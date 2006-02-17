@@ -1,44 +1,133 @@
-From: Gordon Henderson <gordon@drogon.net>
-Subject: Re: 4 disks: RAID-6 or RAID-10 ..
-Date: Fri, 17 Feb 2006 15:56:00 +0000 (GMT)
-Message-ID: <Pine.LNX.4.56.0602171541110.22063@lion.drogon.net>
-References: <Pine.LNX.4.56.0602171100420.22063@lion.drogon.net>
- <43F5B707.3030005@panix.com> <Pine.LNX.4.56.0602171153090.22063@lion.drogon.net>
- <fd8d0180602170407ib160644v@mail.gmail.com> <Pine.LNX.4.56.0602171445280.22063@lion.drogon.net>
- <20060217153132.GA32687@strugglers.net>
+From: Heinz Mauelshagen <mauelshagen@redhat.com>
+Subject: *** Announcement: dmraid 1.0.0.rc10 ***
+Date: Fri, 17 Feb 2006 22:06:35 +0100
+Message-ID: <20060217210635.GA13070@redhat.com>
+Reply-To: mauelshagen@redhat.com
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20060217153132.GA32687@strugglers.net>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Andy Smith <andy@lug.org.uk>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, 17 Feb 2006, Andy Smith wrote:
 
-> On Fri, Feb 17, 2006 at 03:14:37PM +0000, Gordon Henderson wrote:
-> > Still scratching my head, trying to work out if raid-10 can withstand
-> > (any) 2 disks of failure though, although after reading md(4) a few times
-> > now, I'm begining to think it can't (unless you are lucky!) So maybe I'll
-> > just stick with Raid-6 as I know that!
->
-> RAID-10 cannot survive the failure of *any* two disks as if two
-> disks in one of the mirrors died then the whole mirror would be lost
-> which loses you a segment of the upper stripe.  *If* a second disk
-> dies, then with 4 didks total you have 50% chance of it being the
-> one you're relying on.
+               *** Announcement: dmraid 1.0.0.rc10 ***
 
-I understand the avice in a classic RAID-1+0, but Linux native RAID-10 is
-somewhat different from a classic RAID-0 built in top of 2 x 2-disk
-RAID-1's (AIUI). I was thinking of 3 replicas in near mode, but that
-diminishes my overall disk capacity somewhat... (1.333 times a disk rather
-than 2 times a disk for R6, but if performance was significantly better I
-could live with it)
+dmraid 1.0.0.rc10 is available at
+http://people.redhat.com/heinzm/sw/dmraid/ in source tarball,
+source rpm and i386 rpm (with shared and static binary).
 
-I pickup the hardware on Monday evening, so I'll have a few days of
-playing.
+This release adds support for Adaptec HostRAID and JMicron JMB36X
+(see CHANGELOG below for more information).
 
-Cheers,
 
-Gordon
+dmraid (Device-Mapper RAID tool) discovers, [de]activates and displays
+properties of software RAID sets (i.e. ATARAID) and contained DOS
+partitions using the device-mapper runtime of the 2.6 kernel.
+
+The following ATARAID types are supported on Linux 2.6:
+
+Adaptec HostRAID ASR
+Highpoint HPT37X
+Highpoint HPT45X
+Intel Software RAID
+JMicron JMB36X
+LSI Logic MegaRAID
+NVidia NForce
+Promise FastTrack
+Silicon Image Medley
+VIA Software RAID
+
+Please provide insight to support those metadata formats completely.
+
+Thanks.
+
+
+See files README, which comes with the source tarball for
+prerequisites to run this software, further instructions on installing
+and using dmraid!
+
+
+Call for testers:
+-----------------
+
+I need testers with the above ATARAID types, to check that the mapping
+created by this tool is correct (see options "-t -ay") and access to the
+ATARAID data is proper.
+
+In case you have a different ATARAID solution from those listed above,
+please feel free to contact me about supporting it in dmraid.
+
+You can activate your ATARAID sets without danger of overwriting
+your metadata, because dmraid accesses it read-only unless you use
+option -E together with -r in order to erase ATARAID metadata
+(see 'man dmraid')!
+
+This is a release candidate version so you want to have backups of your valuable
+data *and* you want to test accessing your data read-only first in order to
+make sure that the mapping is correct before you go for read-write access.
+
+
+Contacts:
+---------
+
+The author is reachable at <Mauelshagen@RedHat.com>.
+
+For test results, mapping information, discussions, questions, patches,
+enhancement requests and the like, please subscribe and mail to
+<ataraid-list@redhat.com>.
+
+--
+
+Regards,
+Heinz    -- The LVM Guy --
+
+
+Changelog from dmraid 1.0.0.rc9 to 1.0.0.rc10		2006.02.17
+
+FIXES:
+------
+o metadata.c: want_set() didn't drop sets properly
+              (eg, jmicron_raid10 wanted and jmicron_raid1 not dropped)
+
+o scsi.c: avoid retrieving too much data (Al Viro)
+
+o sil.h: magic number fix (some arrays were not recognized)
+
+FEATURES:
+---------
+o added libdmraid_make_table() to activate.c to be used by installer
+
+o asr.[ch]: added Adaptec HostRAID support
+
+o jm.[ch]: added JMicron JMB36x support
+
+o added '--enable-libselinux' to configure for those who want
+  to build without it
+
+o bytorder.h: enhanced to support big endian conversion
+              on little endian arch
+
+o nv.c: support RAID5 with dm-raid45 target
+
+o pdc.h: support additional metadata offset
+
+o metadata.c: enhanced to support RAID4 and RAID5 mappings with dm-raid45 target
+
+
+MISCELANIOUS:
+-------------
+o misc.c: streamlined remove_white_space() (Al Viro)
+
+
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+Heinz Mauelshagen                                 Red Hat GmbH
+Consulting Development Engineer                   Am Sonnenhang 11
+                                                  56242 Marienrachdorf
+                                                  Germany
+Mauelshagen@RedHat.com                            +49 2626 141200
+                                                       FAX 924446
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
