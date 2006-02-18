@@ -1,29 +1,25 @@
-From: Daniel Pittman <daniel@rimspace.net>
-Subject: Re: Raid on USB2 ?
-Date: Sat, 18 Feb 2006 12:11:28 +1100
-Message-ID: <87oe154gjj.fsf@rimspace.net>
-References: <60F5F1E2B94AD4119F0B00B0D0215FFF01A6A25B@TEXTILES.BSC>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: "Stanley Maynard" <mkoyw@yahoo.com>
+Subject: Ladies n Mens Love This i8Dp7j
+Date: Sat, 18 Feb 2006 05:04:14 +0300
+Message-ID: <LAW54.OE649yfB4mvo513053d5__43918.2134847671$1140228507$gmane$org@motmail.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: linux-net@vger.kernel.org
 List-Id: linux-raid.ids
 
-Ken Walker <ken.walker@manchester.ac.uk> writes:
 
-> Anybody tried a Raid1 or Raid5 on USB2.
->
-> If so did it crawl or was it usable ?
+Suffering from short penniss?
+Introduce revolution "Longz" formula which
+gauranteees sizes increase or moneey baack.
 
-Yes, I used this for two by two drive RAID-1 arrays.
+Users reported:
+- 2 inches extra in size
+- 3x pleasurable orgasms
+- 27% thicker
 
-It was usable, but not pleasantly.  The machine became very I/O bound,
-with human scale delays introduced into previously "instant" processes
-such as opening an IMAP mailbox, scanning a directory listing, etc.
+Why waiting?
 
-I wouldn't advise more than two or three drives per USB controller, and
-would expect poor performance even then.
+http://wallofmyrooms.com
 
-    Daniel
 
+94
