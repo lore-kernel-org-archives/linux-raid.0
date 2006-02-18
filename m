@@ -1,36 +1,20 @@
-From: Luca Berra <bluca@comedia.it>
-Subject: Re: quota on raid
-Date: Sat, 18 Feb 2006 09:49:10 +0100
-Message-ID: <20060218084910.GB947@percy.comedia.it>
-References: <6.0.0.22.0.20060218020849.02a207a0@popmail.inwind.it> <20060218084203.GA947@percy.comedia.it>
+From: PFC <lists@peufeu.com>
+Subject: Re: Raid on USB2 ?
+Date: Sat, 18 Feb 2006 10:48:20 +0100
+Message-ID: <op.s45xiuv9cigqcu@apollo13>
+References: <60F5F1E2B94AD4119F0B00B0D0215FFF01A6A25B@TEXTILES.BSC> <87oe154gjj.fsf@rimspace.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; format=flowed; delsp=yes; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20060218084203.GA947@percy.comedia.it>
+In-Reply-To: <87oe154gjj.fsf@rimspace.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Daniel Pittman <daniel@rimspace.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, Feb 18, 2006 at 09:42:04AM +0100, Luca Berra wrote:
->On Sat, Feb 18, 2006 at 02:12:26AM +0100, Antonello PAPA wrote:
->>i have two disk with raid 1. i can't find documents on how to set the 
->>quotas.
->>i whould like to set the quota on /home, can some opne help? thanks and 
->>sorry for bad english.
->>antonello 
->
->in italian:
->http://www.lnf.infn.it/computing/doc/AppuntiLinux/a296.html
->
-sorry,
-this is the _current_ version
-http://a2.swlibero.org/a2111.htm
+>> Anybody tried a Raid1 or Raid5 on USB2.
+>> If so did it crawl or was it usable ?
 
--- 
-Luca Berra -- bluca@comedia.it
-        Communication Media & Services S.r.l.
- /"\
- \ /     ASCII RIBBON CAMPAIGN
-  X        AGAINST HTML MAIL
- / \
+	Why not external SATA ?
+	After all, the little cute SATA cables are a lot more suited to this than  
+the old, ugly flat PATA cables...
