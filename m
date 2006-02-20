@@ -1,70 +1,87 @@
-From: Janos Farkas <jf-ml-k3-raid@lk8rp.mail.xeon.eu.org>
-Subject: Re: raid1 with 1.2 superblock never marked healthy?
-Date: Mon, 20 Feb 2006 10:13:40 +0100
-Message-ID: <privx$1140425087.koan@lk8rp.mail.xeon.eu.org>
-References: <priv$1140364975.koan@shadow.banki.hu> <17400.61822.230666.23651@cse.unsw.edu.au>
+From: Mirko Benz <mirko.benz@web.de>
+Subject: Re: NVRAM support
+Date: Mon, 20 Feb 2006 10:57:02 +0100
+Message-ID: <43F9926E.6040104@web.de>
+References: <43EC5655.1060504@web.de>	<20060210124204.GC28676@harddisk-recovery.com>	<43ECB4A4.6010005@tmr.com>	<Pine.LNX.4.64.0602101700540.30925@twinlark.arctic.org>	<20060213092204.GB3209@harddisk-recovery.nl>	<43F2E526.9010409@web.de> <17395.45710.99321.522482@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <17400.61822.230666.23651@cse.unsw.edu.au>
+In-Reply-To: <17395.45710.99321.522482@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: Neil Brown <neilb@suse.de>
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 2006-02-20 at 09:30:22, Neil Brown wrote:
-> If you use an 'internal' bitmap (which is mirrored across all drives
-> much like the superblock) then you don't need to specify a file name.
-> However if you want the bitmap on a separate file, you have to have
-> that name 'hard coded' in mdadm.conf (or similar).
+Hello,
 
-I was under the impression that mdadm.conf is not extended for this :)
-That would be a nice place compared to /etc/rc.d/whatever..
+We have applications were large data sets (e.g. 100 MB) are sequentially 
+written.
+Software RAID could do a full stripe update (without reading/using 
+existing data).
+Does this happen in parallel? If yes, isn't that data vulnerable when a 
+crash occurs?
 
-I was considering using external bitmap only because I've been bitten a
-few times with journaling filesystems vs. cheap hard disks.  I'm not
-sure if a few hard disks are a significant sample, but some of them
-started developing bad sectors where the journal is stored.  I hoped
-that having an external bitmap would reduce the wear on the mirrored
-parts.  This way, if the bitmap (even on the same hard disk) is getting
-flawed, probably both of the whole mirrors are intact enough for a last
-(additional) backup.
+Thanks,
+Mirko
 
-> > I remember stopping/starting the array correctly does a resync again,
-> > even without a reboot.
-> Hmm... it seems to work for me... How exactly to you start it again.
+Neil Brown schrieb:
+> On Wednesday February 15, mirko.benz@web.de wrote:
+>   
+>> Hi,
+>>
+>> My intention was not to use a NVRAM device for swap.
+>>
+>> Enterprise storage systems use NVRAM for better data protection/faster 
+>> recovery in case of a crash.
+>> Modern CPUs can do RAID calculation very fast. But Linux RAID is 
+>> vulnerable when a crash during a write operation occurs.
+>> E.g. Data and parity write requests are issued in parallel but only one 
+>> finishes. This will
+>> lead to inconsistent data. It will be undetected and can not be 
+>> repaired. Right?
+>>     
+>
+> Wrong.  Well, maybe 5% right.
+>
+> If the array is degraded, that the inconsistency cannot be detected.
+> If the array is fully functioning, then any inconsistency will be
+> corrected by a 'resync'.
+>
+>   
+>> How can journaling be implemented within linux-raid?
+>>     
+>
+> With a fair bit of work. :-)
+>
+>   
+>> I have seen a paper that tries this in cooperation with a file system:
+>> ?Journal-guided Resynchronization for Software RAID?
+>> www.cs.wisc.edu/adsl/Publications
+>>     
+>
+> This is using the ext3 journal to make the 'resync' (mentioned above)
+> faster.  Write-intent bitmaps can achieve similar speedups with
+> different costs.
+>
+>   
+>> But I would rather see a solution within md so that other file systems 
+>> or LVM can be used on top of md.
+>>     
+>
+> Currently there is no solution to the "crash while writing and
+> degraded on restart means possible silent data corruption" problem.
+> However is it, in reality, a very small problem (unless you regularly
+> run with a degraded array - don't do that).
+>
+> The only practical fix at the filesystem level is, as you suggest,
+> journalling to NVRAM.  There is work underway to restructure md/raid5
+> to be able to off-load the xor and raid6 calculations to dedicated
+> hardware.  This restructure would also make it a lot easier to journal
+> raid5 updates thus closing this hole (and also improving write
+> latency).
+>
+> NeilBrown
+>
+>   
 
-Oops, I did not mean resync, but that spare confusion stuff.  When I do
-mdadm -S /dev/md0, and then mdadm -A /dev/md0, I get:
-"raid1: raid set md0 active with 1 out of 2 mirrors"
-And I have to -r /dev/hda3, -a /dev/hda3, and that results in another
-resync.
-
-> No.  mdadm does not record the name of the bitmap file in the
-> superblock.  Just like it does not record the names of component
-> devices in the superblock.
-
-Would it be a bad idea (apart from someone having to do the work :)?
-(But probably a bit better would be doing it as the jfs/ext3 external
-journals store uuid connecting the journal with the device itself).
-
-> >    Array State : uu 1 failed
-> Something is definitely wrong here... hda3 looks like a spare, but
-> isn't.... I'll have a look and see what I can find out.
-
-The only "unusual" thing is how it got set up, because on a semi-live
-system, I started with the magic "missing" component to create another
-half mirror while the previous one is running. "Unusual" because I never
-thought of it as a bad idea, but maybe somehow it did cause what I'm
-seeing.
-
-The original command (then, trying to use bitmaps :) was:
-
-# mdadm --create /dev/md1 --level 1 -n 2 -d 4 -e 1.2 \
-  -b /etc/md/test1.bin --bitmap-chunk 64 missing /dev/hdc3
-
-At some later time, I added /dev/hda3, which is the troubling "spare"
-now.
-
-Janos
