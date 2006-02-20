@@ -1,30 +1,31 @@
-From: "Molle Bestefich" <molle.bestefich@gmail.com>
-Subject: Re: block level vs. file level
-Date: Mon, 20 Feb 2006 17:53:18 +0100
-Message-ID: <62b0912f0602200853m72af5676y4f2dcd07fe358ef8@mail.gmail.com>
-References: <43EF8CFB.5080403@kfa.org> <20060212213157.GX32687@strugglers.net>
-	 <43EFDDF7.6090405@kfa.org>
+From: "Tuomas Leikola" <tuomas.leikola@gmail.com>
+Subject: Re: Avoiding resync of RAID1 during creation
+Date: Mon, 20 Feb 2006 22:27:40 +0200
+Message-ID: <5b170a7d0602201227p5cb458a5j13aecca21aa3d627@mail.gmail.com>
+References: <43F9E65D.6040402@datafoundry.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <43EFDDF7.6090405@kfa.org>
+In-Reply-To: <43F9E65D.6040402@datafoundry.com>
 Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: it <itech@kfa.org>
-Cc: linux-raid@vger.kernel.org
+To: Bryan Wann <bryan@datafoundry.com>
+Cc: linux-raid maillist <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-it wrote:
-> Ouch.
+On 2/20/06, Bryan Wann <bryan@datafoundry.com> wrote:
+> Now with FC4, raidtools is gone and I'm left with mdadm tools.  As far
+> as I can tell, mdadm has nothing resembling --dangerous-no-resync.  I've
+> updated my kickstart to use mdadm instead of mkraid using:
 >
-> How does hardware raid deal with this? Does it?
 
-Hardware RAID controllers deal with this by rounding the size of
-participant devices down to nearest GB, on the assumption that no
-drive manufacturers would have the guts to actually sell eg. a 250 GB
-drive with less than exactly 250.000.000.000 bytes of space on it.
+mdadm --assume-clean
 
-(It would be nice if the various flavors of Linux fdisk had an option
-to do this. It would be very nice if anaconda had an option to do
-this.)
+from the man page:
+
+It can also be used when creating a RAID1 or RAID10 if you want to
+avoid the initial resync, however this  practice - while normally safe
+- is not recommended.
+
+/ tuomas
