@@ -1,17 +1,40 @@
-From: "Janell Rushing" <louineis@lov.ru>
-Subject: Eradicate all that you are indebted for not even sending another cent
-Date: Wed, 22 Feb 2006 17:47:47 -0500
-Message-ID: <108016220459.XAA13898aegainery__16998.7487061464$1140698582$gmane$org@welove.ru>
+From: "Roberto R. Wiley , V" <WildChildirunwithscissorsoros@yahoo.gr>
+Subject: hey there
+Date: Thu, 23 Feb 2006 20:56:04 +0400
+Message-ID: <X824.WB18.7bd2.762D6R9J4@localhost>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, linux-net@vger.kernel.org, linux-raid@vger.kernel.org, linux-tape@vger.kernel.org, linux-tape-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-You have got to look at this. Its outstanding.   Its a major new business.
 
-http://www.judgmenprocessing.com/
+Good day linux-raid@vger.kernel.org,
 
-Carmela   
+Prequ@l!fy      even if you've       Ba_ad         cre,d!t.
 
-Want to not receive info in the future?  yaninena@travel.mail.ru
+C@A sh out for any reason, come to us.
+
+
+$350k for 360 pm, v r    Justo    Giving    away
+
+******************************************************************
+
+COPY the Address below and paste in your BROoWSER:
+
+bajury.lowestpay.net
+
+******************************************************************
+
+
+he refused to associate himself with any investigation which did not tend =
+towards the unusual..
+"Hum! He's about due. Do you feel a creeping,=20.
+Be sure you're sure -- you know --.
+It might be a magical bean,.
+Huh? You say it's mine? Oh, dear,.
+
+
+Sincerely,
+Dino Schulz
