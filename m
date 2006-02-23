@@ -1,7 +1,7 @@
-From: "Roberto R. Wiley , V" <WildChildirunwithscissorsoros@yahoo.gr>
+From: "Percy Y. Philips" <WildChildsbrx@yahoo.co.in>
 Subject: hey there
-Date: Thu, 23 Feb 2006 20:56:04 +0400
-Message-ID: <X824.WB18.7bd2.762D6R9J4@localhost>
+Date: Thu, 23 Feb 2006 10:57:11 -0700
+Message-ID: <N864.FD55.1cw6.315T9H1R1@localhost>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
@@ -10,31 +10,30 @@ To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-Good day linux-raid@vger.kernel.org,
+Hi linux-raid@vger.kernel.org,
 
-Prequ@l!fy      even if you've       Ba_ad         cre,d!t.
+Our site has      LoWe3r        prices and more services than its competit=
+ors.
 
-C@A sh out for any reason, come to us.
+Need         med!_c@_t!0n       without a prior           pre_scr!_pt!0n?
 
+--------------------------------
 
-$350k for 360 pm, v r    Justo    Giving    away
+copy the address below and paste in u your web browser:
 
-******************************************************************
+armagnac.herownpc.com
 
-COPY the Address below and paste in your BROoWSER:
+--------------------------------
 
-bajury.lowestpay.net
-
-******************************************************************
-
-
-he refused to associate himself with any investigation which did not tend =
-towards the unusual..
-"Hum! He's about due. Do you feel a creeping,=20.
-Be sure you're sure -- you know --.
-It might be a magical bean,.
-Huh? You say it's mine? Oh, dear,.
+vali d  for 24 hurs.
 
 
-Sincerely,
-Dino Schulz
+"Consumers view those programs negatively in that they view it as=20.
+  Of Physiology from top to toe I sing;=20.
+I give thee the first suggestion, the problem and indirection,)=20.
+Of the Witch of the West.
+and the results of your conversion will be displayed..
+
+See you later,
+
+Katharine Jefferson
