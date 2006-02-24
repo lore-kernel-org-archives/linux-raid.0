@@ -1,33 +1,70 @@
-From: Janos Farkas <jf-ml-k3-raid@lk8rp.mail.xeon.eu.org>
-Subject: Re: raid1 with 1.2 superblock never marked healthy?
-Date: Fri, 24 Feb 2006 16:24:47 +0100
-Message-ID: <priv$1140794048.koan@shadow.banki.hu>
-References: <priv$1140364975.koan@shadow.banki.hu> <17400.61822.230666.23651@cse.unsw.edu.au> <privx$1140425087.koan@lk8rp.mail.xeon.eu.org> <Pine.LNX.4.64.0602200741570.29156@filesrv1.baby-dragons.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Andrew Burgess <aab@cichlid.com>
+Subject: raid6 resync: patch "fix raid6 resync check/repair code" working?
+Date: Fri, 24 Feb 2006 09:21:10 -0800
+Message-ID: <200602241721.k1OHLAOs014146@cichlid.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.64.0602200741570.29156@filesrv1.baby-dragons.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
-Cc: linux-raid maillist <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 2006-02-20 at 07:48:01, James W. Laferriere wrote:
-> 	How hard would it be for mdadm & md to allow use of both internal
-> 	and external bitmaps ?  And then mdadm be extended to do a compare
-> 	of an external against a internal when the opertaor askes to do
-> 	so .  Soes this sound reasonable ?  Thoughts ?
+I had a bad sector on a raid6 member disk, fixed it with dd and then
+decided to bite the bullet and upgrade to 2.6.16rc4 to get the better
+bad sector error handling.
 
-Can you explain a bit more what would it be useful?  As I understand the
-concept (which may be quite different from the reality and/or
-implementation), the bitmap of the "most up-to-date" component is used to
-determine what updates the other component is missing.
+I note this kernel has the "fix raid6 resync check/repair code" patch.
+Since my disk was out of the array briefly I expected to see
+reduced writes during resync but I am not seeing this. In fact,
+the syncing disk doesnt get read at all!
 
-(What to do in the case of multi-way, arbitrarily removed mirrors is
-above my head :)
+Here's an iostat output:
 
-In that scheme, I don't see any use of a bitmap which is not "connected"
-to any available sub-component.
+Device:            tps   Blk_read/s   Blk_wrtn/s   Blk_read   Blk_wrtn
+sdd              43.58      8989.34         4.25   12172822       5752
+sdh              43.01      8988.78         3.17   12172070       4288
+sdi              46.17      8982.13         1.01   12163062       1368
+sdj              48.42      8989.03         3.23   12172408       4376
+sdk              46.39         2.56      8963.30       3470   12137568
+sdo              50.18      8986.71         2.98   12169268       4032
+sds              50.71      8992.34         3.85   12176890       5218
+sdt              48.61      8989.37         4.22   12172868       5720
 
-Janos
+(I've deleted the uninteresting disks)
+
+Is it a pilot error? I added the missing disk (sdk) to the array
+and mdadm said 're-adding' IIRC. I have no bitmaps yet in case that matters.
+
+/dev/md1:
+        Version : 00.90.03
+  Creation Time : Mon Dec  5 08:38:36 2005
+     Raid Level : raid6
+     Array Size : 1757815296 (1676.38 GiB 1800.00 GB)
+    Device Size : 292969216 (279.40 GiB 300.00 GB)
+   Raid Devices : 8
+  Total Devices : 8
+Preferred Minor : 1
+    Persistence : Superblock is persistent
+
+    Update Time : Fri Feb 24 09:12:32 2006
+          State : clean, degraded, recovering
+ Active Devices : 7
+Working Devices : 8
+ Failed Devices : 0
+  Spare Devices : 1
+
+     Chunk Size : 128K
+
+ Rebuild Status : 2% complete
+
+           UUID : 628e4bb1:71f6dbea:5b4cd026:7ac5282f
+         Events : 0.2285138
+
+    Number   Major   Minor   RaidDevice State
+       0       8       49        0      active sync   /dev/sdd1
+       1      65       49        1      active sync   /dev/sdt1
+       2      65       35        2      active sync   /dev/sds3
+       8       8      161        3      spare rebuilding   /dev/sdk1
+       4       8      225        4      active sync   /dev/sdo1
+       5       8      113        5      active sync   /dev/sdh1
+       6       8      145        6      active sync   /dev/sdj1
+       7       9        4        7      active sync   /dev/md4
+
