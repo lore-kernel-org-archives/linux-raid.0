@@ -1,37 +1,25 @@
-From: "Norberto X. Milton" <blueoceanztrb@yahoo.es>
-Subject: Re: Re:
-Date: Sun, 26 Feb 2006 08:04:46 +0300
-Message-ID: <kV396.LV86.0rp5.560R5U2Y6f@localhost>
+From: Andre Noll <maan@systemlinux.org>
+Subject: Re: silent corruption with RAID1
+Date: Sun, 26 Feb 2006 09:22:09 +0100
+Message-ID: <20060226082209.GH7030@skl-net.de>
+References: <20060225182714.F4550@fincher.users.accretive-networks.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20060225182714.F4550@fincher.users.accretive-networks.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Moses Leslie <moses@flyingcroc.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On 18:40, Moses Leslie wrote:
+> 0000:00:0a.0 Unknown mass storage controller: Silicon Image, Inc.
+> (formerly CMD Technology Inc) SiI 3112 [SATALink/SATARaid] Serial ATA
+> Controller (rev 02)
 
-Hey,
+Do you have Seagate drives? Some models have problems with this controller..
 
-We have Special    0ff3rss      and some  New       Pr0ducctss.
-
-WiDE variety of       pre_scr!p_t!0n       med!_c@-t!0ns     to choose fro=
-m.
-
-------------------------------------------------------------------------
-
-copy the address below and paste in o your web browser:
-
-afterdays.grindscull.net
-
-------------------------------------------------------------------------
-
-
-His workbook is wedged in the window,.
-Make of my pass a road to the light=20.
-It's autumn, 1991, and I'm sitting on the edge of the bed.
-Of a tear that runs down an angel's face..
-I had nothing further to do with them,.
-
-Get back to you later,
-
-Olen Labovitz
+Andre
+-- 
+The only person who always got his work done by Friday was Robinson Crusoe
