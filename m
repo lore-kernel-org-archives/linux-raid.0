@@ -1,70 +1,59 @@
-From: Miss Maria Bahie <bahiem@indiatimes.com>
-Subject: A Plea For Help
-Date: Sat, 25 Feb 2006 00:08:30 -0800
-Message-ID: <200602250808.k1P88Qd7008789@zeus1.kernel.org>
-Reply-To: bahiem@k.ro
+From: Moses Leslie <moses@flyingcroc.net>
+Subject: silent corruption with RAID1
+Date: Sat, 25 Feb 2006 18:40:58 -0800 (PST)
+Message-ID: <20060225182714.F4550@fincher.users.accretive-networks.net>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="79bdb24c-1cf0-4d7e-94ce-31129f665df2"
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hi,
 
-This is a multi-part message in MIME format
+I have a machine that currently has 4 drives in it (currently running
+2.6.15.4). The first two drives are on the onboard SATA controller (VIA)
+in a RAID-1.  I haven't had any issues with these.
 
---79bdb24c-1cf0-4d7e-94ce-31129f665df2
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: quoted-printable
+The other two drives were added recently, along with an SiL PCI SATA card
+to put them on.  lspci reports this card as:
 
-DEAR BELOVED,
+0000:00:0a.0 Unknown mass storage controller: Silicon Image, Inc.
+(formerly CMD Technology Inc) SiI 3112 [SATALink/SATARaid] Serial ATA
+Controller (rev 02)
 
-I am MISS MARIA BAHIE and am 26 years of age. I I happen to be the only 
-surviving daughter/child of LATE MR. PATRICK BAHIE.
+I initially used mdadm to create a new RAID1 of the two new drives, and
+added them into the LVM group that the other ones were in to expand the
+drive, but pretty quickly noticed (via rsync -c) that all new files were
+corrupted.
 
-I have decided to contact you over a desperate and pitiable situation in 
-which I find myself after loosing my parents and siblings to the civil 
-crises in my country. I am left alone in the world.
-I must inform you that most of my our family=E2=80=99s assets and funds were 
-=
+I've since pulled the 2nd set of drives out of the LVM to test.  It's only
+when using a RAID-1 that I get occasionaly corruption.  I split the drives
+(each 300GB) into 4 75GB partitions each, and created 3 md devices.   One
+75GB raid1, one 150GB raid0, and 1 225GB raid5.
 
-either looted or vandalized by my father=E2=80=99s business partners and 
-government=E2=80=99s authorities.
+I used a script that newfs'd each one, dd'd multiple copies of files (one
+run with a 1GB, one with 3GB, one with 6GB), md5'd those files, then
+umounted.
 
-At the moment, I need your cordial assistance in receiving a fund worth of 
-US$18M. This fund was deposited by my late father as family belongings 
-with a private security firm.
+At least once in each test run, there was a file with the wrong checksum
+when on the RAID-1 part of the test.
 
-I would need your assistance in receiving and investing this funds as well 
-as helping me in obtaining traveling documents to your country or any 
-other western country to enable me finish my education.
+After completing all the tests, I redid the md devices such that none
+of them used any of the same partitions that they had used in the first
+test (IE the RAID1 was sda1 and sdb1 in the first one, and was sda4 and
+sdb4 in the second one).
 
-I am ready to provide you with all the relevant information related to 
-this deposit including all documents.
+I also did the same test using each of the regular partitions as well
+(sda1-4 and sdb1-4).
 
-Again, my whole life will be a mess if nothing is done urgently to receive 
-this funds as all my livelihood now lies on this funds. Please in any way 
-you can be of help to me do as you will not only help me as a person 
-rather you will be helping humanity in general.
+I was never able to duplicate any corruption any other time than with the
+RAID1.
 
-Furthermore, I will be looking forward to your quick response to this 
-effect as I will welcome your suggestions on way forward including your 
-conditions of assistance.
+There's never any error messages in dmesg or syslog.
 
-More so, I have decided to compensate your much needed assistance with 20% 
-of the total sum while any expenses you will incur in the course of the 
-transaction will be refunded as soon as the business is done.
+Is there anything I can do to help track down where the problem is?
 
-Be informed that, I am doing things on my own for now and I do not see any 
-form of risk in the transaction as long as we will continue this 
-transaction between us at least until I travel out from these wicked 
-people.
+Thanks!
 
-I will wait for to hear from you as soon as possible.
-
-Regards,
-
-Maria Bahie 
-  
---79bdb24c-1cf0-4d7e-94ce-31129f665df2--
-
+Moses
