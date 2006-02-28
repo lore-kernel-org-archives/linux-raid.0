@@ -1,17 +1,26 @@
-From: "Julie" <Julie@comcast.net>
-Subject: Re: Unable to contact you.
-Date: Tue, 28 Feb 2006 18:08:45 -0500
-Message-ID: <200602281708.k1SH8kEW006932@zeus2.kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: "Milton Carrillo" <DNHUMP@hotmail.com>
+Subject: Doctors Use This Too AQ
+Date: Tue, 28 Feb 2006 15:05:07 -0300
+Message-ID: <CFE3.9A9.3097898B8C__9570.46905900842$1141150185$gmane$org@mopalinux.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: linux-net@vger.kernel.org
+Cc: linux-newbie@vger.kernel.org, linux-ppp@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-We've attempted to contact you to discuss your home. Your current laon has been pre aproved for a lwoer rtae.
-Laon Qaulifies for up to 3.4% or a more lwoer raet.
-Vsiit here to confirm your information within 24 hours.
-http://www.df7j.net/real
+
+Suffering from short penniss?
+Introduce revolution "Longz" formula which
+gauranteees sizes increase or moneey baack.
+
+Users reported:
+- 2 inches extra in size
+- 3x pleasurable orgasms
+- 27% thicker
+
+Why waiting?
+
+http://thunder14.stronglength.biz
 
 
+YOd
