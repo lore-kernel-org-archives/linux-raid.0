@@ -1,374 +1,106 @@
-From: "kyle" <kylewong@southa.com>
-Subject: disk failure but raid 5 does not degrade
-Date: Tue, 28 Feb 2006 23:51:19 +0800
-Message-ID: <00ce01c63c7e$d122c320$28df0f3d@kyleont8n3poyo>
-Reply-To: "kyle" <kylewong@southa.com>
+From: "Enrique Garcia Briones" <egarcia@mail.uadec.mx>
+Subject: RAID-1 and RAID(5 or 6) on Sparc HELP
+Date: Tue, 28 Feb 2006 09:45:43 -0600
+Message-ID: <20060228152109.M9744@mail.uadec.mx>
 Mime-Version: 1.0
 Content-Type: text/plain;
-	charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+	charset=iso-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: debian-sparc@lists.debian.org, linux-raid@vger.kernel.org
+Cc: cmontoya@mail.uadec.mx
 List-Id: linux-raid.ids
 
-Hi,
+Hi listers,
 
-Recently I have my RAID5 freeze up twice within one month, with single disk
-failure, /dev/sda. The RAID5 doesn't go to degrade mode, all processes from
-nfs clients trying to access the freezed RAID5 stuck in "D" state, the nfs
-server running the RAID5 cannot be shutdown, only power button works. The
-nfs server is running kernel 2.6.15.2
+I hope someone can help me to aim in the right direction.
 
-Actually I wonder it's really disk (sda) failure or not, I haven't test the
-drive yet.  However I found something like:
-Feb 27 18:26:11 images1 kernel: ata1: translated ATA stat/err 0xd0/00 to
-SCSI SK/ASC/ASCQ 0xb/47/00
-maybe libata problem? Anyway I expect RAID5 should go to degrade mode
-instead of just freeze in this case. Maybe the new "RAID5 read failure
-handling" make the RAID doesn't go to degrade mode?
+I'km trying to put an RAID-1 and RAID-(5 or 6) in a Sun420 with an A1000 
+disk array with (12 * 36gb) and 2 internal HDD.
 
-Please CC me if possible, thanks.
+I have been following the instructions in the following links:
 
-My raid configuration (after replaced sda and resync):
-[root@images1 log]# more /proc/mdstat
-Personalities : [raid1] [raid5]
-md1 : active raid1 hdc2[1] hda2[0]
-      6144768 blocks [2/2] [UU]
+http://www.epimetrics.com/topics/one-page?page_id=421&topic=Bit-head%
+20Stuff&page_topic_id=120 
 
-md2 : active raid5 sda1[2] hda4[0] sdf1[7] sde1[6] sdd1[5] sdc1[4] sdb1[3]
-hdc4[1]
-      1664893440 blocks level 5, 512k chunk, algorithm 2 [8/8] [UUUUUUUU]
+http://translate.google.com/translate?u=http%3A%2F%2Fwww.sunwizard.net%
+2Fhtml%2Farticles%2Fsl001.html&langpair=fr%7Cen&hl=fr&ie=UTF-8&oe=UTF-
+8&prev=%2Flanguage_tools 
+ 
+http://marc.theaimsgroup.com/?l=linux-sparc&m=101787980731878&w=2
 
-md0 : active raid1 hdc1[1] hda1[0]
-      104320 blocks [2/2] [UU]
+And as well a lot of Deep Google-ing...
 
-/var/log/message:
-Feb 27 18:26:11 images1 kernel: ata1: command 0x25 timeout, stat 0xd0
-host_stat 0x21
-Feb 27 18:26:11 images1 kernel: ata1: translated ATA stat/err 0xd0/00 to
-SCSI SK/ASC/ASCQ 0xb/47/00
-Feb 27 18:26:11 images1 kernel: ata1: status=0xd0 { Busy }
-Feb 27 18:26:11 images1 kernel: sd 0:0:0:0: SCSI error: return code =
-0x8000002
-Feb 27 18:26:11 images1 kernel: sda: Current: sense key: Aborted Command
-Feb 27 18:26:11 images1 kernel:     Additional sense: Scsi parity error
-Feb 27 18:26:11 images1 kernel: end_request: I/O error, dev sda, sector
-44318183
-Feb 27 18:26:11 images1 kernel: ATA: abnormal status 0xD0 on port 0x9F7
-Feb 27 18:26:11 images1 last message repeated 2 times
-Feb 27 18:26:41 images1 kernel: ata1: command 0x25 timeout, stat 0xd0
-host_stat 0x21
-Feb 27 18:26:41 images1 kernel: ata1: translated ATA stat/err 0xd0/00 to
-SCSI SK/ASC/ASCQ 0xb/47/00
-Feb 27 18:26:41 images1 kernel: ata1: status=0xd0 { Busy }
-Feb 27 18:26:41 images1 kernel: sd 0:0:0:0: SCSI error: return code =
-0x8000002
-Feb 27 18:26:41 images1 kernel: sda: Current: sense key: Aborted Command
-Feb 27 18:26:41 images1 kernel:     Additional sense: Scsi parity error
-Feb 27 18:26:41 images1 kernel: end_request: I/O error, dev sda, sector
-44318191
-Feb 27 18:26:41 images1 kernel: ATA: abnormal status 0xD0 on port 0x9F7
-Feb 27 18:26:41 images1 last message repeated 2 times
-Feb 27 18:27:11 images1 kernel: ata1: command 0x25 timeout, stat 0xd0
-host_stat 0x21
-Feb 27 18:27:11 images1 kernel: ata1: translated ATA stat/err 0xd0/00 to
-SCSI SK/ASC/ASCQ 0xb/47/00
-Feb 27 18:27:11 images1 kernel: ata1: status=0xd0 { Busy }
-Feb 27 18:27:11 images1 kernel: sd 0:0:0:0: SCSI error: return code =
-0x8000002
-Feb 27 18:27:11 images1 kernel: sda: Current: sense key: Aborted Command
-Feb 27 18:27:11 images1 kernel:     Additional sense: Scsi parity error
-Feb 27 18:27:11 images1 kernel: end_request: I/O error, dev sda, sector
-44318199
-Feb 27 18:27:11 images1 kernel: ATA: abnormal status 0xD0 on port 0x9F7
-Feb 27 18:27:11 images1 last message repeated 2 times
-Feb 27 18:27:23 images1 PAM-securetty[4594]: access denied: tty 'pts/0' is
-not secure !
-Feb 27 18:27:28 images1 login[4594]: FAILED LOGIN 1 FROM 152.101.81.89 FOR
-root, Authentication failure
-Feb 27 18:27:32 images1 remote(pam_unix)[4594]: session opened for user kyle
-by (uid=0)
-Feb 27 18:27:32 images1  -- kyle[4594]: LOGIN ON pts/0 BY kyle FROM
-152.101.81.89
-Feb 27 18:27:36 images1 su(pam_unix)[4619]: authentication failure; logname=
-uid=500 euid=0 tty=pts/0 ruser=kyle rhost=  user=root
-Feb 27 18:27:41 images1 kernel: ata1: command 0x25 timeout, stat 0xd0
-host_stat 0x21
-Feb 27 18:27:41 images1 kernel: ata1: translated ATA stat/err 0xd0/00 to
-SCSI SK/ASC/ASCQ 0xb/47/00
-Feb 27 18:27:41 images1 kernel: ata1: status=0xd0 { Busy }
-Feb 27 18:27:41 images1 kernel: sd 0:0:0:0: SCSI error: return code =
-0x8000002
-Feb 27 18:27:41 images1 kernel: sda: Current: sense key: Aborted Command
-Feb 27 18:27:41 images1 kernel:     Additional sense: Scsi parity error
-Feb 27 18:27:41 images1 kernel: end_request: I/O error, dev sda, sector
-44318207
-Feb 27 18:27:41 images1 kernel: ATA: abnormal status 0xD0 on port 0x9F7
-Feb 27 18:27:41 images1 last message repeated 2 times
-Feb 27 18:27:42 images1 su(pam_unix)[4620]: session opened for user root by
-(uid=500)
-Feb 27 18:28:11 images1 kernel: ata1: command 0x25 timeout, stat 0xd0
-host_stat 0x21
-Feb 27 18:28:11 images1 kernel: ata1: translated ATA stat/err 0xd0/00 to
-SCSI SK/ASC/ASCQ 0xb/47/00
-Feb 27 18:28:11 images1 kernel: ata1: status=0xd0 { Busy }
-Feb 27 18:28:11 images1 kernel: sd 0:0:0:0: SCSI error: return code =
-0x8000002
-Feb 27 18:28:11 images1 kernel: sda: Current: sense key: Aborted Command
-Feb 27 18:28:11 images1 kernel:     Additional sense: Scsi parity error
-Feb 27 18:28:11 images1 kernel: end_request: I/O error, dev sda, sector
-44318231
-Feb 27 18:28:11 images1 kernel: ATA: abnormal status 0xD0 on port 0x9F7
-Feb 27 18:28:11 images1 last message repeated 2 times
-Feb 27 18:28:41 images1 kernel: ata1: command 0x25 timeout, stat 0xd0
-host_stat 0x21
-Feb 27 18:28:41 images1 kernel: ata1: translated ATA stat/err 0xd0/00 to
-SCSI SK/ASC/ASCQ 0xb/47/00
-Feb 27 18:28:41 images1 kernel: ata1: status=0xd0 { Busy }
-Feb 27 18:28:41 images1 kernel: sd 0:0:0:0: SCSI error: return code =
-0x8000002
-Feb 27 18:28:41 images1 kernel: sda: Current: sense key: Aborted Command
-Feb 27 18:28:41 images1 kernel:     Additional sense: Scsi parity error
-Feb 27 18:28:41 images1 kernel: end_request: I/O error, dev sda, sector
-44318239
-Feb 27 18:28:41 images1 kernel: ATA: abnormal status 0xD0 on port 0x9F7
-Feb 27 18:28:41 images1 last message repeated 2 times
-Feb 27 18:29:11 images1 kernel: ata1: command 0x25 timeout, stat 0xd0
-host_stat 0x21
-Feb 27 18:29:11 images1 kernel: ata1: translated ATA stat/err 0xd0/00 to
-SCSI SK/ASC/ASCQ 0xb/47/00
-Feb 27 18:29:11 images1 kernel: ata1: status=0xd0 { Busy }
-Feb 27 18:29:11 images1 kernel: sd 0:0:0:0: SCSI error: return code =
-0x8000002
-Feb 27 18:29:11 images1 kernel: sda: Current: sense key: Aborted Command
-Feb 27 18:29:11 images1 kernel:     Additional sense: Scsi parity error
-Feb 27 18:29:11 images1 kernel: end_request: I/O error, dev sda, sector
-336291503
-Feb 27 18:29:11 images1 kernel: ATA: abnormal status 0xD0 on port 0x9F7
-Feb 27 18:29:11 images1 last message repeated 2 times
-Feb 27 18:29:35 images1 telnetd[4906]: ttloop: read: Connection reset by
-peer
-Feb 27 18:29:41 images1 kernel: ata1: command 0x25 timeout, stat 0xd0
-host_stat 0x21
-Feb 27 18:29:41 images1 kernel: ata1: translated ATA stat/err 0xd0/00 to
-SCSI SK/ASC/ASCQ 0xb/47/00
-Feb 27 18:29:41 images1 kernel: ata1: status=0xd0 { Busy }
-Feb 27 18:29:41 images1 kernel: sd 0:0:0:0: SCSI error: return code =
-0x8000002
-Feb 27 18:29:41 images1 kernel: sda: Current: sense key: Aborted Command
-Feb 27 18:29:41 images1 kernel:     Additional sense: Scsi parity error
-Feb 27 18:29:41 images1 kernel: end_request: I/O error, dev sda, sector
-336390743
-Feb 27 18:29:41 images1 kernel: ATA: abnormal status 0xD0 on port 0x9F7
-Feb 27 18:29:41 images1 last message repeated 2 times
-Feb 27 18:30:11 images1 kernel: ata1: command 0x25 timeout, stat 0xd0
-host_stat 0x21
-Feb 27 18:30:11 images1 kernel: ata1: translated ATA stat/err 0xd0/00 to
-SCSI SK/ASC/ASCQ 0xb/47/00
-Feb 27 18:30:11 images1 kernel: ata1: status=0xd0 { Busy }
-Feb 27 18:30:11 images1 kernel: sd 0:0:0:0: SCSI error: return code =
-0x8000002
-Feb 27 18:30:11 images1 kernel: sda: Current: sense key: Aborted Command
-Feb 27 18:30:11 images1 kernel:     Additional sense: Scsi parity error
-Feb 27 18:30:11 images1 kernel: end_request: I/O error, dev sda, sector
-336390751
-Feb 27 18:30:11 images1 kernel: ATA: abnormal status 0xD0 on port 0x9F7
-Feb 27 18:30:11 images1 last message repeated 2 times
-Feb 27 18:30:41 images1 kernel: ata1: command 0x25 timeout, stat 0xd0
-host_stat 0x21
-Feb 27 18:30:41 images1 kernel: ata1: translated ATA stat/err 0xd0/00 to
-SCSI SK/ASC/ASCQ 0xb/47/00
-Feb 27 18:30:41 images1 kernel: ata1: status=0xd0 { Busy }
-Feb 27 18:30:41 images1 kernel: sd 0:0:0:0: SCSI error: return code =
-0x8000002
-Feb 27 18:30:41 images1 kernel: sda: Current: sense key: Aborted Command
-Feb 27 18:30:41 images1 kernel:     Additional sense: Scsi parity error
-Feb 27 18:30:41 images1 kernel: end_request: I/O error, dev sda, sector
-336390759
-Feb 27 18:30:41 images1 kernel: ATA: abnormal status 0xD0 on port 0x9F7
-Feb 27 18:30:41 images1 last message repeated 2 times
-Feb 27 18:31:11 images1 kernel: ata1: command 0x25 timeout, stat 0xd0
-host_stat 0x21
-Feb 27 18:31:11 images1 kernel: ata1: translated ATA stat/err 0xd0/00 to
-SCSI SK/ASC/ASCQ 0xb/47/00
-Feb 27 18:31:11 images1 kernel: ata1: status=0xd0 { Busy }
-Feb 27 18:31:11 images1 kernel: sd 0:0:0:0: SCSI error: return code =
-0x8000002
-Feb 27 18:31:11 images1 kernel: sda: Current: sense key: Aborted Command
-Feb 27 18:31:11 images1 kernel:     Additional sense: Scsi parity error
-Feb 27 18:31:11 images1 kernel: end_request: I/O error, dev sda, sector
-336390767
-Feb 27 18:31:11 images1 kernel: ATA: abnormal status 0xD0 on port 0x9F7
-Feb 27 18:31:11 images1 last message repeated 2 times
-Feb 27 18:31:41 images1 kernel: ata1: command 0x25 timeout, stat 0xd0
-host_stat 0x21
-Feb 27 18:31:41 images1 kernel: ata1: translated ATA stat/err 0xd0/00 to
-SCSI SK/ASC/ASCQ 0xb/47/00
-Feb 27 18:31:41 images1 kernel: ata1: status=0xd0 { Busy }
-Feb 27 18:31:41 images1 kernel: sd 0:0:0:0: SCSI error: return code =
-0x8000002
-Feb 27 18:31:41 images1 kernel: sda: Current: sense key: Aborted Command
-Feb 27 18:31:41 images1 kernel:     Additional sense: Scsi parity error
-Feb 27 18:31:41 images1 kernel: end_request: I/O error, dev sda, sector
-336390775
-Feb 27 18:31:41 images1 kernel: ATA: abnormal status 0xD0 on port 0x9F7
-Feb 27 18:31:41 images1 last message repeated 2 times
-Feb 27 18:32:11 images1 kernel: ata1: command 0x25 timeout, stat 0xd0
-host_stat 0x21
-Feb 27 18:32:11 images1 kernel: ata1: translated ATA stat/err 0xd0/00 to
-SCSI SK/ASC/ASCQ 0xb/47/00
-Feb 27 18:32:11 images1 kernel: ata1: status=0xd0 { Busy }
-Feb 27 18:32:11 images1 kernel: sd 0:0:0:0: SCSI error: return code =
-0x8000002
-Feb 27 18:32:11 images1 kernel: sda: Current: sense key: Aborted Command
-Feb 27 18:32:11 images1 kernel:     Additional sense: Scsi parity error
-Feb 27 18:32:11 images1 kernel: end_request: I/O error, dev sda, sector
-336390783
-Feb 27 18:32:11 images1 kernel: ATA: abnormal status 0xD0 on port 0x9F7
-Feb 27 18:32:11 images1 last message repeated 2 times
-Feb 27 18:32:41 images1 kernel: ata1: command 0x25 timeout, stat 0xd0
-host_stat 0x21
-Feb 27 18:32:41 images1 kernel: ata1: translated ATA stat/err 0xd0/00 to
-SCSI SK/ASC/ASCQ 0xb/47/00
-Feb 27 18:32:41 images1 kernel: ata1: status=0xd0 { Busy }
-Feb 27 18:32:41 images1 kernel: sd 0:0:0:0: SCSI error: return code =
-0x8000002
-Feb 27 18:32:41 images1 kernel: sda: Current: sense key: Aborted Command
-Feb 27 18:32:41 images1 kernel:     Additional sense: Scsi parity error
-Feb 27 18:32:41 images1 kernel: end_request: I/O error, dev sda, sector
-336390791
-Feb 27 18:32:41 images1 kernel: ATA: abnormal status 0xD0 on port 0x9F7
-Feb 27 18:32:41 images1 last message repeated 2 times
-Feb 27 18:32:44 images1 su(pam_unix)[4620]: session closed for user root
-Feb 27 18:32:45 images1 remote(pam_unix)[4594]: session closed for user kyle
-Feb 27 18:33:11 images1 kernel: ata1: command 0x25 timeout, stat 0xd0
-host_stat 0x21
-Feb 27 18:33:11 images1 kernel: ata1: translated ATA stat/err 0xd0/00 to
-SCSI SK/ASC/ASCQ 0xb/47/00
-Feb 27 18:33:11 images1 kernel: ata1: status=0xd0 { Busy }
-Feb 27 18:33:11 images1 kernel: sd 0:0:0:0: SCSI error: return code =
-0x8000002
-Feb 27 18:33:11 images1 kernel: sda: Current: sense key: Aborted Command
-Feb 27 18:33:11 images1 kernel:     Additional sense: Scsi parity error
-Feb 27 18:33:11 images1 kernel: end_request: I/O error, dev sda, sector
-336390799
-Feb 27 18:33:11 images1 kernel: ATA: abnormal status 0xD0 on port 0x9F7
-Feb 27 18:33:11 images1 last message repeated 2 times
-Feb 27 18:33:41 images1 kernel: ata1: command 0x25 timeout, stat 0xd0
-host_stat 0x21
-Feb 27 18:33:41 images1 kernel: ata1: translated ATA stat/err 0xd0/00 to
-SCSI SK/ASC/ASCQ 0xb/47/00
-Feb 27 18:33:41 images1 kernel: ata1: status=0xd0 { Busy }
-Feb 27 18:33:41 images1 kernel: sd 0:0:0:0: SCSI error: return code =
-0x8000002
-Feb 27 18:33:41 images1 kernel: sda: Current: sense key: Aborted Command
-Feb 27 18:33:41 images1 kernel:     Additional sense: Scsi parity error
-Feb 27 18:33:41 images1 kernel: end_request: I/O error, dev sda, sector
-336390807
-Feb 27 18:33:41 images1 kernel: ATA: abnormal status 0xD0 on port 0x9F7
-Feb 27 18:33:41 images1 last message repeated 2 times
-Feb 27 18:34:11 images1 kernel: ata1: command 0x25 timeout, stat 0xd0
-host_stat 0x21
-Feb 27 18:34:11 images1 kernel: ata1: translated ATA stat/err 0xd0/00 to
-SCSI SK/ASC/ASCQ 0xb/47/00
-Feb 27 18:34:11 images1 kernel: ata1: status=0xd0 { Busy }
-Feb 27 18:34:11 images1 kernel: sd 0:0:0:0: SCSI error: return code =
-0x8000002
-Feb 27 18:34:11 images1 kernel: sda: Current: sense key: Aborted Command
-Feb 27 18:34:11 images1 kernel:     Additional sense: Scsi parity error
-Feb 27 18:34:11 images1 kernel: end_request: I/O error, dev sda, sector
-336390815
-Feb 27 18:34:11 images1 kernel: ATA: abnormal status 0xD0 on port 0x9F7
-Feb 27 18:34:11 images1 last message repeated 2 times
-Feb 27 18:34:41 images1 kernel: ata1: command 0x25 timeout, stat 0xd0
-host_stat 0x21
-Feb 27 18:34:41 images1 kernel: ata1: translated ATA stat/err 0xd0/00 to
-SCSI SK/ASC/ASCQ 0xb/47/00
-Feb 27 18:34:41 images1 kernel: ata1: status=0xd0 { Busy }
-Feb 27 18:34:41 images1 kernel: sd 0:0:0:0: SCSI error: return code =
-0x8000002
-Feb 27 18:34:41 images1 kernel: sda: Current: sense key: Aborted Command
-Feb 27 18:34:41 images1 kernel:     Additional sense: Scsi parity error
-Feb 27 18:34:41 images1 kernel: end_request: I/O error, dev sda, sector
-336390823
-Feb 27 18:34:41 images1 kernel: ATA: abnormal status 0xD0 on port 0x9F7
-Feb 27 18:34:41 images1 last message repeated 2 times
-Feb 27 18:35:11 images1 kernel: ata1: command 0x25 timeout, stat 0xd0
-host_stat 0x21
-Feb 27 18:35:11 images1 kernel: ata1: translated ATA stat/err 0xd0/00 to
-SCSI SK/ASC/ASCQ 0xb/47/00
-Feb 27 18:35:11 images1 kernel: ata1: status=0xd0 { Busy }
-Feb 27 18:35:11 images1 kernel: sd 0:0:0:0: SCSI error: return code =
-0x8000002
-Feb 27 18:35:11 images1 kernel: sda: Current: sense key: Aborted Command
-Feb 27 18:35:11 images1 kernel:     Additional sense: Scsi parity error
-Feb 27 18:35:11 images1 kernel: end_request: I/O error, dev sda, sector
-336390831
-Feb 27 18:35:11 images1 kernel: ATA: abnormal status 0xD0 on port 0x9F7
-Feb 27 18:35:11 images1 last message repeated 2 times
-Feb 27 18:35:41 images1 kernel: ata1: command 0x25 timeout, stat 0xd0
-host_stat 0x21
-Feb 27 18:35:41 images1 kernel: ata1: translated ATA stat/err 0xd0/00 to
-SCSI SK/ASC/ASCQ 0xb/47/00
-Feb 27 18:35:41 images1 kernel: ata1: status=0xd0 { Busy }
-Feb 27 18:35:41 images1 kernel: sd 0:0:0:0: SCSI error: return code =
-0x8000002
-Feb 27 18:35:41 images1 kernel: sda: Current: sense key: Aborted Command
-Feb 27 18:35:41 images1 kernel:     Additional sense: Scsi parity error
-Feb 27 18:35:41 images1 kernel: end_request: I/O error, dev sda, sector
-336390839
-Feb 27 18:35:41 images1 kernel: ATA: abnormal status 0xD0 on port 0x9F7
-Feb 27 18:35:41 images1 last message repeated 2 times
-Feb 27 18:36:11 images1 kernel: ata1: command 0x25 timeout, stat 0xd0
-host_stat 0x21
-Feb 27 18:36:11 images1 kernel: ata1: translated ATA stat/err 0xd0/00 to
-SCSI SK/ASC/ASCQ 0xb/47/00
-Feb 27 18:36:11 images1 kernel: ata1: status=0xd0 { Busy }
-Feb 27 18:36:11 images1 kernel: sd 0:0:0:0: SCSI error: return code =
-0x8000002
-Feb 27 18:36:11 images1 kernel: sda: Current: sense key: Aborted Command
-Feb 27 18:36:11 images1 kernel:     Additional sense: Scsi parity error
-Feb 27 18:36:11 images1 kernel: end_request: I/O error, dev sda, sector
-336390847
-Feb 27 18:36:11 images1 kernel: ATA: abnormal status 0xD0 on port 0x9F7
-Feb 27 18:36:11 images1 last message repeated 2 times
-..........................
-..........................
-..........................
-Feb 27 19:46:12 images1 kernel: ata1: command 0x25 timeout, stat 0xd0
-host_stat 0x21
-Feb 27 19:46:12 images1 kernel: ata1: translated ATA stat/err 0xd0/00 to
-SCSI SK/ASC/ASCQ 0xb/47/00
-Feb 27 19:46:12 images1 kernel: ata1: status=0xd0 { Busy }
-Feb 27 19:46:12 images1 kernel: sd 0:0:0:0: SCSI error: return code =
-0x8000002
-Feb 27 19:46:12 images1 kernel: sda: Current: sense key: Aborted Command
-Feb 27 19:46:12 images1 kernel:     Additional sense: Scsi parity error
-Feb 27 19:46:12 images1 kernel: end_request: I/O error, dev sda, sector
-336391695
-Feb 27 19:46:12 images1 kernel: ATA: abnormal status 0xD0 on port 0x9F7
-Feb 27 19:46:12 images1 last message repeated 2 times
-Feb 27 19:46:14 images1 shutdown: shutting down for system reboot
-Feb 27 19:46:40 images1 login(pam_unix)[5137]: session opened for user root
-by (uid=0)
-Feb 27 19:46:41 images1  -- root[5137]: ROOT LOGIN ON tty3
-Feb 27 19:46:42 images1 kernel: ata1: command 0x25 timeout, stat 0xd0
-host_stat 0x21
-Feb 27 19:46:42 images1 kernel: ata1: translated ATA stat/err 0xd0/00 to
-SCSI SK/ASC/ASCQ 0xb/47/00
-Feb 27 19:46:42 images1 kernel: ata1: status=0xd0 { Busy }
-Feb 27 19:46:42 images1 kernel: sd 0:0:0:0: SCSI error: return code =
-0x8000002
-Feb 27 19:46:42 images1 kernel: sda: Current: sense key: Aborted Command
-Feb 27 19:46:42 images1 kernel:     Additional sense: Scsi parity error
-Feb 27 19:46:42 images1 kernel: end_request: I/O error, dev sda, sector
-336391703
-Feb 27 19:46:42 images1 kernel: ATA: abnormal status 0xD0 on port 0x9F7
-.....................................
-Cannot shutdown, power off.
+And I have stuck in the step when setting up the disc B of the array and 
+ready to boot from a reduced raid-1, after modifying the FSTAB and SILO.CONF 
+files, all I can get is KERNEL PANIC
 
-Thanks a lot,
-Kyle
+I have already compile the RAID-1 directly in the kernel, it seems to be 
+correctly configured.
 
+It seems to me that I have to put a boot point in the disk B, someone 
+suggested me to use mkinitrd, but after reading the man pages for this 
+command I can't be able to figure out how to do that.
+
+my fdisk -l are the followings:
+
+DISK A
+
+debian:/etc/mkinitrd# fdisk -l /dev/sda
+
+Disco /dev/sda (etiqueta de disco Sun): 64 cabezas, 32 sectores, 34732 
+cilindros
+Unidades = cilindros de 2048 * 512 bytes
+
+Disposit. Indic.  Principio   Fin    Bloques  Id  Sistema
+/dev/sda1             0      9537   9765888    1  Inicio
+/dev/sda2          9537     13352   3906560   82  Linux swap
+/dev/sda3             0     34732  35565568    5  Disco completo
+/dev/sda4         13352     18216   4980736   83  Linux native
+/dev/sda5         18216     23080   4980736   83  Linux native
+/dev/sda6         23080     34732  11931648   83  Linux native
+debian:/etc/mkinitrd# 
+
+
+DISK B
+
+debian:/etc/mkinitrd# fdisk -l /dev/sdm
+
+Disco /dev/sdm (etiqueta de disco Sun): 64 cabezas, 32 sectores, 34730 
+cilindros
+Unidades = cilindros de 2048 * 512 bytes
+
+Disposit. Indic.  Principio   Fin    Bloques  Id  Sistema
+/dev/sdm1             0      9537   9765888   fd  Linux raid autodetect
+/dev/sdm2          9537     13352   3906560   82  Linux swap
+/dev/sdm3             0     34730  35563520    5  Disco completo
+/dev/sdm4         13352     18216   4980736   fd  Linux raid autodetect
+/dev/sdm5         18216     23080   4980736   fd  Linux raid autodetect
+/dev/sdm6         23080     34730  11929600   fd  Linux raid autodetect
+debian:/etc/mkinitrd# 
+
+
+The /dev/sda if the first HDD of the A1000 and the /dev/sdm is the first 
+internal HDD
+
+the /dev/sdm have already a 'cp' of the /dev/sda
+
+Must I use /dev/sda and /dev/sdb to have this working?
+Any plans to make work correctly seting up RAID from installation in Sparc?
+Can I have more that one disk with boot-able partition? if so, I haven't got 
+any clues on how to do that.
+
+The rest of the disks in the BOX are for configuring the raid-(5 or 6)
+
+Please, any suggestion will be greatly appreciated, whatever crazy idea 
+would be good.
+
+Thanks in Advance.
+
+Enrique
+
+--
+UAdeC
+En el Bien fincamos el Saber
+Open WebMail Project (http://openwebmail.org)
 
