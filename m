@@ -1,77 +1,71 @@
-From: Sandro Dentella <sandro@e-den.it>
-Subject: when --add after a fail?
-Date: Wed, 1 Mar 2006 10:18:57 +0100
-Message-ID: <20060301091857.GA8817@casa.e-den.it>
+From: Luca Berra <bluca@comedia.it>
+Subject: Re: raid5 wont restart after disk failure, then corrupts
+Date: Wed, 1 Mar 2006 12:37:34 +0100
+Message-ID: <20060301113734.GA32059@percy.comedia.it>
+References: <20060228220811.GA32469@cjx.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
+In-Reply-To: <20060228220811.GA32469@cjx.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux Raid List <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi all,
+On Tue, Feb 28, 2006 at 10:08:11PM +0000, Chris Allen wrote:
+>
+>Yesterday morning we had an io error on /dev/sdd1:
+>
+>Feb 27 10:08:57 snap25 kernel: SCSI error : <0 0 3 0> return code = 0x10000
+>Feb 27 10:08:57 snap25 kernel: end_request: I/O error, dev sdd, sector 50504271
+>Feb 27 10:08:57 snap25 kernel: raid5: Disk failure on sdd1, disabling device. Operation continuing on 7 devices
+>
+>So, I shutdown the system and replaced drive sdd with a new one. 
+>When I powered up again, all was not well. The array wouldn't start:
+>
+>Feb 27 13:36:02 snap25 kernel: md: md0: raid array is not clean -- starting background reconstruction
+....
+>Feb 27 13:36:02 snap25 kernel: raid5: cannot start dirty degraded array for md0
 
-   i've been using raid1 sisnce quite a loto of time. Sporadiccaly an array
-   fails a disk and in many situations I can just pull the device into the
-   array with
+something happened whan you shut down the system and the superblock on
+the drives was not updated
 
-      mdadm /dev/mdN --add failded_device
+>I tried assembling the array with --force, but this would produce exactly the
+>same results as above - the array would refuse to start.
+>
+>QUESTION: What should I have done here? Each time I have tried this in the past, I
+recreate the array with a missing drive in place of sdd.
+mount your fs readonly (as ext2 in case it was ext3) and verify that all
+data is readable.
 
-   I've never really understood what is the magic that resurrexes it. I
-   thought something related to relocation of bad blocks, but I'm  not at
-   all aware of what happens "there"...
+>have had no problems restarting the array and adding the new disk. What had gone
+>wrong, and why wouldn't the array start?
+something happened whan you shut down the system and the superblock on
+the drives was not updated
 
-   Is that a correct trial to do?
+>Then things went from bad to worse.
+>
+>
+>===========================================
+>PROBLEM 2 - DATA CORRUPTION
+>===========================================
+>
+>
+>1. Any idea what had happened here? Why didn't it notice that sdd1 was stale? 
+something happened whan you shut down the system and the superblock on
+the drives was not updated
+>
+>2. If I had let it complete its resync would it have sorted out the corruption? 
+no
+>Or would it have made things worse?
+possibly yes
 
-   Now I have a device that throuws an error:
-
-srv-ornago:/tmp# mdadm /dev/md2 --add /dev/hdc6 
-mdadm: hot add failed for /dev/hdc6: Invalid argument
-
-the kernel complains:
-Mar  1 09:34:29 srv-ornago kernel: md: could not bd_claim hdc6.
-Mar  1 09:34:29 srv-ornago kernel: md: error, md_import_device() returned -16
-
-   is this enought to say the disk (pretty new, 6 months) is to be changed?
-   which checks should I do.
-
-Thanks in advance
-sandro
-*:-)
-
-
-srv-ornago:/tmp# mdadm  --detail /dev/md2
-/dev/md2:
-        Version : 00.90.01
-  Creation Time : Mon Apr 29 02:29:18 2002
-     Raid Level : raid1
-     Array Size : 5116544 (4.88 GiB 5.24 GB)
-    Device Size : 5116544 (4.88 GiB 5.24 GB)
-   Raid Devices : 2
-  Total Devices : 2
-Preferred Minor : 2
-    Persistence : Superblock is persistent
-
-    Update Time : Wed Mar  1 10:18:15 2006
-          State : clean, degraded
- Active Devices : 1
-Working Devices : 1
- Failed Devices : 1
-  Spare Devices : 0
-
-           UUID : c203673d:0444f961:50e95acb:fb5b89ba
-         Events : 0.1392171
-
-    Number   Major   Minor   RaidDevice State
-       0       3        6        0      active sync   /dev/.static/dev/ide/host0/bus0/target0/lun0/part6
-       1       0        0        -      removed
-
-       2      22        6        -      faulty   /dev/.static/dev/ide/host0/bus1/target0/lun0/part6
-
-   
+L.
 
 -- 
-Sandro Dentella  *:-)
-e-mail: sandro@e-den.it 
-http://www.tksql.org                    TkSQL Home page - My GPL work
+Luca Berra -- bluca@comedia.it
+        Communication Media & Services S.r.l.
+ /"\
+ \ /     ASCII RIBBON CAMPAIGN
+  X        AGAINST HTML MAIL
+ / \
