@@ -1,17 +1,21 @@
-From: "Angel" <Angel@comcast.net>
-Subject: Great raets today.
-Date: Tue, 28 Feb 2006 21:30:56 -0500
-Message-ID: <200603010030.k210UTtU013704@zeus1.kernel.org>
+From: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
+Subject: NCQ general question
+Date: Wed, 1 Mar 2006 09:04:11 +0200
+Message-ID: <5d96567b0602282304o558fb564jd72784bafdd289f5@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
+To: Linux RAID Mailing List <linux-raid@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 List-Id: linux-raid.ids
 
-We've attempted to contact you to discuss your home. Your current laon has been pre aproved for a lwoer rtae.
-Laon Qaulifies for up to 3.4% or a more lwoer raet.
-Vsiit here to confirm your information within 24 hours.
-http://www.df7j.net/real
+i am thinking of buying a promise card sataII pcix.
+they have two types, a card which support NCQ
+and another that does not.
+What is the bennifit of buying  a card with NCQ tagging ?
 
-
+i would be thankfull for any answer .
+thank you.
+raz.
