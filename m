@@ -1,40 +1,50 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: NCQ general question
-Date: Wed, 01 Mar 2006 11:20:26 -0500
-Message-ID: <4405C9CA.9020500@pobox.com>
-References: <5d96567b0602282304o558fb564jd72784bafdd289f5@mail.gmail.com> <440561CB.30201@yahoo.de> <4405A656.1030602@rtr.ca> <4405C41F.5060504@yahoo.de> <20060301160554.GD4816@suse.de>
+From: Mike Hardy <mhardy@h3c.com>
+Subject: Re: No syncing after crash. Is this a software raid bug?
+Date: Wed, 01 Mar 2006 08:24:58 -0800
+Message-ID: <4405CADA.3070204@h3c.com>
+References: <20060301124432.GA3591@hactar.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20060301160554.GD4816@suse.de>
+In-Reply-To: <20060301124432.GA3591@hactar.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: Gentoopower <gentoopower@yahoo.de>, Mark Lord <liml@rtr.ca>, "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>, Linux RAID Mailing List <linux-raid@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Jens Axboe wrote:
-> On Wed, Mar 01 2006, Gentoopower wrote:
->>P.S. Just waiting to see NCQ support for my nforce system in libata:-)
+
+Why would you not be happy? resyncs in general are bad since they
+indicate your data is possibly out-of-sync and the resync itself
+consumes an enormous amount of resources
+
+This is a feature of new-ish md driver code that more aggressively marks
+the array as "clean" after writes
+
+The end result is that the array will most likely be "clean" in all
+circumstances even a crash, and you simply won't need to resync
+
+That's a good thing!
+
+-Mike
+
+Kasper Dupont wrote:
+> I have a FC4 installation (upgraded from FC3) using kernel
+> version 2.6.15-1.1831_FC4. I see some symptoms in the software
+> raid, which I'm not quite happy about.
 > 
+> After an unclean shutdown caused by a crash or power failure,
+> it does not resync the md devices. I have tried comparing the
+> contents of the two mirrors for each of the md devices. And I
+> found that on the swap device, there were differences.
 > 
-> Don't hold your breath, it's unlikely to get supported as nvidia wont
-> open the specs. ahci is a really really nice controller, if you want ncq
-> I suggest going with that. sil is probably the next in line for ncq
-> support.
-
-
-Actually.....
-
-* Old-nvidia is ADMA, and I have docs under NDA
-
-* nvidia themselves say they are uninterested in NCQ support for their 
-older ADMA controllers, though they don't mind if I implement it
-
-* New-nvidia is AHCI, and thus will support NCQ when AHCI does
-
-* slight correction to the above:  sil24 will do NCQ, I don't think sil does
-
-	Jeff
-
-
+> Isn't this a bug in the software raid? Shouldn't it always
+> resync after reboot, if there could possibly be any difference
+> between the contents on the two disks?
+> 
+> I know that as long as only swap is affected, it is not going
+> to cause data loss. But how can I be sure it is not going to
+> happen on file systems as well?
+> 
+> Should I report this as a bug in Fedora Core or did I miss
+> something?
+> 
