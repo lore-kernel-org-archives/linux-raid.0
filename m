@@ -1,42 +1,77 @@
-From: Gentoopower <gentoopower@yahoo.de>
-Subject: Re: NCQ general question
-Date: Wed, 01 Mar 2006 09:56:43 +0100
-Message-ID: <440561CB.30201@yahoo.de>
-References: <5d96567b0602282304o558fb564jd72784bafdd289f5@mail.gmail.com>
+From: Sandro Dentella <sandro@e-den.it>
+Subject: when --add after a fail?
+Date: Wed, 1 Mar 2006 10:18:57 +0100
+Message-ID: <20060301091857.GA8817@casa.e-den.it>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <5d96567b0602282304o558fb564jd72784bafdd289f5@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
-Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-raid-owner@vger.kernel.org
+To: Linux Raid List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Raz Ben-Jehuda(caro) wrote:
-> i am thinking of buying a promise card sataII pcix.
-> they have two types, a card which support NCQ
-> and another that does not.
-> What is the bennifit of buying  a card with NCQ tagging ?
->   
-How about: http://en.wikipedia.org/wiki/Native_command_queueing
-> i would be thankfull for any answer .
-> thank you.
-> raz.
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->
->   
+Hi all,
+
+   i've been using raid1 sisnce quite a loto of time. Sporadiccaly an array
+   fails a disk and in many situations I can just pull the device into the
+   array with
+
+      mdadm /dev/mdN --add failded_device
+
+   I've never really understood what is the magic that resurrexes it. I
+   thought something related to relocation of bad blocks, but I'm  not at
+   all aware of what happens "there"...
+
+   Is that a correct trial to do?
+
+   Now I have a device that throuws an error:
+
+srv-ornago:/tmp# mdadm /dev/md2 --add /dev/hdc6 
+mdadm: hot add failed for /dev/hdc6: Invalid argument
+
+the kernel complains:
+Mar  1 09:34:29 srv-ornago kernel: md: could not bd_claim hdc6.
+Mar  1 09:34:29 srv-ornago kernel: md: error, md_import_device() returned -16
+
+   is this enought to say the disk (pretty new, 6 months) is to be changed?
+   which checks should I do.
+
+Thanks in advance
+sandro
+*:-)
 
 
+srv-ornago:/tmp# mdadm  --detail /dev/md2
+/dev/md2:
+        Version : 00.90.01
+  Creation Time : Mon Apr 29 02:29:18 2002
+     Raid Level : raid1
+     Array Size : 5116544 (4.88 GiB 5.24 GB)
+    Device Size : 5116544 (4.88 GiB 5.24 GB)
+   Raid Devices : 2
+  Total Devices : 2
+Preferred Minor : 2
+    Persistence : Superblock is persistent
 
-	
+    Update Time : Wed Mar  1 10:18:15 2006
+          State : clean, degraded
+ Active Devices : 1
+Working Devices : 1
+ Failed Devices : 1
+  Spare Devices : 0
 
-	
-		
-___________________________________________________________ 
-Telefonate ohne weitere Kosten vom PC zum PC: http://messenger.yahoo.de
+           UUID : c203673d:0444f961:50e95acb:fb5b89ba
+         Events : 0.1392171
 
+    Number   Major   Minor   RaidDevice State
+       0       3        6        0      active sync   /dev/.static/dev/ide/host0/bus0/target0/lun0/part6
+       1       0        0        -      removed
+
+       2      22        6        -      faulty   /dev/.static/dev/ide/host0/bus1/target0/lun0/part6
+
+   
+
+-- 
+Sandro Dentella  *:-)
+e-mail: sandro@e-den.it 
+http://www.tksql.org                    TkSQL Home page - My GPL work
