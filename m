@@ -1,55 +1,65 @@
-From: Kasper Dupont
-	<48755289462761382922@expires.02.sep.2006.kasperd.net>
-Subject: Re: No syncing after crash. Is this a software raid bug?
-Date: Wed, 1 Mar 2006 22:56:43 +0100
-Message-ID: <20060301215641.GA27042@hactar.lan>
-References: <20060301124432.GA3591@hactar.lan>
-Reply-To: linux-raid@vger.kernel.org,
-	  48755289462761382922@expires.02.sep.2006.kasperd.net
+From: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
+Subject: Re: NCQ general question
+Date: Thu, 2 Mar 2006 10:14:53 +0200
+Message-ID: <5d96567b0603020014p62d73dc3uc3e67c300110f373@mail.gmail.com>
+References: <5d96567b0602282304o558fb564jd72784bafdd289f5@mail.gmail.com>
+	 <440561CB.30201@yahoo.de> <4405A656.1030602@rtr.ca>
+	 <4405C41F.5060504@yahoo.de> <20060301160554.GD4816@suse.de>
+	 <4405C9CA.9020500@pobox.com> <20060301185312.GI4816@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20060301185312.GI4816@suse.de>
 Content-Disposition: inline
-In-Reply-To: <20060301124432.GA3591@hactar.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Jens Axboe <axboe@suse.de>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Gentoopower <gentoopower@yahoo.de>, Mark Lord <liml@rtr.ca>, Linux RAID Mailing List <linux-raid@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 List-Id: linux-raid.ids
 
-> Why would you not be happy? resyncs in general are bad since they
-> indicate your data is possibly out-of-sync and the resync itself
-> consumes an enormous amount of resources
+i can see the NCQ realy bother people.
 
-Of course reducing the amount of resources spend on syncing is
-a good thing. But it shouldn't be done at the expense of less
-reliability.
+i am using a promise card sata TX4 150.
+does any of you has a patch for the driver
+so it would support NCQ ?
 
-> This is a feature of new-ish md driver code that more aggressively ma=
-rks
-> the array as "clean" after writes
+On 3/1/06, Jens Axboe <axboe@suse.de> wrote:
+> On Wed, Mar 01 2006, Jeff Garzik wrote:
+> > Jens Axboe wrote:
+> > >On Wed, Mar 01 2006, Gentoopower wrote:
+> > >>P.S. Just waiting to see NCQ support for my nforce system in libata:-)
+> > >
+> > >
+> > >Don't hold your breath, it's unlikely to get supported as nvidia wont
+> > >open the specs. ahci is a really really nice controller, if you want ncq
+> > >I suggest going with that. sil is probably the next in line for ncq
+> > >support.
+> >
+> >
+> > Actually.....
+> >
+> > * Old-nvidia is ADMA, and I have docs under NDA
+> >
+> > * nvidia themselves say they are uninterested in NCQ support for their
+> > older ADMA controllers, though they don't mind if I implement it
+>
+> So it's up to you if it'll happen or not. I'm sure people would
+> appreciate nforce NCQ support :-)
+>
+> > * New-nvidia is AHCI, and thus will support NCQ when AHCI does
+>
+> Great! The sane choice, for both producer and consumer.
+>
+> > * slight correction to the above:  sil24 will do NCQ, I don't think sil does
+>
+> Ok, it was more of an umbrella sil label, I haven't looked into specific
+> models.
+>
+> --
+> Jens Axboe
+>
+>
 
-A bit too aggressive it seems. How can it end up being marked
-clean when the two mirrors differ?
 
-> The end result is that the array will most likely be "clean" in all
-> circumstances even a crash, and you simply won't need to resync
-
-Shouldn't it be unclean while an update is in progress? And if
-it is how come I have been completely unable to trigger a resync
-even when it was reset while disks were busy writing?
-
-Here is the program I have used to verify if the two mirrors are
-in sync: http://kasperd.net/~kasperd/raidtest.c
-This program find that there is a difference between the two
-mirrors.
-
---=20
-Kasper Dupont -- Rigtige m=E6nd skriver deres egne backupprogrammer
-#define _(_)"d.%.4s%."_"2s" /* This is my new email address */
-char*_=3D"@2kaspner"_()"%03"_("4s%.")"t\n";printf(_+11,_+6,_,6,_+2,_+7,=
-_+6);
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--
+Raz
