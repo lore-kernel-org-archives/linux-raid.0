@@ -1,24 +1,42 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: NCQ general question
-Date: Thu, 02 Mar 2006 08:37:59 -0500
-Message-ID: <4406F537.1070605@pobox.com>
-References: <5d96567b0602282304o558fb564jd72784bafdd289f5@mail.gmail.com>	 <440561CB.30201@yahoo.de> <4405A656.1030602@rtr.ca>	 <4405C41F.5060504@yahoo.de> <20060301160554.GD4816@suse.de>	 <4405C9CA.9020500@pobox.com> <20060301185312.GI4816@suse.de>	 <5d96567b0603020014p62d73dc3uc3e67c300110f373@mail.gmail.com>	 <20060302081834.GY4816@suse.de> <4406D4E0.3010800@pobox.com> <5d96567b0603020534l3fa2f0f5m6b513e4ca3fe8de@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <5d96567b0603020534l3fa2f0f5m6b513e4ca3fe8de@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
-Cc: Jens Axboe <axboe@suse.de>, Gentoopower <gentoopower@yahoo.de>, Mark Lord <liml@rtr.ca>, Linux RAID Mailing List <linux-raid@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+From: Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE>
+Subject: Re: No syncing after crash. Is this a software raid bug?
+Date: Thu, 2 Mar 2006 14:48:25 +0100
+Message-ID: <du6t39$be5$1@sea.gmane.org>
+References: <20060301124432.GA3591@hactar.lan> <20060301215641.GA27042@hactar.lan>
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Raz Ben-Jehuda(caro) wrote:
-> Thank you Mr Garzik.
-> Is there a list of all drivers and there features they give ?
+Kasper Dupont <48755289462761382922@expires.02.sep.2006.kasperd.net> wrote:
+> A bit too aggressive it seems. How can it end up being marked
+> clean when the two mirrors differ?
 
-Yes: http://linux-ata.org/sata-status.html
+Do you have write-cache enabled on the mirrors?
 
-	Jeff
+Sometimes I have differences between RAID1 mirrors in 2.4, too. Even with
+clean shutdown or reboot sequences. However, in my case, it turns out
+that this always affects areas which are "free" on the filesystem layer.
+This assumption is especially feeded by
+a) the fact that the content of at least one of these differing areas is
+typically zeroed and
+b) that I have md5sums of all my files which don't show up any
+differences when I either copy the non-zero content over the zeros or the
+other way around.
+Especially I have never experienced such "normal" differences on my swap
+RAID1 mirrors. Until now I thought this would have to do with kernel 2.4
+and block-device-specific dirty-page-flushing and missing write-barriers
+and things like that which lead to blocks used for a short time only get
+flushed to the one mirror but not to the other (and then, since they are
+freed again, the flush to the other mirror will never happen, since the
+associated pages are just not dirty anymore).
+However, I thought - at least until now ;) - this would change with 2.6,
+since there md has more control over the block-devices it uses.
 
+
+regards
+   Mario
+-- 
+The question of whether a computer can think is no more interesting than
+the question of whether a submarine can swim.          -- E. W. Dijkstra
 
