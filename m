@@ -1,78 +1,102 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: NCQ general question
-Date: Fri, 03 Mar 2006 17:19:05 -0500
-Message-ID: <4408C0D9.4010202@garzik.org>
-References: <5d96567b0602282304o558fb564jd72784bafdd289f5@mail.gmail.com> <440561CB.30201@yahoo.de> <4405A656.1030602@rtr.ca> <20060301135547.GV4816@suse.de> <C6838977-5411-400F-9548-2F22598DC2AE@egenera.com>
+From: Heinz Mauelshagen <mauelshagen@redhat.com>
+Subject: Re: No syncing after crash. Is this a software raid bug?
+Date: Fri, 3 Mar 2006 23:26:19 +0100
+Message-ID: <20060303222619.GB2976@redhat.com>
+References: <20060301124432.GA3591@hactar.lan> <20060301215641.GA27042@hactar.lan> <du6t39$be5$1@sea.gmane.org> <20060303133952.GA2976@redhat.com> <du9ju5$6c5$1@sea.gmane.org>
+Reply-To: mauelshagen@redhat.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <C6838977-5411-400F-9548-2F22598DC2AE@egenera.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Steve Byan <smb@egenera.com>
-Cc: Jens Axboe <axboe@suse.de>, Mark Lord <liml@rtr.ca>, Gentoopower <gentoopower@yahoo.de>, "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>, Linux RAID Mailing List <linux-raid@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <du9ju5$6c5$1@sea.gmane.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Steve Byan wrote:
-> On Mar 1, 2006, at 8:55 AM, Jens Axboe wrote:
-> The problem with TCQ is that the host can't disconnect on writes  after 
-> sending the data to the drive but before receiving the status.  The host 
-> can only disconnect between sending the command and moving  the data. 
+On Fri, Mar 03, 2006 at 03:30:29PM +0100, Mario 'BitKoenig' Holbe wrote:
+> Heinz Mauelshagen <mauelshagen@redhat.com> wrote:
+> > The fact that mirrors in a RAID1 set partially differ even on propper
+> > shutdown is caused by the ability to change dirty pages *while* they
+> > are being accessed (ie. by a mirroring driver).
+> 
+> That's quite the scenario what I thought about, but more clear now,
+> thanks.
+> But when a dirty page is modified while it's being accessed, it stays
+> dirty and gets cleaned (i.e. written to disk) later again, right?
 
-That, but also:  The standard PCI IDE hardware interface prevents the 
-device from selecting command $N's DMA data out of $M active write commands.
+Well, cleaing a dirty page isn't a 1:1 action with respect to writing.
+A mirroring driver (eg. the MD raid1 personality), will access the dirty
+page multiple times to store the data on multiple mirrors before the dirty
+flag will be cleared during endio processing.
 
-With reads, the device has more freedom to process the requests 
-asynchronously.
+> This
+> would imply that the mirrors should always be equal after a clean
+> shutdown, which in fact is not true.
 
+Think roughly:
 
-> Consequently TCQ is useless for writes, which is where you  really need 
+o page gets dirtied
+o page gets handed to mirroring driver
+o mirroring driver initiates writes to all mirrors
+o write gets through to first mirror
+o page content gets changed
+o second write gets through to other mirror
 
-Agreed.
+> 
+> > Mind you that this is a block level inconsistency only, because the
+> ...
+> > An example for a filesystem causing this is a file write followed
+> > by a file truncation.
+> 
+> Yes, this is also quite similar to the scenario what I thought about -
+> especially it suggests that this case happens only on "free" space.
+> 
+> However, Kaspers case is a bit different, since it involves swap space,
+> which leads to the suspicion that there are cases where mirror
+> differences could occur also on "non-free" space (although there is
+> of course also something like "free" space on swap and one had to
+> analyze if it's such space that is affected, which most likely isn't
+> the simplest thing at all :)). While swap is probably quite robust
+> against such a scenario, since it's not valid after a reboot anymore,
 
+Yes. This is a don't care.
 
-> it. It works OK for reads. TCQ was really invented as a  way to allow 
-> CD-ROM drives to play nice on the same ATA bus as disks.
+> I could imagine other cases (i.e. database raw devices) where subsequent
+> reads lead to different data due to the different mirrors, isn't it?
 
-Disagree, you are probably thinking about bus disconnect associated with 
-the overlapped command set?  AFAIK TCQ has -never- applied to ATAPI.
+This is what I meant by well-behaved applications.
+The DBMS will write to such (eventually) inconsistent blocks
+*before* it'll read them back in hence removing the block-level inconsistency.
 
+> And couldn't this happen even on swap without reboot inbetween when a
+> page really needs to be read from disk?
 
-> The reason you need write queuing is for data integrity reasons, not  
-> for performance. ATA disks effectively get command-queuing on writes  
-> even without TCQ and NCQ - they simply park the data in a volatile  RAM 
-> cache, tell the host that the data is saved on persistent  storage, and 
-> then asynchronously write the queued data to the  physical media. The 
-> drive reorders those writes and will gather  sequential writes.
+It shouldn't, because page-ins will follow page-outs first.
+Meanwhile the transient page table(s) will contain the disk address(es)
+of the respective page(s).
 
-Data integrity -and- performance.  Performance increases for all the 
-standard reasons that an asynchronous pipeline increases performance 
-over a synchronous one.
+Heinz
 
-The write cache means that requests on the device can be processed 
-asynchronously, but without NCQ there is still a synchronous bottleneck: 
-  the device<->controller pipe.
+> 
+> 
+> regards
+>    Mario
+> -- 
+> File names are infinite in length where infinity is set to 255 characters.
+>                                 -- Peter Collinson, "The Unix File System"
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-> However, note that all filesystems that make even a pretense of  trying 
-> to maintain filesystem integrity after a power failure (note  that the 
-> Windows NT implementation of FAT32 does not attempt to  maintain 
-> filesystem integrity after a power failure) depend on  knowing when data 
-> makes it to persistent storage, so they can order  their writes 
-
-True.
-
-
-> correctly. ATA disk write caching breaks this guarantee.  To restore 
-> filesystem integrity on a careful-write filesystem like  most unix 
-> filesystems, you have to disable write-caching in the  drive. This 
-
-False, as Linux has proven:  barriers can be implemented with 
-flush-cache commands.
-
-Disabling write cache is not your only choice, and using flush-cache 
-gives you better performance than flat-out disabling the write cache.
-
-	Jeff
-
-
+Heinz Mauelshagen                                 Red Hat GmbH
+Consulting Development Engineer                   Am Sonnenhang 11
+Cluster and Storage Development                   56242 Marienrachdorf
+                                                  Germany
+Mauelshagen@RedHat.com                            +49 2626 141200
+                                                       FAX 924446
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
