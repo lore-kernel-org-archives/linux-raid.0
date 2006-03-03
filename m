@@ -1,64 +1,38 @@
-From: Kasper Dupont
-	<70006427576745453539@expires.04.sep.2006.kasperd.net>
+From: Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE>
 Subject: Re: No syncing after crash. Is this a software raid bug?
-Date: Fri, 3 Mar 2006 08:30:18 +0100
-Message-ID: <20060303073016.GA662@hactar.lan>
-References: <20060301124432.GA3591@hactar.lan> <20060301215641.GA27042@hactar.lan>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Date: Fri, 3 Mar 2006 13:03:24 +0100
+Message-ID: <du9bac$7h2$1@sea.gmane.org>
+References: <20060301124432.GA3591@hactar.lan> <20060301215641.GA27042@hactar.lan> <20060303073016.GA662@hactar.lan>
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20060301215641.GA27042@hactar.lan>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> Do you have write-cache enabled on the mirrors?
+Kasper Dupont <70006427576745453539@expires.04.sep.2006.kasperd.net> wrote:
+>> Do you have write-cache enabled on the mirrors?
+> How do I find out about that?
 
-How do I find out about that?
+for 2.4 (although I belive to remember that the reporting is broken
+there) and IDE:
+grep -i ^wcache /proc/ide/hd*/settings
 
-> Sometimes I have differences between RAID1 mirrors in 2.4, too.
+>> that this always affects areas which are "free" on the filesystem layer.
+> Does the raid layer have any way to know if they are free and
 
-I have not experienced this with 2.4. However the 2.4 and 2.6
-machines are not exactly the same hardware. But AFAIR they both
-use Promise controllers and Seagate disks.
+No, that's why I did put the free in quotes and did desribe how the
+"free" differs from "used" :)
 
-> Even with clean shutdown or reboot sequences.
+> So far I have only seen it happen on swap. I thought that might
+> be because that machine swaps a lot.
 
-Actually I think some of the differences on the swap device have
-happened on clean shutdowns.
+Well, if it swaps a lot, my assumption could lead to different mirrors
+in that case too - supposed my assumption is true at all :)
 
-> However, in my case, it turns out
-> that this always affects areas which are "free" on the filesystem lay=
-er.
 
-Does the raid layer have any way to know if they are free and
-treat them differently?
+regards
+   Mario
+-- 
+Tower: "Say fuelstate." Pilot: "Fuelstate."
+Tower: "Say again." Pilot: "Again."
+Tower: "Arghl, give me your fuel!" Pilot: "Sorry, need it by myself..."
 
-> that I have md5sums of all my files which don't show up any
-> differences when I either copy the non-zero content over the zeros or=
- the
-> other way around.
-
-OK. Then it may very well be free areas. (Or perhaps journal)
-
-> Especially I have never experienced such "normal" differences on my s=
-wap
-> RAID1 mirrors.
-
-So far I have only seen it happen on swap. I thought that might
-be because that machine swaps a lot.
-
-(A copy of any replies to my email address will be appreciated).
-
---=20
-Kasper Dupont -- Rigtige m=E6nd skriver deres egne backupprogrammer
-#define _(_)"d.%.4s%."_"2s" /* This is my new email address */
-char*_=3D"@2kaspner"_()"%03"_("4s%.")"t\n";printf(_+11,_+6,_,6,_+2,_+7,=
-_+6);
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
