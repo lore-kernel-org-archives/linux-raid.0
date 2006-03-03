@@ -1,80 +1,51 @@
-From: Heinz Mauelshagen <mauelshagen@redhat.com>
-Subject: Re: No syncing after crash. Is this a software raid bug?
-Date: Fri, 3 Mar 2006 14:39:52 +0100
-Message-ID: <20060303133952.GA2976@redhat.com>
-References: <20060301124432.GA3591@hactar.lan> <20060301215641.GA27042@hactar.lan> <du6t39$be5$1@sea.gmane.org>
-Reply-To: mauelshagen@redhat.com
+From: "Molle Bestefich" <molle.bestefich@gmail.com>
+Subject: Re: block level vs. file level
+Date: Fri, 3 Mar 2006 15:07:10 +0100
+Message-ID: <62b0912f0603030607n6927f168t489fc2d3fb9d3113@mail.gmail.com>
+References: <43EF8CFB.5080403@kfa.org> <20060212213157.GX32687@strugglers.net>
+	 <43EFDDF7.6090405@kfa.org>
+	 <62b0912f0602200853m72af5676y4f2dcd07fe358ef8@mail.gmail.com>
+	 <44013875.8080906@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <44013875.8080906@tmr.com>
 Content-Disposition: inline
-In-Reply-To: <du6t39$be5$1@sea.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE>
-Cc: linux-raid@vger.kernel.org
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: it <itech@kfa.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Bill Davidsen wrote:
+> Molle Bestefich wrote:
+> >it wrote:
+> > > Ouch.
+> > >
+> > > How does hardware raid deal with this? Does it?
+> >
+> > Hardware RAID controllers deal with this by rounding the size of
+> > participant devices down to nearest GB, on the assumption that no
+> > drive manufacturers would have the guts to actually sell eg. a 250 GB
+> > drive with less than exactly 250.000.000.000 bytes of space on it.
+> >
+> > (It would be nice if the various flavors of Linux fdisk had an option
+> > to do this. It would be very nice if anaconda had an option to do
+> > this.)
+>
+> I guess if you care you specify the size of the partition instead of
+> "use it all." I use fdisk usually, cfdisk when installing, both let me
+> set size, fdisk let's me set starting track and even play with the
+> partition table's idea of geometry. What kind of an option did you have
+> in mind?
 
-The fact that mirrors in a RAID1 set partially differ even on propper
-shutdown is caused by the ability to change dirty pages *while* they
-are being accessed (ie. by a mirroring driver).
-This has been a fact in Linux since ever and is expected behaviour with
-eg. filesystems, direct IO and memory mapped files.
+I don't know.  Examples good enough?
 
-Mind you that this is a block level inconsistency only, because the
-fs/application will always write before it'll read the blocks in
-question unless it is not well-behanved.
+a.) "Do not use space beyond highest GB"
+b.) "Do not use last cylinder"
 
-An example for a filesystem causing this is a file write followed
-by a file truncation.
+Help texts could be:
 
-Regards,
-Heinz    -- The LVM Guy --
-
-On Thu, Mar 02, 2006 at 02:48:25PM +0100, Mario 'BitKoenig' Holbe wrote:
-> Kasper Dupont <48755289462761382922@expires.02.sep.2006.kasperd.net> wrote:
-> > A bit too aggressive it seems. How can it end up being marked
-> > clean when the two mirrors differ?
-> 
-> Do you have write-cache enabled on the mirrors?
-> 
-> Sometimes I have differences between RAID1 mirrors in 2.4, too. Even with
-> clean shutdown or reboot sequences. However, in my case, it turns out
-> that this always affects areas which are "free" on the filesystem layer.
-> This assumption is especially feeded by
-> a) the fact that the content of at least one of these differing areas is
-> typically zeroed and
-> b) that I have md5sums of all my files which don't show up any
-> differences when I either copy the non-zero content over the zeros or the
-> other way around.
-> Especially I have never experienced such "normal" differences on my swap
-> RAID1 mirrors. Until now I thought this would have to do with kernel 2.4
-> and block-device-specific dirty-page-flushing and missing write-barriers
-> and things like that which lead to blocks used for a short time only get
-> flushed to the one mirror but not to the other (and then, since they are
-> freed again, the flush to the other mirror will never happen, since the
-> associated pages are just not dirty anymore).
-> However, I thought - at least until now ;) - this would change with 2.6,
-> since there md has more control over the block-devices it uses.
-> 
-> 
-> regards
->    Mario
-> -- 
-> The question of whether a computer can think is no more interesting than
-> the question of whether a submarine can swim.          -- E. W. Dijkstra
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
-Heinz Mauelshagen                                 Red Hat GmbH
-Consulting Development Engineer                   Am Sonnenhang 11
-Cluster and Storage Development                   56242 Marienrachdorf
-                                                  Germany
-Mauelshagen@RedHat.com                            +49 2626 141200
-                                                       FAX 924446
-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+a.) "Helps ensure that you can replace fx. a 300GB drive from one
+manufacturer with a 300GB from another."
+b.) "Leave an area that Windows might use for disk metadata alone."
