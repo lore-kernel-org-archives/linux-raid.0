@@ -1,51 +1,49 @@
-From: "Molle Bestefich" <molle.bestefich@gmail.com>
-Subject: Re: block level vs. file level
-Date: Fri, 3 Mar 2006 15:07:10 +0100
-Message-ID: <62b0912f0603030607n6927f168t489fc2d3fb9d3113@mail.gmail.com>
-References: <43EF8CFB.5080403@kfa.org> <20060212213157.GX32687@strugglers.net>
-	 <43EFDDF7.6090405@kfa.org>
-	 <62b0912f0602200853m72af5676y4f2dcd07fe358ef8@mail.gmail.com>
-	 <44013875.8080906@tmr.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+From: Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE>
+Subject: Re: No syncing after crash. Is this a software raid bug?
+Date: Fri, 3 Mar 2006 15:30:29 +0100
+Message-ID: <du9ju5$6c5$1@sea.gmane.org>
+References: <20060301124432.GA3591@hactar.lan> <20060301215641.GA27042@hactar.lan> <du6t39$be5$1@sea.gmane.org> <20060303133952.GA2976@redhat.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <44013875.8080906@tmr.com>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: it <itech@kfa.org>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Bill Davidsen wrote:
-> Molle Bestefich wrote:
-> >it wrote:
-> > > Ouch.
-> > >
-> > > How does hardware raid deal with this? Does it?
-> >
-> > Hardware RAID controllers deal with this by rounding the size of
-> > participant devices down to nearest GB, on the assumption that no
-> > drive manufacturers would have the guts to actually sell eg. a 250 GB
-> > drive with less than exactly 250.000.000.000 bytes of space on it.
-> >
-> > (It would be nice if the various flavors of Linux fdisk had an option
-> > to do this. It would be very nice if anaconda had an option to do
-> > this.)
->
-> I guess if you care you specify the size of the partition instead of
-> "use it all." I use fdisk usually, cfdisk when installing, both let me
-> set size, fdisk let's me set starting track and even play with the
-> partition table's idea of geometry. What kind of an option did you have
-> in mind?
+Heinz Mauelshagen <mauelshagen@redhat.com> wrote:
+> The fact that mirrors in a RAID1 set partially differ even on propper
+> shutdown is caused by the ability to change dirty pages *while* they
+> are being accessed (ie. by a mirroring driver).
 
-I don't know.  Examples good enough?
+That's quite the scenario what I thought about, but more clear now,
+thanks.
+But when a dirty page is modified while it's being accessed, it stays
+dirty and gets cleaned (i.e. written to disk) later again, right? This
+would imply that the mirrors should always be equal after a clean
+shutdown, which in fact is not true.
 
-a.) "Do not use space beyond highest GB"
-b.) "Do not use last cylinder"
+> Mind you that this is a block level inconsistency only, because the
+...
+> An example for a filesystem causing this is a file write followed
+> by a file truncation.
 
-Help texts could be:
+Yes, this is also quite similar to the scenario what I thought about -
+especially it suggests that this case happens only on "free" space.
 
-a.) "Helps ensure that you can replace fx. a 300GB drive from one
-manufacturer with a 300GB from another."
-b.) "Leave an area that Windows might use for disk metadata alone."
+However, Kaspers case is a bit different, since it involves swap space,
+which leads to the suspicion that there are cases where mirror
+differences could occur also on "non-free" space (although there is
+of course also something like "free" space on swap and one had to
+analyze if it's such space that is affected, which most likely isn't
+the simplest thing at all :)). While swap is probably quite robust
+against such a scenario, since it's not valid after a reboot anymore,
+I could imagine other cases (i.e. database raw devices) where subsequent
+reads lead to different data due to the different mirrors, isn't it?
+And couldn't this happen even on swap without reboot inbetween when a
+page really needs to be read from disk?
+
+
+regards
+   Mario
+-- 
+File names are infinite in length where infinity is set to 255 characters.
+                                -- Peter Collinson, "The Unix File System"
+
