@@ -1,49 +1,52 @@
-From: Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE>
+From: Kasper Dupont
+	<87385155133026632046@expires.04.sep.2006.kasperd.net>
 Subject: Re: No syncing after crash. Is this a software raid bug?
-Date: Fri, 3 Mar 2006 15:30:29 +0100
-Message-ID: <du9ju5$6c5$1@sea.gmane.org>
-References: <20060301124432.GA3591@hactar.lan> <20060301215641.GA27042@hactar.lan> <du6t39$be5$1@sea.gmane.org> <20060303133952.GA2976@redhat.com>
+Date: Fri, 3 Mar 2006 15:48:26 +0100
+Message-ID: <20060303144824.GA15672@hactar.lan>
+References: <20060301124432.GA3591@hactar.lan> <20060301215641.GA27042@hactar.lan> <20060303073016.GA662@hactar.lan>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20060303073016.GA662@hactar.lan>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Heinz Mauelshagen <mauelshagen@redhat.com> wrote:
-> The fact that mirrors in a RAID1 set partially differ even on propper
-> shutdown is caused by the ability to change dirty pages *while* they
-> are being accessed (ie. by a mirroring driver).
+> grep -i ^wcache /proc/ide/hd*/settings
 
-That's quite the scenario what I thought about, but more clear now,
-thanks.
-But when a dirty page is modified while it's being accessed, it stays
-dirty and gets cleaned (i.e. written to disk) later again, right? This
-would imply that the mirrors should always be equal after a clean
-shutdown, which in fact is not true.
+On the 2.6 system where I see the differences between mirrors
+I get this result from above command:
 
-> Mind you that this is a block level inconsistency only, because the
-...
-> An example for a filesystem causing this is a file write followed
-> by a file truncation.
+/proc/ide/hde/settings:wcache                  1               0       =
+        1               rw
+/proc/ide/hdg/settings:wcache                  1               0       =
+        1               rw
 
-Yes, this is also quite similar to the scenario what I thought about -
-especially it suggests that this case happens only on "free" space.
+On a 2.4 system where I see no differences between mirrors I
+get this result from above command:
 
-However, Kaspers case is a bit different, since it involves swap space,
-which leads to the suspicion that there are cases where mirror
-differences could occur also on "non-free" space (although there is
-of course also something like "free" space on swap and one had to
-analyze if it's such space that is affected, which most likely isn't
-the simplest thing at all :)). While swap is probably quite robust
-against such a scenario, since it's not valid after a reboot anymore,
-I could imagine other cases (i.e. database raw devices) where subsequent
-reads lead to different data due to the different mirrors, isn't it?
-And couldn't this happen even on swap without reboot inbetween when a
-page really needs to be read from disk?
+/proc/ide/hda/settings:wcache                  0               0       =
+        1               rw
+/proc/ide/hdc/settings:wcache                  0               0       =
+        1               rw
+/proc/ide/hde/settings:wcache                  0               0       =
+        1               rw
+/proc/ide/hdg/settings:wcache                  0               0       =
+        1               rw
 
+So how should I interpret this?
 
-regards
-   Mario
--- 
-File names are infinite in length where infinity is set to 255 characters.
-                                -- Peter Collinson, "The Unix File System"
+(A copy of any replies to my email address will be appreciated).
 
+--=20
+Kasper Dupont -- Rigtige m=E6nd skriver deres egne backupprogrammer
+#define _(_)"d.%.4s%."_"2s" /* This is my new email address */
+char*_=3D"@2kaspner"_()"%03"_("4s%.")"t\n";printf(_+11,_+6,_,6,_+2,_+7,=
+_+6);
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
