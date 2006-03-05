@@ -1,32 +1,36 @@
-From: A G <lower_tech@yahoo.com>
-Subject: mdadm vs RAIDframe
-Date: Sat, 4 Mar 2006 17:36:39 -0800 (PST)
-Message-ID: <20060305013639.447.qmail@web32802.mail.mud.yahoo.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+From: "Wayne Bartlett" <SnookieDiggerurub@yahoo.dk>
+Subject: hey
+Date: Sun, 05 Mar 2006 07:45:35 +0300
+Message-ID: <687.75e413d5.2a9MCY44@yahoo.fr>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+Hello linux-raid@vger.kernel.org,
 
-I'm interested to implement a software RAID system
-with a few SATA drives.  I'm currently looking at
-mdadm on Linux and RAIDframe on NetBSD.
+No queasy sto,mach.
 
-Does anyone have experiences in both of these
-implementations?  Which one is more robust?
+Curbs your Ap pet ite.=20
+
+Hu-dee aa is Promising App,etiite Sup-pre,ss-ant
+
+------------------------------------------------------------------------
+
+COPY the Address below and paste in your BROaWSER:
+
+appendancy.landoftheburd.com
+
+------------------------------------------------------------------------
 
 
-Thanks,
+At times I was pleased, to annoy him, to tickle him, to teach him to do so=
+mersaults.
+When frightened -- home to Thee I run --.
+No safety , no love, no respect was I due..
+Of the apple her stepmother.
+On the coat of the woman.
 
 
-Sean Lee
-
-
-__________________________________________________
-Do You Yahoo!?
-Tired of spam?  Yahoo! Mail has the best spam protection around 
-http://mail.yahoo.com 
+Thanks Alot,
+Rosendo Johnson
