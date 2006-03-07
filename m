@@ -1,91 +1,61 @@
-From: "Rob ." <ensoftrob@hotmail.com>
-Subject: Need to get rid of failed devices in RAID5 after moving drive to new interface
-Date: Tue, 07 Mar 2006 02:47:48 -0600
-Message-ID: <BAY105-F2822CBFEB359481776D8FEB5EE0@phx.gbl>
+From: Heinz Mauelshagen <mauelshagen@redhat.com>
+Subject: Re: No syncing after crash. Is this a software raid bug?
+Date: Tue, 7 Mar 2006 11:47:04 +0100
+Message-ID: <20060307104704.GD2976@redhat.com>
+References: <20060301124432.GA3591@hactar.lan> <20060301215641.GA27042@hactar.lan> <20060303073016.GA662@hactar.lan> <20060303144824.GA15672@hactar.lan> <20060304131609.GA4064@erwin.lan>
+Reply-To: mauelshagen@redhat.com
 Mime-Version: 1.0
-Content-Type: text/plain; format=flowed
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20060304131609.GA4064@erwin.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Kasper Dupont <10616252720827252562@expires.05.sep.2006.kasperd.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+On Sat, Mar 04, 2006 at 02:16:11PM +0100, Kasper Dupont wrote:
+> > If it relies on static page content during updates of its mirrors, =
+it
+> > need to take a private copy of the page(s).
+>=20
+> And by that you mean that raid5 and raid6 must copy the page
+> contents before writing it to disk?
 
-The RAID5 I set up originally had 2 PATA drives and 2 SATA drives.  I 
-recently purchased 2 more SATA drives, so I wanted to swap out the PATA ones 
-one at a time.  In my infinite wisdom I did the following:
+Yes.
+They need to do it anayway in order to calculate parity blocks.
 
-1. Shutdown.
-2. Physically removed the PATA drive (/dev/hdb, with partition /dev/hdb5).
-3. Installed the SATA drive.
-4. Booted up; saw a message that a device had failed but there were no 
-spares to rebuild.
-5. Partitioned the new drive.
-6. mdadm --add /dev/md5 /dev/sdc5 (added the new drive).
+>=20
+> --=20
+> Kasper Dupont -- Rigtige m=E6nd skriver deres egne backupprogrammer
+> #define _(_)"d.%.4s%."_"2s" /* This is my new email address */
+> char*_=3D"@2kaspner"_()"%03"_("4s%.")"t\n";printf(_+11,_+6,_,6,_+2,_+=
+7,_+6);
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-As you can see, the new SATA drive was added as /dev/sdc.  My reasoning for 
-removing hdb5 outright rather than marking it failed was that I hoped it 
-would be easier to reinsert hdb5 and rebuild the array if something bad 
-happened (say, if sda failed) while the array was rebuilding.
+Regards,
+Heinz    -- The LVM Guy --
 
-Since RAID5 works as you would expect, it rebuilt md5 without any problems 
-as soon as I added /dev/sdc5 to the RAID.  However, if I type this command:
+=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D=
+-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D=
+-=3D-=3D-=3D-
 
-mdadm --detail /dev/md5
-
-...I see the following output (note Total Devices: 5 and Failed Devices:1):
-
--------------------------------------------------------------------------------------------------
-/dev/md5:
-        Version : 00.90.00
-  Creation Time : Mon Sep  5 16:47:04 2005
-     Raid Level : raid5
-     Array Size : 146512320 (139.73 GiB 150.03 GB)
-    Device Size : 48837440 (46.58 GiB 50.01 GB)
-   Raid Devices : 4
-  Total Devices : 5
-Preferred Minor : 5
-    Persistence : Superblock is persistent
-
-    Update Time : Tue Mar  7 01:30:33 2006
-          State : dirty, no-errors
-Active Devices : 4
-Working Devices : 4
-Failed Devices : 1
-  Spare Devices : 0
-
-         Layout : left-symmetric
-     Chunk Size : 64K
-
-    Number   Major   Minor   RaidDevice State
-       0       8        5        0      active sync   /dev/sda5
-       1       8       21        1      active sync   /dev/sdb5
-       2       8       37        2      active sync   /dev/sdc5
-       3      22       69        3      active sync   /dev/hdd5
-           UUID : 811eb962:7ab90bd2:585e740e:fe7a507b
-         Events : 0.42
--------------------------------------------------------------------------------------------------
-
-Everything seems to be happy and functioning, but it's really bugging me 
-that I can't get rid of the failed device.  At first I thought it was 
-because my /etc/mdadm.conf was out-of-date.  However, I replaced instances 
-of /dev/hdb* with /dev/sdc* in the /etc/mdadm.conf.
-
-I noticed someone else has also had this problem but didn't have a solution 
-(scroll to the very bottom):
-http://www.digitalmapping.sk.ca/Networks/ExpandingRAID.htm
-
-Doing mdadm --remove /dev/md5 /dev/hdb5 won't work any more, because 
-/dev/hdb5 doesn't exist any more, and even if it did, by now I would 
-consider hdb invalid or corrupt because new data has been written to the 
-RAID.
-
-So, friends, how do you suggest I get rid of that faulty device so I can 
-clear my conscience?
-
--Rob
-
-_________________________________________________________________
-Don’t just search. Find. Check out the new MSN Search! 
-http://search.msn.click-url.com/go/onm00200636ave/direct/01/
-
+Heinz Mauelshagen                                 Red Hat GmbH
+Consulting Development Engineer                   Am Sonnenhang 11
+Cluster and Storage Development                   56242 Marienrachdorf
+                                                  Germany
+Mauelshagen@RedHat.com                            +49 2626 141200
+                                                       FAX 924446
+=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D=
+-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D=
+-=3D-=3D-=3D-
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
