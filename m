@@ -1,137 +1,91 @@
-From: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
-Subject: Re: raid5 performance question
-Date: Tue, 7 Mar 2006 10:40:16 +0200
-Message-ID: <5d96567b0603070040t114334cbm858147afe551f719@mail.gmail.com>
-References: <5d96567b0603060346r768a0ee1i8d8170cf9ba4bac1@mail.gmail.com>
-	 <17420.46746.365629.168649@cse.unsw.edu.au>
+From: "Rob ." <ensoftrob@hotmail.com>
+Subject: Need to get rid of failed devices in RAID5 after moving drive to new interface
+Date: Tue, 07 Mar 2006 02:47:48 -0600
+Message-ID: <BAY105-F2822CBFEB359481776D8FEB5EE0@phx.gbl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17420.46746.365629.168649@cse.unsw.edu.au>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil.
-what is the stripe_cache exacly ?
+Hi,
 
-First , here are some numbers.
+The RAID5 I set up originally had 2 PATA drives and 2 SATA drives.  I 
+recently purchased 2 more SATA drives, so I wanted to swap out the PATA ones 
+one at a time.  In my infinite wisdom I did the following:
 
-Setting it to 1024 gives me 85 MB/s.
-Setting it to 4096 gives me 105 MB/s.
-Setting it to 8192 gives me 115 MB/s.
+1. Shutdown.
+2. Physically removed the PATA drive (/dev/hdb, with partition /dev/hdb5).
+3. Installed the SATA drive.
+4. Booted up; saw a message that a device had failed but there were no 
+spares to rebuild.
+5. Partitioned the new drive.
+6. mdadm --add /dev/md5 /dev/sdc5 (added the new drive).
 
-the md.txt does not say much about it just that it is the number of
-entries.
+As you can see, the new SATA drive was added as /dev/sdc.  My reasoning for 
+removing hdb5 outright rather than marking it failed was that I hoped it 
+would be easier to reinsert hdb5 and rebuild the array if something bad 
+happened (say, if sda failed) while the array was rebuilding.
 
-here are some tests i have made:
+Since RAID5 works as you would expect, it rebuilt md5 without any problems 
+as soon as I added /dev/sdc5 to the RAID.  However, if I type this command:
 
-test1:
-when i set the stripe_cache to zero and run:
+mdadm --detail /dev/md5
 
-  "dd if=/dev/md1 of=/dev/zero bs=1M count=100000 skip=630000"
- i am getting 120MB/s.
- when i set the stripe cache to 4096 and : issue the same command i am
-getting 120 MB/s
-as well.
+...I see the following output (note Total Devices: 5 and Failed Devices:1):
 
-test 2:
-I would describe what this tester does:
+-------------------------------------------------------------------------------------------------
+/dev/md5:
+        Version : 00.90.00
+  Creation Time : Mon Sep  5 16:47:04 2005
+     Raid Level : raid5
+     Array Size : 146512320 (139.73 GiB 150.03 GB)
+    Device Size : 48837440 (46.58 GiB 50.01 GB)
+   Raid Devices : 4
+  Total Devices : 5
+Preferred Minor : 5
+    Persistence : Superblock is persistent
 
-It opens N descriptors over a device.
-It issues N IOs to the target and waits for the completion of each IO.
-When the IO is completed the tester has two choices:
+    Update Time : Tue Mar  7 01:30:33 2006
+          State : dirty, no-errors
+Active Devices : 4
+Working Devices : 4
+Failed Devices : 1
+  Spare Devices : 0
 
-  1. calculate a new seek posistion over the target.
+         Layout : left-symmetric
+     Chunk Size : 64K
 
-  2. move sequetially to the next position. meaning , if one reads 1MB
-buffer, the next
-      position is current+1M.
+    Number   Major   Minor   RaidDevice State
+       0       8        5        0      active sync   /dev/sda5
+       1       8       21        1      active sync   /dev/sdb5
+       2       8       37        2      active sync   /dev/sdc5
+       3      22       69        3      active sync   /dev/hdd5
+           UUID : 811eb962:7ab90bd2:585e740e:fe7a507b
+         Events : 0.42
+-------------------------------------------------------------------------------------------------
 
-  I am using direct IO and asynchrnous IO.
+Everything seems to be happy and functioning, but it's really bugging me 
+that I can't get rid of the failed device.  At first I thought it was 
+because my /etc/mdadm.conf was out-of-date.  However, I replaced instances 
+of /dev/hdb* with /dev/sdc* in the /etc/mdadm.conf.
 
-option 1 simulates non contigous files. option 2 simulates contiguous files.
-the above numbers were made with option 2.
-if i am using option 1 i am getting 95 MB/s with stripe_size=4096.
+I noticed someone else has also had this problem but didn't have a solution 
+(scroll to the very bottom):
+http://www.digitalmapping.sk.ca/Networks/ExpandingRAID.htm
 
-A single disk in this manner ( option 1 ) gives ~28 MB/s.
-A single disk in scenario 2 gives ~30 MB/s.
+Doing mdadm --remove /dev/md5 /dev/hdb5 won't work any more, because 
+/dev/hdb5 doesn't exist any more, and even if it did, by now I would 
+consider hdb invalid or corrupt because new data has been written to the 
+RAID.
 
-I understand the a question of the IO distribution is something to talk
-about. but i am submitting 250 IOs so i suppose to be heavy on the raid.
+So, friends, how do you suggest I get rid of that faulty device so I can 
+clear my conscience?
 
-Questions
-1. how can the stripe size cache gives me a boost when i have total
-random access
-    to the disk ?
+-Rob
 
-2. Does direct IO passes this cache ?
+_________________________________________________________________
+Don’t just search. Find. Check out the new MSN Search! 
+http://search.msn.click-url.com/go/onm00200636ave/direct/01/
 
-3. How can a dd of 1 MB over 1MB chunck size acheive this high
-throughputs of 4 disks
-   even if does not get the stripe cache benifits ?
-
-thank  you
-raz.
-
-
-
-
-On 3/7/06, Neil Brown <neilb@suse.de> wrote:
-> On Monday March 6, raziebe@gmail.com wrote:
-> > Neil Hello .
-> > I have a performance question.
-> >
-> > I am using raid5 stripe size 1024K over 4 disks.
->
-> I assume you mean a chunksize of 1024K rather than a stripe size.
-> With a 4 disk array, the stripe size will be 3 times the chunksize,
-> and so could not possibly by 1024K.
->
-> > I am benchmarking it with an asynchronous tester.
-> > This tester submits 100 IOs of size of 1024 K --> as the stripe size.
-> > It reads raw io from the device, no file system is involved.
-> >
-> > I am making the following comparsion:
-> >
-> > 1. Reading 4 disks at the same time using 1 MB buffer in random manner.
-> > 2. Reading 1 raid5 device using 1MB buffer in random manner.
->
-> If your chunk size is 1MB, then you will need larger sequential reads
-> to get good throughput.
->
-> You can also try increasing the size of the stripe cache in
->    /sys/block/mdX/md/stripe_cache_size
->
-> The units are in pages (normally 4K) per device.  The default is 256 which fits
-> only one stripe with a 1 Meg chunk size.
->
-> Try 1024 ?
->
-> NeilBrown
->
->
-> >
-> > I am getting terrible results in scenario 2. if scenario 1 gives 120 MB/s from
-> > 4 disks, the raid5 device gives 35 MB/s .
-> > it is like i am reading a single disk , but by looking at iostat i can
-> > see that all
-> > disks are active but with low throughput.
-> >
-> > Any idea ?
-> >
-> > Thank you.
-> > --
-> > Raz
-> > -
-> > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-
-
---
-Raz
