@@ -1,93 +1,137 @@
-From: Neil Brown <neilb@suse.de>
-Subject: RE: mdadm Device Busy Error
-Date: Tue, 7 Mar 2006 16:17:29 +1100
-Message-ID: <17421.5993.343080.896707@cse.unsw.edu.au>
-References: <17382.32368.830307.369741@cse.unsw.edu.au>
-	<000001c6419f$32f09170$644e0a0a@freeway.com>
+From: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
+Subject: Re: raid5 performance question
+Date: Tue, 7 Mar 2006 10:40:16 +0200
+Message-ID: <5d96567b0603070040t114334cbm858147afe551f719@mail.gmail.com>
+References: <5d96567b0603060346r768a0ee1i8d8170cf9ba4bac1@mail.gmail.com>
+	 <17420.46746.365629.168649@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Bill Kunyiha on Monday March 6
+In-Reply-To: <17420.46746.365629.168649@cse.unsw.edu.au>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Kunyiha <bill@freeway.com>
-Cc: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Monday March 6, bill@freeway.com wrote:
-> Please help me here. I want to create an array containing an active
-> partition. 
+Neil.
+what is the stripe_cache exacly ?
 
-You cannot do that.  It would corrupt the active partition.
+First , here are some numbers.
 
->            I'd like to convert a machine from having a non-raid root to
-> having a raid1 root.
+Setting it to 1024 gives me 85 MB/s.
+Setting it to 4096 gives me 105 MB/s.
+Setting it to 8192 gives me 115 MB/s.
 
-It goes like this:
-  1/ create a degraded array using only the new device
-          mdadm -C /dev/md0 -l1 -n2 missing /dev/hdc1
-  2/ make a filesystem there
-          mkfs /dev/md0
-  3/ mount and copy over
-          mount /dev/md0 /mnt
-          cp -ax / /mnt
-  4/ update lilo.conf (or grub or whatever) on new filesystem
-     Also update /etc/fstab
-          vi /mnt/etc/lilo.conf
-          chroot /mnt /sbin/lilo
-          vi /mnt/etc/fstab
-  5/ reboot
-  6/ make sure the root filesystem is /dev/md0 and everything look
-    cool.  If not, boot off /dev/hdb1 and try again.
-  7/ add the original drive to the array
-          mdadm /dev/md0 -a /dev/hdb1
+the md.txt does not say much about it just that it is the number of
+entries.
 
-Done/
+here are some tests i have made:
 
-  
-          
-> I want to create software raid on two ide drives(hdb and hdc).
-> Currently everything is on hdb.
-> I want to convert hdb and hdc to raid auto detect.
-> I want if one drive fails, the other takes over, therefore all the disks
-> should have a boot loader, bios (I mean identical). So that if I take any of
-> the disks out, the system still boots. Can I do this and how do I go about
-> doing this?
-> 
-> 
-> On Friday February 3, bill@freeway.com wrote:
-> > I had problems with mdadm and what i did was reinstall Fedora Core 4 on my
-> > system. I would like to create raid 1 on /dev/hdb1 and /dev/hd1
-> > However when i try and create raid on these drives, i get an error from
-> > /dev/hdb1 saying that the device is busy. Here's the output i get from the
-> > screen.
-> > What could be the problem?
-> > 
-> > [root@lab-asterisk ~]# mdadm --create --verbose
-> > /dev/md0 --level=1 --raid-devices=2 /dev/hdb1 /dev/hdc1
-> > mdadm: Cannot open /dev/hdb1: Device or resource busy
-> > mdadm: create aborted
-> > 
-> > [root@lab-asterisk ~]# fdisk -l
-> > 
-> > Disk /dev/hdb: 20.0 GB, 20020396032 bytes
-> > 255 heads, 63 sectors/track, 2434 cylinders
-> > Units = cylinders of 16065 * 512 = 8225280 bytes
-> > 
-> >    Device Boot      Start         End      Blocks   Id  System
-> > /dev/hdb1   *           1        2401    19286001   fd  Linux raid
-> > autodetect
-> > /dev/hdb2            2402        2434      265072+  fd  Linux raid
-> > autodetect
-> > 
-> > Disk /dev/hdc: 10.2 GB, 10242892800 bytes
-> > 16 heads, 63 sectors/track, 19846 cylinders
-> > Units = cylinders of 1008 * 512 = 516096 bytes
-> > 
-> >    Device Boot      Start         End      Blocks   Id  System
-> > /dev/hdc1               1       19846    10002352+  fd  Linux raid
-> > autodetect
-> > [root@lab-asterisk ~]#
-> > [root@lab-asterisk ~]#
-> 
->  
+test1:
+when i set the stripe_cache to zero and run:
+
+  "dd if=/dev/md1 of=/dev/zero bs=1M count=100000 skip=630000"
+ i am getting 120MB/s.
+ when i set the stripe cache to 4096 and : issue the same command i am
+getting 120 MB/s
+as well.
+
+test 2:
+I would describe what this tester does:
+
+It opens N descriptors over a device.
+It issues N IOs to the target and waits for the completion of each IO.
+When the IO is completed the tester has two choices:
+
+  1. calculate a new seek posistion over the target.
+
+  2. move sequetially to the next position. meaning , if one reads 1MB
+buffer, the next
+      position is current+1M.
+
+  I am using direct IO and asynchrnous IO.
+
+option 1 simulates non contigous files. option 2 simulates contiguous files.
+the above numbers were made with option 2.
+if i am using option 1 i am getting 95 MB/s with stripe_size=4096.
+
+A single disk in this manner ( option 1 ) gives ~28 MB/s.
+A single disk in scenario 2 gives ~30 MB/s.
+
+I understand the a question of the IO distribution is something to talk
+about. but i am submitting 250 IOs so i suppose to be heavy on the raid.
+
+Questions
+1. how can the stripe size cache gives me a boost when i have total
+random access
+    to the disk ?
+
+2. Does direct IO passes this cache ?
+
+3. How can a dd of 1 MB over 1MB chunck size acheive this high
+throughputs of 4 disks
+   even if does not get the stripe cache benifits ?
+
+thank  you
+raz.
+
+
+
+
+On 3/7/06, Neil Brown <neilb@suse.de> wrote:
+> On Monday March 6, raziebe@gmail.com wrote:
+> > Neil Hello .
+> > I have a performance question.
+> >
+> > I am using raid5 stripe size 1024K over 4 disks.
+>
+> I assume you mean a chunksize of 1024K rather than a stripe size.
+> With a 4 disk array, the stripe size will be 3 times the chunksize,
+> and so could not possibly by 1024K.
+>
+> > I am benchmarking it with an asynchronous tester.
+> > This tester submits 100 IOs of size of 1024 K --> as the stripe size.
+> > It reads raw io from the device, no file system is involved.
+> >
+> > I am making the following comparsion:
+> >
+> > 1. Reading 4 disks at the same time using 1 MB buffer in random manner.
+> > 2. Reading 1 raid5 device using 1MB buffer in random manner.
+>
+> If your chunk size is 1MB, then you will need larger sequential reads
+> to get good throughput.
+>
+> You can also try increasing the size of the stripe cache in
+>    /sys/block/mdX/md/stripe_cache_size
+>
+> The units are in pages (normally 4K) per device.  The default is 256 which fits
+> only one stripe with a 1 Meg chunk size.
+>
+> Try 1024 ?
+>
+> NeilBrown
+>
+>
+> >
+> > I am getting terrible results in scenario 2. if scenario 1 gives 120 MB/s from
+> > 4 disks, the raid5 device gives 35 MB/s .
+> > it is like i am reading a single disk , but by looking at iostat i can
+> > see that all
+> > disks are active but with low throughput.
+> >
+> > Any idea ?
+> >
+> > Thank you.
+> > --
+> > Raz
+> > -
+> > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+
+
+--
+Raz
