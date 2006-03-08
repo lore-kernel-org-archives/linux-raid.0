@@ -1,77 +1,32 @@
-From: "Molle Bestefich" <molle.bestefich@gmail.com>
-Subject: Re: raid 5 corruption
-Date: Wed, 8 Mar 2006 11:29:14 +0100
-Message-ID: <62b0912f0603080229i61fab398p28f541e00a424699@mail.gmail.com>
-References: <37363.127.0.0.1.1141797527.squirrel@a2s5.a2hosting.com>
+From: Louis-David Mitterrand <vindex+lists-linux-raid@apartia.org>
+Subject: Re: NCQ general question
+Date: Wed, 8 Mar 2006 17:51:08 +0100
+Message-ID: <20060308165108.GA19567@apartia.fr>
+References: <4405A656.1030602@rtr.ca> <20060301135547.GV4816@suse.de> <C6838977-5411-400F-9548-2F22598DC2AE@egenera.com> <4408C0D9.4010202@garzik.org> <98B59AFC-2781-4A8A-82E4-C923B4A48F9E@egenera.com> <4409E623.5070707@garzik.org> <C7155197-3E90-4EDF-9D1A-5A5210248938@egenera.com> <311601c90603041556oce5a50ev8379ea39fa7b65cc@mail.gmail.com> <5d96567b0603042319v7b08184cq918fe4ac32da61e3@mail.gmail.com> <440A934B.1050505@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <37363.127.0.0.1.1141797527.squirrel@a2s5.a2hosting.com>
 Content-Disposition: inline
+In-Reply-To: <440A934B.1050505@garzik.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: goldfita@signalsguru.net
-Cc: linux-raid@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Todd <goldfita@signalsguru.net> wrote:
-> The strangest thing happened the other day. I booted my machine
-> and the permissions were all messed up. I couldn't access many
-> files as root which were owned by root. I couldnt' run common
-> programs as root or a standard user.
+On Sun, Mar 05, 2006 at 02:29:15AM -0500, Jeff Garzik wrote:
+> Raz Ben-Jehuda(caro) wrote:
+> >Is NCQ supported when setting the controller to JBOD instead of using HW 
+> >raid?
+> 
+> 1) The two have nothing to do with each other
+> 
+> 2) It sounds like you haven't yet read
+> http://linux-ata.org/faq-sata-raid.html
 
-Odd, have you found out why?
-What was the first error you saw?
+Hello,
 
-> So I restarted and it wouldn't mount my raid drive (raid 5, 5 disks).
-> I tried doing it manually from the livecd, and it's telling me it
-> can't mount with only 2 disks.
+Do you plan on updating your AHCI NCQ patch found in 
+http://www.kernel.org/pub/linux/kernel/people/jgarzik/libata/archive/
+It no longer applies cleanly to the latest 2.6.15.x kernel.
 
-Is that because the kernel found only 2/5 physical disks,
-or because MD thinks that they're out-of-date?
-
-> I tried to force with four drives and it claims there's no
-> superblock for sda3.
-
-Try mdadm --assemble --force again, but exclude sda3 and
-assemble the array using the 4 other drives instead?
-
-You might want to run mdadm to query the superblock on each device.
-
-You can post the output to this list so others will be able to see
-which of your drives are considered 'freshest' by MD etc.
-
-> There's nothing wrong with my disks. I can mount the boot partition.
-
-One doesn't imply the other.  And since you don't tell where the boot
-partition resides, it hardly seems relevant to your RAID devices..
-
-> It's fine as far as I can tell. Does anyone know what's going on?
-> Has anyone else experienced this?
-> I have had problems in the past with other machines.
-> One time a redhat machine locked up in X.
-
-Yeah, I've had X lock up on me quite a lot.
-
-> I don't know if it was just X or the kernel.
-
-Probably the graphics driver.
-
-> I restarted and it couldn't find the root i-node.
-> It may have been correctable, but I just reinstalled.
-> It seems strange that windows can crash on me every day and
-> it still starts right back up. (I still have 98.)
-> But linux seems to have more fragile file systems.
-
-Windows' flushing policy is a LOT more sane than Linux'.
-That's probably why you'll rarely get corrupted filesystems
-with Windows, and often with Linux.
-
-Like you, I've had filesystem corruption after system crashes
-happen to me with Linux quite a lot, and never (even though
-it crashes much more often) with Windows.
-
-My guess is that the Linux kernel folks are more concerned with
-a .01% improvement in performance than with your data and that's
-why the policy is as it is..  But I could easily be wrong, so take
-it with a grain of salt.
+Thanks,
