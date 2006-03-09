@@ -1,86 +1,44 @@
-From: Sean Puttergill <puttergi@yahoo.ca>
+From: dean gaudet <dean@arctic.org>
 Subject: Re: Auto-assembling arrays using mdadm
-Date: Thu, 9 Mar 2006 14:23:34 -0500 (EST)
-Message-ID: <20060309192334.12864.qmail@web35314.mail.mud.yahoo.com>
-References: <Pine.LNX.4.64.0603090939410.32502@twinlark.arctic.org>
+Date: Thu, 9 Mar 2006 13:51:01 -0800 (PST)
+Message-ID: <Pine.LNX.4.64.0603091344010.32502@twinlark.arctic.org>
+References: <20060309192334.12864.qmail@web35314.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0603090939410.32502@twinlark.arctic.org>
+In-Reply-To: <20060309192334.12864.qmail@web35314.mail.mud.yahoo.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: dean gaudet <dean@arctic.org>
+To: Sean Puttergill <puttergi@yahoo.ca>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-As far as I know, "mdadm --assemble --scan" requires
-that there be ARRAY lines in the mdadm.conf file. 
-These lines must list the device node and the UUID of
-the array at a minimum.
+On Thu, 9 Mar 2006, Sean Puttergill wrote:
 
-What I want to achieve is to automatically inspect a
-set of disks and start all the RAID arrays found
-without the need for any a priori information in the
-mdadm.conf file.  I.e. with mdadm.conf as follows:
-
-"
-DEVICE /dev/sd*
-"
-
-This is the kind of functionality provided by kernel
-RAID autodetect.  You don't have to have any config
-information provided in advance.  The kernel finds and
-assembles all arrays on disks with RAID autodetect
-partition type.  I want to do the same thing, but with
-mdadm.
-
-Perhaps I am confused.  Has this changed in 2.x?  I am
-using version 1.11.0
-
-
-Sean
-
---- dean gaudet <dean@arctic.org> wrote:
-
-> On Thu, 9 Mar 2006, Sean Puttergill wrote:
-> 
-> > Hi.
-> > 
-> > I am looking to script auto-assembly of all arrays
-> > detected on an arbitrary set of drives using
+> This is the kind of functionality provided by kernel
+> RAID autodetect.  You don't have to have any config
+> information provided in advance.  The kernel finds and
+> assembles all arrays on disks with RAID autodetect
+> partition type.  I want to do the same thing, but with
 > mdadm.
-> > 
-> > The way I am thinking of doing this is as follows:
-> > 
-> > mdadm.conf =
-> > 
-> > DEVICE /dev/sd*
-> 
-> i prefer to use "DEVICE partitions"
-> 
-> > 1. Use "mdadm -E" on each drive in turn to get the
-> > UUID for the array to which it belongs and
-> assemble a
-> > list of unique UUIDs.
-> > 
-> > 2. Run "mdadm -A --uuid=<UUID> --auto=md --scan"
-> for
-> > each unique UUID.
-> > 
-> > 
-> > My question is, is it currently possible for me to
-> get
-> > mdadm to do this automatically?
-> 
-> the man page has an example... it's just:
-> 
-> 	mdadm --assemble --scan
-> 
-> -dean
-> 
 
+you know i've been bitten by that several times... the kernel sees the 
+autodetect partition type of a disk which used to belong in another box 
+(which for various reasons i've not yet been able to zero the old raid 
+superblock)... and brings up a raid minor which conflicts with another 
+array already present in the system... which causes device renaming to 
+occur and can mess up the boot.  (although if i'm using UUIDs or labels 
+for mounting the filesystems it can almost work -- there are still a few 
+cases where those don't help... such as xfs external log partition.)
 
-__________________________________________________
-Do You Yahoo!?
-Tired of spam?  Yahoo! Mail has the best spam protection around 
-http://mail.yahoo.com 
+i suppose what i suggested doesn't do what you want... but i prefer not 
+using kernel autoassembly these days because of the above problem.
+
+the 1.12 man page has more examples which can help you...
+
+	echo "DEVICE partitions" >tmp.mdadm.conf
+	mdadm --detail --scan --config=tmp.mdadm.conf >>tmp.mdadm.conf
+	mdadm --assemble --scan --config=tmp.mdadm.conf
+
+i think that'll do what you want...
+
+-dean
