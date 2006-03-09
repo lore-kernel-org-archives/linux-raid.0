@@ -1,146 +1,79 @@
-From: "Bill Kunyiha" <bill@freeway.com>
-Subject: mdadm Device Busy Error
-Date: Wed, 8 Mar 2006 15:19:04 -0800
-Message-ID: <000001c64306$b3553b50$644e0a0a@freeway.com>
-References: <17421.5993.343080.896707@cse.unsw.edu.au>
-Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17421.5993.343080.896707@cse.unsw.edu.au>
-Sender: linux-raid-owner@vger.kernel.org
-To: 'Neil Brown' <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+From: NeilBrown <neilb@suse.de>
+Subject: [PATCH] md: Fix several raid1 bugs which cause a memory leak...
+Date: Thu, 9 Mar 2006 14:16:29 +1100
+Message-ID: <1060309031629.22478@suse.de>
+References: <20060309141537.22458.patches@notabene>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932334AbWCIDRe@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
-Hi all,
-
-Thanks Neil for the help you've offered me.
-Everything worked okay until I think number 4. Here's how my /etc/fstab  and
-/mnt/etc/fstab files looks like
-
-/etc/fstab
-# This is edited by fstab-sync
-
-LABEL=/ 		/ 		ext3		default
-11
-none			/dev/pts	devpts	gid=5,mode=620	00
-none			/dev/shm	tmpfs		default		00
-none			/proc		proc		default		00
-none			/sys		sysfs		default		00
-LABEL=SWAP-hdb2	swap		swap		default		00
-
-/mnt/etc/fstab
-# This is edited by fstab-sync
-
-LABEL=/ 		/mnt 		RAID		default
-11
-none			/dev/pts	devpts	gid=5,mode=620	00
-none			/dev/shm	tmpfs		default		00
-none			/proc		proc		default		00
-none			/sys		sysfs		default		00
-LABEL=SWAP-hdb2	swap		swap		default		00
+This patch is suitable for 2.6.16
+NeilBrown
 
 
+### Comments for Changeset
 
-How should I change it after step 4? Should I change / to /mnt in both the
-files or how should they be? I'm guessing the two files have to be
-different. If I change the /etc/fstab file and change / to /mnt the system
-will not boot and I cannot edit the file since its in read only recovery
-mode 
-How should the files look like.
+- wrong test for 'is this a BARRIER bio'
+- not freeing on all possible paths.
+- using r1_bio after freeing it.
 
-Thank you for all the help.
+Signed-off-by: Neil Brown <neilb@suse.de>
 
-Bill Kunyiha
+### Diffstat output
+ ./drivers/md/raid1.c |   13 ++++++++-----
+ 1 file changed, 8 insertions(+), 5 deletions(-)
 
------Original Message-----
-From: Neil Brown [mailto:neilb@suse.de] 
-Sent: Monday, March 06, 2006 9:17 PM
-To: Bill Kunyiha
-Cc: linux-raid@vger.kernel.org
-Subject: RE: mdadm Device Busy Error
-
-On Monday March 6, bill@freeway.com wrote:
-> Please help me here. I want to create an array containing an active
-> partition. 
-
-You cannot do that.  It would corrupt the active partition.
-
->            I'd like to convert a machine from having a non-raid root to
-> having a raid1 root.
-
-It goes like this:
-  1/ create a degraded array using only the new device
-          mdadm -C /dev/md0 -l1 -n2 missing /dev/hdc1
-  2/ make a filesystem there
-          mkfs /dev/md0
-  3/ mount and copy over
-          mount /dev/md0 /mnt
-          cp -ax / /mnt
-  4/ update lilo.conf (or grub or whatever) on new filesystem
-     Also update /etc/fstab
-          vi /mnt/etc/lilo.conf
-          chroot /mnt /sbin/lilo
-          vi /mnt/etc/fstab
-  5/ reboot
-  6/ make sure the root filesystem is /dev/md0 and everything look
-    cool.  If not, boot off /dev/hdb1 and try again.
-  7/ add the original drive to the array
-          mdadm /dev/md0 -a /dev/hdb1
-
-Done/
-
-  
-          
-> I want to create software raid on two ide drives(hdb and hdc).
-> Currently everything is on hdb.
-> I want to convert hdb and hdc to raid auto detect.
-> I want if one drive fails, the other takes over, therefore all the disks
-> should have a boot loader, bios (I mean identical). So that if I take any
-of
-> the disks out, the system still boots. Can I do this and how do I go about
-> doing this?
-> 
-> 
-> On Friday February 3, bill@freeway.com wrote:
-> > I had problems with mdadm and what i did was reinstall Fedora Core 4 on
-my
-> > system. I would like to create raid 1 on /dev/hdb1 and /dev/hd1
-> > However when i try and create raid on these drives, i get an error from
-> > /dev/hdb1 saying that the device is busy. Here's the output i get from
-the
-> > screen.
-> > What could be the problem?
-> > 
-> > [root@lab-asterisk ~]# mdadm --create --verbose
-> > /dev/md0 --level=1 --raid-devices=2 /dev/hdb1 /dev/hdc1
-> > mdadm: Cannot open /dev/hdb1: Device or resource busy
-> > mdadm: create aborted
-> > 
-> > [root@lab-asterisk ~]# fdisk -l
-> > 
-> > Disk /dev/hdb: 20.0 GB, 20020396032 bytes
-> > 255 heads, 63 sectors/track, 2434 cylinders
-> > Units = cylinders of 16065 * 512 = 8225280 bytes
-> > 
-> >    Device Boot      Start         End      Blocks   Id  System
-> > /dev/hdb1   *           1        2401    19286001   fd  Linux raid
-> > autodetect
-> > /dev/hdb2            2402        2434      265072+  fd  Linux raid
-> > autodetect
-> > 
-> > Disk /dev/hdc: 10.2 GB, 10242892800 bytes
-> > 16 heads, 63 sectors/track, 19846 cylinders
-> > Units = cylinders of 1008 * 512 = 516096 bytes
-> > 
-> >    Device Boot      Start         End      Blocks   Id  System
-> > /dev/hdc1               1       19846    10002352+  fd  Linux raid
-> > autodetect
-> > [root@lab-asterisk ~]#
-> > [root@lab-asterisk ~]#
-> 
->  
-
+diff ./drivers/md/raid1.c~current~ ./drivers/md/raid1.c
+--- ./drivers/md/raid1.c~current~	2006-03-09 14:14:26.000000000 +1100
++++ ./drivers/md/raid1.c	2006-03-09 14:14:26.000000000 +1100
+@@ -306,6 +306,7 @@ static int raid1_end_write_request(struc
+ 	r1bio_t * r1_bio = (r1bio_t *)(bio->bi_private);
+ 	int mirror, behind = test_bit(R1BIO_BehindIO, &r1_bio->state);
+ 	conf_t *conf = mddev_to_conf(r1_bio->mddev);
++	struct bio *to_put = NULL;
+ 
+ 	if (bio->bi_size)
+ 		return 1;
+@@ -323,6 +324,7 @@ static int raid1_end_write_request(struc
+ 		 * this branch is our 'one mirror IO has finished' event handler:
+ 		 */
+ 		r1_bio->bios[mirror] = NULL;
++		to_put = bio;
+ 		if (!uptodate) {
+ 			md_error(r1_bio->mddev, conf->mirrors[mirror].rdev);
+ 			/* an I/O failed, we can't clear the bitmap */
+@@ -375,7 +377,7 @@ static int raid1_end_write_request(struc
+ 			/* Don't dec_pending yet, we want to hold
+ 			 * the reference over the retry
+ 			 */
+-			return 0;
++			goto out;
+ 		}
+ 		if (test_bit(R1BIO_BehindIO, &r1_bio->state)) {
+ 			/* free extra copy of the data pages */
+@@ -392,10 +394,11 @@ static int raid1_end_write_request(struc
+ 		raid_end_bio_io(r1_bio);
+ 	}
+ 
+-	if (r1_bio->bios[mirror]==NULL)
+-		bio_put(bio);
+-
+ 	rdev_dec_pending(conf->mirrors[mirror].rdev, conf->mddev);
++ out:
++	if (to_put)
++		bio_put(to_put);
++
+ 	return 0;
+ }
+ 
+@@ -857,7 +860,7 @@ static int make_request(request_queue_t 
+ 	atomic_set(&r1_bio->remaining, 0);
+ 	atomic_set(&r1_bio->behind_remaining, 0);
+ 
+-	do_barriers = bio->bi_rw & BIO_RW_BARRIER;
++	do_barriers = bio_barrier(bio);
+ 	if (do_barriers)
+ 		set_bit(R1BIO_Barrier, &r1_bio->state);
+ 
