@@ -1,52 +1,110 @@
-From: Sandro Dentella <sandro@e-den.it>
-Subject: a user-raid list for non gurus?
-Date: Fri, 10 Mar 2006 10:05:02 +0100
-Message-ID: <20060310090502.GA7422@casa.e-den.it>
+From: Sean Puttergill <puttergi@yahoo.ca>
+Subject: Re: Auto-assembling arrays using mdadm
+Date: Fri, 10 Mar 2006 04:34:58 -0500 (EST)
+Message-ID: <20060310093459.67755.qmail@web35304.mail.mud.yahoo.com>
+References: <17425.3736.352007.884424@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <17425.3736.352007.884424@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux Raid List <linux-raid@vger.kernel.org>
+To: Neil Brown <neilb@suse.de>
+Cc: dean gaudet <dean@arctic.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi all,
+I definitely wish to do this, that's why I'm asking. 
+I assume your statement refers to the general
+usefulness of what I am asking for.
 
-  even thought I'm subscribed to this list since quite a lot of time, I only
-  can grab a little purcentage of the discussion due to technical gap.
-  
-  When it happens that I ask something to the list I normally get unanswered
-  even on problems that in my opinion shouldn't be considered really
-  specific to my setup. Here just the last 2 questions:
+As to why I wish to implement this functionality, well
+you can tell that I am not targetting this at your
+average user's PC.  Not to be too secretive, but think
+along the lines of something more appliance like. 
+Amongst the requirements that I have for the system
+that I am constructing, I must deal with installing
+RAID sets that come from other boxes.  I need to be
+able to automatically start up existing RAID arrays on
+drive sets that have migrated over without needing to
+have any a priori knowledge of the RAID arrays that
+might exist on the drives.
 
-http://marc.theaimsgroup.com/?l=linux-raid&m=114185900020437&w=2
-http://marc.theaimsgroup.com/?l=linux-raid&m=114120476328121&w=2
-  
-  I'd like to know if there is a users-linux-raid where these kind of
-  questions get answered, if I should just insist on this list, or if I
-  missed some document (possibly a complete howto) that already gives 
-  thorought info on how to cope with troubles, or a wiki.
-  
-  I feel like linux-raid is missing a good howto. The documentation you can
-  find is often outdated or incomplete and it only saldomly helped me to get
-  out of problems. 
+In any case, your suggestion of a new flag to output
+unique device names from mdadm --examine (using UUID
+of array) sounds like an acceptable solution.  Please
+consider adding it.
 
-  The sad part of all this is that with raid systems you are not normally in
-  the mood/position to test things. You would much more prefere to arrive at
-  the crash already with the knowledge on how to cope with it... but the
-  crash is never as the one you simulated failing the device...
-
-Thanks for your attention and you job anyhow
-sandro
-*:-)
+I assume that using "--auto=md" when assembling will
+currently not take care of minor number conflicts in
+the config file?
 
 
-PS: In case anybody feeels like writing a complete howto I could
-    help... with the index ;-) of what a system admin -not a raid guru-
-    would like to read to understant raid (not just to setup)
+Thanks,
+Sean
+
+--- Neil Brown <neilb@suse.de> wrote:
+
+> On Thursday March 9, puttergi@yahoo.ca wrote:
+> 
+> It is not clear to me that this is something that
+> you would ever want
+> to do, just as you would not want an automatic
+> process to mount every
+> filesystem that it finds on any disk drive. (I agree
+> with dean here).
+> 
+> Maybe if you explained why you wanted to do this, a
+> more focussed
+> response could be provided.
+> 
+> 
+> > That did the trick, except you must do:
+> > 
+> > mdadm --examine --scan --config=tmp.mdadm.conf
+> > >>tmp.mdadm.conf
+> > 
+> > instead of:
+> > 
+> > mdadm --detail --scan --config=tmp.mdadm.conf
+> > >>tmp.mdadm.conf
+> > 
+> > I assume that this method would have the same
+> problems
+> > with conflicting minor number.  Will have to add
+> an
+> > intermediate step to process the tmp.mdadm.conf
+> file
+> > to uniquify the RAID array device names (i.e.
+> remove
+> > duplicate /dev/md0, etc.).
+> > 
+> > 
+> > Thanks for the tip.  I personally think mdadm
+> should
+> > be modified to do this all in one step (including
+> > dealing with minor number conflicts).
+> 
+> This is unlikely to happen.
+> 
+> It is, however, possible that "mdadm --examine
+> --scan" could grow an option
+> whereby the device names are given as
+>   /dev/md/UUID:OF:THE:ARRAY:THAT:WAS:FOUND
+> 
+> This, toogether with giving 'auto=mdp' could avoid
+> and issues with
+> minor number conflicts.  Then:
+>   echo DEV partitions > /etc/mdadm.conf
+>   mdadm -Es --new-flag >> /etc/mdadm.conf
+>   mdadm -As --auto-mdp
+> would assemble all arrays, which is what you claim
+> to want.
+> 
+> NeilBrown
+> 
 
 
--- 
-Sandro Dentella  *:-)
-e-mail: sandro@e-den.it 
-http://www.tksql.org                    TkSQL Home page - My GPL work
+__________________________________________________
+Do You Yahoo!?
+Tired of spam?  Yahoo! Mail has the best spam protection around 
+http://mail.yahoo.com 
