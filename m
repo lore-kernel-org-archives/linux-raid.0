@@ -1,52 +1,61 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: device that *thinks* to be a spare...
-Date: Fri, 10 Mar 2006 21:33:31 +1100
-Message-ID: <17425.22011.228249.274063@cse.unsw.edu.au>
-References: <20060308230200.GA10856@casa.e-den.it>
+Subject: Re: when --add after a fail?
+Date: Fri, 10 Mar 2006 21:37:33 +1100
+Message-ID: <17425.22253.896718.826151@cse.unsw.edu.au>
+References: <20060301091857.GA8817@casa.e-den.it>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Sandro Dentella on Thursday March 9
+In-Reply-To: message from Sandro Dentella on Wednesday March 1
 Sender: linux-raid-owner@vger.kernel.org
 To: Sandro Dentella <sandro@e-den.it>
-Cc: linux-raid@vger.kernel.org
+Cc: Linux Raid List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Thursday March 9, sandro@e-den.it wrote:
-> Yersterday i toubled with system crash due to an md device that stopped due
-> to an error on a single block (sata controller).
+On Wednesday March 1, sandro@e-den.it wrote:
+> Hi all,
+> 
+>    i've been using raid1 sisnce quite a loto of time. Sporadiccaly an array
+>    fails a disk and in many situations I can just pull the device into the
+>    array with
+> 
+>       mdadm /dev/mdN --add failded_device
 
-That shouldn't cause a system crash.  Do you have any kernel logs
-showing exactly what happened (what the single-block error was etc)?
+If a drive fails, you should try to understand *why* it failed before
+simply adding it back to the array.  If it was a transient read error,
+then it is fairly safe to add it back, though more recent kernels will
+not kick a drive in this situation.
+If it was a write error, then the reconstruction will fail.
+If it was a cabling or hardware error, then you really need to get it
+fixed.
+
 
 > 
-> Starting from a live rescue cd to analize the situation I found that the
-> array thought the good disk was the one had the block failure, so
-> that reconstruction arrived at 75% and then restarted (I saw that
-> happending).
+>    I've never really understood what is the magic that resurrexes it. I
+>    thought something related to relocation of bad blocks, but I'm  not at
+>    all aware of what happens "there"...
 
-That is very strange.  Again, logs would be helpful.
+md will simply copy all the data from the 'good' drive to the 'bad'
+drive.  If this work, life continues happily.  If not....
 
-
-> 
-> I eliminated the bad disk and the other couldn't start complaining it was a
-> spare one (but no one was configured as spare...) so that there where no
-> good disk. I had to turn it into a normal /dev/sda disk to be able to start
-> the system. 
-> 
-> My question is if there is a way to convince a device that it is the good
-> device w/o destroying the array and how it can happen that an array
-> component turns into a spare one.
-
-You can always re-create the array e.g.
-  mdadm -C /dev/md -l1 -n2 /dev/sda missing
-
-This does not destroy data.
 
 > 
-> What should I have one?
+>    Is that a correct trial to do?
+> 
+>    Now I have a device that throuws an error:
+> 
+> srv-ornago:/tmp# mdadm /dev/md2 --add /dev/hdc6 
+> mdadm: hot add failed for /dev/hdc6: Invalid argument
+> 
+> the kernel complains:
+> Mar  1 09:34:29 srv-ornago kernel: md: could not bd_claim hdc6.
+> Mar  1 09:34:29 srv-ornago kernel: md: error, md_import_device()
+> returned -16
 
-Provided more details in logs :-)
+This is telling you that the device (hdc6) is in use by something
+else.
+Is it mentioned in 'cat /proc/mdstat' ? It some partition on it
+mounted?
 
 NeilBrown
