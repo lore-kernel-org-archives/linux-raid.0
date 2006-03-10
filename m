@@ -1,61 +1,65 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: when --add after a fail?
-Date: Fri, 10 Mar 2006 21:37:33 +1100
-Message-ID: <17425.22253.896718.826151@cse.unsw.edu.au>
-References: <20060301091857.GA8817@casa.e-den.it>
+Subject: Re: a user-raid list for non gurus?
+Date: Fri, 10 Mar 2006 21:41:15 +1100
+Message-ID: <17425.22475.629813.392530@cse.unsw.edu.au>
+References: <20060310090502.GA7422@casa.e-den.it>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Sandro Dentella on Wednesday March 1
+In-Reply-To: message from Sandro Dentella on Friday March 10
 Sender: linux-raid-owner@vger.kernel.org
 To: Sandro Dentella <sandro@e-den.it>
 Cc: Linux Raid List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wednesday March 1, sandro@e-den.it wrote:
+On Friday March 10, sandro@e-den.it wrote:
 > Hi all,
 > 
->    i've been using raid1 sisnce quite a loto of time. Sporadiccaly an array
->    fails a disk and in many situations I can just pull the device into the
->    array with
+>   even thought I'm subscribed to this list since quite a lot of time, I only
+>   can grab a little purcentage of the discussion due to technical gap.
+>   
+>   When it happens that I ask something to the list I normally get unanswered
+>   even on problems that in my opinion shouldn't be considered really
+>   specific to my setup. Here just the last 2 questions:
 > 
->       mdadm /dev/mdN --add failded_device
+> http://marc.theaimsgroup.com/?l=linux-raid&m=114185900020437&w=2
+> http://marc.theaimsgroup.com/?l=linux-raid&m=114120476328121&w=2
 
-If a drive fails, you should try to understand *why* it failed before
-simply adding it back to the array.  If it was a transient read error,
-then it is fairly safe to add it back, though more recent kernels will
-not kick a drive in this situation.
-If it was a write error, then the reconstruction will fail.
-If it was a cabling or hardware error, then you really need to get it
-fixed.
+Maybe you just have to ask again.  It worked this time....
 
+>   
+>   I'd like to know if there is a users-linux-raid where these kind of
+>   questions get answered, if I should just insist on this list, or if I
+>   missed some document (possibly a complete howto) that already gives 
+>   thorought info on how to cope with troubles, or a wiki.
 
+No, this list is the best place to ask.  Questions usually get
+answered, but not always. People are busy etc.  Feel free to ask a
+second time if you haven't had an answer.
+
+>   
+>   I feel like linux-raid is missing a good howto. The documentation you can
+>   find is often outdated or incomplete and it only saldomly helped me to get
+>   out of problems. 
 > 
->    I've never really understood what is the magic that resurrexes it. I
->    thought something related to relocation of bad blocks, but I'm  not at
->    all aware of what happens "there"...
-
-md will simply copy all the data from the 'good' drive to the 'bad'
-drive.  If this work, life continues happily.  If not....
-
-
+>   The sad part of all this is that with raid systems you are not normally in
+>   the mood/position to test things. You would much more prefere to arrive at
+>   the crash already with the knowledge on how to cope with it... but the
+>   crash is never as the one you simulated failing the device...
 > 
->    Is that a correct trial to do?
+> Thanks for your attention and you job anyhow
+> sandro
+> *:-)
 > 
->    Now I have a device that throuws an error:
 > 
-> srv-ornago:/tmp# mdadm /dev/md2 --add /dev/hdc6 
-> mdadm: hot add failed for /dev/hdc6: Invalid argument
-> 
-> the kernel complains:
-> Mar  1 09:34:29 srv-ornago kernel: md: could not bd_claim hdc6.
-> Mar  1 09:34:29 srv-ornago kernel: md: error, md_import_device()
-> returned -16
+> PS: In case anybody feeels like writing a complete howto I could
+>     help... with the index ;-) of what a system admin -not a raid guru-
+>     would like to read to understant raid (not just to setup)
 
-This is telling you that the device (hdc6) is in use by something
-else.
-Is it mentioned in 'cat /proc/mdstat' ? It some partition on it
-mounted?
+To have a good howto, we need someone to step forward to write it.
+They don't necessarily need to know all the answers - they can ask
+here - but it would help if they know some good questions, and are
+reasonably good at technical writing.
 
 NeilBrown
