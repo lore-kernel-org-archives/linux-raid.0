@@ -1,24 +1,31 @@
-From: PFC <lists@peufeu.com>
-Subject: Re: how to clone a disk
-Date: Sat, 11 Mar 2006 13:40:29 +0100
-Message-ID: <op.s581hroxcigqcu@apollo13>
-References: <1142038562.20484.234.camel@localhost.localdomain> <dd43dcfb0603110353g1a4d51f6y9fe4caa4007b6e9c@mail.gmail.com>
+From: "Jane Billings" <hfhvcxawfhcamw@arsenal.co.uk>
+Subject: Don't miss out on improving your performance!
+Date: Sat, 11 Mar 2006 09:53:26 -0500
+Message-ID: <1D6AA7EB.2260536@nexgo.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; format=flowed; delsp=yes; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <dd43dcfb0603110353g1a4d51f6y9fe4caa4007b6e9c@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Paul M." <paul@gpmidi.net>, mingz@ele.uri.edu
-Cc: linux-raid@vger.kernel.org
+To: linux-net@vger.kernel.org, linux-newbie@vger.kernel.org, linux-ppp@vger.kernel.org, linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org, linux-serial@vger.kernel.org
 List-Id: linux-raid.ids
 
 
->> I have a raid5 array that contain 4 disk and 1 spare disk. now i saw one
->> disk have sign of going fail via smart log.
+hi friends :)
 
-	Better safe than sorry... replace the failing disk and resync, that's all.
+tried other product not working 
 
-	You might want to do "cat /dev/md# > /dev/null", or "cat /dev/hd?  
->/dev/null" first. This is to be sure there isn't some yet-unseen bad  
-sector on some other drive which would screw your resync.
+then please try us our product come with 
+100% money back guarrantee
+
+Ultimate hooddia -lose weeight in no time 
+http://ok-hood.com
+
+Perfect HHGGGHH - feel Young again
+http://zg-heeal.com
+
+Male Virility - have better sex 
+http://og-white.com
+
+alsatian
