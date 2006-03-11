@@ -1,31 +1,21 @@
-From: "Jane Billings" <hfhvcxawfhcamw@arsenal.co.uk>
-Subject: Don't miss out on improving your performance!
-Date: Sat, 11 Mar 2006 09:53:26 -0500
-Message-ID: <1D6AA7EB.2260536@nexgo.uk>
+From: "Sidney" <Sidney@verizon.com>
+Subject: {hey:hello} have you seen?
+Date: Sat, 11 Mar 2006 16:02:59 -0500
+Message-ID: <200603111502.k2BF2qiw018827@zeus2.kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-net@vger.kernel.org, linux-newbie@vger.kernel.org, linux-ppp@vger.kernel.org, linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org, linux-serial@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Have you ever felt like you wanted to show success?
+sure you can all you need is a watch to show everyone
+Our replicas are the best around.
+Feel the success of a new watch
+this might be the most important place you have ever visited.
+suprise everyone with your new watch
+http://www.letsgetreplica.com
 
-hi friends :)
+tedd
 
-tried other product not working 
-
-then please try us our product come with 
-100% money back guarrantee
-
-Ultimate hooddia -lose weeight in no time 
-http://ok-hood.com
-
-Perfect HHGGGHH - feel Young again
-http://zg-heeal.com
-
-Male Virility - have better sex 
-http://og-white.com
-
-alsatian
