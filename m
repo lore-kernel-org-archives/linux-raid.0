@@ -1,48 +1,52 @@
-From: "Linwood Story" <ougzp@590wsr.net>
-Subject: Professional Credit Loans for Americans
-Date: Sun, 12 Mar 2006 22:56:21 -0300
-Message-ID: <ougzp__41958.9016739794$1142214953$gmane$org@590wsr.net.pt>
+From: Patrik Jonsson <patrik@ucolick.org>
+Subject: raid5 hang on get_active_stripe
+Date: Mon, 13 Mar 2006 14:36:48 -0800
+Message-ID: <4415F400.5030808@ucolick.org>
+References: <5d96567b0603060346r768a0ee1i8d8170cf9ba4bac1@mail.gmail.com>	 <Pine.LNX.4.56.0603061156140.26994@lion.drogon.net> <5d96567b0603060456h5f2c3cc8me790c86b74e1f854@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
-	format=flowed
-Content-Transfer-Encoding: 7BIT
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enigFF0E91E8719892486AA6BB0F"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <5d96567b0603060456h5f2c3cc8me790c86b74e1f854@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-newbie@vger.kernel.org
-Cc: linux-serial@vger.kernel.org, linux-net@vger.kernel.org, linux-kernel@vger.kernel.org, autoanswer@vger.kernel.org, linux-assembly@vger.kernel.org, majordomo@vger.kernel.org, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-We tried to contact you multiple times about refniancing your home at a lower rate.
-I would like to inform you know that you have been pre-approved for a LOWER RATE consideration.
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enigFF0E91E8719892486AA6BB0F
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 
-Here are the terms: 
-*Account ID: [68468-167]
-*Negotiable Amount: $144,768 to $691,160
-*Rate: 3.75% - 5.80%
+Hi all,
 
-Please fill out this quick form and we will have a broker contact you as soon as possible.
+I just experienced some kind of lockup accessing my 8-drive raid5
+(2.6.16-rc4-mm2). The system has been up for 16 days running fine, but
+now processes that try to read the md device hang. ps tells me they are
+all sleeping in get_active_stripe. There is nothing in the syslog, and I
+can read from the individual drives fine with dd. mdadm says the state
+is "active".
 
-http://www.big9.net/vk.asp
+I'm not sure what to do now. Is it safe to try to reboot the system or
+could that cause the device to get corrupted if it's hung in the middle
+of some important operation?
 
+Ideas appreciated,
 
-Regards,
+/Patrik
 
-Linwood Story,
-Senior Account Manager
+--------------enigFF0E91E8719892486AA6BB0F
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.2 (MingW32)
+Comment: Using GnuPG with Thunderbird - http://enigmail.mozdev.org
 
+iD8DBQFEFfQBT+KvsdUW5p8RAoqdAJ9ivlNSybWuwEgqxLcoqWOPSQcyggCggi9Y
+EbNL6cdMfDa0tN1yDk+IabY=
+=TFbe
+-----END PGP SIGNATURE-----
 
-
-
-
-
-
-
-
-
-
-
-
-loomis you logician me, incalculable issue debussy greenberg . collet you toot me, car alleyway inventory . stallion you ray me, antigorite croydon jeep . diversion you zoroastrian me, headsmen midrange decennial . 
-protest you dogging me, pantomimic rust . pathology you hijack me, copybook . arnold you prosper me, coltsfoot contempt bread . 
-http://big9.net/n.asp
+--------------enigFF0E91E8719892486AA6BB0F--
