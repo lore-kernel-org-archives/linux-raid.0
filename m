@@ -1,53 +1,53 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: raid5 hang on get_active_stripe
-Date: Tue, 14 Mar 2006 10:17:50 +1100
-Message-ID: <17429.64926.100005.904328@cse.unsw.edu.au>
-References: <5d96567b0603060346r768a0ee1i8d8170cf9ba4bac1@mail.gmail.com>
-	<Pine.LNX.4.56.0603061156140.26994@lion.drogon.net>
-	<5d96567b0603060456h5f2c3cc8me790c86b74e1f854@mail.gmail.com>
-	<4415F400.5030808@ucolick.org>
+From: "MR. ANDRE AMOUSSOU" <aa2006bj@katamail.com>
+Subject: Good Morning,
+Date: Mon, 13 Mar 2006 14:53:20 +0100
+Message-ID: <1142258000.4415795088d9d__20198.7185086638$1142308060$gmane$org@imp.online.net>
+Reply-To: amoussou_10@yahoo.fr
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Patrik Jonsson on Monday March 13
 Sender: linux-raid-owner@vger.kernel.org
-To: Patrik Jonsson <patrik@ucolick.org>
-Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Monday March 13, patrik@ucolick.org wrote:
-> Hi all,
-> 
-> I just experienced some kind of lockup accessing my 8-drive raid5
-> (2.6.16-rc4-mm2). The system has been up for 16 days running fine, but
-> now processes that try to read the md device hang. ps tells me they are
-> all sleeping in get_active_stripe. There is nothing in the syslog, and I
-> can read from the individual drives fine with dd. mdadm says the state
-> is "active".
+Good Morning,
+I am Mr.Amoussou Andre, a credit officer in First National Bank Cotonou Benin,
+and personal account manager to an expartriate who used to work with Benin
+Total Oil Company(B.T.O.C). On the 2nd of January 2005, I recieved a call that
+my client died in the Tsunami Disaster with his wife and two kids while on
+vacation at Phuket Island in Thailand.
 
-Hmmm... That's sad. That's going to be very hard to track down.
+Since then I have made several enquiries to locate any of my client's extended
+relatives. This has proved unsuccessful. I have contacted you to assist in
+repartriating the money left behind by my client before it gets confiscated or
+declared unserviceable by the bank.
 
-If you could
-  echo t > /proc/sysrq-trigger
+Particularly, the bank where the deceased had an account valued at
+US$19,500,000.00 (Nineteen Million, Five Hundred Th! ousand United States
+Dollars). The bank has issued me a notice to provide the next-of-kin or have
+the account confiscated. Since I have been unsuccessful in locating the
+biological relatives of my late client, I hereby seek your consent to present
+you to the bank as next-of-kin of the deceased since you
+are a
+foreigner, so that the proceeds of this account valued at US$19.5M can be
+transfered to you as inheritance and thereafter, you and me can share the
+money; 50% to me and 35% to you, while 5% will be donated to the Tsunami
+Disaster Charity Fund, and 10% for expenditures.
 
-and send me the dump that appears in the kernel log, I would
-appreciate it.  I doubt it will be very helpful, but it is the best
-bet I can come up with.
+I have original copy of Certificate of Deposit of the funds, which will be
+used to substantiate our inherittance claims. All I require is your consent
+and honest co-operation to enable us see the deal through.
 
-> 
-> I'm not sure what to do now. Is it safe to try to reboot the system or
-> could that cause the device to get corrupted if it's hung in the middle
-> of some important operation?
+Furthermore, I guarantee that the transaction will be executed under a
+legitimate arrangement that will protect you from any breach of the law.
+Please contact me via ! email to enable us discuss further.
 
-You could try increasing the size of the stripe cache
-  echo 512 > /sys/block/mdX/md/stripe_cache_size
-(choose and appropriate 'X').
-Maybe check the content of
-         /sys/block/mdX/md/stripe_cache_active
-as well.
+Thank you.
+Yours faithfully,
+Mr.Amoussou Andre,
+(Credit Officer)
+Email:amoussou_10@yahoo.fr
 
-Other than that, just reboot.  The raid5 will do a resync, but the
-data should be fine.
 
-NeilBrown
+
+
