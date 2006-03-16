@@ -1,62 +1,78 @@
-From: Laurent CARON <lcaron@apartia.fr>
-Subject: Re: Bitmaps & Kernel Versions
-Date: Thu, 16 Mar 2006 12:56:37 +0100
-Message-ID: <44195275.9010208@apartia.fr>
-References: <4417DA8B.3040306@unix-scripts.info> <17431.59281.909724.299333@cse.unsw.edu.au> <20060315234333.GC25405@percy.comedia.it>
+From: Frank Blendinger <fb@intoxicatedmind.net>
+Subject: Two disk failure in RAID5 during resync, wrong superblocks
+Date: Thu, 16 Mar 2006 13:19:56 +0100
+Message-ID: <20060316121956.GE27570@intoxicatedmind.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="brEuL7wsLY8+TuWz"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20060315234333.GC25405@percy.comedia.it>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
-Cc: Luca Berra <bluca@comedia.it>
 List-Id: linux-raid.ids
 
-Luca Berra a =E9crit :
-> On Wed, Mar 15, 2006 at 09:08:17PM +1100, Neil Brown wrote:
->=20
->> On Wednesday March 15, lcaron@unix-scripts.info wrote:
->>
->>> Hi,
->>>
->>> I'm planning to use bitmaps on some of our RAID1 arrays.
->>>
->>> I'm wondering how bitmaps are handeled by older kernels.
->>>
->>> Eg: I create a raid array with a bitmap under a 2.6.15 kernel.
->>>
->>> I now want to boot under 2.6.12, or even 2.4
->>>
->>>
->>> Hos is it handeled?
->>> Will it work even if this is my / partition?
->>
->>
->> On older kernel will not notice the bitmap and will behave
->> 'normally'.
->=20
-> strange,
-> last time i tried an older kernel would refuse to activate an md with=
- a
-> bitmap on it.
-> I am far from home on a business trip and i don't have kernel-sources=
- at
-> hand, but i seem to remember that the kernel was very strict on the
-> feature bitmap in the superblock.
->=20
-> L.
->=20
-I experienced the same strange behavior.
 
-Bitmap was created on 2.6.15, tried to boot 2.6.14 and /dev/md0 was not=
-=20
-started :$.
+--brEuL7wsLY8+TuWz
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-Strange.....
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Hi all,
+
+I have just added the missing fourth disk to my RAID5 and waited for the
+resync to finish. This morning I had to see this in my /proc/mdstat:
+
+md2 : active raid5 hde1[4] hdg1[5](F) hdk1[2] hdi1[1]
+      730948992 blocks level 5, 64k chunk, algorithm 2 [4/2] [_UU_]
+
+hde is the added fourth disk the array was syncing to and hdg seems to
+have failed during this. From my syslog from yesterday:
+
+Mar 14 21:09:17 localhost kernel: [  717.345236] md: bind<hdg1>
+Mar 14 21:09:17 localhost kernel: [  717.633915] raid5: device hdg1 operational as raid disk 0
+Mar 14 21:09:17 localhost kernel: [  717.687884]  disk 0, o:1, dev:hdg1
+Mar 14 22:29:19 localhost kernel: [ 5529.025214] hdg: dma_intr: status=0x51 { DriveReady SeekComplete Error }
+Mar 14 22:29:19 localhost kernel: [ 5529.025242] hdg: dma_intr: error=0x84 { DriveStatusError BadCRC }
+Mar 14 22:29:19 localhost kernel: [ 5529.180163] hdg: dma_intr: status=0x51 { DriveReady SeekComplete Error }
+Mar 14 22:29:19 localhost kernel: [ 5529.180187] hdg: dma_intr: error=0x84 { DriveStatusError BadCRC }
+[...]
+Mar 14 23:27:15 localhost kernel: [ 9006.977466] PDC202XX: Secondary channel reset.
+Mar 14 23:27:15 localhost kernel: [ 9009.060757] PDC202XX: Primary channel reset.
+Mar 14 23:27:15 localhost kernel: [ 9009.061102] ide3: reset: master: error (0x00?)
+
+I guess the disk was then kicked out of the array.
+
+
+So I'm left with to working disks (hdk and hdi), one probably broken
+disk (hdg) with valuable data on it and one disk (hde) with not enough
+information on it to assemble the array.
+
+I think that leaves me two options:
+
+1) I'll try to reboot and force the array to be assembled with the
+   broken hdg, add hde and pray that a resync will finish.
+
+2) I'll dd_rescue hdg to hde and create the array with hde, hgk and hdi.
+   Then add hdg and see if a resync works.
+
+What would you suggest me to do? Is there maybe a better approach that I
+have missed? Any hints on how to force mdadm to assemble the array with
+the faulty hdg?
+
+
+Thanks in advance,
+Frank
+
+--brEuL7wsLY8+TuWz
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.1 (GNU/Linux)
+
+iD8DBQFEGVfscs96QQvy/noRAsv7AJ9r5iV4Kfl0NxXb4QRvWzcsqi/IQwCghowH
+Xk23VkxS5fw9hJz9z0AOHJY=
+=4GFw
+-----END PGP SIGNATURE-----
+
+--brEuL7wsLY8+TuWz--
