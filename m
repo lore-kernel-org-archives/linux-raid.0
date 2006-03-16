@@ -1,61 +1,62 @@
-From: Nix <nix@esperi.org.uk>
-Subject: Re: A random initramfs script
-Date: Thu, 16 Mar 2006 07:39:27 +0000
-Message-ID: <874q1yrg7k.fsf@hades.wkstn.nix>
-References: <87u0a0so6w.fsf@hades.wkstn.nix>
-	<20060315002527.GO27173@skl-net.de> <87lkvcrtzu.fsf@hades.wkstn.nix>
-	<20060315185750.GP27173@skl-net.de>
-	<17432.59463.266472.266509@cse.unsw.edu.au>
+From: Laurent CARON <lcaron@apartia.fr>
+Subject: Re: Bitmaps & Kernel Versions
+Date: Thu, 16 Mar 2006 12:56:37 +0100
+Message-ID: <44195275.9010208@apartia.fr>
+References: <4417DA8B.3040306@unix-scripts.info> <17431.59281.909724.299333@cse.unsw.edu.au> <20060315234333.GC25405@percy.comedia.it>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17432.59463.266472.266509@cse.unsw.edu.au> (Neil Brown's
- message of "Thu, 16 Mar 2006 15:23:35 +1100")
+In-Reply-To: <20060315234333.GC25405@percy.comedia.it>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Andre Noll <maan@systemlinux.org>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: Luca Berra <bluca@comedia.it>
 List-Id: linux-raid.ids
 
-On Thu, 16 Mar 2006, Neil Brown wrote:
-> On Wednesday March 15, maan@systemlinux.org wrote:
->> On 08:29, Nix wrote:
->> > Yeah, that would work. Neil's very *emphatic* about hardwiring the UUIDs of
->> > your arrays, though I'll admit that given the existence of --examine --scan,
->> > I don't really see why. :)
->> 
->> He likes to compare the situation with /etc/fstab. Nobody complains
->> about having to edit /etc/fstab, so why keep people complaining about
->> having to edit /etc/mdadm.conf?
-> 
-> Indeed!  And if you plug in some devices off another machine for
-> disaster recovery, you don't want another disaster because you
-> assembled the wrong arrays.
+Luca Berra a =E9crit :
+> On Wed, Mar 15, 2006 at 09:08:17PM +1100, Neil Brown wrote:
+>=20
+>> On Wednesday March 15, lcaron@unix-scripts.info wrote:
+>>
+>>> Hi,
+>>>
+>>> I'm planning to use bitmaps on some of our RAID1 arrays.
+>>>
+>>> I'm wondering how bitmaps are handeled by older kernels.
+>>>
+>>> Eg: I create a raid array with a bitmap under a 2.6.15 kernel.
+>>>
+>>> I now want to boot under 2.6.12, or even 2.4
+>>>
+>>>
+>>> Hos is it handeled?
+>>> Will it work even if this is my / partition?
+>>
+>>
+>> On older kernel will not notice the bitmap and will behave
+>> 'normally'.
+>=20
+> strange,
+> last time i tried an older kernel would refuse to activate an md with=
+ a
+> bitmap on it.
+> I am far from home on a business trip and i don't have kernel-sources=
+ at
+> hand, but i seem to remember that the kernel was very strict on the
+> feature bitmap in the superblock.
+>=20
+> L.
+>=20
+I experienced the same strange behavior.
 
-Well, I can't have that go wrong because I assemble all of them :)
+Bitmap was created on 2.6.15, tried to boot 2.6.14 and /dev/md0 was not=
+=20
+started :$.
 
-One thing I would like to know, though: I screwed up construction
-of one of my arrays and forgot to give it a name, so every array
-with a V1 superblock has a name *except one*.
-
-Is there a way to change the name after array creation? (Another
-overloading of --grow, perhaps?)
-
-(I'm still quite new to md so rather queasy about `just trying'
-things like this with active arrays containing critical data.
-I suppose I should build a test array on a sparse loopback mount
-or something...)
-
-> I would like an md superblock to be able to contain some indication of
-> the 'name' of the machine which is meant to host the array, so that
-> once a machine knows its own name, it can automatically find and mount
-> its own arrays,
-
-... and of course you could request the mounting of some other machine's
-arrays if you cart disks around between machines :)
-
-Seems like a good idea.
-
--- 
-`Come now, you should know that whenever you plan the duration of your
- unplanned downtime, you should add in padding for random management
- freakouts.'
+Strange.....
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
