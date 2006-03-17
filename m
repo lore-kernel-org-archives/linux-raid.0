@@ -1,47 +1,83 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: [PATCH 006 of 13] md: Infrastructure to allow normal IO to
- continue while array is expanding.
-Date: Thu, 16 Mar 2006 22:01:37 -0800
-Message-ID: <20060316220137.5820ab09.akpm@osdl.org>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: [PATCH 005 of 13] md: Allow stripes to be expanded in
+ preparation for expanding an array.
+Date: Fri, 17 Mar 2006 17:04:48 +1100
+Message-ID: <17434.20864.926514.729680@cse.unsw.edu.au>
 References: <20060317154017.15880.patches@notabene>
-	<1060317044750.16084@suse.de>
+	<1060317044745.16072@suse.de>
+	<20060316215047.65f411d4.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1060317044750.16084@suse.de>
+In-Reply-To: message from Andrew Morton on Thursday March 16
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
+To: Andrew Morton <akpm@osdl.org>
 Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-NeilBrown <neilb@suse.de> wrote:
->
->  -	retry:
->   		prepare_to_wait(&conf->wait_for_overlap, &w, TASK_UNINTERRUPTIBLE);
->  -		sh = get_active_stripe(conf, new_sector, pd_idx, (bi->bi_rw&RWA_MASK));
->  +		sh = get_active_stripe(conf, new_sector, disks, pd_idx, (bi->bi_rw&RWA_MASK));
->   		if (sh) {
->  -			if (!add_stripe_bio(sh, bi, dd_idx, (bi->bi_rw&RW_MASK))) {
->  -				/* Add failed due to overlap.  Flush everything
->  +			if (unlikely(conf->expand_progress != MaxSector)) {
->  +				/* expansion might have moved on while waiting for a
->  +				 * stripe, so we much do the range check again.
->  +				 */
->  +				int must_retry = 0;
->  +				spin_lock_irq(&conf->device_lock);
->  +				if (logical_sector <  conf->expand_progress &&
->  +				    disks == conf->previous_raid_disks)
->  +					/* mismatch, need to try again */
->  +					must_retry = 1;
->  +				spin_unlock_irq(&conf->device_lock);
->  +				if (must_retry) {
->  +					release_stripe(sh);
->  +					goto retry;
->  +				}
->  +			}
+On Thursday March 16, akpm@osdl.org wrote:
+> NeilBrown <neilb@suse.de> wrote:
+> >
+> > +static int resize_stripes(raid5_conf_t *conf, int newsize)
+> >  +{
+> >  +	/* make all the stripes able to hold 'newsize' devices.
+> >  +	 * New slots in each stripe get 'page' set to a new page.
+> >  +	 * We allocate all the new stripes first, then if that succeeds,
+> >  +	 * copy everything across.
+> >  +	 * Finally we add new pages.  This could fail, but we leave
+> >  +	 * the stripe cache at it's new size, just with some pages empty.
+> >  +	 *
+> >  +	 * We use GFP_NOIO allocations as IO to the raid5 is blocked
+> >  +	 * at some points in this operation.
+> >  +	 */
+> >  +	struct stripe_head *osh, *nsh;
+> >  +	struct list_head newstripes, oldstripes;
+> 
+> You can use LIST_HEAD() here, avoid the separate INIT_LIST_HEAD().
+> 
 
-The locking in here looks strange.  We take the lock, do some arithmetic
-and some tests and then drop the lock again.  Is it not possible that the
-result of those tests now becomes invalid?
+I guess.....
+I have to have the declaration "miles" from where I use the variable.
+Do I have to have the initialisation equally far?  Ok, I'll do that..
+
+
+> 
+> >  +	struct disk_info *ndisks;
+> >  +	int err = 0;
+> >  +	kmem_cache_t *sc;
+> >  +	int i;
+> >  +
+> >  +	if (newsize <= conf->pool_size)
+> >  +		return 0; /* never bother to shrink */
+> >  +
+> >  +	sc = kmem_cache_create(conf->cache_name[1-conf->active_name],
+> >  +			       sizeof(struct stripe_head)+(newsize-1)*sizeof(struct r5dev),
+> >  +			       0, 0, NULL, NULL);
+> 
+> kmem_cache_create() internally does a GFP_KERNEL allocation.
+> 
+> >  +	if (!sc)
+> >  +		return -ENOMEM;
+> >  +	INIT_LIST_HEAD(&newstripes);
+> >  +	for (i = conf->max_nr_stripes; i; i--) {
+> >  +		nsh = kmem_cache_alloc(sc, GFP_NOIO);
+> 
+> So either this can use GFP_KERNEL, or we have a problem.
+
+Good point....  Maybe the comment about GFP_NOIO just needs to be
+improved. 
+We cannot risk waiting on IO after the 
+	/* OK, we have enough stripes, start collecting inactive
+	 * stripes and copying them over
+	 */
+
+comment, up to the second last while loop, that starts
+	while(!list_empty(&newstripes)) {
+
+Before the comment, which where the kmem_cache_create is, is OK.
+
+Thanks!
+
+NeilBrown
 
