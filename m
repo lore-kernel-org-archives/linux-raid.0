@@ -1,72 +1,40 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH 006 of 13] md: Infrastructure to allow normal IO to
- continue while array is expanding.
-Date: Fri, 17 Mar 2006 17:17:08 +1100
-Message-ID: <17434.21604.687323.519646@cse.unsw.edu.au>
+From: Andrew Morton <akpm@osdl.org>
+Subject: Re: [PATCH 010 of 13] md: Only checkpoint expansion progress
+ occasionally.
+Date: Thu, 16 Mar 2006 22:17:43 -0800
+Message-ID: <20060316221743.71a21520.akpm@osdl.org>
 References: <20060317154017.15880.patches@notabene>
-	<1060317044750.16084@suse.de>
-	<20060316220137.5820ab09.akpm@osdl.org>
+	<1060317044814.16208@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Andrew Morton on Thursday March 16
+In-Reply-To: <1060317044814.16208@suse.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
+To: NeilBrown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thursday March 16, akpm@osdl.org wrote:
-> NeilBrown <neilb@suse.de> wrote:
-> >
-> >  -	retry:
-> >   		prepare_to_wait(&conf->wait_for_overlap, &w, TASK_UNINTERRUPTIBLE);
-> >  -		sh = get_active_stripe(conf, new_sector, pd_idx, (bi->bi_rw&RWA_MASK));
-> >  +		sh = get_active_stripe(conf, new_sector, disks, pd_idx, (bi->bi_rw&RWA_MASK));
-> >   		if (sh) {
-> >  -			if (!add_stripe_bio(sh, bi, dd_idx, (bi->bi_rw&RW_MASK))) {
-> >  -				/* Add failed due to overlap.  Flush everything
-> >  +			if (unlikely(conf->expand_progress != MaxSector)) {
-> >  +				/* expansion might have moved on while waiting for a
-> >  +				 * stripe, so we much do the range check again.
-> >  +				 */
-> >  +				int must_retry = 0;
-> >  +				spin_lock_irq(&conf->device_lock);
-> >  +				if (logical_sector <  conf->expand_progress &&
-> >  +				    disks == conf->previous_raid_disks)
-> >  +					/* mismatch, need to try again */
-> >  +					must_retry = 1;
-> >  +				spin_unlock_irq(&conf->device_lock);
-> >  +				if (must_retry) {
-> >  +					release_stripe(sh);
-> >  +					goto retry;
-> >  +				}
-> >  +			}
-> 
-> The locking in here looks strange.  We take the lock, do some arithmetic
-> and some tests and then drop the lock again.  Is it not possible that the
-> result of those tests now becomes invalid?
+NeilBrown <neilb@suse.de> wrote:
+>
+> diff ./drivers/md/raid5.c~current~ ./drivers/md/raid5.c
+>  --- ./drivers/md/raid5.c~current~	2006-03-17 11:48:58.000000000 +1100
+>  +++ ./drivers/md/raid5.c	2006-03-17 11:48:58.000000000 +1100
+>  @@ -1747,8 +1747,9 @@ static int make_request(request_queue_t 
 
-Obviously another comment missing.
- conf->expand_progress is sector_t and so could be 64bits on a 32 bit
- platform, and so I cannot be sure it is updated atomically.  So I
- always access it within a lock (unless I am comparing for equality with ~0).
- 
- Yes, the result can become invalid, but only in one direction:  As
- expand_progress always increases, it is possible that it will pass
- logical_sector.  When that happens, STRIPE_EXPANDING gets set on the
- stripe_head at logical_sector.
- So because we took a reference to logical_sector *before* this test,
- and check for stripe_expanding *after* the test, we can easily catch
- that transition.
+That's a fairly complex function..
 
- Putting it another way, this test is to catch cases where
- logical_sector is a long way from expand_progress, the subsequent
- test of STRIPE_EXPANDING catches cases where they are close together,
- and the ordering wrt get_stripe_active ensures there are no holes.
+I wonder about this:
 
-Now to put that into a few short-but-clear comments.
+	spin_lock_irq(&conf->device_lock);
+	if (--bi->bi_phys_segments == 0) {
+		int bytes = bi->bi_size;
 
-Thanks again!
+		if ( bio_data_dir(bi) == WRITE )
+			md_write_end(mddev);
+		bi->bi_size = 0;
+		bi->bi_end_io(bi, bytes, 0);
+	}
+	spin_unlock_irq(&conf->device_lock);
 
-NeilBrown
+bi_end_io() can be somewhat expensive.  Does it need to happen under the lock?
