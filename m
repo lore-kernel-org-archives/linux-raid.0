@@ -1,50 +1,53 @@
-From: Andre Noll <maan@systemlinux.org>
-Subject: Re: A random initramfs script
-Date: Fri, 17 Mar 2006 04:35:40 +0100
-Message-ID: <20060317033540.GE14051@skl-net.de>
-References: <87u0a0so6w.fsf@hades.wkstn.nix> <20060315002527.GO27173@skl-net.de> <87lkvcrtzu.fsf@hades.wkstn.nix> <20060315185750.GP27173@skl-net.de> <87hd5zs9zm.fsf@hades.wkstn.nix> <20060316002330.GT27173@skl-net.de> <87zmjqq14r.fsf@hades.wkstn.nix> <20060316234613.GX27173@skl-net.de> <87r751q4wi.fsf@hades.wkstn.nix>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: NeilBrown <neilb@suse.de>
+Subject: [PATCH 000 of 13] md: Introduction
+Date: Fri, 17 Mar 2006 15:47:12 +1100
+Message-ID: <20060317154017.15880.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <87r751q4wi.fsf@hades.wkstn.nix>
 Sender: linux-raid-owner@vger.kernel.org
-To: Nix <nix@esperi.org.uk>
-Cc: linux-raid@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 00:41, Nix wrote:
 
-> > So I downloaded iproute2-2.4.7-now-ss020116-try.tar.gz, but there
-> > seems to be a problem with errno.h:
-> 
-> Holy meatballs that's ancient.
+Following are 13 patches for md in 2.6.last (created against 2.6.16-rc6-mm1).
+They are NOT appropriate for 2.6.16 but should be OK for .17.  Please include
+them in -mm.
 
-It is the most recent version on the ftp server mentioned in the HOWTO.
+The first three are assorted bug fixes, none really serious
 
-> Try <http://developer.osdl.org/dev/iproute2/download/iproute2-2.6.15-060110.tar.gz>
-> for a rather newer and more capable copy. :)
+The remainder implement raid5 reshaping.  Currently the only shape change
+that is supported is added a device, but it is envisioned that 
+changing the chunksize and layout will also be supported, as well
+as changing the level (e.g. 1->5, 5->6).
 
-Much better. Thanks. This version works fine for me, just like busybox
-ip does.
+The reshape process naturally has to move all of the data in the
+array, and so should be used with caution.  It is believed to work,
+and some testing does support this, but wider testing would be great
+for increasing my confidence.
 
-> Yes, the initial population of /dev is done by firing messages at udevd
-> *from a shell script*. It's gone all the way from devfs's kernel-space
-> hardwiring to something sufficiently extensible that a shell script can
-> do all the neessary stuff to populate /dev :)
+You will need a version of mdadm newer than 2.3.1 to make use of raid5
+growth.  This is because mdadm need to take a copy of a 'critical
+section' at the start of the array incase there is a crash at an
+awkward moment.  On restart, mdadm will restore the critical section
+and allow reshape to continue.
 
-Yeah, Linux rulez :)
+I hope to release a 2.4-pre by early next week - it still needs a
+little more polishing.
 
-> [uClibc]
-> 
-> Alternatively, just suck down GCC from, say, svn://gcc.gnu.org/svn/gcc/tags/gcc_3_4_5_release,
-> or ftp.gnu.org, or somewhere, and point buildroot at that.
+NeilBrown
 
-Yep, there's a 'dl' directory which contains all downloads. One can
-download the tarballs from anywhere else to that directory. Seems to
-work now.
 
-Thanks
-Andre
--- 
-The only person who always got his work done by Friday was Robinson Crusoe
+ [PATCH 001 of 13] md: Add '4' to the list of levels for which bitmaps are supported.
+ [PATCH 002 of 13] md: Fix the 'failed' count for version-0 superblocks.
+ [PATCH 003 of 13] md: Update status_resync to handle LARGE devices.
+
+ [PATCH 004 of 13] md: Split disks array out of raid5 conf structure so it is easier to grow.
+ [PATCH 005 of 13] md: Allow stripes to be expanded in preparation for expanding an array.
+ [PATCH 006 of 13] md: Infrastructure to allow normal IO to continue while array is expanding.
+ [PATCH 007 of 13] md: Core of raid5 resize process
+ [PATCH 008 of 13] md: Final stages of raid5 expand code.
+ [PATCH 009 of 13] md: Checkpoint and allow restart of raid5 reshape
+ [PATCH 010 of 13] md: Only checkpoint expansion progress occasionally.
+ [PATCH 011 of 13] md: Split reshape handler in check_reshape and start_reshape.
+ [PATCH 012 of 13] md: Make 'reshape' a possible sync_action action.
+ [PATCH 013 of 13] md: Support suspending of IO to regions of an md array.
