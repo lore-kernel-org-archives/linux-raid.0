@@ -1,59 +1,50 @@
 From: Andre Noll <maan@systemlinux.org>
 Subject: Re: A random initramfs script
-Date: Fri, 17 Mar 2006 02:22:45 +0100
-Message-ID: <20060317012245.GD14051@skl-net.de>
-References: <87u0a0so6w.fsf@hades.wkstn.nix> <20060315002527.GO27173@skl-net.de> <87lkvcrtzu.fsf@hades.wkstn.nix> <20060315185750.GP27173@skl-net.de> <17432.59463.266472.266509@cse.unsw.edu.au>
+Date: Fri, 17 Mar 2006 04:35:40 +0100
+Message-ID: <20060317033540.GE14051@skl-net.de>
+References: <87u0a0so6w.fsf@hades.wkstn.nix> <20060315002527.GO27173@skl-net.de> <87lkvcrtzu.fsf@hades.wkstn.nix> <20060315185750.GP27173@skl-net.de> <87hd5zs9zm.fsf@hades.wkstn.nix> <20060316002330.GT27173@skl-net.de> <87zmjqq14r.fsf@hades.wkstn.nix> <20060316234613.GX27173@skl-net.de> <87r751q4wi.fsf@hades.wkstn.nix>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <17432.59463.266472.266509@cse.unsw.edu.au>
+In-Reply-To: <87r751q4wi.fsf@hades.wkstn.nix>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Nix <nix@esperi.org.uk>, linux-raid@vger.kernel.org
+To: Nix <nix@esperi.org.uk>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 15:23, Neil Brown wrote:
+On 00:41, Nix wrote:
 
-> You shouldn't need portmap to mount an NFS filesystem unless you
-> enable locking,
-
-That's news to me, thanks for pointing it out. But I do need portmap
-for mounting a NFS filesystem read-only (/usr, which contains
-portmap). Is that correct?
-
-> > He likes to compare the situation with /etc/fstab. Nobody complains
-> > about having to edit /etc/fstab, so why keep people complaining about
-> > having to edit /etc/mdadm.conf?
+> > So I downloaded iproute2-2.4.7-now-ss020116-try.tar.gz, but there
+> > seems to be a problem with errno.h:
 > 
-> Indeed!  And if you plug in some devices off another machine for
-> disaster recovery, you don't want another disaster because you
-> assembled the wrong arrays.
+> Holy meatballs that's ancient.
 
-How is such a disaster possible, given each md device contains an
-ID for the array it belongs to? But yes, it is certainly a good
-idea to doublecheck everything before assembling the array in such
-a recovery situation.
+It is the most recent version on the ftp server mentioned in the HOWTO.
 
-> I would like an md superblock to be able to contain some indication of
-> the 'name' of the machine which is meant to host the array, so that
-> once a machine knows its own name, it can automatically find and mount
-> its own arrays, but that isn't near the top of my list of priorities
-> yet.
+> Try <http://developer.osdl.org/dev/iproute2/download/iproute2-2.6.15-060110.tar.gz>
+> for a rather newer and more capable copy. :)
 
-How about a user-defined name?
+Much better. Thanks. This version works fine for me, just like busybox
+ip does.
 
-	mdadm --create --name the_extra_noisy_array /dev/md0 --level...
+> Yes, the initial population of /dev is done by firing messages at udevd
+> *from a shell script*. It's gone all the way from devfs's kernel-space
+> hardwiring to something sufficiently extensible that a shell script can
+> do all the neessary stuff to populate /dev :)
 
-would use some fixed algorithm to compute a usual UUID for the new
-array from the string "the_extra_noisy_array", and
+Yeah, Linux rulez :)
 
-	mdadm --assemble /dev/md0 --name the_extra_noisy_array
+> [uClibc]
+> 
+> Alternatively, just suck down GCC from, say, svn://gcc.gnu.org/svn/gcc/tags/gcc_3_4_5_release,
+> or ftp.gnu.org, or somewhere, and point buildroot at that.
 
-could use the same algorithm and take into account only those devices
-which have a UUID equal to the computed one.
+Yep, there's a 'dl' directory which contains all downloads. One can
+download the tarballs from anywhere else to that directory. Seems to
+work now.
 
-Just a thought.
+Thanks
 Andre
 -- 
 The only person who always got his work done by Friday was Robinson Crusoe
