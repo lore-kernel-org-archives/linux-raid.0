@@ -1,31 +1,29 @@
-From: NeilBrown <neilb@suse.de>
-Subject: [PATCH 003 of 6] md: Remove an unused variable.
-Date: Fri, 17 Mar 2006 18:21:36 +1100
-Message-ID: <1060317072136.28638@suse.de>
-References: <20060317181912.28543.patches@notabene>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: Neil, where are your Patches !
+Date: Fri, 17 Mar 2006 22:10:59 +1100
+Message-ID: <17434.39235.49589.69449@cse.unsw.edu.au>
+References: <fd8d0180603150510h37865209p@mail.gmail.com>
+	<17433.61627.891961.775442@cse.unsw.edu.au>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: message from Neil Brown on Friday March 17
 Sender: linux-raid-owner@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Francois Barre <francois.barre@gmail.com>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+On Friday March 17, neilb@suse.de wrote:
+> > 
+> > So, where are they hidding ? I can't believe that an efficient
+> > organization such as http://cgi.cse.unsw.edu.au/~neilb/patches/ is not
+> > available anymore...
+> 
+> Hmmm.... I thought the appeared somewhere automatically, but they
+> don't seem to, do they.... I'll try to sort something out later today.
+> 
 
+Ok, look again, under  
+   http://cgi.cse.unsw.edu.au/~neilb/patches/linux-devel/
 
-Signed-off-by: Neil Brown <neilb@suse.de>
-
-### Diffstat output
- ./drivers/md/raid5.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff ./drivers/md/raid5.c~current~ ./drivers/md/raid5.c
---- ./drivers/md/raid5.c~current~	2006-03-17 18:18:32.000000000 +1100
-+++ ./drivers/md/raid5.c	2006-03-17 18:18:35.000000000 +1100
-@@ -2186,7 +2186,7 @@ static int run(mddev_t *mddev)
- 		 * increase, and we must be past the point where
- 		 * a stripe over-writes itself
- 		 */
--		sector_t here_new, here_old, there_new;
-+		sector_t here_new, here_old;
- 		int old_disks;
- 
- 		if (mddev->new_level != mddev->level ||
+NeilBrown
