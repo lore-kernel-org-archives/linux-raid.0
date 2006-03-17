@@ -1,7 +1,8 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [PATCH 000 of 13] md: Introduction
-Date: Fri, 17 Mar 2006 15:47:12 +1100
-Message-ID: <20060317154017.15880.patches@notabene>
+Subject: [PATCH 001 of 13] md: Add '4' to the list of levels for which bitmaps are supported.
+Date: Fri, 17 Mar 2006 15:47:26 +1100
+Message-ID: <1060317044726.16023@suse.de>
+References: <20060317154017.15880.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: Andrew Morton <akpm@osdl.org>
@@ -9,45 +10,25 @@ Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-Following are 13 patches for md in 2.6.last (created against 2.6.16-rc6-mm1).
-They are NOT appropriate for 2.6.16 but should be OK for .17.  Please include
-them in -mm.
-
-The first three are assorted bug fixes, none really serious
-
-The remainder implement raid5 reshaping.  Currently the only shape change
-that is supported is added a device, but it is envisioned that 
-changing the chunksize and layout will also be supported, as well
-as changing the level (e.g. 1->5, 5->6).
-
-The reshape process naturally has to move all of the data in the
-array, and so should be used with caution.  It is believed to work,
-and some testing does support this, but wider testing would be great
-for increasing my confidence.
-
-You will need a version of mdadm newer than 2.3.1 to make use of raid5
-growth.  This is because mdadm need to take a copy of a 'critical
-section' at the start of the array incase there is a crash at an
-awkward moment.  On restart, mdadm will restore the critical section
-and allow reshape to continue.
-
-I hope to release a 2.4-pre by early next week - it still needs a
-little more polishing.
-
-NeilBrown
+I really should make this a function of the personality....
 
 
- [PATCH 001 of 13] md: Add '4' to the list of levels for which bitmaps are supported.
- [PATCH 002 of 13] md: Fix the 'failed' count for version-0 superblocks.
- [PATCH 003 of 13] md: Update status_resync to handle LARGE devices.
+Signed-off-by: Neil Brown <neilb@suse.de>
 
- [PATCH 004 of 13] md: Split disks array out of raid5 conf structure so it is easier to grow.
- [PATCH 005 of 13] md: Allow stripes to be expanded in preparation for expanding an array.
- [PATCH 006 of 13] md: Infrastructure to allow normal IO to continue while array is expanding.
- [PATCH 007 of 13] md: Core of raid5 resize process
- [PATCH 008 of 13] md: Final stages of raid5 expand code.
- [PATCH 009 of 13] md: Checkpoint and allow restart of raid5 reshape
- [PATCH 010 of 13] md: Only checkpoint expansion progress occasionally.
- [PATCH 011 of 13] md: Split reshape handler in check_reshape and start_reshape.
- [PATCH 012 of 13] md: Make 'reshape' a possible sync_action action.
- [PATCH 013 of 13] md: Support suspending of IO to regions of an md array.
+### Diffstat output
+ ./drivers/md/md.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff ./drivers/md/md.c~current~ ./drivers/md/md.c
+--- ./drivers/md/md.c~current~	2006-03-17 11:45:43.000000000 +1100
++++ ./drivers/md/md.c	2006-03-17 11:48:08.000000000 +1100
+@@ -763,7 +763,8 @@ static int super_90_validate(mddev_t *md
+ 
+ 		if (sb->state & (1<<MD_SB_BITMAP_PRESENT) &&
+ 		    mddev->bitmap_file == NULL) {
+-			if (mddev->level != 1 && mddev->level != 5 && mddev->level != 6
++			if (mddev->level != 1 && mddev->level != 4
++			    && mddev->level != 5 && mddev->level != 6
+ 			    && mddev->level != 10) {
+ 				/* FIXME use a better test */
+ 				printk(KERN_WARNING "md: bitmaps not supported for this level.\n");
