@@ -1,40 +1,78 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: [PATCH 010 of 13] md: Only checkpoint expansion progress
- occasionally.
-Date: Thu, 16 Mar 2006 22:17:43 -0800
-Message-ID: <20060316221743.71a21520.akpm@osdl.org>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: [PATCH 005 of 13] md: Allow stripes to be expanded in
+ preparation for expanding an array.
+Date: Fri, 17 Mar 2006 17:24:11 +1100
+Message-ID: <17434.22027.100178.665781@cse.unsw.edu.au>
 References: <20060317154017.15880.patches@notabene>
-	<1060317044814.16208@suse.de>
+	<1060317044745.16072@suse.de>
+	<20060316215739.2b11cb82.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1060317044814.16208@suse.de>
+In-Reply-To: message from Andrew Morton on Thursday March 16
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
+To: Andrew Morton <akpm@osdl.org>
 Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-NeilBrown <neilb@suse.de> wrote:
->
-> diff ./drivers/md/raid5.c~current~ ./drivers/md/raid5.c
->  --- ./drivers/md/raid5.c~current~	2006-03-17 11:48:58.000000000 +1100
->  +++ ./drivers/md/raid5.c	2006-03-17 11:48:58.000000000 +1100
->  @@ -1747,8 +1747,9 @@ static int make_request(request_queue_t 
+On Thursday March 16, akpm@osdl.org wrote:
+> NeilBrown <neilb@suse.de> wrote:
+> >
+> > +	/* Got them all.
+> >  +	 * Return the new ones and free the old ones.
+> >  +	 * At this point, we are holding all the stripes so the array
+> >  +	 * is completely stalled, so now is a good time to resize
+> >  +	 * conf->disks.
+> >  +	 */
+> >  +	ndisks = kzalloc(newsize * sizeof(struct disk_info), GFP_NOIO);
+> >  +	if (ndisks) {
+> >  +		for (i=0; i<conf->raid_disks; i++)
+> >  +			ndisks[i] = conf->disks[i];
+> >  +		kfree(conf->disks);
+> >  +		conf->disks = ndisks;
+> >  +	} else
+> >  +		err = -ENOMEM;
+> >  +	while(!list_empty(&newstripes)) {
+> >  +		nsh = list_entry(newstripes.next, struct stripe_head, lru);
+> >  +		list_del_init(&nsh->lru);
+> >  +		for (i=conf->raid_disks; i < newsize; i++)
+> >  +			if (nsh->dev[i].page == NULL) {
+> >  +				struct page *p = alloc_page(GFP_NOIO);
+> >  +				nsh->dev[i].page = p;
+> >  +				if (!p)
+> >  +					err = -ENOMEM;
+> >  +			}
+> >  +		release_stripe(nsh);
+> >  +	}
+> >  +	while(!list_empty(&oldstripes)) {
+> >  +		osh = list_entry(oldstripes.next, struct stripe_head, lru);
+> >  +		list_del(&osh->lru);
+> >  +		kmem_cache_free(conf->slab_cache, osh);
+> >  +	}
+> >  +	kmem_cache_destroy(conf->slab_cache);
+> >  +	conf->slab_cache = sc;
+> >  +	conf->active_name = 1-conf->active_name;
+> >  +	conf->pool_size = newsize;
+> >  +	return err;
+> >  +}
+> 
+> Are you sure the -ENOMEM handling here is solid?  It
+> looks.... strange.
 
-That's a fairly complex function..
+The philosophy of the -ENOMEM handling is (awkwardly?) embodied in the
+comment
+	 * Finally we add new pages.  This could fail, but we leave
+	 * the stripe cache at it's new size, just with some pages empty.
 
-I wonder about this:
+at the top of the function.  The core function here is making some
+data structures bigger.  In each case, having a bigger data structure
+than required is no big deal.  So we try to increase the size of each
+of them (the stripe_head cache, the 'disks' array, and the pages
+allocated to each stripe.
+If any of there fail we return -ENOMEM, but may allow others to
+succeed.
 
-	spin_lock_irq(&conf->device_lock);
-	if (--bi->bi_phys_segments == 0) {
-		int bytes = bi->bi_size;
+Does that help?
 
-		if ( bio_data_dir(bi) == WRITE )
-			md_write_end(mddev);
-		bi->bi_size = 0;
-		bi->bi_end_io(bi, bytes, 0);
-	}
-	spin_unlock_irq(&conf->device_lock);
-
-bi_end_io() can be somewhat expensive.  Does it need to happen under the lock?
+NeilBrown
