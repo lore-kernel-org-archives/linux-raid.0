@@ -1,106 +1,58 @@
-From: NeilBrown <neilb@suse.de>
-Subject: [PATCH 004 of 13] md: Split disks array out of raid5 conf structure so it is easier to grow.
-Date: Fri, 17 Mar 2006 15:47:40 +1100
-Message-ID: <1060317044740.16060@suse.de>
+From: Andrew Morton <akpm@osdl.org>
+Subject: Re: [PATCH 005 of 13] md: Allow stripes to be expanded in
+ preparation for expanding an array.
+Date: Thu, 16 Mar 2006 21:50:47 -0800
+Message-ID: <20060316215047.65f411d4.akpm@osdl.org>
 References: <20060317154017.15880.patches@notabene>
+	<1060317044745.16072@suse.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1060317044745.16072@suse.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
+To: NeilBrown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
+NeilBrown <neilb@suse.de> wrote:
+>
+> +static int resize_stripes(raid5_conf_t *conf, int newsize)
+>  +{
+>  +	/* make all the stripes able to hold 'newsize' devices.
+>  +	 * New slots in each stripe get 'page' set to a new page.
+>  +	 * We allocate all the new stripes first, then if that succeeds,
+>  +	 * copy everything across.
+>  +	 * Finally we add new pages.  This could fail, but we leave
+>  +	 * the stripe cache at it's new size, just with some pages empty.
+>  +	 *
+>  +	 * We use GFP_NOIO allocations as IO to the raid5 is blocked
+>  +	 * at some points in this operation.
+>  +	 */
+>  +	struct stripe_head *osh, *nsh;
+>  +	struct list_head newstripes, oldstripes;
 
-Previously the array of disk information was included in the
-raid5 'conf' structure which was allocated to an appropriate size.
-This makes it awkward to change the size of that array.
-So we split it off into a separate kmalloced array which will
-require a little extra indexing, but is much easier to grow.
+You can use LIST_HEAD() here, avoid the separate INIT_LIST_HEAD().
 
 
-Signed-off-by: Neil Brown <neilb@suse.de>
+>  +	struct disk_info *ndisks;
+>  +	int err = 0;
+>  +	kmem_cache_t *sc;
+>  +	int i;
+>  +
+>  +	if (newsize <= conf->pool_size)
+>  +		return 0; /* never bother to shrink */
+>  +
+>  +	sc = kmem_cache_create(conf->cache_name[1-conf->active_name],
+>  +			       sizeof(struct stripe_head)+(newsize-1)*sizeof(struct r5dev),
+>  +			       0, 0, NULL, NULL);
 
-### Diffstat output
- ./drivers/md/raid5.c         |   10 +++++++---
- ./drivers/md/raid6main.c     |   10 +++++++---
- ./include/linux/raid/raid5.h |    2 +-
- 3 files changed, 15 insertions(+), 7 deletions(-)
+kmem_cache_create() internally does a GFP_KERNEL allocation.
 
-diff ./drivers/md/raid5.c~current~ ./drivers/md/raid5.c
---- ./drivers/md/raid5.c~current~	2006-03-17 11:45:43.000000000 +1100
-+++ ./drivers/md/raid5.c	2006-03-17 11:48:55.000000000 +1100
-@@ -1822,11 +1822,13 @@ static int run(mddev_t *mddev)
- 		return -EIO;
- 	}
- 
--	mddev->private = kzalloc(sizeof (raid5_conf_t)
--				 + mddev->raid_disks * sizeof(struct disk_info),
--				 GFP_KERNEL);
-+	mddev->private = kzalloc(sizeof (raid5_conf_t), GFP_KERNEL);
- 	if ((conf = mddev->private) == NULL)
- 		goto abort;
-+	conf->disks = kzalloc(mddev->raid_disks * sizeof(struct disk_info),
-+			      GFP_KERNEL);
-+	if (!conf->disks)
-+		goto abort;
- 
- 	conf->mddev = mddev;
- 
-@@ -1966,6 +1968,7 @@ static int run(mddev_t *mddev)
- abort:
- 	if (conf) {
- 		print_raid5_conf(conf);
-+		kfree(conf->disks);
- 		kfree(conf->stripe_hashtbl);
- 		kfree(conf);
- 	}
-@@ -1986,6 +1989,7 @@ static int stop(mddev_t *mddev)
- 	kfree(conf->stripe_hashtbl);
- 	blk_sync_queue(mddev->queue); /* the unplug fn references 'conf'*/
- 	sysfs_remove_group(&mddev->kobj, &raid5_attrs_group);
-+	kfree(conf->disks);
- 	kfree(conf);
- 	mddev->private = NULL;
- 	return 0;
+>  +	if (!sc)
+>  +		return -ENOMEM;
+>  +	INIT_LIST_HEAD(&newstripes);
+>  +	for (i = conf->max_nr_stripes; i; i--) {
+>  +		nsh = kmem_cache_alloc(sc, GFP_NOIO);
 
-diff ./drivers/md/raid6main.c~current~ ./drivers/md/raid6main.c
---- ./drivers/md/raid6main.c~current~	2006-03-17 11:45:43.000000000 +1100
-+++ ./drivers/md/raid6main.c	2006-03-17 11:48:55.000000000 +1100
-@@ -2006,11 +2006,14 @@ static int run(mddev_t *mddev)
- 		return -EIO;
- 	}
- 
--	mddev->private = kzalloc(sizeof (raid6_conf_t)
--				 + mddev->raid_disks * sizeof(struct disk_info),
--				 GFP_KERNEL);
-+	mddev->private = kzalloc(sizeof (raid6_conf_t), GFP_KERNEL);
- 	if ((conf = mddev->private) == NULL)
- 		goto abort;
-+	conf->disks = kzalloc(mddev->raid_disks * sizeof(struct disk_info),
-+				 GFP_KERNEL);
-+	if (!conf->disks)
-+		goto abort;
-+
- 	conf->mddev = mddev;
- 
- 	if ((conf->stripe_hashtbl = kzalloc(PAGE_SIZE, GFP_KERNEL)) == NULL)
-@@ -2158,6 +2161,7 @@ abort:
- 		print_raid6_conf(conf);
- 		safe_put_page(conf->spare_page);
- 		kfree(conf->stripe_hashtbl);
-+		kfree(conf->disks);
- 		kfree(conf);
- 	}
- 	mddev->private = NULL;
-
-diff ./include/linux/raid/raid5.h~current~ ./include/linux/raid/raid5.h
---- ./include/linux/raid/raid5.h~current~	2006-03-17 11:45:43.000000000 +1100
-+++ ./include/linux/raid/raid5.h	2006-03-17 11:48:55.000000000 +1100
-@@ -240,7 +240,7 @@ struct raid5_private_data {
- 							 * waiting for 25% to be free
- 							 */        
- 	spinlock_t		device_lock;
--	struct disk_info	disks[0];
-+	struct disk_info	*disks;
- };
- 
- typedef struct raid5_private_data raid5_conf_t;
+So either this can use GFP_KERNEL, or we have a problem.
