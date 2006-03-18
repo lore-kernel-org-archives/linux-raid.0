@@ -1,48 +1,54 @@
-From: "Francois Barre" <francois.barre@gmail.com>
-Subject: Re: Neil, where are your Patches !
-Date: Sat, 18 Mar 2006 10:31:53 +0100
-Message-ID: <fd8d0180603180131k517bc899y@mail.gmail.com>
-References: <fd8d0180603150510h37865209p@mail.gmail.com>
-	 <17433.61627.891961.775442@cse.unsw.edu.au>
-	 <17434.39235.49589.69449@cse.unsw.edu.au>
-	 <fd8d0180603170430r5cf8883dg@mail.gmail.com>
+From: Michael Tokarev <mjt@tls.msk.ru>
+Subject: Terrible slow write speed to MegaRAID SCSI array
+Date: Sat, 18 Mar 2006 13:55:21 +0300
+Message-ID: <441BE719.1010308@tls.msk.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <fd8d0180603170430r5cf8883dg@mail.gmail.com>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-> > Ok, look again, under
-> >   http://cgi.cse.unsw.edu.au/~neilb/patches/linux-devel/
-> >
+We've installed an LSI Logic MegaRaid SCSI 320-1 card
+on our server (used only temporarily to move data to
+larger disks, but that's not the point), and measured
+linear write performance, just to know how much time
+it will took to copy our (somewhat large) data to the
+new array.  And to my surprize, this card, with current
+firmware, current (2.6.15) kernel and modern disks is
+terrible slow on writing - writing speed varies between
+1.5 megabutes/sec to 10 megabytes/sec, depending on the
+logical drive settings in the megaraid adapter.
 
-Early comments :
-I tested with patch-all-2006-03-17-10 on top of 2.6.16-rc6-mm1.
-I had two compilation issues :
-* in include/linux/raid/md_k.h, external is not defined in mddev_s. I
-supposed it was an int.
+I tried different raid configurations (raid10 - 3 spans
+of two-disk raid1s; raid1 out of 2 drives; raid 0 on one
+drive) - makes no difference whatsoever (but on raid1,
+I only can get 8 megabytes/sec write speed - 10 mb/sec
+is on raid10).
 
-* in drivers/raid/md.c and include/linux/raid/md.h, md_do_sync is
-confused, being declared static, but used in other places, like
-raid5.c. I supposed it shall be declared non-static.
+The disks are 140Gb FUJITSU MAT3147NC ones, pretty modern.
+One disk, when plugged into non-megaraid card and accessed
+as single disk, delivers about 60 megabytes/sec write speed,
+and about 80 mb/sec read (reading speed on megaraid array
+is quite good - about 240 mb/sec for 6-disk raid10).
 
-With these 2 modifications, compilation is ok.
+I've upgraded firmware on the megaraid card to the latest one
+available on lsi logic website - nothing changed wrt write
+speed (but read speed decreased from 240 to about 190 mb/sec -
+still acceptable for me).
 
-Raid5 resize testing :
-I tried using it with 4 loop devices, creating a 3 10Mb raid5 and adding a 4th.
-- mdadm -C -n 3 -l 5 /dev/md1 /dev/loop[123] : no problem
-- mdadm -a /dev/md1 /dev/loop4 : loop4 is a spare
-- mdadm -G -n 4 /dev/md1 returns error, but nothing happens : the 4th
-is not added, and stays as a spare. md1 is still accessible, no
-problem about that.
+I'm using megaraid_mbox driver.
 
-I'll try of course to investigate more...
+The only "improvement" I was able to get is when I enable
+write caching on the card, -- in this case, writing speed
+is very good up to first 64Mb (amount of memory on the
+card), and decreases again back to 1.5..10 mb/sec after
+64Mb.
 
-Regards,
+The question is: where's the problem? linux? driver? hardware?
+Anyone else expirienced this problem?
 
-F.-E.B.
+Thanks.
+
+/mjt
