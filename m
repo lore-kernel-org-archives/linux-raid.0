@@ -1,36 +1,51 @@
-From: Joshua Baker-LePain <jlb17@duke.edu>
-Subject: Re: Terrible slow write speed to MegaRAID SCSI array
-Date: Sat, 18 Mar 2006 11:02:07 -0500 (EST)
-Message-ID: <Pine.LNX.4.62.0603181059480.2734@chaos.egr.duke.edu>
-References: <441BE719.1010308@tls.msk.ru>
+From: Gordon Henderson <gordon@drogon.net>
+Subject: Re: ex2fsck showing MANY errors on degraded RAID - out of luck?
+Date: Sat, 18 Mar 2006 16:10:41 +0000 (GMT)
+Message-ID: <Pine.LNX.4.56.0603181604390.31603@lion.drogon.net>
+References: <6d5bedd80603180741s6b19ed53x929093fdac803d99@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <441BE719.1010308@tls.msk.ru>
+In-Reply-To: <6d5bedd80603180741s6b19ed53x929093fdac803d99@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Michael Tokarev <mjt@tls.msk.ru>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: Ewan Grantham <ewan.grantham@gmail.com>
+Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Sat, 18 Mar 2006 at 1:55pm, Michael Tokarev wrote
+On Sat, 18 Mar 2006, Ewan Grantham wrote:
 
-> We've installed an LSI Logic MegaRaid SCSI 320-1 card
-> on our server (used only temporarily to move data to
-> larger disks, but that's not the point), and measured
-> linear write performance, just to know how much time
-> it will took to copy our (somewhat large) data to the
-> new array.  And to my surprize, this card, with current
-> firmware, current (2.6.15) kernel and modern disks is
-> terrible slow on writing - writing speed varies between
-> 1.5 megabutes/sec to 10 megabytes/sec, depending on the
-> logical drive settings in the megaraid adapter.
+> OK, managed to use assemble force to get the five remaining drives of
+> the array up in degraded mode. But running ex2fsck (I had an ext3 fs
+> on the RAID) is revealing a number of bad dtimes and invalid blocks.
+> Trying to run ex2fsck with the -p option doesn't work for long, and
+> having to hit enter after each line is testing my patience.
+>
+> So, am I likely to have any good data by the time I finish anyway, or
+> am I wasting my time? Any quicker way to cleanup the filesystem to
+> find out?
 
-I've got the same card in a server running CentOS 4.2.  With default 
-settings on the card and the OS, I'm getting 45MB/s reads and 22MB/s 
-writes according to bonnie++ to a 2 disk raid1 mirror.  I'll certainly try 
-to get better, but it's not nearly as bad as yours.
+You might be able to mount it read-only and copy the data off, but who
+knows what you might actually be copying.
 
--- 
-Joshua Baker-LePain
-Department of Biomedical Engineering
-Duke University
+There is a -y option to fsck which assumes a yes answer to all the
+questions. It's never a good option, but sometimes the only option unless
+you have an intimate knowledge of ext2/3 and an infinite amount of time to
+sort it out.
+
+I had to do this recently to a trashed 4-disk Raid-5 array - it had been
+one disk down for some time and despite my telling them that they were
+living on borrowed time, they didn't do anything about it, until a 2nd
+disk died.  I managed to make it start in degraded mode, then fsck'd with
+the -y option. 3 times. The array showed less than half the data it
+originally had, but it seemed to keep them happy.... (and I saw some
+messages from fsck I'd never seen before!) Fortunately they had a partial
+backup that was only a day or 2 old, so they got most of the stuff back,
+but I really suspect some of those file have holes in them and blocks of
+bogus data.
+
+A really quick way to clean up the filessystem is by use of the mkfs
+command ;-)
+
+Good luck!
+
+Gordon
