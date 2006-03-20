@@ -1,70 +1,69 @@
-From: Sander <sander@humilis.net>
-Subject: RAID5 grow success  (was: Re: 2.6.16-rc6-mm2)
-Date: Mon, 20 Mar 2006 14:02:32 +0100
-Message-ID: <20060320130232.GA32762@favonius>
-References: <20060318044056.350a2931.akpm@osdl.org>
-Reply-To: sander@humilis.net
+From: Martin Cracauer <cracauer@cons.org>
+Subject: Re: making raid5 more robust after a crash?
+Date: Mon, 20 Mar 2006 12:41:59 -0500
+Message-ID: <20060320124159.A50675@cons.org>
+References: <20060317130247.GA19878@cjx.com> <17435.9868.249413.113639@cse.unsw.edu.au>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20060318044056.350a2931.akpm@osdl.org>
+In-Reply-To: <17435.9868.249413.113639@cse.unsw.edu.au>; from neilb@suse.de on Sat, Mar 18, 2006 at 08:13:48AM +1100
 Sender: linux-raid-owner@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: linux-kernel@vger.kernel.org, neilb@suse.de, linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: Chris Allen <chris@cjx.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Andrew Morton wrote (ao):
-> - Lots of MD and DM updates
+Neil Brown wrote on Sat, Mar 18, 2006 at 08:13:48AM +1100: 
+> On Friday March 17, chris@cjx.com wrote:
+> > Dear All,
+> > 
+> > We have a number of machines running 4TB raid5 arrays.
+> > Occasionally one of these machines will lock up solid and
+> > will need power cycling. Often when this happens, the
+> > array will refuse to restart with 'cannot start dirty
+> > degraded array'. Usually  mdadm --assemble --force will
+> > get the thing going again - although it will then do
+> > a complete resync.
 
-I would like to report that growing an online raid5 device works like a
-charm:
+First of all you need to make sure you can see the kernel messages
+from this.  If /var/log/messages lives on the array affected you won't
+see messages explaining what happens even if the kernel printed them.
 
-mdadm --version
-mdadm - v2.4-pre1 - Not For Production Use - 20 March 2006
+What you see here is probably similar to a problem I just had: by
+using software RAID you are subject to errors below the RAID level
+that are not disk errors.  In my case a BIOS problem on my board made
+the SATA driver run out of space, on requests for two of the disks on
+my RAID-5, simultaneously.  The driver had to report an error upstream
+and the RAID software on top of it cannot tell such a non-disk error
+from a disk error.  It treats everything as a disk error and drops the
+disk out of the array because it has seen errors on requests for two
+disks.
 
-mdadm -C -l5 -n3 /dev/md0 /dev/sda1 /dev/sdb1 /dev/sdc1
+I have more info on my accident here:
+http://forums.2cpu.com/showthread.php?t=73705
 
-While performing:
-for i in `seq 4`
-do dd if=/dev/zero of=bigfile.$i bs=1024k count=10000
-done
-md5sum bigfile.*
+As I said, you need to have a logfile on a disk not in the array, or
+(better) you need to be able to watch kernel messages on the console
+when this happens.
 
-I do:
-mdadm /dev/md0 -a /dev/sdd1
+It sounds to me you have a similar problem to what I had: a software
+error above the disks but below the raid level.
 
-mdadm --grow /dev/md0 --raid-disks=4
+> > 
+> > 
+> > My question is: Is there any way I can make the array
+> > more robust? I don't mind it losing a single drive and
+> > having to resync when we get a lockup - but having to
+> > do a forced assemble always makes me nervous, and means
+> > that this sort of crash has to be escalated to a senior
+> > engineer.
 
-When the dd and md5sum finishes, I umount and:
+The re-sync is actually a big problem because actually losing a drive
+physically during the re-sync will kill your array (unless it is the
+re-syncing disk).
 
-e2fsck -f /dev/md0
-resize2fs -p /dev/md0
-
-After mounting again the disk indeed is bigger, and the md5sum still
-matches.
-
-
-FWIW, I now try to add four more spares at once, and grow the raid5
-again. It seems to work:
-
-
-# mdadm /dev/md0 -a /dev/sde1 /dev/sdf1 /dev/sdg1 /dev/sdh1
-mdadm: added /dev/sde1
-mdadm: added /dev/sdf1
-mdadm: added /dev/sdg1
-mdadm: added /dev/sdh1
-# mdadm --grow /dev/md0 --raid-disks=8
-mdadm: Need to backup 448K of critical section..
-mdadm: ... critical section passed.
-#
-
-It is still reshapeing ATM.
-
-Thanks!
-
-	Sander
-
+Martin
 -- 
-Humilis IT Services and Solutions
-http://www.humilis.net
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Martin Cracauer <cracauer@cons.org>   http://www.cons.org/cracauer/
+FreeBSD - where you want to go, today.      http://www.freebsd.org/
