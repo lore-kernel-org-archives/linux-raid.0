@@ -1,36 +1,70 @@
-From: Neil Brown <neilb@suse.de>
-Subject: ANNOUNCE: mdadm 2.4-pre1 - development release for testing only
-Date: Mon, 20 Mar 2006 14:59:25 +1100
-Message-ID: <17438.10397.11438.191944@cse.unsw.edu.au>
+From: Sander <sander@humilis.net>
+Subject: RAID5 grow success  (was: Re: 2.6.16-rc6-mm2)
+Date: Mon, 20 Mar 2006 14:02:32 +0100
+Message-ID: <20060320130232.GA32762@favonius>
+References: <20060318044056.350a2931.akpm@osdl.org>
+Reply-To: sander@humilis.net
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20060318044056.350a2931.akpm@osdl.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: linux-kernel@vger.kernel.org, neilb@suse.de, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Andrew Morton wrote (ao):
+> - Lots of MD and DM updates
+
+I would like to report that growing an online raid5 device works like a
+charm:
+
+mdadm --version
+mdadm - v2.4-pre1 - Not For Production Use - 20 March 2006
+
+mdadm -C -l5 -n3 /dev/md0 /dev/sda1 /dev/sdb1 /dev/sdc1
+
+While performing:
+for i in `seq 4`
+do dd if=/dev/zero of=bigfile.$i bs=1024k count=10000
+done
+md5sum bigfile.*
+
+I do:
+mdadm /dev/md0 -a /dev/sdd1
+
+mdadm --grow /dev/md0 --raid-disks=4
+
+When the dd and md5sum finishes, I umount and:
+
+e2fsck -f /dev/md0
+resize2fs -p /dev/md0
+
+After mounting again the disk indeed is bigger, and the md5sum still
+matches.
 
 
-I am somewhat cautious in announcing the availability of
-   mdadm version 2.4-pre1
+FWIW, I now try to add four more spares at once, and grow the raid5
+again. It seems to work:
 
-It is available at the usual places:
-   http://www.cse.unsw.edu.au/~neilb/source/mdadm/
-and
-   http://www.{countrycode}.kernel.org/pub/linux/utils/raid/mdadm/
 
-pre-release 2.4-pre1 contains support for growing a raid5 array i.e.
-adding extra drives and restriping the whole arrays.
+# mdadm /dev/md0 -a /dev/sde1 /dev/sdf1 /dev/sdg1 /dev/sdh1
+mdadm: added /dev/sde1
+mdadm: added /dev/sdf1
+mdadm: added /dev/sdg1
+mdadm: added /dev/sdh1
+# mdadm --grow /dev/md0 --raid-disks=8
+mdadm: Need to backup 448K of critical section..
+mdadm: ... critical section passed.
+#
 
-This requires a kernel more recent than 2.6.16-rc6-mm2.
+It is still reshapeing ATM.
 
-During a restripe, there is a crtical section at the start where a
-system crash can leave the contents of the raid5 unrecoverable.  This
-version of mdadm will backup that section, and can restore it when
-reassembling the array after a crash.
+Thanks!
 
-Have fun, but use it carefully and report any problems.
+	Sander
 
-NeilBrown 20th March 2006
-
+-- 
+Humilis IT Services and Solutions
+http://www.humilis.net
