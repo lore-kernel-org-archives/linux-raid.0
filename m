@@ -1,65 +1,55 @@
-From: "Ewan Grantham" <ewan.grantham@gmail.com>
-Subject: Re: ex2fsck showing MANY errors on degraded RAID - out of luck?
-Date: Sat, 18 Mar 2006 11:05:38 -0600
-Message-ID: <6d5bedd80603180905h452002cau5d5663188ae1c527@mail.gmail.com>
-References: <6d5bedd80603180741s6b19ed53x929093fdac803d99@mail.gmail.com>
-	 <Pine.LNX.4.56.0603181604390.31603@lion.drogon.net>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: Neil, where are your Patches !
+Date: Mon, 20 Mar 2006 14:54:47 +1100
+Message-ID: <17438.10119.117697.502421@cse.unsw.edu.au>
+References: <fd8d0180603150510h37865209p@mail.gmail.com>
+	<17433.61627.891961.775442@cse.unsw.edu.au>
+	<17434.39235.49589.69449@cse.unsw.edu.au>
+	<fd8d0180603170430r5cf8883dg@mail.gmail.com>
+	<fd8d0180603180131k517bc899y@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.56.0603181604390.31603@lion.drogon.net>
-Content-Disposition: inline
+In-Reply-To: message from Francois Barre on Saturday March 18
 Sender: linux-raid-owner@vger.kernel.org
-To: Gordon Henderson <gordon@drogon.net>
-Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: Francois Barre <francois.barre@gmail.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Well, we'll see what we end up with. I'm still not sure why I had such
-a mess in the first place since it was a single disk failure, and I
-caught it fairly quickly. Only thing I can figure is that it had
-something to do with the fact that failure happened during an e2fsck
-run in the first place.
+On Saturday March 18, francois.barre@gmail.com wrote:
+> > > Ok, look again, under
+> > >   http://cgi.cse.unsw.edu.au/~neilb/patches/linux-devel/
+> > >
+> 
+> Early comments :
+> I tested with patch-all-2006-03-17-10 on top of 2.6.16-rc6-mm1.
+> I had two compilation issues :
+> * in include/linux/raid/md_k.h, external is not defined in mddev_s. I
+> supposed it was an int.
+> 
+> * in drivers/raid/md.c and include/linux/raid/md.h, md_do_sync is
+> confused, being declared static, but used in other places, like
+> raid5.c. I supposed it shall be declared non-static.
+> 
+> With these 2 modifications, compilation is ok.
 
-Thanks for at least telling me an option to take the drudgery out of
-it. Was driving me crazy having to hit enter so many times :-)
+Yes... If you grabbed all the patches, it would have included some
+that I haven't worked on for a while, and haven't tested recently
+either...
 
-On 3/18/06, Gordon Henderson <gordon@drogon.net> wrote:
-> On Sat, 18 Mar 2006, Ewan Grantham wrote:
->
-> > OK, managed to use assemble force to get the five remaining drives of
-> > the array up in degraded mode. But running ex2fsck (I had an ext3 fs
-> > on the RAID) is revealing a number of bad dtimes and invalid blocks.
-> > Trying to run ex2fsck with the -p option doesn't work for long, and
-> > having to hit enter after each line is testing my patience.
-> >
-> > So, am I likely to have any good data by the time I finish anyway, or
-> > am I wasting my time? Any quicker way to cleanup the filesystem to
-> > find out?
->
-> You might be able to mount it read-only and copy the data off, but who
-> knows what you might actually be copying.
->
-> There is a -y option to fsck which assumes a yes answer to all the
-> questions. It's never a good option, but sometimes the only option unless
-> you have an intimate knowledge of ext2/3 and an infinite amount of time to
-> sort it out.
->
-> I had to do this recently to a trashed 4-disk Raid-5 array - it had been
-> one disk down for some time and despite my telling them that they were
-> living on borrowed time, they didn't do anything about it, until a 2nd
-> disk died.  I managed to make it start in degraded mode, then fsck'd with
-> the -y option. 3 times. The array showed less than half the data it
-> originally had, but it seemed to keep them happy.... (and I saw some
-> messages from fsck I'd never seen before!) Fortunately they had a partial
-> backup that was only a day or 2 old, so they got most of the stuff back,
-> but I really suspect some of those file have holes in them and blocks of
-> bogus data.
->
-> A really quick way to clean up the filessystem is by use of the mkfs
-> command ;-)
->
-> Good luck!
->
-> Gordon
->
+I'll do another patch set in a day or so with these fixed up.
+
+> 
+> Raid5 resize testing :
+> I tried using it with 4 loop devices, creating a 3 10Mb raid5 and adding a 4th.
+> - mdadm -C -n 3 -l 5 /dev/md1 /dev/loop[123] : no problem
+> - mdadm -a /dev/md1 /dev/loop4 : loop4 is a spare
+> - mdadm -G -n 4 /dev/md1 returns error, but nothing happens : the 4th
+> is not added, and stays as a spare. md1 is still accessible, no
+> problem about that.
+
+That is deliberate.  You need a new version of mdadm to use
+raid5-reshape safely.  A pre-release will be out soon.
+
+NeilBrown
