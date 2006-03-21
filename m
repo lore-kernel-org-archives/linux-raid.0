@@ -1,33 +1,42 @@
-From: "cannon jada" <IRAF@glocalforum.org>
-Subject: Re[8]: Love is a canvas furnished by Nature and embroidered by imagination
-Date: Tue, 21 Mar 2006 11:21:02 +0000
-Message-ID: <4dc401c64cd9$053e28a9$e6462b3e__12498.9099138931$1142939867$gmane$org@62-43-70-230.user.ono.com>
+From: Herta Van den Eynde <herta.vandeneynde@cc.kuleuven.be>
+Subject: Does grub support sw raid1?
+Date: Tue, 21 Mar 2006 16:50:05 +0100
+Message-ID: <442020AD.7090902@cc.kuleuven.be>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	format=flowed;
-	charset="us-ascii";
-	reply-type=original
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: kaylynn jarmesiya <linux-newbie@vger.kernel.org>
+To: linux-raid@vger.kernel.org, redhat-list@redhat.com
 List-Id: linux-raid.ids
 
-Howdy!
+(crossposted to linux-raid@vger.kernel.org and redhat-list@redhat.com)
+(apologies for this, but this should have be operational last week)
 
-viiaaaaagra and other mmmmeeeeeds
-http://orkgq.fewatural.com/?a=1538gsegyl 
-cheaap pprriiicceess
+I installed Red Hat EL AS 4 on a HP Proliant DL380, and configured all
+system devices in software RAID 1.  I added an entry to grub.conf to 
+fallback to the second disk in case the first entry fails.  At boottime, 
+booting from hd0 works fine.  As does booting from hd1.
 
-knew his brother and the workings of his intellect: he knew that
-his unbelief came not from life being easier for him without
-faith, but had grown up because step by step the contemporary
-scientific interpretation of natural phenomena crushed out the
-possibility of faith; and so he knew that his present return was
-not a legitimate one, brought about by way of the same working of
-his intellect, but simply a temporary, interested return to faith
-in a desperate hope of recovery.  Levin knew too that Kitty had
-strengthened his hope by accounts of the marvelous recoveries she
-had heard of.  Levin knew all this; and it was agonizingly
-painful to him to behold the supplicating, hopeful eyes and the
+Until I physically remove hd0 from the system.
+
+I tried manually installing grub on hd1,
+I added hd1 to the device.map and subsequently re-installed grub on it, 
+I remapped hd0 to /dev/cciss/c0d1 and subsequently re-installed grub
+all to no avail.
+
+I previously installed this while the devices were in slots 2 and 3. 
+The system wouldn't even boot then.  It looks as though booting from sw 
+RAID1 will only work when there's a valid device in slot 0.  Still 
+preferable over hw RAID1, but even better would be if this worked all 
+the way.
+
+Is this working for anyone?  Any idea what I may have overlooked?  Any 
+suggestions on how to debug this?
+
+Kind regards,
+
+Herta
+
+Disclaimer: http://www.kuleuven.be/cwis/email_disclaimer.htm
 
