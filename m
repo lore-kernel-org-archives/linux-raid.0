@@ -1,8 +1,7 @@
 From: Alex Izvorski <aizvorski@gmail.com>
-Subject: Re: Large Stripe Size (>4MB)
-Date: Wed, 22 Mar 2006 21:59:11 +0000 (UTC)
-Message-ID: <loom.20060322T223645-85@post.gmane.org>
-References: <dd43dcfb0602180704n78f4de2lb61dd359387897b3@mail.gmail.com>
+Subject: raid5 that used parity for reads only when degraded
+Date: Wed, 22 Mar 2006 23:47:38 +0000 (UTC)
+Message-ID: <loom.20060323T003324-767@post.gmane.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
@@ -11,50 +10,24 @@ Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Paul M. <paul <at> gpmidi.net> writes:
+Hello,
 
-> 
-> Couple questions related to some raid using some firewire disks:
-> 
-> Is it possible to set the stripe size to 16+MB?
-> 
-> Is there a way to force the raid driver to only access one disk at a time?
-> 
-> Thanks,
-> 
-> Paul
+I have a question: I'd like to have a raid5 array which writes parity data but
+does not check it during reads while the array is ok.  I would trust each disk
+to detect errors itself and cause the array to be degraded if necessary, in
+which case that disk would drop out and the parity data would start being used
+just as in a normal raid5.  In other words until there is an I/O error that
+causes a disk to drop out, such an array would behave almost like a raid0 with
+N-1 disks as far as reads are concerned.  Ideally this behavior would be
+something that one could turn on/off on the fly with a ioctl or via a echo "0" >
+/sys/block/md0/check_parity_on_reads type of mechanism.  
 
-Yes, it's possible - just change the #define MAX_CHUNK_SIZE 
-in linux/include/linux/raid/md_k.h and rebuild your kernel.  I am 
-happily running an array with a 64MB chunk.
+How hard is this to do?   Is anyone interested in helping to do this?  I think
+it would really help applications which have a lot more reads than writes. 
+Where exactly does parity checking during reads happen?  I've looked over the
+code briefly but the right part of it didn't appear obvious ;)
 
-Can some knowledgeable person explain if there is any downside to a very large
-number in that define (as in, a few GB)?  Does it use up any resources or can it
-overflow any arithmetic somewhere in the kernel?
-
-The original 4MB max limit and 64k default in mdadm appears to be based on the
-(erroneous) assumption that small chunks always provide better performance, but
-that *really* depends on the application.  I would say that there are two ways
-in which high performance can be achieved, both based on minimizing the number
-of seeks per transaction or per unit of throughput: either a chunk size much
-smaller than the typical read size (so all heads seek to the same place and then
-read a bunch from there), or a chunk size much larger than the typical read, and
-a lot of concurrent reads (so each read is typically serviced by only a single
-seek on one drive, but all drives are kept busy).
-
+Regards,
 --Alex
-
-
---- linux.orig/include/linux/raid/md_k.h        2006-03-22 16:42:49
-+++ linux/include/linux/raid/md_k.h     2006-03-21 15:04:38
-@@ -83,7 +83,7 @@
-  * options passed in raidrun:
-  */
-
--#define MAX_CHUNK_SIZE (4096*1024)
-+#define MAX_CHUNK_SIZE (128*1024*1024)
-
- /*
-  * MD's 'extended' device
 
 
