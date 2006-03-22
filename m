@@ -1,76 +1,41 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: a user-raid list for non gurus?
-Date: Wed, 22 Mar 2006 07:59:02 -0500
-Message-ID: <44214A16.1020106@tmr.com>
-References: <20060310090502.GA7422@casa.e-den.it>
+From: Gordon Henderson <gordon@drogon.net>
+Subject: Re: raid5: switching cache buffer size, 512 --> 4096
+Date: Wed, 22 Mar 2006 13:15:36 +0000 (GMT)
+Message-ID: <Pine.LNX.4.56.0603221313380.26251@lion.drogon.net>
+References: <e3edb0fa0603220456m1fc5687fl5960226c093a1b2f@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20060310090502.GA7422@casa.e-den.it>
+In-Reply-To: <e3edb0fa0603220456m1fc5687fl5960226c093a1b2f@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Sandro Dentella <sandro@e-den.it>
-Cc: Linux Raid List <linux-raid@vger.kernel.org>
+To: Shai <shaibn@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Sandro Dentella wrote:
+On Wed, 22 Mar 2006, Shai wrote:
 
->Hi all,
+> Hi,
 >
->  even thought I'm subscribed to this list since quite a lot of time, I only
->  can grab a little purcentage of the discussion due to technical gap.
->  
->  When it happens that I ask something to the list I normally get unanswered
->  even on problems that in my opinion shouldn't be considered really
->  specific to my setup. Here just the last 2 questions:
+> I have two raid5 MDs: /dev/md0 and /dev/md1;
 >
->http://marc.theaimsgroup.com/?l=linux-raid&m=114185900020437&w=2
->http://marc.theaimsgroup.com/?l=linux-raid&m=114120476328121&w=2
->  
->  I'd like to know if there is a users-linux-raid where these kind of
->  questions get answered, if I should just insist on this list, or if I
->  missed some document (possibly a complete howto) that already gives 
->  thorought info on how to cope with troubles, or a wiki.
->  
+> I had broken md0 the other day and had to rebuild it.
+> i've formated it as xfs and wanted to make md1 also xfs so I decided to
+> move all the data from md1 to md0.
 >
+> while doing the cp of all that data, I'm getting lots of messages on
+> the console screen which don't enable me to work on it ( i use telnet
+> now ):
+>
+> > raid5: switching cache buffer size, 512 --> 4096
+> > raid5: switching cache buffer size, 4096 --> 512
+>
+> Can someone help me resolve this?
 
-The problem is that with a user list, the people who are best able to 
-answer your questions are unlikely to see them. While many people have 
-good intentions, in practice we lack TIME to read yet another list, 
-particularly those where the chance of finding something useful to an 
-experienced user are small.
+Search the archives - I had this many moons ago. It's something to do with
+xfs using a different block-size for the journal to the data, and I think
+there are mount/mkfs options to remedy this, or the other solution is to
+find the kprintf in the driver and comment it out...
 
->  
->  I feel like linux-raid is missing a good howto. The documentation you can
->  find is often outdated or incomplete and it only saldomly helped me to get
->  out of problems. 
->  
->
+(I stopped uing xfs, but not for other reasons. don't see it under ext3)
 
-Right now RAID is moving so fast that it would be out of date, and 
-that's less helpful than nothing. The mdadm man page is the howto, and 
-the only thing remotely able to provide information on exactly what you 
-have installed today.
-
->  The sad part of all this is that with raid systems you are not normally in
->  the mood/position to test things. You would much more prefere to arrive at
->  the crash already with the knowledge on how to cope with it... but the
->  crash is never as the one you simulated failing the device...
->
->Thanks for your attention and you job anyhow
->sandro
->*:-)
->
->
->PS: In case anybody feeels like writing a complete howto I could
->    help... with the index ;-) of what a system admin -not a raid guru-
->    would like to read to understant raid (not just to setup)
->  
->
-I agree that people don't feel like messing with their RAID when they have it working! I would love to change my setup, but there is no funding for a backup system to make backing up several TB convenient, and no time to spend doing it the hard way.
-
--- 
-bill davidsen <davidsen@tmr.com>
-  CTO TMR Associates, Inc
-  Doing interesting things with small computers since 1979
-
+Gordon
