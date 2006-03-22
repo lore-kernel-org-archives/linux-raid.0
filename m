@@ -1,54 +1,72 @@
 From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: raid5 performance question
-Date: Wed, 22 Mar 2006 08:22:26 -0500
-Message-ID: <44214F92.5020002@tmr.com>
-References: <5d96567b0603060346r768a0ee1i8d8170cf9ba4bac1@mail.gmail.com>	<17420.46746.365629.168649@cse.unsw.edu.au>	<5d96567b0603070040t114334cbm858147afe551f719@mail.gmail.com> <17422.4406.887200.421869@cse.unsw.edu.au>
+Subject: Re: Does grub support sw raid1?
+Date: Wed, 22 Mar 2006 08:28:28 -0500
+Message-ID: <442150FC.2060903@tmr.com>
+References: <442020AD.7090902@cc.kuleuven.be> <44202F7A.80901@h3c.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17422.4406.887200.421869@cse.unsw.edu.au>
+In-Reply-To: <44202F7A.80901@h3c.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>, Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: Mike Hardy <mhardy@h3c.com>
+Cc: Herta Van den Eynde <herta.vandeneynde@cc.kuleuven.be>, linux-raid@vger.kernel.org, redhat-list@redhat.com
 List-Id: linux-raid.ids
 
-Neil Brown wrote:
+Mike Hardy wrote:
 
->On Tuesday March 7, raziebe@gmail.com wrote:
+>This works for me, there are several pages out there (I recall using the
+>commands from a gentoo one most recently) that show the exact sequence
+>of grub things you should do to get grub in the MBR of both disks.
+>
+>It sounds like your machine may not be set to boot off of anything other
+>than that one disk though? Is that maybe a BIOS thing?
+>
+>I dunno, but I have definitely pulled a primary drive out of the system
+>completely and booted off the second one, then had linux come up with
+>(correctly) degraded arrays
 >  
 >
->>Neil.
->>what is the stripe_cache exacly ?
->>    
+
+Frequently a BIOS will boot a 2nd drive if the first is missing/dead, 
+but not if it returns bad data (CRC error). A soft fail is not handled 
+correctly by all BIOS' in use, possibly a majority of them.
+
+>-Mike
+>
+>Herta Van den Eynde wrote:
+>  
+>
+>>(crossposted to linux-raid@vger.kernel.org and redhat-list@redhat.com)
+>>(apologies for this, but this should have be operational last week)
 >>
->
->In order to ensure correctness of data, all IO operations on a raid5
->pass through the 'stripe cache'  This is a cache of stripes where each
->stripe is one page wide across all devices.
->
->e.g. to write a block, we allocate one stripe in the cache to cover
->that block, pre-read anything that might be needed, copy in the new
->data and update parity, and write out anything that has changed.
->  
->
-I can see that you would have to read the old data and parity blocks for 
-RAID-5, I assume that's what you mean by "might be needed" and not a 
-read of every drive to get the data to rebuild the parity from scratch. 
-That would be not only slower, but require complex error recovery on an 
-error reading unneeded data.
-
->Similarly to read, we allocate a stripe to cover the block, read in
->the requires parts, and copy out of the stripe cache into the
->destination.
->
->Requiring all reads to pass through the stripe cache is not strictly
->necessary, but it keeps the code a lot easier to manage (fewer special
->cases).   Bypassing the cache for simple read requests when the array
->is non-degraded is on my list....
->
-It sounds as if you do a memory copy with each read, even if a read to 
-user buffer would be possible. Hopefully I'm reading that wrong.
+>>I installed Red Hat EL AS 4 on a HP Proliant DL380, and configured all
+>>system devices in software RAID 1.  I added an entry to grub.conf to
+>>fallback to the second disk in case the first entry fails.  At boottime,
+>>booting from hd0 works fine.  As does booting from hd1.
+>>
+>>Until I physically remove hd0 from the system.
+>>
+>>I tried manually installing grub on hd1,
+>>I added hd1 to the device.map and subsequently re-installed grub on it,
+>>I remapped hd0 to /dev/cciss/c0d1 and subsequently re-installed grub
+>>all to no avail.
+>>
+>>I previously installed this while the devices were in slots 2 and 3. The
+>>system wouldn't even boot then.  It looks as though booting from sw
+>>RAID1 will only work when there's a valid device in slot 0.  Still
+>>preferable over hw RAID1, but even better would be if this worked all
+>>the way.
+>>
+>>Is this working for anyone?  Any idea what I may have overlooked?  Any
+>>suggestions on how to debug this?
+>>
+>>Kind regards,
+>>
+>>Herta
+>>
+>>Disclaimer: http://www.kuleuven.be/cwis/email_disclaimer.htm
+>>
 
 -- 
 bill davidsen <davidsen@tmr.com>
