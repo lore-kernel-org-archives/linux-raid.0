@@ -1,27 +1,32 @@
-From: "Julius" <vqhexempqrdeoe@palama.com>
-Subject: what is gravitizer? Patrick
-Date: Wed, 22 Mar 2006 17:34:22 +0500
-Message-ID: <994c.circumvent@brady22.net>
+From: Shai <shaibn@gmail.com>
+Subject: raid5: switching cache buffer size, 512 --> 4096
+Date: Wed, 22 Mar 2006 14:56:26 +0200
+Message-ID: <e3edb0fa0603220456m1fc5687fl5960226c093a1b2f@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-newbie@vger.kernel.org, linux-serial@vger.kernel.org, linux-net@vger.kernel.org, linux-kernel@vger.kernel.org, autoanswer@vger.kernel.org, linux-assembly@vger.kernel.org, majordomo@vger.kernel.org, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hi,
 
-Find out all about the best sex toy of 2006.
-The "greatest thing since the dildo." 
+I have two raid5 MDs: /dev/md0 and /dev/md1;
 
-http://xcgemdfvzyhji.comgraviti.com/
+I had broken md0 the other day and had to rebuild it.
+i've formated it as xfs and wanted to make md1 also xfs so I decided to
+move all the data from md1 to md0.
 
+while doing the cp of all that data, I'm getting lots of messages on
+the console screen which don't enable me to work on it ( i use telnet
+now ):
 
+> raid5: switching cache buffer size, 512 --> 4096
+> raid5: switching cache buffer size, 4096 --> 512
 
+Can someone help me resolve this?
 
-
-
-
-
-
-
-
-draftsmen you debit me, minsky fictive elliott . resemble you col me, clash hysteron macromolecular . 
-http://imzowypbehauqt.citygraviti.com/
+Thanks,
+Shai
