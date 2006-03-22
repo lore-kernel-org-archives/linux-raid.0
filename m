@@ -1,41 +1,57 @@
-From: Gordon Henderson <gordon@drogon.net>
-Subject: Re: raid5: switching cache buffer size, 512 --> 4096
-Date: Wed, 22 Mar 2006 13:15:36 +0000 (GMT)
-Message-ID: <Pine.LNX.4.56.0603221313380.26251@lion.drogon.net>
-References: <e3edb0fa0603220456m1fc5687fl5960226c093a1b2f@mail.gmail.com>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: raid5 performance question
+Date: Wed, 22 Mar 2006 08:22:26 -0500
+Message-ID: <44214F92.5020002@tmr.com>
+References: <5d96567b0603060346r768a0ee1i8d8170cf9ba4bac1@mail.gmail.com>	<17420.46746.365629.168649@cse.unsw.edu.au>	<5d96567b0603070040t114334cbm858147afe551f719@mail.gmail.com> <17422.4406.887200.421869@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <e3edb0fa0603220456m1fc5687fl5960226c093a1b2f@mail.gmail.com>
+In-Reply-To: <17422.4406.887200.421869@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shai <shaibn@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>, Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wed, 22 Mar 2006, Shai wrote:
+Neil Brown wrote:
 
-> Hi,
+>On Tuesday March 7, raziebe@gmail.com wrote:
+>  
 >
-> I have two raid5 MDs: /dev/md0 and /dev/md1;
+>>Neil.
+>>what is the stripe_cache exacly ?
+>>    
+>>
 >
-> I had broken md0 the other day and had to rebuild it.
-> i've formated it as xfs and wanted to make md1 also xfs so I decided to
-> move all the data from md1 to md0.
+>In order to ensure correctness of data, all IO operations on a raid5
+>pass through the 'stripe cache'  This is a cache of stripes where each
+>stripe is one page wide across all devices.
 >
-> while doing the cp of all that data, I'm getting lots of messages on
-> the console screen which don't enable me to work on it ( i use telnet
-> now ):
+>e.g. to write a block, we allocate one stripe in the cache to cover
+>that block, pre-read anything that might be needed, copy in the new
+>data and update parity, and write out anything that has changed.
+>  
 >
-> > raid5: switching cache buffer size, 512 --> 4096
-> > raid5: switching cache buffer size, 4096 --> 512
->
-> Can someone help me resolve this?
+I can see that you would have to read the old data and parity blocks for 
+RAID-5, I assume that's what you mean by "might be needed" and not a 
+read of every drive to get the data to rebuild the parity from scratch. 
+That would be not only slower, but require complex error recovery on an 
+error reading unneeded data.
 
-Search the archives - I had this many moons ago. It's something to do with
-xfs using a different block-size for the journal to the data, and I think
-there are mount/mkfs options to remedy this, or the other solution is to
-find the kprintf in the driver and comment it out...
+>Similarly to read, we allocate a stripe to cover the block, read in
+>the requires parts, and copy out of the stripe cache into the
+>destination.
+>
+>Requiring all reads to pass through the stripe cache is not strictly
+>necessary, but it keeps the code a lot easier to manage (fewer special
+>cases).   Bypassing the cache for simple read requests when the array
+>is non-degraded is on my list....
+>
+It sounds as if you do a memory copy with each read, even if a read to 
+user buffer would be possible. Hopefully I'm reading that wrong.
 
-(I stopped uing xfs, but not for other reasons. don't see it under ext3)
+-- 
+bill davidsen <davidsen@tmr.com>
+  CTO TMR Associates, Inc
+  Doing interesting things with small computers since 1979
 
-Gordon
