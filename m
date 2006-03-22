@@ -1,75 +1,126 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: Does grub support sw raid1?
-Date: Wed, 22 Mar 2006 08:28:28 -0500
-Message-ID: <442150FC.2060903@tmr.com>
-References: <442020AD.7090902@cc.kuleuven.be> <44202F7A.80901@h3c.com>
+From: Shai <shaibn@gmail.com>
+Subject: raid5: switching cache buffer size, 512 --> 4096
+Date: Wed, 22 Mar 2006 18:29:48 +0200
+Message-ID: <e3edb0fa0603220829v770be4d6q44a1ea40627e3826@mail.gmail.com>
+References: <e3edb0fa0603220456m1fc5687fl5960226c093a1b2f@mail.gmail.com>
+	 <Pine.LNX.4.56.0603221313380.26251@lion.drogon.net>
+	 <e3edb0fa0603220525g2c0ac99bsc00fb067515220be@mail.gmail.com>
+	 <Pine.LNX.4.56.0603221326300.26251@lion.drogon.net>
+	 <e3edb0fa0603220738l1450bf35o2c6643c6a42cc16c@mail.gmail.com>
+	 <Pine.LNX.4.56.0603221542520.26251@lion.drogon.net>
+	 <e3edb0fa0603220827q7376f49j300129724f7ec619@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <44202F7A.80901@h3c.com>
+In-Reply-To: <e3edb0fa0603220827q7376f49j300129724f7ec619@mail.gmail.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Mike Hardy <mhardy@h3c.com>
-Cc: Herta Van den Eynde <herta.vandeneynde@cc.kuleuven.be>, linux-raid@vger.kernel.org, redhat-list@redhat.com
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Mike Hardy wrote:
+FYI
 
->This works for me, there are several pages out there (I recall using the
->commands from a gentoo one most recently) that show the exact sequence
->of grub things you should do to get grub in the MBR of both disks.
->
->It sounds like your machine may not be set to boot off of anything other
->than that one disk though? Is that maybe a BIOS thing?
->
->I dunno, but I have definitely pulled a primary drive out of the system
->completely and booted off the second one, then had linux come up with
->(correctly) degraded arrays
->  
->
+---------- Forwarded message ----------
+From: Shai
+Date: Mar 22, 2006 6:27 PM
+Subject: Re: raid5: switching cache buffer size, 512 --> 4096
+To: Gordon H.
 
-Frequently a BIOS will boot a 2nd drive if the first is missing/dead, 
-but not if it returns bad data (CRC error). A soft fail is not handled 
-correctly by all BIOS' in use, possibly a majority of them.
+Hi,
 
->-Mike
+I want to thank you very much for answering all my questions and I
+don't want you to think for one second that I don't appricitate your
+time... I do :)
+
+Ok, so getting them removed via the source is the solution.. but what
+if I don't have the source? Can you tell me what exactly I should look
+for and change?
+
+Thanks (again),
+Shai
+
+On 3/22/06, Gordon H. wrote:
+> On Wed, 22 Mar 2006, Shai wrote:
 >
->Herta Van den Eynde wrote:
->  
+> > Ok,
+> >
+> > say I don't care about md1 being redone. Is there anything i can do to
+> > it that will fix these error messages? format again with some
+> > parameters? rebuild the raid?
 >
->>(crossposted to linux-raid@vger.kernel.org and redhat-list@redhat.com)
->>(apologies for this, but this should have be operational last week)
->>
->>I installed Red Hat EL AS 4 on a HP Proliant DL380, and configured all
->>system devices in software RAID 1.  I added an entry to grub.conf to
->>fallback to the second disk in case the first entry fails.  At boottime,
->>booting from hd0 works fine.  As does booting from hd1.
->>
->>Until I physically remove hd0 from the system.
->>
->>I tried manually installing grub on hd1,
->>I added hd1 to the device.map and subsequently re-installed grub on it,
->>I remapped hd0 to /dev/cciss/c0d1 and subsequently re-installed grub
->>all to no avail.
->>
->>I previously installed this while the devices were in slots 2 and 3. The
->>system wouldn't even boot then.  It looks as though booting from sw
->>RAID1 will only work when there's a valid device in slot 0.  Still
->>preferable over hw RAID1, but even better would be if this worked all
->>the way.
->>
->>Is this working for anyone?  Any idea what I may have overlooked?  Any
->>suggestions on how to debug this?
->>
->>Kind regards,
->>
->>Herta
->>
->>Disclaimer: http://www.kuleuven.be/cwis/email_disclaimer.htm
->>
-
--- 
-bill davidsen <davidsen@tmr.com>
-  CTO TMR Associates, Inc
-  Doing interesting things with small computers since 1979
-
+> They asren't really errors - more informational. Which is why you should
+> comment them out of the source code if you don't want them...
+>
+> You aer probably taking a performance hit when they are printed though -
+> for 2 reasons, one the overhead of actually printing them (and logging
+> them), and the other when the cache is flushed, so best to stop it
+> happening, so look in the xfs manuals to see if you can fix the blocks
+> size on the journal.
+>
+>  Gordon
+>
+>
+> >
+> > Shai
+> >
+> > On 3/22/06, Gordon H. wrote:
+> > > On Wed, 22 Mar 2006, Shai wrote:
+> > >
+> > > > I just found this email on the website but I don't know where the archives are.
+> > > > I'm not very good with mdadm and I don't want to mess things up to
+> > > > much trying things out.
+> > >
+> > > It's got nothing to do with mdadm - it's simply that xfs sometiems makes a
+> > > request for a block-size of 512 bytes, then a block size of 4096 bytes,
+> > > and theres only one block cache in the md system, so when the block size
+> > > changes it has to flush the cache.
+> > >
+> > > > Can you show me the archives?
+> > >
+> > > http://www.google.co.uk/search?hl=en&q=linux-raid+archive&btnG=Google+Search&meta=
+> > >
+> > > > Can you maybe help me out in finding how to fix it rather then comment
+> > > > out the error messages?
+> > >
+> > > If you can fix it, then the linux-raid crowd will welcome you with open
+> > > arms :)
+> > >
+> > > But I'd start with looking at the man pages for xfs and seeing if theres a
+> > > way to fix the block size of the journal.
+> > >
+> > > Gordon
+> > >
+> > >
+> > > > Thanks in advance!!!
+> > > >
+> > > > Shai
+> > > >
+> > > > On 3/22/06, Gordon H. wrote:
+> > > > > On Wed, 22 Mar 2006, Shai wrote:
+> > > > >
+> > > > > > Hi,
+> > > > > >
+> > > > > > I have two raid5 MDs: /dev/md0 and /dev/md1;
+> > > > > >
+> > > > > > I had broken md0 the other day and had to rebuild it.
+> > > > > > i've formated it as xfs and wanted to make md1 also xfs so I decided to
+> > > > > > move all the data from md1 to md0.
+> > > > > >
+> > > > > > while doing the cp of all that data, I'm getting lots of messages on
+> > > > > > the console screen which don't enable me to work on it ( i use telnet
+> > > > > > now ):
+> > > > > >
+> > > > > > > raid5: switching cache buffer size, 512 --> 4096
+> > > > > > > raid5: switching cache buffer size, 4096 --> 512
+> > > > > >
+> > > > > > Can someone help me resolve this?
+> > > > >
+> > > > > Search the archives - I had this many moons ago. It's something to do with
+> > > > > xfs using a different block-size for the journal to the data, and I think
+> > > > > there are mount/mkfs options to remedy this, or the other solution is to
+> > > > > find the kprintf in the driver and comment it out...
+> > > > >
+> > > > > (I stopped uing xfs, but not for other reasons. don't see it under ext3)
+> > > > >
+> > > > > Gordon
