@@ -1,42 +1,65 @@
-From: NeilBrown <neilb@suse.de>
-Subject: [PATCH] Fix bug: BIO_RW_BARRIER requests to md/raid1 hang.
-Date: Thu, 23 Mar 2006 14:41:16 +1100
-Message-ID: <1060323034116.13086@suse.de>
-References: <20060323143936.13067.patches@notabene>
+From: "Yogesh Pahilwan" <pahilwan.yogesh@spsoftindia.com>
+Subject: RE: Linux MD RAID5/6 bitmap patches
+Date: Thu, 23 Mar 2006 14:42:52 +0530
+Message-ID: <WM55FF1C4E77EA475bABFCC81C4DDCE4A9@spsoftindia.com>
+References: <44219238.9080905@steeleye.com>
+Mime-Version: 1.0
+Content-Type: text/plain;
+	charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <44219238.9080905@steeleye.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>, stable@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+To: 'Paul Clements' <paul.clements@steeleye.com>
+Cc: 'Neil Brown' <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-The following fixes a rather embarassing bug in 2.6.16, and so should
-go into 2.6.16.1, and 2.6.16-rc1.
-Thanks,
-NeilBrown
+Hi Paul,
 
+Thanks for your reply.
 
-### Comments for Changeset
+Where can we get documentation (design/implementation) about RAID6 and
+bitmap for linux kernel 2.6.
 
-Both R1BIO_Barrier and R1BIO_Returned are 4 !!!!
+Thanks and Regards
+Yogesh
 
-This means that barrier requests don't get returned (i.e. b_endio
-called) because it looks like they already have been.
+-----Original Message-----
+From: Paul Clements [mailto:paul.clements@steeleye.com] 
+Sent: Wednesday, March 22, 2006 11:37 PM
+To: Yogesh Pahilwan
+Cc: 'Neil Brown'; linux-raid@vger.kernel.org
+Subject: Re: Linux MD RAID5/6 bitmap patches
 
+Yogesh Pahilwan wrote:
 
-Signed-off-by: Neil Brown <neilb@suse.de>
+> Thanks for your reply. As far as what I understood that when we apply the
+> bitmap patch, for every write it will do 2 sync writes that is setting the
+> dirty bit, writing intent log and one async write for clearing the dirty
+> bit. Is it correct?
 
-### Diffstat output
- ./include/linux/raid/raid1.h |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+The bits are in the intent log, so the "setting dirty bit" and "writing 
+intent log" are the same thing. Just one write.
 
-diff ./include/linux/raid/raid1.h~current~ ./include/linux/raid/raid1.h
---- ./include/linux/raid/raid1.h~current~	2006-03-23 13:46:27.000000000 +1100
-+++ ./include/linux/raid/raid1.h	2006-03-23 14:36:53.000000000 +1100
-@@ -130,6 +130,6 @@ struct r1bio_s {
-  * with failure when last write completes (and all failed).
-  * Record that bi_end_io was called with this flag...
-  */
--#define	R1BIO_Returned 4
-+#define	R1BIO_Returned 6
- 
- #endif
+> If that is the case are there any patches available which can do
+collection
+> of sync write in a queue and write a collection in single write request.
+> For Eg:
+> For 10 writes , we will have 10 + 1 sync writes + 10 async write.
+
+The bitmap code already does this by default. The bitmap writes are 
+queued up so that all writes to a given page (within a short time 
+period) are reduced to a single write. The performance is actually quite 
+good. There's very little performance difference between having a bitmap 
+versus not having one.
+
+> I mean to say , 10 sync writes for setting the dirty bits + 1 sync write
+for
+> write intent log for all queued request in one write operation + 10 async
+> write for clearing the dirty bit.
+
+The async writes for clearing the bitmap are also combined.
+
+--
+Paul
+
