@@ -1,65 +1,35 @@
 From: "Yogesh Pahilwan" <pahilwan.yogesh@spsoftindia.com>
-Subject: RE: Linux MD RAID5/6 bitmap patches
-Date: Thu, 23 Mar 2006 14:42:52 +0530
-Message-ID: <WM55FF1C4E77EA475bABFCC81C4DDCE4A9@spsoftindia.com>
-References: <44219238.9080905@steeleye.com>
+Subject: raw I/O support for Fedora Core 4
+Date: Thu, 23 Mar 2006 14:54:25 +0530
+Message-ID: <WM57DB3DF98115400697C908A54A80DEE9@spsoftindia.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="US-ASCII"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <44219238.9080905@steeleye.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Paul Clements' <paul.clements@steeleye.com>
-Cc: 'Neil Brown' <neilb@suse.de>, linux-raid@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Paul,
+Hi All,
 
-Thanks for your reply.
+I want to do raw I/O on MD RAID and LVM for fedora core 4(kernel 2.6.15.6).
 
-Where can we get documentation (design/implementation) about RAID6 and
-bitmap for linux kernel 2.6.
+After doing googling I came to know that "raw" command does the raw
+operation by linking 
+MD device and LVM volume to the raw device as 
 
-Thanks and Regards
+# raw /dev/raw/raw1 /dev/md0.
+
+But when I search on this I came to know that there is no raw (/dev/rawctl)
+device support available with 2.6 kernel.
+I have also tried recompile the kernel sources with raw device support it is
+not getting compiled as it is obsolete in 2.6. 
+If I want to include raw device support in my kernel what should I will have
+to do, so that I 
+Will be able to do raw I/O on MD device and LVM volumes.
+
+Thanks and Regards,
 Yogesh
-
------Original Message-----
-From: Paul Clements [mailto:paul.clements@steeleye.com] 
-Sent: Wednesday, March 22, 2006 11:37 PM
-To: Yogesh Pahilwan
-Cc: 'Neil Brown'; linux-raid@vger.kernel.org
-Subject: Re: Linux MD RAID5/6 bitmap patches
-
-Yogesh Pahilwan wrote:
-
-> Thanks for your reply. As far as what I understood that when we apply the
-> bitmap patch, for every write it will do 2 sync writes that is setting the
-> dirty bit, writing intent log and one async write for clearing the dirty
-> bit. Is it correct?
-
-The bits are in the intent log, so the "setting dirty bit" and "writing 
-intent log" are the same thing. Just one write.
-
-> If that is the case are there any patches available which can do
-collection
-> of sync write in a queue and write a collection in single write request.
-> For Eg:
-> For 10 writes , we will have 10 + 1 sync writes + 10 async write.
-
-The bitmap code already does this by default. The bitmap writes are 
-queued up so that all writes to a given page (within a short time 
-period) are reduced to a single write. The performance is actually quite 
-good. There's very little performance difference between having a bitmap 
-versus not having one.
-
-> I mean to say , 10 sync writes for setting the dirty bits + 1 sync write
-for
-> write intent log for all queued request in one write operation + 10 async
-> write for clearing the dirty bit.
-
-The async writes for clearing the bitmap are also combined.
-
---
-Paul
 
