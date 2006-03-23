@@ -1,39 +1,42 @@
-From: Daniel Pittman <daniel@rimspace.net>
-Subject: Re: naming of md devices
-Date: Thu, 23 Mar 2006 13:37:26 +1100
-Message-ID: <87r74tx4wp.fsf@rimspace.net>
-References: <87slpav0p6.fsf@uwo.ca> <87ek0uc595.fsf@hades.wkstn.nix>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: NeilBrown <neilb@suse.de>
+Subject: [PATCH] Fix bug: BIO_RW_BARRIER requests to md/raid1 hang.
+Date: Thu, 23 Mar 2006 14:41:16 +1100
+Message-ID: <1060323034116.13086@suse.de>
+References: <20060323143936.13067.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>, stable@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Nix <nix@esperi.org.uk> writes:
-> On 22 Mar 2006, Dan Christensen prattled cheerily:
+The following fixes a rather embarassing bug in 2.6.16, and so should
+go into 2.6.16.1, and 2.6.16-rc1.
+Thanks,
+NeilBrown
 
-[...]
 
-> Last I heard the Debian initramfs constructs RAID arrays by explicitly
-> specifying the devices that make them up. This is, um, a bad idea: the
-> first time a disk fails or your kernel renumbers them you're in
-> *trouble*.
+### Comments for Changeset
 
-The initrd tool, which was the default option, does this, and it is a
-bad idea.
+Both R1BIO_Barrier and R1BIO_Returned are 4 !!!!
 
-The initramfs tool, which is mostly shared with Ubuntu, is less stupid.
-It uses mdadm and a loop to scan through the devices found on the
-machine and find what RAID levels are required, then builds the RAID
-arrays with mdrun.
+This means that barrier requests don't get returned (i.e. b_endio
+called) because it looks like they already have been.
 
-Unfortunately, it still doesn't transfer /etc/mdadm.conf to the
-initramfs, resulting in arrays changing position when constructed, to my
-annoyance.   So, stupid, but not as stupid as the oldest tools.
 
-	Daniel
--- 
-Digital Infrastructure Solutions -- making IT simple, stable and secure
-Phone: 0401 155 707	   email: contact@digital-infrastructure.com.au
+Signed-off-by: Neil Brown <neilb@suse.de>
 
+### Diffstat output
+ ./include/linux/raid/raid1.h |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff ./include/linux/raid/raid1.h~current~ ./include/linux/raid/raid1.h
+--- ./include/linux/raid/raid1.h~current~	2006-03-23 13:46:27.000000000 +1100
++++ ./include/linux/raid/raid1.h	2006-03-23 14:36:53.000000000 +1100
+@@ -130,6 +130,6 @@ struct r1bio_s {
+  * with failure when last write completes (and all failed).
+  * Record that bi_end_io was called with this flag...
+  */
+-#define	R1BIO_Returned 4
++#define	R1BIO_Returned 6
+ 
+ #endif
