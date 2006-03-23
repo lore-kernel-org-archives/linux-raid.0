@@ -1,42 +1,44 @@
-From: dean gaudet <dean@arctic.org>
-Subject: Re: naming of md devices
-Date: Wed, 22 Mar 2006 18:07:58 -0800 (PST)
-Message-ID: <Pine.LNX.4.64.0603221757340.1724@twinlark.arctic.org>
-References: <87slpav0p6.fsf@uwo.ca> <87ek0uc595.fsf@hades.wkstn.nix>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: Large Stripe Size (>4MB)
+Date: Thu, 23 Mar 2006 13:40:32 +1100
+Message-ID: <17442.2720.146886.112633@cse.unsw.edu.au>
+References: <dd43dcfb0602180704n78f4de2lb61dd359387897b3@mail.gmail.com>
+	<loom.20060322T223645-85@post.gmane.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87ek0uc595.fsf@hades.wkstn.nix>
+In-Reply-To: message from Alex Izvorski on Wednesday March 22
 Sender: linux-raid-owner@vger.kernel.org
-To: Nix <nix@esperi.org.uk>
-Cc: Dan Christensen <jdc@uwo.ca>, linux-raid@vger.kernel.org
+To: Alex Izvorski <aizvorski@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, 23 Mar 2006, Nix wrote:
+On Wednesday March 22, aizvorski@gmail.com wrote:
+> Paul M. <paul <at> gpmidi.net> writes:
+> 
+> > 
+> > Couple questions related to some raid using some firewire disks:
+> > 
+> > Is it possible to set the stripe size to 16+MB?
+> > 
+> > Is there a way to force the raid driver to only access one disk at a time?
+> > 
+> > Thanks,
+> > 
+> > Paul
+> 
+> Yes, it's possible - just change the #define MAX_CHUNK_SIZE 
+> in linux/include/linux/raid/md_k.h and rebuild your kernel.  I am 
+> happily running an array with a 64MB chunk.
+> 
+> Can some knowledgeable person explain if there is any downside to a very large
+> number in that define (as in, a few GB)?  Does it use up any resources or can it
+> overflow any arithmetic somewhere in the kernel?
 
-> Last I heard the Debian initramfs constructs RAID arrays by explicitly
-> specifying the devices that make them up. This is, um, a bad idea:
-> the first time a disk fails or your kernel renumbers them you're
-> in *trouble*.
+Up to 2Gig should work without problems.  More than that will cause
+overflow in the 0.90 superblock.  With the version-1 superblock we
+should be able to support chunks upto a terrabyte (I think) but we
+would need a code-audit and a fair bit of fixing first.
 
-yaird seems to dtrt ... at least in unstable.  if you install yaird 
-instead of initramfs-tools you get stuff like this in the initrd /init:
-
-mknod /dev/md3 b 9 3
-mdadm -Ac partitions /dev/md3 --uuid 2b3a5b77:c7b4ab81:a2b8322a:db5c4e88
-
-initramfs-tools also appears to do something which should work... but i 
-haven't tested it... it basically runs "mdrun /dev" without specifying a 
-minor/uuid for the root, so it'll start all arrays... i'm afraid that 
-might mess up for one of my arrays which is "auto=mdp"... and has the 
-annoying property of starting arrays on disks you've moved from other 
-systems.
-
-so anyhow i lean towards yaird at the moment... (and i should submit some 
-bug reports i guess).
-
-the above is on unstable... i don't use stable (and stable definitely does 
-the wrong thing -- 
-<http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=338200>).
-
--dean
+NeilBrown
