@@ -1,45 +1,68 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: raid5 that used parity for reads only when degraded
-Date: Fri, 24 Mar 2006 15:38:45 +1100
-Message-ID: <17443.30677.822868.981690@cse.unsw.edu.au>
-References: <loom.20060323T003324-767@post.gmane.org>
-	<17441.59458.918847.175664@cse.unsw.edu.au>
-	<1143175107.7404.88.camel@starfire>
+Subject: Re: raid5 performance question
+Date: Fri, 24 Mar 2006 15:40:58 +1100
+Message-ID: <17443.30810.518618.435323@cse.unsw.edu.au>
+References: <5d96567b0603060346r768a0ee1i8d8170cf9ba4bac1@mail.gmail.com>
+	<17420.46746.365629.168649@cse.unsw.edu.au>
+	<5d96567b0603070040t114334cbm858147afe551f719@mail.gmail.com>
+	<17422.4406.887200.421869@cse.unsw.edu.au>
+	<44214F92.5020002@tmr.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Alex Izvorski on Thursday March 23
+In-Reply-To: message from Bill Davidsen on Wednesday March 22
 Sender: linux-raid-owner@vger.kernel.org
-To: Alex Izvorski <aizvorski@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>, Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Thursday March 23, aizvorski@gmail.com wrote:
-> Neil - Thank you very much for the response.  
+On Wednesday March 22, davidsen@tmr.com wrote:
+> Neil Brown wrote:
 > 
-> In my tests with identically configured raid0 and raid5 arrays, raid5
-> initially had much lower throughput during reads.  I had assumed that
-> was because raid5 did parity-checking all the time.  It turns out that
-> raid5 throughput can get fairly close to raid0 throughput
-> if /sys/block/md0/md/stripe_cache_size is set to a very high value,
-> 8192-16384.  However the cpu load is still very much higher during raid5
-> reads.  I'm not sure why?
+> >On Tuesday March 7, raziebe@gmail.com wrote:
+> >  
+> >
+> >>Neil.
+> >>what is the stripe_cache exacly ?
+> >>    
+> >>
+> >
+> >In order to ensure correctness of data, all IO operations on a raid5
+> >pass through the 'stripe cache'  This is a cache of stripes where each
+> >stripe is one page wide across all devices.
+> >
+> >e.g. to write a block, we allocate one stripe in the cache to cover
+> >that block, pre-read anything that might be needed, copy in the new
+> >data and update parity, and write out anything that has changed.
+> >  
+> >
+> I can see that you would have to read the old data and parity blocks for 
+> RAID-5, I assume that's what you mean by "might be needed" and not a 
+> read of every drive to get the data to rebuild the parity from scratch. 
+> That would be not only slower, but require complex error recovery on an 
+> error reading unneeded data.
 
-Probably all the memcpys.
-For a raid5 read, the data is DMAed from the device into the
-stripe_cache, and then memcpy is used to move it to the filesystem (or
-other client) buffer.  Worse: this memcpy happens on only one CPU so a
-multiprocessor won't make it go any after.
+"might be needed" because sometime raid5 reads the old copies of the
+blocks it is about to over-write, and sometimes it reads all the
+blocks that it is NOT going to over-write instead.  And if it is
+over-writing all blocks in the stripe, it doesn't need to read
+anything.
 
-I would be possible to bypass the stripe_cache for reads from a
-non-degraded array (I did it for 2.4) but it is somewhat more complex
-in 2.6 and I haven't attempted it yet (there have always been other
-more interesting things to do).
 
-To test is this is the problem you could probably just comment-out the
-memcpy (the copy_data in handle_stripe) and see if the reads go
-faster.  Obviously you will be getting garbage back, but it should
-give you a reasonably realistic measure of the cost.
+> 
+> >Similarly to read, we allocate a stripe to cover the block, read in
+> >the requires parts, and copy out of the stripe cache into the
+> >destination.
+> >
+> >Requiring all reads to pass through the stripe cache is not strictly
+> >necessary, but it keeps the code a lot easier to manage (fewer special
+> >cases).   Bypassing the cache for simple read requests when the array
+> >is non-degraded is on my list....
+> >
+> It sounds as if you do a memory copy with each read, even if a read to 
+> user buffer would be possible. Hopefully I'm reading that wrong.
+
+Unfortunately you are reading it correctly.
 
 NeilBrown
