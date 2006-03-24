@@ -1,131 +1,56 @@
-From: Herta Van den Eynde <herta.vandeneynde@cc.kuleuven.be>
-Subject: Re: Does grub support sw raid1?
-Date: Thu, 23 Mar 2006 17:33:15 +0100
-Message-ID: <4422CDCB.4070104@cc.kuleuven.be>
-References: <442020AD.7090902@cc.kuleuven.be> <44202F7A.80901@h3c.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: Bug in md grow code
+Date: Fri, 24 Mar 2006 11:06:00 +1100
+Message-ID: <17443.14312.975082.563189@cse.unsw.edu.au>
+References: <20060323223929.GO17043@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <44202F7A.80901@h3c.com>
+In-Reply-To: message from Doug Ledford on Thursday March 23
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org, redhat-list@redhat.com
+To: Doug Ledford <dledford@redhat.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Thanks to all who confirmed that this should work, and gave pointers to=
-=20
-   more reading material.
+On Thursday March 23, dledford@redhat.com wrote:
+> The code that checks all the devices in an array and tries to fit a grow
+> request to the largest possible value is broken and will only do this
+> successfully if the first element of the array isn't <= all other elements
+> in the array.  Not re-initializing the fit variable with each loop of the
+> check solves the problems.
 
-=46urther investigation proved that the problem is caused by the Smart=20
-Array Controllers that HP uses.  As these "Smart" controllers don't=20
-allow for JBOD configs, I had configured each disk as RAID 0 at the=20
-hardware level.  When I remove disk 0, the controller detects that it i=
-s=20
-not set up for fault tolerance, and fails the logical drive.
-As they apparently will only boot from the first logical drive defined,=
-=20
-(which must have been the reason why I couldn't boot when I installed=20
-Red Hat on drives in slots 2 and 3), you now need to go into the Smart=20
-controller configuration utility, and delete the failed logical drive.
-My 2nd disk was configured in logical drive 2, which now is at the top=20
-of the list, and therefore can boot just fine.
+Ahh...yes, thanks.
+Not quite critical enough to get into 2.6.16.1 I suspect, but I'll
+make sure it heads upstream for 2.6.17.
 
-I'm now struggling with getting the Smart Array controller to recognize=
-=20
-the replacement devive, but that would be a question for an HP/linux=20
-mailing list.  I tried registering to=20
-compaqandlinux-subscribe@van-dijk.net, which gets expanded to=20
-compaqandlinux-subscribe@jedi.van-dijk.net, but that comes back with a=20
-"user unknown in local recipient table".
-Does anyone know of a good "linux on HP" mailinglist?
+Thanks again,
+NeilBrown
 
-Kind regards,
-
-Herta
-
-
-Mike Hardy wrote:
-> This works for me, there are several pages out there (I recall using =
-the
-> commands from a gentoo one most recently) that show the exact sequenc=
-e
-> of grub things you should do to get grub in the MBR of both disks.
->=20
-> It sounds like your machine may not be set to boot off of anything ot=
-her
-> than that one disk though? Is that maybe a BIOS thing?
->=20
-> I dunno, but I have definitely pulled a primary drive out of the syst=
-em
-> completely and booted off the second one, then had linux come up with
-> (correctly) degraded arrays
->=20
-> -Mike
->=20
-> Herta Van den Eynde wrote:
->=20
->>(crossposted to linux-raid@vger.kernel.org and redhat-list@redhat.com=
-)
->>(apologies for this, but this should have be operational last week)
->>
->>I installed Red Hat EL AS 4 on a HP Proliant DL380, and configured al=
-l
->>system devices in software RAID 1.  I added an entry to grub.conf to
->>fallback to the second disk in case the first entry fails.  At bootti=
-me,
->>booting from hd0 works fine.  As does booting from hd1.
->>
->>Until I physically remove hd0 from the system.
->>
->>I tried manually installing grub on hd1,
->>I added hd1 to the device.map and subsequently re-installed grub on i=
-t,
->>I remapped hd0 to /dev/cciss/c0d1 and subsequently re-installed grub
->>all to no avail.
->>
->>I previously installed this while the devices were in slots 2 and 3. =
-The
->>system wouldn't even boot then.  It looks as though booting from sw
->>RAID1 will only work when there's a valid device in slot 0.  Still
->>preferable over hw RAID1, but even better would be if this worked all
->>the way.
->>
->>Is this working for anyone?  Any idea what I may have overlooked?  An=
-y
->>suggestions on how to debug this?
->>
->>Kind regards,
->>
->>Herta
->>
->>Disclaimer: http://www.kuleuven.be/cwis/email_disclaimer.htm
->>
->>-
->>To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
->>the body of a message to majordomo@vger.kernel.org
->>More majordomo info at  http://vger.kernel.org/majordomo-info.html
->=20
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->=20
-
---=20
-Herta Van den Eynde              -=3D- Toledo system management
-K.U. Leuven - Ludit              -=3D- phone: +32 (0)16 322 166
-                                  -=3D- 50=B051'27" N 004=B040'39" E
-
-"Life on Earth may be expensive,
-  but it comes with a free ride around the Sun."
-
-Disclaimer: http://www.kuleuven.be/cwis/email_disclaimer.htm
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> Signed-off-by: Doug Ledford <dledford@redhat.com>
+> 
+> -- 
+>   Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
+>          Red Hat, Inc. 
+>          1801 Varsity Dr.
+>          Raleigh, NC 27606
+>   
+> --- linux-2.6.9/drivers/md/md.c.save	2006-03-22 18:32:38.000000000 -0500
+> +++ linux-2.6.9/drivers/md/md.c	2006-03-22 18:33:40.000000000 -0500
+> @@ -2426,6 +2426,7 @@
+>  	if (mddev->size != info->size) {
+>  		mdk_rdev_t * rdev;
+>  		struct list_head *tmp;
+> +		int fit = (info->size == 0);
+>  		if (mddev->pers->resize == NULL)
+>  			return -EINVAL;
+>  		/* The "size" is the amount of each device that is used.
+> @@ -2442,7 +2443,6 @@
+>  			return -EBUSY;
+>  		ITERATE_RDEV(mddev,rdev,tmp) {
+>  			sector_t avail;
+> -			int fit = (info->size == 0);
+>  			if (rdev->sb_offset > rdev->data_offset)
+>  				avail = (rdev->sb_offset*2) - rdev->data_offset;
+>  			else
