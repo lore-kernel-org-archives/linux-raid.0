@@ -1,56 +1,51 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: Bug in md grow code
-Date: Fri, 24 Mar 2006 11:06:00 +1100
-Message-ID: <17443.14312.975082.563189@cse.unsw.edu.au>
-References: <20060323223929.GO17043@redhat.com>
+Subject: Re: mdadm shutdown question
+Date: Fri, 24 Mar 2006 11:55:19 +1100
+Message-ID: <17443.17271.91625.522918@cse.unsw.edu.au>
+References: <20060323144235.GC25807@timor.isp-services.nl>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Doug Ledford on Thursday March 23
+In-Reply-To: message from Frido Ferdinand on Thursday March 23
 Sender: linux-raid-owner@vger.kernel.org
-To: Doug Ledford <dledford@redhat.com>
+To: Frido Ferdinand <frido@zolder.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thursday March 23, dledford@redhat.com wrote:
-> The code that checks all the devices in an array and tries to fit a grow
-> request to the largest possible value is broken and will only do this
-> successfully if the first element of the array isn't <= all other elements
-> in the array.  Not re-initializing the fit variable with each loop of the
-> check solves the problems.
+On Thursday March 23, frido@zolder.org wrote:
+> Hi,
+> 
+> This question is mainly about the following error during shutdown on my 
+> gentoo system:
+> 
+> mdadm: fail to stop array /dev/md1: Device or resource busy
+> 
+> (full raid1, root is on /dev/md1)
+> 
+> After searching bugzilla I found:
+> 
+> http://bugs.gentoo.org/show_bug.cgi?id=119380
+> 
+> However there's no agreement on if / how mdadm should stop the rootfs 
+> during a shutdown sequence. Can anyone enlight me on a good way to
+> proceed in this ?
 
-Ahh...yes, thanks.
-Not quite critical enough to get into 2.6.16.1 I suspect, but I'll
-make sure it heads upstream for 2.6.17.
+There is no need to stop the root md, or in fact any md, at shutdown.
+The shutdown process in the kernel will switch any active md arrays to
+read-only, which is effectively the same as shutting them down.
 
-Thanks again,
+It doesn't hurt to do
+  mdadm -Ss
+but it isn't really needed and you can ignore any errors.
+
 NeilBrown
 
 > 
-> Signed-off-by: Doug Ledford <dledford@redhat.com>
+> Regards,
 > 
-> -- 
->   Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
->          Red Hat, Inc. 
->          1801 Varsity Dr.
->          Raleigh, NC 27606
->   
-> --- linux-2.6.9/drivers/md/md.c.save	2006-03-22 18:32:38.000000000 -0500
-> +++ linux-2.6.9/drivers/md/md.c	2006-03-22 18:33:40.000000000 -0500
-> @@ -2426,6 +2426,7 @@
->  	if (mddev->size != info->size) {
->  		mdk_rdev_t * rdev;
->  		struct list_head *tmp;
-> +		int fit = (info->size == 0);
->  		if (mddev->pers->resize == NULL)
->  			return -EINVAL;
->  		/* The "size" is the amount of each device that is used.
-> @@ -2442,7 +2443,6 @@
->  			return -EBUSY;
->  		ITERATE_RDEV(mddev,rdev,tmp) {
->  			sector_t avail;
-> -			int fit = (info->size == 0);
->  			if (rdev->sb_offset > rdev->data_offset)
->  				avail = (rdev->sb_offset*2) - rdev->data_offset;
->  			else
+> 		-- Frido Ferdinand
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
