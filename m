@@ -1,26 +1,57 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [PATCH 000 of 3] md: Introduction - 3 assorted md fixes
-Date: Fri, 24 Mar 2006 16:58:57 +1100
-Message-ID: <20060324165531.2372.patches@notabene>
+Subject: [PATCH 001 of 3] md: Remove bi_end_io call out from under a spinlock.
+Date: Fri, 24 Mar 2006 16:59:28 +1100
+Message-ID: <1060324055928.2444@suse.de>
+References: <20060324165531.2372.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: Andrew Morton <akpm@osdl.org>
 Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-Three little fixes.
-The last is possibly most interesting as it highlight how wrong I managed
-to get the BIO_BARRIER stuff in raid1, which I really thought I had tested.
 
-I'm happy of this and the previous collection of raid5-growth patches
-to be merged into 2.6.17-rc1.  I had hoped the raid5-growth could sit
-in -mm a bit longer, but I didn't get them there in time, and I'd
-rather not wait until after 2.6.17.  They have received a reasonable
-amount of testing both by me and others and appear to be safe.
+raid5 overloads bi_phys_segments to count the number of blocks that
+the request was broken in to so that it knows when the bio is completely handled. 
 
-Thanks,
-NeilBrown
+Accessing this must  always be done under a spinlock.   In one case we
+also call bi_end_io under that spinlock, which probably isn't ideal as
+bi_end_io could be expensive (even though it isn't allowed to sleep).
 
- [PATCH 001 of 3] md: Remove bi_end_io call out from under a spinlock.
- [PATCH 002 of 3] md: Fix md grow/size code to correctly find the maximum available space.
- [PATCH 003 of 3] md: Restore 'remaining' count when retrying an write operation.
+So we reducde the range of the spinlock to just accessing bi_phys_segments.
+
+Signed-off-by: Neil Brown <neilb@suse.de>
+
+### Diffstat output
+ ./drivers/md/raid5.c |    6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff ./drivers/md/raid5.c~current~ ./drivers/md/raid5.c
+--- ./drivers/md/raid5.c~current~	2006-03-24 14:01:30.000000000 +1100
++++ ./drivers/md/raid5.c	2006-03-24 14:06:47.000000000 +1100
+@@ -1743,6 +1743,7 @@ static int make_request(request_queue_t 
+ 	sector_t logical_sector, last_sector;
+ 	struct stripe_head *sh;
+ 	const int rw = bio_data_dir(bi);
++	int remaining;
+ 
+ 	if (unlikely(bio_barrier(bi))) {
+ 		bio_endio(bi, bi->bi_size, -EOPNOTSUPP);
+@@ -1852,7 +1853,9 @@ static int make_request(request_queue_t 
+ 			
+ 	}
+ 	spin_lock_irq(&conf->device_lock);
+-	if (--bi->bi_phys_segments == 0) {
++	remaining = --bi->bi_phys_segments;
++	spin_unlock_irq(&conf->device_lock);
++	if (remaining == 0) {
+ 		int bytes = bi->bi_size;
+ 
+ 		if ( bio_data_dir(bi) == WRITE )
+@@ -1860,7 +1863,6 @@ static int make_request(request_queue_t 
+ 		bi->bi_size = 0;
+ 		bi->bi_end_io(bi, bytes, 0);
+ 	}
+-	spin_unlock_irq(&conf->device_lock);
+ 	return 0;
+ }
+ 
