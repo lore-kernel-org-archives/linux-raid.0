@@ -1,68 +1,26 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: raid5 performance question
-Date: Fri, 24 Mar 2006 15:40:58 +1100
-Message-ID: <17443.30810.518618.435323@cse.unsw.edu.au>
-References: <5d96567b0603060346r768a0ee1i8d8170cf9ba4bac1@mail.gmail.com>
-	<17420.46746.365629.168649@cse.unsw.edu.au>
-	<5d96567b0603070040t114334cbm858147afe551f719@mail.gmail.com>
-	<17422.4406.887200.421869@cse.unsw.edu.au>
-	<44214F92.5020002@tmr.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+From: NeilBrown <neilb@suse.de>
+Subject: [PATCH 000 of 3] md: Introduction - 3 assorted md fixes
+Date: Fri, 24 Mar 2006 16:58:57 +1100
+Message-ID: <20060324165531.2372.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Bill Davidsen on Wednesday March 22
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>, Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: Andrew Morton <akpm@osdl.org>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wednesday March 22, davidsen@tmr.com wrote:
-> Neil Brown wrote:
-> 
-> >On Tuesday March 7, raziebe@gmail.com wrote:
-> >  
-> >
-> >>Neil.
-> >>what is the stripe_cache exacly ?
-> >>    
-> >>
-> >
-> >In order to ensure correctness of data, all IO operations on a raid5
-> >pass through the 'stripe cache'  This is a cache of stripes where each
-> >stripe is one page wide across all devices.
-> >
-> >e.g. to write a block, we allocate one stripe in the cache to cover
-> >that block, pre-read anything that might be needed, copy in the new
-> >data and update parity, and write out anything that has changed.
-> >  
-> >
-> I can see that you would have to read the old data and parity blocks for 
-> RAID-5, I assume that's what you mean by "might be needed" and not a 
-> read of every drive to get the data to rebuild the parity from scratch. 
-> That would be not only slower, but require complex error recovery on an 
-> error reading unneeded data.
+Three little fixes.
+The last is possibly most interesting as it highlight how wrong I managed
+to get the BIO_BARRIER stuff in raid1, which I really thought I had tested.
 
-"might be needed" because sometime raid5 reads the old copies of the
-blocks it is about to over-write, and sometimes it reads all the
-blocks that it is NOT going to over-write instead.  And if it is
-over-writing all blocks in the stripe, it doesn't need to read
-anything.
+I'm happy of this and the previous collection of raid5-growth patches
+to be merged into 2.6.17-rc1.  I had hoped the raid5-growth could sit
+in -mm a bit longer, but I didn't get them there in time, and I'd
+rather not wait until after 2.6.17.  They have received a reasonable
+amount of testing both by me and others and appear to be safe.
 
-
-> 
-> >Similarly to read, we allocate a stripe to cover the block, read in
-> >the requires parts, and copy out of the stripe cache into the
-> >destination.
-> >
-> >Requiring all reads to pass through the stripe cache is not strictly
-> >necessary, but it keeps the code a lot easier to manage (fewer special
-> >cases).   Bypassing the cache for simple read requests when the array
-> >is non-degraded is on my list....
-> >
-> It sounds as if you do a memory copy with each read, even if a read to 
-> user buffer would be possible. Hopefully I'm reading that wrong.
-
-Unfortunately you are reading it correctly.
-
+Thanks,
 NeilBrown
+
+ [PATCH 001 of 3] md: Remove bi_end_io call out from under a spinlock.
+ [PATCH 002 of 3] md: Fix md grow/size code to correctly find the maximum available space.
+ [PATCH 003 of 3] md: Restore 'remaining' count when retrying an write operation.
