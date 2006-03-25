@@ -1,99 +1,114 @@
-From: Alex Izvorski <aizvorski@gmail.com>
-Subject: raid5 high cpu usage during reads - oprofile results
-Date: Sat, 25 Mar 2006 00:38:20 -0800
-Message-ID: <1143275900.8573.116.camel@starfire>
-References: <1143240438.8573.59.camel@starfire>
+From: Neil Brown <neilb@suse.de>
+Subject: Improving read performance on md/raid5
+Date: Sat, 25 Mar 2006 20:48:28 +1100
+Message-ID: <17445.4588.434149.623158@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1143240438.8573.59.camel@starfire>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello,
 
-I profiled some raid5 reads using oprofile to try to track down the
-suspiciously high cpu load I see.  This uses the same 8-disk SATA setup
-as I had described earlier.  One of runs is on a 1MB chunk raid5, the
-other on a 32MB chunk raid5.  As Neil suggested memcpy is a big part of
-the cpu load.  The rest of it apprears to be in handle_stripe and
-get_active_stripe - these three account for most of the load, with the
-remainder fairly evenly distributed among a dozen other routines.  If
-using a large chunk size, handle_stripe and get_active_stripe will
-predominate (and result in some truly abnormal cpu loads).  I am
-attaching annotated (from opannotate) source and assembly for raid5.c
-from the second (32MB chunk) run.   The annotated results do not make
-much sense to me, but I suspect that the exact line numbers etc may be
-shifted slightly as usually happens with optimized builds.  I hope this
-would be useful.
+Greetings all.
 
-Regards,
---Alex 
+ This issue - improving read performance on md/raid5 - has come up a
+ few times just recently, and I currently have two private emails on
+ the topic waiting to be answered.  While I do plan to answer those, I
+ generally prefer to have discussions about RAID openly on this
+ mailing list, and as I have something useful to say, I thought I
+ would post it to the list, and maybe refer to it the responses to
+ those private emails.
 
-P.S. I had originally mailed the oprofile results as attachments to the 
-list, but I think they didn't go through.  I put them at:
- http://linuxraid.pastebin.com/621363 - oprofile annotated assembly
- http://linuxraid.pastebin.com/621364 - oprofile annotated source
-Sorry if you get this email twice.
+ raid5 has a 'stripe cache' which is primarily used for synchronising
+ multiple accesses to the one stripe.  This is particularly important
+ for write (so the parity block can be updated correctly) and for
+ resync/recovery (so that changes made by resync/recovery don't
+ interfere with changes made by writing).  It is also important for
+ reading when reading from a degraded array - as the parity is used
+ for that, and so must be synchronised with parity updates.
 
+ However the synchrony provided by the stripe cache isn't really
+ needed for reads from a non-degraded array, or even for reads from a
+ working drive on a degraded array.  And making all reads use the
+ stripe cache has a performance impact.
 
------------------------------------------------------------------------
-mdadm --create /dev/md0 --level=raid5 --chunk=1024 --raid-devices=8 \
- --size=10485760 /dev/sd[abcdefgh]1
-echo "8192" > /sys/block/md0/md/stripe_cache_size
-./test_aio -f /dev/md0 -T 10 -s 60G -r 8M -n 14
-throughput 205MB/s, cpu load 40%
-
-opreport --symbols --image-path=/lib/modules/2.6.15-gentoo-r7/kernel/ 
-samples  %        image name app name   symbol name
-91839    42.9501  vmlinux    vmlinux    memcpy
-25946    12.1341  raid5.ko   raid5      handle_stripe
-17732     8.2927  raid5.ko   raid5      get_active_stripe
-5454      2.5507  vmlinux    vmlinux    blk_rq_map_sg
-4850      2.2682  vmlinux    vmlinux    __delay
-4726      2.2102  raid5.ko   raid5      raid5_compute_sector
-4588      2.1457  raid5.ko   raid5      copy_data
-4389      2.0526  raid5.ko   raid5      .text
-4362      2.0400  raid5.ko   raid5      make_request
-3688      1.7248  vmlinux    vmlinux    clear_page
-3548      1.6593  raid5.ko   raid5      raid5_end_read_request
-2594      1.2131  vmlinux    vmlinux    blk_recount_segments
-1944      0.9091  vmlinux    vmlinux    generic_make_request
-1627      0.7609  vmlinux    vmlinux    dma_map_sg
-1555      0.7272  vmlinux    vmlinux    get_user_pages
-1540      0.7202  libata.ko  libata     ata_bmdma_status
-1464      0.6847  vmlinux    vmlinux    __make_request
-1350      0.6314  vmlinux    vmlinux    follow_page
-1098      0.5135  vmlinux    vmlinux    finish_wait
-...(others under 0.5%)
------------------------------------------------------------------------
-
-mdadm --create /dev/md0 --level=raid5 --chunk=32678 --raid-devices=8 \
- --size=10485760 /dev/sd[abcdefgh]1
-echo "16384" > /sys/block/md0/md/stripe_cache_size
-./test_aio -f /dev/md0 -T 10 -s 60G -r 8M -n 14
-throughput 207MB/s, cpu load 80%
-
-opreport --symbols --image-path=/lib/modules/2.6.15-gentoo-r7/kernel/ 
-samples  %        image name app name   symbol name
-112441   28.2297  raid5.ko   raid5      get_active_stripe
-86826    21.7988  vmlinux    vmlinux    memcpy
-78688    19.7556  raid5.ko   raid5      handle_stripe
-18796     4.7190  raid5.ko   raid5      .text
-13301     3.3394  raid5.ko   raid5      raid5_compute_sector
-8339      2.0936  raid5.ko   raid5      make_request
-5881      1.4765  vmlinux    vmlinux    blk_rq_map_sg
-5463      1.3716  raid5.ko   raid5      raid5_end_read_request
-4269      1.0718  vmlinux    vmlinux    __delay
-4131      1.0371  raid5.ko   raid5      copy_data
-3531      0.8865  vmlinux    vmlinux    clear_page
-2964      0.7441  vmlinux    vmlinux    blk_recount_segments
-2617      0.6570  vmlinux    vmlinux    get_user_pages
-2025      0.5084  vmlinux    vmlinux    dma_map_sg
-...(others under 0.5%)
------------------------------------------------------------------------
+ I was thinking about this while driving my son to his cricket match
+ (we lost) and I realised that bypassing the cache would be a lot
+ easier than I had previously imagined.  However I am not likely to
+ have much time to give to it in the near future (plenty else to do)
+ so I thought I would outline what needs to be done in case someone
+ (or someones) else might like to give it a try.  If you do, I will be
+ more than happy to provide further guidance and feed back as
+ required.
 
 
+ What is required is:
 
+ 1/ define a "mergeable_bvec" function modelled on
+   raid0_mergeable_bvec.   This should restrict read requests to fit
+   entirely on one disk if possible.  (It can allow write requests to
+   be arbitrarily large).
+   Note that we cannot force all read requests to be from exactly one
+   device as a one-page request must always be allowed, even if it
+   crosses a drive boundary.  But most is good enough.
+
+ 2/ modify make_request in raid5.c to check for read requests which
+   fit entirely on a working device, and handle them differently
+   (probably with a new function - make_request is rather complex and
+   really needs to be split up).
+   The alternate handling should:
+
+    - use bio_clone to make a copy of the bio
+    - set bi_end_io to a new function, and set bi_private to the
+         original bio.
+    - pass the new bio to generic_make_request
+    - be careful to take a reference to the rdev (rdev->nr_pending)
+      like handle_stripe does.
+
+   This will bypass the cache and read directly into the buffers that
+   were passed.
+   The "new function" should check if the read succeeded and if it
+   did, call bio_endio on the original bio (having bio_put the new bio
+   first). 
+   If the read failed.. we'll have to do something, but I'll get to
+   that in a minute.
+
+At this point you can test the new code for speed and make sure it
+meets expectations.
+
+  3/ We need to be able to retry a failed read.  This is done by
+  attaching the bio to the stripe cache and letting the current code
+  handle it.  So the "new function" in step 2 needs to find the
+  mddev_t structure (start from bi_bdev) and put the failed bio on a
+  new retry list (use bi_next for linkage).
+  raid5d then needs to
+       - check for entries on that list
+       - take them off and perform a sequence of
+           get_active_stripe/add_stripe_bio 
+         just like make_request does. 
+         It should also arrange to set the R5_ReadError flag so that
+         handle_stripe will attempt the read-error-recovery that it
+         can do.
+
+Then you can test correct handling of read errors.
+
+This should be developed and eventually presented as a sequence of
+patches.
+
+1- step one, the mergeable_bvec funtion
+2- refactor make_request so that the code needed by raid5d will be
+   readily available
+3- introduce the new list and put appropriate code into raid5d
+4- extend make_request to handle appropriate reads differently.
+
+
+So: if anyone would like to do this and feels at all capable, please
+give it a go and keep us informed of how it is going.
+
+And if you wanted to do raid6 as well (should be identical code) that
+would be excellent....
+
+Thanks,
+NeilBrown
