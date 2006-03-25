@@ -1,114 +1,32 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Improving read performance on md/raid5
-Date: Sat, 25 Mar 2006 20:48:28 +1100
-Message-ID: <17445.4588.434149.623158@cse.unsw.edu.au>
+From: Brad Campbell <brad@wasp.net.au>
+Subject: Silly stripe cache values
+Date: Sat, 25 Mar 2006 15:26:15 +0400
+Message-ID: <442528D7.1050302@wasp.net.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: RAID Linux <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+G'day all,
 
-Greetings all.
+I have a box here.. it has a 2Ghz processor and 1.5GB of ram. It runs the entire OS over NFS and 
+it's sole purpose in life is to run 15 SATA drives in a Raid-6 with ext3 on it, and share that over 
+NFS. Most of that ram is sitting completely idle and thus I thought a logical thing to do would be 
+to stuff as much of it as possible into the MD subsystem to help it cache..
 
- This issue - improving read performance on md/raid5 - has come up a
- few times just recently, and I currently have two private emails on
- the topic waiting to be answered.  While I do plan to answer those, I
- generally prefer to have discussions about RAID openly on this
- mailing list, and as I have something useful to say, I thought I
- would post it to the list, and maybe refer to it the responses to
- those private emails.
+Are there any limits to the values living in /sys/block/md* and what might be the tradeoffs (if any) 
+to using what would normally be thought stupid amounts of ram for these knobs ?
 
- raid5 has a 'stripe cache' which is primarily used for synchronising
- multiple accesses to the one stripe.  This is particularly important
- for write (so the parity block can be updated correctly) and for
- resync/recovery (so that changes made by resync/recovery don't
- interfere with changes made by writing).  It is also important for
- reading when reading from a degraded array - as the parity is used
- for that, and so must be synchronised with parity updates.
+This box does not get written to often, it's just a media streamer mostly.. but if I am writing to 
+it then it chokes just providing a 1Mb stream over the network currently. (It's on a 2.6.15-git11 
+kernel currently but I'm just upgrading to 2.6.16 now)
 
- However the synchrony provided by the stripe cache isn't really
- needed for reads from a non-degraded array, or even for reads from a
- working drive on a degraded array.  And making all reads use the
- stripe cache has a performance impact.
-
- I was thinking about this while driving my son to his cricket match
- (we lost) and I realised that bypassing the cache would be a lot
- easier than I had previously imagined.  However I am not likely to
- have much time to give to it in the near future (plenty else to do)
- so I thought I would outline what needs to be done in case someone
- (or someones) else might like to give it a try.  If you do, I will be
- more than happy to provide further guidance and feed back as
- required.
-
-
- What is required is:
-
- 1/ define a "mergeable_bvec" function modelled on
-   raid0_mergeable_bvec.   This should restrict read requests to fit
-   entirely on one disk if possible.  (It can allow write requests to
-   be arbitrarily large).
-   Note that we cannot force all read requests to be from exactly one
-   device as a one-page request must always be allowed, even if it
-   crosses a drive boundary.  But most is good enough.
-
- 2/ modify make_request in raid5.c to check for read requests which
-   fit entirely on a working device, and handle them differently
-   (probably with a new function - make_request is rather complex and
-   really needs to be split up).
-   The alternate handling should:
-
-    - use bio_clone to make a copy of the bio
-    - set bi_end_io to a new function, and set bi_private to the
-         original bio.
-    - pass the new bio to generic_make_request
-    - be careful to take a reference to the rdev (rdev->nr_pending)
-      like handle_stripe does.
-
-   This will bypass the cache and read directly into the buffers that
-   were passed.
-   The "new function" should check if the read succeeded and if it
-   did, call bio_endio on the original bio (having bio_put the new bio
-   first). 
-   If the read failed.. we'll have to do something, but I'll get to
-   that in a minute.
-
-At this point you can test the new code for speed and make sure it
-meets expectations.
-
-  3/ We need to be able to retry a failed read.  This is done by
-  attaching the bio to the stripe cache and letting the current code
-  handle it.  So the "new function" in step 2 needs to find the
-  mddev_t structure (start from bi_bdev) and put the failed bio on a
-  new retry list (use bi_next for linkage).
-  raid5d then needs to
-       - check for entries on that list
-       - take them off and perform a sequence of
-           get_active_stripe/add_stripe_bio 
-         just like make_request does. 
-         It should also arrange to set the R5_ReadError flag so that
-         handle_stripe will attempt the read-error-recovery that it
-         can do.
-
-Then you can test correct handling of read errors.
-
-This should be developed and eventually presented as a sequence of
-patches.
-
-1- step one, the mergeable_bvec funtion
-2- refactor make_request so that the code needed by raid5d will be
-   readily available
-3- introduce the new list and put appropriate code into raid5d
-4- extend make_request to handle appropriate reads differently.
-
-
-So: if anyone would like to do this and feels at all capable, please
-give it a go and keep us informed of how it is going.
-
-And if you wanted to do raid6 as well (should be identical code) that
-would be excellent....
-
-Thanks,
-NeilBrown
+Regards,
+Brad
+-- 
+"Human beings, who are almost unique in having the ability
+to learn from the experience of others, are also remarkable
+for their apparent disinclination to do so." -- Douglas Adams
