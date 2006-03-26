@@ -1,58 +1,59 @@
-From: "Vince W." <listacct1@lvwnet.com>
-Subject: Re: grub-install to mdp-style RAID1 array?
-Date: Sun, 26 Mar 2006 11:40:04 -0500
-Message-ID: <4426C3E4.1070304@lvwnet.com>
-References: <44269E72.209@lvwnet.com>
+From: Dan Christensen <jdc@uwo.ca>
+Subject: Re: naming of md devices
+Date: Sun, 26 Mar 2006 14:34:34 -0500
+Message-ID: <87ek0p0zlh.fsf@uwo.ca>
+References: <87slpav0p6.fsf@uwo.ca> <87ek0uc595.fsf@hades.wkstn.nix>
+	<87fyl9swxb.fsf@uwo.ca> <87hd5nnvd6.fsf@hades.wkstn.nix>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <44269E72.209@lvwnet.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Vince W. wrote:
-> 
-> The command I used to create the array was:
-> 
-> # mdadm --create /dev/mdpraid --auto=mdp --level=1 --raid-devices=2 
-> /dev/hdi /dev/hdk
- >
- > running interactive grub shell:
-> 
->     GNU GRUB  version 0.95  (640K lower / 3072K upper memory)
-> 
->  [ Minimal BASH-like line editing is supported.  For the first word, TAB
->    lists possible command completions.  Anywhere else TAB lists the 
-> possible
->    completions of a device/filename.]
-> 
-> grub> device (hd0) /dev/mdpraid
-> 
-> grub> root (hd0,  <- tab completion attempt to see what it will say:
->  Possible partitions are:
->    Partition num: 0,  Filesystem type is ext2fs, partition type 0x83
->    Partition num: 1,  Filesystem type unknown, partition type 0x82
->    Partition num: 2,  Filesystem type is ext2fs, partition type 0x83
-> 
-> grub> root (hd0,0)
->  Filesystem type is ext2fs, partition type 0x83
-> 
-> grub> setup
-> 
-> Error 11: Unrecognized device string
-> 
+Nix <nix@esperi.org.uk> writes:
 
-Uh, turns out I wasn't using the right syntax....
+> On 23 Mar 2006, Dan Christensen moaned:
+>
+>> I also tried putting root=LABEL=/ on my boot command line.  Debian's
+>> kernel seemed to understand this but gave:
+>> 
+>> Begin: Waiting for root filesystem...
+>> Done.
+>> Done.
+>> Begin: Mounting root filesystem
+>> ...kernel autodetection of raid seemed to happen here...
+>> ALERT /dev/disk/by_label// does not exist
+>
+> Ah, welcome to the udev problems. Look at the Debian kernel-maint list
+> at lists.debian.org and marvel at the trouble they're having because
+> they're using udev on their initramfs. I'm glad I used mdev instead :)
 
-typing this instead worked:
+Yes, I'm understanding better what is going on.  First of all, / is
+not a valid label.  (The relevant thing for udev is the "safe" output
+of "vol_id /dev/md1".)  So I've changed the filesystem label to "root"
+using tune2fs -L.
 
-grub> setup (hd0)
+Second, the udev in Debian had support for persistent devices for one
+brief release, but it has been taken out while problems with
+ide-generic are being investigated.  
 
-I can now boot from the partitioned MD device.  woo-hoo!
+I put in my own initramfs hook script to put the appropriate udev
+files in the initramfs image, but still I'm not getting the
+/dev/disk/by_label/root symlink.  I can't figure out why this
+isn't working.
 
-Now to see if I can pull the 1st drive and boot from the 2nd drive in 
-the array.
+>> BUT, my self-compiled kernel is now failing to bring up the arrays! 
+>
+> Without boot messages it's very hard to say what's going on. If you have
+> another machine, you could try booting with the messages going over a
+> serial console...
 
-Vince
+I may try that, but the stock Debian kernel is working for me so for
+now I'll probably leave this unsolved.
+
+Sorry that this is getting a bit off topic for the list.  Thanks
+for all the help!
+
+Dan
+
