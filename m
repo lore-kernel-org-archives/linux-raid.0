@@ -1,19 +1,32 @@
-From: "Amanda" <amanda3@verizon.net>
-Subject: New Replicas... selerem
-Date: Sun, 26 Mar 2006 03:51:54 +0000 (UTC)
-Message-ID: <646502984774$44606981$59789244@jikytuzyvenolo>
+From: dean gaudet <dean@arctic.org>
+Subject: Re: raid5 high cpu usage during reads - oprofile results
+Date: Sat, 25 Mar 2006 21:38:17 -0800 (PST)
+Message-ID: <Pine.LNX.4.64.0603252122210.6166@twinlark.arctic.org>
+References: <1143240438.8573.59.camel@starfire> <1143275900.8573.116.camel@starfire>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	format=flowed;
-	charset="iso-8859-1";
-	reply-type=original
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-Date: Sun, 26 Mar 2006 11:49:50 0800
+In-Reply-To: <1143275900.8573.116.camel@starfire>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Alex Izvorski <aizvorski@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Would you like cheap and luxury watches? http://www.perfectgifthere.com/
+On Sat, 25 Mar 2006, Alex Izvorski wrote:
 
+>  http://linuxraid.pastebin.com/621363 - oprofile annotated assembly
 
+it looks to me like a lot of time is spent in __find_stripe() ... i wonder 
+if the hash is working properly.
+
+in raid5.c you could try changing
+
+#define stripe_hash(conf, sect) (&((conf)->stripe_hashtbl[((sect) >> STRIPE_SHIFT) & HASH_MASK]))
+
+to
+
+#define stripe_hash(conf, sect) (&((conf)->stripe_hashtbl[(((sect) >> STRIPE_SHIFT) ^ ((sect) >> (2*STRIPE_SHIFT))) & HASH_MASK]))
+
+or maybe try using jhash_1word((sect) >> STRIPE_SHIFT, 0) ...
+
+-dean
