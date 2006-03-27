@@ -1,42 +1,44 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: Question about build md.c in the kernel source tree
-Date: Mon, 27 Mar 2006 20:48:00 +1100
-Message-ID: <17447.46288.163877.546972@cse.unsw.edu.au>
-References: <200603271618592181267@gmail.com>
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: raid and elevator
+Date: Mon, 27 Mar 2006 14:27:47 +0200
+Message-ID: <20060327122747.GK8186@suse.de>
+References: <5d96567b0603261329o39a5e777w5bc39ad5251b4ecb@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Zhikun Wang on Monday March 27
+Content-Disposition: inline
+In-Reply-To: <5d96567b0603261329o39a5e777w5bc39ad5251b4ecb@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Zhikun Wang <raidwang@gmail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Linux RAID Mailing List <linux-raid@vger.kernel.org>, Neil Brown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-On Monday March 27, raidwang@gmail.com wrote:
-> Hi:
-> 	I am reading linux software RAID(MD) source code. I want to add some "printk" information in the md.c file. But md.c has been build in the kernel. How can i only build the md.c file without building the whole kernel source tree? 
-> 	Thanks a lot!
-
-Edit .config
-remove the line
-          CONFIG_BLK_DEV_MD=y
-run 'make oldconfig'
-When it asks you about the md driver and 'm' for module rather than
-'y' for yes.
-
-Then md will be built as a module, producing md_mod.ko and raid*.ko.
-These can then be loaded into the running kernel with 'insmod' and
-removed with 'rmmod'.
-
-NeilBrown
-
-
+On Sun, Mar 26 2006, Raz Ben-Jehuda(caro) wrote:
+> It is my belief that the linux elevators are not optimized for
+> raid throughout.
 > 
-> 																								zkwang
->   
+> Basically when IO initiator generates IO over a single disk he can control
+> the amount of IOs and this way control IOs latencies.
 > 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> This is not the case in raided volumes.
+> 
+> Example:
+> 
+> An IO initiator intiates bulks of asynchronous IOs over a raided
+> volume. since the user does not know the target destination of each IO
+> he
+> might cause imbalance over the disks. one disk may become overflooded
+> with IOs while the other is may starve. So eventually we are ending with
+> a non balaned raided volume in terms of bad latencies.
+> 
+> I am trying to deal with this problem by fixing the deadline elevator code
+> to batch IOs , meaning , when n IOs are reaching the disk, each m deadlined
+> IOs are sorted and then dispatced.
+
+You do realize that the io scheduler resides _below_ the raid
+personality? So if you want to balance what goes to what io scheduler
+(and thus, disk), you'd want to mess with the raid personality.
+
+-- 
+Jens Axboe
+
