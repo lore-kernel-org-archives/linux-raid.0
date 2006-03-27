@@ -1,30 +1,41 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: question : raid bio sector size
-Date: Tue, 28 Mar 2006 09:52:56 +1100
-Message-ID: <17448.27848.37751.899817@cse.unsw.edu.au>
-References: <5d96567b0603270849v6546a760oe3a703cb8bad3b3e@mail.gmail.com>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: software raid to Hardware raid
+Date: Mon, 27 Mar 2006 18:28:40 -0500
+Message-ID: <44287528.8040003@tmr.com>
+References: <4428073C.50007@4dcsi.com> <44281791.7060105@4dcsi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Raz Ben-Jehuda(caro) on Monday March 27
+In-Reply-To: <44281791.7060105@4dcsi.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
-Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: Ken <Ken@4dcsi.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Monday March 27, raziebe@gmail.com wrote:
-> i have playing with raid5 and i noticed that the arriving bios  sizes
-> are 1 sector.
-> why is that  and where is it set ?
+Ken wrote:
 
-bios arriving from where?
+> Hello,
+>   We have a Red Hat 7.1 box running kernel 2.4.17-SMP.   We have 
+> raidtools installed.   We had a hardware RAID that got converted to a 
+> software raid by mistake.   Is there any way to go back without 
+> loosing the data?   the device is showing up as /dev/md0.  Thank you. 
 
-bios from the filesystem to the raid5 device will be whatever size the
-fs wants to make them.
+1 - back up your data
+2 - convert to hw raid
+3 - test carefully to be sure it works
+4 - reload your data
 
-bios from the raid5 device to the component devices will always be 1
-page (typically 8 sectors).  This is the size used by the stripe cache
-which is used to synchronise everything.
+And left out, step zero, consider why you want to do this if what you 
+have is working reliably
+also, between 2 and 3 consider upgrading to a distribution and kernel 
+written this millenium.
 
-NeilBrown
+Given the state of hardware raid when that kernel was new, and the state 
+of the drivers, I would be very sure I had a GOOD reason to change anything.
+
+-- 
+bill davidsen <davidsen@tmr.com>
+  CTO TMR Associates, Inc
+  Doing interesting things with small computers since 1979
+
