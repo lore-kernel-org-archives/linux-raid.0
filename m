@@ -1,7 +1,7 @@
 From: andy liebman <andyliebman@aol.com>
-Subject: Conflicting Size Numbers -- Bug in mdadm, md, df?
-Date: Mon, 27 Mar 2006 12:36:14 -0500
-Message-ID: <4428228E.8080909@aol.com>
+Subject: Conflicting Size Numbers -- bug in md, df, mdadm?
+Date: Mon, 27 Mar 2006 12:37:58 -0500
+Message-ID: <442822F6.8050801@aol.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
@@ -79,26 +79,26 @@ Device with SINGLE partition:
 [root@localhost admin]# xfs_info /RAIDS/RAID_1
 meta-data=/RAIDS/RAID_1          isize=256    agcount=32, agsize=83921600
 blks
-        =                       sectsz=512
+         =                       sectsz=512
 data     =                       bsize=4096   blocks=2685489536, imaxpct=25
-        =                       sunit=64     swidth=128 blks, unwritten=1
+         =                       sunit=64     swidth=128 blks, unwritten=1
 naming   =version 2              bsize=4096
 log      =internal               bsize=4096   blocks=32768, version=1
-        =                       sectsz=512   sunit=0 blks
+         =                       sectsz=512   sunit=0 blks
 realtime =none                   extsz=524288 blocks=0, rtextents=0
 
 
 Device with NO partitions:
- 
+
 root@localhost admin]# xfs_info /RAIDS/RAID_2
 meta-data=/RAIDS/RAID_2          isize=256    agcount=32, agsize=83921600
 blks
-        =                       sectsz=512
+         =                       sectsz=512
 data     =                       bsize=4096   blocks=2685489536, imaxpct=25
-        =                       sunit=64     swidth=128 blks, unwritten=1
+         =                       sunit=64     swidth=128 blks, unwritten=1
 naming   =version 2              bsize=4096
 log      =internal               bsize=4096   blocks=32768, version=1
-        =                       sectsz=512   sunit=0 blks
+         =                       sectsz=512   sunit=0 blks
 realtime =none                   extsz=524288 blocks=0, rtextents=0
 
 
@@ -108,23 +108,23 @@ Device with TWO partitions:
 [root@localhost admin]# xfs_info /RAIDS/RAID_1
 meta-data=/RAIDS/RAID_1          isize=256    agcount=32, agsize=41961664
 blks
-        =                       sectsz=512
+         =                       sectsz=512
 data     =                       bsize=4096   blocks=1342773248, imaxpct=25
-        =                       sunit=64     swidth=128 blks, unwritten=1
+         =                       sunit=64     swidth=128 blks, unwritten=1
 naming   =version 2              bsize=4096
 log      =internal               bsize=4096   blocks=32768, version=1
-        =                       sectsz=512   sunit=0 blks
+         =                       sectsz=512   sunit=0 blks
 realtime =none                   extsz=524288 blocks=0, rtextents=0
 
 [root@localhost admin]# xfs_info /RAIDS/RAID_2
 meta-data=/RAIDS/RAID_2          isize=256    agcount=32, agsize=41959872
 blks
-        =                       sectsz=512
+         =                       sectsz=512
 data     =                       bsize=4096   blocks=1342715904, imaxpct=25
-        =                       sunit=64     swidth=128 blks, unwritten=1
+         =                       sunit=64     swidth=128 blks, unwritten=1
 naming   =version 2              bsize=4096
 log      =internal               bsize=4096   blocks=32768, version=1
-        =                       sectsz=512   sunit=0 blks
+         =                       sectsz=512   sunit=0 blks
 realtime =none                   extsz=524288 blocks=0, rtextents=0
 
 
@@ -135,116 +135,116 @@ Device with SINGLE partition
 
 [root@localhost admin]# mdadm --query --detail /dev/md1
 /dev/md1:
-       Version : 00.90.02
- Creation Time : Mon Mar 27 09:30:35 2006
-    Raid Level : raid0
-    Array Size : 10741958144 (10244.33 GiB 10999.77 GB)
-  Raid Devices : 2
- Total Devices : 2
+        Version : 00.90.02
+  Creation Time : Mon Mar 27 09:30:35 2006
+     Raid Level : raid0
+     Array Size : 10741958144 (10244.33 GiB 10999.77 GB)
+   Raid Devices : 2
+  Total Devices : 2
 Preferred Minor : 1
-   Persistence : Superblock is persistent
+    Persistence : Superblock is persistent
 
-   Update Time : Mon Mar 27 09:30:35 2006
-         State : clean
+    Update Time : Mon Mar 27 09:30:35 2006
+          State : clean
 Active Devices : 2
 Working Devices : 2
 Failed Devices : 0
- Spare Devices : 0
+  Spare Devices : 0
 
-    Chunk Size : 256K
+     Chunk Size : 256K
 
-          UUID : 6603dcff:7ce336a8:d4b5e0a6:0f0d7d16
-        Events : 0.2
+           UUID : 6603dcff:7ce336a8:d4b5e0a6:0f0d7d16
+         Events : 0.2
 
-   Number   Major   Minor   RaidDevice State
-      0       8       17        0      active sync   /dev/sdb1
-      1       8       33        1      active sync   /dev/sdc1
+    Number   Major   Minor   RaidDevice State
+       0       8       17        0      active sync   /dev/sdb1
+       1       8       33        1      active sync   /dev/sdc1
 
 
 
 Device with NO partitions:
- 
+
 [root@localhost admin]# mdadm --query --detail /dev/md2
 /dev/md2:
-       Version : 00.90.02
- Creation Time : Sun Jan 22 04:06:58 2006
-    Raid Level : raid0
-    Array Size : 10741958144 (10244.33 GiB 10999.77 GB)
-  Raid Devices : 2
- Total Devices : 2
+        Version : 00.90.02
+  Creation Time : Sun Jan 22 04:06:58 2006
+     Raid Level : raid0
+     Array Size : 10741958144 (10244.33 GiB 10999.77 GB)
+   Raid Devices : 2
+  Total Devices : 2
 Preferred Minor : 2
-   Persistence : Superblock is persistent
+    Persistence : Superblock is persistent
 
-   Update Time : Sun Jan 22 04:06:58 2006
-         State : clean
+    Update Time : Sun Jan 22 04:06:58 2006
+          State : clean
 Active Devices : 2
 Working Devices : 2
 Failed Devices : 0
- Spare Devices : 0
+  Spare Devices : 0
 
-    Chunk Size : 256K
+     Chunk Size : 256K
 
-          UUID : c0e066fe:656ff651:bd71f666:03378481
-        Events : 0.1
+           UUID : c0e066fe:656ff651:bd71f666:03378481
+         Events : 0.1
 
-   Number   Major   Minor   RaidDevice State
-      0       8       32        0      active sync   /dev/sdc
-      1       8       48        1      active sync   /dev/sdd
+    Number   Major   Minor   RaidDevice State
+       0       8       32        0      active sync   /dev/sdc
+       1       8       48        1      active sync   /dev/sdd
 
 Device with TWO partitions:
 
 [root@localhost admin]# mdadm --query --detail /dev/md1
 /dev/md1:
-       Version : 00.90.02
- Creation Time : Fri Mar 24 08:13:54 2006
-    Raid Level : raid0
-    Array Size : 5371093504 (5122.27 GiB 5500.00 GB)
-  Raid Devices : 2
- Total Devices : 2
+        Version : 00.90.02
+  Creation Time : Fri Mar 24 08:13:54 2006
+     Raid Level : raid0
+     Array Size : 5371093504 (5122.27 GiB 5500.00 GB)
+   Raid Devices : 2
+  Total Devices : 2
 Preferred Minor : 1
-   Persistence : Superblock is persistent
+    Persistence : Superblock is persistent
 
-   Update Time : Fri Mar 24 08:13:54 2006
-         State : clean
+    Update Time : Fri Mar 24 08:13:54 2006
+          State : clean
 Active Devices : 2
 Working Devices : 2
 Failed Devices : 0
- Spare Devices : 0
+  Spare Devices : 0
 
-    Chunk Size : 256K
+     Chunk Size : 256K
 
-          UUID : 40ea6266:ba1b3330:21674ca4:57a2aca7
-        Events : 0.1
+           UUID : 40ea6266:ba1b3330:21674ca4:57a2aca7
+         Events : 0.1
 
-   Number   Major   Minor   RaidDevice State
-      0       8       17        0      active sync   /dev/sdb1
-      1       8       33        1      active sync   /dev/sdc1
+    Number   Major   Minor   RaidDevice State
+       0       8       17        0      active sync   /dev/sdb1
+       1       8       33        1      active sync   /dev/sdc1
 [root@localhost admin]# mdadm --query --detail /dev/md2
 /dev/md2:
-       Version : 00.90.02
- Creation Time : Fri Mar 24 08:14:07 2006
-    Raid Level : raid0
-    Array Size : 5370864640 (5122.06 GiB 5499.77 GB)
-  Raid Devices : 2
- Total Devices : 2
+        Version : 00.90.02
+  Creation Time : Fri Mar 24 08:14:07 2006
+     Raid Level : raid0
+     Array Size : 5370864640 (5122.06 GiB 5499.77 GB)
+   Raid Devices : 2
+  Total Devices : 2
 Preferred Minor : 2
-   Persistence : Superblock is persistent
+    Persistence : Superblock is persistent
 
-   Update Time : Fri Mar 24 08:14:07 2006
-         State : clean
+    Update Time : Fri Mar 24 08:14:07 2006
+          State : clean
 Active Devices : 2
 Working Devices : 2
 Failed Devices : 0
- Spare Devices : 0
+  Spare Devices : 0
 
-    Chunk Size : 256K
+     Chunk Size : 256K
 
-          UUID : a8cc58ca:7a31b91a:c568d2ba:004d34b2
-        Events : 0.1
+           UUID : a8cc58ca:7a31b91a:c568d2ba:004d34b2
+         Events : 0.1
 
-   Number   Major   Minor   RaidDevice State
-      0       8       18        0      active sync   /dev/sdb2
-      1       8       34        1      active sync   /dev/sdc2
+    Number   Major   Minor   RaidDevice State
+       0       8       18        0      active sync   /dev/sdb2
+       1       8       34        1      active sync   /dev/sdc2
 
 
 
@@ -265,7 +265,7 @@ Filesystem           1K-blocks      Used Available Use% Mounted on
 
 
 Device with NO partitions:
- 
+
 [root@localhost admin]# df
 Filesystem            Size  Used Avail Use% Mounted on
 /dev/hda1              13G  6.1G  6.2G  50% /
@@ -294,7 +294,6 @@ Filesystem           1K-blocks      Used Available Use% Mounted on
 /dev/sda6             45960116   2524516  43435600   6% /home
 /dev/md1             5370961920      1064 5370960856   1% /RAIDS/RAID_1
 /dev/md2             5370732544      1608 5370730936   1% /RAIDS/RAID_2
-
 
 
 
