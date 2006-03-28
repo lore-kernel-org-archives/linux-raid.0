@@ -1,49 +1,52 @@
-From: Technomage <technomage-hawke@cox.net>
-Subject: recovering data on a failed raid-0 installation
-Date: Mon, 27 Mar 2006 16:35:47 -0700
-Message-ID: <200603271635.48466.technomage-hawke@cox.net>
+From: Ken Swarthout <Ken@4dcsi.com>
+Subject: Re: software raid to Hardware raid
+Date: Mon, 27 Mar 2006 21:12:07 -0500
+Message-ID: <44289B77.80700@4dcsi.com>
+References: <4428073C.50007@4dcsi.com> <44281791.7060105@4dcsi.com> <44287528.8040003@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <44287528.8040003@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-ok,
-here's the situation in a nutshell.
+Thank you for your reply.   It is a little more than a terabyte worth of 
+information.   And although we have everything backed up on tape, it 
+will take a very long time to restore it.  The reason we need to do this 
+is because when it was converted to software RAID, we lost a lot of 
+performance.  There are about twenty 80 gig hard drives hooked to two 
+promise RAID controllers.   Can I just run raidstop /dev/md0 and not 
+loose the data and still have the original hardware RAID still there?  
+Thanks.
 
-one of the 2 HD's in a linux raid-0 installation has failed.
+--Ken
 
-Fortunately, or otherwise, it was NOT the primary HD.
+Bill Davidsen wrote:
 
-problem is, I need to recover data from the first drive but appear to be 
-unable to do so because the raid is not complete. the second drive only had 
-193 MB written to it and I am fairly certain that the data I would like to 
-recover is NOT on that drive.
+> Ken wrote:
+>
+>> Hello,
+>>   We have a Red Hat 7.1 box running kernel 2.4.17-SMP.   We have 
+>> raidtools installed.   We had a hardware RAID that got converted to a 
+>> software raid by mistake.   Is there any way to go back without 
+>> loosing the data?   the device is showing up as /dev/md0.  Thank you. 
+>
+>
+> 1 - back up your data
+> 2 - convert to hw raid
+> 3 - test carefully to be sure it works
+> 4 - reload your data
+>
+> And left out, step zero, consider why you want to do this if what you 
+> have is working reliably
+> also, between 2 and 3 consider upgrading to a distribution and kernel 
+> written this millenium.
+>
+> Given the state of hardware raid when that kernel was new, and the 
+> state of the drivers, I would be very sure I had a GOOD reason to 
+> change anything.
+>
 
-can anyone offer any solutions to this?
 
-the second HD is not usable (heat related failure issues). 
-
-The filesystem used on the md0 partition (under mdadm) was xfs. now I have 
-tried the xfs_check and xfs_repair tools and they are not helpful at this 
-point.
-
-The developer (of mdadm) suggested I use the following commands in an attempt 
-to recover:
-
-  mdadm -C /dev/md0 -l0 -n2 /dev/......
-  fsck -n /dev/md0
-
-However, the second one was a no go.
-
-I am stumped as to how to proceed here. I need the data off the first drive, 
-but do not appear to have any way (other than using cat to see it) to get at 
-it.
-
-some help would be greatly appreciated.
-
-technomage
