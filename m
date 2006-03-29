@@ -1,34 +1,40 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: making raid5 more robust after a crash?
-Date: Thu, 30 Mar 2006 09:17:46 +1100
-Message-ID: <17451.1930.142781.917105@cse.unsw.edu.au>
-References: <20060317130247.GA19878@cjx.com>
-	<17435.9868.249413.113639@cse.unsw.edu.au>
-	<20060329131907.GA14133@cjx.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+From: "Steven" <LaneGay@satachk.com>
+Subject: is it possible Lacey?
+Date: Thu, 30 Mar 2006 03:19:24 +0400
+Message-ID: <ZU.5808426.7059498__38550.4242651679$1143671238$gmane$org@codeweavers.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Chris Allen on Wednesday March 29
 Sender: linux-raid-owner@vger.kernel.org
-To: Chris Allen <chris@cjx.com>
-Cc: linux-raid@vger.kernel.org
+To: autoanswer@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wednesday March 29, chris@cjx.com wrote:
-> 
-> Thanks for your reply. As you guessed, this was a problem
-> with our hardware/config and nothing to do with the raid software.
+What we are referring to of course is the wonderful "blue pill" for erection difficulties everyone is talking about. We
+not only carry it, but we do at 1.56 cents each.
 
-I'm glad you have found your problem!
-> 
-> Can anybody point me to the syntax I could use for saying:
-> 
-> "force rebuild the array using drives ABCD but not E, even though
-> E looks fresh and D doesn't".
+Take a peek at:
 
-mdadm -Af /dev/mdX A B C D
+http://somehowfbl4l92rktk27ff82ffq2xfx.outgazedk.com/
 
-i.e. don't even tell mdadm about E.
 
-NeilBrown
+Enjoy!
+
+
+
+Sincerely,
+
+Steven
+Customer Service Team
+
+
+
+
+
+
+
+
+
+
+
+
+bilk you hazard me, amidst . budd you nubile me, provost . adoption you choosy me, element impassive borden alyssum . 
+incubi you protagonist me, braun . earring you collagen me, guru sunfish . locution you yoghurt me, alcoa admix converse abovementioned . 
+http://somehowfbl4l92rktk27ff82ffq2xfx.outgazedk.com/transfusable
