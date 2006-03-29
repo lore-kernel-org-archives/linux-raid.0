@@ -1,83 +1,33 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: recovering data on a failed raid-0 installation
-Date: Wed, 29 Mar 2006 16:31:33 +1100
-Message-ID: <17450.7093.694274.976614@cse.unsw.edu.au>
-References: <200603282208.47214.technomage-hawke@cox.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+From: Online Banking Chase <service@chase.com>
+Subject: {Virus?} Important information regarding your Chase account
+Date: Wed, 29 Mar 2006 04:45:26 -0500
+Message-ID: <200603290945.k2T9jQPs028362@mail.mrbooks.com>
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Technomage on Tuesday March 28
 Sender: linux-raid-owner@vger.kernel.org
-To: Technomage <technomage-hawke@cox.net>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday March 28, technomage-hawke@cox.net wrote:
-> ok,
-> here's the situation in a nutshell.
-> 
-> one of the 2 HD's in a linux raid-0 installation has failed.
-> 
-> Fortunately, or otherwise, it was NOT the primary HD.
+Warning: This message has had one or more attachments removed
+Warning: (the entire message).
+Warning: Please read the "yoursite-Attachment-Warning.txt" attachment(s) for more information.
 
-What do you mean by "primary HD".  All drives in a raid-0 are equal.
+This is a message from the MailScanner E-Mail Virus Protection Service
+----------------------------------------------------------------------
+The original e-mail attachment "the entire message"
+was believed to be infected by a virus and has been replaced by this warning
+message.
 
-> 
-> problem is, I need to recover data from the first drive but appear to be 
-> unable to do so because the raid is not complete. the second drive only had 
-> 193 MB written to it and I am fairly certain that the data I would like to 
-> recover is NOT on that drive.
+If you wish to receive a copy of the *infected* attachment, please
+e-mail helpdesk and include the whole of this message
+in your request. Alternatively, you can call them, with
+the contents of this message to hand when you call.
 
-Why do you think only 193MB was written to the second drive?  raid0
-will normally write equal amounts to all drives.
+At Wed Mar 29 04:45:29 2006 the virus scanner said:
+   ClamAV: msg-15220-3821.html contains HTML.Phishing.Bank-393 
 
-> 
-> can anyone offer any solutions to this?
-> 
-> the second HD is not usable (heat related failure issues). 
-> 
-> The filesystem used on the md0 partition (under mdadm) was xfs. now I have 
-> tried the xfs_check and xfs_repair tools and they are not helpful at this 
-> point.
-> 
-> The developer (of mdadm) suggested I use the following commands in an attempt 
-> to recover:
-> 
->   mdadm -C /dev/md0 -l0 -n2 /dev/......
->   fsck -n /dev/md0
-> 
-> However, the second one was a no go.
+Note to Help Desk: Look on the yoursite MailScanner in /var/spool/MailScanner/quarantine/20060329 (message k2T9jQIJ028364).
+-- 
+Postmaster
+MailScanner thanks transtec Computers for their support
 
-Exactly how was it a "no go"?
-However if the second drive is really not usable, then your data is
-gone.
-
-> 
-> I am stumped as to how to proceed here. I need the data off the first drive, 
-> but do not appear to have any way (other than using cat to see it) to get at 
-> it.
-
-Your data isn't on the first drive.  It is half on the first drive and
-half on the second drive.
-However if you really really think most of the data is on the first
-drive, you could try getting another blank drive, combining it with
-the working drive in a raid0, and xfs_check/xfs_repair that.
-
-Sorry we cannot be more helpful, but raid0 provide zero protection
-against device failure.
-
-> 
-> some help would be greatly appreciated.
-> 
-> technomage
-> 
-> p. here is the original response sent back to me from the developer
-> of mdadm:
-
-For future reference, it is generally considered bad form to post a
-privately received mail message to a public list.  Not that I have
-particular problems with it in this case, but it is best to avoid
-things that are considered "bad form".
-
-NeilBrown
