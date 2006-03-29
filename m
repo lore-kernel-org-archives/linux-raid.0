@@ -1,33 +1,49 @@
-From: Online Banking Chase <service@chase.com>
-Subject: {Virus?} Important information regarding your Chase account
-Date: Wed, 29 Mar 2006 04:45:26 -0500
-Message-ID: <200603290945.k2T9jQPs028362@mail.mrbooks.com>
-Content-Type: text/plain
+From: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
+Subject: Re: question : raid bio sector size
+Date: Wed, 29 Mar 2006 09:57:36 +0000
+Message-ID: <5d96567b0603290157g5cfcc7d1p27e221a6ac06ad0@mail.gmail.com>
+References: <5d96567b0603270849v6546a760oe3a703cb8bad3b3e@mail.gmail.com>
+	 <17448.27848.37751.899817@cse.unsw.edu.au>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <17448.27848.37751.899817@cse.unsw.edu.au>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+Cc: Neil Brown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-Warning: This message has had one or more attachments removed
-Warning: (the entire message).
-Warning: Please read the "yoursite-Attachment-Warning.txt" attachment(s) for more information.
+I was refering to bios reaching make_request in raid5.c .
+I would be more precise.
+I am dd'ing " dd if=/dev/md1 of=/dev/zero bs=1M count=1 skip=10"
+I have added the following printk in make_request "printk ("%d:",bio->bi_size)"
+I am getting sector sizes. 512:512:512:512:512....
+I suppose they gathered in the elevator,
+but still why so small ?
 
-This is a message from the MailScanner E-Mail Virus Protection Service
-----------------------------------------------------------------------
-The original e-mail attachment "the entire message"
-was believed to be infected by a virus and has been replaced by this warning
-message.
+thank you
+raz.
 
-If you wish to receive a copy of the *infected* attachment, please
-e-mail helpdesk and include the whole of this message
-in your request. Alternatively, you can call them, with
-the contents of this message to hand when you call.
+On 3/27/06, Neil Brown <neilb@suse.de> wrote:
+> On Monday March 27, raziebe@gmail.com wrote:
+> > i have playing with raid5 and i noticed that the arriving bios  sizes
+> > are 1 sector.
+> > why is that  and where is it set ?
+>
+> bios arriving from where?
+>
+> bios from the filesystem to the raid5 device will be whatever size the
+> fs wants to make them.
+>
+> bios from the raid5 device to the component devices will always be 1
+> page (typically 8 sectors).  This is the size used by the stripe cache
+> which is used to synchronise everything.
+>
+> NeilBrown
+>
 
-At Wed Mar 29 04:45:29 2006 the virus scanner said:
-   ClamAV: msg-15220-3821.html contains HTML.Phishing.Bank-393 
 
-Note to Help Desk: Look on the yoursite MailScanner in /var/spool/MailScanner/quarantine/20060329 (message k2T9jQIJ028364).
--- 
-Postmaster
-MailScanner thanks transtec Computers for their support
-
+--
+Raz
