@@ -1,66 +1,32 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH 001 of 3] md: Don't clear bits in bitmap when writing to
- one device fails during recovery.
-Date: Thu, 30 Mar 2006 17:48:03 +1100
-Message-ID: <17451.32547.622388.387407@cse.unsw.edu.au>
-References: <20060330164933.25210.patches@notabene>
-	<1060330055237.25270@suse.de>
-	<20060329221209.20e7fd00.akpm@osdl.org>
+From: Mikael Abrahamsson <swmike@swm.pp.se>
+Subject: making raid5 more robust against block errors
+Date: Thu, 30 Mar 2006 08:53:17 +0200 (CEST)
+Message-ID: <Pine.LNX.4.62.0603300849110.30836@uplift.swm.pp.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Andrew Morton on Wednesday March 29
 Sender: linux-raid-owner@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wednesday March 29, akpm@osdl.org wrote:
-> NeilBrown <neilb@suse.de> wrote:
-> >
-> > +	if (!uptodate) {
-> >  +		int sync_blocks = 0;
-> >  +		sector_t s = r1_bio->sector;
-> >  +		long sectors_to_go = r1_bio->sectors;
-> >  +		/* make sure these bits doesn't get cleared. */
-> >  +		do {
-> >  +			bitmap_end_sync(mddev->bitmap, r1_bio->sector,
-> >  +					&sync_blocks, 1);
-> >  +			s += sync_blocks;
-> >  +			sectors_to_go -= sync_blocks;
-> >  +		} while (sectors_to_go > 0);
-> >   		md_error(mddev, conf->mirrors[mirror].rdev);
-> >  +	}
-> 
-> Can mddev->bitmap be NULL?
 
-Yes, normally it is.
+Is there any work going on to handle readerrors on a raid5 disk being 
+handled by recreating the faulty block from the other disks and just 
+rewriting the block, instead of kicking the disk out?
 
-> 
-> If so, will the above loop do the right thing when this:
-> 
-> void bitmap_end_sync(struct bitmap *bitmap, sector_t offset, int *blocks, int aborted)
-> {
-> 	bitmap_counter_t *bmc;
-> 	unsigned long flags;
-> /*
-> 	if (offset == 0) printk("bitmap_end_sync 0 (%d)\n", aborted);
-> */	if (bitmap == NULL) {
-> 		*blocks = 1024;
-> 		return;
-> 	}
-> 
-> triggers?
+I've problems on several occasions where two disks in a raid5 will have 
+single sector errors and thus it's impossible (afaik) to get the array up 
+and running without a lot of manual intervention and likely data loss, 
+when the information needed to get the array up and running without 
+dataloss is actually there.
 
-Yes.  sync_blocks will be 1024 (a nice big number) and the loop will
-exit quite quickly having done nothing (which is what it needs to do
-in that case).
-Ofcourse, if someone submits a bio for multiple thousands of sectors
-it will loop needlessly a few times, but do we ever generate bios that
-are even close to a megabyte?
-If so, that 1024 can be safely increased to 1<<20, and possibly higher
-but I would need to check.
+I know this has been discussed before (I've been in these discussions 
+myself), just wanted to know if this resulted in any improvement?
 
-Thanks for asking
-NeilBrown
+Right now I am more prone to using 3ware hw-raid rather than sw-raid due 
+to this, as it will do the above and handle the read error gracefully. The 
+data integrity is more important than write speed (where sw-raid excels) 
+for me.
+
+-- 
+Mikael Abrahamsson    email: swmike@swm.pp.se
