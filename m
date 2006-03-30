@@ -1,40 +1,24 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [PATCH 002 of 3] md: Remove some code that can sleep from under a spinlock.
-Date: Thu, 30 Mar 2006 16:52:42 +1100
-Message-ID: <1060330055242.25283@suse.de>
-References: <20060330164933.25210.patches@notabene>
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
+Subject: [PATCH 000 of 3] md: Introduction - assorted fixed for 2.6.16
+Date: Thu, 30 Mar 2006 16:52:33 +1100
+Message-ID: <20060330164933.25210.patches@notabene>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751070AbWC3FyS@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Andrew Morton <akpm@osdl.org>
 Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
+Following are three patches for md.  The first fixes a problem that
+can cause corruption in fairly unusual circumstances (re-adding a
+device to a raid1 and suffering write-errors that are subsequntly
+fixed and the device is re-added again).
 
-And remove the comments that were put in inplace of a fix too....
+The other two fix minor problems
 
-Signed-off-by: Neil Brown <neilb@suse.de>
+The are suitable to go straight in to 2.6.17-rc.
 
-### Diffstat output
- ./drivers/md/md.c |    8 +++-----
- 1 file changed, 3 insertions(+), 5 deletions(-)
+NeilBrown
 
-diff ./drivers/md/md.c~current~ ./drivers/md/md.c
---- ./drivers/md/md.c~current~	2006-03-30 16:48:30.000000000 +1100
-+++ ./drivers/md/md.c	2006-03-30 16:48:47.000000000 +1100
-@@ -214,13 +214,11 @@ static void mddev_put(mddev_t *mddev)
- 		return;
- 	if (!mddev->raid_disks && list_empty(&mddev->disks)) {
- 		list_del(&mddev->all_mddevs);
--		/* that blocks */
-+		spin_unlock(&all_mddevs_lock);
- 		blk_cleanup_queue(mddev->queue);
--		/* that also blocks */
- 		kobject_unregister(&mddev->kobj);
--		/* result blows... */
--	}
--	spin_unlock(&all_mddevs_lock);
-+	} else
-+		spin_unlock(&all_mddevs_lock);
- }
- 
- static mddev_t * mddev_find(dev_t unit)
+ [PATCH 001 of 3] md: Don't clear bits in bitmap when writing to one device fails during recovery.
+ [PATCH 002 of 3] md: Remove some code that can sleep from under a spinlock.
+ [PATCH 003 of 3] md: Raid-6 did not create sysfs entries for stripe cache
