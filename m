@@ -1,39 +1,40 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH] Add stripe cache entries to raid6 sysfs
-Date: Thu, 30 Mar 2006 16:10:42 +1100
-Message-ID: <17451.26706.789624.534981@cse.unsw.edu.au>
-References: <442528D7.1050302@wasp.net.au>
-	<44252ACE.9020706@wasp.net.au>
-	<44253BDC.3020609@wasp.net.au>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+From: NeilBrown <neilb@suse.de>
+Subject: [PATCH 002 of 3] md: Remove some code that can sleep from under a spinlock.
+Date: Thu, 30 Mar 2006 16:52:42 +1100
+Message-ID: <1060330055242.25283@suse.de>
+References: <20060330164933.25210.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Brad Campbell on Saturday March 25
 Sender: linux-raid-owner@vger.kernel.org
-To: Brad Campbell <brad@wasp.net.au>
-Cc: RAID Linux <linux-raid@vger.kernel.org>
+To: Andrew Morton <akpm@osdl.org>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Saturday March 25, brad@wasp.net.au wrote:
-> Raid-6 did not create sysfs entries for stripe cache
-> 
-> Signed-off-by: Brad Campbell <brad@wasp.net.au>
-> 
-> ---
-> diff -u vanilla/linux-2.6.16/drivers/md/raid6main.c linux-2.6.16/drivers/md/raid6main.c
-> --- vanilla/linux-2.6.16/drivers/md/raid6main.c 2006-03-20 09:53:29.000000000 +0400
-> +++ linux-2.6.16/drivers/md/raid6main.c 2006-03-25 16:35:05.000000000 +0400
-> @@ -2148,6 +2148,7 @@
->          }
-> 
->          /* Ok, everything is just fine now */
-> +        sysfs_create_group(&mddev->kobj, &raid6_attrs_group);
->          mddev->array_size =  mddev->size * (mddev->raid_disks - 2);
-> 
->          mddev->queue->unplug_fn = raid6_unplug_device;
 
-Gee, I wonder I missed that...
-Thanks!
+And remove the comments that were put in inplace of a fix too....
 
-NeilBrown
+Signed-off-by: Neil Brown <neilb@suse.de>
+
+### Diffstat output
+ ./drivers/md/md.c |    8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
+
+diff ./drivers/md/md.c~current~ ./drivers/md/md.c
+--- ./drivers/md/md.c~current~	2006-03-30 16:48:30.000000000 +1100
++++ ./drivers/md/md.c	2006-03-30 16:48:47.000000000 +1100
+@@ -214,13 +214,11 @@ static void mddev_put(mddev_t *mddev)
+ 		return;
+ 	if (!mddev->raid_disks && list_empty(&mddev->disks)) {
+ 		list_del(&mddev->all_mddevs);
+-		/* that blocks */
++		spin_unlock(&all_mddevs_lock);
+ 		blk_cleanup_queue(mddev->queue);
+-		/* that also blocks */
+ 		kobject_unregister(&mddev->kobj);
+-		/* result blows... */
+-	}
+-	spin_unlock(&all_mddevs_lock);
++	} else
++		spin_unlock(&all_mddevs_lock);
+ }
+ 
+ static mddev_t * mddev_find(dev_t unit)
