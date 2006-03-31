@@ -1,39 +1,21 @@
-From: Joshua Baker-LePain <jlb17@duke.edu>
-Subject: Re: mdadm and large RAID
-Date: Fri, 31 Mar 2006 15:05:44 -0500 (EST)
-Message-ID: <Pine.LNX.4.62.0603311504360.24968@chaos.egr.duke.edu>
-References: <442D8ABE.9000608@bigred.unl.edu>
+From: Technomage <technomage-hawke@cox.net>
+Subject: Re: addendum: was Re: recovering data on a failed raid-0 installation
+Date: Fri, 31 Mar 2006 14:58:53 -0700
+Message-ID: <200603311458.54083.technomage-hawke@cox.net>
+References: <200603290526.k2T5Qmp14592@www.watkins-home.com> <200603292114.37439.technomage-hawke@cox.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <442D8ABE.9000608@bigred.unl.edu>
+In-Reply-To: <200603292114.37439.technomage-hawke@cox.net>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Cesar Delgado <cdelgad2@bigred.unl.edu>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, 31 Mar 2006 at 2:02pm, Cesar Delgado wrote
+well? are you guys tapped out on this or should I be looking elsewhere?
 
-> Here's the story.  We purchased a box with ~8TB space.  It has 2 fiber 
-> connections so, we thought, to maximize throughput into the device we could 
-> build 2 RAIDs in hardware, on the box, and export each one out each fiber 
-> channel and then create a striped raid of the two devices at the hardware 
-> level.  Due to the way we created the 2 RAIDs each export is ~3TB.
->
-> What we've tried.  We tried making a RAID 0 with mdadm over the two devices. 
-> There appears and entry en /dev/mdstats showing the RAID. Then we try to put 
-> XFS on it, the machine hard locks.  We tried formatting each separate device 
-> and there were no problems.  The machine just hard-locks when I try to put 
-> the filesystem on the RAID.
+The *was* the recommended place to seek out help.
 
-You're missing a lot of vital information: what distribution are you 
-using, what version of mdadm, what fiber adapter, etc.
-
-> There's not errors in the logs.  The machine freezes up too quickly.
-
-Have you tried a serial console and or remote syslog?
-
--- 
-Joshua Baker-LePain
-Department of Biomedical Engineering
-Duke University
+still waiting........
