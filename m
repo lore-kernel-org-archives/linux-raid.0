@@ -1,31 +1,49 @@
-From: Joshua Baker-LePain <jlb17@duke.edu>
-Subject: Re: Recommendations for supported 4-port SATA PCI card ?
-Date: Fri, 31 Mar 2006 05:29:44 -0500 (EST)
-Message-ID: <Pine.LNX.4.62.0603310522500.7170@chaos.egr.duke.edu>
+From: Jim Klimov <klimov@2ka.mipt.ru>
+Subject: Re[2]: Recommendations for supported 4-port SATA PCI card ?
+Date: Fri, 31 Mar 2006 14:48:51 +0400
+Message-ID: <1692031240.20060331144851@2ka.mipt.ru>
 References: <Pine.LNX.4.44.0603302227150.18644-100000@coffee.psychology.mcmaster.ca>
+ <Pine.GSO.4.64.0603311122330.2115@montezuma.acc.umu.se>
+ <Pine.LNX.4.62.0603310524060.7170@chaos.egr.duke.edu>
+Reply-To: Jim Klimov <klimov@2ka.mipt.ru>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44.0603302227150.18644-100000@coffee.psychology.mcmaster.ca>
+In-Reply-To: <Pine.LNX.4.62.0603310524060.7170@chaos.egr.duke.edu>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mark Hahn <hahn@physics.mcmaster.ca>
-Cc: linux-raid@vger.kernel.org
+To: Mattias Wadenstein <maswan@acc.umu.se>
+Cc: Mark Hahn <hahn@physics.mcmaster.ca>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, 30 Mar 2006 at 10:38pm, Mark Hahn wrote
+Hello Joshua,
 
-> before the 9550, I never found attractive in price/performance:
-> expensive as hell and a lot slower than MD.  but the 9550 is really
-> quite impressive...
+JBL> That's exactly why I recommended them.  3w-xxxx has been in the kernel a
+JBL> *long* time and is extremely stable.  Sure, it's expensive for "just" a
+JBL> SATA controller, but not for a solid one that doesn't fall over at random
+JBL> times.
+Just for my 2 cents: we have a number of different generations of
+3Ware cards (IDE and SATA) in our campus network, mostly with Western
+Digital drives.
 
-I like the 3wares for their ability to do true hot swap in hardware RAID 
-mode.  I have 2 older servers with 7500 cards in 'em that I recently tried 
-to migrate to md (for speed, as you mentioned).  All my testing with 
-'mdadm --fail' went just fine.  However, when a disk actually died and the 
-3ware booted it, the server hung.  So I migrated 'em back to hardware 
-RAID (but RAID10 instead of RAID5).
+It seems quite beneficial to use their Raid Edition series of drives
+instead of desktop ones. Beside the longer warranty and perhaps better
+manufacturing and better resistance to vibration, according to the WD
+site, these drives also report errors (if any) quicker to a host
+adapter. This results in errors being handled by RAID hardware
+gracefully, instead of the whole drive being considered as timed out.
+
+In practice, we had some fun months with a RAID5 set made of desktop
+Caviars rebuilding once in a while for no apparent reason, with each
+disk working well for a long time. And we had no such problem with
+RE disks for over a year now.
+
+Hope this helps some list readers make their choice, and please don't
+consider this an advertisement of certain brands ;) If any other
+manufaturer offers capabilities similar to WD RE (especially timeouts),
+please take a better look if you consider a hardware RAID controller.
 
 -- 
-Joshua Baker-LePain
-Department of Biomedical Engineering
-Duke University
+Best regards,
+ Jim Klimov                            mailto:klimov@2ka.mipt.ru
+
