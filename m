@@ -1,39 +1,29 @@
 From: Joshua Baker-LePain <jlb17@duke.edu>
 Subject: Re: Recommendations for supported 4-port SATA PCI card ?
-Date: Fri, 31 Mar 2006 05:25:22 -0500 (EST)
-Message-ID: <Pine.LNX.4.62.0603310524060.7170@chaos.egr.duke.edu>
+Date: Fri, 31 Mar 2006 05:29:44 -0500 (EST)
+Message-ID: <Pine.LNX.4.62.0603310522500.7170@chaos.egr.duke.edu>
 References: <Pine.LNX.4.44.0603302227150.18644-100000@coffee.psychology.mcmaster.ca>
- <Pine.GSO.4.64.0603311122330.2115@montezuma.acc.umu.se>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.GSO.4.64.0603311122330.2115@montezuma.acc.umu.se>
+In-Reply-To: <Pine.LNX.4.44.0603302227150.18644-100000@coffee.psychology.mcmaster.ca>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mattias Wadenstein <maswan@acc.umu.se>
-Cc: Mark Hahn <hahn@physics.mcmaster.ca>, linux-raid@vger.kernel.org
+To: Mark Hahn <hahn@physics.mcmaster.ca>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, 31 Mar 2006 at 11:28am, Mattias Wadenstein wrote
+On Thu, 30 Mar 2006 at 10:38pm, Mark Hahn wrote
 
-> On Thu, 30 Mar 2006, Mark Hahn wrote:
->
->>> 3ware.  Period.  If you're going to use md, get the 8506-4 series rather
->>> than either of the 9xxx series cards.
->> 
->> before the 9550, I never found attractive in price/performance:
->> expensive as hell and a lot slower than MD.  but the 9550 is really
->> quite impressive...
->
-> I'd still recommend 3ware for the md case, because of reliability. For my 
-> 6-disk raid a 8506-4 was actually slightly faster than two sil3114s running 
-> md raid5. The 3ware card has the additional advantage of not pushing the 
-> machine into a hard hang once per day or so when doing io over the raid 
-> layer.
+> before the 9550, I never found attractive in price/performance:
+> expensive as hell and a lot slower than MD.  but the 9550 is really
+> quite impressive...
 
-That's exactly why I recommended them.  3w-xxxx has been in the kernel a 
-*long* time and is extremely stable.  Sure, it's expensive for "just" a 
-SATA controller, but not for a solid one that doesn't fall over at random 
-times.
+I like the 3wares for their ability to do true hot swap in hardware RAID 
+mode.  I have 2 older servers with 7500 cards in 'em that I recently tried 
+to migrate to md (for speed, as you mentioned).  All my testing with 
+'mdadm --fail' went just fine.  However, when a disk actually died and the 
+3ware booted it, the server hung.  So I migrated 'em back to hardware 
+RAID (but RAID10 instead of RAID5).
 
 -- 
 Joshua Baker-LePain
