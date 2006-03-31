@@ -1,63 +1,32 @@
-From: mitchell laks <mlaks2000@yahoo.com>
-Subject: Re: sata controllers status=0x51 =?utf-8?b?ew==?= DriveReady SeekComplete Error =?utf-8?b?fQ==?= error=0x84 =?utf-8?b?ew==?= DriveStatusError BadCRC =?utf-8?b?fQ==?=
-Date: Thu, 30 Mar 2006 23:07:00 +0000 (UTC)
-Message-ID: <loom.20060331T005324-626@post.gmane.org>
-References: <200603301051.31551.mlaks@verizon.net> <442C14A8.4030606@dgreaves.com>
+From: Mark Hahn <hahn@physics.mcmaster.ca>
+Subject: Re: Recommendations for supported 4-port SATA PCI card ?
+Date: Thu, 30 Mar 2006 22:38:16 -0500 (EST)
+Message-ID: <Pine.LNX.4.44.0603302227150.18644-100000@coffee.psychology.mcmaster.ca>
+References: <Pine.LNX.4.62.0603301057230.4271@chaos.egr.duke.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.62.0603301057230.4271@chaos.egr.duke.edu>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-David Greaves <david <at> dgreaves.com> writes:
+> > I have 4x500GB Maxtor SATA drives and I want to attach
+> > these to a 4-port SATA PCI card and RAID5 them using "md"
+> >
+> > Could anybody recommend a card that will have out of
+> > box support on a Fedora system ?
 
-> 
-> Check out the linux-ide archive for my (and others) reports.
+which FC release?  I believe FC4 would have decent support for 
+promise tx4's (there are at least two - the most recent might
+not work OOB).  sil 3114's ought to work as well.
 
-I just read them and weeped.
+> 3ware.  Period.  If you're going to use md, get the 8506-4 series rather 
+> than either of the 9xxx series cards.
 
-> 
-> I've had lots of issues like this - spurious and IMHO incorrect error
-> messages. Only certain types of disk access cause them - xfs_repair and
-> rsync seem to tickle it.
+before the 9550, I never found attractive in price/performance: 
+expensive as hell and a lot slower than MD.  but the 9550 is really
+quite impressive...
 
-Interesting. rsync for me.
-
-> With 2.6.15 I had lots of *very* scary moments with multiple disk
-> failures on a raid5 during xfs_repair.
-> I think it's down to the 'basic' error handling in the libata code and
-> certain disks/controllers being loose with the protocol. They then
-> identified problems in 'fua' (IIRC) handling which was pulled for 2.6.16.
-> 
-> 2.6.16 seems to be much better (fewer 'odd' errors reported and md
-> doesn't mind)
-
-"Fewer" - oh oh. Can you quantify this for me? I seem to be getting around 
-8-9 /10 days = or averaging about 1 per rsync. 
-
-I should check to see if the distribution is Poisson like distribution :).
-
-I have not lost my raid1 yet. lucky me.
-
-I am now very worried.
-
-I need to do some testing off line with the new kernel  before 
-putting out the fix. 
-
-Is your experience also with an Asus board with a via vt8237 powered
- sata  connector?
-
-Would you suggest I try the promise sata connector instead, before 
-I try to move
-over to the newer kernel? Or both? 
-Could you give me more of your experience?
-
-Thanks,
-
-Mitchell
-
-Thanks
-
+regards, mark hahn
 
