@@ -1,47 +1,36 @@
-From: Brad Campbell <brad@wasp.net.au>
-Subject: Re: Recommendations for supported 4-port SATA PCI card ?
-Date: Sat, 01 Apr 2006 04:28:30 +0400
-Message-ID: <442DC92E.8080003@wasp.net.au>
-References: <442BFB2B.6090903@stams.strath.ac.uk> <442D22CD.3010602@nighthawkrad.net>
+From: Technomage <technomage-hawke@cox.net>
+Subject: Re: addendum: was Re: recovering data on a failed raid-0 installation
+Date: Fri, 31 Mar 2006 19:01:03 -0700
+Message-ID: <200603311901.03360.technomage-hawke@cox.net>
+References: <200603290526.k2T5Qmp14592@www.watkins-home.com> <200603311458.54083.technomage-hawke@cox.net> <1143843059.1B7FB4F1@dh11.dngr.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <442D22CD.3010602@nighthawkrad.net>
+In-Reply-To: <1143843059.1B7FB4F1@dh11.dngr.org>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Christopher Smith <csmith@nighthawkrad.net>
+To: Jeff Breidenbach <jeff@jab.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Christopher Smith wrote:
-> Ian Thurlbeck wrote:
->>
->> Dear All
->>
->> I have 4x500GB Maxtor SATA drives and I want to attach
->> these to a 4-port SATA PCI card and RAID5 them using "md"
->>
->> Could anybody recommend a card that will have out of
->> box support on a Fedora system ?
-> 
-> I have had a lot of success with Promise TX4 cards, with the caveat that 
->  more than two controllers can't be in the same box (or couldn't as of a 
-> few months ago - this may have been fixed).  They're fairly cheap and 
+Jeff,
+I would if I could. but I live on a rather limited income here . :(
 
-I've been running 3 together in one box for about 18 months, and four in another for a year now... 
-the on board BIOS will only pickup 8 drives, but they work just fine under Linux and recognise all 
-connected drives.
+also, my chances for employment (other than self-contracted services) in 
+phoenix are slim and none (being disabled in a market with a very soft tech 
+sector can lead to that).
 
-I have 11 drives in one box (on promise.. 2 on the on-board VIA and 1 on PATA) and 15 drives in 
-another (all across 4 promise cards).. all on SATA150-TX4 cards..
+now, I don't mean to be abrasive, but, so far, I haven't seen much other than:
+1. it can't be done or
+2. hire a paid consultant.
 
-Performance sucks.. but then when you put 15 drives on a single PCI 33Mhz bus what do you expect ?
-Great for streaming media though.. (and cheap, and very reliable). The only media errors I get are 
-on the VIA controller. The promise controllers have not had a single media error since they were 
-installed.
+as for 1, if a pro can do it, it stands to reason that someone, somewhere (not 
+a pro) found the way and made his millions on it.
 
-Brad
--- 
-"Human beings, who are almost unique in having the ability
-to learn from the experience of others, are also remarkable
-for their apparent disinclination to do so." -- Douglas Adams
+as for 2, not going to be possible on $600.00 a month.
+
+On Friday 31 March 2006 15:10, Jeff Breidenbach wrote:
+> Technomage, I recommend hiring a paid consultant; your attitude is a
+> little too abrasive for a communal support channel.
