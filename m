@@ -1,29 +1,24 @@
 From: Mark Hahn <hahn@physics.mcmaster.ca>
-Subject: Re: addendum: was Re: recovering data on a failed raid-0 installation
-Date: Sat, 1 Apr 2006 13:11:43 -0500 (EST)
-Message-ID: <Pine.LNX.4.44.0604011309040.11853-100000@coffee.psychology.mcmaster.ca>
-References: <200603311458.54083.technomage-hawke@cox.net>
+Subject: Re: sata controllers status=0x51 { DriveReady SeekComplete Error }
+ error=0x84 { DriveStatusError BadCRC }
+Date: Sat, 1 Apr 2006 13:25:32 -0500 (EST)
+Message-ID: <Pine.LNX.4.44.0604011323380.11853-100000@coffee.psychology.mcmaster.ca>
+References: <442E698D.8000100@dgreaves.com>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200603311458.54083.technomage-hawke@cox.net>
+In-Reply-To: <442E698D.8000100@dgreaves.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Technomage <technomage-hawke@cox.net>
-Cc: linux-raid@vger.kernel.org
+To: David Greaves <david@dgreaves.com>
+Cc: Mitchell Laks <mlaks@verizon.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> well? are you guys tapped out on this or should I be looking elsewhere?
-> The *was* the recommended place to seek out help.
-> still waiting........
+> >Mar 29 23:33:26 A1 kernel: ata6: status=0x51 { DriveReady SeekComplete Error }
+> >Mar 29 23:33:26 A1 kernel: ata6: error=0x84 { DriveStatusError BadCRC }
 
-netiquette hint: if you don't get a reply, you need to first verify
-that you provided all possible diagnostic info in a clear, succinct message,
-and _send_it_again_.  this sort of "well, why haven't you fixed my problem
-yet" message is going to discourage any response, since you're asserting 
-that readers should spend the time to go back, find your message, and do 
-free work for you.
-
-in short, make yourself easy to help.
-
-regards, mark hahn.
+BadCRC is unambiguous: the packet was corrupted.  that could happen several
+ways, the most common of which is bogus cables (remember, PATA is 18",
+not longer, with the ends plugged in.)  but things like flakey power,
+overclocking, or controllers programmed with wrong timing could also 
+cause such errors.
 
