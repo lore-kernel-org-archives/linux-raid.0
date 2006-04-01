@@ -1,60 +1,65 @@
-From: David Greaves <david@dgreaves.com>
-Subject: Re: sata controllers status=0x51 { DriveReady SeekComplete Error
- } error=0x84 { DriveStatusError BadCRC }
-Date: Sat, 01 Apr 2006 12:52:45 +0100
-Message-ID: <442E698D.8000100@dgreaves.com>
-References: <200603301051.31551.mlaks@verizon.net>
+From: Christopher Smith <csmith@nighthawkrad.net>
+Subject: Re: Recommendations for supported 4-port SATA PCI card ?
+Date: Sat, 01 Apr 2006 22:51:05 +1100
+Message-ID: <442E6929.9090802@nighthawkrad.net>
+References: <442BFB2B.6090903@stams.strath.ac.uk> <442D22CD.3010602@nighthawkrad.net> <442DC92E.8080003@wasp.net.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200603301051.31551.mlaks@verizon.net>
+In-Reply-To: <442DC92E.8080003@wasp.net.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mitchell Laks <mlaks@verizon.net>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Mitchell Laks wrote:
+Brad Campbell wrote:
+> I've been running 3 together in one box for about 18 months, and four in 
+> another for a year now... the on board BIOS will only pickup 8 drives, 
+> but they work just fine under Linux and recognise all connected drives.
 
->Hi,
->
->I have a production server in place at a remote site. 
->I have a single system drive that is an ide drive 
->and two data drives that are on a via SATA controller in a raid1 
->configuration.
->
->I am monitoring the /var/log/messages and I get messages every few days
->
->Mar 22 23:31:36 A1 kernel: ata6: status=0x51 { DriveReady SeekComplete Error }
->Mar 22 23:31:36 A1 kernel: ata6: error=0x84 { DriveStatusError BadCRC }
->
->Mar 23 23:20:12 A1 kernel: ata5: status=0x51 { DriveReady SeekComplete Error }
->Mar 23 23:20:12 A1 kernel: ata5: error=0x84 { DriveStatusError BadCRC }
->Mar 23 23:32:03 A1 kernel: ata6: status=0x51 { DriveReady SeekComplete Error }
->Mar 23 23:32:04 A1 kernel: ata6: error=0x84 { DriveStatusError BadCRC }
->
->Mar 24 23:22:45 A1 kernel: ata5: status=0x51 { DriveReady SeekComplete Error }
->Mar 24 23:22:45 A1 kernel: ata5: error=0x84 { DriveStatusError BadCRC }
->
->
->Mar 27 23:16:57 A1 kernel: ata5: status=0x51 { DriveReady SeekComplete Error }
->Mar 27 23:16:57 A1 kernel: ata5: error=0x84 { DriveStatusError BadCRC }
->
->Mar 28 23:10:16 A1 kernel: ata5: status=0x51 { DriveReady SeekComplete Error }
->Mar 28 23:10:17 A1 kernel: ata5: error=0x84 { DriveStatusError BadCRC }
->Mar 28 23:23:32 A1 kernel: ata6: status=0x51 { DriveReady SeekComplete Error }
->Mar 28 23:23:32 A1 kernel: ata6: error=0x84 { DriveStatusError BadCRC }
->
->
->Mar 29 23:33:26 A1 kernel: ata6: status=0x51 { DriveReady SeekComplete Error }
->Mar 29 23:33:26 A1 kernel: ata6: error=0x84 { DriveStatusError BadCRC }
->  
->
-Look here:
+What distro and kernel ?
 
-http://marc.theaimsgroup.com/?l=linux-kernel&m=114386015009790&w=2
+I tried this about 2 - 3 months ago and had problems whenever more than 
+two cards were in my system, even if only a single drive was installed. 
+  I posted about it here (search for "multiple promise sata150 tx4 
+cards" back in January).
 
-I don't know he's right - you may want to get into it...
+The symptoms were ata timeouts:
 
-David
+ata3: status=0x51 { DriveReady SeekComplete Error }
+ata3: error=0x0c { DriveStatusError }
+ata3: status=0x51 { DriveReady SeekComplete Error }
+ata3: error=0x0c { DriveStatusError }
+ata2: status=0x51 { DriveReady SeekComplete Error }
+ata2: error=0x0c { DriveStatusError }
+ata2: status=0x51 { DriveReady SeekComplete Error }
+ata2: error=0x0c { DriveStatusError }
 
+This would happen consistently with three controllers in, never with 
+two.  I tried every possible combination of controllers and drives I 
+could think of, to eliminate any potential of broken hardware being the 
+cause.
+
+I should probably give it another go, given there have been a couple of 
+minor kernel versions since then, but I'm surprised to hear you've had 
+it working for so long - no-one was able to give me a solution to my 
+problem at the time (I ended up getting a pair of two-channel SATA 
+cards) and I assumed it was a driver bug of some description.  Promise, 
+of course, were useless, saying more than a single controller was an 
+unsupported configuration.
+
+> I have 11 drives in one box (on promise.. 2 on the on-board VIA and 1 on 
+> PATA) and 15 drives in another (all across 4 promise cards).. all on 
+> SATA150-TX4 cards..
+> 
+> Performance sucks.. but then when you put 15 drives on a single PCI 
+> 33Mhz bus what do you expect ?
+> Great for streaming media though.. (and cheap, and very reliable). The 
+> only media errors I get are on the VIA controller. The promise 
+> controllers have not had a single media error since they were installed.
+
+I have no complaints about the performance (relatively speaking, of 
+course), but I've got the cards in a machine with multiple PCI-X busses, 
+so it's not really bottlenecked there.
+
+CS
