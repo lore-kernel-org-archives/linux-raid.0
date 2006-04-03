@@ -1,47 +1,69 @@
-From: David Greaves <david@dgreaves.com>
-Subject: Re: Help recreating a raid5
-Date: Mon, 03 Apr 2006 07:34:46 +0100
-Message-ID: <4430C206.7070606@dgreaves.com>
-References: <442F8817.508@dgreaves.com> <17456.33425.813324.99020@cse.unsw.edu.au>
+From: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
+Subject: How is an IO size are determnied ?
+Date: Mon, 3 Apr 2006 10:31:40 +0300
+Message-ID: <5d96567b0604030031q768933a1p49f94e53313a42b@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17456.33425.813324.99020@cse.unsw.edu.au>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+Cc: Neil Brown <neilb@suse.de>, Jens Axboe <axboe@suse.de>
 List-Id: linux-raid.ids
 
-Neil Brown wrote:
+Neil/Jens  Hello.
+Hope is this not too much bother for you.
 
->On Sunday April 2, david@dgreaves.com wrote:
->  
->
->>>From some archive reading I understand that I can recreate the array using
->>
->>   mdadm --create /dev/md1 -l5 -n3 /dev/sdd1 /dev/sdb1 missing
->>
->>but that I need to specify the correct order for the drives.
->>
->>I've not used --assume-clean, --force or --run; should I? I assume that
->>since it's only got 2 of 3 then it won't need the assume-clean.
->>
->>The detail and dmesg data suggests that the order in the command  above
->>is correct.
->>
->>Can anyone confirm this?
->>    
->>
->
->Yes, that all looks correct.
->  
->
-Thanks Neil
+Question: how does the psuedo device ( /dev/md )  change the
+IOs sizes going down into the disks ?
 
-That seemed to work.
-Now I need to find out if I have bad hardware or if there is something
-(else) wrong with libata :)
+Explanation:
+I am using software raid5 , chunk size is 1024K, 4 disks.
+I have made a hook in make_request inorder to bypass
+the raid5 IO methodology .I need to control the amount of IOs
+going down into the disk and their sizes.
+the hook looks like this.
 
-David
 
+static int make_request (request_queue_t *q, struct bio * bi){
+...
+if ( bypass_raid5 &&  bio_data_dir(bi) == READ )
+        {
+                new_sector = raid5_compute_sector(bi->bi_sector,
+                                                                      
+           raid_disks,
+                                                                      
+           data_disks,
+                                                                      
+           &dd_idx,
+                                                                      
+           &pd_idx,
+                                                                      
+           conf);
+
+                bi->bi_sector = new_sector;
+                bi->bi_bdev =  conf->disks[dd_idx].rdev->bdev;
+                 return 1;
+}
+...
+}
+
+I have compared the IOs sizes and numbers in the deadline elevator.
+it seems that an a single direct IO read of 1MB to a disk
+is divided into two 1/2 MB request_t ( though max_hw_sectors=2048)
+and when I go through the raid i am getting three request_t's
+992 sectors followed by 64 sectors followed by 992 sectors.
+I have also recorded the IOs going in make_request in this
+scenario, it is composed of 8 124K and an additional 32K
+request.
+
+the test:
+My test is simple . I am reading the device in direct io mode
+and no file system in involved.
+could you explain this ? why I am not getting two 1/2 MB ?
+Could it be the slab cache ? ( biovec256)
+
+Thank you
+--
+Raz
