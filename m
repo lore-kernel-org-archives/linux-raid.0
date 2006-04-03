@@ -1,29 +1,43 @@
-From: PFC <lists@peufeu.com>
-Subject: Re: Cheap Motherboards and Linux RAID
-Date: Mon, 03 Apr 2006 21:24:39 +0200
-Message-ID: <op.s7f5jdn6cigqcu@apollo13>
-References: <6f809746f8127f.6f8127f6f80974@shaw.ca>
+From: Paul Clements <paul.clements@steeleye.com>
+Subject: Re: [PATCH] mdadm: monitor event argument passing
+Date: Mon, 03 Apr 2006 15:55:20 -0400
+Message-ID: <44317DA8.9040500@steeleye.com>
+References: <442D7864.9020901@steeleye.com> <17456.26958.388668.339215@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; format=flowed; delsp=yes; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <6f809746f8127f.6f8127f6f80974@shaw.ca>
+In-Reply-To: <17456.26958.388668.339215@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Solid Computing <solidcomputing@shaw.ca>, linux-raid@vger.kernel.org
-Cc: jeff@garzik.org
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Neil Brown wrote:
+> On Friday March 31, paul.clements@steeleye.com wrote:
+> 
+>>I've been looking at the mdadm monitor, and thought it might be useful 
+>>if it allowed extra context information (in the form of command line 
+>>arguments) to be sent to the event program, so instead of just:
+>>
+>># mdadm -F /dev/md0 -p "md_event"
+>>
+>>you could do something like:
+>>
+>># mdadm -F /dev/md0 -p "md_event -i <some_info>"
+>>
+>>And the "-i <some_info>" will be passed on the command line to the event 
+>>program. Of course you can usually figure out what the extra context 
+>>should be in the event program itself, but it may take more work.
+> 
+> 
+> I would recommend the use of environment variables for this:
+> 
+>   md_event_context=<some_info> mdadm -F /dev/md0 -p md_event
 
-> If you happen to be unfortunate enough to have also purchased a cheap  
-> ASUS K8N VM with the Nforce410 chipset in order to get the software RAID
+> Does that work for you?
 
-	And if you are also unfortunate enough to have bought some newer Maxtor  
-SATA harddrives, use the jumper on the drive to revert to SATA150 instead  
-of SATA300 ; this will prevent your drives from randomly failing (and  
-losing all data) every 2-5 days. If your drive has no jumper, you (should)  
-be safe (hopefully). This bug is agnostic and hits windows and linux, with  
-nforce 3 and 4 chipsets. On the SATA150 position, the machine has been  
-running smoothly for a few months with no problem whatsoever.
+Yes, that would work.
 
-> (or anything for that matter) to work you have to disable APIC .  This  
-> means APIC modules must not be loaded.
+Thanks,
+Paul
