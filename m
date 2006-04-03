@@ -1,46 +1,43 @@
-From: gaetan.leurent@ens.fr (=?iso-8859-1?Q?Ga=EBtan?= LEURENT)
-Subject: Raid 4/5 small writes
-Date: Sun, 02 Apr 2006 17:37:22 +0200
-Message-ID: <qlk3bgwt2dp.fsf@clipper.ens.fr>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: [PATCH] mdadm 2.4: fix write mostly for add and re-add
+Date: Mon, 3 Apr 2006 10:12:17 +1000
+Message-ID: <17456.26721.577745.219133@cse.unsw.edu.au>
+References: <442DED37.9030504@steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: message from Paul Clements on Friday March 31
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Paul Clements <paul.clements@steeleye.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+On Friday March 31, paul.clements@steeleye.com wrote:
+> The following patch makes it possible to tag a device as write-mostly on 
+> --add and --re-add with a non-persistent superblock array. Previously, 
+> this was not working.
 
-I'm considering building a Raid4[#] array for my desktop and I have a
-question about small writes with Raid4/Raid5: when a small part of a
-block is modified, we have two options:
+Thanks Paul.  It'll be in the next release.
 
-- read the hole stripe, compute the new checksum and write the data and
-  the checksum
+NeilBrown
 
-- read only the part of the data that will be overwritten, and the
-  corresponding part of the checksum.  Since the checksum is a simple
-  XOR, we have:
-     New Checksum =3D Old Checksum XOR Old Data XOR New Data
-  and we can write the new data and the new checksum without reading
-  more data.
-
-Does the Linux kernel implements the second way?
-
-
-[#] I'm not doing Raid5 because I have two 120Go drives and two 250Go
-    drives.  I am thinking of making a Raid0 array out of the two small
-    drives, and using that as the parity drive for the Raid4.  I believ=
-e
-    this should give better performance than Raid5.
-
-Thanks,
-
---=20
-Ga=EBtan LEURENT
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> Thanks,
+> Paul
+> 
+> Signed-Off-By: Paul Clements <paul.clements@steeleye.com>
+> 
+>  Manage.c |    2 ++
+>  1 files changed, 2 insertions(+)
+> --- mdadm-2.4/Manage.c	2006-03-28 01:11:11.000000000 -0500
+> +++ mdadm-2.4-fix-write-mostly/Manage.c	2006-03-31 21:56:37.000000000 -0500
+> @@ -341,6 +341,8 @@ int Manage_subdevs(char *devname, int fd
+>  						break;
+>  					}
+>  			}
+> +			if (dv->writemostly)
+> +				disc.state |= (1 << MD_DISK_WRITEMOSTLY);
+>  			if (ioctl(fd,ADD_NEW_DISK, &disc)) {
+>  				fprintf(stderr, Name ": add new device failed for %s as %d: %s\n",
+>  					dv->devname, j, strerror(errno));
