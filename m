@@ -1,57 +1,90 @@
-From: Dexter Filmore <Dexter.Filmore@gmx.de>
-Subject: softraid: controller? 5->6? grow?
-Date: Tue, 4 Apr 2006 19:48:31 +0200
-Message-ID: <200604041948.31141.Dexter.Filmore@gmx.de>
+From: "Mike Garey" <random51k@gmail.com>
+Subject: Can't mount /dev/md0 after stopping a synchronization
+Date: Tue, 4 Apr 2006 15:25:06 -0400
+Message-ID: <c79e949d0604041225jc9b89cclf8653cd18e88d632@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+I'm in the process of setting up a software RAID level 1 on debian
+testing with two 160 gig drives on an Asus P4P800 motherboard with
+Intel Pentium 4 CPU 3.00GHz and 512 megs of RAM.  I've been following
+the instructions in /usr/share/doc/mdadm/rootraiddoc97.html, but after
+rebooting to /dev/hdc1 (/dev/md0) and issuing the command "mdadm --add
+/dev/md0 /dev/hda1", I was only getting 1636K/sec for the
+synchronization, which was _way_ too slow (I forgot I had left a CDROM
+drive on the secondary IDE channel, so /dev/hdc1 was running at UDMA2,
+plus, I was using a 40 conductor cable instead of 80).  So I decided
+to reboot the system and cancel the synchronization, thus destroying
+everything on /dev/hda1 (but this didn't seem like an issue, since I
+was able to boot from /dev/md0 aka /dev/hdc1).
 
-I'm currently planning my first raid array.
-I intend to go for softraid (budget's the limiting factor), not sure about 5 
-or 6 yet.
+So after stopping the sync process and rebooting, I was unable to boot
+from hdc1 because I had forgotten to copy over my initrd with md/raid1
+modules from /dev/hda1 to /dev/hdc1, and of course now /dev/hda1 is
+destroyed, so I can't use the initrd-RAID that was previously on there
+(and the initrd-RAID never existed on /dev/hdc1, since I created it on
+/dev/hda1 _after_ I had issued the "mount /dev/md0 /mnt/md0; cp -axu /
+/mnt/md0" commands - don't ask why).  So when I rebooted, I didn't
+have md/raid1 support, and so /dev/md0 couldn't mount.. I ended up
+building a new initrd with md/raid1 on another debian box, then
+copying them to /dev/hdc1.  I've now tried installing grub on
+/dev/hdc, disconnected /dev/hda, and attempted to boot.  I now get the
+following message:
 
-Plan so far: build a raid5 from 3 disks, later add a disk and reconf to raid6.
-Question: is that possible at all? Can a raid5 be reconfed to a raid6 with 
-raidreconf?
-Next Question: how stable is it? Will I likely get away without making backups 
-or is there like a 10% chance of failure?
-Other precautions advised?
+md: md driver 0.90.3 MAX_MD_DEVS=3D256, MD_SB_DISKS=3D27
+md: bitmap version 4.39
+md: raid1 personality registered as nr3
+.
+.
+Begin: Mounting root file system...
+Begin: Running /scripts/local-top
+Done.
+ALERT! /dev/md0 does not exist.  Dropping to a shell!
 
-Next: Let's say I stick to raid5 for the moment and a disk dies. I heard that 
-some people had another disk killed during resync because of the extra 
-stress, hence losing the entire raid. 
-This was attributed to the circumstance that all disks were from the same 
-production series. True? Should I rather go for disks from different months? 
-Or even brands? Are there vendors who ship sets fitting that purpose?
+At which point I get dropped into busybox..  One thing I notice is
+that although it shows the md module being loaded, it doesn't really
+say anything about configuring/adding any RAID disks (which is used to
+say, back when I had first booted into /dev/md0 (hdc1) before killing
+/dev/hda1).  So now apparently /dev/md0 no longer exists, and I have
+no idea how to create it.
 
-Another thing: I need a recommendation for a sATA controller.
-Requirements: cheap, PCI, 4 ports sATA II. I had a look at a Sil3114 
-controller, then noticed it was sATA-1. I don't even aim for the performance, 
-but simply for the connectors. sATA-1 connectors are said to be troublesome 
-for being fragile. If that can be neglected, let me know.
+In fstab on /dev/hcd1, I have:
 
-System is an nF2/AthlonXP2000+, PCI32bit, right now Slackware, 2.6.14.
-Might become debian.
+/dev/md0 / ext3 defaults 0 0
 
-Thanks in advance,
+and in /boot/grub/menu.lst I have:
 
-Dex
+title           Debian GNU/Linux, kernel 2.6.15-486 RAID
+root            (hd0,0)
+kernel          /boot/vmlinuz-2.6.15-486 root=3D/dev/md0 ro
+initrd          /boot/initrd.img-2.6.15-486-RAID
+savedefault
+boot
 
--- 
------BEGIN GEEK CODE BLOCK-----
-Version: 3.12
-GCS d--(+)@ s-:+ a- C+++(++++) UL+>++++ P+>++ L+++>++++ E-- W++ N o? K-
-w--(---) !O M+ V- PS++(+) PE(-) Y++ PGP t++(---)@ 5 X+(++) R+(++) tv--(+)@ 
-b++(+++) DI+++ D G++ e* h>++ r%>* y?
-------END GEEK CODE BLOCK------
+Now, /dev/md0 was originally created by using:
 
-http://www.stop1984.com
-http://www.againsttcpa.com
+mdadm --create /dev/md0 --level=3D1 --raid-disks=3D2 missing /dev/hdc1
+
+can anybody tell me why /dev/md0 is no longer available on /dev/hdc1,
+and if possible how to recreate it?
+
+I should mention that after I cancelled the synchronization process,
+and was unable to reboot into /dev/hdc1, I then mounted /dev/hdc1
+through busybox, changed the Type of the disk from FD (linux raid) to
+83 (linux), modified /etc/fstab and /boot/grub/menu.lst so it pointed
+to /dev/hdc1 instead of /dev/md0.  I tried rebooting after changing
+these options, and it gave me a message saying "Failed to mount root
+file system" or something to that effect. Could changing the Type of
+the disk or mounting /dev/hdc1 have caused /dev/md0 to become
+corrupted/deleted?
+
+If anybody has the time to read through my message
+and give me some advice, I would very much appreciate it.  Thanks,
+
+Mike
