@@ -1,31 +1,115 @@
-From: Paul Clements <paul.clements@steeleye.com>
-Subject: Re: Can't mount /dev/md0 after stopping a synchronization
-Date: Wed, 05 Apr 2006 13:24:44 -0400
-Message-ID: <4433FD5C.1050109@steeleye.com>
-References: <c79e949d0604042045w2fb901c2rfb4c00984f6b8761@mail.gmail.com>	 <4433E073.8040502@fnuck.dk> <c79e949d0604050839k2287fefdm53f6abb08dfcae89@mail.gmail.com>
+From: "Nigel J. Terry" <nigel@nigelterry.net>
+Subject: Re: Help needed - RAID5 recovery from Power-fail - SOLVED
+Date: Wed, 05 Apr 2006 16:26:00 -0400
+Message-ID: <443427D8.2070002@nigelterry.net>
+References: <4431B2B3.9080700@nigelterry.net> <17457.46503.897583.343329@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <c79e949d0604050839k2287fefdm53f6abb08dfcae89@mail.gmail.com>
+In-Reply-To: <17457.46503.897583.343329@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mike Garey <random51k@gmail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org, david@dgreaves.com, mhardy@h3c.com
 List-Id: linux-raid.ids
 
-Mike Garey wrote:
+Thanks for all the help. I am now up and running again and have been
+stable for over a day. I will now install my new drive and add it to
+give me an array of three drives.
 
-> I seem to be getting closer.. If I try booting from a kernel without
-> raid1 and md support, but using an initrd with raid1/md modules, then
-> I get the "ALERT! /dev/md0 does not exist.  Dropping to a shell!"
-> message.  I can't understand why there would be any difference between
-> using a kernel with raid1/md support, or using an initrd image with
-> raid1/md support, but apparently there is.  If anyone else has any
+I'll also learn more about Raid, mdadm and smartd so that I am better
+prepared next time.
 
-Autodetection doesn't occur unless md is built into the kernel -- one of 
-the reasons why using autodetection is becoming less and less popular. 
-You're probably better off assembling the array from your initrd with 
-some invocation of mdadm.
+Thanks again
 
---
-Paul
+Nigel
+Neil Brown wrote:
+> On Monday April 3, nigel@nigelterry.net wrote:
+>   
+>> I wonder if you could help a Raid Newbie with a problem
+>>
+>> I had a power fail, and now I can't access my RAID array. It has been
+>> working fine for months until I lost power... Being a fool, I don't have
+>> a full backup, so I really need to get this data back.
+>>
+>> I run FC4 (64bit).
+>> I have an array of two disks /dev/sda1 and /dev/sdb1 as a raid5 array
+>> /dev/md0 on top of which I run lvm and mount the whole lot as /home. My
+>> intention was always to add another disk to this array, and I purchased
+>> one yesterday.
+>>     
+>
+> 2 devices in a raid5??  Doesn't seem a lot of point it being raid5
+> rather than raid1.
+>
+>   
+>> When I boot, I get:
+>>
+>> md0 is not clean
+>> Cannot start dirty degraded array
+>> failed to run raid set md0
+>>     
+>
+> This tells use that the array is degraded.  A dirty degraded array can
+> have undetectable data corruption.  That is why it won't start it for
+> you.
+> However with only two devices, data corruption from this cause isn't
+> actually possible. 
+>
+> The kernel parameter
+>    md_mod.start_dirty_degraded=1
+> will bypass this message and start the array anyway.
+>
+> Alternately:
+>   mdadm -A --force /dev/md0 /dev/sd[ab]1
+>
+>   
+>> # mdadm --examine /dev/sda1
+>> /dev/sda1:
+>>           Magic : a92b4efc
+>>         Version : 00.90.02
+>>            UUID : c57d50aa:1b3bcabd:ab04d342:6049b3f1
+>>   Creation Time : Thu Dec 15 15:29:36 2005
+>>      Raid Level : raid5
+>>    Raid Devices : 2
+>>   Total Devices : 2
+>> Preferred Minor : 0
+>>
+>>     Update Time : Tue Mar 21 06:25:52 2006
+>>           State : active
+>>  Active Devices : 1
+>>     
+>
+> So at 06:25:52, there was only one working devices, while...
+>
+>
+>   
+>> #mdadm --examine /dev/sdb1
+>> /dev/sdb1:
+>>           Magic : a92b4efc
+>>         Version : 00.90.02
+>>            UUID : c57d50aa:1b3bcabd:ab04d342:6049b3f1
+>>   Creation Time : Thu Dec 15 15:29:36 2005
+>>      Raid Level : raid5
+>>    Raid Devices : 2
+>>   Total Devices : 2
+>> Preferred Minor : 0
+>>
+>>     Update Time : Tue Mar 21 06:23:57 2006
+>>           State : active
+>>  Active Devices : 2
+>>     
+>
+> at 06:23:57 there were two.
+>
+> It looks like you lost a drive a while ago. Did you notice?
+>
+> Anyway, the 'mdadm' command I gave above should get the array working
+> again for you.  Then you might want to
+>    mdadm /dev/md0 -a /dev/sdb1
+> is you trust /dev/sdb
+>
+> NeilBrown
+>
+>
+>   
