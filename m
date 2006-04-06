@@ -1,115 +1,105 @@
-From: "Nigel J. Terry" <nigel@nigelterry.net>
-Subject: Re: Help needed - RAID5 recovery from Power-fail - SOLVED
-Date: Wed, 05 Apr 2006 16:26:00 -0400
-Message-ID: <443427D8.2070002@nigelterry.net>
-References: <4431B2B3.9080700@nigelterry.net> <17457.46503.897583.343329@cse.unsw.edu.au>
+From: "Mike Garey" <random51k@gmail.com>
+Subject: Re: Can't mount /dev/md0 after stopping a synchronization
+Date: Thu, 6 Apr 2006 00:32:43 -0400
+Message-ID: <c79e949d0604052132k311d808am1ed38b413d4ae100@mail.gmail.com>
+References: <c79e949d0604042045w2fb901c2rfb4c00984f6b8761@mail.gmail.com>
+	 <4433E073.8040502@fnuck.dk>
+	 <c79e949d0604050839k2287fefdm53f6abb08dfcae89@mail.gmail.com>
+	 <4433FD5C.1050109@steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17457.46503.897583.343329@cse.unsw.edu.au>
+In-Reply-To: <4433FD5C.1050109@steeleye.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org, david@dgreaves.com, mhardy@h3c.com
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Thanks for all the help. I am now up and running again and have been
-stable for over a day. I will now install my new drive and add it to
-give me an array of three drives.
+On 4/5/06, Paul Clements <paul.clements@steeleye.com> wrote:
+> Mike Garey wrote:
+>
+> > I seem to be getting closer.. If I try booting from a kernel without
+> > raid1 and md support, but using an initrd with raid1/md modules, then
+> > I get the "ALERT! /dev/md0 does not exist.  Dropping to a shell!"
+> > message.  I can't understand why there would be any difference between
+> > using a kernel with raid1/md support, or using an initrd image with
+> > raid1/md support, but apparently there is.  If anyone else has any
+>
+> Autodetection doesn't occur unless md is built into the kernel -- one of
+> the reasons why using autodetection is becoming less and less popular.
+> You're probably better off assembling the array from your initrd with
+> some invocation of mdadm.
 
-I'll also learn more about Raid, mdadm and smartd so that I am better
-prepared next time.
+I've since tried building my own initrd using the mkinitramfs script
+that comes with debian testing for kernel 2.6.15, as well as the
+mkinitramfs from mdadm-2.4.  Before, I had only used mkinitramfs that
+came with debian testing, and it didn't seem to include the mdadm
+binary into the image, which would explain why it wasn't able to mount
+the root filesystem (it also tries to execute the command "/sbin/mdrun
+dev", which I guess should start the RAID array, but /sbin/mdrun
+doesn't exist either - seems the built in mkinitramfs script doesn't
+really work exactly as it should - either that, or I'm making a
+mistake somewhere).  Anyways, after booting using my initramfs image
+(and failling to mount /dev/md0), I was dropped into busybox and tried
+the following:
 
-Thanks again
+/ # mdadm -Acpartitions --super-minor=0 --auto=part /dev/mda
+md: md_d0 stopped.
+md: bind<hdc1>
+raid: raid set md_d0 active with 1 out of 2 mirrors
+mdadm: /dev/mda has been started with 1 drive (out of 2).
+/ # mount /dev/mda /root
+EXT2-fs warning (device md_d0): ext2_fill_super: mounting ext3
+filesystem as ext2
 
-Nigel
-Neil Brown wrote:
-> On Monday April 3, nigel@nigelterry.net wrote:
->   
->> I wonder if you could help a Raid Newbie with a problem
->>
->> I had a power fail, and now I can't access my RAID array. It has been
->> working fine for months until I lost power... Being a fool, I don't have
->> a full backup, so I really need to get this data back.
->>
->> I run FC4 (64bit).
->> I have an array of two disks /dev/sda1 and /dev/sdb1 as a raid5 array
->> /dev/md0 on top of which I run lvm and mount the whole lot as /home. My
->> intention was always to add another disk to this array, and I purchased
->> one yesterday.
->>     
+/# mount
+none on /sys type sysfs (rw)
+non on /proc type proc (rw,nodiratime)
+udev on /dev type tmpfs (rw)
+/dev/mda on /root type ext2 (rw,nogrpid)
+
+so it seems with a little bit of tweaking, I'll be able to modify the
+scripts to get /dev/md0 to mount as the root file system.  The only
+thing that bothers me is the "EXT2-fs warning" about having the ext3
+filesystem mounted as ext2.. Does anybody know why this is happening,
+or how to fix this?  Also, having mounted the filesystem as ext2, will
+I have caused any damage to it?  And should I be mounting my RAID
+device as /dev/mda or /dev/md0?
+
+On 4/5/06, Jim Klimov <klimov@2ka.mipt.ru> wrote:
+> Hello Mike,
 >
-> 2 devices in a raid5??  Doesn't seem a lot of point it being raid5
-> rather than raid1.
+> I'm afraid I haven't seen your first messages in detail. Sorry, if I
+> repeat the lines you already know by heart ;)
 >
->   
->> When I boot, I get:
->>
->> md0 is not clean
->> Cannot start dirty degraded array
->> failed to run raid set md0
->>     
+> Nevertheless, do you by chance have the ability to rebuild your
+> kernel, or are you keen on making MD work from initrd and some stock
+> kernel?
+
+right now I'm using a custom built kernel with md and raid1 built into
+it and it works fine (although I get the same EXT2-fs warning as with
+the initramfs image early on in the boot process, but it seems to end
+up being mounted as ext3 when the system finally boots).  As I
+mentioned above, I'm now trying to get the initramfs version working,
+since it'd be nice to have a solution that works with the standard
+prepackaged kernel.
+
+
+> If a custom kernel is ok, link the raid1 driver statically. In this
+> case, if the root submirrors are primary partitions flagged with 0xfd
+> filesystem type, the kernel will assemble these partitions to a mirror
+> before mounting.
 >
-> This tells use that the array is degraded.  A dirty degraded array can
-> have undetectable data corruption.  That is why it won't start it for
-> you.
-> However with only two devices, data corruption from this cause isn't
-> actually possible. 
+> You can also try the raid1 driver's parameters on kernel command line
+> to force md-device naming and components, i.e.
+> ... root=/dev/md0 md=0,/dev/hda1,/dev/hdc1
 >
-> The kernel parameter
->    md_mod.start_dirty_degraded=1
-> will bypass this message and start the array anyway.
+> And in case of mirroring i think you should always be able to mount
+> the filesystems as they are, i.e.
+> ... root=/dev/hda1 ro
 >
-> Alternately:
->   mdadm -A --force /dev/md0 /dev/sd[ab]1
->
->   
->> # mdadm --examine /dev/sda1
->> /dev/sda1:
->>           Magic : a92b4efc
->>         Version : 00.90.02
->>            UUID : c57d50aa:1b3bcabd:ab04d342:6049b3f1
->>   Creation Time : Thu Dec 15 15:29:36 2005
->>      Raid Level : raid5
->>    Raid Devices : 2
->>   Total Devices : 2
->> Preferred Minor : 0
->>
->>     Update Time : Tue Mar 21 06:25:52 2006
->>           State : active
->>  Active Devices : 1
->>     
->
-> So at 06:25:52, there was only one working devices, while...
->
->
->   
->> #mdadm --examine /dev/sdb1
->> /dev/sdb1:
->>           Magic : a92b4efc
->>         Version : 00.90.02
->>            UUID : c57d50aa:1b3bcabd:ab04d342:6049b3f1
->>   Creation Time : Thu Dec 15 15:29:36 2005
->>      Raid Level : raid5
->>    Raid Devices : 2
->>   Total Devices : 2
->> Preferred Minor : 0
->>
->>     Update Time : Tue Mar 21 06:23:57 2006
->>           State : active
->>  Active Devices : 2
->>     
->
-> at 06:23:57 there were two.
->
-> It looks like you lost a drive a while ago. Did you notice?
->
-> Anyway, the 'mdadm' command I gave above should get the array working
-> again for you.  Then you might want to
->    mdadm /dev/md0 -a /dev/sdb1
-> is you trust /dev/sdb
->
-> NeilBrown
->
->
->   
+> A pitfall is there, that /etc/fstab may require mounting other FSes
+> from metadevices, not partitions. And if you mount read-write, then
+> your submirrors will be out of sync and that's undetected by raid
+> driver.
