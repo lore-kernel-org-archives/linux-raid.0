@@ -1,32 +1,26 @@
-From: Matthias Eble
-	<matthias.eble@mailing.kaufland-informationssysteme.com>
-Subject: accessing mirrired lvm on shared storage
-Date: Thu, 06 Apr 2006 20:19:53 +0200
-Message-ID: <44355BC9.4020608@mailing.kaufland-informationssysteme.com>
+From: "Mike Snitzer" <snitzer@gmail.com>
+Subject: mdadm > 2.2 ver1 superblock regression?
+Date: Thu, 6 Apr 2006 17:18:54 -0400
+Message-ID: <170fa0d20604061418t6bd1d6d7yad02290e93fb04d3@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+When I try to create a RAID1 array with ver 1.0 superblock using mdadm
+> 2.2 I'm getting:
+WARNING - superblock isn't sized correctly
 
-Hi all,
+Looking at the code (and adding a bit more debugging) it is clear that
+all 3 checks fail in super1.c's calc_sb_1_csum()'s "make sure I can
+count..." test.
 
-I've got an extended setup whith two Systems, each with two FC cards. 
-Every card is connected to a seperate disk array (so one system accesses 
-two arrays). The other node has access to the same two arrays (standby).
+Is this a regression in mdadm 2.4, 2.3.1 and 2.3 (NOTE: mdadm 2.2's
+ver1 sb works!)?
 
-The active server mirrors the data (4 LUNs) between the two arrays via 
-md. On top is a LVM physical volume. The other system is meant to be 
-booted but not acessing the VGs.
-
-My question is, if it is possible to let both systems set up the md 
-mirror without corrupting the data? Is there any data written even when 
-the VGs are not taken active? I think I remember that LVM refuses to 
-activate volumegroups which are active on another system, right?
-This would save me from caring about IO fencing.
-
-thanks for your help in advance..
-matthias
+please advise, thanks.
+Mike
