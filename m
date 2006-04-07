@@ -1,42 +1,33 @@
-From: Neil Brown <neilb@suse.de>
-Subject: ANNOUNCE: mdadm 2.4.1 - A tool for managing Soft RAID under Linux
-Date: Fri, 7 Apr 2006 14:41:23 +1000
-Message-ID: <17461.60787.261862.314653@cse.unsw.edu.au>
+From: "Mike Snitzer" <snitzer@gmail.com>
+Subject: Re: mdadm > 2.2 ver1 superblock regression?
+Date: Fri, 7 Apr 2006 01:34:04 -0400
+Message-ID: <170fa0d20604062234p67d929a6lae496b131961a251@mail.gmail.com>
+References: <170fa0d20604061418t6bd1d6d7yad02290e93fb04d3@mail.gmail.com>
+	 <17461.49011.622350.590931@cse.unsw.edu.au>
+	 <17461.60755.831530.37888@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <17461.60755.831530.37888@cse.unsw.edu.au>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On 4/7/06, Neil Brown <neilb@suse.de> wrote:
+> On Friday April 7, neilb@suse.de wrote:
+> >
+> > Seeing this hasn't made it into a released kernel yet, I might just
+> > change it.  But I'll have to make sure that old mdadm's don't mess
+> > things up ... I wonder how I will do that :-(
+> >
+> > Thanks for the report.
+>
+> Yes, try 2.4.1 (just released).
 
-I am pleased to announce the availability of
-   mdadm version 2.4.1
 
-It is available at the usual places:
-   http://www.cse.unsw.edu.au/~neilb/source/mdadm/
-and
-   http://www.{countrycode}.kernel.org/pub/linux/utils/raid/mdadm/
+Works great.. thanks for the extremely quick response and fix.
 
-mdadm is a tool for creating, managing and monitoring
-device arrays using the "md" driver in Linux, also
-known as Software RAID arrays.
-
-2.4.1 primarily fixes an alignment problem in the version-1
-superblock.  This is an incompatible change relating to
-raid5-reshape.  Read the change log below.
-
-Changelog Entries:
-    -   Honour --write-mostly when adding to an array without persistent
-        superblocks.
-    -   Fix alignment problem in version-1 superblocks.
-	NOTE: This is an incompatable change affecting raid5 reshape.
-	If you want to reshape a raid5 using version-1 superblocks,
-	use 2.6.17-rc2 or later, and mdadm-2.4.1 or later.
-
-Development of mdadm is sponsored by
- SUSE Labs, Novell Inc.
-
-NeilBrown  7th April 2006
-
+Mike
