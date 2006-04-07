@@ -1,33 +1,36 @@
-From: "Mike Snitzer" <snitzer@gmail.com>
-Subject: Re: mdadm > 2.2 ver1 superblock regression?
-Date: Fri, 7 Apr 2006 01:34:04 -0400
-Message-ID: <170fa0d20604062234p67d929a6lae496b131961a251@mail.gmail.com>
-References: <170fa0d20604061418t6bd1d6d7yad02290e93fb04d3@mail.gmail.com>
-	 <17461.49011.622350.590931@cse.unsw.edu.au>
-	 <17461.60755.831530.37888@cse.unsw.edu.au>
+From: andy liebman <andyliebman@aol.com>
+Subject: Real Time Mirroring of a NAS
+Date: Fri, 07 Apr 2006 06:47:18 -0400
+Message-ID: <44364336.7060704@aol.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17461.60755.831530.37888@cse.unsw.edu.au>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 4/7/06, Neil Brown <neilb@suse.de> wrote:
-> On Friday April 7, neilb@suse.de wrote:
-> >
-> > Seeing this hasn't made it into a released kernel yet, I might just
-> > change it.  But I'll have to make sure that old mdadm's don't mess
-> > things up ... I wonder how I will do that :-(
-> >
-> > Thanks for the report.
->
-> Yes, try 2.4.1 (just released).
+Hi,
+
+I'm looking for a way to create a real-time mirror of a NAS. In other 
+words, say I have a 5.5 TB NAS (3ware 16-drive array, RAID-5, 500 GB 
+drives). I want to mirror it in real time to a completely separate 5.5 
+TB NAS. RSYNCing in the background is not an option. The two NAS boxes 
+need to hold identical data at all times. It is NOT necessary that the 
+data be accessed from both NAS boxes simultaneously. One is simply a 
+backup of the other.
+
+I guess one option might be to use Redhat's Global File System (GFS). 
+Although there seems to be an 8TB limit for a GFS filesystem, which 
+could be an issue down the road.
+
+But would the following approach work:
+
+Can I export NAS B as a SAN or ISCSI target, connect the two machines 
+with, say, mryinet cards or 10 GbE TOE cards, mount the NAS B volume on 
+NAS A, and create a RAID-1 mirror of the two volumes? Is this kind of 
+thing done?
+
+Andy Liebman
 
 
-Works great.. thanks for the extremely quick response and fix.
-
-Mike
