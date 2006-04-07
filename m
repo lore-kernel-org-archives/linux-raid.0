@@ -1,49 +1,60 @@
-From: "Tuomas Leikola" <tuomas.leikola@gmail.com>
-Subject: Re: Can't mount /dev/md0 after stopping a synchronization
-Date: Fri, 7 Apr 2006 16:17:58 +0300
-Message-ID: <5b170a7d0604070617s304b3366i4573e97b4fbe6650@mail.gmail.com>
-References: <c79e949d0604042045w2fb901c2rfb4c00984f6b8761@mail.gmail.com>
-	 <4433E073.8040502@fnuck.dk>
-	 <c79e949d0604050839k2287fefdm53f6abb08dfcae89@mail.gmail.com>
-	 <5b170a7d0604050920p674e10a9u9e26a52fcf3933c1@mail.gmail.com>
-	 <c79e949d0604050959o6feb6badx5f854a937a337a1d@mail.gmail.com>
+From: "John Stoffel" <john@stoffel.org>
+Subject: Re: Real Time Mirroring of a NAS
+Date: Fri, 7 Apr 2006 09:25:24 -0400
+Message-ID: <17462.26692.193774.288778@smtp.charter.net>
+References: <44364336.7060704@aol.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <c79e949d0604050959o6feb6badx5f854a937a337a1d@mail.gmail.com>
-Content-Disposition: inline
+In-Reply-To: <44364336.7060704@aol.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mike Garey <random51k@gmail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: andy liebman <andyliebman@aol.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> but wouldn't I need to have /dev/md0 available before doing mdadm
-> --assemble?  When booting from an initrd image, /dev/md0 is never
-> created for some reason..
->
 
-Sorry, I didn't realize initrd adds to the mix.
+andy> I'm looking for a way to create a real-time mirror of a NAS. In
+andy> other words, say I have a 5.5 TB NAS (3ware 16-drive array,
+andy> RAID-5, 500 GB drives). I want to mirror it in real time to a
+andy> completely separate 5.5 TB NAS. RSYNCing in the background is
+andy> not an option. The two NAS boxes need to hold identical data at
+andy> all times. It is NOT necessary that the data be accessed from
+andy> both NAS boxes simultaneously. One is simply a backup of the
+andy> other.
 
-> > Note, you should never do any read/write access to the component disks
-> > after creating the raid. I guess you know this already, but some
-> > wording seemed suspect.
->
-> I take it you mean after the disks are synchronized, it's a bad thing
-> to write directly to /dev/hda1 or /dev/hdc1... In my case, I've
-> written directly to /dev/hdc1, but it's the only disk in the array,
-> and I'm going to be resyncing /dev/hda1 anyways, so it seems in this
-> instance it's okay?
+How much data loss can you stand?  Or more accurately, how much lag in
+copying data between the arrays can you stand for your Disaster
+recovery issues?  How far apart are the two systems?  Is the setup
+write intensive, or read intensive?
 
-Correct, unless the disks are already halfway synchronized. Didn't
-check this, but IIRC modern-day md remembers how much is synchronized,
-it sync is aborted (cleanly).
+Why is rsync not an option?  Not upto date enough?  *grin*  
 
-Glad your problem got solved!
+One option might be to use inotify to watch filesystem A and to copy
+data that changes to filesystem B as quickly as possible.  
 
-BTW, if you're still having problems with sync speed, try fiddling around with
+andy> I guess one option might be to use Redhat's Global File System
+andy> (GFS).  Although there seems to be an 8TB limit for a GFS
+andy> filesystem, which could be an issue down the road.
 
-/proc/sys/dev/raid/speed_limit_min
+How large are you planning on growing your filesystem?  Why can't it
+be split?  What are your assumptions?   
 
-as the md sync speed detection code is not foolproof (at least lvms as
-component devices has fooled it on occasion).
+andy> But would the following approach work:
+
+andy> Can I export NAS B as a SAN or ISCSI target, connect the two
+andy> machines with, say, mryinet cards or 10 GbE TOE cards, mount the
+andy> NAS B volume on NAS A, and create a RAID-1 mirror of the two
+andy> volumes? Is this kind of thing done?
+
+I guess I'd look into mirroring the underlying disk subsystems and
+then putting the NAS on top of that.  If the NAS box goes down, you
+can then just fire up NAS on the backup server and continue. 
+
+Mostly, I don't understand what problem you're trying to solve, so I
+can't offer good suggestions because the solution changes depending on
+assumptions.  
+
+I already assume you don't have tons of money to spend here.  *grin*
+
+John
