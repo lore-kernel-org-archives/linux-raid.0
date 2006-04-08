@@ -1,27 +1,31 @@
-From: "Colin McDonald" <ce.mcdonald@gmail.com>
-Subject: RHEL3 kernel panic with md
-Date: Fri, 7 Apr 2006 17:47:35 -0400
-Message-ID: <bbfa52890604071447t2e791afai781522f9f204485d@mail.gmail.com>
+From: Alex Tomas <alex@clusterfs.com>
+Subject: linear writes to raid5
+Date: Sat, 08 Apr 2006 04:17:35 +0400
+Message-ID: <m37j60udi8.fsf@bzzz.home.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
+Cc: alex@clusterfs.com
 List-Id: linux-raid.ids
 
-I appear to have a corrupt file system and now it is mirrored. LOL.
 
-I am running Redhat Enterprise 3 and using mdtools.
+Good day all,
 
-I booted from the install media iso and went into rescue mode. RH was
-unable to find the partitions automatically but after exiting into
-bash i can run fdisk -l and i see all of the partitions.
+is there a way to batch explicitely write requests raid5 issues?
+for example, there is a raid5 built from 3 disks with chunk=64K.
+one types dd if=/dev/zero of=/dev/md0 bs=128k count=1 and 128K
+bio gets into the raid5. raid5 processes the request, does xor
+for parity stripe, then issues 2 64KB requests down to lower level.
 
-I know this is sparse info but would any of the group be able to give
-the best approach to getting them  mounted and fsck'd?
+is it even possible to implement? if so, how complex?
 
-Thank you in advance
+I suppose we could introduce a context which holds last
+non-issued bio and instead of generic_make_request() in 
+handle_stripe() try to merge current request to the previous
+one from the context? how does this sound to you?
 
-Colin
+
+thanks, Alex
+
