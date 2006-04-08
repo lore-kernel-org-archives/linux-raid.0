@@ -1,31 +1,39 @@
-From: Alex Tomas <alex@clusterfs.com>
-Subject: linear writes to raid5
-Date: Sat, 08 Apr 2006 04:17:35 +0400
-Message-ID: <m37j60udi8.fsf@bzzz.home.net>
+From: "JaniD++" <djani22@dynamicweb.hu>
+Subject: Raid 4 idea!
+Date: Sat, 8 Apr 2006 08:44:39 +0200
+Message-ID: <005901c65ad7$ea45f6c0$2c00a8c0@dcccs>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="iso-8859-2"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
-Cc: alex@clusterfs.com
 List-Id: linux-raid.ids
 
+Hello, list,
 
-Good day all,
+I have one idea!
 
-is there a way to batch explicitely write requests raid5 issues?
-for example, there is a raid5 built from 3 disks with chunk=64K.
-one types dd if=/dev/zero of=/dev/md0 bs=128k count=1 and 128K
-bio gets into the raid5. raid5 processes the request, does xor
-for parity stripe, then issues 2 64KB requests down to lower level.
+I using raid4, and found to be really good, but i think this can be more
+better! :-)
 
-is it even possible to implement? if so, how complex?
+If the raid4 fails one disk (except the patiry disk), the md currently only
+drop the disk from array, but i think this could be more useful, if the md
+immediately starts to transform the parity disk into the place fo missing
+disk!
 
-I suppose we could introduce a context which holds last
-non-issued bio and instead of generic_make_request() in 
-handle_stripe() try to merge current request to the previous
-one from the context? how does this sound to you?
+This is possible, and with this option, performance-dependent systems can go
+faster again, after the "rebuild" is completed!
 
+This is only requires one (big) number in superblock to count/track the
+process.
 
-thanks, Alex
+Also this has a little risk too, and need to be an "expert" option - i
+think...
+
+What do you think, Neil?
+
+Cheers,
+Janos
 
