@@ -1,63 +1,59 @@
-From: Brad Campbell <brad@wasp.net.au>
-Subject: Re: A failed-disk-how-to anywhere?
-Date: Sun, 09 Apr 2006 18:19:50 +0400
-Message-ID: <44391806.3000200@wasp.net.au>
-References: <C1F5413C-E9AB-4331-A901-1FBB645719DF@stender.com>
+From: Luca Berra <bluca@comedia.it>
+Subject: Re: md/mdadm fails to properly run on 2.6.15 after upgrading from 2.6.11
+Date: Sun, 9 Apr 2006 16:46:25 +0200
+Message-ID: <20060409144625.GM24587@percy.comedia.it>
+References: <4438FFA9.4030907@debruin.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <C1F5413C-E9AB-4331-A901-1FBB645719DF@stender.com>
+Content-Disposition: inline
+In-Reply-To: <4438FFA9.4030907@debruin.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Martin Stender <martin@stender.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Martin Stender wrote:
-> Hi there!
-> 
-> I have two identical disks sitting on a Promise dual channel IDE 
-> controller. I guess both disks are primary's then.
-> 
-> One of the disks have failed, so I bought a new disk, took out the 
-> failed disk, and put in the new one.
-> That might seem a little naive, and apparently it was, since the system 
-> won't boot up now.
-> It boots fine, when only the old, healthy disk is connected.
-> 
-> By the way, all three partitions are raided - including /boot ...
-> 
-> Anyway, I have removed the old disk from the Raid with:
-> #mdadm /dev/mdo --remove /dev/hde1
-> #mdadm /dev/md1 --remove /dev/hde2
-> #mdadm /dev/md2 --remove /dev/hde3
-> 
-> - but the the problem persists.
-> 
-> I can't seem to find a decent 'How-To' - so how it this supposed to be 
-> done?
+On Sun, Apr 09, 2006 at 02:35:53PM +0200, Marc L. de Bruin wrote:
+>Hi,
+>
+>(I just subscribed, sorry if this is a dupe. I did try to match the 
+>subject from the archives, but couldn't find any...)
+>
+>I ran into trouble after upgrading a Debian Sarge system from 2.6.11 to 
+>2.6.15. To be more precise, it turned out that md/mdadm seems to not 
+>function properly during the boot process of 2.6.15.
+>
+>My /etc/mdadm/mdadm.conf contains this:
+>
+> >>>---[mdadm.conf]---
+>DEVICE /dev/hdi1 /dev/hdg1 /dev/hdc1
+>ARRAY /dev/md1 level=raid5 num-devices=3 
+>UUID=09c58ab6:f706e37b:504cf890:1a597046 
+>devices=/dev/hdi1,/dev/hdg1,/dev/hdc1
+>
+>DEVICE /dev/hdg2 /dev/hdc2
+>ARRAY /dev/md2 level=raid1 num-devices=2 
+>UUID=86210844:6abbf533:dc82f982:fe417066 devices=/dev/hdg2,/dev/hdc2
+>
+>DEVICE /dev/hda2 /dev/hdb2
+>ARRAY /dev/md0 level=raid1 num-devices=2 
+>UUID=da619c37:6c072dc8:52e45423:f4a58b7c devices=/dev/hda2,/dev/hdb2
+>
+>DEVICE /dev/hda1 /dev/hdb1
+>ARRAY /dev/md4 level=raid1 num-devices=2 
+>UUID=bfc30f9b:d2c21677:c4ae5f90:b2bddb75 devices=/dev/hda1,/dev/hdb1
+>
+>DEVICE /dev/hdc3 /dev/hdg3
+>ARRAY /dev/md3 level=raid1 num-devices=2 
+>UUID=fced78ce:54f00a78:8662e7eb:2ad01d0b devices=/dev/hdc3,/dev/hdg3
+> >>>---[/mdadm.conf]---
 
-A little more info would be helpful. How does the machine boot? How are your other disks configured?
-Are you booting off the Promise board or on-board controller (making assumptions given your promise 
-appears to contain hde, I'm assuming hd[abcd] are on board somewhere..)
+replace all
+DEVICE .....
+lines
+with a single
 
-I'm going to take a wild stab in the dark now..
+DEVICE partitions
+remove all the device=... part from the array lines.
 
-My initial thought would be you have hde and hdg in a raid-1 and nothing on the on-board 
-controllers. hde has failed and when you removed it your controller tried the 1st disk it could find 
-(hdg) to boot of.. Bingo.. away we go.
-You plug a new shiny disk into hde and now the controller tries to boot off that, except it's blank 
-and therefore a no-go.
+L.
 
-I'd either try and force the controller to boot off hdg (which might be a controller bios option) or 
-swap hde & hdg.. then it might boot and let you create your partitions on hdg and then add it back 
-into the mirror.
-
-How close did I get ?
-
-
-Brad
--- 
-"Human beings, who are almost unique in having the ability
-to learn from the experience of others, are also remarkable
-for their apparent disinclination to do so." -- Douglas Adams
