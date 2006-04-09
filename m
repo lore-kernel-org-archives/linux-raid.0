@@ -1,59 +1,46 @@
-From: Luca Berra <bluca@comedia.it>
-Subject: Re: md/mdadm fails to properly run on 2.6.15 after upgrading from 2.6.11
-Date: Sun, 9 Apr 2006 16:46:25 +0200
-Message-ID: <20060409144625.GM24587@percy.comedia.it>
+From: dean gaudet <dean@arctic.org>
+Subject: Re: md/mdadm fails to properly run on 2.6.15 after upgrading from
+ 2.6.11
+Date: Sun, 9 Apr 2006 07:47:39 -0700 (PDT)
+Message-ID: <Pine.LNX.4.64.0604090736170.4668@twinlark.arctic.org>
 References: <4438FFA9.4030907@debruin.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
 In-Reply-To: <4438FFA9.4030907@debruin.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: "Marc L. de Bruin" <marc@debruin.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, Apr 09, 2006 at 02:35:53PM +0200, Marc L. de Bruin wrote:
->Hi,
->
->(I just subscribed, sorry if this is a dupe. I did try to match the 
->subject from the archives, but couldn't find any...)
->
->I ran into trouble after upgrading a Debian Sarge system from 2.6.11 to 
->2.6.15. To be more precise, it turned out that md/mdadm seems to not 
->function properly during the boot process of 2.6.15.
->
->My /etc/mdadm/mdadm.conf contains this:
->
-> >>>---[mdadm.conf]---
->DEVICE /dev/hdi1 /dev/hdg1 /dev/hdc1
->ARRAY /dev/md1 level=raid5 num-devices=3 
->UUID=09c58ab6:f706e37b:504cf890:1a597046 
->devices=/dev/hdi1,/dev/hdg1,/dev/hdc1
->
->DEVICE /dev/hdg2 /dev/hdc2
->ARRAY /dev/md2 level=raid1 num-devices=2 
->UUID=86210844:6abbf533:dc82f982:fe417066 devices=/dev/hdg2,/dev/hdc2
->
->DEVICE /dev/hda2 /dev/hdb2
->ARRAY /dev/md0 level=raid1 num-devices=2 
->UUID=da619c37:6c072dc8:52e45423:f4a58b7c devices=/dev/hda2,/dev/hdb2
->
->DEVICE /dev/hda1 /dev/hdb1
->ARRAY /dev/md4 level=raid1 num-devices=2 
->UUID=bfc30f9b:d2c21677:c4ae5f90:b2bddb75 devices=/dev/hda1,/dev/hdb1
->
->DEVICE /dev/hdc3 /dev/hdg3
->ARRAY /dev/md3 level=raid1 num-devices=2 
->UUID=fced78ce:54f00a78:8662e7eb:2ad01d0b devices=/dev/hdc3,/dev/hdg3
-> >>>---[/mdadm.conf]---
+On Sun, 9 Apr 2006, Marc L. de Bruin wrote:
 
-replace all
-DEVICE .....
-lines
-with a single
+...
+> Okay, just pressing Control-D continues the boot process and AFAIK the root
+> filesystemen actually isn't corrupt. Running e2fsck returns no errors and
+> booting 2.6.11 works just fine, but I have no clue why it picked the wrong
+> partitions to build md[01234].
+> 
+> What could have happened here?
 
-DEVICE partitions
-remove all the device=... part from the array lines.
+i didn't know sarge had 2.6.11 or 2.6.15 packages... but i'm going to 
+assume you've installed one of initramfs-tools or yaird in order to use 
+the unstable 2.6.11 or 2.6.15 packages... so my comments might not apply.
 
-L.
+initramfs-tools generates an "mdrun /dev" which starts all the raids it 
+can find... but does not include the mdadm.conf in the initrd so i'm not 
+sure it will necessarily start them in the right minor devices.  try doing 
+an "mdadm --examine /dev/xxx" on some of your partitions to see if the 
+"preferred minor" is what you expect it to be...
 
+if the preferred minors are wrong there's some mdadm incantation to update 
+them... see the man page.
+
+or switch to yaird (you'll have to install yaird and purge 
+initramfs-tools) and dpkg-reconfigure your kernel packages to cause the 
+initrds to be rebuilt.  yaird starts only the raid required for the root 
+filesystem, and specifies the correct minor for it.  then later after the 
+initrd /etc/init.d/mdadm-raid will start the rest of your raids using your 
+mdadm.conf.
+
+-dean
