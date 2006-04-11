@@ -1,23 +1,22 @@
-From: "Yesenia Green" <jatjmb@msn.com>
-Subject: You Will Love This T7Zu2
-Date: Tue, 11 Apr 2006 11:25:39 -0300
-Message-ID: <LAW34.OE649yfB4mvo103153d5__34233.7940972813$1144761977$gmane$org@motmail.com>
+From: Shai <shaibn@gmail.com>
+Subject: mdadm + raid1 of 2 disks and now need to add more
+Date: Tue, 11 Apr 2006 16:41:30 +0200
+Message-ID: <e3edb0fa0604110741h355f4eft3f3d42a825cb4233@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-net@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hi,
 
-Lazy to attend exam or classes?
+I have two SCSI disks on raid1.
+Since I have lots of reads from that raid, I want to add two more
+disks to this raid so that read will be faster.
 
-We have Diplomas, Degrees, Masters' or Doctorate
-to choose from any field of your interest.
+How should I add the new disks?
 
-Only 2 weeks require to delivers the prestigious non-accredited
-universities paper to your doorstep.
-
-Do not hesitate to give us a call today!
-1-484-693-8861
-
-
-Ib6
+Shai
