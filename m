@@ -1,43 +1,49 @@
-From: dean gaudet <dean@arctic.org>
-Subject: forcing a read on a known bad block
-Date: Tue, 11 Apr 2006 14:57:36 -0700 (PDT)
-Message-ID: <Pine.LNX.4.64.0604092000020.29514@twinlark.arctic.org>
+From: Ming Zhang <mingz@ele.uri.edu>
+Subject: Re: mdadm + raid1 of 2 disks and now need to add more
+Date: Tue, 11 Apr 2006 18:13:02 -0400
+Message-ID: <1144793582.26235.196.camel@localhost.localdomain>
+References: <e3edb0fa0604110741h355f4eft3f3d42a825cb4233@mail.gmail.com>
+	 <20060411145142.GR29446@strugglers.net>
+	 <443BE6A6.5000202@unix-scripts.info>
+	 <20060411203216.GV29446@strugglers.net>
+Reply-To: mingz@ele.uri.edu
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20060411203216.GV29446@strugglers.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Andy Smith <andy@lug.org.uk>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-hey Neil...
+On Tue, 2006-04-11 at 20:32 +0000, Andy Smith wrote:
+> On Tue, Apr 11, 2006 at 07:25:58PM +0200, Laurent CARON wrote:
+> > Andy Smith wrote:
+> > >On Tue, Apr 11, 2006 at 04:41:30PM +0200, Shai wrote:
+> > >>I have two SCSI disks on raid1.
+> > >>Since I have lots of reads from that raid, I want to add two more
+> > >>disks to this raid so that read will be faster.
+> > >>
+> > >>How should I add the new disks?
+> > >
+> > >Is this possible with md currently:
+> > >
+> > >Create a RAID-10 on the two new disks specifying one disk missing
+> > >from each mirror.
+> > >
+> > >Then copy data over and add the two existing disks letting it
+> > >resync?
+> > 
+> > Why not growing the array with 2 more disks?
+> 
+> Well I guess a RAID-1 of 4 disks would be slightly more redundant
+> than a 4 disk RAID-10, but it would have half the capacity, and the
+> read performance would be very similar, no?
 
-i've been wanting to test out the reconstruct-on-read-error code... and 
-i've had two chances to do so, but haven't be able to force md to read the 
-appropriate block to trigger the code.
+raid1 of 4 will give u read performance like 1 disk;
+raid10 of 4 can give u read performance like aggregated 2 disks.
 
-i had two disks with SMART Current_Pending_Sector > 0 (which indicates 
-pending read error) and i did SMART long self-tests to find out where the 
-bad block was (it should show the LBA in the SMART error log)...
 
-one disk was in a raid1 -- and so it was kind of random which of the two 
-disks would be read from if i tried to seek to that LBA and read... in 
-theory with O_DIRECT i should have been able to randomly get the right 
-disk, but that seems a bit clunky.  unfortunately i didn't think of the 
-O_DIRECT trick until after i'd given up and decided to just resync the 
-whole disk proactively.
+> 
 
-the other disk was in a raid5 ... 5 disk raid5, so 20% chance of the bad 
-block being in parity.  i copied the kernel code to be sure, and sure 
-enough the bad block was in parity... just bad luck :)  so i can't force a 
-read there any way that i know of...
-
-anyhow this made me wonder if there's some other existing trick to force 
-such reads/reconstructions to occur... or perhaps this might be a useful 
-future feature.
-
-on the raid5 disk i actually tried reading the LBA directly from the 
-component device and it didn't trigger the read error, so now i'm a bit 
-skeptical of the SMART log and/or my computation of the seek offset in the 
-partition... but the above question is still interesting.
-
--dean
