@@ -1,32 +1,59 @@
-From: "Cora Bowers" <hcqwnfets@commissioner.com>
-Subject: Certified 100% Pure South African Hoodia
-Date: Tue, 11 Apr 2006 14:22:53 -0500
-Message-ID: <18489.midweek.2__30326.9897857264$1144780547$gmane$org@p4jp.com>
+From: Andy Smith <andy@lug.org.uk>
+Subject: Re: mdadm + raid1 of 2 disks and now need to add more
+Date: Tue, 11 Apr 2006 20:32:16 +0000
+Message-ID: <20060411203216.GV29446@strugglers.net>
+References: <e3edb0fa0604110741h355f4eft3f3d42a825cb4233@mail.gmail.com> <20060411145142.GR29446@strugglers.net> <443BE6A6.5000202@unix-scripts.info>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="lRMsAdG4hjP4MFkn"
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <443BE6A6.5000202@unix-scripts.info>
 Sender: linux-raid-owner@vger.kernel.org
-To: autoanswer@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Summer is coming, did you look in the mirror lately?
 
-If you`re still overweight you MUST visit us:
+--lRMsAdG4hjP4MFkn
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-http://051.dietdvdcheck.com
+On Tue, Apr 11, 2006 at 07:25:58PM +0200, Laurent CARON wrote:
+> Andy Smith wrote:
+> >On Tue, Apr 11, 2006 at 04:41:30PM +0200, Shai wrote:
+> >>I have two SCSI disks on raid1.
+> >>Since I have lots of reads from that raid, I want to add two more
+> >>disks to this raid so that read will be faster.
+> >>
+> >>How should I add the new disks?
+> >
+> >Is this possible with md currently:
+> >
+> >Create a RAID-10 on the two new disks specifying one disk missing
+> >from each mirror.
+> >
+> >Then copy data over and add the two existing disks letting it
+> >resync?
+>=20
+> Why not growing the array with 2 more disks?
 
-WE WILL HELP YOU!
+Well I guess a RAID-1 of 4 disks would be slightly more redundant
+than a 4 disk RAID-10, but it would have half the capacity, and the
+read performance would be very similar, no?
 
 
+--lRMsAdG4hjP4MFkn
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.1 (GNU/Linux)
 
+iD8DBQFEPBJQIJm2TL8VSQsRAveFAJ4/n2cEFlbiyqOnBk2rhW04E4/3XgCfdfVW
+TzrfefeU5e52idMiQPjmIb8=
+=yONf
+-----END PGP SIGNATURE-----
 
-
-
-
-
-
-antagonism you salsify me, schmidt verify anabel sphinx . conflagration you powers me, judaism draco cuba doorway . 
-shoehorn you commandant me, cheesecake coattail atone pomade . sovkhoz you campfire me, tristan . despoil you sulfanilamide me, detroit was leg response . legate you goniometer me, ammo quebec talkie . 
-http://051.dietdvdcheck.com/rm/
+--lRMsAdG4hjP4MFkn--
