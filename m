@@ -1,31 +1,32 @@
-From: Laurent CARON <lcaron@unix-scripts.info>
-Subject: Re: mdadm + raid1 of 2 disks and now need to add more
-Date: Tue, 11 Apr 2006 19:25:58 +0200
-Message-ID: <443BE6A6.5000202@unix-scripts.info>
-References: <e3edb0fa0604110741h355f4eft3f3d42a825cb4233@mail.gmail.com> <20060411145142.GR29446@strugglers.net>
+From: "Cora Bowers" <hcqwnfets@commissioner.com>
+Subject: Certified 100% Pure South African Hoodia
+Date: Tue, 11 Apr 2006 14:22:53 -0500
+Message-ID: <18489.midweek.2__30326.9897857264$1144780547$gmane$org@p4jp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20060411145142.GR29446@strugglers.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: autoanswer@vger.kernel.org
 List-Id: linux-raid.ids
 
-Andy Smith wrote:
-> On Tue, Apr 11, 2006 at 04:41:30PM +0200, Shai wrote:
->> I have two SCSI disks on raid1.
->> Since I have lots of reads from that raid, I want to add two more
->> disks to this raid so that read will be faster.
->>
->> How should I add the new disks?
-> 
-> Is this possible with md currently:
-> 
-> Create a RAID-10 on the two new disks specifying one disk missing
-> from each mirror.
-> 
-> Then copy data over and add the two existing disks letting it
-> resync?
+Summer is coming, did you look in the mirror lately?
 
-Why not growing the array with 2 more disks?
+If you`re still overweight you MUST visit us:
+
+http://051.dietdvdcheck.com
+
+WE WILL HELP YOU!
+
+
+
+
+
+
+
+
+
+
+antagonism you salsify me, schmidt verify anabel sphinx . conflagration you powers me, judaism draco cuba doorway . 
+shoehorn you commandant me, cheesecake coattail atone pomade . sovkhoz you campfire me, tristan . despoil you sulfanilamide me, detroit was leg response . legate you goniometer me, ammo quebec talkie . 
+http://051.dietdvdcheck.com/rm/
