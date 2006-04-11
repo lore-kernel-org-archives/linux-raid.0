@@ -1,46 +1,80 @@
-From: dean gaudet <dean@arctic.org>
-Subject: Re: md/mdadm fails to properly run on 2.6.15 after upgrading from
- 2.6.11
-Date: Tue, 11 Apr 2006 14:13:44 -0700 (PDT)
-Message-ID: <Pine.LNX.4.64.0604111412010.25252@twinlark.arctic.org>
-References: <4438FFA9.4030907@debruin.org> <Pine.LNX.4.64.0604090736170.4668@twinlark.arctic.org>
- <443A0F3A.90104@debruin.org> <Pine.LNX.4.64.0604100843370.29514@twinlark.arctic.org>
- <443A9DDC.10601@debruin.org> <Pine.LNX.4.64.0604101128290.29514@twinlark.arctic.org>
- <443AC897.50206@debruin.org>
+From: johnny@navtek.no
+Subject: failed to RUN_ARRAY, input/output error
+Date: Tue, 11 Apr 2006 23:22:28 +0200 (CEST)
+Message-ID: <54490.84.236.149.243.1144790548.squirrel@www.navtek.no>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <443AC897.50206@debruin.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Marc L. de Bruin" <marc@debruin.org>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
+Hello all
 
-On Mon, 10 Apr 2006, Marc L. de Bruin wrote:
+I just ran into a problem with my RAID5 array. Everything seemed to run
+fine, but then suddenly froze and upon reboot the boot process wouldn't
+start from the array and panic'ed after a while.
 
-> dean gaudet wrote:
-> > On Mon, 10 Apr 2006, Marc L. de Bruin wrote:
-> > 
-> > > However, all "preferred minor"s are correct, meaning that the output is in
-> > > sync with what I expected it to be from /etc/mdadm/mdadm.conf.
-> > > 
-> > > Any other ideas? Just adding /etc/mdadm/mdadm.conf to the initrd does not
-> > > seem
-> > > to work, since mdrun seems to ignore it?!
-> 
-> > it seems to me "mdrun /dev" is about the worst thing possible to use in an
-> > initrd.
-> 
-> :-)
-> 
-> I guess I'll have to change to yaird asap then. I can't think of any other
-> solid solution...
+Here's the data I've been able to gather from my FC 5 linux rescue session:
 
-yeah i've been yaird... it's not perfect -- take a look at 
-<http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=351183> for a patch i 
-use to improve the ability of a yaird initrd booting when you've moved 
-devices or a device has failed.
+My partitions: /dev/hda2, /dev/hdc2, /dev/hde1, /dev/hdg1
+/dev/hde is not working - lots of DriveReady SeekComplete Error and others
 
--dean
+# mdadm -V
+mdadm - v2.3.1
+
+# mdadm -E /dev/hda2, /dev/hdc2 and /dev/hdg1 yields:
+Same on all:
+Magic: a92b4efc
+Version: 00.90.01
+UUID : <long id>
+Raid Level: raid5
+Raid Devices: 4
+Total Devices: 4
+Preferred Minor: 0
+State: active
+Active Devices: 3
+Working Devices: 3
+Failed Devices: 2
+Events: 0.4188000
+Layout: left-symmetric
+Chunk size: 256K
+
+Number Major Minor RaidDevice State
+0 3  2 0 active sync /dev/hda2
+1 22 2 1 active sync /dev/hdc2
+2 0  0 2 faulty removed
+3 34 1 3 active sync /dev/hdg1
+
+Different on all:
+Checksum
+
+# mdadm --assemble /dev/md0 /dev/hda2 /dev/hdc2 /dev/hdg1
+mdadm: failed to RUN_ARRAY /dev/md0: Input/output error
+
+# cat /proc/mdstat
+md0: inactive hda2[0] hdg1[3] hdc2[1]
+
+# mdadm --detail /dev/md0
+Persistence: Superblock is persistent
+State: active, degraded
+Active Devices: 3
+Working Devices: 3
+Failed Devices: 0
+
+Number Major Minor RaidDevice State
+0 3  2 0 active sync /dev/hda2
+1 22 2 1 active sync /dev/hdc2
+0 0  0 2311520 removed
+3 34 1 3 active sync /dev/hdg1
+
+I'm off to buy another 200GiB disk now, but is my current array doomed or
+do I have a chance?
+Any inputs would be highly welcome!
+
+thanks
+Johnny Ljunggren
+
+
