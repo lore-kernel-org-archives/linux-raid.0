@@ -1,80 +1,43 @@
-From: johnny@navtek.no
-Subject: failed to RUN_ARRAY, input/output error
-Date: Tue, 11 Apr 2006 23:22:28 +0200 (CEST)
-Message-ID: <54490.84.236.149.243.1144790548.squirrel@www.navtek.no>
+From: dean gaudet <dean@arctic.org>
+Subject: forcing a read on a known bad block
+Date: Tue, 11 Apr 2006 14:57:36 -0700 (PDT)
+Message-ID: <Pine.LNX.4.64.0604092000020.29514@twinlark.arctic.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+hey Neil...
 
-Hello all
+i've been wanting to test out the reconstruct-on-read-error code... and 
+i've had two chances to do so, but haven't be able to force md to read the 
+appropriate block to trigger the code.
 
-I just ran into a problem with my RAID5 array. Everything seemed to run
-fine, but then suddenly froze and upon reboot the boot process wouldn't
-start from the array and panic'ed after a while.
+i had two disks with SMART Current_Pending_Sector > 0 (which indicates 
+pending read error) and i did SMART long self-tests to find out where the 
+bad block was (it should show the LBA in the SMART error log)...
 
-Here's the data I've been able to gather from my FC 5 linux rescue session:
+one disk was in a raid1 -- and so it was kind of random which of the two 
+disks would be read from if i tried to seek to that LBA and read... in 
+theory with O_DIRECT i should have been able to randomly get the right 
+disk, but that seems a bit clunky.  unfortunately i didn't think of the 
+O_DIRECT trick until after i'd given up and decided to just resync the 
+whole disk proactively.
 
-My partitions: /dev/hda2, /dev/hdc2, /dev/hde1, /dev/hdg1
-/dev/hde is not working - lots of DriveReady SeekComplete Error and others
+the other disk was in a raid5 ... 5 disk raid5, so 20% chance of the bad 
+block being in parity.  i copied the kernel code to be sure, and sure 
+enough the bad block was in parity... just bad luck :)  so i can't force a 
+read there any way that i know of...
 
-# mdadm -V
-mdadm - v2.3.1
+anyhow this made me wonder if there's some other existing trick to force 
+such reads/reconstructions to occur... or perhaps this might be a useful 
+future feature.
 
-# mdadm -E /dev/hda2, /dev/hdc2 and /dev/hdg1 yields:
-Same on all:
-Magic: a92b4efc
-Version: 00.90.01
-UUID : <long id>
-Raid Level: raid5
-Raid Devices: 4
-Total Devices: 4
-Preferred Minor: 0
-State: active
-Active Devices: 3
-Working Devices: 3
-Failed Devices: 2
-Events: 0.4188000
-Layout: left-symmetric
-Chunk size: 256K
+on the raid5 disk i actually tried reading the LBA directly from the 
+component device and it didn't trigger the read error, so now i'm a bit 
+skeptical of the SMART log and/or my computation of the seek offset in the 
+partition... but the above question is still interesting.
 
-Number Major Minor RaidDevice State
-0 3  2 0 active sync /dev/hda2
-1 22 2 1 active sync /dev/hdc2
-2 0  0 2 faulty removed
-3 34 1 3 active sync /dev/hdg1
-
-Different on all:
-Checksum
-
-# mdadm --assemble /dev/md0 /dev/hda2 /dev/hdc2 /dev/hdg1
-mdadm: failed to RUN_ARRAY /dev/md0: Input/output error
-
-# cat /proc/mdstat
-md0: inactive hda2[0] hdg1[3] hdc2[1]
-
-# mdadm --detail /dev/md0
-Persistence: Superblock is persistent
-State: active, degraded
-Active Devices: 3
-Working Devices: 3
-Failed Devices: 0
-
-Number Major Minor RaidDevice State
-0 3  2 0 active sync /dev/hda2
-1 22 2 1 active sync /dev/hdc2
-0 0  0 2311520 removed
-3 34 1 3 active sync /dev/hdg1
-
-I'm off to buy another 200GiB disk now, but is my current array doomed or
-do I have a chance?
-Any inputs would be highly welcome!
-
-thanks
-Johnny Ljunggren
-
-
+-dean
