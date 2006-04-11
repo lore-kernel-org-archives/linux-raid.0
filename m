@@ -1,49 +1,61 @@
-From: Ming Zhang <mingz@ele.uri.edu>
-Subject: Re: mdadm + raid1 of 2 disks and now need to add more
-Date: Tue, 11 Apr 2006 18:13:02 -0400
-Message-ID: <1144793582.26235.196.camel@localhost.localdomain>
-References: <e3edb0fa0604110741h355f4eft3f3d42a825cb4233@mail.gmail.com>
-	 <20060411145142.GR29446@strugglers.net>
-	 <443BE6A6.5000202@unix-scripts.info>
-	 <20060411203216.GV29446@strugglers.net>
-Reply-To: mingz@ele.uri.edu
+From: Patrik Jonsson <patrik@ucolick.org>
+Subject: Re: forcing a read on a known bad block
+Date: Tue, 11 Apr 2006 15:15:56 -0700
+Message-ID: <443C2A9C.7000908@ucolick.org>
+References: <Pine.LNX.4.64.0604092000020.29514@twinlark.arctic.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enig2206837C755018A486BA422D"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20060411203216.GV29446@strugglers.net>
+In-Reply-To: <Pine.LNX.4.64.0604092000020.29514@twinlark.arctic.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andy Smith <andy@lug.org.uk>
+To: dean gaudet <dean@arctic.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, 2006-04-11 at 20:32 +0000, Andy Smith wrote:
-> On Tue, Apr 11, 2006 at 07:25:58PM +0200, Laurent CARON wrote:
-> > Andy Smith wrote:
-> > >On Tue, Apr 11, 2006 at 04:41:30PM +0200, Shai wrote:
-> > >>I have two SCSI disks on raid1.
-> > >>Since I have lots of reads from that raid, I want to add two more
-> > >>disks to this raid so that read will be faster.
-> > >>
-> > >>How should I add the new disks?
-> > >
-> > >Is this possible with md currently:
-> > >
-> > >Create a RAID-10 on the two new disks specifying one disk missing
-> > >from each mirror.
-> > >
-> > >Then copy data over and add the two existing disks letting it
-> > >resync?
-> > 
-> > Why not growing the array with 2 more disks?
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enig2206837C755018A486BA422D
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+
+hi dean,
+
+dean gaudet wrote:
 > 
-> Well I guess a RAID-1 of 4 disks would be slightly more redundant
-> than a 4 disk RAID-10, but it would have half the capacity, and the
-> read performance would be very similar, no?
+> the other disk was in a raid5 ... 5 disk raid5, so 20% chance of the bad 
+> block being in parity.  i copied the kernel code to be sure, and sure 
+> enough the bad block was in parity... just bad luck :)  so i can't force a 
+> read there any way that i know of...
 
-raid1 of 4 will give u read performance like 1 disk;
-raid10 of 4 can give u read performance like aggregated 2 disks.
+well, for raid5 you can use 'echo repair > /sys/block/mdx/md/sync_action'
 
+This does a 'simulated reconstruction' and has triggered this for me in
+the past. (For some reason 'check' instead of 'repair' did not, even
+though it should have tried to read all the blocks then, too...)
 
-> 
+That said, I have one disk in an 8-disk raid5 that says 'current pending
+sector 1', and another that says 'offline uncorrectable 1', and they
+have been doing so for months. Neither SMART extended tests or full
+raid5 resyncs have either failed or fixed this, so I don't know what's
+up with that...
 
+cheers,
+
+/Patrik
+
+--------------enig2206837C755018A486BA422D
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.2 (MingW32)
+Comment: Using GnuPG with Thunderbird - http://enigmail.mozdev.org
+
+iD8DBQFEPCqcT+KvsdUW5p8RAmcOAJ98q+2+rBfGTdeLXStlGnEOWx5vFQCfTHH4
+YCaM08yTMPeYor1XXTCcwyc=
+=53vY
+-----END PGP SIGNATURE-----
+
+--------------enig2206837C755018A486BA422D--
