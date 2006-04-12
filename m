@@ -1,46 +1,37 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: accessing mirrired lvm on shared storage
-Date: Wed, 12 Apr 2006 14:09:52 +1000
-Message-ID: <17468.32144.316047.478627@cse.unsw.edu.au>
-References: <44355BC9.4020608@mailing.kaufland-informationssysteme.com>
-	<20060407134636.2bce1917@mwdsp001>
+From: Luca Berra <bluca@comedia.it>
+Subject: Re: [RAID] forcing a read on a known bad block
+Date: Wed, 12 Apr 2006 07:18:03 +0200
+Message-ID: <20060412051803.GA19309@percy.comedia.it>
+References: <Pine.LNX.4.64.0604092000020.29514@twinlark.arctic.org> <Pine.LNX.4.64.0604111232010.6603@taurus.cesta.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Chris Osicki on Friday April 7
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.64.0604111232010.6603@taurus.cesta.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Chris Osicki <osk@admin.swisscom-mobile.ch>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Friday April 7, osk@admin.swisscom-mobile.ch wrote:
-> Unfortunately md lacks the ability to mark an array as
-> used/busy/you_name_it. Sometime ago I asked on this list for such an
-> enhancement (see thread with subject "Question: array locking,
-> possible"). Although I managed (with great help from few people on 
-> this list) to attract Neil's attention, I couldn't fine enough
-> arguments to convince him to put this topic on hist TO-DO list.
-> Neil, you see the constantly growing number of potential users of this
-> feature? ;-)
+On Tue, Apr 11, 2006 at 12:37:53PM -1000, Julian Cowley wrote:
+>On Tue, 11 Apr 2006, dean gaudet wrote:
+>>anyhow this made me wonder if there's some other existing trick to force
+>>such reads/reconstructions to occur... or perhaps this might be a useful
+>>future feature.
+>
+>For testing RAID, what would be really nice is if there were a virtual
+>disk device where one could simulate bad sectors (read or write),
+>non-responsive disks, etc.  It would be virtual in the same sort way
+>that /dev/full simulates a full disk.
+>
+either use the MD "faulty" personality, or the device-mapper "error"
+target.
 
-I don't think that just marking an array "don't mount" is really a
-useful solution.  And if it was, it would be something done in 'mdadm'
-rather than in 'md'.
+L.
 
-What you really want is cluster wide locking using DLM or similar.
-That way when the node which has active use of the array fails,
-another node can pick up automatically.
-Then we could put a flag in the superblock which says 'shared', and md
-would need a special request to assemble such an array.
-
-One thing that is on my todo list is supporting shared raid1, so that
-several nodes in the cluster can assemble the same raid1 and access it
-- providing that the clients all do proper mutual exclusion as
-e.g. OCFS does.
-
-Your desire to have only-assembled-once would be trivial to include in
-that.
-
-NeilBrown
-
+-- 
+Luca Berra -- bluca@comedia.it
+        Communication Media & Services S.r.l.
+ /"\
+ \ /     ASCII RIBBON CAMPAIGN
+  X        AGAINST HTML MAIL
+ / \
