@@ -1,56 +1,42 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: mdadm + raid1 of 2 disks and now need to add more
-Date: Wed, 12 Apr 2006 18:16:06 +1000
-Message-ID: <17468.46918.372777.583831@cse.unsw.edu.au>
-References: <e3edb0fa0604110741h355f4eft3f3d42a825cb4233@mail.gmail.com>
-	<e3edb0fa0604120018y3e305d05td532034e546ab816@mail.gmail.com>
+Subject: Re: mdadm does not want to create partitions
+Date: Wed, 12 Apr 2006 18:30:46 +1000
+Message-ID: <17468.47798.66618.134174@cse.unsw.edu.au>
+References: <200604112310.19991.casus@casus.us>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Shai on Wednesday April 12
+In-Reply-To: message from Anton Petrusevich on Tuesday April 11
 Sender: linux-raid-owner@vger.kernel.org
-To: Shai <shaibn@gmail.com>
+To: Anton Petrusevich <casus@casus.us>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wednesday April 12, shaibn@gmail.com wrote:
-> I now have the md0 raid1 with 2 disks and 1 spare:
->        0      22       65        0      active sync   /dev/hdd1
->        1      22       66        1      active sync   /dev/hdd2
+On Tuesday April 11, casus@casus.us wrote:
+> but, I have:
 > 
->        2      22       67        2      spare   /dev/hdd3
+> # mdadm -A /dev/md1 --auto=part8
+> mdadm: that --auto option not compatable with device named /dev/md1
 > 
-> # /usr/local/sbin/mdadm -G -n 3 /dev/md0
-> mdadm: Cannot set raid-devices for /dev/md0: File exists
-> 
-> i'm using kernel 2.4.26
 
-You'll need a 2.6 kernel for that, I don't remember which one is the
-minimum.
+"/dev/md1" is traditionally a name for a non-partitioned md, and using
+it for a partioned might cause confusion..
 
-If you are stuck with 2.4, you need to recreate the array:
- mdadm -S /dev/md0
- mdadm -C /dev/md0 -l1 -n3 --assume-clean /dev/hdd1 /dev/hdd2 missing
- mdadm /dev/md0 -a /dev/hdd3
+Use "/dev/md/d0" (preferred) or "/dev/mda"  or even
+ /dev/my-big-storage
 
-(is that really 3 partitions on the one device?  Just for testing,
-right?
+and mdadm won't complain.
 
 NeilBrown
 
-> 
-> # /usr/local/sbin/mdadm -V
-> mdadm - v2.4.1 -  4 April 2006
-> 
-> On 4/11/06, Shai <shaibn@gmail.com> wrote:
-> > Hi,
-> >
-> > I have two SCSI disks on raid1.
-> > Since I have lots of reads from that raid, I want to add two more
-> > disks to this raid so that read will be faster.
-> >
-> > How should I add the new disks?
+
+> It can be assembled only as non-partitioned, --auto=part or mdp do not work 
+> also. I need my partitions back, but I don't understand what I can do. The 
+> kernel is from RHEL-4 2.6.9-22.EL.roothugemem (custom build for RedHat 9). It 
+> was working before the power failure. 
+> -- 
+> Anton Petrusevich
 > -
 > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
 > the body of a message to majordomo@vger.kernel.org
