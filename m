@@ -1,43 +1,32 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: mdadm does not want to create partitions
-Date: Wed, 12 Apr 2006 18:30:46 +1000
-Message-ID: <17468.47798.66618.134174@cse.unsw.edu.au>
-References: <200604112310.19991.casus@casus.us>
+Subject: Re: failed to RUN_ARRAY, input/output error
+Date: Wed, 12 Apr 2006 18:33:37 +1000
+Message-ID: <17468.47969.652243.826774@cse.unsw.edu.au>
+References: <54490.84.236.149.243.1144790548.squirrel@www.navtek.no>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Anton Petrusevich on Tuesday April 11
+In-Reply-To: message from johnny@navtek.no on Tuesday April 11
 Sender: linux-raid-owner@vger.kernel.org
-To: Anton Petrusevich <casus@casus.us>
+To: johnny@navtek.no
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday April 11, casus@casus.us wrote:
-> but, I have:
-> 
-> # mdadm -A /dev/md1 --auto=part8
-> mdadm: that --auto option not compatable with device named /dev/md1
-> 
+On Tuesday April 11, johnny@navtek.no wrote:
+> State: active
 
-"/dev/md1" is traditionally a name for a non-partitioned md, and using
-it for a partioned might cause confusion..
+> Number Major Minor RaidDevice State
+> 0 3  2 0 active sync /dev/hda2
+> 1 22 2 1 active sync /dev/hdc2
+> 2 0  0 2 faulty removed
+> 3 34 1 3 active sync /dev/hdg1
 
-Use "/dev/md/d0" (preferred) or "/dev/mda"  or even
- /dev/my-big-storage
+active and degraded is a bad combination.  There is a small
+possibility of undetectable data corruption.
+I wonder why the system froze - that would contribute to the 'active'.
 
-and mdadm won't complain.
+Add a '--force' to the '--assemble' and it will start the array for
+you.
 
 NeilBrown
-
-
-> It can be assembled only as non-partitioned, --auto=part or mdp do not work 
-> also. I need my partitions back, but I don't understand what I can do. The 
-> kernel is from RHEL-4 2.6.9-22.EL.roothugemem (custom build for RedHat 9). It 
-> was working before the power failure. 
-> -- 
-> Anton Petrusevich
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
