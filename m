@@ -1,60 +1,92 @@
-From: Alex Tomas <alex@clusterfs.com>
-Subject: Re: linear writes to raid5
-Date: Wed, 12 Apr 2006 20:01:22 +0400
-Message-ID: <m3d5fmrdf1.fsf@bzzz.home.net>
-References: <m37j60udi8.fsf@bzzz.home.net>
-	<17465.43983.345817.253532@cse.unsw.edu.au>
-	<m3y7ybrffe.fsf@bzzz.home.net>
-	<17468.18087.901186.523228@cse.unsw.edu.au>
-	<m3hd4yrdx3.fsf@bzzz.home.net>
+From: Chris Osicki <osk@admin.swisscom-mobile.ch>
+Subject: Re: accessing mirrired lvm on shared storage
+Date: Wed, 12 Apr 2006 18:47:19 +0200
+Message-ID: <20060412184719.4e857070@mwdsp001>
+References: <44355BC9.4020608@mailing.kaufland-informationssysteme.com>
+	<20060407134636.2bce1917@mwdsp001>
+	<17468.32144.316047.478627@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <m3hd4yrdx3.fsf@bzzz.home.net> (Alex Tomas's message of "Wed,
- 12 Apr 2006 19:50:32 +0400")
+In-Reply-To: <17468.32144.316047.478627@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Alex Tomas <alex@clusterfs.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org, Neil Brown <neilb@suse.de>
 List-Id: linux-raid.ids
 
->>>>> Alex Tomas (AT) writes:
+On Wed, 12 Apr 2006 14:09:52 +1000
+Neil Brown <neilb@suse.de> wrote:
 
- AT> I see. though my point is a bit different:
- AT> say, there is an application that's doing big linear writes in order
- AT> to achieve good throughput. on the other hand, most of modern storages
- AT> are very sensible to request size and tend to suck serving zillions
- AT> of small I/Os. raid5 breaks all incoming requests into small ones and
- AT> handles them separately. of couse, one might be lucky and after submiting
- AT> those small requests get merged to larger ones. but only due to luck,
- AT> I'm afraid. what I'm talking about is expressly code in raid5 that
- AT> would try to merge small requests in some obvious cases.
- AT> for example:
+> On Friday April 7, osk@admin.swisscom-mobile.ch wrote:
+> > Unfortunately md lacks the ability to mark an array as
+> > used/busy/you_name_it. Sometime ago I asked on this list for such an
+> > enhancement (see thread with subject "Question: array locking,
+> > possible"). Although I managed (with great help from few people on 
+> > this list) to attract Neil's attention, I couldn't fine enough
+> > arguments to convince him to put this topic on hist TO-DO list.
+> > Neil, you see the constantly growing number of potential users of this
+> > feature? ;-)
+> 
+> I don't think that just marking an array "don't mount" is really a
+> useful solution.  And if it was, it would be something done in 'mdadm'
+> rather than in 'md'.
 
+I don't think I understand this bit, sorry, but see below.
 
-sorry, forgot to include the example ...
+> 
+> What you really want is cluster wide locking using DLM or similar.
+> That way when the node which has active use of the array fails,
+> another node can pick up automatically.
 
-there is 3 disks raid5 with chunk=64K. one does 128K request.
+But I also want to prevent accidentally activation of the array on the
+stand-by node. That would mean make mdadm cluster or a lock manager
+aware, which we certainly don't want. 
+That's why I'm asking for a flag on the array which would be far less complex 
+solution than a Lock Manager.
 
-and in make_request() we do something like this:
+> Then we could put a flag in the superblock which says 'shared', and md
+> would need a special request to assemble such an array.
 
-    struct context {
-              struct bio *bios[FOR_EVERY_DISK];
-    };
+That would mean, if I get you right, "Attention, it could be used on
+another host, go and check or let me assemble it anyway if you know
+what you're doing". 
 
-    /* initialize context with empty bio's */
-    for (all internal stripes) {
-        sh = get_active_stripe();
-        add_stripe_bio(sh, bi, ...);
-        handle_stripe(sh, context);
-    }
-    /* submit all non-empty bio's from the context */
+I was thinking about a flag saying "locked" which would
+mean "array is assembled/used". 
+Look, if I have a cluster (active/stand-by) when starting it I assemble
+my array in exclusive mode by setting the "locked" flag. If I do a
+manual fail-over of my package/service using the array in question,
+when stopping the array the flag gets cleared. The node which takes
+over finds the array "unlocked", locks, assembles and uses it. Now the
+active node crashes without clearing the flag. It is now
+responsibility of the cluster software to force the assembly of the
+array on the node taking over.
+And nobody can accidentally/unwittingly assemble the array on stand-by
+node (without giving the option -I_know_what_I_am_doing ;-), 
+which currently is my main concern as I haven't experienced any
+crashes or malfunction of my clusters yet. Touching wood ....
 
+It is how ServiceGuard cluster software on HP-UX works except that
+disk mirroring and locking is done in LVM. Moreover LVM does know
+about SG Cluster and prevents you from doing certain operations
+depending on the current state of the cluster.
 
-and in handle_stripe(): instead of immediate calling
-generic_make_request() try to merge request to correspondend
-bio in the context.
+> 
+> One thing that is on my todo list is supporting shared raid1, so that
+> several nodes in the cluster can assemble the same raid1 and access it
+> - providing that the clients all do proper mutual exclusion as
+> e.g. OCFS does.
+> 
+> Your desire to have only-assembled-once would be trivial to include in
+> that.
 
-I understand there are few different limits to bio size,
-active stripes, etc. but what do you think about the idea in general?
+If this is what I described above, I hold my breath ;-)
 
-thanks, Alex
+> 
+> NeilBrown
+> 
+
+Thanks very much for your time.
+
+Regards,
+Chris
