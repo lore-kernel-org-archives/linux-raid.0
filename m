@@ -1,62 +1,42 @@
-From: linux@horizon.com
-Subject: How to verify RAID parity/mirroring?
-Date: 13 Apr 2006 01:43:06 -0400
-Message-ID: <20060413054306.10106.qmail@science.horizon.com>
+From: Erik Mouw <erik@harddisk-recovery.com>
+Subject: Re: Cheap Clustered FS
+Date: Thu, 13 Apr 2006 15:06:36 +0200
+Message-ID: <20060413130636.GE20839@harddisk-recovery.com>
+References: <589a24260604101424o4bbb193egcd21d639ec040322@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <589a24260604101424o4bbb193egcd21d639ec040322@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: linux@horizon.com
+To: Jon Miller <jonebird@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I'm looking forward to testing the new SATA NCQ support that the linux
-IDE developers have working, but of course that opens me to the risk of
-disk corruption.
+On Mon, Apr 10, 2006 at 05:24:34PM -0400, Jon Miller wrote:
+> I have two machines which have redundant paths to the same shared scsi
+> disk. I've had no problem creating the multipath'ed device md0 to
+> handle my redundant pathing. But now I'd like to use a simple FS, such
+> as ext3, mounted rw on the first machine and ro on the second machine.
+> The idea is that the second machine, mounting the FS ro, would be able
+> to read any new data being written in the FS.
+> Everything has been rather easy to setup, but anything being created
+> on the FS is not seen on the other machine with the FS mounted ro.
+> That is, I can create a file on the first machine and I never see that
+> file from the second machine until I remount the FS.
+> At this point, I am actually trying to avoid GFS, OCFS, veritas
+> clustered FS options as well as NFS. If there was a simple hack, that
+> I'm missing, to enable the updates to the FS to be seen in realtime,
+> then I'd actually prefer that method.
+> Any help would be appreciated.
 
-So I'd like to be able to do clever things with the existing RAID arrays 
-to mitigate the damage.
-
-I have a lot of useful-but-not-essential data (old backups) on a RAID 5
-partition.  I'm willing to risk the data but I'd rather not delete it
-preemptively.  I also don't want silent corruption.
-
-What I'd like to be able to do is, after a few experiments, verify the
-RAID 5 parity to see if I've scrogged things.  Is there some option to
-mdadm to do that?  I could just md5sum the component partitions, but it
-would be useful information to also know *where* the damage occurred.
-Relative to the LBA28 limit, for example.
-
-And similarly for RAID-1 mirrors.  I have the most essential data
-(vmlinuz and a basic test mode installation) on a 6-way RAID-1, so if
-something doesn't match, it's easy enough to find a valid copy.  But I
-need to notice that things aren't right.
-
-
-The other thing I'd like to do is to be able to reintegrate a mirrored
-pair (particularly RAID-10) in the "wrong" direction.  That is:
-- I split the mirror and literally unplug half so it can't get
-  corrupted.
-- I boot with a test kernel and run my tests.  Oops!  It scribbled on
-  the disk.
-- I want to reboot with a known-good kernel and regenerate the mirrors
-  from the old, good data.
-
-One thing I could do is remove the experimental partitions from the mirror
-set and generate a fresh RAID-0 md to experiment on.  Then I can mount
-the old md without fear of it getting overwritten.  But if I forget,
-is there something I can do before plugging in the old, good drives that
-will ensure that the kernel doesn't copy the new, corrupted data on top
-of the old, good data as soon as I reboot?
-
-Will removing the corrupted drives, booting from the old drives, and then
-hot-adding the corrupted drives force a copy in the right direction?
-Or will the RAID system get confused about generation numbers?
-
-Is there some way to force the generation number of a partition to a
-very low number so it will be the one chosen for overwrite on reboot?
+I'm affraid the only way out is indeed GFS or OCFS. Those filesystems
+are specifically designed to be mounted by several hosts and (should)
+have caching and locking issues covered.
 
 
-I didn't find anything in the mdadm 2.4.1 man page, but I have a faint
-memory of such verification options being discussed.  Did it appear in
-a more obscure place?
+Erik
 
-Thank you for any suggestions.
+-- 
++-- Erik Mouw -- www.harddisk-recovery.com -- +31 70 370 12 90 --
+| Lab address: Delftechpark 26, 2628 XH, Delft, The Netherlands
