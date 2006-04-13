@@ -1,56 +1,132 @@
-From: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
-Subject: Re: Cheap Clustered FS
-Date: Thu, 13 Apr 2006 16:20:47 +0300
-Message-ID: <5d96567b0604130620k1cd96714mf2f7d8e0b1d305a9@mail.gmail.com>
-References: <589a24260604101424o4bbb193egcd21d639ec040322@mail.gmail.com>
-	 <20060413130636.GE20839@harddisk-recovery.com>
+From: =?ISO-8859-15?Q?Martin_M=FCller_-_Rudolf_Hausstein_OHG?=
+	<m.mueller@hausstein.at>
+Subject: Softraid wont be restarting
+Date: Thu, 13 Apr 2006 15:49:51 +0200
+Message-ID: <443E56FF.4040805@hausstein.at>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20060413130636.GE20839@harddisk-recovery.com>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Erik Mouw <erik@harddisk-recovery.com>
-Cc: Jon Miller <jonebird@gmail.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-may be lustre
+Hi!
 
-On 4/13/06, Erik Mouw <erik@harddisk-recovery.com> wrote:
-> On Mon, Apr 10, 2006 at 05:24:34PM -0400, Jon Miller wrote:
-> > I have two machines which have redundant paths to the same shared scsi
-> > disk. I've had no problem creating the multipath'ed device md0 to
-> > handle my redundant pathing. But now I'd like to use a simple FS, such
-> > as ext3, mounted rw on the first machine and ro on the second machine.
-> > The idea is that the second machine, mounting the FS ro, would be able
-> > to read any new data being written in the FS.
-> > Everything has been rather easy to setup, but anything being created
-> > on the FS is not seen on the other machine with the FS mounted ro.
-> > That is, I can create a file on the first machine and I never see that
-> > file from the second machine until I remount the FS.
-> > At this point, I am actually trying to avoid GFS, OCFS, veritas
-> > clustered FS options as well as NFS. If there was a simple hack, that
-> > I'm missing, to enable the updates to the FS to be seen in realtime,
-> > then I'd actually prefer that method.
-> > Any help would be appreciated.
->
-> I'm affraid the only way out is indeed GFS or OCFS. Those filesystems
-> are specifically designed to be mounted by several hosts and (should)
-> have caching and locking issues covered.
->
->
-> Erik
->
-> --
-> +-- Erik Mouw -- www.harddisk-recovery.com -- +31 70 370 12 90 --
-> | Lab address: Delftechpark 26, 2628 XH, Delft, The Netherlands
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+Since two weeks im trying to remount a Sofraid (Level1) which I created 
+with
+
+mdadm -Cv /dev/md3 -l1 -2 /dev/sdc1 /dev/sdd1
 
 
---
-Raz
+When I boot the system, debian (3.1, kernel 2.6.16.1) tells me, that the 
+reiserfs on the raid has a bad superblock.
+
+
+When I recrate the raid and check it by mdadm I get the following 
+different messeges:
+
+bash:~# mdadm -Q /dev/md3
+/dev/md3: 186.31GiB raid1 2 devices, 0 spares. Use mdadm --detail for 
+more detail.
+/dev/md3: No md super block found, not an md component.
+
+
+bash:~# mdadm --detail /dev/md3
+/dev/md3:
+Version : 00.90.03
+Creation Time : Wed Apr 12 15:49:28 2006
+Raid Level : raid1
+Array Size : 195358336 (186.31 GiB 200.05 GB)
+Device Size : 195358336 (186.31 GiB 200.05 GB)
+Raid Devices : 2
+Total Devices : 2
+Preferred Minor : 3
+Persistence : Superblock is persistent
+
+Update Time : Wed Apr 12 15:49:46 2006
+State : active, resyncing
+Active Devices : 2
+Working Devices : 2
+Failed Devices : 0
+Spare Devices : 0
+
+Rebuild Status : 4% complete
+
+UUID : 2cb624fd:38e44c54:716ab7c2:c6c0e8c3
+Events : 0.2
+
+Number Major Minor RaidDevice State
+0 8 33 0 active sync /dev/sdc1
+1 8 49 1 active sync /dev/sdd1
+
+----------
+
+
+I?m having other softraids, wich are created by the installationsroutine 
+of sarge. These raids are working properly.
+My /etc/mdadm/mdadm.cong looks like this:
+
+DEVICE partitions
+ARRAY /dev/md2 level=raid1 num-devices=1 spares=1 
+UUID=fd3f5565:700efa41:9c649802:f9165970
+devices=/dev/sda4,/dev/sdb4
+ARRAY /dev/md1 level=raid1 num-devices=1 spares=1 
+UUID=ce956e77:bb6dfc5c:052c5d48:90ccc5a5
+devices=/dev/sda3,/dev/sdb3
+ARRAY /dev/md0 level=raid1 num-devices=1 spares=1 
+UUID=5f5bc322:fe00157d:7f574758:88afc009
+devices=/dev/sda2,/dev/sdb2
+
+ARRAY /dev/md3 level=raid1 num-devices=1 spares=1
+devices=/dev/sdc1,/dev/sdd1
+
+
+A part of the bootlog in /var/log/messages :
+
+Apr 12 15:36:39 localhost kernel: ReiserFS: md3: warning: sh-2006: 
+read_super_block: bread failed (dev md3, block 2, size 4096)
+
+Apr 12 15:36:39 localhost kernel: ReiserFS: md3: warning: sh-2006: 
+read_super_block: bread failed (dev md3, block 16, size 4096)
+
+Apr 12 15:36:39 localhost kernel: ReiserFS: md3: warning: sh-2021: 
+reiserfs_fill_super: can not find reiserfs on md3
+
+
+I have surely created a reiserfs on the raid, and I have waited till the 
+sync is done before I restarted the machine.
+
+
+Details of fdisk:
+
+fdisk /dev/sdc
+
+p
+
+Disk /dev/sdc: 200.0 GB, 200049647616 bytes
+255 heads, 63 sectors/track, 24321 cylinders
+Units = cylinders of 16065 * 512 = 8225280 bytes
+
+Device Boot Start End Blocks Id System
+/dev/sdc1 1 24321 195358401 fd Linux raid autodetect
+
+
+fdisk /dev/sdd
+p
+
+Disk /dev/sdd: 200.0 GB, 200049647616 bytes
+255 heads, 63 sectors/track, 24321 cylinders
+Units = cylinders of 16065 * 512 = 8225280 bytes
+
+Device Boot Start End Blocks Id System
+/dev/sdd1 1 24321 195358401 fd Linux raid autodetect
+
+
+
+--- Can anyone help me with this? On the raid, there are no necessary data.
+What have to do, to mount the raid during startup.
+
+
+THX, Martin
+
