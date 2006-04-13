@@ -1,51 +1,62 @@
-From: Forrest Taylor <ftaylor@redhat.com>
-Subject: Re: LVM tutorial for RAID-5 Array Setup?
-Date: Wed, 12 Apr 2006 12:09:49 -0600
-Message-ID: <1144865389.3600.2.camel@x1-6-00-0d-60-fd-e8-4c>
-References: <6d5bedd80604121037k699223a8p28b6db566994216@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-r9tZh68Pxto89nT7woxV"
+From: linux@horizon.com
+Subject: How to verify RAID parity/mirroring?
+Date: 13 Apr 2006 01:43:06 -0400
+Message-ID: <20060413054306.10106.qmail@science.horizon.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <6d5bedd80604121037k699223a8p28b6db566994216@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Ewan Grantham <ewan.grantham@gmail.com>
-Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
+Cc: linux@horizon.com
 List-Id: linux-raid.ids
 
+I'm looking forward to testing the new SATA NCQ support that the linux
+IDE developers have working, but of course that opens me to the risk of
+disk corruption.
 
---=-r9tZh68Pxto89nT7woxV
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+So I'd like to be able to do clever things with the existing RAID arrays 
+to mitigate the damage.
 
-On Wed, 2006-04-12 at 12:37 -0500, Ewan Grantham wrote:
-> Am getting ready to setup a new machine with Kubuntu (Dapper Drake
-> Flight 6 to be specific), and am thinking that I might want to use LVM
-> this time to setup my RAID array of disks (Six external USB-2 300 Gig
-> HDs to be specific).
->=20
-> Is LVM going to make my life easier or more difficult? Any good
-> tutorial y'all can recommend?
+I have a lot of useful-but-not-essential data (old backups) on a RAID 5
+partition.  I'm willing to risk the data but I'd rather not delete it
+preemptively.  I also don't want silent corruption.
 
-Doesn't the installer allow LVM on top of RAID?  If so, that is the
-simplest approach.  There are even GUI apps that let you create/resize
-logical volumes and their filesystems, so it is quite simple.
+What I'd like to be able to do is, after a few experiments, verify the
+RAID 5 parity to see if I've scrogged things.  Is there some option to
+mdadm to do that?  I could just md5sum the component partitions, but it
+would be useful information to also know *where* the damage occurred.
+Relative to the LBA28 limit, for example.
 
-I have found LVM to be very useful--shrinking or expanding partitions
-can come in handy when you are running low on disk space.
+And similarly for RAID-1 mirrors.  I have the most essential data
+(vmlinuz and a basic test mode installation) on a 6-way RAID-1, so if
+something doesn't match, it's easy enough to find a valid copy.  But I
+need to notice that things aren't right.
 
-Forrest
 
---=-r9tZh68Pxto89nT7woxV
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+The other thing I'd like to do is to be able to reintegrate a mirrored
+pair (particularly RAID-10) in the "wrong" direction.  That is:
+- I split the mirror and literally unplug half so it can't get
+  corrupted.
+- I boot with a test kernel and run my tests.  Oops!  It scribbled on
+  the disk.
+- I want to reboot with a known-good kernel and regenerate the mirrors
+  from the old, good data.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.6 (GNU/Linux)
+One thing I could do is remove the experimental partitions from the mirror
+set and generate a fresh RAID-0 md to experiment on.  Then I can mount
+the old md without fear of it getting overwritten.  But if I forget,
+is there something I can do before plugging in the old, good drives that
+will ensure that the kernel doesn't copy the new, corrupted data on top
+of the old, good data as soon as I reboot?
 
-iD8DBQBEPUJtaUnzBifbsNQRAiETAJ9O1MAjPXNIYLLC+urFgDX246btKwCaAuHc
-tSIFCjZQxUgJ3ciF+opmIyA=
-=mISQ
------END PGP SIGNATURE-----
+Will removing the corrupted drives, booting from the old drives, and then
+hot-adding the corrupted drives force a copy in the right direction?
+Or will the RAID system get confused about generation numbers?
 
---=-r9tZh68Pxto89nT7woxV--
+Is there some way to force the generation number of a partition to a
+very low number so it will be the one chosen for overwrite on reboot?
 
+
+I didn't find anything in the mdadm 2.4.1 man page, but I have a faint
+memory of such verification options being discussed.  Did it appear in
+a more obscure place?
+
+Thank you for any suggestions.
