@@ -1,46 +1,35 @@
 From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: Softraid controllers and Linux
-Date: Sun, 16 Apr 2006 13:58:18 -0400
-Message-ID: <444285BA.6030009@tmr.com>
-References: <541048249.20060403093652@2ka.mipt.ru>
+Subject: Re: RHEL3 kernel panic with md
+Date: Sun, 16 Apr 2006 14:05:46 -0400
+Message-ID: <4442877A.5090608@tmr.com>
+References: <bbfa52890604071447t2e791afai781522f9f204485d@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <541048249.20060403093652@2ka.mipt.ru>
+In-Reply-To: <bbfa52890604071447t2e791afai781522f9f204485d@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jim Klimov <klimov@2ka.mipt.ru>
+To: Colin McDonald <ce.mcdonald@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Jim Klimov wrote:
+Colin McDonald wrote:
 
->Hello linux-raid,
+>I appear to have a corrupt file system and now it is mirrored. LOL.
 >
->  I have tried several cheap RAID controllers recently (namely,
->  VIA VT6421, Intel 6300ESB and Adaptec/Marvell 885X6081).
->  
->  VIA one is a PCI card, the second two are built in a Supermicro
->  motherboard (E7520/X6DHT-G).
+>I am running Redhat Enterprise 3 and using mdtools.
 >
->  The intent was to let the BIOS of the controllers make a RAID1
->  mirror of two disks independently of an OS to make redundant
->  multi-OS booting transparent. While DOS and Windows saw their
->  mirrors as a singular block device, Linux (FC5) accessed the
->  two drives separately on all adapters.
+>I booted from the install media iso and went into rescue mode. RH was
+>unable to find the partitions automatically but after exiting into
+>bash i can run fdisk -l and i see all of the partitions.
 >
->  Is this a bug or a feature of the kernel driver support? (I did
->  not try vendors' binary drivers, if there are any).
+>I know this is sparse info but would any of the group be able to give
+>the best approach to getting them  mounted and fsck'd?
 >
->  
->
-If I understand how Linux uses the drives, you have to make them raid 
-manually. However, the nice thing about BIOS RAID is that it will boot 
-the system if the first boot drive fails. If the drive fails hard the 
-BIOS will go to the first functional drive and boot. But if you get a 
-CRC error, some BIOS will try another and some will just fail.
 
-Vendor dependent.
+I'm happy to say I haven't tried this, but I would think that you can 
+start the raid array manually and then run fsck (also manually). I would 
+worry about why the rescue mode didn't find your data, though.
 
 -- 
 bill davidsen <davidsen@tmr.com>
