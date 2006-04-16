@@ -1,62 +1,45 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: RAID5 recovery trouble, bd_claim failed?
-Date: Mon, 17 Apr 2006 08:46:03 +1000
-Message-ID: <17474.51499.479497.322081@cse.unsw.edu.au>
-References: <1145106091.18173.18.camel@nemo.qabal.org>
+Subject: Re: accessing mirrired lvm on shared storage
+Date: Mon, 17 Apr 2006 08:53:49 +1000
+Message-ID: <17474.51965.988298.906463@cse.unsw.edu.au>
+References: <44355BC9.4020608@mailing.kaufland-informationssysteme.com>
+	<20060407134636.2bce1917@mwdsp001>
+	<17468.32144.316047.478627@cse.unsw.edu.au>
+	<170fa0d20604130757s22407500ude1bcc16d499273@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Nathanial Byrnes on Saturday April 15
+In-Reply-To: message from Mike Snitzer on Thursday April 13
 Sender: linux-raid-owner@vger.kernel.org
-To: Nathanial Byrnes <nate@qabal.org>
-Cc: linux-raid@vger.kernel.org
+To: Mike Snitzer <snitzer@gmail.com>
+Cc: Chris Osicki <osk@admin.swisscom-mobile.ch>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Saturday April 15, nate@qabal.org wrote:
-> Hi All,
-> 	Recently I lost a disk in my raid5 SW array. It seems that it took a
-> second disk with it. The other disk appears to still be funtional (from
-> an fdisk perspective...). I am trying to get the array to work in
-> degraded mode via failed-disk in raidtab, but am always getting the
-> following error:
+On Thursday April 13, snitzer@gmail.com wrote:
+> On 4/12/06, Neil Brown <neilb@suse.de> wrote:
 > 
-> md: could not bd_claim hde.
-> md: autostart failed!
+> > One thing that is on my todo list is supporting shared raid1, so that
+> > several nodes in the cluster can assemble the same raid1 and access it
+> > - providing that the clients all do proper mutual exclusion as
+> > e.g. OCFS does.
 > 
-> When I try to raidstart the array. Is it the case tha I had been running
-> in degraded mode before the disk failure, and then lost the other disk?
-> if so, how can I tell. 
+> Very cool... that would be extremely nice to have.  Any estimate on
+> when you might get to this?
+> 
 
-raidstart is deprecated.  It doesn't work reliably.  Don't use it.
+I'm working on it, but there are lots of distractions....
 
-> 
-> I have been messing about with mkraid -R and I have tried to
-> add /dev/hdf (a new disk) back to the array. However, I am fairly
-> confident that I have not kicked off the recovery process, so I am
-> imagining that once I get the superblocks in order, I should be able to
-> recover to the new disk?
-> 
-> My system and raid config are:
-> Kernel 2.6.13.1
-> Slack 10.2
-> RAID 5 which originally looked like:
-> /dev/hde
-> /dev/hdg
-> /dev/hdi
-> /dev/hdk
-> 
-> but when I moved the disks to another box with fewer IDE controllers
-> /dev/hde
-> /dev/hdf
-> /dev/hdg
-> /dev/hdh
-> 
-> How should I approach this?
+The first step is getting support into the kernel for various
+operations like suspending and resuming IO and resync.
+That is progressing nicely.
 
-mdadm --assemble /dev/md0 --uuid=38081921:59a998f9:64c1a001:ec534ef2 /dev/hd*
-
-If that doesn't work, add "--force" but be cautious of the data - do
-an fsck atleast.
+The next step is writing a user-space app which co-ordinates
+everything.  e.g. makes sure device-failed and device-added events
+happen everywhere before they are acknowledged anywhere and stuff like
+that.  I don't know how that will progress.
+I hope to have something to demonstrate early in the second half of
+the year.
 
 NeilBrown
+
