@@ -1,68 +1,69 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: Softraid wont be restarting
-Date: Mon, 17 Apr 2006 08:59:46 +1000
-Message-ID: <17474.52322.160740.814031@cse.unsw.edu.au>
-References: <443E56FF.4040805@hausstein.at>
+Subject: Re: How to verify RAID parity/mirroring?
+Date: Mon, 17 Apr 2006 09:03:40 +1000
+Message-ID: <17474.52556.536514.754498@cse.unsw.edu.au>
+References: <20060413054306.10106.qmail@science.horizon.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Martin  =?ISO-8859-1?Q?=20M=FCller?= - Rudolf Hausstein OHG on Thursday April 13
+In-Reply-To: message from linux@horizon.com on  April 13
 Sender: linux-raid-owner@vger.kernel.org
-To: =?ISO-8859-15?Q?Martin_M=FCller_-_Rudolf_Hausstein_OHG?= <m.mueller@hausstein.at>
+To: linux@horizon.com
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thursday April 13, m.mueller@hausstein.at wrote:
-> Hi!
+On  April 13, linux@horizon.com wrote:
+> I'm looking forward to testing the new SATA NCQ support that the linux
+> IDE developers have working, but of course that opens me to the risk of
+> disk corruption.
 > 
-> Since two weeks im trying to remount a Sofraid (Level1) which I created 
-> with
+> So I'd like to be able to do clever things with the existing RAID arrays 
+> to mitigate the damage.
 > 
-> mdadm -Cv /dev/md3 -l1 -2 /dev/sdc1 /dev/sdd1
+> I have a lot of useful-but-not-essential data (old backups) on a RAID 5
+> partition.  I'm willing to risk the data but I'd rather not delete it
+> preemptively.  I also don't want silent corruption.
 > 
-....
-> ----------
-> 
-> 
-> I?m having other softraids, wich are created by the installationsroutine 
-> of sarge. These raids are working properly.
-> My /etc/mdadm/mdadm.cong looks like this:
-> 
-> DEVICE partitions
-> ARRAY /dev/md2 level=raid1 num-devices=1 spares=1 
-> UUID=fd3f5565:700efa41:9c649802:f9165970
-> devices=/dev/sda4,/dev/sdb4
-> ARRAY /dev/md1 level=raid1 num-devices=1 spares=1 
-> UUID=ce956e77:bb6dfc5c:052c5d48:90ccc5a5
-> devices=/dev/sda3,/dev/sdb3
-> ARRAY /dev/md0 level=raid1 num-devices=1 spares=1 
-> UUID=5f5bc322:fe00157d:7f574758:88afc009
-> devices=/dev/sda2,/dev/sdb2
-> 
-> ARRAY /dev/md3 level=raid1 num-devices=1 spares=1
-> devices=/dev/sdc1,/dev/sdd1
-> 
+> What I'd like to be able to do is, after a few experiments, verify the
+> RAID 5 parity to see if I've scrogged things.  Is there some option to
+> mdadm to do that?  I could just md5sum the component partitions, but it
+> would be useful information to also know *where* the damage occurred.
+> Relative to the LBA28 limit, for example.
 
-I suggest getting rid of the "devices=" bits.  You don't want or need
-them.
+Try
+  echo check > /sys/block/mdX/md/sync_action
+
+It doesn't tell to where it finds errors (though maybe it could).  It
+will report a count of errors in
+   /sys/block/mdX/md/mismatch_cnt
 
 
 > 
-> A part of the bootlog in /var/log/messages :
+> And similarly for RAID-1 mirrors.  I have the most essential data
+> (vmlinuz and a basic test mode installation) on a 6-way RAID-1, so if
+> something doesn't match, it's easy enough to find a valid copy.  But I
+> need to notice that things aren't right.
 > 
-> Apr 12 15:36:39 localhost kernel: ReiserFS: md3: warning: sh-2006: 
-> read_super_block: bread failed (dev md3, block 2, size 4096)
+> 
+> The other thing I'd like to do is to be able to reintegrate a mirrored
+> pair (particularly RAID-10) in the "wrong" direction.  That is:
+> - I split the mirror and literally unplug half so it can't get
+>   corrupted.
+> - I boot with a test kernel and run my tests.  Oops!  It scribbled on
+>   the disk.
+> - I want to reboot with a known-good kernel and regenerate the mirrors
+>   from the old, good data.
+> 
+> One thing I could do is remove the experimental partitions from the mirror
+> set and generate a fresh RAID-0 md to experiment on.  Then I can mount
+> the old md without fear of it getting overwritten.  But if I forget,
+> is there something I can do before plugging in the old, good drives that
+> will ensure that the kernel doesn't copy the new, corrupted data on top
+> of the old, good data as soon as I reboot?
 
-'bread failed' suggests that the array isn't assembled.
-If you assemble the array after boot
-  mdadm -As /dev/md3
-can you then mount the filesystem:
-  mount /dev/md3 /wherever
-?
+ mdadm --zero-superblock /dev/experimental-device
 
-I suspect something is wrong with the initramfs that debian created
-for you - there have been a lot of complaints about that lately.
-
+Then the old/good data will be all that is found.
 
 NeilBrown
