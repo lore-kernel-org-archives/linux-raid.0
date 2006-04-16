@@ -1,38 +1,27 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: RHEL3 kernel panic with md
-Date: Sun, 16 Apr 2006 14:05:46 -0400
-Message-ID: <4442877A.5090608@tmr.com>
-References: <bbfa52890604071447t2e791afai781522f9f204485d@mail.gmail.com>
+From: "Molle Bestefich" <molle.bestefich@gmail.com>
+Subject: help wanted - 6-disk raid5 borked: _ _ U U U U
+Date: Sun, 16 Apr 2006 23:19:43 +0200
+Message-ID: <62b0912f0604161419udee8ff2tf0861bc2f6e8e304@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <bbfa52890604071447t2e791afai781522f9f204485d@mail.gmail.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Colin McDonald <ce.mcdonald@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Colin McDonald wrote:
+A system with 6 disks, it was UUUUUU a moment ago, after read errors
+on a file now looks like:
 
->I appear to have a corrupt file system and now it is mirrored. LOL.
->
->I am running Redhat Enterprise 3 and using mdtools.
->
->I booted from the install media iso and went into rescue mode. RH was
->unable to find the partitions automatically but after exiting into
->bash i can run fdisk -l and i see all of the partitions.
->
->I know this is sparse info but would any of the group be able to give
->the best approach to getting them  mounted and fsck'd?
->
+/proc/mdstat:
+  md1 : active raid5 sdf1[5] sde1[4] sdd1[3] sdc1[2] sdb1[6](F) sda1[7](F)
+      level 5, 64k chunk, algorithm 2 [6/4] [__UUUU]
 
-I'm happy to say I haven't tried this, but I would think that you can 
-start the raid array manually and then run fsck (also manually). I would 
-worry about why the rescue mode didn't find your data, though.
+uname:
+  linux 2.6.11-gentoo-r4
 
--- 
-bill davidsen <davidsen@tmr.com>
-  CTO TMR Associates, Inc
-  Doing interesting things with small computers since 1979
+What's the recommended approach?
 
+Compile 2.6.16.5 and mdadm 2.4.1, install both, reboot, then use mdadm
+assemble --force (after automatic mount probably fails)?
