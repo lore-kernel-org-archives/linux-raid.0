@@ -1,27 +1,36 @@
-From: carlos@fisica.ufpr.br (Carlos Carvalho)
-Subject: Re: help wanted - 6-disk raid5 borked: _ _ U U U U
-Date: Sun, 16 Apr 2006 20:46:52 -0300
-Message-ID: <17474.55148.614834.999648@fisica.ufpr.br>
-References: <62b0912f0604161419udee8ff2tf0861bc2f6e8e304@mail.gmail.com>
-	<17474.51121.178492.61143@cse.unsw.edu.au>
-	<62b0912f0604161617k31eedfaev8778b299e4a65b4b@mail.gmail.com>
-	<17474.54168.331725.412456@cse.unsw.edu.au>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: Questions about: Where to find algorithms for RAID5 / RAID6
+Date: Mon, 17 Apr 2006 09:47:49 +1000
+Message-ID: <17474.55205.159398.46695@cse.unsw.edu.au>
+References: <443B6DF3.2060500@harddata.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17474.54168.331725.412456@cse.unsw.edu.au>
+In-Reply-To: message from Maurice Hilarius on Tuesday April 11
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Maurice Hilarius <maurice@harddata.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Neil Brown (neilb@suse.de) wrote on 17 April 2006 09:30:
- >The easiest thing to do when you get an error on a drive is to kick
- >the drive from the array, so that is what the code always did, and
- >still does in many cases.
- >It is arguable that for a read error on a degraded raid5, that may not
- >be the best thing to do, but I'm not completely convinced.
+On Tuesday April 11, maurice@harddata.com wrote:
+> Good day.
+> 
+> I am looking for some information, and hope the readers of this list
+> might be able to point me in the right direction:
+> 
+> Here is the scenario:
+> In RAID5 ( or RAID6) when a file is written, some parity data is
+> created, (by some form of XOR process, I assume), then that parity data
+> is written to disk.
+> 
+> I am looking to find the algorithm that is used to create that parity
+> data and to decides where to place it on the disks.
+> 
+> Any help on this is deeply appreciated.
+> 
 
-I don't see how it could be different. If the array is degraded and
-one more disk fails there's no way to obtain the information, so the
-md device just fails like a single disk.
+wikipedia has some useful information, and definitely has a link to a
+paper that described raid6 on linux.
+
+NeilBrown
