@@ -1,36 +1,34 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: Questions about: Where to find algorithms for RAID5 / RAID6
-Date: Mon, 17 Apr 2006 09:47:49 +1000
-Message-ID: <17474.55205.159398.46695@cse.unsw.edu.au>
-References: <443B6DF3.2060500@harddata.com>
+Subject: Re: Raid 4 idea!
+Date: Mon, 17 Apr 2006 09:53:17 +1000
+Message-ID: <17474.55533.730535.21499@cse.unsw.edu.au>
+References: <005901c65ad7$ea45f6c0$2c00a8c0@dcccs>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Maurice Hilarius on Tuesday April 11
+In-Reply-To: message from JaniD++ on Saturday April 8
 Sender: linux-raid-owner@vger.kernel.org
-To: Maurice Hilarius <maurice@harddata.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: JaniD++ <djani22@dynamicweb.hu>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday April 11, maurice@harddata.com wrote:
-> Good day.
+On Saturday April 8, djani22@dynamicweb.hu wrote:
+> Hello, list,
 > 
-> I am looking for some information, and hope the readers of this list
-> might be able to point me in the right direction:
+> I have one idea!
 > 
-> Here is the scenario:
-> In RAID5 ( or RAID6) when a file is written, some parity data is
-> created, (by some form of XOR process, I assume), then that parity data
-> is written to disk.
+> I using raid4, and found to be really good, but i think this can be more
+> better! :-)
 > 
-> I am looking to find the algorithm that is used to create that parity
-> data and to decides where to place it on the disks.
-> 
-> Any help on this is deeply appreciated.
-> 
+> If the raid4 fails one disk (except the patiry disk), the md currently only
+> drop the disk from array, but i think this could be more useful, if the md
+> immediately starts to transform the parity disk into the place fo missing
+> disk!
 
-wikipedia has some useful information, and definitely has a link to a
-paper that described raid6 on linux.
+While this might sound easy to do, doing it in a way that is
+crash-proof makes it a lot more complicated.
+
+It may happen one day, but I'm afraid I don't see it as a priority.
 
 NeilBrown
