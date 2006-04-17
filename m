@@ -1,59 +1,91 @@
-From: "Mike Snitzer" <snitzer@gmail.com>
-Subject: Re: accessing mirrired lvm on shared storage
-Date: Mon, 17 Apr 2006 14:15:11 -0400
-Message-ID: <170fa0d20604171115v53347680r36a1792cbd98676e@mail.gmail.com>
-References: <44355BC9.4020608@mailing.kaufland-informationssysteme.com>
-	 <20060407134636.2bce1917@mwdsp001>
-	 <17468.32144.316047.478627@cse.unsw.edu.au>
-	 <170fa0d20604130757s22407500ude1bcc16d499273@mail.gmail.com>
-	 <17474.51965.988298.906463@cse.unsw.edu.au>
+From: Nate Byrnes <nate@qabal.org>
+Subject: Re: RAID5 recovery trouble, bd_claim failed?
+Date: Mon, 17 Apr 2006 15:29:34 -0400
+Message-ID: <4443EC9E.9010502@qabal.org>
+References: <1145106091.18173.18.camel@nemo.qabal.org>	<17474.51499.479497.322081@cse.unsw.edu.au>	<1145242458.18173.49.camel@nemo.qabal.org>	<17475.1455.344850.506978@cse.unsw.edu.au>	<1145268508.18173.61.camel@nemo.qabal.org> <17475.28176.159396.519547@cse.unsw.edu.au> <444386C6.2070201@qabal.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17474.51965.988298.906463@cse.unsw.edu.au>
-Content-Disposition: inline
+In-Reply-To: <444386C6.2070201@qabal.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 4/16/06, Neil Brown <neilb@suse.de> wrote:
-> On Thursday April 13, snitzer@gmail.com wrote:
-> > On 4/12/06, Neil Brown <neilb@suse.de> wrote:
-> >
-> > > One thing that is on my todo list is supporting shared raid1, so that
-> > > several nodes in the cluster can assemble the same raid1 and access it
-> > > - providing that the clients all do proper mutual exclusion as
-> > > e.g. OCFS does.
-> >
-> > Very cool... that would be extremely nice to have.  Any estimate on
-> > when you might get to this?
-> >
+Hi Neil, List,
+    Am I just out of luck? Perhaps a full reboot? Something else?
+    Thanks,
+    Nate
+
+Nate Byrnes wrote:
+> Hi Neil,
+>    Nothing references hdf as you can see below.  I have also rmmod'ed 
+> md and raid5 modules and modprobed them back in. Thoughts?
 >
-> I'm working on it, but there are lots of distractions....
+>    Thanks again,
+>    Nate
 >
-> The first step is getting support into the kernel for various
-> operations like suspending and resuming IO and resync.
-> That is progressing nicely.
-
-Sounds good... will it be possible to suspend/resume IO to only
-specific members of the raid1 (aka partial IO/resync suspend/resume)? 
-If not I have a tangential raid1 suspend/resume question: is there a
-better/cleaner way to suspend and resume a raid1 mirror than removing
-and re-adding a member?
-
-That is you:
-1) establish a 2 disk raid1
-2) suspend the mirror but allow degraded changes to occur  (remove member?)
-3) after a user specified interval resume the mirror to resync (re-add member?)
-4) goto 2
-
-Using the write-intent bitmap the resync should be relatively cheap. 
-However, would it be better to just use mdadm to tag a member as
-write-mostly and enable write-behind on the raid1?  BUT is there a way
-to set the write-behind to 0 to force a resync at a certain time (it
-would appear write-behind is a create-time feature)?
-
-thanks,
-mike
+> root@finn:~# cat /proc/swaps
+> Filename                                Type            Size    
+> Used    Priority
+> /dev/sdb2                               partition       1050616 
+> 1028    -1
+>
+> root@finn:~# cat /proc/mounts
+> rootfs / rootfs rw 0 0
+> /dev/root / ext3 rw 0 0
+> proc /proc proc rw,nodiratime 0 0
+> sysfs /sys sysfs rw 0 0
+> none /dev ramfs rw 0 0
+> /dev/sdb1 /usr ext3 rw 0 0
+> devpts /dev/pts devpts rw 0 0
+> nfsd /proc/fs/nfsd nfsd rw 0 0
+> usbfs /proc/bus/usb usbfs rw 0 0
+>
+> root@finn:~# cat /proc/mdstat
+> Personalities : [raid5]
+> md0 : inactive hdh[2] hdg[3] hde[1]
+>      234451968 blocks
+>
+> unused devices: <none>
+>
+>
+> Neil Brown wrote:
+>> On Monday April 17, nate@qabal.org wrote:
+>>  
+>>>> What is /dev/hdf busy? Is it in use? mounted? something?
+>>>>
+>>>>       
+>>> Not that I am aware of. Here is the mount output:
+>>>
+>>> root@finn:/etc# mount
+>>> /dev/sda1 on / type ext3 (rw)
+>>> proc on /proc type proc (rw)
+>>> sysfs on /sys type sysfs (rw)
+>>> /dev/sdb1 on /usr type ext3 (rw)
+>>> devpts on /dev/pts type devpts (rw,gid=5,mode=620)
+>>> nfsd on /proc/fs/nfsd type nfsd (rw)
+>>> usbfs on /proc/bus/usb type usbfs (rw)
+>>>
+>>> lsof | grep hdf does not return any results.
+>>>
+>>> is there some other way to find out?
+>>>     
+>>
+>>  cat /proc/swaps
+>>  cat /proc/mounts
+>>  cat /proc/mdstat
+>>
+>> as well as 'lsof' should find it.
+>>
+>> -
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+>>
+>>
+>>   
+>
+> !DSPAM:444386c978211215816793!
+>
