@@ -1,34 +1,45 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: Raid 4 idea!
-Date: Mon, 17 Apr 2006 09:53:17 +1000
-Message-ID: <17474.55533.730535.21499@cse.unsw.edu.au>
-References: <005901c65ad7$ea45f6c0$2c00a8c0@dcccs>
+From: "Molle Bestefich" <molle.bestefich@gmail.com>
+Subject: Re: help wanted - 6-disk raid5 borked: _ _ U U U U
+Date: Mon, 17 Apr 2006 02:21:21 +0200
+Message-ID: <62b0912f0604161721xc30e6abn27c55dcd9caefd2@mail.gmail.com>
+References: <62b0912f0604161419udee8ff2tf0861bc2f6e8e304@mail.gmail.com>
+	 <17474.51121.178492.61143@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from JaniD++ on Saturday April 8
+In-Reply-To: <17474.51121.178492.61143@cse.unsw.edu.au>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: JaniD++ <djani22@dynamicweb.hu>
+To: Neil Brown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Saturday April 8, djani22@dynamicweb.hu wrote:
-> Hello, list,
-> 
-> I have one idea!
-> 
-> I using raid4, and found to be really good, but i think this can be more
-> better! :-)
-> 
-> If the raid4 fails one disk (except the patiry disk), the md currently only
-> drop the disk from array, but i think this could be more useful, if the md
-> immediately starts to transform the parity disk into the place fo missing
-> disk!
+Neil Brown wrote:
+> use --assemble --force
 
-While this might sound easy to do, doing it in a way that is
-crash-proof makes it a lot more complicated.
+# mdadm --assemble --force /dev/md1
+mdadm: forcing event count in /dev/sda1(0) from 163362 upto 163368
+mdadm: /dev/md1 has been started with 5 drives (out of 6).
 
-It may happen one day, but I'm afraid I don't see it as a priority.
+Oops, only 5 drives, but I know data is OK on all 6 drives.
 
-NeilBrown
+I also know that there are bad blocks on more than 1 drive.  So I want
+MD to recover from the other drives in those cases, which I won't be
+able to with only 5 drives.
+
+In other words, checking/repairing with only 5 drives will lead to
+data corruption.
+
+I'll stop and try again, listing all 6 drives by hand:
+
+# mdadm --stop /dev/md1
+# mdadm --assemble /dev/md1 --force  /dev/sda1 /dev/sdb1 /dev/sdc1
+/dev/sdd1 /dev/sde1 /dev/sdf1
+mdadm: /dev/md1 has been started with 5 drives (out of 6).
+
+Ugh.  Didn't work.  Bug?
+
+How do I force MD to raise the event counter on sdb1 and accept it
+into the array as-is, so I can avoid bad-block induced data
+corruption?
