@@ -1,47 +1,60 @@
-From: CaT <cat@zip.com.au>
+From: carlos@fisica.ufpr.br (Carlos Carvalho)
 Subject: Re: help wanted - 6-disk raid5 borked: _ _ U U U U
-Date: Mon, 17 Apr 2006 10:25:13 +1000
-Message-ID: <20060417002513.GR19700@zip.com.au>
-References: <62b0912f0604161419udee8ff2tf0861bc2f6e8e304@mail.gmail.com> <17474.51121.178492.61143@cse.unsw.edu.au> <62b0912f0604161617k31eedfaev8778b299e4a65b4b@mail.gmail.com> <17474.54168.331725.412456@cse.unsw.edu.au> <17474.55148.614834.999648@fisica.ufpr.br>
+Date: Sun, 16 Apr 2006 21:39:34 -0300
+Message-ID: <17474.58310.249427.460602@fisica.ufpr.br>
+References: <62b0912f0604161419udee8ff2tf0861bc2f6e8e304@mail.gmail.com>
+	<17474.51121.178492.61143@cse.unsw.edu.au>
+	<62b0912f0604161721xc30e6abn27c55dcd9caefd2@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <17474.55148.614834.999648@fisica.ufpr.br>
+In-Reply-To: <62b0912f0604161721xc30e6abn27c55dcd9caefd2@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Carlos Carvalho <carlos@fisica.ufpr.br>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, Apr 16, 2006 at 08:46:52PM -0300, Carlos Carvalho wrote:
-> Neil Brown (neilb@suse.de) wrote on 17 April 2006 09:30:
->  >The easiest thing to do when you get an error on a drive is to kick
->  >the drive from the array, so that is what the code always did, and
->  >still does in many cases.
->  >It is arguable that for a read error on a degraded raid5, that may not
->  >be the best thing to do, but I'm not completely convinced.
-> 
-> I don't see how it could be different. If the array is degraded and
-> one more disk fails there's no way to obtain the information, so the
-> md device just fails like a single disk.
+Molle Bestefich (molle.bestefich@gmail.com) wrote on 17 April 2006 02:21:
+ >Neil Brown wrote:
+ >> use --assemble --force
+ >
+ ># mdadm --assemble --force /dev/md1
+ >mdadm: forcing event count in /dev/sda1(0) from 163362 upto 163368
+ >mdadm: /dev/md1 has been started with 5 drives (out of 6).
+ >
+ >Oops, only 5 drives, but I know data is OK on all 6 drives.
+ >
+ >I also know that there are bad blocks on more than 1 drive.  So I want
+ >MD to recover from the other drives in those cases, which I won't be
+ >able to with only 5 drives.
+ >
+ >In other words, checking/repairing with only 5 drives will lead to
+ >data corruption.
+ >
+ >I'll stop and try again, listing all 6 drives by hand:
+ >
+ ># mdadm --stop /dev/md1
+ ># mdadm --assemble /dev/md1 --force  /dev/sda1 /dev/sdb1 /dev/sdc1
+ >/dev/sdd1 /dev/sde1 /dev/sdf1
+ >mdadm: /dev/md1 has been started with 5 drives (out of 6).
+ >
+ >Ugh.  Didn't work.  Bug?
+ >
+ >How do I force MD to raise the event counter on sdb1 and accept it
+ >into the array as-is, so I can avoid bad-block induced data
+ >corruption?
 
-Not necessarily. You probably have something like (say) 200GB of data
-stripes across that disk. That one read error may affect just one or a
-few which means there's a whole buttload of data that could be retrieved
-still. Perhaps setting the entire raid array read-only on such an error
-would be better? That makes it a choice between potentially losing
-everything and having writes and some reads fail as you have a mild
-stroke trying to get another drive in on things. Put the drive in, let
-the array do the best it can to restore things, fail the bad drive, put
-another disk in, have it come up fully and the fsck it good.
+There's something strange going on. As far as I understand when the
+first read failure happens, with a non-degraded array, the (recent)
+kernel doesn't kick the disk out, it recovers the info from the parity
+and tries to write back the stripe on the failed disk so that it has a
+chance to remap the sectors. Only if the write fails it kicks the disk
+out.
 
-At least this way you probably have less of a chance of losing the
-entire array of data and who knows, only the 'less important' files
-might be lost. :)
+When the array is degraded the first read failure cannot be recovered,
+so the disk is (I suppose) excluded immediately and the whole array
+stops. This means that the superblocks will have different values and
+mdadm won't assemble back all of the 6 units, it'll try to reconstruct
+the first failed one.
 
-Anyway, my 2c. :)
-
--- 
-    "To the extent that we overreact, we proffer the terrorists the
-    greatest tribute."
-    	- High Court Judge Michael Kirby
+I don't know how to assemble everything back together in this case.
