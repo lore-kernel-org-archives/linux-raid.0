@@ -1,45 +1,62 @@
-From: "Molle Bestefich" <molle.bestefich@gmail.com>
+From: Neil Brown <neilb@suse.de>
 Subject: Re: help wanted - 6-disk raid5 borked: _ _ U U U U
-Date: Mon, 17 Apr 2006 02:47:16 +0200
-Message-ID: <62b0912f0604161747x7254dbby9f4a3f21e4349b33@mail.gmail.com>
+Date: Mon, 17 Apr 2006 10:51:09 +1000
+Message-ID: <17474.59005.812914.343869@cse.unsw.edu.au>
 References: <62b0912f0604161419udee8ff2tf0861bc2f6e8e304@mail.gmail.com>
-	 <17474.51121.178492.61143@cse.unsw.edu.au>
-	 <62b0912f0604161617k31eedfaev8778b299e4a65b4b@mail.gmail.com>
-	 <17474.54168.331725.412456@cse.unsw.edu.au>
-	 <17474.55148.614834.999648@fisica.ufpr.br>
-	 <20060417002513.GR19700@zip.com.au>
-	 <17474.58490.889579.654449@fisica.ufpr.br>
+	<17474.51121.178492.61143@cse.unsw.edu.au>
+	<62b0912f0604161721xc30e6abn27c55dcd9caefd2@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17474.58490.889579.654449@fisica.ufpr.br>
-Content-Disposition: inline
+In-Reply-To: message from Molle Bestefich on Monday April 17
 Sender: linux-raid-owner@vger.kernel.org
-To: Carlos Carvalho <carlos@fisica.ufpr.br>
+To: Molle Bestefich <molle.bestefich@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Carlos Carvalho wrote:
-> You want the array to stay on and jump here and there getting the
-> stripes from wherever it can, each time from a different set of disks.
-> That's surely nice but I think it's too much to ask...
+On Monday April 17, molle.bestefich@gmail.com wrote:
+> Neil Brown wrote:
+> > use --assemble --force
+> 
+> # mdadm --assemble --force /dev/md1
+> mdadm: forcing event count in /dev/sda1(0) from 163362 upto 163368
+> mdadm: /dev/md1 has been started with 5 drives (out of 6).
+> 
+> Oops, only 5 drives, but I know data is OK on all 6 drives.
+> 
+> I also know that there are bad blocks on more than 1 drive.  So I want
+> MD to recover from the other drives in those cases, which I won't be
+> able to with only 5 drives.
+> 
+> In other words, checking/repairing with only 5 drives will lead to
+> data corruption.
+> 
+> I'll stop and try again, listing all 6 drives by hand:
+> 
+> # mdadm --stop /dev/md1
+> # mdadm --assemble /dev/md1 --force  /dev/sda1 /dev/sdb1 /dev/sdc1
+> /dev/sdd1 /dev/sde1 /dev/sdf1
+> mdadm: /dev/md1 has been started with 5 drives (out of 6).
+> 
+> Ugh.  Didn't work.  Bug?
+> 
+> How do I force MD to raise the event counter on sdb1 and accept it
+> into the array as-is, so I can avoid bad-block induced data
+> corruption?
 
-With the bad block rate on modern disks as high as ever, I dare say
-it's an absolutely obligatory feature.
+For that, you have to recreate the array.  Make sure you get the
+chunksize,  parity algorithm, and order correct, but something like
 
-If anyone knows how to do the above, I'm still looking for help :-).
+  mdadm -C /dev/md1 --assume-clean /dev/sda1 /dev/sdb1 /dev/sdc1 \
+      /dev/sdd1 /dev/sde1 /dev/sdf1
 
-Quoting meself:
-=============
-Trying to start with all 6 devices by hand:
+and then 
+  echo check > /sys/block/md1/md/sync_action
 
-# mdadm --assemble /dev/md1 --force  /dev/sda1 /dev/sdb1 /dev/sdc1
-/dev/sdd1 /dev/sde1 /dev/sdf1
-mdadm: /dev/md1 has been started with 5 drives (out of 6).
+and see what 
+   cat /sys/block/md1/md/mismatch_count
+reports at the end.
+Then maybe 'echo repair > ....'
 
-Ugh.  Didn't work.  Bug?
-
-How do I force MD to raise the event counter on sdb1 and accept it
-into the array as-is, so I can avoid bad-block induced data
-corruption?
+NeilBrown
