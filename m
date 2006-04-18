@@ -1,29 +1,40 @@
-From: Michael Tokarev <mjt@tls.msk.ru>
-Subject: Re: accessing mirrired lvm on shared storage
-Date: Tue, 18 Apr 2006 18:33:42 +0400
-Message-ID: <4444F8C6.8060103@tls.msk.ru>
-References: <44355BC9.4020608@mailing.kaufland-informationssysteme.com>	<20060407134636.2bce1917@mwdsp001>	<17468.32144.316047.478627@cse.unsw.edu.au>	<170fa0d20604130757s22407500ude1bcc16d499273@mail.gmail.com> <17474.51965.988298.906463@cse.unsw.edu.au>
+From: David Greaves <david@dgreaves.com>
+Subject: Re: libata retry - disable?
+Date: Tue, 18 Apr 2006 15:44:38 +0100
+Message-ID: <4444FB56.9060806@dgreaves.com>
+References: <62b0912f0604172330g274c286fje159f9d920d5ec61@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17474.51965.988298.906463@cse.unsw.edu.au>
+In-Reply-To: <62b0912f0604172330g274c286fje159f9d920d5ec61@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
+To: Molle Bestefich <molle.bestefich@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil Brown wrote:
-[]
->> Very cool... that would be extremely nice to have.  Any estimate on
->> when you might get to this?
->>
-> 
-> I'm working on it, but there are lots of distractions....
+Molle Bestefich wrote:
+> Does anyone know of a way to disable libata's 5-time retry when a read fails?
+>
+> It has the effect of causing every failed sector read to take 6
+> seconds before it fails, causing raid5 rebuilds to go awfully slow. 
+> It's generally undesirable too, when you've got RAID on top that can
+> write replacement data onto the failed sectors..
+>
+> Log showing a failed sector:
+> Apr 18 09:49:53 linux kernel: end_request: I/O error, dev sda, sector 131124407
+> Apr 18 09:49:55 linux kernel: ata1: no sense translation for status: 0x51
+> Apr 18 09:49:55 linux kernel: ata1: translated ATA stat/err 0x51/00 to
+> SCSI SK/ASC/ASCQ 0x3/11/04
+>   
+What kernel Molle?
 
-Neil, is there anything you're NOT working on? ;)
+There were some nasties in 2.6.15 to do with FUA. Have a look for my
+postings in linux-ide (my problems are still not entirely resolved).
 
-Sorry just can't resist... ;)
+(I got very used to mdadm --force and xfs_repair during that experience!)
 
-/mjt
+David
+
+-- 
 
