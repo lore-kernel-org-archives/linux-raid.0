@@ -1,32 +1,59 @@
-From: "Aidan Brooks" <sgtcab@agentfire.com>
-Subject: Academic Qualifications available from prestigious NON-ACCREDITED universities
-Date: Mon, 17 Apr 2006 20:57:47 -0800
-Message-ID: <000001c662be$579f3e00$0100007f__46931.0067747303$1145329096$gmane$org@localhost>
+From: "Molle Bestefich" <molle.bestefich@gmail.com>
+Subject: libata retry - disable?
+Date: Tue, 18 Apr 2006 08:30:42 +0200
+Message-ID: <62b0912f0604172330g274c286fje159f9d920d5ec61@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="windows-1251"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Does anyone know of a way to disable libata's 5-time retry when a read fails?
 
-NO ONE is turned down.
+It has the effect of causing every failed sector read to take 6
+seconds before it fails, causing raid5 rebuilds to go awfully slow. 
+It's generally undesirable too, when you've got RAID on top that can
+write replacement data onto the failed sectors..
 
-According to the U.S. Census Bureau, with the following degrees, 
-here's how much you can  expect to make in your lifetime:
-
-High School Diploma:  $1,100,000
-Bachelor's Degree:    $2,100,000
-Master's Degree:      $2,500,000
-Doctorate:            $4,400,000
-
-You Need a Better Degree, and we can Help!
-Obtain degrees from Prestigious non-accredited
-Universities based on you life experience.
-NO ONE is turned down.
-
-Call Now 7 days a week.
-"1-718-504-5376"
-
+Log showing a failed sector:
+Apr 18 09:49:53 linux kernel: end_request: I/O error, dev sda, sector 131124407
+Apr 18 09:49:55 linux kernel: ata1: no sense translation for status: 0x51
+Apr 18 09:49:55 linux kernel: ata1: translated ATA stat/err 0x51/00 to
+SCSI SK/ASC/ASCQ 0x3/11/04
+Apr 18 09:49:55 linux kernel: ata1: status=0x51 { DriveReady
+SeekComplete Error }
+Apr 18 09:49:56 linux kernel: ata1: no sense translation for status: 0x51
+Apr 18 09:49:56 linux kernel: ata1: translated ATA stat/err 0x51/00 to
+SCSI SK/ASC/ASCQ 0x3/11/04
+Apr 18 09:49:56 linux kernel: ata1: status=0x51 { DriveReady
+SeekComplete Error }
+Apr 18 09:49:57 linux kernel: ata1: no sense translation for status: 0x51
+Apr 18 09:49:57 linux kernel: ata1: translated ATA stat/err 0x51/00 to
+SCSI SK/ASC/ASCQ 0x3/11/04
+Apr 18 09:49:57 linux kernel: ata1: status=0x51 { DriveReady
+SeekComplete Error }
+Apr 18 09:49:59 linux kernel: ata1: no sense translation for status: 0x51
+Apr 18 09:49:59 linux kernel: ata1: translated ATA stat/err 0x51/00 to
+SCSI SK/ASC/ASCQ 0x3/11/04
+Apr 18 09:49:59 linux kernel: ata1: status=0x51 { DriveReady
+SeekComplete Error }
+Apr 18 09:50:00 linux kernel: ata1: no sense translation for status: 0x51
+Apr 18 09:50:00 linux kernel: ata1: translated ATA stat/err 0x51/00 to
+SCSI SK/ASC/ASCQ 0x3/11/04
+Apr 18 09:50:00 linux kernel: ata1: status=0x51 { DriveReady
+SeekComplete Error }
+Apr 18 09:50:01 linux kernel: ata1: no sense translation for status: 0x51
+Apr 18 09:50:01 linux kernel: ata1: translated ATA stat/err 0x51/00 to
+SCSI SK/ASC/ASCQ 0x3/11/04
+Apr 18 09:50:01 linux kernel: ata1: status=0x51 { DriveReady
+SeekComplete Error }
+Apr 18 09:50:01 linux kernel: sd 0:0:0:0: SCSI error: return code = 0x8000002
+Apr 18 09:50:01 linux kernel: sda: Current: sense key: Medium Error
+Apr 18 09:50:01 linux kernel:     Additional sense: Unrecovered read
+error - auto reallocate failed
+Apr 18 09:50:01 linux kernel: end_request: I/O error, dev sda, sector 131124415
+Apr 18 09:50:02 linux kernel: raid5: read error corrected!!
+Apr 18 09:50:02 linux last message repeated 112 times
