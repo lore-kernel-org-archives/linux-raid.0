@@ -1,43 +1,45 @@
-From: "Molle Bestefich" <molle.bestefich@gmail.com>
-Subject: Re: libata retry - disable?
-Date: Tue, 18 Apr 2006 18:49:14 +0200
-Message-ID: <62b0912f0604180949h3448fc48j539a9ea39b1166d0@mail.gmail.com>
-References: <62b0912f0604172330g274c286fje159f9d920d5ec61@mail.gmail.com>
-	 <4444FB56.9060806@dgreaves.com>
+From: Maurice Hilarius <maurice@harddata.com>
+Subject: Re: RAID5 recovery trouble, bd_claim failed?
+Date: Tue, 18 Apr 2006 16:13:08 -0600
+Message-ID: <44456474.9040201@harddata.com>
+References: <1145106091.18173.18.camel@nemo.qabal.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4444FB56.9060806@dgreaves.com>
-Content-Disposition: inline
+In-Reply-To: <1145106091.18173.18.camel@nemo.qabal.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Greaves <david@dgreaves.com>
+To: Nathanial Byrnes <nate@qabal.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-David Greaves wrote:
-> Molle Bestefich wrote:
-> > Does anyone know of a way to disable libata's 5-time retry when a read fails?
-> >
-> > It has the effect of causing every failed sector read to take 6
-> > seconds before it fails, causing raid5 rebuilds to go awfully slow.
-> > It's generally undesirable too, when you've got RAID on top that can
-> > write replacement data onto the failed sectors..
-> >
-> > Log showing a failed sector:
-> > Apr 18 09:49:53 linux kernel: end_request: I/O error, dev sda, sector 131124407
-> > Apr 18 09:49:55 linux kernel: ata1: no sense translation for status: 0x51
-> > Apr 18 09:49:55 linux kernel: ata1: translated ATA stat/err 0x51/00 to
-> > SCSI SK/ASC/ASCQ 0x3/11/04
-> >
-> What kernel Molle?
+Nathanial Byrnes wrote:
+> Hi All,
+> 	Recently I lost a disk in my raid5 SW array. It seems that it took a
+> second disk with it. The other disk appears to still be funtional (from
+> an fdisk perspective...). I am trying to get the array to work in
+> degraded mode via failed-disk in raidtab, but am always getting the
+> following error:
 >
-> There were some nasties in 2.6.15 to do with FUA. Have a look for my
-> postings in linux-ide (my problems are still not entirely resolved).
+>   
+Let me guess:
+IDE disks, in pairs.
+Jumpered as Master and Salve.
 
-2.6.16.5.  A bit surprised to see 2.6.16.7 out already.
-I think the errors are (were, md-rewrite fixed it) real enough.
+Right?
 
-> (I got very used to mdadm --force and xfs_repair during that experience!)
 
-:-)
+
+
+
+-- 
+
+With our best regards,
+
+
+Maurice W. Hilarius        Telephone: 01-780-456-9771
+Hard Data Ltd.  FAX:       01-780-456-9772
+11060 - 166 Avenue         email:maurice@harddata.com
+Edmonton, AB, Canada       http://www.harddata.com/
+   T5X 1Y3
+
