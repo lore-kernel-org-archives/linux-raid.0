@@ -1,59 +1,32 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: RAID5 recovery trouble, bd_claim failed?
-Date: Tue, 18 Apr 2006 10:24:56 +1000
-Message-ID: <17476.12760.843811.483031@cse.unsw.edu.au>
-References: <1145106091.18173.18.camel@nemo.qabal.org>
-	<17474.51499.479497.322081@cse.unsw.edu.au>
-	<1145242458.18173.49.camel@nemo.qabal.org>
-	<17475.1455.344850.506978@cse.unsw.edu.au>
-	<1145268508.18173.61.camel@nemo.qabal.org>
-	<17475.28176.159396.519547@cse.unsw.edu.au>
-	<444386C6.2070201@qabal.org>
-	<4443EC9E.9010502@qabal.org>
-	<17476.3083.900753.898632@cse.unsw.edu.au>
-	<1145312490.9148.0.camel@nemo.qabal.org>
+From: "Aidan Brooks" <sgtcab@agentfire.com>
+Subject: Academic Qualifications available from prestigious NON-ACCREDITED universities
+Date: Mon, 17 Apr 2006 20:57:47 -0800
+Message-ID: <000001c662be$579f3e00$0100007f__46931.0067747303$1145329096$gmane$org@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="windows-1251"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Nathanial Byrnes on Monday April 17
 Sender: linux-raid-owner@vger.kernel.org
-To: Nathanial Byrnes <nate@qabal.org>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Monday April 17, nate@qabal.org wrote:
-> Unfortunately nothing changed. 
 
-Weird... so hdf still reports as 'busy'?
-Is it mentioned anywhere in /var/log/messages since reboot?
+NO ONE is turned down.
 
-What version of mdadm are you using?  Try 2.4.1 and see if that works
-differently.
+According to the U.S. Census Bureau, with the following degrees, 
+here's how much you can  expect to make in your lifetime:
 
-NeilBrown
+High School Diploma:  $1,100,000
+Bachelor's Degree:    $2,100,000
+Master's Degree:      $2,500,000
+Doctorate:            $4,400,000
 
-> 
-> 
-> On Tue, 2006-04-18 at 07:43 +1000, Neil Brown wrote:
-> > On Monday April 17, nate@qabal.org wrote:
-> > > Hi Neil, List,
-> > >     Am I just out of luck? Perhaps a full reboot? Something else?
-> > >     Thanks,
-> > >     Nate
-> > 
-> > Reboot and try again seems like the best bet at this stage.
-> > 
-> > NeilBrown
-> > -
-> > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > 
-> > !DSPAM:44440c1a90901937570534!
-> > 
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+You Need a Better Degree, and we can Help!
+Obtain degrees from Prestigious non-accredited
+Universities based on you life experience.
+NO ONE is turned down.
+
+Call Now 7 days a week.
+"1-718-504-5376"
+
