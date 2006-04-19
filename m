@@ -1,62 +1,23 @@
-From: "GLOBAL MATERIALS INCORPORATED(GMI)." <global@globalmaterialsinc.com>
-Subject: IT PAYS TO WORK WITH THE GMI COMPANY AS A REPRESENTATIVE.
-Date: Wed, 19 Apr 2006 00:47:52 +0100
-Message-ID: <200604182347.k3INln1E029477@zeus1.kernel.org>
-Reply-To: globalmarterial@yahoo.es
+From: "Ewan Grantham" <ewan.grantham@gmail.com>
+Subject: Using LVM for RAID 1+0
+Date: Tue, 18 Apr 2006 19:20:39 -0500
+Message-ID: <6d5bedd80604181720s4a481844s22e107089c790e80@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-
-Welcome
-
-Dear Sir/Madam,
-
-We write to solicit your assistance in working with us as our payment
-Agent who can help us establish a medium of getting to our customers in
-Canada, America/Europe to help in receiving products from our customers
-as well as making payments through you to us and our clients as the
-case may warrant.
-
-You will be paid 10% of every payment/transaction made through you to
-us. Subject to your satisfaction, you will be given the opportunity to
-negotiate your Mode in which we will pay for your services as our
-representative.
-
-Meanwhile, we export raw materials into Canada, America/Europe.
-
-Please kindly indicate your interest via the email address as stated
-below and you are also required to fill in the form below so as to enab=
-le
-us proceed with furnishing you with further details/information=92s tha=
-t
-you might need to proceed in this transaction.
-You can view our official website for any further information that you
-might need to know about our company.
-
-
-1. Your Full Names................................................
-2. Your Full Contact Address......................................
-3. State/Country..................................................
-4. Your Phone/Fax number.........................................
-5. Occupation....................................
-
-Your swift response and assistance will be appreciated in this regard.
-
-Regards,
-
-CEO
-MR. DESMOND GREEN
-Email : globalmarterial@yahoo.es
-GLOBAL MATERIALS INCORPORATED(GMI).
-
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Had though of setting up several disks as a RAID-5 array, but for some
+reason one of the disks would keep failing when I tried to build the
+array. The same disk, however, would format just fine with EXT3, and
+is quite happy about being put in a RAID-1 array with another disk.
+Given that strangeness, I'm thinking a better way to go is to pair off
+my disks into several RAID-1 arrays, and then use LVM to setup
+striping across all of them to effectively give me a RAID 1+0 setup.
+Since one pair of disks is a different size than the other pairs, I
+presumed this would be better than actually creating a RAID-0 across
+all the RAID-1 arrays. Is that correct?
