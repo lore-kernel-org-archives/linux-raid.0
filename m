@@ -1,37 +1,43 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: Raid5 says it's rebuilding, but it lies :)
-Date: Wed, 19 Apr 2006 11:31:05 +1000
-Message-ID: <17477.37593.650885.214484@cse.unsw.edu.au>
-References: <13525.1145408657@www047.gmx.net>
+From: "Ewan Grantham" <ewan.grantham@gmail.com>
+Subject: Re: Using LVM for RAID 1+0
+Date: Tue, 18 Apr 2006 21:19:40 -0500
+Message-ID: <6d5bedd80604181919o350b715dm1d715d0be01f3c6@mail.gmail.com>
+References: <6d5bedd80604181720s4a481844s22e107089c790e80@mail.gmail.com>
+	 <17477.35448.136382.373967@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Karl Schricker on Wednesday April 19
+In-Reply-To: <17477.35448.136382.373967@cse.unsw.edu.au>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Karl Schricker <k_schricker@gmx.net>
-Cc: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wednesday April 19, k_schricker@gmx.net wrote:
-> I have a raid5 configuration with 4 disks, of which all were active.  My
-> system froze due to a separate issue (firewire), so I had to power cycle. 
-> In the past, I've always been able to recover with fsck on /dev/md0, however
-> this time I was not, and I am unable to re-assemble the array now.
-> 
-> I'm really hoping someone can help me with this.  I've been googling and
-> reading the mdadm manpage for 3 days and getting nowhere.
-> 
-> After booting, I get 3 active disks and one faulty.  Theoretically with
-> raid5 I should be able to recover from this, right? :)  When I add it back
-> to the array, it changes to "spare rebuilding".  However it lies: no Rebuild
-> Status ever shows up (and I let it run overnight).
+On 4/18/06, Neil Brown <neilb@suse.de> wrote:
+> No, this is not correct.
+> md/raid0 has no problem with devices being of different sizes.  It
+> will make use of all the space doing as much striping as possible.
 
-Hmmm... there is certainly room for removing confusion from that
-"mdadm -D" is reporting.  However what you want to do it:
+In that case, the other question would be if you can grow a RAID 0
+array. Currently, one pair of disks have my remaining data. The idea
+was to set the other pairs to RAID 1 arrays, link them with LVM (or
+RAID 0) into one partition, copy the data, then convert the remaining
+pair of disks to a RAID 1 array and grow the RAID 0 array to add the
+additional RAID 1 array.
 
- mdadm -S /dev/md0
- mdadm -A /dev/md0 --force /dev/sd[abd]
- mdadm /dev/md0 --add /dev/sdv
+> However it sounds like your drive or your controller is not to be
+> trusted.  There is a reason that it is failing.  Maybe raid5 triggers
+> that reason more often, but that doesn't mean that raid1 won't
+> trigger it at all.  I suggest you be very wary of your hardware!
 
-NeilBrown
+Suspicious is the word for it. Which is why I'm not going back to RAID
+5 using my current configuration. My drives are all external USB-2,
+and split between some ports on front, some on back, and some on an
+add-on card. My guess is that I had an arrangement that was swamping
+the channels. I've played around with what is attached where in a
+manner that appears to have "fixed' that.
+
+FWIW,
+Ewan
