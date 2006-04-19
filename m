@@ -1,47 +1,61 @@
-From: Tim Moore <linux-raid@nsr500.net>
-Subject: Re: Real Time Mirroring of a NAS
-Date: Tue, 18 Apr 2006 21:23:54 -0700
-Message-ID: <4445BB5A.8060201@nsr500.net>
-References: <44364336.7060704@aol.com> <8110058661.20060407200418@2ka.mipt.ru> <4436984A.9020803@aol.com>
+From: "James Sutherland" <J.A.Sutherland@dundee.ac.uk>
+Subject: Rebuilding RAID6 after wrongly marked "faulty" drives
+Date: Wed, 19 Apr 2006 09:22:24 +0100
+Message-ID: <s4460159.071@gw-out.dundee.ac.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4436984A.9020803@aol.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Thanks to the IOMMU bug (run out of memory? Send everything to /dev/null
+and return errors which make RAID think the drives are all faulty...)
+I've lost a RAID6 array: 2 of the 7 drives were (wrongly) marked
+'faulty' because of this bug.
+
+After enlarging my I/O aperture to stop the problem recurring, I
+managed to get the array started with 5 of the 7 drives - only to have
+one of them apparently develop a genuine fault:
+
+***
+end_request: I/O error, dev sde, sector 4057289
+Buffer I/O error on device sde2, logical block 962111
+ATA: abnormal status 0xD8 on port 0xFFFFC20000010287
+ATA: abnormal status 0xD8 on port 0xFFFFC20000010287
+ATA: abnormal status 0xD8 on port 0xFFFFC20000010287
+ata7: command 0x25 timeout, stat 0xd8 host_stat 0x1
+ata7: translated ATA stat/err 0xd8/00 to SCSI SK/ASC/ASCQ 0xb/47/00
+ata7: status=0xd8 { Busy }
+sd 6:0:0:0: SCSI error: return code = 0x8000002
+sde: Current: sense key=0xb
+    ASC=0x47 ASCQ=0x0
+***
+
+Assuming this is a genuine drive failure, is there any way I can
+reconstruct using the other 6 drives, despite two of them wrongly being
+marked "failed"? I tried --assemble /dev/md2 --force (names), but was
+told I had "4 drives and 2 spares" - not enough to start the array :-(
+There's a log entry about "ejecting non-fresh /dev/... from array",
+although the event counts all match.
+
+Disturbingly, Seagate's diagnostic had reached 87% last night without
+reporting any problems, leaving me in some doubt as to whether the drive
+really had failed.
+
+I'm also getting appalling rebuild speeds on the RAID1 system partition
+(2-3Mbyte/sec, without any other load; bumping up speed_min in /proc did
+nothing.)
+
+As someone else has suggested, disabling libata's automatic retries
+would be a *huge* improvement in rebuild speed, but also improve
+reliability (if a block can be read on the 4th attempt, it really isn't
+very OK - but AFAICS, this is masked at present). Copying the working
+bits of a dying drive directly to the hot spare, then just using parity
+to fill in the gaps, would seem nice...
 
 
-andy liebman wrote:
- > ...
-> By the way, I use 3ware 9550SX cards. On a 16 drive RAID-5 SATA array, I 
-> can get sequential reads that top 600 MBs/sec. That's megabytes, not 
-> megabits. And write speeds are close to 400 MB/sec with the new faster 
-> on-board XOR processing. And random reads are at least 200 MB/sec. So, 
-> 10 GbE is a must, really.
+James.
 
-A 400MB/s network input stream means either 1x10GbE or 4xGbE's to 
-PCI-X/PCI-e bus, then to disk, then to PCI-X/PCI-e bus, then across another 
-net to the backup system, so the I/O subsystem alone must handle 800MB/s.
-
-3ware may actually do a single 400MB/s stream, but what about 4x100MB/s or 
-8x50MB/s?  It's really hard to do that much I/O _and_ provide data 
-integrity.  If your data rates and the mirroring requirements are that 
-critical you might want to look at the fast NAS systems coming out (eg- 
-agami.com) built on top of AMD's HT architecture.
-
-Cheers,
-
-
-> 
-> Andy
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
--- 
-  | for direct mail add "private_" in front of user name
