@@ -1,61 +1,47 @@
-From: "James Sutherland" <J.A.Sutherland@dundee.ac.uk>
-Subject: Rebuilding RAID6 after wrongly marked "faulty" drives
-Date: Wed, 19 Apr 2006 09:22:24 +0100
-Message-ID: <s4460159.071@gw-out.dundee.ac.uk>
+From: David Greaves <david@dgreaves.com>
+Subject: Re: Raid5 says it's rebuilding, but it lies :)
+Date: Wed, 19 Apr 2006 10:32:21 +0100
+Message-ID: <444603A5.6060806@dgreaves.com>
+References: <13525.1145408657@www047.gmx.net> <17477.37593.650885.214484@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <17477.37593.650885.214484@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Karl Schricker <k_schricker@gmx.net>
+Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Thanks to the IOMMU bug (run out of memory? Send everything to /dev/null
-and return errors which make RAID think the drives are all faulty...)
-I've lost a RAID6 array: 2 of the 7 drives were (wrongly) marked
-'faulty' because of this bug.
+Neil Brown wrote:
+> On Wednesday April 19, k_schricker@gmx.net wrote:
+>   
+>> I have a raid5 configuration with 4 disks, of which all were active.  My
+>> system froze due to a separate issue (firewire), so I had to power cycle. 
+>> In the past, I've always been able to recover with fsck on /dev/md0, however
+>> this time I was not, and I am unable to re-assemble the array now.
+>>
+>> I'm really hoping someone can help me with this.  I've been googling and
+>> reading the mdadm manpage for 3 days and getting nowhere.
+>>
+>> After booting, I get 3 active disks and one faulty.  Theoretically with
+>> raid5 I should be able to recover from this, right? :)  When I add it back
+>> to the array, it changes to "spare rebuilding".  However it lies: no Rebuild
+>> Status ever shows up (and I let it run overnight).
+>>     
+>
+> Hmmm... there is certainly room for removing confusion from that
+> "mdadm -D" is reporting.  However what you want to do it:
+>
+>  mdadm -S /dev/md0
+>  mdadm -A /dev/md0 --force /dev/sd[abd]
+>  mdadm /dev/md0 --add /dev/sdv
+>   
+Typo: this last line should be:
 
-After enlarging my I/O aperture to stop the problem recurring, I
-managed to get the array started with 5 of the 7 drives - only to have
-one of them apparently develop a genuine fault:
+mdadm /dev/md0 --add /dev/sdc
+                            ^
 
-***
-end_request: I/O error, dev sde, sector 4057289
-Buffer I/O error on device sde2, logical block 962111
-ATA: abnormal status 0xD8 on port 0xFFFFC20000010287
-ATA: abnormal status 0xD8 on port 0xFFFFC20000010287
-ATA: abnormal status 0xD8 on port 0xFFFFC20000010287
-ata7: command 0x25 timeout, stat 0xd8 host_stat 0x1
-ata7: translated ATA stat/err 0xd8/00 to SCSI SK/ASC/ASCQ 0xb/47/00
-ata7: status=0xd8 { Busy }
-sd 6:0:0:0: SCSI error: return code = 0x8000002
-sde: Current: sense key=0xb
-    ASC=0x47 ASCQ=0x0
-***
+David
 
-Assuming this is a genuine drive failure, is there any way I can
-reconstruct using the other 6 drives, despite two of them wrongly being
-marked "failed"? I tried --assemble /dev/md2 --force (names), but was
-told I had "4 drives and 2 spares" - not enough to start the array :-(
-There's a log entry about "ejecting non-fresh /dev/... from array",
-although the event counts all match.
-
-Disturbingly, Seagate's diagnostic had reached 87% last night without
-reporting any problems, leaving me in some doubt as to whether the drive
-really had failed.
-
-I'm also getting appalling rebuild speeds on the RAID1 system partition
-(2-3Mbyte/sec, without any other load; bumping up speed_min in /proc did
-nothing.)
-
-As someone else has suggested, disabling libata's automatic retries
-would be a *huge* improvement in rebuild speed, but also improve
-reliability (if a block can be read on the 4th attempt, it really isn't
-very OK - but AFAICS, this is masked at present). Copying the working
-bits of a dying drive directly to the hot spare, then just using parity
-to fill in the gaps, would seem nice...
-
-
-James.
 
