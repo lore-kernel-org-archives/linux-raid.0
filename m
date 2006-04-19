@@ -1,52 +1,47 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: Using LVM for RAID 1+0
-Date: Wed, 19 Apr 2006 12:47:34 +1000
-Message-ID: <17477.42182.423594.547630@cse.unsw.edu.au>
-References: <6d5bedd80604181720s4a481844s22e107089c790e80@mail.gmail.com>
-	<17477.35448.136382.373967@cse.unsw.edu.au>
-	<6d5bedd80604181919o350b715dm1d715d0be01f3c6@mail.gmail.com>
+From: Tim Moore <linux-raid@nsr500.net>
+Subject: Re: Real Time Mirroring of a NAS
+Date: Tue, 18 Apr 2006 21:23:54 -0700
+Message-ID: <4445BB5A.8060201@nsr500.net>
+References: <44364336.7060704@aol.com> <8110058661.20060407200418@2ka.mipt.ru> <4436984A.9020803@aol.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Ewan Grantham on Tuesday April 18
+In-Reply-To: <4436984A.9020803@aol.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Ewan Grantham <ewan.grantham@gmail.com>
-Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday April 18, ewan.grantham@gmail.com wrote:
-> On 4/18/06, Neil Brown <neilb@suse.de> wrote:
-> > No, this is not correct.
-> > md/raid0 has no problem with devices being of different sizes.  It
-> > will make use of all the space doing as much striping as possible.
+
+
+andy liebman wrote:
+ > ...
+> By the way, I use 3ware 9550SX cards. On a 16 drive RAID-5 SATA array, I 
+> can get sequential reads that top 600 MBs/sec. That's megabytes, not 
+> megabits. And write speeds are close to 400 MB/sec with the new faster 
+> on-board XOR processing. And random reads are at least 200 MB/sec. So, 
+> 10 GbE is a must, really.
+
+A 400MB/s network input stream means either 1x10GbE or 4xGbE's to 
+PCI-X/PCI-e bus, then to disk, then to PCI-X/PCI-e bus, then across another 
+net to the backup system, so the I/O subsystem alone must handle 800MB/s.
+
+3ware may actually do a single 400MB/s stream, but what about 4x100MB/s or 
+8x50MB/s?  It's really hard to do that much I/O _and_ provide data 
+integrity.  If your data rates and the mirroring requirements are that 
+critical you might want to look at the fast NAS systems coming out (eg- 
+agami.com) built on top of AMD's HT architecture.
+
+Cheers,
+
+
 > 
-> In that case, the other question would be if you can grow a RAID 0
-> array. Currently, one pair of disks have my remaining data. The idea
-> was to set the other pairs to RAID 1 arrays, link them with LVM (or
-> RAID 0) into one partition, copy the data, then convert the remaining
-> pair of disks to a RAID 1 array and grow the RAID 0 array to add the
-> additional RAID 1 array.
-
-No, you cannot grow an md/raid0 array.  If you need growth, then you
-would need to consider LVM at this stage, though md/linear will
-probably be able to grow soon.
-
+> Andy
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > 
-> > However it sounds like your drive or your controller is not to be
-> > trusted.  There is a reason that it is failing.  Maybe raid5 triggers
-> > that reason more often, but that doesn't mean that raid1 won't
-> > trigger it at all.  I suggest you be very wary of your hardware!
-> 
-> Suspicious is the word for it. Which is why I'm not going back to RAID
-> 5 using my current configuration. My drives are all external USB-2,
-> and split between some ports on front, some on back, and some on an
-> add-on card. My guess is that I had an arrangement that was swamping
-> the channels. I've played around with what is attached where in a
-> manner that appears to have "fixed' that.
 
-I've always felt that raid over USB was a "courageous" design.  USB
-has such a "temporary" feel to it.  However, if it work for you,
-great.
-
-NeilBrown
+-- 
+  | for direct mail add "private_" in front of user name
