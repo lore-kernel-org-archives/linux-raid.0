@@ -1,65 +1,38 @@
-From: Ming Zhang <mingz@ele.uri.edu>
-Subject: Re: replace disk in raid5 without linux noticing?
-Date: Thu, 20 Apr 2006 11:24:48 -0400
-Message-ID: <1145546688.26292.11.camel@localhost.localdomain>
-References: <200604191631.04305.Dexter.Filmore@gmx.de>
-	 <e3edb0fa0604190931i1160d94eo829ba17943b0c5eb@mail.gmail.com>
-	 <1145466223.8608.84.camel@localhost.localdomain>
-	 <44467654.2060903@swcp.com>
-	 <1145470570.8608.100.camel@localhost.localdomain>
-	 <20060420152208.GF27744@boogie.lpds.sztaki.hu>
-Reply-To: mingz@ele.uri.edu
+From: majek <majekreiser@forest.one.pl>
+Subject: raid 5 growing
+Date: Thu, 20 Apr 2006 20:08:03 +0200
+Message-ID: <4447CE03.6040403@forest.one.pl>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-2
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20060420152208.GF27744@boogie.lpds.sztaki.hu>
 Sender: linux-raid-owner@vger.kernel.org
-To: Gabor Gombas <gombasg@sztaki.hu>
-Cc: Brendan Conoboy <synk@swcp.com>, Shai <shaibn@gmail.com>, Dexter Filmore <Dexter.Filmore@gmx.de>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, 2006-04-20 at 17:22 +0200, Gabor Gombas wrote:
-> On Wed, Apr 19, 2006 at 02:16:10PM -0400, Ming Zhang wrote:
-> 
-> > is this possible? 
-> > * stop RAID5
-> > * set a mirror between current disk X and a new added disk Y, and X as
-> > primary one (which means copy X to Y to full sync, and before this ends,
-> > only read from X); also this mirror will not have any metadata or mark
-> > on existing disk;
-> 
-> The mirror should be created without persistent superblocks (obviously),
-> but --build does not seem to allow RAID1.
-> 
-> > * add this mirror to RAID5
-> > * start RAID5;
-> > 
-> > ... mirror will continue copy data from X to Y, once end
-> > 
-> > * stop RAID5
-> > * split mirror
-> > * put DISK Y back to RAID5
-> > * restart RAID5.
-> > 
-> > since this is a mirror, all metadata are same. it will be even greater
-> > if no need to stop raid5 to do this.
-> 
-> The process seems rather fragile. If I created a RAID5 array to protect
-> my data I most certainly would not like to perform so much steps where I
-> can mess up.
+Hi.
 
-it can be be script and then little chance to get failed.
+I am testing adding device to raid5 and I have some questiones.
+
+How can I intrepret this line from dmesg (after growing):
+ioctl32(mdadm:3762): Unknown cmd fd(3) cmd(90000915){10} arg(ffffa758) on /dev/md0
+
+What this means:
+Filesystem "md0": Disabling barriers, not supported by the underlying device
 
 
-or if i understand current raid5 bitmap right. u can remove the disk X
-from raid, then do a dd from disk X to Y, and then add disk Y to raid.
-then bitmap can handle the rsync with a much less cost.
+And i have another question, not connected directly to raid.
+When I run "xfs_growfs" I get this errors:
+xfs_growfs: XFS_IOC_FSGROWFSDATA xfsctl failed: Invalid argument
+xfs_growfs: XFS_IOC_FSGEOMETRY xfsctl failed: Invalid argument
+And in dmesg:
+ioctl32(xfs_growfs:4024): Unknown cmd fd(3) cmd(806c5864){00} arg(ffffcb20) on /mnt/test
 
+Thanks for help.
 
+(custom kernel 2.6.17-rc2, mdadm 2.4.1, xfs_growfs 2.7.16, processor Athlon64 (x86_64) )
 
+Thanks!
 
-> 
-> Gabor
-> 
+MM.
 
