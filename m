@@ -1,7 +1,7 @@
 From: Neil Brown <neilb@suse.de>
 Subject: Re: Soft lockup with 2.6.17-rc1 on amd64
-Date: Thu, 20 Apr 2006 14:53:58 +1000
-Message-ID: <17479.5094.438679.603825@cse.unsw.edu.au>
+Date: Thu, 20 Apr 2006 16:35:51 +1000
+Message-ID: <17479.11207.24738.466684@cse.unsw.edu.au>
 References: <20060420024134.GA2798@samfundet.no>
 	<17479.2316.814366.755975@cse.unsw.edu.au>
 Mime-Version: 1.0
@@ -41,18 +41,61 @@ On Thursday April 20, neilb@suse.de wrote:
 > 
 > Can you try this patch please?
 
-Actually, I wouldn't bother.  I've read further and missed the fact
-that inode_init_once was being called already.
+Yeh, that one was completely wrong.  I think this one will fix it, but
+it probably isn't reproducible, so you probably cannot test it.
 
-Is this delay reproducible at all?  If so I'll get you to put some
-tracing in.
+However: could you please  give me details of dm-[0-3]?  Particularly
+how big they are, but also what sort of dm target and what underlying
+devices.
+Also, what is the clock speed of your processor - I assume it is not
+just hyper-threading but actually has two independent core?
 
-However, I somehow doubt it is reproducible, as it is very similar to
-
-   https://bugzilla.novell.com/show_bug.cgi?id=152099
-
-and that wasn't reproducible.
-
-But if it is... great!
-
+Thanks,
 NeilBrown
+
+---------------------------------------
+Remove softlockup from invalidate_mapping_pages.
+
+If invalidate_mapping_pages is called to invalidate a very large
+mapping (e.g. a very large block device) and if the only active page
+in that device is near the end  (or at least, at a very large  index),
+such as, say, the superblock of an md array, and if that page
+happens to be locked when invalidate_mapping_pages is called,
+then
+  pagevec_lookup will return this page and
+  as it is locked, 'next' will be incremented and pagevec_lookup
+  will be called again. and again. and again.
+  while we count from 0 upto a very large number.
+
+We should really always set 'next' to 'page->index+1' before going
+around the loop again, not just if the page isn't locked.
+
+
+Cc: "Steinar H. Gunderson" <sgunderson@bigfoot.com>
+Signed-off-by: Neil Brown <neilb@suse.de>
+
+### Diffstat output
+ ./mm/truncate.c |   10 ++++------
+ 1 file changed, 4 insertions(+), 6 deletions(-)
+
+diff ./mm/truncate.c~current~ ./mm/truncate.c
+--- ./mm/truncate.c~current~	2006-04-20 15:27:22.000000000 +1000
++++ ./mm/truncate.c	2006-04-20 15:38:20.000000000 +1000
+@@ -238,13 +238,11 @@ unsigned long invalidate_mapping_pages(s
+ 		for (i = 0; i < pagevec_count(&pvec); i++) {
+ 			struct page *page = pvec.pages[i];
+ 
+-			if (TestSetPageLocked(page)) {
+-				next++;
++			next = page->index+1;
++
++			if (TestSetPageLocked(page))
+ 				continue;
+-			}
+-			if (page->index > next)
+-				next = page->index;
+-			next++;
++
+ 			if (PageDirty(page) || PageWriteback(page))
+ 				goto unlock;
+ 			if (page_mapped(page))
