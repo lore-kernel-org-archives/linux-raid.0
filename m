@@ -1,29 +1,36 @@
-From: "Vijay Ramnarayan" <vijay.ramnarayan@intransa.com>
-Subject: Vijay - RAID restore question
-Date: Thu, 20 Apr 2006 03:10:49 -0700
-Message-ID: <B3A32F6D68F5E04E84F0ADF5A9093256018339B6@E2K3-CLUS-01.intransa.com>
+From: Johnny Ljunggren <johnny@navtek.no>
+Subject: Re: failed to RUN_ARRAY, input/output error
+Date: Thu, 20 Apr 2006 12:41:40 +0200
+Message-ID: <44476564.9030608@navtek.no>
+References: <54490.84.236.149.243.1144790548.squirrel@www.navtek.no> <17468.47969.652243.826774@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
+In-Reply-To: <17468.47969.652243.826774@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+Neil Brown wrote:
+> Add a '--force' to the '--assemble' and it will start the array for
+> you.
+>   
 
-I had a Redhat box on which I ha configured  Software Mirroring between
-two disks using mdadm. 
-  
-Had to reinstall the OS which I did and now I have both the disks on the
-same system.  
+Just an update (happy one) to the problem. This is what I did (from memory):
+-Replaced the failed harddrive
+-Used FC5 disc 1 to start in rescue mode
+-Used fdisk to partition the new hard drive
+-# mdadm -A /dev/md0 /dev/hda2 /dev/hdc2 /dev/hdg1
+-# mdadm /dev/md0 -a /dev/hde1
+-# mdadm -S /dev/md0
+-# mdadm -A --force /dev/md0 /dev/hda2 /dev/hdc2 /dev/hde1 /dev/hdg1
+I did some tests with 'mdadm -A --force /dev/md0 /dev/hda2 /dev/hdc2 
+/dev/hde1 /dev/hdg1 --update=summaries/resync'  as well but I'm not sure 
+if that had anything to do with it.
+Anyway, I'm up and running.
 
-How do I configure mdam so that the DATA from at least one disk is not
-deleted ? 
-I cannot mount them as ext3 file system currently ?
-
-Thanks, 
-Vijay Kumar. 
+-- 
+Johnny Ljunggren, Navtek AS
+Tlf: 918 50 411, 33 07 10 77
 
