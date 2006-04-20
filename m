@@ -1,34 +1,46 @@
 From: Gabor Gombas <gombasg@sztaki.hu>
-Subject: Re: help wanted - 6-disk raid5 borked: _ _ U U U U
-Date: Thu, 20 Apr 2006 16:35:45 +0200
-Message-ID: <20060420143545.GB27744@boogie.lpds.sztaki.hu>
-References: <62b0912f0604161419udee8ff2tf0861bc2f6e8e304@mail.gmail.com> <17474.51121.178492.61143@cse.unsw.edu.au> <62b0912f0604161617k31eedfaev8778b299e4a65b4b@mail.gmail.com> <17474.54168.331725.412456@cse.unsw.edu.au>
+Subject: Re: replace disk in raid5 without linux noticing?
+Date: Thu, 20 Apr 2006 17:22:08 +0200
+Message-ID: <20060420152208.GF27744@boogie.lpds.sztaki.hu>
+References: <200604191631.04305.Dexter.Filmore@gmx.de> <e3edb0fa0604190931i1160d94eo829ba17943b0c5eb@mail.gmail.com> <1145466223.8608.84.camel@localhost.localdomain> <44467654.2060903@swcp.com> <1145470570.8608.100.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <17474.54168.331725.412456@cse.unsw.edu.au>
+In-Reply-To: <1145470570.8608.100.camel@localhost.localdomain>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Molle Bestefich <molle.bestefich@gmail.com>, linux-raid@vger.kernel.org
+To: Ming Zhang <mingz@ele.uri.edu>
+Cc: Brendan Conoboy <synk@swcp.com>, Shai <shaibn@gmail.com>, Dexter Filmore <Dexter.Filmore@gmx.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Apr 17, 2006 at 09:30:32AM +1000, Neil Brown wrote:
+On Wed, Apr 19, 2006 at 02:16:10PM -0400, Ming Zhang wrote:
 
-> It is arguable that for a read error on a degraded raid5, that may not
-> be the best thing to do, but I'm not completely convinced.
+> is this possible? 
+> * stop RAID5
+> * set a mirror between current disk X and a new added disk Y, and X as
+> primary one (which means copy X to Y to full sync, and before this ends,
+> only read from X); also this mirror will not have any metadata or mark
+> on existing disk;
 
-My opinion would be that in the degraded case md should behave as if it
-was a single physical drive, and just pass the error to the upper layers.
-Then the filesystem can decide what to do (for example, ext3 can be told
-to just continue, remount read-only, or simply panic).
+The mirror should be created without persistent superblocks (obviously),
+but --build does not seem to allow RAID1.
 
-> A read error will mean that a write to the same stripe will have to
-> fail, so at the very least we would want to switch the array
-> read-only.
+> * add this mirror to RAID5
+> * start RAID5;
+> 
+> ... mirror will continue copy data from X to Y, once end
+> 
+> * stop RAID5
+> * split mirror
+> * put DISK Y back to RAID5
+> * restart RAID5.
+> 
+> since this is a mirror, all metadata are same. it will be even greater
+> if no need to stop raid5 to do this.
 
-Not neccessarily. Just fail the write with -EIO and let the file system
-decide. Or at least make the error-handling behaviour run-time configurable.
+The process seems rather fragile. If I created a RAID5 array to protect
+my data I most certainly would not like to perform so much steps where I
+can mess up.
 
 Gabor
 
