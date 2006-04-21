@@ -1,31 +1,196 @@
-From: carlos@fisica.ufpr.br (Carlos Carvalho)
-Subject: Re: help wanted - 6-disk raid5 borked: _ _ U U U U
-Date: Fri, 21 Apr 2006 19:45:29 -0300
-Message-ID: <17481.24713.400927.636615@fisica.ufpr.br>
-References: <62b0912f0604161419udee8ff2tf0861bc2f6e8e304@mail.gmail.com>
-	<17474.51121.178492.61143@cse.unsw.edu.au>
-	<62b0912f0604161617k31eedfaev8778b299e4a65b4b@mail.gmail.com>
-	<17474.54168.331725.412456@cse.unsw.edu.au>
-	<20060420143545.GB27744@boogie.lpds.sztaki.hu>
+From: Sam Hopkins <sah@coraid.com>
+Subject: data recovery on raid5
+Date: Fri, 21 Apr 2006 19:11:39 -0400
+Message-ID: <8867c2a014b34d9c11ce162c4f5860af@coraid.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+	boundary="upas-ylodqbwflyntnajooxyhxkoulc"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20060420143545.GB27744@boogie.lpds.sztaki.hu>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
+Cc: jrs@abhost.net, support@coraid.com
 List-Id: linux-raid.ids
 
-Gabor Gombas (gombasg@sztaki.hu) wrote on 20 April 2006 16:35:
- >On Mon, Apr 17, 2006 at 09:30:32AM +1000, Neil Brown wrote:
- >
- >> It is arguable that for a read error on a degraded raid5, that may not
- >> be the best thing to do, but I'm not completely convinced.
- >
- >My opinion would be that in the degraded case md should behave as if it
- >was a single physical drive, and just pass the error to the upper layers.
- >Then the filesystem can decide what to do (for example, ext3 can be told
- >to just continue, remount read-only, or simply panic).
+This is a multi-part message in MIME format.
+--upas-ylodqbwflyntnajooxyhxkoulc
+Content-Disposition: inline
+Content-Type: text/plain; charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
 
-Agreed. This makes for a nice conceptual separation: raid is only a
-matter of disk redundancy, independent of the rest.
+Hello,
+
+I have a client with a failed raid5 that is in desperate need of the
+data that's on the raid.  The attached file holds the mdadm -E
+superblocks that are hopefully the keys to the puzzle.  Linux-raid
+folks, if you can give any help here it would be much appreciated.
+
+# mdadm -V
+mdadm - v1.7.0 - 11 August 2004
+# uname -a
+Linux hazel 2.6.13-gentoo-r5 #1 SMP Sat Jan 21 13:24:15 PST 2006 i686 Intel(R) Pentium(R) 4 CPU 2.40GHz GenuineIntel GNU/Linux
+
+Here's my take:
+
+Logfiles show that last night drive /dev/etherd/e0.4 failed and around
+noon today /dev/etherd/e0.0 failed.  This jibes with the superblock
+dates and info.
+
+My assessment is that since the last known good configuration was
+0 <missing>
+1 /dev/etherd/e0.0
+2 /dev/etherd/e0.2
+3 /dev/etherd/e0.3
+
+then we should shoot for this.  I couldn't figure out how to get there
+using mdadm -A since /dev/etherd/e0.0 isn't in sync with e0.2 or e0.3.
+If anyone can suggest a way to get this back using -A, please chime in.
+
+The alternative is to recreate the array with this configuration hoping
+the data blocks will all line up properly so the filesystem can be mounted
+and data retrieved.  It looks like the following command is the right
+way to do this, but not being an expert I (and the client) would like
+someone else to verify the sanity of this approach.
+
+Will
+
+mdadm -C /dev/md0 -n 4 -l 5 missing /dev/etherd/e0.[023]
+
+do what we want?
+
+Linux-raid folks, please reply-to-all as we're probably all not on
+the list.
+
+Thanks for your help,
+
+Sam
+
+--upas-ylodqbwflyntnajooxyhxkoulc
+Content-Disposition: attachment; filename=mdadm-e.0234
+Content-Type: text/plain; charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
+
+/dev/etherd/e0.0:
+          Magic : a92b4efc
+        Version : 00.90.00
+           UUID : 8fe1fe85:eeb90460:c525faab:cdaab792
+  Creation Time : Mon Jan  3 03:16:48 2005
+     Raid Level : raid5
+    Device Size : 195360896 (186.31 GiB 200.05 GB)
+   Raid Devices : 4
+  Total Devices : 5
+Preferred Minor : 0
+
+    Update Time : Fri Apr 21 12:45:07 2006
+          State : clean
+ Active Devices : 3
+Working Devices : 4
+ Failed Devices : 1
+  Spare Devices : 1
+       Checksum : 4cc955da - correct
+         Events : 0.3488315
+
+         Layout : left-asymmetric
+     Chunk Size : 32K
+
+      Number   Major   Minor   RaidDevice State
+this     1     152        0        1      active sync   /dev/etherd/e0.0
+
+   0     0       0        0        0      removed
+   1     1     152        0        1      active sync   /dev/etherd/e0.0
+   2     2     152       32        2      active sync   /dev/etherd/e0.2
+   3     3     152       48        3      active sync   /dev/etherd/e0.3
+   4     4     152       16        0      spare   /dev/etherd/e0.1
+/dev/etherd/e0.2:
+          Magic : a92b4efc
+        Version : 00.90.00
+           UUID : 8fe1fe85:eeb90460:c525faab:cdaab792
+  Creation Time : Mon Jan  3 03:16:48 2005
+     Raid Level : raid5
+    Device Size : 195360896 (186.31 GiB 200.05 GB)
+   Raid Devices : 4
+  Total Devices : 5
+Preferred Minor : 0
+
+    Update Time : Fri Apr 21 14:03:12 2006
+          State : clean
+ Active Devices : 2
+Working Devices : 3
+ Failed Devices : 3
+  Spare Devices : 1
+       Checksum : 4cc991e9 - correct
+         Events : 0.3493633
+
+         Layout : left-asymmetric
+     Chunk Size : 32K
+
+      Number   Major   Minor   RaidDevice State
+this     2     152       32        2      active sync   /dev/etherd/e0.2
+
+   0     0       0        0        0      removed
+   1     1       0        0        1      faulty removed
+   2     2     152       32        2      active sync   /dev/etherd/e0.2
+   3     3     152       48        3      active sync   /dev/etherd/e0.3
+   4     4     152       16        4      spare   /dev/etherd/e0.1
+/dev/etherd/e0.3:
+          Magic : a92b4efc
+        Version : 00.90.00
+           UUID : 8fe1fe85:eeb90460:c525faab:cdaab792
+  Creation Time : Mon Jan  3 03:16:48 2005
+     Raid Level : raid5
+    Device Size : 195360896 (186.31 GiB 200.05 GB)
+   Raid Devices : 4
+  Total Devices : 5
+Preferred Minor : 0
+
+    Update Time : Fri Apr 21 14:03:12 2006
+          State : clean
+ Active Devices : 2
+Working Devices : 3
+ Failed Devices : 3
+  Spare Devices : 1
+       Checksum : 4cc991fb - correct
+         Events : 0.3493633
+
+         Layout : left-asymmetric
+     Chunk Size : 32K
+
+      Number   Major   Minor   RaidDevice State
+this     3     152       48        3      active sync   /dev/etherd/e0.3
+
+   0     0       0        0        0      removed
+   1     1       0        0        1      faulty removed
+   2     2     152       32        2      active sync   /dev/etherd/e0.2
+   3     3     152       48        3      active sync   /dev/etherd/e0.3
+   4     4     152       16        4      spare   /dev/etherd/e0.1
+/dev/etherd/e0.4:
+          Magic : a92b4efc
+        Version : 00.90.00
+           UUID : 8fe1fe85:eeb90460:c525faab:cdaab792
+  Creation Time : Mon Jan  3 03:16:48 2005
+     Raid Level : raid5
+    Device Size : 195360896 (186.31 GiB 200.05 GB)
+   Raid Devices : 4
+  Total Devices : 5
+Preferred Minor : 0
+
+    Update Time : Thu Apr 20 21:07:50 2006
+          State : clean
+ Active Devices : 4
+Working Devices : 5
+ Failed Devices : 0
+  Spare Devices : 1
+       Checksum : 4cc84d59 - correct
+         Events : 0.3482550
+
+         Layout : left-asymmetric
+     Chunk Size : 32K
+
+      Number   Major   Minor   RaidDevice State
+this     0     152       64        0      active sync   /dev/etherd/e0.4
+
+   0     0     152       64        0      active sync   /dev/etherd/e0.4
+   1     1     152        0        1      active sync   /dev/etherd/e0.0
+   2     2     152       32        2      active sync   /dev/etherd/e0.2
+   3     3     152       48        3      active sync   /dev/etherd/e0.3
+   4     4     152       16        4      spare   /dev/etherd/e0.1
+--upas-ylodqbwflyntnajooxyhxkoulc--
