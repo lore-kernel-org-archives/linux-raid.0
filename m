@@ -1,36 +1,85 @@
-From: carlos@fisica.ufpr.br (Carlos Carvalho)
-Subject: disks becoming slow but not explicitly failing anyone?
-Date: Sat, 22 Apr 2006 17:05:34 -0300
-Message-ID: <17482.35982.996526.551753@fisica.ufpr.br>
+From: Jonathan <jrs@abhost.net>
+Subject: Re: data recovery on raid5
+Date: Sat, 22 Apr 2006 13:07:32 -0700
+Message-ID: <444A8D04.20809@abhost.net>
+References: <444A7C99.80006@abhost.net> <62b0912f0604221248s653843bfx363f346c7ef31a94@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <62b0912f0604221248s653843bfx363f346c7ef31a94@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-We've been hit by a strange problem for about 9 months already. Our
-main server suddenly becomes very unresponsive, the load skyrockets
-and if demand is high enough it collapses. top shows many processes
-stuck in D state. There are no raid or disk error messages, either in
-the console or logs.
+I was already terrified of screwing things up -- now I'm afraid of 
+making things worse
 
-The machine has 4 IDE disks in a software raid5 array, connected to a
-3Ware 7506. Only once I saw warnings of scsi resets of the 3Ware due
-to timeouts.
+based on what was posted before is this a sensible thing to try?
 
-This 3Ware card has leds which are on when there's activity in the IDE
-channel. As expected, all leds turn on and off almost simultaneously
-during normal operation of the raid5, however when the problem appears
-one of the leds stays on much longer than the others for each burst of
-activity. This shows that the disk is getting much slower than the
-others, holding the whole array.
+mdadm -C /dev/md0 -c 32 -n 4 -l 5 missing /dev/etherd/e0.[023]
 
-Several times a smart test of the disk shows read failures but not
-always. I've changed cables, 3Ware card and even connected the slow
-disk in the IDE channel of the motherboard to no avail. Changing the
-disk and reconstructing the array restores normal operation.
+Is what I've done to the superblock size recoverable?
 
-This has happened with 7 (seven!!) disks already, 80GB and 120GB,
-Maxtor and Seagate. Has anyone else seen this?
+I don't understand how mdadm --assemble would know what to do, which is 
+why I didn't try it initially.  That said, obviouly my lack of 
+understanding isn't helping one bit.
+
+I don't think I can afford a penny per byte, but I'd happy part with 
+hundreds of dollars to get the data back.  I would really like someone 
+with more knowledge than me to hold my hand before I continue to make 
+things worse.
+
+help please - support@abhost.net
+
+-- Jonathan
+
+
+Molle Bestefich wrote:
+
+>Jonathan wrote:
+>  
+>
+>># mdadm -C /dev/md0 -n 4 -l 5 missing /dev/etherd/e0.[023]
+>>    
+>>
+>
+>I think you should have tried "mdadm --assemble --force" first, as I
+>proposed earlier.
+>
+>By doing the above, you have effectively replaced your version 0.9.0
+>superblocks with version 0.9.2.  I don't know if version 0.9.2
+>superblocks are larger than 0.9.0, Neil hasn't responded to that yet. 
+>Potentially hazardous, who knows.
+>
+>Anyway.
+>This is from your old superblock as described by Sam Hopkins:
+>
+>  
+>
+>>/dev/etherd/<blah>:
+>>     Chunk Size : 32K
+>>    
+>>
+>
+>This is from what you've just posted:
+>  
+>
+>>/dev/etherd/<blah>:
+>>     Chunk Size : 64K
+>>    
+>>
+>
+>If I were you, I'd recreate your superblocks now, but with the correct
+>chunk size (use -c).
+>
+>  
+>
+>>We'll be happy to pay you for your services.
+>>    
+>>
+>
+>I'll be modest and charge you a penny per byte of data recovered, ho hum.
+>  
+>
+
