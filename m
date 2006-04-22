@@ -1,79 +1,60 @@
-From: Christian Pedaschus <cpedaschus@gmx.de>
+From: "Molle Bestefich" <molle.bestefich@gmail.com>
 Subject: Re: data recovery on raid5
-Date: Sun, 23 Apr 2006 01:17:09 +0200
-Message-ID: <444AB975.40302@gmx.de>
-References: <444A7C99.80006@abhost.net>	 <62b0912f0604221248s653843bfx363f346c7ef31a94@mail.gmail.com>	 <444A8D04.20809@abhost.net>	 <62b0912f0604221322k25c96c37q2bee9361a6316c1b@mail.gmail.com>	 <444A92CF.70401@abhost.net> <62b0912f0604221338m6b9fc06do61d78ffa622523bc@mail.gmail.com> <444A9841.8070202@abhost.net>
+Date: Sat, 22 Apr 2006 23:17:40 +0200
+Message-ID: <62b0912f0604221417g3f539b9aub9c4fa82ab78faaf@mail.gmail.com>
+References: <444A7C99.80006@abhost.net>
+	 <62b0912f0604221248s653843bfx363f346c7ef31a94@mail.gmail.com>
+	 <444A8D04.20809@abhost.net>
+	 <62b0912f0604221322k25c96c37q2bee9361a6316c1b@mail.gmail.com>
+	 <444A92CF.70401@abhost.net>
+	 <62b0912f0604221338m6b9fc06do61d78ffa622523bc@mail.gmail.com>
+	 <444A9841.8070202@abhost.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <444A9841.8070202@abhost.net>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: Jonathan <jrs@abhost.net>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-nice to hear you got your data back.
-now it's perhaps a good time to donate some money to some
-ppls/oss-projects for saving your ass ;) ;)
-
-greets, chris
-
-
-
 Jonathan wrote:
-
-> hazel /virtual # mdadm -C /dev/md0 -c 32 -n 4 -l 5
-> --parity=left-asymmetric missing /dev/etherd/e0.[023]
-> mdadm: /dev/etherd/e0.0 appears to be part of a raid array:
->    level=5 devices=4 ctime=Sat Apr 22 13:25:40 2006
-> mdadm: /dev/etherd/e0.2 appears to be part of a raid array:
->    level=5 devices=4 ctime=Sat Apr 22 13:25:40 2006
-> mdadm: /dev/etherd/e0.3 appears to contain an ext2fs file system
->    size=720300416K  mtime=Wed Oct  5 16:39:28 2005
-> mdadm: /dev/etherd/e0.3 appears to be part of a raid array:
->    level=5 devices=4 ctime=Sat Apr 22 13:25:40 2006
-> Continue creating array? y
-> mdadm: array /dev/md0 started.
-> hazel /virtual # mount -t ext2 -r /dev/md0 /md0
-> hazel /virtual # df -H
-> Filesystem             Size   Used  Avail Use% Mounted on
-> /dev/hda4               67G   5.8G    58G  10% /
-> udev                   526M   177k   526M   1% /dev
-> /dev/hda3              8.1G    34M   7.7G   1% /tmp
-> none                   526M      0   526M   0% /dev/shm
-> /dev/md1               591G    11G   551G   2% /virtual
 > /dev/md0               591G    54G   507G  10% /md0
->
+
+Hrm.  Have you been hassling us for a mere 54G worth of data?
+(Just kidding :-D.)
+
 > now I'm doing a:
->
 > (cd /md0 && tar cf - . ) | (cd /virtual/recover/ && tar xvfp -)
->
+
+I wonder - if you have the disk space, why not take David Greaves'
+advice and create a backup of the individual disks before fiddling
+with md superblocks?
+
+Anyway, a quick cheat sheet might come in handy:
+* Hot-add a disk to an array (outdated raid data on that disk won't be used):
+  # mdadm /dev/md1 --add /dev/etherd/e0.xyz
+
+* Check that parity is OK for an entire array:
+  # echo check > /sys/block/md1/md/sync_action
+
+* Manually start a resync:
+  # echo repair > /sys/block/md1/md/sync_action
+
+* Experiment with MDADM by using sparse files:
+  # dd if=/dev/zero of=sparse0 bs=1M seek=200000 count=1
+  # dd if=/dev/zero of=sparse1 bs=1M seek=200000 count=1
+  # dd if=/dev/zero of=sparse2 bs=1M seek=200000 count=1
+  # dd if=/dev/zero of=sparse3 bs=1M seek=200000 count=1
+  # losetup /dev/loop0 sparse0
+  # losetup /dev/loop1 sparse1
+  # losetup /dev/loop2 sparse2
+  # losetup /dev/loop3 sparse3
+  # mdadm -C /dev/md5 -c 32 -p left-a -n 4 -l 5 missing /dev/loop{1,2,3}
+
 > thank you thank you thank you thank you thank you thank you
->
->
-> Molle Bestefich wrote:
->
->> Jonathan wrote:
->>  
->>
->>> Well, the block sizes are back to 32k now, but I still had no luck
->>> mounting /dev/md0 once I created the array.
->>>   
->>
->>
->> Ahem, I missed something.
->> Sorry, the 'a' was hard to spot.
->>
->> Your array used layout : left-asymmetric, while the superblock you've
->> just created has layout: left-symmetric.
->>
->> Try again, but add the option "--parity=left-asymmetric"
->>
->
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->
+
+np.
+(wait, does that mean I won't get my money? ;-))
