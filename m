@@ -1,47 +1,36 @@
-From: David Greaves <david@dgreaves.com>
-Subject: Re: Problem with 5disk RAID5 array - two drives lost
-Date: Sat, 22 Apr 2006 20:54:05 +0100
-Message-ID: <444A89DD.2000803@dgreaves.com>
-References: <A2F915E2-EC52-4EFE-86C2-547A71F8D788@writemem.com>	<62b0912f0604212054m40283fdbybdb6cd89e61dd153@mail.gmail.com> <17482.34615.908339.197028@fisica.ufpr.br>
+From: carlos@fisica.ufpr.br (Carlos Carvalho)
+Subject: disks becoming slow but not explicitly failing anyone?
+Date: Sat, 22 Apr 2006 17:05:34 -0300
+Message-ID: <17482.35982.996526.551753@fisica.ufpr.br>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17482.34615.908339.197028@fisica.ufpr.br>
 Sender: linux-raid-owner@vger.kernel.org
-To: Carlos Carvalho <carlos@fisica.ufpr.br>
-Cc: linux-raid@vger.kernel.org, tbostrom@writemem.com
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Carlos Carvalho wrote:
-> Molle Bestefich (molle.bestefich@gmail.com) wrote on 22 April 2006 05:54:
->  >Tim Bostrom wrote:
->  >> raid5: Disk failure on hdf1, disabling device.
->  >
->  >MD doesn't like to find errors when it's rebuilding.
->  >It will kick that disk off the array, which will cause MD to return
->  >crap (instead of stopping the array and removing the device - I
->  >wonder), again causing 'mount' etc. to fail.
->  >
->  >Quite unfortunate for you, since you have absolutely no redundancy
->  >with 4/5 drives, and you really can't afford to have the 4th disk
->  >kicked just because there's a bad block on it.
->
-> Yes...
->
-> As Molle says, you have a chance that it's a driver/cable problem.
-> What you can also do is dd the disk to another one and try to rebuild
-> the array with the new disk so that you won't get errors during the
-> reconstruction. If you get errors during the copy you'll have to
-> decide what to do with the bad blocks. Some people prefer to use
-> ddrescue instead of dd; I've never tried it.
-I've used ddrescue and would *highly* recommend it. Use the GNU version,
-not the other one (dd_rescue?)
+We've been hit by a strange problem for about 9 months already. Our
+main server suddenly becomes very unresponsive, the load skyrockets
+and if demand is high enough it collapses. top shows many processes
+stuck in D state. There are no raid or disk error messages, either in
+the console or logs.
 
-It handles errors very well indeed and has a good display to show what's
-happening.
+The machine has 4 IDE disks in a software raid5 array, connected to a
+3Ware 7506. Only once I saw warnings of scsi resets of the 3Ware due
+to timeouts.
 
-It seems faster than dd (possibly threaded so streams both drives rather
-than read a drive, write a drive)
+This 3Ware card has leds which are on when there's activity in the IDE
+channel. As expected, all leds turn on and off almost simultaneously
+during normal operation of the raid5, however when the problem appears
+one of the leds stays on much longer than the others for each burst of
+activity. This shows that the disk is getting much slower than the
+others, holding the whole array.
 
-David
+Several times a smart test of the disk shows read failures but not
+always. I've changed cables, 3Ware card and even connected the slow
+disk in the IDE channel of the motherboard to no avail. Changing the
+disk and reconstructing the array restores normal operation.
+
+This has happened with 7 (seven!!) disks already, 80GB and 120GB,
+Maxtor and Seagate. Has anyone else seen this?
