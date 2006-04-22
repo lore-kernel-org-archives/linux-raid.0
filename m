@@ -1,60 +1,50 @@
-From: "Molle Bestefich" <molle.bestefich@gmail.com>
+From: carlos@fisica.ufpr.br (Carlos Carvalho)
 Subject: Re: data recovery on raid5
-Date: Sat, 22 Apr 2006 23:17:40 +0200
-Message-ID: <62b0912f0604221417g3f539b9aub9c4fa82ab78faaf@mail.gmail.com>
+Date: Sat, 22 Apr 2006 18:42:33 -0300
+Message-ID: <17482.41801.445052.11179@fisica.ufpr.br>
 References: <444A7C99.80006@abhost.net>
-	 <62b0912f0604221248s653843bfx363f346c7ef31a94@mail.gmail.com>
-	 <444A8D04.20809@abhost.net>
-	 <62b0912f0604221322k25c96c37q2bee9361a6316c1b@mail.gmail.com>
-	 <444A92CF.70401@abhost.net>
-	 <62b0912f0604221338m6b9fc06do61d78ffa622523bc@mail.gmail.com>
-	 <444A9841.8070202@abhost.net>
+	<62b0912f0604221248s653843bfx363f346c7ef31a94@mail.gmail.com>
+	<444A8D04.20809@abhost.net>
+	<62b0912f0604221322k25c96c37q2bee9361a6316c1b@mail.gmail.com>
+	<444A92CF.70401@abhost.net>
+	<62b0912f0604221338m6b9fc06do61d78ffa622523bc@mail.gmail.com>
+	<444A9841.8070202@abhost.net>
+	<62b0912f0604221417g3f539b9aub9c4fa82ab78faaf@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <444A9841.8070202@abhost.net>
-Content-Disposition: inline
+In-Reply-To: <62b0912f0604221417g3f539b9aub9c4fa82ab78faaf@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jonathan <jrs@abhost.net>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Jonathan wrote:
-> /dev/md0               591G    54G   507G  10% /md0
+Molle Bestefich (molle.bestefich@gmail.com) wrote on 22 April 2006 23:17:
+ >Jonathan wrote:
+ >> thank you thank you thank you thank you thank you thank you
 
-Hrm.  Have you been hassling us for a mere 54G worth of data?
-(Just kidding :-D.)
+Nice job Molle!
 
-> now I'm doing a:
-> (cd /md0 && tar cf - . ) | (cd /virtual/recover/ && tar xvfp -)
+ >np.
+ >(wait, does that mean I won't get my money? ;-))
 
-I wonder - if you have the disk space, why not take David Greaves'
-advice and create a backup of the individual disks before fiddling
-with md superblocks?
+At least you showed someone a new meaning of "support"...
 
-Anyway, a quick cheat sheet might come in handy:
-* Hot-add a disk to an array (outdated raid data on that disk won't be used):
-  # mdadm /dev/md1 --add /dev/etherd/e0.xyz
+Is it my turn now? Just look at this:
 
-* Check that parity is OK for an entire array:
-  # echo check > /sys/block/md1/md/sync_action
+md1 : active raid5 sdp2[15](F) sdo2[16](F) sdn2[13] sdm2[12] sdl2[11] sdk2[10] sdj2[9] sdi2[8] sdh2[17](F) sdg2[18](F) sdf2[5] sde2[4] sdd2[3] sdc2[2] sdb2[1] sda2[0]
+      4198656 blocks level 5, 128k chunk, algorithm 2 [15/12] [UUUUUU__UUUUUU_]
+      
+md3 : active raid5 sdp5[15](F) sdo5[16](F) sdn5[13] sdm5[12] sdl5[11] sdk5[10] sdj5[9] sdi5[8] sdh5[17](F) sdg5[18](F) sdf5[5] sde5[4] sdd5[3] sdc5[2] sdb5[1] sda5[0]
+      588487424 blocks level 5, 128k chunk, algorithm 2 [15/12] [UUUUUU__UUUUUU_]
+      
+md4 : active raid5 sdp6[15](S) sdo6[16](F) sdn6[13] sdm6[12] sdl6[11] sdk6[10] sdj6[9] sdi6[8] sdh6[17](F) sdg6[18](F) sdf6[5] sde6[4] sdd6[3] sdc6[2] sdb6[1] sda6[0]
+      2141065472 blocks level 5, 128k chunk, algorithm 2 [15/12] [UUUUUU__UUUUUU_]
 
-* Manually start a resync:
-  # echo repair > /sys/block/md1/md/sync_action
+This is a 15-array + spare where 3 or 4 disks dropped, *very* likely
+because of these miserable crappy sata power connectors :-( :-( It's
+unbelievable that the industry changes from a working standard to an
+unreliable trash in such common and widespread devices...
 
-* Experiment with MDADM by using sparse files:
-  # dd if=/dev/zero of=sparse0 bs=1M seek=200000 count=1
-  # dd if=/dev/zero of=sparse1 bs=1M seek=200000 count=1
-  # dd if=/dev/zero of=sparse2 bs=1M seek=200000 count=1
-  # dd if=/dev/zero of=sparse3 bs=1M seek=200000 count=1
-  # losetup /dev/loop0 sparse0
-  # losetup /dev/loop1 sparse1
-  # losetup /dev/loop2 sparse2
-  # losetup /dev/loop3 sparse3
-  # mdadm -C /dev/md5 -c 32 -p left-a -n 4 -l 5 missing /dev/loop{1,2,3}
-
-> thank you thank you thank you thank you thank you thank you
-
-np.
-(wait, does that mean I won't get my money? ;-))
+I'm trying to get enough stamina to put the damn thing back on line...
+Or at least try to :-(
