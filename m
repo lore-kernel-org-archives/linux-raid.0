@@ -1,28 +1,52 @@
-From: Arthur Britto <ahbritto@iat.com>
-Subject: Re: Unable to add write-intent bitmap
-Date: Sat, 22 Apr 2006 19:48:55 -0700
-Message-ID: <1145760535.10042.40.camel@profit>
-References: <1145743788.10042.33.camel@profit>
-	 <17482.59590.954386.580590@cse.unsw.edu.au>
+From: gelma <dislessico@gmail.com>
+Subject: to be or not to be...
+Date: Sun, 23 Apr 2006 14:58:36 +0200
+Message-ID: <20060423125836.GB6081@gelma.net>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17482.59590.954386.580590@cse.unsw.edu.au>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, 2006-04-23 at 12:39 +1000, Neil Brown wrote:
-> You should be able to make it work by setting the chunk size
-> explicitly to 1024k i.e
->      mdadm -Gb internal --bitmap-chunk=1024 /dev/md0
+Hi all,
+	to make a long story very very shorty:
+	a) I create /dev/md1, kernel latest rc-2-git4 and mdadm-2.4.1.tgz,
+	   with this command:
+	   /root/mdadm -Cv /dev/.static/dev/.static/dev/.static/dev/md1 --bitmap-chunk=1024 --chunk=256 --assume-clean --bitmap=internal -l5 -n5 /dev/hda2 /dev/hdb2 /dev/hde2 /dev/hdf2 missing
+	
+	b) dm-encrypt /dev/md1
+	
+	c) create fs with:
+	   mkfs.ext3 -O dir_index -L 'tritone' -i 256000 /dev/mapper/raidone
+	
+	d) export it via nfs (mounting /dev/mapper/raidone as ext2)
 
-That worked.
+	e) start to cp-ing files
 
-Thanks Neil! =D
+	f) after 1 TB of written data, with no problem/warning, one of the
+	not-in-raid-array HD freeze
 
--Arthur
+	g) reboot, check with:
+	   fsck -C -D -y /dev/mapper/raidone
+	   
+	   a) first run: lot of strange errors report about impossible
+	   i_size values, duplicated blocks, and so on, but it ends without
+	   complain, saying everything is fixed.
+	   b) mount it (as ext3), everything, at first glance, seems good
+	   (I will check checksum tomorrow) as
+	   number/size/filename/directory place of files. In /lost+found
+	   some files, but nothing "real". I mean, special files/devices,
+	   that never were on that fs, with giga/tera size (holes, of
+	   course), with chattr bits randomly setted.
+	   when I try to remove them I've got a kernel complain about
+	   offset in dir /lost+found.
+	   c) fsck again, after everything is fine
 
+	Now the cloning from old storage is going on, and now I'm wondering
+	if "--assume-clean" could be the reason of what happens.
+	btw, hardware passed usual test (memtest, cpuburn, ecc).
 
+thanks a lot for your time and sorry for my terrible english,
+gelma
