@@ -1,61 +1,69 @@
-From: Anssi Hannula <anssi.hannula@gmail.com>
-Subject: Re: Recovery speed at 1MB/s/device, unable to change
-Date: Mon, 24 Apr 2006 00:37:48 +0300
-Message-ID: <444BF3AC.4090804@gmail.com>
-References: <444BD3E7.4090601@gmail.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: to be or not to be...
+Date: Mon, 24 Apr 2006 07:45:27 +1000
+Message-ID: <17483.62839.125510.962278@cse.unsw.edu.au>
+References: <20060423125836.GB6081@gelma.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <444BD3E7.4090601@gmail.com>
+In-Reply-To: message from gelma on Sunday April 23
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: gelma <dislessico@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Anssi Hannula wrote:
-> The speed is only 2000K/sec, even after I set:
-> ---
-> # cat /proc/sys/dev/raid/speed_limit_min
-> 10000
-> # cat /proc/sys/dev/raid/speed_limit_max
-> 400000
-> ---
+On Sunday April 23, dislessico@gmail.com wrote:
+> Hi all,
+> 	to make a long story very very shorty:
+> 	a) I create /dev/md1, kernel latest rc-2-git4 and mdadm-2.4.1.tgz,
+> 	   with this command:
+> 	   /root/mdadm -Cv /dev/.static/dev/.static/dev/.static/dev/md1 \
+>              --bitmap-chunk=1024 --chunk=256 --assume-clean --bitmap=internal \
+                                               ^^^^^^^^^^^^^^
+>              -l5 -n5 /dev/hda2 /dev/hdb2 /dev/hde2 /dev/hdf2 missing
+> 	
+
+ From the man page:
+       --assume-clean
+              Tell mdadm that the array pre-existed and is known to be  clean.
+              It  can be useful when trying to recover from a major failure as
+              you can be sure that no data will be affected unless  you  actu-
+              ally  write  to  the array.  It can also be used when creating a
+              RAID1 or RAID10 if you want to avoid the initial resync, however
+              this  practice - while normally safe - is not recommended.   Use
+                                                                           ^^^
+              this ony if you really know what you are doing.
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+So presumably you know what you are doing, and I wonder why you bother
+to ask us :-)
+Ofcourse, if you don't know what you are doing, then I suggest
+dropping the --assume-clean.  
+In correct use of this flag can lead to data corruption.  This is
+particularly true if your array goes degraded, but is also true while
+your array isn't degraded.  In this case it is (I think) very unusual
+and may not be the cause of your corruption, but you should avoid
+using the flag anyway.
+
+
+> 	b) dm-encrypt /dev/md1
+> 	
+> 	c) create fs with:
+> 	   mkfs.ext3 -O dir_index -L 'tritone' -i 256000 /dev/mapper/raidone
+> 	
+> 	d) export it via nfs (mounting /dev/mapper/raidone as ext2)
+                                                              ^^^^
+
+Why not ext3?
+
 > 
-> The system is about 90% idle, so there should be more bandwidth.
+> 	e) start to cp-ing files
 > 
-> ---
-> # cat /proc/version
-> Linux version 2.6.17-rc2-git4 (anssi@delta.onse.fi) (gcc version 4.0.1
-> (4.0.1-5mdk for Mandriva Linux release 2006.0)) #1 Sun Apr 23 00:56:30
-> EEST 2006
-> ---
+> 	f) after 1 TB of written data, with no problem/warning, one of the
+> 	not-in-raid-array HD freeze
 
-Hmm... I don't know if this is related, but something seems to be really
-wrong.
+This could signal a bad controller.  If it does, then you cannot trust
+any drives.
 
-I run the following set of commands:
-
-# dd if=/dev/zero of=ohase count=5K
-# dd if=/dev/zero of=ohase2 count=5K
-# losetup /dev/loop0 ohase
-# losetup /dev/loop1 ohase2
-# mdadm --create /dev/md_d1 -ap --level=5 --raid-devices=2 /dev/loop0
-missing
-# fdisk /dev/md_d1
-(created one partition)
-# mkfs.ext3 /dev/md_d1p1
-# mount /dev/md_d1p1 /mnt/test
-# echo jopajoo > /mnt/iso/test
-# mdadm --manage /dev/md_d1 --add /dev/loop1
-# mdadm --grow /dev/md_d1 --raid-devices=3 --backup-file backupfile
-mdadm: Need to backup 128K of critical section..
-mdadm: /dev/md_d1: Cannot get array details from sysfs
-
-Strace shows that it's trying to access
-"/sys/block/md_d4/md/component_size".
-
-Why is this?
-
--- 
-Anssi Hannula
-
+NeilBrown
