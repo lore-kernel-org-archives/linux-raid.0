@@ -1,44 +1,56 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: EVMS causing problems with mdadm?
-Date: Mon, 24 Apr 2006 07:48:00 +1000
-Message-ID: <17483.62992.692017.319991@cse.unsw.edu.au>
-References: <6d5bedd80604230833m3614f453we869b8bf7261d0e9@mail.gmail.com>
+Subject: Re: Recovery speed at 1MB/s/device, unable to change
+Date: Mon, 24 Apr 2006 07:58:44 +1000
+Message-ID: <17483.63636.745420.456281@cse.unsw.edu.au>
+References: <444BD3E7.4090601@gmail.com>
+	<444BF3AC.4090804@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Ewan Grantham on Sunday April 23
+In-Reply-To: message from Anssi Hannula on Monday April 24
 Sender: linux-raid-owner@vger.kernel.org
-To: Ewan Grantham <ewan.grantham@gmail.com>
-Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: Anssi Hannula <anssi.hannula@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sunday April 23, ewan.grantham@gmail.com wrote:
-> Did my latest updates for my Kubuntu (Ubuntu KDE variant) this
-> morning, and noticed that EVMS has now "taken control" of my RAID
-> array. Didn't think much about it until I tried to make a RAID-1 array
-> with two disks I've just added to the system. Trying to do a create
-> verbose tells me that device /dev/md1 (or 2 or 3 - I tried a couple
-> just to see) doesn't exist. And in fact, there are no block devices
-> listed beyond md0.
+On Monday April 24, anssi.hannula@gmail.com wrote:
+> # mdadm --grow /dev/md_d1 --raid-devices=3 --backup-file backupfile
+> mdadm: Need to backup 128K of critical section..
+> mdadm: /dev/md_d1: Cannot get array details from sysfs
+> 
+> Strace shows that it's trying to access
+> "/sys/block/md_d4/md/component_size".
+> 
+> Why is this?
 
-Sounds like udev is in use rather than a static /dev.
+Because I didn't test my code properly :-(
 
-Add '--auto=md' to the mdadm command line, and it will create the
-devices for you.  Or --auto=part if you want partitioned arrays.  See
-man page for more details.
+Following patch should fix it.
 
-I suspect this might need to be come the default in another year or so....
+Re: the recovery speed problem:  I would try dding from one drive to
+the other and see what sort of speed you get then:
+  dd if=/dev/sda of=/dev/sdb bs=1024k count=1000
+or something like that.
 
+Thanks,
 NeilBrown
 
-> 
-> Trying to go into EVMS to create a new Volume brings up the screen for
-> doing so, but doesn't actually let you create a new one.
-> 
-> Any suggestion of what I might be doing wrong, or is this a bug I
-> should be reporting to the Ubuntu folks?
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Neil Brown <neilb@suse.de>
+
+### Diffstat output
+ ./sysfs.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff ./sysfs.c~current~ ./sysfs.c
+--- ./sysfs.c~current~	2006-03-14 15:33:12.000000000 +1100
++++ ./sysfs.c	2006-04-24 07:56:56.000000000 +1000
+@@ -206,7 +206,7 @@ unsigned long long get_component_size(in
+ 			minor(stb.st_rdev));
+ 	else
+ 		sprintf(fname, "/sys/block/md_d%d/md/component_size",
+-			minor(stb.st_rdev)/16);
++			minor(stb.st_rdev)/64);
+ 	fd = open(fname, O_RDONLY);
+ 	if (fd < 0)
+ 		return 0;
