@@ -1,46 +1,55 @@
-From: Luca Berra <bluca@comedia.it>
-Subject: Re: EVMS causing problems with mdadm?
-Date: Mon, 24 Apr 2006 00:02:45 +0200
-Message-ID: <20060423220245.GA4050@percy.comedia.it>
-References: <6d5bedd80604230833m3614f453we869b8bf7261d0e9@mail.gmail.com> <17483.62992.692017.319991@cse.unsw.edu.au>
+From: Anssi Hannula <anssi.hannula@gmail.com>
+Subject: Re: Recovery speed at 1MB/s/device, unable to change
+Date: Mon, 24 Apr 2006 01:48:39 +0300
+Message-ID: <444C0447.4040200@gmail.com>
+References: <444BD3E7.4090601@gmail.com>	<444BF3AC.4090804@gmail.com> <17483.63636.745420.456281@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <17483.62992.692017.319991@cse.unsw.edu.au>
+In-Reply-To: <17483.63636.745420.456281@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Apr 24, 2006 at 07:48:00AM +1000, Neil Brown wrote:
->On Sunday April 23, ewan.grantham@gmail.com wrote:
->> Did my latest updates for my Kubuntu (Ubuntu KDE variant) this
->> morning, and noticed that EVMS has now "taken control" of my RAID
->> array. Didn't think much about it until I tried to make a RAID-1 array
->> with two disks I've just added to the system. Trying to do a create
->> verbose tells me that device /dev/md1 (or 2 or 3 - I tried a couple
->> just to see) doesn't exist. And in fact, there are no block devices
->> listed beyond md0.
->
->Sounds like udev is in use rather than a static /dev.
->
->Add '--auto=md' to the mdadm command line, and it will create the
->devices for you.  Or --auto=part if you want partitioned arrays.  See
->man page for more details.
->
->I suspect this might need to be come the default in another year or so....
->
-i was tkinking about stat()ing "/dev/.udev" and automatically enabling
---auto if found
+(sorry, prev post missed the list)
 
-WDYT?
+Neil Brown wrote:
+> On Monday April 24, anssi.hannula@gmail.com wrote:
+> 
+>># mdadm --grow /dev/md_d1 --raid-devices=3 --backup-file backupfile
+>>mdadm: Need to backup 128K of critical section..
+>>mdadm: /dev/md_d1: Cannot get array details from sysfs
+>>
+>>Strace shows that it's trying to access
+>>"/sys/block/md_d4/md/component_size".
+>>
+>>Why is this?
+> 
+> 
+> Because I didn't test my code properly :-(
+> 
+> Following patch should fix it.
 
-L.
+Okay, will test.
+
+> Re: the recovery speed problem:  I would try dding from one drive to
+> the other and see what sort of speed you get then:
+>   dd if=/dev/sda of=/dev/sdb bs=1024k count=1000
+> or something like that.
+
+
+# export LANGUAGE=C; export LANG=C; export LC_ALL=C; date; dd
+if=/dev/sda skip=20000 of=/dev/sdb bs=1024k count=1000; date
+Mon Apr 24 01:14:48 EEST 2006
+1000+0 records in
+1000+0 records out
+Mon Apr 24 01:15:42 EEST 2006
+
+So the speed is about 20MB/s.
 
 -- 
-Luca Berra -- bluca@comedia.it
-        Communication Media & Services S.r.l.
- /"\
- \ /     ASCII RIBBON CAMPAIGN
-  X        AGAINST HTML MAIL
- / \
+Anssi Hannula
+
+
