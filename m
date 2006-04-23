@@ -1,43 +1,26 @@
-From: "Molle Bestefich" <molle.bestefich@gmail.com>
-Subject: Re: to be or not to be...
-Date: Sun, 23 Apr 2006 17:14:23 +0200
-Message-ID: <62b0912f0604230814m675e947am140c0cfffa72465e@mail.gmail.com>
-References: <20060423125836.GB6081@gelma.net>
+From: "Ewan Grantham" <ewan.grantham@gmail.com>
+Subject: EVMS causing problems with mdadm?
+Date: Sun, 23 Apr 2006 10:33:25 -0500
+Message-ID: <6d5bedd80604230833m3614f453we869b8bf7261d0e9@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20060423125836.GB6081@gelma.net>
 Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: gelma <dislessico@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-gelma wrote:
-> first run: lot of strange errors report about impossible i_size
-> values, duplicated blocks, and so on
+Did my latest updates for my Kubuntu (Ubuntu KDE variant) this
+morning, and noticed that EVMS has now "taken control" of my RAID
+array. Didn't think much about it until I tried to make a RAID-1 array
+with two disks I've just added to the system. Trying to do a create
+verbose tells me that device /dev/md1 (or 2 or 3 - I tried a couple
+just to see) doesn't exist. And in fact, there are no block devices
+listed beyond md0.
 
-You mention only filesystem errors, no block device related errors.
-In this case, I'd say that it's more likely that dm-crypt is to blame
-rather than MD.
+Trying to go into EVMS to create a new Volume brings up the screen for
+doing so, but doesn't actually let you create a new one.
 
-I think you should try the dm-devel mailing list.  Posting a complete
-log of everything that has happened would probably be a good thing.
-
-I have no experience with dm-crypt, but I do have experience with
-another dm target (dm-snapshot), which iss very good at destroying my
-data.
-
-If you want a stable solution for encrypting your files, I can
-recommend loop-aes.
-loop-aes has very well thought-through security, the docs are concise
-but have wide coverage,
-it has good backwards compatibility - probably not your biggest
-concern right now, but it is *very* nice to know that your data is
-accessible, in the future as well as now - etc..  I've been using it
-for a couple of years now, since the 2.2 or 2.4 days (can't remember),
-and I've had nothing short of an absolutely *brilliant* experience
-with it.
-
-Enough propaganda for now, hope that you get your problem solved :-).
+Any suggestion of what I might be doing wrong, or is this a bug I
+should be reporting to the Ubuntu folks?
