@@ -1,45 +1,64 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: Unable to add write-intent bitmap
-Date: Sun, 23 Apr 2006 12:39:02 +1000
-Message-ID: <17482.59590.954386.580590@cse.unsw.edu.au>
-References: <1145743788.10042.33.camel@profit>
+Subject: Re: data recovery on raid5
+Date: Sun, 23 Apr 2006 12:46:38 +1000
+Message-ID: <17482.60046.999713.487183@cse.unsw.edu.au>
+References: <444A7C99.80006@abhost.net>
+	<62b0912f0604221248s653843bfx363f346c7ef31a94@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Arthur Britto on Saturday April 22
+In-Reply-To: message from Molle Bestefich on Saturday April 22
 Sender: linux-raid-owner@vger.kernel.org
-To: Arthur Britto <ahbritto@iat.com>
-Cc: linux-raid@vger.kernel.org
+To: Molle Bestefich <molle.bestefich@gmail.com>
+Cc: Jonathan <jrs@abhost.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Saturday April 22, ahbritto@iat.com wrote:
-> Hi,
+On Saturday April 22, molle.bestefich@gmail.com wrote:
+> Jonathan wrote:
+> > # mdadm -C /dev/md0 -n 4 -l 5 missing /dev/etherd/e0.[023]
 > 
-> I am unable to add a write-intent bitmap to an existing array.  The man
-> page indicates:
+> I think you should have tried "mdadm --assemble --force" first, as I
+> proposed earlier.
 > 
-> >When using an internal bitmap, the chunksize is automatically
-> >determined to make best use of available space.
-> 
-> Yet, it appears that bitmap being created is too large and goes past the
-> end of the partitions provided to the array.
-> 
-> How can I add a write-intent bitmap to this array or will I need to
-> re-create this array?
+> By doing the above, you have effectively replaced your version 0.9.0
+> superblocks with version 0.9.2.  I don't know if version 0.9.2
+> superblocks are larger than 0.9.0, Neil hasn't responded to that yet. 
+> Potentially hazardous, who knows.
 
-You don't need to recreate the array.
-There seems to be some confusion in mdadm as to whether sizes are in
-'sectors' or 'kibibytes' - I thought I had sorted all that out, but it
-seems not.
+There is no difference in the superblock between 0.90.0 and 0.90.2.
 
-You should be able to make it work by setting the chunk size
-explicitly to 1024k i.e
-     mdadm -Gb internal --bitmap-chunk=1024 /dev/md0
+md has always used version numbers, but always in a confusing way.
+There should be two completely separate version numbers: the version
+for the format of the superblock, and the version for the software
+implementation.  md confuses these two.
 
-Meanwhile I try to sort out the code, make it consistent, and get a
-new mdadm out.
+To try to sort it out, I have decided that:
+ - The 'major' version number is the overall choice of superblock
+    This is currently 0 or 1
+ - The 'minor' version encodes minor variation in the superblock.
+    For version 1, this is different locations (there are other bits
+    in the superblock to allow new fields to be added)
+    For version 0, it is currently only used to make sure old software
+      doesn't try to assemble an array which is undergoing a
+      shape, as that would confuse it totals.
 
-Thanks for the report.
+ - The 'patchlevel' is used to indicate feature availability in
+   the implementation.  It really should be stored in the superblock,
+   but it is for historical reasons.  It is not checked when
+   validating a superblock.
+  To quote from md.h
+
+/*
+ * MD_PATCHLEVEL_VERSION indicates kernel functionality.
+ * >=1 means different superblock formats are selectable using SET_ARRAY_INFO
+ *     and major_version/minor_version accordingly
+ * >=2 means that Internal bitmaps are supported by setting MD_SB_BITMAP_PRESENT
+ *     in the super status byte
+ * >=3 means that bitmap superblock version 4 is supported, which uses
+ *     little-ending representation rather than host-endian
+ */
+
+Hope that helps.
 
 NeilBrown
