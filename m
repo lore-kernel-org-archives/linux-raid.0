@@ -1,69 +1,44 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: to be or not to be...
-Date: Mon, 24 Apr 2006 07:45:27 +1000
-Message-ID: <17483.62839.125510.962278@cse.unsw.edu.au>
-References: <20060423125836.GB6081@gelma.net>
+Subject: Re: EVMS causing problems with mdadm?
+Date: Mon, 24 Apr 2006 07:48:00 +1000
+Message-ID: <17483.62992.692017.319991@cse.unsw.edu.au>
+References: <6d5bedd80604230833m3614f453we869b8bf7261d0e9@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from gelma on Sunday April 23
+In-Reply-To: message from Ewan Grantham on Sunday April 23
 Sender: linux-raid-owner@vger.kernel.org
-To: gelma <dislessico@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: Ewan Grantham <ewan.grantham@gmail.com>
+Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Sunday April 23, dislessico@gmail.com wrote:
-> Hi all,
-> 	to make a long story very very shorty:
-> 	a) I create /dev/md1, kernel latest rc-2-git4 and mdadm-2.4.1.tgz,
-> 	   with this command:
-> 	   /root/mdadm -Cv /dev/.static/dev/.static/dev/.static/dev/md1 \
->              --bitmap-chunk=1024 --chunk=256 --assume-clean --bitmap=internal \
-                                               ^^^^^^^^^^^^^^
->              -l5 -n5 /dev/hda2 /dev/hdb2 /dev/hde2 /dev/hdf2 missing
-> 	
+On Sunday April 23, ewan.grantham@gmail.com wrote:
+> Did my latest updates for my Kubuntu (Ubuntu KDE variant) this
+> morning, and noticed that EVMS has now "taken control" of my RAID
+> array. Didn't think much about it until I tried to make a RAID-1 array
+> with two disks I've just added to the system. Trying to do a create
+> verbose tells me that device /dev/md1 (or 2 or 3 - I tried a couple
+> just to see) doesn't exist. And in fact, there are no block devices
+> listed beyond md0.
 
- From the man page:
-       --assume-clean
-              Tell mdadm that the array pre-existed and is known to be  clean.
-              It  can be useful when trying to recover from a major failure as
-              you can be sure that no data will be affected unless  you  actu-
-              ally  write  to  the array.  It can also be used when creating a
-              RAID1 or RAID10 if you want to avoid the initial resync, however
-              this  practice - while normally safe - is not recommended.   Use
-                                                                           ^^^
-              this ony if you really know what you are doing.
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Sounds like udev is in use rather than a static /dev.
 
-So presumably you know what you are doing, and I wonder why you bother
-to ask us :-)
-Ofcourse, if you don't know what you are doing, then I suggest
-dropping the --assume-clean.  
-In correct use of this flag can lead to data corruption.  This is
-particularly true if your array goes degraded, but is also true while
-your array isn't degraded.  In this case it is (I think) very unusual
-and may not be the cause of your corruption, but you should avoid
-using the flag anyway.
+Add '--auto=md' to the mdadm command line, and it will create the
+devices for you.  Or --auto=part if you want partitioned arrays.  See
+man page for more details.
 
-
-> 	b) dm-encrypt /dev/md1
-> 	
-> 	c) create fs with:
-> 	   mkfs.ext3 -O dir_index -L 'tritone' -i 256000 /dev/mapper/raidone
-> 	
-> 	d) export it via nfs (mounting /dev/mapper/raidone as ext2)
-                                                              ^^^^
-
-Why not ext3?
-
-> 
-> 	e) start to cp-ing files
-> 
-> 	f) after 1 TB of written data, with no problem/warning, one of the
-> 	not-in-raid-array HD freeze
-
-This could signal a bad controller.  If it does, then you cannot trust
-any drives.
+I suspect this might need to be come the default in another year or so....
 
 NeilBrown
+
+> 
+> Trying to go into EVMS to create a new Volume brings up the screen for
+> doing so, but doesn't actually let you create a new one.
+> 
+> Any suggestion of what I might be doing wrong, or is this a bug I
+> should be reporting to the Ubuntu folks?
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
