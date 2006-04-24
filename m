@@ -1,27 +1,50 @@
-From: Arthur Britto <ahbritto@iat.com>
-Subject: Re: Problem with 5disk RAID5 array - two drives lost
-Date: Sun, 23 Apr 2006 19:00:22 -0700
-Message-ID: <1145844022.9213.1.camel@profit>
-References: <A2F915E2-EC52-4EFE-86C2-547A71F8D788@writemem.com>
-	 <62b0912f0604212054m40283fdbybdb6cd89e61dd153@mail.gmail.com>
-	 <A6B7149E-FC1E-4779-8370-66AF285F58A0@writemem.com>
+From: Anssi Hannula <anssi.hannula@gmail.com>
+Subject: Re: Recovery speed at 1MB/s/device, unable to change
+Date: Mon, 24 Apr 2006 16:33:25 +0300
+Message-ID: <444CD3A5.1000102@gmail.com>
+References: <444BD3E7.4090601@gmail.com>	<444BF3AC.4090804@gmail.com> <17483.63636.745420.456281@cse.unsw.edu.au> <444C0481.2000408@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <A6B7149E-FC1E-4779-8370-66AF285F58A0@writemem.com>
+In-Reply-To: <444C0481.2000408@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Tim Bostrom <tbostrom@writemem.com>
+To: Neil Brown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, 2006-04-23 at 17:17 -0700, Tim Bostrom wrote:
-> I bought two extra 250GB drives - I'll try using dd_rescue as  
-> recommended and see if I can get a "good" copy of hdf online.
+Anssi Hannula wrote:
+> Neil Brown wrote:
+> 
+>>On Monday April 24, anssi.hannula@gmail.com wrote:
+>>
+>>
+>>># mdadm --grow /dev/md_d1 --raid-devices=3 --backup-file backupfile
+>>>mdadm: Need to backup 128K of critical section..
+>>>mdadm: /dev/md_d1: Cannot get array details from sysfs
+>>>
+>>>Strace shows that it's trying to access
+>>>"/sys/block/md_d4/md/component_size".
+>>>
+>>>Why is this?
+>>
+>>
+>>Because I didn't test my code properly :-(
+>>
+>>Following patch should fix it.
+>>
+> 
+> 
+> It appears you missed another occurrence (patch attached).
+> 
+> However,
+[...strange problems...]
 
-You might want to use dd_rhelp:
-http://www.kalysto.org/utilities/dd_rhelp/index.en.html
+The rest of my problems, including the slow speed of reconstruction were
+solved by reboot and I'm unable to reproduce them.
 
--Arthur
+Neil, thank you very much for the speedy replies :)
 
+-- 
+Anssi Hannula
 
