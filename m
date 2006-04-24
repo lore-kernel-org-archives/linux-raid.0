@@ -1,76 +1,58 @@
-From: gelma <dislessico@gmail.com>
-Subject: Re: to be or not to be...
-Date: Mon, 24 Apr 2006 16:34:24 +0200
-Message-ID: <20060424143424.GB11616@gelma.net>
-References: <20060423125836.GB6081@gelma.net> <17483.62839.125510.962278@cse.unsw.edu.au>
+From: Jonas Smedegaard <dr@jones.dk>
+Subject: Re: Raid5 & Debian Yaird Woes
+Date: Mon, 24 Apr 2006 17:13:42 +0200
+Message-ID: <20060424171342.74b9b6dd.dr@jones.dk>
+References: <200602031229.37972.mylists@blue-matrix.org>
+	<200602040958.20183.mylists@blue-matrix.org>
+	<Pine.LNX.4.64.0602031622100.19604@twinlark.arctic.org>
+	<200602050907.31735.mylists@blue-matrix.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; protocol="application/pgp-signature";
+ micalg="PGP-SHA1";
+ boundary="Signature=_Mon__24_Apr_2006_17_13_42_+0200_DSdAJD5YdMoQUF9s"
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <17483.62839.125510.962278@cse.unsw.edu.au>
+In-Reply-To: <200602050907.31735.mylists@blue-matrix.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
+To: Lewis Shobbrook <mylists@blue-matrix.org>
+Cc: dean@arctic.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Apr 24, 2006 at 07:45:27AM +1000, Neil Brown wrote:
-> your array isn't degraded.  In this case it is (I think) very unusual
-> and may not be the cause of your corruption, but you should avoid
-> using the flag anyway.
-thanks a lot for your time and your attention, Neil. Your support it's fast
-and valuable, as usual.
-well, I wasted lot of hours, after my post, trying to find the reason of
-the corruptions I've got.
-Well, the problem is funny... I mean... I can cp hundred of giga, in ext2,
-without complain in dmesg/log, but if I umount the fs and run fsck I've got
-a lot of incredible problem (duplicated blocks, and so on). with ext3 it
-can works for hours, seldom I've got ext3-journal corruption.
-anyway, after fsck, the checksum of files is always good, and lost+found
-full of monster (some files need debugs to be eliminated (lsattr/chattr
-failed working with them)).
-after checking hardware, changing controllers, now I have changed even
-hd cables. at home I will re-run all the tests.
-I don't think it's a problem of raid software, of course.
+--Signature=_Mon__24_Apr_2006_17_13_42_+0200_DSdAJD5YdMoQUF9s
+Content-Type: text/plain; charset=US-ASCII
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-> 
-> 
-> > 	b) dm-encrypt /dev/md1
-> > 	
-> > 	c) create fs with:
-> > 	   mkfs.ext3 -O dir_index -L 'tritone' -i 256000 /dev/mapper/raidone
-> > 	
-> > 	d) export it via nfs (mounting /dev/mapper/raidone as ext2)
->                                                               ^^^^
-> 
-> Why not ext3?
-Well, because I had to clone 1,5 TB of data, spread over a lot of disks,
-in one shot, and to avoid journal seeks I've done so.
+On Sun, 5 Feb 2006 09:07:29 +1100 Lewis Shobbrook wrote:
 
-> 
-> > 
-> > 	e) start to cp-ing files
-> > 
-> > 	f) after 1 TB of written data, with no problem/warning, one of the
-> > 	not-in-raid-array HD freeze
-> 
-> This could signal a bad controller.  If it does, then you cannot trust
-> any drives.
+> Basically it just states waiting X seconds
 
-well, it was my fault... I mean, I've got a Dell server, without enough
-internal room for all the disks. The source disk was out of the server, and
-I move it... it wasn't happy...
-anyway, I'm using HPT ATA PCI controller (well tested, I mean, I used the ones
-in the server since 2000). btw, 5 disks Maxtor, 500Giga each one.
+Please post in public rather than to me privately.
 
-The problem isn't MD related, but it's the first time I've got so much
-problems finding the culprit of data corruption. Usually it's RAM/CPU
-fault, few times I've got problem with controller... but this time I'm
-going slightly mad... also, why meta and not data (file are checked with a
-stupid python script I wrote)... is there an ATA command triggered only
-with metadata? uhm... maybe mounting the array in synchronous mode I could
-gather more info, uhm...
+If this debate is related to a bug already filed against the Debian
+package of yaird then cc that bugreport: <bug number>@bugs.debian.org -
+and if not then please file a bugreport.
 
-at the end, Neil, thanks a lot for your work. If you'll be in Italy, some
-day, I'll be happy to be your host.
 
-ciao,
-gelma
+Thanks in advance,
+
+ - Jonas
+
+
+--=20
+* Jonas Smedegaard - idealist og Internet-arkitekt
+* Tlf.: +45 40843136  Website: http://dr.jones.dk/
+
+ - Enden er n_r: http://www.shibumi.org/eoti.htm
+
+--Signature=_Mon__24_Apr_2006_17_13_42_+0200_DSdAJD5YdMoQUF9s
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.3 (GNU/Linux)
+
+iD8DBQFETOsnn7DbMsAkQLgRAmYwAJ4kAK9sznzS/+m/yZUSXl5EElysdQCeNu2/
+1vaPSrBuu6kXOaHAmzuid50=
+=7nhv
+-----END PGP SIGNATURE-----
+
+--Signature=_Mon__24_Apr_2006_17_13_42_+0200_DSdAJD5YdMoQUF9s--
