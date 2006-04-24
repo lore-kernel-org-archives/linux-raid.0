@@ -1,62 +1,29 @@
-From: Jonas Smedegaard <dr@jones.dk>
-Subject: Re: Raid5 & Debian Yaird Woes
-Date: Mon, 24 Apr 2006 17:20:34 +0200
-Message-ID: <20060424172034.dd7d3f63.dr@jones.dk>
-References: <200602031229.37972.mylists@blue-matrix.org>
-	<200602040958.20183.mylists@blue-matrix.org>
-	<Pine.LNX.4.64.0602031622100.19604@twinlark.arctic.org>
-	<200602050907.31735.mylists@blue-matrix.org>
-	<20060424171342.74b9b6dd.dr@jones.dk>
-Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pgp-signature";
- micalg="PGP-SHA1";
- boundary="Signature=_Mon__24_Apr_2006_17_20_34_+0200_NFbnu2ljb8XDY12l"
+From: "Mauricio Benitez" <vtqra@ghl.com>
+Subject: Supports Total Healthy Lifestyles
+Date: Tue, 25 Apr 2006 00:17:42 +0600
+Message-ID: <218c.barkeep__23064.3562543721$1145899503$gmane$org@creosote82.net>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20060424171342.74b9b6dd.dr@jones.dk>
 Sender: linux-raid-owner@vger.kernel.org
-To: mylists@blue-matrix.org, dean@arctic.org, linux-raid@vger.kernel.org
+To: linux-newbie@vger.kernel.org, linux-serial@vger.kernel.org, linux-net@vger.kernel.org, linux-kernel@vger.kernel.org, autoanswer@vger.kernel.org, linux-assembly@vger.kernel.org, majordomo@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Signature=_Mon__24_Apr_2006_17_20_34_+0200_NFbnu2ljb8XDY12l
-Content-Type: text/plain; charset=US-ASCII
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Summer is coming, did you look in the mirror lately?
 
-On Mon, 24 Apr 2006 17:13:42 +0200 Jonas Smedegaard wrote:
+If you`re still overweight you MUST visit us:
 
-> On Sun, 5 Feb 2006 09:07:29 +1100 Lewis Shobbrook wrote:
->=20
-> > Basically it just states waiting X seconds
->=20
-> Please post in public rather than to me privately.
+http://051.priiceofhealth.com
 
-Uh, how embarrassing: I thought I was looking in my inbox, but instead
-was looking in the "todo" box full of old postings I am supposed to
-deal with.
-
-Sorry for my rant - I guess I've already commented on this long time
-ago.
+WE WILL HELP YOU!
 
 
-Kind regards,
 
- - Jonas
 
---=20
-* Jonas Smedegaard - idealist og Internet-arkitekt
-* Tlf.: +45 40843136  Website: http://dr.jones.dk/
 
- - Enden er n_r: http://www.shibumi.org/eoti.htm
 
---Signature=_Mon__24_Apr_2006_17_20_34_+0200_NFbnu2ljb8XDY12l
-Content-Type: application/pgp-signature
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.3 (GNU/Linux)
 
-iD8DBQFETOzCn7DbMsAkQLgRAjwhAJ47PWRpf6zW4IVpKLy7Rt/5te8jIwCdHk7l
-mxFtwvoFrd9DraoAAZ65BjI=
-=MysG
------END PGP SIGNATURE-----
 
---Signature=_Mon__24_Apr_2006_17_20_34_+0200_NFbnu2ljb8XDY12l--
+
+drudge you jose me, macon perihelion . peripheral you joshua me, clasp custodian peripatetic sexton . python you heave me, gunfire bespectacled conscription jackdaw . bowstring you centenary me, seminar avuncular bryan . 
+abeyant you impersonate me, beardsley dock bp effect . harley you butterfat me, cordial tomograph worcester . 
+http://051.priiceofhealth.com/rm/
