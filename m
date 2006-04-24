@@ -1,7 +1,7 @@
 From: <infoadvert1@o2.co.uk>
 Subject: REPRESENTATIVE/MANAGER WANTED
-Date: Mon, 24 Apr 2006 20:23:08 +0100 (BST)
-Message-ID: <18872835.1145906588199.JavaMail.root@pippin>
+Date: Mon, 24 Apr 2006 20:56:31 +0100 (BST)
+Message-ID: <18369647.1145908591662.JavaMail.root__49812.20463892$1145909114$gmane$org@pippin>
 Reply-To: <infoadvert1@o2.co.uk>
 Mime-Version: 1.0
 Content-Type: text/plain;charset="UTF-8"
