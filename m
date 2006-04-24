@@ -1,78 +1,57 @@
-From: Tim Bostrom <tbostrom@writemem.com>
-Subject: Re: Problem with 5disk RAID5 array - two drives lost
-Date: Sun, 23 Apr 2006 17:17:50 -0700
-Message-ID: <A6B7149E-FC1E-4779-8370-66AF285F58A0@writemem.com>
-References: <A2F915E2-EC52-4EFE-86C2-547A71F8D788@writemem.com> <62b0912f0604212054m40283fdbybdb6cd89e61dd153@mail.gmail.com>
-Mime-Version: 1.0 (Apple Message framework v749.3)
-Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
-Content-Transfer-Encoding: 7bit
+From: dean gaudet <dean@arctic.org>
+Subject: proactive raid5 disk replacement success (using bitmap + raid1)
+Date: Sun, 23 Apr 2006 18:40:17 -0700 (PDT)
+Message-ID: <Pine.LNX.4.64.0604231823560.22072@twinlark.arctic.org>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <62b0912f0604212054m40283fdbybdb6cd89e61dd153@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Molle Bestefich <molle.bestefich@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-First let me say - thank you for responding.  I'm still trying to  
-figure out this problem.
+i had a disk in a raid5 which i wanted to clone onto the hot spare... 
+without going offline and without long periods without redundancy.  a few 
+folks have discussed using bitmaps and temporary (superblockless) raid1 
+mappings to do this... i'm not sure anyone has tried / reported success 
+though.  this is my success report.
 
+setup info:
 
-On Apr 21, 2006, at 8:54 PM  Apr 21, 2006, Molle Bestefich wrote:
+- kernel version 2.6.16.9 (as packaged by debian)
+- mdadm version 2.4.1
+- /dev/md4 is the raid5
+- /dev/sde1 is the disk in md4 i want to clone from
+- /dev/sdh1 is the hot spare from md4, and is the clone target
+- /dev/md5 is an unused md device name
 
-> Tim Bostrom wrote:
->> It appears that /dev/hdf1 failed this past week and /dev/hdh1  
->> failed  back in February.
->
-> An obvious question would be, how much have you been altering the
-> contents of the array since February?
->
+here are the exact commands i issued:
 
-This is a video backup drive for my MythTV system.  I just backup old  
-TV shows and movies from my system.  There's maybe 3-4 GB of data  
-that's been stored there since February and no other data's been  
-moved or deleted.  Pretty much when something is backed up here, it  
-stays.  I'm willing to lose the February - April data.
+mdadm -Gb internal --bitmap-chunk=1024 /dev/md4
+mdadm /dev/md4 -r /dev/sdh1
+mdadm /dev/md4 -f /dev/sde1 -r /dev/sde1
+mdadm --build /dev/md5 -ayes --level=1 --raid-devices=2 /dev/sde1 missing
+mdadm /dev/md4 --re-add /dev/md5
+mdadm /dev/md5 -a /dev/sdh1
 
->
->> hdf: dma_intr: error=0x40 { UncorrectableError }, LBAsect=6720
->
->
->
-> Actually, there's a lot of sequential sector numbers in the output  
-> you posted.
-> I think it's unusual for a drive to develop that many bad blocks in  
-> a row.
-> I could be wrong, and it could be a head crash or something (have you
-> been moving the system around much?).
->
-> But if I had to guess, I'd say that there's a real likelihood that
-> it's a loose cable or a controller problem or a driver issue.
->
-> Could you try and run:
-> # dd if=/dev/hdf of=/dev/null bs=1M count=100 skip=1234567
-> You can play around with different random numbers instead of 1234567.
-> If it craps out *immediately*, then I'd say it's a cable problem or
-> so, and not a problem with what's on the platters.
->
+... wait a few hours for md5 resync...
 
+mdadm /dev/md4 -f /dev/md5 -r /dev/md5
+mdadm --stop /dev/md5
+mdadm /dev/md4 --re-add /dev/sdh1
+mdadm --zero-superblock /dev/sde1
+mdadm /dev/md4 -a /dev/sde1
 
-Tried running this.  It doesn't crap out immediately.  Goes along,  
-but I see a bunch of the {Uncorrectable Error} {Drive Ready Seek  
-Complete} errors in dmesg that I posted before.  I see these messages  
-in dmesg when I run the above command.
+this sort of thing shouldn't be hard to script :)
 
-I bought two extra 250GB drives - I'll try using dd_rescue as  
-recommended and see if I can get a "good" copy of hdf online.
+the only times i was without full redundancy was briefly between the "-r" 
+and "--re-add" commands... and with bitmap support the raid5 resync for 
+each of those --re-adds was essentially zero.
 
+thanks Neil (and others)!
 
+-dean
 
->
-> No, get the array running first, then fix the filesystem.
->
-> You can initiate array checks and repairs like this:
-> # cd /sys/block/md0/md/
-> # echo check > sync_action
-> or
-> # echo repair > sync_action
->
->
+p.s. it's absolutely necessary to use "--build" for the temporary raid1 
+... if you use --create mdadm will rightfully tell you it's already a raid 
+component and if you --force it then you'll trash the raid5 superblock and 
+it won't fit into the raid5 any more...
