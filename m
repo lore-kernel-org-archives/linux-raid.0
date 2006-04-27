@@ -1,46 +1,32 @@
-From: Ming Zhang <mingz@ele.uri.edu>
-Subject: Re: Controlling Reading and Writing in RAID 1 configuration
-Date: Thu, 27 Apr 2006 18:38:16 -0400
-Message-ID: <1146177496.11547.147.camel@localhost.localdomain>
-References: <20060425125814.6366.qmail@web52907.mail.yahoo.com>
-	 <17489.16385.884347.871210@cse.unsw.edu.au>
-Reply-To: mingz@ele.uri.edu
+From: "Matt Harding" <Matt.Harding@pt.com>
+Subject: RE: Infinite fail-retry loop on degraded RAID1 array
+Date: Thu, 27 Apr 2006 15:55:50 -0700
+Message-ID: <AE5398F6F2923E429D8870BFDE090196025BC1B7@sloexchange01.corp.pt.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17489.16385.884347.871210@cse.unsw.edu.au>
+Content-class: urn:content-classes:message
 Sender: linux-raid-owner@vger.kernel.org
 To: Neil Brown <neilb@suse.de>
-Cc: Rik Herrin <rikherrin@yahoo.com>, linux-raid@vger.kernel.org
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-On Fri, 2006-04-28 at 08:04 +1000, Neil Brown wrote:
-> On Tuesday April 25, rikherrin@yahoo.com wrote:
-> > Hi,
-> >   I have a setup where I want to use RAID 1 to mirror
-> > my data over the LAN.  I am exposing 2x500 GB-sized
-> > devices via iSCSI and was wondering if I could
-> > configure the RAID 1 to write to both members of the
-> > RAID 1 configuration but only read from one as one
+> The only particularly "unusual" thing I can see in your configuration
+> is 2.6.12, which is nearly a year old :-)
 
-only read from one disk, shall this be a "--read-preferred" ?
+Well, what can I say; the project has taken a little longer than
+originally planned...
 
-i checked email archive, but still not quite understand on this
-"--write-mostly". for raid1, u anyway need to write all components, so
-why there is a "mostly"?
+> The code for handling read errors during resync was written in
+> December, so I suspect you'll have a lot better luck with
+> 2.6.16.latest.
 
+Thanks!  I saw a post discussing a similar problem dated 2004, so I
+assumed (incorrectly) that the fix had been around before 2.6.12.
 
-> > link is 1GbE while the other is lower but sufficient
-> > for writing.  Is this possible? Thanks for your help.
-> 
-> You'll be wanting the '--write-mostly' option to mdadm.
-> This requires a fairly recent kernel and mdadm.
-> 
-> NeilBrown
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Best regards,
+~Matt Harding~
 
