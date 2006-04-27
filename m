@@ -1,29 +1,28 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: Controlling Reading and Writing in RAID 1 configuration
-Date: Fri, 28 Apr 2006 08:04:49 +1000
-Message-ID: <17489.16385.884347.871210@cse.unsw.edu.au>
-References: <20060425125814.6366.qmail@web52907.mail.yahoo.com>
+Subject: Re: Infinite fail-retry loop on degraded RAID1 array
+Date: Fri, 28 Apr 2006 08:16:24 +1000
+Message-ID: <17489.17080.597282.782574@cse.unsw.edu.au>
+References: <AE5398F6F2923E429D8870BFDE090196025BC13F@sloexchange01.corp.pt.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Rik Herrin on Tuesday April 25
+In-Reply-To: message from Matt Harding on Tuesday April 25
 Sender: linux-raid-owner@vger.kernel.org
-To: Rik Herrin <rikherrin@yahoo.com>
+To: Matt Harding <Matt.Harding@pt.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday April 25, rikherrin@yahoo.com wrote:
-> Hi,
->   I have a setup where I want to use RAID 1 to mirror
-> my data over the LAN.  I am exposing 2x500 GB-sized
-> devices via iSCSI and was wondering if I could
-> configure the RAID 1 to write to both members of the
-> RAID 1 configuration but only read from one as one
-> link is 1GbE while the other is lower but sufficient
-> for writing.  Is this possible? Thanks for your help.
+On Tuesday April 25, Matt.Harding@pt.com wrote:
+> I am experiencing a problem that I think was supposed to be fixed some
+> time ago (if I read the previous discussion correctly) but appears to
+> have resurfaced on my somewhat unusual configuration.
 
-You'll be wanting the '--write-mostly' option to mdadm.
-This requires a fairly recent kernel and mdadm.
+The only particularly "unusual" thing I can see in your configuration
+is 2.6.12, which is nearly a year old :-)
+
+The code for handling read errors during resync was written in
+December, so I suspect you'll have a lot better luck with
+2.6.16.latest.
 
 NeilBrown
