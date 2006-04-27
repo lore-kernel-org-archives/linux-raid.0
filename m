@@ -1,65 +1,49 @@
-From: Emmanuel Eleganza <emmanuel_eleganza4@virgilio.it>
-Subject: Accept in good faith.
-Date: Fri, 28 Apr 2006 04:00:59 +0100 (GMT+01:00)
-Message-ID: <10ade712ce2.emmanuel_eleganza4__7944.35396460376$1146194768$gmane$org@virgilio.it>
-Reply-To: drjoelzuma115@yahoo.com
+From: "sinosteel corporation" <andong_liu1000@gmail.cn>
+Subject: AGENTS NEEDED
+Date: Fri, 28 Apr 2006 01:16:29 +0800 (CST)
+Message-ID: <56276.213.185.118.196.1146158189.squirrel__16707.541261758$1146203456$gmane$org@3w.gmail.cn>
+Reply-To: andong_liu05@yahoo.com.cn
 Mime-Version: 1.0
-Content-Type: text/plain;charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 List-Id: linux-raid.ids
 
-Goodday,
+17B Xichang'an Street,West District,
+Beijing 100031 P.R.CHINA.
 
-I got your contact over the internet as a 
-trustworthy and 
-reliable person.please pay 
-attention and understand my reason of 
-contacting you today through this email. 
-My name is Hon.EMMANUEL 
-ELEGANZA..I am the 
-personal solicitor to a foreinger, Late 
-Mr. Morris 
-Thompson ,an American who 
-unfortunately lost his life in the plane 
-crash of Alaska Airlines Flight 261, which 
-crashed on January 31 2000. 
-You may read 
-more about the crash on visiting this C.N.N 
-News 
-internet website. 
+Dear Sir/Madam,
 
-http://archives.cnn.com/2000/US/02/01/alaska.
-airlines.list/ 
+I am  Mr.Shunpui Anderson, CEO of Sinosteel Corporation. We are searching
+for representatives who can help us establish a medium of getting to our
+costumers in the Canada,America,North America and Europe as well as making
+payments through you to us.
 
-I desprately need your assistance to secure 
-and move 
-huge sums of money left behind by 
-my late client to the tune of 
-$85,000,000 
-(Eight five million united states dollars). 
-I will pay 
-you 20% of the total sum for your 
-coperation in this matter.I will 
-give you more 
-details,on your positive response, also 
-include in your 
-reply and acknowledgement of 
-this mail your tel number so that we can 
-disscuss in details. I can be reached 
-urgently through my private mail 
-address 
-below. 
+ We deals on products like Baosteel, Wuhan Iron & Steel Corp, Anshan Iron
+& Steel Corp. and Taiyuan Iron & Steel Corp etc, we export these raw
+materials into Europe, America, Africa and Canada.
 
-emmaeleganza2003@kaixo.com
+Baosteel
+Wuhan Iron & Steel Corp
+Anshan Iron & Steel Corp
+Taiyuan Iron & Steel Corp
 
-Yours Faithfully, 
+Please if you are interested in transacting business with us we will be
+glad. Please contact us for more information; Subject to your satisfaction
+you will be given the opportunity to negotiate your mode for  which we
+will pay for your services as our representative in Canada,America,North
+America and Europe.
 
-EMMANUEL ELEGANZA
-Address: 3 Presley Way
-Crownhill, Milton Keynes
-Buckinghamshire MK8 OES
-United Kingdom.
-TELEPHONE +44 702 4082191
+Please if you are interested forward to us your phone number/fax and your
+full contact addresses.
+
+Thanks in advance
+Please,for further enquiery/informations contact,(i.e reply to):
+CHIEF ACCOUNTANT,
+Mr.'Andong Liu'on this email(andong_liu05@yahoo.com.cn)
+
+Mr.Shunpui Anderson
+CEO.
+SINOSTEEL CORPORATION
 
