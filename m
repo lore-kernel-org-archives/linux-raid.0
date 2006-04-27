@@ -1,68 +1,46 @@
-From: "Emmanuel Eleganza" <emmanueleleganza@tiscali.cz>
-Subject: Accept in good faith.
-Date: Thu, 27 Apr 2006 23:21:58 +0100
-Message-ID: <443E4BCB0001D386__47587.9284590066$1146176559$gmane$org@nzoth.tiscali.cz>
-Reply-To: joelzuma112@yahoo.com
+From: Ming Zhang <mingz@ele.uri.edu>
+Subject: Re: Controlling Reading and Writing in RAID 1 configuration
+Date: Thu, 27 Apr 2006 18:38:16 -0400
+Message-ID: <1146177496.11547.147.camel@localhost.localdomain>
+References: <20060425125814.6366.qmail@web52907.mail.yahoo.com>
+	 <17489.16385.884347.871210@cse.unsw.edu.au>
+Reply-To: mingz@ele.uri.edu
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-2
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <17489.16385.884347.871210@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: Rik Herrin <rikherrin@yahoo.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Goodday,
 
-I got your contact over the internet as a=20
-trustworthy and reliable person.please pay=20
-attention and understand my reason of=20
-contacting you today through this email.=20
-My name is HON.EMMANUEL ELEGANZA..I am the=20
-personal solicitor to a foreinger, Late=20
-Mr. Morris Thompson ,an American who=20
-unfortunately lost his life in the plane=20
-crash of Alaska Airlines Flight 261, which=20
-crashed on January 31 2000. You may read=20
-more about the crash on visiting this C.N.N=20
-News internet website.=20
+On Fri, 2006-04-28 at 08:04 +1000, Neil Brown wrote:
+> On Tuesday April 25, rikherrin@yahoo.com wrote:
+> > Hi,
+> >   I have a setup where I want to use RAID 1 to mirror
+> > my data over the LAN.  I am exposing 2x500 GB-sized
+> > devices via iSCSI and was wondering if I could
+> > configure the RAID 1 to write to both members of the
+> > RAID 1 configuration but only read from one as one
 
-http://archives.cnn.com/2000/US/02/01/alaska.
-airlines.list/=20
+only read from one disk, shall this be a "--read-preferred" ?
 
-I desprately need your assistance to secure=20
-and move huge sums of money left behind by=20
-my late client to the tune of $85,000,000=20
-(Eight five million united states dollars).=20
-I will pay you 20% of the total sum for your=20
-coperation in this matter.I will give you more=20
-details,on your positive response, also=20
-include in your reply and acknowledgement of=20
-this mail your tel number so that we can=20
-disscuss in details. I can be reached=20
-urgently through my private mail address=20
-below.=20
-
-emmaeleganza2003@kaixo.com
-
-Yours Faithfully,=20
-
-EMMANUEL ELEGANZA
-Address: 3 Presley Way
-Crownhill, Milton Keynes
-Buckinghamshire MK8 OES
-United Kingdom.
-TELEPHONE +44 702 4082191
-
-______________________________________
-Plat=EDte zbyte=E8n=EC drah=E9 povinn=E9 ru=E8en=ED? Zjist=ECte si cenu=
- v online kalkula=E8ce
-nebo na tel. 841 444 444. O bonus nep=F8ijdete, p=F8evedeme v=E1m ho.
-http://ad.tiscali.com/adclick/CID=3D0002ceb4c6efdc0e00000000/SITE=3DCZ.=
-TISCALI/AREA=3DNEWSLETTER..HOME/POS=3DL2
+i checked email archive, but still not quite understand on this
+"--write-mostly". for raid1, u anyway need to write all components, so
+why there is a "mostly"?
 
 
+> > link is 1GbE while the other is lower but sufficient
+> > for writing.  Is this possible? Thanks for your help.
+> 
+> You'll be wanting the '--write-mostly' option to mdadm.
+> This requires a fairly recent kernel and mdadm.
+> 
+> NeilBrown
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
