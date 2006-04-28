@@ -1,7 +1,7 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [PATCH 002 of 5] md: Fixed refcounting/locking when attempting read error correction in raid10
-Date: Fri, 28 Apr 2006 12:51:39 +1000
-Message-ID: <1060428025139.30758@suse.de>
+Subject: [PATCH 003 of 5] md: Change ENOTSUPP to EOPNOTSUPP
+Date: Fri, 28 Apr 2006 12:51:44 +1000
+Message-ID: <1060428025144.30770@suse.de>
 References: <20060428124313.29510.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
@@ -10,109 +10,32 @@ Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-We need to hold a reference to rdevs while reading
-and writing to attempt to correct read errors.  This
-reference must be taken under an rcu lock.
-
+Because that is what you get if a BIO_RW_BARRIER isn't supported !
 
 Signed-off-by: Neil Brown <neilb@suse.de>
 
 ### Diffstat output
- ./drivers/md/raid10.c |   44 ++++++++++++++++++++++++++++++--------------
- 1 file changed, 30 insertions(+), 14 deletions(-)
+ ./drivers/md/raid1.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff ./drivers/md/raid10.c~current~ ./drivers/md/raid10.c
---- ./drivers/md/raid10.c~current~	2006-04-28 12:13:20.000000000 +1000
-+++ ./drivers/md/raid10.c	2006-04-28 12:16:54.000000000 +1000
-@@ -1407,36 +1407,45 @@ static void raid10d(mddev_t *mddev)
- 				if (s > (PAGE_SIZE>>9))
- 					s = PAGE_SIZE >> 9;
+diff ./drivers/md/raid1.c~current~ ./drivers/md/raid1.c
+--- ./drivers/md/raid1.c~current~	2006-04-28 12:17:27.000000000 +1000
++++ ./drivers/md/raid1.c	2006-04-28 12:17:27.000000000 +1000
+@@ -315,7 +315,7 @@ static int raid1_end_write_request(struc
+ 		if (r1_bio->bios[mirror] == bio)
+ 			break;
  
-+				rcu_read_lock();
- 				do {
- 					int d = r10_bio->devs[sl].devnum;
--					rdev = conf->mirrors[d].rdev;
-+					rdev = rcu_dereference(conf->mirrors[d].rdev);
- 					if (rdev &&
--					    test_bit(In_sync, &rdev->flags) &&
--					    sync_page_io(rdev->bdev,
--							 r10_bio->devs[sl].addr +
--							 sect + rdev->data_offset,
--							 s<<9,
--							 conf->tmppage, READ))
--						success = 1;
--					else {
--						sl++;
--						if (sl == conf->copies)
--							sl = 0;
-+					    test_bit(In_sync, &rdev->flags)) {
-+						atomic_inc(&rdev->nr_pending);
-+						rcu_read_unlock();
-+						success = sync_page_io(rdev->bdev,
-+								       r10_bio->devs[sl].addr +
-+								       sect + rdev->data_offset,
-+								       s<<9,
-+								       conf->tmppage, READ);
-+						rdev_dec_pending(rdev, mddev);
-+						rcu_read_lock();
-+						if (success)
-+							break;
- 					}
-+					sl++;
-+					if (sl == conf->copies)
-+						sl = 0;
- 				} while (!success && sl != r10_bio->read_slot);
-+				rcu_read_unlock();
- 
- 				if (success) {
- 					int start = sl;
- 					/* write it back and re-read */
-+					rcu_read_lock();
- 					while (sl != r10_bio->read_slot) {
- 						int d;
- 						if (sl==0)
- 							sl = conf->copies;
- 						sl--;
- 						d = r10_bio->devs[sl].devnum;
--						rdev = conf->mirrors[d].rdev;
-+						rdev = rcu_dereference(conf->mirrors[d].rdev);
- 						if (rdev &&
- 						    test_bit(In_sync, &rdev->flags)) {
-+							atomic_inc(&rdev->nr_pending);
-+							rcu_read_unlock();
- 							atomic_add(s, &rdev->corrected_errors);
- 							if (sync_page_io(rdev->bdev,
- 									 r10_bio->devs[sl].addr +
-@@ -1444,6 +1453,8 @@ static void raid10d(mddev_t *mddev)
- 									 s<<9, conf->tmppage, WRITE) == 0)
- 								/* Well, this device is dead */
- 								md_error(mddev, rdev);
-+							rdev_dec_pending(rdev, mddev);
-+							rcu_read_lock();
- 						}
- 					}
- 					sl = start;
-@@ -1453,17 +1464,22 @@ static void raid10d(mddev_t *mddev)
- 							sl = conf->copies;
- 						sl--;
- 						d = r10_bio->devs[sl].devnum;
--						rdev = conf->mirrors[d].rdev;
-+						rdev = rcu_dereference(conf->mirrors[d].rdev);
- 						if (rdev &&
- 						    test_bit(In_sync, &rdev->flags)) {
-+							atomic_inc(&rdev->nr_pending);
-+							rcu_read_unlock();
- 							if (sync_page_io(rdev->bdev,
- 									 r10_bio->devs[sl].addr +
- 									 sect + rdev->data_offset,
- 									 s<<9, conf->tmppage, READ) == 0)
- 								/* Well, this device is dead */
- 								md_error(mddev, rdev);
-+							rdev_dec_pending(rdev, mddev);
-+							rcu_read_lock();
- 						}
- 					}
-+					rcu_read_unlock();
- 				} else {
- 					/* Cannot read from anywhere -- bye bye array */
- 					md_error(mddev, conf->mirrors[r10_bio->devs[r10_bio->read_slot].devnum].rdev);
+-	if (error == -ENOTSUPP && test_bit(R1BIO_Barrier, &r1_bio->state)) {
++	if (error == -EOPNOTSUPP && test_bit(R1BIO_Barrier, &r1_bio->state)) {
+ 		set_bit(BarriersNotsupp, &conf->mirrors[mirror].rdev->flags);
+ 		set_bit(R1BIO_BarrierRetry, &r1_bio->state);
+ 		r1_bio->mddev->barriers_work = 0;
+@@ -1404,7 +1404,7 @@ static void raid1d(mddev_t *mddev)
+ 			unplug = 1;
+ 		} else if (test_bit(R1BIO_BarrierRetry, &r1_bio->state)) {
+ 			/* some requests in the r1bio were BIO_RW_BARRIER
+-			 * requests which failed with -ENOTSUPP.  Hohumm..
++			 * requests which failed with -EOPNOTSUPP.  Hohumm..
+ 			 * Better resubmit without the barrier.
+ 			 * We know which devices to resubmit for, because
+ 			 * all others have had their bios[] entry cleared.
