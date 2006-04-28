@@ -1,46 +1,71 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: Controlling Reading and Writing in RAID 1 configuration
-Date: Fri, 28 Apr 2006 09:06:27 +1000
-Message-ID: <17489.20083.873352.723996@cse.unsw.edu.au>
-References: <20060425125814.6366.qmail@web52907.mail.yahoo.com>
-	<17489.16385.884347.871210@cse.unsw.edu.au>
-	<1146177496.11547.147.camel@localhost.localdomain>
+From: "Ian! D. Allen" <idallen@idallen.ca>
+Subject: Re: Mdadm -- how to add another device in a linear mode?
+Date: Thu, 27 Apr 2006 20:11:34 -0400
+Message-ID: <20060428001134.GH11345@elm.home.idallen.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Ming Zhang on Thursday April 27
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: mingz@ele.uri.edu
-Cc: Rik Herrin <rikherrin@yahoo.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thursday April 27, mingz@ele.uri.edu wrote:
-> 
-> On Fri, 2006-04-28 at 08:04 +1000, Neil Brown wrote:
-> > On Tuesday April 25, rikherrin@yahoo.com wrote:
-> > > Hi,
-> > >   I have a setup where I want to use RAID 1 to mirror
-> > > my data over the LAN.  I am exposing 2x500 GB-sized
-> > > devices via iSCSI and was wondering if I could
-> > > configure the RAID 1 to write to both members of the
-> > > RAID 1 configuration but only read from one as one
-> 
-> only read from one disk, shall this be a "--read-preferred" ?
+>1- I would like to create a linear raid level with one device.
+>2- I would like to add another device to the first one.
 
-No.  The one(s) you don't read from is the odd-one-out.  The one(s)
-you read from are 'normal' and don't get a special flag.
+An example.
 
-> 
-> i checked email archive, but still not quite understand on this
-> "--write-mostly". for raid1, u anyway need to write all components, so
-> why there is a "mostly"?
-> 
+Since a linear array is dependent on *all* the component devices, failure 
+could be a problem as you add more components.  (A failure of any single
+device will bring down the whole linear.  Bad.)  So I always add raid1
+devices to a linear, never raw disk partitions.  A disk failure only
+degrades the raid1, it doesn't destroy the linear.
 
-Mostly it will just write to this device.
-But if all the non-write-mostly device fail, then it will read from
-this device.  So it isn't write-only.  It is write-mostly.
+Create a raid1 pair from two partitions: 
 
-Make sense?
+  mdadm --create --auto=yes --level=raid1 --raid-devices=2 \
+     /dev/md10 /dev/sdc1 /dev/sdd1
 
-NeilBrown
+Put the raid1 device into a linear (only one device!) and make a file system:
+
+  mdadm --create --auto=yes --level=linear --force --raid-devices=1 \
+     /dev/md12 /dev/md10
+  mkfs -j /dev/md12              # creates an ext3 journalling file system
+  mkdir -p /mnt/test
+  mount /dev/md12 /mnt/test
+  df -h
+
+Do whatever you need with /dev/md12 (the linear).  Time passes.  You want
+to add another device to the linear and grow the ext3 file system to 
+use the rest of the space.  You can do all this without copying your data.
+
+First, make another raid1 device to add to the linear:
+
+  mdadm --create --auto=yes --level=raid1 --raid-devices=2 \
+     /dev/md11 /dev/sde1 /dev/sdf1
+
+To grow the linear by adding to the end, unmount the fs, stop the linear,
+remake it with both raid1 pairs (get the order right!), and resize the
+file system to fill the new big linear partition:
+
+  umount /mnt/test
+  mdadm --stop /dev/md12
+  mdadm --create --auto=yes --level=linear --raid-devices=2 \
+     /dev/md12 /dev/md10 /dev/md11
+  fsck -f -C /dev/md12            # resize2fs wants a fsck first
+  resize2fs -p /dev/md12          # grows to fill entire linear partition
+  fsck -f -C /dev/md12            # should be clean
+  mount /dev/md12 /mnt/test
+  df -h                           # shows full new size
+
+Note that an ext[23] file system will allocate files *all over* the 
+new large linear partition, using both /dev/md10 and /dev/md11, so just
+because you added a new disk at the *end* of the linear array doesn't
+mean it won't get used the instant it's mounted as part of an ext[23]
+file system.
+
+-- 
+- Ian! D. Allen  -  idallen@idallen.ca  -  Ottawa, Ontario, Canada
+| Home Page: http://www.idallen.com/ - Contact Improv: http://contactimprov.ca/
+| College professor (Open Source / Linux) via: http://teaching.idallen.com/
+| Support the public commons and public digital rights:  http://eff.org/
