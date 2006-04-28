@@ -1,56 +1,65 @@
-From: NeilBrown <neilb@suse.de>
-Subject: [PATCH 004 of 5] md: Improve detection of lack of barrier support in raid1
-Date: Fri, 28 Apr 2006 12:51:50 +1000
-Message-ID: <1060428025150.30782@suse.de>
-References: <20060428124313.29510.patches@notabene>
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S965204AbWD1CwN@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Emmanuel Eleganza <emmanuel_eleganza4@virgilio.it>
+Subject: Accept in good faith.
+Date: Fri, 28 Apr 2006 04:00:59 +0100 (GMT+01:00)
+Message-ID: <10ade712ce2.emmanuel_eleganza4__7944.35396460376$1146194768$gmane$org@virgilio.it>
+Reply-To: drjoelzuma115@yahoo.com
+Mime-Version: 1.0
+Content-Type: text/plain;charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
 List-Id: linux-raid.ids
 
+Goodday,
 
-Move the test for 'do barrier work' down a bit so that if the first
-write to a raid1 is a BIO_RW_BARRIER write, the checking done by
-superblock writes will cause the right thing to happen.
+I got your contact over the internet as a 
+trustworthy and 
+reliable person.please pay 
+attention and understand my reason of 
+contacting you today through this email. 
+My name is Hon.EMMANUEL 
+ELEGANZA..I am the 
+personal solicitor to a foreinger, Late 
+Mr. Morris 
+Thompson ,an American who 
+unfortunately lost his life in the plane 
+crash of Alaska Airlines Flight 261, which 
+crashed on January 31 2000. 
+You may read 
+more about the crash on visiting this C.N.N 
+News 
+internet website. 
 
+http://archives.cnn.com/2000/US/02/01/alaska.
+airlines.list/ 
 
-Signed-off-by: Neil Brown <neilb@suse.de>
+I desprately need your assistance to secure 
+and move 
+huge sums of money left behind by 
+my late client to the tune of 
+$85,000,000 
+(Eight five million united states dollars). 
+I will pay 
+you 20% of the total sum for your 
+coperation in this matter.I will 
+give you more 
+details,on your positive response, also 
+include in your 
+reply and acknowledgement of 
+this mail your tel number so that we can 
+disscuss in details. I can be reached 
+urgently through my private mail 
+address 
+below. 
 
-### Diffstat output
- ./drivers/md/raid1.c |   16 +++++++++++-----
- 1 file changed, 11 insertions(+), 5 deletions(-)
+emmaeleganza2003@kaixo.com
 
-diff ./drivers/md/raid1.c~current~ ./drivers/md/raid1.c
---- ./drivers/md/raid1.c~current~	2006-04-28 12:17:27.000000000 +1000
-+++ ./drivers/md/raid1.c	2006-04-28 12:17:40.000000000 +1000
-@@ -753,18 +753,24 @@ static int make_request(request_queue_t 
- 	const int rw = bio_data_dir(bio);
- 	int do_barriers;
- 
--	if (unlikely(!mddev->barriers_work && bio_barrier(bio))) {
--		bio_endio(bio, bio->bi_size, -EOPNOTSUPP);
--		return 0;
--	}
--
- 	/*
- 	 * Register the new request and wait if the reconstruction
- 	 * thread has put up a bar for new requests.
- 	 * Continue immediately if no resync is active currently.
-+	 * We test barriers_work *after* md_write_start as md_write_start
-+	 * may cause the first superblock write, and that will check out
-+	 * if barriers work.
- 	 */
-+
- 	md_write_start(mddev, bio); /* wait on superblock update early */
- 
-+	if (unlikely(!mddev->barriers_work && bio_barrier(bio))) {
-+		if (rw == WRITE)
-+			md_write_end(mddev);
-+		bio_endio(bio, bio->bi_size, -EOPNOTSUPP);
-+		return 0;
-+	}
-+
- 	wait_barrier(conf);
- 
- 	disk_stat_inc(mddev->gendisk, ios[rw]);
+Yours Faithfully, 
+
+EMMANUEL ELEGANZA
+Address: 3 Presley Way
+Crownhill, Milton Keynes
+Buckinghamshire MK8 OES
+United Kingdom.
+TELEPHONE +44 702 4082191
+
