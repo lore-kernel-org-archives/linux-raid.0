@@ -1,30 +1,30 @@
-From: "Molle Bestefich" <molle.bestefich@gmail.com>
-Subject: Re: [PATCH 003 of 5] md: Change ENOTSUPP to EOPNOTSUPP
-Date: Fri, 28 Apr 2006 15:34:48 +0200
-Message-ID: <62b0912f0604280634x7df2a8a5m9022826876446cb6@mail.gmail.com>
-References: <20060428124313.29510.patches@notabene>
-	 <1060428025144.30770@suse.de>
+From: John Rowe <rowe@excc.ex.ac.uk>
+Subject: RAID-related: SATA disk removal?
+Date: Fri, 28 Apr 2006 16:55:57 +0100
+Message-ID: <1146239757.10253.122.camel@kenny>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
-	format=flowed
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1060428025144.30770@suse.de>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-NeilBrown wrote:
-> Change ENOTSUPP to EOPNOTSUPP
-> Because that is what you get if a BIO_RW_BARRIER isn't supported !
+I am testing a machine with two SATA drives in startech.com removable
+caddies. Everything including swap is RAID1. (I'm running x86_64
+Scientific Linux 4.2, a RedHat enterprise clone.)
 
-Dumb question, hope someone can answer it :).
+Informal tests suggest that pulling out an active disk causes the whole
+machine to hang up but removing a disk from the RAID arrays and pulling
+it out gives the message: "nv_sata: Primary device removed" and
+everything happily keeps running.
 
-Does this mean that any version of MD up till now won't know that SATA
-disks does not support barriers, and therefore won't flush SATA disks
-and therefore I need to disable the disks's write cache if I want to
-be 100% sure that raid arrays are not corrupted?
+Is this a fair description? In practise do people find that following
+the above allows a failed disk to be replaced without shutting down the
+machine? 
 
-Or am I way off :-).
+Thanks
+
+John
+
+
