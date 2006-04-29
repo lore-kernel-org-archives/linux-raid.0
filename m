@@ -1,34 +1,69 @@
-From: "felisha" <felihassan29@yahoo.co.in>
-Subject: greetings from felisha
-Date: Fri, 28 Apr 2006 21:25:42 +0100
-Message-ID: <200604282025.k3SKPNmQ027595@zeus2.kernel.org>
-Reply-To: felisha_hassan@myway.com
+From: "Dennis Stout" <stoutman@gmail.com>
+Subject: RFC: PATCH
+Date: Sat, 29 Apr 2006 00:47:02 -0800
+Message-ID: <3e1c369e0604290147t27cfc031n2fc25ceb49da2b99@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: multipart/mixed;
+	boundary="----=_Part_6171_23900021.1146300422635"
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-From: Miss. felisha Hassan
-Dakar. Snegal,West Africa
-Email: felisha_hassan@myway.com
-Dear One,
-My warmest greeting to you in the name of the Lord.
-I am Felisha Hassan, and I inheritated an important some from my late father who died in recent crisis in Cote d'Ivoire.Iam from Cote d"Ivore,but now iam in Senegal for save my live,before i could have good honest and truesthworthy one. I wish to request for your assistance in investing this sum in lucrative venture or manufacturing and real estate management in your country. I have Five million, seven hundred thousand United State Dollars. USD($5,700,000) to invest in this transaction and I will require your assistance in receiving thefund in your account in your country. I will gladly give you some resonable percent from the total sum for your assistance. 
+------=_Part_6171_23900021.1146300422635
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-Before his death on September 2005, he gave me all the necessary legal documents to the deposit of the fund in the bank, I am 20 years old and a university undergraduate and really don't know what to do. Now I want an account overseas where I can transfer this funds and after the transaction I will come and reside permanently in your country till such a time that it will be convinient for me to return back home if I so desire. This is because I have suffered a lot of set backs as a result of incessant political crisis here in Ivory coast. The death of my father actually brought sorrow to my life. I also want to invest the fund under your care because I am ignorant of business world.
+It was annoying to me to have to edit the output of mdadm -Escb
+partitions in order to get a working mdadm.conf file so I wrote a
+patch that allows the output of the above command to be used directly
+as a config file.
 
-I am in a sincere desire of your humble assistance in this regards. Your suggestions and ideas willbe highly regarded. Now permit me to ask these few questions:
-1. Can you honestly help me from your heart?
-2. Can I completely trust you?
-3. What percentage of the total amount in question will be good for you after the money is in your account? 
+Probably still wise to poke the config file before using it in a
+production system, but that goes for anything.
 
-Please, consider this and get back to me as soon as possible. Immedaitely I confirm your willingness, I will send to you my picture and also give you more details about myself and the bank were my late father deposited the fund, so that you can reach the bank and confirm the existence of the fund as well, because seeing is believing.Please reply me through this my private email: 
-felisha_hassan@myway.com
-Awaiting your immediate response and may God bless you. 
-With love,
-felisha
+Dennis Stout
+
+Enclosed: mdadm-2.1-Examine_output_fix-1.patch (637bytes)
+
+------=_Part_6171_23900021.1146300422635
+Content-Type: application/octet-stream;
+	name=mdadm-2.1-Examine_output_fix-1.patch
+Content-Transfer-Encoding: 7bit
+X-Attachment-Id: f_emlozqhw
+Content-Disposition: attachment; filename="mdadm-2.1-Examine_output_fix-1.patch"
+
+Author:  Dennis Stout
+Date:  2006-04-27
+Initial Package Version:  2.1
+Description:  Allows mdadm -Esbc partitions output to be used directly as a config file
+
+
+--- mdadm-2.1/Examine.c	2005-09-04 16:54:55.000000000 -0800
++++ mdadm-2.1-new/Examine.c	2006-04-27 13:46:51.000000000 -0800
+@@ -132,10 +132,10 @@
+ 			ap->st->ss->brief_examine_super(ap->super);
+ 			if (ap->spares) printf("   spares=%d", ap->spares);
+ 			if (brief > 1) {
+-				printf("   devices");
++				printf("DEVICE ");
+ 				for (d=dl_next(ap->devs); d!= ap->devs; d=dl_next(d)) {
+ 					printf("%c%s", sep, d);
+-					sep=',';
++					sep=' ';
+ 				}
+ 			}
+ 			free(ap->super);
 
 
 
+
+
+
+
+
+
+
+
+------=_Part_6171_23900021.1146300422635--
