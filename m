@@ -1,69 +1,45 @@
-From: "Dennis Stout" <stoutman@gmail.com>
-Subject: RFC: PATCH
-Date: Sat, 29 Apr 2006 00:47:02 -0800
-Message-ID: <3e1c369e0604290147t27cfc031n2fc25ceb49da2b99@mail.gmail.com>
+From: "Molle Bestefich" <molle.bestefich@gmail.com>
+Subject: Re: md: Change ENOTSUPP to EOPNOTSUPP
+Date: Sat, 29 Apr 2006 15:50:28 +0200
+Message-ID: <62b0912f0604290650v6fa0759flace16041c26fa003@mail.gmail.com>
+References: <20060428124313.29510.patches@notabene>
+	 <1060428025144.30770@suse.de>
+	 <62b0912f0604280634x7df2a8a5m9022826876446cb6@mail.gmail.com>
+	 <44524765.6070703@emc.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_Part_6171_23900021.1146300422635"
+Content-Type: text/plain; charset=US-ASCII;
+	format=flowed
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <44524765.6070703@emc.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Ric Wheeler <ric@emc.com>
+Cc: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-------=_Part_6171_23900021.1146300422635
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+Ric Wheeler wrote:
+> You are absolutely right - if you do not have a validated, working
+> barrier for your low level devices (or a high end, battery backed array
+> or JBOD), you should disable the write cache on your RAIDed partitions
+> and on your normal file systems ;-)
+>
+> There is working support for SCSI (or libata S-ATA) barrier operations
+> in mainline, but they conflict with queue enable targets which ends up
+> leaving queuing on and disabling the barriers.
 
-It was annoying to me to have to edit the output of mdadm -Escb
-partitions in order to get a working mdadm.conf file so I wrote a
-patch that allows the output of the above command to be used directly
-as a config file.
+Thank you very much for the information!
 
-Probably still wise to poke the config file before using it in a
-production system, but that goes for anything.
+How can I check that I have a validated, working barrier with my
+particular kernel version etc.?
+(Do I just assume that since it's not SCSI, it doesn't work?)
 
-Dennis Stout
+I find it, hmm... stupefying?  horrendous?  completely brain dead?  I
+don't know..  that noone warns users about this.  I bet there's a
+million people out there, happily using MD (probably installed and
+initialized it with Fedora Core / anaconda) and thinking their data is
+safe, while in fact it is anything but.  Damn, this is not a good
+situation..
 
-Enclosed: mdadm-2.1-Examine_output_fix-1.patch (637bytes)
-
-------=_Part_6171_23900021.1146300422635
-Content-Type: application/octet-stream;
-	name=mdadm-2.1-Examine_output_fix-1.patch
-Content-Transfer-Encoding: 7bit
-X-Attachment-Id: f_emlozqhw
-Content-Disposition: attachment; filename="mdadm-2.1-Examine_output_fix-1.patch"
-
-Author:  Dennis Stout
-Date:  2006-04-27
-Initial Package Version:  2.1
-Description:  Allows mdadm -Esbc partitions output to be used directly as a config file
-
-
---- mdadm-2.1/Examine.c	2005-09-04 16:54:55.000000000 -0800
-+++ mdadm-2.1-new/Examine.c	2006-04-27 13:46:51.000000000 -0800
-@@ -132,10 +132,10 @@
- 			ap->st->ss->brief_examine_super(ap->super);
- 			if (ap->spares) printf("   spares=%d", ap->spares);
- 			if (brief > 1) {
--				printf("   devices");
-+				printf("DEVICE ");
- 				for (d=dl_next(ap->devs); d!= ap->devs; d=dl_next(d)) {
- 					printf("%c%s", sep, d);
--					sep=',';
-+					sep=' ';
- 				}
- 			}
- 			free(ap->super);
-
-
-
-
-
-
-
-
-
-
-
-------=_Part_6171_23900021.1146300422635--
+(Any suggestions for a good place to fix this?  Better really really
+really late than never...)
