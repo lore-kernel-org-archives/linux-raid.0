@@ -1,104 +1,91 @@
-From: Christian Pedaschus <cpedaschus@gmx.de>
-Subject: strange things going on, raid5&evms
-Date: Sat, 29 Apr 2006 23:56:52 +0200
-Message-ID: <4453E124.9030301@gmx.de>
+From: Ric Wheeler <ric@emc.com>
+Subject: Re: md: Change ENOTSUPP to EOPNOTSUPP
+Date: Sat, 29 Apr 2006 16:23:41 -0400
+Message-ID: <4453CB4D.9020907@emc.com>
+References: <20060428124313.29510.patches@notabene>	 <1060428025144.30770@suse.de>	 <62b0912f0604280634x7df2a8a5m9022826876446cb6@mail.gmail.com>	 <44524765.6070703@emc.com> <62b0912f0604290650v6fa0759flace16041c26fa003@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <62b0912f0604290650v6fa0759flace16041c26fa003@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Molle Bestefich <molle.bestefich@gmail.com>
+Cc: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi list,
-
-i'll try to make it short, but raid-problems seem to have sooo long
-descriptions ;)
-
-A week ago i got a 200GB Sata drive and an Adapted 1210SA and decided to
-do some tests with evms and software-raid and so i created a Raid5 out
-of 3 Partitions using evmsgui:
-15gb sda6 (Scsi Disk)
-15gb sdb6 (Scsi Disk)
-15gb sdc6 (Sata Disk)
-No spares.
-(i know this is not the best disk-config, but it was purely for testing,
-neither important data nor high performance)
-
-Worked like a charm for some days, but 2 days ago the system crashed
-(while i was away). I don't know if it happened because of the raid, but
-my sys hasn't crashed for over a year, so i highly suspect it.
-After rebooting, the raid5 did not come back, i got boot-messages like:
-
-[   34.232750] md: md2: raid array is not clean -- starting background
-reconstruction
-[   34.317923] raid5: device dm-5 operational as raid disk 1
-[   34.403238] raid5: device dm-4 operational as raid disk 0
-[   34.487662] raid5: cannot start dirty degraded array for md2
-[   34.571717] RAID5 conf printout:
-[   34.655027]  --- rd:3 wd:2 fd:1
-[   34.737736]  disk 0, o:1, dev:dm-4
-[   34.820023]  disk 1, o:1, dev:dm-5
-[   34.901839] raid5: failed to run raid set md2
-[   34.983871] md: pers->run() failed ...
-[   35.070053] md: bind<dm-26>
-[   35.150748] md: bind<dm-27>
-[   35.309622] md: array md2 already has disks!
-[   35.388342] md: array md2 already has disks!
-[   35.466417] md: array md2 already has disks!
-[   35.544040] md: array md2 already has disks!
-[snip]
-[   42.500546] md: array md2 already has disks!
-[   42.562950] md: array md2 already has disks!
-[   42.623025] md: array md2 already has disks!
-[   42.686593] md: array md2 already has disks!
-[   42.744099] md: array md2 already has disks!
-[snip]
-[   50.918891] md: array md2 already has disks!
-[   50.919045] md: array md2 already has disks!
-[   50.919169] md: array md2 already has disks!
-[   50.919290] md: array md2 already has disks!
-[   50.919454] md: array md2 already has disks!
-[   50.919565] md: array md2 already has disks!
-
-The rest of the sata-drive, which run as single evms-volumes (namely
-sdc7/sdc8 both with 80gb) run fine. Even after removing the sata-drive
-from the system i'm still not able to start the raid5 with the 2 scsi
-discs, i always get:
-# mdadm --manage --run /dev/md2
-mdadm: failed to run array /dev/md2: Input/output error
-
-But the scsi-disks are fine and the other raid0/1 which i have on the
-scsi-discs are running without problems. I really wonder why i can't
-start a raid5 with 2 disks and instead get I/O Errors. It doesn't matter
-if i have the sata disk connected or not, it's always the same.
-
-For now i did not upgrade any software, still running:
-
-# uname -a
-Linux pc1 2.6.15-gentoo-r1 #6 SMP PREEMPT Fri Apr 21 14:16:34 CEST 2006
-i686 Intel(R) Xeon(TM) CPU 2.40GHz GenuineIntel GNU/Linux
-
-# mdadm --version
-mdadm - v1.12.0 - 14 June 2005
-
-Any advice how to start the raid5 or shall i update mdadm (seems kinda old)?
-Like i said, i have no important data on it, so i could live with a
-reset, but the reason for my test was to find out if i can trust md+evms
-and so i'm highly interested what to do now.
-
-Greets, Chris
 
 
+Molle Bestefich wrote:
 
+> Ric Wheeler wrote:
+>
+>> You are absolutely right - if you do not have a validated, working
+>> barrier for your low level devices (or a high end, battery backed array
+>> or JBOD), you should disable the write cache on your RAIDed partitions
+>> and on your normal file systems ;-)
+>>
+>> There is working support for SCSI (or libata S-ATA) barrier operations
+>> in mainline, but they conflict with queue enable targets which ends up
+>> leaving queuing on and disabling the barriers.
+>
+>
+> Thank you very much for the information!
+>
+> How can I check that I have a validated, working barrier with my
+> particular kernel version etc.?
+> (Do I just assume that since it's not SCSI, it doesn't work?)
 
+The support is in for all drive types now, but you do have to check.
 
+You should look in /var/log/messages and see that you have something 
+like this:
 
+  Mar 29 16:07:19 localhost kernel: ReiserFS: sda14: warning: reiserfs: 
+option "skip_busy" is set
+  Mar 29 16:07:19 localhost kernel: ReiserFS: sda14: warning: allocator 
+options = [00000020] 
+  Mar 29 16:07:19 localhost kernel:
+  Mar 29 16:07:19 localhost kernel: ReiserFS: sda14: found reiserfs 
+format "3.6" with standard journal
+  Mar 29 16:07:19 localhost kernel: ReiserFS: sdc14: Using r5 hash to 
+sort names
+  Mar 29 16:07:19 localhost kernel: ReiserFS: sda14: using ordered data mode
+  Mar 29 16:07:20 localhost kernel: reiserfs: using flush barriers
 
+You can also do a sanity check on the number of synchronous IO's/second 
+and make sure that it seems sane for your class of drive.  For example, 
+I use a simple test which creates files, fills them and then fsync's 
+each file before close. 
 
+With the barrier on and write cache active, I can write about 30 (10k) 
+files/sec to a new file system.  I get the same number with no barrier 
+and write cache off which is what you would expect.
 
+If you manually mount with barriers off and the write cache on however, 
+your numbers will jump up to about 852 (10k) files/sec.  This is the one 
+to look out for ;-)
 
+>
+> I find it, hmm... stupefying?  horrendous?  completely brain dead?  I
+> don't know..  that noone warns users about this.  I bet there's a
+> million people out there, happily using MD (probably installed and
+> initialized it with Fedora Core / anaconda) and thinking their data is
+> safe, while in fact it is anything but.  Damn, this is not a good
+> situation..
 
+The wide spread use of the write barrier is pretty new stuff.  In 
+fairness, the accepted wisdom is (and has been for a long time) to 
+always run with write cache off if you care about your data integrity 
+(again, regardless of MD or native file system). Think of the write 
+barrier support as a great performance boost (I can see almost a 50% win 
+in some cases), but getting it well understood and routinely tested is 
+still a challenge.
 
+>
+> (Any suggestions for a good place to fix this?  Better really really
+> really late than never...)
 
+Good test suites and lots of user testing...
+
+ric
 
