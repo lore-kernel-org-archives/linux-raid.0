@@ -1,82 +1,38 @@
-From: "Sherman Spints" <jobs@kwuakegold.esmartbuyer.com>
-Subject: JOB OPENINGS
-Date: Sun, 30 Apr 2006 10:45:51 +0000
-Message-ID: <84.254.189.6.1014672496.1146393955@webmail.katamail.com>
-Reply-To: shermanspints@yahoo.com
+From: Dick Snippe <Dick.Snippe@tech.omroep.nl>
+Subject: try to write back redundant data before failing disk in raid5 setup
+Date: Mon, 1 May 2006 01:17:42 +0200
+Message-ID: <20060430231742.GC24146@tech.omroep.nl>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-SHERMAN SPINTS ARTIFICIAL AND NATURAL ARTS .
-158 rue Julian Grimau Bat C1,
-94400 Vitry sur seine
-TEL : (33) 01 46 82 00 00
-=46AX : (33) 01 46 82 14 00
-http://kwuakegold.esmartbuyer.com
+Hello,
 
-My name is Mr. Sherman Spints I am an Artist and a consultant. I live i=
-n FRANCE, with my three kids, two cats, one dog and the love of my life=
- i.e. my wife. It is definitely a full house and I have been doing Artw=
-orks since I was young, I also have been in the business of precious st=
-one for a longtime and earned enough to have my personal GOLD mine. Tha=
-t made me had about 22 years experience in the profession. I have a maj=
-or in Art in high school and took a few College Art Courses. Most of my=
- works are done in either pencil or airbrush mixed with color pencils, =
-which I have recently added to make my work more presentable to world.
-I design and create artwork on the computer too. I have been selling my=
- artworks for the past 6 years and have had my work featured on trading=
- cards, prints, dailies, magazines and others. I have sold my artworks,=
- sapphires gold and gold dust in galleries and to private collectors fr=
-om all over the world. I am always facing serious difficulties when it =
-comes to selling my art works to Americans and British=92s and people i=
-n some other countries of the world, they are always offering to pay wi=
-th a US MONEY ORDER or CHEQUE and Other Forms of Negotiable Instruments=
-, which is difficult to be cashed here in Europe.
-I am looking for a representative in the STATE or UK and other countrie=
-s of the World who will be working for me as a per time worker and I wi=
-ll be willing to pay the person 15% for every transaction, which wouldn=
-=92t affect your present state of work. I mean someone who would help m=
-e receive payments from my customers in the STATE or UK and Other Count=
-ries of the world. I need a good person who is responsible, reliable an=
-d trustworthy. Because the cost of coming to the state and getting paym=
-ents is very expensive for me and I am working on setting up a branch i=
-n the STATE and UK, so for now I need a representative in the United st=
-ates and UK who will be handling the payment aspect for me.
-These payments are either going to be coming in form of a MONEY ORDER, =
-TRAVLLERS CHECKS, PERSONAL CHECK or BUSINESS CHECKS. This payments will=
- be coming from my clients to you and your name and address will be eff=
-ected on any of the negotiable instruments my clients are paying you wi=
-th ok. So all you need to do is to cash the PAYMENTS, deduct your said =
-percentage and send the balance of the money back to us through Western=
- Union Money Transfer or Money Gram to any place I will have to instruc=
-t you to do that. But the problem I have is Trust and Honesty, but I ha=
-ve my way of getting anyone that gets away with our money, I have conta=
-cted the FEDERAL BUREAU OF INVESTIGATIONS (FBI) branch in Washington an=
-d I've been given an assurace to get that person tracked down before th=
-e next 48hours.=A0=A0Once you have cashed the payment there, your meant=
- to deduct your15% and send the balance to me via Western Union Money T=
-ransfer or Money Gram Money Transfer, all transfer fees should be deduc=
-ted from the money. If you are interested, please get back to me as soo=
-n as possible. Thanks
-Regards,
+Suppose a read action on a disk which is member of a raid5 (or raid1 or any
+other raid where there's data redundancy) fails.
+What ahppens next is that the entire disk is marked as "failed" and a raid5
+rebuild is initiated.
 
-Mr. Sherman Spints,
-http://kwuakegold.esmartbuyer.com
+However, that seems like overkill to me. If only one sector on one disk
+failed, that sector could be re-calculated  (using parity calculations)
+AND written back to the original disk (i.e. the disk with the bad sector).
+Any modern disk will do sector remapping, so the bad sector will simply be
+replaced by a good one and there's no need to fail the entire disk.
 
-_______________________________________________________________________=
-_
-SERVIZIO VOICE: TELEFONA e INVIA SMS dal tuo computer a tariffe vantagg=
-iose!=20
-Scopri come telefonare e videochiamare gratis da pc a pc.
-http://voice.repubblica.it
+The reason I bring this up is that I think raid5 rebuilds are 'scary'
+things. Suppose a raid5 rebuild is initiated while other members of the
+raid5 set have bad -but yet undetected- sectors scattered around the disc
+(Current_Pending_Sector in smartd speak). Now this raid5 rebuild would fail,
+losing the entire raid5 set. While each and every bit in the raid5 set might
+still be salvagable!  (I've seen this happen on 5x250Gb raid5 sets.)
 
+Does anyone on this list have any opinions about this issue?
 
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Dick Snippe - Publieke Omroep Internet Services
+Gebouw 12.401 (peperbus) Sumatralaan 45 Hilversum  \ fight war
+tel +31 35 6774252, email beheer@omroep.nl []()     \ not wars
