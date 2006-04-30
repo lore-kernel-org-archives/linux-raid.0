@@ -1,54 +1,56 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH 003 of 5] md: Change ENOTSUPP to EOPNOTSUPP
-Date: Sun, 30 Apr 2006 14:13:09 +1000
-Message-ID: <17492.14677.389207.321221@cse.unsw.edu.au>
-References: <20060428124313.29510.patches@notabene>
-	<1060428025144.30770@suse.de>
-	<62b0912f0604280634x7df2a8a5m9022826876446cb6@mail.gmail.com>
+Subject: Re: RFC: PATCH
+Date: Sun, 30 Apr 2006 14:20:22 +1000
+Message-ID: <17492.15110.997827.911138@cse.unsw.edu.au>
+References: <3e1c369e0604290147t27cfc031n2fc25ceb49da2b99@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Molle Bestefich on Friday April 28
+In-Reply-To: message from Dennis Stout on Saturday April 29
 Sender: linux-raid-owner@vger.kernel.org
-To: Molle Bestefich <molle.bestefich@gmail.com>
+To: Dennis Stout <stoutman@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Friday April 28, molle.bestefich@gmail.com wrote:
-> NeilBrown wrote:
-> > Change ENOTSUPP to EOPNOTSUPP
-> > Because that is what you get if a BIO_RW_BARRIER isn't supported !
+On Saturday April 29, stoutman@gmail.com wrote:
+> It was annoying to me to have to edit the output of mdadm -Escb
+> partitions in order to get a working mdadm.conf file so I wrote a
+> patch that allows the output of the above command to be used directly
+> as a config file.
 > 
-> Dumb question, hope someone can answer it :).
+> Probably still wise to poke the config file before using it in a
+> production system, but that goes for anything.
 > 
-> Does this mean that any version of MD up till now won't know that SATA
-> disks does not support barriers, and therefore won't flush SATA disks
-> and therefore I need to disable the disks's write cache if I want to
-> be 100% sure that raid arrays are not corrupted?
+> Dennis Stout
 > 
-> Or am I way off :-).
+> Enclosed: mdadm-2.1-Examine_output_fix-1.patch (637bytes)
 
-The effect of this bug is almost unnoticeable.
+This is definitely not what you want to do.
 
-In almost all cases, md will detect that a drive doesn't support
-barriers when writing out the superblock - this is completely separate
-code and is correct.  Thus md/raid1 will reject any barrier requests
-coming from the filesystem and will never pass them down, and will not
-make a wrong decision because of this bug.
+(for those who haven't read the patch, it replaces the
+          device=/dev/a,/dev/b,...
+line that "mdadm -Ebv" shows with
+DEVICE /dev/a /dev/b ...
+)
 
-The only cases where this bug could cause a problem are:
- 1/ when the first write is a barrier write.  It is possible that
-    reiserfs does this in some cases.  However only this write will be
-    at risk.
- 2/ if a device changes its behaviour from accepting barriers to  
-    not accepting barrier (Which is very uncommon).
+The DEVICE line should *NOT* list explicit devices to be checked.  It
+should either be
+   DEVICE partitions
+meaning to check all devices mentioned in /proc/partitions, or it
+should be some wildcard list that encompasses everything that could
+possibly be relevant. e.g.
+   DEVICE /dev/hd*
+if you know all your devices are IDE devices and you don't want to
+scan SCSI devices for some reason.
 
-As md will be rejecting barrier requests, the filesystem will know not
-to trust them and should use other techniques such as waiting for
-dependant requests to complete, and calling blkdev_issue_flush were
-appropriate.
+This is because in most cases devices names can change after a
+reconfiguration and/or reboot and so depending on fixed device names
+isn't safe.
 
-Whether filesystems actually do this, I am less certain.
+The change I have been considering that would "make the output of
+-Esb more useful" would be to assume a default DEVICE line of
+   DEVICE partitions
+if none were given.  This is probably safe and useful.
 
 NeilBrown
