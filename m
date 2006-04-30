@@ -1,7 +1,7 @@
 From: "Sherman Spints" <jobs@kwuakegold.esmartbuyer.com>
 Subject: JOB OPENINGS
-Date: Sun, 30 Apr 2006 10:46:24 +0000
-Message-ID: <84.254.189.6.162770549.1146393989@webmail.katamail.com>
+Date: Sun, 30 Apr 2006 10:45:51 +0000
+Message-ID: <84.254.189.6.1014672496.1146393955@webmail.katamail.com>
 Reply-To: shermanspints@yahoo.com
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=ISO-8859-1
