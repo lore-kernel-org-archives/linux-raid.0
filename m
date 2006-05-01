@@ -1,51 +1,25 @@
-From: Erik Mouw <erik@harddisk-recovery.com>
-Subject: Re: Two-disk RAID5?
-Date: Mon, 1 May 2006 19:11:28 +0200
-Message-ID: <20060501171128.GA18811@harddisk-recovery.com>
-References: <216D6FA68B0F304DA93E95C5B786F2D12FCBBC@bart.corp.egenera.com> <Pine.LNX.4.61.0604261518020.1846@soloth.lewis.org>
+From: Greg KH <greg@kroah.com>
+Subject: Re: [stable] [PATCH 001 of 5] md: Avoid oops when attempting to fix read errors on raid10
+Date: Mon, 1 May 2006 14:52:50 -0700
+Message-ID: <20060501215250.GA11226@kroah.com>
+References: <20060428124313.29510.patches@notabene> <1060428025015.30731@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.61.0604261518020.1846@soloth.lewis.org>
+In-Reply-To: <1060428025015.30731@suse.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jon Lewis <jlewis@lewis.org>
-Cc: "Jansen, Frank" <fjansen@egenera.com>, Tuomas Leikola <tuomas.leikola@gmail.com>, John Rowe <rowe@excc.ex.ac.uk>, linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: Andrew Morton <akpm@osdl.org>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, stable@kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Apr 26, 2006 at 03:22:38PM -0400, Jon Lewis wrote:
-> On Wed, 26 Apr 2006, Jansen, Frank wrote:
+On Fri, Apr 28, 2006 at 12:50:15PM +1000, NeilBrown wrote:
 > 
-> >It is not possible to flip a bit to change a set of disks from RAID 1 to
-> >RAID 5, as the physical layout is different.
+> We should add to the counter for the rdev *after* checking
+> if the rdev is NULL !!!
 > 
-> As Tuomas pointed out though, a 2 disk RAID5 is kind of a special case 
-> where all you have is data and parity which is actually also just data. 
+> Signed-off-by: Neil Brown <neilb@suse.de>
 
-No, the other way around: RAID1 is a special case of RAID5.
+Queued to -stable, thanks.
 
-The parity of RAID5 with n disks is contructed like[1]:
-
-  parity = disk1 XOR disk2 XOR ... XOR disk n-1
-
-With n = 2, this reduces to:
-
-  parity = disk1 XOR nothing = disk1
-
-Which is just mirroring, which we usually call "RAID1".
-
-> Seems kind of like a RAID1 with extra overhead.  I don't think I've ever 
-> heard of a RAID5 implementation willing to handle <3 drives though.
-
-Our own RAID recovery tools can handle that just fine.
-
-
-Erik
-
-[1] Yes, there's also an algorithm to select which disk is used for
-parity for what block, but that doesn't change the way *how* parity is
-calculated.
-
--- 
-+-- Erik Mouw -- www.harddisk-recovery.com -- +31 70 370 12 90 --
-| Lab address: Delftechpark 26, 2628 XH, Delft, The Netherlands
+greg k-h
