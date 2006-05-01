@@ -1,110 +1,51 @@
-From: Gil <gil@fooplanet.com>
-Subject: Re: md: Change ENOTSUPP to EOPNOTSUPP
-Date: Mon, 01 May 2006 09:14:12 -0700
-Message-ID: <445633D4.2000607@fooplanet.com>
-References: <20060428124313.29510.patches@notabene>	 <1060428025144.30770@suse.de>	 <62b0912f0604280634x7df2a8a5m9022826876446cb6@mail.gmail.com>	 <44524765.6070703@emc.com> <62b0912f0604290650v6fa0759flace16041c26fa003@mail.gmail.com> <4453CB4D.9020907@emc.com>
+From: Erik Mouw <erik@harddisk-recovery.com>
+Subject: Re: Two-disk RAID5?
+Date: Mon, 1 May 2006 19:11:28 +0200
+Message-ID: <20060501171128.GA18811@harddisk-recovery.com>
+References: <216D6FA68B0F304DA93E95C5B786F2D12FCBBC@bart.corp.egenera.com> <Pine.LNX.4.61.0604261518020.1846@soloth.lewis.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4453CB4D.9020907@emc.com>
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.61.0604261518020.1846@soloth.lewis.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Jon Lewis <jlewis@lewis.org>
+Cc: "Jansen, Frank" <fjansen@egenera.com>, Tuomas Leikola <tuomas.leikola@gmail.com>, John Rowe <rowe@excc.ex.ac.uk>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-So for those of us using other filesystems (e.g. ext2/3), is there
-some way to determine whether or not barriers are available?
+On Wed, Apr 26, 2006 at 03:22:38PM -0400, Jon Lewis wrote:
+> On Wed, 26 Apr 2006, Jansen, Frank wrote:
+> 
+> >It is not possible to flip a bit to change a set of disks from RAID 1 to
+> >RAID 5, as the physical layout is different.
+> 
+> As Tuomas pointed out though, a 2 disk RAID5 is kind of a special case 
+> where all you have is data and parity which is actually also just data. 
 
-Neil says that mdadm detects this and writes it into the superblock
-but I can't find a reference to this anywhere in the md output in
-the logs or in any interactive output of mdadm.
+No, the other way around: RAID1 is a special case of RAID5.
 
-FWIW I'm running mdadm 1.11 with 0.90.03 superblocks (e.g. stock
-Fedora Core 4).
+The parity of RAID5 with n disks is contructed like[1]:
 
-Any ideas?
+  parity = disk1 XOR disk2 XOR ... XOR disk n-1
 
-TIA,
+With n = 2, this reduces to:
 
---Gil
+  parity = disk1 XOR nothing = disk1
 
-Ric Wheeler wrote:
-> 
-> 
-> Molle Bestefich wrote:
-> 
->> Ric Wheeler wrote:
->>
->>> You are absolutely right - if you do not have a validated, working
->>> barrier for your low level devices (or a high end, battery backed array
->>> or JBOD), you should disable the write cache on your RAIDed partitions
->>> and on your normal file systems ;-)
->>>
->>> There is working support for SCSI (or libata S-ATA) barrier operations
->>> in mainline, but they conflict with queue enable targets which ends up
->>> leaving queuing on and disabling the barriers.
->>
->>
->> Thank you very much for the information!
->>
->> How can I check that I have a validated, working barrier with my
->> particular kernel version etc.?
->> (Do I just assume that since it's not SCSI, it doesn't work?)
-> 
-> The support is in for all drive types now, but you do have to check.
-> 
-> You should look in /var/log/messages and see that you have something
-> like this:
-> 
->  Mar 29 16:07:19 localhost kernel: ReiserFS: sda14: warning: reiserfs:
-> option "skip_busy" is set
->  Mar 29 16:07:19 localhost kernel: ReiserFS: sda14: warning: allocator
-> options = [00000020]  Mar 29 16:07:19 localhost kernel:
->  Mar 29 16:07:19 localhost kernel: ReiserFS: sda14: found reiserfs
-> format "3.6" with standard journal
->  Mar 29 16:07:19 localhost kernel: ReiserFS: sdc14: Using r5 hash to
-> sort names
->  Mar 29 16:07:19 localhost kernel: ReiserFS: sda14: using ordered data mode
->  Mar 29 16:07:20 localhost kernel: reiserfs: using flush barriers
-> 
-> You can also do a sanity check on the number of synchronous IO's/second
-> and make sure that it seems sane for your class of drive.  For example,
-> I use a simple test which creates files, fills them and then fsync's
-> each file before close.
-> With the barrier on and write cache active, I can write about 30 (10k)
-> files/sec to a new file system.  I get the same number with no barrier
-> and write cache off which is what you would expect.
-> 
-> If you manually mount with barriers off and the write cache on however,
-> your numbers will jump up to about 852 (10k) files/sec.  This is the one
-> to look out for ;-)
-> 
->>
->> I find it, hmm... stupefying?  horrendous?  completely brain dead?  I
->> don't know..  that noone warns users about this.  I bet there's a
->> million people out there, happily using MD (probably installed and
->> initialized it with Fedora Core / anaconda) and thinking their data is
->> safe, while in fact it is anything but.  Damn, this is not a good
->> situation..
-> 
-> The wide spread use of the write barrier is pretty new stuff.  In
-> fairness, the accepted wisdom is (and has been for a long time) to
-> always run with write cache off if you care about your data integrity
-> (again, regardless of MD or native file system). Think of the write
-> barrier support as a great performance boost (I can see almost a 50% win
-> in some cases), but getting it well understood and routinely tested is
-> still a challenge.
-> 
->>
->> (Any suggestions for a good place to fix this?  Better really really
->> really late than never...)
-> 
-> Good test suites and lots of user testing...
-> 
-> ric
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Which is just mirroring, which we usually call "RAID1".
 
+> Seems kind of like a RAID1 with extra overhead.  I don't think I've ever 
+> heard of a RAID5 implementation willing to handle <3 drives though.
+
+Our own RAID recovery tools can handle that just fine.
+
+
+Erik
+
+[1] Yes, there's also an algorithm to select which disk is used for
+parity for what block, but that doesn't change the way *how* parity is
+calculated.
+
+-- 
++-- Erik Mouw -- www.harddisk-recovery.com -- +31 70 370 12 90 --
+| Lab address: Delftechpark 26, 2628 XH, Delft, The Netherlands
