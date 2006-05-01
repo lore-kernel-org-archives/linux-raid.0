@@ -1,28 +1,30 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: raid5 resizing
-Date: Mon, 1 May 2006 15:33:49 +1000
-Message-ID: <17493.40381.454128.908875@cse.unsw.edu.au>
-References: <20060501052334.GB2741@zip.com.au>
+From: "H. Peter Anvin" <hpa@zytor.com>
+Subject: Re: [PATCH 005 of 11] md: Merge raid5 and raid6 code
+Date: Sun, 30 Apr 2006 22:40:05 -0700
+Message-ID: <44559F35.2050800@zytor.com>
+References: <20060501152229.18367.patches@notabene> <1060501053025.22961@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from CaT on Monday May 1
+In-Reply-To: <1060501053025.22961@suse.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: CaT <cat@zip.com.au>
-Cc: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: Andrew Morton <akpm@osdl.org>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Monday May 1, cat@zip.com.au wrote:
-> Hey folks.
+NeilBrown wrote:
+> There is a lot of commonality between raid5.c and raid6main.c.  This
+> patches merges both into one module called raid456.  This saves a lot
+> of code, and paves the way for online raid5->raid6 migrations.
 > 
-> There's no point in using LVM on a raid5 setup if all you intend to do
-> in the future is resize the filesystem on it, is there? The new raid5
-> resizing code takes care of providing the extra space and then as long
-> as the say ext3 filesystem is created with resize_inode all should be
-> sweet. Right? Or have I missed something crucial here? :)
+> There is still duplication, e.g. between handle_stripe5 and
+> handle_stripe6.  This will probably be cleaned up later.
+> 
+> Cc:  "H. Peter Anvin" <hpa@zytor.com>
+> Signed-off-by: Neil Brown <neilb@suse.de>
+> 
 
-You are correct.  md/raid5 makes the extra space available all by
-itself. 
+Wonderful!  Thank you for doing this :)
 
-NeilBrown
+	-hpa
