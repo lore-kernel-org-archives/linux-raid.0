@@ -1,43 +1,110 @@
-From: Linus Torvalds <torvalds@osdl.org>
-Subject: Re: [PATCH 004 of 11] md: Increase the delay before marking metadata
- clean, and make it configurable.
-Date: Mon, 1 May 2006 08:17:35 -0700 (PDT)
-Message-ID: <Pine.LNX.4.64.0605010814410.2557@g5.osdl.org>
-References: <20060501152229.18367.patches@notabene> <1060501053019.22949@suse.de>
- <20060430224404.1060d29a.akpm@osdl.org> <17493.42109.153523.381980@cse.unsw.edu.au>
- <20060430231303.6b2bce82.akpm@osdl.org>
+From: Gil <gil@fooplanet.com>
+Subject: Re: md: Change ENOTSUPP to EOPNOTSUPP
+Date: Mon, 01 May 2006 09:14:12 -0700
+Message-ID: <445633D4.2000607@fooplanet.com>
+References: <20060428124313.29510.patches@notabene>	 <1060428025144.30770@suse.de>	 <62b0912f0604280634x7df2a8a5m9022826876446cb6@mail.gmail.com>	 <44524765.6070703@emc.com> <62b0912f0604290650v6fa0759flace16041c26fa003@mail.gmail.com> <4453CB4D.9020907@emc.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20060430231303.6b2bce82.akpm@osdl.org>
+In-Reply-To: <4453CB4D.9020907@emc.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+So for those of us using other filesystems (e.g. ext2/3), is there
+some way to determine whether or not barriers are available?
 
+Neil says that mdadm detects this and writes it into the superblock
+but I can't find a reference to this anywhere in the md output in
+the logs or in any interactive output of mdadm.
 
-On Sun, 30 Apr 2006, Andrew Morton wrote:
+FWIW I'm running mdadm 1.11 with 0.90.03 superblocks (e.g. stock
+Fedora Core 4).
+
+Any ideas?
+
+TIA,
+
+--Gil
+
+Ric Wheeler wrote:
 > 
-> Generally I don't think we should be teaching the kernel to accept
-> pretend-floating-point numbers like this, especially when a) "delay in
-> milliseconds" is such a simple concept and b) it's so easy to go from float
-> to milliseconds in userspace.
 > 
-> Do you really expect that humans (really dumb ones ;)) will be echoing
-> numbers into this file?  Or will it mainly be a thing for mdadm to fiddle
-> with?
+> Molle Bestefich wrote:
+> 
+>> Ric Wheeler wrote:
+>>
+>>> You are absolutely right - if you do not have a validated, working
+>>> barrier for your low level devices (or a high end, battery backed array
+>>> or JBOD), you should disable the write cache on your RAIDed partitions
+>>> and on your normal file systems ;-)
+>>>
+>>> There is working support for SCSI (or libata S-ATA) barrier operations
+>>> in mainline, but they conflict with queue enable targets which ends up
+>>> leaving queuing on and disabling the barriers.
+>>
+>>
+>> Thank you very much for the information!
+>>
+>> How can I check that I have a validated, working barrier with my
+>> particular kernel version etc.?
+>> (Do I just assume that since it's not SCSI, it doesn't work?)
+> 
+> The support is in for all drive types now, but you do have to check.
+> 
+> You should look in /var/log/messages and see that you have something
+> like this:
+> 
+>  Mar 29 16:07:19 localhost kernel: ReiserFS: sda14: warning: reiserfs:
+> option "skip_busy" is set
+>  Mar 29 16:07:19 localhost kernel: ReiserFS: sda14: warning: allocator
+> options = [00000020]  Mar 29 16:07:19 localhost kernel:
+>  Mar 29 16:07:19 localhost kernel: ReiserFS: sda14: found reiserfs
+> format "3.6" with standard journal
+>  Mar 29 16:07:19 localhost kernel: ReiserFS: sdc14: Using r5 hash to
+> sort names
+>  Mar 29 16:07:19 localhost kernel: ReiserFS: sda14: using ordered data mode
+>  Mar 29 16:07:20 localhost kernel: reiserfs: using flush barriers
+> 
+> You can also do a sanity check on the number of synchronous IO's/second
+> and make sure that it seems sane for your class of drive.  For example,
+> I use a simple test which creates files, fills them and then fsync's
+> each file before close.
+> With the barrier on and write cache active, I can write about 30 (10k)
+> files/sec to a new file system.  I get the same number with no barrier
+> and write cache off which is what you would expect.
+> 
+> If you manually mount with barriers off and the write cache on however,
+> your numbers will jump up to about 852 (10k) files/sec.  This is the one
+> to look out for ;-)
+> 
+>>
+>> I find it, hmm... stupefying?  horrendous?  completely brain dead?  I
+>> don't know..  that noone warns users about this.  I bet there's a
+>> million people out there, happily using MD (probably installed and
+>> initialized it with Fedora Core / anaconda) and thinking their data is
+>> safe, while in fact it is anything but.  Damn, this is not a good
+>> situation..
+> 
+> The wide spread use of the write barrier is pretty new stuff.  In
+> fairness, the accepted wisdom is (and has been for a long time) to
+> always run with write cache off if you care about your data integrity
+> (again, regardless of MD or native file system). Think of the write
+> barrier support as a great performance boost (I can see almost a 50% win
+> in some cases), but getting it well understood and routinely tested is
+> still a challenge.
+> 
+>>
+>> (Any suggestions for a good place to fix this?  Better really really
+>> really late than never...)
+> 
+> Good test suites and lots of user testing...
+> 
+> ric
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-I generally hate interfaces that have some "random base".
-
-So "delay in seconds" is not a random base, because "seconds" is a good SI 
-base unit, and there's not a lot of question about it. But once you start 
-talking milliseconds on microseconds, I'd actually much rather have a 
-"fake floating point number" over having different files have different 
-(magic) base constants. How do you remember which are milliseconds, which 
-are microseconds, and which are just seconds?
-
-It should be easy to have a helper function or two that takes a "struct 
-timeval" and reads/writes a "float".
-
-		Linus
