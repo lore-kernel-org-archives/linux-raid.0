@@ -1,37 +1,43 @@
-From: Mike Hardy <mhardy@h3c.com>
-Subject: Re: raid5 resizing
-Date: Mon, 01 May 2006 05:28:50 -0700
-Message-ID: <4455FF02.4050404@h3c.com>
-References: <20060501052334.GB2741@zip.com.au> <17493.40381.454128.908875@cse.unsw.edu.au>
+From: Linus Torvalds <torvalds@osdl.org>
+Subject: Re: [PATCH 004 of 11] md: Increase the delay before marking metadata
+ clean, and make it configurable.
+Date: Mon, 1 May 2006 08:17:35 -0700 (PDT)
+Message-ID: <Pine.LNX.4.64.0605010814410.2557@g5.osdl.org>
+References: <20060501152229.18367.patches@notabene> <1060501053019.22949@suse.de>
+ <20060430224404.1060d29a.akpm@osdl.org> <17493.42109.153523.381980@cse.unsw.edu.au>
+ <20060430231303.6b2bce82.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17493.40381.454128.908875@cse.unsw.edu.au>
+In-Reply-To: <20060430231303.6b2bce82.akpm@osdl.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: CaT <cat@zip.com.au>, linux-raid@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-Neil Brown wrote:
-> On Monday May 1, cat@zip.com.au wrote:
-> 
->>Hey folks.
->>
->>There's no point in using LVM on a raid5 setup if all you intend to do
->>in the future is resize the filesystem on it, is there? The new raid5
->>resizing code takes care of providing the extra space and then as long
->>as the say ext3 filesystem is created with resize_inode all should be
->>sweet. Right? Or have I missed something crucial here? :)
-> 
-> 
-> You are correct.  md/raid5 makes the extra space available all by
-> itself. 
 
-Further - even if you don't create the filesystem with the right amount
-of extra metadata space for online resizing, you can resize any ext2/3
-filesystem offline, and it doesn't take very long. You just use
-resize2fsf instead of ext2online
+On Sun, 30 Apr 2006, Andrew Morton wrote:
+> 
+> Generally I don't think we should be teaching the kernel to accept
+> pretend-floating-point numbers like this, especially when a) "delay in
+> milliseconds" is such a simple concept and b) it's so easy to go from float
+> to milliseconds in userspace.
+> 
+> Do you really expect that humans (really dumb ones ;)) will be echoing
+> numbers into this file?  Or will it mainly be a thing for mdadm to fiddle
+> with?
 
--Mike
+I generally hate interfaces that have some "random base".
+
+So "delay in seconds" is not a random base, because "seconds" is a good SI 
+base unit, and there's not a lot of question about it. But once you start 
+talking milliseconds on microseconds, I'd actually much rather have a 
+"fake floating point number" over having different files have different 
+(magic) base constants. How do you remember which are milliseconds, which 
+are microseconds, and which are just seconds?
+
+It should be easy to have a helper function or two that takes a "struct 
+timeval" and reads/writes a "float".
+
+		Linus
