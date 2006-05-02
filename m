@@ -1,46 +1,39 @@
-From: Coywolf Qi Hunt <qiyong@freeforge.net>
-Subject: [patch] stripe_to_pdidx() cleanup
-Date: Tue, 2 May 2006 08:18:43 -0400
-Message-ID: <20060502121843.GA24153@everest.sosdg.org>
+From: Al Boldi <a1426z@gawab.com>
+Subject: Re: [PATCH 009 of 11] md: Support stripe/offset mode in raid10
+Date: Tue, 2 May 2006 19:38:45 +0300
+Message-ID: <200605021938.45254.a1426z@gawab.com>
+References: <20060501152229.18367.patches@notabene> <1060501053054.23009@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="windows-1256"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1060501053054.23009@suse.de>
 Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: akpm@osdl.org
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, neilb@suse.de
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Andrew Morton <akpm@osdl.org>
 List-Id: linux-raid.ids
 
-Hello,
+NeilBrown wrote:
+> The "industry standard" DDF format allows for a stripe/offset layout
+> where data is duplicated on different stripes. e.g.
+>
+>   A  B  C  D	
+>   D  A  B  C	
+>   E  F  G  H	
+>   H  E  F  G	
+>
+> (columns are drives, rows are stripes, LETTERS are chunks of data).
 
-Cleanup: Remove unnecessary variable x in stripe_to_pdidx().
+Presumably, this is the case for --layout=f2 ?
+If so, would --layout=f4 result in a 4-mirror/striped array?
 
-Signed-off-by: Coywolf Qi Hunt <qiyong@freeforge.net>
----
+Also, would it be possible to have a staged write-back mechanism across 
+multiple stripes?
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 3184360..7df6840 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -1033,13 +1033,12 @@ static void end_reshape(raid5_conf_t *co
- 
- static int stripe_to_pdidx(sector_t stripe, raid5_conf_t *conf, int disks)
- {
--	int sectors_per_chunk = conf->chunk_size >> 9;
--	sector_t x = stripe;
- 	int pd_idx, dd_idx;
--	int chunk_offset = sector_div(x, sectors_per_chunk);
--	stripe = x;
--	raid5_compute_sector(stripe*(disks-1)*sectors_per_chunk
--			     + chunk_offset, disks, disks-1, &dd_idx, &pd_idx, conf);
-+	int sectors_per_chunk = conf->chunk_size >> 9;
-+	int chunk_offset = sector_div(stripe, sectors_per_chunk);
-+
-+	raid5_compute_sector(stripe*(disks-1)*sectors_per_chunk + chunk_offset,
-+				disks, disks-1, &dd_idx, &pd_idx, conf);
- 	return pd_idx;
- }
- 
+Thanks!
 
--- 
-Coywolf Qi Hunt
+--
+Al
+
