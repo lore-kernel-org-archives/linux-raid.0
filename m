@@ -1,39 +1,37 @@
-From: Al Boldi <a1426z@gawab.com>
-Subject: Re: [PATCH 009 of 11] md: Support stripe/offset mode in raid10
-Date: Tue, 2 May 2006 19:38:45 +0300
-Message-ID: <200605021938.45254.a1426z@gawab.com>
-References: <20060501152229.18367.patches@notabene> <1060501053054.23009@suse.de>
+From: David Mansfield <centos@dm.cobite.com>
+Subject: RAID1: can't remove (or set-faulty) a disk during resync with mdadm
+Date: Tue, 02 May 2006 15:36:45 -0400
+Message-ID: <4457B4CD.7030709@dm.cobite.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="windows-1256"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1060501053054.23009@suse.de>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Andrew Morton <akpm@osdl.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-NeilBrown wrote:
-> The "industry standard" DDF format allows for a stripe/offset layout
-> where data is duplicated on different stripes. e.g.
->
->   A  B  C  D	
->   D  A  B  C	
->   E  F  G  H	
->   H  E  F  G	
->
-> (columns are drives, rows are stripes, LETTERS are chunks of data).
+Hi,
 
-Presumably, this is the case for --layout=f2 ?
-If so, would --layout=f4 result in a 4-mirror/striped array?
+I'm running on Centos 4.3 with the latest kernel so perhaps this is a 
+'vendor uses old/modified kernel' problem, (kernel is 2.6.9-34.EL) but 
+anyway here goes:
 
-Also, would it be possible to have a staged write-back mechanism across 
-multiple stripes?
+I have a degraded mirror.  The rebuild is proceeding with /dev/hda1 
+'good' and /dev/hdb1 'syncing'.
 
-Thanks!
+I'd like to pull /dev/hdb1 out of the raid and go back to 'degraded' 
+mode with no resync.
 
---
-Al
+When I run mdadm --manage -f /dev/md1 /dev/hdb2 it only causes the 
+resync to start again from the beginning, it doesn't actually mark it bad.
 
+The same thing happens if there's a write error to /dev/hdb1 during 
+resync, instead of failing, it simply restarts the resync.
+
+I imagine the two are related - maybe 'set faulty' simply simulates an 
+i/o error on the member, but during resync, the behavior is 'retry'.
+
+Is there anything that can be done about this (other than politely ask 
+vendor for a fix ;-)?
+
+David
