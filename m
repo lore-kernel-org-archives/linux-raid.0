@@ -1,30 +1,55 @@
-From: bert hubert <bert.hubert@netherlabs.nl>
-Subject: Re: [PATCH 004 of 11] md: Increase the delay before marking metadata clean, and make it configurable.
-Date: Tue, 2 May 2006 07:56:21 +0200
-Message-ID: <20060502055621.GA552@outpost.ds9a.nl>
-References: <20060501152229.18367.patches@notabene> <1060501053019.22949@suse.de>
+From: Ric Wheeler <ric@emc.com>
+Subject: Re: md: Change ENOTSUPP to EOPNOTSUPP
+Date: Tue, 02 May 2006 07:37:36 -0400
+Message-ID: <44574480.8010405@emc.com>
+References: <20060428124313.29510.patches@notabene>	 <1060428025144.30770@suse.de>	 <62b0912f0604280634x7df2a8a5m9022826876446cb6@mail.gmail.com>	 <44524765.6070703@emc.com> <62b0912f0604290650v6fa0759flace16041c26fa003@mail.gmail.com> <4453CB4D.9020907@emc.com> <445633D4.2000607@fooplanet.com> <4456BBE4.2000706@steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1060501053019.22949@suse.de>
+In-Reply-To: <4456BBE4.2000706@steeleye.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Andrew Morton <akpm@osdl.org>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Paul Clements <paul.clements@steeleye.com>
+Cc: Gil <gil@fooplanet.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, May 01, 2006 at 03:30:19PM +1000, NeilBrown wrote:
-> When a md array has been idle (no writes) for 20msecs it is marked as
-> 'clean'.  This delay turns out to be too short for some real
-> workloads.  So increase it to 200msec (the time to update the metadata
-> should be a tiny fraction of that) and make it sysfs-configurable.
 
-What does this mean, 'too short'? What happens in that case, backing block
-devices are still busy writing? When making this configurable, the help text
-better explain what the trade offs are.
 
-Thanks.
+Paul Clements wrote:
 
--- 
-http://www.PowerDNS.com      Open source, database driven DNS Software 
-http://netherlabs.nl              Open and Closed source services
+>
+> You'll see something like this in your system log if barriers are not 
+> supported:
+>
+> Apr  3 16:44:01 adam kernel: JBD: barrier-based sync failed on md0 - 
+> disabling barriers
+>
+>
+> Otherwise, assume that they are. But like Neil said, it shouldn't 
+> matter to a user whether they are supported or not. Filesystems will 
+> work correctly either way.
+>
+> -- 
+> Paul
+>
+File systems will work correctly, but if you are running without 
+barriers and with your write cache enabled, you are running the risk of 
+data loss or file system corruption on any power loss.
+
+It is an issue of concern since drive companies ship the write cache on 
+by default. When we detect a non-supported drive (queuing enabled, lack 
+of support for the barrier low level mechanism) we disable future 
+barrier request and leave the write cache enabled.
+
+I guess that you could argue that this is what most home users want 
+(i.e., best performance at the cost of some possible data loss on power 
+outage since most people lose power rarely these days), but it is not 
+good enough for critical data storage.
+
+I would suggest that if you see this message on ext3 (or the reiserfs 
+message for reiser users), you should run with your write cache disabled 
+by default or disable queuing (which is often the reason the barrier ops 
+get disabled).
+
+ric
+
