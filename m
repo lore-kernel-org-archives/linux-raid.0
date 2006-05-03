@@ -1,27 +1,54 @@
-From: Gil <gil@fooplanet.com>
-Subject: Re: RAID1: can't remove (or set-faulty) a disk during resync with
- mdadm
-Date: Tue, 02 May 2006 12:44:41 -0700
-Message-ID: <4457B6A9.9030608@fooplanet.com>
-References: <4457B4CD.7030709@dm.cobite.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: [PATCH 009 of 11] md: Support stripe/offset mode in raid10
+Date: Wed, 3 May 2006 10:05:53 +1000
+Message-ID: <17495.62433.136481.543828@cse.unsw.edu.au>
+References: <20060501152229.18367.patches@notabene>
+	<1060501053054.23009@suse.de>
+	<200605021938.45254.a1426z@gawab.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4457B4CD.7030709@dm.cobite.com>
+In-Reply-To: message from Al Boldi on Tuesday May 2
 Sender: linux-raid-owner@vger.kernel.org
-To: David Mansfield <centos@dm.cobite.com>
-Cc: linux-raid@vger.kernel.org
+To: Al Boldi <a1426z@gawab.com>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Andrew Morton <akpm@osdl.org>
 List-Id: linux-raid.ids
 
-David Mansfield wrote:
-> When I run mdadm --manage -f /dev/md1 /dev/hdb2 it only causes the
-> resync to start again from the beginning, it doesn't actually mark it bad.
+On Tuesday May 2, a1426z@gawab.com wrote:
+> NeilBrown wrote:
+> > The "industry standard" DDF format allows for a stripe/offset layout
+> > where data is duplicated on different stripes. e.g.
+> >
+> >   A  B  C  D	
+> >   D  A  B  C	
+> >   E  F  G  H	
+> >   H  E  F  G	
+> >
+> > (columns are drives, rows are stripes, LETTERS are chunks of data).
+> 
+> Presumably, this is the case for --layout=f2 ?
 
-For grins, does mdadm --manage /dev/md1 -f /dev/hdb2 behave
-differently?  Or just mdadm /dev/md1 -f /dev/hdb2?
+Almost.  mdadm doesn't support this layout yet.  
+'f2' is a similar layout, but the offset stripes are a lot further
+down the drives.
+It will possibly be called 'o2' or 'offset2'.
 
-I ran basically the last one on a CentOS 4.3 box not more than a
-week ago and it was fine.
+> If so, would --layout=f4 result in a 4-mirror/striped array?
 
---Gil
+o4 on a 4 drive array would be 
+
+   A  B  C  D
+   D  A  B  C
+   C  D  A  B
+   B  C  D  A
+   E  F  G  H
+   ....
+
+> 
+> Also, would it be possible to have a staged write-back mechanism across 
+> multiple stripes?
+
+What exactly would that mean?  And what would be the advantage?
+
+NeilBrown
