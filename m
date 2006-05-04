@@ -1,32 +1,35 @@
-From: gelma <dislessico@gmail.com>
-Subject: Re: to be or not to be...
-Date: Wed, 3 May 2006 17:36:35 +0200
-Message-ID: <20060503153634.GA14534@gelma.net>
-References: <20060423125836.GB6081@gelma.net> <17483.62839.125510.962278@cse.unsw.edu.au>
+From: "Dueled V. Opinion" <gatekoo@grantham.net>
+Subject: Software
+Date: Thu, 04 May 2006 02:53:08 -0400
+Message-ID: <0400617060.20060504025308@grantham.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <17483.62839.125510.962278@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: Neil Brown <neilb@suse.de>
+To: Linux <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On lun, apr 24, 2006 at 07:45:27 +1000, Neil Brown wrote:
-> This could signal a bad controller.  If it does, then you cannot trust
-> any drives.
+Need s0ftware? Click here. 
+Learn to build simple and clean websites that can bring in the dough... 
 
-Hi all,
-	just to tell the end of story, my tests, and others,[1]
-	confirms problema in MD+DM-crypt interaction.
-	It would be good to put an advisory in menuconfig.
+New software on our site:
 
-Thanks a lot for your time,
-gelma
+Windows 98 - $49.95
+Premiere 7 - $69.95
+Borland Delphi 7 Enterprise Edition (2CD) - $69.95
+Director MX 2004 - $69.95
+LiveMotion 2.0 - $69.95
+InDesign CS - $69.95
+Windows NT 4.0 Server - $49.95
+Dreamweaver MX 2004 $69.95
+Photo Painter 8 - $59.95
+Fireworks MX 2004 - $69.95
+InDesign CS - $69.95
+Office XP Professional - $79.95
+Visual Studio .NET Architect Edition (8CD) - $139.95
+Visio 2003 Professional - $69.95
 
-
-
--------
-[1] http://episteme.arstechnica.com/groupee/forums/a/tpc/f/96509133/m/282007248731
+Our site:
+http://a1gwgoyzflfo9aa5fsa5xasa.absolverfj.com
 
