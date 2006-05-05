@@ -1,35 +1,44 @@
-From: Bill Davidsen <davidsen@tmr.com>
+From: John Rowe <rowe@excc.ex.ac.uk>
 Subject: Re: Two-disk RAID5?
-Date: Thu, 04 May 2006 21:22:29 -0400
-Message-ID: <445AA8D5.2040604@tmr.com>
-References: <1146069707.10253.50.camel@kenny>
+Date: Fri, 05 May 2006 10:31:56 +0100
+Message-ID: <1146821517.4365.40.camel@kenny>
+References: <216D6FA68B0F304DA93E95C5B786F2D12FCBBC@bart.corp.egenera.com>
+	 <Pine.LNX.4.61.0604261518020.1846@soloth.lewis.org>
+	 <20060501171128.GA18811@harddisk-recovery.com>  <445AA801.6050404@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1146069707.10253.50.camel@kenny>
+In-Reply-To: <445AA801.6050404@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: John Rowe <rowe@excc.ex.ac.uk>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-John Rowe wrote:
 
->I'm about to create a RAID1 file system and a strange thought occurs to
->me: if I create a two-disk RAID5 array then I can grow it later by the
->simple expedient of adding a third disk and hence doubling its size.
->
->Is there any real down-side to this, such as performance? Alternatively
->is it likely that mdadm will soon be able to convert a RAID1 pair to
->RAID5 any time soon? (Just how different are they anyway? Isn't the
->RAID4/5 checksum just an OR?)
->
-I think it works, I just set up a little test case with two 20MB files 
-and loopback mount. The mdadm seems to work, the mke2fs seems to work, 
-the f/s is there. Please verify, this system is a bit (okay a bunch) hacked.
+> Sorry, I couldn't find a diplomatic way to say you're completely wrong.
 
--- 
-bill davidsen <davidsen@tmr.com>
-  CTO TMR Associates, Inc
-  Doing interesting things with small computers since 1979
+We don't necessarily expect a diplomatic way, but a clear and
+intelligent one would be helpful. 
+
+In two-disk RAID5 which is it?
+
+  1) The 'parity bit' is the same as the datum.
+
+  2) The parity bit is the complement of the datum.
+
+  3) It doesn't work at a bit-wise level.
+
+Many of us feel that RAID5 looks like:
+
+  parity = data[0];
+  for (i=1; i < ndisks; ++i)
+      parity ^= data[i];
+
+which implies (1). It could easily be (2) but merely saying "it's not
+data, it's parity" doesn't clarify matters a great deal. 
+
+But I'm pleased my question has stirred up such controversy!
+
+John
+
 
