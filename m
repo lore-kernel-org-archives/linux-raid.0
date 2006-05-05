@@ -1,36 +1,127 @@
-From: Erik Mouw <erik@harddisk-recovery.com>
-Subject: Re: Two-disk RAID5?
-Date: Fri, 5 May 2006 12:24:05 +0200
-Message-ID: <20060505102405.GA4900@harddisk-recovery.com>
-References: <216D6FA68B0F304DA93E95C5B786F2D12FCBBC@bart.corp.egenera.com> <Pine.LNX.4.61.0604261518020.1846@soloth.lewis.org> <20060501171128.GA18811@harddisk-recovery.com> <445AA801.6050404@tmr.com>
+From: <tomcasassa@aol.com>
+Subject: =?koi8-r?B?IEZpbmFuY2UgbWFuYWdlcnMg?=
+	=?koi8-r?B?YXJlIHdhbnRlZCAobXNnIGlk?=
+	=?koi8-r?B?ID0gWDR4ICk=?=
+Date: Fri, 5 May 2006 17:43:55 +0300
+Message-ID: <4958991247.20060209173446@aol.com>
+Reply-To: <alex@wc-support.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed;
+ boundary="----------F9FCABED66D547"
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <445AA801.6050404@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: Jon Lewis <jlewis@lewis.org>, "Jansen, Frank" <fjansen@egenera.com>, Tuomas Leikola <tuomas.leikola@gmail.com>, John Rowe <rowe@excc.ex.ac.uk>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, May 04, 2006 at 09:18:57PM -0400, Bill Davidsen wrote:
-> Erik Mouw wrote:
-> >No, the other way around: RAID1 is a special case of RAID5.
-> >
-> No it isn't. If you have N drives in RAID1 you have N independent copies 
-> of the data and no parity, there's just no corresponding thing in RAID5, 
-> which has one copy of the data, plus parity. There is no special case, 
-> it just doesn't work that way. Set N>2 and report back.
+------------F9FCABED66D547
+Content-Type: text/plain; charset=koi8-r
+Content-Transfer-Encoding: 8bit
 
-Just write out the formulas and it becomes obvious.
+Hello, your e-mail address linux-raid@vger.kernel.org ,  has been taken from the open sources. My name is Alex Brewster. I am the main manager of Web Click Company. 
 
-> Sorry, I couldn't find a diplomatic way to say you're completely wrong.
+We are engaged in software developing and design. The main office of our Company is located in Lithuania. 
 
-I guess we have to agree to disagree.
+We are searching for employees to work in our company worldwide. If you wish to have additional income from 4000 to 10 000 dollars a month, 
+
+working from your house this offer is for you. The choice of vacancies is huge (designers, managers, auditors, financiers). 
+
+We will offer you the best conditions to work. 
+
+Also if you own a company or if you are managing director of the company we offer you to cooperation with us.  
+
+Send yours contact data and your CV to our e-mail:  alexweclick@yahoo.co.uk
+
+  
+
+ Please do not reply to this letter. Send your contact data to this e-mail: alexweclick@yahoo.co.uk
 
 
-Erik
 
--- 
-+-- Erik Mouw -- www.harddisk-recovery.com -- +31 70 370 12 90 --
-| Lab address: Delftechpark 26, 2628 XH, Delft, The Netherlands
+
+
+
+
+
+
+linux-raid@vger.kernel.org sorry for possible disturbance
+
+
+
+------------------------------------------------------------
+
+This email is not sent unsolicited and is in compliance with the
+
+federal CAN-SPAM act.  Your email address was provided to us as
+
+either a reciprocal user of website promotion system(s), or as an
+
+email initially sent by you or your company to which this response
+
+is being provided.
+
+--------------------------------------------------------------
+
+
+
+
+
+
+
+cMt1kRAn
+
+
+
+this mailing conforms to all federal laws.  please reply
+
+back with "stop mailings" in subject line linux-raid@vger.kernel.org to 
+
+stop mailings.  per can-spam you must allow up to 7
+
+business days for your email deletion.
+
+
+
+
+
+
+
+G0m
+
+
+
+
+
+rx
+
+TKzjwLpq
+
+crFR1J
+
+
+
+28iv
+
+HFrjOE
+
+
+
+b
+
+
+
+
+
+S89Z
+
+
+
+yD3Ly4
+
+dD33WXN
+
+
+
+
+------------F9FCABED66D547--
+
+
