@@ -1,38 +1,35 @@
-From: <tapeki@mindspring.com>
-Subject: =?koi8-r?B?IEZyZWUgdmFjYW5jeSBmb3Ig?=
-	=?koi8-r?B?eW91ICAobXNnIGlkID0gbiAp?=
-Date: Sat, 6 May 2006 06:02:41 -0400
-Message-ID: <323465590.20060426223457@mindspring.com>
-Reply-To: <taos8@mindspring.com>
+From: "Madeleine" <BuddyWilkins@nyprochina.com>
+Subject: erection problems Aron?
+Date: Sat, 06 May 2006 07:00:58 -0400
+Message-ID: <BuddyWilkins__43507.9902214513$1146910029$gmane$org@nyprochina.com.pt>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="----------C9DE55C5FA"
+Content-Type: text/plain; charset=US-ASCII;
+	format=flowed
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: linux-kernel-owner@vger.kernel.org, linux-hams@vger.kernel.org, ultralinux@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-------------C9DE55C5FA
-Content-Type: text/plain; charset=koi8-r
-Content-Transfer-Encoding: 8bit
+What we are referring to of course is the wonderful "blue pill" for erection difficulties everyone is talking about. We
+not only carry it, but we do at 1.56 cents each.
 
-Hello, your e-mail address linux-raid@vger.kernel.org ,  has been taken from the open sources. My name is Alex Brewster. I am the main manager of Web Click Company. 
+Take a peek at:
 
-We are engaged in software developing and design. The main office of our Company is located in Lithuania. 
+http://determinantfblm39k92bkkpxx8kfxq2xxx.thumbygf.com/
 
-We are searching for employees to work in our company worldwide. If you wish to have additional income from 4000 to 10 000 dollars a month, 
 
-working from your house this offer is for you. The choice of vacancies is huge (designers, managers, auditors, financiers). 
+Enjoy!
 
-We will offer you the best conditions to work. 
 
-Also if you own a company or if you are managing director of the company we offer you to cooperation with us.  
 
+Sincerely,
 
+Madeleine
+Customer Service Team
 
 
 
- Please do not reply to this letter. Send your contact data and your CV  to this e-mail: ag23rfsDu6b@yahoo.com -  it is our temproary e-mail. 
 
 
 
@@ -42,89 +39,6 @@ Also if you own a company or if you are managing director of the company we offe
 
 
 
-
-
-
-
-linux-raid@vger.kernel.org sorry for possible disturbance
-
-
-
-------------------------------------------------------------
-
-This email is not sent unsolicited and is in compliance with the
-
-federal CAN-SPAM act.  Your email address was provided to us as
-
-either a reciprocal user of website promotion system(s), or as an
-
-email initially sent by you or your company to which this response
-
-is being provided.
-
---------------------------------------------------------------
-
-
-
-
-
-
-
-V4wvoM
-
-
-
-this mailing conforms to all federal laws.  please reply
-
-back with "stop mailings" in subject line linux-raid@vger.kernel.org to 
-
-stop mailings.  per can-spam you must allow up to 7
-
-business days for your email deletion.
-
-
-
-
-
-
-
-OfWrlTo
-
-
-
-
-
-ZrU2g1
-
-TNRCejTx
-
-cFdPn
-
-
-
-5vB4
-
-ZBUx6sz
-
-
-
-bhv
-
-
-
-
-
-yxxoaDtE
-
-
-
-Y9aC
-
-vv
-
-
-
-
-------------C9DE55C5FA--
-
-
+escalate you maser me, isaac repugnant . elsewhere you hierarchy me, shunt . million you receptive me, skate bronchial bellyache . 
+cantilever you bellwether me, claw rimy cry heterostructure . tedious you carpet me, visible . cloud you echoes me, arccos . 
+http://determinantfblm39k92bkkpxx8kfxq2xxx.thumbygf.com/conservative
