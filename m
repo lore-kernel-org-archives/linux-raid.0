@@ -1,33 +1,130 @@
-From: "Jenna Mcmillan" <paulene.zellerrn9@gmail.com>
-Subject: High-quality custom logos and business identities (ID46096480)
-Date: Fri, 5 May 2006 21:43:42 -0100
-Message-ID: <200605051943.k45Jh3A3009390__45616.3588715301$1146858240$gmane$org@zeus1.kernel.org>
+From: <tapeki@mindspring.com>
+Subject: =?koi8-r?B?IEZyZWUgdmFjYW5jeSBmb3Ig?=
+	=?koi8-r?B?eW91ICAobXNnIGlkID0gbiAp?=
+Date: Sat, 6 May 2006 06:02:41 -0400
+Message-ID: <323465590.20060426223457@mindspring.com>
+Reply-To: <taos8@mindspring.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-        charset="Windows-1252"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="----------C9DE55C5FA"
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-ppp@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-j4w
+------------C9DE55C5FA
+Content-Type: text/plain; charset=koi8-r
+Content-Transfer-Encoding: 8bit
 
-Our art team creates a custom logo for you, based on your needs.  Years of experience have taught us how to create a logo that makes a statement that is unique to you.
+Hello, your e-mail address linux-raid@vger.kernel.org ,  has been taken from the open sources. My name is Alex Brewster. I am the main manager of Web Click Company. 
 
-In a professional manner we learn about your image and how you would like the world to perceive you and your company.  With this information we then create a logo that is not only unique but reflects the purpose of you and your company.
+We are engaged in software developing and design. The main office of our Company is located in Lithuania. 
 
-For value and a logo that reflects your image, take a few minutes and visit Logo Maker!
+We are searching for employees to work in our company worldwide. If you wish to have additional income from 4000 to 10 000 dollars a month, 
 
-http://abbott.biz.logotip-marke.com
+working from your house this offer is for you. The choice of vacancies is huge (designers, managers, auditors, financiers). 
 
-Sincerely,
-Logo Design Team
- 
+We will offer you the best conditions to work. 
 
-
+Also if you own a company or if you are managing director of the company we offer you to cooperation with us.  
 
 
 
- colatitude barn dandy
+
+
+ Please do not reply to this letter. Send your contact data and your CV  to this e-mail: ag23rfsDu6b@yahoo.com -  it is our temproary e-mail. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+linux-raid@vger.kernel.org sorry for possible disturbance
+
+
+
+------------------------------------------------------------
+
+This email is not sent unsolicited and is in compliance with the
+
+federal CAN-SPAM act.  Your email address was provided to us as
+
+either a reciprocal user of website promotion system(s), or as an
+
+email initially sent by you or your company to which this response
+
+is being provided.
+
+--------------------------------------------------------------
+
+
+
+
+
+
+
+V4wvoM
+
+
+
+this mailing conforms to all federal laws.  please reply
+
+back with "stop mailings" in subject line linux-raid@vger.kernel.org to 
+
+stop mailings.  per can-spam you must allow up to 7
+
+business days for your email deletion.
+
+
+
+
+
+
+
+OfWrlTo
+
+
+
+
+
+ZrU2g1
+
+TNRCejTx
+
+cFdPn
+
+
+
+5vB4
+
+ZBUx6sz
+
+
+
+bhv
+
+
+
+
+
+yxxoaDtE
+
+
+
+Y9aC
+
+vv
+
+
+
+
+------------C9DE55C5FA--
+
 
