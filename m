@@ -1,105 +1,38 @@
-From: Al Boldi <a1426z@gawab.com>
-Subject: Re: [PATCH 009 of 11] md: Support stripe/offset mode in raid10
-Date: Mon, 8 May 2006 19:59:26 +0300
-Message-ID: <200605081959.26470.a1426z@gawab.com>
-References: <20060501152229.18367.patches@notabene> <200605030700.23515.a1426z@gawab.com> <17502.61577.874881.753541@cse.unsw.edu.au>
+From: Dexter Filmore <Dexter.Filmore@gmx.de>
+Subject: slackware -current softraid5 boot problem
+Date: Tue, 9 May 2006 00:06:32 +0200
+Message-ID: <200605090006.32615.Dexter.Filmore@gmx.de>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="windows-1256"
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17502.61577.874881.753541@cse.unsw.edu.au>
 Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil Brown wrote:
-> On Wednesday May 3, a1426z@gawab.com wrote:
-> > Neil Brown wrote:
-> > > On Tuesday May 2, a1426z@gawab.com wrote:
-> > > > NeilBrown wrote:
-> > > > > The "industry standard" DDF format allows for a stripe/offset
-> > > > > layout where data is duplicated on different stripes. e.g.
-> > > > >
-> > > > >   A  B  C  D
-> > > > >   D  A  B  C
-> > > > >   E  F  G  H
-> > > > >   H  E  F  G
-> > > > >
-> > > > > (columns are drives, rows are stripes, LETTERS are chunks of
-> > > > > data).
-> > > >
-> > > > Presumably, this is the case for --layout=f2 ?
-> > >
-> > > Almost.  mdadm doesn't support this layout yet.
-> > > 'f2' is a similar layout, but the offset stripes are a lot further
-> > > down the drives.
-> > > It will possibly be called 'o2' or 'offset2'.
-> > >
-> > > > If so, would --layout=f4 result in a 4-mirror/striped array?
-> > >
-> > > o4 on a 4 drive array would be
-> > >
-> > >    A  B  C  D
-> > >    D  A  B  C
-> > >    C  D  A  B
-> > >    B  C  D  A
-> > >    E  F  G  H
-> > >    ....
-> >
-> > Yes, so would this give us 4 physically duplicate mirrors?
->
-> It would give 4 devices each containing the same data, but in a
-> different layout - much as the picture shows....
->
-> > If not, would it be possible to add a far-offset mode to yield such
-> > a layout?
->
-> Exactly what sort of layout do you want?
+Finally got me a bunch of disks as a raid 5, I don't even want to boot from 
+it, plain data array. four sata-II samsungs on a sil3114 controller, all fine 
+so far.
 
-Something like this:
+Booting the machine I get "no superblock on /dev/sdd, stopping 
+assembly" (or assembly aborted or so)
+After boot has completed, running mdadm --assemble --scan --verbose manually 
+works just fine and doesn't tell a thing about missing superblocks. 
 
-o1	A1 B1 C1 D1
+Ideas, anyone?
 
-o2	A1 A2 B1 B2
-	C2 C1 D2 D1
-	
-o3	A1 A2 A3 B1
-	B2 B3 C1 C2
-	C3 D1 D2 D3
+Dex
 
-o4	A1 A2 A3 A4
-	B2 B3 B4 B1
-	C3 C4 C1 C2
-	D4 D1 D2 D3
 
-(columns are drives, numbers are stripes, LETTERS are chunks of data).
+-- 
+-----BEGIN GEEK CODE BLOCK-----
+Version: 3.12
+GCS d--(+)@ s-:+ a- C+++(++++) UL+>++++ P+>++ L+++>++++ E-- W++ N o? K-
+w--(---) !O M+ V- PS++(+) PE(-) Y++ PGP t++(---)@ 5 X+(++) R+(++) tv--(+)@ 
+b++(+++) DI+++ D G++ e* h>++ r%>* y?
+------END GEEK CODE BLOCK------
 
-> > > > Also, would it be possible to have a staged write-back mechanism
-> > > > across multiple stripes?
-> > >
-> > > What exactly would that mean?
-> >
-> > Write the first stripe, then write subsequent duplicate stripes based on
-> > idle with a max delay for each delayed stripe.
-> >
-> > > And what would be the advantage?
-> >
-> > Faster burst writes, probably.
->
-> I still don't get what you are after.
-> You always need to wait for writes of all copies to complete before
-> acknowledging the write to the filesystem, otherwise you risk
-> corruption if there is a crash and a device failure.
-
-Yes, some people can not stomach running degraded at any time, so they could 
-set the delay for the first duplicate stripe to 0, and subsequent stripes at 
-leasure.
-
-Thanks!
-
---
-Al
-
+http://www.stop1984.com
+http://www.againsttcpa.com
