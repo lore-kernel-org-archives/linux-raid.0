@@ -1,43 +1,84 @@
-From: "David M. Strang" <dstrang@shellpower.net>
-Subject: Horrific Raid 5 crash... help!
-Date: Sun, 7 May 2006 22:40:49 -0400
-Message-ID: <004b01c67248$d0e9e8c0$a300a8c0@enterprise.local>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: [PATCH 009 of 11] md: Support stripe/offset mode in raid10
+Date: Mon, 8 May 2006 17:17:29 +1000
+Message-ID: <17502.61577.874881.753541@cse.unsw.edu.au>
+References: <20060501152229.18367.patches@notabene>
+	<200605021938.45254.a1426z@gawab.com>
+	<17495.62433.136481.543828@cse.unsw.edu.au>
+	<200605030700.23515.a1426z@gawab.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	format=flowed;
-	charset="iso-8859-1";
-	reply-type=original
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: message from Al Boldi on Wednesday May 3
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Al Boldi <a1426z@gawab.com>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-I'd have to say, I'm currently rating in the top 10 most unlucky people in 
-the linux software raid world right now.
+On Wednesday May 3, a1426z@gawab.com wrote:
+> Neil Brown wrote:
+> > On Tuesday May 2, a1426z@gawab.com wrote:
+> > > NeilBrown wrote:
+> > > > The "industry standard" DDF format allows for a stripe/offset layout
+> > > > where data is duplicated on different stripes. e.g.
+> > > >
+> > > >   A  B  C  D
+> > > >   D  A  B  C
+> > > >   E  F  G  H
+> > > >   H  E  F  G
+> > > >
+> > > > (columns are drives, rows are stripes, LETTERS are chunks of data).
+> > >
+> > > Presumably, this is the case for --layout=f2 ?
+> >
+> > Almost.  mdadm doesn't support this layout yet.
+> > 'f2' is a similar layout, but the offset stripes are a lot further
+> > down the drives.
+> > It will possibly be called 'o2' or 'offset2'.
+> >
+> > > If so, would --layout=f4 result in a 4-mirror/striped array?
+> >
+> > o4 on a 4 drive array would be
+> >
+> >    A  B  C  D
+> >    D  A  B  C
+> >    C  D  A  B
+> >    B  C  D  A
+> >    E  F  G  H
+> >    ....
+> 
+> Yes, so would this give us 4 physically duplicate mirrors?
 
-I'm terrified of rebooting; I had 136 days uptime, and I needed to swap out 
-my wireless card. So, I shut down my system. For some time now, anytime I 
-reboot... my raid wants to rebuild a disk. It comes up 27 disks, 1 spare - 
-clean, degraded, rebuilding. The disk rebuilds, and everything is hunky 
-dory. It's a nusance, but oh well. I've had so many issues in the past where 
-my raid would randomly kick disks (ended up being firmware) that I've always 
-been greatful on how stable it's been since those issues were resolved. A 
-few months back, I actually had a disk fail. I swapped in a spare, it 
-rebuilt - all good.
+It would give 4 devices each containing the same data, but in a
+different layout - much as the picture shows....
 
-Well today, during this illustrious rebuild... it appears I actually DID 
-have a disk fail. So, I have 26 disks... 1 partially rebuilt, and 1 failed. 
-Hoping and praying that a rebuild didn't actually wipe the disk and maybe 
-just synced things up -- I did a create with the 26 disks + 1 partially 
-rebuilt and 1 'missing disk'.... well, the array came up.... but I get 
-access denied on a zillion things, and the filesystem is freaking out.
 
-Before I proceed any further... what are my options? Do I have any options? 
-I could run a fsck... but I held off fearing it could just make things 
-worse.
+> If not, would it be possible to add a far-offset mode to yield such
+> a layout?
 
-Thanks,
+Exactly what sort of layout do you want?
 
-David M. Strang 
 
+> 
+> > > Also, would it be possible to have a staged write-back mechanism across
+> > > multiple stripes?
+> >
+> > What exactly would that mean?
+> 
+> Write the first stripe, then write subsequent duplicate stripes based on idle 
+> with a max delay for each delayed stripe.
+> 
+> > And what would be the advantage?
+> 
+> Faster burst writes, probably.
+
+I still don't get what you are after.
+You always need to wait for writes of all copies to complete before
+acknowledging the write to the filesystem, otherwise you risk
+corruption if there is a crash and a device failure.
+So inserting any delays (other than the per-device plugging which
+helps to group adjacent requests) isn't going to make things go
+faster.
+
+NeilBrown
