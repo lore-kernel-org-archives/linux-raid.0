@@ -1,69 +1,105 @@
-From: "Molle Bestefich" <molle.bestefich@gmail.com>
-Subject: Re: Horrific Raid 5 crash... help!
-Date: Mon, 8 May 2006 18:47:06 +0200
-Message-ID: <62b0912f0605080947n42e1e40blfe29b2360573cff1@mail.gmail.com>
-References: <004b01c67248$d0e9e8c0$a300a8c0@enterprise.local>
+From: Al Boldi <a1426z@gawab.com>
+Subject: Re: [PATCH 009 of 11] md: Support stripe/offset mode in raid10
+Date: Mon, 8 May 2006 19:59:26 +0300
+Message-ID: <200605081959.26470.a1426z@gawab.com>
+References: <20060501152229.18367.patches@notabene> <200605030700.23515.a1426z@gawab.com> <17502.61577.874881.753541@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
-	format=flowed
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain;
+  charset="windows-1256"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <004b01c67248$d0e9e8c0$a300a8c0@enterprise.local>
+In-Reply-To: <17502.61577.874881.753541@cse.unsw.edu.au>
 Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: "David M. Strang" <dstrang@shellpower.net>
-Cc: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-David M. Strang wrote:
-> Well today, during this illustrious rebuild... it appears I actually DID
-> have a disk fail. So, I have 26 disks... 1 partially rebuilt, and 1 failed.
+Neil Brown wrote:
+> On Wednesday May 3, a1426z@gawab.com wrote:
+> > Neil Brown wrote:
+> > > On Tuesday May 2, a1426z@gawab.com wrote:
+> > > > NeilBrown wrote:
+> > > > > The "industry standard" DDF format allows for a stripe/offset
+> > > > > layout where data is duplicated on different stripes. e.g.
+> > > > >
+> > > > >   A  B  C  D
+> > > > >   D  A  B  C
+> > > > >   E  F  G  H
+> > > > >   H  E  F  G
+> > > > >
+> > > > > (columns are drives, rows are stripes, LETTERS are chunks of
+> > > > > data).
+> > > >
+> > > > Presumably, this is the case for --layout=f2 ?
+> > >
+> > > Almost.  mdadm doesn't support this layout yet.
+> > > 'f2' is a similar layout, but the offset stripes are a lot further
+> > > down the drives.
+> > > It will possibly be called 'o2' or 'offset2'.
+> > >
+> > > > If so, would --layout=f4 result in a 4-mirror/striped array?
+> > >
+> > > o4 on a 4 drive array would be
+> > >
+> > >    A  B  C  D
+> > >    D  A  B  C
+> > >    C  D  A  B
+> > >    B  C  D  A
+> > >    E  F  G  H
+> > >    ....
+> >
+> > Yes, so would this give us 4 physically duplicate mirrors?
+>
+> It would give 4 devices each containing the same data, but in a
+> different layout - much as the picture shows....
+>
+> > If not, would it be possible to add a far-offset mode to yield such
+> > a layout?
+>
+> Exactly what sort of layout do you want?
 
-Common scenario it seems.
+Something like this:
 
-> Hoping and praying that a rebuild didn't actually wipe the disk and maybe
-> just synced things up -- I did a create with the 26 disks + 1 partially
-> rebuilt and 1 'missing disk'....
+o1	A1 B1 C1 D1
 
-I've always loathed that approach.
-It seems *so* wrong to force MD to nuke all the information that is in
-the superblocks.
+o2	A1 A2 B1 B2
+	C2 C1 D2 D1
+	
+o3	A1 A2 A3 B1
+	B2 B3 C1 C2
+	C3 D1 D2 D3
 
-I know this is the recommended approach, and I wish it would be changed.
-Better sooner than later, too :-).
+o4	A1 A2 A3 A4
+	B2 B3 B4 B1
+	C3 C4 C1 C2
+	D4 D1 D2 D3
 
-> well, the array came up.... but I get access denied on a zillion things,
-> and the filesystem is freaking out.
+(columns are drives, numbers are stripes, LETTERS are chunks of data).
 
-Do you have something like mdadm's printout of the superblocks before
-and after you did the "mdadm --create"?  Without that information,
-it's going to be hard to tell what's going on.
+> > > > Also, would it be possible to have a staged write-back mechanism
+> > > > across multiple stripes?
+> > >
+> > > What exactly would that mean?
+> >
+> > Write the first stripe, then write subsequent duplicate stripes based on
+> > idle with a max delay for each delayed stripe.
+> >
+> > > And what would be the advantage?
+> >
+> > Faster burst writes, probably.
+>
+> I still don't get what you are after.
+> You always need to wait for writes of all copies to complete before
+> acknowledging the write to the filesystem, otherwise you risk
+> corruption if there is a crash and a device failure.
 
-My best guess is that you've assembled the array using the halfway
-rebuilt disk, that it was kicked by MD long ago on basis of a single
-bad block somewhere, and that the disk happens to contain a bunch of
-old data which confuses the filesystem.
+Yes, some people can not stomach running degraded at any time, so they could 
+set the delay for the first duplicate stripe to 0, and subsequent stripes at 
+leasure.
 
-But it's a *very* wild guess.
+Thanks!
 
-> Before I proceed any further... what are my options? Do I have any options?
+--
+Al
 
-Hard to say unless you can tell us which disks failed, and when, and
-which disks you use to assemble now, etc etc.
-
-The more information, the better.
-
-> I could run a fsck... but I held off fearing it could just make things worse.
-
-Good thinking..
-I've often seen ext3 fsck do a lot more harm than good.
-(I believe reiser's fsck is pretty good, but haven't got any
-experience with it.)
-Until you're sure you've got everything right, I wouldn't run fsck.
-
-In fact, assemble the array readonly and mount the filesystem readonly.
-
-If you need to do modifications, and you're not sure you're doing it
-right, you can make a duplicate of the individual disks in the RAID
-and perform experiments on those.  Of course, the price tag depends on
-how many GB your array is..
