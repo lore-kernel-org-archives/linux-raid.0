@@ -1,42 +1,132 @@
-From: CaT <cat@zip.com.au>
-Subject: Re: strange RAID5 problem
-Date: Tue, 9 May 2006 16:12:45 +1000
-Message-ID: <20060509061245.GA4776@zip.com.au>
-References: <4460290C.50202@harddata.com>
+From: <eileencarson@aol.com>
+Subject: =?koi8-r?B?IEJpZyBMaXRodWFuaWFuIGNv?=
+	=?koi8-r?B?bXBhbnkgaXMgbG9va2luZyBm?=
+	=?koi8-r?B?b3IgbWFuYWdlcnMgIChtc2cg?=
+	=?koi8-r?B?aWQgPSBGaVUgKQ==?=
+Date: Tue, 9 May 2006 10:15:36 +0200
+Message-ID: <040124981.20051013201603@aol.com>
+Reply-To: <gerti@optonline.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed;
+ boundary="----------A2C618B6F414"
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4460290C.50202@harddata.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Maurice Hilarius <maurice@harddata.com>
-Cc: linux-raid@vger.kernel.org, neilb@suse.de
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, May 08, 2006 at 11:30:52PM -0600, Maurice Hilarius wrote:
-> [root@box ~]# mdadm
-> --assemble /dev/md3 /dev/sdq1 /dev/sdr1 /dev/sds1 /dev/sdt1 /dev/sdu1
-> /dev/sdv1 /dev/sdw1 /dev/sdx1 /dev/sdy1 /dev/sdz1 /dev/sdaa1 /dev/sdab1
-> /dev/sdac1 /dev/sdad1 /dev/sdae1 /dev/sdaf1
-> mdadm: superblock on /dev/sdw1 doesn't match others - assembly aborted
+------------A2C618B6F414
+Content-Type: text/plain; charset=koi8-r
+Content-Transfer-Encoding: 8bit
 
-Have you tried zeroing the superblock with
+Hello, your e-mail address linux-raid@vger.kernel.org ,  has been taken from the open sources. My name is Alex Brewster. I am the main manager of Web Click Company. 
 
-mdadm --misc --zero-superblock /dev/sdw1
+We are engaged in software developing and design. The main office of our Company is located in Lithuania. 
 
-and then adding it in?
+We are searching for employees to work in our company worldwide. If you wish to have additional income from 4000 to 10 000 dollars a month, 
 
-> [root@box ~]# mount /dev/md3 /all/boxw16/
-> /dev/md3: Invalid argument
-> mount: /dev/md3: can't read superblock
+working from your house this offer is for you. The choice of vacancies is huge (designers, managers, auditors, financiers). 
 
-Wow that looks messy. ummm. about the only thing I can think of is
-failing /dev/sdw1 and removing it (I know it says it's not there
-but...)
+We will offer you the best conditions to work. 
 
-Also, not biggest expert on raid around here. ;)
+Also if you own a company or if you are managing director of the company we offer you to cooperation with us.  
 
--- 
-    "To the extent that we overreact, we proffer the terrorists the
-    greatest tribute."
-    	- High Court Judge Michael Kirby
+
+
+
+
+ Please do not reply to this letter. Send your contact data and your CV  to this e-mail: aq57mtnmp4b@yahoo.com -  it is our temproary e-mail. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+linux-raid@vger.kernel.org sorry for possible disturbance
+
+
+
+------------------------------------------------------------
+
+This email is not sent unsolicited and is in compliance with the
+
+federal CAN-SPAM act.  Your email address was provided to us as
+
+either a reciprocal user of website promotion system(s), or as an
+
+email initially sent by you or your company to which this response
+
+is being provided.
+
+--------------------------------------------------------------
+
+
+
+
+
+
+
+GPD2C
+
+
+
+this mailing conforms to all federal laws.  please reply
+
+back with "stop mailings" in subject line linux-raid@vger.kernel.org to 
+
+stop mailings.  per can-spam you must allow up to 7
+
+business days for your email deletion.
+
+
+
+
+
+
+
+5bxHzU
+
+
+
+
+
+e
+
+drY
+
+75SuR
+
+
+
+r2Tf9
+
+xjyLJZO
+
+
+
+Ef
+
+
+
+
+
+8p
+
+
+
+r
+
+NkG
+
+
+
+
+------------A2C618B6F414--
+
+
