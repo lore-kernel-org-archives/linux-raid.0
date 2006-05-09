@@ -1,38 +1,38 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: strange RAID5 problem
-Date: Tue, 9 May 2006 15:45:25 +1000
-Message-ID: <17504.11381.804875.246260@cse.unsw.edu.au>
-References: <4460290C.50202@harddata.com>
+From: Luca Berra <bluca@comedia.it>
+Subject: Re: slackware -current softraid5 boot problem
+Date: Tue, 9 May 2006 07:50:49 +0200
+Message-ID: <20060509055048.GA22085@percy.comedia.it>
+References: <200605090006.32615.Dexter.Filmore@gmx.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Maurice Hilarius on Monday May 8
+Content-Disposition: inline
+In-Reply-To: <200605090006.32615.Dexter.Filmore@gmx.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Maurice Hilarius <maurice@harddata.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Monday May 8, maurice@harddata.com wrote:
-> Good evening.
-> 
-> I am having a bit of a problem with a largish RAID5 set.
-> Now it is looking more and more like I am about to lose all the data on
-> it, so I am asking (begging?) to see if anyone can help me sort this out.
-> 
+On Tue, May 09, 2006 at 12:06:32AM +0200, Dexter Filmore wrote:
+>Finally got me a bunch of disks as a raid 5, I don't even want to boot from 
+>it, plain data array. four sata-II samsungs on a sil3114 controller, all fine 
+>so far.
+>
+>Booting the machine I get "no superblock on /dev/sdd, stopping 
+>assembly" (or assembly aborted or so)
+>After boot has completed, running mdadm --assemble --scan --verbose manually 
+>works just fine and doesn't tell a thing about missing superblocks. 
+>
+you don't give a lot of information about your setup,
+in any case it could be something like udev and the /dev/sdd device node
+not being available at boot?
 
-Very thorough description, but you omitted the 'dmesg' output
-corresponding to :
+Regards,
+L.
 
-> 
-> [root@box ~]# mdadm
-> --assemble /dev/md3 /dev/sdq1 /dev/sdr1 /dev/sds1 /dev/sdt1 /dev/sdu1
-> /dev/sdv1 /dev/sdx1 /dev/sdy1 /dev/sdz1 /dev/sdaa1 /dev/sdab1 /dev/sdac1
-> /dev/sdad1 /dev/sdae1 /dev/sdaf1
-> mdadm: failed to RUN_ARRAY /dev/md3: Invalid argument
-
-
-Also, you don't seem to have tried '--force' with '--assemble'.  It
-might help.
-
-NeilBrown
+-- 
+Luca Berra -- bluca@comedia.it
+        Communication Media & Services S.r.l.
+ /"\
+ \ /     ASCII RIBBON CAMPAIGN
+  X        AGAINST HTML MAIL
+ / \
