@@ -1,67 +1,42 @@
-From: Luca Berra <bluca@comedia.it>
+From: CaT <cat@zip.com.au>
 Subject: Re: strange RAID5 problem
-Date: Tue, 9 May 2006 07:58:25 +0200
-Message-ID: <20060509055824.GB22085@percy.comedia.it>
+Date: Tue, 9 May 2006 16:12:45 +1000
+Message-ID: <20060509061245.GA4776@zip.com.au>
 References: <4460290C.50202@harddata.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
 In-Reply-To: <4460290C.50202@harddata.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Maurice Hilarius <maurice@harddata.com>
+Cc: linux-raid@vger.kernel.org, neilb@suse.de
 List-Id: linux-raid.ids
 
 On Mon, May 08, 2006 at 11:30:52PM -0600, Maurice Hilarius wrote:
->[root@box ~]# mdadm /dev/md3 -a /dev/sdw1
->
->But, I get this error message:
->mdadm: hot add failed for /dev/sdw1: No such device
->
->What? We just made the partition on sdw a moment ago in fdisk. It IS there!
+> [root@box ~]# mdadm
+> --assemble /dev/md3 /dev/sdq1 /dev/sdr1 /dev/sds1 /dev/sdt1 /dev/sdu1
+> /dev/sdv1 /dev/sdw1 /dev/sdx1 /dev/sdy1 /dev/sdz1 /dev/sdaa1 /dev/sdab1
+> /dev/sdac1 /dev/sdad1 /dev/sdae1 /dev/sdaf1
+> mdadm: superblock on /dev/sdw1 doesn't match others - assembly aborted
 
-I don't believe you, prove it (/proc/partitions)
+Have you tried zeroing the superblock with
 
->So. we look around a bit:
-># /cat/proc/mdstat
->
->md3 : inactive sdq1[0] sdaf1[15] sdae1[14] sdad1[13] sdac1[12] sdab1[11]
->sdaa1[10] sdz1[9] sdy1[8] sdx1[7] sdv1[5] sdu1[4] sdt1[3] sds1[2]
->sdr1[1]
->      5860631040 blocks
->
->Yup, that looks correct, missing sdw1[6]
+mdadm --misc --zero-superblock /dev/sdw1
 
-no, it does not, it is 'inactive'
+and then adding it in?
 
->[root@box ~]# cat /proc/mdstat
->Personalities : [raid1] [raid5]
-...
->md3 : inactive sdq1[0] sdaf1[15] sdae1[14] sdad1[13] sdac1[12] sdab1[11]
->sdaa1[10] sdz1[9] sdy1[8] sdx1[7] sdv1[5] sdu1[4] sdt1[3] sds1[2]
->sdr1[1]
->      5860631040 blocks
-...
->[root@box ~]# mdadm /dev/md3 -a /dev/sdw1
->mdadm: hot add failed for /dev/sdw1: No such device
->
->OK, let's mount the degraded RAID and try to copy the files to somewhere
->else, so we can make it from scratch:
->
->[root@box ~]# mount /dev/md3 /all/boxw16/
->/dev/md3: Invalid argument
->mount: /dev/md3: can't read superblock
->
-it is still inactive, no wonder you cannot access it.
+> [root@box ~]# mount /dev/md3 /all/boxw16/
+> /dev/md3: Invalid argument
+> mount: /dev/md3: can't read superblock
 
-try running the array, or really stop it before assembling.
+Wow that looks messy. ummm. about the only thing I can think of is
+failing /dev/sdw1 and removing it (I know it says it's not there
+but...)
 
-L.
+Also, not biggest expert on raid around here. ;)
 
 -- 
-Luca Berra -- bluca@comedia.it
-        Communication Media & Services S.r.l.
- /"\
- \ /     ASCII RIBBON CAMPAIGN
-  X        AGAINST HTML MAIL
- / \
+    "To the extent that we overreact, we proffer the terrorists the
+    greatest tribute."
+    	- High Court Judge Michael Kirby
