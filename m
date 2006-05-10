@@ -1,42 +1,29 @@
-From: Mirko Benz <mirko.benz@web.de>
-Subject: RAID 0 over HW RAID
-Date: Wed, 10 May 2006 15:37:26 +0200
-Message-ID: <4461EC96.9040704@web.de>
+From: Maurice Hilarius <maurice@harddata.com>
+Subject: Thanks! Was:[Re: strange RAID5 problem]
+Date: Wed, 10 May 2006 08:54:59 -0600
+Message-ID: <4461FEC3.6030404@harddata.com>
+References: <4460290C.50202@harddata.com> <20060509055824.GB22085@percy.comedia.it> <4460C059.3070304@harddata.com> <20060509192053.GA27247@percy.comedia.it> <4461156A.3050903@harddata.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4461156A.3050903@harddata.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello,
+Thanks to Neil, Luca, and CaT, who were all a big help.
 
-We want to combine two HW RAID controllers with RAID 0 using MD and see 
-some performance issues.
 
-Setup:
-- Linux 2.6.16-64 bit, Dual XEON, 1 GB RAM
-- 2 RAID controllers: ARECA with 7 SATA disks each (RAID5)
-- SW RAID 0 over the two HW RAID controllers
-- stripe size is always 64k
 
-Measured with IOMETER (MB/s, 64 kb block size with sequential I/O).
-one HW RAID controller:    
-- R: 360 W: 240
-two HW RAID controllers:    
-- R: 619  W: 480 (one IOMETER worker per device)
-MD0 over two  HW RAID controllers:
-- R 367 W: 433 (one IOMETER worker over md device)
+-- 
 
-Read throughput is similar to a single controller. Any hint how to 
-improve that?
-Using a larger block size does not help.
+With our best regards,
 
-We are considering using MD to combine HW RAID controllers with battery 
-backup support for better data protection. In this scenario md should do 
-no write caching. Is it possible to use something like O_DIRECT  with md?
 
-Regards,
-Mirko
+Maurice W. Hilarius        Telephone: 01-780-456-9771
+Hard Data Ltd.  FAX:       01-780-456-9772
+11060 - 166 Avenue         email:maurice@harddata.com
+Edmonton, AB, Canada       http://www.harddata.com/
+   T5X 1Y3
 
