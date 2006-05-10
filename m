@@ -1,32 +1,42 @@
-From: Dexter Filmore <Dexter.Filmore@gmx.de>
-Subject: xfs or ext3?
-Date: Wed, 10 May 2006 15:35:59 +0200
-Message-ID: <200605101535.59829.Dexter.Filmore@gmx.de>
+From: Mirko Benz <mirko.benz@web.de>
+Subject: RAID 0 over HW RAID
+Date: Wed, 10 May 2006 15:37:26 +0200
+Message-ID: <4461EC96.9040704@web.de>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Since xfs is not shrinkable (if this information is not correct anymore, let 
-me know), I consider ext3. 
-Do I need to no anything? Will there be a noticable performance impact 
-(softraid5 on four sata disks, athlon xp2000+/512mb)?
-Do I have to provide stride parameter like for ext2?
+Hello,
 
-Dex
+We want to combine two HW RAID controllers with RAID 0 using MD and see 
+some performance issues.
 
--- 
------BEGIN GEEK CODE BLOCK-----
-Version: 3.12
-GCS d--(+)@ s-:+ a- C+++(++++) UL+>++++ P+>++ L+++>++++ E-- W++ N o? K-
-w--(---) !O M+ V- PS++(+) PE(-) Y++ PGP t++(---)@ 5 X+(++) R+(++) tv--(+)@ 
-b++(+++) DI+++ D G++ e* h>++ r%>* y?
-------END GEEK CODE BLOCK------
+Setup:
+- Linux 2.6.16-64 bit, Dual XEON, 1 GB RAM
+- 2 RAID controllers: ARECA with 7 SATA disks each (RAID5)
+- SW RAID 0 over the two HW RAID controllers
+- stripe size is always 64k
 
-http://www.stop1984.com
-http://www.againsttcpa.com
+Measured with IOMETER (MB/s, 64 kb block size with sequential I/O).
+one HW RAID controller:    
+- R: 360 W: 240
+two HW RAID controllers:    
+- R: 619  W: 480 (one IOMETER worker per device)
+MD0 over two  HW RAID controllers:
+- R 367 W: 433 (one IOMETER worker over md device)
+
+Read throughput is similar to a single controller. Any hint how to 
+improve that?
+Using a larger block size does not help.
+
+We are considering using MD to combine HW RAID controllers with battery 
+backup support for better data protection. In this scenario md should do 
+no write caching. Is it possible to use something like O_DIRECT  with md?
+
+Regards,
+Mirko
+
