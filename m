@@ -1,262 +1,48 @@
-From: dean gaudet <dean@arctic.org>
-Subject: Re: raid5 hang on get_active_stripe
-Date: Thu, 11 May 2006 08:13:03 -0700 (PDT)
-Message-ID: <Pine.LNX.4.64.0605110758100.25283@twinlark.arctic.org>
-References: <5d96567b0603060346r768a0ee1i8d8170cf9ba4bac1@mail.gmail.com>
- <Pine.LNX.4.56.0603061156140.26994@lion.drogon.net>
- <5d96567b0603060456h5f2c3cc8me790c86b74e1f854@mail.gmail.com>
- <4415F400.5030808@ucolick.org> <17429.64926.100005.904328@cse.unsw.edu.au>
+From: =?ISO-8859-1?Q?=20=22Ger=E7ek?= =?ISO-8859-1?Q?=20Terc=FCme=22?=
+	 <gercektercume@yahoo.com>
+Subject: Fiyatlar:  =?ISO-8859-1?Q?=20=DDngilizce-?= 7 YTL, Almanca,...
+Date: Thu, 11 May 2006 21:45:54 +0300
+Message-ID: <200605111845.k4BIjWdW018282@zeus1.kernel.org>
+Reply-To: gercektercume@yahoo.com
 Mime-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="131011217-500257289-1147360383=:25283"
+Content-Type: text/plain; charset=windows-1254
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17429.64926.100005.904328@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Patrik Jonsson <patrik@ucolick.org>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+Sayfa ba=FE=FD Terc=FCme Fiyatlar=FD:
 
---131011217-500257289-1147360383=:25283
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+=DDngilizce	: 7 YTL=09
+=DDngilizce  	: 5 YTL (ticari yaz=FD=FEma, yar=FDm sayfa)
+Almanca	: 9 YTL=09
+=46rans=FDzca	: 9 YTL	=09
+Rus=E7a		: 10 YTL=20
+Arap=E7a		: 12 YTL
+Di=F0er Diller i=E7in l=FCtfen fiyat isteyiniz.
+=20
+Ticari Yaz=FD=FEma, Katalog, Akreditif, Kullan=FDm K=FDlavuzu, Web-Site=
+si,=85=20
+dahil =DDngilizce ile di=F0er dillerdeki  her t=FCrl=FC metinleriniz
+internet  ve  fax  yolu  ile  h=FDzl=FD  ve  kaliteli  bir  =FEekilde  =
+terc=FCme  edilir.
 
-On Tue, 14 Mar 2006, Neil Brown wrote:
+Yaz=FDl=FD ve S=F6zl=FC Terc=FCme, Internet, Telefon, SMS =FCzerinden t=
+erc=FCme ve t=FCm
+hizmetlerimiz hakk=FDnda bilgi i=E7in www.gercektercume.com 'a t=FDklay=
+=FDn=FDz.
 
-> On Monday March 13, patrik@ucolick.org wrote:
-> > Hi all,
-> > 
-> > I just experienced some kind of lockup accessing my 8-drive raid5
-> > (2.6.16-rc4-mm2). The system has been up for 16 days running fine, but
-> > now processes that try to read the md device hang. ps tells me they are
-> > all sleeping in get_active_stripe. There is nothing in the syslog, and I
-> > can read from the individual drives fine with dd. mdadm says the state
-> > is "active".
-> 
-> Hmmm... That's sad. That's going to be very hard to track down.
-> 
-> If you could
->   echo t > /proc/sysrq-trigger
-> 
-> and send me the dump that appears in the kernel log, I would
-> appreciate it.  I doubt it will be very helpful, but it is the best
-> bet I can come up with.
-
-i seem to be running into this as well... it has happenned several times 
-in the past three weeks.  i attached the kernel log output...
-
-it's a debian 2.6.16 kernel, which is based mostly on 2.6.16.10.
-
-md4 : active raid5 sdd1[0] sde1[5](S) sdh1[4] sdg1[3] sdf1[2] sdc1[1]
-      1562834944 blocks level 5, 128k chunk, algorithm 2 [5/5] [UUUUU]
-      bitmap: 3/187 pages [12KB], 1024KB chunk
-
-those drives are on 3w-xxxx (7508 controller).  i'm using lvm2 and
-xfs as the filesystem (although i'm pretty sure an ext3 fs on another lv
-is hanging too -- but i forgot to check before i unwedged it).
-
-let me know if anything else is useful and i can try to catch it next
-time.
+Ger=E7ek Terc=FCme:
+Tel/Fax:0 212 347 1866    	        =20
+Gsm:    0 555 630  9008	     =20
+Web:    www.gercektercume.com
+e-mail:  info@gercektercume.com=09
+MSN:    gercektercume@hotmail.com
 
 
-> You could try increasing the size of the stripe cache
->   echo 512 > /sys/block/mdX/md/stripe_cache_size
-> (choose and appropriate 'X').
-
-yeah that got things going again -- it took a minute or so maybe, i
-wasn't paying attention as to how fast things cleared up.
-
-
-> Maybe check the content of
->          /sys/block/mdX/md/stripe_cache_active
-> as well.
-
-next time i'll check this before i increase stripe_cache_size... it's
-0 now, but the raid5 is working again...
-
--dean
---131011217-500257289-1147360383=:25283
-Content-Type: APPLICATION/octet-stream; name=messages.gz
-Content-Transfer-Encoding: BASE64
-Content-Description: 
-Content-Disposition: attachment; filename=messages.gz
-
-H4sICIVRY0QAA21lc3NhZ2VzAOxdSZPbOpK+z6/QcToUHcK+vJtdtk/TMxPT
-fXvhYIAAWKUplaQnqbzMr59MkBIXUWVSUpXfojrYFCgmFiI/ZH5IpP7hvk8o
-nRD9ixS/MDFZrLxbPKy2u8lj3Czj4pfJP79v/+e3Cfz/sPo6+efO7eK//eOH
-Dw34ysi/7TxfzJf3gwTv3Pax9fB/35X/r+dhUrjdQ9xM/MN8ESbfV8/Le/i0
-WoS4GSB7vpzvarH/nLz7+FEz8o6kj+W/dNL4wDq9+Pf//K9//cf7vw2oKRTR
-0GjJhJR/dH9BJi5GqNSRSZH+nEi3aG5F/Z2csDwSQ0a8iZzamOe5KS+cLYUY
-itKoIZorqNpSSUjMsSKmRdGosWrm6Bpd3cfqghkGVVPGBaPVOEBnDxedGsmg
-Gu/cYjH518b5+MuQ9v0KZY/Zbv4UN1nutnHK6Ezoz5NuMflG5Yx8Y8UgoVv/
-EMPzIiYJq+fdlBIzo9x+nhzdId+UB8EmHyR4vVn5uN3WT89A5lHhNwIS7SCB
-YZVt4yL63dRoObOaf57UReQbVzmI4j4MEpZl69Vi8dXNsWFUys+TZknZqmH9
-9KtNzLbft/uWCKpmUqnPk+4NeC8O5TKuhr2Z+lEqxYxLA++kKc46kEbVIGnd
-v+FKH4UKNPjjOY7aHwUJVLVvMR30JM8LzUHZ6y8Pb2UsvNKo9OnihNIb6QIl
-PCm9zF1D6b0pCp9TP6LGQyNBxWEyMNbT/mMVfxOlz7Kv7jFmz+vMr56eVsup
-YDNtcbp2ymFi4XwQ56q9Pan1lI/R+rh2MO93qyypEjUzbVDv28UglGFjh6zb
-k1+fl/Nv2Xa3ie4p20T/5Wl7P5WEzShMgM+Tvrsgv1BYwcDhcM870Nan1ZdY
-DmvxvPS7OY7qDNXu9O2EFNwNBjDEamhpAJXWM4ow0SoFpQ4g0A1ECHzOzVfl
-s0bNLL7AViH5JnEcFB/cwu9LX7XQshkTFcoeSsk3j10uhgl8k3H9UmyrFms9
-41R8nhxKyLecIkgOlITwmp6ToA2ElHhbCeK4vCgxVE5c7mBBXrvtLovb9dQI
-mK06CezcgTckQLKWAyT7zWrZNPUIUfzTx08fKuuOca3QxhNSyPQBTT3GrdHw
-rwIwG4H6jHEZo6mNthLiAkmVFrEIbfyjhdx/R4izUN/nLs+DKS9cnqwrJfCi
-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
-sBEEFWHoY1XyRYJXCKr/Ajh8STOo7AAA
-
---131011217-500257289-1147360383=:25283--
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
