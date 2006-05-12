@@ -1,36 +1,34 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: hardware raid 5 and software raid 0 stripe broke.
-Date: Fri, 12 May 2006 12:28:41 +1000
-Message-ID: <17507.62169.927233.886775@cse.unsw.edu.au>
-References: <4463ECBD.8040506@4dcsi.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+From: NeilBrown <neilb@suse.de>
+Subject: [PATCH 000 of 8] md/bitmap: Introduction - rework management of bitmap files.
+Date: Fri, 12 May 2006 16:07:25 +1000
+Message-ID: <20060512160121.7872.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Ken on Thursday May 11
 Sender: linux-raid-owner@vger.kernel.org
-To: Ken <Ken@4dcsi.com>
-Cc: linux-raid@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Paul Clements <paul.clements@steeleye.com>
 List-Id: linux-raid.ids
 
-On Thursday May 11, Ken@4dcsi.com wrote:
-> We have a Linux box running redhat 7.2   We have two hardware 
-> controllers in it with about 500gig's each.   They're raid 5.   We were 
-> using a software raid to combine them all together.   1 hard drive went 
-> down so we replaced it and now the system won't boot.   We have used a 
-> Knoppix boot cd to get into a linux system.   We can see /dev/sda1 and 
-> /dev/sdb1.   However, /dev/md0 cannot be accessed.   Is there a safe way 
-> to create the software raid from the cd to see if maybe mdadm on the 
-> original system got corrupt?   any help would be greatly appreciated.
+I thought it was time to review the md/bitmap code - partly because I
+wasn't comfortable with how it was handling writing to files.  The more
+I learnt about the VM/VFS, the more I realised it was wrong....
 
-What booted off knoppix, what does
+I found plenty to do...
 
- mdadm -E /dev/sda1
- mdadm -E /dev/sdb1
+The last patch in this series of 8 is the big one.  It substantially
+changes the way bitmap files are handled.  The key change is that it
+now works more like swapfile: bmap() is used to find where the blocks
+are and write goes direct to storage bypassing the filesystem.
 
-produce?
+These are *not* for 2.6.17, but should be ok for when 2.6.18 opens.
 
-How about
-  mdadm -A /dev/md0 /dev/sda1 /dev/sdb1
+I've done some testing and it seems to work OK, but it is a big change
+and more testing wouldn't be a bad thing :-)
 
-NeilBrown
+ [PATCH 001 of 8] md/bitmap: Fix online removal of file-backed bitmaps
+ [PATCH 002 of 8] md/bitmap: Remove bitmap writeback daemon.
+ [PATCH 003 of 8] md/bitmap: Cleaner separation of page attribute handlers in md/bitmap.
+ [PATCH 004 of 8] md/bitmap: Use set_bit etc for bitmap page attributes.
+ [PATCH 005 of 8] md/bitmap: Remove unnecessary page reference manipulations from md/bitmap code.
+ [PATCH 006 of 8] md/bitmap: Remove dead code from md/bitmap.
+ [PATCH 007 of 8] md/bitmap: Tidy up i_writecount handling in md/bitmap
+ [PATCH 008 of 8] md/bitmap: Change md/bitmap file handling to use bmap to file blocks.
