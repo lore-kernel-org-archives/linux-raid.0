@@ -1,134 +1,49 @@
-From: NeilBrown <neilb@suse.de>
-Subject: [PATCH 007 of 8] md/bitmap: Tidy up i_writecount handling in md/bitmap
-Date: Fri, 12 May 2006 16:08:04 +1000
-Message-ID: <1060512060804.8079@suse.de>
-References: <20060512160121.7872.patches@notabene>
+From: Ken <Ken@4dcsi.com>
+Subject: Re: hardware raid 5 and software raid 0 stripe broke.
+Date: Fri, 12 May 2006 09:07:44 -0400
+Message-ID: <446488A0.8050004@4dcsi.com>
+References: <4463ECBD.8040506@4dcsi.com> <17507.62169.927233.886775@cse.unsw.edu.au>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <17507.62169.927233.886775@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Paul Clements <paul.clements@steeleye.com>
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Neil Brown wrote:
+> On Thursday May 11, Ken@4dcsi.com wrote:
+>   
+>> We have a Linux box running redhat 7.2   We have two hardware 
+>> controllers in it with about 500gig's each.   They're raid 5.   We were 
+>> using a software raid to combine them all together.   1 hard drive went 
+>> down so we replaced it and now the system won't boot.   We have used a 
+>> Knoppix boot cd to get into a linux system.   We can see /dev/sda1 and 
+>> /dev/sdb1.   However, /dev/md0 cannot be accessed.   Is there a safe way 
+>> to create the software raid from the cd to see if maybe mdadm on the 
+>> original system got corrupt?   any help would be greatly appreciated.
+>>     
+>
+> What booted off knoppix, what does
+>
+>  mdadm -E /dev/sda1
+>  mdadm -E /dev/sdb1
+>
+> produce?
+>
+> How about
+>   mdadm -A /dev/md0 /dev/sda1 /dev/sdb1
+>
+> NeilBrown
+>
+>   
+Thank you for your response Neil.   We got it up and running again.   I 
+don't remember what we did though.   We've been going on no sleep all 
+week trying to setup a new server and right before the old one crashed 
+we were all ready to go home and take a little rest.
 
-md/bitmap modifies i_writecount of a bitmap file to make sure
-that no-one else writes to it.  
-The reverting of the change is sometimes done twice, and there
-is one error path where it is omitted.
+Thanks again.
 
-This patch tidies that up.
-
-Signed-off-by: Neil Brown <neilb@suse.de>
-
-### Diffstat output
- ./drivers/md/bitmap.c |    8 +-------
- ./drivers/md/md.c     |   49 ++++++++++++++++++++++++++++++-------------------
- 2 files changed, 31 insertions(+), 26 deletions(-)
-
-diff ./drivers/md/bitmap.c~current~ ./drivers/md/bitmap.c
---- ./drivers/md/bitmap.c~current~	2006-05-12 15:59:53.000000000 +1000
-+++ ./drivers/md/bitmap.c	2006-05-12 16:00:03.000000000 +1000
-@@ -625,7 +625,6 @@ static void drain_write_queues(struct bi
- static void bitmap_file_put(struct bitmap *bitmap)
- {
- 	struct file *file;
--	struct inode *inode;
- 	unsigned long flags;
- 
- 	spin_lock_irqsave(&bitmap->lock, flags);
-@@ -637,13 +636,8 @@ static void bitmap_file_put(struct bitma
- 
- 	bitmap_file_unmap(bitmap);
- 
--	if (file) {
--		inode = file->f_mapping->host;
--		spin_lock(&inode->i_lock);
--		atomic_set(&inode->i_writecount, 1); /* allow writes again */
--		spin_unlock(&inode->i_lock);
-+	if (file)
- 		fput(file);
--	}
- }
- 
- 
-
-diff ./drivers/md/md.c~current~ ./drivers/md/md.c
---- ./drivers/md/md.c~current~	2006-05-12 15:54:48.000000000 +1000
-+++ ./drivers/md/md.c	2006-05-12 16:00:03.000000000 +1000
-@@ -2864,6 +2864,32 @@ out:
- 	return err;
- }
- 
-+/* similar to deny_write_access, but accounts for our holding a reference
-+ * to the file ourselves */
-+static int deny_bitmap_write_access(struct file * file)
-+{
-+	struct inode *inode = file->f_mapping->host;
-+
-+	spin_lock(&inode->i_lock);
-+	if (atomic_read(&inode->i_writecount) > 1) {
-+		spin_unlock(&inode->i_lock);
-+		return -ETXTBSY;
-+	}
-+	atomic_set(&inode->i_writecount, -1);
-+	spin_unlock(&inode->i_lock);
-+
-+	return 0;
-+}
-+
-+static void restore_bitmap_write_access(struct file *file)
-+{
-+	struct inode *inode = file->f_mapping->host;
-+
-+	spin_lock(&inode->i_lock);
-+	atomic_set(&inode->i_writecount, 1);
-+	spin_unlock(&inode->i_lock);
-+}
-+
- static int do_md_stop(mddev_t * mddev, int ro)
- {
- 	int err = 0;
-@@ -2927,7 +2953,7 @@ static int do_md_stop(mddev_t * mddev, i
- 
- 		bitmap_destroy(mddev);
- 		if (mddev->bitmap_file) {
--			atomic_set(&mddev->bitmap_file->f_dentry->d_inode->i_writecount, 1);
-+			restore_bitmap_write_access(mddev->bitmap_file);
- 			fput(mddev->bitmap_file);
- 			mddev->bitmap_file = NULL;
- 		}
-@@ -3531,23 +3557,6 @@ abort_export:
- 	return err;
- }
- 
--/* similar to deny_write_access, but accounts for our holding a reference
-- * to the file ourselves */
--static int deny_bitmap_write_access(struct file * file)
--{
--	struct inode *inode = file->f_mapping->host;
--
--	spin_lock(&inode->i_lock);
--	if (atomic_read(&inode->i_writecount) > 1) {
--		spin_unlock(&inode->i_lock);
--		return -ETXTBSY;
--	}
--	atomic_set(&inode->i_writecount, -1);
--	spin_unlock(&inode->i_lock);
--
--	return 0;
--}
--
- static int set_bitmap_file(mddev_t *mddev, int fd)
- {
- 	int err;
-@@ -3595,8 +3604,10 @@ static int set_bitmap_file(mddev_t *mdde
- 		mddev->pers->quiesce(mddev, 0);
- 	}
- 	if (fd < 0) {
--		if (mddev->bitmap_file)
-+		if (mddev->bitmap_file) {
-+			restore_bitmap_write_access(mddev->bitmap_file);
- 			fput(mddev->bitmap_file);
-+		}
- 		mddev->bitmap_file = NULL;
- 	}
- 
+--Ken
