@@ -1,69 +1,146 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [PATCH 006 of 8] md/bitmap: Remove dead code from md/bitmap.
-Date: Fri, 12 May 2006 16:07:59 +1000
-Message-ID: <1060512060759.8061@suse.de>
+Subject: [PATCH 003 of 8] md/bitmap: Cleaner separation of page attribute handlers in md/bitmap.
+Date: Fri, 12 May 2006 16:07:42 +1000
+Message-ID: <1060512060742.8024@suse.de>
 References: <20060512160121.7872.patches@notabene>
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1750934AbWELGIW@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
 To: Andrew Morton <akpm@osdl.org>
 Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Paul Clements <paul.clements@steeleye.com>
 List-Id: linux-raid.ids
 
 
-bitmap_active is never called, and the BITMAP_ACTIVE flag is
-never users or tested, so discard them both.
+md/bitmap has some attributes per-page.  Handling of these
+attributes in largely abstracted in set_page_attr and
+clear_page_attr.  However get_page_attr exposes the 
+format used to store them.  So prior to changing that
+format, introduce test_page_attr instead of get_page_attr,
+and make appropriate usage changes.
 
-Also remove some out-of-date 'todo' comments.
 
 Signed-off-by: Neil Brown <neilb@suse.de>
 
 ### Diffstat output
- ./drivers/md/bitmap.c |   22 ----------------------
- 1 file changed, 22 deletions(-)
+ ./drivers/md/bitmap.c |   41 ++++++++++++++++++++++-------------------
+ 1 file changed, 22 insertions(+), 19 deletions(-)
 
 diff ./drivers/md/bitmap.c~current~ ./drivers/md/bitmap.c
---- ./drivers/md/bitmap.c~current~	2006-05-12 15:58:57.000000000 +1000
-+++ ./drivers/md/bitmap.c	2006-05-12 15:59:53.000000000 +1000
-@@ -14,9 +14,6 @@
-  *
-  * flush after percent set rather than just time based. (maybe both).
-  * wait if count gets too high, wake when it drops to half.
-- * allow bitmap to be mirrored with superblock (before or after...)
-- * allow hot-add to re-instate a current device.
-- * allow hot-add of bitmap after quiessing device
-  */
- 
- #include <linux/module.h>
-@@ -70,23 +67,6 @@ static inline char * bmname(struct bitma
- 	return bitmap->mddev ? mdname(bitmap->mddev) : "mdX";
+--- ./drivers/md/bitmap.c~current~	2006-05-12 15:55:37.000000000 +1000
++++ ./drivers/md/bitmap.c	2006-05-12 15:56:51.000000000 +1000
+@@ -717,9 +717,10 @@ static inline void clear_page_attr(struc
+ 	bitmap->filemap_attr[page->index] &= ~attr;
  }
  
--
--/*
-- * test if the bitmap is active
-- */
--int bitmap_active(struct bitmap *bitmap)
--{
--	unsigned long flags;
--	int res = 0;
--
--	if (!bitmap)
--		return res;
--	spin_lock_irqsave(&bitmap->lock, flags);
--	res = bitmap->flags & BITMAP_ACTIVE;
--	spin_unlock_irqrestore(&bitmap->lock, flags);
--	return res;
--}
--
- #define WRITE_POOL_SIZE 256
+-static inline unsigned long get_page_attr(struct bitmap *bitmap, struct page *page)
++static inline unsigned long test_page_attr(struct bitmap *bitmap, struct page *page,
++					   enum bitmap_page_attr attr)
+ {
+-	return bitmap->filemap_attr[page->index];
++	return bitmap->filemap_attr[page->index] & attr;
+ }
  
  /*
-@@ -1496,8 +1476,6 @@ int bitmap_create(mddev_t *mddev)
- 	if (!bitmap->bp)
- 		goto error;
+@@ -745,7 +746,7 @@ static void bitmap_file_set_bit(struct b
  
--	bitmap->flags |= BITMAP_ACTIVE;
--
- 	/* now that we have some pages available, initialize the in-memory
- 	 * bitmap from the on-disk bitmap */
- 	start = 0;
+ 
+ 	/* make sure the page stays cached until it gets written out */
+-	if (! (get_page_attr(bitmap, page) & BITMAP_PAGE_DIRTY))
++	if (! test_page_attr(bitmap, page, BITMAP_PAGE_DIRTY))
+ 		get_page(page);
+ 
+  	/* set the bit */
+@@ -769,7 +770,8 @@ static void bitmap_writeback(struct bitm
+  * sync the dirty pages of the bitmap file to disk */
+ int bitmap_unplug(struct bitmap *bitmap)
+ {
+-	unsigned long i, attr, flags;
++	unsigned long i, flags;
++	int dirty, need_write;
+ 	struct page *page;
+ 	int wait = 0;
+ 	int err;
+@@ -786,17 +788,18 @@ int bitmap_unplug(struct bitmap *bitmap)
+ 			return 0;
+ 		}
+ 		page = bitmap->filemap[i];
+-		attr = get_page_attr(bitmap, page);
++		dirty = test_page_attr(bitmap, page, BITMAP_PAGE_DIRTY);
++		need_write = test_page_attr(bitmap, page, BITMAP_PAGE_NEEDWRITE);
+ 		clear_page_attr(bitmap, page, BITMAP_PAGE_DIRTY);
+ 		clear_page_attr(bitmap, page, BITMAP_PAGE_NEEDWRITE);
+-		if ((attr & BITMAP_PAGE_DIRTY))
++		if (dirty)
+ 			wait = 1;
+ 		spin_unlock_irqrestore(&bitmap->lock, flags);
+ 
+-		if (attr & (BITMAP_PAGE_DIRTY | BITMAP_PAGE_NEEDWRITE)) {
++		if (dirty | need_write) {
+ 			err = write_page(bitmap, page, 0);
+ 			if (err == -EAGAIN) {
+-				if (attr & BITMAP_PAGE_DIRTY)
++				if (dirty)
+ 					err = write_page(bitmap, page, 1);
+ 				else
+ 					err = 0;
+@@ -961,12 +964,11 @@ void bitmap_write_all(struct bitmap *bit
+ 	/* We don't actually write all bitmap blocks here,
+ 	 * just flag them as needing to be written
+ 	 */
++	int i;
+ 
+-	unsigned long chunks = bitmap->chunks;
+-	unsigned long bytes = (chunks+7)/8 + sizeof(bitmap_super_t);
+-	unsigned long num_pages = (bytes + PAGE_SIZE-1) / PAGE_SIZE;
+-	while (num_pages--)
+-		bitmap->filemap_attr[num_pages] |= BITMAP_PAGE_NEEDWRITE;
++	for (i=0; i < bitmap->file_pages; i++)
++		set_page_attr(bitmap, bitmap->filemap[i],
++			      BITMAP_PAGE_NEEDWRITE);
+ }
+ 
+ 
+@@ -997,7 +999,6 @@ int bitmap_daemon_work(struct bitmap *bi
+ 	struct page *page = NULL, *lastpage = NULL;
+ 	int err = 0;
+ 	int blocks;
+-	int attr;
+ 	void *paddr;
+ 
+ 	if (bitmap == NULL)
+@@ -1019,13 +1020,15 @@ int bitmap_daemon_work(struct bitmap *bi
+ 
+ 		if (page != lastpage) {
+ 			/* skip this page unless it's marked as needing cleaning */
+-			if (!((attr=get_page_attr(bitmap, page)) & BITMAP_PAGE_CLEAN)) {
+-				if (attr & BITMAP_PAGE_NEEDWRITE) {
++			if (!test_page_attr(bitmap, page, BITMAP_PAGE_CLEAN)) {
++				int need_write = test_page_attr(bitmap, page,
++								BITMAP_PAGE_NEEDWRITE);
++				if (need_write) {
+ 					get_page(page);
+ 					clear_page_attr(bitmap, page, BITMAP_PAGE_NEEDWRITE);
+ 				}
+ 				spin_unlock_irqrestore(&bitmap->lock, flags);
+-				if (attr & BITMAP_PAGE_NEEDWRITE) {
++				if (need_write) {
+ 					switch (write_page(bitmap, page, 0)) {
+ 					case -EAGAIN:
+ 						set_page_attr(bitmap, page, BITMAP_PAGE_NEEDWRITE);
+@@ -1043,7 +1046,7 @@ int bitmap_daemon_work(struct bitmap *bi
+ 			/* grab the new page, sync and release the old */
+ 			get_page(page);
+ 			if (lastpage != NULL) {
+-				if (get_page_attr(bitmap, lastpage) & BITMAP_PAGE_NEEDWRITE) {
++				if (test_page_attr(bitmap, lastpage, BITMAP_PAGE_NEEDWRITE)) {
+ 					clear_page_attr(bitmap, lastpage, BITMAP_PAGE_NEEDWRITE);
+ 					spin_unlock_irqrestore(&bitmap->lock, flags);
+ 					err = write_page(bitmap, lastpage, 0);
+@@ -1097,7 +1100,7 @@ int bitmap_daemon_work(struct bitmap *bi
+ 	/* now sync the final page */
+ 	if (lastpage != NULL) {
+ 		spin_lock_irqsave(&bitmap->lock, flags);
+-		if (get_page_attr(bitmap, lastpage) &BITMAP_PAGE_NEEDWRITE) {
++		if (test_page_attr(bitmap, lastpage, BITMAP_PAGE_NEEDWRITE)) {
+ 			clear_page_attr(bitmap, lastpage, BITMAP_PAGE_NEEDWRITE);
+ 			spin_unlock_irqrestore(&bitmap->lock, flags);
+ 			err = write_page(bitmap, lastpage, 0);
