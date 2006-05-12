@@ -1,14 +1,15 @@
 From: Andrew Morton <akpm@osdl.org>
-Subject: Re: [PATCH 002 of 8] md/bitmap: Remove bitmap writeback daemon.
-Date: Fri, 12 May 2006 10:40:35 -0700
-Message-ID: <20060512104035.5fee4e66.akpm@osdl.org>
+Subject: Re: [PATCH 008 of 8] md/bitmap: Change md/bitmap file handling to
+ use bmap to file blocks.
+Date: Fri, 12 May 2006 10:47:50 -0700
+Message-ID: <20060512104750.0f5cb10a.akpm@osdl.org>
 References: <20060512160121.7872.patches@notabene>
-	<1060512060736.8006@suse.de>
+	<1060512060809.8099@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1060512060736.8006@suse.de>
+In-Reply-To: <1060512060809.8099@suse.de>
 Sender: linux-raid-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, paul.clements@steeleye.com
@@ -16,28 +17,26 @@ List-Id: linux-raid.ids
 
 NeilBrown <neilb@suse.de> wrote:
 >
->  ./drivers/md/bitmap.c         |  115 ++----------------------------------------
+> If md is asked to store a bitmap in a file, it tries to hold onto the
+> page cache pages for that file, manipulate them directly, and call a
+> cocktail of operations to write the file out.  I don't believe this is
+> a supportable approach.
 
-hmm.  I hope we're not doing any of that filesystem I/O within the context
-of submit_bio() or kblockd or anything like that.  Looks OK from a quick
-scan.
+erk.  I think it's better than...
 
-a_ops->commit_write() already ran set_page_dirty(), so you don't need that
-in there.
+> This patch changes the approach to use the same approach as swap files.
+> i.e. bmap is used to enumerate all the block address of parts of the file
+> and we write directly to those blocks of the device.
 
-I assume this always works in units of a complete page?  It's strange to do
-prepare_write() followed immediately by commit_write().  Normally
-prepare_write() will do some prereading, but it's smart enough to not do
-that if the caller is preparing to write the whole page.
+That's going in at a much lower level.  Even swapfiles don't assume
+buffer_heads.
 
-We normally use PAGE_CACHE_SIZE for these things, not PAGE_SIZE.  Same diff.
+When playing with bmap() one needs to be careful that nobody has truncated
+the file on you, else you end up writing to disk blocks which aren't part
+of the file any more.
 
-If you have a page and you want to write the whole thing out then there's
-really no need to run prepare_write or commit_write at all.  Just
-initialise the whole page, run set_page_dirty() then write_one_page().
+All this (and a set_fs(KERNEL_DS), ug) looks like a step backwards to me. 
+Operating at the pagecache a_ops level looked better, and more
+filesystem-independent.
 
-Perhaps it should check that the backing filesystem actually implements
-commit_write(), prepare_write(), readpage(), etc.  Some might not, and the
-user will get taught not to do that via an oops.
-
-
+I haven't looked at this patch at all closely yet.  Do I really need to?
