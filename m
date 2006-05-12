@@ -1,33 +1,43 @@
-From: Marcin Hlybin <marcin.hlybin@swmind.com>
-Subject: Re: RAID5 excesses
-Date: Fri, 12 May 2006 15:52:19 +0200
-Message-ID: <200605121552.19921.marcin.hlybin@swmind.com>
-References: <200604201422.55243.marcin.hlybin@swmind.com>
+From: Andrew Morton <akpm@osdl.org>
+Subject: Re: [PATCH 002 of 8] md/bitmap: Remove bitmap writeback daemon.
+Date: Fri, 12 May 2006 10:40:35 -0700
+Message-ID: <20060512104035.5fee4e66.akpm@osdl.org>
+References: <20060512160121.7872.patches@notabene>
+	<1060512060736.8006@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-2"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200604201422.55243.marcin.hlybin@swmind.com>
-Content-Disposition: inline
+In-Reply-To: <1060512060736.8006@suse.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, paul.clements@steeleye.com
 List-Id: linux-raid.ids
 
-On Thursday 20 of April 2006 14:22, you wrote:
+NeilBrown <neilb@suse.de> wrote:
+>
+>  ./drivers/md/bitmap.c         |  115 ++----------------------------------------
 
-> Here is a particularly interesting problem.
-> I have 1TB RAID5 production arrary and a lot of stress ;)
+hmm.  I hope we're not doing any of that filesystem I/O within the context
+of submit_bio() or kblockd or anything like that.  Looks OK from a quick
+scan.
 
-I don't know if it was caused by PowerSaving in WD3200 disks, but I've bought 
-Adaptec AACRAID controller and it works very nice. 
-If you've got any information about these disks -model WD3200JD-60KLB0 -a nd 
-why there are such problems, please let me know. 
+a_ops->commit_write() already ran set_page_dirty(), so you don't need that
+in there.
 
-Regards
+I assume this always works in units of a complete page?  It's strange to do
+prepare_write() followed immediately by commit_write().  Normally
+prepare_write() will do some prereading, but it's smart enough to not do
+that if the caller is preparing to write the whole page.
 
--- 
- Marcin Hlybin, marcin.hlybin (at) swmind.com
- Sys/Net Administrator, tel. +48 12 2523 402
+We normally use PAGE_CACHE_SIZE for these things, not PAGE_SIZE.  Same diff.
 
- SoftwareMind, www.softwaremind.pl | Where quality meets the future
+If you have a page and you want to write the whole thing out then there's
+really no need to run prepare_write or commit_write at all.  Just
+initialise the whole page, run set_page_dirty() then write_one_page().
+
+Perhaps it should check that the backing filesystem actually implements
+commit_write(), prepare_write(), readpage(), etc.  Some might not, and the
+user will get taught not to do that via an oops.
+
+
