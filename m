@@ -1,49 +1,33 @@
-From: Ken <Ken@4dcsi.com>
-Subject: Re: hardware raid 5 and software raid 0 stripe broke.
-Date: Fri, 12 May 2006 09:07:44 -0400
-Message-ID: <446488A0.8050004@4dcsi.com>
-References: <4463ECBD.8040506@4dcsi.com> <17507.62169.927233.886775@cse.unsw.edu.au>
+From: Marcin Hlybin <marcin.hlybin@swmind.com>
+Subject: Re: RAID5 excesses
+Date: Fri, 12 May 2006 15:52:19 +0200
+Message-ID: <200605121552.19921.marcin.hlybin@swmind.com>
+References: <200604201422.55243.marcin.hlybin@swmind.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-2"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17507.62169.927233.886775@cse.unsw.edu.au>
+In-Reply-To: <200604201422.55243.marcin.hlybin@swmind.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil Brown wrote:
-> On Thursday May 11, Ken@4dcsi.com wrote:
->   
->> We have a Linux box running redhat 7.2   We have two hardware 
->> controllers in it with about 500gig's each.   They're raid 5.   We were 
->> using a software raid to combine them all together.   1 hard drive went 
->> down so we replaced it and now the system won't boot.   We have used a 
->> Knoppix boot cd to get into a linux system.   We can see /dev/sda1 and 
->> /dev/sdb1.   However, /dev/md0 cannot be accessed.   Is there a safe way 
->> to create the software raid from the cd to see if maybe mdadm on the 
->> original system got corrupt?   any help would be greatly appreciated.
->>     
->
-> What booted off knoppix, what does
->
->  mdadm -E /dev/sda1
->  mdadm -E /dev/sdb1
->
-> produce?
->
-> How about
->   mdadm -A /dev/md0 /dev/sda1 /dev/sdb1
->
-> NeilBrown
->
->   
-Thank you for your response Neil.   We got it up and running again.   I 
-don't remember what we did though.   We've been going on no sleep all 
-week trying to setup a new server and right before the old one crashed 
-we were all ready to go home and take a little rest.
+On Thursday 20 of April 2006 14:22, you wrote:
 
-Thanks again.
+> Here is a particularly interesting problem.
+> I have 1TB RAID5 production arrary and a lot of stress ;)
 
---Ken
+I don't know if it was caused by PowerSaving in WD3200 disks, but I've bought 
+Adaptec AACRAID controller and it works very nice. 
+If you've got any information about these disks -model WD3200JD-60KLB0 -a nd 
+why there are such problems, please let me know. 
+
+Regards
+
+-- 
+ Marcin Hlybin, marcin.hlybin (at) swmind.com
+ Sys/Net Administrator, tel. +48 12 2523 402
+
+ SoftwareMind, www.softwaremind.pl | Where quality meets the future
