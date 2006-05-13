@@ -1,45 +1,94 @@
-From: =?UTF-8?Q?georgesmith=5F11?= <georgesmith_11@o2.pl>
-Subject: =?UTF-8?Q?INVESTMENT=20PROJECT=3F?=
-Date: Sat, 13 May 2006 03:06:04 +0200
-Message-ID: <52ce4eb2.680bd90f.446530fc.135e3__7571.50464128262$1147482515$gmane$org@o2.pl>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: [PATCH 008 of 8] md/bitmap: Change md/bitmap file handling to
+ use bmap to file blocks.
+Date: Sat, 13 May 2006 13:46:24 +1000
+Message-ID: <17509.22160.118149.49714@cse.unsw.edu.au>
+References: <20060512160121.7872.patches@notabene>
+	<1060512060809.8099@suse.de>
+	<20060512104750.0f5cb10a.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: message from Andrew Morton on Friday May 12
 Sender: linux-raid-owner@vger.kernel.org
-To: georgesmith_11@o2.pl
+To: Andrew Morton <akpm@osdl.org>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, paul.clements@steeleye.com
 List-Id: linux-raid.ids
 
-Dear Beloved,
+On Friday May 12, akpm@osdl.org wrote:
+> NeilBrown <neilb@suse.de> wrote:
+> >
+> > If md is asked to store a bitmap in a file, it tries to hold onto the
+> > page cache pages for that file, manipulate them directly, and call a
+> > cocktail of operations to write the file out.  I don't believe this is
+> > a supportable approach.
+> 
+> erk.  I think it's better than...
+> 
+> > This patch changes the approach to use the same approach as swap files.
+> > i.e. bmap is used to enumerate all the block address of parts of the file
+> > and we write directly to those blocks of the device.
+> 
+> That's going in at a much lower level.  Even swapfiles don't assume
+> buffer_heads.
 
-I am looking for your cooperation in building a Tourist Hotel/shopping
-Mall or Real Estate in your country. I am sorry if this is not in your
-line with your business.I need an experienced person like you to assist me to set up , develop the project and assume responsibility of
-ownership as chairman but will be bringing in profit /distribute profit monthly or annually.
+I'm not "assuming" buffer_heads.  I'm creating buffer heads and using
+them for my own purposes.  These are my pages and my buffer heads.
+None of them belong to the filesystem.
+The buffer_heads are simply a convenient data-structure to record the
+several block addresses for each page.  I could have equally created
+an array storing all the addresses, and built the required bios by
+hand at write time.  But buffer_heads did most of the work for me, so
+I used them.
 
-I am Dr.George Smith,a citizen of Nairobi ,Kenya.A former Presidential
-adviser on Budget and planning to the former president of Kenya,Daniel
-Ara Moi.I acuirred this money as a result of gold and diamond export.
+Yes, it is a lower level, but
+ 1/ I am certain that there will be no kmalloc problems and
+ 2/ Because it is exactly the level used by swapfile, I know that it
+    is sufficiently 'well defined' that no-one is going to break it.
 
-I am currently in possession of $25.1m,which i want to use for
-investment purposes preferably in your country.Now the present
-government of Mwai ibaki has intensified efforts at probing Moi\'s
-government,goverment officials have turned their backs on us and have
-been frustrating me and others that served under Daniel Arab Moi. For
-this reason, I left Kenya for Western part of Africa, in the Calabar
-City.
+> 
+> When playing with bmap() one needs to be careful that nobody has truncated
+> the file on you, else you end up writing to disk blocks which aren't part
+> of the file any more.
 
-That is why i need someone like you who is trustworhty and honest, to
-assist me achieve my objectives,and also manage the business for me.
-However ,I got your email information on your Hotel contact list,that
-is why i am making thisexclusive contact with you. your immediate reply will be highly appreciated and I shall give you more information on this project,and your percentage and all what is expected of you.
+Well we currently play games with i_write_count to ensure that no-one
+else has the file open for write.  And if no-one else can get write
+access, then it cannot be truncated.
+I did think about adding the S_SWAPFILE flag, but decided to leave
+that for a separate patch and review different approaches to
+preventing write access first (e.g. can I use a lease?).
 
-You call me my numbers :234-8033-585896
-Reply to this my email address::georgesmith@casinomail.com
-Your responseis higly welcomed.
+> 
+> All this (and a set_fs(KERNEL_DS), ug) looks like a step backwards to me. 
+> Operating at the pagecache a_ops level looked better, and more
+> filesystem-independent.
 
-Thanks and God bless.
+If you really want filesystem independence, you need to use vfs_read
+and vfs_write to read/write the file.  I have a patch which did that,
+but decided that the possibility of kmalloc failure at awkward times
+would make that not suitable.
+So I now use vfs_read to read in the file (just like knfsd) and
+bmap/submit_bh to write out the file (just like swapfile).
 
-I Remain Yours;
-Dr.George Smith
+I don't think a_ops really provides an interface that I can use, partly
+because, as I said in a previous email, it isn't really a public
+interface to a filesystem.
 
+> 
+> I haven't looked at this patch at all closely yet.  Do I really need to?
+
+I assume you are asking that because you hope I will retract the
+patch.  While I'm always open to being educated, I am not yet
+convinced that there is any better way, or even any other usable way,
+to do what needs to be done, so I am not inclined to retract the
+patch.
+
+I'd like to say that you don't need to read it because it is perfect,
+but unfortunately history suggests that is unlikely to be true.
+
+Whether you look more closely is of course up to you, but I'm convinced
+that patch is in the right direction, and your review and comments are
+always very valuable.
+
+NeilBrown
