@@ -1,41 +1,30 @@
-From: David Greaves <david@dgreaves.com>
-Subject: Re: Removing a RAID 1 setting without loosing data
-Date: Sat, 13 May 2006 16:29:17 +0100
-Message-ID: <4465FB4D.30900@dgreaves.com>
-References: <1147531525.6198.8.camel@nachus.raulgomez.net>  <Pine.LNX.4.56.0605131548450.19433@lion.drogon.net> <1147532647.6198.16.camel@nachus.raulgomez.net> <Pine.LNX.4.56.0605131612030.19433@lion.drogon.net>
+From: Paul Clements <paul.clements@steeleye.com>
+Subject: Re: [PATCH 008 of 8] md/bitmap: Change md/bitmap file handling to
+ use bmap to file blocks.
+Date: Sat, 13 May 2006 11:29:32 -0400
+Message-ID: <4465FB5C.6070808@steeleye.com>
+References: <20060512160121.7872.patches@notabene>	<1060512060809.8099@suse.de>	<20060512104750.0f5cb10a.akpm@osdl.org>	<17509.22160.118149.49714@cse.unsw.edu.au> <20060512235934.4f609019.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.56.0605131612030.19433@lion.drogon.net>
+In-Reply-To: <20060512235934.4f609019.akpm@osdl.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?UTF-8?B?UmHDumwgR8OzbWV6IENhYnJlcmE=?= <raulgomezc@acm.org>
-Cc: Gordon Henderson <gordon@drogon.net>, linux-raid@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-Gordon Henderson wrote:
-> On Sat, 13 May 2006, Ra=EF=BF=BDl G=EF=BF=BDmez Cabrera wrote:
->  =20
->> Hi Gordon, thanks for your quick response.
->>
->> Well my client does not want to spend more money on this particular
->> server, I think maybe that is because they are planning to replace i=
-t...
->>    =20
->
-> Ask your client just how valuable their email data is...
->  =20
-As Gordon mentioned - you do realise that you don't have to have an
-exact duplicate disk don't you?
+Andrew Morton wrote:
 
-It's SCSI and old so probably small -  you could even get a =C2=A330/$5=
-0 30GB
-IDE disk and create a partition on that to use as a mirror device if
-money's an issue.
+> The loss of pagecache coherency seems sad.  I assume there's never a
+> requirement for userspace to read this file.
 
-David
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Actually, there is. mdadm reads the bitmap file, so that would be 
+broken. Also, it's just useful for a user to be able to read the bitmap 
+(od -x, or similar) to figure out approximately how much more he's got 
+to resync to get an array in-sync. Other than reading the bitmap file, I 
+don't know of any way to determine that.
+
+--
+Paul
+
