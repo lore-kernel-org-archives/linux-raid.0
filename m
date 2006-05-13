@@ -1,53 +1,55 @@
-From: Gordon Henderson <gordon@drogon.net>
+From: =?ISO-8859-1?Q?Ra=FAl_G=F3mez?= Cabrera <raulgomezc@acm.org>
 Subject: Re: Removing a RAID 1 setting without loosing data
-Date: Sat, 13 May 2006 15:50:51 +0100 (BST)
-Message-ID: <Pine.LNX.4.56.0605131548450.19433@lion.drogon.net>
+Date: Sat, 13 May 2006 11:04:07 -0400
+Message-ID: <1147532647.6198.16.camel@nachus.raulgomez.net>
 References: <1147531525.6198.8.camel@nachus.raulgomez.net>
+	 <Pine.LNX.4.56.0605131548450.19433@lion.drogon.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=ISO-8859-1
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1147531525.6198.8.camel@nachus.raulgomez.net>
+In-Reply-To: <Pine.LNX.4.56.0605131548450.19433@lion.drogon.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?ISO-8859-1?Q?Ra=FAl_G=F3mez?= Cabrera <raulgomezc@acm.org>
+To: Gordon Henderson <gordon@drogon.net>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, 13 May 2006, Ra=FAl G=F3mez Cabrera wrote:
+Hi Gordon, thanks for your quick response.
 
-> Hi everyone,
->
-> I have a installed a system (mail server) wich had a RAID 1 (software=
-)
-> with two SCSI Disk running on Linux. The sdb disk has failed a few mo=
-nth
-> ago and the system is still working as expected.
->
-> Since the failure of the disk I've looking for a replacement, but so =
-far
-> I cannot find a new one to replace it.
->
-> My client (who owns the system) ask me to simply remove the failed di=
-sk
-> and the RAID settings, but I'm not sure if I just simply remove
-> the /dev/md0 from the fstab and from the bootloader and point the / t=
-o
-> the sda1 (a Linux RAID partition).
->
-> Anyone can help me with this situation???
+Well my client does not want to spend more money on this particular
+server, I think maybe that is because they are planning to replace it..=
+=2E
 
-I'd just halt the server and remove the failed disk and would leave all
-the RAID stuff in-place as theres no need to remove it, really. It soun=
-ds
-like your client thinks there might be issues, but there really shouldn=
-'t
-be any. (nor performance issues either)
+As for the RAID settings you are rigth!!!, I'm going to leave it
+untouched!
 
-Why can't you find a replacement disk? You can always put in a bigger o=
-ne
-if neccessary...
+Thanks again!
 
-Gordon
+Raul.
+
+El s=C3=A1b, 13-05-2006 a las 15:50 +0100, Gordon Henderson escribi=C3=B3=
+:
+
+> I'd just halt the server and remove the failed disk and would leave a=
+ll
+> the RAID stuff in-place as theres no need to remove it, really. It so=
+unds
+> like your client thinks there might be issues, but there really shoul=
+dn't
+> be any. (nor performance issues either)
+>=20
+> Why can't you find a replacement disk? You can always put in a bigger=
+ one
+> if neccessary...
+>=20
+> Gordon
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>=20
+
 -
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
