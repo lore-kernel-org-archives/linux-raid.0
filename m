@@ -1,59 +1,96 @@
-From: "Blake" <ufmiuccacm@aosepc.com>
-Subject: best online casino
-Date: Fri, 12 May 2006 09:41:36 -0400
-Message-ID: <IT.5696586.7059808__40299.4283861064$1147500080$gmane$org@codeweavers.com>
+From: Andrew Morton <akpm@osdl.org>
+Subject: Re: [PATCH 002 of 8] md/bitmap: Remove bitmap writeback daemon.
+Date: Fri, 12 May 2006 23:59:32 -0700
+Message-ID: <20060512235932.12f5a295.akpm@osdl.org>
+References: <20060512160121.7872.patches@notabene>
+	<1060512060736.8006@suse.de>
+	<20060512104035.5fee4e66.akpm@osdl.org>
+	<17509.20239.993465.843942@cse.unsw.edu.au>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <17509.20239.993465.843942@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-gcc@vger.kernel.org, sparclinux@vger.kernel.org, linux-diald@vger.kernel.org, linux-serial@vger.kernel.org, linux-sound@vger.kernel.org, linux-kernel-owner@vger.kernel.org, linux-hams@vger.kernel.org, ultralinux@vger.kernel.org, linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, paul.clements@steeleye.com
 List-Id: linux-raid.ids
 
-Hey, so glad to finally get hold of you,
+Neil Brown <neilb@suse.de> wrote:
+>
+> On Friday May 12, akpm@osdl.org wrote:
+> > NeilBrown <neilb@suse.de> wrote:
+> > >
+> > >  ./drivers/md/bitmap.c         |  115 ++----------------------------------------
+> > 
+> > hmm.  I hope we're not doing any of that filesystem I/O within the context
+> > of submit_bio() or kblockd or anything like that.  Looks OK from a quick
+> > scan.
+> 
+> No.  We do all the I/O from the context of the per-array thread.
 
-Log on to Hi Roller Casino and get $888 FREE 
+OK.
 
-Feel like getting rich in the comfort of your own home? Welcome to Hi Roller 
-Casino, Where Fortunes are Made! 
+> However some IO requests cannot complete until the filesystem I/O
+> completes, so we need to be sure that the filesystem I/O won't block
+> waiting for memory, or fail with -ENOMEM.
+
+That sounds like a complex deadlock.  Suppose the bitmap writeout requres
+some writeback to happen before it can get enough memory to proceed.
+
+> bitmap.c is currently trying to do something every different.
+> It uses ->readpage to get pages in the page cache (even though some
+> address spaces don't define ->readpage) and then holds onto those
+> pages without holding the page lock, and then calls ->writepage to
+> flush them out from time to time.
+
+That's OK.
+
+> Before calling writepage it gets the pagelock, but doesn't re-check
+> that ->mapping is correct (there is nothing much it can do if it isn't
+> correct..).
+
+We do that to find out if the page was truncated while we ewre waiting for
+the page lock.
+
+> I noticed this is particularly a problem with tmpfs.  When you call
+> writepage on a tmpfs page, the page is swizzled into the swap cache,
+> and ->mapping becomes NULL - not the behaviour that bitmap is
+> expecting.
+
+You shouldn't call writepage on tmpfs.  If !bdi_cap_writeback_dirty(), your
+write_page() should immediately give up and "succeed".  Because this
+filesystem has no permanent backing store anyway.
+
+tmpfs doesn't implement bmap(), so your new patch fixes that problem ;)
+
+> > We normally use PAGE_CACHE_SIZE for these things, not PAGE_SIZE.  Same diff.
+> > 
+> 
+> Yeah.... why is that?  Why have two names for exactly the same value?
+
+I guess at one time it was thought that we could use a different unit size
+for pagecache.  Nowadays we use it by convention - it has little more than
+documentary value.
+
+> How does a poor develop know when to use one and when the other?  More
+> particularly, how does one remember.
+
+If the page is a pagecache page, use PAGE_CACHE_SIZE.  There are a few
+spots where it blurs, but not many.
+
+> > If you have a page and you want to write the whole thing out then there's
+> > really no need to run prepare_write or commit_write at all.  Just
+> > initialise the whole page, run set_page_dirty() then write_one_page().
+> > 
+> 
+> I see that now.  But only after locking the page, and rechecking that
+> ->mapping is correct, and if it isn't .... well, more work is involved
+> that bitmap is in a position to do.
+
+If you've bumped i_writecount to block truncate then there's no need to
+check for truncation after locking the page.
+
+i_mutex could be used similarly.
 
 
-Hi Roller Casino offers over 60 interactive games, including six progressive 
-slots and three progressive games that have paid out some of the largest 
-online jackpots in history! Even better. Hi Roller Casino will give you $10 
-Free when you download the free software and open a real account. Once 
-you've opened your REAL account and made your first deposit, 
-Hi Roller Casino will match it up to $888. 
-
-
-All commercial transactions at Hi Roller Casino are facilitated by Proc-Cyber 
-Services, a well-known and established e-cash merchant. Which means you can 
-rest assured that all your credit card transactions are 100% secured by 
-digital encryption as well as a unique password and account number. Online 
-banking can be done through a variety of safe and user-friendly methods 
-like FirePay, Citadel, NETeller, PrePaidATM, ACH, Wire transfers or Credit 
-Cards. 
-
-
-Need help? Hi Roller Casino provides a friendly, efficient 24/7 Support Desk 
-via email and toll-free lines. 
-
-
-By now you'll be keen to start making your fortune, so click here: 
-
-http://cazelun.com/d1/total 
-
-and start WINNING!
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-cooperate you bunny me, impugn reverberate . salesman you tinkle me, alameda alleyway exception kiwi . 
