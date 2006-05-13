@@ -1,30 +1,45 @@
-From: "Jake" <brokerszqw@sugarbushvt.com>
-Subject: amazing mortgages for americans Fri, 12 May 2006 18:44:48 -0400
-Date: Fri, 12 May 2006 18:44:48 -0400
-Message-ID: <7597852026.20060512184448@aye>
-Reply-To: "Jake Gibbs" <brokerszqw@sugarbushvt.com>
+From: =?UTF-8?Q?georgesmith=5F11?= <georgesmith_11@o2.pl>
+Subject: =?UTF-8?Q?INVESTMENT=20PROJECT=3F?=
+Date: Sat, 13 May 2006 03:06:04 +0200
+Message-ID: <52ce4eb2.680bd90f.446530fc.135e3__7571.50464128262$1147482515$gmane$org@o2.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: georgesmith_11@o2.pl
 List-Id: linux-raid.ids
 
+Dear Beloved,
 
-	The good things of prosperity are to be wished but the good things that belong to adversity are to be admired.
-Buenos tardes!
+I am looking for your cooperation in building a Tourist Hotel/shopping
+Mall or Real Estate in your country. I am sorry if this is not in your
+line with your business.I need an experienced person like you to assist me to set up , develop the project and assume responsibility of
+ownership as chairman but will be bringing in profit /distribute profit monthly or annually.
 
-Hello H0me 0wners.......G00d News....!! Lowest M o r t a g a g e  R a t e s in decades.
+I am Dr.George Smith,a citizen of Nairobi ,Kenya.A former Presidential
+adviser on Budget and planning to the former president of Kenya,Daniel
+Ara Moi.I acuirred this money as a result of gold and diamond export.
 
-http://reficashnow32.com/index3.php?refid=8
-	The love of life is necessary to the vigorous prosecution of any undertaking.
+I am currently in possession of $25.1m,which i want to use for
+investment purposes preferably in your country.Now the present
+government of Mwai ibaki has intensified efforts at probing Moi\'s
+government,goverment officials have turned their backs on us and have
+been frustrating me and others that served under Daniel Arab Moi. For
+this reason, I left Kenya for Western part of Africa, in the Calabar
+City.
 
-All L0an Types Available: Refienance, H0me Equity, H0me Improvement, De bt Consolidation We'll quickly match you up with the B.EST provider based on YOUR NEEDS. Whether its a H0me Equity Loan or a Low-Rate-Re-financing.
-	The ability to sign a check is the least reliable guide to a company's fitness.
+That is why i need someone like you who is trustworhty and honest, to
+assist me achieve my objectives,and also manage the business for me.
+However ,I got your email information on your Hotel contact list,that
+is why i am making thisexclusive contact with you. your immediate reply will be highly appreciated and I shall give you more information on this project,and your percentage and all what is expected of you.
 
-We specialize in less-than-perfect *credit. It does NOT cost anything, just fill up a online form - we reques you to take just 2 minutes off your valuable time for lowering your interest costs -No obligation...
+You call me my numbers :234-8033-585896
+Reply to this my email address::georgesmith@casinomail.com
+Your responseis higly welcomed.
 
-Live as you would have wished to live when you come to die.Epigrams succeed where epics fail.
+Thanks and God bless.
 
+I Remain Yours;
+Dr.George Smith
 
