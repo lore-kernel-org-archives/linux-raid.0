@@ -1,25 +1,28 @@
-From: Mark Hahn <hahn@physics.mcmaster.ca>
-Subject: Re: softraid and multiple distros
-Date: Sun, 14 May 2006 14:42:53 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44.0605141438340.7486-100000@coffee.psychology.mcmaster.ca>
-References: <200605142000.56659.Dexter.Filmore@gmx.de>
+From: "H. Peter Anvin" <hpa@zytor.com>
+Subject: Re: Problem with large devices >2TB
+Date: Sun, 14 May 2006 13:10:06 -0700 (PDT)
+Message-ID: <e482qu$dkq$1@terminus.zytor.com>
+References: <0376848.20060510150440@2ka.mipt.ru>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200605142000.56659.Dexter.Filmore@gmx.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dexter Filmore <Dexter.Filmore@gmx.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> Now the devices have all two superblocks, the one left from the first try 
-> which are now kinda orphaned and those now active. 
-> Can I trust mdadm to handle this properly on its own?
+Followup to:  <0376848.20060510150440@2ka.mipt.ru>
+By author:    Jim Klimov <klimov@2ka.mipt.ru>
+In newsgroup: linux.dev.raid
+> 
+>   Since the new parted worked ok (older one didn't), we were happy
+>   until we tried a reboot. During the device initialization and after
+>   it the system only recognises the 6 or 7 partitions which start
+>   before the 2000Gb limit:
+> 
 
-I'm not sure what "properly" means.  you should not leave around 0xfd 
-partitions with bogus superblocks, since MD will certainly try to 
-assemble them.  I don't know offhand how it decides which components 
-to make into a single array (UUID?), but why screw around?
-for "orphan" partitions, either change the partition type 
-or zero the superblock or both...
+For a DOS partition table, there is no such thing as a partition
+starting beyond 2 TB.  You need to use a GPT or other more
+sophisticated partition table.
 
+	-hpa
