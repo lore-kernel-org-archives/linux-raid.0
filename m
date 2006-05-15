@@ -1,69 +1,185 @@
-From: Joshua Baker-LePain <jlb17@duke.edu>
-Subject: raid0 over 2 h/w raid5's OOPSing at mkfs
-Date: Mon, 15 May 2006 14:47:33 -0400 (EDT)
-Message-ID: <Pine.LNX.4.62.0605151440080.29380@chaos.egr.duke.edu>
+From: Andrew Morton <akpm@osdl.org>
+Subject: Re: [PATCH 008 of 8] md/bitmap: Change md/bitmap file handling to
+ use bmap to file blocks.
+Date: Mon, 15 May 2006 14:04:57 -0700
+Message-ID: <20060515140457.18991c2e.akpm@osdl.org>
+References: <20060512160121.7872.patches@notabene>
+	<1060512060809.8099@suse.de>
+	<20060512104750.0f5cb10a.akpm@osdl.org>
+	<17509.22160.118149.49714@cse.unsw.edu.au>
+	<20060512235934.4f609019.akpm@osdl.org>
+	<17511.51907.537657.656420@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <17511.51907.537657.656420@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, paul.clements@steeleye.com
 List-Id: linux-raid.ids
 
-I've got a x86_64 system with 2 3ware 9550SX-12s, each set up as a raid5 
-w/ a hot spare.  Over that, I do a software raid0 stripe via:
+Neil Brown <neilb@suse.de> wrote:
+>
+> ...
+> 
+> > >  I have a patch which did that,
+> > > but decided that the possibility of kmalloc failure at awkward times
+> > > would make that not suitable.
+> > 
+> > submit_bh() can and will allocate memory, although most decent device
+> > drivers should be OK.
+> > 
+> 
+> submit_bh (like all decent device drivers) uses a mempool for memory
+> allocation so we can be sure that the delay in getting memory is
+> bounded by the delay for a few IO requests to complete, and we can be
+> sure the allocation won't fail.  This is perfectly fine.
 
-mdadm -C /dev/md0 -c 512 -l 0 -n 2 /dev/sd[bc]1
+My point is that some device drivers will apparently call into the mamory
+allocator (should be GFP_NOIO) on the request submission path.  I don't
+recall whcih drivers - but not mainstream ones.
 
-Whenever I try to format md0 (I've tried both mke2fs and mkfs.xfs), the 
-system OOPSes.  I'm running centos-4 with the default kernel, but I've 
-upgraded the 3ware driver/firmware to the most recent versions.  Based on 
-the OOPS I'll paste below, who should I be blaming for this crash?  Any 
-ideas on how to fix it?  Thanks.
+> > > 
+> > > I don't think a_ops really provides an interface that I can use, partly
+> > > because, as I said in a previous email, it isn't really a public
+> > > interface to a filesystem.
+> > 
+> > It's publicer than bmap+submit_bh!
+> > 
+> 
+> I don't know how you can say that.
 
-Unable to handle kernel NULL pointer dereference at 0000000000000027 RIP:
-<ffffffffa0194ab6>{:raid0:raid0_make_request+448}
-PML4 3e913067 PGD 7b652067 PMD 0
-Oops: 0000 [1] SMP
-CPU 1
-Modules linked in: raid0 md5 ipv6 parport_pc lp parport i2c_dev i2c_core sunrpc ipt_REJECT ipt_state ip_conntrack iptable_filter ip_tables dm_mirror dm_mod button battery ac ohci_hcd hw_random tg3 floppy ext3 jbd 3w_9xxx(U) 3w_xxxx sd_mod scsi_mod
-Pid: 2955, comm: mke2fs Not tainted 2.6.9-34.ELsmp
-RIP: 0010:[<ffffffffa0194ab6>] <ffffffffa0194ab6>{:raid0:raid0_make_request+448}
-RSP: 0018:000001007cee1a38  EFLAGS: 00010246
-RAX: 000001007f3cd780 RBX: 0000010051277400 RCX: 0000000000002460
-RDX: ffffffffffffffff RSI: 00000000000003ff RDI: 000001007f3cd7a8
-RBP: 0000000000000009 R08: 0000000000001230 R09: 00000000003d0900
-R10: 000000007f1b5440 R11: 00000000f4240000 R12: 000001007f3cd7c0
-R13: 00000100416af4a0 R14: 00000000f4240000 R15: 000000001e848000
-FS:  0000002a955662e0(0000) GS:ffffffff804d7b80(0000) knlGS:00000000f7fef6c0
-CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
-CR2: 0000000000000027 CR3: 000000007ffa2000 CR4: 00000000000006e0
-Process mke2fs (pid: 2955, threadinfo 000001007cee0000, task 000001003f5e77f0)
-Stack: 0000000100000000 0000000000000246 0000000000000246 0000000000000008
-        0000010051277400 0000000000000100 00000002e9081800 ffffffff8024acea
-        ffffffff80134df2 000001007cee1ab0
-Call Trace:<ffffffff8024acea>{generic_make_request+355} <ffffffff80134df2>{autoremove_wake_function+0}
-        <ffffffff80160400>{cache_init_objs+60} <ffffffff8024adf6>{submit_bio+247}
-        <ffffffff8017c1e0>{bio_alloc+288} <ffffffff8017e36f>{blkdev_get_block+0}
-        <ffffffff8017a0f6>{submit_bh+255} <ffffffff8017e36f>{blkdev_get_block+0}
-        <ffffffff8017a17a>{ll_rw_block+100} <ffffffff8017b60a>{__block_prepare_write+638}
-        <ffffffff8017e36f>{blkdev_get_block+0} <ffffffff8017b79b>{block_prepare_write+26}
-        <ffffffff8015a769>{generic_file_buffered_write+440}
-        <ffffffff8013bd7f>{current_fs_time+89} <ffffffff8015af36>{__generic_file_aio_write_nolock+731}
-        <ffffffff8015b1d4>{generic_file_aio_write_nolock+32}
-        <ffffffff8015b3a2>{generic_file_write_nolock+158} <ffffffff801d1f8b>{selinux_file_permission+298}
-        <ffffffff80134df2>{autoremove_wake_function+0} <ffffffff80229b05>{write_chan+0}
-        <ffffffff8017f2fc>{blkdev_file_write+26} <ffffffff80177c60>{vfs_write+207}
-        <ffffffff80177d48>{sys_write+69} <ffffffff801101c6>{system_call+126}
+bmap() is a userspace API, not really a kernel one.  And it assumes a
+block-backed filesystem.
+
+> bmap is so public that it is exported to userspace through an IOCTL
+> and is used by lilo (admitted only for reading, not writing).  More
+> significantly it is used by swapfile which is a completely independent
+> subsystem from the filesystem.  Contrast this with a_ops.  The primary
+> users of a_ops are routines like generic_file_{read,write} and
+> friends.  These are tools - library routines - that are used by
+> filesystems to implement their 'file_operations' which are the real
+> public interface.  As far as these uses go, it is not a public
+> interface.  Where a filesystem doesn't use some library routines, it
+> does not need to implement the matching functionality in the a_op
+> interface.
+
+Well yeah.  If one wants to do filesystem I/O in-kernel then one should use
+the filesystem I/O entry points: read() and write() (and get flamed ;)).
+
+If one wants to cut in at a lower level than that then we get into a pickle
+because different types of filesytems do quite different things to
+implement read() and write().
+
+> The other main user is the 'VM' which might try to flush out or
+> invalidate pages.  However the VM isn't using this interface to
+> interact with files, but only to interact with pages, and it doesn't
+> much care what is done with the pages providing they get clean, or get
+> released, or whatever.
+> 
+> The way I perceive Linux design/development, active usage is far more
+> significant than documented design.  If some feature of an interface
+> isn't being actively used - by in-kernel code - then you cannot be
+> sure that feature will be uniformly implemented, or that it won't
+> change subtly next week.
+> 
+> So when I went looking for the best way to get md/bitmap to write to a
+> file, I didn't just look at the interface specs (which are pretty
+> poorly documented anyway), I looked at existing code.
+> I can find 3 different parts of the kernel that write to a file.
+> They are
+>    swap-file
+>    loop
+>    nfsd
+> 
+> nfsd uses vfs_read/vfs_write  which have too many failure/delay modes
+>   for me to safely use.
+> loop uses prepare_write/commit_write (if available) or f_op->write
+>   (not vfs_write - I wonder why) which is not much better than what
+>   nfsd uses.  And as far as I can tell loop never actually flushes data to 
+>   storage (hope no-one thinks a journalling filesystem on loop is a
+>   good idea) so it isn't a good model to follow.
+>   [[If loop was a good model to follow, I would have rejected the
+>   code for writing to a file in the first place, only accepted code
+>   for writing to a device, and insisted on using loop to close the gap]]
+> 
+> That leaves swap-file as the only in-kernel user of a filesystem that
+> accesses the file in a way similar to what I need.  Is it any surprise
+> that I chose to copy it?
+
+swapfile doesn't use vfs_read() for swapin...
+
+> 
+> > 
+> > But if the pagecache is dirty then invalidate_inode_pages() will leave it
+> > dirty and the VM will later write it back, corrupting your bitmap file. 
+> > You should get i_writecount, fsync the file and then run
+> > invalidate_inode_pages().
+> 
+> Well, as I am currently reading the file through the pagecache.... but
+> yes, I should put an fsync in there (and the invalidate before read is
+> fairly pointless.  It is the invalidate after close that is important).
+
+umm, the code in its present form _will_ corrupt MD bitmap files. 
+invalidate_inode_pages() will not invalidate dirty pagecache, and that
+dirty pagecache will later get written back, undoing any of your
+intervening direct-io writes.  Most of the time, MD will do another
+direct-io write _after_ the VM has done that writeback and things will get
+fixed up.  But there is a window.  So that fsync() is required.
+
+> > 
+> > You might as well use kernel_read() too, if you insist on begin oddball ;)
+> 
+> I didn't know about that one..
+> 
+> If you would feel more comfortable with kernel_read I would be more
+> than happy to use it.
+
+We might as well save some code.
+
+> In fact, if you can assure me that if I have an inode, and I have
+>   confirmed that
+>     bdi_cap_writeback_dirty(inode->i_mapping->backing_dev_info)
+>    && inode->i_mapping->a_ops->readpage != NULL
+> 
+>   and have disabled truncation, either via i_write_count or otherwise,
+>   then
+>    - read_cache_page( .... ..a_ops->readpage ....)
+>       will return a page that will, as long as I hold a counted reference,
+>       remain in the page cache for that file at the appropriate address
+>       (even though I don't hold it locked)
+
+yup, as long as the page is pinned with get_page().
+
+>    - set_page_dirty and write_one_page
+>       will not fail, except with -EIO, and will not block waiting for
+>       any writeback except for writeback of that file (e.g. won't do
+>       any unprotected kmallocs)
+
+Mostly.  There is a risk that ->writepage() will need to read filesystem
+metadata to locate the page's blocks.  Most of the time that won't happen
+because the page still has buffers attached.  You'd have to keep the pages
+locked to prevent that.  But writepage() will unlock the page so there's
+still a teeny window where the page could get its buffers taken away.  Plus
+we don't know that the filesystem caches the disk mapping in the page's
+buffers anyway (ext2 -o nobh, for example).
 
 
-Code: 48 8b 42 28 48 89 43 10 48 03 4a 40 b8 01 00 00 00 48 89 0b
-RIP <ffffffffa0194ab6>{:raid0:raid0_make_request+448} RSP <000001007cee1a38>
-CR2: 0000000000000027
-  <0>Kernel panic - not syncing: Oops
+> then I'll be happy to go back to using that interface, though I guess I'd
+> have to figure out what to do about redirty_page_for_writepage calls...
+> 
+> But if you can assure me of the above, then I'd be curious as to why
+> swapfile doesn't use the readpage/writepage interface....
 
+If we did that we'd need to memcpy the data between the swapfile pagecache
+and swapcache whenever doing swapin and swapout.  Plus swap goes
+direct-to-BIO to minimise the risk of doing memory allocations on the
+swapout path.  And the swap code treats swapdevs and swapfiles identically.
+And the swap code cannot pin all of the swapfile's pagecache in memory
+(would make it rather pointless), whereas the MD bitmap code can afford to
+do this.
 
+Ho hum, I give up.  I don't think, in practice, this code fixes any
+demonstrable bug though.
 
--- 
-Joshua Baker-LePain
-Department of Biomedical Engineering
-Duke University
