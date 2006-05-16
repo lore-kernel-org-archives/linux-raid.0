@@ -1,31 +1,34 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH 001 of 3] md: Change md/bitmap file handling to use bmap
- to file blocks-fix
-Date: Tue, 16 May 2006 12:16:16 +1000
-Message-ID: <17513.13808.915295.711470@cse.unsw.edu.au>
-References: <20060516111036.2649.patches@notabene>
-	<1060516011302.2711@suse.de>
-	<20060515185440.0989a805.akpm@osdl.org>
+From: Dan Christensen <jdc@uwo.ca>
+Subject: recovery from mkswap on mounted raid1 ext3 filesystem?
+Date: Mon, 15 May 2006 22:19:09 -0400
+Message-ID: <87hd3qu2xu.fsf@uwo.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Andrew Morton on Monday May 15
 Sender: linux-raid-owner@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, reuben-lkml@reub.net
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Monday May 15, akpm@osdl.org wrote:
-> NeilBrown <neilb@suse.de> wrote:
-> >
-> >  +		do_sync_file_range(file, 0, LLONG_MAX,
-> >  +				   SYNC_FILE_RANGE_WRITE |
-> >  +				   SYNC_FILE_RANGE_WAIT_AFTER);
-> 
-> That needs a SYNC_FILE_RANGE_WAIT_BEFORE too.  Otherwise any dirty,
-> under-writeback pages will remain dirty.  I'll make that change.
+I accidentally ran mkswap on an md raid1 device which had a mounted
+ext3 filesystem on it.  I also did a swapon, but I don't think
+anything was written to swap before I noticed the mistake.  How much
+of the partition is toast, and is it something e2fsck might fix?
 
-Ahhh.. yes... that makes sense!  Thanks :-)
+Luckily I have a recent full backup, but it would be easier if
+there was a quick fix!  :-)
 
-NeilBrown
+Thanks,
+
+Dan
+
+(For the curious: I made the mistake because my fstab file had md0 and
+md1 reversed, because a few kernel revisions back the kernel decided
+to name them differently.  And for some reason, the "mount" command
+reports the wrong information from my fstab rather than the right
+information which is (for example) in /proc/mounts.  Is this a bug?
+
+Moreover, shouldn't the mkswap command check whether a device is in
+use before overwriting it?
+
+I realize this isn't the right list for these questions...)
+
