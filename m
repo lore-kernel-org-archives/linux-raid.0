@@ -1,39 +1,33 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [PATCH 003 of 3] md: Calculate correct array size for raid10 in new offset mode.
-Date: Tue, 16 May 2006 11:13:12 +1000
-Message-ID: <1060516011312.2735@suse.de>
+Subject: [PATCH 002 of 3] md: Fix inverted test for 'repair' directive.
+Date: Tue, 16 May 2006 11:13:07 +1000
+Message-ID: <1060516011307.2723@suse.de>
 References: <20060516111036.2649.patches@notabene>
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1750961AbWEPBNx@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Andrew Morton <akpm@osdl.org>
 Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-The size calculation made assumtion which the new offset mode
-didn't follow.  This gets the size right in all cases.
+We should be able to write 'repair' to /sys/block/mdX/md/sync_action,
+however due to and inverted test, that always given EINVAL.
 
 Signed-off-by: Neil Brown <neilb@suse.de>
 
 ### Diffstat output
- ./drivers/md/raid10.c |    8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+ ./drivers/md/md.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff ./drivers/md/raid10.c~current~ ./drivers/md/raid10.c
---- ./drivers/md/raid10.c~current~	2006-05-16 11:09:25.000000000 +1000
-+++ ./drivers/md/raid10.c	2006-05-16 11:09:42.000000000 +1000
-@@ -2060,7 +2060,13 @@ static int run(mddev_t *mddev)
- 	/*
- 	 * Ok, everything is just fine now
- 	 */
--	size = conf->stride * conf->raid_disks;
-+	if (conf->far_offset) {
-+		size = mddev->size >> (conf->chunk_shift-1);
-+		size *= conf->raid_disks;
-+		size <<= conf->chunk_shift;
-+		sector_div(size, conf->far_copies);
-+	} else
-+		size = conf->stride * conf->raid_disks;
- 	sector_div(size, conf->near_copies);
- 	mddev->array_size = size/2;
- 	mddev->resync_max_sectors = size;
+diff ./drivers/md/md.c~current~ ./drivers/md/md.c
+--- ./drivers/md/md.c~current~	2006-05-16 11:09:25.000000000 +1000
++++ ./drivers/md/md.c	2006-05-16 11:09:41.000000000 +1000
+@@ -2318,7 +2318,7 @@ action_store(mddev_t *mddev, const char 
+ 	} else {
+ 		if (cmd_match(page, "check"))
+ 			set_bit(MD_RECOVERY_CHECK, &mddev->recovery);
+-		else if (cmd_match(page, "repair"))
++		else if (!cmd_match(page, "repair"))
+ 			return -EINVAL;
+ 		set_bit(MD_RECOVERY_REQUESTED, &mddev->recovery);
+ 		set_bit(MD_RECOVERY_SYNC, &mddev->recovery);
