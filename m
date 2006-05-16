@@ -1,47 +1,64 @@
-From: Dexter Filmore <Dexter.Filmore@gmx.de>
-Subject: Re: softraid and multiple distros
-Date: Tue, 16 May 2006 14:24:48 +0200
-Message-ID: <200605161424.49057.Dexter.Filmore@gmx.de>
-References: <Pine.LNX.4.44.0605141048330.7486-100000@coffee.psychology.mcmaster.ca> <200605161216.00477.Dexter.Filmore@gmx.de> <17513.47199.99460.746601@cse.unsw.edu.au>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: [-mm patch] make variables static after klibc merge
+Date: Tue, 16 May 2006 14:32:34 +0200
+Message-ID: <20060516123234.GR6931@stusta.de>
+References: <20060515005637.00b54560.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17513.47199.99460.746601@cse.unsw.edu.au>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751809AbWEPMch@vger.kernel.org>
 Content-Disposition: inline
-Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+In-Reply-To: <20060515005637.00b54560.akpm@osdl.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>, hpa@zytor.com
+Cc: linux-kernel@vger.kernel.org, mingo@redhat.com, neilb@cse.unsw.edu.au, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> So in the very simple one-array situation, this is probably safe.
-> But it doesn't generalise.  If you have two array of distinct devices,
-> then something like
->
->  ARRAY /dev/md0 devices=/dev/sda1,/dev/sdb1,/dev/sdc1,/dev/sdd1
->  ARRAY /dev/md1 devices=/dev/sde1,/dev/sdf1,/dev/sdg1,/dev/sdh1
->
-> is not safe.  If /dev/sda1 fails, you pull it out and reboot, then md1
-> won't be assembled properly as everything will get renamed.
-> In general it is safer to use UUIDs
->
->   DEVICE /dev/sd[a-z][0-9]
->   ARRAY /dev/md0 uuid=whatever
->   ARRAY /dev/md1 uuid=whatever:else
->
-> Hope that makes it reasonably clear.
+On Mon, May 15, 2006 at 12:56:37AM -0700, Andrew Morton wrote:
+> 
+> ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.17-rc4/2.6.17-rc4-mm1/
+> 
+> - This tree contains a large number of new bugs^H^H^H^Hpatches.
+> 
+>   - klibc (Kernel libc), as git-klibc.patch (Peter Anvin)
+>...
+> Changes since 2.6.17-rc3-mm1:
+>...
+>  git-klibc.patch
+>...
+>  git trees
+>...
 
-Absolutely, thanks.
+We can now make the following variables static:
+- drivers/md/md.c: mdp_major
+- init/main.c: envp_init[]
 
+Signed-off-by: Adrian Bunk <bunk@stusta.de>
 
--- 
------BEGIN GEEK CODE BLOCK-----
-Version: 3.12
-GCS d--(+)@ s-:+ a- C+++(++++) UL+>++++ P+>++ L+++>++++ E-- W++ N o? K-
-w--(---) !O M+ V- PS++(+) PE(-) Y++ PGP t++(---)@ 5 X+(++) R+(++) tv--(+)@ 
-b++(+++) DI+++ D G++ e* h>++ r%>* y?
-------END GEEK CODE BLOCK------
+---
 
-http://www.stop1984.com
-http://www.againsttcpa.com
+ drivers/md/md.c |    2 +-
+ init/main.c     |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+--- linux-2.6.17-rc4-mm1-full/drivers/md/md.c.old	2006-05-16 12:49:59.000000000 +0200
++++ linux-2.6.17-rc4-mm1-full/drivers/md/md.c	2006-05-16 12:50:17.000000000 +0200
+@@ -2563,7 +2563,7 @@
+ 	.default_attrs	= md_default_attrs,
+ };
+ 
+-int mdp_major = 0;
++static int mdp_major = 0;
+ 
+ static struct kobject *md_probe(dev_t dev, int *part, void *data)
+ {
+--- linux-2.6.17-rc4-mm1-full/init/main.c.old	2006-05-16 13:20:22.000000000 +0200
++++ linux-2.6.17-rc4-mm1-full/init/main.c	2006-05-16 13:20:43.000000000 +0200
+@@ -161,7 +161,7 @@
+ __setup("maxcpus=", maxcpus);
+ 
+ static char * argv_init[MAX_INIT_ARGS+2] = { "init", NULL, };
+-char * envp_init[MAX_INIT_ENVS+2] = { "HOME=/", "TERM=linux", NULL, };
++static char * envp_init[MAX_INIT_ENVS+2] = { "HOME=/", "TERM=linux", NULL, };
+ static const char *panic_later, *panic_param;
+ 
+ extern struct obs_kernel_param __setup_start[], __setup_end[];
