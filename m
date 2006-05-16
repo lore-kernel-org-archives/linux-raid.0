@@ -1,33 +1,25 @@
-From: NeilBrown <neilb@suse.de>
-Subject: [PATCH 002 of 3] md: Fix inverted test for 'repair' directive.
-Date: Tue, 16 May 2006 11:13:07 +1000
-Message-ID: <1060516011307.2723@suse.de>
+From: Andrew Morton <akpm@osdl.org>
+Subject: Re: [PATCH 001 of 3] md: Change md/bitmap file handling to use bmap
+ to file blocks-fix
+Date: Mon, 15 May 2006 18:54:40 -0700
+Message-ID: <20060515185440.0989a805.akpm@osdl.org>
 References: <20060516111036.2649.patches@notabene>
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1750961AbWEPBNx@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+	<1060516011302.2711@suse.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1060516011302.2711@suse.de>
+Sender: linux-raid-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, reuben-lkml@reub.net
 List-Id: linux-raid.ids
 
+NeilBrown <neilb@suse.de> wrote:
+>
+>  +		do_sync_file_range(file, 0, LLONG_MAX,
+>  +				   SYNC_FILE_RANGE_WRITE |
+>  +				   SYNC_FILE_RANGE_WAIT_AFTER);
 
-We should be able to write 'repair' to /sys/block/mdX/md/sync_action,
-however due to and inverted test, that always given EINVAL.
-
-Signed-off-by: Neil Brown <neilb@suse.de>
-
-### Diffstat output
- ./drivers/md/md.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff ./drivers/md/md.c~current~ ./drivers/md/md.c
---- ./drivers/md/md.c~current~	2006-05-16 11:09:25.000000000 +1000
-+++ ./drivers/md/md.c	2006-05-16 11:09:41.000000000 +1000
-@@ -2318,7 +2318,7 @@ action_store(mddev_t *mddev, const char 
- 	} else {
- 		if (cmd_match(page, "check"))
- 			set_bit(MD_RECOVERY_CHECK, &mddev->recovery);
--		else if (cmd_match(page, "repair"))
-+		else if (!cmd_match(page, "repair"))
- 			return -EINVAL;
- 		set_bit(MD_RECOVERY_REQUESTED, &mddev->recovery);
- 		set_bit(MD_RECOVERY_SYNC, &mddev->recovery);
+That needs a SYNC_FILE_RANGE_WAIT_BEFORE too.  Otherwise any dirty,
+under-writeback pages will remain dirty.  I'll make that change.
