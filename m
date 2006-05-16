@@ -1,44 +1,129 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: raid0 over 2 h/w raid5's OOPSing at mkfs
-Date: Tue, 16 May 2006 09:38:39 +1000
-Message-ID: <17513.4351.71436.972341@cse.unsw.edu.au>
-References: <Pine.LNX.4.62.0605151440080.29380@chaos.egr.duke.edu>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+From: NeilBrown <neilb@suse.de>
+Subject: [PATCH 001 of 3] md: Change md/bitmap file handling to use bmap to file blocks-fix
+Date: Tue, 16 May 2006 11:13:02 +1000
+Message-ID: <1060516011302.2711@suse.de>
+References: <20060516111036.2649.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Joshua Baker-LePain on Monday May 15
 Sender: linux-raid-owner@vger.kernel.org
-To: Joshua Baker-LePain <jlb17@duke.edu>
-Cc: linux-raid@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Reuben Farrelly <reuben-lkml@reub.net>
 List-Id: linux-raid.ids
 
-On Monday May 15, jlb17@duke.edu wrote:
-> I've got a x86_64 system with 2 3ware 9550SX-12s, each set up as a raid5 
-> w/ a hot spare.  Over that, I do a software raid0 stripe via:
-> 
-> mdadm -C /dev/md0 -c 512 -l 0 -n 2 /dev/sd[bc]1
-> 
-> Whenever I try to format md0 (I've tried both mke2fs and mkfs.xfs), the 
-> system OOPSes.  I'm running centos-4 with the default kernel, but I've 
-> upgraded the 3ware driver/firmware to the most recent versions.  Based on 
-> the OOPS I'll paste below, who should I be blaming for this crash?  Any 
-> ideas on how to fix it?  Thanks.
 
-Try this.
+Fix problems with new bmap based access to bitmap files.
 
-http://www.kernel.org/git/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=1eb29128c644581fa51f822545921394ad4f719f
+1/ When not using a file based bitmap, attach a NULL list of buffers
+   to each page so the common free_buffer routine can cope.
+2/ Use submit_bh to read as well as write, rather than vfs_read.  
+   This makes read and write more symetric.
+3/ sync the file before reading, to ensure that the page cache has no
+   dirty pages that might get written out later.
 
-Raid0 has troubles in 64bit machines back in 2.6.9 days.
+Signed-off-by: Neil Brown <neilb@suse.de>
 
-NeilBrown.
+### Diffstat output
+ ./drivers/md/bitmap.c |   46 ++++++++++++++++++++++------------------------
+ 1 file changed, 22 insertions(+), 24 deletions(-)
 
-
-> 
-> Unable to handle kernel NULL pointer dereference at 0000000000000027 RIP:
-> <ffffffffa0194ab6>{:raid0:raid0_make_request+448}
-> PML4 3e913067 PGD 7b652067 PMD 0
-> Oops: 0000 [1] SMP
-> CPU 1
-> Modules linked in: raid0 md5 ipv6 parport_pc lp parport i2c_dev i2c_core sunrpc ipt_REJECT ipt_state ip_conntrack iptable_filter ip_tables dm_mirror dm_mod button battery ac ohci_hcd hw_random tg3 floppy ext3 jbd 3w_9xxx(U) 3w_xxxx sd_mod scsi_mod
-> Pid: 2955, comm: mke2fs Not tainted 2.6.9-34.ELsmp
+diff ./drivers/md/bitmap.c~current~ ./drivers/md/bitmap.c
+--- ./drivers/md/bitmap.c~current~	2006-05-16 11:09:26.000000000 +1000
++++ ./drivers/md/bitmap.c	2006-05-16 11:09:33.000000000 +1000
+@@ -247,6 +247,8 @@ static struct page *read_sb_page(mddev_t
+ 
+ 		if (sync_page_io(rdev->bdev, target, PAGE_SIZE, page, READ)) {
+ 			page->index = index;
++			attach_page_buffers(page, NULL); /* so that free_buffer will
++							  * quietly no-op */
+ 			return page;
+ 		}
+ 	}
+@@ -349,11 +351,8 @@ static struct page *read_page(struct fil
+ {
+ 	struct page *page = NULL;
+ 	struct inode *inode = file->f_dentry->d_inode;
+-	loff_t pos = index << PAGE_SHIFT;
+-	int ret;
+ 	struct buffer_head *bh;
+ 	sector_t block;
+-	mm_segment_t oldfs;
+ 
+ 	PRINTK("read bitmap file (%dB @ %Lu)\n", (int)PAGE_SIZE,
+ 			(unsigned long long)index << PAGE_SHIFT);
+@@ -364,18 +363,6 @@ static struct page *read_page(struct fil
+ 	if (IS_ERR(page))
+ 		goto out;
+ 
+-	oldfs = get_fs();
+-	set_fs(KERNEL_DS);
+-	ret = vfs_read(file, (char __user*) page_address(page), count, &pos);
+-	set_fs(oldfs);
+-
+-	if (ret >= 0 && ret != count)
+-		ret = -EIO;
+-	if (ret < 0) {
+-		put_page(page);
+-		page = ERR_PTR(ret);
+-		goto out;
+-	}
+ 	bh = alloc_page_buffers(page, 1<<inode->i_blkbits, 0);
+ 	if (!bh) {
+ 		put_page(page);
+@@ -403,12 +390,22 @@ static struct page *read_page(struct fil
+ 
+ 			bh->b_end_io = end_bitmap_write;
+ 			bh->b_private = bitmap;
++			atomic_inc(&bitmap->pending_writes);
++			set_buffer_locked(bh);
++			set_buffer_mapped(bh);
++			submit_bh(READ, bh);
+ 		}
+ 		block++;
+ 		bh = bh->b_this_page;
+ 	}
+-
+ 	page->index = index;
++
++	wait_event(bitmap->write_wait,
++		   atomic_read(&bitmap->pending_writes)==0);
++	if (bitmap->flags & BITMAP_WRITE_ERROR) {
++		free_buffers(page);
++		page = ERR_PTR(-EIO);
++	}
+ out:
+ 	if (IS_ERR(page))
+ 		printk(KERN_ALERT "md: bitmap read error: (%dB @ %Lu): %ld\n",
+@@ -1415,15 +1412,19 @@ int bitmap_create(mddev_t *mddev)
+ 		return -ENOMEM;
+ 
+ 	spin_lock_init(&bitmap->lock);
++	atomic_set(&bitmap->pending_writes, 0);
++	init_waitqueue_head(&bitmap->write_wait);
++
+ 	bitmap->mddev = mddev;
+ 
+ 	bitmap->file = file;
+ 	bitmap->offset = mddev->bitmap_offset;
+-	if (file) get_file(file);
+-
+-	/* Ensure we read fresh data */
+-	invalidate_inode_pages(file->f_dentry->d_inode->i_mapping);
+-
++	if (file) {
++		get_file(file);
++		do_sync_file_range(file, 0, LLONG_MAX,
++				   SYNC_FILE_RANGE_WRITE |
++				   SYNC_FILE_RANGE_WAIT_AFTER);
++	}
+ 	/* read superblock from bitmap file (this sets bitmap->chunksize) */
+ 	err = bitmap_read_sb(bitmap);
+ 	if (err)
+@@ -1446,9 +1447,6 @@ int bitmap_create(mddev_t *mddev)
+ 
+ 	bitmap->syncchunk = ~0UL;
+ 
+-	atomic_set(&bitmap->pending_writes, 0);
+-	init_waitqueue_head(&bitmap->write_wait);
+-
+ #ifdef INJECT_FATAL_FAULT_1
+ 	bitmap->bp = NULL;
+ #else
