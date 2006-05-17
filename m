@@ -1,36 +1,56 @@
-From: "oettinger34@gmail.com" <oettinger34@gmail.com>
-Subject: =?iso-8859-9?B?YWxtYW4gYmlyYXP9IG9ldHRpbmdlciB0/HJraXllZGU=?=
-Date: Wed, 17 May 2006 12:54:19 +0300
-Message-ID: <3267189718f0cbdc99f22c89169ce0fc@gmail.com>
-Reply-To: oettinger34@gmail.com
+From: Reuben Farrelly <reuben-lkml@reub.net>
+Subject: Re: [PATCH 000 of 3] md: Introduction - 3 bugfixs for -mm
+Date: Thu, 18 May 2006 00:04:40 +1200
+Message-ID: <446B1158.8030608@reub.net>
+References: <20060516111036.2649.patches@notabene>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-9
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20060516111036.2649.patches@notabene>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Andrew Morton <akpm@osdl.org>
 List-Id: linux-raid.ids
 
-ALMANYANIN EN=C7OK =DD=C7=DDLEN B=DDRALARINDAN B=DDR=DD OLAN     OETT=DD=
-NGER B=DDRASI T=DCRK=DDYE' YE GELD=DD
-                               =20
-              ORJ=DDNAL  ALMAN  B=DDRASI   OETT=DDNGER         =20
+On 16/05/2006 1:12 p.m., NeilBrown wrote:
+> The first of these fixes issues with the new bmap based bitmap file
+> access code, and possibly should be an -mm hotfix, and without it,
+> 'internal' bitmaps don't work any more :-(
+> 
+> Others are minor and unrelated.
+> 
+> Thanks,
+> NeilBrown
+> 
+> 
+>  [PATCH 001 of 3] md: Change md/bitmap file handling to use bmap to file blocks-fix
+>  [PATCH 002 of 3] md: Fix inverted test for 'repair' directive.
+>  [PATCH 003 of 3] md: Calculate correct array size for raid10 in new offset mode.
 
- DENEMED=DDN=DDZ M=DD ?
-            =20
-DENEY=DDN 270 YILDIR =DD=C7=DDLEN B=DDR TAT
+Patch 1 fixes the problems I was having with RAID-1 arrays not able to start up 
+on 2.6.17-rc4-mm1.  Thanks for that.
 
-BU B=DDRAYI BEDAVA  DENEMEK   =DDSTERM=DDS=DDN=DDZ?
+However things appear still not quite right on boot, as each mount works but 
+displays as though it didn't work, ie:
 
-EVET =DDSE B=DDZE BULUNDU=D0UNUZ SEMT=DD VE ALMAK ALDI=D0INIZ TEKEL BAY=
-=DDN=DDN ADINI YAZIN S=DDZ=DDN ADINIZA OETT=DDNGER B=DDRANIZI BIRAKALIM
+md: considering sdc2 ...
+md:  adding sdc2 ...
+md:  adding sda2 ...
+md: created md0
+md: bind<sda2>
+md: bind<sdc2>
+md: running: <sdc2><sda2>
+raid1: raid set md0 active with 0 out of 2 mirrors
 
+0 out of 2 ?
 
-=DDSTANBUL ANADOLU BA=DEBAY=DD
+cat /proc/mdstats  shows that everything does in fact seem to be working:
 
+md0 : active raid1 sdc2[1] sda2[0]
+       24410688 blocks [2/2] [UU]
+       bitmap: 21/187 pages [84KB], 64KB chunk
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The array otherwise seems to be fine.  I guess it's just a visual glitch.
+
+reuben
