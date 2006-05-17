@@ -1,48 +1,38 @@
-From: Patrik Jonsson <patrik@ucolick.org>
-Subject: Raid5 resize "testing opportunity"
-Date: Wed, 17 May 2006 14:32:59 -0700
-Message-ID: <446B968B.6050606@ucolick.org>
-References: <20060501152229.18367.patches@notabene>	<200605021938.45254.a1426z@gawab.com>	<17495.62433.136481.543828@cse.unsw.edu.au>	<200605030700.23515.a1426z@gawab.com> <17502.61577.874881.753541@cse.unsw.edu.au>
+From: Dexter Filmore <Dexter.Filmore@gmx.de>
+Subject: copying data over NFS to raid5 array is jumpy
+Date: Wed, 17 May 2006 23:38:03 +0200
+Message-ID: <200605172338.03486.Dexter.Filmore@gmx.de>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="------------enigD6EE3C8348A053F70271200A"
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17502.61577.874881.753541@cse.unsw.edu.au>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enigD6EE3C8348A053F70271200A
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+copying from a local standalone disk to a raid5 array works smooth at a 
+constant 30MB/s. So far, so good.
 
-Hi all,
+Now, copying data from a machine on the network over 100MBit NFS is kinda 
+jerky. It works, but within a second or two, the transfer rate reported goes 
+from a few 100k/s up to 22MB/s (which is bogus - 100MBit=12.5MB/s max) and 
+back, varying all over.
+Copying to the single disk works is constant around 10MB/s.
 
-For Neil's benefit (:-) I'm about to test the raid5 resize code by
-trying to grow our 2TB raid5 from 8 to 10 devices. Currently, I'm
-running a 2.6.16-rc4-mm2 kernel.  Is this current enough to support the
-resize? (I suspect not.) If I upgrade to 2.6.17-rc4-mm1, would that do
-it, or is it even in stable 2.6.16.16?
+I use "sync" in exportfs for all shares.
 
-Thanks,
-
-/Patrik
+What could cause this behaviour?
 
 
---------------enigD6EE3C8348A053F70271200A
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
+-- 
+-----BEGIN GEEK CODE BLOCK-----
+Version: 3.12
+GCS d--(+)@ s-:+ a- C+++(++++) UL+>++++ P+>++ L+++>++++ E-- W++ N o? K-
+w--(---) !O M+ V- PS++(+) PE(-) Y++ PGP t++(---)@ 5 X+(++) R+(++) tv--(+)@ 
+b++(+++) DI+++ D G++ e* h>++ r%>* y?
+------END GEEK CODE BLOCK------
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.2 (MingW32)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
-
-iD8DBQFEa5aQT+KvsdUW5p8RAmD9AKCW2+EpxFsr/tqxA4dGDSmfOxqqMQCgiJL+
-Liw5Ks6/kwJ3yDAIgD0oYHA=
-=6NT+
------END PGP SIGNATURE-----
-
---------------enigD6EE3C8348A053F70271200A--
+http://www.stop1984.com
+http://www.againsttcpa.com
