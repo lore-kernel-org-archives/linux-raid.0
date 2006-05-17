@@ -1,98 +1,48 @@
-From: dean gaudet <dean@arctic.org>
-Subject: Re: raid5 hang on get_active_stripe
-Date: Wed, 17 May 2006 11:41:28 -0700 (PDT)
-Message-ID: <Pine.LNX.4.64.0605171137350.29929@twinlark.arctic.org>
-References: <5d96567b0603060346r768a0ee1i8d8170cf9ba4bac1@mail.gmail.com>
- <Pine.LNX.4.56.0603061156140.26994@lion.drogon.net>
- <5d96567b0603060456h5f2c3cc8me790c86b74e1f854@mail.gmail.com>
- <4415F400.5030808@ucolick.org> <17429.64926.100005.904328@cse.unsw.edu.au>
- <Pine.LNX.4.64.0605110758100.25283@twinlark.arctic.org>
+From: Patrik Jonsson <patrik@ucolick.org>
+Subject: Raid5 resize "testing opportunity"
+Date: Wed, 17 May 2006 14:32:59 -0700
+Message-ID: <446B968B.6050606@ucolick.org>
+References: <20060501152229.18367.patches@notabene>	<200605021938.45254.a1426z@gawab.com>	<17495.62433.136481.543828@cse.unsw.edu.au>	<200605030700.23515.a1426z@gawab.com> <17502.61577.874881.753541@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enigD6EE3C8348A053F70271200A"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0605110758100.25283@twinlark.arctic.org>
+In-Reply-To: <17502.61577.874881.753541@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Patrik Jonsson <patrik@ucolick.org>, linux-raid@vger.kernel.org
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, 11 May 2006, dean gaudet wrote:
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enigD6EE3C8348A053F70271200A
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
 
-> On Tue, 14 Mar 2006, Neil Brown wrote:
-> 
-> > On Monday March 13, patrik@ucolick.org wrote:
-> > > I just experienced some kind of lockup accessing my 8-drive raid5
-> > > (2.6.16-rc4-mm2). The system has been up for 16 days running fine, but
-> > > now processes that try to read the md device hang. ps tells me they are
-> > > all sleeping in get_active_stripe. There is nothing in the syslog, and I
-> > > can read from the individual drives fine with dd. mdadm says the state
-> > > is "active".
-...
-> 
-> i seem to be running into this as well... it has happenned several times 
-> in the past three weeks.  i attached the kernel log output...
+Hi all,
 
-it happenned again...  same system as before...
+For Neil's benefit (:-) I'm about to test the raid5 resize code by
+trying to grow our 2TB raid5 from 8 to 10 devices. Currently, I'm
+running a 2.6.16-rc4-mm2 kernel.  Is this current enough to support the
+resize? (I suspect not.) If I upgrade to 2.6.17-rc4-mm1, would that do
+it, or is it even in stable 2.6.16.16?
+
+Thanks,
+
+/Patrik
 
 
-> > You could try increasing the size of the stripe cache
-> >   echo 512 > /sys/block/mdX/md/stripe_cache_size
-> > (choose and appropriate 'X').
-> 
-> yeah that got things going again -- it took a minute or so maybe, i
-> wasn't paying attention as to how fast things cleared up.
+--------------enigD6EE3C8348A053F70271200A
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
 
-i tried 768 this time and it wasn't enough... 1024 did it again...
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.2 (MingW32)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
 
-> 
-> > Maybe check the content of
-> >          /sys/block/mdX/md/stripe_cache_active
-> > as well.
-> 
-> next time i'll check this before i increase stripe_cache_size... it's
-> 0 now, but the raid5 is working again...
+iD8DBQFEa5aQT+KvsdUW5p8RAmD9AKCW2+EpxFsr/tqxA4dGDSmfOxqqMQCgiJL+
+Liw5Ks6/kwJ3yDAIgD0oYHA=
+=6NT+
+-----END PGP SIGNATURE-----
 
-here's a sequence of things i did... not sure if it helps:
-
-# cat /sys/block/md4/md/stripe_cache_active
-435
-# cat /sys/block/md4/md/stripe_cache_size
-512
-# echo 768 >/sys/block/md4/md/stripe_cache_size
-# cat /sys/block/md4/md/stripe_cache_active
-752
-# cat /sys/block/md4/md/stripe_cache_active
-752
-# cat /sys/block/md4/md/stripe_cache_active
-752
-# cat /sys/block/md4/md/stripe_cache_active
-752
-# cat /sys/block/md4/md/stripe_cache_active
-752
-# cat /sys/block/md4/md/stripe_cache_active
-752
-# cat /sys/block/md4/md/stripe_cache_active
-752
-# echo 1024 >/sys/block/md4/md/stripe_cache_size
-# cat /sys/block/md4/md/stripe_cache_active
-927
-# cat /sys/block/md4/md/stripe_cache_active
-151
-# cat /sys/block/md4/md/stripe_cache_active
-66
-# cat /sys/block/md4/md/stripe_cache_active
-2
-# cat /sys/block/md4/md/stripe_cache_active
-1
-# cat /sys/block/md4/md/stripe_cache_active
-0
-# cat /sys/block/md4/md/stripe_cache_active
-3
-
-and it's OK again... except i'm going to lower the stripe_cache_size to
-256 again because i'm not sure i want to keep having to double it each
-freeze :)
-
-let me know if you want the task dump output from this one too.
-
--dean
+--------------enigD6EE3C8348A053F70271200A--
