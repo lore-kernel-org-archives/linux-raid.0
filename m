@@ -1,47 +1,37 @@
-From: Patrik Jonsson <patrik@ucolick.org>
+From: Neil Brown <neilb@suse.de>
 Subject: Re: Raid5 resize "testing opportunity"
-Date: Thu, 18 May 2006 17:40:05 -0700
-Message-ID: <446D13E5.2050107@ucolick.org>
-References: <20060501152229.18367.patches@notabene>	<200605021938.45254.a1426z@gawab.com>	<17495.62433.136481.543828@cse.unsw.edu.au>	<200605030700.23515.a1426z@gawab.com>	<17502.61577.874881.753541@cse.unsw.edu.au>	<446B968B.6050606@ucolick.org> <17515.46721.340413.205804@cse.unsw.edu.au>
+Date: Fri, 19 May 2006 10:44:14 +1000
+Message-ID: <17517.5342.472654.391841@cse.unsw.edu.au>
+References: <20060501152229.18367.patches@notabene>
+	<200605021938.45254.a1426z@gawab.com>
+	<17495.62433.136481.543828@cse.unsw.edu.au>
+	<200605030700.23515.a1426z@gawab.com>
+	<17502.61577.874881.753541@cse.unsw.edu.au>
+	<446B968B.6050606@ucolick.org>
+	<17515.46721.340413.205804@cse.unsw.edu.au>
+	<446D13E5.2050107@ucolick.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="------------enigEE9F402D2767D2FD69CA6646"
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17515.46721.340413.205804@cse.unsw.edu.au>
+In-Reply-To: message from Patrik Jonsson on Thursday May 18
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
+To: Patrik Jonsson <patrik@ucolick.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enigEE9F402D2767D2FD69CA6646
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+On Thursday May 18, patrik@ucolick.org wrote:
+> Hi Neil,
+> 
+> The raid5 reshape seems to have gone smoothly (nice job!), though it
+> took 11 hours! Are there any pieces of info you would like about the array?
 
-Hi Neil,
+Excellent!
 
-The raid5 reshape seems to have gone smoothly (nice job!), though it
-took 11 hours! Are there any pieces of info you would like about the arra=
-y?
+No, no other information would be useful.  
+This is the first real-life example that I know of of adding 2 devices
+at once.  That should be no more difficult, but it is good to know
+that it works in fact as well as in theory.
 
-cheers,
-
-/Patrik
-
-
---------------enigEE9F402D2767D2FD69CA6646
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.2 (MingW32)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
-
-iD8DBQFEbRPlT+KvsdUW5p8RAhf2AJsFlspEuS3RNywI5/9RRpCUkLNeFgCeIAqT
-25azf8Sb/k0vp8R/BHIkJcw=
-=g6XU
------END PGP SIGNATURE-----
-
---------------enigEE9F402D2767D2FD69CA6646--
+Thanks,
+NeilBrown
