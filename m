@@ -1,41 +1,47 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: mdadm: bitmap size
-Date: Fri, 19 May 2006 09:51:43 +1000
-Message-ID: <17517.2191.803890.424144@cse.unsw.edu.au>
-References: <446D0119.1010508@phx6a.ath.cx>
+From: Patrik Jonsson <patrik@ucolick.org>
+Subject: Re: Raid5 resize "testing opportunity"
+Date: Thu, 18 May 2006 17:40:05 -0700
+Message-ID: <446D13E5.2050107@ucolick.org>
+References: <20060501152229.18367.patches@notabene>	<200605021938.45254.a1426z@gawab.com>	<17495.62433.136481.543828@cse.unsw.edu.au>	<200605030700.23515.a1426z@gawab.com>	<17502.61577.874881.753541@cse.unsw.edu.au>	<446B968B.6050606@ucolick.org> <17515.46721.340413.205804@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enigEE9F402D2767D2FD69CA6646"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Ste on Friday May 19
+In-Reply-To: <17515.46721.340413.205804@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Ste <ste@phx6a.ath.cx>
+To: Neil Brown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Friday May 19, ste@phx6a.ath.cx wrote:
-> Hi all, i have this problem:
-> 
-> I am going to do raid 1 over two virtual devices. These virtual devices 
-> are two hard disks situated on other two servers.
-> 
-> The problem is:
-> A network failure could happen often, and if it happen, i don't want to 
-> recover all the disks. I want to recover just last changed things.
-> 
-> As i can see the bitmap do exactly this, but the default bitmap is too 
-> small!
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enigEE9F402D2767D2FD69CA6646
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
 
-Why do you say that?
-Are you using an internal bitmap, or a bitmap in a separate file?
+Hi Neil,
 
-> There is no problem to have a bitmap file of 1 Gb, but i can't find the 
-> way to tell to mdadm the size to use for the bitmap file.
+The raid5 reshape seems to have gone smoothly (nice job!), though it
+took 11 hours! Are there any pieces of info you would like about the arra=
+y?
 
-The only way to control the size of the bitmap is the change the
-bitmap chunk size.
-Warning: if you have more than 1 million bits in the bitmap, the
-kernel may fail in memory allocation and may not be able to assemble
-your array.
+cheers,
 
-NeilBrown
+/Patrik
+
+
+--------------enigEE9F402D2767D2FD69CA6646
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.2 (MingW32)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
+
+iD8DBQFEbRPlT+KvsdUW5p8RAhf2AJsFlspEuS3RNywI5/9RRpCUkLNeFgCeIAqT
+25azf8Sb/k0vp8R/BHIkJcw=
+=g6XU
+-----END PGP SIGNATURE-----
+
+--------------enigEE9F402D2767D2FD69CA6646--
