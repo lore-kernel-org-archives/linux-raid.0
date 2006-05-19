@@ -1,115 +1,109 @@
-From: "Dan Williams" <dan.j.williams@intel.com>
-Subject: Re: [RFC][PATCH] MD RAID Acceleration: Move stripe operations outside the spin lock
-Date: Fri, 19 May 2006 11:01:38 -0700
-Message-ID: <e9c3a7c20605191101l7a4488b5ge185ff921e91b401@mail.gmail.com>
-References: <1147818171.18360.14.camel@dwillia2-linux.ch.intel.com>
-	 <17517.11618.885744.164970@cse.unsw.edu.au>
+From: Per Lindstrand <mail@perlindstrand.com>
+Subject: Re: Raid5 resize "testing opportunity"
+Date: Fri, 19 May 2006 22:11:44 +0200
+Message-ID: <446E2680.9070905@perlindstrand.com>
+References: <20060501152229.18367.patches@notabene>	<200605021938.45254.a1426z@gawab.com>	<17495.62433.136481.543828@cse.unsw.edu.au>	<200605030700.23515.a1426z@gawab.com>	<17502.61577.874881.753541@cse.unsw.edu.au>	<446B968B.6050606@ucolick.org>	<17515.46721.340413.205804@cse.unsw.edu.au>	<446D13E5.2050107@ucolick.org> <17517.5342.472654.391841@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
-	format=flowed
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17517.11618.885744.164970@cse.unsw.edu.au>
-Content-Disposition: inline
+In-Reply-To: <17517.5342.472654.391841@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
 To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, daniel.j.thompson@intel.com, Chris Leech <christopher.leech@intel.com>
+Cc: Patrik Jonsson <patrik@ucolick.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> Hi.
->
-> This certainly looks like it is heading in the right direction - thanks.
->
-> I have a couple of questions, which will probably lead to more.
->
-> You obviously need some state-machine functionality to oversee the
-> progression like  xor - drain - xor (for RMW) or clear - copy - xor
-> (for RCW).
-> You have encoded the different states on a per block basis (storing it
-> in sh->dev[x].flags) rather than on a per-strip basis (and so encoding
-> it in sh->state).
-> What was the reason for this choice?
->
-> The only reason I can think of is to allow more parallelism :
-> different blocks within a strip can be in different states.  I cannot
-> see any value in this as the 'xor' operation will work across all
-> (active) blocks in the strip and so you will have to synchronise all
-> the blocks on that operation.
->
-> I feel the code would be simpler if the state was in the strip rather
-> than the block.
-I agree, I started out down this path but then I had trouble
-determining which blocks were part of the operation without the
-overhead of taking the sh->lock.  So, the original decision was based
-on the design goal of minimizing the locking required in the
-workqueue.  But your questions sparked a realization about how to
-rework this, although I think it requires the wait_for_block_op queue,
- see below...
+Hi Neil,
 
-> The wait_for_block_op queue and it's usage seems odd to me.
-> handle_stripe should never have to wait for anything.
-> when a block_op is started, the sh->count should be incremented, and
-> the decremented when the block-ops have finished.  Only when will
-> handle_stripe get to look at the stripe_head again.  So waiting
-> shouldn't be needed.
-The case I was concerned about was when two threads are at the top of
-handle_stripe, one gets in and kicks off a block op while the other
-spins.  handle_write_operations makes the assumption that it can
-blindly advance the state without worrying about whether the workqueue
-has had a chance to dequeue the request.  Without the wait, the
-workqueue races with the 2nd thread coming out of the spin lock.  I.e.
-the thread in handle stripe may advance the state before the request
-is dequeued in the workqueue.  The other purpose is that it allows the
-workqueue to read the state bits without taking a lock.  At run time
-it appears that it does not take the wait path very often, it takes it
-once at the beginning of a set of operations but after the first strip
-is recycled on to the handle list there are enough strips queued up
-such that it does not need to wait.
+I'm currently running an active raid5 array of 12 x 300GB SATA devices.
+During the last couple of months I have grown my raid two times (from 4
+to 8 to 12). I was using a 2.6.16-rc1 kernel with the (at that time)
+latest md-patch.
 
-As I wrote "The other purpose is that it allows the workqueue to read
-the state bits without taking a lock" I realized that I can rewrite
-the code to have the state information solely in sh->state.
+I'm happy to say that both times the growing procedure completed
+successfully!
 
-> Your GFP_KERNEL kmalloc is a definite no-no which can lead to
-> deadlocks (it might block while trying to write data out thought the
-> same raid array).  At least it should be GFP_NOIO.
-Ahh, I did not consider the case of I/O out the same md device.  A
-hypothetical question though, would we keep recursing (threads
-sleeping waiting for I/O) to a point where kmalloc would eventually
-return 0 (i.e. to a point where we can take the allocation failure
-path), or would we deadlock at some point?
+This is how I did:
 
-> However a better solution would be to create and use a mempool - they
-> are designed for exactly this sort of usage.
-> However I'm not sure if even that is needed.  Can a stripe_head have
-> move than one active block_ops task happening?  If not, the
-> 'stripe_work' should be embedded in the 'stripe_head'.
-The 'more than one active blocks_ops' case I am considering is a read
-(bio fill) that is issued in between the bio drain and xor operation
-for a write.  However, another realization, with the wait_for_block_op
-queue it should be ok to have the stripe_work embedded in the
-stripe_head since the next operation will not be issued until the
-first is dequeued.
+At first I had 4 devices ( /dev/sd{a,b,c,d} ) running in an active raid=
+5
+array (chunk-size 256). When I bought 4 more I thought I=92d try to gro=
+w
+them instead of running another array. I assembled my array with 4
+drives and made sure that the array started without problems (cat:ed
+/proc/mdstat). After that I cfdisk:ed the 4 new devices to one huge
+partition with the type FD (Linux raid autodetect) and added them as
+spares with the command:
 
-> There will probably be more questions once these are answered, but as
-> the code is definitely a good start.
+# mdadm --add /dev/md0 /dev/sd{e,f,g,h}1
 
-Thanks for being patient with my attempts.
+After that I checked the /proc/mdstat to confirm that they had been
+successfully added and then executed the grow command:
 
->
-> (*) Since reading the DDF documentation again, I've realised that
-> using the word 'stripe' both for a chunk-wide stripe and a block-wide
-> stripe is very confusing.  So I've started using 'strip' for a
-> block-wide stripe.  Thus a 'stripe_head' should really be a
-> 'strip_head'.
->
-> I hope this doesn't end up being even more confusing :-)
->
-I actually think this will make things less confusing.
+# mdadm -Gv /dev/md0 -n8
 
-A question, is it inefficient to discuss this with the 2.6.17-rc state
-of the code, should I move over to the latest -mm?
+which started the whole growing procedure. After that I waited (it took
+about 6 times rebuilding from 4 to 8 and almost 11 hours from 8 to 12).
 
-Thanks again for your help,
 
-Dan
+The following information might not belong in the raid-list but I
+thought it might be useful someone:
+---------------------------------------------------------------------
+The raid is encrypted with LUKS aes-cbc-essiv:sha256 and has an ext3
+filesystem formatted with '-T Largefile', -m0 and '-R stride=3D64'. Aft=
+er
+I successfully had grown the raid5 array I managed to resize the LUKS
+and the ext3 partition with the following commands:
+
+(After decrypting the raid using standard luksOpen procedure)
+
+# cryptsetup resize cmd0
+(no I didn't forget the <size> information)
+
+# resize2fs -p /dev/mapper/cmd0
+seemed to do the trick with the ext3 filesystem.
+---------------------------------------------------------------------
+
+This is how I did it both times and I must say, even though it was scar=
+y
+as hell growing a raid of 2.1TB with need-to-have data, it was really
+interesting and boy am I glad it worked! =3D)
+
+I just thought I=92d tribute to the raid-list with my grow-story. It ca=
+n
+be nice to hear of those who succeed too and not only when people have
+accidents. =3D)
+
+Thanks for a great work with the growing code!
+
+Best regards
+Per Lindstrand, Sweden
+
+Neil Brown wrote:
+> On Thursday May 18, patrik@ucolick.org wrote:
+>> Hi Neil,
+>>
+>> The raid5 reshape seems to have gone smoothly (nice job!), though it
+>> took 11 hours! Are there any pieces of info you would like about the=
+ array?
+>=20
+> Excellent!
+>=20
+> No, no other information would be useful. =20
+> This is the first real-life example that I know of of adding 2 device=
+s
+> at once.  That should be no more difficult, but it is good to know
+> that it works in fact as well as in theory.
+>=20
+> Thanks,
+> NeilBrown
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
