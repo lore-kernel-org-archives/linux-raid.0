@@ -1,46 +1,43 @@
-From: Jeff Breidenbach <jeff@jab.org>
-Subject: recovery speed on many-disk RAID 1
-Date: Sat, 20 May 2006 19:16:33 -0700
-Message-ID: <E1FhdUf-0002pr-00@toko.jab.org>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: recovery speed on many-disk RAID 1
+Date: Sun, 21 May 2006 13:15:58 +1000
+Message-ID: <17519.56174.431539.632965@cse.unsw.edu.au>
+References: <E1FhdUf-0002pr-00@toko.jab.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: message from Jeff Breidenbach on Saturday May 20
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Jeff Breidenbach <jeff@jab.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Saturday May 20, jeff@jab.org wrote:
+> interrupted by seeks from read requests on the RAID. But that's not
+> really necessary; imagine if it instead went something like:
+> 
+>   sbb1 -> sbg1    # High bandwidth copy operation limited by drive speed
+>   sb[cde]1        # These guys handle read requests
+> 
 
-Consider the following setup, mainly designed for reading random small
-files quickly. Normally, this a quintuply redundant RAID-1. 
+Yeh... that could be done.  There is even a comment in the 2.4 code:
 
-# cat /proc/mdstat
-Personalities : [raid1] 
-md1 : active raid1 sdg1[6] sde1[1] sdb1[4] sdd1[3] sdc1[2]
-      488383936 blocks [6/4] [_UUUU_]
-      [>....................]  recovery =  3.7% (18245248/488383936) finish=725.7min speed=10794K/sec
+	/* If reconstructing, and >1 working disc,
+	 * could dedicate one to rebuild and others to
+	 * service read requests ..
+	 */
 
-# mount | grep backup
-/dev/sdf1 on /backup type reiserfs (ro)
+though that seems to have disappeared from 2.6.
 
-However, right now a backup operation is occuring. The backup strategy
-is simply swapping a pair of drives between the RAID and /backup, and
-letting linux-raid do all the work. Here we've just pulled sdf1 from
-the RAID and inserted sdg1.
+Given that
+ - high rebuild speed could swamp some buss and so interfere with
+   regular IO and
+ - it is fairly easy to ask for the speed to be higher
 
-The interesting part here is the recovery rate. It seems to tightly
-hug whatever is set in /proc/sys/dev/raid/speed_limit_min. I'm kind of
-suprised about that, and suspect the recovery operation is getting
-interrupted by seeks from read requests on the RAID. But that's not
-really necessary; imagine if it instead went something like:
+I'm not sure that it is necessary.... might be interesting though.
 
-  sbb1 -> sbg1    # High bandwidth copy operation limited by drive speed
-  sb[cde]1        # These guys handle read requests
+I've added it to my todo list, but if someone else would like to have
+a try....
 
-I think that's more or less what happens anyway when I crank up
-speed_limit_min. But I wonder if such a thing could happen
-automatically? Isn't this generally the right way to go when dealing
-with recovery and many-disk RAID-1?
-
-Cheers,
-Jeff
-
-
- 
+NeilBrown
