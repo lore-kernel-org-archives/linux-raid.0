@@ -1,35 +1,41 @@
-From: Dexter Filmore <Dexter.Filmore@gmx.de>
-Subject: raid5 resize in 2.6.17 - how will it be different from raidreconf?
-Date: Mon, 22 May 2006 00:34:49 +0200
-Message-ID: <200605220034.49858.Dexter.Filmore@gmx.de>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: raid 5 read performance
+Date: Mon, 22 May 2006 08:38:43 +1000
+Message-ID: <17520.60403.55872.255838@cse.unsw.edu.au>
+References: <5d96567b0605210210wc3925ek6161f427944f8b7@mail.gmail.com>
+	<17520.12342.245437.75779@cse.unsw.edu.au>
+	<e9c3a7c20605211019i19dc1010r1abb45cb8a51b7d5@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: message from Dan Williams on Sunday May 21
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Dan Williams <dan.j.williams@gmail.com>
+Cc: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>, Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-How will the raid5 resize in 2.6.17 be different from raidreconf? 
-Will it be less risky to grow an array that way?
-Will it be possible to migrate raid5 to raid6?
+On Sunday May 21, dan.j.williams@gmail.com wrote:
+> > Please read
+> >
+> > http://www.spinics.net/lists/raid/msg11838.html
+> >
+> > and ask if you have further questions.
+> >
+> Does this implementation also need to do delayed updates to the stripe
+> cache?  I.e. we bypass the cache and get the requester the data it
+> needs but then schedule that data to also be copied into the cache by
+> the work queue.  The thinking being to reduce the read penalties
+> associated with subsequent writes to the stripe.
+> 
 
-(And while talking of that: can I add for example two disks and grow *and* 
-migrate to raid6 in one sweep or will I have to go raid6 and then add more 
-disks?)
+I doubt that would be worth the effort.  I don't think data lives very
+long in the stripe cache, and so a lot of the copying would be wasted.
+Also, I gather that modern drives have a reasonable cache and if data
+was read recently for a read, then reading it again for a write might
+be very quick.
 
-Dex
+I think the gains you get on the read side will more than offset any
+small loss on the write side.
 
-
--- 
------BEGIN GEEK CODE BLOCK-----
-Version: 3.12
-GCS d--(+)@ s-:+ a- C+++(++++) UL+>++++ P+>++ L+++>++++ E-- W++ N o? K-
-w--(---) !O M+ V- PS++(+) PE(-) Y++ PGP t++(---)@ 5 X+(++) R+(++) tv--(+)@ 
-b++(+++) DI+++ D G++ e* h>++ r%>* y?
-------END GEEK CODE BLOCK------
-
-http://www.stop1984.com
-http://www.againsttcpa.com
+NeilBrown
