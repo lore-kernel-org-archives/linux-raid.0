@@ -1,43 +1,61 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: recovery speed on many-disk RAID 1
-Date: Sun, 21 May 2006 13:15:58 +1000
-Message-ID: <17519.56174.431539.632965@cse.unsw.edu.au>
-References: <E1FhdUf-0002pr-00@toko.jab.org>
+From: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
+Subject: raid 5 read performance
+Date: Sun, 21 May 2006 12:10:48 +0300
+Message-ID: <5d96567b0605210210wc3925ek6161f427944f8b7@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Jeff Breidenbach on Saturday May 20
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Jeff Breidenbach <jeff@jab.org>
-Cc: linux-raid@vger.kernel.org
+To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+Cc: Neil Brown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-On Saturday May 20, jeff@jab.org wrote:
-> interrupted by seeks from read requests on the RAID. But that's not
-> really necessary; imagine if it instead went something like:
-> 
->   sbb1 -> sbg1    # High bandwidth copy operation limited by drive speed
->   sb[cde]1        # These guys handle read requests
-> 
+Neil hello
+I am measuring read performance of two raid5 with 7 sata disks, chunk size 1MB.
+when i set the stripe_cache_size to 4096 i get 240 MB/s. IO'ing from
+the two raids ended with 270 MB/s.
 
-Yeh... that could be done.  There is even a comment in the 2.4 code:
+i have added a code in make_request which passes the raid5 logic in
+the case of read.
 
-	/* If reconstructing, and >1 working disc,
-	 * could dedicate one to rebuild and others to
-	 * service read requests ..
-	 */
+it looks like this :
+static int make_request (request_queue_t *q, struct bio * bi)
+{
+.....
+	if ( conf->raid5_bypass_read  &&  bio_data_dir(bi) == READ )
+	{	
+		new_sector = raid5_compute_sector(bi->bi_sector,
+						  raid_disks,
+						  data_disks,
+						  &dd_idx,
+						  &pd_idx,
+						  conf);
 
-though that seems to have disappeared from 2.6.
+		bi->bi_sector = new_sector;
+		bi->bi_bdev =  conf->disks[dd_idx].rdev->bdev;
+		//
+		//	do some statics
+		//
+		disk_stat_inc(mddev->gendisk, ios[rw]);
+		disk_stat_add(mddev->gendisk, sectors[rw], bio_sectors(bi));
 
-Given that
- - high rebuild speed could swamp some buss and so interfere with
-   regular IO and
- - it is fairly easy to ask for the speed to be higher
+		//
+		// make upper level to the work for me
+		//
+		return 1;
+	}
+...
+}
 
-I'm not sure that it is necessary.... might be interesting though.
+it increased the performance to 440 MB/s.
 
-I've added it to my todo list, but if someone else would like to have
-a try....
+Question :
+       What is the cost of not walking trough the raid5 code in the
+case of READ ?
+       if i add and error handling code will it be suffice ?
 
-NeilBrown
+thank you
+-- 
+Raz
