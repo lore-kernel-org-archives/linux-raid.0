@@ -1,35 +1,31 @@
-From: "Darryl" <lwogiajpgugep@polsorb.net>
-Subject: you wont believe Darryl
-Date: Sun, 21 May 2006 09:33:14 -0400
-Message-ID: <987c.problematic__16314.8432075561$1148215299$gmane$org@exhale67.immersion89.net>
+From: "Dan Williams" <dan.j.williams@gmail.com>
+Subject: Re: raid 5 read performance
+Date: Sun, 21 May 2006 10:19:07 -0700
+Message-ID: <e9c3a7c20605211019i19dc1010r1abb45cb8a51b7d5@mail.gmail.com>
+References: <5d96567b0605210210wc3925ek6161f427944f8b7@mail.gmail.com>
+	 <17520.12342.245437.75779@cse.unsw.edu.au>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+	format=flowed
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <17520.12342.245437.75779@cse.unsw.edu.au>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-net@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, autoanswer@vger.kernel.org, linux-assembly@vger.kernel.org, majordomo@vger.kernel.org, linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>, Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Heya!
+> Please read
+>
+> http://www.spinics.net/lists/raid/msg11838.html
+>
+> and ask if you have further questions.
+>
+Does this implementation also need to do delayed updates to the stripe
+cache?  I.e. we bypass the cache and get the requester the data it
+needs but then schedule that data to also be copied into the cache by
+the work queue.  The thinking being to reduce the read penalties
+associated with subsequent writes to the stripe.
 
-Has your cum ever dribbled and you wish it had shot out?
-Have you ever wanted to impress your girl with a huge cumshot?
-
-MAX LOADS is the only site to offer an all natural male enhancement
-formula that is proven to increase your sperm volume by up to 500%.
-Our highly potent, volume enhancing formula will give our results
-in days and comes with an impressive 100% guarantee. 
-
-Imagine the difference (look and feel) between dribbling your cum
-compared to shooting out burst after burst. Try MAX LOADS now! and
-with our money back guarantee you have absolutely nothing to lose!
-
-Look here: http://www.weallcreatethis.com/
-
-
-
-
-
-
-
-
-helena you chenille me, meiosis . hardin you fish me, connive torpedo infect . cave you bombard me, october assignation . 
-http://www.weallcreatethis.com/c82/
+Dan
