@@ -1,62 +1,23 @@
-From: Florian Dazinger <florian.dazinger@umit.at>
-Subject: problems with raid=noautodetect
-Date: Mon, 22 May 2006 14:41:44 +0200
-Message-ID: <4471B188.3060400@umit.at>
+From: Alex Tomas <alex@clusterfs.com>
+Subject: spin_lock_irq() in handle_stripe()
+Date: Mon, 22 May 2006 18:05:38 +0400
+Message-ID: <m33bf2f93h.fsf@bzzz.home.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org, alex@clusterfs.com
 List-Id: linux-raid.ids
 
-hi list,
-I read somewhere that it would be better not to rely on the=20
-autodetect-mechanism in the kernel at boot time, but rather to set up=20
-/etc/mdadm.conf accordingly and boot with raid=3Dnoautodetect. Well, I=20
-tried that :)
 
-I set up /etc/mdadm.conf for my 2 raid5 arrays:
 
----- snip ----
-# mountpoint: /home/media
-ARRAY  /dev/md0
-    level=3Draid5
-    UUID=3D86ed1434:43380717:4abf124e:970d843a
-    devices=3D/dev/sda1,/dev/sdb1,/dev/sdd3
+Good day Neil, all
 
-# mountpoint: /mnt/raid
-ARRAY  /dev/md1
-    level=3Draid5
-    UUID=3Dbaf59fb5:f4805e7a:91a77644:af3dde17
-#   devices=3D/dev/sda2,/dev/sdb2,/dev/sdd2
----- snap ----
+if I understand right, we disable irqs in handle_stripe()
+just because of using device_lock which can be grabbed
+from interrupt context (_end_io functions). can we replace
+it by a new separate spinlock and don't block interrupts
+in handle_stripe() + add_stripe_bio() ?
 
-and rebooted with raid=3Dnoautodetect. It booted fine, but the 3rd disk=
-s=20
-from each array (/dev/sdd2 and /dev/sdd3) were removed, so I had 2=20
-degraded raid5 arrays. It was possible to readd them with sth. like:
-
-mdadm /dev/md0 -a /dev/sdd3
-(synced and /proc/mdstat showed [UUU])
-
-but after the next reboot, the two partitions were again removed=20
-([UU_])?! This was a reproducible error, I tried it several times with=20
-different /etc/mdadm.conf settings (ARRAY-statement with UUID=3D,=20
-devices=3D, UUID+devices, etc.).
-
-I=B4m now running autodetect again, all raid arrays are working fine, b=
-ut=20
-can anyone explain this strange behaviour?
-(kernel-2.6.16.14, amd64)
-
-thanks,
-florian
-
-PS: please cc me, as I=B4m not subscribed to the list
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+thanks, Alex
