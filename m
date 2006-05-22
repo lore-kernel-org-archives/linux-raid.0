@@ -1,23 +1,30 @@
-From: Alex Tomas <alex@clusterfs.com>
-Subject: spin_lock_irq() in handle_stripe()
-Date: Mon, 22 May 2006 18:05:38 +0400
-Message-ID: <m33bf2f93h.fsf@bzzz.home.net>
+From: Dexter Filmore <Dexter.Filmore@gmx.de>
+Subject: 4 disks in raid 5: 33MB/s read performance?
+Date: Mon, 22 May 2006 17:46:38 +0200
+Message-ID: <200605221746.38122.Dexter.Filmore@gmx.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org, alex@clusterfs.com
+To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+I just dd'ed a 700MB iso to /dev/null, dd returned 33MB/s.
+Isn't that a little slow?
+System is a sil3114 4 port sata 1 controller with 4 samsung spinpoint 250GB, 
+8MB cache in raid 5 on a Athlon XP 2000+/512MB.
 
 
-Good day Neil, all
+-- 
+-----BEGIN GEEK CODE BLOCK-----
+Version: 3.12
+GCS d--(+)@ s-:+ a- C+++(++++) UL+>++++ P+>++ L+++>++++ E-- W++ N o? K-
+w--(---) !O M+ V- PS++(+) PE(-) Y++ PGP t++(---)@ 5 X+(++) R+(++) tv--(+)@ 
+b++(+++) DI+++ D G++ e* h>++ r%>* y?
+------END GEEK CODE BLOCK------
 
-if I understand right, we disable irqs in handle_stripe()
-just because of using device_lock which can be grabbed
-from interrupt context (_end_io functions). can we replace
-it by a new separate spinlock and don't block interrupts
-in handle_stripe() + add_stripe_bio() ?
-
-thanks, Alex
+http://www.stop1984.com
+http://www.againsttcpa.com
