@@ -1,29 +1,53 @@
-From: Ste <ste@phx6a.ath.cx>
-Subject: Re: mdadm: bitmap size
-Date: Tue, 23 May 2006 12:13:40 +0200
-Message-ID: <4472E054.5050007@phx6a.ath.cx>
-References: <446D0119.1010508@phx6a.ath.cx>	<17517.2191.803890.424144@cse.unsw.edu.au>	<91ebddcf0605211608i1145d957g65b18b3caa68cfc@mail.gmail.com> <17520.63317.693491.212555@cse.unsw.edu.au>
+From: Dexter Filmore <Dexter.Filmore@gmx.de>
+Subject: Re: raid5 resize in 2.6.17 - how will it be different from raidreconf?
+Date: Mon, 22 May 2006 13:17:36 +0200
+Message-ID: <200605221317.37083.Dexter.Filmore@gmx.de>
+References: <200605220034.49858.Dexter.Filmore@gmx.de> <17520.61194.529436.322401@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17520.63317.693491.212555@cse.unsw.edu.au>
+In-Reply-To: <17520.61194.529436.322401@cse.unsw.edu.au>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil Brown wrote:
-> (Please don't reply off-list.  If the conversation starts on the list,
-> please leave it there unless there is a VERY GOOD reason).
->   
-Sorry this wasn't my intent.
-> raidhotadd doesn't know anything about bitmaps.
-> If you use 'mdadm /dev/mda --add /dev/nda' you should find that it
-> works better.
+> > Will it be less risky to grow an array that way?
 >
-> I recommend getting rid of setfaulty / raidhotadd /raidhotremove etc
-> and just using mdadm.
->   
-Okay, thankyou. :-)
+> It should be.  In particular it will survive an unexpected reboot (as
+> long as you don't lose and drives at the same time) which I don't
+> think raidreconf would.
+> Testing results so far are quite positive.
 
-Stefano.
+Write cache comes to mind - did you test power fail scenarios?
+
+> > (And while talking of that: can I add for example two disks and grow
+> > *and* migrate to raid6 in one sweep or will I have to go raid6 and then
+> > add more disks?)
+>
+> Adding two disks would be the preferred way to do it.
+> Add only one disk and going to raid6 is problematic because the
+> reshape process will be over-writing live data the whole time, making
+> crash protection quite expensive.
+> By contrast, when you are expanding the size of the array, after the
+> first few stripes you are writing to an area of the drives where there
+> is no live data.
+
+Let me see if I got this right: if I add *two* disks and go from raid 5 to 6 
+with raidreconf, no live data needs to be overwritten and in case something 
+fails I will still be able to assemble the "old" array..?
+
+
+-- 
+-----BEGIN GEEK CODE BLOCK-----
+Version: 3.12
+GCS d--(+)@ s-:+ a- C+++(++++) UL+>++++ P+>++ L+++>++++ E-- W++ N o? K-
+w--(---) !O M+ V- PS++(+) PE(-) Y++ PGP t++(---)@ 5 X+(++) R+(++) tv--(+)@ 
+b++(+++) DI+++ D G++ e* h>++ r%>* y?
+------END GEEK CODE BLOCK------
+
+http://www.stop1984.com
+http://www.againsttcpa.com
