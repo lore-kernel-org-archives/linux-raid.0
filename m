@@ -1,43 +1,61 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: Does software RAID take advantage of SMP, or 64 bit CPU(s)?
-Date: Tue, 23 May 2006 16:26:40 +1000
-Message-ID: <17522.43808.68998.902497@cse.unsw.edu.au>
-References: <4472A9FF.9060501@comcast.net>
+From: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
+Subject: improving raid 5 performance
+Date: Tue, 23 May 2006 11:53:30 +0300
+Message-ID: <5d96567b0605230153w2c2b0015y3bdd54cc9ae37899@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Adam Talbot on Monday May 22
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Adam Talbot <talbotx@comcast.net>
-Cc: linux-raid@vger.kernel.org
+To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+Cc: Neil Brown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-On Monday May 22, talbotx@comcast.net wrote:
-> A few simple questions about the 2.6.16+ kernel and software RAID.
-> Does software RAID in the 2.6.16 kernel take advantage of SMP?
+Neil hello.
 
-Not exactly.  RAID5/6 tends to use just one cpu for parity
-calculations, but that frees up other cpus for doing other important
-work.
+1.
+i have applied the common path according to
+http://www.spinics.net/lists/raid/msg11838.html as much as i can.
 
-> Does software RAID take advantage of 64-bit CPU(s)?
+it looks ok in terms of throughput.
+before i continue to a non common path ( step 3 ) i do not understand
+raid0_mergeable_bvec entirely.
 
-No more or less that other code in the kernel.  Sometimes using a 64-bit
-CPU is a cost because more data is shuffled around...
+as i understand the code checks alignment . i made a version for this
+purpose which looks like that:
 
-Was there some particular sort of 'advantage' that you were thinking
-of?
+static int raid5_mergeable_bvec(request_queue_t *q, struct bio *bio,
+struct bio_vec *biovec)
+{
+	mddev_t *mddev = q->queuedata;
+	sector_t sector=bio->bi_sector+get_start_sect(bio->bi_bdev);
+	int max;
+	unsigned int chunk_sectors = mddev->chunk_size >> 9;
+	unsigned int bio_sectors = bio->bi_size >> 9;
 
-NeilBrown
+	max=(chunk_sectors-((sector&(chunk_sectors-1))+bio_sectors))<<9;
+	if (max < 0){
+		printk("handle_aligned_read not aligned %d %d %d
+%lld\n",max,chunk_sectors,bio_sectors,sector);
+		return -1; // Is bigger than one chunk size
+	}
+
+//	printk("handle_aligned_read aligned %d %d %d
+%lld\n",max,chunk_sectors,bio_sectors,sector);
+	return max;
+}
+
+Questions:
+   1.1 why did you drop the max=0 case ?
+   1.2  what these lines mean ? do i need it ?
+       if (max <= biovec->bv_len && bio_sectors == 0)
+                 return biovec->bv_len;
+         else
+                return max;
+         }
 
 
-> If there are any good web sites that cover this information, a link
-> would be GREAT!
-> 
-> -Adam Talbot
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+thank you
+
+Raz
