@@ -1,89 +1,73 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: improving raid 5 performance
-Date: Tue, 23 May 2006 20:40:37 +1000
-Message-ID: <17522.59045.371311.439259@cse.unsw.edu.au>
-References: <5d96567b0605230153w2c2b0015y3bdd54cc9ae37899@mail.gmail.com>
+From: Adam Talbot <talbotx@comcast.net>
+Subject: Re: Does software RAID take advantage of SMP, or 64 bit CPU(s)?
+Date: Tue, 23 May 2006 07:44:59 -0700
+Message-ID: <44731FEB.6020602@comcast.net>
+References: <4472A9FF.9060501@comcast.net> <17522.43808.68998.902497@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Raz Ben-Jehuda(caro) on Tuesday May 23
+In-Reply-To: <17522.43808.68998.902497@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
-Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday May 23, raziebe@gmail.com wrote:
-> Neil hello.
-> 
-> 1.
-> i have applied the common path according to
-> http://www.spinics.net/lists/raid/msg11838.html as much as i can.
+-Neil
+I was not looking for any direct advantage.  It is more a money VS
+performance thing.  I have a old dual proc Opteron motherboard.  I am
+going with 64-bit, but it is much cheaper if I just go buy a nice single
+proc board instead of buying two Opterons for my dual proc board.  If I
+could get a 1.5~2X performance improvement with SMP I would pay the
+extra money.  If there is no major performance difference, I will take
+the cheap road.
 
-Great.  I look forward to seeing the results.
+Thank you for the good input.
+-Adam
 
-> 
-> it looks ok in terms of throughput.
-> before i continue to a non common path ( step 3 ) i do not understand
-> raid0_mergeable_bvec entirely.
+P.S.  Here is my current plan.
+RAID 6, 6X 400GB SATA 2.0 HDD's, Athlon FX 53, 1GB DDR 400, Nvidia based
+motherboard, Gb Ethernet.  Storing 15,000+ MP3's, 500+ movies.
 
-Not too surprising - it is rather subtle unfortunately.
+Neil Brown wrote:
+> On Monday May 22, talbotx@comcast.net wrote:
+>   
+>> A few simple questions about the 2.6.16+ kernel and software RAID.
+>> Does software RAID in the 2.6.16 kernel take advantage of SMP?
+>>     
+>
+> Not exactly.  RAID5/6 tends to use just one cpu for parity
+> calculations, but that frees up other cpus for doing other important
+> work.
+>
+>   
+>> Does software RAID take advantage of 64-bit CPU(s)?
+>>     
+>
+> No more or less that other code in the kernel.  Sometimes using a 64-bit
+> CPU is a cost because more data is shuffled around...
+>
+> Was there some particular sort of 'advantage' that you were thinking
+> of?
+>
+> NeilBrown
+>
+>
+>   
+>> If there are any good web sites that cover this information, a link
+>> would be GREAT!
+>>
+>> -Adam Talbot
+>>
+>> -
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>     
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>   
 
-> 
-> as i understand the code checks alignment . i made a version for this
-> purpose which looks like that:
-
-Yes, it checks alignment with the chunks and devices.
-However we always have to allow one page to be added to a bio, so
-sometimes we have to accept a bio that crosses a chunk/device boundary.
-
-The main (possibly only) user is in __bio_add_page in fs/bio.c
-so we basically code the merge_bvec_fn to meet the needs of that code.
-
-> 
-> static int raid5_mergeable_bvec(request_queue_t *q, struct bio *bio,
-> struct bio_vec *biovec)
-> {
-> 	mddev_t *mddev = q->queuedata;
-> 	sector_t sector=bio->bi_sector+get_start_sect(bio->bi_bdev);
-> 	int max;
-> 	unsigned int chunk_sectors = mddev->chunk_size >> 9;
-> 	unsigned int bio_sectors = bio->bi_size >> 9;
-> 
-> 	max=(chunk_sectors-((sector&(chunk_sectors-1))+bio_sectors))<<9;
-> 	if (max < 0){
-> 		printk("handle_aligned_read not aligned %d %d %d
-> %lld\n",max,chunk_sectors,bio_sectors,sector);
-> 		return -1; // Is bigger than one chunk size
-> 	}
-> 
-> //	printk("handle_aligned_read aligned %d %d %d
-> %lld\n",max,chunk_sectors,bio_sectors,sector);
-> 	return max;
-> }
-
-you cannot return a negative number, because the result is
-compared with an 'unsigned int', and the comparison will be unsigned. 
-So "return -1" is a problem.  I think you need to make this code 
-look a lot more like raid0_mergeable_bvec.
-
-
-> 
-> Questions:
->    1.1 why did you drop the max=0 case ?
-
-I'm not sure what you mean by 'drop'.
-If bio->bi_size == 0, then we are not allowed to return a number
-smaller than biovec->bv_len, otherwise bio_add_page wont be able
-to put any pages on the bio, and so wont be able to start any IO.
-
->    1.2  what these lines mean ? do i need it ?
->        if (max <= biovec->bv_len && bio_sectors == 0)
->                  return biovec->bv_len;
->          else
->                 return max;
->          }
-
-Yes, you need this.  It basically implements the above restriction.
-
-NeilBrown
