@@ -1,45 +1,29 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [PATCH 002 of 2] md: Make sure bi_max_vecs is set properly in bio_split
-Date: Mon, 22 May 2006 09:02:50 +0200
-Message-ID: <20060522070249.GC4216@suse.de>
-References: <20060522161259.2792.patches@notabene> <1060522061855.2861@suse.de>
+From: Ste <ste@phx6a.ath.cx>
+Subject: Re: mdadm: bitmap size
+Date: Tue, 23 May 2006 12:13:40 +0200
+Message-ID: <4472E054.5050007@phx6a.ath.cx>
+References: <446D0119.1010508@phx6a.ath.cx>	<17517.2191.803890.424144@cse.unsw.edu.au>	<91ebddcf0605211608i1145d957g65b18b3caa68cfc@mail.gmail.com> <17520.63317.693491.212555@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1060522061855.2861@suse.de>
+In-Reply-To: <17520.63317.693491.212555@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Andrew Morton <akpm@osdl.org>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Don Dupuis <dondster@gmail.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, May 22 2006, NeilBrown wrote:
-> 
-> Else a subsequence bio_clone might make a mess.
-> 
-> Signed-off-by: Neil Brown <neilb@suse.de>
-> Cc: "Don Dupuis" <dondster@gmail.com>
-> Cc: Jens Axboe <axboe@suse.de>
-> ### Diffstat output
->  ./fs/bio.c |    3 +++
->  1 file changed, 3 insertions(+)
-> 
-> diff ./fs/bio.c~current~ ./fs/bio.c
-> --- ./fs/bio.c~current~	2006-05-22 16:12:46.000000000 +1000
-> +++ ./fs/bio.c	2006-05-22 16:12:16.000000000 +1000
-> @@ -1103,6 +1103,9 @@ struct bio_pair *bio_split(struct bio *b
->  	bp->bio1.bi_io_vec = &bp->bv1;
->  	bp->bio2.bi_io_vec = &bp->bv2;
->  
-> +	bp->bio1.bi_max_vecs = 1;
-> +	bp->bio2.bi_max_vecs = 1;
-> +
->  	bp->bio1.bi_end_io = bio_pair_end_1;
->  	bp->bio2.bi_end_io = bio_pair_end_2;
->  
+Neil Brown wrote:
+> (Please don't reply off-list.  If the conversation starts on the list,
+> please leave it there unless there is a VERY GOOD reason).
+>   
+Sorry this wasn't my intent.
+> raidhotadd doesn't know anything about bitmaps.
+> If you use 'mdadm /dev/mda --add /dev/nda' you should find that it
+> works better.
+>
+> I recommend getting rid of setfaulty / raidhotadd /raidhotremove etc
+> and just using mdadm.
+>   
+Okay, thankyou. :-)
 
-Obviously correct, thanks Neil.
-
--- 
-Jens Axboe
-
+Stefano.
