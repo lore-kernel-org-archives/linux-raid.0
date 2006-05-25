@@ -1,45 +1,43 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: 4 disks in raid 5: 33MB/s read performance?
-Date: Thu, 25 May 2006 14:56:38 +1000
-Message-ID: <17525.14598.970592.611106@cse.unsw.edu.au>
-References: <Pine.LNX.4.44.0605221231560.20391-100000@coffee.psychology.mcmaster.ca>
-	<4474BDE3.7030905@tmr.com>
+Subject: Re: iostat messed up with md on 2.6.16.x
+Date: Thu, 25 May 2006 15:40:39 +1000
+Message-ID: <17525.17239.964716.567877@cse.unsw.edu.au>
+References: <1148431824.2377.11.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Bill Davidsen on Wednesday May 24
+In-Reply-To: message from Pallai Roland on Wednesday May 24
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: Mark Hahn <hahn@physics.mcmaster.ca>, Dexter Filmore <Dexter.Filmore@gmx.de>, Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: Pallai Roland <dap@mail.index.hu>
+Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wednesday May 24, davidsen@tmr.com wrote:
-> Mark Hahn wrote:
+On Wednesday May 24, dap@mail.index.hu wrote:
 > 
-> >>I just dd'ed a 700MB iso to /dev/null, dd returned 33MB/s.
-> >>Isn't that a little slow?
-> >>    
-> >>
-> >
-> >what bs parameter did you give to dd?  it should be at least 3*chunk
-> >(probably 3*64k if you used defaults.)
-> >
+> Hi,
 > 
-> I would expect readahead to make this unproductive. Mind you, I didn't 
-> say it is, but I can't see why not. There was a problem with data going 
-> through stripe cache when it didn't need to, but I thought that was fixed.
+>  I upgraded my kernel from 2.6.15.6 to 2.6.16.16 and now the 'iostat -x
+> 1' permanently shows 100% utilisation on each disk that member of an md
+> array. I asked my friend who using 3 boxes with 2.6.16.2 2.6.16.9
+> 2.6.16.11 and raid1, he's reported the same too. it works for anyone?
+> I don't think that it's exactly a md problem, but only appears with the
+> md, so I wrote here
 > 
-> Neil? Am I an optimist?
+>  I did a basic debugging on evening and I think the problem is the
+> double calling of disk->in_flight-- in block/ll_rw_blk.c  -  I dont know
+> why, but here's a sample line from /proc/diskstats after a raid array
+> assembled:
+> 
+>     8    0 sda 52 1134 8256 568 3 7 24 16 4294967295 433820 4294534144
+>                                           ^^^^^^^^^^ in_flight = -1
+> 
+>  I wrote an ugly workaround and now the iostat working well [see
+> attach#1], but if it's a real bug, someone should find the root cause of
+> it, please
 
-Probably....
+http://lkml.org/lkml/2006/5/23/42
 
-You are write about readahead - it should make the difference in block
-size irrelevant.
-
-You are wrong about the problem of reading through the cache being
-fixed.  It hasn't yet.  We still read through the cache.
-However that shouldn't cause more than a 10% speed reduction, and
-33MB/s sounds like more than 10% down.
+might help...
 
 NeilBrown
