@@ -1,27 +1,40 @@
-From: Ste <ste@phx6a.ath.cx>
-Subject: Re: mdadm: bitmap size
-Date: Thu, 25 May 2006 20:49:01 +0200
-Message-ID: <4475FC1D.6000000@phx6a.ath.cx>
-References: <446D0119.1010508@phx6a.ath.cx>	<17517.2191.803890.424144@cse.unsw.edu.au>	<91ebddcf0605211608i1145d957g65b18b3caa68cfc@mail.gmail.com> <17520.63317.693491.212555@cse.unsw.edu.au> <4472E054.5050007@phx6a.ath.cx>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: RAID5 kicks non-fresh drives
+Date: Fri, 26 May 2006 07:18:03 +1000
+Message-ID: <17526.7947.129968.287311@cse.unsw.edu.au>
+References: <1148571503.2772.35.camel@hendrix.hollabaugh.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4472E054.5050007@phx6a.ath.cx>
+In-Reply-To: message from Craig Hollabaugh on Thursday May 25
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Craig Hollabaugh <craig@hollabaugh.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Ste wrote:
->> raidhotadd doesn't know anything about bitmaps.
->> If you use 'mdadm /dev/mda --add /dev/nda' you should find that it
->> works better.
->>
->> I recommend getting rid of setfaulty / raidhotadd /raidhotremove etc
->> and just using mdadm.
->>
-Okay now it works really fine. You could write somewere to not mix mdadm 
-and standard raidtools.
+On Thursday May 25, craig@hollabaugh.com wrote:
+> 
+> >From dmesg
+> md: Autodetecting RAID arrays.
+> md: autorun ...
+> md: considering sdl1 ...
+> md:  adding sdl1 ...
+> md:  adding sdi1 ...
+> md:  adding sdh1 ...
+> md:  adding sdg1 ...
+> md:  adding sdf1 ...
+> md:  adding sde1 ...
+> md:  adding sdd1 ...
+> md:  adding sdc1 ...
+> md:  adding sdb1 ...
+> md:  adding sda1 ...
+> md:  adding hdc1 ...
+> md: created md0
+> 
+> The kernel didn't add sdj or sdk.
+> 
 
-Thanks a lot!
-Bye! :-)
+And the partition types of sdj1 and sdk1 are ???
+
+NeilBrown
