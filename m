@@ -1,37 +1,41 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: 4 disks in raid 5: 33MB/s read performance?
-Date: Wed, 24 May 2006 16:11:15 -0400
-Message-ID: <4474BDE3.7030905@tmr.com>
-References: <Pine.LNX.4.44.0605221231560.20391-100000@coffee.psychology.mcmaster.ca>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: Max. md array size under 32-bit i368 ...
+Date: Thu, 25 May 2006 14:54:15 +1000
+Message-ID: <17525.14455.604933.928728@cse.unsw.edu.au>
+References: <200605221746.38122.Dexter.Filmore@gmx.de>
+	<17522.17186.715844.748238@cse.unsw.edu.au>
+	<Pine.LNX.4.56.0605240913410.16780@lion.drogon.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44.0605221231560.20391-100000@coffee.psychology.mcmaster.ca>
+In-Reply-To: message from Gordon Henderson on Wednesday May 24
 Sender: linux-raid-owner@vger.kernel.org
-To: Mark Hahn <hahn@physics.mcmaster.ca>
-Cc: Dexter Filmore <Dexter.Filmore@gmx.de>, Linux RAID Mailing List <linux-raid@vger.kernel.org>, Neil Brown <neilb@suse.de>
+To: Gordon Henderson <gordon@drogon.net>
+Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Mark Hahn wrote:
+On Wednesday May 24, gordon@drogon.net wrote:
+> 
+> I know this has come up before, but a few quick googles hasn't answered my
+> questions - I'm after the max. array size that can be created under
+> bog-standard 32-bit intel Linux, and any issues re. partitioning.
+> 
+> I'm aiming to create a raid-6 over 12 x 500GB drives - am I going to
+> have any problems?
 
->>I just dd'ed a 700MB iso to /dev/null, dd returned 33MB/s.
->>Isn't that a little slow?
->>    
->>
->
->what bs parameter did you give to dd?  it should be at least 3*chunk
->(probably 3*64k if you used defaults.)
->
+No, this should work providing your kernel is compiled with CONFIG_LBD.
 
-I would expect readahead to make this unproductive. Mind you, I didn't 
-say it is, but I can't see why not. There was a problem with data going 
-through stripe cache when it didn't need to, but I thought that was fixed.
+NeilBrown
 
-Neil? Am I an optimist?
-
--- 
-bill davidsen <davidsen@tmr.com>
-  CTO TMR Associates, Inc
-  Doing interesting things with small computers since 1979
-
+> 
+> (I'm not parittioning the resulting md device, just the underlying sd
+> devices and building a single md out of  sd[a-l]4 ...)
+> 
+> Cheers,
+> 
+> Gordon
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
