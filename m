@@ -1,107 +1,274 @@
-From: Dexter Filmore <Dexter.Filmore@gmx.de>
-Subject: Re: 4 disks in raid 5: 33MB/s read performance?
-Date: Thu, 25 May 2006 15:58:48 +0200
-Message-ID: <200605251558.48397.Dexter.Filmore@gmx.de>
-References: <200605221746.38122.Dexter.Filmore@gmx.de> <17522.17186.715844.748238@cse.unsw.edu.au>
+From: Craig Hollabaugh <craig@hollabaugh.com>
+Subject: RAID5 kicks non-fresh drives
+Date: Thu, 25 May 2006 09:38:23 -0600
+Message-ID: <1148571503.2772.35.camel@hendrix.hollabaugh.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17522.17186.715844.748238@cse.unsw.edu.au>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> On Monday May 22, Dexter.Filmore@gmx.de wrote:
-> > I just dd'ed a 700MB iso to /dev/null, dd returned 33MB/s.
-> > Isn't that a little slow?
-> > System is a sil3114 4 port sata 1 controller with 4 samsung spinpoi=
-nt
-> > 250GB, 8MB cache in raid 5 on a Athlon XP 2000+/512MB.
->
-> Yes, read on raid5 isn't as fast as we might like at the moment.
->
-> It looks like you are getting about 11MB/s of each disk which is
-> probably quite a bit slower than they can manage (what is the
-> single-drive read speed you get dding from /dev/sda or whatever).
->
-> You could try playing with the readahead number (blockdev --setra/--g=
-etra).
-> I'm beginning to think that the default setting is a little low.
+Folks,
 
-Changed from 384 to 1024, no improvement.
+I had two drives fails on a 13 drive RAID5 array with bad-blocks
+(confirmed this with external disk scan). I replaced and hot-added new
+drives back into array. Resync completed without incident. I moved the
+machine back into production and after reboot, the two new drives get
+kicked out of array for being non-fresh. Everything I try results in
+these two drives always getting kicked out.
 
->
-> You could also try increasing the stripe-cache size by writing number=
-s
-> to
->    /sys/block/mdX/md/stripe_cache_size
+Here's what I tried.
+	searched and read for at least 10 hours for info on kicking
+"non-fresh" 
+	hot-adding then rebooting 5 times with same result
+		using kernel 2.4.30, 2.6.11.8 and 2.6.16.8. 
+		(resync takes 4 hours to complete, so iterations take a while)
+	mdadm version is v1.12 
+	after the resync before the reboot, manual stopping and starting the
+array 
+		always in correct operation (no kicking of drives)
 
-Actually, there's no directory /sys/block/md0/md/ here. Can I find that=
- in=20
-proc somewhere? And what are sane numbers for this setting?
+My questions are
+	1. How does a drive become non-fresh? 
+	2. Is the non-fresh status related to 'events'?
+	3. How can I determine that all the drives are fresh before a reboot?
+	4. 2.4.30 and 2.6.11.8 dmesg output mentions kicking non-fresh drives.
+		2.6.16.8 doesn't even consider my new drives, see "after reboot" below
+	    After a resync, how can I determine that all my drives are actually
+part of the array?
+            mdadm -E /dev/sdX1  for each drive shows the same info. 
+	5. From everything I've tried, the array looks fine before the reboot.
+But no matter
+		what I've tried, the drives are kicked upon reboot.   
+	6. /proc/mdstat reports "Personalities : [raid5] [raid4]", the array is
+raid5, 
+		where raid4 come from?
 
-> I wonder if your SATA  controller is causing you grief.
-> Could you try
->    dd if=3D/dev/SOMEDISK of=3D/dev/null bs=3D1024k count=3D1024
-> and then do the same again on all devices in parallel
-> e.g.
->    dd if=3D/dev/SOMEDISK of=3D/dev/null bs=3D1024k count=3D1024 &
->    dd if=3D/dev/SOMEOTHERDISK of=3D/dev/null bs=3D1024k count=3D1024 =
-&
->    ...
+Thanks for reading this and any suggestions you can offer.
+Craig
 
- 4112 pts/0    R      0:00 dd if /dev/sda of /dev/null bs 1024k count 1=
-024
- 4113 pts/0    R      0:00 dd if /dev/sdb of /dev/null bs 1024k count 1=
-024
- 4114 pts/0    R      0:00 dd if /dev/sdc of /dev/null bs 1024k count 1=
-024
- 4115 pts/0    R      0:00 dd if /dev/sdd of /dev/null bs 1024k count 1=
-024
- 4116 pts/0    R+     0:00 ps ax
-
-1024+0 Datens=E4tze ein
-1024+0 Datens=E4tze aus
-1073741824 Bytes (1,1 GB) kopiert, 34,5576 Sekunden, 31,1 MB/s
-1024+0 Datens=E4tze ein
-1024+0 Datens=E4tze aus
-1073741824 Bytes (1,1 GB) kopiert, 36,073 Sekunden, 29,8 MB/s
-1024+0 Datens=E4tze ein
-1024+0 Datens=E4tze aus
-1073741824 Bytes (1,1 GB) kopiert, 40,5109 Sekunden, 26,5 MB/s
-1024+0 Datens=E4tze ein
-1024+0 Datens=E4tze aus
-1073741824 Bytes (1,1 GB) kopiert, 40,5054 Sekunden, 26,5 MB/s
-
-(Partly german, but I think you get it)
-
-A single disks pumps out 65-70MB/s. Since they are on a PCI 32bit contr=
-oller=20
-the combined speeds when reading from all four disks at once pretty muc=
-h max=20
-the 133MB/s PCI limit. (I' surprised it comes so close. That controller=
- works=20
-pretty well for 18 bucks.)
-
-Dex
+-- 
+------------------------------------------------------------
+Dr. Craig Hollabaugh, craig@hollabaugh.com, 970 240 0509
+Author of Embedded Linux: Hardware, Software and Interfacing
+www.embeddedlinuxinterfacing.com
 
 
---=20
------BEGIN GEEK CODE BLOCK-----
-Version: 3.12
-GCS d--(+)@ s-:+ a- C+++(++++) UL+>++++ P+>++ L+++>++++ E-- W++ N o? K-
-w--(---) !O M+ V- PS++(+) PE(-) Y++ PGP t++(---)@ 5 X+(++) R+(++) tv--(=
-+)@=20
-b++(+++) DI+++ D G++ e* h>++ r%>* y?
-------END GEEK CODE BLOCK------
 
-http://www.stop1984.com
-http://www.againsttcpa.com
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+The two drives in question are sdj1 and sdk1.
+
+Here's output after the resync before the reboot
+
+root@vaughan[502]: cat /proc/mdstat
+Personalities : [raid5] [raid4]
+md0 : active raid5 sdj1[12](S) sdk1[9] sda1[0] sdl1[11] hdc1[10] sdd1[8]
+sdh1[7] sdg1[6] sdf1[5] sde1[4] sdi1[3] sdc1[2] sdb1[1]
+      1289056384 blocks level 5, 128k chunk, algorithm 2 [12/12]
+[UUUUUUUUUUUU]
+
+unused devices: <none>
+
+root@vaughan[501]: mdadm -D /dev/md0
+/dev/md0:
+        Version : 00.90.03
+  Creation Time : Thu Jan 16 09:10:52 2003
+     Raid Level : raid5
+     Array Size : 1289056384 (1229.34 GiB 1319.99 GB)
+    Device Size : 117186944 (111.76 GiB 120.00 GB)
+   Raid Devices : 12
+  Total Devices : 13
+Preferred Minor : 0
+    Persistence : Superblock is persistent
+
+    Update Time : Thu May 25 05:36:58 2006
+          State : clean
+ Active Devices : 12
+Working Devices : 13
+ Failed Devices : 0
+  Spare Devices : 1
+
+         Layout : left-symmetric
+     Chunk Size : 128K
+
+           UUID : 4d862825:91140f1a:eb97e7f2:9bfa2403
+         Events : 0.2681049
+
+    Number   Major   Minor   RaidDevice State
+       0       8        1        0      active sync   /dev/sda1
+       1       8       17        1      active sync   /dev/sdb1
+       2       8       33        2      active sync   /dev/sdc1
+       3       8      129        3      active sync   /dev/sdi1
+       4       8       65        4      active sync   /dev/sde1
+       5       8       81        5      active sync   /dev/sdf1
+       6       8       97        6      active sync   /dev/sdg1
+       7       8      113        7      active sync   /dev/sdh1
+       8       8       49        8      active sync   /dev/sdd1
+       9       8      161        9      active sync   /dev/sdk1
+      10      22        1       10      active sync   /dev/hdc1
+      11       8      177       11      active sync   /dev/sdl1
+
+      12       8      145        -      spare   /dev/sdj1
+
+root@vaughan[512]: mdadm -E /dev/sdj1
+/dev/sdj1:
+          Magic : a92b4efc
+        Version : 00.90.00
+           UUID : 4d862825:91140f1a:eb97e7f2:9bfa2403
+  Creation Time : Thu Jan 16 09:10:52 2003
+     Raid Level : raid5
+   Raid Devices : 12
+  Total Devices : 13
+Preferred Minor : 0
+
+    Update Time : Thu May 25 05:36:58 2006
+          State : clean
+ Active Devices : 12
+Working Devices : 13
+ Failed Devices : 0
+  Spare Devices : 1
+       Checksum : 9943fc98 - correct
+         Events : 0.2681049
+
+         Layout : left-symmetric
+     Chunk Size : 128K
+
+      Number   Major   Minor   RaidDevice State
+this    12       8      145       12      spare   /dev/sdj1
+
+   0     0       8        1        0      active sync   /dev/sda1
+   1     1       8       17        1      active sync   /dev/sdb1
+   2     2       8       33        2      active sync   /dev/sdc1
+   3     3       8      129        3      active sync   /dev/sdi1
+   4     4       8       65        4      active sync   /dev/sde1
+   5     5       8       81        5      active sync   /dev/sdf1
+   6     6       8       97        6      active sync   /dev/sdg1
+   7     7       8      113        7      active sync   /dev/sdh1
+   8     8       8       49        8      active sync   /dev/sdd1
+   9     9       8      161        9      active sync   /dev/sdk1
+  10    10      22        1       10      active sync   /dev/hdc1
+  11    11       8      177       11      active sync   /dev/sdl1
+  12    12       8      145       12      spare   /dev/sdj1
+
+
+------------------------------------------------------------------------------------------------
+Now after reboot
+
+root@vaughan[542]: uname -a
+Linux vaughan 2.6.16.8 #1 Wed May 24 15:00:27 MDT 2006 i686 GNU/Linux
+
+From dmesg
+md: Autodetecting RAID arrays.
+md: autorun ...
+md: considering sdl1 ...
+md:  adding sdl1 ...
+md:  adding sdi1 ...
+md:  adding sdh1 ...
+md:  adding sdg1 ...
+md:  adding sdf1 ...
+md:  adding sde1 ...
+md:  adding sdd1 ...
+md:  adding sdc1 ...
+md:  adding sdb1 ...
+md:  adding sda1 ...
+md:  adding hdc1 ...
+md: created md0
+
+The kernel didn't add sdj or sdk.
+
+
+root@vaughan[501]: cat /proc/mdstat
+Personalities : [raid5] [raid4]
+md0 : active raid5 sdl1[11] sdi1[3] sdh1[7] sdg1[6] sdf1[5] sde1[4]
+sdd1[8] sdc1[2] sdb1[1] sda1[0] hdc1[10]
+      1289056384 blocks level 5, 128k chunk, algorithm 2 [12/11]
+[UUUUUUUUU_UU]
+
+unused devices: <none>
+
+root@vaughan[502]: mdadm -D /dev/md0
+/dev/md0:
+        Version : 00.90.03
+  Creation Time : Thu Jan 16 09:10:52 2003
+     Raid Level : raid5
+     Array Size : 1289056384 (1229.34 GiB 1319.99 GB)
+    Device Size : 117186944 (111.76 GiB 120.00 GB)
+   Raid Devices : 12
+  Total Devices : 11
+Preferred Minor : 0
+    Persistence : Superblock is persistent
+
+    Update Time : Thu May 25 05:36:58 2006
+          State : clean, degraded
+ Active Devices : 11
+Working Devices : 11
+ Failed Devices : 0
+  Spare Devices : 0
+
+         Layout : left-symmetric
+     Chunk Size : 128K
+
+           UUID : 4d862825:91140f1a:eb97e7f2:9bfa2403
+         Events : 0.2681049
+
+    Number   Major   Minor   RaidDevice State
+       0       8        1        0      active sync   /dev/sda1
+       1       8       17        1      active sync   /dev/sdb1
+       2       8       33        2      active sync   /dev/sdc1
+       3       8      129        3      active sync   /dev/sdi1
+       4       8       65        4      active sync   /dev/sde1
+       5       8       81        5      active sync   /dev/sdf1
+       6       8       97        6      active sync   /dev/sdg1
+       7       8      113        7      active sync   /dev/sdh1
+       8       8       49        8      active sync   /dev/sdd1
+       9       0        0        -      removed
+      10      22        1       10      active sync   /dev/hdc1
+      11       8      177       11      active sync   /dev/sdl1
+
+
+ root@vaughan[512]: mdadm -E /dev/sdj1
+/dev/sdj1:
+          Magic : a92b4efc
+        Version : 00.90.00
+           UUID : 4d862825:91140f1a:eb97e7f2:9bfa2403
+  Creation Time : Thu Jan 16 09:10:52 2003
+     Raid Level : raid5
+   Raid Devices : 12
+  Total Devices : 13
+Preferred Minor : 0
+
+    Update Time : Thu May 25 05:36:58 2006
+          State : clean
+ Active Devices : 12
+Working Devices : 13
+ Failed Devices : 0
+  Spare Devices : 1
+       Checksum : 9943fc98 - correct
+         Events : 0.2681049
+
+         Layout : left-symmetric
+     Chunk Size : 128K
+
+      Number   Major   Minor   RaidDevice State
+this    12       8      145       12      spare   /dev/sdj1
+
+   0     0       8        1        0      active sync   /dev/sda1
+   1     1       8       17        1      active sync   /dev/sdb1
+   2     2       8       33        2      active sync   /dev/sdc1
+   3     3       8      129        3      active sync   /dev/sdi1
+   4     4       8       65        4      active sync   /dev/sde1
+   5     5       8       81        5      active sync   /dev/sdf1
+   6     6       8       97        6      active sync   /dev/sdg1
+   7     7       8      113        7      active sync   /dev/sdh1
+   8     8       8       49        8      active sync   /dev/sdd1
+   9     9       8      161        9      active sync   /dev/sdk1
+  10    10      22        1       10      active sync   /dev/hdc1
+  11    11       8      177       11      active sync   /dev/sdl1
+  12    12       8      145       12      spare   /dev/sdj1
+
+
+
+
+
