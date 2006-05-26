@@ -1,38 +1,79 @@
-From: Nix <nix@esperi.org.uk>
-Subject: Re: Does software RAID take advantage of SMP, or 64 bit CPU(s)?
-Date: Fri, 26 May 2006 01:14:50 +0100
-Message-ID: <874pzd1w1x.fsf@hades.wkstn.nix>
-References: <4472A9FF.9060501@comcast.net>
-	<17522.43808.68998.902497@cse.unsw.edu.au>
+From: Neil Brown <neilb@suse.de>
+Subject: ANNOUNCE: mdadm 2.5 - A tool for managing Soft RAID under Linux
+Date: Fri, 26 May 2006 16:33:08 +1000
+Message-ID: <17526.41252.855793.479011@cse.unsw.edu.au>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17522.43808.68998.902497@cse.unsw.edu.au> (Neil Brown's message of "23 May 2006 07:27:17 +0100")
 Sender: linux-raid-owner@vger.kernel.org
-To: Adam Talbot <talbotx@comcast.net>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 23 May 2006, Neil Brown noted:
-> On Monday May 22, talbotx@comcast.net wrote:
->> A few simple questions about the 2.6.16+ kernel and software RAID.
->> Does software RAID in the 2.6.16 kernel take advantage of SMP?
-> 
-> Not exactly.  RAID5/6 tends to use just one cpu for parity
-> calculations, but that frees up other cpus for doing other important
-> work.
 
-To expand on this, that depends on how many RAID arrays you've got,
-since there's one parity-computation daemon per array.
 
-If you have several arrays and are writing to them at the same time,
-or several arrays and some are degraded, then several md*_raid*
-daemons might be working at once.
+I am pleased to announce the availability of
+   mdadm version 2.5
 
-But that's not very likely, I'd guess. (I have multiple RAID-5 arrays,
-but that's only because I'm trying to get useful RAIDing on multiple
-disks of drastically different size.)
+It is available at the usual places:
+   http://www.cse.unsw.edu.au/~neilb/source/mdadm/
+and
+   http://www.{countrycode}.kernel.org/pub/linux/utils/raid/mdadm/
 
--- 
-`On a scale of 1-10, X's "brokenness rating" is 1.1, but that's only
- because bringing Windows into the picture rescaled "brokenness" by
- a factor of 10.' --- Peter da Silva
+mdadm is a tool for creating, managing and monitoring
+device arrays using the "md" driver in Linux, also
+known as Software RAID arrays.
+
+Release 2.5 adds a host of minor updates and one major update.
+
+The major update involves an "Auto Assemble" function which will,
+with certainly limits, scan all available devices for anything that
+looks like an md array, and will try to assemble it.
+This code should be treated with some caution as it is very new,
+and could be revised in future, though hopefully not very much.
+
+The main problem I have always had will auto-assembly is that it
+is too easy for it to assemble thing that you don't want assembled,
+e.g. if you have moved some devices from a different computer.
+To remove this problem, arrays can now be tagged for the computer
+that is their home (homehost) and only arrays with the correct
+homehost will be auto-assembled.
+
+Feedback on the effectiveness and usefulness of this feature and it's
+documentation is encouraged.
+
+Changelog Entries:
+    -   Support 'mailfrom' line in mdadm.conf so the From: line in alert
+	emails can be explicitly set.
+    -   Arrange that SparesMissing (which is similar in import to
+	DegradedArray) generates an Email.
+    -   Assume "DEVICE partitions" if no DEVICE line is given.
+    -   Support new 'offset' layout for raid10.
+    -   When creating a bitmap file, choose a chunksize to limit number
+	of bitmap chunks to 2 million.  More than this can cause kmalloc
+	failure.
+    -   New 'CREATE' line in mdadm.conf for defaults such as owner, group,
+	mode and auto-flag
+    -   --detail checks if array has been started or not and includes that
+	in report.
+    -   When using --update=uuid on an array with a bitmap, update the
+	bitmap's uuid too.
+    -   Add a copy of /proc/mdstat to the mail message sent by mdadm
+        --monitor.
+    -   New flag --no-degraded to avoid starting arrays if there are
+	fewer devices available than last time the array was started.
+	This is only needed with --scan, as with --scan, that behaviour
+	is the default.
+    -   Support for 'homehost' concept.  This is a fairly major update.
+	It includes a configfile option and a command line option for
+	specifying a homehost, records that host in the superblock,
+	and reports the homehost where possible.
+    -   Support for Auto Assembly.  "mdadm -As" will, if provided with
+	the name of a homehost, try to assemble all arrays it can find
+	that were created for that homehost.  See man pages for more details.
+
+Development of mdadm is sponsored by
+ SUSE Labs, Novell Inc.
+
+NeilBrown  26th May 2006
+
