@@ -1,79 +1,72 @@
 From: Neil Brown <neilb@suse.de>
-Subject: ANNOUNCE: mdadm 2.5 - A tool for managing Soft RAID under Linux
-Date: Fri, 26 May 2006 16:33:08 +1000
-Message-ID: <17526.41252.855793.479011@cse.unsw.edu.au>
+Subject: Re: mdadm and 2.4 kernel?
+Date: Fri, 26 May 2006 17:01:54 +1000
+Message-ID: <17526.42978.992496.348952@cse.unsw.edu.au>
+References: <4475FAE3.6080309@phx6a.ath.cx>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: message from Ste on Thursday May 25
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Ste <ste@phx6a.ath.cx>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Thursday May 25, ste@phx6a.ath.cx wrote:
+> Hi, for various reasons i'll need to run mdadm on a 2.4 kernel.
+> Now I have 2.4.32 kernel.
+> 
+> Take a look:
+> 
+> root@data:~# mdadm --create --verbose /dev/md0 --level=1 
+> --bitmap=/root/md0bitmap -n 2 /dev/nda /dev/ndb --force --assume-clean
+> mdadm: /dev/nda appears to be part of a raid array:
+>     level=raid1 devices=2 ctime=Thu May 25 20:10:47 2006
+> mdadm: /dev/ndb appears to be part of a raid array:
+>     level=raid1 devices=2 ctime=Thu May 25 20:10:47 2006
+> mdadm: size set to 39118144K
+> Continue creating array? y
+> mdadm: Warning - bitmaps created on this kernel are not portable
+>   between different architectured.  Consider upgrading the Linux kernel.
+> mdadm: Cannot set bitmap file for /dev/md0: No such device
+> 
+
+2.4 does not support bitmaps (nor do early 2.6 kernels).
+
+> 
+> root@data:~# mdadm --create --verbose /dev/md0 --level=1  -n 2 /dev/nda 
+> /dev/ndb --force --assume-clean
+> mdadm: /dev/nda appears to be part of a raid array:
+>     level=raid1 devices=2 ctime=Thu May 25 20:10:47 2006
+> mdadm: /dev/ndb appears to be part of a raid array:
+>     level=raid1 devices=2 ctime=Thu May 25 20:10:47 2006
+> mdadm: size set to 39118144K
+> Continue creating array? y
+> mdadm: SET_ARRAY_INFO failed for /dev/md0: File exists
+> root@data:~# 
+
+It seems /dev/md0 is already active somehow.
+Try
+  mdadm -S /dev/md0
+first.  What does "cat /proc/mdstat" say?
+
+NeilBrown
 
 
-I am pleased to announce the availability of
-   mdadm version 2.5
-
-It is available at the usual places:
-   http://www.cse.unsw.edu.au/~neilb/source/mdadm/
-and
-   http://www.{countrycode}.kernel.org/pub/linux/utils/raid/mdadm/
-
-mdadm is a tool for creating, managing and monitoring
-device arrays using the "md" driver in Linux, also
-known as Software RAID arrays.
-
-Release 2.5 adds a host of minor updates and one major update.
-
-The major update involves an "Auto Assemble" function which will,
-with certainly limits, scan all available devices for anything that
-looks like an md array, and will try to assemble it.
-This code should be treated with some caution as it is very new,
-and could be revised in future, though hopefully not very much.
-
-The main problem I have always had will auto-assembly is that it
-is too easy for it to assemble thing that you don't want assembled,
-e.g. if you have moved some devices from a different computer.
-To remove this problem, arrays can now be tagged for the computer
-that is their home (homehost) and only arrays with the correct
-homehost will be auto-assembled.
-
-Feedback on the effectiveness and usefulness of this feature and it's
-documentation is encouraged.
-
-Changelog Entries:
-    -   Support 'mailfrom' line in mdadm.conf so the From: line in alert
-	emails can be explicitly set.
-    -   Arrange that SparesMissing (which is similar in import to
-	DegradedArray) generates an Email.
-    -   Assume "DEVICE partitions" if no DEVICE line is given.
-    -   Support new 'offset' layout for raid10.
-    -   When creating a bitmap file, choose a chunksize to limit number
-	of bitmap chunks to 2 million.  More than this can cause kmalloc
-	failure.
-    -   New 'CREATE' line in mdadm.conf for defaults such as owner, group,
-	mode and auto-flag
-    -   --detail checks if array has been started or not and includes that
-	in report.
-    -   When using --update=uuid on an array with a bitmap, update the
-	bitmap's uuid too.
-    -   Add a copy of /proc/mdstat to the mail message sent by mdadm
-        --monitor.
-    -   New flag --no-degraded to avoid starting arrays if there are
-	fewer devices available than last time the array was started.
-	This is only needed with --scan, as with --scan, that behaviour
-	is the default.
-    -   Support for 'homehost' concept.  This is a fairly major update.
-	It includes a configfile option and a command line option for
-	specifying a homehost, records that host in the superblock,
-	and reports the homehost where possible.
-    -   Support for Auto Assembly.  "mdadm -As" will, if provided with
-	the name of a homehost, try to assemble all arrays it can find
-	that were created for that homehost.  See man pages for more details.
-
-Development of mdadm is sponsored by
- SUSE Labs, Novell Inc.
-
-NeilBrown  26th May 2006
-
+> 
+> Obviously the devices "/dev/nda" and "/dev/ndb" exists (i can make fdisk 
+> on them).
+> 
+> Can someone help me?
+> Thanks.
+> Stefano.
+> 
+>             
+> 
+> 
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
