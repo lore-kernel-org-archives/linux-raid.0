@@ -1,45 +1,39 @@
-From: Craig Hollabaugh <craig@hollabaugh.com>
+From: Bill Davidsen <davidsen@tmr.com>
 Subject: Re: RAID5 kicks non-fresh drives
-Date: Fri, 26 May 2006 11:06:21 -0600
-Message-ID: <1148663181.2836.11.camel@hendrix.hollabaugh.com>
-References: <Pine.LNX.4.44.0605261231460.20378-100000@coffee.psychology.mcmaster.ca>
+Date: Fri, 26 May 2006 13:32:28 -0400
+Message-ID: <44773BAC.9090002@tmr.com>
+References: <1148571503.2772.35.camel@hendrix.hollabaugh.com>  <17526.7947.129968.287311@cse.unsw.edu.au> <1148596237.4957.4.camel@hendrix.hollabaugh.com> <Pine.LNX.4.62.0605260956120.20178@uplift.swm.pp.se>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44.0605261231460.20378-100000@coffee.psychology.mcmaster.ca>
+In-Reply-To: <Pine.LNX.4.62.0605260956120.20178@uplift.swm.pp.se>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mark Hahn <hahn@physics.mcmaster.ca>
-Cc: linux-raid@vger.kernel.org
+To: Mikael Abrahamsson <swmike@swm.pp.se>
+Cc: Craig Hollabaugh <craig@hollabaugh.com>, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, 2006-05-26 at 12:45 -0400, Mark Hahn wrote:
-> I think the current situation is good, since there is some danger of 
-> going too far.  for instance, testing each partition to see whether 
-> it contains a valid superblock would be pretty crazy, right?  requiring
-> either the "auto-assemble-me" partition type, or explicit partitions 
-> given in a config file is a happy medium...
-> 
+Mikael Abrahamsson wrote:
 
-I created my array in 1/2003, don't know versions of kernel or mdadm I
-was using then.
+> On Thu, 25 May 2006, Craig Hollabaugh wrote:
+>
+>> That did it! I set the partition FS Types from 'Linux' to 'Linux raid 
+>> autodetect' after my last re-sync completed. Manually stopped and 
+>> started the array. Things looked good, so I crossed my fingers and 
+>> rebooted. The kernel found all the drives and all is happy here in 
+>> Colorado.
+>
+>
+> Would it make sense for the raid code to somehow warn in the log when 
+> a device in a raid set doesn't have "Linux raid autodetect" partition 
+> type? If this was in "dmesg", would you have spotted the problem before?
+>
+As long as it is written where logwatch will see it, not recognize it, 
+and report it... People who don't read their logwatch reports get no 
+sympathy from me.
 
-In my situation over the past few days.
-  kernel 2.4.30 kicked non-fresh
-  kernel 2.6.11.8 kicked non-fresh
-  kernel 2.6.18.8 didn't mention anything, just skipped my 'linux'
-partitions
-
-These kernels auto-assemble prior to mounting /. So the kernel doesn't
-consult my 
-/etc/mdadm/mdadm.conf file. Is this correct? 
-
-
-
-> 
 -- 
-------------------------------------------------------------
-Dr. Craig Hollabaugh, craig@hollabaugh.com, 970 240 0509
-Author of Embedded Linux: Hardware, Software and Interfacing
-www.embeddedlinuxinterfacing.com
+bill davidsen <davidsen@tmr.com>
+  CTO TMR Associates, Inc
+  Doing interesting things with small computers since 1979
 
