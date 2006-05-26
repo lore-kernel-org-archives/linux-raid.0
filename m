@@ -1,41 +1,29 @@
-From: Luca Berra <bluca@comedia.it>
-Subject: Re: problems with raid=noautodetect
-Date: Fri, 26 May 2006 09:56:04 +0200
-Message-ID: <20060526075604.GD8203@percy.comedia.it>
-References: <4471B188.3060400@umit.at> <17522.15774.526526.244768@cse.unsw.edu.au> <20060526075308.GC8203@percy.comedia.it>
+From: Mikael Abrahamsson <swmike@swm.pp.se>
+Subject: Re: RAID5 kicks non-fresh drives
+Date: Fri, 26 May 2006 09:57:52 +0200 (CEST)
+Message-ID: <Pine.LNX.4.62.0605260956120.20178@uplift.swm.pp.se>
+References: <1148571503.2772.35.camel@hendrix.hollabaugh.com>
+ <17526.7947.129968.287311@cse.unsw.edu.au> <1148596237.4957.4.camel@hendrix.hollabaugh.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20060526075308.GC8203@percy.comedia.it>
+In-Reply-To: <1148596237.4957.4.camel@hendrix.hollabaugh.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: Craig Hollabaugh <craig@hollabaugh.com>
+Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, May 26, 2006 at 09:53:08AM +0200, Luca Berra wrote:
->On Tue, May 23, 2006 at 08:39:26AM +1000, Neil Brown wrote:
->>Presumably you have a 'DEVICE' line in mdadm.conf too?  What is it.
->>My first guess is that it isn't listing /dev/sdd? somehow.
->
->Neil,
->i am seeing a lot of people that fall in this same error, and i would
->propose a way of avoiding this problem
->
->1) make "DEVICE partitions" the default if no device line is specified.
-oops,
-just read your 2.5 announce, you already did that :)
->2) deprecate the "DEVICE" keyword issuing a warning when it is found in
->the configuration file
->3) introduce "DEVICEFILTER" or similar keyword with the same meaning at
->the actual "DEVICE" keyboard
->4) optionally add an "EXCLUDEDEVICE" keyword with the opposite meaning.
->
+On Thu, 25 May 2006, Craig Hollabaugh wrote:
+
+> That did it! I set the partition FS Types from 'Linux' to 'Linux raid 
+> autodetect' after my last re-sync completed. Manually stopped and 
+> started the array. Things looked good, so I crossed my fingers and 
+> rebooted. The kernel found all the drives and all is happy here in 
+> Colorado.
+
+Would it make sense for the raid code to somehow warn in the log when a 
+device in a raid set doesn't have "Linux raid autodetect" partition type? 
+If this was in "dmesg", would you have spotted the problem before?
 
 -- 
-Luca Berra -- bluca@comedia.it
-        Communication Media & Services S.r.l.
- /"\
- \ /     ASCII RIBBON CAMPAIGN
-  X        AGAINST HTML MAIL
- / \
+Mikael Abrahamsson    email: swmike@swm.pp.se
