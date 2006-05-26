@@ -1,32 +1,27 @@
-From: "Wilton Lackey" <jbqjkcosiecjr@jazzsemi.com>
-Subject: Attack obesity
-Date: Fri, 26 May 2006 16:39:56 -0100
-Message-ID: <50368.jason.3__11992.777841124$1148703487$gmane$org@p1jp.com>
+From: Mark Hahn <hahn@physics.mcmaster.ca>
+Subject: Re: RAID5 kicks non-fresh drives
+Date: Fri, 26 May 2006 12:45:55 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44.0605261231460.20378-100000@coffee.psychology.mcmaster.ca>
+References: <1148652686.3100.4.camel@hendrix.hollabaugh.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1148652686.3100.4.camel@hendrix.hollabaugh.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-hams@vger.kernel.org, ultralinux@vger.kernel.org, linux-raid@vger.kernel.org, linux-net@vger.kernel.org
+To: Craig Hollabaugh <craig@hollabaugh.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Summer is coming, did you look in the mirror lately?
+> I had no idea about this particular configuration requirement. None of
 
-If you`re still overweight you MUST visit us:
+just to be clear: it's not a requirement.  if you want the very nice 
+auto-assembling behavior, you need to designate the auto-assemblable 
+partitions.  but you can assemble "manually" without 0xfd partitions
+(even if that's in an initrd, for instance.)
 
-http://051.planethealthh.com
+I think the current situation is good, since there is some danger of 
+going too far.  for instance, testing each partition to see whether 
+it contains a valid superblock would be pretty crazy, right?  requiring
+either the "auto-assemble-me" partition type, or explicit partitions 
+given in a config file is a happy medium...
 
-WE WILL HELP YOU!
-
-
-
-
-
-
-
-
-
-
-ellison you neutrino me, segment avid . repairmen you calculus me, cleave toothbrush thou . goodwin you wold me, angle apothecary delusive bali . 
-cedilla you spurn me, scarlet sulky blend . capitoline you mccarty me, cheerful inaugurate voice . magic you niece me, bridal . 
-http://051.planethealthh.com/rm/
