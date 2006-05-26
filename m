@@ -1,39 +1,39 @@
-From: Bill Davidsen <davidsen@tmr.com>
+From: Mark Hahn <hahn@physics.mcmaster.ca>
 Subject: Re: RAID5 kicks non-fresh drives
-Date: Fri, 26 May 2006 13:32:28 -0400
-Message-ID: <44773BAC.9090002@tmr.com>
-References: <1148571503.2772.35.camel@hendrix.hollabaugh.com>  <17526.7947.129968.287311@cse.unsw.edu.au> <1148596237.4957.4.camel@hendrix.hollabaugh.com> <Pine.LNX.4.62.0605260956120.20178@uplift.swm.pp.se>
+Date: Fri, 26 May 2006 13:30:46 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44.0605261327520.20378-100000@coffee.psychology.mcmaster.ca>
+References: <1148663181.2836.11.camel@hendrix.hollabaugh.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.62.0605260956120.20178@uplift.swm.pp.se>
+In-Reply-To: <1148663181.2836.11.camel@hendrix.hollabaugh.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mikael Abrahamsson <swmike@swm.pp.se>
-Cc: Craig Hollabaugh <craig@hollabaugh.com>, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
+To: Craig Hollabaugh <craig@hollabaugh.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Mikael Abrahamsson wrote:
+>>>> I created my array in 1/2003, don't know versions of kernel or mdadm I
+> was using then.
 
-> On Thu, 25 May 2006, Craig Hollabaugh wrote:
->
->> That did it! I set the partition FS Types from 'Linux' to 'Linux raid 
->> autodetect' after my last re-sync completed. Manually stopped and 
->> started the array. Things looked good, so I crossed my fingers and 
->> rebooted. The kernel found all the drives and all is happy here in 
->> Colorado.
->
->
-> Would it make sense for the raid code to somehow warn in the log when 
-> a device in a raid set doesn't have "Linux raid autodetect" partition 
-> type? If this was in "dmesg", would you have spotted the problem before?
->
-As long as it is written where logwatch will see it, not recognize it, 
-and report it... People who don't read their logwatch reports get no 
-sympathy from me.
+did you have /etc/*md* related config files?  some distros use
+them to assemble during boot (not quite the same as 0xfd auto-assembly,
+but still pretty "auto").
 
--- 
-bill davidsen <davidsen@tmr.com>
-  CTO TMR Associates, Inc
-  Doing interesting things with small computers since 1979
+> In my situation over the past few days.
+>   kernel 2.4.30 kicked non-fresh
+>   kernel 2.6.11.8 kicked non-fresh
+>   kernel 2.6.18.8 didn't mention anything, just skipped my 'linux'
+> partitions
+>
+> These kernels auto-assemble prior to mounting /. So the kernel doesn't
+> consult my
+> /etc/mdadm/mdadm.conf file. Is this correct?
+
+yes - the kernel traditionally doesn't, of its own accord, read files.
+most stuff under /etc are inputs to user-level tools that run during 
+boot to instruct the kernel how to configure things.  distros have,
+in the past, had boot-time scripts that would run mdadm and thus 
+read your mdadm.conf (or the raid config files that predate mdadm...)
+
+so perhaps your observed change in behavior had to do with distro changes...
 
