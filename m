@@ -1,63 +1,81 @@
 From: "Dirk Jagdmann" <jagdmann@gmail.com>
-Subject: Re: [patch] fix static build
-Date: Sun, 28 May 2006 00:17:03 +0200
-Message-ID: <5d0f60990605271517r3da1c489if2de0cfe7f75c46c@mail.gmail.com>
-References: <5d0f60990605270305r8acc03fmb57cb739711456fe@mail.gmail.com>
-	 <20060527135428.GK8203@percy.comedia.it>
+Subject: Re: [patch] install a static build
+Date: Sun, 28 May 2006 00:19:07 +0200
+Message-ID: <5d0f60990605271519t6e06fd9bw1e0a5f4f372bb31a@mail.gmail.com>
+References: <5d0f60990605270308j71f3f2aem18219202d0fa957f@mail.gmail.com>
+	 <20060527134825.GJ8203@percy.comedia.it>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
-	boundary="----=_Part_33395_29254471.1148768223396"
+	boundary="----=_Part_33403_899922.1148768347969"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20060527135428.GK8203@percy.comedia.it>
+In-Reply-To: <20060527134825.GJ8203@percy.comedia.it>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-------=_Part_33395_29254471.1148768223396
+------=_Part_33403_899922.1148768347969
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: quoted-printable
 Content-Disposition: inline
 
 Hello Luca,
 
-> you should also fix the clean target.
+> maybe you better add an install-static target.
 
-you're right, I overlooked cleaning the additional two object files. A
-new patch is attached.
+you're right, that would be a cleaner approach. I've don so, and while
+doing so added install-tcc, install-ulibc, install-klibc too.
+
+And while I'm busy in the Makefile anyway I've made a third patch
+which adds the uninstall: target too.
 
 --=20
 ---> Dirk Jagdmann
 ----> http://cubic.org/~doj
 -----> http://llg.cubic.org
 
-------=_Part_33395_29254471.1148768223396
-Content-Type: application/octet-stream; name="staticbuild.patch"
+------=_Part_33403_899922.1148768347969
+Content-Type: application/octet-stream; name="staticinstall.patch"
 Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="staticbuild.patch"
-X-Attachment-Id: f_enqixy6i
+Content-Disposition: attachment; filename="staticinstall.patch"
+X-Attachment-Id: f_enqj0k6v
 
 SW5kZXg6IG1kYWRtLTIuNS9NYWtlZmlsZQo9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
 PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09Ci0tLSBtZGFkbS0yLjUub3JpZy9N
-YWtlZmlsZQkyMDA2LTA1LTI4IDAwOjExOjQ2LjAwMDAwMDAwMCArMDIwMAorKysgbWRhZG0tMi41
-L01ha2VmaWxlCTIwMDYtMDUtMjggMDA6MTU6NDUuMDAwMDAwMDAwICswMjAwCkBAIC03Miw2ICs3
-Miw4IEBACiAJQ3JlYXRlLmMgRGV0YWlsLmMgRXhhbWluZS5jIEdyb3cuYyBNb25pdG9yLmMgZGxp
-bmsuYyBLaWxsLmMgUXVlcnkuYyBcCiAJbWRvcGVuLmMgc3VwZXIwLmMgc3VwZXIxLmMgYml0bWFw
-LmMgcmVzdHJpcGUuYyBzeXNmcy5jCiAKK1NUQVRJQ09CSlMgPSBTSEExLm8gc2hhMS5vCisKIEFT
-U0VNQkxFX1NSQ1MgOj0gbWRhc3NlbWJsZS5jIEFzc2VtYmxlLmMgY29uZmlnLmMgZGxpbmsuYyB1
-dGlsLmMgc3VwZXIwLmMgc3VwZXIxLmMKIEFTU0VNQkxFX0ZMQUdTOj0gLURNREFTU0VNQkxFCiBp
-ZmRlZiBNREFTU0VNQkxFX0FVVE8KQEAgLTg4LDggKzkwLDkgQEAKIAkkKENDKSAkKExERkxBR1Mp
-IC1vIG1kYWRtICQoT0JKUykgJChMRExJQlMpCiAKIG1kYWRtLnN0YXRpYyA6IFNUQVRJQz0tRFNU
-QVRJQwotbWRhZG0uc3RhdGljIDogcm1jb25mICQoT0JKUykKLQkkKENDKSAkKExERkxBR1MpIC1E
-U1RBVElDIC1zdGF0aWMgLW8gbWRhZG0uc3RhdGljICQoT0JKUykgU0hBMS5vIHNoYTEubworbWRh
-ZG0uc3RhdGljIDogcm1jb25mICQoT0JKUykgJChTVEFUSUNPQkpTKQorCSQoQ0MpICQoTERGTEFH
-UykgLURTVEFUSUMgLXN0YXRpYyAtbyBtZGFkbS5zdGF0aWMgJChPQkpTKSAkKFNUQVRJQ09CSlMp
-CisKIHJtY29uZjoKIAlybSAtZiBjb25maWcubwogCkBAIC0xNDksNyArMTUyLDcgQEAKIAkkKElO
-U1RBTEwpIC1EIC1tIDY0NCBtZGFkbS5jb25mLjUgJChERVNURElSKSQoTUFONURJUikvbWRhZG0u
-Y29uZi41CiAKIGNsZWFuIDogCi0Jcm0gLWYgbWRhZG0gJChPQkpTKSBjb3JlICoubWFuIG1kYWRt
-LnRjYyBtZGFkbS51Y2xpYmMgbWRhZG0uc3RhdGljICoub3JpZyAqLnBvcmlnICoucmVqICouYWx0
-IFwKKwlybSAtZiBtZGFkbSAkKE9CSlMpICQoU1RBVElDT0JKUykgY29yZSAqLm1hbiBtZGFkbS50
-Y2MgbWRhZG0udWNsaWJjIG1kYWRtLnN0YXRpYyAqLm9yaWcgKi5wb3JpZyAqLnJlaiAqLmFsdCBc
-CiAJbWRhc3NlbWJsZSBtZGFzc2VtYmxlLnN0YXRpYyBtZGFzc2VtYmxlLnVjbGliYyBtZGFzc2Vt
-YmxlLmtsaWJjIHN3YXBfc3VwZXIgXAogCWluaXQuY3Bpby5neiBtZGFkbS51Y2xpYmMuc3RhdGlj
-IHRlc3Rfc3RyaXBlCiAK
-------=_Part_33395_29254471.1148768223396--
+YWtlZmlsZQkyMDA2LTA1LTI4IDAwOjA1OjA2LjAwMDAwMDAwMCArMDIwMAorKysgbWRhZG0tMi41
+L01ha2VmaWxlCTIwMDYtMDUtMjggMDA6MTE6NDQuMDAwMDAwMDAwICswMjAwCkBAIC0xNDMsOCAr
+MTQzLDIyIEBACiBTSEExLm8gOiBTSEExLmMKIAkkKENDKSAkKENGTEFHUykgLURIQVZFX1NURElO
+VF9IIC1vIFNIQTEubyAtYyBTSEExLmMKIAotaW5zdGFsbCA6IG1kYWRtIG1kYWRtLjggbWQuNCBt
+ZGFkbS5jb25mLjUKK2luc3RhbGwgOiBtZGFkbSBpbnN0YWxsLW1hbgogCSQoSU5TVEFMTCkgLUQg
+JChTVFJJUCkgLW0gNzU1IG1kYWRtICQoREVTVERJUikkKEJJTkRJUikvbWRhZG0KKworaW5zdGFs
+bC1zdGF0aWMgOiBtZGFkbS5zdGF0aWMgaW5zdGFsbC1tYW4KKwkkKElOU1RBTEwpIC1EICQoU1RS
+SVApIC1tIDc1NSBtZGFkbS5zdGF0aWMgJChERVNURElSKSQoQklORElSKS9tZGFkbQorCitpbnN0
+YWxsLXRjYyA6IG1kYWRtLnRjYyBpbnN0YWxsLW1hbgorCSQoSU5TVEFMTCkgLUQgJChTVFJJUCkg
+LW0gNzU1IG1kYWRtLnRjYyAkKERFU1RESVIpJChCSU5ESVIpL21kYWRtCisKK2luc3RhbGwtdWNs
+aWJjIDogbWRhZG0udWNsaWJjIGluc3RhbGwtbWFuCisJJChJTlNUQUxMKSAtRCAkKFNUUklQKSAt
+bSA3NTUgbWRhZG0udWNsaWJjICQoREVTVERJUikkKEJJTkRJUikvbWRhZG0KKworaW5zdGFsbC1r
+bGliYyA6IG1kYWRtLmtsaWJjIGluc3RhbGwtbWFuCisJJChJTlNUQUxMKSAtRCAkKFNUUklQKSAt
+bSA3NTUgbWRhZG0ua2xpYmMgJChERVNURElSKSQoQklORElSKS9tZGFkbQorCitpbnN0YWxsLW1h
+bjogbWRhZG0uOCBtZC40IG1kYWRtLmNvbmYuNQogCSQoSU5TVEFMTCkgLUQgLW0gNjQ0IG1kYWRt
+LjggJChERVNURElSKSQoTUFOOERJUikvbWRhZG0uOAogCSQoSU5TVEFMTCkgLUQgLW0gNjQ0IG1k
+LjQgJChERVNURElSKSQoTUFONERJUikvbWQuNAogCSQoSU5TVEFMTCkgLUQgLW0gNjQ0IG1kYWRt
+LmNvbmYuNSAkKERFU1RESVIpJChNQU41RElSKS9tZGFkbS5jb25mLjUK
+------=_Part_33403_899922.1148768347969
+Content-Type: application/octet-stream; name="uninstall.patch"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="uninstall.patch"
+X-Attachment-Id: f_enqj0of2
+
+SW5kZXg6IG1kYWRtLTIuNS9NYWtlZmlsZQo9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09Ci0tLSBtZGFkbS0yLjUub3JpZy9N
+YWtlZmlsZQkyMDA2LTA1LTI4IDAwOjA5OjM4LjAwMDAwMDAwMCArMDIwMAorKysgbWRhZG0tMi41
+L01ha2VmaWxlCTIwMDYtMDUtMjggMDA6MTE6MDguMDAwMDAwMDAwICswMjAwCkBAIC0xNjMsNiAr
+MTYzLDkgQEAKIAkkKElOU1RBTEwpIC1EIC1tIDY0NCBtZC40ICQoREVTVERJUikkKE1BTjRESVIp
+L21kLjQKIAkkKElOU1RBTEwpIC1EIC1tIDY0NCBtZGFkbS5jb25mLjUgJChERVNURElSKSQoTUFO
+NURJUikvbWRhZG0uY29uZi41CiAKK3VuaW5zdGFsbDoKKwlybSAtZiAkKERFU1RESVIpJChNQU44
+RElSKS9tZGFkbS44IG1kLjQgJChERVNURElSKSQoTUFONERJUikvbWQuNCAkKERFU1RESVIpJChN
+QU41RElSKS9tZGFkbS5jb25mLjUgJChERVNURElSKSQoQklORElSKS9tZGFkbQorCiBjbGVhbiA6
+IAogCXJtIC1mIG1kYWRtICQoT0JKUykgY29yZSAqLm1hbiBtZGFkbS50Y2MgbWRhZG0udWNsaWJj
+IG1kYWRtLnN0YXRpYyAqLm9yaWcgKi5wb3JpZyAqLnJlaiAqLmFsdCBcCiAJbWRhc3NlbWJsZSBt
+ZGFzc2VtYmxlLnN0YXRpYyBtZGFzc2VtYmxlLnVjbGliYyBtZGFzc2VtYmxlLmtsaWJjIHN3YXBf
+c3VwZXIgXAo=
+------=_Part_33403_899922.1148768347969--
