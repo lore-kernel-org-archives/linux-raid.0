@@ -1,33 +1,63 @@
-From: "Ruefully R. Coked" <schwartx@colima.com>
-Subject: Get bucks for good rest
-Date: Sat, 27 May 2006 23:49:50 -0400
-Message-ID: <6894512456.20060527234950@colima.com>
+From: "Dirk Jagdmann" <jagdmann@gmail.com>
+Subject: Re: [patch] fix static build
+Date: Sun, 28 May 2006 00:17:03 +0200
+Message-ID: <5d0f60990605271517r3da1c489if2de0cfe7f75c46c@mail.gmail.com>
+References: <5d0f60990605270305r8acc03fmb57cb739711456fe@mail.gmail.com>
+	 <20060527135428.GK8203@percy.comedia.it>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+	boundary="----=_Part_33395_29254471.1148768223396"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20060527135428.GK8203@percy.comedia.it>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Greetings,
-Hot vacancy is available. The Soft 4 Biz Inc. provides the day-to-day software for business and solutions assigned to Outsourcing Vendors. The Company develops wide range of software for various need of business, government of other institutions all other the World.
-Through highly innovative Internet products and technologies, the Company is completely changing the paradigm of sales policy. The company's sales platform will provide clients with the most effective online sales solutions and will be dramatically easier to use than existing off-line payment methods.
-Soft 4 Biz Inc. is now looking for Key Account Managers with successful background in Internet payment systems, consumer businesses, and basic bank operations for part-time work in United Kingdom.
-The responsibilities will include:
-*Primary business contact with Outsourcing vendors
-*Work with account managers representing Marketing, International, Production and Engineering to ensure accurate and timely
-*Assisting customers
-We require such qualifications and skills:
-*Experience in basic bank operations
-*Ability to work at least 10 hours per week
-*Excellent verbal and written communication skills to effectively communicate with various departments and levels within Soft 4 Biz Inc.
-*Excellent organizational skills and ability to work independently
-*Ability to handle confidential and sensitive employee information
-*Experience with computer
-Send brief information about you to job@soft-for-business.com and you will be sent a full information regarding this vacancy and application form.
---
-Best regards,
-Soft For Business team
+------=_Part_33395_29254471.1148768223396
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
+Hello Luca,
 
+> you should also fix the clean target.
+
+you're right, I overlooked cleaning the additional two object files. A
+new patch is attached.
+
+--=20
+---> Dirk Jagdmann
+----> http://cubic.org/~doj
+-----> http://llg.cubic.org
+
+------=_Part_33395_29254471.1148768223396
+Content-Type: application/octet-stream; name="staticbuild.patch"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="staticbuild.patch"
+X-Attachment-Id: f_enqixy6i
+
+SW5kZXg6IG1kYWRtLTIuNS9NYWtlZmlsZQo9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09Ci0tLSBtZGFkbS0yLjUub3JpZy9N
+YWtlZmlsZQkyMDA2LTA1LTI4IDAwOjExOjQ2LjAwMDAwMDAwMCArMDIwMAorKysgbWRhZG0tMi41
+L01ha2VmaWxlCTIwMDYtMDUtMjggMDA6MTU6NDUuMDAwMDAwMDAwICswMjAwCkBAIC03Miw2ICs3
+Miw4IEBACiAJQ3JlYXRlLmMgRGV0YWlsLmMgRXhhbWluZS5jIEdyb3cuYyBNb25pdG9yLmMgZGxp
+bmsuYyBLaWxsLmMgUXVlcnkuYyBcCiAJbWRvcGVuLmMgc3VwZXIwLmMgc3VwZXIxLmMgYml0bWFw
+LmMgcmVzdHJpcGUuYyBzeXNmcy5jCiAKK1NUQVRJQ09CSlMgPSBTSEExLm8gc2hhMS5vCisKIEFT
+U0VNQkxFX1NSQ1MgOj0gbWRhc3NlbWJsZS5jIEFzc2VtYmxlLmMgY29uZmlnLmMgZGxpbmsuYyB1
+dGlsLmMgc3VwZXIwLmMgc3VwZXIxLmMKIEFTU0VNQkxFX0ZMQUdTOj0gLURNREFTU0VNQkxFCiBp
+ZmRlZiBNREFTU0VNQkxFX0FVVE8KQEAgLTg4LDggKzkwLDkgQEAKIAkkKENDKSAkKExERkxBR1Mp
+IC1vIG1kYWRtICQoT0JKUykgJChMRExJQlMpCiAKIG1kYWRtLnN0YXRpYyA6IFNUQVRJQz0tRFNU
+QVRJQwotbWRhZG0uc3RhdGljIDogcm1jb25mICQoT0JKUykKLQkkKENDKSAkKExERkxBR1MpIC1E
+U1RBVElDIC1zdGF0aWMgLW8gbWRhZG0uc3RhdGljICQoT0JKUykgU0hBMS5vIHNoYTEubworbWRh
+ZG0uc3RhdGljIDogcm1jb25mICQoT0JKUykgJChTVEFUSUNPQkpTKQorCSQoQ0MpICQoTERGTEFH
+UykgLURTVEFUSUMgLXN0YXRpYyAtbyBtZGFkbS5zdGF0aWMgJChPQkpTKSAkKFNUQVRJQ09CSlMp
+CisKIHJtY29uZjoKIAlybSAtZiBjb25maWcubwogCkBAIC0xNDksNyArMTUyLDcgQEAKIAkkKElO
+U1RBTEwpIC1EIC1tIDY0NCBtZGFkbS5jb25mLjUgJChERVNURElSKSQoTUFONURJUikvbWRhZG0u
+Y29uZi41CiAKIGNsZWFuIDogCi0Jcm0gLWYgbWRhZG0gJChPQkpTKSBjb3JlICoubWFuIG1kYWRt
+LnRjYyBtZGFkbS51Y2xpYmMgbWRhZG0uc3RhdGljICoub3JpZyAqLnBvcmlnICoucmVqICouYWx0
+IFwKKwlybSAtZiBtZGFkbSAkKE9CSlMpICQoU1RBVElDT0JKUykgY29yZSAqLm1hbiBtZGFkbS50
+Y2MgbWRhZG0udWNsaWJjIG1kYWRtLnN0YXRpYyAqLm9yaWcgKi5wb3JpZyAqLnJlaiAqLmFsdCBc
+CiAJbWRhc3NlbWJsZSBtZGFzc2VtYmxlLnN0YXRpYyBtZGFzc2VtYmxlLnVjbGliYyBtZGFzc2Vt
+YmxlLmtsaWJjIHN3YXBfc3VwZXIgXAogCWluaXQuY3Bpby5neiBtZGFkbS51Y2xpYmMuc3RhdGlj
+IHRlc3Rfc3RyaXBlCiAK
+------=_Part_33395_29254471.1148768223396--
