@@ -1,81 +1,75 @@
-From: "Dirk Jagdmann" <jagdmann@gmail.com>
-Subject: Re: [patch] install a static build
-Date: Sun, 28 May 2006 00:19:07 +0200
-Message-ID: <5d0f60990605271519t6e06fd9bw1e0a5f4f372bb31a@mail.gmail.com>
-References: <5d0f60990605270308j71f3f2aem18219202d0fa957f@mail.gmail.com>
-	 <20060527134825.GJ8203@percy.comedia.it>
-Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_Part_33403_899922.1148768347969"
+From: Steve Haehnichen <steve@trix.com>
+Subject: "Readonly" entry in your TODO list
+Date: Sat, 27 May 2006 17:44:36 -0700
+Message-ID: <E1Fk9OW-0005ra-00@spoon.trix.com>
+Reply-To: steve@trix.com
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20060527134825.GJ8203@percy.comedia.it>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-------=_Part_33403_899922.1148768347969
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+Just a quick note, first to say THANKS for raid/md and mdadm.. it's
+fantastic, especially the monitor mode, --examine and --detail.
 
-Hello Luca,
+I recently had an unfortunately RAID-5 failure.. the machine crashed,
+and on reboot found one RAID member (out of 10) to be not-so-fresh.
+So it was kicked out of the RAID and rebuild began as planned.  I had
+two spare drives.  So far, so good.
 
-> maybe you better add an install-static target.
+Halfway through rebuilding, it found a read error on one drive!  This
+isn't shouldn't have been surprising, since some of the data is two
+years old had not been read in some time.
 
-you're right, that would be a cleaner approach. I've don so, and while
-doing so added install-tcc, install-ulibc, install-klibc too.
+You can guess what happened next -- it failed the drive, and could no
+longer assemble the raid with one drive unfresh and another one
+faulty.
 
-And while I'm busy in the Makefile anyway I've made a third patch
-which adds the uninstall: target too.
+This is where the READONLY assembly would have been useful.  I wanted
+to 'freeze' the machine and change nothing on it until I had copied
+some critical data out of the raid.  I'd like to do:
 
---=20
----> Dirk Jagdmann
-----> http://cubic.org/~doj
------> http://llg.cubic.org
+  mdadm --assemble --force --readonly /dev/md1
 
-------=_Part_33403_899922.1148768347969
-Content-Type: application/octet-stream; name="staticinstall.patch"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="staticinstall.patch"
-X-Attachment-Id: f_enqj0k6v
+But... it won't assemble until it can update the event count in the
+unfresh drive, even with --force.  This requires that I allow a write
+to the device, as well as kick off a rebuild.
 
-SW5kZXg6IG1kYWRtLTIuNS9NYWtlZmlsZQo9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09Ci0tLSBtZGFkbS0yLjUub3JpZy9N
-YWtlZmlsZQkyMDA2LTA1LTI4IDAwOjA1OjA2LjAwMDAwMDAwMCArMDIwMAorKysgbWRhZG0tMi41
-L01ha2VmaWxlCTIwMDYtMDUtMjggMDA6MTE6NDQuMDAwMDAwMDAwICswMjAwCkBAIC0xNDMsOCAr
-MTQzLDIyIEBACiBTSEExLm8gOiBTSEExLmMKIAkkKENDKSAkKENGTEFHUykgLURIQVZFX1NURElO
-VF9IIC1vIFNIQTEubyAtYyBTSEExLmMKIAotaW5zdGFsbCA6IG1kYWRtIG1kYWRtLjggbWQuNCBt
-ZGFkbS5jb25mLjUKK2luc3RhbGwgOiBtZGFkbSBpbnN0YWxsLW1hbgogCSQoSU5TVEFMTCkgLUQg
-JChTVFJJUCkgLW0gNzU1IG1kYWRtICQoREVTVERJUikkKEJJTkRJUikvbWRhZG0KKworaW5zdGFs
-bC1zdGF0aWMgOiBtZGFkbS5zdGF0aWMgaW5zdGFsbC1tYW4KKwkkKElOU1RBTEwpIC1EICQoU1RS
-SVApIC1tIDc1NSBtZGFkbS5zdGF0aWMgJChERVNURElSKSQoQklORElSKS9tZGFkbQorCitpbnN0
-YWxsLXRjYyA6IG1kYWRtLnRjYyBpbnN0YWxsLW1hbgorCSQoSU5TVEFMTCkgLUQgJChTVFJJUCkg
-LW0gNzU1IG1kYWRtLnRjYyAkKERFU1RESVIpJChCSU5ESVIpL21kYWRtCisKK2luc3RhbGwtdWNs
-aWJjIDogbWRhZG0udWNsaWJjIGluc3RhbGwtbWFuCisJJChJTlNUQUxMKSAtRCAkKFNUUklQKSAt
-bSA3NTUgbWRhZG0udWNsaWJjICQoREVTVERJUikkKEJJTkRJUikvbWRhZG0KKworaW5zdGFsbC1r
-bGliYyA6IG1kYWRtLmtsaWJjIGluc3RhbGwtbWFuCisJJChJTlNUQUxMKSAtRCAkKFNUUklQKSAt
-bSA3NTUgbWRhZG0ua2xpYmMgJChERVNURElSKSQoQklORElSKS9tZGFkbQorCitpbnN0YWxsLW1h
-bjogbWRhZG0uOCBtZC40IG1kYWRtLmNvbmYuNQogCSQoSU5TVEFMTCkgLUQgLW0gNjQ0IG1kYWRt
-LjggJChERVNURElSKSQoTUFOOERJUikvbWRhZG0uOAogCSQoSU5TVEFMTCkgLUQgLW0gNjQ0IG1k
-LjQgJChERVNURElSKSQoTUFONERJUikvbWQuNAogCSQoSU5TVEFMTCkgLUQgLW0gNjQ0IG1kYWRt
-LmNvbmYuNSAkKERFU1RESVIpJChNQU41RElSKS9tZGFkbS5jb25mLjUK
-------=_Part_33403_899922.1148768347969
-Content-Type: application/octet-stream; name="uninstall.patch"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="uninstall.patch"
-X-Attachment-Id: f_enqj0of2
+I had to start the raid without --readonly, and then quickly change it
+to --manage --readonly to stop the rebuilding before it potentially
+finds another bad sector and really makes trouble.
 
-SW5kZXg6IG1kYWRtLTIuNS9NYWtlZmlsZQo9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09Ci0tLSBtZGFkbS0yLjUub3JpZy9N
-YWtlZmlsZQkyMDA2LTA1LTI4IDAwOjA5OjM4LjAwMDAwMDAwMCArMDIwMAorKysgbWRhZG0tMi41
-L01ha2VmaWxlCTIwMDYtMDUtMjggMDA6MTE6MDguMDAwMDAwMDAwICswMjAwCkBAIC0xNjMsNiAr
-MTYzLDkgQEAKIAkkKElOU1RBTEwpIC1EIC1tIDY0NCBtZC40ICQoREVTVERJUikkKE1BTjRESVIp
-L21kLjQKIAkkKElOU1RBTEwpIC1EIC1tIDY0NCBtZGFkbS5jb25mLjUgJChERVNURElSKSQoTUFO
-NURJUikvbWRhZG0uY29uZi41CiAKK3VuaW5zdGFsbDoKKwlybSAtZiAkKERFU1RESVIpJChNQU44
-RElSKS9tZGFkbS44IG1kLjQgJChERVNURElSKSQoTUFONERJUikvbWQuNCAkKERFU1RESVIpJChN
-QU41RElSKS9tZGFkbS5jb25mLjUgJChERVNURElSKSQoQklORElSKS9tZGFkbQorCiBjbGVhbiA6
-IAogCXJtIC1mIG1kYWRtICQoT0JKUykgY29yZSAqLm1hbiBtZGFkbS50Y2MgbWRhZG0udWNsaWJj
-IG1kYWRtLnN0YXRpYyAqLm9yaWcgKi5wb3JpZyAqLnJlaiAqLmFsdCBcCiAJbWRhc3NlbWJsZSBt
-ZGFzc2VtYmxlLnN0YXRpYyBtZGFzc2VtYmxlLnVjbGliYyBtZGFzc2VtYmxlLmtsaWJjIHN3YXBf
-c3VwZXIgXAo=
-------=_Part_33403_899922.1148768347969--
+
+Also, I like to take full images of problem drives, using something
+like dd or dd_rescue to make a raw file dump, and them mount them as
+loopback devices.  Works great for recovery!
+
+mango / # losetup -a
+/dev/loop/0: [fd00]:1095813 (WD-WMACK1166390.p1)
+/dev/loop/1: [fd00]:1095812 (WD-WMACK1182728.p1)
+/dev/loop/2: [fd00]:1095820 (WD-WMAEH2610524.p1)
+/dev/loop/3: [fd00]:43 (WD-WMAEP1040801.p1)
+/dev/loop/4: [fd00]:46 (Y41MRR0E.p1)
+/dev/loop/5: [fd00]:1095816 (Y44N8PKE.p1)
+/dev/loop/6: [fd00]:85317 (Y4580H9E.p1)
+/dev/loop/7: [fd00]:1095811 (Y458CJRE.p1)
+
+mango / # cat /proc/mdstat 
+md1 : active (read-only) raid5 hdc1[0] loop0[8] loop1[7] loop7[6] loop5[5] loop3[4] loop4[3] loop6[2] hdd1[1]
+      1406594304 blocks level 5, 128k chunk, algorithm 2 [10/9] [UUUUUUUUU_]
+
+Anyway, just a vote here for readonly assembly.  The second one on
+your todo list: "don't kick drives on read errors" would have probably
+been useful as well.
+
+
+The lesson I learned is that it's good hygiene to simply read all data
+on the drives now and then to 'prompt' any drive failures before there
+exists more than one at a time.  I intend to 'dd' read all of /dev/md0
+once a week or so in the background, in addition to the smartctl tests
+which did not detect this.
+
+Thanks again for sharing the md/raid code.  I would have never guessed
+something like this was possible, let alone free.
+
+-Steve
+
