@@ -1,153 +1,434 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: raid5 hang on get_active_stripe
-Date: Sun, 28 May 2006 22:04:51 +1000
-Message-ID: <17529.37347.782285.77442@cse.unsw.edu.au>
-References: <5d96567b0603060346r768a0ee1i8d8170cf9ba4bac1@mail.gmail.com>
-	<Pine.LNX.4.56.0603061156140.26994@lion.drogon.net>
-	<5d96567b0603060456h5f2c3cc8me790c86b74e1f854@mail.gmail.com>
-	<4415F400.5030808@ucolick.org>
-	<17429.64926.100005.904328@cse.unsw.edu.au>
-	<Pine.LNX.4.64.0605110758100.25283@twinlark.arctic.org>
-	<Pine.LNX.4.64.0605171137350.29929@twinlark.arctic.org>
-	<17522.29813.189944.397154@cse.unsw.edu.au>
-	<Pine.LNX.4.64.0605260903270.7952@twinlark.arctic.org>
-	<17527.38282.35857.117651@cse.unsw.edu.au>
-	<Pine.LNX.4.64.0605270834240.30550@twinlark.arctic.org>
+From: Luca Berra <bluca@comedia.it>
+Subject: [PATCH] mdadm 2.5 (Was: ANNOUNCE: mdadm 2.5 - A tool for managing Soft RAID under Linux)
+Date: Sun, 28 May 2006 15:32:03 +0200
+Message-ID: <20060528133203.GC8203@percy.comedia.it>
+References: <17526.41252.855793.479011@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="yVhtmJPUSI46BTXb"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from dean gaudet on Saturday May 27
+Content-Disposition: inline
+In-Reply-To: <17526.41252.855793.479011@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: dean gaudet <dean@arctic.org>
-Cc: Patrik Jonsson <patrik@ucolick.org>, linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Saturday May 27, dean@arctic.org wrote:
-> On Sat, 27 May 2006, Neil Brown wrote:
-> 
-> > Thanks.  This narrows it down quite a bit... too much infact:  I can
-> > now say for sure that this cannot possible happen :-)
-> > 
-> >   2/ The message.gz you sent earlier with the
-> >           echo t > /proc/sysrq-trigger
-> >      trace in it didn't contain information about md4_raid5 - the 
-> 
-> got another hang again this morning... full dmesg output attached.
-> 
 
-Thanks.  Nothing surprising there, which maybe is a surprise itself...
+--yVhtmJPUSI46BTXb
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Disposition: inline
 
-I'm still somewhat stumped by this.  But given that it is nicely
-repeatable, I'm sure we can get there...
+On Fri, May 26, 2006 at 04:33:08PM +1000, Neil Brown wrote:
+>
+>
+>I am pleased to announce the availability of
+>   mdadm version 2.5
+>
 
-The following patch adds some more tracing to raid5, and might fix a
-subtle bug in ll_rw_blk, though it is an incredible long shot that
-this could be affecting raid5 (if it is, I'll have to assume there is
-another bug somewhere).   It certainly doesn't break ll_rw_blk.
-Whether it actually fixes something I'm not sure.
+hello,
+i tried rebuilding mdadm 2.5 on current mandriva cooker, which uses
+gcc-4.1.1, glibc-2.4 and dietlibc 0.29 and found the following issues
+addressed by patches attacched to this message
+I would be glad if you could review these patches and include them in
+upcoming mdadm releases.
 
-If you could try with these on top of the previous patches I'd really
-appreciate it.
+- mdadm-2.3.1-kernel-byteswap-include-fix.patch
+reverts a change introduced with mdadm 2.3.1 for redhat compatibility
+asm/byteorder.h is an architecture dependent file and does more
+stuff than a call to the linux/byteorder/XXX_endian.h
+the fact that not calling asm/byteorder.h does not define
+__BYTEORDER_HAS_U64__ is just an example of issues that might arise.
+if redhat is broken it should be worked around differently than breaking
+mdadm.
 
-When you read from ..../stripe_cache_active, it should trigger a
-(cryptic) kernel message within the next 15 seconds.  If I could get
-the contents of that file and the kernel messages, that should help.
+- mdadm-2.4-snprintf.patch
+this is self commenting, just an error in the snprintf call
 
-Thanks heaps,
+- mdadm-2.4-strict-aliasing.patch
+fix for another srict-aliasing problem, you can typecast a reference to a
+void pointer to anything, you cannot typecast a reference to a struct.
 
-NeilBrown
+- mdadm-2.5-mdassemble.patch
+pass CFLAGS to mdassemble build, enabling -Wall -Werror showed some
+issues also fixed by the patch.
+
+- mdadm-2.5-rand.patch
+Posix dictates rand() versus bsd random() function, and dietlibc
+deprecated random(), so switch to srand()/rand() and make everybody
+happy.
+
+- mdadm-2.5-unused.patch
+glibc 2.4 is pedantic on ignoring return values from fprintf, fwrite and
+write, so now we check the rval and actually do something with it.
+in the Grow.c case i only print a warning, since i don't think we can do
+anithing in case we fail invalidating those superblocks (is should never
+happen, but then...)
+
+Regards,
+L.
 
 
-Signed-off-by: Neil Brown <neilb@suse.de>
+-- 
+Luca Berra -- bluca@comedia.it
+        Communication Media & Services S.r.l.
+ /"\
+ \ /     ASCII RIBBON CAMPAIGN
+  X        AGAINST HTML MAIL
+ / \
 
-### Diffstat output
- ./block/ll_rw_blk.c  |    4 ++--
- ./drivers/md/raid5.c |   18 ++++++++++++++++++
- 2 files changed, 20 insertions(+), 2 deletions(-)
+--yVhtmJPUSI46BTXb
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: attachment; filename="mdadm-2.3.1-kernel-byteswap-include-fix.patch"
 
-diff ./block/ll_rw_blk.c~current~ ./block/ll_rw_blk.c
---- ./block/ll_rw_blk.c~current~	2006-05-28 21:54:23.000000000 +1000
-+++ ./block/ll_rw_blk.c	2006-05-28 21:55:17.000000000 +1000
-@@ -874,7 +874,7 @@ static void __blk_queue_free_tags(reques
+* Sat Feb 18 2006 Christiaan Welvaart <cjw@daneel.dyndns.org>
+not including asm/byteorder.h will not define __BYTEORDER_HAS_U64__
+causing __fswab64 to be undefined and failure compiling mdadm on
+big_endian architectures like PPC
+
+--- mdadm-2.3.1/mdadm.h.bak	2006-02-06 04:52:12.000000000 +0100
++++ mdadm-2.3.1/mdadm.h	2006-02-18 03:51:59.786926267 +0100
+@@ -72,16 +72,7 @@
+ #include	"bitmap.h"
+ 
+ #include <endian.h>
+-/* #include "asm/byteorder.h" Redhat don't like this so... */
+-#if __BYTE_ORDER == __LITTLE_ENDIAN
+-#  include <linux/byteorder/little_endian.h>
+-#elif __BYTE_ORDER == __BIG_ENDIAN
+-#  include <linux/byteorder/big_endian.h>
+-#elif __BYTE_ORDER == __PDP_ENDIAN
+-#  include <linux/byteorder/pdp_endian.h>
+-#else
+-#  error "unknown endianness."
+-#endif
++#include <asm/byteorder.h>
+ 
+ 
+ 
+
+--yVhtmJPUSI46BTXb
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: attachment; filename="mdadm-2.4-snprintf.patch"
+
+* Sat May 27 2006 Luca Berra <bluca@vodka.it>
+snprintf size should be at most the size of the buffer
+
+--- mdadm-2.4/util.c.snprintf	2006-05-27 13:53:18.000000000 +0200
++++ mdadm-2.4/util.c	2006-05-27 13:53:38.000000000 +0200
+@@ -439,7 +439,7 @@
+ 		}
+ 	if (create && !std && !nonstd) {
+ 		static char buf[30];
+-		snprintf(buf, 1024, "%d:%d", major, minor);
++		snprintf(buf, 30, "%d:%d", major, minor);
+ 		nonstd = buf;
  	}
  
- 	q->queue_tags = NULL;
--	q->queue_flags &= ~(1 << QUEUE_FLAG_QUEUED);
-+	clear_bit(QUEUE_FLAG_QUEUED, &q->queue_flags);
- }
- 
- /**
-@@ -963,7 +963,7 @@ int blk_queue_init_tags(request_queue_t 
- 	 * assign it, all done
- 	 */
- 	q->queue_tags = tags;
--	q->queue_flags |= (1 << QUEUE_FLAG_QUEUED);
-+	set_bit(QUEUE_FLAG_QUEUED, &q->queue_flags);
- 	return 0;
- fail:
- 	kfree(tags);
 
-diff ./drivers/md/raid5.c~current~ ./drivers/md/raid5.c
---- ./drivers/md/raid5.c~current~	2006-05-27 09:17:10.000000000 +1000
-+++ ./drivers/md/raid5.c	2006-05-28 21:56:56.000000000 +1000
-@@ -1701,13 +1701,20 @@ static sector_t sync_request(mddev_t *md
-  * During the scan, completed stripes are saved for us by the interrupt
-  * handler, so that they will not have to wait for our next wakeup.
-  */
-+static unsigned long trigger;
-+
- static void raid5d (mddev_t *mddev)
+--yVhtmJPUSI46BTXb
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: attachment; filename="mdadm-2.4-strict-aliasing.patch"
+
+* Sat May 27 2006 Luca Berra <bluca@vodka.it>
+This is to avoid gcc warnings when building with strict-aliasing optimization
+
+--- mdadm-2.4/dlink.h.alias	2006-05-26 21:05:07.000000000 +0200
++++ mdadm-2.4/dlink.h	2006-05-27 12:32:58.000000000 +0200
+@@ -4,16 +4,16 @@
+ 
+ struct __dl_head
  {
- 	struct stripe_head *sh;
- 	raid5_conf_t *conf = mddev_to_conf(mddev);
- 	int handled;
-+	int trace = 0;
+-    struct __dl_head *	dh_prev;
+-    struct __dl_head *	dh_next;
++    void * dh_prev;
++    void * dh_next;
+ };
  
- 	PRINTK("+++ raid5d active\n");
-+	if (test_and_clear_bit(0, &trigger))
-+		trace = 1;
-+	if (trace)
-+		printk("raid5d runs\n");
+ #define	dl_alloc(size)	((void*)(((char*)calloc(1,(size)+sizeof(struct __dl_head)))+sizeof(struct __dl_head)))
+ #define	dl_new(t)	((t*)dl_alloc(sizeof(t)))
+ #define	dl_newv(t,n)	((t*)dl_alloc(sizeof(t)*n))
  
- 	md_check_recovery(mddev);
+-#define dl_next(p) *((void**)&(((struct __dl_head*)(p))[-1].dh_next))
+-#define dl_prev(p) *((void**)&(((struct __dl_head*)(p))[-1].dh_prev))
++#define dl_next(p) *(&(((struct __dl_head*)(p))[-1].dh_next))
++#define dl_prev(p) *(&(((struct __dl_head*)(p))[-1].dh_prev))
  
-@@ -1725,6 +1732,13 @@ static void raid5d (mddev_t *mddev)
- 			activate_bit_delay(conf);
+ void *dl_head(void);
+ char *dl_strdup(char *);
+
+--yVhtmJPUSI46BTXb
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: attachment; filename="mdadm-2.5-mdassemble.patch"
+
+* Sat May 27 2006 Luca Berra <bluca@vodka.it>
+add CFLAGS to mdassemble build and fix a couple of non-returning functions
+
+--- mdadm-2.5/mdadm.h.bluca	2006-05-27 14:25:53.000000000 +0200
++++ mdadm-2.5/mdadm.h	2006-05-27 15:20:37.000000000 +0200
+@@ -44,10 +44,8 @@
+ #include	<errno.h>
+ #include	<string.h>
+ #include	<syslog.h>
+-#ifdef __dietlibc__NONO
+-int strncmp(const char *s1, const char *s2, size_t n) __THROW __pure__;
+-char *strncpy(char *dest, const char *src, size_t n) __THROW;
+-#include    <strings.h>
++#ifdef __dietlibc__
++#include	<strings.h>
+ #endif
+ 
+ 
+--- mdadm-2.5/mdassemble.c.bluca	2006-05-27 15:11:02.000000000 +0200
++++ mdadm-2.5/mdassemble.c	2006-05-27 15:15:24.000000000 +0200
+@@ -54,7 +54,7 @@
+ };
+ 
+ #ifndef MDASSEMBLE_AUTO
+-/* from mdadm.c */
++/* from mdopen.c */
+ int open_mddev(char *dev, int autof/*unused */)
+ {
+ 	int mdfd = open(dev, O_RDWR, 0);
+@@ -79,7 +79,7 @@
+ int verbose = 0;
+ int force = 0;
+ 
+-int main() {
++int main(int argc, char *argv[]) {
+ 	mddev_ident_t array_list =  conf_get_ident(configfile, NULL);
+ 	if (!array_list) {
+ 		fprintf(stderr, Name ": No arrays found in config file\n");
+@@ -100,4 +100,5 @@
+ 					   NULL, NULL,
+ 					   readonly, runstop, NULL, NULL, verbose, force);
+ 		}
++	return rv;
+ }
+--- mdadm-2.5/Makefile.bluca	2006-05-27 14:56:07.000000000 +0200
++++ mdadm-2.5/Makefile	2006-05-27 15:24:07.000000000 +0200
+@@ -73,7 +73,7 @@
+ 	mdopen.c super0.c super1.c bitmap.c restripe.c sysfs.c
+ 
+ ASSEMBLE_SRCS := mdassemble.c Assemble.c config.c dlink.c util.c super0.c super1.c
+-ASSEMBLE_FLAGS:= -DMDASSEMBLE
++ASSEMBLE_FLAGS:= $(CFLAGS) -DMDASSEMBLE
+ ifdef MDASSEMBLE_AUTO
+ ASSEMBLE_SRCS += mdopen.c mdstat.c
+ ASSEMBLE_FLAGS += -DMDASSEMBLE_AUTO
+--- mdadm-2.5/util.c.bluca	2006-05-27 14:25:53.000000000 +0200
++++ mdadm-2.5/util.c	2006-05-27 15:34:47.000000000 +0200
+@@ -375,7 +375,7 @@
+ }
+ int nftw(const char *path, int (*han)(const char *name, const struct stat *stb, int flag, struct FTW *s), int nopenfd, int flags)
+ {
+-	ftw(path, add_dev_1, nopenfd);
++	return ftw(path, add_dev_1, nopenfd);
+ }
+ #endif
+ 
+
+--yVhtmJPUSI46BTXb
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: attachment; filename="mdadm-2.5-rand.patch"
+
+* Sat May 27 2006 Luca Berra <bluca@vodka.it>
+POSIX dictates rand/srand instead of BSD srandom/random
+
+--- mdadm-2.5/Assemble.c.rand	2006-05-27 14:40:30.000000000 +0200
++++ mdadm-2.5/Assemble.c	2006-05-27 15:32:39.000000000 +0200
+@@ -412,10 +412,10 @@
+ 				int rfd;
+ 				if ((rfd = open("/dev/urandom", O_RDONLY)) < 0 ||
+ 				    read(rfd, ident->uuid, 16) != 16) {
+-					*(__u32*)(ident->uuid) = random();
+-					*(__u32*)(ident->uuid+1) = random();
+-					*(__u32*)(ident->uuid+2) = random();
+-					*(__u32*)(ident->uuid+3) = random();
++					*(__u32*)(ident->uuid) = rand();
++					*(__u32*)(ident->uuid+1) = rand();
++					*(__u32*)(ident->uuid+2) = rand();
++					*(__u32*)(ident->uuid+3) = rand();
+ 				}
+ 				if (rfd >= 0) close(rfd);
+ 			}
+--- mdadm-2.5/mdadm.c.rand	2006-05-26 07:43:35.000000000 +0200
++++ mdadm-2.5/mdadm.c	2006-05-27 15:31:18.000000000 +0200
+@@ -107,7 +107,7 @@
+ 
+ 	int mdfd = -1;
+ 
+-	srandom(time(0) ^ getpid());
++	srand(time(0) ^ getpid());
+ 
+ 	ident.uuid_set=0;
+ 	ident.level = UnSet;
+--- mdadm-2.5/super0.c.rand	2006-05-27 14:34:54.000000000 +0200
++++ mdadm-2.5/super0.c	2006-05-27 15:33:08.000000000 +0200
+@@ -539,7 +539,7 @@
+ 	sb->patch_version = 0;
+ 	sb->gvalid_words = 0; /* ignored */
+ 	if (rfd < 0 || read(rfd, &sb->set_uuid0, 4) != 4)
+-		sb->set_uuid0 = random();
++		sb->set_uuid0 = rand();
+ 	sb->ctime = time(0);
+ 	sb->level = info->level;
+ 	if (size != info->size)
+@@ -550,9 +550,9 @@
+ 	sb->md_minor = info->md_minor;
+ 	sb->not_persistent = 0;
+ 	if (rfd < 0 || read(rfd, &sb->set_uuid1, 12) != 12) {
+-		sb->set_uuid1 = random();
+-		sb->set_uuid2 = random();
+-		sb->set_uuid3 = random();
++		sb->set_uuid1 = rand();
++		sb->set_uuid2 = rand();
++		sb->set_uuid3 = rand();
+ 	}
+ 	if (rfd >= 0)
+ 		close(rfd);
+--- mdadm-2.5/super1.c.rand	2006-05-27 14:37:22.000000000 +0200
++++ mdadm-2.5/super1.c	2006-05-27 15:33:29.000000000 +0200
+@@ -583,10 +583,10 @@
+ 
+ 	if ((rfd = open("/dev/urandom", O_RDONLY)) < 0 ||
+ 	    read(rfd, sb->set_uuid, 16) != 16) {
+-		*(__u32*)(sb->set_uuid) = random();
+-		*(__u32*)(sb->set_uuid+4) = random();
+-		*(__u32*)(sb->set_uuid+8) = random();
+-		*(__u32*)(sb->set_uuid+12) = random();
++		*(__u32*)(sb->set_uuid) = rand();
++		*(__u32*)(sb->set_uuid+4) = rand();
++		*(__u32*)(sb->set_uuid+8) = rand();
++		*(__u32*)(sb->set_uuid+12) = rand();
+ 	}
+ 	if (rfd >= 0) close(rfd);
+ 
+@@ -751,10 +751,10 @@
+ 
+ 	if ((rfd = open("/dev/urandom", O_RDONLY)) < 0 ||
+ 	    read(rfd, sb->device_uuid, 16) != 16) {
+-		*(__u32*)(sb->device_uuid) = random();
+-		*(__u32*)(sb->device_uuid+4) = random();
+-		*(__u32*)(sb->device_uuid+8) = random();
+-		*(__u32*)(sb->device_uuid+12) = random();
++		*(__u32*)(sb->device_uuid) = rand();
++		*(__u32*)(sb->device_uuid+4) = rand();
++		*(__u32*)(sb->device_uuid+8) = rand();
++		*(__u32*)(sb->device_uuid+12) = rand();
+ 	}
+ 	if (rfd >= 0) close(rfd);
+ 	sb->events = 0;
+
+--yVhtmJPUSI46BTXb
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: attachment; filename="mdadm-2.5-unused.patch"
+
+* Sat May 27 2006 Luca Berra <bluca@vodka.it>
+check return status of all write/fwrite functions as required by glibc 2.4
+
+--- mdadm-2.5/Monitor.c.unused	2006-05-27 14:28:23.000000000 +0200
++++ mdadm-2.5/Monitor.c	2006-05-27 14:28:28.000000000 +0200
+@@ -521,7 +521,7 @@
+ 				int n;
+ 				fprintf(mp, "\nP.S. The /proc/mdstat file current contains the following:\n\n");
+ 				while ( (n=fread(buf, 1, sizeof(buf), mdstat)) > 0)
+-					fwrite(buf, 1, n, mp);
++					n=fwrite(buf, 1, n, mp); /* yes, i don't care about the result */
+ 				fclose(mdstat);
+ 			}
+ 			fclose(mp);
+--- mdadm-2.5/super1.c.unused	2006-05-27 14:36:13.000000000 +0200
++++ mdadm-2.5/super1.c	2006-05-27 14:37:22.000000000 +0200
+@@ -715,7 +715,8 @@
+ 			(((char*)sb)+1024);
+ 		if (__le32_to_cpu(bm->magic) == BITMAP_MAGIC) {
+ 			locate_bitmap1(st, fd, sbv);
+-			write(fd, bm, sizeof(*bm));
++			if (write(fd, bm, sizeof(*bm)) != sizeof(*bm))
++			    return 5;
+ 		}
+ 	}
+ 	fsync(fd);
+--- mdadm-2.5/super0.c.unused	2006-05-27 14:31:33.000000000 +0200
++++ mdadm-2.5/super0.c	2006-05-27 14:34:54.000000000 +0200
+@@ -625,7 +625,8 @@
+ 	if (super->state & (1<<MD_SB_BITMAP_PRESENT)) {
+ 		struct bitmap_super_s * bm = (struct bitmap_super_s*)(super+1);
+ 		if (__le32_to_cpu(bm->magic) == BITMAP_MAGIC)
+-			write(fd, bm, sizeof(*bm));
++			if (write(fd, bm, sizeof(*bm)) != sizeof(*bm))
++			    return 5;
+ 	}
+ 
+ 	fsync(fd);
+--- mdadm-2.5/Grow.c.unused	2006-05-23 06:34:37.000000000 +0200
++++ mdadm-2.5/Grow.c	2006-05-27 14:25:53.000000000 +0200
+@@ -801,7 +801,10 @@
+ 		memset(&bsb, 0, sizeof(bsb));
+ 		for (i=odisks; i<d ; i++) {
+ 			lseek64(fdlist[i], (offsets[i]+last_block)<<9, 0);
+-			write(fdlist[i], &bsb, sizeof(bsb));
++			if (write(fdlist[i], &bsb, sizeof(bsb)) < 0) {
++				fprintf(stderr, Name ": %s: failed to invalidate metadata for raid disk %d\n",
++					devname, i);
++			}
  		}
  
-+		if (trace)
-+			printk(" le=%d, pas=%d, bqp=%d le=%d\n",
-+			       list_empty(&conf->handle_list),
-+			       atomic_read(&conf->preread_active_stripes),
-+			       blk_queue_plugged(mddev->queue),
-+			       list_empty(&conf->delayed_list));
-+
- 		if (list_empty(&conf->handle_list) &&
- 		    atomic_read(&conf->preread_active_stripes) < IO_THRESHOLD &&
- 		    !blk_queue_plugged(mddev->queue) &&
-@@ -1756,6 +1770,8 @@ static void raid5d (mddev_t *mddev)
- 	unplug_slaves(mddev);
- 
- 	PRINTK("--- raid5d inactive\n");
-+	if (trace)
-+		printk("raid5d done\n");
+ 		/* unsuspend. */
+--- mdadm-2.5/bitmap.c.unused	2006-05-19 09:15:32.000000000 +0200
++++ mdadm-2.5/bitmap.c	2006-05-27 14:52:31.000000000 +0200
+@@ -399,16 +399,22 @@
+ 	return rv;
  }
  
- static ssize_t
-@@ -1813,6 +1829,7 @@ stripe_cache_active_show(mddev_t *mddev,
- 		struct list_head *l;
- 		n = sprintf(page, "%d\n", atomic_read(&conf->active_stripes));
- 		n += sprintf(page+n, "%d preread\n", atomic_read(&conf->preread_active_stripes));
-+		n += sprintf(page+n, "%splugged\n", blk_queue_plugged(mddev->queue)?"":"not ");
- 		spin_lock_irq(&conf->device_lock);
- 		c1=0;
- 		list_for_each(l, &conf->bitmap_list)
-@@ -1822,6 +1839,7 @@ stripe_cache_active_show(mddev_t *mddev,
- 			c2++;
- 		spin_unlock_irq(&conf->device_lock);
- 		n += sprintf(page+n, "bitlist=%d delaylist=%d\n", c1, c2);
-+		trigger = 0xffff;
- 		return n;
- 	} else
- 		return 0;
+-void bitmap_update_uuid(int fd, int *uuid)
++int bitmap_update_uuid(int fd, int *uuid)
+ {
+ 	struct bitmap_super_s bm;
+-	lseek(fd, 0, 0);
++	if (lseek(fd, 0, 0) != 0)
++		return 1;
+ 	if (read(fd, &bm, sizeof(bm)) != sizeof(bm))
+-		return;
++		return 1;
+ 	if (bm.magic != __cpu_to_le32(BITMAP_MAGIC))
+-		return;
++		return 1;
+ 	memcpy(bm.uuid, uuid, 16);
++	if (lseek(fd, 0, 0) != 0)
++		return 2;
++	if (write(fd, &bm, sizeof(bm)) != sizeof(bm)) {
++		lseek(fd, 0, 0);
++		return 2;
++	}
+ 	lseek(fd, 0, 0);
+-	write(fd, &bm, sizeof(bm));
+-	lseek(fd, 0, 0);
++	return 0;
+ }
+--- mdadm-2.5/mdadm.h.unused	2006-05-27 14:25:53.000000000 +0200
++++ mdadm-2.5/mdadm.h	2006-05-27 14:51:53.000000000 +0200
+@@ -371,7 +371,7 @@
+ 			unsigned long long array_size,
+ 			int major);
+ extern int ExamineBitmap(char *filename, int brief, struct supertype *st);
+-extern void bitmap_update_uuid(int fd, int *uuid);
++extern int bitmap_update_uuid(int fd, int *uuid);
+ 
+ extern int md_get_version(int fd);
+ extern int get_linux_version(void);
+--- mdadm-2.5/Assemble.c.unused	2006-05-26 08:28:07.000000000 +0200
++++ mdadm-2.5/Assemble.c	2006-05-27 14:40:30.000000000 +0200
+@@ -451,7 +451,9 @@
+ 
+ 			if (strcmp(update, "uuid")==0 &&
+ 			    ident->bitmap_fd)
+-				bitmap_update_uuid(ident->bitmap_fd, info.uuid);
++				if (bitmap_update_uuid(ident->bitmap_fd, info.uuid) != 0)
++					fprintf(stderr, Name ": Could not update uuid on %s.\n",
++						devname);
+ 		} else
+ #endif
+ 		{
+
+--yVhtmJPUSI46BTXb--
