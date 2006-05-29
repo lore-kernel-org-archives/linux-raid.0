@@ -1,51 +1,56 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: RAID5 kicks non-fresh drives
-Date: Mon, 29 May 2006 14:34:36 +1000
-Message-ID: <17530.31196.220346.778940@cse.unsw.edu.au>
-References: <1148652686.3100.4.camel@hendrix.hollabaugh.com>
-	<Pine.LNX.4.44.0605261231460.20378-100000@coffee.psychology.mcmaster.ca>
+From: Luca Berra <bluca@comedia.it>
+Subject: Re: problems with raid=noautodetect
+Date: Mon, 29 May 2006 07:02:43 +0200
+Message-ID: <20060529050242.GM8203@percy.comedia.it>
+References: <4471B188.3060400@umit.at> <17522.15774.526526.244768@cse.unsw.edu.au> <20060526075308.GC8203@percy.comedia.it> <17530.30389.862288.268450@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Mark Hahn on Friday May 26
+Content-Disposition: inline
+In-Reply-To: <17530.30389.862288.268450@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mark Hahn <hahn@physics.mcmaster.ca>
-Cc: Craig Hollabaugh <craig@hollabaugh.com>, linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Friday May 26, hahn@physics.mcmaster.ca wrote:
-> > I had no idea about this particular configuration requirement. None of
-> 
-> just to be clear: it's not a requirement.  if you want the very nice 
-> auto-assembling behavior, you need to designate the auto-assemblable 
-> partitions.  but you can assemble "manually" without 0xfd partitions
-> (even if that's in an initrd, for instance.)
-> 
-> I think the current situation is good, since there is some danger of 
-> going too far.  for instance, testing each partition to see whether 
-> it contains a valid superblock would be pretty crazy, right?
+On Mon, May 29, 2006 at 02:21:09PM +1000, Neil Brown wrote:
+>> 3) introduce "DEVICEFILTER" or similar keyword with the same meaning at
+>> the actual "DEVICE" keyboard
+>
+>If it has the same meaning, why not leave it called 'DEVICE'???
 
-I'm curious: why exactly do you say that?
-Doing the reads themselves cannot be a problem as the kernel already
-reads the partition table from each devices.  Reading superblocks is
-no big deal.
+the idea was to warn people that write
 
-If you don't like the idea of assembling everything that was found,
-how is that different from.....
+DEVICE /dev/sda1 /dev/sdb1 /dev/sdc1 /dev/sdd1
+ARRAY /dev/md0 .......
 
-  requiring
-> either the "auto-assemble-me" partition type, or explicit partitions 
-> given in a config file is a happy medium...
+that it might break since disk naming is not guaranteed to be constant.
 
-assembling everything that was found which had an 'auto-assemble-me'
-flag?  That flag, in common usage, contains almost zero information
-more than the existence of the raid superblock.
+>However, there is at least the beginnings of a good idea here.
+>
+>If we assume there is a list of devices provided by a (possibly
+>default) 'DEVICE' line, then 
+>
+>DEVICEFILTER   !pattern1 !pattern2 pattern3 pattern4
+>
+>could mean that any device in that list which matches pattern 1 or 2
+>is immediately discarded, and remaining device that matches patterns 3
+>or 4 are included, and the remainder are discard.
+>
+>The rule could be that the default is to include any devices that
+>don't match a !pattern, unless there is a pattern without a '!', in
+>which case the default is to reject non-accepted patterns.
+>Is that straight forward enough, or do I need an
+>  order allow,deny
+>like apache has?
+>
+I think that documenting the feature would be enough
+L.
 
-Am I missing something?
-
-My opinion:  the "auto-assemble-me" partition type is not a happy
-medium.  The superblock containing the hostname (as supported by
-mdadm-2.5) is (I hope).
-
-NeilBrown
+-- 
+Luca Berra -- bluca@comedia.it
+        Communication Media & Services S.r.l.
+ /"\
+ \ /     ASCII RIBBON CAMPAIGN
+  X        AGAINST HTML MAIL
+ / \
