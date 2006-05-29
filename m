@@ -1,42 +1,63 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: [patch] install a static build
-Date: Mon, 29 May 2006 12:24:47 +1000
-Message-ID: <17530.23407.766753.5581@cse.unsw.edu.au>
-References: <5d0f60990605270308j71f3f2aem18219202d0fa957f@mail.gmail.com>
-	<20060527134825.GJ8203@percy.comedia.it>
-	<5d0f60990605271519t6e06fd9bw1e0a5f4f372bb31a@mail.gmail.com>
+Subject: Re: problems with raid=noautodetect
+Date: Mon, 29 May 2006 14:21:09 +1000
+Message-ID: <17530.30389.862288.268450@cse.unsw.edu.au>
+References: <4471B188.3060400@umit.at>
+	<17522.15774.526526.244768@cse.unsw.edu.au>
+	<20060526075308.GC8203@percy.comedia.it>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Dirk Jagdmann on Sunday May 28
+In-Reply-To: message from Luca Berra on Friday May 26
 Sender: linux-raid-owner@vger.kernel.org
-To: Dirk Jagdmann <jagdmann@gmail.com>
+To: Luca Berra <bluca@comedia.it>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sunday May 28, jagdmann@gmail.com wrote:
-> Hello Luca,
+On Friday May 26, bluca@comedia.it wrote:
+> On Tue, May 23, 2006 at 08:39:26AM +1000, Neil Brown wrote:
+> >Presumably you have a 'DEVICE' line in mdadm.conf too?  What is it.
+> >My first guess is that it isn't listing /dev/sdd? somehow.
 > 
-> > maybe you better add an install-static target.
+> Neil,
+> i am seeing a lot of people that fall in this same error, and i would
+> propose a way of avoiding this problem
 > 
-> you're right, that would be a cleaner approach. I've don so, and while
-> doing so added install-tcc, install-ulibc, install-klibc too.
-> 
-> And while I'm busy in the Makefile anyway I've made a third patch
-> which adds the uninstall: target too.
-> 
-> -- 
-> ---> Dirk Jagdmann
-> ----> http://cubic.org/~doj
-> -----> http://llg.cubic.org
+> 1) make "DEVICE partitions" the default if no device line is specified.
 
-thanks for these.  
-They are now in my git tree:
-  http://neil.brown.name/cgi-bin/gitweb.cgi?p=mdadm
-  git://neil.brown.name/mdadm
-  
-They claim me as their author I'm afraid.. I'll have to fix my scripts
-to get it right next time :-(
+As you note, we think alike on this :-)
+
+> 2) deprecate the "DEVICE" keyword issuing a warning when it is found in
+> the configuration file
+
+Not sure I'm so keen on that, at least not in the near term.
+
+
+> 3) introduce "DEVICEFILTER" or similar keyword with the same meaning at
+> the actual "DEVICE" keyboard
+
+If it has the same meaning, why not leave it called 'DEVICE'???
+
+However, there is at least the beginnings of a good idea here.
+
+If we assume there is a list of devices provided by a (possibly
+default) 'DEVICE' line, then 
+
+DEVICEFILTER   !pattern1 !pattern2 pattern3 pattern4
+
+could mean that any device in that list which matches pattern 1 or 2
+is immediately discarded, and remaining device that matches patterns 3
+or 4 are included, and the remainder are discard.
+
+The rule could be that the default is to include any devices that
+don't match a !pattern, unless there is a pattern without a '!', in
+which case the default is to reject non-accepted patterns.
+Is that straight forward enough, or do I need an
+  order allow,deny
+like apache has?
+
+
+Thanks for the suggestion.
 
 NeilBrown
