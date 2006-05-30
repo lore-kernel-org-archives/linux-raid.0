@@ -1,88 +1,48 @@
-From: "Francois Barre" <francois.barre@gmail.com>
-Subject: Re: adding multipath device without reboot?
-Date: Tue, 30 May 2006 17:42:07 +0200
-Message-ID: <fd8d0180605300842j62602621jd9550c5411459826@mail.gmail.com>
-References: <447C4FC5.3030502@cc.kuleuven.be>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: Can't get drives containing spare devices to spindown
+Date: Tue, 30 May 2006 12:39:01 -0400
+Message-ID: <447C7525.4010100@tmr.com>
+References: <446395C0.5060502@debruin.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <447C4FC5.3030502@cc.kuleuven.be>
-Content-Disposition: inline
+In-Reply-To: <446395C0.5060502@debruin.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Herta Van den Eynde <herta.vandeneynde@cc.kuleuven.be>
+To: "Marc L. de Bruin" <marc@debruin.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Guess hdparm -z /dev/md12 would do the trick, if you're lucky enough...
+Did I miss an answer to this? As the weather gets hotter I'm doing all I 
+can to reduce heat.
 
-2006/5/30, Herta Van den Eynde <herta.vandeneynde@cc.kuleuven.be>:
-> I'm trying to add a new SAN LUN to a system, create a multipath mdadm
-> device on it, partition it, and create a new filesystem on it, all
-> without taking the system down.
+Marc L. de Bruin wrote:
+
+> Lo,
 >
-> All goes well, up to partitioning the md device:
+> Situation: /dev/md0, type raid1, containing 2 active devices 
+> (/dev/hda1 and /dev/hdc1) and 2 spare devices (/dev/hde1 and /dev/hdg1).
 >
->    # fdisk /dev/md12
->    Device contains neither a valid DOS partition table, nor Sun, SGI
->    or OSF disklabel
->    Building a new DOS disklabel. Changes will remain in memory only,
->    until you decide to write them. After that, of course, the
->    previous content won't be recoverable.
+> Those two spare 'partitions' are the only partitions on those disks 
+> and therefore I'd like to spin down those disks using hdparm for 
+> obvious reasons (noise, heat). Specifically, 'hdparm -S <value> 
+> <device>' sets the standby (spindown) timeout for a drive; the value 
+> is used by the drive to determine how long to wait (with no disk 
+> activity) before turning off the spindle motor to save power.
 >
->    The number of cylinders for this disk is set to 8569312.
->    There is nothing wrong with that, but this is larger than 1024,
->    and could in certain setups cause problems with:
->    1) software that runs at boot time (e.g., old versions of LILO)
->    2) booting and partitioning software from other OSs
->       (e.g., DOS FDISK, OS/2 FDISK)
->    Warning: invalid flag 0x0000 of partition table 4 will be
->    corrected by w(rite)
+> However, it turns out that md actually sort-of prevents those spare 
+> disks to spindown. I can get them off for about 3 to 4 seconds, after 
+> which they immediately spin up again. Removing the spare devices from 
+> /dev/md0 (mdadm /dev/md0 --remove /dev/hd[eg]1) actually solves this, 
+> but I have no intention actually removing those devices.
 >
->    Command (m for help): p
->
->    Disk /dev/md12: 35.0 GB, 35099901952 bytes
->    2 heads, 4 sectors/track, 8569312 cylinders
->    Units = cylinders of 8 * 512 = 4096 bytes
->
->         Device Boot      Start         End      Blocks   Id  System
->
->    Command (m for help): n
->    Command action
->       e   extended
->       p   primary partition (1-4)
->    p
->    Partition number (1-4): 1
->    First cylinder (1-8569312, default 1):
->    Using default value 1
->    Last cylinder or +size or +sizeM or +sizeK (1-8569312, default
->    8569312):
->    Using default value 8569312
->
->    Command (m for help): w
->    The partition table has been altered!
->
->    Calling ioctl() to re-read partition table.
->
->    WARNING: Re-reading the partition table failed with error 22:
->    Invalid argument.
->    The kernel still uses the old table.
->    The new table will be used at the next reboot.
->    Syncing disks.
->
-> I know a reboot will read the new table, but is there any way to clear
-> the in-memory table and replace it with the newly written one?
-> The entire point of this exercise is to be able to add diskspace without
-> having to reboot.
->
-> Kind regards,
->
-> Herta
->
-> Disclaimer: http://www.kuleuven.be/cwis/email_disclaimer.htm
->
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+> How can I make sure that I'm actually able to spin down those two 
+> spare drives? 
+
+
+
+-- 
+bill davidsen <davidsen@tmr.com>
+  CTO TMR Associates, Inc
+  Doing interesting things with small computers since 1979
+
