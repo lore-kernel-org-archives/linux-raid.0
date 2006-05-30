@@ -1,45 +1,52 @@
 From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: Can't get drives containing spare devices to spindown
-Date: Tue, 30 May 2006 12:39:01 -0400
-Message-ID: <447C7525.4010100@tmr.com>
-References: <446395C0.5060502@debruin.org>
+Subject: Re: problems with raid=noautodetect
+Date: Tue, 30 May 2006 13:10:24 -0400
+Message-ID: <447C7C80.3080002@tmr.com>
+References: <4471B188.3060400@umit.at>	<17522.15774.526526.244768@cse.unsw.edu.au>	<20060526075308.GC8203@percy.comedia.it> <17530.30389.862288.268450@cse.unsw.edu.au>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <446395C0.5060502@debruin.org>
+In-Reply-To: <17530.30389.862288.268450@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Marc L. de Bruin" <marc@debruin.org>
-Cc: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: Luca Berra <bluca@comedia.it>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Did I miss an answer to this? As the weather gets hotter I'm doing all I 
-can to reduce heat.
+Neil Brown wrote:
 
-Marc L. de Bruin wrote:
-
-> Lo,
+>On Friday May 26, bluca@comedia.it wrote:
+>  
 >
-> Situation: /dev/md0, type raid1, containing 2 active devices 
-> (/dev/hda1 and /dev/hdc1) and 2 spare devices (/dev/hde1 and /dev/hdg1).
+>>On Tue, May 23, 2006 at 08:39:26AM +1000, Neil Brown wrote:
+>>    
+>>
+>>>Presumably you have a 'DEVICE' line in mdadm.conf too?  What is it.
+>>>My first guess is that it isn't listing /dev/sdd? somehow.
+>>>      
+>>>
+>>Neil,
+>>i am seeing a lot of people that fall in this same error, and i would
+>>propose a way of avoiding this problem
+>>
+>>1) make "DEVICE partitions" the default if no device line is specified.
+>>    
+>>
 >
-> Those two spare 'partitions' are the only partitions on those disks 
-> and therefore I'd like to spin down those disks using hdparm for 
-> obvious reasons (noise, heat). Specifically, 'hdparm -S <value> 
-> <device>' sets the standby (spindown) timeout for a drive; the value 
-> is used by the drive to determine how long to wait (with no disk 
-> activity) before turning off the spindle motor to save power.
+>As you note, we think alike on this :-)
 >
-> However, it turns out that md actually sort-of prevents those spare 
-> disks to spindown. I can get them off for about 3 to 4 seconds, after 
-> which they immediately spin up again. Removing the spare devices from 
-> /dev/md0 (mdadm /dev/md0 --remove /dev/hd[eg]1) actually solves this, 
-> but I have no intention actually removing those devices.
+>  
 >
-> How can I make sure that I'm actually able to spin down those two 
-> spare drives? 
-
-
+>>2) deprecate the "DEVICE" keyword issuing a warning when it is found in
+>>the configuration file
+>>    
+>>
+>
+>Not sure I'm so keen on that, at least not in the near term.
+>
+Let's not start warning and depreciating powerful features because they 
+can be misused... If I wanted someone to make decisions for me I would 
+be using this software at all.
 
 -- 
 bill davidsen <davidsen@tmr.com>
