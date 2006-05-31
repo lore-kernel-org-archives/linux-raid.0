@@ -1,35 +1,63 @@
-From: "=?gb2312?B?zfXWvsCk?=" <raidwang@gmail.com>
-Subject: kernel messages when "rmmod md" module
-Date: Wed, 31 May 2006 17:37:44 +0800
-Message-ID: <200605311737409216484@gmail.com>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: problems with raid=noautodetect
+Date: Wed, 31 May 2006 09:23:59 -0400
+Message-ID: <447D98EF.1030803@tmr.com>
+References: <4471B188.3060400@umit.at> <17522.15774.526526.244768@cse.unsw.edu.au> <20060526075308.GC8203@percy.comedia.it> <17530.30389.862288.268450@cse.unsw.edu.au> <447C7C80.3080002@tmr.com> <20060530173020.GD4022@percy.comedia.it>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20060530173020.GD4022@percy.comedia.it>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>, Neil Brown <neilb@cse.unsw.edu.au>
+To: Luca Berra <bluca@comedia.it>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-hi,
-	I build the linux-2.6.11 kernel using the default kernle config file in configs directory and just config "<M> RAID support". When i use "mdadm -S /dev/md0" to stop md, everything is ok! But when i "rmmod md", kernel prints messages as follow.
- 
-Debug: sleeping function called from invalid context at kernel/workqueue.c:264
-in_atomic():1, irqs_disabled():0
- [<c013bbf4>] flush_workqueue+0x1a/0x27
- [<c029ec2f>] blk_cleanup_queue+0x30/0x78
- [<c021eb5d>] kref_put+0x29/0x8c
- [<e11e50d1>] mddev_put+0xad/0x133 [md]
- [<c021df71>] kobject_put+0x1e/0x22
- [<e11ec802>] md_exit+0x1ce/0x2b3 [md]
- [<c014a059>] __try_stop_module+0x27/0x3e
- [<c014a098>] try_stop_module+0x28/0x2d
- [<c014a248>] sys_delete_module+0x13b/0x180
- [<c0108ac4>] do_syscall_trace+0x10b/0x14c
- [<c010384d>] syscall_call+0x7/0xb
+Luca Berra wrote:
 
-    I add some debug message in the md.c and find "md_exit" function calls "mddev_put" function. After "mddev_put" function calls "blk_put_queue(mddev->queue);", the kernel prints message as above.
-	I have noticed that "do_md_stop" function calls "mddev->pers->stop(mddev);", and "stop" function has called "blk_sync_queue(mddev->queue);"
- 
-	Would anybody give me some suggestions? Thanks!
+> On Tue, May 30, 2006 at 01:10:24PM -0400, Bill Davidsen wrote:
+>
+>>>> 2) deprecate the "DEVICE" keyword issuing a warning when it is 
+>>>> found in
+>>>> the configuration file
+>>>
+>>>
+>>> Not sure I'm so keen on that, at least not in the near term.
+>>>
+>> Let's not start warning and depreciating powerful features because 
+>> they can be misused... If I wanted someone to make decisions for me I 
+>> would be using this software at all.
+>
+>
+> you cut the rest of the mail.
+
+Trimming the part about which I make no comment is usually a good thing.
+
+> i did not propose to deprecate the feature,
+> just the keyword.
+
+"A rose by any other name would still smell as sweet." In other words, 
+the capability is still able to be misused, and changing the name or 
+generating error messages will only cause work and concern for people 
+using the feature.
+
+>
+> but, ok,
+> just go on writing DEVICE /dev/sda1
+> DEVICE /dev/sdb1
+> ARRAY /dev/md0 devices=/dev/sda1,/dev/sdb1
+>
+> then come on the list and complain when it stops working. 
+
+
+What I suggest is that the feature keep working, and no one will 
+complain. If there is a missing partition the error messages are clear. 
+The feature is mainly used when there are partitions or drives which 
+should not be examined, and "stops working" only when a hardware config 
+has changed.
+
+-- 
+bill davidsen <davidsen@tmr.com>
+  CTO TMR Associates, Inc
+  Doing interesting things with small computers since 1979
 
