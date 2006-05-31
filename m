@@ -1,144 +1,76 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: RAID 5 Whole Devices - Partition
-Date: Wed, 31 May 2006 09:48:49 +1000
-Message-ID: <17532.55777.423385.872@cse.unsw.edu.au>
-References: <4e40e93e0605301008x34bc03dekb9a35952668e7a14@mail.gmail.com>
+From: dean gaudet <dean@arctic.org>
+Subject: Re: raid5 hang on get_active_stripe
+Date: Tue, 30 May 2006 17:15:35 -0700 (PDT)
+Message-ID: <Pine.LNX.4.64.0605301713480.11178@twinlark.arctic.org>
+References: <5d96567b0603060346r768a0ee1i8d8170cf9ba4bac1@mail.gmail.com>
+ <Pine.LNX.4.56.0603061156140.26994@lion.drogon.net>
+ <5d96567b0603060456h5f2c3cc8me790c86b74e1f854@mail.gmail.com>
+ <4415F400.5030808@ucolick.org> <17429.64926.100005.904328@cse.unsw.edu.au>
+ <Pine.LNX.4.64.0605110758100.25283@twinlark.arctic.org>
+ <Pine.LNX.4.64.0605171137350.29929@twinlark.arctic.org>
+ <17522.29813.189944.397154@cse.unsw.edu.au> <Pine.LNX.4.64.0605260903270.7952@twinlark.arctic.org>
+ <17527.38282.35857.117651@cse.unsw.edu.au> <Pine.LNX.4.64.0605270834240.30550@twinlark.arctic.org>
+ <17529.37347.782285.77442@cse.unsw.edu.au> <Pine.LNX.4.64.0605291354260.30134@twinlark.arctic.org>
+ <17531.35050.632471.433333@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Michael Theodoulou on Tuesday May 30
+In-Reply-To: <17531.35050.632471.433333@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Michael Theodoulou <michael.theodoulou@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: Patrik Jonsson <patrik@ucolick.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday May 30, michael.theodoulou@gmail.com wrote:
-> Hello,
-> 
-> I am trying to create a RAID5 array out of 3 160GB SATA drives. After
-> i create the array i want to partition the device into 2 partitions.
-> 
-> The system lies on a SCSI disk and the 2 partitions will be used for
-> data storage.
-> The SATA host is an HPT374 device with drivers compiled in the kernel.
-> 
-> These are the steps i followed
-> 
-> mdadm -Cv --auto=part /dev/md_d0 --chunk=64 -l 5 --raid-devices=3
-> /dev/hde /dev/hdi /dev/hdk
-> 
-> Running this command notifies me that there is an ext2 fs on one of
-> the drives even if i fdisked them before and removed all partititions.
-> Why is this happening?
+On Tue, 30 May 2006, Neil Brown wrote:
 
-The ext2 superblock is on the second 1K for the device.
-The only place that fdisk writes is in the first 512 bytes.  So fdisk
-is never going to remove the signature of a an ext2 filesystem.
+> Could you try this patch please?  On top of the rest.
+> And if it doesn't fail in a couple of days, tell me how regularly the
+> message 
+>    kblockd_schedule_work failed
+> gets printed.
 
+i'm running this patch now ... and just after reboot, no freeze yet, i've 
+already seen a handful of these:
+
+May 30 17:05:09 localhost kernel: kblockd_schedule_work failed
+May 30 17:05:59 localhost kernel: kblockd_schedule_work failed
+May 30 17:08:16 localhost kernel: kblockd_schedule_work failed
+May 30 17:10:51 localhost kernel: kblockd_schedule_work failed
+May 30 17:11:51 localhost kernel: kblockd_schedule_work failed
+May 30 17:12:46 localhost kernel: kblockd_schedule_work failed
+May 30 17:14:14 localhost kernel: kblockd_schedule_work failed
+
+-dean
 
 > 
-> In anycase i continue with the array creation
-
-This is the right thing to do.
-
+> Thanks,
+> NeilBrown
 > 
-> After initialization 5 new devices are created in /dev
 > 
-> /dev/md_d0
-> /dev/md_d0p1
-> /dev/md_d0_p1
-> /dev/md_d0_p2
-> /dev/md_d0_p3
-> /dev/md_d0_p4
+> Signed-off-by: Neil Brown <neilb@suse.de>
 > 
-> The problems arise when i reboot.
-> A device /dev/md0 seems to keep the 3 disks busy and as a result when
-
-You need to find out where that is coming from.  Complete kernel logs
-might help.  Maybe you have an initrd which is trying to be helpful?
-
-
-> the time comes
-> to assemble the array i get the error that the disks are busy.
-> When the system boots i cat /proc/mdstat and see that /dev/md0 is a
-> raid5 array made of the two disks and it comes up as degraded
+> ### Diffstat output
+>  ./block/ll_rw_blk.c |    6 +++++-
+>  1 file changed, 5 insertions(+), 1 deletion(-)
 > 
-> I can then stop the array using mdadm -S /dev/md0 and restart it using
-> mdadm -As which uses the correct /dev/md_d0. Examining that shows its
-> clean and ok
+> diff ./block/ll_rw_blk.c~current~ ./block/ll_rw_blk.c
+> --- ./block/ll_rw_blk.c~current~	2006-05-30 09:48:02.000000000 +1000
+> +++ ./block/ll_rw_blk.c	2006-05-30 09:48:48.000000000 +1000
+> @@ -1636,7 +1636,11 @@ static void blk_unplug_timeout(unsigned 
+>  {
+>  	request_queue_t *q = (request_queue_t *)data;
+>  
+> -	kblockd_schedule_work(&q->unplug_work);
+> +	if (!kblockd_schedule_work(&q->unplug_work)) {
+> +		/* failed to schedule the work, try again later */
+> +		printk("kblockd_schedule_work failed\n");
+> +		mod_timer(&q->unplug_timer, jiffies + q->unplug_delay);
+> +	}
+>  }
+>  
+>  /**
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > 
-> /dev/md_d0:
->         Version : 00.90.01
->   Creation Time : Tue May 30 17:03:31 2006
->      Raid Level : raid5
->      Array Size : 312581632 (298.10 GiB 320.08 GB)
->     Device Size : 156290816 (149.05 GiB 160.04 GB)
->    Raid Devices : 3
->   Total Devices : 3
-> Preferred Minor : 0
->     Persistence : Superblock is persistent
-> 
->     Update Time : Tue May 30 19:48:03 2006
->           State : clean
->  Active Devices : 3
-> Working Devices : 3
->  Failed Devices : 0
->   Spare Devices : 0
-> 
->          Layout : left-symmetric
->      Chunk Size : 64K
-> 
->     Number   Major   Minor   RaidDevice State
->        0      33        0        0      active sync   /dev/hde
->        1      56        0        1      active sync   /dev/hdi
->        2      57        0        2      active sync   /dev/hdk
->            UUID : 9f520781:7f3c2052:1cb5078e:c3f3b95c
->          Events : 0.2
-> 
-> Is this the expected behavior? Why doesnt the kernel ignore /dev/md0
-> and tries to use it? I tried using raid=noautodetect but it didnt help
-> I am using 2.6.9
-
-Most be something else trying to start the array.  Maybe a stray
-'raidstart'.  Maybe something in an initrd.
-
-> 
-> This is my mdadm.conf
-> DEVICE /dev/hde /dev/hdi /dev/hdk
-> ARRAY /dev/md_d0 level=raid5 num-devices=3
-> UUID=9f520781:7f3c2052:1cb5078e:c3f3b95c
->    devices=/dev/hde,/dev/hdi,/dev/hdk auto=partition
-> MAILADDR myemail@mydomain.tld
-
-This should work providing the device names of the ide drives never
-change  -- which is fairly safe.  It isn't safe for SCSI drives.
-
-
-> 
-> Furthermore when i fdisk the drives after all of this i can see the 2
-> partitions on /dev/hde and /dev/hdi but /dev/hdk shows that no
-> partition exists. Is this a sign of data corruption or drive failure?
-> Shouldnt all 3 drives show the same partition information?
-
-No.  The drives shouldn't really have partition information at all.
-The raid array has the partition information.
-However the first block of /dev/hde is also the first block of
-/dev/md_d0, so it will appear to have the same partition table.
-And the first block of /dev/hdk is an 'xor' of the first blocks of hdi
-and hde.  So if the first block of hdi is all zeros, then the first
-block of /dev/hdk will have the same partition table.
-
-
-> fdisk /dev/hde
-> /dev/hde1               1       19457   156288352   fd  Linux raid autodetect
-> 
-> fdisk /dev/hdi
-> /dev/hdi1               1       19457   156288321   fd  Linux raid
-> autodetect
-
-When you created the partitions in /dev/md_d0, you must have set the
-partition type to 'Linux raid autodetect'.  You don't want to do that.
-Change it to 'Linux' or whatever.
-
-NeilBrown
