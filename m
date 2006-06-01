@@ -1,93 +1,31 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: raid5 hang on get_active_stripe
-Date: Thu, 1 Jun 2006 12:51:20 +1000
-Message-ID: <17534.22056.981033.686846@cse.unsw.edu.au>
-References: <5d96567b0603060346r768a0ee1i8d8170cf9ba4bac1@mail.gmail.com>
-	<Pine.LNX.4.56.0603061156140.26994@lion.drogon.net>
-	<5d96567b0603060456h5f2c3cc8me790c86b74e1f854@mail.gmail.com>
-	<4415F400.5030808@ucolick.org>
-	<17429.64926.100005.904328@cse.unsw.edu.au>
-	<Pine.LNX.4.64.0605110758100.25283@twinlark.arctic.org>
-	<Pine.LNX.4.64.0605171137350.29929@twinlark.arctic.org>
-	<17522.29813.189944.397154@cse.unsw.edu.au>
-	<Pine.LNX.4.64.0605260903270.7952@twinlark.arctic.org>
-	<17527.38282.35857.117651@cse.unsw.edu.au>
-	<Pine.LNX.4.64.0605270834240.30550@twinlark.arctic.org>
-	<17529.37347.782285.77442@cse.unsw.edu.au>
-	<Pine.LNX.4.64.0605291354260.30134@twinlark.arctic.org>
-	<17531.35050.632471.433333@cse.unsw.edu.au>
-	<Pine.LNX.4.64.0605301713480.11178@twinlark.arctic.org>
-	<17532.59212.364233.765155@cse.unsw.edu.au>
-	<Pine.LNX.4.64.0605301758380.21977@twinlark.arctic.org>
-	<17532.62343.933852.982391@cse.unsw.edu.au>
-	<Pine.LNX.4.64.0605301844180.21977@twinlark.arctic.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+From: NeilBrown <neilb@suse.de>
+Subject: [PATCH 000 of 10] md: Introduction - assorted patches for -mm
+Date: Thu, 1 Jun 2006 15:13:11 +1000
+Message-ID: <20060601150955.27444.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from dean gaudet on Tuesday May 30
 Sender: linux-raid-owner@vger.kernel.org
-To: dean gaudet <dean@arctic.org>
-Cc: Patrik Jonsson <patrik@ucolick.org>, linux-raid@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday May 30, dean@arctic.org wrote:
-> On Wed, 31 May 2006, Neil Brown wrote:
-> 
-> > On Tuesday May 30, dean@arctic.org wrote:
-> > > 
-> > > actually i think the rate is higher... i'm not sure why, but klogd doesn't 
-> > > seem to keep up with it:
-> > > 
-> > > root@neemlark:~# grep -c kblockd_schedule_work /var/log/messages
-> > > 31
-> > > root@neemlark:~# dmesg | grep -c kblockd_schedule_work
-> > > 8192
-> > 
-> > # grep 'last message repeated' /var/log/messages
-> > ??
-> 
-> um hi, of course :)  the paste below is approximately correct.
-> 
+Following are 10 patches for md in -mm.  None are appropriate for 2.6.17.
 
-Ok, so thousands of times a second.  Not what I expected at all...
-
-So I read the code more carefully, and can see that patch was all
-wrong.  It might actually make the problem go away, but isn't really
-the right fix.
-
-I think I will be able to suggest a fix which should work a be a
-reasonable thing to do, but it still won't help me understand the
-problem.
-
-I've got one more long-shot I would like to try first.  If you could
-backout that change to ll_rw_block, and apply this patch instead.
-Then when it hangs, just cat the stripe_cache_active file and see if
-that unplugs things or not (cat it a few times).
-
-If it does, I think I am on to the problem.
-If it doesn't I'll give up and give you a patch that should work
-around the problem in a reasonable way.
+First 3 are fixes.
+Next 2 are functionality improvements (people keep wanting their spare 
+   drives to go to sleep, so now they can).
+Remainder are more sysfs access.
 
 Thanks,
 NeilBrown
 
-Signed-off-by: Neil Brown <neilb@suse.de>
 
-### Diffstat output
- ./drivers/md/raid5.c |    3 +++
- 1 file changed, 3 insertions(+)
-
-diff ./drivers/md/raid5.c~current~ ./drivers/md/raid5.c
---- ./drivers/md/raid5.c~current~	2006-05-28 21:56:56.000000000 +1000
-+++ ./drivers/md/raid5.c	2006-06-01 12:44:52.000000000 +1000
-@@ -1840,6 +1840,9 @@ stripe_cache_active_show(mddev_t *mddev,
- 		spin_unlock_irq(&conf->device_lock);
- 		n += sprintf(page+n, "bitlist=%d delaylist=%d\n", c1, c2);
- 		trigger = 0xffff;
-+
-+		/* incredible long shot... */
-+		kblockd_flush();
- 		return n;
- 	} else
- 		return 0;
+ [PATCH 001 of 10] md: md Kconfig speeling feex
+ [PATCH 002 of 10] md: Fix Kconfig error
+ [PATCH 003 of 10] md: Fix bug that stops raid5 resync from happening
+ [PATCH 004 of 10] md: Allow re-add to work on array without bitmaps.
+ [PATCH 005 of 10] md: Don't write dirty/clean update to spares - leave them alone
+ [PATCH 006 of 10] md: Set/get state of array via sysfs
+ [PATCH 007 of 10] md: Allow rdev state to be set via sysfs.
+ [PATCH 008 of 10] md: Allow raid 'layout' to be read and set via sysfs.
+ [PATCH 009 of 10] md: Allow resync_start to be set and queried via sysfs.
+ [PATCH 010 of 10] md: Allow the write_mostly flag to be set via sysfs.
