@@ -1,75 +1,138 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [PATCH 007 of 10] md: Allow rdev state to be set via sysfs.
-Date: Thu, 1 Jun 2006 15:14:03 +1000
-Message-ID: <1060601051403.27625@suse.de>
+Subject: [PATCH 004 of 10] md: Allow re-add to work on array without bitmaps.
+Date: Thu, 1 Jun 2006 15:13:42 +1000
+Message-ID: <1060601051342.27589@suse.de>
 References: <20060601150955.27444.patches@notabene>
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S964911AbWFAFOu@vger.kernel.org>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751795AbWFAFOI@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: Andrew Morton <akpm@osdl.org>
 Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-The md/dev-XXX/state file can now be written:
+When an array has a bitmap, a device can be removed and re-added
+and only blocks changes since the removal (as recorded in the bitmap)
+will be resynced.
 
- "faulty" simulates an error on the device
- "remove" removes the device from the array (if it is not busy)
+It should be possible to do a similar thing to arrays without bitmaps.
+i.e. if a device is removed and re-added and *no* changes have been
+made in the interim, then the add should not require a resync.
+
+This patch allows that option. 
+This means that when assembling an array one device at a time (e.g.
+during device discovery) the array can be enabled read-only as soon
+as enough devices are available, but extra devices can still be added
+without causing a resync.
 
 Signed-off-by: Neil Brown <neilb@suse.de>
 
 ### Diffstat output
- ./Documentation/md.txt |    3 +++
- ./drivers/md/md.c      |   26 +++++++++++++++++++++++++-
- 2 files changed, 28 insertions(+), 1 deletion(-)
-
-diff ./Documentation/md.txt~current~ ./Documentation/md.txt
---- ./Documentation/md.txt~current~	2006-06-01 15:05:29.000000000 +1000
-+++ ./Documentation/md.txt	2006-06-01 15:05:29.000000000 +1000
-@@ -302,6 +302,9 @@ Each directory contains:
- 			 This includes spares that are in the process
- 			 of being recoverred to
- 	This list make grow in future.
-+	This can be written to.
-+	Writing "faulty"  simulates a failure on the device.
-+	Writing "remove" removes the device from the array.
- 
-       errors
- 	An approximate count of read errors that have been detected on
+ ./drivers/md/md.c    |   25 ++++++++++++++-----------
+ ./drivers/md/raid1.c |    6 ++++++
+ 2 files changed, 20 insertions(+), 11 deletions(-)
 
 diff ./drivers/md/md.c~current~ ./drivers/md/md.c
---- ./drivers/md/md.c~current~	2006-06-01 15:05:29.000000000 +1000
-+++ ./drivers/md/md.c	2006-06-01 15:05:30.000000000 +1000
-@@ -1745,8 +1745,32 @@ state_show(mdk_rdev_t *rdev, char *page)
- 	return len+sprintf(page+len, "\n");
- }
+--- ./drivers/md/md.c~current~	2006-06-01 15:03:28.000000000 +1000
++++ ./drivers/md/md.c	2006-06-01 15:05:29.000000000 +1000
+@@ -737,6 +737,7 @@ static int super_90_validate(mddev_t *md
+ {
+ 	mdp_disk_t *desc;
+ 	mdp_super_t *sb = (mdp_super_t *)page_address(rdev->sb_page);
++	__u64 ev1 = md_event(sb);
  
-+static ssize_t
-+state_store(mdk_rdev_t *rdev, const char *buf, size_t len)
-+{
-+	/* can write
-+	 *  faulty  - simulates and error
-+	 *  remove  - disconnects the device
-+	 */
-+	int err = -EINVAL;
-+	if (cmd_match(buf, "faulty") && rdev->mddev->pers) {
-+		md_error(rdev->mddev, rdev);
-+		err = 0;
-+	} else if (cmd_match(buf, "remove")) {
-+		if (rdev->raid_disk >= 0)
-+			err = -EBUSY;
-+		else {
-+			mddev_t *mddev = rdev->mddev;
-+			kick_rdev_from_array(rdev);
-+			md_update_sb(mddev);
-+			md_new_event(mddev);
-+			err = 0;
-+		}
+ 	rdev->raid_disk = -1;
+ 	rdev->flags = 0;
+@@ -753,7 +754,7 @@ static int super_90_validate(mddev_t *md
+ 		mddev->layout = sb->layout;
+ 		mddev->raid_disks = sb->raid_disks;
+ 		mddev->size = sb->size;
+-		mddev->events = md_event(sb);
++		mddev->events = ev1;
+ 		mddev->bitmap_offset = 0;
+ 		mddev->default_bitmap_offset = MD_SB_BYTES >> 9;
+ 
+@@ -802,7 +803,6 @@ static int super_90_validate(mddev_t *md
+ 
+ 	} else if (mddev->pers == NULL) {
+ 		/* Insist on good event counter while assembling */
+-		__u64 ev1 = md_event(sb);
+ 		++ev1;
+ 		if (ev1 < mddev->events) 
+ 			return -EINVAL;
+@@ -810,11 +810,13 @@ static int super_90_validate(mddev_t *md
+ 		/* if adding to array with a bitmap, then we can accept an
+ 		 * older device ... but not too old.
+ 		 */
+-		__u64 ev1 = md_event(sb);
+ 		if (ev1 < mddev->bitmap->events_cleared)
+ 			return 0;
+-	} else /* just a hot-add of a new device, leave raid_disk at -1 */
+-		return 0;
++	} else {
++		if (ev1 < mddev->events)
++			/* just a hot-add of a new device, leave raid_disk at -1 */
++			return 0;
 +	}
-+	return err ? err : len;
-+}
- static struct rdev_sysfs_entry
--rdev_state = __ATTR_RO(state);
-+rdev_state = __ATTR(state, 0644, state_show, state_store);
  
- static ssize_t
- super_show(mdk_rdev_t *rdev, char *page)
+ 	if (mddev->level != LEVEL_MULTIPATH) {
+ 		desc = sb->disks + rdev->desc_nr;
+@@ -1105,6 +1107,7 @@ static int super_1_load(mdk_rdev_t *rdev
+ static int super_1_validate(mddev_t *mddev, mdk_rdev_t *rdev)
+ {
+ 	struct mdp_superblock_1 *sb = (struct mdp_superblock_1*)page_address(rdev->sb_page);
++	__u64 ev1 = le64_to_cpu(sb->events);
+ 
+ 	rdev->raid_disk = -1;
+ 	rdev->flags = 0;
+@@ -1120,7 +1123,7 @@ static int super_1_validate(mddev_t *mdd
+ 		mddev->layout = le32_to_cpu(sb->layout);
+ 		mddev->raid_disks = le32_to_cpu(sb->raid_disks);
+ 		mddev->size = le64_to_cpu(sb->size)/2;
+-		mddev->events = le64_to_cpu(sb->events);
++		mddev->events = ev1;
+ 		mddev->bitmap_offset = 0;
+ 		mddev->default_bitmap_offset = 1024 >> 9;
+ 		
+@@ -1154,7 +1157,6 @@ static int super_1_validate(mddev_t *mdd
+ 
+ 	} else if (mddev->pers == NULL) {
+ 		/* Insist of good event counter while assembling */
+-		__u64 ev1 = le64_to_cpu(sb->events);
+ 		++ev1;
+ 		if (ev1 < mddev->events)
+ 			return -EINVAL;
+@@ -1162,12 +1164,13 @@ static int super_1_validate(mddev_t *mdd
+ 		/* If adding to array with a bitmap, then we can accept an
+ 		 * older device, but not too old.
+ 		 */
+-		__u64 ev1 = le64_to_cpu(sb->events);
+ 		if (ev1 < mddev->bitmap->events_cleared)
+ 			return 0;
+-	} else /* just a hot-add of a new device, leave raid_disk at -1 */
+-		return 0;
+-
++	} else {
++		if (ev1 < mddev->events)
++			/* just a hot-add of a new device, leave raid_disk at -1 */
++			return 0;
++	}
+ 	if (mddev->level != LEVEL_MULTIPATH) {
+ 		int role;
+ 		rdev->desc_nr = le32_to_cpu(sb->dev_number);
+
+diff ./drivers/md/raid1.c~current~ ./drivers/md/raid1.c
+--- ./drivers/md/raid1.c~current~	2006-06-01 15:03:28.000000000 +1000
++++ ./drivers/md/raid1.c	2006-06-01 15:05:29.000000000 +1000
+@@ -1625,6 +1625,12 @@ static sector_t sync_request(mddev_t *md
+ 	/* before building a request, check if we can skip these blocks..
+ 	 * This call the bitmap_start_sync doesn't actually record anything
+ 	 */
++	if (mddev->bitmap == NULL &&
++	    mddev->recovery_cp == MaxSector &&
++	    conf->fullsync == 0) {
++		*skipped = 1;
++		return max_sector - sector_nr;
++	}
+ 	if (!bitmap_start_sync(mddev->bitmap, sector_nr, &sync_blocks, 1) &&
+ 	    !conf->fullsync && !test_bit(MD_RECOVERY_REQUESTED, &mddev->recovery)) {
+ 		/* We can skip this block, and probably several more */
