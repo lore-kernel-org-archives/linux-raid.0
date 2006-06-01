@@ -1,52 +1,47 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: RAID5E
-Date: Thu, 1 Jun 2006 11:13:02 +1000
-Message-ID: <17534.16158.788542.538484@cse.unsw.edu.au>
-References: <447D9E72.3000704@tmr.com>
+Subject: Re: [PATCH] mdadm 2.5 (Was: ANNOUNCE: mdadm 2.5 - A tool for managing
+ Soft RAID under Linux)
+Date: Thu, 1 Jun 2006 11:22:09 +1000
+Message-ID: <17534.16705.903525.672433@cse.unsw.edu.au>
+References: <20060531171801.56459.qmail@web50208.mail.yahoo.com>
+	<447E1574.60908@eyal.emu.id.au>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Bill Davidsen on Wednesday May 31
+In-Reply-To: message from Eyal Lebedinsky on Thursday June 1
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: Linux Raid List <linux-raid@vger.kernel.org>
+To: Eyal Lebedinsky <eyal@eyal.emu.id.au>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wednesday May 31, davidsen@tmr.com wrote:
-> Where I was working most recently some systems were using RAID5E (RAID5 
-> with both the parity and hot spare distributed). This seems to be highly 
-> desirable for small arrays, where spreading head motion over one more 
-> drive will improve performance, and in all cases where a rebuild to the 
-> hot spare will avoid a bottleneck on a single drive.
+On Thursday June 1, eyal@eyal.emu.id.au wrote:
+> Alex Davis wrote:
+> >>short swap16(short in)
+> >>{
+> >>       int i;
+> >>       short out=0;
+> >>       for (i=0; i<4; i++) {
+> >>               out = out<<8 | (in&255);
+> >>               in = in >> 8;
+> >>       }
+> >>       return out;
+> >>}
+> > 
+> > Shouldn't that be "for (i=0; i<2; i++) {..." ? 
+
+Well, yes... if you want the code to actually work, I guess that might
+be an improvement....
+
+
 > 
-> Is there any plan to add this capability?
+> In which case, do we really need this complexity rather than
+> a clear swap, e.g.
+> 	return (short)(((in&0x0ff)<<8) | ((in>>8)&0x0ff))
 
-I thought about it briefly....
+What I like about the above is that the difference between swap16,
+swap32 and swap64 is just one number.  In this case I think clarity
+and maintainability are much more important than efficiency.
 
-As I understand it, the layout of raid5e when non-degraded is very
-similar to raid6 - however the 'Q' block is simply not used.
-This would be trivial to implement.
-
-The interesting bit comes when a device fails and you want to rebuild
-that distributed spare.
-There are two possible ways that you could do this:
-
-1/ Leave the spare where it is and write the correct data into each
- spare.  This would be fairly easy but would leave an array with an
- very ... interesting layout of data.
- When you add a replacement you just move everything back.
-
-2/ reshape the array to be a regular raid5 layout.  This would be hard
- to do well without NVRAM as you are moving live data, but would result
- in a neat and tidy array.  Ofcourse adding a drive back in would be
- interesting again...
-
-I had previously only thought of option '2', and so discarded the idea
-as not worth the effort.  The more I think about it, the more possible
-option 1 sounds.
-I've put it back on my todo list, but I don't expect to get to it this
-year.  Ofcourse if someone else wants to give it a try, I'm happy to
-make suggestions and review code.
-
+Thanks for the comment,
 NeilBrown
