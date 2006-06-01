@@ -1,52 +1,41 @@
-From: Usman Omar <usman_omar@tlen.pl>
-Subject: INVESTMENT
-Date: Thu,  1 Jun 2006 12:33:44 +0200 (CEST)
-Message-ID: <20060601103344.1128C14C7BD@h56451.serverkompetenz.net>
-Reply-To: info_ceo_zibex@myway.com
+From: stephan sperber <quinte17@gmx.de>
+Subject: raid5e and raid5ee
+Date: Thu, 01 Jun 2006 11:59:14 +0200
+Message-ID: <20060601095914.72770@gmx.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+This topic is quite interresting.
+I found some information about raid5e and raid5ee only on the german wi=
+kipedia, but the pictures could do just fine.
+
+http://de.wikipedia.org/wiki/RAID#RAID_5E
+http://de.wikipedia.org/wiki/Bild:RAID_5E.png
+http://de.wikipedia.org/wiki/Bild:RAID_5EE.png
+
+as i understand it, there is no real raid5 in place.
+raid5ee is basically a simple raid5 with 4 discs, but leaving the 4. di=
+sk virtually empty. so if 1 disk fails, the empty stripes are filled.
+
+i dont know much about this topic, and i dont know if the information i=
+n wikipedia is correct, but i hope i could help a bit
+
+yours
+
+stephan
+--=20
 
 
-Hello please read and reply me as I want to settle my son and my wife out of the country as soon as possible and I believe this is best for us now that things getting worse and worse here.
-
-
-
-I am richman and wealthyman and I provide everything needed, as Baghdad is not safe for us anymore. 
-
-
-
-Please reply me as i want continue my business abroad immediately after my family is out as I want them out and I will also move out soon as i close my company and settle all staff working for me. i waiting for your reply and making plans so they leave to Jordan first and be safe atleast.
-
-
-
-I will like to go into real estate business as i want close my oil and constructions business here due to constant fear of daily events here. 
-
-
-
-I will tell you more but note this is private idea i am thinking of how to continue.
-
-
-
-Please reply to <info_ceo_zibex@myway.com> which is my business email address. 
-
-
-
-Thanks and expecting your reply.
-
-
-
-Usman Omar. 
-
-
-
-
-
-
-
-
+Der GMX SmartSurfer hilft bis zu 70% Ihrer Onlinekosten zu sparen!
+      Ideal f=FCr Modem und ISDN: http://www.gmx.net/de/go/smartsurfer
+   =20
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
