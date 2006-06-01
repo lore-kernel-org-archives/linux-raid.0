@@ -1,81 +1,54 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [PATCH 008 of 10] md: Allow raid 'layout' to be read and set via sysfs.
-Date: Thu, 1 Jun 2006 15:14:08 +1000
-Message-ID: <1060601051408.27637@suse.de>
+Subject: [PATCH 001 of 10] md: md Kconfig speeling feex
+Date: Thu, 1 Jun 2006 15:13:17 +1000
+Message-ID: <1060601051317.27547@suse.de>
 References: <20060601150955.27444.patches@notabene>
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S964886AbWFAFOd@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Andrew Morton <akpm@osdl.org>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Justin Piszcz <jpiszcz@lucidpixels.com>
 List-Id: linux-raid.ids
 
 
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
 
+I was experimenting with Linux SW raid today and found a spelling error 
+when reading the help menus...
+(and fly spell found more).
 
 Signed-off-by: Neil Brown <neilb@suse.de>
 
 ### Diffstat output
- ./Documentation/md.txt |    5 +++++
- ./drivers/md/md.c      |   27 +++++++++++++++++++++++++++
- 2 files changed, 32 insertions(+)
+ ./drivers/md/Kconfig |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff ./Documentation/md.txt~current~ ./Documentation/md.txt
---- ./Documentation/md.txt~current~	2006-06-01 15:05:29.000000000 +1000
-+++ ./Documentation/md.txt	2006-06-01 15:05:30.000000000 +1000
-@@ -200,6 +200,11 @@ All md devices contain:
-      This can be written only while the array is being assembled, not
-      after it is started.
+diff ./drivers/md/Kconfig~current~ ./drivers/md/Kconfig
+--- ./drivers/md/Kconfig~current~	2006-06-01 15:03:29.000000000 +1000
++++ ./drivers/md/Kconfig	2006-06-01 15:04:25.000000000 +1000
+@@ -90,7 +90,7 @@ config MD_RAID10
+ 	depends on BLK_DEV_MD && EXPERIMENTAL
+ 	---help---
+ 	  RAID-10 provides a combination of striping (RAID-0) and
+-	  mirroring (RAID-1) with easier configuration and more flexable
++	  mirroring (RAID-1) with easier configuration and more flexible
+ 	  layout.
+ 	  Unlike RAID-0, but like RAID-1, RAID-10 requires all devices to
+ 	  be the same size (or at least, only as much as the smallest device
+@@ -147,7 +147,7 @@ config MD_RAID5_RESHAPE
+ 	  is online.  However it is still EXPERIMENTAL code.  It should
+ 	  work, but please be sure that you have backups.
  
-+  layout
-+     The "layout" for the array for the particular level.  This is
-+     simply a number that is interpretted differently by different
-+     levels.  It can be written while assembling an array.
-+
-    new_dev
-      This file can be written but not read.  The value written should
-      be a block device number as major:minor.  e.g. 8:0
-
-diff ./drivers/md/md.c~current~ ./drivers/md/md.c
---- ./drivers/md/md.c~current~	2006-06-01 15:05:30.000000000 +1000
-+++ ./drivers/md/md.c	2006-06-01 15:05:30.000000000 +1000
-@@ -2155,6 +2155,32 @@ level_store(mddev_t *mddev, const char *
- static struct md_sysfs_entry md_level =
- __ATTR(level, 0644, level_show, level_store);
+-	  You will need mdadm verion 2.4.1 or later to use this
++	  You will need mdadm version 2.4.1 or later to use this
+ 	  feature safely.  During the early stage of reshape there is
+ 	  a critical section where live data is being over-written.  A
+ 	  crash during this time needs extra care for recovery.  The
+@@ -221,7 +221,7 @@ config DM_SNAPSHOT
+        tristate "Snapshot target (EXPERIMENTAL)"
+        depends on BLK_DEV_DM && EXPERIMENTAL
+        ---help---
+-         Allow volume managers to take writeable snapshots of a device.
++         Allow volume managers to take writable snapshots of a device.
  
-+
-+static ssize_t
-+layout_show(mddev_t *mddev, char *page)
-+{
-+	/* just a number, not meaningful for all levels */
-+	return sprintf(page, "%d\n", mddev->layout);
-+}
-+
-+static ssize_t
-+layout_store(mddev_t *mddev, const char *buf, size_t len)
-+{
-+	char *e;
-+	unsigned long n = simple_strtoul(buf, &e, 10);
-+	if (mddev->pers)
-+		return -EBUSY;
-+
-+	if (!*buf || (*e && *e != '\n'))
-+		return -EINVAL;
-+
-+	mddev->layout = n;
-+	return len;
-+}
-+static struct md_sysfs_entry md_layout =
-+__ATTR(layout, 0655, layout_show, layout_store);
-+
-+
- static ssize_t
- raid_disks_show(mddev_t *mddev, char *page)
- {
-@@ -2741,6 +2767,7 @@ __ATTR(suspend_hi, S_IRUGO|S_IWUSR, susp
- 
- static struct attribute *md_default_attrs[] = {
- 	&md_level.attr,
-+	&md_layout.attr,
- 	&md_raid_disks.attr,
- 	&md_chunk_size.attr,
- 	&md_size.attr,
+ config DM_MIRROR
+        tristate "Mirror target (EXPERIMENTAL)"
