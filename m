@@ -1,44 +1,93 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: kernel messages when "rmmod md" module
-Date: Thu, 1 Jun 2006 12:22:44 +1000
-Message-ID: <17534.20340.521351.699187@cse.unsw.edu.au>
-References: <200605311737409216484@gmail.com>
+Subject: Re: raid5 hang on get_active_stripe
+Date: Thu, 1 Jun 2006 12:51:20 +1000
+Message-ID: <17534.22056.981033.686846@cse.unsw.edu.au>
+References: <5d96567b0603060346r768a0ee1i8d8170cf9ba4bac1@mail.gmail.com>
+	<Pine.LNX.4.56.0603061156140.26994@lion.drogon.net>
+	<5d96567b0603060456h5f2c3cc8me790c86b74e1f854@mail.gmail.com>
+	<4415F400.5030808@ucolick.org>
+	<17429.64926.100005.904328@cse.unsw.edu.au>
+	<Pine.LNX.4.64.0605110758100.25283@twinlark.arctic.org>
+	<Pine.LNX.4.64.0605171137350.29929@twinlark.arctic.org>
+	<17522.29813.189944.397154@cse.unsw.edu.au>
+	<Pine.LNX.4.64.0605260903270.7952@twinlark.arctic.org>
+	<17527.38282.35857.117651@cse.unsw.edu.au>
+	<Pine.LNX.4.64.0605270834240.30550@twinlark.arctic.org>
+	<17529.37347.782285.77442@cse.unsw.edu.au>
+	<Pine.LNX.4.64.0605291354260.30134@twinlark.arctic.org>
+	<17531.35050.632471.433333@cse.unsw.edu.au>
+	<Pine.LNX.4.64.0605301713480.11178@twinlark.arctic.org>
+	<17532.59212.364233.765155@cse.unsw.edu.au>
+	<Pine.LNX.4.64.0605301758380.21977@twinlark.arctic.org>
+	<17532.62343.933852.982391@cse.unsw.edu.au>
+	<Pine.LNX.4.64.0605301844180.21977@twinlark.arctic.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from  =?ISO-8859-1?Q?=20=1B$(AMuV>@$=1B(B?= on Wednesday May 31
+In-Reply-To: message from dean gaudet on Tuesday May 30
 Sender: linux-raid-owner@vger.kernel.org
-To: =?gb2312?B?zfXWvsCk?= <raidwang@gmail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: dean gaudet <dean@arctic.org>
+Cc: Patrik Jonsson <patrik@ucolick.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wednesday May 31, raidwang@gmail.com wrote:
-> hi,
-> 	I build the linux-2.6.11 kernel using the default kernle config file in configs directory and just config "<M> RAID support". When i use "mdadm -S /dev/md0" to stop md, everything is ok! But when i "rmmod md", kernel prints messages as follow.
->  
-> Debug: sleeping function called from invalid context at kernel/workqueue.c:264
-> in_atomic():1, irqs_disabled():0
->  [<c013bbf4>] flush_workqueue+0x1a/0x27
->  [<c029ec2f>] blk_cleanup_queue+0x30/0x78
->  [<c021eb5d>] kref_put+0x29/0x8c
->  [<e11e50d1>] mddev_put+0xad/0x133 [md]
->  [<c021df71>] kobject_put+0x1e/0x22
->  [<e11ec802>] md_exit+0x1ce/0x2b3 [md]
->  [<c014a059>] __try_stop_module+0x27/0x3e
->  [<c014a098>] try_stop_module+0x28/0x2d
->  [<c014a248>] sys_delete_module+0x13b/0x180
->  [<c0108ac4>] do_syscall_trace+0x10b/0x14c
->  [<c010384d>] syscall_call+0x7/0xb
+On Tuesday May 30, dean@arctic.org wrote:
+> On Wed, 31 May 2006, Neil Brown wrote:
 > 
->     I add some debug message in the md.c and find "md_exit" function calls "mddev_put" function. After "mddev_put" function calls "blk_put_queue(mddev->queue);", the kernel prints message as above.
-> 	I have noticed that "do_md_stop" function calls "mddev->pers->stop(mddev);", and "stop" function has called "blk_sync_queue(mddev->queue);"
->  
-> 	Would anybody give me some suggestions? Thanks!
+> > On Tuesday May 30, dean@arctic.org wrote:
+> > > 
+> > > actually i think the rate is higher... i'm not sure why, but klogd doesn't 
+> > > seem to keep up with it:
+> > > 
+> > > root@neemlark:~# grep -c kblockd_schedule_work /var/log/messages
+> > > 31
+> > > root@neemlark:~# dmesg | grep -c kblockd_schedule_work
+> > > 8192
+> > 
+> > # grep 'last message repeated' /var/log/messages
+> > ??
+> 
+> um hi, of course :)  the paste below is approximately correct.
+> 
 
-You should always work with the latest kernel.
-That problem was fixed recently in
+Ok, so thousands of times a second.  Not what I expected at all...
 
- http://www.kernel.org/git/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=926ce2d8a7d446c720faec9d8c5105eeb04bcf7a
+So I read the code more carefully, and can see that patch was all
+wrong.  It might actually make the problem go away, but isn't really
+the right fix.
 
+I think I will be able to suggest a fix which should work a be a
+reasonable thing to do, but it still won't help me understand the
+problem.
+
+I've got one more long-shot I would like to try first.  If you could
+backout that change to ll_rw_block, and apply this patch instead.
+Then when it hangs, just cat the stripe_cache_active file and see if
+that unplugs things or not (cat it a few times).
+
+If it does, I think I am on to the problem.
+If it doesn't I'll give up and give you a patch that should work
+around the problem in a reasonable way.
+
+Thanks,
 NeilBrown
+
+Signed-off-by: Neil Brown <neilb@suse.de>
+
+### Diffstat output
+ ./drivers/md/raid5.c |    3 +++
+ 1 file changed, 3 insertions(+)
+
+diff ./drivers/md/raid5.c~current~ ./drivers/md/raid5.c
+--- ./drivers/md/raid5.c~current~	2006-05-28 21:56:56.000000000 +1000
++++ ./drivers/md/raid5.c	2006-06-01 12:44:52.000000000 +1000
+@@ -1840,6 +1840,9 @@ stripe_cache_active_show(mddev_t *mddev,
+ 		spin_unlock_irq(&conf->device_lock);
+ 		n += sprintf(page+n, "bitlist=%d delaylist=%d\n", c1, c2);
+ 		trigger = 0xffff;
++
++		/* incredible long shot... */
++		kblockd_flush();
+ 		return n;
+ 	} else
+ 		return 0;
