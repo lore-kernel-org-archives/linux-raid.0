@@ -1,76 +1,87 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: raid5 hang on get_active_stripe
-Date: Fri, 2 Jun 2006 17:27:36 +1000
-Message-ID: <17535.59496.431182.785563@cse.unsw.edu.au>
-References: <5d96567b0603060346r768a0ee1i8d8170cf9ba4bac1@mail.gmail.com>
-	<5d96567b0603060456h5f2c3cc8me790c86b74e1f854@mail.gmail.com>
-	<4415F400.5030808@ucolick.org>
-	<17429.64926.100005.904328@cse.unsw.edu.au>
-	<Pine.LNX.4.64.0605110758100.25283@twinlark.arctic.org>
-	<Pine.LNX.4.64.0605171137350.29929@twinlark.arctic.org>
-	<17522.29813.189944.397154@cse.unsw.edu.au>
-	<Pine.LNX.4.64.0605260903270.7952@twinlark.arctic.org>
-	<17527.38282.35857.117651@cse.unsw.edu.au>
-	<Pine.LNX.4.64.0605270834240.30550@twinlark.arctic.org>
-	<17529.37347.782285.77442@cse.unsw.edu.au>
-	<Pine.LNX.4.64.0605291354260.30134@twinlark.arctic.org>
-	<17531.35050.632471.433333@cse.unsw.edu.au>
-	<Pine.LNX.4.64.0605301713480.11178@twinlark.arctic.org>
-	<17532.59212.364233.765155@cse.unsw.edu.au>
-	<Pine.LNX.4.64.0605301758380.21977@twinlark.arctic.org>
-	<17532.62343.933852.982391@cse.unsw.edu.au>
-	<Pine.LNX.4.64.0605301844180.21977@twinlark.arctic.org>
-	<17534.22056.981033.686846@cse.unsw.edu.au>
-	<Pine.LNX.4.64.0606020009560.10016@twinlark.arctic.org>
+From: Roy Waldspurger <rlists@frameandfocus.com>
+Subject: Clarifications about check/repair, i.e. RAID SCRUBBING
+Date: Fri, 02 Jun 2006 01:18:32 -0700
+Message-ID: <447FF458.6030802@frameandfocus.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from dean gaudet on Friday June 2
 Sender: linux-raid-owner@vger.kernel.org
-To: dean gaudet <dean@arctic.org>
-Cc: Patrik Jonsson <patrik@ucolick.org>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Friday June 2, dean@arctic.org wrote:
-> On Thu, 1 Jun 2006, Neil Brown wrote:
-> 
-> > I've got one more long-shot I would like to try first.  If you could
-> > backout that change to ll_rw_block, and apply this patch instead.
-> > Then when it hangs, just cat the stripe_cache_active file and see if
-> > that unplugs things or not (cat it a few times).
-> 
-> nope that didn't unstick it... i had to raise stripe_cache_size (from 256 
-> to 768... 512 wasn't enough)...
-> 
-> -dean
+Hi Neil/folks,
 
-Ok, thanks.
-I still don't know what is really going on, but I'm 99.9863% sure this
-will fix it, and is a reasonable thing to do.
-(Yes, I lose a ';'.  That is deliberate).
+I'm seeking some (hopefully) simple clarifications about the newer raid 
+checking and scrubbing behavior present in more recent kernels.  I must 
+say that I was more than pleased when I learned about the new 
+functionality.  Kudos, Neil for this addition.  Unfortunately, because 
+this is new it's not to be found in the FAQs or HOW-TOs... with the 
+exception of the Gentoo "HOWTO Install on Software RAID".
 
-Please let me know what this proves, and thanks again for your
-patience.
+I've looked at the following sources of info:
+linux-2.6.16.19/Documentation/md.txt
+linux-2.6.16.19/drivers/md:raid5.c and raid6main.c
+(the raid5_end_read_request and raid6_end_read_request routines)
 
-NeilBrown
+emails on the linux-raid mailing list, in particular:
 
+http://lkml.org/lkml/2005/12/4/118
+http://www.mail-archive.com/linux-raid@vger.kernel.org/msg04615.html
+===============================================================
 
-Signed-off-by: Neil Brown <neilb@suse.de>
+In any regard:
 
-### Diffstat output
- ./drivers/md/raid5.c |    5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+I'm talking about triggering the following functionality:
 
-diff ./drivers/md/raid5.c~current~ ./drivers/md/raid5.c
---- ./drivers/md/raid5.c~current~	2006-05-28 21:56:56.000000000 +1000
-+++ ./drivers/md/raid5.c	2006-06-02 17:24:07.000000000 +1000
-@@ -285,7 +285,7 @@ static struct stripe_head *get_active_st
- 						     < (conf->max_nr_stripes *3/4)
- 						     || !conf->inactive_blocked),
- 						    conf->device_lock,
--						    unplug_slaves(conf->mddev);
-+						    raid5_unplug_device(conf->mddev->queue)
- 					);
- 				conf->inactive_blocked = 0;
- 			} else
+echo check > /sys/block/mdX/md/sync_action
+echo repair > /sys/block/mdX/md/sync_action
+
+On a RAID5, and soon a RAID6, I'm looking to set up a cron job, and am 
+trying to figure out what exactly to schedule.  The answers to the 
+following questions might shed some light on this:
+
+1. GENERALLY SPEAKING, WHAT IS THE DIFFERENCE BETWEEN THE "CHECK" AND 
+"REPAIR" COMMANDS?
+The "md.txt" doc mentions for "check" that "a repair may also happen for 
+some raid levels."
+Which RAID levels, and in what cases?  If I perform a "check" is there a 
+cache of bad blocks that need to be fixed that can quickly be repaired 
+by executing the "repair" command?  Or would it go through the entire 
+array again?  I'm working with new drives, and haven't come across any 
+bad blocks to test this with.
+
+2. CAN "CHECK" BE RUN ON A DEGRADED ARRAY (say with N out of N+1 disks 
+on a RAID level 5)?  I can test this out, but was it designed to do 
+this, versus "REPAIR" only working on a full set of active drives? 
+Perhaps "repair" is assuming that I have N+1 disks so that parity can be 
+WRITTEN?
+
+3. RE: FEEDBACK/LOGGING: it seems that I might see some messages in 
+dmesg logging output such as "raid5:read error corrected!", is that 
+right?  I realize that "mismatch_count" can also be used to see if there 
+was any "action" during a "check" or "repair."  I'm assuming this stuff 
+doesn't make its way into an email.
+
+4. DOES "REPAIR" PERFORM READS TO CHECK THE ARRAY, AND THEN WRITE TO THE 
+ARRAY *ONLY WHEN NECESSARY* TO PERFORM FIXES FOR CERTAIN BLOCKS?  (I 
+know, it's sorta a repeat of question number 1+2).
+
+5. IS THERE ILL-EFFECT TO STOP EITHER "CHECK" OR "REPAIR" BY ISSUING "IDLE"?
+
+6. IS IT AT ALL POSSIBLE TO CHECK A CERTAIN RANGE OF BLOCKS?  And to 
+keep track of which blocks were checked?  The motivation is to start 
+checking some blocks overnight, and to pick-up where I left off the next 
+night...
+
+7. ANY OTHER CONSIDERATIONS WHEN "SCRUBBING" THE RAID?
+
+Sorry for some of these questions being so similar in nature.  I just 
+want to make sure I understand it correctly.
+
+Neil, again, a BIG thanks for this new functionality.  I'm looking 
+forward to putting a system in place to exercise my drives!
+
+Cheers,
+
+-- roy
