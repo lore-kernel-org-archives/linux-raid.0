@@ -1,41 +1,36 @@
-From: stephan sperber <quinte17@gmx.de>
-Subject: raid5e and raid5ee
-Date: Thu, 01 Jun 2006 11:59:14 +0200
-Message-ID: <20060601095914.72770@gmx.net>
+From: dean gaudet <dean@arctic.org>
+Subject: Re: raid5 hang on get_active_stripe
+Date: Fri, 2 Jun 2006 00:10:31 -0700 (PDT)
+Message-ID: <Pine.LNX.4.64.0606020009560.10016@twinlark.arctic.org>
+References: <5d96567b0603060346r768a0ee1i8d8170cf9ba4bac1@mail.gmail.com>
+ <5d96567b0603060456h5f2c3cc8me790c86b74e1f854@mail.gmail.com>
+ <4415F400.5030808@ucolick.org> <17429.64926.100005.904328@cse.unsw.edu.au>
+ <Pine.LNX.4.64.0605110758100.25283@twinlark.arctic.org>
+ <Pine.LNX.4.64.0605171137350.29929@twinlark.arctic.org>
+ <17522.29813.189944.397154@cse.unsw.edu.au> <Pine.LNX.4.64.0605260903270.7952@twinlark.arctic.org>
+ <17527.38282.35857.117651@cse.unsw.edu.au> <Pine.LNX.4.64.0605270834240.30550@twinlark.arctic.org>
+ <17529.37347.782285.77442@cse.unsw.edu.au> <Pine.LNX.4.64.0605291354260.30134@twinlark.arctic.org>
+ <17531.35050.632471.433333@cse.unsw.edu.au> <Pine.LNX.4.64.0605301713480.11178@twinlark.arctic.org>
+ <17532.59212.364233.765155@cse.unsw.edu.au> <Pine.LNX.4.64.0605301758380.21977@twinlark.arctic.org>
+ <17532.62343.933852.982391@cse.unsw.edu.au> <Pine.LNX.4.64.0605301844180.21977@twinlark.arctic.org>
+ <17534.22056.981033.686846@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <17534.22056.981033.686846@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: Patrik Jonsson <patrik@ucolick.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This topic is quite interresting.
-I found some information about raid5e and raid5ee only on the german wi=
-kipedia, but the pictures could do just fine.
+On Thu, 1 Jun 2006, Neil Brown wrote:
 
-http://de.wikipedia.org/wiki/RAID#RAID_5E
-http://de.wikipedia.org/wiki/Bild:RAID_5E.png
-http://de.wikipedia.org/wiki/Bild:RAID_5EE.png
+> I've got one more long-shot I would like to try first.  If you could
+> backout that change to ll_rw_block, and apply this patch instead.
+> Then when it hangs, just cat the stripe_cache_active file and see if
+> that unplugs things or not (cat it a few times).
 
-as i understand it, there is no real raid5 in place.
-raid5ee is basically a simple raid5 with 4 discs, but leaving the 4. di=
-sk virtually empty. so if 1 disk fails, the empty stripes are filled.
+nope that didn't unstick it... i had to raise stripe_cache_size (from 256 
+to 768... 512 wasn't enough)...
 
-i dont know much about this topic, and i dont know if the information i=
-n wikipedia is correct, but i hope i could help a bit
-
-yours
-
-stephan
---=20
-
-
-Der GMX SmartSurfer hilft bis zu 70% Ihrer Onlinekosten zu sparen!
-      Ideal f=FCr Modem und ISDN: http://www.gmx.net/de/go/smartsurfer
-   =20
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-dean
