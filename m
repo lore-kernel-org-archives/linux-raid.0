@@ -1,24 +1,36 @@
-From: "Biana M." <skgrifon@4unet.ru>
-Subject: Re[2]:  Ave
-Date: Fri, 02 Jun 2006 16:43:09 +0300
-Message-ID: <008c01c6864a$79743a80$4a26000a__38054.2814652019$1149255785$gmane$org@201-1-159-35.dsl.telesp.net.br>
+From: KENT ANDERSON <ken.anderson@laposte.net>
+Subject: EMPLOYMENT MAIL
+Date: Fri, 02 Jun 2006 09:00:54 -0600
+Message-ID: <E1FmB8w-0004iP-S8@server.thevenusserver.com>
+Reply-To: ken.anderson@laposte.net
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="windows-1251"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Franz <linux-msdos@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello, Franz
+From The Desk of:
 
-I am a lovely and lonely Lady who is looking for the man who will make me happy and whom I want to feel like in paradise with!
-If you want to be my beautiful Hero who will save me from this loneliness find me 
-http://www.L6kPWuqO1D8n.i-am-waiting4love.net/
-and wake me up with a warm kiss.
+Kent Anderson PhD
+L. G. A. (Woodworking Machinery) Ltd,
+1 Rutland Court,EH3 8EY,
+London.
 
-see you later,
-Biana M.
+
+Dear Sir/Madam,
+
+We will be very glad if you can be our representative in your country 
+and earn 10% of every payment made through you to us.
+
+For more information, contact us through email. Note that you shall not 
+be liable to make any upfront payment.
+
+Thanks in advance.
+
+Kind Regards,
+Kent Anderson (CEO)
+
 
 
