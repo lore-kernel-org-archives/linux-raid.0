@@ -1,56 +1,59 @@
-From: Patrik Jonsson <patrik@ucolick.org>
-Subject: Raid5 read error correction log
-Date: Sat, 03 Jun 2006 16:26:09 -0700
-Message-ID: <44821A91.8080007@ucolick.org>
-References: <447FF458.6030802@frameandfocus.com> <17536.7877.532121.626175@cse.unsw.edu.au>
+From: Andy Smith <andy@strugglers.net>
+Subject: "command 0x25 timeout, stat 0x50 host_stat 0x1"
+Date: Sun, 4 Jun 2006 00:05:45 +0000
+Message-ID: <20060604000545.GT24455@strugglers.net>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="------------enig6E5402C740E8609A3BDF0B29"
+	protocol="application/pgp-signature"; boundary="yuedfix5hmtMJRO4"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17536.7877.532121.626175@cse.unsw.edu.au>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enig6E5402C740E8609A3BDF0B29
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
 
-Hey Neil,
+--yuedfix5hmtMJRO4
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-It would sure be nice if the log contained any info about the error
-correction that's been done rather than simply saying "read error
-corrected", like which array chunk, device and sector was corrected. I'm
-having a persistent pending sector on a drive, and when I do check or
-repair, it says "read error corrected" many times, but I don't know
-whether it's doing the same sector over and over or if there are just so
-many of them...  I seem to remember reading something about this on the
-list some time ago, is it already in the kernel? (I'm running 2.6.17-rc4
-now).
+Hi,
 
-Btw, when it does correct a read error, I assume it also tries to read
-it again to verify that the correction worked?
+I'm building a system with 4 SATA ports based on Intel ICH7 and an
+additional 2 ports on a Silicon Image 3112.  There are 6 Seagate
+drives, all model number ST3320620AS.
 
-thanks,
+Booting the system with a Knoppix 4 DVD (kernel version 2.6.12), I
+went to set up the md arrays and got a syslog full of this:
 
-/Patrik
+ata2: command 0x25 timeout, stat 0x50 host_stat 0x2
+ata1: command 0x25 timeout, stat 0x50 host_stat 0x1
+ata1: command 0x25 timeout, stat 0x50 host_stat 0x1
+ata1: command 0x25 timeout, stat 0x50 host_stat 0x2
 
+as well as a painfully slow (~100K/sec) initial resync.
 
---------------enig6E5402C740E8609A3BDF0B29
+Googling about seems to show some problems related to Silicon Image
+311x and Seagate drives, so I removed the Sil3112 and investigated
+what happens with just the onboard ICH7 and 4 disks.  Unfortunately
+I still get the same problems.
+
+Has anyone ever come across this problem before and know where it
+may lie, hardware or software?
+
+Cheers,
+Andy
+
+--yuedfix5hmtMJRO4
 Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.2 (MingW32)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
+Version: GnuPG v1.4.1 (GNU/Linux)
 
-iD8DBQFEghqXT+KvsdUW5p8RApfmAJ9DOqHl3Cjj/fsD4WF7N2GAVx2RiACgpT9t
-+z4TprvdL0Et0rSaU85YAIY=
-=amci
+iD8DBQFEgiPZIJm2TL8VSQsRArtcAJ0TsNvPJHLY94Is1ztqbVKfmV4bwACgzT+x
+5aTY/9SDZA6M5GkuXRpx6ss=
+=CEZo
 -----END PGP SIGNATURE-----
 
---------------enig6E5402C740E8609A3BDF0B29--
+--yuedfix5hmtMJRO4--
