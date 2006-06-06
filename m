@@ -1,32 +1,44 @@
-From: Nix <nix@esperi.org.uk>
-Subject: Re: Problems with device-mapper on top of RAID-5 and RAID-6
-Date: Mon, 05 Jun 2006 21:40:18 +0100
-Message-ID: <87verf72vh.fsf@hades.wkstn.nix>
-References: <448054DB.1020004@congenio.de>
+From: Gordon Henderson <gordon@drogon.net>
+Subject: Quick Question ..
+Date: Tue, 6 Jun 2006 10:36:42 +0100 (BST)
+Message-ID: <Pine.LNX.4.56.0606060931200.17732@lion.drogon.net>
+References: <200605221746.38122.Dexter.Filmore@gmx.de>
+ <17522.17186.715844.748238@cse.unsw.edu.au> <Pine.LNX.4.56.0605240913410.16780@lion.drogon.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <448054DB.1020004@congenio.de> (Uwe Meyer-Gruhl's message of "2 Jun 2006 16:10:51 +0100")
+In-Reply-To: <Pine.LNX.4.56.0605240913410.16780@lion.drogon.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Dr. Uwe Meyer-Gruhl" <f+gmane@congenio.de>
-Cc: linux-raid@vger.kernel.org
+To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 2 Jun 2006, Uwe Meyer-Gruhl uttered the following:
-> Neil's suggestion indicates that there may be a race condition
-> stacking md and dm over each other, but I have not yet tested that
-> patch. I once had problems stacking cryptoloop over RAID-6, so it
-> might really be a stacking problem. We don't know yet if LVM over RAID
-> is affected as well.
 
-I've been running LVM on RAID (spanning two RAID-5 arrays) for some time
-now and have had no trouble (that I know of: a check just completed OK,
-so the RAID layer at least is consistent). The arrays have both IDE and
-SCSI (sym53c875) components.
+I'm just after conformation (or not!) of something I've done for a long
+time which I think is right - it certainly seem right, but one of those
+things I've always wondered about ...
 
-Of course this is a subtle and intermittent problem so this is hardly
-a green light :/
+When creating an array I allocate drives from alternative controllers with
+the thought that the OS/system/hardware might be able to better overlap
+accesses to the devices - but it sort of assumes that the kernel drivers
+(and/or mdadm) don't re-order accesses to the devices internally (I'm not
+counting SCSI logical re-ordering here)
 
--- 
-`Voting for any American political party is fundamentally
- incomprehensible.' --- Vadik
+So. eg. an example I'm working on now - I have a server with 2 external
+facing SCSI interfaces, and a box with 14 drives on 2 chains - so 7 drives
+on each interface (I'd prefer less, but it's what I've got - it's a Dell
+external box)  sd{a-g} are on scsi0, and sd{h-n} are on scsi1, so I issue
+the create command with:
+
+  mdadm --create /dev/md1 -n14 -l6	\
+	 /dev/sda /dev/sdh		\
+	 /dev/sdb /dev/sdi		\
+	etc.
+
+I guess benchmarking it would be the way to really test it, but I'm not
+after performance for this particular box - just after some thoughts as to
+whether this is the "best" (or not!) way to do things, or if I'm wasting
+my time doing it this way!
+
+Thanks,
+
+Gordon
