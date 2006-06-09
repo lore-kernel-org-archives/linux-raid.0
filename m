@@ -1,96 +1,75 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: raid 5 read performance
-Date: Sat, 10 Jun 2006 08:59:21 +1000
-Message-ID: <17545.64841.443046.249299@cse.unsw.edu.au>
-References: <5d96567b0606090850q6185e6a0u8b16860b4f826d4f@mail.gmail.com>
+From: "David M. Strang" <dstrang@shellpower.net>
+Subject: Failed Hard Disk... help!
+Date: Fri, 9 Jun 2006 19:36:42 -0400
+Message-ID: <002801c68c1d$905a6020$7e0c10ac@enterprise.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	format=flowed;
+	charset="iso-8859-1";
+	reply-type=original
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Raz Ben-Jehuda(caro) on Friday June 9
 Sender: linux-raid-owner@vger.kernel.org
-To: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
-Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Friday June 9, raziebe@gmail.com wrote:
-> Neil hello
-> 
-> Sorry for the delay. too many things to do.
+Hello all...
 
-You aren't alone there!
+I'm looking for a suggestion or two... I have a server running with 2 
+Western Digital WD4000YR drives running a RAID1 mirror... the other day, I 
+was lucky enough to have one of the drives fail. Being as they are new(er) 
+drives, they are still under warrenty, and I'm looking to do an advanced 
+replacement RMA to swap the drive and allow it to rebuild. The problem is... 
+I don't have the serial numbers of the hard drives. No big deal... except, 
+they are SATA drives, and I'm running 2.6.14.6.... honestly, with the main 
+drive of the mirror failed, I'm afraid to upgrade. I'm also afraid to 
+upgrade, because I'm still using mdadm v2.2 with v1.00.02 superblocks. I had 
+a recent raid disaster here at home (see another thread, long story short - 
+every reboot, the raid 5 rebuilds... during one of those rebuilds, a disk 
+really failed. bye bye data) - during all my attempts to recover from it, I 
+upgraded to a newer mdadm and kernel, and it refused to recognize my raid 
+superblocks! I had to revert to mdadm 2.2, and the old kernel to see the 
+superblocks again (still... 26 of 28, did me little good... and forcing 27 
+of 28 with 1 missing using the partially rebuilt disk, I think did even less 
+good).
 
-> 
-> I have implemented all said in :
-> http://www.spinics.net/lists/raid/msg11838.html
-> 
-> As always I have some questions:
-> 
-> 1.  mergeable_bvec
->      I did not understand first i must admit. now i do not see how it
-> differs from the
->      one of raid0.  so i  actually copied it and renamed it.
+What options do I have to retreive the serial number without driving out to 
+the datacenter and looking at the drive? Do I need to be afraid of upgrading 
+my kernel and mdadm and having my superblock go poof?
 
-Sounds fine.  For raid5 there is no need to force write requests to be
-split up, but that's a minor difference.
+-(root@xenogenesis)-(/)- # mdadm --version
+mdadm - v2.2 - 5 December 2005
+-(root@xenogenesis)-(/)- # mdadm --detail /dev/md_d0
+/dev/md_d0:
+        Version : 01.00.02
+  Creation Time : Thu Jan  5 19:49:04 2006
+     Raid Level : raid1
+     Array Size : 390711376 (372.61 GiB 400.09 GB)
+    Device Size : 390711376 (372.61 GiB 400.09 GB)
+   Raid Devices : 2
+  Total Devices : 1
+Preferred Minor : 0
+    Persistence : Superblock is persistent
 
-> 
-> 2. statistics.
->     i have added md statistics since the code does not reach the
-> statics in make_request.
->     it returns from make_request before that.
+    Update Time : Fri Jun  9 19:04:40 2006
+          State : clean, degraded
+ Active Devices : 1
+Working Devices : 1
+ Failed Devices : 0
+  Spare Devices : 0
 
-Why not put the code *after* that?  Not that it matters a great deal.
-I'll comment more when I see the code I expect.
+           Name : CRUX x64
+           UUID : c622e6f7:2765c0fb:7516cdf1:3ee5b706
+         Events : 13085584
 
-> 
-> 3. i have added the new retry list called toread_aligned to raid5_conf_t .
->     hope this is correct.
-> 
+    Number   Major   Minor   RaidDevice State
+   -1428255432       0        0    10922      removed
+       1       8       16        1      active sync   /dev/sdb
+-(root@xenogenesis)-(/)- # uname -ar
+Linux xenogenesis 2.6.14.6 #1 SMP Wed Jan 25 20:07:07 EST 2006 x86_64 x86_64 
+x86_64 GNU/Linux
+-(root@xenogenesis)-(/)- #
 
-Sounds good.
-
-
-> 4.  your instructions are to add a failed bio to sh, but it does not
-> say to handle it directly.
->     i have tried it and something is missing here. raid5d handle
-> stripes only if  conf->handle_list is not empty. i added handle_stripe
-> and and release_stripe of my own.
->    this way i managed to get from the completion routine:
->    "R5: read error corrected!! " message . ( i have tested by failing
-> a ram disk ).
-> 
-
-Sounds right, but I'd need to see the code to be sure.
-
-> 
-> 5. I am going to test the non common path heavily before submitting
-> you the patch ( on real disks  and use  several file systems and
-> several chunk sizes).
-
-I'd rather see the patch earlier, even if it isn't fully tested.
-
->  It is quite a big patch so I need to know which kernel do you want me
-> to use ? i am using poor 2.6.15.
-
-A patch against the latest -mm would be best, but I'm happy to take it
-against anything even vaguely recent.
-
-However, it needs to be multiple patches, not just one.
-This is a *very* important point.  As that original email said:
-
-  This should be developed and eventually presented as a sequence of
-  patches.
-
-There are several distinct steps in this change and they need to be
-reviewed separately or it is just too hard.
-So I would really like it if you could separate out the changes into
-logically distinct patches.
-If you can't or won't, then still send the patch, but I'll have to
-break it up so it'll probably take longer to process.
-
-
-Thanks for your efforts,
-
-NeilBrown
+Thanks,
+David M. Strang 
 
