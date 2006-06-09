@@ -1,21 +1,31 @@
-From: "Traci Freeman" <agnykure@yahoo.com>
-Subject: You Need This Linux-net
-Date: Fri, 09 Jun 2006 08:55:33 +0600
-Message-ID: <131.97e558d5.2a9GMQ44@sol.com>
+From: Dexter Filmore <Dexter.Filmore@gmx.de>
+Subject: which CPU for XOR?
+Date: Fri, 9 Jun 2006 13:49:24 +0200
+Message-ID: <200606091349.24109.Dexter.Filmore@gmx.de>
+Mime-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-net@vger.kernel.org, linux-newbie@vger.kernel.org, linux-ppp@vger.kernel.org, linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+What type of operation is XOR anyway? Should be ALU, right?
+So - what CPU is best for software raid? One with high integer processing 
+power? 
 
-The most complete Phar macy Online
-We carry all major medds at bargain price
-Viggra, Ci ialis, VaIium, Xa naax
-Phantermiine, Ulltraam and etc...
-SatiisfactIon Gua ranteeed
-
-http://www.archstuff.com/1/
+Dex
 
 
-rmA
+-- 
+-----BEGIN GEEK CODE BLOCK-----
+Version: 3.12
+GCS d--(+)@ s-:+ a- C+++(++++) UL+>++++ P+>++ L+++>++++ E-- W++ N o? K-
+w--(---) !O M+ V- PS++(+) PE(-) Y++ PGP t++(---)@ 5 X+(++) R+(++) tv--(+)@ 
+b++(+++) DI+++ D G++ e* h>++ r%>* y?
+------END GEEK CODE BLOCK------
 
+http://www.stop1984.com
+http://www.againsttcpa.com
