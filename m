@@ -1,31 +1,55 @@
-From: Dexter Filmore <Dexter.Filmore@gmx.de>
-Subject: which CPU for XOR?
-Date: Fri, 9 Jun 2006 13:49:24 +0200
-Message-ID: <200606091349.24109.Dexter.Filmore@gmx.de>
+From: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
+Subject: raid 5 read performance
+Date: Fri, 9 Jun 2006 18:50:28 +0300
+Message-ID: <5d96567b0606090850q6185e6a0u8b16860b4f826d4f@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+Cc: Neil Brown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-What type of operation is XOR anyway? Should be ALU, right?
-So - what CPU is best for software raid? One with high integer processing 
-power? 
+Neil hello
 
-Dex
+Sorry for the delay. too many things to do.
+
+I have implemented all said in :
+http://www.spinics.net/lists/raid/msg11838.html
+
+As always I have some questions:
+
+1.  mergeable_bvec
+     I did not understand first i must admit. now i do not see how it
+differs from the
+     one of raid0.  so i  actually copied it and renamed it.
+
+2. statistics.
+    i have added md statistics since the code does not reach the
+statics in make_request.
+    it returns from make_request before that.
+
+3. i have added the new retry list called toread_aligned to raid5_conf_t .
+    hope this is correct.
+
+4.  your instructions are to add a failed bio to sh, but it does not
+say to handle it directly.
+    i have tried it and something is missing here. raid5d handle
+stripes only if  conf->handle_list is not empty. i added handle_stripe
+and and release_stripe of my own.
+   this way i managed to get from the completion routine:
+   "R5: read error corrected!! " message . ( i have tested by failing
+a ram disk ).
 
 
+5. I am going to test the non common path heavily before submitting
+you the patch ( on real disks  and use  several file systems and
+several chunk sizes).
+ It is quite a big patch so I need to know which kernel do you want me
+to use ? i am using poor 2.6.15.
+
+I thank you
 -- 
------BEGIN GEEK CODE BLOCK-----
-Version: 3.12
-GCS d--(+)@ s-:+ a- C+++(++++) UL+>++++ P+>++ L+++>++++ E-- W++ N o? K-
-w--(---) !O M+ V- PS++(+) PE(-) Y++ PGP t++(---)@ 5 X+(++) R+(++) tv--(+)@ 
-b++(+++) DI+++ D G++ e* h>++ r%>* y?
-------END GEEK CODE BLOCK------
-
-http://www.stop1984.com
-http://www.againsttcpa.com
+Raz
