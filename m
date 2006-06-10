@@ -1,32 +1,85 @@
-From: "CATHERINE APEPE" <mrsapepe1@walla.com>
-Subject: VERY IMPORTANT
-Date: Sat, 10 Jun 2006 17:31:31 +0100
-Message-ID: <!&!FD230D01c3858_419b8_448B01F4@walla.com>
+From: dean gaudet <dean@arctic.org>
+Subject: Re: raid5 hang on get_active_stripe
+Date: Sat, 10 Jun 2006 12:49:59 -0700 (PDT)
+Message-ID: <Pine.LNX.4.64.0606101244420.759@twinlark.arctic.org>
+References: <5d96567b0603060346r768a0ee1i8d8170cf9ba4bac1@mail.gmail.com>
+ <17429.64926.100005.904328@cse.unsw.edu.au> <Pine.LNX.4.64.0605110758100.25283@twinlark.arctic.org>
+ <Pine.LNX.4.64.0605171137350.29929@twinlark.arctic.org>
+ <17522.29813.189944.397154@cse.unsw.edu.au> <Pine.LNX.4.64.0605260903270.7952@twinlark.arctic.org>
+ <17527.38282.35857.117651@cse.unsw.edu.au> <Pine.LNX.4.64.0605270834240.30550@twinlark.arctic.org>
+ <17529.37347.782285.77442@cse.unsw.edu.au> <Pine.LNX.4.64.0605291354260.30134@twinlark.arctic.org>
+ <17531.35050.632471.433333@cse.unsw.edu.au> <Pine.LNX.4.64.0605301713480.11178@twinlark.arctic.org>
+ <17532.59212.364233.765155@cse.unsw.edu.au> <Pine.LNX.4.64.0605301758380.21977@twinlark.arctic.org>
+ <17532.62343.933852.982391@cse.unsw.edu.au> <Pine.LNX.4.64.0605301844180.21977@twinlark.arctic.org>
+ <17534.22056.981033.686846@cse.unsw.edu.au> <Pine.LNX.4.64.0606020009560.10016@twinlark.arctic.org>
+ <17535.59496.431182.785563@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <17535.59496.431182.785563@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: Patrik Jonsson <patrik@ucolick.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-34 FOURWAYS CROSSING
-FORUWAYS, JOHANNESBURG
-SOUTH AFRICA
-TEL: +27-724340319 
+On Fri, 2 Jun 2006, Neil Brown wrote:
+
+> On Friday June 2, dean@arctic.org wrote:
+> > On Thu, 1 Jun 2006, Neil Brown wrote:
+> > 
+> > > I've got one more long-shot I would like to try first.  If you could
+> > > backout that change to ll_rw_block, and apply this patch instead.
+> > > Then when it hangs, just cat the stripe_cache_active file and see if
+> > > that unplugs things or not (cat it a few times).
+> > 
+> > nope that didn't unstick it... i had to raise stripe_cache_size (from 256 
+> > to 768... 512 wasn't enough)...
+> > 
+> > -dean
+> 
+> Ok, thanks.
+> I still don't know what is really going on, but I'm 99.9863% sure this
+> will fix it, and is a reasonable thing to do.
+> (Yes, I lose a ';'.  That is deliberate).
+
+it's been running for a week now... and the freeze hasn't occured... it's 
+possible the circumstances for reproducing it haven't occured again 
+either, but i haven't really changed my disk usage behaviour so it's 
+probably fixed.
+
+let me know if you come up with some other solution you'd like tested.
+
+thanks
+-dean
 
 
-I do recognize the surprise this urgent but confidential letter will bring to you especially as it came from a stranger, but rest assured that it came with the best of intentions. I am Mrs. Catherine Apepe, from the Diamond-rich district of Sierra Leone and my late husband was the former Special adviser to the ousted Head of State of Sierra Leone, Major Johnny Paul Koroma. I got your email address from a friend who works at the International Chamber of Commerce here in South Africa.
-
-During the war between our forces led by the Ex-Head of State, Major Johnny Paul Koroma and the West African Allied Forces (ECOMOG), my country relied heavily on the foreign earnings generated from diamond trade. This money was personally kept by the then President Major Johnny Paul Koroma since our banking system had collapsed during the war. However, as the war progressed, it became apparent that we were going to loose the war to the superior and better armed West African Allied Forces (ECOMOG). At this point, my Husband Mr. Luis Apepe starched away the sum US$30,000,000.00 in a security and storage company here in South Africa for safekeeping and to avoid being traced. Unfortunately on his return to Sierra Leone he was murdered.
-
-Right now my son and I are in South Africa to claim this money and we need a trustworthy individual or company that can help us proved the important instruments that we will need in transferring and receiving the fund abroad for purpose of investment as South Africa is not conducive for us to invest this fund as we are presently refugees, if you are willing to assist we will offer you 30% of the total sum.
-
-God bless you as we wait for your immediate response, please do include your telephone number, you can also call me or my son or email me,
- mrapepe1@walla.com Mr. Peter Apepe on +27 724340319  
-
-Regards,
-
-Mrs. Catherine. Apepe
-
+> 
+> Please let me know what this proves, and thanks again for your
+> patience.
+> 
+> NeilBrown
+> 
+> 
+> Signed-off-by: Neil Brown <neilb@suse.de>
+> 
+> ### Diffstat output
+>  ./drivers/md/raid5.c |    5 ++++-
+>  1 file changed, 4 insertions(+), 1 deletion(-)
+> 
+> diff ./drivers/md/raid5.c~current~ ./drivers/md/raid5.c
+> --- ./drivers/md/raid5.c~current~	2006-05-28 21:56:56.000000000 +1000
+> +++ ./drivers/md/raid5.c	2006-06-02 17:24:07.000000000 +1000
+> @@ -285,7 +285,7 @@ static struct stripe_head *get_active_st
+>  						     < (conf->max_nr_stripes *3/4)
+>  						     || !conf->inactive_blocked),
+>  						    conf->device_lock,
+> -						    unplug_slaves(conf->mddev);
+> +						    raid5_unplug_device(conf->mddev->queue)
+>  					);
+>  				conf->inactive_blocked = 0;
+>  			} else
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
