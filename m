@@ -1,85 +1,144 @@
-From: dean gaudet <dean@arctic.org>
-Subject: Re: raid5 hang on get_active_stripe
-Date: Sat, 10 Jun 2006 12:49:59 -0700 (PDT)
-Message-ID: <Pine.LNX.4.64.0606101244420.759@twinlark.arctic.org>
-References: <5d96567b0603060346r768a0ee1i8d8170cf9ba4bac1@mail.gmail.com>
- <17429.64926.100005.904328@cse.unsw.edu.au> <Pine.LNX.4.64.0605110758100.25283@twinlark.arctic.org>
- <Pine.LNX.4.64.0605171137350.29929@twinlark.arctic.org>
- <17522.29813.189944.397154@cse.unsw.edu.au> <Pine.LNX.4.64.0605260903270.7952@twinlark.arctic.org>
- <17527.38282.35857.117651@cse.unsw.edu.au> <Pine.LNX.4.64.0605270834240.30550@twinlark.arctic.org>
- <17529.37347.782285.77442@cse.unsw.edu.au> <Pine.LNX.4.64.0605291354260.30134@twinlark.arctic.org>
- <17531.35050.632471.433333@cse.unsw.edu.au> <Pine.LNX.4.64.0605301713480.11178@twinlark.arctic.org>
- <17532.59212.364233.765155@cse.unsw.edu.au> <Pine.LNX.4.64.0605301758380.21977@twinlark.arctic.org>
- <17532.62343.933852.982391@cse.unsw.edu.au> <Pine.LNX.4.64.0605301844180.21977@twinlark.arctic.org>
- <17534.22056.981033.686846@cse.unsw.edu.au> <Pine.LNX.4.64.0606020009560.10016@twinlark.arctic.org>
- <17535.59496.431182.785563@cse.unsw.edu.au>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+From: osk@admin.swisscom-mobile.ch
+Subject: RAID5 troubles
+Date: Sat, 10 Jun 2006 22:28:13 +0200 (MEST)
+Message-ID: <200606102028.k5AKSD86022209@mrz.swissptt.ch>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17535.59496.431182.785563@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Patrik Jonsson <patrik@ucolick.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, 2 Jun 2006, Neil Brown wrote:
+Hi
 
-> On Friday June 2, dean@arctic.org wrote:
-> > On Thu, 1 Jun 2006, Neil Brown wrote:
-> > 
-> > > I've got one more long-shot I would like to try first.  If you could
-> > > backout that change to ll_rw_block, and apply this patch instead.
-> > > Then when it hangs, just cat the stripe_cache_active file and see if
-> > > that unplugs things or not (cat it a few times).
-> > 
-> > nope that didn't unstick it... i had to raise stripe_cache_size (from 256 
-> > to 768... 512 wasn't enough)...
-> > 
-> > -dean
-> 
-> Ok, thanks.
-> I still don't know what is really going on, but I'm 99.9863% sure this
-> will fix it, and is a reasonable thing to do.
-> (Yes, I lose a ';'.  That is deliberate).
+I have three SATA 250 GB disks with two partitions on each one. 
+The first partition  from each disk form a RAID1 array which is my root 
+partition. The second partition of each disk form a RAID5.
+Everything was working fine, then I had to power off/on the machine as it 
+was hanging. At next boot the RAID1 array was degraded but running,
+mdadm /dev/md0--add /dev/sdc2 fixed it.
 
-it's been running for a week now... and the freeze hasn't occured... it's 
-possible the circumstances for reproducing it haven't occured again 
-either, but i haven't really changed my disk usage behaviour so it's 
-probably fixed.
+The RAID5 array is still a problem, dmesg says:
 
-let me know if you come up with some other solution you'd like tested.
+md: created md1
+md: bind<sda2>
+md: bind<sdb2>
+md: bind<sdc2>
+md: running: <sdc2><sdb2><sda2>
+md: kicking non-fresh sdc2 from array!
+md: unbind<sdc2>
+md: export_rdev(sdc2)
+md: md1: raid array is not clean -- starting background reconstruction
+raid5: device sdb2 operational as raid disk 0
+raid5: device sda2 operational as raid disk 1
+raid5: cannot start dirty degraded array for md1
+RAID5 conf printout:
+ --- rd:3 wd:2 fd:1
+ disk 0, o:1, dev:sdb2
+ disk 1, o:1, dev:sda2
+raid5: failed to run raid set md1
+md: pers->run() failed ...
+md: do_md_run() returned -5
+md: md1 stopped.
+md: unbind<sdb2>
+md: export_rdev(sdb2)
+md: unbind<sda2>
+md: export_rdev(sda2)
 
-thanks
--dean
+mdadm --examine for those three partions:
+
+/dev/sda2:
+          Magic : a92b4efc
+        Version : 00.90.03
+           UUID : 1e721d7b:1ed2152e:1f8e55e3:a881163a
+  Creation Time : Fri May 12 21:36:04 2006
+     Raid Level : raid5
+   Raid Devices : 3
+  Total Devices : 3
+Preferred Minor : 1
+
+    Update Time : Fri Jun  2 23:41:26 2006
+          State : active
+ Active Devices : 2
+Working Devices : 2
+ Failed Devices : 2
+  Spare Devices : 0
+       Checksum : 45e5f094 - correct
+         Events : 0.67315
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+      Number   Major   Minor   RaidDevice State
+this     1       8        2        1      active sync   /dev/sda2
+
+   0     0       8       18        0      active sync   /dev/sdb2
+   1     1       8        2        1      active sync   /dev/sda2
+   2     2       0        0        2      faulty removed
+
+/dev/sdb2:
+          Magic : a92b4efc
+        Version : 00.90.03
+           UUID : 1e721d7b:1ed2152e:1f8e55e3:a881163a
+  Creation Time : Fri May 12 21:36:04 2006
+     Raid Level : raid5
+   Raid Devices : 3
+  Total Devices : 3
+Preferred Minor : 1
+
+    Update Time : Fri Jun  2 23:41:26 2006
+          State : active
+ Active Devices : 2
+Working Devices : 2
+ Failed Devices : 2
+  Spare Devices : 0
+       Checksum : 45e5f0a2 - correct
+         Events : 0.67315
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+      Number   Major   Minor   RaidDevice State
+this     0       8       18        0      active sync   /dev/sdb2
+
+   0     0       8       18        0      active sync   /dev/sdb2
+   1     1       8        2        1      active sync   /dev/sda2
+   2     2       0        0        2      faulty removed
+
+/dev/sdc2:
+          Magic : a92b4efc
+        Version : 00.90.03
+           UUID : 1e721d7b:1ed2152e:1f8e55e3:a881163a
+  Creation Time : Fri May 12 21:36:04 2006
+     Raid Level : raid5
+   Raid Devices : 3
+  Total Devices : 3
+Preferred Minor : 1
+
+    Update Time : Fri Jun  2 20:36:31 2006
+          State : clean
+ Active Devices : 3
+Working Devices : 3
+ Failed Devices : 0
+  Spare Devices : 0
+       Checksum : 45e6cc45 - correct
+         Events : 0.67313
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+      Number   Major   Minor   RaidDevice State
+this     2       8       34        2      active sync   /dev/sdc2
+
+   0     0       8       18        0      active sync   /dev/sdb2
+   1     1       8        2        1      active sync   /dev/sda2
+   2     2       8       34        2      active sync   /dev/sdc2
 
 
-> 
-> Please let me know what this proves, and thanks again for your
-> patience.
-> 
-> NeilBrown
-> 
-> 
-> Signed-off-by: Neil Brown <neilb@suse.de>
-> 
-> ### Diffstat output
->  ./drivers/md/raid5.c |    5 ++++-
->  1 file changed, 4 insertions(+), 1 deletion(-)
-> 
-> diff ./drivers/md/raid5.c~current~ ./drivers/md/raid5.c
-> --- ./drivers/md/raid5.c~current~	2006-05-28 21:56:56.000000000 +1000
-> +++ ./drivers/md/raid5.c	2006-06-02 17:24:07.000000000 +1000
-> @@ -285,7 +285,7 @@ static struct stripe_head *get_active_st
->  						     < (conf->max_nr_stripes *3/4)
->  						     || !conf->inactive_blocked),
->  						    conf->device_lock,
-> -						    unplug_slaves(conf->mddev);
-> +						    raid5_unplug_device(conf->mddev->queue)
->  					);
->  				conf->inactive_blocked = 0;
->  			} else
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Is there any way to recover?
+
+I'm using
+Kernel: 2.6.16.16
+mdadm: v1.12.0
+
+Thanks for your time.
+
+Regards,
+Chris
