@@ -1,65 +1,37 @@
-From: Andy Smith <andy@lug.org.uk>
-Subject: Re: "command 0x25 timeout, stat 0x50 host_stat 0x1"
-Date: Sun, 11 Jun 2006 15:09:15 +0000
-Message-ID: <20060611150915.GL32471@strugglers.net>
-References: <20060604000545.GT24455@strugglers.net> <44822BE7.4010905@ucolick.org>
+From: "Molle Bestefich" <molle.bestefich@gmail.com>
+Subject: Re: RAID5 troubles
+Date: Sun, 11 Jun 2006 17:42:43 +0200
+Message-ID: <62b0912f0606110842v1fbf117ag8eb57758af06977e@mail.gmail.com>
+References: <200606102028.k5AKSD86022209@mrz.swissptt.ch>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="pWOmaDnDlrCGjNh4"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <200606102028.k5AKSD86022209@mrz.swissptt.ch>
 Content-Disposition: inline
-In-Reply-To: <44822BE7.4010905@ucolick.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
+To: osk@admin.swisscom-mobile.ch
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Chris wrote:
+> Kernel: 2.6.16.16
+> mdadm: v1.12.0
 
---pWOmaDnDlrCGjNh4
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+> The RAID5 array is still a problem, dmesg says:
 
-On Sat, Jun 03, 2006 at 05:40:07PM -0700, Patrik Jonsson wrote:
-> Andy Smith wrote:
-> > Booting the system with a Knoppix 4 DVD (kernel version 2.6.12), I
-> > went to set up the md arrays and got a syslog full of this:
-> >=20
-> > ata2: command 0x25 timeout, stat 0x50 host_stat 0x2
-> > ata1: command 0x25 timeout, stat 0x50 host_stat 0x1
-> > ata1: command 0x25 timeout, stat 0x50 host_stat 0x1
-> > ata1: command 0x25 timeout, stat 0x50 host_stat 0x2
-> >=20
-> > as well as a painfully slow (~100K/sec) initial resync.
+> md: running: <sdc2><sdb2><sda2>
+> raid5: device sdb2 operational as raid disk 0
+> raid5: device sda2 operational as raid disk 1
+> raid5: cannot start dirty degraded array for md1
 
-[...]
+Odd.  Perhaps a bug.
+Not sure it will help, but try upgrading mdadm to latest stable (v2.5 or so).
 
-> I shot in the dark, but cabling might be a culprit. I've had some issues
-> with cables, both with the ridiculously unreliable SATA connectors
-> coming out a little as well as with cables which must have been
-> insufficiently shielded.
+> raid5: failed to run raid set md1
+> md: pers->run() failed ...
+> md: do_md_run() returned -5
 
-It actually seems to have been power related.  I'm using Icydock
-SATA disk chassis which have two molex power connectors and one SATA
-power connector for 3 drives.  I had thought that the differing
-types made it an either/or situation, i.e. that it would be happy
-with the two molex.  The "documentation" is what I would charitably
-call terse.  Anyway after putting in the 3rd SATA power this problem
-went away.
-
-Cheers,
-Andy
-
---pWOmaDnDlrCGjNh4
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
-
-iD8DBQFEjDIbIJm2TL8VSQsRAsj+AJ9WhC/sjX9lFXZTG6LhqqvjrCXRGwCgypNa
-s6cK5TnT7yWswgPJX2aaURw=
-=BYLy
------END PGP SIGNATURE-----
-
---pWOmaDnDlrCGjNh4--
+Rather unhelpful to not print an error message.
+Unfortunately, I've no clue what -5 means, or where one may look up
+do_md_run() errors.
