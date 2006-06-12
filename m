@@ -1,30 +1,56 @@
-From: "Galina" <zakaz@1piter.ru>
-Subject: Re[2]:Ave !
-Date: Mon, 12 Jun 2006 13:06:30 +0300
-Message-ID: <004b01c68e07$c2c14880$4600000a__14259.1490796351$1150106818$gmane$org@202.159.224.35>
+From: Chris Osicki <osk@admin.swisscom-mobile.ch>
+Subject: Re: RAID5 troubles
+Date: Mon, 12 Jun 2006 12:25:23 +0200
+Message-ID: <20060612122523.0f4aa2c6@mwdsp001>
+References: <200606102028.k5AKSD86022209@mrz.swissptt.ch>
+	<62b0912f0606110842v1fbf117ag8eb57758af06977e@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1251
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <62b0912f0606110842v1fbf117ag8eb57758af06977e@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-newbie <linux-newbie@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Ave =85.=09
+On Sun, 11 Jun 2006 17:42:43 +0200
+"Molle Bestefich" <molle.bestefich@gmail.com> wrote:
 
-I am a lovely and lonely Lady who is looking for the man who will make =
-me happy and whom I want to feel like in paradise with!
-If you want to be my beautiful Hero who will save me from this loneline=
-ss find me=20
-http://www.BngDniT2Fm.im-waiting-4you.net/
-and wake me up with a warm kiss.
+> Chris wrote:
+> > Kernel: 2.6.16.16
+> > mdadm: v1.12.0
+> 
+> > The RAID5 array is still a problem, dmesg says:
+> 
+> > md: running: <sdc2><sdb2><sda2>
+> > raid5: device sdb2 operational as raid disk 0
+> > raid5: device sda2 operational as raid disk 1
+> > raid5: cannot start dirty degraded array for md1
+> 
+> Odd.  Perhaps a bug.
+> Not sure it will help, but try upgrading mdadm to latest stable (v2.5 or so).
+> 
+> > raid5: failed to run raid set md1
+> > md: pers->run() failed ...
+> > md: do_md_run() returned -5
+> 
+> Rather unhelpful to not print an error message.
+> Unfortunately, I've no clue what -5 means, or where one may look up
+> do_md_run() errors.
+> 
 
-see you later
-Galina
+Hi
+
+Sorry for the noise I made. --force was the right way to go which I was too afraid of.
+I put lots of work into the data I wanted protect with this newly created array, so
+I wanted to ask before I damage it.
+So, this did it:
+
+mdadm /dev/md1 --assemble --force /dev/sda2 /dev/sdb2
+mdadm /dev/md1 --add /dev/sdc2
 
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks for your help.
+
+Regards,
+Chris
