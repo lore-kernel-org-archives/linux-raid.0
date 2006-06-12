@@ -1,56 +1,21 @@
-From: Chris Osicki <osk@admin.swisscom-mobile.ch>
-Subject: Re: RAID5 troubles
-Date: Mon, 12 Jun 2006 12:25:23 +0200
-Message-ID: <20060612122523.0f4aa2c6@mwdsp001>
-References: <200606102028.k5AKSD86022209@mrz.swissptt.ch>
-	<62b0912f0606110842v1fbf117ag8eb57758af06977e@mail.gmail.com>
+From: "Margarito L Smith" <Christian@new-quest.net>
+Subject: Cheap medicatio&n prescribed
+Date: Mon, 12 Jun 2006 00:26:52 -1100
+Message-ID: <A59ADC26.09019B9__2718.52213559232$1150108035$gmane$org@new-quest.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <62b0912f0606110842v1fbf117ag8eb57758af06977e@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Coleman Gates <linux-kernel@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Sun, 11 Jun 2006 17:42:43 +0200
-"Molle Bestefich" <molle.bestefich@gmail.com> wrote:
+Cheap m$dication prescribed. Worldwide shipping.
+http://su.lkjv.com/?fqlwceum
 
-> Chris wrote:
-> > Kernel: 2.6.16.16
-> > mdadm: v1.12.0
-> 
-> > The RAID5 array is still a problem, dmesg says:
-> 
-> > md: running: <sdc2><sdb2><sda2>
-> > raid5: device sdb2 operational as raid disk 0
-> > raid5: device sda2 operational as raid disk 1
-> > raid5: cannot start dirty degraded array for md1
-> 
-> Odd.  Perhaps a bug.
-> Not sure it will help, but try upgrading mdadm to latest stable (v2.5 or so).
-> 
-> > raid5: failed to run raid set md1
-> > md: pers->run() failed ...
-> > md: do_md_run() returned -5
-> 
-> Rather unhelpful to not print an error message.
-> Unfortunately, I've no clue what -5 means, or where one may look up
-> do_md_run() errors.
-> 
-
-Hi
-
-Sorry for the noise I made. --force was the right way to go which I was too afraid of.
-I put lots of work into the data I wanted protect with this newly created array, so
-I wanted to ask before I damage it.
-So, this did it:
-
-mdadm /dev/md1 --assemble --force /dev/sda2 /dev/sdb2
-mdadm /dev/md1 --add /dev/sdc2
+of my new 18-phase master plan. Et tu, Brute I thought you didn't have a
+sense of humor. Ethnic, cleansing I'm just trying to tell you the princesses
+went A.W.O.L. Even at the turning of the tide
 
 
-Thanks for your help.
-
-Regards,
-Chris
