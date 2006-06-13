@@ -1,20 +1,27 @@
-From: "=?GB2312?B?yubQxw==?=" <xshu2006@gmail.com>
-Subject: why raid5 not like this?
-Date: Tue, 13 Jun 2006 11:32:02 +0800
-Message-ID: <7de068fd0606122032t5641c96fm62a208d074750f12@mail.gmail.com>
+From: "Stephanie Mead" <kngyfln@hotmail.com>
+Subject: We Guuaranteees Bigger Pen-nis Vkdka
+Date: Tue, 13 Jun 2006 11:58:37 +0100
+Message-ID: <9A287EE3.7684.5215C2D5@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: linux-net@vger.kernel.org
+Cc: linux-newbie@vger.kernel.org, linux-ppp@vger.kernel.org, linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org, linux-serial@vger.kernel.org, linux-sound@vger.kernel.org
 List-Id: linux-raid.ids
 
-in linux raid4/5/6  ,one big bio will span several devices,and There
-may be several bio's per stripe+device.if the bio arrived in bi_sector
-with overlap,we must wait the former bio to be finished.
-why not we split the bigger bio into small ones?we can attach the
-smaller bio to the stripe+device (here we may can do some merge ).one
-disk i/o we can finish many small bios.if all the small bios of the
-request be finished ,we can return the request.
+
+
+
+Here's latest "Longz" formula has been proven
+to add inches to the sizes while multiplying
+orgasms like never had before. 
+Our products is light years ahead of our competitors
+which has millions of happy users.
+
+Check us out..You won't regret.
+
+http://maxx14.coolhb.biz
+
+
+EN8W
