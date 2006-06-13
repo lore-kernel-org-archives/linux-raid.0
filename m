@@ -1,54 +1,54 @@
 From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: to understand the logic of raid0_make_request
-Date: Tue, 13 Jun 2006 14:45:39 -0400
-Message-ID: <448F07D3.50605@tmr.com>
-References: <4558af040606121737w1bab008am1110e4e1c2cd8934@mail.gmail.com> <17550.2944.728044.154492@cse.unsw.edu.au>
+Subject: Re: raid5 hang on get_active_stripe
+Date: Tue, 13 Jun 2006 14:53:08 -0400
+Message-ID: <448F0994.6050704@tmr.com>
+References: <5d96567b0603060346r768a0ee1i8d8170cf9ba4bac1@mail.gmail.com>	<17429.64926.100005.904328@cse.unsw.edu.au>	<Pine.LNX.4.64.0605110758100.25283@twinlark.arctic.org>	<Pine.LNX.4.64.0605171137350.29929@twinlark.arctic.org>	<17522.29813.189944.397154@cse.unsw.edu.au>	<Pine.LNX.4.64.0605260903270.7952@twinlark.arctic.org>	<17527.38282.35857.117651@cse.unsw.edu.au>	<Pine.LNX.4.64.0605270834240.30550@twinlark.arctic.org>	<17529.37347.782285.77442@cse.unsw.edu.au>	<Pine.LNX.4.64.0605291354260.30134@twinlark.arctic.org>	<17531.35050.632471.433333@cse.unsw.edu.au>	<Pine.LNX.4.64.0605301713480.11178@twinlark.arctic.org>	<17532.59212.364233.765155@cse.unsw.edu.au>	<Pine.LNX.4.64.0605301758380.21977@twinlark.arctic.org>	<17532.62343.933852.982391@cse.unsw.edu.au>	<Pine.LNX.4.64.0605301844180.21977@twinlark.arctic.org>	<17534.22056.981033.686846@cse.unsw.edu.au>	<Pine.LNX.4.64.0606020009560.
+ 10016@twinlark.arctic.org> <17535.59496.431182.785563@cse.unsw.edu.au>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17550.2944.728044.154492@cse.unsw.edu.au>
+In-Reply-To: <17535.59496.431182.785563@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
 To: Neil Brown <neilb@suse.de>
-Cc: liu yang <liudows2@gmail.com>, linux-raid@vger.kernel.org
+Cc: dean gaudet <dean@arctic.org>, Patrik Jonsson <patrik@ucolick.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 Neil Brown wrote:
 
->On Tuesday June 13, liudows2@gmail.com wrote:
+>On Friday June 2, dean@arctic.org wrote:
 >  
 >
->>hello,everyone.
->>I am studying the code of raid0.But I find that the logic of
->>raid0_make_request is a little difficult to understand.
->>Who can tell me what the function of raid0_make_request will do eventually?
+>>On Thu, 1 Jun 2006, Neil Brown wrote:
+>>
+>>    
+>>
+>>>I've got one more long-shot I would like to try first.  If you could
+>>>backout that change to ll_rw_block, and apply this patch instead.
+>>>Then when it hangs, just cat the stripe_cache_active file and see if
+>>>that unplugs things or not (cat it a few times).
+>>>      
+>>>
+>>nope that didn't unstick it... i had to raise stripe_cache_size (from 256 
+>>to 768... 512 wasn't enough)...
+>>
+>>-dean
 >>    
 >>
 >
->One of two possibilities.
+>Ok, thanks.
+>I still don't know what is really going on, but I'm 99.9863% sure this
+>will fix it, and is a reasonable thing to do.
+>(Yes, I lose a ';'.  That is deliberate).
 >
->Most often it will update bio->bi_dev and bio->bi_sector to refer to
->the correct location on the correct underlying devices, and then 
->will return '1'.
->The fact that it returns '1' is noticed by generic_make_request in
->block/ll_rw_block.c and generic_make_request will loop around and
->retry the request on the new device at the new offset.
+>Please let me know what this proves, and thanks again for your
+>patience.
 >
->However in the unusual case that the request cross a chunk boundary
->and so needs to be sent to two different devices, raidi_make_request
->will split the bio into to (using bio_split) will submit each of the
->two bios directly down to the appropriate devices - and will then
->return '0', so that generic make request doesn't loop around.
+>NeilBrown
 >
->I hope that helps.
->
-Helps me, anyway, thanks! Wish the comments on stuff like that in 
-general were clear, you can see what the code *does*, but you have to 
-hope that it's what the coder *intended*. And if you're looking for a 
-bug it may not be, so this is not an idle complaint.
+[...snip...]
 
-Some of the kernel coders think "if it was hard to write it should be 
-hard to understand."
+Will that fix be in 2.6.17?
 
 -- 
 bill davidsen <davidsen@tmr.com>
