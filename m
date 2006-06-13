@@ -1,96 +1,44 @@
-From: "Janos Haar" <djani22@netcenter.hu>
-Subject: A log of thanks, and some question. :)
-Date: Wed, 14 Jun 2006 00:27:10 +0200
-Message-ID: <01b801c68f38$c1992ea0$1800a8c0@dcccs>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: raid5 hang on get_active_stripe
+Date: Wed, 14 Jun 2006 09:13:17 +1000
+Message-ID: <17551.18061.160356.35034@cse.unsw.edu.au>
+References: <5d96567b0603060346r768a0ee1i8d8170cf9ba4bac1@mail.gmail.com>
+	<17429.64926.100005.904328@cse.unsw.edu.au>
+	<Pine.LNX.4.64.0605110758100.25283@twinlark.arctic.org>
+	<Pine.LNX.4.64.0605171137350.29929@twinlark.arctic.org>
+	<17522.29813.189944.397154@cse.unsw.edu.au>
+	<Pine.LNX.4.64.0605260903270.7952@twinlark.arctic.org>
+	<17527.38282.35857.117651@cse.unsw.edu.au>
+	<Pine.LNX.4.64.0605270834240.30550@twinlark.arctic.org>
+	<17529.37347.782285.77442@cse.unsw.edu.au>
+	<Pine.LNX.4.64.0605291354260.30134@twinlark.arctic.org>
+	<17531.35050.632471.433333@cse.unsw.edu.au>
+	<Pine.LNX.4.64.0605301713480.11178@twinlark.arctic.org>
+	<17532.59212.364233.765155@cse.unsw.edu.au>
+	<Pine.LNX.4.64.0605301758380.21977@twinlark.arctic.org>
+	<17532.62343.933852.982391@cse.unsw.edu.au>
+	<Pine.LNX.4.64.0605301844180.21977@twinlark.arctic.org>
+	<17534.22056.981033.686846@cse.unsw.edu.au>
+	<Pine.LNX.4.64.0606020009560.10016@twinlark.arctic.org>
+	<17535.59496.431182.785563@cse.unsw.edu.au>
+	<448F0994.6050704@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-2"
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: message from Bill Davidsen on Tuesday June 13
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: dean gaudet <dean@arctic.org>, Patrik Jonsson <patrik@ucolick.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello, list, Neil,
+On Tuesday June 13, davidsen@tmr.com wrote:
+> 
+> Will that fix be in 2.6.17?
+> 
 
-First i want to thanks, to Neil, for the mdadm! :-)
+Probably not.  We have had the last 'rc' twice and I so I don't think
+it is appropriate to submit the patch at this stage.
+I probably will submit it for an early 2.6.17.x. and for 2.6.16.y.
 
-On the last week, i have successfully recover my 12 disk raid4 array with
-mdadm, from 10 good, 2 failed, and +1 disk with one day older parity infos.
-I have saved about 14TB data, and only lost about 40-50GB! (Raid0-stripped
-4x3.3TB and XFS)
-
-Thanks, Neil!
-
-Anyway, i have some questions too:
-
-After i more times re-create the full raid4 array, i cannot add back the
-bitmap!
-
-[root@st-0003 ~]# cat /proc/mdstat
-Personalities : [linear] [raid0] [raid1] [raid10] [raid5] [raid4] [raid6]
-[multi
-path] [faulty]
-md0 : active raid4 hda1[0] sde1[11] sdi1[10] sdd1[9] sdj1[8] sdh1[7] sdg1[6]
-sdf
-1[5] sdc1[4] sda1[3] sdb1[2] hdb1[1]
-      3223457600 blocks level 4, 4k chunk, algorithm 0 [12/12]
-[UUUUUUUUUUUU]
-
-unused devices: <none>
-[root@st-0003 ~]# mdadm -D /dev/md0
-/dev/md0:
-        Version : 00.90.03
-  Creation Time : Fri Jun  9 08:27:26 2006
-     Raid Level : raid4
-     Array Size : 3223457600 (3074.13 GiB 3300.82 GB)
-    Device Size : 293041600 (279.47 GiB 300.07 GB)
-   Raid Devices : 12
-  Total Devices : 12
-Preferred Minor : 0
-    Persistence : Superblock is persistent
-
-    Update Time : Wed Jun 14 00:10:23 2006
-          State : clean
- Active Devices : 12
-Working Devices : 12
- Failed Devices : 0
-  Spare Devices : 0
-
-     Chunk Size : 4K
-
-           UUID : 3eec5a2c:812deda6:1219fc67:edc77e6e
-         Events : 0.153457
-
-    Number   Major   Minor   RaidDevice State
-       0       3        1        0      active sync   /dev/hda1
-       1       3       65        1      active sync   /dev/hdb1
-       2       8       17        2      active sync   /dev/sdb1
-       3       8        1        3      active sync   /dev/sda1
-       4       8       33        4      active sync   /dev/sdc1
-       5       8       81        5      active sync   /dev/sdf1
-       6       8       97        6      active sync   /dev/sdg1
-       7       8      113        7      active sync   /dev/sdh1
-       8       8      145        8      active sync   /dev/sdj1
-       9       8       49        9      active sync   /dev/sdd1
-      10       8      129       10      active sync   /dev/sdi1
-      11       8       65       11      active sync   /dev/sde1
-[root@st-0003 ~]# time mdadm -G /dev/md0 --bitmap=internal
-mdadm: failed to set internal bitmap.
-
-real    0m8.645s
-user    0m0.070s
-sys     0m1.600s
-[root@st-0003 ~]#
-
-Why? :-)
-
-And another one question:
-Why are the bitmap support disabled in the latest kernels for raid4?
-It works really good, i have tested it a lot of times! ;-)
-
-(Neil sent me a little patch to enable it before...)
-
-Thanks
-Janos
-
+NeilBrown
