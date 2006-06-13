@@ -1,68 +1,96 @@
-From: Gordon Henderson <gordon@drogon.net>
-Subject: Re: RAID tuning?
-Date: Tue, 13 Jun 2006 22:38:24 +0100 (BST)
-Message-ID: <Pine.LNX.4.56.0606132229110.17860@lion.drogon.net>
-References: <4558af040606121737w1bab008am1110e4e1c2cd8934@mail.gmail.com>
- <17550.2944.728044.154492@cse.unsw.edu.au> <448E127F.5010708@comcast.net>
- <Pine.LNX.4.56.0606130906370.27931@lion.drogon.net>
- <Pine.LNX.4.64.0606130620410.8834@p34.internal.lan>
- <Pine.LNX.4.56.0606131124160.27931@lion.drogon.net> <448EFCA7.6050603@comcast.net>
+From: "Janos Haar" <djani22@netcenter.hu>
+Subject: A log of thanks, and some question. :)
+Date: Wed, 14 Jun 2006 00:27:10 +0200
+Message-ID: <01b801c68f38$c1992ea0$1800a8c0@dcccs>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+	charset="iso-8859-2"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <448EFCA7.6050603@comcast.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Adam Talbot <talbotx@comcast.net>
-Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, 13 Jun 2006, Adam Talbot wrote:
+Hello, list, Neil,
 
-> I still have not figured out if "block" is per disk or per stripe?
-> My current array is rebuilding and states "64k chunk" is this a per disk
-> number or is that a functional stripe?
+First i want to thanks, to Neil, for the mdadm! :-)
 
-The block-size in the argument to mkfs is the size of the basic data block
-on disk. (if this is what you mean) In olden days you'd fiddle with this
-to do two things: By reducing it, you can reduce the amount of wasted
-space on the filesystem - eg. if you were to only write files of 1K long,
-then with a 4K blocks-size, you'll waste 3K of disk space for each file,
-secondly reducing it you can increase the number of inodes - which once
-upon a time was neccessary when using a disk for a usenet new spool disk
-(millions upon millions of small files where you'r typically run out of
-inodes)
+On the last week, i have successfully recover my 12 disk raid4 array with
+mdadm, from 10 good, 2 failed, and +1 disk with one day older parity infos.
+I have saved about 14TB data, and only lost about 40-50GB! (Raid0-stripped
+4x3.3TB and XFS)
 
-Of course you might be meaning something else ;-)
+Thanks, Neil!
 
-> Nice scrip Gordon.  It turns out that I have build a script that does
-> the exact same thing.  I call I thrash_test.  Trying to take down the
-> array before it goes in to production. It is a very good test!
+Anyway, i have some questions too:
 
-It's csh, so people can sue me if they like ;-)
+After i more times re-create the full raid4 array, i cannot add back the
+bitmap!
 
-I do a number of things - trying to excercise as much of the hardware at
-any ont time as possible - so I'll typically run bonnie on each partition,
-and at the same time run a continuous wget to ftp a file into the box, and
-a wget from anothe box to ftp a file out (big files, 1GB or so), and run a
-loop of make clean ; make -j3 in the kernel build directory too. If I can
-do this for a week I'm usually more than happy!!!
+[root@st-0003 ~]# cat /proc/mdstat
+Personalities : [linear] [raid0] [raid1] [raid10] [raid5] [raid4] [raid6]
+[multi
+path] [faulty]
+md0 : active raid4 hda1[0] sde1[11] sdi1[10] sdd1[9] sdj1[8] sdh1[7] sdg1[6]
+sdf
+1[5] sdc1[4] sda1[3] sdb1[2] hdb1[1]
+      3223457600 blocks level 4, 4k chunk, algorithm 0 [12/12]
+[UUUUUUUUUUUU]
 
-If anyone else has good "soaktest" type runes, I'd like to hear them to
-add to my collection. (I do run cpuburn too, but I don't think it's a good
-representation of "server" work on a modern machine).
+unused devices: <none>
+[root@st-0003 ~]# mdadm -D /dev/md0
+/dev/md0:
+        Version : 00.90.03
+  Creation Time : Fri Jun  9 08:27:26 2006
+     Raid Level : raid4
+     Array Size : 3223457600 (3074.13 GiB 3300.82 GB)
+    Device Size : 293041600 (279.47 GiB 300.07 GB)
+   Raid Devices : 12
+  Total Devices : 12
+Preferred Minor : 0
+    Persistence : Superblock is persistent
 
-> I ran hdpram -t last time the array was up. It states I am running at
-> about 200 MB/sec.  I will get you the real number when the array is done
-> rebuilding.  currently at 120min left...
+    Update Time : Wed Jun 14 00:10:23 2006
+          State : clean
+ Active Devices : 12
+Working Devices : 12
+ Failed Devices : 0
+  Spare Devices : 0
 
-hdparn really is quick & dirty. you might want to time a dd of /dev/md? to
-/dev/null with varying block sizes and read sizes to get 'raw' streaming
-performance.
+     Chunk Size : 4K
 
-> Can any one give me more info on this error?  Pulled from
-> /var/log/messages.
-> "raid6: read error corrected!!"
+           UUID : 3eec5a2c:812deda6:1219fc67:edc77e6e
+         Events : 0.153457
 
-Not seen that one!!!
+    Number   Major   Minor   RaidDevice State
+       0       3        1        0      active sync   /dev/hda1
+       1       3       65        1      active sync   /dev/hdb1
+       2       8       17        2      active sync   /dev/sdb1
+       3       8        1        3      active sync   /dev/sda1
+       4       8       33        4      active sync   /dev/sdc1
+       5       8       81        5      active sync   /dev/sdf1
+       6       8       97        6      active sync   /dev/sdg1
+       7       8      113        7      active sync   /dev/sdh1
+       8       8      145        8      active sync   /dev/sdj1
+       9       8       49        9      active sync   /dev/sdd1
+      10       8      129       10      active sync   /dev/sdi1
+      11       8       65       11      active sync   /dev/sde1
+[root@st-0003 ~]# time mdadm -G /dev/md0 --bitmap=internal
+mdadm: failed to set internal bitmap.
 
-Gordon
+real    0m8.645s
+user    0m0.070s
+sys     0m1.600s
+[root@st-0003 ~]#
+
+Why? :-)
+
+And another one question:
+Why are the bitmap support disabled in the latest kernels for raid4?
+It works really good, i have tested it a lot of times! ;-)
+
+(Neil sent me a little patch to enable it before...)
+
+Thanks
+Janos
+
