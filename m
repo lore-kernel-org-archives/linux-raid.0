@@ -1,38 +1,75 @@
-From: "Molle Bestefich" <molle.bestefich@gmail.com>
-Subject: Re: RAID tuning?
-Date: Wed, 14 Jun 2006 17:35:56 +0200
-Message-ID: <62b0912f0606140835t518f6590v7d4ef11039284d28@mail.gmail.com>
-References: <4558af040606121737w1bab008am1110e4e1c2cd8934@mail.gmail.com>
-	 <17550.2944.728044.154492@cse.unsw.edu.au>
-	 <448E127F.5010708@comcast.net>
-	 <Pine.LNX.4.56.0606130906370.27931@lion.drogon.net>
-	 <Pine.LNX.4.64.0606130620410.8834@p34.internal.lan>
-	 <Pine.LNX.4.56.0606131124160.27931@lion.drogon.net>
-	 <448EFCA7.6050603@comcast.net>
-	 <Pine.LNX.4.56.0606132229110.17860@lion.drogon.net>
-	 <87zmgfn562.fsf@hades.wkstn.nix>
+From: Bill Cizek <cizek@rcn.com>
+Subject: Re: IBM xSeries stop responding during RAID1 reconstruction
+Date: Wed, 14 Jun 2006 10:46:09 -0500
+Message-ID: <44902F41.8030300@rcn.com>
+References: <20060614085354.GA18106@rigacci.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87zmgfn562.fsf@hades.wkstn.nix>
-Content-Disposition: inline
+In-Reply-To: <20060614085354.GA18106@rigacci.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
+To: Niccolo Rigacci <niccolo@rigacci.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Nix wrote:
-> Adam Talbot wrote:
-> > Can any one give me more info on this error?
-> > Pulled from /var/log/messages.
-> > "raid6: read error corrected!!"
+Niccolo Rigacci wrote:
+
+>Hi to all,
 >
-> The message is pretty easy to figure out and the code (in
-> drivers/md/raid6main.c) is clear enough.
+>I have a new IBM xSeries 206m with two SATA drives, I installed a 
+>Debian Testing (Etch) and configured a software RAID as shown:
+>
+>Personalities : [raid1]
+>md1 : active raid1 sdb5[1] sda5[0]
+>      1951744 blocks [2/2] [UU]
+>
+>md2 : active raid1 sdb6[1] sda6[0]
+>      2931712 blocks [2/2] [UU]
+>
+>md3 : active raid1 sdb7[1] sda7[0]
+>      39061952 blocks [2/2] [UU]
+>
+>md0 : active raid1 sdb1[1] sda1[0]
+>      5855552 blocks [2/2] [UU]
+>
+>I experience this problem: whenever a volume is reconstructing 
+>(syncing), the system stops responding. The machine is alive, 
+>because it responds to the ping, the console is responsive but I 
+>cannot pass the login prompt. It seems that every disk activity 
+>is delayed and blocking.
+>
+>When the sync is complete, the machine start to respond again 
+>perfectly.
+>
+>Any hints on how to start debugging?
+>  
+>
 
-But the message could be clearer, for instance it would be a very good
-service to the user if the message showed which block had been
-corrected.
+I ran into a similar problem using kernel 2.6.16.14 on an ASUS 
+motherboard:  When I
+mirrored two SATA drives it seemed to block all other disk I/O until the 
+sync was complete.
 
-Also using two !! in place of one ! makes the message seem a little dumb :-).
+My symptoms were the same:  all consoles were non-responsive and when I 
+tried to login
+it just sat there until the sync was complete.
+
+I was able to work around this by lowering 
+/proc/sys/dev/raid/speed_limit_max to a value
+below my disk thruput value (~ 50 MB/s) as follows:
+
+$ echo 45000 > /proc/sys/dev/raid/speed_limit_max
+
+That kept my system usable but didn't address the underlying problem of 
+the raid
+resync not being appropriately throttled.  I ended up configuring my 
+system differently
+so this became a moot point for me.
+
+Hope this helps,
+Bill
+
+
+
+
