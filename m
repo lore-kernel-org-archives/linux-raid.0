@@ -1,7 +1,7 @@
 From: "=?GB2312?B?uPDQ29fK?=" <xiongzige@gmail.com>
-Subject: Call for help of raid5
-Date: Thu, 15 Jun 2006 10:44:42 +0800
-Message-ID: <1caa67950606141944n7eb794eejc2be08e162d81d75@mail.gmail.com>
+Subject: raid6
+Date: Thu, 15 Jun 2006 11:07:14 +0800
+Message-ID: <1caa67950606142007p59c6b079xe2db9a7a94e506ef@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
@@ -11,7 +11,9 @@ Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-In the make_request() function,
- prepare_to_wait(&conf->wait_for_overlap, &w, TASK_UNINTERRUPTIBLE);
-how does the system wake up the (&conf->wait_for_overlap) For the first time?
-And how does the first request deliver to the device driver. ?
+        I am confronted  with a big problem of the raid6 algorithm,
+when recently I learn the raid6 code of linux 2.6 you have contributed
+.
+ Unfortunately I can not understand the algorithm of  P +Q parity in
+this program . Is this some formula for this raid6 algorithm? I realy
+respect your help,could you show me some details about this algorithm?
