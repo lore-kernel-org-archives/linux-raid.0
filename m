@@ -1,19 +1,26 @@
-From: "=?GB2312?B?uPDQ29fK?=" <xiongzige@gmail.com>
-Subject: raid6
-Date: Thu, 15 Jun 2006 11:07:14 +0800
-Message-ID: <1caa67950606142007p59c6b079xe2db9a7a94e506ef@mail.gmail.com>
+From: Henrik Holst <henrik.holst@idgmail.se>
+Subject: Re: raid6
+Date: Thu, 15 Jun 2006 05:40:35 +0200
+Message-ID: <4490D6B3.5030109@idgmail.se>
+References: <1caa67950606142007p59c6b079xe2db9a7a94e506ef@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <1caa67950606142007p59c6b079xe2db9a7a94e506ef@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
+To: =?UTF-8?B?6JGb6ZuE6LWE?= <xiongzige@gmail.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-        I am confronted  with a big problem of the raid6 algorithm,
-when recently I learn the raid6 code of linux 2.6 you have contributed
-.
- Unfortunately I can not understand the algorithm of  P +Q parity in
-this program . Is this some formula for this raid6 algorithm? I realy
-respect your help,could you show me some details about this algorithm?
+xiongzige wrote:
+>Unfortunately I can not understand the algorithm of  P +Q parity in
+>this program . Is this some formula for this raid6 algorithm? I realy
+>respect your help,could you show me some details about this algorithm?
+
+I saw a few links a while back in the list:
+
+http://www.issociate.de/board/post/243808/RAID6_Query.html
+
+Regards,
+Henrik Holst
