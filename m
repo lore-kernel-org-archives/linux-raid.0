@@ -1,39 +1,206 @@
-From: "Pamela Alston" <PamelaAlston@0451.com>
-Subject: :), ostrich-feather grass
-Date: Thu, 15 Jun 2006 15:26:38 +0000 (UTC)
-Message-ID: <743721204.20060615152632@0451.com>
-Reply-To: "Pamela Alston" <PamelaAlston@0451.com>
+From: "James H. Edwards" <jedwards@nmcourts.com>
+Subject: Help with dirty RAID array
+Date: Thu, 15 Jun 2006 11:06:17 -0600
+Message-ID: <1150391177.16155.164.camel@homer.nmcourts.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Date: Thu, 15 Jun 2006 15:26:32 -0060
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Even if you have no erectin problems SOFT CIAzLIS 
-would help you to make BETTER SE  X MORE OFTEN!
-and to bring  unimagnable plesure to her.
+I have a RAID 1 and RAID 5 array on a mail server. It panic rebooted and
+now the arrays will not start cleaning. I have run xfs_repair on both
+arrays Each array flip flops from indicating it is dirty and then clean.
+I do not see the resync process running, which I am used to seeing when
+a a box is not shutdown correctly. Here is the output of  mdadm -QD for
+both arrays showing clean and dirty state, what do I need to do the
+clean these arrays ? 
 
-Just disolve half a pil under your tongue 
-and get ready for action in 15 minutes. 
+MD0 Array:
 
-The tests showed that the majority of men 
-after taking this medic ation were able to have 
-PERFECT ER ECTI ON during 36 hours!
 
-VISIT US, AND GET OUR SPECIAL 70% DISC OUNT OFER!
+[root@jidmail bin]# mdadm -QD /dev/md0
+/dev/md0:
+        Version : 00.90.01
+  Creation Time : Mon Nov 22 06:11:32 2004
+     Raid Level : raid1
+     Array Size : 71681920 (68.36 GiB 73.40 GB)
+    Device Size : 71681920 (68.36 GiB 73.40 GB)
+   Raid Devices : 2
+  Total Devices : 2
+Preferred Minor : 0
+    Persistence : Superblock is persistent
 
-http://jqluol.knelllank.com/?76748530
+    Update Time : Thu Jun 15 11:00:28 2006
+          State : clean
+ Active Devices : 2
+Working Devices : 2
+ Failed Devices : 0
+  Spare Devices : 0
 
-==========
-out beyond the Far Cliffs. His one sorrow was not solituile, it  was  that
-night,  when  you crawl  past, you can  see  the glow  inside,  like alcohol
-American  science   fiction,   when  the  late  John  W.  Campbell,   editor
-headquarters. They're  all well-built healthy fellows. They don't have to go
-but  I simply could not force myself to believe the hysterical reports about
-was so small  that it looked  like a  cat turd. I had never even noticed  it
 
-     It's all so pointless, he thought, deliberately dropping  a  hard-won
-over the left hillock. Of course, I didn't  know what was on the other side.
+    Number   Major   Minor   RaidDevice State
+       0       8      241        0      active sync   /dev/sdp1
+       1      65        1        1      active sync   /dev/sdq1
+           UUID : 2f4cbf03:cd1ddc43:ef9965aa:3d51f6f2
+         Events : 0.47732796
+
+
+[root@jidmail bin]# mdadm -QD /dev/md0
+/dev/md0:
+        Version : 00.90.01
+  Creation Time : Mon Nov 22 06:11:32 2004
+     Raid Level : raid1
+     Array Size : 71681920 (68.36 GiB 73.40 GB)
+    Device Size : 71681920 (68.36 GiB 73.40 GB)
+   Raid Devices : 2
+  Total Devices : 2
+Preferred Minor : 0
+    Persistence : Superblock is persistent
+
+    Update Time : Thu Jun 15 11:00:29 2006
+          State : dirty
+ Active Devices : 2
+Working Devices : 2
+ Failed Devices : 0
+  Spare Devices : 0
+
+
+    Number   Major   Minor   RaidDevice State
+       0       8      241        0      active sync   /dev/sdp1
+       1      65        1        1      active sync   /dev/sdq1
+           UUID : 2f4cbf03:cd1ddc43:ef9965aa:3d51f6f2
+         Events : 0.47732797
+[root@jidmail bin]#
+
+
+
+MD1 Array:
+
+[root@jidmail bin]# mdadm -QD /dev/md1
+/dev/md1:
+        Version : 00.90.01
+  Creation Time : Mon Nov 22 06:11:19 2004
+     Raid Level : raid5
+     Array Size : 1577091648 (1504.03 GiB 1614.94 GB)
+    Device Size : 143371968 (136.73 GiB 146.81 GB)
+   Raid Devices : 12
+  Total Devices : 14
+Preferred Minor : 1
+    Persistence : Superblock is persistent
+
+    Update Time : Thu Jun 15 11:04:29 2006
+          State : dirty
+ Active Devices : 12
+Working Devices : 14
+ Failed Devices : 0
+  Spare Devices : 2
+
+         Layout : left-asymmetric
+     Chunk Size : 64K
+
+    Number   Major   Minor   RaidDevice State
+       0       8       33        0      active sync   /dev/sdc1
+       1       8       49        1      active sync   /dev/sdd1
+       2       8       65        2      active sync   /dev/sde1
+       3       8       81        3      active sync   /dev/sdf1
+       4       8       97        4      active sync   /dev/sdg1
+       5       8      113        5      active sync   /dev/sdh1
+       6       8      129        6      active sync   /dev/sdi1
+       7       8      145        7      active sync   /dev/sdj1
+       8       8      161        8      active sync   /dev/sdk1
+       9       8      177        9      active sync   /dev/sdl1
+      10       8      193       10      active sync   /dev/sdm1
+      11       8      209       11      active sync   /dev/sdn1
+      12      65       17       -1      spare   /dev/sdr1
+      13       8      225       -1      spare   /dev/sdo1
+           UUID : 478195d2:df1da7b0:fbaa9190:6c2a0348
+         Events : 0.47810358
+[root@jidmail bin]# mdadm -QD /dev/md1
+/dev/md1:
+        Version : 00.90.01
+  Creation Time : Mon Nov 22 06:11:19 2004
+     Raid Level : raid5
+     Array Size : 1577091648 (1504.03 GiB 1614.94 GB)
+    Device Size : 143371968 (136.73 GiB 146.81 GB)
+   Raid Devices : 12
+  Total Devices : 14
+Preferred Minor : 1
+    Persistence : Superblock is persistent
+
+    Update Time : Thu Jun 15 11:04:31 2006
+          State : dirty
+ Active Devices : 12
+Working Devices : 14
+ Failed Devices : 0
+  Spare Devices : 2
+
+         Layout : left-asymmetric
+     Chunk Size : 64K
+
+    Number   Major   Minor   RaidDevice State
+       0       8       33        0      active sync   /dev/sdc1
+       1       8       49        1      active sync   /dev/sdd1
+       2       8       65        2      active sync   /dev/sde1
+       3       8       81        3      active sync   /dev/sdf1
+       4       8       97        4      active sync   /dev/sdg1
+       5       8      113        5      active sync   /dev/sdh1
+       6       8      129        6      active sync   /dev/sdi1
+       7       8      145        7      active sync   /dev/sdj1
+       8       8      161        8      active sync   /dev/sdk1
+       9       8      177        9      active sync   /dev/sdl1
+      10       8      193       10      active sync   /dev/sdm1
+      11       8      209       11      active sync   /dev/sdn1
+      12      65       17       -1      spare   /dev/sdr1
+      13       8      225       -1      spare   /dev/sdo1
+           UUID : 478195d2:df1da7b0:fbaa9190:6c2a0348
+         Events : 0.47810372
+
+
+[root@jidmail bin]# mdadm -QD /dev/md1
+/dev/md1:
+        Version : 00.90.01
+  Creation Time : Mon Nov 22 06:11:19 2004
+     Raid Level : raid5
+     Array Size : 1577091648 (1504.03 GiB 1614.94 GB)
+    Device Size : 143371968 (136.73 GiB 146.81 GB)
+   Raid Devices : 12
+  Total Devices : 14
+Preferred Minor : 1
+    Persistence : Superblock is persistent
+
+    Update Time : Thu Jun 15 11:04:33 2006
+          State : clean
+ Active Devices : 12
+Working Devices : 14
+ Failed Devices : 0
+  Spare Devices : 2
+
+         Layout : left-asymmetric
+     Chunk Size : 64K
+
+    Number   Major   Minor   RaidDevice State
+       0       8       33        0      active sync   /dev/sdc1
+       1       8       49        1      active sync   /dev/sdd1
+       2       8       65        2      active sync   /dev/sde1
+       3       8       81        3      active sync   /dev/sdf1
+       4       8       97        4      active sync   /dev/sdg1
+       5       8      113        5      active sync   /dev/sdh1
+       6       8      129        6      active sync   /dev/sdi1
+       7       8      145        7      active sync   /dev/sdj1
+       8       8      161        8      active sync   /dev/sdk1
+       9       8      177        9      active sync   /dev/sdl1
+      10       8      193       10      active sync   /dev/sdm1
+      11       8      209       11      active sync   /dev/sdn1
+      12      65       17       -1      spare   /dev/sdr1
+      13       8      225       -1      spare   /dev/sdo1
+           UUID : 478195d2:df1da7b0:fbaa9190:6c2a0348
+         Events : 0.47810379
+[root@jidmail bin]#
+
+
+
+
+
