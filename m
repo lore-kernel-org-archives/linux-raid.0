@@ -1,29 +1,50 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: raid6
-Date: Thu, 15 Jun 2006 13:43:59 +1000
-Message-ID: <17552.55167.65872.651894@cse.unsw.edu.au>
-References: <1caa67950606142007p59c6b079xe2db9a7a94e506ef@mail.gmail.com>
+From: "Sanal Dedektiflik Hizmetleri" <sd0606tt2f@yahoo.com.tr>
+Subject: =?ISO-8859-1?Q?=20Art=FDk?=  =?ISO-8859-1?Q?=20e=FEler,?= sevgililer, ortaklar birbirini aldatamayacak!
+Date: Thu, 15 Jun 2006 08:59:10 +0300
+Message-ID: <200606150559.k5F5xIVp009760@zeus2.kernel.org>
+Reply-To: "Sanal Dedektiflik Hizmetleri" <sd0606t2r@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-9
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from  =?ISO-8859-1?Q?=20=1B$(A8pP[WJ=1B(B?= on Thursday June 15
 Sender: linux-raid-owner@vger.kernel.org
-To: =?GB2312?B?uPDQ29fK?= <xiongzige@gmail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thursday June 15, xiongzige@gmail.com wrote:
->         I am confronted  with a big problem of the raid6 algorithm,
-> when recently I learn the raid6 code of linux 2.6 you have contributed
-> .
->  Unfortunately I can not understand the algorithm of  P +Q parity in
-> this program . Is this some formula for this raid6 algorithm? I realy
-> respect your help,could you show me some details about this algorithm?
 
-See:
- http://en.wikipedia.org/wiki/Redundant_array_of_independent_disks#RAID_6
-and
- http://kernel.org/pub/linux/kernel/people/hpa/raid6.pdf
- 
-NeilBrown
+SANAL DEDEKT=DDFL=DDK H=DDZMETLER=DD
+"Art=FDk e=FEler, sevgililer, arkada=FElar, ortaklar, birbirini aldatam=
+ayacak!"
+=20
+T=DCRK=DDYE BU H=DDZMET VE TEKN=DD=D0=DD KONU=DEUYOR...=20
+YEN=DD TEKNOLOJ=DD H=DDZMET=DDN=DDZDE!  =20
+=20
+Sizi aldatan ki=FEinin,=20
+* Telefonlar=FDn=FD dinleyebilir, mesajlar=FDn=FD okuyabilirsiniz.
+* Bilgisayar ortam=FDn=FD inceleyebilir, denetleyebilirsiniz.
+* Internet ortam=FDn=FD, e-mail ve chat yaz=FD=FEmalar=FDn=FD inceleyeb=
+ilirsiniz.
+* G=FCnl=FCk ya=FEant=FDs=FDn=FD takip edebilir, kay=FDt alabilirsiniz.
+* Sizi/yak=FDnlar=FDn=FDz=FD rahats=FDz eden bir ki=FEiyi tespit edebil=
+irsiniz.
+* Di=F0er takip, te=FEhis ve tespit =E7al=FD=FEmalar=FDm=FDzdan yararla=
+nabilirsiniz.
+* Teklif edece=F0iniz dedektiflik hizmetlerini yapt=FDrabilirsiniz.
+
+L=FCtfen =FCcretsiz e-bro=FE=FCr ve detayl=FD bilgi dosyalar=FDm=FDz=FD=
+ isteyiniz.
+=D6=F0renmek iste=F0iniz di=F0er ayr=FDnt=FDlar=FD sormaktan =E7ekinmey=
+iniz.=20
+Web sitemizi ziyaret ediniz.
+
+Sayg=FDlar=FDm=FDzla,
+
+N. Cem, Antalya, TR
+GSM/SMS: 0546-797 93 76
+E-MAIL/MSN: sd0606t2r@gmail.com
+ICQ: 310-115-006
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
