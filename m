@@ -1,50 +1,48 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: IBM xSeries stop responding during RAID1 reconstruction
-Date: Thu, 15 Jun 2006 20:13:48 +1000
-Message-ID: <17553.13020.134589.292543@cse.unsw.edu.au>
-References: <20060614085354.GA18106@rigacci.org>
-	<44902F41.8030300@rcn.com>
-	<20060615091219.GB2080@rigacci.org>
+From: Leo Kliger <lkliger@bigpond.net.au>
+Subject: Re: Disks keep failing durning testing
+Date: Thu, 15 Jun 2006 22:12:36 +1000
+Message-ID: <1150373556.3393.268.camel@borgcube2>
+References: <4558af040606121737w1bab008am1110e4e1c2cd8934@mail.gmail.com>
+	 <17550.2944.728044.154492@cse.unsw.edu.au> <448E127F.5010708@comcast.net>
+	 <Pine.LNX.4.56.0606130906370.27931@lion.drogon.net>
+	 <Pine.LNX.4.64.0606130620410.8834@p34.internal.lan>
+	 <Pine.LNX.4.56.0606131124160.27931@lion.drogon.net>
+	 <448EFCA7.6050603@comcast.net>
+	 <Pine.LNX.4.56.0606132229110.17860@lion.drogon.net>
+	 <87zmgfn562.fsf@hades.wkstn.nix> <449073AD.3000809@comcast.net>
+	 <op.ta5n1jz0cigqcu@apollo13>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Niccolo Rigacci on Thursday June 15
+In-Reply-To: <op.ta5n1jz0cigqcu@apollo13>
 Sender: linux-raid-owner@vger.kernel.org
-To: Niccolo Rigacci <niccolo@rigacci.org>
-Cc: Bill Cizek <cizek@rcn.com>, linux-raid@vger.kernel.org
+To: PFC <lists@peufeu.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thursday June 15, niccolo@rigacci.org wrote:
-> On Wed, Jun 14, 2006 at 10:46:09AM -0500, Bill Cizek wrote:
-> > Niccolo Rigacci wrote:
-> > 
-> > >When the sync is complete, the machine start to respond again 
-> > >perfectly.
-> > >
-> > I was able to work around this by lowering 
-> > /proc/sys/dev/raid/speed_limit_max to a value
-> > below my disk thruput value (~ 50 MB/s) as follows:
-> > 
-> > $ echo 45000 > /proc/sys/dev/raid/speed_limit_max
+On Wed, 2006-06-14 at 23:45 +0200, PFC wrote:
+> > 6X MaxLine 300GB SATAII 7200RPM Hard drive.
 > 
-> Thanks!
+> 	Flip the jumper on the drive to set it to SATA1 (1.5 Gbps) instead of  
+> SATA2.
+> 	On my PC Maxtor drives kept failing until I did this, not a problem since.
 > 
-> This hack seems to solve my problem too. So it seems that the 
-> RAID subsystem does not detect a proper speed to throttle the 
-> sync.
+> 	Of course YMMV.
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-The RAID subsystem doesn't try to detect a 'proper' speed.
-When there is nothing else happening, it just drives the disks as fast
-as they will go.
-If this is causing a lockup, then there is something else wrong, just
-as any single process should not - by writing constantly to disks - be
-able to clog up the whole system.
+Is this possible on all SATAII drives?
 
-Maybe if you could get the result of 
-  alt-sysrq-P
-or even
-  alt-sysrq-T
-while the system seems to hang.
+I have a similar issue with Western Digital drives and can't find this
+information on their website.... actually check out the following link
+and look at their graphic HOWTO:- 
 
-NeilBrown
+http://www.westerndigital.com/en/products/products.asp?driveid=131&language=en
+
+It appears that the one jumper setting (for SSC - is this what I'm
+looking for?) they discuss is described as being enabled and disabled
+with or without the jumper.
+
