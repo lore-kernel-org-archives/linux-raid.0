@@ -1,41 +1,53 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: Raid5 software problems after loosing 4 disks for 48 hours
-Date: Fri, 16 Jun 2006 11:21:04 +1000
-Message-ID: <17554.1920.421692.780276@cse.unsw.edu.au>
-References: <7c9ce5050606151659y219947e1g9f9034982d81221b@mail.gmail.com>
+From: "liu yang" <liudows2@gmail.com>
+Subject: Re: to understand the logic of raid0_make_request
+Date: Fri, 16 Jun 2006 10:53:34 +0800
+Message-ID: <4558af040606151953g2ae4c1aasb0c398294cda5887@mail.gmail.com>
+References: <4558af040606121737w1bab008am1110e4e1c2cd8934@mail.gmail.com>
+	 <17550.2944.728044.154492@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Wilson Wilson on Friday June 16
+In-Reply-To: <17550.2944.728044.154492@cse.unsw.edu.au>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Wilson Wilson <wilson150@gmail.com>
+To: Neil Brown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Friday June 16, wilson150@gmail.com wrote:
-> 
-> And is there a way if more then 1 disks goes offline, for the whole
-> array to be taken offline? My understanding of raid5 is loose 1+ disks
-> and nothing on the raid would be readable. this is not the case here.
-> 
+2006/6/13, Neil Brown <neilb@suse.de>:
+> On Tuesday June 13, liudows2@gmail.com wrote:
+> > hello,everyone.
+> > I am studying the code of raid0.But I find that the logic of
+> > raid0_make_request is a little difficult to understand.
+> > Who can tell me what the function of raid0_make_request will do eventually?
+>
+> One of two possibilities.
+>
+> Most often it will update bio->bi_dev and bio->bi_sector to refer to
+> the correct location on the correct underlying devices, and then
+> will return '1'.
+> The fact that it returns '1' is noticed by generic_make_request in
+> block/ll_rw_block.c and generic_make_request will loop around and
+> retry the request on the new device at the new offset.
+>
+> However in the unusual case that the request cross a chunk boundary
+> and so needs to be sent to two different devices, raidi_make_request
+> will split the bio into to (using bio_split) will submit each of the
+> two bios directly down to the appropriate devices - and will then
+> return '0', so that generic make request doesn't loop around.
+>
+> I hope that helps.
+>
+> NeilBrown
+>
 
-Nothing will be writable, but some blocks might be readable.
 
+Thanks a lot.I went through the code again following your guide.But I
+still can't understand how the bio->bi_sector and bio->bi_dev are
+computed.I don't know what the var 'block' stands for.
+Could you explain them to me ?
+Thanks!
+Regards.
 
-> All the disks are online now, what do I need to do to rebuild the array?
-
-Have you tried
-  mdadm --assemble --force /dev/md0 /dev/sd[bcdefghijklmnop]1
-??
-Actually, it occurs to me that that might not do the best thing if 4
-drives disappeared at exactly the same time (though it is unlikely
-that you would notice)
-You should probably use
- mdadm --create /dev/md0 -f -l5 -n15 -c32  /dev/sd[bcdefghijklmnop]1
-This is assuming that  e,f,g,h were in that order in the array before
-they died.
-The '-f' is quite important - it tells mdadm not recover a spare, but
-to resync the parity blocks.
-
-NeilBrown
+YangLiu
