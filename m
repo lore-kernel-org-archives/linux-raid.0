@@ -1,39 +1,27 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: ANNOUNCE: mdadm 2.5.1 - A tool for managing Soft RAID under Linux
-Date: Fri, 16 Jun 2006 13:54:46 -0400
-Message-ID: <4492F066.7060709@tmr.com>
-References: <17554.895.666628.776527@cse.unsw.edu.au> <4492D26B.4070705@steeleye.com>
+From: "H. Peter Anvin" <hpa@zytor.com>
+Subject: Re: raid6
+Date: Fri, 16 Jun 2006 11:27:05 -0700 (PDT)
+Message-ID: <e6ut5p$5p1$1@terminus.zytor.com>
+References: <1caa67950606142007p59c6b079xe2db9a7a94e506ef@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4492D26B.4070705@steeleye.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Paul Clements <paul.clements@steeleye.com>
-Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Paul Clements wrote:
-
-> Neil Brown wrote:
+Followup to:  <1caa67950606142007p59c6b079xe2db9a7a94e506ef@mail.gmail.com>
+By author:    "=?GB2312?B?uPDQ29fK?=" <xiongzige@gmail.com>
+In newsgroup: linux.dev.raid
 >
->>
->> I am pleased to announce the availability of
->>    mdadm version 2.5.1
->
->
-> Hi Neil,
->
-> Here's a small patch to allow compilation on gcc 2.x. It looks like 
-> gcc 3.x allows variable declarations that are not at the start of a 
-> block of code (I don't know if there's some standard that allows that 
-> in C code now, but it doesn't work with all C compilers). 
+>         I am confronted  with a big problem of the raid6 algorithm,
+> when recently I learn the raid6 code of linux 2.6 you have contributed
+> .
+>  Unfortunately I can not understand the algorithm of  P +Q parity in
+> this program . Is this some formula for this raid6 algorithm? I realy
+> respect your help,could you show me some details about this algorithm?
 
-Even if valid, having the declaration at the top of the block in which 
-it's used makes the program more readable.
+   http://www.kernel.org/pub/linux/kernel/people/hpa/raid6.pdf
 
--- 
-bill davidsen <davidsen@tmr.com>
-  CTO TMR Associates, Inc
-  Doing interesting things with small computers since 1979
-
+	-hpa
