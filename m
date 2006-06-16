@@ -1,52 +1,41 @@
 From: Neil Brown <neilb@suse.de>
-Subject: ANNOUNCE: mdadm 2.5.1 - A tool for managing Soft RAID under Linux
-Date: Fri, 16 Jun 2006 11:03:59 +1000
-Message-ID: <17554.895.666628.776527@cse.unsw.edu.au>
+Subject: Re: Raid5 software problems after loosing 4 disks for 48 hours
+Date: Fri, 16 Jun 2006 11:21:04 +1000
+Message-ID: <17554.1920.421692.780276@cse.unsw.edu.au>
+References: <7c9ce5050606151659y219947e1g9f9034982d81221b@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: message from Wilson Wilson on Friday June 16
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Wilson Wilson <wilson150@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Friday June 16, wilson150@gmail.com wrote:
+> 
+> And is there a way if more then 1 disks goes offline, for the whole
+> array to be taken offline? My understanding of raid5 is loose 1+ disks
+> and nothing on the raid would be readable. this is not the case here.
+> 
+
+Nothing will be writable, but some blocks might be readable.
 
 
-I am pleased to announce the availability of
-   mdadm version 2.5.1
+> All the disks are online now, what do I need to do to rebuild the array?
 
-It is available at the usual places:
-   http://www.cse.unsw.edu.au/~neilb/source/mdadm/
-and
-   http://www.${countrycode}kernel.org/pub/linux/utils/raid/mdadm/
-and via git at
-   git://neil.brown.name/git/mdadm
+Have you tried
+  mdadm --assemble --force /dev/md0 /dev/sd[bcdefghijklmnop]1
+??
+Actually, it occurs to me that that might not do the best thing if 4
+drives disappeared at exactly the same time (though it is unlikely
+that you would notice)
+You should probably use
+ mdadm --create /dev/md0 -f -l5 -n15 -c32  /dev/sd[bcdefghijklmnop]1
+This is assuming that  e,f,g,h were in that order in the array before
+they died.
+The '-f' is quite important - it tells mdadm not recover a spare, but
+to resync the parity blocks.
 
-mdadm is a tool for creating, managing and monitoring
-device arrays using the "md" driver in Linux, also
-known as Software RAID arrays.
-
-Release 2.5.1 adds multiple minor updates including a couple of bugfixes.
-
-Changelog Entries:
-    -   Various fixes for gcc warnings
-    -   uclibc warnings
-    -   Makefile improvements for static linking/intalling
-    -   Makefile uninstall target
-    -   Really fix return status of --examine
-    -   Typos
-    -   Byteorder stuff (again)
-    -   Don't try to create devices with --manage or --grow
-    -   allow default metadata (superblock) type to be specified
-	in mdadm.conf
-    -   Get --stop to list devices stopped but honour --quiet
-    -   remove libssl dependency
-    -   Avoid some misdetection of overlapping partitions
-    -   Fix memory leak in --monitor mode
-
-Development of mdadm is sponsored by
- SUSE Labs, Novell Inc.
-
-NeilBrown  16th June 2006
-
-
+NeilBrown
