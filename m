@@ -1,7 +1,7 @@
-From: "Ricardo" <RicardoColey@alumnidirector.com>
-Subject: Never-seen Every man wishes it.  Revel in
-Date: Fri, 16 Jun 2006 17:27:27 +0700
-Message-ID: <94212706434140.94EDDA8EE6__12704.2897082449$1150453701$gmane$org@0A5MRM6B>
+From: "Kathy" <KathyBlake@hairdresser.net>
+Subject: Recent stuff But without any  =?ISO-8859-1?Q?=20results=85?= Delight
+Date: Fri, 16 Jun 2006 13:31:36 +0300
+Message-ID: <79390298607097.2A72E36203@8MQHFLP7>
 Mime-Version: 1.0
 Content-Type: text/plain;
         charset="Windows-1252"
@@ -11,13 +11,14 @@ Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Nice to see you!
-Have more success with women and impress them with your power and stamina in bed 
-Our customers enjoy saving on most popular goods, and we deliver them fast and inexpensive
+Good day to you bro!
 
- World’s greatest brands produce these goods in top class labs with latest technologies.
- See our shop: http://www.extremeci.com
+Enhanced male power and unlimited prowess with your girl The best products for the winning guys 
+Order now and benefit from lowest costs and convenient shipment
 
- The prices are really low and the quality it truly very high!
+ State-of-the-art goods from the highest class brands, recognized everywhere
+
+ See our shop: http://www.diomedeacb.com
+ Come on in and get it all very cheap!
 
 
