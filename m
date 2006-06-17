@@ -1,48 +1,52 @@
-From: David Greaves <david@dgreaves.com>
-Subject: Re: Raid5 software problems after loosing 4 disks for 48 hours
-Date: Sat, 17 Jun 2006 22:42:34 +0100
-Message-ID: <4494774A.50205@dgreaves.com>
-References: <7c9ce5050606151659y219947e1g9f9034982d81221b@mail.gmail.com>	 <17554.1920.421692.780276@cse.unsw.edu.au> <7c9ce5050606170524l54f2b6i75e3472d313933b0@mail.gmail.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: Raid5 reshape
+Date: Sun, 18 Jun 2006 07:55:11 +1000
+Message-ID: <17556.31295.280083.533342@cse.unsw.edu.au>
+References: <449250ED.7090302@irule.net>
+	<17554.21119.487820.638171@cse.unsw.edu.au>
+	<4492D5B1.60004@nigelterry.net>
+	<4492D8D9.7010101@irule.net>
+	<17555.12441.42212.93049@cse.unsw.edu.au>
+	<4493330E.30501@nigelterry.net>
+	<17555.13409.834439.80361@cse.unsw.edu.au>
+	<44945643.3070300@nigelterry.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <7c9ce5050606170524l54f2b6i75e3472d313933b0@mail.gmail.com>
+In-Reply-To: message from Nigel J. Terry on Saturday June 17
 Sender: linux-raid-owner@vger.kernel.org
-To: Wilson Wilson <wilson150@gmail.com>
+To: "Nigel J. Terry" <nigel@nigelterry.net>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Wilson Wilson wrote:
-> Neil great stuff, its online now!!!
-Congratulations :)
->
-> I am still unsure how this raid5 volume was partially readable with 4
-> disks missing.  My understanding each file is written across all disks
-> apart from one, which is used for CRC.  So if 2 disks are offline the
-> whole thing should be unreadable.
-I'll try :)
+On Saturday June 17, nigel@nigelterry.net wrote:
+> 
+> Any ideas what I should do next? Thanks
+> 
 
-md doesn't operate at a file level, it operates on chunks. The chunk
-could be 64Kb in size.
+Looks like you've probably hit a bug.  I'll need a bit more info
+though.
 
-For raid5 each stripe is made of n-1 chunks. (raid6 would be n-2).
-When a stripe is read, if your file is in one of the chunks that's still
-there then you're in luck.
+First:
 
-I guess md knows it's degraded and gives as much data back as possible.
+> [root@homepc ~]# cat /proc/mdstat
+> Personalities : [raid5] [raid4]
+> md0 : active raid5 sdb1[1] sda1[0] hdc1[4](S) hdb1[2]
+>       490223104 blocks super 0.91 level 5, 128k chunk, algorithm 2 [4/3] 
+> [UUU_]
+>       [=>...................]  reshape =  6.9% (17073280/245111552) 
+> finish=86.3min speed=44003K/sec
+> 
+> unused devices: <none>
 
-This means that you have a certain probability of accessing a given file
-depending on it's size, the filesystem and the degree to which the array
-is degraded.
+This really makes it look like the reshape is progressing.  How
+long after the reboot was this taken?  How long after hdc1 has hot
+added (roughly)?  What does it show now?
 
-FWIW I'd *never* try a r/w operation on such a degraded array.
+What happens if you remove hdc1 again?  Does the reshape keep going?
 
-Speculation:
-I'm surprised you could mount such a 'sparse' array though. I wonder if
-some filesystems (like xfs) would just barf as they mounted because they
-have more distributed mount-time data structures and would spot the
-missing chunks.  Others (ext3?) may just mount and try to read blocks on
-demand.
+What I would expect to happen in this case is that the array reshapes
+into a degraded array, then the missing disk is recovered onto hdc1.
 
-David
+NeilBrown
