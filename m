@@ -1,30 +1,45 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: Raid5 reshape
-Date: Sat, 17 Jun 2006 08:44:49 +1000
-Message-ID: <17555.13409.834439.80361@cse.unsw.edu.au>
-References: <449250ED.7090302@irule.net>
-	<17554.21119.487820.638171@cse.unsw.edu.au>
-	<4492D5B1.60004@nigelterry.net>
-	<4492D8D9.7010101@irule.net>
-	<17555.12441.42212.93049@cse.unsw.edu.au>
-	<4493330E.30501@nigelterry.net>
+From: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
+Subject: mdadm 2.5.1 - A problem came up ...
+Date: Fri, 16 Jun 2006 19:12:44 -0700 (PDT)
+Message-ID: <Pine.LNX.4.64.0606161855270.17622@filesrv1.baby-dragons.com>
+References: <17554.895.666628.776527@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Nigel J. Terry on Friday June 16
+In-Reply-To: <17554.895.666628.776527@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Nigel J. Terry" <nigel@nigelterry.net>
-Cc: Tim T <irule@irule.net>, linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Friday June 16, nigel@nigelterry.net wrote:
-> Thanks for all the advice. One final question, what kernel and mdadm 
-> versions do I need?
+ 	Hello Neil ,  If I add any disk partition to end of the below command as
+ 	man mdadm requests .  Ok ,  Now I get it ,  "partitions" or "none" are
+ 	required .  But still ...
 
-For resizing raid5:
+ 	<Quote>
+ 	mdadm --examine --brief --scan --config=partitions
+ 	mdadm -Ebsc partitions
+ 	Create  a list of devices by reading /proc/partitions, scan these for RAID superblocks, and printout a brief listing of all that was found.
+ 	<\Quote>
 
-mdadm-2.4 or later
-linux-2.6.17-rc2 or later
+root@privateers:~# mdadm -Ebsc
+mdadm: option requires an argument -- c
+Usage: mdadm --help
+   for help
 
-NeilBrown
+ 	Ok ,  But when I do a ...
+
+root@privateers:~# mdadm -Ebsc --help
+ARRAY /dev/md0 level=raid1 num-devices=2 UUID=8d5cd2c7:42544200:d2bdaaad:ce1bab0c
+ARRAY /dev/md1 level=raid1 num-devices=2 UUID=e8a0caca:1e477715:f7f74d6b:88dd401c
+ARRAY /dev/md3 level=raid1 num-devices=2 UUID=a87d5acf:17038a98:03577e48:76e31d5c
+ARRAY /dev/md2 level=raid1 num-devices=2 UUID=8f4b56fa:840ad5eb:0c28a667:6a46f759
+
+ 	I was expecting a help readout not the command to actually function .
+ 		Hth ,  JimL
+-- 
++----------------------------------------------------------------------+
+| James   W.   Laferriere |   System    Techniques   | Give me VMS     |
+| Network        Engineer | 3600 14th Ave SE #20-103 |  Give me Linux  |
+| babydr@baby-dragons.com |  Olympia ,  WA.   98501  |   only  on  AXP |
++----------------------------------------------------------------------+
