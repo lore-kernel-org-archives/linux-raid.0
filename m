@@ -1,92 +1,54 @@
-From: "Nigel J. Terry" <nigel@nigelterry.net>
-Subject: Re: Raid5 reshape
-Date: Mon, 19 Jun 2006 17:42:41 -0400
-Message-ID: <44971A51.6050008@nigelterry.net>
-References: <449250ED.7090302@irule.net>	<17554.21119.487820.638171@cse.unsw.edu.au>	<4492D5B1.60004@nigelterry.net>	<4492D8D9.7010101@irule.net>	<17555.12441.42212.93049@cse.unsw.edu.au>	<4493330E.30501@nigelterry.net>	<17555.13409.834439.80361@cse.unsw.edu.au>	<44945643.3070300@nigelterry.net>	<17556.31295.280083.533342@cse.unsw.edu.au>	<44947BCA.9040305@nigelterry.net>	<44947C98.6060809@nigelterry.net>	<17556.32630.611922.294047@cse.unsw.edu.au>	<44948002.3050706@nigelterry.net>	<44954DB7.2000305@nigelterry.net> <17558.1521.522659.91428@cse.unsw.edu.au>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: the question about raid0_make_request
+Date: Tue, 20 Jun 2006 08:23:29 +1000
+Message-ID: <17559.9185.778789.896340@cse.unsw.edu.au>
+References: <4558af040606181821l17679796tf1c756de636ddb11@mail.gmail.com>
+	<17558.5.526854.354998@cse.unsw.edu.au>
+	<4558af040606190029i72564bd5u735e5b4740bb2ad1@mail.gmail.com>
+	<17558.28534.725605.257058@cse.unsw.edu.au>
+	<4558af040606190814k2f76cfc8h38374eaed7fe6b19@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17558.1521.522659.91428@cse.unsw.edu.au>
+In-Reply-To: message from liu yang on Monday June 19
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
+To: liu yang <liudows2@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil Brown wrote:
-> On Sunday June 18, nigel@nigelterry.net wrote:
->   
->> This from dmesg might help diagnose the problem:
->>
->>     
->
-> Yes, that helps a lot, thanks.
->
-> The problem is that the reshape thread is restarting before the array
-> is fully set-up, so it ends up dereferencing a NULL pointer.
->
-> This patch should fix it.
-> In fact, there is a small chance that next time you boot it will work
-> without this patch, but the patch makes it more reliable.
->
-> There definitely should be no data-loss due to this bug.
->
-> Thanks,
-> NeilBrown
->
->   
-Neil
+On Monday June 19, liudows2@gmail.com wrote:
+> We can imagine that there is a raid0 array whose layerout is drawn in the
+> attachment.
+> Take this for example.
+> There are 3 zones totally, and their zone->nb_dev is 5,4,3 respectively.
+> In the raid0_make_request function, the var block is the offset of bio in
+> kilobytes.
+> 
+> 
+>  x = block >> chunksize_bits;
+>   tmp_dev = zone->dev[sector_div(x, zone->nb_dev)];
+> 
+> If block is in the chunk 5, then x = block >> chunksize_bits = 5.And the
+> nb_dev of zone2 is 4.
+> So tmp_dev = zone->dev[sector_div(5,4)] = zone->dev[1].
+> But we can see that the right result should be zone->dev[0].
+> Then how does the 'bug'  get the  right  underlying device?
 
-That seems to have fixed it. The reshape is now progressing and there are no apparent errors in dmesg. Details below.
+When you say 'right' result, you really mean 'expected' result.
 
-I'll send another confirmation tomorrow when hopefully it has finished :-)
+You expect the layout to be
 
-Many thanks for a great product and great support.
+   0   1   2   3   4
+       5   6   7   8
+           9   10  11
 
-Nigel
+The actual layout for Linux-md-raid0 is
 
-[root@homepc ~]# cat /proc/mdstat
-Personalities : [raid5] [raid4]
-md0 : active raid5 sdb1[1] sda1[0] hdc1[4](S) hdb1[2]
-      490223104 blocks super 0.91 level 5, 128k chunk, algorithm 2 [4/3] 
-[UUU_]
-      [=>...................]  reshape =  7.9% (19588744/245111552) 
-finish=6.4min speed=578718K/sec
+   0   1   2   3   4
+       8   5   6   7
+           9   10  11
 
-unused devices: <none>
-[root@homepc ~]# mdadm --detail /dev/md0
-/dev/md0:
-        Version : 00.91.03
-  Creation Time : Tue Apr 18 17:44:34 2006
-     Raid Level : raid5
-     Array Size : 490223104 (467.51 GiB 501.99 GB)
-    Device Size : 245111552 (233.76 GiB 250.99 GB)
-   Raid Devices : 4
-  Total Devices : 4
-Preferred Minor : 0
-    Persistence : Superblock is persistent
+Not what you would expect, but still a valid layout.
 
-    Update Time : Mon Jun 19 17:38:42 2006
-          State : clean, degraded, recovering
- Active Devices : 3
-Working Devices : 4
- Failed Devices : 0
-  Spare Devices : 1
-
-         Layout : left-symmetric
-     Chunk Size : 128K
-
- Reshape Status : 8% complete
-  Delta Devices : 1, (3->4)
-
-           UUID : 50e3173e:b5d2bdb6:7db3576b:644409bb
-         Events : 0.3287189
-
-    Number   Major   Minor   RaidDevice State
-       0       8        1        0      active sync   /dev/sda1
-       1       8       17        1      active sync   /dev/sdb1
-       2       3       65        2      active sync   /dev/hdb1
-       3       0        0        3      removed
-
-       4      22        1        -      spare   /dev/hdc1
-[root@homepc ~]#
-
+NeilBrown
