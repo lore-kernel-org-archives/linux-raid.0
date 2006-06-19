@@ -1,37 +1,45 @@
-From: "Painter Josh" <cfzonzrfcgeuk@orgymail.net>
-Subject: top notch replicas need
-Date: Mon, 19 Jun 2006 07:10:15 -0600 (PDT)
-Message-ID: <121688473250895nua7twq4tq6.7487337474896.Mail.news__19955.1474456259$1150719049$gmane$org@space.timsvault.com>
+From: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
+Subject: read perfomance patchset
+Date: Mon, 19 Jun 2006 17:02:28 +0300
+Message-ID: <5d96567b0606190702k36466d35x856da3610ea11862@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-From: "Painter Josh" <cfzonzrfcgeuk@orgymail.net>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-serial@vger.kernel.org
-Cc: linux-raid@vger.kernel.org, linux-ia64@vger.kernel.org, linux-tape@vger.kernel.org, linux-net@vger.kernel.org, linux-ide@vger.kernel.org, ultralinux@vger.kernel.org
+To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+Cc: Neil Brown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-Life is Full of Luxuries...
+Neil hello
 
-Only a handful of people can afford the finest products. 
+if i am not mistaken here:
 
-Here at "Luxury Replica" we are committed to bringing you the finest products, at below affordable prices. 
+in first instance of :   if(bi) ...
+               ...
 
-All designer brands for Watches, Ties, Handbags and even Mont Blanc.
+you return without setting to NULL
 
-http://051.dizwaetchnice.com
++static struct bio *remove_bio_from_retry(raid5_conf_t *conf)
++{
++       struct bio *bi;
++
++       bi = conf->retry_read_aligned;
++       if (bi) {
+-->               return bi;
+-->               conf->retry_read_aligned = NULL;
++       }
++       bi = conf->retry_read_aligned_list;
++       if(bi) {
++               conf->retry_read_aligned = bi->bi_next;
++               bi->bi_next = NULL;
++               bi->bi_phys_segments = 1; /* biased count of active stripes */
++               bi->bi_hw_segments = 0; /* count of processed stripes */
++       }
++
++       return bi;
++}
 
-
-
-
-
-
-
-
-
-
-
-
-trouble ice
-http://051.dizwaetchnice.com/rm
+-- 
+Raz
