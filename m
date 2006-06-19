@@ -1,45 +1,36 @@
-From: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
-Subject: read perfomance patchset
-Date: Mon, 19 Jun 2006 17:02:28 +0300
-Message-ID: <5d96567b0606190702k36466d35x856da3610ea11862@mail.gmail.com>
+From: Gabor Gombas <gombasg@sztaki.hu>
+Subject: Re: IBM xSeries stop responding during RAID1 reconstruction
+Date: Mon, 19 Jun 2006 17:05:56 +0200
+Message-ID: <20060619150556.GQ11429@boogie.lpds.sztaki.hu>
+References: <20060614085354.GA18106@rigacci.org> <44902F41.8030300@rcn.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
+In-Reply-To: <44902F41.8030300@rcn.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
-Cc: Neil Brown <neilb@suse.de>
+To: Bill Cizek <cizek@rcn.com>
+Cc: Niccolo Rigacci <niccolo@rigacci.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil hello
+On Wed, Jun 14, 2006 at 10:46:09AM -0500, Bill Cizek wrote:
 
-if i am not mistaken here:
+> I was able to work around this by lowering 
+> /proc/sys/dev/raid/speed_limit_max to a value
+> below my disk thruput value (~ 50 MB/s) as follows:
 
-in first instance of :   if(bi) ...
-               ...
+IMHO a much better fix is to use the cfq I/O scheduler during the
+rebuild. The default anticipatory scheduler gives horrible latencies
+and can cause the machine to appear as 'locked up' if there is heavy
+I/O load like a RAID reconstruct or heavy database usage.
 
-you return without setting to NULL
+The price of cfq is lower throughput (higher RAID rebuild time) than
+with the anticipatory I/O scheduler.
 
-+static struct bio *remove_bio_from_retry(raid5_conf_t *conf)
-+{
-+       struct bio *bi;
-+
-+       bi = conf->retry_read_aligned;
-+       if (bi) {
--->               return bi;
--->               conf->retry_read_aligned = NULL;
-+       }
-+       bi = conf->retry_read_aligned_list;
-+       if(bi) {
-+               conf->retry_read_aligned = bi->bi_next;
-+               bi->bi_next = NULL;
-+               bi->bi_phys_segments = 1; /* biased count of active stripes */
-+               bi->bi_hw_segments = 0; /* count of processed stripes */
-+       }
-+
-+       return bi;
-+}
+Gabor
 
 -- 
-Raz
+     ---------------------------------------------------------
+     MTA SZTAKI Computer and Automation Research Institute
+                Hungarian Academy of Sciences
+     ---------------------------------------------------------
