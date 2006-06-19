@@ -1,78 +1,35 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: the question about raid0_make_request
-Date: Mon, 19 Jun 2006 19:33:42 +1000
-Message-ID: <17558.28534.725605.257058@cse.unsw.edu.au>
-References: <4558af040606181821l17679796tf1c756de636ddb11@mail.gmail.com>
-	<17558.5.526854.354998@cse.unsw.edu.au>
-	<4558af040606190029i72564bd5u735e5b4740bb2ad1@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+From: "Lenore Villalobos" <XYOVLWEKCMG@twinserve.co.uk>
+Subject: Fwd: change
+Date: Mon, 19 Jun 2006 17:03:54 +0500
+Message-ID: <33731002160636.GI32841@baghdad.tech.sitadelle.com>
+References: <XYOVLWEKCMG@twinserve.co.uk> <E1A4npj-0002ZF-00XYOVLWEKCMG@twinserve.co.uk>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from liu yang on Monday June 19
+In-Reply-To: <E1A4npj-0002ZF-00XYOVLWEKCMG@twinserve.co.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: liu yang <liudows2@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-msdos@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Monday June 19, liudows2@gmail.com wrote:
-> Thanks,Neil.
-> I noticed that the whole codes of calculating the underlying device is below
-> 	{
-> 		sector_t x =  (block - zone->zone_offset) >> chunksize_bits;
-> 
-> 		sector_div(x, zone->nb_dev);
-> 		chunk = x;
-> 		BUG_ON(x != (sector_t)chunk);
-> 
-> 		x = block >> chunksize_bits;
-> 		tmp_dev = zone->dev[sector_div(x, zone->nb_dev)];
-> 	}
-> 	rsect = (((chunk << chunksize_bits) + zone->dev_offset)<<1)
-> 		+ sect_in_chunk;
-> 
-> so we first set the var x to the chunk number relative to the start of
-> the current zone.But after that we execute 'x = block >>
-> chunksize_bits' which will set x to the chunk nr relative to the start
->  of the mddev,I think. Right?
-> I am confused.
+-S''ensationall r'evoolution in m''edicine!
 
-Ahhhh yes, now I remember.
+-E'n'l'a'r'g'e your p''e'n'i's up to 10 cm or up to 4 i'nches!
 
-Yes, you are right, this code is 'wrong' - but it is 'definitively
-wrong' if that means anything ....
+-It's h'e'r'b'a'l solution what hasn't side e'ffect, but has 100% g'uaranted results!
 
-The line
-> 		x = block >> chunksize_bits;
-really 'should' be
-> 		x = (block - zone->zone_offset) >> chunksize_bits;
+-Don't lose your chance and but know wihtout d'oubts, you will be i'mpressed with results!
 
-but it isn't.  That bug has been there 'forever'.  You can see it in
-2.0.40 at 
-  http://lxr.linux.no/source/drivers/block/raid0.c?v=2.0.40#L201
+ Clisk here: http://chicagolandhomesales.info
 
-The effect of that 'bug' is that in zones after the first, all the
-blocks are shifted some number of devices to the right compared with
-where you would expect them to be.
-e.g. the first block in new zone might not be on the first device in
-the zone, but might be on the third, or whatever.
-However the offset is consistent.   Whether you read or write data,
-you will find the block at the same offset.  So the array works
-perfectly, except not exactly how you would expect.
 
-Obviously we could not 'fix' this 'bug', because then anyone who has a
-raid0 will multiple zones would find their array gets corrupted when
-they upgrade.
 
-If we ever wanted to support some raid0 array that was also accessed
-by other software (e.g. a DDF array), we would need to make sure that
-the 'bug' was fixed in that usage. 
 
-So you are right, the code is confusing, but it does provide a
-reliable raid0 array.
 
-I hope that helps.
 
-I guess we should really put a comment in there explaining this....
 
-NeilBrown
+
+
+swanlike realm bernadine insipid roommate fanout chevalier malfunction exalt efficacy
+coppery coot curve flick eleazar prizewinning cocaine invite guardia
+exchange formate frederick calcutta loaf electric pervade clear abc dopant kraut
+jeremy resort allotted cheater vitriol highland shirtmake contend
+blinn analytic imposture hannah piston hill kaplan dreamboat
+beadle deluge uterus catenate lever climatic bistate downright
