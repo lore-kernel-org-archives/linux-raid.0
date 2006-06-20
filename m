@@ -1,42 +1,56 @@
-From: "Nigel J. Terry" <nigel@nigelterry.net>
-Subject: Re: Raid5 reshape
-Date: Mon, 19 Jun 2006 19:35:10 -0400
-Message-ID: <449734AE.10907@nigelterry.net>
-References: <449250ED.7090302@irule.net>	<17554.21119.487820.638171@cse.unsw.edu.au>	<4492D5B1.60004@nigelterry.net>	<4492D8D9.7010101@irule.net>	<17555.12441.42212.93049@cse.unsw.edu.au>	<4493330E.30501@nigelterry.net>	<17555.13409.834439.80361@cse.unsw.edu.au>	<44945643.3070300@nigelterry.net>	<17556.31295.280083.533342@cse.unsw.edu.au>	<44947BCA.9040305@nigelterry.net>	<44947C98.6060809@nigelterry.net>	<17556.32630.611922.294047@cse.unsw.edu.au>	<44948002.3050706@nigelterry.net>	<44954DB7.2000305@nigelterry.net>	<17558.1521.522659.91428@cse.unsw.edu.au>	<44971A51.6050008@nigelterry.net>	<17559.10564.840472.525999@cse.unsw.edu.au>	<44972AF1.8040500@nigelterry.net> <17559.13371.751956.423312@cse.unsw.edu.au>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: [PATCH] ANNOUNCE: mdadm 2.5.1 - A tool for managing Soft RAID
+ under Linux
+Date: Tue, 20 Jun 2006 10:04:07 +1000
+Message-ID: <17559.15223.15351.875432@cse.unsw.edu.au>
+References: <17554.895.666628.776527@cse.unsw.edu.au>
+	<4492D26B.4070705@steeleye.com>
+	<4492F066.7060709@tmr.com>
+	<4496BE1A.8010502@steeleye.com>
+	<4496F3BE.9040707@steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17559.13371.751956.423312@cse.unsw.edu.au>
+In-Reply-To: message from Paul Clements on Monday June 19
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
+To: Paul Clements <paul.clements@steeleye.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil Brown wrote:
-> On Monday June 19, nigel@nigelterry.net wrote:
->   
->> One comment - As I look at the rebuild, which is now over 20%, the time 
->> till finish makes no sense. It did make sense when the first reshape 
->> started. I guess your estimating / averaging algorithm doesn't work for 
->> a restarted reshape. A minor cosmetic issue - see below
->>
->> Nigel
->> [nterry@homepc ~]$ cat /proc/mdstat
->> Personalities : [raid5] [raid4]
->> md0 : active raid5 sdb1[1] sda1[0] hdc1[4](S) hdb1[2]
->>       490223104 blocks super 0.91 level 5, 128k chunk, algorithm 2 [4/3] 
->> [UUU_]
->>       [====>................]  reshape = 22.7% (55742816/245111552) 
->> finish=5.8min speed=542211K/sec
->>     
->
-> Hmmm..... I see.
-> This should fix that, but I don't expect you to interrupt your reshape
-> to try it.
->
+On Monday June 19, paul.clements@steeleye.com wrote:
+> > Neil Brown wrote:
+> > I am pleased to announce the availability of
+> >    mdadm version 2.5.1
+> 
+> What the heck, here's another one. :) This one is slightly more serious. 
+> We're getting a device of "0:0" in "Fail" events from the mdadm monitor 
+> sometimes now (due to the change in map_dev, which allows it to 
+> sometimes return "0:0" instead of just NULL for an unknown device).
+> 
+
+Thanks for this and the other two.  They are now in .git
+
+> The patch fixes my issue. I don't know if there are more.
+> 
+
+I chose to do this differently - map_dev will now return NULL for 0,0
+and all users can cope with a NULL.
+
+NeilBrown
+
+
+
 > Thanks,
-> NeilBrown
->
->   
-I have nothing better to do, I'll give it a go and let you know...
+> Paul
+> --- mdadm-2.5.1/Monitor.c	Thu Jun  1 21:33:41 2006
+> +++ mdadm-2.5.1-new/Monitor.c	Mon Jun 19 14:51:31 2006
+> @@ -328,7 +328,7 @@ int Monitor(mddev_dev_t devlist,
+>  					}
+>  					disc.major = disc.minor = 0;
+>  				}
+> -				if (dv == NULL && st->devid[i])
+> +				if ((dv == NULL || strcmp(dv, "0:0") == 0) && st->devid[i])
+>  					dv = map_dev(major(st->devid[i]),
+>  						     minor(st->devid[i]), 1);
+>  				change = newstate ^ st->devstate[i];
