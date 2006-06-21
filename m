@@ -1,33 +1,25 @@
-From: Paul Clements <paul.clements@steeleye.com>
-Subject: Re: bitmap status question
-Date: Wed, 21 Jun 2006 15:39:35 -0400
-Message-ID: <4499A077.4050802@steeleye.com>
-References: <44997EFB.8080308@dgreaves.com>
+From: "Zachariah Espinoza" <tkutcbdk@kobel.com>
+Subject: watch  =?ISO-8859-1?Q?=20you=92ve?= always wanted!
+Date: Wed, 21 Jun 2006 21:41:59 +0000 (UTC)
+Message-ID: <76280830.20060623203355__3303.93386907435$1150926119$gmane$org@kobel.com>
+Reply-To: "Zachariah Espinoza" <tkutcbdk@kobel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <44997EFB.8080308@dgreaves.com>
+Date: Fri, 23 Jun 2006 20:33:55 +0180
 Sender: linux-raid-owner@vger.kernel.org
-To: David Greaves <david@dgreaves.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-fsdevel@vger.kernel.org
 List-Id: linux-raid.ids
 
-David Greaves wrote:
-> How do I interpret:
->       bitmap: 0/117 pages [0KB], 1024KB chunk
-> in the mdstat output
-> 
-> what does it mean when it's, eg: 23/117
+Get the Finest Watch Replica!
 
-This refers to the in-memory bitmap (basically a cache of what's in the 
-on-disk bitmap -- it allows bitmap operations to be more efficient).
+We only sell premium watches. There's no battery in these replicas just like the real ones since they charge themselves as you move. The second hand moves JUST like the real ones, too. These original watches sell in stores for thousands of dollars. We sell them for much less. 
 
-If it's 23/117 that means there are 23 of 117 pages allocated in the 
-in-memory bitmap. The pages are allocated on demand, and get freed when 
-they're empty (all zeroes). The in-memory bitmap uses 16 bits for each 
-bitmap chunk to count all ongoing writes to the chunk, so it's actually 
-up to 16 times larger than the on-disk bitmap.
+- Replicated to the Smallest Detail
+- 98% Perfectly Accurate Markings 
+- Signature Green Sticker w/ Serial Number on Watch Back
+- Magnified Quickset Date
+- Includes all Proper Markings
 
---
-Paul
+Visit us: www.repliqswiss.com 
