@@ -1,64 +1,51 @@
-From: "Christian Pernegger" <pernegger@gmail.com>
-Subject: Re: Ok to go ahead with this setup?
-Date: Thu, 22 Jun 2006 21:50:49 +0200
-Message-ID: <bb145bd20606221250y147d0a0bk1e371a3078adc09e@mail.gmail.com>
-References: <bb145bd20606221008p131d4daem289a6b9300757c66@mail.gmail.com>
-	 <62b0912f0606221104q2f47f574i86441efed5831957@mail.gmail.com>
+From: Chris Allen <chris@cjx.com>
+Subject: Re: Large single raid and XFS or two small ones and EXT3?
+Date: Thu, 22 Jun 2006 20:58:10 +0100
+Message-ID: <449AF652.1030209@cjx.com>
+References: <449AEB7C.6040108@cjx.com> <Pine.LNX.4.56.0606222014210.21158@lion.drogon.net> <449AEE46.6050408@zytor.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <62b0912f0606221104q2f47f574i86441efed5831957@mail.gmail.com>
-Content-Disposition: inline
+In-Reply-To: <449AEE46.6050408@zytor.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> > Pentium D 930
+
+
+H. Peter Anvin wrote:
+> Gordon Henderson wrote:
+>> On Thu, 22 Jun 2006, Chris Allen wrote:
+>>
+>>> Dear All,
+>>>
+>>> I have a Linux storage server containing 16x750GB drives - so 12TB raw
+>>> space.
+>>
+>> Just one thing - Do you want to use RAID-5 or RAID-6 ?
+>>
+>> I just ask, as with that many drives (and that much data!) the
+>> possibilities of a 2nd drive failure is increasing, and personally,
+>> wherever I can, I take the hit these days, and have used RAID-6 for
+>> some time... drives are cheap, even the 750GB behemoths!
+>>
+>>> If I make them into a single RAID5 array, then it appears my only
+>>> choice for a filesystem is XFS - as  EXT3 won't really handle 
+>>> partitions
+>>> over 8TB.
+>>
+>> I can't help with this though - I didn't realise ext3 had such a
+>> limitation though!
+>>
 >
-> HPA recently said that x86_64 CPUs have better RAID5 performance.
-
-Good to know. I did intend to use Debian-amd64 anyway.
-
-> Is it a NAS kind of device?
-
-Yes, mostly. It also runs a caching NNTP proxy and drives our
-networked audio players :)
-Personal file server describes it best, I think.
-
-> In that case, drop the 2x 300GB disks and get 6x 500GB instead.  You
-> can partition those so that you have a RAID1 spanning the first 10GB
-> of all 6 drives for use as the system partition, and use the rest in a
-> RAID5.
-
-Good idea, it's just that I already have the listed disks, and I need
-at least 150 GB effective capacity on the mirror for important work
-data, not just the OS. Anything specific wrong with the Maxtors?
-
-> > * Should I use the 300s as a single mirror, or span multiple ones over
-> > the two disks?
+> 16 TB (2^32 blocks) should be the right number.
 >
-> What would the purpose be?
+It should be, but mkfs.ext3 won't let me create a filesystem bigger than 
+8TB.
+It appears that the only way round this is through kernel patches, and, 
+as this
+is a production machine, I'd rather stick to mainstream releases and go 
+for one
+of the above solutions.
 
-I read somewhere that this could reduce rebuild time when a "disk"
-(partition in this case) is kicked offline because of a timeout or
-somesuch. Sounds a bit fishy, which is why I'm asking.
-
-> > * Am I even correct in assuming that I could stick an array in another
-> > box and have it work?
->
-> Work for what?
-
-Well, access to the data. The point of the whole exercise is that I
-don't want to be cut off from my data, just because a part of the host
-(not the disks) died.
-
-> Get gigabit nics, in case you want to fiddle with iSCSI? :-)
-
-The board has one or two Intel Gb NICs, they usually work fine ...
-
-And iSCSI sounds way too expensive. :)
-
-Thanks,
-
-C.
