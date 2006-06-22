@@ -1,21 +1,35 @@
-From: Mark Hahn <hahn@physics.mcmaster.ca>
-Subject: Re: New FAQ entry? (was IBM xSeries stop responding during RAID1
- reconstruction)
-Date: Wed, 21 Jun 2006 22:20:03 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44.0606212219120.10004-100000@coffee.psychology.mcmaster.ca>
-References: <4499951B.8040306@tls.msk.ru>
+From: parker.williams@ivenus.com
+Subject: I Await Your Anticipated Response!
+Date: Thu, 22 Jun 2006 04:26:38 +0100 (BST)
+Message-ID: <20060622032638.20970.fh1046.wm@smtp.sc1.cp.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4499951B.8040306@tls.msk.ru>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> There's much easier/simpler way to set default scheduler.  As
+Good Day,
 
-personally, I don't see any point to worrying about the default,
-compile-time or boot time:
+May I crave your indulgence to solicit your cooperation
+for investment partnership in your country.
 
-for f in `find /sys/block/* -name scheduler`; do echo cfq > $f; done
+I am a credit officer in charge of an unclaimed and
+idle funds that was in my Bank in one European Country.
+
+This substantial amount is already with a security firm
+in Europe.
+
+Should this proposal interest you kindly revert back to
+me through this confidential e-mail addres
+(wpaker001@mail.md) for futher details.               
+              
+Yours truly,
+
+Williams Parker
+
+______________________________________________
+Get your free email address from iVenus.com - the web network for European women. 
+Logon to iVenus.com for Competitions, Fashion, Beauty, Health, Horoscopes, Chat, Discussions, Shopping.
 
