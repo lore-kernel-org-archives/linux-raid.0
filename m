@@ -1,49 +1,81 @@
-From: "Molle Bestefich" <molle.bestefich@gmail.com>
-Subject: Re: Ok to go ahead with this setup?
-Date: Fri, 23 Jun 2006 00:11:11 +0200
-Message-ID: <62b0912f0606221511p74a78ca5id4b5d3f870258815@mail.gmail.com>
-References: <bb145bd20606221008p131d4daem289a6b9300757c66@mail.gmail.com>
-	 <62b0912f0606221104q2f47f574i86441efed5831957@mail.gmail.com>
-	 <bb145bd20606221250y147d0a0bk1e371a3078adc09e@mail.gmail.com>
+From: Ming Zhang <mingz@ele.uri.edu>
+Subject: Re: proactive raid5 disk replacement success (using bitmap + raid1)
+Date: Thu, 22 Jun 2006 19:50:25 -0400
+Message-ID: <1151020225.2686.92.camel@localhost.localdomain>
+References: <Pine.LNX.4.64.0604231823560.22072@twinlark.arctic.org>
+Reply-To: mingz@ele.uri.edu
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <bb145bd20606221250y147d0a0bk1e371a3078adc09e@mail.gmail.com>
-Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.64.0604231823560.22072@twinlark.arctic.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Christian Pernegger <pernegger@gmail.com>
+To: dean gaudet <dean@arctic.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Christian Pernegger wrote:
-> Anything specific wrong with the Maxtors?
+Hi Dean
 
-No.  I've used Maxtor for a long time and I'm generally happy with them.
+Thanks a lot for sharing this.
 
-They break now and then, but their online warranty system is great.
-I've also been treated kindly by their help desk - talked to a cute
-gal from Maxtor in Ireland over the phone just yesterday ;-).
+I am not quite understand about these 2 commands. Why we want to add a
+pre-failing disk back to md4?
 
-Then again, they've just been acquired by Seagate, or so, so things
-may change for the worse, who knows.
+mdadm --zero-superblock /dev/sde1
+mdadm /dev/md4 -a /dev/sde1
 
-I'd watch out regarding the Western Digital disks, apparently they
-have a bad habit of turning themselves off when used in RAID mode, for
-some reason:
-http://thread.gmane.org/gmane.linux.kernel.device-mapper.devel/1980/
+Ming
 
-> I read somewhere that this could reduce rebuild time when a "disk"
-> (partition in this case) is kicked offline because of a timeout or
-> somesuch. Sounds a bit fishy, which is why I'm asking.
 
-The bitmap code in MD is for fast rebuilding, if you need that.
+On Sun, 2006-04-23 at 18:40 -0700, dean gaudet wrote:
+> i had a disk in a raid5 which i wanted to clone onto the hot spare... 
+> without going offline and without long periods without redundancy.  a few 
+> folks have discussed using bitmaps and temporary (superblockless) raid1 
+> mappings to do this... i'm not sure anyone has tried / reported success 
+> though.  this is my success report.
+> 
+> setup info:
+> 
+> - kernel version 2.6.16.9 (as packaged by debian)
+> - mdadm version 2.4.1
+> - /dev/md4 is the raid5
+> - /dev/sde1 is the disk in md4 i want to clone from
+> - /dev/sdh1 is the hot spare from md4, and is the clone target
+> - /dev/md5 is an unused md device name
+> 
+> here are the exact commands i issued:
+> 
+> mdadm -Gb internal --bitmap-chunk=1024 /dev/md4
+> mdadm /dev/md4 -r /dev/sdh1
+> mdadm /dev/md4 -f /dev/sde1 -r /dev/sde1
+> mdadm --build /dev/md5 -ayes --level=1 --raid-devices=2 /dev/sde1 missing
+> mdadm /dev/md4 --re-add /dev/md5
+> mdadm /dev/md5 -a /dev/sdh1
+> 
+> ... wait a few hours for md5 resync...
+> 
+> mdadm /dev/md4 -f /dev/md5 -r /dev/md5
+> mdadm --stop /dev/md5
+> mdadm /dev/md4 --re-add /dev/sdh1
+> mdadm --zero-superblock /dev/sde1
+> mdadm /dev/md4 -a /dev/sde1
+> 
+> this sort of thing shouldn't be hard to script :)
+> 
+> the only times i was without full redundancy was briefly between the "-r" 
+> and "--re-add" commands... and with bitmap support the raid5 resync for 
+> each of those --re-adds was essentially zero.
+> 
+> thanks Neil (and others)!
+> 
+> -dean
+> 
+> p.s. it's absolutely necessary to use "--build" for the temporary raid1 
+> ... if you use --create mdadm will rightfully tell you it's already a raid 
+> component and if you --force it then you'll trash the raid5 superblock and 
+> it won't fit into the raid5 any more...
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-> The point of the whole exercise is that I don't want to be cut off
-> from my data, just because a part of the host (not the disks) died.
-
-I don't see any large risks of that happening with the setup you've outlined.
-
-> And iSCSI sounds way too expensive. :)
-
-I think a host adapter is around $100.
