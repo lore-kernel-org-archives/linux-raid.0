@@ -1,34 +1,44 @@
-From: Niccolo Rigacci <niccolo@rigacci.org>
-Subject: Re: New FAQ entry? (was IBM xSeries stop responding during RAID1 reconstruction)
-Date: Thu, 22 Jun 2006 09:11:45 +0200
-Message-ID: <20060622071145.GA718@rigacci.org>
-References: <Pine.LNX.4.44.0606212219120.10004-100000@coffee.psychology.mcmaster.ca> <449A1E10.2050402@fooplanet.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: read perfomance patchset
+Date: Thu, 22 Jun 2006 17:18:43 +1000
+Message-ID: <17562.17491.384773.706654@cse.unsw.edu.au>
+References: <5d96567b0606190702k36466d35x856da3610ea11862@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <449A1E10.2050402@fooplanet.com>
+In-Reply-To: message from Raz Ben-Jehuda(caro) on Monday June 19
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: Mark Hahn <hahn@physics.mcmaster.ca>
+To: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
+Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-> > personally, I don't see any point to worrying about the default,
-> > compile-time or boot time:
-> > 
-> > for f in `find /sys/block/* -name scheduler`; do echo cfq > $f; done
+On Monday June 19, raziebe@gmail.com wrote:
+> Neil hello
+> 
+> if i am not mistaken here:
+> 
+> in first instance of :   if(bi) ...
+>                ...
+> 
+> you return without setting to NULL
+> 
 
-I tested this case:
+Yes, you are right. Thanks.
+And fixing that bug removes the crash.
+However....
 
-- reboot as per power failure (RAID goes dirty)
-- RAID start resyncing as soon as the kernel assemble it
-- every disk activity is blocked, even DHCP failed!
-- host services are unavailable
+I've been doing a few tests and it is hard to measure much
+improvement, which is strange.
 
-This is why I changed the kernel default.
+I can maybe see a 1% improvement but that could just be noise.
+I do some more and see if I can find out what is happening.
 
--- 
-Niccolo Rigacci
-Firenze - Italy
+Interestingly, with a simple
+  dd if=/dev/md1 of=/dev/null bs=1024k
+test, 2.6.16 is substantially faster (10%) than 2.6.17-rc6-mm2 before 
+that patches are added.  There is something weird there.
 
-Iraq, missione di pace: 38475 morti - www.iraqbodycount.net
+Have you done any testing?
+
+NeilBrown
