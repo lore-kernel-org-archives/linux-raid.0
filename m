@@ -1,97 +1,67 @@
-From: Ming Zhang <mingz@ele.uri.edu>
-Subject: Re: proactive raid5 disk replacement success (using bitmap + raid1)
-Date: Thu, 22 Jun 2006 20:13:37 -0400
-Message-ID: <1151021617.2686.100.camel@localhost.localdomain>
-References: <Pine.LNX.4.64.0604231823560.22072@twinlark.arctic.org>
-	 <1151020225.2686.92.camel@localhost.localdomain>
-	 <Pine.LNX.4.64.0606221705570.5336@twinlark.arctic.org>
-Reply-To: mingz@ele.uri.edu
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: Is shrinking raid5 possible?
+Date: Thu, 22 Jun 2006 20:49:04 -0400
+Message-ID: <449B3A80.4070602@tmr.com>
+References: <44960C45.9050407@anu.edu.au> <17558.10906.59066.196870@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0606221705570.5336@twinlark.arctic.org>
+In-Reply-To: <17558.10906.59066.196870@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: dean gaudet <dean@arctic.org>
-Cc: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: Paul Davidson <Paul.Davidson@anu.edu.au>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-ic. thx for clarifying.
+Neil Brown wrote:
 
-ming
+>On Monday June 19, Paul.Davidson@anu.edu.au wrote:
+>  
+>
+>>Hi,
+>>
+>>I'd like to shrink the size of a RAID5 array - is this
+>>possible? My first attempt shrinking 1.4Tb to 600Gb,
+>>
+>>mdadm --grow /dev/md5 --size=629145600
+>>
+>>gives
+>>
+>>mdadm: Cannot set device size/shape for /dev/md5: No space left on device
+>>    
+>>
+>
+>Yep.
+>The '--size' option refers to:
+>              Amount  (in  Kibibytes)  of  space  to  use  from  each drive in
+>              RAID1/4/5/6.  This must be a multiple of  the  chunk  size,  and
+>              must  leave about 128Kb of space at the end of the drive for the
+>              RAID superblock.  
+>(from the man page).
+>
+>So you were telling md to use the first 600GB of each device in the
+>array, and it told you there wasn't that much room.
+>If your array has N drives, you need to divide the target array size
+>by N-1 to find the target device size.
+>So if you have a 5 drive array, then you want
+>  --size=157286400
+>
 
-On Thu, 2006-06-22 at 17:09 -0700, dean gaudet wrote:
-> well that part is optional... i wasn't replacing the disk right away 
-> anyhow -- it had just exhibited its first surface error during SMART and i 
-> thought i'd try moving the data elsewhere just for the experience of it.
-> 
-> -dean
-> 
-> On Thu, 22 Jun 2006, Ming Zhang wrote:
-> 
-> > Hi Dean
-> > 
-> > Thanks a lot for sharing this.
-> > 
-> > I am not quite understand about these 2 commands. Why we want to add a
-> > pre-failing disk back to md4?
-> > 
-> > mdadm --zero-superblock /dev/sde1
-> > mdadm /dev/md4 -a /dev/sde1
-> > 
-> > Ming
-> > 
-> > 
-> > On Sun, 2006-04-23 at 18:40 -0700, dean gaudet wrote:
-> > > i had a disk in a raid5 which i wanted to clone onto the hot spare... 
-> > > without going offline and without long periods without redundancy.  a few 
-> > > folks have discussed using bitmaps and temporary (superblockless) raid1 
-> > > mappings to do this... i'm not sure anyone has tried / reported success 
-> > > though.  this is my success report.
-> > > 
-> > > setup info:
-> > > 
-> > > - kernel version 2.6.16.9 (as packaged by debian)
-> > > - mdadm version 2.4.1
-> > > - /dev/md4 is the raid5
-> > > - /dev/sde1 is the disk in md4 i want to clone from
-> > > - /dev/sdh1 is the hot spare from md4, and is the clone target
-> > > - /dev/md5 is an unused md device name
-> > > 
-> > > here are the exact commands i issued:
-> > > 
-> > > mdadm -Gb internal --bitmap-chunk=1024 /dev/md4
-> > > mdadm /dev/md4 -r /dev/sdh1
-> > > mdadm /dev/md4 -f /dev/sde1 -r /dev/sde1
-> > > mdadm --build /dev/md5 -ayes --level=1 --raid-devices=2 /dev/sde1 missing
-> > > mdadm /dev/md4 --re-add /dev/md5
-> > > mdadm /dev/md5 -a /dev/sdh1
-> > > 
-> > > ... wait a few hours for md5 resync...
-> > > 
-> > > mdadm /dev/md4 -f /dev/md5 -r /dev/md5
-> > > mdadm --stop /dev/md5
-> > > mdadm /dev/md4 --re-add /dev/sdh1
-> > > mdadm --zero-superblock /dev/sde1
-> > > mdadm /dev/md4 -a /dev/sde1
-> > > 
-> > > this sort of thing shouldn't be hard to script :)
-> > > 
-> > > the only times i was without full redundancy was briefly between the "-r" 
-> > > and "--re-add" commands... and with bitmap support the raid5 resync for 
-> > > each of those --re-adds was essentially zero.
-> > > 
-> > > thanks Neil (and others)!
-> > > 
-> > > -dean
-> > > 
-> > > p.s. it's absolutely necessary to use "--build" for the temporary raid1 
-> > > ... if you use --create mdadm will rightfully tell you it's already a raid 
-> > > component and if you --force it then you'll trash the raid5 superblock and 
-> > > it won't fit into the raid5 any more...
-> > > -
-> > > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> > > the body of a message to majordomo@vger.kernel.org
-> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > 
+May I say in all honesty that making people do that math instead of the 
+computer is a really bad user interface? Good, consider it said. An 
+means to just set the target size of the resulting raid device would be 
+a LOT less likely to cause bad user input, and while I'm complaining it 
+should inderstand suffices 'k', 'm', and 'g'.
+
+Far easier to use for the case where you need, for instance, 10G of 
+storage for a database, tell mdadm what devices to use and what you need 
+(and the level of course) and let the computer figure out the details, 
+rounding up, leaving 128k, and phase of the moon if you decide to use it.
+
+Sorry, I think the current approach is baaad human interface.
+
+-- 
+bill davidsen <davidsen@tmr.com>
+  CTO TMR Associates, Inc
+  Doing interesting things with small computers since 1979
 
