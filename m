@@ -1,35 +1,25 @@
-From: Ricky Beam <jfbeam@bluetronic.net>
-Subject: Re: Ok to go ahead with this setup?
-Date: Fri, 23 Jun 2006 02:45:16 -0400 (EDT)
-Message-ID: <Pine.GSO.4.33.0606230232160.2322-100000@sweetums.bluetronic.net>
-References: <62b0912f0606221511p74a78ca5id4b5d3f870258815@mail.gmail.com>
+From: Nix <nix@esperi.org.uk>
+Subject: Re: [PATCH*2] mdadm works with uClibc from SVN
+Date: Fri, 23 Jun 2006 08:33:38 +0100
+Message-ID: <871wtgl419.fsf@hades.wkstn.nix>
+References: <87wtbbjxd4.fsf@hades.wkstn.nix>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <62b0912f0606221511p74a78ca5id4b5d3f870258815@mail.gmail.com>
+In-Reply-To: <87wtbbjxd4.fsf@hades.wkstn.nix> (nix@esperi.org.uk's message of "20 Jun 2006 23:06:22 +0100")
 Sender: linux-raid-owner@vger.kernel.org
-To: Molle Bestefich <molle.bestefich@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, 23 Jun 2006, Molle Bestefich wrote:
->I'd watch out regarding the Western Digital disks, apparently they
->have a bad habit of turning themselves off when used in RAID mode, for
->some reason:
->http://thread.gmane.org/gmane.linux.kernel.device-mapper.devel/1980/
+On 20 Jun 2006, nix@esperi.org.uk prattled cheerily:
+> For some time, mdadm's been dumping core on me in my uClibc-built
+> initramfs. As you might imagine this is somewhat frustrating, not least
+> since my root filesystem's in LVM on RAID. Half an hour ago I got around
+> to debugging this.
 
-Where "for some reason" == HEAT.  I've seen Maxtor, Seagate, AND Western
-Digital drives all shutdown when they get too hot -- so hot you cannot
-touch them.  I know this all too well because Dell is stupid or lazy
-to design their cases with proper ventilation over the drives; one drive
-simply gets hot, two drives get hot enough to discolor their plastic
-drive sleds.
+Ping?
 
-Unless you're talking about little laptop drives, hard drives need active
-cooling.  A few CFM is usually enough.  A LOT of people underestimate
-the cooling needs of their drives. (and sadly that includes far too many
-manufacturers of IDE/SATA drive cages.)
-
---Ricky
-
-
+-- 
+`NB: Anyone suggesting that we should say "Tibibytes" instead of
+ Terabytes there will be hunted down and brutally slain.
+ That is all.' --- Matthew Wilcox
