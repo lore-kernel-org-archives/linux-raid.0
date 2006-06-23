@@ -1,46 +1,63 @@
-From: "Christian Pernegger" <pernegger@gmail.com>
-Subject: Re: Is shrinking raid5 possible?
-Date: Fri, 23 Jun 2006 20:16:58 +0200
-Message-ID: <bb145bd20606231116g7808e467w29a9bf273ba0df52@mail.gmail.com>
-References: <44960C45.9050407@anu.edu.au>
-	 <17558.10906.59066.196870@cse.unsw.edu.au> <449B3A80.4070602@tmr.com>
-	 <17563.17224.85968.572754@cse.unsw.edu.au>
+From: Tom Vier <tmv@comcast.net>
+Subject: Re: Large single raid and XFS or two small ones and EXT3?
+Date: Fri, 23 Jun 2006 14:19:25 -0400
+Message-ID: <20060623181925.GB3894@zero>
+References: <449AEB7C.6040108@cjx.com> <fd8d0180606230226w10b1982ay2916805d9aa0e3bb@mail.gmail.com> <449BE381.6070000@cjx.com> <200606231701.44803.a1426z@gawab.com> <449C150E.3040107@thebarn.com>
+Reply-To: Tom Vier <tmv@comcast.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17563.17224.85968.572754@cse.unsw.edu.au>
 Content-Disposition: inline
+In-Reply-To: <449C150E.3040107@thebarn.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Russell Cattelan <cattelan@thebarn.com>
+Cc: Al Boldi <a1426z@gawab.com>, linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org
 List-Id: linux-raid.ids
 
-> Why would you ever want to reduce the size of a raid5 in this way?
+On Fri, Jun 23, 2006 at 11:21:34AM -0500, Russell Cattelan wrote:
+> When you refer to data=ordered are you taking about ext3 user data 
+> journaling?
 
-A feature that would have been useful to me a few times is the ability
-to shrink an array by whole disks.
+iirc, data=ordered just writes new data out before updating block pointers,
+the file's length in its inode, and the block usage bitmap. That way you
+don't get junk or zeroed data at the tail of the file. However, i think to
+prevent data leaks (from deleted files), data=writeback requires a write to
+the journal, indicating what blocks are being added, so that on recovery
+they can be zeroed if the transaction wasn't completed.
 
-Example:
+> While user data journaling seems like a good idea is unclear as what 
+> benefits it really provides?
 
-8x 300 GB disks -> 2100 GB raw capacity
+Data gets commited sooner (until pressure or timeouts force the data to be
+written to its final spot - then you loose thruput and there's a net delay).
+I think for bursts of small file creation, data=journaled is a win. I don't
+know how lazy ext3 is about writing the data to its final position. It
+probably does it when the commit timeout hits 0 or the journal is full.
 
-shrink file system, remove 2 disks =
+> As far as barriers go I assume you are referring to the ide write barriers?
+> 
+> The need for barrier support in the file system is a result of cheap ide
+> disks providing large write caches but not having enough reserve power to
+> guarantee that the cache will be sync'ed to disk in the event of a power
+> failure.
 
-6x 300 GB disks --> 1500 GB raw capacity
+It's needed on any drive (including scsi) that has writeback cache enabled.
+Most scsi drives (in my experience) come from the factory with the cache set
+to write thru, in case the fs/os doesn't use ordered tags, cache flushes, or
+force-unit-access writes.
 
-Why?
+> Note ext3,xfs,and reiser all use write barrier now fos r ide disks.
 
-If you're not backed up by a company budget, moving data to an new
-array (extra / larger disks) is extremely difficult. A lot of cases
-will hold 8 disks but not 16, never mind the extra RAID controller.
-Building another temporary server and moving the data via Gigabit is
-slow and expensive as well.
+What i've found very disappointing is that my raid1 doesn't support them!
 
-Shrinking the array step-by-step and unloading data onto a regular
-filesystem on the freed disks would be a cheap (if time consuming) way
-to migrate, because the data could be copied back to the new array a
-disk at a time.
+Jun 22 10:53:49 zero kernel: Filesystem "md1": Disabling barriers, not
+supported by the underlying device
 
-Thanks,
+I'm not sure if it's the sata drive that don't support write barriers, or if
+it's just the md1 layer. I need to investigate that. I think reiserfs also
+complained that trying to enabled write barriers fails on that md1 (i've
+been playing with various fs'es on it).
 
-C.
+-- 
+Tom Vier <tmv@comcast.net>
+DSA Key ID 0x15741ECE
