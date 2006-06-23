@@ -1,63 +1,64 @@
-From: Tom Vier <tmv@comcast.net>
-Subject: Re: Large single raid and XFS or two small ones and EXT3?
-Date: Fri, 23 Jun 2006 14:19:25 -0400
-Message-ID: <20060623181925.GB3894@zero>
-References: <449AEB7C.6040108@cjx.com> <fd8d0180606230226w10b1982ay2916805d9aa0e3bb@mail.gmail.com> <449BE381.6070000@cjx.com> <200606231701.44803.a1426z@gawab.com> <449C150E.3040107@thebarn.com>
-Reply-To: Tom Vier <tmv@comcast.net>
+From: Nix <nix@esperi.org.uk>
+Subject: Re: [PATCH*2] mdadm works with uClibc from SVN
+Date: Fri, 23 Jun 2006 20:45:47 +0100
+Message-ID: <87veqrk650.fsf@hades.wkstn.nix>
+References: <87wtbbjxd4.fsf@hades.wkstn.nix> <871wtgl419.fsf@hades.wkstn.nix>
+	<17563.41604.667253.877348@cse.unsw.edu.au>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <449C150E.3040107@thebarn.com>
+In-Reply-To: <17563.41604.667253.877348@cse.unsw.edu.au> (Neil Brown's message of "Fri, 23 Jun 2006 18:12:52 +1000")
 Sender: linux-raid-owner@vger.kernel.org
-To: Russell Cattelan <cattelan@thebarn.com>
-Cc: Al Boldi <a1426z@gawab.com>, linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, Jun 23, 2006 at 11:21:34AM -0500, Russell Cattelan wrote:
-> When you refer to data=ordered are you taking about ext3 user data 
-> journaling?
-
-iirc, data=ordered just writes new data out before updating block pointers,
-the file's length in its inode, and the block usage bitmap. That way you
-don't get junk or zeroed data at the tail of the file. However, i think to
-prevent data leaks (from deleted files), data=writeback requires a write to
-the journal, indicating what blocks are being added, so that on recovery
-they can be zeroed if the transaction wasn't completed.
-
-> While user data journaling seems like a good idea is unclear as what 
-> benefits it really provides?
-
-Data gets commited sooner (until pressure or timeouts force the data to be
-written to its final spot - then you loose thruput and there's a net delay).
-I think for bursts of small file creation, data=journaled is a win. I don't
-know how lazy ext3 is about writing the data to its final position. It
-probably does it when the commit timeout hits 0 or the journal is full.
-
-> As far as barriers go I assume you are referring to the ide write barriers?
+On Fri, 23 Jun 2006, Neil Brown mused:
+> On Friday June 23, nix@esperi.org.uk wrote:
+>> On 20 Jun 2006, nix@esperi.org.uk prattled cheerily:
+>> > For some time, mdadm's been dumping core on me in my uClibc-built
+>> > initramfs. As you might imagine this is somewhat frustrating, not least
+>> > since my root filesystem's in LVM on RAID. Half an hour ago I got around
+>> > to debugging this.
+>> 
+>> Ping?
 > 
-> The need for barrier support in the file system is a result of cheap ide
-> disks providing large write caches but not having enough reserve power to
-> guarantee that the cache will be sync'ed to disk in the event of a power
-> failure.
+> No, but I do know someone by that name.....
 
-It's needed on any drive (including scsi) that has writeback cache enabled.
-Most scsi drives (in my experience) come from the factory with the cache set
-to write thru, in case the fs/os doesn't use ordered tags, cache flushes, or
-force-unit-access writes.
+Sorry, I'm pinging all the patches I've sent out in the last few weeks
+and this one was on my hit list :)
 
-> Note ext3,xfs,and reiser all use write barrier now fos r ide disks.
+> Yeh, it's on my todo list. 
 
-What i've found very disappointing is that my raid1 doesn't support them!
+Agreed.
 
-Jun 22 10:53:49 zero kernel: Filesystem "md1": Disabling barriers, not
-supported by the underlying device
+> I suspect I would rather make mdadm not dump core of ftw isn't
+> available.
 
-I'm not sure if it's the sata drive that don't support write barriers, or if
-it's just the md1 layer. I need to investigate that. I think reiserfs also
-complained that trying to enabled write barriers fails on that md1 (i've
-been playing with various fs'es on it).
+It was... surprising. I'm still not sure how I ever made it work without
+this fxi; the first uClibc-based initramfs I ever rolled had mdadm 2.3.1
+in it and a `DEVICE partitions', and there was no core dump. A mystery.
+
+> Is there some #define in an include file which will allow me to tell
+> if the current uclibc supports ftw or not?
+
+I misspoke: ftw was split into multiple files in late 2005, but it was
+originally added in September 2003, in time for version 0.9.21.
+
+Obviously the #defines in <ftw.h> don't exist before that date, but
+that's a bit late to check, really.
+
+<features.h> provides the macros __UCLIBC_MAJOR__, __UCLIBC_MINOR__, and
+__UCLIBC_SUBLEVEL__: versions above 0.9.20 appear to support ftw()
+(at least, they have the function, in 32-bit form at least, which
+is certainly enough for this application!)
+
+> (and I'm more like to reply to mail if it the "To" or "Cc" line
+>  mentions me specifically - it's less likely to get lost that way).
+
+OK.
 
 -- 
-Tom Vier <tmv@comcast.net>
-DSA Key ID 0x15741ECE
+`NB: Anyone suggesting that we should say "Tibibytes" instead of
+ Terabytes there will be hunted down and brutally slain.
+ That is all.' --- Matthew Wilcox
