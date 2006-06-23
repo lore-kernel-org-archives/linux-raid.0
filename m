@@ -1,47 +1,72 @@
 From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: New FAQ entry? (was IBM xSeries stop responding during RAID1
- reconstruction)
-Date: Thu, 22 Jun 2006 23:14:51 -0400
-Message-ID: <449B5CAB.50409@tmr.com>
-References: <Pine.LNX.4.44.0606212219120.10004-100000@coffee.psychology.mcmaster.ca> <449A1E10.2050402@fooplanet.com> <20060622071145.GA718@rigacci.org>
+Subject: Re: Ok to go ahead with this setup?
+Date: Thu, 22 Jun 2006 23:25:13 -0400
+Message-ID: <449B5F19.4070707@tmr.com>
+References: <bb145bd20606221008p131d4daem289a6b9300757c66@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20060622071145.GA718@rigacci.org>
+In-Reply-To: <bb145bd20606221008p131d4daem289a6b9300757c66@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Niccolo Rigacci <niccolo@rigacci.org>
-Cc: linux-raid@vger.kernel.org, Mark Hahn <hahn@physics.mcmaster.ca>
+To: Christian Pernegger <pernegger@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Niccolo Rigacci wrote:
+Christian Pernegger wrote:
 
->>>personally, I don't see any point to worrying about the default,
->>>compile-time or boot time:
->>>
->>>for f in `find /sys/block/* -name scheduler`; do echo cfq > $f; done
->>>      
->>>
+> Hi list!
 >
->I tested this case:
+> Having experienced firsthand the pain that hardware RAID controllers
+> can be -- my 3ware 7500-8 died and it took me a week to find even a
+> 7508-8 -- I would like to switch to kernel software RAID.
 >
->- reboot as per power failure (RAID goes dirty)
->- RAID start resyncing as soon as the kernel assemble it
->- every disk activity is blocked, even DHCP failed!
->- host services are unavailable
+> Here's a tentative setup:
 >
->This is why I changed the kernel default.
+> Intel SE7230NH1-E mainboard
+> Pentium D 930
+> 2x1GB Crucial 533 DDR2 ECC
+> Intel SC5295-E enclosure
 >
->  
+> Promise Ultra133 TX2 (2ch PATA)
+>   - 2x Maxtor 6B300R0 (300GB, DiamondMax 10) in RAID1
 >
-Changing on the command line assumes that you built all of the 
-schedulers in... but making that assumption, perhaps the correct 
-fail-safe is to have cfq as the default, and at the end of rc.local 
-check for rebuild, and if everything is clean change to whatever work 
-best at the end of the boot. If the raid is not clean stay with cfq.
+> Onboard Intel ICH7R (4ch SATA)
+>   - 4x Western Digital WD5000YS (500GB, Caviar RE2) in RAID5
+>
+> * Does this hardware work flawlessly with Linux?
+>
+> * Is it advisable to boot from the mirror?
+>  Would the box still boot with only one of the disks?
 
-Has anyone tried deadline for this? I think I had this as deafult and 
-didn't hand on a raid5 fail/rebuild.
+
+Let me say this about firmware mirror: while virtually every BIOS will 
+boot the "next" disk if the first fails, some will not fail over if the 
+first drive is returning a parity but still returning data. Take that 
+data any way you want, drive failure at power cycle is somewhat more 
+likely than failure while running.
+
+>
+> * Can I use EVMS as a frontend?
+>  Does it even use md or is EVMS's RAID something else entirely?
+>
+> * Should I use the 300s as a single mirror, or span multiple ones over
+> the two disks?
+>
+> * Am I even correct in assuming that I could stick an array in another
+> box and have it work?
+>
+> Comments welcome
+>
+> Thanks,
+>
+> Chris
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+
 
 -- 
 bill davidsen <davidsen@tmr.com>
