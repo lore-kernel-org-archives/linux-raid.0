@@ -1,47 +1,46 @@
-From: Christian Pedaschus <cpedaschus@gmx.de>
-Subject: Re: Large single raid and XFS or two small ones and EXT3?
-Date: Fri, 23 Jun 2006 18:46:18 +0200
-Message-ID: <449C1ADA.9010907@gmx.de>
-References: <449AEB7C.6040108@cjx.com> <fd8d0180606230226w10b1982ay2916805d9aa0e3bb@mail.gmail.com> <449BE381.6070000@cjx.com> <200606231701.44803.a1426z@gawab.com> <20060623160602.GK5817@schatzie.adilger.int> <449C19BF.7060500@gmx.de>
+From: "Christian Pernegger" <pernegger@gmail.com>
+Subject: Re: Is shrinking raid5 possible?
+Date: Fri, 23 Jun 2006 20:16:58 +0200
+Message-ID: <bb145bd20606231116g7808e467w29a9bf273ba0df52@mail.gmail.com>
+References: <44960C45.9050407@anu.edu.au>
+	 <17558.10906.59066.196870@cse.unsw.edu.au> <449B3A80.4070602@tmr.com>
+	 <17563.17224.85968.572754@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <449C19BF.7060500@gmx.de>
-Sender: linux-fsdevel-owner@vger.kernel.org
-Cc: Andreas Dilger <adilger@clusterfs.com>, Al Boldi <a1426z@gawab.com>, linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <17563.17224.85968.572754@cse.unsw.edu.au>
+Content-Disposition: inline
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+> Why would you ever want to reduce the size of a raid5 in this way?
 
-Christian Pedaschus wrote:
+A feature that would have been useful to me a few times is the ability
+to shrink an array by whole disks.
 
->for ext3 use (on unmounted disks):
->tune2fs -O has_journal -o journal_data /dev/{disk}
->tune2fs -O dir_index /dev/{disk}
->
->if data is on the drive, you need to run a fsck afterwards and it uses a
->good bit of ram, but it makes ext3 a good bit faster.
->
->and my main points for using ext3 is still: "it's a very mature fs,
->nobody will tell you such horrible storys about data-lossage with ext3
->than with any other filesystem."
->and there are undelete tools for ext3.
->
->so if you're for data-integrity (i guess you are, else you would not use
->raid, or? ;) ), use ext3 and if you need the last single kb/s get a
->faster drive or use lots of them with a good raid-combo and/or use a
->separate disk for the journal (man 8 tune2fs)
->
->my 0.5 cents,
->greets chris
->
->ps. but you know, filesystem choosage is not pure science, it's
->half-religion :D
->  
->
-Ops, should be:
+Example:
 
-tune2fs -O has_journal -o journal_data /dev/{partition}
-tune2fs -O dir_index /dev/{partition}
+8x 300 GB disks -> 2100 GB raw capacity
 
-;)
+shrink file system, remove 2 disks =
+
+6x 300 GB disks --> 1500 GB raw capacity
+
+Why?
+
+If you're not backed up by a company budget, moving data to an new
+array (extra / larger disks) is extremely difficult. A lot of cases
+will hold 8 disks but not 16, never mind the extra RAID controller.
+Building another temporary server and moving the data via Gigabit is
+slow and expensive as well.
+
+Shrinking the array step-by-step and unloading data onto a regular
+filesystem on the freed disks would be a cheap (if time consuming) way
+to migrate, because the data could be copied back to the new array a
+disk at a time.
+
+Thanks,
+
+C.
