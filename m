@@ -1,38 +1,50 @@
-From: "H. Peter Anvin" <hpa@zytor.com>
-Subject: Re: Ok to go ahead with this setup?
-Date: Thu, 22 Jun 2006 19:44:53 -0700
-Message-ID: <449B55A5.5030703@zytor.com>
-References: <bb145bd20606221008p131d4daem289a6b9300757c66@mail.gmail.com>	 <62b0912f0606221104q2f47f574i86441efed5831957@mail.gmail.com>	 <bb145bd20606221250y147d0a0bk1e371a3078adc09e@mail.gmail.com> <62b0912f0606221511p74a78ca5id4b5d3f870258815@mail.gmail.com>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: New FAQ entry? (was IBM xSeries stop responding during RAID1
+ reconstruction)
+Date: Thu, 22 Jun 2006 23:14:51 -0400
+Message-ID: <449B5CAB.50409@tmr.com>
+References: <Pine.LNX.4.44.0606212219120.10004-100000@coffee.psychology.mcmaster.ca> <449A1E10.2050402@fooplanet.com> <20060622071145.GA718@rigacci.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <62b0912f0606221511p74a78ca5id4b5d3f870258815@mail.gmail.com>
+In-Reply-To: <20060622071145.GA718@rigacci.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Molle Bestefich <molle.bestefich@gmail.com>
-Cc: Christian Pernegger <pernegger@gmail.com>, linux-raid@vger.kernel.org
+To: Niccolo Rigacci <niccolo@rigacci.org>
+Cc: linux-raid@vger.kernel.org, Mark Hahn <hahn@physics.mcmaster.ca>
 List-Id: linux-raid.ids
 
-Molle Bestefich wrote:
-> Christian Pernegger wrote:
->> Anything specific wrong with the Maxtors?
-> 
-> No.  I've used Maxtor for a long time and I'm generally happy with them.
-> 
-> They break now and then, but their online warranty system is great.
-> I've also been treated kindly by their help desk - talked to a cute
-> gal from Maxtor in Ireland over the phone just yesterday ;-).
-> 
-> Then again, they've just been acquired by Seagate, or so, so things
-> may change for the worse, who knows.
-> 
-> I'd watch out regarding the Western Digital disks, apparently they
-> have a bad habit of turning themselves off when used in RAID mode, for
-> some reason:
-> http://thread.gmane.org/gmane.linux.kernel.device-mapper.devel/1980/
-> 
+Niccolo Rigacci wrote:
 
-I have exactly the opposite experience.  More than 50% of Maxtor drives 
-fail inside 18 months; WDs seem to be really solid.
+>>>personally, I don't see any point to worrying about the default,
+>>>compile-time or boot time:
+>>>
+>>>for f in `find /sys/block/* -name scheduler`; do echo cfq > $f; done
+>>>      
+>>>
+>
+>I tested this case:
+>
+>- reboot as per power failure (RAID goes dirty)
+>- RAID start resyncing as soon as the kernel assemble it
+>- every disk activity is blocked, even DHCP failed!
+>- host services are unavailable
+>
+>This is why I changed the kernel default.
+>
+>  
+>
+Changing on the command line assumes that you built all of the 
+schedulers in... but making that assumption, perhaps the correct 
+fail-safe is to have cfq as the default, and at the end of rc.local 
+check for rebuild, and if everything is clean change to whatever work 
+best at the end of the boot. If the raid is not clean stay with cfq.
 
-	-hpa
+Has anyone tried deadline for this? I think I had this as deafult and 
+didn't hand on a raid5 fail/rebuild.
+
+-- 
+bill davidsen <davidsen@tmr.com>
+  CTO TMR Associates, Inc
+  Doing interesting things with small computers since 1979
+
