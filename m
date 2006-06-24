@@ -1,36 +1,26 @@
-From: Nix <nix@esperi.org.uk>
-Subject: Re: Large single raid and XFS or two small ones and EXT3?
-Date: Fri, 23 Jun 2006 20:53:04 +0100
-Message-ID: <87irmrk5sv.fsf@hades.wkstn.nix>
-References: <449AEB7C.6040108@cjx.com>
-	<fd8d0180606230226w10b1982ay2916805d9aa0e3bb@mail.gmail.com>
-	<449BE381.6070000@cjx.com> <200606231701.44803.a1426z@gawab.com>
-	<20060623160602.GK5817@schatzie.adilger.int> <449C19BF.7060500@gmx.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <449C19BF.7060500@gmx.de> (Christian Pedaschus's message of "23 Jun 2006 17:43:25 +0100")
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Christian Pedaschus <cpedaschus@gmx.de>, linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org
+From: "Seth Oakley" <FIKWKKINAHMKTA@yes.optus.com.au>
+Subject: Hosting plans information
+Date: Sat, 24 Jun 2006 02:53:38 -0200
+Message-ID: <65431002160787.GI32714__3868.16147151894$1151121796$gmane$org@tasteful.tech.sitadelle.com>
+References: <FIKWKKINAHMKTA@yes.optus.com.au> <E1A4npj-0002ZF-00FIKWKKINAHMKTA@yes.optus.com.au>
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <E1A4npj-0002ZF-00FIKWKKINAHMKTA@yes.optus.com.au>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 23 Jun 2006, Christian Pedaschus said:
-> and my main points for using ext3 is still: "it's a very mature fs,
-> nobody will tell you such horrible storys about data-lossage with ext3
-> than with any other filesystem."
+Sensationall revoolution in medicine!
 
-Actually I can, but it required bad RAM *and* a broken disk controller
-*and* an electrical storm *and* heavy disk loads (only read loads,
-but I didn't have noatime active so read implied write).
+E''nlarge your p''enis up to 10 cm or up to 4 inches!
 
-In my personal experience it's since weathered machines with `only' RAM
-so bad that md5sums of 512Kb files wouldn't come out the same way twice
-with no problems at all (some file data got corrupted, unsurprisingly,
-but the metadata was fine).
+Its h'erbal solution what hasnt side effect, but has 100% guaranted results!
 
-Definitely an FS to be relied upon.
+Dont lose your chance and but know wihtout doubts, you will be impressed with results!
 
--- 
-`NB: Anyone suggesting that we should say "Tibibytes" instead of
- Terabytes there will be hunted down and brutally slain.
- That is all.' --- Matthew Wilcox
+Clisk here: http://xhdc.net
+
+
+
+
+camelopard allure pattern figurine eveready backstitch nervous syllabi
+bonaparte clam bleeker hampton sprig duffel cornerstone decouple
