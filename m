@@ -1,30 +1,25 @@
-From: "Ivy Gordon" <BlytheCasey@netpipe.com>
-Subject: Premium Rep#ic%ted Watches 71
-Date: Thu, 25 May 2006 07:26:48 +0400
-Message-ID: <fb7101c67fcc$958fe810$c8be1ac1__47135.9037481763$1151161803$gmane$org@BlytheCasey>
+From: "Ginger Holder" <tl.com.br@citius.getresponse.com>
+Subject: top quality brand watches
+Date: Sat, 24 Jun 2006 15:16:26 +0000 (UTC)
+Message-ID: <30368678.20060624151621@citius.getresponse.com>
+Reply-To: "Ginger Holder" <tl.com.br@citius.getresponse.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+Date: Sat, 24 Jun 2006 15:16:21 -0060
 Sender: linux-raid-owner@vger.kernel.org
-To: Dee <linux-ppp@vger.kernel.org>, Winnie Ryan <linux-raid@vger.kernel.org>, willatkinsonuk <linux-scsi@vger.kernel.org>, Marcy A Johnson <linux-smp@vger.kernel.org>, Luisa <linux-tape@vger.kernel.org>, Jeri Barber <sparclinux@vger.kernel.org>
+To: linux-8086@vger.kernel.org
 List-Id: linux-raid.ids
 
-Low priced replicas available in all styles. 
-Mens, womans and childrens.
+Get the Finest Watch Replicas!
 
-These watches are of great quality and 
-are replicated to mirror the real thing.
+We only sell premium watches. There's no battery in these replicas just like the real ones since they charge themselves as you move. The second hand moves JUST like the real ones, too. These original watches sell in stores for thousands of dollars. We sell them for much less. 
 
-Excellent prices that cannot be passed up
-Take a look at our selection of watches
+- Replicated to the Smallest Detail
+- 98% Perfectly Accurate Markings 
+- Signature Green Sticker w/ Serial Number on Watch Back
+- Magnified Quickset Date
+- Includes all Proper Markings
 
-http://mmj.selectreplics.com/
-
-
-To get rid of this fan While you live, tell truth and shame the Devil! 
-You know how I gab. Whipping boy
-Now, let's get down to business. Whistle and flute 
-
-
+Visit us: www.fasts-hopping.com 
