@@ -1,57 +1,36 @@
-From: Adam Talbot <talbotx@comcast.net>
-Subject: Re: Large single raid and XFS or two small ones and EXT3?
-Date: Sat, 24 Jun 2006 15:52:46 -0700
-Message-ID: <449DC23E.4000604@comcast.net>
-References: <449AEB7C.6040108@cjx.com>	<op.tblclqd3cigqcu@apollo13>	<fd8d0180606230226w10b1982ay2916805d9aa0e3bb@mail.gmail.com>	<449BE381.6070000@cjx.com>	<fd8d0180606230630x3f6b1ab7g444716cf8d5ab2c2@mail.gmail.com>	<68c491a60606230746m5c1f0301g8e00fdd4f0e0739b@mail.gmail.com>	<449C0505.8000601@tmr.com>	<fd8d0180606230834t18427168jd776d33980f516b2@mail.gmail.com> <17564.52087.651968.635043@cse.unsw.edu.au> <449CF0D0.9080006@comcast.net> <449D0715.8050609@dgreaves.com>
+From: "Nigel J. Terry" <nigel@nigelterry.net>
+Subject: Re: Raid5 reshape (Solved)
+Date: Sat, 24 Jun 2006 18:58:59 -0400
+Message-ID: <449DC3B3.2050307@nigelterry.net>
+References: <449250ED.7090302@irule.net>	<17554.21119.487820.638171@cse.unsw.edu.au>	<4492D5B1.60004@nigelterry.net>	<4492D8D9.7010101@irule.net>	<17555.12441.42212.93049@cse.unsw.edu.au>	<4493330E.30501@nigelterry.net>	<17555.13409.834439.80361@cse.unsw.edu.au>	<44945643.3070300@nigelterry.net>	<17556.31295.280083.533342@cse.unsw.edu.au>	<44947BCA.9040305@nigelterry.net>	<44947C98.6060809@nigelterry.net>	<17556.32630.611922.294047@cse.unsw.edu.au>	<44948002.3050706@nigelterry.net>	<44954DB7.2000305@nigelterry.net>	<17558.1521.522659.91428@cse.unsw.edu.au>	<44971A51.6050008@nigelterry.net>	<17559.10564.840472.525999@cse.unsw.edu.au>	<44972AF1.8040500@nigelterry.net>	<17559.13371.751956.423312@cse.unsw.edu.au>	<449734AE.10907@nigelterry.net>	<4497CF71.5050906@nigelterry.net> <17560.57599.658968.66555@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <449D0715.8050609@dgreaves.com>
+In-Reply-To: <17560.57599.658968.66555@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Greaves <david@dgreaves.com>
-Cc: Neil Brown <neilb@suse.de>, Francois Barre <francois.barre@gmail.com>, linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Trying to test for tuning with different chunk's.  Just finished 16K
-chunk and am about 20% done with the 32K test.  Here are the numbers on
-16K chunk, will send 32, 96,128,192 and 256 as I get them.  But keep in
-mind each one of these tests take about 4~6 hours, so it is a slow
-process...  I have settled for XFS as the file system type, it seems to
-be able to beat any thing else out there.
--Adam
+Neil
 
-XFS
-Config=NAS+NFS
-RAID6 16K chunk
-nas tmp # time tar cf - . | (cd /data ; tar xf - )
-real    252m40.143s
-user    1m4.720s
-sys     25m6.270s
-/dev/md/0             1.1T  371G  748G  34% /data
-4.207 hours @ 90,167M/hour or 1502M/min  or 25.05M/sec
+Well I did warn you that I was an idiot... :-) I have been attempting to
+work out exactly what I did and what happened. All I have learned is
+that I need to keep better notes
 
+Yes, the 21 mounts is a fsck, nothing to do with raid. However it is
+still noteworthy that this took several hours to complete with the raid
+also reshaping rather than the few minutes I have seen in the past. Some
+kind of interaction there.
 
+I think that the kernel I was using had both the fixes you had sent me
+in it, but I honestly can't be sure - Sorry. In the past, that bug
+caused it to fail immediately and the reshape to freeze. This appeared
+to occur after the reshape, maybe a problem at the end of the reshape
+process. Probably however I screwed up, and I have no way to retest.
 
+Finally, just a note to say that the system continues to work just fine
+and I am really impressed. Thanks again
 
-David Greaves wrote:
-> Adam Talbot wrote:
->   
->> OK, this topic I relay need to get in on.
->> I have spent the last few week bench marking my new 1.2TB, 6 disk, RAID6
->> array.
->>     
-> Very interesting. Thanks.
->
-> Did you get around to any 'tuning'.
-> Things like raid chunk size, external logs for xfs, blockdev readahead
-> on the underlying devices and the raid device?
->
-> David
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->   
+Nigel
 
