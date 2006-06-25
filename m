@@ -1,35 +1,24 @@
-From: "Mr. Alfaro" <xbbxotci@digitalmaila.com>
-Subject: new msg for Morgan
-Date: Sat, 24 Jun 2006 19:29:42 -0600 (PDT)
-Message-ID: <R753J64PL65PNPIS9N49__9156.59320676259$1151195398$gmane$org@y.muslimmarriagejunction.com>
-Reply-To: "Mr. Alfaro" <xbbxotci@digitalmaila.com>
+From: "Olen" <OlenDennison@graphic-designer.com>
+Subject: Brand new Surely you only dream of it Revel in
+Date: Sat, 24 Jun 2006 23:26:59 -0400
+Message-ID: <58996804313317.E0B566C5EB__24588.6614583016$1151206014$gmane$org@QPHJWX>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+        charset="Windows-1252"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-serial@vger.kernel.org, linux-raid@vger.kernel.org, linux-ia64@vger.kernel.org, linux-tape@vger.kernel.org, linux-net@vger.kernel.org, linux-ide@vger.kernel.org, ultralinux@vger.kernel.org, linux-kernel-owner@vger.kernel.org
+To: linux-serial@vger.kernel.org
 List-Id: linux-raid.ids
 
-FABULOUS REPLICAS - AMAZING PRICES
+Dear user.
+Impress your girl with prolonged hardness, plentiful explosions and increased duration 
+Order our magical stuff now for the amazing prices, and we will dispatch it right away
 
-Handbags • Jewelry • Pens • Watches • Neckties • Clutches • and More
+ Unique offers on most recognized and famous brands on Earth.
 
-All our products are made with the finest leather and silks, and come
-with certificate, tags and all the extras, just as you would find in a 
-boutique. Extreme care is taken to pay special attention to detail. 
+ Come in here: http://www.sluggishcl.com 
 
-You will be immediately surprised by the craftsmanship and strength of 
-our fine, high-quality luxury items, whether it be a watch, handbag, or tie.
-
-Visit Now to See our Current Specials! 
-
-http://051.deedlsonwheelss.com
+ We offer reliable service and 5 years expirience on the marcket!
 
 
-
-
-
-
-
-bulb flat
-http://051.deedlsonwheelss.com/rm
