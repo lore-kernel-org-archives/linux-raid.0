@@ -1,133 +1,107 @@
-From: Ronald Lembcke <es186@fen-net.de>
-Subject: Bug in 2.6.17 / mdadm 2.5.1
-Date: Sun, 25 Jun 2006 15:59:26 +0200
-Message-ID: <20060625135926.GA6253@defiant.crash>
-References: <20060624104745.GA6352@defiant.crash>
+From: Adam Talbot <talbotx@comcast.net>
+Subject: Re: Large single raid and XFS or two small ones and EXT3?
+Date: Sun, 25 Jun 2006 07:51:37 -0700
+Message-ID: <449EA2F9.3050503@comcast.net>
+References: <449AEB7C.6040108@cjx.com>	<op.tblclqd3cigqcu@apollo13>	<fd8d0180606230226w10b1982ay2916805d9aa0e3bb@mail.gmail.com>	<449BE381.6070000@cjx.com>	<fd8d0180606230630x3f6b1ab7g444716cf8d5ab2c2@mail.gmail.com>	<68c491a60606230746m5c1f0301g8e00fdd4f0e0739b@mail.gmail.com>	<449C0505.8000601@tmr.com>	<fd8d0180606230834t18427168jd776d33980f516b2@mail.gmail.com> <17564.52087.651968.635043@cse.unsw.edu.au> <449CF0D0.9080006@comcast.net> <449D0715.8050609@dgreaves.com> <449DC23E.4000604@comcast.net>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="OgqxwSJOaUobr8KG"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20060624104745.GA6352@defiant.crash>
+In-Reply-To: <449DC23E.4000604@comcast.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
-Cc: es186@fen-net.de
+To: Adam Talbot <talbotx@comcast.net>
+Cc: David Greaves <david@dgreaves.com>, Neil Brown <neilb@suse.de>, Francois Barre <francois.barre@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+ACK!
+At one point some one stated that they were having problems with XFS
+crashing under high NFS loads...  Did it look something like this?
+-Adam
 
---OgqxwSJOaUobr8KG
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Starting XFS recovery on filesystem: md0 (logdev: internal)
+Filesystem "md0": XFS internal error xlog_valid_rec_header(1) at line
+3478 of file fs/xfs/xfs_log_recover.c.  Caller 0xffffffff802114fc
 
-Hi!
-
-There's a bug in Kernel 2.6.17 and / or mdadm which prevents (re)adding
-a disk to a degraded RAID5-Array.
-
-The mail I'm replying to was sent to linux-raid only. A summary of my
-problem is in the quoted part, and everything you need to reproduce it
-is below.
-There's more information (kernel log, output of mdadm -E, ...) in the
-original mail (
-Subject: RAID5 degraded after mdadm -S, mdadm --assemble (everytime)
-Message-ID: <20060624104745.GA6352@defiant.crash>
-It can be found here for example:=20
-http://www.spinics.net/lists/raid/msg12859.html )
-
-More about this problem below the quoted pard.
-
-On Sat Jun 24 12:47:45 2006, I wrote:
-> I set up a RAID5 array of 4 disks. I initially created a degraded array
-> and added the fourth disk (sda1) later.
->=20
-> The array is "clean", but when I do =20
->   mdadm -S /dev/md0=20
->   mdadm --assemble /dev/md0 /dev/sd[abcd]1
-> it won't start. It always says sda1 is "failed".
->=20
-> When I remove sda1 and add it again everything seems to be fine until I
-> stop the array.=20
-
-CPU: AMD-K6(tm) 3D processor
-Kernel: Linux version 2.6.17 (root@ganges) (gcc version 4.0.3 (Debian
-4.0.3-1)) #2 Tue Jun 20 17:48:32 CEST 2006
-
-The problem is: The superblocks get inconsistent, but I couldn't find
-where this actually happens.
-
-Here are some simple steps to reproduce it (don't forget to adjust the
-device-names if you're allready using /dev/md1 or /dev/loop[0-3]):
-The behaviour changes when you execute --zero-superblock in the example=20
-below (it looks even more broken).
-It also changes when you fail some other disk instead of loop2.
-When loop3 is failed (without executing --zero-superblock) it can
-successfully be re-added.
+Call Trace: <ffffffff80211437>{xlog_valid_rec_header+231}
+       <ffffffff802114fc>{xlog_do_recovery_pass+172}
+<ffffffff8020f0c8>{xlog_find_tail+2344}
+       <ffffffff802217e1>{kmem_alloc+97}
+<ffffffff80211bb0>{xlog_recover+192}
+       <ffffffff8020c564>{xfs_log_mount+1380}
+<ffffffff80213968>{xfs_mountfs+2712}
+       <ffffffff8016aa3a>{set_blocksize+138}
+<ffffffff80224d1d>{xfs_setsize_buftarg_flags+61}
+       <ffffffff802192b4>{xfs_mount+2724}
+<ffffffff8022ae00>{linvfs_fill_super+0}
+       <ffffffff8022aeb8>{linvfs_fill_super+184}
+<ffffffff8024a62e>{strlcpy+78}
+       <ffffffff80169db2>{sget+722} <ffffffff8016a460>{set_bdev_super+0}
+       <ffffffff8022ae00>{linvfs_fill_super+0}
+<ffffffff8022ae00>{linvfs_fill_super+0}
+       <ffffffff8016a5bc>{get_sb_bdev+268}
+<ffffffff8016a84b>{do_kern_mount+107}
+       <ffffffff8017eed3>{do_mount+1603}
+<ffffffff8011a2f9>{do_page_fault+1033}
+       <ffffffff80145f66>{find_get_pages+22}
+<ffffffff8014d57a>{invalidate_mapping_pages+202}
+       <ffffffff80149f99>{__alloc_pages+89}
+<ffffffff8014a234>{__get_free_pages+52}
+       <ffffffff8017f257>{sys_mount+151} <ffffffff8010a996>{system_call+126}
+XFS: log mount/recovery failed: error 990
+XFS: log mount failed
 
 
-############################################
-cd /tmp; mkdir raiddtest; cd raidtest
-dd bs=3D1M count=3D1 if=3D/dev/zero of=3Ddisk0
-dd bs=3D1M count=3D1 if=3D/dev/zero of=3Ddisk1
-dd bs=3D1M count=3D1 if=3D/dev/zero of=3Ddisk2
-dd bs=3D1M count=3D1 if=3D/dev/zero of=3Ddisk3
-losetup /dev/loop0 disk0
-losetup /dev/loop1 disk1
-losetup /dev/loop2 disk2
-losetup /dev/loop3 disk3
-mdadm --create /dev/md1 --level=3D5 --raid-devices=3D4 /dev/loop0 /dev/loop=
-1 /dev/loop2 /dev/loop3
-mdadm /dev/md1 --fail /dev/loop2
-mdadm /dev/md1 --remove /dev/loop2
+Adam Talbot wrote:
+> Trying to test for tuning with different chunk's.  Just finished 16K
+> chunk and am about 20% done with the 32K test.  Here are the numbers on
+> 16K chunk, will send 32, 96,128,192 and 256 as I get them.  But keep in
+> mind each one of these tests take about 4~6 hours, so it is a slow
+> process...  I have settled for XFS as the file system type, it seems to
+> be able to beat any thing else out there.
+> -Adam
+>
+> XFS
+> Config=NAS+NFS
+> RAID6 16K chunk
+> nas tmp # time tar cf - . | (cd /data ; tar xf - )
+> real    252m40.143s
+> user    1m4.720s
+> sys     25m6.270s
+> /dev/md/0             1.1T  371G  748G  34% /data
+> 4.207 hours @ 90,167M/hour or 1502M/min  or 25.05M/sec
+>
+>
+>
+>
+> David Greaves wrote:
+>   
+>> Adam Talbot wrote:
+>>   
+>>     
+>>> OK, this topic I relay need to get in on.
+>>> I have spent the last few week bench marking my new 1.2TB, 6 disk, RAID6
+>>> array.
+>>>     
+>>>       
+>> Very interesting. Thanks.
+>>
+>> Did you get around to any 'tuning'.
+>> Things like raid chunk size, external logs for xfs, blockdev readahead
+>> on the underlying devices and the raid device?
+>>
+>> David
+>> -
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+>>   
+>>     
+>
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>   
 
-#mdadm --zero-superblock /dev/loop2
-# here something goes wrong
-mdadm /dev/md1 --add /dev/loop2
-
-mdadm --stop /dev/md1
-# can't reassemble
-mdadm --assemble /dev/md1 /dev/loop0 /dev/loop1 /dev/loop2 /dev/loop3
-############################################
-
-
-To cleanup everything :)
-############################################
-mdadm --stop /dev/md1
-losetup -d /dev/loop0
-losetup -d /dev/loop1
-losetup -d /dev/loop2
-losetup -d /dev/loop3
-rm disk0 disk1 disk2 disk3
-###########################################
-
-
-After mdadm --create the superblocks are ok, but look a little bit
-strange (the failed device):
-
-dev_roles[i]: 0000 0001 0002 fffe 0003
-the disks have dev_num: 0,1,2,4
-
-But after --fail --remove --add=20
-dev_roles[i]: 0000 0001 fffe fffe 0003 0002
-but the disks still have dev_num: 0,1,2,4.
-Either loop2 must have disk_num=3D5 or dev_roles needs to be
-0,1,2,0xfffe,4.
-
-
-Greetings,
-           Roni
-
---OgqxwSJOaUobr8KG
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.3 (GNU/Linux)
-
-iD8DBQFEnpa+1AoV+KoUdT8RAu3ZAJ4qpO2JXAPCI7kvC349tOcb5S+uSQCfXo7C
-F9H9A/GQ4WYiyrjpv6vg3lI=
-=rcdC
------END PGP SIGNATURE-----
-
---OgqxwSJOaUobr8KG--
