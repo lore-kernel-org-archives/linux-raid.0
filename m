@@ -1,73 +1,35 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: Large single raid and XFS or two small ones and EXT3?
-Date: Mon, 26 Jun 2006 04:06:15 -0400 (EDT)
-Message-ID: <Pine.LNX.4.64.0606260405360.18299@p34.internal.lan>
-References: <449AEB7C.6040108@cjx.com> <op.tblclqd3cigqcu@apollo13>
- <fd8d0180606230226w10b1982ay2916805d9aa0e3bb@mail.gmail.com> <449BE381.6070000@cjx.com>
- <fd8d0180606230630x3f6b1ab7g444716cf8d5ab2c2@mail.gmail.com>
- <68c491a60606230746m5c1f0301g8e00fdd4f0e0739b@mail.gmail.com>
- <449C0505.8000601@tmr.com> <fd8d0180606230834t18427168jd776d33980f516b2@mail.gmail.com>
- <17564.52087.651968.635043@cse.unsw.edu.au> <Pine.LNX.4.64.0606240840100.10312@p34.internal.lan>
- <449F251B.1090805@tmr.com>
+From: Chris Allen <chris@cjx.com>
+Subject: Re: Multiple raids on one machine?
+Date: Mon, 26 Jun 2006 09:47:01 +0100
+Message-ID: <449F9F05.8030001@cjx.com>
+References: <449F100D.6030509@cjx.com> <Pine.LNX.4.56.0606260847470.370@lion.drogon.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <449F251B.1090805@tmr.com>
+In-Reply-To: <Pine.LNX.4.56.0606260847470.370@lion.drogon.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: Neil Brown <neilb@suse.de>, Francois Barre <francois.barre@gmail.com>, linux-raid@vger.kernel.org
+To: Gordon Henderson <gordon@drogon.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
 
-On Sun, 25 Jun 2006, Bill Davidsen wrote:
+Gordon Henderson wrote:
+> I use option 2 (above) all the time, and I've never noticed any
+> performance issues. (not issues with recovery after a power failure) I'd
+> like to think that on a modern processor the CPU can handle the parity,
+> etc. calculations several orders of magnitude faster than the hardware can
+> chug data to & from the drives, so all it's really adding is a tiny bit of
+> latency...
+>
+>   
 
-> Justin Piszcz wrote:
->
->> 
->> On Sat, 24 Jun 2006, Neil Brown wrote:
->> 
->>> On Friday June 23, francois.barre@gmail.com wrote:
->>> 
->>>>> The problem is that there is no cost effective backup available.
->>>> 
->>>> 
->>>> One-liner questions :
->>>> - How does Google make backups ?
->>> 
->>> 
->>> No, Google ARE the backups :-)
->>> 
->>>> - Aren't tapes dead yet ?
->>> 
->>> 
->>> LTO-3 does 300Gig, and LTO-4 is planned.
->>> They may not cope with tera-byte arrays in one hit, but they still
->>> have real value.
->>> 
->>>> - What about a NUMA principle applied to storage ?
->>> 
->>> 
->>> You mean an Hierarchical Storage Manager?  Yep, they exist.  I'm sure
->>> SGI, EMC and assorted other TLAs could sell you one.
->>> 
->> 
->> LTO3 is 400GB native and we've seen very good compression, so 800GB-1TB per 
->> tape. 
->
-> The problem is in small business use, LTO3 is costly in the 1-10TB range, and 
-> takes a lot of media changes as well. A TB of RAID-5 is ~$500, and at that 
-> small size the cost of drives and media is disproportionally high. Using more 
-> drives is cost effective, but they are not good for long term off site 
-> storage, because they're large and fragile.
->
-> No obvious solutions in that price and application range that I see.
->
-> -- 
-> bill davidsen <davidsen@tmr.com>
-> CTO TMR Associates, Inc
-> Doing interesting things with small computers since 1979
->
+Thanks for this, and for the very informed responses from other 
+subscribers. We have gone from
+100GB of storage in May 2000 (which lasted us over a year) to 50TB today 
+(which will last us
+three months), and a forecast of 200TB by this time next year! I'm 
+learning fast :-)
 
-In the 1-10TB range you are probably correct, as the numbers increase 
-however, many LTO2/LTO3 drives + robotics become justifiable.
+
