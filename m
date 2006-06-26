@@ -1,51 +1,21 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: [-mm patch] make variables static after klibc merge
-Date: Mon, 26 Jun 2006 22:56:29 +0200
-Message-ID: <20060626205629.GE23314@stusta.de>
+From: Andre Tomt <andre@tomt.net>
+Subject: Re: Bug in 2.6.17 / mdadm 2.5.1
+Date: Mon, 26 Jun 2006 23:24:48 +0200
+Message-ID: <44A050A0.7010400@tomt.net>
+References: <20060624104745.GA6352@defiant.crash>	<20060625135926.GA6253@defiant.crash> <17567.13099.133933.397389@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-raid-owner@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>, hpa@zytor.com
-Cc: linux-kernel@vger.kernel.org, mingo@redhat.com, neilb@cse.unsw.edu.au, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S933067AbWFZVYu@vger.kernel.org>
+In-Reply-To: <17567.13099.133933.397389@cse.unsw.edu.au>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: Ronald Lembcke <es186@fen-net.de>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-We can now make the following variables static:
-- drivers/md/md.c: mdp_major
-- init/main.c: envp_init[]
+Neil Brown wrote:
+<snip>
+> Alternately you can apply the following patch to the kernel and
+> version-1 superblocks should work better.
 
-Signed-off-by: Adrian Bunk <bunk@stusta.de>
-
----
-
-This patch was already sent on:
-- 16 May 2006
-
- drivers/md/md.c |    2 +-
- init/main.c     |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
-
---- linux-2.6.17-rc4-mm1-full/drivers/md/md.c.old	2006-05-16 12:49:59.000000000 +0200
-+++ linux-2.6.17-rc4-mm1-full/drivers/md/md.c	2006-05-16 12:50:17.000000000 +0200
-@@ -2563,7 +2563,7 @@
- 	.default_attrs	= md_default_attrs,
- };
- 
--int mdp_major = 0;
-+static int mdp_major = 0;
- 
- static struct kobject *md_probe(dev_t dev, int *part, void *data)
- {
---- linux-2.6.17-rc4-mm1-full/init/main.c.old	2006-05-16 13:20:22.000000000 +0200
-+++ linux-2.6.17-rc4-mm1-full/init/main.c	2006-05-16 13:20:43.000000000 +0200
-@@ -161,7 +161,7 @@
- __setup("maxcpus=", maxcpus);
- 
- static char * argv_init[MAX_INIT_ARGS+2] = { "init", NULL, };
--char * envp_init[MAX_INIT_ENVS+2] = { "HOME=/", "TERM=linux", NULL, };
-+static char * envp_init[MAX_INIT_ENVS+2] = { "HOME=/", "TERM=linux", NULL, };
- static const char *panic_later, *panic_param;
- 
- extern struct obs_kernel_param __setup_start[], __setup_end[];
-
+-stable material?
