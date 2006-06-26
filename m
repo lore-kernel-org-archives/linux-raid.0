@@ -1,92 +1,69 @@
-From: Adam Talbot <talbotx@comcast.net>
-Subject: Re: Large single raid and XFS or two small ones and EXT3?
-Date: Sun, 25 Jun 2006 17:42:40 -0700
-Message-ID: <449F2D80.6080100@comcast.net>
-References: <449AEB7C.6040108@cjx.com>	<op.tblclqd3cigqcu@apollo13>	<fd8d0180606230226w10b1982ay2916805d9aa0e3bb@mail.gmail.com>	<449BE381.6070000@cjx.com>	<fd8d0180606230630x3f6b1ab7g444716cf8d5ab2c2@mail.gmail.com>	<68c491a60606230746m5c1f0301g8e00fdd4f0e0739b@mail.gmail.com>	<449C0505.8000601@tmr.com>	<fd8d0180606230834t18427168jd776d33980f516b2@mail.gmail.com> <17564.52087.651968.635043@cse.unsw.edu.au> <449CF0D0.9080006@comcast.net> <449F22D7.2090604@tmr.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: Bug in 2.6.17 / mdadm 2.5.1
+Date: Mon, 26 Jun 2006 11:06:51 +1000
+Message-ID: <17567.13099.133933.397389@cse.unsw.edu.au>
+References: <20060624104745.GA6352@defiant.crash>
+	<20060625135926.GA6253@defiant.crash>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <449F22D7.2090604@tmr.com>
+In-Reply-To: message from Ronald Lembcke on Sunday June 25
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: Neil Brown <neilb@suse.de>, Francois Barre <francois.barre@gmail.com>, linux-raid@vger.kernel.org
+To: Ronald Lembcke <es186@fen-net.de>
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Not exactly sure how to tune for stripe size. 
-What would you advise?
--Adam
+On Sunday June 25, es186@fen-net.de wrote:
+> Hi!
+> 
+> There's a bug in Kernel 2.6.17 and / or mdadm which prevents (re)adding
+> a disk to a degraded RAID5-Array.
 
+Thank you for the detailed report.
+The bug is in the md driver in the kernel (not in mdadm), and only
+affects version-1 superblocks.  Debian recently changed the default
+(in /etc/mdadm.conf) to use version-1 superblocks which I thought
+would be OK (I've some testing) but obviously I missed something. :-(
 
-Bill Davidsen wrote:
-> winspeareAdam Talbot wrote:
->
->> OK, this topic I relay need to get in on.
->> I have spent the last few week bench marking my new 1.2TB, 6 disk, RAID6
->> array. I wanted real numbers, not "This FS is faster because..." I have
->> moved over 100TB of data on my new array running the bench mark
->> testing.  I have yet to have any major problems with ReiserFS, EXT2/3,
->> JFS, or XFS.  I have done extensive testing on all, including just
->> trying to break the file system with billions of 1k files, or a 1TB
->> file. Was able to cause some problems with EXT3 and RiserFS with the 1KB
->> and 1TB tests, respectively. but both were fixed with a fsck. My basic
->> test is to move all data from my old server to my new server
->> (whitequeen2) and clock the transfer time.  Whitequeen2 has very little
->> storage.  The NAS's 1.2TB of storage is attached via iSCSI and a cross
->> over cable to the back of whitequeen2.  The data is 100GB of user's
->> files(1KB~2MB), 50GB of MP3's (1MB~5MB) and the rest is movies and
->> system backups 600MB~2GB.  Here is a copy of my current data sheet,
->> including specs on the servers and copy times, my numbers are not
->> perfect, but they should give you a clue about speeds...  XFS wins.
->>  
->>
->
-> In many (most?) cases I'm a lot more concerned about filesystem
-> stability than performance. That is, I want the fastest <reliable>
-> filesystem. With ext2 and ext3 I've run multiple multi-TB machines
-> spread over four time zones, and not had a f/s problem updating ~1TB/day.
->
->> The computer: whitequeen2
->> AMD Athlon64 3200 (2.0GHz)
->> 1GB Corsair DDR 400 (2X 512MB's running in dual DDR mode)
->> Foxconn 6150K8MA-8EKRS motherboard
->> Off brand case/power supply
->> 2X os disks, software raid array, RAID 1, Maxtor 51369U3, FW DA620CQ0
->> Intel pro/1000 NIC
->> CentOS 4.3 X86_64 2.6.9
->>    Main app server, Apache, Samba, NFS, NIS
->>
->> The computer: nas
->> AMD Athlon64 3000 (1.8GHz)
->> 256MB Corsair DDR 400 (2X 128MB's running in dual DDR mode)
->> Foxconn 6150K8MA-8EKRS motherboard
->> Off brand case/power supply and drive cages
->> 2X os disks, software raid array, RAID 1, Maxtor 51369U3, FW DA620CQ0
->> 6X software raid array, RAID 6, Maxtor 7V300F0, FW VA111900
->> Gentoo linux. X86_64 2.6.16-gentoo-r9
->>   System built very lite, only built as an iSCSI based NAS.
->>
->> EXT3
->> Config=APP+NFS-->NAS+iSCSI
->> RAID6 64K chunk
->> [root@whitequeen2 tmp]# time tar cf - . | (cd /data ; tar xf - )
->> real    371m29.802s
->> user    1m28.492s
->> sys     46m48.947s
->> /dev/sdb1             1.1T  371G  674G  36% /data
->> 6.192 hours @ 61,262M/hour or 1021M/min or 17.02M/sec
->>
->>
->> EXT2
->> Config=APP+NFS-->NAS+iSCSI
->> RAID6 64K chunk
->> [root@whitequeen2 tmp]# time tar cf - . | ( cd /data/ ; tar xf - )
->> real    401m48.702s
->> user    1m25.599s
->> sys     30m22.620s
->> /dev/sdb1             1.1T  371G  674G  36% /data
->> 6.692 hours @ 56,684M/hour or 945M/min or 15.75M/sec
->>
-> Did you tune the extN filesystems to the stripe size of the raid?
->
+If you remove the "metadata=1" (or whatever it is) from
+/etc/mdadm/mdadm.conf and then create the array, it will be created
+with a version-0.90 superblock has had more testing.
 
+Alternately you can apply the following patch to the kernel and
+version-1 superblocks should work better.
+
+NeilBrown
+
+-------------------------------------------------
+Set desc_nr correctly for version-1 superblocks.
+
+This has to be done in ->load_super, not ->validate_super
+
+### Diffstat output
+ ./drivers/md/md.c |    6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff .prev/drivers/md/md.c ./drivers/md/md.c
+--- .prev/drivers/md/md.c	2006-06-26 11:02:43.000000000 +1000
++++ ./drivers/md/md.c	2006-06-26 11:02:46.000000000 +1000
+@@ -1057,6 +1057,11 @@ static int super_1_load(mdk_rdev_t *rdev
+ 	if (rdev->sb_size & bmask)
+ 		rdev-> sb_size = (rdev->sb_size | bmask)+1;
+ 
++	if (sb->level == cpu_to_le32(LEVEL_MULTIPATH))
++		rdev->desc_nr = -1;
++	else
++		rdev->desc_nr = le32_to_cpu(sb->dev_number);
++
+ 	if (refdev == 0)
+ 		ret = 1;
+ 	else {
+@@ -1165,7 +1170,6 @@ static int super_1_validate(mddev_t *mdd
+ 
+ 	if (mddev->level != LEVEL_MULTIPATH) {
+ 		int role;
+-		rdev->desc_nr = le32_to_cpu(sb->dev_number);
+ 		role = le16_to_cpu(sb->dev_roles[rdev->desc_nr]);
+ 		switch(role) {
+ 		case 0xffff: /* spare */
