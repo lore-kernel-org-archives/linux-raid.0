@@ -1,87 +1,59 @@
 From: Bill Davidsen <davidsen@tmr.com>
 Subject: Re: Large single raid and XFS or two small ones and EXT3?
-Date: Sun, 25 Jun 2006 19:57:11 -0400
-Message-ID: <449F22D7.2090604@tmr.com>
-References: <449AEB7C.6040108@cjx.com>	<op.tblclqd3cigqcu@apollo13>	<fd8d0180606230226w10b1982ay2916805d9aa0e3bb@mail.gmail.com>	<449BE381.6070000@cjx.com>	<fd8d0180606230630x3f6b1ab7g444716cf8d5ab2c2@mail.gmail.com>	<68c491a60606230746m5c1f0301g8e00fdd4f0e0739b@mail.gmail.com>	<449C0505.8000601@tmr.com>	<fd8d0180606230834t18427168jd776d33980f516b2@mail.gmail.com> <17564.52087.651968.635043@cse.unsw.edu.au> <449CF0D0.9080006@comcast.net>
+Date: Sun, 25 Jun 2006 20:06:51 -0400
+Message-ID: <449F251B.1090805@tmr.com>
+References: <449AEB7C.6040108@cjx.com> <op.tblclqd3cigqcu@apollo13> <fd8d0180606230226w10b1982ay2916805d9aa0e3bb@mail.gmail.com> <449BE381.6070000@cjx.com> <fd8d0180606230630x3f6b1ab7g444716cf8d5ab2c2@mail.gmail.com> <68c491a60606230746m5c1f0301g8e00fdd4f0e0739b@mail.gmail.com> <449C0505.8000601@tmr.com> <fd8d0180606230834t18427168jd776d33980f516b2@mail.gmail.com> <17564.52087.651968.635043@cse.unsw.edu.au> <Pine.LNX.4.64.0606240840100.10312@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <449CF0D0.9080006@comcast.net>
+In-Reply-To: <Pine.LNX.4.64.0606240840100.10312@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: Adam Talbot <talbotx@comcast.net>
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
 Cc: Neil Brown <neilb@suse.de>, Francois Barre <francois.barre@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-winspeareAdam Talbot wrote:
+Justin Piszcz wrote:
 
->OK, this topic I relay need to get in on.
->I have spent the last few week bench marking my new 1.2TB, 6 disk, RAID6
->array. I wanted real numbers, not "This FS is faster because..." I have
->moved over 100TB of data on my new array running the bench mark
->testing.  I have yet to have any major problems with ReiserFS, EXT2/3,
->JFS, or XFS.  I have done extensive testing on all, including just
->trying to break the file system with billions of 1k files, or a 1TB
->file. Was able to cause some problems with EXT3 and RiserFS with the 1KB
->and 1TB tests, respectively. but both were fixed with a fsck. My basic
->test is to move all data from my old server to my new server
->(whitequeen2) and clock the transfer time.  Whitequeen2 has very little
->storage.  The NAS's 1.2TB of storage is attached via iSCSI and a cross
->over cable to the back of whitequeen2.  The data is 100GB of user's
->files(1KB~2MB), 50GB of MP3's (1MB~5MB) and the rest is movies and
->system backups 600MB~2GB.  Here is a copy of my current data sheet,
->including specs on the servers and copy times, my numbers are not
->perfect, but they should give you a clue about speeds...  XFS wins.
->  
 >
+> On Sat, 24 Jun 2006, Neil Brown wrote:
+>
+>> On Friday June 23, francois.barre@gmail.com wrote:
+>>
+>>>> The problem is that there is no cost effective backup available.
+>>>
+>>>
+>>> One-liner questions :
+>>> - How does Google make backups ?
+>>
+>>
+>> No, Google ARE the backups :-)
+>>
+>>> - Aren't tapes dead yet ?
+>>
+>>
+>> LTO-3 does 300Gig, and LTO-4 is planned.
+>> They may not cope with tera-byte arrays in one hit, but they still
+>> have real value.
+>>
+>>> - What about a NUMA principle applied to storage ?
+>>
+>>
+>> You mean an Hierarchical Storage Manager?  Yep, they exist.  I'm sure
+>> SGI, EMC and assorted other TLAs could sell you one.
+>>
+>
+> LTO3 is 400GB native and we've seen very good compression, so 
+> 800GB-1TB per tape. 
 
-In many (most?) cases I'm a lot more concerned about filesystem 
-stability than performance. That is, I want the fastest <reliable> 
-filesystem. With ext2 and ext3 I've run multiple multi-TB machines 
-spread over four time zones, and not had a f/s problem updating ~1TB/day.
+The problem is in small business use, LTO3 is costly in the 1-10TB 
+range, and takes a lot of media changes as well. A TB of RAID-5 is 
+~$500, and at that small size the cost of drives and media is 
+disproportionally high. Using more drives is cost effective, but they 
+are not good for long term off site storage, because they're large and 
+fragile.
 
->The computer: whitequeen2
->AMD Athlon64 3200 (2.0GHz)
->1GB Corsair DDR 400 (2X 512MB's running in dual DDR mode)
->Foxconn 6150K8MA-8EKRS motherboard
->Off brand case/power supply
->2X os disks, software raid array, RAID 1, Maxtor 51369U3, FW DA620CQ0
->Intel pro/1000 NIC
->CentOS 4.3 X86_64 2.6.9
->    Main app server, Apache, Samba, NFS, NIS
->
->The computer: nas
->AMD Athlon64 3000 (1.8GHz)
->256MB Corsair DDR 400 (2X 128MB's running in dual DDR mode)
->Foxconn 6150K8MA-8EKRS motherboard
->Off brand case/power supply and drive cages
->2X os disks, software raid array, RAID 1, Maxtor 51369U3, FW DA620CQ0
->6X software raid array, RAID 6, Maxtor 7V300F0, FW VA111900
->Gentoo linux. X86_64 2.6.16-gentoo-r9
->   System built very lite, only built as an iSCSI based NAS.
->
->EXT3
->Config=APP+NFS-->NAS+iSCSI
->RAID6 64K chunk
->[root@whitequeen2 tmp]# time tar cf - . | (cd /data ; tar xf - )
->real    371m29.802s
->user    1m28.492s
->sys     46m48.947s
->/dev/sdb1             1.1T  371G  674G  36% /data
->6.192 hours @ 61,262M/hour or 1021M/min or 17.02M/sec
->
->
->EXT2
->Config=APP+NFS-->NAS+iSCSI
->RAID6 64K chunk
->[root@whitequeen2 tmp]# time tar cf - . | ( cd /data/ ; tar xf - )
->real    401m48.702s
->user    1m25.599s
->sys     30m22.620s
->/dev/sdb1             1.1T  371G  674G  36% /data
->6.692 hours @ 56,684M/hour or 945M/min or 15.75M/sec
->
-Did you tune the extN filesystems to the stripe size of the raid?
+No obvious solutions in that price and application range that I see.
 
 -- 
 bill davidsen <davidsen@tmr.com>
