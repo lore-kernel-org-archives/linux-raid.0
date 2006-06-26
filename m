@@ -1,48 +1,152 @@
-From: "Christian Pernegger" <pernegger@gmail.com>
-Subject: Re: Is shrinking raid5 possible?
-Date: Mon, 26 Jun 2006 13:33:46 +0200
-Message-ID: <bb145bd20606260433w2bafccfdu3448732f5b5c1c5f@mail.gmail.com>
-References: <44960C45.9050407@anu.edu.au>
-	 <17558.10906.59066.196870@cse.unsw.edu.au> <449B3A80.4070602@tmr.com>
-	 <17563.17224.85968.572754@cse.unsw.edu.au>
-	 <bb145bd20606231116g7808e467w29a9bf273ba0df52@mail.gmail.com>
-	 <17567.36792.303403.35943@cse.unsw.edu.au>
+From: Dimitris Zilaskos <dzila@tassadar.physics.auth.gr>
+Subject: Re: recover data from linear raid
+Date: Mon, 26 Jun 2006 16:48:10 +0300 (EEST)
+Message-ID: <Pine.LNX.4.64.0606261640330.16450@tassadar.physics.auth.gr>
+References: <Pine.LNX.4.64.0606242233000.32322@tassadar.physics.auth.gr>
+	<17566.13544.15613.709664@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17567.36792.303403.35943@cse.unsw.edu.au>
-Content-Disposition: inline
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Return-path: <ext3-users-bounces@redhat.com>
+In-Reply-To: <17566.13544.15613.709664@cse.unsw.edu.au>
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/ext3-users>,
+	<mailto:ext3-users-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/ext3-users>
+List-Post: <mailto:ext3-users@redhat.com>
+List-Help: <mailto:ext3-users-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/ext3-users>,
+	<mailto:ext3-users-request@redhat.com?subject=subscribe>
+Sender: ext3-users-bounces@redhat.com
+Errors-To: ext3-users-bounces@redhat.com
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org, ext3-users@redhat.com
 List-Id: linux-raid.ids
 
-> This is shrinking an array by removing drives.  We were talking about
-> shrinking an array by reducing the size of drives - a very different
-> think.
+>
+> As Christian said, specific error message help a lot.
+> Assume the two devices are hdc and hde,
+>
+>  fdisk -l /dev/hdc
+>  fdisk -l /dev/hde
+>  mdadm -E /dev/hdc
+>  mdadm -E /dev/hde
+>
+> and my best guess
+>
+>   mdadm --build /dev/md0 --level linear --raid-disks 2 /dev/hdc /dev/hde
+>   fsck -n /dev/md0
+>
+> (and linux-raid@vger.kernel.org might be a better mailing list for
+> this particular sort of problem).
 
-Yes I know - I just wanted to get this in as an alternative shrinking semantic.
+Disk /dev/hdb: 250.0 GB, 250059350016 bytes
+255 heads, 63 sectors/track, 30401 cylinders
+Units = cylinders of 16065 * 512 = 8225280 bytes
 
-As for reducing the RAID (partition) size on the individual drives I
-can only see two reasons:
+    Device Boot    Start       End    Blocks   Id  System
+[root@node004 root]# fdisk -l /dev/hdc
 
-1) One wants to replace / add a disk but the new disk is slightly
-smaller than the existing ones. Actual capacity varies a lot for the
-same nominal capacity, especially across brands.
+Disk /dev/hdc: 300.0 GB, 300090728448 bytes
+255 heads, 63 sectors/track, 36483 cylinders
+Units = cylinders of 16065 * 512 = 8225280 bytes
 
-2) One wants to do something else with some of the space, although for
-a RAID5 I don't quite see the point - you'd end up with n small
-partitions. Shrinking a 2-way mirror or stripe this way sounds far
-more useful.
+    Device Boot    Start       End    Blocks   Id  System
+[root@node004 root]# mdadm -E /dev/hdb
+/dev/hdb:
+           Magic : a92b4efc
+         Version : 00.90.00
+            UUID : 293be3e8:5a7ac6e7:adefc469:84f8aefb
+   Creation Time : Fri Jun 23 15:47:10 2006
+      Raid Level : linear
+     Device Size : 244198464 (232.89 GiB 250.06 GB)
+    Raid Devices : 2
+   Total Devices : 2
+Preferred Minor : 0
 
-Having RAID tightly integrated with volume management and partitions
-would be nice, but that's a pipe dream. (EVMS just integrates the UI
-somewhat, you still have to mess about with layers.)
+     Update Time : Fri Jun 23 15:48:43 2006
+           State : clean, no-errors
+  Active Devices : 2
+Working Devices : 2
+  Failed Devices : 0
+   Spare Devices : 0
+        Checksum : f790e07f - correct
+          Events : 0.2
 
-> I'm not sure it is really worth the effort I'm afraid.
+        Rounding : 32K
 
-Neither am I ... it just would have come in handy a few times, that's all.
+       Number   Major   Minor   RaidDevice State
+this     0       3       64        0      active sync   /dev/hdb
+    0     0       3       64        0      active sync   /dev/hdb
+    1     1      22        0        1      active sync   /dev/hdc
+[root@node004 root]# mdadm -E /dev/hdc
+/dev/hdc:
+           Magic : a92b4efc
+         Version : 00.90.00
+            UUID : 293be3e8:5a7ac6e7:adefc469:84f8aefb
+   Creation Time : Fri Jun 23 15:47:10 2006
+      Raid Level : linear
+     Device Size : 244198464 (232.89 GiB 250.06 GB)
+    Raid Devices : 2
+   Total Devices : 2
+Preferred Minor : 0
 
-Thanks,
+     Update Time : Fri Jun 23 15:48:43 2006
+           State : clean, no-errors
+  Active Devices : 2
+Working Devices : 2
+  Failed Devices : 0
+   Spare Devices : 0
+        Checksum : f790e054 - correct
+          Events : 0.2
 
-C.
+        Rounding : 32K
+
+       Number   Major   Minor   RaidDevice State
+this     1      22        0        1      active sync   /dev/hdc
+    0     0       3       64        0      active sync   /dev/hdb
+    1     1      22        0        1      active sync   /dev/hdc
+[root@node004 root]# mdadm --build /dev/md0 --level linear --raid-disks 2 
+/dev/hdb /dev/hdc
+mdadm: array /dev/md0 built and started.
+
+fsck -n /dev/md0
+fsck 1.32 (09-Nov-2002)
+e2fsck 1.32 (09-Nov-2002)
+Couldn't find ext2 superblock, trying backup blocks...
+fsck.ext2: Bad magic number in super-block while trying to open /dev/md0
+
+The superblock could not be read or does not describe a correct ext2
+filesystem.  If the device is valid and it really contains an ext2
+filesystem (and not swap or ufs or something else), then the superblock
+is corrupt, and you might try running e2fsck with an alternate superblock:
+     e2fsck -b 8193 <device>
+
+fsck -b 8193 /dev/md0
+fsck 1.32 (09-Nov-2002)
+e2fsck 1.32 (09-Nov-2002)
+fsck.ext2: Bad magic number in super-block while trying to open /dev/md0
+
+The superblock could not be read or does not describe a correct ext2
+filesystem.  If the device is valid and it really contains an ext2
+filesystem (and not swap or ufs or something else), then the superblock
+is corrupt, and you might try running e2fsck with an alternate superblock:
+     e2fsck -b 8193 <device>
+
+
+ 	During a recovery attemp today by mistake I created a mirror array 
+with hdb as the primary and hdc as the secondary. I interrupted the array 
+creation almost immediately, but part of the hdc was overwritten. However 
+the array never held more than 70 gbytes of data, so I hope everything is 
+intact on hdb :/
+
+
+ 	Thank you all for your kind help:)
+--
+============================================================================
+
+Dimitris Zilaskos
+
+Department of Physics @ Aristotle University of Thessaloniki , Greece
+PGP key : http://tassadar.physics.auth.gr/~dzila/pgp_public_key.asc
+ 	  http://egnatia.ee.auth.gr/~dzila/pgp_public_key.asc
+MD5sum  : de2bd8f73d545f0e4caf3096894ad83f  pgp_public_key.asc
+============================================================================
