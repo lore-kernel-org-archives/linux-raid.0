@@ -1,47 +1,211 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: IBM xSeries stop responding during RAID1 reconstruction
-Date: Mon, 26 Jun 2006 10:52:52 -0400
-Message-ID: <449FF4C4.2050700@tmr.com>
-References: <20060614085354.GA18106@rigacci.org> <44902F41.8030300@rcn.com> <20060619150556.GQ11429@boogie.lpds.sztaki.hu> <20060620130859.GA15394@rigacci.org> <20060620132753.GI22404@boogie.lpds.sztaki.hu> <Pine.LNX.4.64.0606200757300.30567@filesrv1.baby-dragons.com>
+From: Dimitris Zilaskos <dzila@tassadar.physics.auth.gr>
+Subject: Re: recover data from linear raid
+Date: Mon, 26 Jun 2006 18:21:44 +0300 (EEST)
+Message-ID: <Pine.LNX.4.64.0606261818510.18573@tassadar.physics.auth.gr>
+References: <Pine.LNX.4.64.0606242233000.32322@tassadar.physics.auth.gr>
+	<17566.13544.15613.709664@cse.unsw.edu.au>
+	<Pine.LNX.4.64.0606261640330.16450@tassadar.physics.auth.gr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0606200757300.30567@filesrv1.baby-dragons.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
-Cc: Gabor Gombas <gombasg@sztaki.hu>, linux-raid maillist <linux-raid@vger.kernel.org>
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Return-path: <ext3-users-bounces@redhat.com>
+In-Reply-To: <Pine.LNX.4.64.0606261640330.16450@tassadar.physics.auth.gr>
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/ext3-users>,
+	<mailto:ext3-users-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/ext3-users>
+List-Post: <mailto:ext3-users@redhat.com>
+List-Help: <mailto:ext3-users-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/ext3-users>,
+	<mailto:ext3-users-request@redhat.com?subject=subscribe>
+Sender: ext3-users-bounces@redhat.com
+Errors-To: ext3-users-bounces@redhat.com
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org, ext3-users@redhat.com
 List-Id: linux-raid.ids
 
-Mr. James W. Laferriere wrote:
 
->     Hello Gabor ,
->
-> On Tue, 20 Jun 2006, Gabor Gombas wrote:
->
->> On Tue, Jun 20, 2006 at 03:08:59PM +0200, Niccolo Rigacci wrote:
+ 	I managed to get the hard disk of the retired system and this is 
+its raid-related boot log:
+
+md: Autodetecting RAID arrays.
+  [events: 0000004d]
+  [events: 0000004d]
+md: autorun ...
+md: considering hdb1 ...
+md:  adding hdb1 ...
+md:  adding hdc1 ...
+md: created md0
+md: bind<hdc1,1>
+md: bind<hdb1,2>
+md: running: <hdb1><hdc1>
+md: hdb1's event counter: 0000004d
+md: hdc1's event counter: 0000004d
+md0: max total readahead window set to 512k
+md0: 2 data-disks, max readahead per data-disk: 256k
+raid0: looking at hdb1
+raid0:   comparing hdb1(244195904) with hdb1(244195904)
+raid0:   END
+raid0:   ==> UNIQUE
+raid0: 1 zones
+raid0: looking at hdc1
+raid0:   comparing hdc1(293049600) with hdb1(244195904)
+raid0:   NOT EQUAL
+raid0:   comparing hdc1(293049600) with hdc1(293049600)
+raid0:   END
+raid0:   ==> UNIQUE
+raid0: 2 zones
+raid0: FINAL 2 zones
+raid0: zone 0
+raid0: checking hdb1 ... contained as device 0
+   (244195904) is smallest!.
+raid0: checking hdc1 ... contained as device 1
+raid0: zone->nb_dev: 2, size: 488391808
+raid0: current zone offset: 244195904
+raid0: zone 1
+raid0: checking hdb1 ... nope.
+raid0: checking hdc1 ... contained as device 0
+   (293049600) is smallest!.
+raid0: zone->nb_dev: 1, size: 48853696
+raid0: current zone offset: 293049600
+raid0: done.
+raid0 : md_size is 537245504 blocks.
+raid0 : conf->smallest->size is 48853696 blocks.
+raid0 : nb_zone is 11.
+raid0 : Allocating 88 bytes for hash.
+md: ... autorun DONE.
+
+
+>> 
+>> As Christian said, specific error message help a lot.
+>> Assume the two devices are hdc and hde,
 >>
->>> Do you know if it is possible to switch the scheduler at runtime?
+>>  fdisk -l /dev/hdc
+>>  fdisk -l /dev/hde
+>>  mdadm -E /dev/hdc
+>>  mdadm -E /dev/hde
+>> 
+>> and my best guess
 >>
->> echo cfq > /sys/block/<disk>/queue/scheduler
+>>   mdadm --build /dev/md0 --level linear --raid-disks 2 /dev/hdc /dev/hde
+>>   fsck -n /dev/md0
+>> 
+>> (and linux-raid@vger.kernel.org might be a better mailing list for
+>> this particular sort of problem).
+>
+> Disk /dev/hdb: 250.0 GB, 250059350016 bytes
+> 255 heads, 63 sectors/track, 30401 cylinders
+> Units = cylinders of 16065 * 512 = 8225280 bytes
+>
+>   Device Boot    Start       End    Blocks   Id  System
+> [root@node004 root]# fdisk -l /dev/hdc
+>
+> Disk /dev/hdc: 300.0 GB, 300090728448 bytes
+> 255 heads, 63 sectors/track, 36483 cylinders
+> Units = cylinders of 16065 * 512 = 8225280 bytes
+>
+>   Device Boot    Start       End    Blocks   Id  System
+> [root@node004 root]# mdadm -E /dev/hdb
+> /dev/hdb:
+>          Magic : a92b4efc
+>        Version : 00.90.00
+>           UUID : 293be3e8:5a7ac6e7:adefc469:84f8aefb
+>  Creation Time : Fri Jun 23 15:47:10 2006
+>     Raid Level : linear
+>    Device Size : 244198464 (232.89 GiB 250.06 GB)
+>   Raid Devices : 2
+>  Total Devices : 2
+> Preferred Minor : 0
+>
+>    Update Time : Fri Jun 23 15:48:43 2006
+>          State : clean, no-errors
+> Active Devices : 2
+> Working Devices : 2
+> Failed Devices : 0
+>  Spare Devices : 0
+>       Checksum : f790e07f - correct
+>         Events : 0.2
+>
+>       Rounding : 32K
+>
+>      Number   Major   Minor   RaidDevice State
+> this     0       3       64        0      active sync   /dev/hdb
+>   0     0       3       64        0      active sync   /dev/hdb
+>   1     1      22        0        1      active sync   /dev/hdc
+> [root@node004 root]# mdadm -E /dev/hdc
+> /dev/hdc:
+>          Magic : a92b4efc
+>        Version : 00.90.00
+>           UUID : 293be3e8:5a7ac6e7:adefc469:84f8aefb
+>  Creation Time : Fri Jun 23 15:47:10 2006
+>     Raid Level : linear
+>    Device Size : 244198464 (232.89 GiB 250.06 GB)
+>   Raid Devices : 2
+>  Total Devices : 2
+> Preferred Minor : 0
+>
+>    Update Time : Fri Jun 23 15:48:43 2006
+>          State : clean, no-errors
+> Active Devices : 2
+> Working Devices : 2
+> Failed Devices : 0
+>  Spare Devices : 0
+>       Checksum : f790e054 - correct
+>         Events : 0.2
+>
+>       Rounding : 32K
+>
+>      Number   Major   Minor   RaidDevice State
+> this     1      22        0        1      active sync   /dev/hdc
+>   0     0       3       64        0      active sync   /dev/hdb
+>   1     1      22        0        1      active sync   /dev/hdc
+> [root@node004 root]# mdadm --build /dev/md0 --level linear --raid-disks 2 
+> /dev/hdb /dev/hdc
+> mdadm: array /dev/md0 built and started.
+>
+> fsck -n /dev/md0
+> fsck 1.32 (09-Nov-2002)
+> e2fsck 1.32 (09-Nov-2002)
+> Couldn't find ext2 superblock, trying backup blocks...
+> fsck.ext2: Bad magic number in super-block while trying to open /dev/md0
+>
+> The superblock could not be read or does not describe a correct ext2
+> filesystem.  If the device is valid and it really contains an ext2
+> filesystem (and not swap or ufs or something else), then the superblock
+> is corrupt, and you might try running e2fsck with an alternate superblock:
+>    e2fsck -b 8193 <device>
+>
+> fsck -b 8193 /dev/md0
+> fsck 1.32 (09-Nov-2002)
+> e2fsck 1.32 (09-Nov-2002)
+> fsck.ext2: Bad magic number in super-block while trying to open /dev/md0
+>
+> The superblock could not be read or does not describe a correct ext2
+> filesystem.  If the device is valid and it really contains an ext2
+> filesystem (and not swap or ufs or something else), then the superblock
+> is corrupt, and you might try running e2fsck with an alternate superblock:
+>    e2fsck -b 8193 <device>
 >
 >
->     At least one can do a ls of the /sys/block area & then do an 
-> automated
->     echo cfq down the tree .  Does anyone know of a method to set a 
-> default
->     scheduler ?  Scanning down a list or manually maintaining a list 
-> seems
->     to be a bug in the waiting .  Tia ,  JimL
-
-Thought I posted this... it can be set in kernel build or on the bloot 
-parameters from grub/lilo.
-
-2nd thought: set it to cfq by default, then at the END of rc.local, if 
-there are no arrays rebuilding, change to something else if you like.
-
--- 
-bill davidsen <davidsen@tmr.com>
-  CTO TMR Associates, Inc
-  Doing interesting things with small computers since 1979
-
+> 	During a recovery attemp today by mistake I created a mirror array 
+> with hdb as the primary and hdc as the secondary. I interrupted the array 
+> creation almost immediately, but part of the hdc was overwritten. However the 
+> array never held more than 70 gbytes of data, so I hope everything is intact 
+> on hdb :/
+>
+>
+> 	Thank you all for your kind help:)
+> --
+> ============================================================================
+>
+> Dimitris Zilaskos
+>
+> Department of Physics @ Aristotle University of Thessaloniki , Greece
+> PGP key : http://tassadar.physics.auth.gr/~dzila/pgp_public_key.asc
+> 	  http://egnatia.ee.auth.gr/~dzila/pgp_public_key.asc
+> MD5sum  : de2bd8f73d545f0e4caf3096894ad83f  pgp_public_key.asc
+> ============================================================================
+>
+> _______________________________________________
+> Ext3-users mailing list
+> Ext3-users@redhat.com
+> https://www.redhat.com/mailman/listinfo/ext3-users
+>
