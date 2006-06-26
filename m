@@ -1,60 +1,44 @@
 From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: RAID5 degraded after mdadm -S, mdadm --assemble (everytime)
-Date: Mon, 26 Jun 2006 10:20:45 -0400
-Message-ID: <449FED3D.8060709@tmr.com>
-References: <20060624104745.GA6352@defiant.crash>
+Subject: Re: IBM xSeries stop responding during RAID1 reconstruction
+Date: Mon, 26 Jun 2006 10:52:52 -0400
+Message-ID: <449FF4C4.2050700@tmr.com>
+References: <20060614085354.GA18106@rigacci.org> <44902F41.8030300@rcn.com> <20060619150556.GQ11429@boogie.lpds.sztaki.hu> <20060620130859.GA15394@rigacci.org> <20060620132753.GI22404@boogie.lpds.sztaki.hu> <Pine.LNX.4.64.0606200757300.30567@filesrv1.baby-dragons.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20060624104745.GA6352@defiant.crash>
+In-Reply-To: <Pine.LNX.4.64.0606200757300.30567@filesrv1.baby-dragons.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Ronald Lembcke <es186@fen-net.de>
-Cc: linux-raid@vger.kernel.org
+To: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
+Cc: Gabor Gombas <gombasg@sztaki.hu>, linux-raid maillist <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Ronald Lembcke wrote:
+Mr. James W. Laferriere wrote:
 
->Hi!
+>     Hello Gabor ,
 >
->I set up a RAID5 array of 4 disks. I initially created a degraded array
->and added the fourth disk (sda1) later.
+> On Tue, 20 Jun 2006, Gabor Gombas wrote:
 >
->The array is "clean", but when I do  
->  mdadm -S /dev/md0 
->  mdadm --assemble /dev/md0 /dev/sd[abcd]1
->it won't start. It always says sda1 is "failed".
->
->When I remove sda1 and add it again everything seems to be fine until I
->stop the array. 
->
->Below is the output of /proc/mdstat, mdadm -D -Q, mdadm -E and a piece of the
->kernel log.
->The output of mdadm -E looks strange for /dev/sd[bcd]1, saying "1 failed".
->
->What can I do about this?
->How could this happen? I mixed up the syntax when adding the fourth disk and
->tried these two commands (at least one didn't yield an error message):
->mdadm --manage -a /dev/md0 /dev/sda1
->mdadm --manage -a /dev/sda1 /dev/md0
+>> On Tue, Jun 20, 2006 at 03:08:59PM +0200, Niccolo Rigacci wrote:
+>>
+>>> Do you know if it is possible to switch the scheduler at runtime?
+>>
+>> echo cfq > /sys/block/<disk>/queue/scheduler
 >
 >
->Thanks in advance ...
->                      Roni
->
->
->
->ganges:~# cat /proc/mdstat 
->Personalities : [raid5] [raid4] 
->md0 : active raid5 sda1[4] sdc1[0] sdb1[2] sdd1[1]
->      691404864 blocks super 1.0 level 5, 64k chunk, algorithm 2 [4/4] [UUUU]
->      
->unused devices: <none>
->
-I will just comment that the 0 1 2   4 numbering on the devices is 
-unusual. When you created this did you do something which made md think 
-there was another device, failed or missing, which was device[3]? I just 
-looked at a bunch of my arrays and found no similar examples.
+>     At least one can do a ls of the /sys/block area & then do an 
+> automated
+>     echo cfq down the tree .  Does anyone know of a method to set a 
+> default
+>     scheduler ?  Scanning down a list or manually maintaining a list 
+> seems
+>     to be a bug in the waiting .  Tia ,  JimL
+
+Thought I posted this... it can be set in kernel build or on the bloot 
+parameters from grub/lilo.
+
+2nd thought: set it to cfq by default, then at the END of rc.local, if 
+there are no arrays rebuilding, change to something else if you like.
 
 -- 
 bill davidsen <davidsen@tmr.com>
