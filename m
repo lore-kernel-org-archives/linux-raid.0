@@ -1,7 +1,7 @@
-From: Neil Brown <neilb@suse.de>
+From: Neil Brown <neilb@cse.unsw.edu.au>
 Subject: Re: recover data from linear raid
-Date: Tue, 27 Jun 2006 11:19:04 +1000
-Message-ID: <17568.34696.276196.82824@cse.unsw.edu.au>
+Date: Tue, 27 Jun 2006 11:23:10 +1000
+Message-ID: <17568.34942.243102.778519@cse.unsw.edu.au>
 References: <Pine.LNX.4.64.0606242233000.32322@tassadar.physics.auth.gr>
 	<17566.13544.15613.709664@cse.unsw.edu.au>
 	<Pine.LNX.4.64.0606261640330.16450@tassadar.physics.auth.gr>
