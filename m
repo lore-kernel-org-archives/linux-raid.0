@@ -1,35 +1,27 @@
-From: Nix <nix@esperi.org.uk>
-Subject: Re: Multiple raids on one machine?
-Date: Tue, 27 Jun 2006 17:08:59 +0100
-Message-ID: <87odwefun8.fsf@hades.wkstn.nix>
-References: <449F100D.6030509@cjx.com> <871wtahqgo.fsf@hades.wkstn.nix>
-	<44A117A3.5040203@cjx.com>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: When will the Areca RAID driver be merged into mainline?
+Date: Tue, 27 Jun 2006 14:05:54 -0400 (EDT)
+Message-ID: <Pine.LNX.4.64.0606271404281.392@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <44A117A3.5040203@cjx.com> (Chris Allen's message of "Tue, 27 Jun 2006 12:33:55 +0100")
 Sender: linux-raid-owner@vger.kernel.org
-To: Chris Allen <chris@cjx.com>
+To: linux-kernel@vger.kernel.org
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, 27 Jun 2006, Chris Allen wondered:
-> Nix wrote:
->> There is a third alternative which can be useful if you have a mess of
->> drives of widely-differing capacities: make several RAID arrays so as to tesselate
->> space across all the drives, and then pile an LVM on the top of all of them to
->> fuse them back into one again.
-> 
-> But won't I be stuck with the same problem? ie I'll have a single 12TB
-> lvm, and won't be able to use EXT3 on it?
+Anyone have an ETA on this? I heard soon but was wondering how soon..?
 
-Not without ext3 patches (until the very-large-ext3 patches now pending
-on l-k go in), sure. But because it's LVMed you could cut it into a couple
-of exg3 filesystems easily. (I find it hard to imagine a single *directory*
-whose children contain 12Tb of files in a form that you can't cut into
-pieces with suitable use of bind mounts, but still, perhaps such exists.)
+kernel-version-2.6.x
+kernel-version-2.6.x/arcmsr
+kernel-version-2.6.x/arcmsr/arcmsr.c
+kernel-version-2.6.x/arcmsr/arcmsr.h
+kernel-version-2.6.x/arcmsr/Makefile
+kernel-version-2.6.x/readme.txt
 
--- 
-`NB: Anyone suggesting that we should say "Tibibytes" instead of
- Terabytes there will be hunted down and brutally slain.
- That is all.' --- Matthew Wilcox
+The driver is quite small and non-intrusive, I was wondering what is 
+holding it back getting merged into the official mainline kernel?
+
+Thanks,
+
+Justin.
