@@ -1,85 +1,75 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [PATCH 006 of 12] md: Fix some small races in bitmap plugging in raid5.
-Date: Tue, 27 Jun 2006 17:05:37 +1000
-Message-ID: <1060627070537.26022@suse.de>
+Subject: [PATCH 005 of 12] md: Fix a plug/unplug race in raid5
+Date: Tue, 27 Jun 2006 17:05:31 +1000
+Message-ID: <1060627070531.26010@suse.de>
 References: <20060627170010.25835.patches@notabene>
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030692AbWF0HFo@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Andrew Morton <akpm@osdl.org>
 Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-The comment gives more details, but I didn't quite have the
-sequencing write, so there was room for races to leave bits
-unset in the on-disk bitmap for short periods of time.
+When a device is unplugged, requests are moved from one or two
+(depending on whether a bitmap is in use) queues to the main
+request queue.
+
+So whenever requests are put on either of those queues, we should make
+sure the raid5 array is 'plugged'.
+However we don't.  We currently plug the raid5 queue just before
+putting requests on queues, so there is room for a race.  If something
+unplugs the queue at just the wrong time, requests will be left on
+the queue and nothing will want to unplug them.
+Normally something else will plug and unplug the queue fairly
+soon, but there is a risk that nothing will.
 
 Signed-off-by: Neil Brown <neilb@suse.de>
 
 ### Diffstat output
- ./drivers/md/raid5.c |   30 +++++++++++++++++++++++++++---
- 1 file changed, 27 insertions(+), 3 deletions(-)
+ ./drivers/md/raid5.c |   18 ++++++------------
+ 1 file changed, 6 insertions(+), 12 deletions(-)
 
 diff .prev/drivers/md/raid5.c ./drivers/md/raid5.c
---- .prev/drivers/md/raid5.c	2006-06-27 12:17:33.000000000 +1000
+--- .prev/drivers/md/raid5.c	2006-06-27 12:17:32.000000000 +1000
 +++ ./drivers/md/raid5.c	2006-06-27 12:17:33.000000000 +1000
-@@ -18,6 +18,30 @@
-  * Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-  */
- 
-+/*
-+ * BITMAP UNPLUGGING:
-+ *
-+ * The sequencing for updating the bitmap reliably is a little
-+ * subtle (and I got it wrong the first time) so it deserves some
-+ * explanation.
-+ *
-+ * We group bitmap updates into batches.  Each batch has a number.
-+ * We may write out several batches at once, but that isn't very important.
-+ * conf->bm_write is the number of the last batch successfully written.
-+ * conf->bm_flush is the number of the last batch that was closed to
-+ *    new additions.
-+ * When we discover that we will need to write to any block in a stripe
-+ * (in add_stripe_bio) we update the in-memory bitmap and record in sh->bm_seq
-+ * the number of the batch it will be in. This is bm_flush+1.
-+ * When we are ready to do a write, if that batch hasn't been written yet,
-+ *   we plug the array and queue the stripe for later.
-+ * When an unplug happens, we increment bm_flush, thus closing the current
-+ *   batch.
-+ * When we notice that bm_flush > bm_write, we write out all pending updates
-+ * to the bitmap, and advance bm_write to where bm_flush was.
-+ * This may occasionally write a bit out twice, but is sure never to
-+ * miss any bits.
-+ */
- 
- #include <linux/config.h>
- #include <linux/module.h>
-@@ -93,7 +117,7 @@ static void __release_stripe(raid5_conf_
+@@ -89,12 +89,14 @@ static void __release_stripe(raid5_conf_
+ 		BUG_ON(!list_empty(&sh->lru));
+ 		BUG_ON(atomic_read(&conf->active_stripes)==0);
+ 		if (test_bit(STRIPE_HANDLE, &sh->state)) {
+-			if (test_bit(STRIPE_DELAYED, &sh->state))
++			if (test_bit(STRIPE_DELAYED, &sh->state)) {
  				list_add_tail(&sh->lru, &conf->delayed_list);
- 				blk_plug_device(conf->mddev->queue);
- 			} else if (test_bit(STRIPE_BIT_DELAY, &sh->state) &&
--				   conf->seq_write == sh->bm_seq) {
-+				   sh->bm_seq - conf->seq_write > 0) {
+-			else if (test_bit(STRIPE_BIT_DELAY, &sh->state) &&
+-				 conf->seq_write == sh->bm_seq)
++				blk_plug_device(conf->mddev->queue);
++			} else if (test_bit(STRIPE_BIT_DELAY, &sh->state) &&
++				   conf->seq_write == sh->bm_seq) {
  				list_add_tail(&sh->lru, &conf->bitmap_list);
- 				blk_plug_device(conf->mddev->queue);
- 			} else {
-@@ -1274,9 +1298,9 @@ static int add_stripe_bio(struct stripe_
- 		(unsigned long long)sh->sector, dd_idx);
+-			else {
++				blk_plug_device(conf->mddev->queue);
++			} else {
+ 				clear_bit(STRIPE_BIT_DELAY, &sh->state);
+ 				list_add_tail(&sh->lru, &conf->handle_list);
+ 			}
+@@ -2556,13 +2558,6 @@ static int raid5_issue_flush(request_que
+ 	return ret;
+ }
  
- 	if (conf->mddev->bitmap && firstwrite) {
--		sh->bm_seq = conf->seq_write;
- 		bitmap_startwrite(conf->mddev->bitmap, sh->sector,
- 				  STRIPE_SECTORS, 0);
-+		sh->bm_seq = conf->seq_flush+1;
- 		set_bit(STRIPE_BIT_DELAY, &sh->state);
- 	}
- 
-@@ -2920,7 +2944,7 @@ static void raid5d (mddev_t *mddev)
- 	while (1) {
- 		struct list_head *first;
- 
--		if (conf->seq_flush - conf->seq_write > 0) {
-+		if (conf->seq_flush != conf->seq_write) {
- 			int seq = conf->seq_flush;
- 			spin_unlock_irq(&conf->device_lock);
- 			bitmap_unplug(mddev->bitmap);
+-static inline void raid5_plug_device(raid5_conf_t *conf)
+-{
+-	spin_lock_irq(&conf->device_lock);
+-	blk_plug_device(conf->mddev->queue);
+-	spin_unlock_irq(&conf->device_lock);
+-}
+-
+ static int make_request(request_queue_t *q, struct bio * bi)
+ {
+ 	mddev_t *mddev = q->queuedata;
+@@ -2672,7 +2667,6 @@ static int make_request(request_queue_t 
+ 				goto retry;
+ 			}
+ 			finish_wait(&conf->wait_for_overlap, &w);
+-			raid5_plug_device(conf);
+ 			handle_stripe(sh, NULL);
+ 			release_stripe(sh);
+ 		} else {
