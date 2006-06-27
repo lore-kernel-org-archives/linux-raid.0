@@ -1,98 +1,78 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [PATCH 004 of 12] md: Fix resync speed calculation for restarted resyncs.
-Date: Tue, 27 Jun 2006 17:05:25 +1000
-Message-ID: <1060627070525.25998@suse.de>
+Subject: [PATCH 003 of 12] md: Delay starting md threads until array is completely setup.
+Date: Tue, 27 Jun 2006 17:05:20 +1000
+Message-ID: <1060627070520.25986@suse.de>
 References: <20060627170010.25835.patches@notabene>
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030729AbWF0HIz@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
 To: Andrew Morton <akpm@osdl.org>
 Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-We introduced 'io_sectors' recently so we could count
-the sectors that causes io during resync separate from sectors
-which didn't cause IO - there can be a difference if a bitmap
-is being used to accelerate resync.
+When an array is started we start one or two threads (two if
+there is a reshape or recovery that needs to be completed).
 
-However when a speed is reported, we find the number of sectors
-processed recently by subtracting an oldish io_sectors count
-from a current 'curr_resync' count.  This is wrong because
-curr_resync counts all sectors, not just io sectors.
+We currently start these *before* the array is completely set up and
+in particular before queue->queuedata is set.  If the thread
+actually starts very quickly on another CPU, we can end up
+dereferencing queue->queuedata and oops.
 
-So, add a field to mddev to store the curren io_sectors separately from
-curr_resync, and use that in the calculations.
+This patch also makes sure we don't try to start a recovery if
+a reshape is being restarted.
 
 ### Diffstat output
- ./drivers/md/md.c           |   10 ++++++----
- ./drivers/md/raid5.c        |    3 ++-
- ./include/linux/raid/md_k.h |    3 ++-
- 3 files changed, 10 insertions(+), 6 deletions(-)
+ ./drivers/md/md.c    |   10 +++++-----
+ ./drivers/md/raid5.c |    3 ---
+ 2 files changed, 5 insertions(+), 8 deletions(-)
 
 diff .prev/drivers/md/md.c ./drivers/md/md.c
 --- .prev/drivers/md/md.c	2006-06-27 12:17:32.000000000 +1000
 +++ ./drivers/md/md.c	2006-06-27 12:17:32.000000000 +1000
-@@ -2721,7 +2721,7 @@ static ssize_t
- sync_speed_show(mddev_t *mddev, char *page)
- {
- 	unsigned long resync, dt, db;
--	resync = (mddev->curr_resync - atomic_read(&mddev->recovery_active));
-+	resync = (mddev->curr_mark_cnt - atomic_read(&mddev->recovery_active));
- 	dt = ((jiffies - mddev->resync_mark) / HZ);
- 	if (!dt) dt++;
- 	db = resync - (mddev->resync_mark_cnt);
-@@ -4692,12 +4692,13 @@ static void status_resync(struct seq_fil
+@@ -3100,8 +3100,7 @@ static int do_md_run(mddev_t * mddev)
+ 		}
+ 	
+ 	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+-	md_wakeup_thread(mddev->thread);
+	
++
+ 	if (mddev->sb_dirty)
+ 		md_update_sb(mddev);
+ 
+@@ -3121,7 +3120,7 @@ static int do_md_run(mddev_t * mddev)
+ 	 * start recovery here.  If we leave it to md_check_recovery,
+ 	 * it will remove the drives and not do the right thing
  	 */
- 	dt = ((jiffies - mddev->resync_mark) / HZ);
- 	if (!dt) dt++;
--	db = resync - (mddev->resync_mark_cnt/2);
--	rt = (dt * ((unsigned long)(max_blocks-resync) / (db/100+1)))/100;
-+	db = (mddev->curr_mark_cnt - atomic_read(&mddev->recovery_active))
-+		- mddev->resync_mark_cnt;
-+	rt = (dt * ((unsigned long)(max_blocks-resync) / (db/2/100+1)))/100;
+-	if (mddev->degraded) {
++	if (mddev->degraded && !mddev->sync_thread) {
+ 		struct list_head *rtmp;
+ 		int spares = 0;
+ 		ITERATE_RDEV(mddev,rdev,rtmp)
+@@ -3142,10 +3141,11 @@ static int do_md_run(mddev_t * mddev)
+ 				       mdname(mddev));
+ 				/* leave the spares where they are, it shouldn't hurt */
+ 				mddev->recovery = 0;
+-			} else
+-				md_wakeup_thread(mddev->sync_thread);
++			}
+ 		}
+ 	}
++	md_wakeup_thread(mddev->thread);
++	md_wakeup_thread(mddev->sync_thread); /* possibly kick off a reshape */
  
- 	seq_printf(seq, " finish=%lu.%lumin", rt / 60, (rt % 60)/6);
- 
--	seq_printf(seq, " speed=%ldK/sec", db/dt);
-+	seq_printf(seq, " speed=%ldK/sec", db/2/dt);
- }
- 
- static void *md_seq_start(struct seq_file *seq, loff_t *pos)
-@@ -5208,6 +5209,7 @@ void md_do_sync(mddev_t *mddev)
- 
- 		j += sectors;
- 		if (j>1) mddev->curr_resync = j;
-+		mddev->curr_mark_cnt = io_sectors;
- 		if (last_check == 0)
- 			/* this is the earliers that rebuilt will be
- 			 * visible in /proc/mdstat
+ 	mddev->changed = 1;
+ 	md_new_event(mddev);
 
 diff .prev/drivers/md/raid5.c ./drivers/md/raid5.c
---- .prev/drivers/md/raid5.c	2006-06-27 12:17:32.000000000 +1000
+--- .prev/drivers/md/raid5.c	2006-06-27 12:16:41.000000000 +1000
 +++ ./drivers/md/raid5.c	2006-06-27 12:17:32.000000000 +1000
-@@ -282,7 +282,8 @@ static struct stripe_head *get_active_st
- 			} else {
- 				if (!test_bit(STRIPE_HANDLE, &sh->state))
- 					atomic_inc(&conf->active_stripes);
--				if (list_empty(&sh->lru))
-+				if (list_empty(&sh->lru) &&
-+				    !test_bit(STRIPE_EXPANDING, &sh->state))
- 					BUG();
- 				list_del_init(&sh->lru);
- 			}
-
-diff .prev/include/linux/raid/md_k.h ./include/linux/raid/md_k.h
---- .prev/include/linux/raid/md_k.h	2006-06-27 12:15:17.000000000 +1000
-+++ ./include/linux/raid/md_k.h	2006-06-27 12:17:32.000000000 +1000
-@@ -148,9 +148,10 @@ struct mddev_s
+@@ -3248,9 +3248,6 @@ static int run(mddev_t *mddev)
+ 		set_bit(MD_RECOVERY_RUNNING, &mddev->recovery);
+ 		mddev->sync_thread = md_register_thread(md_do_sync, mddev,
+ 							"%s_reshape");
+-		/* FIXME if md_register_thread fails?? */
+-		md_wakeup_thread(mddev->sync_thread);
+-
+ 	}
  
- 	struct mdk_thread_s		*thread;	/* management thread */
- 	struct mdk_thread_s		*sync_thread;	/* doing resync or reconstruct */
--	sector_t			curr_resync;	/* blocks scheduled */
-+	sector_t			curr_resync;	/* last block scheduled */
- 	unsigned long			resync_mark;	/* a recent timestamp */
- 	sector_t			resync_mark_cnt;/* blocks written at resync_mark */
-+	sector_t			curr_mark_cnt; /* blocks scheduled now */
- 
- 	sector_t			resync_max_sectors; /* may be set by personality */
- 
+ 	/* read-ahead size must cover two whole stripes, which is
