@@ -1,39 +1,119 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [PATCH 011 of 12] md: Fix "Will Configure" message when interpreting md= kernel parameter.
-Date: Tue, 27 Jun 2006 17:06:05 +1000
-Message-ID: <1060627070605.26082@suse.de>
+Subject: [PATCH 012 of 12] md: Include sector number in messages about corrected read errors.
+Date: Tue, 27 Jun 2006 17:06:12 +1000
+Message-ID: <1060627070612.26094@suse.de>
 References: <20060627170010.25835.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: Andrew Morton <akpm@osdl.org>
-Cc: "H. Peter Anvin" <hpa@zytor.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-If a partitionable array is used, we should say e.g.
-  Will configure md_d0 (super-block) from ....
-rather than
-  Will configure md0 (super-block) from ....
-which implies non-partitionable.
-
+This is generally useful, but particularly helps see if it is
+the same sector that always needs correcting, or different ones.
 
 Signed-off-by: Neil Brown <neilb@suse.de>
 
 ### Diffstat output
- ./usr/kinit/do_mounts_md.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ ./drivers/md/raid1.c  |    3 +++
+ ./drivers/md/raid10.c |    4 ++++
+ ./drivers/md/raid5.c  |   30 +++++++++++++++++++++++-------
+ 3 files changed, 30 insertions(+), 7 deletions(-)
 
-diff .prev/usr/kinit/do_mounts_md.c ./usr/kinit/do_mounts_md.c
---- .prev/usr/kinit/do_mounts_md.c	2006-06-27 12:15:15.000000000 +1000
-+++ ./usr/kinit/do_mounts_md.c	2006-06-27 12:17:34.000000000 +1000
-@@ -205,8 +205,8 @@ static int md_setup(char *str)
- 		pername = "super-block";
- 	}
+diff .prev/drivers/md/raid1.c ./drivers/md/raid1.c
+--- .prev/drivers/md/raid1.c	2006-06-27 12:17:33.000000000 +1000
++++ ./drivers/md/raid1.c	2006-06-27 12:17:34.000000000 +1000
+@@ -1509,6 +1509,9 @@ static void raid1d(mddev_t *mddev)
+ 									 s<<9, conf->tmppage, READ) == 0)
+ 								/* Well, this device is dead */
+ 								md_error(mddev, rdev);
++							else
++								printk(KERN_INFO "raid1:%s: read error corrected (%d sectors at %llu on %s)\n",
++								       mdname(mddev), s, sect + rdev->data_offset, bdevname(rdev->bdev, b));
+ 						}
+ 					}
+ 				} else {
+
+diff .prev/drivers/md/raid10.c ./drivers/md/raid10.c
+--- .prev/drivers/md/raid10.c	2006-06-27 12:15:15.000000000 +1000
++++ ./drivers/md/raid10.c	2006-06-27 12:17:34.000000000 +1000
+@@ -1492,6 +1492,10 @@ static void raid10d(mddev_t *mddev)
+ 									 s<<9, conf->tmppage, READ) == 0)
+ 								/* Well, this device is dead */
+ 								md_error(mddev, rdev);
++							else
++								printk(KERN_INFO "raid10:%s: read error corrected (%d sectors at %llu on %s)\n",
++								       mdname(mddev), s, sect+rdev->data_offset, bdevname(rdev->bdev, b));
++
+ 							rdev_dec_pending(rdev, mddev);
+ 							rcu_read_lock();
+ 						}
+
+diff .prev/drivers/md/raid5.c ./drivers/md/raid5.c
+--- .prev/drivers/md/raid5.c	2006-06-27 12:17:34.000000000 +1000
++++ ./drivers/md/raid5.c	2006-06-27 12:17:34.000000000 +1000
+@@ -524,6 +524,8 @@ static int raid5_end_read_request(struct
+ 	raid5_conf_t *conf = sh->raid_conf;
+ 	int disks = sh->disks, i;
+ 	int uptodate = test_bit(BIO_UPTODATE, &bi->bi_flags);
++	char b[BDEVNAME_SIZE];
++	mdk_rdev_t *rdev;
  
--	fprintf(stderr, "md: Will configure md%d (%s) from %s, below.\n",
--		minor, pername, str);
-+	fprintf(stderr, "md: Will configure md%s%d (%s) from %s, below.\n",
-+		partitioned?"_d":"", minor, pername, str);
- 	md_setup_args[ent].device_names = str;
- 	md_setup_args[ent].partitioned = partitioned;
- 	md_setup_args[ent].minor = minor;
+ 	if (bi->bi_size)
+ 		return 1;
+@@ -571,25 +573,39 @@ static int raid5_end_read_request(struct
+ 		set_bit(R5_UPTODATE, &sh->dev[i].flags);
+ #endif
+ 		if (test_bit(R5_ReadError, &sh->dev[i].flags)) {
+-			printk(KERN_INFO "raid5: read error corrected!!\n");
++			rdev = conf->disks[i].rdev;
++			printk(KERN_INFO "raid5:%s: read error corrected (%lu sectors at %llu on %s)\n",
++			       mdname(conf->mddev), STRIPE_SECTORS,
++			       (unsigned long long)sh->sector + rdev->data_offset,
++			       bdevname(rdev->bdev, b));
+ 			clear_bit(R5_ReadError, &sh->dev[i].flags);
+ 			clear_bit(R5_ReWrite, &sh->dev[i].flags);
+ 		}
+ 		if (atomic_read(&conf->disks[i].rdev->read_errors))
+ 			atomic_set(&conf->disks[i].rdev->read_errors, 0);
+ 	} else {
++		const char *bdn = bdevname(conf->disks[i].rdev->bdev, b);
+ 		int retry = 0;
++		rdev = conf->disks[i].rdev;
++
+ 		clear_bit(R5_UPTODATE, &sh->dev[i].flags);
+-		atomic_inc(&conf->disks[i].rdev->read_errors);
++		atomic_inc(&rdev->read_errors);
+ 		if (conf->mddev->degraded)
+-			printk(KERN_WARNING "raid5: read error not correctable.\n");
++			printk(KERN_WARNING "raid5:%s: read error not correctable (sector %llu on %s).\n",
++			       mdname(conf->mddev),
++			       (unsigned long long)sh->sector + rdev->data_offset,
++			       bdn);
+ 		else if (test_bit(R5_ReWrite, &sh->dev[i].flags))
+ 			/* Oh, no!!! */
+-			printk(KERN_WARNING "raid5: read error NOT corrected!!\n");
+-		else if (atomic_read(&conf->disks[i].rdev->read_errors)
++			printk(KERN_WARNING "raid5:%s: read error NOT corrected!! (sector %llu on %s).\n",
++			       mdname(conf->mddev),
++			       (unsigned long long)sh->sector + rdev->data_offset,
++			       bdn);
++		else if (atomic_read(&rdev->read_errors)
+ 			 > conf->max_nr_stripes)
+ 			printk(KERN_WARNING
+-			       "raid5: Too many read errors, failing device.\n");
++			       "raid5:%s: Too many read errors, failing device %s.\n",
++			       mdname(conf->mddev), bdn);
+ 		else
+ 			retry = 1;
+ 		if (retry)
+@@ -597,7 +613,7 @@ static int raid5_end_read_request(struct
+ 		else {
+ 			clear_bit(R5_ReadError, &sh->dev[i].flags);
+ 			clear_bit(R5_ReWrite, &sh->dev[i].flags);
+-			md_error(conf->mddev, conf->disks[i].rdev);
++			md_error(conf->mddev, rdev);
+ 		}
+ 	}
+ 	rdev_dec_pending(conf->disks[i].rdev, conf->mddev);
