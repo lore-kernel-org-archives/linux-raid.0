@@ -1,32 +1,40 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [PATCH 000 of 12] md: Introduction
-Date: Tue, 27 Jun 2006 17:05:01 +1000
-Message-ID: <20060627170010.25835.patches@notabene>
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
+Subject: [PATCH 001 of 12] md: Possible fix for unplug problem
+Date: Tue, 27 Jun 2006 17:05:10 +1000
+Message-ID: <1060627070510.25960@suse.de>
+References: <20060627170010.25835.patches@notabene>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030690AbWF0HFU@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Andrew Morton <akpm@osdl.org>
 Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-Following are 12 assorted small patches for md.
-They are against 2.6.17-mm2 and are suitable for inclusion in 2.6.18.
 
-They are primarily small bug fixes, many fixing possible races, some
-of which have been seen in the wild, some not.
+I have reports of a problem with raid5 which turns out to be because
+the raid5 device gets stuck in a 'plugged' state.  This shouldn't be
+able to happen as 3msec after it gets plugged it should get unplugged.
+However it happens none-the-less.  This patch fixes the problem and is
+a reasonable thing to do, though it might hurt performance slightly in
+some cases.
 
-Thanks,
-NeilBrown
+Until I can find the real problem, we should probably have this
+workaround in place.
 
+Signed-off-by: Neil Brown <neilb@suse.de>
 
- [PATCH 001 of 12] md: Possible fix for unplug problem
- [PATCH 002 of 12] md: Set desc_nr correctly for version-1 superblocks.
- [PATCH 003 of 12] md: Delay starting md threads until array is completely setup.
- [PATCH 004 of 12] md: Fix resync speed calculation for restarted resyncs.
- [PATCH 005 of 12] md: Fix a plug/unplug race in raid5
- [PATCH 006 of 12] md: Fix some small races in bitmap plugging in raid5.
- [PATCH 007 of 12] md: Fix usage of wrong variable in raid1
- [PATCH 008 of 12] md: Unify usage of symbolic names for perms.
- [PATCH 009 of 12] md: Require CAP_SYS_ADMIN for (re-)configuring md devices via sysfs.
- [PATCH 010 of 12] md: Remove a variable that is now unused.
- [PATCH 011 of 12] md: Fix "Will Configure" message when interpreting md= kernel parameter.
- [PATCH 012 of 12] md: Include sector number in messages about corrected read errors.
+### Diffstat output
+ ./drivers/md/raid5.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff .prev/drivers/md/raid5.c ./drivers/md/raid5.c
+--- .prev/drivers/md/raid5.c	2006-06-27 12:15:17.000000000 +1000
++++ ./drivers/md/raid5.c	2006-06-27 12:16:41.000000000 +1000
+@@ -271,7 +271,7 @@ static struct stripe_head *get_active_st
+ 						     < (conf->max_nr_stripes *3/4)
+ 						     || !conf->inactive_blocked),
+ 						    conf->device_lock,
+-						    unplug_slaves(conf->mddev)
++						    raid5_unplug_device(conf->mddev->queue)
+ 					);
+ 				conf->inactive_blocked = 0;
+ 			} else
