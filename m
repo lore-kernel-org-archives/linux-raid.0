@@ -1,35 +1,29 @@
-From: "Randy.Dunlap" <rdunlap@xenotime.net>
-Subject: Re: When will the Areca RAID driver be merged into mainline?
-Date: Tue, 27 Jun 2006 11:19:24 -0700
-Message-ID: <20060627111924.63bd1cfa.rdunlap@xenotime.net>
-References: <Pine.LNX.4.64.0606271404281.392@p34.internal.lan>
+From: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
+Subject: mdadm 2.5.2 - Static built , Interesting warnings when
+Date: Tue, 27 Jun 2006 11:52:20 -0700 (PDT)
+Message-ID: <Pine.LNX.4.64.0606271147410.12026@filesrv1.baby-dragons.com>
+References: <17569.6292.142280.859690@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0606271404281.392@p34.internal.lan>
+In-Reply-To: <17569.6292.142280.859690@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+To: linux-raid maillist <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tue, 27 Jun 2006 14:05:54 -0400 (EDT) Justin Piszcz wrote:
+ 	Hello All ,  What change in Glibc mekes this necessary ?  Is there a
+ 	method available to include the getpwnam & getgrnam structures so that
+ 	full static build will work .  Tia ,  JimL
 
-> Anyone have an ETA on this? I heard soon but was wondering how soon..?
-> 
-> kernel-version-2.6.x
-> kernel-version-2.6.x/arcmsr
-> kernel-version-2.6.x/arcmsr/arcmsr.c
-> kernel-version-2.6.x/arcmsr/arcmsr.h
-> kernel-version-2.6.x/arcmsr/Makefile
-> kernel-version-2.6.x/readme.txt
-> 
-> The driver is quite small and non-intrusive, I was wondering what is 
-> holding it back getting merged into the official mainline kernel?
+gcc -Wall -Werror -Wstrict-prototypes -ggdb -DSendmail=\""/usr/sbin/sendmail -t"\" -DCONFFILE=\"/etc/mdadm.conf\" -DCONFFILE2=\"/etc/mdadm/mdadm.conf\" -DHAVE_STDINT_H -o sha1.o -c sha1.c
+gcc -static -o mdadm mdadm.o config.o mdstat.o  ReadMe.o util.o Manage.o Assemble.o Build.o Create.o Detail.o Examine.o Grow.o Monitor.o dlink.o Kill.o Query.o mdopen.o super0.o super1.o bitmap.o restripe.o sysfs.o sha1.o
+config.o(.text+0x8c4): In function `createline': /home/archive/mdadm-2.5.2/config.c:341: warning: Using 'getgrnam' in statically linked applications requires at runtime the shared libraries from the glibc version used for linking
+config.o(.text+0x80b):/home/archive/mdadm-2.5.2/config.c:326: warning: Using 'getpwnam' in statically linked applications requires at runtime the shared libraries from the glibc version used for linking
+nroff -man mdadm.8 > mdadm.man
 
-Please read this thread:
-
-http://lkml.org/lkml/2006/6/22/7
-
----
-~Randy
+-- 
++----------------------------------------------------------------------+
+| James   W.   Laferriere |   System    Techniques   | Give me VMS     |
+| Network        Engineer | 3600 14th Ave SE #20-103 |  Give me Linux  |
+| babydr@baby-dragons.com |  Olympia ,  WA.   98501  |   only  on  AXP |
++----------------------------------------------------------------------+
