@@ -1,41 +1,57 @@
-From: Chris Allen <chris@cjx.com>
-Subject: Re: Multiple raids on one machine?
-Date: Tue, 27 Jun 2006 12:33:55 +0100
-Message-ID: <44A117A3.5040203@cjx.com>
-References: <449F100D.6030509@cjx.com> <871wtahqgo.fsf@hades.wkstn.nix>
+From: Neil Brown <neilb@suse.de>
+Subject: ANNOUNCE: mdadm 2.5.2 - A tool for managing Soft RAID under Linux
+Date: Tue, 27 Jun 2006 21:37:56 +1000
+Message-ID: <17569.6292.142280.859690@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <871wtahqgo.fsf@hades.wkstn.nix>
 Sender: linux-raid-owner@vger.kernel.org
-To: Nix <nix@esperi.org.uk>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
 
-Nix wrote:
-> On 25 Jun 2006, Chris Allen uttered the following:
->> Back to my 12 terabyte fileserver, I have decided to split the storage
->> into four partitions each of 3TB. This way I can choose between XFS
->> and EXT3 later on.
->>
->> So now, my options are between the following:
->>
->> 1. Single 12TB /dev/md0, partitioned into four 3TB partitions. But how do
->> I do this? fdisk won't handle it. Can GNU Parted handle partitions this big?
->>
->> 2. Partition the raw disks into four partitions and make /dev/md0,md1,md2,md3.
->> But am I heading for problems here? Is there going to be a big performance hit
->> with four raid5 arrays on the same machine? Am I likely to have dataloss problems
->> if my machine crashes?
-> 
-> There is a third alternative which can be useful if you have a mess of
-> drives of widely-differing capacities: make several RAID arrays so as to tesselate
-> space across all the drives, and then pile an LVM on the top of all of them to
-> fuse them back into one again.
-> 
+I am pleased to announce the availability of
+   mdadm version 2.5.2
 
-But won't I be stuck with the same problem? ie I'll have a single 12TB 
-lvm, and won't be able to use EXT3 on it?
+It is available at the usual places:
+   http://www.cse.unsw.edu.au/~neilb/source/mdadm/
+and
+   countrycode=xx.
+   http://www.${countrycode}kernel.org/pub/linux/utils/raid/mdadm/
+and via git at
+   git://neil.brown.name/mdadm
+   http://neil.brown.name/git?p=mdadm
+
+mdadm is a tool for creating, managing and monitoring
+device arrays using the "md" driver in Linux, also
+known as Software RAID arrays.
+
+Release 2.5.2 is primarily a bugfix release over 2.5.1.
+It also contains a work-around for a kernel bug which affects
+hot-adding to arrays with a version-1 superblock.
+
+Changelog Entries:
+    -   Fix problem with compiling with gcc-2 compilers
+    -   Fix compile problem of post-incrmenting a variable in a macro arg.
+    -   Stop map_dev from returning [0:0], as that breaks things.
+    -   Add 'Array Slot' line to --examine for version-1 superblocks
+	to make it a bit easier to see what is happening.
+    -   Work around bug in --add handling for  version-1 superblocks
+	in 2.6.17 (and prior).
+    -   Make -assemble a bit more resilient to finding strange
+	information in superblocks.
+    -   Don't claim newly added spares are InSync!! (don't know why that
+	code was ever in there)
+    -   Work better when no 'ftw' is available, and check to see
+	if current uclibc provides ftw.
+    -   Never use /etc/mdadm.conf if --config file is given (previously
+	some code used one, some used the other).
+
+Development of mdadm is sponsored by
+ SUSE Labs, Novell Inc.
+
+NeilBrown  27th June 2006
+
+
