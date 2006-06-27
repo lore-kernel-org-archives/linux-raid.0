@@ -1,21 +1,44 @@
-From: Andre Tomt <andre@tomt.net>
-Subject: Re: Bug in 2.6.17 / mdadm 2.5.1
-Date: Mon, 26 Jun 2006 23:24:48 +0200
-Message-ID: <44A050A0.7010400@tomt.net>
-References: <20060624104745.GA6352@defiant.crash>	<20060625135926.GA6253@defiant.crash> <17567.13099.133933.397389@cse.unsw.edu.au>
+From: "willypaker20@katamail.it" <willypaker20@katamail.it>
+Subject: I Await Your Anticipated Response!
+Date: Tue, 27 Jun 2006 00:56:29 +0000
+Message-ID: <196.207.10.234.398494500.1151369791@webmail.katamail.com>
+Reply-To: wilpaker2010@yahoo.co.uk
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S933067AbWFZVYu@vger.kernel.org>
-In-Reply-To: <17567.13099.133933.397389@cse.unsw.edu.au>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Ronald Lembcke <es186@fen-net.de>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil Brown wrote:
-<snip>
-> Alternately you can apply the following patch to the kernel and
-> version-1 superblocks should work better.
+Good Day,
 
--stable material?
+May I crave your indulgence to solicit your cooperation for investment =
+partnership in your country.
+
+I am a credit officer in charge of an unclaimed and idle funds that was=
+ in my Bank in one European Country.
+
+This substantial amount is already with a security firm in Europe.
+
+Should this proposal interest you kindly revert back to me through this=
+ confidential e-mail addres (wilpaker2010@yahoo.co.uk) for futher detai=
+ls.=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0
+Yours truly,
+
+Williams Parker
+
+_______________________________________________________________________=
+_
+SERVIZIO VOICE: TELEFONA e INVIA SMS dal tuo computer a tariffe vantagg=
+iose!=20
+Scopri come telefonare e videochiamare gratis da pc a pc.
+http://voice.repubblica.it
+
+
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
