@@ -1,44 +1,30 @@
-From: "willypaker20@katamail.it" <willypaker20@katamail.it>
-Subject: I Await Your Anticipated Response!
-Date: Tue, 27 Jun 2006 00:56:29 +0000
-Message-ID: <196.207.10.234.398494500.1151369791@webmail.katamail.com>
-Reply-To: wilpaker2010@yahoo.co.uk
+From: Neil Brown <neilb@suse.de>
+Subject: Re: Bug in 2.6.17 / mdadm 2.5.1
+Date: Tue, 27 Jun 2006 11:00:05 +1000
+Message-ID: <17568.33557.175846.567743@cse.unsw.edu.au>
+References: <20060624104745.GA6352@defiant.crash>
+	<20060625135926.GA6253@defiant.crash>
+	<17567.13099.133933.397389@cse.unsw.edu.au>
+	<44A050A0.7010400@tomt.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: message from Andre Tomt on Monday June 26
 Sender: linux-raid-owner@vger.kernel.org
+To: Andre Tomt <andre@tomt.net>
+Cc: Ronald Lembcke <es186@fen-net.de>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Good Day,
+On Monday June 26, andre@tomt.net wrote:
+> Neil Brown wrote:
+> <snip>
+> > Alternately you can apply the following patch to the kernel and
+> > version-1 superblocks should work better.
+> 
+> -stable material?
 
-May I crave your indulgence to solicit your cooperation for investment =
-partnership in your country.
+Maybe.  I'm not sure it exactly qualifies, but I might try sending it
+to them and see what they think.
 
-I am a credit officer in charge of an unclaimed and idle funds that was=
- in my Bank in one European Country.
-
-This substantial amount is already with a security firm in Europe.
-
-Should this proposal interest you kindly revert back to me through this=
- confidential e-mail addres (wilpaker2010@yahoo.co.uk) for futher detai=
-ls.=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0
-Yours truly,
-
-Williams Parker
-
-_______________________________________________________________________=
-_
-SERVIZIO VOICE: TELEFONA e INVIA SMS dal tuo computer a tariffe vantagg=
-iose!=20
-Scopri come telefonare e videochiamare gratis da pc a pc.
-http://voice.repubblica.it
-
-
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+NeilBrown
