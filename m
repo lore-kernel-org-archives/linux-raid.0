@@ -1,60 +1,60 @@
 From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: Ok to go ahead with this setup?
-Date: Wed, 28 Jun 2006 06:18:56 -0400 (EDT)
-Message-ID: <Pine.LNX.4.64.0606280618050.18112@p34.internal.lan>
-References: <bb145bd20606221008p131d4daem289a6b9300757c66@mail.gmail.com>  
- <62b0912f0606221104q2f47f574i86441efed5831957@mail.gmail.com>  
- <bb145bd20606221250y147d0a0bk1e371a3078adc09e@mail.gmail.com>
- <62b0912f0606221511p74a78ca5id4b5d3f870258815@mail.gmail.com>
- <Pine.LNX.4.64.0606272241040.26384@router.windsormachine.com>
- <44A2204D.D21130B7@ardistech.com>
+Subject: Re: I need a PCI V2.1 4 port SATA card
+Date: Wed, 28 Jun 2006 06:20:31 -0400 (EDT)
+Message-ID: <Pine.LNX.4.64.0606280619410.18112@p34.internal.lan>
+References: <200606280245.k5S2jkB24340@www.watkins-home.com> <44A205BC.90808@wasp.net.au>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <44A2204D.D21130B7@ardistech.com>
+In-Reply-To: <44A205BC.90808@wasp.net.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: "bart@ardistech.com" <bart@ardistech.com>
-Cc: Mike Dresser <mdresser_l@windsormachine.com>, linux-raid@vger.kernel.org
+To: Brad Campbell <brad@wasp.net.au>
+Cc: Guy <bugzilla@watkins-home.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
 
-On Wed, 28 Jun 2006, bart@ardistech.com wrote:
+On Wed, 28 Jun 2006, Brad Campbell wrote:
 
-> Mike Dresser wrote:
+> Guy wrote:
+>> Hello group,
 >>
->> On Fri, 23 Jun 2006, Molle Bestefich wrote:
->>
->>> Christian Pernegger wrote:
->>>> Anything specific wrong with the Maxtors?
->>>
->>> I'd watch out regarding the Western Digital disks, apparently they
->>> have a bad habit of turning themselves off when used in RAID mode, for
->>> some reason:
->>> http://thread.gmane.org/gmane.linux.kernel.device-mapper.devel/1980/
->>
->> The MaxLine III's (7V300F0) with VA111630/670 firmware currently timeout
->> on a weekly or less basis.. I'm still testing VA111680 on a 15x300 gig
->> array
->>
-> We also see similar problem on Maxtor 6V250F0 drives: they 'crash' randomly at
-> a weeks timescale. Only way to get them back is by power cycling. Tried both
-> SuperMicro SATA card (Marvell chip) and Promise Fastrak, firmware updates from
-> Maxtor did not fix it yet. We were already forced to exchange all drives at
-> a customer because he does not want to use Maxtor's anymore. Neither do we :(
+>> 	I am upgrading my disks from old 18 Gig SCSI disks to 300 Gig SATA
+>> disks.  I need a good SATA controller.  My system is old and has PCI V 2.1.
+>> I need a 4 port card, or 2 2 port cards.  My system has multi PCI buses, so
+>> 2 cards may give me better performance, but I don't need it.  I will be
+>> using software RAID.  Can anyone recommend a card that is supported by the
+>> current kernel?
 >
-> 	Bart
+> I'm using Promise SATA150TX4 cards here in old PCI based systems. They work 
+> great and have been rock solid for well in excess of a year 24/7 hard use. I 
+> have 3 in one box and 4 in another.
+>
+> I'm actually looking at building another 15 disk server now and was hoping to 
+> move to something quicker using _almost_ commodity hardware.
+>
+> My current 15 drive RAID-6 server is built around a KT600 board with an AMD 
+> Sempron processor and 4 SATA150TX4 cards. It does the job but it's not the 
+> fastest thing around (takes about 10 hours to do a check of the array or 
+> about 15 to do a rebuild).
+>
+> I'd love to do something similar with PCI-E or PCI-X and make it go faster 
+> (the PCI bus bandwidth is the killer), however I've not seen many affordable 
+> PCI-E multi-port cards that are supported yet and PCI-X seems to mean moving 
+> to "server" class mainboards and the other expenses that come along with 
+> that.
+>
+> Brad
+> -- 
+> "Human beings, who are almost unique in having the ability
+> to learn from the experience of others, are also remarkable
+> for their apparent disinclination to do so." -- Douglas Adams
 > -
 > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 >
 
-> The MaxLine III's (7V300F0) with VA111630/670 firmware currently timeout
-> on a weekly or less basis.. I'm still testing VA111680 on a 15x300 gig
-> array
-
-How do you have the 15 drives attached? Did you buy a SATA raid card?  Do 
-you have multiple (cheap JBOD SATA cards)?  If so, which did you use? I 
-cannot seem to find any PCI-e cards with >= 4-8 slots that support JBOD 
-under $700-$900.
+That is the problem, the only 4 port cards are PCI and not PCI-e and thus 
+limit your speed and bw, the only alternative I see is an Areca card if 
+you want speed..
