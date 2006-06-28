@@ -1,49 +1,38 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: I need a PCI V2.1 4 port SATA card
-Date: Wed, 28 Jun 2006 15:38:00 -0400 (EDT)
-Message-ID: <Pine.LNX.4.64.0606281537320.32443@p34.internal.lan>
-References: <200606280245.k5S2jkB24340@www.watkins-home.com>
- <44A205BC.90808@wasp.net.au> <bb145bd20606280455w36470256l9f5962fdf77fcc3@mail.gmail.com>
+From: Niccolo Rigacci <niccolo@rigacci.org>
+Subject: Cutting power without breaking RAID
+Date: Wed, 28 Jun 2006 23:43:50 +0200
+Message-ID: <20060628214350.GA23970@rigacci.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <bb145bd20606280455w36470256l9f5962fdf77fcc3@mail.gmail.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Christian Pernegger <pernegger@gmail.com>
-Cc: Brad Campbell <brad@wasp.net.au>, linux-raid@vger.kernel.org
+To: linux-raid maillist <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+Hello,
 
+I'm facing this problem:
 
-On Wed, 28 Jun 2006, Christian Pernegger wrote:
+when my Linux box detects a POWER FAIL event from the UPS, it 
+starts a normal shutdown. Just before the normal kernel poweroff, 
+it sends to the UPS a signal on the serial line which says 
+"cut-off the power to the server and switch-off the UPS".
 
->> My current 15 drive RAID-6 server is built around a KT600 board with an AMD 
->> Sempron
->> processor and 4 SATA150TX4 cards. It does the job but it's not the fastest 
->> thing around
->> (takes about 10 hours to do a check of the array or about 15 to do a 
->> rebuild).
->
-> What kind of enclosure do you have this in?
->
-> I also subscribe to the "almost commodity hardware" philosophy,
-> however I've not been able to find a case that comfortably takes even
-> 8 drives. (The Stacker is an absolute nightmare ...) Even most
-> rackable cases stop at 6 3.5" drive bays -- either that or they are
-> dedicated storage racks with integrated hw RAID and fiber SCSI
-> interconnect --> definitely not commodity.
->
-> Thanks,
->
-> C.
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+This is required to reboot the server as soon as the power is 
+restored.
 
-For the case, there a number of cases (Lian Li) that fit 20 drives with 
-easy, check here:
+The problem is that the root partition is on top of a RAID-1 
+filesystem which is still mounted when the program that kills the 
+power is run, so the system goes down with a non clean RAID 
+volume.
 
-http://www.newegg.com/Product/Product.asp?item=N82E16811112062
+What can be the proper action to do before killing the power to 
+ensure that RAID will remain clean? It seems that remounting 
+the partition read-only is not sufficient.
 
+-- 
+Niccolo Rigacci
+Firenze - Italy
+
+Iraq, missione di pace: 38475 morti - www.iraqbodycount.net
