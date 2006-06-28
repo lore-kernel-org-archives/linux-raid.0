@@ -1,33 +1,40 @@
-From: "Christian Pernegger" <pernegger@gmail.com>
+From: Gordon Henderson <gordon@drogon.net>
 Subject: Re: I need a PCI V2.1 4 port SATA card
-Date: Wed, 28 Jun 2006 13:55:56 +0200
-Message-ID: <bb145bd20606280455w36470256l9f5962fdf77fcc3@mail.gmail.com>
+Date: Wed, 28 Jun 2006 12:59:50 +0100 (BST)
+Message-ID: <Pine.LNX.4.56.0606281257120.10200@lion.drogon.net>
 References: <200606280245.k5S2jkB24340@www.watkins-home.com>
-	 <44A205BC.90808@wasp.net.au>
+ <44A205BC.90808@wasp.net.au> <bb145bd20606280455w36470256l9f5962fdf77fcc3@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <44A205BC.90808@wasp.net.au>
-Content-Disposition: inline
+In-Reply-To: <bb145bd20606280455w36470256l9f5962fdf77fcc3@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Brad Campbell <brad@wasp.net.au>
+To: Christian Pernegger <pernegger@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> My current 15 drive RAID-6 server is built around a KT600 board with an AMD Sempron
-> processor and 4 SATA150TX4 cards. It does the job but it's not the fastest thing around
-> (takes about 10 hours to do a check of the array or about 15 to do a rebuild).
+On Wed, 28 Jun 2006, Christian Pernegger wrote:
 
-What kind of enclosure do you have this in?
+> I also subscribe to the "almost commodity hardware" philosophy,
+> however I've not been able to find a case that comfortably takes even
+> 8 drives. (The Stacker is an absolute nightmare ...) Even most
+> rackable cases stop at 6 3.5" drive bays -- either that or they are
+> dedicated storage racks with integrated hw RAID and fiber SCSI
+> interconnect --> definitely not commodity.
 
-I also subscribe to the "almost commodity hardware" philosophy,
-however I've not been able to find a case that comfortably takes even
-8 drives. (The Stacker is an absolute nightmare ...) Even most
-rackable cases stop at 6 3.5" drive bays -- either that or they are
-dedicated storage racks with integrated hw RAID and fiber SCSI
-interconnect --> definitely not commodity.
+I've used these:
 
-Thanks,
+  http://www.acme-technology.co.uk/acm338.htm
 
-C.
+(8 drives in a 3U case), and their variants
+
+eg:
+
+  http://www.acme-technology.co.uk/acm312.htm
+
+(12 disks in a 3U case)
+
+for several years with good results. Not the cheapest on the block though,
+but never had any real issues with them.
+
+Gordon
