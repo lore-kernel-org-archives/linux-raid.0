@@ -1,32 +1,34 @@
-From: Mike Dresser <mdresser_l@windsormachine.com>
-Subject: Re: Ok to go ahead with this setup?
-Date: Tue, 27 Jun 2006 22:42:50 -0400 (EDT)
-Message-ID: <Pine.LNX.4.64.0606272241040.26384@router.windsormachine.com>
-References: <bb145bd20606221008p131d4daem289a6b9300757c66@mail.gmail.com>
- <62b0912f0606221104q2f47f574i86441efed5831957@mail.gmail.com>
- <bb145bd20606221250y147d0a0bk1e371a3078adc09e@mail.gmail.com>
- <62b0912f0606221511p74a78ca5id4b5d3f870258815@mail.gmail.com>
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: I need a PCI V2.1 4 port SATA card
+Date: Tue, 27 Jun 2006 23:45:42 -0400
+Message-ID: <200606280245.k5S2jkB24340@www.watkins-home.com>
+References: <Pine.LNX.4.62.0606250905160.25559@chaos.egr.duke.edu>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <62b0912f0606221511p74a78ca5id4b5d3f870258815@mail.gmail.com>
+In-Reply-To: <Pine.LNX.4.62.0606250905160.25559@chaos.egr.duke.edu>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, 23 Jun 2006, Molle Bestefich wrote:
+Hello group,
 
-> Christian Pernegger wrote:
->> Anything specific wrong with the Maxtors?
->
-> I'd watch out regarding the Western Digital disks, apparently they
-> have a bad habit of turning themselves off when used in RAID mode, for
-> some reason:
-> http://thread.gmane.org/gmane.linux.kernel.device-mapper.devel/1980/
+	I am upgrading my disks from old 18 Gig SCSI disks to 300 Gig SATA
+disks.  I need a good SATA controller.  My system is old and has PCI V 2.1.
+I need a 4 port card, or 2 2 port cards.  My system has multi PCI buses, so
+2 cards may give me better performance, but I don't need it.  I will be
+using software RAID.  Can anyone recommend a card that is supported by the
+current kernel?
 
-The MaxLine III's (7V300F0) with VA111630/670 firmware currently timeout 
-on a weekly or less basis.. I'm still testing VA111680 on a 15x300 gig 
-array
+	I know this is the wrong group, sorry.  But I know this is a very
+good place to ask!  I did search the archives but don't seem to have the
+correct keywords to find what I want.
 
-Mike
+	Btw, I plan to buy 3 or 4 Seagate ST3320620AS disks.  Barracuda
+7200.10 SATA 320G.
+
+Thanks,
+Guy
 
