@@ -1,48 +1,32 @@
-From: Nix <nix@esperi.org.uk>
-Subject: Re: mdadm 2.5.2 - Static built , Interesting warnings when
-Date: Tue, 27 Jun 2006 22:53:50 +0100
-Message-ID: <87fyhqfeoh.fsf@hades.wkstn.nix>
-References: <17569.6292.142280.859690@cse.unsw.edu.au>
-	<Pine.LNX.4.64.0606271147410.12026@filesrv1.baby-dragons.com>
+From: Mike Dresser <mdresser_l@windsormachine.com>
+Subject: Re: Ok to go ahead with this setup?
+Date: Tue, 27 Jun 2006 22:42:50 -0400 (EDT)
+Message-ID: <Pine.LNX.4.64.0606272241040.26384@router.windsormachine.com>
+References: <bb145bd20606221008p131d4daem289a6b9300757c66@mail.gmail.com>
+ <62b0912f0606221104q2f47f574i86441efed5831957@mail.gmail.com>
+ <bb145bd20606221250y147d0a0bk1e371a3078adc09e@mail.gmail.com>
+ <62b0912f0606221511p74a78ca5id4b5d3f870258815@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0606271147410.12026@filesrv1.baby-dragons.com> (James W. Laferriere's message of "27 Jun 2006 19:52:26 +0100")
+In-Reply-To: <62b0912f0606221511p74a78ca5id4b5d3f870258815@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
-Cc: linux-raid maillist <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 27 Jun 2006, James W. Laferriere uttered the following:
-> 	Hello All ,  What change in Glibc mekes this necessary ?  Is there a
+On Fri, 23 Jun 2006, Molle Bestefich wrote:
 
-glibc 2.x has always had the requirement that lookups that use the NSS
-mechanism require the use of dynamically linked libraries. This is not
-new.
+> Christian Pernegger wrote:
+>> Anything specific wrong with the Maxtors?
+>
+> I'd watch out regarding the Western Digital disks, apparently they
+> have a bad habit of turning themselves off when used in RAID mode, for
+> some reason:
+> http://thread.gmane.org/gmane.linux.kernel.device-mapper.devel/1980/
 
-Solaris (from which the idea of NSS is taken) has the same constraint,
-but more strictly enforced: they don't have glibc's hacks to allow
-dlopen() to work from statically linked apps, so they simply *don't
-provide* getpwnam() et al in their static libc. (As of Solaris 10 they
-don't provide a static libc at all.)
+The MaxLine III's (7V300F0) with VA111630/670 firmware currently timeout 
+on a weekly or less basis.. I'm still testing VA111680 on a 15x300 gig 
+array
 
-> 	method available to include the getpwnam & getgrnam structures so that
-> 	full static build will work .  Tia ,  JimL
+Mike
 
-The full static build *does* work. But, as the warning says,
-
-> config.o(.text+0x8c4): In function `createline': /home/archive/mdadm-2.5.2/config.c:341: warning: Using 'getgrnam' in statically linked applications requires at runtime the shared libraries from the glibc version used for linking
-> config.o(.text+0x80b):/home/archive/mdadm-2.5.2/config.c:326: warning: Using 'getpwnam' in statically linked applications requires at runtime the shared libraries from the glibc version used for linking
-
-... you can't expect to run this mdadm on a system that does not contain
-the same version of glibc you compiled this copy of mdadm against.
-
-This all turned up with the homehost= support in mdadm 2.5, and it
-arguably does make the static glibc build less useful. (Still,
-if you need a static build that works with no glibc present at
-all, there's always uClibc.)
-
--- 
-`NB: Anyone suggesting that we should say "Tibibytes" instead of
- Terabytes there will be hunted down and brutally slain.
- That is all.' --- Matthew Wilcox
