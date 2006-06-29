@@ -1,32 +1,48 @@
-From: Niccolo Rigacci <niccolo@rigacci.org>
-Subject: Re: Cutting power without breaking RAID
-Date: Thu, 29 Jun 2006 11:48:06 +0200
-Message-ID: <20060629094806.GB8313@rigacci.org>
-References: <20060628214350.GA23970@rigacci.org> <17571.20553.319133.437688@cse.unsw.edu.au>
+From: "Christian Pernegger" <pernegger@gmail.com>
+Subject: Re: RAID resync after every boot?
+Date: Thu, 29 Jun 2006 17:02:07 +0200
+Message-ID: <bb145bd20606290802m4740645bwf733be06f6708d01@mail.gmail.com>
+References: <bb145bd20606290205p5f367b5bu8c3051b6fcc4fc51@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <bb145bd20606290205p5f367b5bu8c3051b6fcc4fc51@mail.gmail.com>
 Content-Disposition: inline
-In-Reply-To: <17571.20553.319133.437688@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid maillist <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Jun 29, 2006 at 02:00:09PM +1000, Neil Brown wrote:
-> With 2.6, 
->    killall -9 md0_raid1
-> 
-> should do the trick (assuming root is on /dev/md0.  If it is elsewhere,
-> choose a different process name).
+> [...] it seems that it wants to resync on every boot ...
 
-Thanks, this is what I was looking for!
+Update:
 
-I will try remounting read-only and killing the md0_raid1.
-I will keep you informed.
+- During shutdown I got a few errors on the console regarding arrays
+that couldn't be stopped, because the mdadm package in Debian tries to
+shut down all arrays, even if it is set not to autostart any --> will
+file bug.
 
--- 
-Niccolo Rigacci
-Firenze - Italy
+- The kernel is supposed to shut down md devices (managed by EVMS) on
+its own, just before halt / reboot. The last bits of my shutdown
+sequence are approximately (this stuff sure goes by fast):
 
-Iraq, missione di pace: 38725 morti - www.iraqbodycount.net
+Will now halt.
+md: stopping all md devices
+md0: still in use
+syncing cache of SCSI disk /dev/sda
+syncing cache of SCSI disk /dev/sdb
+syncing cache of SCSI disk /dev/sdc
+syncing cache of SCSI disk /dev/sdd
+
+I don't know what could be using the array at this point, since all
+user processes should be dead. Kernel bug? (Kernel is 2.6.17-1-686
+from Debian unstable)
+
+- sometimes the array comes up clean after a reboot, especially if it
+was never mounted.
+
+Any pointers?
+
+Thanks,
+
+C.
