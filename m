@@ -1,39 +1,51 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: Drive issues in RAID vs. not-RAID ..
-Date: Thu, 29 Jun 2006 13:51:57 +1000
-Message-ID: <17571.20061.557898.910635@cse.unsw.edu.au>
-References: <bb145bd20606221008p131d4daem289a6b9300757c66@mail.gmail.com>
-	<62b0912f0606221104q2f47f574i86441efed5831957@mail.gmail.com>
-	<bb145bd20606221250y147d0a0bk1e371a3078adc09e@mail.gmail.com>
-	<62b0912f0606221511p74a78ca5id4b5d3f870258815@mail.gmail.com>
-	<Pine.LNX.4.64.0606272241040.26384@router.windsormachine.com>
-	<bb145bd20606280025x55f0090x2e6d6763be307b97@mail.gmail.com>
-	<Pine.LNX.4.56.0606280917080.6357@lion.drogon.net>
+Subject: Re: Cutting power without breaking RAID
+Date: Thu, 29 Jun 2006 14:00:09 +1000
+Message-ID: <17571.20553.319133.437688@cse.unsw.edu.au>
+References: <20060628214350.GA23970@rigacci.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Gordon Henderson on Wednesday June 28
+In-Reply-To: message from Niccolo Rigacci on Wednesday June 28
 Sender: linux-raid-owner@vger.kernel.org
-To: Gordon Henderson <gordon@drogon.net>
-Cc: linux-raid@vger.kernel.org
+To: Niccolo Rigacci <niccolo@rigacci.org>
+Cc: linux-raid maillist <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wednesday June 28, gordon@drogon.net wrote:
+On Wednesday June 28, niccolo@rigacci.org wrote:
+> Hello,
 > 
-> I've seen a few comments to the effect that some disks have problems when
-> used in a RAID setup and I'm a bit preplexed as to why this might be..
+> I'm facing this problem:
 > 
-> What's the difference between a drive in a RAID set (either s/w or h/w)
-> and a drive on it's own, assuming the load, etc. is roughly the same in
-> each setup?
+> when my Linux box detects a POWER FAIL event from the UPS, it 
+> starts a normal shutdown. Just before the normal kernel poweroff, 
+> it sends to the UPS a signal on the serial line which says 
+> "cut-off the power to the server and switch-off the UPS".
 > 
-> Is it just "bad feeling" or is there any scientific reasons for it?
+> This is required to reboot the server as soon as the power is 
+> restored.
+> 
+> The problem is that the root partition is on top of a RAID-1 
+> filesystem which is still mounted when the program that kills the 
+> power is run, so the system goes down with a non clean RAID 
+> volume.
+> 
+> What can be the proper action to do before killing the power to 
+> ensure that RAID will remain clean? It seems that remounting 
+> the partition read-only is not sufficient.
 
-I don't think that 'disks' have problems being in a raid, but I
-believe some controllers do (though I don't know whether it is the
-controller or the driver that is at fault).  RAID make concurrent
-requests much more likely and so is likely to push hard at any locking
-issues.
+Are you running a 2.4 kernel or a 2.6 kernel?
+
+With 2.4, you cannot do what you want to do.
+
+With 2.6, 
+   killall -9 md0_raid1
+
+should do the trick (assuming root is on /dev/md0.  If it is elsewhere,
+choose a different process name).
+After you "kill -9" the raid thread, the array will be marked clean
+immediately all writes complete, and marked dirty again before
+allowing another write.
 
 NeilBrown
