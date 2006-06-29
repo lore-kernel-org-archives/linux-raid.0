@@ -1,33 +1,26 @@
-From: "Christian Pernegger" <pernegger@gmail.com>
-Subject: RAID resync after every boot?
-Date: Thu, 29 Jun 2006 11:05:20 +0200
-Message-ID: <bb145bd20606290205p5f367b5bu8c3051b6fcc4fc51@mail.gmail.com>
+From: Niccolo Rigacci <niccolo@rigacci.org>
+Subject: Re: Cutting power without breaking RAID
+Date: Thu, 29 Jun 2006 11:45:05 +0200
+Message-ID: <20060629094504.GA8313@rigacci.org>
+References: <20060628214350.GA23970@rigacci.org> <44A326C5.70205@irule.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
+In-Reply-To: <44A326C5.70205@irule.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Tim <irule@irule.net>
+Cc: linux-raid maillist <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Yesterday evening I initialized a new RAID5, waited for completion and
-shut down the machine. Yet when I restarted it this morning it
-immediately began with a resync -- it seems that it wants to resync on
-every boot ...
+On Wed, Jun 28, 2006 at 06:03:01PM -0700, Tim wrote:
+> Your UPS won't accept a timer value to wait before actually cutting
+> power?
 
-This is a new Debian testing installation, array was created with EVMS
-and is started with EVMS in the initrd. mdadm is used for monitoring
-and maintainance.
+Unfortunately my UPS des not!
 
-Grepping through the init scripts I really could find nothing that
-looked like it shut down md arrays -- when and where is that supposed
-to happen?
+-- 
+Niccolo Rigacci
+Firenze - Italy
 
-Of course I could use mdadm to stop the array by hand before issuing
-shutdown, but I'm sure this has worked out-of-the-box before, and
-besides I can't do it for the roo-on-RAID1 I intend on adding.
-
-Thanks,
-
-C.
+Iraq, missione di pace: 38725 morti - www.iraqbodycount.net
