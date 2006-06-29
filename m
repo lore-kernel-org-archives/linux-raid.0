@@ -1,36 +1,33 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: mdadm 2.5.2 - Static built , Interesting warnings when
-Date: Thu, 29 Jun 2006 14:03:34 +1000
-Message-ID: <17571.20758.329051.338156@cse.unsw.edu.au>
-References: <17569.6292.142280.859690@cse.unsw.edu.au>
-	<Pine.LNX.4.64.0606271147410.12026@filesrv1.baby-dragons.com>
+From: Arjan van de Ven <arjan@infradead.org>
+Subject: Re: [PATCH 000 of 006] raid5: Offload RAID operations to a
+	workqueue
+Date: Thu, 29 Jun 2006 10:37:29 +0200
+Message-ID: <1151570249.3122.11.camel@laptopd505.fenrus.org>
+References: <1151519032.2232.62.camel@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Mr. James W. Laferriere on Tuesday June 27
+In-Reply-To: <1151519032.2232.62.camel@dwillia2-linux.ch.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
-Cc: linux-raid maillist <linux-raid@vger.kernel.org>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: NeilBrown <neilb@suse.de>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday June 27, babydr@baby-dragons.com wrote:
->  	Hello All ,  What change in Glibc mekes this necessary ?  Is there a
->  	method available to include the getpwnam & getgrnam structures so that
->  	full static build will work .  Tia ,  JimL
+On Wed, 2006-06-28 at 11:23 -0700, Dan Williams wrote:
+> This patch set is a step towards enabling hardware offload in the
+> md-raid5 driver.  These patches are considered experimental and are not
+> yet suitable for production environments.
 > 
-> gcc -Wall -Werror -Wstrict-prototypes -ggdb -DSendmail=\""/usr/sbin/sendmail -t"\" -DCONFFILE=\"/etc/mdadm.conf\" -DCONFFILE2=\"/etc/mdadm/mdadm.conf\" -DHAVE_STDINT_H -o sha1.o -c sha1.c
-> gcc -static -o mdadm mdadm.o config.o mdstat.o  ReadMe.o util.o Manage.o Assemble.o Build.o Create.o Detail.o Examine.o Grow.o Monitor.o dlink.o Kill.o Query.o mdopen.o super0.o super1.o bitmap.o restripe.o sysfs.o sha1.o
-> config.o(.text+0x8c4): In function `createline': /home/archive/mdadm-2.5.2/config.c:341: warning: Using 'getgrnam' in statically linked applications requires at runtime the shared libraries from the glibc version used for linking
-> config.o(.text+0x80b):/home/archive/mdadm-2.5.2/config.c:326: warning: Using 'getpwnam' in statically linked applications requires at runtime the shared libraries from the glibc version used for linking
-> nroff -man mdadm.8 > mdadm.man
+> As mentioned, this patch set is the first step in that it moves work
+> from handle_stripe5 to a work queue.  
 
-Are you running
-  make LDFLAGS=-static mdadm
-or something like that?  No, that won't work any more.
-Use
-   make mdadm.static
+Hi,
 
-that will get you a good static binary by included 'pwgr.o'.
+since using work queues involve more context switches than doing things
+inline... have you measured the performance impact of your changes? If
+so... was there any impact that you could measure, and how big was that?
 
-NeilBrown
+Greetings,
+    Arjan van de Ven
+
