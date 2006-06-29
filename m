@@ -1,51 +1,36 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: Cutting power without breaking RAID
-Date: Thu, 29 Jun 2006 14:00:09 +1000
-Message-ID: <17571.20553.319133.437688@cse.unsw.edu.au>
-References: <20060628214350.GA23970@rigacci.org>
+Subject: Re: mdadm 2.5.2 - Static built , Interesting warnings when
+Date: Thu, 29 Jun 2006 14:03:34 +1000
+Message-ID: <17571.20758.329051.338156@cse.unsw.edu.au>
+References: <17569.6292.142280.859690@cse.unsw.edu.au>
+	<Pine.LNX.4.64.0606271147410.12026@filesrv1.baby-dragons.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Niccolo Rigacci on Wednesday June 28
+In-Reply-To: message from Mr. James W. Laferriere on Tuesday June 27
 Sender: linux-raid-owner@vger.kernel.org
-To: Niccolo Rigacci <niccolo@rigacci.org>
+To: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
 Cc: linux-raid maillist <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wednesday June 28, niccolo@rigacci.org wrote:
-> Hello,
+On Tuesday June 27, babydr@baby-dragons.com wrote:
+>  	Hello All ,  What change in Glibc mekes this necessary ?  Is there a
+>  	method available to include the getpwnam & getgrnam structures so that
+>  	full static build will work .  Tia ,  JimL
 > 
-> I'm facing this problem:
-> 
-> when my Linux box detects a POWER FAIL event from the UPS, it 
-> starts a normal shutdown. Just before the normal kernel poweroff, 
-> it sends to the UPS a signal on the serial line which says 
-> "cut-off the power to the server and switch-off the UPS".
-> 
-> This is required to reboot the server as soon as the power is 
-> restored.
-> 
-> The problem is that the root partition is on top of a RAID-1 
-> filesystem which is still mounted when the program that kills the 
-> power is run, so the system goes down with a non clean RAID 
-> volume.
-> 
-> What can be the proper action to do before killing the power to 
-> ensure that RAID will remain clean? It seems that remounting 
-> the partition read-only is not sufficient.
+> gcc -Wall -Werror -Wstrict-prototypes -ggdb -DSendmail=\""/usr/sbin/sendmail -t"\" -DCONFFILE=\"/etc/mdadm.conf\" -DCONFFILE2=\"/etc/mdadm/mdadm.conf\" -DHAVE_STDINT_H -o sha1.o -c sha1.c
+> gcc -static -o mdadm mdadm.o config.o mdstat.o  ReadMe.o util.o Manage.o Assemble.o Build.o Create.o Detail.o Examine.o Grow.o Monitor.o dlink.o Kill.o Query.o mdopen.o super0.o super1.o bitmap.o restripe.o sysfs.o sha1.o
+> config.o(.text+0x8c4): In function `createline': /home/archive/mdadm-2.5.2/config.c:341: warning: Using 'getgrnam' in statically linked applications requires at runtime the shared libraries from the glibc version used for linking
+> config.o(.text+0x80b):/home/archive/mdadm-2.5.2/config.c:326: warning: Using 'getpwnam' in statically linked applications requires at runtime the shared libraries from the glibc version used for linking
+> nroff -man mdadm.8 > mdadm.man
 
-Are you running a 2.4 kernel or a 2.6 kernel?
+Are you running
+  make LDFLAGS=-static mdadm
+or something like that?  No, that won't work any more.
+Use
+   make mdadm.static
 
-With 2.4, you cannot do what you want to do.
-
-With 2.6, 
-   killall -9 md0_raid1
-
-should do the trick (assuming root is on /dev/md0.  If it is elsewhere,
-choose a different process name).
-After you "kill -9" the raid thread, the array will be marked clean
-immediately all writes complete, and marked dirty again before
-allowing another write.
+that will get you a good static binary by included 'pwgr.o'.
 
 NeilBrown
