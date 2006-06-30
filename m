@@ -1,49 +1,42 @@
-From: "Christian Pernegger" <pernegger@gmail.com>
-Subject: Strange intermittant errors + RAID doesn't fail the disk.
-Date: Fri, 30 Jun 2006 18:32:00 +0200
-Message-ID: <bb145bd20606300932x2268822k78561e549996aef3@mail.gmail.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: raid issues after power failure
+Date: Sat, 1 Jul 2006 09:06:46 +1000
+Message-ID: <17573.44678.188170.409349@cse.unsw.edu.au>
+References: <49954.82.141.169.118.1151658773.squirrel@mail.tyrell.hu>
+	<fd8d0180606300221x2280e220qd6f5fcd1096ff37b@mail.gmail.com>
+	<49971.82.141.169.118.1151659502.squirrel@mail.tyrell.hu>
+	<fd8d0180606300250q6fbab5d3wdf343b530f3119a9@mail.gmail.com>
+	<fd8d0180606300251p9129a8cr41c62bf87191cf39@mail.gmail.com>
+	<fd8d0180606300256j324dbcbfnb9aa21432b22eba1@mail.gmail.com>
+	<Pine.LNX.4.63.0606300827570.30060@turos>
+	<fd8d0180606300540r3c957a7duf0c831917f55be7f@mail.gmail.com>
+	<Pine.LNX.4.63.0606300842430.30060@turos>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: message from Akos Maroy on Friday June 30
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Akos Maroy <darkeye@tyrell.hu>
+Cc: Francois Barre <francois.barre@gmail.com>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-More problems ...
+On Friday June 30, darkeye@tyrell.hu wrote:
+> On Fri, 30 Jun 2006, Francois Barre wrote:
+> > Did you try upgrading mdadm yet ?
+> 
+> yes, I have version 2.5 now, and it produces the same results.
+> 
 
-As reported I have 4x WD5000YS (Caviar RE2 500 GB) in a md RAID5
-array. I've been benchmarking and otherwise testing the new array
-these last few days, and apart from the fact that the md doesn't shut
-down properly I've had no problems.
+Try adding '--force' to the -A line.
+That tells mdadm to try really hard to assemble the array.
 
-Today I wanted to finally copy some data over, but I after 5sec I got:
+You should be aware that when a degraded array has an unclean
+shutdown it is possible that data corruption could result, possibly in
+files that have not be changed for a long time.  It is also quite
+possible that there is no data corruption, or it is only on part of
+the array that are not actually in use.
 
-[...]
-ata2: port reset, p_is 8000000 is 2 pis 0 cmd 44017 tf d0 ss 123 se 0
-ata2: status=0x50 { DriveReady SeekComplete }
-sdc: Current: sense key: No Sense
-    Additional sense: No additional sense information
-ata2: handling error/timeout
-ata2: port reset, p_is 0 is 0 pis 0 cmd 44017 tf 150 ss 123 se 0
-ata2: status=0x50 { DriveReady SeekComplete }
-ata2: error=0x01 { AddrMarkNotFound }
-sdc: Current: sense key: No Sense
-    Additional sense: No additional sense information
-[repeat]
+I recommend at least a full 'fsck' in this situation.
 
-All processes accessing the array hang and can't even be killed by
-kill -9, but md does not mark the disk as failed.
-
-I then tested all four disks individually in another box -- according
-to WD's drive diagnostic they're fine. Re-created the array on the
-disks, which worked for a few hours, now I get the same error again.
-:(
-
-Kernel is 2.6.17-1-686 (Debian testing). I could go back to 16, but 15
-is missing a CIFS change I need.
-
-Any help is appreciated.
-
-Christian
+NeilBrown
