@@ -1,50 +1,75 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: raid5 write performance
-Date: Mon, 3 Jul 2006 08:35:14 +1000
-Message-ID: <17576.18978.563672.656847@cse.unsw.edu.au>
-References: <5d96567b0607020702p25d66490i79445bac606e5210@mail.gmail.com>
+From: Luca Berra <bluca@comedia.it>
+Subject: [PATCH] enable auto=yes by default when using udev
+Date: Mon, 3 Jul 2006 00:45:50 +0200
+Message-ID: <20060702224549.GD12733@percy.comedia.it>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="6TrnltStXW4iwmi0"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Raz Ben-Jehuda(caro) on Sunday July 2
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
-Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+Cc: Neil Brown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-On Sunday July 2, raziebe@gmail.com wrote:
-> Neil hello.
-> 
-> I have been looking at the raid5 code trying to understand why writes
-> performance is so poor.
 
-raid5 write performance is expected to be poor, as you often need to
-pre-read data or parity before the write can be issued.
+--6TrnltStXW4iwmi0
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Disposition: inline
 
-> If I am not mistaken here, It seems that you issue a write in size of
-> one page an no more no matter what buffer size I am using .
+Hello,
+the following patch aims at solving an issue that is confusing a lot of
+users.
+when using udev, device files are created only when devices are
+registered with the kernel, and md devices are registered only when
+started.
+mdadm needs the device file _before_ starting the array.
+so when using udev you must add --auto=yes to the mdadm commandline or
+to the ARRAY line in mdadm.conf
 
-I doubt the small write size would contribute more than a couple of
-percent to the speed issue.  Scheduling (when to write, when to
-pre-read, when to wait a moment) is probably much more important.
+following patch makes auto=yes the default when using udev
 
-> 
-> 1. Is this page is directed only to parity disk ?
+L.
 
-No.  All drives are written with one page units.  Each request is
-divided into one-page chunks, these one page chunks are gathered -
-where possible - into strips, and the strips are handled as units
-(Where a strip is like a stripe, only 1 page wide rather then one chunk
-wide - if that makes sense).
 
-> 2. How can i increase the write throughout ?
+-- 
+Luca Berra -- bluca@comedia.it
+        Communication Media & Services S.r.l.
+ /"\
+ \ /     ASCII RIBBON CAMPAIGN
+  X        AGAINST HTML MAIL
+ / \
 
-Look at scheduling patterns - what order are the blocks getting
-written, do we pre-read when we don't need to, things like that.
+--6TrnltStXW4iwmi0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: attachment; filename="mdadm-2.5.1-autof.patch"
 
-The current code tries to do the right thing, and it certainly has
-been worse in the past, but I wouldn't be surprised if it could still
-be improved.
+* Sat Jun 24 2006 Luca Berra <bluca@vodka.it>
+- automatically create devices if using udev
 
-NeilBrown
+--- mdadm-2.5.1/mdadm.c.autof	2006-06-02 01:51:01.000000000 -0400
++++ mdadm-2.5.1/mdadm.c	2006-06-24 05:17:45.000000000 -0400
+@@ -857,6 +857,13 @@
+ 		fputs(Usage, stderr);
+ 		exit(2);
+ 	}
++
++	/* if we are using udev and auto is not set, mdadm will almost
++	 * certainly fail, so we force it here.
++	 */
++	if (autof == 0 && access("/dev/.udevdb",F_OK) == 0)
++		autof=2;
++
+ 	/* Ok, got the option parsing out of the way
+ 	 * hopefully it's mostly right but there might be some stuff
+ 	 * missing
+@@ -873,7 +880,7 @@
+ 			fprintf(stderr, Name ": an md device must be given in this mode\n");
+ 			exit(2);
+ 		}
+-		if ((int)ident.super_minor == -2 && autof) {
++		if ((int)ident.super_minor == -2 && autof > 2 ) {
+ 			fprintf(stderr, Name ": --super-minor=dev is incompatible with --auto\n");	
+ 			exit(2);
+ 		}
+
+--6TrnltStXW4iwmi0--
