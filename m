@@ -1,59 +1,42 @@
-From: Jason Lunz <lunz@falooley.org>
-Subject: Re: degraded raid5 refuses to start
-Date: Sun, 2 Jul 2006 01:37:40 +0000 (UTC)
-Message-ID: <e87814$bvn$1@sea.gmane.org>
-References: <e86oub$buu$1@sea.gmane.org>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: changing MD device names
+Date: Sun, 2 Jul 2006 14:30:20 +1000
+Message-ID: <17575.19420.943532.223775@cse.unsw.edu.au>
+References: <Pine.LNX.4.61.0607012009220.2163@soloth.lewis.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: message from Jon Lewis on Saturday July 1
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Jon Lewis <jlewis@lewis.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-lunz@falooley.org said:
-> How do I get this array going again?  Am I doing something wrong?
-> Reading the list archives indicates that there could be bugs in this
-> area, or that I may need to recreate the array with -C (though that
-> seems heavyhanded to me).
+On Saturday July 1, jlewis@lewis.org wrote:
+> I have a system which was running several raid1 devices (md0 - md2) using 
+> 2 physical drives (hde, and hdg).  I wanted to swap out these drives for 
+> two different ones, so I did the following:
+> 
+> 1) swap out hdg for a new drive
+> 2) create degraded raid1's (md3 and md4) using partitions on new hdg
+> 3) format md3 and md4 and copy data from md0-2 to md3-4
+> 4) install grub on new hdg
+> 5) pull hde
+> 
+> Now, after a bit of fixing in the grub menu and fstab, I have a system 
+> that boots up using just 1 of the new drives, but the md devices are md3 
+> and md4.  What's the easiest way to change the prefered minor # and get 
+> these to be md0 and md1?  Will just booting from a rescue or live CD and 
+> assembling the new drives as md0 & md1 automatically update the prefered 
+> minor in their superblocks?
+> 
+> The system is running Centos 4 (2.6.9-34.0.1.EL kernel).
 
-This is what I ended up doing. I made backups of the three superblocks,
-then recreated them with:
+You need to do a tiny bit more than assemble the new drives as md0 and
+md1.  You also need to cause some write activity so that md bothers to
+update the superblock.  Mounting and unmounting the filesystem should
+do it.
+Or you could assemble with --update=super-minor
 
-# mdadm -C /dev/md2 -n4 -l5 /dev/sda3 missing /dev/hda1 /dev/hdc1
-
-(I knew the chunk size and layout would be the same, since I just use
-the defaults).
-
-After this, the array works again. I have before and after images of the
-three superblocks if anyone wants to look into how they got into this
-state.
-
-As far as I can see, the problem was that the broken array got into a
-state where the superblock counts were like this:
-
-   Raid Devices : 4
-  Total Devices : 4
-Preferred Minor : 2
-
-    Update Time : Mon Jun 26 22:51:12 2006
-          State : active
- Active Devices : 3
-Working Devices : 3
- Failed Devices : 2
-  Spare Devices : 0
-
-notice how the total number of Working + Failed (5) exceeds the number
-of disks in the array. Maybe there's a bug to be fixed here that lets
-these counters get out of whack somehow?
-
-After reconstructing the array, the Failed count went back down to 1,
-and everything started working normally again. I wonder if simply
-decrementing that one value in each superblock would have been enough to 
-get the array going again, rather than rewriting all the superblocks. If
-so, maybe that can be safely built into mdadm? 
-
-Either that, or it was having two disks marked State: active and one
-marked clean in the degraded array.
-
-anyway, I have a dead disk and kept all my data, so thanks.
-
-Jason
-
+NeilBrown
