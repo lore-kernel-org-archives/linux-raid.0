@@ -1,26 +1,21 @@
-From: "Vicente" <Vicenteconcert@earthlink.net>
-Subject: Have more success with women and impress them with your power and stamina in bed
-Date: Sun, 2 Jul 2006 19:38:01 -0400
-Message-ID: <19625456764376.CAB92E43E6@2IGUIJI>
+From: "Ken" <Kenabusive@eartlink.net>
+Subject: Everything has its time, and climax in bed shouldn't also happen too soon.
+Date: Sun, 2 Jul 2006 20:51:44 -0400
+Message-ID: <39484282429265.8DBFC35E71@6G7FU>
 Mime-Version: 1.0
 Content-Type: text/plain;
         charset="Windows-1252"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: linux-serial@vger.kernel.org
 List-Id: linux-raid.ids
 
-Good day,
+Hi Bro!
+
+ Younger and older males face this difficulty. Whatever your age, you have the answer. Confidence and affection of your partner are the greatest things you get. 
+ http://www.kyklopescf.com 
 
 
-
-Have more success with women and impress them with your power and stamina in bed
-Make your girlfriend or wife speechless with increased hardness, richer orgsms and more power in bed
-
-
- http://www.syllabhd.com
-
-You cannot get blood from a stone Opportunity seldom knocks twice.
- A user and his leisure time are soon parted.
+ Virtual reality is its own reward. People who think the world revolves around them have no sense of direction Love is an ideal thing, marriage a real thing If life deals you lemons make lemonade  
 
