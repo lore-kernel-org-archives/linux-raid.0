@@ -1,47 +1,50 @@
-From: Luca Berra <bluca@comedia.it>
-Subject: Re: [PATCH] enable auto=yes by default when using udev
-Date: Tue, 4 Jul 2006 00:46:03 +0200
-Message-ID: <20060703224557.GB26362@percy.comedia.it>
-References: <20060702224549.GD12733@percy.comedia.it> <17576.21342.685662.432117@cse.unsw.edu.au>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: How does md determine which partitions to use in RAID1 when DEVICE partitions is specified
+Date: Tue, 4 Jul 2006 08:40:03 +1000
+Message-ID: <17577.40131.651688.98278@cse.unsw.edu.au>
+References: <e0904ff40607031327o5fd9fcc6v9b431656d5a01d02@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <17576.21342.685662.432117@cse.unsw.edu.au>
+In-Reply-To: message from Brian Bonner on Monday July 3
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: bkbonner@gmail.com
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Jul 03, 2006 at 09:14:38AM +1000, Neil Brown wrote:
->However....
->
->> +
->> +	/* if we are using udev and auto is not set, mdadm will almost
->> +	 * certainly fail, so we force it here.
->> +	 */
->> +	if (autof == 0 && access("/dev/.udevdb",F_OK) == 0)
->> +		autof=2;
->> +
->
->I'm worried that this test is not very robust.
->On my Debian/unstable system running used, there is no
-> /dev/.udevdb
->though there is a
-> /dev/.udev/db
->
->I guess I could test for both, but then udev might change
->again.... I'd really like a more robust check.
->
-is /dev/.udev/db a debianism?
-in this case a check for both might suffice, else i will have to think
-harder about it.
+On Monday July 3, bkbonner@gmail.com wrote:
+> I have Fedora Core 5 installed with mirroring on the Boot partition
+> and root partition.  I created a Logical Volume Group on the mirrored
+> root partition.
+> 
+> How does md figure out which partitions are actually specified.  It
+> says it stores the uuid in the superblock, but I can't seem to figure
+> out where this is, or how to get it.  is it in the partition, or
+> volume.
 
-L.
+The superblock is near the end of whatever you told md to use for the
+array.
+ From your 'mdadm --detail' output, I see that means /dev/sda1
+/dev/sdb1 /dev/sda2 etc.  The superblock for each partition is near
+the end of each partition.
 
--- 
-Luca Berra -- bluca@comedia.it
-        Communication Media & Services S.r.l.
- /"\
- \ /     ASCII RIBBON CAMPAIGN
-  X        AGAINST HTML MAIL
- / \
+> 
+> The reason I'm asking this, I'd like to add two USB 2.0 drives that
+> are mirrored, and I would specify the device name (/dev/sdd, /dev/sde)
+> for the ARRAY, but I found that the allocation of these device names
+> is dependent upon when the drive is inserted into the USB.
+
+You don't need to care about the device name.  Just add the uuid
+information to mdadm.conf.  Providing the devices are plugged in,
+mdadm will find them.
+
+> 
+> I'm going to ask if there is a way to "lock" the volume names for
+> devices (I'm thinking by UUID) for USB devices in partitions.
+> 
+
+'udev' might have functionality to do this.  But you don't really need
+it with mdadm.
+
+NeilBrown
