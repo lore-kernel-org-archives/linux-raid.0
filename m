@@ -1,60 +1,35 @@
-From: Frank Blendinger <fb@intoxicatedmind.net>
-Subject: Re: [PATCH] enable auto=yes by default when using udev
-Date: Mon, 3 Jul 2006 13:13:37 +0200
-Message-ID: <20060703111337.GR24409@intoxicatedmind.net>
-References: <20060702224549.GD12733@percy.comedia.it> <17576.21342.685662.432117@cse.unsw.edu.au>
+From: =?ISO-8859-1?Q?=C1kos_Mar=F3y?= <darkeye@tyrell.hu>
+Subject: Re: raid issues after power failure
+Date: Mon, 03 Jul 2006 13:30:55 +0200
+Message-ID: <44A8FFEF.30500@tyrell.hu>
+References: <49954.82.141.169.118.1151658773.squirrel@mail.tyrell.hu>	 <fd8d0180606300251p9129a8cr41c62bf87191cf39@mail.gmail.com>	 <fd8d0180606300256j324dbcbfnb9aa21432b22eba1@mail.gmail.com>	 <Pine.LNX.4.63.0606300827570.30060@turos>	 <fd8d0180606300540r3c957a7duf0c831917f55be7f@mail.gmail.com>	 <Pine.LNX.4.63.0606300842430.30060@turos>	 <17573.44678.188170.409349@cse.unsw.edu.au>	 <44A69496.9030109@tyrell.hu>	 <fd8d0180607020114m5e02e1ek553e5da2941eb6dd@mail.gmail.com>	 <44A8DB48.8080905@tyrell.hu> <fd8d0180607030216t5f26db56mab091f1418a8e322@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="eNjIDde0W37E3OQP"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <17576.21342.685662.432117@cse.unsw.edu.au>
+In-Reply-To: <fd8d0180607030216t5f26db56mab091f1418a8e322@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: Francois Barre <francois.barre@gmail.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+Francois Barre wrote:
+> AFAIK, mdadm -A <raid device> will use /etc/mdadm.conf to know what
+> underlying partitions you mean with your /dev/md0.
+> 
+> So, try
+> 
+> # mdadm --stop /dev/md0
+> # mdadm -A /dev/md0 /dev/sd[abcd]1
+> 
+> And then have a look on your /etc/mdadm.conf, especially the line
+> starting by
+> ARRAY /dev/md0 ...
 
---eNjIDde0W37E3OQP
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+yes, I already found the problem in /etc/mdadm.conf , and it was totally
+my mistake..
 
-On Mon, Jul 03, 2006 at 09:14:38AM +1000, Neil Brown wrote:
-> I'm worried that this test is not very robust.
-> On my Debian/unstable system running used, there is no
->  /dev/.udevdb
-> though there is a
->  /dev/.udev/db
->=20
-> I guess I could test for both, but then udev might change
-> again.... I'd really like a more robust check.
->=20
-> Maybe I could test if /dev was a mount point?
->=20
-> Any other ideas?
-
-Maybe checking for a running 'udevd' process?
+sorry to bother you with such lame problems.
 
 
-Frank
-
---=20
-Frank Blendinger | fb(at)intoxicatedmind.net | GPG: 0x0BF2FE7A
-Fingerprint: BB64 F2B8 DFD8 BF90 0F2E 892B 72CF 7A41 0BF2 FE7A
-   "Just because I don't care doesn't mean I don't undestand."
-                                               (Homer Simpson)
-
---eNjIDde0W37E3OQP
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
-
-iD8DBQFEqPvhcs96QQvy/noRAtCrAJ9uJM7g5xQpVaDf2xXfDjbWj6FUQACdHSLq
-OBxdyK6CWDM4DR1udcGLQBk=
-=qfa5
------END PGP SIGNATURE-----
-
---eNjIDde0W37E3OQP--
+Akos
