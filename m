@@ -1,27 +1,46 @@
-From: Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE>
-Subject: Re: [PATCH] enable auto=yes by default when using udev
-Date: Mon, 3 Jul 2006 11:11:10 +0200
-Message-ID: <e8amve$snq$1@sea.gmane.org>
-References: <20060702224549.GD12733@percy.comedia.it> <17576.21342.685662.432117@cse.unsw.edu.au> <e89kst$8jr$2@sea.gmane.org>
+From: "Francois Barre" <francois.barre@gmail.com>
+Subject: Re: raid issues after power failure
+Date: Mon, 3 Jul 2006 11:16:58 +0200
+Message-ID: <fd8d0180607030216t5f26db56mab091f1418a8e322@mail.gmail.com>
+References: <49954.82.141.169.118.1151658773.squirrel@mail.tyrell.hu>
+	 <fd8d0180606300251p9129a8cr41c62bf87191cf39@mail.gmail.com>
+	 <fd8d0180606300256j324dbcbfnb9aa21432b22eba1@mail.gmail.com>
+	 <Pine.LNX.4.63.0606300827570.30060@turos>
+	 <fd8d0180606300540r3c957a7duf0c831917f55be7f@mail.gmail.com>
+	 <Pine.LNX.4.63.0606300842430.30060@turos>
+	 <17573.44678.188170.409349@cse.unsw.edu.au>
+	 <44A69496.9030109@tyrell.hu>
+	 <fd8d0180607020114m5e02e1ek553e5da2941eb6dd@mail.gmail.com>
+	 <44A8DB48.8080905@tyrell.hu>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <44A8DB48.8080905@tyrell.hu>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: =?ISO-8859-1?Q?=C1kos_Mar=F3y?= <darkeye@tyrell.hu>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Jason Lunz <lunz@falooley.org> wrote:
-> there's a udevd you can check for. I don't know whether that's a better
-> test or not.
+> # mdadm --stop /dev/md0
+> # mdadm -A /dev/md0
+>
+> will result in the array started with 3 drives out of 4 again. what am I
+> doing wrong?
+>
+>
+> Akos
 
-It's not. For example, the Debian package does also start this udevd on
-package upgrades, even when a 2.4 kernel is running which definitely
-has no udev support :)
+AFAIK, mdadm -A <raid device> will use /etc/mdadm.conf to know what
+underlying partitions you mean with your /dev/md0.
 
+So, try
 
-regards
-   Mario
--- 
-Programmieren in C++ haelt die grauen Zellen am Leben. Es schaerft
-alle fuenf Sinne: den Schwachsinn, den Bloedsinn, den Wahnsinn, den
-Unsinn und den Stumpfsinn.
-                                 [Holger Veit in doc]
+# mdadm --stop /dev/md0
+# mdadm -A /dev/md0 /dev/sd[abcd]1
 
+And then have a look on your /etc/mdadm.conf, especially the line starting by
+ARRAY /dev/md0 ...
+
+Regards,
