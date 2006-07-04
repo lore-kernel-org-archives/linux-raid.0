@@ -1,46 +1,23 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: Linux SATA Support Question - Is the ULI M1575 chip supported?
-Date: Mon, 03 Jul 2006 20:57:47 -0400
-Message-ID: <44A9BD0B.8010104@garzik.org>
-References: <Pine.LNX.4.64.0607031756510.3342@p34.internal.lan>
+From: "Tanner" <TannerSampson@mail.com>
+Subject: =?ISO-8859-1?Q?=20New=92n=92hot?= Now you have chance to do it Delight in
+Date: Tue, 4 Jul 2006 11:56:18 +1000
+Message-ID: <93353413268149.4F99FEB74D__26450.3635968596$1151978245$gmane$org@7UPMDGSU>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+        charset="Windows-1252"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0607031756510.3342@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Justin Piszcz wrote:
-> 
-> In the source:
-> 
-> enum {
->         uli_5289                = 0,
->         uli_5287                = 1,
->         uli_5281                = 2,
-> 
->         uli_max_ports           = 4,
-> 
->         /* PCI configuration registers */
->         ULI5287_BASE            = 0x90, /* sata0 phy SCR registers */
->         ULI5287_OFFS            = 0x10, /* offset from sata0->sata1 phy 
-> regs */
->         ULI5281_BASE            = 0x60, /* sata0 phy SCR  registers */
->         ULI5281_OFFS            = 0x60, /* offset from sata0->sata1 phy 
-> regs */
-> };
-> 
-> However, in the manual for this motherboard it states it has a ULI 
-> M1575, can anyone comment?
-> 
-> http://us.dfi.com.tw/Upload/Manual/90800601.pdf
+Nice to see you!
 
-What is the PCI ID?
+Would you like to please your lovely partner completely? 
+It’s absolutely true – just take one before start
+ Take it before go to bed and you will be able to show the paradise for you sweetie
 
-	Jeff
+ Find what you need here: http://www.basszass.com 
 
-
+ We thank you for being interested in our products
 
