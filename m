@@ -1,78 +1,47 @@
-From: Michael Tokarev <mjt@tls.msk.ru>
+From: Luca Berra <bluca@comedia.it>
 Subject: Re: [PATCH] enable auto=yes by default when using udev
-Date: Tue, 04 Jul 2006 14:29:10 +0400
-Message-ID: <44AA42F6.8070307@tls.msk.ru>
-References: <20060702224549.GD12733@percy.comedia.it> <17576.21342.685662.432117@cse.unsw.edu.au>
+Date: Tue, 4 Jul 2006 12:43:17 +0200
+Message-ID: <20060704104307.GB8357@percy.comedia.it>
+References: <20060702224549.GD12733@percy.comedia.it> <17576.21342.685662.432117@cse.unsw.edu.au> <20060703224557.GB26362@percy.comedia.it>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17576.21342.685662.432117@cse.unsw.edu.au>
+Content-Disposition: inline
+In-Reply-To: <20060703224557.GB26362@percy.comedia.it>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Luca Berra <bluca@comedia.it>, Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Neil Brown wrote:
-> On Monday July 3, bluca@comedia.it wrote:
->> Hello,
->> the following patch aims at solving an issue that is confusing a lot of
->> users.
->> when using udev, device files are created only when devices are
->> registered with the kernel, and md devices are registered only when
->> started.
->> mdadm needs the device file _before_ starting the array.
->> so when using udev you must add --auto=yes to the mdadm commandline or
->> to the ARRAY line in mdadm.conf
+On Tue, Jul 04, 2006 at 12:46:03AM +0200, Luca Berra wrote:
+>On Mon, Jul 03, 2006 at 09:14:38AM +1000, Neil Brown wrote:
+>>However....
 >>
->> following patch makes auto=yes the default when using udev
-> 
-> The principle I'm reasonably happy with, though you can now make this
-> the default with a line like
-> 
->   CREATE auto=yes
-> in mdadm.conf.
-> 
-> However....
-> 
->> +
->> +	/* if we are using udev and auto is not set, mdadm will almost
->> +	 * certainly fail, so we force it here.
->> +	 */
->> +	if (autof == 0 && access("/dev/.udevdb",F_OK) == 0)
->> +		autof=2;
->> +
-> 
-> I'm worried that this test is not very robust.
-> On my Debian/unstable system running used, there is no
->  /dev/.udevdb
-> though there is a
->  /dev/.udev/db
-> 
-> I guess I could test for both, but then udev might change
-> again.... I'd really like a more robust check.
+>>>+
+>>>+	/* if we are using udev and auto is not set, mdadm will almost
+>>>+	 * certainly fail, so we force it here.
+>>>+	 */
+>>>+	if (autof == 0 && access("/dev/.udevdb",F_OK) == 0)
+>>>+		autof=2;
+>>>+
+>>
+>>I'm worried that this test is not very robust.
+>>On my Debian/unstable system running used, there is no
+>>/dev/.udevdb
+>>though there is a
+>>/dev/.udev/db
+>>
+>>I guess I could test for both, but then udev might change
+>>again.... I'd really like a more robust check.
+>>
+>is /dev/.udev/db a debianism?
+no it is not
+>in this case a check for both might suffice, else i will have to think
+>harder about it.
 
-Why to test for udev at all?  If the device does not exist, regardless
-if udev is running or not, it might be a good idea to try to create it.
-Because IT IS NEEDED, period.  Whenever the operation fails or not, and
-whenever we fail if it fails or not - it's another question, and I think
-that w/o explicit auto=yes, we may ignore create error and try to continue,
-and with auto=yes, we fail on create error.
-
-Note that /dev might be managed by some other tool as well, like mudev
-from busybox, or just a tiny shell /sbin/hotplug script.
-
-Note also that the whole root filesystem might be on tmpfs (like in
-initramfs), so /dev will not be a mountpoint.
-
-Also, I think mdadm should stop creating strange temporary nodes somewhere
-as it does now.  If /dev/whatever exist, use it. If not, create it (unless,
-perhaps, auto=no is specified) directly with proper mknod("/dev/mdX"), but
-don't try to use some temporary names in /dev or elsewhere.
-
-In case of nfs-mounted read-only root filesystem, if someone will ever need
-to assemble raid arrays in that case.. well, he can either prepare proper
-/dev on the nfs server, or use tmpfs-based /dev, or just specify /tmp/mdXX
-instead of /dev/mdXX - whatever suits their needs better.
-
-/mjt
+-- 
+Luca Berra -- bluca@comedia.it
+        Communication Media & Services S.r.l.
+ /"\
+ \ /     ASCII RIBBON CAMPAIGN
+  X        AGAINST HTML MAIL
+ / \
