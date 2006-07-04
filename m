@@ -1,42 +1,37 @@
 From: Luca Berra <bluca@comedia.it>
 Subject: Re: [PATCH] enable auto=yes by default when using udev
-Date: Tue, 4 Jul 2006 12:43:17 +0200
-Message-ID: <20060704104307.GB8357@percy.comedia.it>
-References: <20060702224549.GD12733@percy.comedia.it> <17576.21342.685662.432117@cse.unsw.edu.au> <20060703224557.GB26362@percy.comedia.it>
+Date: Tue, 4 Jul 2006 12:47:03 +0200
+Message-ID: <20060704104658.GC8357@percy.comedia.it>
+References: <20060702224549.GD12733@percy.comedia.it> <17576.21342.685662.432117@cse.unsw.edu.au> <44AA42F6.8070307@tls.msk.ru>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20060703224557.GB26362@percy.comedia.it>
+In-Reply-To: <44AA42F6.8070307@tls.msk.ru>
 Sender: linux-raid-owner@vger.kernel.org
 To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tue, Jul 04, 2006 at 12:46:03AM +0200, Luca Berra wrote:
->On Mon, Jul 03, 2006 at 09:14:38AM +1000, Neil Brown wrote:
->>However....
->>
->>>+
->>>+	/* if we are using udev and auto is not set, mdadm will almost
->>>+	 * certainly fail, so we force it here.
->>>+	 */
->>>+	if (autof == 0 && access("/dev/.udevdb",F_OK) == 0)
->>>+		autof=2;
->>>+
->>
->>I'm worried that this test is not very robust.
->>On my Debian/unstable system running used, there is no
->>/dev/.udevdb
->>though there is a
->>/dev/.udev/db
->>
->>I guess I could test for both, but then udev might change
->>again.... I'd really like a more robust check.
->>
->is /dev/.udev/db a debianism?
-no it is not
->in this case a check for both might suffice, else i will have to think
->harder about it.
+On Tue, Jul 04, 2006 at 02:29:10PM +0400, Michael Tokarev wrote:
+>Why to test for udev at all?  If the device does not exist, regardless
+because udev whas what was giving me pains :)
+
+>if udev is running or not, it might be a good idea to try to create it.
+>Because IT IS NEEDED, period.  Whenever the operation fails or not, and
+i believe we can set autof to 2 by default.
+
+>whenever we fail if it fails or not - it's another question, and I think
+>that w/o explicit auto=yes, we may ignore create error and try to continue,
+>and with auto=yes, we fail on create error.
+we need to distinguish between explicit auto=no, explicit auto=yes and
+implicit auto=yes for this. maybe this is overkill
+
+>as it does now.  If /dev/whatever exist, use it. If not, create it (unless,
+>perhaps, auto=no is specified) directly with proper mknod("/dev/mdX"), but
+>don't try to use some temporary names in /dev or elsewhere.
+agreed!
+
+L.
 
 -- 
 Luca Berra -- bluca@comedia.it
