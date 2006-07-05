@@ -1,78 +1,24 @@
-From: "Adam Henley" <adamazing@gmail.com>
-Subject: Re: Linux SATA Support Question - Is the ULI M1575 chip supported?
-Date: Tue, 4 Jul 2006 21:44:07 +0100
-Message-ID: <c526a04b0607041344nf8b7206u8c64e8730c4c770b@mail.gmail.com>
-References: <Pine.LNX.4.64.0607031756510.3342@p34.internal.lan>
-	 <44A9BD0B.8010104@garzik.org>
+From: "Galina" <quing@002.ru>
+Subject: Re[2]:  from Galina
+Date: Wed, 05 Jul 2006 12:39:34 +0300
+Message-ID: <003501c6a016$e8143180$c915000a@202.137.212.151>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="windows-1251"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <44A9BD0B.8010104@garzik.org>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+To: Max <linux-net-owner@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 04/07/06, Jeff Garzik <jeff@garzik.org> wrote:
-> Justin Piszcz wrote:
-> >
-> > In the source:
-> >
-> > enum {
-> >         uli_5289                = 0,
-> >         uli_5287                = 1,
-> >         uli_5281                = 2,
-> >
-> >         uli_max_ports           = 4,
-> >
-> >         /* PCI configuration registers */
-> >         ULI5287_BASE            = 0x90, /* sata0 phy SCR registers */
-> >         ULI5287_OFFS            = 0x10, /* offset from sata0->sata1 phy
-> > regs */
-> >         ULI5281_BASE            = 0x60, /* sata0 phy SCR  registers */
-> >         ULI5281_OFFS            = 0x60, /* offset from sata0->sata1 phy
-> > regs */
-> > };
-> >
-> > However, in the manual for this motherboard it states it has a ULI
-> > M1575, can anyone comment?
-> >
-> > http://us.dfi.com.tw/Upload/Manual/90800601.pdf
->
-> What is the PCI ID?
->
->         Jeff
+Hello, Max
 
-Sure this won't help, but just in case... my board:
-http://www.asrock.com/product/939Dual-SATA2.htm
-"Chipset  	- Northbridge: ULi M1695
-                    - Southbridge: ULI M1567"
+I am a lovely and lonely Lady who is looking for the man who will make me happy and whom I want to feel like in paradise with!
+If you want to be my beautiful Hero who will save me from this loneliness find me 
+http://www.foryou-mydestiny.com/
+and wake me up with a warm kiss.
 
-PCI ID of Southbridge in lspci output below looks like 5289
+Good-bye
+Galina
 
-00:00.0 Host bridge: ALi Corporation M1695 K8 Northbridge [PCI Express
-and HyperTransport]
-00:01.0 PCI bridge: ALi Corporation: Unknown device 524b
-00:02.0 PCI bridge: ALi Corporation: Unknown device 524c
-00:04.0 Host bridge: ALi Corporation M1689 K8 Northbridge [Super K8 Single Chip]
-00:05.0 PCI bridge: ALi Corporation AGP8X Controller
-00:06.0 PCI bridge: ALi Corporation M5249 HTT to PCI Bridge
-00:07.0 ISA bridge: ALi Corporation M1563 HyperTransport South Bridge (rev 70)
-00:07.1 Bridge: ALi Corporation M7101 Power Management Controller [PMU]
-00:11.0 Ethernet controller: ALi Corporation M5263 Ethernet Controller (rev 40)
-00:12.0 IDE interface: ALi Corporation M5229 IDE (rev c7)
-00:12.1 IDE interface: ALi Corporation ULi 5289 SATA (rev 10)
-00:13.0 USB Controller: ALi Corporation USB 1.1 Controller (rev 03)
-00:13.1 USB Controller: ALi Corporation USB 1.1 Controller (rev 03)
-<snip>
 
-Justin: I'm using 2.6.17.1 and the sata_uli driver seems to be
-handling the SATA drives just fine. But as I say, it's a different
-southbridge, so apologies if I'm just contributing to the noise :o)
-
-Not sure if this is comprehensive: http://pci-ids.ucw.cz/iii/?i=10b9
-It doesn't appear to list the M1575's pci id there.
-
-adam
