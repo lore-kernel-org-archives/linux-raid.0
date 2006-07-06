@@ -1,33 +1,35 @@
-From: "Cecil Buchanan" <adele@mfs.com>
-Subject: Logo your Business Identity (ID103125267)
-Date: Wed, 5 Jul 2006 21:45:18 +0000 (UTC)
-Message-ID: <200607052144.k65LiQZl004803__27320.6458696679$1152135918$gmane$org@zeus1.kernel.org>
+From: "Christian Pernegger" <pernegger@gmail.com>
+Subject: Re: Strange intermittant errors + RAID doesn't fail the disk.
+Date: Thu, 6 Jul 2006 15:01:47 +0200
+Message-ID: <bb145bd20607060601x33519be7tb4c4812ab54cc7c@mail.gmail.com>
+References: <bb145bd20606300932x2268822k78561e549996aef3@mail.gmail.com>
+	 <17573.52096.655463.808666@cse.unsw.edu.au>
+	 <bb145bd20606302313x557f94d8xd69cce83731e2a4b@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-        charset="Windows-1252"
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Date: Wen, 5 Jul 2006 17:44:38 +0500
+In-Reply-To: <bb145bd20606302313x557f94d8xd69cce83731e2a4b@mail.gmail.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-b04
+> > I suggest you find a SATA related mailing list to post this to (Look
+> > in the MAINTAINERS file maybe) or post it to linux-kernel.
 
-Our art team creates a custom logo for you, based on your needs.  Years of experience have taught us how to create a logo that makes a statement that is unique to you.
+linux-ide couldn't help much, aside from recommending a bleeding-edge
+patchset which should fix a lot of things SATA:
+http://home-tj.org/files/libata-tj-stable/
 
-In a professional manner we learn about your image and how you would like the world to perceive you and your company.  With this information we then create a logo that is not only unique but reflects the purpose of you and your company.
+What fixed the error, though, was exchanging one of the cables. (Just
+my luck, it was new and supposedly quality, ... oh well)
 
-For value and a logo that reflects your image, take a few minutes and visit Logo Maker!
+I'm still interested in why the md code didn't fail the disk. While it
+was 'up' any access to the array would hang for a long time,
+ultimately fail and corrupt the fs to boot. When I failed the disk
+manually everything was fine (if degraded) again.
 
-http://bauble.biz.try-logosxb.biz
+Regards,
 
-Sincerely,
-Logo Design Team
- 
-
-
-
-
- diacritic contumacy coastal
-
+C.
