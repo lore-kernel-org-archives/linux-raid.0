@@ -1,48 +1,67 @@
-From: "Christian Pernegger" <pernegger@gmail.com>
-Subject: Re: Strange intermittant errors + RAID doesn't fail the disk.
-Date: Fri, 7 Jul 2006 00:29:41 +0200
-Message-ID: <bb145bd20607061529i6d84ca2at35e3a11144e4608c@mail.gmail.com>
-References: <bb145bd20606300932x2268822k78561e549996aef3@mail.gmail.com>
-	 <17573.52096.655463.808666@cse.unsw.edu.au>
-	 <bb145bd20606302313x557f94d8xd69cce83731e2a4b@mail.gmail.com>
-	 <bb145bd20607060601x33519be7tb4c4812ab54cc7c@mail.gmail.com>
-	 <17581.35131.123710.652968@cse.unsw.edu.au>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: zeroing old superblocks & upgrading...
+Date: Fri, 7 Jul 2006 09:09:08 +1000
+Message-ID: <17581.38932.532010.388731@cse.unsw.edu.au>
+References: <17581.36135.379062.709693@stoffel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17581.35131.123710.652968@cse.unsw.edu.au>
-Content-Disposition: inline
+In-Reply-To: message from John Stoffel on Thursday July 6
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: John Stoffel <john@stoffel.org>
+Cc: Luca Berra <bluca@comedia.it>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> md is very dependant on the driver doing the right thing.  It doesn't
-> do any timeouts or anything like that - it assumes the driver will.
-> md simply trusts the return status from the drive, and fails a drive
-> if and only if a write to the drive is reported as failing (if a read
-> fails, md trys to over-write with good data first).
->
-> I don't know exactly how the driver was responding to the bad cable,
-> but it clearly wasn't returning an error, so md didn't fail it.
+On Thursday July 6, john@stoffel.org wrote:
+> 
+> Neil,
+> 
+> First off, thanks for all your hard work on this software, it's really
+> a great thing to have.
+> 
+> But I've got some interesting issues here.  Though not urgent.  As
+> I've said in other messages, I've got a pair of 120gb HDs mirrored.
+> I'm using MD across partitions, /dev/hde1 and /dev/hdg1.  Works
+> nicely.
+> 
+> But I see that I have an old superblock sitting around on /dev/hde
+> (notice, no partition here!) which I'd like to clean up.
+> 
+...
+> 
+> I can't seem to zero it out:
+> 
+>   # mdadm --misc --zero-superblock /dev/hde
+>   mdadm: Couldn't open /dev/hde for write - not zeroing
+> 
+> Should I just ignore this, or should I break off /dev/hde from the
+> array and scrub the disk and then re-add it back in?
 
-There were a lot of errors in dmesg -- seems like they did not get
-passed up to md? I find it surprising that the md layer doesn't have
-its own timeouts, but then I know nothing about such things :)
+You could ignore it - it shouldn't hurt.
+But if you wanted to (and were running a fairly recent kernel) you
+could
+  mdadm --grow --bitmap=internal /dev/md0
+  mdadm /dev/md0 --fail /dev/hde1 --remove /dev/hde1
+  mdadm --zero-superblock /dev/hde
+  mdadm /dev/md0 --add /dev/hde1
+  mdadm --grow --bitmap=none /dev/md0
 
-Thanks for clearing this up for me,
+and it should work with minimal resync...
 
-C.
+Though thinking about it - after the first --grow, check that the
+unwanted bitmap is still there.  It is quite possible that the
+internal bitmap will over-write the unwanted superblock (depending on
+the exact size and aligment of hde1 compared with hde).
+If it is gone, then don't bother with the rest of the sequence. 
 
-[...]
-ata2: port reset, p_is 8000000 is 2 pis 0 cmd 44017 tf d0 ss 123 se 0
-ata2: status=0x50 { DriveReady SeekComplete }
-sdc: Current: sense key: No Sense
-   Additional sense: No additional sense information
-ata2: handling error/timeout
-ata2: port reset, p_is 0 is 0 pis 0 cmd 44017 tf 150 ss 123 se 0
-ata2: status=0x50 { DriveReady SeekComplete }
-ata2: error=0x01 { AddrMarkNotFound }
-sdc: Current: sense key: No Sense
-   Additional sense: No additional sense information
-[repeat]
+
+> 
+> Also, can I upgrade my superblock to the latest version with out any
+> problems?
+
+The only problem with superblock version numbers is that they are
+probably confusing.  If you don't worry about them, they should just
+do the right thing.
+
+NeilBrown
