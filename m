@@ -1,40 +1,24 @@
-From: "Christian Pernegger" <pernegger@gmail.com>
-Subject: Can't get md array to shut down cleanly
-Date: Thu, 6 Jul 2006 15:48:15 +0200
-Message-ID: <bb145bd20607060648p3776d335g55e4bdee4ecaf3c4@mail.gmail.com>
+From: Sevrin Robstad <quackyo@start.no>
+Subject: Re: RAID 5 crash, is there any way to recover some data ?
+Date: Thu, 06 Jul 2006 16:12:10 +0200
+Message-ID: <44AD1A3A.7040601@start.no>
+References: <44A95478.2050004@online.no> <44A965F7.10401@h3c.com>
+ <44A98F4E.7080300@start.no> <44A9F64B.6050500@h3c.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-reply-to: <44A9F64B.6050500@h3c.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Still more problems ... :(
+Is there not any way for me to recover my data....
 
-My md raid5 still does not always shut down cleanly. The last few
-lines of the shutdown sequence are always as follows:
+As I said, i have already rebuilt the raid with wrong disc setup... Now 
+i have built the raid with the right setup, and one missing disk.
+But there's not any ext3 partition on it anymore. Is there any way to 
+search trough the md0 device and find some of the data ???
 
-[...]
-Will now halt.
-md: stopping all md devices.
-md: md0 still in use.
-Synchronizing SCSI cache for disk /dev/sdd:
-Synchronizing SCSI cache for disk /dev/sdc:
-Synchronizing SCSI cache for disk /dev/sdb:
-Synchronizing SCSI cache for disk /dev/sda:
-Shutdown: hde
-System halted.
 
-Most of the time the md array comes up clean on the next boot, often
-enough it does not. Having the array rebuild after every other reboot
-is not my idea of fun, because the only reason to take it down is to
-exchange a failing disk.
-
-Again, help appreciated - I don't dare putting the system into
-"production" like that.
-
-Regards
-
-C.
+Sevrin
