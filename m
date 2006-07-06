@@ -1,83 +1,62 @@
-From: Luca Berra <bluca@comedia.it>
-Subject: issue with internal bitmaps
-Date: Thu, 6 Jul 2006 16:12:07 +0200
-Message-ID: <20060706141207.GC21642@percy.comedia.it>
+From: Niccolo Rigacci <niccolo@rigacci.org>
+Subject: Re: Can't get md array to shut down cleanly
+Date: Thu, 6 Jul 2006 17:46:58 +0200
+Message-ID: <20060706154658.GC13285@rigacci.org>
+References: <bb145bd20607060648p3776d335g55e4bdee4ecaf3c4@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
+In-Reply-To: <bb145bd20607060648p3776d335g55e4bdee4ecaf3c4@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Christian Pernegger <pernegger@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-hello, i just realized that internal bitmaps do not seem to work
-anymore.
+> My md raid5 still does not always shut down cleanly. The last few
+> lines of the shutdown sequence are always as follows:
+> 
+> [...]
+> Will now halt.
+> md: stopping all md devices.
+> md: md0 still in use.
+> Synchronizing SCSI cache for disk /dev/sdd:
+> Synchronizing SCSI cache for disk /dev/sdc:
+> Synchronizing SCSI cache for disk /dev/sdb:
+> Synchronizing SCSI cache for disk /dev/sda:
+> Shutdown: hde
+> System halted.
 
-kernel 2.6.17
-mdadm 2.5.2
 
-[root@localhost ~]# mdadm --create --level=1 -n 2 -e 1 --bitmap=internal /dev/md100 /dev/sda1 /dev/sda2
-mdadm: array /dev/md100 started.
+May be your shutdown script is doing "halt -h"? Halting the disk 
+immediately without letting the RAID to settle to a clean state 
+can be the cause?
 
-... wait awhile ...
+I see that my Debian avoids the -h option if running RAID,
+from /etc/init.d/halt:
 
-[root@localhost ~]# cat /proc/mdstat
-Personalities : [raid1]
-md100 : active raid1 sda2[1] sda1[0]
-      1000424 blocks super 1.0 [2/2] [UU]
-      bitmap: 4/4 pages [16KB], 128KB chunk
 
-unused devices: <none>
-[root@localhost ~]# mdadm -X /dev/md100
-        Filename : /dev/md100
-           Magic : 00000000
-mdadm: invalid bitmap magic 0x0, the bitmap file appears to be corrupted
-         Version : 0
-mdadm: unknown bitmap version 0, either the bitmap file is corrupted or you need to upgrade your tools
+        # Don't shut down drives if we're using RAID.
+        hddown="-h"
+        if grep -qs '^md.*active' /proc/mdstat
+        then
+                hddown=""
+        fi
 
-[root@localhost ~]# cat /proc/mdstat
-Personalities : [raid1]
-md100 : active raid1 sda2[1] sda1[0]
-      1000424 blocks super 1.0 [2/2] [UU]
-      bitmap: 0/4 pages [0KB], 128KB chunk
+        # If INIT_HALT=HALT don't poweroff.
+        poweroff="-p"
+        if [ "$INIT_HALT" = "HALT" ]
+        then
+                poweroff=""
+        fi
 
-unused devices: <none>
-
-[root@localhost ~]# mdadm -D /dev/md100
-/dev/md100:
-        Version : 01.00.03
-  Creation Time : Thu Jul  6 16:05:10 2006
-     Raid Level : raid1
-     Array Size : 1000424 (977.14 MiB 1024.43 MB)
-    Device Size : 1000424 (977.14 MiB 1024.43 MB)
-   Raid Devices : 2
-  Total Devices : 2
-Preferred Minor : 100
-    Persistence : Superblock is persistent
-
-  Intent Bitmap : Internal
-
-    Update Time : Thu Jul  6 16:07:11 2006
-          State : active
- Active Devices : 2
-Working Devices : 2
- Failed Devices : 0
-  Spare Devices : 0
-
-           Name : 100
-           UUID : 60cd0dcb:fde52377:699453f7:da96b9d4
-         Events : 1
-
-    Number   Major   Minor   RaidDevice State
-       0       8        1        0      active sync   /dev/sda1
-       1       8        2        1      active sync   /dev/sda2
-
+        log_action_msg "Will now halt"
+        sleep 1
+        halt -d -f -i $poweroff $hddown
 
 
 -- 
-Luca Berra -- bluca@comedia.it
-        Communication Media & Services S.r.l.
- /"\
- \ /     ASCII RIBBON CAMPAIGN
-  X        AGAINST HTML MAIL
- / \
+Niccolo Rigacci
+Firenze - Italy
+
+Iraq, missione di pace: 38839 morti - www.iraqbodycount.net
