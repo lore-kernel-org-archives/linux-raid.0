@@ -1,11 +1,8 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: Strange intermittant errors + RAID doesn't fail the disk.
-Date: Fri, 7 Jul 2006 08:05:47 +1000
-Message-ID: <17581.35131.123710.652968@cse.unsw.edu.au>
-References: <bb145bd20606300932x2268822k78561e549996aef3@mail.gmail.com>
-	<17573.52096.655463.808666@cse.unsw.edu.au>
-	<bb145bd20606302313x557f94d8xd69cce83731e2a4b@mail.gmail.com>
-	<bb145bd20607060601x33519be7tb4c4812ab54cc7c@mail.gmail.com>
+Subject: Re: Can't get md array to shut down cleanly
+Date: Fri, 7 Jul 2006 08:13:02 +1000
+Message-ID: <17581.35566.273512.814844@cse.unsw.edu.au>
+References: <bb145bd20607060648p3776d335g55e4bdee4ecaf3c4@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
@@ -17,28 +14,54 @@ Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 On Thursday July 6, pernegger@gmail.com wrote:
-> > > I suggest you find a SATA related mailing list to post this to (Look
-> > > in the MAINTAINERS file maybe) or post it to linux-kernel.
+> Still more problems ... :(
 > 
-> linux-ide couldn't help much, aside from recommending a bleeding-edge
-> patchset which should fix a lot of things SATA:
-> http://home-tj.org/files/libata-tj-stable/
+> My md raid5 still does not always shut down cleanly. The last few
+> lines of the shutdown sequence are always as follows:
 > 
-> What fixed the error, though, was exchanging one of the cables. (Just
-> my luck, it was new and supposedly quality, ... oh well)
+> [...]
+> Will now halt.
+> md: stopping all md devices.
+> md: md0 still in use.
+> Synchronizing SCSI cache for disk /dev/sdd:
+> Synchronizing SCSI cache for disk /dev/sdc:
+> Synchronizing SCSI cache for disk /dev/sdb:
+> Synchronizing SCSI cache for disk /dev/sda:
+> Shutdown: hde
+> System halted.
 > 
-> I'm still interested in why the md code didn't fail the disk. While it
-> was 'up' any access to the array would hang for a long time,
-> ultimately fail and corrupt the fs to boot. When I failed the disk
-> manually everything was fine (if degraded) again.
+> Most of the time the md array comes up clean on the next boot, often
+> enough it does not. Having the array rebuild after every other reboot
+> is not my idea of fun, because the only reason to take it down is to
+> exchange a failing disk.
+> 
 
-md is very dependant on the driver doing the right thing.  It doesn't
-do any timeouts or anything like that - it assumes the driver will. 
-md simply trusts the return status from the drive, and fails a drive
-if and only if a write to the drive is reported as failing (if a read
-fails, md trys to over-write with good data first).
+How are you shutting down the machine?  If something sending SIGKILL
+to all processes?  If it does, then md really should shut down cleanly
+every time....
 
-I don't know exactly how the driver was responding to the bad cable,
-but it clearly wasn't returning an error, so md didn't fail it.
+That said, I do see some room for improvement in the md shutdown
+sequence - it shouldn't give up at that point just because the device
+seems to be in use....  I'll look into that.
+You could try the following patch.  I think it should be safe.
 
 NeilBrown
+
+Signed-off-by: Neil Brown <neilb@suse.de>
+
+### Diffstat output
+ ./drivers/md/md.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff .prev/drivers/md/md.c ./drivers/md/md.c
+--- .prev/drivers/md/md.c	2006-07-07 08:11:43.000000000 +1000
++++ ./drivers/md/md.c	2006-07-07 08:12:15.000000000 +1000
+@@ -3217,7 +3217,7 @@ static int do_md_stop(mddev_t * mddev, i
+ 	struct gendisk *disk = mddev->gendisk;
+ 
+ 	if (mddev->pers) {
+-		if (atomic_read(&mddev->active)>2) {
++		if (mode != 1 && atomic_read(&mddev->active)>2) {
+ 			printk("md: %s still in use.\n",mdname(mddev));
+ 			return -EBUSY;
+ 		}
