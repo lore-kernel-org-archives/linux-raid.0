@@ -1,52 +1,81 @@
-From: Mattias Wadenstein <maswan@acc.umu.se>
-Subject: Re: Strange intermittant errors + RAID doesn't fail the disk.
-Date: Fri, 7 Jul 2006 10:58:07 +0200 (MEST)
-Message-ID: <Pine.GSO.4.64.0607071049000.18452@montezuma.acc.umu.se>
-References: <bb145bd20606300932x2268822k78561e549996aef3@mail.gmail.com>
- <17573.52096.655463.808666@cse.unsw.edu.au>
- <bb145bd20606302313x557f94d8xd69cce83731e2a4b@mail.gmail.com>
- <bb145bd20607060601x33519be7tb4c4812ab54cc7c@mail.gmail.com>
- <17581.35131.123710.652968@cse.unsw.edu.au>
+From: "Christian Pernegger" <pernegger@gmail.com>
+Subject: Re: Can't get md array to shut down cleanly
+Date: Fri, 7 Jul 2006 11:25:08 +0200
+Message-ID: <bb145bd20607070225q7d6f943cx134815d004ad0d78@mail.gmail.com>
+References: <bb145bd20607060648p3776d335g55e4bdee4ecaf3c4@mail.gmail.com>
+	 <17581.35566.273512.814844@cse.unsw.edu.au>
+	 <bb145bd20607061807m7d3a2395hd75b5b338b86e259@mail.gmail.com>
+	 <17582.4876.14646.245791@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17581.35131.123710.652968@cse.unsw.edu.au>
+In-Reply-To: <17582.4876.14646.245791@cse.unsw.edu.au>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: Neil Brown <neilb@suse.de>
-Cc: Christian Pernegger <pernegger@gmail.com>, linux-raid@vger.kernel.org
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, 7 Jul 2006, Neil Brown wrote:
+Good morning!
 
-> On Thursday July 6, pernegger@gmail.com wrote:
->>>> I suggest you find a SATA related mailing list to post this to (Look
->>>> in the MAINTAINERS file maybe) or post it to linux-kernel.
->>
->> linux-ide couldn't help much, aside from recommending a bleeding-edge
->> patchset which should fix a lot of things SATA:
->> http://home-tj.org/files/libata-tj-stable/
->>
->> What fixed the error, though, was exchanging one of the cables. (Just
->> my luck, it was new and supposedly quality, ... oh well)
->>
->> I'm still interested in why the md code didn't fail the disk. While it
->> was 'up' any access to the array would hang for a long time,
->> ultimately fail and corrupt the fs to boot. When I failed the disk
->> manually everything was fine (if degraded) again.
+> That patch was against latest -mm.... For earlier kernels you want to
+> test 'ro'.
+
+Ok. Was using stock 2.6.17.
+
+> > Done unmounting local file systems.
+> > *md: md0 stopped
+> > *md: unbind <sdf>
+> > *md: export_rdev<sdf>
+> > *[last two lines for each disk.]
+> > *Stopping RAID arrays ... done (1 array(s) stopped).
+> > Mounting root filesystem read-only ... done
 >
-> md is very dependant on the driver doing the right thing.  It doesn't
-> do any timeouts or anything like that - it assumes the driver will.
-> md simply trusts the return status from the drive, and fails a drive
-> if and only if a write to the drive is reported as failing (if a read
-> fails, md trys to over-write with good data first).
+> That isn't good. You've stopped the array before the filesystem is
+> readonly.  Switching to readonly could cause a write which won't work
+> as the array doesn't exist any more...
 
-Hmm.. Perhaps a bit of extra logic there might be good? If you try to 
-re-write the failing bit with good data, try to read the recently written 
-data back (perhaps after a bit of wait). If that still fails, then fail 
-the disk.
+I don't have root on the md, just a regular fs, which is unmounted
+just before that first line above.
 
-If it can't remember recently written data, it is clearly unsuitable for a 
-running system. But the occasional block going bad (and getting remapped 
-at a write) wouldn't trigger it.
+> That really should cause the array to be clean.  Once the md thread
+> gets SIGKILL (it ignores SIGTERM) it will mark the array as 'clean'
+> the moment there are no pending writes.
 
-/Mattias Wadenstein
+After digging a little deeper it seems that the md thread(s) might not
+get their SIGKILL after all. The relevant portion from S20sendsigs is
+as follows:
+
+do_stop () {
+        # Kill all processes.
+        log_action_begin_msg "Sending all processes the TERM signal"
+        killall5 -15
+        log_action_end_msg 0
+        sleep 5
+        log_action_begin_msg "Sending all processes the KILL signal"
+        killall5 -9
+        log_action_end_msg 0
+}
+
+Apparently killall5 excludes kernel threads. I tried regular killall
+but that kills the shutdown script as well :) What do other distros
+use? I could file a bug but I highly doubt it would be seen as such.
+
+S40umountfs unmounts non-root filesystems
+S50mdadm-raid tries to stop arrays (and maybe succeeds, with patch)
+via mdadm --stop.
+S90halt halts the machine.
+
+I'd really feel better if I didn't have to rely on userspace at all to
+shut down my arrays, though. At least for people with root-on-RAID the
+shutdown just before halt / reboot will have to work, anyway.
+
+Any idea what could keep the mddev->active above 2?
+
+Happy to help with bughuntiung -- I can't use the box properly anyway
+until I can be sure this is solved.
+
+Thanks,
+
+C.
