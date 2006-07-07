@@ -1,67 +1,25 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Kernel 2.6.17 and RAID5 Grow Problem (critical section backup)
-Date: Fri, 7 Jul 2006 08:38:08 -0400 (EDT)
-Message-ID: <Pine.LNX.4.64.0607070830450.2648@p34.internal.lan>
+From: "Ewan Grantham" <ewan.grantham@gmail.com>
+Subject: Setting up mdadm.conf for UUID?
+Date: Fri, 7 Jul 2006 07:39:12 -0500
+Message-ID: <6d5bedd80607070539x53df9eeet8d4ba31acb283ee5@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-raid@vger.kernel.org
+To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-p34:~# mdadm /dev/md3 -a /dev/hde1
-mdadm: added /dev/hde1
+My RAID-5 array is composed of six USB drives. Unfortunately, my
+Ubuntu Dapper system doesn't always assign the same devices to the
+drives after a reboot. However, mdadm doesn't seem to like having an
+mdadm.conf that doesn't have a Devices line with specified device
+names.
 
-p34:~# mdadm -D /dev/md3
-/dev/md3:
-         Version : 00.90.03
-   Creation Time : Fri Jun 30 09:17:12 2006
-      Raid Level : raid5
-      Array Size : 1953543680 (1863.04 GiB 2000.43 GB)
-     Device Size : 390708736 (372.61 GiB 400.09 GB)
-    Raid Devices : 6
-   Total Devices : 7
-Preferred Minor : 3
-     Persistence : Superblock is persistent
+Anyway to setup an mdadm.conf so that it will just assemble the drives
+using the UUID of the array? Or is the trick to not have an mdadm.conf
+and add something to a runlevel script?
 
-     Update Time : Fri Jul  7 08:25:44 2006
-           State : clean
-  Active Devices : 6
-Working Devices : 7
-  Failed Devices : 0
-   Spare Devices : 1
-
-          Layout : left-symmetric
-      Chunk Size : 512K
-
-            UUID : e76e403c:7811eb65:73be2f3b:0c2fc2ce
-          Events : 0.232940
-
-     Number   Major   Minor   RaidDevice State
-        0      22        1        0      active sync   /dev/hdc1
-        1      56        1        1      active sync   /dev/hdi1
-        2       3        1        2      active sync   /dev/hda1
-        3       8       49        3      active sync   /dev/sdd1
-        4      88        1        4      active sync   /dev/hdm1
-        5       8       33        5      active sync   /dev/sdc1
-
-        6      33        1        -      spare   /dev/hde1
-p34:~# mdadm --grow /dev/md3 --raid-disks=7
-mdadm: Need to backup 15360K of critical section..
-mdadm: Cannot set device size/shape for /dev/md3: No space left on device
-p34:~# mdadm --grow /dev/md3 --bitmap=internal --raid-disks=7
-mdadm: can change at most one of size, raiddisks, bitmap, and layout
-p34:~# umount /dev/md3
-p34:~# mdadm --grow /dev/md3 --raid-disks=7
-mdadm: Need to backup 15360K of critical section..
-mdadm: Cannot set device size/shape for /dev/md3: No space left on device
-p34:~#
-
-The disk only has about 350GB of 1.8TB used, any idea why I get this 
-error?
-
-I searched google but could not find anything on this issue when trying to 
-grow the array?
-
-
+TIA,
+Ewan
