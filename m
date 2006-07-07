@@ -1,81 +1,67 @@
-From: "Christian Pernegger" <pernegger@gmail.com>
-Subject: Re: Can't get md array to shut down cleanly
-Date: Fri, 7 Jul 2006 11:25:08 +0200
-Message-ID: <bb145bd20607070225q7d6f943cx134815d004ad0d78@mail.gmail.com>
-References: <bb145bd20607060648p3776d335g55e4bdee4ecaf3c4@mail.gmail.com>
-	 <17581.35566.273512.814844@cse.unsw.edu.au>
-	 <bb145bd20607061807m7d3a2395hd75b5b338b86e259@mail.gmail.com>
-	 <17582.4876.14646.245791@cse.unsw.edu.au>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Kernel 2.6.17 and RAID5 Grow Problem (critical section backup)
+Date: Fri, 7 Jul 2006 08:38:08 -0400 (EDT)
+Message-ID: <Pine.LNX.4.64.0607070830450.2648@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17582.4876.14646.245791@cse.unsw.edu.au>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
+To: linux-kernel@vger.kernel.org
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Good morning!
+p34:~# mdadm /dev/md3 -a /dev/hde1
+mdadm: added /dev/hde1
 
-> That patch was against latest -mm.... For earlier kernels you want to
-> test 'ro'.
+p34:~# mdadm -D /dev/md3
+/dev/md3:
+         Version : 00.90.03
+   Creation Time : Fri Jun 30 09:17:12 2006
+      Raid Level : raid5
+      Array Size : 1953543680 (1863.04 GiB 2000.43 GB)
+     Device Size : 390708736 (372.61 GiB 400.09 GB)
+    Raid Devices : 6
+   Total Devices : 7
+Preferred Minor : 3
+     Persistence : Superblock is persistent
 
-Ok. Was using stock 2.6.17.
+     Update Time : Fri Jul  7 08:25:44 2006
+           State : clean
+  Active Devices : 6
+Working Devices : 7
+  Failed Devices : 0
+   Spare Devices : 1
 
-> > Done unmounting local file systems.
-> > *md: md0 stopped
-> > *md: unbind <sdf>
-> > *md: export_rdev<sdf>
-> > *[last two lines for each disk.]
-> > *Stopping RAID arrays ... done (1 array(s) stopped).
-> > Mounting root filesystem read-only ... done
->
-> That isn't good. You've stopped the array before the filesystem is
-> readonly.  Switching to readonly could cause a write which won't work
-> as the array doesn't exist any more...
+          Layout : left-symmetric
+      Chunk Size : 512K
 
-I don't have root on the md, just a regular fs, which is unmounted
-just before that first line above.
+            UUID : e76e403c:7811eb65:73be2f3b:0c2fc2ce
+          Events : 0.232940
 
-> That really should cause the array to be clean.  Once the md thread
-> gets SIGKILL (it ignores SIGTERM) it will mark the array as 'clean'
-> the moment there are no pending writes.
+     Number   Major   Minor   RaidDevice State
+        0      22        1        0      active sync   /dev/hdc1
+        1      56        1        1      active sync   /dev/hdi1
+        2       3        1        2      active sync   /dev/hda1
+        3       8       49        3      active sync   /dev/sdd1
+        4      88        1        4      active sync   /dev/hdm1
+        5       8       33        5      active sync   /dev/sdc1
 
-After digging a little deeper it seems that the md thread(s) might not
-get their SIGKILL after all. The relevant portion from S20sendsigs is
-as follows:
+        6      33        1        -      spare   /dev/hde1
+p34:~# mdadm --grow /dev/md3 --raid-disks=7
+mdadm: Need to backup 15360K of critical section..
+mdadm: Cannot set device size/shape for /dev/md3: No space left on device
+p34:~# mdadm --grow /dev/md3 --bitmap=internal --raid-disks=7
+mdadm: can change at most one of size, raiddisks, bitmap, and layout
+p34:~# umount /dev/md3
+p34:~# mdadm --grow /dev/md3 --raid-disks=7
+mdadm: Need to backup 15360K of critical section..
+mdadm: Cannot set device size/shape for /dev/md3: No space left on device
+p34:~#
 
-do_stop () {
-        # Kill all processes.
-        log_action_begin_msg "Sending all processes the TERM signal"
-        killall5 -15
-        log_action_end_msg 0
-        sleep 5
-        log_action_begin_msg "Sending all processes the KILL signal"
-        killall5 -9
-        log_action_end_msg 0
-}
+The disk only has about 350GB of 1.8TB used, any idea why I get this 
+error?
 
-Apparently killall5 excludes kernel threads. I tried regular killall
-but that kills the shutdown script as well :) What do other distros
-use? I could file a bug but I highly doubt it would be seen as such.
+I searched google but could not find anything on this issue when trying to 
+grow the array?
 
-S40umountfs unmounts non-root filesystems
-S50mdadm-raid tries to stop arrays (and maybe succeeds, with patch)
-via mdadm --stop.
-S90halt halts the machine.
 
-I'd really feel better if I didn't have to rely on userspace at all to
-shut down my arrays, though. At least for people with root-on-RAID the
-shutdown just before halt / reboot will have to work, anyway.
-
-Any idea what could keep the mddev->active above 2?
-
-Happy to help with bughuntiung -- I can't use the box properly anyway
-until I can be sure this is solved.
-
-Thanks,
-
-C.
