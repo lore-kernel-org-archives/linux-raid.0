@@ -1,134 +1,61 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: Kernel 2.6.17 and RAID5 Grow Problem (critical section backup)
-Date: Fri, 7 Jul 2006 10:37:46 -0400 (EDT)
-Message-ID: <Pine.LNX.4.64.0607071037190.5153@p34.internal.lan>
-References: <Pine.LNX.4.64.0607070830450.2648@p34.internal.lan>
- <Pine.LNX.4.64.0607070845280.2648@p34.internal.lan>
- <Pine.LNX.4.64.0607070849140.3010@p34.internal.lan>
+From: Doug Ledford <dledford@redhat.com>
+Subject: Re: Strange intermittant errors + RAID doesn't fail the disk.
+Date: Fri, 07 Jul 2006 13:38:41 -0400
+Message-ID: <1152293921.17835.70.camel@fc5.xsintricity.com>
+References: <bb145bd20606300932x2268822k78561e549996aef3@mail.gmail.com>
+	 <17573.52096.655463.808666@cse.unsw.edu.au>
+	 <bb145bd20606302313x557f94d8xd69cce83731e2a4b@mail.gmail.com>
+	 <bb145bd20607060601x33519be7tb4c4812ab54cc7c@mail.gmail.com>
+	 <17581.35131.123710.652968@cse.unsw.edu.au>
+	 <bb145bd20607061529i6d84ca2at35e3a11144e4608c@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0607070849140.3010@p34.internal.lan>
+In-Reply-To: <bb145bd20607061529i6d84ca2at35e3a11144e4608c@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-raid@vger.kernel.org, neilb@suse.de
+To: Christian Pernegger <pernegger@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Fri, 2006-07-07 at 00:29 +0200, Christian Pernegger wrote:
 
+> > I don't know exactly how the driver was responding to the bad cable,
+> > but it clearly wasn't returning an error, so md didn't fail it.
+> 
+> There were a lot of errors in dmesg -- seems like they did not get
+> passed up to md? I find it surprising that the md layer doesn't have
+> its own timeouts, but then I know nothing about such things :)
+> 
+> Thanks for clearing this up for me,
+> 
+> C.
+> 
+> [...]
+> ata2: port reset, p_is 8000000 is 2 pis 0 cmd 44017 tf d0 ss 123 se 0
+> ata2: status=0x50 { DriveReady SeekComplete }
+> sdc: Current: sense key: No Sense
+>    Additional sense: No additional sense information
+> ata2: handling error/timeout
+> ata2: port reset, p_is 0 is 0 pis 0 cmd 44017 tf 150 ss 123 se 0
+> ata2: status=0x50 { DriveReady SeekComplete }
+> ata2: error=0x01 { AddrMarkNotFound }
+> sdc: Current: sense key: No Sense
+>    Additional sense: No additional sense information
+> [repeat]
 
-On Fri, 7 Jul 2006, Justin Piszcz wrote:
+This looks like a bad sd/sata lld interaction problem.  Specifically,
+the sata driver wasn't filling in a suitable sense code block to
+simulate auto-sense on the command, and the scsi disk driver was either
+trying to get sense or retrying the same command.  Anyway, not an md
+issue, a sata/scsi issue in terms of why it wasn't getting out of the
+reset loop eventually.  I would send your bad cable to Jeff Garzik for
+further analysis of the problem ;-)
 
-> On Fri, 7 Jul 2006, Justin Piszcz wrote:
->
->> On Fri, 7 Jul 2006, Justin Piszcz wrote:
->> 
->>> p34:~# mdadm /dev/md3 -a /dev/hde1
->>> mdadm: added /dev/hde1
->>> 
->>> p34:~# mdadm -D /dev/md3
->>> /dev/md3:
->>>        Version : 00.90.03
->>>  Creation Time : Fri Jun 30 09:17:12 2006
->>>     Raid Level : raid5
->>>     Array Size : 1953543680 (1863.04 GiB 2000.43 GB)
->>>    Device Size : 390708736 (372.61 GiB 400.09 GB)
->>>   Raid Devices : 6
->>>  Total Devices : 7
->>> Preferred Minor : 3
->>>    Persistence : Superblock is persistent
->>>
->>>    Update Time : Fri Jul  7 08:25:44 2006
->>>          State : clean
->>> Active Devices : 6
->>> Working Devices : 7
->>> Failed Devices : 0
->>>  Spare Devices : 1
->>>
->>>         Layout : left-symmetric
->>>     Chunk Size : 512K
->>>
->>>           UUID : e76e403c:7811eb65:73be2f3b:0c2fc2ce
->>>         Events : 0.232940
->>>
->>>    Number   Major   Minor   RaidDevice State
->>>       0      22        1        0      active sync   /dev/hdc1
->>>       1      56        1        1      active sync   /dev/hdi1
->>>       2       3        1        2      active sync   /dev/hda1
->>>       3       8       49        3      active sync   /dev/sdd1
->>>       4      88        1        4      active sync   /dev/hdm1
->>>       5       8       33        5      active sync   /dev/sdc1
->>>
->>>       6      33        1        -      spare   /dev/hde1
->>> p34:~# mdadm --grow /dev/md3 --raid-disks=7
->>> mdadm: Need to backup 15360K of critical section..
->>> mdadm: Cannot set device size/shape for /dev/md3: No space left on device
->>> p34:~# mdadm --grow /dev/md3 --bitmap=internal --raid-disks=7
->>> mdadm: can change at most one of size, raiddisks, bitmap, and layout
->>> p34:~# umount /dev/md3
->>> p34:~# mdadm --grow /dev/md3 --raid-disks=7
->>> mdadm: Need to backup 15360K of critical section..
->>> mdadm: Cannot set device size/shape for /dev/md3: No space left on device
->>> p34:~#
->>> 
->>> The disk only has about 350GB of 1.8TB used, any idea why I get this 
->>> error?
->>> 
->>> I searched google but could not find anything on this issue when trying to 
->>> grow the array?
->>> 
->>> 
->>> -
->>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>> 
->> 
->> Is it because I use a 512kb chunksize?
->> 
->> Jul  7 08:44:59 p34 kernel: [4295845.933000] raid5: reshape: not enough 
->> stripes.  Needed 512
->> Jul  7 08:44:59 p34 kernel: [4295845.962000] md: couldn't update array 
->> info. -28
->> 
->> So the RAID5 reshape only works if you use a 128kb or smaller chunk size?
->> 
->> Justin.
->> -
->> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->> Please read the FAQ at  http://www.tux.org/lkml/
->> 
->
->> From the source:
->
-> /* Can only proceed if there are plenty of stripe_heads.
-> @@ -2599,30 +2593,48 @@ static int raid5_reshape(mddev_t *mddev,
-> * If the chunk size is greater, user-space should request more
-> * stripe_heads first.
-> */
-> - if ((mddev->chunk_size / STRIPE_SIZE) * 4 > conf->max_nr_stripes) {
-> + if ((mddev->chunk_size / STRIPE_SIZE) * 4 > conf->max_nr_stripes ||
-> + (mddev->new_chunk / STRIPE_SIZE) * 4 > conf->max_nr_stripes) {
-> printk(KERN_WARNING "raid5: reshape: not enough stripes. Needed %lu\n",
-> (mddev->chunk_size / STRIPE_SIZE)*4);
-> return -ENOSPC;
-> }
->
-> I don't see anything that mentions one needs to use a certain chunk size?
->
-> Any idea what the problem is here?
->
-> Justin.
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
->
+-- 
+Doug Ledford <dledford@redhat.com>
+http://people.redhat.com/dledford
 
-Neil,
+Infiniband specific RPMs available at
+http://people.redhat.com/dledford/Infiniband
 
-Any comments?
-
-Justin.
