@@ -1,56 +1,43 @@
-From: Reuben Farrelly <reuben-lkml@reub.net>
-Subject: Re: Resizing RAID-1 arrays - some possible bugs and problems
-Date: Sat, 08 Jul 2006 09:10:07 +1200
-Message-ID: <44AECDAF.3080608@reub.net>
-References: <44AE644C.9090408@reub.net> <Pine.LNX.4.64.0607071451370.14371@p34.internal.lan>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: Kernel 2.6.17 and RAID5 Grow Problem (critical section backup)
+Date: Sat, 8 Jul 2006 08:00:55 +1000
+Message-ID: <17582.55703.209583.446356@cse.unsw.edu.au>
+References: <Pine.LNX.4.64.0607070830450.2648@p34.internal.lan>
+	<Pine.LNX.4.64.0607070845280.2648@p34.internal.lan>
+	<Pine.LNX.4.64.0607070849140.3010@p34.internal.lan>
+	<Pine.LNX.4.64.0607071037190.5153@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0607071451370.14371@p34.internal.lan>
+In-Reply-To: message from Justin Piszcz on Friday July 7
 Sender: linux-raid-owner@vger.kernel.org
 To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: linux-raid@vger.kernel.org, Neil Brown <neilb@suse.de>
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-
-
-On 8/07/2006 6:52 a.m., Justin Piszcz wrote:
-> Reuben,
+On Friday July 7, jpiszcz@lucidpixels.com wrote:
+> >> 
+> >> Jul  7 08:44:59 p34 kernel: [4295845.933000] raid5: reshape: not enough 
+> >> stripes.  Needed 512
+> >> Jul  7 08:44:59 p34 kernel: [4295845.962000] md: couldn't update array 
+> >> info. -28
+> >> 
+> >> So the RAID5 reshape only works if you use a 128kb or smaller chunk size?
+> >> 
 > 
-> What chunk size did you use?
+> Neil,
 > 
-> I can't even get mine to get past this part:
-> 
-> p34:~# mdadm /dev/md3 --grow --raid-disks=7
-> mdadm: Need to backup 15360K of critical section..
-> mdadm: Cannot set device size/shape for /dev/md3: No space left on device
-> 
-> Justin.
+> Any comments?
 > 
 
-Just whatever the system selected for the chunk size, ie I didn't specify it 
-myself ;)
+Yes.   This is something I need to fix in the next mdadm.
+You need to tell md/raid5 to increase the size of the stripe cache
+before the grow can proceed.  You can do this with
 
-[root@tornado cisco]# cat /proc/mdstat
-Personalities : [raid1]
+  echo 600 > /sys/block/md3/md/stripe_cache_size
 
-md0 : active raid1 sdc2[0] sda2[1]
-       24410688 blocks [2/2] [UU]
-       bitmap: 0/187 pages [0KB], 64KB chunk
+Then the --grow should work.  The next mdadm will do this for you.
 
-md1 : active raid1 sdc3[0] sda3[1]
-       19542944 blocks [2/2] [UU]
-       bitmap: 0/150 pages [0KB], 64KB chunk
-
-md2 : active raid1 sdc5[0] sda5[1]
-       4891648 blocks [2/2] [UU]
-       bitmap: 2/150 pages [8KB], 16KB chunk
-
-I was working on md1 when I filed the email earlier.
-
-I wonder if the chunk size is left as-is after a --grow, and if this is optimal 
-or not or if this could lead to issues...
-
-reuben
+NeilBrown
 
