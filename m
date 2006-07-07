@@ -1,116 +1,80 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: Kernel 2.6.17 and RAID5 Grow Problem (critical section backup)
-Date: Fri, 7 Jul 2006 08:49:43 -0400 (EDT)
-Message-ID: <Pine.LNX.4.64.0607070849140.3010@p34.internal.lan>
-References: <Pine.LNX.4.64.0607070830450.2648@p34.internal.lan>
- <Pine.LNX.4.64.0607070845280.2648@p34.internal.lan>
+From: "John Stoffel" <john@stoffel.org>
+Subject: Re: zeroing old superblocks & upgrading...
+Date: Fri, 7 Jul 2006 09:10:34 -0400
+Message-ID: <17582.23882.797049.201350@stoffel.org>
+References: <17581.36135.379062.709693@stoffel.org>
+	<17581.38932.532010.388731@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0607070845280.2648@p34.internal.lan>
+In-Reply-To: <17581.38932.532010.388731@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: John Stoffel <john@stoffel.org>, Luca Berra <bluca@comedia.it>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, 7 Jul 2006, Justin Piszcz wrote:
+>>>>> "Neil" == Neil Brown <neilb@suse.de> writes:
 
-> On Fri, 7 Jul 2006, Justin Piszcz wrote:
->
->> p34:~# mdadm /dev/md3 -a /dev/hde1
->> mdadm: added /dev/hde1
+>> I can't seem to zero it out:
 >> 
->> p34:~# mdadm -D /dev/md3
->> /dev/md3:
->>        Version : 00.90.03
->>  Creation Time : Fri Jun 30 09:17:12 2006
->>     Raid Level : raid5
->>     Array Size : 1953543680 (1863.04 GiB 2000.43 GB)
->>    Device Size : 390708736 (372.61 GiB 400.09 GB)
->>   Raid Devices : 6
->>  Total Devices : 7
->> Preferred Minor : 3
->>    Persistence : Superblock is persistent
->>
->>    Update Time : Fri Jul  7 08:25:44 2006
->>          State : clean
->> Active Devices : 6
->> Working Devices : 7
->> Failed Devices : 0
->>  Spare Devices : 1
->>
->>         Layout : left-symmetric
->>     Chunk Size : 512K
->>
->>           UUID : e76e403c:7811eb65:73be2f3b:0c2fc2ce
->>         Events : 0.232940
->>
->>    Number   Major   Minor   RaidDevice State
->>       0      22        1        0      active sync   /dev/hdc1
->>       1      56        1        1      active sync   /dev/hdi1
->>       2       3        1        2      active sync   /dev/hda1
->>       3       8       49        3      active sync   /dev/sdd1
->>       4      88        1        4      active sync   /dev/hdm1
->>       5       8       33        5      active sync   /dev/sdc1
->>
->>       6      33        1        -      spare   /dev/hde1
->> p34:~# mdadm --grow /dev/md3 --raid-disks=7
->> mdadm: Need to backup 15360K of critical section..
->> mdadm: Cannot set device size/shape for /dev/md3: No space left on device
->> p34:~# mdadm --grow /dev/md3 --bitmap=internal --raid-disks=7
->> mdadm: can change at most one of size, raiddisks, bitmap, and layout
->> p34:~# umount /dev/md3
->> p34:~# mdadm --grow /dev/md3 --raid-disks=7
->> mdadm: Need to backup 15360K of critical section..
->> mdadm: Cannot set device size/shape for /dev/md3: No space left on device
->> p34:~#
+>> # mdadm --misc --zero-superblock /dev/hde
+>> mdadm: Couldn't open /dev/hde for write - not zeroing
 >> 
->> The disk only has about 350GB of 1.8TB used, any idea why I get this error?
->> 
->> I searched google but could not find anything on this issue when trying to 
->> grow the array?
->> 
->> 
->> -
->> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->> 
->
-> Is it because I use a 512kb chunksize?
->
-> Jul  7 08:44:59 p34 kernel: [4295845.933000] raid5: reshape: not enough 
-> stripes.  Needed 512
-> Jul  7 08:44:59 p34 kernel: [4295845.962000] md: couldn't update array info. 
-> -28
->
-> So the RAID5 reshape only works if you use a 128kb or smaller chunk size?
->
-> Justin.
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
->
+>> Should I just ignore this, or should I break off /dev/hde from the
+>> array and scrub the disk and then re-add it back in?
 
-From the source:
+Neil> You could ignore it - it shouldn't hurt.
 
-/* Can only proceed if there are plenty of stripe_heads.
-@@ -2599,30 +2593,48 @@ static int raid5_reshape(mddev_t *mddev,
-* If the chunk size is greater, user-space should request more
-* stripe_heads first.
-*/
-- if ((mddev->chunk_size / STRIPE_SIZE) * 4 > conf->max_nr_stripes) {
-+ if ((mddev->chunk_size / STRIPE_SIZE) * 4 > conf->max_nr_stripes ||
-+ (mddev->new_chunk / STRIPE_SIZE) * 4 > conf->max_nr_stripes) {
-printk(KERN_WARNING "raid5: reshape: not enough stripes. Needed %lu\n",
-(mddev->chunk_size / STRIPE_SIZE)*4);
-return -ENOSPC;
-}
+Ok.
 
-I don't see anything that mentions one needs to use a certain chunk size?
+Neil> But if you wanted to (and were running a fairly recent kernel) you
+Neil> could
+Neil>   mdadm --grow --bitmap=internal /dev/md0
 
-Any idea what the problem is here?
+Did this.  And now I can do mdadm -X /dev/hde1 to examine the bitmap,
+but I think this totally blows.  To create a bitmap, I add it to an
+md# device, but to examine it, I have to know which sub-devices to
+query?  That's really not what I would expect.
 
-Justin.
+I do see that 
+
+	mdadm -q --detail /dev/md0
+
+shows the bitmap status (though not the size or parameters of the
+bitmap), which is good. 
+
+Neil>   mdadm /dev/md0 --fail /dev/hde1 --remove /dev/hde1
+Neil>   mdadm --zero-superblock /dev/hde
+Neil>   mdadm /dev/md0 --add /dev/hde1
+
+Worked wonderfully!  Cleaned out the old superblock nicely, which I
+think is a good thing here. 
+
+Neil>   mdadm --grow --bitmap=none /dev/md0
+
+Neil> and it should work with minimal resync...
+
+So why would I want to remove the bitmap?  The re-sync happened pretty
+much quickly enough that I didn't even see any non-in-sync status when
+I did the --add of the device back in.  Very very cool...
+
+Though... if I was paranoid, I'd disable the bitmap because there's no
+way to be sure that I didn't write some garbage at a random block N
+somewhere in the array.  Hmm... can't make that guarrentee now either,
+so it's probably a moot point.  
+
+In any case, I'm planning on keeping the bitmap.  
+
+Neil> Though thinking about it - after the first --grow, check that
+Neil> the unwanted bitmap is still there.  It is quite possible that
+Neil> the internal bitmap will over-write the unwanted superblock
+Neil> (depending on the exact size and aligment of hde1 compared with
+Neil> hde).  If it is gone, then don't bother with the rest of the
+Neil> sequence.
+
+It was still there after the addition of the bitmap.  
+
+Thanks Neil!
+
+John
