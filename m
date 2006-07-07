@@ -1,81 +1,41 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: Can't get md array to shut down cleanly
-Date: Fri, 7 Jul 2006 17:53:48 +1000
-Message-ID: <17582.4876.14646.245791@cse.unsw.edu.au>
-References: <bb145bd20607060648p3776d335g55e4bdee4ecaf3c4@mail.gmail.com>
-	<17581.35566.273512.814844@cse.unsw.edu.au>
-	<bb145bd20607061807m7d3a2395hd75b5b338b86e259@mail.gmail.com>
+From: Luca Berra <bluca@comedia.it>
+Subject: Re: issue with internal bitmaps
+Date: Fri, 7 Jul 2006 10:29:39 +0200
+Message-ID: <20060707082939.GC18956@percy.comedia.it>
+References: <20060706141207.GC21642@percy.comedia.it> <17581.35762.452409.927246@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Christian Pernegger on Friday July 7
+Content-Disposition: inline
+In-Reply-To: <17581.35762.452409.927246@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Christian Pernegger <pernegger@gmail.com>
+To: Neil Brown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Friday July 7, pernegger@gmail.com wrote:
-> > How are you shutting down the machine?  If something sending SIGKILL
-> > to all processes?
-> 
-> First SIGTERM, then SIGKILL, yes.
-> 
+On Fri, Jul 07, 2006 at 08:16:18AM +1000, Neil Brown wrote:
+>On Thursday July 6, bluca@comedia.it wrote:
+>> hello, i just realized that internal bitmaps do not seem to work
+>> anymore.
+>
+>I cannot imagine why.  Nothing you have listed show anything wrong
+>with md...
+>
+>Maybe you were expecting
+>   mdadm -X /dev/md100
+>to do something useful.  Like -E, -X must be applied to a component
+>device.  Try
+>   mdadm -X /dev/sda1
+>
+/me needs some strong coffe. yes you are right, sorry
 
-That really should cause the array to be clean.  Once the md thread
-gets SIGKILL (it ignores SIGTERM) it will mark the array as 'clean'
-the moment there are no pending writes.
-
-> > You could try the following patch.  I think it should be safe.
-> 
-> Hmm, it said chunk failed, so I replaced the line by hand. That didn't
-> want to compile because "mode" supposedly wasn't defined ... was that
-> supposed to be "mddev->safemode"? Closest thing to a mode I could find
-> ...
-
-That patch was against latest -mm.... For earlier kernels you want to
-test 'ro'.
-
-   if (!no && atomic_read(&mddev->active)>2) {
-          printk("md: %s still ing use.\n" ....
+L.
 
 
-> Anyway, this is much better: (lines with * are new)
-> 
-> Done unmounting local file systems.
-> *md: md0 stopped
-> *md: unbind <sdf>
-> *md: export_rdev<sdf>
-> *[last two lines for each disk.]
-> *Stopping RAID arrays ... done (1 array(s) stopped).
-> Mounting root filesystem read-only ... done
-
-That isn't good. You've stopped the array before the filesystem is
-readonly.  Switching to readonly could cause a write which won't work
-as the array doesn't exist any more...
-
-NeilBrown
-
-
-> Will now halt.
-> md: stopping all md devices
-> * md: md0 switched to read-only mode
-> Synchronizing SCSI cache for disk /dev/sdf:
-> [...]
-> 
-> As you can see the error message is gone now. Much more interesting
-> are the lines before the "Will now halt." line. Those were not there
-> before -- apparently this first attempt by whatever to shutdown the
-> array failed silently.
-> 
-> Not sure if this actually fixes the resync problem (I sure hope so,
-> after the last of these no fs could be found anymore on the device)
-> but it's 5 past 3 already, will try tomorrow.
-> 
-> Thanks,
-> 
-> C.
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Luca Berra -- bluca@comedia.it
+        Communication Media & Services S.r.l.
+ /"\
+ \ /     ASCII RIBBON CAMPAIGN
+  X        AGAINST HTML MAIL
+ / \
