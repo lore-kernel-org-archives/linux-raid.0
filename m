@@ -1,47 +1,29 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
+From: "Christian Pernegger" <pernegger@gmail.com>
 Subject: Re: ICH7 sata-ahci + software raid warning
-Date: Tue, 11 Jul 2006 08:40:17 -0400 (EDT)
-Message-ID: <Pine.LNX.4.64.0607110839330.858@p34.internal.lan>
+Date: Tue, 11 Jul 2006 14:44:31 +0200
+Message-ID: <bb145bd20607110544u74cf35afra8875ef65394c5a2@mail.gmail.com>
 References: <bb145bd20607100948y2f41e034re3c0fb30c8bd1ad5@mail.gmail.com>
- <Pine.LNX.4.64.0607110823160.858@p34.internal.lan>
- <fd8d0180607110533j7f9fe7c8k7ececea622d7c17b@mail.gmail.com>
+	 <Pine.LNX.4.64.0607110823160.858@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <fd8d0180607110533j7f9fe7c8k7ececea622d7c17b@mail.gmail.com>
+In-Reply-To: <Pine.LNX.4.64.0607110823160.858@p34.internal.lan>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Francois Barre <francois.barre@gmail.com>
-Cc: Christian Pernegger <pernegger@gmail.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+> Why not just --set-faulty or --fail with mdadm?
 
+This is not about testing, but about real errors.
 
-On Tue, 11 Jul 2006, Francois Barre wrote:
+1) I depend on the md layer to tell me if a disk is faulty ... failing
+the disk manually would only help if I already knew the disk was
+faulty and just wanted to remove it.
 
-> 2006/7/11, Justin Piszcz <jpiszcz@lucidpixels.com>:
->> Why not just --set-faulty or --fail with mdadm?
->> 
->
-> If you answer to "Bad blocks maybe, can't test that.", I'll say AFAIK,
-> --set-faulty will only stay at the md layer, and won't go through the
-> underlying driver (sata here, ata elsewhere, ...), so this will not
-> help diagnose the driver behaviour on block read problem.
->
-> If you answer to the fact that md does not mark the drive faulty, I
-> guess Christian was refering to an automatic to mark the disk faulty,
-> not a manual way, in order, for exemple, to trigger a resync with a
-> spare drive just after a drive failure has been detected (and not only
-> after the admin found it).
->
-> As an ugly workaround, a daemon script could look at the current drive
-> status regularly (in /sys, in /proc or trying to read /dev/sd?), and
-> mark the drive faulty on error...
->
+2) If the affected array has root on it it's game over: no logins of
+any sort, no issuing commands, no manual failing, since any process
+that accesses a fs will hang.
 
-For ICH5 and all other controllers (non-AHCI) of course, I've always seen 
-md mark it faulty on a bad disk/sector/etc.
-
-I thought you were just trying to mark it faulty manually for the purpose 
-of rebuilding it.
-
-Justin.
+C.
