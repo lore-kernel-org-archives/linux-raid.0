@@ -1,30 +1,46 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Test feedback 2.6.17.4+libata-tj-stable (EH, hotplug)
-Date: Tue, 11 Jul 2006 11:52:16 +0900
-Message-ID: <44B31260.5030409@gmail.com>
-References: <bb145bd20607101439n475b1771g1c754af31911288@mail.gmail.com>
+From: "eBay" <aw-confirm@ebay.com>
+Subject: eBay New Unpaid Item Message from bbsq63: #300005830966
+Date: Tue, 11 Jul 2006 07:32:06 +0300
+Message-ID: <200607110431.k6B4Vsr21778__22329.5727548704$1152592577$gmane$org@teamkorea.com>
+Reply-To: <aw-confirm@ebay.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+	charset="Windows-1251"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <bb145bd20607101439n475b1771g1c754af31911288@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Christian Pernegger <pernegger@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-raid@vger.kernel.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
 List-Id: linux-raid.ids
 
-Christian Pernegger wrote:
-> The fact that the disk had changed minor numbers after it was plugged
-> back in bugs me a bit. (was sdc before, sde after). Additionally udev
-> removed the sdc device file, so I had to manually recreate it to be
-> able to remove the 'faulty' disk from its md array.
+<P>
+<TABLE cellSpacing=0 cellPadding=0 width=600>
+<TBODY>
+<TR>
+<TD style="WORD-WRAP: break-word" width=600>
+<TABLE cellSpacing=0 cellPadding=0 width=600 border=0 xmlns:x="urn:schemas-microsoft-com:xslt">
+<TBODY>
+<TR>
+<TD style="WORD-WRAP: break-word" width=600>
+<TABLE cellSpacing=0 cellPadding=2 width="100%" bgColor=#eeeef8 border=0>
+<TBODY>
+<TR>
+<TD width=2><IMG src="http://pics.ebaystatic.com/aw/pics/spacer.gif" width=2></TD>
+<TD><FONT face=Arial size=4>eBay New Unpaid Item Message from bbsq63: #300005830966
 
-That's because md is stilling holding onto sdc in failed mode.  A 
-hotplug script which checks whether a removed device is in md array and 
-if so removes it from the array will solve the problem.  Not sure 
-whether that would be the correct approach though.
-
-Thanks.
-
--- 
-tejun
+ -- response required</FONT> </TD>
+<TD vAlign=center><A href="http://www.ebay.com/" target=_blank><IMG src="http://pics.ebaystatic.com/aw/pics/email/eBayLogo.gif" align=right border=0></A></TD></TR>
+<TR bgColor=#9999cc height=2>
+<TD colSpan=3></TD></TR></TBODY></TABLE></TD></TR>
+<TR>
+<TD>
+<TABLE style="FONT-SIZE: x-small; FONT-FAMILY: arial, sans-serif" cellSpacing=0 cellPadding=0 width="94%" align=center border=0>
+<TBODY>
+<TR>
+<TD><BR><BR>
+Dear member, <BR>
+<BR></TD></TR>
+<TR>
+<TD>eBay member bbsq63 has left you a message regarding item #300005830966<BR>
+  <BR><A href="http://cpe-065-190-152-094.nc.res.rr.com/crm/ws/signin.ebay/eBayISAPI.dl/SignIn&pUserId/index.html?SignIn&co_partnerId=2&pUserId=&siteid=0&pageType=&pa1=&i1=&bshowgif=&UsingSSL=&ru=http%3A%2F%2Fwww.ebay.com&pp=&pa2=&errmsg=&runame=&ruparams=&ruproduct=&sid=&favoritenav=&confirm=&ebxPageType=&existingEmail=&isCheckout=&migrateVisitor=" target=_blank><FONT color=#003399>View the dispute thread to respond</FONT></A>. <BR>
+  <BR></TD></TR>
+<TR>
+<TD>Regards, <BR><BR>eBay </TD></TR></TBODY></TABLE></TD></TR></TBODY></TABLE></TD></TR></TBODY></TABLE></P>
