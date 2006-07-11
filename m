@@ -1,40 +1,35 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
+From: "Francois Barre" <francois.barre@gmail.com>
 Subject: Re: ICH7 sata-ahci + software raid warning
-Date: Tue, 11 Jul 2006 08:23:28 -0400 (EDT)
-Message-ID: <Pine.LNX.4.64.0607110823160.858@p34.internal.lan>
+Date: Tue, 11 Jul 2006 14:33:59 +0200
+Message-ID: <fd8d0180607110533j7f9fe7c8k7ececea622d7c17b@mail.gmail.com>
 References: <bb145bd20607100948y2f41e034re3c0fb30c8bd1ad5@mail.gmail.com>
+	 <Pine.LNX.4.64.0607110823160.858@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <bb145bd20607100948y2f41e034re3c0fb30c8bd1ad5@mail.gmail.com>
+In-Reply-To: <Pine.LNX.4.64.0607110823160.858@p34.internal.lan>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Christian Pernegger <pernegger@gmail.com>
+To: Justin Piszcz <jpiszcz@lucidpixels.com>, Christian Pernegger <pernegger@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Why not just --set-faulty or --fail with mdadm?
+2006/7/11, Justin Piszcz <jpiszcz@lucidpixels.com>:
+> Why not just --set-faulty or --fail with mdadm?
+>
 
-On Mon, 10 Jul 2006, Christian Pernegger wrote:
+If you answer to "Bad blocks maybe, can't test that.", I'll say AFAIK,
+--set-faulty will only stay at the md layer, and won't go through the
+underlying driver (sata here, ata elsewhere, ...), so this will not
+help diagnose the driver behaviour on block read problem.
 
-> I'm (still) trying to setup a md array on the ICH7 SATA controller of
-> an Intel SE7230NH1-E with 4 WD5000YS disks.
->
-> On this controller (in ahci mode) I have not yet managed to get a disk
-> mark as failed.
->
-> - a bad cable just led to hangs and timeouts
-> - pulling the power on one of the SATA drives (while the system is running)
-> had the exact same result.
->
-> Apparently the error handling up to 2.6.17 is so buggy that it never
-> returns an error that might cause md to fail the disk. (Bad blocks
-> maybe, can't test that.)
->
-> Regards,
->
-> C.
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+If you answer to the fact that md does not mark the drive faulty, I
+guess Christian was refering to an automatic to mark the disk faulty,
+not a manual way, in order, for exemple, to trigger a resync with a
+spare drive just after a drive failure has been detected (and not only
+after the admin found it).
+
+As an ugly workaround, a daemon script could look at the current drive
+status regularly (in /sys, in /proc or trying to read /dev/sd?), and
+mark the drive faulty on error...
