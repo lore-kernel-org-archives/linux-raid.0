@@ -1,46 +1,53 @@
-From: "eBay" <aw-confirm@ebay.com>
-Subject: eBay New Unpaid Item Message from bbsq63: #300005830966
-Date: Tue, 11 Jul 2006 07:32:06 +0300
-Message-ID: <200607110431.k6B4Vsr21778__22329.5727548704$1152592577$gmane$org@teamkorea.com>
-Reply-To: <aw-confirm@ebay.com>
+From: Vladimir Strycek <vladoportos@vladoportos.sk>
+Subject: Problem with 3xRAID1 to RAID 0
+Date: Tue, 11 Jul 2006 09:41:31 +0200
+Message-ID: <44B3562B.7040801@vladoportos.sk>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="Windows-1251"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-<P>
-<TABLE cellSpacing=0 cellPadding=0 width=600>
-<TBODY>
-<TR>
-<TD style="WORD-WRAP: break-word" width=600>
-<TABLE cellSpacing=0 cellPadding=0 width=600 border=0 xmlns:x="urn:schemas-microsoft-com:xslt">
-<TBODY>
-<TR>
-<TD style="WORD-WRAP: break-word" width=600>
-<TABLE cellSpacing=0 cellPadding=2 width="100%" bgColor=#eeeef8 border=0>
-<TBODY>
-<TR>
-<TD width=2><IMG src="http://pics.ebaystatic.com/aw/pics/spacer.gif" width=2></TD>
-<TD><FONT face=Arial size=4>eBay New Unpaid Item Message from bbsq63: #300005830966
+Hi,
 
- -- response required</FONT> </TD>
-<TD vAlign=center><A href="http://www.ebay.com/" target=_blank><IMG src="http://pics.ebaystatic.com/aw/pics/email/eBayLogo.gif" align=right border=0></A></TD></TR>
-<TR bgColor=#9999cc height=2>
-<TD colSpan=3></TD></TR></TBODY></TABLE></TD></TR>
-<TR>
-<TD>
-<TABLE style="FONT-SIZE: x-small; FONT-FAMILY: arial, sans-serif" cellSpacing=0 cellPadding=0 width="94%" align=center border=0>
-<TBODY>
-<TR>
-<TD><BR><BR>
-Dear member, <BR>
-<BR></TD></TR>
-<TR>
-<TD>eBay member bbsq63 has left you a message regarding item #300005830966<BR>
-  <BR><A href="http://cpe-065-190-152-094.nc.res.rr.com/crm/ws/signin.ebay/eBayISAPI.dl/SignIn&pUserId/index.html?SignIn&co_partnerId=2&pUserId=&siteid=0&pageType=&pa1=&i1=&bshowgif=&UsingSSL=&ru=http%3A%2F%2Fwww.ebay.com&pp=&pa2=&errmsg=&runame=&ruparams=&ruproduct=&sid=&favoritenav=&confirm=&ebxPageType=&existingEmail=&isCheckout=&migrateVisitor=" target=_blank><FONT color=#003399>View the dispute thread to respond</FONT></A>. <BR>
-  <BR></TD></TR>
-<TR>
-<TD>Regards, <BR><BR>eBay </TD></TR></TBODY></TABLE></TD></TR></TBODY></TABLE></TD></TR></TBODY></TABLE></P>
+I created to 3 x /dev/md1 to /dev/md3  which consist of six identical 
+200GB hdd
+
+my mdadm --detail --scan looks like
+
+Proteus:/home/vladoportos# mdadm --detail --scan
+ARRAY /dev/md1 level=raid1 num-devices=2 UUID=d1fadb29:cc004047:aabf2f31:3f044905
+   devices=/dev/sdb,/dev/sda
+ARRAY /dev/md2 level=raid1 num-devices=2 UUID=38babb4d:92129d4a:94d659f1:3b238c53
+   devices=/dev/sdc,/dev/sdd
+ARRAY /dev/md3 level=raid1 num-devices=2 UUID=a0406e29:c1f586be:6b3381cf:086be0c2
+   devices=/dev/sde,/dev/sdf
+ARRAY /dev/md0 level=raid1 num-devices=2 UUID=c04441d4:e15d900e:57903584:9eb5fea6
+   devices=/dev/hdc1,/dev/hdd1
+
+
+and mdadm.conf
+
+DEVICE partitions
+ARRAY /dev/md4 level=raid0 num-devices=3 UUID=1c8291ba:2d83cf54:2698ce30:e49b1e6c
+   devices=/dev/md1,/dev/md2,/dev/md3
+ARRAY /dev/md3 level=raid1 num-devices=2 UUID=a0406e29:c1f586be:6b3381cf:086be0c2
+   devices=/dev/sde,/dev/sdf
+ARRAY /dev/md2 level=raid1 num-devices=2 UUID=38babb4d:92129d4a:94d659f1:3b238c53
+   devices=/dev/sdc,/dev/sdd
+ARRAY /dev/md1 level=raid1 num-devices=2 UUID=d1fadb29:cc004047:aabf2f31:3f044905
+   devices=/dev/sda,/dev/sdb
+ARRAY /dev/md0 level=raid1 num-devices=2 UUID=c04441d4:e15d900e:57903584:9eb5fea6
+   devices=/dev/hdc1,/dev/hdd1
+
+
+
+as you can see i created than from md1-3 RAID0 - md4 its works fine... 
+but i cant get it again after reboot i need to create it again...
+
+I dont get it why it wont creat at boot...  any body had similar problem ?
+
+Thanks for help and best regard
+Vladimir
