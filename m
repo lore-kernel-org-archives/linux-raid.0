@@ -1,53 +1,53 @@
-From: Vladimir Strycek <vladoportos@vladoportos.sk>
-Subject: Problem with 3xRAID1 to RAID 0
-Date: Tue, 11 Jul 2006 09:41:31 +0200
-Message-ID: <44B3562B.7040801@vladoportos.sk>
+From: Jan Engelhardt <jengelh@linux01.gwdg.de>
+Subject: Re: Kernel 2.6.17 and RAID5 Grow Problem (critical section backup)
+Date: Tue, 11 Jul 2006 09:52:00 +0200 (MEST)
+Message-ID: <Pine.LNX.4.61.0607110950450.30961@yvahk01.tjqt.qr>
+References: <Pine.LNX.4.64.0607070830450.2648@p34.internal.lan>
+ <Pine.LNX.4.64.0607070845280.2648@p34.internal.lan>
+ <Pine.LNX.4.64.0607070849140.3010@p34.internal.lan>
+ <Pine.LNX.4.64.0607071037190.5153@p34.internal.lan> <17582.55703.209583.446356@cse.unsw.edu.au>
+ <Pine.LNX.4.64.0607101747160.2603@p34.internal.lan>
+ <Pine.LNX.4.61.0607110026030.5420@yvahk01.tjqt.qr>
+ <Pine.LNX.4.64.0607101830130.2603@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: MULTIPART/MIXED; BOUNDARY="1283855629-366268452-1152604320=:30961"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.64.0607101830130.2603@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: Neil Brown <neilb@suse.de>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-I created to 3 x /dev/md1 to /dev/md3  which consist of six identical 
-200GB hdd
+--1283855629-366268452-1152604320=:30961
+Content-Type: TEXT/PLAIN; charset=UTF-8
+Content-Transfer-Encoding: 8BIT
 
-my mdadm --detail --scan looks like
+>> Hm, what's superblock 0.91? It is not mentioned in mdadm.8.
+>> 
+>
+> Not sure, the block version perhaps?
+>
+Well yes of course, but what characteristics? The manual only lists
 
-Proteus:/home/vladoportos# mdadm --detail --scan
-ARRAY /dev/md1 level=raid1 num-devices=2 UUID=d1fadb29:cc004047:aabf2f31:3f044905
-   devices=/dev/sdb,/dev/sda
-ARRAY /dev/md2 level=raid1 num-devices=2 UUID=38babb4d:92129d4a:94d659f1:3b238c53
-   devices=/dev/sdc,/dev/sdd
-ARRAY /dev/md3 level=raid1 num-devices=2 UUID=a0406e29:c1f586be:6b3381cf:086be0c2
-   devices=/dev/sde,/dev/sdf
-ARRAY /dev/md0 level=raid1 num-devices=2 UUID=c04441d4:e15d900e:57903584:9eb5fea6
-   devices=/dev/hdc1,/dev/hdd1
+ 0, 0.90, default
+        Use the original 0.90  format  superblock.   This  format
+        limits  arrays to 28 componenet devices and limits compo■
+        nent devices of levels 1 and greater to 2 terabytes.
 
+ 1, 1.0, 1.1, 1.2
+        Use the new version-1 format superblock.   This  has  few
+        restrictions.    The   different   subversion  store  the
+        superblock at different locations on the  device,  either
+        at  the  end (for 1.0), at the start (for 1.1) or 4K from
+        the start (for 1.2).
 
-and mdadm.conf
-
-DEVICE partitions
-ARRAY /dev/md4 level=raid0 num-devices=3 UUID=1c8291ba:2d83cf54:2698ce30:e49b1e6c
-   devices=/dev/md1,/dev/md2,/dev/md3
-ARRAY /dev/md3 level=raid1 num-devices=2 UUID=a0406e29:c1f586be:6b3381cf:086be0c2
-   devices=/dev/sde,/dev/sdf
-ARRAY /dev/md2 level=raid1 num-devices=2 UUID=38babb4d:92129d4a:94d659f1:3b238c53
-   devices=/dev/sdc,/dev/sdd
-ARRAY /dev/md1 level=raid1 num-devices=2 UUID=d1fadb29:cc004047:aabf2f31:3f044905
-   devices=/dev/sda,/dev/sdb
-ARRAY /dev/md0 level=raid1 num-devices=2 UUID=c04441d4:e15d900e:57903584:9eb5fea6
-   devices=/dev/hdc1,/dev/hdd1
+No 0.91 :(
+(My mdadm is 2.2, but the problem remains in 2.5.2)
 
 
-
-as you can see i created than from md1-3 RAID0 - md4 its works fine... 
-but i cant get it again after reboot i need to create it again...
-
-I dont get it why it wont creat at boot...  any body had similar problem ?
-
-Thanks for help and best regard
-Vladimir
+Jan Engelhardt
+-- 
+--1283855629-366268452-1152604320=:30961--
