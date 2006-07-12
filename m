@@ -1,66 +1,66 @@
-From: David Greaves <david@dgreaves.com>
-Subject: Re: SWRaid Wiki
-Date: Tue, 11 Jul 2006 19:47:59 +0100
-Message-ID: <44B3F25F.9030606@dgreaves.com>
-References: <fd8d0180607110641i41b6b639r227e6745e282cec7@mail.gmail.com>
+From: "Andrew Skolarz" <pletopia@gmail.com>
+Subject: PLEASE HELP ... raid5 array degraded ...
+Date: Tue, 11 Jul 2006 22:09:01 -0500
+Message-ID: <51adc5d50607112009v476d680fqe9918d607b90def4@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <fd8d0180607110641i41b6b639r227e6745e282cec7@mail.gmail.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Francois Barre <francois.barre@gmail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Francois Barre wrote:
-> Hello David, all,
-> 
-> You pointed the http://linux-raid.osdl.org as a future ressource for
-> SwRAID and MD knowledge base.
-Yes. it's not ready for public use yet so I've not announced it formally
-- I just mention it to people when things pop up.
+as the topic says i was running a raid5 array.  i was using this
+because i assumed it wouldn't die .. even if i lost a drive.  well, i
+guess i was wrong :(
 
-> 
-> In fact, the TODO page on the wiki is empty...
-Hmm, yes... maybe it should say "build todo list"
+a little background .. i have 2 raid5 arrays.  one is compromised of 4
+200gb hd's (this crashed as of last night) and one is 4 300gb's.  last
+night, i was accessing a file on the 2x200 while my server decided to
+crash.  When i booted up today, the boot up sequence started yelling
+at me that it couldn't load the reiserfs cause of a bad superblock.
+upon further investigation i determined it wasn't the a bad superblock
+in the reiserfs .. but rather one of the md superblocks on my hd's was
+corrupt.
 
-One action I am pursuing is "take over the official RAID FAQ". I've made
-contact with the authors and we're discussing licenses etc...
-Horrid stuff but important to many. Speaking of which, Neil, if you read
-this - are the man pages under the GFDL or the GPL?
+myth ~ # dmesg | grep md
+md: raid0 personality registered as nr 2
+md: raid5 personality registered as nr 4
+md: md driver 0.90.2 MAX_MD_DEVS=256, MD_SB_DISKS=27
+md: bitmap version 3.38
+md: Autodetecting RAID arrays.
+md: invalid superblock checksum on hdl1
+md: hdl1 has invalid sb, not importing!
+md: autorun ...
+md: considering hdk1 ...
+md:  adding hdk1 ...
+md:  adding hdj1 ...
+md:  adding hdi1 ...
+md: created md0
+md: bind<hdi1>
+md: bind<hdj1>
+md: bind<hdk1>
+md: running: <hdk1><hdj1><hdi1>
+md: md0: raid array is not clean -- starting background reconstruction
+raid5: cannot start dirty degraded array for md0
+raid5: failed to run raid set md0
+md: pers->run() failed ...
+md: do_md_run() returned -5
+md: md0 stopped.
+md: unbind<hdk1>
+md: export_rdev(hdk1)
+md: unbind<hdj1>
+md: export_rdev(hdj1)
+md: unbind<hdi1>
+md: export_rdev(hdi1)
+md: ... autorun DONE.
 
+is the whole array dead ?? is there no way to recover the 450gb of
+data i have on there ?
 
-> But I would like to help on feeding this wiki with all the clues and
-> experiences posted on the ML,
-That would be worthwhile.
+i tried even unplugging /dev/hdl and prayed it would start up with
+just 3 drives (like raid5 should) but no luck .. just like here
+without that drive, it doesn't want to reconstruct.
 
- and it would first be interresting to
-> build up the TODO list, which could start by :
-> - reference various situations where help can be provided : recovery,
-> diagnostics, statistics,
-> - create a comprehensive list of success stories & good
-> design/techniques, in order to help people design their own RAID
-> systems. In my opinion, this both deals with software params (raid
-> level, chunk size, fs, ...), and with hardware decisions (sata vs.
-> scsi, the right controller, ...)
-Well, I wanted to focus more on refining key information from such
-stories. After all, a success story is only relevant to a particular
-situation.
-
-I'd rather develop a diagnostic approach which leads people through a
-diagnostic process and explains when to use certain tools/options. That
-would also be something we could keep up to date whereas an actual story
-loses relevance over time.
-
-
-> PS : I really like your "RAID Recovery" page :
-> "If this happens then first of all: don't panic. Seriously. Don't rush
-> into anything..."
-<grin>
-yes, but so true...
-
-David
-
-
--- 
+PLEASE HELP and tell me that my data is not lost .. i beg you
