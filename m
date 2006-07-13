@@ -1,28 +1,24 @@
-From: Burn Alting <burn@goldweb.com.au>
-Subject: Hardware assisted parity computation - is it now worth it?
-Date: Thu, 13 Jul 2006 18:18:59 +1000
-Message-ID: <1152778739.26511.65.camel@swtf.comptex.com.au>
+From: linuxmania.lizhi@gmail.com
+Subject: Where is MD Device Layer
+Date: Thu, 13 Jul 2006 16:31:41 +0800
+Message-ID: <23623672.1152779501896.JavaMail.websites@opensubscriber>
+Reply-To: linuxmania.lizhi@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Last year, there were discussions on this list about the possible
-use of a 'co-processor' (Intel's IOP333) to compute raid 5/6's
-parity data.
+Hi all,
+I'm new to MD RAID. When I read the book "Understanding the Linux Kernel", I know that there are several layers between Filesystems (e.g. ext2) and block device files (e.g. /dev/sda1). These layers are:
+Filesystem <==> Generic Block Layer <==> I/O Scheduler Layer <==> Block Device Driver <==> Block Device.
+May I know where exactly is the MD RAID Device Layer(e.g. /dev/md0)?
+Thanks a lot!
 
-We are about to see low cost, multi core cpu chips with very
-high speed memory bandwidth. In light of this, is there any
-effective benefit to such devices as the IOP333?
+Linuxmania
 
-Or in other words, is a cheaper (power, heat, etc) cpu with
-higher memory access speeds, more cost effective than a
-bridge/bus device (ie hardware) solution (which typically
-has much lower memory access speeds)?
-
-Burn Alting
-burn@goldweb.com.au
-
+--
+This message was sent on behalf of linuxmania.lizhi@gmail.com at openSubscriber.com
+http://www.opensubscriber.com/messages/linux-raid@vger.kernel.org/topic.html
