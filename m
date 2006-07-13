@@ -1,15 +1,35 @@
-From: "Payne" <Paynecomplainant@bikerider.com>
-Subject: But now I can penetrate hardly and give the pleasure to every woman!
-Date: Thu, 13 Jul 2006 08:11:02 -0500
-Message-ID: <29042079954989.962649CE6F@2DZWX>
+From: "Dan Williams" <dan.j.williams@gmail.com>
+Subject: Re: Hardware assisted parity computation - is it now worth it?
+Date: Thu, 13 Jul 2006 14:16:39 -0700
+Message-ID: <e9c3a7c20607131416u11f68581j87d5a6c02b2a5018@mail.gmail.com>
+References: <1152778739.26511.65.camel@swtf.comptex.com.au>
 Mime-Version: 1.0
-Content-Type: text/plain;
-        charset="Windows-1252"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1152778739.26511.65.camel@swtf.comptex.com.au>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Burn Alting <burn@goldweb.com.au>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Woo-hooo! Younger and older males face this difficulty. Whatever your age, you have the answer. Extra-Time is the thing that puts you in complete control over the situation. You tried condoms, pauses, alcohol, but nothing worked. Eager to find a way to stop this premature thing forever? Come on in here: http://ferrold.com/dll/get/ This is your chance to build relationship of your dreams with your partner.
+On 7/13/06, Burn Alting <burn@goldweb.com.au> wrote:
+> Last year, there were discussions on this list about the possible
+> use of a 'co-processor' (Intel's IOP333) to compute raid 5/6's
+> parity data.
+The MD patches have been posted for review, and the hardware offload
+pieces are nearing completion.
 
+> We are about to see low cost, multi core cpu chips with very
+> high speed memory bandwidth. In light of this, is there any
+> effective benefit to such devices as the IOP333?
+It is true that upcoming server platforms have an abundance of CPU
+cycles, but what about the case where an IOP is the host processor?
+This is the primary target of the current work.  Also, what about the
+more expensive RAID6 conditions (2-failed disks) where there might be
+benefits to having MD split its work over many CPUs?
+
+Regards,
+
+Dan
