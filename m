@@ -1,7 +1,7 @@
-From: "Mathew" <Mathewcanine@columnist.com>
+From: "Elijah" <Elijahdelia@inorbit.com>
 Subject: Make your girlfriend or wife speechless with increased hardness, richer orgsms and more power in bed
-Date: Fri, 14 Jul 2006 10:21:57 +0800
-Message-ID: <77077993302425.18EB92EFD1@SGCT>
+Date: Fri, 14 Jul 2006 11:28:09 +0900
+Message-ID: <66747050125772.E5A0FB9B70@M2ZQ4NVR>
 Mime-Version: 1.0
 Content-Type: text/plain;
         charset="Windows-1252"
@@ -11,14 +11,13 @@ Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello!
+Hi,
+Most quality products for anyone who wants to become a champion in bed
+Impress your girl with prolonged hardness, plentiful explosions and increased duration
 
-Rock hard manhood, multiple explosions and several times more semen volume
-Enhanced male power and unlimited prowess with your girl The best products for the winning guys
- http://www.entirelyjb.com
+ http://www.icicledid.com
 
-
-A disposition towards inquiry deprived the feline of its vital state. You can't teach a new mouse old clicks. A slap on the back is only a few inches away from a kick in the butt.
- People living in glass houses should not pelt stones. St Swithins Day, if thou does rain, for forty days it will remain, St Swithins day if thou be fair for forty days twill rain no more
+Waste not, want not A friend is not so soon gotten as lost. It takes two to make a quarrel Age before beauty
+ Men are from earth Women are from earth Deal with it  The Moon does not heed the barking of dogs 
 
 
