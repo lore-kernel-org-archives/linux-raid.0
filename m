@@ -1,116 +1,50 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: [PATCH] enable auto=yes by default when using udev
-Date: Mon, 17 Jul 2006 15:42:02 -0400
-Message-ID: <44BBE80A.1080007@tmr.com>
-References: <20060702224549.GD12733@percy.comedia.it> <17576.21342.685662.432117@cse.unsw.edu.au> <44AA42F6.8070307@tls.msk.ru>
+From: "whc86 (sent by Nabble.com)" <lists@nabble.com>
+Subject: troubleshooting PNY S-cure
+Date: Mon, 17 Jul 2006 12:49:52 -0700 (PDT)
+Message-ID: <5367261.post@talk.nabble.com>
+Reply-To: whc86 <willconstable@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <44AA42F6.8070307@tls.msk.ru>
 Sender: linux-raid-owner@vger.kernel.org
-To: Michael Tokarev <mjt@tls.msk.ru>
-Cc: Neil Brown <neilb@suse.de>, Luca Berra <bluca@comedia.it>, Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Michael Tokarev wrote:
 
->Neil Brown wrote:
->  
->
->>On Monday July 3, bluca@comedia.it wrote:
->>    
->>
->>>Hello,
->>>the following patch aims at solving an issue that is confusing a lot of
->>>users.
->>>when using udev, device files are created only when devices are
->>>registered with the kernel, and md devices are registered only when
->>>started.
->>>mdadm needs the device file _before_ starting the array.
->>>so when using udev you must add --auto=yes to the mdadm commandline or
->>>to the ARRAY line in mdadm.conf
->>>
->>>following patch makes auto=yes the default when using udev
->>>      
->>>
->>The principle I'm reasonably happy with, though you can now make this
->>the default with a line like
->>
->>  CREATE auto=yes
->>in mdadm.conf.
->>
->>However....
->>
->>    
->>
->>>+
->>>+	/* if we are using udev and auto is not set, mdadm will almost
->>>+	 * certainly fail, so we force it here.
->>>+	 */
->>>+	if (autof == 0 && access("/dev/.udevdb",F_OK) == 0)
->>>+		autof=2;
->>>+
->>>      
->>>
->>I'm worried that this test is not very robust.
->>On my Debian/unstable system running used, there is no
->> /dev/.udevdb
->>though there is a
->> /dev/.udev/db
->>
->>I guess I could test for both, but then udev might change
->>again.... I'd really like a more robust check.
->>    
->>
->
->Why to test for udev at all?  If the device does not exist, regardless
->if udev is running or not, it might be a good idea to try to create it.
->Because IT IS NEEDED, period.  Whenever the operation fails or not, and
->whenever we fail if it fails or not - it's another question, and I think
->that w/o explicit auto=yes, we may ignore create error and try to continue,
->and with auto=yes, we fail on create error.
->  
->
-I have to agree here, I can't think of a case where creation of the 
-device name would not be desirable, udev or no. But to be cautious, 
-perhaps the default should be to create the device if the path starts 
-with /dev/ or /tmp/ unless auto creation is explicitly off. I don't 
-think udev or mount points come into the default decision at all, there 
-are just too many options on naming.
+I am setting up a mythtv backend server on fedora 5 using 5x Seagate 300gb
+drives and PNY S-cure Raid 3.  the bulk of the 1.2 TB is a jfs partition
+while there is a 100 mb /boot partition in ext2 also.  the OS runs from /
+partition and /swap partition on a WD raptor on a different controller.
 
->Note that /dev might be managed by some other tool as well, like mudev
->from busybox, or just a tiny shell /sbin/hotplug script.
->
->Note also that the whole root filesystem might be on tmpfs (like in
->initramfs), so /dev will not be a mountpoint.
->  
->
-Agree with both points.
+My raid array keeps losing drives.  Its usually drive 3 but sometiems drive
+4, but they usually rebuild and then thigns are reported as 'all is well'
+again.  No interruption to functionality during these drive failures for the
+past 2 weeks (added the raid and drives to my comptuer 2 weeks ago)
 
->Also, I think mdadm should stop creating strange temporary nodes somewhere
->as it does now.  If /dev/whatever exist, use it. If not, create it (unless,
->perhaps, auto=no is specified) directly with proper mknod("/dev/mdX"), but
->don't try to use some temporary names in /dev or elsewhere.
->  
->
-True, but I don't see a case where this would be useful. And if it is, 
-then add an auto=obscure_names option for the case where you really want 
-that behaviour.
+Yesterday, i think drives 3 and 4 failed together-- after a reboot pny bios
+said 3 and 4 not attached-- after anotehr reboot, it 'array rebuilding',
+showing drive 3 as failed but 4 as fine.  However, unlike the past failures,
+this time i only get to a grub> prompt and dont know how to/if i can boot
+the system
 
->In case of nfs-mounted read-only root filesystem, if someone will ever need
->to assemble raid arrays in that case.. well, he can either prepare proper
->/dev on the nfs server, or use tmpfs-based /dev, or just specify /tmp/mdXX
->instead of /dev/mdXX - whatever suits their needs better.
->
-Because /dev and /tmp are well known special cases, I would default auto 
-for them. In other cases explicit behavior could be specified.
+I have rma'd the card and two drives, but am curious about other reasons
+this might be failing.  How much power should i need?  at first, all ran
+from a single 400w fanless psu.  
 
-Feel free to point out something bad which occurs by using this default 
-behavior.
+Athlon 2600, Asus A7v8x, gig of DDR333, raptor 74, 5x Seagate 7200 Sata, 2
+optical drives, 2 PCI cards plus raid card
 
+after first failure, took 400 w psu from the closet and shorted the 'on'
+lead to the ground so it would run, then tied the ground from the closet psu
+to the psu in my system.  I put all hard drives on the closet psu and
+resumed using the system.  Things seemed to work better for a while but i
+had another couple harmless failures and then the major one...
+
+any help would be great!
+thanks,
+will
 -- 
-bill davidsen <davidsen@tmr.com>
-  CTO TMR Associates, Inc
-  Doing interesting things with small computers since 1979
+View this message in context: http://www.nabble.com/troubleshooting-PNY-S-cure-tf1956814.html#a5367261
+Sent from the linux-raid forum at Nabble.com.
 
