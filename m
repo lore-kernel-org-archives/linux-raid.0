@@ -1,50 +1,35 @@
-From: "whc86 (sent by Nabble.com)" <lists@nabble.com>
-Subject: troubleshooting PNY S-cure
-Date: Mon, 17 Jul 2006 12:49:52 -0700 (PDT)
-Message-ID: <5367261.post@talk.nabble.com>
-Reply-To: whc86 <willconstable@gmail.com>
+From: "Christian Pernegger" <pernegger@gmail.com>
+Subject: Still can't get md arrays that were started from an initrd to shutdown
+Date: Mon, 17 Jul 2006 22:55:55 +0200
+Message-ID: <bb145bd20607171355x8143b0eofb0017637d749263@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+[This is a bit of a repost, because I'm slightly desperate :)]
 
-I am setting up a mythtv backend server on fedora 5 using 5x Seagate 300gb
-drives and PNY S-cure Raid 3.  the bulk of the 1.2 TB is a jfs partition
-while there is a 100 mb /boot partition in ext2 also.  the OS runs from /
-partition and /swap partition on a WD raptor on a different controller.
+I'm still having problems with some md arrays not shutting down
+cleanly on halt / reboot.
 
-My raid array keeps losing drives.  Its usually drive 3 but sometiems drive
-4, but they usually rebuild and then thigns are reported as 'all is well'
-again.  No interruption to functionality during these drive failures for the
-past 2 weeks (added the raid and drives to my comptuer 2 weeks ago)
+The problem seems to affect only arrays that are started via an
+initrd, even if they do not have the root filesystem on them.
+That's all arrays if they're either managed by EVMS or the
+ramdisk-creator is initramfs-tools. For yaird-generated initrds only
+the array with root on it is affected.
 
-Yesterday, i think drives 3 and 4 failed together-- after a reboot pny bios
-said 3 and 4 not attached-- after anotehr reboot, it 'array rebuilding',
-showing drive 3 as failed but 4 as fine.  However, unlike the past failures,
-this time i only get to a grub> prompt and dont know how to/if i can boot
-the system
+At the moment I'm working around the problem by inserting a sync and
+15 second sleep before reboot / halt. That way the array _sometimes_
+is switched into a read-only mode.
 
-I have rma'd the card and two drives, but am curious about other reasons
-this might be failing.  How much power should i need?  at first, all ran
-from a single 400w fanless psu.  
+If only there were an exitrd imge to comlement the initrds ...
 
-Athlon 2600, Asus A7v8x, gig of DDR333, raptor 74, 5x Seagate 7200 Sata, 2
-optical drives, 2 PCI cards plus raid card
+Any ideas welcome
 
-after first failure, took 400 w psu from the closet and shorted the 'on'
-lead to the ground so it would run, then tied the ground from the closet psu
-to the psu in my system.  I put all hard drives on the closet psu and
-resumed using the system.  Things seemed to work better for a while but i
-had another couple harmless failures and then the major one...
+Thank you,
 
-any help would be great!
-thanks,
-will
--- 
-View this message in context: http://www.nabble.com/troubleshooting-PNY-S-cure-tf1956814.html#a5367261
-Sent from the linux-raid forum at Nabble.com.
-
+Christian
