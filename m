@@ -1,50 +1,46 @@
 From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: Random Seek on Array as slow as on single disk
-Date: Mon, 17 Jul 2006 13:54:37 -0400
-Message-ID: <44BBCEDD.5070902@tmr.com>
-References: <20060716153736.E36C5200967@smtp.funpic.de> <20060716163931.D95FE200970@smtp.funpic.de> <20060716164930.5DBFF200973@smtp.funpic.de>
+Subject: Re: Hardware assisted parity computation - is it now worth it?
+Date: Mon, 17 Jul 2006 14:05:21 -0400
+Message-ID: <44BBD161.5030609@tmr.com>
+References: <1152778739.26511.65.camel@swtf.comptex.com.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20060716164930.5DBFF200973@smtp.funpic.de>
+In-Reply-To: <1152778739.26511.65.camel@swtf.comptex.com.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: "A. Liemen" <maillist@liemen.net>
+To: Burn Alting <burn@goldweb.com.au>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-A. Liemen wrote:
+Burn Alting wrote:
 
-> Hardware Raid.
+>Last year, there were discussions on this list about the possible
+>use of a 'co-processor' (Intel's IOP333) to compute raid 5/6's
+>parity data.
 >
-> http://www.areca.com.tw/products/html/pcix-sata.htm
-
-
-You should ask the vendor, this isn't a software RAID issue, and the 
-usual path to improving bad hardware is in upgrading. You may be able to 
-get better firmware if you're lucky.
-
->
-> Alex
->
-> Jeff Breidenbach schrieb:
->
->>> Controller: Areca ARC 1160 PCI-X 1GB Cache
->>
->>
->> Those numbers are for Arica hardware raid or linux software raid?
->> --Jeff
->> -
->> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>We are about to see low cost, multi core cpu chips with very
+>high speed memory bandwidth. In light of this, is there any
+>effective benefit to such devices as the IOP333?
+>  
 >
 
+Was there ever? Unless you're running on a really slow CPU, like 386, 
+with a TB of RAID attached, and heavy CPU load, could anyone ever see a 
+measureable performance gain? I haven't seen any such benchmarks, 
+although I haven't looked beyond reading several related mailing lists.
+
+>Or in other words, is a cheaper (power, heat, etc) cpu with
+>higher memory access speeds, more cost effective than a
+>bridge/bus device (ie hardware) solution (which typically
+>has much lower memory access speeds)?
+>
+An additional device is always more complex, and less tunable than a CPU 
+based solution. Except in the case above where there is very little CPU 
+available, I don't see much hope for a cost (money and complexity) 
+effective non-CPU solution.
+
+Obviously my opinion only.
 
 -- 
 bill davidsen <davidsen@tmr.com>
