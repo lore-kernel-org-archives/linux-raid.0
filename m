@@ -1,48 +1,48 @@
-From: Mattias Wadenstein <maswan@acc.umu.se>
-Subject: Re: Random Seek on Array as slow as on single disk
-Date: Mon, 17 Jul 2006 09:23:38 +0200 (MEST)
-Message-ID: <Pine.GSO.4.64.0607170918450.23815@montezuma.acc.umu.se>
-References: <20060716153736.E36C5200967@smtp.funpic.de>
- <20060716163931.D95FE200970@smtp.funpic.de> <20060716164930.5DBFF200973@smtp.funpic.de>
+From: "Christian Pernegger" <pernegger@gmail.com>
+Subject: Tuning the I/O scheduler for md?
+Date: Mon, 17 Jul 2006 11:28:26 +0200
+Message-ID: <bb145bd20607170228o647f88b8i332cb9109d427f7b@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20060716164930.5DBFF200973@smtp.funpic.de>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: "A. Liemen" <maillist@liemen.net>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, 16 Jul 2006, A. Liemen wrote:
+Based on various googled comments I have selected 'deadline' as the
+elevator for the disks comprising my md arrays, with no further tuning
+yet ... not so stellar :(
 
-> Hardware Raid.
->
-> http://www.areca.com.tw/products/html/pcix-sata.htm
+Basically concurrent reads (even just 2, even worse with 1 read + 1
+write) don't work too well.
 
-If you want to see even worse performance with bonnie, try running several 
-parallel in sync, somewhere around 6-15 simultaneous read sessions[*] 
-should give you rather horrible performance numbers.
+Example:
 
-That said, synthetic benchmarks isn't everything. Check if it is an issue 
-with realistic load too. In some cases there can be quite a difference.
+RAID1: I bulk-move some 90GB of files onto the mirror, which takes a
+while. Meanwhile I want to do an ls on another directory on the same
+mirror. The ls output fits on 20 lines but takes in excess of 10
+seconds.
 
-/Mattias Wadenstein
+RAID5: That's where the 90GB above are coming from. Concurrently my
+music player wants to load a song every 3-5 Minutes from the same
+array. Takes 5-10 seconds.
 
-[*] Exact numbers may vary, for me it was as low as 6 on a 12-disk raid6 
-where the throughput dropped from ~300M/s to ~30M/s, but smaller raidsets 
-had a breakoff point up close to 8-10 reading procseses.
+During the transfer I also tried to open a samba share on another disk
+which was idle at the time - still took about 3 seconds, as samba
+itself is on the mirror.
 
-> Jeff Breidenbach schrieb:
->>> Controller: Areca ARC 1160 PCI-X 1GB Cache
->> 
->> Those numbers are for Arica hardware raid or linux software raid?
->> --Jeff
->> -
->> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+The bulk transfer (one mv) seems to utterly starve everything else.
+
+CPU load is non-existent, all of 2GB RAM is used for cache, swap is unused.
+
+I realize there's no way to tell the kernel which traffic is
+interactive and which is bulk, but I also don't see why deadline
+should starve so much.
+
+Any pointers?
+
+Thanks,
+
+Christian
