@@ -1,35 +1,49 @@
-From: "Christian Pernegger" <pernegger@gmail.com>
-Subject: Still can't get md arrays that were started from an initrd to shutdown
-Date: Mon, 17 Jul 2006 22:55:55 +0200
-Message-ID: <bb145bd20607171355x8143b0eofb0017637d749263@mail.gmail.com>
+From: Sevrin Robstad <quack@online.no>
+Subject: Re: trying to "brute-force" my RAID 5...
+Date: Mon, 17 Jul 2006 23:23:22 +0200
+Message-ID: <44BBFFCA.5030309@online.no>
+References: <44BAB76D.9070809@start.no>
+ <62b0912f0607170413x465b363eh92c811da67cc363@mail.gmail.com>
+ <44BBFF5A.7010702@start.no>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-reply-to: <44BBFF5A.7010702@start.no>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-[This is a bit of a repost, because I'm slightly desperate :)]
 
-I'm still having problems with some md arrays not shutting down
-cleanly on halt / reboot.
+ Molle Bestefich wrote:
 
-The problem seems to affect only arrays that are started via an
-initrd, even if they do not have the root filesystem on them.
-That's all arrays if they're either managed by EVMS or the
-ramdisk-creator is initramfs-tools. For yaird-generated initrds only
-the array with root on it is affected.
+>> Sevrin Robstad wrote:
+>>
+>>> I got a friend of mine to make a list of all the 6^6 combinations of 
+>>> dev
+>>> 1 2 3 4 5 missing,
+>>>
+>>> shouldn't this work ???
+>>
+>>
+>> Only if you get the layout and chunk size right.
+>>
+>> And make sure that you know whether you were using partitions (eg.
+>> sda1) or whole drives (eg. sda - bad idea).
+>>
+> Thanks for replying.. I guess I'm pretty sure that ONE of the 66 
+> combination should be the right one?? And chunk size - 64kbyte is 
+> default, yes ? I created the RAID when I installed Fedora Core 3 some 
+> time ago, didn't do anything special so the chunks should be 64kbyte 
+> and parity should be left-symmetric ?
+>  I'm also sure that I created it on partitions, and all disks has a 
+> "Linux Raid" partition on it.
+>
+> But still, when I grep the log of my script I get no partition out of 
+> any combination...
+>
+> Any Idea ?
+>
+>
+> Sevrin
 
-At the moment I'm working around the problem by inserting a sync and
-15 second sleep before reboot / halt. That way the array _sometimes_
-is switched into a read-only mode.
-
-If only there were an exitrd imge to comlement the initrds ...
-
-Any ideas welcome
-
-Thank you,
-
-Christian
