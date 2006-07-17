@@ -1,28 +1,19 @@
-From: Sevrin Robstad <quackyo@start.no>
-Subject: trying to "brute-force" my RAID 5...
-Date: Mon, 17 Jul 2006 00:02:21 +0200
-Message-ID: <44BAB76D.9070809@start.no>
+From: "Jerrold" <Jerroldantioch@mail.com>
+Subject: Brand new Online Caasino. Go and Play Itt
+Date: Sun, 16 Jul 2006 23:18:30 -0200
+Message-ID: <34865434526146.C148A71C12__23669.7263470434$1153102551$gmane$org@M95CXX>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain;
+        charset="Windows-1252"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: linux-sound@vger.kernel.org
 List-Id: linux-raid.ids
 
-I have written some posts about this before... My 6 disk RAID 5 broke 
-down because of hardware failure. When I tried to get it up'n'running again
-I did a --create without any missing disk, which made it rebuild. I have 
-also lost all information about how the old RAID was set up..
+Good day! 
 
-I got a friend of mine to make a list of all the 6^6 combinations of dev 
-1 2 3 4 5 missing, and set it up this way :
+  Online Casino with 85+ games. PPlay It Now!  http://wegast.com/d1/check/ 
 
-"mdadm --create -n 6 -l 5  dev1 2 3 4 5 missing ; fdisk -l /dev/md0 ; 
-mdadm --stop /dev/md0" .
-But a "cat logfile | grep Linux" of the output of this script tells me 
-that on no of these combination does it find a valid "type 83" partition.
+ Its too late to shut the stable door after the horse has bolted Have you ever noticed? anybody going slower than you is an idiot, and anyone going faster than you is a maniac
 
-shouldn't this work ???
-
-Sevrin
