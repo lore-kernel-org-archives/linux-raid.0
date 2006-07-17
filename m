@@ -1,49 +1,45 @@
-From: Sevrin Robstad <quack@online.no>
-Subject: Re: trying to "brute-force" my RAID 5...
-Date: Mon, 17 Jul 2006 23:23:22 +0200
-Message-ID: <44BBFFCA.5030309@online.no>
-References: <44BAB76D.9070809@start.no>
- <62b0912f0607170413x465b363eh92c811da67cc363@mail.gmail.com>
- <44BBFF5A.7010702@start.no>
+From: Dexter Filmore <Dexter.Filmore@gmx.de>
+Subject: Re: second controller: what will my discs be called, and does it matter?
+Date: Mon, 17 Jul 2006 23:45:02 +0200
+Message-ID: <200607172345.02745.Dexter.Filmore@gmx.de>
+References: <200607062012.14684.Dexter.Filmore@gmx.de> <44BBD6B6.6080602@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-reply-to: <44BBFF5A.7010702@start.no>
+In-Reply-To: <44BBD6B6.6080602@tmr.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Am Montag, 17. Juli 2006 20:28 schrieb Bill Davidsen:
+> >Next question: assembling by UUID, does that matter at all?
+>
+> No. There's the beauty of it.
 
- Molle Bestefich wrote:
+That's what I needed to hear.
 
->> Sevrin Robstad wrote:
->>
->>> I got a friend of mine to make a list of all the 6^6 combinations of 
->>> dev
->>> 1 2 3 4 5 missing,
->>>
->>> shouldn't this work ???
->>
->>
->> Only if you get the layout and chunk size right.
->>
->> And make sure that you know whether you were using partitions (eg.
->> sda1) or whole drives (eg. sda - bad idea).
->>
-> Thanks for replying.. I guess I'm pretty sure that ONE of the 66 
-> combination should be the right one?? And chunk size - 64kbyte is 
-> default, yes ? I created the RAID when I installed Fedora Core 3 some 
-> time ago, didn't do anything special so the chunks should be 64kbyte 
-> and parity should be left-symmetric ?
->  I'm also sure that I created it on partitions, and all disks has a 
-> "Linux Raid" partition on it.
 >
-> But still, when I grep the log of my script I get no partition out of 
-> any combination...
+> >(And while talking UUID - can I safely migrate to a udev-kernel? Someone
+> > on this list recently ran into trouble because of such an issue.)
 >
-> Any Idea ?
->
->
-> Sevrin
+> You shouldn't lose data unless you panic at the first learning
+> experience and do something without thinking of the results. I would
+> convert to UUID first, obviously.
 
+Already happened. Biggest problem so far is coming up with a sane backup 
+solution for 500gigs of data :P
+
+-- 
+-----BEGIN GEEK CODE BLOCK-----
+Version: 3.12
+GCS d--(+)@ s-:+ a- C++++ UL++ P+>++ L+++>++++ E-- W++ N o? K-
+w--(---) !O M+ V- PS+ PE Y++ PGP t++(---)@ 5 X+(++) R+(++) tv--(+)@ 
+b++(+++) DI+++ D- G++ e* h>++ r* y?
+------END GEEK CODE BLOCK------
+
+http://www.stop1984.com
+http://www.againsttcpa.com
