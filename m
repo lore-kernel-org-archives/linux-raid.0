@@ -1,46 +1,41 @@
 From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: Hardware assisted parity computation - is it now worth it?
-Date: Mon, 17 Jul 2006 14:05:21 -0400
-Message-ID: <44BBD161.5030609@tmr.com>
-References: <1152778739.26511.65.camel@swtf.comptex.com.au>
+Subject: Re: Test feedback 2.6.17.4+libata-tj-stable (EH, hotplug)
+Date: Mon, 17 Jul 2006 14:08:17 -0400
+Message-ID: <44BBD211.9030501@tmr.com>
+References: <bb145bd20607101439n475b1771g1c754af31911288@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1152778739.26511.65.camel@swtf.comptex.com.au>
-Sender: linux-raid-owner@vger.kernel.org
-To: Burn Alting <burn@goldweb.com.au>
-Cc: linux-raid@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <bb145bd20607101439n475b1771g1c754af31911288@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Christian Pernegger <pernegger@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Burn Alting wrote:
+Christian Pernegger wrote:
 
->Last year, there were discussions on this list about the possible
->use of a 'co-processor' (Intel's IOP333) to compute raid 5/6's
->parity data.
+> I finally got around to testing 2.6.17.4 with libata-tj-stable-20060710.
 >
->We are about to see low cost, multi core cpu chips with very
->high speed memory bandwidth. In light of this, is there any
->effective benefit to such devices as the IOP333?
->  
+> Hardware: ICH7R in ahci mode + WD5000YS's.
 >
-
-Was there ever? Unless you're running on a really slow CPU, like 386, 
-with a TB of RAID attached, and heavy CPU load, could anyone ever see a 
-measureable performance gain? I haven't seen any such benchmarks, 
-although I haven't looked beyond reading several related mailing lists.
-
->Or in other words, is a cheaper (power, heat, etc) cpu with
->higher memory access speeds, more cost effective than a
->bridge/bus device (ie hardware) solution (which typically
->has much lower memory access speeds)?
+> EH: much, much better. Before the patch it seemed like errors were
+> only printed to dmesg but never handed up to any layer above. Now md
+> actually fails the disk when I pull the (power) plug. I'll try my bad
+> cable once I can find it.
 >
-An additional device is always more complex, and less tunable than a CPU 
-based solution. Except in the case above where there is very little CPU 
-available, I don't see much hope for a cost (money and complexity) 
-effective non-CPU solution.
+> Hotplug: Unplugging was fine, took about 15s until the driver gave up
+> on the disk. After re-plugging the driver had to hard-reset the port
+> once to get the disk back, though that might be by design.
+>
+> The fact that the disk had changed minor numbers after it was plugged
+> back in bugs me a bit. (was sdc before, sde after). Additionally udev
+> removed the sdc device file, so I had to manually recreate it to be
+> able to remove the 'faulty' disk from its md array.
+>
+> Thanks for a great patch! I just hope it doesn't eat my data :) 
 
-Obviously my opinion only.
+And thank you for testing!
 
 -- 
 bill davidsen <davidsen@tmr.com>
