@@ -1,33 +1,27 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: Raid5 Reshape Status + xfs_growfs = Success! (2.6.17.3)
-Date: Tue, 18 Jul 2006 10:48:07 +1000
-Message-ID: <17596.12231.468729.199881@cse.unsw.edu.au>
-References: <Pine.LNX.4.64.0607111159470.12230@p34.internal.lan>
+Subject: Re: SWRaid Wiki
+Date: Tue, 18 Jul 2006 10:52:28 +1000
+Message-ID: <17596.12492.846118.833729@cse.unsw.edu.au>
+References: <fd8d0180607110641i41b6b639r227e6745e282cec7@mail.gmail.com>
+	<44B3F25F.9030606@dgreaves.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751285AbWGRAsp@vger.kernel.org>
-In-Reply-To: message from Justin Piszcz on Tuesday July 11
-Sender: linux-kernel-owner@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, xfs@oss.sgi.com
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: message from David Greaves on Tuesday July 11
+Sender: linux-raid-owner@vger.kernel.org
+To: David Greaves <david@dgreaves.com>
+Cc: Francois Barre <francois.barre@gmail.com>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tuesday July 11, jpiszcz@lucidpixels.com wrote:
-> Neil,
-> 
-> It worked, echo'ing the 600 > to the stripe width in /sys, however, how 
-> come /dev/md3 says it is 0 MB when I type fdisk -l?
-> 
-> Is this normal?
+On Tuesday July 11, david@dgreaves.com wrote:
 
-Yes.  The 'cylinders' number is limited to 16bits.  For you 2.2TB
-array, the number of 'cylinders' (given 2 heads and 4 sectors) would
-be about 500,000 which doesn't fit into 16 bits.
-> 
-> Furthermore, the xfs_growfs worked beautifully!
+> Horrid stuff but important to many. Speaking of which, Neil, if you read
+> this - are the man pages under the GFDL or the GPL?
 > 
 
-Excellent!
+GPL.
+
+I'll make that more explicit in the next release.
 
 NeilBrown
