@@ -1,40 +1,64 @@
-From: "David Rientjes" <rientjes@google.com>
-Subject: Re: Mounting array was read write for about 3 minutes, then Read-only file system error
-Date: Mon, 17 Jul 2006 17:04:24 -0700
-Message-ID: <9ec263480607171704s555b4fechb20eb36b1d5a1c23@mail.google.com>
-References: <e0904ff40607061932l3b1d7849v43ed568aa4fceea8@mail.gmail.com>
-	 <17596.8875.945108.21839@cse.unsw.edu.au>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: Kernel 2.6.17 and RAID5 Grow Problem (critical section backup)
+Date: Tue, 18 Jul 2006 10:16:27 +1000
+Message-ID: <17596.10331.396365.132469@cse.unsw.edu.au>
+References: <Pine.LNX.4.64.0607070830450.2648@p34.internal.lan>
+	<Pine.LNX.4.64.0607070845280.2648@p34.internal.lan>
+	<Pine.LNX.4.64.0607070849140.3010@p34.internal.lan>
+	<Pine.LNX.4.64.0607071037190.5153@p34.internal.lan>
+	<17582.55703.209583.446356@cse.unsw.edu.au>
+	<Pine.LNX.4.64.0607101747160.2603@p34.internal.lan>
+	<Pine.LNX.4.61.0607110026030.5420@yvahk01.tjqt.qr>
+	<Pine.LNX.4.64.0607101830130.2603@p34.internal.lan>
+	<Pine.LNX.4.61.0607110950450.30961@yvahk01.tjqt.qr>
+	<e8vplt$fgv$1@sea.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17596.8875.945108.21839@cse.unsw.edu.au>
-Content-Disposition: inline
+In-Reply-To: message from Petr Vyskocil on Tuesday July 11
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Petr Vyskocil <petr@anime.cz>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 7/17/06, Neil Brown <neilb@suse.de> wrote:
-> On Thursday July 6, bkbonner@gmail.com wrote:
-> > I created a raid1 array using /dev/disk/by-id with (2) 250GB USB 2.0
-> > Drives.  It was working for about 2 minutes until I tried to copy a
-> > directory tree from one drive to the array and then cancelled it
-> > midstream.  After cancelling the copy, when I list the contents of the
-> > directory it doesn't show anything there.
-> >
-> > When I try to create a file, I get the following error msg:
-> >
-> > [root@app1 ~]# cd /mnt/usb250
-> > [root@app1 usb250]# ls
-> > lost+found
-> > [root@app1 usb250]# touch test.txt
-> > touch: cannot touch `test.txt': Read-only file system
->
-> Sounds like you got some disk errors so the filesystem when readonly.
->
-> Is there anything in /var/log/messages about errors at that time?
+On Tuesday July 11, petr@anime.cz wrote:
+> >>> Hm, what's superblock 0.91? It is not mentioned in mdadm.8.
+> >>>
+> >> Not sure, the block version perhaps?
+> >>
+> > Well yes of course, but what characteristics? The manual only lists
+> >  0, 0.90, default
+> >  1, 1.0, 1.1, 1.2
+> > No 0.91 :(
+> 
+> 
+> AFAICR superblock version gets raised by 0.01 for the duration of 
+> reshape, so that non-reshape aware kernels do not try to assemble it 
+> (and cause data corruption).
 
-What's /proc/mount for /dev/disk/by-id when it's rw?  Is it
-rw,errors=remount-ro?
+Exactly.  The following will be in the next mdadm - unless someone
+wants to re-write it for me using shorter sentences :-)
 
-David
+NeilBrown
+
+
+
+diff .prev/md.4 ./md.4
+--- .prev/md.4	2006-06-20 10:01:17.000000000 +1000
++++ ./md.4	2006-07-18 10:14:47.000000000 +1000
+@@ -74,6 +74,14 @@ UUID
+ a 128 bit Universally Unique Identifier that identifies the array that
+ this device is part of.
+ 
++When a version 0.90 array is being reshaped (e.g. adding extra devices
++to a RAID5), the version number is temporarily set to 0.91.  This
++ensures that if the reshape process is stopped in the middle (e.g. by
++a system crash) and the machine boots into an older kernel that does
++not support reshaping, then the array will not be assembled (which
++would cause data corruption) but will be left untouched until a kernel
++that can complete the reshape processes is used.
++
+ .SS ARRAYS WITHOUT SUPERBLOCKS
+ While it is usually best to create arrays with superblocks so that
+ they can be assembled reliably, there are some circumstances where an
