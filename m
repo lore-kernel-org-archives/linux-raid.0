@@ -1,36 +1,49 @@
 From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: which disk the the one that data is on?
-Date: Tue, 18 Jul 2006 09:16:37 -0400
-Message-ID: <44BCDF35.9060906@tmr.com>
-References: <e3edb0fa0607180053x7a29bf71se8d30c591e7d10d5@mail.gmail.com>
+Subject: Re: issue with internal bitmaps
+Date: Tue, 18 Jul 2006 09:34:35 -0400
+Message-ID: <44BCE36B.1040500@tmr.com>
+References: <20060706141207.GC21642@percy.comedia.it> <17581.35762.452409.927246@cse.unsw.edu.au> <44BBDC93.6050603@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <e3edb0fa0607180053x7a29bf71se8d30c591e7d10d5@mail.gmail.com>
+In-Reply-To: <44BBDC93.6050603@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shai <shaibn@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: Neil Brown <neilb@suse.de>, Luca Berra <bluca@comedia.it>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Shai wrote:
+Bill Davidsen wrote:
 
-> Hi,
+> Neil Brown wrote:
 >
-> I rebooted my server today to find out that one of the arrays is being
-> re-synced (see output below)
-> .
-> 1. What does the (S) to the right of hdh1[5](S) mean?
-> 2. How do I know, from this output, which disk is the one holding the
-> most current data and from which all the other drives are syncing
-> from? Or are they all containing the data and this sync process is
-> something else? Maybe I'm just not understanding what is being done
-> exactly? 
+>> On Thursday July 6, bluca@comedia.it wrote:
+>>  
+>>
+>>> hello, i just realized that internal bitmaps do not seem to work
+>>> anymore.
+>>>   
+>>
+>>
+>> I cannot imagine why.  Nothing you have listed show anything wrong
+>> with md...
+>>
+>> Maybe you were expecting
+>>   mdadm -X /dev/md100
+>> to do something useful.  Like -E, -X must be applied to a component
+>> device.  Try
+>>   mdadm -X /dev/sda1
+>>
+> To take this from the other end, why should -X apply to a component? 
+> Since the components can and do change names, and you frequently 
+> mention assembly by UUID, why aren't the component names determined 
+> from the invariant array name when mdadm wants them, instead of having 
+> a user or script check the array to get the components?
 
-In addition to what you have already been told, if you "find out" that 
-the array is in rebuild I would be a lot more worried to find out why. 
-If it was from unclean shutdown you really should look into a bitmap if 
-you don't have one.
+Boy, I didn't say that well... what I meant to suggest is that when -E 
+or -X are applied to the array as a whole, would it not be useful to 
+itterate them over all of the components rather than than looking for 
+non-existant data in the array itself?
 
 -- 
 bill davidsen <davidsen@tmr.com>
