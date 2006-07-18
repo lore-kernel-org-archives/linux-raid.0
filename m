@@ -1,30 +1,38 @@
-From: Luca Berra <bluca@comedia.it>
-Subject: Re: issue with internal bitmaps
-Date: Wed, 19 Jul 2006 00:54:29 +0200
-Message-ID: <20060718225429.GB28146@percy.comedia.it>
-References: <20060706141207.GC21642@percy.comedia.it> <17581.35762.452409.927246@cse.unsw.edu.au> <44BBDC93.6050603@tmr.com> <44BCE36B.1040500@tmr.com>
+From: Nix <nix@esperi.org.uk>
+Subject: Re: only 4 spares and no access to my data
+Date: Wed, 19 Jul 2006 00:44:31 +0100
+Message-ID: <87ac76bhr4.fsf@hades.wkstn.nix>
+References: <loom.20060709T205013-455@post.gmane.org>
+	<62b0912f0607091223y3d0a1ab5xbc5fb01ce2a74f9e@mail.gmail.com>
+	<loom.20060710T095111-275@post.gmane.org>
+	<44B213CD.5010907@idgmail.se>
+	<17596.17567.790363.193434@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <44BCE36B.1040500@tmr.com>
+In-Reply-To: <17596.17567.790363.193434@cse.unsw.edu.au> (Neil Brown's message of "18 Jul 2006 03:18:07 +0100")
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: Henrik Holst <henrik.holst@idgmail.se>, Karl Voit <neww@Karl-Voit.at>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Jul 18, 2006 at 09:34:35AM -0400, Bill Davidsen wrote:
->Boy, I didn't say that well... what I meant to suggest is that when -E 
->or -X are applied to the array as a whole, would it not be useful to 
->itterate them over all of the components rather than than looking for 
->non-existant data in the array itself?
-the question i believe is to distinguish the case where an md device is
-a component of another md device...
-L.
+On 18 Jul 2006, Neil Brown moaned:
+> The superblock locations for sda and sda1 can only be 'one and the
+> same' if sda1 is at an offset in sda which is a multiple of 64K, and
+> if sda1 ends near the end of sda.  This certainly can happen, but it
+> is by no means certain.
+> 
+> For this reason, version-1 superblocks record the offset of the
+> superblock in the device so that if a superblock is written to sda1
+> and then read from sda, it will look wrong (wrong offset) and so will
+> be ignored (no valid superblock here).
+
+One case where this can happen is Sun slices (and I think BSD disklabels
+too), where /dev/sda and /dev/sda1 start at the *same place*.
+
+(This causes amusing problems with LVM vgscan unless the raw devices
+are excluded, too.)
 
 -- 
-Luca Berra -- bluca@comedia.it
-        Communication Media & Services S.r.l.
- /"\
- \ /     ASCII RIBBON CAMPAIGN
-  X        AGAINST HTML MAIL
- / \
+`We're sysadmins. We deal with the inconceivable so often I can clearly 
+ see the need to define levels of inconceivability.' --- Rik Steenwinkel
