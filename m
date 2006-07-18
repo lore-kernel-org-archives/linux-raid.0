@@ -1,62 +1,69 @@
-From: David Chinner <dgc@sgi.com>
-Subject: Re: XFS and write barrier
-Date: Wed, 19 Jul 2006 03:04:06 +1000
-Message-ID: <20060718170406.GT15160733@melbourne.sgi.com>
-References: <200607151248.56603.Martin@lichtvoll.de> <20060716173238.GD3417@free.net.ph> <20060718173122.B1914501@wobbly.melbourne.sgi.com> <17596.41680.124148.595601@cse.unsw.edu.au>
+From: David Greaves <david@dgreaves.com>
+Subject: Re: md reports: unknown partition table - fixed.
+Date: Tue, 18 Jul 2006 19:37:46 +0100
+Message-ID: <44BD2A7A.5040906@dgreaves.com>
+References: <44BD0FC3.3010304@dgreaves.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <17596.41680.124148.595601@cse.unsw.edu.au>
+In-Reply-To: <44BD0FC3.3010304@dgreaves.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Nathan Scott <nathans@sgi.com>, xfs@oss.sgi.com, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: Neil Brown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-On Tue, Jul 18, 2006 at 06:58:56PM +1000, Neil Brown wrote:
-> On Tuesday July 18, nathans@sgi.com wrote:
-> > On Mon, Jul 17, 2006 at 01:32:38AM +0800, Federico Sevilla III wrote:
-> > > On Sat, Jul 15, 2006 at 12:48:56PM +0200, Martin Steigerwald wrote:
-> > > > I am currently gathering information to write an article about journal
-> > > > filesystems with emphasis on write barrier functionality, how it
-> > > > works, why journalling filesystems need write barrier and the current
-> > > > implementation of write barrier support for different filesystems.
+David Greaves wrote:
+> Hi
 > 
-> "Journalling filesystems need write barrier" isn't really accurate.
-> They can make good use of write barrier if it is supported, and where
-> it isn't supported, they should use blkdev_issue_flush in combination
-> with regular submit/wait.
+> After a powercut I'm trying to mount an array and failing :(
 
-blkdev_issue_flush() causes a write cache flush - just like a
-barrier typically causes a write cache flush up to the I/O with the
-barrier in it.  Both of these mechanisms provide the same thing - an
-I/O barrier that enforces ordering of I/Os to disk.
+A reboot after tidying up /dev/ fixed it.
 
-Given that filesystems already indicate to the block layer when they
-want a barrier, wouldn't it be better to get the block layer to issue
-this cache flush if the underlying device doesn't support barriers
-and it receives a barrier request?
+The first time through I'd forgotten to update the boot scripts and they
+were assembling the wrong UUID. That was fine; I realised this and ran
+the manual assemble:
 
-FWIW, Only XFS and Reiser3 use this function, and only then when
-issuing a fsync when barriers are disabled to make sure a common
-test (fsync then power cycle) doesn't result in data loss...
+  mdadm --assemble /dev/media /dev/sd[bcdef]1
+  dmesg
+  cat /proc/mdstat
 
-> > Noone here seems to know, maybe Neil &| the other folks on linux-raid
-> > can help us out with details on status of MD and write barriers?
-> 
-> In 2.6.17, md/raid1 will detect if the underlying devices support
-> barriers and if they all do, it will accept barrier requests from the
-> filesystem and pass those requests down to all devices.
-> 
-> Other raid levels will reject all barrier requests.
+All OK (but I'd forgotten that this was a partitioned array). I suspect
+the device entries for /dev/media[1234] from last time were hanging about.
 
-Any particular reason for not supporting barriers on the other types
-of RAID?
+  mount /media
+  fdisk /dev/media
+So I guess this fails because the major-minor are for a non-p md device?
 
-Cheers,
+  mdadm --assemble /dev/media --auto=p /dev/sd[bcdef]1
+  mdadm --stop /dev/media
+This fails because I'm on mdadm 2.4.1
 
-Dave.
+  mdadm --assemble /dev/media --auto=p /dev/sd[bcdef]1
+  cat /proc/mdstat
+  mdadm --stop /dev/md_d0
+  mdadm --stop /dev/md0
+  cat /proc/mdstat
+So by now I upgrade to mdadm 2.5.1 in another session.
+
+  mdadm --stop /dev/media
+  dmesg
+  cat /proc/mdstat
+and it stops.
+
+  mdadm --assemble /dev/media --auto=p /dev/sd[bcdef]1
+But now it won't create working devices...
+
+Much messing about with assemble and I try a kernel upgrade - can't
+because the driver for my video card won't compile under 2.6.17 yet so
+WTF, I suspect major/minor numbers so just reboot it under the same kernel.
+
+All seems well.
+
+I think there's a bug here somewhere. I wonder/suspect that the
+superblock should contain the fact that it's a partitioned/able md device?
+
+David
+
 -- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+
