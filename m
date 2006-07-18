@@ -1,30 +1,46 @@
-From: "Molle Bestefich" <molle.bestefich@gmail.com>
-Subject: Re: trying to "brute-force" my RAID 5...
-Date: Tue, 18 Jul 2006 16:04:35 +0200
-Message-ID: <62b0912f0607180704k6b2c8679w2ac70371a346afec@mail.gmail.com>
-References: <44BAB76D.9070809@start.no>
-	 <62b0912f0607170413x465b363eh92c811da67cc363@mail.gmail.com>
-	 <44BBFF5A.7010702@start.no> <44BBFFCA.5030309@online.no>
+From: "Francisca Phelps" <FranciscaPhelps@0733.com>
+Subject: Future, wood calker
+Date: Tue, 18 Jul 2006 14:38:35 +0300
+Message-ID: <6809128171.20060718143835__42441.7673414156$1153233587$gmane$org@0733.com>
+Reply-To: "Francisca Phelps" <FranciscaPhelps@0733.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <44BBFFCA.5030309@online.no>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Sevrin Robstad <quack@online.no>
-Cc: linux-raid@vger.kernel.org
+To: linux-scsi-owner@vger.kernel.org
 List-Id: linux-raid.ids
 
-Sevrin Robstad wrote:
-> I created the RAID when I installed Fedora Core 3 some time ago,
-> didn't do anything special so the chunks should be 64kbyte and
-> parity should be left-symmetric ?
+Your cre dit doesn't matter to us! If you OWN real est ate
+and want IMMEDIATEM cash to spend ANY way you like, or simply wish 
+to LOWER your monthly paym ents by a third or more, here are the dea ls
+we have TODAY (hurry, these ofers will expre TONIGHT):
 
-I have no idea what's default on FC3, sorry.
+$488,000.00 at a 3.67,% fixed-rateA
+$372,000.00 at a 3.90,% variable-rateG
+$492,000.00 at a 3.21,% interest-onlyZ
+$248,000.00 at a 3.36,% fixed-rateR
+$198,000.00 at a 3.55,% variable-rate4
 
-> Any Idea ?
+Hurry, when these deals are gone, they are gone Simply fill out this one-min ute form... 
 
-I missed that you were trying to fdisk -l /dev/md0..
-As others have suggested, search for filesystems using fsck, or mount,
-or what not ;-).
+Don't worry about approval, your cre dit will not disqualify you! 
+
+http://0O7Y565H.jokip.com
+
+
+
+pursed lips, and nodded in the direction of the kitchen.
+immediately, without thinking, he shouted: "Halt!"  He extended his  hand to
+
+     Right at their feet the  road into the quarry began, torn up many years
+avenue, we're not on a  promenade here, you  know. Arthur got up slowly. His
+were kids."
+
+was nothing to inspire hope either. For some reason,  his first thought  was
+his burnt skin, walked to a dry spot and examined the backpack. The pack had
+     The valley had cooled overnight, and by dawn it was actually cold. They
+lower lip was split. But all in all, okay.
+
+heard  the familiar rumble from both  sides. There was nothing  on  the left
+wrong--that it would disappoint him, evoke doubts, throw him  from the cloud
