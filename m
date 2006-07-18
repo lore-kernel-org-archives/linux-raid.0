@@ -1,38 +1,32 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH] enable auto=yes by default when using udev
-Date: Tue, 18 Jul 2006 15:19:32 +1000
-Message-ID: <17596.28516.152402.395214@cse.unsw.edu.au>
-References: <20060702224549.GD12733@percy.comedia.it>
-	<17576.21342.685662.432117@cse.unsw.edu.au>
-	<44AA42F6.8070307@tls.msk.ru>
-	<e8dmd5$kek$1@sea.gmane.org>
+Subject: Re: Can't add disk to failed raid array
+Date: Tue, 18 Jul 2006 15:36:02 +1000
+Message-ID: <17596.29506.188695.678634@cse.unsw.edu.au>
+References: <200607152056.55090.pwaldo@waldoware.com>
+	<17594.4774.17991.656057@cse.unsw.edu.au>
+	<200607160824.04175.pwaldo@waldoware.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Mario 'BitKoenig' Holbe on Tuesday July 4
+In-Reply-To: message from Paul Waldo on Sunday July 16
 Sender: linux-raid-owner@vger.kernel.org
-To: Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE>
+To: Paul Waldo <pwaldo@waldoware.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday July 4, Mario.Holbe@TU-Ilmenau.DE wrote:
-> Michael Tokarev <mjt@tls.msk.ru> wrote:
-> > Why to test for udev at all?  If the device does not exist, regardless
-> > if udev is running or not, it might be a good idea to try to create it.
-> > Because IT IS NEEDED, period.  Whenever the operation fails or not, and
-> 
-> Perhaps it was just a typo and you damage more if you just create it.
-> Typical behaviour is to *not* just create device nodes because they
-> don't exist but instead assume administrators know what they do.
-> That's why I personally think it's better to rely on administrator's
-> decision about automatic creation of device nodes.
+On Sunday July 16, pwaldo@waldoware.com wrote:
+> Thanks for the reply, Neil.  Here is my version:
+> [root@paul log]# mdadm --version
+> mdadm - v2.3.1 - 6 February 2006
 
-Yes, the typo issue is a real one.  But so is the frustration with
-devices not appearing where you would expect.
+Positively ancient :-)  Nothing obvious in the change log since then.
 
-I think I'm leaning towards auto-creating names if they look like
-standard names (or are listed in mdadm.conf?), but required
-auto=whatever to create anything else.
+Can you show me the output of 
+  mdadm -E /dev/hdd2
+  mdadm -E /dev/hda2
 
+immediately after the failed attempt to add hdd2.
+
+Thanks,
 NeilBrown
