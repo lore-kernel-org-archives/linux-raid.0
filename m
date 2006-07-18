@@ -1,64 +1,15 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: Kernel 2.6.17 and RAID5 Grow Problem (critical section backup)
-Date: Tue, 18 Jul 2006 10:16:27 +1000
-Message-ID: <17596.10331.396365.132469@cse.unsw.edu.au>
-References: <Pine.LNX.4.64.0607070830450.2648@p34.internal.lan>
-	<Pine.LNX.4.64.0607070845280.2648@p34.internal.lan>
-	<Pine.LNX.4.64.0607070849140.3010@p34.internal.lan>
-	<Pine.LNX.4.64.0607071037190.5153@p34.internal.lan>
-	<17582.55703.209583.446356@cse.unsw.edu.au>
-	<Pine.LNX.4.64.0607101747160.2603@p34.internal.lan>
-	<Pine.LNX.4.61.0607110026030.5420@yvahk01.tjqt.qr>
-	<Pine.LNX.4.64.0607101830130.2603@p34.internal.lan>
-	<Pine.LNX.4.61.0607110950450.30961@yvahk01.tjqt.qr>
-	<e8vplt$fgv$1@sea.gmane.org>
+From: "Calvert" <Calvertboulder@cliffhanger.com>
+Subject: You ejacculatte within a few minutes of penetration!
+Date: Tue, 18 Jul 2006 08:36:04 +0800
+Message-ID: <14684824249574.426EE6A686__5203.40341977334$1153183554$gmane$org@SEPSBU>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+        charset="Windows-1252"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Petr Vyskocil on Tuesday July 11
 Sender: linux-raid-owner@vger.kernel.org
-To: Petr Vyskocil <petr@anime.cz>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-serial@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday July 11, petr@anime.cz wrote:
-> >>> Hm, what's superblock 0.91? It is not mentioned in mdadm.8.
-> >>>
-> >> Not sure, the block version perhaps?
-> >>
-> > Well yes of course, but what characteristics? The manual only lists
-> >  0, 0.90, default
-> >  1, 1.0, 1.1, 1.2
-> > No 0.91 :(
-> 
-> 
-> AFAICR superblock version gets raised by 0.01 for the duration of 
-> reshape, so that non-reshape aware kernels do not try to assemble it 
-> (and cause data corruption).
+Yo! Leave complaining to others. You deserve to get rid of this. Not just stopping it, but curing - Extra-Time conquers all reasons for the premature finish. Many of us know the bitter feeling of not being able to deliver longer acts of mutual pleasure. You may find what you need here: http://polerty.com/dll/get/ Get the courage and performance you need to be the best man of her life.
 
-Exactly.  The following will be in the next mdadm - unless someone
-wants to re-write it for me using shorter sentences :-)
-
-NeilBrown
-
-
-
-diff .prev/md.4 ./md.4
---- .prev/md.4	2006-06-20 10:01:17.000000000 +1000
-+++ ./md.4	2006-07-18 10:14:47.000000000 +1000
-@@ -74,6 +74,14 @@ UUID
- a 128 bit Universally Unique Identifier that identifies the array that
- this device is part of.
- 
-+When a version 0.90 array is being reshaped (e.g. adding extra devices
-+to a RAID5), the version number is temporarily set to 0.91.  This
-+ensures that if the reshape process is stopped in the middle (e.g. by
-+a system crash) and the machine boots into an older kernel that does
-+not support reshaping, then the array will not be assembled (which
-+would cause data corruption) but will be left untouched until a kernel
-+that can complete the reshape processes is used.
-+
- .SS ARRAYS WITHOUT SUPERBLOCKS
- While it is usually best to create arrays with superblocks so that
- they can be assembled reliably, there are some circumstances where an
