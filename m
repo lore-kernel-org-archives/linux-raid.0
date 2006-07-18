@@ -1,39 +1,32 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: which disk the the one that data is on?
-Date: Tue, 18 Jul 2006 19:51:59 +1000
-Message-ID: <17596.44863.331069.588455@cse.unsw.edu.au>
-References: <e3edb0fa0607180053x7a29bf71se8d30c591e7d10d5@mail.gmail.com>
-	<17596.41907.608404.634683@cse.unsw.edu.au>
-	<e3edb0fa0607180223q11193d9ey6a6569bded1feb4@mail.gmail.com>
+From: "Christian Pernegger" <pernegger@gmail.com>
+Subject: Re: [PATCH] enable auto=yes by default when using udev
+Date: Tue, 18 Jul 2006 12:07:54 +0200
+Message-ID: <bb145bd20607180307i2914eef0q52446edd694f45df@mail.gmail.com>
+References: <20060702224549.GD12733@percy.comedia.it>
+	 <17576.21342.685662.432117@cse.unsw.edu.au>
+	 <44AA42F6.8070307@tls.msk.ru> <e8dmd5$kek$1@sea.gmane.org>
+	 <17596.28516.152402.395214@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Shai on Tuesday July 18
+In-Reply-To: <17596.28516.152402.395214@cse.unsw.edu.au>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Shai <shaibn@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday July 18, shaibn@gmail.com wrote:
-> Hi,
-> 
-> So if I were to want to stop the resync process on a very large array
-> (1.4T), since it is in the middle of the day and makes work slower...
-> How can I tell which drive is the one that is being used to check all
-> the rest of the data? Or in other words, how can I stop the resync
-> process and let it cont. later?
+> I think I'm leaning towards auto-creating names if they look like
+> standard names (or are listed in mdadm.conf?), but required
+> auto=whatever to create anything else.
 
-There is no "one that is being used to check all the rest".  They are
-all in this together.
+The auto= option has the disadvantage that it is different for
+partitionable and regular arrays -- is there no way to detect from the
+array if it is supposed to be partitionable or not?
 
-But if you want to stop the resync because it is slowing things down
-then write a small number to /proc/sys/dev/raid/speed_limit_min
-e.g.
+As it is scripts are better off creating the node with correct
+major/minor and assembling without auto=.
 
-  echo 10 > /proc/sys/dev/raid/speed_limit_min
+Regards,
 
-This won't actually stop it, but it will make it go very slowly so as
-not to interfere with anything else.
-
-NeilBrown
+C.
