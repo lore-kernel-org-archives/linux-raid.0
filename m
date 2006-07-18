@@ -1,58 +1,43 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: Problem with 3xRAID1 to RAID 0
-Date: Tue, 18 Jul 2006 11:03:39 +1000
-Message-ID: <17596.13163.100902.855435@cse.unsw.edu.au>
-References: <44B3562B.7040801@vladoportos.sk>
+Subject: Re: Test feedback 2.6.17.4+libata-tj-stable (EH, hotplug)
+Date: Tue, 18 Jul 2006 11:21:19 +1000
+Message-ID: <17596.14223.843247.572486@cse.unsw.edu.au>
+References: <bb145bd20607101439n475b1771g1c754af31911288@mail.gmail.com>
+	<44B31260.5030409@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Vladimir Strycek on Tuesday July 11
-Sender: linux-raid-owner@vger.kernel.org
-To: Vladimir Strycek <vladoportos@vladoportos.sk>
-Cc: linux-raid@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: message from Tejun Heo on Tuesday July 11
+Sender: linux-ide-owner@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Christian Pernegger <pernegger@gmail.com>, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday July 11, vladoportos@vladoportos.sk wrote:
-> Hi,
+On Tuesday July 11, htejun@gmail.com wrote:
+> Christian Pernegger wrote:
+> > The fact that the disk had changed minor numbers after it was plugged
+> > back in bugs me a bit. (was sdc before, sde after). Additionally udev
+> > removed the sdc device file, so I had to manually recreate it to be
+> > able to remove the 'faulty' disk from its md array.
 > 
-> I created to 3 x /dev/md1 to /dev/md3  which consist of six identical 
-> 200GB hdd
-> 
-> my mdadm --detail --scan looks like
-> 
-> Proteus:/home/vladoportos# mdadm --detail --scan
-> ARRAY /dev/md1 level=raid1 num-devices=2 UUID=d1fadb29:cc004047:aabf2f31:3f044905
->    devices=/dev/sdb,/dev/sda
-> ARRAY /dev/md2 level=raid1 num-devices=2 UUID=38babb4d:92129d4a:94d659f1:3b238c53
->    devices=/dev/sdc,/dev/sdd
-> ARRAY /dev/md3 level=raid1 num-devices=2 UUID=a0406e29:c1f586be:6b3381cf:086be0c2
->    devices=/dev/sde,/dev/sdf
-> ARRAY /dev/md0 level=raid1 num-devices=2 UUID=c04441d4:e15d900e:57903584:9eb5fea6
->    devices=/dev/hdc1,/dev/hdd1
-> 
-> 
-> and mdadm.conf
-> 
-> DEVICE partitions
-> ARRAY /dev/md4 level=raid0 num-devices=3 UUID=1c8291ba:2d83cf54:2698ce30:e49b1e6c
->    devices=/dev/md1,/dev/md2,/dev/md3
-> ARRAY /dev/md3 level=raid1 num-devices=2 UUID=a0406e29:c1f586be:6b3381cf:086be0c2
->    devices=/dev/sde,/dev/sdf
-> ARRAY /dev/md2 level=raid1 num-devices=2 UUID=38babb4d:92129d4a:94d659f1:3b238c53
->    devices=/dev/sdc,/dev/sdd
-> ARRAY /dev/md1 level=raid1 num-devices=2 UUID=d1fadb29:cc004047:aabf2f31:3f044905
->    devices=/dev/sda,/dev/sdb
-> ARRAY /dev/md0 level=raid1 num-devices=2 UUID=c04441d4:e15d900e:57903584:9eb5fea6
->    devices=/dev/hdc1,/dev/hdd1
+> That's because md is stilling holding onto sdc in failed mode.  A 
+> hotplug script which checks whether a removed device is in md array and 
+> if so removes it from the array will solve the problem.  Not sure 
+> whether that would be the correct approach though.
 
-Get rid of the "devices=..." lines.  You don't want them - though they
-aren't causing a problem yet...
+Checking whether the to-be-removed device is in an md array or in use
+in any other way first definitely sounds like the right approach to
+me.
 
-What happens if you
-  mdadm --stop --scan
-  mdadm --assemble --scan
+Exactly what to do if the device is in use is somewhat less obvious.
+If the array is completely quiescent then you don't necessarily want
+to fail/remove the device from the array....
 
-What gets assembled?
+I think the best approach would be to have plug-ins that are called if
+an unplugged device is in use, and if it is still in use after those
+calls, then don't delete the device.  Maybe it would also be good if
+hotplug was told when a device was no longer in use so it could remove
+the /dev entry then....
 
 NeilBrown
