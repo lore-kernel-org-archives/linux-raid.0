@@ -1,49 +1,40 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: zeroing old superblocks & upgrading...
-Date: Tue, 18 Jul 2006 09:57:18 +1000
-Message-ID: <17596.9182.836056.396966@cse.unsw.edu.au>
-References: <17581.36135.379062.709693@stoffel.org>
-	<17581.38932.532010.388731@cse.unsw.edu.au>
-	<17582.23882.797049.201350@stoffel.org>
+From: "David Rientjes" <rientjes@google.com>
+Subject: Re: Mounting array was read write for about 3 minutes, then Read-only file system error
+Date: Mon, 17 Jul 2006 17:04:24 -0700
+Message-ID: <9ec263480607171704s555b4fechb20eb36b1d5a1c23@mail.google.com>
+References: <e0904ff40607061932l3b1d7849v43ed568aa4fceea8@mail.gmail.com>
+	 <17596.8875.945108.21839@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from John Stoffel on Friday July 7
+In-Reply-To: <17596.8875.945108.21839@cse.unsw.edu.au>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: John Stoffel <john@stoffel.org>
-Cc: Luca Berra <bluca@comedia.it>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Friday July 7, john@stoffel.org wrote:
-> 
-> Neil> But if you wanted to (and were running a fairly recent kernel) you
-> Neil> could
-> Neil>   mdadm --grow --bitmap=internal /dev/md0
-> 
-> Did this.  And now I can do mdadm -X /dev/hde1 to examine the bitmap,
-> but I think this totally blows.  To create a bitmap, I add it to an
-> md# device, but to examine it, I have to know which sub-devices to
-> query?  That's really not what I would expect.
+On 7/17/06, Neil Brown <neilb@suse.de> wrote:
+> On Thursday July 6, bkbonner@gmail.com wrote:
+> > I created a raid1 array using /dev/disk/by-id with (2) 250GB USB 2.0
+> > Drives.  It was working for about 2 minutes until I tried to copy a
+> > directory tree from one drive to the array and then cancelled it
+> > midstream.  After cancelling the copy, when I list the contents of the
+> > directory it doesn't show anything there.
+> >
+> > When I try to create a file, I get the following error msg:
+> >
+> > [root@app1 ~]# cd /mnt/usb250
+> > [root@app1 usb250]# ls
+> > lost+found
+> > [root@app1 usb250]# touch test.txt
+> > touch: cannot touch `test.txt': Read-only file system
+>
+> Sounds like you got some disk errors so the filesystem when readonly.
+>
+> Is there anything in /var/log/messages about errors at that time?
 
-Hmm... I can see that.
--X is a counterpart to -E
-They are both letters from EXamine.  They both look at a component and
-tell you want is there.
--D (--detail) reports on the array.  Maybe it should be give more
-details about any bitmap....
-> 
-> Neil>   mdadm --grow --bitmap=none /dev/md0
-> 
-> Neil> and it should work with minimal resync...
-> 
-> So why would I want to remove the bitmap?
+What's /proc/mount for /dev/disk/by-id when it's rw?  Is it
+rw,errors=remount-ro?
 
-To return you to the state you started in.  You didn't have a bitmap
-to start with, so I gave you a recipe that left you with no bitmap.  I
-didn't want to assume anything about whether you want a bitmap or not.
-
-Ofcouse, if you want to leave the bitmap there, that is fine.
-Possibly even a good idea.
-
-NeilBrown
+David
