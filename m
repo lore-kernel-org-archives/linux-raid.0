@@ -1,46 +1,44 @@
-From: "Francisca Phelps" <FranciscaPhelps@0733.com>
-Subject: Future, wood calker
-Date: Tue, 18 Jul 2006 14:38:35 +0300
-Message-ID: <6809128171.20060718143835__42441.7673414156$1153233587$gmane$org@0733.com>
-Reply-To: "Francisca Phelps" <FranciscaPhelps@0733.com>
+From: Paul Clements <paul.clements@steeleye.com>
+Subject: Re: mdadm -X bitmap status off by 2^16
+Date: Tue, 18 Jul 2006 11:30:42 -0400
+Message-ID: <44BCFEA2.20301@steeleye.com>
+References: <priv$efbe06145625$36d67b3763@200607.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <priv$efbe06145625$36d67b3763@200607.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-scsi-owner@vger.kernel.org
+To: Janos Farkas <chexum+dev@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Your cre dit doesn't matter to us! If you OWN real est ate
-and want IMMEDIATEM cash to spend ANY way you like, or simply wish 
-to LOWER your monthly paym ents by a third or more, here are the dea ls
-we have TODAY (hurry, these ofers will expre TONIGHT):
+Janos Farkas wrote:
 
-$488,000.00 at a 3.67,% fixed-rateA
-$372,000.00 at a 3.90,% variable-rateG
-$492,000.00 at a 3.21,% interest-onlyZ
-$248,000.00 at a 3.36,% fixed-rateR
-$198,000.00 at a 3.55,% variable-rate4
+> # for i in hdb3 hdd3 hda3 ; mdadm -X /dev/$i|grep map
+>           Bitmap : 285923 bits (chunks), 0 dirty (0.0%)
+>           Bitmap : 285923 bits (chunks), 0 dirty (0.0%)
+>           Bitmap : 285923 bits (chunks), 65536 dirty (22.9%)
 
-Hurry, when these deals are gone, they are gone Simply fill out this one-min ute form... 
-
-Don't worry about approval, your cre dit will not disqualify you! 
-
-http://0O7Y565H.jokip.com
+This indicates that the _on-disk_ bits are cleared on two disks, but set 
+on the third.
 
 
+> # cat /proc/mdstat
+> Personalities : [raid1] [raid6] [raid5] [raid4]
+> md0 : active raid5 hdd3[2] hdb3[0] hda3[1]
+>       585569024 blocks level 5, 64k chunk, algorithm 2 [3/3] [UUU]
+>       bitmap: 0/140 pages [0KB], 1024KB chunk
 
-pursed lips, and nodded in the direction of the kitchen.
-immediately, without thinking, he shouted: "Halt!"  He extended his  hand to
+This indicates that the _in-memory_ bits are all cleared.
 
-     Right at their feet the  road into the quarry began, torn up many years
-avenue, we're not on a  promenade here, you  know. Arthur got up slowly. His
-were kids."
+At array startup, md initializes the in-memory bitmap from the on-disk 
+copy. It then uses the in-memory bitmap from that point on, shadowing 
+any changes there into the on-disk bitmap.
 
-was nothing to inspire hope either. For some reason,  his first thought  was
-his burnt skin, walked to a dry spot and examined the backpack. The pack had
-     The valley had cooled overnight, and by dawn it was actually cold. They
-lower lip was split. But all in all, okay.
+At the end of a rebuild (which should have happened after you added the 
+third disk), the bits should all be cleared. The on-disk bits get 
+cleared lazily, though. Is there any chance that they are cleared now? 
+If not, it sounds like a bug to me.
 
-heard  the familiar rumble from both  sides. There was nothing  on  the left
-wrong--that it would disappoint him, evoke doubts, throw him  from the cloud
+--
+Paul
