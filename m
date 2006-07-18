@@ -1,34 +1,30 @@
-From: Paul Waldo <pwaldo@waldoware.com>
-Subject: Re: Raid and LVM and LILO
-Date: Tue, 18 Jul 2006 09:28:40 -0400
-Message-ID: <44BCE208.20302@waldoware.com>
-References: <44BC21B6.1080507@minicom.com.br> <44BCCDCF.9070707@waldoware.com> <44BCD9AB.1090205@minicom.com.br>
+From: "Molle Bestefich" <molle.bestefich@gmail.com>
+Subject: Re: trying to "brute-force" my RAID 5...
+Date: Tue, 18 Jul 2006 16:04:35 +0200
+Message-ID: <62b0912f0607180704k6b2c8679w2ac70371a346afec@mail.gmail.com>
+References: <44BAB76D.9070809@start.no>
+	 <62b0912f0607170413x465b363eh92c811da67cc363@mail.gmail.com>
+	 <44BBFF5A.7010702@start.no> <44BBFFCA.5030309@online.no>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <44BCD9AB.1090205@minicom.com.br>
+In-Reply-To: <44BBFFCA.5030309@online.no>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Du <eduardo@minicom.com.br>
+To: Sevrin Robstad <quack@online.no>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I assume that your /boot was raid1...  I had similar issues with the 
-Debian installer, trying to install a file server using LVM on top of 
-RAID.  I never did work out the problem; I installed Fedora Core :-/ 
-Sorry I can't be of more help :-(
+Sevrin Robstad wrote:
+> I created the RAID when I installed Fedora Core 3 some time ago,
+> didn't do anything special so the chunks should be 64kbyte and
+> parity should be left-symmetric ?
 
-Paul
+I have no idea what's default on FC3, sorry.
 
-Du wrote:
-> Paul Waldo wrote:
->> Hi Du,
->>
->> Did you create a /boot partition?  /boot cannot be on LVM (AFAIK), and 
->> can be a regular partition or raid1.  HTH.
-> The second thing I tried was that. I made a 200 MB /dev/md0 to be the 
-> /boot partition and the rest to be /dev/md1 where the system will be 
-> under LVM. But LILO says be that I dont have an active partition. I set 
-> the /dev/md0 to be bootable, and set the 2 "Raid Linux Autodetect" 
-> partitions that makes /dev/md0 bootable too. But LILO never installs...
+> Any Idea ?
 
+I missed that you were trying to fdisk -l /dev/md0..
+As others have suggested, search for filesystems using fsck, or mount,
+or what not ;-).
