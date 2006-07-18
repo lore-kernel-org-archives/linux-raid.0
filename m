@@ -1,57 +1,35 @@
-From: Janos Farkas <chexum+dev@gmail.com>
-Subject: mdadm -X bitmap status off by 2^16
-Date: Tue, 18 Jul 2006 08:46:13 +0200
-Message-ID: <priv$efbe06145625$36d67b3763@200607.gmail.com>
+From: Nathan Scott <nathans@sgi.com>
+Subject: Re: XFS and write barrier
+Date: Tue, 18 Jul 2006 17:31:22 +1000
+Message-ID: <20060718173122.B1914501@wobbly.melbourne.sgi.com>
+References: <200607151248.56603.Martin@lichtvoll.de> <20060716173238.GD3417@free.net.ph>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
+In-Reply-To: <20060716173238.GD3417@free.net.ph>; from jijo@free.net.ph on Mon, Jul 17, 2006 at 01:32:38AM +0800
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: xfs@oss.sgi.com
+Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi!
+On Mon, Jul 17, 2006 at 01:32:38AM +0800, Federico Sevilla III wrote:
+> On Sat, Jul 15, 2006 at 12:48:56PM +0200, Martin Steigerwald wrote:
+> > I am currently gathering information to write an article about journal
+> > filesystems with emphasis on write barrier functionality, how it
+> > works, why journalling filesystems need write barrier and the current
+> > implementation of write barrier support for different filesystems.
+> 
+> Cool! Would you by any chance have information on the interaction
+> between journal filesystems with write barrier functionality, and
+> software RAID (md)? Based on my experience with 2.6.17, XFS detects that
+> the underlying software RAID 1 device does not support barriers and
+> therefore disables that functionality.
 
-Another pseudo-problem :) I've just set up a RAID5 array by creating a
-three-disk one from two disks, and later adding the third.  Everything
-seems normal, but the mdadm (2.5.2) -X output:
+Noone here seems to know, maybe Neil &| the other folks on linux-raid
+can help us out with details on status of MD and write barriers?
 
-        Filename : /dev/hda3
-           Magic : 6d746962
-         Version : 4
-            UUID : 293ceee6.d1811fb1.a8b316e6.b54abcc7
-          Events : 12
-  Events Cleared : 12
-           State : OK
-       Chunksize : 1 MB
-          Daemon : 5s flush period
-      Write Mode : Normal
-       Sync Size : 292784512 (279.22 GiB 299.81 GB)
-          Bitmap : 285923 bits (chunks), 65536 dirty (22.9%)
+cheers.
 
-# for i in hdb3 hdd3 hda3 ; mdadm -X /dev/$i|grep map
-          Bitmap : 285923 bits (chunks), 0 dirty (0.0%)
-          Bitmap : 285923 bits (chunks), 0 dirty (0.0%)
-          Bitmap : 285923 bits (chunks), 65536 dirty (22.9%)
-# for i in hdb3 hdd3 hda3 ; mdadm -X /dev/$i|grep map
-          Bitmap : 285923 bits (chunks), 1 dirty (0.0%)
-          Bitmap : 285923 bits (chunks), 1 dirty (0.0%)
-          Bitmap : 285923 bits (chunks), 65537 dirty (22.9%)
-# for i in hdb3 hdd3 hda3 ; mdadm -X /dev/$i|grep map
-          Bitmap : 285923 bits (chunks), 7 dirty (0.0%)
-          Bitmap : 285923 bits (chunks), 7 dirty (0.0%)
-          Bitmap : 285923 bits (chunks), 65543 dirty (22.9%)
-# for i in hdb3 hdd3 hda3 ; mdadm -X /dev/$i|grep map
-          Bitmap : 285923 bits (chunks), 0 dirty (0.0%)
-          Bitmap : 285923 bits (chunks), 0 dirty (0.0%)
-          Bitmap : 285923 bits (chunks), 65536 dirty (22.9%)
-
-# cat /proc/mdstat
-Personalities : [raid1] [raid6] [raid5] [raid4]
-md0 : active raid5 hdd3[2] hdb3[0] hda3[1]
-      585569024 blocks level 5, 64k chunk, algorithm 2 [3/3] [UUU]
-      bitmap: 0/140 pages [0KB], 1024KB chunk
-
-Is this going to bite me later on, or just a harmless display problem?
-
-Janos
+-- 
+Nathan
