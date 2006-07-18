@@ -1,69 +1,54 @@
-From: David Greaves <david@dgreaves.com>
-Subject: Re: md reports: unknown partition table - fixed.
-Date: Tue, 18 Jul 2006 19:37:46 +0100
-Message-ID: <44BD2A7A.5040906@dgreaves.com>
-References: <44BD0FC3.3010304@dgreaves.com>
+From: Sevrin Robstad <quack@online.no>
+Subject: Re: trying to "brute-force" my RAID 5...
+Date: Tue, 18 Jul 2006 23:14:23 +0200
+Message-ID: <44BD4F2F.2050502@online.no>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <44BD0FC3.3010304@dgreaves.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
-Cc: Neil Brown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-David Greaves wrote:
-> Hi
-> 
-> After a powercut I'm trying to mount an array and failing :(
+Neil Brown wrote:
+ >
+ >>I have written some posts about this before... My 6 disk RAID 5 broke
+ >>down because of hardware failure. When I tried to get it up'n'running 
+again
+ >>I did a --create without any missing disk, which made it rebuild. I have
+ >>also lost all information about how the old RAID was set up..
+ >>
+ >>I got a friend of mine to make a list of all the 6^6 combinations of dev
+ >>1 2 3 4 5 missing, and set it up this way :
+ >>
+ >>"mdadm --create -n 6 -l 5  dev1 2 3 4 5 missing ; fdisk -l /dev/md0 ;
+ >>mdadm --stop /dev/md0" .
+ >>But a "cat logfile | grep Linux" of the output of this script tells me
+ >>that on no of these combination does it find a valid "type 83" partition.
+ >>
+ >>shouldn't this work ???
+ >
+ > No.
+ >
+ > What are you expecting fdisk to tell you?  fdisk lists partitions and
+ > I suspect you didn't have any partitions on /dev/md0
+ > More likely you want something like
+ >    fsck -n -f /dev/md0
+ >
+ > and see which one produces the least noise.
 
-A reboot after tidying up /dev/ fixed it.
+They all produce
 
-The first time through I'd forgotten to update the boot scripts and they
-were assembling the wrong UUID. That was fine; I realised this and ran
-the manual assemble:
+"Bad magic number in super-block while trying to open /dev/md0" .
 
-  mdadm --assemble /dev/media /dev/sd[bcdef]1
-  dmesg
-  cat /proc/mdstat
+I tried file -s /dev/md0 also, and with one of the disk as first disk I 
+got "ext 3 filedata (needs journal recovery) (errors)" .
 
-All OK (but I'd forgotten that this was a partitioned array). I suspect
-the device entries for /dev/media[1234] from last time were hanging about.
+but as fsck -n -f can't do anything with it, there might not be any hope ?
 
-  mount /media
-  fdisk /dev/media
-So I guess this fails because the major-minor are for a non-p md device?
 
-  mdadm --assemble /dev/media --auto=p /dev/sd[bcdef]1
-  mdadm --stop /dev/media
-This fails because I'm on mdadm 2.4.1
+Or can it still be that I have some wrong setting?
 
-  mdadm --assemble /dev/media --auto=p /dev/sd[bcdef]1
-  cat /proc/mdstat
-  mdadm --stop /dev/md_d0
-  mdadm --stop /dev/md0
-  cat /proc/mdstat
-So by now I upgrade to mdadm 2.5.1 in another session.
+Chunk size is (and was) default 64k, yes?
 
-  mdadm --stop /dev/media
-  dmesg
-  cat /proc/mdstat
-and it stops.
-
-  mdadm --assemble /dev/media --auto=p /dev/sd[bcdef]1
-But now it won't create working devices...
-
-Much messing about with assemble and I try a kernel upgrade - can't
-because the driver for my video card won't compile under 2.6.17 yet so
-WTF, I suspect major/minor numbers so just reboot it under the same kernel.
-
-All seems well.
-
-I think there's a bug here somewhere. I wonder/suspect that the
-superblock should contain the fact that it's a partitioned/able md device?
-
-David
-
--- 
-
+Sevrin
