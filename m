@@ -1,33 +1,23 @@
-From: Alex Davis <alex14641@yahoo.com>
-Subject: Is it possible to recover data after resync?
-Date: Wed, 19 Jul 2006 11:40:48 -0700 (PDT)
-Message-ID: <20060719184048.96988.qmail@web50204.mail.yahoo.com>
+From: "Rudolph" <RudolphKeen@accountant.com>
+Subject: Just out Now you have chance to do it Be delighted with
+Date: Wed, 19 Jul 2006 20:51:32 +0200
+Message-ID: <01884670214590.C6CC9902B2__28724.1745544181$1153335161$gmane$org@FZ82T>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain;
+        charset="Windows-1252"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: linux-serial@vger.kernel.org
 List-Id: linux-raid.ids
 
-Situation:
+Hello my friend,
 
-I accidentally killed the power to my 5-disk RAID 5 array. I then powered
-it back up and rebooted the system. After reboot, however, I got the follow-
-ing error when trying to assemble the array:
+Rock hard manhood, multiple explosions and several times more semen volume 
+Low prices, handy delivery, everything for your convenience.
+ World’s greatest brands produce these goods in top class labs with latest technologies.
+ Take a look: http://www.hanchbi.com 
 
-mdadm -A -amd /dev/md0 /dev/sd[a-e]
-mdadm: /dev/md0 assembled from 2 drives - not enough to start the array.
+ We offer reliable service and 5 years expirience on the marcket!
 
-I had read somewhere that it's possible to recover an array using the -C
-option to mdadm. Unfortunately, I didn't specify 'missing', so instead of
-recovering, it's resyncing. 
 
-Is there any way to recover the original data?
-
-I code, therefore I am
-
-__________________________________________________
-Do You Yahoo!?
-Tired of spam?  Yahoo! Mail has the best spam protection around 
-http://mail.yahoo.com 
