@@ -1,31 +1,31 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: which disk the the one that data is on?
-Date: Thu, 20 Jul 2006 10:23:59 +1000
-Message-ID: <17598.52511.607140.257550@cse.unsw.edu.au>
-References: <e3edb0fa0607180053x7a29bf71se8d30c591e7d10d5@mail.gmail.com>
-	<17596.41907.608404.634683@cse.unsw.edu.au>
-	<e3edb0fa0607180223q11193d9ey6a6569bded1feb4@mail.gmail.com>
-	<17596.44863.331069.588455@cse.unsw.edu.au>
-	<e3edb0fa0607182233l2dd64395o884e523b7820676d@mail.gmail.com>
+Subject: Re: md reports: unknown partition table - fixed.
+Date: Thu, 20 Jul 2006 10:33:46 +1000
+Message-ID: <17598.53098.732139.882100@cse.unsw.edu.au>
+References: <44BD0FC3.3010304@dgreaves.com>
+	<44BD2A7A.5040906@dgreaves.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Shai on Wednesday July 19
+In-Reply-To: message from David Greaves on Tuesday July 18
 Sender: linux-raid-owner@vger.kernel.org
-To: Shai <shaibn@gmail.com>
+To: David Greaves <david@dgreaves.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wednesday July 19, shaibn@gmail.com wrote:
-> Hi,
+On Tuesday July 18, david@dgreaves.com wrote:
 > 
-> Another question on this matter please:
-> If there is a raid5 with 4 disks and 1 missing, and we add that disk,
-> while its doing the resync of that disk, how do we know which disk it
-> is (if we forgot what one we added)?
+> I think there's a bug here somewhere. I wonder/suspect that the
+> superblock should contain the fact that it's a partitioned/able md device?
 
-mdadm --detail will list all the devices.  The one that is being
-recovered won't be 'sync' - the others will.
+I've thought about that and am not in favour.
+I would rather just assume everything is partitionable - put
+  CREATE auto=part
+
+in mdadm.conf
+
+If this causes problems, then those problems need to be identified and
+fixed.
 
 NeilBrown
