@@ -1,42 +1,32 @@
-From: "Mary B." <argentum@74.ru>
-Subject: Re[3]:  Ave !
-Date: Thu, 20 Jul 2006 10:59:23 +0300
-Message-ID: <001b01c6abd2$5d186700$7702000a__41198.6699015417$1153382347$gmane$org@host-84-222-170-42.cust-adsl.tiscali.it>
+From: Stephen <Jeffrey@aon.at>
+Subject: Vacancy in our corporation.
+Date: Thu, 20 Jul 2006 17:56:31 +0900
+Message-ID: <EFEA4C93.8755212@aon.at>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="windows-1251"
+Content-Type: text/plain; charset=windows-1251; format=flowed
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Maximilian <linux-net-owner@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello, Maximilian
+Need Extra Inc0me?
 
-I think we had correspondence a long time ago if it was not you I am sorry.
-If it was I could not answer you because my Mozilla mail manager was down for a 
-long time and I could not fix it only with my friend's help I got the emails 
-address out for me ..:)
-I hope it was whom we were corresponded with you are still interested, as I am, 
-though I realize much time has passed since then...
-I really don't know where to start ....
-Maybe you could tell me a little about yourself since I lost our early letters, 
-your appearance,age , hobbies, and are you still in the search?
-If it was you I wrote to and you are interested to get to know me better, I have 
-a profile at :
-http://iamsearching-forlove.com/
 
-Don't really know what else to say for now I hope this is the right address
+New opportunities for you - today!
 
-Let me know if you are interested, And I hope
-you won't run when you see my picture :-)
+Get Assisted Co. invites you to cooperation.
+You are responsible and accurate
 
-Goodbye
+You are from 18 till 60 year old
 
-Mary B.
+You have free time (2-4 hours daily)
 
-If you think that you were subscribed by mistake for this mail
-delivery or if your email has been added without your permission,
-please, visit http://iamsearching-forlove.com/ and unsubscribe from our mails.
+This is your chance.
+
+Contact us, your job is waiting for you!
+
+
+Please send all emails to: support@g-ted.info
 
 
