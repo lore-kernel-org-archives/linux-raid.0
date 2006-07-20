@@ -1,7 +1,7 @@
 From: Alex Davis <alex14641@yahoo.com>
 Subject: Re: Is it possible to recover data after resync?
-Date: Wed, 19 Jul 2006 20:42:32 -0700 (PDT)
-Message-ID: <20060720034232.78278.qmail@web50210.mail.yahoo.com>
+Date: Wed, 19 Jul 2006 20:54:11 -0700 (PDT)
+Message-ID: <20060720035411.7327.qmail@web50207.mail.yahoo.com>
 References: <17598.62721.936579.64693@cse.unsw.edu.au>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
@@ -36,8 +36,12 @@ List-Id: linux-raid.ids
 > Hard to say without precise details.  Maybe it's worth a try, maybe
 > not.
 
-What details are needed?
+Ignore my previous message. Typing 
 
+mdadm -C -amd -l5 -n5 -c128 /dev/md0 /dev/sde /dev/sdd /dev/sdc /dev/sdb missing
+
+seems to have done the trick. I'll do an add of /dev/sda and an fsck and report
+my results later.
 
 > NeilBrown
 > 
