@@ -1,31 +1,39 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: md reports: unknown partition table - fixed.
-Date: Thu, 20 Jul 2006 10:33:46 +1000
-Message-ID: <17598.53098.732139.882100@cse.unsw.edu.au>
-References: <44BD0FC3.3010304@dgreaves.com>
-	<44BD2A7A.5040906@dgreaves.com>
+Subject: Re: Is it possible to recover data after resync?
+Date: Thu, 20 Jul 2006 11:08:27 +1000
+Message-ID: <17598.55179.66969.564751@cse.unsw.edu.au>
+References: <20060719184048.96988.qmail@web50204.mail.yahoo.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from David Greaves on Tuesday July 18
+In-Reply-To: message from Alex Davis on Wednesday July 19
 Sender: linux-raid-owner@vger.kernel.org
-To: David Greaves <david@dgreaves.com>
+To: Alex Davis <alex14641@yahoo.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday July 18, david@dgreaves.com wrote:
+On Wednesday July 19, alex14641@yahoo.com wrote:
+> Situation:
 > 
-> I think there's a bug here somewhere. I wonder/suspect that the
-> superblock should contain the fact that it's a partitioned/able md device?
+> I accidentally killed the power to my 5-disk RAID 5 array. I then powered
+> it back up and rebooted the system. After reboot, however, I got the follow-
+> ing error when trying to assemble the array:
+> 
+> mdadm -A -amd /dev/md0 /dev/sd[a-e]
+> mdadm: /dev/md0 assembled from 2 drives - not enough to start the array.
+> 
+> I had read somewhere that it's possible to recover an array using the -C
+> option to mdadm. Unfortunately, I didn't specify 'missing', so instead of
+> recovering, it's resyncing. 
 
-I've thought about that and am not in favour.
-I would rather just assume everything is partitionable - put
-  CREATE auto=part
+--assemble --force is worth try first and is much safer.
 
-in mdadm.conf
+> 
+> Is there any way to recover the original data?
 
-If this causes problems, then those problems need to be identified and
-fixed.
+Well, if you got all the right devices in the right order, then your
+data should be fine.  If not, I hope you have good backups, because
+they are your only hope.
 
 NeilBrown
