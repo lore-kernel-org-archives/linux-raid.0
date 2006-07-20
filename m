@@ -1,60 +1,55 @@
-From: Alex Davis <alex14641@yahoo.com>
-Subject: Re: Is it possible to recover data after resync?
-Date: Thu, 20 Jul 2006 06:49:12 -0700 (PDT)
-Message-ID: <20060720134912.90068.qmail@web50214.mail.yahoo.com>
+From: "Pieter Steyn" <pieterste@gmail.com>
+Subject: Re: Megaraid, howto?
+Date: Thu, 20 Jul 2006 16:33:49 +0200
+Message-ID: <c49e66200607200733u6ad8d669i6ab2ca598495cd75@mail.gmail.com>
+References: <c49e66200607200014wbefb21ay4d9a24ccd43356b0@mail.gmail.com>
+	 <Pine.LNX.4.62.0607200856450.24627@chaos.egr.duke.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.62.0607200856450.24627@chaos.egr.duke.edu>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
+To: Joshua Baker-LePain <jlb17@duke.edu>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Thanks alot Joshua!
 
+This is _exactly_ what I was looking for.
 
---- Alex Davis <alex14641@yahoo.com> wrote:
+Cheers!
 
-> 
-> 
-> --- Neil Brown <neilb@suse.de> wrote:
-> 
-> > On Wednesday July 19, alex14641@yahoo.com wrote:
-> > > > 
-> > > > > 
-> > > > > Is there any way to recover the original data?
-> > > > 
-> > > > Well, if you got all the right devices in the right order, then your
-> > > > data should be fine.  If not, I hope you have good backups, because
-> > > > they are your only hope.
-> > > > 
-> > > > NeilBrown
-> > > > 
-> > > 
-> > > So do I just keep doing mdadm -A /dev/md0 /dev/.... using different 
-> > > permutations of the devices until my data shows up?
-> > > 
-> > 
-> > Hard to say without precise details.  Maybe it's worth a try, maybe
-> > not.
-> 
-> Ignore my previous message. Typing 
-> 
-> mdadm -C -amd -l5 -n5 -c128 /dev/md0 /dev/sde /dev/sdd /dev/sdc /dev/sdb missing
-> 
-> seems to have done the trick. I'll do an add of /dev/sda and an fsck and report
-> my results later.
+On 7/20/06, Joshua Baker-LePain <jlb17@duke.edu> wrote:
+> On Thu, 20 Jul 2006 at 9:14am, Pieter Steyn wrote
 >
-
-mdadm --add was successful. fsck showed no errors.
-
-Life is good.
-
--Alex
-
-I code, therefore I am
-
-__________________________________________________
-Do You Yahoo!?
-Tired of spam?  Yahoo! Mail has the best spam protection around 
-http://mail.yahoo.com 
+> > I have a few hosts that use Megaraid controllers.
+> >
+> > Could someone please show me an effective way to monitor the status?
+> >
+> > I've used the software on dells website, and the only program partly
+> > useful was Megamon, which is a gui menu based program that runs on the
+> > shell, I've written an expect script that gives me the proper output
+> > when I run the program on that shell, but it does not work from within
+> > crontab / ssh hostname "command".
+>
+> Problems like that are almost always due to a difference in the shell
+> environments of your login shell and crontab.  Make sure all your paths
+> are explicit and stuff (that's a technical term, son) like that.
+>
+> > If anyone could please tell me of either an alternative way / or how I
+> > can get my expect script to work through crontab, I'd greatly
+> > apreciate it!
+>
+> I have a (very/embarrassingly) crude script which uses megarc (downloaded
+> directly from LSI).  It greps the output of "megarc -dispCfg -a0" for
+> DEGRADED.  If it finds that then it emails me and also touches a state
+> file so it doesn't continue mailing me every 15 minutes (which is how
+> often I run it).
+>
+> --
+> Joshua Baker-LePain
+> Department of Biomedical Engineering
+> Duke University
+>
