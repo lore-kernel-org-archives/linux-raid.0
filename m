@@ -1,31 +1,31 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: raid5.h documentation
-Date: Thu, 20 Jul 2006 10:22:05 +1000
-Message-ID: <17598.52397.290196.966427@cse.unsw.edu.au>
-References: <5d96567b0607190208y2ad6f71fvb92eb5ac66ff9af9@mail.gmail.com>
+Subject: Re: which disk the the one that data is on?
+Date: Thu, 20 Jul 2006 10:23:59 +1000
+Message-ID: <17598.52511.607140.257550@cse.unsw.edu.au>
+References: <e3edb0fa0607180053x7a29bf71se8d30c591e7d10d5@mail.gmail.com>
+	<17596.41907.608404.634683@cse.unsw.edu.au>
+	<e3edb0fa0607180223q11193d9ey6a6569bded1feb4@mail.gmail.com>
+	<17596.44863.331069.588455@cse.unsw.edu.au>
+	<e3edb0fa0607182233l2dd64395o884e523b7820676d@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Raz Ben-Jehuda(caro) on Wednesday July 19
+In-Reply-To: message from Shai on Wednesday July 19
 Sender: linux-raid-owner@vger.kernel.org
-To: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
-Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: Shai <shaibn@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wednesday July 19, raziebe@gmail.com wrote:
-> Neil hello.
+On Wednesday July 19, shaibn@gmail.com wrote:
+> Hi,
 > 
-> you say raid5.h:
-> ...
->  * Whenever the delayed queue is empty and the device is not plugged, we
->  * move any strips from delayed to handle and clear the DELAYED flag
-> and set   PREREAD_ACTIVE.
->  ...
-> 
-> i do not understand how can one move from delayed if delayed is empty .
+> Another question on this matter please:
+> If there is a raid5 with 4 disks and 1 missing, and we add that disk,
+> while its doing the resync of that disk, how do we know which disk it
+> is (if we forgot what one we added)?
 
-It should say
-  Whenever the 'handle' queue is empty.....
+mdadm --detail will list all the devices.  The one that is being
+recovered won't be 'sync' - the others will.
 
 NeilBrown
