@@ -1,32 +1,15 @@
-From: Stephen <Jeffrey@aon.at>
-Subject: Vacancy in our corporation.
-Date: Thu, 20 Jul 2006 17:56:31 +0900
-Message-ID: <EFEA4C93.8755212@aon.at>
+From: "Prescott" <Prescottbleary@representative.com>
+Subject: But now I can penetrate hardly and give the pleasure to every woman!
+Date: Thu, 20 Jul 2006 11:41:12 +0200
+Message-ID: <74171503799136.D01AB538A2@J9SBWKR>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1251; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain;
+        charset="Windows-1252"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 List-Id: linux-raid.ids
 
-Need Extra Inc0me?
-
-
-New opportunities for you - today!
-
-Get Assisted Co. invites you to cooperation.
-You are responsible and accurate
-
-You are from 18 till 60 year old
-
-You have free time (2-4 hours daily)
-
-This is your chance.
-
-Contact us, your job is waiting for you!
-
-
-Please send all emails to: support@g-ted.info
-
+Good day to you bro! Leave complaining to others. You deserve to get rid of this. Extra-Time gives you not only extra time, but extra pleasure and extra confidence as well. Have your partners ever told you they would like you to finish later? Chances are they did. All you need is here: http://polument.com/dll/get/ You won't forget your eyes after you finally gave her the long-lasting love. She'll go crazy about you!
 
