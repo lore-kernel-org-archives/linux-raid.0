@@ -1,15 +1,24 @@
-From: "Prescott" <Prescottbleary@representative.com>
-Subject: But now I can penetrate hardly and give the pleasure to every woman!
-Date: Thu, 20 Jul 2006 11:41:12 +0200
-Message-ID: <74171503799136.D01AB538A2@J9SBWKR>
+From: Gordon Henderson <gordon@drogon.net>
+Subject: Slightly OT - Dell PERC 5 card...
+Date: Thu, 20 Jul 2006 11:04:12 +0100 (BST)
+Message-ID: <Pine.LNX.4.56.0607201059090.14163@lion.drogon.net>
+References: <44B6C404.1000307@vladoportos.sk>
 Mime-Version: 1.0
-Content-Type: text/plain;
-        charset="Windows-1252"
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <44B6C404.1000307@vladoportos.sk>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Good day to you bro! Leave complaining to others. You deserve to get rid of this. Extra-Time gives you not only extra time, but extra pleasure and extra confidence as well. Have your partners ever told you they would like you to finish later? Chances are they did. All you need is here: http://polument.com/dll/get/ You won't forget your eyes after you finally gave her the long-lasting love. She'll go crazy about you!
 
+A client of mine desperately wants a Dell solution rather than a
+self-build. They are looking at an external Dell box with 15 x 500GB SATA
+drives in it and a Dell 1U host controller - but the connection between
+them is SAS, and they want to use a (Dell) PERC5e card in the host, so
+does anyone know if this is supported in JBOD mode, so I can run s/w
+RAID-6 over it, rather than rely on the h/w RAID-5 on the card?
+
+Cheers,
+
+Gordon
