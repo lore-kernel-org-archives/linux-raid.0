@@ -1,92 +1,31 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: XFS and write barrier
-Date: Wed, 19 Jul 2006 09:41:31 +1000
-Message-ID: <17597.29099.110370.121220@cse.unsw.edu.au>
-References: <200607151248.56603.Martin@lichtvoll.de>
-	<20060716173238.GD3417@free.net.ph>
-	<20060718173122.B1914501@wobbly.melbourne.sgi.com>
-	<17596.41680.124148.595601@cse.unsw.edu.au>
-	<20060718170406.GT15160733@melbourne.sgi.com>
+Subject: Re: raid5.h documentation
+Date: Thu, 20 Jul 2006 10:22:05 +1000
+Message-ID: <17598.52397.290196.966427@cse.unsw.edu.au>
+References: <5d96567b0607190208y2ad6f71fvb92eb5ac66ff9af9@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from David Chinner on Wednesday July 19
+In-Reply-To: message from Raz Ben-Jehuda(caro) on Wednesday July 19
 Sender: linux-raid-owner@vger.kernel.org
-To: David Chinner <dgc@sgi.com>
-Cc: Nathan Scott <nathans@sgi.com>, xfs@oss.sgi.com, linux-raid@vger.kernel.org
+To: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
+Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wednesday July 19, dgc@sgi.com wrote:
-> On Tue, Jul 18, 2006 at 06:58:56PM +1000, Neil Brown wrote:
-> > On Tuesday July 18, nathans@sgi.com wrote:
-> > > On Mon, Jul 17, 2006 at 01:32:38AM +0800, Federico Sevilla III wrote:
-> > > > On Sat, Jul 15, 2006 at 12:48:56PM +0200, Martin Steigerwald wrote:
-> > > > > I am currently gathering information to write an article about journal
-> > > > > filesystems with emphasis on write barrier functionality, how it
-> > > > > works, why journalling filesystems need write barrier and the current
-> > > > > implementation of write barrier support for different filesystems.
-> > 
-> > "Journalling filesystems need write barrier" isn't really accurate.
-> > They can make good use of write barrier if it is supported, and where
-> > it isn't supported, they should use blkdev_issue_flush in combination
-> > with regular submit/wait.
+On Wednesday July 19, raziebe@gmail.com wrote:
+> Neil hello.
 > 
-> blkdev_issue_flush() causes a write cache flush - just like a
-> barrier typically causes a write cache flush up to the I/O with the
-> barrier in it.  Both of these mechanisms provide the same thing - an
-> I/O barrier that enforces ordering of I/Os to disk.
+> you say raid5.h:
+> ...
+>  * Whenever the delayed queue is empty and the device is not plugged, we
+>  * move any strips from delayed to handle and clear the DELAYED flag
+> and set   PREREAD_ACTIVE.
+>  ...
 > 
-> Given that filesystems already indicate to the block layer when they
-> want a barrier, wouldn't it be better to get the block layer to issue
-> this cache flush if the underlying device doesn't support barriers
-> and it receives a barrier request?
+> i do not understand how can one move from delayed if delayed is empty .
 
-A barrier means a lot more than just a flush.
-It means
-  wait for all proceeding requests to commit
-  flush
-  write this request
-  flush
-
-Any block device that uses the io scheduler could probably manage
-this.  Other block devices might not find it so easy.
-
-> 
-> Any particular reason for not supporting barriers on the other types
-> of RAID?
-> 
-
-Imagine trying to implement barriers for raid0 (or any level with
-striping).  You would need to
-  block new requests
-  wait for all requests to all devices to complete
-  issue a flush to all devices
-  issue the barrier request to the target device
-  issue a flush to the target device
-  permit new requests.
-
-This means raid0 would need to keep track of all pending requests,
-which it doesn't do.  As the filesystem does, it is just as efficient
-to let the filesystem to the work.
-
-I guess raid0 could
-  - block new requests
-  - submit a no-op barrier to all devices
-  - wait for the no-op to complete
-  - submit the write/barrier request
-  - permit new requests.
-
-This would avoid needing to keep track of all requests.  However I
-don't think the Linux block layer supports a no-op barrer, and I don't
-think this would actually be better than not supporting barriers.
-
-The real value of barriers (as far as I can see) is that the target
-device can understand them so you don't need to stall the queue of
-requests flying over the buss to the device.  If you need to stall the
-flow of requests and wait at the OS level, then the value of barriers
-disappears and you may as well wait in the filesystem code.
-
-At least, that is my understanding.  I am happy to be educated.
+It should say
+  Whenever the 'handle' queue is empty.....
 
 NeilBrown
