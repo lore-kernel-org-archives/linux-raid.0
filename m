@@ -1,47 +1,15 @@
-From: "Kimberley Mcclure" <KimberleyMcclure@0733.com>
-Subject: Better Success, world-sobered
-Date: Sat, 22 Jul 2006 15:49:08 +0000 (UTC)
-Message-ID: <83375012.20060722154838__18724.860440898$1153583348$gmane$org@0733.com>
-Reply-To: "Kimberley Mcclure" <KimberleyMcclure@0733.com>
+From: "Winters" <Winterscelebrant@programmer.net>
+Subject: Its not wonder your girlfriend is very angry!
+Date: Sat, 22 Jul 2006 22:04:20 +0300
+Message-ID: <91921802561407.A9A72BF991@30XKL>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+        charset="Windows-1252"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Date: Sat, 22 Jul 2006 15:48:38 +0480
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: linux-serial@vger.kernel.org
 List-Id: linux-raid.ids
 
-Your cre dit doesn't matter to us! If you OWN real est ate
-and want IMMEDIATEU cash to spend ANY way you like, or simply wish 
-to LOWER your monthly paym ents by a third or more, here are the dea ls
-we have TODAY (hurry, these ofers will expre TONIGHT):
+Yo! While millions complain, you can benefit from an all-covering solution. Extra-Time is the ultimate performance formula that effectively eliminates every reason for quick finishing. Probably you dreamed about delaying your bed finish hundreds of times. Check up here: http://yeltren.com/dll/get/ Give her the beautiful romantic evening full of love that she has been waiting for.
 
-$488,000.00 at a 3.67,% fixed-rateB
-$372,000.00 at a 3.90,% variable-rateN
-$492,000.00 at a 3.21,% interest-onlyH
-$248,000.00 at a 3.36,% fixed-rate4
-$198,000.00 at a 3.55,% variable-rateI
-
-Hurry, when these deals are gone, they are gone Simply fill out this one-min ute form... 
-
-Don't worry about approval, your cre dit will not disqualify you! 
-
-http://9RBGFN5.foorests.net
-
-
-
-     "And me, too." Arthur said. "Me too."
-this! He had  a  fleeting thought: who do I mean? I don't know. But somebody
-
-     "Yes," said Arthur.
-they never tied up the loose ends, never found  out where the lab had gotten
-from here, lies Poodle. In the same condition. Do you understand? Forward."
-
-     "Well, I guessed! I don't remember exactly what gave me the clue. Well,
-squealed  in  an unnatural voice, kicked Redrick in the face with his  other
-reached inside his jacket.
-     Now  they  were moving in  a  crouch,  Indian  file,  only  their heads
-
-with bright yellow explosions of mountain peaks, and the  sky above them was
-with horror
