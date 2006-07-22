@@ -1,15 +1,28 @@
-From: "Casey" <Caseybackplane@winning.com>
-Subject: Its not wonder your girlfriend is very angry!
-Date: Sat, 22 Jul 2006 09:36:30 +0200
-Message-ID: <15122977774469.06196283B8@Z6P2LV>
+From: Dennis <Kevin@aon.at>
+Subject: Sind Sie fertig Ihr Einkommen zu erhohen?
+Date: Sat, 22 Jul 2006 13:24:42 +0400
+Message-ID: <16FF6B4F.0271161@aon.at>
 Mime-Version: 1.0
-Content-Type: text/plain;
-        charset="Windows-1252"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=windows-1251; format=flowed
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-How are u? Stop disappointing your partner and join the lucky ones who have overcome this. Results are guaranteed with Extra-Time, the number one solution for any male. Imagine how your life will improve if you stopped being reproached for premature creaming once and for all. Enter: {EX_DO
+Brauchen Sie zusaetzliches Einkommen?
+ 
+Schon heute haben Sie diese neue Moeglichkeit!
+ 
+ Company Get Assisted Co. bietet Ihnen die Zusammenarbeit an.
+Sie sind verantwortlich und punktlich.
+ Sie sind zwischen 18 und 60 Jahre.
+
+Sie haben Freizeit (2-4 Stunden taglich)
+
+Das ist Ihre Chance. 
+
+ Kontaktieren Sie mit uns, bitte, Ihr Job wartet auf Sie!
+Schicken Sie bitte Ihre E-Mails an support@g-ted.biz
+
 
