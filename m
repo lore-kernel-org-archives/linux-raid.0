@@ -1,36 +1,15 @@
-From: "Kristine Mcintyre" <KristineMcintyre@mail.ru>
-Subject: Your health, passion-wasted
-Date: Sat, 22 Jul 2006 02:25:24 +0000 (UTC)
-Message-ID: <24967506.20060722022456__13385.5093540207$1153535124$gmane$org@mail.ru>
-Reply-To: "Kristine Mcintyre" <KristineMcintyre@mail.ru>
+From: "Casey" <Caseybackplane@winning.com>
+Subject: Its not wonder your girlfriend is very angry!
+Date: Sat, 22 Jul 2006 09:36:30 +0200
+Message-ID: <15122977774469.06196283B8@Z6P2LV>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+        charset="Windows-1252"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Date: Sat, 22 Jul 2006 02:24:56 -0480
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-scsi-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Genuine Swiss made RoleTx repilcas are as close to the real thing 
-as a repilca watch can be. Sometimes even the professional jewelers 
-are unable to tell the difference from the real Role5x watch.
+How are u? Stop disappointing your partner and join the lucky ones who have overcome this. Results are guaranteed with Extra-Time, the number one solution for any male. Imagine how your life will improve if you stopped being reproached for premature creaming once and for all. Enter: {EX_DO
 
-Why spend thousands of dollars on the real deal when 
-a repilca watch looks so much alike that only an expert could tell the difference...
-And you only pay a fractoin of the price.
-
-VISIT US, AND GET OUR SPECIL 370% DIS5COUNT OFER!
-
-http://AV4N197cshnzd0k0iinduushccszcuu.madwortmj.com/
-
-==========
-quietly with them all, exhorting them never to  stop  their  learning  and
-wanted to shout "Stop! Freeze!" but I couldn't. And I probably wouldn't have
-understood all at once that his friend had quite  honestly  been  no  more
-     "You can trust me, Red. I didn't breathe a word to anyone."
-anchovy to a hungry old gull chasing him. I could  be  spending  all  this
-scattered, and I thought I heard something.
-
-very bright and quick with their lessons. But the old feeling  came  back,
-the sidewalk on our left there was black bramble growing, and you could tell
