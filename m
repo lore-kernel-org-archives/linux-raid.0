@@ -1,28 +1,47 @@
-From: Dennis <Kevin@aon.at>
-Subject: Sind Sie fertig Ihr Einkommen zu erhohen?
-Date: Sat, 22 Jul 2006 13:24:42 +0400
-Message-ID: <16FF6B4F.0271161@aon.at>
+From: "Kimberley Mcclure" <KimberleyMcclure@0733.com>
+Subject: Better Success, world-sobered
+Date: Sat, 22 Jul 2006 15:49:08 +0000 (UTC)
+Message-ID: <83375012.20060722154838__18724.860440898$1153583348$gmane$org@0733.com>
+Reply-To: "Kimberley Mcclure" <KimberleyMcclure@0733.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1251; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+Date: Sat, 22 Jul 2006 15:48:38 +0480
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 List-Id: linux-raid.ids
 
-Brauchen Sie zusaetzliches Einkommen?
- 
-Schon heute haben Sie diese neue Moeglichkeit!
- 
- Company Get Assisted Co. bietet Ihnen die Zusammenarbeit an.
-Sie sind verantwortlich und punktlich.
- Sie sind zwischen 18 und 60 Jahre.
+Your cre dit doesn't matter to us! If you OWN real est ate
+and want IMMEDIATEU cash to spend ANY way you like, or simply wish 
+to LOWER your monthly paym ents by a third or more, here are the dea ls
+we have TODAY (hurry, these ofers will expre TONIGHT):
 
-Sie haben Freizeit (2-4 Stunden taglich)
+$488,000.00 at a 3.67,% fixed-rateB
+$372,000.00 at a 3.90,% variable-rateN
+$492,000.00 at a 3.21,% interest-onlyH
+$248,000.00 at a 3.36,% fixed-rate4
+$198,000.00 at a 3.55,% variable-rateI
 
-Das ist Ihre Chance. 
+Hurry, when these deals are gone, they are gone Simply fill out this one-min ute form... 
 
- Kontaktieren Sie mit uns, bitte, Ihr Job wartet auf Sie!
-Schicken Sie bitte Ihre E-Mails an support@g-ted.biz
+Don't worry about approval, your cre dit will not disqualify you! 
+
+http://9RBGFN5.foorests.net
 
 
+
+     "And me, too." Arthur said. "Me too."
+this! He had  a  fleeting thought: who do I mean? I don't know. But somebody
+
+     "Yes," said Arthur.
+they never tied up the loose ends, never found  out where the lab had gotten
+from here, lies Poodle. In the same condition. Do you understand? Forward."
+
+     "Well, I guessed! I don't remember exactly what gave me the clue. Well,
+squealed  in  an unnatural voice, kicked Redrick in the face with his  other
+reached inside his jacket.
+     Now  they  were moving in  a  crouch,  Indian  file,  only  their heads
+
+with bright yellow explosions of mountain peaks, and the  sky above them was
+with horror
