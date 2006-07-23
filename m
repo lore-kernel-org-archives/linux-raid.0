@@ -1,7 +1,7 @@
 From: Paul Waldo <pwaldo@waldoware.com>
 Subject: Re: In Trouble--Please Help!  (was Re: Can't add disk to failed raid array)
-Date: Sun, 23 Jul 2006 07:50:06 -0400
-Message-ID: <200607230750.07034.pwaldo@waldoware.com>
+Date: Sun, 23 Jul 2006 07:53:47 -0400
+Message-ID: <200607230753.47853.pwaldo@waldoware.com>
 References: <200607152056.55090.pwaldo@waldoware.com> <200607230704.46377.pwaldo@waldoware.com> <17603.23694.20794.434276@cse.unsw.edu.au>
 Mime-Version: 1.0
 Content-Type: text/plain;
@@ -66,11 +66,8 @@ On Sunday 23 July 2006 07:25, Neil Brown wrote:
 >
 > NeilBrown
 
-Hi Neil,
 
-Thanks for the quick reply.  I tried your suggestion.  I now see 
-that /dev/hda2 (good partition) is 155308387 blocks.  I 
-repartitioned /dev/hdd such that /dev/hdd2 is also 155308387, but I still get 
-the message about no superblock on hdd2 :-(.  I used --force.
+At this point, I'd just be happy to be able to get the degraded array back up 
+and running.  Is there any way to do that?  Thanks!
 
 Paul
