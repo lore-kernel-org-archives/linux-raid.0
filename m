@@ -1,138 +1,60 @@
-From: "Daniel J. Priem" <daniel@flexserv.de>
-Subject: raid from2.6 kernel not recognized under 2.4
-Date: Sun, 23 Jul 2006 10:57:49 +0200
-Message-ID: <878xmkd7g2.fsf@xserver.flexserv.de>
+From: Paul Waldo <pwaldo@waldoware.com>
+Subject: In Trouble--Please Help!  (was Re: Can't add disk to failed raid array)
+Date: Sun, 23 Jul 2006 07:04:46 -0400
+Message-ID: <200607230704.46377.pwaldo@waldoware.com>
+References: <200607152056.55090.pwaldo@waldoware.com> <200607160824.04175.pwaldo@waldoware.com> <17596.29506.188695.678634@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <17596.29506.188695.678634@cse.unsw.edu.au>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello i created a raid0 wich works nice under 2.6 but under 2.4 i dont
-get it running.
-Please CC me i am not subscribed to this list
+Please, please! I am dead in the water!
 
-Regards Daniel
+To recap, I have a RAID6 array on a Fedora Core 5 system, using /dev/hd[acdeg]
+2 and /dev/sd[ab]2.  /dev/hdd went bad so I replaced the drive and tried to 
+add it back to the array.  Here is what happens:
 
-below the output one from 2.4 other from 2.6
+#mdadm --assemble /dev/md1 /dev/hd[acdeg]2 /dev/sd[ab]2
+mdadm: no RAID superblock on /dev/hdd2
+mdadm: /dev/hdd2 has no superblock - assembly aborted
 
-daniel@prehension:~$ cat /etc/mdadm/mdadm.conf
-DEVICE /dev/hd*[0-9] /dev/sd*[0-9]
-ARRAY /dev/md0 level=raid0 num-devices=2
-UUID=a2f1ee4c:42b18d34:1571b1f2:b800e11f
-   devices=/dev/sdb1,/dev/sda4
-daniel@prehension:~$
-daniel@prehension:~$ sudo /etc/init.d/mdadm-raid start
-Starting raid devices: mdadm: failed to add /dev/sda4 to /dev/md0:
-Invalid argument
-mdadm: failed to add /dev/sdb1 to /dev/md0: Invalid argument
-mdadm: /dev/md0 assembled from 0 drives - not enough to start the array.
-done.
-daniel@prehension:~$daniel@prehension:~$ sudo mdadm -A /dev/md0
---uuid=a2f1ee4c:42b18d34:1571b1f2:b800e11f /dev/sdb1 /dev/sda4
-mdadm: failed to add /dev/sda4 to /dev/md0: Invalid argument
-mdadm: failed to add /dev/sdb1 to /dev/md0: Invalid argument
-mdadm: /dev/md0 assembled from 0 drives - not enough to start the array.
-daniel@prehension:~$ sudo mdadm -A /dev/md2
-mdadm: failed to add /dev/sda4 to /dev/md2: Invalid argument
-mdadm: failed to add /dev/sdb1 to /dev/md2: Invalid argument
-mdadm: /dev/md2 assembled from 0 drives - not enough to start the array.
-daniel@prehension:~$ sudo mdadm -A /dev/md0  --scan
---uuid=a2f1ee4c:42b18d34:1571b1f2:b800e11f /dev/sdb1 /dev/sda4
-mdadm: failed to add /dev/sda4 to /dev/md0: Invalid argument
-mdadm: failed to add /dev/sdb1 to /dev/md0: Invalid argument
-mdadm: /dev/md0 assembled from 0 drives - not enough to start the array.
-mdadm: /dev/sdb1 not identified in config file.
-mdadm: /dev/sda4 not identified in config file.
-daniel@prehension:~$ sudo mdadm -A /dev/md0  --scan /dev/sdb1 /dev/sda4
-mdadm: failed to add /dev/sda4 to /dev/md0: Invalid argument
-mdadm: failed to add /dev/sdb1 to /dev/md0: Invalid argument
-mdadm: /dev/md0 assembled from 0 drives - not enough to start the array.
-mdadm: /dev/sdb1 not identified in config file.
-mdadm: /dev/sda4 not identified in config file.
-daniel@prehension:~$ sudo mdadm -A /dev/md0  --scan /dev/sdb1 /dev/sda4
--c /etc/mdadm/mdadm.conf
-mdadm: failed to add /dev/sda4 to /dev/md0: Invalid argument
-mdadm: failed to add /dev/sdb1 to /dev/md0: Invalid argument
-mdadm: /dev/md0 assembled from 0 drives - not enough to start the array.
-mdadm: /dev/sdb1 not identified in config file.
-mdadm: /dev/sda4 not identified in config file.
+I also tried assembling without the new drive:
+#mdadm --assemble /dev/md1 /dev/hd[aceg]2 /dev/sd[ab]2
+mdadm: failed to RUN_ARRAY /dev/md1: Input/output error
 
-daniel@prehension:~$ sudo mdadm -E /dev/sdb1 und mdadm -E /dev/sda4
-#
-/dev/sdb1:
-          Magic : a92b4efc
-        Version : 00.90.03
-           UUID : a2f1ee4c:42b18d34:1571b1f2:b800e11f
-  Creation Time : Fri Jul 14 20:36:55 2006
-     Raid Level : raid0
-    Device Size : 13528064 (12.90 GiB 13.85 GB)
-   Raid Devices : 2
-  Total Devices : 2
-Preferred Minor : 0
-    Update Time : Fri Jul 14 20:36:56 2006
-          State : active
- Active Devices : 2
-Working Devices : 2
- Failed Devices : 0
-  Spare Devices : 0
-       Checksum : 7958 - expected e68092d7
-         Events : 0.1
-     Chunk Size : 64K
-      Number   Major   Minor   RaidDevice State
-this     0       8       17        0      active sync   /dev/sdb1
-   0     0       8       17        0      active sync   /dev/sdb1
-   1     1       8        4        1      active sync   /dev/sda4
-mdadm: cannot open und: No such file or directory
-mdadm: cannot find device size for und: No such file or directory
-mdadm: cannot open mdadm: No such file or directory
-mdadm: cannot find device size for mdadm: No such file or directory
-/dev/sda4:
-          Magic : a92b4efc
-        Version : 00.90.03
-           UUID : a2f1ee4c:42b18d34:1571b1f2:b800e11f
-  Creation Time : Fri Jul 14 20:36:55 2006
-     Raid Level : raid0
-    Device Size : 13528064 (12.90 GiB 13.85 GB)
-   Raid Devices : 2
-  Total Devices : 2
-Preferred Minor : 0
-    Update Time : Fri Jul 14 20:36:56 2006
-          State : active
- Active Devices : 2
-Working Devices : 2
- Failed Devices : 0
-  Spare Devices : 0
-       Checksum : 794d - expected e68092cc
-         Events : 0.1
-     Chunk Size : 64K
-      Number   Major   Minor   RaidDevice State
-this     1       8        4        1      active sync   /dev/sda4
-   0     0       8       17        0      active sync   /dev/sdb1
-   1     1       8        4        1      active sync   /dev/sda4
-daniel@prehension:~$ sudo mdadm -D /dev/md0
-/dev/md0:
-        Version : 00.90.03
-  Creation Time : Fri Jul 14 20:36:55 2006
-     Raid Level : raid0
-     Array Size : 31212096 (29.77 GiB 31.96 GB)
-   Raid Devices : 2
-  Total Devices : 2
-Preferred Minor : 0
-    Persistence : Superblock is persistent
-    Update Time : Fri Jul 14 20:36:56 2006
-          State : clean
- Active Devices : 2
-Working Devices : 2
- Failed Devices : 0
-  Spare Devices : 0
-     Chunk Size : 64K
-           UUID : a2f1ee4c:42b18d34:1571b1f2:b800e11f
-         Events : 0.1
-    Number   Major   Minor   RaidDevice State
-       0       8       17        0      active sync   /dev/sdb1
-       1       8        4        1      active sync   /dev/sda4
-daniel@prehension:~$
+Forgive me if the messages are not exactly correct, as I am booted into the FC 
+rescue disk and I am transcribing what I see to another computer.
+
+How can I get mdadm to use the new drive?  Am I completely fscked?  Thanks in 
+advance for any help!!!!
+
+Paul
 
 
+On Tuesday 18 July 2006 01:36, Neil Brown wrote:
+> On Sunday July 16, pwaldo@waldoware.com wrote:
+> > Thanks for the reply, Neil.  Here is my version:
+> > [root@paul log]# mdadm --version
+> > mdadm - v2.3.1 - 6 February 2006
+>
+> Positively ancient :-)  Nothing obvious in the change log since then.
+>
+> Can you show me the output of
+>   mdadm -E /dev/hdd2
+>   mdadm -E /dev/hda2
+>
+> immediately after the failed attempt to add hdd2.
+>
+> Thanks,
+> NeilBrown
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
