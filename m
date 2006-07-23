@@ -1,31 +1,47 @@
-From: Nix <nix@esperi.org.uk>
-Subject: Re: md reports: unknown partition table - fixed.
-Date: Sat, 22 Jul 2006 22:32:19 +0100
-Message-ID: <87ac71gwbg.fsf@hades.wkstn.nix>
-References: <44BD0FC3.3010304@dgreaves.com> <44BD2A7A.5040906@dgreaves.com>
-	<17598.53098.732139.882100@cse.unsw.edu.au>
+From: "Casey Morris" <CaseyMorris@mail.ru>
+Subject: Better Success, willow fly
+Date: Sun, 23 Jul 2006 04:17:10 +0000 (UTC)
+Message-ID: <662161c80604yyg13mcyxrfzvrjk5yjjbqkeljd1owq0el__21079.34484161$1153628230$gmane$org@mxs.mail.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17598.53098.732139.882100@cse.unsw.edu.au> (Neil Brown's message of "20 Jul 2006 01:34:36 +0100")
+Date: Sun, 23 Jul 2006 04:16:53 -0480
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: David Greaves <david@dgreaves.com>, linux-raid@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 20 Jul 2006, Neil Brown uttered the following:
-> On Tuesday July 18, david@dgreaves.com wrote:
->> 
->> I think there's a bug here somewhere. I wonder/suspect that the
->> superblock should contain the fact that it's a partitioned/able md device?
-> 
-> I've thought about that and am not in favour.
-> I would rather just assume everything is partitionable - put
->   CREATE auto=part
+Your cre dit doesn't matter to us! If you OWN real est ate
+and want IMMEDIATEW cash to spend ANY way you like, or simply wish 
+to LOWER your monthly paym ents by a third or more, here are the dea ls
+we have TODAY (hurry, these ofers will expre TONIGHT):
 
-As long as `partitionable' doesn't imply `partitioned': I'd quite like
-LVM-on-raw-md to keep working...
+$488,000.00 at a 3.67,% fixed-rate0
+$372,000.00 at a 3.90,% variable-rate5
+$492,000.00 at a 3.21,% interest-onlyF
+$248,000.00 at a 3.36,% fixed-rate9
+$198,000.00 at a 3.55,% variable-rateR
 
--- 
-`We're sysadmins. We deal with the inconceivable so often I can clearly 
- see the need to define levels of inconceivability.' --- Rik Steenwinkel
+Hurry, when these deals are gone, they are gone Simply fill out this one-min ute form... 
+
+Don't worry about approval, your cre dit will not disqualify you! 
+
+http://F7Y9STZN.foorests.net
+
+
+
+had wanted to emigrate,  I had  decided when was still in jail. I mean, what
+on  its axles, and he remembered that  they could  rest  in the shade of the
+
+them to  shallower  water,  and  soon  they  were walking  on  dry,  springy
+by its warm textured handle, tossed it up in the air, and caught it.
+his memory told him.
+
+4. REDRICK SCHUHART, AGE 31
+     They  went around  the  mound  of gray  rags. There was nothing left of
+     "Everything clear?" Redrick asked. Arthur gulped and nodded.
+grab, or  bite away from the indifferent  chaos that  surrounded him. It had
+
+fear he had crawled in  some wild zigzag, like a roach on a hot skillet, and
+     "Yes," Redrick said. "But not here. In  the mountains in the northwest.
