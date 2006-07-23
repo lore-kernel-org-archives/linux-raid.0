@@ -1,30 +1,22 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: In Trouble--Please Help!  (was Re: Can't add disk to failed raid array)
-Date: Sun, 23 Jul 2006 21:59:45 +1000
-Message-ID: <17603.25777.274507.385333@cse.unsw.edu.au>
-References: <200607152056.55090.pwaldo@waldoware.com>
-	<200607230704.46377.pwaldo@waldoware.com>
-	<17603.23694.20794.434276@cse.unsw.edu.au>
-	<200607230753.47853.pwaldo@waldoware.com>
+From: "Tuomas Leikola" <tuomas.leikola@gmail.com>
+Subject: Re: trying to "brute-force" my RAID 5...
+Date: Sun, 23 Jul 2006 15:28:30 +0300
+Message-ID: <5b170a7d0607230528s734c1dceq48a89ce49f19d71d@mail.gmail.com>
+References: <44BD4F2F.2050502@online.no>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Paul Waldo on Sunday July 23
+In-Reply-To: <44BD4F2F.2050502@online.no>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Paul Waldo <pwaldo@waldoware.com>
+To: Sevrin Robstad <quack@online.no>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sunday July 23, pwaldo@waldoware.com wrote:
-> 
-> 
-> At this point, I'd just be happy to be able to get the degraded array back up 
-> and running.  Is there any way to do that?  Thanks!
+On 7/19/06, Sevrin Robstad <quack@online.no> wrote:
+> I tried file -s /dev/md0 also, and with one of the disk as first disk I
+> got "ext 3 filedata (needs journal recovery) (errors)" .
 
- mdadm --assemble --force /dev/md1 /dev/hd[aceg]2 /dev/sd[ab]2
-
-should get you the degraded array.  If not, what kernel log messages
-do you get?
-
-
+Congratulations, you have found your first disk. Does fsck still
+complain about the magic number?
