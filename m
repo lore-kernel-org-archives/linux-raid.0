@@ -1,28 +1,34 @@
-From: "Jeff Breidenbach" <breidenbach@gmail.com>
+From: hahn@physics.mcmaster.ca
 Subject: Re: Drives of same model in RAID 1/10 ?
-Date: Mon, 24 Jul 2006 14:51:35 -0700
-Message-ID: <e03b90ae0607241451n1d03ef34oab06461f84378fc4@mail.gmail.com>
-References: <ea34i5$k2a$1@sea.gmane.org>
-	 <20060724214359.GV21855@strugglers.net>
-Reply-To: jeff@jab.org
+Date: Mon, 24 Jul 2006 17:54:54 -0400 (EDT)
+Message-ID: <Pine.LNX.4.64.0607241746370.12006@coffee.psychology.mcmaster.ca>
+References: <ea34i5$k2a$1@sea.gmane.org> <20060724214359.GV21855@strugglers.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20060724214359.GV21855@strugglers.net>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> The only issue is the obvious one that the manufacturers are usually
-> fairly vague about the exact usable size of each disk.  If you
-> bought half the disks from one manufacturer and half from another
-> then you should be able to pair them up and use the minimum of the
-> size of each pair.
+>> I am in the process of deciding which SATA-II drives should I choose for an
+>> external RAID system. I heard that it was safer to choose drives from
+>> different manufacturers to reduce the chance of near-simultaneous failure
+>> due to model-specific issues.
+>> Is this so?
+>
+> It's certainly safer.. whether you think it is worth the trouble is
+> your call.
 
-In a similar vein, if the drives have different speeds and you may be
-wasting some performance. The faster drives may be forced to
-sit around waiting for an I/O operation to complete on the slowpoke.
+it would be great to know the numbers.  I WAG that this pretty 
+theoretical model-specific failure mode is insignificant compared 
+to environment or wear/load-specific ones.  I can imagine the former
+was more of a concern in the days of disks on shared buses (SCSI, FC, 
+even IDE), when a model-specific response to some protocol oddity
+might cause group failures.
 
-Jeff
+nowadays, a SATA disk will probably share power, air, vibration with 
+its peers, and in some sense, IO load.  but I suspect there's enough
+variance in the latter to make synchronized dying uncommon.  at least 
+short-scale synchrony.  vendor would be much less relevant to 
+power/air/vibration issues.
