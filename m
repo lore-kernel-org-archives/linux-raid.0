@@ -1,30 +1,56 @@
-From: "Pieter Steyn" <pieterste@gmail.com>
-Subject: Re: Dell PowerEdge Expandable RAID Controller 4e/Di
-Date: Mon, 24 Jul 2006 21:41:43 +0200
-Message-ID: <c49e66200607241241y46cd624n866ca4d2a9f9d8db@mail.gmail.com>
-References: <c49e66200607240619g64acb7a9ud325e1c43be798a5@mail.gmail.com>
-	 <Pine.LNX.4.56.0607241506520.13928@lion.drogon.net>
+From: Andy Smith <andy@lug.org.uk>
+Subject: Re: Drives of same model in RAID 1/10 ?
+Date: Mon, 24 Jul 2006 21:43:59 +0000
+Message-ID: <20060724214359.GV21855@strugglers.net>
+References: <ea34i5$k2a$1@sea.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="nQ68ZCL8P0driJRh"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.56.0607241506520.13928@lion.drogon.net>
 Content-Disposition: inline
+In-Reply-To: <ea34i5$k2a$1@sea.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Gordon Henderson <gordon@drogon.net>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Ah!
 
-As per Joshua's reply to one of my previous Raid questions, the
-solution works in this case aswel! :
+--nQ68ZCL8P0driJRh
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
+On Mon, Jul 24, 2006 at 07:46:21PM +0100, Mark Hellman wrote:
+> I am in the process of deciding which SATA-II drives should I choose for an
+> external RAID system. I heard that it was safer to choose drives from
+> different manufacturers to reduce the chance of near-simultaneous failure
+> due to model-specific issues.
+> Is this so?
 
->I have a (very/embarrassingly) crude script which uses megarc >(downloaded
->directly from LSI).  It greps the output of "megarc -dispCfg -a0" for
->DEGRADED.  If it finds that then it emails me and also touches a >state
->file so it doesn't continue mailing me every 15 minutes (which is how
->often I run it).
+It's certainly safer.. whether you think it is worth the trouble is
+your call.
 
-Cheers!
+> And are there other potential problems related with choosing drives from
+> different manufacturers?
+
+The only issue is the obvious one that the manufacturers are usually
+fairly vague about the exact usable size of each disk.  If you
+bought half the disks from one manufacturer and half from another
+then you should be able to pair them up and use the minimum of the
+size of each pair.
+
+Cheers,
+Andy
+
+--nQ68ZCL8P0driJRh
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.1 (GNU/Linux)
+
+iD8DBQFExT8fIJm2TL8VSQsRAkWyAJ9ybRuvXDH3jWR94ctQS68bcD81MwCbBFD3
+9MZg6ZDxUWOrBpe1b2Zqkyg=
+=kaIB
+-----END PGP SIGNATURE-----
+
+--nQ68ZCL8P0driJRh--
