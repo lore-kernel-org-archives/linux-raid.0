@@ -1,35 +1,35 @@
-From: hahn@physics.mcmaster.ca
-Subject: Re: I travelled twice in the past !!
-Date: Mon, 24 Jul 2006 09:30:15 -0400 (EDT)
-Message-ID: <Pine.LNX.4.64.0607240920150.24050@coffee.psychology.mcmaster.ca>
-References: <44C4C6BE.9030305@ensg.ign.fr>
+From: "Dan Williams" <dan.j.williams@gmail.com>
+Subject: Re: In Trouble--Please Help! (was Re: Can't add disk to failed raid array)
+Date: Mon, 24 Jul 2006 11:26:51 -0700
+Message-ID: <e9c3a7c20607241126n614b7941i4319a7889ac12c5e@mail.gmail.com>
+References: <200607152056.55090.pwaldo@waldoware.com>
+	 <200607230753.47853.pwaldo@waldoware.com>
+	 <17603.25777.274507.385333@cse.unsw.edu.au>
+	 <200607230832.48807.pwaldo@waldoware.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <44C4C6BE.9030305@ensg.ign.fr>
+In-Reply-To: <200607230832.48807.pwaldo@waldoware.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: =?ISO-8859-1?Q?Edouard_Gaulu=E9?= <edouard.gaulue@ensg.ign.fr>
-Cc: linux-raid@vger.kernel.org
+To: Paul Waldo <pwaldo@waldoware.com>
+Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> - The system answered it had to resynchronize the disks.
-> - After this, the data I got were about one year ago...
+On 7/23/06, Paul Waldo <pwaldo@waldoware.com> wrote:
+> Here is the dmesg output.  No log files are created with the FC5 rescue disk.
+> Thanks!
+I ran into this as well, I believe at this point you want to set:
 
-you mean that you lost a year's worth of updates?
+md-mod.start_dirty_degraded=1
 
-> - I thought that in RAID 1, writes were made on the 2 disks and reads 
-> half/half on the first and the second. Am I wrong ?
+as part of your boot options.  Understand you may see some filesystem
+corruption as noted in the documentation.
 
-no.
+See:
+http://www.linux-m32r.org/lxr/http/source/Documentation/md.txt?v=2.6.17#L54
 
-> - I've got the feeling that starting a certain day  (don't know which one), 
-> it stopped behave this way. Is this happening often ? Is it a bug ? How to 
-> detect this behaviour ?
+Regards,
 
-my only theory is that one of your disks fell out of the raid a year ago.
-that would explain why it contained old data.  but in rebuilding the raid,
-the more recent disk should be overwriting the old one.  unless you do
-cruel things to the raid superblocks, I don't really see how this could 
-happen.  afaikt, someone would have to jump the event counter on the stale
-disk to or past the fresher one, and I expect MD would only do that after a
-rebuild succeeds...
+Dan
