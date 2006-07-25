@@ -1,44 +1,39 @@
-From: dave rientjes <rientjes@google.com>
-Subject: Re: [PATCH] md: new bitmap sysfs interface
-Date: Tue, 25 Jul 2006 10:41:32 -0700 (PDT)
-Message-ID: <Pine.LNX.4.63.0607251039370.12479@chino.corp.google.com>
-References: <44C5BA6F.3010404@steeleye.com>
+From: marco <thedrop@infinito.it>
+Subject: write back cache and barrier questions
+Date: Tue, 25 Jul 2006 15:41:05 +0000 (UTC)
+Message-ID: <loom.20060725T173745-751@post.gmane.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <44C5BA6F.3010404@steeleye.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Paul Clements <paul.clements@steeleye.com>
-Cc: linux-raid@vger.kernel.org, neilb@suse.de
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, 25 Jul 2006, Paul Clements wrote:
+Hi,
+I don't have a deep knowledge about filesystems and I've few experiences with 
+raid configuration, so I need someone who can answear some questions about 
+write back cache and barriers.
 
-> @@ -1322,6 +1324,18 @@ static void bitmap_set_memory_bits(struc
->
->  }
-> 
-> +/* dirty the memory and file bits for bitmap chunks "s" to "e" */
-> +void bitmap_dirty_bits(struct bitmap *bitmap, unsigned long s, unsigned long 
-e)
-> +{
-> +       unsigned long chunk;
-> +
-> +       for (chunk = s; chunk <= e; chunk++) {
-> +               sector_t sec = chunk << CHUNK_BLOCK_SHIFT(bitmap);
-> +               bitmap_set_memory_bits(bitmap, sec, 1);
-> +               bitmap_file_set_bit(bitmap, sec);
-> +       }
-> +}
-> +
+I have two sata hd (sda, sdb) configured in bios-raid 0 and relative device 
+created by dmraid on boot (nvidia_ihfaaicb).
 
-Why not
+(1) what should I do to know if the write back cache is enabled or not ?
+(2) if the write cache is enabled on both sda and sdb this mean that is enabled 
+also on the raid device (/dev/mapper/nvidia_ihfaaicb) ?
+(3) how should I do to enable/disable the write cache on the raid device ?
 
-{
- 	for (; s <= e; s++) {
- 		sector_t sec = s << CHUNK_BLOCK_SHIFT(bitmap);
- 		...
- 	}
-}
+If I try mounting a xfs filesystem I get a message like "barriers are not 
+supported by this device" but if I mount a ext3 or a reiserfs filesystem 
+respectively with options barrier=1 and barrier=flush they don't complain.
+If I mount the reiserfs I explicity get a message like "using barriers".
+So who tells the truth ?? 
 
- 		David
+(4) is there a way to know if the raid device supports barrier or not ?
+(5) is there a (not dangerous) test I can do to figure out if barriers are 
+really enabled and used with ext3 and reiserfs filesystems ?
+
+Thanks for reading the message
+Marco
+
+
