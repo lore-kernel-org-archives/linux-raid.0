@@ -1,39 +1,39 @@
-From: marco <thedrop@infinito.it>
-Subject: write back cache and barrier questions
-Date: Tue, 25 Jul 2006 15:41:05 +0000 (UTC)
-Message-ID: <loom.20060725T173745-751@post.gmane.org>
+From: Sevrin Robstad <quack@online.no>
+Subject: FIXED : brute-force my RAID 5 - just some fsck errors..
+Date: Tue, 25 Jul 2006 23:39:03 +0200
+Message-ID: <44C68F77.6020909@online.no>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
-I don't have a deep knowledge about filesystems and I've few experiences with 
-raid configuration, so I need someone who can answear some questions about 
-write back cache and barriers.
+I finally got my old RAID-5 up again, after bruteforcing the setup of 
+it... (A Script that ran "mdadm --create --run -n 6 -l 5 /dev/md0 
+/dev/1-5 missing;fsck -n -f /dev/md0;mdadm --stop /dev/md0;)
+The first run didn't find anything that made sense, but desperately I 
+ran the same script with -c xx from 4 to 256 and I finally hit jackpot 
+with one combo and 256kb chunksize.
 
-I have two sata hd (sda, sdb) configured in bios-raid 0 and relative device 
-created by dmraid on boot (nvidia_ihfaaicb).
+Most of the RAID is fine, and I'm backing up the whole 1 terrabyte. But 
+there's some errors on it, fsck reports
 
-(1) what should I do to know if the write back cache is enabled or not ?
-(2) if the write cache is enabled on both sda and sdb this mean that is enabled 
-also on the raid device (/dev/mapper/nvidia_ihfaaicb) ?
-(3) how should I do to enable/disable the write cache on the raid device ?
+"Illegal block #12 (xxx) in inode 95764590."
 
-If I try mounting a xfs filesystem I get a message like "barriers are not 
-supported by this device" but if I mount a ext3 or a reiserfs filesystem 
-respectively with options barrier=1 and barrier=flush they don't complain.
-If I mount the reiserfs I explicity get a message like "using barriers".
-So who tells the truth ?? 
+It's the same from block #12 to block #1035, and same inode.
 
-(4) is there a way to know if the raid device supports barrier or not ?
-(5) is there a (not dangerous) test I can do to figure out if barriers are 
-really enabled and used with ext3 and reiserfs filesystems ?
-
-Thanks for reading the message
-Marco
+There's also some multiply-claimed block(s) in some inodes, and some 
+files that share Inode's.
 
 
+will fsck fix if I run it without "-n"  ?  Or will it just we worse ? Or 
+is it possible that I have done another mistake with some 
+RAID-parametres ???
+
+
+Thanx for all help anyway!
+
+
+Sevrin
