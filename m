@@ -1,22 +1,67 @@
-From: "Atkins" <Atkinsapproval@registerednurses.com>
-Subject: One is by reducing food intake or food absorption and the other is by enhancing energy expenditure.
-Date: Tue, 25 Jul 2006 10:54:32 +0300
-Message-ID: <74994682951017.05897EAFE8@D990GPT>
+From: "Burl Powell" <266ade@chocofan.com>
+Subject: Hola, ofrecemos ganancias con nuestro programa unico
+Date: Tue, 25 Jul 2006 01:40:40 -0700
+Message-ID: <200607250841.k6P8efZe003066@zeus1.kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-        charset="Windows-1252"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-scsi-digest@vger.kernel.org
+Content-Type: text/plain; charset=Windows-1251
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello to you! 
+Es usted una persona responsable y esta buscando un trabajo de medio ti=
+empo  muy bien pagado?=20
+=20
+Somos una compania familiar especializados en varias operaciones con an=
+tiguedades y joyeria Antigua, somos =93Tollis Ltd=94 , y estamos buscan=
+do gente honesta y responsable para que se nos una..  =20
 
- Fatblaster combines a variety of herbal ingredients that maximize your body's ability to absorb food and increase energy expenditure.  One is by reducing food intake or food absorption and the other is by enhancing energy expenditure.  One is by reducing food intake or food absorption and the other is by enhancing energy expenditure.  Enter: http://yeltren.com/gal/fb/ 
 
- Fools seldom differ. Hate is like cancer slowly eating us away inside 
+=20
+No te pierdas esta oportunidad =96 somos exactamente lo que estas busca=
+ndo!
+Ganaras mas de EUR 1500 por mes,  utilizando solo 3-4 horas de tu tiemp=
+o. Es real con nosotros!.=20
+=20
+
+Nosotros no hacemos conversacion de venta que requiera que pagues cargo=
+s de inscripcion o inscribirte a una lista de correo. No queremos que i=
+nviertas dinero. Este trabajo requiere solo un monto limitado de tu tie=
+mpo.. =20
+=20
 
 
- Confession is good for the soul Learning is a treasure that will follow its owner everywhere  Love conquers all
+Te pagaremos en la primera semana de trabajo  =20
+=20
 
+
+No requerimos ninguna experiencia ni habilidad especial. Trabajaras com=
+o un contratado independiente desde tu hogar.=20
+ =20
+
+
+Si estas interesado, por  favor sientete libre de pedir informacion adi=
+cional y las provisiones generales.  =20
+=20
+
+Escribenos ahora, te responderemos al instante.=20
+Por favor responde a este mail: support@t-antiquesupport.com
+
+
+
+
+
+
+
+
+
+cashmere=20
+cavort bastard=20
+buck
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
