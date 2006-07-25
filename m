@@ -1,67 +1,44 @@
-From: "Burl Powell" <266ade@chocofan.com>
-Subject: Hola, ofrecemos ganancias con nuestro programa unico
-Date: Tue, 25 Jul 2006 01:40:40 -0700
-Message-ID: <200607250841.k6P8efZe003066@zeus1.kernel.org>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: Drives of same model in RAID 1/10 ?
+Date: Tue, 25 Jul 2006 07:48:21 -0400 (EDT)
+Message-ID: <Pine.LNX.4.64.0607250748050.31045@p34.internal.lan>
+References: <ea34i5$k2a$1@sea.gmane.org> <20060724214359.GV21855@strugglers.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=Windows-1251
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Sender: linux-scsi-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20060724214359.GV21855@strugglers.net>
+Sender: linux-raid-owner@vger.kernel.org
+To: Andy Smith <andy@lug.org.uk>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Es usted una persona responsable y esta buscando un trabajo de medio ti=
-empo  muy bien pagado?=20
-=20
-Somos una compania familiar especializados en varias operaciones con an=
-tiguedades y joyeria Antigua, somos =93Tollis Ltd=94 , y estamos buscan=
-do gente honesta y responsable para que se nos una..  =20
 
 
-=20
-No te pierdas esta oportunidad =96 somos exactamente lo que estas busca=
-ndo!
-Ganaras mas de EUR 1500 por mes,  utilizando solo 3-4 horas de tu tiemp=
-o. Es real con nosotros!.=20
-=20
+On Mon, 24 Jul 2006, Andy Smith wrote:
 
-Nosotros no hacemos conversacion de venta que requiera que pagues cargo=
-s de inscripcion o inscribirte a una lista de correo. No queremos que i=
-nviertas dinero. Este trabajo requiere solo un monto limitado de tu tie=
-mpo.. =20
-=20
+> On Mon, Jul 24, 2006 at 07:46:21PM +0100, Mark Hellman wrote:
+>> I am in the process of deciding which SATA-II drives should I choose for an
+>> external RAID system. I heard that it was safer to choose drives from
+>> different manufacturers to reduce the chance of near-simultaneous failure
+>> due to model-specific issues.
+>> Is this so?
+>
+> It's certainly safer.. whether you think it is worth the trouble is
+> your call.
+>
+>> And are there other potential problems related with choosing drives from
+>> different manufacturers?
+>
+> The only issue is the obvious one that the manufacturers are usually
+> fairly vague about the exact usable size of each disk.  If you
+> bought half the disks from one manufacturer and half from another
+> then you should be able to pair them up and use the minimum of the
+> size of each pair.
+>
+> Cheers,
+> Andy
+>
 
+So far the WD 400GB -KD drives and Seagate 400GB seem to have the same 
+amount of sectors.
 
-Te pagaremos en la primera semana de trabajo  =20
-=20
-
-
-No requerimos ninguna experiencia ni habilidad especial. Trabajaras com=
-o un contratado independiente desde tu hogar.=20
- =20
-
-
-Si estas interesado, por  favor sientete libre de pedir informacion adi=
-cional y las provisiones generales.  =20
-=20
-
-Escribenos ahora, te responderemos al instante.=20
-Por favor responde a este mail: support@t-antiquesupport.com
-
-
-
-
-
-
-
-
-
-cashmere=20
-cavort bastard=20
-buck
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
