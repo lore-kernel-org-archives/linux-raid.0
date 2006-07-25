@@ -1,39 +1,24 @@
-From: Sevrin Robstad <quack@online.no>
-Subject: FIXED : brute-force my RAID 5 - just some fsck errors..
-Date: Tue, 25 Jul 2006 23:39:03 +0200
-Message-ID: <44C68F77.6020909@online.no>
+From: "Sargent" <commoditydebase@programmer.net>
+Subject: Thermogenesis is a term referring to the body's production of heat. Heat production is a normal part of the metabolic process.
+Date: Tue, 25 Jul 2006 17:58:37 -0400
+Message-ID: <99064461983388.ADD48F52E1__24596.4277456098$1153864759$gmane$org@EPYCDHVG>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain;
+        charset="Windows-1252"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I finally got my old RAID-5 up again, after bruteforcing the setup of 
-it... (A Script that ran "mdadm --create --run -n 6 -l 5 /dev/md0 
-/dev/1-5 missing;fsck -n -f /dev/md0;mdadm --stop /dev/md0;)
-The first run didn't find anything that made sense, but desperately I 
-ran the same script with -c xx from 4 to 256 and I finally hit jackpot 
-with one combo and 256kb chunksize.
-
-Most of the RAID is fine, and I'm backing up the whole 1 terrabyte. But 
-there's some errors on it, fsck reports
-
-"Illegal block #12 (xxx) in inode 95764590."
-
-It's the same from block #12 to block #1035, and same inode.
-
-There's also some multiply-claimed block(s) in some inodes, and some 
-files that share Inode's.
+Hello, 
 
 
-will fsck fix if I run it without "-n"  ?  Or will it just we worse ? Or 
-is it possible that I have done another mistake with some 
-RAID-parametres ???
+ Fatblaster is a thermogenic weight loss formula designed to naturally assist the body in burning more calories by efficiently using stored body fat for energy. Fatblaster combines a variety of herbal ingredients that maximize your body's ability to absorb food and increase energy expenditure.  This means you can still eat all the burgers, pizza you want without and gains in weight, infact you will lose weight. See our shop: http://klopinta.com/gall/fb/ 
 
 
-Thanx for all help anyway!
+ Lazy hands make a man poor, but diligent hands bring wealth  Laughter is the best medicine Once in a while, right in the middle of an ordinary life, love gives us a fairy tale
 
 
-Sevrin
+ No one is expected to achieve the impossible Practice makes perfect and Nobody's perfect.
+
