@@ -1,55 +1,26 @@
-From: David Greaves <david@dgreaves.com>
-Subject: Re: host based mirror distance in a fc-based SAN environment
-Date: Wed, 26 Jul 2006 11:56:15 +0100
-Message-ID: <44C74A4F.4010504@dgreaves.com>
-References: <45063.212.34.68.17.1153893489.squirrel@extern.x-cellent.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: Jason Lunz <lunz@falooley.org>
+Subject: Re: Grub vs Lilo
+Date: Wed, 26 Jul 2006 16:44:42 +0000 (UTC)
+Message-ID: <ea865p$7o0$1@sea.gmane.org>
+References: <200607261943.24828.mylists@blue-matrix.org>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <45063.212.34.68.17.1153893489.squirrel@extern.x-cellent.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Stefan Majer <stefan@x-cellent.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Stefan Majer wrote:
-> Hi,
-> 
-> im curious if there are some numbers out up to which distance its possible
-> to mirror (raid1) 2 FC-LUNs. We have 2 datacenters with a effective
-> distance of 11km. The fabrics in one datacenter are connected to the
-> fabrics in the other datacenter with 5 dark fibre both about 11km in
-> distance.
-> 
-> I want to set up servers wich mirrors their LUNs across the SAN-boxen in
-> both datacenters. On top of this mirrored LUN i put lvm2.
-> 
-> So the question is does anybody have some numbers up to which distance
-> this method works ?
+mylists@blue-matrix.org said:
+> Wondering if anyone can comment on an easy way to get grub to update
+> all components in a raid1 array.  I have a raid1 /boot with a raid10
+> /root and have previously used lilo with the raid-extra-boot option to
+> install to boot sectors of all component devices.  With grub it
+> appears that you can only update non default devices via the command
+> line.  I like the ability to be able to type lilo and have all updated
+> in one hit.  Is there a way to do this with grub?  
 
-No. But have a look at man mdadm in later mdadm:
+assuming your /boot is made of hda1 and hdc1:
 
-       -W, --write-mostly
-             subsequent devices lists in a --build, --create,  or  --add
-             command  will  be flagged as 'write-mostly'.  This is valid
-             for RAID1 only and means that the 'md'  driver  will  avoid
-             reading from these devices if at all possible.  This can be
-             useful if mirroring over a slow link.
+grub-install /dev/hda1
+grub-install /dev/hdc1
 
-       --write-behind=
-             Specify that write-behind mode should be enabled (valid for
-             RAID1  only).  If an argument is specified, it will set the
-             maximum number of outstanding writes allowed.  The  default
-             value  is  256.  A write-intent bitmap is required in order
-             to  use  write-behind  mode,  and  write-behind   is   only
-             attempted on drives marked as write-mostly.
+Jason
 
-Which suggests that the WAN/LAN latency shouldn't impact you except on
-failure.
-
-HTH
-
-David
-
--- 
