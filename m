@@ -1,24 +1,30 @@
-From: "Sargent" <commoditydebase@programmer.net>
-Subject: Thermogenesis is a term referring to the body's production of heat. Heat production is a normal part of the metabolic process.
-Date: Tue, 25 Jul 2006 17:58:37 -0400
-Message-ID: <99064461983388.ADD48F52E1__24596.4277456098$1153864759$gmane$org@EPYCDHVG>
+From: "Stefan Majer" <stefan@x-cellent.com>
+Subject: host based mirror distance in a fc-based SAN environment
+Date: Wed, 26 Jul 2006 07:58:09 +0200 (CEST)
+Message-ID: <45063.212.34.68.17.1153893489.squirrel@extern.x-cellent.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-        charset="Windows-1252"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello, 
+Hi,
 
+im curious if there are some numbers out up to which distance its possible
+to mirror (raid1) 2 FC-LUNs. We have 2 datacenters with a effective
+distance of 11km. The fabrics in one datacenter are connected to the
+fabrics in the other datacenter with 5 dark fibre both about 11km in
+distance.
 
- Fatblaster is a thermogenic weight loss formula designed to naturally assist the body in burning more calories by efficiently using stored body fat for energy. Fatblaster combines a variety of herbal ingredients that maximize your body's ability to absorb food and increase energy expenditure.  This means you can still eat all the burgers, pizza you want without and gains in weight, infact you will lose weight. See our shop: http://klopinta.com/gall/fb/ 
+I want to set up servers wich mirrors their LUNs across the SAN-boxen in
+both datacenters. On top of this mirrored LUN i put lvm2.
 
+So the question is does anybody have some numbers up to which distance
+this method works ?
 
- Lazy hands make a man poor, but diligent hands bring wealth  Laughter is the best medicine Once in a while, right in the middle of an ordinary life, love gives us a fairy tale
+greetings
 
-
- No one is expected to achieve the impossible Practice makes perfect and Nobody's perfect.
+Stefan Majer
 
