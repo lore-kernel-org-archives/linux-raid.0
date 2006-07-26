@@ -1,30 +1,27 @@
-From: "Stefan Majer" <stefan@x-cellent.com>
-Subject: host based mirror distance in a fc-based SAN environment
-Date: Wed, 26 Jul 2006 07:58:09 +0200 (CEST)
-Message-ID: <45063.212.34.68.17.1153893489.squirrel@extern.x-cellent.com>
+From: Lewis Shobbrook <mylists@blue-matrix.org>
+Subject: Grub vs Lilo
+Date: Wed, 26 Jul 2006 19:43:22 +1000
+Message-ID: <200607261943.24828.mylists@blue-matrix.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+Hi All,
 
-im curious if there are some numbers out up to which distance its possible
-to mirror (raid1) 2 FC-LUNs. We have 2 datacenters with a effective
-distance of 11km. The fabrics in one datacenter are connected to the
-fabrics in the other datacenter with 5 dark fibre both about 11km in
-distance.
+Wondering if anyone can comment on an easy way to get grub to update all 
+components in a raid1 array.  I have a raid1 /boot with a raid10 /root and 
+have previously used lilo with the raid-extra-boot option to install to boot 
+sectors of all component devices.  With grub it appears that you can only 
+update non default devices via the command line.  I like the ability to be 
+able to type lilo and have all updated in one hit.  Is there a way to do this 
+with grub?  
 
-I want to set up servers wich mirrors their LUNs across the SAN-boxen in
-both datacenters. On top of this mirrored LUN i put lvm2.
+Cheers,
 
-So the question is does anybody have some numbers up to which distance
-this method works ?
-
-greetings
-
-Stefan Majer
-
+Lewis
