@@ -1,31 +1,39 @@
-From: "Caro" <maxim-t@aaanet.ru>
-Subject: Re[2]: Aloha !
-Date: Thu, 27 Jul 2006 00:50:07 +0300
-Message-ID: <005101c6b0fd$6dae6d00$5e23000a__30544.6070772179$1153950614$gmane$org@219.134.163.71>
+From: Jeff Woods <Kazrak+kernel@cesmail.net>
+Subject: ICH7R "strip" size
+Date: Wed, 26 Jul 2006 20:12:23 -0600
+Message-ID: <7.0.1.0.2.20060726194627.06340898@jeffwoods.us>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="windows-1251"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="us-ascii"; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: David <linux-net@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi, David
+Howdy.
 
-I'm a very young and energetic lady! I have very positive attitude to life and people. I do enjoy new experience life can offer me: to see new interesting places, to meet new people.
-I do try to enjoy every moment of life and accept everything the way it comes without complaining.
-Though my life seems to be quite enjoyable there's one important thing missing. It's LOVE!
-Without my beloved one, my soul mate, my King my life is not completed.
-I wish i coud find him very soon so that we could share together every momement of the life-time romance! 
-What about you? Could you be my King? If answer is "yes" - you can find more about me 
-http://dating-foryou.com/passion/
+I realize this list is more focused on Linux software RAID than 
+"proprietary" RAID controllers, but I've been Googling and can't find 
+an answer that I suspect someone on this list probably knows. If 
+anyone can suggest a better forum for this question or someplace 
+where the answer is documented, that would be great.
 
-see you later!
-Carito
+Intel's ICH7R firmware allows creating volumes in various RAID modes 
+where the "strip size" (which I believe to be a misspelling of 
+"stripe size") can be certain multiples of 16KB.
 
-If you think that you were subscribed by mistake for this mail
-delivery or if your email has been added without your permission,
-please, visit http://dating-foryou.com/passion/ and unsubscribe from our mails.
+IIUC, a RAID "stripe" is composed of "chunks" spanning two or more 
+drives. For example, a four disc RAID-5 array with 64KB chunks would 
+yield a 256KB stripe with 192KB of usable storage per stripe.
 
+I'm trying to optimize I/O performance for a database with 64KB 
+blocks. I understand that RAID-0 multiplies the likelihood of a 
+failure but that's only a nuisance and not a problem in my situation.
+
+My question: What are the chunk and usable storage sizes per stripe 
+for four discs in RAID-0 on an ICH7R configured for a 128KB "strip"?
+
+Thank you very much.
+
+--
+Jeff Woods <kazrak+kernel@cesmail.net> 
 
