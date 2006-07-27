@@ -1,54 +1,41 @@
-From: Simen Thoresen <simentt@dolphinics.no>
-Subject: Re: Grub vs Lilo
-Date: Thu, 27 Jul 2006 13:50:38 +0200
-Message-ID: <44C8A88E.4020600@dolphinics.no>
-References: <200607272316.23441.mylists@blue-matrix.org>
+From: Paul Clements <paul.clements@steeleye.com>
+Subject: Re: [PATCH] md: new bitmap sysfs interface
+Date: Thu, 27 Jul 2006 10:07:06 -0400
+Message-ID: <44C8C88A.8080109@steeleye.com>
+References: <44C5BA6F.3010404@steeleye.com>	 <170fa0d20607261430n3e9d3962xeef50669ce0d1996@mail.gmail.com>	 <44C8248B.7010501@steeleye.com> <170fa0d20607262036i30ab9f12qf64c0fc7b90b9eca@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200607272316.23441.mylists@blue-matrix.org>
+In-Reply-To: <170fa0d20607262036i30ab9f12qf64c0fc7b90b9eca@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Lewis Shobbrook <mylists@blue-matrix.org>
-Cc: linux-raid@vger.kernel.org
+To: Mike Snitzer <snitzer@gmail.com>
+Cc: linux-raid@vger.kernel.org, neilb@suse.de
 List-Id: linux-raid.ids
 
-Lewis Shobbrook wrote:
-> Hi All,
+Mike Snitzer wrote:
+> On 7/26/06, Paul Clements <paul.clements@steeleye.com> wrote:
+>> Mike Snitzer wrote:
+
+>> > Also, what is the interface one should use to collect dirty bits from
+>> > the primary's bitmap?
+>>
+>> Whatever you'd like. scp the bitmap file over or collect the ranges into
+>> a file and scp that over, or something similar.
 > 
-> Wondering if anyone can comment on an easy way to get grub to update all 
-> components in a raid1 array.  I have a raid1 /boot with a raid10 /root and 
-> have previously used lilo with the raid-extra-boot option to install to boot 
-> sectors of all component devices.  With grub it appears that you can only 
-> update non default devices via the command line.  I like the ability to be 
-> able to type lilo and have all updated in one hit.  Is there a way to do this 
-> with grub?  
+> OK, so regardless of whether you are using an external or internal
+> bitmap; how does one collect the ranges from an array's bitmap?
 
-Hi All,
+Well, with an internal bitmap you don't need this interface. The bitmap 
+is located on all the component disks. The reason we don't use internal 
+bitmaps in a configuration where one of the disks is located remotely 
+(over a LAN or SAN, or possibly a WAN) is that the bitmap updates (which 
+are synchronous and occur fairly often) would be too costly.
 
-I'll second this RFI - I /think/ I know how to set this up by hand (I'm 
-following the doc on 
-http://www.ex-parrot.com/~pete/software-raid-howto.html
-, and have tested booting from each drive from this), but this is 
-neither very simple, nor automatically applied to a new disk when it is 
-hot-added. Thus the procedure will need to be executed each time a drive 
-is replaced.
+So reading the bits out of a file is fairly simple. The bitmap file is 
+laid out one bit per chunk, with a 256 byte superblock at the front. You 
+just need a perl script (for example) that reads the file and keeps 
+track of which bits are dirty, and then prints those numbers out.
 
-Perhaps a GRUB-forum is a better venue for this discussion?
-
--S
-
-
-> Cheers,
-> 
-> Lewis
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
-
--- 
-Simen Thoresen, Dolphin ICS
-Systems Administration and Wulfkit Support
+--
+Paul
