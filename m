@@ -1,39 +1,67 @@
-From: Jeff Woods <Kazrak+kernel@cesmail.net>
-Subject: ICH7R "strip" size
-Date: Wed, 26 Jul 2006 20:12:23 -0600
-Message-ID: <7.0.1.0.2.20060726194627.06340898@jeffwoods.us>
+From: Paul Clements <paul.clements@steeleye.com>
+Subject: Re: [PATCH] md: new bitmap sysfs interface
+Date: Wed, 26 Jul 2006 22:27:23 -0400
+Message-ID: <44C8248B.7010501@steeleye.com>
+References: <44C5BA6F.3010404@steeleye.com> <170fa0d20607261430n3e9d3962xeef50669ce0d1996@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <170fa0d20607261430n3e9d3962xeef50669ce0d1996@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Mike Snitzer <snitzer@gmail.com>
+Cc: linux-raid@vger.kernel.org, neilb@suse.de
 List-Id: linux-raid.ids
 
-Howdy.
+Mike Snitzer wrote:
 
-I realize this list is more focused on Linux software RAID than 
-"proprietary" RAID controllers, but I've been Googling and can't find 
-an answer that I suspect someone on this list probably knows. If 
-anyone can suggest a better forum for this question or someplace 
-where the answer is documented, that would be great.
+> I tracked down the thread you referenced and these posts (by you)
+> seems to summarize things well:
+> http://marc.theaimsgroup.com/?l=linux-raid&m=111116563016418&w=2
+> http://marc.theaimsgroup.com/?l=linux-raid&m=111117515400864&w=2
+> 
+> But for clarity's sake, could you elaborate on the negative
+> implications of not merging the bitmaps on the secondary server?  Will
+> the previous primary's dirty blocks get dropped on the floor because
+> the secondary (now the primary) doesn't have awareness of the previous
+> primary's dirty blocks once it activates the raid1?
 
-Intel's ICH7R firmware allows creating volumes in various RAID modes 
-where the "strip size" (which I believe to be a misspelling of 
-"stripe size") can be certain multiples of 16KB.
+Right. At the time of the failover, there were (probably) blocks that 
+were out of sync between the primary and secondary. Now, after you've 
+failed over to the secondary, you've got to overwrite those blocks with 
+data from the secondary in order to make the primary disk consistent 
+again. This requires that either you do a full resync from secondary to 
+primary (if you don't know what differs), or you merge the two bitmaps 
+and resync just that data.
 
-IIUC, a RAID "stripe" is composed of "chunks" spanning two or more 
-drives. For example, a four disc RAID-5 array with 64KB chunks would 
-yield a 256KB stripe with 192KB of usable storage per stripe.
+> Also, what is the interface one should use to collect dirty bits from
+> the primary's bitmap?
 
-I'm trying to optimize I/O performance for a database with 64KB 
-blocks. I understand that RAID-0 multiplies the likelihood of a 
-failure but that's only a nuisance and not a problem in my situation.
+Whatever you'd like. scp the bitmap file over or collect the ranges into 
+a file and scp that over, or something similar.
 
-My question: What are the chunk and usable storage sizes per stripe 
-for four discs in RAID-0 on an ICH7R configured for a 128KB "strip"?
+> This bitmap merge can't happen until the primary's dirty bits can be
+> collected right?  Waiting for the failed server to come back to
 
-Thank you very much.
+Right. So, when the primary fails, you start the array on the secondary 
+with a _clean_ bitmap, and just its local disk component. Now, whatever 
+gets written while the primary is down gets put into the bitmap on the 
+secondary. When the primary comes back up, you take the dirty bits from 
+it and add them into the secondary's bitmap. Then, you insert the 
+primary's disk (via nbd or similar) back into the array, and begin a 
+resync.
+
+That's the whole reason for this interface. We have to modify the bitmap 
+while the array is active (modifying the bitmap while the array is down 
+is trivial, and certainly doesn't require sysfs :).
+
+> harvest the dirty bits it has seems wrong (why failover at all?); so I
+> must be missing something.
+
+We fail over immediately. We wait until later to combine the bitmaps and 
+resync the data.
+
+Hope that helps.
 
 --
-Jeff Woods <kazrak+kernel@cesmail.net> 
-
+Paul
