@@ -1,60 +1,30 @@
-From: "Mike Snitzer" <snitzer@gmail.com>
-Subject: Re: [PATCH] md: new bitmap sysfs interface
-Date: Wed, 26 Jul 2006 23:36:28 -0400
-Message-ID: <170fa0d20607262036i30ab9f12qf64c0fc7b90b9eca@mail.gmail.com>
-References: <44C5BA6F.3010404@steeleye.com>
-	 <170fa0d20607261430n3e9d3962xeef50669ce0d1996@mail.gmail.com>
-	 <44C8248B.7010501@steeleye.com>
+From: Mark Hahn <hahn@physics.mcmaster.ca>
+Subject: Re: ICH7R "strip" size
+Date: Thu, 27 Jul 2006 01:18:56 -0400 (EDT)
+Message-ID: <Pine.LNX.4.64.0607270113120.19846@coffee.psychology.mcmaster.ca>
+References: <7.0.1.0.2.20060726194627.06340898@jeffwoods.us>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <44C8248B.7010501@steeleye.com>
-Content-Disposition: inline
+In-Reply-To: <7.0.1.0.2.20060726194627.06340898@jeffwoods.us>
 Sender: linux-raid-owner@vger.kernel.org
-To: Paul Clements <paul.clements@steeleye.com>
-Cc: linux-raid@vger.kernel.org, neilb@suse.de
+To: Jeff Woods <Kazrak+kernel@cesmail.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 7/26/06, Paul Clements <paul.clements@steeleye.com> wrote:
-> Mike Snitzer wrote:
->
-> > I tracked down the thread you referenced and these posts (by you)
-> > seems to summarize things well:
-> > http://marc.theaimsgroup.com/?l=linux-raid&m=111116563016418&w=2
-> > http://marc.theaimsgroup.com/?l=linux-raid&m=111117515400864&w=2
-> >
-> > But for clarity's sake, could you elaborate on the negative
-> > implications of not merging the bitmaps on the secondary server?  Will
-> > the previous primary's dirty blocks get dropped on the floor because
-> > the secondary (now the primary) doesn't have awareness of the previous
-> > primary's dirty blocks once it activates the raid1?
->
-> Right. At the time of the failover, there were (probably) blocks that
-> were out of sync between the primary and secondary. Now, after you've
-> failed over to the secondary, you've got to overwrite those blocks with
-> data from the secondary in order to make the primary disk consistent
-> again. This requires that either you do a full resync from secondary to
-> primary (if you don't know what differs), or you merge the two bitmaps
-> and resync just that data.
+> My question: What are the chunk and usable storage sizes per stripe for four 
+> discs in RAID-0 on an ICH7R configured for a 128KB "strip"?
 
-I took more time to read the later posts in the original thread; that
-coupled with your detailed response has helped a lot. thanks.
+raid0 always has 100% usable; configuring it is deciding how much 
+concurrency you want.
 
-> > Also, what is the interface one should use to collect dirty bits from
-> > the primary's bitmap?
->
-> Whatever you'd like. scp the bitmap file over or collect the ranges into
-> a file and scp that over, or something similar.
+if your writes are 64K and you have 4 disks, your max concurrency would
+be at 64K per disk (stripe size in MD), or 256K for a whole stripe.
+if you want max bandwidth, but concurrency of 1, you want the 64k write
+to busy all the disks, for a 16K stripe size (64K whole-stripe).
 
-OK, so regardless of whether you are using an external or internal
-bitmap; how does one collect the ranges from an array's bitmap?
-
-Generally speaking I think others would have the same (naive) question
-given that we need to know what to use as input for the sysfs
-interface you've kindly provided.   If it is left as an exercise to
-the user that is fine; I'd imagine neilb will get our backs with a
-nifty new mdadm flag if need be.
-
-thanks again,
-Mike
+with raid5, the main thing additional factor is to try to arrange 
+"blind" whole-stripe writes if possible.  that is, you pay the
+read-modify-write penalty unless you write a whole stripe at once:
+n-1 * stripe size if you can manage it aligned, or at least several
+whole stripes to amortize the reads necessary on the edges...
