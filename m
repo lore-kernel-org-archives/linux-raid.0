@@ -1,15 +1,27 @@
-From: "jurisdiction@prenet.net" <jurisdiction@prenet.net>
-Subject: We got the best brands
-Date: Thu, 27 Jul 2006 03:31:08 -0500 (PDT)
-Message-ID: <99630442.1I983EK6__36232.4092690416$1153985489$gmane$org@prenet.net>
+From: Lewis Shobbrook <mylists@blue-matrix.org>
+Subject: Grub vs Lilo
+Date: Thu, 27 Jul 2006 23:16:20 +1000
+Message-ID: <200607272316.23441.mylists@blue-matrix.org>
 Mime-Version: 1.0
 Content-Type: text/plain;
-        charset="windows-1250"
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-newbie@vger.kernel.org, linux-kernel-owner@vger.kernel.org, linux-net@vger.kernel.org, linux-raid@vger.kernel.org, linux-ia64@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Almost everything you need
-http://www.google.de/url?q=%68%74%74%70%3A%2F%2Fnut1agt1bhaln5n8b5n8bnn5.%74%6F%72%75%6C%75%73%67%66%2E%63%6F%6D
+Hi All,
+
+Wondering if anyone can comment on an easy way to get grub to update all 
+components in a raid1 array.  I have a raid1 /boot with a raid10 /root and 
+have previously used lilo with the raid-extra-boot option to install to boot 
+sectors of all component devices.  With grub it appears that you can only 
+update non default devices via the command line.  I like the ability to be 
+able to type lilo and have all updated in one hit.  Is there a way to do this 
+with grub?  
+
+Cheers,
+
+Lewis
