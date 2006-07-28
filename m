@@ -1,46 +1,44 @@
-From: Sander Smeenk <ssmeenk@freshdot.net>
-Subject: Re: Weird blocks at fsync() calls using md
-Date: Fri, 28 Jul 2006 15:38:11 +0200
-Message-ID: <20060728133811.GB2241@freshdot.net>
-References: <20060728101645.GA32686@freshdot.net> <17609.61671.113267.692986@cse.unsw.edu.au> <20060728114704.GA2241@freshdot.net> <17609.65110.567036.457706@cse.unsw.edu.au>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Prarit Bhargava <prarit@sgi.com>
+Subject: [PATCH 2/2] Fix IA64 components
+Date: Fri, 28 Jul 2006 09:52:13 -0400
+Message-ID: <20060728135213.29357.65701.sendpatchset@prarit.boston.redhat.com>
+References: <20060728135203.29357.64980.sendpatchset@prarit.boston.redhat.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <17609.65110.567036.457706@cse.unsw.edu.au>
+In-Reply-To: <20060728135203.29357.64980.sendpatchset@prarit.boston.redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org, linux-ia64@vger.kernel.org
+Cc: Prarit Bhargava <prarit@sgi.com>
 List-Id: linux-raid.ids
 
-Quoting Neil Brown (neilb@suse.de):
+Patch to fix export issue with RAID5 + IA64.
 
-> > 13:28:07.011717 fsync(4)                = 0
-> > 13:28:12.748252 open("js_gen.pl", O_WRONLY|O_CREAT|O_TRUNC, 0770) = 3
-> > 13:28:12.748427 write(3, "#!/usr/bin/perl -w\nuse strict;\nu"..., 2189) = 2189
-> > 13:28:12.748506 fsync(3)                = 0
-> > 13:28:13.006702 close(3)                = 0
-> Yes, it's weird.  The sync of the .swp file takes a lot longer than
-> the fsync of the actual file you are saving....
+	-removes dead CONFIG options
 
-Yup. And it's always the fsync() on the .swp file too ;)
+This patch should be committed by the IA64 maintainer.
 
-> I have this theory that there might be some odd interaction between md
-> and the drive scheduler.
+Signed-off-by: Prarit Bhargava <prarit@redhat.com>
 
-Well, i never really understood the big difference between the three
-models. I used to do deadline on servers, but that turned out to be
-REALLY bad (at least on our intranet server). Caused major load on
-writes, made NFS b0rk, and when i switched it back to Anticipatory it
-was all normal again, so that's what i used afterwards.
-
-Using CFQ gives the same, maybe even worse results.
-As does Deadline :S
-
-Strange huh! Only this time the fsync() wasn't on the .swp file but on
-the "real" file after writing it's contents...
-
-Kind regards,
-Sander.
--- 
-| He broke into song because he couldn't find the key. 
-| 1024D/08CEC94D - 34B3 3314 B146 E13C 70C8  9BDB D463 7E41 08CE C94D
+diff -urNp linux-2.6.17.ia64.orig/arch/ia64/kernel/ia64_ksyms.c linux-2.6.17.ia64/arch/ia64/kernel/ia64_ksyms.c
+--- linux-2.6.17.ia64.orig/arch/ia64/kernel/ia64_ksyms.c	2006-07-27 09:20:01.000000000 -0400
++++ linux-2.6.17.ia64/arch/ia64/kernel/ia64_ksyms.c	2006-07-27 14:51:42.000000000 -0400
+@@ -67,7 +68,7 @@ EXPORT_SYMBOL(__udivdi3);
+ EXPORT_SYMBOL(__moddi3);
+ EXPORT_SYMBOL(__umoddi3);
+ 
+-#if defined(CONFIG_MD_RAID5) || defined(CONFIG_MD_RAID5_MODULE)
++#ifdef CONFIG_MD_RAID5_IA64
+ extern void xor_ia64_2(void);
+ extern void xor_ia64_3(void);
+ extern void xor_ia64_4(void);
+diff -urNp linux-2.6.17.ia64.orig/arch/ia64/lib/Makefile linux-2.6.17.ia64/arch/ia64/lib/Makefile
+--- linux-2.6.17.ia64.orig/arch/ia64/lib/Makefile	2006-07-27 09:20:01.000000000 -0400
++++ linux-2.6.17.ia64/arch/ia64/lib/Makefile	2006-07-27 14:51:19.000000000 -0400
+@@ -14,7 +14,7 @@ lib-y := __divsi3.o __udivsi3.o __modsi3
+ lib-$(CONFIG_ITANIUM)	+= copy_page.o copy_user.o memcpy.o
+ lib-$(CONFIG_MCKINLEY)	+= copy_page_mck.o memcpy_mck.o
+ lib-$(CONFIG_PERFMON)	+= carta_random.o
+-lib-$(CONFIG_MD_RAID5)	+= xor.o
++lib-$(CONFIG_MD_RAID5_IA64)	+= xor.o
+ 
+ AFLAGS___divdi3.o	=
+ AFLAGS___udivdi3.o	= -DUNSIGNED
