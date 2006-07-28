@@ -1,7 +1,7 @@
 From: Prarit Bhargava <prarit@sgi.com>
-Subject: [PATCH 2/2] Fix IA64 components
-Date: Fri, 28 Jul 2006 09:52:13 -0400
-Message-ID: <20060728135213.29357.65701.sendpatchset@prarit.boston.redhat.com>
+Subject: [PATCH 1/2] Fix RAID5 components
+Date: Fri, 28 Jul 2006 09:52:08 -0400
+Message-ID: <20060728135208.29357.90091.sendpatchset@prarit.boston.redhat.com>
 References: <20060728135203.29357.64980.sendpatchset@prarit.boston.redhat.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20060728135203.29357.64980.sendpatchset@prarit.boston.redhat.com>
@@ -12,33 +12,27 @@ List-Id: linux-raid.ids
 
 Patch to fix export issue with RAID5 + IA64.
 
-	-removes dead CONFIG options
+	-adds new MD_RAID5_IA64 option (default to "y")
+	 that builds IA64 RAID5 components.
 
-This patch should be committed by the IA64 maintainer.
+This patch should be committed by the MD maintainers.
 
 Signed-off-by: Prarit Bhargava <prarit@redhat.com>
 
-diff -urNp linux-2.6.17.ia64.orig/arch/ia64/kernel/ia64_ksyms.c linux-2.6.17.ia64/arch/ia64/kernel/ia64_ksyms.c
---- linux-2.6.17.ia64.orig/arch/ia64/kernel/ia64_ksyms.c	2006-07-27 09:20:01.000000000 -0400
-+++ linux-2.6.17.ia64/arch/ia64/kernel/ia64_ksyms.c	2006-07-27 14:51:42.000000000 -0400
-@@ -67,7 +68,7 @@ EXPORT_SYMBOL(__udivdi3);
- EXPORT_SYMBOL(__moddi3);
- EXPORT_SYMBOL(__umoddi3);
+diff -urNp linux-2.6.17.ia64.orig/drivers/md/Kconfig linux-2.6.17.ia64/drivers/md/Kconfig
+--- linux-2.6.17.ia64.orig/drivers/md/Kconfig	2006-07-27 09:20:03.000000000 -0400
++++ linux-2.6.17.ia64/drivers/md/Kconfig	2006-07-27 14:55:15.000000000 -0400
+@@ -135,6 +135,13 @@ config MD_RAID456
  
--#if defined(CONFIG_MD_RAID5) || defined(CONFIG_MD_RAID5_MODULE)
-+#ifdef CONFIG_MD_RAID5_IA64
- extern void xor_ia64_2(void);
- extern void xor_ia64_3(void);
- extern void xor_ia64_4(void);
-diff -urNp linux-2.6.17.ia64.orig/arch/ia64/lib/Makefile linux-2.6.17.ia64/arch/ia64/lib/Makefile
---- linux-2.6.17.ia64.orig/arch/ia64/lib/Makefile	2006-07-27 09:20:01.000000000 -0400
-+++ linux-2.6.17.ia64/arch/ia64/lib/Makefile	2006-07-27 14:51:19.000000000 -0400
-@@ -14,7 +14,7 @@ lib-y := __divsi3.o __udivsi3.o __modsi3
- lib-$(CONFIG_ITANIUM)	+= copy_page.o copy_user.o memcpy.o
- lib-$(CONFIG_MCKINLEY)	+= copy_page_mck.o memcpy_mck.o
- lib-$(CONFIG_PERFMON)	+= carta_random.o
--lib-$(CONFIG_MD_RAID5)	+= xor.o
-+lib-$(CONFIG_MD_RAID5_IA64)	+= xor.o
+ 	  If unsure, say Y.
  
- AFLAGS___divdi3.o	=
- AFLAGS___udivdi3.o	= -DUNSIGNED
++config MD_RAID5_IA64
++	bool "RAID 5 support for IA64"
++	depends on MD_RAID456 && IA64
++	default y
++	---help---
++	Say "Y" if you plan on using RAID5 in IA64
++
+ config MD_RAID5_RESHAPE
+ 	bool "Support adding drives to a raid-5 array (experimental)"
+ 	depends on MD_RAID456 && EXPERIMENTAL
