@@ -1,16 +1,15 @@
-From: Prarit Bhargava <prarit@sgi.com>
-Subject: [PATCH 0/2] Fix RAID5 + IA64 compile
-Date: Fri, 28 Jul 2006 09:52:03 -0400
-Message-ID: <20060728135203.29357.64980.sendpatchset@prarit.boston.redhat.com>
+From: "Romero" <creasedocket@2die4.com>
+Subject: Order this powerful tab and begin to play!
+Date: Sat, 29 Jul 2006 08:40:20 +0900
+Message-ID: <74080343809515.CC47F193DA__14870.0349186131$1154130101$gmane$org@K53IXW>
+Mime-Version: 1.0
+Content-Type: text/plain;
+        charset="Windows-1252"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org, linux-ia64@vger.kernel.org
-Cc: Prarit Bhargava <prarit@sgi.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Patchset to fix RAID5 on ia64.  Removes dead CONFIG options and
-introduces a new CONFIG option.
+Hello my friend! Let your special one know you've overcome this, unlike millions of other men. >From 5 to 10 minutes of extra time and more - now real with Extra-Time. Lack control over your squirting? Partner unhappy with the time you last in bed? Find what you need: http://juliasterkl.com/gall/get/ You'll make your equipment suit the task - and she'll worship you for that!
 
-Patch is against 2.6.17 + 2.6.18-rc2-git5
-
-Signed-off-by: Prarit Bhargava <prarit@redhat.com>
