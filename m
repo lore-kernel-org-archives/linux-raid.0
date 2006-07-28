@@ -1,62 +1,60 @@
-From: Sander Smeenk <ssmeenk@freshdot.net>
-Subject: Weird blocks at fsync() calls using md
-Date: Fri, 28 Jul 2006 12:16:45 +0200
-Message-ID: <20060728101645.GA32686@freshdot.net>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: Weird blocks at fsync() calls using md
+Date: Fri, 28 Jul 2006 21:11:35 +1000
+Message-ID: <17609.61671.113267.692986@cse.unsw.edu.au>
+References: <20060728101645.GA32686@freshdot.net>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="bg08WKrSYDhXBjb5"
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: message from Sander Smeenk on Friday July 28
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Sander Smeenk <ssmeenk@freshdot.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Friday July 28, ssmeenk@freshdot.net wrote:
+> Hello list,
+> 
+> I've recently subscribed to this list as i'm facing a little problem
+> using md v0.90.3 (bitmap v4.39) on Linux 2.6.17.1, Debian 'sid', mdadm
+> 2.4.1...
 
---bg08WKrSYDhXBjb5
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+sounds fairly up-to-date.
 
-Hello list,
+> 
+> While the system is under heavy disk IO, calls to fsync() made by vim
+> (for example) block for a LONG time. Like 30 seconds or more. I'm not
+> sure if it also blocks other IO during that fsync() wait, but it's nasty
+> enough to have your :w action take 30+ secs...
 
-I've recently subscribed to this list as i'm facing a little problem
-using md v0.90.3 (bitmap v4.39) on Linux 2.6.17.1, Debian 'sid', mdadm
-2.4.1...
+I have vim taking forever to ":w" without using md/raid at all - I
+suspect vim does something silly (maybe a 'sync' instead of just an
+'fsync' - haven't bothered to check yet).
 
-While the system is under heavy disk IO, calls to fsync() made by vim
-(for example) block for a LONG time. Like 30 seconds or more. I'm not
-sure if it also blocks other IO during that fsync() wait, but it's nasty
-enough to have your :w action take 30+ secs...
+Precisely what evidence do you have?
 
-My system is running in RAID1 on two SCSI U320 disks:
-Personalities : [raid1]=20
-md0 : active raid1 sdb[0] sdc[1]
-      71819392 blocks [2/2] [UU]
+> 
+> My system is running in RAID1 on two SCSI U320 disks:
+> Personalities : [raid1] 
+> md0 : active raid1 sdb[0] sdc[1]
+>       71819392 blocks [2/2] [UU]
 
-Some guy on IRC told me he had the same problem once, and it was related
-to some whacky locking mechanism used in the software raid code? I'd
-really like to know if this is a common problem and what i can do about
-it.
+Looks perfectly normal.
 
-Any ideas are welcomed!
+> 
+> Some guy on IRC told me he had the same problem once, and it was related
+> to some whacky locking mechanism used in the software raid code? I'd
+> really like to know if this is a common problem and what i can do about
+> it.
 
-Thanks alot,
-Sander Smeenk.
---=20
-| Show me a piano falling down a mine shaft and I'll show you A-flat miner.
-| 1024D/08CEC94D - 34B3 3314 B146 E13C 70C8  9BDB D463 7E41 08CE C94D
+I don't think md uses any whacky locking mechanisms...
 
---bg08WKrSYDhXBjb5
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
+If you want to help solve it (which would be great) the best thing is
+to collect some concrete data.
+e.g.
+  strace -o /tmp/trace -tt -p pid-of-vim
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.3 (GNU/Linux)
+while doing the thing in vim that takes a long time.
 
-iD8DBQFEyeQN1GN+QQjOyU0RAj0TAJ4xa3x1P9K1yX0WnOpS/qjjjn/58ACeKO9N
-Q1jGcGqeoM0S5lL38WvRN5A=
-=84Gb
------END PGP SIGNATURE-----
-
---bg08WKrSYDhXBjb5--
+NeilBrown
