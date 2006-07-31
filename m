@@ -1,201 +1,393 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [PATCH 003 of 9] md: Factor out part of raid1d into a separate function.
-Date: Mon, 31 Jul 2006 17:32:01 +1000
-Message-ID: <1060731073201.24455@suse.de>
+Subject: [PATCH 005 of 9] md: Replace magic numbers in sb_dirty with well defined bit flags
+Date: Mon, 31 Jul 2006 17:32:18 +1000
+Message-ID: <1060731073218.24482@suse.de>
 References: <20060731172842.24323.patches@notabene>
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S964823AbWGaHcQ@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
 To: Andrew Morton <akpm@osdl.org>
 Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-raid1d has toooo many nested block, so take the fix_read_error
-functionality out into a separate function.
+Instead of magic numbers (0,1,2,3) in sb_dirty, we have
+some flags instead:
+MD_CHANGE_DEVS
+   Some device state has changed requiring superblock update
+   on all devices.
+MD_CHANGE_CLEAN
+   The array has transitions from 'clean' to 'dirty' or back,
+   requiring a superblock update on active devices, but possibly
+   not on spares
+MD_CHANGE_PENDING
+   A superblock update is underway.  
+
+We wait for an update to complete by waiting for all flags to
+be clear.  A flag can be set at any time, even during an update,
+without risk that the change will be lost.
+
+Stop exporting md_update_sb - isn't needed.
+
 
 Signed-off-by: Neil Brown <neilb@suse.de>
 
 ### Diffstat output
- ./drivers/md/raid1.c |  161 ++++++++++++++++++++++++++++-----------------------
- 1 file changed, 89 insertions(+), 72 deletions(-)
+ ./drivers/md/md.c           |   68 +++++++++++++++++++++++---------------------
+ ./drivers/md/multipath.c    |    3 -
+ ./drivers/md/raid1.c        |    2 -
+ ./drivers/md/raid10.c       |    2 -
+ ./drivers/md/raid5.c        |    8 ++---
+ ./include/linux/raid/md.h   |    1 
+ ./include/linux/raid/md_k.h |    6 +++
+ 7 files changed, 49 insertions(+), 41 deletions(-)
+
+diff .prev/drivers/md/md.c ./drivers/md/md.c
+--- .prev/drivers/md/md.c	2006-07-31 17:23:57.000000000 +1000
++++ ./drivers/md/md.c	2006-07-31 17:24:34.000000000 +1000
+@@ -1587,7 +1587,7 @@ static void sync_sbs(mddev_t * mddev, in
+ 	}
+ }
+ 
+-void md_update_sb(mddev_t * mddev)
++static void md_update_sb(mddev_t * mddev, int force_change)
+ {
+ 	int err;
+ 	struct list_head *tmp;
+@@ -1597,18 +1597,25 @@ void md_update_sb(mddev_t * mddev)
+ 
+ repeat:
+ 	spin_lock_irq(&mddev->write_lock);
+-	sync_req = mddev->in_sync;
+-	mddev->utime = get_seconds();
+-	if (mddev->sb_dirty == 3)
++
++	set_bit(MD_CHANGE_PENDING, &mddev->flags);
++	if (test_and_clear_bit(MD_CHANGE_DEVS, &mddev->flags))
++		force_change = 1;
++	if (test_and_clear_bit(MD_CHANGE_CLEAN, &mddev->flags))
+ 		/* just a clean<-> dirty transition, possibly leave spares alone,
+ 		 * though if events isn't the right even/odd, we will have to do
+ 		 * spares after all
+ 		 */
+ 		nospares = 1;
++	if (force_change)
++		nospares = 0;
++
++	sync_req = mddev->in_sync;
++	mddev->utime = get_seconds();
+ 
+ 	/* If this is just a dirty<->clean transition, and the array is clean
+ 	 * and 'events' is odd, we can roll back to the previous clean state */
+-	if (mddev->sb_dirty == 3
++	if (nospares
+ 	    && (mddev->in_sync && mddev->recovery_cp == MaxSector)
+ 	    && (mddev->events & 1))
+ 		mddev->events--;
+@@ -1639,7 +1646,6 @@ repeat:
+ 		MD_BUG();
+ 		mddev->events --;
+ 	}
+-	mddev->sb_dirty = 2;
+ 	sync_sbs(mddev, nospares);
+ 
+ 	/*
+@@ -1647,7 +1653,7 @@ repeat:
+ 	 * nonpersistent superblocks
+ 	 */
+ 	if (!mddev->persistent) {
+-		mddev->sb_dirty = 0;
++		clear_bit(MD_CHANGE_PENDING, &mddev->flags);
+ 		spin_unlock_irq(&mddev->write_lock);
+ 		wake_up(&mddev->sb_wait);
+ 		return;
+@@ -1684,20 +1690,20 @@ repeat:
+ 			break;
+ 	}
+ 	md_super_wait(mddev);
+-	/* if there was a failure, sb_dirty was set to 1, and we re-write super */
++	/* if there was a failure, MD_CHANGE_DEVS was set, and we re-write super */
+ 
+ 	spin_lock_irq(&mddev->write_lock);
+-	if (mddev->in_sync != sync_req|| mddev->sb_dirty == 1) {
++	if (mddev->in_sync != sync_req ||
++	    test_bit(MD_CHANGE_DEVS, &mddev->flags)) {
+ 		/* have to write it out again */
+ 		spin_unlock_irq(&mddev->write_lock);
+ 		goto repeat;
+ 	}
+-	mddev->sb_dirty = 0;
++	clear_bit(MD_CHANGE_PENDING, &mddev->flags);
+ 	spin_unlock_irq(&mddev->write_lock);
+ 	wake_up(&mddev->sb_wait);
+ 
+ }
+-EXPORT_SYMBOL_GPL(md_update_sb);
+ 
+ /* words written to sysfs files may, or my not, be \n terminated.
+  * We want to accept with case. For this we use cmd_match.
+@@ -1770,7 +1776,7 @@ state_store(mdk_rdev_t *rdev, const char
+ 		else {
+ 			mddev_t *mddev = rdev->mddev;
+ 			kick_rdev_from_array(rdev);
+-			md_update_sb(mddev);
++			md_update_sb(mddev, 1);
+ 			md_new_event(mddev);
+ 			err = 0;
+ 		}
+@@ -2413,7 +2419,7 @@ array_state_store(mddev_t *mddev, const 
+ 			spin_lock_irq(&mddev->write_lock);
+ 			if (atomic_read(&mddev->writes_pending) == 0) {
+ 				mddev->in_sync = 1;
+-				mddev->sb_dirty = 1;
++				set_bit(MD_CHANGE_CLEAN, &mddev->flags);
+ 			}
+ 			spin_unlock_irq(&mddev->write_lock);
+ 		} else {
+@@ -2425,7 +2431,7 @@ array_state_store(mddev_t *mddev, const 
+ 	case active:
+ 		if (mddev->pers) {
+ 			restart_array(mddev);
+-			mddev->sb_dirty = 0;
++			clear_bit(MD_CHANGE_CLEAN, &mddev->flags);
+ 			wake_up(&mddev->sb_wait);
+ 			err = 0;
+ 		} else {
+@@ -2530,7 +2536,7 @@ size_store(mddev_t *mddev, const char *b
+ 
+ 	if (mddev->pers) {
+ 		err = update_size(mddev, size);
+-		md_update_sb(mddev);
++		md_update_sb(mddev, 1);
+ 	} else {
+ 		if (mddev->size == 0 ||
+ 		    mddev->size > size)
+@@ -3098,8 +3104,8 @@ static int do_md_run(mddev_t * mddev)
+ 	
+ 	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+ 	
+-	if (mddev->sb_dirty)
+-		md_update_sb(mddev);
++	if (mddev->flags)
++		md_update_sb(mddev, 0);
+ 
+ 	set_capacity(disk, mddev->array_size<<1);
+ 
+@@ -3262,10 +3268,10 @@ static int do_md_stop(mddev_t * mddev, i
+ 			if (mddev->ro)
+ 				mddev->ro = 0;
+ 		}
+-		if (!mddev->in_sync || mddev->sb_dirty) {
++		if (!mddev->in_sync || mddev->flags) {
+ 			/* mark array as shutdown cleanly */
+ 			mddev->in_sync = 1;
+-			md_update_sb(mddev);
++			md_update_sb(mddev, 1);
+ 		}
+ 		if (mode == 1)
+ 			set_disk_ro(disk, 1);
+@@ -3734,7 +3740,7 @@ static int hot_remove_disk(mddev_t * mdd
+ 		goto busy;
+ 
+ 	kick_rdev_from_array(rdev);
+-	md_update_sb(mddev);
++	md_update_sb(mddev, 1);
+ 	md_new_event(mddev);
+ 
+ 	return 0;
+@@ -3811,7 +3817,7 @@ static int hot_add_disk(mddev_t * mddev,
+ 
+ 	rdev->raid_disk = -1;
+ 
+-	md_update_sb(mddev);
++	md_update_sb(mddev, 1);
+ 
+ 	/*
+ 	 * Kick recovery, maybe this spare has to be added to the
+@@ -3942,7 +3948,8 @@ static int set_array_info(mddev_t * mdde
+ 
+ 	mddev->max_disks     = MD_SB_DISKS;
+ 
+-	mddev->sb_dirty      = 1;
++	mddev->flags         = 0;
++	set_bit(MD_CHANGE_DEVS, &mddev->flags);
+ 
+ 	mddev->default_bitmap_offset = MD_SB_BYTES >> 9;
+ 	mddev->bitmap_offset = 0;
+@@ -4111,7 +4118,7 @@ static int update_array_info(mddev_t *md
+ 			mddev->bitmap_offset = 0;
+ 		}
+ 	}
+-	md_update_sb(mddev);
++	md_update_sb(mddev, 1);
+ 	return rv;
+ }
+ 
+@@ -4947,12 +4954,12 @@ void md_write_start(mddev_t *mddev, stru
+ 		spin_lock_irq(&mddev->write_lock);
+ 		if (mddev->in_sync) {
+ 			mddev->in_sync = 0;
+-			mddev->sb_dirty = 3;
++			set_bit(MD_CHANGE_CLEAN, &mddev->flags);
+ 			md_wakeup_thread(mddev->thread);
+ 		}
+ 		spin_unlock_irq(&mddev->write_lock);
+ 	}
+-	wait_event(mddev->sb_wait, mddev->sb_dirty==0);
++	wait_event(mddev->sb_wait, mddev->flags==0);
+ }
+ 
+ void md_write_end(mddev_t *mddev)
+@@ -5222,7 +5229,6 @@ void md_do_sync(mddev_t *mddev)
+ 				    !test_bit(In_sync, &rdev->flags) &&
+ 				    rdev->recovery_offset < mddev->curr_resync)
+ 					rdev->recovery_offset = mddev->curr_resync;
+-			mddev->sb_dirty = 1;
+ 		}
+ 	}
+ 
+@@ -5279,7 +5285,7 @@ void md_check_recovery(mddev_t *mddev)
+ 	}
+ 
+ 	if ( ! (
+-		mddev->sb_dirty ||
++		mddev->flags ||
+ 		test_bit(MD_RECOVERY_NEEDED, &mddev->recovery) ||
+ 		test_bit(MD_RECOVERY_DONE, &mddev->recovery) ||
+ 		(mddev->safemode == 1) ||
+@@ -5295,14 +5301,14 @@ void md_check_recovery(mddev_t *mddev)
+ 		if (mddev->safemode && !atomic_read(&mddev->writes_pending) &&
+ 		    !mddev->in_sync && mddev->recovery_cp == MaxSector) {
+ 			mddev->in_sync = 1;
+-			mddev->sb_dirty = 3;
++			set_bit(MD_CHANGE_CLEAN, &mddev->flags);
+ 		}
+ 		if (mddev->safemode == 1)
+ 			mddev->safemode = 0;
+ 		spin_unlock_irq(&mddev->write_lock);
+ 
+-		if (mddev->sb_dirty)
+-			md_update_sb(mddev);
++		if (mddev->flags)
++			md_update_sb(mddev, 0);
+ 
+ 
+ 		if (test_bit(MD_RECOVERY_RUNNING, &mddev->recovery) &&
+@@ -5321,7 +5327,7 @@ void md_check_recovery(mddev_t *mddev)
+ 				/* activate any spares */
+ 				mddev->pers->spare_active(mddev);
+ 			}
+-			md_update_sb(mddev);
++			md_update_sb(mddev, 1);
+ 
+ 			/* if array is no-longer degraded, then any saved_raid_disk
+ 			 * information must be scrapped
+
+diff .prev/drivers/md/multipath.c ./drivers/md/multipath.c
+--- .prev/drivers/md/multipath.c	2006-07-31 17:23:57.000000000 +1000
++++ ./drivers/md/multipath.c	2006-07-31 17:24:34.000000000 +1000
+@@ -253,7 +253,7 @@ static void multipath_error (mddev_t *md
+ 			char b[BDEVNAME_SIZE];
+ 			clear_bit(In_sync, &rdev->flags);
+ 			set_bit(Faulty, &rdev->flags);
+-			mddev->sb_dirty = 1;
++			set_bit(MD_CHANGE_DEVS, &mddev->flags);
+ 			conf->working_disks--;
+ 			printk(KERN_ALERT "multipath: IO failure on %s,"
+ 				" disabling IO path. \n	Operation continuing"
+@@ -470,7 +470,6 @@ static int multipath_run (mddev_t *mddev
+ 	}
+ 
+ 	conf->raid_disks = mddev->raid_disks;
+-	mddev->sb_dirty = 1;
+ 	conf->mddev = mddev;
+ 	spin_lock_init(&conf->device_lock);
+ 	INIT_LIST_HEAD(&conf->retry_list);
 
 diff .prev/drivers/md/raid1.c ./drivers/md/raid1.c
---- .prev/drivers/md/raid1.c	2006-07-31 17:23:57.000000000 +1000
-+++ ./drivers/md/raid1.c	2006-07-31 17:24:24.000000000 +1000
-@@ -1359,6 +1359,89 @@ static void sync_request_write(mddev_t *
-  *	3.	Performs writes following reads for array syncronising.
-  */
+--- .prev/drivers/md/raid1.c	2006-07-31 17:24:24.000000000 +1000
++++ ./drivers/md/raid1.c	2006-07-31 17:24:34.000000000 +1000
+@@ -966,7 +966,7 @@ static void error(mddev_t *mddev, mdk_rd
+ 	}
+ 	clear_bit(In_sync, &rdev->flags);
+ 	set_bit(Faulty, &rdev->flags);
+-	mddev->sb_dirty = 1;
++	set_bit(MD_CHANGE_DEVS, &mddev->flags);
+ 	printk(KERN_ALERT "raid1: Disk failure on %s, disabling device. \n"
+ 		"	Operation continuing on %d devices\n",
+ 		bdevname(rdev->bdev,b), conf->working_disks);
+
+diff .prev/drivers/md/raid10.c ./drivers/md/raid10.c
+--- .prev/drivers/md/raid10.c	2006-07-31 17:24:34.000000000 +1000
++++ ./drivers/md/raid10.c	2006-07-31 17:24:34.000000000 +1000
+@@ -960,7 +960,7 @@ static void error(mddev_t *mddev, mdk_rd
+ 	}
+ 	clear_bit(In_sync, &rdev->flags);
+ 	set_bit(Faulty, &rdev->flags);
+-	mddev->sb_dirty = 1;
++	set_bit(MD_CHANGE_DEVS, &mddev->flags);
+ 	printk(KERN_ALERT "raid10: Disk failure on %s, disabling device. \n"
+ 		"	Operation continuing on %d devices\n",
+ 		bdevname(rdev->bdev,b), conf->working_disks);
+
+diff .prev/drivers/md/raid5.c ./drivers/md/raid5.c
+--- .prev/drivers/md/raid5.c	2006-07-31 17:23:57.000000000 +1000
++++ ./drivers/md/raid5.c	2006-07-31 17:24:34.000000000 +1000
+@@ -696,7 +696,7 @@ static void error(mddev_t *mddev, mdk_rd
+ 	PRINTK("raid5: error called\n");
  
-+static void fix_read_error(conf_t *conf, int read_disk,
-+			   sector_t sect, int sectors)
-+{
-+	mddev_t *mddev = conf->mddev;
-+	while(sectors) {
-+		int s = sectors;
-+		int d = read_disk;
-+		int success = 0;
-+		int start;
-+		mdk_rdev_t *rdev;
-+
-+		if (s > (PAGE_SIZE>>9))
-+			s = PAGE_SIZE >> 9;
-+
-+		do {
-+			rdev = conf->mirrors[d].rdev;
-+			if (rdev &&
-+			    test_bit(In_sync, &rdev->flags) &&
-+			    sync_page_io(rdev->bdev,
-+					 sect + rdev->data_offset,
-+					 s<<9,
-+					 conf->tmppage, READ))
-+				success = 1;
-+			else {
-+				d++;
-+				if (d == conf->raid_disks)
-+					d = 0;
-+			}
-+		} while (!success && d != read_disk);
-+
-+		if (!success) {
-+			/* Cannot read from anywhere -- bye bye array */
-+			md_error(mddev, conf->mirrors[read_disk].rdev);
-+			break;
-+		}
-+		/* write it back and re-read */
-+		start = d;
-+		while (d != read_disk) {
-+			if (d==0)
-+				d = conf->raid_disks;
-+			d--;
-+			rdev = conf->mirrors[d].rdev;
-+			atomic_add(s, &rdev->corrected_errors);
-+			if (rdev &&
-+			    test_bit(In_sync, &rdev->flags)) {
-+				if (sync_page_io(rdev->bdev,
-+						 sect + rdev->data_offset,
-+						 s<<9, conf->tmppage, WRITE)
-+				    == 0)
-+					/* Well, this device is dead */
-+					md_error(mddev, rdev);
-+			}
-+		}
-+		d = start;
-+		while (d != read_disk) {
-+			char b[BDEVNAME_SIZE];
-+			if (d==0)
-+				d = conf->raid_disks;
-+			d--;
-+			rdev = conf->mirrors[d].rdev;
-+			if (rdev &&
-+			    test_bit(In_sync, &rdev->flags)) {
-+				if (sync_page_io(rdev->bdev,
-+						 sect + rdev->data_offset,
-+						 s<<9, conf->tmppage, READ)
-+				    == 0)
-+					/* Well, this device is dead */
-+					md_error(mddev, rdev);
-+				else
-+					printk(KERN_INFO
-+					       "raid1:%s: read error corrected "
-+					       "(%d sectors at %llu on %s)\n",
-+					       mdname(mddev), s,
-+					       (unsigned long long)sect +
-+					           rdev->data_offset,
-+					       bdevname(rdev->bdev, b));
-+			}
-+		}
-+		sectors -= s;
-+		sect += s;
-+	}
-+}
-+
- static void raid1d(mddev_t *mddev)
- {
- 	r1bio_t *r1_bio;
-@@ -1451,80 +1534,14 @@ static void raid1d(mddev_t *mddev)
- 			 * This is all done synchronously while the array is
- 			 * frozen
- 			 */
--			sector_t sect = r1_bio->sector;
--			int sectors = r1_bio->sectors;
--			freeze_array(conf);
--			if (mddev->ro == 0) while(sectors) {
--				int s = sectors;
--				int d = r1_bio->read_disk;
--				int success = 0;
--
--				if (s > (PAGE_SIZE>>9))
--					s = PAGE_SIZE >> 9;
--
--				do {
--					rdev = conf->mirrors[d].rdev;
--					if (rdev &&
--					    test_bit(In_sync, &rdev->flags) &&
--					    sync_page_io(rdev->bdev,
--							 sect + rdev->data_offset,
--							 s<<9,
--							 conf->tmppage, READ))
--						success = 1;
--					else {
--						d++;
--						if (d == conf->raid_disks)
--							d = 0;
--					}
--				} while (!success && d != r1_bio->read_disk);
--
--				if (success) {
--					/* write it back and re-read */
--					int start = d;
--					while (d != r1_bio->read_disk) {
--						if (d==0)
--							d = conf->raid_disks;
--						d--;
--						rdev = conf->mirrors[d].rdev;
--						atomic_add(s, &rdev->corrected_errors);
--						if (rdev &&
--						    test_bit(In_sync, &rdev->flags)) {
--							if (sync_page_io(rdev->bdev,
--									 sect + rdev->data_offset,
--									 s<<9, conf->tmppage, WRITE) == 0)
--								/* Well, this device is dead */
--								md_error(mddev, rdev);
--						}
--					}
--					d = start;
--					while (d != r1_bio->read_disk) {
--						if (d==0)
--							d = conf->raid_disks;
--						d--;
--						rdev = conf->mirrors[d].rdev;
--						if (rdev &&
--						    test_bit(In_sync, &rdev->flags)) {
--							if (sync_page_io(rdev->bdev,
--									 sect + rdev->data_offset,
--									 s<<9, conf->tmppage, READ) == 0)
--								/* Well, this device is dead */
--								md_error(mddev, rdev);
--							else
--								printk(KERN_INFO "raid1:%s: read error corrected (%d sectors at %llu on %s)\n",
--								       mdname(mddev), s, (unsigned long long)(sect + rdev->data_offset), bdevname(rdev->bdev, b));
--						}
--					}
--				} else {
--					/* Cannot read from anywhere -- bye bye array */
--					md_error(mddev, conf->mirrors[r1_bio->read_disk].rdev);
--					break;
--				}
--				sectors -= s;
--				sect += s;
-+			if (mddev->ro == 0) {
-+				freeze_array(conf);
-+				fix_read_error(conf, r1_bio->read_disk,
-+					       r1_bio->sector,
-+					       r1_bio->sectors);
-+				unfreeze_array(conf);
- 			}
+ 	if (!test_bit(Faulty, &rdev->flags)) {
+-		mddev->sb_dirty = 1;
++		set_bit(MD_CHANGE_DEVS, &mddev->flags);
+ 		if (test_bit(In_sync, &rdev->flags)) {
+ 			conf->working_disks--;
+ 			mddev->degraded++;
+@@ -2781,9 +2781,9 @@ static sector_t reshape_request(mddev_t 
+ 		wait_event(conf->wait_for_overlap,
+ 			   atomic_read(&conf->reshape_stripes)==0);
+ 		mddev->reshape_position = conf->expand_progress;
+-		mddev->sb_dirty = 1;
++		set_bit(MD_CHANGE_DEVS, &mddev->flags);
+ 		md_wakeup_thread(mddev->thread);
+-		wait_event(mddev->sb_wait, mddev->sb_dirty == 0 ||
++		wait_event(mddev->sb_wait, mddev->flags == 0 ||
+ 			   kthread_should_stop());
+ 		spin_lock_irq(&conf->device_lock);
+ 		conf->expand_lo = mddev->reshape_position;
+@@ -3605,7 +3605,7 @@ static int raid5_start_reshape(mddev_t *
+ 	mddev->degraded = (conf->raid_disks - conf->previous_raid_disks) - added_devices;
+ 	mddev->raid_disks = conf->raid_disks;
+ 	mddev->reshape_position = 0;
+-	mddev->sb_dirty = 1;
++	set_bit(MD_CHANGE_DEVS, &mddev->flags);
  
--			unfreeze_array(conf);
--
- 			bio = r1_bio->bios[r1_bio->read_disk];
- 			if ((disk=read_balance(conf, r1_bio)) == -1) {
- 				printk(KERN_ALERT "raid1: %s: unrecoverable I/O"
+ 	clear_bit(MD_RECOVERY_SYNC, &mddev->recovery);
+ 	clear_bit(MD_RECOVERY_CHECK, &mddev->recovery);
+
+diff .prev/include/linux/raid/md.h ./include/linux/raid/md.h
+--- .prev/include/linux/raid/md.h	2006-07-31 17:23:57.000000000 +1000
++++ ./include/linux/raid/md.h	2006-07-31 17:24:34.000000000 +1000
+@@ -93,7 +93,6 @@ extern int sync_page_io(struct block_dev
+ extern void md_do_sync(mddev_t *mddev);
+ extern void md_new_event(mddev_t *mddev);
+ 
+-extern void md_update_sb(mddev_t * mddev);
+ 
+ #endif 
+ 
+
+diff .prev/include/linux/raid/md_k.h ./include/linux/raid/md_k.h
+--- .prev/include/linux/raid/md_k.h	2006-07-31 17:23:57.000000000 +1000
++++ ./include/linux/raid/md_k.h	2006-07-31 17:24:34.000000000 +1000
+@@ -114,7 +114,11 @@ struct mddev_s
+ 	dev_t				unit;
+ 	int				md_minor;
+ 	struct list_head 		disks;
+-	int				sb_dirty;
++	unsigned long			flags;
++#define MD_CHANGE_DEVS	0	/* Some device status has changed */
++#define MD_CHANGE_CLEAN 1	/* transition to or from 'clean' */
++#define MD_CHANGE_PENDING 2	/* superblock update in progress */
++
+ 	int				ro;
+ 
+ 	struct gendisk			*gendisk;
