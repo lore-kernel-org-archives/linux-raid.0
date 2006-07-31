@@ -1,31 +1,48 @@
-From: Jes Sorensen <jes@sgi.com>
-Subject: Re: [PATCH 0/2] Fix RAID5 + IA64 compile
-Date: Mon, 31 Jul 2006 15:13:55 +0200
-Message-ID: <44CE0213.8030204@sgi.com>
-References: <20060728140145.9149.43458.sendpatchset@prarit.boston.redhat.com> <yq01ws29li9.fsf@jaguar.mkp.net> <44CE01AB.8040205@redhat.com>
+From: Ingo Oeser <ioe-lkml@rameria.de>
+Subject: Re: [PATCH 005 of 9] md: Replace magic numbers in sb_dirty with well defined bit flags
+Date: Mon, 31 Jul 2006 17:33:11 +0200
+Message-ID: <200607311733.12848.ioe-lkml@rameria.de>
+References: <20060731172842.24323.patches@notabene> <1060731073218.24482@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="iso-8859-15"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ia64-owner@vger.kernel.org>
-In-Reply-To: <44CE01AB.8040205@redhat.com>
-Sender: linux-ia64-owner@vger.kernel.org
-To: Prarit Bhargava <prarit@redhat.com>
-Cc: linux-ia64@vger.kernel.org, linux-raid@vger.kernel.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1060731073218.24482@suse.de>
+Content-Disposition: inline
+Sender: linux-raid-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: Andrew Morton <akpm@osdl.org>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-Prarit Bhargava wrote:
-> Resubmitting ... please note this patch is ia64 ONLY.
+Hi Neil,
 
-> ------------------------------------------------------------------------
+I think the names in this patch don't match the description at all.
+May I suggest different ones?
+
+On Monday, 31. July 2006 09:32, NeilBrown wrote:
 > 
-> CONFIG_MD_RAID5 became CONFIG_MD_RAID456 in drivers/md/Kconfig.  Make the same
-> change in arch/ia64
-> 
-> Signed-off-by: Prarit Bhargava <prarit@redhat.com>
-> Signed-off-by: Aron Griffis <aron@hp.com>
+> Instead of magic numbers (0,1,2,3) in sb_dirty, we have
+> some flags instead:
+> MD_CHANGE_DEVS
+>    Some device state has changed requiring superblock update
+>    on all devices.
 
-Acked-by: Jes Sorensen <jes@sgi.com>
+MD_SB_STALE or MD_SB_NEED_UPDATE
 
-I like this one much better :-)
+> MD_CHANGE_CLEAN
+>    The array has transitions from 'clean' to 'dirty' or back,
+>    requiring a superblock update on active devices, but possibly
+>    not on spares
 
-Jes
+Maybe split this into MD_SB_DIRTY and MD_SB_CLEAN ?
+
+> MD_CHANGE_PENDING
+>    A superblock update is underway.  
+
+MD_SB_PENDING_UPDATE
+
+
+Regards
+
+Ingo Oeser
