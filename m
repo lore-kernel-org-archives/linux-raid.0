@@ -1,7 +1,7 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [PATCH 002 of 9] md: Fix a comment that is wrong in raid5.h
-Date: Mon, 31 Jul 2006 17:31:54 +1000
-Message-ID: <1060731073154.24442@suse.de>
+Subject: [PATCH 008 of 9] md: Remove working_disks from raid1 state data
+Date: Mon, 31 Jul 2006 17:32:44 +1000
+Message-ID: <1060731073244.24518@suse.de>
 References: <20060731172842.24323.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
@@ -10,25 +10,130 @@ Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
 
+It is equivalent to conf->raid_disks - conf->mddev->degraded.
 
 Signed-off-by: Neil Brown <neilb@suse.de>
 
 ### Diffstat output
- ./include/linux/raid/raid5.h |    5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ ./drivers/md/raid1.c         |   28 ++++++++++++----------------
+ ./include/linux/raid/raid1.h |    1 -
+ 2 files changed, 12 insertions(+), 17 deletions(-)
 
-diff .prev/include/linux/raid/raid5.h ./include/linux/raid/raid5.h
---- .prev/include/linux/raid/raid5.h	2006-07-31 16:33:02.000000000 +1000
-+++ ./include/linux/raid/raid5.h	2006-07-31 16:33:02.000000000 +1000
-@@ -195,8 +195,9 @@ struct stripe_head {
-  * it to the count of prereading stripes.
-  * When write is initiated, or the stripe refcnt == 0 (just in case) we
-  * clear the PREREAD_ACTIVE flag and decrement the count
-- * Whenever the delayed queue is empty and the device is not plugged, we
-- * move any strips from delayed to handle and clear the DELAYED flag and set PREREAD_ACTIVE.
-+ * Whenever the 'handle' queue is empty and the device is not plugged, we
-+ * move any strips from delayed to handle and clear the DELAYED flag and set
-+ * PREREAD_ACTIVE.
-  * In stripe_handle, if we find pre-reading is necessary, we do it if
-  * PREREAD_ACTIVE is set, else we set DELAYED which will send it to the delayed queue.
-  * HANDLE gets cleared if stripe_handle leave nothing locked.
+diff .prev/drivers/md/raid1.c ./drivers/md/raid1.c
+--- .prev/drivers/md/raid1.c	2006-07-31 17:24:34.000000000 +1000
++++ ./drivers/md/raid1.c	2006-07-31 17:24:36.000000000 +1000
+@@ -271,7 +271,7 @@ static int raid1_end_read_request(struct
+ 	 */
+ 	update_head_pos(mirror, r1_bio);
+ 
+-	if (uptodate || conf->working_disks <= 1) {
++	if (uptodate || (conf->raid_disks - conf->mddev->degraded) <= 1) {
+ 		/*
+ 		 * Set R1BIO_Uptodate in our master bio, so that
+ 		 * we will return a good error code for to the higher
+@@ -929,7 +929,7 @@ static void status(struct seq_file *seq,
+ 	int i;
+ 
+ 	seq_printf(seq, " [%d/%d] [", conf->raid_disks,
+-						conf->working_disks);
++		   conf->raid_disks - mddev->degraded);
+ 	for (i = 0; i < conf->raid_disks; i++)
+ 		seq_printf(seq, "%s",
+ 			      conf->mirrors[i].rdev &&
+@@ -950,7 +950,7 @@ static void error(mddev_t *mddev, mdk_rd
+ 	 * else mark the drive as failed
+ 	 */
+ 	if (test_bit(In_sync, &rdev->flags)
+-	    && conf->working_disks == 1)
++	    && (conf->raid_disks - mddev->degraded) == 1)
+ 		/*
+ 		 * Don't fail the drive, act as though we were just a
+ 		 * normal single drive
+@@ -958,7 +958,6 @@ static void error(mddev_t *mddev, mdk_rd
+ 		return;
+ 	if (test_bit(In_sync, &rdev->flags)) {
+ 		mddev->degraded++;
+-		conf->working_disks--;
+ 		/*
+ 		 * if recovery is running, make sure it aborts.
+ 		 */
+@@ -969,7 +968,7 @@ static void error(mddev_t *mddev, mdk_rd
+ 	set_bit(MD_CHANGE_DEVS, &mddev->flags);
+ 	printk(KERN_ALERT "raid1: Disk failure on %s, disabling device. \n"
+ 		"	Operation continuing on %d devices\n",
+-		bdevname(rdev->bdev,b), conf->working_disks);
++		bdevname(rdev->bdev,b), conf->raid_disks - mddev->degraded);
+ }
+ 
+ static void print_conf(conf_t *conf)
+@@ -982,7 +981,7 @@ static void print_conf(conf_t *conf)
+ 		printk("(!conf)\n");
+ 		return;
+ 	}
+-	printk(" --- wd:%d rd:%d\n", conf->working_disks,
++	printk(" --- wd:%d rd:%d\n", conf->raid_disks - conf->mddev->degraded,
+ 		conf->raid_disks);
+ 
+ 	for (i = 0; i < conf->raid_disks; i++) {
+@@ -1019,7 +1018,6 @@ static int raid1_spare_active(mddev_t *m
+ 		if (tmp->rdev 
+ 		    && !test_bit(Faulty, &tmp->rdev->flags)
+ 		    && !test_bit(In_sync, &tmp->rdev->flags)) {
+-			conf->working_disks++;
+ 			mddev->degraded--;
+ 			set_bit(In_sync, &tmp->rdev->flags);
+ 		}
+@@ -1887,15 +1885,11 @@ static int run(mddev_t *mddev)
+ 			blk_queue_max_sectors(mddev->queue, PAGE_SIZE>>9);
+ 
+ 		disk->head_position = 0;
+-		if (!test_bit(Faulty, &rdev->flags) && test_bit(In_sync, &rdev->flags))
+-			conf->working_disks++;
+ 	}
+ 	conf->raid_disks = mddev->raid_disks;
+ 	conf->mddev = mddev;
+ 	spin_lock_init(&conf->device_lock);
+ 	INIT_LIST_HEAD(&conf->retry_list);
+-	if (conf->working_disks == 1)
+-		mddev->recovery_cp = MaxSector;
+ 
+ 	spin_lock_init(&conf->resync_lock);
+ 	init_waitqueue_head(&conf->wait_barrier);
+@@ -1903,11 +1897,6 @@ static int run(mddev_t *mddev)
+ 	bio_list_init(&conf->pending_bio_list);
+ 	bio_list_init(&conf->flushing_bio_list);
+ 
+-	if (!conf->working_disks) {
+-		printk(KERN_ERR "raid1: no operational mirrors for %s\n",
+-			mdname(mddev));
+-		goto out_free_conf;
+-	}
+ 
+ 	mddev->degraded = 0;
+ 	for (i = 0; i < conf->raid_disks; i++) {
+@@ -1920,6 +1909,13 @@ static int run(mddev_t *mddev)
+ 			mddev->degraded++;
+ 		}
+ 	}
++	if (mddev->degraded == conf->raid_disks) {
++		printk(KERN_ERR "raid1: no operational mirrors for %s\n",
++			mdname(mddev));
++		goto out_free_conf;
++	}
++	if (conf->raid_disks - mddev->degraded == 1)
++		mddev->recovery_cp = MaxSector;
+ 
+ 	/*
+ 	 * find the first working one and use it as a starting point
+
+diff .prev/include/linux/raid/raid1.h ./include/linux/raid/raid1.h
+--- .prev/include/linux/raid/raid1.h	2006-07-31 17:23:55.000000000 +1000
++++ ./include/linux/raid/raid1.h	2006-07-31 17:24:36.000000000 +1000
+@@ -30,7 +30,6 @@ struct r1_private_data_s {
+ 	mddev_t			*mddev;
+ 	mirror_info_t		*mirrors;
+ 	int			raid_disks;
+-	int			working_disks;
+ 	int			last_used;
+ 	sector_t		next_seq_sect;
+ 	spinlock_t		device_lock;
