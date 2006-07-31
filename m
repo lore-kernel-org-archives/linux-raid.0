@@ -1,48 +1,43 @@
-From: Ingo Oeser <ioe-lkml@rameria.de>
-Subject: Re: [PATCH 005 of 9] md: Replace magic numbers in sb_dirty with well defined bit flags
-Date: Mon, 31 Jul 2006 17:33:11 +0200
-Message-ID: <200607311733.12848.ioe-lkml@rameria.de>
-References: <20060731172842.24323.patches@notabene> <1060731073218.24482@suse.de>
+From: Helge Hafting <helgehaf@aitel.hist.no>
+Subject: Re: let md auto-detect 128+ raid members, fix potential race condition
+Date: Mon, 31 Jul 2006 18:34:30 +0200
+Message-ID: <20060731163429.GA6464@aitel.hist.no>
+References: <ork65veg2y.fsf@free.oliva.athome.lsd.ic.unicamp.br> <20060730124139.45861b47.akpm@osdl.org> <orac6qerr4.fsf@free.oliva.athome.lsd.ic.unicamp.br> <17613.16090.470524.736889@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1060731073218.24482@suse.de>
 Content-Disposition: inline
+In-Reply-To: <17613.16090.470524.736889@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Andrew Morton <akpm@osdl.org>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: Alexandre Oliva <aoliva@redhat.com>, Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Neil,
-
-I think the names in this patch don't match the description at all.
-May I suggest different ones?
-
-On Monday, 31. July 2006 09:32, NeilBrown wrote:
+On Mon, Jul 31, 2006 at 09:20:58AM +1000, Neil Brown wrote:
 > 
-> Instead of magic numbers (0,1,2,3) in sb_dirty, we have
-> some flags instead:
-> MD_CHANGE_DEVS
->    Some device state has changed requiring superblock update
->    on all devices.
+> My first inclination is not to fix this problem.
+> 
+> I consider md auto-detect to be a legacy feature.
+> I don't use it and I recommend that other people don't use it.
+> However I cannot justify removing it, so it stays there.
+> Having this limitation could be seen as a good motivation for some
+> more users to stop using it.
+> 
+> Why not use auto-detect?
+[Arguments deleted]
 
-MD_SB_STALE or MD_SB_NEED_UPDATE
+Well, if autodetection is removed, what is then the preferred
+way of booting off a raid-1 device?
 
-> MD_CHANGE_CLEAN
->    The array has transitions from 'clean' to 'dirty' or back,
->    requiring a superblock update on active devices, but possibly
->    not on spares
+Kernel parameters?
 
-Maybe split this into MD_SB_DIRTY and MD_SB_CLEAN ?
+An initrd with mdadm just for this?  Some people want to do even
+partition detection from initrd, in order to have a smaller
+kernel.  We aren't there yet though.
 
-> MD_CHANGE_PENDING
->    A superblock update is underway.  
+Autotetect is nice from an administrator viewpoint - compile
+it in and it "just works".  The trouble when you connect
+an array from some other machine is to be expected, but 
+that isn't exactly everyday stuff.  
 
-MD_SB_PENDING_UPDATE
-
-
-Regards
-
-Ingo Oeser
+Helge Hafting
