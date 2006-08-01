@@ -1,80 +1,67 @@
-From: Alexandre Oliva <aoliva@redhat.com>
-Subject: Re: let md auto-detect 128+ raid members, fix potential race condition
-Date: Tue, 01 Aug 2006 00:33:04 -0300
-Message-ID: <orac6p870v.fsf@free.oliva.athome.lsd.ic.unicamp.br>
-References: <ork65veg2y.fsf@free.oliva.athome.lsd.ic.unicamp.br>
-	<20060730124139.45861b47.akpm@osdl.org>
-	<orac6qerr4.fsf@free.oliva.athome.lsd.ic.unicamp.br>
-	<17613.16090.470524.736889@cse.unsw.edu.au>
-	<ord5blcyg0.fsf@free.oliva.athome.lsd.ic.unicamp.br>
-	<17614.44057.322945.156592@cse.unsw.edu.au>
-	<orpsflrxmb.fsf@free.oliva.athome.lsd.ic.unicamp.br>
-Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="=-=-="
+From: NeilBrown <neilb@suse.de>
+Subject: [PATCH] md: Fix a bug that recently crept into md/linear
+Date: Tue, 1 Aug 2006 14:08:47 +1000
+Message-ID: <1060801040847.11976@suse.de>
+References: <20060801140742.11940.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <orpsflrxmb.fsf@free.oliva.athome.lsd.ic.unicamp.br> (Alexandre Oliva's message of "Mon, 31 Jul 2006 23:35:56 -0300")
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Simon Kirby <sim@netnation.com>
 List-Id: linux-raid.ids
 
---=-=-=
+This patch fixed a bug in 2.6.18-rc3 It would be good if it can get
+into -final.
 
-On Jul 31, 2006, Alexandre Oliva <aoliva@redhat.com> wrote:
-
->> mdadm --assemble --scan --homehost='<system>' --auto-update-homehost \
->> --auto=yes --run
-
->> in your initrd, having set the hostname correctly first.  It might do
->> exactly what you want.
-
-> I'll give it a try some time tomorrow, since I won't turn on that
-> noisy box today any more; my daughter is already asleep :-)
-
-But then, I could use my own desktop to test it :-)
-
-FWIW, here's the patch for Fedora rawhide's mkinitrd that worked for
-me.  I figured even without --homehost it worked fine, even without
-HOMEHOST set in mdadm.conf.
-
-I hope copying mdadm.conf to initrd won't ever hurt, can you think of
-any case in which it would?
+Thanks,
+NeilBrown
 
 
---=-=-=
-Content-Type: text/x-patch
-Content-Disposition: inline; filename=mkinitrd-mdadm.patch
+### Comments for Changeset
 
---- /sbin/mkinitrd	2006-07-26 15:43:41.000000000 -0300
-+++ /tmp/mkinitrd	2006-08-01 00:06:14.000000000 -0300
-@@ -1240,10 +1240,19 @@
- emitdms
+A recent patch that allowed linear arrays to be reconfigured on-line
+allowed in a bug which results in divide by zero - not all
+mddev->array_size were converted to conf->array_size.
+
+This patch finished the conversion and fixed the bug.
+
+The offending patch was commit 7c7546ccf6463edbeee8d9aac6de7be1cd80d08a.
+
+Thanks to Simon Kirby <sim@netnation.com> for the bug report.
+
+Cc: Simon Kirby <sim@netnation.com>
+Signed-off-by: Neil Brown <neilb@suse.de>
+
+### Diffstat output
+ ./drivers/md/linear.c |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff .prev/drivers/md/linear.c ./drivers/md/linear.c
+--- .prev/drivers/md/linear.c	2006-08-01 11:06:15.000000000 +1000
++++ ./drivers/md/linear.c	2006-08-01 11:06:23.000000000 +1000
+@@ -162,7 +162,7 @@ static linear_conf_t *linear_conf(mddev_
+ 		goto out;
+ 	}
  
- if [ -n "$raiddevices" ]; then
-+  if test -f /sbin/mdadm.static; then
-+    if test -f /etc/mdadm.conf; then
-+      inst /etc/mdadm.conf "$MNTIMAGE/etc/mdadm.conf"
-+    fi
-+    inst /sbin/mdadm.static "$MNTIMAGE/sbin/mdadm"
-+    emit "mkdir /dev/md"
-+    emit "mdadm --quiet --assemble --scan --auto-update-homehost --auto=yes --run"
-+  else
-     for dev in $raiddevices; do
-         cp -a /dev/${dev} $MNTIMAGE/dev
-         emit "raidautorun /dev/${dev}"
-     done
-+  fi
- fi
+-	min_spacing = mddev->array_size;
++	min_spacing = conf->array_size;
+ 	sector_div(min_spacing, PAGE_SIZE/sizeof(struct dev_info *));
  
- if [ -n "$vg_list" ]; then
-
---=-=-=
-
-
--- 
-Alexandre Oliva         http://www.lsd.ic.unicamp.br/~oliva/
-Secretary for FSF Latin America        http://www.fsfla.org/
-Red Hat Compiler Engineer   aoliva@{redhat.com, gcc.gnu.org}
-Free Software Evangelist  oliva@{lsd.ic.unicamp.br, gnu.org}
-
---=-=-=--
+ 	/* min_spacing is the minimum spacing that will fit the hash
+@@ -171,7 +171,7 @@ static linear_conf_t *linear_conf(mddev_
+ 	 * that is larger than min_spacing as use the size of that as
+ 	 * the actual spacing
+ 	 */
+-	conf->hash_spacing = mddev->array_size;
++	conf->hash_spacing = conf->array_size;
+ 	for (i=0; i < cnt-1 ; i++) {
+ 		sector_t sz = 0;
+ 		int j;
+@@ -228,7 +228,7 @@ static linear_conf_t *linear_conf(mddev_
+ 	curr_offset = 0;
+ 	i = 0;
+ 	for (curr_offset = 0;
+-	     curr_offset < mddev->array_size;
++	     curr_offset < conf->array_size;
+ 	     curr_offset += conf->hash_spacing) {
+ 
+ 		while (i < mddev->raid_disks-1 &&
