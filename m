@@ -1,35 +1,77 @@
-From: "Caro" <N.Balina@248.ru>
-Subject: Re[4]: Ave...
-Date: Tue, 01 Aug 2006 18:23:24 +0300
-Message-ID: <006401c6b57e$63b5bf80$1a15000a__43139.3200335608$1154445820$gmane$org@KIMBL>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: [PATCH 005 of 9] md: Replace magic numbers in sb_dirty with well
+ defined bit flags
+Date: Tue, 01 Aug 2006 13:12:52 -0400
+Message-ID: <44CF8B94.8030506@tmr.com>
+References: <20060731172842.24323.patches@notabene> <1060731073218.24482@suse.de> <200607311733.12848.ioe-lkml@rameria.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1251
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-userfs <linux-userfs@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751475AbWHAQ6F@vger.kernel.org>
+In-Reply-To: <200607311733.12848.ioe-lkml@rameria.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Ingo Oeser <ioe-lkml@rameria.de>
+Cc: NeilBrown <neilb@suse.de>, Andrew Morton <akpm@osdl.org>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello=85=09
+Ingo Oeser wrote:
 
-I am a lovely and lonely Lady who is looking for the man who will make =
-me happy and whom I want to feel like in paradise with!
-If you want to be my beautiful Hero who will save me from this loneline=
-ss find me=20
-http://www.dating-foryou.com/passion/
-and wake me up with a warm kiss.
+>Hi Neil,
+>
+>I think the names in this patch don't match the description at all.
+>May I suggest different ones?
+>
+>On Monday, 31. July 2006 09:32, NeilBrown wrote:
+>  
+>
+>>Instead of magic numbers (0,1,2,3) in sb_dirty, we have
+>>some flags instead:
+>>MD_CHANGE_DEVS
+>>   Some device state has changed requiring superblock update
+>>   on all devices.
+>>    
+>>
+>
+>MD_SB_STALE or MD_SB_NEED_UPDATE
+>  
+>
+I think STALE is better, it is unambigous.
 
-Best regards,
-Caro
+>  
+>
+>>MD_CHANGE_CLEAN
+>>   The array has transitions from 'clean' to 'dirty' or back,
+>>   requiring a superblock update on active devices, but possibly
+>>   not on spares
+>>    
+>>
+>
+>Maybe split this into MD_SB_DIRTY and MD_SB_CLEAN ?
+>  
+>
+I don't think the split is beneficial, but I don't care for the name 
+much. Some name like SB_UPDATE_NEEDED or the like might be better.
 
-If you think that you were subscribed by mistake for this mail
-delivery or if your email has been added without your permission,
-please, visit http://dating-foryou.com/passion/ and unsubscribe from ou=
-r mails.
+>  
+>
+>>MD_CHANGE_PENDING
+>>   A superblock update is underway.  
+>>    
+>>
+>
+>MD_SB_PENDING_UPDATE
+>
+>  
+>
+I would have said UPDATE_PENDING, but either is more descriptive than 
+the original.
 
+Neil - the logic in this code is pretty complex, all the help you can 
+give the occasional reader, by using very descriptive names for things, 
+is helpful to the reader and reduces your "question due to 
+misunderstanding" load.
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+bill davidsen <davidsen@tmr.com>
+  CTO TMR Associates, Inc
+  Doing interesting things with small computers since 1979
