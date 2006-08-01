@@ -1,38 +1,55 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH 004 of 9] md: Factor out part of raid10d into a separate
- function.
-Date: Wed, 2 Aug 2006 06:27:21 +1000
-Message-ID: <17615.47401.552607.980993@cse.unsw.edu.au>
-References: <20060731172842.24323.patches@notabene>
-	<1060731073208.24470@suse.de>
-	<44CF8C2D.2010900@tmr.com>
+From: Alexandre Oliva <aoliva@redhat.com>
+Subject: Re: let md auto-detect 128+ raid members, fix potential race condition
+Date: Tue, 01 Aug 2006 17:46:38 -0300
+Message-ID: <oru04wfakx.fsf@free.oliva.athome.lsd.ic.unicamp.br>
+References: <ork65veg2y.fsf@free.oliva.athome.lsd.ic.unicamp.br>
+	<20060730124139.45861b47.akpm@osdl.org>
+	<orac6qerr4.fsf@free.oliva.athome.lsd.ic.unicamp.br>
+	<17613.16090.470524.736889@cse.unsw.edu.au>
+	<ord5blcyg0.fsf@free.oliva.athome.lsd.ic.unicamp.br>
+	<17614.44057.322945.156592@cse.unsw.edu.au>
+	<orpsflrxmb.fsf@free.oliva.athome.lsd.ic.unicamp.br>
+	<orac6p870v.fsf@free.oliva.athome.lsd.ic.unicamp.br>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Bill Davidsen on Tuesday August 1
+In-Reply-To: <orac6p870v.fsf@free.oliva.athome.lsd.ic.unicamp.br> (Alexandre Oliva's message of "Tue, 01 Aug 2006 00:33:04 -0300")
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: Andrew Morton <akpm@osdl.org>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday August 1, davidsen@tmr.com wrote:
-> don't think this is better, NeilBrown wrote:
-> 
-> >raid10d has toooo many nested block, so take the fix_read_error
-> >functionality out into a separate function.
-> >  
-> >
-> 
-> Definite improvement in readability. Will all versions of the compiler 
-> do something appropriate WRT inlining or not?
+On Aug  1, 2006, Alexandre Oliva <aoliva@redhat.com> wrote:
 
-As the separated function is called about once in a blue moon, it
-hardly matters.  I'd probably rather it wasn't inlined so as to be
-sure it doesn't clutter the L-1 cache when it isn't needed, but that's
-the sort of thing I really want to leave to the compiler.
+>> I'll give it a try some time tomorrow, since I won't turn on that
+>> noisy box today any more; my daughter is already asleep :-)
 
-Maybe it would be good to stick an 'unlikely' or 'likely' in raid10d
-to tell the compiler how likely a read error is...
+> But then, I could use my own desktop to test it :-)
 
-NeilBrown
+But then, I wouldn't be testing quite the same scenario.
+
+My boot-required RAID devices were all raid 1, whereas the larger,
+separate volume group was all raid 6.
+
+Using the mkinitrd patch that I posted before, the result was that
+mdadm did try to bring up all raid devices but, because the raid456
+module was not loaded in initrd, the raid devices were left inactive.
+
+Then, when rc.sysinit tried to bring them up with mdadm -A -s, that
+did nothing to the inactive devices, since they didn't have to be
+assembled.  Adding --run didn't help.
+
+My current work-around is to add raid456 to initrd, but that's ugly.
+Scanning /proc/mdstat for inactive devices in rc.sysinit and doing
+mdadm --run on them is feasible, but it looks ugly and error-prone.
+
+Would it be reasonable to change mdadm so as to, erhm, disassemble ;-)
+the raid devices it tried to bring up but that, for whatever reason,
+it couldn't activate?  (say, missing module, not enough members,
+whatever)
+
+-- 
+Alexandre Oliva         http://www.lsd.ic.unicamp.br/~oliva/
+Secretary for FSF Latin America        http://www.fsfla.org/
+Red Hat Compiler Engineer   aoliva@{redhat.com, gcc.gnu.org}
+Free Software Evangelist  oliva@{lsd.ic.unicamp.br, gnu.org}
