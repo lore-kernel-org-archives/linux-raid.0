@@ -1,48 +1,49 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: let md auto-detect 128+ raid members, fix potential race condition
-Date: Wed, 02 Aug 2006 12:47:20 -0400
-Message-ID: <44D0D718.5050505@tmr.com>
-References: <ork65veg2y.fsf@free.oliva.athome.lsd.ic.unicamp.br>	<20060730124139.45861b47.akpm@osdl.org>	<orac6qerr4.fsf@free.oliva.athome.lsd.ic.unicamp.br>	<17613.16090.470524.736889@cse.unsw.edu.au> <44CF9221.90902@tmr.com> <orlkq8f8ge.fsf@free.oliva.athome.lsd.ic.unicamp.br>
+From: Dan Graham <graham@molbio.uoregon.edu>
+Subject: Converting Ext3 to Ext3 under RAID 1
+Date: Wed, 2 Aug 2006 12:15:42 -0700 (PDT)
+Message-ID: <Pine.LNX.4.61.0608021205110.626@molbio.uoregon.edu>
+References: <200607152056.55090.pwaldo@waldoware.com> <200607230753.47853.pwaldo@waldoware.com>
+ <17603.25777.274507.385333@cse.unsw.edu.au> <200607230832.48807.pwaldo@waldoware.com>
+ <17605.22207.56022.972200@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <orlkq8f8ge.fsf@free.oliva.athome.lsd.ic.unicamp.br>
+In-Reply-To: <17605.22207.56022.972200@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Alexandre Oliva <aoliva@redhat.com>
-Cc: Neil Brown <neilb@suse.de>, Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Alexandre Oliva wrote:
-> On Aug  1, 2006, Bill Davidsen <davidsen@tmr.com> wrote:
-> 
->> I rarely think you are totally wrong about anything RAID, but I do
->> believe you have missed the point of autodetect. It is intended to
->> work as it does now, building the array without depending on some user
->> level functionality.
-> 
-> Well, it clearly depends on at least some user level functionality
-> (the ioctl that triggers autodetect).  Going from that to a
-> full-fledged mdadm doesn't sound like such a big deal to me.
-> 
->> I don't personally see the value of autodetect for putting together
->> the huge number of drives people configure. I see this as a way to
->> improve boot reliability, if someone needs 64 drives for root and
->> boot, they need to read a few essays on filesystem
->> configuration. However, I'm aware that there are some really bizarre
->> special cases out there.
-> 
-> There's LVM.  If you have to keep root out of the VG just because
-> people say so, you lose lots of benefits from LVM, such as being able
-> to grow root with the system running, take snapshots of root, etc.
-> 
-But it's MY system. I don't have to anything. More to the point, growing 
-root while the system is running is done a lot less than booting. In 
-general the root f/s has very little in it, and that's a good thing.
+Hello;
+   I have an existing, active ext3 filesystem which I would like to convert to
+a RAID 1 ext3 filesystem with minimal down time.  After casting about the web 
+and experimenting some on a test system, I believe that I can accomplish this 
+in the following manner.
+
+   - Dismount the filesystem.
+   - Shrink the filesystem to leave room for the RAID superblock at the end
+     while leaving the partition size untouched (shrinking by 16 blocks seems to
+     work )
+   - Create a degraded array with only the partition carrying the shrunk ext3
+     system
+   - start the array and mount the array.
+   - hot add the mirroring partitions.
+
+The questions I have for those who know Linux-Raid better than I.
+
+    Is this scheme even half-way sane?
+    Is 16 blocks a large enough area?
+
+
+Thanks in advance for any and all feed-back.
 
 -- 
-Bill Davidsen <davidsen@tmr.com>
-   Obscure bug of 2004: BASH BUFFER OVERFLOW - if bash is being run by a
-normal user and is setuid root, with the "vi" line edit mode selected,
-and the character set is "big5," an off-by-one errors occurs during
-wildcard (glob) expansion.
+Daniel Graham
+graham@molbio.uoregon.edu
+
+541-346-5079 (voice)
+541-346-4854 (FAX)
+
+Institute of Molecular Biology
+1229 University of Oregon
+Eugene, OR 97403-1229
+
