@@ -1,63 +1,47 @@
-From: Alexandre Oliva <aoliva@redhat.com>
+From: Luca Berra <bluca@comedia.it>
 Subject: Re: let md auto-detect 128+ raid members, fix potential race condition
-Date: Tue, 01 Aug 2006 18:32:33 -0300
-Message-ID: <orlkq8f8ge.fsf@free.oliva.athome.lsd.ic.unicamp.br>
-References: <ork65veg2y.fsf@free.oliva.athome.lsd.ic.unicamp.br>
-	<20060730124139.45861b47.akpm@osdl.org>
-	<orac6qerr4.fsf@free.oliva.athome.lsd.ic.unicamp.br>
-	<17613.16090.470524.736889@cse.unsw.edu.au> <44CF9221.90902@tmr.com>
+Date: Wed, 2 Aug 2006 08:37:21 +0200
+Message-ID: <20060802063721.GC28815@percy.comedia.it>
+References: <ork65veg2y.fsf@free.oliva.athome.lsd.ic.unicamp.br> <20060730124139.45861b47.akpm@osdl.org> <orac6qerr4.fsf@free.oliva.athome.lsd.ic.unicamp.br> <17613.16090.470524.736889@cse.unsw.edu.au> <ord5blcyg0.fsf@free.oliva.athome.lsd.ic.unicamp.br> <17614.44057.322945.156592@cse.unsw.edu.au> <orpsflrxmb.fsf@free.oliva.athome.lsd.ic.unicamp.br> <orac6p870v.fsf@free.oliva.athome.lsd.ic.unicamp.br> <oru04wfakx.fsf@free.oliva.athome.lsd.ic.unicamp.br>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <44CF9221.90902@tmr.com> (Bill Davidsen's message of "Tue, 01 Aug 2006 13:40:49 -0400")
+Content-Disposition: inline
+In-Reply-To: <oru04wfakx.fsf@free.oliva.athome.lsd.ic.unicamp.br>
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
+To: Alexandre Oliva <aoliva@redhat.com>
 Cc: Neil Brown <neilb@suse.de>, Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Aug  1, 2006, Bill Davidsen <davidsen@tmr.com> wrote:
+On Tue, Aug 01, 2006 at 05:46:38PM -0300, Alexandre Oliva wrote:
+>Using the mkinitrd patch that I posted before, the result was that
+>mdadm did try to bring up all raid devices but, because the raid456
+>module was not loaded in initrd, the raid devices were left inactive.
 
-> I rarely think you are totally wrong about anything RAID, but I do
-> believe you have missed the point of autodetect. It is intended to
-> work as it does now, building the array without depending on some user
-> level functionality.
+probably your initrd is broken, it should not have even tried to bring
+up an md array that was not needed to mount root.
 
-Well, it clearly depends on at least some user level functionality
-(the ioctl that triggers autodetect).  Going from that to a
-full-fledged mdadm doesn't sound like such a big deal to me.
+>Then, when rc.sysinit tried to bring them up with mdadm -A -s, that
+>did nothing to the inactive devices, since they didn't have to be
+>assembled.  Adding --run didn't help.
+>
+>My current work-around is to add raid456 to initrd, but that's ugly.
+>Scanning /proc/mdstat for inactive devices in rc.sysinit and doing
+>mdadm --run on them is feasible, but it looks ugly and error-prone.
+>
+>Would it be reasonable to change mdadm so as to, erhm, disassemble ;-)
+>the raid devices it tried to bring up but that, for whatever reason,
+>it couldn't activate?  (say, missing module, not enough members,
+>whatever)
 
-> I don't personally see the value of autodetect for putting together
-> the huge number of drives people configure. I see this as a way to
-> improve boot reliability, if someone needs 64 drives for root and
-> boot, they need to read a few essays on filesystem
-> configuration. However, I'm aware that there are some really bizarre
-> special cases out there.
+this would make sense if it were an option, patches welcome :)
 
-There's LVM.  If you have to keep root out of the VG just because
-people say so, you lose lots of benefits from LVM, such as being able
-to grow root with the system running, take snapshots of root, etc.
-
-Sure enough the LVM subsystem could make things better for one to not
-need all of the PVs in the root-containing VG in order to be able to
-mount root read-write, or at all, but if you think about it, if initrd
-is set up such that you only bring up the devices that hold the actual
-root device within the VG and then you change that, say by taking a
-snapshot of root, moving it around, growing it, etc, you'd be better
-off if you could still boot.  So you do want all of the VG members to
-be around, just in case.
-
-This is trivially-accomplished for regular disks whose drivers are
-loaded by initrd, but for raid devices, you need to tentatively bring
-up every raid member you can, just in case some piece of root is
-there, otherwise you may end up unable to boot.
-
-Yes, this is an argument against root on LVM, but there are arguments
-*for* root on LVM as well, and there's no reason to not support both
-behaviors equally well and let people figure out what works best for
-them.
+L.
 
 -- 
-Alexandre Oliva         http://www.lsd.ic.unicamp.br/~oliva/
-Secretary for FSF Latin America        http://www.fsfla.org/
-Red Hat Compiler Engineer   aoliva@{redhat.com, gcc.gnu.org}
-Free Software Evangelist  oliva@{lsd.ic.unicamp.br, gnu.org}
+Luca Berra -- bluca@comedia.it
+        Communication Media & Services S.r.l.
+ /"\
+ \ /     ASCII RIBBON CAMPAIGN
+  X        AGAINST HTML MAIL
+ / \
