@@ -1,51 +1,39 @@
-From: Neil Brown <neilb@suse.de>
+From: Paul Clements <paul.clements@steeleye.com>
 Subject: Re: [PATCH] md: new bitmap sysfs interface
-Date: Thu, 3 Aug 2006 11:42:26 +1000
-Message-ID: <17617.21634.568180.436250@cse.unsw.edu.au>
-References: <44C5BA6F.3010404@steeleye.com>
+Date: Wed, 02 Aug 2006 21:53:19 -0400
+Message-ID: <44D1570F.4020406@steeleye.com>
+References: <44C5BA6F.3010404@steeleye.com> <17617.21634.568180.436250@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Paul Clements on Tuesday July 25
+In-Reply-To: <17617.21634.568180.436250@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Paul Clements <paul.clements@steeleye.com>
+To: Neil Brown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday July 25, paul.clements@steeleye.com wrote:
-> This patch (tested against 2.6.18-rc1-mm1) adds a new sysfs interface 
-> that allows the bitmap of an array to be dirtied. The interface is 
-> write-only, and is used as follows:
+Neil Brown wrote:
+
+> Is 'bitmap' the best name for the sysfs file?
+> It seems a bit generic to me.
 > 
-> echo "1000" > /sys/block/md2/md/bitmap
+>   write-bits-here-to-dirty-them-in-the-bitmap
 > 
-> (dirty the bit for chunk 1000 [offset 0] in the in-memory and on-disk 
-> bitmaps of array md2)
+> is probably (no, definitely) too verbose.
 > 
-> echo "1000-2000" > /sys/block/md1/md/bitmap
-> 
-> (dirty the bits for chunks 1000-2000 in md1's bitmap)
-> 
+>  dirty-in-bitmap
+> maybe?
+>  bitmap-set-bits
 
-Thanks.  Only one remaining issue (which I didn't think of last time :-)
+> Any better suggestions?
 
-Is 'bitmap' the best name for the sysfs file?
-It seems a bit generic to me.
-
-  write-bits-here-to-dirty-them-in-the-bitmap
-
-is probably (no, definitely) too verbose.
-
- dirty-in-bitmap
-maybe?
- bitmap-set-bits
-
-None of these seem completely satisfying.
-I like to start with the most important word - which is 'bitmap' in
-this case, but that isn't completely essential.
-
-Any better suggestions?
+I like "bitmap-set-bits" or "bitmap-dirty" maybe. I had thought about 
+this, but never changed the name. I agree, something more than just 
+"bitmap" is probably appropriate, so that if we ever add a generic 
+bitmap output or input (to clear bits, maybe) then we still have 
+"bitmap" available, and also because (as you said) "bitmap" is a little 
+too generic for what this interface really does.
 
 Thanks,
-NeilBrown
+Paul
