@@ -1,123 +1,51 @@
-From: Doug Ledford <dledford@redhat.com>
-Subject: Re: [PATCH 005 of 9] md: Replace magic numbers in sb_dirty with
-	well defined bit flags
-Date: Wed, 02 Aug 2006 18:52:23 -0400
-Message-ID: <1154559143.2725.418.camel@fc5.xsintricity.com>
-References: <20060731172842.24323.patches@notabene>
-	 <1060731073218.24482@suse.de> <200607311733.12848.ioe-lkml@rameria.de>
-	 <44CF8B94.8030506@tmr.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: [PATCH] md: new bitmap sysfs interface
+Date: Thu, 3 Aug 2006 11:42:26 +1000
+Message-ID: <17617.21634.568180.436250@cse.unsw.edu.au>
+References: <44C5BA6F.3010404@steeleye.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-QSMC2eoEJd2hjdiC+0rK"
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <44CF8B94.8030506@tmr.com>
+In-Reply-To: message from Paul Clements on Tuesday July 25
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: Ingo Oeser <ioe-lkml@rameria.de>, NeilBrown <neilb@suse.de>, Andrew Morton <akpm@osdl.org>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Paul Clements <paul.clements@steeleye.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Tuesday July 25, paul.clements@steeleye.com wrote:
+> This patch (tested against 2.6.18-rc1-mm1) adds a new sysfs interface 
+> that allows the bitmap of an array to be dirtied. The interface is 
+> write-only, and is used as follows:
+> 
+> echo "1000" > /sys/block/md2/md/bitmap
+> 
+> (dirty the bit for chunk 1000 [offset 0] in the in-memory and on-disk 
+> bitmaps of array md2)
+> 
+> echo "1000-2000" > /sys/block/md1/md/bitmap
+> 
+> (dirty the bits for chunks 1000-2000 in md1's bitmap)
+> 
 
---=-QSMC2eoEJd2hjdiC+0rK
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Thanks.  Only one remaining issue (which I didn't think of last time :-)
 
-On Tue, 2006-08-01 at 13:12 -0400, Bill Davidsen wrote:
-> Ingo Oeser wrote:
->=20
-> >Hi Neil,
-> >
-> >I think the names in this patch don't match the description at all.
-> >May I suggest different ones?
-> >
-> >On Monday, 31. July 2006 09:32, NeilBrown wrote:
-> > =20
-> >
-> >>Instead of magic numbers (0,1,2,3) in sb_dirty, we have
-> >>some flags instead:
-> >>MD_CHANGE_DEVS
-> >>   Some device state has changed requiring superblock update
-> >>   on all devices.
-> >>   =20
-> >>
-> >
-> >MD_SB_STALE or MD_SB_NEED_UPDATE
-> > =20
-> >
-> I think STALE is better, it is unambigous.
-> > =20
-> >
-> >>MD_CHANGE_CLEAN
-> >>   The array has transitions from 'clean' to 'dirty' or back,
-> >>   requiring a superblock update on active devices, but possibly
-> >>   not on spares
-> >>   =20
-> >>
-> >
-> >Maybe split this into MD_SB_DIRTY and MD_SB_CLEAN ?
-> > =20
-> >
-> I don't think the split is beneficial, but I don't care for the name=20
-> much. Some name like SB_UPDATE_NEEDED or the like might be better.
+Is 'bitmap' the best name for the sysfs file?
+It seems a bit generic to me.
 
-Yeah, no split.  The absence of a dirty flag denotes clean.
+  write-bits-here-to-dirty-them-in-the-bitmap
 
-> > =20
-> >
-> >>MD_CHANGE_PENDING
-> >>   A superblock update is underway. =20
-> >>   =20
-> >>
-> >
-> >MD_SB_PENDING_UPDATE
-> >
-> > =20
-> >
-> I would have said UPDATE_PENDING, but either is more descriptive than=20
-> the original.
->=20
-> Neil - the logic in this code is pretty complex, all the help you can=20
-> give the occasional reader, by using very descriptive names for things,=20
-> is helpful to the reader and reduces your "question due to=20
-> misunderstanding" load.
+is probably (no, definitely) too verbose.
 
-Well, if you don't mind the length you could do:
+ dirty-in-bitmap
+maybe?
+ bitmap-set-bits
 
-MD_SB_WRITEOUT_ALL	/* we need to flush all superblocks due
-                         * to a device change. */
-MD_SB_WRITEOUT_SOME	/* we need to flush the active devices
-                         * superblocks due to normal write operations */
-MD_SB_WRITEOUT_PENDING	/* the flush is underway */
+None of these seem completely satisfying.
+I like to start with the most important word - which is 'bitmap' in
+this case, but that isn't completely essential.
 
-In trying to come up with descriptive names for this, it really points
-out how having both the "I need something" and "I'm handling something"
-flags in the same name space sucks.
+Any better suggestions?
 
-Anyway, I don't think Neil's original names were that bad, just
-obviously the names describe the condition that precipitated the state,
-not the current state, implying that a reader of that code should
-probably be thinking about what caused the state more than the state
-when determining the appropriate course of action.  It may be preferable
-to leave them that way to push readers towards that sort of analysis,
-whatever Neil thinks is best on that.
-
---=20
-Doug Ledford <dledford@redhat.com>
-              GPG KeyID: CFBFF194
-              http://people.redhat.com/dledford
-
-Infiniband specific RPMs available at
-              http://people.redhat.com/dledford/Infiniband
-
---=-QSMC2eoEJd2hjdiC+0rK
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.4 (GNU/Linux)
-
-iD8DBQBE0Syng6WylM+/8ZQRAuiLAJ4zjwAhgTlgdkJgJrVenJxHKGlhxQCaAx5G
-6SPEWMbnqP/ZpsWtaASvWdw=
-=5GYo
------END PGP SIGNATURE-----
-
---=-QSMC2eoEJd2hjdiC+0rK--
-
+Thanks,
+NeilBrown
