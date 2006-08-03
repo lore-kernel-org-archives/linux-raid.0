@@ -1,43 +1,60 @@
-From: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
-Subject: Re: [PATCH] md: new bitmap sysfs interface
-Date: Thu, 3 Aug 2006 08:39:35 -0700 (PDT)
-Message-ID: <Pine.LNX.4.64.0608030838060.2068@filesrv1.baby-dragons.com>
-References: <44C5BA6F.3010404@steeleye.com> <17617.21634.568180.436250@cse.unsw.edu.au>
- <44D1A4AC.3090302@dgreaves.com>
+From: Paul Clements <paul.clements@steeleye.com>
+Subject: [BUG] raid1: barrier retry does not work correctly with write-behind
+Date: Thu, 03 Aug 2006 11:44:06 -0400
+Message-ID: <44D219C6.3090505@steeleye.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <44D1A4AC.3090302@dgreaves.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Greaves <david@dgreaves.com>
-Cc: Neil Brown <neilb@suse.de>, Paul Clements <paul.clements@steeleye.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org, neilb@suse.de
 List-Id: linux-raid.ids
 
- 	Hello All ,
+Description:
+-----------
+When a filesystem sends a barrier write down to raid1, raid1 tries to 
+pass the write down to its component devices. However, if one or more of 
+the devices return EOPNOTSUPP, it means that they do not support 
+barriers, and raid1 must strip the barrier out of the write and retry 
+it. Now, this all works fine in most cases. However, in a raid1 mirror 
+with write-behind enabled, we end up getting a corrupt bio sent down for 
+the write retry. The bug is in the following code (raid1.c, line 1409):
 
-On Thu, 3 Aug 2006, David Greaves wrote:
-> Neil Brown wrote:
->>   write-bits-here-to-dirty-them-in-the-bitmap
->>
->> is probably (no, definitely) too verbose.
->> Any better suggestions?
->
-> It's not actually a bitmap is it?
-> It takes a number or range and *operates* on a bitmap.
->
-> so:
-> dirty-chunk-in-bitmap
->
-> or maybe:
-> dirty-bitmap-chunk
->
-> David
+} else if (test_bit(R1BIO_BarrierRetry, &r1_bio->state)) {
+      /* some requests in the r1bio were BIO_RW_BARRIER
+       * requests which failed with -EOPNOTSUPP.  Hohumm..
+       * Better resubmit without the barrier.
+       * We know which devices to resubmit for, because
+       * all others have had their bios[] entry cleared.
+       * We already have a nr_pending reference on these rdevs.
+       */
+      int i;
+      clear_bit(R1BIO_BarrierRetry, &r1_bio->state);
+      clear_bit(R1BIO_Barrier, &r1_bio->state);
+      for (i=0; i < conf->raid_disks; i++)
+          if (r1_bio->bios[i])
+              atomic_inc(&r1_bio->remaining);
+      for (i=0; i < conf->raid_disks; i++)
+          if (r1_bio->bios[i]) {
+              struct bio_vec *bvec;
+              int j;
 
- 	A thought , maybe  bitmap-dirty-this-chunk   ?
+              bio = bio_clone(r1_bio->master_bio, GFP_NOIO);
 
--- 
-+----------------------------------------------------------------------+
-| James   W.   Laferriere |   System    Techniques   | Give me VMS     |
-| Network        Engineer | 3600 14th Ave SE #20-103 |  Give me Linux  |
-| babydr@baby-dragons.com |  Olympia ,  WA.   98501  |   only  on  AXP |
-+----------------------------------------------------------------------+
+
+The r1_bio->master_bio may already have had end_io() called and been 
+freed by the time we bio_clone() it. This results in an invalid bio 
+being sent down to one (or more) of the raid1 components. In my testing, 
+the original 4K barrier write ended up being a zero length write when it 
+was retried.
+
+Solution:
+--------
+Can we just bio_alloc instead of cloning? I think we have all the sector 
+and offset data in the r1_bio. We could then bio_add_page() the pages 
+into the new bio, possibly? Or could we just use the original bio that 
+failed, being careful to clean up fields (I think we used to do this but 
+Neil changed the behavior because of some problems).
+
+--
+Paul
