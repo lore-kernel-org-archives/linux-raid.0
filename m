@@ -1,20 +1,22 @@
-From: "Lee" <centricballetic@popstar.com>
-Subject: New and hot Now you have chance to do it Revel in
-Date: Fri, 4 Aug 2006 11:47:54 +0100
-Message-ID: <83231274926359.894D513BFE@DG73IUG>
+From: "Nicole" <asconferrable@hot-shot.com>
+Subject: The newest Every man wishes it.  Revel in
+Date: Fri, 4 Aug 2006 12:54:04 +0200
+Message-ID: <50870931214465.59B9064B7E@Z3UQ>
 Mime-Version: 1.0
 Content-Type: text/plain;
         charset="Windows-1252"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: linux-scsi-digest@vger.kernel.org
 List-Id: linux-raid.ids
 
-Good day dear Sir,
-You gape for shooting like you had seen in those films… 
-Tonight you’ll prove your volume
+Good day to you bro!
+Do you wish to become multi-orgasmic? 
+
+This successful product is created especially for you, guys
  Try this volume enhancing formula
- Come on in here: http://helnall.com/gall/gsm/ 
- We thank you for being our customer!
+
+ Just take a look: http://helnall.com/gall/gsm/ 
+ The prices are really low and the quality it truly very high!
 
