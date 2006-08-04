@@ -1,40 +1,93 @@
-From: Paul Clements <paul.clements@steeleye.com>
+From: "Francois Barre" <francois.barre@gmail.com>
 Subject: Re: Raid5 bitmap - Bug in bitmap_startwrite()
-Date: Fri, 04 Aug 2006 10:20:49 -0400
-Message-ID: <44D357C1.4090006@steeleye.com>
+Date: Fri, 4 Aug 2006 18:46:18 +0200
+Message-ID: <fd8d0180608040946j38771bb1raabaadbc833a4e3b@mail.gmail.com>
 References: <fd8d0180608040205i5db2453flaf797ae506f823a6@mail.gmail.com>
+	 <44D357C1.4090006@steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+	boundary="----=_Part_49535_31006409.1154709978202"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <fd8d0180608040205i5db2453flaf797ae506f823a6@mail.gmail.com>
+In-Reply-To: <44D357C1.4090006@steeleye.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Francois Barre <francois.barre@gmail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid <linux-raid@vger.kernel.org>
+Cc: Paul Clements <paul.clements@steeleye.com>
 List-Id: linux-raid.ids
 
-Francois Barre wrote:
+------=_Part_49535_31006409.1154709978202
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-> Final question, I do not fully understand the bitmap_get_counter()
-> function, especially comparing the 'hijacked' version (lines
-> 1126-11127) :
->  return &((bitmap_counter_t *) &bitmap->bp[page].map)[hi];
-> 
-> and the 'normal' version (lines 1131-1132)
->   return (bitmap_counter_t *) &(bitmap->bp[page].map[pageoff]);
-> 
-> The hijacked version uses a 16-bit bitmap_counter_t*
-> 'bitmap->bp[page].map' table with the hi index, whereas the normal
-> uses a 8-bit char* 'bitmap->bp[page].map' table with the pageoff
-> index.
-> 
-> This may be the 'hijacked' logic, but I'm a little puzzled here.
+As promised, here is the dmesg of the Oops caused by the BUG_ON() on line 1166.
+So it seems that (*bcm & COUNTER_MAX) == COUNTER_MAX, so the system is
+issuing many more bitmap_startwrite() than bitmap_endwrite(). I'll try
+and compile with more verbous options and see what happens.
 
-Yes. When we fail to allocate a page for the map (which should be rare), 
-we, instead of failing the whole operation, just use the pointer to page 
-, so we're basically using 4 bytes (the page pointer itself) instead of 
-4K (the page) for that part of the bitmap. So each bit represents more 
-data (1000x more in the case of x86).
+> > This may be the 'hijacked' logic, but I'm a little puzzled here.
+>
+> Yes. When we fail to allocate a page for the map (which should be rare),
+> we, instead of failing the whole operation, just use the pointer to page
+> , so we're basically using 4 bytes (the page pointer itself) instead of
+> 4K (the page) for that part of the bitmap. So each bit represents more
+> data (1000x more in the case of x86).
 
---
-Paul
+Thanks, I got it when I re-read the code and understood the
+bitmap_checkpage() as well. Now it seems pretty clear.
+Anyway it looks pretty unlikely for my system to run OOM and to hijack
+page in bitmap_checkpage()...
+
+Regards,
+
+------=_Part_49535_31006409.1154709978202
+Content-Type: application/octet-stream; name=dmesg_bitmap_trace_tail
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_eqgs8lyf
+Content-Disposition: attachment; filename="dmesg_bitmap_trace_tail"
+
+UkFJRDUgY29uZiBwcmludG91dDoKIC0tLSByZDo0IHdkOjQgZmQ6MAogZGlzayAwLCBvOjEsIGRl
+djpzZGExCiBkaXNrIDEsIG86MSwgZGV2OnNkYzEKIGRpc2sgMiwgbzoxLCBkZXY6c2RiMQogZGlz
+ayAzLCBvOjEsIGRldjpzZGQxCm1kMDogYml0bWFwIGluaXRpYWxpemVkIGZyb20gZGlzazogcmVh
+ZCA4LzggcGFnZXMsIHNldCAyNDQ5NTkgYml0cywgc3RhdHVzOiAwCmNyZWF0ZWQgYml0bWFwICgx
+MjAgcGFnZXMpIGZvciBkZXZpY2UgbWQwCm1kOiBzeW5jaW5nIFJBSUQgYXJyYXkgbWQwCm1kOiBt
+aW5pbXVtIF9ndWFyYW50ZWVkXyByZWNvbnN0cnVjdGlvbiBzcGVlZDogMTAwMCBLQi9zZWMvZGlz
+Yy4KbWQ6IHVzaW5nIG1heGltdW0gYXZhaWxhYmxlIGlkbGUgSU8gYmFuZHdpZHRoIChidXQgbm90
+IG1vcmUgdGhhbiAyMDAwMDAgS0Ivc2VjKSBmb3IgcmVjb25zdHJ1Y3Rpb24uCm1kOiB1c2luZyAx
+MjhrIHdpbmRvdywgb3ZlciBhIHRvdGFsIG9mIDk3OTg0MCBibG9ja3MuCmtqb3VybmFsZCBzdGFy
+dGluZy4gIENvbW1pdCBpbnRlcnZhbCA1IHNlY29uZHMKa2VybmVsIEJVRyBpbiBiaXRtYXBfc3Rh
+cnR3cml0ZSBhdCBkcml2ZXJzL21kL2JpdG1hcC5jOjExNjYhCk9vcHM6IEV4Y2VwdGlvbiBpbiBr
+ZXJuZWwgbW9kZSwgc2lnOiA1IFsjMV0KCk1vZHVsZXMgbGlua2VkIGluOiByYWlkNDU2IHhvciBy
+YWRlb24gZHJtIGFncGdhcnQgbWRfbW9kIHNuZF9wY20gc25kX3RpbWVyIHNuZCBzb3VuZGNvcmUg
+c25kX3BhZ2VfYWxsb2Mgc2JwMiBhcmM0IHJhdGVfY29udHJvbCBiY200M3h4X2Q4MDIxMSBldGgx
+Mzk0IGZpcm13YXJlX2NsYXNzIDgwMjExIG9oY2kxMzk0IGllZWUxMzk0IGVoY2lfaGNkCk5JUDog
+RTI1NkMxNDAgTFI6IEUyNTZCRkYwIENUUjogQzAwMTAzMjQKUkVHUzogZGM1ZDVhMzAgVFJBUDog
+MDcwMCAgIE5vdCB0YWludGVkICAoMi42LjE4LXJjMy1nMTUwN2YwOTgpCk1TUjogMDAwMjEwMzIg
+PE1FLElSLERSPiAgQ1I6IDg0MDA4NDg0ICBYRVI6IDAwMDAwMDAwClRBU0sgPSBkYzZjY2Q1MFs2
+NjY0XSAnbW91bnQnIFRIUkVBRDogZGM1ZDQwMDAKR1BSMDA6IDAwMDAwMDAxIERDNUQ1QUUwIERD
+NkNDRDUwIERCRUZGMDAwIDAwMDAwMDAwIEZGRkZGRkZCIDAwMDAwMDAwIDA4MDAwMDAwIApHUFIw
+ODogMDAwMDAwMDEgMDAwMDAwMDAgMDAwMDAwMDAgQzAwMTAzMjQgMDAwMDAwMDAgMTAwMkM5RjAg
+MjgwMDQ0MjIgMDAwMDAwMDAgCkdQUjE2OiAxMDExMTFFOCAxMDBEMDAwMCAwMDAwMDAwMCAwMDAw
+MDAwMSAwMDAwMDAwMSAwMDAwMDAwMCAwMDAwMDAwOCAwMDAwMDAwMCAKR1BSMjQ6IEMwOTE1RTAw
+IERDNjdBNTgwIDAwMDAwMDAxIDAwMDAwMDA4IERCRUZGMDAwIDAwMDAwMDAwIDAwMDAwMDAwIENG
+RTdGQzYwIApOSVAgW0UyNTZDMTQwXSBiaXRtYXBfc3RhcnR3cml0ZSsweDFiOC8weDIxNCBbbWRf
+bW9kXQpMUiBbRTI1NkJGRjBdIGJpdG1hcF9zdGFydHdyaXRlKzB4NjgvMHgyMTQgW21kX21vZF0K
+Q2FsbCBUcmFjZToKW0RDNUQ1QUUwXSBbRTI1NkJGRjBdIGJpdG1hcF9zdGFydHdyaXRlKzB4Njgv
+MHgyMTQgW21kX21vZF0gKHVucmVsaWFibGUpCltEQzVENUIxMF0gW0UyNzQ4QkMwXSBtYWtlX3Jl
+cXVlc3QrMHg0NTAvMHg2ZmMgW3JhaWQ0NTZdCltEQzVENUI3MF0gW0MwMTAyNEUwXSBnZW5lcmlj
+X21ha2VfcmVxdWVzdCsweDIxOC8weDIzNApbREM1RDVCQjBdIFtDMDEwMzhFQ10gc3VibWl0X2Jp
+bysweGU0LzB4ZjgKW0RDNUQ1QkYwXSBbQzAwNkI1NzRdIHN1Ym1pdF9iaCsweDE2MC8weDE5OApb
+REM1RDVDMTBdIFtDMDA2QjYzQ10gc3luY19kaXJ0eV9idWZmZXIrMHg5MC8weDExYwpbREM1RDVD
+MjBdIFtDMDBCMkI5MF0gZXh0M19jb21taXRfc3VwZXIrMHg5OC8weGFjCltEQzVENUM0MF0gW0Mw
+MEIyRTZDXSBleHQzX3NldHVwX3N1cGVyKzB4MTk4LzB4MjMwCltEQzVENUM4MF0gW0MwMEI0QzM4
+XSBleHQzX2ZpbGxfc3VwZXIrMHgxMjM0LzB4MTRmYwpbREM1RDVDRjBdIFtDMDA3MDc3NF0gZ2V0
+X3NiX2JkZXYrMHgxMDAvMHgxNmMKW0RDNUQ1RDQwXSBbQzAwQjIyQkNdIGV4dDNfZ2V0X3NiKzB4
+MWMvMHgyYwpbREM1RDVENTBdIFtDMDA2RkM4NF0gdmZzX2tlcm5fbW91bnQrMHg1Yy8weGE0CltE
+QzVENUQ3MF0gW0MwMDZGRDE4XSBkb19rZXJuX21vdW50KzB4M2MvMHg2MApbREM1RDVEOTBdIFtD
+MDA4NkU3Q10gZG9fbW91bnQrMHg1NTgvMHg1YzAKW0RDNUQ1RjEwXSBbQzAwODZGNzRdIHN5c19t
+b3VudCsweDkwLzB4ZTQKW0RDNUQ1RjQwXSBbQzAwMEY0RENdIHJldF9mcm9tX3N5c2NhbGwrMHgw
+LzB4MzgKLS0tIEV4Y2VwdGlvbjogYzAxIGF0IDB4ZmYyMTczOAogICAgTFIgPSAweDEwMDAzN2M4
+Ckluc3RydWN0aW9uIGR1bXA6CjM4ZTAwMDAxIDRiZmZlZDAxIDgxM2YwMDBjIDgwNjkwMWIwIDQ4
+MDAxYjUxIDM4MDAwMDAyIGIwMWMwMDAwIGEwMWMwMDAwIAo1NDAwMDRiZSA2ODAwM2ZmZiAyMTIw
+MDAwMCA3YzA5MDExNCA8MGYwMDAwMDA+IGExM2MwMDAwIDM5MjkwMDAxIGIxM2MwMDAwIAogCg==
+
+------=_Part_49535_31006409.1154709978202--
