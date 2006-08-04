@@ -1,37 +1,60 @@
-From: Paul Clements <paul.clements@steeleye.com>
-Subject: Re: [BUG] raid1: barrier retry does not work correctly with write-behind
-Date: Thu, 03 Aug 2006 23:35:33 -0400
-Message-ID: <44D2C085.7010109@steeleye.com>
-References: <44D219C6.3090505@steeleye.com> <17618.42801.411938.763485@cse.unsw.edu.au> <44D2BA5A.3020809@steeleye.com>
+From: "Francois Barre" <francois.barre@gmail.com>
+Subject: Raid5 bitmap - Bug in bitmap_startwrite()
+Date: Fri, 4 Aug 2006 11:05:15 +0200
+Message-ID: <fd8d0180608040205i5db2453flaf797ae506f823a6@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <44D2BA5A.3020809@steeleye.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: Neil Brown <neilb@suse.de>
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Paul Clements wrote:
+Hi all,
 
-> I think bio_clone gives us that already. I may have missed something but 
-> I think we have everything we need:
-> 
-> When a bio comes into raid1's make_request we bio_clone for each drive 
-> and attach those to r1_bio->bios. We also have behind_pages, which 
-> contains the pages. I think maybe instead of cloning r1_bio->master_bio, 
-> we can just clone r1_bio->bios[i]. Does that make sense?
+I lost connection to the testing machine, so I'll have to recall all
+the details. I may have contact with it again by tonight, so I may be
+able to post exact problems.
 
-Never mind, of course that won't work...it's basically the same as using 
-the failed bio.
+The setup : ppc/g4 (mac mini) running 4 firewire-based raid5 disks.
+Kernel 2.6.18-rc3 from linux/kernel/git/linville/wireless-dev.git
 
-Yes, so we need a copy of the bvec too. Would it be easier, or less 
-risky just to create an entire "spare" bio, cloned from the master bio 
-during make_request as the other r1_bio->bios[] are, and then use that 
-if we need it? Maybe too much overhead, but it should guarantee that 
-none of the fields have been monkey-ed with by an underlying disk. May 
-be easier than trying to allocate and construct bvecs by hand?
+The action : on this 4 disk raid5, add an internal bitmap (mdadm -g
+--bitmap internal) while the array is rebuilding
 
---
-Paul
+The problem : at bitmap insertion, kernel shows a BUG in
+bitmap_startwrite() at line 1122 (as far as I recall). This is a bit
+strange, because the only BUG_ON() defined in this function is at
+1166, and is
+
+  BUG_ON((*bmc & COUNTER_MAX) == COUNTER_MAX);
+
+The running rebuild goes on, but at the end of it the machine hangs completely.
+This bug has been triggered with a clean raid5 (i.e. not rebuilding)
+also, and with 2.6.17-rc3.
+
+The question : is the bitmap creation tested in such recent kernels ?
+Including BE cpus ?
+I may investigate the value of (*bmc), which is the result of
+bitmap_get_counter().. Is the value only modified in
+bitmap_startwrite() at line 1167 with (*bmc) ++; ?
+
+Final question, I do not fully understand the bitmap_get_counter()
+function, especially comparing the 'hijacked' version (lines
+1126-11127) :
+  return &((bitmap_counter_t *) &bitmap->bp[page].map)[hi];
+
+and the 'normal' version (lines 1131-1132)
+   return (bitmap_counter_t *) &(bitmap->bp[page].map[pageoff]);
+
+The hijacked version uses a 16-bit bitmap_counter_t*
+'bitmap->bp[page].map' table with the hi index, whereas the normal
+uses a 8-bit char* 'bitmap->bp[page].map' table with the pageoff
+index.
+
+This may be the 'hijacked' logic, but I'm a little puzzled here.
+
+Thanks for any clues, help, or... anything else.
+
+Regards,
