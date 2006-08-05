@@ -1,101 +1,79 @@
-From: "Mike Snitzer" <snitzer@gmail.com>
-Subject: Re: [PATCH 010 of 10] md: Allow the write_mostly flag to be set via sysfs.
-Date: Sat, 5 Aug 2006 01:59:50 -0400
-Message-ID: <170fa0d20608042259u3b6b75fah36c3777dfbf33fa6@mail.gmail.com>
-References: <20060601150955.27444.patches@notabene>
-	 <1060601051418.27661@suse.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Jason Lunz <lunz@falooley.org>
+Subject: raid1 oops, 2.6.16
+Date: Sat, 5 Aug 2006 14:04:08 +0000 (UTC)
+Message-ID: <eb28go$vl2$1@sea.gmane.org>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1060601051418.27661@suse.de>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Aside from this write-mostly sysfs support, is there a way to toggle
-the write-mostly bit of an md member with mdadm?  I couldn't identify
-a clear way to do so.
+I just had a disk die in a 2.6.16 (debian kernel) raid1 server, and it's
+triggered an oops in raid1.
 
-It'd be nice if mdadm --assemble would honor --write-mostly...
+There are a bunch of 2-partition mirrors:
+
+Personalities : [raid1]
+md5 : active raid1 hdc7[2](F) hda7[1]
+      77625984 blocks [2/1] [_U]
+
+md4 : active raid1 hdc6[2](F) hda6[1]
+      16000640 blocks [2/1] [_U]
+
+md3 : active raid1 hdc5[2](F) hda5[1]
+      12570752 blocks [2/1] [_U]
+
+md2 : active raid1 hdc3[2](F) hda3[1]
+      8000256 blocks [2/1] [_U]
+
+md1 : active raid1 hdc2[2](F) hda2[1]
+      2000000 blocks [2/1] [_U]
+
+md0 : active raid1 hdc1[2](F) hda1[1]
+      995904 blocks [2/1] [_U]
+
+unused devices: <none>
 
 
-On 6/1/06, NeilBrown <neilb@suse.de> wrote:
->
-> It appears in /sys/mdX/md/dev-YYY/state
-> and can be set or cleared by writing 'writemostly' or '-writemostly'
-> respectively.
->
-> Signed-off-by: Neil Brown <neilb@suse.de>
->
-> ### Diffstat output
->  ./Documentation/md.txt |    5 +++++
->  ./drivers/md/md.c      |   12 ++++++++++++
->  2 files changed, 17 insertions(+)
->
-> diff ./Documentation/md.txt~current~ ./Documentation/md.txt
-> --- ./Documentation/md.txt~current~     2006-06-01 15:05:30.000000000 +1000
-> +++ ./Documentation/md.txt      2006-06-01 15:05:30.000000000 +1000
-> @@ -309,6 +309,9 @@ Each directory contains:
->               faulty   - device has been kicked from active use due to
->                           a detected fault
->               in_sync  - device is a fully in-sync member of the array
-> +             writemostly - device will only be subject to read
-> +                        requests if there are no other options.
-> +                        This applies only to raid1 arrays.
->               spare    - device is working, but not a full member.
->                          This includes spares that are in the process
->                          of being recoverred to
-> @@ -316,6 +319,8 @@ Each directory contains:
->         This can be written to.
->         Writing "faulty"  simulates a failure on the device.
->         Writing "remove" removes the device from the array.
-> +       Writing "writemostly" sets the writemostly flag.
-> +       Writing "-writemostly" clears the writemostly flag.
->
->        errors
->         An approximate count of read errors that have been detected on
->
-> diff ./drivers/md/md.c~current~ ./drivers/md/md.c
-> --- ./drivers/md/md.c~current~  2006-06-01 15:05:30.000000000 +1000
-> +++ ./drivers/md/md.c   2006-06-01 15:05:30.000000000 +1000
-> @@ -1737,6 +1737,10 @@ state_show(mdk_rdev_t *rdev, char *page)
->                 len += sprintf(page+len, "%sin_sync",sep);
->                 sep = ",";
->         }
-> +       if (test_bit(WriteMostly, &rdev->flags)) {
-> +               len += sprintf(page+len, "%swrite_mostly",sep);
-> +               sep = ",";
-> +       }
->         if (!test_bit(Faulty, &rdev->flags) &&
->             !test_bit(In_sync, &rdev->flags)) {
->                 len += sprintf(page+len, "%sspare", sep);
-> @@ -1751,6 +1755,8 @@ state_store(mdk_rdev_t *rdev, const char
->         /* can write
->          *  faulty  - simulates and error
->          *  remove  - disconnects the device
-> +        *  writemostly - sets write_mostly
-> +        *  -writemostly - clears write_mostly
->          */
->         int err = -EINVAL;
->         if (cmd_match(buf, "faulty") && rdev->mddev->pers) {
-> @@ -1766,6 +1772,12 @@ state_store(mdk_rdev_t *rdev, const char
->                         md_new_event(mddev);
->                         err = 0;
->                 }
-> +       } else if (cmd_match(buf, "writemostly")) {
-> +               set_bit(WriteMostly, &rdev->flags);
-> +               err = 0;
-> +       } else if (cmd_match(buf, "-writemostly")) {
-> +               clear_bit(WriteMostly, &rdev->flags);
-> +               err = 0;
->         }
->         return err ? err : len;
->  }
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+amidst all the failure messages for these arrays in dmesg, I have this:
+
+
+RAID1 conf printout:
+ --- wd:1 rd:2
+ disk 1, wo:0, o:1, dev:hda1
+Unable to handle kernel NULL pointer dereference at virtual address 00000088
+ printing eip:
+f0831ea8
+*pde = 00000000
+Oops: 0002 [#1]
+Modules linked in: thermal fan button processor ac battery e1000 rtc ext3 jbd mbcache raid1 md_mod ide_disk generic siimage ide_core evdev mousedev
+CPU:    0
+EIP:    0060:[<f0831ea8>]    Not tainted VLI
+EFLAGS: 00010246   (2.6.16-2-686 #1)
+EIP is at raid1d+0x2c8/0x4c3 [raid1]
+eax: 00000008   ebx: 00000000   ecx: c9c60100   edx: b1a1ac60
+esi: 00000000   edi: dd67c6c0   ebp: efd52740   esp: b1ac1f08
+ds: 007b   es: 007b   ss: 0068
+Process md5_raid1 (pid: 1001, threadinfo=b1ac0000 task=b1bc5a70)
+Stack: <0>000000b1 5e341300 003e0387 00000001 00000001 00000008 00000008 025e1458
+       00000000 b1bc5b98 00000001 efd5275c b1ac1fa4 7fffffff b026e32b 00000005
+       b1ac0000 b1ac1f84 7fffffff 00000000 b1a1aba0 b1ac1f84 b1ac1fa4 7fffffff
+Call Trace:
+ [<b026e32b>] schedule_timeout+0x13/0x8e
+ [<f0864095>] md_thread+0xe3/0xfb [md_mod]
+ [<b012522e>] autoremove_wake_function+0x0/0x3a
+ [<b026dced>] schedule+0x45f/0x4cd
+ [<b012522e>] autoremove_wake_function+0x0/0x3a
+ [<f0863fb2>] md_thread+0x0/0xfb [md_mod]
+ [<b0124efe>] kthread+0x79/0xa3
+ [<b0124e85>] kthread+0x0/0xa3
+ [<b01012cd>] kernel_thread_helper+0x5/0xb
+Code: 83 7c 24 10 00 8b 47 20 0f 84 dc 00 00 00 89 74 24 0c 39 c6 74 63 85 f6 75 03 8b 75
+08 4e 8b 55 04 6b c6 0c 8b 1c 02 8b 44 24 14 <01> 83 88 00 00 00 85 db 74 3f 8b 43 70 a8 04 74 38 6a 01 ff 75
+ end_request: I/O error, dev hdc, sector 26464418
+
+
+The server is still running, but processes (like sync(1)) are getting hung in D
+state.
+
+Jason
+
