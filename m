@@ -1,66 +1,65 @@
-From: David Greaves <david@dgreaves.com>
-Subject: Re: raid5/lvm setup questions
-Date: Sat, 05 Aug 2006 18:31:37 +0100
-Message-ID: <44D4D5F9.9080201@dgreaves.com>
-References: <20060805165358.GA29177@cm.nu>
+From: "Dan Williams" <dan.j.williams@gmail.com>
+Subject: Re: raid 5 read performance
+Date: Sat, 5 Aug 2006 10:31:39 -0700
+Message-ID: <e9c3a7c20608051031v2e82c118sd08f7f9cddcca9ce@mail.gmail.com>
+References: <5d96567b0606090850q6185e6a0u8b16860b4f826d4f@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20060805165358.GA29177@cm.nu>
+In-Reply-To: <5d96567b0606090850q6185e6a0u8b16860b4f826d4f@mail.gmail.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Shane <shane@cm.nu>
-Cc: linux-raid@vger.kernel.org
+To: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
+Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>, Neil Brown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-Shane wrote:
-> Hello all,
-> 
-> I'm building a new server which will use a number of disks
-> and am not sure of the best way to go about the setup. 
-> There will be 4 320gb SATA drives installed at first.  I'm
-> just wondering how to set the system up for upgradability. 
-> I'll be using raid5 but not sure whether to use lvm over
-> the raid array.
-> 
-> By upgradability, I'd like to do several things.  Adding
-> another drive of the same size to the array.  I understand
-> reshape can be used here to expand the underlying block
-> device.
-Yes, it can.
+> Neil hello
+>
+> Sorry for the delay. too many things to do.
+>
+> I have implemented all said in :
+> http://www.spinics.net/lists/raid/msg11838.html
+>
+> As always I have some questions:
+>
+> 1.  mergeable_bvec
+>      I did not understand first i must admit. now i do not see how it
+> differs from the
+>      one of raid0.  so i  actually copied it and renamed it.
+>
+> 2. statistics.
+>     i have added md statistics since the code does not reach the
+> statics in make_request.
+>     it returns from make_request before that.
+>
+> 3. i have added the new retry list called toread_aligned to raid5_conf_t .
+>     hope this is correct.
+>
+> 4.  your instructions are to add a failed bio to sh, but it does not
+> say to handle it directly.
+>     i have tried it and something is missing here. raid5d handle
+> stripes only if  conf->handle_list is not empty. i added handle_stripe
+> and and release_stripe of my own.
+>    this way i managed to get from the completion routine:
+>    "R5: read error corrected!! " message . ( i have tested by failing
+> a ram disk ).
+>
+>
+> 5. I am going to test the non common path heavily before submitting
+> you the patch ( on real disks  and use  several file systems and
+> several chunk sizes).
+>  It is quite a big patch so I need to know which kernel do you want me
+> to use ? i am using poor 2.6.15.
+>
+> I thank you
+> --
+> Raz
+Hi Raz,
 
-  If the block device is the pv of an lvm array,
-> would that also automatically expand in which I would
-> create additional lvs in the new space.  If this isn't
-> automatic, are there ways to do it manually?
-Not automatic AFAIK - but doable.
+What is the status of this patch?  Anything I can help out with, like
+testing or forward porting to the latest kernel?
 
-> What about replacing all four drives with larger units. 
-> Say going from 300gbx4 to 500gbx4.  Can one replace them
-> one at a time, going through fail/rebuild as appropriate
-> and then expand the array into the unused space
-Yes.
+Thanks,
 
- or would
-> one have to reinstall at that point.
-No
-
-
-None of the requirements above drive you to layering lvm over the top.
-
-That's not to say don't do it - but you certainly don't *need* to do it.
-
-Pros:
-* allows snapshots (for consistent backups)
-* allows various lvm block movements etc...
-* Can later grow vg to use discrete additional block devices without raid5 grow
-limitations (eg same-ish size disks etc)
-
-Cons:
-* extra complexity -> risk of bugs/admin errors...
-* performance impact
-
-As an example of the cons: I've just set up lvm2 over my raid5 and whilst
-testing snapshots, the first thing that happened was a kernel BUG and an oops...
-
-David
+Dan
