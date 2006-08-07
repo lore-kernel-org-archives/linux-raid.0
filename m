@@ -1,28 +1,23 @@
-From: Nix <nix@esperi.org.uk>
+From: Chet McNeill <chet@somedec.com>
 Subject: Re: raid5/lvm setup questions
-Date: Mon, 07 Aug 2006 20:57:13 +0100
-Message-ID: <87mzagz5d2.fsf@hades.wkstn.nix>
+Date: Mon, 7 Aug 2006 14:20:14 -0600 (MDT)
+Message-ID: <Pine.LNX.4.64.0608071417560.13422@somedec.sdecent.org>
 References: <20060805165358.GA29177@cm.nu> <44D4D5F9.9080201@dgreaves.com>
+ <87mzagz5d2.fsf@hades.wkstn.nix> <20060807200455.GA29837@cm.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <44D4D5F9.9080201@dgreaves.com> (David Greaves's message of "5 Aug 2006 18:31:52 +0100")
+In-Reply-To: <20060807200455.GA29837@cm.nu>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Greaves <david@dgreaves.com>
-Cc: Shane <shane@cm.nu>, linux-raid@vger.kernel.org
+To: Shane <shane@cm.nu>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 5 Aug 2006, David Greaves prattled cheerily:
-> As an example of the cons: I've just set up lvm2 over my raid5 and whilst
-> testing snapshots, the first thing that happened was a kernel BUG and an oops...
+> I seem to recall patches to md floating around a couple
+> years back for partitioning of md devices.  Are those still
+> available somewhere?
 
-I've been backing up using writable snapshots on LVM2 over RAID-5 for
-some time. No BUGs.
+I believe the patches that you are referring to are now included into
+the standard 2.6+ kernel.
 
-I think the blame here is likely to be layable at the snapshots' door,
-anyway: they're still a little wobbly and the implementation is pretty
-complex: bugs surface on a regular basis.
-
--- 
-`We're sysadmins. We deal with the inconceivable so often I can clearly 
- see the need to define levels of inconceivability.' --- Rik Steenwinkel
+-Chet
