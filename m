@@ -1,46 +1,27 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: raid5/lvm setup questions
-Date: Tue, 8 Aug 2006 09:29:29 +1000
-Message-ID: <17623.52441.692673.160830@cse.unsw.edu.au>
-References: <20060805165358.GA29177@cm.nu>
-	<44D4D5F9.9080201@dgreaves.com>
-	<20060805175908.GA31024@cm.nu>
+From: James Peverill <jamespev@net1plus.com>
+Subject: Resize on dirty array?
+Date: Mon, 07 Aug 2006 20:36:35 -0400
+Message-ID: <44D7DC93.2070905@net1plus.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Shane on Saturday August 5
 Sender: linux-raid-owner@vger.kernel.org
-To: Shane <shane@cm.nu>
-Cc: David Greaves <david@dgreaves.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Saturday August 5, shane@cm.nu wrote:
-> On Sat, Aug 05, 2006 at 06:31:37PM +0100, David Greaves wrote:
-> > > Say going from 300gbx4 to 500gbx4.  Can one replace them
-> > > one at a time, going through fail/rebuild as appropriate
-> > > and then expand the array into the unused space
-> > Yes.
-> 
-> I didn't see anything in the mdadm manual on this.  Would
-> one just do a --grow /dev/md0 once the disks were changed
-> out?  It looks like --grow is used to change the number of
-> devices in the array but not the device size itself.
 
-It does both (and more).
+I have a software raid 5 setup with four drives.  One drive failed.  I 
+got a replacement but unfortunately it turns out that my original disks 
+were just a few gigs over the replacement.  It seems that most 
+manufacturers don't actually advertise the REAL capacity of the disk, so 
+getting one that is the same size as the old ones could be tough.(and 
+they aren't available anymore of course...)
 
- mdadm --grow /dev/md0 --raid-disk=5
-changes the number of drives to 5.
+So my question... can I resize the array while it is missing a drive?  
+The raid is <50% full, and the few gigs is only a few percent.  In 
+retrospect I shouldn't have sized them right to the limit...
 
- mdadm --grow /dev/md0 --size=max
+Any ideas would be appreciated.  Thanks!
 
-changes the used-size of each drive to the maximum available.
-
- mdadm --grow /dev/md0 --bitmap=internal
-adds an internal write-intent bitmap
-
- mdadm --grow /dev/md0 --chunksize=128
-might change the chunksize to 128k.. but doesn't yet.  
-Maybe one day :-)
-
-NeilBrown
+James
