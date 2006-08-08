@@ -1,15 +1,33 @@
-From: "Mckinney" <biconcavecain@counsellor.com>
-Subject: Wow, you used to ccum within 5 minutes!
-Date: Tue, 8 Aug 2006 10:58:20 +0300
-Message-ID: <60285846667820.172CA00D95@JLNVU>
+From: Alexandre Oliva <aoliva@redhat.com>
+Subject: modifying degraded raid 1 then re-adding other members is bad
+Date: Tue, 08 Aug 2006 06:38:19 -0300
+Message-ID: <or8xlztvn8.fsf@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-        charset="Windows-1252"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: linux-raid <linux-raid@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Good day my friend! Thousands of men know what it feels like, though few will admit they have a problem. The great thing about Extra-Time is that it works, making you last longer from the very first time. You tried condoms, pauses, alcohol, but nothing worked. Eager to find a way to stop this premature thing forever? Just take a look: http://mebimbts.com/gal/get/ Confidence and affection of your partner are the greatest things you get.
+Assume I have a fully-functional raid 1 between two disks, one
+hot-pluggable and the other fixed.
 
+If I unplug the hot-pluggable disk and reboot, the array will come up
+degraded, as intended.
+
+If I then modify a lot of the data in the raid device (say it's my
+root fs and I'm running daily Fedora development updates :-), which
+modifies only the fixed disk, and then plug the hot-pluggable disk in
+and re-add its members, it appears that it comes up without resyncing
+and, well, major filesystem corruption ensues.
+
+Is this a known issue, or should I try to gather more info about it?
+
+This happened with 2.6.18rc3-git[367] (not sure which), plus Fedora
+development patches.
+
+-- 
+Alexandre Oliva         http://www.lsd.ic.unicamp.br/~oliva/
+Secretary for FSF Latin America        http://www.fsfla.org/
+Red Hat Compiler Engineer   aoliva@{redhat.com, gcc.gnu.org}
+Free Software Evangelist  oliva@{lsd.ic.unicamp.br, gnu.org}
