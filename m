@@ -1,43 +1,25 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: Resize on dirty array?
-Date: Wed, 9 Aug 2006 14:09:54 +1000
-Message-ID: <17625.24594.568139.430440@cse.unsw.edu.au>
-References: <44D7DC93.2070905@net1plus.com>
-	<17623.57067.835826.446152@cse.unsw.edu.au>
-	<44D8E535.9080208@net1plus.com>
+From: Jan Engelhardt <jengelh@linux01.gwdg.de>
+Subject: Re: modifying degraded raid 1 then re-adding other members is bad
+Date: Wed, 9 Aug 2006 08:35:38 +0200 (MEST)
+Message-ID: <Pine.LNX.4.61.0608090834060.11585@yvahk01.tjqt.qr>
+References: <or8xlztvn8.fsf@redhat.com> <17624.29070.246605.213021@cse.unsw.edu.au>
+ <44D8732C.2060207@tls.msk.ru> <17625.4242.910985.97868@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from James Peverill on Tuesday August 8
+In-Reply-To: <17625.4242.910985.97868@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: James Peverill <jamespev@net1plus.com>
-Cc: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: Michael Tokarev <mjt@tls.msk.ru>, Alexandre Oliva <aoliva@redhat.com>, linux-raid <linux-raid@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tuesday August 8, jamespev@net1plus.com wrote:
-> 
-> The resize went fine, but after re-adding the drive back into the array 
-> I got another fail event (on another drive) about 23% through the 
-> rebuild :(
-> 
-> Did I have to "remove" the bad drive before re-adding it with mdadm?  I 
-> think my array might be toast...
-> 
+>> Why we're updating it BACKWARD in the first place?
+>
+>To avoid writing to spares when it isn't needed - some people want
+>their spare drives to go to sleep.
 
-You wouldn't be able to re-add the drive without removing it first.
-But why did you re-add the failed drive?  Why not add the new one? Or
-maybe you did...
-
-2 drives failed - yes - that sounds a bit like toast.
-You can possible do a --force assemble without the new drive and try
-to backup the data somewhere - if you have somewhere large enough.
-
-NeilBrown
+That sounds a little dangerous. What if it decrements below 0?
 
 
-> Any tips on where I should go now?
-> 
-> Thanks for the help.
-> 
-> James
+Jan Engelhardt
+-- 
