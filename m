@@ -1,57 +1,39 @@
-From: dean gaudet <dean@arctic.org>
-Subject: Re: Resize on dirty array?
-Date: Thu, 10 Aug 2006 10:44:11 -0700 (PDT)
-Message-ID: <Pine.LNX.4.64.0608101031330.2920@twinlark.arctic.org>
-References: <44D7DC93.2070905@net1plus.com> <17623.57067.835826.446152@cse.unsw.edu.au>
-  <44D8E535.9080208@net1plus.com> <17625.24594.568139.430440@cse.unsw.edu.au>
-  <44D9C6F5.7070501@net1plus.com> <68c491a60608090437l7e3b583el2214cbe6f01009ab@mail.gmail.com>
- <Pine.LNX.4.64.0608090846160.16324@coffee.psychology.mcmaster.ca>
- <44D9E41C.4050608@net1plus.com>
+From: Paul Clements <paul.clements@steeleye.com>
+Subject: Re: way too high reconstruction speed - bug?
+Date: Thu, 10 Aug 2006 14:43:05 -0400
+Message-ID: <44DB7E39.4060001@steeleye.com>
+References: <44DB00E9.8020000@wpkg.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-2; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <44D9E41C.4050608@net1plus.com>
+In-Reply-To: <44DB00E9.8020000@wpkg.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: James Peverill <jamespev@net1plus.com>
+To: Tomasz Chmielewski <mangoo@wpkg.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-suggestions:
+Tomasz Chmielewski wrote:
+> [42949428.590000] md: md11: raid array is not clean -- starting 
+> background reconstruction
+> [42949428.620000] raid10: raid set md11 active with 4 out of 4 devices
+> [42949428.630000] md: syncing RAID array md11
+> [42949428.630000] md: minimum _guaranteed_ reconstruction speed: 1000 
+> KB/sec/disc.
+> [42949428.640000] md: using maximum available idle IO bandwidth (but not 
+> more than 200000 KB/sec) for reconstruction.
+> [42949428.650000] md: using 128k window, over a total of 779264640 blocks.
+> [42949428.650000] md: resuming recovery of md11 from checkpoint.
 
-- set up smartd to run long self tests once a month.   (stagger it every 
-  few days so that your disks aren't doing self-tests at the same time)
+The recovery was resumed from a previous checkpoint. I guess you 
+rebooted or stopped the array during recovery?
 
-- run 2.6.15 or later so md supports repairing read errors from the other 
-  drives...
+At any rate, md doesn't calculate resync speed correctly for 
+checkpointed or bitmapped resyncs (it assumes that the skipped portion 
+was actually resynced).
 
-- run 2.6.16 or later so you get the check and repair sync_actions in
-  /sys/block/mdX/md/sync_action (i think 2.6.16.x still has a bug where
-  you have to echo a random word other than repair to sync_action to get
-  a repair to start... wrong sense on a strcmp, fixed in 2.6.17).
+Neil fairly recently sent in patches to fix this, but I think they won't 
+be in mainline until 2.6.18 or so.
 
-- run nightly diffs of smartctl -a output on all your drives so you see 
-  when one of them reports problems in the smart self test or otherwise
-  has a Current_Pending_Sectors or Realloc event... then launch a
-  repair sync_action.
-
-- proactively replace your disks every couple years (i prefer to replace 
-  busy disks before 3 years).
-
--dean
-
-On Wed, 9 Aug 2006, James Peverill wrote:
-
-> 
-> In this case the raid WAS the backup... however it seems it turned out to be
-> less reliable than the single disks it was supporting.  In the future I think
-> I'll make sure my disks have varying ages so they don't fail all at once.
-> 
-> James
-> 
-> > > RAID is no excuse for backups.
-> PS: <ctrl><pgup>
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+--
+Paul
