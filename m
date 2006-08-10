@@ -1,7 +1,7 @@
 From: Tomasz Chmielewski <mangoo@wpkg.org>
 Subject: RAID-10 and 4 HDDs - how many HDDs can break without loosing data?
-Date: Thu, 10 Aug 2006 10:48:01 +0200
-Message-ID: <44DAF2C1.2050308@wpkg.org>
+Date: Thu, 10 Aug 2006 10:49:37 +0200
+Message-ID: <44DAF321.7090204@wpkg.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-2; format=flowed
 Content-Transfer-Encoding: 7bit
@@ -10,9 +10,9 @@ Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I want to set up RAID-10 on 4 400 GB drives, on not-so powerful machine 
-(600 MHz ARM, Thecus n4100) - to have a total of 800 GB storage, with 
-some protection against a drive failure.
+I want to set up RAID-10 on 4 400 GB drives, on a not-so powerful 
+machine (600 MHz ARM, Thecus n4100) - to have a total of 800 GB storage, 
+with some protection against a drive failure.
 
 As the machine is not very powerful, I don't want to use RAID-5 nor RAID-6.
 
@@ -28,7 +28,7 @@ HDD1 HDD2   HDD3 HDD4
 
 With RAID-0 on top of RAID-1, with 4 drives, I would achieve:
 - 100% chance of recovery if any single, one disk fails,
-- 50% chance of recovery if any two disk failure.
+- 50% chance of recovery if any two disks fail.
 
 
 Now with RAID-10 in the Linux kernel, what are my chances of recovering 
