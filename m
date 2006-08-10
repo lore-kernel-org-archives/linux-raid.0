@@ -1,39 +1,21 @@
-From: Paul Clements <paul.clements@steeleye.com>
-Subject: Re: way too high reconstruction speed - bug?
-Date: Thu, 10 Aug 2006 14:43:05 -0400
-Message-ID: <44DB7E39.4060001@steeleye.com>
-References: <44DB00E9.8020000@wpkg.org>
+From: "Minerva" <bloodshotchallenge@mail.com>
+Subject: Delight Introducing a great product which will make you a better, more confident man!
+Date: Fri, 11 Aug 2006 00:08:02 +0200
+Message-ID: <00129003280843.11A2BC7086@CRNYXR>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-2; format=flowed
+Content-Type: text/plain;
+        charset="Windows-1252"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <44DB00E9.8020000@wpkg.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Tomasz Chmielewski <mangoo@wpkg.org>
-Cc: linux-raid@vger.kernel.org
+To: linux-scsi-digest@vger.kernel.org
 List-Id: linux-raid.ids
 
-Tomasz Chmielewski wrote:
-> [42949428.590000] md: md11: raid array is not clean -- starting 
-> background reconstruction
-> [42949428.620000] raid10: raid set md11 active with 4 out of 4 devices
-> [42949428.630000] md: syncing RAID array md11
-> [42949428.630000] md: minimum _guaranteed_ reconstruction speed: 1000 
-> KB/sec/disc.
-> [42949428.640000] md: using maximum available idle IO bandwidth (but not 
-> more than 200000 KB/sec) for reconstruction.
-> [42949428.650000] md: using 128k window, over a total of 779264640 blocks.
-> [42949428.650000] md: resuming recovery of md11 from checkpoint.
+Get the freshest
+ Let's face it, you always wanted it. And with this product you can finally get what you want - better size and its better usage! Bigger, stronger and eventually better - this is what you will have in just a couple of months.
+ Just show her how big it is, and she will forget everybody she met before. You'll be dazzled to last for hours and hours with your new stronger, longer bed tool. Just take a look: http://www.retilfo.com/gal/ms/ 
+Now you don't need a huge car or expensive watch to prove that you are not at all size-challenged.
 
-The recovery was resumed from a previous checkpoint. I guess you 
-rebooted or stopped the array during recovery?
 
-At any rate, md doesn't calculate resync speed correctly for 
-checkpointed or bitmapped resyncs (it assumes that the skipped portion 
-was actually resynced).
+ What you lose on the swings you gain on the roundabouts If you look like your passport picture, you probably need the trip.  When the blind leadeth the blind.. get out of the way. The e-mail of the species is more deadly than the mail.
 
-Neil fairly recently sent in patches to fix this, but I think they won't 
-be in mainline until 2.6.18 or so.
-
---
-Paul
