@@ -1,45 +1,69 @@
-From: Luca Berra <bluca@comedia.it>
-Subject: Re: RAID-10 and 4 HDDs - how many HDDs can break without loosing data?
-Date: Thu, 10 Aug 2006 12:39:39 +0200
-Message-ID: <20060810103939.GA24269@percy.comedia.it>
-References: <44DAF321.7090204@wpkg.org>
+From: Tomasz Chmielewski <mangoo@wpkg.org>
+Subject: drive is a spare, but I want to make it active - how?
+Date: Thu, 10 Aug 2006 13:48:55 +0200
+Message-ID: <44DB1D27.4010508@wpkg.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-2; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <44DAF321.7090204@wpkg.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Aug 10, 2006 at 10:49:37AM +0200, Tomasz Chmielewski wrote:
->With RAID-0 on top of RAID-1, with 4 drives, I would achieve:
->- 100% chance of recovery if any single, one disk fails,
->- 50% chance of recovery if any two disks fail.
->
->Now with RAID-10 in the Linux kernel, what are my chances of recovering 
->from a single and two disk failure?
+I created RAID-10 on 4 drives, and I'm testing it a bit.
 
->Is it also 100% if one disk fails, and 50% if two disks fail?
+I removed one drive, and then added it again.
 
-if the number of copies is 2 yes
+mdadm --detail says:
 
->Or perhaps, with 4 drives, RAID-10 can survive any 2 disks failure?
-nope
+         Version : 01.00.03
+   Creation Time : Thu Aug 10 10:15:18 2006
+      Raid Level : raid10
+      Array Size : 779264640 (743.16 GiB 797.97 GB)
+     Device Size : 779264640 (371.58 GiB 398.98 GB)
+    Raid Devices : 4
+   Total Devices : 4
+Preferred Minor : 11
+     Persistence : Superblock is persistent
 
-note that with raid10 the number of copies for each stripe does not need
-to be a divisor of the number of drives.
-e.g you can have 4 drives and 3 stripe copies.
-in this case you are able to survive any 2 disk failure. but the usable
-space is DRIVE_SIZE * 1.33
+     Update Time : Thu Aug 10 13:14:44 2006
+           State : active, degraded, resyncing
+  Active Devices : 3
+Working Devices : 4
+  Failed Devices : 0
+   Spare Devices : 1
 
-L.
+          Layout : near=2, far=1
+      Chunk Size : 64K
+
+  Rebuild Status : 39% complete
+
+            Name : 11
+            UUID : 3f0bf25c:614339d1:31c006be:e823b74d
+          Events : 13
+
+     Number   Major   Minor   RaidDevice State
+        0       0        0        0      removed
+        1       8       18        1      active sync   /dev/sdb2
+        2       8       34        2      active sync   /dev/sdc2
+        3       8       50        3      active sync   /dev/sdd2
+
+        4       8        2        -      spare   /dev/sda2
+
+
+So, I have 4 working devices, which include 3 active devices and one 
+spare device.
+
+As I remember, with RAID-1, when I added a spare with "mdadm /dev/mdX -a 
+/dev/sdY", I would see a message "hot added /dev/sdY", and state "spare 
+rebuilding" in "mdadm --detail" output.
+
+Right now I don't see the spare is being rebuilt? Spare HDD LED doesn't 
+blink either, so it would indicate that it's doing nothing.
+
+Why? Is it because the rebuild status is not complete?
 
 
 -- 
-Luca Berra -- bluca@comedia.it
-        Communication Media & Services S.r.l.
- /"\
- \ /     ASCII RIBBON CAMPAIGN
-  X        AGAINST HTML MAIL
- / \
+Tomasz Chmielewski
+http://wpkg.org
