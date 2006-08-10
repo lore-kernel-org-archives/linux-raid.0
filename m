@@ -1,50 +1,45 @@
-From: Tomasz Chmielewski <mangoo@wpkg.org>
-Subject: way too high reconstruction speed - bug?
-Date: Thu, 10 Aug 2006 11:48:25 +0200
-Message-ID: <44DB00E9.8020000@wpkg.org>
+From: Luca Berra <bluca@comedia.it>
+Subject: Re: RAID-10 and 4 HDDs - how many HDDs can break without loosing data?
+Date: Thu, 10 Aug 2006 12:39:39 +0200
+Message-ID: <20060810103939.GA24269@percy.comedia.it>
+References: <44DAF321.7090204@wpkg.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-2; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <44DAF321.7090204@wpkg.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I noticed that I have a wrong reconstruction speed when looking at 
-/proc/mdstat:
+On Thu, Aug 10, 2006 at 10:49:37AM +0200, Tomasz Chmielewski wrote:
+>With RAID-0 on top of RAID-1, with 4 drives, I would achieve:
+>- 100% chance of recovery if any single, one disk fails,
+>- 50% chance of recovery if any two disks fail.
+>
+>Now with RAID-10 in the Linux kernel, what are my chances of recovering 
+>from a single and two disk failure?
 
-# cat /proc/mdstat
-Personalities : [raid0] [raid1] [raid10]
-md11 : active raid10 sda2[0] sdd2[3] sdc2[2] sdb2[1]
-       779264640 blocks super 1.0 64K chunks 2 near-copies [4/4] [UUUU]
-       [===>.................]  resync = 16.4% (127955392/779264640) 
-finish=4.1min speed=2588238K/sec
+>Is it also 100% if one disk fails, and 50% if two disks fail?
 
+if the number of copies is 2 yes
 
-2588238K/sec is about 100 more to what I used to see before.
+>Or perhaps, with 4 drives, RAID-10 can survive any 2 disks failure?
+nope
 
+note that with raid10 the number of copies for each stripe does not need
+to be a divisor of the number of drives.
+e.g you can have 4 drives and 3 stripe copies.
+in this case you are able to survive any 2 disk failure. but the usable
+space is DRIVE_SIZE * 1.33
 
-Should I start to worry?
-
-I'm using kernel 2.6.16.27 on ARM CPU.
-
-[42949428.580000] md: bind<sdb2>
-[42949428.580000] md: bind<sdc2>
-[42949428.590000] md: bind<sdd2>
-[42949428.590000] md: bind<sda2>
-[42949428.590000] md: md11: raid array is not clean -- starting 
-background reconstruction
-[42949428.620000] raid10: raid set md11 active with 4 out of 4 devices
-[42949428.630000] md: syncing RAID array md11
-[42949428.630000] md: minimum _guaranteed_ reconstruction speed: 1000 
-KB/sec/disc.
-[42949428.640000] md: using maximum available idle IO bandwidth (but not 
-more than 200000 KB/sec) for reconstruction.
-[42949428.650000] md: using 128k window, over a total of 779264640 blocks.
-[42949428.650000] md: resuming recovery of md11 from checkpoint.
-
+L.
 
 
 -- 
-Tomasz Chmielewski
-http://wpkg.org
+Luca Berra -- bluca@comedia.it
+        Communication Media & Services S.r.l.
+ /"\
+ \ /     ASCII RIBBON CAMPAIGN
+  X        AGAINST HTML MAIL
+ / \
