@@ -1,60 +1,48 @@
-From: "PIDA INC" <pidaincn15@hotmail.com>
-Subject: COMPLIMENT! PIDA INC LOAN.
-Date: Thu, 10 Aug 2006 22:58:58 +0000
-Message-ID: <BAY18-F16B740F5AF1D79D8108798DD4A0__18215.4827322394$1155250811$gmane$org@phx.gbl>
+From: Tomasz Chmielewski <mangoo@wpkg.org>
+Subject: Re: way too high reconstruction speed - bug?
+Date: Fri, 11 Aug 2006 13:47:20 +0200
+Message-ID: <44DC6E48.7070506@wpkg.org>
+References: <44DB00E9.8020000@wpkg.org> <44DB7E39.4060001@steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; format=flowed
+Content-Type: text/plain; charset=ISO-8859-2; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <44DB7E39.4060001@steeleye.com>
 Sender: linux-raid-owner@vger.kernel.org
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-PRUDENT INDUSTRIAL DEVELOPMENT AGENCY(PIDA INC)
-Educating And Granting Of Loans.
-A symbol of entrepreneural relationship and growth.
+Paul Clements wrote:
+> Tomasz Chmielewski wrote:
+>> [42949428.590000] md: md11: raid array is not clean -- starting 
+>> background reconstruction
+>> [42949428.620000] raid10: raid set md11 active with 4 out of 4 devices
+>> [42949428.630000] md: syncing RAID array md11
+>> [42949428.630000] md: minimum _guaranteed_ reconstruction speed: 1000 
+>> KB/sec/disc.
+>> [42949428.640000] md: using maximum available idle IO bandwidth (but 
+>> not more than 200000 KB/sec) for reconstruction.
+>> [42949428.650000] md: using 128k window, over a total of 779264640 
+>> blocks.
+>> [42949428.650000] md: resuming recovery of md11 from checkpoint.
+> 
+> The recovery was resumed from a previous checkpoint. I guess you 
+> rebooted or stopped the array during recovery?
+> 
+> At any rate, md doesn't calculate resync speed correctly for 
+> checkpointed or bitmapped resyncs (it assumes that the skipped portion 
+> was actually resynced).
+> 
+> Neil fairly recently sent in patches to fix this, but I think they won't 
+> be in mainline until 2.6.18 or so.
 
-Email: pidainc26@yahoo.co.nz
+All right, thanks for explanation.
 
-Dear Sir/Madam,
-
-I write to you based on a request by an investor and his need for 
-investment/funding in your country. My name is MR LARRY GREEN, a financial 
-consultant with PRUDENT INDUSTRIAL DEVELOPMENT AGENCY (PIDA INC) which is a 
-reputable financial services firm. My company most times represents the 
-interests of very wealthy investors. Due to the sensitivity of the position 
-they hold in their society and the unstable investment environment of their 
-country, they evacuate majority of their funds into more stable economies 
-and developed nations where they can get good yield for their money.
-
-I was recently approached by a Reserved Client, whom I had personally worked 
-with a few years ago with a proposal. What he request is an individual such 
-as you, who will be willing to receive money on his behalf abroad, and put 
-it to good use for a period not exceeding 6 years for a start.
-
-The client has offered these terms: 1. 10% commission paid to me and my 
-foreign partner of the total funds successfully evacuated. The funds in 
-question are over 13.2Million US Dollars.
-
-2. The funds will be used by the foreign partner for six years as a loan 
-without any interest. That is, you do not pay any interest on the money but 
-you give the client 50% of all profits after tax that accrued from the use 
-of the funds.
-
-If these terms are agreeable to you, kindly let me know and I will provide 
-you with all necessary information and procedures involved.
+After yet another reboot I had something like speed=7588238K/sec, I can
+only wonder when hard drives will have this speed :)
 
 
-All reply should be sent to this Email: pidainc26@yahoo.co.nz    for urgent 
-attendance.
-
-Sincerely yours,
-MR. LARRY GREEN
-Consultant Officer PIDA INC. Belfast
-Email:pidainc26@yahoo.co.nz
-
-PS* The client is willing to make available the fund to your possession and 
-in your country within 7days of confirmation of your capabilities.
-
-_________________________________________________________________
-Don’t just search. Find. Check out the new MSN Search! 
-http://search.msn.click-url.com/go/onm00200636ave/direct/01/
+-- 
+Tomasz Chmielewski
+http://wpkg.org
 
