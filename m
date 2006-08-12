@@ -1,41 +1,54 @@
-From: Brad Campbell <brad@wasp.net.au>
-Subject: Re: Resize on dirty array?
-Date: Sat, 12 Aug 2006 08:36:11 +0400
-Message-ID: <44DD5ABB.1090804@wasp.net.au>
-References: <44D7DC93.2070905@net1plus.com> <44D8E535.9080208@net1plus.com>	 <17625.24594.568139.430440@cse.unsw.edu.au>	 <44D9C6F5.7070501@net1plus.com>	 <68c491a60608090437l7e3b583el2214cbe6f01009ab@mail.gmail.com>	 <Pine.LNX.4.64.0608090846160.16324@coffee.psychology.mcmaster.ca>	 <44D9E41C.4050608@net1plus.com>	 <Pine.LNX.4.64.0608101031330.2920@twinlark.arctic.org>	 <72dbd3150608111810m4e4a2e07r5ddcee2132dd6d9a@mail.gmail.com>	 <Pine.LNX.4.64.0608111813250.29322@twinlark.arctic.org> <72dbd3150608111905g43ac320bn1ab30cbe021a3f43@mail.gmail.com>
+From: Chuck Ebbert <76306.1226@compuserve.com>
+Subject: [bug?] raid1 integrity checking is broken on 2.6.18-rc4
+Date: Sat, 12 Aug 2006 02:49:24 -0400
+Message-ID: <200608120252_MC3-1-C7DD-BA91@compuserve.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+	 charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <72dbd3150608111905g43ac320bn1ab30cbe021a3f43@mail.gmail.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: David Rees <drees76@gmail.com>
-Cc: dean gaudet <dean@arctic.org>, linux-raid@vger.kernel.org
+To: linux-raid <linux-raid@vger.kernel.org>
+Cc: Neil Brown <neilb@suse.de>, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-raid.ids
 
-David Rees wrote:
->> > I personally prefer to do a long self-test once a week, a month seems
->> > like a lot of time for something to go wrong.
->>
->> unfortunately i found some drives (seagate 400 pata) had a rather 
->> negative
->> effect on performance while doing self-test.
-> 
-> Interesting that you noted negative performance, but I typically
-> schedule the tests for off-hours anyway where performance isn't
-> critical.
+Doing this on a raid1 array:
+        echo "check" >/sys/block/md0/md/sync_action
 
-Personally I have every disk do a short test at 6am Monday-Saturday, and then they *all* (29 of 
-them) do a long test every Sunday at 6am.
+On 2.6.16.27:
+        Activity lights on both mirrors show activity for a while,
+        then the array status prints on the console.
 
-I figure having all disks do a long test at the same time rather than staggered is going to show up 
-any pending issues with my PSU's also.
+On 2.6.18-rc4 + the below patch:
+        Drive activity light blinks once on one drive, then the
+        array status prints (obviously no checking takes place.)
 
-(Been doing this for nearly 2 years now and had it show up a couple of drives that were slowly 
-growing defects. Nothing a dd if=/dev/zero of=/dev/sd(x) did not fix though)
 
-Brad
+Applied hotfix on 2.6.18-rc4:
+
+--- .prev/drivers/md/md.c       2006-08-08 09:00:44.000000000 +1000
++++ ./drivers/md/md.c   2006-08-08 09:04:04.000000000 +1000
+@@ -1597,6 +1597,19 @@ void md_update_sb(mddev_t * mddev)
+ 
+ repeat:
+        spin_lock_irq(&mddev->write_lock);
++
++       if (mddev->degraded && mddev->sb_dirty == 3)
++               /* If the array is degraded, then skipping spares is both
++                * dangerous and fairly pointless.
++                * Dangerous because a device that was removed from the array
++                * might have a event_count that still looks up-to-date,
++                * so it can be re-added without a resync.
++                * Pointless because if there are any spares to skip,
++                * then a recovery will happen and soon that array won't
++                * be degraded any more and the spare can go back to sleep then.
++                */
++               mddev->sb_dirty = 1;
++
+        sync_req = mddev->in_sync;
+        mddev->utime = get_seconds();
+        if (mddev->sb_dirty == 3)
 -- 
-"Human beings, who are almost unique in having the ability
-to learn from the experience of others, are also remarkable
-for their apparent disinclination to do so." -- Douglas Adams
+Chuck
+
