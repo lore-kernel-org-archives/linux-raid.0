@@ -1,54 +1,38 @@
-From: Chuck Ebbert <76306.1226@compuserve.com>
-Subject: [bug?] raid1 integrity checking is broken on 2.6.18-rc4
-Date: Sat, 12 Aug 2006 02:49:24 -0400
-Message-ID: <200608120252_MC3-1-C7DD-BA91@compuserve.com>
+From: "Tuomas Leikola" <tuomas.leikola@gmail.com>
+Subject: Re: Resize on dirty array?
+Date: Sat, 12 Aug 2006 10:22:04 +0300
+Message-ID: <5b170a7d0608120022n39742f2cl8f8017f6cc328f5e@mail.gmail.com>
+References: <44D7DC93.2070905@net1plus.com>
+	 <17623.57067.835826.446152@cse.unsw.edu.au>
+	 <44D8E535.9080208@net1plus.com>
+	 <17625.24594.568139.430440@cse.unsw.edu.au>
+	 <44D9C6F5.7070501@net1plus.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	 charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <44D9C6F5.7070501@net1plus.com>
 Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
-Cc: Neil Brown <neilb@suse.de>, linux-kernel <linux-kernel@vger.kernel.org>
+To: James Peverill <jamespev@net1plus.com>
+Cc: linux-raid@vger.kernel.org, Neil Brown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-Doing this on a raid1 array:
-        echo "check" >/sys/block/md0/md/sync_action
+On 8/9/06, James Peverill <jamespev@net1plus.com> wrote:
+>
+> I'll try the force assemble but it sounds like I'm screwed.  It sounds
+> like what happened was that two of my drives developed bad sectors in
+> different places that weren't found until I accessed certain areas (in
+> the case of the first failure) and did the drive rebuild (for the second
+> failure).  In the future, is there a way to help prevent this?
 
-On 2.6.16.27:
-        Activity lights on both mirrors show activity for a while,
-        then the array status prints on the console.
+This is a common scenario, and I feel could be helped if md could be
+told to not drop the disk on first failure, but rather keep it running
+in "FAILING" status (as opposed to FAILED), until all data from it has
+been evacuated (hot spare). This way, if another disk became "failing"
+during rebuild, due to another area of the disk, those blocks could be
+rebuilt using the other "failing" disk. (Also, this allows for the
+rebuild to mostly be a ddrescue-style copy operation, rather than
+parity computation).
 
-On 2.6.18-rc4 + the below patch:
-        Drive activity light blinks once on one drive, then the
-        array status prints (obviously no checking takes place.)
-
-
-Applied hotfix on 2.6.18-rc4:
-
---- .prev/drivers/md/md.c       2006-08-08 09:00:44.000000000 +1000
-+++ ./drivers/md/md.c   2006-08-08 09:04:04.000000000 +1000
-@@ -1597,6 +1597,19 @@ void md_update_sb(mddev_t * mddev)
- 
- repeat:
-        spin_lock_irq(&mddev->write_lock);
-+
-+       if (mddev->degraded && mddev->sb_dirty == 3)
-+               /* If the array is degraded, then skipping spares is both
-+                * dangerous and fairly pointless.
-+                * Dangerous because a device that was removed from the array
-+                * might have a event_count that still looks up-to-date,
-+                * so it can be re-added without a resync.
-+                * Pointless because if there are any spares to skip,
-+                * then a recovery will happen and soon that array won't
-+                * be degraded any more and the spare can go back to sleep then.
-+                */
-+               mddev->sb_dirty = 1;
-+
-        sync_req = mddev->in_sync;
-        mddev->utime = get_seconds();
-        if (mddev->sb_dirty == 3)
--- 
-Chuck
-
+Do you guys feel this is feasible? Neil?
