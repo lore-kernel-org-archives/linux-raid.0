@@ -1,22 +1,23 @@
-From: "Bynum" <cavalcadecongresswoman@rescueteam.com>
-Subject: While on fatblaster, you can lose weight without any changes in lifestyle.
-Date: Sun, 13 Aug 2006 02:15:48 +0100
-Message-ID: <21966396999597.7E93F00293@8SMB>
+From: "Patel" <barberadenosine@alumnidirector.com>
+Subject: Its also an energy booster so you feel more alert.
+Date: Sun, 13 Aug 2006 10:19:45 +0900
+Message-ID: <99033197237079.4908857372@3DXNIK2L>
 Mime-Version: 1.0
 Content-Type: text/plain;
         charset="Windows-1252"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-scsi-digest@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi, 
+Yo! 
 
 
- Fatblaster is an all natural herbal formulated thermogenic weight loss supplement.  Its also an energy booster so you feel more alert.  Nutritional substances can also stimulate thermogenesis. Thermogenesis, when not simply needed for routine food digestion and metabolism, is both a source of heat and when stimulated through appropriate dietary supplementation, a mechanism to increase metabolic rate.  Just take a look: http://kimetion.com/gall/fb/ 
+ One way to reduce energy intake and absorption is through thermogenic formulas such as the ingredients found in Fatblaster.  Fatblaster is an all natural herbal formulated thermogenic weight loss supplement.  With every order guaranteed, you have nothing to lose! (except weight) Find what you need: http://kimetion.com/gall/fb/ 
 
- A huge part of real love is constant forgiveness. A journey of a thousand miles begins with a single step. 
 
- Hunger is the best sauce Seven-fifths of all people do not understand fractions The looks ah de pudding is not de taste.
+ Love is an ideal thing, marriage a real thing A golden key opens all doors. 
+
+ For they shall be an ornament of grace unto thy head, and chains about thy neck. Let thy fountain be blessed: and rejoice with the wife of thy youth. Christmas comes but once a year Can a man take fire in his bosom, and his clothes not be burned?
 
