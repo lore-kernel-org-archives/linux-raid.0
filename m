@@ -1,33 +1,79 @@
-From: "Chrystal Jarrett" <sgchnas@iojd.org>
-Subject: Avoid enhancement pills
-Date: Sat, 12 Aug 2006 18:13:07 -0500
-Message-ID: <3266330424.1491593414@iojd.org>
-Reply-To: "Chrystal Jarrett" <sgchnas@iojd.org>
+From: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
+Subject: Re: raid5 write performance
+Date: Sun, 13 Aug 2006 16:19:19 +0300
+Message-ID: <5d96567b0608130619w60d8d883q4ffbfefcf650ee82@mail.gmail.com>
+References: <5d96567b0607020702p25d66490i79445bac606e5210@mail.gmail.com>
+	 <17576.18978.563672.656847@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <17576.18978.563672.656847@cse.unsw.edu.au>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+Cc: Neil Brown <neilb@suse.de>
 List-Id: linux-raid.ids
 
+well ... me again
 
-Hey bro, nice talking to you the other day!!! type
-*************************************************************************************************
-*  Thought you wou1d want to check this out,I got some for out
-*  myse1f cause they were on sa1e,you shou1d check out the s!te, I added the 1ink below. simply
-*
-*  Stee1 Pa(kage: 10 Patches reg $79.95 N0vv $49.95 ! Free shipping to:! see
-*  Si1ver Pa(kage: 25 Patches reg $129.95, N0vv $99.95! Free shipping and free exercise manua1 inc1uded! their
-*  Go1d Pa(kage: 40 Patches reg $189.95, N0vv $149.95! Free shipping and free exercise manua1 inc1uded! drive
-*  P1atinum Pa(kage: 65 Patches reg $259.95, N0vv $199.95! Free shipping and free exercise manua1 inc1uded! now
-* 
-*
-*  
-I kn0vv l!ke 10 guys wh0 have already st0(ked up on these best. http://www.jiliubabusidvadebila.com/ 
-*
-Talk to you soon old!
-In business, words are words explanations are explanations, promises are promises, but only performance is reality.
-*************************************************************************************************
+Following your advice....
+
+I added a deadline for every WRITE stripe head when it is created.
+in raid5_activate_delayed i checked if deadline is expired and if not i am
+setting the sh to prereadactive mode as .
+
+This small fix ( and in few other places in the code) reduced the
+amount of reads
+to zero with dd but with no improvement to throghput. But with random access to
+the raid  ( buffers are aligned by the stripe width and with the size
+of stripe width )
+there is an improvement of at least 20 % .
+
+Problem is that a user must know what he is doing else there would be
+a reduction
+in performance if deadline line it too long (say 100 ms).
+
+raz
+
+On 7/3/06, Neil Brown <neilb@suse.de> wrote:
+> On Sunday July 2, raziebe@gmail.com wrote:
+> > Neil hello.
+> >
+> > I have been looking at the raid5 code trying to understand why writes
+> > performance is so poor.
+>
+> raid5 write performance is expected to be poor, as you often need to
+> pre-read data or parity before the write can be issued.
+>
+> > If I am not mistaken here, It seems that you issue a write in size of
+> > one page an no more no matter what buffer size I am using .
+>
+> I doubt the small write size would contribute more than a couple of
+> percent to the speed issue.  Scheduling (when to write, when to
+> pre-read, when to wait a moment) is probably much more important.
+>
+> >
+> > 1. Is this page is directed only to parity disk ?
+>
+> No.  All drives are written with one page units.  Each request is
+> divided into one-page chunks, these one page chunks are gathered -
+> where possible - into strips, and the strips are handled as units
+> (Where a strip is like a stripe, only 1 page wide rather then one chunk
+> wide - if that makes sense).
+>
+> > 2. How can i increase the write throughout ?
+>
+> Look at scheduling patterns - what order are the blocks getting
+> written, do we pre-read when we don't need to, things like that.
+>
+> The current code tries to do the right thing, and it certainly has
+> been worse in the past, but I wouldn't be surprised if it could still
+> be improved.
+>
+> NeilBrown
+>
 
 
+-- 
+Raz
