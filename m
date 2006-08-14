@@ -1,61 +1,53 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: [bug?] raid1 integrity checking is broken on 2.6.18-rc4
-Date: Mon, 14 Aug 2006 16:14:06 +1000
-Message-ID: <17632.5294.559058.66914@cse.unsw.edu.au>
-References: <200608120252_MC3-1-C7DD-BA91@compuserve.com>
+From: Luca Berra <bluca@comedia.it>
+Subject: Re: Making bootable SATA RAID1 array in Mandriva 2006
+Date: Mon, 14 Aug 2006 10:17:14 +0200
+Message-ID: <20060814081714.GI19306@percy.comedia.it>
+References: <44DFBB0E.90705@aol.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Chuck Ebbert on Saturday August 12
+Content-Disposition: inline
+In-Reply-To: <44DFBB0E.90705@aol.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Chuck Ebbert <76306.1226@compuserve.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Saturday August 12, 76306.1226@compuserve.com wrote:
-> Doing this on a raid1 array:
->         echo "check" >/sys/block/md0/md/sync_action
-> 
-> On 2.6.16.27:
->         Activity lights on both mirrors show activity for a while,
->         then the array status prints on the console.
-> 
-> On 2.6.18-rc4 + the below patch:
->         Drive activity light blinks once on one drive, then the
->         array status prints (obviously no checking takes place.)
-> 
+On Sun, Aug 13, 2006 at 07:51:42PM -0400, andy liebman wrote:
+>-- I copied the contents of /dev/sda1 (/ partition) and /dev/sda6 (/home 
+>partition) to /dev/sdb1 and /dev/sdb6 using rsync.
+this is not really important, but you should have used the raid devices
+as a target.
 
-Thanks for the report.
-Easily duplicated, easily fixed.
-I'll make sure this patch gets into 2.6.18.
+>-- I edited fstab and lilo.conf on the the RAID1 "/" partition so that 
+>they would refer to /dev/md1
+>-- I ran chroot on the /dev/md1 partition
+did you mount /dev, /proc and /sys before chrooting?
+i.e
+mount --bind /dev /newroot/dev
+mount -t proc /proc /newroot/proc
+mount -t sysfs /sys /newroot/sys
 
-Thanks again,
-NeilBrown
+>-- I set up an /etc/mdadm.conf file (using mdadm --detail 
+>--scan>>/etc/mdadm.conf   -- that's where Mandriva puts it)
+>-- I added to lilo.conf "raid-extra-boot=  and tried both "mbr" and 
+>"/dev/sda,/dev/sdb"
+mbr should do
 
-Signed-off-by: Neil Brown <neilb@suse.de>
+>-- I ran mkinitrd and created a new initrd in /boot on /dev/md1.  I got 
+>an error about not finding the 3w_9xxx driver, but I don't need to load 
+>that in the initrd anyway so I reran with --builtin=3w_9xxx so that 
+>mkinitrd would skip that driver that I don't need.
+>
+>BUT, after all of this, I get a bunch of errors when I try to run lilo:
+>     Fatal: Trying to map files from unnamed device 0x0000
 
-diff .prev/drivers/md/raid1.c ./drivers/md/raid1.c
---- .prev/drivers/md/raid1.c	2006-07-31 17:24:36.000000000 +1000
-+++ ./drivers/md/raid1.c	2006-08-14 15:52:48.000000000 +1000
-@@ -1644,15 +1644,16 @@ static sector_t sync_request(mddev_t *md
- 		return 0;
- 	}
- 
--	/* before building a request, check if we can skip these blocks..
--	 * This call the bitmap_start_sync doesn't actually record anything
--	 */
- 	if (mddev->bitmap == NULL &&
- 	    mddev->recovery_cp == MaxSector &&
-+	    !test_bit(MD_RECOVERY_REQUESTED, &mddev->recovery) &&
- 	    conf->fullsync == 0) {
- 		*skipped = 1;
- 		return max_sector - sector_nr;
- 	}
-+	/* before building a request, check if we can skip these blocks..
-+	 * This call the bitmap_start_sync doesn't actually record anything
-+	 */
- 	if (!bitmap_start_sync(mddev->bitmap, sector_nr, &sync_blocks, 1) &&
- 	    !conf->fullsync && !test_bit(MD_RECOVERY_REQUESTED, &mddev->recovery)) {
- 		/* We can skip this block, and probably several more */
+Regards,
+L.
 
+-- 
+Luca Berra -- bluca@comedia.it
+        Communication Media & Services S.r.l.
+ /"\
+ \ /     ASCII RIBBON CAMPAIGN
+  X        AGAINST HTML MAIL
+ / \
