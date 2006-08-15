@@ -1,41 +1,49 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: Kernel panic during resync
-Date: Tue, 15 Aug 2006 08:14:04 +1000
-Message-ID: <17632.62892.429563.800085@cse.unsw.edu.au>
-References: <44DC8153.8010105@waldoware.com>
+From: "Teri Crocker" <teri.crockerdg@midcoast.com>
+Subject: For Investors Who Love Small Stox
+Date: Tue, 15 Aug 2006 07:45:49 -0400
+Message-ID: <007b01c6c060$5a5f8280$425a45d4__14533.6333117031$1155597274$gmane$org@midcoast.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+        charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Paul Waldo on Friday August 11
 Sender: linux-raid-owner@vger.kernel.org
-To: Paul Waldo <pwaldo@waldoware.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-kernel-owner@vger.kernel.org, linux-diald@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Friday August 11, pwaldo@waldoware.com wrote:
-> Hi all,
-> 
-> I've got a machine with a RAID6 array which hung on me yesterday.  Upon
-> reboot, mdadm refused to start the array, since it was degraded and
-> dirty.  The array had 7 drives, and one had previously gone bad.  I'm
-> running Fedora Core 5.
-> 
-> I rebooted, using the "md-mod.start_dirty_degraded=1" parameter.
-> Everything seemed to be OK--the sync process started and I watched it go
-> for about half an hour.  I came back later, and found the machine had a
-> kernel panic with the message "Kernel panic - not syncing: Fatal
-> exception in interrupt".  Just to make sure, I restarted and tried to
-> sync again, but got the same message.
-> 
-> What might be causing this?  Is there any way to recover?  Thanks in
-> advance!
+TRADING A|ERT FOR CDPN 
+Trade Date: Monday August 14, 2006
 
-It is very hard to say without more details.
-Was there any stack trace?  Any other possibly related messages that
-you can report?
+Company: China Datacom Corporation 
+Ticker: CDPN
+Current_Price: $0.27 
+3-5 Day Estimate: $1.50
+Buy: "Str0ng" 
 
-And what kernel (exactly) are you using?
+This Upcoming Week is going to be CDPN First Marketing Campiagn! 
+CDPN is just getting off the ground and trading is about to explode.  
+Get in on CDPN before its .75 or better.  We put this on our radars as 
+10/10 and predict profits of 200-300percent by end of the week!
 
-NeilBrown
- 
+BREAKING NEWS: China Datacom Corporation Announces Business Acquisition 
+in China (August 11, 2006 - 9:30 AM EDT)
+
+* China Datacom Corporation today announced that CDPN had entered Plan 
+of Exchange with Supremacy International Limited ('Supremacy'), a 
+corporation incorporated in British Virgin Island. Pursuant to this 
+agreement, CDPN would acquire 100percent interest of Supremacy, such 
+that Supremacy will become a wholly owned subsidiary of CDPN. 
+
+* The acquisition will enable CDPN to tap into the emerging 3G related 
+value added services market in China. China is now the largest mobile 
+telecommunication market in the world, accounting for 20percent of the 
+world total number of mobile users. It is estimated that in China 
+revenues created from 3G related businesses will increase from about 
+USD2.8 to USD28.3 bi||ion from 2006 to 2010.
+
+
+This is going to be the FIRST BIG WAVE for this company.  We strongly 
+beleive this is your chance to get in at .27 and watch it shoot into 
+the d0||ar range by the end of the week!  Our picks this week netted 
+our newsletter subscribers 400percent profits.  Don't let this one 
+slide, read the releases, and get on CDPN first thing Monday morning.
