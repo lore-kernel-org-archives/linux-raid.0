@@ -1,78 +1,52 @@
-From: Gordon Henderson <gordon@drogon.net>
+From: Luca Berra <bluca@comedia.it>
 Subject: Re: Can you IMAGE Mirrored OS Drives?
-Date: Wed, 16 Aug 2006 08:03:50 +0100 (BST)
-Message-ID: <Pine.LNX.4.56.0608160755090.15328@lion.drogon.net>
+Date: Wed, 16 Aug 2006 09:38:54 +0200
+Message-ID: <20060816073854.GA7356@percy.comedia.it>
 References: <44E250CD.5040308@aol.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 In-Reply-To: <44E250CD.5040308@aol.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: andy liebman <andyliebman@aol.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, 15 Aug 2006, andy liebman wrote:
+On Tue, Aug 15, 2006 at 06:55:09PM -0400, andy liebman wrote:
+>I will post my recipe here tomorrow for others to see -- maybe it will 
+>help somebody else. I just want to edit a few things to clarify before I 
+>post it. Some of the gotchas were were amusing -- like I couldn't run 
+>LILO on degraded raid1 arrays, and running "mkinitrd" from within 
+damn, could you open a bug on qa.mandriva.com, so we will remember to
+fix it?
+>Mandriva 2006 produces gzipped initrd files, but running "mkinitrd" by 
+>chrooting in from a LIVE CD produces initrd files that needs cpio to 
+>decompress and read it.
+actually up to kernel 2.6.12-18mdk we defaulted to gzipped cramfs
+initrd. now the default is initramfs.
 
-> -- If I were to create disk images of EACH drive (i.e., /dev/sda and
-> /dev/sdb), could I restore each of those images to NEW drives -- with
-> all of their respective partitions -- and have a working RAIDED OS?  I
-> ask because my ultimate goal is to put a RAIDED OS on many systems, and
-> once I get ONE working, it would be nice to clone them the way I already
-> clone SINGLE OS drives. Can you clone RAIDS?
+>clone SINGLE OS drives. Can you clone RAIDS? It would mean, of course, 
+you can certainly clone raids.
 
-Yes.
+>that the UUIDs would be the same on each system. Is that bad? Is there 
+>any risk here?
+The only risk is if you ever move one disk from one machine to another.
+To work around this you can change the uuid by recreating the array with
+mdadm, but you would have to regenerate the initrd and fight again with
+lilo :(
 
-I did this some time back to create half a dozen identical systems. I did
-it with IDE drives, but I don't see why it won't work with SCSI/SATA.
+>-- I know there was a lot of discussion on the list a while back about 
+>whether or not to mirror SWAP space. Was there ever any conclusion? It 
+yes, with kernel 2.2 mirroring swap led to deadlocks under memory
+pressure. but with modern kernels the only issue that would prevent you
+to mirror swap is masochism.
 
-The first thing you need is to make sure the partition tables are
-identical on both drives. (you probably don't, but it'll be much easier)
+L.
 
-So I started with my good system, and had a copy of the partition table on
-hda:
-
-  # sfdisk -d /dev/hda > ~hda.part
-
-Made sure all partitions were insync, then shut it down and remove hdb,
-and replace it with a new blank disk of the same size.
-
-It booted just fine, with all partitions degraded.
-
-Put the parittion table on the new blank hdb:
-
-  # sfdisk /dev/hdb < ~/hda.part
-
-then I hot-added each partition. eg:
-
-  # mdadm --add /dev/md1 /dev/hdb1
-
-and so on.
-
-And that's it.
-
-you have in your hand a working disk to put (as hda) into a new system, so
-just put in in and repeat the above, then you have 2 working systems. Shut
-them down and remove the hdb's and you have 2 degraded systems and 2 new
-masters to repeat the process.
-
-It's time consuming, but it will work.
-
-One thing you will need to do is change the hostname on each new system
-you bring up, and IP address (if not by DHCP).
-
-> It would mean, of course,
-> that the UUIDs would be the same on each system. Is that bad? Is there
-> any risk here?
-
-Probably not.
-
-> -- I know there was a lot of discussion on the list a while back about
-> whether or not to mirror SWAP space. Was there ever any conclusion?
-
-If you don't mirror (or RAID) swap, and a sector in the swap partition
-goes faulty, then it's game over, so if you have swap then it must be
-raided. I've put swap on RAID1/5 and 6. It might be sub-optimal on RAID-5
-and 6, but hey ...
-
-Gordon
+-- 
+Luca Berra -- bluca@comedia.it
+        Communication Media & Services S.r.l.
+ /"\
+ \ /     ASCII RIBBON CAMPAIGN
+  X        AGAINST HTML MAIL
+ / \
