@@ -1,35 +1,42 @@
-From: dean gaudet <dean@arctic.org>
-Subject: Re: Is mdadm --create safe for existing arrays ?
-Date: Wed, 16 Aug 2006 09:21:24 -0700 (PDT)
-Message-ID: <Pine.LNX.4.64.0608160918570.28447@twinlark.arctic.org>
-References: <20060816152645.9761.qmail@web34611.mail.mud.yahoo.com>
+From: andy liebman <andyliebman@aol.com>
+Subject: Re: Imaging Mirrored OS Drives
+Date: Wed, 16 Aug 2006 13:05:39 -0400
+Message-ID: <44E35063.3040706@aol.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20060816152645.9761.qmail@web34611.mail.mud.yahoo.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Peter Greis <peter_greis@yahoo.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 16 Aug 2006, Peter Greis wrote:
+For those who have been following my attempt to create IMAGES of a pair 
+of drives with mirrored OS partitions, and then restore the IMAGES to a 
+new set of drives...
 
-> So, how do I change / and /boot to make the super
-> blocks persistent ? Is it safe to run "mdadm --create
-> /dev/md0 --raid-devices=2 --level=1 /dev/sda1
-> /dev/sdb1" without loosing any data ?
+This doesn't work directly. The imaging programs are FAST because they 
+do not perform block level copying. They replicated partition structure 
+and copy FILES from disk to image and then image to disk.
 
-boot a rescue disk
+As I have just discovered, when I restore the images to NEW clean 
+drives, the partitions on the NEW drives do not have any RAID 
+information. No UUID for mdadm to use. No RAIDS to assemble. But the 
+file information is there.
 
-shrink the filesystems by a few MB to accomodate the superblock
+So, my questions are...
 
-mdadm --create /dev/md0 --raid-devices=2 --level=1 /dev/sda1 missing
-mdadm /dev/md0 -a /dev/sdb1
+1) Is it now possible to CREATE mirrored partitions with mdadm AND still 
+KEEP the existing data on the NEW set of drives. In other words, create 
+the mirrors AFTER the fact (given that the data on the drives is 
+identical).
 
-grow the filesystem
+2) Furthermore, if the above is possible, in creating the arrays on the 
+new drives is there a way to force mdadm to give the arrays specific 
+UUID numbers? It looks like I can do that with mdadm --update? Should I 
+create the arrays first using the normal "mdadm -C" procedure, and then 
+update the UUIDs?
 
-you could probably get away with an --assume-clean and no resync if you 
-know the array is clean... just don't forget to shrink/grow the 
-filesystem.
+I want to update the UUIDs so that they are the same as the UUIDs on the 
+partitions on the original set of drives.
 
--dean
+Andy Liebman
