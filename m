@@ -1,30 +1,46 @@
-From: "Molle Bestefich" <molle.bestefich@gmail.com>
-Subject: Re: remark and RFC
-Date: Wed, 16 Aug 2006 16:59:53 +0200
-Message-ID: <62b0912f0608160759u37879015hec81eaaf8439e68d@mail.gmail.com>
-References: <200608160906.k7G96A204753@inv.it.uc3m.es>
+From: Peter Greis <peter_greis@yahoo.com>
+Subject: Is mdadm --create safe for existing arrays ?
+Date: Wed, 16 Aug 2006 08:26:45 -0700 (PDT)
+Message-ID: <20060816152645.9761.qmail@web34611.mail.mud.yahoo.com>
+Reply-To: peter_greis@yahoo.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200608160906.k7G96A204753@inv.it.uc3m.es>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: ptb@inv.it.uc3m.es
-Cc: linux raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Peter T. Breuer wrote:
-> I would like raid request retries to be done with exponential
-> delays, so that we get a chance to overcome network brownouts.
+Greetings,
 
-Hmm, I don't think MD even does retries of requests.
+I have a SuSE 10.0 raid-1 root which will not properly
+boot, and I have noticed that / and /boot have
+non-persistent super blocks (which I read is required
+for booting).
 
-It does write-back as a (very successful! Thanks Neil :-D) attempt to
-fix bad blocks, but that's a different thing.
+So, how do I change / and /boot to make the super
+blocks persistent ? Is it safe to run "mdadm --create
+/dev/md0 --raid-devices=3D2 --level=3D1 /dev/sda1
+/dev/sdb1" without loosing any data ?
 
-Is that what you meant?
+regards,
 
-Or is there something sandwiched between MD and ENBD that performs retries...
+Peter
 
-Or am I just wrong :-)..
+PS Yes, I have googled extensively without finding a
+conclusive answer.
+=20
+
+Peter Greis
+freethinker gmbh
+St=E4fa Switzerland
+
+__________________________________________________
+Do You Yahoo!?
+Tired of spam?  Yahoo! Mail has the best spam protection around=20
+http://mail.yahoo.com=20
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
