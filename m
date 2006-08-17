@@ -1,35 +1,23 @@
-From: Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE>
-Subject: Re: remark and RFC
-Date: Thu, 17 Aug 2006 16:11:37 +0200
-Message-ID: <ec1tep$rmm$1@sea.gmane.org>
-References: <200608160906.k7G96A204753@inv.it.uc3m.es>
+From: "=?GB2312?B?yubQxw==?=" <xshu2006@gmail.com>
+Subject: Re: raid5 grow problem
+Date: Thu, 17 Aug 2006 22:30:53 +0800
+Message-ID: <7de068fd0608170730s75afb310g58e6c5fd07202ef@mail.gmail.com>
+References: <7de068fd0608161815yc34ec6bl886fa637691ee5f8@mail.gmail.com>
+	 <7de068fd0608170223g2009962chc222233c70ee9317@mail.gmail.com>
+	 <Pine.LNX.4.64.0608170847390.9352@p34.internal.lan>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.64.0608170847390.9352@p34.internal.lan>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Peter T. Breuer <ptb@inv.it.uc3m.es> wrote:
-> 1) I would like raid request retries to be done with exponential
->    delays, so that we get a chance to overcome network brownouts.
-
-Hmmm, IMHO this should be implemented in nbd/enbd where it belongs to
-and errors should be masked within nbd/enbd then. Since (at least) md
-has no read-timeouts or something like that (please correct me if I'm
-wrong), this should be no big issue.
-
-Typically, storage media communication channels are loss-free, so either
-a read is okay or it fails. A storage media usually has no retry-on-
-timeout semantics, so upper layers are with high probability not aware
-of such a thing. This is the same with RAID as well as with filesystems,
-so if you run an ext2 or something like that on top of your enbd you
-should suffer from the same problems: if a read fails, the filesystem
-goes dead, gets remounted read-only or follows whatever error-strategy
-you have it configured for.
-
-
-regards
-   Mario
--- 
-() Ascii Ribbon Campaign
-/\ Support plain text e-mail
-
+> I've only tried growing a RAID5, which was the only RAID that I remember
+> being supported (to grow) in the kernel, I am not sure if its posible to
+i know this,but how you grow your raid5,what's your mdadm version?
+need anyother configure before creat md & use mdadm -G ..to grow?
+> grow other types of RAID arrays.
