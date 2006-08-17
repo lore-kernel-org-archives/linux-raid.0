@@ -1,52 +1,32 @@
-From: "basidiomycetes" <clovenchaucer@royalvegas-casino-kr.com>
-Subject: great bryan
-Date: Thu, 17 Aug 2006 17:42:35 +0300
-Message-ID: <04949658289234.853BA6392A__10971.8630709269$1155825790$gmane$org@OLS2>
+From: Pavel Machek <pavel@suse.cz>
+Subject: Re: [patch] raid1: allow user to force reads from a specific disk
+Date: Thu, 17 Aug 2006 15:04:19 +0000
+Message-ID: <20060817150419.GC5950@ucw.cz>
+References: <200608062018_MC3-1-C74D-B4E9@compuserve.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-        charset="Windows-1252"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <200608062018_MC3-1-C74D-B4E9@compuserve.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Chuck Ebbert <76306.1226@compuserve.com>
+Cc: Neil Brown <neilb@suse.de>, linux-kernel <linux-kernel@vger.kernel.org>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Key stoock invetsment strategies that increase your profit
+Hi!
 
-Fellow Investorr, big news are hitting on thursday for AGA O!!!
+> Allow user to force raid1 to read all data from a given disk.
+> This lets users do integrity checking by comparing results
+> from reading different disks.  If at any time the system finds
+> it cannot read from the given disk it resets the disk number
+> to -1, the default, which means to balance reads.
+> 
+> Signed-off-by: Chuck Ebbert <76306.1226@compuserve.com>
 
-Somebody knows something...place A GAO on the radar!!!
+Using /sysfs as an interface... so that two utilities checking disk
+integrity will interfere with each other and integrity check will
+interfere with normal work. Perhaps ioctl/fcntl and per-fd status is
+would be right thing to do?
 
-Get ready for a volatile 2nd half of 2006 - one where the Bulls and 
-Bears will BOTH be proved wrong. But odds are, we'll see another 
-year where the makret indexes bounce around a lot without really going anywhere. And we'll also see certain sectors - favored at this point in the economic cycle - SOAR... 
-
-Own the right sttocks, in the right space, and you could reap a 
-handful of money-doublers. But if you own the wrong investment, you could easly lose 25%-35% or more! 
-
-Here is my Favorite Pick for the second half of 2006: AGA O!!!
-
-Traade Alret: Thursday, August 17, 2006 
----------------------------------------------
-CCompany: AGAA RESOURCESS NEEW
-Stcok: AG AO 
-Currennt Prrice: $1.69
-1 Week Target: $4.10
-Buy: "SSTRONG" 
-Expectations: Max 
----------------------------------------------
-
-When this Stcok moves - watch out! This is your chance to get in 
-the low. Big watch in play this Thursday morning! Out AG AO on your 
-radar's now and reap the benefits early. 
-
-
-There is a massive promotion underway this Thursday, August 17 
-apprising potential eager inveestors of this emerging situation. 
-When this stcok moves - watch out! stooocks wwe profille shoow aa signifiicant increasee iin sstock priice sometimes in days, not months or years, remember this is a stronng pllay. 
-
-Massive news for AG AO this thursday! AGA O is a big mover in the STCOK MAKRET!!! 
-
-A leopard cannot change its spots. As you sow, so shall you reap. Better a poor man whose walk is blameless than a rich man whose ways are perverse Fools seldom differ. The more you get, the more you want.
-Lots of people confuse bad management with destiny Give a clown a finger and he will take your hand .
-
+-- 
+Thanks for all the (sleeping) penguins.
