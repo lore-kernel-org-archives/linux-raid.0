@@ -1,55 +1,34 @@
-From: "artichoke" <aiddistributor@royalecomfort.com>
-Subject: tremendous achieve
-Date: Wed, 16 Aug 2006 20:47:17 -0500
-Message-ID: <77117059307049.D8E949A5B8@5L1S>
+From: "Noah Stevenson" <lesa@rmasales.com>
+Subject: Logo your Business Identity (ID6498911)
+Date: Thu, 17 Aug 2006 01:48:01 -0400
+Message-ID: <35882881826625.AB089C0083__23321.9292866581$1155788139$gmane$org@58D0Y47>
 Mime-Version: 1.0
 Content-Type: text/plain;
         charset="Windows-1252"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: linux-ppp@vger.kernel.org
 List-Id: linux-raid.ids
 
-sttock recommendations and managing solutions
+p7n
 
-Fellow Investoor, big news are hitting on thursday for AGA O!!!
+Our art team creates a custom logo for you, based on your needs.  Years of experience have taught us how to create a logo that makes a statement that is unique to you.
 
-Somebody knows something...place AGA O on the radar!!!
+In a professional manner we learn about your image and how you would like the world to perceive you and your company.  With this information we then create a logo that is not only unique but reflects the purpose of you and your company.
 
-Get ready for a volatile 2nd half of 2006 - one where the Bulls and 
-Bears will BOTH be proved wrong. But odds are, we'll see another 
-year where the mraket indexes bounce around a lot without really going anywhere. And we'll also see certain sectors - favored at this point in the economic cycle - SOAR... 
+For value and a logo that reflects your image, take a few minutes and visit Logo Maker!
 
-Own the right sttocks, in the right space, and you could reap a 
-handful of money-doublers. But if you own the wrong investment, you could easly lose 25%-35% or more! 
+http://cominform.com.marklogo-ax.biz
 
-Here is my Favorite Pick for the second half of 2006: A GAO!!!
-
-Traade Aelrt: Thursday, August 17, 2006 
----------------------------------------------
-Commpany: AGAA RRESOURCES NEWW
-Stcok: AGA O 
-Currentt Pricee: $1.69
-1 Week Target: $4.10
-Buy: "SSTRONG" 
-Expectations: Max 
----------------------------------------------
-
-When this Stcok moves - watch out! This is your chance to get in 
-the low. Big watch in play this Thursday morning! Out AGA O on your 
-radar's now and reap the benefits early. 
-
-
-There is a massive promotion underway this Thursday, August 17 
-apprising potential eager investorss of this emerging situation. 
-When this stcok moves - watch out! stocckks wwe prrofile shhow aa signifficant increaase iin sttock pricee sometimes in days, not months or years, remember this is a sstrong plaay. 
-
-Massive news for AG AO this thursday! A GAO is a big mover in the STCOK MAREKT!!! 
+Sincerely,
+Logo Design Team
+ 
 
 
 
-A gentleman without an estate is a pudding without suet.  His own iniquities shall take the wicked himself, and he shall be holden with the cords of his sins.. Distance makes the heart grow fonder It ain't over 'till it's over..
 
-God could not be everywhere and therefore he made mothers  Variety is the spice of life.
+
+
+ absorb carrageen cordage
 
