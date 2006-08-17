@@ -1,76 +1,63 @@
-From: Chuck Ebbert <76306.1226@compuserve.com>
-Subject: Re: [bug?] raid1 integrity checking is broken on 2.6.18-rc4
-Date: Thu, 17 Aug 2006 16:03:24 -0400
-Message-ID: <200608171605_MC3-1-C870-8190@compuserve.com>
+From: "amphetamine" <asphyxiatedeception@earthlink.net>
+Subject: bloodroot
+Date: Thu, 17 Aug 2006 15:51:26 -0700
+Message-ID: <78241690091804.29C1B03146@TF8N6>
 Mime-Version: 1.0
 Content-Type: text/plain;
-	 charset=us-ascii
+        charset="Windows-1252"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030238AbWHQUGa@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-raid <linux-raid@vger.kernel.org>
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-scsi-digest@vger.kernel.org
 List-Id: linux-raid.ids
 
-In-Reply-To: <17632.5294.559058.66914@cse.unsw.edu.au>
+18 August! Attention!
+ 
+Get on BC LC first thing on friday, this one !
 
-On Mon, 14 Aug 2006 16:14:06 +1000, Neil Brown wrote:
+CCompany: BICOASTAL COMMUNICAT
+Symobl:  B CLC 
+Currrent PPrice: $0.0265
+Exppecting pricceon Friday: $0.06-$0.08
 
-> > On 2.6.18-rc4 + the below patch:
-> >         Drive activity light blinks once on one drive, then the
-> >         array status prints (obviously no checking takes place.)
-> > 
-> 
-> Thanks for the report.
-> Easily duplicated, easily fixed.
-> I'll make sure this patch gets into 2.6.18.
-> 
-> Thanks again,
-> NeilBrown
-> 
+The pirce is the minimum for last week and it will boom on friday!
+Worst Scenarrio Target Prcie: $0.065
+Most Probable Scenairo Target PPrice: $0.099
+Best Scenario Target Prcie: $0.125
+Thursday's Volume: 8,725,600 (Heavy)
 
-I just tried the patch and now it seems to be syncing the drives instead
-of only checking them?  (At the very least the message is misleading.)
+Watch out for BC LC this friday, we see a great story in the making!
 
- # echo "check" >/sys/block/md0/md/sync_action
- # dmesg | tail -9
- md: syncing RAID array md0
- md: minimum _guaranteed_ reconstruction speed: 1000 KB/sec/disc.
- md: using maximum available idle IO bandwidth (but not more than 200000 KB/sec) for reconstruction.
- md: using 128k window, over a total of 104256 blocks.
- md: md0: sync done.
- RAID1 conf printout:
-  --- wd:2 rd:2
-  disk 0, wo:0, o:1, dev:hda9
-  disk 1, wo:0, o:1, dev:sda5
+Recommendation: "Stronng Buyy" starting on Friday, August 18, 2006.
+
+Latest News
+
+Bicoastal Communications Inc. Announces E911 Service Agreement. Grand 
+Junction, Colo.--(Busiiness Wiree)--Aug. 15, 2006--Bicoastal Communications Inc.(Pink Sheets: BCL C - News) announces it has reached an agreement with Dialpoint Voice Service Inc. of Nevada to provide E911 services for its National VoIP (Voice over Internet Protocol) rollout through Callingpoint Communications.
+
+This will give Bicoastal the ability to provide E911 services to all of the lower 48 
+states via VoIP as required by the FCC. Upon successful testing of the system, Bicoastal will be in position to start offering Residential and Business VoIP 
+services through its Callingpoint Communications unit within the next two weeks. 
+
+About the Company:
+
+Bicoastal Communications Inc. is positioned to make substantial growth in the coming years. The company strategy is to deploy into non-primary cities with 
+population centers of less than one million people. Unlike the major metropolitan areas of the country, these cities have not seen the benefit of competitive product offerings. Bicoastal intends to address these deficiencies by encompassing its IP services, Traditional and VoIP Telephone services and Television (IPTV) services, securing revenues with the much-touted triple play.The strategic partnerships developed have already made it possible for Bicoastal to gain direct access to 25,000 fiber-connected homes throughout the United States.
+
+Members should pick up BC LC as early as possible on Friday.
+
+This news is going to send B CLC off the charts!  
+
+We all know that in the this businses it's the big announcements that makes these stockss expldoe!!! 
+
+We see this as a hgue proift taking a deal. Watch BCL C like a hawk!
+
+Watch this one Tradde on the 18 OF August. Go B CLC! 
 
 
-> Signed-off-by: Neil Brown <neilb@suse.de>
-> 
-> diff .prev/drivers/md/raid1.c ./drivers/md/raid1.c
-> --- .prev/drivers/md/raid1.c  2006-07-31 17:24:36.000000000 +1000
-> +++ ./drivers/md/raid1.c      2006-08-14 15:52:48.000000000 +1000
-> @@ -1644,15 +1644,16 @@ static sector_t sync_request(mddev_t *md
->               return 0;
->       }
->  
-> -     /* before building a request, check if we can skip these blocks..
-> -      * This call the bitmap_start_sync doesn't actually record anything
-> -      */
->       if (mddev->bitmap == NULL &&
->           mddev->recovery_cp == MaxSector &&
-> +         !test_bit(MD_RECOVERY_REQUESTED, &mddev->recovery) &&
->           conf->fullsync == 0) {
->               *skipped = 1;
->               return max_sector - sector_nr;
->       }
-> +     /* before building a request, check if we can skip these blocks..
-> +      * This call the bitmap_start_sync doesn't actually record anything
-> +      */
->       if (!bitmap_start_sync(mddev->bitmap, sector_nr, &sync_blocks, 1) &&
->           !conf->fullsync && !test_bit(MD_RECOVERY_REQUESTED, &mddev->recovery)) {
->               /* We can skip this block, and probably several more */
 
--- 
-Chuck
+
+Pick your friends like you pick your fruit You do well to believe in God Satan also believes and trembles
+
+Two sides of the same coin. The nearer to the church, the farther from God. Believe nothing of what you hear, and only half of what you see  Out of the frying pan and into the fire .
+
