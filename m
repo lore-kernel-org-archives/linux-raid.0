@@ -1,63 +1,38 @@
-From: "amphetamine" <asphyxiatedeception@earthlink.net>
-Subject: bloodroot
-Date: Thu, 17 Aug 2006 15:51:26 -0700
-Message-ID: <78241690091804.29C1B03146@TF8N6>
-Mime-Version: 1.0
-Content-Type: text/plain;
-        charset="Windows-1252"
-Content-Transfer-Encoding: 7bit
+From: "Peter T. Breuer" <ptb@inv.it.uc3m.es>
+Subject: Re: remark and RFC
+Date: Fri, 18 Aug 2006 09:51:14 +0200 (MET DST)
+Message-ID: <200608180751.k7I7pE609767@inv.it.uc3m.es>
+Reply-To: ptb@inv.it.uc3m.es
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: From (env: ptb) at "Aug 17, 2006 08:28:07 am"
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-scsi-digest@vger.kernel.org
+To: ptb@inv.it.uc3m.es
+Cc: Neil Brown <neilb@suse.de>, linux raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-18 August! Attention!
- 
-Get on BC LC first thing on friday, this one !
+"Also sprach ptb:"
+> 4) what the network device driver wants to do is be able to identify
+>    the difference between primary requests and retries, and delay 
+>    retries (or repeat them internally) with some reasonable backoff
+>    scheme to give them more chance of working in the face of a
+>    brownout, but it has no way of doing that.  You can make the problem
+>    go away by delaying retries yourself (is there a timedue field in
+>    requests, as well as a timeout field?  If so, maybe that can be used
+>    to signal what kind of a request it is and how to treat it).
 
-CCompany: BICOASTAL COMMUNICAT
-Symobl:  B CLC 
-Currrent PPrice: $0.0265
-Exppecting pricceon Friday: $0.06-$0.08
+If one could set the 
 
-The pirce is the minimum for last week and it will boom on friday!
-Worst Scenarrio Target Prcie: $0.065
-Most Probable Scenairo Target PPrice: $0.099
-Best Scenario Target Prcie: $0.125
-Thursday's Volume: 8,725,600 (Heavy)
+    unsigned long start_time;
 
-Watch out for BC LC this friday, we see a great story in the making!
+field in the outgoing retry request to now + 1 jiffy, that might be
+helpful.  I can't see a functionally significant use of this field at
+present in the kernel ...  ll_rw_blk rewrites the field when merging
+requests and end_that_request then uses it for the accounting stats
+(duration) __disk_stat_add(disk, ticks[rw], duration) which will add a
+minus 1 at worst.
 
-Recommendation: "Stronng Buyy" starting on Friday, August 18, 2006.
+Shame there isn't a timedue field in the request struct.
 
-Latest News
+Silly idea, maybe.
 
-Bicoastal Communications Inc. Announces E911 Service Agreement. Grand 
-Junction, Colo.--(Busiiness Wiree)--Aug. 15, 2006--Bicoastal Communications Inc.(Pink Sheets: BCL C - News) announces it has reached an agreement with Dialpoint Voice Service Inc. of Nevada to provide E911 services for its National VoIP (Voice over Internet Protocol) rollout through Callingpoint Communications.
-
-This will give Bicoastal the ability to provide E911 services to all of the lower 48 
-states via VoIP as required by the FCC. Upon successful testing of the system, Bicoastal will be in position to start offering Residential and Business VoIP 
-services through its Callingpoint Communications unit within the next two weeks. 
-
-About the Company:
-
-Bicoastal Communications Inc. is positioned to make substantial growth in the coming years. The company strategy is to deploy into non-primary cities with 
-population centers of less than one million people. Unlike the major metropolitan areas of the country, these cities have not seen the benefit of competitive product offerings. Bicoastal intends to address these deficiencies by encompassing its IP services, Traditional and VoIP Telephone services and Television (IPTV) services, securing revenues with the much-touted triple play.The strategic partnerships developed have already made it possible for Bicoastal to gain direct access to 25,000 fiber-connected homes throughout the United States.
-
-Members should pick up BC LC as early as possible on Friday.
-
-This news is going to send B CLC off the charts!  
-
-We all know that in the this businses it's the big announcements that makes these stockss expldoe!!! 
-
-We see this as a hgue proift taking a deal. Watch BCL C like a hawk!
-
-Watch this one Tradde on the 18 OF August. Go B CLC! 
-
-
-
-
-Pick your friends like you pick your fruit You do well to believe in God Satan also believes and trembles
-
-Two sides of the same coin. The nearer to the church, the farther from God. Believe nothing of what you hear, and only half of what you see  Out of the frying pan and into the fire .
-
+Peter
