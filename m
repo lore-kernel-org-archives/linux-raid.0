@@ -1,34 +1,23 @@
-From: Luca Berra <bluca@comedia.it>
-Subject: Re: Can you IMAGE Mirrored OS Drives?
-Date: Sat, 19 Aug 2006 09:05:39 +0200
-Message-ID: <20060819070539.GA13491@percy.comedia.it>
-References: <44E250CD.5040308@aol.com> <20060816073854.GA7356@percy.comedia.it> <20060819011353.GG6440@boogie.lpds.sztaki.hu>
+From: "Frederic" <bedimmedadapt@rosvik.net>
+Subject: Take pleasure from Finally there is something that really gives you extra inches and extra confidence.
+Date: Sat, 19 Aug 2006 03:28:10 -0700
+Message-ID: <49231462305783.686BC7FF0C@TVSKZ3PU>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain;
+        charset="Windows-1252"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20060819011353.GG6440@boogie.lpds.sztaki.hu>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, Aug 19, 2006 at 03:13:53AM +0200, Gabor Gombas wrote:
->> but you would have to regenerate the initrd and fight again with lilo :(
->
->Or you can just build a kernel with md built-in and use the kernel-level
->RAID autodetection. In situations like this it is _much_ easier and
->_much_ more robust than all the initrd-based solutions I have seen.
+New and hot
 
-please, can we try not to resurrect again the kernel-level autodetection
-flamewar on this list.
+ Finally there is something that really gives you extra inches and extra confidence. You will be counting days before your rod will be almost reaching your knees.
 
-L.
+ Give her an opportunity to spread rumors about your enormous size. Get ready to hear girls spreading gossip behind your back about your new size. You may find what you need here: http://www.ogoled.com/gal/ms/ 
+Introducing a great product which will make you a better, more confident man!
 
 
--- 
-Luca Berra -- bluca@comedia.it
-        Communication Media & Services S.r.l.
- /"\
- \ /     ASCII RIBBON CAMPAIGN
-  X        AGAINST HTML MAIL
- / \
+ Happiness is wanting what you have - not having what you want A miss is as good as a mile. Wisdom crieth without; she uttereth her voice in the streets. Then shall they call upon me, but I will not answer; they shall seek me early, but they shall not find me.
+
