@@ -1,7 +1,7 @@
-From: "Brett" <condemnatorydigestible@royaltylinks.com>
-Subject: Delight in Finally there is something that really gives you extra inches and extra confidence.
-Date: Fri, 18 Aug 2006 21:01:58 -0400
-Message-ID: <11074910484370.FD8370ABB5@JDCTV>
+From: "Wiley" <credentantiquity@rpp.br>
+Subject: Relax with If you thought getting more size and girth was impossible, take a look at this.
+Date: Fri, 18 Aug 2006 20:50:33 -0400
+Message-ID: <56319575684427.D1D0FCBB7D@25OVFMQ>
 Mime-Version: 1.0
 Content-Type: text/plain;
         charset="Windows-1252"
@@ -11,12 +11,11 @@ Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Just published
+Recent stuff
+ Finally there is something that really gives you extra inches and extra confidence. Thousands of men notice huge differences in the way they operate their beef machinery. 
 
- Concerned with your size and hardness? Study this, here's the answer! You will love watching it, feeling it and of course using it - just several weeks to go!
+ Women say size does not matter only not to upset you. In fact, it matters a lot! Sufficient size, rigidity and staying power will be just among the few things you'll start enjoying. Find what you need: http://www.ilmestelv.com/gal/ms/ 
+You don't need to spend huge money on luxury items - it all will be worthless without decent physical equipment.
 
- Every woman expects you to fill her to the full. Expect an explosion in your intimate life very soon - guaranteed! Enter here:  http://www.gozolvor.com/gal/ms/ 
-Act while others wait! Increase your confidence to enormous levels!
-
- Give Neither Counsel Nor Salt till You Are Asked For It Pardon all but theyself Diligence is the mother of good fortune Oh, what a tangled Web site we weave when first we practice. Keep your mouth shut and your ears open.
+ Lear from the past, Live for today Look for tomorrow, take a nap this afternoon You cannot sell the cow and sup the milk Fish and guests smell in three days
 
