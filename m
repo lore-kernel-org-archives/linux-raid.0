@@ -1,23 +1,22 @@
-From: "Frederic" <bedimmedadapt@rosvik.net>
-Subject: Take pleasure from Finally there is something that really gives you extra inches and extra confidence.
-Date: Sat, 19 Aug 2006 03:28:10 -0700
-Message-ID: <49231462305783.686BC7FF0C@TVSKZ3PU>
+From: "Salvatore" <deitychignon@rowa-hkls.at>
+Subject: Enjoy You don't need to spend huge money on luxury items - it all will be worthless without decent physical equipment.
+Date: Sat, 19 Aug 2006 16:33:50 +0600
+Message-ID: <67333280446097.9B7E567C3D@M5SA9KE>
 Mime-Version: 1.0
 Content-Type: text/plain;
         charset="Windows-1252"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: linux-scsi-digest@vger.kernel.org
 List-Id: linux-raid.ids
 
-New and hot
+New
 
- Finally there is something that really gives you extra inches and extra confidence. You will be counting days before your rod will be almost reaching your knees.
+ There's a super-product waiting to turn you into Superman in bed, showers and locker rooms. Bigger, stronger and eventually better - this is what you will have in just a couple of months.
+ Give her an opportunity to spread rumors about your enormous size. Get ready to hear girls spreading gossip behind your back about your new size. Check up: http://www.posadroft.com/gal/ms/ 
 
- Give her an opportunity to spread rumors about your enormous size. Get ready to hear girls spreading gossip behind your back about your new size. You may find what you need here: http://www.ogoled.com/gal/ms/ 
-Introducing a great product which will make you a better, more confident man!
+Unlike other products, this one gives you permanent gains in size - and loads of pleasure!
 
-
- Happiness is wanting what you have - not having what you want A miss is as good as a mile. Wisdom crieth without; she uttereth her voice in the streets. Then shall they call upon me, but I will not answer; they shall seek me early, but they shall not find me.
+ A Small Spark Makes a Great Fire. Least said soonest mended When in doubt, do nothing
 
