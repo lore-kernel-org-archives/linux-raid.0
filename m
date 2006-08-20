@@ -1,19 +1,27 @@
-From: "Dona Doherty" <LeroyBDH@msn.com>
-Subject: Quality Medicine Available
-Date: Sun, 20 Aug 2006 03:09:42 -0600
-Message-ID: <141.70e558d5.2a9TDC44__31368.857008829$1156061642$gmane$org@sol.com>
+From: "www.muzikvideo.gen.ms" <muzik@video.gen.ms>
+Subject: www.muzikvideo.gen.ms   KLIP INDIRMEK ISTEYEN HEMEN GIRSIN!!!
+Date: Sun, 20 Aug 2006 17:18:56
+Message-ID: <200608201419.k7KEJbtR005521@zeus1.kernel.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="iso-8859-1"
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-sound@vger.kernel.org, linux-smp@vger.kernel.org, linux-tape@vger.kernel.org, majordomo@vger.kernel.org, linux-net@vger.kernel.org, linux-ia64@vger.kernel.org, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+www.muzikvideo.gen.ms   KLIP INDIRMEK ISTEYEN HEMEN GIRSIN!!!
 
-Looking for quality me ds at affordable price?
-We have widest range of me ds at very
-competitive price.
-Money baack gauaranteesss...
+uzun süredir yayinda olan köklü ve ünlü klip sitesinden haberiniz yok mu? hemen 
+sizde klip indirmek istiyorsanýz, hemde zahmetsiz, hizli ve hemen sitemize buyrun.
+www.muzikvideo.gen.ms
 
-http://wowrsxjwlfyxmx1r99kerrke9r9.cobironec.st/?wow
+bu maili tanidiklarýniza gönderirseniz seviniriz. klip indirmek herkesin hakki. her 
+dilden kaliteli klip isteyenler buyursun
+yeni cikan klipler aninda sitemize eklenmektedir. ayrica 500 den fazla kaliteli klipte sitemizde bulunmaktadir.
+en güncel klip sitesine sizi de bekleriz...
 
 
-0u
+www.muzikvideo.gen.ms
+
+
+Bir Sorun Ya Da Istek Olursa MSN Ve Mail Adresi: muzikonlinetk@hotmail.com
