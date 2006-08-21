@@ -1,36 +1,51 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: Re: [PATCH-stable16] Fix a potential NULL dereference in md/raid1
-Date: Mon, 21 Aug 2006 02:01:09 +0200
-Message-ID: <20060821000109.GA11651@stusta.de>
-References: <20060821094833.21982.patches@notabene> <1060820235013.22016@suse.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: NeilBrown <neilb@suse.de>
+Subject: [PATCH] Fix a potential NULL dereference in md/raid1
+Date: Mon, 21 Aug 2006 10:05:26 +1000
+Message-ID: <1060821000526.22545@suse.de>
+References: <20060821100439.22490.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1060820235013.22016@suse.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
+To: Stable <stable@kernel.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Aug 21, 2006 at 09:50:13AM +1000, NeilBrown wrote:
+patch for 2.6.17 stable series.
+Thanks,
+NeilBrown
+### Comments for Changeset
 
-> patch for 2.6.16 stable series
->...
+At the point where this 'atomic_add' is, rdev could be NULL,
+as seen by the fact that we test for this in the very next 
+statement.
+Further is it is really the wrong place of the add.
+We could add to the count of corrected errors 
+once the are sure it was corrected, not before
+trying to correct it.
 
-Thanks for this patch.
+Signed-off-by: Neil Brown <neilb@suse.de>
 
-It does also apply against both 2.6.17.9 and Linus' tree.
+### Diffstat output
+ ./drivers/md/raid1.c |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-Is it not required in these trees, or are you also submitting it there?
-
-cu
-Adrian
-
--- 
-
-       "Is there not promise of rain?" Ling Tan asked suddenly out
-        of the darkness. There had been need of rain for many days.
-       "Only a promise," Lao Er said.
-                                       Pearl S. Buck - Dragon Seed
-
+diff .prev/drivers/md/raid1.c ./drivers/md/raid1.c
+--- .prev/drivers/md/raid1.c	2006-08-21 09:59:05.000000000 +1000
++++ ./drivers/md/raid1.c	2006-08-21 09:59:05.000000000 +1000
+@@ -1486,7 +1486,6 @@ static void raid1d(mddev_t *mddev)
+ 							d = conf->raid_disks;
+ 						d--;
+ 						rdev = conf->mirrors[d].rdev;
+-						atomic_add(s, &rdev->corrected_errors);
+ 						if (rdev &&
+ 						    test_bit(In_sync, &rdev->flags)) {
+ 							if (sync_page_io(rdev->bdev,
+@@ -1509,6 +1508,9 @@ static void raid1d(mddev_t *mddev)
+ 									 s<<9, conf->tmppage, READ) == 0)
+ 								/* Well, this device is dead */
+ 								md_error(mddev, rdev);
++							else
++								atomic_add(s, &rdev->corrected_errors);
++
+ 						}
+ 					}
+ 				} else {
