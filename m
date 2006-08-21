@@ -1,37 +1,50 @@
-From: Neil Brown <neilb@suse.de>
+From: Adrian Bunk <bunk@stusta.de>
 Subject: Re: [PATCH-stable16] Fix a potential NULL dereference in md/raid1
-Date: Mon, 21 Aug 2006 10:07:12 +1000
-Message-ID: <17640.63792.278940.578508@cse.unsw.edu.au>
-References: <20060821094833.21982.patches@notabene>
-	<1060820235013.22016@suse.de>
-	<20060821000109.GA11651@stusta.de>
+Date: Mon, 21 Aug 2006 02:28:47 +0200
+Message-ID: <20060821002847.GB11651@stusta.de>
+References: <20060821094833.21982.patches@notabene> <1060820235013.22016@suse.de> <20060821000109.GA11651@stusta.de> <17640.63792.278940.578508@cse.unsw.edu.au>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Adrian Bunk on Monday August 21
+Content-Disposition: inline
+In-Reply-To: <17640.63792.278940.578508@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Adrian Bunk <bunk@stusta.de>
+To: Neil Brown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Monday August 21, bunk@stusta.de wrote:
-> On Mon, Aug 21, 2006 at 09:50:13AM +1000, NeilBrown wrote:
+On Mon, Aug 21, 2006 at 10:07:12AM +1000, Neil Brown wrote:
+> On Monday August 21, bunk@stusta.de wrote:
+> > On Mon, Aug 21, 2006 at 09:50:13AM +1000, NeilBrown wrote:
+> > 
+> > > patch for 2.6.16 stable series
+> > >...
+> > 
+> > Thanks for this patch.
+> > 
+> > It does also apply against both 2.6.17.9 and Linus' tree.
+> > 
+> > Is it not required in these trees, or are you also submitting it there?
 > 
-> > patch for 2.6.16 stable series
-> >...
+> I've just sent a patch to stable@kernel.org for 2.6.17.9. (it is the
+> same patch with slightly different line numbers).
 > 
-> Thanks for this patch.
-> 
-> It does also apply against both 2.6.17.9 and Linus' tree.
-> 
-> Is it not required in these trees, or are you also submitting it there?
+> The patch for -linus is quite different and will follow shortly (with
+> a few other patches).
 
-I've just sent a patch to stable@kernel.org for 2.6.17.9. (it is the
-same patch with slightly different line numbers).
+OK, I'll apply this patch when it has successfully passed 2.6.17 review 
+and got included in 2.6.17.
 
-The patch for -linus is quite different and will follow shortly (with
-a few other patches).
+> Thanks,
+> NeilBrown
 
-Thanks,
-NeilBrown
+cu
+Adrian
+
+-- 
+
+       "Is there not promise of rain?" Ling Tan asked suddenly out
+        of the darkness. There had been need of rain for many days.
+       "Only a promise," Lao Er said.
+                                       Pearl S. Buck - Dragon Seed
+
