@@ -1,64 +1,101 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: invalid superblock - why?
-Date: Mon, 21 Aug 2006 11:26:26 +1000
-Message-ID: <17641.3010.978057.92568@cse.unsw.edu.au>
-References: <200608210104.17274.Dexter.Filmore@gmx.de>
+Subject: Re: RAID5 producing fake partition table on single drive
+Date: Mon, 21 Aug 2006 17:35:17 +1000
+Message-ID: <17641.25141.373827.77279@cse.unsw.edu.au>
+References: <1155987607.7207.23.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Dexter Filmore on Monday August 21
+In-Reply-To: message from Lem on Saturday August 19
 Sender: linux-raid-owner@vger.kernel.org
-To: Dexter Filmore <Dexter.Filmore@gmx.de>
-Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: Lem <l3mming@iinet.net.au>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Monday August 21, Dexter.Filmore@gmx.de wrote:
-> raid5, 4 sata disks, slackware with 2.6.14.6.
-> Yesterday the machine hung, so I used MagicKey to sync, remount read only and 
-> reboot.
-> After that the third disk was not assembled into the array.
-> dmesg came up with:
+On Saturday August 19, l3mming@iinet.net.au wrote:
+> Hi all,
 > 
-> [   34.652268] md: md0 stopped. 
-> [   34.742673] md: bind<sdb1> 
-> [   34.742900] md: invalid superblock checksum on sdc1 
-> [   34.742920] md: sdc1 has invalid sb, not importing! 
-> [   34.742941] md: md_import_device returned -22 
-> [   34.743257] md: bind<sdd1> 
-> [   34.743464] md: bind<sda1> 
-> [   34.743506] raid5: device sda1 operational as raid disk 0 
-> [   34.743524] raid5: device sdd1 operational as raid disk 3 
-> [   34.743542] raid5: device sdb1 operational as raid disk 1 
-> [   34.744128] raid5: allocated 4195kB for md0 
-> [   34.744146] raid5: raid level 5 set md0 active with 3 out of 4 devices, alg 
-> orithm 2 
-> [   34.744173] RAID5 conf printout: 
-> [   34.744187]  --- rd:4 wd:3 fd:1 
-> [   34.744202]  disk 0, o:1, dev:sda1 
-> [   34.744216]  disk 1, o:1, dev:sdb1 
-> [   34.744231]  disk 3, o:1, dev:sdd1
+> I'm having a problem with my RAID5 array, here's the deal:
 > 
-> So after throwing a minor fit (my first degraded array) I started 
-> investigating options. Whe I was sure the disk was alright I re-added it and 
-> resyncing started. 
-> It's currently still at it.
+> System is an AMD Athlon 64 X2 4200+ on a Gigabyte K8NS-939-Ultra
+> (nForce3 Ultra). Linux 2.6.17.7, x86_64. Debian GNU/Linux Sid, GCC 4.1.1
+> (kernel configured and compiled by hand).
 > 
-> Question: what happened to that superblock? just because it didn't shut down 
-> properly? Disk seems to be ok.
+> RAID5 array created using mdadm 2.5.2. All drives are 250Gb Seagate
+> SATAs, spread across three controllers: nForce3 Ultra (motherboard),
+> Silicon Image 3124 (motherboard) and Promise SATA TX300 (PCI).
+> 
+> /dev/sda: ST3250624NS
+> /dev/sdb: ST3250624NS
+> /dev/sdc: ST3250823AS
+> /dev/sdd: ST3250624NS
+> /dev/sde: ST3250823AS
+> 
+> The array assembles and runs perfectly at boot, and continues to operate
+> without errors, and has been for a few months. It is using a version
+> 0.90 superblock. None of the devices were partitioned with fdisk, they
+> were just passed to mdadm when the array was created.
+> 
+> Recently (last week or two), I have noticed the following in dmesg:
+> 
+> SCSI device sde: 488397168 512-byte hdwr sectors (250059 MB)
+> sde: Write Protect is off
+> sde: Mode Sense: 00 3a 00 00
+> SCSI device sde: drive cache: write back
+> SCSI device sde: 488397168 512-byte hdwr sectors (250059 MB)
+> sde: Write Protect is off
+> sde: Mode Sense: 00 3a 00 00
+> SCSI device sde: drive cache: write back
+>  sde: sde1 sde3
 
-The output of 
-  mdadm -E /dev/sdc1
-might have been interesting, but I guess it is too late for that now.
+This itself shouldn't be a problem.  The fact that the kernel imagines
+there are partitions shouldn't hurt as long as no-one tries to access
+them.
 
-Apart from hardware errors, an incorrect checksum should only happen
-if some but not all of the superblock is written (it is 8 sectors
-long).
-I suspect that is extremely unlikely to happen, and given the symptoms
-you describe, I think it is extremely unlike to have happened in your
-case.
 
-So I'm afraid I don't know what happened, and unless it happens again,
-it would be very hard to trace the problem down.
+> sd 6:0:0:0: Attached scsi disk sde
+> 
+> Buffer I/O error on device sde3, logical block 1792
+> Buffer I/O error on device sde3, logical block 1793
+> Buffer I/O error on device sde3, logical block 1794
+> Buffer I/O error on device sde3, logical block 1795
+> Buffer I/O error on device sde3, logical block 1796
+> Buffer I/O error on device sde3, logical block 1797
+> Buffer I/O error on device sde3, logical block 1798
+> Buffer I/O error on device sde3, logical block 1799
+> Buffer I/O error on device sde3, logical block 1792
+> Buffer I/O error on device sde3, logical block 1793
+
+This, on the other hand, might be a problem - though possibly only a
+small one.
+Who is trying to access sde3 I wonder.  I'm fairly sure the kernel
+wouldn't do that directly.
+
+Maybe some 'udev' related thing is trying to be clever?
+
+Apart from these messages, is there any symptoms that cause a problem? 
+It could just be that something is reading from somewhere that doesn't
+exist, and is complaining.  So let them complain.  Who cares :-)
+
+> 
+> I'm not a software/kernel/RAID developer by any stretch of the
+> imagination, but my thoughts are that I've just been unlucky with my
+> array and that the data on there has somehow managed to look like a
+> partition table, and the kernel is trying to read it, resulting in the
+> buffer IO errors.
+
+But these errors are necessarily a problem (I admit they look scary).
+
+> 
+> I believe a solution to this problem would be for me to create proper
+> partitions on my RAID disks (with type fd I suspect?), and possibly use
+> a version 1.x superblock rather than 0.90.
+
+Creation partitions and then raiding them would remove these messages.
+Also using a verions 1.1 or 1.2 superblock would (as they put the
+superblock at the start of the device instead of the end).
+
+But is it worth the effort?
 
 NeilBrown
