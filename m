@@ -1,38 +1,39 @@
-From: Dexter Filmore <Dexter.Filmore@gmx.de>
-Subject: Re: invalid superblock - why?
-Date: Mon, 21 Aug 2006 13:04:11 +0200
-Message-ID: <200608211304.12010.Dexter.Filmore@gmx.de>
-References: <200608210104.17274.Dexter.Filmore@gmx.de> <17641.3010.978057.92568@cse.unsw.edu.au>
+From: jwillem <jwillem@stads.net>
+Subject: smal mdadm 1.5  bug
+Date: Mon, 21 Aug 2006 14:25:19 +0200
+Message-ID: <20060821141801.AD67.JWILLEM@stads.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset="US-ASCII"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17641.3010.978057.92568@cse.unsw.edu.au>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Am Montag, 21. August 2006 03:26 schrieb Neil Brown:
->
-> The output of
->   mdadm -E /dev/sdc1
-> might have been interesting, but I guess it is too late for that now.
-
-True. Bummer. As you can imagine I wanted the array degraded for as short as 
-possible and was eager to take measures to bring it back on track.
-I'll remember for next time - which I hope is not too soon...
 
 
--- 
------BEGIN GEEK CODE BLOCK-----
-Version: 3.12
-GCS d--(+)@ s-:+ a- C++++ UL++ P+>++ L+++>++++ E-- W++ N o? K-
-w--(---) !O M+ V- PS+ PE Y++ PGP t++(---)@ 5 X+(++) R+(++) tv--(+)@ 
-b++(+++) DI+++ D- G++ e* h>++ r* y?
-------END GEEK CODE BLOCK------
 
-http://www.stop1984.com
-http://www.againsttcpa.com
+We have had a raidsystem running for several years 
+Created by the Fedora Core 2 installscript. 
+
+Is has bit bigger raidsystem of more than 11 TB
+It was installed on 32 bit Fedora Core 2  linux 2.6.10 with mdadm 1.50
+
+After a failure we had one disk that was out sync. 
+Couldn't assemble raidset, even with --force -> "Cannot write superblock"
+
+After looking at the sourcecode in the file util.c  from mdadm-1.5.0 we
+found out that variable "size" was negative
+We changed variable size from "long size" into "unsigned long size" wich
+fixed this problem.
+
+Seems that 1.9 already fixed the problem, perhaps even earlyer
+But also that 
+> Changes Prior to 1.5.0 release
+>     -   Fix compiling error with BLKGETSIZE64 and some signed/unsigned 
+> comparison warnings.
+
+This was the version we were working on, so something went wrong there. 
+
+Greetings Jan-Willem Michels ( Boy Kentrop working at our company fixed
+our problem) 
