@@ -1,67 +1,54 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: invalid superblock - *again*
-Date: Tue, 22 Aug 2006 11:18:51 +1000
-Message-ID: <17642.23419.119010.518798@cse.unsw.edu.au>
-References: <200608210104.17274.Dexter.Filmore@gmx.de>
-	<17641.3010.978057.92568@cse.unsw.edu.au>
-	<200608211304.12010.Dexter.Filmore@gmx.de>
-	<200608220302.23412.Dexter.Filmore@gmx.de>
+Subject: Re: smal mdadm 1.5  bug
+Date: Tue, 22 Aug 2006 16:33:37 +1000
+Message-ID: <17642.42305.746250.714032@cse.unsw.edu.au>
+References: <20060821141801.AD67.JWILLEM@stads.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Dexter Filmore on Tuesday August 22
+In-Reply-To: message from jwillem on Monday August 21
 Sender: linux-raid-owner@vger.kernel.org
-To: Dexter Filmore <Dexter.Filmore@gmx.de>
-Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: jwillem <jwillem@stads.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday August 22, Dexter.Filmore@gmx.de wrote:
-> Am Montag, 21. August 2006 13:04 schrieb Dexter Filmore:
-> I seriously don't know what's going on here.
-> I upgraded packages and rebooted the machine to find that now disk 4 of 4 is 
-> not assembled.
+On Monday August 21, jwillem@stads.net wrote:
 > 
-> Here's dmesg and mdadm -E 
 > 
-> ***************** dmesg ******************
-> [   38.439644] md: md0 stopped.
-> [   38.536089] md: bind<sdb1>
-> [   38.536301] md: bind<sdc1>
-> [   38.536501] md: bind<sdd1>
-> [   38.536702] md: bind<sda1>
-> [   38.536733] md: kicking non-fresh sdd1 from array!
-> [   38.536751] md: unbind<sdd1>
-> [   38.536765] md: export_rdev(sdd1)
-> [   38.536794] raid5: device sda1 operational as raid disk 0
-> [   38.536812] raid5: device sdc1 operational as raid disk 2
-> [   38.536831] raid5: device sdb1 operational as raid disk 1
-> [   38.537453] raid5: allocated 4195kB for md0
-> [   38.537471] raid5: raid level 5 set md0 active with 3 out of 4 devices, 
-> algor
-> ithm 2
-> [   38.537499] RAID5 conf printout:
-> [   38.537513]  --- rd:4 wd:3 fd:1
-> [   38.537528]  disk 0, o:1, dev:sda1
-> [   38.537543]  disk 1, o:1, dev:sdb1
-> [   38.537558]  disk 2, o:1, dev:sdc1
-> *********************************************
 > 
-> Most notable: [   38.536733] md: kicking non-fresh sdd1 from array!
-> What does this mean?
+> We have had a raidsystem running for several years 
+> Created by the Fedora Core 2 installscript. 
+> 
+> Is has bit bigger raidsystem of more than 11 TB
+> It was installed on 32 bit Fedora Core 2  linux 2.6.10 with mdadm 1.50
+> 
+> After a failure we had one disk that was out sync. 
+> Couldn't assemble raidset, even with --force -> "Cannot write superblock"
+> 
+> After looking at the sourcecode in the file util.c  from mdadm-1.5.0 we
+> found out that variable "size" was negative
+> We changed variable size from "long size" into "unsigned long size" wich
+> fixed this problem.
+> 
+> Seems that 1.9 already fixed the problem, perhaps even earlyer
+> But also that 
+> > Changes Prior to 1.5.0 release
+> >     -   Fix compiling error with BLKGETSIZE64 and some signed/unsigned 
+> > comparison warnings.
+> 
+> This was the version we were working on, so something went wrong there. 
+> 
+> Greetings Jan-Willem Michels ( Boy Kentrop working at our company fixed
+> our problem) 
 
-It means that the 'event' count on sdd1 is old compared to that on
-the other partitions.  The most likely explanation is that when the
-array was last running, sdd1 was not part of it.
+I'm a little confused..
 
-> 
-> What's happening here? What can I do? Do I have to readd sdd and resync? Or is 
-> there an easier way out? What causes these issues?
-> 
+Are you just telling us that you found a bug in an old version of
+mdadm that was fixed in a newer version of mdadm?  Or are you telling
+us that there is still a bug in a current version of mdadm?
 
-Yes, you need to add sdd1 back to the array and it will resync.
-
-I would need some precise recent history of the array to know why this
-happened.  That might not be easy to come by.
+If so, which version?
+mdadm-1.5.0 is very old, and even mdadm-1.9.0 is fairly old.
 
 NeilBrown
