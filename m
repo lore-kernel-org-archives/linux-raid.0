@@ -1,23 +1,29 @@
-From: "Otis" <adducecompass@rossresults.com>
-Subject: Be delighted with  Unlike other products, this one gives you permanent gains in size - and loads of pleasure!
-Date: Tue, 22 Aug 2006 08:11:17 -0300
-Message-ID: <63569992947685.97DBF98CEB@1CAZ7O>
+From: Gabor Gombas <gombasg@sztaki.hu>
+Subject: Re: Can you IMAGE Mirrored OS Drives?
+Date: Tue, 22 Aug 2006 19:30:49 +0200
+Message-ID: <20060822173046.GF926@boogie.lpds.sztaki.hu>
+References: <44E250CD.5040308@aol.com> <20060816073854.GA7356@percy.comedia.it> <20060819011353.GG6440@boogie.lpds.sztaki.hu> <20060819070539.GA13491@percy.comedia.it>
 Mime-Version: 1.0
-Content-Type: text/plain;
-        charset="Windows-1252"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20060819070539.GA13491@percy.comedia.it>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Just published
+On Sat, Aug 19, 2006 at 09:05:39AM +0200, Luca Berra wrote:
 
- Unlike other products, this one gives you permanent gains in size - and loads of pleasure! Several inches in a couple of months, this is not fantasy, this is reality!
+> please, can we try not to resurrect again the kernel-level autodetection
+> flamewar on this list.
 
- Give her a chance to climax from penetration - increase your tool once and for all! You can mark inches on your ruler, expecting your intimate tool to gain a lot in size. Come on in here: http://www.caseyjul.com/gall/ms/ 
+There is no need for a flame war. In some situations one is better, in
+other situations the other is better.
 
-This is what you always needed to lead a happier, more fulfilling life.
+Gabor
 
- No man is an island A lender nor borrower be.  A friend to all is a friend to none.  Fruit out of season, sorrow out of reason Look before you leap.
-
+-- 
+     ---------------------------------------------------------
+     MTA SZTAKI Computer and Automation Research Institute
+                Hungarian Academy of Sciences
+     ---------------------------------------------------------
