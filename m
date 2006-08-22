@@ -1,52 +1,61 @@
-From: Neil Brown <neilb@suse.de>
+From: Brad Campbell <brad@wasp.net.au>
 Subject: Re: RAID-6 check slow..
-Date: Tue, 22 Aug 2006 17:52:04 +1000
-Message-ID: <17642.47012.109307.542850@cse.unsw.edu.au>
-References: <44EAB1B7.7010208@wasp.net.au>
+Date: Tue, 22 Aug 2006 12:07:16 +0400
+Message-ID: <44EABB34.60603@wasp.net.au>
+References: <44EAB1B7.7010208@wasp.net.au> <17642.47012.109307.542850@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Brad Campbell on Tuesday August 22
+In-Reply-To: <17642.47012.109307.542850@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Brad Campbell <brad@wasp.net.au>
+To: Neil Brown <neilb@suse.de>
 Cc: RAID Linux <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tuesday August 22, brad@wasp.net.au wrote:
-> G'day all,
-> 
-> I have a box with 15 SATA drives in it, they are all on the PCI bus and it's a relatively slow machine.
-> 
-> I can extract about 100MB/s combined read speed from these drives with dd.
-> 
-> When reading /dev/md0 with dd I get about 80MB/s, but when I ask it to check the array on a 
-> completely idle system with echo check > /sys/block/md/md0/sync_action I get a combined read speed 
-> across all drives of 31.9MB/s
-> 
-> I'm not that fussed I guess, given the system does have extended idle periods, it would be nice to 
-> have a sync or check complete as quickly as the hardware allows. Experience has shown that a rebuild 
-> of a single disk failure takes 10-12 hours but the check seems to take forever
-> 
-> brad@storage1:~$ cat /proc/mdstat
-> Personalities : [raid6]
-> md0 : active raid6 sda[0] sdo[14] sdn[13] sdm[12] sdl[11] sdk[10] sdj[9] sdi[8] sdh[7] sdg[6] sdf[5] 
-> sde[4] sdd[3] sdc[2] sdb[1]
->        3186525056 blocks level 6, 128k chunk, algorithm 2 [15/15] [UUUUUUUUUUUUUUU]
->        [>....................]  resync =  0.1% (458496/245117312) finish=1881.9min speed=2164K/sec
+Neil Brown wrote:
 
-Hmm....  nothing obvious.
-Have you tried increasing 
-  /proc/sys/dev/raid/speed_limit_min:1000
-just in case that makes a difference (it shouldn't but you seem to be
-down close to that speed).
+> Hmm....  nothing obvious.
+> Have you tried increasing 
+>   /proc/sys/dev/raid/speed_limit_min:1000
+> just in case that makes a difference (it shouldn't but you seem to be
+> down close to that speed).
 
-What speed in the raid6 algorithm used - as reported at boot time?
-Again, I doubt that is the problem - if should be about 1000 times
-speed you are seeing.
+No difference..
 
-What if you try increasing /sys/block/md0/md/stripe_cache_size ?
+> What speed in the raid6 algorithm used - as reported at boot time?
+> Again, I doubt that is the problem - if should be about 1000 times
+> speed you are seeing.
 
-That's all I can think of for now.
+raid6: int32x1    739 MB/s
+raid6: int32x2    991 MB/s
+raid6: int32x4    636 MB/s
+raid6: int32x8    587 MB/s
+raid6: mmxx1     1556 MB/s
+raid6: mmxx2     2701 MB/s
+raid6: sse1x1    1432 MB/s
+raid6: sse1x2    2398 MB/s
+raid6: using algorithm sse1x2 (2398 MB/s)
+md: raid6 personality registered for level 6
+raid5: automatically using best checksumming function: pIII_sse
+    pIII_sse  :  2345.000 MB/sec
+raid5: using function: pIII_sse (2345.000 MB/sec)
+md: md driver 0.90.3 MAX_MD_DEVS=256, MD_SB_DISKS=27
+md: bitmap version 4.39
 
-NeilBrown
+
+> What if you try increasing /sys/block/md0/md/stripe_cache_size ?
+
+I already have this at 8192 (which appears to be HUGE for 15 drives, but I've got 1.5GB of ram and 
+nothing else using it)
+
+> That's all I can think of for now.
+> 
+
+Oh well, no stress.. Just thought I'd ask anyway :)
+
+Brad
+-- 
+"Human beings, who are almost unique in having the ability
+to learn from the experience of others, are also remarkable
+for their apparent disinclination to do so." -- Douglas Adams
