@@ -1,61 +1,65 @@
-From: Brad Campbell <brad@wasp.net.au>
-Subject: Re: RAID-6 check slow..
-Date: Tue, 22 Aug 2006 12:07:16 +0400
-Message-ID: <44EABB34.60603@wasp.net.au>
-References: <44EAB1B7.7010208@wasp.net.au> <17642.47012.109307.542850@cse.unsw.edu.au>
+From: Dexter Filmore <Dexter.Filmore@gmx.de>
+Subject: Re: invalid superblock - *again*
+Date: Tue, 22 Aug 2006 13:26:42 +0200
+Message-ID: <200608221326.42776.Dexter.Filmore@gmx.de>
+References: <200608210104.17274.Dexter.Filmore@gmx.de> <200608220302.23412.Dexter.Filmore@gmx.de> <17642.23419.119010.518798@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17642.47012.109307.542850@cse.unsw.edu.au>
+In-Reply-To: <17642.23419.119010.518798@cse.unsw.edu.au>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: Neil Brown <neilb@suse.de>
-Cc: RAID Linux <linux-raid@vger.kernel.org>
+Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Neil Brown wrote:
+Am Dienstag, 22. August 2006 03:18 schrieb Neil Brown:
+> >
+> > Most notable: [   38.536733] md: kicking non-fresh sdd1 from array!
+> > What does this mean?
+>
+> It means that the 'event' count on sdd1 is old compared to that on
+> the other partitions.  The most likely explanation is that when the
+> array was last running, sdd1 was not part of it.
 
-> Hmm....  nothing obvious.
-> Have you tried increasing 
->   /proc/sys/dev/raid/speed_limit_min:1000
-> just in case that makes a difference (it shouldn't but you seem to be
-> down close to that speed).
+Event count - so: a certain command or set of instructions was sent to all 
+disks, but one didn't get it, hence the raid module can't ensure that the 
+data on that disk is consistent with the rest of the array?
 
-No difference..
+> > What's happening here? What can I do? Do I have to readd sdd and resync?
+> > Or is there an easier way out? What causes these issues?
+>
+> Yes, you need to add sdd1 back to the array and it will resync.
 
-> What speed in the raid6 algorithm used - as reported at boot time?
-> Again, I doubt that is the problem - if should be about 1000 times
-> speed you are seeing.
+Ok, if that's what it takes.
 
-raid6: int32x1    739 MB/s
-raid6: int32x2    991 MB/s
-raid6: int32x4    636 MB/s
-raid6: int32x8    587 MB/s
-raid6: mmxx1     1556 MB/s
-raid6: mmxx2     2701 MB/s
-raid6: sse1x1    1432 MB/s
-raid6: sse1x2    2398 MB/s
-raid6: using algorithm sse1x2 (2398 MB/s)
-md: raid6 personality registered for level 6
-raid5: automatically using best checksumming function: pIII_sse
-    pIII_sse  :  2345.000 MB/sec
-raid5: using function: pIII_sse (2345.000 MB/sec)
-md: md driver 0.90.3 MAX_MD_DEVS=256, MD_SB_DISKS=27
-md: bitmap version 4.39
+> I would need some precise recent history of the array to know why this
+> happened.  That might not be easy to come by.
 
+Depends on what exactly you mean. Disk age? smart data? Hardware types? Logs? 
+OS?
 
-> What if you try increasing /sys/block/md0/md/stripe_cache_size ?
+I don't have more than a few vague guesses about what might have happened. 
+First of all it might be possible that the file systems on the array were not 
+unmounted properly during shutdown because a remote NFS mount was hogging 
+them. If that be the case, LVM couldn't have shut down properly, then the md 
+device wouldn't have stopped and the machine just powered down.
+That would explain it.
+Slackware has no raid runlevel scripts out of the box, I wrote them myself.
+Maybe such conditions are not handled properly.
 
-I already have this at 8192 (which appears to be HUGE for 15 drives, but I've got 1.5GB of ram and 
-nothing else using it)
+What speaks against that theory is that nfsd is stopped before lvm and raid is 
+handled.
 
-> That's all I can think of for now.
-> 
-
-Oh well, no stress.. Just thought I'd ask anyway :)
-
-Brad
 -- 
-"Human beings, who are almost unique in having the ability
-to learn from the experience of others, are also remarkable
-for their apparent disinclination to do so." -- Douglas Adams
+-----BEGIN GEEK CODE BLOCK-----
+Version: 3.12
+GCS d--(+)@ s-:+ a- C++++ UL++ P+>++ L+++>++++ E-- W++ N o? K-
+w--(---) !O M+ V- PS+ PE Y++ PGP t++(---)@ 5 X+(++) R+(++) tv--(+)@ 
+b++(+++) DI+++ D- G++ e* h>++ r* y?
+------END GEEK CODE BLOCK------
+
+http://www.stop1984.com
+http://www.againsttcpa.com
