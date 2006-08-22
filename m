@@ -1,52 +1,24 @@
-From: Steve Cousins <steve.cousins@maine.edu>
-Subject: Correct way to create multiple RAID volumes with hot-spare?
-Date: Tue, 22 Aug 2006 15:05:29 -0400
-Message-ID: <44EB5579.4020200@maine.edu>
+From: Richard Scobie <richard@sauce.co.nz>
+Subject: RAID over Firewire
+Date: Wed, 23 Aug 2006 11:35:26 +1200
+Message-ID: <44EB94BE.8080907@sauce.co.nz>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+Has anyone had any experience or comment regarding linux RAID over ieee1394?
 
-I have a set of 11 500 GB drives. Currently each has two 250 GB 
-partitions (/dev/sd?1 and /dev/sd?2).  I have two RAID6 arrays set up, 
-each with 10 drives and then I wanted the 11th drive to be a hot-spare. 
-  When I originally created the array I used mdadm and only specified 
-the use of 10 drives since the 11th one wasn't even a thought at the 
-time (I didn't think I could get an 11th drive in the case).  Now I can 
-manually add in the 11th drive partitions into each of the arrays and 
-they show up as a spares but on reboot they aren't part of the set 
-anymore.  I have added them into /etc/mdadm.conf and the partition type 
-is set to be  Software RAID (fd).
+As a budget backup solution, I am considering using a pair of 500GB 
+drives, each connected to a firewire 400 port, configured as a linear 
+array, to which the contents of an onboard array will be rsynced weekly.
 
-Maybe I shouldn't be splitting the drives up into partitions.  I did 
-this due to issues with volumes greater than 2TB.  Maybe this isn't an 
-issue anymore and I should just rebuild the array from scratch with 
-single partitions.  Or should there even be partitions? Should I just 
-use /dev/sd[abcdefghijk] ?
+In theory, throughput performance should not be an issue, but it would 
+be great to hear from somone who has done this.
 
-On a side note, maybe for another thread, the arrays work great until a 
-reboot (using 'shutdown' or 'reboot' and they seem to be shutting down 
-the md system correctly).  Sometimes one or even two (yikes!) partitions 
-in each array go offline and I have to mdadm /dev/md0 -a /dev/sdx1 it 
-back in.  Do others experience this regularly with RAID6?  Is RAID6 not 
-ready for prime time?
+Regards,
 
-As for system information, it is (was) a Dual Opteron with CentOS 4.3 
-(now I'm putting FC5 on it as I write) with a 3Ware 8506-12 SATA RAID 
-card that I am using in JBOD mode so I could do software RAID6.
-
-Thanks for your help.
-
-Steve
--- 
-______________________________________________________________________
-  Steve Cousins, Ocean Modeling Group    Email: cousins@umit.maine.edu
-  Marine Sciences, 452 Aubert Hall       http://rocky.umeoce.maine.edu
-  Univ. of Maine, Orono, ME 04469        Phone: (207) 581-4302
-
-
+Richard
