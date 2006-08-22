@@ -1,55 +1,99 @@
-From: Doug Ledford <dledford@redhat.com>
-Subject: Re: RAID5 producing fake partition table on single drive
-Date: Mon, 21 Aug 2006 18:47:32 -0400
-Message-ID: <1156200453.19051.13.camel@fc6.xsintricity.com>
-References: <1155987607.7207.23.camel@localhost.localdomain>
-	 <17641.25141.373827.77279@cse.unsw.edu.au>
+From: Dexter Filmore <Dexter.Filmore@gmx.de>
+Subject: Re: invalid superblock - *again*
+Date: Tue, 22 Aug 2006 03:02:23 +0200
+Message-ID: <200608220302.23412.Dexter.Filmore@gmx.de>
+References: <200608210104.17274.Dexter.Filmore@gmx.de> <17641.3010.978057.92568@cse.unsw.edu.au> <200608211304.12010.Dexter.Filmore@gmx.de>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-F3vRgtHny3m3hvAUCQTf"
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17641.25141.373827.77279@cse.unsw.edu.au>
+In-Reply-To: <200608211304.12010.Dexter.Filmore@gmx.de>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: Neil Brown <neilb@suse.de>
-Cc: Lem <l3mming@iinet.net.au>, linux-raid@vger.kernel.org
+Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+Am Montag, 21. August 2006 13:04 schrieb Dexter Filmore:
+I seriously don't know what's going on here.
+I upgraded packages and rebooted the machine to find that now disk 4 of 4 is 
+not assembled.
 
---=-F3vRgtHny3m3hvAUCQTf
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Here's dmesg and mdadm -E 
 
-On Mon, 2006-08-21 at 17:35 +1000, Neil Brown wrote:
+***************** dmesg ******************
+[   38.439644] md: md0 stopped.
+[   38.536089] md: bind<sdb1>
+[   38.536301] md: bind<sdc1>
+[   38.536501] md: bind<sdd1>
+[   38.536702] md: bind<sda1>
+[   38.536733] md: kicking non-fresh sdd1 from array!
+[   38.536751] md: unbind<sdd1>
+[   38.536765] md: export_rdev(sdd1)
+[   38.536794] raid5: device sda1 operational as raid disk 0
+[   38.536812] raid5: device sdc1 operational as raid disk 2
+[   38.536831] raid5: device sdb1 operational as raid disk 1
+[   38.537453] raid5: allocated 4195kB for md0
+[   38.537471] raid5: raid level 5 set md0 active with 3 out of 4 devices, 
+algor
+ithm 2
+[   38.537499] RAID5 conf printout:
+[   38.537513]  --- rd:4 wd:3 fd:1
+[   38.537528]  disk 0, o:1, dev:sda1
+[   38.537543]  disk 1, o:1, dev:sdb1
+[   38.537558]  disk 2, o:1, dev:sdc1
+*********************************************
 
-> > Buffer I/O error on device sde3, logical block 1793
->=20
-> This, on the other hand, might be a problem - though possibly only a
-> small one.
-> Who is trying to access sde3 I wonder.  I'm fairly sure the kernel
-> wouldn't do that directly.
+Most notable: [   38.536733] md: kicking non-fresh sdd1 from array!
+What does this mean?
 
-It's the mount program collecting possible LABEL=3D data on the partitions
-listed in /proc/partitions, of which sde3 is outside the valid range for
-the drive.
+********* mdadm -E /dev/sdd1 ****************
+/dev/sdd1:
+          Magic : a92b4efc
+        Version : 00.90.02
+           UUID : 7f103422:7be2c2ce:e67a70be:112a2914
+  Creation Time : Tue May  9 01:11:41 2006
+     Raid Level : raid5
+    Device Size : 244187904 (232.88 GiB 250.05 GB)
+     Array Size : 732563712 (698.63 GiB 750.15 GB)
+   Raid Devices : 4
+  Total Devices : 4
+Preferred Minor : 0
 
---=20
-Doug Ledford <dledford@redhat.com>
-              GPG KeyID: CFBFF194
-              http://people.redhat.com/dledford
+    Update Time : Tue Aug 22 01:42:36 2006
+          State : clean
+ Active Devices : 4
+Working Devices : 4
+ Failed Devices : 0
+  Spare Devices : 0
+       Checksum : 33b2d59b - correct
+         Events : 0.765488
 
-Infiniband specific RPMs available at
-              http://people.redhat.com/dledford/Infiniband
+         Layout : left-symmetric
+     Chunk Size : 32K
 
---=-F3vRgtHny3m3hvAUCQTf
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+      Number   Major   Minor   RaidDevice State
+this     3       8       49        3      active sync   /dev/sdd1
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
+   0     0       8        1        0      active sync   /dev/sda1
+   1     1       8       17        1      active sync   /dev/sdb1
+   2     2       8       33        2      active sync   /dev/sdc1
+   3     3       8       49        3      active sync   /dev/sdd1
 
-iD8DBQBE6jgEg6WylM+/8ZQRAt/eAKCrN7NjbtagaF1th0uYQtVTEGjcCACdFAYM
-LbxS+TIrOmZD9lfKdbpYv0M=
-=jt/R
------END PGP SIGNATURE-----
+*************************************************
 
---=-F3vRgtHny3m3hvAUCQTf--
+What's happening here? What can I do? Do I have to readd sdd and resync? Or is 
+there an easier way out? What causes these issues?
 
+
+-- 
+-----BEGIN GEEK CODE BLOCK-----
+Version: 3.12
+GCS d--(+)@ s-:+ a- C++++ UL++ P+>++ L+++>++++ E-- W++ N o? K-
+w--(---) !O M+ V- PS+ PE Y++ PGP t++(---)@ 5 X+(++) R+(++) tv--(+)@ 
+b++(+++) DI+++ D- G++ e* h>++ r* y?
+------END GEEK CODE BLOCK------
+
+http://www.stop1984.com
+http://www.againsttcpa.com
