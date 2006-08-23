@@ -1,26 +1,23 @@
-From: Richard Scobie <richard@sauce.co.nz>
-Subject: Re: RAID over Firewire
-Date: Thu, 24 Aug 2006 10:06:44 +1200
-Message-ID: <44ECD174.5080300@sauce.co.nz>
-References: <44EB94BE.8080907@sauce.co.nz> <200608231510.26160.Dexter.Filmore@gmx.de> <44ECC870.2090202@sauce.co.nz> <44ECC9CD.7020502@h3c.com>
+From: "Erick" <arabcull@rpls.biz>
+Subject: Relax with Finally there is something that really gives you extra inches and extra confidence.
+Date: Thu, 24 Aug 2006 07:30:06 +0900
+Message-ID: <16682301017578.2F6A6E1848@OKIO>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain;
+        charset="Windows-1252"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <44ECC9CD.7020502@h3c.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: linux-scsi-digest@vger.kernel.org
 List-Id: linux-raid.ids
 
-Mike Hardy wrote:
+Get the freshest
 
+ Act while others wait! Increase your confidence to enormous levels! Are you prepared to see and feel the inches that weren't there weeks before?
 
-> I'm not sure SMART works over firewire anyway. That's a question.
-> 
-> http://smartmontools.sourceforge.net/:
-> 
-> "As for USB and FireWire (ieee1394) disks and tape drives, the news is
-> not good. They appear to Linux as SCSI devices but their implementations
-> do not usually support those SCSI commands needed by smartmontools."
+ Did she ever tell you your size is insufficient? No? Maybe she was just being polite? Expect an explosion in your intimate life very soon - guaranteed! Come on in: http://www.sedeji.com/gal/xl/ 
 
-Thanks, that is a good point I will follow up.
+Unlike other products, this one gives you permanent gains in size - and loads of pleasure!
+
+ Ignorance is bliss I also will laugh at your calamity; I will mock when your fear cometh. Caught between the devil and the deep blue sea . Its too late to shut the stable door after the horse has bolted
+
