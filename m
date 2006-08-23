@@ -1,29 +1,32 @@
 From: Richard Scobie <richard@sauce.co.nz>
 Subject: Re: RAID over Firewire
-Date: Thu, 24 Aug 2006 09:27:53 +1200
-Message-ID: <44ECC859.5030806@sauce.co.nz>
-References: <44EB94BE.8080907@sauce.co.nz> <Pine.LNX.4.56.0608230832170.6721@lion.drogon.net>
+Date: Thu, 24 Aug 2006 09:28:16 +1200
+Message-ID: <44ECC870.2090202@sauce.co.nz>
+References: <44EB94BE.8080907@sauce.co.nz> <200608231510.26160.Dexter.Filmore@gmx.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.56.0608230832170.6721@lion.drogon.net>
+In-Reply-To: <200608231510.26160.Dexter.Filmore@gmx.de>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Gordon Henderson wrote:
+Dexter Filmore wrote:
 
-> While I haven't done this, I have a client who uses Firewire drives
-> (Lacie) as a backup solution and they seem to "just work", and look like
-> locally attached SCSI drives (Performance is quite good too!) I guess you
-> won't be hot pluging/unplugging them, so those issues won't bite you, but
-> I can't see a reason why a pair of them wouldn't be OK.
+> Of all modes I wouldn't use a linear setup for backups. One disk dies - all 
+> data is lost.
 
-Thanks.
+> I'd go for an external raid5 solution, tho those tend to be slow and 
+> expensive.
+> 
 
-While I can see that hotunplugging without unmounting would be an issue,
-what is the problem with hot plugging or unplugging otherwise?
+Unfortunately "budget" is the overriding factor here. Unlike RAID 0, I
+thought there may be a way of recovering data from undamaged disks in a
+linear array, although I guess the file system used has some say in this.
+
+I hope to mitgate the risk somewhat by regularly using smartd to do long
+self tests on the disks.
 
 Regards,
 
