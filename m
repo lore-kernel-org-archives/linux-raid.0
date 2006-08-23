@@ -1,25 +1,54 @@
-From: "=?ISO-8859-1?Q?Martin_Schr=F6der?=" <martin@oneiros.de>
-Subject: Re: RAID over Firewire
-Date: Wed, 23 Aug 2006 01:56:08 +0200
-Message-ID: <68c491a60608221656s3332ede6x3a013a741b4d15db@mail.gmail.com>
-References: <44EB94BE.8080907@sauce.co.nz>
+From: "Archie Cotton" <vrmciwn@tanager.k12.ia.us>
+Subject: help
+Date: Wed, 23 Aug 2006 18:21:57 -0100
+Message-ID: <6.7.3.64.2.20031939263053.025b4b48__46851.254933472$1156303386$gmane$org@relaxation.starnetusa.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <44EB94BE.8080907@sauce.co.nz>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: linux-net@vger.kernel.org
 List-Id: linux-raid.ids
 
-2006/8/23, Richard Scobie <richard@sauce.co.nz>:
-> As a budget backup solution, I am considering using a pair of 500GB
-> drives, each connected to a firewire 400 port, configured as a linear
-> array, to which the contents of an onboard array will be rsynced weekly.
+Do you want a w-atch?
 
-You can get 1TB+ RAID0 FW800 "drives". LaCie even sells FW RAIDs with
-RAID 5 + Hotspare. :-)
+In our online store you can buy r e p l i c a s of R o l e x watches an=
+d
+other brands. They look and feel exactly like the real thing.
 
-Best
-   Martin
+- We have 100+ different brands in our selection
+- Best prices on the market Just For You
+- Great Discount Live Support Extended Warranty
+- Free shipping if you order 2 or more
+- Save up to 85% compared to the cost of other r e p l i c a s
+- Standard Features:
+- Screw-in crown
+- Unidirectional turning bezel where appropriate
+- All the appropriate r o l e x logos, on crown and dial
+- Heavy weight
+
+Clisk here: http://superty.info
+
+
+
+
+
+
+
+
+
+
+
+
+
+"It's yours.
+That was the only way he could account for this bizarre behavior=A0=97 =
+she had seen the marks after all, and this was the beginning of some ne=
+w and spectacular punishment.
+As a result, hadn't his "serious fiction=BBbecome steadily more self-co=
+nscious, a sort of scream?
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
