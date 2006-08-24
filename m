@@ -1,36 +1,33 @@
-From: Gordon Henderson <gordon@drogon.net>
-Subject: Re: RAID over Firewire
-Date: Thu, 24 Aug 2006 07:11:22 +0100 (BST)
-Message-ID: <Pine.LNX.4.56.0608240708220.6721@lion.drogon.net>
-References: <44EB94BE.8080907@sauce.co.nz> <Pine.LNX.4.56.0608230832170.6721@lion.drogon.net>
- <44ECC859.5030806@sauce.co.nz>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+From: NeilBrown <neilb@suse.de>
+Subject: [PATCH 000 of 2] md: Fix a bug with backward event updates.
+Date: Thu, 24 Aug 2006 17:20:13 +1000
+Message-ID: <20060824171215.14077.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <44ECC859.5030806@sauce.co.nz>
 Sender: linux-raid-owner@vger.kernel.org
-To: Richard Scobie <richard@sauce.co.nz>
-Cc: linux-raid@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, 24 Aug 2006, Richard Scobie wrote:
+Hi Andrew,
 
-> Gordon Henderson wrote:
->
-> > While I haven't done this, I have a client who uses Firewire drives
-> > (Lacie) as a backup solution and they seem to "just work", and look like
-> > locally attached SCSI drives (Performance is quite good too!) I guess you
-> > won't be hot pluging/unplugging them, so those issues won't bite you, but
-> > I can't see a reason why a pair of them wouldn't be OK.
->
-> Thanks.
->
-> While I can see that hotunplugging without unmounting would be an issue,
-> what is the problem with hot plugging or unplugging otherwise?
+There is a bug in 2.6.18-rc which needs to be fixed before -final,
+but there is a patch in -mm which is not scheduled for 2.6.18 which
+touches the same code - so that patch has to change.
 
-Mostly dumb user issues - unplugging before unmounting, but I have seen
-issues in older kernels where the
- echo "scsi remove-single-device 0 0 0 0" > /proc/scsi/scsi
-rune has crashed the server.
+So:
+ wind back to 
+    md-replace-magic-numbers-in-sb_dirty-with-well-defined-bit-flags.patch
+ discard that patch.
+ Apply 1 of 2 following - that needs to go to Linux (or Greg)
+ Then apply 2 of 2 to replace the one that was removed.
+ Then you should be able to wind forwards again and everything will apply.
 
-Gordon
+(If there is some other way you would like me to deal with this
+ situation - just say so).
+
+Thanks,
+NeilBrown
+
+
+ [PATCH 001 of 2] md: Avoid backward event updates in md superblock when degraded.
+ [PATCH 002 of 2] md: replace magic numbers in sb_dirty with well defined bit flags
