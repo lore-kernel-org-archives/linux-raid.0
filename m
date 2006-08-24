@@ -1,36 +1,36 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: Linux: Why software RAID?
-Date: Thu, 24 Aug 2006 04:19:38 -0400
-Message-ID: <44ED611A.3090604@garzik.org>
-References: <44ED1E41.40606@garzik.org> <44ED2969.30606@sauce.co.nz>
+From: "Francois Barre" <francois.barre@gmail.com>
+Subject: Re: RAID over Firewire
+Date: Thu, 24 Aug 2006 12:27:06 +0200
+Message-ID: <fd8d0180608240327tbad7bf3v6c8a8c7514f7d29c@mail.gmail.com>
+References: <44EB94BE.8080907@sauce.co.nz>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <44ED2969.30606@sauce.co.nz>
+In-Reply-To: <44EB94BE.8080907@sauce.co.nz>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: Richard Scobie <richard@sauce.co.nz>
-Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Richard Scobie wrote:
-> Jeff Garzik wrote:
->> Mark Perkel wrote:
->>
->>> Running Linux on an AMD AM2 nVidia chip ser that supports Raid 0
->>> striping on the motherboard. Just wondering if hardware raid (SATA2) is
->>> going to be faster that software raid and why? 
->>
-> 
-> Jeff, on a slightly related note, is the driver status for the NVIDIA as 
-> reflected on your site, correct for the new nForce 590/570 AM2 chipset?
+2006/8/23, Richard Scobie <richard@sauce.co.nz>:
+> Has anyone had any experience or comment regarding linux RAID over ieee1394?
+>
+I've been successfully running a 4x250Gb Raid5 over ieee1394 with XFS on top.
+The 4 drives are sharing the same ieee1394 bus, so the bandwidth is
+awfull, because they have to share 20Mb/s.
+It happens from time to time that one drive is temporary lost, so I
+must re-add it and resync... (I would have liked to put a bitmap on
+it, but I get an oops... I did not have time to give it a closer look
+yet).
 
-Unfortunately I rarely have an idea about how marketing names correlate 
-to chipsets.
+> As a budget backup solution, I am considering using a pair of 500GB
+> drives, each connected to a firewire 400 port, configured as a linear
+> array, to which the contents of an onboard array will be rsynced weekly.
 
-Do you have a PCI ID (lspci -n)?
+I would really suggest you to study a 3-drive raid5 scenario, because
+the risk of temporary loosing a disk is not neglectible... Regarding
+to the cost of an extra disk.
 
-	Jeff
-
-
-
+That was my 2cents..
