@@ -1,108 +1,41 @@
-From: "Rob Bray" <raid@bymeinc.com>
-Subject: Re: md: only binds to one mirror after reboot
-Date: Thu, 24 Aug 2006 15:51:20 -0400 (EDT)
-Message-ID: <53427.192.168.0.1.1156449080.squirrel@bymeinc.com>
+From: Richard Scobie <richard@sauce.co.nz>
+Subject: Re: Linux: Why software RAID?
+Date: Fri, 25 Aug 2006 08:08:33 +1200
+Message-ID: <44EE0741.1050705@sauce.co.nz>
+References: <44ED1E41.40606@garzik.org> <44ED2969.30606@sauce.co.nz> <44ED611A.3090604@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <44ED611A.3090604@garzik.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andreas.Pelzner@aixvision.net
-Cc: linux-raid@vger.kernel.org
+To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-> hello,
->
-> after reboot, md only binds to one mirror (/dev/hdb1).
-> raid1: raid set md0 active with 1 out of 2 mirrors
->
-> After adding /dev/hda1 manually 'mdadm --add /dev/md0 /dev/hda1', the
-> raid seems to work well:
->
-> isp:/var/log# cat /proc/mdstat
-> Personalities : [raid1]
-> md0 : active raid1 hda1[0] hdb1[1]
->       154191744 blocks [2/2] [UU]
->
-> Any idea what I did wrong?
->
-> Tia
->
-> some system information:
->
-> isp:/var/log# uname -r
-> 2.6.17.8
-> isp:/var/log# mdadm -V
-> mdadm - v1.9.0 - 04 February 2005
->
-> isp:/var/log# fdisk -l
->
-> Disk /dev/hda: 160.0 GB, 160041885696 bytes
-> 255 heads, 63 sectors/track, 19457 cylinders
-> Units = cylinders of 16065 * 512 = 8225280 bytes
->
->    Device Boot      Start         End      Blocks   Id  System
-> /dev/hda1   *           1       19196   154191838+  fd  Linux raid
-> autodetect
-> /dev/hda2           19197       19457     2096482+   5  Extended
-> /dev/hda5           19197       19388     1542208+  82  Linux swap /
-> Solaris
->
-> Disk /dev/hdb: 160.0 GB, 160041885696 bytes
-> 255 heads, 63 sectors/track, 19457 cylinders
-> Units = cylinders of 16065 * 512 = 8225280 bytes
->
->    Device Boot      Start         End      Blocks   Id  System
-> /dev/hdb1   *           1       19196   154191838+  fd  Linux raid
-> autodetect
-> /dev/hdb2           19197       19457     2096482+   5  Extended
-> /dev/hdb5           19197       19388     1542208+  82  Linux swap /
-> Solaris
->
-> Disk /dev/md0: 157.8 GB, 157892345856 bytes
-> 2 heads, 4 sectors/track, 38547936 cylinders
-> Units = cylinders of 8 * 512 = 4096 bytes
-> #
-> isp:/var/log# grep md messages
-> Aug 23 22:16:07 isp kernel: Kernel command line: root=/dev/md0
-> md=0,/dev/hda1,/dev/hdb1 ro
-> Aug 23 22:16:07 isp kernel: md: md driver 0.90.3 MAX_MD_DEVS=256,
-> MD_SB_DISKS=27
-> Aug 23 22:16:07 isp kernel: md: bitmap version 4.39
-> Aug 23 22:16:07 isp kernel: md: raid1 personality registered for level 1
-> Aug 23 22:16:07 isp kernel: md: md0 stopped.
-> Aug 23 22:16:07 isp kernel: md: bind<hdb1>
-> Aug 23 22:16:07 isp kernel: raid1: raid set md0 active with 1 out of 2
-> mirrors
-> Aug 23 22:16:07 isp kernel: EXT3 FS on md0, internal journal
-> Aug 23 22:45:55 isp kernel: Kernel command line: root=/dev/md0
-> md=0,/dev/hda1,/dev/hdb1 ro
-> Aug 23 22:45:55 isp kernel: md: md driver 0.90.3 MAX_MD_DEVS=256,
-> MD_SB_DISKS=27
-> Aug 23 22:45:55 isp kernel: md: bitmap version 4.39
-> Aug 23 22:45:55 isp kernel: md: raid1 personality registered for level 1
-> Aug 23 22:45:55 isp kernel: md: md0 stopped.
-> Aug 23 22:45:55 isp kernel: md: bind<hdb1>
-> Aug 23 22:45:55 isp kernel: raid1: raid set md0 active with 1 out of 2
-> mirrors
-> Aug 23 22:45:55 isp kernel: EXT3 FS on md0, internal journal
->
-> <manually added /dev/hda1/>
->
-> Aug 24 07:12:30 isp kernel: md: bind<hda1>
-> Aug 24 07:12:30 isp kernel: md: syncing RAID array md0
-> Aug 24 07:12:30 isp kernel: md: minimum _guaranteed_ reconstruction
-> speed: 1000 KB/sec/disc.
-> Aug 24 07:12:30 isp kernel: md: using maximum available idle IO
-> bandwidth (but not more than 200000 KB/sec) for reconstruction.
-> Aug 24 07:12:30 isp kernel: md: using 128k window, over a total of
-> 154191744 blocks.
-> Aug 24 08:28:05 isp kernel: md: md0: sync done.
->
-> Kind Regards
-> Andreas Pelzner
+Jeff Garzik wrote:
+> Richard Scobie wrote:
 
-Do you have the autodetect kernel messages from booting?
+>> Jeff, on a slightly related note, is the driver status for the NVIDIA 
+>> as reflected on your site, correct for the new nForce 590/570 AM2 
+>> chipset?
+> 
+> 
+> Unfortunately I rarely have an idea about how marketing names correlate 
+> to chipsets.
+> 
+> Do you have a PCI ID (lspci -n)?
 
-Rob
+Unfortunately not, as I am researchiung prior to purchase and Google has 
+not thrown up anything useful.
 
+However, the chipset numbers for the nForce 590 are C51Xe and MCP55PXE.
+
+I think though, that I have answered the question. According to this 
+NVIDIA page containing a download that appears to be the source from the 
+kernel, "These drivers have been fully tested with nForce 570/590."
+
+http://www.nvidia.co.uk/object/linux_nforce_1.11_uk.html
+
+Regards,
+
+Richard
