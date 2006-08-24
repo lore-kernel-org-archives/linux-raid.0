@@ -1,7 +1,7 @@
-From: Richard Scobie <richard@sauce.co.nz>
+From: "Chris Friesen" <cfriesen@nortel.com>
 Subject: Re: Linux: Why software RAID?
-Date: Thu, 24 Aug 2006 16:22:01 +1200
-Message-ID: <44ED2969.30606@sauce.co.nz>
+Date: Wed, 23 Aug 2006 23:20:35 -0600
+Message-ID: <44ED3723.3090308@nortel.com>
 References: <44ED1E41.40606@garzik.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
@@ -9,20 +9,24 @@ Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <44ED1E41.40606@garzik.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>, Linux RAID Mailing List <linux-raid@vger.kernel.org>, marc@perkel.com
 List-Id: linux-raid.ids
 
 Jeff Garzik wrote:
-> Mark Perkel wrote:
+
+> But anyway, to help answer the question of hardware vs. software RAID, I 
+> wrote up a page:
 > 
->> Running Linux on an AMD AM2 nVidia chip ser that supports Raid 0
->> striping on the motherboard. Just wondering if hardware raid (SATA2) is
->> going to be faster that software raid and why? 
-> 
+>     http://linux.yyz.us/why-software-raid.html
 
-Jeff, on a slightly related note, is the driver status for the NVIDIA as 
-reflected on your site, correct for the new nForce 590/570 AM2 chipset?
+Just curious...with these guys 
+(http://www.bigfootnetworks.com/KillerOverview.aspx) putting linux on a 
+PCI NIC to allow them to bypass Windows' network stack, has anyone ever 
+considered doing "hardware" raid by using an embedded cpu running linux 
+software RAID, with battery-backed memory?
 
-Regards,
+It would theoretically allow you to remain feature-compatible by 
+downloading new kernels to your RAID card.
 
-Richard
+Chris
