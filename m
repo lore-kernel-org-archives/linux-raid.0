@@ -1,22 +1,14 @@
-From: "Isabella Reese" <sexdocqlff@sexdoc.com>
-Subject: She will love you more than any other guy
-Date: Wed, 23 Aug 2006 20:08:31 -0400
-Message-ID: <3306028882.9707562695@sexdoc.com>
-Reply-To: "Isabella Reese" <sexdocqlff@sexdoc.com>
+From: "Roderick Larson" <joyce@007names.com>
+Subject: re:Hi
+Date: Thu, 24 Aug 2006 02:22:32 -0540
+Message-ID: <662161c8060467bh07yq4w98p8887gjpazz22kq0a925@mail.webex.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-
-Hey man, welcome ok I had to send you this site, they I ordered a Gold package and these things work amazingly instant!
-For real,  welcome I've tried a bunch of other ones but they don't work- these ones are the real deal though stats.
-Democracy does not guarantee equality of conditions -- it only guarantees equality of opportunity.
-to Check out the site for yourself:
-http://www.keloparemazik.com/
-Unless commitment is made, there are only promises and hopes but no plans.
-
-
+The young and perspective financial company employs young experts. It is your unique chance to start your career in the company with a world name. We have some kinds of vacancies. You can work freelance or work in office. With us you can achieve new horizons in your career. You can earn up to 3000-4000$ per month. The basic requirements to the candidates are: knowledge of PC and bases of accounts department, honesty, clearness and efficiency in work. If you are interested in the given offer, please send your CV to USA@direct-goldusa1.biz
