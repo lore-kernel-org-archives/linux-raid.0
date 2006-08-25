@@ -1,77 +1,44 @@
-From: <internationale.office1@virgilio.it>
-Subject: INFORMATIE:
-Date: Fri, 25 Aug 2006 11:40:04 +0100 (GMT+01:00)
-Message-ID: <10d44ea3c2a.internationale.office1@virgilio.it>
-Reply-To: <internationale.office1@virgilio.it>
+From: Steve Cousins <steve.cousins@maine.edu>
+Subject: Re: Correct way to create multiple RAID volumes with hot-spare?
+Date: Fri, 25 Aug 2006 12:17:40 -0400
+Message-ID: <44EF22A4.73D45C59@maine.edu>
+References: <44EB5579.4020200@maine.edu> <Pine.LNX.4.64.0608230634270.15031@p34.internal.lan> <Pine.LNX.4.62.0608230915580.12782@chaos.egr.duke.edu>
 Mime-Version: 1.0
-Content-Type: text/plain;charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
+To: Joshua Baker-LePain <jlb17@duke.edu>
+Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-INFORMATIE:
-CONTACT MR. GIRLBERT FONS
-BANK GIRO LOTERIJ INTERNATIONAL
-PROMOTION PRIZE AWARD DEPT. 
-REF: DYK/82283922/769 
-BATCH: 11/621/2PDH 
-/NL 
-Dear Winner, 
-Following the official publication of the E-mail 
-electronic online Sweepstakes result organized by the Bank giro loterij 
-corporation, the Slidecircuir award and the Heineken prizes in 
-conjunction with the foundation for the promotion of software products,
-(F.P.S.), held on the 29th of July , 2006, in AmsterdamThe Netherlands,
-wherein your electrononic email address emerged as one of the online 
-winning emails in the 1st category and therefore attracted a cash award 
-of One Million Euros.
-We write to officially notify you of this award 
-and to advise you to contact the processing office immediately upon 
-receipt of this message for more information concerning the 
-verification, processing and eventual payment of the above prize to you.
-It is important to note that your award information was released today 
-the 25th of August 2006 with the following particulars attached to it.
-*********************************************
-(I) Award numbers: TL 
-22/15409
-(ii) Email ticket number: TL754/22/76
-(iii) BATCH NUMBER: 
-75/011/INL
-(iv) The file REFERENCE NUMBER:: TL/0534/30/05
-*********************************************
-Please contact the claim 
-agents within 5 working days to facilitate the release of your prize, 
-You are required to mention theabove particulars of your award in every 
-correspondenceaddressed to the processing agents.
-******************************************
-FOREIGN TRANSFER MANAGER
-MR. 
-GIRBERT FONS
-BANK GIRO LOTERIJ SECURITY DEPARTMENT.
-Tel: +31- 204-000-
-498
-Mobiel:: +31-616-719-703
-Fax: +31-847 725-1862
-Fax: +31-847-567-613
-Email:vettingdepart@netscape.com
- 
-***************************************** 
-The Bank giro loterij Awards 
-is sponsored by a consortium of software promotion companies.
-The Intel 
-Group, Toshiba, Dell Computers, Microsoft and other international 
-companies.The Bank giroloterij internet draw is held periodically and 
-is so organized to encourage the use of the internet and promote 
-computer literacy worldwide. 
-We are proud to say that over 20 Million 
-Euro are won annually in more than 150 countries worldwide. Rememer, 
-all winning must be claimed as soon as possible to avoid delay.Please 
-note, in order to avoid unnecessary delays and complications,remember 
-to quote your reference number and batch number in all correspondence.
-Once again on behalf of all our staff,
-CONGRATULATIONS!!! 
-Sincerely,
-Mrs.MARGRIET VAN HENK 
-Promotions Coordinator 
+
+
+Joshua Baker-LePain wrote:
+
+> On Wed, 23 Aug 2006 at 6:34am, Justin Piszcz wrote
+>
+> > On Tue, 22 Aug 2006, Steve Cousins wrote:
+> >
+> >> As for system information, it is (was) a Dual Opteron with CentOS 4.3 (now
+> >> I'm putting FC5 on it as I write) with a 3Ware 8506-12 SATA RAID card that
+> >> I am using in JBOD mode so I could do software RAID6.
+> >>
+> >
+> > If you are using SW RAID, there is no 2TB limit.
+>
+> Ditto for more recent HW RAIDs.  *However*, there are other considerations
+> when dealing with >2TiB devices.  E.g. you can't boot from them.
+>
+
+You are both correct. When I said "due to issues with volumes greater than 2TB" I
+should have indicated that they were more to do with my issues and/or our
+environment.  I probably wasn't persistent enough with it.  I now have a DAS box
+with >2TB volumes and it is working fine so I should probably start over using no
+partions and see how it goes.
+
+Thanks,
+
+Steve
+
 
