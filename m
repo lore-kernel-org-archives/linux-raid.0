@@ -1,42 +1,50 @@
-From: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
-Subject: Re: Linux: Why software RAID?
-Date: Sat, 26 Aug 2006 15:18:37 +0300
-Message-ID: <5d96567b0608260518j3c6e36cdx8c7e8c7bda34ee5c@mail.gmail.com>
-References: <20060826035034.13307.qmail@science.horizon.com>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: Re: [PATCH-stable16] Fix a potential NULL dereference in md/raid1
+Date: Sat, 26 Aug 2006 17:33:52 +0200
+Message-ID: <20060826153352.GH4765@stusta.de>
+References: <20060821094833.21982.patches@notabene> <1060820235013.22016@suse.de> <20060821000109.GA11651@stusta.de> <17640.63792.278940.578508@cse.unsw.edu.au> <20060821002847.GB11651@stusta.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20060826035034.13307.qmail@science.horizon.com>
 Content-Disposition: inline
+In-Reply-To: <20060821002847.GB11651@stusta.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: "linux@horizon.com" <linux@horizon.com>
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Furthremore , hw controller are much less feaure rich than sw raid.
-many different stripe sizes, stripe cache tunning ....
+On Mon, Aug 21, 2006 at 02:28:47AM +0200, Adrian Bunk wrote:
+> On Mon, Aug 21, 2006 at 10:07:12AM +1000, Neil Brown wrote:
+> > On Monday August 21, bunk@stusta.de wrote:
+> > > On Mon, Aug 21, 2006 at 09:50:13AM +1000, NeilBrown wrote:
+> > > 
+> > > > patch for 2.6.16 stable series
+> > > >...
+> > > 
+> > > Thanks for this patch.
+> > > 
+> > > It does also apply against both 2.6.17.9 and Linus' tree.
+> > > 
+> > > Is it not required in these trees, or are you also submitting it there?
+> > 
+> > I've just sent a patch to stable@kernel.org for 2.6.17.9. (it is the
+> > same patch with slightly different line numbers).
+> > 
+> > The patch for -linus is quite different and will follow shortly (with
+> > a few other patches).
+> 
+> OK, I'll apply this patch when it has successfully passed 2.6.17 review 
+> and got included in 2.6.17.
 
-On 25 Aug 2006 23:50:34 -0400, linux@horizon.com <linux@horizon.com> wrote:
-> > Hardware RAID can be (!= is) more tolerant of serious drive failures
-> > where a single drive locks up the bus. A high-end hardware RAID card
-> > may be designed with independent controllers so a single drive failure
-> > cannot take other spindles down with it. The same can be accomplished
-> > with sw RAID of course if the builder is careful to use multiple PCI
-> > cards, etc. Sw RAID over your motherboard's onboard controllers leaves
-> > you vulnerable.
->
-> Which is exactly why I *like* SW RAID - I can, and do, have the mirrors
-> span controllers so a whole controller can fail without taking down
-> the system.
->
-> With HW RAID cards, if your controller dies, you're SOL.
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+Applied, thanks for the patch.
 
+cu
+Adrian
 
 -- 
-Raz
+
+       "Is there not promise of rain?" Ling Tan asked suddenly out
+        of the darkness. There had been need of rain for many days.
+       "Only a promise," Lao Er said.
+                                       Pearl S. Buck - Dragon Seed
+
