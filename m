@@ -1,45 +1,125 @@
-From: "contravene" <ceriumbronze@earthlink.net>
-Subject: crank
-Date: Sun, 27 Aug 2006 00:05:58 -0700
-Message-ID: <44284521402617.9FCDC81037@6V6VD9Z7>
+From: "Andreas Pelzner" <Andreas.Pelzner@aixvision.net>
+Subject: RE: md: only binds to one mirror after reboot
+Date: Sun, 27 Aug 2006 11:00:36 +0200
+Message-ID: <C05CC316E92A964C9BDD81EE36AE05343C7070@x2k3.a-team.ihs>
 Mime-Version: 1.0
 Content-Type: text/plain;
-        charset="Windows-1252"
-Content-Transfer-Encoding: 7bit
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-class: urn:content-classes:message
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-scsi-digest@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-W a t c h   o u t!
-
-ALLAINCE ETNERPRISE (A ETR)
-Current Pirce: 0.80
-Add this g e m to your watc h list, and watc h it tard closely!
-
-Nwes Rleease!
-
-Teacorp announces breackrough in removing deadly landmi nes.
-
-Mill Valley, California August 25, 2006 - The Alilance Etnerprise Corportaion announced today a breakthrough in developing an Aerail Ladnmine Sysetm aimed at locating, detecting and mapping deadly landmine s.
-
-TaeCrop's mission is to reclaim lands around the globe embedded with lan dmines that victimize countries and their stakeholders.
-
-More than 100 m i l l i o n land mines in 83 countries are holding international communities and industries hostage, preventing the inves tment in and development of product ive lands and the re-building of infrastructure. A broad variety of landm ines have been scattered over p roductive areas effectively crippling the ec onomy and disabling thousands of children and adults.  There are no reliable records that accurately show where these d e v a s t a t i n g landmi nes lie in wait for their vic tims.
- 
-With the present day cost s to clear a single land mine ranging between $1,000 to $1,500, solving the problem of de-mining lands will reach billions of dolla rs.  TaeCorp has developed a technology based, c ost effective solution to this problem using its three tiered approach to scanning, mapping and removing la ndmines. TaeCorp's System will provide many social and econo mic ben efits to countries and their industries including oil and gas, mining, agriculture, roads and infrastructure development.
-
-About TaeCorp.
-
-TaeCorp's vision is to be the recognized leader in providing Areial Detectoin Systmes including global de-mining, clearing a path to a safer planet for all humankind.
-
-Here comes the big one! 
-All signs show that AE TR is going to Explode!
-
-Co nclusion:
-The examples above show the awesome, earning potential of little known companies that explode onto invsetor's radar screens; Many of you are already familiar with this. Is AE TR poised and positioned to do that for you? Then you may feel the time has come to act... And please watch this one trdae tomorrow! Go AET R.
-Pen ny stokcs are considered highly speculative and may be unsuitable for all but very aggressive invsetors.  This p rofile is not in any way affi liated with the featured company.  This report is for entertainment and advertising purposes only and should not be used as invetsment advice.  If you wish to stop future m a i lings, or if you feel you have been wrongfully placed in our membership, send a blank e m a i l with No Thanks in the subject to 
 
 
+> -----Original Message-----
+> From: linux-raid-owner@vger.kernel.org 
+> [mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Rob Bray
+> Sent: Donnerstag, 24. August 2006 21:51
+> To: Andreas Pelzner
+> Cc: linux-raid@vger.kernel.org
+> Subject: Re: md: only binds to one mirror after reboot
+> 
+> > hello,
+> >
+> > after reboot, md only binds to one mirror (/dev/hdb1).
+> > raid1: raid set md0 active with 1 out of 2 mirrors
+> >
+> > After adding /dev/hda1 manually 'mdadm --add /dev/md0 
+> /dev/hda1', the
+> > raid seems to work well:
+> >
+> > isp:/var/log# cat /proc/mdstat
+> > Personalities : [raid1]
+> > md0 : active raid1 hda1[0] hdb1[1]
+> >       154191744 blocks [2/2] [UU]
+> >
+> > Any idea what I did wrong?
+> >
+> > Tia
+> >
+> > some system information:
+> >
+> > isp:/var/log# uname -r
+> > 2.6.17.8
+> > isp:/var/log# mdadm -V
+> > mdadm - v1.9.0 - 04 February 2005
+> >
+> > isp:/var/log# fdisk -l
+> >
+> > Disk /dev/hda: 160.0 GB, 160041885696 bytes
+> > 255 heads, 63 sectors/track, 19457 cylinders
+> > Units = cylinders of 16065 * 512 = 8225280 bytes
+> >
+> >    Device Boot      Start         End      Blocks   Id  System
+> > /dev/hda1   *           1       19196   154191838+  fd  Linux raid
+> > autodetect
+> > /dev/hda2           19197       19457     2096482+   5  Extended
+> > /dev/hda5           19197       19388     1542208+  82  Linux swap /
+> > Solaris
+> >
+> > Disk /dev/hdb: 160.0 GB, 160041885696 bytes
+> > 255 heads, 63 sectors/track, 19457 cylinders
+> > Units = cylinders of 16065 * 512 = 8225280 bytes
+> >
+> >    Device Boot      Start         End      Blocks   Id  System
+> > /dev/hdb1   *           1       19196   154191838+  fd  Linux raid
+> > autodetect
+> > /dev/hdb2           19197       19457     2096482+   5  Extended
+> > /dev/hdb5           19197       19388     1542208+  82  Linux swap /
+> > Solaris
+> >
+> > Disk /dev/md0: 157.8 GB, 157892345856 bytes
+> > 2 heads, 4 sectors/track, 38547936 cylinders
+> > Units = cylinders of 8 * 512 = 4096 bytes
+> > #
+> > isp:/var/log# grep md messages
+> > Aug 23 22:16:07 isp kernel: Kernel command line: root=/dev/md0
+> > md=0,/dev/hda1,/dev/hdb1 ro
+> > Aug 23 22:16:07 isp kernel: md: md driver 0.90.3 MAX_MD_DEVS=256,
+> > MD_SB_DISKS=27
+> > Aug 23 22:16:07 isp kernel: md: bitmap version 4.39
+> > Aug 23 22:16:07 isp kernel: md: raid1 personality 
+> registered for level 1
+> > Aug 23 22:16:07 isp kernel: md: md0 stopped.
+> > Aug 23 22:16:07 isp kernel: md: bind<hdb1>
+> > Aug 23 22:16:07 isp kernel: raid1: raid set md0 active with 
+> 1 out of 2
+> > mirrors
+> > Aug 23 22:16:07 isp kernel: EXT3 FS on md0, internal journal
+> > Aug 23 22:45:55 isp kernel: Kernel command line: root=/dev/md0
+> > md=0,/dev/hda1,/dev/hdb1 ro
+> > Aug 23 22:45:55 isp kernel: md: md driver 0.90.3 MAX_MD_DEVS=256,
+> > MD_SB_DISKS=27
+> > Aug 23 22:45:55 isp kernel: md: bitmap version 4.39
+> > Aug 23 22:45:55 isp kernel: md: raid1 personality 
+> registered for level 1
+> > Aug 23 22:45:55 isp kernel: md: md0 stopped.
+> > Aug 23 22:45:55 isp kernel: md: bind<hdb1>
+> > Aug 23 22:45:55 isp kernel: raid1: raid set md0 active with 
+> 1 out of 2
+> > mirrors
+> > Aug 23 22:45:55 isp kernel: EXT3 FS on md0, internal journal
+> >
+> > <manually added /dev/hda1/>
+> >
+> > Aug 24 07:12:30 isp kernel: md: bind<hda1>
+> > Aug 24 07:12:30 isp kernel: md: syncing RAID array md0
+> > Aug 24 07:12:30 isp kernel: md: minimum _guaranteed_ reconstruction
+> > speed: 1000 KB/sec/disc.
+> > Aug 24 07:12:30 isp kernel: md: using maximum available idle IO
+> > bandwidth (but not more than 200000 KB/sec) for reconstruction.
+> > Aug 24 07:12:30 isp kernel: md: using 128k window, over a total of
+> > 154191744 blocks.
+> > Aug 24 08:28:05 isp kernel: md: md0: sync done.
+> >
+> > Kind Regards
+> > Andreas Pelzner
+> 
+> Do you have the autodetect kernel messages from booting?
+> 
 
-
+I don't know where to find these messages. Can anyone tell me pls.?
+Andreas
