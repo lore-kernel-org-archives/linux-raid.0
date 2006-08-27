@@ -1,7 +1,7 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [PATCH 004 of 4] md: Improve locking around error handling
-Date: Mon, 28 Aug 2006 09:49:33 +1000
-Message-ID: <1060827234933.32501@suse.de>
+Subject: [PATCH 002 of 4] md: Factor out part of raid1d into a separate function
+Date: Mon, 28 Aug 2006 09:49:22 +1000
+Message-ID: <1060827234922.32479@suse.de>
 References: <20060828092849.21292.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
@@ -11,192 +11,205 @@ List-Id: linux-raid.ids
 
 From: NeilBrown <neilb@suse.de>
 
-The error handling routines don't use proper locking, and so two concurrent
-errors could trigger a problem.
-
-So:
-  - use test-and-set and test-and-clear to synchonise
-    the In_sync bits with the ->degraded count
-  - use the spinlock to protect updates to the
-    degraded count (could use an atomic_t but that
-    would be a bigger change in code, and isn't
-    really justified)
-  - remove un-necessary locking in raid5
+raid1d has toooo many nested block, so take the fix_read_error functionality
+out into a separate function.
 
 Signed-off-by: Neil Brown <neilb@suse.de>
 ---
 
- drivers/md/raid1.c  |   16 +++++++++++-----
- drivers/md/raid10.c |   12 ++++++++----
- drivers/md/raid5.c  |   20 ++++++++++++--------
- 3 files changed, 31 insertions(+), 17 deletions(-)
+ drivers/md/raid1.c |  161 +++++++++++++++++++++++--------------------
+ 1 file changed, 89 insertions(+), 72 deletions(-)
 
 Index: mm-quilt/drivers/md/raid1.c
 ===================================================================
---- mm-quilt.orig/drivers/md/raid1.c	2006-08-28 09:43:39.000000000 +1000
-+++ mm-quilt/drivers/md/raid1.c	2006-08-28 09:43:44.000000000 +1000
-@@ -959,14 +959,16 @@ static void error(mddev_t *mddev, mdk_rd
- 		 * normal single drive
- 		 */
- 		return;
--	if (test_bit(In_sync, &rdev->flags)) {
-+	if (test_and_clear_bit(In_sync, &rdev->flags)) {
-+		unsigned long flags;
-+		spin_lock_irqsave(&conf->device_lock, flags);
- 		mddev->degraded++;
-+		spin_unlock_irqrestore(&conf->device_lock, flags);
- 		/*
- 		 * if recovery is running, make sure it aborts.
- 		 */
- 		set_bit(MD_RECOVERY_ERR, &mddev->recovery);
- 	}
--	clear_bit(In_sync, &rdev->flags);
- 	set_bit(Faulty, &rdev->flags);
- 	set_bit(MD_CHANGE_DEVS, &mddev->flags);
- 	printk(KERN_ALERT "raid1: Disk failure on %s, disabling device. \n"
-@@ -1022,9 +1024,11 @@ static int raid1_spare_active(mddev_t *m
- 		mdk_rdev_t *rdev = conf->mirrors[i].rdev;
- 		if (rdev
- 		    && !test_bit(Faulty, &rdev->flags)
--		    && !test_bit(In_sync, &rdev->flags)) {
-+		    && !test_and_set_bit(In_sync, &rdev->flags)) {
-+			unsigned long flags;
-+			spin_lock_irqsave(&conf->device_lock, flags);
- 			mddev->degraded--;
--			set_bit(In_sync, &rdev->flags);
-+			spin_unlock_irqrestore(&conf->device_lock, flags);
- 		}
- 	}
+--- mm-quilt.orig/drivers/md/raid1.c	2006-08-28 09:06:32.000000000 +1000
++++ mm-quilt/drivers/md/raid1.c	2006-08-28 09:42:51.000000000 +1000
+@@ -1368,6 +1368,95 @@ static void sync_request_write(mddev_t *
+  *	3.	Performs writes following reads for array syncronising.
+  */
  
-@@ -2048,7 +2052,7 @@ static int raid1_reshape(mddev_t *mddev)
- 	mirror_info_t *newmirrors;
- 	conf_t *conf = mddev_to_conf(mddev);
- 	int cnt, raid_disks;
--
-+	unsigned long flags;
- 	int d, d2;
- 
- 	/* Cannot change chunk_size, layout, or level */
-@@ -2107,7 +2111,9 @@ static int raid1_reshape(mddev_t *mddev)
- 	kfree(conf->poolinfo);
- 	conf->poolinfo = newpoolinfo;
- 
-+	spin_lock_irqsave(&conf->device_lock, flags);
- 	mddev->degraded += (raid_disks - conf->raid_disks);
-+	spin_unlock_irqrestore(&conf->device_lock, flags);
- 	conf->raid_disks = mddev->raid_disks = raid_disks;
- 	mddev->delta_disks = 0;
- 
-Index: mm-quilt/drivers/md/raid10.c
-===================================================================
---- mm-quilt.orig/drivers/md/raid10.c	2006-08-28 09:43:37.000000000 +1000
-+++ mm-quilt/drivers/md/raid10.c	2006-08-28 09:43:44.000000000 +1000
-@@ -950,14 +950,16 @@ static void error(mddev_t *mddev, mdk_rd
- 		 * really dead" tests...
- 		 */
- 		return;
--	if (test_bit(In_sync, &rdev->flags)) {
-+	if (test_and_clear_bit(In_sync, &rdev->flags)) {
-+		unsigned long flags;
-+		spin_lock_irqsave(&conf->device_lock, flags);
- 		mddev->degraded++;
-+		spin_unlock_irqrestore(&conf->device_lock, flags);
- 		/*
- 		 * if recovery is running, make sure it aborts.
- 		 */
- 		set_bit(MD_RECOVERY_ERR, &mddev->recovery);
- 	}
--	clear_bit(In_sync, &rdev->flags);
- 	set_bit(Faulty, &rdev->flags);
- 	set_bit(MD_CHANGE_DEVS, &mddev->flags);
- 	printk(KERN_ALERT "raid10: Disk failure on %s, disabling device. \n"
-@@ -1033,9 +1035,11 @@ static int raid10_spare_active(mddev_t *
- 		tmp = conf->mirrors + i;
- 		if (tmp->rdev
- 		    && !test_bit(Faulty, &tmp->rdev->flags)
--		    && !test_bit(In_sync, &tmp->rdev->flags)) {
-+		    && !test_and_set_bit(In_sync, &tmp->rdev->flags)) {
-+			unsigned long flags;
-+			spin_lock_irqsave(&conf->device_lock, flags);
- 			mddev->degraded--;
--			set_bit(In_sync, &tmp->rdev->flags);
-+			spin_unlock_irqrestore(&conf->device_lock, flags);
- 		}
- 	}
- 
-Index: mm-quilt/drivers/md/raid5.c
-===================================================================
---- mm-quilt.orig/drivers/md/raid5.c	2006-08-28 09:43:27.000000000 +1000
-+++ mm-quilt/drivers/md/raid5.c	2006-08-28 09:43:44.000000000 +1000
-@@ -636,7 +636,6 @@ static int raid5_end_write_request (stru
-  	struct stripe_head *sh = bi->bi_private;
- 	raid5_conf_t *conf = sh->raid_conf;
- 	int disks = sh->disks, i;
--	unsigned long flags;
- 	int uptodate = test_bit(BIO_UPTODATE, &bi->bi_flags);
- 
- 	if (bi->bi_size)
-@@ -654,7 +653,6 @@ static int raid5_end_write_request (stru
- 		return 0;
- 	}
- 
--	spin_lock_irqsave(&conf->device_lock, flags);
- 	if (!uptodate)
- 		md_error(conf->mddev, conf->disks[i].rdev);
- 
-@@ -662,8 +660,7 @@ static int raid5_end_write_request (stru
- 	
- 	clear_bit(R5_LOCKED, &sh->dev[i].flags);
- 	set_bit(STRIPE_HANDLE, &sh->state);
--	__release_stripe(conf, sh);
--	spin_unlock_irqrestore(&conf->device_lock, flags);
-+	release_stripe(sh);
- 	return 0;
- }
- 
-@@ -697,9 +694,11 @@ static void error(mddev_t *mddev, mdk_rd
- 
- 	if (!test_bit(Faulty, &rdev->flags)) {
- 		set_bit(MD_CHANGE_DEVS, &mddev->flags);
--		if (test_bit(In_sync, &rdev->flags)) {
-+		if (test_and_clear_bit(In_sync, &rdev->flags)) {
-+			unsigned long flags;
-+			spin_lock_irqsave(&conf->device_lock, flags);
- 			mddev->degraded++;
--			clear_bit(In_sync, &rdev->flags);
-+			spin_unlock_irqrestore(&conf->device_lock, flags);
- 			/*
- 			 * if recovery was running, make sure it aborts.
++static void fix_read_error(conf_t *conf, int read_disk,
++			   sector_t sect, int sectors)
++{
++	mddev_t *mddev = conf->mddev;
++	while(sectors) {
++		int s = sectors;
++		int d = read_disk;
++		int success = 0;
++		int start;
++		mdk_rdev_t *rdev;
++
++		if (s > (PAGE_SIZE>>9))
++			s = PAGE_SIZE >> 9;
++
++		do {
++			/* Note: no rcu protection needed here
++			 * as this is synchronous in the raid1d thread
++			 * which is the thread that might remove
++			 * a device.  If raid1d ever becomes multi-threaded....
++			 */
++			rdev = conf->mirrors[d].rdev;
++			if (rdev &&
++			    test_bit(In_sync, &rdev->flags) &&
++			    sync_page_io(rdev->bdev,
++					 sect + rdev->data_offset,
++					 s<<9,
++					 conf->tmppage, READ))
++				success = 1;
++			else {
++				d++;
++				if (d == conf->raid_disks)
++					d = 0;
++			}
++		} while (!success && d != read_disk);
++
++		if (!success) {
++			/* Cannot read from anywhere -- bye bye array */
++			md_error(mddev, conf->mirrors[read_disk].rdev);
++			break;
++		}
++		/* write it back and re-read */
++		start = d;
++		while (d != read_disk) {
++			if (d==0)
++				d = conf->raid_disks;
++			d--;
++			rdev = conf->mirrors[d].rdev;
++			if (rdev &&
++			    test_bit(In_sync, &rdev->flags)) {
++				if (sync_page_io(rdev->bdev,
++						 sect + rdev->data_offset,
++						 s<<9, conf->tmppage, WRITE)
++				    == 0)
++					/* Well, this device is dead */
++					md_error(mddev, rdev);
++			}
++		}
++		d = start;
++		while (d != read_disk) {
++			char b[BDEVNAME_SIZE];
++			if (d==0)
++				d = conf->raid_disks;
++			d--;
++			rdev = conf->mirrors[d].rdev;
++			if (rdev &&
++			    test_bit(In_sync, &rdev->flags)) {
++				if (sync_page_io(rdev->bdev,
++						 sect + rdev->data_offset,
++						 s<<9, conf->tmppage, READ)
++				    == 0)
++					/* Well, this device is dead */
++					md_error(mddev, rdev);
++				else {
++					atomic_add(s, &rdev->corrected_errors);
++					printk(KERN_INFO
++					       "raid1:%s: read error corrected "
++					       "(%d sectors at %llu on %s)\n",
++					       mdname(mddev), s,
++					       (unsigned long long)sect +
++					           rdev->data_offset,
++					       bdevname(rdev->bdev, b));
++				}
++			}
++		}
++		sectors -= s;
++		sect += s;
++	}
++}
++
+ static void raid1d(mddev_t *mddev)
+ {
+ 	r1bio_t *r1_bio;
+@@ -1460,86 +1549,14 @@ static void raid1d(mddev_t *mddev)
+ 			 * This is all done synchronously while the array is
+ 			 * frozen
  			 */
-@@ -3419,9 +3418,11 @@ static int raid5_spare_active(mddev_t *m
- 		tmp = conf->disks + i;
- 		if (tmp->rdev
- 		    && !test_bit(Faulty, &tmp->rdev->flags)
--		    && !test_bit(In_sync, &tmp->rdev->flags)) {
-+		    && !test_and_set_bit(In_sync, &tmp->rdev->flags)) {
-+			unsigned long flags;
-+			spin_lock_irqsave(&conf->device_lock, flags);
- 			mddev->degraded--;
--			set_bit(In_sync, &tmp->rdev->flags);
-+			spin_unlock_irqrestore(&conf->device_lock, flags);
- 		}
- 	}
- 	print_raid5_conf(conf);
-@@ -3557,6 +3558,7 @@ static int raid5_start_reshape(mddev_t *
- 	struct list_head *rtmp;
- 	int spares = 0;
- 	int added_devices = 0;
-+	unsigned long flags;
+-			sector_t sect = r1_bio->sector;
+-			int sectors = r1_bio->sectors;
+-			freeze_array(conf);
+-			if (mddev->ro == 0) while(sectors) {
+-				int s = sectors;
+-				int d = r1_bio->read_disk;
+-				int success = 0;
+-
+-				if (s > (PAGE_SIZE>>9))
+-					s = PAGE_SIZE >> 9;
+-
+-				do {
+-					/* Note: no rcu protection needed here
+-					 * as this is synchronous in the raid1d thread
+-					 * which is the thread that might remove
+-					 * a device.  If raid1d ever becomes multi-threaded....
+-					 */
+-					rdev = conf->mirrors[d].rdev;
+-					if (rdev &&
+-					    test_bit(In_sync, &rdev->flags) &&
+-					    sync_page_io(rdev->bdev,
+-							 sect + rdev->data_offset,
+-							 s<<9,
+-							 conf->tmppage, READ))
+-						success = 1;
+-					else {
+-						d++;
+-						if (d == conf->raid_disks)
+-							d = 0;
+-					}
+-				} while (!success && d != r1_bio->read_disk);
+-
+-				if (success) {
+-					/* write it back and re-read */
+-					int start = d;
+-					while (d != r1_bio->read_disk) {
+-						if (d==0)
+-							d = conf->raid_disks;
+-						d--;
+-						rdev = conf->mirrors[d].rdev;
+-						if (rdev &&
+-						    test_bit(In_sync, &rdev->flags)) {
+-							if (sync_page_io(rdev->bdev,
+-									 sect + rdev->data_offset,
+-									 s<<9, conf->tmppage, WRITE) == 0)
+-								/* Well, this device is dead */
+-								md_error(mddev, rdev);
+-						}
+-					}
+-					d = start;
+-					while (d != r1_bio->read_disk) {
+-						if (d==0)
+-							d = conf->raid_disks;
+-						d--;
+-						rdev = conf->mirrors[d].rdev;
+-						if (rdev &&
+-						    test_bit(In_sync, &rdev->flags)) {
+-							if (sync_page_io(rdev->bdev,
+-									 sect + rdev->data_offset,
+-									 s<<9, conf->tmppage, READ) == 0)
+-								/* Well, this device is dead */
+-								md_error(mddev, rdev);
+-							else {
+-								atomic_add(s, &rdev->corrected_errors);
+-								printk(KERN_INFO "raid1:%s: read error corrected (%d sectors at %llu on %s)\n",
+-								       mdname(mddev), s, (unsigned long long)(sect + rdev->data_offset), bdevname(rdev->bdev, b));
+-							}
+-						}
+-					}
+-				} else {
+-					/* Cannot read from anywhere -- bye bye array */
+-					md_error(mddev, conf->mirrors[r1_bio->read_disk].rdev);
+-					break;
+-				}
+-				sectors -= s;
+-				sect += s;
++			if (mddev->ro == 0) {
++				freeze_array(conf);
++				fix_read_error(conf, r1_bio->read_disk,
++					       r1_bio->sector,
++					       r1_bio->sectors);
++				unfreeze_array(conf);
+ 			}
  
- 	if (mddev->degraded ||
- 	    test_bit(MD_RECOVERY_RUNNING, &mddev->recovery))
-@@ -3598,7 +3600,9 @@ static int raid5_start_reshape(mddev_t *
- 				break;
- 		}
- 
-+	spin_lock_irqsave(&conf->device_lock, flags);
- 	mddev->degraded = (conf->raid_disks - conf->previous_raid_disks) - added_devices;
-+	spin_unlock_irqrestore(&conf->device_lock, flags);
- 	mddev->raid_disks = conf->raid_disks;
- 	mddev->reshape_position = 0;
- 	set_bit(MD_CHANGE_DEVS, &mddev->flags);
+-			unfreeze_array(conf);
+-
+ 			bio = r1_bio->bios[r1_bio->read_disk];
+ 			if ((disk=read_balance(conf, r1_bio)) == -1) {
+ 				printk(KERN_ALERT "raid1: %s: unrecoverable I/O"
