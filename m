@@ -1,30 +1,43 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: RAID6 fallen apart
-Date: Mon, 28 Aug 2006 22:28:17 +1000
-Message-ID: <17650.57697.725755.359936@cse.unsw.edu.au>
-References: <87y7tcxu71.fsf@szonett.ki.iif.hu>
-	<17650.20238.346014.292009@cse.unsw.edu.au>
-	<200608281420.20820.Dexter.Filmore@gmx.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+From: linux@horizon.com
+Subject: Re: Interesting RAID checking observations
+Date: 28 Aug 2006 09:00:39 -0400
+Message-ID: <20060828130039.31909.qmail@science.horizon.com>
+References: <Pine.LNX.4.64.0608270716410.3175@p34.internal.lan>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Dexter Filmore on Monday August 28
+In-Reply-To: <Pine.LNX.4.64.0608270716410.3175@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dexter Filmore <Dexter.Filmore@gmx.de>
+To: jpiszcz@lucidpixels.com, linux@horizon.com
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Monday August 28, Dexter.Filmore@gmx.de wrote:
-> Am Montag, 28. August 2006 04:03 schrieben Sie:
-> > The easiest thing to do is simply recreate the array, making sure to
-> > have the drives in the correct order, and any options (like chunk
-> > size) the same.  This will not hurt the data (if done correctly).
-> 
-> First time I hear this. Good to know.
-> Thought recreate implies sync.
+> The PCI bus is only capable of 133MB/s max.  Unless you have dedicated 
+> SATA ports, each on its own PCI-e bus, you will not get speeds in excess 
+> of 133MB/s, 200MB/s+ I have read reports of someone using 4-5 SATA 
+> controllers (SiI 3112 cards on PCI-e x1 ports) and they got around 200MB/s 
+> or so on a RAID5, I assume that was read performance.
 
-It does.  But 'sync' doesn't destroy data. It just updates parity
-information.
+Um, I *do* have dedicated SATA ports, each pair on its own PCIe bus.
+You might recall I wrote:
 
-NeilBrown
+>> This is 6 ST3400832AS 400 GB SATA drives, each capable of 60 MB/s
+>> sustained, on Sil3132 PCIe controllers with NCQ enabled.  I measured
+>> > 300 MB/sec sustained aggregate off a temporary RAID-0 device during
+>> installation.
+
+I also included examples of reading 60 MB/s off 6 drives in parallel
+(360 MB/s aggregate), and reading off RAID-5 at 277 MB/s.
+
+To be specific, the narrowest bottleneck between drive and RAM is the
+250 MB/s PCIe link shared by each pair of drives.  To quote approximate
+one-way bandwidths:
+
+    1.5 Gb/s SATA         2.5 Gb/s PCIe
+Drive <--------> Sil3132
+Drive <--------> Dual SATA <--------\
+                                     \ 
+Drive <--------> Sil3132              \  16x HyperTransport     2x DDR
+Drive <--------> Dual SATA <-------> nForce4 <-----> CPU <-----> RAM
+                                      /     4000 MB/s    6400 MB/s
+Drive <--------> Sil3132             /
+Drive <--------> Dual SATA <--------/
+    150 MB/s each         250 MB/s each
