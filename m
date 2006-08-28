@@ -1,78 +1,34 @@
-From: Luca Berra <bluca@comedia.it>
-Subject: [PATCH] mdadm -As --auto=yes fails if some of the md are already active
-Date: Mon, 28 Aug 2006 13:23:30 +0200
-Message-ID: <20060828112330.GB32563@percy.comedia.it>
+From: Dexter Filmore <Dexter.Filmore@gmx.de>
+Subject: Re: RAID6 fallen apart
+Date: Mon, 28 Aug 2006 14:20:20 +0200
+Message-ID: <200608281420.20820.Dexter.Filmore@gmx.de>
+References: <87y7tcxu71.fsf@szonett.ki.iif.hu> <17650.20238.346014.292009@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="5mCyUwZo2JvN/JJP"
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <17650.20238.346014.292009@cse.unsw.edu.au>
 Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
-Cc: Neil Brown <neilb@suse.de>
 List-Id: linux-raid.ids
 
+Am Montag, 28. August 2006 04:03 schrieben Sie:
+> The easiest thing to do is simply recreate the array, making sure to
+> have the drives in the correct order, and any options (like chunk
+> size) the same.  This will not hurt the data (if done correctly).
 
---5mCyUwZo2JvN/JJP
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Disposition: inline
-
-hello, since i started forcing auto=yes to mdadm, due to udev
-i discovered a small problem.
-
-basically when starting an array the routine that should check and
-create the device file in mdopen.c errors if the md is already active.
-this is not needed since trying to activate an already active array is
-checked further in the code path.
-
-also i believe that running mdadm -As when all devices are active should
-return with 0 exit code. (that is the reason for the hunk patching
-mdadm.c)
-
-please apply
-
-Regards,
-L.
-
+First time I hear this. Good to know.
+Thought recreate implies sync.
 
 -- 
-Luca Berra -- bluca@comedia.it
-        Communication Media & Services S.r.l.
- /"\
- \ /     ASCII RIBBON CAMPAIGN
-  X        AGAINST HTML MAIL
- / \
+-----BEGIN GEEK CODE BLOCK-----
+Version: 3.12
+GCS d--(+)@ s-:+ a- C++++ UL++ P+>++ L+++>++++ E-- W++ N o? K-
+w--(---) !O M+ V- PS+ PE Y++ PGP t++(---)@ 5 X+(++) R+(++) tv--(+)@ 
+b++(+++) DI+++ D- G++ e* h>++ r* y?
+------END GEEK CODE BLOCK------
 
---5mCyUwZo2JvN/JJP
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: attachment; filename="mdadm-2.5.3-active.patch"
-
-* Sat Aug 19 2006 Luca Berra <bluca@vodka.it>
-- do not fail when autoassembling everything and some md are already active
-
---- mdadm-2.5.3/mdadm.c	2006-08-19 17:00:51.000000000 +0200
-+++ mdadm-2.5.3/mdadm.c	2006-08-19 16:30:16.000000000 +0200
-@@ -1020,7 +1020,7 @@
- 				}
- 				if (ioctl(mdfd, GET_ARRAY_INFO, &array)>=0)
- 					/* already assembled, skip */
--					;
-+					cnt++;
- 				else {
- 					rv |= Assemble(ss, array_list->devname, mdfd,
- 						       array_list,
---- mdadm-2.5.3/mdopen.c	2006-06-26 07:11:00.000000000 +0200
-+++ mdadm-2.5.3/mdopen.c	2006-08-19 17:03:24.000000000 +0200
-@@ -166,10 +166,7 @@
- 			}
- 			if (ioctl(mdfd, GET_ARRAY_INFO, &array)==0) {
- 				/* already active */
--				close(mdfd);
--				fprintf(stderr, Name ": %s is already active.\n",
--					dev);
--				return -1;
-+				return mdfd;
- 			} else {
- 				if (major != MD_MAJOR && parts > 0)
- 					make_parts(dev, parts);
-
---5mCyUwZo2JvN/JJP--
+http://www.stop1984.com
+http://www.againsttcpa.com
