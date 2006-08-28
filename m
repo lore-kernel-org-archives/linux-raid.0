@@ -1,69 +1,72 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: invalid superblock - *again*
-Date: Mon, 28 Aug 2006 13:38:16 +1000
-Message-ID: <17650.25896.938033.522653@cse.unsw.edu.au>
-References: <200608210104.17274.Dexter.Filmore@gmx.de>
-	<200608220302.23412.Dexter.Filmore@gmx.de>
-	<17642.23419.119010.518798@cse.unsw.edu.au>
-	<200608221326.42776.Dexter.Filmore@gmx.de>
+Subject: Re: RAID5 producing fake partition table on single drive
+Date: Mon, 28 Aug 2006 13:46:02 +1000
+Message-ID: <17650.26362.445865.67553@cse.unsw.edu.au>
+References: <1155987607.7207.23.camel@localhost.localdomain>
+	<17641.25141.373827.77279@cse.unsw.edu.au>
+	<1156147425.4525.20.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Dexter Filmore on Tuesday August 22
+In-Reply-To: message from Lem on Monday August 21
 Sender: linux-raid-owner@vger.kernel.org
-To: Dexter Filmore <Dexter.Filmore@gmx.de>
-Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: Lem <l3mming@iinet.net.au>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday August 22, Dexter.Filmore@gmx.de wrote:
-> Am Dienstag, 22. August 2006 03:18 schrieb Neil Brown:
-> > >
-> > > Most notable: [   38.536733] md: kicking non-fresh sdd1 from array!
-> > > What does this mean?
-> >
-> > It means that the 'event' count on sdd1 is old compared to that on
-> > the other partitions.  The most likely explanation is that when the
-> > array was last running, sdd1 was not part of it.
+On Monday August 21, l3mming@iinet.net.au wrote:
 > 
-> Event count - so: a certain command or set of instructions was sent to all 
-> disks, but one didn't get it, hence the raid module can't ensure that the 
-> data on that disk is consistent with the rest of the array?
+> This is where I'm having a problem - lilo fails due to the bogus
+> partition table, here's the output:
+> 
+> # lilo
+> part_nowrite: read:: Input/output error
+
+I think maybe lilo needs to be fixed.  If you haven't explicitly told
+it to look at sde, the worst it should do is give a warning.
+Maybe you can put something in lilo.conf to tell it what sort of
+partitions sde does (or doesn't) have so it won't bother looking
+itself?
+
+> 
+> The above buffer I/O errors (logical block 1792+) occur as filesystems
+> are being automounted. /dev/sde* doesn't exist in /etc/fstab of course.
 > 
 
-Not exactly.  Events are thing like starting and stopping the array,
-adding or removing drives, drive failure and clean <-> dirty
-transitions.  If the event counts are not consistent, then when the
-array was last stopped, one drive (at least) was missing from the
-array. 
+Do you mount-by-label at all.  In that case mount we look at each
+partition, but it doesn't fail, so not-a-problem.
 
-> > > What's happening here? What can I do? Do I have to readd sdd and resync?
-> > > Or is there an easier way out? What causes these issues?
-> >
-> > Yes, you need to add sdd1 back to the array and it will resync.
 > 
-> Ok, if that's what it takes.
+> A few questions, searching for the best possible solution. I believe
+> this is worth the effort, else I can't run lilo without disabling the
+> array and removing /dev/sde from the system.
 > 
-> > I would need some precise recent history of the array to know why this
-> > happened.  That might not be easy to come by.
-> 
-> Depends on what exactly you mean. Disk age? smart data? Hardware types? Logs? 
-> OS?
-> 
+> 1. Is it possible to have mdadm or another tool automatically convert
+> the superblocks to v1.1/1.2 (and perhaps create proper partitions)?
 
-Complete kernel logs since a time when it was known to be good might
-be enough - so I could track all the 'event's and see where it went
-out of sync.
+No.  It would require moving all the data on the device.
 
-> I don't have more than a few vague guesses about what might have happened. 
-> First of all it might be possible that the file systems on the array were not 
-> unmounted properly during shutdown because a remote NFS mount was hogging 
-> them. If that be the case, LVM couldn't have shut down properly, then the md 
-> device wouldn't have stopped and the machine just powered down.
-> That would explain it.
+> 
+> 2. If number 1 isn't possible, is it possible to convert one drive at a
+> time to have a proper partition table? Like this: Stop array;
+> fdisk /dev/sde, create partition of type fd (entire disk), save
+> partition table; Start array. (then I'd assume mdadm would notice
+> that /dev/sde has changed and possibly start a resync? - if not, and it
+> just works, then great!). If that works, then do every other drive, one
+> at a time.
 
-Maybe but even shutting down with the array still active shouldn't
-cause the event counts to go out of sync.  It should just trigger a
-resync.
+When you create a partition table, sde1 will be slightly smaller than
+sde1.  But if it is less than 64K smaller you might be able to do
+something.  mdadm won't notice by itself, but you could tell it.
+
+ mdadm /dev/md0 --fail /dev/sde
+ mdadm /dev/md0 --remove /dev/sde
+ mdadm --zero-superb lock /dev/sde
+ ##use fdisk to create a single partition
+ mdadm /dev/md0 --add /dev/sde1
+ ## if that works then wait for the resync to complete
+ ## and do the same to other drives.  Then update any
+ ## config files that might be relevant.
 
 NeilBrown
