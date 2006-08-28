@@ -1,59 +1,38 @@
-From: Ferenc Wagner <wferi@niif.hu>
-Subject: Re: RAID6 fallen apart
-Date: Mon, 28 Aug 2006 17:36:09 +0200
-Message-ID: <87ejv027py.fsf@tac.ki.iif.hu>
-References: <87y7tcxu71.fsf@szonett.ki.iif.hu>
-	<17650.20238.346014.292009@cse.unsw.edu.au>
+From: "crush" <crush.academy@rowberrygroup.com>
+Subject: The best credit
+Date: Mon, 28 Aug 2006 11:37:41 -0400
+Message-ID: <10259579362752.3DA5DA833F@8DRS0QI>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+        charset="Windows-1252"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17650.20238.346014.292009@cse.unsw.edu.au> (Neil Brown's
- message of "Mon, 28 Aug 2006 12:03:58 +1000")
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil Brown <neilb@suse.de> writes:
+Good day my friend! 
 
-> On Saturday August 26, wferi@niif.hu wrote:
->
->> after an intermittent network failure, our RAID6 array of AoE devices
->> can't run anymore.  Looks like the system dropped each of the disks one
->> after the other, and at the third the array failed as expected.
->> Trying to assemble the array results in all disks going into spare
->> status, nothing useful.  The disks really must have been cut
->> simultaneously, but their superblocks were probably altered since then
->> by the recovery attempts.
->
-> You say some of the drives are 'spare'.  How did that happen?  Did you
-> try to add them back to the array after it has failed?  That is a
-> mistake.
+Your credit doesn't matter to us!
+If you OWN real estate and want IMMEDIATE cash to spend ANY way you 
+like, or simply wish to LOWER your monthly payments by a third or more, here are the deals we have TODAY:
 
-Surely it was, although not mine.
+$488,000.00 at a 3.67% fixed-rate
+$372,000.00 at a 3.90% variable-rate
+$492,000.00 at a 3.21% interest-only
+$248,000.00 at a 3.36% fixed-rate
+$198,000.00 at a 3.55% variable-rate
 
-> The thing to do at that point is 
->   - stop the array
->   - make sure the network is back and the individual drives are
->     working
->   - use mdadm to assemble with --force.  This should 'just work'. 
+Hurry, we have requests limits, so when these deals are gone, they are 
+gone!
 
-Probably it should have...
+We have one-mimute form to apply the request,
+please CLICK HERE
 
-> But if you used --add, then you will have destroyed info in the
-> superblock.  That isn't the end of the world, but makes it a little
-> harder.
->
-> The easiest thing to do is simply recreate the array, making sure to
-> have the drives in the correct order, and any options (like chunk
-> size) the same.  This will not hurt the data (if done correctly).
+http://J9WAW.yourcreditpartner.biz/?ncache=103082
 
-Thanks, that did it!  Strangely (for me) mdadm -E doesn't report the
-chunk size, only mdadm -D does, which is not available prior assembly.
-Looks like it was left at the default 64k.  I recreated the array with
-two drives missing to avoid triggering a resync, and added them
-afterwards.  I wonder whether it makes any difference.
+Don't worry about approval, your credit will not disqualify you!
 
-Anyway, thanks a lot!
--- 
-Feri.
+Approval Manager.
+
+
