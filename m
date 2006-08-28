@@ -1,44 +1,61 @@
-From: linux@horizon.com
-Subject: Re: Interesting RAID checking observations
-Date: 28 Aug 2006 09:15:52 -0400
-Message-ID: <20060828131552.5776.qmail@science.horizon.com>
-References: <17650.16675.561765.886119@cse.unsw.edu.au>
+From: "Andreas Pelzner" <Andreas.Pelzner@aixvision.net>
+Subject: RE: md: only binds to one mirror after reboot
+Date: Mon, 28 Aug 2006 15:54:42 +0200
+Message-ID: <C05CC316E92A964C9BDD81EE36AE05343C7075@x2k3.a-team.ihs>
+Mime-Version: 1.0
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17650.16675.561765.886119@cse.unsw.edu.au>
+Content-class: urn:content-classes:message
 Sender: linux-raid-owner@vger.kernel.org
-To: linux@horizon.com, neilb@suse.de
+To: Neil Brown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> I don't think the processor is saturating.  I've seen reports of this
-> sort of thing before and until recently had no idea what was happening,
-> couldn't reproduce it, and couldn't think of any more useful data to
-> collect.
+thanks a lot,
 
-Well I can reproduce it easily enough.  It's a production server, but
-I can do low-risk experiments after hours.
+you told me the rigt way. I had to add the lines "raid1" and "md_mod" to
+/etc/mkinitrd/modules. After recreating the initrd image "mkinitrd -o
+/boot/initrd.img-2.6.17.8 /lib/modules/2.6.17.8" the server boots into
+both raid disk correctly.
 
-I'd like to note that the symptoms include not even being
-able to *type* at the console, which I thought was all in-kernel
-code, not subject to being swapped out.  But whatever.
+isp:~# cat /proc/mdstat
+Personalities : [raid1]
+md0 : active raid1 hda1[0] hdb1[1]
+      154191744 blocks [2/2] [UU]
 
-> I'm not sure exactly how that translates into the machine being
-> unresponsive, but it wouldn't surprise me.  I'll try to post a patch
-> for that to linux-raid in a soonish.
+unused devices: <none>
 
-I look forward to testing it!
-
-> How much RAM does this system have?
-
-1 GB (ECC).  133 MHz SDR SDRAM.
-
-> Again, you aren't the first to report this.  I haven't seen it myself,
-> but my regular test machine is busy at the moment.  I'll try to
-> organise some testing soon.
-
-I can do a fair bit of experimentation with this machine, as long as I
-don't lose the data that's on it.
-
-> Thanks for the reports.
-
-Thanks for the response!  Sorry to be a pain.
+Andreas Pelzner
+> 
+> On Monday August 28, Andreas.Pelzner@aixvision.net wrote:
+> > Pls. find the kernel messages here.
+> 
+> Thanks.
+> 
+> 'md' and the drivers for you disks are not compiled into the kernel
+> but are present as modules in an 'initrd'.
+> So the kernel parameter or
+>   md=0,/dev/hda1,/dev/hdb1
+> is ignored and the code in the inird is completely responsible for
+> assembling md0.
+> You have a look at what it does:
+>   
+>   mkdir /foo
+>   mount -t cramfs /initrd.img  /foo
+>                   ^^^^^^^^^^^
+> 
+> You have to find the initrd that is being used and use that name here.
+> Then have a look at etc mdadm.conf in /foo.
+> 
+> Once you understand the problem you will need to remake your initrd to
+> get this right.
+> 
+> NeilBrown
+> -
+> To unsubscribe from this list: send the line "unsubscribe 
+> linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
