@@ -1,43 +1,44 @@
 From: linux@horizon.com
 Subject: Re: Interesting RAID checking observations
-Date: 28 Aug 2006 09:00:39 -0400
-Message-ID: <20060828130039.31909.qmail@science.horizon.com>
-References: <Pine.LNX.4.64.0608270716410.3175@p34.internal.lan>
+Date: 28 Aug 2006 09:15:52 -0400
+Message-ID: <20060828131552.5776.qmail@science.horizon.com>
+References: <17650.16675.561765.886119@cse.unsw.edu.au>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0608270716410.3175@p34.internal.lan>
+In-Reply-To: <17650.16675.561765.886119@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: jpiszcz@lucidpixels.com, linux@horizon.com
+To: linux@horizon.com, neilb@suse.de
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> The PCI bus is only capable of 133MB/s max.  Unless you have dedicated 
-> SATA ports, each on its own PCI-e bus, you will not get speeds in excess 
-> of 133MB/s, 200MB/s+ I have read reports of someone using 4-5 SATA 
-> controllers (SiI 3112 cards on PCI-e x1 ports) and they got around 200MB/s 
-> or so on a RAID5, I assume that was read performance.
+> I don't think the processor is saturating.  I've seen reports of this
+> sort of thing before and until recently had no idea what was happening,
+> couldn't reproduce it, and couldn't think of any more useful data to
+> collect.
 
-Um, I *do* have dedicated SATA ports, each pair on its own PCIe bus.
-You might recall I wrote:
+Well I can reproduce it easily enough.  It's a production server, but
+I can do low-risk experiments after hours.
 
->> This is 6 ST3400832AS 400 GB SATA drives, each capable of 60 MB/s
->> sustained, on Sil3132 PCIe controllers with NCQ enabled.  I measured
->> > 300 MB/sec sustained aggregate off a temporary RAID-0 device during
->> installation.
+I'd like to note that the symptoms include not even being
+able to *type* at the console, which I thought was all in-kernel
+code, not subject to being swapped out.  But whatever.
 
-I also included examples of reading 60 MB/s off 6 drives in parallel
-(360 MB/s aggregate), and reading off RAID-5 at 277 MB/s.
+> I'm not sure exactly how that translates into the machine being
+> unresponsive, but it wouldn't surprise me.  I'll try to post a patch
+> for that to linux-raid in a soonish.
 
-To be specific, the narrowest bottleneck between drive and RAM is the
-250 MB/s PCIe link shared by each pair of drives.  To quote approximate
-one-way bandwidths:
+I look forward to testing it!
 
-    1.5 Gb/s SATA         2.5 Gb/s PCIe
-Drive <--------> Sil3132
-Drive <--------> Dual SATA <--------\
-                                     \ 
-Drive <--------> Sil3132              \  16x HyperTransport     2x DDR
-Drive <--------> Dual SATA <-------> nForce4 <-----> CPU <-----> RAM
-                                      /     4000 MB/s    6400 MB/s
-Drive <--------> Sil3132             /
-Drive <--------> Dual SATA <--------/
-    150 MB/s each         250 MB/s each
+> How much RAM does this system have?
+
+1 GB (ECC).  133 MHz SDR SDRAM.
+
+> Again, you aren't the first to report this.  I haven't seen it myself,
+> but my regular test machine is busy at the moment.  I'll try to
+> organise some testing soon.
+
+I can do a fair bit of experimentation with this machine, as long as I
+don't lose the data that's on it.
+
+> Thanks for the reports.
+
+Thanks for the response!  Sorry to be a pain.
