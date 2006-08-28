@@ -1,43 +1,81 @@
-From: "Rob Bray" <raid@bymeinc.com>
-Subject: Raid5 reads and cpu
-Date: Mon, 28 Aug 2006 14:33:53 -0400 (EDT)
-Message-ID: <46510.192.168.0.1.1156790033.squirrel@bymeinc.com>
+From: James Brown <jbrown@orange.net>
+Subject: Re: Newbie: Kernel panic during RAID1 test & reboot loses one disk
+Date: Mon, 28 Aug 2006 23:53:27 +0200
+Message-ID: <44F365D7.2020001@orange.net>
+References: <ecqek4$tnu$1@sea.gmane.org> <17650.19291.747235.505927@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <17650.19291.747235.505927@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This might be a dumb question, but what causes md to use a large amount of
-cpu resources when reading a large amount of data from a raid1 array?
-Examples are on a 2.4GHz AMD64, 2GB, 2.6.15.1 (I realize there are md
-enhancements to later versions; I had some other unrelated issues and
-rolled back to one I've run on for several months).
+Neil Brown wrote:
+> On Saturday August 26, jbrown@orange.net wrote:
+>> All,
+>>
+>> [...]
+>>
+>> * Problem 1: Since moving from 2.4 -> 2.6 kernel, a reboot kicks one 
+>> device out of the array (c.f. post by Andreas Pelzner on 24th Aug 2006).
+>>
+>> * Problem 2: When booting my system, unless both disks plugged in, I get 
+>> a kernel panic (oh dear!):
+>>
+>>  > mdadm md0 stopped
+>>  > mdadm cannot open device /dev/hda6 no such device or address
+>>  > mdadm /dev/hda6 has wrong uuid
+>>  > mdadm no devices found for /dev/md0
+>>  > ext3fs unable to read superblock
+>>  > ecit 2 - unable to read superblock cramfs
+>>  > kernel panic attempting to kill init
+> 
+> At a guess, I'd say something is wrong with your initramfs/initrd.
+> Can you look inside it and see what /etc/mdadm/mdadm.conf contains?
 
-A given 7-disk raid0 array can read 450MB/s (using cat > null) and use
-virtually no CPU resources. (Although cat and kswapd use quite a bit [60%]
-munching on the data)
+Sure, this is the first time I've mounted an initrd, here goes:
 
-A raid5 array on the same drive set pulls in at 250MB/s, but md uses
-roughly 50% of the CPU (the other 50% is spent dealing with the data,
-saturating the processor).
+# file /boot/initrd.img-2.6.8-3-386
+[...]Linux Compressed ROM File System data, little endian size 4333568 
+version #2 sorted_dirs CRC 0xa04ccaa3, edition 0, 2492 blocks, 312 files
 
-A consistency check on the raid5 array uses roughly 3% of the cpu. It is
-otherwise ~97% idle.
-md11 : active raid5 sdi2[5] sdh2[4] sdf2[3] sde2[2] sdd2[1] sdc2[6] sdb2[0]
-      248974848 blocks level 5, 256k chunk, algorithm 2 [7/7] [UUUUUUU]
-      [==============>......]  resync = 72.2% (29976960/41495808)
-finish=3.7min speed=51460K/sec
-(~350MB/s aggregate throughput, 50MB/s on each device)
+# losetup /dev/loop0
 
-Just a friendly question as to why CPU utilization is significantly
-different between a check and a real-world read on raid5? I feel like if
-there was vm overhead getting the data into userland, the slowdown would
-be present in raid0 as well. I assume parity calculations aren't done on a
-read of the array, which leaves me at my question.
+# mkdir /tmp/initrdmount
 
-Thanks,
-Rob
+# mount -t cramfs /dev/loop0 /tmp/initrdmount
+
+# ls -al /tmp/initrdmount/etc/
+total 1.0K
+drwxr-xr-x  1 root root 64 1970-01-01 01:00 modprobe.d/
+-rw-r--r--  1 root root  0 1970-01-01 01:00 mtab
+
+There is no mdadm/mdadm.conf! What I should do about this?
+
+> [...]
+>> * System md logs don't mention hdc6
+>> # grep md /var/log/messages
+> 
+>  grep -C 5 md /var/log/messages
+> might be better as it gives a bit more context.l
+
+I've put the messages here:
+
+http://www.zen6780.zen.co.uk/messages.txt
+
+Many thanks for your time.
+
+James.
+
+> But I'm betting on the initramfs being a problem.
+> 
+> NeilBrown
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
