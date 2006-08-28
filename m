@@ -1,50 +1,69 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: RAID6 fallen apart
-Date: Mon, 28 Aug 2006 12:03:58 +1000
-Message-ID: <17650.20238.346014.292009@cse.unsw.edu.au>
-References: <87y7tcxu71.fsf@szonett.ki.iif.hu>
+Subject: Re: invalid superblock - *again*
+Date: Mon, 28 Aug 2006 13:38:16 +1000
+Message-ID: <17650.25896.938033.522653@cse.unsw.edu.au>
+References: <200608210104.17274.Dexter.Filmore@gmx.de>
+	<200608220302.23412.Dexter.Filmore@gmx.de>
+	<17642.23419.119010.518798@cse.unsw.edu.au>
+	<200608221326.42776.Dexter.Filmore@gmx.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Wagner Ferenc on Saturday August 26
+In-Reply-To: message from Dexter Filmore on Tuesday August 22
 Sender: linux-raid-owner@vger.kernel.org
-To: Wagner Ferenc <wferi@niif.hu>
-Cc: linux-raid@vger.kernel.org
+To: Dexter Filmore <Dexter.Filmore@gmx.de>
+Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Saturday August 26, wferi@niif.hu wrote:
-> Hi,
+On Tuesday August 22, Dexter.Filmore@gmx.de wrote:
+> Am Dienstag, 22. August 2006 03:18 schrieb Neil Brown:
+> > >
+> > > Most notable: [   38.536733] md: kicking non-fresh sdd1 from array!
+> > > What does this mean?
+> >
+> > It means that the 'event' count on sdd1 is old compared to that on
+> > the other partitions.  The most likely explanation is that when the
+> > array was last running, sdd1 was not part of it.
 > 
-> after an intermittent network failure, our RAID6 array of AoE devices
-> can't run anymore.  Looks like the system dropped each of the disks one
-> after the other, and at the third the array failed as expected.
-> Trying to assemble the array results in all disks going into spare
-> status, nothing useful.  The disks really must have been cut
-> simultaneously, but their superblocks were probably altered since then
-> by the recovery attempts.
+> Event count - so: a certain command or set of instructions was sent to all 
+> disks, but one didn't get it, hence the raid module can't ensure that the 
+> data on that disk is consistent with the rest of the array?
 > 
-> Can anybody suggest a possible way out?  I'm thinking like restoring
-> all the superblocks into a clean state, starting the array, checking
-> the filesystem and doing a full copy of it, but don't know how to
-> restore the superblocks.  Or am I mistaken?
 
+Not exactly.  Events are thing like starting and stopping the array,
+adding or removing drives, drive failure and clean <-> dirty
+transitions.  If the event counts are not consistent, then when the
+array was last stopped, one drive (at least) was missing from the
+array. 
 
-You say some of the drives are 'spare'.  How did that happen?  Did you
-try to add them back to the array after it has failed?  That is a
-mistake.
-The thing to do at that point is 
-  - stop the array
-  - make sure the network is back and the individual drives are
-    working
-  - use mdadm to assemble with --force.  This should 'just work'. 
+> > > What's happening here? What can I do? Do I have to readd sdd and resync?
+> > > Or is there an easier way out? What causes these issues?
+> >
+> > Yes, you need to add sdd1 back to the array and it will resync.
+> 
+> Ok, if that's what it takes.
+> 
+> > I would need some precise recent history of the array to know why this
+> > happened.  That might not be easy to come by.
+> 
+> Depends on what exactly you mean. Disk age? smart data? Hardware types? Logs? 
+> OS?
+> 
 
-But if you used --add, then you will have destroyed info in the
-superblock.  That isn't the end of the world, but makes it a little
-harder.
+Complete kernel logs since a time when it was known to be good might
+be enough - so I could track all the 'event's and see where it went
+out of sync.
 
-The easiest thing to do is simply recreate the array, making sure to
-have the drives in the correct order, and any options (like chunk
-size) the same.  This will not hurt the data (if done correctly).
+> I don't have more than a few vague guesses about what might have happened. 
+> First of all it might be possible that the file systems on the array were not 
+> unmounted properly during shutdown because a remote NFS mount was hogging 
+> them. If that be the case, LVM couldn't have shut down properly, then the md 
+> device wouldn't have stopped and the machine just powered down.
+> That would explain it.
+
+Maybe but even shutting down with the array still active shouldn't
+cause the event counts to go out of sync.  It should just trigger a
+resync.
 
 NeilBrown
