@@ -1,61 +1,59 @@
-From: "Andreas Pelzner" <Andreas.Pelzner@aixvision.net>
-Subject: RE: md: only binds to one mirror after reboot
-Date: Mon, 28 Aug 2006 15:54:42 +0200
-Message-ID: <C05CC316E92A964C9BDD81EE36AE05343C7075@x2k3.a-team.ihs>
+From: Ferenc Wagner <wferi@niif.hu>
+Subject: Re: RAID6 fallen apart
+Date: Mon, 28 Aug 2006 17:36:09 +0200
+Message-ID: <87ejv027py.fsf@tac.ki.iif.hu>
+References: <87y7tcxu71.fsf@szonett.ki.iif.hu>
+	<17650.20238.346014.292009@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
+In-Reply-To: <17650.20238.346014.292009@cse.unsw.edu.au> (Neil Brown's
+ message of "Mon, 28 Aug 2006 12:03:58 +1000")
 Sender: linux-raid-owner@vger.kernel.org
 To: Neil Brown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-thanks a lot,
+Neil Brown <neilb@suse.de> writes:
 
-you told me the rigt way. I had to add the lines "raid1" and "md_mod" to
-/etc/mkinitrd/modules. After recreating the initrd image "mkinitrd -o
-/boot/initrd.img-2.6.17.8 /lib/modules/2.6.17.8" the server boots into
-both raid disk correctly.
+> On Saturday August 26, wferi@niif.hu wrote:
+>
+>> after an intermittent network failure, our RAID6 array of AoE devices
+>> can't run anymore.  Looks like the system dropped each of the disks one
+>> after the other, and at the third the array failed as expected.
+>> Trying to assemble the array results in all disks going into spare
+>> status, nothing useful.  The disks really must have been cut
+>> simultaneously, but their superblocks were probably altered since then
+>> by the recovery attempts.
+>
+> You say some of the drives are 'spare'.  How did that happen?  Did you
+> try to add them back to the array after it has failed?  That is a
+> mistake.
 
-isp:~# cat /proc/mdstat
-Personalities : [raid1]
-md0 : active raid1 hda1[0] hdb1[1]
-      154191744 blocks [2/2] [UU]
+Surely it was, although not mine.
 
-unused devices: <none>
+> The thing to do at that point is 
+>   - stop the array
+>   - make sure the network is back and the individual drives are
+>     working
+>   - use mdadm to assemble with --force.  This should 'just work'. 
 
-Andreas Pelzner
-> 
-> On Monday August 28, Andreas.Pelzner@aixvision.net wrote:
-> > Pls. find the kernel messages here.
-> 
-> Thanks.
-> 
-> 'md' and the drivers for you disks are not compiled into the kernel
-> but are present as modules in an 'initrd'.
-> So the kernel parameter or
->   md=0,/dev/hda1,/dev/hdb1
-> is ignored and the code in the inird is completely responsible for
-> assembling md0.
-> You have a look at what it does:
->   
->   mkdir /foo
->   mount -t cramfs /initrd.img  /foo
->                   ^^^^^^^^^^^
-> 
-> You have to find the initrd that is being used and use that name here.
-> Then have a look at etc mdadm.conf in /foo.
-> 
-> Once you understand the problem you will need to remake your initrd to
-> get this right.
-> 
-> NeilBrown
-> -
-> To unsubscribe from this list: send the line "unsubscribe 
-> linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Probably it should have...
+
+> But if you used --add, then you will have destroyed info in the
+> superblock.  That isn't the end of the world, but makes it a little
+> harder.
+>
+> The easiest thing to do is simply recreate the array, making sure to
+> have the drives in the correct order, and any options (like chunk
+> size) the same.  This will not hurt the data (if done correctly).
+
+Thanks, that did it!  Strangely (for me) mdadm -E doesn't report the
+chunk size, only mdadm -D does, which is not available prior assembly.
+Looks like it was left at the default 64k.  I recreated the array with
+two drives missing to avoid triggering a resync, and added them
+afterwards.  I wonder whether it makes any difference.
+
+Anyway, thanks a lot!
+-- 
+Feri.
