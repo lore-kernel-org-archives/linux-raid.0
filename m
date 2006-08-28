@@ -1,35 +1,36 @@
-From: "Norm Legit" <normlegit@gmail.com>
-Subject: Re: Question regarding superblocks
-Date: Sun, 27 Aug 2006 22:27:38 -0700
-Message-ID: <e5b4df2e0608272227t23dd7258sc940dd7e07459609@mail.gmail.com>
-References: <e5b4df2e0608271850i2019f223ybd58e635336f5ea6@mail.gmail.com>
-	 <17650.20000.949138.131523@cse.unsw.edu.au>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE>
+Subject: Re: Resize on dirty array?
+Date: Mon, 28 Aug 2006 08:36:01 +0200
+Message-ID: <ecu2sh$3nm$1@sea.gmane.org>
+References: <44D7DC93.2070905@net1plus.com> <17623.57067.835826.446152@cse.unsw.edu.au> <44D8E535.9080208@net1plus.com> <17625.24594.568139.430440@cse.unsw.edu.au> <44D9C6F5.7070501@net1plus.com> <5b170a7d0608120022n39742f2cl8f8017f6cc328f5e@mail.gmail.com> <17650.30521.355859.724575@cse.unsw.edu.au>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17650.20000.949138.131523@cse.unsw.edu.au>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Phenomenal, thank you so much!  This worked perfectly!!
+Neil Brown <neilb@suse.de> wrote:
+> I would be a lot happier about it if the block layer told me whether
+> the fail was a Media error or some other sort of error.
 
--  Norm
+This wouldn't help you either. I've seen drives (mainly Samsung) that
+locked up the whole IDE bus after some simple (subsequent) sector-read-
+errors.
+And with strange IDE drivers (like PDC202XX_NEW) this could also
+escalate to whole-machine freezes - I've also seen this and had to play
+hardly with device-mapper's dm-error target to work around this :)
 
-On 8/27/06, Neil Brown <neilb@suse.de> wrote:
-> On Sunday August 27, normlegit@gmail.com wrote:
-> > Hi,
-> >
-> > I created a raid5 array with 3 devices.  Unfortunately, I carelessly used
-> > the "--zero-superblock" option with mdadm to remove all of the superblock.
-> > I still have the mdadm.conf file which has the uuid in it.  Is there a way
-> > for me to rebuild the superblocks or recover the data on these drives?
->
-> Just recreate the array with the same devices in the same order and
-> the same chunk size.  All your data should still be there.
->
-> NeilBrown
->
+So IMHO at least the default behaviour should stay as it currently is:
+if a drive fails, do never ever touch it again. Perhaps, you could make
+such a "FAILING" feature somehow configurable (perhaps even on a
+per-mirror base) in order to allow users to enable it for drives they
+*do* know they don't show up such a bad behaviour.
+
+
+regards
+   Mario
+-- 
+Independence Day: Fortunately, the alien computer operating system works just
+fine with the laptop. This proves an important point which Apple enthusiasts
+have known for years. While the evil empire of Microsoft may dominate the
+computers of Earth people, more advanced life forms clearly prefer Macs.
+
