@@ -1,57 +1,49 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: raid5 write performance
-Date: Mon, 28 Aug 2006 14:32:55 +1000
-Message-ID: <17650.29175.778076.964022@cse.unsw.edu.au>
-References: <5d96567b0607020702p25d66490i79445bac606e5210@mail.gmail.com>
-	<17576.18978.563672.656847@cse.unsw.edu.au>
-	<5d96567b0608130619w60d8d883q4ffbfefcf650ee82@mail.gmail.com>
+Subject: Re: Resize on dirty array?
+Date: Mon, 28 Aug 2006 14:55:21 +1000
+Message-ID: <17650.30521.355859.724575@cse.unsw.edu.au>
+References: <44D7DC93.2070905@net1plus.com>
+	<17623.57067.835826.446152@cse.unsw.edu.au>
+	<44D8E535.9080208@net1plus.com>
+	<17625.24594.568139.430440@cse.unsw.edu.au>
+	<44D9C6F5.7070501@net1plus.com>
+	<5b170a7d0608120022n39742f2cl8f8017f6cc328f5e@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Raz Ben-Jehuda(caro) on Sunday August 13
+In-Reply-To: message from Tuomas Leikola on Saturday August 12
 Sender: linux-raid-owner@vger.kernel.org
-To: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
-Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: Tuomas Leikola <tuomas.leikola@gmail.com>
+Cc: James Peverill <jamespev@net1plus.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sunday August 13, raziebe@gmail.com wrote:
-> well ... me again
+On Saturday August 12, tuomas.leikola@gmail.com wrote:
+> On 8/9/06, James Peverill <jamespev@net1plus.com> wrote:
+> >
+> > I'll try the force assemble but it sounds like I'm screwed.  It sounds
+> > like what happened was that two of my drives developed bad sectors in
+> > different places that weren't found until I accessed certain areas (in
+> > the case of the first failure) and did the drive rebuild (for the second
+> > failure).  In the future, is there a way to help prevent this?
 > 
-> Following your advice....
+> This is a common scenario, and I feel could be helped if md could be
+> told to not drop the disk on first failure, but rather keep it running
+> in "FAILING" status (as opposed to FAILED), until all data from it has
+> been evacuated (hot spare). This way, if another disk became "failing"
+> during rebuild, due to another area of the disk, those blocks could be
+> rebuilt using the other "failing" disk. (Also, this allows for the
+> rebuild to mostly be a ddrescue-style copy operation, rather than
+> parity computation).
 > 
-> I added a deadline for every WRITE stripe head when it is created.
-> in raid5_activate_delayed i checked if deadline is expired and if not i am
-> setting the sh to prereadactive mode as .
-> 
-> This small fix ( and in few other places in the code) reduced the
-> amount of reads
-> to zero with dd but with no improvement to throghput. But with random access to
-> the raid  ( buffers are aligned by the stripe width and with the size
-> of stripe width )
-> there is an improvement of at least 20 % .
-> 
-> Problem is that a user must know what he is doing else there would be
-> a reduction
-> in performance if deadline line it too long (say 100 ms).
+> Do you guys feel this is feasible? Neil?
 
-So if I understand you correctly, you are delaying write requests to
-partial stripes slightly (your 'deadline') and this is sometimes
-giving you a 20% improvement ?
+Maybe....
+I would be a lot happier about it if the block layer told me whether
+the fail was a Media error or some other sort of error.
 
-I'm not surprised that you could get some improvement.  20% is quite
-surprising.  It would be worth following through with this to make
-that improvement generally available.
-
-As you say, picking a time in milliseconds is very error prone.  We
-really need to come up with something more natural.
-I had hopped that the 'unplug' infrastructure would provide the right
-thing, but apparently not.  Maybe unplug is just being called too
-often.
-
-I'll see if I can duplicate this myself and find out what is really
-going on.
-
-Thanks for the report.
+But something could probably be arranged, and the general idea has been
+suggested a number of times now, so maybe it really is a good idea :-)
+I'll put it on my todo list :-)
 
 NeilBrown
