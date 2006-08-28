@@ -1,39 +1,35 @@
-From: Neil Brown <neilb@suse.de>
-Subject: RE: md: only binds to one mirror after reboot
-Date: Mon, 28 Aug 2006 15:21:44 +1000
-Message-ID: <17650.32104.71098.353892@cse.unsw.edu.au>
-References: <C05CC316E92A964C9BDD81EE36AE05343C7071@x2k3.a-team.ihs>
+From: "Norm Legit" <normlegit@gmail.com>
+Subject: Re: Question regarding superblocks
+Date: Sun, 27 Aug 2006 22:27:38 -0700
+Message-ID: <e5b4df2e0608272227t23dd7258sc940dd7e07459609@mail.gmail.com>
+References: <e5b4df2e0608271850i2019f223ybd58e635336f5ea6@mail.gmail.com>
+	 <17650.20000.949138.131523@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Andreas Pelzner on Monday August 28
+In-Reply-To: <17650.20000.949138.131523@cse.unsw.edu.au>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Andreas Pelzner <Andreas.Pelzner@aixvision.net>
+To: Neil Brown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Monday August 28, Andreas.Pelzner@aixvision.net wrote:
-> Pls. find the kernel messages here.
+Phenomenal, thank you so much!  This worked perfectly!!
 
-Thanks.
+-  Norm
 
-'md' and the drivers for you disks are not compiled into the kernel
-but are present as modules in an 'initrd'.
-So the kernel parameter or
-  md=0,/dev/hda1,/dev/hdb1
-is ignored and the code in the inird is completely responsible for
-assembling md0.
-You have a look at what it does:
-  
-  mkdir /foo
-  mount -t cramfs /initrd.img  /foo
-                  ^^^^^^^^^^^
-
-You have to find the initrd that is being used and use that name here.
-Then have a look at etc mdadm.conf in /foo.
-
-Once you understand the problem you will need to remake your initrd to
-get this right.
-
-NeilBrown
+On 8/27/06, Neil Brown <neilb@suse.de> wrote:
+> On Sunday August 27, normlegit@gmail.com wrote:
+> > Hi,
+> >
+> > I created a raid5 array with 3 devices.  Unfortunately, I carelessly used
+> > the "--zero-superblock" option with mdadm to remove all of the superblock.
+> > I still have the mdadm.conf file which has the uuid in it.  Is there a way
+> > for me to rebuild the superblocks or recover the data on these drives?
+>
+> Just recreate the array with the same devices in the same order and
+> the same chunk size.  All your data should still be there.
+>
+> NeilBrown
+>
