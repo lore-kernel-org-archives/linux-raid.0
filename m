@@ -1,61 +1,48 @@
-From: "adam radford" <aradford@gmail.com>
-Subject: Re: 3ware glitches cause softraid rebuilds
-Date: Mon, 28 Aug 2006 17:56:16 -0700
-Message-ID: <b1bc6a000608281756s1e76a80eq5f70e654e2e7e3e3@mail.gmail.com>
-References: <1926236045.20060829034652@2ka.mipt.ru>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: RAID6 fallen apart
+Date: Tue, 29 Aug 2006 12:01:27 +1000
+Message-ID: <17651.40951.849657.876173@cse.unsw.edu.au>
+References: <87y7tcxu71.fsf@szonett.ki.iif.hu>
+	<17650.20238.346014.292009@cse.unsw.edu.au>
+	<87ejv027py.fsf@tac.ki.iif.hu>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_Part_162402_15333797.1156812976398"
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1750719AbWH2A43@vger.kernel.org>
-In-Reply-To: <1926236045.20060829034652@2ka.mipt.ru>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jim Klimov <klimov@2ka.mipt.ru>
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: message from Ferenc Wagner on Monday August 28
+Sender: linux-raid-owner@vger.kernel.org
+To: Ferenc Wagner <wferi@niif.hu>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-------=_Part_162402_15333797.1156812976398
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+On Monday August 28, wferi@niif.hu wrote:
+> Neil Brown <neilb@suse.de> writes:
+> >
+> > You say some of the drives are 'spare'.  How did that happen?  Did you
+> > try to add them back to the array after it has failed?  That is a
+> > mistake.
+> 
+> Surely it was, although not mine.
+> 
 
-Jim,
+;-)
 
-Can you try the attached (and below) patch for 2.6.17.11?
+> > The easiest thing to do is simply recreate the array, making sure to
+> > have the drives in the correct order, and any options (like chunk
+> > size) the same.  This will not hurt the data (if done correctly).
+> 
+> Thanks, that did it!  Strangely (for me) mdadm -E doesn't report the
+> chunk size, only mdadm -D does, which is not available prior assembly.
+> Looks like it was left at the default 64k.  I recreated the array with
+> two drives missing to avoid triggering a resync, and added them
+> afterwards.  I wonder whether it makes any difference.
 
-Also, please make sure you are running the latest firmware.
+Great!
+mdadm -E does report chunk size .. for raid0, raid4, raid5. :-(
+It will be fixed for raid6 and raid10 in the next release.  Thanks.
 
-Thanks,
+Possibly safer to recreate with two missing if you aren't sure of the
+order.  That way you can look in the array to see if it looks right,
+or if you have to try a different order.
 
--Adam
-
-diff -Naur linux-2.6.17.11/drivers/scsi/3w-9xxx.c
-linux-2.6.17.12/drivers/scsi/3w-9xxx.c
---- linux-2.6.17.11/drivers/scsi/3w-9xxx.c	2006-08-23 14:16:33.000000000 -0700
-+++ linux-2.6.17.12/drivers/scsi/3w-9xxx.c	2006-08-28 17:48:29.000000000 -0700
-@@ -943,6 +943,7 @@
- 		before = jiffies;
- 		while ((response_que_value & TW_9550SX_DRAIN_COMPLETED) !=
-TW_9550SX_DRAIN_COMPLETED) {
- 			response_que_value = readl(TW_RESPONSE_QUEUE_REG_ADDR_LARGE(tw_dev));
-+			msleep(1);
- 			if (time_after(jiffies, before + HZ * 30))
- 				goto out;
- 		}
-
-------=_Part_162402_15333797.1156812976398
-Content-Type: text/x-patch; name=3ware_patch.diff; charset=ANSI_X3.4-1968
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_erfkfts2
-Content-Disposition: attachment; filename="3ware_patch.diff"
-
-ZGlmZiAtTmF1ciBsaW51eC0yLjYuMTcuMTEvZHJpdmVycy9zY3NpLzN3LTl4eHguYyBsaW51eC0y
-LjYuMTcuMTIvZHJpdmVycy9zY3NpLzN3LTl4eHguYwotLS0gbGludXgtMi42LjE3LjExL2RyaXZl
-cnMvc2NzaS8zdy05eHh4LmMJMjAwNi0wOC0yMyAxNDoxNjozMy4wMDAwMDAwMDAgLTA3MDAKKysr
-IGxpbnV4LTIuNi4xNy4xMi9kcml2ZXJzL3Njc2kvM3ctOXh4eC5jCTIwMDYtMDgtMjggMTc6NDg6
-MjkuMDAwMDAwMDAwIC0wNzAwCkBAIC05NDMsNiArOTQzLDcgQEAKIAkJYmVmb3JlID0gamlmZmll
-czsKIAkJd2hpbGUgKChyZXNwb25zZV9xdWVfdmFsdWUgJiBUV185NTUwU1hfRFJBSU5fQ09NUExF
-VEVEKSAhPSBUV185NTUwU1hfRFJBSU5fQ09NUExFVEVEKSB7CiAJCQlyZXNwb25zZV9xdWVfdmFs
-dWUgPSByZWFkbChUV19SRVNQT05TRV9RVUVVRV9SRUdfQUREUl9MQVJHRSh0d19kZXYpKTsKKwkJ
-CW1zbGVlcCgxKTsKIAkJCWlmICh0aW1lX2FmdGVyKGppZmZpZXMsIGJlZm9yZSArIEhaICogMzAp
-KQogCQkJCWdvdG8gb3V0OwogCQl9Cg==
-------=_Part_162402_15333797.1156812976398--
+NeilBrown
