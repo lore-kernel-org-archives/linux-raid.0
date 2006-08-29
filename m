@@ -1,139 +1,72 @@
-From: NeilBrown <neilb@suse.de>
-Subject: [PATCH 004 of 4] md: Make messages about resync/recovery etc more specific.
-Date: Tue, 29 Aug 2006 15:39:59 +1000
-Message-ID: <1060829053959.6664@suse.de>
+From: Andrew Morton <akpm@osdl.org>
+Subject: Re: [PATCH 001 of 4] md: Define backing_dev_info.congested_fn for
+ raid0 and linear
+Date: Mon, 28 Aug 2006 22:59:08 -0700
+Message-ID: <20060828225908.af114751.akpm@osdl.org>
 References: <20060829153414.6475.patches@notabene>
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751197AbWH2Fkk@vger.kernel.org>
+	<1060829053924.6610@suse.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751189AbWH2F7O@vger.kernel.org>
+In-Reply-To: <1060829053924.6610@suse.de>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
+To: NeilBrown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Tue, 29 Aug 2006 15:39:24 +1000
+NeilBrown <neilb@suse.de> wrote:
 
-It is possible to request a 'check' of an md/raid array where
-the whole array is read and consistancies are reported.
+> 
+> Each backing_dev needs to be able to report whether it is congested,
+> either by modulating BDI_*_congested in ->state, or by
+> defining a ->congested_fn.
+> md/raid did neither of these.  This patch add a congested_fn
+> which simply checks all component devices to see if they are
+> congested.
+> 
+> Signed-off-by: Neil Brown <neilb@suse.de>
+> 
+> +static int linear_congested(void *data, int bits)
+> +{
+> +	mddev_t *mddev = data;
+> +	linear_conf_t *conf = mddev_to_conf(mddev);
+> +	int i, ret = 0;
+> +
+> +	for (i = 0; i < mddev->raid_disks && !ret ; i++) {
+> +		request_queue_t *q = bdev_get_queue(conf->disks[i].rdev->bdev);
+> +		ret |= bdi_congested(&q->backing_dev_info, bits);
 
-This uses the same mechanisms as 'resync' and so reports in the
-kernel logs that a resync is being started.
-This understandably confuses/worries people.
+nit: `ret = ' would suffice here.
 
-Also the text in /proc/mdstat suggests a 'resync' is happen when it is
-just a check.
+> +static int raid0_congested(void *data, int bits)
+> +{
+> +	mddev_t *mddev = data;
+> +	raid0_conf_t *conf = mddev_to_conf(mddev);
+> +	mdk_rdev_t **devlist = conf->strip_zone[0].dev;
+> +	int i, ret = 0;
+> +
+> +	for (i = 0; i < mddev->raid_disks && !ret ; i++) {
+> +		request_queue_t *q = bdev_get_queue(devlist[i]->bdev);
+> +
+> +		ret |= bdi_congested(&q->backing_dev_info, bits);
 
-This patch changes those messages to be more specific about
-what is happening.
+And here.
 
-Signed-off-by: Neil Brown <neilb@suse.de>
-
-### Diffstat output
- ./drivers/md/md.c |   47 +++++++++++++++++++++++++++++++----------------
- 1 file changed, 31 insertions(+), 16 deletions(-)
-
-diff .prev/drivers/md/md.c ./drivers/md/md.c
---- .prev/drivers/md/md.c	2006-08-29 15:22:40.000000000 +1000
-+++ ./drivers/md/md.c	2006-08-29 15:23:57.000000000 +1000
-@@ -4641,9 +4641,11 @@ static void status_resync(struct seq_fil
- 	seq_printf(seq, " %s =%3u.%u%% (%llu/%llu)",
- 		   (test_bit(MD_RECOVERY_RESHAPE, &mddev->recovery)?
- 		    "reshape" :
--		      (test_bit(MD_RECOVERY_SYNC, &mddev->recovery) ?
--		       "resync" : "recovery")),
--		      per_milli/10, per_milli % 10,
-+		    (test_bit(MD_RECOVERY_CHECK, &mddev->recovery)?
-+		     "check" :
-+		     (test_bit(MD_RECOVERY_SYNC, &mddev->recovery) ?
-+		      "resync" : "recovery"))),
-+		   per_milli/10, per_milli % 10,
- 		   (unsigned long long) resync,
- 		   (unsigned long long) max_blocks);
- 
-@@ -5032,6 +5034,7 @@ void md_do_sync(mddev_t *mddev)
- 	int skipped = 0;
- 	struct list_head *rtmp;
- 	mdk_rdev_t *rdev;
-+	char *desc;
- 
- 	/* just incase thread restarts... */
- 	if (test_bit(MD_RECOVERY_DONE, &mddev->recovery))
-@@ -5039,6 +5042,18 @@ void md_do_sync(mddev_t *mddev)
- 	if (mddev->ro) /* never try to sync a read-only array */
- 		return;
- 
-+	if (test_bit(MD_RECOVERY_SYNC, &mddev->recovery)) {
-+		if (test_bit(MD_RECOVERY_CHECK, &mddev->recovery))
-+			desc = "data-check";
-+		else if (test_bit(MD_RECOVERY_REQUESTED, &mddev->recovery))
-+			desc = "requested-resync";
-+		else
-+			desc = "resync";
-+	} else if (test_bit(MD_RECOVERY_RESHAPE, &mddev->recovery))
-+		desc = "reshape";
-+	else
-+		desc = "recovery";
-+
- 	/* we overload curr_resync somewhat here.
- 	 * 0 == not engaged in resync at all
- 	 * 2 == checking that there is no conflict with another sync
-@@ -5082,10 +5097,10 @@ void md_do_sync(mddev_t *mddev)
- 				prepare_to_wait(&resync_wait, &wq, TASK_UNINTERRUPTIBLE);
- 				if (!kthread_should_stop() &&
- 				    mddev2->curr_resync >= mddev->curr_resync) {
--					printk(KERN_INFO "md: delaying resync of %s"
--					       " until %s has finished resync (they"
-+					printk(KERN_INFO "md: delaying %s of %s"
-+					       " until %s has finished (they"
- 					       " share one or more physical units)\n",
--					       mdname(mddev), mdname(mddev2));
-+					       desc, mdname(mddev), mdname(mddev2));
- 					mddev_put(mddev2);
- 					schedule();
- 					finish_wait(&resync_wait, &wq);
-@@ -5121,12 +5136,12 @@ void md_do_sync(mddev_t *mddev)
- 				j = rdev->recovery_offset;
- 	}
- 
--	printk(KERN_INFO "md: syncing RAID array %s\n", mdname(mddev));
--	printk(KERN_INFO "md: minimum _guaranteed_ reconstruction speed:"
--		" %d KB/sec/disc.\n", speed_min(mddev));
-+	printk(KERN_INFO "md: %s of RAID array %s\n", desc, mdname(mddev));
-+	printk(KERN_INFO "md: minimum _guaranteed_  speed:"
-+		" %d KB/sec/disk.\n", speed_min(mddev));
- 	printk(KERN_INFO "md: using maximum available idle IO bandwidth "
--	       "(but not more than %d KB/sec) for reconstruction.\n",
--	       speed_max(mddev));
-+	       "(but not more than %d KB/sec) for %s.\n",
-+	       speed_max(mddev), desc);
- 
- 	is_mddev_idle(mddev); /* this also initializes IO event counters */
- 
-@@ -5152,8 +5167,8 @@ void md_do_sync(mddev_t *mddev)
- 
- 	if (j>2) {
- 		printk(KERN_INFO 
--			"md: resuming recovery of %s from checkpoint.\n",
--			mdname(mddev));
-+		       "md: resuming %s of %s from checkpoint.\n",
-+		       desc, mdname(mddev));
- 		mddev->curr_resync = j;
- 	}
- 
-@@ -5236,7 +5251,7 @@ void md_do_sync(mddev_t *mddev)
- 			}
- 		}
- 	}
--	printk(KERN_INFO "md: %s: sync done.\n",mdname(mddev));
-+	printk(KERN_INFO "md: %s: %s done.\n",mdname(mddev), desc);
- 	/*
- 	 * this also signals 'finished resyncing' to md_stop
- 	 */
-@@ -5256,8 +5271,8 @@ void md_do_sync(mddev_t *mddev)
- 			if (test_bit(MD_RECOVERY_INTR, &mddev->recovery)) {
- 				if (mddev->curr_resync >= mddev->recovery_cp) {
- 					printk(KERN_INFO
--					       "md: checkpointing recovery of %s.\n",
--					       mdname(mddev));
-+					       "md: checkpointing %s of %s.\n",
-+					       desc, mdname(mddev));
- 					mddev->recovery_cp = mddev->curr_resync;
- 				}
- 			} else
+> +	}
+> +	return ret;
+> +}
+> +
+>  
+>  static int create_strip_zones (mddev_t *mddev)
+>  {
+> @@ -236,6 +251,8 @@ static int create_strip_zones (mddev_t *
+>  	mddev->queue->unplug_fn = raid0_unplug;
+>  
+>  	mddev->queue->issue_flush_fn = raid0_issue_flush;
+> +	mddev->queue->backing_dev_info.congested_fn = raid0_congested;
+> +	mddev->queue->backing_dev_info.congested_data = mddev;
+>  
+>  	printk("raid0: done.\n");
+>  	return 0;
