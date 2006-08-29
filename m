@@ -1,114 +1,97 @@
-From: Lem <l3mming@iinet.net.au>
-Subject: Re: RAID5 producing fake partition table on single drive
-Date: Tue, 29 Aug 2006 17:17:35 +1000
-Message-ID: <1156835855.4404.10.camel@localhost.localdomain>
-References: <1155987607.7207.23.camel@localhost.localdomain>
-	 <17641.25141.373827.77279@cse.unsw.edu.au>
-	 <1156147425.4525.20.camel@localhost.localdomain>
-	 <17650.26362.445865.67553@cse.unsw.edu.au>
+From: Neil Bortnak <linux-raid@moro.us>
+Subject: Feature Request/Suggestion - "Drive Linking"
+Date: Wed, 30 Aug 2006 01:21:07 +0900
+Message-ID: <1156868468.5611.102.camel@localhost>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17650.26362.445865.67553@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, 2006-08-28 at 13:46 +1000, Neil Brown wrote: 
-> On Monday August 21, l3mming@iinet.net.au wrote:
-> > 
-> > This is where I'm having a problem - lilo fails due to the bogus
-> > partition table, here's the output:
-> > 
-> > # lilo
-> > part_nowrite: read:: Input/output error
+Hi Everybody,
 
-> I think maybe lilo needs to be fixed.  If you haven't explicitly told
-> it to look at sde, the worst it should do is give a warning.
-> Maybe you can put something in lilo.conf to tell it what sort of
-> partitions sde does (or doesn't) have so it won't bother looking
-> itself?
+I had this major recovery last week after a hardware failure monkeyed
+things up pretty badly. About half way though I had a couple of ideas
+and I thought I'd suggest/ask them.
 
-# lilo -P ignore
-part_nowrite: read:: Input/output error
+1) "Drive Linking": So let's say I have a 6 disk RAID5 array and I have
+reason to believe one of the drives will fail (funny noises, SMART
+warnings or it's *really* slow compared to the other drives, etc). It
+would be nice to put in a new drive, link it to the failing disk so that
+it copies all of the data to the new one and mirrors new writes as they
+happen.
 
-Telling lilo to ignore invalid partition tables doesn't appear to work,
-perhaps a bug report needs to be filed here.
+This way I could get the replacement in and do the resync without
+actually having to degrade the array first. When it's done, pulling out
+the failing disk automatically breaks the link and everything goes back
+to normal. Or, if you break the link in software, it removes the old
+disk from the array and wipes out the superblock automatically.
 
-> > 
-> > The above buffer I/O errors (logical block 1792+) occur as filesystems
-> > are being automounted. /dev/sde* doesn't exist in /etc/fstab of course.
-> > 
-> 
-> Do you mount-by-label at all.  In that case mount we look at each
-> partition, but it doesn't fail, so not-a-problem.
-
-I do mount by label, yes, and it all works perfectly.
-
-> > 
-> > A few questions, searching for the best possible solution. I believe
-> > this is worth the effort, else I can't run lilo without disabling the
-> > array and removing /dev/sde from the system.
-> > 
-> > 1. Is it possible to have mdadm or another tool automatically convert
-> > the superblocks to v1.1/1.2 (and perhaps create proper partitions)?
-> 
-> No.  It would require moving all the data on the device.
-
-Bugger. :-(
-
-> > 
-> > 2. If number 1 isn't possible, is it possible to convert one drive at a
-> > time to have a proper partition table? Like this: Stop array;
-> > fdisk /dev/sde, create partition of type fd (entire disk), save
-> > partition table; Start array. (then I'd assume mdadm would notice
-> > that /dev/sde has changed and possibly start a resync? - if not, and it
-> > just works, then great!). If that works, then do every other drive, one
-> > at a time.
-> 
-> When you create a partition table, sde1 will be slightly smaller than
-> sde1.  But if it is less than 64K smaller you might be able to do
-> something.  mdadm won't notice by itself, but you could tell it.
-> 
->  mdadm /dev/md0 --fail /dev/sde
->  mdadm /dev/md0 --remove /dev/sde
->  mdadm --zero-superb lock /dev/sde
->  ##use fdisk to create a single partition
->  mdadm /dev/md0 --add /dev/sde1
->  ## if that works then wait for the resync to complete
->  ## and do the same to other drives.  Then update any
->  ## config files that might be relevant.
-
-I tried doing this, but mdadm complains in the following way:
-
-[output from fdisk after using 'o' to create a new MSDOS partition table]
-
-Disk /dev/sde: 250.0 GB, 250059350016 bytes
-255 heads, 63 sectors/track, 30401 cylinders
-Units = cylinders of 16065 * 512 = 8225280 bytes
-
-   Device Boot      Start         End      Blocks   Id  System
-/dev/sde1               1       30401   244196001   fd  Linux raid autodetect
+Maybe there is a way to do this already and I just missed it, but I
+don't think so. I'm not really keen on degrading the array just in case
+the system finds an unrecoverable error on one of the other disks during
+the resync and the whole thing comes crashing down in a dual disk
+failure. In fact, I'm not keen on degrading the array period.
 
 
-# mdadm /dev/md0 --add /dev/sde1
-mdadm: add new device failed for /dev/sde1 as 5: Invalid argument
+2) This sort of brings up a subject I'm getting increasingly paranoid
+about. It seems to me that if disk 1 develops a unrecoverable error at
+block 500 and disk 4 develops one at 55,000 I'm going to get a double
+disk failure as soon as one of the bad blocks is read (or some other
+system problem ->makes it look like<- some random block is
+unrecoverable). Such an error should not bring the whole thing to a
+crashing halt. I know I can recover from that sort of error manually,
+but yuk.
 
-from dmesg:
+It seems to me that as arrays get larger and larger, failure mechanisms
+better than "wipe out 750G of mirror and put the array in jeopardy
+because a single block is unrecoverable" need to be developed. Can bad
+block redirection help us add a layer of defense, at least in the short
+term? Granted, if the disk block is unrecoverable because all the spares
+are used up, the chances are the drive will die off soon anyway, but I'd
+rather get one last kick at doing a clean rebuild (maybe a la the disk
+linking idea above) before ejecting the drive. The current methods
+employed by RAID 1-6 seem a bit crude. Fine for 20 years ago, but
+showing it's age with today's increasingly massive data sets.
 
-md: sde1 has invalid sb, not importing!
-md: md_import_device returned -22
+I'm quite thankful for all the MD work and this isn't a criticism. I'm
+merely interested in the problem and wonder at other people's thoughts
+on the matter. Maybe we can move from something that paints in large
+strokes like RAID 1-6 and look towards an all-new RAID-OMG. I'm
+basically thinking it's prudent to apply security's idea of "defense in
+depth" to drive safety.
 
-'mdadm --zero-superblock /dev/sde1' does not fix it.
 
-'mdadm /dev/md0 --add /dev/sde' adds the HD back to the array without issue.
+3) So this last rebuild I had to do was for a system with a double disk
+failure and no backup (no, not my system as I would have had a backup as
+we all know raid doesn't protect against a lot of threats). I managed to
+get it done but I ended up writing a lot of offline, userspace
+verification and resync tools in perl and C and editing the superblocks
+with hexedit.
 
-I'm having another issue with hard lockups (not even caps-lock light working)
-when the array is being accessed and the kernel goes to swap something out (I
-think this is what's happening, more observation required). The swap space is
-on the system drive (shares a controller with the RAID array - onboard SATA
-controller). I'm not sure why this happens.
+An extra tool to edit superblock fields would be very keen.
 
+If no one is horrified by the fact I did the other recovery tools in
+perl, I would be happy to clean them up and submit them. I wrote one to
+verify a given disk's data vs. the other disks and report errors
+(optionally fixing them). It also has a range feature so you don't have
+to do the whole disk. The other is similar, but I built it for high
+speed bulk resyncing from userspace (no need to have RAID in the
+kernel).
+
+
+4) And finally (for today at least), can mdadm do the equivalent of
+NetApp's or 3Ware's disk scrubbing? I know I can check an array manually
+with a /sys entry, but it would be cool to have mdadm optionally run
+these checks and continually rerun them when they were finished for all
+the arrays on the system. Just part of it's monitoring duties really.
+For someone like me, I only care about data integrity and uptime, not
+speed. I heard something like that was going in, but I don't know it's
+status.
+
+Thanks!
+
+Neil
 
