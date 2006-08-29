@@ -1,17 +1,17 @@
-From: "denominate" <denominate.defunct@rotary-club-rottweil.de>
-Subject: New home its simple
-Date: Wed, 30 Aug 2006 05:42:36 +0900
-Message-ID: <07798008796085.7D1F4CE735@TS9BT>
+From: "bogeymen" <bogeymen.amorous@rote.nl>
+Subject: Credits situation
+Date: Tue, 29 Aug 2006 23:11:40 +0200
+Message-ID: <71960205376800.8A50D0A263__20292.1020602391$1156885905$gmane$org@BWHWQTQZ>
 Mime-Version: 1.0
 Content-Type: text/plain;
         charset="Windows-1252"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-scsi-digest@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Good day Bro, 
+Halo! 
 
 Your credit doesn't matter to us!
 If you OWN real estate and want IMMEDIATE cash to spend ANY way you 
@@ -29,7 +29,7 @@ gone!
 We have one-mimute form to apply the request,
 please CLICK HERE
 
-http://9N8PI.bulkercreditprocess.com/?ncache=103414
+http://36Z.yourcreditpartner.us/?ncache=10524479
 
 Don't worry about approval, your credit will not disqualify you!
 
