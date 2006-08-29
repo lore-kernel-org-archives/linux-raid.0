@@ -1,60 +1,38 @@
-From: dean gaudet <dean@arctic.org>
-Subject: Re: Feature Request/Suggestion - "Drive Linking"
-Date: Tue, 29 Aug 2006 10:43:16 -0700 (PDT)
-Message-ID: <Pine.LNX.4.64.0608291036100.30045@twinlark.arctic.org>
-References: <1156868468.5611.102.camel@localhost>
+From: "denominate" <denominate.defunct@rotary-club-rottweil.de>
+Subject: New home its simple
+Date: Wed, 30 Aug 2006 05:42:36 +0900
+Message-ID: <07798008796085.7D1F4CE735@TS9BT>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+        charset="Windows-1252"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1156868468.5611.102.camel@localhost>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Bortnak <linux-raid@moro.us>
-Cc: linux-raid@vger.kernel.org
+To: linux-scsi-digest@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 30 Aug 2006, Neil Bortnak wrote:
+Good day Bro, 
 
-> Hi Everybody,
-> 
-> I had this major recovery last week after a hardware failure monkeyed
-> things up pretty badly. About half way though I had a couple of ideas
-> and I thought I'd suggest/ask them.
-> 
-> 1) "Drive Linking": So let's say I have a 6 disk RAID5 array and I have
-> reason to believe one of the drives will fail (funny noises, SMART
-> warnings or it's *really* slow compared to the other drives, etc). It
-> would be nice to put in a new drive, link it to the failing disk so that
-> it copies all of the data to the new one and mirrors new writes as they
-> happen.
+Your credit doesn't matter to us!
+If you OWN real estate and want IMMEDIATE cash to spend ANY way you 
+like, or simply wish to LOWER your monthly payments by a third or more, here are the deals we have TODAY:
 
-http://arctic.org/~dean/proactive-raid5-disk-replacement.txt
+$488,000.00 at a 3.67% fixed-rate
+$372,000.00 at a 3.90% variable-rate
+$492,000.00 at a 3.21% interest-only
+$248,000.00 at a 3.36% fixed-rate
+$198,000.00 at a 3.55% variable-rate
 
-works for any raid level actually.
+Hurry, we have requests limits, so when these deals are gone, they are 
+gone!
+
+We have one-mimute form to apply the request,
+please CLICK HERE
+
+http://9N8PI.bulkercreditprocess.com/?ncache=103414
+
+Don't worry about approval, your credit will not disqualify you!
+
+Approval Manager.
 
 
-> 2) This sort of brings up a subject I'm getting increasingly paranoid
-> about. It seems to me that if disk 1 develops a unrecoverable error at
-> block 500 and disk 4 develops one at 55,000 I'm going to get a double
-> disk failure as soon as one of the bad blocks is read (or some other
-> system problem ->makes it look like<- some random block is
-> unrecoverable). Such an error should not bring the whole thing to a
-> crashing halt. I know I can recover from that sort of error manually,
-> but yuk.
-
-Neil made some improvements in this area as of 2.6.15... when md gets a 
-read error it won't knock the entire drive out immediately -- it first 
-attempts to reconstruct the sectors from the other drives and write them 
-back.  this covers a lot of the failure cases because the drive will 
-either successfully complete the write in-place, or use its reallocation 
-pool.  the kernel logs when it makes such a correction (but the log wasn't 
-very informative until 2.6.18ish i think).
-
-if you watch SMART data (either through smartd logging changes for you, or 
-if you diff the output regularly) you can see this activity happen as 
-well.
-
-you can also use the check/repair sync_actions to force this to happen 
-when you know a disk has a Current_Pending_Sector (i.e. pending read 
-error).
-
--dean
