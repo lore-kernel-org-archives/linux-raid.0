@@ -1,33 +1,65 @@
-From: "Ruth Ivimey-Cook" <Ruth.Ivimey-Cook@ivimey.org>
-Subject: RE: SATA ontrollers and Linux MD
-Date: Thu, 31 Aug 2006 10:22:47 +0100
-Message-ID: <000c01c6ccdf$06241880$0e00a8c0@sherlock>
-References: <20060831033111.55493.qmail@web50209.mail.yahoo.com>
+From: Ralf Herrmann <Ralf.Herrmann@TU-Ilmenau.de>
+Subject: Re[2]: PROBLEM: system crash on AMD64 with 2.6.17.11 while accessing
+ 3TB Software-RAID5
+Date: Thu, 31 Aug 2006 15:51:30 +0200
+Message-ID: <44F6E962.40900@TU-Ilmenau.de>
+References: <758194931.20060829001041@TU-Ilmenau.de> <17654.24059.852752.251958@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20060831033111.55493.qmail@web50209.mail.yahoo.com>
+In-Reply-To: <17654.24059.852752.251958@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Alex Davis' <alex14641@yahoo.com>, linux-raid@vger.kernel.org
-Cc: Ruth.Ivimey-Cook@ivimey.org
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Folks, 
+Dear Mr.Brown,
 
-> I'm currently using a Promise Technologies TX4300 SATA II 
-> 3.0GB/s controller, to which are connected 4 Seagate 
-> Barracuda 7200.10 ST3320620AS 320GB drives. I've only had 
-> this setup for
-> 2 weeks but so far I'm happy with it. The controller is PCI 
-> and costs about $66. the drives are about $100/each.
+> Yes...... you are hitting some pretty serious BUGs.  And this is in
+> code that is not specific to RAID at all, so if there really were bugs
+> there, we would expect to have seen them well before now.
 
-Thanks. Someone else mentioned the TX4 as being ok.
+Your are absolutely right, it doesn't seem to be in RAID at all,
+but as of now, it only happened when doing something with /dev/md0.
 
-I'm also more seriously considering the Supermicro SAT2
 
-Thanks for your thoughts.
+> I really looks to me like a hardware problem.  Some how various bits
+> of memory sometimes have bad values and cause a problem.
+> 
+> How long did you run memtest?  I would suggest running it for at
+> least 24 hours, because my best guess is that it is bad memory, even
+> though your tests so far don't show that.
 
-Ruth
+I ran it for about 16h, with all tests enabled, no error occured.
 
+I was always wondering why it worked before the change and
+not now. The only difference were the larger drives. And i've read so many reports
+of people running much larger RAID5 partitions than we do,
+so why should it fail in this case?
+
+So my best bet at the moment, would be a hardware problem, too.
+I continued looking at the kernel oops messages and sometimes
+disassembly of the code where it broke gave invalid opcodes.
+This also looks pretty much like a hardware issue.
+But tests of single components did not unvail any error.....
+
+It seems to me, that it only happens, when many system components
+are involved, several HDDs, the whole RAM, the NIC and so on.
+That leads me to another idea i'm currently testing.
+
+It could very well be a bad power supply.
+Maybe this box was running at full load of the power supply before,
+and now with new drives consumes more power the supply can deliver,
+if all system components are used at once.
+I switched to a better power supply, tests are running as i write this.
+
+I'm sorry if i wasted your time, i should have checked this before
+writing to the list. But power supply problems are pretty odd
+and hard to identify. Anyways, i'm not sure if that solves the problem.
+
+Ok, i'll write the results of current tests, when they are finished.
+
+Thanks for your consideration.
+
+Ralf
