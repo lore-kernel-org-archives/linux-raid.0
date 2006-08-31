@@ -1,29 +1,31 @@
-From: emmet debbie <masahiro@mail.com>
-Subject: I fuond the rihgt progarm for you
-Date: Tue, 09 Apr 2002 12:08:53 +0300
-Message-ID: <3c9201c1dfa6$ab30e7ac$39ed2744@mail.com>
+From: Alex Davis <alex14641@yahoo.com>
+Subject: Re: SATA ontrollers and Linux MD
+Date: Wed, 30 Aug 2006 20:31:11 -0700 (PDT)
+Message-ID: <20060831033111.55493.qmail@web50209.mail.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-    format=flowed;
-    charset="iso-8859-1";
-    reply-type=original
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
+Cc: Ruth.Ivimey-Cook@ivimey.org
 List-Id: linux-raid.ids
 
-Hi pal,
-how are you?
-I think I found a great opportunity to make money online, would like to share it with you.
-Just check out this site, http://www.incotrust.com - they're paying 5% daily on your investment, can you imagine?
-First i was a  bit sceptical, but it works! I more than tripled my investment now. They accept e-gold or e-bullion.
-Just use my referral link http://incotrust.com?ref=2513451
-Best,
-stay in touch
+I'm currently using a Promise Technologies TX4300 SATA II 3.0GB/s controller, to which are
+connected 4 Seagate Barracuda 7200.10 ST3320620AS 320GB drives. I've only had this setup for 
+2 weeks but so far I'm happy with it. The controller is PCI and costs about $66. the drives 
+are about $100/each.
 
-Mike
+Note: the cables that come with the controller come loose too easy. If you go this route,
+get some additional cables.
 
+I have a RAID5 setup. While sync'ing, the throughput was about 30MB/sec.
 
 
-xunfa
+
+I code, therefore I am
+
+__________________________________________________
+Do You Yahoo!?
+Tired of spam?  Yahoo! Mail has the best spam protection around 
+http://mail.yahoo.com 
