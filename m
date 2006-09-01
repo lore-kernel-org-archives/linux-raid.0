@@ -1,27 +1,49 @@
-From: "Rosetta Rollins" <tkowalski@dansexc.com>
-Subject: select bestseller action
-Date: Fri, 1 Sep 2006 09:20:21 +0000 (UTC)
-Message-ID: <6871834648.20060506091750__24884.9517586224$1157102421$gmane$org@dansexc.com>
-Reply-To: "Rosetta Rollins" <tkowalski@dansexc.com>
+From: "Joan Ponce" <wybxuedrgmpbcv@lbcaa.com>
+Subject: Please confirm your new Support Center account
+Date: Fri, 01 Sep 2006 10:48:28 -0700
+Message-ID: <22871130090241.CFB0404DE__17286.9099224501$1157129899$gmane$org@goldfish.starnetusa.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Date: Sat, 6 May 2006 09:17:50 -0060
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-net@vger.kernel.org
+To: linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-Have you ever wondered how it would feel to wear a $10,000 watch
-or a $9,000 necklace. Well now is you chance. We have a complete
-line of high quailty replicated products. No one will ever notice
-the difference. Only you will know. So why wait.
- 
-Come visit us online and see for your self.
+Icrease Your S''exual Desire and S''perm volume by 500%
+L'onger o''rgasms - The longest most intense o''rgasms of your life
+Multiple o''rgasms - Cum again and again
+S'PUR-M is The Newest and The Safest Way
+100% N''atural and No Side Effects - in contrast to well-known brands.
+Experience three times longer o''rgasms
+World Wide shipping within 24 hours
+=20
+ Clisk here http://www.happydogveterinaria.info
 
-www.demandroll.com 
 
-If you do like the quiality of the product in the first 30day
-Return it for a full re fund minus the shiipng costs.
-So wha t do you have to loose.
 
+
+
+
+
+
+
+
+
+
+
+
+never in time.
+She had never heard Geoffrey sound so, and would not have believed it i=
+f someone had told her of it.
+She was taking extravagant care of him, changing the bandages on his we=
+eping stump every eight hours (and at first, she had informed him with =
+the air of one who knows she will never get a medal for what she has do=
+ne=A0=97 although she deserves one=A0=97 she had done it every four hou=
+rs), giving him sponge baths and alcohol rubs=A0=97 as if to deny what =
+she had done.
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
