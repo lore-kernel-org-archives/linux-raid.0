@@ -1,42 +1,28 @@
-From: David Greaves <david@dgreaves.com>
+From: "John Stoffel" <john@stoffel.org>
 Subject: Re: Kernel RAID support
-Date: Sun, 03 Sep 2006 11:49:58 +0100
-Message-ID: <44FAB356.1070109@dgreaves.com>
-References: <44FA5261.4010207@sauce.co.nz> <1157256114.10326.0.camel@localhost> <44FA5BE1.1080706@sauce.co.nz>
+Date: Sun, 3 Sep 2006 08:50:18 -0400
+Message-ID: <17658.53130.680004.690202@smtp.charter.net>
+References: <44FA5261.4010207@sauce.co.nz>
+	<1157256114.10326.0.camel@localhost>
+	<44FA5BE1.1080706@sauce.co.nz>
+	<44FAB356.1070109@dgreaves.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <44FA5BE1.1080706@sauce.co.nz>
+In-Reply-To: <44FAB356.1070109@dgreaves.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Richard Scobie <richard@sauce.co.nz>
-Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>, josh@temp123.org
+To: David Greaves <david@dgreaves.com>
+Cc: Richard Scobie <richard@sauce.co.nz>, Linux RAID Mailing List <linux-raid@vger.kernel.org>, josh@temp123.org
 List-Id: linux-raid.ids
 
-Richard Scobie wrote:
-> Josh Litherland wrote:
->> On Sun, 2006-09-03 at 15:56 +1200, Richard Scobie wrote:
->>
->>> I am building  2.6.18rc5-mm1 and I cannot find the entry under "make
->>> config", to enable the various RAID options.
->>
->>
->> Under "Device Drivers", switch on "Multi-device support".
->>
-> 
-> Thanks. I must be going nuts, as it does not appear as an option. Below
-> is the list under "Device Drivers" if I do a "make menuconfig":
 
-Recently reported on lkml
+For 2.6.18-rc5-mm1, just edit drivers/md/Kconfig and change the 'if
+CONFIG_BLOCK' to 'if BLOCK' and you'll be all set.  You can then run
+'make oldconfig' and you should be all set.
 
-Andrew Morton said:
-ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.18-rc5/2.6.18-rc5-mm1/hot-fixes/
-contains a fix for this.
-
-HTH
-David
-
-PS on kernel mailing lists do a reply-all and don't trim cc lists :)
+It's a simple change, and easier than hunting down and applying a
+patch at this point.  :]
 
 -- 
-VGER BF report: U 0.500279
+VGER BF report: U 0.49976
