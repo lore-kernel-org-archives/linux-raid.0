@@ -1,39 +1,28 @@
-From: Dexter Filmore <Dexter.Filmore@gmx.de>
-Subject: Re: serious trouble - raid5 won't assemble properly, vgscan sees no volumes - solved
-Date: Sun, 3 Sep 2006 14:57:35 +0200
-Message-ID: <200609031457.35485.Dexter.Filmore@gmx.de>
-References: <200609021847.06938.Dexter.Filmore@gmx.de>
+From: dean gaudet <dean@arctic.org>
+Subject: Re: RAID-5 recovery
+Date: Sun, 3 Sep 2006 15:32:27 -0700 (PDT)
+Message-ID: <Pine.LNX.4.64.0609031530010.12203@twinlark.arctic.org>
+References: <200609031148.56910.clive@vacuumtube.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200609021847.06938.Dexter.Filmore@gmx.de>
-Content-Disposition: inline
+In-Reply-To: <200609031148.56910.clive@vacuumtube.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Clive Messer <clive@vacuumtube.org.uk>
+Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Array is online, degraded for the moment but I can access the file systems for 
-backups.
+On Sun, 3 Sep 2006, Clive Messer wrote:
 
-I passed -A --force to mdadm, seems that did the trick. 
+> This leads me to a question. I understand from reading the linux-raid archives 
+> that the current behaviour when rebuilding with a single badblock on another 
+> disk is for that disk to also be kicked from the array.
 
-What puzzles me still is that I had a degraded array for the third time now 
-and never could tell why it happened in the first place.
-This time the machine crashed for no apparent reason, tho I suspect heat 
-issues. Will investigate and eventually move the disks to another machine.
+that's not quite the current behaviour.  since 2.6.14 or .15 or so md will 
+reconstruct bad blocks from other disks and try writing them.  it's only 
+when this fails repeatedly that it knocks the disk out of the array.
 
--- 
------BEGIN GEEK CODE BLOCK-----
-Version: 3.12
-GCS d--(+)@ s-:+ a- C++++ UL++ P+>++ L+++>++++ E-- W++ N o? K-
-w--(---) !O M+ V- PS+ PE Y++ PGP t++(---)@ 5 X+(++) R+(++) tv--(+)@ 
-b++(+++) DI+++ D- G++ e* h>++ r* y?
-------END GEEK CODE BLOCK------
-
-http://www.stop1984.com
-http://www.againsttcpa.com
+-dean
 
 -- 
-VGER BF report: S 0.991633
+VGER BF report: H 0.347442
