@@ -1,37 +1,45 @@
-From: "Tuomas Leikola" <tuomas.leikola@gmail.com>
-Subject: Re: RAID6 fallen apart
-Date: Sun, 3 Sep 2006 18:19:13 +0300
-Message-ID: <5b170a7d0609030819r402a2a36ob7e8b74195d16a5b@mail.gmail.com>
-References: <87y7tcxu71.fsf@szonett.ki.iif.hu>
-	 <17650.20238.346014.292009@cse.unsw.edu.au>
-	 <87ejv027py.fsf@tac.ki.iif.hu>
-	 <17651.40951.849657.876173@cse.unsw.edu.au>
-	 <5b170a7d0609030818ra8fa45i8f45cb55a8628fc9@mail.gmail.com>
+From: Michael Tokarev <mjt@tls.msk.ru>
+Subject: Re: Feature Request/Suggestion - "Drive Linking"
+Date: Sun, 03 Sep 2006 22:35:25 +0400
+Message-ID: <44FB206D.6000206@tls.msk.ru>
+References: <1156868468.5611.102.camel@localhost> <5b170a7d0609030759u2b145237m85757ec649f86488@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5b170a7d0609030818ra8fa45i8f45cb55a8628fc9@mail.gmail.com>
-Content-Disposition: inline
+In-Reply-To: <5b170a7d0609030759u2b145237m85757ec649f86488@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Ferenc Wagner <wferi@niif.hu>, linux-raid@vger.kernel.org
+To: Tuomas Leikola <tuomas.leikola@gmail.com>
+Cc: Neil Bortnak <linux-raid@moro.us>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 9/3/06, Tuomas Leikola <tuomas.leikola@gmail.com> wrote:
-> > Possibly safer to recreate with two missing if you aren't sure of the
-> > order.  That way you can look in the array to see if it looks right,
-> > or if you have to try a different order.
->
-> I'd say it's safer to recreate with all disks, in order to get the
-> resync. Otherwise you risk the all so famous silent data corruption on
-> stripes with writes in-flight at the time of failure.
+Tuomas Leikola wrote:
+[]
+> Here's an alternate description. On first 'unrecoverable' error, the
+> disk is marked as FAILING, which means that a spare is immediately
+> taken into use to replace the failing one. The disk is not kicked, and
+> readable blocks can still be used to rebuild other blocks (from other
+> FAILING disks).
+> 
+> The rebuild can be more like a ddrescue type operation, which is
+> probably a lot faster in the case of raid6, and the disk can be
+> automatically kicked after the sync is done. If there is no read
+> access to the FAILING disk, the rebuild will be faster just because
+> seeks are avoided in a busy system.
 
-Ment to say: after you know the correct order. Sorry.
+It's not that simple.  The issue is with writes.  If there's a "failing"
+disk, md code will need to keep track of "up-to-date", or "good" sectors
+of it vs "obsolete" ones.  Ie, when write fails, the data in that block
+is either unreadable (but can become readable on the next try, say, after
+themperature change or whatnot), or readable but contains old data, or
+is readable but contains some random garbage.  So at least that block(s)
+of the disk should not be copied to the spare during resync, and should
+not be read at all, to avoid returning wrong data to userspace.  In short,
+if the array isn't stopped (or changed to read-only), we should watch for
+writes, and remember which ones are failed.  Which is some non-trivial
+change.  Yes, bitmaps somewhat helps here.
 
->
-> Tuomas
->
+/mjt
 
 -- 
-VGER BF report: H 3.07213e-07
+VGER BF report: H 0.418675
