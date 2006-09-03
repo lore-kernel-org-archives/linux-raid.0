@@ -1,41 +1,42 @@
-From: Clive Messer <clive@vacuumtube.org.uk>
-Subject: RAID-5 recovery
-Date: Sun, 3 Sep 2006 11:48:56 +0100
-Message-ID: <200609031148.56910.clive@vacuumtube.org.uk>
+From: David Greaves <david@dgreaves.com>
+Subject: Re: Kernel RAID support
+Date: Sun, 03 Sep 2006 11:49:58 +0100
+Message-ID: <44FAB356.1070109@dgreaves.com>
+References: <44FA5261.4010207@sauce.co.nz> <1157256114.10326.0.camel@localhost> <44FA5BE1.1080706@sauce.co.nz>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <44FA5BE1.1080706@sauce.co.nz>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: Richard Scobie <richard@sauce.co.nz>
+Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>, josh@temp123.org
 List-Id: linux-raid.ids
 
+Richard Scobie wrote:
+> Josh Litherland wrote:
+>> On Sun, 2006-09-03 at 15:56 +1200, Richard Scobie wrote:
+>>
+>>> I am building  2.6.18rc5-mm1 and I cannot find the entry under "make
+>>> config", to enable the various RAID options.
+>>
+>>
+>> Under "Device Drivers", switch on "Multi-device support".
+>>
+> 
+> Thanks. I must be going nuts, as it does not appear as an option. Below
+> is the list under "Device Drivers" if I do a "make menuconfig":
 
-Hi,
+Recently reported on lkml
 
-I lost a disk from a 4 disk RAID-5 array; usually not a problem, investigate 
-and add it back in. Normally nothing wrong with the disk, possibly a ICH6 
-libata bug when heavy IO is taking place. Yesterday when adding it back to 
-the array, I run into a problem with 3 badblocks on one of the other disks 
-which caused the rebuilding to stop. Anyway, got my array back (only one lost 
-file) with ddrescue.
+Andrew Morton said:
+ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.18-rc5/2.6.18-rc5-mm1/hot-fixes/
+contains a fix for this.
 
-This leads me to a question. I understand from reading the linux-raid archives 
-that the current behaviour when rebuilding with a single badblock on another 
-disk is for that disk to also be kicked from the array. For some time I have 
-considered buying a 3ware 9500 card and using that instead of my current ICH6 
-and md solution. Can anyone tell me what would happen in the same scenario 
-with a 3ware card. ie. would that transparently handle a RAID-5 disk failure 
-and rebuild, with a badblock on another disk? Or would I have even less 
-chance of getting my data back?
+HTH
+David
 
-Regards
+PS on kernel mailing lists do a reply-all and don't trim cc lists :)
 
-Clive
 -- 
-Clive Messer <clive@vacuumtube.org.uk>
-
--- 
-VGER BF report: U 0.520926
+VGER BF report: U 0.500279
