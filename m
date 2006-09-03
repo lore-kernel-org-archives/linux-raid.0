@@ -1,58 +1,44 @@
-From: Mikael Abrahamsson <swmike@swm.pp.se>
-Subject: Re: RAID-5 recovery
-Date: Sun, 3 Sep 2006 15:11:11 +0200 (CEST)
-Message-ID: <Pine.LNX.4.62.0609031504220.21489@uplift.swm.pp.se>
-References: <200609031148.56910.clive@vacuumtube.org.uk>
+From: "Tuomas Leikola" <tuomas.leikola@gmail.com>
+Subject: Re: Feature Request/Suggestion - "Drive Linking"
+Date: Sun, 3 Sep 2006 17:59:51 +0300
+Message-ID: <5b170a7d0609030759u2b145237m85757ec649f86488@mail.gmail.com>
+References: <1156868468.5611.102.camel@localhost>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200609031148.56910.clive@vacuumtube.org.uk>
+In-Reply-To: <1156868468.5611.102.camel@localhost>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Clive Messer <clive@vacuumtube.org.uk>
-Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: Neil Bortnak <linux-raid@moro.us>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, 3 Sep 2006, Clive Messer wrote:
+> This way I could get the replacement in and do the resync without
+> actually having to degrade the array first.
 
-> This leads me to a question. I understand from reading the linux-raid 
-> archives that the current behaviour when rebuilding with a single 
-> badblock on another disk is for that disk to also be kicked from the 
-> array. For some time I have considered buying a 3ware 9500 card and 
-> using that instead of my current ICH6 and md solution. Can anyone tell 
-> me what would happen in the same scenario with a 3ware card. ie. would 
-> that transparently handle a RAID-5 disk failure and rebuild, with a 
-> badblock on another disk? Or would I have even less chance of getting my 
-> data back?
+<snip>
 
-I only have experience with the 7500 series card and it does the 
-following if you run it in 3ware RAID5 mode:
+> 2) This sort of brings up a subject I'm getting increasingly paranoid
+> about. It seems to me that if disk 1 develops a unrecoverable error at
+> block 500 and disk 4 develops one at 55,000 I'm going to get a double
+> disk failure as soon as one of the bad blocks is read
 
-If there is a read error (bad block) on a disk and the array is not 
-degraded, it will recalculate the content of the block from the other 
-disks and write the bad block, causing the drive to re-allocate. It 
-will log that it did this.
+Here's an alternate description. On first 'unrecoverable' error, the
+disk is marked as FAILING, which means that a spare is immediately
+taken into use to replace the failing one. The disk is not kicked, and
+readable blocks can still be used to rebuild other blocks (from other
+FAILING disks).
 
-If the array is degraded as per your description, it will default to the 
-same behaviour linux kernel does for sw-raid, ie stop rebuilding if it 
-encounters a read error.
-If on the other hand you do want it to ignore the read error, you can tell 
-it to do so.
+The rebuild can be more like a ddrescue type operation, which is
+probably a lot faster in the case of raid6, and the disk can be
+automatically kicked after the sync is done. If there is no read
+access to the FAILING disk, the rebuild will be faster just because
+seeks are avoided in a busy system.
 
-The command to do so from the 3ware cli program is:
+Personally I feel this is a good idea, count my vote in.
 
-maint rebuild c<c> u<u> p<p:-p...> [ignoreECC]
-
-If you add the option "ignoreECC", it will ignore read errors.
-
-In the web administration part this is called "Force Continue on Source 
-Errors".
-
-I think 3ware has the manual of the 9500 online so you can probably find 
-if the 9500 does the same thing by downloading the manual, it should cover 
-this important aspect of RAID5 operation.
+- Tuomas
 
 -- 
-Mikael Abrahamsson    email: swmike@swm.pp.se
-
--- 
-VGER BF report: U 0.500325
+VGER BF report: U 0.505245
