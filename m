@@ -1,37 +1,43 @@
-From: Ferenc Wagner <wferi@niif.hu>
-Subject: Re: RAID6 fallen apart
-Date: Mon, 04 Sep 2006 18:03:28 +0200
-Message-ID: <87veo3mxf3.fsf@tac.ki.iif.hu>
-References: <87y7tcxu71.fsf@szonett.ki.iif.hu>
-	<17650.20238.346014.292009@cse.unsw.edu.au>
-	<87ejv027py.fsf@tac.ki.iif.hu>
-	<17651.40951.849657.876173@cse.unsw.edu.au>
-	<5b170a7d0609030818ra8fa45i8f45cb55a8628fc9@mail.gmail.com>
-	<5b170a7d0609030819r402a2a36ob7e8b74195d16a5b@mail.gmail.com>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: Interesting RAID checking observations - I'm getting it too
+Date: Mon, 04 Sep 2006 12:42:53 -0400
+Message-ID: <44FC578D.5020704@tmr.com>
+References: <20060830192410.332db788.nanog@fa1c52f96c54f7450e1ffb215f29991e.nosense.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5b170a7d0609030819r402a2a36ob7e8b74195d16a5b@mail.gmail.com> (Tuomas
- Leikola's message of "Sun, 3 Sep 2006 18:19:13 +0300")
+In-Reply-To: <20060830192410.332db788.nanog@fa1c52f96c54f7450e1ffb215f29991e.nosense.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Tuomas Leikola <tuomas.leikola@gmail.com>
-Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
+To: Mark Smith <nanog@fa1c52f96c54f7450e1ffb215f29991e.nosense.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-"Tuomas Leikola" <tuomas.leikola@gmail.com> writes:
 
-> On 9/3/06, Tuomas Leikola <tuomas.leikola@gmail.com> wrote:
->>> Possibly safer to recreate with two missing if you aren't sure of the
->>> order.  That way you can look in the array to see if it looks right,
->>> or if you have to try a different order.
->>
->> I'd say it's safer to recreate with all disks, in order to get the
->> resync. Otherwise you risk the all so famous silent data corruption on
->> stripes with writes in-flight at the time of failure.
+
+
+Mark Smith wrote:
+
+>Just a note, I've noticed this problem too. I run a RAID1 check once
+>every 24 hours, and while developing the script to do it, noticed that
+>the machine became virtually unusable - mouse was jumpy, typing lagged.
 >
-> Ment to say: after you know the correct order. Sorry.
+>I run this check every morning at 4.00am so I'm usually asleep and
+>don't notice it, so it hasn't been a big bother to me.
+>  
+>
+Interesting, but do you run other stuff at that time? Several 
+distributions run various things in the middle of the night which really 
+bog the machine.
 
-I highly appreciate expert advice. Thanks for taking the time!
+>The data may be a bit corse, however here is what sysstat/sar says my
+>machine does during the check. Let me know if you want any more or other
+>sar data.
+>
+[ data dropped, not relevant to my suggestion ]
+
 -- 
-Best wishes,
-Feri.
+bill davidsen <davidsen@tmr.com>
+  CTO TMR Associates, Inc
+  Doing interesting things with small computers since 1979
+
