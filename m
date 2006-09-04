@@ -1,45 +1,37 @@
-From: Josh Litherland <josh@temp123.org>
-Subject: Re: Superblock checksum problems
-Date: Mon, 04 Sep 2006 12:00:12 -0400
-Message-ID: <1157385612.2990.4.camel@localhost>
-References: <1157236610.8070.7.camel@localhost>
-	 <17659.46517.979409.131348@cse.unsw.edu.au>
-Reply-To: josh@temp123.org
+From: Ferenc Wagner <wferi@niif.hu>
+Subject: Re: RAID6 fallen apart
+Date: Mon, 04 Sep 2006 18:03:28 +0200
+Message-ID: <87veo3mxf3.fsf@tac.ki.iif.hu>
+References: <87y7tcxu71.fsf@szonett.ki.iif.hu>
+	<17650.20238.346014.292009@cse.unsw.edu.au>
+	<87ejv027py.fsf@tac.ki.iif.hu>
+	<17651.40951.849657.876173@cse.unsw.edu.au>
+	<5b170a7d0609030818ra8fa45i8f45cb55a8628fc9@mail.gmail.com>
+	<5b170a7d0609030819r402a2a36ob7e8b74195d16a5b@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17659.46517.979409.131348@cse.unsw.edu.au>
+In-Reply-To: <5b170a7d0609030819r402a2a36ob7e8b74195d16a5b@mail.gmail.com> (Tuomas
+ Leikola's message of "Sun, 3 Sep 2006 18:19:13 +0300")
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: Tuomas Leikola <tuomas.leikola@gmail.com>
+Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, 2006-09-04 at 15:12 +1000, Neil Brown wrote:
+"Tuomas Leikola" <tuomas.leikola@gmail.com> writes:
 
-> It this repeatable?
+> On 9/3/06, Tuomas Leikola <tuomas.leikola@gmail.com> wrote:
+>>> Possibly safer to recreate with two missing if you aren't sure of the
+>>> order.  That way you can look in the array to see if it looks right,
+>>> or if you have to try a different order.
+>>
+>> I'd say it's safer to recreate with all disks, in order to get the
+>> resync. Otherwise you risk the all so famous silent data corruption on
+>> stripes with writes in-flight at the time of failure.
+>
+> Ment to say: after you know the correct order. Sorry.
 
-100% repeatable.
-
-> Does the checksum stay wrong? 
-
-Yes, once they have changed to the bad value, they don't move again that
-I've seen (done several trials over the past few days).
-
-> If you stop the array and run 'mdadm -E' on the drives, what values do
-> they have now.
-
-I'll test to see if they actually change values, but I can say for
-certain that they are still invalid checksum, i.e. once I stop the array
-I have to assemble it with -U resync to get it back online. (and it of
-course rebuilds)
-
-I'm starting to suspect the card's BIOS; it might either be bad or be
-some version which interacts strangely with the sata_sil driver.  I am
-going to hunt for a flash update for it soon.
-
-Thanks for the reply!
-
+I highly appreciate expert advice. Thanks for taking the time!
 -- 
-Josh Litherland (josh@temp123.org)
-
+Best wishes,
+Feri.
