@@ -1,54 +1,65 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH 001 of 4] md: Define backing_dev_info.congested_fn for
- raid0 and linear
-Date: Mon, 4 Sep 2006 15:32:28 +1000
-Message-ID: <17659.47724.27700.54965@cse.unsw.edu.au>
-References: <20060829153414.6475.patches@notabene>
-	<1060829053924.6610@suse.de>
-	<20060828225908.af114751.akpm@osdl.org>
+Subject: Re: Newbie: Kernel panic during RAID1 test & reboot loses one disk
+Date: Mon, 4 Sep 2006 15:35:18 +1000
+Message-ID: <17659.47894.664930.94286@cse.unsw.edu.au>
+References: <ecqek4$tnu$1@sea.gmane.org>
+	<17650.19291.747235.505927@cse.unsw.edu.au>
+	<44F365D7.2020001@orange.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Andrew Morton on Monday August 28
+In-Reply-To: message from James Brown on Monday August 28
 Sender: linux-raid-owner@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+To: James Brown <jbrown@orange.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Monday August 28, akpm@osdl.org wrote:
-> On Tue, 29 Aug 2006 15:39:24 +1000
-> NeilBrown <neilb@suse.de> wrote:
-> 
+On Monday August 28, jbrown@orange.net wrote:
+> Neil Brown wrote:
+> > On Saturday August 26, jbrown@orange.net wrote:
+> >> All,
+> >>
+> >> [...]
+> >>
+> >> * Problem 1: Since moving from 2.4 -> 2.6 kernel, a reboot kicks one 
+> >> device out of the array (c.f. post by Andreas Pelzner on 24th Aug 2006).
+> >>
+> >> * Problem 2: When booting my system, unless both disks plugged in, I get 
+> >> a kernel panic (oh dear!):
+> >>
+> >>  > mdadm md0 stopped
+> >>  > mdadm cannot open device /dev/hda6 no such device or address
+> >>  > mdadm /dev/hda6 has wrong uuid
+> >>  > mdadm no devices found for /dev/md0
+> >>  > ext3fs unable to read superblock
+> >>  > ecit 2 - unable to read superblock cramfs
+> >>  > kernel panic attempting to kill init
 > > 
-> > Each backing_dev needs to be able to report whether it is congested,
-> > either by modulating BDI_*_congested in ->state, or by
-> > defining a ->congested_fn.
-> > md/raid did neither of these.  This patch add a congested_fn
-> > which simply checks all component devices to see if they are
-> > congested.
-> > 
-> > Signed-off-by: Neil Brown <neilb@suse.de>
-> > 
-> > +static int linear_congested(void *data, int bits)
-> > +{
-> > +	mddev_t *mddev = data;
-> > +	linear_conf_t *conf = mddev_to_conf(mddev);
-> > +	int i, ret = 0;
-> > +
-> > +	for (i = 0; i < mddev->raid_disks && !ret ; i++) {
-> > +		request_queue_t *q = bdev_get_queue(conf->disks[i].rdev->bdev);
-> > +		ret |= bdi_congested(&q->backing_dev_info, bits);
+> > At a guess, I'd say something is wrong with your initramfs/initrd.
+> > Can you look inside it and see what /etc/mdadm/mdadm.conf contains?
 > 
-> nit: `ret = ' would suffice here.
+> Sure, this is the first time I've mounted an initrd, here goes:
 > 
+> # file /boot/initrd.img-2.6.8-3-386
+> [...]Linux Compressed ROM File System data, little endian size 4333568 
+> version #2 sorted_dirs CRC 0xa04ccaa3, edition 0, 2492 blocks, 312 files
+> 
+> # losetup /dev/loop0
+> 
+> # mkdir /tmp/initrdmount
+> 
+> # mount -t cramfs /dev/loop0 /tmp/initrdmount
+> 
+> # ls -al /tmp/initrdmount/etc/
+> total 1.0K
+> drwxr-xr-x  1 root root 64 1970-01-01 01:00 modprobe.d/
+> -rw-r--r--  1 root root  0 1970-01-01 01:00 mtab
+> 
+> There is no mdadm/mdadm.conf! What I should do about this?
 
-Yeh.... I was looking at  linear_issue_flush, which aborts when
-ret == 0, and dm_table_any_congested, which 'or's together the results
-and combining to two.  And I kept changing my mind as to which way I
-wanted to go for linear_congested et.al, and ended up going both ways
-:-(
-I hate indecision.  I think.  Well, probably I do.  Maybe.
+Sorry, I don't think.  You'll have to ask on some Debian list.  I
+don't know the intricacies of Debian initrd.
 
 NeilBrown
 
