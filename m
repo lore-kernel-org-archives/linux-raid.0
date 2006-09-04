@@ -1,34 +1,28 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: RAID-5 recovery
-Date: Mon, 4 Sep 2006 14:39:01 +1000
-Message-ID: <17659.44517.186189.152370@cse.unsw.edu.au>
-References: <200609031148.56910.clive@vacuumtube.org.uk>
-	<Pine.LNX.4.64.0609031530010.12203@twinlark.arctic.org>
+Subject: Re: RAID6 Problem (in conjunction with nested LVM and encryption)
+Date: Mon, 4 Sep 2006 15:04:23 +1000
+Message-ID: <17659.46039.259569.312043@cse.unsw.edu.au>
+References: <20060903012118.3e0b7485@30_bodo.rupinet>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from dean gaudet on Sunday September 3
+In-Reply-To: message from Bodo Thiesen on Sunday September 3
 Sender: linux-raid-owner@vger.kernel.org
-To: dean gaudet <dean@arctic.org>
-Cc: Clive Messer <clive@vacuumtube.org.uk>, Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: Bodo Thiesen <bothie@gmx.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sunday September 3, dean@arctic.org wrote:
-> On Sun, 3 Sep 2006, Clive Messer wrote:
+On Sunday September 3, bothie@gmx.de wrote:
+> Hello GABELN
 > 
-> > This leads me to a question. I understand from reading the linux-raid archives 
-> > that the current behaviour when rebuilding with a single badblock on another 
-> > disk is for that disk to also be kicked from the array.
-> 
-> that's not quite the current behaviour.  since 2.6.14 or .15 or so md will 
-> reconstruct bad blocks from other disks and try writing them.  it's only 
-> when this fails repeatedly that it knocks the disk out of the array.
+> I have a really really big problem. In fact, the problem is the output of 
+> mdadm --examine as shown on http://nomorepasting.com/paste.php?pasteID=68021
 
-"when rebuild" md/raid5 cannot reconstruct bad blocks because the
-array is degraded, so a read error is immediately fatal.
+Please explain why you think that output is a problem.  It looks fine
+to me.
 
 NeilBrown
 
 -- 
-VGER BF report: H 3.53108e-11
+VGER BF report: H 0.447086
