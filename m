@@ -1,109 +1,87 @@
-From: "Miss woodrow" <hawks@execs.com>
-Subject: Apply for job in hawks Marines
-Date: Mon, 4 Sep 2006 13:38:08 -0700
-Message-ID: <200609040536.k845ZmCH020122@zeus1.kernel.org>
-Reply-To: hawks@execs.com
+From: Paul Waldo <pwaldo@waldoware.com>
+Subject: Re: Strange IO stats on RAID1?
+Date: Mon, 4 Sep 2006 05:58:13 -0400
+Message-ID: <200609040558.13676.pwaldo@waldoware.com>
+References: <44F57FEF.7000400@waldoware.com> <17659.47491.922866.938176@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <17659.47491.922866.938176@cse.unsw.edu.au>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Job Opportunity
+On Monday 04 September 2006 1:28 am, Neil Brown wrote:
+> On Wednesday August 30, pwaldo@waldoware.com wrote:
+> > Hi all,
+> >
+> > I have an IMAP mail server where mail messages are stored on a RAID1
+> > array. The access on that array (/dev/md3) has seemed slow, so I did some
+> > investigating. "iostat -x /dev/hd[bd] /dev/md3" shows this:
+> >
+> > avg-cpu:  %user   %nice %system %iowait  %steal   %idle
+> >           14.34   47.03   13.99   19.64    0.00    5.00
+> >
+> > Device:    rrqm/s wrqm/s   r/s   w/s  rsec/s  wsec/s    rkB/s    wkB/s
+> > avgrq-sz avgqu-sz   await  svctm  %util hdb          1.05  34.88 35.48 
+> > 2.60 1531.23  299.85   765.62   149.93    48.08     0.20    5.38   3.07 
+> > 11.69 hdd          0.70  34.83 41.08  2.65  963.12  299.85   481.56  
+> > 149.93    28.88     0.15    3.49   1.65   7.24 md3          0.00   0.00
+> > 78.31 36.98 2494.35  295.85  1247.18   147.93    24.20     0.00    0.00  
+> > 0.00   0.00
+> >
+> >
+> >
+> >
+> > Here  is my /proc/mdstat for md3:
+> >
+> > md3 : active raid1 hdb1[0] hdd1[1]
+> >       12699264 blocks [2/2] [UU]
+> >
+> >
+> > Observations:
+> > - Stats for raw disks writes are similar
+> > - Stats for reads on hdd are about half that of hdd
+>
+> Yes.... odd.
+>
+> There shouldn't be any bias to one drive or the other.
+> When it scans for the best drive to use, it always starts from the
+> last one that was used, so there should be no bias to one or the
+> other.
+>
+> I assume they are identical drives?
+>   dd if=/dev/hdXX of=/dev/null bs=1024k count=1024
+>
+> give similar speeds for each?
+>
+> NeilBrown
 
-HAWKS MARINES CRUISES INTERNATIONAL. CANADA
+Hi Neil,
 
-IT IS A WONDERFUL WORLD CLASS LINNERS THAT SEATS OVER 2000 PASSENGERS.
-The proud Class features an unprecedented design with some of the most=20
-innovative facilities ever found on a cruise ship.
+They are different drives:
+root@mail:~# cat /proc/ide/hd[bd]/model
+WDC WD205BA
+IC35L020AVER07-0
 
-COMPANY'S OVERVIEW:
-=46rom its modest beginnings in 2004 with a single ship cruising to Car=
-ibeans,
-HAWKS has grown to becomeone of the premiere cruise lines in the world.=
- Today,
-its fleet carries more than a million passengers each year to more worl=
-dwide=20
-destinations than any other major line. The most recognized cruise line=
- in the=20
-world was catapulted to stardom in 2005 when Pacific HAWKS was casted i=
-n a=20
-starring role on a new television show called The Fantasy Boat. The wee=
-kly series,=20
-which introduced millions of viewers to the still-new concept of a sea-=
-going vacation,
-was an instant hit and both the company name and its "SEAWITCH"logo hav=
-e remained=20
-synonymous with cruising ever since. HAWKS MARINES modern fleet has gro=
-wn considerably=20
-in recent months include Caribbean HAWKS MARINES (2006) Two additional =
-new ships will=20
-join HAWKs' fleet by 2007,making it one of the most modern fleets on th=
-e high seas.=20
-Personal Choice Cruising=AEBuilding on past success.=20
-Hawks is continually evolving to meet the needs of the today's vacation=
-er.
-In the mid-march 2006 the company pioneered the concept of putting pass=
-engers=20
-in control of their own cruise stract experience with the introduction =
-of=20
-its Sun-class ships. These revolutionary vessels gave passengers the fr=
-eedom to=20
-choose from a wide range of flexible onboard facilities,amenities and s=
-ervices
-in order to create a personal vacation experience that takes the regime=
-ntation=20
-out of the cruise experience and suits each passenger's own needs and p=
-references.
+The read speeds are different, 14% by my calculations:
+root@mail:~# dd if=/dev/hdb of=/dev/null bs=1024k count=1024
+1024+0 records in
+1024+0 records out
+1073741824 bytes (1.1 GB) copied, 49.1775 seconds, 21.8 MB/s
+root@mail:~# dd if=/dev/hdd of=/dev/null bs=1024k count=1024
+1024+0 records in
+1024+0 records out
+1073741824 bytes (1.1 GB) copied, 42.3739 seconds, 25.3 MB/s
 
-REQUIREMENTS FOR QUALIFICATIONS.
+BTW, my kernel is 2.6.15-26 and mdadm is 1.12.0, running on Kubuntu 6.06.  
+Thanks!
 
-ALL APPLICANTS MUST POCCESS AN O'LEVEL STATEMENT OF
-RESULT WITH A MINIMUM OF 2-3 CREDITS...ENGLISH LANGUAGE
-COMPULSORY.IF AVAILABLE, OTHER CERTIFICATES AS DIPLOMA AND
-DEGREE INCLUDING IT PROGRAM CERTIFICATES SHOULD ALSO BE SENT=20
-TO US VIA E MAIL AS A SCANNED ATTACHMENT.NOTE THAT RECRUITMENT=20
-OF WORKERS IS BASED ON THE PREMISE THAT ALL CERTIFICATES MUST BE
-ORIGINAL AND DUELY CERTIFIED.SHORTLISTED CABIN CREW MUST PRESENT
-SIX(6) COPIES OF PASSPORTS PHOTOS ALONGSIDE WITH A THREE(3) YEAR VALID
-INTERNATIONAL PASSPORTS AT THE IMMIGRATION CHECKPOINTS UPON ARRIVAL=20
-AT THE KUALA-LUMPUR INTERNATIONAL AIRPORT. EVERY SELECTED CABIN CREW
-MUST UNDER-GO TWO WEEKS TRAINING MALAYSIA BEFORE EMBARKING TO
-CANADA FOR HIS / HER SPECIFIC JOB. BEFORE ARRIVAL,A SCANNED COPY=20
-OF PAGES 2-5 OF SHORTLISTED CANDIDATE,S INTERNATIONAL PASSPORTS
-AND BIRTH CERTIFICATES MUST BE SCANNED AND FORWARDED
-TO US VIA E MAIL ATTACHMENTS FOR AN IMMEDIATE CLEARANCE=20
-AT THE IMMIGRATION DEPARTMENT OF MALAYSIA. VISAS WOULD BE
-GIVEN ON ARRIVAL ACCORDINGLY.A COPY OF A CLEAR MEDICAL REPORT
-IS EXPECTED OF EVERY SHORTLISTED CABIN CREW.
+Paul
 
-VACANCIES:
-IT Administrator, Account Executive, Admin Executive,
-Personal Assistant, Computer Engineer, Second Officer,
-Communication Officer, Ship Cabin Crew Attendee,
-Computer Operators and Security guides are needed.
-N.B, INTERESTED APPLICANT IS ADVISED TO APPLY FOR
-A JOB WITH HIS / HER C.V AND AN APPLICATION LETTER.
-APPLICATION CLOSES ON 10th SEPTEMBER. 2006.
-
-CONTACT ADDRESS:
-Human Resourses Recruitment
-Manhalwk Marines Canada
-Int'l,Administrative Sdn Bhd Co.No.487000-P
-Kuching P.O.Box 300-5735 Pelabuhan
-Kiang Sarawak
-Hotline:0060172354019
-Malaysia
-
-
-
-
-
---=20
-VGER BF report: S 1
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+VGER BF report: H 0.00374821
