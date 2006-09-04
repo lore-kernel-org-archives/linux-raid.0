@@ -1,39 +1,45 @@
-From: Bill Davidsen <davidsen@tmr.com>
+From: Joel Jaeggli <joelja@uoregon.edu>
 Subject: Re: Linux: Why software RAID?
-Date: Mon, 04 Sep 2006 13:31:27 -0400
-Message-ID: <44FC62EF.7040100@tmr.com>
-References: <20060824090741.J30362@mail.kroptech.com>	 <1156425650.3007.140.camel@localhost.localdomain>	 <44EDB843.2020608@perkel.com> <1156432892.3007.155.camel@localhost.localdomain>
+Date: Mon, 04 Sep 2006 10:31:12 -0700
+Message-ID: <44FC62E0.6030202@uoregon.edu>
+References: <20060824090741.J30362@mail.kroptech.com>	 <1156425650.3007.140.camel@localhost.localdomain>	 <44EDB843.2020608@perkel.com> <1156432892.3007.155.camel@localhost.localdomain> <44FC62EF.7040100@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1156432892.3007.155.camel@localhost.localdomain>
+In-Reply-To: <44FC62EF.7040100@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Marc Perkel <marc@perkel.com>, Adam Kropelin <akropel1@rochester.rr.com>, Jeff Garzik <jeff@garzik.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Marc Perkel <marc@perkel.com>, Adam Kropelin <akropel1@rochester.rr.com>, Jeff Garzik <jeff@garzik.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Alan Cox wrote:
 
->Ar Iau, 2006-08-24 am 07:31 -0700, ysgrifennodd Marc Perkel:
->  
->
->>So - the bottom line answer to my question is that unless you are
->>running raid 5 and you have a high powered raid card with cache and
->>battery backup that there is no significant speed increase to use
->>hardware raid. For raid 0 there is no advantage.
->>
->>    
->>
->If your raid is entirely on PCI plug in cards and you are doing RAID1
->there is a speed up using hardware assisted raid because of the PCI bus
->contention.
->
 
-I would expect to see this with RAID5 as well, for the same reason...
+Bill Davidsen wrote:
+> Alan Cox wrote:
+> 
+>> Ar Iau, 2006-08-24 am 07:31 -0700, ysgrifennodd Marc Perkel:
+>>  
+>>
+>>> So - the bottom line answer to my question is that unless you are
+>>> running raid 5 and you have a high powered raid card with cache and
+>>> battery backup that there is no significant speed increase to use
+>>> hardware raid. For raid 0 there is no advantage.
+>>>
+>>>   
+>> If your raid is entirely on PCI plug in cards and you are doing RAID1
+>> there is a speed up using hardware assisted raid because of the PCI bus
+>> contention.
+>>
+> 
+> I would expect to see this with RAID5 as well, for the same reason...
+
+assuming you actually have lots of pci contention that might be a
+consideration... if you're sitting on server class hardware with
+multiple pci buses or using pci-express cards that won't be a
+significant issue.
 
 -- 
-bill davidsen <davidsen@tmr.com>
-  CTO TMR Associates, Inc
-  Doing interesting things with small computers since 1979
-
+------------------------------------------------------------------------
+Joel Jaeggli             Unix Consulting              joelja@uoregon.edu
+GPG Key Fingerprint:   5C6E 0104 BAF0 40B0 5BD3 C38B F000 35AB B67F 56B2
