@@ -1,50 +1,37 @@
 From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: Raid5 reads and cpu
-Date: Mon, 04 Sep 2006 13:09:45 -0400
-Message-ID: <44FC5DD9.5040200@tmr.com>
-References: <46510.192.168.0.1.1156790033.squirrel@bymeinc.com>
+Subject: Re: Interesting RAID checking observations
+Date: Mon, 04 Sep 2006 13:16:05 -0400
+Message-ID: <44FC5F55.6000008@tmr.com>
+References: <20060828131552.5776.qmail@science.horizon.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <46510.192.168.0.1.1156790033.squirrel@bymeinc.com>
+In-Reply-To: <20060828131552.5776.qmail@science.horizon.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Rob Bray <raid@bymeinc.com>
-Cc: linux-raid@vger.kernel.org
+To: linux@horizon.com
+Cc: neilb@suse.de, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Rob Bray wrote:
+linux@horizon.com wrote:
 
->This might be a dumb question, but what causes md to use a large amount of
->cpu resources when reading a large amount of data from a raid1 array?
->Examples are on a 2.4GHz AMD64, 2GB, 2.6.15.1 (I realize there are md
->enhancements to later versions; I had some other unrelated issues and
->rolled back to one I've run on for several months).
+>>I don't think the processor is saturating.  I've seen reports of this
+>>sort of thing before and until recently had no idea what was happening,
+>>couldn't reproduce it, and couldn't think of any more useful data to
+>>collect.
+>>    
+>>
 >
->A given 7-disk raid0 array can read 450MB/s (using cat > null) and use
->virtually no CPU resources. (Although cat and kswapd use quite a bit [60%]
->munching on the data)
+>Well I can reproduce it easily enough.  It's a production server, but
+>I can do low-risk experiments after hours.
 >
->A raid5 array on the same drive set pulls in at 250MB/s, but md uses
->roughly 50% of the CPU (the other 50% is spent dealing with the data,
->saturating the processor).
+>I'd like to note that the symptoms include not even being
+>able to *type* at the console, which I thought was all in-kernel
+>code, not subject to being swapped out.  But whatever.
 >
->A consistency check on the raid5 array uses roughly 3% of the cpu. It is
->otherwise ~97% idle.
->md11 : active raid5 sdi2[5] sdh2[4] sdf2[3] sde2[2] sdd2[1] sdc2[6] sdb2[0]
->      248974848 blocks level 5, 256k chunk, algorithm 2 [7/7] [UUUUUUU]
->      [==============>......]  resync = 72.2% (29976960/41495808)
->finish=3.7min speed=51460K/sec
->(~350MB/s aggregate throughput, 50MB/s on each device)
->
->Just a friendly question as to why CPU utilization is significantly
->different between a check and a real-world read on raid5? I feel like if
->there was vm overhead getting the data into userland, the slowdown would
->be present in raid0 as well. I assume parity calculations aren't done on a
->read of the array, which leaves me at my question.
->  
->
-What are you stripe and cache sizes?
+Really? Or is it just that you can type but the characters don't get 
+echoed. The type part is in the kernel, but the display involves X 
+unless you run a direct console.
 
 -- 
 bill davidsen <davidsen@tmr.com>
