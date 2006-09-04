@@ -1,49 +1,48 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: Superblock checksum problems
-Date: Mon, 4 Sep 2006 15:12:21 +1000
-Message-ID: <17659.46517.979409.131348@cse.unsw.edu.au>
-References: <1157236610.8070.7.camel@localhost>
+Subject: Re: mdadm dynamic multipathing
+Date: Mon, 4 Sep 2006 15:14:18 +1000
+Message-ID: <17659.46634.460877.139173@cse.unsw.edu.au>
+References: <Pine.SOC.4.61.0608311235360.23597@cove>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Josh Litherland on Saturday September 2
+In-Reply-To: message from D. Lane Ware on Thursday August 31
 Sender: linux-raid-owner@vger.kernel.org
-To: josh@temp123.org
+To: "D. Lane Ware" <dlware@uchicago.edu>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Saturday September 2, josh@temp123.org wrote:
+On Thursday August 31, dlware@uchicago.edu wrote:
+> Hi all,
 > 
-> Attempting to build a new raid5 md array across 4 hard drives.  At the
-> exact moment that the drive finishes rebuilding, the superblock checksum
-> changes to an invalid value.  During the rebuild, mdadm -E for the 4
-> drives shows:
+> Just wondering if there is any way to get mdadm created multipath devices 
+> to re-activate a previously disabled path?
 > 
->        Checksum : 70c0863a - correct
->        Checksum : 70c0864c - correct
->        Checksum : 70c0865e - correct
->        Checksum : 70c08670 - correct
+> I know I can
 > 
-> The instant it finishes:
+> mdadm /dev/md0 -f /dev/sdx -r /dev/sdx -a /dev/sdx
 > 
->        Checksum : 70c0bc47 - expected 70c0bc27
->        Checksum : 70c0bc59 - expected 70c0bc39
->        Checksum : 70c0bc6b - expected 70c0bc4b
->        Checksum : 70c0bc7d - expected 70c0bc5d
+> to re-activate it, but I want mdadm to do it on its own.
 > 
-> Kernel is 2.6.17.11.
+> Will the monitoring tool allow this (running it in daemon mode)?
+> 
+> Is there any plan to include dynamic multipathing in the future?
+> 
+> I've used Sun's disksuite multipathing in the past and IBM's sdd/vpath 
+> tools and it just worked, so I kind of just expected it here.
+> 
+> Thanks for any help you can provide.
 
-Very odd.
-It this repeatable?
-Does the checksum stay wrong? 
-i.e. if you run 'mdadm -E' again, a few seconds later, does it still
-report the wrong number?
+No, mdadm doesn't do that.
 
-If you stop the array and run 'mdadm -E' on the drives, what values do
-they have now.
+md/multipath is not being actively supported.
+Most multipath development effort is centring around dm/multipath.
+
+However I'm happy to accept and review patches to md/multipath and/or
+mdadm for multipath support.
 
 NeilBrown
 
 -- 
-VGER BF report: U 0.5
+VGER BF report: H 1.30853e-05
