@@ -1,50 +1,34 @@
-From: "Julio Meca Hansen" <julio28@jumec.jazztel.es>
-Subject: RAID-0 on the Intel ICH7R chipset and swap configuration...
-Date: Mon, 4 Sep 2006 03:38:50 +0200
-Message-ID: <000e01c6cfc2$df6bb220$0c01a8c0@mobilebox>
-References: <S1751187AbWICWhh/20060903223813Z+56@vger.kernel.org>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: RAID-5 recovery
+Date: Mon, 4 Sep 2006 14:39:01 +1000
+Message-ID: <17659.44517.186189.152370@cse.unsw.edu.au>
+References: <200609031148.56910.clive@vacuumtube.org.uk>
+	<Pine.LNX.4.64.0609031530010.12203@twinlark.arctic.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: message from dean gaudet on Sunday September 3
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: dean gaudet <dean@arctic.org>
+Cc: Clive Messer <clive@vacuumtube.org.uk>, Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi,
+On Sunday September 3, dean@arctic.org wrote:
+> On Sun, 3 Sep 2006, Clive Messer wrote:
+> 
+> > This leads me to a question. I understand from reading the linux-raid archives 
+> > that the current behaviour when rebuilding with a single badblock on another 
+> > disk is for that disk to also be kicked from the array.
+> 
+> that's not quite the current behaviour.  since 2.6.14 or .15 or so md will 
+> reconstruct bad blocks from other disks and try writing them.  it's only 
+> when this fails repeatedly that it knocks the disk out of the array.
 
-I would like to ask for advice on the following subject:
+"when rebuild" md/raid5 cannot reconstruct bad blocks because the
+array is degraded, so a read error is immediately fatal.
 
-I've recently acquired a FOXCONN 945G7MA-8EKRS2 mATX board, which comes
-with an Intel ICH7R chipset, and I would like to make a RAID-0 array
-with 3 disks of equal size (750GB in this case) with an XFS filesystem
-(system configuration is for a pure 64bit system)
-
-but I have some concerns about the software raid under linux:
-
-1. giving the fact the RAID management the chipset does is by software,
-I should use mdadm for all management task, right? or does the driver in
-the linux kernel tree take the work for me? (no lazyness intended, just
-want to be sure I'm thinking on the right way of doing things)
-
-2. is it advisable to make a RAID-0 array with only 3 disks? I mean... I
-know it works with 2 or more disks but... would an odd number of drives
-hinder the performance of the driver?
-
-3. should I place /boot on the array or should it be better to place it
-on the fourth disk I have (to place the /swap partition, among other
-reasons)? I suppose if I place /boot on the array it could give me a
-faster startup on disk access related processes, or is this assumption
-wrong?
-
-Sorry for so many questions, I have no real experience with RAID and I
-would like to learn but would like some advice on this to be on the
-right way
-
-Thanks in advance,
-Julio Meca Hansen
-
+NeilBrown
 
 -- 
-VGER BF report: U 0.912078
+VGER BF report: H 3.53108e-11
