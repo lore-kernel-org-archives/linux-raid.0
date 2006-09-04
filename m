@@ -1,34 +1,27 @@
-From: Josh Litherland <josh@temp123.org>
-Subject: Re: Superblock checksum problems
-Date: Mon, 04 Sep 2006 17:13:18 -0400
-Message-ID: <1157404398.2990.14.camel@localhost>
-References: <1157236610.8070.7.camel@localhost>
-	 <17659.46517.979409.131348@cse.unsw.edu.au>
-	 <1157385612.2990.4.camel@localhost>  <1157403347.2990.11.camel@localhost>
-Reply-To: josh@temp123.org
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+From: linux@horizon.com
+Subject: Re: Interesting RAID checking observations
+Date: 4 Sep 2006 17:15:01 -0400
+Message-ID: <20060904211501.26766.qmail@science.horizon.com>
+References: <44FC5F55.6000008@tmr.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1157403347.2990.11.camel@localhost>
+In-Reply-To: <44FC5F55.6000008@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: davidsen@tmr.com
+Cc: linux-raid@vger.kernel.org, linux@horizon.com, neilb@suse.de
 List-Id: linux-raid.ids
 
+>> I'd like to note that the symptoms include not even being
+>> able to *type* at the console, which I thought was all in-kernel
+>> code, not subject to being swapped out.  But whatever.
+>
+> Really? Or is it just that you can type but the characters don't get 
+> echoed. The type part is in the kernel, but the display involves X 
+> unless you run a direct console.
 
-This one will really curl your hair.  So, operating with the knowledge
-that the checksum's state of correctness or incorrectness was changing
-all the time, I did this:
+No, as I said, it was at a (text-mode) console, /dev/tty2 as I recall.
+You're right, I expect it was just not echoing, as I could switch
+consoles fine, implying that the lowest-level interrupt handler was
+working, but it's still surprising.
 
-while [ $? != 0 ] ; do
-	mdadm -A /dev/md0 /dev/sd[abcd]1
-done
-
-after 1,518 trials it successfully assembled.
-
-*beats head against wall*
-
--- 
-Josh Litherland (josh@temp123.org)
-
+The server stopped responding to my login, so I wandered over to the
+console to look for kernel panics and encountered the symptom.
