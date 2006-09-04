@@ -1,48 +1,59 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: mdadm dynamic multipathing
-Date: Mon, 4 Sep 2006 15:14:18 +1000
-Message-ID: <17659.46634.460877.139173@cse.unsw.edu.au>
-References: <Pine.SOC.4.61.0608311235360.23597@cove>
+Subject: Re: Strange IO stats on RAID1?
+Date: Mon, 4 Sep 2006 15:28:35 +1000
+Message-ID: <17659.47491.922866.938176@cse.unsw.edu.au>
+References: <44F57FEF.7000400@waldoware.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from D. Lane Ware on Thursday August 31
+In-Reply-To: message from Paul Waldo on Wednesday August 30
 Sender: linux-raid-owner@vger.kernel.org
-To: "D. Lane Ware" <dlware@uchicago.edu>
+To: Paul Waldo <pwaldo@waldoware.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thursday August 31, dlware@uchicago.edu wrote:
+On Wednesday August 30, pwaldo@waldoware.com wrote:
 > Hi all,
 > 
-> Just wondering if there is any way to get mdadm created multipath devices 
-> to re-activate a previously disabled path?
+> I have an IMAP mail server where mail messages are stored on a RAID1 array.  
+> The access on that array (/dev/md3) has seemed slow, so I did some investigating.  
+> "iostat -x /dev/hd[bd] /dev/md3" shows this:
 > 
-> I know I can
+> avg-cpu:  %user   %nice %system %iowait  %steal   %idle
+>           14.34   47.03   13.99   19.64    0.00    5.00
 > 
-> mdadm /dev/md0 -f /dev/sdx -r /dev/sdx -a /dev/sdx
+> Device:    rrqm/s wrqm/s   r/s   w/s  rsec/s  wsec/s    rkB/s    wkB/s avgrq-sz avgqu-sz   await  svctm  %util
+> hdb          1.05  34.88 35.48  2.60 1531.23  299.85   765.62   149.93    48.08     0.20    5.38   3.07  11.69
+> hdd          0.70  34.83 41.08  2.65  963.12  299.85   481.56   149.93    28.88     0.15    3.49   1.65   7.24
+> md3          0.00   0.00 78.31 36.98 2494.35  295.85  1247.18   147.93    24.20     0.00    0.00   0.00   0.00
 > 
-> to re-activate it, but I want mdadm to do it on its own.
 > 
-> Will the monitoring tool allow this (running it in daemon mode)?
 > 
-> Is there any plan to include dynamic multipathing in the future?
 > 
-> I've used Sun's disksuite multipathing in the past and IBM's sdd/vpath 
-> tools and it just worked, so I kind of just expected it here.
+> Here  is my /proc/mdstat for md3:
 > 
-> Thanks for any help you can provide.
+> md3 : active raid1 hdb1[0] hdd1[1]
+>       12699264 blocks [2/2] [UU]
+> 
+> 
+> Observations:
+> - Stats for raw disks writes are similar
+> - Stats for reads on hdd are about half that of hdd
 
-No, mdadm doesn't do that.
+Yes.... odd.
 
-md/multipath is not being actively supported.
-Most multipath development effort is centring around dm/multipath.
+There shouldn't be any bias to one drive or the other.
+When it scans for the best drive to use, it always starts from the
+last one that was used, so there should be no bias to one or the
+other.
 
-However I'm happy to accept and review patches to md/multipath and/or
-mdadm for multipath support.
+I assume they are identical drives? 
+  dd if=/dev/hdXX of=/dev/null bs=1024k count=1024
+
+give similar speeds for each?
 
 NeilBrown
 
 -- 
-VGER BF report: H 1.30853e-05
+VGER BF report: U 0.499857
