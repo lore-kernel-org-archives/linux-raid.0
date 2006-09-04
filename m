@@ -1,27 +1,33 @@
-From: "=?ISO-8859-1?Q?Martin_Schr=F6der?=" <martin@oneiros.de>
-Subject: Re: RAID-5 recovery
-Date: Mon, 4 Sep 2006 02:09:23 +0200
-Message-ID: <68c491a60609031709p5ede3670v9aa8bd19de56d530@mail.gmail.com>
-References: <200609040051.41271.clive@vacuumtube.org.uk>
+From: "Brittney" <vyqpzdgl@vger.kernel.org>
+Subject: How much does your image cost?
+Date: Mon, 04 Sep 2006 00:35:35 +0000
+Message-ID: <F3GLjI.squirrel@64.139.3.197>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200609040051.41271.clive@vacuumtube.org.uk>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux List <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-2006/9/4, Clive Messer <clive@vacuumtube.org.uk>:
-> Does anyone have a preference for cards other than 3ware if purchasing
-> a 'hardware' raid card? From what have read the 3ware cards are very well
-> regarded and the driver is open source.
+The corporate image is priceless, and we suggest design services that will move your company forward, 
+make it more distinctive and recognizable. Catchy logo, stylish stationery, fascinating marketing materials 
+and website; done specially for your company! We've harnessed the power of our creativeness to suggest
 
-OpenBSD recommends LSI MegaRaid.
+- great ideas and their skilful realizations (just have a look at our portfolio!);
 
-Best
-   Martin
+- reasonable prices (compare our services, the unlimited number of revisions and our quotes to find 
+  the reasons why we guarantee 100% customer's satisfaction);
+
+- and our fascinating schedule times (you will see the first variants in three business days after 
+  sending information about your company and your preferences).
+
+Do you still hesitate? No wander! Such a great offer is rarely come across. Have a look at our website to find out how you can benefit with our help.
+
+Click here to get more info: http://www.busimesslogos.com
+
+Thank you,
+ Brittney
 
 -- 
-VGER BF report: H 0.000871471
+VGER BF report: H 0.347867
