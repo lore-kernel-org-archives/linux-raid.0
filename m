@@ -1,73 +1,45 @@
-From: Guillaume Filion <gfk@logidac.com>
-Subject: checkarray: E: no kernel support for parity checks.
-Date: Mon, 4 Sep 2006 09:34:48 -0400
-Message-ID: <2760ec154727cb74d5c8824eb24916a8@logidac.com>
-Mime-Version: 1.0 (Apple Message framework v624)
-Content-Type: multipart/signed; protocol="application/pgp-signature"; micalg=pgp-sha1; boundary="Apple-Mail-4-828545320"
+From: Josh Litherland <josh@temp123.org>
+Subject: Re: Superblock checksum problems
+Date: Mon, 04 Sep 2006 12:00:12 -0400
+Message-ID: <1157385612.2990.4.camel@localhost>
+References: <1157236610.8070.7.camel@localhost>
+	 <17659.46517.979409.131348@cse.unsw.edu.au>
+Reply-To: josh@temp123.org
+Mime-Version: 1.0
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <17659.46517.979409.131348@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---Apple-Mail-4-828545320
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+On Mon, 2006-09-04 at 15:12 +1000, Neil Brown wrote:
 
-Hi,
+> It this repeatable?
 
-I'm not sure if this is the right place to ask this question, but a=20
-Google search didn't turned out anything relevant, so I'm taking a=20
-chance here.
+100% repeatable.
 
-I have my root on software raid on Debian and every night, cron is=20
-sending me this error:
------
-Subject: Cron <root@ali> [ -x /usr/share/mdadm/checkarray ] &&=20
-/usr/share/mdadm/checkarray --cron --all --quiet
+> Does the checksum stay wrong? 
 
-checkarray: E: no kernel support for parity checks.
------
+Yes, once they have changed to the bad value, they don't move again that
+I've seen (done several trials over the past few days).
 
-Looking at the code, it looks like this is where the error is reported:
-if [ -z "$(ls /sys/block/md*/md/sync_action 2>/dev/null)" ]; then
-   [ $quiet -lt 2 ] && echo "$PROGNAME: E: no kernel support for parity=20=
+> If you stop the array and run 'mdadm -E' on the drives, what values do
+> they have now.
 
-checks." >&2
-   exit 3
-fi
+I'll test to see if they actually change values, but I can say for
+certain that they are still invalid checksum, i.e. once I stop the array
+I have to assemble it with -U resync to get it back online. (and it of
+course rebuilds)
 
-My /sys directory is empty:
-gfk@ali:~$ ls -ld /sys
-drwxr-xr-x 2 root root 4096 Nov 12  2005 /sys
-gfk@ali:~$ ls -l /sys
-total 0
+I'm starting to suspect the card's BIOS; it might either be bad or be
+some version which interacts strangely with the sata_sil driver.  I am
+going to hunt for a flash update for it soon.
 
-Is it normal that /sys is empty? I can't find how to populate it, if=20
-someone could give me a clue... :-)
+Thanks for the reply!
 
-Thanks a lot,
-GFK's
---=20
-Guillaume Filion, ing. jr
-Logidac Tech., Beaumont, Qu=E9bec, Canada - http://logidac.com/
-PGP Key and more: http://guillaume.filion.org/=
-
---Apple-Mail-4-828545320
-content-type: application/pgp-signature; x-mac-type=70674453;
-	name=PGP.sig
-content-description: =?ISO-8859-1?Q?Ceci_est_une_signature_=E9lectronique_PGP?=
-content-disposition: inline; filename=PGP.sig
-content-transfer-encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (Darwin)
-
-iD8DBQFE/Ct4CQALUqp8khARAjCWAJ4uP1Kv3Td2d2jq4/y38J2FrwxDvwCg5EkM
-FifuYwwwvBu9ELEbpZ0zuKM=
-=V/7N
------END PGP SIGNATURE-----
-
---Apple-Mail-4-828545320--
+-- 
+Josh Litherland (josh@temp123.org)
 
