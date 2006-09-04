@@ -1,77 +1,50 @@
 From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: PROBLEM: system crash on AMD64 with 2.6.17.11 while accessing
- 3TB Software-RAID5
-Date: Mon, 04 Sep 2006 13:06:34 -0400
-Message-ID: <44FC5D1A.6020809@tmr.com>
-References: <758194931.20060829001041@TU-Ilmenau.de> <17654.24059.852752.251958@cse.unsw.edu.au> <44F6E962.40900@TU-Ilmenau.de>
+Subject: Re: Raid5 reads and cpu
+Date: Mon, 04 Sep 2006 13:09:45 -0400
+Message-ID: <44FC5DD9.5040200@tmr.com>
+References: <46510.192.168.0.1.1156790033.squirrel@bymeinc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <44F6E962.40900@TU-Ilmenau.de>
+In-Reply-To: <46510.192.168.0.1.1156790033.squirrel@bymeinc.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Ralf Herrmann <Ralf.Herrmann@TU-Ilmenau.de>
-Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
+To: Rob Bray <raid@bymeinc.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Ralf Herrmann wrote:
+Rob Bray wrote:
 
-> Dear Mr.Brown,
+>This might be a dumb question, but what causes md to use a large amount of
+>cpu resources when reading a large amount of data from a raid1 array?
+>Examples are on a 2.4GHz AMD64, 2GB, 2.6.15.1 (I realize there are md
+>enhancements to later versions; I had some other unrelated issues and
+>rolled back to one I've run on for several months).
 >
->> Yes...... you are hitting some pretty serious BUGs.  And this is in
->> code that is not specific to RAID at all, so if there really were bugs
->> there, we would expect to have seen them well before now.
+>A given 7-disk raid0 array can read 450MB/s (using cat > null) and use
+>virtually no CPU resources. (Although cat and kswapd use quite a bit [60%]
+>munching on the data)
 >
+>A raid5 array on the same drive set pulls in at 250MB/s, but md uses
+>roughly 50% of the CPU (the other 50% is spent dealing with the data,
+>saturating the processor).
 >
-> Your are absolutely right, it doesn't seem to be in RAID at all,
-> but as of now, it only happened when doing something with /dev/md0.
+>A consistency check on the raid5 array uses roughly 3% of the cpu. It is
+>otherwise ~97% idle.
+>md11 : active raid5 sdi2[5] sdh2[4] sdf2[3] sde2[2] sdd2[1] sdc2[6] sdb2[0]
+>      248974848 blocks level 5, 256k chunk, algorithm 2 [7/7] [UUUUUUU]
+>      [==============>......]  resync = 72.2% (29976960/41495808)
+>finish=3.7min speed=51460K/sec
+>(~350MB/s aggregate throughput, 50MB/s on each device)
 >
+>Just a friendly question as to why CPU utilization is significantly
+>different between a check and a real-world read on raid5? I feel like if
+>there was vm overhead getting the data into userland, the slowdown would
+>be present in raid0 as well. I assume parity calculations aren't done on a
+>read of the array, which leaves me at my question.
+>  
 >
->> I really looks to me like a hardware problem.  Some how various bits
->> of memory sometimes have bad values and cause a problem.
->>
->> How long did you run memtest?  I would suggest running it for at
->> least 24 hours, because my best guess is that it is bad memory, even
->> though your tests so far don't show that.
->
->
-> I ran it for about 16h, with all tests enabled, no error occured.
->
-> I was always wondering why it worked before the change and
-> not now. The only difference were the larger drives. And i've read so 
-> many reports
-> of people running much larger RAID5 partitions than we do,
-> so why should it fail in this case?
->
-> So my best bet at the moment, would be a hardware problem, too.
-> I continued looking at the kernel oops messages and sometimes
-> disassembly of the code where it broke gave invalid opcodes.
-> This also looks pretty much like a hardware issue.
-> But tests of single components did not unvail any error.....
->
-> It seems to me, that it only happens, when many system components
-> are involved, several HDDs, the whole RAM, the NIC and so on.
-> That leads me to another idea i'm currently testing.
->
-> It could very well be a bad power supply.
-> Maybe this box was running at full load of the power supply before,
-> and now with new drives consumes more power the supply can deliver,
-> if all system components are used at once.
-> I switched to a better power supply, tests are running as i write this.
->
-> I'm sorry if i wasted your time, i should have checked this before
-> writing to the list. But power supply problems are pretty odd
-> and hard to identify. Anyways, i'm not sure if that solves the problem.
->
-> Ok, i'll write the results of current tests, when they are finished.
->
-> Thanks for your consideration. 
-
-It certainly is a legitimate question, and marginal power would have 
-been at the end of my list as well... However, if all else fails, try 
-formatting the new drives to use only the size of the old drive capacity 
-(RAID on small partitions) and see if that works. If so you may have 
-found some rare size-related bug.
+What are you stripe and cache sizes?
 
 -- 
 bill davidsen <davidsen@tmr.com>
