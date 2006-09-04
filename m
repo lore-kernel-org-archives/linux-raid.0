@@ -1,67 +1,55 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: Newbie: Kernel panic during RAID1 test & reboot loses one disk
-Date: Mon, 4 Sep 2006 15:35:18 +1000
-Message-ID: <17659.47894.664930.94286@cse.unsw.edu.au>
-References: <ecqek4$tnu$1@sea.gmane.org>
-	<17650.19291.747235.505927@cse.unsw.edu.au>
-	<44F365D7.2020001@orange.net>
+From: Bodo Thiesen <bothie@gmx.de>
+Subject: Re: RAID6 Problem (in conjunction with nested LVM and encryption)
+Date: Mon, 4 Sep 2006 07:45:39 +0200
+Message-ID: <20060904074539.25e930e7@30_bodo.rupinet>
+References: <20060903012118.3e0b7485@30_bodo.rupinet>
+	<17659.46039.259569.312043@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from James Brown on Monday August 28
+In-Reply-To: <17659.46039.259569.312043@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: James Brown <jbrown@orange.net>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Monday August 28, jbrown@orange.net wrote:
-> Neil Brown wrote:
-> > On Saturday August 26, jbrown@orange.net wrote:
-> >> All,
-> >>
-> >> [...]
-> >>
-> >> * Problem 1: Since moving from 2.4 -> 2.6 kernel, a reboot kicks one 
-> >> device out of the array (c.f. post by Andreas Pelzner on 24th Aug 2006).
-> >>
-> >> * Problem 2: When booting my system, unless both disks plugged in, I get 
-> >> a kernel panic (oh dear!):
-> >>
-> >>  > mdadm md0 stopped
-> >>  > mdadm cannot open device /dev/hda6 no such device or address
-> >>  > mdadm /dev/hda6 has wrong uuid
-> >>  > mdadm no devices found for /dev/md0
-> >>  > ext3fs unable to read superblock
-> >>  > ecit 2 - unable to read superblock cramfs
-> >>  > kernel panic attempting to kill init
-> > 
-> > At a guess, I'd say something is wrong with your initramfs/initrd.
-> > Can you look inside it and see what /etc/mdadm/mdadm.conf contains?
-> 
-> Sure, this is the first time I've mounted an initrd, here goes:
-> 
-> # file /boot/initrd.img-2.6.8-3-386
-> [...]Linux Compressed ROM File System data, little endian size 4333568 
-> version #2 sorted_dirs CRC 0xa04ccaa3, edition 0, 2492 blocks, 312 files
-> 
-> # losetup /dev/loop0
-> 
-> # mkdir /tmp/initrdmount
-> 
-> # mount -t cramfs /dev/loop0 /tmp/initrdmount
-> 
-> # ls -al /tmp/initrdmount/etc/
-> total 1.0K
-> drwxr-xr-x  1 root root 64 1970-01-01 01:00 modprobe.d/
-> -rw-r--r--  1 root root  0 1970-01-01 01:00 mtab
-> 
-> There is no mdadm/mdadm.conf! What I should do about this?
+Neil Brown <neilb@suse.de> wrote:
 
-Sorry, I don't think.  You'll have to ask on some Debian list.  I
-don't know the intricacies of Debian initrd.
+> On Sunday September 3, bothie@gmx.de wrote:
+>
+>> I have a really really big problem. In fact, the problem is the output of 
+>> mdadm --examine as shown on http://nomorepasting.com/paste.php?pasteID=68021
+> 
+> Please explain why you think that output is a problem.  It looks fine
+> to me.
 
-NeilBrown
+1. craida1 claims about itself to be raidh-raidh1 ...
+
+2. according to craida1 the raid is composed of raidh-raidh1, a faulty disk 
+   (that was craid1b), craidb1, craidc1 and craida2, but not craida1 itself, 
+   of course                                ^^^^^^^
+
+2b. Continue with craida2. It claims to be craide1 and being part of 
+    craide1, craidh1, craida2, craidc2, craidd2.
+
+YMMV, but I call that anything but "fine". ;)
+
+This inconsistencies continue, and nearly no disk is right about which raid 
+it belongs to and what other disks belong to that raid.
+
+To get it to the point. raid1 should be craid... a1,b1(faulty),c1,d1,e1; 
+r2 should be a2,c2,d2,e2,g2; r3 should be b3,c3,d3,e3,g3 and r4 should 
+finally be c4,d4,e4,f4,g4.
+h1 shouldn't be used yet (it should have replaced b1 already, but I didn't 
+get to that point yet). And raidh-raidh1 shouldn't be known to any raid at 
+all, as only c* was added to the raids at any time.
+
+So, I hope, that I made my problem clear now.
+
+Regards, Bodo
+
+PS: You may stop putting me CC as I finally managed successfully to join the 
+    list ;)
 
 -- 
-VGER BF report: U 0.5
+VGER BF report: U 0.50496
