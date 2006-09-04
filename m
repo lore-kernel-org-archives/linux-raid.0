@@ -1,7 +1,7 @@
 From: Josh Litherland <josh@temp123.org>
 Subject: Re: Superblock checksum problems
-Date: Mon, 04 Sep 2006 17:46:58 -0400
-Message-ID: <1157406418.2990.20.camel@localhost>
+Date: Mon, 04 Sep 2006 17:54:53 -0400
+Message-ID: <1157406893.2990.22.camel@localhost>
 References: <1157236610.8070.7.camel@localhost>
 	 <17659.46517.979409.131348@cse.unsw.edu.au>
 	 <1157385612.2990.4.camel@localhost> <1157403347.2990.11.camel@localhost>
@@ -20,31 +20,23 @@ List-Id: linux-raid.ids
 
 On Tue, 2006-09-05 at 07:35 +1000, Neil Brown wrote:
 
-> Something is SERIOUSLY wrong.
-> As it affects all drives, I suspect the drives are fine.
-> As that machine doesn't crash instantly, I suspect the cpu/memory is
-> fine.
-> Which leaves the controller and cables.
-
+> Try
 >  for i in `seq 1 20`; do
 >   dd if=/dev/sda of=/tmp/try-$i conv=direct
 >  done
 >  for i in `seq 2 20`; do
 >   cmp -l /tmp/try-1 /tmp/try=$i
 >  done
-> 
-> and look for a pattern.
 
--nod-  You're thinking the card is reading/writing different values intermittently, I'm guessing.  The only thing
-which makes me dubious about that is, once the md is up and running it seems to do perfectly fine.  I've only used
-it for a couple days, but never got any read errors or invalid file problems.  I was doing pretty heavy IO on it,
-and these header checksum readings are changing several times a SECOND.
+I tried a variant of this:
 
-The other is that the actual checksum value being generated never changes, just the kernel's idea of whether it's
-valid or invalid.
+for i in `seq 1 20`; do
+	dd if=/dev/sda1 of=/tmp/try-$i count=4 bs=4096 iflag=direct 
+	sleep 0.25
+done
 
-Weird, weird, weird.  I will probably get a new card, but I'd like to keep examining this one for SCIENCE for a 
-little while longer.
+Tried it with and without the sleep, on all 4 drives.  In all cases, the
+20 "try" files were identical.
 
 -- 
 Josh Litherland (josh@temp123.org)
