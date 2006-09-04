@@ -1,67 +1,49 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: Raid5 reads and cpu
-Date: Mon, 4 Sep 2006 16:08:37 +1000
-Message-ID: <17659.49893.62949.263198@cse.unsw.edu.au>
-References: <1436.68.254.47.18.1156790025.squirrel@bymeinc.com>
+From: Mikael Abrahamsson <swmike@swm.pp.se>
+Subject: Re: RAID-5 recovery
+Date: Mon, 4 Sep 2006 10:11:26 +0200 (CEST)
+Message-ID: <Pine.LNX.4.62.0609040958340.21489@uplift.swm.pp.se>
+References: <200609031148.56910.clive@vacuumtube.org.uk>
+ <Pine.LNX.4.64.0609031530010.12203@twinlark.arctic.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Rob Bray on Monday August 28
+In-Reply-To: <Pine.LNX.4.64.0609031530010.12203@twinlark.arctic.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Rob Bray <raid@bymeinc.com>
-Cc: linux-raid@vger.kernel.org
+To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Monday August 28, raid@bymeinc.com wrote:
-> This might be a dumb question, but what causes md to use a large amount of
-> cpu resources when reading a large amount of data from a raid1 array?
+On Sun, 3 Sep 2006, dean gaudet wrote:
 
-I assume you meant raid5 there.
+> that's not quite the current behaviour.  since 2.6.14 or .15 or so md 
+> will reconstruct bad blocks from other disks and try writing them. 
+> it's only when this fails repeatedly that it knocks the disk out of the 
+> array.
 
-md/raid5 shouldn't use that much CPU when reading.
-It does use more than raid0 as it reads data in the stripe-cache and
-then copies the data from the stripe cache into the read-buffer.  But
-I wouldn't expect that to come anywhere near 50%.
+Hi. When in 2.6.15 I used the /sys/block/md*/md/sync_action "check" option 
+it looked more like it was rebuilding the device than checking it.
 
-Are you really seeing 'raid5d' using 50% of CPU in 'top' or similar?
+Is this behaviour changed in more recent kernels, or did I just 
+misunderstand the log output from the check:
 
-NeilBrown
+# echo "check" > sync_action
+# dmesg
+md: syncing RAID array md3
+md: minimum _guaranteed_ reconstruction speed: 1000 KB/sec/disc.
+md: using maximum available idle IO bandwidth (but not more than 200000 
+KB/sec) for reconstruction.
+md: using 128k window, over a total of 248896 blocks.
+md: md3: sync done.
 
+This doesn't look like a check, more like a rebuild? Looking at iostat -x 
+does indicate that it's reading from one drive and writing to another?
 
-> Examples are on a 2.4GHz AMD64, 2GB, 2.6.15.1 (I realize there are md
-> enhancements to later versions; I had some other unrelated issues and
-> rolled back to one I've run on for several months).
-> 
-> A given 7-disk raid0 array can read 450MB/s (using cat > null) and use
-> virtually no CPU resources. (Although cat and kswapd use quite a bit [60%]
-> munching on the data)
-> 
-> A raid5 array on the same drive set pulls in at 250MB/s, but md uses
-> roughly 50% of the CPU (the other 50% is spent dealing with the data,
-> saturating the processor).
-> 
-> A consistency check on the raid5 array uses roughly 3% of the cpu. It is
-> otherwise ~97% idle.
-> md11 : active raid5 sdi2[5] sdh2[4] sdf2[3] sde2[2] sdd2[1] sdc2[6] sdb2[0]
->       248974848 blocks level 5, 256k chunk, algorithm 2 [7/7] [UUUUUUU]
->       [==============>......]  resync = 72.2% (29976960/41495808)
-> finish=3.7min speed=51460K/sec
-> (~350MB/s aggregate throughput, 50MB/s on each device)
-> 
-> Just a friendly question as to why CPU utilization is significantly
-> different between a check and a real-world read on raid5? I feel like if
-> there was vm overhead getting the data into userland, the slowdown would
-> be present in raid0 as well. I assume parity calculations aren't done on a
-> read of the array, which leaves me at my question.
-> 
-> Thanks,
-> Rob
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+# uname -a
+Linux 2.6.15-1-686-smp #2 SMP Mon Mar 6 15:34:50 UTC 2006 i686 GNU/Linux
+
+This is a standard debian kernel.
 
 -- 
-VGER BF report: U 0.5
+Mikael Abrahamsson    email: swmike@swm.pp.se
+
+-- 
+VGER BF report: H 0.329215
