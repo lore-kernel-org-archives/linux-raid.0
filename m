@@ -1,64 +1,33 @@
-From: Patrik Jonsson <patrik@ucolick.org>
-Subject: Re: Care and feeding of RAID?
-Date: Tue, 05 Sep 2006 09:56:22 -0700
-Message-ID: <44FDAC36.8040407@ucolick.org>
-References: <44FD722C.7050608@waldoware.com> <20060905131454.GA28548@scavenger.homeip.net>
+From: Luca Berra <bluca@comedia.it>
+Subject: Re: checking md device parity (forced resync) - is it necessary?
+Date: Tue, 5 Sep 2006 18:59:05 +0200
+Message-ID: <20060905165904.GB17634@percy.comedia.it>
+References: <44FD3C65.8040000@wpkg.org> <17661.19907.140798.943518@cse.unsw.edu.au> <44FD66C3.6040609@wpkg.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="------------enig54D0D7FCCBD6BE9A3FD4FA8C"
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20060905131454.GA28548@scavenger.homeip.net>
+Content-Disposition: inline
+In-Reply-To: <44FD66C3.6040609@wpkg.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Benjamin Schieder <blindcoder@scavenger.homeip.net>
-Cc: Paul Waldo <pwaldo@waldoware.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enig54D0D7FCCBD6BE9A3FD4FA8C
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+On Tue, Sep 05, 2006 at 02:00:03PM +0200, Tomasz Chmielewski wrote:
+># by default, run at 01:06 on the first Sunday of each month.
+>6 1 1-7 * 7 root [ -x /usr/share/mdadm/checkarray ] && 
+>/usr/share/mdadm/checkarray --cron --all --quiet
+>
+>However, it will run at 01:06, on 1st-7th day of each month, and on 
+>Sundays (Debian etch).
+hihihi
+monthday and weekday are or-ed in crontab 
 
-On 05.09.2006 08:48:44, Paul Waldo wrote:
->> Hi all,
->>
->> I have a RAID6 array and I wondering about care and feeding instructio=
-ns :-)
->>
->> Here is what I currently do:
->>    - daily incremental and weekly full backups to a separate machine
->>    - run smartd tests (short once a day, long once a week)
->>    - check the raid for bad blocks every week
->>
->> What else can I do make sure the array keeps humming?  Thanks in advan=
-ce!
->>    =20
-Make sure the drives are adequately cooled. I use this nifty utility to
-look at my drive temps:
-http://martybugs.net/linux/hddtemp.cgi
+L.
 
-mtbf seems to have an exponential dependence on temperature, so it pays
-off to keep temp down. Exactly what temp you consider safe is
-individual, but my drives only occasionally go above 40C.
-
-cheers,
-
-/Patrik
-
-
-
---------------enig54D0D7FCCBD6BE9A3FD4FA8C
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (MingW32)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
-
-iD8DBQFE/aw2T+KvsdUW5p8RAi6VAJ4mL/xigPH7i2mM9obOEnwrQG0wKACgkBxe
-HvHiIzNyfJRbalAsbivVROY=
-=bQPh
------END PGP SIGNATURE-----
-
---------------enig54D0D7FCCBD6BE9A3FD4FA8C--
+-- 
+Luca Berra -- bluca@comedia.it
+        Communication Media & Services S.r.l.
+ /"\
+ \ /     ASCII RIBBON CAMPAIGN
+  X        AGAINST HTML MAIL
+ / \
