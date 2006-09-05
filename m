@@ -1,40 +1,64 @@
-From: Luca Berra <bluca@comedia.it>
-Subject: Re: RAID5 producing fake partition table on single drive
-Date: Tue, 5 Sep 2006 18:49:27 +0200
-Message-ID: <20060905164927.GA17634@percy.comedia.it>
-References: <1155987607.7207.23.camel@localhost.localdomain> <17641.25141.373827.77279@cse.unsw.edu.au> <1156200453.19051.13.camel@fc6.xsintricity.com> <44FC68A8.4010002@tmr.com>
+From: Patrik Jonsson <patrik@ucolick.org>
+Subject: Re: Care and feeding of RAID?
+Date: Tue, 05 Sep 2006 09:56:22 -0700
+Message-ID: <44FDAC36.8040407@ucolick.org>
+References: <44FD722C.7050608@waldoware.com> <20060905131454.GA28548@scavenger.homeip.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enig54D0D7FCCBD6BE9A3FD4FA8C"
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <44FC68A8.4010002@tmr.com>
+In-Reply-To: <20060905131454.GA28548@scavenger.homeip.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Benjamin Schieder <blindcoder@scavenger.homeip.net>
+Cc: Paul Waldo <pwaldo@waldoware.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Sep 04, 2006 at 01:55:52PM -0400, Bill Davidsen wrote:
->Doug Ledford wrote:
->>It's the mount program collecting possible LABEL= data on the partitions
->>listed in /proc/partitions, of which sde3 is outside the valid range for
->>the drive.
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enig54D0D7FCCBD6BE9A3FD4FA8C
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
+
+On 05.09.2006 08:48:44, Paul Waldo wrote:
+>> Hi all,
 >>
->May I belatedly say that this is sort-of a kernel issue, since 
->/proc/partitions reflects invalid data? Perhaps a boot option like 
->nopart=sda,sdb or similar would be in order?
->
-i would move partition detection code to user space completely, so it
-could be ran selectively on the drives that do happen to have a patition
-table.
+>> I have a RAID6 array and I wondering about care and feeding instructio=
+ns :-)
+>>
+>> Here is what I currently do:
+>>    - daily incremental and weekly full backups to a separate machine
+>>    - run smartd tests (short once a day, long once a week)
+>>    - check the raid for bad blocks every week
+>>
+>> What else can I do make sure the array keeps humming?  Thanks in advan=
+ce!
+>>    =20
+Make sure the drives are adequately cooled. I use this nifty utility to
+look at my drive temps:
+http://martybugs.net/linux/hddtemp.cgi
 
-a compromise could be having mdadm (or the script that starts mdadm at
-boot time, issue an ioctl(fd,BLKPG,...) to make kernel forget about any
-eventual partition table it might have misdetected
-L.
+mtbf seems to have an exponential dependence on temperature, so it pays
+off to keep temp down. Exactly what temp you consider safe is
+individual, but my drives only occasionally go above 40C.
 
--- 
-Luca Berra -- bluca@comedia.it
-        Communication Media & Services S.r.l.
- /"\
- \ /     ASCII RIBBON CAMPAIGN
-  X        AGAINST HTML MAIL
- / \
+cheers,
+
+/Patrik
+
+
+
+--------------enig54D0D7FCCBD6BE9A3FD4FA8C
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (MingW32)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
+
+iD8DBQFE/aw2T+KvsdUW5p8RAi6VAJ4mL/xigPH7i2mM9obOEnwrQG0wKACgkBxe
+HvHiIzNyfJRbalAsbivVROY=
+=bQPh
+-----END PGP SIGNATURE-----
+
+--------------enig54D0D7FCCBD6BE9A3FD4FA8C--
