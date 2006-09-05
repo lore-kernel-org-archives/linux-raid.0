@@ -1,36 +1,42 @@
 From: Paul Waldo <pwaldo@waldoware.com>
 Subject: Re: Care and feeding of RAID?
-Date: Tue, 05 Sep 2006 13:39:57 -0400
-Message-ID: <44FDB66D.8060202@waldoware.com>
-References: <44FD722C.7050608@waldoware.com>
+Date: Tue, 05 Sep 2006 13:46:50 -0400
+Message-ID: <44FDB80A.50606@waldoware.com>
+References: <44FD722C.7050608@waldoware.com> <Pine.LNX.4.56.0609051414310.17570@lion.drogon.net> <44FD91D1.7090501@maine.edu> <Pine.LNX.4.56.0609051749430.17570@lion.drogon.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <44FD722C.7050608@waldoware.com>
+In-Reply-To: <Pine.LNX.4.56.0609051749430.17570@lion.drogon.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Gordon Henderson <gordon@drogon.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Paul Waldo wrote:
-> Hi all,
+Gordon Henderson wrote:
+> On Tue, 5 Sep 2006, Steve Cousins wrote:
+[snip]
+> and my weekly badblocks script looks like:
 > 
-> I have a RAID6 array and I wondering about care and feeding instructions 
-> :-)
+> #!/bin/csh
 > 
-> Here is what I currently do:
->    - daily incremental and weekly full backups to a separate machine
->    - run smartd tests (short once a day, long once a week)
->    - check the raid for bad blocks every week
+> echo "`uname -n`: Badblocks test starting at [`date`]"
 > 
-> What else can I do make sure the array keeps humming?  Thanks in advance!
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> foreach disk ( a c )
+>   foreach partition ( 1 2 3 5 6 )
+>     echo -n "hd$disk${partition}: "
+>     badblocks -c 128 /dev/hd$disk$partition
+>   end
+>   echo ""
+> end
 > 
+> echo "`uname -n`: Badblocks test   ending at [`date`]"
+[snip]
 
-What about bitmaps?  Nobody has mentioned them.  It is my understanding that 
-you just turn them on with "mdadm /dev/mdX -b internal".  Any caveats for this?
+Maybe I'm missing something, but are these partitions mounted?  Here's what I 
+get when I do this on a mounted partition:
 
-Paul
+[root@paul ~]# badblocks -nsv /dev/md0
+/dev/md0 is mounted; it's not safe to run badblocks!
+
+If you are running RAID, is it safe to run badblocks on the underlying partition?
