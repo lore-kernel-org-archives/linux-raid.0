@@ -1,63 +1,93 @@
-From: Steve Cousins <steve.cousins@maine.edu>
+From: Benjamin Schieder <blindcoder@scavenger.homeip.net>
 Subject: Re: Care and feeding of RAID?
-Date: Tue, 05 Sep 2006 11:03:45 -0400
-Message-ID: <44FD91D1.7090501@maine.edu>
-References: <44FD722C.7050608@waldoware.com> <Pine.LNX.4.56.0609051414310.17570@lion.drogon.net>
+Date: Tue, 5 Sep 2006 17:41:56 +0200
+Message-ID: <20060905154156.GB28548@scavenger.homeip.net>
+References: <44FD722C.7050608@waldoware.com> <Pine.LNX.4.56.0609051414310.17570@lion.drogon.net> <44FD91D1.7090501@maine.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="gj572EiMnwbLXET9"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.56.0609051414310.17570@lion.drogon.net>
+Content-Disposition: inline
+In-Reply-To: <44FD91D1.7090501@maine.edu>
 Sender: linux-raid-owner@vger.kernel.org
-To: Gordon Henderson <gordon@drogon.net>
-Cc: Paul Waldo <pwaldo@waldoware.com>, linux-raid@vger.kernel.org
+To: Steve Cousins <steve.cousins@maine.edu>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Gordon Henderson wrote:
 
->On Tue, 5 Sep 2006, Paul Waldo wrote:
->
->  
->
->>Hi all,
->>
->>I have a RAID6 array and I wondering about care and feeding instructions :-)
->>
->>Here is what I currently do:
->>    - daily incremental and weekly full backups to a separate machine
->>    - run smartd tests (short once a day, long once a week)
->>    - check the raid for bad blocks every week
->>
->>What else can I do make sure the array keeps humming?  Thanks in advance!
->>    
->>
->
->Stop fiddling with it :)
->
->I run similar stuff, but don't forget running mdadm in daemon mode to send
->you an email should a drive fail. I also check each device individually,
->rather than the array although I don't know the value of doing this over
->the SMART tests on modern drives though...
->  
->
+--gj572EiMnwbLXET9
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Would people be willing to list their setup? Including such things as 
-mdadm.conf file, crontab -l, plus scripts that they use to check the 
-smart data and the array, mdadm daemon parameters and anything else that 
-is relevant to checking and maintaining an array? 
+On 05.09.2006 11:03:45, Steve Cousins wrote:
+> Would people be willing to list their setup? Including such things as=20
+> mdadm.conf file, crontab -l, plus scripts that they use to check the=20
+> smart data and the array, mdadm daemon parameters and anything else that=
+=20
+> is relevant to checking and maintaining an array?=20
 
-I'm running the mdmonitor script at startup and a sample mdadm.conf  
-(one of 3 machines) looks like:
+Personally, I use this script from cron:
+http://shellscripts.org/project/hdtest
+0 3 * * * root /root/sbin/hdtest.sh -l /var/log/smart_ata-ST3250624A_4ND33C=
+LT.log /dev/disk/by-id/ata-ST3250624A_4ND33CLT short
+1 3 * * * root /root/sbin/hdtest.sh -l /var/log/smart_ata-ST3250624A_4ND33E=
+JE.log /dev/disk/by-id/ata-ST3250624A_4ND33EJE short
+2 3 * * * root /root/sbin/hdtest.sh -l /var/log/smart_ata-ST3250624A_4ND33E=
+LA.log /dev/disk/by-id/ata-ST3250624A_4ND33ELA short
 
-MAILADDR cousins@limpet-gb.umeoce.maine.edu
-ARRAY /dev/md0 level=raid5 num-devices=3 
-UUID=39d07542:f3c97e69:fbb63d9d:64a052d3 
-devices=/dev/sdb1,/dev/sdc1,/dev/sdd1
+I have made the experience that long tests slow down the raid to a point
+where the system becomes unusable.
 
-These are SATA drives and except for the one machine that has a 3Ware 
-8506 card in it I haven't been able to get SMART programs to do anything 
-with these drives.  How do others deal with this? 
+My mdadm.conf is like this:
+---
+DEVICE partitions
+ARRAY /dev/md/0 level=3Draid1 num-devices=3D3 UUID=3D3559ffcf:14eb9889:3826=
+d6c2:c13731d7
+ARRAY /dev/md/1 level=3Draid5 num-devices=3D3 UUID=3D649fc7cc:d4b52c31:240f=
+ce2c:c64686e7
+ARRAY /dev/md/2 level=3Draid5 num-devices=3D3 UUID=3D9a3bf634:58f39e44:27ba=
+8087:d5189766
+   spares=3D1
+ARRAY /dev/md/4 level=3Draid5 num-devices=3D3 UUID=3Dd4799be3:5b157884:e387=
+18c2:c05ab840
+   spares=3D1
+ARRAY /dev/md/5 level=3Draid5 num-devices=3D3 UUID=3Dca4a6110:4533d8d5:0e2e=
+d4e1:2f5805b2
+   spares=3D1
 
-Thanks,
+MAIL root@localhost
+---
 
-Steve
+Also, I run
+
+	mdadm --monitor /dev/md/* --daemonise
+
+=66rom an init script.
+
+Greetings,
+	Benjamin
+--=20
+ _  _     _   _            _  =20
+| \| |___| |_| |_  __ _ __| |__
+| .` / -_)  _| ' \/ _` / _| / /
+|_|\_\___|\__|_||_\__,_\__|_\_\
+| |  (_)_ _ _  ___ __
+| |__| | ' \ || \ \ /
+|____|_|_||_\_,_/_\_\
+Play Nethack anywhere with an x86 computer:
+	http://www.crash-override.net/nethacklinux.html
+
+--gj572EiMnwbLXET9
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.3 (GNU/Linux)
+
+iD8DBQFE/ZrEr0OTeImXvg8RAuZhAKCdCeUSwHG50WTaxhV+OljhbXJjZgCgnYj7
+n0zLG85vDUgiLSSDDGqvWpE=
+=lYw5
+-----END PGP SIGNATURE-----
+
+--gj572EiMnwbLXET9--
