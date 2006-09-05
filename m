@@ -1,56 +1,44 @@
-From: "Rev. Jeffrey Paul" <sneak@datavibe.net>
+From: Steve Cousins <steve.cousins@maine.edu>
 Subject: Re: Care and feeding of RAID?
-Date: Tue, 5 Sep 2006 13:57:24 -0400
-Message-ID: <20060905175724.GK11132@datavibe.net>
-References: <44FD722C.7050608@waldoware.com> <Pine.LNX.4.56.0609051414310.17570@lion.drogon.net> <44FD91D1.7090501@maine.edu>
+Date: Tue, 05 Sep 2006 14:29:48 -0400
+Message-ID: <44FDC21C.7050203@maine.edu>
+References: <44FD722C.7050608@waldoware.com> <Pine.LNX.4.56.0609051414310.17570@lion.drogon.net> <44FD91D1.7090501@maine.edu> <20060905154156.GB28548@scavenger.homeip.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <44FD91D1.7090501@maine.edu>
+In-Reply-To: <20060905154156.GB28548@scavenger.homeip.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Steve Cousins <steve.cousins@maine.edu>
-Cc: Gordon Henderson <gordon@drogon.net>, Paul Waldo <pwaldo@waldoware.com>, linux-raid@vger.kernel.org
+To: Benjamin Schieder <blindcoder@scavenger.homeip.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Sep 05, 2006 at 11:03:45AM -0400, Steve Cousins wrote:
+
+
+Benjamin Schieder wrote:
+> On 05.09.2006 11:03:45, Steve Cousins wrote:
 > 
-> These are SATA drives and except for the one machine that has a 3Ware 
-> 8506 card in it I haven't been able to get SMART programs to do anything 
-> with these drives.  How do others deal with this? 
+>>Would people be willing to list their setup? Including such things as 
+>>mdadm.conf file, crontab -l, plus scripts that they use to check the 
+>>smart data and the array, mdadm daemon parameters and anything else that 
+>>is relevant to checking and maintaining an array? 
 > 
+> 
+> Personally, I use this script from cron:
+> http://shellscripts.org/project/hdtest
 
-I use the tw_cli program to check up on my 3ware stuff.
+Hi Benjamin,
 
-It took me quite a bit of time to figure that one out.  I don't
-have any automated monitoring set up, but it'd be simple enough to
-script.  I check on the array every so often and run a verify every few
-months to see if it kicks a disk out (it hasn't yet).
+I am checking this out and I see that you are the writer of this script.
+I'm getting errors when it comes to lines 76 and 86-90 about the 
+arithmetic symbols. This is on a Fedora Core 5 system with bash version 
+3.1.7(1).   I weeded out the smartctl command and tried it manually with 
+no luck on my SATA /dev/sd? drives.
 
-0 root@datavibe:~# tw_cli 
-//datavibe> info
+What do you (or others) recommend for SATA drives?
 
-Ctl   Model        Ports   Drives   Units   NotOpt   RRate   VRate   BBU
-------------------------------------------------------------------------
-c0    8006-2LP     2       2        1       0        2       -       -        
+Thanks,
 
-//datavibe> info c0
+Steve
 
-Unit  UnitType  Status         %Cmpl  Stripe  Size(GB)  Cache  AVerify  IgnECC
-------------------------------------------------------------------------------
-u0    RAID-1    OK             -      -       232.885   ON     -        -     
 
-Port   Status           Unit   Size        Blocks        Serial
----------------------------------------------------------------
-p0     OK               u0     232.88 GB   488397168     WD-WMAL718611 
-p1     OK               u0     232.88 GB   488397168     WD-WMAL718619
-//datavibe>
-
--j
-
--- 
---------------------------------------------------------
- Rev. Jeffrey Paul    -datavibe-     sneak@datavibe.net
-  aim:x736e65616b   pgp:0xD9B3C17D   phone:877-748-3467
-   9440 0C7F C598 01CA 2F17  D098 0A3A 4B8F D9B3 C17D
---------------------------------------------------------
