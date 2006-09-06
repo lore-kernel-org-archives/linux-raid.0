@@ -1,46 +1,28 @@
-From: Josh Litherland <josh@temp123.org>
-Subject: Re: Superblock checksum problems
-Date: Wed, 06 Sep 2006 09:26:13 -0400
-Message-ID: <1157549173.2424.5.camel@localhost>
-References: <1157236610.8070.7.camel@localhost>
-	 <17659.46517.979409.131348@cse.unsw.edu.au>
-	 <1157385612.2990.4.camel@localhost> <1157403347.2990.11.camel@localhost>
-	 <1157404398.2990.14.camel@localhost>
-	 <17660.39978.663609.990424@cse.unsw.edu.au>
-	 <1157406418.2990.20.camel@localhost>  <1157411506.6946.1.camel@localhost>
+From: "John Stoffel" <john@stoffel.org>
+Subject: Re: checking md device parity (forced resync) - is it necessary?
+Date: Wed, 6 Sep 2006 09:55:51 -0400
+Message-ID: <17662.54119.167225.879836@smtp.charter.net>
+References: <44FD3C65.8040000@wpkg.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1157411506.6946.1.camel@localhost>
+In-Reply-To: <44FD3C65.8040000@wpkg.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
+To: Tomasz Chmielewski <mangoo@wpkg.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-Stranger than we dreamt it...
+Tomasz> Lately I installed Debian on a Thecus n4100 machine.  It's a
+Tomasz> 600 MHz ARM storage device, and has 4 x 400 GB drives.
 
-I got a new, identical card, the Syba 4-port PCI card and had EXACTLY
-the same problems.  Tried with all new cables, exact same problems.
-Moved the card into each PCI slot in the system.  Same problems.
+Interesting box... how quiet is it?  I'm thinking of one of these for
+home use, but I'll probably go with an EPIA box so I can actually
+setup a NFS/CiFS/backup/http/mysql server...
 
-I put the drives and cables into a different system onto an onboard SATA
-controller, and they work fine, so drives and cables are "known good".
+I've looked at the Irfant and the Buffalo Logic ones as well... all
+tempting.  But backups are the killer.  :]
 
-It seems unlikely that two identical cards would be broken in exactly
-the same way, so I have to revert back to my previous suspicion: bad
-interaction between the card's firmware and the driver.
-
-This evening, I will try out the weird card in the new system's
-motherboard, to see if it's something in the old mobo that doesn't like
-this card.
-
-I will hold on to this card at least until weekend for testing, and
-longer if anyone thinks they might have a patch for me to test.
-
-My thanks to everyone who's still paying attention to this thread.  =)
-
--- 
-Josh Litherland (josh@temp123.org)
-
+Thanks,
+John
