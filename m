@@ -1,57 +1,46 @@
-From: Mike Hardy <mhardy@h3c.com>
-Subject: Re: checking state of RAID (for automated notifications)
-Date: Wed, 06 Sep 2006 09:50:13 -0700
-Message-ID: <44FEFC45.1080500@h3c.com>
-References: <44FE8A68.8060306@wpkg.org>
+From: Luca Berra <bluca@comedia.it>
+Subject: Re: Care and feeding of RAID?
+Date: Wed, 6 Sep 2006 20:49:45 +0200
+Message-ID: <20060906184945.GD991@percy.comedia.it>
+References: <44FD722C.7050608@waldoware.com> <Pine.LNX.4.56.0609051414310.17570@lion.drogon.net> <44FD91D1.7090501@maine.edu> <20060905154156.GB28548@scavenger.homeip.net> <44FDC21C.7050203@maine.edu> <20060905205727.GD17634@percy.comedia.it> <20060906071224.GA20933@scavenger.homeip.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-2
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <44FE8A68.8060306@wpkg.org>
+Content-Disposition: inline
+In-Reply-To: <20060906071224.GA20933@scavenger.homeip.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Tomasz Chmielewski <mangoo@wpkg.org>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Wed, Sep 06, 2006 at 09:12:24AM +0200, Benjamin Schieder wrote:
+>> >>Personally, I use this script from cron:
+>> >>http://shellscripts.org/project/hdtest
+>> 
+>> nice race :)
+>
+>As in race condition? Where?
 
-<berlin> % rpm -qf /usr/lib/nagios/plugins/contrib/check_linux_raid.pl
-nagios-plugins-1.4.1-1.2.fc4.rf
+mktemp
+rm
+touch
+why do you do that?
 
-It is built in to my nagios plugins package at least, and works great.
+>I'm running smartmontools 5.33 here. When did the output change? It still
+>works fine here.
 
--Mike
+i retested now with 5.36 and it seems the output did _not_ change, i
+don't know what i saw this morning.
 
-Tomasz Chmielewski wrote:
-> I would like to have RAID status monitored by nagios.
-> 
-> This sounds like a simple script, but I'm not sure what approach is
-> correct.
-> 
-> 
-> Considering, that the "health" status of /proc/mdstat looks like this:
-> 
-> # cat /proc/mdstat
-> Personalities : [raid1] [raid10]
-> md2 : active raid10 sda2[4] sdd2[3] sdc2[2] sdb2[1]
->       779264640 blocks super 1.0 64K chunks 2 near-copies [4/4] [UUUU]
-> 
-> md1 : active raid1 sdd1[1] sdc1[0]
->       1076224 blocks [2/2] [UU]
-> 
-> md0 : active raid1 sdb1[1] sda1[0]
->       1076224 blocks [2/2] [UU]
-> 
-> unused devices: <none>
-> 
-> 
-> What my script should be checking?
-> 
-> Does the number of "U" (8 for this host) letters indicate that RAID is
-> healthy?
-> Or should I count "in_sync" in "cat /sys/block/md*/md/rd*/state"?
-> Perhaps the two approaches are the same, though.
-> 
-> 
-> What's the best way to determine that the RAID is running fine?
-> 
-> 
+but then it errors on the line
+IFS="   " read type status online < <( smartctl -d ata -a ${disk} | grep
+\#\ 1 | sed 's,  \+,   ,g' | cut -f 2,3,5 )
+
+L.
+
+-- 
+Luca Berra -- bluca@comedia.it
+        Communication Media & Services S.r.l.
+ /"\
+ \ /     ASCII RIBBON CAMPAIGN
+  X        AGAINST HTML MAIL
+ / \
