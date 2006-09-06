@@ -1,46 +1,46 @@
-From: Luca Berra <bluca@comedia.it>
-Subject: Re: Care and feeding of RAID?
-Date: Wed, 6 Sep 2006 20:49:45 +0200
-Message-ID: <20060906184945.GD991@percy.comedia.it>
-References: <44FD722C.7050608@waldoware.com> <Pine.LNX.4.56.0609051414310.17570@lion.drogon.net> <44FD91D1.7090501@maine.edu> <20060905154156.GB28548@scavenger.homeip.net> <44FDC21C.7050203@maine.edu> <20060905205727.GD17634@percy.comedia.it> <20060906071224.GA20933@scavenger.homeip.net>
+From: John McMonagle <johnm@advocap.org>
+Subject: Re: RAID-5 recovery
+Date: Wed, 06 Sep 2006 16:13:35 -0500
+Message-ID: <44FF39FF.3000007@advocap.org>
+References: <200609031148.56910.clive@vacuumtube.org.uk>	<Pine.LNX.4.64.0609031530010.12203@twinlark.arctic.org> <17659.44517.186189.152370@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20060906071224.GA20933@scavenger.homeip.net>
+In-Reply-To: <17659.44517.186189.152370@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wed, Sep 06, 2006 at 09:12:24AM +0200, Benjamin Schieder wrote:
->> >>Personally, I use this script from cron:
->> >>http://shellscripts.org/project/hdtest
->> 
->> nice race :)
->
->As in race condition? Where?
+Neil Brown wrote:
+> On Sunday September 3, dean@arctic.org wrote:
+> 
+>>On Sun, 3 Sep 2006, Clive Messer wrote:
+>>
+>>
+>>>This leads me to a question. I understand from reading the linux-raid archives 
+>>>that the current behaviour when rebuilding with a single badblock on another 
+>>>disk is for that disk to also be kicked from the array.
+>>
+>>that's not quite the current behaviour.  since 2.6.14 or .15 or so md will 
+>>reconstruct bad blocks from other disks and try writing them.  it's only 
+>>when this fails repeatedly that it knocks the disk out of the array.
+> 
+> 
+> "when rebuild" md/raid5 cannot reconstruct bad blocks because the
+> array is degraded, so a read error is immediately fatal.
+> 
+> NeilBrown
+> 
 
-mktemp
-rm
-touch
-why do you do that?
+Don't keep up as much as I should, but is there now an attempt to
+automatically fix disk read errors?
 
->I'm running smartmontools 5.33 here. When did the output change? It still
->works fine here.
+If so what version of kernel and mdadm are required?
+Also if true does this apply to other raid levels like 1, 6 and 10?
 
-i retested now with 5.36 and it seems the output did _not_ change, i
-don't know what i saw this morning.
+Thanks
 
-but then it errors on the line
-IFS="   " read type status online < <( smartctl -d ata -a ${disk} | grep
-\#\ 1 | sed 's,  \+,   ,g' | cut -f 2,3,5 )
+John
 
-L.
-
--- 
-Luca Berra -- bluca@comedia.it
-        Communication Media & Services S.r.l.
- /"\
- \ /     ASCII RIBBON CAMPAIGN
-  X        AGAINST HTML MAIL
- / \
