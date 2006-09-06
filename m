@@ -1,57 +1,55 @@
-From: Luca Berra <bluca@comedia.it>
+From: Gordon Henderson <gordon@drogon.net>
 Subject: Re: Care and feeding of RAID?
-Date: Tue, 5 Sep 2006 22:57:27 +0200
-Message-ID: <20060905205727.GD17634@percy.comedia.it>
-References: <44FD722C.7050608@waldoware.com> <Pine.LNX.4.56.0609051414310.17570@lion.drogon.net> <44FD91D1.7090501@maine.edu> <20060905154156.GB28548@scavenger.homeip.net> <44FDC21C.7050203@maine.edu>
+Date: Wed, 6 Sep 2006 01:04:03 +0100 (BST)
+Message-ID: <Pine.LNX.4.56.0609060101030.27973@lion.drogon.net>
+References: <44FD722C.7050608@waldoware.com> <Pine.LNX.4.56.0609051414310.17570@lion.drogon.net>
+ <44FD91D1.7090501@maine.edu> <Pine.LNX.4.56.0609051749430.17570@lion.drogon.net>
+ <44FDB80A.50606@waldoware.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <44FDC21C.7050203@maine.edu>
+In-Reply-To: <44FDB80A.50606@waldoware.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Steve Cousins <steve.cousins@maine.edu>
+To: Paul Waldo <pwaldo@waldoware.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Sep 05, 2006 at 02:29:48PM -0400, Steve Cousins wrote:
+On Tue, 5 Sep 2006, Paul Waldo wrote:
+
+> Gordon Henderson wrote:
+> > On Tue, 5 Sep 2006, Steve Cousins wrote:
+> [snip]
+> > and my weekly badblocks script looks like:
+> >
+> > #!/bin/csh
+> >
+> > echo "`uname -n`: Badblocks test starting at [`date`]"
+> >
+> > foreach disk ( a c )
+> >   foreach partition ( 1 2 3 5 6 )
+> >     echo -n "hd$disk${partition}: "
+> >     badblocks -c 128 /dev/hd$disk$partition
+> >   end
+> >   echo ""
+> > end
+> >
+> > echo "`uname -n`: Badblocks test   ending at [`date`]"
+> [snip]
 >
+> Maybe I'm missing something, but are these partitions mounted?  Here's what I
+> get when I do this on a mounted partition:
 >
->Benjamin Schieder wrote:
->>On 05.09.2006 11:03:45, Steve Cousins wrote:
->>
->>>Would people be willing to list their setup? Including such things as 
->>>mdadm.conf file, crontab -l, plus scripts that they use to check the 
->>>smart data and the array, mdadm daemon parameters and anything else that 
->>>is relevant to checking and maintaining an array? 
->>
->>
->>Personally, I use this script from cron:
->>http://shellscripts.org/project/hdtest
+> [root@paul ~]# badblocks -nsv /dev/md0
+> /dev/md0 is mounted; it's not safe to run badblocks!
 
-nice race :)
+Do not use the -n option... (and -s won't be much use in a cron job, nor
+-v, probably!) -n will write to the device which might well have issues
+with the filesystem cache...
 
->I am checking this out and I see that you are the writer of this script.
->I'm getting errors when it comes to lines 76 and 86-90 about the 
->arithmetic symbols. This is on a Fedora Core 5 system with bash version 
-that is because smartctl output has changed and the grep above returns
-no number.
+By reading the underlying drives you won't trigger a raid array failure
+should you do see a bad sector, which might give you time to go something
+about it. There was some emails on this list some time back (year or 2,3?)
+about badblocking the md? device - I imagine it might not read every block
+of every device unless it was a raid-0 array...
 
->3.1.7(1).   I weeded out the smartctl command and tried it manually with 
->no luck on my SATA /dev/sd? drives.
-
-which command?
-
->What do you (or others) recommend for SATA drives?
-
-smartmontools and a recent kernel just work.
-also you can schedule smart tests with smartmontools. so you don't need
-to cron scripts.
-
-L.
-
--- 
-Luca Berra -- bluca@comedia.it
-        Communication Media & Services S.r.l.
- /"\
- \ /     ASCII RIBBON CAMPAIGN
-  X        AGAINST HTML MAIL
- / \
+Gordon
