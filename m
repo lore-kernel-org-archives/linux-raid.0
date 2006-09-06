@@ -1,47 +1,46 @@
-From: Tomasz Chmielewski <mangoo@wpkg.org>
-Subject: checking state of RAID (for automated notifications)
-Date: Wed, 06 Sep 2006 10:44:24 +0200
-Message-ID: <44FE8A68.8060306@wpkg.org>
+From: Josh Litherland <josh@temp123.org>
+Subject: Re: Superblock checksum problems
+Date: Wed, 06 Sep 2006 09:26:13 -0400
+Message-ID: <1157549173.2424.5.camel@localhost>
+References: <1157236610.8070.7.camel@localhost>
+	 <17659.46517.979409.131348@cse.unsw.edu.au>
+	 <1157385612.2990.4.camel@localhost> <1157403347.2990.11.camel@localhost>
+	 <1157404398.2990.14.camel@localhost>
+	 <17660.39978.663609.990424@cse.unsw.edu.au>
+	 <1157406418.2990.20.camel@localhost>  <1157411506.6946.1.camel@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-2; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1157411506.6946.1.camel@localhost>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I would like to have RAID status monitored by nagios.
 
-This sounds like a simple script, but I'm not sure what approach is correct.
+Stranger than we dreamt it...
 
+I got a new, identical card, the Syba 4-port PCI card and had EXACTLY
+the same problems.  Tried with all new cables, exact same problems.
+Moved the card into each PCI slot in the system.  Same problems.
 
-Considering, that the "health" status of /proc/mdstat looks like this:
+I put the drives and cables into a different system onto an onboard SATA
+controller, and they work fine, so drives and cables are "known good".
 
-# cat /proc/mdstat
-Personalities : [raid1] [raid10]
-md2 : active raid10 sda2[4] sdd2[3] sdc2[2] sdb2[1]
-       779264640 blocks super 1.0 64K chunks 2 near-copies [4/4] [UUUU]
+It seems unlikely that two identical cards would be broken in exactly
+the same way, so I have to revert back to my previous suspicion: bad
+interaction between the card's firmware and the driver.
 
-md1 : active raid1 sdd1[1] sdc1[0]
-       1076224 blocks [2/2] [UU]
+This evening, I will try out the weird card in the new system's
+motherboard, to see if it's something in the old mobo that doesn't like
+this card.
 
-md0 : active raid1 sdb1[1] sda1[0]
-       1076224 blocks [2/2] [UU]
+I will hold on to this card at least until weekend for testing, and
+longer if anyone thinks they might have a patch for me to test.
 
-unused devices: <none>
-
-
-What my script should be checking?
-
-Does the number of "U" (8 for this host) letters indicate that RAID is 
-healthy?
-Or should I count "in_sync" in "cat /sys/block/md*/md/rd*/state"?
-Perhaps the two approaches are the same, though.
-
-
-What's the best way to determine that the RAID is running fine?
-
+My thanks to everyone who's still paying attention to this thread.  =)
 
 -- 
-Tomasz Chmielewski
-http://wpkg.org
+Josh Litherland (josh@temp123.org)
+
