@@ -1,31 +1,39 @@
-From: Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE>
-Subject: Re: Care and feeding of RAID?
-Date: Wed, 6 Sep 2006 09:41:55 +0200
-Message-ID: <edlu43$jo4$4@sea.gmane.org>
-References: <44FD722C.7050608@waldoware.com> <Pine.LNX.4.56.0609051414310.17570@lion.drogon.net> <44FD91D1.7090501@maine.edu> <Pine.LNX.4.56.0609051749430.17570@lion.drogon.net>
+From: Tomasz Chmielewski <mangoo@wpkg.org>
+Subject: Re: checking md device parity (forced resync) - is it necessary?
+Date: Wed, 06 Sep 2006 10:12:43 +0200
+Message-ID: <44FE82FB.3010904@wpkg.org>
+References: <44FD3C65.8040000@wpkg.org> <17661.19907.140798.943518@cse.unsw.edu.au> <44FD66C3.6040609@wpkg.org> <edlsqo$jo4$2@sea.gmane.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-2; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <edlsqo$jo4$2@sea.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Gordon Henderson <gordon@drogon.net> wrote:
-> I don't have any mdadm.conf files ... What am I missing? (I've always been
-> under the impression that after needing the /etc/raidtab file with the old
-> raidtools, you didn't need a config file as such under mdadm...  However,
+Mario 'BitKoenig' Holbe wrote:
+> Tomasz Chmielewski <mangoo@wpkg.org> wrote:
+>> # by default, run at 01:06 on the first Sunday of each month.
+>> 6 1 1-7 * 7 root [ -x /usr/share/mdadm/checkarray ] && 
+> 
+> You have a quite old version of mdadm. This issue has been fixed in
+> mdadm (2.5.2-8) unstable from 27 Jul 2006. Current version is mdadm
+> (2.5.3.git200608202239-2) unstable from 23 Aug 2006.
+> 
+> Since the feature did just appear in mdadm (2.5.2-3) UNRELEASED from
+> 7 Jul 2006 (and even just went to unstable with mdadm (2.5.2-7) unstable
+> from 20 Jul 2006), it seems you were simply in quite bad luck :)
 
-You don't necessarily need one. However, since Neil considers in-kernel
-RAID-autodetection a bad thing and since mdadm typically relies on
-mdadm.conf for RAID-assembly and since especially with newer kernels you
-probably need to auto-create device nodes (2.6 and udev), it's more
-convenient to have one. Though you could live without one even then.
+Yes, I saw somewhere in the changelogs that the issue is fixed.
 
-I did also run without one over a long time and I also don't like it to
-have one, however, sometimes in the past convenience won :)
+Still, I can't find 2.5.2-8 anywhere on the mirrors, perhaps it's just a 
+matter of time...
 
 
-regards
-   Mario
 -- 
-There is nothing more deceptive than an obvious fact.
-             -- Sherlock Holmes by Arthur Conan Doyle
+Tomasz Chmielewski
+http://wpkg.org
+
 
