@@ -1,32 +1,31 @@
 From: Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE>
 Subject: Re: Care and feeding of RAID?
-Date: Wed, 6 Sep 2006 09:33:14 +0200
-Message-ID: <edltjq$jo4$3@sea.gmane.org>
-References: <44FD722C.7050608@waldoware.com> <Pine.LNX.4.56.0609051414310.17570@lion.drogon.net> <44FD91D1.7090501@maine.edu> <20060905154156.GB28548@scavenger.homeip.net>
+Date: Wed, 6 Sep 2006 09:41:55 +0200
+Message-ID: <edlu43$jo4$4@sea.gmane.org>
+References: <44FD722C.7050608@waldoware.com> <Pine.LNX.4.56.0609051414310.17570@lion.drogon.net> <44FD91D1.7090501@maine.edu> <Pine.LNX.4.56.0609051749430.17570@lion.drogon.net>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Benjamin Schieder <blindcoder@scavenger.homeip.net> wrote:
-> I have made the experience that long tests slow down the raid to a point
-> where the system becomes unusable.
+Gordon Henderson <gordon@drogon.net> wrote:
+> I don't have any mdadm.conf files ... What am I missing? (I've always been
+> under the impression that after needing the /etc/raidtab file with the old
+> raidtools, you didn't need a config file as such under mdadm...  However,
 
-Even though we're quite off-topic here with that since it's more
-SMART-related... this is at least unusual.
-I'm also running regular SMART selftests (short daily, long weekly) and
-usually they don't affect drive's performance very much. However,
-whenever I experienced massive slow-downs while selftests are running,
-this did always point to disk problems... too much (and strategic
-disadvantageous) reallocated sectors (keep an ear on the disks, hear
-them seek()ing :)), non-reallocatable sectors or just temperature (for
-example, WD drives tend to show a bad performance when getting too hot).
+You don't necessarily need one. However, since Neil considers in-kernel
+RAID-autodetection a bad thing and since mdadm typically relies on
+mdadm.conf for RAID-assembly and since especially with newer kernels you
+probably need to auto-create device nodes (2.6 and udev), it's more
+convenient to have one. Though you could live without one even then.
+
+I did also run without one over a long time and I also don't like it to
+have one, however, sometimes in the past convenience won :)
 
 
 regards
    Mario
 -- 
-But after a while I learned the trick of speaking fast. You don't have
-to think any faster; just use twice as many words to say everything.
-                                -- Paul Graham
+There is nothing more deceptive than an obvious fact.
+             -- Sherlock Holmes by Arthur Conan Doyle
 
