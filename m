@@ -1,49 +1,57 @@
-From: Tomasz Chmielewski <mangoo@wpkg.org>
-Subject: Re: checking md device parity (forced resync) - is it necessary?
-Date: Wed, 06 Sep 2006 16:11:46 +0200
-Message-ID: <44FED722.2050508@wpkg.org>
-References: <44FD3C65.8040000@wpkg.org> <17662.54119.167225.879836@smtp.charter.net>
+From: Mike Hardy <mhardy@h3c.com>
+Subject: Re: checking state of RAID (for automated notifications)
+Date: Wed, 06 Sep 2006 09:50:13 -0700
+Message-ID: <44FEFC45.1080500@h3c.com>
+References: <44FE8A68.8060306@wpkg.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-2
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17662.54119.167225.879836@smtp.charter.net>
+In-Reply-To: <44FE8A68.8060306@wpkg.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: John Stoffel <john@stoffel.org>
+To: Tomasz Chmielewski <mangoo@wpkg.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-John Stoffel wrote:
-> Tomasz> Lately I installed Debian on a Thecus n4100 machine.  It's a
-> Tomasz> 600 MHz ARM storage device, and has 4 x 400 GB drives.
+
+<berlin> % rpm -qf /usr/lib/nagios/plugins/contrib/check_linux_raid.pl
+nagios-plugins-1.4.1-1.2.fc4.rf
+
+It is built in to my nagios plugins package at least, and works great.
+
+-Mike
+
+Tomasz Chmielewski wrote:
+> I would like to have RAID status monitored by nagios.
 > 
-> Interesting box... how quiet is it?  
-
-I can't tell you if it's quiet or not, it's in the server room right 
-now, and serves as a backup and iSCSI storage for Xen.
-
-But as I still configured it and it was on my desk, it seemed a bit 
-louder than a normal PC.
-After all, it has 4 drives (which you have to buy separately).
-
-
-> I'm thinking of one of these for
-> home use, but I'll probably go with an EPIA box so I can actually
-> setup a NFS/CiFS/backup/http/mysql server...
-
-Although it has two gigabit network cards, you can't fully use them - 
-the IXP3xx ARM CPU (600 MHz) allows you to only send about 25 MB/s of 
-packets (measured on a loopback interface, so iSCSI LAN speeds are a bit 
-lower).
-
-
-> I've looked at the Irfant and the Buffalo Logic ones as well... all
-> tempting.  But backups are the killer.  :]
-
-There's also Thecus n5200, 800 MHz mobile Celeron, which you can supply 
-with 5 drives... :)
-
-
--- 
-Tomasz Chmielewski
-http://wpkg.org
+> This sounds like a simple script, but I'm not sure what approach is
+> correct.
+> 
+> 
+> Considering, that the "health" status of /proc/mdstat looks like this:
+> 
+> # cat /proc/mdstat
+> Personalities : [raid1] [raid10]
+> md2 : active raid10 sda2[4] sdd2[3] sdc2[2] sdb2[1]
+>       779264640 blocks super 1.0 64K chunks 2 near-copies [4/4] [UUUU]
+> 
+> md1 : active raid1 sdd1[1] sdc1[0]
+>       1076224 blocks [2/2] [UU]
+> 
+> md0 : active raid1 sdb1[1] sda1[0]
+>       1076224 blocks [2/2] [UU]
+> 
+> unused devices: <none>
+> 
+> 
+> What my script should be checking?
+> 
+> Does the number of "U" (8 for this host) letters indicate that RAID is
+> healthy?
+> Or should I count "in_sync" in "cat /sys/block/md*/md/rd*/state"?
+> Perhaps the two approaches are the same, though.
+> 
+> 
+> What's the best way to determine that the RAID is running fine?
+> 
+> 
