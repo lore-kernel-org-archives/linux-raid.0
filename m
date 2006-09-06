@@ -1,55 +1,30 @@
-From: Gordon Henderson <gordon@drogon.net>
-Subject: Re: Care and feeding of RAID?
-Date: Wed, 6 Sep 2006 01:04:03 +0100 (BST)
-Message-ID: <Pine.LNX.4.56.0609060101030.27973@lion.drogon.net>
-References: <44FD722C.7050608@waldoware.com> <Pine.LNX.4.56.0609051414310.17570@lion.drogon.net>
- <44FD91D1.7090501@maine.edu> <Pine.LNX.4.56.0609051749430.17570@lion.drogon.net>
- <44FDB80A.50606@waldoware.com>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+From: Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE>
+Subject: Re: Superblock checksum problems
+Date: Wed, 6 Sep 2006 09:07:38 +0200
+Message-ID: <edls3q$jo4$1@sea.gmane.org>
+References: <1157236610.8070.7.camel@localhost> <17659.46517.979409.131348@cse.unsw.edu.au> <1157385612.2990.4.camel@localhost> <1157403347.2990.11.camel@localhost> <1157404398.2990.14.camel@localhost> <17660.39978.663609.990424@cse.unsw.edu.au> <1157406418.2990.20.camel@localhost> <1157411506.6946.1.camel@localhost> <44FCBA2C.5070108@idgmail.se>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <44FDB80A.50606@waldoware.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Paul Waldo <pwaldo@waldoware.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, 5 Sep 2006, Paul Waldo wrote:
+Henrik Holst <henrik.holst@idgmail.se> wrote:
+> It would be good to have an analog to "memtest" but for PATA and SATA
+> ports. Anyone seen something like that out there on the web?
 
-> Gordon Henderson wrote:
-> > On Tue, 5 Sep 2006, Steve Cousins wrote:
-> [snip]
-> > and my weekly badblocks script looks like:
-> >
-> > #!/bin/csh
-> >
-> > echo "`uname -n`: Badblocks test starting at [`date`]"
-> >
-> > foreach disk ( a c )
-> >   foreach partition ( 1 2 3 5 6 )
-> >     echo -n "hd$disk${partition}: "
-> >     badblocks -c 128 /dev/hd$disk$partition
-> >   end
-> >   echo ""
-> > end
-> >
-> > echo "`uname -n`: Badblocks test   ending at [`date`]"
-> [snip]
->
-> Maybe I'm missing something, but are these partitions mounted?  Here's what I
-> get when I do this on a mounted partition:
->
-> [root@paul ~]# badblocks -nsv /dev/md0
-> /dev/md0 is mounted; it's not safe to run badblocks!
+Are you looking for `badblocks'?
 
-Do not use the -n option... (and -s won't be much use in a cron job, nor
--v, probably!) -n will write to the device which might well have issues
-with the filesystem cache...
+There is also a `memtest.sh' from Doug Ledford. It's main intention is,
+as the name suggests, to find memory problems. However, it does also
+stress the disk a lot. In fact, it finds problems that occur somewhere
+on the path from a disk to a CPU. If you increase its $NR_SIMULTANEOUS
+to fill up your disk entirely, it should nearly do what you are looking
+for (except for some blocks that are never touched because of filesystem
+organization) :)
 
-By reading the underlying drives you won't trigger a raid array failure
-should you do see a bad sector, which might give you time to go something
-about it. There was some emails on this list some time back (year or 2,3?)
-about badblocking the md? device - I imagine it might not read every block
-of every device unless it was a raid-0 array...
 
-Gordon
+regards
+   Mario
+-- 
+I thought the only thing the internet was good for was porn.  -- Futurama
+
