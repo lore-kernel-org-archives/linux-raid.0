@@ -1,30 +1,32 @@
 From: Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE>
-Subject: Re: checking md device parity (forced resync) - is it necessary?
-Date: Wed, 6 Sep 2006 09:19:52 +0200
-Message-ID: <edlsqo$jo4$2@sea.gmane.org>
-References: <44FD3C65.8040000@wpkg.org> <17661.19907.140798.943518@cse.unsw.edu.au> <44FD66C3.6040609@wpkg.org>
+Subject: Re: Care and feeding of RAID?
+Date: Wed, 6 Sep 2006 09:33:14 +0200
+Message-ID: <edltjq$jo4$3@sea.gmane.org>
+References: <44FD722C.7050608@waldoware.com> <Pine.LNX.4.56.0609051414310.17570@lion.drogon.net> <44FD91D1.7090501@maine.edu> <20060905154156.GB28548@scavenger.homeip.net>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Tomasz Chmielewski <mangoo@wpkg.org> wrote:
-> # by default, run at 01:06 on the first Sunday of each month.
-> 6 1 1-7 * 7 root [ -x /usr/share/mdadm/checkarray ] && 
+Benjamin Schieder <blindcoder@scavenger.homeip.net> wrote:
+> I have made the experience that long tests slow down the raid to a point
+> where the system becomes unusable.
 
-You have a quite old version of mdadm. This issue has been fixed in
-mdadm (2.5.2-8) unstable from 27 Jul 2006. Current version is mdadm
-(2.5.3.git200608202239-2) unstable from 23 Aug 2006.
-
-Since the feature did just appear in mdadm (2.5.2-3) UNRELEASED from
-7 Jul 2006 (and even just went to unstable with mdadm (2.5.2-7) unstable
-from 20 Jul 2006), it seems you were simply in quite bad luck :)
+Even though we're quite off-topic here with that since it's more
+SMART-related... this is at least unusual.
+I'm also running regular SMART selftests (short daily, long weekly) and
+usually they don't affect drive's performance very much. However,
+whenever I experienced massive slow-downs while selftests are running,
+this did always point to disk problems... too much (and strategic
+disadvantageous) reallocated sectors (keep an ear on the disks, hear
+them seek()ing :)), non-reallocatable sectors or just temperature (for
+example, WD drives tend to show a bad performance when getting too hot).
 
 
 regards
    Mario
 -- 
-It is practically impossible to teach good programming style to students
-that have had prior exposure to BASIC: as potential programmers they are
-mentally mutilated beyond hope of regeneration.  -- Dijkstra
+But after a while I learned the trick of speaking fast. You don't have
+to think any faster; just use twice as many words to say everything.
+                                -- Paul Graham
 
