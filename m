@@ -1,83 +1,74 @@
-From: Benjamin Schieder <blindcoder@scavenger.homeip.net>
+From: Luca Berra <bluca@comedia.it>
 Subject: Re: Care and feeding of RAID?
-Date: Wed, 6 Sep 2006 09:12:24 +0200
-Message-ID: <20060906071224.GA20933@scavenger.homeip.net>
-References: <44FD722C.7050608@waldoware.com> <Pine.LNX.4.56.0609051414310.17570@lion.drogon.net> <44FD91D1.7090501@maine.edu> <20060905154156.GB28548@scavenger.homeip.net> <44FDC21C.7050203@maine.edu> <20060905205727.GD17634@percy.comedia.it>
+Date: Wed, 6 Sep 2006 09:16:09 +0200
+Message-ID: <20060906071609.GF17634@percy.comedia.it>
+References: <44FD722C.7050608@waldoware.com> <Pine.LNX.4.56.0609051414310.17570@lion.drogon.net> <44FD91D1.7090501@maine.edu> <20060905154156.GB28548@scavenger.homeip.net> <44FDC21C.7050203@maine.edu> <20060905205727.GD17634@percy.comedia.it> <44FDF08D.8000504@maine.edu>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="wRRV7LY7NUeQGEoC"
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20060905205727.GD17634@percy.comedia.it>
+In-Reply-To: <44FDF08D.8000504@maine.edu>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Steve Cousins <steve.cousins@maine.edu>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Tue, Sep 05, 2006 at 05:47:57PM -0400, Steve Cousins wrote:
+>
+>
+>Luca Berra wrote:
+>
+>>On Tue, Sep 05, 2006 at 02:29:48PM -0400, Steve Cousins wrote:
+>>
+>>>
+>>>
+>>>Benjamin Schieder wrote:
+>>>
+>>>>On 05.09.2006 11:03:45, Steve Cousins wrote:
+>>>>
+>>>>>Would people be willing to list their setup? Including such things 
+>>>>>as mdadm.conf file, crontab -l, plus scripts that they use to check 
+>>>>>the smart data and the array, mdadm daemon parameters and anything 
+>>>>>else that is relevant to checking and maintaining an array? 
+>>>>
+>>>>
+>>>>
+>>>>Personally, I use this script from cron:
+>>>>http://shellscripts.org/project/hdtest
+>>
+>>
+>>nice race :)
+>
+>I'm not sure what you mean?
 
---wRRV7LY7NUeQGEoC
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+tmp="`mktemp`"
+rm -f ${tmp}
+touch ${tmp}
 
-On 05.09.2006 22:57:27, Luca Berra wrote:
-> On Tue, Sep 05, 2006 at 02:29:48PM -0400, Steve Cousins wrote:
-> >
-> >
-> >Benjamin Schieder wrote:
-> >>On 05.09.2006 11:03:45, Steve Cousins wrote:
-> >>
-> >>>Would people be willing to list their setup? Including such things as=
-=20
-> >>>mdadm.conf file, crontab -l, plus scripts that they use to check the=
-=20
-> >>>smart data and the array, mdadm daemon parameters and anything else th=
-at=20
-> >>>is relevant to checking and maintaining an array?=20
-> >>
-> >>
-> >>Personally, I use this script from cron:
-> >>http://shellscripts.org/project/hdtest
->=20
-> nice race :)
-
-As in race condition? Where?
-
-> >I am checking this out and I see that you are the writer of this script.
-> >I'm getting errors when it comes to lines 76 and 86-90 about the=20
-> >arithmetic symbols. This is on a Fedora Core 5 system with bash version=
-=20
-> that is because smartctl output has changed and the grep above returns
-> no number.
-
-I'm running smartmontools 5.33 here. When did the output change? It still
-works fine here.
-
-> >What do you (or others) recommend for SATA drives?
->=20
-> smartmontools and a recent kernel just work.
-> also you can schedule smart tests with smartmontools. so you don't need
-> to cron scripts.
-
-Interesting. I'll look into that.
+the last two lines are unneeded and can be tricked to overwrite
+arbitrary filenames
 
 
-Greetings,
-	Benjamin
+>I tried smartctl -t short -d scsi /dev/sdb where /dev/sdb is a 250GB 
+>SATA drive.
 
---=20
-The Nethack IdleRPG! Idle to your favorite Nethack messages!
-http://pallas.crash-override.net/nethackidle/
+it is '-d ata'
 
---wRRV7LY7NUeQGEoC
-Content-Type: application/pgp-signature
-Content-Disposition: inline
+>What command do you use for SATA drives?  The sourceforge page implies 
+>that -d sata doesn't exist yet.  I'm using FC 5 with 2.6.17 kernel and 
+>smartmontools version 5.33.  Do you have a sample configuration script 
+>that you could show me?
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.3 (GNU/Linux)
+# monitor two sata disks, show temperature in degrees,
+# do a long test every sunday and a short every other day
+# at 1am on sda and at 2am on sdb, YMMV
+/dev/sda -d ata -a -R 194 -s (L/../../7|S/../../[123456])/01
+/dev/sdb -d ata -a -R 194 -s (L/../../7|S/../../[123456])/02
 
-iD8DBQFE/nTYr0OTeImXvg8RArClAJ0fPUaraFYvZ1zk7Sk97oXqtwbbfACdEnFh
-tqziHlNgdy6IeUelgpIEC98=
-=ctMj
------END PGP SIGNATURE-----
-
---wRRV7LY7NUeQGEoC--
+-- 
+Luca Berra -- bluca@comedia.it
+        Communication Media & Services S.r.l.
+ /"\
+ \ /     ASCII RIBBON CAMPAIGN
+  X        AGAINST HTML MAIL
+ / \
