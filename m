@@ -1,46 +1,75 @@
-From: John McMonagle <johnm@advocap.org>
-Subject: Re: RAID-5 recovery
-Date: Wed, 06 Sep 2006 16:13:35 -0500
-Message-ID: <44FF39FF.3000007@advocap.org>
-References: <200609031148.56910.clive@vacuumtube.org.uk>	<Pine.LNX.4.64.0609031530010.12203@twinlark.arctic.org> <17659.44517.186189.152370@cse.unsw.edu.au>
+From: Tomasz Chmielewski <mangoo@wpkg.org>
+Subject: Re: checking state of RAID (for automated notifications)
+Date: Thu, 07 Sep 2006 10:30:44 +0200
+Message-ID: <44FFD8B4.7080901@wpkg.org>
+References: <44FE8A68.8060306@wpkg.org> <44FEFC45.1080500@h3c.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-2; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17659.44517.186189.152370@cse.unsw.edu.au>
+In-Reply-To: <44FEFC45.1080500@h3c.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: Mike Hardy <mhardy@h3c.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil Brown wrote:
-> On Sunday September 3, dean@arctic.org wrote:
+Mike Hardy wrote:
+> <berlin> % rpm -qf /usr/lib/nagios/plugins/contrib/check_linux_raid.pl
+> nagios-plugins-1.4.1-1.2.fc4.rf
 > 
->>On Sun, 3 Sep 2006, Clive Messer wrote:
->>
->>
->>>This leads me to a question. I understand from reading the linux-raid archives 
->>>that the current behaviour when rebuilding with a single badblock on another 
->>>disk is for that disk to also be kicked from the array.
->>
->>that's not quite the current behaviour.  since 2.6.14 or .15 or so md will 
->>reconstruct bad blocks from other disks and try writing them.  it's only 
->>when this fails repeatedly that it knocks the disk out of the array.
-> 
-> 
-> "when rebuild" md/raid5 cannot reconstruct bad blocks because the
-> array is degraded, so a read error is immediately fatal.
-> 
-> NeilBrown
-> 
+> It is built in to my nagios plugins package at least, and works great.
 
-Don't keep up as much as I should, but is there now an attempt to
-automatically fix disk read errors?
+All right, I didn't see it.
 
-If so what version of kernel and mdadm are required?
-Also if true does this apply to other raid levels like 1, 6 and 10?
+I was thinking of monitoring remote servers; I wrote something very simple.
+It checks how many "U" letters there are in /proc/mdstat, and compares 
+it to $DEVICES number we have.
 
-Thanks
+First, run this one on a remote machine, via cron:
 
-John
 
+#!/bin/bash
+
+# This script prints the status of RAID device on this machine
+
+# how many RAID devices/partitions do we have here?
+DEVICES=8
+
+
+# no need to change anything below...
+
+RUNNING=$(cat /proc/mdstat | tr -cd  "U" | wc -c)
+
+if [ "$DEVICES" == "$RUNNING" ] ; then
+
+echo "RAID status OK" > /tmp/raid-status.txt
+
+else
+
+echo "RAID broken" > /tmp/raid-status.txt
+
+fi
+
+
+And then poll the results from the nagios server (let's call it 
+"check_raid" nagios plugin):
+
+#!/bin/bash
+
+# checks state of software RAID
+
+STATUS=$(ssh -l checkuser -i ~nagios/.ssh/checkuser.rsa $1 "cat 
+/tmp/raid-status.txt")
+
+if [ "$STATUS" == "RAID status OK" ] ; then
+echo $STATUS
+exit 0
+else
+echo $STATUS
+exit 2
+fi
+
+
+-- 
+Tomasz Chmielewski
+http://wpkg.org
