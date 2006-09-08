@@ -1,97 +1,38 @@
-From: dean gaudet <dean@arctic.org>
-Subject: Re: proactive-raid-disk-replacement
-Date: Fri, 8 Sep 2006 11:44:07 -0700 (PDT)
-Message-ID: <Pine.LNX.4.64.0609081128130.32186@twinlark.arctic.org>
-References: <45012E73.5040900@tls.msk.ru> <Pine.LNX.4.64.0609080215220.32186@twinlark.arctic.org>
- <45014A43.2020702@tls.msk.ru>
+From: "David Rees" <drees76@gmail.com>
+Subject: Re: Messed up creating new array...
+Date: Fri, 8 Sep 2006 13:40:25 -0700
+Message-ID: <72dbd3150609081340p2c35ccacs5f2e0b3d33c73eb9@mail.gmail.com>
+References: <001201c6d34f$b0651710$0e00a8c0@sherlock>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <45014A43.2020702@tls.msk.ru>
+In-Reply-To: <001201c6d34f$b0651710$0e00a8c0@sherlock>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Michael Tokarev <mjt@tls.msk.ru>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: Ruth Ivimey-Cook <Ruth.Ivimey-Cook@ivimey.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, 8 Sep 2006, Michael Tokarev wrote:
+On 9/8/06, Ruth Ivimey-Cook <Ruth.Ivimey-Cook@ivimey.org> wrote:
+> I messed up slightly when creating a new 6-disk raid6 array, and am wondering
+> if there is a simple answer. The problem is that I didn't partition the drives,
+> but simply used the whole drive. All drives are of the same type and using the
+> Supermicro SAT2-MV8 controller.
 
-> dean gaudet wrote:
-> > On Fri, 8 Sep 2006, Michael Tokarev wrote:
-> > 
-> >> Recently Dean Gaudet, in thread titled 'Feature
-> >> Request/Suggestion - "Drive Linking"', mentioned his
-> >> document, http://arctic.org/~dean/proactive-raid5-disk-replacement.txt
-> >>
-> >> I've read it, and have some umm.. concerns.  Here's why:
-> >>
-> >> ....
-> >>> mdadm -Gb internal --bitmap-chunk=1024 /dev/md4
-> 
-> By the way, don't specify bitmap-chunk for internal bitmap.
-> It's needed for file-based (external) bitmap.  With internal
-> bitmap, we have fixed size in superblock for it, so bitmap-chunk
-> is determined by dividing that size by size of the array.
+This should work:
 
-yeah sorry that was with an older version of mdadm which didn't calculate 
-the chunksize correct for an internal bitmap on a large enough array... i 
-should have mentioned that in the post.  it's fixed in newer mdadm.
+1. Unmount filesystem.
+2. Shrink file system to something a bit smaller. Since it's a big
+array, 1GB should give you plenty of room.
+3. Shrink raid array to something in between the new fs size and old
+fs size. Make sure you don't shrink it smaller than the filesystem!
+4. Remove a disk from the array (fail/remove)
+5. Partition disk
+6. Add partition back to array
+7. Repeat steps 4-6 for all disks in the array.
+8. Now the whole array should be on partitions. Grow the raid array
+back to "max".
+9. Grow filesystem to the partition size.
 
-
-> > my practice is to run regular SMART long self tests, which tend to find 
-> > Current_Pending_Sectors (which are generally read errors waiting to 
-> > happen) and then launch a "repair" sync action... that generally drops the 
-> > Current_Pending_Sector back to zero.  either through a realloc or just 
-> > simply rewriting the block.  if it's a realloc then i consider if there's 
-> > enough of them to warrant replacing the disk...
-> > 
-> > so for me the chances of a read error while doing the raid1 thing aren't 
-> > as high as they could be...
-> 
-> So the whole thing goes this way:
->   0) do a SMART selftest ;)
->   1) do repair for the whole array
->   2) copy data from failing to new drive
->     (using temporary superblock-less array)
->   2a) if step 2 failed still, probably due to new bad sectors,
->       go the "old way", removing the failing drive and adding
->       new one.
-> 
-> That's 2x or 3x (or 4x counting the selftest, but that should be
-> done regardless) more work than just going the "old way" from the
-> beginning, but still some chances to have it completed flawlessly
-> in 2 steps, without losing redundancy.
-
-well it's more "work" but i don't actually manually launch the SMART 
-tests, smartd does that.  i just notice when i get mail indicating 
-Current_Pending_Sectors has gone up.
-
-but i'm starting to lean towards SMART short tests (in case they test 
-something i can't test with a full surface read) and regular crontabbed 
-rate-limited repair or check actions.
-
-
-> 2)  The same, but not offlining the array.  Hot-remove a drive, make copy
->    of it to new drive, flip necessary bitmap bits, and re-add the new drive,
->    and let raid code to resync changed (during copy, while the array was
->    still active, something might has changed) and missing blocks.
-> 
-> This variant still loses redundancy, but not much of it, provided the bitmap
-> code works correctly.
-
-
-i like this method.  it yields the minimal disk copy time because there's
-no competition with the live traffic... and you can recover if another
-disk has errors while you're doing the copy.
-
-
-> 3)  The same as your way, with the difference that we tell md to *skip* and
->   ignore possible errors during resync (which is also not possible currently).
-
-maybe we could hand it a bitmap to record the errors in... so we could
-merge it with the raid5 bitmap later.
-
-still not really the best solution though, is it?
-
-we really want a solution similar to raid10...
-
--dean
+-Dave
