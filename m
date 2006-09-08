@@ -1,60 +1,43 @@
-From: Mark Smith <nanog@fa1c52f96c54f7450e1ffb215f29991e.nosense.org>
-Subject: Re: Interesting RAID checking observations - I'm getting it too
-Date: Fri, 8 Sep 2006 19:00:30 +0930
-Message-ID: <20060908190030.2aa781d8.nanog@fa1c52f96c54f7450e1ffb215f29991e.nosense.org>
-References: <20060830192410.332db788.nanog@fa1c52f96c54f7450e1ffb215f29991e.nosense.org>
-	<44FC578D.5020704@tmr.com>
+From: Lars Schimmer <l.schimmer@cgv.tugraz.at>
+Subject: RAID5 fill up?
+Date: Fri, 08 Sep 2006 11:31:31 +0200
+Message-ID: <45013873.5040006@cgv.tugraz.at>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <44FC578D.5020704@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Bill,
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-On Mon, 04 Sep 2006 12:42:53 -0400
-Bill Davidsen <davidsen@tmr.com> wrote:
+Hi!
 
-> 
-> 
-> 
-> Mark Smith wrote:
-> 
-> >
-> Interesting, but do you run other stuff at that time? Several 
-> distributions run various things in the middle of the night which really 
-> bog the machine.
-> 
+I=B4ve got a software RAiD5 with 6 250GB HDs.
+Now I changed one disk after another to a 400GB HD and resynced the
+raid5 after each change.
+Now the RAID5 has got 6 400GB HDs and still uses only 6*250GB space.
+How can I grow the md0 device to use 6*400GB?
 
-Doesn't look like it. Shifted the check to 3.00am, 4.00am period is now
-"all nothing" :
+MfG,
+Lars Schimmer
+- --
+- -------------------------------------------------------------
+TU Graz, Institut f=FCr ComputerGraphik & WissensVisualisierung
+Tel: +43 316 873-5405       E-Mail: l.schimmer@cgv.tugraz.at
+=46ax: +43 316 873-5402       PGP-Key-ID: 0x4A9B1723
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.1 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
 
-00:01:01          CPU     %user     %nice   %system   %iowait    %steal     %idle
-.
-.
-03:56:02          all      0.85      0.00      0.38      0.00      0.00     98.77
-04:01:01          all      0.75      0.00      0.34      0.00      0.00     98.91
-04:06:01          all      0.73      0.00      0.35      0.00      0.00     98.92
-04:11:01          all      0.73      0.00      0.38      0.00      0.00     98.89
-04:16:01          all      0.84      0.00      0.37      0.00      0.00     98.79
-04:21:01          all      0.68      0.00      0.34      0.00      0.00     98.98
-04:26:01          all      0.78      0.00      0.39      0.00      0.00     98.83
-04:31:01          all      1.18      0.00      0.40      0.00      0.00     98.43
-04:36:01          all      0.88      0.00      0.33      0.00      0.00     98.79
-04:41:01          all      0.72      0.00      0.38      0.00      0.00     98.90
-04:46:01          all      0.80      0.00      0.42      0.00      0.00     98.78
-.
-.
-
-Regards,
-Mark.
-
--- 
-
-        "Sheep are slow and tasty, and therefore must remain constantly
-         alert."
-                                   - Bruce Schneier, "Beyond Fear"
+iD8DBQFFAThzmWhuE0qbFyMRApImAJ9j3CJRyfoGeg2IthY6JCMDRs5GugCfQZIY
+ENAC2gqh3fc8/HZQs1dUhAs=3D
+=3DguH4
+-----END PGP SIGNATURE-----
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
