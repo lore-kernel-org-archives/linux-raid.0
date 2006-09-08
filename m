@@ -1,70 +1,41 @@
-From: Lars Schimmer <l.schimmer@cgv.tugraz.at>
-Subject: Re: RAID5 fill up?
-Date: Fri, 08 Sep 2006 15:41:40 +0200
-Message-ID: <45017314.1080506@cgv.tugraz.at>
-References: <45013873.5040006@cgv.tugraz.at> <450142AC.8010304@tls.msk.ru> <45016177.8080604@cgv.tugraz.at> <45016867.7080800@tls.msk.ru>
+From: "Ruth Ivimey-Cook" <Ruth.Ivimey-Cook@ivimey.org>
+Subject: Messed up creating new array...
+Date: Fri, 8 Sep 2006 15:04:24 +0100
+Message-ID: <001201c6d34f$b0651710$0e00a8c0@sherlock>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+	charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <45016867.7080800@tls.msk.ru>
 Sender: linux-raid-owner@vger.kernel.org
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+Folks,
 
-Michael Tokarev wrote:
-> Lars Schimmer wrote:
-> []
->>>> mdadm --grow is your friend.
->> Oh, damn, right. I was focussed on --grow to add a new HD to the RAI=
-D....
->> But isn=B4t there a switch to grow to max possible value?
->> Do I always have to search for the biggest value and type it in by h=
-and?
->=20
-> How about actually reading the fine manual? ;-P
->=20
->   -z, --size=3D
->=20
->               This value can be set with --grow for RAID level 1/4/5/=
-6. If the
->               array  was created with a size smaller than the current=
-ly active
->               drives, the extra space can be accessed using --grow.  =
-The  size
->               can  be given as max which means to choose the largest =
-size that
->               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^=
-^^^^
->               fits on all current drives.
+I messed up slightly when creating a new 6-disk raid6 array, and am wondering
+if there is a simple answer. The problem is that I didn't partition the drives,
+but simply used the whole drive. All drives are of the same type and using the
+Supermicro SAT2-MV8 controller.
 
-*damn* This must be the friday... Or I=B4m in weekend to fast.
+This is a problem because mdadm doesn't find the component drives... I can only
+start the array by using "mdadm --assemble /dev/md3 /dev/sd{drives}". While
+this works it means my system doesn't boot very easily :-(
 
-THANKS so far.
+For fixes I can think of the possible solutions:
 
-> /mjt
+ - Modify the startup script to do the mdadm --assemble /dev/md3
+/dev/sd{a,b,c,d,e}. Is there any other disadvantage of this?
 
+ - Use fdisk to create whole-disk partitions - but would this damage the
+already stored data?
 
-MfG,
-Lars Schimmer
-- --
-- -------------------------------------------------------------
-TU Graz, Institut f=FCr ComputerGraphik & WissensVisualisierung
-Tel: +43 316 873-5405       E-Mail: l.schimmer@cgv.tugraz.at
-=46ax: +43 316 873-5402       PGP-Key-ID: 0x4A9B1723
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
+ - Start again doing it right.... But this will take >12 hours and has a chance
+of failure!
 
-iD8DBQFFAXMUmWhuE0qbFyMRAtqjAJ96irdwtHjIEpvXbrq60a01VLAsMQCdHhCn
-YIPwr2pZQ7cErVc9NxenxGA=3D
-=3DKgy0
------END PGP SIGNATURE-----
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Any thoughts?
+
+Regards,
+
+Ruth
+
