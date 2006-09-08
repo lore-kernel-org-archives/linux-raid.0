@@ -1,76 +1,86 @@
-From: "John Stoffel" <john@stoffel.org>
-Subject: 2.6.18-rc5-mm1 - bd_claim_by_disk oops
-Date: Fri, 8 Sep 2006 10:07:16 -0400
-Message-ID: <17665.30996.679000.180156@smtp.charter.net>
+From: martin.kihlgren@adocca.com
+Subject: Please help me save my data
+Date: Fri, 8 Sep 2006 15:26:22 +0200 (CEST)
+Message-ID: <57786.213.136.43.252.1157721982.squirrel@webmail.adocca.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-lvm@redhat.com, linux-raid@vger.kernel.org
-Cc: john@stoffel.org
+To: linux-raid@vger.kernel.org
+Cc: neilb@suse.de
 List-Id: linux-raid.ids
 
 
-I got the following on 2.6.18-rc5-mm1 when trying to lvextend a test
-logical volume that I had just created.  This came about because I
-have been trying to expand some LVs on my system, which are based on a
-VG ontop of an MD mirror pair.  It's an SMP box too if that means
-anything.  
+Hello list.
 
-device-mapper: table: 253:3: linear: dm-linear: Device lookup failed
-device-mapper: ioctl: error adding target to table
-device-mapper: table: 253:3: linear: dm-linear: Device lookup failed
-device-mapper: ioctl: error adding target to table
-device-mapper: table: 253:2: linear: dm-linear: Device lookup failed
-device-mapper: ioctl: error adding target to table
-BUG: unable to handle kernel paging request at virtual address
-6f72702e
- printing eip:
-c018505b
-*pde = 00000000
-Oops: 0000 [#1]
-4K_STACKS SMP 
-last sysfs file: /block/dm-2/removable
-Modules linked in: rfcomm l2cap bluetooth sbp2 i2c_piix4 ohci1394
-evdev snd_ens1
-371 snd_rawmidi snd_ac97_codec snd_ac97_bus i2c_core snd_pcm snd_timer
-snd sound
-core snd_page_alloc ieee1394 uhci_hcd ohci_hcd usb_storage
-CPU:    1
-EIP:    0060:[<c018505b>]    Not tainted VLI
-EFLAGS: 00010292   (2.6.18-rc5-mm1 #1) 
-EIP is at bd_claim_by_disk+0x9b/0x1c0
-eax: e6622ba0   ebx: 6f72702e   ecx: c16decbc   edx: 6f72702e
-esi: 00000000   edi: e4a11220   ebp: c16dec80   esp: c62e1ca4
-ds: 007b   es: 007b   ss: 0068
-Process lvextend (pid: 2926, ti=c62e1000 task=dccfa580
-task.ti=c62e1000)
-Stack: c047cefa c16dec8c c16dec80 e3e31920 d1130e80 c16dec80 c035f9c8
-fffffff4 
-       e128d160 00900000 e3e31920 c036040c f0a5915c c042bf66 c62e1d50
-c62e1d4c 
-       c0500f0c e128d160 f0a5915c f0a1b080 e128d0c0 00000000 00000001
-c0500f0c 
-Call Trace:
- [<c035f9c8>] open_dev+0x48/0x80
- [<c036040c>] dm_get_device+0x20c/0x480
- [<c0243537>] vsscanf+0x447/0x490
- [<c0360ca9>] linear_ctr+0x99/0x110
- [<c035ff0d>] dm_table_add_target+0x17d/0x2e0
- [<c0361e6a>] table_load+0xba/0x1d0
- [<c0362b9d>] ctl_ioctl+0x22d/0x2a0
- [<c028b594>] n_tty_receive_buf+0x324/0x1070
- [<c0361db0>] table_load+0x0/0x1d0
- [<c016c2d8>] do_ioctl+0x78/0x90
- [<c016c34c>] vfs_ioctl+0x5c/0x2b0
- [<c016c5dd>] sys_ioctl+0x3d/0x70
- [<c0102f33>] syscall_call+0x7/0xb
- =======================
-Code: 3c 8b 13 0f 18 02 90 8d 4d 3c 39 cb 0f 84 24 01 00 00 8b 47 0c
-3b 43 0c 75
- 0f e9 ab 00 00 00 90 3b 43 0c 0f 84 a1 00 00 00 89 d3 <8b> 12 0f 18
-02 90 39 cb
- 75 eb e8 d6 a9 0b 00 85 c0 89 47 0c 0f 
-EIP: [<c018505b>] bd_claim_by_disk+0x9b/0x1c0 SS:ESP 0068:c62e1ca4
- 
+I have a spot of trouble with a RAID5 array of mine, and I thought maybe
+you could help me.
+
+This is the story so far:
+
+ * I bought 10 external USB drives. This seemed like a good idea, they are
+   cheap, they are hot-pluggable and they are fast enough.
+ * I set them up in two RAID5 arrays, which I set up as LVM pv's. Then I
+   created an LVM vg out of these and an LVM lv out of the vg.
+ * I encrypted this lv and formatted it with an xfs fs.
+
+This all worked perfectly fine, until I realized how bad these drives and
+this USB controller work with ehci_hcd.
+
+In short, the devices get reset all the time. And each time they get
+reset, everything stops for a while. Nothing strange and no showstopper
+here.
+
+But the really bad thing is when they reset in some extra-bad way, and get
+dropped completely. What happens then is that the RAID5 system drops them,
+and they get reincarnated with a new device name. /dev/sdi becomes
+suddenly /dev/sdn or something similarly horrbile.
+
+And since I (up until yesterday) didnt know about write-intent bitmaps
+each resync took around 10 hours. Plenty of time for ANOTHER disk to fail
+and get dropped.
+
+This I usually solved by doing mdadm -S and then mdadm -A -f.
+
+Yesterday, however, I was feeling extra clever, and I just did mdadm -a
+/dev/md1 /dev/sdn1.
+
+This was a huge mistake.
+
+What had happened, I now realized, was this:
+
+ * /dev/md1 is fine
+ * /dev/sdX1 drops, and /dev/md1 is degraded
+ * I re-add /dev/sdX1 in its new guise, and /dev/md1 is resyncing with
+   4 working drives and one spare
+ * /dev/sdY1 drops, and /dev/md1 stops
+ * I re-add /dev/sdY1 in its new guise, and mdadm marks it as a SPARE.
+ * I suddenly have an array with 3 working drives and 2 spares where
+   I know that one spare is in fact synced and ready to go, since
+   the array stopped the moment it failed.
+
+Also, I dont know any longer WHERE in the array the synced but
+spare-marked drive should go. I know that the working drives are 0, 2 and
+4, but not where the synced spare drive should go.
+
+So, what I want to do is:
+
+ * Mark the synced spare drive as working and in position 1
+ * Assemble the array without the unsynced spare and check if this
+   provides consistent data
+ * If it didnt, I want to mark the synced spare as working and in
+   position 3, and try the same thing again
+ * When I have it working, I just want to add the unsynced spare and
+   let it sync normally
+ * Then I will create a write-intent bitmap to avoid the dangerously
+   long sync times, and also buy a new USB controller hoping that it
+   will solve my problems
+
+So, do you guys have any idea how I can do this? mdadm doesnt support
+changing the superblock in such a free hand manner...
+
+Please help me save this data :/ It is precious to me :.(
+
+regards,
+//Martin Kihlgren
