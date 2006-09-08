@@ -1,76 +1,79 @@
-From: martin.kihlgren@adocca.com
-Subject: Please help me save my data
-Date: Fri, 8 Sep 2006 15:36:35 +0200
-Message-ID: <20060908133624.GA20190@troja.ath.cx>
+From: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
+Subject: Re: RAID5 fill up?
+Date: Fri, 8 Sep 2006 09:35:14 -0700 (PDT)
+Message-ID: <Pine.LNX.4.64.0609080931340.23948@filesrv1.baby-dragons.com>
+References: <45013873.5040006@cgv.tugraz.at> <450142AC.8010304@tls.msk.ru>
+ <45016177.8080604@cgv.tugraz.at> <20060908132516.GH19633@percy.comedia.it>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: MULTIPART/MIXED; BOUNDARY="566704117-1685796775-1157733314=:23948"
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <20060908132516.GH19633@percy.comedia.it>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: neilb@suse.de
+To: linux-raid maillist <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-Hello list.
+--566704117-1685796775-1157733314=:23948
+Content-Type: TEXT/PLAIN; charset=iso-8859-1; format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 
-I have a spot of trouble with a RAID5 array of mine, and I thought maybe you could help me.
+ =09Hello Neil & Luca ,
 
-This is the story so far:
+On Fri, 8 Sep 2006, Luca Berra wrote:
+> On Fri, Sep 08, 2006 at 02:26:31PM +0200, Lars Schimmer wrote:
+>> -----BEGIN PGP SIGNED MESSAGE-----
+>> Hash: SHA1
+>>=20
+>> Michael Tokarev wrote:
+>>> Lars Schimmer wrote:
+>>>> Hi!
+>>>>=20
+>>>> I=B4ve got a software RAiD5 with 6 250GB HDs.
+>>>> Now I changed one disk after another to a 400GB HD and resynced the
+>>>> raid5 after each change.
+>>>> Now the RAID5 has got 6 400GB HDs and still uses only 6*250GB space.
+>>>> How can I grow the md0 device to use 6*400GB?
+>>>=20
+>>> mdadm --grow is your friend.
+>>=20
+>> Oh, damn, right. I was focussed on --grow to add a new HD to the RAID...=
+=2E
+>> But isn=B4t there a switch to grow to max possible value?
+>> Do I always have to search for the biggest value and type it in by hand?
+> man mdadm
+> ....
+>      -z, --size=3D
+> ....
+>             This value can be set with --grow for RAID level 1/4/5/6. If =
+the
+>             array  was created with a size smaller than the currently act=
+ive
+>             drives, the extra space can be accessed using --grow.  The  s=
+ize
+>             can  be given as max which means to choose the largest size t=
+hat
+>             fits on all current drives.
 
- * I bought 10 external USB drives. This seemed like a good idea, they are
-   cheap, they are hot-pluggable and they are fast enough.
- * I set them up in two RAID5 arrays, which I set up as LVM pv's. Then I
-   created an LVM vg out of these and an LVM lv out of the vg.
- * I encrypted this lv and formatted it with an xfs fs.
+ =09Kuca ,  Thank you for posting this snippet .
+ =09Neil ,  Might changing ,
 
-This all worked perfectly fine, until I realized how bad these drives and this USB controller work with ehci_hcd.
+              can  be given as max which means to choose the largest size t=
+hat
+ =09To
+              can  be given as 'max' which means to choose the largest size=
+ that
 
-In short, the devices get reset all the time. And each time they get reset, everything stops for a while. Nothing strange and no showstopper 
-here.
+ =09help those reading this be aware that this is a 'string' to add to the
+ =09end of --size=3D ?  Also if there are other keywords not quoted ('') th=
+is
+ =09might be a good opertunity .  ;-)  Tia ,  JimL
 
-But the really bad thing is when they reset in some extra-bad way, and get dropped completely. What happens then is that the RAID5 system 
-drops them, and they get reincarnated with a new device name. /dev/sdi becomes suddenly /dev/sdn or something similarly horrbile.
-
-And since I (up until yesterday) didnt know about write-intent bitmaps each resync took around 10 hours. Plenty of time for ANOTHER disk to 
-fail and get dropped.
-
-This I usually solved by doing mdadm -S and then mdadm -A -f.
-
-Yesterday, however, I was feeling extra clever, and I just did mdadm -a /dev/md1 /dev/sdn1.
-
-This was a huge mistake.
-
-What had happened, I now realized, was this:
-
- * /dev/md1 is fine
- * /dev/sdX1 drops, and /dev/md1 is degraded
- * I re-add /dev/sdX1 in its new guise, and /dev/md1 is resyncing with
-   4 working drives and one spare
- * /dev/sdY1 drops, and /dev/md1 stops
- * I re-add /dev/sdY1 in its new guise, and mdadm marks it as a SPARE. * I suddenly have an array with 3 working drives and 2 spares where
-   I know that one spare is in fact synced and ready to go, since
-   the array stopped the moment it failed.
-
-Also, I dont know any longer WHERE in the array the synced but
-spare-marked drive should go. I know that the working drives are 0, 2 and 4, but not where the synced spare drive should go.
-
-So, what I want to do is:
-
- * Mark the synced spare drive as working and in position 1
- * Assemble the array without the unsynced spare and check if this
-   provides consistent data
- * If it didnt, I want to mark the synced spare as working and in
-   position 3, and try the same thing again
- * When I have it working, I just want to add the unsynced spare and
-   let it sync normally
- * Then I will create a write-intent bitmap to avoid the dangerously
-   long sync times, and also buy a new USB controller hoping that it will solve my problems
-
-So, do you guys have any idea how I can do this? mdadm doesnt support changing the superblock in such a free hand manner...
-
-Please help me save this data :/ It is precious to me :.(
-
-regards,
-//Martin Kihlgren
-
+--=20
++----------------------------------------------------------------------+
+| James   W.   Laferriere |   System    Techniques   | Give me VMS     |
+| Network        Engineer | 3600 14th Ave SE #20-103 |  Give me Linux  |
+| babydr@baby-dragons.com |  Olympia ,  WA.   98501  |   only  on  AXP |
++----------------------------------------------------------------------+
+--566704117-1685796775-1157733314=:23948--
