@@ -1,77 +1,60 @@
-From: dean gaudet <dean@arctic.org>
-Subject: Re: proactive-raid-disk-replacement
-Date: Fri, 8 Sep 2006 02:24:40 -0700 (PDT)
-Message-ID: <Pine.LNX.4.64.0609080215220.32186@twinlark.arctic.org>
-References: <45012E73.5040900@tls.msk.ru>
+From: Mark Smith <nanog@fa1c52f96c54f7450e1ffb215f29991e.nosense.org>
+Subject: Re: Interesting RAID checking observations - I'm getting it too
+Date: Fri, 8 Sep 2006 19:00:30 +0930
+Message-ID: <20060908190030.2aa781d8.nanog@fa1c52f96c54f7450e1ffb215f29991e.nosense.org>
+References: <20060830192410.332db788.nanog@fa1c52f96c54f7450e1ffb215f29991e.nosense.org>
+	<44FC578D.5020704@tmr.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <45012E73.5040900@tls.msk.ru>
+In-Reply-To: <44FC578D.5020704@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Michael Tokarev <mjt@tls.msk.ru>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, 8 Sep 2006, Michael Tokarev wrote:
+Hi Bill,
 
-> Recently Dean Gaudet, in thread titled 'Feature
-> Request/Suggestion - "Drive Linking"', mentioned his
-> document, http://arctic.org/~dean/proactive-raid5-disk-replacement.txt
+On Mon, 04 Sep 2006 12:42:53 -0400
+Bill Davidsen <davidsen@tmr.com> wrote:
+
 > 
-> I've read it, and have some umm.. concerns.  Here's why:
 > 
-> ....
-> > mdadm -Gb internal --bitmap-chunk=1024 /dev/md4
-> > mdadm /dev/md4 -r /dev/sdh1
-> > mdadm /dev/md4 -f /dev/sde1 -r /dev/sde1
-> > mdadm --build /dev/md5 -ayes --level=1 --raid-devices=2 /dev/sde1 missing
-> > mdadm /dev/md4 --re-add /dev/md5
-> > mdadm /dev/md5 -a /dev/sdh1
+> 
+> Mark Smith wrote:
+> 
 > >
-> > ... wait a few hours for md5 resync...
+> Interesting, but do you run other stuff at that time? Several 
+> distributions run various things in the middle of the night which really 
+> bog the machine.
 > 
-> And here's the problem.  While new disk, sdh1, are resynced from
-> old, probably failing disk sde1, chances are high that there will
-> be an unreadable block on sde1.  And this means the whole thing
-> will not work -- md5 initially contained one working drive (sde1)
-> and one spare (sdh1) which is being converted (resynced) to working
-> disk.  But after read error on sde1, md5 will contain one failed
-> drive and one spare -- for raid1 it's fatal combination.
-> 
-> While at the same time, it's perfectly easy to reconstruct this
-> failing block from other component devices of md4.
 
-this statement is an argument for native support for this type of activity 
-in md itself.
+Doesn't look like it. Shifted the check to 3.00am, 4.00am period is now
+"all nothing" :
 
-> That to say: this way of replacing disk in a software raid array
-> isn't much better than just removing old drive and adding new one.
+00:01:01          CPU     %user     %nice   %system   %iowait    %steal     %idle
+.
+.
+03:56:02          all      0.85      0.00      0.38      0.00      0.00     98.77
+04:01:01          all      0.75      0.00      0.34      0.00      0.00     98.91
+04:06:01          all      0.73      0.00      0.35      0.00      0.00     98.92
+04:11:01          all      0.73      0.00      0.38      0.00      0.00     98.89
+04:16:01          all      0.84      0.00      0.37      0.00      0.00     98.79
+04:21:01          all      0.68      0.00      0.34      0.00      0.00     98.98
+04:26:01          all      0.78      0.00      0.39      0.00      0.00     98.83
+04:31:01          all      1.18      0.00      0.40      0.00      0.00     98.43
+04:36:01          all      0.88      0.00      0.33      0.00      0.00     98.79
+04:41:01          all      0.72      0.00      0.38      0.00      0.00     98.90
+04:46:01          all      0.80      0.00      0.42      0.00      0.00     98.78
+.
+.
 
-hmm... i'm not sure i agree.  in your proposal you're guaranteed to have 
-no redundancy while you wait for the new disk to sync in the raid5.
+Regards,
+Mark.
 
-in my proposal the probability that you'll retain redundancy through the 
-entire process is non-zero.  we can debate how non-zero it is, but 
-non-zero is greater than zero.
+-- 
 
-i'll admit it depends a heck of a lot on how long you wait to replace your 
-disks, but i prefer to replace mine well before they get to the point 
-where just reading the entire disk is guaranteed to result in problems.
-
-
-> And if the drive you're replacing is failing (according to SMART
-> for example), this method is more likely to fail.
-
-my practice is to run regular SMART long self tests, which tend to find 
-Current_Pending_Sectors (which are generally read errors waiting to 
-happen) and then launch a "repair" sync action... that generally drops the 
-Current_Pending_Sector back to zero.  either through a realloc or just 
-simply rewriting the block.  if it's a realloc then i consider if there's 
-enough of them to warrant replacing the disk...
-
-so for me the chances of a read error while doing the raid1 thing aren't 
-as high as they could be...
-
-but yeah you've convinced me this solution isn't good enough.
-
--dean
+        "Sheep are slow and tasty, and therefore must remain constantly
+         alert."
+                                   - Bruce Schneier, "Beyond Fear"
