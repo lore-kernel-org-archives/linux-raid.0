@@ -1,71 +1,66 @@
 From: "Rob Bray" <raid@bymeinc.com>
-Subject: Re: Raid5 reads and cpu
-Date: Thu, 7 Sep 2006 16:53:03 -0400 (EDT)
-Message-ID: <39829.192.168.0.1.1157662383.squirrel@bymeinc.com>
-References: <46510.192.168.0.1.1156790033.squirrel@bymeinc.com>
-    <44FC5DD9.5040200@tmr.com>
+Subject: Re: RAID-5 recovery
+Date: Thu, 7 Sep 2006 21:45:51 -0400 (EDT)
+Message-ID: <36355.192.168.0.1.1157679951.squirrel@bymeinc.com>
+References: <200609031148.56910.clive@vacuumtube.org.uk>
+    <Pine.LNX.4.64.0609031530010.12203@twinlark.arctic.org>
+    <Pine.LNX.4.62.0609040958340.21489@uplift.swm.pp.se>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <44FC5DD9.5040200@tmr.com>
+In-Reply-To: <Pine.LNX.4.62.0609040958340.21489@uplift.swm.pp.se>
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
+To: Mikael Abrahamsson <swmike@swm.pp.se>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> Rob Bray wrote:
+> Hi. When in 2.6.15 I used the /sys/block/md*/md/sync_action "check" option
+> it looked more like it was rebuilding the device than checking it.
 >
->>This might be a dumb question, but what causes md to use a large amount
->> of
->>cpu resources when reading a large amount of data from a raid1 array?
->>Examples are on a 2.4GHz AMD64, 2GB, 2.6.15.1 (I realize there are md
->>enhancements to later versions; I had some other unrelated issues and
->>rolled back to one I've run on for several months).
->>
->>A given 7-disk raid0 array can read 450MB/s (using cat > null) and use
->>virtually no CPU resources. (Although cat and kswapd use quite a bit
->> [60%]
->>munching on the data)
->>
->>A raid5 array on the same drive set pulls in at 250MB/s, but md uses
->>roughly 50% of the CPU (the other 50% is spent dealing with the data,
->>saturating the processor).
->>
->>A consistency check on the raid5 array uses roughly 3% of the cpu. It is
->>otherwise ~97% idle.
->>md11 : active raid5 sdi2[5] sdh2[4] sdf2[3] sde2[2] sdd2[1] sdc2[6]
->> sdb2[0]
->>      248974848 blocks level 5, 256k chunk, algorithm 2 [7/7] [UUUUUUU]
->>      [==============>......]  resync = 72.2% (29976960/41495808)
->>finish=3.7min speed=51460K/sec
->>(~350MB/s aggregate throughput, 50MB/s on each device)
->>
->>Just a friendly question as to why CPU utilization is significantly
->>different between a check and a real-world read on raid5? I feel like if
->>there was vm overhead getting the data into userland, the slowdown would
->>be present in raid0 as well. I assume parity calculations aren't done on
->> a
->>read of the array, which leaves me at my question.
->>
->>
-> What are you stripe and cache sizes?
+> Is this behaviour changed in more recent kernels, or did I just
+> misunderstand the log output from the check:
+>
+> # echo "check" > sync_action
+> # dmesg
+> md: syncing RAID array md3
+> md: minimum _guaranteed_ reconstruction speed: 1000 KB/sec/disc.
+> md: using maximum available idle IO bandwidth (but not more than 200000
+> KB/sec) for reconstruction.
+> md: using 128k window, over a total of 248896 blocks.
+> md: md3: sync done.
+>
+> This doesn't look like a check, more like a rebuild? Looking at iostat -x
+> does indicate that it's reading from one drive and writing to another?
+>
+> # uname -a
+> Linux 2.6.15-1-686-smp #2 SMP Mon Mar 6 15:34:50 UTC 2006 i686 GNU/Linux
+>
+> This is a standard debian kernel.
 >
 > --
-> bill davidsen <davidsen@tmr.com>
->   CTO TMR Associates, Inc
->   Doing interesting things with small computers since 1979
+> Mikael Abrahamsson    email: swmike@swm.pp.se
 >
+> --
+> VGER BF report: H 0.329215
 > -
 > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 >
 
-md11 : active raid5 sdi2[5] sdh2[4] sdf2[3] sde2[2] sdd2[1] sdc2[6] sdb2[0]
-      248974848 blocks level 5, 256k chunk, algorithm 2 [7/7] [UUUUUUU]
+I didn't see a response to this post -- forgive me if this is a
+duplicate.. The following went into 2.6.16 to fix what you mentioned,
+although the message will still report "reconstruction" without Neil's
+most recent patch to fix the wording:
 
-stripe_cache_size = 256
-I've tried increasing it with the same result
+Author: NeilBrown <neilb@suse.de>
+Date:   Fri Jan 6 00:20:26 2006 -0800
 
+    [PATCH] md: allow raid1 to check consistency
+
+    Where performing a user-requested 'check' or 'repair', we read all
+readable devices, and compare the contents.  We only write to blocks
+which had read errors, or blocks with content that differs from the
+first good device found.
 
