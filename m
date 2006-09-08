@@ -1,32 +1,45 @@
-From: Ralf Herrmann <ralf.herrmann@tu-ilmenau.de>
-Subject: Re: PROBLEM: system crash on AMD64 with 2.6.17.11 while accessing
- 3TB Software-RAID5
-Date: Fri, 08 Sep 2006 11:02:33 +0900
-Message-ID: <4500CF39.8010806@tu-ilmenau.de>
-References: <758194931.20060829001041@TU-Ilmenau.de> <17654.24059.852752.251958@cse.unsw.edu.au> <44F6E962.40900@TU-Ilmenau.de> <44FC5D1A.6020809@tmr.com>
+From: Michael Tokarev <mjt@tls.msk.ru>
+Subject: proactive-raid-disk-replacement
+Date: Fri, 08 Sep 2006 12:48:51 +0400
+Message-ID: <45012E73.5040900@tls.msk.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <44FC5D1A.6020809@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Dear Mr. Davidson and Mr. Brown,
+Recently Dean Gaudet, in thread titled 'Feature
+Request/Suggestion - "Drive Linking"', mentioned his
+document, http://arctic.org/~dean/proactive-raid5-disk-replacement.txt
 
-> It certainly is a legitimate question, and marginal power would have 
-> been at the end of my list as well... However, if all else fails, try 
-> formatting the new drives to use only the size of the old drive capacity 
-> (RAID on small partitions) and see if that works. If so you may have 
-> found some rare size-related bug.
+I've read it, and have some umm.. concerns.  Here's why:
 
-Seems as if the new power supply did the trick. The box's been
-running smoothly, for about 2 days lately.
-I'm currently not in office, but since i didn't get emergency
-calls from my colleagues i assume it still works.
+....
+> mdadm -Gb internal --bitmap-chunk=1024 /dev/md4
+> mdadm /dev/md4 -r /dev/sdh1
+> mdadm /dev/md4 -f /dev/sde1 -r /dev/sde1
+> mdadm --build /dev/md5 -ayes --level=1 --raid-devices=2 /dev/sde1 missing
+> mdadm /dev/md4 --re-add /dev/md5
+> mdadm /dev/md5 -a /dev/sdh1
+>
+> ... wait a few hours for md5 resync...
 
-Thanks again for your time,
+And here's the problem.  While new disk, sdh1, are resynced from
+old, probably failing disk sde1, chances are high that there will
+be an unreadable block on sde1.  And this means the whole thing
+will not work -- md5 initially contained one working drive (sde1)
+and one spare (sdh1) which is being converted (resynced) to working
+disk.  But after read error on sde1, md5 will contain one failed
+drive and one spare -- for raid1 it's fatal combination.
 
-Ralf Herrmann
+While at the same time, it's perfectly easy to reconstruct this
+failing block from other component devices of md4.
+
+That to say: this way of replacing disk in a software raid array
+isn't much better than just removing old drive and adding new one.
+And if the drive you're replacing is failing (according to SMART
+for example), this method is more likely to fail.
+
+/mjt
