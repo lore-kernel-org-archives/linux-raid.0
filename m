@@ -1,79 +1,97 @@
-From: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
-Subject: Re: RAID5 fill up?
-Date: Fri, 8 Sep 2006 09:35:14 -0700 (PDT)
-Message-ID: <Pine.LNX.4.64.0609080931340.23948@filesrv1.baby-dragons.com>
-References: <45013873.5040006@cgv.tugraz.at> <450142AC.8010304@tls.msk.ru>
- <45016177.8080604@cgv.tugraz.at> <20060908132516.GH19633@percy.comedia.it>
+From: dean gaudet <dean@arctic.org>
+Subject: Re: proactive-raid-disk-replacement
+Date: Fri, 8 Sep 2006 11:44:07 -0700 (PDT)
+Message-ID: <Pine.LNX.4.64.0609081128130.32186@twinlark.arctic.org>
+References: <45012E73.5040900@tls.msk.ru> <Pine.LNX.4.64.0609080215220.32186@twinlark.arctic.org>
+ <45014A43.2020702@tls.msk.ru>
 Mime-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="566704117-1685796775-1157733314=:23948"
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20060908132516.GH19633@percy.comedia.it>
+In-Reply-To: <45014A43.2020702@tls.msk.ru>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid maillist <linux-raid@vger.kernel.org>
+To: Michael Tokarev <mjt@tls.msk.ru>
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+On Fri, 8 Sep 2006, Michael Tokarev wrote:
 
---566704117-1685796775-1157733314=:23948
-Content-Type: TEXT/PLAIN; charset=iso-8859-1; format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+> dean gaudet wrote:
+> > On Fri, 8 Sep 2006, Michael Tokarev wrote:
+> > 
+> >> Recently Dean Gaudet, in thread titled 'Feature
+> >> Request/Suggestion - "Drive Linking"', mentioned his
+> >> document, http://arctic.org/~dean/proactive-raid5-disk-replacement.txt
+> >>
+> >> I've read it, and have some umm.. concerns.  Here's why:
+> >>
+> >> ....
+> >>> mdadm -Gb internal --bitmap-chunk=1024 /dev/md4
+> 
+> By the way, don't specify bitmap-chunk for internal bitmap.
+> It's needed for file-based (external) bitmap.  With internal
+> bitmap, we have fixed size in superblock for it, so bitmap-chunk
+> is determined by dividing that size by size of the array.
 
- =09Hello Neil & Luca ,
+yeah sorry that was with an older version of mdadm which didn't calculate 
+the chunksize correct for an internal bitmap on a large enough array... i 
+should have mentioned that in the post.  it's fixed in newer mdadm.
 
-On Fri, 8 Sep 2006, Luca Berra wrote:
-> On Fri, Sep 08, 2006 at 02:26:31PM +0200, Lars Schimmer wrote:
->> -----BEGIN PGP SIGNED MESSAGE-----
->> Hash: SHA1
->>=20
->> Michael Tokarev wrote:
->>> Lars Schimmer wrote:
->>>> Hi!
->>>>=20
->>>> I=B4ve got a software RAiD5 with 6 250GB HDs.
->>>> Now I changed one disk after another to a 400GB HD and resynced the
->>>> raid5 after each change.
->>>> Now the RAID5 has got 6 400GB HDs and still uses only 6*250GB space.
->>>> How can I grow the md0 device to use 6*400GB?
->>>=20
->>> mdadm --grow is your friend.
->>=20
->> Oh, damn, right. I was focussed on --grow to add a new HD to the RAID...=
-=2E
->> But isn=B4t there a switch to grow to max possible value?
->> Do I always have to search for the biggest value and type it in by hand?
-> man mdadm
-> ....
->      -z, --size=3D
-> ....
->             This value can be set with --grow for RAID level 1/4/5/6. If =
-the
->             array  was created with a size smaller than the currently act=
-ive
->             drives, the extra space can be accessed using --grow.  The  s=
-ize
->             can  be given as max which means to choose the largest size t=
-hat
->             fits on all current drives.
 
- =09Kuca ,  Thank you for posting this snippet .
- =09Neil ,  Might changing ,
+> > my practice is to run regular SMART long self tests, which tend to find 
+> > Current_Pending_Sectors (which are generally read errors waiting to 
+> > happen) and then launch a "repair" sync action... that generally drops the 
+> > Current_Pending_Sector back to zero.  either through a realloc or just 
+> > simply rewriting the block.  if it's a realloc then i consider if there's 
+> > enough of them to warrant replacing the disk...
+> > 
+> > so for me the chances of a read error while doing the raid1 thing aren't 
+> > as high as they could be...
+> 
+> So the whole thing goes this way:
+>   0) do a SMART selftest ;)
+>   1) do repair for the whole array
+>   2) copy data from failing to new drive
+>     (using temporary superblock-less array)
+>   2a) if step 2 failed still, probably due to new bad sectors,
+>       go the "old way", removing the failing drive and adding
+>       new one.
+> 
+> That's 2x or 3x (or 4x counting the selftest, but that should be
+> done regardless) more work than just going the "old way" from the
+> beginning, but still some chances to have it completed flawlessly
+> in 2 steps, without losing redundancy.
 
-              can  be given as max which means to choose the largest size t=
-hat
- =09To
-              can  be given as 'max' which means to choose the largest size=
- that
+well it's more "work" but i don't actually manually launch the SMART 
+tests, smartd does that.  i just notice when i get mail indicating 
+Current_Pending_Sectors has gone up.
 
- =09help those reading this be aware that this is a 'string' to add to the
- =09end of --size=3D ?  Also if there are other keywords not quoted ('') th=
-is
- =09might be a good opertunity .  ;-)  Tia ,  JimL
+but i'm starting to lean towards SMART short tests (in case they test 
+something i can't test with a full surface read) and regular crontabbed 
+rate-limited repair or check actions.
 
---=20
-+----------------------------------------------------------------------+
-| James   W.   Laferriere |   System    Techniques   | Give me VMS     |
-| Network        Engineer | 3600 14th Ave SE #20-103 |  Give me Linux  |
-| babydr@baby-dragons.com |  Olympia ,  WA.   98501  |   only  on  AXP |
-+----------------------------------------------------------------------+
---566704117-1685796775-1157733314=:23948--
+
+> 2)  The same, but not offlining the array.  Hot-remove a drive, make copy
+>    of it to new drive, flip necessary bitmap bits, and re-add the new drive,
+>    and let raid code to resync changed (during copy, while the array was
+>    still active, something might has changed) and missing blocks.
+> 
+> This variant still loses redundancy, but not much of it, provided the bitmap
+> code works correctly.
+
+
+i like this method.  it yields the minimal disk copy time because there's
+no competition with the live traffic... and you can recover if another
+disk has errors while you're doing the copy.
+
+
+> 3)  The same as your way, with the difference that we tell md to *skip* and
+>   ignore possible errors during resync (which is also not possible currently).
+
+maybe we could hand it a bitmap to record the errors in... so we could
+merge it with the raid5 bitmap later.
+
+still not really the best solution though, is it?
+
+we really want a solution similar to raid10...
+
+-dean
