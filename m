@@ -1,28 +1,42 @@
-From: "Tuomas Leikola" <tuomas.leikola@gmail.com>
-Subject: Re: Check/repair on composite RAID
-Date: Sat, 9 Sep 2006 21:00:51 +0300
-Message-ID: <5b170a7d0609091100r631442e9ma17a88cee92c8706@mail.gmail.com>
-References: <45024AB5.4050703@sauce.co.nz>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: 2 Hard Drives & RAID
+Date: Sat, 9 Sep 2006 15:48:24 -0400 (EDT)
+Message-ID: <Pine.LNX.4.64.0609091548080.14845@p34.internal.lan>
+References: <ednknc$gk$4@sea.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <45024AB5.4050703@sauce.co.nz>
-Content-Disposition: inline
+In-Reply-To: <ednknc$gk$4@sea.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Richard Scobie <richard@sauce.co.nz>
-Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: "Sandra L. McGrew" <momo_1@alltel.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 9/9/06, Richard Scobie <richard@sauce.co.nz> wrote:
-> If I have a RAID 10, comprising a RAID 0, /dev/md3 made up of RAID1,
-> /dev/md1 and RAID1, /dev/md2 and I do an:
->
-> echo repair > /sys/block/md3/md/sync_action
->
-> will this run simultaneous repairs on the the underlying RAID 1's, or
-> should seperate repairs be done to md1 and 2?
 
-check/repair is pointless on raid0, as there is no redundancy.
 
-You should run separate checks (repairs) on the underlying devices.
+On Wed, 6 Sep 2006, Sandra L. McGrew wrote:
+
+> I have two hard drives installed in this DELL GX110 Optiplex computer. I
+> believe that they are configured in RAID5, but am not certain. Is there a
+> graphical method of determining how many drives are being used and how they
+> are configured???
+> I'm using Debian, 'Sarge'...
+>
+> The computer is incrediby fast... I'm thinking that could be because it's a
+> DELL or because the drives are mirrored...
+>             I would apppreciate any help that you can give me...
+>                   Most sincerley,
+>                                Dan (nurse1@longviewcomm[removethis].net)
+>
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+
+RAID5 requires 3 drives or more.
+
+To check your disks type: fdisk -l as root.
+
+Justin.
+
