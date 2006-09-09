@@ -1,96 +1,90 @@
-From: Bodo Thiesen <bothie@gmx.de>
-Subject: Re: proactive-raid-disk-replacement
-Date: Sun, 10 Sep 2006 02:02:03 +0200
-Message-ID: <20060910020203.27d26886@30_bodo.rupinet>
-References: <45012E73.5040900@tls.msk.ru>
+From: Sandra McGrew <nurse1@longviewcomm.net>
+Subject: Re: 2 Hard Drives & RAID
+Date: Sat, 09 Sep 2006 17:11:33 -0500
+Message-ID: <edve80$p4j$1@sea.gmane.org>
+References: <ednknc$gk$4@sea.gmane.org> <Pine.LNX.4.64.0609091548080.14845@p34.internal.lan> <45031F68.4020403@panix.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7Bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <45012E73.5040900@tls.msk.ru>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Michael Tokarev <mjt@tls.msk.ru> wrote:
+I'm looking into the Debian, 'Sarge' Info Center and under the device column
+it shows
+Device          Type            Size            Mount  Point
+/dev/fd0        auto            N/A             /media/floppy0
+/dev/hda1       Ext3            35.9            /
+/dev/hdc        iso9660         N/A             /media/cdrom1
+/dev/hdd        iso9660         N/A             /media/cdrom0
 
-> > mdadm -Gb internal --bitmap-chunk=1024 /dev/md4
-> > mdadm /dev/md4 -r /dev/sdh1
-> > mdadm /dev/md4 -f /dev/sde1 -r /dev/sde1
-> > mdadm --build /dev/md5 -ayes --level=1 --raid-devices=2 /dev/sde1 missing
-> > mdadm /dev/md4 --re-add /dev/md5
-> > mdadm /dev/md5 -a /dev/sdh1
-> >
-> > ... wait a few hours for md5 resync...
+So, it doesn't look like it is seeing the other hard drive... it is
+connected and the BIOS sees it... therefore, it's available to the system,
+I'm just not certain how to  see it and once I can do that, I will worry
+'bout formating it next... there is a nice utility for that... I'm not
+certain, but I think that I can handle that part... if I could just find
+the other drive... unless, I'm wrong about this info center showing me all
+the drives... 
+
+another point is that in Konquer, under 'Hard Disc'... then 'Dev'...
+'ataraid' is the first folder... 
+
+I hope that this information will help you to see what I'm seeing a little
+better... 
+I don't see anything that looks like "cat /proc/mdstat"??? What is that???
+I would appreciate any help that you give me...
+                        Thanks for all the help so far,
+                                                        Dan
+
+berk walker wrote:
+
+> Justin Piszcz wrote:
 > 
-> And here's the problem.  While new disk, sdh1, are resynced from
-> old, probably failing disk sde1, chances are high that there will
-> be an unreadable block on sde1.
+>>
+>>
+>> On Wed, 6 Sep 2006, Sandra L. McGrew wrote:
+>>
+>>> I have two hard drives installed in this DELL GX110 Optiplex computer. I
+>>> believe that they are configured in RAID5, but am not certain. Is
+>>> there a
+>>> graphical method of determining how many drives are being used and
+>>> how they
+>>> are configured???
+>>> I'm using Debian, 'Sarge'...
+>>>
+>>> The computer is incrediby fast... I'm thinking that could be because
+>>> it's a
+>>> DELL or because the drives are mirrored...
+>>>             I would apppreciate any help that you can give me...
+>>>                   Most sincerley,
+>>>                                Dan (nurse1@longviewcomm[removethis].net)
+>>>
+>>> -
+>>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>
+>>
+>> RAID5 requires 3 drives or more.
+>>
+>> To check your disks type: fdisk -l as root.
+>>
+>> Justin.
+>>
+>>
+> Actually, RAID5 requires 2 drives, but that does defeat most of the
+> reason for RAID5 in the 1st place.
+> 
+> I think that "cat /proc/mdstat" is a fast way to see if the box sees the
+> drives as RAID.  If you have mdadm installed, it has a wealth of querys
+> - assuming that you do have some RAID items - and they may be whole
+> disks or partitions.
+> 
+> b-
+> 
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-So, we need a way, to feedback the redundancy from the raid5 to the raid1.
 
-Here is a short 5 minute brainstorm I did, to check, wether it's possible to 
-manage this, and I think, it is:
-
-Requirements:
-	Any Raid with parity of any kind needs to provide so called "vitual 
-	block devices", which carry the same data, as the underlaying block 
-	devices, which the array is composed of. If the underlaying block 
-	device can't read a block, that block will be calculated from the 
-	other raid disks and hence is still readable using the virtual block 
-	device.
-
-	e.g. having the disks sda1 .. sde1 in a raid5 means, the raid 
-	provides not one new block device (e.g. /dev/md4 as in the example 
-	above), but six (the one just mentioned and maybe we call them 
-	/dev/vsda1 .. /dev/vsde1 or /dev/mapper/vsda1 .. /dev/mapper/vsde1
-	or even /dev/mapper/virtual/sda1 .. /dev/mapper/virtual/sde1). For 
-	ease, I'll call them just vsdx1 here.
-	
-	Reading any block from vsda1 will yield the same data as reading 
-	from sda1 at any time (except the case, that reading from sda1 
-	fails, then vsda1 will still carry that data).
-
-Now, construct the following nested raid structure:
-
-	sda1 + vsda1 + missing = /dev/md10 RAID1 w/o super block
-	sdb1 + vsdb1 + missing = /dev/md11 RAID1 w/o super block
-	sdc1 + vsdc1 + missing = /dev/md12 RAID1 w/o super block
-	sdd1 + vsdd1 + missing = /dev/md13 RAID1 w/o super block
-	sde1 + vsde1 + missing = /dev/md14 RAID1 w/o super block
-
-	md10 + md11 + md12 + md13 + md14 = /dev/md4 RAID5 optionally with sb
-
-Problem:
-
-	As long as md4 is not active, vsdx1 is not available. So the arrays 
-	md1x need to be created with 1 disk out of 3. After md4 was 
-	assembled, vsdx1 needs to be added. Now we get another problem: 
-	There must be no sync between sdx1 and vsdx1 (they are more or less 
-	the same device). So there should be an option to mdadm like 
-	--assume-sync for hot-add.
-
-What we get:
-
-	As soon as we decide to replace a disk (like sde1 as above) we just 
-	hot-add sdh1 to the sde1-raid1 array. That array will start 
-	resyncing. If now a block can't be read from sde1, it's just taken 
-	from vsde1 (and there that block will be reconstructed from the 
-	raid5).
-	
-	After syncing to sdh1 was completed, sde1 may be removed from the 
-	array.
-
-We would loose redundancy at no time - the only lost redundancy is those of 
-the already failed sde1 which we can't workaround anyways (except for using 
-raid6 etc.).
-
-This is only a brainstorm, and I don't know what internal effects could 
-cause problems, like the resyncing process of the raid1 array reading a bad 
-block from sde1 then triggering a reconstruction using vsde1 if in parallel 
-the raid5 itself detects (e.g. as cause from a user space read) sde1 to have 
-failed and tries to write back that block to the raid array for sde1 while 
-in the raid1 the same rewrite is pending already ... problems over problems, 
-but the evil is in detail as ever ...
-
-Regards, Bodo
