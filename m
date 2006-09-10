@@ -1,34 +1,33 @@
 From: dean gaudet <dean@arctic.org>
-Subject: Re: UUID's
-Date: Sat, 9 Sep 2006 22:14:04 -0700 (PDT)
-Message-ID: <Pine.LNX.4.64.0609092204430.18380@twinlark.arctic.org>
-References: <4501E9C6.10403@sauce.co.nz> <Pine.LNX.4.64.0609082011050.8584@twinlark.arctic.org>
- <45023FDF.3060606@sauce.co.nz>
+Subject: Re: Care and feeding of RAID?
+Date: Sat, 9 Sep 2006 22:23:40 -0700 (PDT)
+Message-ID: <Pine.LNX.4.64.0609092215140.18380@twinlark.arctic.org>
+References: <44FD722C.7050608@waldoware.com> <44FDB66D.8060202@waldoware.com>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <45023FDF.3060606@sauce.co.nz>
+In-Reply-To: <44FDB66D.8060202@waldoware.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Richard Scobie <richard@sauce.co.nz>
-Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: Paul Waldo <pwaldo@waldoware.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, 9 Sep 2006, Richard Scobie wrote:
+On Tue, 5 Sep 2006, Paul Waldo wrote:
 
-> To remove all doubt about what is assembled where, I though going to:
-> 
-> DEVICE partitions
-> MAILADDR root
-> ARRAY /dev/md3 UUID=xyz etc.
-> 
-> would be more secure.
-> 
-> Is this correct thinking on my part?
+> What about bitmaps?  Nobody has mentioned them.  It is my understanding that
+> you just turn them on with "mdadm /dev/mdX -b internal".  Any caveats for
+> this?
 
-yup.
+bitmaps have been working great for me on a raid5 and raid1.  it makes it 
+that much more tolerable when i accidentally crash the box and don't have 
+to wait forever for a resync.
 
-mdadm can generate it all for you... there's an example on the man page.  
-basically you just want to paste the output of "mdadm --detail --scan 
---config=partitions" into your mdadm.conf.
+i don't notice the extra write traffic all that much... under heavy 
+traffic i see about 3 writes/s to the spare disk in the raid5 -- i assume 
+those are all due to the bitmap in the superblock on the spare.
+
+i've considered using an external bitmap, i forget why i didn't do that 
+initially.  the filesystem on the raid5 already has an external journal on 
+raid1.
 
 -dean
