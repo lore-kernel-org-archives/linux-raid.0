@@ -1,7 +1,7 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH 04/19] raid5: move compute block operations to a workqueue
-Date: Mon, 11 Sep 2006 16:17:56 -0700
-Message-ID: <20060911231756.4737.91223.stgit@dwillia2-linux.ch.intel.com>
+Subject: [PATCH 11/19] dmaengine: add memset as an asynchronous dma operation
+Date: Mon, 11 Sep 2006 16:18:33 -0700
+Message-ID: <20060911231833.4737.27198.stgit@dwillia2-linux.ch.intel.com>
 References: <1158015632.4241.31.camel@dwillia2-linux.ch.intel.com>
 Content-Type: text/plain; charset=utf-8; format=fixed
 Content-Transfer-Encoding: 8bit
@@ -14,294 +14,171 @@ List-Id: linux-raid.ids
 
 From: Dan Williams <dan.j.williams@intel.com>
 
-Enable handle_stripe5 to pass off compute block operations to
-raid5_do_soft_block_ops, formerly handled by compute_block.
-
-Here are a few notes about the new flags R5_ComputeReq and
-STRIPE_OP_COMPUTE_Recover:
-
-Previously, when handle_stripe5 found a block that needed to be computed it
-updated it in the same step.  Now that these operations are separated
-(across multiple calls to handle_stripe5), a R5_ComputeReq flag is needed
-to tell other parts of handle_stripe5 to treat the block under computation
-as if it were up to date.  The order of events in the work queue ensures that the
-block is indeed up to date before performing further operations.
-
-STRIPE_OP_COMPUTE_Recover_pd was added to track when the parity block is being
-computed due to a failed parity check.  This allows the code in
-handle_stripe5 that produces requests for check_parity and compute_block
-operations to be separate from the code that consumes the result.
-
 Changelog:
-* count blocks under computation as uptodate
-* removed handle_compute_operations5.  All logic moved into handle_stripe5
-so that we do not need to go through the initiation logic to end the
-operation.
-* since the write operations mark blocks !uptodate we hold off the code to
-compute/read blocks until it completes.
-* new compute block operations and reads are held off while a compute is in
-flight
-* do not compute a block while a check parity operation is pending, and do
-not start a new check parity operation while a compute operation is pending
-* STRIPE_OP_Recover_pd holds off the clearing of the STRIPE_OP_COMPUTE state.
-This allows the transition to be handled by the check parity logic that
-writes recomputed parity to disk.
+* make the dmaengine api EXPORT_SYMBOL_GPL
+* zero sum support should be standalone, not integrated into xor
 
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
 
- drivers/md/raid5.c |  153 ++++++++++++++++++++++++++++++++++++----------------
- 1 files changed, 107 insertions(+), 46 deletions(-)
+ drivers/dma/dmaengine.c   |   15 ++++++++++
+ drivers/dma/ioatdma.c     |    5 +++
+ include/linux/dmaengine.h |   68 +++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 88 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 24ed4d8..0c39203 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -1300,7 +1300,8 @@ static int handle_write_operations5(stru
- 		}
- 	} else {
- 		/* enter stage 1 of read modify write operation */
--		BUG_ON(!test_bit(R5_UPTODATE, &sh->dev[pd_idx].flags));
-+		BUG_ON(!(test_bit(R5_UPTODATE, &sh->dev[pd_idx].flags) ||
-+			test_bit(R5_ComputeReq, &sh->dev[pd_idx].flags)));
+diff --git a/drivers/dma/dmaengine.c b/drivers/dma/dmaengine.c
+index e78ce89..fe62237 100644
+--- a/drivers/dma/dmaengine.c
++++ b/drivers/dma/dmaengine.c
+@@ -604,6 +604,17 @@ dma_cookie_t dma_async_do_xor_err(struct
+ 	return -ENXIO;
+ }
  
- 		set_bit(STRIPE_OP_RMW, &sh->state);
- 		set_bit(STRIPE_OP_RMW_ParityPre, &sh->ops.state);
-@@ -1314,7 +1315,8 @@ static int handle_write_operations5(stru
- 			 * so we distinguish these blocks by the RMWReq bit
- 			 */
- 			if (dev->towrite &&
--			    test_bit(R5_UPTODATE, &dev->flags)) {
-+			    (test_bit(R5_UPTODATE, &dev->flags) ||
-+			    test_bit(R5_ComputeReq, &dev->flags))) {
- 				set_bit(R5_RMWReq, &dev->flags);
- 				set_bit(R5_LOCKED, &dev->flags);
- 				clear_bit(R5_UPTODATE, &dev->flags);
-@@ -1748,7 +1750,7 @@ static void handle_stripe5(struct stripe
- 	int i;
- 	int syncing, expanding, expanded;
- 	int locked=0, uptodate=0, to_read=0, to_write=0, failed=0, written=0;
--	int non_overwrite=0, write_complete=0;
-+	int compute=0, non_overwrite=0, write_complete=0;
- 	int failed_num=0;
- 	struct r5dev *dev;
- 
-@@ -1799,7 +1801,7 @@ static void handle_stripe5(struct stripe
- 		/* now count some things */
- 		if (test_bit(R5_LOCKED, &dev->flags)) locked++;
- 		if (test_bit(R5_UPTODATE, &dev->flags)) uptodate++;
--
-+		if (test_bit(R5_ComputeReq, &dev->flags)) BUG_ON(++compute > 1);
- 		
- 		if (dev->toread) to_read++;
- 		if (dev->towrite) {
-@@ -1955,40 +1957,83 @@ static void handle_stripe5(struct stripe
- 	 * parity, or to satisfy requests
- 	 * or to load a block that is being partially written.
- 	 */
--	if (to_read || non_overwrite || (syncing && (uptodate < disks)) || expanding) {
--		for (i=disks; i--;) {
--			dev = &sh->dev[i];
--			if (!test_bit(R5_LOCKED, &dev->flags) && !test_bit(R5_UPTODATE, &dev->flags) &&
--			    (dev->toread ||
--			     (dev->towrite && !test_bit(R5_OVERWRITE, &dev->flags)) ||
--			     syncing ||
--			     expanding ||
--			     (failed && (sh->dev[failed_num].toread ||
--					 (sh->dev[failed_num].towrite && !test_bit(R5_OVERWRITE, &sh->dev[failed_num].flags))))
--				    )
--				) {
--				/* we would like to get this block, possibly
--				 * by computing it, but we might not be able to
-+	if (to_read || non_overwrite || (syncing && (uptodate + compute < disks)) || expanding ||
-+		test_bit(STRIPE_OP_COMPUTE, &sh->state)) {
-+		/* Finish any pending compute operations.  Parity recovery implies
-+		 * a write-back which is handled later on in this routine
-+		 */
-+		if (test_bit(STRIPE_OP_COMPUTE, &sh->state) &&
-+			test_bit(STRIPE_OP_COMPUTE_Done, &sh->ops.state) &&
-+			!test_bit(STRIPE_OP_COMPUTE_Recover_pd, &sh->ops.state)) {
-+			clear_bit(STRIPE_OP_COMPUTE, &sh->state);
-+			clear_bit(STRIPE_OP_COMPUTE_Done, &sh->ops.state);
-+		}
-+		
-+		/* blocks being written are temporarily !UPTODATE */
-+		if (!test_bit(STRIPE_OP_COMPUTE, &sh->state) &&
-+			!test_bit(STRIPE_OP_RCW, &sh->state) &&
-+			!test_bit(STRIPE_OP_RMW, &sh->state)) {
-+			for (i=disks; i--;) {
-+				dev = &sh->dev[i];
++/**
++ * dma_async_do_memset_err - default function for dma devices that
++ *      do not support memset
++ */
++dma_cookie_t dma_async_do_memset_err(struct dma_chan *chan,
++                union dmaengine_addr dest, unsigned int dest_off,
++                int val, size_t len, unsigned long flags)
++{
++        return -ENXIO;
++}
 +
-+				/* don't schedule compute operations or reads on
-+				 * the parity block while a check is in flight
- 				 */
--				if (uptodate == disks-1) {
--					PRINTK("Computing block %d\n", i);
--					compute_block(sh, i);
--					uptodate++;
--				} else if (test_bit(R5_Insync, &dev->flags)) {
--					set_bit(R5_LOCKED, &dev->flags);
--					set_bit(R5_Wantread, &dev->flags);
-+				if ((i == sh->pd_idx) && test_bit(STRIPE_OP_CHECK, &sh->state))
-+					continue;
+ static int __init dma_bus_init(void)
+ {
+ 	mutex_init(&dma_list_mutex);
+@@ -621,6 +632,9 @@ EXPORT_SYMBOL_GPL(dma_async_memcpy_pg_to
+ EXPORT_SYMBOL_GPL(dma_async_memcpy_dma_to_dma);
+ EXPORT_SYMBOL_GPL(dma_async_memcpy_pg_to_dma);
+ EXPORT_SYMBOL_GPL(dma_async_memcpy_dma_to_pg);
++EXPORT_SYMBOL_GPL(dma_async_memset_buf);
++EXPORT_SYMBOL_GPL(dma_async_memset_page);
++EXPORT_SYMBOL_GPL(dma_async_memset_dma);
+ EXPORT_SYMBOL_GPL(dma_async_xor_pgs_to_pg);
+ EXPORT_SYMBOL_GPL(dma_async_xor_dma_list_to_dma);
+ EXPORT_SYMBOL_GPL(dma_async_operation_complete);
+@@ -629,6 +643,7 @@ EXPORT_SYMBOL_GPL(dma_async_device_regis
+ EXPORT_SYMBOL_GPL(dma_async_device_unregister);
+ EXPORT_SYMBOL_GPL(dma_chan_cleanup);
+ EXPORT_SYMBOL_GPL(dma_async_do_xor_err);
++EXPORT_SYMBOL_GPL(dma_async_do_memset_err);
+ EXPORT_SYMBOL_GPL(dma_async_chan_init);
+ EXPORT_SYMBOL_GPL(dma_async_map_page);
+ EXPORT_SYMBOL_GPL(dma_async_map_single);
+diff --git a/drivers/dma/ioatdma.c b/drivers/dma/ioatdma.c
+index 0159d14..231247c 100644
+--- a/drivers/dma/ioatdma.c
++++ b/drivers/dma/ioatdma.c
+@@ -637,6 +637,10 @@ extern dma_cookie_t dma_async_do_xor_err
+ 	union dmaengine_addr src, unsigned int src_cnt,
+ 	unsigned int src_off, size_t len, unsigned long flags);
+ 
++extern dma_cookie_t dma_async_do_memset_err(struct dma_chan *chan,
++	union dmaengine_addr dest, unsigned int dest_off,
++	int val, size_t size, unsigned long flags);
 +
-+				if (!test_bit(R5_LOCKED, &dev->flags) && !test_bit(R5_UPTODATE, &dev->flags) &&
-+				     (dev->toread ||
-+				     (dev->towrite && !test_bit(R5_OVERWRITE, &dev->flags)) ||
-+				     syncing ||
-+				     expanding ||
-+				     (failed && (sh->dev[failed_num].toread ||
-+						 (sh->dev[failed_num].towrite &&
-+						 	!test_bit(R5_OVERWRITE, &sh->dev[failed_num].flags))))
-+					    )
-+					) {
-+					/* 1/ We would like to get this block, possibly
-+					 * by computing it, but we might not be able to.
-+					 *
-+					 * 2/ Since parity check operations make the parity
-+					 * block !uptodate it will need to be refreshed
-+					 * before any compute operations on data disks are
-+					 * scheduled.
-+					 *
-+					 * 3/ We hold off parity block re-reads until check
-+					 * operations have quiesced.
-+					 */
-+					if ((uptodate == disks-1) && !test_bit(STRIPE_OP_CHECK, &sh->state)) {
-+						set_bit(STRIPE_OP_COMPUTE, &sh->state);
-+						set_bit(STRIPE_OP_COMPUTE_Prep, &sh->ops.state);
-+						set_bit(R5_ComputeReq, &dev->flags);
-+						sh->ops.pending++;
-+						/* Careful: from this point on 'uptodate' is in the eye of the
-+						 * workqueue which services 'compute' operations before writes.
-+						 * R5_ComputeReq flags blocks that will be R5_UPTODATE
-+						 * in the work queue.
-+						 */
-+						uptodate++;
-+					} else if ((uptodate < disks-1) && test_bit(R5_Insync, &dev->flags)) {
-+						/* Note: we hold off compute operations while checks are in flight,
-+						 * but we still prefer 'compute' over 'read' hence we only read if
-+						 * (uptodate < disks-1)
-+						 */
-+						set_bit(R5_LOCKED, &dev->flags);
-+						set_bit(R5_Wantread, &dev->flags);
- #if 0
--					/* if I am just reading this block and we don't have
--					   a failed drive, or any pending writes then sidestep the cache */
--					if (sh->bh_read[i] && !sh->bh_read[i]->b_reqnext &&
--					    ! syncing && !failed && !to_write) {
--						sh->bh_cache[i]->b_page =  sh->bh_read[i]->b_page;
--						sh->bh_cache[i]->b_data =  sh->bh_read[i]->b_data;
--					}
-+						/* if I am just reading this block and we don't have
-+						   a failed drive, or any pending writes then sidestep the cache */
-+						if (sh->bh_read[i] && !sh->bh_read[i]->b_reqnext &&
-+						    ! syncing && !failed && !to_write) {
-+							sh->bh_cache[i]->b_page =  sh->bh_read[i]->b_page;
-+							sh->bh_cache[i]->b_data =  sh->bh_read[i]->b_data;
-+						}
- #endif
--					locked++;
--					PRINTK("Reading block %d (sync=%d)\n", 
--						i, syncing);
-+						locked++;
-+						PRINTK("Reading block %d (sync=%d)\n", 
-+							i, syncing);
-+					}
- 				}
- 			}
- 		}
-@@ -2055,7 +2100,7 @@ #if 0
- || sh->bh_page[i]!=bh->b_page
- #endif
- 				    ) &&
--			    !test_bit(R5_UPTODATE, &dev->flags)) {
-+			    !(test_bit(R5_UPTODATE, &dev->flags) || test_bit(R5_ComputeReq, &dev->flags))) {
- 				if (test_bit(R5_Insync, &dev->flags)
- /*				    && !(!mddev->insync && i == sh->pd_idx) */
- 					)
-@@ -2069,7 +2114,7 @@ #if 0
- || sh->bh_page[i] != bh->b_page
- #endif
- 				    ) &&
--			    !test_bit(R5_UPTODATE, &dev->flags)) {
-+			    !(test_bit(R5_UPTODATE, &dev->flags) || test_bit(R5_ComputeReq, &dev->flags))) {
- 				if (test_bit(R5_Insync, &dev->flags)) rcw++;
- 				else rcw += 2*disks;
- 			}
-@@ -2082,7 +2127,8 @@ #endif
- 			for (i=disks; i--;) {
- 				dev = &sh->dev[i];
- 				if ((dev->towrite || i == sh->pd_idx) &&
--				    !test_bit(R5_LOCKED, &dev->flags) && !test_bit(R5_UPTODATE, &dev->flags) &&
-+				    !test_bit(R5_LOCKED, &dev->flags) &&
-+				    !(test_bit(R5_UPTODATE, &dev->flags) || test_bit(R5_ComputeReq, &dev->flags)) &&
- 				    test_bit(R5_Insync, &dev->flags)) {
- 					if (test_bit(STRIPE_PREREAD_ACTIVE, &sh->state))
- 					{
-@@ -2101,7 +2147,8 @@ #endif
- 			for (i=disks; i--;) {
- 				dev = &sh->dev[i];
- 				if (!test_bit(R5_OVERWRITE, &dev->flags) && i != sh->pd_idx &&
--				    !test_bit(R5_LOCKED, &dev->flags) && !test_bit(R5_UPTODATE, &dev->flags) &&
-+				    !test_bit(R5_LOCKED, &dev->flags) &&
-+				    !(test_bit(R5_UPTODATE, &dev->flags) || test_bit(R5_ComputeReq, &dev->flags)) &&
- 				    test_bit(R5_Insync, &dev->flags)) {
- 					if (test_bit(STRIPE_PREREAD_ACTIVE, &sh->state))
- 					{
-@@ -2127,16 +2174,19 @@ #endif
- 	 * 2/ Hold off parity checks while parity dependent operations are in flight
- 	 *    (RCW and RMW are protected by 'locked')
- 	 */
--	if ((syncing && locked == 0 &&
--	    !test_bit(STRIPE_INSYNC, &sh->state)) ||
--	    	test_bit(STRIPE_OP_CHECK, &sh->state)) {
-+	if ((syncing && locked == 0 && !test_bit(STRIPE_OP_COMPUTE, &sh->state) &&
-+		!test_bit(STRIPE_INSYNC, &sh->state)) ||
-+	    	test_bit(STRIPE_OP_CHECK, &sh->state) ||
-+	    	test_bit(STRIPE_OP_COMPUTE_Recover_pd, &sh->ops.state)) {
+ static dma_addr_t ioat_map_page(struct dma_chan *chan, struct page *page,
+ 					unsigned long offset, size_t size,
+ 					int direction)
+@@ -748,6 +752,7 @@ #endif
+ 	device->common.capabilities = DMA_MEMCPY;
+ 	device->common.device_do_dma_memcpy = do_ioat_dma_memcpy;
+ 	device->common.device_do_dma_xor = dma_async_do_xor_err;
++	device->common.device_do_dma_memset = dma_async_do_memset_err;
+ 	device->common.map_page = ioat_map_page;
+ 	device->common.map_single = ioat_map_single;
+ 	device->common.unmap_page = ioat_unmap_page;
+diff --git a/include/linux/dmaengine.h b/include/linux/dmaengine.h
+index cb4cfcf..8d53b08 100644
+--- a/include/linux/dmaengine.h
++++ b/include/linux/dmaengine.h
+@@ -260,6 +260,7 @@ struct dma_chan_client_ref {
+  * @device_issue_pending: push appended descriptors to hardware
+  * @device_do_dma_memcpy: perform memcpy with a dma engine
+  * @device_do_dma_xor: perform block xor with a dma engine
++ * @device_do_dma_memset: perform block fill with a dma engine
+  */
+ struct dma_device {
  
- 		set_bit(STRIPE_HANDLE, &sh->state);
- 		/* Take one of the following actions:
- 		 * 1/ start a check parity operation if (uptodate == disks)
- 		 * 2/ finish a check parity operation and act on the result
-+		 * 3/ skip to the writeback section if we previously 
-+		 *    initiated a recovery operation
- 		 */
--		if (failed == 0) {
-+		if (failed == 0 && !test_bit(STRIPE_OP_COMPUTE_Recover_pd, &sh->ops.state)) {
- 			if (!test_bit(STRIPE_OP_CHECK, &sh->state)) {
- 				BUG_ON(uptodate != disks);
- 				set_bit(STRIPE_OP_CHECK, &sh->state);
-@@ -2157,18 +2207,29 @@ #endif
- 						/* don't try to repair!! */
- 						set_bit(STRIPE_INSYNC, &sh->state);
- 					else {
--						compute_block(sh, sh->pd_idx);
-+						set_bit(STRIPE_OP_COMPUTE, &sh->state);
-+						set_bit(STRIPE_OP_COMPUTE_Recover_pd, &sh->ops.state);
-+						set_bit(STRIPE_OP_COMPUTE_Prep, &sh->ops.state);
-+						set_bit(R5_ComputeReq, &sh->dev[sh->pd_idx].flags);
-+						sh->ops.pending++;
- 						uptodate++;
- 					}
- 				}
- 			}
- 		}
-+		if (test_bit(STRIPE_OP_COMPUTE_Done, &sh->ops.state) &&
-+			test_bit(STRIPE_OP_COMPUTE_Recover_pd, &sh->ops.state)) {
-+			clear_bit(STRIPE_OP_COMPUTE, &sh->state);
-+			clear_bit(STRIPE_OP_COMPUTE_Done, &sh->ops.state);
-+			clear_bit(STRIPE_OP_COMPUTE_Recover_pd, &sh->ops.state);
-+		}
+@@ -284,6 +285,9 @@ struct dma_device {
+ 			union dmaengine_addr src, unsigned int src_cnt,
+ 			unsigned int src_off, size_t len,
+ 			unsigned long flags);
++	dma_cookie_t (*device_do_dma_memset)(struct dma_chan *chan,
++			union dmaengine_addr dest, unsigned int dest_off,
++			int value, size_t len, unsigned long flags);
+ 	enum dma_status (*device_operation_complete)(struct dma_chan *chan,
+ 			dma_cookie_t cookie, dma_cookie_t *last,
+ 			dma_cookie_t *used);
+@@ -478,6 +482,70 @@ static inline dma_cookie_t dma_async_mem
+ }
  
--		/* Wait for check parity operations to complete
-+		/* Wait for check parity and compute block operations to complete
- 		 * before write-back
- 		 */
- 		if (!test_bit(STRIPE_INSYNC, &sh->state) &&
--			!test_bit(STRIPE_OP_CHECK, &sh->state)) {
-+			!test_bit(STRIPE_OP_CHECK, &sh->state) &&
-+			!test_bit(STRIPE_OP_COMPUTE, &sh->state)) {
- 
- 			/* either failed parity check, or recovery is happening */
- 			if (failed==0)
+ /**
++ * dma_async_memset_buf - offloaded memset
++ * @chan: DMA channel to offload memset to
++ * @buf: destination buffer
++ * @val: value to initialize the buffer
++ * @len: length
++ */
++static inline dma_cookie_t dma_async_memset_buf(struct dma_chan *chan,
++	void *buf, int val, size_t len)
++{
++	unsigned long flags = DMA_DEST_BUF;
++	union dmaengine_addr dest_addr = { .buf = buf };
++	int cpu = get_cpu();
++	per_cpu_ptr(chan->local, cpu)->bytes_transferred += len;
++	per_cpu_ptr(chan->local, cpu)->memcpy_count++;
++	put_cpu();
++
++	return chan->device->device_do_dma_memset(chan, dest_addr, 0, val,
++						len, flags);
++}
++
++/**
++ * dma_async_memset_page - offloaded memset
++ * @chan: DMA channel to offload memset to
++ * @page: destination page
++ * @offset: offset into the destination
++ * @val: value to initialize the buffer
++ * @len: length
++ */
++static inline dma_cookie_t dma_async_memset_page(struct dma_chan *chan,
++	struct page *page, unsigned int offset, int val, size_t len)
++{
++	unsigned long flags = DMA_DEST_PAGE;
++	union dmaengine_addr dest_addr = { .pg = page };
++	int cpu = get_cpu();
++	per_cpu_ptr(chan->local, cpu)->bytes_transferred += len;
++	per_cpu_ptr(chan->local, cpu)->memcpy_count++;
++	put_cpu();
++
++	return chan->device->device_do_dma_memset(chan, dest_addr, offset, val,
++						len, flags);
++}
++
++/**
++ * dma_async_memset_dma - offloaded memset
++ * @chan: DMA channel to offload memset to
++ * @page: destination dma address
++ * @val: value to initialize the buffer
++ * @len: length
++ */
++static inline dma_cookie_t dma_async_memset_dma(struct dma_chan *chan,
++	dma_addr_t dma, int val, size_t len)
++{
++	unsigned long flags = DMA_DEST_DMA;
++	union dmaengine_addr dest_addr = { .dma = dma };
++	int cpu = get_cpu();
++	per_cpu_ptr(chan->local, cpu)->bytes_transferred += len;
++	per_cpu_ptr(chan->local, cpu)->memcpy_count++;
++	put_cpu();
++
++	return chan->device->device_do_dma_memset(chan, dest_addr, 0, val,
++						len, flags);
++}
++
++/**
+  * dma_async_xor_pgs_to_pg - offloaded xor from pages to page
+  * @chan: DMA channel to offload xor to
+  * @dest_page: destination page
