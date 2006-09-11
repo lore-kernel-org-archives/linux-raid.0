@@ -1,7 +1,7 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH 16/19] dmaengine: Driver for the Intel IOP 32x, 33x, and 13xx RAID engines
-Date: Mon, 11 Sep 2006 16:19:00 -0700
-Message-ID: <20060911231859.4737.46229.stgit@dwillia2-linux.ch.intel.com>
+Subject: [PATCH 15/19] dmaengine: raid5 dma client
+Date: Mon, 11 Sep 2006 16:18:54 -0700
+Message-ID: <20060911231854.4737.88026.stgit@dwillia2-linux.ch.intel.com>
 References: <1158015632.4241.31.camel@dwillia2-linux.ch.intel.com>
 Content-Type: text/plain; charset=utf-8; format=fixed
 Content-Transfer-Encoding: 8bit
@@ -14,105 +14,77 @@ List-Id: linux-raid.ids
 
 From: Dan Williams <dan.j.williams@intel.com>
 
-This is a driver for the iop DMA/AAU/ADMA units which are capable of pq_xor,
-pq_update, pq_zero_sum, xor, dual_xor, xor_zero_sum, fill, copy+crc, and copy
-operations.
+Adds a dmaengine client that is the hardware accelerated version of
+raid5_do_soft_block_ops.  It utilizes the raid5 workqueue implementation to
+operate on multiple stripes simultaneously.  See the iop-adma.c driver for
+an example of a driver that enables hardware accelerated raid5.
 
 Changelog:
-* fixed a slot allocation bug in do_iop13xx_adma_xor that caused too few
-slots to be requested eventually leading to data corruption
-* enabled the slot allocation routine to attempt to free slots before
-returning -ENOMEM
-* switched the cleanup routine to solely use the software chain and the
-status register to determine if a descriptor is complete.  This is
-necessary to support other IOP engines that do not have status writeback
-capability
-* make the driver iop generic
-* modified the allocation routines to understand allocating a group of
-slots for a single operation
-* added a null xor initialization operation for the xor only channel on
-iop3xx
-* add software emulation of zero sum on iop32x
-* support xor operations on buffers larger than the hardware maximum
-* add architecture specific raid5-dma support functions
+* mark operations as _Dma rather than _Done until all outstanding
+operations have completed.  Once all operations have completed update the
+state and return it to the handle list
+* add a helper routine to retrieve the last used cookie
+* use dma_async_zero_sum_dma_list for checking parity which optionally
+allows parity check operations to not dirty the parity block in the cache
+(if 'disks' is less than 'MAX_ADMA_XOR_SOURCES')
+* remove dependencies on iop13xx
+* take into account the fact that dma engines have a staging buffer so we
+can perform 1 less block operation compared to software xor
+* added __arch_raid5_dma_chan_request __arch_raid5_dma_next_channel and
+__arch_raid5_dma_check_channel to make the driver architecture independent
+* added channel switching capability for architectures that implement
+different operations (i.e. copy & xor) on individual channels
+* added initial support for "non-blocking" channel switching
 
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
 
- drivers/dma/Kconfig                 |   27 +
- drivers/dma/Makefile                |    1 
- drivers/dma/iop-adma.c              | 1501 +++++++++++++++++++++++++++++++++++
- include/asm-arm/hardware/iop_adma.h |   98 ++
- 4 files changed, 1624 insertions(+), 3 deletions(-)
+ drivers/dma/Kconfig        |    9 +
+ drivers/dma/Makefile       |    1 
+ drivers/dma/raid5-dma.c    |  730 ++++++++++++++++++++++++++++++++++++++++++++
+ drivers/md/Kconfig         |   11 +
+ drivers/md/raid5.c         |   66 ++++
+ include/linux/dmaengine.h  |    5 
+ include/linux/raid/raid5.h |   24 +
+ 7 files changed, 839 insertions(+), 7 deletions(-)
 
 diff --git a/drivers/dma/Kconfig b/drivers/dma/Kconfig
-index fced8c3..3556143 100644
+index 30d021d..fced8c3 100644
 --- a/drivers/dma/Kconfig
 +++ b/drivers/dma/Kconfig
-@@ -7,8 +7,8 @@ menu "DMA Engine support"
- config DMA_ENGINE
- 	bool "Support for DMA engines"
- 	---help---
--	  DMA engines offload copy operations from the CPU to dedicated
--	  hardware, allowing the copies to happen asynchronously.
-+          DMA engines offload block memory operations from the CPU to dedicated
-+          hardware, allowing the operations to happen asynchronously.
+@@ -22,6 +22,15 @@ config NET_DMA
+ 	  Since this is the main user of the DMA engine, it should be enabled;
+ 	  say Y here.
  
- comment "DMA Clients"
- 
-@@ -28,9 +28,19 @@ config RAID5_DMA
- 	default y
- 	---help---
- 	  This enables the use of DMA engines in the MD-RAID5 driver to
--	  offload stripe cache operations, freeing CPU cycles.
-+	  offload stripe cache operations (i.e. xor, memcpy), freeing CPU cycles.
- 	  say Y here
- 
-+config RAID5_DMA_WAIT_VIA_REQUEUE
-+	bool "raid5-dma: Non-blocking channel switching"
-+	depends on RAID5_DMA_ARCH_NEEDS_CHAN_SWITCH && RAID5_DMA && BROKEN
-+	default n
++config RAID5_DMA
++        tristate "MD raid5: block operations offload"
++	depends on INTEL_IOP_ADMA && MD_RAID456
++	default y
 +	---help---
-+	  This enables the raid5-dma driver to continue to operate on incoming
-+	  stripes when it determines that the current stripe must wait for a
-+	  a hardware channel to finish operations.  This code is a work in
-+	  progress, only say Y to debug the implementation, otherwise say N.
++	  This enables the use of DMA engines in the MD-RAID5 driver to
++	  offload stripe cache operations, freeing CPU cycles.
++	  say Y here
 +
  comment "DMA Devices"
  
  config INTEL_IOATDMA
-@@ -40,4 +50,15 @@ config INTEL_IOATDMA
- 	---help---
- 	  Enable support for the Intel(R) I/OAT DMA engine.
- 
-+config INTEL_IOP_ADMA
-+        tristate "Intel IOP ADMA support"
-+        depends on DMA_ENGINE && (ARCH_IOP32X || ARCH_IOP33X || ARCH_IOP13XX)
-+	select RAID5_DMA_ARCH_NEEDS_CHAN_SWITCH if (ARCH_IOP32X || ARCH_IOP33X)
-+        default m
-+        ---help---
-+          Enable support for the Intel(R) IOP Series RAID engines.
-+
-+config RAID5_DMA_ARCH_NEEDS_CHAN_SWITCH
-+	bool
-+
- endmenu
 diff --git a/drivers/dma/Makefile b/drivers/dma/Makefile
-index 4e36d6e..233eae7 100644
+index bdcfdbd..4e36d6e 100644
 --- a/drivers/dma/Makefile
 +++ b/drivers/dma/Makefile
-@@ -2,3 +2,4 @@ obj-$(CONFIG_DMA_ENGINE) += dmaengine.o
+@@ -1,3 +1,4 @@
+ obj-$(CONFIG_DMA_ENGINE) += dmaengine.o
  obj-$(CONFIG_NET_DMA) += iovlock.o
- obj-$(CONFIG_RAID5_DMA) += raid5-dma.o
++obj-$(CONFIG_RAID5_DMA) += raid5-dma.o
  obj-$(CONFIG_INTEL_IOATDMA) += ioatdma.o
-+obj-$(CONFIG_INTEL_IOP_ADMA) += iop-adma.o
-diff --git a/drivers/dma/iop-adma.c b/drivers/dma/iop-adma.c
+diff --git a/drivers/dma/raid5-dma.c b/drivers/dma/raid5-dma.c
 new file mode 100644
-index 0000000..51f1c54
+index 0000000..04a1790
 --- /dev/null
-+++ b/drivers/dma/iop-adma.c
-@@ -0,0 +1,1501 @@
++++ b/drivers/dma/raid5-dma.c
+@@ -0,0 +1,730 @@
 +/*
++ * Offload raid5 operations to hardware RAID engines
 + * Copyright(c) 2006 Intel Corporation. All rights reserved.
 + *
 + * This program is free software; you can redistribute it and/or modify it
@@ -133,1587 +105,956 @@ index 0000000..51f1c54
 + * file called COPYING.
 + */
 +
-+/*
-+ * This driver supports the asynchrounous DMA copy and RAID engines available
-+ * on the Intel Xscale(R) family of I/O Processors (IOP 32x, 33x, 134x)
-+ */
-+
-+#include <linux/init.h>
-+#include <linux/module.h>
++#include <linux/raid/raid5.h>
 +#include <linux/dmaengine.h>
-+#include <linux/delay.h>
-+#include <linux/dma-mapping.h>
-+#include <linux/spinlock.h>
-+#include <linux/interrupt.h>
-+#include <linux/platform_device.h>
-+#include <asm/arch/adma.h>
-+#include <asm/memory.h>
 +
-+#define to_iop_adma_chan(chan) container_of(chan, struct iop_adma_chan, common)
-+#define to_iop_adma_device(dev) container_of(dev, struct iop_adma_device, common)
-+#define to_iop_adma_slot(lh) container_of(lh, struct iop_adma_desc_slot, slot_node)
++static struct dma_client *raid5_dma_client;
++static atomic_t raid5_count;
++extern void release_stripe(struct stripe_head *sh);
++extern void __arch_raid5_dma_chan_request(struct dma_client *client);
++extern struct dma_chan *__arch_raid5_dma_next_channel(struct dma_client *client);
 +
-+#define IOP_ADMA_DEBUG 0
-+#define PRINTK(x...) ((void)(IOP_ADMA_DEBUG && printk(x)))
++#define MAX_HW_XOR_SRCS 16
 +
-+/* software zero sum implemenation bits for iop32x */
-+#ifdef CONFIG_ARCH_IOP32X
-+char iop32x_zero_result_buffer[PAGE_SIZE] __attribute__((aligned(256)));
-+u32 *iop32x_zero_sum_output;
++#ifndef STRIPE_SIZE
++#define STRIPE_SIZE PAGE_SIZE
 +#endif
 +
-+/**
-+ * iop_adma_free_slots - flags descriptor slots for reuse
-+ * @slot: Slot to free
-+ * Caller must hold &iop_chan->lock while calling this function
++#ifndef STRIPE_SECTORS
++#define STRIPE_SECTORS		(STRIPE_SIZE>>9)
++#endif
++
++#ifndef r5_next_bio
++#define r5_next_bio(bio, sect) ( ( (bio)->bi_sector + ((bio)->bi_size>>9) < sect + STRIPE_SECTORS) ? (bio)->bi_next : NULL)
++#endif
++
++#define DMA_RAID5_DEBUG 0
++#define PRINTK(x...) ((void)(DMA_RAID5_DEBUG && printk(x)))
++
++/*
++ * Copy data between a page in the stripe cache, and one or more bion
++ * The page could align with the middle of the bio, or there could be
++ * several bion, each with several bio_vecs, which cover part of the page
++ * Multiple bion are linked together on bi_next.  There may be extras
++ * at the end of this list.  We ignore them.
 + */
-+static inline void iop_adma_free_slots(struct iop_adma_desc_slot *slot)
++static dma_cookie_t dma_raid_copy_data(int frombio, struct bio *bio,
++		     dma_addr_t dma, sector_t sector, struct dma_chan *chan,
++		     dma_cookie_t cookie)
 +{
-+	int stride = slot->stride;
-+	while (stride--) {
-+		slot->stride = 0;
-+		slot = list_entry(slot->slot_node.next,
-+				struct iop_adma_desc_slot,
-+				slot_node);
-+	}
-+}
++	struct bio_vec *bvl;
++	struct page *bio_page;
++	int i;
++	int dma_offset;
++	dma_cookie_t last_cookie = cookie;
 +
-+static void __iop_adma_slot_cleanup(struct iop_adma_chan *iop_chan)
-+{
-+	struct iop_adma_desc_slot *iter, *_iter;
-+	dma_cookie_t cookie = 0;
-+	struct device *dev = &iop_chan->device->pdev->dev;
-+	u32 current_desc = iop_chan_get_current_descriptor(iop_chan);
-+	int busy = iop_chan_is_busy(iop_chan);
-+	int seen_current = 0;
++	if (bio->bi_sector >= sector)
++		dma_offset = (signed)(bio->bi_sector - sector) * 512;
++	else
++		dma_offset = (signed)(sector - bio->bi_sector) * -512;
++	bio_for_each_segment(bvl, bio, i) {
++		int len = bio_iovec_idx(bio,i)->bv_len;
++		int clen;
++		int b_offset = 0;
 +
-+	/* free completed slots from the chain starting with
-+	 * the oldest descriptor
-+	 */
-+	list_for_each_entry_safe(iter, _iter, &iop_chan->chain,
-+					chain_node) {
-+		PRINTK("%s: [%d] cookie: %d busy: %x next: %x\n",
-+			__FUNCTION__, iter->idx, iter->cookie, busy,
-+			iop_desc_get_next_desc(iter, iop_chan));
-+
-+		/* do not advance past the current descriptor loaded into the 
-+		 * hardware channel, subsequent descriptors are either in process
-+		 * or have not been submitted
-+		 */
-+		if (seen_current)
-+			break;
-+
-+		/* stop the search if we reach the current descriptor and the
-+		 * channel is busy, or if it appears that the current descriptor
-+		 * needs to be re-read (i.e. has been appended to)
-+		 */
-+		if (iter->phys == current_desc) {
-+			BUG_ON(seen_current++);
-+			if (busy || iop_desc_get_next_desc(iter, iop_chan))
-+				break;
++		if (dma_offset < 0) {
++			b_offset = -dma_offset;
++			dma_offset += b_offset;
++			len -= b_offset;
 +		}
 +
-+		/* if we are tracking a group of zero-result descriptors add
-+		 * the current result to the accumulator
-+		 */
-+		if (iop_chan->zero_sum_group) {
-+			iop_chan->result_accumulator |=
-+				iop_desc_get_zero_result(iter);
-+			PRINTK("%s: add to zero sum group acc: %d this: %d\n", __FUNCTION__,
-+				iop_chan->result_accumulator, iop_desc_get_zero_result(iter));
-+		}
++		if (len > 0 && dma_offset + len > STRIPE_SIZE)
++			clen = STRIPE_SIZE - dma_offset;
++		else clen = len;
 +
-+		if (iter->cookie) {
-+			u32 src_cnt = iter->src_cnt;
-+			u32 len = iop_desc_get_byte_count(iter, iop_chan);
-+			dma_addr_t addr;
-+
-+			cookie = iter->cookie;
-+			iter->cookie = 0;
-+
-+			/* the first and last descriptor in a zero sum group
-+			 * will have 'xor_check_result' set
-+			 */
-+			if (iter->xor_check_result) {
-+				if (iter->slot_cnt > iter->slots_per_op) {
-+					if (!iop_chan->zero_sum_group) {
-+						iop_chan->zero_sum_group = 1;
-+						iop_chan->result_accumulator |=
-+							iop_desc_get_zero_result(iter);
-+					}
-+					PRINTK("%s: start zero sum group acc: %d this: %d\n", __FUNCTION__,
-+						iop_chan->result_accumulator, iop_desc_get_zero_result(iter));
-+				} else {
-+					if (!iop_chan->zero_sum_group)
-+						iop_chan->result_accumulator |=
-+							iop_desc_get_zero_result(iter);
++		if (clen > 0) {
++			b_offset += bio_iovec_idx(bio,i)->bv_offset;
++			bio_page = bio_iovec_idx(bio,i)->bv_page;
++			if (frombio)
++				do {
++					cookie = dma_async_memcpy_pg_to_dma(chan,
++								dma + dma_offset,
++								bio_page,
++								b_offset,
++								clen);
++					if (cookie == -ENOMEM)
++						dma_sync_wait(chan, last_cookie);
 +					else
-+						iop_chan->zero_sum_group = 0;
-+	
-+					*iter->xor_check_result = iop_chan->result_accumulator;
-+					iop_chan->result_accumulator = 0;
-+
-+					PRINTK("%s: end zero sum group acc: %d this: %d\n", __FUNCTION__,
-+						*iter->xor_check_result, iop_desc_get_zero_result(iter));
-+				}
-+			}
-+
-+			/* unmap dma ranges */
-+			switch (iter->flags & (DMA_DEST_BUF | DMA_DEST_PAGE |
-+				DMA_DEST_DMA)) {
-+			case DMA_DEST_BUF:
-+				addr = iop_desc_get_dest_addr(iter, iop_chan);
-+				dma_unmap_single(dev, addr, len, DMA_FROM_DEVICE);
-+				break;
-+			case DMA_DEST_PAGE:
-+				addr = iop_desc_get_dest_addr(iter, iop_chan);
-+				dma_unmap_page(dev, addr, len, DMA_FROM_DEVICE);
-+				break;
-+			case DMA_DEST_DMA:
-+				break;
-+			}
-+
-+			switch (iter->flags & (DMA_SRC_BUF |
-+					DMA_SRC_PAGE | DMA_SRC_DMA |
-+					DMA_SRC_PAGES | DMA_SRC_DMA_LIST)) {
-+			case DMA_SRC_BUF:
-+				addr = iop_desc_get_src_addr(iter, iop_chan, 0);
-+				dma_unmap_single(dev, addr, len, DMA_TO_DEVICE);
-+				break;
-+			case DMA_SRC_PAGE:
-+				addr = iop_desc_get_src_addr(iter, iop_chan, 0);
-+				dma_unmap_page(dev, addr, len, DMA_TO_DEVICE);
-+				break;
-+			case DMA_SRC_PAGES:
-+				while(src_cnt--) {
-+					addr = iop_desc_get_src_addr(iter,
-+								iop_chan,
-+								src_cnt);
-+					dma_unmap_page(dev, addr, len,
-+						DMA_TO_DEVICE);
-+				}
-+				break;
-+			case DMA_SRC_DMA:
-+			case DMA_SRC_DMA_LIST:
-+				break;
-+			}
++						WARN_ON(cookie <= 0);
++				} while (cookie == -ENOMEM);
++			else
++				do {
++					cookie = dma_async_memcpy_dma_to_pg(chan,
++								bio_page,
++								b_offset,
++								dma + dma_offset,
++								clen);
++					if (cookie == -ENOMEM)
++						dma_sync_wait(chan, last_cookie);
++					else
++						WARN_ON(cookie <= 0);
++				} while (cookie == -ENOMEM);
 +		}
-+
-+		/* leave the last descriptor in the chain 
-+		 * so we can append to it
-+		 */
-+		if (iter->chain_node.next == &iop_chan->chain)
++		last_cookie = cookie;
++		if (clen < len) /* hit end of page */
 +			break;
-+
-+		PRINTK("iop adma%d: cleanup %d stride %d\n",
-+		iop_chan->device->id, iter->idx, iter->stride);
-+
-+		list_del(&iter->chain_node);
-+		iop_adma_free_slots(iter);
++		dma_offset +=  len;
 +	}
 +
-+	BUG_ON(!seen_current);
-+
-+	if (cookie) {
-+		iop_chan->completed_cookie = cookie;
-+
-+		PRINTK("iop adma%d: completed cookie %d\n",
-+		iop_chan->device->id, cookie);
-+	}
++	return last_cookie;
 +}
 +
-+static inline void iop_adma_slot_cleanup(struct iop_adma_chan *iop_chan)
-+{
-+	spin_lock_bh(&iop_chan->lock);
-+	__iop_adma_slot_cleanup(iop_chan);
-+	spin_unlock_bh(&iop_chan->lock);
-+}
++#define issue_xor() do {					          \
++			 do {					          \
++			 	cookie = dma_async_xor_dma_list_to_dma(   \
++			 		sh->ops.dma_chan,	          \
++			 		xor_destination_addr,	          \
++			 		dma,			          \
++			 		count,			          \
++			 		STRIPE_SIZE);		          \
++			 	if (cookie == -ENOMEM)		          \
++			 		dma_sync_wait(sh->ops.dma_chan,	  \
++			 			sh->ops.dma_cookie);      \
++			 	else				          \
++			 		WARN_ON(cookie <= 0);	          \
++			 } while (cookie == -ENOMEM);		          \
++			 sh->ops.dma_cookie = cookie;		          \
++			 dma[0] = xor_destination_addr;			  \
++			 count = 1;					  \
++			} while(0)
++#define check_xor() do {						\
++			if (count == MAX_HW_XOR_SRCS)			\
++				issue_xor();				\
++		     } while (0)
 +
-+static struct iop_adma_desc_slot *
-+__iop_adma_alloc_slots(struct iop_adma_chan *iop_chan, int num_slots,
-+			int slots_per_op, int recurse)
-+{
-+	struct iop_adma_desc_slot *iter = NULL, *alloc_start = NULL;
-+	int i;
++#ifdef CONFIG_RAID5_DMA_ARCH_NEEDS_CHAN_SWITCH
++extern struct dma_chan *__arch_raid5_dma_check_channel(struct dma_chan *chan,
++						dma_cookie_t cookie,
++						struct dma_client *client,
++						unsigned long capabilities);
 +
-+	/* start search from the last allocated descrtiptor
-+	 * if a contiguous allocation can not be found start searching
-+	 * from the beginning of the list
-+	 */
-+	for (i = 0; i < 2; i++) {
-+		int slots_found = 0;
-+		if (i == 0)
-+			iter = iop_chan->last_used;
-+		else {
-+			iter = list_entry(&iop_chan->all_slots,
-+				struct iop_adma_desc_slot,
-+				slot_node);
-+		}
++#ifdef CONFIG_RAID5_DMA_WAIT_VIA_REQUEUE
++#define check_channel(cap, bookmark) do {			     \
++bookmark:							     \
++	next_chan = __arch_raid5_dma_check_channel(sh->ops.dma_chan, \
++						sh->ops.dma_cookie,  \
++						raid5_dma_client,    \
++						(cap));		     \
++	if (!next_chan) {					     \
++		BUG_ON(sh->ops.ops_bookmark);			     \
++		sh->ops.ops_bookmark = &&bookmark;		     \
++		goto raid5_dma_retry;				     \
++	} else {						     \
++		sh->ops.dma_chan = next_chan;			     \
++		sh->ops.dma_cookie = dma_async_get_last_cookie(	     \
++							next_chan);  \
++		sh->ops.ops_bookmark = NULL;			     \
++	}							     \
++} while (0)
++#else
++#define check_channel(cap, bookmark) do {			     \
++bookmark:							     \
++	next_chan = __arch_raid5_dma_check_channel(sh->ops.dma_chan, \
++						sh->ops.dma_cookie,  \
++						raid5_dma_client,    \
++						(cap));		     \
++	if (!next_chan) {					     \
++		dma_sync_wait(sh->ops.dma_chan, sh->ops.dma_cookie); \
++		goto bookmark;					     \
++	} else {						     \
++		sh->ops.dma_chan = next_chan;			     \
++		sh->ops.dma_cookie = dma_async_get_last_cookie(	     \
++							next_chan);  \
++	}							     \
++} while (0)
++#endif /* CONFIG_RAID5_DMA_WAIT_VIA_REQUEUE */
++#else
++#define check_channel(cap, bookmark) do { } while (0)
++#endif /* CONFIG_RAID5_DMA_ARCH_NEEDS_CHAN_SWITCH */
 +
-+		list_for_each_entry_continue(iter, &iop_chan->all_slots, slot_node) {
-+			if (iter->stride) {
-+				/* give up after finding the first busy slot
-+				 * on the second pass through the list
-+				 */
-+				if (i == 1)
-+					break;
-+
-+				slots_found = 0;
-+				continue;
-+			}
-+
-+			/* start the allocation if the slot is correctly aligned */
-+			if (!slots_found++) {
-+				if (iop_desc_is_aligned(iter, slots_per_op))
-+					alloc_start = iter;
-+				else {
-+					slots_found = 0;
-+					continue;
-+				}
-+			}
-+
-+			if (slots_found == num_slots) {
-+				iter = alloc_start;
-+				while (num_slots) {
-+					PRINTK("iop adma%d: allocated [%d] "
-+						"(desc %p phys: %#x) stride %d\n",
-+						iop_chan->device->id,
-+						iter->idx, iter->hw_desc, iter->phys,
-+						slots_per_op);
-+					iop_chan->last_used = iter;
-+					list_add_tail(&iter->chain_node,
-+							&iop_chan->chain);
-+					iter->slot_cnt = num_slots;
-+					iter->slots_per_op = slots_per_op;
-+					iter->xor_check_result = NULL;
-+					iter->cookie = 0;
-+					for (i = 0; i < slots_per_op; i++) {
-+						iter->stride = slots_per_op - i;
-+						iter = list_entry(iter->slot_node.next,
-+								struct iop_adma_desc_slot,
-+								slot_node);
-+					}
-+					num_slots -= slots_per_op;
-+				}
-+				return alloc_start;
-+			}
-+		}
-+	}
-+
-+	/* try once to free some slots if the allocation fails */
-+	if (recurse) {
-+		__iop_adma_slot_cleanup(iop_chan);
-+		return __iop_adma_alloc_slots(iop_chan, num_slots, slots_per_op, 0);
-+	} else
-+		return NULL;
-+}
-+
-+static struct iop_adma_desc_slot *
-+iop_adma_alloc_slots(struct iop_adma_chan *iop_chan,
-+			int num_slots,
-+			int slots_per_op)
-+{
-+	return __iop_adma_alloc_slots(iop_chan, num_slots, slots_per_op, 1);
-+}
-+
-+static void iop_chan_start_null_memcpy(struct iop_adma_chan *iop_chan);
-+static void iop_chan_start_null_xor(struct iop_adma_chan *iop_chan);
-+
-+/* returns the actual number of allocated descriptors */
-+static int iop_adma_alloc_chan_resources(struct dma_chan *chan)
-+{
-+	struct iop_adma_chan *iop_chan = to_iop_adma_chan(chan);
-+	struct iop_adma_desc_slot *slot = NULL;
-+	char *hw_desc;
-+	int i;
-+	int init = iop_chan->slots_allocated ? 0 : 1;
-+	struct iop_adma_platform_data *plat_data;
-+	
-+	plat_data = iop_chan->device->pdev->dev.platform_data;
-+
-+	spin_lock_bh(&iop_chan->lock);
-+	/* Allocate descriptor slots */
-+	i = iop_chan->slots_allocated;
-+	for (; i < (plat_data->pool_size/IOP_ADMA_SLOT_SIZE); i++) {
-+		slot = kmalloc(sizeof(*slot), GFP_KERNEL);
-+		if (!slot) {
-+			printk(KERN_INFO "IOP ADMA Channel only initialized"
-+				" %d descriptor slots", i--);
-+			break;
-+		}
-+		hw_desc = (char *) iop_chan->device->dma_desc_pool_virt;
-+		slot->hw_desc = (void *) &hw_desc[i * IOP_ADMA_SLOT_SIZE];
-+
-+		INIT_LIST_HEAD(&slot->chain_node);
-+		INIT_LIST_HEAD(&slot->slot_node);
-+		hw_desc = (char *) iop_chan->device->dma_desc_pool;
-+		slot->phys = (dma_addr_t) &hw_desc[i * IOP_ADMA_SLOT_SIZE];
-+		slot->stride = 0;
-+		slot->cookie = 0;
-+		slot->xor_check_result = NULL;
-+		slot->idx = i;
-+		list_add_tail(&slot->slot_node, &iop_chan->all_slots);
-+	}
-+	if (i && !iop_chan->last_used)
-+		iop_chan->last_used = list_entry(iop_chan->all_slots.next,
-+					struct iop_adma_desc_slot,
-+					slot_node);
-+
-+	iop_chan->slots_allocated = i;
-+	PRINTK("iop adma%d: allocated %d descriptor slots last_used: %p\n",
-+		iop_chan->device->id, i, iop_chan->last_used);
-+	spin_unlock_bh(&iop_chan->lock);
-+
-+	/* initialize the channel and the chain with a null operation */
-+	if (init) {
-+		if (iop_chan->device->common.capabilities & DMA_MEMCPY)
-+			iop_chan_start_null_memcpy(iop_chan);
-+		else if (iop_chan->device->common.capabilities & DMA_XOR)
-+			iop_chan_start_null_xor(iop_chan);
-+		else
-+			BUG();
-+	}
-+
-+	return (i > 0) ? i : -ENOMEM;
-+}
-+
-+/* chain the descriptors */
-+static inline void iop_chan_chain_desc(struct iop_adma_chan *iop_chan,
-+					struct iop_adma_desc_slot *desc)
-+{
-+	struct iop_adma_desc_slot *prev = list_entry(desc->chain_node.prev,
-+						struct iop_adma_desc_slot,
-+						chain_node);
-+	iop_desc_set_next_desc(prev, iop_chan, desc->phys);
-+}
-+
-+static inline void iop_desc_assign_cookie(struct iop_adma_chan *iop_chan,
-+					struct iop_adma_desc_slot *desc)
-+{
-+	dma_cookie_t cookie = iop_chan->common.cookie;
-+	cookie++;
-+	if (cookie < 0)
-+		cookie = 1;
-+	iop_chan->common.cookie = desc->cookie = cookie;
-+	PRINTK("iop adma%d: %s cookie %d slot %d\n",
-+	iop_chan->device->id, __FUNCTION__, cookie, desc->idx);
-+}
-+
-+static inline void iop_adma_check_threshold(struct iop_adma_chan *iop_chan)
-+{
-+	if (iop_chan->pending >= IOP_ADMA_THRESHOLD) {
-+		iop_chan->pending = 0;
-+		iop_chan_append(iop_chan);
-+	}
-+}
-+
-+static dma_cookie_t do_iop_adma_memcpy(struct dma_chan *chan,
-+                                       union dmaengine_addr dest,
-+					unsigned int dest_off,
-+                                       union dmaengine_addr src,
-+					unsigned int src_off,
-+                                       size_t len,
-+                                       unsigned long flags)
-+{
-+	struct iop_adma_chan *iop_chan = to_iop_adma_chan(chan);
-+	dma_cookie_t ret = -ENOMEM;
-+	struct iop_adma_desc_slot *sw_desc;
-+	int slot_cnt, slots_per_op;
-+
-+	if (!chan || !dest.dma || !src.dma)
-+		return -EFAULT;
-+	if (!len)
-+		return iop_chan->common.cookie;
-+
-+	PRINTK("iop adma%d: %s len: %u flags: %#lx\n",
-+	iop_chan->device->id, __FUNCTION__, len, flags);
-+
-+	switch (flags & (DMA_SRC_BUF | DMA_SRC_PAGE | DMA_SRC_DMA)) {
-+	case DMA_SRC_BUF:
-+		src.dma = dma_map_single(&iop_chan->device->pdev->dev,
-+			src.buf, len, DMA_TO_DEVICE);
-+		break;
-+	case DMA_SRC_PAGE:
-+		src.dma = dma_map_page(&iop_chan->device->pdev->dev,
-+			src.pg, src_off, len, DMA_TO_DEVICE);
-+		break;
-+	case DMA_SRC_DMA:
-+		break;
-+	default:
-+		return -EFAULT;
-+	}
-+
-+	switch (flags & (DMA_DEST_BUF | DMA_DEST_PAGE | DMA_DEST_DMA)) {
-+	case DMA_DEST_BUF:
-+		dest.dma = dma_map_single(&iop_chan->device->pdev->dev,
-+			dest.buf, len, DMA_FROM_DEVICE);
-+		break;
-+	case DMA_DEST_PAGE:
-+		dest.dma = dma_map_page(&iop_chan->device->pdev->dev,
-+			dest.pg, dest_off, len, DMA_FROM_DEVICE);
-+		break;
-+	case DMA_DEST_DMA:
-+		break;
-+	default:
-+		return -EFAULT;
-+	}
-+
-+	spin_lock_bh(&iop_chan->lock);
-+	slot_cnt = iop_chan_memcpy_slot_count(len, &slots_per_op);
-+	sw_desc = iop_adma_alloc_slots(iop_chan, slot_cnt, slots_per_op);
-+	if (sw_desc) {
-+		iop_desc_init_memcpy(sw_desc);
-+		iop_desc_set_byte_count(sw_desc, iop_chan, len);
-+		iop_desc_set_dest_addr(sw_desc, iop_chan, dest.dma);
-+		iop_desc_set_memcpy_src_addr(sw_desc, src.dma, slot_cnt, slots_per_op);
-+
-+		iop_chan_chain_desc(iop_chan, sw_desc);
-+		iop_desc_assign_cookie(iop_chan, sw_desc);
-+
-+		sw_desc->flags = flags;
-+		iop_chan->pending++;
-+		ret = sw_desc->cookie;
-+	}
-+	spin_unlock_bh(&iop_chan->lock);
-+
-+	iop_adma_check_threshold(iop_chan);
-+
-+	return ret;
-+}
-+
-+static dma_cookie_t do_iop_adma_memset(struct dma_chan *chan,
-+                                       union dmaengine_addr dest,
-+					unsigned int dest_off,
-+                                       int val,
-+                                       size_t len,
-+                                       unsigned long flags)
-+{
-+	struct iop_adma_chan *iop_chan = to_iop_adma_chan(chan);
-+	dma_cookie_t ret = -ENOMEM;
-+	struct iop_adma_desc_slot *sw_desc;
-+	int slot_cnt, slots_per_op;
-+
-+	if (!chan || !dest.dma)
-+		return -EFAULT;
-+	if (!len)
-+		return iop_chan->common.cookie;
-+
-+	PRINTK("iop adma%d: %s len: %u flags: %#lx\n",
-+	iop_chan->device->id, __FUNCTION__, len, flags);
-+
-+	switch (flags & (DMA_DEST_BUF | DMA_DEST_PAGE | DMA_DEST_DMA)) {
-+	case DMA_DEST_BUF:
-+		dest.dma = dma_map_single(&iop_chan->device->pdev->dev,
-+			dest.buf, len, DMA_FROM_DEVICE);
-+		break;
-+	case DMA_DEST_PAGE:
-+		dest.dma = dma_map_page(&iop_chan->device->pdev->dev,
-+			dest.pg, dest_off, len, DMA_FROM_DEVICE);
-+		break;
-+	case DMA_DEST_DMA:
-+		break;
-+	default:
-+		return -EFAULT;
-+	}
-+
-+	spin_lock_bh(&iop_chan->lock);
-+	slot_cnt = iop_chan_memset_slot_count(len, &slots_per_op);
-+	sw_desc = iop_adma_alloc_slots(iop_chan, slot_cnt, slots_per_op);
-+	if (sw_desc) {
-+		iop_desc_init_memset(sw_desc);
-+		iop_desc_set_byte_count(sw_desc, iop_chan, len);
-+		iop_desc_set_block_fill_val(sw_desc, val);
-+		iop_desc_set_dest_addr(sw_desc, iop_chan, dest.dma);
-+
-+		iop_chan_chain_desc(iop_chan, sw_desc);
-+		iop_desc_assign_cookie(iop_chan, sw_desc);
-+
-+		sw_desc->flags = flags;
-+		iop_chan->pending++;
-+		ret = sw_desc->cookie;
-+	}
-+	spin_unlock_bh(&iop_chan->lock);
-+
-+	iop_adma_check_threshold(iop_chan);
-+
-+	return ret;
-+}
-+
-+/**
-+ * do_iop_adma_xor - xor from source pages to a dest page
-+ * @chan: common channel handle
-+ * @dest: DMAENGINE destination address
-+ * @dest_off: offset into the destination page
-+ * @src: DMAENGINE source addresses
-+ * @src_cnt: number of source pages
-+ * @src_off: offset into the source pages
-+ * @len: transaction length in bytes
-+ * @flags: DMAENGINE address type flags
++/*
++ * dma_do_raid5_block_ops - perform block memory operations on stripe data
++ * outside the spin lock with dma engines
++ *
++ * A note about the need for __arch_raid5_dma_check_channel:
++ * This function is only needed to support architectures where a single raid
++ * operation spans multiple hardware channels.  For example on a reconstruct
++ * write, memory copy operations are submitted to a memcpy channel and then
++ * the routine must switch to the xor channel to complete the raid operation.
++ * __arch_raid5_dma_check_channel makes sure the previous operation has
++ * completed before returning the new channel.
++ * Some efficiency can be gained by putting the stripe back on the work
++ * queue rather than spin waiting.  This code is a work in progress and is
++ * available via the 'broken' option CONFIG_RAID5_DMA_WAIT_VIA_REQUEUE.
++ * If 'wait via requeue' is not defined the check_channel macro live waits
++ * for the next channel.
 + */
-+static dma_cookie_t do_iop_adma_xor(struct dma_chan *chan,
-+					union dmaengine_addr dest,
-+					unsigned int dest_off,
-+					union dmaengine_addr src,
-+					unsigned int src_cnt,
-+					unsigned int src_off,
-+					size_t len,
-+					unsigned long flags)
++static void dma_do_raid5_block_ops(void *stripe_head_ref)
 +{
-+	struct iop_adma_chan *iop_chan = to_iop_adma_chan(chan);
-+	struct device *dev = &iop_chan->device->pdev->dev;
-+	struct iop_adma_desc_slot *sw_desc;
-+	dma_cookie_t ret = -ENOMEM;
-+	int slot_cnt, slots_per_op;
++	struct stripe_head *sh = stripe_head_ref;
++	int i, pd_idx = sh->pd_idx, disks = sh->disks;
++	dma_addr_t dma[MAX_HW_XOR_SRCS];
++	int overlap=0;
++	unsigned long state, ops_state, ops_state_orig;
++	raid5_conf_t *conf = sh->raid_conf;
++	dma_cookie_t cookie;
++	#ifdef CONFIG_RAID5_DMA_ARCH_NEEDS_CHAN_SWITCH
++	struct dma_chan *next_chan;
++	#endif
 +
-+	if (!chan || !dest.dma || !src.dma_list)
-+		return -EFAULT;
++	if (!sh->ops.dma_chan) {
++		sh->ops.dma_chan = __arch_raid5_dma_next_channel(raid5_dma_client);
++		dma_chan_get(sh->ops.dma_chan);
++		/* retrieve the last used cookie on this channel */
++		sh->ops.dma_cookie = dma_async_get_last_cookie(sh->ops.dma_chan);
++	}
 +
-+	if (!len)
-+		return iop_chan->common.cookie;
++	/* take a snapshot of what needs to be done at this point in time */
++	spin_lock(&sh->lock);
++	state = sh->state;
++	ops_state_orig = ops_state = sh->ops.state;
++	spin_unlock(&sh->lock);
 +
-+	PRINTK("iop adma%d: %s src_cnt: %d len: %u flags: %lx\n",
-+	iop_chan->device->id, __FUNCTION__, src_cnt, len, flags);
++	#ifdef CONFIG_RAID5_DMA_WAIT_VIA_REQUEUE
++	/* pick up where we left off */
++	if (sh->ops.ops_bookmark)
++		goto *sh->ops.ops_bookmark;
++	#endif
 +
-+	spin_lock_bh(&iop_chan->lock);
-+	slot_cnt = iop_chan_xor_slot_count(len, src_cnt, &slots_per_op);
-+	sw_desc = iop_adma_alloc_slots(iop_chan, slot_cnt, slots_per_op);
-+	if (sw_desc) {
-+		#ifdef CONFIG_ARCH_IOP32X
-+		if ((flags & DMA_DEST_BUF) &&
-+			dest.buf == (void *) iop32x_zero_result_buffer) {
-+			PRINTK("%s: iop32x zero sum emulation requested\n",
-+				__FUNCTION__);
-+			sw_desc->xor_check_result = iop32x_zero_sum_output;
++	if (test_bit(STRIPE_OP_BIOFILL, &state) &&
++		!test_bit(STRIPE_OP_BIOFILL_Dma, &ops_state)) {
++		struct bio *return_bi;
++		PRINTK("%s: stripe %llu STRIPE_OP_BIOFILL op_state: %lx\n",
++			__FUNCTION__, (unsigned long long)sh->sector,
++			ops_state);
++
++		check_channel(DMA_MEMCPY, stripe_op_biofill);
++		return_bi = NULL;
++
++		for (i=disks ; i-- ;) {
++			struct r5dev *dev = &sh->dev[i];
++			if (test_bit(R5_ReadReq, &dev->flags)) {
++				struct bio *rbi, *rbi2;
++				spin_lock_irq(&conf->device_lock);
++				rbi = dev->toread;
++				dev->toread = NULL;
++				spin_unlock_irq(&conf->device_lock);
++				overlap++;
++				while (rbi && rbi->bi_sector < dev->sector + STRIPE_SECTORS) {
++					sh->ops.dma_cookie = dma_raid_copy_data(0,
++								rbi, dev->dma, dev->sector,
++								sh->ops.dma_chan,
++								sh->ops.dma_cookie);
++					rbi2 = r5_next_bio(rbi, dev->sector);
++					spin_lock_irq(&conf->device_lock);
++					if (--rbi->bi_phys_segments == 0) {
++						rbi->bi_next = return_bi;
++						return_bi = rbi;
++					}
++					spin_unlock_irq(&conf->device_lock);
++					rbi = rbi2;
++				}
++				dev->read = return_bi;
++			}
++		}
++		if (overlap)
++			set_bit(STRIPE_OP_BIOFILL_Dma, &ops_state);
++	}
++
++	if (test_bit(STRIPE_OP_COMPUTE, &state) &&
++		!test_bit(STRIPE_OP_COMPUTE_Dma, &ops_state)) {
++
++		/* dma engines do not need to pre-zero the destination */
++		if (test_and_clear_bit(STRIPE_OP_COMPUTE_Prep, &ops_state))
++			set_bit(STRIPE_OP_COMPUTE_Parity, &ops_state);
++
++		if (test_and_clear_bit(STRIPE_OP_COMPUTE_Parity, &ops_state)) {
++			dma_addr_t xor_destination_addr;
++			int dd_idx;
++			int count;
++
++			check_channel(DMA_XOR, stripe_op_compute_parity);
++			dd_idx = -1;
++			count = 0;
++
++			for (i=disks ; i-- ; )
++				if (test_bit(R5_ComputeReq, &sh->dev[i].flags)) {
++					dd_idx = i;
++					PRINTK("%s: stripe %llu STRIPE_OP_COMPUTE "
++					       "op_state: %lx block: %d\n",
++						__FUNCTION__,
++						(unsigned long long)sh->sector,
++						ops_state, dd_idx);
++					break;
++				}
++
++			BUG_ON(dd_idx < 0);
++
++			xor_destination_addr = sh->dev[dd_idx].dma;
++
++			for (i=disks ; i-- ; )
++				if (i != dd_idx) {
++					dma[count++] = sh->dev[i].dma;
++					check_xor();
++				}
++
++			if (count > 1)
++				issue_xor();
++
++			set_bit(STRIPE_OP_COMPUTE_Dma, &ops_state);
++		}
++	}
++
++	if (test_bit(STRIPE_OP_RMW, &state) &&
++		!test_bit(STRIPE_OP_RMW_Dma, &ops_state)) {
++		BUG_ON(test_bit(STRIPE_OP_RCW, &state));
++
++		PRINTK("%s: stripe %llu STRIPE_OP_RMW op_state: %lx\n",
++			__FUNCTION__, (unsigned long long)sh->sector,
++			ops_state);
++
++		if (test_and_clear_bit(STRIPE_OP_RMW_ParityPre, &ops_state)) {
++			dma_addr_t xor_destination_addr;
++			int count;
++
++			check_channel(DMA_XOR, stripe_op_rmw_paritypre);
++			count = 0;
++
++			/* existing parity data is used in the xor subtraction */
++			xor_destination_addr = dma[count++] = sh->dev[pd_idx].dma;
++
++			for (i=disks ; i-- ;) {
++				struct r5dev *dev = &sh->dev[i];
++				struct bio *chosen;
++
++				/* Only process blocks that are known to be uptodate */
++				if (dev->towrite && test_bit(R5_RMWReq, &dev->flags)) {
++					dma[count++] = dev->dma;
++
++					spin_lock(&sh->lock);
++					chosen = dev->towrite;
++					dev->towrite = NULL;
++					BUG_ON(dev->written);
++					dev->written = chosen;
++					spin_unlock(&sh->lock);
++
++					overlap++;
++
++					check_xor();
++				}
++			}
++			if (count > 1)
++				issue_xor();
++
++			set_bit(STRIPE_OP_RMW_Drain, &ops_state);
++		}
++
++		if (test_and_clear_bit(STRIPE_OP_RMW_Drain, &ops_state)) {
++
++			check_channel(DMA_MEMCPY, stripe_op_rmw_drain);
++
++			for (i=disks ; i-- ;) {
++				struct r5dev *dev = &sh->dev[i];
++				struct bio *wbi = dev->written;
++
++				while (wbi && wbi->bi_sector < dev->sector + STRIPE_SECTORS) {
++					sh->ops.dma_cookie = dma_raid_copy_data(1,
++							     wbi, dev->dma, dev->sector,
++							     sh->ops.dma_chan,
++							     sh->ops.dma_cookie);
++					wbi = r5_next_bio(wbi, dev->sector);
++				}
++			}
++			set_bit(STRIPE_OP_RMW_ParityPost, &ops_state);
++		}
++
++		if (test_and_clear_bit(STRIPE_OP_RMW_ParityPost, &ops_state)) {
++			dma_addr_t xor_destination_addr;
++			int count;
++
++			check_channel(DMA_XOR, stripe_op_rmw_paritypost);
++			count = 0;
++
++			xor_destination_addr = dma[count++] = sh->dev[pd_idx].dma;
++
++			for (i=disks ; i-- ;) {
++				struct r5dev *dev = &sh->dev[i];
++				if (dev->written) {
++					dma[count++] = dev->dma;
++					check_xor();
++				}
++			}
++			if (count > 1)
++				issue_xor();
++
++			set_bit(STRIPE_OP_RMW_Dma, &ops_state);
++		}
++	}
++
++	if (test_bit(STRIPE_OP_RCW, &state) &&
++		!test_bit(STRIPE_OP_RCW_Dma, &ops_state)) {
++		BUG_ON(test_bit(STRIPE_OP_RMW, &state));
++
++		PRINTK("%s: stripe %llu STRIPE_OP_RCW op_state: %lx\n",
++			__FUNCTION__, (unsigned long long)sh->sector,
++			ops_state);
++
++
++		if (test_and_clear_bit(STRIPE_OP_RCW_Drain, &ops_state)) {
++
++			check_channel(DMA_MEMCPY, stripe_op_rcw_drain);
++
++			for (i=disks ; i-- ;) {
++				struct r5dev *dev = &sh->dev[i];
++				struct bio *chosen;
++				struct bio *wbi;
++
++				if (i!=pd_idx && dev->towrite &&
++					test_bit(R5_LOCKED, &dev->flags)) {
++
++					spin_lock(&sh->lock);
++					chosen = dev->towrite;
++					dev->towrite = NULL;
++					BUG_ON(dev->written);
++					wbi = dev->written = chosen;
++					spin_unlock(&sh->lock);
++
++					overlap++;
++
++					while (wbi && wbi->bi_sector < dev->sector + STRIPE_SECTORS) {
++						sh->ops.dma_cookie = dma_raid_copy_data(1,
++								     wbi, dev->dma, dev->sector,
++								     sh->ops.dma_chan,
++								     sh->ops.dma_cookie);
++						wbi = r5_next_bio(wbi, dev->sector);
++					}
++				}
++			}
++			set_bit(STRIPE_OP_RCW_Parity, &ops_state);
++		}
++
++		if (test_and_clear_bit(STRIPE_OP_RCW_Parity, &ops_state)) {
++			dma_addr_t xor_destination_addr;
++			int count;
++
++			check_channel(DMA_XOR, stripe_op_rcw_parity);
++			count = 0;
++
++			xor_destination_addr = sh->dev[pd_idx].dma;
++
++			for (i=disks; i--;)
++				if (i != pd_idx) {
++					dma[count++] = sh->dev[i].dma;
++					check_xor();
++				}
++			if (count > 1)
++				issue_xor();
++
++			set_bit(STRIPE_OP_RCW_Dma, &ops_state);
++		}
++	}
++
++	if (test_bit(STRIPE_OP_CHECK, &state) &&
++		!test_bit(STRIPE_OP_CHECK_Dma, &ops_state)) {
++		PRINTK("%s: stripe %llu STRIPE_OP_CHECK op_state: %lx\n",
++		__FUNCTION__, (unsigned long long)sh->sector,
++		ops_state);
++
++		if (test_and_clear_bit(STRIPE_OP_CHECK_Gen, &ops_state)) {
++
++			check_channel(DMA_XOR | DMA_ZERO_SUM, stripe_op_check_gen);
++
++			if (disks > MAX_HW_XOR_SRCS) {
++				/* we need to do a destructive xor 
++				 * i.e. the result needs to be temporarily stored in memory
++				 */
++				dma_addr_t xor_destination_addr;
++				int count = 0;
++				int skip = -1;
++
++				xor_destination_addr = dma[count++] = sh->dev[pd_idx].dma;
++
++				/* xor all but one block */
++				for (i=disks; i--;)
++					if (i != pd_idx) {
++						if (skip < 0) {
++							skip = i;
++							continue;
++						}
++						dma[count++] = sh->dev[i].dma;
++						check_xor();
++					}
++				if (count > 1)
++					issue_xor();
++
++				/* zero result check the skipped block with
++				 * the new parity
++				 */
++				count = 2;
++				dma[1] = sh->dev[skip].dma;
++				do {
++					cookie = dma_async_zero_sum_dma_list(
++						sh->ops.dma_chan,
++						dma,
++						count,
++						STRIPE_SIZE,
++						&sh->ops.dma_result);
++					if (cookie == -ENOMEM)
++						dma_sync_wait(sh->ops.dma_chan,
++						sh->ops.dma_cookie);
++					else
++						WARN_ON(cookie <= 0);
++				} while (cookie == -ENOMEM);
++				sh->ops.dma_cookie = cookie;
++			} else {
++				int count = 0;
++				for (i=disks; i--;)
++					dma[count++] = sh->dev[i].dma;
++				do {
++					cookie = dma_async_zero_sum_dma_list(
++						sh->ops.dma_chan,
++						dma,
++						count,
++						STRIPE_SIZE,
++						&sh->ops.dma_result);
++					if (cookie == -ENOMEM)
++						dma_sync_wait(sh->ops.dma_chan,
++						sh->ops.dma_cookie);
++					else
++						WARN_ON(cookie <= 0);
++				} while (cookie == -ENOMEM);
++				sh->ops.dma_cookie = cookie;
++			}
++			set_bit(STRIPE_OP_CHECK_Verify, &ops_state);
++			set_bit(STRIPE_OP_CHECK_Dma, &ops_state);
++		}
++	}
++
++#ifdef CONFIG_RAID5_DMA_WAIT_VIA_REQUEUE
++raid5_dma_retry:
++#endif
++	spin_lock(&sh->lock);
++	/* Update the state of operations:
++	 * -clear incoming requests
++	 * -preserve output status (i.e. done status / check result / dma)
++	 * -preserve requests added since 'ops_state_orig' was set
++	 */
++	sh->ops.state ^= (ops_state_orig & ~STRIPE_OP_COMPLETION_MASK);
++	sh->ops.state |= ops_state;
++
++	/* if we cleared an overlap condition wake up threads in make_request */
++	if (overlap)
++		for (i= disks; i-- ;) {
++			struct r5dev *dev = &sh->dev[i];
++			if (test_and_clear_bit(R5_Overlap, &dev->flags))
++				wake_up(&sh->raid_conf->wait_for_overlap);
++		}
++
++	if (dma_async_operation_complete(sh->ops.dma_chan, sh->ops.dma_cookie,
++					NULL, NULL) == DMA_IN_PROGRESS)
++		dma_async_issue_pending(sh->ops.dma_chan);
++	else { /* now that dma operations have quiesced update the stripe state */
++		int written, work;
++		written = 0;
++		work = 0;
++
++		if (test_and_clear_bit(STRIPE_OP_BIOFILL_Dma, &sh->ops.state)) {
++			work++;
++			set_bit(STRIPE_OP_BIOFILL_Done, &sh->ops.state);
++		}
++		if (test_and_clear_bit(STRIPE_OP_COMPUTE_Dma, &sh->ops.state)) {
++			for (i=disks ; i-- ;)
++				if (test_and_clear_bit(R5_ComputeReq,
++						       &sh->dev[i].flags)) {
++					set_bit(R5_UPTODATE,
++						&sh->dev[i].flags);
++					break;
++				}
++			work++;
++			set_bit(STRIPE_OP_COMPUTE_Done, &sh->ops.state);
++		}
++		if (test_and_clear_bit(STRIPE_OP_RCW_Dma, &sh->ops.state)) {
++			work++;
++			written++;
++			set_bit(R5_UPTODATE, &sh->dev[sh->pd_idx].flags);
++			set_bit(STRIPE_OP_RCW_Done, &sh->ops.state);
++		}
++		if (test_and_clear_bit(STRIPE_OP_RMW_Dma, &sh->ops.state)) {
++			work++;
++			written++;
++			set_bit(R5_UPTODATE, &sh->dev[sh->pd_idx].flags);
++			set_bit(STRIPE_OP_RMW_Done, &sh->ops.state);
++		}
++		if (written)
++			for (i=disks ; i-- ;) {
++				struct r5dev *dev = &sh->dev[i];
++				if (dev->written)
++					set_bit(R5_UPTODATE, &dev->flags);
++			}
++		if (test_and_clear_bit(STRIPE_OP_CHECK_Dma, &sh->ops.state)) {
++			if (test_and_clear_bit(STRIPE_OP_CHECK_Verify,
++				&sh->ops.state)) {
++				work++;
++				if (sh->ops.dma_result == 0) {
++					set_bit(STRIPE_OP_CHECK_IsZero,
++						&sh->ops.state);
++
++					/* if the parity is correct and we
++					 * performed the check withtout dirtying
++					 * the parity block, mark it up to date.
++					 */
++					if (disks <= MAX_HW_XOR_SRCS)
++						set_bit(R5_UPTODATE, 
++						&sh->dev[sh->pd_idx].flags);
++
++				} else
++					clear_bit(STRIPE_OP_CHECK_IsZero,
++						&sh->ops.state);
++
++				set_bit(STRIPE_OP_CHECK_Done, &sh->ops.state);
++
++			} else
++				BUG();
++		}
++
++		sh->ops.pending -= work;
++		BUG_ON(sh->ops.pending < 0);
++
++		#ifdef CONFIG_RAID5_DMA_WAIT_VIA_REQUEUE
++		/* return to the bookmark to continue the operation */
++		if (sh->ops.ops_bookmark) {
++			overlap = 0;
++			state = sh->state;
++			ops_state_orig = ops_state = sh->ops.state;
++			spin_unlock(&sh->lock);
++			goto *sh->ops.ops_bookmark;
 +		}
 +		#endif
 +
-+		iop_desc_init_xor(sw_desc, src_cnt);
-+		iop_desc_set_byte_count(sw_desc, iop_chan, len);
-+
-+		switch (flags & (DMA_DEST_BUF | DMA_DEST_PAGE |
-+				DMA_DEST_PAGES | DMA_DEST_DMA |
-+				DMA_DEST_DMA_LIST)) {
-+		case DMA_DEST_PAGE:
-+			dest.dma = dma_map_page(dev, dest.pg, dest_off, len,
-+					DMA_FROM_DEVICE);
-+			break;
-+		case DMA_DEST_BUF:
-+			dest.dma = dma_map_single(dev, dest.buf, len,
-+					DMA_FROM_DEVICE);
-+			break;
-+		}
-+
-+		iop_desc_set_dest_addr(sw_desc, iop_chan, dest.dma);
-+
-+		switch (flags & (DMA_SRC_BUF | DMA_SRC_PAGE |
-+				DMA_SRC_PAGES | DMA_SRC_DMA |
-+				DMA_SRC_DMA_LIST)) {
-+		case DMA_SRC_PAGES:
-+			while (src_cnt--) {
-+				dma_addr_t addr = dma_map_page(dev,
-+							src.pgs[src_cnt],
-+							src_off, len,
-+							DMA_TO_DEVICE);
-+				iop_desc_set_xor_src_addr(sw_desc,
-+							src_cnt,
-+							addr,
-+							slot_cnt,
-+							slots_per_op);
-+			}
-+			break;
-+		case DMA_SRC_DMA_LIST:
-+			while (src_cnt--) {
-+				iop_desc_set_xor_src_addr(sw_desc,
-+							src_cnt,
-+							src.dma_list[src_cnt],
-+							slot_cnt,
-+							slots_per_op);
-+			}
-+			break;
-+		}
-+
-+		iop_chan_chain_desc(iop_chan, sw_desc);
-+		iop_desc_assign_cookie(iop_chan, sw_desc);
-+
-+		sw_desc->flags = flags;
-+		iop_chan->pending++;
-+		ret = sw_desc->cookie;
-+	}
-+	spin_unlock_bh(&iop_chan->lock);
-+
-+	iop_adma_check_threshold(iop_chan);
-+
-+	return ret;
-+}
-+
-+/**
-+ * do_iop_adma_zero_sum - xor the sources together and report whether
-+ *				the sum is zero
-+ * @chan: common channel handle
-+ * @src: DMAENGINE source addresses
-+ * @src_cnt: number of sources
-+ * @src_off: offset into the sources
-+ * @len: transaction length in bytes
-+ * @flags: DMAENGINE address type flags
-+ * @result: set to 1 if sum is zero else 0
-+ */
-+#ifndef CONFIG_ARCH_IOP32X
-+static dma_cookie_t do_iop_adma_zero_sum(struct dma_chan *chan,
-+					union dmaengine_addr src,
-+					unsigned int src_cnt,
-+					unsigned int src_off,
-+					size_t len,
-+					u32 *result,
-+					unsigned long flags)
-+{
-+	struct iop_adma_chan *iop_chan = to_iop_adma_chan(chan);
-+	struct iop_adma_desc_slot *sw_desc;
-+	dma_cookie_t ret = -ENOMEM;
-+	int slot_cnt, slots_per_op;
-+
-+	if (!chan || !src.dma_list || !result)
-+		return -EFAULT;
-+
-+	if (!len)
-+		return iop_chan->common.cookie;
-+
-+	PRINTK("iop adma%d: %s src_cnt: %d len: %u flags: %lx\n",
-+	iop_chan->device->id, __FUNCTION__, src_cnt, len, flags);
-+
-+	spin_lock_bh(&iop_chan->lock);
-+	slot_cnt = iop_chan_zero_sum_slot_count(len, src_cnt, &slots_per_op);
-+	sw_desc = iop_adma_alloc_slots(iop_chan, slot_cnt, slots_per_op);
-+	if (sw_desc) {
-+		struct device *dev = &iop_chan->device->pdev->dev;
-+		iop_chan->pending += iop_desc_init_zero_sum(sw_desc, src_cnt,
-+					slot_cnt, slots_per_op);
-+
-+		switch (flags & (DMA_SRC_BUF | DMA_SRC_PAGE |
-+				DMA_SRC_PAGES | DMA_SRC_DMA |
-+				DMA_SRC_DMA_LIST)) {
-+		case DMA_SRC_PAGES:
-+			while (src_cnt--) {
-+				dma_addr_t addr = dma_map_page(dev,
-+						src.pgs[src_cnt],
-+						src_off, len,
-+						DMA_TO_DEVICE);
-+				iop_desc_set_zero_sum_src_addr(sw_desc,
-+						src_cnt,
-+						addr,
-+						slot_cnt,
-+						slots_per_op);
-+			}
-+			break;
-+		case DMA_SRC_DMA_LIST:
-+			while (src_cnt--) {
-+				iop_desc_set_zero_sum_src_addr(sw_desc,
-+						src_cnt,
-+						src.dma_list[src_cnt],
-+						slot_cnt,
-+						slots_per_op);
-+			}
-+			break;
-+		}
-+
-+		iop_desc_set_zero_sum_byte_count(sw_desc, len, slots_per_op);
-+
-+		/* assign a cookie to the first descriptor so
-+		 * the buffers are unmapped
-+		 */
-+		iop_desc_assign_cookie(iop_chan, sw_desc);
-+		sw_desc->flags = flags;
-+
-+		/* assign cookie to the last descriptor in the group
-+		 * so the xor_check_result is updated. Also, set the
-+		 * xor_check_result ptr of the first and last descriptor
-+		 * so the cleanup routine can sum the group of results
-+		 */
-+		if (slot_cnt > slots_per_op) {
-+			struct iop_adma_desc_slot *desc;
-+			desc = list_entry(iop_chan->chain.prev,
-+				struct iop_adma_desc_slot,
-+				chain_node);
-+			iop_desc_assign_cookie(iop_chan, desc);
-+			sw_desc->xor_check_result = result;
-+			desc->xor_check_result = result;
-+			ret = desc->cookie;
-+		} else {
-+			sw_desc->xor_check_result = result;
-+			ret = sw_desc->cookie;
-+		}
-+
-+		/* add the group to the chain */
-+		iop_chan_chain_desc(iop_chan, sw_desc);
-+	}
-+	spin_unlock_bh(&iop_chan->lock);
-+
-+	iop_adma_check_threshold(iop_chan);
-+
-+	return ret;
-+}
-+#else
-+/* iop32x does not support zero sum in hardware, so we simulate 
-+ * it in software.  It only supports a PAGE_SIZE length which is
-+ * enough to support md raid.
-+ */
-+static dma_cookie_t do_iop_adma_zero_sum(struct dma_chan *chan,
-+					union dmaengine_addr src,
-+					unsigned int src_cnt,
-+					unsigned int src_off,
-+					size_t len,
-+					u32 *result,
-+					unsigned long flags)
-+{
-+	static union dmaengine_addr dest_addr = { .buf = iop32x_zero_result_buffer };
-+	static dma_cookie_t last_zero_result_cookie = 0;
-+	struct iop_adma_chan *iop_chan = to_iop_adma_chan(chan);
-+	dma_cookie_t ret;
-+
-+	if (!chan || !src.dma_list || !result)
-+		return -EFAULT;
-+
-+	if (!len)
-+		return iop_chan->common.cookie;
-+
-+	if (len > sizeof(iop32x_zero_result_buffer)) {
-+		printk(KERN_ERR "iop32x performs zero sum with a %d byte buffer, %d"
-+		  	" bytes is too large\n", sizeof(iop32x_zero_result_buffer),
-+		  	len);
-+		BUG();
-+		return -EFAULT;
++		/* the stripe is done with the channel */
++		dma_chan_put(sh->ops.dma_chan);
++		sh->ops.dma_chan = NULL;
++		sh->ops.dma_cookie = 0;
 +	}
 +
-+	/* we only have 1 result buffer, it can not be shared */
-+	if (last_zero_result_cookie) {
-+		PRINTK("%s: waiting for last_zero_result_cookie: %d\n",
-+			__FUNCTION__, last_zero_result_cookie);
-+		dma_sync_wait(chan, last_zero_result_cookie);
-+		last_zero_result_cookie = 0;
++	BUG_ON(sh->ops.pending == 0 && sh->ops.dma_chan);
++	clear_bit(STRIPE_OP_QUEUED, &sh->state);
++	set_bit(STRIPE_HANDLE, &sh->state);
++	queue_raid_work(sh);
++	spin_unlock(&sh->lock);
++
++	release_stripe(sh);
++}
++
++static void raid5_dma_event_callback(struct dma_client *client,
++			struct dma_chan *chan, enum dma_event event)
++{
++	switch (event) {
++	case DMA_RESOURCE_SUSPEND:
++		PRINTK("%s: DMA_RESOURCE_SUSPEND\n", __FUNCTION__);
++		break;
++	case DMA_RESOURCE_RESUME:
++		PRINTK("%s: DMA_RESOURCE_RESUME\n", __FUNCTION__);
++		break;
++	case DMA_RESOURCE_ADDED:
++		PRINTK("%s: DMA_RESOURCE_ADDED\n", __FUNCTION__);
++		break;
++	case DMA_RESOURCE_REMOVED:
++		PRINTK("%s: DMA_RESOURCE_REMOVED\n", __FUNCTION__);
++		break;
++	default:
++		PRINTK("%s: unknown\n", __FUNCTION__);
++		break;
 +	}
 +
-+	PRINTK("iop adma%d: %s src_cnt: %d len: %u flags: %lx\n",
-+	iop_chan->device->id, __FUNCTION__, src_cnt, len, flags);
-+
-+	flags |= DMA_DEST_BUF;
-+	iop32x_zero_sum_output = result;
-+
-+	ret = do_iop_adma_xor(chan, dest_addr, 0, src, src_cnt, src_off,
-+				len, flags);
-+
-+	if (ret > 0)
-+		last_zero_result_cookie = ret;
-+
-+	return ret;
-+}
-+#endif
-+
-+static void iop_adma_free_chan_resources(struct dma_chan *chan)
-+{
-+	struct iop_adma_chan *iop_chan = to_iop_adma_chan(chan);
-+	struct iop_adma_desc_slot *iter, *_iter;
-+	int in_use_descs = 0;
-+
-+	iop_adma_slot_cleanup(iop_chan);
-+
-+	spin_lock_bh(&iop_chan->lock);
-+	list_for_each_entry_safe(iter, _iter, &iop_chan->chain,
-+					chain_node) {
-+		in_use_descs++;
-+		list_del(&iter->chain_node);
-+	}
-+	list_for_each_entry_safe_reverse(iter, _iter, &iop_chan->all_slots, slot_node) {
-+		list_del(&iter->slot_node);
-+		kfree(iter);
-+		iop_chan->slots_allocated--;
-+	}
-+	iop_chan->last_used = NULL;
-+
-+	PRINTK("iop adma%d %s slots_allocated %d\n", iop_chan->device->id,
-+		__FUNCTION__, iop_chan->slots_allocated);
-+	spin_unlock_bh(&iop_chan->lock);
-+
-+	/* one is ok since we left it on there on purpose */
-+	if (in_use_descs > 1)
-+		printk(KERN_ERR "IOP: Freeing %d in use descriptors!\n",
-+			in_use_descs - 1);
 +}
 +
-+/**
-+ * iop_adma_is_complete - poll the status of an ADMA transaction
-+ * @chan: ADMA channel handle
-+ * @cookie: ADMA transaction identifier
-+ */
-+static enum dma_status iop_adma_is_complete(struct dma_chan *chan,
-+                                            dma_cookie_t cookie,
-+                                            dma_cookie_t *done,
-+                                            dma_cookie_t *used)
++static int __init raid5_dma_init (void)
 +{
-+	struct iop_adma_chan *iop_chan = to_iop_adma_chan(chan);
-+	dma_cookie_t last_used;
-+	dma_cookie_t last_complete;
-+	enum dma_status ret;
++	raid5_dma_client = dma_async_client_register(
++				&raid5_dma_event_callback);
 +
-+	last_used = chan->cookie;
-+	last_complete = iop_chan->completed_cookie;
-+
-+	if (done)
-+		*done= last_complete;
-+	if (used)
-+		*used = last_used;
-+
-+	ret = dma_async_is_complete(cookie, last_complete, last_used);
-+	if (ret == DMA_SUCCESS)
-+		return ret;
-+
-+	iop_adma_slot_cleanup(iop_chan);
-+
-+	last_used = chan->cookie;
-+	last_complete = iop_chan->completed_cookie;
-+
-+	if (done)
-+		*done= last_complete;
-+	if (used)
-+		*used = last_used;
-+
-+	return dma_async_is_complete(cookie, last_complete, last_used);
-+}
-+
-+/* to do: can we use these interrupts to implement 'sleep until completed' */
-+static irqreturn_t iop_adma_eot_handler(int irq, void *data, struct pt_regs *regs)
-+{
-+	return IRQ_NONE;
-+}
-+
-+static irqreturn_t iop_adma_eoc_handler(int irq, void *data, struct pt_regs *regs)
-+{
-+	return IRQ_NONE;
-+}
-+
-+static irqreturn_t iop_adma_err_handler(int irq, void *data, struct pt_regs *regs)
-+{
-+	return IRQ_NONE;
-+}
-+
-+static void iop_adma_issue_pending(struct dma_chan *chan)
-+{
-+	struct iop_adma_chan *iop_chan = to_iop_adma_chan(chan);
-+	spin_lock(&iop_chan->lock);
-+	if (iop_chan->pending) {
-+		iop_chan->pending = 0;
-+		iop_chan_append(iop_chan);
-+	}
-+	spin_unlock(&iop_chan->lock);
-+}
-+
-+/*
-+ * Perform a transaction to verify the HW works.
-+ */
-+#define IOP_ADMA_TEST_SIZE 2000
-+
-+static int __devinit iop_adma_memcpy_self_test(struct iop_adma_device *device)
-+{
-+	int i;
-+	union dmaengine_addr src;
-+	union dmaengine_addr dest;
-+	struct dma_chan *dma_chan;
-+	dma_cookie_t cookie;
-+	int err = 0;
-+
-+	src.buf = kzalloc(sizeof(u8) * IOP_ADMA_TEST_SIZE, SLAB_KERNEL);
-+	if (!src.buf)
++	if (raid5_dma_client == NULL)
 +		return -ENOMEM;
-+	dest.buf = kzalloc(sizeof(u8) * IOP_ADMA_TEST_SIZE, SLAB_KERNEL);
-+	if (!dest.buf) {
-+		kfree(src.buf);
-+		return -ENOMEM;
-+	}
 +
-+	/* Fill in src buffer */
-+	for (i = 0; i < IOP_ADMA_TEST_SIZE; i++)
-+		((u8 *) src.buf)[i] = (u8)i;
++	__arch_raid5_dma_chan_request(raid5_dma_client);
 +
-+	memset(dest.buf, 0, IOP_ADMA_TEST_SIZE);
-+
-+	/* Start copy, using first DMA channel */
-+	dma_chan = container_of(device->common.channels.next,
-+	                        struct dma_chan,
-+	                        device_node);
-+	if (iop_adma_alloc_chan_resources(dma_chan) < 1) {
-+		err = -ENODEV;
-+		goto out;
-+	}
-+
-+	cookie = do_iop_adma_memcpy(dma_chan, dest, 0, src, 0,
-+		IOP_ADMA_TEST_SIZE, DMA_SRC_BUF | DMA_DEST_BUF);
-+	iop_adma_issue_pending(dma_chan);
-+	msleep(1);
-+
-+	if (iop_adma_is_complete(dma_chan, cookie, NULL, NULL) != DMA_SUCCESS) {
-+		printk(KERN_ERR "iop adma%d: Self-test copy timed out, disabling\n",
-+			device->id);
-+		err = -ENODEV;
-+		goto free_resources;
-+	}
-+
-+	consistent_sync(dest.buf, IOP_ADMA_TEST_SIZE, DMA_FROM_DEVICE);
-+	if (memcmp(src.buf, dest.buf, IOP_ADMA_TEST_SIZE)) {
-+		printk(KERN_ERR "iop adma%d: Self-test copy failed compare, disabling\n",
-+			device->id);
-+		err = -ENODEV;
-+		goto free_resources;
-+	}
-+
-+free_resources:
-+	iop_adma_free_chan_resources(dma_chan);
-+out:
-+	kfree(src.buf);
-+	kfree(dest.buf);
-+	return err;
-+}
-+
-+#define IOP_ADMA_NUM_SRC_TST 4 /* must be <= 15 */
-+static int __devinit iop_adma_xor_zero_sum_self_test(struct iop_adma_device *device)
-+{
-+	int i, src_idx;
-+	struct page *xor_srcs[IOP_ADMA_NUM_SRC_TST];
-+	struct page *zero_sum_srcs[IOP_ADMA_NUM_SRC_TST + 1];
-+	union dmaengine_addr dest;
-+	union dmaengine_addr src;
-+	struct dma_chan *dma_chan;
-+	dma_cookie_t cookie;
-+	u8 cmp_byte = 0;
-+	u32 cmp_word;
-+	u32 zero_sum_result;
-+	int err = 0;
-+
-+	for (src_idx = 0; src_idx < IOP_ADMA_NUM_SRC_TST; src_idx++) {
-+		xor_srcs[src_idx] = alloc_page(GFP_KERNEL);
-+		if (!xor_srcs[src_idx])
-+			while (src_idx--) {
-+				__free_page(xor_srcs[src_idx]);
-+				return -ENOMEM;
-+			}
-+	}
-+
-+	dest.pg = alloc_page(GFP_KERNEL);
-+	if (!dest.pg)
-+		while (src_idx--) {
-+			__free_page(xor_srcs[src_idx]);
-+			return -ENOMEM;
-+		}
-+
-+	/* Fill in src buffers */
-+	for (src_idx = 0; src_idx < IOP_ADMA_NUM_SRC_TST; src_idx++) {
-+		u8 *ptr = page_address(xor_srcs[src_idx]);
-+		for (i = 0; i < PAGE_SIZE; i++)
-+			ptr[i] = (1 << src_idx);
-+	}
-+
-+	for (src_idx = 0; src_idx < IOP_ADMA_NUM_SRC_TST; src_idx++)
-+		cmp_byte ^= (u8) (1 << src_idx);
-+
-+	cmp_word = (cmp_byte << 24) | (cmp_byte << 16) | (cmp_byte << 8) | cmp_byte;
-+
-+	memset(page_address(dest.pg), 0, PAGE_SIZE);
-+
-+	dma_chan = container_of(device->common.channels.next,
-+	                        struct dma_chan,
-+	                        device_node);
-+	if (iop_adma_alloc_chan_resources(dma_chan) < 1) {
-+		err = -ENODEV;
-+		goto out;
-+	}
-+
-+	/* test xor */
-+	src.pgs = xor_srcs;
-+	cookie = do_iop_adma_xor(dma_chan, dest, 0, src,
-+		IOP_ADMA_NUM_SRC_TST, 0, PAGE_SIZE, DMA_DEST_PAGE | DMA_SRC_PAGES);
-+	iop_adma_issue_pending(dma_chan);
-+	msleep(8);
-+
-+	if (iop_adma_is_complete(dma_chan, cookie, NULL, NULL) != DMA_SUCCESS) {
-+		printk(KERN_ERR "iop_adma: Self-test xor timed out, disabling\n");
-+		err = -ENODEV;
-+		goto free_resources;
-+	}
-+
-+	consistent_sync(page_address(dest.pg), PAGE_SIZE, DMA_FROM_DEVICE);
-+	for (i = 0; i < (PAGE_SIZE / sizeof(u32)); i++) {
-+		u32 *ptr = page_address(dest.pg);
-+		if (ptr[i] != cmp_word) {
-+			printk(KERN_ERR "iop_adma: Self-test xor failed compare, disabling\n");
-+			err = -ENODEV;
-+			goto free_resources;
-+		}
-+	}
-+
-+	/* zero sum the sources with the destintation page */
-+	for (i = 0; i < IOP_ADMA_NUM_SRC_TST; i++)
-+		zero_sum_srcs[i] = xor_srcs[i];
-+	zero_sum_srcs[i] = dest.pg;
-+	src.pgs = zero_sum_srcs;
-+
-+	zero_sum_result = 1;
-+	cookie = do_iop_adma_zero_sum(dma_chan, src, IOP_ADMA_NUM_SRC_TST + 1,
-+				0, PAGE_SIZE, &zero_sum_result, DMA_SRC_PAGES);
-+	iop_adma_issue_pending(dma_chan);
-+	msleep(8);
-+
-+	if (iop_adma_is_complete(dma_chan, cookie, NULL, NULL) != DMA_SUCCESS) {
-+		printk(KERN_ERR "iop_adma: Self-test zero sum timed out, disabling\n");
-+		err = -ENODEV;
-+		goto free_resources;
-+	}
-+
-+	if (zero_sum_result != 0) {
-+		printk(KERN_ERR "iop_adma: Self-test zero sum failed compare, disabling\n");
-+		err = -ENODEV;
-+		goto free_resources;
-+	}
-+
-+	/* test memset */
-+	cookie = do_iop_adma_memset(dma_chan, dest, 0, 0, PAGE_SIZE, DMA_DEST_PAGE);
-+	iop_adma_issue_pending(dma_chan);
-+	msleep(8);
-+
-+	if (iop_adma_is_complete(dma_chan, cookie, NULL, NULL) != DMA_SUCCESS) {
-+		printk(KERN_ERR "iop_adma: Self-test memset timed out, disabling\n");
-+		err = -ENODEV;
-+		goto free_resources;
-+	}
-+
-+	consistent_sync(page_address(dest.pg), PAGE_SIZE, DMA_FROM_DEVICE);
-+	for (i = 0; i < PAGE_SIZE/sizeof(u32); i++) {
-+		u32 *ptr = page_address(dest.pg);
-+		if (ptr[i]) {
-+			printk(KERN_ERR "iop_adma: Self-test memset failed compare, disabling\n");
-+			err = -ENODEV;
-+			goto free_resources;
-+		}
-+	}
-+
-+	/* test for non-zero parity sum */
-+	zero_sum_result = 0;
-+	cookie = do_iop_adma_zero_sum(dma_chan, src, IOP_ADMA_NUM_SRC_TST + 1,
-+				0, PAGE_SIZE, &zero_sum_result, DMA_SRC_PAGES);
-+	iop_adma_issue_pending(dma_chan);
-+	msleep(8);
-+
-+	if (iop_adma_is_complete(dma_chan, cookie, NULL, NULL) != DMA_SUCCESS) {
-+		printk(KERN_ERR "iop_adma: Self-test non-zero sum timed out, disabling\n");
-+		err = -ENODEV;
-+		goto free_resources;
-+	}
-+
-+	if (zero_sum_result != 1) {
-+		printk(KERN_ERR "iop_adma: Self-test non-zero sum failed compare, disabling\n");
-+		err = -ENODEV;
-+		goto free_resources;
-+	}
-+
-+free_resources:
-+	iop_adma_free_chan_resources(dma_chan);
-+out:
-+	src_idx = IOP_ADMA_NUM_SRC_TST;
-+	while (src_idx--)
-+		__free_page(xor_srcs[src_idx]);
-+	__free_page(dest.pg);
-+	return err;
-+}
-+
-+static int __devexit iop_adma_remove(struct platform_device *dev)
-+{
-+	struct iop_adma_device *device = platform_get_drvdata(dev);
-+	struct dma_chan *chan, *_chan;
-+	struct iop_adma_chan *iop_chan;
-+	int i;
-+	struct iop_adma_platform_data *plat_data = dev->dev.platform_data;
-+
-+
-+	dma_async_device_unregister(&device->common);
-+
-+	for (i = 0; i < 3; i++) {
-+		unsigned int irq;
-+		irq = platform_get_irq(dev, i);
-+		free_irq(irq, device);
-+	}
-+
-+	dma_free_coherent(&dev->dev, plat_data->pool_size,
-+			device->dma_desc_pool_virt, device->dma_desc_pool);
-+
-+	do {
-+		struct resource *res;
-+		res = platform_get_resource(dev, IORESOURCE_MEM, 0);
-+		release_mem_region(res->start, res->end - res->start);
-+	} while (0);
-+
-+	list_for_each_entry_safe(chan, _chan, &device->common.channels,
-+				device_node) {
-+		iop_chan = to_iop_adma_chan(chan);
-+		list_del(&chan->device_node);
-+		kfree(iop_chan);
-+	}
-+	kfree(device);
-+
++	printk("raid5-dma: driver initialized\n");
 +	return 0;
++
 +}
 +
-+static dma_addr_t iop_adma_map_page(struct dma_chan *chan, struct page *page,
-+					unsigned long offset, size_t size,
-+					int direction)
++static void __init raid5_dma_exit (void)
 +{
-+	struct iop_adma_chan *iop_chan = to_iop_adma_chan(chan);
-+	return dma_map_page(&iop_chan->device->pdev->dev, page, offset, size,
-+			direction);
++	if (raid5_dma_client)
++		dma_async_client_unregister(raid5_dma_client);
++
++	raid5_dma_client = NULL;
 +}
 +
-+static dma_addr_t iop_adma_map_single(struct dma_chan *chan, void *cpu_addr,
-+					size_t size, int direction)
++static struct dma_chan *raid5_dma_next_channel(void)
 +{
-+	struct iop_adma_chan *iop_chan = to_iop_adma_chan(chan);
-+	return dma_map_single(&iop_chan->device->pdev->dev, cpu_addr, size,
-+			direction);
++	return __arch_raid5_dma_next_channel(raid5_dma_client);
 +}
 +
-+static void iop_adma_unmap_page(struct dma_chan *chan, dma_addr_t handle,
-+				size_t size, int direction)
++void raid5_dma_get_dma(struct raid5_dma *dma)
 +{
-+	struct iop_adma_chan *iop_chan = to_iop_adma_chan(chan);
-+	dma_unmap_page(&iop_chan->device->pdev->dev, handle, size, direction);
++	dma->owner = THIS_MODULE;
++	dma->channel_iterate = raid5_dma_next_channel;
++	dma->do_block_ops = dma_do_raid5_block_ops;
++	atomic_inc(&raid5_count);
 +}
 +
-+static void iop_adma_unmap_single(struct dma_chan *chan, dma_addr_t handle,
-+				size_t size, int direction)
-+{
-+	struct iop_adma_chan *iop_chan = to_iop_adma_chan(chan);
-+	dma_unmap_single(&iop_chan->device->pdev->dev, handle, size, direction);
-+}
++EXPORT_SYMBOL_GPL(raid5_dma_get_dma);
 +
-+extern dma_cookie_t dma_async_do_memcpy_err(struct dma_chan *chan,
-+		union dmaengine_addr dest, unsigned int dest_off,
-+		union dmaengine_addr src, unsigned int src_off,
-+                size_t len, unsigned long flags);
-+
-+extern dma_cookie_t dma_async_do_xor_err(struct dma_chan *chan,
-+		union dmaengine_addr dest, unsigned int dest_off,
-+		union dmaengine_addr src, unsigned int src_cnt,
-+		unsigned int src_off, size_t len, unsigned long flags);
-+
-+extern dma_cookie_t dma_async_do_zero_sum_err(struct dma_chan *chan,
-+		union dmaengine_addr src, unsigned int src_cnt,
-+		unsigned int src_off, size_t len, u32 *result,
-+		unsigned long flags);
-+
-+extern dma_cookie_t dma_async_do_memset_err(struct dma_chan *chan,
-+                union dmaengine_addr dest, unsigned int dest_off,
-+                int val, size_t len, unsigned long flags);
-+
-+static int __devinit iop_adma_probe(struct platform_device *pdev)
-+{
-+	struct resource *res;
-+	int ret=0, irq_eot=0, irq_eoc=0, irq_err=0, irq, i;
-+	struct iop_adma_device *adev;
-+	struct iop_adma_chan *iop_chan;
-+	struct iop_adma_platform_data *plat_data = pdev->dev.platform_data;
-+
-+	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
-+	if (!res)
-+		return -ENODEV;
-+
-+	if (!request_mem_region(res->start, res->end - res->start, pdev->name))
-+		return -EBUSY;
-+
-+	if ((adev = kzalloc(sizeof(*adev), GFP_KERNEL)) == NULL) {
-+		ret = -ENOMEM;
-+		goto err_adev_alloc;
-+	}
-+
-+	if ((adev->dma_desc_pool_virt = dma_alloc_writecombine(&pdev->dev,
-+					plat_data->pool_size,
-+					&adev->dma_desc_pool,
-+					GFP_KERNEL)) == NULL) {
-+		ret = -ENOMEM;
-+		goto err_dma_alloc;
-+	}
-+
-+	PRINTK("%s: allocted descriptor pool virt %p phys %p\n",
-+	__FUNCTION__, adev->dma_desc_pool_virt, (void *) adev->dma_desc_pool);
-+
-+	adev->id = plat_data->hw_id;
-+	adev->common.capabilities = plat_data->capabilities;
-+
-+	for (i = 0; i < 3; i++) {
-+		irq = platform_get_irq(pdev, i);
-+		if (irq < 0)
-+			ret = -ENXIO;
-+		else {
-+			switch (i) {
-+			case 0:
-+				irq_eot = irq;
-+				ret = request_irq(irq, iop_adma_eot_handler,
-+					 0, pdev->name, adev);
-+				if (ret) {
-+					ret = -EIO;
-+					goto err_irq0;
-+				}
-+				break;
-+			case 1:
-+				irq_eoc = irq;
-+				ret = request_irq(irq, iop_adma_eoc_handler,
-+					0, pdev->name, adev);
-+				if (ret) {
-+					ret = -EIO;
-+					goto err_irq1;
-+				}
-+				break;
-+			case 2:
-+				irq_err = irq;
-+				ret = request_irq(irq, iop_adma_err_handler,
-+					0, pdev->name, adev);
-+				if (ret) {
-+					ret = -EIO;
-+					goto err_irq2;
-+				}
-+				break;
-+			}
-+		}
-+	}
-+
-+	adev->pdev = pdev;
-+	platform_set_drvdata(pdev, adev);
-+
-+	INIT_LIST_HEAD(&adev->common.channels);
-+	adev->common.device_alloc_chan_resources = iop_adma_alloc_chan_resources;
-+	adev->common.device_free_chan_resources = iop_adma_free_chan_resources;
-+	adev->common.device_operation_complete = iop_adma_is_complete;
-+	adev->common.device_issue_pending = iop_adma_issue_pending;
-+	adev->common.map_page = iop_adma_map_page;
-+	adev->common.map_single = iop_adma_map_single;
-+	adev->common.unmap_page = iop_adma_unmap_page;
-+	adev->common.unmap_single = iop_adma_unmap_single;
-+
-+	if (adev->common.capabilities & DMA_MEMCPY)
-+		adev->common.device_do_dma_memcpy = do_iop_adma_memcpy;
-+	else
-+		adev->common.device_do_dma_memcpy = dma_async_do_memcpy_err;
-+
-+	if (adev->common.capabilities & DMA_MEMSET)
-+		adev->common.device_do_dma_memset = do_iop_adma_memset;
-+	else
-+		adev->common.device_do_dma_memset = dma_async_do_memset_err;
-+
-+	if (adev->common.capabilities & DMA_XOR)
-+		adev->common.device_do_dma_xor = do_iop_adma_xor;
-+	else
-+		adev->common.device_do_dma_xor = dma_async_do_xor_err;
-+
-+	if (adev->common.capabilities & DMA_ZERO_SUM)
-+		adev->common.device_do_dma_zero_sum = do_iop_adma_zero_sum;
-+	else
-+		adev->common.device_do_dma_zero_sum = dma_async_do_zero_sum_err;
-+
-+	if ((iop_chan = kzalloc(sizeof(*iop_chan), GFP_KERNEL)) == NULL) {
-+		ret = -ENOMEM;
-+		goto err_chan_alloc;
-+	}
-+
-+	spin_lock_init(&iop_chan->lock);
-+	iop_chan->device = adev;
-+	INIT_LIST_HEAD(&iop_chan->chain);
-+	INIT_LIST_HEAD(&iop_chan->all_slots);
-+	iop_chan->last_used = NULL;
-+	dma_async_chan_init(&iop_chan->common, &adev->common);
-+
-+	if (adev->common.capabilities & DMA_MEMCPY) {
-+		ret = iop_adma_memcpy_self_test(adev);
-+		PRINTK("iop adma%d: memcpy self test returned %d\n", adev->id, ret);
-+		if (ret)
-+			goto err_self_test;
-+	}
-+
-+	if (adev->common.capabilities & (DMA_XOR + DMA_ZERO_SUM + DMA_MEMSET)) {
-+		ret = iop_adma_xor_zero_sum_self_test(adev);
-+		PRINTK("iop adma%d: xor self test returned %d\n", adev->id, ret);
-+		if (ret)
-+			goto err_self_test;
-+	}
-+
-+	printk(KERN_INFO "Intel(R) IOP ADMA Engine found [%d]: "
-+		"( %s%s%s%s%s%s%s%s%s)\n",
-+		adev->id,
-+		adev->common.capabilities & DMA_PQ_XOR	      ? "pq_xor " : "",
-+		adev->common.capabilities & DMA_PQ_UPDATE     ? "pq_update " : "",
-+		adev->common.capabilities & DMA_PQ_ZERO_SUM   ? "pq_zero_sum " : "",
-+		adev->common.capabilities & DMA_XOR	      ? "xor " : "",
-+		adev->common.capabilities & DMA_DUAL_XOR      ? "dual_xor " : "",
-+		adev->common.capabilities & DMA_ZERO_SUM      ? "xor_zero_sum " : "",
-+		adev->common.capabilities & DMA_MEMSET	      ? "memset " : "",
-+		adev->common.capabilities & DMA_MEMCPY_CRC32C ? "memcpy+crc " : "",
-+		adev->common.capabilities & DMA_MEMCPY	      ? "memcpy " : "");
-+
-+	dma_async_device_register(&adev->common);
-+	goto out;
-+
-+err_self_test:
-+	kfree(iop_chan);
-+err_chan_alloc:
-+err_irq2:
-+	free_irq(irq_eoc, adev);
-+err_irq1:
-+	free_irq(irq_eot, adev);
-+err_irq0:
-+	dma_free_coherent(&adev->pdev->dev, plat_data->pool_size,
-+			adev->dma_desc_pool_virt, adev->dma_desc_pool);
-+err_dma_alloc:
-+	kfree(adev);
-+err_adev_alloc:
-+	release_mem_region(res->start, res->end - res->start);
-+out:
-+	return ret;
-+}
-+
-+static void iop_chan_start_null_memcpy(struct iop_adma_chan *iop_chan)
-+{
-+	struct iop_adma_desc_slot *sw_desc;
-+	dma_cookie_t cookie;
-+	int slot_cnt, slots_per_op;
-+
-+	spin_lock_bh(&iop_chan->lock);
-+	slot_cnt = iop_chan_memcpy_slot_count(0, &slots_per_op);
-+	sw_desc = iop_adma_alloc_slots(iop_chan, slot_cnt, slots_per_op);
-+	if (sw_desc) {
-+		iop_desc_init_memcpy(sw_desc);
-+		iop_desc_set_byte_count(sw_desc, iop_chan, 0);
-+		iop_desc_set_dest_addr(sw_desc, iop_chan, 0);
-+		iop_desc_set_memcpy_src_addr(sw_desc, 0, slot_cnt, slots_per_op);
-+
-+		cookie = iop_chan->common.cookie;
-+		cookie++;
-+		if (cookie <= 1)
-+			cookie = 2;
-+
-+		/* initialize the completed cookie to be less than
-+		 * the most recently used cookie
-+		 */
-+		iop_chan->completed_cookie = cookie - 1;
-+		iop_chan->common.cookie = sw_desc->cookie = cookie;
-+
-+		/* channel should not be busy */
-+		BUG_ON(iop_chan_is_busy(iop_chan));
-+
-+		/* clear any prior error-status bits */
-+		iop_chan_clear_status(iop_chan);
-+
-+		/* disable operation */
-+		iop_chan_disable(iop_chan);
-+
-+		/* set the descriptor address */
-+		iop_chan_set_next_descriptor(iop_chan, sw_desc->phys);
-+
-+		/* run the descriptor */
-+		iop_chan_enable(iop_chan);
-+	} else
-+		printk(KERN_ERR "iop adma%d failed to allocate null descriptor\n",
-+			iop_chan->device->id);
-+	spin_unlock_bh(&iop_chan->lock);
-+}
-+
-+static void iop_chan_start_null_xor(struct iop_adma_chan *iop_chan)
-+{
-+	struct iop_adma_desc_slot *sw_desc;
-+	dma_cookie_t cookie;
-+	int slot_cnt, slots_per_op;
-+
-+	spin_lock_bh(&iop_chan->lock);
-+	slot_cnt = iop_chan_xor_slot_count(0, 2, &slots_per_op);
-+	sw_desc = iop_adma_alloc_slots(iop_chan, slot_cnt, slots_per_op);
-+	if (sw_desc) {
-+		iop_desc_init_null_xor(sw_desc, 2);
-+		iop_desc_set_byte_count(sw_desc, iop_chan, 0);
-+		iop_desc_set_dest_addr(sw_desc, iop_chan, 0);
-+		iop_desc_set_xor_src_addr(sw_desc, 0, 0, slot_cnt, slots_per_op);
-+		iop_desc_set_xor_src_addr(sw_desc, 1, 0, slot_cnt, slots_per_op);
-+
-+		cookie = iop_chan->common.cookie;
-+		cookie++;
-+		if (cookie <= 1)
-+			cookie = 2;
-+
-+		/* initialize the completed cookie to be less than
-+		 * the most recently used cookie
-+		 */
-+		iop_chan->completed_cookie = cookie - 1;
-+		iop_chan->common.cookie = sw_desc->cookie = cookie;
-+
-+		/* channel should not be busy */
-+		BUG_ON(iop_chan_is_busy(iop_chan));
-+
-+		/* clear any prior error-status bits */
-+		iop_chan_clear_status(iop_chan);
-+
-+		/* disable operation */
-+		iop_chan_disable(iop_chan);
-+
-+		/* set the descriptor address */
-+		iop_chan_set_next_descriptor(iop_chan, sw_desc->phys);
-+
-+		/* run the descriptor */
-+		iop_chan_enable(iop_chan);
-+	} else
-+		printk(KERN_ERR "iop adma%d failed to allocate null descriptor\n",
-+			iop_chan->device->id);
-+	spin_unlock_bh(&iop_chan->lock);
-+}
-+
-+static struct platform_driver iop_adma_driver = {
-+	.probe		= iop_adma_probe,
-+	.remove		= iop_adma_remove,
-+	.driver		= {
-+		.owner	= THIS_MODULE,
-+		.name	= "IOP-ADMA",
-+	},
-+};
-+
-+static int __init iop_adma_init (void)
-+{
-+	return platform_driver_register(&iop_adma_driver);
-+}
-+
-+static void __exit iop_adma_exit (void)
-+{
-+	platform_driver_unregister(&iop_adma_driver);
-+	return;
-+}
-+
-+void __arch_raid5_dma_chan_request(struct dma_client *client)
-+{
-+	iop_raid5_dma_chan_request(client);
-+}
-+
-+struct dma_chan *__arch_raid5_dma_next_channel(struct dma_client *client)
-+{
-+	return iop_raid5_dma_next_channel(client);
-+}
-+
-+struct dma_chan *__arch_raid5_dma_check_channel(struct dma_chan *chan,
-+						dma_cookie_t cookie,
-+						struct dma_client *client,
-+						unsigned long capabilities)
-+{
-+	return iop_raid5_dma_check_channel(chan, cookie, client, capabilities);
-+}
-+
-+EXPORT_SYMBOL_GPL(__arch_raid5_dma_chan_request);
-+EXPORT_SYMBOL_GPL(__arch_raid5_dma_next_channel);
-+EXPORT_SYMBOL_GPL(__arch_raid5_dma_check_channel);
-+
-+module_init(iop_adma_init);
-+module_exit(iop_adma_exit);
++module_init(raid5_dma_init);
++module_exit(raid5_dma_exit);
 +
 +MODULE_AUTHOR("Intel Corporation");
-+MODULE_DESCRIPTION("IOP ADMA Engine Driver");
++MODULE_DESCRIPTION("RAID5-DMA Offload Driver");
 +MODULE_LICENSE("GPL");
-diff --git a/include/asm-arm/hardware/iop_adma.h b/include/asm-arm/hardware/iop_adma.h
-new file mode 100644
-index 0000000..62bbbdf
---- /dev/null
-+++ b/include/asm-arm/hardware/iop_adma.h
-@@ -0,0 +1,98 @@
-+/*
-+ * Copyright(c) 2006 Intel Corporation. All rights reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms of the GNU General Public License as published by the Free
-+ * Software Foundation; either version 2 of the License, or (at your option)
-+ * any later version.
-+ *
-+ * This program is distributed in the hope that it will be useful, but WITHOUT
-+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-+ * more details.
-+ *
-+ * You should have received a copy of the GNU General Public License along with
-+ * this program; if not, write to the Free Software Foundation, Inc., 59
-+ * Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-+ *
-+ * The full GNU General Public License is included in this distribution in the
-+ * file called COPYING.
-+ */
-+#ifndef IOP_ADMA_H
-+#define IOP_ADMA_H
-+#include <linux/types.h>
-+#include <linux/dmaengine.h>
+diff --git a/drivers/md/Kconfig b/drivers/md/Kconfig
+index 2a16b3b..dbd3ddc 100644
+--- a/drivers/md/Kconfig
++++ b/drivers/md/Kconfig
+@@ -183,6 +183,17 @@ config MD_RAID456_WORKQUEUE_MULTITHREAD
+ 
+ 	  If unsure say, Y.
+ 
++config MD_RAID5_HW_OFFLOAD
++	depends on MD_RAID456 && RAID5_DMA
++	bool "Execute raid5 xor/copy operations with hardware engines"
++	default y
++	---help---
++	  On platforms with the requisite hardware capabilities MD
++	  can offload  RAID5 stripe cache operations (i.e. parity
++	  maintenance and bio buffer copies)
 +
-+#define IOP_ADMA_SLOT_SIZE 32
-+#define IOP_ADMA_THRESHOLD 20
++	  If unsure say, Y.
 +
-+/**
-+ * struct iop_adma_device - internal representation of an ADMA device
-+ * @pdev: Platform device
-+ * @id: HW ADMA Device selector
-+ * @dma_desc_pool: base of DMA descriptor region (DMA address)
-+ * @dma_desc_pool_virt: base of DMA descriptor region (CPU address)
-+ * @common: embedded struct dma_device
-+ */
-+struct iop_adma_device {
-+	struct platform_device *pdev;
-+	int id;
-+	dma_addr_t dma_desc_pool;
-+	void *dma_desc_pool_virt;
-+	struct dma_device common;
-+};
+ config MD_MULTIPATH
+ 	tristate "Multipath I/O support"
+ 	depends on BLK_DEV_MD
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index ad6883b..4daa335 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -53,6 +53,16 @@ #include "raid6.h"
+ 
+ #include <linux/raid/bitmap.h>
+ 
++#ifdef CONFIG_MD_RAID5_HW_OFFLOAD
++#include <linux/dma-mapping.h>
++extern void raid5_dma_get_dma(struct raid5_dma *dma);
++#endif /* CONFIG_MD_RAID5_HW_OFFLOAD */
 +
-+/**
-+ * struct iop_adma_device - internal representation of an ADMA device
-+ * @lock: serializes enqueue/dequeue operations to the slot pool
-+ * @device: parent device
-+ * @chain: device chain view of the descriptors
-+ * @common: common dmaengine channel object members
-+ * @all_slots: complete domain of slots usable by the channel
-+ * @pending: allows batching of hardware operations
-+ * @result_accumulator: allows zero result sums of buffers > the hw maximum
-+ * @zero_sum_group: flag to the clean up routine to collect zero sum results
-+ * @completed_cookie: identifier for the most recently completed operation
-+ * @slots_allocated: records the actual size of the descriptor slot pool
-+ */
-+struct iop_adma_chan {
-+	spinlock_t lock;
-+	struct iop_adma_device *device;
-+	struct list_head chain;
-+	struct dma_chan common;
-+	struct list_head all_slots;
-+	struct iop_adma_desc_slot *last_used;
-+	int pending;
-+	u8 result_accumulator;
-+	u8 zero_sum_group;
-+	dma_cookie_t completed_cookie;
-+	int slots_allocated;
-+};
++#ifdef CONFIG_MD_RAID6_HW_OFFLOAD
++#include <linux/dma-mapping.h>
++extern void raid6_dma_get_dma(struct raid6_dma *dma);
++#endif /* CONFIG_MD_RAID6_HW_OFFLOAD */
 +
-+struct iop_adma_desc_slot {
-+	void *hw_desc;
-+	struct list_head slot_node;
-+	struct list_head chain_node;
-+	dma_cookie_t cookie;
-+	dma_addr_t phys;
-+	u16 stride;
-+	u16 idx;
-+	u16 slot_cnt;
-+	u8 src_cnt;
-+	u8 slots_per_op;
-+	unsigned long flags;
-+	union {
-+		u32 *xor_check_result;
-+		u32 *crc32_result;
-+	};
-+};
-+
-+struct iop_adma_platform_data {
-+        int hw_id;
-+        unsigned long capabilities;
-+        size_t pool_size;
-+};
-+
-+#define to_iop_sw_desc(addr_hw_desc) container_of(addr_hw_desc, struct iop_adma_desc_slot, hw_desc)
-+#define iop_hw_desc_slot_idx(hw_desc, idx) ( (void *) (((unsigned long) hw_desc) + ((idx) << 5)) )
+ /*
+  * Stripe cache
+  */
+@@ -138,7 +148,7 @@ static void __release_stripe(raid5_conf_
+ 		}
+ 	}
+ }
+-static void release_stripe(struct stripe_head *sh)
++void release_stripe(struct stripe_head *sh)
+ {
+ 	raid5_conf_t *conf = sh->raid_conf;
+ 	unsigned long flags;
+@@ -193,6 +203,17 @@ static void shrink_buffers(struct stripe
+ 		p = sh->dev[i].page;
+ 		if (!p)
+ 			continue;
++		#ifdef CONFIG_MD_RAID5_HW_OFFLOAD
++		do {
++			raid5_conf_t *conf = sh->raid_conf;
++			struct dma_chan *chan = conf->dma.channel_iterate();
++			/* assumes that all channels share the same mapping
++			 * characteristics
++			 */
++			dma_async_unmap_page(chan, sh->dev[i].dma,
++					PAGE_SIZE, DMA_FROM_DEVICE);
++		} while (0);
++		#endif
+ 		sh->dev[i].page = NULL;
+ 		put_page(p);
+ 	}
+@@ -209,6 +230,20 @@ static int grow_buffers(struct stripe_he
+ 			return 1;
+ 		}
+ 		sh->dev[i].page = page;
++		#ifdef CONFIG_MD_RAID5_HW_OFFLOAD
++		do {
++			raid5_conf_t *conf = sh->raid_conf;
++			struct dma_chan *chan = conf->dma.channel_iterate();
++			/* assumes that all channels share the same mapping
++			 * characteristics
++			 */
++			sh->dev[i].dma = dma_async_map_page(chan,
++							sh->dev[i].page,
++							0,
++							PAGE_SIZE,
++							DMA_FROM_DEVICE);
++		} while (0);
++		#endif
+ 	}
+ 	return 0;
+ }
+@@ -576,6 +611,13 @@ #if 0
+ #else
+ 		set_bit(R5_UPTODATE, &sh->dev[i].flags);
+ #endif
++#ifdef CONFIG_MD_RAID5_HW_OFFLOAD
++		/* If the backing block device driver performed a pio
++		 * read then the buffer needs to be cleaned
++		 */
++		consistent_sync(page_address(sh->dev[i].page), PAGE_SIZE,
++				DMA_TO_DEVICE);
 +#endif
+ 		if (test_bit(R5_ReadError, &sh->dev[i].flags)) {
+ 			rdev = conf->disks[i].rdev;
+ 			printk(KERN_INFO "raid5:%s: read error corrected (%lu sectors at %llu on %s)\n",
+@@ -666,6 +708,15 @@ static int raid5_end_write_request (stru
+ 	rdev_dec_pending(conf->disks[i].rdev, conf->mddev);
+ 	
+ 	clear_bit(R5_LOCKED, &sh->dev[i].flags);
++
++	#ifdef CONFIG_MD_RAID5_HW_OFFLOAD
++	/* If the backing block device driver performed a pio
++	 * write then the buffer needs to be invalidated
++	 */
++	consistent_sync(page_address(sh->dev[i].page), PAGE_SIZE,
++			DMA_FROM_DEVICE);
++	#endif
++
+ 	set_bit(STRIPE_HANDLE, &sh->state);
+ 	__release_stripe(conf, sh);
+ 	spin_unlock_irqrestore(&conf->device_lock, flags);
+@@ -1311,6 +1362,7 @@ static int stripe_to_pdidx(sector_t stri
+ 	return pd_idx;
+ }
+ 
++#ifndef CONFIG_MD_RAID5_HW_OFFLOAD
+ /*
+  * raid5_do_soft_block_ops - perform block memory operations on stripe data
+  * outside the spin lock.
+@@ -1600,6 +1652,7 @@ static void raid5_do_soft_block_ops(void
+ 
+ 	release_stripe(sh);
+ }
++#endif /* #ifndef CONFIG_MD_RAID5_HW_OFFLOAD*/
+ 
+ /*
+  * handle_stripe - do things to a stripe.
+@@ -3553,12 +3606,12 @@ static int run(mddev_t *mddev)
+ 	#endif
+ 	#endif
+ 
+-	/* To Do:
+-	 * 1/ Offload to asynchronous copy / xor engines
+-	 * 2/ Automated selection of optimal do_block_ops
+-	 *	routine similar to the xor template selection
+-	 */
++	#ifdef CONFIG_MD_RAID5_HW_OFFLOAD
++	raid5_dma_get_dma(&conf->dma);
++	conf->do_block_ops = conf->dma.do_block_ops;
++	#else
+ 	conf->do_block_ops = raid5_do_soft_block_ops;
++	#endif
+ 
+ 
+ 	spin_lock_init(&conf->device_lock);
+@@ -4184,6 +4237,7 @@ static void raid5_exit(void)
+ 	unregister_md_personality(&raid4_personality);
+ }
+ 
++EXPORT_SYMBOL(release_stripe);
+ module_init(raid5_init);
+ module_exit(raid5_exit);
+ MODULE_LICENSE("GPL");
+diff --git a/include/linux/dmaengine.h b/include/linux/dmaengine.h
+index 0a70c9e..7fd5aaf 100644
+--- a/include/linux/dmaengine.h
++++ b/include/linux/dmaengine.h
+@@ -762,6 +762,11 @@ static inline enum dma_status dma_sync_w
+ 	return status;
+ }
+ 
++static inline dma_cookie_t dma_async_get_last_cookie(struct dma_chan *chan)
++{
++	return chan->cookie;
++}
++
+ /* --- DMA device --- */
+ 
+ int dma_async_device_register(struct dma_device *device);
+diff --git a/include/linux/raid/raid5.h b/include/linux/raid/raid5.h
+index 31ae55c..f5b021d 100644
+--- a/include/linux/raid/raid5.h
++++ b/include/linux/raid/raid5.h
+@@ -4,6 +4,9 @@ #define _RAID5_H
+ #include <linux/raid/md.h>
+ #include <linux/raid/xor.h>
+ #include <linux/workqueue.h>
++#ifdef CONFIG_MD_RAID5_HW_OFFLOAD
++#include <linux/dmaengine.h>
++#endif
+ 
+ /*
+  *
+@@ -169,16 +172,28 @@ struct stripe_head {
+ 		#ifdef CONFIG_MD_RAID456_WORKQUEUE
+ 		struct work_struct	work;		/* work queue descriptor */
+ 		#endif
++		#ifdef CONFIG_MD_RAID5_HW_OFFLOAD
++		u32 			dma_result;	/* storage for dma engine zero sum results */
++		dma_cookie_t		dma_cookie;	/* last issued dma operation */
++		struct dma_chan		*dma_chan;	/* dma channel for ops offload */
++		#ifdef CONFIG_RAID5_DMA_WAIT_VIA_REQUEUE
++		void			*ops_bookmark;	/* place holder for requeued stripes */
++		#endif /* CONFIG_RAID5_DMA_WAIT_VIA_REQUEUE */
++		#endif /* CONFIG_MD_RAID5_HW_OFFLOAD */
+ 	} ops;
+ 	struct r5dev {
+ 		struct bio	req;
+ 		struct bio_vec	vec;
+ 		struct page	*page;
++		#ifdef CONFIG_MD_RAID5_HW_OFFLOAD
++		dma_addr_t	dma;
++		#endif
+ 		struct bio	*toread, *read, *towrite, *written;
+ 		sector_t	sector;			/* sector of this page */
+ 		unsigned long	flags;
+ 	} dev[1]; /* allocated with extra space depending of RAID geometry */
+ };
++
+ /* Flags */
+ #define	R5_UPTODATE	0	/* page contains current data */
+ #define	R5_LOCKED	1	/* IO has been submitted on "req" */
+@@ -190,7 +205,6 @@ #define	R5_Wantwrite	5
+ #define	R5_Overlap	7	/* There is a pending overlapping request on this block */
+ #define	R5_ReadError	8	/* seen a read error here recently */
+ #define	R5_ReWrite	9	/* have tried to over-write the readerror */
+-
+ #define	R5_Expanded	10	/* This block now has post-expand data */
+ #define	R5_Consistent	11	/* Block is HW DMA-able without a cache flush */
+ #define	R5_ComputeReq	12	/* compute_block in progress treat as uptodate */
+@@ -373,6 +387,14 @@ struct raid5_private_data {
+ 	int			pool_size; /* number of disks in stripeheads in pool */
+ 	spinlock_t		device_lock;
+ 	struct disk_info	*disks;
++#ifdef CONFIG_MD_RAID5_HW_OFFLOAD
++	struct raid5_dma {
++		struct module *owner;
++		void (*do_block_ops)(void *stripe_ref);
++		struct dma_chan * (*channel_iterate)(void);
++	} dma;
++#endif
++
+ };
+ 
+ typedef struct raid5_private_data raid5_conf_t;
