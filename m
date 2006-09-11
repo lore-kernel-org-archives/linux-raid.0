@@ -1,184 +1,156 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH 11/19] dmaengine: add memset as an asynchronous dma operation
-Date: Mon, 11 Sep 2006 16:18:33 -0700
-Message-ID: <20060911231833.4737.27198.stgit@dwillia2-linux.ch.intel.com>
+Subject: [PATCH 05/19] raid5: move read completion copies to a workqueue
+Date: Mon, 11 Sep 2006 16:18:02 -0700
+Message-ID: <20060911231801.4737.12584.stgit@dwillia2-linux.ch.intel.com>
 References: <1158015632.4241.31.camel@dwillia2-linux.ch.intel.com>
 Content-Type: text/plain; charset=utf-8; format=fixed
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-raid-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S965097AbWIKXSH@vger.kernel.org>
 In-Reply-To: <1158015632.4241.31.camel@dwillia2-linux.ch.intel.com>
-Sender: linux-raid-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: neilb@suse.de, linux-raid@vger.kernel.org
 Cc: akpm@osdl.org, linux-kernel@vger.kernel.org, christopher.leech@intel.com
 List-Id: linux-raid.ids
 
 From: Dan Williams <dan.j.williams@intel.com>
 
-Changelog:
-* make the dmaengine api EXPORT_SYMBOL_GPL
-* zero sum support should be standalone, not integrated into xor
+Enable handle_stripe5 to hand off the memory copy operations that satisfy
+read requests to raid5_do_soft_blocks_ops, formerly this was handled in
+line within handle_stripe5.
 
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+It adds a 'read' (past tense) pointer to the r5dev structure
+to to track reads that have been offloaded to the workqueue.  When the copy
+operation is complete the 'read' pointer is reused as the return_bi for the
+bi_end_io() call.
+
+Changelog:
+* dev->read only holds reads that have been satisfied, previously it
+doubled as a request queue to the operations routine
+* added R5_ReadReq to mark the blocks that belong to a given bio fill
+operation
+* requested reads no longer count towards the 'to_read' count, 'to_fill'
+tracks the number of requested reads
+
+Signed-off-by: Dan Williams <dan.j.willams@intel.com>
 ---
 
- drivers/dma/dmaengine.c   |   15 ++++++++++
- drivers/dma/ioatdma.c     |    5 +++
- include/linux/dmaengine.h |   68 +++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 88 insertions(+), 0 deletions(-)
+ drivers/md/raid5.c |   67 +++++++++++++++++++++++++++++-----------------------
+ 1 files changed, 38 insertions(+), 29 deletions(-)
 
-diff --git a/drivers/dma/dmaengine.c b/drivers/dma/dmaengine.c
-index e78ce89..fe62237 100644
---- a/drivers/dma/dmaengine.c
-+++ b/drivers/dma/dmaengine.c
-@@ -604,6 +604,17 @@ dma_cookie_t dma_async_do_xor_err(struct
- 	return -ENXIO;
- }
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 0c39203..1a8dfd2 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -240,11 +240,11 @@ static void init_stripe(struct stripe_he
+ 	for (i = sh->disks; i--; ) {
+ 		struct r5dev *dev = &sh->dev[i];
  
-+/**
-+ * dma_async_do_memset_err - default function for dma devices that
-+ *      do not support memset
-+ */
-+dma_cookie_t dma_async_do_memset_err(struct dma_chan *chan,
-+                union dmaengine_addr dest, unsigned int dest_off,
-+                int val, size_t len, unsigned long flags)
-+{
-+        return -ENXIO;
-+}
-+
- static int __init dma_bus_init(void)
- {
- 	mutex_init(&dma_list_mutex);
-@@ -621,6 +632,9 @@ EXPORT_SYMBOL_GPL(dma_async_memcpy_pg_to
- EXPORT_SYMBOL_GPL(dma_async_memcpy_dma_to_dma);
- EXPORT_SYMBOL_GPL(dma_async_memcpy_pg_to_dma);
- EXPORT_SYMBOL_GPL(dma_async_memcpy_dma_to_pg);
-+EXPORT_SYMBOL_GPL(dma_async_memset_buf);
-+EXPORT_SYMBOL_GPL(dma_async_memset_page);
-+EXPORT_SYMBOL_GPL(dma_async_memset_dma);
- EXPORT_SYMBOL_GPL(dma_async_xor_pgs_to_pg);
- EXPORT_SYMBOL_GPL(dma_async_xor_dma_list_to_dma);
- EXPORT_SYMBOL_GPL(dma_async_operation_complete);
-@@ -629,6 +643,7 @@ EXPORT_SYMBOL_GPL(dma_async_device_regis
- EXPORT_SYMBOL_GPL(dma_async_device_unregister);
- EXPORT_SYMBOL_GPL(dma_chan_cleanup);
- EXPORT_SYMBOL_GPL(dma_async_do_xor_err);
-+EXPORT_SYMBOL_GPL(dma_async_do_memset_err);
- EXPORT_SYMBOL_GPL(dma_async_chan_init);
- EXPORT_SYMBOL_GPL(dma_async_map_page);
- EXPORT_SYMBOL_GPL(dma_async_map_single);
-diff --git a/drivers/dma/ioatdma.c b/drivers/dma/ioatdma.c
-index 0159d14..231247c 100644
---- a/drivers/dma/ioatdma.c
-+++ b/drivers/dma/ioatdma.c
-@@ -637,6 +637,10 @@ extern dma_cookie_t dma_async_do_xor_err
- 	union dmaengine_addr src, unsigned int src_cnt,
- 	unsigned int src_off, size_t len, unsigned long flags);
+-		if (dev->toread || dev->towrite || dev->written ||
++		if (dev->toread || dev->read || dev->towrite || dev->written ||
+ 		    test_bit(R5_LOCKED, &dev->flags)) {
+-			printk("sector=%llx i=%d %p %p %p %d\n",
++			printk("sector=%llx i=%d %p %p %p %p %d\n",
+ 			       (unsigned long long)sh->sector, i, dev->toread,
+-			       dev->towrite, dev->written,
++			       dev->read, dev->towrite, dev->written,
+ 			       test_bit(R5_LOCKED, &dev->flags));
+ 			BUG();
+ 		}
+@@ -1749,7 +1749,7 @@ static void handle_stripe5(struct stripe
+ 	struct bio *bi;
+ 	int i;
+ 	int syncing, expanding, expanded;
+-	int locked=0, uptodate=0, to_read=0, to_write=0, failed=0, written=0;
++	int locked=0, uptodate=0, to_read=0, to_write=0, failed=0, written=0, to_fill=0;
+ 	int compute=0, non_overwrite=0, write_complete=0;
+ 	int failed_num=0;
+ 	struct r5dev *dev;
+@@ -1765,44 +1765,47 @@ static void handle_stripe5(struct stripe
+ 	syncing = test_bit(STRIPE_SYNCING, &sh->state);
+ 	expanding = test_bit(STRIPE_EXPAND_SOURCE, &sh->state);
+ 	expanded = test_bit(STRIPE_EXPAND_READY, &sh->state);
+-	/* Now to look around and see what can be done */
  
-+extern dma_cookie_t dma_async_do_memset_err(struct dma_chan *chan,
-+	union dmaengine_addr dest, unsigned int dest_off,
-+	int val, size_t size, unsigned long flags);
++	if (test_bit(STRIPE_OP_BIOFILL, &sh->state) &&
++		test_bit(STRIPE_OP_BIOFILL_Done, &sh->ops.state)) {
++		clear_bit(STRIPE_OP_BIOFILL, &sh->state);
++		clear_bit(STRIPE_OP_BIOFILL_Done, &sh->ops.state);
++	}
 +
- static dma_addr_t ioat_map_page(struct dma_chan *chan, struct page *page,
- 					unsigned long offset, size_t size,
- 					int direction)
-@@ -748,6 +752,7 @@ #endif
- 	device->common.capabilities = DMA_MEMCPY;
- 	device->common.device_do_dma_memcpy = do_ioat_dma_memcpy;
- 	device->common.device_do_dma_xor = dma_async_do_xor_err;
-+	device->common.device_do_dma_memset = dma_async_do_memset_err;
- 	device->common.map_page = ioat_map_page;
- 	device->common.map_single = ioat_map_single;
- 	device->common.unmap_page = ioat_unmap_page;
-diff --git a/include/linux/dmaengine.h b/include/linux/dmaengine.h
-index cb4cfcf..8d53b08 100644
---- a/include/linux/dmaengine.h
-+++ b/include/linux/dmaengine.h
-@@ -260,6 +260,7 @@ struct dma_chan_client_ref {
-  * @device_issue_pending: push appended descriptors to hardware
-  * @device_do_dma_memcpy: perform memcpy with a dma engine
-  * @device_do_dma_xor: perform block xor with a dma engine
-+ * @device_do_dma_memset: perform block fill with a dma engine
-  */
- struct dma_device {
++	/* Now to look around and see what can be done */
+ 	rcu_read_lock();
+ 	for (i=disks; i--; ) {
+ 		mdk_rdev_t *rdev;
+ 		dev = &sh->dev[i];
+ 		clear_bit(R5_Insync, &dev->flags);
  
-@@ -284,6 +285,9 @@ struct dma_device {
- 			union dmaengine_addr src, unsigned int src_cnt,
- 			unsigned int src_off, size_t len,
- 			unsigned long flags);
-+	dma_cookie_t (*device_do_dma_memset)(struct dma_chan *chan,
-+			union dmaengine_addr dest, unsigned int dest_off,
-+			int value, size_t len, unsigned long flags);
- 	enum dma_status (*device_operation_complete)(struct dma_chan *chan,
- 			dma_cookie_t cookie, dma_cookie_t *last,
- 			dma_cookie_t *used);
-@@ -478,6 +482,70 @@ static inline dma_cookie_t dma_async_mem
- }
+-		PRINTK("check %d: state 0x%lx read %p write %p written %p\n",
+-			i, dev->flags, dev->toread, dev->towrite, dev->written);
++		PRINTK("check %d: state 0x%lx toread %p read %p write %p written %p\n",
++		i, dev->flags, dev->toread, dev->read, dev->towrite, dev->written);
++
++		/* maybe we can acknowledge completion of a biofill operation */
++		if (test_bit(R5_ReadReq, &dev->flags) && !dev->toread)
++			clear_bit(R5_ReadReq, &dev->flags);
++
+ 		/* maybe we can reply to a read */
++		if (dev->read && !test_bit(R5_ReadReq, &dev->flags) &&
++			!test_bit(STRIPE_OP_BIOFILL, &sh->state)) {
++			return_bi = dev->read;
++			dev->read = NULL;
++		}
++
++		/* maybe we can start a biofill operation */
+ 		if (test_bit(R5_UPTODATE, &dev->flags) && dev->toread) {
+-			struct bio *rbi, *rbi2;
+-			PRINTK("Return read for disc %d\n", i);
+-			spin_lock_irq(&conf->device_lock);
+-			rbi = dev->toread;
+-			dev->toread = NULL;
+-			if (test_and_clear_bit(R5_Overlap, &dev->flags))
+-				wake_up(&conf->wait_for_overlap);
+-			spin_unlock_irq(&conf->device_lock);
+-			while (rbi && rbi->bi_sector < dev->sector + STRIPE_SECTORS) {
+-				copy_data(0, rbi, dev->page, dev->sector);
+-				rbi2 = r5_next_bio(rbi, dev->sector);
+-				spin_lock_irq(&conf->device_lock);
+-				if (--rbi->bi_phys_segments == 0) {
+-					rbi->bi_next = return_bi;
+-					return_bi = rbi;
+-				}
+-				spin_unlock_irq(&conf->device_lock);
+-				rbi = rbi2;
+-			}
++			to_read--;
++			if (!test_bit(STRIPE_OP_BIOFILL, &sh->state))
++				set_bit(R5_ReadReq, &dev->flags);
+ 		}
  
- /**
-+ * dma_async_memset_buf - offloaded memset
-+ * @chan: DMA channel to offload memset to
-+ * @buf: destination buffer
-+ * @val: value to initialize the buffer
-+ * @len: length
-+ */
-+static inline dma_cookie_t dma_async_memset_buf(struct dma_chan *chan,
-+	void *buf, int val, size_t len)
-+{
-+	unsigned long flags = DMA_DEST_BUF;
-+	union dmaengine_addr dest_addr = { .buf = buf };
-+	int cpu = get_cpu();
-+	per_cpu_ptr(chan->local, cpu)->bytes_transferred += len;
-+	per_cpu_ptr(chan->local, cpu)->memcpy_count++;
-+	put_cpu();
+ 		/* now count some things */
+ 		if (test_bit(R5_LOCKED, &dev->flags)) locked++;
+ 		if (test_bit(R5_UPTODATE, &dev->flags)) uptodate++;
++		if (test_bit(R5_ReadReq, &dev->flags)) to_fill++;
+ 		if (test_bit(R5_ComputeReq, &dev->flags)) BUG_ON(++compute > 1);
+-		
 +
-+	return chan->device->device_do_dma_memset(chan, dest_addr, 0, val,
-+						len, flags);
-+}
+ 		if (dev->toread) to_read++;
+ 		if (dev->towrite) {
+ 			to_write++;
+@@ -1824,9 +1827,15 @@ static void handle_stripe5(struct stripe
+ 			set_bit(R5_Insync, &dev->flags);
+ 	}
+ 	rcu_read_unlock();
 +
-+/**
-+ * dma_async_memset_page - offloaded memset
-+ * @chan: DMA channel to offload memset to
-+ * @page: destination page
-+ * @offset: offset into the destination
-+ * @val: value to initialize the buffer
-+ * @len: length
-+ */
-+static inline dma_cookie_t dma_async_memset_page(struct dma_chan *chan,
-+	struct page *page, unsigned int offset, int val, size_t len)
-+{
-+	unsigned long flags = DMA_DEST_PAGE;
-+	union dmaengine_addr dest_addr = { .pg = page };
-+	int cpu = get_cpu();
-+	per_cpu_ptr(chan->local, cpu)->bytes_transferred += len;
-+	per_cpu_ptr(chan->local, cpu)->memcpy_count++;
-+	put_cpu();
++	if (to_fill && !test_bit(STRIPE_OP_BIOFILL, &sh->state)) {
++		set_bit(STRIPE_OP_BIOFILL, &sh->state);
++		sh->ops.pending++;
++	}
 +
-+	return chan->device->device_do_dma_memset(chan, dest_addr, offset, val,
-+						len, flags);
-+}
-+
-+/**
-+ * dma_async_memset_dma - offloaded memset
-+ * @chan: DMA channel to offload memset to
-+ * @page: destination dma address
-+ * @val: value to initialize the buffer
-+ * @len: length
-+ */
-+static inline dma_cookie_t dma_async_memset_dma(struct dma_chan *chan,
-+	dma_addr_t dma, int val, size_t len)
-+{
-+	unsigned long flags = DMA_DEST_DMA;
-+	union dmaengine_addr dest_addr = { .dma = dma };
-+	int cpu = get_cpu();
-+	per_cpu_ptr(chan->local, cpu)->bytes_transferred += len;
-+	per_cpu_ptr(chan->local, cpu)->memcpy_count++;
-+	put_cpu();
-+
-+	return chan->device->device_do_dma_memset(chan, dest_addr, 0, val,
-+						len, flags);
-+}
-+
-+/**
-  * dma_async_xor_pgs_to_pg - offloaded xor from pages to page
-  * @chan: DMA channel to offload xor to
-  * @dest_page: destination page
+ 	PRINTK("locked=%d uptodate=%d to_read=%d"
+-		" to_write=%d failed=%d failed_num=%d\n",
+-		locked, uptodate, to_read, to_write, failed, failed_num);
++		" to_write=%d to_fill=%d failed=%d failed_num=%d\n",
++		locked, uptodate, to_read, to_write, to_fill, failed, failed_num);
+ 	/* check if the array has lost two devices and, if so, some requests might
+ 	 * need to be failed
+ 	 */
