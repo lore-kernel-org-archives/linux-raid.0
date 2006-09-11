@@ -1,80 +1,104 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 02/19] raid5: move write operations to a workqueue
-Date: Mon, 11 Sep 2006 19:36:49 -0400
-Message-ID: <4505F311.7050901@garzik.org>
-References: <1158015632.4241.31.camel@dwillia2-linux.ch.intel.com> <20060911231746.4737.82707.stgit@dwillia2-linux.ch.intel.com>
+Subject: Re: [PATCH 00/19] Hardware Accelerated MD RAID5: Introduction
+Date: Mon, 11 Sep 2006 19:38:00 -0400
+Message-ID: <4505F358.3040204@garzik.org>
+References: <1158015632.4241.31.camel@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20060911231746.4737.82707.stgit@dwillia2-linux.ch.intel.com>
+In-Reply-To: <1158015632.4241.31.camel@dwillia2-linux.ch.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Dan Williams <dan.j.williams@intel.com>
-Cc: neilb@suse.de, linux-raid@vger.kernel.org, akpm@osdl.org, linux-kernel@vger.kernel.org, christopher.leech@intel.com
+Cc: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org, akpm@osdl.org, linux-kernel@vger.kernel.org, christopher.leech@intel.com
 List-Id: linux-raid.ids
 
 Dan Williams wrote:
-> From: Dan Williams <dan.j.williams@intel.com>
-> 
-> Enable handle_stripe5 to pass off write operations to
-> raid5_do_soft_blocks_ops (which can be run as a workqueue).  The operations
-> moved are reconstruct-writes and read-modify-writes formerly handled by
-> compute_parity5.
-> 
-> Changelog:
-> * moved raid5_do_soft_block_ops changes into a separate patch
-> * changed handle_write_operations5 to only initiate write operations, which
-> prevents new writes from being requested while the current one is in flight
-> * all blocks undergoing a write are now marked locked and !uptodate at the
-> beginning of the write operation
-> * blocks undergoing a read-modify-write need a request flag to distinguish
-> them from blocks that are locked for reading. Reconstruct-writes still use
-> the R5_LOCKED bit to select blocks for the operation
-> * integrated the work queue Kconfig option
-> 
-> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
-> ---
-> 
->  drivers/md/Kconfig         |   21 +++++
->  drivers/md/raid5.c         |  192 ++++++++++++++++++++++++++++++++++++++------
->  include/linux/raid/raid5.h |    3 +
->  3 files changed, 190 insertions(+), 26 deletions(-)
-> 
-> diff --git a/drivers/md/Kconfig b/drivers/md/Kconfig
-> index bf869ed..2a16b3b 100644
-> --- a/drivers/md/Kconfig
-> +++ b/drivers/md/Kconfig
-> @@ -162,6 +162,27 @@ config MD_RAID5_RESHAPE
->  	  There should be enough spares already present to make the new
->  	  array workable.
->  
-> +config MD_RAID456_WORKQUEUE
-> +	depends on MD_RAID456
-> +	bool "Offload raid work to a workqueue from raid5d"
-> +	---help---
-> +	  This option enables raid work (block copy and xor operations)
-> +	  to run in a workqueue.  If your platform has a high context
-> +	  switch penalty say N.  If you are using hardware offload or
-> +	  are running on an SMP platform say Y.
-> +
-> +	  If unsure say, Y.
-> +
-> +config MD_RAID456_WORKQUEUE_MULTITHREAD
-> +	depends on MD_RAID456_WORKQUEUE && SMP
-> +	bool "Enable multi-threaded raid processing"
-> +	default y
-> +	---help---
-> +	  This option controls whether the raid workqueue will be multi-
-> +	  threaded or single threaded.
-> +
-> +	  If unsure say, Y.
+> Neil,
+>=20
+> The following patches implement hardware accelerated raid5 for the In=
+tel
+> Xscale=C2=AE series of I/O Processors.  The MD changes allow stripe
+> operations to run outside the spin lock in a work queue.  Hardware
+> acceleration is achieved by using a dma-engine-aware work queue routi=
+ne
+> instead of the default software only routine.
+>=20
+> Since the last release of the raid5 changes many bug fixes and other
+> improvements have been made as a result of stress testing.  See the p=
+er
+> patch change logs for more information about what was fixed.  This
+> release is the first release of the full dma implementation.
+>=20
+> The patches touch 3 areas, the md-raid5 driver, the generic dmaengine
+> interface, and a platform device driver for IOPs.  The raid5 changes
+> follow your comments concerning making the acceleration implementatio=
+n
+> similar to how the stripe cache handles I/O requests.  The dmaengine
+> changes are the second release of this code.  They expand the interfa=
+ce
+> to handle more than memcpy operations, and add a generic raid5-dma
+> client.  The iop-adma driver supports dma memcpy, xor, xor zero sum, =
+and
+> memset across all IOP architectures (32x, 33x, and 13xx).
+>=20
+> Concerning the context switching performance concerns raised at the
+> previous release, I have observed the following.  For the hardware
+> accelerated case it appears that performance is always better with th=
+e
+> work queue than without since it allows multiple stripes to be operat=
+ed
+> on simultaneously.  I expect the same for an SMP platform, but so far=
+ my
+> testing has been limited to IOPs.  For a single-processor
+> non-accelerated configuration I have not observed performance
+> degradation with work queue support enabled, but in the Kconfig optio=
+n
+> help text I recommend disabling it (CONFIG_MD_RAID456_WORKQUEUE).
+>=20
+> Please consider the patches for -mm.
+>=20
+> -Dan
+>=20
+> [PATCH 01/19] raid5: raid5_do_soft_block_ops
+> [PATCH 02/19] raid5: move write operations to a workqueue
+> [PATCH 03/19] raid5: move check parity operations to a workqueue
+> [PATCH 04/19] raid5: move compute block operations to a workqueue
+> [PATCH 05/19] raid5: move read completion copies to a workqueue
+> [PATCH 06/19] raid5: move the reconstruct write expansion operation t=
+o a workqueue
+> [PATCH 07/19] raid5: remove compute_block and compute_parity5
+> [PATCH 08/19] dmaengine: enable multiple clients and operations
+> [PATCH 09/19] dmaengine: reduce backend address permutations
+> [PATCH 10/19] dmaengine: expose per channel dma mapping characteristi=
+cs to clients
+> [PATCH 11/19] dmaengine: add memset as an asynchronous dma operation
+> [PATCH 12/19] dmaengine: dma_async_memcpy_err for DMA engines that do=
+ not support memcpy
+> [PATCH 13/19] dmaengine: add support for dma xor zero sum operations
+> [PATCH 14/19] dmaengine: add dma_sync_wait
+> [PATCH 15/19] dmaengine: raid5 dma client
+> [PATCH 16/19] dmaengine: Driver for the Intel IOP 32x, 33x, and 13xx =
+RAID engines
+> [PATCH 17/19] iop3xx: define IOP3XX_REG_ADDR[32|16|8] and clean up DM=
+A/AAU defs
+> [PATCH 18/19] iop3xx: Give Linux control over PCI (ATU) initializatio=
+n
+> [PATCH 19/19] iop3xx: IOP 32x and 33x support for the iop-adma driver
 
-In the final patch that gets merged, these configuration options should 
-go away.  We are very anti-#ifdef in Linux, for a variety of reasons. 
-In this particular instance, code complexity increases and 
-maintainability decreases as the #ifdef forest grows.
+Can devices like drivers/scsi/sata_sx4.c or drivers/scsi/sata_promise.c=
+=20
+take advantage of this?  Promise silicon supports RAID5 XOR offload.
+
+If so, how?  If not, why not?  :)
 
 	Jeff
 
 
 
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
