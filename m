@@ -1,13 +1,13 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 01/19] raid5: raid5_do_soft_block_ops
-Date: Mon, 11 Sep 2006 19:34:03 -0400
-Message-ID: <4505F26B.3040003@garzik.org>
-References: <1158015632.4241.31.camel@dwillia2-linux.ch.intel.com> <20060911231740.4737.48922.stgit@dwillia2-linux.ch.intel.com>
+Subject: Re: [PATCH 02/19] raid5: move write operations to a workqueue
+Date: Mon, 11 Sep 2006 19:36:49 -0400
+Message-ID: <4505F311.7050901@garzik.org>
+References: <1158015632.4241.31.camel@dwillia2-linux.ch.intel.com> <20060911231746.4737.82707.stgit@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20060911231740.4737.48922.stgit@dwillia2-linux.ch.intel.com>
+In-Reply-To: <20060911231746.4737.82707.stgit@dwillia2-linux.ch.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Dan Williams <dan.j.williams@intel.com>
 Cc: neilb@suse.de, linux-raid@vger.kernel.org, akpm@osdl.org, linux-kernel@vger.kernel.org, christopher.leech@intel.com
@@ -16,37 +16,63 @@ List-Id: linux-raid.ids
 Dan Williams wrote:
 > From: Dan Williams <dan.j.williams@intel.com>
 > 
-> raid5_do_soft_block_ops consolidates all the stripe cache maintenance
-> operations into a single routine.  The stripe operations are:
-> * copying data between the stripe cache and user application buffers
-> * computing blocks to save a disk access, or to recover a missing block
-> * updating the parity on a write operation (reconstruct write and
-> read-modify-write)
-> * checking parity correctness
+> Enable handle_stripe5 to pass off write operations to
+> raid5_do_soft_blocks_ops (which can be run as a workqueue).  The operations
+> moved are reconstruct-writes and read-modify-writes formerly handled by
+> compute_parity5.
+> 
+> Changelog:
+> * moved raid5_do_soft_block_ops changes into a separate patch
+> * changed handle_write_operations5 to only initiate write operations, which
+> prevents new writes from being requested while the current one is in flight
+> * all blocks undergoing a write are now marked locked and !uptodate at the
+> beginning of the write operation
+> * blocks undergoing a read-modify-write need a request flag to distinguish
+> them from blocks that are locked for reading. Reconstruct-writes still use
+> the R5_LOCKED bit to select blocks for the operation
+> * integrated the work queue Kconfig option
 > 
 > Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 > ---
 > 
->  drivers/md/raid5.c         |  289 ++++++++++++++++++++++++++++++++++++++++++++
->  include/linux/raid/raid5.h |  129 +++++++++++++++++++-
->  2 files changed, 415 insertions(+), 3 deletions(-)
+>  drivers/md/Kconfig         |   21 +++++
+>  drivers/md/raid5.c         |  192 ++++++++++++++++++++++++++++++++++++++------
+>  include/linux/raid/raid5.h |    3 +
+>  3 files changed, 190 insertions(+), 26 deletions(-)
 > 
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index 4500660..8fde62b 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -1362,6 +1362,295 @@ static int stripe_to_pdidx(sector_t stri
->  	return pd_idx;
->  }
+> diff --git a/drivers/md/Kconfig b/drivers/md/Kconfig
+> index bf869ed..2a16b3b 100644
+> --- a/drivers/md/Kconfig
+> +++ b/drivers/md/Kconfig
+> @@ -162,6 +162,27 @@ config MD_RAID5_RESHAPE
+>  	  There should be enough spares already present to make the new
+>  	  array workable.
 >  
-> +/*
-> + * raid5_do_soft_block_ops - perform block memory operations on stripe data
-> + * outside the spin lock.
-> + */
-> +static void raid5_do_soft_block_ops(void *stripe_head_ref)
+> +config MD_RAID456_WORKQUEUE
+> +	depends on MD_RAID456
+> +	bool "Offload raid work to a workqueue from raid5d"
+> +	---help---
+> +	  This option enables raid work (block copy and xor operations)
+> +	  to run in a workqueue.  If your platform has a high context
+> +	  switch penalty say N.  If you are using hardware offload or
+> +	  are running on an SMP platform say Y.
+> +
+> +	  If unsure say, Y.
+> +
+> +config MD_RAID456_WORKQUEUE_MULTITHREAD
+> +	depends on MD_RAID456_WORKQUEUE && SMP
+> +	bool "Enable multi-threaded raid processing"
+> +	default y
+> +	---help---
+> +	  This option controls whether the raid workqueue will be multi-
+> +	  threaded or single threaded.
+> +
+> +	  If unsure say, Y.
 
-This function absolutely must be broken up into multiple functions, 
-presumably one per operation.
+In the final patch that gets merged, these configuration options should 
+go away.  We are very anti-#ifdef in Linux, for a variety of reasons. 
+In this particular instance, code complexity increases and 
+maintainability decreases as the #ifdef forest grows.
 
 	Jeff
 
