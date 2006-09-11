@@ -1,24 +1,16 @@
-From: Leon Avery <leon@eatworms.swmed.edu>
-Subject: raidhotadd works, mdadm --add doesn't
-Date: Sun, 10 Sep 2006 15:40:15 -0500
-Message-ID: <7.0.1.0.0.20060910153725.0360d150@eatworms.swmed.edu>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"; format=flowed
+From: "Terry Noble" <Burchl@hotmail.com>
+Subject: They Need You
+Date: Sun, 10 Sep 2006 22:44:05 -0700
+Message-ID: <191.05e558d5.2a9FJO44__27605.3337999203$1157950346$gmane$org@sol.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
+Cc: linux-diald@vger.kernel.org, linux-laptop@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel-owner@vger.kernel.org, linux-ppp@vger.kernel.org, linux-x25@vger.kernel.org, linux-hams@vger.kernel.org, autoanswer@vger.kernel.org
 List-Id: linux-raid.ids
 
-I'm having trouble using mdadm to hot-add a replacement disk.  I 
-e-mailed a detailed description to the list, only to have it rejected 
-by Bogofilter.  I have therefore placed it on my web server at 
-http://eatworms.swmed.edu/~leon/raid_problem/06_09_10.txt .  Sorry 
-for the extra trouble.
 
---
-Leon Avery                                        (214) 648-4931 (voice)
-Department of Molecular Biology                            -1488 (fax)
-University of Texas Southwestern Medical Center
-6000 Harry Hines Blvd                            leon@eatworms.swmed.edu
-Dallas, TX  75390-9148                  http://eatworms.swmed.edu/~leon/
+Looking for one-night stand companion?
+We have many girls waiting to give you
+a pleasurable sex-experience. 
 
+http://thisinthenameof.com
