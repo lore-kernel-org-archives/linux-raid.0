@@ -1,169 +1,115 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH 13/19] dmaengine: add support for dma xor zero sum operations
-Date: Mon, 11 Sep 2006 16:18:44 -0700
-Message-ID: <20060911231844.4737.55349.stgit@dwillia2-linux.ch.intel.com>
+Subject: [PATCH 03/19] raid5: move check parity operations to a workqueue
+Date: Mon, 11 Sep 2006 16:17:51 -0700
+Message-ID: <20060911231751.4737.68006.stgit@dwillia2-linux.ch.intel.com>
 References: <1158015632.4241.31.camel@dwillia2-linux.ch.intel.com>
 Content-Type: text/plain; charset=utf-8; format=fixed
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-raid-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S965104AbWIKXXx@vger.kernel.org>
 In-Reply-To: <1158015632.4241.31.camel@dwillia2-linux.ch.intel.com>
-Sender: linux-raid-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: neilb@suse.de, linux-raid@vger.kernel.org
 Cc: akpm@osdl.org, linux-kernel@vger.kernel.org, christopher.leech@intel.com
 List-Id: linux-raid.ids
 
 From: Dan Williams <dan.j.williams@intel.com>
 
+Enable handle_stripe5 to pass off check parity operations to
+raid5_do_soft_block_ops formerly handled by compute_parity5.
+
+Changelog:
+* removed handle_check_operations5.  All logic moved into handle_stripe5 so
+that we do not need to go through the initiation logic to end the
+operation.
+* clear the uptodate bit on the parity block
+* hold off check operations if a parity dependent operation is in flight
+like a write
+
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
 
- drivers/dma/dmaengine.c   |   15 ++++++++++++
- drivers/dma/ioatdma.c     |    6 +++++
- include/linux/dmaengine.h |   56 +++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 77 insertions(+), 0 deletions(-)
+ drivers/md/raid5.c |   60 ++++++++++++++++++++++++++++++++++++----------------
+ 1 files changed, 42 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/dma/dmaengine.c b/drivers/dma/dmaengine.c
-index 33ad690..190c612 100644
---- a/drivers/dma/dmaengine.c
-+++ b/drivers/dma/dmaengine.c
-@@ -617,6 +617,18 @@ dma_cookie_t dma_async_do_xor_err(struct
- }
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index e39d248..24ed4d8 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -2121,35 +2121,59 @@ #endif
+ 			locked += handle_write_operations5(sh, rcw);
+ 	}
  
- /**
-+ * dma_async_do_zero_sum_err - default function for dma devices that
-+ *	do not support xor zero sum
-+ */
-+dma_cookie_t dma_async_do_zero_sum_err(struct dma_chan *chan,
-+		union dmaengine_addr src, unsigned int src_cnt,
-+		unsigned int src_off, size_t len, u32 *result,
-+		unsigned long flags)
-+{
-+	return -ENXIO;
-+}
+-	/* maybe we need to check and possibly fix the parity for this stripe
+-	 * Any reads will already have been scheduled, so we just see if enough data
+-	 * is available
++	/* 1/ Maybe we need to check and possibly fix the parity for this stripe.
++	 *    Any reads will already have been scheduled, so we just see if enough data
++	 *    is available.
++	 * 2/ Hold off parity checks while parity dependent operations are in flight
++	 *    (RCW and RMW are protected by 'locked')
+ 	 */
+-	if (syncing && locked == 0 &&
+-	    !test_bit(STRIPE_INSYNC, &sh->state)) {
++	if ((syncing && locked == 0 &&
++	    !test_bit(STRIPE_INSYNC, &sh->state)) ||
++	    	test_bit(STRIPE_OP_CHECK, &sh->state)) {
 +
-+/**
-  * dma_async_do_memset_err - default function for dma devices that
-  *      do not support memset
-  */
-@@ -649,6 +661,8 @@ EXPORT_SYMBOL_GPL(dma_async_memset_page)
- EXPORT_SYMBOL_GPL(dma_async_memset_dma);
- EXPORT_SYMBOL_GPL(dma_async_xor_pgs_to_pg);
- EXPORT_SYMBOL_GPL(dma_async_xor_dma_list_to_dma);
-+EXPORT_SYMBOL_GPL(dma_async_zero_sum_pgs);
-+EXPORT_SYMBOL_GPL(dma_async_zero_sum_dma_list);
- EXPORT_SYMBOL_GPL(dma_async_operation_complete);
- EXPORT_SYMBOL_GPL(dma_async_issue_pending);
- EXPORT_SYMBOL_GPL(dma_async_device_register);
-@@ -656,6 +670,7 @@ EXPORT_SYMBOL_GPL(dma_async_device_unreg
- EXPORT_SYMBOL_GPL(dma_chan_cleanup);
- EXPORT_SYMBOL_GPL(dma_async_do_memcpy_err);
- EXPORT_SYMBOL_GPL(dma_async_do_xor_err);
-+EXPORT_SYMBOL_GPL(dma_async_do_zero_sum_err);
- EXPORT_SYMBOL_GPL(dma_async_do_memset_err);
- EXPORT_SYMBOL_GPL(dma_async_chan_init);
- EXPORT_SYMBOL_GPL(dma_async_map_page);
-diff --git a/drivers/dma/ioatdma.c b/drivers/dma/ioatdma.c
-index 231247c..4e90b02 100644
---- a/drivers/dma/ioatdma.c
-+++ b/drivers/dma/ioatdma.c
-@@ -637,6 +637,11 @@ extern dma_cookie_t dma_async_do_xor_err
- 	union dmaengine_addr src, unsigned int src_cnt,
- 	unsigned int src_off, size_t len, unsigned long flags);
- 
-+extern dma_cookie_t dma_async_do_zero_sum_err(struct dma_chan *chan,
-+        union dmaengine_addr src, unsigned int src_cnt,
-+        unsigned int src_off, size_t len, u32 *result, 
-+	unsigned long flags);
+ 		set_bit(STRIPE_HANDLE, &sh->state);
++		/* Take one of the following actions:
++		 * 1/ start a check parity operation if (uptodate == disks)
++		 * 2/ finish a check parity operation and act on the result
++		 */
+ 		if (failed == 0) {
+-			BUG_ON(uptodate != disks);
+-			compute_parity5(sh, CHECK_PARITY);
+-			uptodate--;
+-			if (page_is_zero(sh->dev[sh->pd_idx].page)) {
+-				/* parity is correct (on disc, not in buffer any more) */
+-				set_bit(STRIPE_INSYNC, &sh->state);
+-			} else {
+-				conf->mddev->resync_mismatches += STRIPE_SECTORS;
+-				if (test_bit(MD_RECOVERY_CHECK, &conf->mddev->recovery))
+-					/* don't try to repair!! */
++			if (!test_bit(STRIPE_OP_CHECK, &sh->state)) {
++				BUG_ON(uptodate != disks);
++				set_bit(STRIPE_OP_CHECK, &sh->state);
++				set_bit(STRIPE_OP_CHECK_Gen, &sh->ops.state);
++				clear_bit(R5_UPTODATE, &sh->dev[sh->pd_idx].flags);
++				sh->ops.pending++;
++				uptodate--;
++			} else if (test_and_clear_bit(STRIPE_OP_CHECK_Done, &sh->ops.state)) {
++				clear_bit(STRIPE_OP_CHECK, &sh->state);
 +
- extern dma_cookie_t dma_async_do_memset_err(struct dma_chan *chan,
- 	union dmaengine_addr dest, unsigned int dest_off,
- 	int val, size_t size, unsigned long flags);
-@@ -752,6 +757,7 @@ #endif
- 	device->common.capabilities = DMA_MEMCPY;
- 	device->common.device_do_dma_memcpy = do_ioat_dma_memcpy;
- 	device->common.device_do_dma_xor = dma_async_do_xor_err;
-+	device->common.device_do_dma_zero_sum = dma_async_do_zero_sum_err;
- 	device->common.device_do_dma_memset = dma_async_do_memset_err;
- 	device->common.map_page = ioat_map_page;
- 	device->common.map_single = ioat_map_single;
-diff --git a/include/linux/dmaengine.h b/include/linux/dmaengine.h
-index 8d53b08..9fd6cbd 100644
---- a/include/linux/dmaengine.h
-+++ b/include/linux/dmaengine.h
-@@ -260,6 +260,7 @@ struct dma_chan_client_ref {
-  * @device_issue_pending: push appended descriptors to hardware
-  * @device_do_dma_memcpy: perform memcpy with a dma engine
-  * @device_do_dma_xor: perform block xor with a dma engine
-+ * @device_do_dma_zero_sum: perform block xor zero sum with a dma engine
-  * @device_do_dma_memset: perform block fill with a dma engine
-  */
- struct dma_device {
-@@ -285,6 +286,10 @@ struct dma_device {
- 			union dmaengine_addr src, unsigned int src_cnt,
- 			unsigned int src_off, size_t len,
- 			unsigned long flags);
-+	dma_cookie_t (*device_do_dma_zero_sum)(struct dma_chan *chan,
-+			union dmaengine_addr src, unsigned int src_cnt,
-+			unsigned int src_off, size_t len, u32 *result,
-+			unsigned long flags);
- 	dma_cookie_t (*device_do_dma_memset)(struct dma_chan *chan,
- 			union dmaengine_addr dest, unsigned int dest_off,
- 			int value, size_t len, unsigned long flags);
-@@ -601,6 +606,57 @@ static inline dma_cookie_t dma_async_xor
- }
- 
- /**
-+ * dma_async_zero_sum_pgs - offloaded xor zero sum from a list of pages
-+ * @chan: DMA channel to offload zero sum to
-+ * @src_pgs: array of source pages
-+ * @src_cnt: number of source pages
-+ * @src_off: offset in pages to xor from
-+ * @len: length
-+ * @result: set to 1 if sum is zero else 0
-+ *
-+ * Both @dest_page/@dest_off and @src_page/@src_off must be mappable to a bus
-+ * address according to the DMA mapping API rules for streaming mappings.
-+ * Both @dest_page/@dest_off and @src_page/@src_off must stay memory resident
-+ * (kernel memory or locked user space pages)
-+ */
-+static inline dma_cookie_t dma_async_zero_sum_pgs(struct dma_chan *chan,
-+	struct page **src_pgs, unsigned int src_cnt, unsigned int src_off,
-+	size_t len, u32 *result)
-+{
-+	unsigned long flags = DMA_DEST_PAGE | DMA_SRC_PAGES;
-+	union dmaengine_addr src_addr = { .pgs = src_pgs };
-+	int cpu = get_cpu();
-+	per_cpu_ptr(chan->local, cpu)->bytes_xor += len * src_cnt;
-+	per_cpu_ptr(chan->local, cpu)->xor_count++;
-+	put_cpu();
++				if (test_and_clear_bit(STRIPE_OP_CHECK_IsZero,
++							&sh->ops.state))
++					/* parity is correct (on disc, not in buffer any more) */
+ 					set_bit(STRIPE_INSYNC, &sh->state);
+ 				else {
+-					compute_block(sh, sh->pd_idx);
+-					uptodate++;
++					conf->mddev->resync_mismatches += STRIPE_SECTORS;
++					if (test_bit(MD_RECOVERY_CHECK, &conf->mddev->recovery))
++						/* don't try to repair!! */
++						set_bit(STRIPE_INSYNC, &sh->state);
++					else {
++						compute_block(sh, sh->pd_idx);
++						uptodate++;
++					}
+ 				}
+ 			}
+ 		}
+-		if (!test_bit(STRIPE_INSYNC, &sh->state)) {
 +
-+	return chan->device->device_do_dma_zero_sum(chan,
-+		src_addr, src_cnt, src_off, len, result, flags);
-+}
++		/* Wait for check parity operations to complete
++		 * before write-back
++		 */
++		if (!test_bit(STRIPE_INSYNC, &sh->state) &&
++			!test_bit(STRIPE_OP_CHECK, &sh->state)) {
 +
-+/**
-+ * dma_async_zero_sum_dma_list - offloaded xor zero sum from a dma list
-+ * @chan: DMA channel to offload zero sum to
-+ * @src_list: array of sources already mapped and consistent
-+ * @src_cnt: number of sources
-+ * @len: length
-+ * @result: set to 1 if sum is zero else 0
-+ */
-+static inline dma_cookie_t dma_async_zero_sum_dma_list(struct dma_chan *chan,
-+	dma_addr_t *src_list, unsigned int src_cnt, size_t len, u32 *result)
-+{
-+	unsigned long flags = DMA_DEST_DMA | DMA_SRC_DMA_LIST;
-+	union dmaengine_addr src_addr = { .dma_list = src_list };
-+	int cpu = get_cpu();
-+	per_cpu_ptr(chan->local, cpu)->bytes_xor += len * src_cnt;
-+	per_cpu_ptr(chan->local, cpu)->xor_count++;
-+	put_cpu();
+ 			/* either failed parity check, or recovery is happening */
+ 			if (failed==0)
+ 				failed_num = sh->pd_idx;
 +
-+	return chan->device->device_do_dma_zero_sum(chan,
-+		src_addr, src_cnt, 0, len, result, flags);
-+}
-+
-+/**
-  * dma_async_issue_pending - flush pending copies to HW
-  * @chan: target DMA channel
-  *
+ 			dev = &sh->dev[failed_num];
+ 			BUG_ON(!test_bit(R5_UPTODATE, &dev->flags));
+ 			BUG_ON(uptodate != disks);
