@@ -1,34 +1,55 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: Moving a raid5 array
-Date: Wed, 13 Sep 2006 02:21:42 +1000
-Message-ID: <17670.56982.310173.651209@cse.unsw.edu.au>
-References: <200609121714.58541.clive@vacuumtube.org.uk>
+From: Dexter Filmore <Dexter.Filmore@gmx.de>
+Subject: Re: access *existing* array from knoppix
+Date: Tue, 12 Sep 2006 18:29:16 +0200
+Message-ID: <200609121829.16513.Dexter.Filmore@gmx.de>
+References: <200609121352.08834.Dexter.Filmore@gmx.de> <200609121637.53998.Dexter.Filmore@gmx.de> <Pine.LNX.4.64.0609121147370.19418@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Clive Messer on Tuesday September 12
+In-Reply-To: <Pine.LNX.4.64.0609121147370.19418@p34.internal.lan>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Clive Messer <clive@vacuumtube.org.uk>
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday September 12, clive@vacuumtube.org.uk wrote:
-> 
-> I currently have a 4 disk raid5 array which I wish to move to another machine. 
-> In the current machine it is comprised of sda1/sdb1/sdc1/sdd1. When I move it 
-> to the new machine the disks will all shift up by 2. ie. the partitions will 
-> now be sdc1/sdd1/sde1/sdf1. If I 'mdadm --assemble' the array on the new 
-> machine with the new partition names will md figure it all out or am I going 
-> to trash my data?
-> 
-> For reference my current mdadm.conf ......
-> 
-> DEVICE /dev/sd*[0-9]
-> ARRAY /dev/md0 level=raid5 num-devices=4 
-> UUID=f1949e2c:bec621e4:de55ae15:4f336899
+Am Dienstag, 12. September 2006 17:47 schrieb Justin Piszcz:
+> Strange, what knoppix are you using? I recall doing it to fix an XFS bug
+> with 4.x and 5.x.
 
-Providing you don't already have a /dev/md0 on the new machine, which
-should work perfectly - no confusion.
+5.0.1. Maybe they gone udev now and didn't handle md devices.
+I'll see if I can so something in /lib/udev/devices.
 
-NeilBrown
+>
+> On Tue, 12 Sep 2006, Dexter Filmore wrote:
+> > Am Dienstag, 12. September 2006 16:08 schrieb Justin Piszcz:
+> >> /dev/MAKEDEV /dev/md0
+> >>
+> >> also make sure the SW raid modules etc are loaded if necessary.
+> >
+> > Won't work, MAKEDEV doesn't know how to create [/dev/]md0.
+> >
+> >
+> > --
+> > -----BEGIN GEEK CODE BLOCK-----
+> > Version: 3.12
+> > GCS d--(+)@ s-:+ a- C++++ UL++ P+>++ L+++>++++ E-- W++ N o? K-
+> > w--(---) !O M+ V- PS+ PE Y++ PGP t++(---)@ 5 X+(++) R+(++) tv--(+)@
+> > b++(+++) DI+++ D- G++ e* h>++ r* y?
+> > ------END GEEK CODE BLOCK------
+> >
+> > http://www.stop1984.com
+> > http://www.againsttcpa.com
+
+-- 
+-----BEGIN GEEK CODE BLOCK-----
+Version: 3.12
+GCS d--(+)@ s-:+ a- C++++ UL++ P+>++ L+++>++++ E-- W++ N o? K-
+w--(---) !O M+ V- PS+ PE Y++ PGP t++(---)@ 5 X+(++) R+(++) tv--(+)@ 
+b++(+++) DI+++ D- G++ e* h>++ r* y?
+------END GEEK CODE BLOCK------
+
+http://www.stop1984.com
+http://www.againsttcpa.com
