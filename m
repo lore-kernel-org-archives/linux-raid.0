@@ -1,32 +1,33 @@
-From: Henrik Holst <henrik.holst@idgmail.se>
+From: dean gaudet <dean@arctic.org>
 Subject: Re: access *existing* array from knoppix
-Date: Tue, 12 Sep 2006 18:38:52 +0200
-Message-ID: <4506E29C.7030602@idgmail.se>
-References: <200609121352.08834.Dexter.Filmore@gmx.de> <200609121637.53998.Dexter.Filmore@gmx.de> <Pine.LNX.4.64.0609121147370.19418@p34.internal.lan> <200609121829.16513.Dexter.Filmore@gmx.de>
+Date: Tue, 12 Sep 2006 11:17:12 -0700 (PDT)
+Message-ID: <Pine.LNX.4.64.0609121113030.18380@twinlark.arctic.org>
+References: <200609121352.08834.Dexter.Filmore@gmx.de>
+ <200609121607.22031.Dexter.Filmore@gmx.de> <Pine.LNX.4.64.0609121008050.19418@p34.internal.lan>
+ <200609121637.53998.Dexter.Filmore@gmx.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200609121829.16513.Dexter.Filmore@gmx.de>
+In-Reply-To: <200609121637.53998.Dexter.Filmore@gmx.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dexter Filmore <Dexter.Filmore@gmx.de>, Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: linux-raid@vger.kernel.org
+To: Dexter Filmore <Dexter.Filmore@gmx.de>
+Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Dexter Filmore wrote:
-> Am Dienstag, 12. September 2006 17:47 schrieb Justin Piszcz:
->> Strange, what knoppix are you using? I recall doing it to fix an XFS bug
->> with 4.x and 5.x.
+On Tue, 12 Sep 2006, Dexter Filmore wrote:
+
+> Am Dienstag, 12. September 2006 16:08 schrieb Justin Piszcz:
+> > /dev/MAKEDEV /dev/md0
+> >
+> > also make sure the SW raid modules etc are loaded if necessary.
 > 
-> 5.0.1. Maybe they gone udev now and didn't handle md devices.
-> I'll see if I can so something in /lib/udev/devices.
+> Won't work, MAKEDEV doesn't know how to create [/dev/]md0.
 
-Try this:
+echo 'DEVICE partitions' >/tmp/mdadm.conf
+mdadm --detail --scan --config=/tmp/mdadm.conf >>/tmp/mdadm.conf
 
-mdadm -Av /dev/md0 --auto=yes /dev/hda1 /dev/hdb1
-                   ^^^^^^^^^^
+take a look in /tmp/mdadm.conf ... your root array should be listed.
 
-I have used this with success on many Udev systems. It will create
-/dev/md0 automatic.
+mdadm --assemble --config=/tmp/mdadm.conf --auto=yes /dev/md0
 
-Henrik Holst
+-dean
