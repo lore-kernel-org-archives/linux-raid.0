@@ -1,41 +1,36 @@
-From: Lem <l3mming@iinet.net.au>
-Subject: Re: Correct way to create multiple RAID volumes with hot-spare?
-Date: Wed, 13 Sep 2006 16:56:55 +1000
-Message-ID: <1158130615.4500.9.camel@localhost.localdomain>
-References: <44EB5579.4020200@maine.edu>
-	 <17644.55759.763091.379642@cse.unsw.edu.au>  <4507212E.3060703@maine.edu>
+From: Jakob Oestergaard <jakob@unthought.net>
+Subject: Re: [PATCH 00/19] Hardware Accelerated MD RAID5: Introduction
+Date: Wed, 13 Sep 2006 09:15:12 +0200
+Message-ID: <20060913071512.GA23492@unthought.net>
+References: <1158015632.4241.31.camel@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4507212E.3060703@maine.edu>
+Content-Disposition: inline
+In-Reply-To: <1158015632.4241.31.camel@dwillia2-linux.ch.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Steve Cousins <steve.cousins@maine.edu>
-Cc: Neil Brown <neilb@suse.de>, Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org, akpm@osdl.org, linux-kernel@vger.kernel.org, christopher.leech@intel.com
 List-Id: linux-raid.ids
 
-On Tue, 2006-09-12 at 17:05 -0400, Steve Cousins wrote:
+On Mon, Sep 11, 2006 at 04:00:32PM -0700, Dan Williams wrote:
+> Neil,
+> 
+...
+> 
+> Concerning the context switching performance concerns raised at the
+> previous release, I have observed the following.  For the hardware
+> accelerated case it appears that performance is always better with the
+> work queue than without since it allows multiple stripes to be operated
+> on simultaneously.  I expect the same for an SMP platform, but so far my
+> testing has been limited to IOPs.  For a single-processor
+> non-accelerated configuration I have not observed performance
+> degradation with work queue support enabled, but in the Kconfig option
+> help text I recommend disabling it (CONFIG_MD_RAID456_WORKQUEUE).
 
-> The recent "Messed up creating new array..." thread has someone who 
-> started by using the whole drives but she now wants to use partitions 
-> because the array is not starting automatically on boot (I think that 
-> was the symptom).  I'm guessing this is because there is no partigion ID 
-> of "fd" since there isn't even a partition.
+Out of curiosity; how does accelerated compare to non-accelerated?
 
-> I'm on the verge of re-doing this array with 11 full drives (/dev/sd? as 
-> opposed to /dev/sd?1 and /dev/sd?2).  Will I have the same problems with 
-> booting?  I like the idea of not having to partition the drives but not 
-> if it is going to cause hassles.  I realize that there could be a 
-> potential problem if I need to replace a drive with a slightly different 
-> model that is slightly smaller.
+-- 
 
-From personal experience, partitions would be much easier. I've still
-got an issue on my RAID5 where one of the hard disks has a bogus/fake
-partition table on it (simply due to the data on the RAID appearing like
-a partition table). It causes problems with lilo and other processes at
-boot time (all non-fatal except for lilo). Perhaps with time I'll get
-lucky and the data in that particular part of the drive will be changed
-to something that looks nothing like a partition table :)
+ / jakob
 
-
-Lem.
