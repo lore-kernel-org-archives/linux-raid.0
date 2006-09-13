@@ -1,36 +1,59 @@
-From: Jakob Oestergaard <jakob@unthought.net>
-Subject: Re: [PATCH 00/19] Hardware Accelerated MD RAID5: Introduction
-Date: Wed, 13 Sep 2006 09:15:12 +0200
-Message-ID: <20060913071512.GA23492@unthought.net>
-References: <1158015632.4241.31.camel@dwillia2-linux.ch.intel.com>
+From: "Leon Woestenberg" <leon.woestenberg@gmail.com>
+Subject: libata hotplug and md raid?
+Date: Wed, 13 Sep 2006 12:11:20 +0200
+Message-ID: <c384c5ea0609130311t4005e5aam153251fc6bbbdfb8@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1158015632.4241.31.camel@dwillia2-linux.ch.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org, akpm@osdl.org, linux-kernel@vger.kernel.org, christopher.leech@intel.com
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Sep 11, 2006 at 04:00:32PM -0700, Dan Williams wrote:
-> Neil,
-> 
-...
-> 
-> Concerning the context switching performance concerns raised at the
-> previous release, I have observed the following.  For the hardware
-> accelerated case it appears that performance is always better with the
-> work queue than without since it allows multiple stripes to be operated
-> on simultaneously.  I expect the same for an SMP platform, but so far my
-> testing has been limited to IOPs.  For a single-processor
-> non-accelerated configuration I have not observed performance
-> degradation with work queue support enabled, but in the Kconfig option
-> help text I recommend disabling it (CONFIG_MD_RAID456_WORKQUEUE).
+Hello all,
 
-Out of curiosity; how does accelerated compare to non-accelerated?
+I am testing the (work-in-progress / upcoming) libata SATA hotplug.
+Hotplugging alone seems to work, but not well in combination with md
+RAID.
+
+Here is my report and a question about intended behaviour. Mainstream
+2.6.17.11 kernel patched with libata-tj-2.6.17.4-20060710.tar.bz2 from
+http://home-tj.org/files/libata-tj-stable/.
+
+Supermicro P8SCT motherboard with Intel ICH6R, using AHCI libata driver.
+
+In short, I use ext3 over /dev/md0 over 4 SATA drives /dev/sd[a-d]
+each driven by libata ahci. I unplug then replug the drive that is
+rebuilding in RAID-5.
+
+When I unplug a drive, /dev/sda is removed, hotplug seems to work to
+the point where proc/mdstat shows the drive failed, but not removed.
+
+Every other notion of the drive (in kernel and udev /dev namespace)
+seems to be gone after unplugging. I cannot manually removed the drive
+using mdadm, because it tells me the drive does not exist.
+
+Replugging the drive brings it back as /dev/sde, md0 will not pick it up.
+
+The expected behaviour (from me) is that the drive re-appears as /dev/sda.
+
+What is the intended behaviour of md in this case?
+
+Should some user-space application fail-remove a drive as a pre-action
+of the unplug event from udev, or should md fully remove the drive
+within kernel space??
+
+See kernel/udev/userspace messages in chronological order,
+with my actions marked between >>> <<<, at this web
+page:
+
+http://pastebin.ca/168798
+
+Thanks,
+--
+Leon
+
 
 -- 
-
- / jakob
-
+Leon
