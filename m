@@ -1,61 +1,41 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 00/19] Hardware Accelerated MD RAID5: Introduction
-Date: Wed, 13 Sep 2006 00:05:36 -0400
-Message-ID: <45078390.7010901@garzik.org>
-References: <1158015632.4241.31.camel@dwillia2-linux.ch.intel.com>	 <4505F358.3040204@garzik.org>	 <e9c3a7c20609111653v29cd4609hd0584ae300b735b7@mail.gmail.com>	 <45061E63.6010901@garzik.org> <e9c3a7c20609112247u30685133kc84f094ce7854776@mail.gmail.com>
+From: Lem <l3mming@iinet.net.au>
+Subject: Re: Correct way to create multiple RAID volumes with hot-spare?
+Date: Wed, 13 Sep 2006 16:56:55 +1000
+Message-ID: <1158130615.4500.9.camel@localhost.localdomain>
+References: <44EB5579.4020200@maine.edu>
+	 <17644.55759.763091.379642@cse.unsw.edu.au>  <4507212E.3060703@maine.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <e9c3a7c20609112247u30685133kc84f094ce7854776@mail.gmail.com>
+In-Reply-To: <4507212E.3060703@maine.edu>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@gmail.com>
-Cc: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org, akpm@osdl.org, linux-kernel@vger.kernel.org, christopher.leech@intel.com
+To: Steve Cousins <steve.cousins@maine.edu>
+Cc: Neil Brown <neilb@suse.de>, Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Dan Williams wrote:
-> On 9/11/06, Jeff Garzik <jeff@garzik.org> wrote:
->> Dan Williams wrote:
->> > This is a frequently asked question, Alan Cox had the same one at OLS.
->> > The answer is "probably."  The only complication I currently see is
->> > where/how the stripe cache is maintained.  With the IOPs its easy
->> > because the DMA engines operate directly on kernel memory.  With the
->> > Promise card I believe they have memory on the card and it's not clear
->> > to me if the XOR engines on the card can deal with host memory.  Also,
->> > MD would need to be modified to handle a stripe cache located on a
->> > device, or somehow synchronize its local cache with card in a manner
->> > that is still able to beat software only MD.
->>
->> sata_sx4 operates through [standard PC] memory on the card, and you use
->> a DMA engine to copy memory to/from the card.
->>
->> [select chipsets supported by] sata_promise operates directly on host
->> memory.
->>
->> So, while sata_sx4 is farther away from your direct-host-memory model,
->> it also has much more potential for RAID acceleration:  ideally, RAID1
->> just copies data to the card once, then copies the data to multiple
->> drives from there.  Similarly with RAID5, you can eliminate copies and
->> offload XOR, presuming the drives are all connected to the same card.
-> In the sata_promise case its straight forward, all that is needed is
-> dmaengine drivers for the xor and memcpy engines.  This would be
-> similar to the current I/OAT model where dma resources are provided by
-> a PCI function.  The sata_sx4 case would need a different flavor of
-> the dma_do_raid5_block_ops routine, one that understands where the
-> cache is located.  MD would also need the capability to bypass the
-> block layer since the data will have already been transferred to the
-> card by a stripe cache operation
-> 
-> The RAID1 case give me pause because it seems any work along these
-> lines requires that the implementation work for both MD and DM, which
-> then eventually leads to being tasked with merging the two.
+On Tue, 2006-09-12 at 17:05 -0400, Steve Cousins wrote:
 
-RAID5 has similar properties.  If all devices in a RAID5 array are 
-attached to a single SX4 card, then a high level write to the RAID5 
-array is passed directly to the card, which then performs XOR, striping, 
-etc.
+> The recent "Messed up creating new array..." thread has someone who 
+> started by using the whole drives but she now wants to use partitions 
+> because the array is not starting automatically on boot (I think that 
+> was the symptom).  I'm guessing this is because there is no partigion ID 
+> of "fd" since there isn't even a partition.
 
-	Jeff
+> I'm on the verge of re-doing this array with 11 full drives (/dev/sd? as 
+> opposed to /dev/sd?1 and /dev/sd?2).  Will I have the same problems with 
+> booting?  I like the idea of not having to partition the drives but not 
+> if it is going to cause hassles.  I realize that there could be a 
+> potential problem if I need to replace a drive with a slightly different 
+> model that is slightly smaller.
+
+From personal experience, partitions would be much easier. I've still
+got an issue on my RAID5 where one of the hard disks has a bogus/fake
+partition table on it (simply due to the data on the RAID appearing like
+a partition table). It causes problems with lilo and other processes at
+boot time (all non-fatal except for lilo). Perhaps with time I'll get
+lucky and the data in that particular part of the drive will be changed
+to something that looks nothing like a partition table :)
 
 
-
+Lem.
