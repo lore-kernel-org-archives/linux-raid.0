@@ -1,46 +1,64 @@
-From: Turbo Fredriksson <turbo@bayour.com>
+From: "Leon Woestenberg" <leon.woestenberg@gmail.com>
 Subject: Re: libata hotplug and md raid?
-Date: Thu, 14 Sep 2006 13:44:46 +0200
-Message-ID: <874pvawu35.fsf@pumba.bayour.com>
+Date: Thu, 14 Sep 2006 14:24:45 +0200
+Message-ID: <c384c5ea0609140524ofed0dd8v6f1b89a6b4d67f75@mail.gmail.com>
 References: <c384c5ea0609130311t4005e5aam153251fc6bbbdfb8@mail.gmail.com>
-	<4507E2A9.7070306@emc.com> <4507E641.7090508@gmail.com>
+	 <4507E2A9.7070306@emc.com> <4507E641.7090508@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4507E641.7090508@gmail.com> (Tejun Heo's message of "Wed, 13
- Sep 2006 20:06:41 +0900")
+In-Reply-To: <4507E641.7090508@gmail.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Ric Wheeler <ric@emc.com>, linux-raid@vger.kernel.org, Greg KH <gregkh@suse.de>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 List-Id: linux-raid.ids
 
->>>>> "Tejun" == Tejun Heo <htejun@gmail.com> writes:
+Hello all,
 
-    Tejun> Would it be better for md to listen to
-    Tejun> hotplug events and auto-remove dead devices or is it
-    Tejun> something which belongs to userland?
+On 9/13/06, Tejun Heo <htejun@gmail.com> wrote:
+> Ric Wheeler wrote:
+> > Leon Woestenberg wrote:
+> >> In short, I use ext3 over /dev/md0 over 4 SATA drives /dev/sd[a-d]
+> >> each driven by libata ahci. I unplug then replug the drive that is
+> >> rebuilding in RAID-5.
+> >>
+> >> When I unplug a drive, /dev/sda is removed, hotplug seems to work to
+> >> the point where proc/mdstat shows the drive failed, but not removed.
+>
+> Yeap, that sounds about right.
+>
+> >> Every other notion of the drive (in kernel and udev /dev namespace)
+> >> seems to be gone after unplugging. I cannot manually removed the drive
+> >> using mdadm, because it tells me the drive does not exist.
+>
+> I see.  That's a problem.  Can you use /dev/.static/dev/sda instead?  If
+> you can't find those static nodes, just create one w/ 'mknod
+> my-static-sda b 8 0' and use it.
+>
 
-From my perspective (User+Admin), I'd _very much_ like to have
-(physically) removed disks be removed by md.
+I did further testing of the ideas set out in this thread.
 
-This would greatly help me when a disk fails on any of my systems.
-They are all SPARC's (with a few x86). None of which have any
-monitor attached. The x86's have, but that monitor is a couple of
-hundred meters away...
+Although I can use (1) static device nodes, or (2) persistent naming
+with the proper udev rules, each has its own kind of problems with md.
 
-So when I change drive, I first have to telnet into the terminal
-switch port for that machine, do the mdadm commands. Then physically
-change the drive. Then back to a machine and telnet back in to the
-machine and hot-add the disk....
+As long as the kernel announces drives as disappeared but md still
+holds a lock, replugging drives will map to other major:minor number
+no matter what I try in userspace.
 
-Granted, it don't take that much time, but it's a couple of extra
-steps (literally :) that I'd prefer not to do/take...
--- 
-supercomputer toluene Mossad Semtex assassination Noriega Rule Psix
-cryptographic critical NORAD terrorist killed fissionable Marxist
-genetic
-[See http://www.aclu.org/echelonwatch/index.html for more about this]
-[Or http://www.europarl.eu.int/tempcom/echelon/pdf/rapport_echelon_en.pdf]
-If neither of these works, try http://www.aclu.org and search for echelon.
-Note. This is a real, not fiction.
-http://www.theregister.co.uk/2001/09/06/eu_releases_echelon_spying_report/
-http://www.aclu.org/safefree/nsaspying/23989res20060131.html#echelon
+Static device nodes will therefore not help me select the drive that
+was unplugged/plugged per se.
+
+Persistent naming using udev works OK (I used /dev/bay0 through
+/dev/bay3 to pinpoint the drive bays) but these disappear upon
+unplugging, while md keeps a lock to the major:minor, so replugging
+will move it to different major:minor numbers.
+
+So the question remains: How will hotplug and md work together?
+
+How does md and hotplug work together for current hotplug devices?
+
+Regards,
+
+Leon.
