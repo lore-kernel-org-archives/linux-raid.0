@@ -1,40 +1,40 @@
 From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: PROBLEM: system crash on AMD64 with 2.6.17.11 while accessing
- 3TB Software-RAID5
-Date: Thu, 14 Sep 2006 18:37:27 -0400
-Message-ID: <4509D9A7.8060107@tmr.com>
-References: <758194931.20060829001041@TU-Ilmenau.de> <17654.24059.852752.251958@cse.unsw.edu.au> <44F6E962.40900@TU-Ilmenau.de> <44FC5D1A.6020809@tmr.com> <4500CF39.8010806@tu-ilmenau.de>
+Subject: Re: RAID5 producing fake partition table on single drive
+Date: Thu, 14 Sep 2006 18:42:04 -0400
+Message-ID: <4509DABC.7040205@tmr.com>
+References: <1155987607.7207.23.camel@localhost.localdomain>	 <17641.25141.373827.77279@cse.unsw.edu.au>	 <1156200453.19051.13.camel@fc6.xsintricity.com>  <44FC68A8.4010002@tmr.com> <1157867968.3920.4.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4500CF39.8010806@tu-ilmenau.de>
+In-Reply-To: <1157867968.3920.4.camel@localhost.localdomain>
 Sender: linux-raid-owner@vger.kernel.org
-To: Ralf Herrmann <ralf.herrmann@tu-ilmenau.de>
-Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
+To: Lem <l3mming@iinet.net.au>
+Cc: Doug Ledford <dledford@redhat.com>, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Ralf Herrmann wrote:
+Lem wrote:
 
-> Dear Mr. Davidson and Mr. Brown,
+>On Mon, 2006-09-04 at 13:55 -0400, Bill Davidsen wrote:
 >
->> It certainly is a legitimate question, and marginal power would have 
->> been at the end of my list as well... However, if all else fails, try 
->> formatting the new drives to use only the size of the old drive 
->> capacity (RAID on small partitions) and see if that works. If so you 
->> may have found some rare size-related bug.
+>  
 >
+>>May I belatedly say that this is sort-of a kernel issue, since 
+>>/proc/partitions reflects invalid data? Perhaps a boot option like 
+>>nopart=sda,sdb or similar would be in order?
+>>    
+>>
 >
-> Seems as if the new power supply did the trick. The box's been
-> running smoothly, for about 2 days lately.
-> I'm currently not in office, but since i didn't get emergency
-> calls from my colleagues i assume it still works.
+>Is this an argument to be passed to the kernel at boot time? It didn't
+>work for me.
 >
-> Thanks again for your time, 
 
+My suggestion was to Neil or other kernel maintainers. If they agree 
+that this is worth fixing, the option could be added in the kernel. It 
+isn't there now, I was soliciting responses on whether this was desirable.
 
-Thanks for letting us know what it was. Even if it was not the first 
-thing we suggested. ;-)
+Unfortunately I see no way to avoid data in the partition table 
+location, which looks like a partition table, from being used.
 
 -- 
 bill davidsen <davidsen@tmr.com>
