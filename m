@@ -1,23 +1,32 @@
-From: "Tuomas Leikola" <tuomas.leikola@gmail.com>
-Subject: Re: access *exisiting* array from knoppix
-Date: Thu, 14 Sep 2006 19:41:04 +0300
-Message-ID: <5b170a7d0609140941j95177e1v5fd1a9ebc443785@mail.gmail.com>
-References: <200609121352.08834.Dexter.Filmore@gmx.de>
-	 <200609121601.17783.Dexter.Filmore@gmx.de>
-	 <5b170a7d0609140858gef68e69taaa8e4930f87c5fd@mail.gmail.com>
-	 <200609141806.15236.Dexter.Filmore@gmx.de>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: Correct way to create multiple RAID volumes with hot-spare?
+Date: Fri, 15 Sep 2006 02:58:48 +1000
+Message-ID: <17673.35400.109037.116836@cse.unsw.edu.au>
+References: <000001c6d6ba$50819ad0$0e00a8c0@sherlock>
+	<4509849B.3020006@maine.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200609141806.15236.Dexter.Filmore@gmx.de>
-Content-Disposition: inline
+In-Reply-To: message from Steve Cousins on Thursday September 14
 Sender: linux-raid-owner@vger.kernel.org
-To: Dexter Filmore <Dexter.Filmore@gmx.de>
-Cc: linux-raid@vger.kernel.org
+To: Steve Cousins <steve.cousins@maine.edu>
+Cc: 'Linux RAID Mailing List' <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 9/14/06, Dexter Filmore <Dexter.Filmore@gmx.de> wrote:
-> How about you read the rest of the thread, wisecracker?
+On Thursday September 14, steve.cousins@maine.edu wrote:
+> 
+> Neil (or others), what is the recommended way to have the array start up 
+> if you use whole drives instead of partitions?  Do you put mdadm -A etc. 
+> in rc.local?
 
-sorry. <mailreader-excuse/>
+I would use
+
+	mdadm -As
+
+is rc.local (or /etc/init.d/mdadm or whatever) whether using
+partitions or not, but maybe that is just me.
+This combined with correct information in mdadm.conf gets it reliably
+right every time.
+
+NeilBrown
