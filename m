@@ -1,174 +1,58 @@
-From: Luca Berra <bluca@comedia.it>
-Subject: Re: [PATCH] missing close in mdassemble
-Date: Fri, 15 Sep 2006 08:56:58 +0200
-Message-ID: <20060915065658.GE25819@percy.comedia.it>
-References: <20060913145743.GH32581@percy.comedia.it>
+From: Lem <l3mming@iinet.net.au>
+Subject: Re: RAID5 producing fake partition table on single drive
+Date: Fri, 15 Sep 2006 17:51:12 +1000
+Message-ID: <1158306672.6349.8.camel@localhost.localdomain>
+References: <1155987607.7207.23.camel@localhost.localdomain>
+	 <17641.25141.373827.77279@cse.unsw.edu.au>
+	 <1156200453.19051.13.camel@fc6.xsintricity.com> <44FC68A8.4010002@tmr.com>
+	 <1157867968.3920.4.camel@localhost.localdomain>  <4509DABC.7040205@tmr.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="YZ5djTAD1cGYuMQK"
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20060913145743.GH32581@percy.comedia.it>
+In-Reply-To: <4509DABC.7040205@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: neilb@suse.de
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: Doug Ledford <dledford@redhat.com>, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Thu, 2006-09-14 at 18:42 -0400, Bill Davidsen wrote:
+> Lem wrote:
+> 
+> >On Mon, 2006-09-04 at 13:55 -0400, Bill Davidsen wrote:
+> >
+> >  
+> >
+> >>May I belatedly say that this is sort-of a kernel issue, since 
+> >>/proc/partitions reflects invalid data? Perhaps a boot option like 
+> >>nopart=sda,sdb or similar would be in order?
+> >>    
+> >>
+> >
+> >Is this an argument to be passed to the kernel at boot time? It didn't
+> >work for me.
+> >
+> 
+> My suggestion was to Neil or other kernel maintainers. If they agree 
+> that this is worth fixing, the option could be added in the kernel. It 
+> isn't there now, I was soliciting responses on whether this was desirable.
 
---YZ5djTAD1cGYuMQK
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Disposition: inline
+My mistake, sorry. It sounds like a nice idea, and would work well in
+cases where the RAID devices are always assigned the same device names
+(sda, sdb, sdc etc), which I'd expect to be the case quite frequently.
 
-On Wed, Sep 13, 2006 at 04:57:43PM +0200, Luca Berra wrote:
->attached, please apply
->without this mdassemble cannot activate stacked arrays, i wonder how i
->managed to miss it :(
->
-Another patch which obsoletes the previous one
-this will make mdassemble, if run a second time, try to make
-arrays read-write. Useful if one starts arrays readonly as described in
-README.initramfs, after resume fails.
+> Unfortunately I see no way to avoid data in the partition table 
+> location, which looks like a partition table, from being used.
 
-L.
+Perhaps an alternative would be to convert an array with
+non-partition-based devices to partition-based devices, though I
+remember Neil saying this would involve relocating all of the data on
+the entire array (perhaps could be done through some funky resync
+option?).
 
+I'm not a developer, those are just my thoughts. Thanks for all the fine
+work guys.
 
--- 
-Luca Berra -- bluca@comedia.it
-        Communication Media & Services S.r.l.
- /"\
- \ /     ASCII RIBBON CAMPAIGN
-  X        AGAINST HTML MAIL
- / \
+Cheers,
+Lem
 
---YZ5djTAD1cGYuMQK
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: attachment; filename="mdadm-2.5.3-mdassemble.patch"
-
---- mdadm-2.5.3/mdassemble.c.close	2006-06-26 07:11:00.000000000 +0200
-+++ mdadm-2.5.3/mdassemble.c	2006-09-13 17:23:15.000000000 +0200
-@@ -91,13 +91,14 @@
- 				rv |= 1;
- 				continue;
- 			}
--			if (ioctl(mdfd, GET_ARRAY_INFO, &array)>=0)
--				/* already assembled, skip */
--				continue;
--			rv |= Assemble(array_list->st, array_list->devname, mdfd,
--					   array_list,
--					   NULL, NULL,
-+			if (ioctl(mdfd, GET_ARRAY_INFO, &array) < 0) {
-+				rv |= Assemble(array_list->st, array_list->devname, mdfd,
-+					   array_list, NULL, NULL,
- 					   readonly, runstop, NULL, NULL, verbose, force);
-+			} else {
-+				rv |= Manage_ro(array_list->devname, mdfd, -1); /* make it readwrite */
-+			}
-+			close(mdfd);
- 		}
- 	return rv;
- }
---- mdadm-2.5.3/Makefile.close	2006-06-20 02:01:17.000000000 +0200
-+++ mdadm-2.5.3/Makefile	2006-09-13 17:54:36.000000000 +0200
-@@ -76,7 +76,7 @@
- STATICSRC = pwgr.c
- STATICOBJS = pwgr.o
- 
--ASSEMBLE_SRCS := mdassemble.c Assemble.c config.c dlink.c util.c super0.c super1.c sha1.c
-+ASSEMBLE_SRCS := mdassemble.c Assemble.c Manage.c config.c dlink.c util.c super0.c super1.c sha1.c
- ASSEMBLE_FLAGS:= $(CFLAGS) -DMDASSEMBLE
- ifdef MDASSEMBLE_AUTO
- ASSEMBLE_SRCS += mdopen.c mdstat.c
---- mdadm-2.5.3/Manage.c.close	2006-06-26 04:26:07.000000000 +0200
-+++ mdadm-2.5.3/Manage.c	2006-09-13 17:25:31.000000000 +0200
-@@ -72,6 +72,8 @@
- 	return 0;			
- }
- 
-+#ifndef MDASSEMBLE
-+
- int Manage_runstop(char *devname, int fd, int runstop, int quiet)
- {
- 	/* Run or stop the array. array must already be configured
-@@ -393,3 +395,5 @@
- 	return 0;
- 	
- }
-+
-+#endif /* MDASSEMBLE */
---- mdadm-2.5.3/util.c.close	2006-09-13 17:29:19.000000000 +0200
-+++ mdadm-2.5.3/util.c	2006-09-13 18:08:56.000000000 +0200
-@@ -189,6 +189,7 @@
- 	}
- }
- 
-+#ifndef MDASSEMBLE
- int check_ext2(int fd, char *name)
- {
- 	/*
-@@ -286,6 +287,7 @@
- 	fprintf(stderr, Name ": assuming 'no'\n");
- 	return 0;
- }
-+#endif /* MDASSEMBLE */
- 
- char *map_num(mapping_t *map, int num)
- {
-@@ -307,7 +309,6 @@
- 	return UnSet;
- }
- 
--
- int is_standard(char *dev, int *nump)
- {
- 	/* tests if dev is a "standard" md dev name.
-@@ -482,6 +483,7 @@
- 	return csum;
- }
- 
-+#ifndef MDASSEMBLE
- char *human_size(long long bytes)
- {
- 	static char buf[30];
-@@ -534,7 +536,9 @@
- 			);
- 	return buf;
- }
-+#endif /* MDASSEMBLE */
- 
-+#if !defined(MDASSEMBLE) || defined(MDASSEMBLE) && defined(MDASSEMBLE_AUTO)
- int get_mdp_major(void)
- {
- static int mdp_major = -1;
-@@ -618,6 +622,7 @@
- 	if (strncmp(name, "/dev/.tmp.md", 12)==0)
- 		unlink(name);
- }
-+#endif /* !defined(MDASSEMBLE) || defined(MDASSEMBLE) && defined(MDASSEMBLE_AUTO) */
- 
- int dev_open(char *dev, int flags)
- {
---- mdadm-2.5.3/mdassemble.8.close	2006-08-07 03:33:56.000000000 +0200
-+++ mdadm-2.5.3/mdassemble.8	2006-09-13 18:25:41.000000000 +0200
-@@ -25,6 +25,13 @@
- .B mdassemble
- has the same effect as invoking
- .B mdadm --assemble --scan.
-+.PP
-+Invoking
-+.B mdassemble
-+a second time will make all defined arrays readwrite, this is useful if
-+using the
-+.B start_ro
-+module parameter.
- 
- .SH OPTIONS
- 
-@@ -54,6 +61,5 @@
- .PP
- .BR mdadm (8),
- .BR mdadm.conf (5),
--.BR md (4).
--.PP
-+.BR md (4),
- .BR diet (1).
-
---YZ5djTAD1cGYuMQK--
