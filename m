@@ -1,50 +1,24 @@
 From: Olof Johansson <olof@lixom.net>
-Subject: [PATCH] dmaengine: clean up and abstract function types (was Re:
- [PATCH 08/19] dmaengine: enable multiple clients and operations)
-Date: Fri, 15 Sep 2006 14:44:23 -0500
-Message-ID: <20060915144423.500b529d@localhost.localdomain>
+Subject: [PATCH] [v2] dmaengine: clean up and abstract function types (was
+ Re: [PATCH 08/19] dmaengine: enable multiple clients and operations)
+Date: Fri, 15 Sep 2006 15:02:36 -0500
+Message-ID: <20060915150236.7a907f1c@localhost.localdomain>
 References: <1158015632.4241.31.camel@dwillia2-linux.ch.intel.com>
 	<20060911231817.4737.49381.stgit@dwillia2-linux.ch.intel.com>
 	<4505F4D0.7010901@garzik.org>
 	<20060915113817.6154aa67@localhost.localdomain>
+	<20060915144423.500b529d@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20060915113817.6154aa67@localhost.localdomain>
+In-Reply-To: <20060915144423.500b529d@localhost.localdomain>
 Sender: linux-raid-owner@vger.kernel.org
 To: Dan Williams <dan.j.williams@intel.com>, christopher.leech@intel.com
 Cc: Jeff Garzik <jeff@garzik.org>, neilb@suse.de, linux-raid@vger.kernel.org, akpm@osdl.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, 15 Sep 2006 11:38:17 -0500 Olof Johansson <olof@lixom.net> wrote:
-
-> On Mon, 11 Sep 2006 19:44:16 -0400 Jeff Garzik <jeff@garzik.org> wrote:
-
-> > Are we really going to add a set of hooks for each DMA engine whizbang 
-> > feature?
-> > 
-> > That will get ugly when DMA engines support memcpy, xor, crc32, sha1, 
-> > aes, and a dozen other transforms.
-> 
-> 
-> Yes, it will be unmaintainable. We need some sort of multiplexing with
-> per-function registrations.
-> 
-> Here's a first cut at it, just very quick. It could be improved further
-> but it shows that we could exorcise most of the hardcoded things pretty
-> easily.
-
-Ok, that was obviously a naive and not so nice first attempt, but I
-figured it was worth it to show how it can be done.
-
-This is a little more proper: Specify at client registration time what
-the function the client will use is, and make the channel use it. This
-way most of the error checking per call can be removed too.
-
-Chris/Dan: Please consider picking this up as a base for the added
-functionality and cleanups.
-
+[Bad day, forgot a quilt refresh.]
 
 
 
@@ -139,6 +113,14 @@ Index: linux-2.6/drivers/dma/ioatdma.c
 ===================================================================
 --- linux-2.6.orig/drivers/dma/ioatdma.c
 +++ linux-2.6/drivers/dma/ioatdma.c
+@@ -40,6 +40,7 @@
+ #define to_ioat_device(dev) container_of(dev, struct ioat_device, common)
+ #define to_ioat_desc(lh) container_of(lh, struct ioat_desc_sw, node)
+ 
++
+ /* internal functions */
+ static int __devinit ioat_probe(struct pci_dev *pdev, const struct pci_device_id *ent);
+ static void __devexit ioat_remove(struct pci_dev *pdev);
 @@ -681,6 +682,14 @@ out:
  	return err;
  }
@@ -438,3 +420,54 @@ Index: linux-2.6/net/core/dev.c
  	if (net_dma_client == NULL)
  		return -ENOMEM;
  
+Index: linux-2.6/drivers/dma/iovlock.c
+===================================================================
+--- linux-2.6.orig/drivers/dma/iovlock.c
++++ linux-2.6/drivers/dma/iovlock.c
+@@ -151,7 +151,7 @@ static dma_cookie_t dma_memcpy_to_kernel
+ 	while (len > 0) {
+ 		if (iov->iov_len) {
+ 			int copy = min_t(unsigned int, iov->iov_len, len);
+-			dma_cookie = dma_async_memcpy_buf_to_buf(
++			dma_cookie = dma_async_buf_to_buf(
+ 					chan,
+ 					iov->iov_base,
+ 					kdata,
+@@ -210,7 +210,7 @@ dma_cookie_t dma_memcpy_to_iovec(struct 
+ 			copy = min_t(int, PAGE_SIZE - iov_byte_offset, len);
+ 			copy = min_t(int, copy, iov[iovec_idx].iov_len);
+ 
+-			dma_cookie = dma_async_memcpy_buf_to_pg(chan,
++			dma_cookie = dma_async_buf_to_pg(chan,
+ 					page_list->pages[page_idx],
+ 					iov_byte_offset,
+ 					kdata,
+@@ -274,7 +274,7 @@ dma_cookie_t dma_memcpy_pg_to_iovec(stru
+ 			copy = min_t(int, PAGE_SIZE - iov_byte_offset, len);
+ 			copy = min_t(int, copy, iov[iovec_idx].iov_len);
+ 
+-			dma_cookie = dma_async_memcpy_pg_to_pg(chan,
++			dma_cookie = dma_async_pg_to_pg(chan,
+ 					page_list->pages[page_idx],
+ 					iov_byte_offset,
+ 					page,
+Index: linux-2.6/net/ipv4/tcp.c
+===================================================================
+--- linux-2.6.orig/net/ipv4/tcp.c
++++ linux-2.6/net/ipv4/tcp.c
+@@ -1431,11 +1431,11 @@ skip_copy:
+ 		struct sk_buff *skb;
+ 		dma_cookie_t done, used;
+ 
+-		dma_async_memcpy_issue_pending(tp->ucopy.dma_chan);
++		dma_async_issue_pending(tp->ucopy.dma_chan);
+ 
+-		while (dma_async_memcpy_complete(tp->ucopy.dma_chan,
+-		                                 tp->ucopy.dma_cookie, &done,
+-		                                 &used) == DMA_IN_PROGRESS) {
++		while (dma_async_complete(tp->ucopy.dma_chan,
++		                          tp->ucopy.dma_cookie, &done,
++		                          &used) == DMA_IN_PROGRESS) {
+ 			/* do partial cleanup of sk_async_wait_queue */
+ 			while ((skb = skb_peek(&sk->sk_async_wait_queue)) &&
+ 			       (dma_async_is_complete(skb->dma_cookie, done,
