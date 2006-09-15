@@ -1,33 +1,36 @@
-From: =?ISO-8859-1?Q?Ask_Bj=F8rn_Hansen?= <ask@develooper.com>
-Subject: Re: RAID5 Problem - $1000 reward for help
-Date: Fri, 15 Sep 2006 02:47:13 -0700
-Message-ID: <48665A6B-A957-4A5C-925E-8C6AB25491F2@develooper.com>
-References: <20060915090856.GD27597@boom.net>
-Mime-Version: 1.0 (Apple Message framework v752.2)
-Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
+From: Olof Johansson <olof@lixom.net>
+Subject: Re: [PATCH 09/19] dmaengine: reduce backend address permutations
+Date: Fri, 15 Sep 2006 09:46:38 -0500
+Message-ID: <20060915094638.7eded22f@localhost.localdomain>
+References: <1158015632.4241.31.camel@dwillia2-linux.ch.intel.com>
+	<20060911231823.4737.95500.stgit@dwillia2-linux.ch.intel.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20060915090856.GD27597@boom.net>
+In-Reply-To: <20060911231823.4737.95500.stgit@dwillia2-linux.ch.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Reza Naima <reza@reza.net>
-Cc: linux-raid@vger.kernel.org, Taner Halicioglu <taner@taner.net>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: neilb@suse.de, linux-raid@vger.kernel.org, akpm@osdl.org, linux-kernel@vger.kernel.org, christopher.leech@intel.com
 List-Id: linux-raid.ids
 
+Hi,
 
-On Sep 15, 2006, at 2:08, Reza Naima wrote:
+On Mon, 11 Sep 2006 16:18:23 -0700 Dan Williams <dan.j.williams@intel.com> wrote:
 
-> Linux version 2.6.12-1.1381_FC3
+> From: Dan Williams <dan.j.williams@intel.com>
+> 
+> Change the backend dma driver API to accept a 'union dmaengine_addr'.  The
+> intent is to be able to support a wide range of frontend address type
+> permutations without needing an equal number of function type permutations
+> on the backend.
 
-Not much help, but newer kernels are more aggressive about not  
-failing a second disk in a raid-5.
-
-(I noticed because the change came in just around when my old raid-5  
-did the same as yours; but before I upgraded).
-
-
-   - ask
-
--- 
-http://www.askbjoernhansen.com/
+Please do the cleanup of existing code before you apply new function.
+Earlier patches in this series added code that you're modifying here.
+If you modify the existing code first it's less churn for everyone to
+review.
 
 
+Thanks,
+
+Olof
