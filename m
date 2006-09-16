@@ -1,28 +1,36 @@
-From: Dexter Filmore <Dexter.Filmore@gmx.de>
-Subject: Slackware and RAID
-Date: Sat, 16 Sep 2006 12:30:22 +0200
-Message-ID: <200609161230.22530.Dexter.Filmore@gmx.de>
+From: "Molle Bestefich" <molle.bestefich@gmail.com>
+Subject: Re: Please help me save my data
+Date: Sat, 16 Sep 2006 15:14:01 +0200
+Message-ID: <62b0912f0609160614x388afc61pc391029b91743d53@mail.gmail.com>
+References: <59430.213.136.43.252.1157976989.squirrel@webmail.adocca.com>
+	 <b53b67d20609110610v5d4a63a9ube77d918b0406484@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <b53b67d20609110610v5d4a63a9ube77d918b0406484@mail.gmail.com>
 Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Patrick Hoover <phoover.eml@gmail.com>
+Cc: linux-raid@vger.kernel.org, martin.kihlgren@adocca.com
 List-Id: linux-raid.ids
 
-Is anyone here who runs a soft raid on Slackware?
-Out of the box there are no raid scripts, the ones I made myself seem a little 
-rawish, barely more than mdadm --assemble/--stop.
+Patrick Hoover wrote:
+> Is anyone else having issues with USB interfaced disks to implement
+> RAID? Any thoughts on Pros / Cons for doing this?
 
--- 
------BEGIN GEEK CODE BLOCK-----
-Version: 3.12
-GCS d--(+)@ s-:+ a- C++++ UL++ P+>++ L+++>++++ E-- W++ N o? K-
-w--(---) !O M+ V- PS+ PE Y++ PGP t++(---)@ 5 X+(++) R+(++) tv--(+)@ 
-b++(+++) DI+++ D- G++ e* h>++ r* y?
-------END GEEK CODE BLOCK------
+Sounds like a very good stress test for MD.
 
-http://www.stop1984.com
-http://www.againsttcpa.com
+I often find servers completely hung when a disk fails, this usually
+happens in the IDE layer.
+If using USB disks circumvents the IDE layer enough, using USB disks
+might get rid of these hangs.  Would be nice at least.  Maybe I'm just
+dreaming.
+
+For end users, USB might remove the need to take special care of
+cooling in your cabinet.
+OTOH, most USB disk enclosures have horrible thermal properties.
+
+USB would make it a lot easier to add new disks (beyond your cabinet's
+capacity) and to remove old disks when/if they're no longer needed.
+Users might run into a bandwidth issue at some point..
