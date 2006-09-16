@@ -1,49 +1,61 @@
-From: Dexter Filmore <Dexter.Filmore@gmx.de>
-Subject: Re: Slackware and RAID
-Date: Sat, 16 Sep 2006 20:39:09 +0200
-Message-ID: <200609162039.09488.Dexter.Filmore@gmx.de>
-References: <200609161230.22530.Dexter.Filmore@gmx.de> <200609162032.07509.Dexter.Filmore@gmx.de> <Pine.LNX.4.56.0609161934270.21474@lion.drogon.net>
+From: martin.kihlgren@adocca.com
+Subject: Re: Please help me save my data
+Date: Sun, 17 Sep 2006 01:53:37 +0200 (CEST)
+Message-ID: <64788.81.216.197.117.1158450817.squirrel@webmail.adocca.com>
+References: <59430.213.136.43.252.1157976989.squirrel@webmail.adocca.com>
+    <b53b67d20609110610v5d4a63a9ube77d918b0406484@mail.gmail.com>
+    <62b0912f0609160614x388afc61pc391029b91743d53@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.56.0609161934270.21474@lion.drogon.net>
-Content-Disposition: inline
+In-Reply-To: <62b0912f0609160614x388afc61pc391029b91743d53@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Gordon Henderson <gordon@drogon.net>
-Cc: linux-raid@vger.kernel.org
+To: Molle Bestefich <molle.bestefich@gmail.com>
+Cc: Patrick Hoover <phoover.eml@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> > What's the remaining third?
-> > I fumbled it into rc.S and rc.6, reason why I ask is that array degraded
-> > about 6 times in the few months I run it and I can't figure why. Only
-> > thing I know is that it degrades somewhere in the reboot process, so I
-> > suspect it might not properly shutdown.
+> Patrick Hoover wrote:
+>> Is anyone else having issues with USB interfaced disks to implement
+>> RAID? Any thoughts on Pros / Cons for doing this?
 >
-> Have you tried simply setting the partition types to 0xFD and relying on
-> the kernel auto-detect?
+> Sounds like a very good stress test for MD.
 >
-> I read here that there seems to be some resistance to this method though,
-> but I've been using it for many years without any issues - however I'm not
-> doing any thing "clever" like LVM or RAID on RAID (RAID1+0, etc.)
+> I often find servers completely hung when a disk fails, this usually
+> happens in the IDE layer.
+> If using USB disks circumvents the IDE layer enough, using USB disks
+> might get rid of these hangs.  Would be nice at least.  Maybe I'm just
+> dreaming.
+>
+> For end users, USB might remove the need to take special care of
+> cooling in your cabinet.
+> OTOH, most USB disk enclosures have horrible thermal properties.
+>
+> USB would make it a lot easier to add new disks (beyond your cabinet's
+> capacity) and to remove old disks when/if they're no longer needed.
+> Users might run into a bandwidth issue at some point..
 
-That's what I actually do: one big 0xFD partition per disk, raid5, lvm2, 3x 
-xfs.
-I run the array with
-mdadm --assemble /dev/md0
-and stop it with 
-mdadm --stop --scan
-after fs are unmounted and LVM is deactivated.
+After I got rid of a crappy USB hub the catastrophic resets stopped. And
+after I bought a separate PCI USB card the non-catastrophic resets have
+almost stopped as well.
 
+So now the system works as well as I hoped when I planned it!
 
--- 
------BEGIN GEEK CODE BLOCK-----
-Version: 3.12
-GCS d--(+)@ s-:+ a- C++++ UL++ P+>++ L+++>++++ E-- W++ N o? K-
-w--(---) !O M+ V- PS+ PE Y++ PGP t++(---)@ 5 X+(++) R+(++) tv--(+)@ 
-b++(+++) DI+++ D- G++ e* h>++ r* y?
-------END GEEK CODE BLOCK------
+And no, nothing hangs except the disk access to the device in question
+when a disk fails.
 
-http://www.stop1984.com
-http://www.againsttcpa.com
+My Seagate disks DO generate too much heat if I stack them on top of each
+other, which their form factor suggests they would accept. If I put them a
+bit more spacy though it works perfectly. And there ARE enclosures with
+separate fans.
+
+I have 10 external USB disks now - I got rid of my internal ones which
+were too old and failing, and I plan on continuing to add on to my
+external array. My RAID5 + LVM + dm_crypt + XFS setup allows for a very
+extendable system.
+
+And as long as I treat the entire disk set as one device, the bandwidth
+will not be an issue since I will never demand more bandwidth from the
+entire array than from a single USB drive anyway.
+
+//Martin
