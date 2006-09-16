@@ -1,32 +1,89 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: Slackware and RAID
-Date: Sat, 16 Sep 2006 13:26:18 -0400
-Message-ID: <450C33BA.2000208@tmr.com>
-References: <200609161230.22530.Dexter.Filmore@gmx.de>
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: proactive-raid-disk-replacement
+Date: Sat, 16 Sep 2006 13:47:59 -0400
+Message-ID: <200609161748.k8GHm4D02573@www.watkins-home.com>
+References: <450C0A29.10606@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200609161230.22530.Dexter.Filmore@gmx.de>
+In-Reply-To: <450C0A29.10606@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dexter Filmore <Dexter.Filmore@gmx.de>
-Cc: linux-raid@vger.kernel.org
+To: 'Bill Davidsen' <davidsen@tmr.com>, 'Tuomas Leikola' <tuomas.leikola@gmail.com>
+Cc: 'Bodo Thiesen' <bothie@gmx.de>, 'Linux RAID' <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Dexter Filmore wrote:
 
->Is anyone here who runs a soft raid on Slackware?
->Out of the box there are no raid scripts, the ones I made myself seem a little 
->rawish, barely more than mdadm --assemble/--stop.
->
->  
->
-I'm pretty much off Slack now, but I have run, the scripts you describe 
-are about 2/3 of what you need, see the thread(s) here about monitoring. 
-mdadm doesn't need a lot of direction...
 
--- 
-bill davidsen <davidsen@tmr.com>
-  CTO TMR Associates, Inc
-  Doing interesting things with small computers since 1979
+} -----Original Message-----
+} From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
+} owner@vger.kernel.org] On Behalf Of Bill Davidsen
+} Sent: Saturday, September 16, 2006 10:29 AM
+} To: Tuomas Leikola
+} Cc: Bodo Thiesen; Linux RAID
+} Subject: Re: proactive-raid-disk-replacement
+} 
+} Tuomas Leikola wrote:
+} 
+} > On 9/10/06, Bodo Thiesen <bothie@gmx.de> wrote:
+} >
+} >> So, we need a way, to feedback the redundancy from the raid5 to the
+} >> raid1.
+} >
+} > <snip long explanation>
+} >
+} > Sounds awfully complicated to me. Perhaps this is how it internally
+} > works, but my 2 cents go to the option to gracefully remove a device
+} > (migrating to a spare without losing redundancy) in the kernel (or
+} > mdadm).
+} >
+} > I'm thinking
+} >
+} > mdadm /dev/raid-device -a /dev/new-disk
+} > mdadm /dev/raid-device --graceful-remove /dev/failing-disk
+} >
+} > also hopefully a path to do this instead of kicking (multiple) disks
+} > when bad blocks occur.
+} 
+} 
+} Actually, an internal implementation is really needed if this is to be
+} generally useful to a non-guru. And it has other possible uses, as well.
+} if there were just a --migrate command:
+}   mdadm --migrate /dev/md0 /dev/sda /dev/sdf
+} as an example for discussion, the whole process of not only moving the
+} data, but getting recovered information from the RAID array could be
+} done by software which does the right thing, creating superblocks, copy
+} UUID, etc. And as a last step it could invalidate the superblock on the
+} failing drive (so reboots would work right) and leave the array running
+} on the new drive.
+} 
+} But wait, there's more! Assume that I want to upgrade from a set of
+} 250GB drives to 400GB drives. Using this feature I could replace a drive
+} at a time, then --grow the array. The process for doing that is complex
+} currently, and many manual steps invite errors.
+
+I like the migrate option or whatever you want to call it.  However, if the
+disk is failing I would want to avoid reading from the failing disk and
+reconstruct the data from the other disks.  Only reading from the failing
+disk if you find a bad block on another disk.  This would put less strain on
+the failing disk possibly allowing it to last long enough to finish the
+migrate.  Your data would remain redundant throughout the process.
+
+However if I am upgrading to larger disks it would be best to read from the
+disk being replaced.  You could even migrate many disks at the same time.
+Your data would remain redundant throughout the process.
+
+Guy
+
+} 
+} --
+} bill davidsen <davidsen@tmr.com>
+}   CTO TMR Associates, Inc
+}   Doing interesting things with small computers since 1979
+} 
+} -
+} To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+} the body of a message to majordomo@vger.kernel.org
+} More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
