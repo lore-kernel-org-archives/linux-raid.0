@@ -1,61 +1,53 @@
-From: martin.kihlgren@adocca.com
-Subject: Re: Please help me save my data
-Date: Sun, 17 Sep 2006 01:53:37 +0200 (CEST)
-Message-ID: <64788.81.216.197.117.1158450817.squirrel@webmail.adocca.com>
+From: Daniel Pittman <daniel@rimspace.net>
+Subject: USB disks for RAID storage (was Re: Please help me save my data)
+Date: Sun, 17 Sep 2006 09:48:04 +1000
+Message-ID: <87odtfe5l7.fsf_-_@rimspace.net>
 References: <59430.213.136.43.252.1157976989.squirrel@webmail.adocca.com>
-    <b53b67d20609110610v5d4a63a9ube77d918b0406484@mail.gmail.com>
-    <62b0912f0609160614x388afc61pc391029b91743d53@mail.gmail.com>
+	<b53b67d20609110610v5d4a63a9ube77d918b0406484@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <62b0912f0609160614x388afc61pc391029b91743d53@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Molle Bestefich <molle.bestefich@gmail.com>
-Cc: Patrick Hoover <phoover.eml@gmail.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> Patrick Hoover wrote:
->> Is anyone else having issues with USB interfaced disks to implement
->> RAID? Any thoughts on Pros / Cons for doing this?
->
-> Sounds like a very good stress test for MD.
->
-> I often find servers completely hung when a disk fails, this usually
-> happens in the IDE layer.
-> If using USB disks circumvents the IDE layer enough, using USB disks
-> might get rid of these hangs.  Would be nice at least.  Maybe I'm just
-> dreaming.
->
-> For end users, USB might remove the need to take special care of
-> cooling in your cabinet.
-> OTOH, most USB disk enclosures have horrible thermal properties.
->
-> USB would make it a lot easier to add new disks (beyond your cabinet's
-> capacity) and to remove old disks when/if they're no longer needed.
-> Users might run into a bandwidth issue at some point..
+"Patrick Hoover" <phoover.eml@gmail.com> writes:
 
-After I got rid of a crappy USB hub the catastrophic resets stopped. And
-after I bought a separate PCI USB card the non-catastrophic resets have
-almost stopped as well.
+> Is anyone else having issues with USB interfaced disks to implement
+> RAID? Any thoughts on Pros / Cons for doing this?  
 
-So now the system works as well as I hoped when I planned it!
+I have done, as a trial.  USB disk support in recent 2.6 based
+distributions was quite stable and reliable, and I had no significant
+problems with RAID arrays -- including constructing arrays at boot time.
 
-And no, nothing hangs except the disk access to the device in question
-when a disk fails.
+However, USB disk performance was not great; I wouldn't want to run more
+than one, or possibly two, disks on a single USB controller.  Anything
+more than that and you really see performance drop off.
 
-My Seagate disks DO generate too much heat if I stack them on top of each
-other, which their form factor suggests they would accept. If I put them a
-bit more spacy though it works perfectly. And there ARE enclosures with
-separate fans.
+Also, the USB transaction latency seems a bit greater than IDE or SATA,
+so there are longer delays in data getting in or out of the system --
+which add up, and make workloads with lots of fsync and small files
+painful.
 
-I have 10 external USB disks now - I got rid of my internal ones which
-were too old and failing, and I plan on continuing to add on to my
-external array. My RAID5 + LVM + dm_crypt + XFS setup allows for a very
-extendable system.
 
-And as long as I treat the entire disk set as one device, the bandwidth
-will not be an issue since I will never demand more bandwidth from the
-entire array than from a single USB drive anyway.
+For bulk storage of large data with low performance requirements
+chaining a whole bunch of USB disks off a single controller would be
+acceptable, but otherwise I wouldn't bother.
 
-//Martin
+
+I didn't investigate IEEE-1394 connected disks, but I anticipate them to
+have similar issues with controller latency and bandwidth.  Tests with
+two disks suggest a similar set of issues.[1]
+
+Regards,
+        Daniel
+
+Footnotes: 
+[1]  Also, Linux optimizes the 1394 bus less well than it could,
+     so performance is hurt by that a bit.  
+
+-- 
+Digital Infrastructure Solutions -- making IT simple, stable and secure
+Phone: 0401 155 707        email: contact@digital-infrastructure.com.au
+                 http://digital-infrastructure.com.au/
+
