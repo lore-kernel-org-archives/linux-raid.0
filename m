@@ -1,95 +1,42 @@
-From: "Molle Bestefich" <molle.bestefich@gmail.com>
-Subject: ATA cables and drives
-Date: Sat, 16 Sep 2006 15:16:29 +0200
-Message-ID: <62b0912f0609160616k3b79ded9la2c918df057daef0@mail.gmail.com>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: RAID5 fill up?
+Date: Sat, 16 Sep 2006 10:12:48 -0400
+Message-ID: <450C0660.5030105@tmr.com>
+References: <45013873.5040006@cgv.tugraz.at> <450142AC.8010304@tls.msk.ru> <45016177.8080604@cgv.tugraz.at> <20060908132516.GH19633@percy.comedia.it> <Pine.LNX.4.64.0609080931340.23948@filesrv1.baby-dragons.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.64.0609080931340.23948@filesrv1.baby-dragons.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
+Cc: linux-raid maillist <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-I'm looking for new harddrives.
+Mr. James W. Laferriere wrote:
 
-This is my experience so far.
+>    
+>     Kuca ,  Thank you for posting this snippet .
+>     Neil ,  Might changing ,
+>
+>              can  be given as max which means to choose the largest 
+> size that
+>     To
+>              can  be given as 'max' which means to choose the largest 
+> size that
+>
+>     help those reading this be aware that this is a 'string' to add to 
+> the
+>     end of --size= ?  Also if there are other keywords not quoted ('') 
+> this
+>     might be a good opertunity .  ;-)  Tia ,  JimL
+>
+Definitely a good idea! If I hadn't seen an example posted using that 
+feature, I would have assumed that it just meant someone was too lazy to 
+type 'maximum' at the time.
 
+-- 
+bill davidsen <davidsen@tmr.com>
+  CTO TMR Associates, Inc
+  Doing interesting things with small computers since 1979
 
-SATA cables:
-=============
-
-I have zero good experiences with any SATA cables.
-They've all been crap so far.
-
-
-3.5" ATA harddrives buyable where I live:
-==========================================
-
-(All drives are 7200rpm, for some reason.)
-
-Hitachi "DeskStar"              500 GB / 16 MB /  8.5 ms / SATA or PATA
-Maxtor "DiamondMax 11"          500 GB / 16 MB /  8.5 ms / SATA or PATA
-Maxtor "MaXLine Pro"            500 GB / 16 MB /  8.5 ms / SATA or PATA
-Seagate "Barracuda 7200.10"     500 GB / 16 MB /    ?    / SATA or PATA
-Seagate "Barracuda 7200.10"     750 GB / 16 MB /    ?    / SATA or PATA
-Seagate "Barracuda 7200.9"      500 GB / 16 MB / 11   ms / SATA or PATA
-Seagate "Barracuda 7200.9"      500 GB /  8 MB / 11   ms / SATA or PATA
-Seagate "Barracuda ES"          500 GB / 16 MB /  8.5 ms / SATA
-Seagate "Barracuda ES"          750 GB / 16 MB /  8.5 ms / SATA
-Seagate "ESATA"                 500 GB / 16 MB /    ?    / SATA (external)
-Seagate "NL35.2 ST3500641NS"    500 GB / 16 MB /  8   ms / ? / SATA
-Seagate "NL35.2 ST3500841NS"    500 GB /  8 MB /  8   ms / ? / SATA
-Western Digital "SE16 WD5000KS" 500 GB / 16 MB /  8.9 ms / SATA
-Western Digital "RE2 WD5000YS"  500 GB / 16 MB /  8.7 ms / SATA
-
-I've tried Maxtor and IBM (now Hitachi) harddrives.
-Both makes have failed on me, but most of the time due to horrible packaging.
-
-I don't care a split-second whether one kind is marginally faster than
-the other, so all the reviews on AnandTech etc. are utterly useless to
-me.  There's an infinite number of more effective ways to get better
-performance than to buy a slightly faster harddrive.
-
-I DO care about quality, namely:
-* How often the drives has catastrophic failure,
-* How they handle heat (dissipation & acceptance - how hot before it fails?),
-* How big the spare area is,
-* How often they have single-sector failures,
-* How long the manufacturer warranty lasts,
-* How easy the manufacturer is to work with wrt. warranty.
-
-I haven't been able to figure the spare area size, heat properties,
-etc. for any drives.
-Thus my only criteria so far has been manufacturer warranty: How much
-bitching do I get when I tell them my drive doesn't work.
-
-My main experience is with Maxtor.
-Maxtor has been none less than superb wrt. warranty!
-Download an ISO with a diag tool, burn the CD, boot the CD, type in
-the fault code it prints on Maxtor's site, and a day or two later
-you've got a new drive in the mail and packaging to ship the old one
-back in.  If something odd happens, call them up and they're extremely
-helpful.
-
-Unfortunately, I lack thorough experience with the other brands.
-
-
-Questions:
-===========
-
-A.) Does anyone have experience with returning Hitachi, Seagate or WD
-drives to the manufacturer?
-    Do they have manufacturer warranty at all?
-    How much/little trouble did you have with Hitachi, Seagate or WD?
-
-B.) Can anyone *prove* (to a reasonable degree) that drives from
-manufacturer H, M, S or WD is of better quality?
-    Has anyone seen a review that heat/shock/stress test drives?
-
-C.) Does good SATA cables exist?
-    Eg. cables that lock on to the drives, or backplanes which lock
-the entire disk in place?
-
-
-Thanks for reading, and thanks in advance for answers (if any) :-).
