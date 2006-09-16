@@ -1,54 +1,115 @@
-From: Jeff Woods <Kazrak+kernel@cesmail.net>
+From: Bill Davidsen <davidsen@tmr.com>
 Subject: Re: ATA cables and drives
-Date: Sat, 16 Sep 2006 09:54:19 -0600
-Message-ID: <7.0.1.0.2.20060916094213.03e216e8@cesmail.net>
-References: <62b0912f0609160616k3b79ded9la2c918df057daef0@mail.gmail.com> <62b0912f0609160616k3b79ded9la2c918df057daef0@mail.gmail.co
- m>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"; format=flowed
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <62b0912f0609160616k3b79ded9la2c918df057daef0@mail.gmail.co
- m>
+Date: Sat, 16 Sep 2006 13:24:16 -0400
+Message-ID: <450C3340.9060507@tmr.com>
 References: <62b0912f0609160616k3b79ded9la2c918df057daef0@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <62b0912f0609160616k3b79ded9la2c918df057daef0@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Molle Bestefich <molle.bestefich@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-At 15:16 +0200 9/16/2006, Molle Bestefich wrote:
->A.) Does anyone have experience with returning Hitachi, Seagate or 
->WD drives to the manufacturer? Do they have manufacturer warranty at 
->all? How much/little trouble did you have with Hitachi, Seagate or WD?
+Molle Bestefich wrote:
 
-A few years ago (but after IBM sold their HDD business to Hitachi) I 
-had a laptop drive (48GB 2.5") die before the three year warranty 
-ended. I did the diagnostic code, RMA thing and got a refurbished 
-replacement which also died within a year. Repeated diagnostic and 
-RMA which got me another drive which still works fine. I think the 
-original two drives died because I was running the laptop they were 
-in 24x7; most laptop drives are not designed for that duty cycle. The 
-new drive has been great in an external USB+Firewire enclosure as a 
-48GB sneakernet drive.
+> I'm looking for new harddrives.
+>
+> This is my experience so far.
+>
+>
+> SATA cables:
+> =============
+>
+> I have zero good experiences with any SATA cables.
+> They've all been crap so far.
+>
+>
+> 3.5" ATA harddrives buyable where I live:
+> ==========================================
+>
+> (All drives are 7200rpm, for some reason.)
 
-I've never had reason to return a Seagate or WD drive. It's been a 
-few years since I used a Seagate personally. I have a 4-way RAID-0 of 
-WD 74GB 10K-RPM Raptors (five year warranty) which work great. I also 
-have two WD 400GB RE2 drives (also five year warranty) in RAID-0 that 
-also seem great.
 
->B.) Can anyone *prove* (to a reasonable degree) that drives from 
->manufacturer H, M, S or WD is of better quality? Has anyone seen a 
->review that heat/shock/stress test drives?
+Unless you live where delivery services don't go, you can get 10k SATA 
+or 15k Ultra320 drives from many vendors. I checked newegg just as a 
+reference, there are many others.
 
-I can't even prove that *I* exist. ;)
+The rest of your questions sound like you are running the drives very 
+hot, and drive life is inversely proportional to temperature. There are 
+mil-spec drives which will live at 100C, but they are not readily 
+available and cost way more than keeping drives cool. I have no idea 
+what kind of SATA cable failure you are seeing, I have some in machines 
+I take to give presentations, and if 10k miles in the back of an SUV 
+didn't cause problems, I doubt any normal operation would. I've had them 
+bad when I got them, but if they work once they keep working, in my 
+experience.
 
->C.) Does good SATA cables exist? Eg. cables that lock on to the 
->drives, or backplanes which lock the entire disk in place?
+>
+>
+> I've tried Maxtor and IBM (now Hitachi) harddrives.
+> Both makes have failed on me, but most of the time due to horrible 
+> packaging.
+>
+> I don't care a split-second whether one kind is marginally faster than
+> the other, so all the reviews on AnandTech etc. are utterly useless to
+> me.  There's an infinite number of more effective ways to get better
+> performance than to buy a slightly faster harddrive.
+>
+> I DO care about quality, namely:
+> * How often the drives has catastrophic failure,
+> * How they handle heat (dissipation & acceptance - how hot before it 
+> fails?),
+> * How big the spare area is,
+> * How often they have single-sector failures,
+> * How long the manufacturer warranty lasts,
+> * How easy the manufacturer is to work with wrt. warranty.
+>
+> I haven't been able to figure the spare area size, heat properties,
+> etc. for any drives.
+> Thus my only criteria so far has been manufacturer warranty: How much
+> bitching do I get when I tell them my drive doesn't work.
+>
+> My main experience is with Maxtor.
+> Maxtor has been none less than superb wrt. warranty!
+> Download an ISO with a diag tool, burn the CD, boot the CD, type in
+> the fault code it prints on Maxtor's site, and a day or two later
+> you've got a new drive in the mail and packaging to ship the old one
+> back in.  If something odd happens, call them up and they're extremely
+> helpful.
+>
+> Unfortunately, I lack thorough experience with the other brands.
+>
+>
+> Questions:
+> ===========
+>
+> A.) Does anyone have experience with returning Hitachi, Seagate or WD
+> drives to the manufacturer?
+>    Do they have manufacturer warranty at all?
+>    How much/little trouble did you have with Hitachi, Seagate or WD?
+>
+> B.) Can anyone *prove* (to a reasonable degree) that drives from
+> manufacturer H, M, S or WD is of better quality?
+>    Has anyone seen a review that heat/shock/stress test drives?
+>
+> C.) Does good SATA cables exist?
+>    Eg. cables that lock on to the drives, or backplanes which lock
+> the entire disk in place?
+>
+>
+> Thanks for reading, and thanks in advance for answers (if any) :-).
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-WD has "SecureConnect" which is a SATA connecter their drives 
-support. I use it and like it on all my WD SATA drives.
-http://www.wdc.com/en/products/accessories.asp?ProdID=74
 
---
-Jeff Woods <kazrak+kernel@cesmail.net>  
+-- 
+bill davidsen <davidsen@tmr.com>
+  CTO TMR Associates, Inc
+  Doing interesting things with small computers since 1979
 
