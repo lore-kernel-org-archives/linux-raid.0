@@ -1,46 +1,54 @@
-From: "Tuomas Leikola" <tuomas.leikola@gmail.com>
-Subject: Re: scrub was Re: RAID5 Problem - $1000 reward for help
-Date: Sun, 17 Sep 2006 16:21:15 +0300
-Message-ID: <5b170a7d0609170621s695e4badl84bbd28d727dd8b0@mail.gmail.com>
-References: <20060915090856.GD27597@boom.net>
-	 <B7838FAF-BD7D-4581-8E5C-8CB896AA3CC0@develooper.com>
-	 <5b170a7d0609170436w18fc6ff3r713284436c394fa7@mail.gmail.com>
-	 <200609171446.01130.Dexter.Filmore@gmx.de>
+From: "Molle Bestefich" <molle.bestefich@gmail.com>
+Subject: Re: USB disks for RAID storage (was Re: Please help me save my data)
+Date: Mon, 18 Sep 2006 10:43:17 +0200
+Message-ID: <62b0912f0609180143y7fb3f9d6m7024c41edb709bcd@mail.gmail.com>
+References: <59430.213.136.43.252.1157976989.squirrel@webmail.adocca.com>
+	 <b53b67d20609110610v5d4a63a9ube77d918b0406484@mail.gmail.com>
+	 <87odtfe5l7.fsf_-_@rimspace.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200609171446.01130.Dexter.Filmore@gmx.de>
+In-Reply-To: <87odtfe5l7.fsf_-_@rimspace.net>
 Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Dexter Filmore <Dexter.Filmore@gmx.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 9/17/06, Dexter Filmore <Dexter.Filmore@gmx.de> wrote:
-> > > > It's recommended to use a script to scrub the raid device regularly,
-> > > > to detect sleeping bad blocks early.
-> > >
-> > > What's the best way to do that?  dd the full md device to /dev/null?
-> >
-> > echo check >/sys/block/md?/md/sync_action
-> >
-> > Distros may have cron scripts to do this "right".
-> >
-> > And you need a fairly recent kernel.
->
-> Does this test stress the discs a lot, like a resync?
-> How long does it take?
-> Can I use it on a mounted array?
->
+Martin Kihlgren writes:
+> And no, nothing hangs except the disk access to the device
+> in question when a disk fails.
 
-yup.
-long. think resync.
-yup.
+Sounds good!  +1 for USB...
 
-It's practically "read everything, verify checksum, report bad blocks
-or inconsistencies".
+> My Seagate disks DO generate too much heat if I stack them on top
+> of each other, which their form factor suggests they would accept.
 
-echo repair>sync_action causes md to fix redundancy blocks if they're
-out of sync (but at that point you already have another problem like
-flakey hardware or so)
+Starts to take up a lot of space if you need to lay them out like that.
+
+(Just for reference, I've had external USB thingys fail with just two
+ drives stacked.  They both failed.)
+
+> My RAID5 + LVM + dm_crypt + XFS setup allows for a very extendable
+> system.
+
+That does give you a cool feature set :-).
+
+With LVM and dm_crypt in there it does sound like you're running with
+beta quality software to my ears, however.  If it works, great.
+
+> And as long as I treat the entire disk set as one device, the
+> bandwidth will not be an issue since I will never demand more
+> bandwidth from the entire array than from a single USB drive
+> anyway.
+
+Fair enough.
+It would be cool to get the extra bandwidth though.
+
+One solution is to use external SATA ("eSATA") enclosures
+instead of USB enclosures.  That would both raise bandwidth, and
+fix the transaction latency issue mentioned by Daniel Pittman.
+
+There's a couple of single-disk enclosures out there that allows
+to connect disks via either eSATA or USB2.  None of them seems to
+come with cooling, though :-/.
