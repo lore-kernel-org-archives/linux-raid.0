@@ -1,54 +1,81 @@
-From: "Molle Bestefich" <molle.bestefich@gmail.com>
-Subject: Re: USB disks for RAID storage (was Re: Please help me save my data)
-Date: Mon, 18 Sep 2006 10:43:17 +0200
-Message-ID: <62b0912f0609180143y7fb3f9d6m7024c41edb709bcd@mail.gmail.com>
-References: <59430.213.136.43.252.1157976989.squirrel@webmail.adocca.com>
-	 <b53b67d20609110610v5d4a63a9ube77d918b0406484@mail.gmail.com>
-	 <87odtfe5l7.fsf_-_@rimspace.net>
+From: Eduardo Jacob <edu@kender.es>
+Subject: USB and raid... Device names change
+Date: Tue, 19 Sep 2006 00:04:40 +0200
+Message-ID: <7.0.1.0.0.20060919000021.03151fd8@kender.es>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87odtfe5l7.fsf_-_@rimspace.net>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Martin Kihlgren writes:
-> And no, nothing hangs except the disk access to the device
-> in question when a disk fails.
+Hi
 
-Sounds good!  +1 for USB...
+I don't know if question is really under your scope, but anyway I 
+haven't got an answer in other places...
 
-> My Seagate disks DO generate too much heat if I stack them on top
-> of each other, which their form factor suggests they would accept.
+After experimenting poor reliability of hard disk effects, I have 
+been trying to add a RAID1 setup to my silent EPIA based server with 
+two IDE to USB 2.0 boxes with identical IDE disks inside. I followed 
+advices around there and everything seemed to work fine: array was 
+reconstructing and it finally get synced. Later I tried it and began 
+copying files to the mounted partition. I decided to see how good and 
+glamorous was RAID and switched off and on one of the disks... To my 
+surprise, when the drive was switched again on, it was detected again 
+and assigned a new device name (originally sda and sdb, now sdb and 
+sdc)... Logically the array didn't synced.
 
-Starts to take up a lot of space if you need to lay them out like that.
+All this with ubuntu dapper fully updated.
 
-(Just for reference, I've had external USB thingys fail with just two
- drives stacked.  They both failed.)
+I began reading and I thought the solution was tweeking udev to 
+create symbolink links to whichever the sd name was.
 
-> My RAID5 + LVM + dm_crypt + XFS setup allows for a very extendable
-> system.
+This is the 10-local.rules I finally put in /etc/udev
 
-That does give you a cool feature set :-).
+BUS=="usb", KERNEL=="sd*", SYSFS{serial}=="DEF10A7350A2", NAME="%k", 
+SYMLINK+="raid11%n"
+BUS=="usb", KERNEL=="sd*", SYSFS(serial)=="DEF10A84811F", NAME="%k", 
+SYMLINK+="raid12%n"
 
-With LVM and dm_crypt in there it does sound like you're running with
-beta quality software to my ears, however.  If it works, great.
+It created succsefully a /dev/raid11, /dev/raid111, /dev/raid12 and 
+/dev/raid121
 
-> And as long as I treat the entire disk set as one device, the
-> bandwidth will not be an issue since I will never demand more
-> bandwidth from the entire array than from a single USB drive
-> anyway.
+Which apperar as
 
-Fair enough.
-It would be cool to get the extra bandwidth though.
+lrwxrwxrwx 1 root root 3 Sep 16 00:19 /dev/raid11 -> sdb
+lrwxrwxrwx 1 root root 4 Sep 16 00:19 /dev/raid111 -> sdb1
+lrwxrwxrwx 1 root root 3 Sep 16 00:19 /dev/raid12 -> sda
+lrwxrwxrwx 1 root root 4 Sep 16 00:19 /dev/raid121 -> sda1
 
-One solution is to use external SATA ("eSATA") enclosures
-instead of USB enclosures.  That would both raise bandwidth, and
-fix the transaction latency issue mentioned by Daniel Pittman.
 
-There's a couple of single-disk enclosures out there that allows
-to connect disks via either eSATA or USB2.  None of them seems to
-come with cooling, though :-/.
+I even sucessfully created an array using partitions /dev/raid111, 
+and /dev/raid121
+
+this is the mdadm.conf I am using:
+
+DEVICE /dev/raid111 /dev/raid121
+ARRAY /dev/md0 level=raid1 num-devices=2 
+UUID=1369e13f:eb4fa45c:6d4b9c2a:8196aa1b
+
+The problem is that raid software doesn't take in count those names 
+and uses the low level name. Here is what you get when you shutdown 
+and switch on one of the disks...
+
+edu@kabia2:~$ cat /proc/mdstat
+Personalities : [raid1]
+md0 : active raid1 sda1[2](F) sdb1[0]
+293033536 blocks [2/1] [U_]
+
+An this the way the links are now...
+
+lrwxrwxrwx 1 root root 3 Sep 16 00:19 /dev/raid11 -> sdb
+lrwxrwxrwx 1 root root 4 Sep 16 00:19 /dev/raid111 -> sdb1
+lrwxrwxrwx 1 root root 3 Sep 16 00:46 /dev/raid12 -> sdd
+lrwxrwxrwx 1 root root 4 Sep 16 00:46 /dev/raid121 -> sdd1
+
+Any suggestions?
+
+Best regards and thank you for your outstanding work.
+
+Eduardo
+
