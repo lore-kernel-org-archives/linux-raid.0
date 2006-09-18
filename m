@@ -1,77 +1,25 @@
-From: "Dan Williams" <dan.j.williams@gmail.com>
-Subject: Re: [PATCH] dmaengine: clean up and abstract function types (was Re: [PATCH 08/19] dmaengine: enable multiple clients and operations)
-Date: Mon, 18 Sep 2006 15:56:37 -0700
-Message-ID: <e9c3a7c20609181556n235d650eg16e5296f192bd2d5@mail.gmail.com>
-References: <1158015632.4241.31.camel@dwillia2-linux.ch.intel.com>
-	 <20060911231817.4737.49381.stgit@dwillia2-linux.ch.intel.com>
-	 <4505F4D0.7010901@garzik.org>
-	 <20060915113817.6154aa67@localhost.localdomain>
-	 <20060915144423.500b529d@localhost.localdomain>
+From: dean gaudet <dean@arctic.org>
+Subject: Re: USB and raid... Device names change
+Date: Mon, 18 Sep 2006 16:43:27 -0700 (PDT)
+Message-ID: <Pine.LNX.4.64.0609181641530.30771@twinlark.arctic.org>
+References: <7.0.1.0.0.20060919000021.03151fd8@kender.es>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20060915144423.500b529d@localhost.localdomain>
-Content-Disposition: inline
+In-Reply-To: <7.0.1.0.0.20060919000021.03151fd8@kender.es>
 Sender: linux-raid-owner@vger.kernel.org
-To: Olof Johansson <olof@lixom.net>
-Cc: christopher.leech@intel.com, Jeff Garzik <jeff@garzik.org>, neilb@suse.de, linux-raid@vger.kernel.org, akpm@osdl.org, linux-kernel@vger.kernel.org
+To: Eduardo Jacob <edu@kender.es>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 9/15/06, Olof Johansson <olof@lixom.net> wrote:
-> On Fri, 15 Sep 2006 11:38:17 -0500 Olof Johansson <olof@lixom.net> wrote:
->
-> > On Mon, 11 Sep 2006 19:44:16 -0400 Jeff Garzik <jeff@garzik.org> wrote:
->
-> > > Are we really going to add a set of hooks for each DMA engine whizbang
-> > > feature?
-> > >
-> > > That will get ugly when DMA engines support memcpy, xor, crc32, sha1,
-> > > aes, and a dozen other transforms.
-> >
-> >
-> > Yes, it will be unmaintainable. We need some sort of multiplexing with
-> > per-function registrations.
-> >
-> > Here's a first cut at it, just very quick. It could be improved further
-> > but it shows that we could exorcise most of the hardcoded things pretty
-> > easily.
->
-> Ok, that was obviously a naive and not so nice first attempt, but I
-> figured it was worth it to show how it can be done.
->
-> This is a little more proper: Specify at client registration time what
-> the function the client will use is, and make the channel use it. This
-> way most of the error checking per call can be removed too.
->
-> Chris/Dan: Please consider picking this up as a base for the added
-> functionality and cleanups.
->
-Thanks for this Olof it has sparked some ideas about how to redo
-support for multiple operations.
+On Tue, 19 Sep 2006, Eduardo Jacob wrote:
 
->
->
->
->
-> Clean up dmaengine a bit. Make the client registration specify which
-> channel functions ("type") the client will use. Also, make devices
-> register which functions they will provide.
->
-> Also exorcise most of the memcpy-specific references from the generic
-> dma engine code. There's still some left in the iov stuff.
-I think we should keep the operation type in the function name but
-drop all the [buf|pg|dma]_to_[buf|pg|dma] permutations.  The buffer
-type can be handled generically across all operation types.  Something
-like the following for a pg_to_buf memcpy.
+> DEVICE /dev/raid111 /dev/raid121
+> ARRAY /dev/md0 level=raid1 num-devices=2 UUID=1369e13f:eb4fa45c:6d4b9c2a:8196aa1b
 
-struct dma_async_op_memcpy *op;
-struct page *pg;
-void *buf;
-size_t len;
+try using "DEVICE partitions"... then "mdadm -As /dev/md0" will scan all 
+available partitions for raid components with 
+UUID=1369e13f:eb4fa45c:6d4b9c2a:8196aa1b.  so it won't matter which sdX 
+they are.
 
-dma_async_op_init_src_pg(op, pg);
-dma_async_op_init_dest_buf(op, buf);
-dma_async_memcpy(chan, op, len);
-
--Dan
+-dean
