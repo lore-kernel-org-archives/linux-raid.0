@@ -1,81 +1,77 @@
-From: Eduardo Jacob <edu@kender.es>
-Subject: USB and raid... Device names change
-Date: Tue, 19 Sep 2006 00:04:40 +0200
-Message-ID: <7.0.1.0.0.20060919000021.03151fd8@kender.es>
+From: "Dan Williams" <dan.j.williams@gmail.com>
+Subject: Re: [PATCH] dmaengine: clean up and abstract function types (was Re: [PATCH 08/19] dmaengine: enable multiple clients and operations)
+Date: Mon, 18 Sep 2006 15:56:37 -0700
+Message-ID: <e9c3a7c20609181556n235d650eg16e5296f192bd2d5@mail.gmail.com>
+References: <1158015632.4241.31.camel@dwillia2-linux.ch.intel.com>
+	 <20060911231817.4737.49381.stgit@dwillia2-linux.ch.intel.com>
+	 <4505F4D0.7010901@garzik.org>
+	 <20060915113817.6154aa67@localhost.localdomain>
+	 <20060915144423.500b529d@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20060915144423.500b529d@localhost.localdomain>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Olof Johansson <olof@lixom.net>
+Cc: christopher.leech@intel.com, Jeff Garzik <jeff@garzik.org>, neilb@suse.de, linux-raid@vger.kernel.org, akpm@osdl.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi
+On 9/15/06, Olof Johansson <olof@lixom.net> wrote:
+> On Fri, 15 Sep 2006 11:38:17 -0500 Olof Johansson <olof@lixom.net> wrote:
+>
+> > On Mon, 11 Sep 2006 19:44:16 -0400 Jeff Garzik <jeff@garzik.org> wrote:
+>
+> > > Are we really going to add a set of hooks for each DMA engine whizbang
+> > > feature?
+> > >
+> > > That will get ugly when DMA engines support memcpy, xor, crc32, sha1,
+> > > aes, and a dozen other transforms.
+> >
+> >
+> > Yes, it will be unmaintainable. We need some sort of multiplexing with
+> > per-function registrations.
+> >
+> > Here's a first cut at it, just very quick. It could be improved further
+> > but it shows that we could exorcise most of the hardcoded things pretty
+> > easily.
+>
+> Ok, that was obviously a naive and not so nice first attempt, but I
+> figured it was worth it to show how it can be done.
+>
+> This is a little more proper: Specify at client registration time what
+> the function the client will use is, and make the channel use it. This
+> way most of the error checking per call can be removed too.
+>
+> Chris/Dan: Please consider picking this up as a base for the added
+> functionality and cleanups.
+>
+Thanks for this Olof it has sparked some ideas about how to redo
+support for multiple operations.
 
-I don't know if question is really under your scope, but anyway I 
-haven't got an answer in other places...
+>
+>
+>
+>
+> Clean up dmaengine a bit. Make the client registration specify which
+> channel functions ("type") the client will use. Also, make devices
+> register which functions they will provide.
+>
+> Also exorcise most of the memcpy-specific references from the generic
+> dma engine code. There's still some left in the iov stuff.
+I think we should keep the operation type in the function name but
+drop all the [buf|pg|dma]_to_[buf|pg|dma] permutations.  The buffer
+type can be handled generically across all operation types.  Something
+like the following for a pg_to_buf memcpy.
 
-After experimenting poor reliability of hard disk effects, I have 
-been trying to add a RAID1 setup to my silent EPIA based server with 
-two IDE to USB 2.0 boxes with identical IDE disks inside. I followed 
-advices around there and everything seemed to work fine: array was 
-reconstructing and it finally get synced. Later I tried it and began 
-copying files to the mounted partition. I decided to see how good and 
-glamorous was RAID and switched off and on one of the disks... To my 
-surprise, when the drive was switched again on, it was detected again 
-and assigned a new device name (originally sda and sdb, now sdb and 
-sdc)... Logically the array didn't synced.
+struct dma_async_op_memcpy *op;
+struct page *pg;
+void *buf;
+size_t len;
 
-All this with ubuntu dapper fully updated.
+dma_async_op_init_src_pg(op, pg);
+dma_async_op_init_dest_buf(op, buf);
+dma_async_memcpy(chan, op, len);
 
-I began reading and I thought the solution was tweeking udev to 
-create symbolink links to whichever the sd name was.
-
-This is the 10-local.rules I finally put in /etc/udev
-
-BUS=="usb", KERNEL=="sd*", SYSFS{serial}=="DEF10A7350A2", NAME="%k", 
-SYMLINK+="raid11%n"
-BUS=="usb", KERNEL=="sd*", SYSFS(serial)=="DEF10A84811F", NAME="%k", 
-SYMLINK+="raid12%n"
-
-It created succsefully a /dev/raid11, /dev/raid111, /dev/raid12 and 
-/dev/raid121
-
-Which apperar as
-
-lrwxrwxrwx 1 root root 3 Sep 16 00:19 /dev/raid11 -> sdb
-lrwxrwxrwx 1 root root 4 Sep 16 00:19 /dev/raid111 -> sdb1
-lrwxrwxrwx 1 root root 3 Sep 16 00:19 /dev/raid12 -> sda
-lrwxrwxrwx 1 root root 4 Sep 16 00:19 /dev/raid121 -> sda1
-
-
-I even sucessfully created an array using partitions /dev/raid111, 
-and /dev/raid121
-
-this is the mdadm.conf I am using:
-
-DEVICE /dev/raid111 /dev/raid121
-ARRAY /dev/md0 level=raid1 num-devices=2 
-UUID=1369e13f:eb4fa45c:6d4b9c2a:8196aa1b
-
-The problem is that raid software doesn't take in count those names 
-and uses the low level name. Here is what you get when you shutdown 
-and switch on one of the disks...
-
-edu@kabia2:~$ cat /proc/mdstat
-Personalities : [raid1]
-md0 : active raid1 sda1[2](F) sdb1[0]
-293033536 blocks [2/1] [U_]
-
-An this the way the links are now...
-
-lrwxrwxrwx 1 root root 3 Sep 16 00:19 /dev/raid11 -> sdb
-lrwxrwxrwx 1 root root 4 Sep 16 00:19 /dev/raid111 -> sdb1
-lrwxrwxrwx 1 root root 3 Sep 16 00:46 /dev/raid12 -> sdd
-lrwxrwxrwx 1 root root 4 Sep 16 00:46 /dev/raid121 -> sdd1
-
-Any suggestions?
-
-Best regards and thank you for your outstanding work.
-
-Eduardo
-
+-Dan
