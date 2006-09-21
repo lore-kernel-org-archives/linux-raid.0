@@ -1,7 +1,7 @@
 From: "Rob Bray" <raid@bymeinc.com>
 Subject: Re: ATA cables and drives
-Date: Thu, 21 Sep 2006 14:38:04 -0400 (EDT)
-Message-ID: <3671.68.254.47.88.1158863884.squirrel@bymeinc.com>
+Date: Thu, 21 Sep 2006 14:38:15 -0400 (EDT)
+Message-ID: <48204.192.168.0.1.1158863895.squirrel@bymeinc.com>
 References: <62b0912f0609160616k3b79ded9la2c918df057daef0@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
