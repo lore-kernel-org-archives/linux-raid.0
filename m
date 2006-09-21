@@ -1,47 +1,31 @@
-From: "Molle Bestefich" <molle.bestefich@gmail.com>
-Subject: Re: USB disks for RAID storage (was Re: Please help me save my data)
-Date: Thu, 21 Sep 2006 07:25:01 +0200
-Message-ID: <62b0912f0609202225qdc710eap2c566e25a7e4bd8a@mail.gmail.com>
-References: <59430.213.136.43.252.1157976989.squirrel@webmail.adocca.com>
-	 <b53b67d20609110610v5d4a63a9ube77d918b0406484@mail.gmail.com>
-	 <87odtfe5l7.fsf_-_@rimspace.net>
-	 <62b0912f0609180143y7fb3f9d6m7024c41edb709bcd@mail.gmail.com>
-	 <b53b67d20609190259v44d7306bya61a487fd055888b@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: linux@horizon.com
+Subject: Re: Interesting RAID checking observations
+Date: 21 Sep 2006 02:58:08 -0400
+Message-ID: <20060921065808.19682.qmail@science.horizon.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <b53b67d20609190259v44d7306bya61a487fd055888b@mail.gmail.com>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Patrick Hoover <phoover.eml@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: linux@horizon.com, neilb@suse.de
 List-Id: linux-raid.ids
 
-Patrick Hoover wrote:
-> However, in this case, where SMART doesn't appear to work,
-> what are the best options for monitoring disk integrity / degradation?
+Just to follow up my speed observations last month on a 6x SATA <-> 3x
+PCIe <-> AMD64 system, as of 2.6.18 final, RAID-10 checking is running
+at a reasonable ~156 MB/s (which I presume means 312 MB/s of reads),
+and raid5 is better than the 23 MB/s I complained about earlier, but
+still a bit sluggish...
 
-echo check > /sys/block/mdX/md/sync_action
+md5 : active raid5 sdf4[5] sde4[4] sdd4[3] sdc4[2] sdb4[1] sda4[0]
+      1719155200 blocks level 5, 64k chunk, algorithm 2 [6/6] [UUUUUU]
+      [=>...................]  resync =  6.2% (21564928/343831040) finish=86.0min speed=62429K/sec
 
-AFAIK, using the above, MD will "repair" bad blocks and kick disks if it fails.
-A failed repair means the spare area is full and the disk desperately
-needs a replacement.
+I'm not sure why the raid5 check can't run at 250 MB/s (300 MB/s disk
+speed).  The processor is idle and can do a lot more than that:
 
-Having a spare disk in the array is probably a good idea too, to
-minimize downtime, especially if you're not able to get to the machine
-all the time.  I don't know if MD checks spares for read errors,
-though that would definitely be useful.
+raid5: automatically using best checksumming function: generic_sse
+   generic_sse:  6769.000 MB/sec
+raid5: using function: generic_sse (6769.000 MB/sec)
 
-Monitoring for kicked disks can be done by running mdadm in daemon
-mode with --monitor, having it send you an email when such an event
-occurs.
 
-Something that I've found useful is to "dd if=/dev/hdX of=/dev/null
-bs=1M count=512".  If there is a problem in the IDE driver, or the
-cable is loose, or there is a controller problem, the disk might
-respond, but will fail as soon as you read a large amount of data.
-I've also seen disks succeed to read some amount of data, but at a
-significantly lower rate than it should.  Monitoring the read rates of
-each disk can be helpful (at least it is to me) to diagnose such
-problems.
+But anyway, it's better, so thank you!  I haven't rebooted the celeron
+I hung for the duration of a RAID-1 check, so I haven't checked that with
+2.6.18 yet.
