@@ -1,48 +1,51 @@
-From: "Rob Bray" <raid@bymeinc.com>
+From: linux@horizon.com
 Subject: Re: Interesting RAID checking observations
-Date: Thu, 21 Sep 2006 14:55:26 -0400 (EDT)
-Message-ID: <57360.192.168.0.1.1158864926.squirrel@bymeinc.com>
-References: <20060921065808.19682.qmail@science.horizon.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Date: 21 Sep 2006 22:13:39 -0400
+Message-ID: <20060922021339.31864.qmail@science.horizon.com>
+References: <57360.192.168.0.1.1158864926.squirrel@bymeinc.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20060921065808.19682.qmail@science.horizon.com>
+In-Reply-To: <57360.192.168.0.1.1158864926.squirrel@bymeinc.com>
 Sender: linux-raid-owner@vger.kernel.org
+To: raid@bymeinc.com
 Cc: linux-raid@vger.kernel.org, linux@horizon.com
 List-Id: linux-raid.ids
 
-> Just to follow up my speed observations last month on a 6x SATA <-> 3x
-> PCIe <-> AMD64 system, as of 2.6.18 final, RAID-10 checking is running
-> at a reasonable ~156 MB/s (which I presume means 312 MB/s of reads),
-> and raid5 is better than the 23 MB/s I complained about earlier, but
-> still a bit sluggish...
->
-> md5 : active raid5 sdf4[5] sde4[4] sdd4[3] sdc4[2] sdb4[1] sda4[0]
->       1719155200 blocks level 5, 64k chunk, algorithm 2 [6/6] [UUUUUU]
->       [=>...................]  resync =  6.2% (21564928/343831040)
-> finish=86.0min speed=62429K/sec
->
-> I'm not sure why the raid5 check can't run at 250 MB/s (300 MB/s disk
-> speed).  The processor is idle and can do a lot more than that:
->
-> raid5: automatically using best checksumming function: generic_sse
->    generic_sse:  6769.000 MB/sec
-> raid5: using function: generic_sse (6769.000 MB/sec)
->
->
-> But anyway, it's better, so thank you!  I haven't rebooted the celeron
-> I hung for the duration of a RAID-1 check, so I haven't checked that with
-> 2.6.18 yet.
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+> Check the I/O performance on the box. I think the "speed" indicator comes
+> out of calculations to determine how fast a failing drive would be
+> rebuilt, were you doing a rebuild instead of a check. I like using the
+> "dstat" tool to get that info at-a-glance
+> (http://dag.wieers.com/home-made/dstat/).
 
-Check the I/O performance on the box. I think the "speed" indicator comes
-out of calculations to determine how fast a failing drive would be
-rebuilt, were you doing a rebuild instead of a check. I like using the
-"dstat" tool to get that info at-a-glance
-(http://dag.wieers.com/home-made/dstat/).
+Thank you, you're quite right!  Running dtst during the check shows
 
+--dsk/sda-----dsk/sdb-----dsk/sdc-----dsk/sdd-----dsk/sde-----dsk/sdf----dsk/total-
+_read _writ:_read _writ:_read _writ:_read _writ:_read _writ:_read _writ:_read _writ
+2954k   37k:2952k   36k:2954k   37k:2952k   35k:2955k   37k:2952k   35k:  17M  217k
+  62M    0 :  62M    0 :  62M    0 :  62M    0 :  61M    0 :  62M    0 : 370M    0 
+  62M    0 :  62M    0 :  62M    0 :  62M    0 :  62M    0 :  62M    0 : 372M    0 
+  62M 8192B:  62M   76k:  62M   76k:  62M   36k:  62M   36k:  62M 8192B: 373M  240k
+  47M 8192B:  47M 8192B:  47M 8192B:  47M 8192B:  47M 8192B:  47M 8192B: 283M   48k
+  59M   16k:  59M   16k:  59M   16k:  59M  100k:  59M  100k:  59M   16k: 353M  264k
+  63M    0 :  63M    0 :  63M    0 :  63M    0 :  63M    0 :  63M    0 : 378M    0 
+  58M    0 :  58M    0 :  58M    0 :  58M    0 :  58M    0 :  58M    0 : 348M    0 
+  57M    0 :  58M    0 :  58M    0 :  57M    0 :  58M    0 :  58M    0 : 345M    0 
+  61M    0 :  61M    0 :  61M    0 :  61M    0 :  61M    0 :  61M    0 : 365M    0 
+  61M    0 :  60M    0 :  60M    0 :  61M    0 :  60M    0 :  60M    0 : 363M    0 
+  60M   16k:  60M   20k:  59M   20k:  59M   28k:  59M   28k:  60M   16k: 356M  128k
+
+Whish is 60 MB/drive, exactly as expected.
+
+On RAID-5, I could call it a "redundancy checking rate", but that doesn't
+correspond to the RAID-1 numbers:
+
+md0 : active raid1 sdf1[5] sde1[4] sdd1[3] sdc1[2] sdb1[1] sda1[0]
+      979840 blocks [6/6] [UUUUUU]
+      [==>..................]  resync = 14.3% (140480/979840) finish=0.4min speed=28096K/sec
+
+Judging from dstat, that 28 MB/s figure is a per-drive.  (And I wonder
+why *that* is so low.)
+
+
+But anyway, good work on RAID-5!  Multi-way RAID-1 isn't economical on large
+volumes of data, so it's hard to get very concerned about the speed.  I *can*
+get > 60 MB/s per drive on 3 parallel 2-way RAID-1 checks.
