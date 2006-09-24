@@ -1,23 +1,35 @@
-From: "Alejandra Rosen" <VTEQQUHDAPNNP@msn.com>
-Subject: 10 Hours E-rections
-Date: Sun, 24 Sep 2006 07:40:48 -0700
-Message-ID: <191.63e558d5.2a9ZYD44__40633.6905238733$1159105538$gmane$org@sol.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: ATA cables and drives
+Date: Sun, 24 Sep 2006 11:01:07 -0400
+Message-ID: <45169DB3.6030903@garzik.org>
+References: <62b0912f0609160616k3b79ded9la2c918df057daef0@mail.gmail.com>	 <48204.192.168.0.1.1158863895.squirrel@bymeinc.com> <62b0912f0609240225m53b4d2fft934f26fb17245fdb@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <62b0912f0609240225m53b4d2fft934f26fb17245fdb@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-sound@vger.kernel.org, linux-smp@vger.kernel.org, linux-tape@vger.kernel.org, majordomo@vger.kernel.org, linux-net@vger.kernel.org, linux-ia64@vger.kernel.org, linux-raid@vger.kernel.org
+To: Molle Bestefich <molle.bestefich@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Molle Bestefich wrote:
+> Hi everyone;
+> 
+> Thanks for the information so far!
+> Greatly appreciated.
+> 
+> I've just found this:
+> http://home-tj.org/wiki/index.php/Sil_m15w#Message:_Re:_SiI_3112_.26_Seagate_drivers 
+> 
+> 
+> Which in particular mentions that Silicon Image controllers and
+> Seagate drives don't work too well together, and neither Silicon Image
+> nor Seagate wants to know about or do anything about the problem.
 
-Suffering from short penniss?
-Introduce revolution "Penis-Patch" formula which
-gauranteees sizes increase or moneey baack.
+Not really true...
 
-Users reported:
-- increase in length, girth and vascularity
-- harder and long-lasting E rection
-- 3x increase in sex drive
+	Jeff
 
-Why waiting?
 
-http://www.srevon.com/a/?159
 
