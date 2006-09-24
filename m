@@ -1,29 +1,43 @@
-From: "Molle Bestefich" <molle.bestefich@gmail.com>
-Subject: Re: ATA cables and drives
-Date: Sun, 24 Sep 2006 11:25:33 +0200
-Message-ID: <62b0912f0609240225m53b4d2fft934f26fb17245fdb@mail.gmail.com>
-References: <62b0912f0609160616k3b79ded9la2c918df057daef0@mail.gmail.com>
-	 <48204.192.168.0.1.1158863895.squirrel@bymeinc.com>
+From: Dexter Filmore <Dexter.Filmore@gmx.de>
+Subject: how to set stride / raid-howto still up to date?
+Date: Sun, 24 Sep 2006 15:03:09 +0200
+Message-ID: <200609241503.09808.Dexter.Filmore@gmx.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <48204.192.168.0.1.1158863895.squirrel@bymeinc.com>
 Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi everyone;
+Want to change a partition from xfs to ext3 but can't tell what to put for 
+stride.
 
-Thanks for the information so far!
-Greatly appreciated.
+man page says:
 
-I've just found this:
-http://home-tj.org/wiki/index.php/Sil_m15w#Message:_Re:_SiI_3112_.26_Seagate_drivers
+"stride=stripe-size
+                          Configure  the  filesystem  for  a  RAID  array with
+                          stripe-size filesystem blocks per stripe."
 
-Which in particular mentions that Silicon Image controllers and
-Seagate drives don't work too well together, and neither Silicon Image
-nor Seagate wants to know about or do anything about the problem.
+So, what is stripe size anyway? The same as chunk size? 
 
-Hmm.
+Is the example in the raid howto section 5.11 still valid? (It still tells 
+about -R instead of -E. Seems a bit old.)
+
+So going with -b 4096 for the ext3 with a 32k chunk size still comes down to a 
+stride of 8, correct?
+
+Dex
+
+-- 
+-----BEGIN GEEK CODE BLOCK-----
+Version: 3.12
+GCS d--(+)@ s-:+ a- C++++ UL++ P+>++ L+++>++++ E-- W++ N o? K-
+w--(---) !O M+ V- PS+ PE Y++ PGP t++(---)@ 5 X+(++) R+(++) tv--(+)@ 
+b++(+++) DI+++ D- G++ e* h>++ r* y?
+------END GEEK CODE BLOCK------
+
+http://www.stop1984.com
+http://www.againsttcpa.com
