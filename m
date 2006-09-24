@@ -1,43 +1,23 @@
-From: Dexter Filmore <Dexter.Filmore@gmx.de>
-Subject: how to set stride / raid-howto still up to date?
-Date: Sun, 24 Sep 2006 15:03:09 +0200
-Message-ID: <200609241503.09808.Dexter.Filmore@gmx.de>
-Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+From: "Alejandra Rosen" <VTEQQUHDAPNNP@msn.com>
+Subject: 10 Hours E-rections
+Date: Sun, 24 Sep 2006 07:40:48 -0700
+Message-ID: <191.63e558d5.2a9ZYD44__40633.6905238733$1159105538$gmane$org@sol.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: linux-sound@vger.kernel.org, linux-smp@vger.kernel.org, linux-tape@vger.kernel.org, majordomo@vger.kernel.org, linux-net@vger.kernel.org, linux-ia64@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Want to change a partition from xfs to ext3 but can't tell what to put for 
-stride.
 
-man page says:
+Suffering from short penniss?
+Introduce revolution "Penis-Patch" formula which
+gauranteees sizes increase or moneey baack.
 
-"stride=stripe-size
-                          Configure  the  filesystem  for  a  RAID  array with
-                          stripe-size filesystem blocks per stripe."
+Users reported:
+- increase in length, girth and vascularity
+- harder and long-lasting E rection
+- 3x increase in sex drive
 
-So, what is stripe size anyway? The same as chunk size? 
+Why waiting?
 
-Is the example in the raid howto section 5.11 still valid? (It still tells 
-about -R instead of -E. Seems a bit old.)
+http://www.srevon.com/a/?159
 
-So going with -b 4096 for the ext3 with a 32k chunk size still comes down to a 
-stride of 8, correct?
-
-Dex
-
--- 
------BEGIN GEEK CODE BLOCK-----
-Version: 3.12
-GCS d--(+)@ s-:+ a- C++++ UL++ P+>++ L+++>++++ E-- W++ N o? K-
-w--(---) !O M+ V- PS+ PE Y++ PGP t++(---)@ 5 X+(++) R+(++) tv--(+)@ 
-b++(+++) DI+++ D- G++ e* h>++ r* y?
-------END GEEK CODE BLOCK------
-
-http://www.stop1984.com
-http://www.againsttcpa.com
