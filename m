@@ -1,91 +1,33 @@
-From: chapman <chris@datasetgo.com>
-Subject: raid 1 recovery steps
-Date: Sun, 24 Sep 2006 09:36:39 -0700 (PDT)
-Message-ID: <6473812.post@talk.nabble.com>
+From: Mark Hahn <hahn@physics.mcmaster.ca>
+Subject: Re: how to set stride / raid-howto still up to date?
+Date: Mon, 25 Sep 2006 00:40:43 -0400 (EDT)
+Message-ID: <Pine.LNX.4.64.0609241829100.17345@coffee.psychology.mcmaster.ca>
+References: <200609241503.09808.Dexter.Filmore@gmx.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <200609241503.09808.Dexter.Filmore@gmx.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Dexter Filmore <Dexter.Filmore@gmx.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+> "stride=stripe-size
+>                          Configure  the  filesystem  for  a  RAID  array with
+>                          stripe-size filesystem blocks per stripe."
 
-Sorry for the noob question but I want to make sure I get this right.
+my understanding (hey, I even had a quick look at the source) is that
+you want blocksize * stripe-size = raid-stripe-size, where the latter 
+is chunksize * num-data-elements.
 
-I have a raid 1 (sata) running on an active server - mdadm reports sda1 as
-faulty.  Running "mdadm --examine /dev/sda1" shows the state as dirty, no
-errors - no failed devices.  Can I assume the disk is ok, just needs to be
-re-added to the array?
+> So, what is stripe size anyway? The same as chunk size?
 
-I'm assuming I need to first remove sda1 from the raid then re-add it,
-correct?  If so, what are the specific steps?  Can this be done safely on a
-live server without pulling the system down?  How will this affect rebooting
-once completed - if at all?  Any gotchas I should look out for?
+I don't know whether there's any agreed-on terminology.  mke2fs wants to know
+how many fs-blocks it'll take to span a whole set of raid chunks.  that is, 
+a write of X will hit all the disks in parallel.  writes that are full-stripe
+(and aligned) don't require the read-mod-write cycle.
 
+> So going with -b 4096 for the ext3 with a 32k chunk size still comes down to a
+> stride of 8, correct?
 
-Here's some mdadm output...
-
-/sbin/mdadm --detail /dev/md0
-/dev/md0:
-        Version : 00.90.00
-  Creation Time : Thu Jan 27 09:55:22 2005
-     Raid Level : raid1
-     Array Size : 154183680 (147.04 GiB 157.88 GB)
-    Device Size : 154183680 (147.04 GiB 157.88 GB)
-   Raid Devices : 2
-  Total Devices : 2
-Preferred Minor : 0
-    Persistence : Superblock is persistent
-
-    Update Time : Wed Sep 13 01:45:03 2006
-          State : dirty, no-errors
- Active Devices : 1
-Working Devices : 1
- Failed Devices : 1
-  Spare Devices : 0
-
-
-    Number   Major   Minor   RaidDevice State
-       0       8        1        0      faulty   /dev/sda1
-       1       8       17        1      active sync   /dev/sdb1
-           UUID : 49f6e41a:28dde75c:8f133fe5:823322fb
-         Events : 0.40
-
-
-
-/sbin/mdadm --examine /dev/sda1
-/dev/sda1:
-          Magic : a92b4efc
-        Version : 00.90.00
-           UUID : 49f6e41a:28dde75c:8f133fe5:823322fb
-  Creation Time : Thu Jan 27 09:55:22 2005
-     Raid Level : raid1
-    Device Size : 154183680 (147.04 GiB 157.88 GB)
-   Raid Devices : 2
-  Total Devices : 2
-Preferred Minor : 0
-
-Update Time : Wed May 24 04:59:32 2006
-State : dirty, no-errors
-Active Devices : 2
-Working Devices : 2
-Failed Devices : 0
-Spare Devices : 0
-Checksum : bce563ef - correct
-Events : 0.39
-
-
-      Number   Major   Minor   RaidDevice State
-this     0       8        1        0      active sync   /dev/sda1
-   0     0       8        1        0      active sync   /dev/sda1
-   1     1       8       17        1      active sync   /dev/sdb1
-
-
-TIA for any assistance you can provide.
-
---chapman
--- 
-View this message in context: http://www.nabble.com/raid-1-recovery-steps-tf2327020.html#a6473812
-Sent from the linux-raid mailing list archive at Nabble.com.
-
+no, I don't think so - I think it should be chunksize*ndatadisks/fsblocksize...
