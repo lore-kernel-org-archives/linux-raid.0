@@ -1,33 +1,23 @@
-From: =?ISO-8859-1?Q?Ask_Bj=F8rn_Hansen?= <ask@develooper.com>
+From: Oliver Paulus <oliver@code-project.org>
 Subject: Re: raid superblock checksum problem
-Date: Tue, 26 Sep 2006 23:31:40 -0700
-Message-ID: <CD68F2EC-E92B-4731-9695-A19C5E165A44@develooper.com>
+Date: Wed, 27 Sep 2006 08:37:20 +0200
+Message-ID: <20060927083720.2hgoo44bnwtss4g4@raudies.homeip.net>
 References: <20060927082251.z2se9ux33pc0o40k@raudies.homeip.net>
-Mime-Version: 1.0 (Apple Message framework v752.2)
-Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
+	<CD68F2EC-E92B-4731-9695-A19C5E165A44@develooper.com>
+Mime-Version: 1.0
+Content-Type: text/plain;
+	charset=ISO-8859-1;
+	format="flowed"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20060927082251.z2se9ux33pc0o40k@raudies.homeip.net>
+In-Reply-To: <CD68F2EC-E92B-4731-9695-A19C5E165A44@develooper.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Oliver Paulus <oliver@code-project.org>
+To: Ask =?iso-8859-1?b?Qmr4cm4=?= Hansen <ask@develooper.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+> Did you mkfs the md device?
 
-On Sep 26, 2006, at 23:22, Oliver Paulus wrote:
-
-> I cannot use the created raid device as "/" partition. I get the  
-> following error
-> in dmesg:
-> "invalid superblock checksum on sda1"
-> "invalid superblock checksum on sdb1"
-
-Did you mkfs the md device?
-
-
-  - ask
-
--- 
-http://askask.com/  - http://develooper.com/
-
+Of course. I use ext3 FS.
 
