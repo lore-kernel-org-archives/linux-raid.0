@@ -1,48 +1,32 @@
-From: "Tuomas Leikola" <tuomas.leikola@gmail.com>
-Subject: Re: raid 1 recovery steps
-Date: Tue, 26 Sep 2006 09:49:49 +0300
-Message-ID: <5b170a7d0609252349y2f7a7617w6d9ce041a1264a02@mail.gmail.com>
-References: <6473812.post@talk.nabble.com>
+From: Oliver Paulus <oliver@code-project.org>
+Subject: raid superblock checksum problem
+Date: Wed, 27 Sep 2006 08:22:51 +0200
+Message-ID: <20060927082251.z2se9ux33pc0o40k@raudies.homeip.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+	charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <6473812.post@talk.nabble.com>
 Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: chapman <chris@datasetgo.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 9/24/06, chapman <chris@datasetgo.com> wrote:
-> Can I assume the disk is ok, just needs to be
-> re-added to the array?
+Hello,
 
-Not necessarily. You should look for logs indicating _why_ it is
-marked bad. If you don't know how long it's been broken, you need some
-monitoring system, like mdadm or logcheck.
+I have a SIL3512 S-ATA controller. I have tried to setup a raid1 with 2 discs.
+The problem I have is that the checksum of both drives is never correct (I used
+mdadm --examine /dev/sdxx). If I assemble a new raid with 2 partitions and the
+resync is finished the checksum on the two partitions is wrong. With "mdadm
+--detail /dev/md0" I get the state "active sync" of the raid device.
 
-This is most commonly caused by bad sectors. If you can re-add and
-resync goes through without complaining, you're probably ok.
+I cannot use the created raid device as "/" partition. I get the following error
+in dmesg:
+"invalid superblock checksum on sda1"
+"invalid superblock checksum on sdb1"
 
-> I'm assuming I need to first remove sda1 from the raid then re-add it,
-> correct?  If so, what are the specific steps?
+I have used the Debian Etch installer (Weekly - from 21.Sept).
 
-mdadm /dev/md0 -r /dev/sda1
-mdadm /dev/md0 -a /dev/sda1
+Regards
+Oliver Paulus
 
-> Can this be done safely on a
-> live server without pulling the system down?
-
-sure.
-
-> How will this affect rebooting
-> once completed - if at all?
-
-Should not have any impact. At least if boot setup is ok.
-
-> Any gotchas I should look out for?
-
-Things get tricky if the other disk has stealthily become bad.
-
-- tuomas
