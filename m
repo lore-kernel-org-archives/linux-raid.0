@@ -1,85 +1,32 @@
-From: "Richard Bollinger" <rabollinger@gmail.com>
-Subject: old raid tools dangerous with 2.6.18?
-Date: Thu, 28 Sep 2006 14:20:34 -0400
-Message-ID: <7744a2840609281120g5a4308d5id79ea8d487e7ae2b@mail.gmail.com>
+From: Michael Tokarev <mjt@tls.msk.ru>
+Subject: Re: [BUG/PATCH] md bitmap broken on big endian machines
+Date: Fri, 29 Sep 2006 02:09:24 +0400
+Message-ID: <451C4814.9030601@tls.msk.ru>
+References: <4512F55D.5030907@steeleye.com> <17691.27892.571457.628971@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <17691.27892.571457.628971@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: Paul Clements <paul.clements@steeleye.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-It appears that raidhotadd doesn't always trigger a resync under 2.6.18.
+Neil Brown wrote:
+[]
+> Use ffz instead of find_first_set to convert multiplier to shift.
+> 
+> From: Paul Clements <paul.clements@steeleye.com>
+> 
+> find_first_set doesn't find the least-significant bit on bigendian
+> machines, so it is really wrong to use it.
+> 
+> ffs is closer, but takes an 'int' and we have a 'unsigned long'.
+> So use ffz(~X) to convert a chunksize into a chunkshift.
 
-Starting with a broken raid1 mirror:
+So we don't use ffs(int) for an unsigned value because of int vs
+unsigned int, but we use ffz() with negated UNSIGNED.  Looks even
+more broken to me, even if it happens to work correctly... ;)
 
-root@LS10:~# mdadm --misc --query --detail /dev/md1
-/dev/md1:
-        Version : 00.90.03
-  Creation Time : Thu Apr  6 13:39:04 2006
-     Raid Level : raid1
-     Array Size : 4112576 (3.92 GiB 4.21 GB)
-    Device Size : 4112576 (3.92 GiB 4.21 GB)
-   Raid Devices : 2
-  Total Devices : 1
-Preferred Minor : 1
-    Persistence : Superblock is persistent
-
-    Update Time : Thu Sep 28 13:52:41 2006
-          State : clean, degraded
- Active Devices : 1
-Working Devices : 1
- Failed Devices : 0
-  Spare Devices : 0
-
-           UUID : 3061bb72:5fc9adb4:9468c10f:cf1d0085
-         Events : 0.48
-
-    Number   Major   Minor   RaidDevice State
-       0       3        2        0      active sync   /dev/hda2
-       1       0        0        1      removed
-root@LS10:~# dd bs=32256 </dev/zero >/dev/hdc2
-root@LS10:~# raidhotadd /dev/md1 /dev/hdc2
-root@LS10:~# cat /proc/mdstat
-Personalities : [linear] [raid0] [raid1] [raid10] [raid6] [raid5]
-[raid4] [multipath]
-md1 : active raid1 hdc2[1] hda2[0]
-      4112576 blocks [2/2] [UU]
-
-unused devices: <none>
-
-Notice that the status immediately changed to up without any
-indication of recync activity.
-
-root@LS10:~# raidsetfaulty /dev/md1 /dev/hdc2
-root@LS10:~# raidhotremove /dev/md1 /dev/hdc2
-
-Now, we add the device using mdadm and see that the sync is in progress:
-
-root@LS10:~# mdadm /dev/md1 -a /dev/hdc2
-mdadm: re-added /dev/hdc2
-root@LS10:~# cat /proc/mdstat
-Personalities : [linear] [raid0] [raid1] [raid10] [raid6] [raid5]
-[raid4] [multipath]
-md1 : active raid1 hdc2[1] hda2[0]
-      4112576 blocks [2/1] [U_]
-      [=>...................]  recovery =  6.4% (266624/4112576)
-finish=0.9min speed=66656K/sec
-
-unused devices: <none>
-root@LS10:~# cat /proc/mdstat
-Personalities : [linear] [raid0] [raid1] [raid10] [raid6] [raid5]
-[raid4] [multipath]
-md1 : active raid1 hdc2[1] hda2[0]
-      4112576 blocks [2/1] [U_]
-      [==>..................]  recovery = 11.5% (476352/4112576)
-finish=1.0min speed=59544K/sec
-
-unused devices: <none>
-
-... and in a minute it finished syncing.
-
-It doesn't work that way on 2.6.17.13; where either raidhotadd or
-mdadm -a trigger a resync.
+/mjt
