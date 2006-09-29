@@ -1,36 +1,40 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [PATCH 006 of 6] md: Add error reporting to superblock write failure
-Date: Fri, 29 Sep 2006 12:53:32 +1000
-Message-ID: <1060929025332.15323@suse.de>
+Subject: [PATCH 004 of 6] md: Use ffz instead of find_first_set to convert multiplier to shift.
+Date: Fri, 29 Sep 2006 12:53:16 +1000
+Message-ID: <1060929025316.15249@suse.de>
 References: <20060929125047.14064.patches@notabene>
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S964993AbWI2Cxp@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
 To: Andrew Morton <akpm@osdl.org>
 Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
 
+From: Paul Clements <paul.clements@steeleye.com>
+
+find_first_set doesn't find the least-significant bit on bigendian
+machines, so it is really wrong to use it.
+
+ffs is closer, but takes an 'int' and we have a 'unsigned long'.
+So use ffz(~X) to convert a chunksize into a chunkshift.
+
 
 Signed-off-by: Neil Brown <neilb@suse.de>
 
 ### Diffstat output
- ./drivers/md/md.c |    6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+ ./drivers/md/bitmap.c |    3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff .prev/drivers/md/md.c ./drivers/md/md.c
---- .prev/drivers/md/md.c	2006-09-29 11:49:00.000000000 +1000
-+++ ./drivers/md/md.c	2006-09-29 11:51:39.000000000 +1000
-@@ -389,8 +389,12 @@ static int super_written(struct bio *bio
- 	if (bio->bi_size)
- 		return 1;
+diff .prev/drivers/md/bitmap.c ./drivers/md/bitmap.c
+--- .prev/drivers/md/bitmap.c	2006-09-29 11:44:38.000000000 +1000
++++ ./drivers/md/bitmap.c	2006-09-29 11:49:40.000000000 +1000
+@@ -1444,8 +1444,7 @@ int bitmap_create(mddev_t *mddev)
+ 	if (err)
+ 		goto error;
  
--	if (error || !test_bit(BIO_UPTODATE, &bio->bi_flags))
-+	if (error || !test_bit(BIO_UPTODATE, &bio->bi_flags)) {
-+		printk("md: super_written gets error=%d, uptodate=%d\n",
-+		       error, test_bit(BIO_UPTODATE, &bio->bi_flags));
-+		WARN_ON(test_bit(BIO_UPTODATE, &bio->bi_flags));
- 		md_error(mddev, rdev);
-+	}
+-	bitmap->chunkshift = find_first_bit(&bitmap->chunksize,
+-					sizeof(bitmap->chunksize));
++	bitmap->chunkshift = ffz(~bitmap->chunksize);
  
- 	if (atomic_dec_and_test(&mddev->pending_writes))
- 		wake_up(&mddev->sb_wait);
+ 	/* now that chunksize and chunkshift are set, we can use these macros */
+  	chunks = (blocks + CHUNK_BLOCK_RATIO(bitmap) - 1) /
