@@ -1,39 +1,53 @@
-From: Oliver Paulus <oliver@code-project.org>
-Subject: Re: raid superblock checksum problem
-Date: Fri, 29 Sep 2006 14:52:07 +0200
-Message-ID: <20060929145207.l5nck3b0c144sg4k@raudies.homeip.net>
-References: <20060927082251.z2se9ux33pc0o40k@raudies.homeip.net>
-	<CD68F2EC-E92B-4731-9695-A19C5E165A44@develooper.com>
-	<20060927083720.2hgoo44bnwtss4g4@raudies.homeip.net>
+From: Peter Zijlstra <a.p.zijlstra@chello.nl>
+Subject: Re: md deadlock (was Re: 2.6.18-mm2)
+Date: Fri, 29 Sep 2006 16:03:17 +0200
+Message-ID: <1159538597.28131.97.camel@taijtu>
+References: <20060928014623.ccc9b885.akpm@osdl.org>
+	 <6bffcb0e0609280454n34d40c0la8786e1eba6dcdf3@mail.gmail.com>
+	 <1159531923.28131.80.camel@taijtu>
+	 <17693.5913.393686.223172@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset=ISO-8859-1;
-	format="flowed"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20060927083720.2hgoo44bnwtss4g4@raudies.homeip.net>
-Content-Disposition: inline
+In-Reply-To: <17693.5913.393686.223172@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>, Andrew Morton <akpm@osdl.org>, Ingo Molnar <mingo@elte.hu>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello,
+On Fri, 2006-09-29 at 22:52 +1000, Neil Brown wrote:
+> On Friday September 29, a.p.zijlstra@chello.nl wrote:
+> > On Thu, 2006-09-28 at 13:54 +0200, Michal Piotrowski wrote:
+> > 
+> > Looks like a real deadlock here. It seems to me #2 is the easiest to
+> > break.
+> 
+> I guess it could deadlock if you tried to add /dev/md0 as a component
+> of /dev/md0.  I should probably check for that somewhere.
+> In other cases the array->member ordering ensures there is no
+> deadlock.
+> 
 
-I have found this mailing list entry with the same problem I currently have:
-http://www.mail-archive.com/linux-raid@vger.kernel.org/msg05835.html
 
-I have made some tests on 4 different mainboards and 2 different SIL 
-3512 cards:
+	1					2
 
-3 mainboards have the VIA KT133 chipset. On each of these mainboards I get the
-checksum problem with both cards if I want to use a softraid.
+ open(/dev/md0)
 
-1 mainboard with a SIS chipset works fine with both cards.
+					open(/dev/md0)
+					- do_open() -> bdev->bd_mutex
+ ioctl(/dev/md0, hotadd) 
+ - md_ioctl() -> mddev->reconfig_mutex
+ -- hot_add_disk()
+ --- bind_rdev_to_array()
+ ---- bd_claim_by_disk()
+ ----- bd_claim_by_kobject()
+					-- md_open()
+					--- mddev_lock()
+					---- mutex_lock(mddev->reconfig_mutex)
+ ------ mutex_lock(bdev->bd_mutex)
 
-It seems that the combination VIA mainboard chipset (KT 133) + SIL 3512 
-+ Linux
-softraid does not work.
 
-Regards
-Oliver Paulus
+looks like an AB-BA deadlock to me
+
 
