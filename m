@@ -1,36 +1,57 @@
-From: Joshua Baker-LePain <jlb17@duke.edu>
-Subject: Re: Monitoring hardware raid
-Date: Mon, 2 Oct 2006 09:20:26 -0400 (EDT)
-Message-ID: <Pine.LNX.4.62.0610020919210.11748@chaos.egr.duke.edu>
-References: <45210B8D.5070501@afn.org>
+From: Peter Zijlstra <a.p.zijlstra@chello.nl>
+Subject: Re: md deadlock (was Re: 2.6.18-mm2)
+Date: Mon, 02 Oct 2006 15:47:38 +0200
+Message-ID: <1159796858.28131.149.camel@taijtu>
+References: <20060928014623.ccc9b885.akpm@osdl.org>
+	 <6bffcb0e0609280454n34d40c0la8786e1eba6dcdf3@mail.gmail.com>
+	 <1159531923.28131.80.camel@taijtu>
+	 <17693.5913.393686.223172@cse.unsw.edu.au>
+	 <1159538597.28131.97.camel@taijtu>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <45210B8D.5070501@afn.org>
+In-Reply-To: <1159538597.28131.97.camel@taijtu>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mauricio Tavares <raub@afn.org>
-Cc: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>, Andrew Morton <akpm@osdl.org>, Ingo Molnar <mingo@elte.hu>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, 2 Oct 2006 at 8:52am, Mauricio Tavares wrote
+On Fri, 2006-09-29 at 16:03 +0200, Peter Zijlstra wrote:
+> On Fri, 2006-09-29 at 22:52 +1000, Neil Brown wrote:
+> > On Friday September 29, a.p.zijlstra@chello.nl wrote:
+> > > On Thu, 2006-09-28 at 13:54 +0200, Michal Piotrowski wrote:
+> > > 
+> > > Looks like a real deadlock here. It seems to me #2 is the easiest to
+> > > break.
+> > 
+> > I guess it could deadlock if you tried to add /dev/md0 as a component
+> > of /dev/md0.  I should probably check for that somewhere.
+> > In other cases the array->member ordering ensures there is no
+> > deadlock.
+> > 
+> 
+> 
+> 	1					2
+> 
+>  open(/dev/md0)
+> 
+> 					open(/dev/md0)
+> 					- do_open() -> bdev->bd_mutex
+>  ioctl(/dev/md0, hotadd) 
+>  - md_ioctl() -> mddev->reconfig_mutex
+>  -- hot_add_disk()
+>  --- bind_rdev_to_array()
+>  ---- bd_claim_by_disk()
+>  ----- bd_claim_by_kobject()
+> 					-- md_open()
+> 					--- mddev_lock()
+> 					---- mutex_lock(mddev->reconfig_mutex)
+>  ------ mutex_lock(bdev->bd_mutex)
+> 
 
-> 	I have here a full tower full of drives that is a self-standing
-> hardware raid which is connected to a redhat 9 box through a scsi cable.
-> Without knowing much more (I am trying to learn more about it like
-> what it is up to), is there a raid monitoring package for linux I can
-> use to find out what is on its mind? Clicking the buttons besides the
-> LCD on the raid box is just not me. And, as I implied, unfortunately I
-> do not know much about that raid (like manufacturer, cards used, and so
-> on) as of now. It is a bit of a black box... literally.
+D'0h, 1:bdev->bd_mutex is ofcourse rdev->bd_mutex; the slave device's
+mutex.
 
-Generally those sorts of boxes have a serial port you can talk to to get 
-status and the like.  They may also have an out-of-band ethernet port for 
-the same thing.
+So mddev->bd_mutex wants to be another class all-together. 
 
-All of this is very manufacturer dependent though, *and* has nothing 
-whatsoever to do with linux-raid...
-
--- 
-Joshua Baker-LePain
-Department of Biomedical Engineering
-Duke University
