@@ -1,29 +1,27 @@
-From: Michael Tokarev <mjt@tls.msk.ru>
-Subject: Re: Simulating Drive Failure on Mirrored OS drive
-Date: Tue, 03 Oct 2006 00:20:31 +0400
-Message-ID: <4521748F.7000300@tls.msk.ru>
-References: <4520555B.4080000@aol.com> <4520C785.8010709@dgreaves.com> <45215240.1040301@aol.com>
+From: Nix <nix@esperi.org.uk>
+Subject: Re: Recipe for Mirrored OS Drives
+Date: Mon, 02 Oct 2006 23:34:08 +0100
+Message-ID: <87psdaqrdr.fsf@hades.wkstn.nix>
+References: <4520532A.3090204@aol.com> <4520C83F.2080504@dgreaves.com>
+	<4521526B.2040705@aol.com> <452155E5.8030908@dgreaves.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <45215240.1040301@aol.com>
+In-Reply-To: <452155E5.8030908@dgreaves.com> (David Greaves's message of "2 Oct 2006 19:09:48 +0100")
 Sender: linux-raid-owner@vger.kernel.org
-To: andy liebman <andyliebman@aol.com>
-Cc: david@dgreaves.com, linux-raid@vger.kernel.org
+To: David Greaves <david@dgreaves.com>
+Cc: andy liebman <andyliebman@aol.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-andy liebman wrote:
-> 
->>
->> Read up on the md-faulty device.
-> 
-> Got any links to this? As I said, we know how to set the device as
-> faulty, but I'm not convinced this is a good simulation of a drive that
-> fails (times out, becomes unresponsive, etc.)
+On 2 Oct 2006, David Greaves spake:
+> I suggest you link from http://linux-raid.osdl.org/index.php/RAID_Boot
 
-Note that 'set device as faulty' is NOT the same as `md-faulty device'.
-Read mdamd(8) manpage, and see options `-l' (level) and `-p' (parity)
-for create mode.
+The pages don't really have the same purpose. RAID_Boot is `how to boot
+your RAID system using initramfs'; this is `how to set up a RAID system
+in the first place', i.e., setup.
 
-/mjt
+I'll give it a bit of a tweak-and-rename in a bit.
+
+-- 
+`In typical emacs fashion, it is both absurdly ornate and
+ still not really what one wanted.' --- jdev
