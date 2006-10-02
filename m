@@ -1,51 +1,29 @@
-From: David Greaves <david@dgreaves.com>
-Subject: Re: Recipe for Mirrored OS Drives
-Date: Mon, 02 Oct 2006 19:09:41 +0100
-Message-ID: <452155E5.8030908@dgreaves.com>
-References: <4520532A.3090204@aol.com> <4520C83F.2080504@dgreaves.com> <4521526B.2040705@aol.com>
+From: Michael Tokarev <mjt@tls.msk.ru>
+Subject: Re: Simulating Drive Failure on Mirrored OS drive
+Date: Tue, 03 Oct 2006 00:20:31 +0400
+Message-ID: <4521748F.7000300@tls.msk.ru>
+References: <4520555B.4080000@aol.com> <4520C785.8010709@dgreaves.com> <45215240.1040301@aol.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4521526B.2040705@aol.com>
+In-Reply-To: <45215240.1040301@aol.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: andy liebman <andyliebman@aol.com>
-Cc: linux-raid@vger.kernel.org
+Cc: david@dgreaves.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 andy liebman wrote:
 > 
 >>
->> Feel free to add it here:
->> http://linux-raid.osdl.org/index.php/Main_Page
->>
->> I haven't been able to do much for a few weeks (typical - I find some
->> time and
->> use it all up just getting the basic setup done - still it's started!)
->>
->> David
->>
+>> Read up on the md-faulty device.
 > 
-> Any hints on how to add a page?
-> 
-> Andy
-> 
+> Got any links to this? As I said, we know how to set the device as
+> faulty, but I'm not convinced this is a good simulation of a drive that
+> fails (times out, becomes unresponsive, etc.)
 
-Yep :)
+Note that 'set device as faulty' is NOT the same as `md-faulty device'.
+Read mdamd(8) manpage, and see options `-l' (level) and `-p' (parity)
+for create mode.
 
-First off it would help to read up on Wikis :
-http://meta.wikimedia.org/wiki/Help:Contents
-
-Basically you:
-* go to the page where you want to link from
-* edit that page to link to your new (not yet created) page
-* save your edit
-* click on the (red) link and you'll be given a page to edit
-* type...
-
-I suggest you link from http://linux-raid.osdl.org/index.php/RAID_Boot
-
-David
-
-
--- 
+/mjt
