@@ -1,21 +1,34 @@
-From: Dilon Smith <Randy@nelsonmail.co.nz>
-Subject: reply to your resume
-Date: Mon, 2 Oct 2006 12:53:37 +0800
-Message-ID: <306C4957.3374872@nelsonmail.co.nz>
+From: David Greaves <david@dgreaves.com>
+Subject: Re: Simulating Drive Failure on Mirrored OS drive
+Date: Mon, 02 Oct 2006 09:02:13 +0100
+Message-ID: <4520C785.8010709@dgreaves.com>
+References: <4520555B.4080000@aol.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
-	format=flowed
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4520555B.4080000@aol.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: andy liebman <andyliebman@aol.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello.
-My name is Dilon Smith. Our company is seeking for persons, living in Australia to offer interesting part-time job.
-Free training, average salary $4500 a month. You are paid daily, must have no criminal history. No need to relocate, you can do this job at your location. Bonuses monthly, 2 weeks vacation yearly.
-Please, contact me at support@sunwaycorp-europe.com if interested with your short resume.
-Thanks
-Dilon Smith
+andy liebman wrote:
+> I tried simply unplugging one drive from its power and from its SATA
+> connector. The OS didn't like that at all. My KDE session kept running,
+> but I could no longer open any new terminals. I couldn't become root in
+> an existing terminal that was already running. And I couldn't SSH into
+> the machine.
+That's likely to be because sata hotswap isn't supported (yet).
+dmesg should give you more info.
 
+ > I know that simply unplugging a drive is not the same as a drive failing
+> or timing out. But is there a more realistic way to simulate a failure
+> so that I can know that the mirror will work when it's needed?
 
+Read up on the md-faulty device.
+
+Also, FWIW, md works just fine :)
+(Lots of other things can go wrong so testing your setup is a food idea though)
+
+David
