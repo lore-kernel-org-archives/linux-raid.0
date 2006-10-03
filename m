@@ -1,34 +1,34 @@
-From: Nix <nix@esperi.org.uk>
-Subject: Re: Recipe for Mirrored OS Drives
-Date: Tue, 03 Oct 2006 19:36:33 +0100
-Message-ID: <87lknxqma6.fsf@hades.wkstn.nix>
-References: <4520532A.3090204@aol.com> <4520C83F.2080504@dgreaves.com>
-	<4521526B.2040705@aol.com> <452155E5.8030908@dgreaves.com>
-	<87psdaqrdr.fsf@hades.wkstn.nix> <4522A814.2000406@dgreaves.com>
+From: syrius.ml@no-log.org
+Subject: Re: old raid tools dangerous with 2.6.18?
+Date: Tue, 03 Oct 2006 20:32:18 +0200
+Message-ID: <8764f1jlpw.874puljlpw@873ba5jlpw.message.id>
+References: <7744a2840609281120g5a4308d5id79ea8d487e7ae2b@mail.gmail.com>
+	<87lknz998s.87k63j998s@87irj3998s.message.id>
+	<17698.3572.190300.504962@cse.unsw.edu.au>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4522A814.2000406@dgreaves.com> (David Greaves's message of "Tue, 03 Oct 2006 19:12:36 +0100")
+In-Reply-To: <17698.3572.190300.504962@cse.unsw.edu.au> (Neil Brown's message
+	of "Tue, 3 Oct 2006 17:15:00 +1000")
 Sender: linux-raid-owner@vger.kernel.org
-To: David Greaves <david@dgreaves.com>
-Cc: andy liebman <andyliebman@aol.com>, linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: Richard Bollinger <rabollinger@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, 03 Oct 2006, David Greaves prattled cheerily:
-> FYI I've done quite a bit on the Howto section:
-> http://linux-raid.osdl.org/index.php/Overview
+Neil Brown <neilb@suse.de> writes:
 
-Ka wow.
+>> > It appears that raidhotadd doesn't always trigger a resync under 2.6.18.
+>> >
+>> > Starting with a broken raid1 mirror:
+>> 
+>> Same with evms and 2.6.18. it does not trigger the raid1 resync in any
+>> case. (while it does with 2.6.17)
+>> Have these tools to be updated ?
+>
+> Well, mdadm-2.x should work, but this is a serious bug in md.
+>
+> The following patch fixes it and should go in 2.6.18.1.
 
-> It still needs a lot of work I think but it's getting there...
-
-Yeah: the `booting on RAID' and RAID_Boot could be merged, and it
-certainly could do with a refactor and update.
-
-But it's a *lot* better than having it rotting in a HOWTO.
-
-I'll look at it shortly.
+yeah, perfect, Thanks a lot !
 
 -- 
-`In typical emacs fashion, it is both absurdly ornate and
- still not really what one wanted.' --- jdev
