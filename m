@@ -1,32 +1,35 @@
-From: Jochen Oekonomopulos <jochen.oekonomopulos@uni-konstanz.de>
-Subject: (unknown)
-Date: Tue, 03 Oct 2006 14:24:26 +0200
-Message-ID: <1159878266.4522567a81ee4@webmail.uni-konstanz.de>
+From: David Greaves <david@dgreaves.com>
+Subject: Re: Recipe for Mirrored OS Drives
+Date: Tue, 03 Oct 2006 19:12:36 +0100
+Message-ID: <4522A814.2000406@dgreaves.com>
+References: <4520532A.3090204@aol.com> <4520C83F.2080504@dgreaves.com>	<4521526B.2040705@aol.com> <452155E5.8030908@dgreaves.com> <87psdaqrdr.fsf@hades.wkstn.nix>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <87psdaqrdr.fsf@hades.wkstn.nix>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: mingo@elte.hu
+To: Nix <nix@esperi.org.uk>
+Cc: andy liebman <andyliebman@aol.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Nix wrote:
+> On 2 Oct 2006, David Greaves spake:
+>> I suggest you link from http://linux-raid.osdl.org/index.php/RAID_Boot
+> 
+> The pages don't really have the same purpose. RAID_Boot is `how to boot
+> your RAID system using initramfs'; this is `how to set up a RAID system
+> in the first place', i.e., setup.
+> 
+> I'll give it a bit of a tweak-and-rename in a bit.
+> 
+Fair :)
 
-Hello Neil, Ingo and [insert your name here],
+FYI I've done quite a bit on the Howto section:
+http://linux-raid.osdl.org/index.php/Overview
 
-I try to understand the raid5 and md code and I have a question
-concerning the cache.
+It still needs a lot of work I think but it's getting there...
 
-There are two ways of calculating the parity: read-modify-write and
-reconstruct-write. In my understanding, the code only checks how many
-buffers it has to read for each method (rmw or rcw) without considering
-the cache. But what if there was relevant data in the cache? How would
-the raid code know it so it can build a decision on top of this
-knowledge?
+David
 
-I hope You can help me, since I could not find any information on this
-in the mailing list archive.
-
-Thanks in advance,
-Jochen
-
+-- 
