@@ -1,30 +1,32 @@
-From: Erik Mouw <erik@harddisk-recovery.com>
-Subject: Re: Recipe for Mirrored OS Drives
-Date: Tue, 3 Oct 2006 12:03:22 +0200
-Message-ID: <20061003100321.GA28561@harddisk-recovery.com>
-References: <4520532A.3090204@aol.com>
+From: Jochen Oekonomopulos <jochen.oekonomopulos@uni-konstanz.de>
+Subject: (unknown)
+Date: Tue, 03 Oct 2006 14:24:26 +0200
+Message-ID: <1159878266.4522567a81ee4@webmail.uni-konstanz.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4520532A.3090204@aol.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: andy liebman <andyliebman@aol.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: mingo@elte.hu
 List-Id: linux-raid.ids
 
-On Sun, Oct 01, 2006 at 07:45:46PM -0400, andy liebman wrote:
-> -- Run rsync to copy contents from your existing OS drive
-> 
->         rsync -av /mnt/oldroot /mnt/newroot
->         rsync -av /mnt/oldhome /mnt/newhome
 
-At least add the -H flag to copy hardlinks. -S for sparse files might
-also be useful.
+Hello Neil, Ingo and [insert your name here],
 
+I try to understand the raid5 and md code and I have a question
+concerning the cache.
 
-Erik
+There are two ways of calculating the parity: read-modify-write and
+reconstruct-write. In my understanding, the code only checks how many
+buffers it has to read for each method (rmw or rcw) without considering
+the cache. But what if there was relevant data in the cache? How would
+the raid code know it so it can build a decision on top of this
+knowledge?
 
--- 
-+-- Erik Mouw -- www.harddisk-recovery.com -- +31 70 370 12 90 --
-| Lab address: Delftechpark 26, 2628 XH, Delft, The Netherlands
+I hope You can help me, since I could not find any information on this
+in the mailing list archive.
+
+Thanks in advance,
+Jochen
+
