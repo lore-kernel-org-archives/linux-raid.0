@@ -1,27 +1,27 @@
-From: Nix <nix@esperi.org.uk>
-Subject: Re: Recipe for Mirrored OS Drives
-Date: Mon, 02 Oct 2006 23:34:08 +0100
-Message-ID: <87psdaqrdr.fsf@hades.wkstn.nix>
-References: <4520532A.3090204@aol.com> <4520C83F.2080504@dgreaves.com>
-	<4521526B.2040705@aol.com> <452155E5.8030908@dgreaves.com>
+From: "Clifton Mckenna" <JQIMZAVRBNUTU@yahoo.com>
+Subject: Multiple Orgasms
+Date: Tue, 03 Oct 2006 11:29:53 +0400
+Message-ID: <2A607EE3.7684.4815C2D5__37080.2967147485$1159857427$gmane$org@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <452155E5.8030908@dgreaves.com> (David Greaves's message of "2 Oct 2006 19:09:48 +0100")
 Sender: linux-raid-owner@vger.kernel.org
-To: David Greaves <david@dgreaves.com>
-Cc: andy liebman <andyliebman@aol.com>, linux-raid@vger.kernel.org
+To: ultralinux@vger.kernel.org, linux-scsi@vger.kernel.org, linux-smp@vger.kernel.org, linux-raid@vger.kernel.org, linux-tape@vger.kernel.org, linux-laptop@vger.kernel.org, linux-net@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 2 Oct 2006, David Greaves spake:
-> I suggest you link from http://linux-raid.osdl.org/index.php/RAID_Boot
 
-The pages don't really have the same purpose. RAID_Boot is `how to boot
-your RAID system using initramfs'; this is `how to set up a RAID system
-in the first place', i.e., setup.
 
-I'll give it a bit of a tweak-and-rename in a bit.
 
--- 
-`In typical emacs fashion, it is both absurdly ornate and
- still not really what one wanted.' --- jdev
+Suffering from short penniss?
+Introduce revolution "Penis-Patch" formula which
+gauranteees sizes increase or moneey baack.
+
+Users reported:
+- increase in length, girth and vascularity
+- harder and long-lasting E rection
+- 3x increase in sex drive
+
+Why waiting?
+
+http://www.vasfert.com/a/?159
+
