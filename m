@@ -1,52 +1,35 @@
-From: martin f krafft <madduck@madduck.net>
+From: =?ISO-8859-1?Q?Ask_Bj=F8rn_Hansen?= <ask@develooper.com>
 Subject: Re: converting RAID5 to RAID10
-Date: Thu, 5 Oct 2006 12:20:28 +0200
-Message-ID: <20061005102028.GA4945@piper.madduck.net>
-References: <20061005095913.GA2530@piper.madduck.net> <17700.56082.745304.937160@cse.unsw.edu.au>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="0F1p//8PRICkK4MW"
+Date: Thu, 5 Oct 2006 03:25:30 -0700
+Message-ID: <0069820A-6071-43D7-ACD5-EFC4A1649A79@develooper.com>
+References: <20061005095913.GA2530@piper.madduck.net> <23368.194.178.120.170.1160043302.squirrel@webmail.xs4all.nl>
+Mime-Version: 1.0 (Apple Message framework v752.2)
+Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <17700.56082.745304.937160@cse.unsw.edu.au>
+In-Reply-To: <23368.194.178.120.170.1160043302.squirrel@webmail.xs4all.nl>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid mailing list <linux-raid@vger.kernel.org>
+To: jurriaan@rivierenland.xs4all.nl
+Cc: linux-raid mailing list <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
 
---0F1p//8PRICkK4MW
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+On Oct 5, 2006, at 3:15 AM, Jurriaan Kalkman wrote:
 
-also sprach Neil Brown <neilb@suse.de> [2006.10.05.1214 +0200]:
-> mdadm --create -l 10 -n 4 -pn2 /dev/md1 /dev/sdc missing /dev/sdd missing
+> AFAIK, linux raid-10 is not exactly raid 1+0, it allows you to, for
+> example, use 3 disks.
 
-Peter Samuelson of the Debian project already suggested this and it
-seems to work.
+I made a raid-10 device earlier today with 7 drives and I was  
+surprised to see that it reported to use all of them.  I thought it'd  
+make one of them a spare (or complain about the odd number of drives).
 
-Thanks a lot, Neil, for the quick and informative response.
+How does that work?  (Or is it the "number of drives reported" bug  
+Neil referred to a moment ago?  I use FC6's version of 2.6.18).
 
---=20
-martin;              (greetings from the heart of the sun.)
-  \____ echo mailto: !#^."<*>"|tr "<*> mailto:" net@madduck
-=20
-spamtraps: madduck.bogus@madduck.net
-=20
-"the ships hung in the sky in much the same way that bricks don't."
-                                 -- hitchhiker's guide to the galaxy
 
---0F1p//8PRICkK4MW
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature (GPG/PGP)
-Content-Disposition: inline
+  - ask
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
+-- 
+http://www.askbjoernhansen.com/
 
-iD8DBQFFJNxsIgvIgzMMSnURAmRyAKCf7FVOrrTf+7cvl5mhT7wSBlXyXQCglEvW
-PnJAxOQ2JrbpVcDCvZQ+su0=
-=EWlW
------END PGP SIGNATURE-----
 
---0F1p//8PRICkK4MW--
