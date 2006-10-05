@@ -1,54 +1,68 @@
-From: "Peter T. Breuer" <ptb@inv.it.uc3m.es>
-Subject: possible deadlock through raid5/md
-Date: Thu, 5 Oct 2006 10:24:52 +0200 (MET DST)
-Message-ID: <200610050824.k958Oqp04752@inv.it.uc3m.es>
-Reply-To: ptb@inv.it.uc3m.es
+From: martin f krafft <madduck@madduck.net>
+Subject: converting RAID5 to RAID10
+Date: Thu, 5 Oct 2006 11:59:13 +0200
+Message-ID: <20061005095913.GA2530@piper.madduck.net>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="Kj7319i9nmIyA2yE"
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux raid <linux-raid@vger.kernel.org>
+To: linux-raid mailing list <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-A user has sent me a ps ax output showing an enbd client daemon
-blocked in get_active_stripe (I presume in raid5.c).
 
+--Kj7319i9nmIyA2yE
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-   ps ax -o f,uid,pid,ppid,pri,ni,vsz,rss,wchan:30,stat,tty,time,command
+I have a 1.5Tb RAID5 machine (3*750Gb disks + 1 spare) and need to
+move some write-intensive services there. Unfortunately, the
+performance is unacceptable. Thus, I wanted to convert the machine
+to RAID10.
 
-   F   UID   PID  PPID PRI  NI   VSZ  RSS WCHAN STAT TT           TIME COMMAND
+My theory was: backup, remove the spare, set one disk faulty, remove
+it, create a degraded RAID10 on the two freed disks, copy data, kill
+RAID5, add disks to new RAID10.
 
-   5     0 26540     1  23   0  2140 1048 get_active_stripe
-   Ds   ?  00:00:00 enbd-client iss04 1300 -i iss04-hdd -n 2 -e -m -b 4096 -p 30 /dev/ndl
+Unfortunately, mdadm (2.5.3) doesn't seem to agree; it complains
+that it cannot assemble a RAID10 with 4 devices when I ask it to:
 
-Any idea how it can get there and what the blockage is? I assume it
-is in wait_event_lock_irq(conf->wait_for_stripe ...) or
-unplug_slaves(), modulo inlining.
+  mdadm --create -l 10 -n4 -pn2 /dev/md1 /dev/sd[cd] missing missing
 
-I believe the client(s) was/were doing a read over the network in
-general terms, looking at other info supplied.  That means something
-would be writing into a local kernel buffer attached to a bh.
+I can kind of understand, but on the other hand I don't. After all,
+if you'll allow me to think in terms of 1+0 instead of 10 for
+a second, why doesn't mdadm just assemble /dev/sd[cd] as RAID0 and
+make the couple one of the two components of the RAID1? What I mean
+is: I could set up RAID1+0 that way; why doesn't it work for RAID10?
 
-That buffer would have come in attached to a kernel request to the enbd
-driver.  I presume that the enbd device is a component of a raid5 array,
-being read.
+Do you know of a way in which I could migrate the data to RAID10?
+Unfortunately, I do not have more 750Gb disks available nor
+a budget, and the 1.5Tb are 96% full.
 
-Curiously, the above client daemon appears NOT to be a transfer daemon,
-but rather a "watchdog". Its only function is to hold the enbd device
-open. Getting into a D state like that is a neat trick, but nothing
-compared with the trick of getting into the raid code!
+Cheers,
 
-My theory, and it is mine, is that on the last close of a device, the
-blkdev_put/get code does a flush of requests to the device as the
-openers count falls to zero. That would exert pressure through the
-device at least, which could deadlock since the transfer daemons are
-dying, but again, I have no idea how anything got into raid code.
+--=20
+martin;              (greetings from the heart of the sun.)
+  \____ echo mailto: !#^."<*>"|tr "<*> mailto:" net@madduck
+=20
+spamtraps: madduck.bogus@madduck.net
+=20
+"if a man treats life artistically, his brain is his heart."
+                                                        -- oscar wilde
 
-Maybe a method attached to a page or bh? If in order to write into
-a buffer, the buffer somehow had to be "decided" by the raid code
-via  a method attached, maybe that would account for where this
-got parked?
+--Kj7319i9nmIyA2yE
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature (GPG/PGP)
+Content-Disposition: inline
 
-I'll add more info later as I get it. For the moment, wild theories
-appreciated.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
 
-Peter
+iD8DBQFFJNdxIgvIgzMMSnURAt75AKCbJT/KG7U1B7VWRCyNcTFZaziXegCdEkPV
+uAA5yDSRpqu+S4yMjpHTsEE=
+=vY4C
+-----END PGP SIGNATURE-----
 
+--Kj7319i9nmIyA2yE--
