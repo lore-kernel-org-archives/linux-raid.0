@@ -1,38 +1,62 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: question about raid5 parity calculations
-Date: Thu, 5 Oct 2006 20:01:55 +1000
-Message-ID: <17700.55315.718541.709990@cse.unsw.edu.au>
-References: <1159878266.4522567a81ee4@webmail.uni-konstanz.de>
+Subject: Re: converting RAID5 to RAID10
+Date: Thu, 5 Oct 2006 20:14:42 +1000
+Message-ID: <17700.56082.745304.937160@cse.unsw.edu.au>
+References: <20061005095913.GA2530@piper.madduck.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Jochen Oekonomopulos on Tuesday October 3
+In-Reply-To: message from martin f krafft on Thursday October 5
 Sender: linux-raid-owner@vger.kernel.org
-To: Jochen Oekonomopulos <jochen.oekonomopulos@uni-konstanz.de>
-Cc: linux-raid@vger.kernel.org, mingo@elte.hu
+To: martin f krafft <madduck@madduck.net>
+Cc: linux-raid mailing list <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tuesday October 3, jochen.oekonomopulos@uni-konstanz.de wrote:
+On Thursday October 5, madduck@madduck.net wrote:
 > 
-> Hello Neil, Ingo and [insert your name here],
+> Unfortunately, mdadm (2.5.3) doesn't seem to agree; it complains
+> that it cannot assemble a RAID10 with 4 devices when I ask it to:
 > 
-> I try to understand the raid5 and md code and I have a question
-> concerning the cache.
+>   mdadm --create -l 10 -n4 -pn2 /dev/md1 /dev/sd[cd] missing missing
 > 
-> There are two ways of calculating the parity: read-modify-write and
-> reconstruct-write. In my understanding, the code only checks how many
-> buffers it has to read for each method (rmw or rcw) without considering
-> the cache. But what if there was relevant data in the cache? How would
-> the raid code know it so it can build a decision on top of this
-> knowledge?
 
-Close.
-It checks how many buffers it has to read for each method *with*
-consideration of the cache.
-Note the "!test_bit(R5_UPTODATE, &dev->flags)" tests in handle_stripe5
-in the section where 'rcw' and 'rwm' are being calculated.
-It only counts buffers that are not uptodate.  i.e. those that do not
-already exist in the stripe cache.
+mdadm --create -l 10 -n 4 -pn2 /dev/md1 /dev/sdc missing /dev/sdd missing
+
+Raid10 lays out data like
+  A A B B
+  C C D D
+not
+  A B A B
+  C D C D
+as you seem to expect.
+
+So you could even do
+
+mdadm --create -l 10 -n 4 -pn2 /dev/md1 missing /dev/sd[cd] missing
+
+for slightly less typing.
+
+There seems to be a bug in raid10 that is reports the wrong number of
+working drives.  This is probably only in 2.6.18.  Patch is below.
 
 NeilBrown
+
+Signed-off-by: Neil Brown <neilb@suse.de>
+
+### Diffstat output
+ ./drivers/md/raid10.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff .prev/drivers/md/raid10.c ./drivers/md/raid10.c
+--- .prev/drivers/md/raid10.c	2006-09-29 11:44:36.000000000 +1000
++++ ./drivers/md/raid10.c	2006-10-05 20:10:07.000000000 +1000
+@@ -2079,7 +2079,7 @@ static int run(mddev_t *mddev)
+ 		disk = conf->mirrors + i;
+ 
+ 		if (!disk->rdev ||
+-		    !test_bit(In_sync, &rdev->flags)) {
++		    !test_bit(In_sync, &disk->rdev->flags)) {
+ 			disk->head_position = 0;
+ 			mddev->degraded++;
+ 		}
