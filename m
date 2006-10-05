@@ -1,63 +1,36 @@
-From: mickg <mickg@mickg.net>
+From: Neil Brown <neilb@suse.de>
 Subject: Re: mdadm RAID5 Grow
-Date: Thu, 05 Oct 2006 17:47:39 -0400
-Message-ID: <45257D7B.90401@mickg.net>
-References: <6652499.post@talk.nabble.com>	<17700.35743.152233.689956@cse.unsw.edu.au>	<4524FD70.6070609@mickg.net> <17701.504.201046.256698@cse.unsw.edu.au>
+Date: Fri, 6 Oct 2006 08:30:07 +1000
+Message-ID: <17701.34671.136633.775362@cse.unsw.edu.au>
+References: <6652499.post@talk.nabble.com>
+	<17700.35743.152233.689956@cse.unsw.edu.au>
+	<4524FD70.6070609@mickg.net>
+	<17701.504.201046.256698@cse.unsw.edu.au>
+	<45257D7B.90401@mickg.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17701.504.201046.256698@cse.unsw.edu.au>
+In-Reply-To: message from mickg on Thursday October 5
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
+To: mickg <mickg@mickg.net>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil Brown wrote:
-> On Thursday October 5, mickg@mickg.net wrote:
->> Neil Brown wrote:
->>> On Wednesday October 4, mickg@mickg.net wrote:
->>>> I have been trying to run: 
->>>> mdadm --grow /dev/md0 --raid-devices=6 --backup-file /backup_raid_grow
->>>> I get:
->>>> mdadm: Need to backup 1280K of critical section..
->>>> mdadm: /dev/md0: Cannot get array details from sysfs
->>> It shouldn't do that.... 
->>> Can you 
->>>   strace -o /tmp/trace -s 300 mdadm --grow .....
-> ...
->> open("/sys/block/md0/md/component_size", O_RDONLY) = -1 ENOENT (No such file or directory)
+On Thursday October 5, mickg@mickg.net wrote:
 > 
-> So it couldn't open .../component_size.  That was added prior to the
-> release of 2.6.16, and you are running 2.6.17.13 so the kernel
-> certainly supports it.  
-> Most likely explanation is that /sys isn't mounted.
-> Do you have a "/sys"?
-> Is it mounted?
-> Can you "ls -l /sys/block/md0/md" ??
+> There is a
+>    sysfs   /sys    sysfs   noauto 0 0
+> line in /etc/fstab
+> I am assuming noauto is the culprit?
 > 
-> Maybe you need to
->   mkdir /sys
->   mount -t sysfs sysfs /sys
-> 
-> and try again.
-> 
-Worked like a charm!
+> Should it be made to automount ?
 
-Thank you!
+Maybe.  You could try and see...
+But I suggest checking with someone who knows about these details in
+your particular distro.
+Maybe there is some init.d script that is meant to "mount /sys" and
+some appropriate time.  Quite possibly it is mean to be mounted
+*before* other 'auto' filesystems in fstab.
 
-There is a
-   sysfs   /sys    sysfs   noauto 0 0
-line in /etc/fstab
-I am assuming noauto is the culprit?
-
-Should it be made to automount ?
-
-mickg
-> NeilBrown
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
+NeilBrown
