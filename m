@@ -1,80 +1,63 @@
-From: Eli Stair <estair@ilm.com>
-Subject: Re: [PATCH] md: Fix bug where new drives added to an md array sometimes
- don't sync properly.
-Date: Thu, 05 Oct 2006 12:26:12 -0700
-Message-ID: <45255C54.6060608@ilm.com>
-References: <20061005171233.6542.patches@notabene> A<1061005071326.6578@suse.de>
+From: mickg <mickg@mickg.net>
+Subject: Re: mdadm RAID5 Grow
+Date: Thu, 05 Oct 2006 17:47:39 -0400
+Message-ID: <45257D7B.90401@mickg.net>
+References: <6652499.post@talk.nabble.com>	<17700.35743.152233.689956@cse.unsw.edu.au>	<4524FD70.6070609@mickg.net> <17701.504.201046.256698@cse.unsw.edu.au>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1061005071326.6578@suse.de>
+In-Reply-To: <17701.504.201046.256698@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-
-
-I'm actually seeing similar behaviour on RAID10 (2.6.18), where after 
-removing a drive from an array re-adding it sometimes results in it 
-still being listed as a faulty-spare and not being "taken" for resync. 
-In the same scenario, after swapping drives, doing a fail,remove, then 
-an 'add' doesn't work, only a re-add will even get the drive listed by 
-MDADM.
-
-
-What's the failure mode/symptoms that this patch is resolving?
-
-Is it possible this affects the RAID10 module/mode as well?  If not, 
-I'll start a new thread for that.  I'm testing this patch to see if it 
-does remedy the situation on RAID10, and will update after some 
-significant testing.
-
-
-/eli
-
-
-
-
-
-
-
-
-NeilBrown wrote:
-> There is a nasty bug in md in 2.6.18 affecting at least raid1.
-> This fixes it (and has already been sent to stable@kernel.org).
+Neil Brown wrote:
+> On Thursday October 5, mickg@mickg.net wrote:
+>> Neil Brown wrote:
+>>> On Wednesday October 4, mickg@mickg.net wrote:
+>>>> I have been trying to run: 
+>>>> mdadm --grow /dev/md0 --raid-devices=6 --backup-file /backup_raid_grow
+>>>> I get:
+>>>> mdadm: Need to backup 1280K of critical section..
+>>>> mdadm: /dev/md0: Cannot get array details from sysfs
+>>> It shouldn't do that.... 
+>>> Can you 
+>>>   strace -o /tmp/trace -s 300 mdadm --grow .....
+> ...
+>> open("/sys/block/md0/md/component_size", O_RDONLY) = -1 ENOENT (No such file or directory)
 > 
-> ### Comments for Changeset
+> So it couldn't open .../component_size.  That was added prior to the
+> release of 2.6.16, and you are running 2.6.17.13 so the kernel
+> certainly supports it.  
+> Most likely explanation is that /sys isn't mounted.
+> Do you have a "/sys"?
+> Is it mounted?
+> Can you "ls -l /sys/block/md0/md" ??
 > 
-> This fixes a bug introduced in 2.6.18.
+> Maybe you need to
+>   mkdir /sys
+>   mount -t sysfs sysfs /sys
 > 
-> If a drive is added to a raid1 using older tools (mdadm-1.x or
-> raidtools) then it will be included in the array without any resync
-> happening.
+> and try again.
 > 
-> It has been submitted for 2.6.18.1.
-> 
-> 
-> Signed-off-by: Neil Brown <neilb@suse.de>
-> 
-> ### Diffstat output
->  ./drivers/md/md.c |    1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff .prev/drivers/md/md.c ./drivers/md/md.c
-> --- .prev/drivers/md/md.c       2006-09-29 11:51:39.000000000 +1000
-> +++ ./drivers/md/md.c   2006-10-05 16:40:51.000000000 +1000
-> @@ -3849,6 +3849,7 @@ static int hot_add_disk(mddev_t * mddev,
->         }
->         clear_bit(In_sync, &rdev->flags);
->         rdev->desc_nr = -1;
-> +       rdev->saved_raid_disk = -1;
->         err = bind_rdev_to_array(rdev, mddev);
->         if (err)
->                 goto abort_export;
+Worked like a charm!
+
+Thank you!
+
+There is a
+   sysfs   /sys    sysfs   noauto 0 0
+line in /etc/fstab
+I am assuming noauto is the culprit?
+
+Should it be made to automount ?
+
+mickg
+> NeilBrown
 > -
 > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+
 
