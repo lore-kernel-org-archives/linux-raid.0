@@ -1,56 +1,91 @@
-From: Daniel Pittman <daniel@rimspace.net>
-Subject: Re: Starting point of the actual RAID data area
-Date: Sun, 08 Oct 2006 10:49:13 +1000
-Message-ID: <87hcyfpr7a.fsf@rimspace.net>
-References: <2341BC7C-A023-4E59-8D2E-773EC9AF031E@dataprey.fi>
+From: "Ian Brown" <ianbrn@gmail.com>
+Subject: Stopping and starting a RAID1 :Invalid argument
+Date: Sun, 8 Oct 2006 12:05:02 +0200
+Message-ID: <d0383f90610080305x4d06d307yfc497f39761f073c@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Jyri Hovila <jyri.hovila@dataprey.fi> writes:
+Hello,
 
-> I'm experimenting with Linux software RAID recovery. My target is to
-> be able to recover RAID 5 from individual drives without using the
-> Linux RAID tools - I mean mdadm and the others. I know it's not the
-> easiest way, but I *do* need to figure out a way to recover Linux RAID
-> using Windows... Sorry... ;)
+I am trying to understand and practice RAID1 functionality: for that
+purpose I created two partitions on the same device (yes,
+I know that it is recommended that the partitions are
+better to be on differrent devices when using RAID1, but this
+is for testing purposes only ).
+My device is a 64 K USB Disk On Key. (on /dev/sdb)
 
-Well, sure, you need to recover the data under Windows -- but why hurt
-yourself by doing it without the appropriate tools?
+Than I ran:
+dd if=/dev/zero of=/dev/sdb bs=1M count=64
 
-The "Services For Unix" package, which is free-as-in-beer, provides an
-enhanced POSIX layer for Windows.  You should be able to port mdadm and
-other tools as appropriate to Windows using those services, which may
-make life easier.
+then I created 2 primary partitions for RAID1 with fdisk:
+/dev/sdb1 and /dev/sdb2.
 
-> What I'd like to know is how can I find where the actual RAID data
-> area starts on disks participating in a RAID 5 set. I know most of the
-> RAID configuration information is stored on all of the drives, but I'm
-> not geek enough to learn how it's stored from the RAID source code.
+fdisk -l /dev/sdb shows :
 
-...if you can't extract that information yourself then I would suggest
-you are in for a world of pain trying to build tools to recover the data
-within Windows.
+Disk /dev/sdb: 65 MB, 65470464 bytes
+3 heads, 42 sectors/track, 1014 cylinders
+Units = cylinders of 126 * 512 = 64512 bytes
 
-Are you sure it wouldn't be easier to install VMWare on the system, then
-Linux into that, and use Linux to do the recovery?  A LiveCD image could
-be used, so you don't need to write the OS anywhere to disk...
+   Device Boot      Start         End      Blocks   Id  System
+/dev/sdb1               1         256       16107   fd  Linux raid autodetect
+/dev/sdb2             257         513       16191   fd  Linux raid autodetect
 
-> I would appreciate it a lot if somebody could give me a hand here. All
-> I need to understand right now is how I can find out the first sector
-> of the actual RAID data. I'm starting with a simple configuration,
-> where there are three identical drives, all of them used fully for one
-> RAID 5 set. And no LVM at this point.
+Both Partitions are of type  Linux raid autodetect ("fd").
+The partitions are equal in size (256 cylinders each)
+Then I created a RAID1 by running:
 
-It would start on the first sector of the first disk.
+mdadm --create /dev/md0 --level=raid1 --raid-devices=2 /dev/sdb1 /dev/sdb2
+
+I got : mdadm: array /dev/md0 started
+
+cat /proc/mdstat shows:
+
+Personalities : [raid1]
+md0 : active raid1 sdb2[1] sdb1[0]
+      16000 blocks [2/2] [UU]
+      [==>..................]  resync = 12.5% (2112/16000)
+finish=0.7min speed=301K/sec
+unused devices: <none>
+
+I created ext3 fs on /dev/md0 and /dev/sdb1 and /dev/sdb2.
+
+I found out that I can mount /dev/md0 , but I cannot
+mount /dev/sdb1 or /dev/sdb2.
+
+when I try : mount /dev/sdb1 /mnt/sdb1/
+I get mount: /dev/sdb1 already mounted or /mnt/sdb1/ busy
+
+
+I found out that if I stop the RAID (and unmount /dev/md0),
+I am able to mount /dev/sdb1 and /dev/sdb2. I also found
+out that a file I created (on the path where /mnt/md0
+was mounted) was mirrored to /dev/sdb1 and /dev/sdb2, as it should
+in RAID1.
+
+The problem is that I cannot run again the RAID
+after stopping it.
+
+I stopped it by:
+mdadm --stop /dev/md0
+cat /proc/mdstat
+Personalities : [raid1]
+unused devices: <none>
+
+I tried to run it again by:
+mdadm --run /dev/md0
+mdadm: failed to run array /dev/md0: Invalid argument
+
+Why is it so ?
+
+what is the way to stop and than run again a RAID ?
+Am I doing something wrong ? any idea?
 
 Regards,
-        Daniel
--- 
-Digital Infrastructure Solutions -- making IT simple, stable and secure
-Phone: 0401 155 707        email: contact@digital-infrastructure.com.au
-                 http://digital-infrastructure.com.au/
 
+Ian
