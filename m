@@ -1,52 +1,56 @@
-From: Chris Allen <chris@cjx.com>
-Subject: Re: raid5 hang on get_active_stripe
-Date: Sun, 08 Oct 2006 00:25:46 +0100
-Message-ID: <4528377A.2010001@cjx.com>
-References: <5d96567b0603060346r768a0ee1i8d8170cf9ba4bac1@mail.gmail.com>	<Pine.LNX.4.64.0605110758100.25283@twinlark.arctic.org>	<Pine.LNX.4.64.0605171137350.29929@twinlark.arctic.org>	<17522.29813.189944.397154@cse.unsw.edu.au>	<Pine.LNX.4.64.0605260903270.7952@twinlark.arctic.org>	<17527.38282.35857.117651@cse.unsw.edu.au>	<Pine.LNX.4.64.0605270834240.30550@twinlark.arctic.org>	<17529.37347.782285.77442@cse.unsw.edu.au>	<Pine.LNX.4.64.0605291354260.30134@twinlark.arctic.org>	<17531.35050.632471.433333@cse.unsw.edu.au>	<Pine.LNX.4.64.0605301713480.11178@twinlark.arctic.org>	<17532.59212.364233.765155@cse.unsw.edu.au>	<Pine.LNX.4.64.0605301758380.21977@twinlark.arctic.org>	<17532.62343.933852.982391@cse.unsw.edu.au>	<Pine.LNX.4.64.0605301844180.21977@twinlark.arctic.org>	<17534.22056.981033.686846@cse.unsw.edu.au>	<Pine.LNX.4.64.0606020009560.10016@twinlark.arctic.org>	<17535.59496.4311
- 82.785563@cse.unsw.edu.au>	<448F0994.6050704@tmr.com> <17551.18061.160356.35034@cse.unsw.!
- edu.au>
+From: Daniel Pittman <daniel@rimspace.net>
+Subject: Re: Starting point of the actual RAID data area
+Date: Sun, 08 Oct 2006 10:49:13 +1000
+Message-ID: <87hcyfpr7a.fsf@rimspace.net>
+References: <2341BC7C-A023-4E59-8D2E-773EC9AF031E@dataprey.fi>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17551.18061.160356.35034@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Jyri Hovila <jyri.hovila@dataprey.fi> writes:
 
+> I'm experimenting with Linux software RAID recovery. My target is to
+> be able to recover RAID 5 from individual drives without using the
+> Linux RAID tools - I mean mdadm and the others. I know it's not the
+> easiest way, but I *do* need to figure out a way to recover Linux RAID
+> using Windows... Sorry... ;)
 
-Neil Brown wrote:
-> On Tuesday June 13, davidsen@tmr.com wrote:
->   
->> Will that fix be in 2.6.17?
->>
->>     
->
-> Probably not.  We have had the last 'rc' twice and I so I don't think
-> it is appropriate to submit the patch at this stage.
-> I probably will submit it for an early 2.6.17.x. and for 2.6.16.y.
->
->
->   
+Well, sure, you need to recover the data under Windows -- but why hurt
+yourself by doing it without the appropriate tools?
 
-What is the status of this?
+The "Services For Unix" package, which is free-as-in-beer, provides an
+enhanced POSIX layer for Windows.  You should be able to port mdadm and
+other tools as appropriate to Windows using those services, which may
+make life easier.
 
-I've been experiencing exactly the same get_active_stripe lockup
-on a FC5 2.6.17-1.2187_FC5smp  stock kernel. Curiously we have ten 
-similar heavily loaded
-servers but only one of them experiences the problem. The problem 
-happens consistently after 24 hours or so
-when I hammer the raid5 array over NFS, but I've never managed to 
-trigger it with local access. I'd also
-say (anecdotally) that it only started happening since I added a bitmap 
-to my array.
+> What I'd like to know is how can I find where the actual RAID data
+> area starts on disks participating in a RAID 5 set. I know most of the
+> RAID configuration information is stored on all of the drives, but I'm
+> not geek enough to learn how it's stored from the RAID source code.
 
+...if you can't extract that information yourself then I would suggest
+you are in for a world of pain trying to build tools to recover the data
+within Windows.
 
-As with the other poster, the lockup is released by increasing 
-stripe_cache_size.
+Are you sure it wouldn't be easier to install VMWare on the system, then
+Linux into that, and use Linux to do the recovery?  A LiveCD image could
+be used, so you don't need to write the OS anywhere to disk...
 
+> I would appreciate it a lot if somebody could give me a hand here. All
+> I need to understand right now is how I can find out the first sector
+> of the actual RAID data. I'm starting with a simple configuration,
+> where there are three identical drives, all of them used fully for one
+> RAID 5 set. And no LVM at this point.
 
+It would start on the first sector of the first disk.
 
-
+Regards,
+        Daniel
+-- 
+Digital Infrastructure Solutions -- making IT simple, stable and secure
+Phone: 0401 155 707        email: contact@digital-infrastructure.com.au
+                 http://digital-infrastructure.com.au/
 
