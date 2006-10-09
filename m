@@ -1,37 +1,32 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: avoiding the initial resync on --create
-Date: Tue, 10 Oct 2006 09:14:33 +1000
-Message-ID: <17706.55257.365940.610605@cse.unsw.edu.au>
-References: <20061009125700.GA10191@piper.madduck.net>
-	<20061009134946.GA26122@harddisk-recovery.com>
-	<1160411520.2917.76.camel@fc6.xsintricity.com>
-	<37950.192.168.0.1.1160421056.squirrel@bymeinc.com>
-	<1160423139.2917.112.camel@fc6.xsintricity.com>
-	<17706.49180.270321.212774@cse.unsw.edu.au>
-	<1160430315.2917.125.camel@fc6.xsintricity.com>
+From: Chris Allen <chris@cjx.com>
+Subject: Re: raid5 hang on get_active_stripe
+Date: Tue, 10 Oct 2006 00:21:42 +0100
+Message-ID: <452AD986.1010304@cjx.com>
+References: <17532.59212.364233.765155@cse.unsw.edu.au>	<Pine.LNX.4.64.0605301758380.21977@twinlark.arctic.org>	<17532.62343.933852.982391@cse.unsw.edu.au>	<Pine.LNX.4.64.0605301844180.21977@twinlark.arctic.org>	<17534.22056.981033.686846@cse.unsw.edu.au>	<Pine.LNX.4.64.0606020009560.10016@twinlark.arctic.org>	<17535.59496.431182.785563@cse.unsw.edu.au>	<448F0994.6050704@tmr.com>	<17551.18061.160356.35034@cse.unsw.!edu.au>	<4528377A.2010001@cjx.com>	<20061009110344.GA7104@cjx.com> <17706.54775.830279.53938@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Doug Ledford on Monday October 9
+In-Reply-To: <17706.54775.830279.53938@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Doug Ledford <dledford@redhat.com>
-Cc: Rob Bray <raid@bymeinc.com>, martin f krafft <madduck@madduck.net>, linux-raid mailing list <linux-raid@vger.kernel.org>
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Monday October 9, dledford@redhat.com wrote:
-> 
-> superblock->init_flag == FALSE then make all writes a parity generating
-> not updating write (less efficient, so you would want to resync the
-> array and clear this up soon, but possible).
 
-Yeh, that would work.  I wonder if it is worth the effort though.
+Neil Brown wrote:
+> On Monday October 9, chris@cjx.com wrote:
+>   
+>> Ok, after more testing, this lockup happens consistently when
+>> bitmaps are switched on and never when they are switched off.
+>>
+>>     
+> Are you happy to try a kernel.org kernel with a few patches and a
+> little shell script running?
+> The net result is that it detects when there is a problem, prints out
+> some trace information, and then gets array going again.
+>
+>
+>   
 
-> 
-> Bleh...sometimes I really dislike always making things cater to the
-> lowest common denominator...you're never as good as you could be and you
-> are always as bad as the worst case...
-
-damn those two-edged swords!
-
-NeilBrown
+Very happy to. Let me know what you'd like me to do.
