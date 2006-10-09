@@ -1,63 +1,73 @@
-From: Chris Allen <chris@cjx.com>
-Subject: Re: raid5 hang on get_active_stripe
-Date: Mon, 9 Oct 2006 12:03:45 +0100
-Message-ID: <20061009110344.GA7104@cjx.com>
-References: <17532.59212.364233.765155@cse.unsw.edu.au> <Pine.LNX.4.64.0605301758380.21977@twinlark.arctic.org> <17532.62343.933852.982391@cse.unsw.edu.au> <Pine.LNX.4.64.0605301844180.21977@twinlark.arctic.org> <17534.22056.981033.686846@cse.unsw.edu.au> <Pine.LNX.4.64.0606020009560.10016@twinlark.arctic.org> <17535.59496.431182.785563@cse.unsw.edu.au> <448F0994.6050704@tmr.com> <17551.18061.160356.35034@cse.unsw.!edu.au> <4528377A.2010001@cjx.com>
+From: martin f krafft <madduck@madduck.net>
+Subject: avoiding the initial resync on --create
+Date: Mon, 9 Oct 2006 14:57:00 +0200
+Message-ID: <20061009125700.GA10191@piper.madduck.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="cWoXeonUoKmBZSoM"
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <4528377A.2010001@cjx.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: linux-raid mailing list <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Ok, after more testing, this lockup happens consistently when
-bitmaps are switched on and never when they are switched off.
 
-Ideas anybody?
+--cWoXeonUoKmBZSoM
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
+Hi all,
 
+I am looking at http://bugs.debian.org/251898 and wondering whether
+it is save to use --assume-clean (which prevents the initial resync)
+when creating RAID arrays from the Debian installer.
 
+Please also see the following discussion on IRC:
 
-On Sun, Oct 08, 2006 at 12:25:46AM +0100, Chris Allen wrote:
-> 
-> 
-> Neil Brown wrote:
-> >On Tuesday June 13, davidsen@tmr.com wrote:
-> >  
-> >>Will that fix be in 2.6.17?
-> >>
-> >>    
-> >
-> >Probably not.  We have had the last 'rc' twice and I so I don't think
-> >it is appropriate to submit the patch at this stage.
-> >I probably will submit it for an early 2.6.17.x. and for 2.6.16.y.
-> >
-> >
-> >  
-> 
-> What is the status of this?
-> 
-> I've been experiencing exactly the same get_active_stripe lockup
-> on a FC5 2.6.17-1.2187_FC5smp  stock kernel. Curiously we have ten 
-> similar heavily loaded
-> servers but only one of them experiences the problem. The problem 
-> happens consistently after 24 hours or so
-> when I hammer the raid5 array over NFS, but I've never managed to 
-> trigger it with local access. I'd also
-> say (anecdotally) that it only started happening since I added a bitmap 
-> to my array.
-> 
-> 
-> As with the other poster, the lockup is released by increasing 
-> stripe_cache_size.
-> 
-> 
-> 
-> 
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+< madduck> yeah, i am not sure --assume-clean is a good idea.
+< peterS> madduck: why not?  I've tried to think of a reason it
+  would fail for months, and so far I'm too stupid to think of one
+< madduck> even then
+< madduck> peterS: because it then assumes that it
+< madduck> it's clean, period.
+< peterS> yeah, so?
+< peterS> the blocks you have not written will have unreliable
+  contents
+< madduck> in reality, the three components are not properly XORed
+< peterS> but why would you care about that?
+< madduck> hm. kinda true.
+< peterS> the blocks you _do_ write will be correct
+< peterS> even an uninitialised raid5 or raid6 seems like it would
+  work perfectly well with --assume-clean
+
+Do you have any thoughts on the issue? If Debian were to --create
+its arrays with --assume-clean just before slapping a filesystem on
+them and installing the system, do you see any potential problems?
+
+--=20
+martin;              (greetings from the heart of the sun.)
+  \____ echo mailto: !#^."<*>"|tr "<*> mailto:" net@madduck
+=20
+spamtraps: madduck.bogus@madduck.net
+=20
+"sometimes we sit and read other people's interpretations of our
+ lyrics and think, 'hey, that's pretty good.' if we liked it, we would
+ keep our mouths shut and just accept the credit as if it was what we
+ meant all along."
+                                                        -- john lennon
+
+--cWoXeonUoKmBZSoM
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature (GPG/PGP)
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
+
+iD8DBQFFKkccIgvIgzMMSnURAmsAAJ0X+b/JpU2GOtipL1g+Fdexs7BUMwCfRkWg
+e2Rdka2svu3GKi98+wMlvls=
+=C9qG
+-----END PGP SIGNATURE-----
+
+--cWoXeonUoKmBZSoM--
