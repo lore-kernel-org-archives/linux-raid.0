@@ -1,34 +1,63 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH/BUG] mdadm: write behind value does not have endian conversion
-Date: Mon, 9 Oct 2006 11:20:05 +1000
-Message-ID: <17705.41925.757418.540579@cse.unsw.edu.au>
-References: <45269835.2020801@steeleye.com>
-	<4526A88E.9000005@steeleye.com>
+From: Chris Allen <chris@cjx.com>
+Subject: Re: raid5 hang on get_active_stripe
+Date: Mon, 9 Oct 2006 12:03:45 +0100
+Message-ID: <20061009110344.GA7104@cjx.com>
+References: <17532.59212.364233.765155@cse.unsw.edu.au> <Pine.LNX.4.64.0605301758380.21977@twinlark.arctic.org> <17532.62343.933852.982391@cse.unsw.edu.au> <Pine.LNX.4.64.0605301844180.21977@twinlark.arctic.org> <17534.22056.981033.686846@cse.unsw.edu.au> <Pine.LNX.4.64.0606020009560.10016@twinlark.arctic.org> <17535.59496.431182.785563@cse.unsw.edu.au> <448F0994.6050704@tmr.com> <17551.18061.160356.35034@cse.unsw.!edu.au> <4528377A.2010001@cjx.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Paul Clements on Friday October 6
+Content-Disposition: inline
+In-Reply-To: <4528377A.2010001@cjx.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Paul Clements <paul.clements@steeleye.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Friday October 6, paul.clements@steeleye.com wrote:
-> Paul Clements wrote:
-> 
-> > --- mdadm-2.5.1/bitmap.c.orig	Fri Oct  6 13:40:35 2006
-> > +++ mdadm-2.5.1/bitmap.c	Fri Oct  6 13:40:53 2006
-> > @@ -33,6 +33,7 @@ inline void sb_le_to_cpu(bitmap_super_t 
-> >  	sb->chunksize = __le32_to_cpu(sb->chunksize);
-> >  	sb->daemon_sleep = __le32_to_cpu(sb->daemon_sleep);
-> >  	sb->sync_size = __le64_to_cpu(sb->sync_size);
-> 
-> > +	sb->write_behind = __le32_to_cpu(sb->sync_size);
-> 
-> Obviously, sync_size should be write_behind in the above line.
+Ok, after more testing, this lockup happens consistently when
+bitmaps are switched on and never when they are switched off.
 
-Thanks.  
-Applied and push out to git.
+Ideas anybody?
 
-NeilBrown
+
+
+
+On Sun, Oct 08, 2006 at 12:25:46AM +0100, Chris Allen wrote:
+> 
+> 
+> Neil Brown wrote:
+> >On Tuesday June 13, davidsen@tmr.com wrote:
+> >  
+> >>Will that fix be in 2.6.17?
+> >>
+> >>    
+> >
+> >Probably not.  We have had the last 'rc' twice and I so I don't think
+> >it is appropriate to submit the patch at this stage.
+> >I probably will submit it for an early 2.6.17.x. and for 2.6.16.y.
+> >
+> >
+> >  
+> 
+> What is the status of this?
+> 
+> I've been experiencing exactly the same get_active_stripe lockup
+> on a FC5 2.6.17-1.2187_FC5smp  stock kernel. Curiously we have ten 
+> similar heavily loaded
+> servers but only one of them experiences the problem. The problem 
+> happens consistently after 24 hours or so
+> when I hammer the raid5 array over NFS, but I've never managed to 
+> trigger it with local access. I'd also
+> say (anecdotally) that it only started happening since I added a bitmap 
+> to my array.
+> 
+> 
+> As with the other poster, the lockup is released by increasing 
+> stripe_cache_size.
+> 
+> 
+> 
+> 
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
