@@ -1,73 +1,56 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: type-0.90.0 superblock and "md-1" superblocks
-Date: Tue, 10 Oct 2006 08:09:14 +1000
-Message-ID: <17706.51338.374155.183402@cse.unsw.edu.au>
-References: <dac45060610090716s7afb4f95mb639866d11a2347e@mail.gmail.com>
+Subject: Re: raid5 hang on get_active_stripe
+Date: Tue, 10 Oct 2006 09:06:31 +1000
+Message-ID: <17706.54775.830279.53938@cse.unsw.edu.au>
+References: <17532.59212.364233.765155@cse.unsw.edu.au>
+	<Pine.LNX.4.64.0605301758380.21977@twinlark.arctic.org>
+	<17532.62343.933852.982391@cse.unsw.edu.au>
+	<Pine.LNX.4.64.0605301844180.21977@twinlark.arctic.org>
+	<17534.22056.981033.686846@cse.unsw.edu.au>
+	<Pine.LNX.4.64.0606020009560.10016@twinlark.arctic.org>
+	<17535.59496.431182.785563@cse.unsw.edu.au>
+	<448F0994.6050704@tmr.com>
+	<17551.18061.160356.35034@cse.unsw.!edu.au>
+	<4528377A.2010001@cjx.com>
+	<20061009110344.GA7104@cjx.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Mark Ryden on Monday October 9
+In-Reply-To: message from Chris Allen on Monday October 9
 Sender: linux-raid-owner@vger.kernel.org
-To: Mark Ryden <markryde@gmail.com>
+To: Chris Allen <chris@cjx.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Monday October 9, markryde@gmail.com wrote:
-> Hello,
+On Monday October 9, chris@cjx.com wrote:
+> Ok, after more testing, this lockup happens consistently when
+> bitmaps are switched on and never when they are switched off.
 > 
-> I wonder what is the "type-0.90.0" superblock and "md-1" superblocks
-> of md and what is the differnce between them? Is it merely
-> some version of kernel md driver ?
-
-Two different formats for the metadata describing the array.
-I usually refer to them as v0.90 and v1.
-Some of the differences are subtle.  Some of the less subtle are:
-  - v0.90 is limited to 28 components in an array.  v1 allows > 256.
-  - v1 supports restarting driver recovery that was interrupted by
-       a clean shutdown.  v0.90 doesn't.
-  - v1 can easily be moved between machines with different byte-order.
-       v0.90 needs explicit conversion.
-  - v0.90 records a small number to identify the array.  v1 stores a
-       textual name.
-  - v0.90 can be used with 'in kernel autodetect' (i.e. partition type
-       0xfd). v1 cannot (I consider this an improvement :-)
-  - v0.90 can get confused if a partition and a whole device are
-       aligned so that the superblock would be at exactly the same
-       location.   v1 avoids this confusion.
-
-> In case it is so - is there a way to know which is
-> the version of the md superblocks which is in use in my kernel ?
+> Ideas anybody?
 > 
 
-2.6 kernels support both, though there have been a number of v1
-specific bugs slowly being ironed out over the months.  From 2.6.18 I
-consider v1 perfectly stable for regular use.  In earlier kernels it
-was quite usable but there were a few minor bugs.
+No. I'm completely stumped.
+Which means it is probably something very obvious, but I keep looking
+in the wrong place :-)
 
-mdadm create v0.90 by default, though the default can be changed in
-/etc/mdadm.conf.
+The interaction with bitmaps is interesting and might prove helpful.
+I'll have another look at the code and see if it opens up some
+possibilities. 
 
+I've been working with Dean Gaudet who can reproduce it.  He has been
+trying out patches that print out lots of debugging information when
+the problem occurs.  This has narrowed it down a bit, but I'm still in
+the dark.
 
-> I see that in drivers/md/md.c
-> there is an array of super_type with 2 elements,
-> the name	of the first is  "0.90.0",and the name of the second
-> is "md-1".
-> 
-> when running :
-> mdadm --detail /dev/md0
-> I see:
-> /dev/md0:
->         Version : 00.90.01
-> 			..
-> 			
-> is this "Version" field is the superblock type ?
+It seems that blk_plug_device is setting a timer to go off in about
+3msecs, but it gets deactivated without firing. This should only
+happen when the device gets unplugged, but the device remains plugged.
 
-The "01" at the end is really a version number for the driver rather
-than a version number for the metadata (aka superblock) - md version
-numbers were not thought out probably and so are confusing.
+Are you happy to try a kernel.org kernel with a few patches and a
+little shell script running?
+The net result is that it detects when there is a problem, prints out
+some trace information, and then gets array going again.
 
-Yes, the "Version" reported by mdadm --detail reflects the superblock
-type.
-
+Thanks,
 NeilBrown
