@@ -1,129 +1,73 @@
-From: Doug Ledford <dledford@redhat.com>
-Subject: Re: avoiding the initial resync on --create
-Date: Mon, 09 Oct 2006 17:45:15 -0400
-Message-ID: <1160430315.2917.125.camel@fc6.xsintricity.com>
-References: <20061009125700.GA10191@piper.madduck.net>
-	 <20061009134946.GA26122@harddisk-recovery.com>
-	 <1160411520.2917.76.camel@fc6.xsintricity.com>
-	 <37950.192.168.0.1.1160421056.squirrel@bymeinc.com>
-	 <1160423139.2917.112.camel@fc6.xsintricity.com>
-	 <17706.49180.270321.212774@cse.unsw.edu.au>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: type-0.90.0 superblock and "md-1" superblocks
+Date: Tue, 10 Oct 2006 08:09:14 +1000
+Message-ID: <17706.51338.374155.183402@cse.unsw.edu.au>
+References: <dac45060610090716s7afb4f95mb639866d11a2347e@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-WFAj9bjzO/mZU8TbPwdg"
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17706.49180.270321.212774@cse.unsw.edu.au>
+In-Reply-To: message from Mark Ryden on Monday October 9
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Rob Bray <raid@bymeinc.com>, martin f krafft <madduck@madduck.net>, linux-raid mailing list <linux-raid@vger.kernel.org>
+To: Mark Ryden <markryde@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Monday October 9, markryde@gmail.com wrote:
+> Hello,
+> 
+> I wonder what is the "type-0.90.0" superblock and "md-1" superblocks
+> of md and what is the differnce between them? Is it merely
+> some version of kernel md driver ?
 
---=-WFAj9bjzO/mZU8TbPwdg
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Two different formats for the metadata describing the array.
+I usually refer to them as v0.90 and v1.
+Some of the differences are subtle.  Some of the less subtle are:
+  - v0.90 is limited to 28 components in an array.  v1 allows > 256.
+  - v1 supports restarting driver recovery that was interrupted by
+       a clean shutdown.  v0.90 doesn't.
+  - v1 can easily be moved between machines with different byte-order.
+       v0.90 needs explicit conversion.
+  - v0.90 records a small number to identify the array.  v1 stores a
+       textual name.
+  - v0.90 can be used with 'in kernel autodetect' (i.e. partition type
+       0xfd). v1 cannot (I consider this an improvement :-)
+  - v0.90 can get confused if a partition and a whole device are
+       aligned so that the superblock would be at exactly the same
+       location.   v1 avoids this confusion.
 
-On Tue, 2006-10-10 at 07:33 +1000, Neil Brown wrote:
-> On Monday October 9, dledford@redhat.com wrote:
-> >=20
-> > The original email was about raid1 and the fact that reads from
-> > different disks could return different data.
->=20
-> To be fair, the original mail didn't mention "raid1" at all.  It did
-> mention raid5 and raid6 as a possible contrast so you could reasonably
-> get the impression that it was talking about raid1.  But that wasn't
-> stated.
+> In case it is so - is there a way to know which is
+> the version of the md superblocks which is in use in my kernel ?
+> 
 
-OK, well I got that impression from the contrast ;-)
+2.6 kernels support both, though there have been a number of v1
+specific bugs slowly being ironed out over the months.  From 2.6.18 I
+consider v1 perfectly stable for regular use.  In earlier kernels it
+was quite usable but there were a few minor bugs.
 
-> Otherwise I agree.  There is no real need to perform the sync of a
-> raid1 at creation.
-> However it seems to be a good idea to regularly 'check' an array to
-> make sure that all blocks on all disks get read to find sleeping bad
-> blocks early.  If you didn't sync first, then every check will find
-> lots of errors.  Ofcourse you could 'repair' instead of 'check'.  Or
-> do that once.  Or something.
->=20
-> For raid6 it is also safe to not sync first, though with the same
-> caveat as raid1.  Raid6 always updates parity by reading all blocks in
-> the stripe that aren't known and calculating P and Q.  So the first
-> write to a stripe will make P and Q correct for that stripe.
-> This is current behaviour.  I don't think I can guarantee it will
-> never changed.
->=20
-> For raid5 it is NOT safe to skip the initial sync.  It is possible for
-> all updates to be "read-modify-write" updates which assume the parity
-> is correct.  If it is wrong, it stays wrong.  Then when you lose a
-> drive, the parity blocks are wrong so the data you recover using them
-> is wrong.
+mdadm create v0.90 by default, though the default can be changed in
+/etc/mdadm.conf.
 
-superblock->init_flag =3D=3D FALSE then make all writes a parity generating
-not updating write (less efficient, so you would want to resync the
-array and clear this up soon, but possible).
 
-> In summary, it is safe to use --assume-clean on a raid1 or raid1o,
-> though I would recommend a "repair" before too long.  For other raid
-> levels it is best avoided.
->=20
-> >=20
-> > Probably the best thing to do would be on create of the array, setup a
-> > large all 0 block of mem and repeatedly write that to all blocks in the
-> > array devices except parity blocks and use a large all 1 block for that=
-.
->=20
-> No, you would want 0 for the parity block too.  0 + 0 =3D 0.
+> I see that in drivers/md/md.c
+> there is an array of super_type with 2 elements,
+> the name	of the first is  "0.90.0",and the name of the second
+> is "md-1".
+> 
+> when running :
+> mdadm --detail /dev/md0
+> I see:
+> /dev/md0:
+>         Version : 00.90.01
+> 			..
+> 			
+> is this "Version" field is the superblock type ?
 
-Sorry, I was thinking odd parity.
+The "01" at the end is really a version number for the driver rather
+than a version number for the metadata (aka superblock) - md version
+numbers were not thought out probably and so are confusing.
 
-> > Then you could just write the entire array at blinding speed.  You coul=
-d
-> > call that the "quick-init" option or something.  You wouldn't be able t=
-o
-> > use the array until it was done, but it would be quick.=20
->=20
-> I doubt you would notice it being faster than the current
-> resync/recovery that happens on creation.  We go at device-speed -
-> either the buss device or the storage device depending on which is
-> slower.
+Yes, the "Version" reported by mdadm --detail reflects the superblock
+type.
 
-There's memory overhead though.  That can impact other operations the
-cpu might do while in the process of recovering.
-
->=20
-> >                                                          If you wanted
-> > to be *really* fast, at least for SCSI drives you could write one large
-> > chunk of 0's and one large chunk of 1's at the first parity block, then
-> > use the SCSI COPY command to copy the 0 chunk everywhere it needs to go=
-,
-> > and likewise for the parity chunk, and avoid transferring the data over
-> > the SCSI bus more than once.
->=20
-> Yes, that might be measurably faster.  It is the sort of thing you might
-> do in a "hardware" RAID controller but I doubt it would ever get done
-> in md (there is a price for being very general).
-
-Bleh...sometimes I really dislike always making things cater to the
-lowest common denominator...you're never as good as you could be and you
-are always as bad as the worst case...
-
---=20
-Doug Ledford <dledford@redhat.com>
-              GPG KeyID: CFBFF194
-              http://people.redhat.com/dledford
-
-Infiniband specific RPMs available at
-              http://people.redhat.com/dledford/Infiniband
-
---=-WFAj9bjzO/mZU8TbPwdg
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
-
-iD8DBQBFKsLrTzP9PM7pjw8RArP4AJ41kmNi0BG1dwL8PeOLx31qjK6RsQCdFv1o
-ziSGFzKI4r32fbJHjB2cANA=
-=UM1k
------END PGP SIGNATURE-----
-
---=-WFAj9bjzO/mZU8TbPwdg--
-
+NeilBrown
