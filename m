@@ -1,201 +1,175 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH 00/19] Hardware Accelerated MD RAID5: Introduction
-Date: Mon, 9 Oct 2006 08:18:33 +1000
-Message-ID: <17705.31033.706571.150023@cse.unsw.edu.au>
-References: <1158015632.4241.31.camel@dwillia2-linux.ch.intel.com>
+From: "Ian Brown" <ianbrn@gmail.com>
+Subject: Re: Stopping and starting a RAID1 :Invalid argument
+Date: Mon, 9 Oct 2006 09:40:20 +0200
+Message-ID: <d0383f90610090040v2d0ab905ka5d4607037dd6e17@mail.gmail.com>
+References: <d0383f90610080305x4d06d307yfc497f39761f073c@mail.gmail.com>
+	 <Pine.LNX.4.56.0610081115440.20412@lion.drogon.net>
+	 <d0383f90610080608x77fbfb80qb1e89fa8840f9d0a@mail.gmail.com>
+	 <20061008132537.M34804@contactbda.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932186AbWJIAb2@vger.kernel.org>
-In-Reply-To: message from Dan Williams on Monday September 11
-Sender: linux-kernel-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-raid@vger.kernel.org, akpm@osdl.org, linux-kernel@vger.kernel.org, christopher.leech@intel.com
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20061008132537.M34804@contactbda.com>
+Content-Disposition: inline
+Sender: linux-raid-owner@vger.kernel.org
+To: jim@contactbda.com
+Cc: Gordon Henderson <gordon@drogon.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hello,
+
+Well, assemble looks like it does the job
+
+mdadm --stop /dev/md0
+
+mdadm --assemble /dev/md0 /dev/sdb1 /dev/sdb2
+
+mdadm: /dev/md0 has been started with 2 drives.
+
+#cat /proc/mdstat
+Personalities : [raid1]
+md0 : active raid1 sdb1[0] sdb2[1]
+      16000 blocks [2/2] [UU]
+
+unused devices: <none>
 
 
-On Monday September 11, dan.j.williams@intel.com wrote:
-> Neil,
->=20
-> The following patches implement hardware accelerated raid5 for the In=
-tel
-> Xscale=AE series of I/O Processors.  The MD changes allow stripe
-> operations to run outside the spin lock in a work queue.  Hardware
-> acceleration is achieved by using a dma-engine-aware work queue routi=
-ne
-> instead of the default software only routine.
-
-Hi Dan,
- Sorry for the delay in replying.
- I've looked through these patches at last (mostly the raid-specific
- bits) and while there is clearly a lot of good stuff here, it does
- 'feel' right - it just seems too complex.
-
- The particular issues that stand out to me are:
-   - 33 new STRIPE_OP_* flags.  I'm sure there doesn't need to be that
-      many new flags.
-   - the "raid5 dma client" patch moves far too much internal
-     knowledge about raid5 into drivers/dma.
-
- Clearly there are some complex issues being dealt with and some
- complexity is to be expected, but I feel there must be room for some
- serious simplification.
-
- Let me try to describe how I envisage it might work.
-
- As you know, the theory-of-operation of handle_stripe is that it
- assesses the state of a stripe deciding what actions to perform and
- then performs them.  Synchronous actions (e.g. current parity calcs)
- are performed 'in-line'.  Async actions (reads, writes) and actions
- that cannot be performed under a spinlock (->b_end_io) are recorded
- as being needed and then are initiated at the end of handle_stripe
- outside of the sh->lock.
-
- The proposal is to bring the parity and other bulk-memory operations
- out of the spinlock and make them optionally asynchronous.
-
- The set of tasks that might be needed to be performed on a stripe
- are:
-	Clear a target cache block
-	pre-xor various cache blocks into a target
-	copy data out of bios into cache blocks. (drain)
-	post-xor various cache blocks into a target
-	copy data into bios out of cache blocks (fill)
-	test if a cache block is all zeros
-	start a read on a cache block
-	start a write on a cache block
-
- (There is also a memcpy when expanding raid5.  I think I would try to
-  simply avoid that copy and move pointers around instead).
-
- Some of these steps require sequencing. e.g.
-   clear, pre-xor, copy, post-xor, write
- for a rwm cycle.
- We could require handle_stripe to be called again for each step.
- i.e. first call just clears the target and flags it as clear.  Next
- call initiates the pre-xor and flags that as done.  Etc.  However I
- think that would make the non-offloaded case too slow, or at least
- too clumsy.
-
- So instead we set flags to say what needs to be done and have a
- workqueue system that does it.
-
- (so far this is all quite similar to what you have done.)
-
- So handle_stripe would set various flag and other things (like
- identify which block was the 'target' block) and run the following
- in a workqueue:
-
-raid5_do_stuff(struct stripe_head *sh)
-{
-	raid5_cont_t *conf =3D sh->raid_conf;
-
-	if (test_bit(CLEAR_TARGET, &sh->ops.pending)) {
-		struct page =3D *p->sh->dev[sh->ops.target].page;
-		rv =3D async_memset(p, 0, 0, PAGE_SIZE, ops_done, sh);
-		if (rv !=3D BUSY)
-			clear_bit(CLEAR_TARGET, &sh->ops.pending);
-		if (rv !=3D COMPLETE)
-			goto out;
-	}
-
-	while (test_bit(PRE_XOR, &sh->ops.pending)) {
-		struct page *plist[XOR_MAX];
-		int offset[XOR_MAX];
-		int pos =3D 0;
-		int d;
-
-		for (d =3D sh->ops.nextdev;
-		     d < conf->raid_disks && pos < XOR_MAX ;
-		     d++) {
-			if (sh->ops.nextdev =3D=3D sh->ops.target)
-				continue;
-			if (!test_bit(R5_WantPreXor, &sh->dev[d].flags))
-				continue;
-			plist[pos] =3D sh->dev[d].page;
-			offset[pos++] =3D 0;
-		}
-		if (pos) {
-			struct page *p =3D sh->dev[sh->ops.target].page;
-			rv =3D async_xor(p, 0, plist, offset, pos, PAGE_SIZE,
-				       ops_done, sh);
-			if (rv !=3D BUSY)
-				sh->ops.nextdev =3D d;
-			if (rv !=3D COMPLETE)
-				goto out;
-		} else {
-			clear_bit(PRE_XOR, &sh->ops.pending);
-			sh->ops.nextdev =3D 0;
-		}
-	}
-	=09
-	while (test_bit(COPY_IN, &sh0>ops.pending)) {
-		...
-	}
-	....
-
-	if (test_bit(START_IO, &sh->ops.pending)) {
-		int d;
-		for (d =3D 0 ; d < conf->raid_disk ; d++) {
-			/* all that code from the end of handle_stripe */
-		}
-
-	release_stripe(conf, sh);
-	return;
-
- out:
-	if (rv =3D=3D BUSY) {
-		/* wait on something and try again ???*/
-	}
-	return;
-}
-
-ops_done(struct stripe_head *sh)
-{
-	queue_work(....whatever..);
-}
+In the kernel log I see:
+"md0: raid array is not clean -- starting background reconstruction"
 
 
-Things to note:
- - we keep track of where we are up to in sh->ops.
-      .pending is flags saying what is left to be done
-      .next_dev is the next device to process for operations that
-        work on several devices
-      .next_bio, .next_iov will be needed for copy operations that
-        cross multiple bios and iovecs.
+What is the meaning of "raid array is not clean" ?
 
- - Each sh->dev has R5_Want flags reflecting which multi-device
-   operations are wanted on each device.
+Should it appear in a normal stop and assemble action on a raid 1 ?
 
- - async bulk-memory operations take pages, offsets, and lengths,
-   and can return COMPLETE (if the operation was performed
-   synchronously) IN_PROGRESS (if it has been started, or at least
-   queued) or BUSY if it couldn't even be queued.  Exactly what to do
-   in that case I'm not sure.  Probably we need a waitqueue to wait
-   on.
+I hope that this message does not indicate that something
+was not done as it should be.
 
- - The interface between the client and the ADMA hardware is a
-   collection of async_ functions.  async_memcpy, async_xor,
-   async_memset etc.
 
-   I gather there needs to be some understanding
-   about whether the pages are already appropriately mapped for DMA or
-   whether a mapping is needed.  Maybe an extra flag argument should
-   be passed.
+Regards,
+IB
 
-   I imagine that any piece of ADMA hardware would register with the
-   'async_*' subsystem, and a call to async_X would be routed as
-   appropriate, or be run in-line.
 
-This approach introduces 8 flags for sh->ops.pending and maybe two or
-three new R5_Want* flags.  It also keeps the raid5 knowledge firmly in
-the raid5 code base.  So it seems to keep the complexity under control
 
-Would this approach make sense to you?  Is there something really
-important I have missed?
-
-(I'll try and be more responsive next time).
-
-Thanks,
-NeilBrown
+On 10/8/06, Jim Buttafuoco <jim@contactbda.com> wrote:
+> try to assemble the array instead, --run is trying to start a partially built array, --stop deactivated the array and
+> released all resources, so --run will NOT work, use --assemble (-A) instead.
+>
+> Good luck
+> Jim
+>
+>
+> ---------- Original Message -----------
+> From: "Ian Brown" <ianbrn@gmail.com>
+> To: "Gordon Henderson" <gordon@drogon.net>
+> Cc: linux-raid@vger.kernel.org
+> Sent: Sun, 8 Oct 2006 15:08:56 +0200
+> Subject: Re: Stopping and starting a RAID1 :Invalid argument
+>
+> > Hello,
+> >
+> > >There is a case under RAID-1 where you can mount the >underlying devices,
+> > >but that's only in an emergency,
+> >
+> > Ok , thnks, this point is clear now.
+> >
+> > So I made another test. This time without mkfs.
+> >
+> > Now , I deleted the partitions and created them anew and did
+> > evertyhing else the same ,only
+> >  this time without mkfs.
+> >
+> > Still:
+> >
+> > stop succeeds :
+> >
+> > mdadm --stop /dev/md0
+> >
+> > cat /proc/mdstat
+> >
+> >  Personalities : [raid1]
+> > unused devices: <none>
+> >
+> > but mdadm --run : give an error:
+> >
+> > mdadm --run /dev/md0
+> >
+> > mdadm: failed to run array /dev/md0: Invalid argument
+> >
+> > Any idea why is it so ? can't I start an array after it was stopped ?
+> >
+> > Regards,
+> > Ian
+> >
+> > On 10/8/06, Gordon Henderson <gordon@drogon.net> wrote:
+> > > On Sun, 8 Oct 2006, Ian Brown wrote:
+> > >
+> > >
+> > > > Then I created a RAID1 by running:
+> > > >
+> > > > mdadm --create /dev/md0 --level=raid1 --raid-devices=2 /dev/sdb1 /dev/sdb2
+> > > >
+> > > > I got : mdadm: array /dev/md0 started
+> > > >
+> > > > cat /proc/mdstat shows:
+> > > >
+> > > > Personalities : [raid1]
+> > > > md0 : active raid1 sdb2[1] sdb1[0]
+> > > >       16000 blocks [2/2] [UU]
+> > > >       [==>..................]  resync = 12.5% (2112/16000)
+> > > > finish=0.7min speed=301K/sec
+> > > > unused devices: <none>
+> > >
+> > > So far so good. Nothing out of the ordinary here for your testing
+> > > environment.
+> > >
+> > > > I created ext3 fs on /dev/md0 and /dev/sdb1 and /dev/sdb2.
+> > >
+> > > Eeek!
+> > >
+> > > You have created a filesystem on md0, which uses /dev/sdb1 and /dev/sdb2,
+> > > THEN you fiddled with the underlying devices, /dev/sdb1 and /dev/sdb2...
+> > >
+> > > What you have done is effectively corrup the filesystem on /dev/md0, and
+> > > possibly even wiped out the superblock on the /dev/md0 device. (which may
+> > > be why you can't start it again)
+> > >
+> > > Once you have created a RAID array, you only ever deal with the mdX
+> > > device. Leave the underlying devices well alone. They are now owned by the
+> > > md device driver.
+> > >
+> > > Start again, and don't fiddle with the underlying /dev/sdbX devices. Do
+> > > not mkfs them, and do not mount them.
+> > >
+> > > All you need to do is this:
+> > >
+> > >   mdadm --create /dev/md0 -l1 -n2 /dev/sdb{1,2}
+> > >   mkfs -t ext3 /dev/md0
+> > >   mount /dev/md0 /mnt
+> > >
+> > > and there you have it.
+> > >
+> > > Use
+> > >         df -h /mnt
+> > > to let you see the size of your new mounted volume - it'll be 30MB or so.
+> > >
+> > >
+> > > There is a case under RAID-1 where you can mount the underlying devices,
+> > > but thats only in an emergency, with the mdX drivers stopped, and you need
+> > > to make absulutely sure you know what you are doing if you do this, and if
+> > > you mount then read-write, the you must not re-enable and mount the
+> > > overlying mdX device as it won't know which of the 2 mirrors is the
+> > > current one and you might get old data. ie. it's a one-way process in an
+> > > emergency, mount the underlying device, get the data off and re-create
+> > > from scratch, and you can only do this with RAID-1 devices.
+> > >
+> > > Gordon
+> > >
+> > -
+> > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> ------- End of Original Message -------
+>
+>
