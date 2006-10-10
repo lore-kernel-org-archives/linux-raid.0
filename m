@@ -1,54 +1,57 @@
-From: Sergey Vlasov <vsu@altlinux.ru>
-Subject: Re: avoiding the initial resync on --create
-Date: Tue, 10 Oct 2006 23:18:28 +0400
-Message-ID: <20061010231828.72d68502.vsu@altlinux.ru>
-References: <20061009125700.GA10191@piper.madduck.net>
-	<20061009134946.GA26122@harddisk-recovery.com>
-	<1160411520.2917.76.camel@fc6.xsintricity.com>
-	<20061010095524.GF7416@boogie.lpds.sztaki.hu>
-	<1160502476.2917.134.camel@fc6.xsintricity.com>
+From: Eli Stair <estair@ilm.com>
+Subject: Setting write-intent bitmap during array resync/create?
+Date: Tue, 10 Oct 2006 12:31:17 -0700
+Message-ID: <452BF505.9020608@ilm.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pgp-signature";
- micalg="PGP-SHA1";
- boundary="Signature=_Tue__10_Oct_2006_23_18_28_+0400_j2v/Ih5t4zPXiJG/"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1160502476.2917.134.camel@fc6.xsintricity.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Doug Ledford <dledford@redhat.com>
-Cc: Gabor Gombas <gombasg@sztaki.hu>, Erik Mouw <erik@harddisk-recovery.com>, linux-raid mailing list <linux-raid@vger.kernel.org>
+To: linux-raid mailing list <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Signature=_Tue__10_Oct_2006_23_18_28_+0400_j2v/Ih5t4zPXiJG/
-Content-Type: text/plain; charset=US-ASCII
-Content-Disposition: inline
-Content-Transfer-Encoding: 7bit
 
-On Tue, 10 Oct 2006 13:47:56 -0400 Doug Ledford wrote:
+I gather this isn't currently possible, but I wonder if it's feasible to 
+make it so?  This works fine once the array is marked 'clean', and I 
+imagine it's simpler to just disallow the bitmap creation until it's in 
+that state.  Would it be possible to allow creation of the bitmap by 
+queueing the action until the array is done rebuilding?
 
-[...]
-> So, like my original email said, fsck has no business reading any block
-> that hasn't been written to either by the install or since the install
-> when the filesystem was filled up more.  It certainly does *not* read
-> blocks just for the fun of it, nor does it rely on anything the
-> filesystem didn't specifically write.
+The reason for this concern is I've got a plethora of systems that are 
+set for auto-deployment; that is they can be booted into a mode where 
+they will have no existing array and will create it from scratch.  I 
+will be using the write-intent bitmap, but in the present state I have 
+to set a job to monitor the array state and manually issue the create 
+command when it is finished building.
 
-There are fsck implementations which read potentially unwritten
-blocks.  E.g., reiserfsck --rebuild-tree reads every block on the
-device, finds anything which looks like a tree block and tries to
-do something with it.  This procedure sometimes recovers files
-which were deleted, and if an uncompressed image of a reiserfs v3
-filesystem was stored in a file on reiserfs, it can confuse
-reiserfsck badly...
+It seems a good candidate for being able to specify this option at array 
+creation time along with all other options.
 
---Signature=_Tue__10_Oct_2006_23_18_28_+0400_j2v/Ih5t4zPXiJG/
-Content-Type: application/pgp-signature
+Just a suggestion/feature request.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
+Cheers,
 
-iD8DBQFFK/IQW82GfkQfsqIRAscdAJ0VoHkiOJ9XFMvO156571PDoQZc5ACePrxq
-VY7H8d0ehYlIFoYVthx9Qyo=
-=sa0c
------END PGP SIGNATURE-----
+/eli
 
---Signature=_Tue__10_Oct_2006_23_18_28_+0400_j2v/Ih5t4zPXiJG/--
+
+
+// WI Bitmap creation attempt:
+
+[root@gtmp08 /]# mdadm /dev/md0 -Gb internal
+
+mdadm: failed to set internal bitmap.
+md: couldn't update array info. -16
+
+
+
+// MD state:
+
+Personalities : [raid10]
+md0 : active raid10 dm-9[13] dm-8[12] dm-7[11] dm-6[10] dm-5[9] dm-4[8] 
+dm-3[7] dm-2[6] dm-13[5] dm-11[4] dm-12[3] dm-10[2] dm-1[1] dm-0[0]
+       1003620352 blocks super 1.2 512K chunks 2 offset-copies [14/14] 
+[UUUUUUUUUUUUUU]
+       [==>..................]  resync = 12.2% (123160576/1003620352) 
+finish=225.5min speed=65050K/sec
+
+unused devices: <none>
