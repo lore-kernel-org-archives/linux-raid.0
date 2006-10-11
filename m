@@ -1,56 +1,33 @@
-From: Michael Tokarev <mjt@tls.msk.ru>
-Subject: Re: avoiding the initial resync on --create
-Date: Thu, 12 Oct 2006 01:24:06 +0400
-Message-ID: <452D60F6.5060000@tls.msk.ru>
-References: <20061009125700.GA10191@piper.madduck.net>	 <20061009134946.GA26122@harddisk-recovery.com>	 <1160411520.2917.76.camel@fc6.xsintricity.com>	 <37950.192.168.0.1.1160421056.squirrel@bymeinc.com> <1160423139.2917.112.camel@fc6.xsintricity.com>
+From: Nix <nix@esperi.org.uk>
+Subject: Re: Starting point of the actual RAID data area
+Date: Wed, 11 Oct 2006 23:16:06 +0100
+Message-ID: <87ejte5wih.fsf@hades.wkstn.nix>
+References: <2341BC7C-A023-4E59-8D2E-773EC9AF031E@dataprey.fi>
+	<87hcyfpr7a.fsf@rimspace.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1160423139.2917.112.camel@fc6.xsintricity.com>
+In-Reply-To: <87hcyfpr7a.fsf@rimspace.net> (Daniel Pittman's message of "8 Oct 2006 02:13:54 +0100")
 Sender: linux-raid-owner@vger.kernel.org
-To: Doug Ledford <dledford@redhat.com>
-Cc: Rob Bray <raid@bymeinc.com>, linux-raid mailing list <linux-raid@vger.kernel.org>
+To: Daniel Pittman <daniel@rimspace.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Doug Ledford wrote:
-> On Mon, 2006-10-09 at 15:10 -0400, Rob Bray wrote:
-[]
-> Probably the best thing to do would be on create of the array, setup a
-> large all 0 block of mem and repeatedly write that to all blocks in the
-> array devices except parity blocks and use a large all 1 block for that.
-> Then you could just write the entire array at blinding speed.  You could
-> call that the "quick-init" option or something.  You wouldn't be able to
-> use the array until it was done, but it would be quick.  If you wanted
-> to be *really* fast, at least for SCSI drives you could write one large
-> chunk of 0's and one large chunk of 1's at the first parity block, then
-> use the SCSI COPY command to copy the 0 chunk everywhere it needs to go,
-> and likewise for the parity chunk, and avoid transferring the data over
-> the SCSI bus more than once.
+On 8 Oct 2006, Daniel Pittman said:
+> Jyri Hovila <jyri.hovila@dataprey.fi> writes:
+>> I would appreciate it a lot if somebody could give me a hand here. All
+>> I need to understand right now is how I can find out the first sector
+>> of the actual RAID data. I'm starting with a simple configuration,
+>> where there are three identical drives, all of them used fully for one
+>> RAID 5 set. And no LVM at this point.
+> 
+> It would start on the first sector of the first disk.
 
-Some notes.
+That depends on the superblock version. Versions 0.9x and 1.0 will do as
+you say, but versions 1.1 and 1.2 will have the start of the disk
+holding either the RAID superblock (for 1.1) or 4Kb of nothing (for
+1.2).
 
-First, raid array gets created sometimes in order to repair a broken array.
-Ie, you had an array, you lose it for whatever reason, and re-create it,
-avoiding initial resync (--assume-clean option), in a hope your data is
-still here.  For that, you don't want to zero-fill your drives, for sure! :)
-
-And second, at least SCSI drives have FORMAT UNIT command, which has a
-range argument (from-sector and to-sector), and, if memory serves me
-right, also "filler" argument as well (the data, 512-byte block, to
-write to all the sectors in the range).  (Well, it was long ago when
-I looked at that stuff, so it might be some other command, but it's
-here anyway).  I'm not sure it's used/available in block device layer
-(most probably it isn't).  But this is the fastest way to fill (parts
-of) your drives with whatever repeated pattern of bytes you want.
-Including this initial zero-filling.
-
-But either way, you don't really need to do that in kernel space --
-Userspace solution will work too.  Ok ok, if kernel is doing it after
-array creation, the array is available immediately for other use,
-which is a plus.
-
-And yes, I'm not sure implementing it is worth the effort.  Unless
-you're re-creating your multi-terabyte array several times a day ;)
-
-/mjt
+-- 
+`In typical emacs fashion, it is both absurdly ornate and
+ still not really what one wanted.' --- jdev
