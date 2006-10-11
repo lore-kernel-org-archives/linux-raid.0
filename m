@@ -1,47 +1,56 @@
-From: Greg KH <gregkh@suse.de>
-Subject: [patch 56/67] MD: Fix problem where hot-added drives are not resynced.
-Date: Wed, 11 Oct 2006 14:08:27 -0700
-Message-ID: <20061011210827.GE16627@kroah.com>
-References: <20061011204756.642936754@quad.kroah.org>
+From: Michael Tokarev <mjt@tls.msk.ru>
+Subject: Re: avoiding the initial resync on --create
+Date: Thu, 12 Oct 2006 01:24:06 +0400
+Message-ID: <452D60F6.5060000@tls.msk.ru>
+References: <20061009125700.GA10191@piper.madduck.net>	 <20061009134946.GA26122@harddisk-recovery.com>	 <1160411520.2917.76.camel@fc6.xsintricity.com>	 <37950.192.168.0.1.1160421056.squirrel@bymeinc.com> <1160423139.2917.112.camel@fc6.xsintricity.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1161441AbWJKVQo@vger.kernel.org>
-Content-Disposition: inline; filename="md-fix-problem-where-hot-added-drives-are-not-resynced.patch"
-In-Reply-To: <20061011210310.GA16627@kroah.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, stable@kernel.org, syrius.ml@no-log.org, Richard Bollinger <rabollinger@gmail.com>
-Cc: Justin Forbes <jmforbes@linuxtx.org>, Zwane Mwaikambo <zwane@arm.linux.org.uk>, Theodore Ts'o <tytso@mit.edu>, Randy Dunlap <rdunlap@xenotime.net>, Dave Jones <davej@redhat.com>, Chuck Wolber <chuckw@quantumlinux.com>, Chris Wedgwood <reviews@ml.cw.f00f.org>, Michael Krufky <mkrufky@linuxtv.org>, torvalds@osdl.org, akpm@osdl.org, alan@lxorguk.ukuu.org.uk, linux-raid@vger.kernel.org, Greg Kroah-Hartman <gregkh@suse.de>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1160423139.2917.112.camel@fc6.xsintricity.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Doug Ledford <dledford@redhat.com>
+Cc: Rob Bray <raid@bymeinc.com>, linux-raid mailing list <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+Doug Ledford wrote:
+> On Mon, 2006-10-09 at 15:10 -0400, Rob Bray wrote:
+[]
+> Probably the best thing to do would be on create of the array, setup a
+> large all 0 block of mem and repeatedly write that to all blocks in the
+> array devices except parity blocks and use a large all 1 block for that.
+> Then you could just write the entire array at blinding speed.  You could
+> call that the "quick-init" option or something.  You wouldn't be able to
+> use the array until it was done, but it would be quick.  If you wanted
+> to be *really* fast, at least for SCSI drives you could write one large
+> chunk of 0's and one large chunk of 1's at the first parity block, then
+> use the SCSI COPY command to copy the 0 chunk everywhere it needs to go,
+> and likewise for the parity chunk, and avoid transferring the data over
+> the SCSI bus more than once.
 
--stable review patch.  If anyone has any objections, please let us know.
+Some notes.
 
-------------------
-From: Neil Brown <neilb@suse.de>
+First, raid array gets created sometimes in order to repair a broken array.
+Ie, you had an array, you lose it for whatever reason, and re-create it,
+avoiding initial resync (--assume-clean option), in a hope your data is
+still here.  For that, you don't want to zero-fill your drives, for sure! :)
 
-If a drive is added with HOT_ADD_DISK rather than ADD_NEW_DISK,
-saved_raid_disk isn't initialised properly, and the drive can be
-included in the array without a resync.
+And second, at least SCSI drives have FORMAT UNIT command, which has a
+range argument (from-sector and to-sector), and, if memory serves me
+right, also "filler" argument as well (the data, 512-byte block, to
+write to all the sectors in the range).  (Well, it was long ago when
+I looked at that stuff, so it might be some other command, but it's
+here anyway).  I'm not sure it's used/available in block device layer
+(most probably it isn't).  But this is the fastest way to fill (parts
+of) your drives with whatever repeated pattern of bytes you want.
+Including this initial zero-filling.
 
+But either way, you don't really need to do that in kernel space --
+Userspace solution will work too.  Ok ok, if kernel is doing it after
+array creation, the array is available immediately for other use,
+which is a plus.
 
-From: Neil Brown <neilb@suse.de>
-Cc: <syrius.ml@no-log.org>
-Cc: Richard Bollinger <rabollinger@gmail.com>
-Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+And yes, I'm not sure implementing it is worth the effort.  Unless
+you're re-creating your multi-terabyte array several times a day ;)
 
----
- drivers/md/md.c |    1 +
- 1 file changed, 1 insertion(+)
-
---- linux-2.6.18.orig/drivers/md/md.c
-+++ linux-2.6.18/drivers/md/md.c
-@@ -3867,6 +3867,7 @@ static int hot_add_disk(mddev_t * mddev,
- 	}
- 	clear_bit(In_sync, &rdev->flags);
- 	rdev->desc_nr = -1;
-+	rdev->saved_raid_disk = -1;
- 	err = bind_rdev_to_array(rdev, mddev);
- 	if (err)
- 		goto abort_export;
-
---
+/mjt
