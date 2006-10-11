@@ -1,92 +1,61 @@
 From: Eli Stair <estair@ilm.com>
-Subject: BUGS: internal bitmap during array create
-Date: Wed, 11 Oct 2006 13:11:57 -0700
-Message-ID: <452D500D.6000203@ilm.com>
+Subject: Re: Setting write-intent bitmap during array resync/create?
+Date: Wed, 11 Oct 2006 13:11:47 -0700
+Message-ID: <452D5003.4070703@ilm.com>
+References: <452BF505.9020608@ilm.com> <Pine.LNX.4.64.0610102213020.20016@twinlark.arctic.org>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
- boundary="------------080705080507070609010604"
+ boundary="------------070504030603040205000309"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.64.0610102213020.20016@twinlark.arctic.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid mailing list <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
 This is a multi-part message in MIME format.
---------------080705080507070609010604
+--------------070504030603040205000309
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 
 
-After realizing my stupid error in specifying the bitmap during array 
-creation, I've triggered a couple of 100% repeatable bugs with this 
-scenario.
 
 
-BUG 1)
+> On Tue, 10 Oct 2006, Eli Stair wrote:
+> 
+>  > I gather this isn't currently possible, but I wonder if it's feasible 
+> to make
+>  > it so?  This works fine once the array is marked 'clean', and I 
+> imagine it's
+>  > simpler to just disallow the bitmap creation until it's in that 
+> state.  Would
+>  > it be possible to allow creation of the bitmap by queueing the action 
+> until
+>  > the array is done rebuilding?
 
-When I create an array without a bitmap and add it after the array is 
-synced, all works fine with any filesystem.  If I create WITH the 
-internal bitmap and use xfs, it chokes at mount time with:
-
-     mount: wrong fs type, bad option, bad superblock on /dev/md0,
-     or too many mounted file systems
-
-xfs_check also dies with:
-
-     [root@gtmp01 GTMP]# xfs_check /dev/md0
-     xfs_check: unexpected XFS SB magic number 0x00000000
-     xfs_check: read failed: Invalid argument
-     xfs_check: data size check failed
-     /usr/sbin/xfs_check: line 28: 30580 Segmentation fault 
-xfs_db$DBOPTS -i -p xfs_check -c "check$OPTS" $1
-
-
-Strangely, whatever the underlying cause is, ext3 seems immune (at least 
-in brief testing) to this.  I can create and mount an ext3 filesystem on 
-top of the array that xfs dies trying to mount.
-
-In the case where the array is created with bitmap at build time, if I 
-wait until resync is completed, do a 'mdadm -Gb none' followed by 'mdadm 
--Gb internal', I can then safely create the XFS filesystem and mount it.
-
-BUG 2)
-
-Another bitmap failure during create time:  MDADM dies with an error 
-after creating the array, when it tries to assemble it, with an 
-external-file bitmap (on ext3):
+dean gaudet wrote:
+> 
+> why don't you add "-b internal" to the mdadm --create command line? 
+> 
+> -dean
+> 
 
 
-     [root@gtmp01 GTMP]# mdadm -C /dev/md0 -f --chunk=512 --level=10 
--n14 -po2 -e1.2 -bESC[1P^M[root@gtmp01 GTMP]# mdadm -C /dev/md0 -f 
---chunk=512 --level=10 -n14 -po2 -e1.2 -b/var/tmp/bitmap /dev/mapper/mpath*
-     mdadm: RUN_ARRAY failed: Cannot allocate memory
-     mdadm: stopped /dev/md0
+Valid question!
 
+One - I apparently made a blunder of the syntax and kept including -G 
+out of habit when I formed the create line, and didn't pay attention to 
+the error in my logs.  D'oh.
 
-The array can be manually assembled, but it does not load with the 
-bitmap, even when specifying it with 'mdadm -A /dev/md0 -b/var/tmp/bitmap'.
+Two - After realizing the mistake, I find there are a few bugs in doing 
+this.  Posting a separate new thread for this.
 
-
-
-
-For reference, I'm running:
-
-mdadm - v2.5.3 -  7 August 2006
-mkfs.xfs version 2.8.11
-kernel 2.6.18 (Opteron, x86_64, SMP)
-
-
-I've attached typescript of the sessions where I run through all of 
-these scenarios, as well as an strace of the "mdadm -C 
--b/var/tmp/bitmap" where it fails to assemble the array.  Also is a file 
-with the superblock detail on all the member devices.
-
-Again, more than happy to help test patches and any scenarios.
 
 Cheers,
 
 /eli
 
---------------080705080507070609010604
+
+--------------070504030603040205000309
 Content-Type: application/x-gzip;
  name="mdadm-create-array-with-bitmap-ext3-success.log.gz"
 Content-Transfer-Encoding: base64
@@ -521,7 +490,7 @@ n57WH3r6/Oxvf//9+/rt9Zv44adv0etv9E8+fvfdN59efwefPvzwm9d3c95+/PDVx++//vGz
 f/df/qLe/v2fv338/u312/3Z71756ev7+4/57Qs//+WPv/jdX8qHr//P796nX72+Hl9/+OG1
 f/3lpy9fL/1/+Hp8+IdvPn3223999udf/fDN33367f8aP/0R/vJ1R8Tbf/rq01t+8cW+foW/
 6PjF7Nuf/enbn/3bv/jsfwNG6UkOQnACAA==
---------------080705080507070609010604
+--------------070504030603040205000309
 Content-Type: application/x-gzip;
  name="mdadm-create-array-with-bitmap-failure.log.gz"
 Content-Transfer-Encoding: base64
@@ -566,35 +535,7 @@ zht6DhP4zNQONPkzOCAPz9zfyxVcMDxsFfwKtUez1Tfsen/IqiyXtm6yNQ/r6Q6E/PqBKPTR
 6NHom7WO0SAC5zzEnGLRGAL6KGerYJaE+aJppHOXEcYSypIEatk0BlmWTR3fp8ybAK9r9Kze
 BvfJB3APUm8+8ae73P0smKdZdsv9kWYhlGVe1qz5x0v/aXPX311+iNq0f3f9F+vr0JohGwAA
 
---------------080705080507070609010604
-Content-Type: application/x-gzip;
- name="mdadm-create-array-with-bitmap-failure.superblocks.gz"
-Content-Transfer-Encoding: base64
-Content-Disposition: inline;
- filename="mdadm-create-array-with-bitmap-failure.superblocks.gz"
-
-H4sICE9PLUUAA21kYWRtLWNyZWF0ZS1hcnJheS13aXRoLWJpdG1hcC1mYWlsdXJlLnN1cGVy
-YmxvY2tzAO3aW2sjNxQA4Hf/Cj1uwZtIR/cD+9A07bJ024Wmbp91OWpNEjuM7dDtr6/GdsYO
-lFKI0cvMgB+s+8UfB411nen5Oj++5zhjw/NT+GOZGLLgISoqacj6jbrNcr2qWVzsE3+gsN11
-VGs89Yl/HVLZt10XvrLF4tNtTZXZ8qJdxOKzU0Jq1Jk4V1GiFJyCSP6sb/ZzeKS+rZr2XVeb
-7/v7dblP+50y+5K2TAgmJHKLSjPg3Byq/xKWmX2mZ3qoRbv6RfRtHJJv6XmZaFMzhJrtix9S
-2N3y775lcMYqLzWwd0KaKyvZx+VNLWuuHLCPN9+cT+ulCucWFLdcsXde2ytxrMPBXllxqsQW
-mzrs837q5z/7uQ3bwL6UsqFtP2Bp2IbSdt1t+ty73RN1p1x3nnd87rZh23cW0nb5TOezPe6I
-y8bwCBqlAgkyetQlFa2UR1OkNFm42ezTakvdKjywm+X2cb+98NIXK936kW36kcSHdbrfd7F4
-yn23/2ur6tb+Sel+s3usRbOMyqeg2HuW1l1XuzjN5ftnWm03+5/DKfFz+Lre9ZNfUeg+iDlb
-71fjA8yOTe9W9y8LrgX8eKh63LyHdV+Ts3d8zmpVmDM5Z2rO9JyZObNz5ubM16w+u+aLWkDI
-/b4cGzgu7mJ3/syuj47E5Gg8jkglzp0hzC5pGWNAx2Mq3GVMJJ00ITV0VAwUl0C0dCTe7Gi3
-+HdHU0AaEaQkS8ViCTVkEqkopBqaSrE1MlVG2sbQEJIMAXQ0viUkeDukV5JOkKaINCJIStfV
-TwCofNE5FIOZA3ErI0bpwLnSEhIBhRghtIQkLwDpXNIJEkyQxgOJS8ujLgLrWETwGtCEGLK2
-BVVxlEVpeUTSvJ6PgootIalLQDqTdIIkJ0jjgRSE8YK4Q1KmJEcWKaoQpRHIwSjQJbaMSNxJ
-71xuCUlfBNJJ0gBpCkgjcuRFyqG6wSgUl0kk5KZQLiWgtWBKHWFLRzUQKshNA5K5jKMB0uBo
-ikcjclScqavuCoLJCmxymJMGFZ1BL1OQGXRDR74GR5NC0xOSvZCjF0iDIzU5Go+jDA6iMITe
-86QFLxg9KahRASUpmyGVho5AJpei4y0duUs5OkIaHOnJ0YgcJR859C/q6iQ0RY1Qj0fZ5Iw6
-huAIWv6HpLwLHFTT85G/mKMDpMGRmRyNx1GEpGX1g1T3RcRUkCuufdaAmRepgoKmb75LBut1
-0/9i336pYfdK0gDJTpDGA8lokQL4gN4GH1X2mOsJiZNUGJTKQEK0DEhZW/KemkK6wK2GV5IG
-SG6CNB5IzrmUhUsYpBUqxoTSJV9VWUzGKV4SbwlJOaeTSk0hXeJWw7mkAZKfII0HUkhQqK49
-KmVMLFlilIYrQQ51kiaYppcadP2NyQyyKaSL3Go4kzT7Bw4oWVb4LQAA
---------------080705080507070609010604
+--------------070504030603040205000309
 Content-Type: application/x-gzip;
  name="mdadm-create-array-with-bitmap_externalfile-fails.log.gz"
 Content-Transfer-Encoding: base64
@@ -633,7 +574,7 @@ KjY2isjYRJcF0yZUFlo2IbLQtEnWx7Db8tqwTXnV7Za8Urspr0S3jaxA7UZWIHYmlWh2JpXY
 5LxIwmJbldtWAonYwkCwbrG4g+TnCU7NbBdQnDASXtmkoRKUb5+VjlysvVdfcJzDZAuDDq6z
 dfoEnlLTIDhI6tSOZzDwAi8ZdgilddNHhpREnLsdohstUz9SE+5MlNzpGzPx172aPNV62Z/T
 xTPpZf9Mb1qknf8z/V8MCxMFzC4AAA==
---------------080705080507070609010604
+--------------070504030603040205000309
 Content-Type: application/x-gzip;
  name="mdadm-create-array-with-bitmap_externalfile-fails.strace.gz"
 Content-Transfer-Encoding: base64
@@ -694,7 +635,7 @@ qUTzTF3ikhInC+ruUcWqVF9Zr5T8odPt9kaK0273XGfkKR2v0xvc7Y6jxESUOk2n2fleqb2p
 1A9qtYN3yqXTanvN75XxV8dZxFxV79EldvycY46lO48s3UtyhE8L9ym3Td9tOuu25jyEKNWL
 TdUtcRYOzEnduXAPRz1BYU0loLMmsbuCT5i64FM/mGIYeretUf3joHfdz9Nl46us/Hvn9aDn
 esOhwqluGkrTGznuldfc+T8wm1vPGA4BAA==
---------------080705080507070609010604
+--------------070504030603040205000309
 Content-Type: application/x-gzip;
  name="mdadm-create-array-without-bitmap-success.log.gz"
 Content-Transfer-Encoding: base64
@@ -736,4 +677,4 @@ vQkKJ5WOEmy3xAkqjh3eCvS++kpX532RBwbdU1Q0DpMzbMMw6AEFoXpTqXGzpNi0za+7c/fr
 oDRfnOaLdeMi/42L/P78YAS1uKGMfqZqnpBNaTEXCJQqHXEpZCkyp+or0nM+x7IyFyyC22iq
 2yPY5TnqpU8oyzhm5ZZSBovbNFE/eqkzkOlSfXqUOV+fgRREO42knq6Q5Rk8i0M5q/2g2qgs
 sdqp3GfzX8wM9c840L/RySRz1Q907qhnlj/Q/QMLAq2B0xsAAA==
---------------080705080507070609010604--
+--------------070504030603040205000309--
