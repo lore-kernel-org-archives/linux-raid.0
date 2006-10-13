@@ -1,151 +1,95 @@
-From: "Dan" <dan@korstad.net>
-Subject: RE: new features time-line
-Date: Fri, 13 Oct 2006 19:14:50 -0500
-Message-ID: <000b01c6ef25$c498bb50$eb00000a@mine3ad5e808fe>
-References: <45300FC5.80806@h3c.com>
+From: jeff <jeff@jeffunit.com>
+Subject: problem during boot with linux software raid 5
+Date: Fri, 13 Oct 2006 18:28:21 -0400
+Message-ID: <1160778501.8826.13.camel@dual_933>
+Reply-To: jeff@jeffunit.com
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <45300FC5.80806@h3c.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Mike Hardy' <mhardy@h3c.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org, jeff@jeffunit.com
 List-Id: linux-raid.ids
 
-Good to hear.  
+I am running mandrake 2006 linux.
 
-I think when I first built my RAID (a few years ago) I did some research on
-this;
-http://www.google.com/search?hl=en&q=bad+block+replacement+capabilities+mdad
-m
+uname -a reports
+Linux dual_933 2.6.12-12mdksmp #1 SMP Fri Sep 9 17:43:23 CEST 2005 i686
+Pentium III (Coppermine) unknown GNU/Linux
 
-And found stories where bit errors were an issue.
-http://www.ogre.com/tiki-read_article.php?articleId=7
+I created a raid 5 partition using 4 250gb ide drives and 1 200gb ide
+drive (I will get a bigger drive real soon now).
 
-After your email, I went out and researched it again.  Eleven months ago a
-patch to address this was submitted for RAID5, I would assume RAID6
-benefited from it too? 
+I said:
+mdadm --create --verbose /dev/md0 --level=5 --raid-devices=5 /dev/hda
+/dev/hdb /dev/hdc /dev/hdd /dev/hdf
 
-_______________________________________
-http://kernel.org/pub/linux/kernel/v2.6/testing/ChangeLog-2.6.15-rc1 
+Then I formatted it:
+mkreiserfs /dev/md0
 
-Author: NeilBrown <neilb@suse.de>
-Date:   Tue Nov 8 21:39:22 2005 -0800
+Then I made an entry in /etc/fstab:
+/dev/md0 /mnt/data reiserfs notail 1 2
 
-    [PATCH] md: better handling of readerrors with raid5.
-    
-    This patch changes the behaviour of raid5 when it gets a read error.
-    Instead of just failing the device, it tried to find out what should
-have
-    been there, and writes it over the bad block.  For some media-errors,
-this
-    has a reasonable chance of fixing the error.  If the write succeeds, and
-a
-    subsequent read succeeds as well, raid5 decided the address is OK and
-    conitnues.
-    
-    Instead of failing a drive on read-error, we attempt to re-write the
-block,
-    and then re-read.  If that all works, we allow the device to remain in
-the
-    array.
-    
-    Signed-off-by: Neil Brown <neilb@suse.de>
-    Signed-off-by: Andrew Morton <akpm@osdl.org>
-    Signed-off-by: Linus Torvalds <torvalds@osdl.org>
-_________________________________________________
+and I mounted it with 'mount -a'
 
+Everything worked fine, and I filled up the disk.
 
-So the vulnerability would exist only if the bad bit stuck at the some
-parity information and another at a data sector that needed that exact
-parity information which is next to impossible and closer to impossible with
-RAID6 since there would need to be loss the data sector and both the same p
-and q parity information at the same time.
+When I rebooted, the reboot hung. I think for some reason it didn't
+automatically start the md0 device, and as a result it couldn't mount
+the /dev/md0 partition in my /etc/fstab. I went into single-user mode,
+and commented out the /dev/md0 line in /etc/fsab, and I was able to
+boot. Then I executed the mdadm --create line, uncommented /etc/fstab,
+and I was able to access my data.
 
-Thus less benefit for splitting up the drives in sections for logical
-volumes is less useful.  And RAID6 provides the added benefit for bit errors
-during a single drive degraded array as opposed to RAID5. 
+I was reading some documentation, and it said that you can use mdadm on
+either partitions or on a device (as I did). When you have partitions, I
+read that you should set the partition type to 0xFD so they get
+autodetected during boot. I can't do this, as I don't have partitions.
 
-Nevertheless, I would still use the LVM system to split the new replacement
-drives if I had a method to utilize the extra drive space of the few new
-replacements prior to replacing all of them.  Otherwise I suppose practice
-patients and wait until they are all replaced to use the current grow -G -z
-max feature.
+I am not sure what I should do to fix the problem.
+I would guess I can create one big partition per disk and mark each as
+0xFD. I checked the superblock status on all of the disks (shown below)
+so it is clear that the disk has a superblock and knows it is raid5.
+Please advise.
 
-Thanks,
-Dan.
+Jeff Deifik
 
 
+(Only one shown, but they rest are pretty similar)
+mdadm --examine  /dev/hda
+/dev/hda:
+          Magic : a92b4efc
+        Version : 00.90.00
+           UUID : ce5e9366:d83a232c:3da68804:f6814703
+  Creation Time : Fri Oct 13 13:02:51 2006
+     Raid Level : raid5
+    Device Size : 195360896 (186.31 GiB 200.05 GB)
+     Array Size : 781443584 (745.24 GiB 800.20 GB)
+   Raid Devices : 5
+  Total Devices : 5
+Preferred Minor : 0
 
------Original Message-----
-From: Mike Hardy [mailto:mhardy@h3c.com] 
-Sent: Friday, October 13, 2006 5:14 PM
-To: Dan
-Subject: Re: new features time-line
+    Update Time : Fri Oct 13 13:09:15 2006
+          State : clean
+ Active Devices : 4
+Working Devices : 5
+ Failed Devices : 1
+  Spare Devices : 1
+       Checksum : 19f15df2 - correct
+         Events : 0.9
 
+         Layout : left-symmetric
+     Chunk Size : 64K
 
-Not commenting on your overall premise, but I believe bit errors are
-already logged and rewritten using parity info by md
+      Number   Major   Minor   RaidDevice State
+this     0       3        0        0      active sync   /dev/hda
 
--Mike
-
-Dan wrote:
-> I am curious if there are plans for either of the following;
-> -RAID6 reshape
-> -RAID5 to RAID6 migration
-> 
-> Here is why I ask, and sorry for the length.
-> 
-> I have an aging RAID6 with eight 250G drives as a physical volume in a
-> volume group.  It is at about 80% capacity.  I have had a couple drives
-fail
-> and replaced them with 500G drives.  I plan to migrate the rest over time
-as
-> they drop out.  However this could be months or years.
-> 
-> I could just be patient and wait until I have replaced all the drives and
-> use the -G -z max  to grow the RAID to resize the array to the maximum
-> space.  But I could use the extra space sooner.
-> 
-> Since I already have the existing RAID (md0) as a physical volume in a
-> volume group, I though why not just use the other half of the drives and
-> create another RAID6 (md1) add that to the same volume group and so on as
-I
-> grow. md0 made from devices=/dev/sd[abcdefgh]1; md1 made from
-> devices=/dev/sd[abcdefgh]2; and so on (I could have the md number match
-the
-> partition number for aesthetics I suppose)...  
-> 
-> By doing this I further protect myself from possible bit error rate on
-> increasingly large drives.  So if there are suddenly three bit errors I
-have
-> a chance as long as they are not all on the same partition number.  Mdadm
-> will only kick out the bad partitions and not the whole drive. (I know I
-am
-> already doing RAID6, what are the chances of three!).
-> 
-> To get to my point, I would like to split the new half of the drives into
-a
-> new physical volume and would 'like' to try to start using some of the
-> drives before I have replace all the existing 250G drives.  If RAID6
-reshape
-> was an option I could start once I have replaced at least three of the old
-> drives (built it as a RAID6 with one missing).  But it is not available,
-> yet.  Or, since RAID5 reshape is an option, I could again start when I
-have
-> replaced three (built it as a RAID5) than grow it to until I get to the
-> eighth drive and migrate to the final desired RAID6.  But that is not an
-> option, yet.
-> 
-> Thoughts?
-> 
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+   0     0       3        0        0      active sync   /dev/hda
+   1     1       3       64        1      active sync   /dev/hdb
+   2     2      22        0        2      active sync   /dev/hdc
+   3     3      22       64        3      active sync   /dev/hdd
+   4     4       0        0        4      faulty removed
+   5     5      33       64        4      spare   /dev/hdf
 
 
 
