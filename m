@@ -1,63 +1,68 @@
-From: Luca Berra <bluca@comedia.it>
-Subject: Re: problem during boot with linux software raid 5
-Date: Sat, 14 Oct 2006 10:09:54 +0200
-Message-ID: <20061014080954.GD17336@percy.comedia.it>
-References: <1160778501.8826.13.camel@dual_933>
+From: Ray Greene <raygr@es.co.nz>
+Subject: Cannot create RAID5 - device or resource busy
+Date: Sat, 14 Oct 2006 15:40:56 +1300
+Message-ID: <b8j0j2p670ad9v56fiubtk3c8ej841mp2b@4ax.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1160778501.8826.13.camel@dual_933>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org, jeff@jeffunit.com
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, Oct 13, 2006 at 06:28:21PM -0400, jeff wrote:
->I am running mandrake 2006 linux.
-s/mandrake/mandriva
+I am having problems creating a RAID 5 array using 3x400GB SATA drives
+on a Dell SC430 running Xandros 4.
 
->uname -a reports
->Linux dual_933 2.6.12-12mdksmp #1 SMP Fri Sep 9 17:43:23 CEST 2005 i686
->Pentium III (Coppermine) unknown GNU/Linux
-not strictly related to your problem, but you should really consider
-applying updates from your distribution.
+I created this once with Webmin and it worked OK but then I deleted it
+and started again as I believe the chunk size was too small at 4kb,
+the default size with Webmin.
 
-<snip>
+I have repartitioned and formatted the drives. I have tried creating
+the array with Webmin and at the console but it always fails with the
+same error.
 
->When I rebooted, the reboot hung. I think for some reason it didn't
->automatically start the md0 device, and as a result it couldn't mount
->the /dev/md0 partition in my /etc/fstab. I went into single-user mode,
->and commented out the /dev/md0 line in /etc/fsab, and I was able to
->boot. Then I executed the mdadm --create line, uncommented /etc/fstab,
->and I was able to access my data.
-the command to activate an already existing raid set is "mdadm
---assemble", not "mdadm --create"
+This is the command I use:
+mdadm --create --verbose /dev/md0 --level=raid5 --chunk=256 --run
+--raid-devices=3 /dev/sdb1 /dev/sdc1 /dev/sdd1
 
->I was reading some documentation, and it said that you can use mdadm on
->either partitions or on a device (as I did). When you have partitions, I
->read that you should set the partition type to 0xFD so they get
->autodetected during boot. I can't do this, as I don't have partitions.
-this is junk documentation do not believe in it :=)
-
-mandriva boot process uses mdadm to assemble raid devices at boot time
-but you need to tell mdadm which arrays it should find at boot by
-editing /etc/mdadm.conf, just run the following code snippet:
-
-#!/bin/sh
-grep -qs '/^[[:space:]]*DEVICE' /etc/mdadm.conf || \
-        echo "DEVICE partitions" >> /etc/mdadm.conf
-
-mdadm -Esc partitions | awk '
-        /^ARRAY[[:space:]]/ {
-                print $0, "auto=yes"
-        }
-' >> /etc/mdadm.conf
+mdadm: layout defaults to left-symmetric
+mdadm: /dev/sdb1 appears to contain an ext2fs file system
+    size=390708800K  mtime=Wed Dec 31 19:00:00 1969
+mdadm: /dev/sdc1 appears to contain an ext2fs file system
+    size=390708800K  mtime=Wed Dec 31 19:00:00 1969
+mdadm: /dev/sdd1 appears to contain an ext2fs file system
+    size=390708800K  mtime=Wed Dec 31 19:00:00 1969
+mdadm: size set to 390708736K
+mdadm: creation continuing despite oddities due to --run
+mdadm: SET_ARRAY_INFO failed for /dev/md0: Device or resource busy
 
 
--- 
-Luca Berra -- bluca@comedia.it
-        Communication Media & Services S.r.l.
- /"\
- \ /     ASCII RIBBON CAMPAIGN
-  X        AGAINST HTML MAIL
- / \
+This is the output from fdisk -l :
+Disk /dev/sdb: 400.0 GB, 400088457216 bytes
+255 heads, 63 sectors/track, 48641 cylinders
+Units = cylinders of 16065 * 512 = 8225280 bytes
+
+Device  Boot Start End  Blocks    Id System
+/dev/sdb1     1   48641 390708801 fd Linux raid autodetect
+
+Disk /dev/sdc: 400.0 GB, 400088457216 bytes
+255 heads, 63 sectors/track, 48641 cylinders
+Units = cylinders of 16065 * 512 = 8225280 bytes
+
+Device  Boot Start End  Blocks    Id System
+/dev/sdc1     1   48641 390708801 fd Linux raid autodetect
+
+Disk /dev/sdd: 400.0 GB, 400088457216 bytes
+255 heads, 63 sectors/track, 48641 cylinders
+Units = cylinders of 16065 * 512 = 8225280 bytes
+
+Device  Boot Start End  Blocks    Id System
+/dev/sdd1     1   48641 390708801 fd Linux raid autodetect
+
+
+Why does it always give the error "Device or resource busy", and what
+can I do about it?
+
+- 
+Ray Greene
+
