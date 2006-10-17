@@ -1,60 +1,28 @@
-From: Clem Pryke <pryke@focus.uchicago.edu>
-Subject: mptsas driver
-Date: Tue, 17 Oct 2006 10:55:00 -0500
-Message-ID: <200610171555.k9HFt0sE029263@focus.uchicago.edu>
+From: "Andrew Moise" <chops@demiurgestudios.com>
+Subject: Re: PERC5 - MegaRaid-SAS problems..
+Date: Tue, 17 Oct 2006 13:58:17 -0400
+Message-ID: <df1ef2450610171058i15ad6b47kb8579fc3f1a7e8ee@mail.gmail.com>
+References: <Pine.LNX.4.56.0610121246400.11816@lion.drogon.net>
+	 <Pine.LNX.4.56.0610171138400.4600@lion.drogon.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Sender: linux-scsi-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org, linux-raid@vger.kernel.org
-Cc: pryke@focus.uchicago.edu
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.56.0610171138400.4600@lion.drogon.net>
+Content-Disposition: inline
+Sender: linux-raid-owner@vger.kernel.org
+To: Gordon Henderson <gordon@drogon.net>
+Cc: linux-poweredge@dell.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I have an Xtore XJ-SA12-316R external SAS chassis housing 12 Seagate ST375064 
-disks.
+On 10/17/06, Gordon Henderson <gordon@drogon.net> wrote:
+> Anyway, it's currently in a RAID-1 configuration (which I used for some
+> initial soaktests) and seems to be just fine:
+>
+> Filesystem            Size  Used Avail Use% Mounted on
+> /dev/md9              6.8T   33M  6.7T   1% /mnt
 
-After an abortive attempt to get this setup using an Adaptec 58300 SAS 
-controller card and their proprietary adp94xx driver I bought an LSI Logic 
-SAS3800X card.
-
-This is supported by module mptsas in RHEL4U4 kernel. As far as I can tell the 
-fusion mpt driver is GPL and so I might not get told off for asking questions 
-about it here? ;-)
-
-I am slaving the disks together using md as raid5 (or raid6 array). Basically 
-it works 99.999% but occasionally produces error during md re-sync:
-
-kernel: mptbase: ioc0: LogInfo(0x31120400): Originator={PL}, Code={Abort}, 
-SubCode(0x0400)
-
-Most times things appear to proceed as normal but a few times it is followed 
-by SCSI errors and the disk is dropped:
-
-Oct 16 16:29:40 spt2 kernel: SCSI error : <2 0 9 0> return code = 0x10000
-Oct 16 16:29:40 spt2 kernel: end_request: I/O error, dev sdd, sector 948164346
-Oct 16 16:29:40 spt2 kernel: raid6: Disk failure on sdd1, disabling device. 
-Operation continuing on 10 devices
-
-I can't prove that the disks aren't really producing timeouts/errors. But I've 
-seen several of them appear to do so and suspect it's the controller/driver. A 
-complication is the chassis which has built in SAS port expander which might 
-also be a factor.
-
-Does anyone have any similar experience?
-
-Thanks for any help.
-
-Clem
-
-More details:
-Card is in Tyan dual AMD64 box. Kernel is RHEL4U4 2.6.9-42.0.2.ELsmp.
-
--- 
-**********************************************************************
-Clem Pryke - Assistant Professor - Astronomy and Astrophysics
-University of Chicago,
-Room 120, LASR, 933 East 56th Street, Chicago, Illinois 60637, USA
-Tel: 773 702-7853  Fax: 773 702-6645  email: pryke@focus.uchicago.edu
-**********************************************************************
-
-
+  Incidentally, what filesystem are you using?  We may be setting up a
+similar situation soon, and I'm considering ext3 and XFS.  ext3
+apparently has a low max fs size, though, and I've heard bad things
+about XFS's behavior on unclean shutdowns...
