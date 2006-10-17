@@ -1,68 +1,45 @@
-From: Tomasz Chmielewski <mangoo@wpkg.org>
-Subject: Re: resync starts over after each reboot (2.6.18.1)?
-Date: Tue, 17 Oct 2006 11:28:22 +0200
-Message-ID: <4534A236.4080907@wpkg.org>
-References: <45349861.4010208@wpkg.org> <17716.41259.239292.413627@cse.unsw.edu.au>
+From: Gordon Henderson <gordon@drogon.net>
+Subject: Re: PERC5 - MegaRaid-SAS problems..
+Date: Tue, 17 Oct 2006 11:44:55 +0100 (BST)
+Message-ID: <Pine.LNX.4.56.0610171138400.4600@lion.drogon.net>
+References: <Pine.LNX.4.56.0610121246400.11816@lion.drogon.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17716.41259.239292.413627@cse.unsw.edu.au>
+In-Reply-To: <Pine.LNX.4.56.0610121246400.11816@lion.drogon.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-poweredge@dell.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil Brown wrote:
-> On Tuesday October 17, mangoo@wpkg.org wrote:
->> I just set up a new Debian unstable box.
->> It's running 2.6.18.1 kernel.
->>
->> I created RAID-1 on two disks, with no data or filesystem on it.
->> As I'm still experimenting with the box, I reboot it quite frequently.
->>
->> I noticed that RAID-1 resync starts from the very beginning after each 
->> reboot. Is it normal?
-> 
-> No.
-> Has the resync finished when you shut down?
 
-No, it was still running.
+For anyone who cares about my saga so-far ;-) ...
 
+I got physical access to the unit this morning and setup the drives as 15
+RAID-0 Logical drives and booted up Linux, and it then attached all the
+drives in the usual way.
 
-> How do you shut down?
+And I can see all 15 drives. So the down-side is that I can't use any sort
+of SMART stuff over the bus (as pointed out by someone else).
 
-I simply type "reboot", so it should shutdown/reboot cleanly.
+Anyway, it's currently in a RAID-1 configuration (which I used for some
+initial soaktests) and seems to be just fine:
 
+Filesystem            Size  Used Avail Use% Mounted on
+/dev/md9              6.8T   33M  6.7T   1% /mnt
 
-> Can you post the kernel logs from boot up to when the resync has
-> started?
+And it's more than fast enough too, although it'll be a lot slower when I
+rebuilt it in RAID-6 mode.
 
-# dmesg|grep md
-
-md: raid1 personality registered for level 1
-md: raid10 personality registered for level 10
-md: raid6 personality registered for level 6
-md: raid5 personality registered for level 5
-md: raid4 personality registered for level 4
-md: md driver 0.90.3 MAX_MD_DEVS=256, MD_SB_DISKS=27
-md: bitmap version 4.39
-md: md0 stopped.
-md: bind<sdb1>
-md: bind<sda1>
-md: md0: raid array is not clean -- starting background reconstruction
-raid1: raid set md0 active with 2 out of 2 mirrors
-md: syncing RAID array md0
-md: minimum _guaranteed_ reconstruction speed: 1000 KB/sec/disc.
-md: using maximum available idle IO bandwidth (but not more than 200000 
-KB/sec) for reconstruction.
-md: using 128k window, over a total of 312568576 blocks.
+Version  1.03       ------Sequential Output------ --Sequential Input- --Random-
+                    -Per Chr- --Block-- -Rewrite- -Per Chr- --Block-- --Seeks--
+Machine        Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP  /sec %CP
+bertha           2G           266336  99 203934  61           421850  40 872.9   1
 
 
-(it has so many raid levels, as I'm still experimenting with it).
+md9 : active raid0 sdo[14] sdn[13] sdm[12] sdl[11] sdk[10] sdj[9] sdi[8]
+sdh[7] sdg[6] sdf[5] sde[4] sdd[3] sdc[2] sdb[1] sda[0]
+      7317748800 blocks 64k chunks
 
+Cheers,
 
--- 
-Tomasz Chmielewski
-http://wpkg.org
-
+Gordon
