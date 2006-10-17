@@ -1,75 +1,75 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH] md: Fix bug where new drives added to an md array sometimes
- don't sync properly.
-Date: Tue, 17 Oct 2006 10:13:05 +1000
-Message-ID: <17716.8209.575554.65572@cse.unsw.edu.au>
-References: <20061005171233.6542.patches@notabene>
-	<1061005071326.6578@suse.de>
-	<45255C54.6060608@ilm.com>
-	<4526DBCE.6070906@ilm.com>
-	<17706.65210.999441.373846@cse.unsw.edu.au>
-	<452E12B1.1070506@tls.msk.ru>
+From: Mark Lord <mlord@pobox.com>
+Subject: Re: libata hotplug and md raid?
+Date: Mon, 16 Oct 2006 20:23:35 -0400
+Message-ID: <45342287.407@pobox.com>
+References: <c384c5ea0609130311t4005e5aam153251fc6bbbdfb8@mail.gmail.com>	 <4507E2A9.7070306@emc.com> <4507E641.7090508@gmail.com> <c384c5ea0609140524ofed0dd8v6f1b89a6b4d67f75@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Michael Tokarev on Thursday October 12
+In-Reply-To: <c384c5ea0609140524ofed0dd8v6f1b89a6b4d67f75@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Michael Tokarev <mjt@tls.msk.ru>
-Cc: Eli Stair <estair@ilm.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: Leon Woestenberg <leon.woestenberg@gmail.com>, Tejun Heo <htejun@gmail.com>, Ric Wheeler <ric@emc.com>, Greg KH <gregkh@suse.de>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Thursday October 12, mjt@tls.msk.ru wrote:
-> Neil Brown wrote:
-> []
-> > Fix count of degraded drives in raid10.
-> > 
-> > Signed-off-by: Neil Brown <neilb@suse.de>
-> > 
-> > --- .prev/drivers/md/raid10.c	2006-10-09 14:18:00.000000000 +1000
-> > +++ ./drivers/md/raid10.c	2006-10-05 20:10:07.000000000 +1000
-> > @@ -2079,7 +2079,7 @@ static int run(mddev_t *mddev)
-> >  		disk = conf->mirrors + i;
-> >  
-> >  		if (!disk->rdev ||
-> > -		    !test_bit(In_sync, &rdev->flags)) {
-> > +		    !test_bit(In_sync, &disk->rdev->flags)) {
-> >  			disk->head_position = 0;
-> >  			mddev->degraded++;
-> >  		}
+Leon Woestenberg wrote:
+> Hello all,
 > 
-> Neil, this makes me nervous.  Seriously.
-
-Yes.  Bugs are a problem.
-
+> On 9/13/06, Tejun Heo <htejun@gmail.com> wrote:
+>> Ric Wheeler wrote:
+>> > Leon Woestenberg wrote:
+>> >> In short, I use ext3 over /dev/md0 over 4 SATA drives /dev/sd[a-d]
+>> >> each driven by libata ahci. I unplug then replug the drive that is
+>> >> rebuilding in RAID-5.
+>> >>
+>> >> When I unplug a drive, /dev/sda is removed, hotplug seems to work to
+>> >> the point where proc/mdstat shows the drive failed, but not removed.
+>>
+>> Yeap, that sounds about right.
+>>
+>> >> Every other notion of the drive (in kernel and udev /dev namespace)
+>> >> seems to be gone after unplugging. I cannot manually removed the drive
+>> >> using mdadm, because it tells me the drive does not exist.
+>>
+>> I see.  That's a problem.  Can you use /dev/.static/dev/sda instead?  If
+>> you can't find those static nodes, just create one w/ 'mknod
+>> my-static-sda b 8 0' and use it.
+>>
 > 
-> How many bugs like this has been fixed so far? 10? 50?  I stopped counting
-> long time ago.  And it's the same thing in every case - misuse of rdev vs
-> disk->rdev.  The same pattern.
-
-I really don't think there have been that many that follow that
-pattern that closely. Maybe 2 or 3.
-
+> I did further testing of the ideas set out in this thread.
 > 
-> I wonder if it can be avoided in the first place somehow - maybe don't
-> declare and use local variable `rdev' (not by name, but by the semantics
-> of it), and always use disk->rdev or mddev->whatever in every place,
-> explicitly, and let the compiler optimize the deref if possible?
+> Although I can use (1) static device nodes, or (2) persistent naming
+> with the proper udev rules, each has its own kind of problems with md.
 > 
+> As long as the kernel announces drives as disappeared but md still
+> holds a lock, replugging drives will map to other major:minor number
+> no matter what I try in userspace.
+> 
+> Static device nodes will therefore not help me select the drive that
+> was unplugged/plugged per se.
+> 
+> Persistent naming using udev works OK (I used /dev/bay0 through
+> /dev/bay3 to pinpoint the drive bays) but these disappear upon
+> unplugging, while md keeps a lock to the major:minor, so replugging
+> will move it to different major:minor numbers.
+> 
+> So the question remains: How will hotplug and md work together?
+> 
+> How does md and hotplug work together for current hotplug devices?
 
-There certainly are styles of programming and rules for choosing names
-that can help reduce bugs.  And the kernel style does encourage some
-good practices.
-But that won't be enough by itself.  We need good style, and a review
-process, and testing.  And still bugs will get through, but there
-should be fewer.  You are welcome to help with any of these.
+I have the same questions.
 
-I hope to set up a more structured testing system soon with should be
-able to catch this sort of bug at least.
+How does this work in a pure SCSI environment? (has it been tested?)
+If something should change, should those changes be in the MD layer?
+Or can this *really* all be done nicely from userspace?  How?
 
-> And btw, this is another 2.6.18.1 candidate (if it's not too late already).
+I've got to fix some problems related to this, for a couple of clients,
+and would like to Do It Right, or as close to Right as reality permits.
 
-Yes, it was too late for 2.6.18.1.  I'll submit it for 2.6.18.2.
+Cheers
+-- 
+Mark Lord
+Real-Time Remedies Inc.
+mlord@pobox.com
 
-Thanks,
-NeilBrown
