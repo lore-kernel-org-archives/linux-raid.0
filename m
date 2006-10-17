@@ -1,71 +1,30 @@
-From: <Patrick_Boyd@Dell.com>
-Subject: RE: PERC5 - MegaRaid-SAS problems..
-Date: Tue, 17 Oct 2006 09:34:36 -0500
-Message-ID: <FCD01C3AA0ADFB498F9BB1A6173DFC5DE5AADC@ausx3mpc120.aus.amer.dell.com>
-References: <Pine.LNX.4.56.0610171138400.4600@lion.drogon.net>
+From: Olivier Doremieux <olivier@doremieux.org>
+Subject: Compile problem
+Date: Tue, 17 Oct 2006 17:22:12 +0200
+Message-ID: <4534F524.3050806@doremieux.org>
+Reply-To: olivier@doremieux.org
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
-In-Reply-To: <Pine.LNX.4.56.0610171138400.4600@lion.drogon.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: gordon@drogon.net, linux-poweredge@lists.us.dell.com, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-You can use either LSI or Dell utilities to monitor the SMART status of
-the disks.
+Hello,
 
-Patrick Boyd
-Dell Storage Software Engineer
-(512)728-3182
- 
+When I am trying to compile the 2.5.4 release, I am getting this error :
 
------Original Message-----
-From: linux-raid-owner@vger.kernel.org
-[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Gordon Henderson
-Sent: Tuesday, October 17, 2006 5:45 AM
-To: linux-poweredge-Lists; linux-raid@vger.kernel.org
-Subject: Re: PERC5 - MegaRaid-SAS problems..
+In file included from util.c:34:
+/usr/include/linux/blkpg.h:36: error: variable or field '__user' 
+declared void
+/usr/include/linux/blkpg.h:36: error: syntax error before '*' token
+util.c: In function 'remove_partitions':
+util.c:128: error: storage size of 'a' isn't known
+cc1: warnings being treated as errors
+util.c:128: warning: unused variable 'a'
+make: *** [util.o] Error 1
 
+Thanks in advance and thanks for the great work,
 
-For anyone who cares about my saga so-far ;-) ...
-
-I got physical access to the unit this morning and setup the drives as
-15 RAID-0 Logical drives and booted up Linux, and it then attached all
-the drives in the usual way.
-
-And I can see all 15 drives. So the down-side is that I can't use any
-sort of SMART stuff over the bus (as pointed out by someone else).
-
-Anyway, it's currently in a RAID-1 configuration (which I used for some
-initial soaktests) and seems to be just fine:
-
-Filesystem            Size  Used Avail Use% Mounted on
-/dev/md9              6.8T   33M  6.7T   1% /mnt
-
-And it's more than fast enough too, although it'll be a lot slower when
-I rebuilt it in RAID-6 mode.
-
-Version  1.03       ------Sequential Output------ --Sequential Input-
---Random-
-                    -Per Chr- --Block-- -Rewrite- -Per Chr- --Block--
---Seeks--
-Machine        Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP
-/sec %CP
-bertha           2G           266336  99 203934  61           421850  40
-872.9   1
-
-
-md9 : active raid0 sdo[14] sdn[13] sdm[12] sdl[11] sdk[10] sdj[9] sdi[8]
-sdh[7] sdg[6] sdf[5] sde[4] sdd[3] sdc[2] sdb[1] sda[0]
-      7317748800 blocks 64k chunks
-
-Cheers,
-
-Gordon
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org More majordomo info
-at  http://vger.kernel.org/majordomo-info.html
+Olivier Doremieux
