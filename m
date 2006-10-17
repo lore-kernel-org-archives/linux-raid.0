@@ -1,46 +1,83 @@
-From: Greg Dickie <greg@max-t.com>
-Subject: Re: PERC5 - MegaRaid-SAS problems..
-Date: Tue, 17 Oct 2006 14:13:09 -0400
-Message-ID: <1161108789.5880.190.camel@edinburgh.max-t.internal>
-References: <Pine.LNX.4.56.0610121246400.11816@lion.drogon.net>
-	 <Pine.LNX.4.56.0610171138400.4600@lion.drogon.net>
-	 <df1ef2450610171058i15ad6b47kb8579fc3f1a7e8ee@mail.gmail.com>
+From: Bruno Costacurta <pubmb02@skynet.be>
+Subject: Doubts about array size
+Date: Tue, 17 Oct 2006 22:21:48 +0200
+Message-ID: <200610172221.49080.pubmb02@skynet.be>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <df1ef2450610171058i15ad6b47kb8579fc3f1a7e8ee@mail.gmail.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Andrew Moise <chops@demiurgestudios.com>
-Cc: Gordon Henderson <gordon@drogon.net>, linux-raid@vger.kernel.org, linux-poweredge@dell.com
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hello,
 
-Never lost an XFS filesystem completely. Can't say the same about ext3.
+I built my first RAID with 2 disks. 
 
-just my 2 cents,
-Greg
+Array looks active (please see hereafter) but I'm confusing about size : 
+having 2 disks of 160-Gb each I expect a size of 160-Gb (correct ?) but array 
+size seems around 103-Gb.
+I also received a 'Disk /dev/md0 doesn't contain a valid partition table'
 
-On Tue, 2006-10-17 at 13:58 -0400, Andrew Moise wrote:
-> On 10/17/06, Gordon Henderson <gordon@drogon.net> wrote:
-> > Anyway, it's currently in a RAID-1 configuration (which I used for some
-> > initial soaktests) and seems to be just fine:
-> >
-> > Filesystem            Size  Used Avail Use% Mounted on
-> > /dev/md9              6.8T   33M  6.7T   1% /mnt
-> 
->   Incidentally, what filesystem are you using?  We may be setting up a
-> similar situation soon, and I'm considering ext3 and XFS.  ext3
-> apparently has a low max fs size, though, and I've heard bad things
-> about XFS's behavior on unclean shutdowns...
-> 
-> _______________________________________________
-> Linux-PowerEdge mailing list
-> Linux-PowerEdge@dell.com
-> http://lists.us.dell.com/mailman/listinfo/linux-poweredge
-> Please read the FAQ at http://lists.us.dell.com/faq
--- 
-Greg Dickie
-just a guy
-Maximum Throughput
+Please find hereafer outputs for commands of fdisk and mdadm :
+
+'fdisk -l' return: 
+
+-start-
+Disk /dev/sdb: 163.9 GB, 163928604672 bytes
+255 heads, 63 sectors/track, 19929 cylinders
+Units = cylinders of 16065 * 512 = 8225280 bytes
+
+   Device Boot      Start         End      Blocks   Id  System
+/dev/sdb1               1       19453   156256191   fd  Linux raid autodetect
+
+Disk /dev/sdc: 160.0 GB, 160041885696 bytes
+255 heads, 63 sectors/track, 19457 cylinders
+Units = cylinders of 16065 * 512 = 8225280 bytes
+
+   Device Boot      Start         End      Blocks   Id  System
+/dev/sdc1               1       19453   156256191   fd  Linux raid autodetect
+
+Disk /dev/md0: 106 MB, 106823680 bytes
+2 heads, 4 sectors/track, 26080 cylinders
+Units = cylinders of 8 * 512 = 4096 bytes
+
+Disk /dev/md0 doesn't contain a valid partition table
+-end-
+
+
+
+'mdadm --detail /dev/md0'  :
+-start-
+/dev/md0:
+        Version : 00.90.03
+  Creation Time : Tue Oct 17 21:26:43 2006
+     Raid Level : raid1
+     Array Size : 104320 (101.89 MiB 106.82 MB)
+    Device Size : 104320 (101.89 MiB 106.82 MB)
+   Raid Devices : 2
+  Total Devices : 2
+Preferred Minor : 0
+    Persistence : Superblock is persistent
+
+    Update Time : Tue Oct 17 21:32:33 2006
+          State : clean
+ Active Devices : 2
+Working Devices : 2
+ Failed Devices : 0
+  Spare Devices : 0
+
+           UUID : 39877482:3daad5f3:a9b54997:0c328c24
+         Events : 0.24
+
+    Number   Major   Minor   RaidDevice State
+       0       8       17        0      active sync   /dev/sdb1
+       1       8       33        1      active sync   /dev/sdc1
+-end-
+
+
+Cheers for help and advice.
+Bruno
 
