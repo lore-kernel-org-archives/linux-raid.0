@@ -1,68 +1,116 @@
-From: Forrest Taylor <ftaylor@redhat.com>
-Subject: Re: Doubts about array size
-Date: Tue, 17 Oct 2006 16:19:52 -0600
-Message-ID: <1161123592.3931.3.camel@x1-6-00-0d-60-fd-e8-4c>
-References: <200610172221.49080.pubmb02@skynet.be>
+From: Hal Vaughan <hal@thresholddigital.com>
+Subject: Restoring a RAID 5
+Date: Tue, 17 Oct 2006 19:08:27 -0400
+Message-ID: <200610171908.27505.hal@thresholddigital.com>
+Reply-To: hal@thresholddigital.com
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Vt//2FYa87H3TaFbbhaA"
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200610172221.49080.pubmb02@skynet.be>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Bruno Costacurta <pubmb02@skynet.be>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+I would expect this question to be answered in the FAQ, but the site 
+seems to be down.  At least I can't get to it now.  I'm sure this is 
+simple, but I want to be sure I get it right the first time and don't 
+mess up the data.
 
---=-Vt//2FYa87H3TaFbbhaA
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I have a system with 5 drives: a system/boot drive and a RAID5  composed 
+of 3 active drives and a spare (formated in ext3).  The boot/system 
+drive died on me the other day and I've restored it, re-installing 
+Debian Sarge.  The RAID drives were not effected by the failure.
 
-On Tue, 2006-10-17 at 22:21 +0200, Bruno Costacurta wrote:
-> Hello,
->=20
-> I built my first RAID with 2 disks.=20
->=20
-> Array looks active (please see hereafter) but I'm confusing about size :=20
-> having 2 disks of 160-Gb each I expect a size of 160-Gb (correct ?) but a=
-rray=20
-> size seems around 103-Gb.
+Now that the system is up and running, I want to restore the RAID.   
+I've been searching and tried:
 
-Your array is not 103-Gb, but 103-Mb.
+mdadm --examine --scan /dev/hde /dev/hdf /dev/hdg /dev/hdh
 
-> Disk /dev/md0: 106 MB, 106823680 bytes
-> 2 heads, 4 sectors/track, 26080 cylinders
-> Units =3D cylinders of 8 * 512 =3D 4096 bytes
->=20
-> 'mdadm --detail /dev/md0'  :
-> -start-
-> /dev/md0:
->         Version : 00.90.03
->   Creation Time : Tue Oct 17 21:26:43 2006
->      Raid Level : raid1
->      Array Size : 104320 (101.89 MiB 106.82 MB)
->     Device Size : 104320 (101.89 MiB 106.82 MB)
+and got:
 
-What did you do to create the device?  Did you change the disks
-recently, or add new disks?
+ARRAY /dev/md0 level=raid5 num-devices=3 
+UUID=d6fd4af2:5e5d0da2:9dec7c5f:ad60c25d
+   devices=/dev/hdf
 
-You could try to grow the RAID (mdadm -G /dev/md0 -z max), but I would
-be wary of doing that until I knew why the disks showed the small size.
+I'm a little puzzled by this, since I created the drive specifying hde 
+first, and would expect mdadm to find that drive and not hdf.  It also 
+finds only that one drive and does not seem to see hde or hdg as part 
+of the RAID.
 
-Forrest
+When I tried 
 
+mdadm --examine /dev/hdf
 
+I got:
 
---=-Vt//2FYa87H3TaFbbhaA
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+/dev/hdf:
+          Magic : a92b4efc
+        Version : 00.90.00
+           UUID : d6fd4af2:5e5d0da2:9dec7c5f:ad60c25d
+  Creation Time : Fri Dec  9 12:41:00 2005
+     Raid Level : raid5
+   Raid Devices : 3
+  Total Devices : 4
+Preferred Minor : 0
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.6 (GNU/Linux)
+    Update Time : Fri Dec  9 15:44:21 2005
+          State : clean
+ Active Devices : 3
+Working Devices : 4
+ Failed Devices : 0
+  Spare Devices : 1
+       Checksum : ba586641 - correct
+         Events : 0.82
 
-iD8DBQBFNVcIaUnzBifbsNQRAmNMAJ44dUiwxMWizD/GtrX4l1SIKwoX7ACgqv9g
-L51I6Ej9gumLAKlTDMicO/A=
-=3IjJ
------END PGP SIGNATURE-----
+         Layout : left-symmetric
+     Chunk Size : 64K
 
---=-Vt//2FYa87H3TaFbbhaA--
+      Number   Major   Minor   RaidDevice State
+this     3      34       64        3      spare   /dev/hdh
 
+   0     0      33        0        0      active sync   /dev/hde
+   1     1      33       64        1      active sync   /dev/hdf
+   2     2      34        0        2      active sync   /dev/hdg
+   3     3      34       64        3      spare   /dev/hdh
+
+That made me feel better, since it shows me that at least mdadm "knows", 
+somehow, the structure and all the disks in the RAID.
+
+When I type the same for any other drive, I get (depending on the drive 
+letter):
+
+mdadm: No super block found on /dev/hdg (Expected magic a92b4efc, got 
+00000000)
+
+Is this correct?  Is there only one superblock and not one per drive?  
+(I may have misunderstood that.)
+
+I thought, from the man page, that I could type:
+
+mdadm --assemble --scan and have it assemble the RAID again, but that 
+doesn't.  I've tried a few combinations, but nothing seems to work.  I 
+get errors and it seems I need to include info in the config file to 
+make it work.
+
+I've seen a fair number of tutorials on setting up RAID drives, but 
+almost nothing on restoring one that exists.  I guess this would be 
+treated the same as if I were moving it from one computer to another.  
+I've found some info on this in the archives of this list, but nothing 
+that actually addressed this issue (I'm still searching, though).
+
+Before anyone asks about backups, I don't have an exact backup (don't 
+yet have the space and equipment), but I can restore the data.  Doing 
+so will take time and I'd really like to know how to take care of this 
+so if it happens in the future with a drive I need restored quickly, 
+I'll be sure to know how to handle it.
+
+I feel like I'm being lazy asking this outright, but should there be 
+just a single command using --scan and --assemble and a few options 
+that will rebuild this and mount it as md0?
+
+Thanks for any help on this -- and if anyone knows of a mirror of the 
+FAQ, I'd like the link since I can't get the original site to load.
+
+Hal
