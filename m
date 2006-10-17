@@ -1,83 +1,59 @@
-From: Bruno Costacurta <pubmb02@skynet.be>
-Subject: Doubts about array size
-Date: Tue, 17 Oct 2006 22:21:48 +0200
-Message-ID: <200610172221.49080.pubmb02@skynet.be>
+From: Gordon Henderson <gordon@drogon.net>
+Subject: Re: PERC5 - MegaRaid-SAS problems..
+Date: Tue, 17 Oct 2006 21:22:09 +0100 (BST)
+Message-ID: <Pine.LNX.4.56.0610171944530.5144@lion.drogon.net>
+References: <Pine.LNX.4.56.0610121246400.11816@lion.drogon.net>
+ <Pine.LNX.4.56.0610171138400.4600@lion.drogon.net>
+ <df1ef2450610171058i15ad6b47kb8579fc3f1a7e8ee@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <df1ef2450610171058i15ad6b47kb8579fc3f1a7e8ee@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Andrew Moise <chops@demiurgestudios.com>
+Cc: linux-poweredge@dell.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello,
+On Tue, 17 Oct 2006, Andrew Moise wrote:
 
-I built my first RAID with 2 disks. 
+> On 10/17/06, Gordon Henderson <gordon@drogon.net> wrote:
+> > Anyway, it's currently in a RAID-1 configuration (which I used for some
+> > initial soaktests) and seems to be just fine:
+> >
+> > Filesystem            Size  Used Avail Use% Mounted on
+> > /dev/md9              6.8T   33M  6.7T   1% /mnt
+>
+>   Incidentally, what filesystem are you using?  We may be setting up a
+> similar situation soon, and I'm considering ext3 and XFS.  ext3
+> apparently has a low max fs size, though, and I've heard bad things
+> about XFS's behavior on unclean shutdowns...
 
-Array looks active (please see hereafter) but I'm confusing about size : 
-having 2 disks of 160-Gb each I expect a size of 160-Gb (correct ?) but array 
-size seems around 103-Gb.
-I also received a 'Disk /dev/md0 doesn't contain a valid partition table'
+I'm using ext3, and it's now RAID-6, so a little smaller:
 
-Please find hereafer outputs for commands of fdisk and mdadm :
+Filesystem            Size  Used Avail Use% Mounted on
+/dev/md9              5.9T   33M  5.7T   1% /archive
 
-'fdisk -l' return: 
+And slower:
 
--start-
-Disk /dev/sdb: 163.9 GB, 163928604672 bytes
-255 heads, 63 sectors/track, 19929 cylinders
-Units = cylinders of 16065 * 512 = 8225280 bytes
-
-   Device Boot      Start         End      Blocks   Id  System
-/dev/sdb1               1       19453   156256191   fd  Linux raid autodetect
-
-Disk /dev/sdc: 160.0 GB, 160041885696 bytes
-255 heads, 63 sectors/track, 19457 cylinders
-Units = cylinders of 16065 * 512 = 8225280 bytes
-
-   Device Boot      Start         End      Blocks   Id  System
-/dev/sdc1               1       19453   156256191   fd  Linux raid autodetect
-
-Disk /dev/md0: 106 MB, 106823680 bytes
-2 heads, 4 sectors/track, 26080 cylinders
-Units = cylinders of 8 * 512 = 4096 bytes
-
-Disk /dev/md0 doesn't contain a valid partition table
--end-
+Version  1.03       ------Sequential Output------ --Sequential Input- --Random-
+                    -Per Chr- --Block-- -Rewrite- -Per Chr- --Block-- --Seeks--
+Machine        Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP  /sec %CP
+bertha           2G           186290  96 111105  75           262779  71 602.0 2
 
 
+I've looked at, and tried XFS (and JFS) and keep coming back to ext3,
+which I have on many, many servers and have never had an issue with it.
 
-'mdadm --detail /dev/md0'  :
--start-
-/dev/md0:
-        Version : 00.90.03
-  Creation Time : Tue Oct 17 21:26:43 2006
-     Raid Level : raid1
-     Array Size : 104320 (101.89 MiB 106.82 MB)
-    Device Size : 104320 (101.89 MiB 106.82 MB)
-   Raid Devices : 2
-  Total Devices : 2
-Preferred Minor : 0
-    Persistence : Superblock is persistent
+I have had problems with XFS, but that was about 2 years ago, so things
+might have improved by then.
 
-    Update Time : Tue Oct 17 21:32:33 2006
-          State : clean
- Active Devices : 2
-Working Devices : 2
- Failed Devices : 0
-  Spare Devices : 0
+This is the biggest server I've setup so-far, it beats my previous record
+of 3TB (which I have on 2 identical servers halfway round the world from
+each other and they've been doing well for several months now).
 
-           UUID : 39877482:3daad5f3:a9b54997:0c328c24
-         Events : 0.24
+After your comment about ext3 max FS size, I had a bit of a oo-er
+situation so had to do a bit of looking to make sure I was OK, and it
+seems that 16TB is the current limit, so OK there for a while, at least...
+(/usr/src/linux/documentation/filesystems/ext2.txt)
 
-    Number   Major   Minor   RaidDevice State
-       0       8       17        0      active sync   /dev/sdb1
-       1       8       33        1      active sync   /dev/sdc1
--end-
-
-
-Cheers for help and advice.
-Bruno
-
+Gordon
