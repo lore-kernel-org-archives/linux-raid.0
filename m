@@ -1,36 +1,68 @@
-From: "Andrew Moise" <chops@demiurgestudios.com>
-Subject: Re: PERC5 - MegaRaid-SAS problems..
-Date: Tue, 17 Oct 2006 18:19:58 -0400
-Message-ID: <df1ef2450610171519r6ee6da3dv3fb2dd479d0431a6@mail.gmail.com>
-References: <Pine.LNX.4.56.0610121246400.11816@lion.drogon.net>
-	 <Pine.LNX.4.56.0610171138400.4600@lion.drogon.net>
-	 <df1ef2450610171058i15ad6b47kb8579fc3f1a7e8ee@mail.gmail.com>
-	 <Pine.LNX.4.56.0610171944530.5144@lion.drogon.net>
+From: Forrest Taylor <ftaylor@redhat.com>
+Subject: Re: Doubts about array size
+Date: Tue, 17 Oct 2006 16:19:52 -0600
+Message-ID: <1161123592.3931.3.camel@x1-6-00-0d-60-fd-e8-4c>
+References: <200610172221.49080.pubmb02@skynet.be>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Vt//2FYa87H3TaFbbhaA"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.56.0610171944530.5144@lion.drogon.net>
-Content-Disposition: inline
+In-Reply-To: <200610172221.49080.pubmb02@skynet.be>
 Sender: linux-raid-owner@vger.kernel.org
-To: Gordon Henderson <gordon@drogon.net>
-Cc: linux-poweredge@dell.com, linux-raid@vger.kernel.org
+To: Bruno Costacurta <pubmb02@skynet.be>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 10/17/06, Gordon Henderson <gordon@drogon.net> wrote:
-> I have had problems with XFS, but that was about 2 years ago, so things
-> might have improved by then.
 
-  Well, filling some random files with zeroes because of an unclean
-shutdown is still defined as "correct" behavior in XFS.  That hasn't
-changed that I've heard of.  Why they haven't implemented something
-akin to "data=ordered" is a mystery to me.
-  I guess I'm begging to start a filesystem flamewar at this point :-).
+--=-Vt//2FYa87H3TaFbbhaA
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> After your comment about ext3 max FS size, I had a bit of a oo-er
-> situation so had to do a bit of looking to make sure I was OK, and it
-> seems that 16TB is the current limit, so OK there for a while, at least...
-> (/usr/src/linux/documentation/filesystems/ext2.txt)
+On Tue, 2006-10-17 at 22:21 +0200, Bruno Costacurta wrote:
+> Hello,
+>=20
+> I built my first RAID with 2 disks.=20
+>=20
+> Array looks active (please see hereafter) but I'm confusing about size :=20
+> having 2 disks of 160-Gb each I expect a size of 160-Gb (correct ?) but a=
+rray=20
+> size seems around 103-Gb.
 
-  Aah, great news.  Different sources differ on what the max size is,
-so I was pessimistically assuming it might be as low as 2TB.  Thanks.
+Your array is not 103-Gb, but 103-Mb.
+
+> Disk /dev/md0: 106 MB, 106823680 bytes
+> 2 heads, 4 sectors/track, 26080 cylinders
+> Units =3D cylinders of 8 * 512 =3D 4096 bytes
+>=20
+> 'mdadm --detail /dev/md0'  :
+> -start-
+> /dev/md0:
+>         Version : 00.90.03
+>   Creation Time : Tue Oct 17 21:26:43 2006
+>      Raid Level : raid1
+>      Array Size : 104320 (101.89 MiB 106.82 MB)
+>     Device Size : 104320 (101.89 MiB 106.82 MB)
+
+What did you do to create the device?  Did you change the disks
+recently, or add new disks?
+
+You could try to grow the RAID (mdadm -G /dev/md0 -z max), but I would
+be wary of doing that until I knew why the disks showed the small size.
+
+Forrest
+
+
+
+--=-Vt//2FYa87H3TaFbbhaA
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.6 (GNU/Linux)
+
+iD8DBQBFNVcIaUnzBifbsNQRAmNMAJ44dUiwxMWizD/GtrX4l1SIKwoX7ACgqv9g
+L51I6Ej9gumLAKlTDMicO/A=
+=3IjJ
+-----END PGP SIGNATURE-----
+
+--=-Vt//2FYa87H3TaFbbhaA--
+
