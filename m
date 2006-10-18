@@ -1,97 +1,74 @@
-From: Lars Schimmer <l.schimmer@cgv.tugraz.at>
-Subject: Problem with Software RAID5
-Date: Wed, 18 Oct 2006 11:39:44 +0200
-Message-ID: <4535F660.90901@cgv.tugraz.at>
+From: martin f krafft <madduck@madduck.net>
+Subject: why partition arrays?
+Date: Wed, 18 Oct 2006 14:42:25 +0200
+Message-ID: <20061018124225.GA23653@piper.madduck.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="r5Pyd7+fXNt84Ff3"
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: linux-raid mailing list <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
 
-Hi!
+--r5Pyd7+fXNt84Ff3
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-I=B4ve got a problem with a software raid5.
-PC runs debian sarge/sid/etch mix with 2.6.16 self built and mdadm mdad=
-m
-2.5.3.git200608202239-7.
-1 of 6 SATA 400GB drives failes and I rebooted the PC.
-After reboot RAID was resyncing.
-But again the HD died and the PC rebooted again, I pulled off the bad H=
-D
-and now the RAID5 won=B4t resync again.
-I built a 2.6.17 kernel and replaced mdadm to  mdadm 2.5.4-1 and still
-RAID5 won=B4t resync again:
-cat /proc/mdstat
-Personalities : [linear] [raid0] [raid1] [raid10] [raid5] [raid4]
-[raid6] [multipath] [faulty]
-md0 : inactive sda1[0] sde1[5] sdd1[4] sdc1[3] sdb1[1]
-      1953543680 blocks
+As the Debian mdadm maintainer, I am often subjected to questions
+about partitionable arrays; people seem to want to use them in
+favour of normal arrays. I don't understand why.
 
-unused devices: <none>
+There's possibly an argument to be made about flexibility when it
+comes to resizing partitions within the array, but even most MD
+array types can be resized now.
 
- mdadm --detail /dev/md0
-/dev/md0:
-        Version : 00.90.03
-  Creation Time : Fri May 12 16:10:24 2006
-     Raid Level : raid5
-    Device Size : 390708736 (372.61 GiB 400.09 GB)
-   Raid Devices : 6
-  Total Devices : 5
-Preferred Minor : 0
-    Persistence : Superblock is persistent
+There's possibly an argument about saving space because of fewer
+sectors used/wasted with superblock information, but I am not going
+to buy that.
 
-    Update Time : Tue Oct 17 14:11:56 2006
-          State : active, degraded, Not Started
- Active Devices : 5
-Working Devices : 5
- Failed Devices : 0
-  Spare Devices : 0
+Why would anyone want to create a partitionable array and put
+partitions in it, rather than creating separate arrays for each
+filesystem? Intuitively, this makes way more sense as then the
+partitions are independent of each other; one array can fail and the
+rest still works -- part of the reason why you partition in the
+first place.
 
-         Layout : left-symmetric
-     Chunk Size : 256K
+Would anyone help me answer this FAQ?
 
-           UUID : 5ce125ae:b76d7567:a531953b:fbba92fc
-         Events : 0.2818447
+(btw: [0] and [1] are obviously for public consumption; they are
+available under the terms of the artistic licence 2.0)
 
-    Number   Major   Minor   RaidDevice State
-       0       8        1        0      active sync   /dev/sda1
-       1       8       17        1      active sync   /dev/sdb1
-       2       0        0        2      removed
-       3       8       33        3      active sync   /dev/sdc1
-       4       8       49        4      active sync   /dev/sdd1
-       5       8       65        5      active sync   /dev/sde1
+0. http://svn.debian.org/wsvn/pkg-mdadm/mdadm/trunk/debian/FAQ?op=3Dfile&re=
+v=3D0&sc=3D0
+1. http://svn.debian.org/wsvn/pkg-mdadm/mdadm/trunk/debian/README.recipes?o=
+p=3Dfile&rev=3D0&sc=3D0
 
-mdadm --stop /dev/md0
-mdadm: stopped /dev/md0
+--=20
+martin;              (greetings from the heart of the sun.)
+  \____ echo mailto: !#^."<*>"|tr "<*> mailto:" net@madduck
+=20
+spamtraps: madduck.bogus@madduck.net
+=20
+"the liar at any rate recognises that recreation, not instruction, is
+ the aim of conversation, and is a far more civilised being than the
+ blockhead who loudly expresses his disbelief in a story which is told
+ simply for the amusement of the company."
+                                                        -- oscar wilde
 
-sinope:~# mdadm --assemble /dev/md0
-mdadm: failed to RUN_ARRAY /dev/md0: Input/output error
+--r5Pyd7+fXNt84Ff3
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature (GPG/PGP)
+Content-Disposition: inline
 
-Any hints? tips?
-
-
-MfG,
-Lars Schimmer
-- --
-- -------------------------------------------------------------
-TU Graz, Institut f=FCr ComputerGraphik & WissensVisualisierung
-Tel: +43 316 873-5405       E-Mail: l.schimmer@cgv.tugraz.at
-=46ax: +43 316 873-5402       PGP-Key-ID: 0x4A9B1723
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.5 (GNU/Linux)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
 
-iD8DBQFFNfZgmWhuE0qbFyMRAqBBAJoCcE4gMx83NQl8pksSqgEpBHWNiACfTpKr
-NVHtinnXRPIbY2Rfv3BUC0s=3D
-=3Dsvsf
+iD4DBQFFNiExIgvIgzMMSnURAqljAJwKda8zrCEr0IQxoE5tw/9kx78k+wCXe80J
+hEh9u6swmY3Pwl6Or060wQ==
+=1p45
 -----END PGP SIGNATURE-----
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+--r5Pyd7+fXNt84Ff3--
