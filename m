@@ -1,41 +1,53 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: new features time-line
-Date: Thu, 19 Oct 2006 12:46:47 +1000
-Message-ID: <17718.59159.519516.656790@cse.unsw.edu.au>
-References: <000a01c6ef12$0030b640$eb00000a@mine3ad5e808fe>
-	<17712.10578.16619.929884@cse.unsw.edu.au>
-	<453592FB.4090105@tmr.com>
+Subject: Re: Propose of enhancement of raid1 driver
+Date: Thu, 19 Oct 2006 13:28:40 +1000
+Message-ID: <17718.61672.794099.425723@cse.unsw.edu.au>
+References: <45347D6E.3000600@mieszczak.com.pl>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Bill Davidsen on Tuesday October 17
+In-Reply-To: message from Miroslaw Mieszczak on Tuesday October 17
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: Dan <dan@korstad.net>, linux-raid@vger.kernel.org
+To: Miroslaw Mieszczak <mirek@mieszczak.com.pl>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday October 17, davidsen@tmr.com wrote:
-> We talked about RAID5E a while ago, is there any thought that this would 
-> actually happen, or is it one of the "would be nice" features? With 
-> larger drives I suspect the number of drives in arrays is going down, 
-> and anything which offers performance benefits for smaller arrays would 
-> be useful.
+On Tuesday October 17, mirek@mieszczak.com.pl wrote:
+> I would like to propose an enhancement of raid 1 driver in linux kernel.
+> The enhancement would be speedup of data reading on mirrored partitions.
+> The idea is easy.
+> If we have mirrored partition over 2 disks, and these disk are in sync, there is
+> possibility of simultaneous reading of the data from both disks on the same way
+> as in raid 0. So it would be chunk1 read from master, chunk2 read from slave at
+> the same time. 
+> As result it would give significant speedup of read operation (comparable with
+> speed of raid 0 disks).
 
-So ... RAID5E is RAID5 using (N-1)/N of each drive (or close to that)
-and not having a hot spare.
-On a drive failure, the data is restriped across N-1 drives so that it
-becomes plain RAID5.  This means that instead of having an idle spare,
-you have spare space at the end of each drive.
+This is not as easy as it sounds.
+Skipping over blocks within a track is no faster than reading blocks
+in the track, so you would need to make sure that your chunk size is
+larger than one track - probably it would need to be several tracks.
 
-To implement this you would need kernel code to restripe and array to
-reduce the number of devices (currently we only increase the number of
-devices).
+Raid1 already does some read-balancing, though it is possible (even
+likely) that it doesn't balance very effectively.  Working out how
+best to do the balancing in general in a non-trivial task, but would
+be worth spending time on.
 
-Probably not too hard - just needs code and motivation.  
+The raid10 module in linux supports a layout described as 'far=2'.
+In this layout, with two drives, the first half of the drives is used
+for a raid0, and the second half is used for a mirrored raid0 with the
+data on the other disk.
+In this layout reads should certainly go at raid0 speeds, though
+there is cost in the speed of writes.
 
-Don't know if/when it will happen, but it probably will
-.... especially if someone tries writing some code (hint hint to any
-potential developers out there...)
+Maybe you would like to experiment.  Write a program that reads from
+two drives in parallel, reading all the 'odd' chunks from one drive
+and the 'even' chunks from the other, and find out how fast it is.
+Maybe you could get it to try lots of different chunk sizes and see
+which is the fastest.
+
+That might be quite helpful in understanding how to get read-balancing
+working well.
 
 NeilBrown
