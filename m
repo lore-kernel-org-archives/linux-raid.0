@@ -1,30 +1,35 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: BUGS: internal bitmap during array create
-Date: Fri, 20 Oct 2006 10:30:12 +1000
-Message-ID: <17720.6292.299879.847268@cse.unsw.edu.au>
-References: <452D500D.6000203@ilm.com>
-	<17710.65130.194296.801803@cse.unsw.edu.au>
-	<4536B809.7020006@ilm.com>
-	<17719.8270.952305.829165@cse.unsw.edu.au>
-	<45380B8B.4040701@ilm.com>
+Subject: Re: [PATCH] md: Fix bug where new drives added to an md array sometimes
+ don't sync properly.
+Date: Fri, 20 Oct 2006 13:24:32 +1000
+Message-ID: <17720.16752.361227.764674@cse.unsw.edu.au>
+References: <20061005171233.6542.patches@notabene>
+	<1061005071326.6578@suse.de>
+	<45255C54.6060608@ilm.com>
+	<4526DBCE.6070906@ilm.com>
+	<17706.65210.999441.373846@cse.unsw.edu.au>
+	<4536A848.8020908@ilm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Eli Stair on Thursday October 19
+In-Reply-To: message from Eli Stair on Wednesday October 18
 Sender: linux-raid-owner@vger.kernel.org
 To: Eli Stair <estair@ilm.com>
-Cc: linux-raid mailing list <linux-raid@vger.kernel.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thursday October 19, estair@ilm.com wrote:
+On Wednesday October 18, estair@ilm.com wrote:
 > 
-> Neil, thanks a ton.  This issue appears resolved completely, array 
-> creation/assembly is clean, filesystem creation and consistency checking 
-> is clean, and I have not generated any filesystem or md errors in 
-> testing yet.
+> FYI, I'm testing 2.6.18.1 and noticed this mis-numbering of RAID10
+> members issue is still extant.  Even with this fix applied to raid10.c, 
+> I am still seeing repeatable issues with devices assuming a "Number" 
+> greater than that which they had when removed from a running array.
 
-Excellent!  
-And thanks a ton for your part if getting this fixed.
+That 'Number' change isn't a problem.  It is really just an arbitrary
+label to track a device.  Once you fail a device and re-add it, md
+considers it to be a new device.
+As long as the 'RaidDevice' number is what you expect, everything is
+working properly.
 
 NeilBrown
