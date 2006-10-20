@@ -1,35 +1,21 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH] md: Fix bug where new drives added to an md array sometimes
- don't sync properly.
-Date: Fri, 20 Oct 2006 13:24:32 +1000
-Message-ID: <17720.16752.361227.764674@cse.unsw.edu.au>
-References: <20061005171233.6542.patches@notabene>
-	<1061005071326.6578@suse.de>
-	<45255C54.6060608@ilm.com>
-	<4526DBCE.6070906@ilm.com>
-	<17706.65210.999441.373846@cse.unsw.edu.au>
-	<4536A848.8020908@ilm.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+From: NeilBrown <neilb@suse.de>
+Subject: [PATCH 000 of 4] md: Introduction - bugfix patches for md.
+Date: Fri, 20 Oct 2006 13:25:23 +1000
+Message-ID: <20061020120612.29297.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Eli Stair on Wednesday October 18
 Sender: linux-raid-owner@vger.kernel.org
-To: Eli Stair <estair@ilm.com>
-Cc: linux-raid@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, stable@kernel.org
 List-Id: linux-raid.ids
 
-On Wednesday October 18, estair@ilm.com wrote:
-> 
-> FYI, I'm testing 2.6.18.1 and noticed this mis-numbering of RAID10
-> members issue is still extant.  Even with this fix applied to raid10.c, 
-> I am still seeing repeatable issues with devices assuming a "Number" 
-> greater than that which they had when removed from a running array.
+Following are 4 bugfix patches for md.
+The first is suitable for 2.6.18.2.  All are suitable for 2.6.19.
 
-That 'Number' change isn't a problem.  It is really just an arbitrary
-label to track a device.  Once you fail a device and re-add it, md
-considers it to be a new device.
-As long as the 'RaidDevice' number is what you expect, everything is
-working properly.
-
+Thanks,
 NeilBrown
+
+
+ [PATCH 001 of 4] md: Fix calculation of ->degraded for multipath and raid10
+ [PATCH 002 of 4] md: Add another COMPAT_IOCTL for md.
+ [PATCH 003 of 4] md: Endian annotation for v1 superblock access.
+ [PATCH 004 of 4] md: Endian annotations for the bitmap superblock
