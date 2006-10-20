@@ -1,34 +1,40 @@
-From: "Jeff Breidenbach" <breidenbach@gmail.com>
-Subject: Re: Propose of enhancement of raid1 driver
-Date: Thu, 19 Oct 2006 21:59:58 -0700
-Message-ID: <e03b90ae0610192159o270a0cf3j94ccdd393d314cb6@mail.gmail.com>
-References: <45347D6E.3000600@mieszczak.com.pl>
-	 <17718.61672.794099.425723@cse.unsw.edu.au>
-Reply-To: jeff@jab.org
+From: "Michael Labuschke" <michael@labuschke.de>
+Subject: patches
+Date: Fri, 20 Oct 2006 19:00:18 +0200
+Message-ID: <20061020170016.C183895C422@futec-gmbh.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+	name="mdadm-2.5.4-gcc_warnings-1.patch"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17718.61672.794099.425723@cse.unsw.edu.au>
-Content-Disposition: inline
+Content-Disposition: attachment;
+	filename="mdadm-2.5.4-gcc_warnings-1.patch"
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Miroslaw Mieszczak <mirek@mieszczak.com.pl>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: neilb@suse.de
 List-Id: linux-raid.ids
 
-> The raid10 module in linux supports a layout described as 'far=2'.
-> In this layout, with two drives, the first half of the drives is used
-> for a raid0, and the second half is used for a mirrored raid0 with the
-> data on the other disk. In this layout reads should certainly go at
-> raid0 speeds, though there is cost in the speed of writes.
+diff -uNr mdadm-2.5.4.orig/mdopen.c mdadm-2.5.4/mdopen.c
+--- mdadm-2.5.4.orig/mdopen.c	2006-08-11 10:00:03.000000000 +0200
++++ mdadm-2.5.4/mdopen.c	2006-10-20 18:39:25.000000000 +0200
+@@ -44,7 +44,8 @@
+ 		strcpy(new+7, new+8);
+ 	else
+ 		new[7] = '_';
+-	symlink(dev+5, new);
++	if(symlink(dev+5, new))
++	    perror("symlink");
+ }
+ 
+ 
+@@ -258,7 +259,8 @@
+ 
+ 			if (strncmp(dev, "/dev/md/", 8) == 0) {
+ 				if (mkdir("/dev/md",0700)==0) {
+-					chown("/dev/md", ci->uid, ci->gid);
++					if (chown("/dev/md", ci->uid, ci->gid))
++					    perror("chown");
+ 					chmod("/dev/md", ci->mode| ((ci->mode>>2) & 0111));
+ 				}
+ 			}
 
-Remember, RAID-10 far=2 mode was very slow in July 2005; don't
-know if it has improved since then. See:
-
-http://www.mail-archive.com/linux-raid@vger.kernel.org/msg02339.html
-
-PS. If you ever need it I have plenty of data from a super redundant
-5 disk RAID-1 recorded with atsar.  It does quite well balancing
-many small, parallel random reads from a webserver.  Struggles
-a little when mixing a single large read with many small parallel
-reads.
