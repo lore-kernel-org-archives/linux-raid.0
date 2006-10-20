@@ -1,40 +1,30 @@
-From: "Michael Labuschke" <michael@labuschke.de>
-Subject: patches
-Date: Fri, 20 Oct 2006 19:00:18 +0200
-Message-ID: <20061020170016.C183895C422@futec-gmbh.de>
+From: Stephan van Hienen <raid@a2000.nu>
+Subject: Re: raid 5 read performance
+Date: Sat, 21 Oct 2006 00:16:21 +0200 (CEST)
+Message-ID: <Pine.LNX.4.64.0610210015390.23381@adsl.a2000.nu>
+References: <5d96567b0605210210wc3925ek6161f427944f8b7@mail.gmail.com>
+ <17520.12342.245437.75779@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	name="mdadm-2.5.4-gcc_warnings-1.patch"
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: attachment;
-	filename="mdadm-2.5.4-gcc_warnings-1.patch"
+In-Reply-To: <17520.12342.245437.75779@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: neilb@suse.de
+To: Neil Brown <neilb@suse.de>
+Cc: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>, Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-diff -uNr mdadm-2.5.4.orig/mdopen.c mdadm-2.5.4/mdopen.c
---- mdadm-2.5.4.orig/mdopen.c	2006-08-11 10:00:03.000000000 +0200
-+++ mdadm-2.5.4/mdopen.c	2006-10-20 18:39:25.000000000 +0200
-@@ -44,7 +44,8 @@
- 		strcpy(new+7, new+8);
- 	else
- 		new[7] = '_';
--	symlink(dev+5, new);
-+	if(symlink(dev+5, new))
-+	    perror("symlink");
- }
- 
- 
-@@ -258,7 +259,8 @@
- 
- 			if (strncmp(dev, "/dev/md/", 8) == 0) {
- 				if (mkdir("/dev/md",0700)==0) {
--					chown("/dev/md", ci->uid, ci->gid);
-+					if (chown("/dev/md", ci->uid, ci->gid))
-+					    perror("chown");
- 					chmod("/dev/md", ci->mode| ((ci->mode>>2) & 0111));
- 				}
- 			}
+On Sun, 21 May 2006, Neil Brown wrote:
 
+> Please read
+> 
+> http://www.spinics.net/lists/raid/msg11838.html
+> 
+> and ask if you have further questions.
+
+Neil,
+
+what is the current status on the slow read performance with 2.6 ?
+
+Regards,
+
+Stephan 
