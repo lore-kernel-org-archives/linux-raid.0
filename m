@@ -1,30 +1,35 @@
-From: Stephan van Hienen <raid@a2000.nu>
-Subject: Re: raid 5 read performance
-Date: Sat, 21 Oct 2006 00:16:21 +0200 (CEST)
-Message-ID: <Pine.LNX.4.64.0610210015390.23381@adsl.a2000.nu>
-References: <5d96567b0605210210wc3925ek6161f427944f8b7@mail.gmail.com>
- <17520.12342.245437.75779@cse.unsw.edu.au>
+From: Chase Venters <chase.venters@clientec.com>
+Subject: Bug with RAID1 hot spares?
+Date: Fri, 20 Oct 2006 20:46:19 -0500
+Message-ID: <200610202046.43033.chase.venters@clientec.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17520.12342.245437.75779@cse.unsw.edu.au>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>, Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
+Cc: jason.meinzer@gmail.com
 List-Id: linux-raid.ids
 
-On Sun, 21 May 2006, Neil Brown wrote:
+Greetings,
+	I was just testing a server I was about to send into production on kernel 
+2.6.18.1. The server has three SCSI disks with "md1" set to a RAID1 with 2 
+mirrors and 1 spare. The mirrors are sda3 and sdb3, spare is sdc3. I manually 
+failed sdb3, and as expected, sdc3 was activated. Strangely 
+enough, /proc/mdstat did not indicate that sdc3 was being synced. I thought 
+these spares weren't kept mirrored until needed?
+	In order to further test my theory, I manually failed sda3, leaving only sdc3 
+(the original spare) active. I ran "find /" for a bit to see if any errors 
+cropped up and none did; however, when I added sda3 and sdb3 back to the 
+array and a resync started, I was soon faced with what appeared to be a 
+_very_ corrupted reiserfs.
+	Strangely enough, after booting on a livecd and assembling md1 with just 
+sda3, I was able to add sdb3 and sdc3, after which the array resynced and 
+left sdb3 a mirror and sdc3 a spare.
+	So there's definitely something odd happening here... why did no resync to 
+the sdc3 spare start when I failed sdb3?
 
-> Please read
-> 
-> http://www.spinics.net/lists/raid/msg11838.html
-> 
-> and ask if you have further questions.
-
-Neil,
-
-what is the current status on the slow read performance with 2.6 ?
-
-Regards,
-
-Stephan 
+Thanks,
+Chase
