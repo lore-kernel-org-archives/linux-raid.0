@@ -1,34 +1,28 @@
-From: "Dan" <dan@korstad.net>
-Subject: future hardware
-Date: Sat, 21 Oct 2006 07:04:43 -0500
-Message-ID: <000901c6f509$1bd65560$eb00000a@mine3ad5e808fe>
+From: "Yana" <allenmassey@btopenworld.com>
+Subject: Re[1]:  i'll be seeing u
+Date: Sat, 21 Oct 2006 16:00:50 +0300
+Message-ID: <006401c6f510$eb252600$8402000a__9017.71587455205$1161437949$gmane$org@router-224-ip-89-34-224-14.tennet.ro>
 Mime-Version: 1.0
 Content-Type: text/plain;
-	charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
+	charset="windows-1251"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Bernd <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-I have been using an older 64bit system, socket 754 for a while now.  It has
-the old PCI bus 33Mhz.  I have two low cost (no HW RAID) PCI SATA I cards
-each with 4 ports to give me an eight disk RAID 6.  I also have a Gig NIC,
-on the PCI bus.  I have Gig switches with clients connecting to it at Gig
-speed.
+Hello, Bernd
 
-As many know you get a peak transfer rate of 133 MB/s or 1064Mb/s from that
-PCI bus http://en.wikipedia.org/wiki/Peripheral_Component_Interconnect
+I'm a very young and energetic lady! I have very positive attitude to life and people. I do enjoy new experience life can offer me: to see new interesting places, to meet new people.
+I do try to enjoy every moment of life and accept everything the way it comes without complaining.
+Though my life seems to be quite enjoyable there's one important thing missing. It's LOVE!
+Without my beloved one, my soul mate, my King my life is not completed.
+I wish i coud find him very soon so that we could share together every momement of the life-time romance! 
+What about you? Could you be my King? If answer is "yes" - you can find more about me 
+http://findsomelove.com/myhoney
 
-The transfer rate is not bad across the network but my bottle neck it the
-PCI bus.  I have been shopping around for new MB and PCI-express cards.  I
-have been using mdadm for a long time and would like to stay with it.  I am
-having trouble finding an eight port PCI-express card that does not have all
-the fancy HW RAID which jacks up the cost.  I am now considering using a MB
-with eight SATA II slots onboard.  GIGABYTE GA-M59SLI-S5 Socket AM2 NVIDIA
-nForce 590 SLI MCP ATX.
+so long:)
 
-What are other users of mdadm using with the PCI-express cards, most cost
-effective solution?
+Yana
 
 
