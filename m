@@ -1,28 +1,37 @@
-From: "Yana" <allenmassey@btopenworld.com>
-Subject: Re[1]:  i'll be seeing u
-Date: Sat, 21 Oct 2006 16:00:50 +0300
-Message-ID: <006401c6f510$eb252600$8402000a__9017.71587455205$1161437949$gmane$org@router-224-ip-89-34-224-14.tennet.ro>
+From: Henrik Holst <henrik.holst@idgmail.se>
+Subject: Re: why partition arrays?
+Date: Sat, 21 Oct 2006 15:39:58 +0200
+Message-ID: <453A232E.8050401@idgmail.se>
+References: <C59E07CE09883545BC9EC6B87E2D3C83523DBF@kdtc.tt.umist.ac.uk> <20061021062648.23c0bd7a@30_bodo.rupinet>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="windows-1251"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20061021062648.23c0bd7a@30_bodo.rupinet>
 Sender: linux-raid-owner@vger.kernel.org
-To: Bernd <linux-raid@vger.kernel.org>
+To: Bodo Thiesen <bothie@gmx.de>
+Cc: linux-raid mailing list <linux-raid@vger.kernel.org>, Ken Walker <ken.walker@manchester.ac.uk>
 List-Id: linux-raid.ids
 
-Hello, Bernd
+Bodo Thiesen wrote:
+> Ken Walker <ken.walker@manchester.ac.uk> wrote:
+> 
+>> Is LVM stable, or can it cause more problems than separate raids on a array.
 
-I'm a very young and energetic lady! I have very positive attitude to life and people. I do enjoy new experience life can offer me: to see new interesting places, to meet new people.
-I do try to enjoy every moment of life and accept everything the way it comes without complaining.
-Though my life seems to be quite enjoyable there's one important thing missing. It's LOVE!
-Without my beloved one, my soul mate, my King my life is not completed.
-I wish i coud find him very soon so that we could share together every momement of the life-time romance! 
-What about you? Could you be my King? If answer is "yes" - you can find more about me 
-http://findsomelove.com/myhoney
+[description of street smart raid setup]
 
-so long:)
+(The same function could probably be achieved with logical partitions
+and ordinary software raid levels.)
 
-Yana
+> So, now decide for your own, if you consider LVM stable - I would ;)
+> 
+> Regards, Bodo
 
+Have you lost any disc (i.e. "physical volumes") since February? Or lost
+the meta-data?
 
+I would not recommend anyone to use LVM if they are less than experts on
+Linux systems. Setting up a LVM system is easy: administrating and
+salvaging the same, was much more work. (I used it ~3 years ago)
+
+/Henrik Holst
