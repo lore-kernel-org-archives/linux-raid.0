@@ -1,53 +1,55 @@
-From: Tomasz Chmielewski <mangoo@wpkg.org>
-Subject: Re: Propose of enhancement of raid1 driver
-Date: Sat, 21 Oct 2006 18:01:05 +0200
-Message-ID: <453A4441.1040409@wpkg.org>
-References: <45347D6E.3000600@mieszczak.com.pl> <17718.61672.794099.425723@cse.unsw.edu.au>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: future hardware
+Date: Sat, 21 Oct 2006 12:52:01 -0400 (EDT)
+Message-ID: <Pine.LNX.4.64.0610211250300.11410@p34.internal.lan>
+References: <000901c6f509$1bd65560$eb00000a@mine3ad5e808fe>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17718.61672.794099.425723@cse.unsw.edu.au>
+In-Reply-To: <000901c6f509$1bd65560$eb00000a@mine3ad5e808fe>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Miroslaw Mieszczak <mirek@mieszczak.com.pl>, linux-raid@vger.kernel.org
+To: Dan <dan@korstad.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil Brown wrote:
-> On Tuesday October 17, mirek@mieszczak.com.pl wrote:
->> I would like to propose an enhancement of raid 1 driver in linux kernel.
->> The enhancement would be speedup of data reading on mirrored partitions.
->> The idea is easy.
->> If we have mirrored partition over 2 disks, and these disk are in sync, there is
->> possibility of simultaneous reading of the data from both disks on the same way
->> as in raid 0. So it would be chunk1 read from master, chunk2 read from slave at
->> the same time. 
->> As result it would give significant speedup of read operation (comparable with
->> speed of raid 0 disks).
+
+
+On Sat, 21 Oct 2006, Dan wrote:
+
+> I have been using an older 64bit system, socket 754 for a while now.  It has
+> the old PCI bus 33Mhz.  I have two low cost (no HW RAID) PCI SATA I cards
+> each with 4 ports to give me an eight disk RAID 6.  I also have a Gig NIC,
+> on the PCI bus.  I have Gig switches with clients connecting to it at Gig
+> speed.
 > 
-> This is not as easy as it sounds.
-> Skipping over blocks within a track is no faster than reading blocks
-> in the track, so you would need to make sure that your chunk size is
-> larger than one track - probably it would need to be several tracks.
+> As many know you get a peak transfer rate of 133 MB/s or 1064Mb/s from that
+> PCI bus http://en.wikipedia.org/wiki/Peripheral_Component_Interconnect
+> 
+> The transfer rate is not bad across the network but my bottle neck it the
+> PCI bus.  I have been shopping around for new MB and PCI-express cards.  I
+> have been using mdadm for a long time and would like to stay with it.  I am
+> having trouble finding an eight port PCI-express card that does not have all
+> the fancy HW RAID which jacks up the cost.  I am now considering using a MB
+> with eight SATA II slots onboard.  GIGABYTE GA-M59SLI-S5 Socket AM2 NVIDIA
+> nForce 590 SLI MCP ATX.
+> 
+> What are other users of mdadm using with the PCI-express cards, most cost
+> effective solution?
+> 
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
-What you said is certainly true when we read one file at a given moment.
+Read this:
 
-What if we read two different files at a given time? Certainly, it would 
-be faster if DRIVE_1 reads FILE_1, and DRIVE_2 reads FILE_2.
+http://www.anandtech.com/IT/showdoc.aspx?i=2859
 
+I have a similar setup to you, 6 IDE ATA/100 + 2 SATA/150 (all 400GB) in 
+an mdadm RAID5, works well but it maxes out the PCI bus unfortunately.  At 
+some point I am going to do what you did, get 2 x SATA PCI-e SiL 3114 
+cards perhaps.  Or, after reading that article, consider SAS maybe..?
 
-> Raid1 already does some read-balancing, though it is possible (even
-> likely) that it doesn't balance very effectively.  Working out how
-> best to do the balancing in general in a non-trivial task, but would
-> be worth spending time on.
-
-Probably what I said before isn't very correct, as RAID-1 has no idea of 
-the filesystem that is on top of it; rather, it will see attempts to 
-access differend areas of the array?
-
-
-
--- 
-Tomasz Chmielewski
-http://wpkg.org
-
+Justin.
