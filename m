@@ -1,55 +1,52 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: future hardware
-Date: Sat, 21 Oct 2006 12:52:01 -0400 (EDT)
-Message-ID: <Pine.LNX.4.64.0610211250300.11410@p34.internal.lan>
-References: <000901c6f509$1bd65560$eb00000a@mine3ad5e808fe>
+From: Bodo Thiesen <bothie@gmx.de>
+Subject: Re: why partition arrays?
+Date: Sat, 21 Oct 2006 21:25:11 +0200
+Message-ID: <20061021212511.0108aa6f@30_bodo.rupinet>
+References: <C59E07CE09883545BC9EC6B87E2D3C83523DBF@kdtc.tt.umist.ac.uk>
+	<20061021062648.23c0bd7a@30_bodo.rupinet>
+	<453A232E.8050401@idgmail.se>
+Reply-To: linux-raid mailing list <linux-raid@vger.kernel.org>,
+	  Ken Walker <ken.walker@manchester.ac.uk>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <000901c6f509$1bd65560$eb00000a@mine3ad5e808fe>
+In-Reply-To: <453A232E.8050401@idgmail.se>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan <dan@korstad.net>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid mailing list <linux-raid@vger.kernel.org>
+Cc: Ken Walker <ken.walker@manchester.ac.uk>
 List-Id: linux-raid.ids
 
+Henrik Holst <henrik.holst@idgmail.se> wrote:
 
+> Have you lost any disc (i.e. "physical volumes") since February?
 
-On Sat, 21 Oct 2006, Dan wrote:
+In fact, we have. One disc failed, we removed it brought a new disc, set 
+it up like the other ones and finally added it to the degraded RAID 
+array. Now everything is fine again ;)
 
-> I have been using an older 64bit system, socket 754 for a while now.  It has
-> the old PCI bus 33Mhz.  I have two low cost (no HW RAID) PCI SATA I cards
-> each with 4 ports to give me an eight disk RAID 6.  I also have a Gig NIC,
-> on the PCI bus.  I have Gig switches with clients connecting to it at Gig
-> speed.
-> 
-> As many know you get a peak transfer rate of 133 MB/s or 1064Mb/s from that
-> PCI bus http://en.wikipedia.org/wiki/Peripheral_Component_Interconnect
-> 
-> The transfer rate is not bad across the network but my bottle neck it the
-> PCI bus.  I have been shopping around for new MB and PCI-express cards.  I
-> have been using mdadm for a long time and would like to stay with it.  I am
-> having trouble finding an eight port PCI-express card that does not have all
-> the fancy HW RAID which jacks up the cost.  I am now considering using a MB
-> with eight SATA II slots onboard.  GIGABYTE GA-M59SLI-S5 Socket AM2 NVIDIA
-> nForce 590 SLI MCP ATX.
-> 
-> What are other users of mdadm using with the PCI-express cards, most cost
-> effective solution?
-> 
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+> Or lost the meta-data?
 
-Read this:
+LVM meta-data or RAID meta-data?
 
-http://www.anandtech.com/IT/showdoc.aspx?i=2859
+LVM: In this case we may really get a problem. But on the other hand: How 
+would you try to loose those meta-data?
 
-I have a similar setup to you, 6 IDE ATA/100 + 2 SATA/150 (all 400GB) in 
-an mdadm RAID5, works well but it maxes out the PCI bus unfortunately.  At 
-some point I am going to do what you did, get 2 x SATA PCI-e SiL 3114 
-cards perhaps.  Or, after reading that article, consider SAS maybe..?
+RAID6: There we would be quite save, as we have all LVs of raid1 called 
+raid?1 and so on. So if it wouldn't assemble anymore we could still fall 
+back to just recreate it.
 
-Justin.
+> I would not recommend anyone to use LVM if they are less than experts on
+> Linux systems.
+
+LVM is such easy to use, I'd recommend anyone to use LVM in favor of 
+creating partitions etc. because I think, repartitioning a disc is MUCH 
+MORE error prone, than just creating a new LV. And you can do stuff like 
+enlarging an LV what you can't with partitions.
+
+> Setting up a LVM system is easy: administrating and
+> salvaging the same, was much more work. (I used it ~3 years ago)
+
+Was that LVM on RAID? I'm talking about LVM on RAID.
+
+Regards, Bodo
