@@ -1,63 +1,34 @@
-From: Bodo Thiesen <bothie@gmx.de>
-Subject: Re: why partition arrays?
-Date: Sat, 21 Oct 2006 06:26:48 +0200
-Message-ID: <20061021062648.23c0bd7a@30_bodo.rupinet>
-References: <C59E07CE09883545BC9EC6B87E2D3C83523DBF@kdtc.tt.umist.ac.uk>
+From: "Dan" <dan@korstad.net>
+Subject: future hardware
+Date: Sat, 21 Oct 2006 07:04:43 -0500
+Message-ID: <000901c6f509$1bd65560$eb00000a@mine3ad5e808fe>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+	charset="US-ASCII"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <C59E07CE09883545BC9EC6B87E2D3C83523DBF@kdtc.tt.umist.ac.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid mailing list <linux-raid@vger.kernel.org>
-Cc: Ken Walker <ken.walker@manchester.ac.uk>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Ken Walker <ken.walker@manchester.ac.uk> wrote:
+I have been using an older 64bit system, socket 754 for a while now.  It has
+the old PCI bus 33Mhz.  I have two low cost (no HW RAID) PCI SATA I cards
+each with 4 ports to give me an eight disk RAID 6.  I also have a Gig NIC,
+on the PCI bus.  I have Gig switches with clients connecting to it at Gig
+speed.
 
-> Is LVM stable, or can it cause more problems than separate raids on a array.
+As many know you get a peak transfer rate of 133 MB/s or 1064Mb/s from that
+PCI bus http://en.wikipedia.org/wiki/Peripheral_Component_Interconnect
 
-I don't know what you consider "stable". But let me explain what we have 
-running here for now, maybe you will then have a better feeling on how 
-stable LVM is:
+The transfer rate is not bad across the network but my bottle neck it the
+PCI bus.  I have been shopping around for new MB and PCI-express cards.  I
+have been using mdadm for a long time and would like to stay with it.  I am
+having trouble finding an eight port PCI-express card that does not have all
+the fancy HW RAID which jacks up the cost.  I am now considering using a MB
+with eight SATA II slots onboard.  GIGABYTE GA-M59SLI-S5 Socket AM2 NVIDIA
+nForce 590 SLI MCP ATX.
 
-After two hard disks crashed, and we loosed more ore less semi-important 
-data, we considered to set up all disk space using RAID6.
+What are other users of mdadm using with the PCI-express cards, most cost
+effective solution?
 
-The initial situation was: We had 7 hard discs with more or less different 
-sizes. So just using the block devices for the raids was not optimal. We 
-didn't want to waste TOO much space (we were going to "waste" 2/5 through 
-RAID6 already, that is 40%, but another 50% by orienting on the smallest 
-disc was out of the questions). So we decided to create four RAID6 arrays 
-each using five block devices. There were the sizes ~100GB, ~75GB and 
-2*~55GB. So we could fully utilize our new discs of ~300GB each, and still 
-meaningful use the other disks - all smaller in size. But with this strange 
-concept we immediately decided, that just using IBM disk labels (aka 
-partitions) were not really meaningful, especially as after swapping discs 
-(consider changing the chassis, just disconnecting all discs ... hmm, what 
-was hdb and what was hdd? And hde? Hmmm ...), so we decided the following 
-structure:
 
-hda -> vg called raida -> creating LVs called raida1..raida4
-hdb -> vg called raidb -> creating LVs called raidb1..raidb4
-
-and so on
-
-On some discs, not all of raidX1..raidX4 were actually created, e.g. on 
-our 200GB disc, only raidX2..raidX4 were creates thus missing the 100GB 
-component.
-
-Now, raid*1 would make up md1, raid*2 would build md2 and so on.
-
-Each of md1..md4 where then created another VG on, all put in one volume 
-group (called 'space' ;), and from that VG we created our actual logical 
-volumes like homes etc.
-
-BTW: I left off the dm-crypt step, additionally the raid LVs are all 
-encrypted.
-
-That system is now stable at least since 14. Feb 2006.
-
-So, now decide for your own, if you consider LVM stable - I would ;)
-
-Regards, Bodo
