@@ -1,32 +1,33 @@
-From: Richard Scobie <richard@sauce.co.nz>
+From: Mike Hardy <mhardy@h3c.com>
 Subject: Re: future hardware
-Date: Sun, 22 Oct 2006 15:02:06 +1300
-Message-ID: <453AD11E.80801@sauce.co.nz>
-References: <000901c6f509$1bd65560$eb00000a@mine3ad5e808fe>
+Date: Sat, 21 Oct 2006 19:38:09 -0700
+Message-ID: <453AD991.2060504@h3c.com>
+References: <000901c6f509$1bd65560$eb00000a@mine3ad5e808fe> <Pine.LNX.4.64.0610211250300.11410@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <000901c6f509$1bd65560$eb00000a@mine3ad5e808fe>
+In-Reply-To: <Pine.LNX.4.64.0610211250300.11410@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Dan wrote:
 
-> 
-> What are other users of mdadm using with the PCI-express cards, most cost
-> effective solution?
 
-I have been successfully using a pair of Addonics AD2SA3GPX1 cards, with
-  4 x 500GB in a stacked RAID0 on top of a pair of RAID1 configuration.
+Justin Piszcz wrote:
 
-The cards are cheap and use the sil24 driver, which seems to be one of
-the better supported.
+> cards perhaps.  Or, after reading that article, consider SAS maybe..?
 
-Performance is good - read/write speeds of 140MB/s in bonnie++ as I recall.
 
-Regards,
+I hate to be the guy that breaks out the unsubstantiated anecdotal
+evidence, but I've got a RAID10 with 4x300GB Maxtor SAS drives, and I've
+already had two trigger their internal SMART "I'm about to fail" message.
 
-Richard
+They've been in service now for around 2 months, and they do have an
+okay temperature, and I have not been beating the crap out of them.
 
+More than a little disappointing.
+
+They are fast though...
+
+-Mike
