@@ -1,64 +1,109 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: Propose of enhancement of raid1 driver
-Date: Mon, 23 Oct 2006 11:33:16 +1000
-Message-ID: <17724.7132.127159.720719@cse.unsw.edu.au>
-References: <45347D6E.3000600@mieszczak.com.pl>
-	<17718.61672.794099.425723@cse.unsw.edu.au>
-	<453A4441.1040409@wpkg.org>
+From: Neil Cavan <nrcavan@engmail.uwaterloo.ca>
+Subject: Re: RAID5 Recovery
+Date: Sun, 22 Oct 2006 22:52:33 -0400
+Message-ID: <BAYC1-PASMTP03983D4F0B5666E72D056AE8000@CEZ.ICE>
+References: <BAYC1-PASMTP06741EF4074D618C18E59FE8030@CEZ.ICE>
+	 <1161479672.14505.10.camel@localhost>
+	 <17724.6902.507094.791289@cse.unsw.edu.au>
+Reply-To: nrcavan@engmail.uwaterloo.ca
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Tomasz Chmielewski on Saturday October 21
+In-Reply-To: <17724.6902.507094.791289@cse.unsw.edu.au>
+Message-Id: <1161571953.4871.8.camel@localhost>
 Sender: linux-raid-owner@vger.kernel.org
-To: Tomasz Chmielewski <mangoo@wpkg.org>
-Cc: Miroslaw Mieszczak <mirek@mieszczak.com.pl>, linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Saturday October 21, mangoo@wpkg.org wrote:
-> Neil Brown wrote:
-> > On Tuesday October 17, mirek@mieszczak.com.pl wrote:
-> >> I would like to propose an enhancement of raid 1 driver in linux kernel.
-> >> The enhancement would be speedup of data reading on mirrored partitions.
-> >> The idea is easy.
-> >> If we have mirrored partition over 2 disks, and these disk are in sync, there is
-> >> possibility of simultaneous reading of the data from both disks on the same way
-> >> as in raid 0. So it would be chunk1 read from master, chunk2 read from slave at
-> >> the same time. 
-> >> As result it would give significant speedup of read operation (comparable with
-> >> speed of raid 0 disks).
+The drives have not been repartitioned.
+
+I think what happened is that I created a new raid5 array over the old
+one, but never synced or initialized it.
+
+I'm leery of re-creating the array as you suggest, because I think
+re-creating an array "over top" of my existing array is what got me into
+trouble in the first place.
+
+Also, from mdadm man page (using v 1.12.0):
+
+--assume-clean
+    Tell mdadm that the array pre-existed and is known to be clean.
+    This is only really useful for Building RAID1  array.   Only
+    use this if you really know what you are doing.  This is currently
+    only supported for --build.
+
+This suggests to me that I can only use this to build a legacy array
+without superblocks - which I don't want - and that since my array was
+RAID5, that it's not "really useful", whatever that means. Oh, and also,
+I don't really know what I'm doing. ;)
+
+If I do re-create the array to regenerate the superblocks, isn't it
+important that I know the exact parameters of the pre-existing array, to
+get the data to match up? chunk size, parity method, etc?
+
+I just don't want to rush in and mess things up. Did that once
+already. ;)
+
+Thanks,
+Neil
+
+On Mon, 2006-23-10 at 11:29 +1000, Neil Brown wrote:
+> On Saturday October 21, nrcavan@engmail.uwaterloo.ca wrote:
+> > Hi,
 > > 
-> > This is not as easy as it sounds.
-> > Skipping over blocks within a track is no faster than reading blocks
-> > in the track, so you would need to make sure that your chunk size is
-> > larger than one track - probably it would need to be several tracks.
+> > I had a run-in with the Ubuntu Server installer, and in trying to get
+> > the new system to recognize the clean 5-disk raid5 array left behind by
+> > the previous Ubuntu system, I think I inadvertently instructed it to
+> > create a new raid array using those same partitions.
+> > 
+> > What I know for sure is that now, I get this:
+> > 
+> > user@host:~$ sudo mdadm --examine /dev/hda1
+> > mdadm: No super block found on /dev/hda1 (Expected magic a92b4efc, got
+> > 00000000)
+> > user@host:~$ sudo mdadm --examine /dev/hdc1
+> > mdadm: No super block found on /dev/hdc1 (Expected magic a92b4efc, got
+> > 00000000)
+> > user@host:~$ sudo mdadm --examine /dev/hde1
+> > mdadm: No super block found on /dev/hde1 (Expected magic a92b4efc, got
+> > 00000000)
+> > user@host:~$ sudo mdadm --examine /dev/hdg1
+> > mdadm: No super block found on /dev/hdg1 (Expected magic a92b4efc, got
+> > 00000000)
+> > user@host:~$ sudo mdadm --examine /dev/hdi1
+> > mdadm: No super block found on /dev/hdi1 (Expected magic a92b4efc, got
+> > 00000000)
+> > 
+> > I didn't format the partitions or write any data to the disk, so I think
+> > the array's data should be intact. Is there a way to recreate the
+> > superblocks, or am I hosed?
 > 
-> What you said is certainly true when we read one file at a given moment.
+> Weirds.... Could the drives have been repartitioned in the process,
+> with the partitions being slightly different sizes or at slightly
+> different offsets?  That might explain the disappearing superblocks,
+> and remaking the partitions might fix it.
 > 
-> What if we read two different files at a given time? Certainly, it would 
-> be faster if DRIVE_1 reads FILE_1, and DRIVE_2 reads FILE_2.
+> Or you can just re-create the array.  Doing so won't destroy any data
+> that happens to be there.
+> To be on the safe side, create it with --assume-clean.  This will avoid
+> a resync so you can be sure that no data blocks will be written at
+> all.
+> Then 'fsck -n' or mount readonly and see if you data is safe.  
+> Once you are happy that you have the data safe you can trigger the
+> resync with
+>    mdadm --assemble --update=resync .....
+> or 
+>    echo resync > /sys/block/md0/md/sync_action
+> 
+> (assuming it is 'md0').
+> 
+> Good luck.
+> 
+> NeilBrown
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-And it is possible that md/raid1 currently does that (I think it
-depends a bit on the size and location of the files).
-
-But what if you are reading 3 separate areas of the filesystem...
-Sharing that over 2 drives when you don't know in-advance what will be
-done is probably non-trivial :-)
-
-> 
-> 
-> > Raid1 already does some read-balancing, though it is possible (even
-> > likely) that it doesn't balance very effectively.  Working out how
-> > best to do the balancing in general in a non-trivial task, but would
-> > be worth spending time on.
-> 
-> Probably what I said before isn't very correct, as RAID-1 has no idea of 
-> the filesystem that is on top of it; rather, it will see attempts to 
-> access differend areas of the array?
-> 
-
-Exactly.  It just sees block address.  It tends to prefer to send a
-request to a drive that has recently been asked to read a block nearby
-the new request.
-
-NeilBrown
