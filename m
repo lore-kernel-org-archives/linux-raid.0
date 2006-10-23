@@ -1,50 +1,41 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: Bug with RAID1 hot spares?
-Date: Mon, 23 Oct 2006 14:13:36 +1000
-Message-ID: <17724.16752.217048.956115@cse.unsw.edu.au>
-References: <200610202046.43033.chase.venters@clientec.com>
+Subject: Re: raid 5 read performance
+Date: Mon, 23 Oct 2006 14:15:42 +1000
+Message-ID: <17724.16878.840243.479385@cse.unsw.edu.au>
+References: <5d96567b0605210210wc3925ek6161f427944f8b7@mail.gmail.com>
+	<17520.12342.245437.75779@cse.unsw.edu.au>
+	<Pine.LNX.4.64.0610210015390.23381@adsl.a2000.nu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Chase Venters on Friday October 20
+In-Reply-To: message from Stephan van Hienen on Saturday October 21
 Sender: linux-raid-owner@vger.kernel.org
-To: Chase Venters <chase.venters@clientec.com>
-Cc: linux-raid@vger.kernel.org, jason.meinzer@gmail.com
+To: Stephan van Hienen <raid@a2000.nu>
+Cc: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>, Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Friday October 20, chase.venters@clientec.com wrote:
-> Greetings,
-> 	I was just testing a server I was about to send into production on kernel 
-> 2.6.18.1. The server has three SCSI disks with "md1" set to a RAID1 with 2 
-> mirrors and 1 spare. The mirrors are sda3 and sdb3, spare is sdc3. I manually 
-> failed sdb3, and as expected, sdc3 was activated. Strangely 
-> enough, /proc/mdstat did not indicate that sdc3 was being synced. I thought 
-> these spares weren't kept mirrored until needed?
+On Saturday October 21, raid@a2000.nu wrote:
+> On Sun, 21 May 2006, Neil Brown wrote:
+> 
+> > Please read
+> > 
+> > http://www.spinics.net/lists/raid/msg11838.html
+> > 
+> > and ask if you have further questions.
+> 
+> Neil,
+> 
+> what is the current status on the slow read performance with 2.6 ?
+> 
 
-Correct.  They are not kept mirrored.
+You mean by-passing the cache to avoid extra copy and synchronisation
+overheads?
+I have the patches.  I tried them once and couldn't measure any
+speedup (I didn't try very hard) and put them aside think "I have to
+look into this properly" and haven't got back to it yet.
 
-> 	So there's definitely something odd happening here... why did no resync to 
-> the sdc3 spare start when I failed sdb3?
+Thanks for the reminder.  Hope to do some performance measurements
+soon.  I'll make sure I include these patches when I do.
 
-yes... can you check that this fixes it please?
-Thanks,
 NeilBrown
-
-Signed-off-by: Neil Brown <neilb@suse.de>
-
-### Diffstat output
- ./drivers/md/md.c |    1 +
- 1 file changed, 1 insertion(+)
-
-diff .prev/drivers/md/md.c ./drivers/md/md.c
---- .prev/drivers/md/md.c	2006-10-23 12:09:08.000000000 +1000
-+++ ./drivers/md/md.c	2006-10-23 14:10:46.000000000 +1000
-@@ -2003,6 +2003,7 @@ static mdk_rdev_t *md_import_device(dev_
- 	kobject_init(&rdev->kobj);
- 
- 	rdev->desc_nr = -1;
-+	rdev->saved_raid_disk = -1;
- 	rdev->flags = 0;
- 	rdev->data_offset = 0;
- 	rdev->sb_events = 0;
