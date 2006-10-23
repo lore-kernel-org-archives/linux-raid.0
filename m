@@ -1,41 +1,52 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: raid 5 read performance
-Date: Mon, 23 Oct 2006 14:15:42 +1000
-Message-ID: <17724.16878.840243.479385@cse.unsw.edu.au>
-References: <5d96567b0605210210wc3925ek6161f427944f8b7@mail.gmail.com>
-	<17520.12342.245437.75779@cse.unsw.edu.au>
-	<Pine.LNX.4.64.0610210015390.23381@adsl.a2000.nu>
+Subject: Re: patches
+Date: Mon, 23 Oct 2006 14:19:47 +1000
+Message-ID: <17724.17123.649113.890603@cse.unsw.edu.au>
+References: <20061020170016.C183895C422@futec-gmbh.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Stephan van Hienen on Saturday October 21
+In-Reply-To: message from Michael Labuschke on Friday October 20
 Sender: linux-raid-owner@vger.kernel.org
-To: Stephan van Hienen <raid@a2000.nu>
-Cc: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>, Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: Michael Labuschke <michael@labuschke.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Saturday October 21, raid@a2000.nu wrote:
-> On Sun, 21 May 2006, Neil Brown wrote:
-> 
-> > Please read
-> > 
-> > http://www.spinics.net/lists/raid/msg11838.html
-> > 
-> > and ask if you have further questions.
-> 
-> Neil,
-> 
-> what is the current status on the slow read performance with 2.6 ?
-> 
 
-You mean by-passing the cache to avoid extra copy and synchronisation
-overheads?
-I have the patches.  I tried them once and couldn't measure any
-speedup (I didn't try very hard) and put them aside think "I have to
-look into this properly" and haven't got back to it yet.
-
-Thanks for the reminder.  Hope to do some performance measurements
-soon.  I'll make sure I include these patches when I do.
+Thanks.  I've modified them a bit as below.
+They will be in 2.5.5.
 
 NeilBrown
+
+
+### Diffstat output
+ ./mdopen.c |    9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
+
+diff .prev/mdopen.c ./mdopen.c
+--- .prev/mdopen.c	2006-10-16 15:26:58.000000000 +1000
++++ ./mdopen.c	2006-10-23 14:18:05.000000000 +1000
+@@ -44,7 +44,8 @@ void make_dev_symlink(char *dev)
+ 		strcpy(new+7, new+8);
+ 	else
+ 		new[7] = '_';
+-	symlink(dev+5, new);
++	if (symlink(dev+5, new))
++		perror(new);
+ }
+ 
+ 
+@@ -249,8 +250,10 @@ int open_mddev(char *dev, int autof)
+ 
+ 			if (strncmp(dev, "/dev/md/", 8) == 0) {
+ 				if (mkdir("/dev/md",0700)==0) {
+-					chown("/dev/md", ci->uid, ci->gid);
+-					chmod("/dev/md", ci->mode| ((ci->mode>>2) & 0111));
++					if (chown("/dev/md", ci->uid, ci->gid))
++						perror("chown /dev/md");
++					if (chmod("/dev/md", ci->mode| ((ci->mode>>2) & 0111)))
++						perror("chmod /dev/md");
+ 				}
+ 			}
+ 			if (mknod(dev, S_IFBLK|0600, makedev(major, minor))!= 0) {
