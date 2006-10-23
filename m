@@ -1,28 +1,68 @@
-From: Nix <nix@esperi.org.uk>
-Subject: Re: why partition arrays?
-Date: Sun, 22 Oct 2006 17:02:20 +0100
-Message-ID: <87fydgbapf.fsf@hades.wkstn.nix>
-References: <C59E07CE09883545BC9EC6B87E2D3C83523DBF@kdtc.tt.umist.ac.uk>
-	<20061021062648.23c0bd7a@30_bodo.rupinet>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: RAID5 Recovery
+Date: Mon, 23 Oct 2006 11:29:26 +1000
+Message-ID: <17724.6902.507094.791289@cse.unsw.edu.au>
+References: <BAYC1-PASMTP06741EF4074D618C18E59FE8030@CEZ.ICE>
+	<1161479672.14505.10.camel@localhost>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20061021062648.23c0bd7a@30_bodo.rupinet> (Bodo Thiesen's message of "21 Oct 2006 05:27:04 +0100")
+In-Reply-To: message from Neil Cavan on Saturday October 21
 Sender: linux-raid-owner@vger.kernel.org
-To: Bodo Thiesen <bothie@gmx.de>
-Cc: linux-raid mailing list <linux-raid@vger.kernel.org>, Ken Walker <ken.walker@manchester.ac.uk>
+To: nrcavan@engmail.uwaterloo.ca
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 21 Oct 2006, Bodo Thiesen yowled:
-> was hdb and what was hdd? And hde? Hmmm ...), so we decided the following 
-> structure:
+On Saturday October 21, nrcavan@engmail.uwaterloo.ca wrote:
+> Hi,
 > 
-> hda -> vg called raida -> creating LVs called raida1..raida4
-> hdb -> vg called raidb -> creating LVs called raidb1..raidb4
+> I had a run-in with the Ubuntu Server installer, and in trying to get
+> the new system to recognize the clean 5-disk raid5 array left behind by
+> the previous Ubuntu system, I think I inadvertently instructed it to
+> create a new raid array using those same partitions.
+> 
+> What I know for sure is that now, I get this:
+> 
+> user@host:~$ sudo mdadm --examine /dev/hda1
+> mdadm: No super block found on /dev/hda1 (Expected magic a92b4efc, got
+> 00000000)
+> user@host:~$ sudo mdadm --examine /dev/hdc1
+> mdadm: No super block found on /dev/hdc1 (Expected magic a92b4efc, got
+> 00000000)
+> user@host:~$ sudo mdadm --examine /dev/hde1
+> mdadm: No super block found on /dev/hde1 (Expected magic a92b4efc, got
+> 00000000)
+> user@host:~$ sudo mdadm --examine /dev/hdg1
+> mdadm: No super block found on /dev/hdg1 (Expected magic a92b4efc, got
+> 00000000)
+> user@host:~$ sudo mdadm --examine /dev/hdi1
+> mdadm: No super block found on /dev/hdi1 (Expected magic a92b4efc, got
+> 00000000)
+> 
+> I didn't format the partitions or write any data to the disk, so I think
+> the array's data should be intact. Is there a way to recreate the
+> superblocks, or am I hosed?
 
-I'm interested: why two VGs? Why not have one VG covering all RAID arrays,
-and then another one for any unRAIDed space (if any)?
+Weirds.... Could the drives have been repartitioned in the process,
+with the partitions being slightly different sizes or at slightly
+different offsets?  That might explain the disappearing superblocks,
+and remaking the partitions might fix it.
 
--- 
-`When we are born we have plenty of Hydrogen but as we age our
- Hydrogen pool becomes depleted.'
+Or you can just re-create the array.  Doing so won't destroy any data
+that happens to be there.
+To be on the safe side, create it with --assume-clean.  This will avoid
+a resync so you can be sure that no data blocks will be written at
+all.
+Then 'fsck -n' or mount readonly and see if you data is safe.  
+Once you are happy that you have the data safe you can trigger the
+resync with
+   mdadm --assemble --update=resync .....
+or 
+   echo resync > /sys/block/md0/md/sync_action
+
+(assuming it is 'md0').
+
+Good luck.
+
+NeilBrown
