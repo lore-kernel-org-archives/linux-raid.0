@@ -1,176 +1,212 @@
-From: Tomasz Chmielewski <mangoo@wpkg.org>
-Subject: Re: resync starts over after each reboot (2.6.18.1)?
-Date: Mon, 23 Oct 2006 18:43:01 +0200
-Message-ID: <453CF115.4020003@wpkg.org>
-References: <45349861.4010208@wpkg.org>	<17716.41259.239292.413627@cse.unsw.edu.au>	<4534A236.4080907@wpkg.org> <17724.19056.601329.815951@cse.unsw.edu.au>
+From: eharney@CLEMSON.EDU
+Subject: Re: Need help recovering a raid5 array
+Date: Mon, 23 Oct 2006 13:49:04 -0400 (EDT)
+Message-ID: <57925.130.127.131.126.1161625744.squirrel@wm.clemson.edu>
+References: <44029.130.127.44.164.1161616905.squirrel@wm.clemson.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17724.19056.601329.815951@cse.unsw.edu.au>
+In-Reply-To: <44029.130.127.44.164.1161616905.squirrel@wm.clemson.edu>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
+To: eharney@CLEMSON.EDU
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil Brown wrote:
-> On Tuesday October 17, mangoo@wpkg.org wrote:
->> Neil Brown wrote:
->>> On Tuesday October 17, mangoo@wpkg.org wrote:
->>>> I just set up a new Debian unstable box.
->>>> It's running 2.6.18.1 kernel.
->>>>
->>>> I created RAID-1 on two disks, with no data or filesystem on it.
->>>> As I'm still experimenting with the box, I reboot it quite frequently.
->>>>
->>>> I noticed that RAID-1 resync starts from the very beginning after each 
->>>> reboot. Is it normal?
->>> No.
->>> Has the resync finished when you shut down?
->> No, it was still running.
->>
-> 
-> Ok, so obviously it should start after a reboot, but maybe not at the
-> very beginning.
-> 
->>> How do you shut down?
->> I simply type "reboot", so it should shutdown/reboot cleanly.
->>
-> 
-> "should".
-> Do you have kernel logs of the shutdown process?  Do they mention md0
-> at all?
+> Hello all,
+>
+> I had a disk fail in a raid 5 array (4 disk array, no spares), and am
+> having trouble recovering it.  I believe my data is still safe, but I
+> cannot tell what is going wrong here.
+>
+> When I try to rebuild the array "mdadm --assemble /dev/md0 /dev/sda2
+> /dev/sdb2 /dev/sdc2 /dev/sdd2" I see "failed to RUN_ARRAY /dev/md0:
+> Input/output error".
+>
+> dmesg shows the following:
+> md: bind<sdb2>
+> md: bind<sdc2>
+> md: bind<sdd2>
+> md: bind<sda2>
+> md: md0: raid array is not clean -- starting background reconstruction
+> raid5: device sda2 operational as raid disk 0
+> raid5: device sdc2 operational as raid disk 2
+> raid5: device sdb2 operational as raid disk 1
+> raid5: cannot start dirty degraded array for md0
+> RAID5 conf printout:
+>  --- rd:4 wd:3 fd:1
+>  disk 0, o:1, dev:sda2
+>  disk 1, o:1, dev:sdb2
+>  disk 2, o:1, dev:sdc2
+> raid5: failed to run raid set md0
+> md: pers->run() failed ...
+>
+>
+>
+> /proc mdstat shows:
+> md0 : inactive sda2[0] sdd2[3](S) sdc2[2] sdb2[1]
+>
+> This seems wrong, as sdd2 should not be a spare - I want it to be the
+> fourth disk.
+>
+>
+> The output of mdadm -E for each disk is as follows:
+> sda2:
+> /dev/sda2:
+>           Magic : a92b4efc
+>         Version : 00.90.00
+>            UUID : c50a81fc:ef4323e6:438a7cb1:25ae35e5
+>   Creation Time : Thu Jun  1 21:13:58 2006
+>      Raid Level : raid5
+>     Device Size : 390555904 (372.46 GiB 399.93 GB)
+>      Array Size : 1171667712 (1117.39 GiB 1199.79 GB)
+>    Raid Devices : 4
+>   Total Devices : 4
+> Preferred Minor : 0
+>
+>     Update Time : Sun Oct 22 23:39:06 2006
+>           State : active
+>  Active Devices : 3
+> Working Devices : 4
+>  Failed Devices : 0
+>   Spare Devices : 1
+>        Checksum : 683f2f5c - correct
+>          Events : 0.8831997
+>
+>          Layout : left-symmetric
+>      Chunk Size : 256K
+>
+>       Number   Major   Minor   RaidDevice State
+> this     0       8        2        0      active sync   /dev/sda2
+>
+>    0     0       8        2        0      active sync   /dev/sda2
+>    1     1       8       18        1      active sync   /dev/sdb2
+>    2     2       8       34        2      active sync   /dev/sdc2
+>    3     3       0        0        3      faulty removed
+>    4     4       8       50        4      spare   /dev/sdd2
+>
+>
+> sdb2:
+> /dev/sdb2:
+>           Magic : a92b4efc
+>         Version : 00.90.00
+>            UUID : c50a81fc:ef4323e6:438a7cb1:25ae35e5
+>   Creation Time : Thu Jun  1 21:13:58 2006
+>      Raid Level : raid5
+>     Device Size : 390555904 (372.46 GiB 399.93 GB)
+>      Array Size : 1171667712 (1117.39 GiB 1199.79 GB)
+>    Raid Devices : 4
+>   Total Devices : 4
+> Preferred Minor : 0
+>
+>     Update Time : Sun Oct 22 23:39:06 2006
+>           State : active
+>  Active Devices : 3
+> Working Devices : 4
+>  Failed Devices : 0
+>   Spare Devices : 1
+>        Checksum : 683f2f6e - correct
+>          Events : 0.8831997
+>
+>          Layout : left-symmetric
+>      Chunk Size : 256K
+>
+>       Number   Major   Minor   RaidDevice State
+> this     1       8       18        1      active sync   /dev/sdb2
+>
+>    0     0       8        2        0      active sync   /dev/sda2
+>    1     1       8       18        1      active sync   /dev/sdb2
+>    2     2       8       34        2      active sync   /dev/sdc2
+>    3     3       0        0        3      faulty removed
+>    4     4       8       50        4      spare   /dev/sdd2
+>
+>
+> sdc2:
+> /dev/sdc2:
+>           Magic : a92b4efc
+>         Version : 00.90.00
+>            UUID : c50a81fc:ef4323e6:438a7cb1:25ae35e5
+>   Creation Time : Thu Jun  1 21:13:58 2006
+>      Raid Level : raid5
+>     Device Size : 390555904 (372.46 GiB 399.93 GB)
+>      Array Size : 1171667712 (1117.39 GiB 1199.79 GB)
+>    Raid Devices : 4
+>   Total Devices : 4
+> Preferred Minor : 0
+>
+>     Update Time : Sun Oct 22 23:39:06 2006
+>           State : active
+>  Active Devices : 3
+> Working Devices : 4
+>  Failed Devices : 0
+>   Spare Devices : 1
+>        Checksum : 683f2f80 - correct
+>          Events : 0.8831997
+>
+>          Layout : left-symmetric
+>      Chunk Size : 256K
+>
+>       Number   Major   Minor   RaidDevice State
+> this     2       8       34        2      active sync   /dev/sdc2
+>
+>    0     0       8        2        0      active sync   /dev/sda2
+>    1     1       8       18        1      active sync   /dev/sdb2
+>    2     2       8       34        2      active sync   /dev/sdc2
+>    3     3       0        0        3      faulty removed
+>    4     4       8       50        4      spare   /dev/sdd2
+>
+>
+> sdd2:
+> /dev/sdd2:
+>           Magic : a92b4efc
+>         Version : 00.90.00
+>            UUID : c50a81fc:ef4323e6:438a7cb1:25ae35e5
+>   Creation Time : Thu Jun  1 21:13:58 2006
+>      Raid Level : raid5
+>     Device Size : 390555904 (372.46 GiB 399.93 GB)
+>      Array Size : 1171667712 (1117.39 GiB 1199.79 GB)
+>    Raid Devices : 4
+>   Total Devices : 4
+> Preferred Minor : 0
+>
+>     Update Time : Sun Oct 22 23:39:06 2006
+>           State : active
+>  Active Devices : 3
+> Working Devices : 4
+>  Failed Devices : 0
+>   Spare Devices : 1
+>        Checksum : 683f2fbf - correct
+>          Events : 0.8831997
+>
+>          Layout : left-symmetric
+>      Chunk Size : 256K
+>
+>       Number   Major   Minor   RaidDevice State
+> this     3       8       50       -1      sync   /dev/sdd2
+>
+>    0     0       8        2        0      active sync   /dev/sda2
+>    1     1       8       18        1      active sync   /dev/sdb2
+>    2     2       8       34        2      active sync   /dev/sdc2
+>    3     3       8       50       -1      sync   /dev/sdd2
+>    4     4       8       50        4      spare   /dev/sdd2
+>
+>
+>
+> Does anyone have any idea how to get this array back into good shape?
+> I'm not sure why it thinks sdd2 should be a spare, or how to get it back
+> to being a regular disk.
+>
+> I would appreciate any help you can offer.  (Also, am I right in thinking
+> my data is still good?  I should still have 3 of the 4 disks working fine,
+> at any rate.)
+>
+> Thanks,
+> Eric
+>
 
-Looks like they are stopped properly:
 
-Deactivating swap...done.
-Shutting down LVM Volume Groups...
-   0 logical volume(s) in volume group "LVM2" now active
-md: md0 stopped.
-md: unbind<sda1>
-md: export_rdev(sda1)
-md: unbind<sdb1>
-md: export_rdev(sdb1)
-Stopping MD array md0...done (stopped).
-Will now restart.
-md: stopping all md devices.
-Synchronizing SCSI cache for disk sdb:
-Synchronizing SCSI cache for disk sda:
+If it helps, I think I may have made the mistake of trying to readd (mdadm
+--add) the fourth device to the array - probably related to why it thinks
+it's a spare.
 
-
-Now that it's synchronized for the very first time, it reboots correctly.
-
-When I mark the array as faulty, remove it, and add it:
-
-# mdadm /dev/md0 -f /dev/sda1
-# mdadm /dev/md0 -r /dev/sda1
-# mdadm /dev/md0 -a /dev/sda1
-
-It begins to rebuild:
-
-  cat /proc/mdstat
-Personalities : [raid1] [raid10] [raid6] [raid5] [raid4]
-md0 : active raid1 sda1[0] sdb1[1]
-       312568576 blocks [2/1] [_U]
-       [>....................]  recovery =  1.2% (3911680/312568576) 
-finish=103.7min speed=49558K/sec
-
-unused devices: <none>
-superthecus:~# reboot
-
-
-When I reboot, it's not rebuilding anymore:
-
-# cat /proc/mdstat
-Personalities : [raid1] [raid10] [raid6] [raid5] [raid4]
-md0 : active raid1 sdb1[1]
-       312568576 blocks [2/1] [_U]
-
-unused devices: <none>
-# cat /proc/mdstat
-# mdadm --detail /dev/md0
-/dev/md0:
-         Version : 00.90.03
-   Creation Time : Mon Oct 16 15:23:12 2006
-      Raid Level : raid1
-      Array Size : 312568576 (298.09 GiB 320.07 GB)
-     Device Size : 312568576 (298.09 GiB 320.07 GB)
-    Raid Devices : 2
-   Total Devices : 1
-Preferred Minor : 0
-     Persistence : Superblock is persistent
-
-     Update Time : Mon Oct 23 18:31:45 2006
-           State : clean, degraded
-  Active Devices : 1
-Working Devices : 1
-  Failed Devices : 0
-   Spare Devices : 0
-
-            UUID : df1bff84:2c0da484:f2202985:660e4c4d
-          Events : 0.6
-
-     Number   Major   Minor   RaidDevice State
-        0       0        0        0      removed
-        1       8       17        1      active sync   /dev/sdb1
-# mdadm /dev/md0 -a /dev/sda1
-md: bind<sda1>
-RAID1 conf printout:
-  --- wd:1 rd:2
-  disk 0, wo:1, o:1, dev:sda1
-  disk 1, wo:0, o:1, dev:sdb1
-mdadm: re-added md: syncing RAID array md0
-md: minimum _guaranteed_ reconstruction speed: 1000 KB/sec/disc.
-/dev/sda1
-md: using maximum available idle IO bandwidth (but not more than 200000 
-KB/sec) for reconstruction.
-md: using 128k window, over a total of 312568576 blocks.
-# cat /proc/mdstat
-Personalities : [raid1] [raid10] [raid6] [raid5] [raid4]
-md0 : active raid1 sda1[0] sdb1[1]
-       312568576 blocks [2/1] [_U]
-       [>....................]  recovery =  0.0% (113728/312568576) 
-finish=91.5min speed=56864K/sec
-
-unused devices: <none>
-
-
-# dmesg|grep dm
-md: kicking non-fresh sda1 from array!
-
-Why was it kicked? I added it to the array, but it didn't fully sync.
-
-Curious. Is it normal?
-
-
->>> Can you post the kernel logs from boot up to when the resync has
->>> started?
->> # dmesg|grep md
->>
-> ....
-> 
-> That looks OK except there is no
-> 
->  md: resuming recovery of md0 from checkpoint
-> 
-> as I would expect....
-> Are you creating the array with an internal bitmap?
-
-Frankly, I don't know...
-It was created by the Debian installer, and once it's synchronized, it
-works fine.
-
-
->> (it has so many raid levels, as I'm still experimenting with it).
->>
-> 
-> Experimentation is good!! It helps you find my bugs :-)
-
-:)
-
-
--- 
-Tomasz Chmielewski
-http://wpkg.org
-
-
+Knowing that, maybe there is a clean way to fix it all?
