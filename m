@@ -1,28 +1,28 @@
-From: Tomasz Chmielewski <mangoo@wpkg.org>
-Subject: Re: resync starts over after each reboot (2.6.18.1)?
-Date: Tue, 24 Oct 2006 13:39:56 +0200
-Message-ID: <453DFB8C.6090205@wpkg.org>
-References: <45349861.4010208@wpkg.org> <17724.19056.601329.815951@cse.unsw.edu.au> <453CF115.4020003@wpkg.org> <200610241323.17267.Dexter.Filmore@gmx.de>
+From: David Greaves <david@dgreaves.com>
+Subject: Re: Raid5 or 6 here... ?
+Date: Tue, 24 Oct 2006 15:34:26 +0100
+Message-ID: <453E2472.8090207@dgreaves.com>
+References: <4535F660.90901@cgv.tugraz.at> <Pine.LNX.4.56.0610241125580.24361@lion.drogon.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200610241323.17267.Dexter.Filmore@gmx.de>
+In-Reply-To: <Pine.LNX.4.56.0610241125580.24361@lion.drogon.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dexter Filmore <Dexter.Filmore@gmx.de>
+To: Gordon Henderson <gordon@drogon.net>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Dexter Filmore wrote:
-> Am Montag, 23. Oktober 2006 18:43 schrieben Sie:
+Gordon Henderson wrote:
+>    1747 ?        S<   724:25 [md9_raid5]
 > 
-> Sound familiar... two things: what exact LVM2 version are you using there?
-> Could you try and shutdown the machine completely till power off and cold boot 
-> it a couple of times and see if the issue persists?
+> It's kernel 2.6.18 and
 
-Yes, shutting down and powering off the machine doesn't change anything.
+Wasn't the module merged to raid456 in 2.6.18?
 
+Are your mdx_raid6's earlier kernels. My raid 6 is on 2.7.17 and says _raid6
 
--- 
-Tomasz Chmielewski
-http://wpkg.org
+Could it be that the combined kernel thread is called mdX_raid5
+
+David
+
