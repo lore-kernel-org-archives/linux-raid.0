@@ -1,235 +1,118 @@
-From: David Greaves <david@dgreaves.com>
-Subject: Re: Need help recovering a raid5 array
-Date: Tue, 24 Oct 2006 09:49:23 +0100
-Message-ID: <453DD393.4030406@dgreaves.com>
-References: <44029.130.127.44.164.1161616903.squirrel@wm.clemson.edu>
+From: Gordon Henderson <gordon@drogon.net>
+Subject: Raid5 or 6 here... ?
+Date: Tue, 24 Oct 2006 11:33:07 +0100 (BST)
+Message-ID: <Pine.LNX.4.56.0610241125580.24361@lion.drogon.net>
+References: <4535F660.90901@cgv.tugraz.at>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <44029.130.127.44.164.1161616903.squirrel@wm.clemson.edu>
+In-Reply-To: <4535F660.90901@cgv.tugraz.at>
 Sender: linux-raid-owner@vger.kernel.org
-To: eharney@CLEMSON.EDU
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-eharney@CLEMSON.EDU wrote:
-> Hello all,
-Hi
 
-First off, don't do anything else without reading up or talking on here :)
+Heres an oddity - Just built a server with 15 external disks over 2 SAS
+channels and I've noticed that the kernel is saying it's RAID5 rather than
+RAID6 ...
 
-The list archive has got a lot of good material - 'help' is usually a good
-search term!!!
+Hard to explain what I mean in words, but:
 
+  bertha:~# cat /proc/mdstat
+  Personalities : [raid0] [raid1] [raid6] [raid5] [raid4]
+  md9 : active raid6 sdh1[14] sdo1[13] sdg1[12] sdn1[11] sdf1[10] sdm1[9] sde1[8] sdl1[7] sdd1[6] sdk1[5] sdc1[4] sdj1[3] sdb1[2] sdi1[1] sda1[0]      6341993216 blocks level 6, 128k chunk, algorithm 2 [15/15]
+	[UUUUUUUUUUUUUUU]
 
-> 
-> I had a disk fail in a raid 5 array (4 disk array, no spares), and am
-> having trouble recovering it.  I believe my data is still safe, but I
-> cannot tell what is going wrong here.
+  md1 : active raid1 sdq1[1] sdp1[0]
+      497856 blocks [2/2] [UU]
 
-There's some useful stuff but always include:
-* kernel version
-* mdadm version
-* relevant dmesg or similar output
+  md2 : active raid1 sdq2[1] sdp2[0]
+      2000000 blocks [2/2] [UU]
 
+  md3 : active raid1 sdq3[1] sdp3[0]
+      2000000 blocks [2/2] [UU]
 
-What went wrong?
-Did /dev/sdd fail? If so then why are you adding it back to the array? Or is
-this now a replacement?
+  md5 : active raid1 sdq5[1] sdp5[0]
+      73240192 blocks [2/2] [UU]
 
-You should be OK - I'll reply quickly now and see if I can make some suggestions
-later (or sooner).
+  md6 : active raid1 sdq6[1] sdp6[0]
+      78509504 blocks [2/2] [UU]
 
-David
+  unused devices: <none>
 
+and:
 
-> 
-> When I try to rebuild the array "mdadm --assemble /dev/md0 /dev/sda2
-> /dev/sdb2 /dev/sdc2 /dev/sdd2" I see "failed to RUN_ARRAY /dev/md0:
-> Input/output error".
-> 
-> dmesg shows the following:
-> md: bind<sdb2>
-> md: bind<sdc2>
-> md: bind<sdd2>
-> md: bind<sda2>
-> md: md0: raid array is not clean -- starting background reconstruction
-> raid5: device sda2 operational as raid disk 0
-> raid5: device sdc2 operational as raid disk 2
-> raid5: device sdb2 operational as raid disk 1
-> raid5: cannot start dirty degraded array for md0
-> RAID5 conf printout:
->  --- rd:4 wd:3 fd:1
->  disk 0, o:1, dev:sda2
->  disk 1, o:1, dev:sdb2
->  disk 2, o:1, dev:sdc2
-> raid5: failed to run raid set md0
-> md: pers->run() failed ...
-> 
-> 
-> 
-> /proc mdstat shows:
-> md0 : inactive sda2[0] sdd2[3](S) sdc2[2] sdb2[1]
-> 
-> This seems wrong, as sdd2 should not be a spare - I want it to be the
-> fourth disk.
-> 
-> 
-> The output of mdadm -E for each disk is as follows:
-> sda2:
-> /dev/sda2:
->           Magic : a92b4efc
->         Version : 00.90.00
->            UUID : c50a81fc:ef4323e6:438a7cb1:25ae35e5
->   Creation Time : Thu Jun  1 21:13:58 2006
->      Raid Level : raid5
->     Device Size : 390555904 (372.46 GiB 399.93 GB)
->      Array Size : 1171667712 (1117.39 GiB 1199.79 GB)
->    Raid Devices : 4
->   Total Devices : 4
-> Preferred Minor : 0
-> 
->     Update Time : Sun Oct 22 23:39:06 2006
->           State : active
->  Active Devices : 3
-> Working Devices : 4
->  Failed Devices : 0
->   Spare Devices : 1
->        Checksum : 683f2f5c - correct
->          Events : 0.8831997
-> 
->          Layout : left-symmetric
->      Chunk Size : 256K
-> 
->       Number   Major   Minor   RaidDevice State
-> this     0       8        2        0      active sync   /dev/sda2
-> 
->    0     0       8        2        0      active sync   /dev/sda2
->    1     1       8       18        1      active sync   /dev/sdb2
->    2     2       8       34        2      active sync   /dev/sdc2
->    3     3       0        0        3      faulty removed
->    4     4       8       50        4      spare   /dev/sdd2
-> 
-> 
-> sdb2:
-> /dev/sdb2:
->           Magic : a92b4efc
->         Version : 00.90.00
->            UUID : c50a81fc:ef4323e6:438a7cb1:25ae35e5
->   Creation Time : Thu Jun  1 21:13:58 2006
->      Raid Level : raid5
->     Device Size : 390555904 (372.46 GiB 399.93 GB)
->      Array Size : 1171667712 (1117.39 GiB 1199.79 GB)
->    Raid Devices : 4
->   Total Devices : 4
-> Preferred Minor : 0
-> 
->     Update Time : Sun Oct 22 23:39:06 2006
->           State : active
->  Active Devices : 3
-> Working Devices : 4
->  Failed Devices : 0
->   Spare Devices : 1
->        Checksum : 683f2f6e - correct
->          Events : 0.8831997
-> 
->          Layout : left-symmetric
->      Chunk Size : 256K
-> 
->       Number   Major   Minor   RaidDevice State
-> this     1       8       18        1      active sync   /dev/sdb2
-> 
->    0     0       8        2        0      active sync   /dev/sda2
->    1     1       8       18        1      active sync   /dev/sdb2
->    2     2       8       34        2      active sync   /dev/sdc2
->    3     3       0        0        3      faulty removed
->    4     4       8       50        4      spare   /dev/sdd2
-> 
-> 
-> sdc2:
-> /dev/sdc2:
->           Magic : a92b4efc
->         Version : 00.90.00
->            UUID : c50a81fc:ef4323e6:438a7cb1:25ae35e5
->   Creation Time : Thu Jun  1 21:13:58 2006
->      Raid Level : raid5
->     Device Size : 390555904 (372.46 GiB 399.93 GB)
->      Array Size : 1171667712 (1117.39 GiB 1199.79 GB)
->    Raid Devices : 4
->   Total Devices : 4
-> Preferred Minor : 0
-> 
->     Update Time : Sun Oct 22 23:39:06 2006
->           State : active
->  Active Devices : 3
-> Working Devices : 4
->  Failed Devices : 0
->   Spare Devices : 1
->        Checksum : 683f2f80 - correct
->          Events : 0.8831997
-> 
->          Layout : left-symmetric
->      Chunk Size : 256K
-> 
->       Number   Major   Minor   RaidDevice State
-> this     2       8       34        2      active sync   /dev/sdc2
-> 
->    0     0       8        2        0      active sync   /dev/sda2
->    1     1       8       18        1      active sync   /dev/sdb2
->    2     2       8       34        2      active sync   /dev/sdc2
->    3     3       0        0        3      faulty removed
->    4     4       8       50        4      spare   /dev/sdd2
-> 
-> 
-> sdd2:
-> /dev/sdd2:
->           Magic : a92b4efc
->         Version : 00.90.00
->            UUID : c50a81fc:ef4323e6:438a7cb1:25ae35e5
->   Creation Time : Thu Jun  1 21:13:58 2006
->      Raid Level : raid5
->     Device Size : 390555904 (372.46 GiB 399.93 GB)
->      Array Size : 1171667712 (1117.39 GiB 1199.79 GB)
->    Raid Devices : 4
->   Total Devices : 4
-> Preferred Minor : 0
-> 
->     Update Time : Sun Oct 22 23:39:06 2006
->           State : active
->  Active Devices : 3
-> Working Devices : 4
->  Failed Devices : 0
->   Spare Devices : 1
->        Checksum : 683f2fbf - correct
->          Events : 0.8831997
-> 
->          Layout : left-symmetric
->      Chunk Size : 256K
-> 
->       Number   Major   Minor   RaidDevice State
-> this     3       8       50       -1      sync   /dev/sdd2
-> 
->    0     0       8        2        0      active sync   /dev/sda2
->    1     1       8       18        1      active sync   /dev/sdb2
->    2     2       8       34        2      active sync   /dev/sdc2
->    3     3       8       50       -1      sync   /dev/sdd2
->    4     4       8       50        4      spare   /dev/sdd2
-> 
-> 
-> 
-> Does anyone have any idea how to get this array back into good shape?
-> I'm not sure why it thinks sdd2 should be a spare, or how to get it back
-> to being a regular disk.
-> 
-> I would appreciate any help you can offer.  (Also, am I right in thinking
-> my data is still good?  I should still have 3 of the 4 disks working fine,
-> at any rate.)
-> 
-> Thanks,
-> Eric
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+  bertha:~# ps ax | grep raid
+   1022 ?        S<     0:00 [md6_raid1]
+   1026 ?        S<     0:00 [md5_raid1]
+   1030 ?        S<     0:00 [md3_raid1]
+   1034 ?        S<     0:00 [md2_raid1]
+   1038 ?        S<     0:06 [md1_raid1]
+   1747 ?        S<   724:25 [md9_raid5]
 
+Note the raid5 at the bottom, even though /proc/mdstat says it's raid-6.
+It was created with:
+
+  mdadm --create /dev/md9 -n15 -l6 --chunk=128    \
+        /dev/sda1 /dev/sdi1             \
+        /dev/sdb1 /dev/sdj1             \
+        /dev/sdc1 /dev/sdk1             \
+        /dev/sdd1 /dev/sdl1             \
+        /dev/sde1 /dev/sdm1             \
+        /dev/sdf1 /dev/sdn1             \
+        /dev/sdg1 /dev/sdo1             \
+        /dev/sdh1
+
+Is this right? I've been thrashing it all week and just notice this. On
+other servers I have using RAID-6, I get what I expect in the 'ps' output.
+I was just about to start removing disks from it to test rebuild, etc...
+Now not so sure!
+
+It's kernel 2.6.18 and
+  mdadm - v1.9.0 - 04 February 2005
+(Debian Sarge)
+
+Finally:
+
+  bertha:~# mdadm --detail /dev/md9
+  /dev/md9:
+        Version : 00.90.03
+  Creation Time : Tue Oct 17 14:35:06 2006
+     Raid Level : raid6
+     Array Size : 6341993216 (6048.20 GiB 6494.20 GB)
+    Device Size : 487845632 (465.25 GiB 499.55 GB)
+   Raid Devices : 15
+  Total Devices : 15
+Preferred Minor : 9
+    Persistence : Superblock is persistent
+
+    Update Time : Tue Oct 24 06:26:03 2006
+          State : clean
+ Active Devices : 15
+Working Devices : 15
+ Failed Devices : 0
+  Spare Devices : 0
+
+     Chunk Size : 128K
+
+           UUID : c1a3973d:c46b7356:402fd93c:9778e5a5
+         Events : 0.8
+
+    Number   Major   Minor   RaidDevice State
+       0       8        1        0      active sync   /dev/sda1
+       1       8      129        1      active sync   /dev/sdi1
+       2       8       17        2      active sync   /dev/sdb1
+       3       8      145        3      active sync   /dev/sdj1
+       4       8       33        4      active sync   /dev/sdc1
+       5       8      161        5      active sync   /dev/sdk1
+       6       8       49        6      active sync   /dev/sdd1
+       7       8      177        7      active sync   /dev/sdl1
+       8       8       65        8      active sync   /dev/sde1
+       9       8      193        9      active sync   /dev/sdm1
+      10       8       81       10      active sync   /dev/sdf1
+      11       8      209       11      active sync   /dev/sdn1
+      12       8       97       12      active sync   /dev/sdg1
+      13       8      225       13      active sync   /dev/sdo1
+      14       8      113       14      active sync   /dev/sdh1
+
+Gordon
