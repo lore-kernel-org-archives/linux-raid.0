@@ -1,35 +1,63 @@
-From: David Greaves <david@dgreaves.com>
-Subject: Re: Raid5 or 6 here... ?
-Date: Tue, 24 Oct 2006 15:50:58 +0100
-Message-ID: <453E2852.6040209@dgreaves.com>
-References: <4535F660.90901@cgv.tugraz.at> <Pine.LNX.4.56.0610241125580.24361@lion.drogon.net> <453E2472.8090207@dgreaves.com>
+From: martin f krafft <madduck@madduck.net>
+Subject: RAID5/10 chunk size and ext2/3 stride parameter
+Date: Tue, 24 Oct 2006 18:03:06 +0200
+Message-ID: <20061024160306.GA15393@lapse.madduck.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="W/nzBZO5zC0uMSeA"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <453E2472.8090207@dgreaves.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Gordon Henderson <gordon@drogon.net>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid mailing list <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-David Greaves wrote:
-> Gordon Henderson wrote:
->>    1747 ?        S<   724:25 [md9_raid5]
->>
->> It's kernel 2.6.18 and
-> 
-> Wasn't the module merged to raid456 in 2.6.18?
-> 
-> Are your mdx_raid6's earlier kernels. My raid 6 is on 2.7.17 and says _raid6
-> 
-> Could it be that the combined kernel thread is called mdX_raid5
-> 
 
-Yup
-raid5.c now handles 45 and 6 and says:
-		mddev->thread = md_register_thread(raid5d, mddev, "%s_raid5");
+--W/nzBZO5zC0uMSeA
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-I think I may actually be able to patch that...
+Hi,
 
-David
+I cannot find authoritative information about the relation between
+the RAID chunk size and the correct stride parameter to use when
+creating an ext2/3 filesystem.
+
+My understanding is that (block * stride) =3D=3D (chunk). So if I create
+a default RAID5/10 with 64k chunks, and create a filesystem with 4k
+blocks on it, I should choose stride 64k/4k =3D 16.
+
+Is the chunk size of an array equal to the stripe size? Or is it
+(n-1)*chunk size for RAID5 and (n/2)*chunk size for a plain near=3D2
+RAID10?
+
+Also, I understand that it makes no sense to use stride for RAID1 as
+there are no stripes in that sense. But for RAID10 it makes sense,
+right?
+
+Thanks,
+
+--=20
+martin;              (greetings from the heart of the sun.)
+  \____ echo mailto: !#^."<*>"|tr "<*> mailto:" net@madduck
+=20
+spamtraps: madduck.bogus@madduck.net
+=20
+"i like wagner's music better than anybody's. it is so loud that one
+ can talk the whole time without other people hearing what one says."
+                                                        -- oscar wilde
+
+--W/nzBZO5zC0uMSeA
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature (GPG/PGP)
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
+
+iD8DBQFFPjk6IgvIgzMMSnURAgQMAKCRtsZ4PvYxtQiGtTlFjO/+jqpscACgruJn
+1pCQM+rmC36NPLBBNyYi2Bc=
+=lPn4
+-----END PGP SIGNATURE-----
+
+--W/nzBZO5zC0uMSeA--
