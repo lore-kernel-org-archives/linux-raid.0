@@ -1,27 +1,28 @@
-From: "Jana" <allenc_3@btinternet.com>
-Subject: Re[3]:  Klaudia
-Date: Tue, 24 Oct 2006 14:33:29 +0300
-Message-ID: <008f01c6f760$37b27080$5c16000a__31657.7030149803$1161689348$gmane$org@201-1-48-29.dsl.telesp.net.br>
+From: Tomasz Chmielewski <mangoo@wpkg.org>
+Subject: Re: resync starts over after each reboot (2.6.18.1)?
+Date: Tue, 24 Oct 2006 13:39:56 +0200
+Message-ID: <453DFB8C.6090205@wpkg.org>
+References: <45349861.4010208@wpkg.org> <17724.19056.601329.815951@cse.unsw.edu.au> <453CF115.4020003@wpkg.org> <200610241323.17267.Dexter.Filmore@gmx.de>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="windows-1252"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <200610241323.17267.Dexter.Filmore@gmx.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Torsten <linux-raid@vger.kernel.org>
+To: Dexter Filmore <Dexter.Filmore@gmx.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello, Torsten
+Dexter Filmore wrote:
+> Am Montag, 23. Oktober 2006 18:43 schrieben Sie:
+> 
+> Sound familiar... two things: what exact LVM2 version are you using there?
+> Could you try and shutdown the machine completely till power off and cold boot 
+> it a couple of times and see if the issue persists?
 
-www.musicworld.cc
-The site is not for the faint of heart. Here all morals are thrown to the wind and man boldly goes where most dare not tread. 
-The motto here is Wet and Wild. What happens is not your normal sex, instead hammer hard fuck games devoid of all taboos. 
-This is something for only the most adventurous sex pro's and lust junkies. 
-Hot, hard and exclusive; and all in the best picture and sound quality available. 
-No where else will you get a show like this; only here.
-
-Talk to you soon
-
-Jana
+Yes, shutting down and powering off the machine doesn't change anything.
 
 
+-- 
+Tomasz Chmielewski
+http://wpkg.org
