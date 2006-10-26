@@ -1,44 +1,24 @@
-From: Paul Clements <paul.clements@steeleye.com>
-Subject: Re: mdadm: bitmaps not supported by this kernel?
-Date: Wed, 25 Oct 2006 20:25:15 -0400
-Message-ID: <4540006B.70808@steeleye.com>
-References: <453FD41B.5080908@tls.msk.ru>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Question of PCI bandwidth affect on SW RAID arrays.
+Date: Thu, 26 Oct 2006 06:15:02 -0400 (EDT)
+Message-ID: <Pine.LNX.4.64.0610260612270.24154@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <453FD41B.5080908@tls.msk.ru>
 Sender: linux-raid-owner@vger.kernel.org
-To: Michael Tokarev <mjt@tls.msk.ru>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Michael Tokarev wrote:
-> Another 32/64 bits issue, it seems.
-> Running 2.6.18.1 x86-64 kernel and mdadm 2.5.3 (32 bit).
-> 
-> # mdadm -G /dev/md1 --bitmap=internal
-> mdadm: bitmaps not supported by this kernel.
-> 
-> # mdadm -G /dev/md1 --bitmap=none
-> mdadm: bitmaps not supported by this kernel.
-> 
-> etc.
-> 
-> Recompiling mdadm in 64bit mode eliminates the problem.
+Quick question,
 
+On older systems, regular PCI motherboards, no PCI-e-- which is faster?
 
-I think this is due to the bug I reported a month or so ago. We were 
-missing a COMPATIBLE_IOCTL entry for the GET_BITMAP_FILE ioctl. Neil has 
-sent in the patch.
+1) One 4 port SATA150 card in 1 PCI slot which has 4 drives connected.
+2) Four SATA150 cards in 4 PCI slots, which each have 1 drive connected?
 
+I'd assume 2 would stress the PCI bus more and thus would be slower, but I 
+am curious what other people know/think/etc?
 
-> So far, only bitmap manipulation is broken this way.
-> I dunno if other things are broken too - at least
-> --assemble, --create, --stop, --detail works.
+Thanks,
 
-
-Yeah, I think everything else works.
-
---
-Paul
+Justin.
