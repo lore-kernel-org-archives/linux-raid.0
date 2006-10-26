@@ -1,72 +1,44 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: RAID5 refuses to accept replacement drive.
-Date: Thu, 26 Oct 2006 07:25:27 +1000
-Message-ID: <17727.54855.468131.528457@cse.unsw.edu.au>
-References: <200610251652.k9PGq5tt032608@wind.enjellic.com>
+From: Paul Clements <paul.clements@steeleye.com>
+Subject: Re: mdadm: bitmaps not supported by this kernel?
+Date: Wed, 25 Oct 2006 20:25:15 -0400
+Message-ID: <4540006B.70808@steeleye.com>
+References: <453FD41B.5080908@tls.msk.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from greg@enjellic.com on Wednesday October 25
+In-Reply-To: <453FD41B.5080908@tls.msk.ru>
 Sender: linux-raid-owner@vger.kernel.org
-To: greg@enjellic.com
+To: Michael Tokarev <mjt@tls.msk.ru>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wednesday October 25, greg@enjellic.com wrote:
-> Good morning to everyone, hope everyone's day is going well.
+Michael Tokarev wrote:
+> Another 32/64 bits issue, it seems.
+> Running 2.6.18.1 x86-64 kernel and mdadm 2.5.3 (32 bit).
 > 
-> Neil, I sent this to your SUSE address a week ago but it may have
-> gotten trapped in a SPAM filter or lost in the shuffle.
-
-Yes, resending is always a good idea if I seem to be ignoring you.
-
-(people who are really on-the-ball will probably start telling me it is a
-resend the first time they mail me. I probably wouldn't notice.. :-)
-
+> # mdadm -G /dev/md1 --bitmap=internal
+> mdadm: bitmaps not supported by this kernel.
 > 
-> I've used MD based RAID since it first existed.  First time I've run
-> into a situation like this.
+> # mdadm -G /dev/md1 --bitmap=none
+> mdadm: bitmaps not supported by this kernel.
 > 
-> Environment:
-> 	Kernel: 2.4.33.3
-> 	MDADM:  2.4.1/2.5.3
-> 	MD:	Three drive RAID5 (md3)
-
-Old kernel, new mdadm.  Not a tested combination unfortunately.  I
-guess I should try booting 2.4 somewhere and try it out...
-
+> etc.
 > 
-> A 'silent' disk failure was experienced in a SCSI hot-swap chassis
-> during a yearly system upgrade.  Machine failed to boot until 'nobd'
-> directive was given to LILO.  Drive was mechanically dead but
-> electrically alive.
-> 
-> Drives were shuffled to get the machine operational.  The machine came
-> up with md3 degraded.  The md3 device refuses to accept a replacement
-> partition using the following syntax:
-> 
-> mdadm --manage /dev/md3 -a /dev/sde1
-> 
-> No output from mdadm, nothing in the logfiles.  Tail end of strace is
-> as follows:
-> 
-> open("/dev/md3", O_RDWR)                = 3
-> fstat64(0x3, 0xbffff8fc)                = 0
-> ioctl(3, 0x800c0910, 0xbffff9f8)        = 0
+> Recompiling mdadm in 64bit mode eliminates the problem.
 
-Those last to lines are a called to md_get_version. 
-Probably the one in open_mddev
 
-> _exit(0)                                = ?
+I think this is due to the bug I reported a month or so ago. We were 
+missing a COMPATIBLE_IOCTL entry for the GET_BITMAP_FILE ioctl. Neil has 
+sent in the patch.
 
-But I can see no way that it would exit...
 
-Are you comfortable with gdb?
-Would you be interested in single stepping around and seeing what path
-leads to the exit?
+> So far, only bitmap manipulation is broken this way.
+> I dunno if other things are broken too - at least
+> --assemble, --create, --stop, --detail works.
 
-Another option is to use mdadm-1.9.0.  That is likely to be more
-reliable.
 
-NeilBrown
+Yeah, I think everything else works.
+
+--
+Paul
