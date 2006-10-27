@@ -1,46 +1,36 @@
 From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: future hardware
-Date: Fri, 27 Oct 2006 17:22:26 -0400
-Message-ID: <45427892.4070008@tmr.com>
-References: <000901c6f509$1bd65560$eb00000a@mine3ad5e808fe>
+Subject: Re: Question of PCI bandwidth affect on SW RAID arrays.
+Date: Fri, 27 Oct 2006 17:43:08 -0400
+Message-ID: <45427D6C.7030909@tmr.com>
+References: <Pine.LNX.4.64.0610260612270.24154@p34.internal.lan>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <000901c6f509$1bd65560$eb00000a@mine3ad5e808fe>
+In-Reply-To: <Pine.LNX.4.64.0610260612270.24154@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan <dan@korstad.net>
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Dan wrote:
+Justin Piszcz wrote:
 
->I have been using an older 64bit system, socket 754 for a while now.  It has
->the old PCI bus 33Mhz.  I have two low cost (no HW RAID) PCI SATA I cards
->each with 4 ports to give me an eight disk RAID 6.  I also have a Gig NIC,
->on the PCI bus.  I have Gig switches with clients connecting to it at Gig
->speed.
+>Quick question,
 >
->As many know you get a peak transfer rate of 133 MB/s or 1064Mb/s from that
->PCI bus http://en.wikipedia.org/wiki/Peripheral_Component_Interconnect
+>On older systems, regular PCI motherboards, no PCI-e-- which is faster?
 >
->The transfer rate is not bad across the network but my bottle neck it the
->PCI bus.  I have been shopping around for new MB and PCI-express cards.  I
->have been using mdadm for a long time and would like to stay with it.  I am
->having trouble finding an eight port PCI-express card that does not have all
->the fancy HW RAID which jacks up the cost.  I am now considering using a MB
->with eight SATA II slots onboard.  GIGABYTE GA-M59SLI-S5 Socket AM2 NVIDIA
->nForce 590 SLI MCP ATX.
+>1) One 4 port SATA150 card in 1 PCI slot which has 4 drives connected.
+>2) Four SATA150 cards in 4 PCI slots, which each have 1 drive connected?
 >
->What are other users of mdadm using with the PCI-express cards, most cost
->effective solution?
+>I'd assume 2 would stress the PCI bus more and thus would be slower, but I 
+>am curious what other people know/think/etc?
 >
-There may still be m/b available with multiple PCI busses. Don't know if 
-you are interested in a low budget solution, but that would address 
-bandwidth and use existing hardware.
-
-Idle curiousity: what kind of case are you using for the drives? I will 
-need to spec a machine with eight drives in the December-January timeframe.
+You are sending the same amount of data over the bus in either case, 
+assuming you are using s/w RAID. This is where (real) hardware RAID has 
+an advantage in performance, the parity doesn't go over the bus. If you 
+have a server board it may have multiple PCI busses, and therefore a 
+higher max bandwidth with multiple cards. I would still expect PCI-e to 
+be faster.
 
 -- 
 bill davidsen <davidsen@tmr.com>
