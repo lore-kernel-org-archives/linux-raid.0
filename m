@@ -1,38 +1,34 @@
-From: Roger Gammans <roger@computer-surgery.co.uk>
-Subject: faulty.c does not accurately simulate failures...
-Date: Sat, 28 Oct 2006 15:17:09 +0100
-Message-ID: <20061028141709.GA4665@julia.computer-surgery.co.uk>
+From: Al Boldi <a1426z@gawab.com>
+Subject: Re: Propose of enhancement of raid1 driver
+Date: Sat, 28 Oct 2006 20:31:07 +0300
+Message-ID: <200610282031.07893.a1426z@gawab.com>
+References: <45347D6E.3000600@mieszczak.com.pl> <17718.61672.794099.425723@cse.unsw.edu.au> <ehin29$80g$1@sea.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="windows-1256"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <ehin29$80g$1@sea.gmane.org>
 Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi
+Mario 'BitKoenig' Holbe wrote:
+> Neil Brown <neilb@suse.de> wrote:
+> > Skipping over blocks within a track is no faster than reading blocks
+> > in the track, so you would need to make sure that your chunk size is
+>
+> Not even "no faster" but probably even "slower".
 
-As the subject says there are differences in the behaviour of simulated 
-failures by faulty, and of a real drive with bad sectors.
+Surely slower, on conventional hds anyway.
 
-There are two ways this manifests itself:-
-	
-	1)  Bad sectors on reall devices often tend to occur a groups,
-	    this is faulty.c is unlikely to generate runs of sectors.
+But what still isn't clear, why can't raid1 use something like the raid10 
+offset=2 mode?
 
-	2)  (I haven't verified this against a real drive yet )
-	    In the read case:-
-	    faulty.c calls (bio->endio)() with all data data having
-	    been transferred correctly eg, with bi_size=0. Whereas
-	    in the errored data is unlikely to have been transfered
-	    in the case of real failled hardware.
 
-Are patches to change these behaviours welcome?  Or is the current
-behaviour intention for a reason I haven't grokked.
+Thanks!
 
-TTFN
--- 
-Roger.                          Home| http://www.sandman.uklinux.net/
-Master of Peng Shui.      (Ancient oriental art of Penguin Arranging)
-Work|Independent Sys Consultant | http://www.computer-surgery.co.uk/
-So what are the eigenvalues and eigenvectors of 'The Matrix'? --anon
+--
+Al
+
