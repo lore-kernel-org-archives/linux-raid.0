@@ -1,34 +1,26 @@
-From: Al Boldi <a1426z@gawab.com>
+From: Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE>
 Subject: Re: Propose of enhancement of raid1 driver
-Date: Sat, 28 Oct 2006 20:31:07 +0300
-Message-ID: <200610282031.07893.a1426z@gawab.com>
-References: <45347D6E.3000600@mieszczak.com.pl> <17718.61672.794099.425723@cse.unsw.edu.au> <ehin29$80g$1@sea.gmane.org>
-Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="windows-1256"
-Content-Transfer-Encoding: 7bit
+Date: Sat, 28 Oct 2006 22:30:48 +0200
+Message-ID: <ei0elo$23m$1@sea.gmane.org>
+References: <45347D6E.3000600@mieszczak.com.pl> <17718.61672.794099.425723@cse.unsw.edu.au> <ehin29$80g$1@sea.gmane.org> <200610282031.07893.a1426z@gawab.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <ehin29$80g$1@sea.gmane.org>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Mario 'BitKoenig' Holbe wrote:
-> Neil Brown <neilb@suse.de> wrote:
-> > Skipping over blocks within a track is no faster than reading blocks
-> > in the track, so you would need to make sure that your chunk size is
->
-> Not even "no faster" but probably even "slower".
+Al Boldi <a1426z@gawab.com> wrote:
+> But what still isn't clear, why can't raid1 use something like the raid10 
+> offset=2 mode?
 
-Surely slower, on conventional hds anyway.
-
-But what still isn't clear, why can't raid1 use something like the raid10 
-offset=2 mode?
+RAID1 has equal data on all mirrors, so sooner or later you have to seek
+somewhere - no matter how you layout the data on each mirror.
 
 
-Thanks!
-
---
-Al
+regards
+   Mario
+-- 
+Programmieren in C++ haelt die grauen Zellen am Leben. Es schaerft
+alle fuenf Sinne: den Schwachsinn, den Bloedsinn, den Wahnsinn, den
+Unsinn und den Stumpfsinn.
+                                 [Holger Veit in doc]
 
