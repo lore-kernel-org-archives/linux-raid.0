@@ -1,51 +1,98 @@
-From: Chris Allen <chris@cjx.com>
-Subject: Re: PERC5 - MegaRaid-SAS problems..
-Date: Sat, 28 Oct 2006 22:46:52 +0100
-Message-ID: <4543CFCC.50109@cjx.com>
-References: <Pine.LNX.4.56.0610121246400.11816@lion.drogon.net>	 <Pine.LNX.4.56.0610171138400.4600@lion.drogon.net>	 <df1ef2450610171058i15ad6b47kb8579fc3f1a7e8ee@mail.gmail.com>	 <Pine.LNX.4.56.0610171944530.5144@lion.drogon.net> <df1ef2450610171519r6ee6da3dv3fb2dd479d0431a6@mail.gmail.com>
+From: Matt Thrailkill <matt@modestolan.com>
+Subject: Raid 0 breakage (maybe)
+Date: Sat, 28 Oct 2006 22:40:00 -0700
+Message-ID: <1162100400.17928.9.camel@stoneburner.xwredwing.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <df1ef2450610171519r6ee6da3dv3fb2dd479d0431a6@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hi.
 
+Last night, I upgraded from Ubuntu 6.06 to Ubuntu 6.10.  I have a Linux
+sw raid0 running on two drives, just using the raw devices rather than
+any partitions on them.  The Ubuntu 6.06 kernel would simply see the
+superblocks on boot and start up the array automagically for me.  The
+6.10 kernel does not.  I don't know if this is an Ubuntu thing, a Linux
+kernel issue (2.6.17 now), or something else.
 
-Andrew Moise wrote:
-> On 10/17/06, Gordon Henderson <gordon@drogon.net> wrote:
->> I have had problems with XFS, but that was about 2 years ago, so things
->> might have improved by then.
->
->  Well, filling some random files with zeroes because of an unclean
-> shutdown is still defined as "correct" behavior in XFS.  That hasn't
-> changed that I've heard of.  Why they haven't implemented something
-> akin to "data=ordered" is a mystery to me.
->  I guess I'm begging to start a filesystem flamewar at this point :-).
+I try and start my array by hand with mdadm, and I get weird stuff.
+Basically, check this out:
+root@stoneburner:~# mdadm --assemble /dev/md0 /dev/hde /dev/hdi
+mdadm: cannot open device /dev/hde: Device or resource busy
+mdadm: /dev/hde has no superblock - assembly aborted
 
-I can consistently crash XFS over md (kernel panic) using a simple 
-forking perl
-script that copies large numbers of files about. The response from the 
-XFS mailing
-list was a shrug and a "well don't do that then..". Problem is, this 
-exactly what
-the clients of my machines *will* do. I can't crash ext3 in this way no 
-matter
-what I do.
+You'd think hde or hdi were busted.  But I can do a `mdadm
+-E /dev/hde /dev/hdi` just fine:
+root@stoneburner:~# mdadm -E /dev/hde /dev/hdi
+/dev/hde:
+          Magic : a92b4efc
+        Version : 00.90.00
+           UUID : dd994e72:2ceb7a88:c43ed7bf:cd2e62fb
+  Creation Time : Sun Feb 15 02:57:53 2004
+     Raid Level : raid0
+    Device Size : 36151808 (34.48 GiB 37.02 GB)
+   Raid Devices : 2
+  Total Devices : 2
+Preferred Minor : 2
 
->
->> After your comment about ext3 max FS size, I had a bit of a oo-er
->> situation so had to do a bit of looking to make sure I was OK, and it
->> seems that 16TB is the current limit, so OK there for a while, at 
->> least...
->> (/usr/src/linux/documentation/filesystems/ext2.txt)
->
->  Aah, great news.  Different sources differ on what the max size is,
-> so I was pessimistically assuming it might be as low as 2TB.  Thanks.
-> -
+    Update Time : Mon Aug  1 19:55:30 2005
+          State : active
+ Active Devices : 2
+Working Devices : 2
+ Failed Devices : 0
+  Spare Devices : 0
+       Checksum : ca633808 - correct
+         Events : 0.247
 
-The max in mainstream kernels is 8TB. mm kernels will support 16TB.
+     Chunk Size : 4K
 
+      Number   Major   Minor   RaidDevice State
+this     1      56        0        1      active sync   /dev/hdi
+
+   0     0      33        0        0      active sync   /dev/hde
+   1     1      56        0        1      active sync   /dev/hdi
+/dev/hdi:
+          Magic : a92b4efc
+        Version : 00.90.00
+           UUID : dd994e72:2ceb7a88:c43ed7bf:cd2e62fb
+  Creation Time : Sun Feb 15 02:57:53 2004
+     Raid Level : raid0
+    Device Size : 36151808 (34.48 GiB 37.02 GB)
+   Raid Devices : 2
+  Total Devices : 2
+Preferred Minor : 2
+
+    Update Time : Mon Aug  1 19:55:30 2005
+          State : active
+ Active Devices : 2
+Working Devices : 2
+ Failed Devices : 0
+  Spare Devices : 0
+       Checksum : ca6337ef - correct
+         Events : 0.247
+
+     Chunk Size : 4K
+
+      Number   Major   Minor   RaidDevice State
+this     0      33        0        0      active sync   /dev/hde
+
+   0     0      33        0        0      active sync   /dev/hde
+   1     1      56        0        1      active sync   /dev/hdi
+
+It seems like it shouldn't be able to query the superblocks if the
+devices are supposedly busy.  Any ideas?  Here is my dmesg also:
+http://people.ucsc.edu/~mthrailk/edgy-dmesg
+
+The ide startup is relatively uneventful, but what is strange is that md
+starting up is very quiet.  It doesn't load the raid0 module, but if I
+load it by hand later, it doesn't make a difference at all with the
+above commands.
+
+I await your advice, thanks!
+-- 
+Matt Thrailkill <matt@modestolan.com>
 
