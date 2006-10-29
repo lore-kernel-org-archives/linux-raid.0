@@ -1,37 +1,44 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: md array numbering is messed up
-Date: Mon, 30 Oct 2006 08:26:43 +1100
-Message-ID: <17733.7315.357603.311275@cse.unsw.edu.au>
-References: <45451A4C.9010708@peeble.net>
+Subject: Re: Raid 0 breakage (maybe)
+Date: Mon, 30 Oct 2006 09:03:31 +1100
+Message-ID: <17733.9523.946779.424799@cse.unsw.edu.au>
+References: <1162100400.17928.9.camel@stoneburner.xwredwing.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Peb on Sunday October 29
+In-Reply-To: message from Matt Thrailkill on Saturday October 28
 Sender: linux-raid-owner@vger.kernel.org
-To: Peb <peb-misc@peeble.net>
+To: Matt Thrailkill <matt@modestolan.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sunday October 29, peb-misc@peeble.net wrote:
-> Hi,
+On Saturday October 28, matt@modestolan.com wrote:
+> Hi.
 > 
-> I have 2 arrays whose numbers get inverted, creating havoc, when booting
-> under different kernels.
+> Last night, I upgraded from Ubuntu 6.06 to Ubuntu 6.10.  I have a Linux
+> sw raid0 running on two drives, just using the raw devices rather than
+> any partitions on them.  The Ubuntu 6.06 kernel would simply see the
+> superblocks on boot and start up the array automagically for me.  The
+> 6.10 kernel does not.  I don't know if this is an Ubuntu thing, a Linux
+> kernel issue (2.6.17 now), or something else.
 > 
-> I have md0 (raid1) made up of ide drives and md1 (raid5) made up of five
-> sata drives, when booting with my current ubuntu 2.6.12-9 kernel. When I
-> try to boot a more recent kernel (2.6.15-26 or 2.6.15-27) the
-> order is inversed and my sata raid5 array shows up as md0.
-> 
-> My arrays are part of evms volumes that just stop working if the
-> numbering is inverted.
-> 
-> any clues ?
+> I try and start my array by hand with mdadm, and I get weird stuff.
+> Basically, check this out:
+> root@stoneburner:~# mdadm --assemble /dev/md0 /dev/hde /dev/hdi
+> mdadm: cannot open device /dev/hde: Device or resource busy
 
-Your arrays are being started the wrong way.
-Do you have an mdadm.conf that lists the arrays?  Can you show us what
-it looked like?
-If not, do you know how the arrays are started in ubuntu?
+This is telling you that /dev/hde - or one of it's partitions - is
+"Busy".  This means more than just 'open'.  It means mounted or
+included in an md or dm array, or used for swap.
+You need to find out what is keeping it busy.
+Most likely dm or md.
+What does
+  cat /proc/mdstat
+show?
+I don't know much about dm - is there some 'pvlist' command or similar
+that will show all the phys volumes it is holding on to..
+
+Or possibly just look in /sys/block/hde/holders
 
 NeilBrown
