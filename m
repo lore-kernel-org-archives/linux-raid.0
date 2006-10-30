@@ -1,36 +1,28 @@
-From: Al Boldi <a1426z@gawab.com>
+From: Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE>
 Subject: Re: Propose of enhancement of raid1 driver
-Date: Mon, 30 Oct 2006 18:44:56 +0300
-Message-ID: <200610301844.56901.a1426z@gawab.com>
-References: <45347D6E.3000600@mieszczak.com.pl> <200610282031.07893.a1426z@gawab.com> <ei0elo$23m$1@sea.gmane.org>
-Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="windows-1256"
-Content-Transfer-Encoding: 7bit
+Date: Mon, 30 Oct 2006 18:02:48 +0100
+Message-ID: <ei5b7o$nb3$1@sea.gmane.org>
+References: <45347D6E.3000600@mieszczak.com.pl> <200610282031.07893.a1426z@gawab.com> <ei0elo$23m$1@sea.gmane.org> <200610301844.56901.a1426z@gawab.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <ei0elo$23m$1@sea.gmane.org>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Mario 'BitKoenig' Holbe wrote:
-> Al Boldi <a1426z@gawab.com> wrote:
-> > But what still isn't clear, why can't raid1 use something like the
-> > raid10 offset=2 mode?
->
-> RAID1 has equal data on all mirrors, so sooner or later you have to seek
-> somewhere - no matter how you layout the data on each mirror.
+Al Boldi <a1426z@gawab.com> wrote:
+> Don't underestimate the effects mere layout can have on multi-disk array 
+> performance, despite it being highly hw dependent.
 
-Don't underestimate the effects mere layout can have on multi-disk array 
-performance, despite it being highly hw dependent.
-
-The best approach would probably involve a user-configurable layout table, to 
-tune it to the specific hw.
+I can't see the difference between equal mirrors and somehow interleaved
+layout on RAID1. Since you have to seek anyways, there should be no
+difference between both approaches once you read big enough chunks. The
+problem with reading big chunks is: you probably read far too much when
+you don't really need the data you did read. And vice versa: when you
+don't read big chunks, it doesn't matter how your data is laid out.
 
 
-Thanks!
-
---
-Al
+regards
+   Mario
+-- 
+Whenever you design a better fool-proof software,
+the genetic pool will always design a better fool.
 
