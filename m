@@ -1,43 +1,36 @@
-From: dean gaudet <dean@arctic.org>
-Subject: Re: md array numbering is messed up
-Date: Mon, 30 Oct 2006 03:58:38 -0800 (PST)
-Message-ID: <Pine.LNX.4.64.0610300352370.26021@twinlark.arctic.org>
-References: <45451A4C.9010708@peeble.net> <17733.7315.357603.311275@cse.unsw.edu.au>
- <4545DECE.7030705@tls.msk.ru> <4545E0BC.5010103@wasp.net.au>
+From: Al Boldi <a1426z@gawab.com>
+Subject: Re: Propose of enhancement of raid1 driver
+Date: Mon, 30 Oct 2006 18:44:56 +0300
+Message-ID: <200610301844.56901.a1426z@gawab.com>
+References: <45347D6E.3000600@mieszczak.com.pl> <200610282031.07893.a1426z@gawab.com> <ei0elo$23m$1@sea.gmane.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+  charset="windows-1256"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4545E0BC.5010103@wasp.net.au>
+In-Reply-To: <ei0elo$23m$1@sea.gmane.org>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Brad Campbell <brad@wasp.net.au>
-Cc: Michael Tokarev <mjt@tls.msk.ru>, Neil Brown <neilb@suse.de>, Peb <peb-misc@peeble.net>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, 30 Oct 2006, Brad Campbell wrote:
+Mario 'BitKoenig' Holbe wrote:
+> Al Boldi <a1426z@gawab.com> wrote:
+> > But what still isn't clear, why can't raid1 use something like the
+> > raid10 offset=2 mode?
+>
+> RAID1 has equal data on all mirrors, so sooner or later you have to seek
+> somewhere - no matter how you layout the data on each mirror.
 
-> Michael Tokarev wrote:
-> > My guess is that it's using mdrun shell script - the same as on Debian.
-> > It's a long story, the thing is quite ugly and messy and does messy things
-> > too, but they says it's compatibility stuff and continue shipping it.
-...
-> 
-> I'd suggest you are probably correct. By default on Ubuntu 6.06
-> 
-> brad@bklaptop2:~$ cat /etc/init.d/mdadm-raid
-> #!/bin/sh
-> #
-> # Start any arrays which are described in /etc/mdadm/mdadm.conf and which are
-> # not running already.
-> #
-> # Copyright (c) 2001-2004 Mario Jou/3en <joussen@debian.org>
-> # Distributable under the terms of the GNU GPL version 2.
-> 
-> MDADM=/sbin/mdadm
-> MDRUN=/sbin/mdrun
+Don't underestimate the effects mere layout can have on multi-disk array 
+performance, despite it being highly hw dependent.
 
-fwiw mdrun is finally on its way out.  the debian "unstable" mdadm package 
-is full of new goodness (initramfs goodness, 2.5.x mdadm featurefulness, 
-monthly full array check goodness).  ubuntu folks should copy it again 
-before they finalize edgy.
+The best approach would probably involve a user-configurable layout table, to 
+tune it to the specific hw.
 
--dean
+
+Thanks!
+
+--
+Al
+
