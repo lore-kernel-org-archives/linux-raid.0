@@ -1,99 +1,58 @@
-From: Brad Campbell <brad@wasp.net.au>
-Subject: Re: md array numbering is messed up
-Date: Mon, 30 Oct 2006 15:23:40 +0400
-Message-ID: <4545E0BC.5010103@wasp.net.au>
-References: <45451A4C.9010708@peeble.net> <17733.7315.357603.311275@cse.unsw.edu.au> <4545DECE.7030705@tls.msk.ru>
+From: dean gaudet <dean@arctic.org>
+Subject: Re: Raid 0 breakage (maybe)
+Date: Mon, 30 Oct 2006 03:35:03 -0800 (PST)
+Message-ID: <Pine.LNX.4.64.0610300318330.22910@twinlark.arctic.org>
+References: <1162100400.17928.9.camel@stoneburner.xwredwing.net>
+ <17733.9523.946779.424799@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4545DECE.7030705@tls.msk.ru>
+In-Reply-To: <17733.9523.946779.424799@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Michael Tokarev <mjt@tls.msk.ru>
-Cc: Neil Brown <neilb@suse.de>, Peb <peb-misc@peeble.net>, linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: Matt Thrailkill <matt@modestolan.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Michael Tokarev wrote:
-> Neil Brown wrote:
->> On Sunday October 29, peb-misc@peeble.net wrote:
->>> Hi,
->>>
->>> I have 2 arrays whose numbers get inverted, creating havoc, when booting
->>> under different kernels.
->>>
->>> I have md0 (raid1) made up of ide drives and md1 (raid5) made up of five
->>> sata drives, when booting with my current ubuntu 2.6.12-9 kernel. When I
->>> try to boot a more recent kernel (2.6.15-26 or 2.6.15-27) the
->>> order is inversed and my sata raid5 array shows up as md0.
->>>
->>> My arrays are part of evms volumes that just stop working if the
->>> numbering is inverted.
->>>
->>> any clues ?
->> Your arrays are being started the wrong way.
->> Do you have an mdadm.conf that lists the arrays?  Can you show us what
->> it looked like?
->> If not, do you know how the arrays are started in ubuntu?
+On Mon, 30 Oct 2006, Neil Brown wrote:
+
+> > root@stoneburner:~# mdadm --assemble /dev/md0 /dev/hde /dev/hdi
+> > mdadm: cannot open device /dev/hde: Device or resource busy
 > 
-> My guess is that it's using mdrun shell script - the same as on Debian.
-> It's a long story, the thing is quite ugly and messy and does messy things
-> too, but they says it's compatibility stuff and continue shipping it.
-> 
-> For the OP, the solution is to *create* mdadm.conf file - in that case
-> mdrun should hopefully NOT run.
+> This is telling you that /dev/hde - or one of it's partitions - is
+> "Busy".  This means more than just 'open'.  It means mounted or
+> included in an md or dm array, or used for swap.
+> You need to find out what is keeping it busy.
+> Most likely dm or md.
 
-I'd suggest you are probably correct. By default on Ubuntu 6.06
+it's probably evms+ubuntu+new kernel stupidity.
 
-brad@bklaptop2:~$ cat /etc/init.d/mdadm-raid
-#!/bin/sh
-#
-# Start any arrays which are described in /etc/mdadm/mdadm.conf and which are
-# not running already.
-#
-# Copyright (c) 2001-2004 Mario Jou/3en <joussen@debian.org>
-# Distributable under the terms of the GNU GPL version 2.
+as far as i've determined, older (dapper) ubuntu had evms as part of the 
+base package requirements.  evms was set up in some promiscuous manner 
+where it goes and sets up dm linear maps for every damn partition and 
+device.  nobody cared before because older kernels don't seem to stop 
+people from using the underlying /dev/foo for md or mount or whatever. but 
+newer kernels don't allow that any more.
 
-MDADM=/sbin/mdadm
-MDRUN=/sbin/mdrun
-CONFIG=/etc/mdadm/mdadm.conf
-DEBIANCONFIG=/etc/default/mdadm
-
-. /lib/lsb/init-functions
-
-test -x $MDADM || exit 0
-
-AUTOSTART=true
-test -f $DEBIANCONFIG && . $DEBIANCONFIG
-
-case "$1" in
-     start)
-         if [ "x$AUTOSTART" = "xtrue" ] ; then
-             if [ ! -f /proc/mdstat ] && [ -x /sbin/modprobe ] ; then
-                 /sbin/modprobe -k md > /dev/null 2>&1
-             fi
-             test -f /proc/mdstat || exit 0
-             log_begin_msg "Starting RAID devices..."
-             if [ -f $CONFIG ] && [ -x $MDADM ] ; then
-                 $MDADM -A -s
-             elif [ -x $MDRUN ] ; then
-                 $MDRUN
-             fi
-             log_end_msg $?
-         fi
-         ;;
-     stop|restart|reload|force-reload)
-         ;;
-     *)
-         log_success_msg "Usage: $0 {start|stop|restart|reload|force-reload}"
-         exit 1
-         ;;
-esac
-
-exit 0
+it looks like they dropped the evms requirement in edgy -- probably 
+because it has the newer kernel... but people who upgraded from dapper 
+will run into this because they'll still have evms from before.
 
 
-Brad
--- 
-"Human beings, who are almost unique in having the ability
-to learn from the experience of others, are also remarkable
-for their apparent disinclination to do so." -- Douglas Adams
+> I don't know much about dm - is there some 'pvlist' command or similar
+> that will show all the phys volumes it is holding on to..
+
+"dmsetup ls" does that...
+
+for example on an ubuntu box i haven't fixed yet:
+
+# dmsetup ls --tree
+hda5 (253:1)
+ `- (3:0)
+hda1 (253:0)
+ `- (3:0)
+
+you can "dmsetup remove hda1" or whatever to get back the real device (but 
+it's better to just remove or disable evms and reboot).
+
+-dean
+
