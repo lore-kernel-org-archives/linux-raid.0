@@ -1,58 +1,43 @@
 From: dean gaudet <dean@arctic.org>
-Subject: Re: Raid 0 breakage (maybe)
-Date: Mon, 30 Oct 2006 03:35:03 -0800 (PST)
-Message-ID: <Pine.LNX.4.64.0610300318330.22910@twinlark.arctic.org>
-References: <1162100400.17928.9.camel@stoneburner.xwredwing.net>
- <17733.9523.946779.424799@cse.unsw.edu.au>
+Subject: Re: md array numbering is messed up
+Date: Mon, 30 Oct 2006 03:58:38 -0800 (PST)
+Message-ID: <Pine.LNX.4.64.0610300352370.26021@twinlark.arctic.org>
+References: <45451A4C.9010708@peeble.net> <17733.7315.357603.311275@cse.unsw.edu.au>
+ <4545DECE.7030705@tls.msk.ru> <4545E0BC.5010103@wasp.net.au>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17733.9523.946779.424799@cse.unsw.edu.au>
+In-Reply-To: <4545E0BC.5010103@wasp.net.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Matt Thrailkill <matt@modestolan.com>, linux-raid@vger.kernel.org
+To: Brad Campbell <brad@wasp.net.au>
+Cc: Michael Tokarev <mjt@tls.msk.ru>, Neil Brown <neilb@suse.de>, Peb <peb-misc@peeble.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, 30 Oct 2006, Neil Brown wrote:
+On Mon, 30 Oct 2006, Brad Campbell wrote:
 
-> > root@stoneburner:~# mdadm --assemble /dev/md0 /dev/hde /dev/hdi
-> > mdadm: cannot open device /dev/hde: Device or resource busy
+> Michael Tokarev wrote:
+> > My guess is that it's using mdrun shell script - the same as on Debian.
+> > It's a long story, the thing is quite ugly and messy and does messy things
+> > too, but they says it's compatibility stuff and continue shipping it.
+...
 > 
-> This is telling you that /dev/hde - or one of it's partitions - is
-> "Busy".  This means more than just 'open'.  It means mounted or
-> included in an md or dm array, or used for swap.
-> You need to find out what is keeping it busy.
-> Most likely dm or md.
+> I'd suggest you are probably correct. By default on Ubuntu 6.06
+> 
+> brad@bklaptop2:~$ cat /etc/init.d/mdadm-raid
+> #!/bin/sh
+> #
+> # Start any arrays which are described in /etc/mdadm/mdadm.conf and which are
+> # not running already.
+> #
+> # Copyright (c) 2001-2004 Mario Jou/3en <joussen@debian.org>
+> # Distributable under the terms of the GNU GPL version 2.
+> 
+> MDADM=/sbin/mdadm
+> MDRUN=/sbin/mdrun
 
-it's probably evms+ubuntu+new kernel stupidity.
-
-as far as i've determined, older (dapper) ubuntu had evms as part of the 
-base package requirements.  evms was set up in some promiscuous manner 
-where it goes and sets up dm linear maps for every damn partition and 
-device.  nobody cared before because older kernels don't seem to stop 
-people from using the underlying /dev/foo for md or mount or whatever. but 
-newer kernels don't allow that any more.
-
-it looks like they dropped the evms requirement in edgy -- probably 
-because it has the newer kernel... but people who upgraded from dapper 
-will run into this because they'll still have evms from before.
-
-
-> I don't know much about dm - is there some 'pvlist' command or similar
-> that will show all the phys volumes it is holding on to..
-
-"dmsetup ls" does that...
-
-for example on an ubuntu box i haven't fixed yet:
-
-# dmsetup ls --tree
-hda5 (253:1)
- `- (3:0)
-hda1 (253:0)
- `- (3:0)
-
-you can "dmsetup remove hda1" or whatever to get back the real device (but 
-it's better to just remove or disable evms and reboot).
+fwiw mdrun is finally on its way out.  the debian "unstable" mdadm package 
+is full of new goodness (initramfs goodness, 2.5.x mdadm featurefulness, 
+monthly full array check goodness).  ubuntu folks should copy it again 
+before they finalize edgy.
 
 -dean
-
