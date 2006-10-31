@@ -1,55 +1,84 @@
-From: "Rob Bray" <raid@bymeinc.com>
-Subject: Re: future hardware
-Date: Tue, 31 Oct 2006 11:11:06 -0500 (EST)
-Message-ID: <55864.192.168.0.1.1162311066.squirrel@bymeinc.com>
-References: <000901c6f509$1bd65560$eb00000a@mine3ad5e808fe>
+From: Mike Hardy <mhardy@h3c.com>
+Subject: Re: New features?
+Date: Tue, 31 Oct 2006 08:50:19 -0800
+Message-ID: <45477ECB.1000801@h3c.com>
+References: <1162293818.32109.113.camel@kenny> <17735.14472.835153.186432@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <000901c6f509$1bd65560$eb00000a@mine3ad5e808fe>
+In-Reply-To: <17735.14472.835153.186432@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan <dan@korstad.net>
-Cc: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: John Rowe <rowe@excc.ex.ac.uk>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> I have been using an older 64bit system, socket 754 for a while now.  It
-> has
-> the old PCI bus 33Mhz.  I have two low cost (no HW RAID) PCI SATA I cards
-> each with 4 ports to give me an eight disk RAID 6.  I also have a Gig NIC,
-> on the PCI bus.  I have Gig switches with clients connecting to it at Gig
-> speed.
->
-> As many know you get a peak transfer rate of 133 MB/s or 1064Mb/s from
-> that
-> PCI bus http://en.wikipedia.org/wiki/Peripheral_Component_Interconnect
->
-> The transfer rate is not bad across the network but my bottle neck it the
-> PCI bus.  I have been shopping around for new MB and PCI-express cards.  I
-> have been using mdadm for a long time and would like to stay with it.  I
-> am
-> having trouble finding an eight port PCI-express card that does not have
-> all
-> the fancy HW RAID which jacks up the cost.  I am now considering using a
-> MB
-> with eight SATA II slots onboard.  GIGABYTE GA-M59SLI-S5 Socket AM2 NVIDIA
-> nForce 590 SLI MCP ATX.
->
-> What are other users of mdadm using with the PCI-express cards, most cost
-> effective solution?
->
->
 
-I agree that SATA drives on PCI-E cards are as much bang-for-buck as is
-available right now. On the newer platforms, each PCI-E slot, the onboard
-RAID controller(s), and the 32-bit PCI bus all have discrete paths to the
-chip.
 
-Play with the thing to see how many disks you can put on a controller
-without a slowdown. Don't assume the controller isn't oversold on
-bandwidth (I was only able to use three out of four CK804 ports on a
-GA-K8NE without saturating it; two out of four slots on a PCI Sil3114).
-Combining the bandwidth of the onboard RAID controller, two SATA slots,
-and one PCI controller card, sustained reads reach 450MB/s (across 7
-disks, RAID-0) with an $80 board, and three $20 controller cards.
+Neil Brown wrote:
+> On Tuesday October 31, rowe@excc.ex.ac.uk wrote:
 
+>> 1 "Warm swap" - replacing drives without taking down the array but maybe
+>> having to type in a few commands. Presumably a sata or sata/raid
+>> interface issue. (True hot swap is nice but not worth delaying warm-
+>> swap.)
+> 
+> I believe that 2.6.18 has SATA hot-swap, so this should be available
+> know ... providing you can find out what commands to use.
+
+I forgot 2.6.18 has SATA hot-swap, has anyone tested that?
+
+FWIW, SCSI (or SAS now, using SCSI or SATA drives) has full hot-swap
+with completely online drive exchanges. I have done this on recent
+kernels in production and it works.
+
+> 
+>> 2 Adding new disks to arrays. Allows incremental upgrades and to take
+>> advantage of the hard disk equivalent of Moore's law.
+> 
+> Works for raid5 and linear.  Raid6 one day.
+
+Also works for raid1!
+
+
+>> 4. Uneven disk sizes, eg adding a 400GB disk to a 2x200GB mirror to
+>> create a 400GB mirror. Together with 2 and 3, allows me to continuously
+>> expand a disk array.
+> 
+> So you have a RAID1 (md) from sda and sdb, both 200GB, and you now have a
+> sdc which is 400GB.
+> So
+>    mdadm /dev/md0 -a /dev/sdc
+>    mdadm /dev/md0 -f /dev/sda
+>    mdadm /dev/md0 -r /dev/sda
+>    # wait for recovery
+
+Could be:
+
+    mdadm /dev/md0 -a /dev/sdc
+    mdadm --grow /dev/md0 --raid-devices=3 # 3-disk mirror
+    # wait for recovery
+    # don't forget grub-install /dev/sda (or similar)!
+    mdadm /dev/md0 -f /dev/sda
+    mdadm /dev/md0 -r /dev/sda
+    mdadm --grow /dev/md0 --raid-devices=2 # 2-disk again
+
+    # Run a 'smartctl -d ata -t long /dev/sdb' before next line...
+
+>    mdadm /dev/md0 -f /dev/sdb
+>    mdadm /dev/md0 -r /dev/sdb
+>    mdadm -C /dev/md1 -l linear -n 2 /dev/sda /dev/sdb
+>    mdadm /dev/md0 -a /dev/md1
+>    # wait for recovery
+>    mdadm --grow /dev/md0 --size=max
+> 
+> You do run with a degraded array for a while, but you can do it
+> entirely online.
+> It might be possible to decrease the time when the array is degraded,
+> but it is too late at night to think about that.
+
+All I did was decrease the degradation time, but hey it could help. And
+don't forget the long SMART test before running degraded for real. Could
+save you some pain.
+
+-Mike
