@@ -1,158 +1,44 @@
-From: Chris Wright <chrisw@sous-sol.org>
-Subject: Re: [stable] [PATCH] Check bio address after mapping through partitions.
-Date: Tue, 31 Oct 2006 02:49:32 -0800
-Message-ID: <20061031104932.GG5881@sequoia.sous-sol.org>
-References: <20061031124940.24199.patches@notabene> <1061031015145.24246@suse.de> <20061031071531.GT14055@kernel.dk>
+From: John Rowe <rowe@excc.ex.ac.uk>
+Subject: New features?
+Date: Tue, 31 Oct 2006 11:23:38 +0000
+Message-ID: <1162293818.32109.113.camel@kenny>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20061031071531.GT14055@kernel.dk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: NeilBrown <neilb@suse.de>, Andrew Morton <akpm@osdl.org>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, stable@kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-* Jens Axboe (jens.axboe@oracle.com) wrote:
-> On Tue, Oct 31 2006, NeilBrown wrote:
-> > This would be good for 2.6.19 and even 18.2, if it is seens acceptable.
-> > raid0 at least (possibly other) can be made to Oops with a bad partition 
-> > table and best fix seem to be to not let out-of-range request get down
-> > to the device.
-> > 
-> > ### Comments for Changeset
-> > 
-> > Partitions are not limited to live within a device.  So
-> > we should range check after partition mapping.
-> > 
-> > Note that 'maxsector' was being used for two different things.  I have
-> > split off the second usage into 'old_sector' so that maxsector can be
-> > still be used for it's primary usage later in the function.
-> > 
-> > Cc: Jens Axboe <jens.axboe@oracle.com>
-> > Signed-off-by: Neil Brown <neilb@suse.de>
-> 
-> Code looks good to me, but for some reason your comment exceeds 80
-> chars. Can you please fix that up?
+All this discussion has led me to wonder if we users of linux RAID have
+a clear consensus of what our priorities are, ie what are the things we
+really want to see soon as opposed to the many things that would be nice
+but not worth delaying the important things for. FWIW, here are mine, in
+order although the first two are roughly equal priority.
 
-Maybe just was copy, pasted and pushed one tab over from the same check
-above the loop.  What about consolidating that one?
+1 "Warm swap" - replacing drives without taking down the array but maybe
+having to type in a few commands. Presumably a sata or sata/raid
+interface issue. (True hot swap is nice but not worth delaying warm-
+swap.)
 
-thanks,
--chris
+2 Adding new disks to arrays. Allows incremental upgrades and to take
+advantage of the hard disk equivalent of Moore's law.
 
---
+3. RAID level conversion (1 to 5, 5 to 6, with single-disk to RAID 1 a
+lower priority).
 
-From: Neil Brown <neilb@suse.de>
+4. Uneven disk sizes, eg adding a 400GB disk to a 2x200GB mirror to
+create a 400GB mirror. Together with 2 and 3, allows me to continuously
+expand a disk array.
 
-Partitions are not limited to live within a device.  So
-we should range check after partition mapping.
-                                                                                                                   
-Note that 'maxsector' was being used for two different things.  I have
-split off the second usage into 'old_sector' so that maxsector can be
-still be used for it's primary usage later in the function.
-                                                                                                                   
-Acked-by: Jens Axboe <jens.axboe@oracle.com>
-Signed-off-by: Neil Brown <neilb@suse.de>
+(Not knowing the code, I wonder if 2, 3 and 4 could be accomplished by
+allowing an "external" RAID device to have several internal devices and
+with changes accomplished the old one to shrink and the new one to grow
+until the old one no longer exists.)
 
-Add check_bad_sector() to consolidate the checks a touch.
+Thanks for listening.
 
-Signed-off-by: Chris Wright <chrisw@sous-sol.org>
+John
 
----
-(smth like this only compile tested extension to Neil's patch)
 
- block/ll_rw_blk.c |   51 +++++++++++++++++++++++++++++++--------------------
- 1 file changed, 31 insertions(+), 20 deletions(-)
 
---- a/block/ll_rw_blk.c
-+++ b/block/ll_rw_blk.c
-@@ -2971,6 +2971,26 @@ static void handle_bad_sector(struct bio
- 	set_bit(BIO_EOF, &bio->bi_flags);
- }
- 
-+static int check_bad_sector(struct bio *bio)
-+{
-+	sector_t maxsector = bio->bi_bdev->bd_inode->i_size >> 9;
-+	int nr_sectors = bio_sectors(bio);
-+	if (maxsector) {
-+		sector_t sector = bio->bi_sector;
-+
-+		if (maxsector < nr_sectors || maxsector - nr_sectors < sector) {
-+			/*
-+			 * This may well happen - the kernel calls bread()
-+			 * without checking the size of the device, e.g., when
-+			 * mounting a device.
-+			 */
-+			handle_bad_sector(bio);
-+			return 1;
-+		}
-+	}
-+	return 0;
-+}
-+
- /**
-  * generic_make_request: hand a buffer to its device driver for I/O
-  * @bio:  The bio describing the location in memory and on the device.
-@@ -2998,26 +3018,14 @@ static void handle_bad_sector(struct bio
- void generic_make_request(struct bio *bio)
- {
- 	request_queue_t *q;
--	sector_t maxsector;
--	int ret, nr_sectors = bio_sectors(bio);
-+	sector_t old_sector;
-+	int ret;
- 	dev_t old_dev;
- 
- 	might_sleep();
- 	/* Test device or partition size, when known. */
--	maxsector = bio->bi_bdev->bd_inode->i_size >> 9;
--	if (maxsector) {
--		sector_t sector = bio->bi_sector;
--
--		if (maxsector < nr_sectors || maxsector - nr_sectors < sector) {
--			/*
--			 * This may well happen - the kernel calls bread()
--			 * without checking the size of the device, e.g., when
--			 * mounting a device.
--			 */
--			handle_bad_sector(bio);
--			goto end_io;
--		}
--	}
-+	if (check_bad_sector(bio))
-+		goto end_io;
- 
- 	/*
- 	 * Resolve the mapping until finished. (drivers are
-@@ -3027,7 +3035,7 @@ void generic_make_request(struct bio *bi
- 	 * NOTE: we don't repeat the blk_size check for each new device.
- 	 * Stacking drivers are expected to know what they are doing.
- 	 */
--	maxsector = -1;
-+	old_sector = -1;
- 	old_dev = 0;
- 	do {
- 		char b[BDEVNAME_SIZE];
-@@ -3061,15 +3069,18 @@ end_io:
- 		 */
- 		blk_partition_remap(bio);
- 
--		if (maxsector != -1)
-+		if (old_sector != -1)
- 			blk_add_trace_remap(q, bio, old_dev, bio->bi_sector, 
--					    maxsector);
-+					    old_sector);
- 
- 		blk_add_trace_bio(q, bio, BLK_TA_QUEUE);
- 
--		maxsector = bio->bi_sector;
-+		old_sector = bio->bi_sector;
- 		old_dev = bio->bi_bdev->bd_dev;
- 
-+		if (check_bad_sector(bio))
-+			goto end_io;
-+
- 		ret = q->make_request_fn(q, bio);
- 	} while (ret);
- }
