@@ -1,63 +1,115 @@
-From: Peb <peb-misc@peeble.net>
-Subject: Re: md array numbering is messed up
-Date: Tue, 31 Oct 2006 00:50:01 +0100
-Message-ID: <45468FA9.4010303@peeble.net>
-References: <45451A4C.9010708@peeble.net>
- <17733.7315.357603.311275@cse.unsw.edu.au> <4545DECE.7030705@tls.msk.ru>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: Kernel OOPS with partitioned software raid (+ further questions)
+Date: Tue, 31 Oct 2006 12:46:53 +1100
+Message-ID: <17734.43789.697487.460594@cse.unsw.edu.au>
+References: <4545379E.4040203@digadd.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-reply-to: <4545DECE.7030705@tls.msk.ru>
+In-Reply-To: message from Christian Schmidt on Monday October 30
 Sender: linux-raid-owner@vger.kernel.org
-To: Michael Tokarev <mjt@tls.msk.ru>
-Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org, dean@arctic.org, brad@wasp.net.au
+To: Christian Schmidt <lkml@digadd.de>
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Michael Tokarev wrote:
-> Neil Brown wrote:
->> On Sunday October 29, peb-misc@peeble.net wrote:
->>> Hi,
->>>
->>> I have 2 arrays whose numbers get inverted, creating havoc, when booting
->>> under different kernels.
->>>
->>> I have md0 (raid1) made up of ide drives and md1 (raid5) made up of five
->>> sata drives, when booting with my current ubuntu 2.6.12-9 kernel. When I
->>> try to boot a more recent kernel (2.6.15-26 or 2.6.15-27) the
->>> order is inversed and my sata raid5 array shows up as md0.
->>>
->>> My arrays are part of evms volumes that just stop working if the
->>> numbering is inverted.
->>>
->>> any clues ?
->> Your arrays are being started the wrong way.
->> Do you have an mdadm.conf that lists the arrays?  Can you show us what
->> it looked like?
->> If not, do you know how the arrays are started in ubuntu?
+On Monday October 30, lkml@digadd.de wrote:
+> Hi all,
 > 
-> My guess is that it's using mdrun shell script - the same as on Debian.
-> It's a long story, the thing is quite ugly and messy and does messy things
-> too, but they says it's compatibility stuff and continue shipping it.
+> I'm running the following software-raid setup:
 > 
-> For the OP, the solution is to *create* mdadm.conf file - in that case
-> mdrun should hopefully NOT run.
+> two raid 0 with two 250GB disks each (sdd1-sdg1) named md_d2 and md_d3
+> one raid 5 with three 500GB disks (sda2-sdc2) and the two raid0 as
+> members named md_d5
+> one raid 1 with 100MB of each of the 500GB disks (sda1-sdc1) named md_d1
 > 
-> /mjt
+> The only raid device that actually has a partition table is md_d5. The
+> other devices are used unpartitioned, which brings me to the first
+> question: Is it possible to run partitioned and unpartitioned software
+> raids at the same time?
+> 
+> Back to the topic now after this question. The resulting problem is: due
+> to the raid5 layout, the partition table of md_d5 is written to where a
+> partition table on md_d3 would be as well:
+> 
+> [~]>fdisk -l /dev/md_d3
+> 
+> Disk /dev/md_d3: 500.1 GB, 500113211392 bytes
+> 2 heads, 4 sectors/track, 122097952 cylinders
+> Units = cylinders of 8 * 512 = 4096 bytes
+> 
+>       Device Boot      Start         End      Blocks   Id  System
+> /dev/md_d3p1               1      244142      976566   83  Linux
+> /dev/md_d3p2          244143     5126956    19531256   8e  Linux LVM
+> /dev/md_d3p3         5126957   488279488  1932610128   8e  Linux LVM
+> 
+> Note that the end of md_d3p3 is way beyond the end of the actual device.
+> Now during boot udev tries to find out about the content of the devices,
+> using the vol_id program. It checks the various locations for raid
+> superblocks, lvm superblocks. What happens show the following strace
+> excerpts:
 
-Well I have the following mdadm.conf:
+snip
+> 
+> The kernel above contains a lot of patches (gentoo's hardened sources),
+> but the same syndrom can be seen with vanilla 2.6.18 or 2.6.19 rc3.
+> 
+> Even if there are likely a dozend workarounds (create a partition table
+> on the raid 0s one by one and resync; no not rely on raid=part for
+> autodetection as the raid5 doesn't come up automatically anyway; don't
+> use vol_id) this should in my oppinion not happen. The points I'd like
+> to criticize are:
+> - The partition table read code, which accepts to create the devices
+> even though they are obviously wrong,
 
-DEVICE /dev/hda /dev/hdc /dev/sd*
-ARRAY /dev/md1 level=raid5 num-devices=4 UID=8ed64073:04d21e1c:33660158:
-a5bc892f
-ARRAY /dev/md0 level=raid1 num-devices=2 UID=cab9de58:d20bffae:654d1910:
-6f440136
+Yeah, I don't like that either.  I tried submitting a patch to fix it
+but different people have different ideas about what the 'right'
+solution is (do we clip the partition to size, or make it disappear
+completely?).
 
-I 've tried inverting the two ARRAY lines and placing the sd* device
-before the ide drives, but that didn't change anything.
+> - The partitioned raid device creation code, which creates subdevices
+> which are larger than the containing device,
 
-So I guess my mdadm.conf isn't correct since mdrun is still running even
-though the file exists ???
+This is exactly the same as the above.  The raid code doesn't create
+the subdevices.  The partition reading code does that.
 
---
-Peb
+> - The layer in the kernel that allows the read beyond end of device down
+> to the raid driver,
+
+Yes... This is generic_make_request in block/ll_rw_blk.c.
+It check that the address is within the partition, but it does not
+check that the address after mapping is still within the device.
+It assumes partitions always fit within devices.
+
+> - Most importantly, the raid driver for failing that bad mannered.
+> 
+
+Maybe, though I would rather the block layer guaranteed never to send
+a request that was out-of-range...
+
+> I honestly didn't look into the other software raid drivers, which are
+> likely to produce the same result. The attached patch for raid0.c makes
+> accesses beyond the end of a device into Buffer I/O errors:
+> 
+> xxxxxx Buffer I/O error on device md_d3p3, logical block 483152512
+> 
+> Regards,
+> Christian
+> --- raid0.c.orig	2006-10-30 00:12:22.000000000 +0100
+> +++ raid0.c	2006-10-30 00:14:48.000000000 +0100
+> @@ -415,6 +415,10 @@
+>  	chunksize_bits = ffz(~chunk_size);
+>  	block = bio->bi_sector >> 1;
+>  	
+> +	if (block >= mddev->array_size) {
+> +		bio_endio(bio, bio->bi_size, -EIO);
+> +		return 0;
+> +	}
+
+That would work.  Similar fixes needed in linear, raid10, and possible
+raid5.
+
+I'll try to push the 'fix it in the block layer' first though.
+
+Thanks,
+NeilBeown
