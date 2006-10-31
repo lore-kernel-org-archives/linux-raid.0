@@ -1,115 +1,86 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: Kernel OOPS with partitioned software raid (+ further questions)
-Date: Tue, 31 Oct 2006 12:46:53 +1100
-Message-ID: <17734.43789.697487.460594@cse.unsw.edu.au>
-References: <4545379E.4040203@digadd.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Christian Schmidt on Monday October 30
-Sender: linux-raid-owner@vger.kernel.org
-To: Christian Schmidt <lkml@digadd.de>
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+From: NeilBrown <neilb@suse.de>
+Subject: [PATCH] Check bio address after mapping through partitions.
+Date: Tue, 31 Oct 2006 12:51:45 +1100
+Message-ID: <1061031015145.24246@suse.de>
+References: <20061031124940.24199.patches@notabene>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S965521AbWJaBvx@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>, stable@kernel.org
 List-Id: linux-raid.ids
 
-On Monday October 30, lkml@digadd.de wrote:
-> Hi all,
-> 
-> I'm running the following software-raid setup:
-> 
-> two raid 0 with two 250GB disks each (sdd1-sdg1) named md_d2 and md_d3
-> one raid 5 with three 500GB disks (sda2-sdc2) and the two raid0 as
-> members named md_d5
-> one raid 1 with 100MB of each of the 500GB disks (sda1-sdc1) named md_d1
-> 
-> The only raid device that actually has a partition table is md_d5. The
-> other devices are used unpartitioned, which brings me to the first
-> question: Is it possible to run partitioned and unpartitioned software
-> raids at the same time?
-> 
-> Back to the topic now after this question. The resulting problem is: due
-> to the raid5 layout, the partition table of md_d5 is written to where a
-> partition table on md_d3 would be as well:
-> 
-> [~]>fdisk -l /dev/md_d3
-> 
-> Disk /dev/md_d3: 500.1 GB, 500113211392 bytes
-> 2 heads, 4 sectors/track, 122097952 cylinders
-> Units = cylinders of 8 * 512 = 4096 bytes
-> 
->       Device Boot      Start         End      Blocks   Id  System
-> /dev/md_d3p1               1      244142      976566   83  Linux
-> /dev/md_d3p2          244143     5126956    19531256   8e  Linux LVM
-> /dev/md_d3p3         5126957   488279488  1932610128   8e  Linux LVM
-> 
-> Note that the end of md_d3p3 is way beyond the end of the actual device.
-> Now during boot udev tries to find out about the content of the devices,
-> using the vol_id program. It checks the various locations for raid
-> superblocks, lvm superblocks. What happens show the following strace
-> excerpts:
+This would be good for 2.6.19 and even 18.2, if it is seens acceptable.
+raid0 at least (possibly other) can be made to Oops with a bad partition 
+table and best fix seem to be to not let out-of-range request get down
+to the device.
 
-snip
-> 
-> The kernel above contains a lot of patches (gentoo's hardened sources),
-> but the same syndrom can be seen with vanilla 2.6.18 or 2.6.19 rc3.
-> 
-> Even if there are likely a dozend workarounds (create a partition table
-> on the raid 0s one by one and resync; no not rely on raid=part for
-> autodetection as the raid5 doesn't come up automatically anyway; don't
-> use vol_id) this should in my oppinion not happen. The points I'd like
-> to criticize are:
-> - The partition table read code, which accepts to create the devices
-> even though they are obviously wrong,
+### Comments for Changeset
 
-Yeah, I don't like that either.  I tried submitting a patch to fix it
-but different people have different ideas about what the 'right'
-solution is (do we clip the partition to size, or make it disappear
-completely?).
+Partitions are not limited to live within a device.  So
+we should range check after partition mapping.
 
-> - The partitioned raid device creation code, which creates subdevices
-> which are larger than the containing device,
+Note that 'maxsector' was being used for two different things.  I have
+split off the second usage into 'old_sector' so that maxsector can be
+still be used for it's primary usage later in the function.
 
-This is exactly the same as the above.  The raid code doesn't create
-the subdevices.  The partition reading code does that.
+Cc: Jens Axboe <jens.axboe@oracle.com>
+Signed-off-by: Neil Brown <neilb@suse.de>
 
-> - The layer in the kernel that allows the read beyond end of device down
-> to the raid driver,
+### Diffstat output
+ ./block/ll_rw_blk.c |   24 ++++++++++++++++++++----
+ 1 file changed, 20 insertions(+), 4 deletions(-)
 
-Yes... This is generic_make_request in block/ll_rw_blk.c.
-It check that the address is within the partition, but it does not
-check that the address after mapping is still within the device.
-It assumes partitions always fit within devices.
-
-> - Most importantly, the raid driver for failing that bad mannered.
-> 
-
-Maybe, though I would rather the block layer guaranteed never to send
-a request that was out-of-range...
-
-> I honestly didn't look into the other software raid drivers, which are
-> likely to produce the same result. The attached patch for raid0.c makes
-> accesses beyond the end of a device into Buffer I/O errors:
-> 
-> xxxxxx Buffer I/O error on device md_d3p3, logical block 483152512
-> 
-> Regards,
-> Christian
-> --- raid0.c.orig	2006-10-30 00:12:22.000000000 +0100
-> +++ raid0.c	2006-10-30 00:14:48.000000000 +0100
-> @@ -415,6 +415,10 @@
->  	chunksize_bits = ffz(~chunk_size);
->  	block = bio->bi_sector >> 1;
->  	
-> +	if (block >= mddev->array_size) {
-> +		bio_endio(bio, bio->bi_size, -EIO);
-> +		return 0;
-> +	}
-
-That would work.  Similar fixes needed in linear, raid10, and possible
-raid5.
-
-I'll try to push the 'fix it in the block layer' first though.
-
-Thanks,
-NeilBeown
+diff .prev/block/ll_rw_blk.c ./block/ll_rw_blk.c
+--- .prev/block/ll_rw_blk.c	2006-10-31 11:43:33.000000000 +1100
++++ ./block/ll_rw_blk.c	2006-10-31 12:47:07.000000000 +1100
+@@ -3007,6 +3007,7 @@ static inline void __generic_make_reques
+ {
+ 	request_queue_t *q;
+ 	sector_t maxsector;
++	sector_t old_sector;
+ 	int ret, nr_sectors = bio_sectors(bio);
+ 	dev_t old_dev;
+ 
+@@ -3035,7 +3036,7 @@ static inline void __generic_make_reques
+ 	 * NOTE: we don't repeat the blk_size check for each new device.
+ 	 * Stacking drivers are expected to know what they are doing.
+ 	 */
+-	maxsector = -1;
++	old_sector = -1;
+ 	old_dev = 0;
+ 	do {
+ 		char b[BDEVNAME_SIZE];
+@@ -3069,15 +3070,30 @@ end_io:
+ 		 */
+ 		blk_partition_remap(bio);
+ 
+-		if (maxsector != -1)
++		if (old_sector != -1)
+ 			blk_add_trace_remap(q, bio, old_dev, bio->bi_sector, 
+-					    maxsector);
++					    old_sector);
+ 
+ 		blk_add_trace_bio(q, bio, BLK_TA_QUEUE);
+ 
+-		maxsector = bio->bi_sector;
++		old_sector = bio->bi_sector;
+ 		old_dev = bio->bi_bdev->bd_dev;
+ 
++		maxsector = bio->bi_bdev->bd_inode->i_size >> 9;
++		if (maxsector) {
++			sector_t sector = bio->bi_sector;
++
++			if (maxsector < nr_sectors || maxsector - nr_sectors < sector) {
++				/*
++				 * This may well happen - partitions are not checked
++				 * to make sure they are within the size of the
++				 * whole device.
++				 */
++				handle_bad_sector(bio);
++				goto end_io;
++			}
++		}
++
+ 		ret = q->make_request_fn(q, bio);
+ 	} while (ret);
+ }
