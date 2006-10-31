@@ -1,36 +1,41 @@
-From: NeilBrown <neilb@suse.de>
-Subject: [PATCH 006 of 6] md: Enable bypassing cache for reads.
-Date: Tue, 31 Oct 2006 17:01:14 +1100
-Message-ID: <1061031060114.5111@suse.de>
-References: <20061031164814.4884.patches@notabene>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [PATCH] Check bio address after mapping through partitions.
+Date: Tue, 31 Oct 2006 08:15:32 +0100
+Message-ID: <20061031071531.GT14055@kernel.dk>
+References: <20061031124940.24199.patches@notabene> <1061031015145.24246@suse.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1061031015145.24246@suse.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
+To: NeilBrown <neilb@suse.de>
+Cc: Andrew Morton <akpm@osdl.org>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, stable@kernel.org
 List-Id: linux-raid.ids
 
+On Tue, Oct 31 2006, NeilBrown wrote:
+> This would be good for 2.6.19 and even 18.2, if it is seens acceptable.
+> raid0 at least (possibly other) can be made to Oops with a bad partition 
+> table and best fix seem to be to not let out-of-range request get down
+> to the device.
+> 
+> ### Comments for Changeset
+> 
+> Partitions are not limited to live within a device.  So
+> we should range check after partition mapping.
+> 
+> Note that 'maxsector' was being used for two different things.  I have
+> split off the second usage into 'old_sector' so that maxsector can be
+> still be used for it's primary usage later in the function.
+> 
+> Cc: Jens Axboe <jens.axboe@oracle.com>
+> Signed-off-by: Neil Brown <neilb@suse.de>
 
-Call the chunk_aligned_read where appropriate.
+Code looks good to me, but for some reason your comment exceeds 80
+chars. Can you please fix that up?
 
-cc:  "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
-Signed-off-by: Neil Brown <neilb@suse.de>
+Acked-by: Jens Axboe <jens.axboe@oracle.com>
 
-### Diffstat output
- ./drivers/md/raid5.c |    5 +++++
- 1 file changed, 5 insertions(+)
+-- 
+Jens Axboe
 
-diff .prev/drivers/md/raid5.c ./drivers/md/raid5.c
---- .prev/drivers/md/raid5.c	2006-10-31 16:42:30.000000000 +1100
-+++ ./drivers/md/raid5.c	2006-10-31 16:47:53.000000000 +1100
-@@ -2798,6 +2798,11 @@ static int make_request(request_queue_t 
- 	disk_stat_inc(mddev->gendisk, ios[rw]);
- 	disk_stat_add(mddev->gendisk, sectors[rw], bio_sectors(bi));
- 
-+	if ( bio_data_dir(bi) == READ &&
-+	     mddev->reshape_position == MaxSector &&
-+	     chunk_aligned_read(q,bi))
-+            		return 0;
-+
- 	logical_sector = bi->bi_sector & ~((sector_t)STRIPE_SECTORS-1);
- 	last_sector = bi->bi_sector + (bi->bi_size>>9);
- 	bi->bi_next = NULL;
