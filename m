@@ -1,45 +1,41 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [PATCH 000 of 6] md: udev events and cache bypass for reads
-Date: Tue, 31 Oct 2006 17:00:40 +1100
-Message-ID: <20061031164814.4884.patches@notabene>
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
+Subject: [PATCH 001 of 6] md: Send online/offline uevents when an md array starts/stops.
+Date: Tue, 31 Oct 2006 17:00:46 +1100
+Message-ID: <1061031060046.5034@suse.de>
+References: <20061031164814.4884.patches@notabene>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1422768AbWJaGAy@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Andrew Morton <akpm@osdl.org>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>, gregkh@suse.de
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, gregkh@suse.de
 List-Id: linux-raid.ids
 
-Following are 6 patches for md in -lastest which I have been sitting
-on for a while because I hadn't had a chance to test them properly.
-I now have so there shouldn't be too many bugs left :-)
 
-First is suitable for 2.6.19 (if it isn't too late and gregkh thinks it
-is good).  Rest are for 2.6.20.
+This allows udev to do something intelligent when an
+array becomes available.
 
-First two make md play a bit more nicely with udev.  Currently udev gets an
-'add' event once and never any remove event or anything else.  And the the 'add'
-event comes before the array is ready to be used.
+cc: gregkh@suse.de
+Signed-off-by: Neil Brown <neilb@suse.de>
 
-The first patch added online/offline events when the array becomes
-ready to be used, and when the array ceases to be usable.
+### Diffstat output
+ ./drivers/md/md.c |    2 ++
+ 1 file changed, 2 insertions(+)
 
-The second patch changes the lifetime rules of md devices so they
-disappear when not in use.  This means that udev will normally dev a
-'remove' event sometime after the offline, and then another 'add' if a
-new array is started with a the same name.  I'm not sure if this helps 
-udev particularly, but it is a lot neater.
-
-Then we have 4 patches that cause raid5 to not use the stripe-cache
-for reads when that is appropriate.  This avoids copies and improves
-read throughput by as much as 30% in some tests.  These patches
-are largely due to  "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>.
-
-NeilBrown
-
-
-
- [PATCH 001 of 6] md: Send online/offline uevents when an md array starts/stops.
- [PATCH 002 of 6] md: Change lifetime rules for 'md' devices.
- [PATCH 003 of 6] md: Define raid5_mergeable_bvec
- [PATCH 004 of 6] md: Handle bypassing the read cache (assuming nothing fails).
- [PATCH 005 of 6] md: Allow reads that have bypassed the cache to be retried on failure.
- [PATCH 006 of 6] md: Enable bypassing cache for reads.
+diff .prev/drivers/md/md.c ./drivers/md/md.c
+--- .prev/drivers/md/md.c	2006-10-31 16:40:52.000000000 +1100
++++ ./drivers/md/md.c	2006-10-31 16:41:02.000000000 +1100
+@@ -3200,6 +3200,7 @@ static int do_md_run(mddev_t * mddev)
+ 
+ 	mddev->changed = 1;
+ 	md_new_event(mddev);
++	kobject_uevent(&mddev->gendisk->kobj, KOBJ_ONLINE);
+ 	return 0;
+ }
+ 
+@@ -3313,6 +3314,7 @@ static int do_md_stop(mddev_t * mddev, i
+ 
+ 			module_put(mddev->pers->owner);
+ 			mddev->pers = NULL;
++			kobject_uevent(&mddev->gendisk->kobj, KOBJ_OFFLINE);
+ 			if (mddev->ro)
+ 				mddev->ro = 0;
+ 		}
