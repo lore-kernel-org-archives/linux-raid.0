@@ -1,151 +1,106 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [PATCH 002 of 6] md: Change lifetime rules for 'md' devices.
-Date: Tue, 31 Oct 2006 17:00:51 +1100
-Message-ID: <1061031060051.5046@suse.de>
+Subject: [PATCH 004 of 6] md: Handle bypassing the read cache (assuming nothing fails).
+Date: Tue, 31 Oct 2006 17:01:03 +1100
+Message-ID: <1061031060103.5076@suse.de>
 References: <20061031164814.4884.patches@notabene>
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1161568AbWJaGCH@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Andrew Morton <akpm@osdl.org>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, gregkh@suse.de
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
 List-Id: linux-raid.ids
 
-
-Currently md devices are created when first opened and remain in existence
-until the module is unloaded.
-This isn't a major problem, but it somewhat ugly.
-
-This patch changes the lifetime rules so that an md device will
-disappear on the last close if it has no state.
-
-Locking rules depend on bd_mutex being held in do_open and
-__blkdev_put, and on setting bd_disk->private_data to 'mddev'.
-
-There is room for a race because md_probe is called early in do_open
-(get_gendisk) to create the mddev.  As this isn't protected by
-bd_mutex, a concurrent call to md_close can destroy that mddev before
-do_open calls md_open to get a reference on it.
-md_open and md_close are serialised by md_mutex so the worst that
-can happen is that md_open finds that the mddev structure doesn't
-exist after all.  In this case bd_disk->private_data will be NULL,
-and md_open chooses to exit with -EBUSY in this case, which is
-arguable and appropriate result.
-
-The new 'dead' field in mddev is used to track whether it is time
-to destroy the mddev (if a last-close happens).  It is cleared when
-any state is create (set_array_info) and set when the array is stopped
-(do_md_stop).
-
-mddev_put becomes simpler. It just destroys the mddev when the
-refcount hits zero.  This will normally be the reference held in
-bd_disk->private_data.
-  
-
-cc: gregkh@suse.de
+cc:  "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
 Signed-off-by: Neil Brown <neilb@suse.de>
 
 ### Diffstat output
- ./drivers/md/md.c           |   35 +++++++++++++++++++++++++----------
- ./include/linux/raid/md_k.h |    3 +++
- 2 files changed, 28 insertions(+), 10 deletions(-)
+ ./drivers/md/raid5.c |   78 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 78 insertions(+)
 
-diff .prev/drivers/md/md.c ./drivers/md/md.c
---- .prev/drivers/md/md.c	2006-10-31 16:41:02.000000000 +1100
-+++ ./drivers/md/md.c	2006-10-31 16:41:14.000000000 +1100
-@@ -226,13 +226,14 @@ static void mddev_put(mddev_t *mddev)
- {
- 	if (!atomic_dec_and_lock(&mddev->active, &all_mddevs_lock))
- 		return;
--	if (!mddev->raid_disks && list_empty(&mddev->disks)) {
--		list_del(&mddev->all_mddevs);
--		spin_unlock(&all_mddevs_lock);
--		blk_cleanup_queue(mddev->queue);
--		kobject_unregister(&mddev->kobj);
--	} else
--		spin_unlock(&all_mddevs_lock);
-+	list_del(&mddev->all_mddevs);
-+	spin_unlock(&all_mddevs_lock);
-+
-+	blk_cleanup_queue(mddev->queue);
-+	mddev->queue = NULL;
-+	del_gendisk(mddev->gendisk);
-+	mddev->gendisk = NULL;
-+	kobject_unregister(&mddev->kobj);
+diff .prev/drivers/md/raid5.c ./drivers/md/raid5.c
+--- .prev/drivers/md/raid5.c	2006-10-31 16:41:26.000000000 +1100
++++ ./drivers/md/raid5.c	2006-10-31 16:41:51.000000000 +1100
+@@ -2633,6 +2633,84 @@ static int raid5_mergeable_bvec(request_
+ 		return max;
  }
  
- static mddev_t * mddev_find(dev_t unit)
-@@ -273,6 +274,7 @@ static mddev_t * mddev_find(dev_t unit)
- 	atomic_set(&new->active, 1);
- 	spin_lock_init(&new->write_lock);
- 	init_waitqueue_head(&new->sb_wait);
-+	new->dead = 1;
- 
- 	new->queue = blk_alloc_queue(GFP_KERNEL);
- 	if (!new->queue) {
-@@ -3362,6 +3364,8 @@ static int do_md_stop(mddev_t * mddev, i
- 		disk = mddev->gendisk;
- 		if (disk)
- 			set_capacity(disk, 0);
-+		mddev->dead = 1;
 +
- 		mddev->changed = 1;
- 	} else if (mddev->pers)
- 		printk(KERN_INFO "md: %s switched to read-only mode.\n",
-@@ -4293,7 +4297,8 @@ static int md_ioctl(struct inode *inode,
- 					printk(KERN_WARNING "md: couldn't set"
- 					       " array info. %d\n", err);
- 					goto abort_unlock;
--				}
-+				} else
-+					mddev->dead = 0;
- 			}
- 			goto done_unlock;
- 
-@@ -4377,6 +4382,8 @@ static int md_ioctl(struct inode *inode,
- 				err = -EFAULT;
- 			else
- 				err = add_new_disk(mddev, &info);
-+			if (!err)
-+				mddev->dead = 0;
- 			goto done_unlock;
- 		}
- 
-@@ -4423,8 +4430,12 @@ static int md_open(struct inode *inode, 
- 	 * Succeed if we can lock the mddev, which confirms that
- 	 * it isn't being stopped right now.
- 	 */
--	mddev_t *mddev = inode->i_bdev->bd_disk->private_data;
--	int err;
-+	mddev_t *mddev;
-+	int err = -EBUSY;
++static int in_chunk_boundary(mddev_t *mddev, struct bio *bio)
++{
++	sector_t sector = bio->bi_sector + get_start_sect(bio->bi_bdev);
++	unsigned int chunk_sectors = mddev->chunk_size >> 9;
++	unsigned int bio_sectors = bio->bi_size >> 9;
 +
-+	mddev = inode->i_bdev->bd_disk->private_data;
-+	if (!mddev)
-+		goto out;
- 
- 	if ((err = mutex_lock_interruptible_nested(&mddev->reconfig_mutex, 1)))
- 		goto out;
-@@ -4443,6 +4454,10 @@ static int md_release(struct inode *inod
-  	mddev_t *mddev = inode->i_bdev->bd_disk->private_data;
- 
- 	BUG_ON(!mddev);
-+	if (inode->i_bdev->bd_openers == 0 && mddev->dead) {
-+		inode->i_bdev->bd_disk->private_data = NULL;
-+		mddev_put(mddev);
++	return  chunk_sectors >=
++		((sector & (chunk_sectors - 1)) + bio_sectors);
++}
++
++/*
++ *  The "raid5_align_endio" should check if the read succeeded and if it
++ *  did, call bio_endio on the original bio (having bio_put the new bio
++ *  first).
++ *  If the read failed..
++ */
++int raid5_align_endio(struct bio *bi, unsigned int bytes , int error)
++{
++	struct bio* raid_bi  = bi->bi_private;
++	if (bi->bi_size)
++		return 1;
++	bio_put(bi);
++	bio_endio(raid_bi, bytes, error);
++	return 0;
++}
++
++static int chunk_aligned_read(request_queue_t *q, struct bio * raid_bio)
++{
++	mddev_t *mddev = q->queuedata;
++	raid5_conf_t *conf = mddev_to_conf(mddev);
++	const unsigned int raid_disks = conf->raid_disks;
++	const unsigned int data_disks = raid_disks - 1;
++	unsigned int dd_idx, pd_idx;
++	struct bio* align_bi;
++	mdk_rdev_t *rdev;
++
++	if (!in_chunk_boundary(mddev, raid_bio)) {
++		printk("chunk_aligned_read : non aligned\n");
++		return 0;
 +	}
- 	mddev_put(mddev);
- 
- 	return 0;
-
-diff .prev/include/linux/raid/md_k.h ./include/linux/raid/md_k.h
---- .prev/include/linux/raid/md_k.h	2006-10-31 16:40:51.000000000 +1100
-+++ ./include/linux/raid/md_k.h	2006-10-31 16:41:14.000000000 +1100
-@@ -119,6 +119,9 @@ struct mddev_s
- #define MD_CHANGE_PENDING 2	/* superblock update in progress */
- 
- 	int				ro;
-+	int				dead; /* array should be discarded on
-+					       * last close
-+					       */
- 
- 	struct gendisk			*gendisk;
- 
++	/*
++ 	 * use bio_clone to make a copy of the bio
++	 */
++	align_bi = bio_clone(raid_bio, GFP_NOIO);
++	if (!align_bi)
++		return 0;
++	/*
++	 *   set bi_end_io to a new function, and set bi_private to the
++	 *     original bio.
++	 */
++	align_bi->bi_end_io  = raid5_align_endio;
++	align_bi->bi_private = raid_bio;
++	/*
++	 *	compute position
++	 */
++	align_bi->bi_sector =  raid5_compute_sector(raid_bio->bi_sector,
++					raid_disks,
++					data_disks,
++					&dd_idx,
++					&pd_idx,
++					conf);
++
++	rcu_read_lock();
++	rdev = rcu_dereference(conf->disks[dd_idx].rdev);
++	if (rdev && test_bit(In_sync, &rdev->flags)) {
++		align_bi->bi_bdev =  rdev->bdev;
++		atomic_inc(&rdev->nr_pending);
++		rcu_read_unlock();
++		generic_make_request(align_bi);
++		return 1;
++	} else {
++		rcu_read_unlock();
++		return 0;
++	}
++}
++
++
+ static int make_request(request_queue_t *q, struct bio * bi)
+ {
+ 	mddev_t *mddev = q->queuedata;
