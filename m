@@ -1,16 +1,13 @@
 From: Frido Ferdinand <frido@zolder.org>
-Subject: Re: New features?
-Date: Tue, 31 Oct 2006 22:41:38 +0100
-Message-ID: <20061031214138.GA17958@timor.isp-services.nl>
-References: <1162293818.32109.113.camel@kenny> <17735.14472.835153.186432@cse.unsw.edu.au> <45477ECB.1000801@h3c.com>
+Subject: New features?
+Date: Tue, 31 Oct 2006 21:43:02 +0000 (UTC)
+Message-ID: <20061031214301.GB17958@timor.isp-services.nl>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <45477ECB.1000801@h3c.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mike Hardy <mhardy@h3c.com>
-Cc: John Rowe <rowe@excc.ex.ac.uk>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 Hi,
@@ -37,6 +34,7 @@ devicefile is gone. So be sure to --remove disks _before_ you pull it.
 Anyone know if there's work being done to fix this issue, does 
 this also happen on scsi ?
 
-Met vriendelijke groet,
+Regards,
 
-		-- Frido Ferdinand
+        -- Frido
+
