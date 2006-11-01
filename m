@@ -1,42 +1,51 @@
-From: Chris Wright <chrisw@sous-sol.org>
-Subject: [PATCH 28/61] md: Fix bug where spares dont always get rebuilt properly when they become live.
-Date: Tue, 31 Oct 2006 21:34:08 -0800
-Message-ID: <20061101054004.729703000@sous-sol.org>
-References: <20061101053340.305569000@sous-sol.org>
+From: Peb <peb-misc@peeble.net>
+Subject: Re: md array numbering is messed up
+Date: Wed, 01 Nov 2006 21:20:45 +0100
+Message-ID: <4549019D.9080107@peeble.net>
+References: <45451A4C.9010708@peeble.net>
+ <17733.7315.357603.311275@cse.unsw.edu.au> <4545DECE.7030705@tls.msk.ru>
+ <45468FA9.4010303@peeble.net> <17734.48563.659660.147905@cse.unsw.edu.au>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline; filename=md-fix-bug-where-spares-don-t-always-get-rebuilt-properly-when-they-become-live.patch
+In-reply-to: <17734.48563.659660.147905@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, stable@kernel.org, Andrew Morton <akpm@osdl.org>
-Cc: Justin Forbes <jmforbes@linuxtx.org>, Zwane Mwaikambo <zwane@arm.linux.org.uk>, Theodore Ts'o <tytso@mit.edu>, Randy Dunlap <rdunlap@xenotime.net>, Dave Jones <davej@redhat.com>, Chuck Wolber <chuckw@quantumlinux.com>, Chris Wedgwood <reviews@ml.cw.f00f.org>, Michael Krufky <mkrufky@linuxtv.org>, torvalds@osdl.org, alan@lxorguk.ukuu.org.uk, NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org, Greg Kroah-Hartman <gregkh@suse.de>
+To: Neil Brown <neilb@suse.de>
+Cc: Michael Tokarev <mjt@tls.msk.ru>, linux-raid@vger.kernel.org, dean@arctic.org, brad@wasp.net.au
 List-Id: linux-raid.ids
 
--stable review patch.  If anyone has any objections, please let us know.
-------------------
+Neil Brown wrote:
+> On Tuesday October 31, peb-misc@peeble.net wrote:
+>> Well I have the following mdadm.conf:
+>>
+>> DEVICE /dev/hda /dev/hdc /dev/sd*
+>> ARRAY /dev/md1 level=raid5 num-devices=4 UID=8ed64073:04d21e1c:33660158:
+>> a5bc892f
+>> ARRAY /dev/md0 level=raid1 num-devices=2 UID=cab9de58:d20bffae:654d1910:
+>> 6f440136
+>>
+> Try 
+>    sh -x /etc/init.d/mdadm-raid start
+> and see what it does.
+> If have created /etc/mdadm/mdadm.conf rather than /etc/mdadm.conf have
+> you?  Debian decided the config file should be in a directory
+> /etc/mdadm, and so are different from everyone else...
+> 
+> NeilBrown
 
-From: NeilBrown <neilb@suse.de>
+Neil,
+I ran the sh -x /etc/init.d/mdadm-raid start command and it is starting
+the arrays through mdadm -A -s and not by running mdrun.
 
-If save_raid_disk is >= 0, then the device could be a device that is 
-already in sync that is being re-added.  So we need to default this
-value to -1.
+All in all, I'd tried the following before checking mdadm-raid:
+removing /sbin/mdrun
+removing my mdadm.conf
+placing my mdadm.conf in /etc instead of /etc/mdadm/
 
-
-Signed-off-by: Neil Brown <neilb@suse.de>
-Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
-Signed-off-by: Chris Wright <chrisw@sous-sol.org>
-
----
- drivers/md/md.c |    1 +
- 1 file changed, 1 insertion(+)
-
---- linux-2.6.18.1.orig/drivers/md/md.c
-+++ linux-2.6.18.1/drivers/md/md.c
-@@ -1994,6 +1994,7 @@ static mdk_rdev_t *md_import_device(dev_
- 	kobject_init(&rdev->kobj);
- 
- 	rdev->desc_nr = -1;
-+	rdev->saved_raid_disk = -1;
- 	rdev->flags = 0;
- 	rdev->data_offset = 0;
- 	rdev->sb_events = 0;
+It just seems to be linked to the kernel.. since when booting from
+2.6.12 my initscripts and config just work, while when using 2.6.15
+without changing anything else.
 
 --
+Peb
