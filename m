@@ -1,24 +1,35 @@
-From: Shaya Potter <spotter@yucs.org>
-Subject: accessing windows raid with mdadm?
-Date: Wed, 01 Nov 2006 17:16:12 -0500
-Message-ID: <1162419372.4743.6.camel@localhost.localdomain>
+From: "Kay Sievers" <kay.sievers@vrfy.org>
+Subject: Re: [PATCH 001 of 6] md: Send online/offline uevents when an md array starts/stops.
+Date: Thu, 2 Nov 2006 13:13:56 +0100
+Message-ID: <3ae72650611020413q797cf62co66f76b058a57104b@mail.gmail.com>
+References: <20061031164814.4884.patches@notabene> <1061031060046.5034@suse.de>
+	 <20061031211615.GC21597@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20061031211615.GC21597@suse.de>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Greg KH <gregkh@suse.de>
+Cc: NeilBrown <neilb@suse.de>, Andrew Morton <akpm@osdl.org>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-[please cc: me on responses]
+On 10/31/06, Greg KH <gregkh@suse.de> wrote:
+> On Tue, Oct 31, 2006 at 05:00:46PM +1100, NeilBrown wrote:
+> >
+> > This allows udev to do something intelligent when an
+> > array becomes available.
+> >
+> > cc: gregkh@suse.de
+> > Signed-off-by: Neil Brown <neilb@suse.de>
+>
+> Acked-by: Greg Kroah-Hartman <gregkh@suse.de>
 
-if one read Documentation/fs/ntfs.txt in the linux kernel, it talks
-about accessing windows raid volumes in Linux
+I don't agree with this, and asked several times to change this to
+"change" events, like device-mapper is doing it to address the same
+problem. Online/offline is not supported by udev/HAL and will not work
+as expected. Please fix this.
 
-If one is using non raid-5, one can use the device mapper, but if one is
-using raid-5, one has to use the md driver. 
-
-However, it seems to be about using raidtools (raidtab and the like).
-Can anyone who understand raidtools and mdadm translate the instructions
-to mdadm, as that would seem to be what most of us use today?
-
+Thanks,
+Kay
