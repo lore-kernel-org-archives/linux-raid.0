@@ -1,52 +1,104 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: New features?
-Date: Fri, 3 Nov 2006 14:39:31 +1100
-Message-ID: <17738.47603.308198.941749@cse.unsw.edu.au>
-References: <20061031214301.GB17958@timor.isp-services.nl>
+Subject: Re: [PATCH 001 of 6] md: Send online/offline uevents when an md
+	array starts/stops.
+Date: Fri, 3 Nov 2006 17:57:34 +1100
+Message-ID: <17738.59486.140951.821033@cse.unsw.edu.au>
+References: <20061031164814.4884.patches@notabene>
+	<1061031060046.5034@suse.de>
+	<20061031211615.GC21597@suse.de>
+	<3ae72650611020413q797cf62co66f76b058a57104b@mail.gmail.com>
+	<17737.58737.398441.111674@cse.unsw.edu.au>
+	<1162475516.7210.32.camel@pim.off.vrfy.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Frido Ferdinand on Tuesday October 31
+In-Reply-To: message from Kay Sievers on Thursday November 2
 Sender: linux-raid-owner@vger.kernel.org
-To: Frido Ferdinand <frido@zolder.org>
-Cc: linux-raid@vger.kernel.org
+To: Kay Sievers <kay.sievers@vrfy.org>
+Cc: Greg KH <gregkh@suse.de>, Andrew Morton <akpm@osdl.org>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday October 31, frido@zolder.org wrote:
-> Hi,
+On Thursday November 2, kay.sievers@vrfy.org wrote:
+> On Thu, 2006-11-02 at 23:32 +1100, Neil Brown wrote:
+> > and I don't remember
+> > you suggesting "change", but my memory isn't what it used to be(*), so you
+> > probably did.
 > 
-> On Tue, Oct 31, 2006 at 08:50:19AM -0800, Mike Hardy wrote:
-> > >> 1 "Warm swap" - replacing drives without taking down the array but maybe
-> > >> having to type in a few commands. Presumably a sata or sata/raid
-> > >> interface issue. (True hot swap is nice but not worth delaying warm-
-> > >> swap.)
-> > > 
-> > > I believe that 2.6.18 has SATA hot-swap, so this should be available
-> > > know ... providing you can find out what commands to use.
-> > 
-> > I forgot 2.6.18 has SATA hot-swap, has anyone tested that?
+> It was in the Czech Republic, but we got a few beers... :) And in the
+> "virtual md devices" conversation.
+
+Hmm... rings a bell.  I guess I didn't appreciate the important
+difference between 'change' and 'online' at the time.  Thanks for
+clearing that up.
+
 > 
-> Yeah, I've tracked the sata EH patches and now 2.6.18 for a while and
-> hotswap works. However if you pull the disk on a raidset the disk is set
-> as faulty and the device (/dev/sda for example) dissapears. If you
-> replug it, the device does not regain it's original devicename but but
-> will use the latest free 'slot' available (in a four disk layout that's
-> /dev/sde). Also trying to --remove the disk doesn't work since the
-> devicefile is gone. So be sure to --remove disks _before_ you pull it.
+> We couldn't think of any use of an "offline" event. So we removed the
+> event when the device-mapper device is suspended.
 > 
-> Anyone know if there's work being done to fix this issue, does 
-> this also happen on scsi ?
+> > Should ONLINE and OFFLINE remain and CHANGE be added, or should they
+> > go away?
+> 
+> The current idea is to send only a "change" event if something happens
+> that makes it necessary for udev to reinvestigate the device, like
+> possible filesystem content that creates /dev/disk/by-* links.
+> 
+> Finer grained device-monitoring is likely better placed by using the
+> poll() infrastructure for a sysfs file, instead of sending pretty
+> expensive uevents. 
+> 
+> Udev only hooks into "change" and revalidates all current symlinks for
+> the device. Udev can run programs on "online", but currently, it will
+> not update any /dev/disk/by-* link, if the device changes its content.
+> 
 
-The 'correct' way to fix "--remove doesn't work after" is to get udev
-to do the "mdadm --remove" before deleting the entry from /dev.
+OK.  Makes sense.
+I tried it an got an interesting result....
 
-mdadm could probably be changed to be able to remove the device
-anyway.  The only difficulty is: how do you tell it which device to
-remove", given that there is no name in /dev to use.
-Suggestions?
+This is with md generating 'CHANGE' events when an array goes on-line
+and when it goes off line, and also with another patch which causes md
+devices to disappear when not active so that we get ADD and REMOVE
+events at reasonably appropriate times.
 
-Having the device come back with a different name shouldn't really be
-a problem.  You can still find it an re-add it.
+It all works fine until I stop an array.
+We get a CHANGE event and then a REMOVE event.
+And then a seemingly infinite series of ADD/REMOVE pairs.
+
+I guess that udev sees the CHANGE and so opens the device to see what
+is there.  By that time the device has disappeared so the open causes
+an ADD.  udev doesn't find anything and closes the device which causes
+it to disappear and we get a REMOVE.
+Now udev sees that ADD and so opens the device again to see what it
+there, triggering an ADD.  Nothing is there so we close it and get a
+REMOVE.
+Now udev sees the second ADD and ....
+
+A bit unfortunate really.  This didn't happen when I had
+ONLINE/OFFLINE as udev ignored the OFFLINE.
+I guess I can removed the CHANGE at shutdown, but as there really is a
+change there, that doesn't seem right.
+
+The real problem is that udev opens the device, and md interprets and
+'open' as a request to create the device. And udev see the open and an
+ADD and so opens the device....
+
+It's not clear to me what the 'right' thing to do here is:
+ - I could stop removing the device on last-close, but I still
+   think that (the current situation) is ugly.
+ - I could delay the remove until udev will have stopped poking,
+   but that is even more ugly
+ - udev could avoid opening md devices until it has poked in 
+   /sys/block/mdX to see what the status is, but that is very specific
+   to md
+
+It would be nice if I could delay the add until later, but that would
+require major surgery and probably break the model badly.
+
+On the whole, it seems that udev was designed without thought to the
+special needs of md, and md was designed (long ago) without thought
+the ugliness that "open creates a device" causes.
+
+Any clever ideas anyone?
+
 
 NeilBrown
