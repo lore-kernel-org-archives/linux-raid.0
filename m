@@ -1,33 +1,49 @@
-From: Gabor Gombas <gombasg@sztaki.hu>
-Subject: Re: New features?
-Date: Fri, 3 Nov 2006 10:33:42 +0100
-Message-ID: <20061103093342.GI25422@boogie.lpds.sztaki.hu>
-References: <20061031214301.GB17958@timor.isp-services.nl> <17738.47603.308198.941749@cse.unsw.edu.au>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: greg@enjellic.com
+Subject: Re: RAID5 refuses to accept replacement drive.
+Date: Fri, 3 Nov 2006 09:51:51 -0600
+Message-ID: <200611031551.kA3FppGK029916@wind.enjellic.com>
+References: <neilb@suse.de>
+Reply-To: greg@enjellic.com
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <17738.47603.308198.941749@cse.unsw.edu.au>
+In-Reply-To: Neil Brown <neilb@suse.de>
+       "Re: RAID5 refuses to accept replacement drive." (Oct 26,  7:25am)
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Frido Ferdinand <frido@zolder.org>, linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>, greg@enjellic.com
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, Nov 03, 2006 at 02:39:31PM +1100, Neil Brown wrote:
+On Oct 26,  7:25am, Neil Brown wrote:
+} Subject: Re: RAID5 refuses to accept replacement drive.
 
-> mdadm could probably be changed to be able to remove the device
-> anyway.  The only difficulty is: how do you tell it which device to
-> remove", given that there is no name in /dev to use.
-> Suggestions?
+Hi Neil, hope the end of the week is going well for you.
 
-Major:minor? If /sys/block still holds an entry for the removed disk,
-then the user can figure it out from the name. Or mdadm could just
-accept a path under /sys/block instead of a device node.
+> On Wednesday October 25, greg@enjellic.com wrote:
+> > Good morning to everyone, hope everyone's day is going well.
+> > 
+> > Neil, I sent this to your SUSE address a week ago but it may have
+> > gotten trapped in a SPAM filter or lost in the shuffle.
+> 
+> Yes, resending is always a good idea if I seem to be ignoring you.
+> 
+> (people who are really on-the-ball will probably start telling me it is a
+> resend the first time they mail me. I probably wouldn't notice.. :-)
 
-Gabor
+Did you get my reply on what I found when I poked at mdadm with gdb?
 
--- 
-     ---------------------------------------------------------
-     MTA SZTAKI Computer and Automation Research Institute
-                Hungarian Academy of Sciences
-     ---------------------------------------------------------
+> NeilBrown
+
+Have a good weekend.
+
+}-- End of excerpt from Neil Brown
+
+As always,
+Dr. G.W. Wettstein, Ph.D.   Enjellic Systems Development, LLC.
+4206 N. 19th Ave.           Specializing in information infra-structure
+Fargo, ND  58102            development.
+PH: 701-281-1686
+FAX: 701-281-3949           EMAIL: greg@enjellic.com
+------------------------------------------------------------------------------
+"Fools ignore complexity.  Pragmatists suffer it.  Some can avoid it.
+Geniuses remove it.
+                                -- Perliss' Programming Proverb #58
+                                   SIGPLAN National, Sept. 1982
