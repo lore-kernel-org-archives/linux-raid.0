@@ -1,52 +1,27 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: invalid (zero) superblock magic upon creation of a new RAID-1 array
-Date: Mon, 6 Nov 2006 09:17:26 +1100
-Message-ID: <17742.25334.685135.990170@cse.unsw.edu.au>
-References: <20061105085702.GD20184@grok.co.za>
+Subject: Re: Is my RAID broken?
+Date: Mon, 6 Nov 2006 09:22:16 +1100
+Message-ID: <17742.25624.469667.437194@cse.unsw.edu.au>
+References: <e50d039c0611042329m29046e6fjf56a8f52a82294ad@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Thomas Andrews on Sunday November 5
+In-Reply-To: message from Robert Hulme on Sunday November 5
 Sender: linux-raid-owner@vger.kernel.org
-To: Thomas Andrews <tandrews@grok.co.za>
+To: Robert Hulme <rob@robhulme.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sunday November 5, tandrews@grok.co.za wrote:
-> Hi
+On Sunday November 5, rob@robhulme.com wrote:
 > 
-> Why would the superblock magic be zero on a newly created RAID-1 set?
-> 
-> I get this error when the kernel (2.6.17.7) boots:
-> 
->     md: Autodetecting RAID arrays.
->     md: invalid raid superblock magic on sda1, found 0x0 not 0xa92b4efc
->     md: sda1 has invalid sb, not importing!
->     md: invalid raid superblock magic on sda2, found 0x0 not 0xa92b4efc
->     md: sda2 has invalid sb, not importing!
->     md: invalid raid superblock magic on sdb1, found 0x0 not 0xa92b4efc
->     md: sdb1 has invalid sb, not importing!
->     md: invalid raid superblock magic on sdb2, found 0x0 not 0xa92b4efc
->     md: sdb2 has invalid sb, not importing!
->     md: autorun ...
->     md: ... autorun DONE.
-> 
-> (I modified md.c so that it prints out "found xxxx not 0xa92b4efc")
-> 
-> I have a monolithic kernel, compiled for RAID-1.
-> 
-> Once the system is up and running, mdadm brings up the RAID arrays fine:
-> 
->     # cat /proc/mdstat
->     Personalities : [raid1] 
->     md1 : active raid1 sda2[0] sdb2[1]
->           506036 blocks super 1.0 [2/2] [UU]
-                          ^^^^^^^^^
+> If its resyncing that means it detected an error, right?
 
-in-kernel autodetect (based on partition types FD) only works for
-version 0.90 superblocks.
+Not a disk error.  'resyncing' means that at startup it looked like
+the array hadn't been shutdown properly so it is making sure that all
+the redundancy in the array is consistent.
 
-You mdadm to assemble the array, it is more flexible than auto-detect.
+So it looks like you machine recently crashed (power failure?) and
+it is restarting.
 
 NeilBrown
