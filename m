@@ -1,89 +1,52 @@
-From: dean gaudet <dean@arctic.org>
-Subject: Re: RAID5 array showing as degraded after motherboard replacement
-Date: Sun, 5 Nov 2006 13:02:23 -0800 (PST)
-Message-ID: <Pine.LNX.4.64.0611051247550.13706@twinlark.arctic.org>
-References: <ef2613f30611050858m562386a0m7966667f803f35fc@mail.gmail.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: invalid (zero) superblock magic upon creation of a new RAID-1 array
+Date: Mon, 6 Nov 2006 09:17:26 +1100
+Message-ID: <17742.25334.685135.990170@cse.unsw.edu.au>
+References: <20061105085702.GD20184@grok.co.za>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <ef2613f30611050858m562386a0m7966667f803f35fc@mail.gmail.com>
+In-Reply-To: message from Thomas Andrews on Sunday November 5
 Sender: linux-raid-owner@vger.kernel.org
-To: James Lee <james.lee@cantab.net>
+To: Thomas Andrews <tandrews@grok.co.za>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, 5 Nov 2006, James Lee wrote:
-
-> Hi there,
+On Sunday November 5, tandrews@grok.co.za wrote:
+> Hi
 > 
-> I'm running a 5-drive software RAID5 array across two controllers.
-> The motherboard in that PC recently died - I sent the board back for
-> RMA.  When I refitted the motherboard, connected up all the drives,
-> and booted up I found that the array was being reported as degraded
-> (though all the data on it is intact).  I have 4 drives on the on
-> board controller and 1 drive on an XFX Revo 64 SATA controller card.
-> The drive which is being reported as not being in the array is the one
-> connected to the XFX controller.
+> Why would the superblock magic be zero on a newly created RAID-1 set?
 > 
-> The OS can see that drive fine, and "mdadm --examine" on that drive
-> shows that it is part of the array and that there are 5 active devices
-> in the array.  Doing "mdadm --examine" on one of the other four drives
-> shows that the array has 4 active drives and one failed.  "mdadm
-> --detail" for the array also shows 4 active and one failed.
+> I get this error when the kernel (2.6.17.7) boots:
+> 
+>     md: Autodetecting RAID arrays.
+>     md: invalid raid superblock magic on sda1, found 0x0 not 0xa92b4efc
+>     md: sda1 has invalid sb, not importing!
+>     md: invalid raid superblock magic on sda2, found 0x0 not 0xa92b4efc
+>     md: sda2 has invalid sb, not importing!
+>     md: invalid raid superblock magic on sdb1, found 0x0 not 0xa92b4efc
+>     md: sdb1 has invalid sb, not importing!
+>     md: invalid raid superblock magic on sdb2, found 0x0 not 0xa92b4efc
+>     md: sdb2 has invalid sb, not importing!
+>     md: autorun ...
+>     md: ... autorun DONE.
+> 
+> (I modified md.c so that it prints out "found xxxx not 0xa92b4efc")
+> 
+> I have a monolithic kernel, compiled for RAID-1.
+> 
+> Once the system is up and running, mdadm brings up the RAID arrays fine:
+> 
+>     # cat /proc/mdstat
+>     Personalities : [raid1] 
+>     md1 : active raid1 sda2[0] sdb2[1]
+>           506036 blocks super 1.0 [2/2] [UU]
+                          ^^^^^^^^^
 
-that means the array was assembled without the 5th disk and is currently 
-degraded.
+in-kernel autodetect (based on partition types FD) only works for
+version 0.90 superblocks.
 
+You mdadm to assemble the array, it is more flexible than auto-detect.
 
-> Now I haven't lost any data here and I know I can just force a resync
-> of the array which is fine.  However I'm concerned about how this has
-> happened.  One worry is that the XFX SATA controller is doing
-> something funny to the drive.  I've noticed that it's BIOS has
-> defaulted to RAID0 mode (even though there's only one drive on it) - I
-> can't see how this would cause any particular problems here though.  I
-> guess it's possible that some data on the drive got corrupted when the
-> motherboard failed...
-
-no it's more likely the devices were renamed or the 5th device didn't come 
-up before the array was assembled.
-
-it's possible that a different bios setting lead to the device using a 
-different driver than is in your initrd... but i'm just guessing.
-
-> Any ideas what could cause mdadm to report as I've described above
-> (I've attached the output of these three commands)?  I'm running
-> Ubuntu Edgy, which is a 2.17.x kernel, and mdadm 2.4.1.  In case it's
-> relevant here, I created the array using EVMS...
-
-i've never created an array with evms... but my guess is that it may have 
-used "mapped" device names instead of the normal device names.  take a 
-look at /proc/mdstat and see what devices are in the array and use those 
-as a template to find the name of the missing device.  below i'll use 
-/dev/sde1 as the example missing device and /dev/md0 as the example array.
-
-first thing i'd try is something like this:
-
-	mdadm /dev/md0 -a /dev/sde1
-
-which hotadds the device into the array... which will start a resync.
-
-when the resync is done (cat /proc/mdstat) do this.
-
-	mdadm -Gb internal /dev/md0
-
-which will add write-intent bitmaps to your device... which will avoid 
-another long wait for a resync after the next reboot if the fix below 
-doesn't help.
-
-then do this:
-
-	dpkg-reconfigure linux-image-`uname -r`
-
-which will rebuild the initrd for your kernel ... and if it was a driver 
-change this should include the new driver into the initrd.
-
-then reboot and see if it comes up fine.  if it doesn't, you can repeat 
-the "-a /dev/sde1" command above... the resync will be quick this time due 
-to the bitmap... and we'll have to investigate further.
-
--dean
+NeilBrown
