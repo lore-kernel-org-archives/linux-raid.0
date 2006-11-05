@@ -1,133 +1,103 @@
-From: "Robert Hulme" <rob@robhulme.com>
-Subject: Is my RAID broken?
-Date: Sun, 5 Nov 2006 07:29:22 +0000
-Message-ID: <e50d039c0611042329m29046e6fjf56a8f52a82294ad@mail.gmail.com>
+From: Thomas Andrews <tandrews@grok.co.za>
+Subject: invalid (zero) superblock magic upon creation of a new RAID-1 array
+Date: Sun, 5 Nov 2006 10:57:02 +0200
+Message-ID: <20061105085702.GD20184@grok.co.za>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi everyone,
+Hi
 
-I recently got an email warning from Zabbix about my raid array, so I
-went to have a look at it:
+Why would the superblock magic be zero on a newly created RAID-1 set?
 
-----------
-Personalities : [linear] [raid0] [raid1] [raid10] [raid5] [raid4]
-md2 : active raid5 hdk1[3] hdi1[2] hdg1[1] hde1[0]
-      1172126208 blocks level 5, 32k chunk, algorithm 2 [4/4] [UUUU]
-      [===============>.....]  resync = 77.6% (303281336/390708736)
-finish=102.7min speed=14181K/sec
+I get this error when the kernel (2.6.17.7) boots:
 
-md1 : active raid5 sdd3[2] sdc3[3] sdb3[1] sda3[0]
-      184490112 blocks level 5, 32k chunk, algorithm 0 [4/4] [UUUU]
+    md: Autodetecting RAID arrays.
+    md: invalid raid superblock magic on sda1, found 0x0 not 0xa92b4efc
+    md: sda1 has invalid sb, not importing!
+    md: invalid raid superblock magic on sda2, found 0x0 not 0xa92b4efc
+    md: sda2 has invalid sb, not importing!
+    md: invalid raid superblock magic on sdb1, found 0x0 not 0xa92b4efc
+    md: sdb1 has invalid sb, not importing!
+    md: invalid raid superblock magic on sdb2, found 0x0 not 0xa92b4efc
+    md: sdb2 has invalid sb, not importing!
+    md: autorun ...
+    md: ... autorun DONE.
 
-md0 : active raid1 sdb1[1] sda1[0]
-      9767424 blocks [2/2] [UU]
+(I modified md.c so that it prints out "found xxxx not 0xa92b4efc")
 
-unused devices: <none>
-----------
+I have a monolithic kernel, compiled for RAID-1.
 
-Then I got detail on md2:
+Once the system is up and running, mdadm brings up the RAID arrays fine:
 
-----------
-weebl:/var/log# mdadm --detail /dev/md2
-/dev/md2:
-        Version : 00.90.03
-  Creation Time : Sun May 14 09:43:37 2006
-     Raid Level : raid5
-     Array Size : 1172126208 (1117.83 GiB 1200.26 GB)
-    Device Size : 390708736 (372.61 GiB 400.09 GB)
-   Raid Devices : 4
-  Total Devices : 4
-Preferred Minor : 2
-    Persistence : Superblock is persistent
+    # cat /proc/mdstat
+    Personalities : [raid1] 
+    md1 : active raid1 sda2[0] sdb2[1]
+          506036 blocks super 1.0 [2/2] [UU]
+          
+    md0 : active raid1 sda1[0]
+          312062456 blocks super 1.0 [2/1] [U_]
+          
+    unused devices: <none>
 
-    Update Time : Sun Nov  5 07:13:01 2006
-          State : clean, resyncing
- Active Devices : 4
-Working Devices : 4
- Failed Devices : 0
-  Spare Devices : 0
+It is deliberately degraded, so that I can boot until I fix this problem.
 
-         Layout : left-symmetric
-     Chunk Size : 32K
+    # dpkg -l mdadm | grep mdadm
+    ii  mdadm  2.5.3.git200608202239-7 tool to administer Linux MD arrays (software RAID)
 
- Rebuild Status : 77% complete
+I've re-created the RAID set a couple of times just to make sure that I
+did it correctly. Here's how:
 
-           UUID : 41af16c5:36143507:8dcabe0b:f372280d
-         Events : 0.12485388
+    mdadm -C /dev/md0 --level=raid1 --raid-devices=2  /dev/sda1 missing
 
-    Number   Major   Minor   RaidDevice State
-       0      33        1        0      active sync   /dev/hde1
-       1      34        1        1      active sync   /dev/hdg1
-       2      56        1        2      active sync   /dev/hdi1
-       3      57        1        3      active sync   /dev/hdk1
-----------
+As I understand it, this can't be an issue with my config files, because
+the error occurs *before* the filesystem is mounted.
 
-I thought it would be good to check /var/log/messages:
+    # fdisk -l /dev/sd[a-z]
 
-----------
-Nov  5 01:06:01 xen-dom0 kernel: md: syncing RAID array md0
-Nov  5 01:06:01 xen-dom0 kernel: md: minimum _guaranteed_
-reconstruction speed: 1000 KB/sec/disc.
-Nov  5 01:06:01 xen-dom0 kernel: md: using maximum available idle IO
-bandwidth (but not more than 200000 KB/sec) for reconstruction.
-Nov  5 01:06:01 xen-dom0 kernel: md: using 128k window, over a total
-of 9767424 blocks.
-Nov  5 01:06:01 xen-dom0 kernel: md: delaying resync of md1 until md0
-has finished resync (they share one or more physical units)
-Nov  5 01:06:01 xen-dom0 kernel: md: syncing RAID array md2
-Nov  5 01:06:01 xen-dom0 kernel: md: minimum _guaranteed_
-reconstruction speed: 1000 KB/sec/disc.
-Nov  5 01:06:01 xen-dom0 kernel: md: using maximum available idle IO
-bandwidth (but not more than 200000 KB/sec) for reconstruction.
-Nov  5 01:06:01 xen-dom0 kernel: md: using 128k window, over a total
-of 390708736 blocks.
+    Disk /dev/sda: 320.0 GB, 320072933376 bytes
+    255 heads, 63 sectors/track, 38913 cylinders
+    Units = cylinders of 16065 * 512 = 8225280 bytes
 
-Nov  5 01:12:37 xen-dom0 kernel: md: md0: sync done.
-Nov  5 01:12:37 xen-dom0 kernel: md: syncing RAID array md1
-Nov  5 01:12:37 xen-dom0 kernel: RAID1 conf printout:
-Nov  5 01:12:37 xen-dom0 kernel:  --- wd:2 rd:2
-Nov  5 01:12:37 xen-dom0 kernel:  disk 0, wo:0, o:1, dev:sda1
-Nov  5 01:12:37 xen-dom0 kernel:  disk 1, wo:0, o:1, dev:sdb1
-Nov  5 01:12:37 xen-dom0 kernel: md: minimum _guaranteed_
-reconstruction speed: 1000 KB/sec/disc.
-Nov  5 01:12:37 xen-dom0 kernel: md: using maximum available idle IO
-bandwidth (but not more than 200000 KB/sec) for reconstruction.
-Nov  5 01:12:37 xen-dom0 kernel: md: using 128k window, over a total
-of 61496704 blocks.
+       Device Boot      Start         End      Blocks   Id  System
+    /dev/sda1   *           1       38850   312062593+  fd  Linux raid autodetect
+    /dev/sda2           38851       38913      506047+  fd  Linux raid autodetect
 
-Nov  5 02:21:14 xen-dom0 kernel: RAID5 conf printout:
-Nov  5 02:21:14 xen-dom0 kernel:  --- rd:4 wd:4 fd:0
-Nov  5 02:21:14 xen-dom0 kernel:  disk 0, o:1, dev:sda3
-Nov  5 02:21:14 xen-dom0 kernel:  disk 1, o:1, dev:sdb3
-Nov  5 02:21:14 xen-dom0 kernel:  disk 2, o:1, dev:sdd3
-Nov  5 02:21:14 xen-dom0 kernel:  disk 3, o:1, dev:sdc3
-----------
+    Disk /dev/sdb: 320.0 GB, 320072933376 bytes
+    255 heads, 63 sectors/track, 38913 cylinders
+    Units = cylinders of 16065 * 512 = 8225280 bytes
 
-This system has been running for a year now without problems so it is
-really disappointing to think there is a problem :'(
+       Device Boot      Start         End      Blocks   Id  System
+    /dev/sdb1   *           1       38850   312062593+  fd  Linux raid autodetect
+    /dev/sdb2           38851       38913      506047+  fd  Linux raid autodetect
 
-Why might this happen? Is it serious? What should I do to resolve the situation?
+Some info about the (brand new) disks:
 
-If its resyncing that means it detected an error, right?
+    # hdparm -I /dev/sda
+
+    ATA device, with non-removable media
+            Model Number:       WDC WD3200YS-01PGB0                     
+            Serial Number:      WD-WCAPD2664999
+            Firmware Revision:  21.00M21
+    Standards:
+            Supported: 7 6 5 4 
+            Likely used: 7
+    Configuration:
+            Logical         max     current
+            cylinders       16383   16383
+            heads           16      16
+            sectors/track   63      63
+            --
+            CHS current addressable sectors:   16514064
+            LBA    user addressable sectors:  268435455
+            LBA48  user addressable sectors:  625142448
+            device size with M = 1024*1024:      305245 MBytes
+            device size with M = 1000*1000:      320072 MBytes (320 GB)
 
 
-Thank you for your help
--Rob
-
--- 
-------------------------------------------------------
-"By all means let's be open-minded, but not so open-minded that our
-brains drop out." - Richard Dawkins
-
-"It is far better to grasp the universe as it really is than to
-persist in delusion, however satisfying and reassuring." - Carl Sagan
-
-http://www.robhulme.com/
-http://robhu.livejournal.com/
+Many thanks,
+Thomas
