@@ -1,87 +1,133 @@
-From: dean gaudet <dean@arctic.org>
-Subject: Re: RAID5/10 chunk size and ext2/3 stride parameter
-Date: Sat, 4 Nov 2006 18:59:36 -0800 (PST)
-Message-ID: <Pine.LNX.4.64.0611041852030.13706@twinlark.arctic.org>
-References: <20061024160306.GA15393@lapse.madduck.net>
- <Pine.LNX.4.64.0611031103520.26057@twinlark.arctic.org>
- <20061104120049.GA16979@piper.madduck.net>
+From: "Robert Hulme" <rob@robhulme.com>
+Subject: Is my RAID broken?
+Date: Sun, 5 Nov 2006 07:29:22 +0000
+Message-ID: <e50d039c0611042329m29046e6fjf56a8f52a82294ad@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20061104120049.GA16979@piper.madduck.net>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: martin f krafft <madduck@madduck.net>
-Cc: linux-raid mailing list <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, 4 Nov 2006, martin f krafft wrote:
+Hi everyone,
 
-> also sprach dean gaudet <dean@arctic.org> [2006.11.03.2019 +0100]:
-> > > I cannot find authoritative information about the relation between
-> > > the RAID chunk size and the correct stride parameter to use when
-> > > creating an ext2/3 filesystem.
-> > 
-> > you know, it's interesting -- mkfs.xfs somehow gets the right sunit/swidth 
-> > automatically from the underlying md device.
-> 
-> i don't know enough about xfs to be able to agree or disagree with
-> you on that.
-> 
-> > # mdadm --create --level=5 --raid-devices=4 --assume-clean --auto=yes /dev/md0 /dev/sd[abcd]1
-> > mdadm: array /dev/md0 started.
-> 
-> with 64k chunks i assume...
+I recently got an email warning from Zabbix about my raid array, so I
+went to have a look at it:
 
-yup.
+----------
+Personalities : [linear] [raid0] [raid1] [raid10] [raid5] [raid4]
+md2 : active raid5 hdk1[3] hdi1[2] hdg1[1] hde1[0]
+      1172126208 blocks level 5, 32k chunk, algorithm 2 [4/4] [UUUU]
+      [===============>.....]  resync = 77.6% (303281336/390708736)
+finish=102.7min speed=14181K/sec
+
+md1 : active raid5 sdd3[2] sdc3[3] sdb3[1] sda3[0]
+      184490112 blocks level 5, 32k chunk, algorithm 0 [4/4] [UUUU]
+
+md0 : active raid1 sdb1[1] sda1[0]
+      9767424 blocks [2/2] [UU]
+
+unused devices: <none>
+----------
+
+Then I got detail on md2:
+
+----------
+weebl:/var/log# mdadm --detail /dev/md2
+/dev/md2:
+        Version : 00.90.03
+  Creation Time : Sun May 14 09:43:37 2006
+     Raid Level : raid5
+     Array Size : 1172126208 (1117.83 GiB 1200.26 GB)
+    Device Size : 390708736 (372.61 GiB 400.09 GB)
+   Raid Devices : 4
+  Total Devices : 4
+Preferred Minor : 2
+    Persistence : Superblock is persistent
+
+    Update Time : Sun Nov  5 07:13:01 2006
+          State : clean, resyncing
+ Active Devices : 4
+Working Devices : 4
+ Failed Devices : 0
+  Spare Devices : 0
+
+         Layout : left-symmetric
+     Chunk Size : 32K
+
+ Rebuild Status : 77% complete
+
+           UUID : 41af16c5:36143507:8dcabe0b:f372280d
+         Events : 0.12485388
+
+    Number   Major   Minor   RaidDevice State
+       0      33        1        0      active sync   /dev/hde1
+       1      34        1        1      active sync   /dev/hdg1
+       2      56        1        2      active sync   /dev/hdi1
+       3      57        1        3      active sync   /dev/hdk1
+----------
+
+I thought it would be good to check /var/log/messages:
+
+----------
+Nov  5 01:06:01 xen-dom0 kernel: md: syncing RAID array md0
+Nov  5 01:06:01 xen-dom0 kernel: md: minimum _guaranteed_
+reconstruction speed: 1000 KB/sec/disc.
+Nov  5 01:06:01 xen-dom0 kernel: md: using maximum available idle IO
+bandwidth (but not more than 200000 KB/sec) for reconstruction.
+Nov  5 01:06:01 xen-dom0 kernel: md: using 128k window, over a total
+of 9767424 blocks.
+Nov  5 01:06:01 xen-dom0 kernel: md: delaying resync of md1 until md0
+has finished resync (they share one or more physical units)
+Nov  5 01:06:01 xen-dom0 kernel: md: syncing RAID array md2
+Nov  5 01:06:01 xen-dom0 kernel: md: minimum _guaranteed_
+reconstruction speed: 1000 KB/sec/disc.
+Nov  5 01:06:01 xen-dom0 kernel: md: using maximum available idle IO
+bandwidth (but not more than 200000 KB/sec) for reconstruction.
+Nov  5 01:06:01 xen-dom0 kernel: md: using 128k window, over a total
+of 390708736 blocks.
+
+Nov  5 01:12:37 xen-dom0 kernel: md: md0: sync done.
+Nov  5 01:12:37 xen-dom0 kernel: md: syncing RAID array md1
+Nov  5 01:12:37 xen-dom0 kernel: RAID1 conf printout:
+Nov  5 01:12:37 xen-dom0 kernel:  --- wd:2 rd:2
+Nov  5 01:12:37 xen-dom0 kernel:  disk 0, wo:0, o:1, dev:sda1
+Nov  5 01:12:37 xen-dom0 kernel:  disk 1, wo:0, o:1, dev:sdb1
+Nov  5 01:12:37 xen-dom0 kernel: md: minimum _guaranteed_
+reconstruction speed: 1000 KB/sec/disc.
+Nov  5 01:12:37 xen-dom0 kernel: md: using maximum available idle IO
+bandwidth (but not more than 200000 KB/sec) for reconstruction.
+Nov  5 01:12:37 xen-dom0 kernel: md: using 128k window, over a total
+of 61496704 blocks.
+
+Nov  5 02:21:14 xen-dom0 kernel: RAID5 conf printout:
+Nov  5 02:21:14 xen-dom0 kernel:  --- rd:4 wd:4 fd:0
+Nov  5 02:21:14 xen-dom0 kernel:  disk 0, o:1, dev:sda3
+Nov  5 02:21:14 xen-dom0 kernel:  disk 1, o:1, dev:sdb3
+Nov  5 02:21:14 xen-dom0 kernel:  disk 2, o:1, dev:sdd3
+Nov  5 02:21:14 xen-dom0 kernel:  disk 3, o:1, dev:sdc3
+----------
+
+This system has been running for a year now without problems so it is
+really disappointing to think there is a problem :'(
+
+Why might this happen? Is it serious? What should I do to resolve the situation?
+
+If its resyncing that means it detected an error, right?
 
 
-> > # mkfs.xfs /dev/md0
-> > meta-data=/dev/md0               isize=256    agcount=32, agsize=9157232 
-> > blks
-> >          =                       sectsz=4096  attr=0
-> > data     =                       bsize=4096   blocks=293031424, imaxpct=25
-> >          =                       sunit=16     swidth=48 blks, unwritten=1
-> 
-> sunit seems like the stride width i determined (64k chunks / 4k
-> bzise), but what is swidth? Is it 64 * 3/4 because of the four
-> device RAID5?
+Thank you for your help
+-Rob
 
-yup.
+-- 
+------------------------------------------------------
+"By all means let's be open-minded, but not so open-minded that our
+brains drop out." - Richard Dawkins
 
-and for a raid6 mkfs.xfs correctly gets sunit=16 swidth=32.
+"It is far better to grasp the universe as it really is than to
+persist in delusion, however satisfying and reassuring." - Carl Sagan
 
-
-> > # mdadm --create --level=10 --layout=f2 --raid-devices=4 --assume-clean --auto=yes /dev/md0 /dev/sd[abcd]1
-> > mdadm: array /dev/md0 started.
-> > # mkfs.xfs -f /dev/md0
-> > meta-data=/dev/md0               isize=256    agcount=32, agsize=6104816 blks
-> >          =                       sectsz=512   attr=0
-> > data     =                       bsize=4096   blocks=195354112, imaxpct=25
-> >          =                       sunit=16     swidth=64 blks, unwritten=1
-> 
-> okay, so as before, 16 stride size and 64 stripe width, because
-> we're now dealing with mirrors.
-> 
-> > # mdadm --create --level=10 --layout=n2 --raid-devices=4 --assume-clean --auto=yes /dev/md0 /dev/sd[abcd]1
-> > mdadm: array /dev/md0 started.
-> > # mkfs.xfs -f /dev/md0
-> > meta-data=/dev/md0               isize=256    agcount=32, agsize=6104816 blks
-> >          =                       sectsz=512   attr=0
-> > data     =                       bsize=4096   blocks=195354112, imaxpct=25
-> >          =                       sunit=16     swidth=64 blks, unwritten=1
-> 
-> why not? in this case, -n2 and -f2 aren't any different, are they?
-
-they're different in that with f2 you get essentially 4 disk raid0 read 
-performance because the copies of each byte are half a disk away... so it 
-looks like a raid0 on the first half of the disks, and another raid0 on 
-the second half.
-
-in n2 the two copies are at the same offset... so it looks more like a 2 
-disk raid0 for reading and writing.
-
-i'm not 100% certain what xfs uses them for -- you can actually change the 
-values at mount time.  so it probably uses them for either read scheduling 
-or write layout or both.
-
--dean
+http://www.robhulme.com/
+http://robhu.livejournal.com/
