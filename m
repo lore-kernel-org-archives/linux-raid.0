@@ -1,29 +1,117 @@
-From: Bradshaw <breadlord@gmail.com>
-Subject: Checking individual drive state
-Date: Sun, 05 Nov 2006 15:27:42 +0000
-Message-ID: <454E02EE.5030209@gmail.com>
+From: "James Lee" <james.lee@cantab.net>
+Subject: RAID5 array showing as degraded after motherboard replacement
+Date: Sun, 5 Nov 2006 16:58:22 +0000
+Message-ID: <ef2613f30611050858m562386a0m7966667f803f35fc@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+	boundary="----=_Part_59658_12913753.1162745902426"
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I've recently built a smallish RAID5 box as a storage area for my home 
-network, using mdadm. However, one of the drives will not remain in the 
-array for longer that around two days before it is removed. Readding it 
-to the array does not throw any errors, leading me to believe that it's 
-probably a problem with the controller, which is an add-in SATA card, as 
-well as the other drive connected to it failing once.
+------=_Part_59658_12913753.1162745902426
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-I don't know how to scan the one disk for bad sectors, stopping the 
-array and doing an fsck or similar throws errors, so I need help in 
-determining whether the disc itself is faulty.
+Hi there,
 
-If the controller is to be replaced, how would I go about migrating the 
-two discs to the new controller whilst maintaining the array?
+I'm running a 5-drive software RAID5 array across two controllers.
+The motherboard in that PC recently died - I sent the board back for
+RMA.  When I refitted the motherboard, connected up all the drives,
+and booted up I found that the array was being reported as degraded
+(though all the data on it is intact).  I have 4 drives on the on
+board controller and 1 drive on an XFX Revo 64 SATA controller card.
+The drive which is being reported as not being in the array is the one
+connected to the XFX controller.
 
-Thanks in advance
+The OS can see that drive fine, and "mdadm --examine" on that drive
+shows that it is part of the array and that there are 5 active devices
+in the array.  Doing "mdadm --examine" on one of the other four drives
+shows that the array has 4 active drives and one failed.  "mdadm
+--detail" for the array also shows 4 active and one failed.
 
-Tom Bradshaw
+Now I haven't lost any data here and I know I can just force a resync
+of the array which is fine.  However I'm concerned about how this has
+happened.  One worry is that the XFX SATA controller is doing
+something funny to the drive.  I've noticed that it's BIOS has
+defaulted to RAID0 mode (even though there's only one drive on it) - I
+can't see how this would cause any particular problems here though.  I
+guess it's possible that some data on the drive got corrupted when the
+motherboard failed...
+
+Any ideas what could cause mdadm to report as I've described above
+(I've attached the output of these three commands)?  I'm running
+Ubuntu Edgy, which is a 2.17.x kernel, and mdadm 2.4.1.  In case it's
+relevant here, I created the array using EVMS...
+
+Thanks,
+James
+
+------=_Part_59658_12913753.1162745902426
+Content-Type: text/plain; name=mdadm_output.txt; charset=ANSI_X3.4-1968
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_eu5ouvlf
+Content-Disposition: attachment; filename="mdadm_output.txt"
+
+amFtZXNAamFtZXMtc2VydmVyOn4kIHN1ZG8gbWRhZG0gLS1leGFtaW5lIC9kZXYvaGRlMQpQYXNz
+d29yZDoKL2Rldi9oZGUxOgogICAgICAgICAgTWFnaWMgOiBhOTJiNGVmYwogICAgICAgIFZlcnNp
+b24gOiAwMC45MC4wMAogICAgICAgICAgIFVVSUQgOiAzM2Q1MzM4YjpkMmQ2YmFmMDo0MjQ0OThh
+ZDo0N2QwNTA4NwogIENyZWF0aW9uIFRpbWUgOiBTdW4gSmFuIDE1IDE2OjQ3OjUxIDIwMDYKICAg
+ICBSYWlkIExldmVsIDogcmFpZDUKICAgIERldmljZSBTaXplIDogMzEyNDk2MTI4ICgyOTguMDIg
+R2lCIDMyMC4wMCBHQikKICAgICBBcnJheSBTaXplIDogMTI0OTk4NDUxMiAoMTE5Mi4wOCBHaUIg
+MTI3OS45OCBHQikKICAgUmFpZCBEZXZpY2VzIDogNQogIFRvdGFsIERldmljZXMgOiA1ClByZWZl
+cnJlZCBNaW5vciA6IDAKCiAgICBVcGRhdGUgVGltZSA6IFNhdCBOb3YgIDQgMTY6Mjk6MDYgMjAw
+NgogICAgICAgICAgU3RhdGUgOiBjbGVhbgogQWN0aXZlIERldmljZXMgOiA1CldvcmtpbmcgRGV2
+aWNlcyA6IDUKIEZhaWxlZCBEZXZpY2VzIDogMAogIFNwYXJlIERldmljZXMgOiAwCiAgICAgICBD
+aGVja3N1bSA6IGQ2MjhlMTdlIC0gY29ycmVjdAogICAgICAgICBFdmVudHMgOiAwLjQyMzIxMzEK
+CiAgICAgICAgIExheW91dCA6IGxlZnQtYXN5bW1ldHJpYwogICAgIENodW5rIFNpemUgOiAyNTZL
+CgogICAgICBOdW1iZXIgICBNYWpvciAgIE1pbm9yICAgUmFpZERldmljZSBTdGF0ZQp0aGlzICAg
+ICA0ICAgICAyNTQgICAgICAgIDYgICAgICAgIDQgICAgICBhY3RpdmUgc3luYwoKICAgMCAgICAg
+MCAgICAgMjU0ICAgICAgICAyICAgICAgICAwICAgICAgYWN0aXZlIHN5bmMKICAgMSAgICAgMSAg
+ICAgMjU0ICAgICAgICAzICAgICAgICAxICAgICAgYWN0aXZlIHN5bmMKICAgMiAgICAgMiAgICAg
+MjU0ICAgICAgICA0ICAgICAgICAyICAgICAgYWN0aXZlIHN5bmMKICAgMyAgICAgMyAgICAgMjU0
+ICAgICAgICA1ICAgICAgICAzICAgICAgYWN0aXZlIHN5bmMKICAgNCAgICAgNCAgICAgMjU0ICAg
+ICAgICA2ICAgICAgICA0ICAgICAgYWN0aXZlIHN5bmMKamFtZXNAamFtZXMtc2VydmVyOn4kIApq
+YW1lc0BqYW1lcy1zZXJ2ZXI6fiQgCmphbWVzQGphbWVzLXNlcnZlcjp+JCAKamFtZXNAamFtZXMt
+c2VydmVyOn4kIHN1ZG8gbWRhZG0gLS1leGFtaW5lIC9kZXYvc2RhMQovZGV2L3NkYTE6CiAgICAg
+ICAgICBNYWdpYyA6IGE5MmI0ZWZjCiAgICAgICAgVmVyc2lvbiA6IDAwLjkwLjAwCiAgICAgICAg
+ICAgVVVJRCA6IDMzZDUzMzhiOmQyZDZiYWYwOjQyNDQ5OGFkOjQ3ZDA1MDg3CiAgQ3JlYXRpb24g
+VGltZSA6IFN1biBKYW4gMTUgMTY6NDc6NTEgMjAwNgogICAgIFJhaWQgTGV2ZWwgOiByYWlkNQog
+ICAgRGV2aWNlIFNpemUgOiAzMTI0OTYxMjggKDI5OC4wMiBHaUIgMzIwLjAwIEdCKQogICAgIEFy
+cmF5IFNpemUgOiAxMjQ5OTg0NTEyICgxMTkyLjA4IEdpQiAxMjc5Ljk4IEdCKQogICBSYWlkIERl
+dmljZXMgOiA1CiAgVG90YWwgRGV2aWNlcyA6IDQKUHJlZmVycmVkIE1pbm9yIDogMAoKICAgIFVw
+ZGF0ZSBUaW1lIDogU3VuIE5vdiAgNSAxMTo1NjoyOSAyMDA2CiAgICAgICAgICBTdGF0ZSA6IGNs
+ZWFuCiBBY3RpdmUgRGV2aWNlcyA6IDQKV29ya2luZyBEZXZpY2VzIDogNAogRmFpbGVkIERldmlj
+ZXMgOiAxCiAgU3BhcmUgRGV2aWNlcyA6IDAKICAgICAgIENoZWNrc3VtIDogZDYyOWVlMjUgLSBj
+b3JyZWN0CiAgICAgICAgIEV2ZW50cyA6IDAuNDIzMjIwNAoKICAgICAgICAgTGF5b3V0IDogbGVm
+dC1hc3ltbWV0cmljCiAgICAgQ2h1bmsgU2l6ZSA6IDI1NksKCiAgICAgIE51bWJlciAgIE1ham9y
+ICAgTWlub3IgICBSYWlkRGV2aWNlIFN0YXRlCnRoaXMgICAgIDEgICAgICAgOCAgICAgICAgMSAg
+ICAgICAgMSAgICAgIGFjdGl2ZSBzeW5jICAgL2Rldi9zZGExCgogICAwICAgICAwICAgICAgIDgg
+ICAgICAgMTcgICAgICAgIDAgICAgICBhY3RpdmUgc3luYyAgIC9kZXYvc2RiMQogICAxICAgICAx
+ICAgICAgIDggICAgICAgIDEgICAgICAgIDEgICAgICBhY3RpdmUgc3luYyAgIC9kZXYvc2RhMQog
+ICAyICAgICAyICAgICAgIDggICAgICAgMzMgICAgICAgIDIgICAgICBhY3RpdmUgc3luYyAgIC9k
+ZXYvc2RjMQogICAzICAgICAzICAgICAgIDggICAgICAgNDkgICAgICAgIDMgICAgICBhY3RpdmUg
+c3luYyAgIC9kZXYvc2RkMQogICA0ICAgICA0ICAgICAgIDAgICAgICAgIDAgICAgICAgIDQgICAg
+ICBmYXVsdHkgcmVtb3ZlZApqYW1lc0BqYW1lcy1zZXJ2ZXI6fiQgCmphbWVzQGphbWVzLXNlcnZl
+cjp+JCAKamFtZXNAamFtZXMtc2VydmVyOn4kIApqYW1lc0BqYW1lcy1zZXJ2ZXI6fiQgc3VkbyBt
+ZGFkbSAtLWRldGFpbCAvZGV2L21kMCAKL2Rldi9tZDA6CiAgICAgICAgVmVyc2lvbiA6IDAwLjkw
+LjAzCiAgQ3JlYXRpb24gVGltZSA6IFN1biBKYW4gMTUgMTY6NDc6NTEgMjAwNgogICAgIFJhaWQg
+TGV2ZWwgOiByYWlkNQogICAgIEFycmF5IFNpemUgOiAxMjQ5OTg0NTEyICgxMTkyLjA4IEdpQiAx
+Mjc5Ljk4IEdCKQogICAgRGV2aWNlIFNpemUgOiAzMTI0OTYxMjggKDI5OC4wMiBHaUIgMzIwLjAw
+IEdCKQogICBSYWlkIERldmljZXMgOiA1CiAgVG90YWwgRGV2aWNlcyA6IDQKUHJlZmVycmVkIE1p
+bm9yIDogMAogICAgUGVyc2lzdGVuY2UgOiBTdXBlcmJsb2NrIGlzIHBlcnNpc3RlbnQKCiAgICBV
+cGRhdGUgVGltZSA6IFN1biBOb3YgIDUgMTE6NTY6MjkgMjAwNgogICAgICAgICAgU3RhdGUgOiBj
+bGVhbiwgZGVncmFkZWQKIEFjdGl2ZSBEZXZpY2VzIDogNApXb3JraW5nIERldmljZXMgOiA0CiBG
+YWlsZWQgRGV2aWNlcyA6IDAKICBTcGFyZSBEZXZpY2VzIDogMAoKICAgICAgICAgTGF5b3V0IDog
+bGVmdC1hc3ltbWV0cmljCiAgICAgQ2h1bmsgU2l6ZSA6IDI1NksKCiAgICAgICAgICAgVVVJRCA6
+IDMzZDUzMzhiOmQyZDZiYWYwOjQyNDQ5OGFkOjQ3ZDA1MDg3CiAgICAgICAgIEV2ZW50cyA6IDAu
+NDIzMjIwNAoKICAgIE51bWJlciAgIE1ham9yICAgTWlub3IgICBSYWlkRGV2aWNlIFN0YXRlCiAg
+ICAgICAwICAgICAgIDggICAgICAgMTcgICAgICAgIDAgICAgICBhY3RpdmUgc3luYyAgIC9kZXYv
+c2RiMQogICAgICAgMSAgICAgICA4ICAgICAgICAxICAgICAgICAxICAgICAgYWN0aXZlIHN5bmMg
+ICAvZGV2L3NkYTEKICAgICAgIDIgICAgICAgOCAgICAgICAzMyAgICAgICAgMiAgICAgIGFjdGl2
+ZSBzeW5jICAgL2Rldi9zZGMxCiAgICAgICAzICAgICAgIDggICAgICAgNDkgICAgICAgIDMgICAg
+ICBhY3RpdmUgc3luYyAgIC9kZXYvc2RkMQogICAgICAgNCAgICAgICAwICAgICAgICAwICAgICAg
+ICA0ICAgICAgcmVtb3ZlZApqYW1lc0BqYW1lcy1zZXJ2ZXI6fiQgCg==
+------=_Part_59658_12913753.1162745902426--
