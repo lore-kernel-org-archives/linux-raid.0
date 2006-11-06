@@ -1,46 +1,44 @@
 From: dean gaudet <dean@arctic.org>
-Subject: Re: RAID5 array showing as degraded after motherboard replacement
-Date: Mon, 6 Nov 2006 00:29:52 -0800 (PST)
-Message-ID: <Pine.LNX.4.64.0611060028120.20361@twinlark.arctic.org>
-References: <ef2613f30611050858m562386a0m7966667f803f35fc@mail.gmail.com>
- <Pine.LNX.4.64.0611051247550.13706@twinlark.arctic.org>
- <ef2613f30611051607t24fdcec0qe6f37227e4118b73@mail.gmail.com>
+Subject: Re: [PATCH 001 of 6] md: Send online/offline uevents when an md
+ array starts/stops.
+Date: Mon, 6 Nov 2006 00:38:32 -0800 (PST)
+Message-ID: <Pine.LNX.4.64.0611060030320.20361@twinlark.arctic.org>
+References: <20061031164814.4884.patches@notabene> <1061031060046.5034@suse.de>
+ <20061031211615.GC21597@suse.de> <3ae72650611020413q797cf62co66f76b058a57104b@mail.gmail.com>
+ <17737.58737.398441.111674@cse.unsw.edu.au> <1162475516.7210.32.camel@pim.off.vrfy.org>
+ <17738.59486.140951.821033@cse.unsw.edu.au> <1162542178.14310.26.camel@pim.off.vrfy.org>
+ <17742.32612.870346.954568@cse.unsw.edu.au>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <ef2613f30611051607t24fdcec0qe6f37227e4118b73@mail.gmail.com>
+In-Reply-To: <17742.32612.870346.954568@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: James Lee <james.lee@cantab.net>
-Cc: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: Kay Sievers <kay.sievers@vrfy.org>, Greg KH <gregkh@suse.de>, Andrew Morton <akpm@osdl.org>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Mon, 6 Nov 2006, Neil Brown wrote:
 
+> This creates a deep disconnect between udev and md.
+> udev expects a device to appear first, then it created the
+> device-special-file in /dev.
+> md expect the device-special-file to exist first, and then created the
+> device on the first open.
 
-On Mon, 6 Nov 2006, James Lee wrote:
+could you create a special /dev/mdx device which is used to 
+assemble/create arrays only?  i mean literally "mdx" not "mdX" where X is 
+a number.  mdx would always be there if md module is loaded... so udev 
+would see the driver appear and then create the /dev/mdx.  then mdadm 
+would use /dev/mdx to do assemble/creates/whatever and cause other devices 
+to appear/disappear in a manner which udev is happy with.
 
-> Thanks for the reply Dean.  I looked through dmesg output from the
-> boot up, to check whether this was just an ordering issue during the
-> system start up (since both evms and mdadm attempt to activate the
-> array, which could cause things to go wrong...).
-> 
-> Looking through the dmesg output though, it looks like the 'missing'
-> disk is being detected before the array is assembled, but that the
-> disk is throwing up errors.  I've attached the full output of dmesg;
-> grepping it for "hde" gives the following:
-> 
-> [17179574.084000]     ide2: BM-DMA at 0xd400-0xd407, BIOS settings:
-> hde:DMA, hdf:DMA
-> [17179574.380000] hde: NetCell SyncRAID(TM) SR5000 JBOD, ATA DISK drive
-> [17179575.312000] hde: max request size: 512KiB
-> [17179575.312000] hde: 625134827 sectors (320069 MB), CHS=38912/255/63, (U)DMA
-> [17179575.312000] hde: set_geometry_intr: status=0x51 { DriveReady
-> SeekComplete Error }
-> [17179575.312000] hde: set_geometry_intr: error=0x04 { DriveStatusError }
-> [17179575.312000] hde: cache flushes supported
+(much like how /dev/ptmx is used to create /dev/pts/N entries.)
 
-is it possible that the "NetCell SyncRAID" implementation is stealing some 
-of the sectors (even though it's marked JBOD)?  anyhow it could be the 
-disk is bad, but i'd still be tempted to see if the problem stays with the 
-controller if you swap the disk with another in the array.
+doesn't help legacy mdadm binaries... but seems like it fits the New World 
+Order.
+
+or hm i suppose the New World Order is to eschew binary interfaces and 
+suggest a /sys/class/md/ hierarchy with a bunch of files you have to splat 
+ascii data into to cause an array to be created/assembled.
 
 -dean
