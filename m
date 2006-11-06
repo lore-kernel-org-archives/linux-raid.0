@@ -1,57 +1,67 @@
 From: dean gaudet <dean@arctic.org>
-Subject: Re: Is my RAID broken?
-Date: Mon, 6 Nov 2006 00:17:50 -0800 (PST)
-Message-ID: <Pine.LNX.4.64.0611060015180.20361@twinlark.arctic.org>
-References: <e50d039c0611042329m29046e6fjf56a8f52a82294ad@mail.gmail.com>
- <17742.25624.469667.437194@cse.unsw.edu.au> <Pine.LNX.4.64.0611060858260.5535@uplift.swm.pp.se>
+Subject: Re: mdadm 2.5.5 external bitmap assemble problem
+Date: Mon, 6 Nov 2006 00:26:16 -0800 (PST)
+Message-ID: <Pine.LNX.4.64.0611060018300.20361@twinlark.arctic.org>
+References: <Pine.LNX.4.64.0611041838080.13706@twinlark.arctic.org>
+ <17742.27204.963051.400395@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="131011217-260578305-1162801070=:20361"
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0611060858260.5535@uplift.swm.pp.se>
+In-Reply-To: <17742.27204.963051.400395@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mikael Abrahamsson <swmike@swm.pp.se>
+To: Neil Brown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+On Mon, 6 Nov 2006, Neil Brown wrote:
 
---131011217-260578305-1162801070=:20361
-Content-Type: TEXT/PLAIN; charset=ISO-8859-1
-Content-Transfer-Encoding: 8BIT
-
-On Mon, 6 Nov 2006, Mikael Abrahamsson wrote:
-
-> On Mon, 6 Nov 2006, Neil Brown wrote:
+> > hey i have another related question... external bitmaps seem to pose a bit 
+> > of a chicken-and-egg problem.  all of my filesystems are md devices. with 
+> > an external bitmap i need at least one of the arrays to start, then have 
+> > filesystems mounted, then have more arrays start... it just happens to 
+> > work OK if i let debian unstale initramfs try to start all my arrays, 
+> > it'll fail for the ones needing bitmap.  then later /etc/init.d/mdadm-raid 
+> > should start the array.  (well it would if the bitmap= in mdadm.conf 
+> > worked :)
+> > 
+> > is it possible to put bitmaps on devices instead of files?  mdadm seems to 
+> > want a --force for that (because the device node exists already) and i 
+> > haven't tried forcing it.  although i suppose a 200KB partition would be 
+> > kind of tiny.... but i could place the bitmap right beside the external 
+> > transaction log for the filesystem on the raid5.
 > 
-> > So it looks like you machine recently crashed (power failure?) and it is
-> > restarting.
-> 
-> Or upgrade some part of the OS and now it'll do resync every week or so (I
-> think this is debian default nowadays, don't know the interval though).
+> Create the root filesystem with --bitmap=internal, and store all the
+> other bitmaps on that filesystem maybe?
 
-it should be only once a month... and it's just a "check" -- it reads 
-everything and corrects errors.
+yeah i only have the one external bitmap (it's for a large raid5)... so 
+things will work fine once i apply your patch.  thanks.
 
-i think it's a great thing actually... way more useful than smart long 
-self-tests because md can reconstruct read errors immediately -- before 
-you lose redundancy in that stripe.
+> I don't know if it would work to have a bitmap on a device, but you
+> can always mkfs the device, mount it, and put a bitmap on a file
+> there??
+
+yeah this was the first thing i tried after i found mdadm -b /dev/foo 
+wasn't accepted...
+
+without modifying startup scripts there's no way to use any filesystem 
+other than root... it's just due to ordering of init scripts:
+
+# ls /etc/rcS.d | grep -i 'mount\|raid'
+S02mountkernfs.sh
+S04mountdevsubfs.sh
+S25mdadm-raid
+S35mountall.sh
+S36mountall-bootclean.sh
+S45mountnfs.sh
+S46mountnfs-bootclean.sh
+
+i'd need to run another mdadm-raid after the S35mountall, and then another 
+mountall.
+
+anyhow, i don't think you need to change anything (except maybe a note in 
+the docs somewhere), i'm just bringing it up as part of the experience of 
+trying external bitmap.  i suspect that in the wild and crazy direction 
+debian and ubuntu are heading (ditching sysvinit for event-driven systems) 
+it'll be "easy" to express the boot dependencies.
 
 -dean
-
-% cat /etc/cron.d/mdadm
-#
-# cron.d/mdadm -- schedules periodic redundancy checks of MD devices
-#
-# Copyright © martin f. krafft <madduck@madduck.net>
-# distributed under the terms of the Artistic Licence 2.0
-#
-# $Id: mdadm.cron.d 147 2006-08-30 09:26:11Z madduck $
-#
-
-# By default, run at 01:06 on every Sunday, but do nothing unless the day of
-# the month is less than or equal to 7. Thus, only run on the first Sunday of
-# each month. crontab(5) sucks, unfortunately, in this regard; therefore this
-# hack (see #380425).
-6 1 * * 0 root [ -x /usr/share/mdadm/checkarray ] && [ $(date +\%d) -le 7 ] && /usr/share/mdadm/checkarray --cron --all --quiet
---131011217-260578305-1162801070=:20361--
