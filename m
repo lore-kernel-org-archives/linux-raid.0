@@ -1,67 +1,46 @@
 From: dean gaudet <dean@arctic.org>
-Subject: Re: mdadm 2.5.5 external bitmap assemble problem
-Date: Mon, 6 Nov 2006 00:26:16 -0800 (PST)
-Message-ID: <Pine.LNX.4.64.0611060018300.20361@twinlark.arctic.org>
-References: <Pine.LNX.4.64.0611041838080.13706@twinlark.arctic.org>
- <17742.27204.963051.400395@cse.unsw.edu.au>
+Subject: Re: RAID5 array showing as degraded after motherboard replacement
+Date: Mon, 6 Nov 2006 00:29:52 -0800 (PST)
+Message-ID: <Pine.LNX.4.64.0611060028120.20361@twinlark.arctic.org>
+References: <ef2613f30611050858m562386a0m7966667f803f35fc@mail.gmail.com>
+ <Pine.LNX.4.64.0611051247550.13706@twinlark.arctic.org>
+ <ef2613f30611051607t24fdcec0qe6f37227e4118b73@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17742.27204.963051.400395@cse.unsw.edu.au>
+In-Reply-To: <ef2613f30611051607t24fdcec0qe6f37227e4118b73@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
+To: James Lee <james.lee@cantab.net>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, 6 Nov 2006, Neil Brown wrote:
 
-> > hey i have another related question... external bitmaps seem to pose a bit 
-> > of a chicken-and-egg problem.  all of my filesystems are md devices. with 
-> > an external bitmap i need at least one of the arrays to start, then have 
-> > filesystems mounted, then have more arrays start... it just happens to 
-> > work OK if i let debian unstale initramfs try to start all my arrays, 
-> > it'll fail for the ones needing bitmap.  then later /etc/init.d/mdadm-raid 
-> > should start the array.  (well it would if the bitmap= in mdadm.conf 
-> > worked :)
-> > 
-> > is it possible to put bitmaps on devices instead of files?  mdadm seems to 
-> > want a --force for that (because the device node exists already) and i 
-> > haven't tried forcing it.  although i suppose a 200KB partition would be 
-> > kind of tiny.... but i could place the bitmap right beside the external 
-> > transaction log for the filesystem on the raid5.
+
+On Mon, 6 Nov 2006, James Lee wrote:
+
+> Thanks for the reply Dean.  I looked through dmesg output from the
+> boot up, to check whether this was just an ordering issue during the
+> system start up (since both evms and mdadm attempt to activate the
+> array, which could cause things to go wrong...).
 > 
-> Create the root filesystem with --bitmap=internal, and store all the
-> other bitmaps on that filesystem maybe?
+> Looking through the dmesg output though, it looks like the 'missing'
+> disk is being detected before the array is assembled, but that the
+> disk is throwing up errors.  I've attached the full output of dmesg;
+> grepping it for "hde" gives the following:
+> 
+> [17179574.084000]     ide2: BM-DMA at 0xd400-0xd407, BIOS settings:
+> hde:DMA, hdf:DMA
+> [17179574.380000] hde: NetCell SyncRAID(TM) SR5000 JBOD, ATA DISK drive
+> [17179575.312000] hde: max request size: 512KiB
+> [17179575.312000] hde: 625134827 sectors (320069 MB), CHS=38912/255/63, (U)DMA
+> [17179575.312000] hde: set_geometry_intr: status=0x51 { DriveReady
+> SeekComplete Error }
+> [17179575.312000] hde: set_geometry_intr: error=0x04 { DriveStatusError }
+> [17179575.312000] hde: cache flushes supported
 
-yeah i only have the one external bitmap (it's for a large raid5)... so 
-things will work fine once i apply your patch.  thanks.
-
-> I don't know if it would work to have a bitmap on a device, but you
-> can always mkfs the device, mount it, and put a bitmap on a file
-> there??
-
-yeah this was the first thing i tried after i found mdadm -b /dev/foo 
-wasn't accepted...
-
-without modifying startup scripts there's no way to use any filesystem 
-other than root... it's just due to ordering of init scripts:
-
-# ls /etc/rcS.d | grep -i 'mount\|raid'
-S02mountkernfs.sh
-S04mountdevsubfs.sh
-S25mdadm-raid
-S35mountall.sh
-S36mountall-bootclean.sh
-S45mountnfs.sh
-S46mountnfs-bootclean.sh
-
-i'd need to run another mdadm-raid after the S35mountall, and then another 
-mountall.
-
-anyhow, i don't think you need to change anything (except maybe a note in 
-the docs somewhere), i'm just bringing it up as part of the experience of 
-trying external bitmap.  i suspect that in the wild and crazy direction 
-debian and ubuntu are heading (ditching sysvinit for event-driven systems) 
-it'll be "easy" to express the boot dependencies.
+is it possible that the "NetCell SyncRAID" implementation is stealing some 
+of the sectors (even though it's marked JBOD)?  anyhow it could be the 
+disk is bad, but i'd still be tempted to see if the problem stays with the 
+controller if you swap the disk with another in the array.
 
 -dean
