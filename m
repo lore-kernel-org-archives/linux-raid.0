@@ -1,36 +1,78 @@
-From: Nix <nix@esperi.org.uk>
-Subject: Re: invalid (zero) superblock magic upon creation of a new RAID-1 array
-Date: Mon, 06 Nov 2006 20:20:17 +0000
-Message-ID: <873b8ws4xq.fsf@hades.wkstn.nix>
-References: <20061105085702.GD20184@grok.co.za>
-	<17742.25334.685135.990170@cse.unsw.edu.au>
-	<20061106064233.GA2793@grok.co.za>
+From: "James Lee" <james.lee@cantab.net>
+Subject: Re: RAID5 array showing as degraded after motherboard replacement
+Date: Tue, 7 Nov 2006 00:18:25 +0000
+Message-ID: <ef2613f30611061618n185978daqc8e4a07368b6baec@mail.gmail.com>
+References: <ef2613f30611050858m562386a0m7966667f803f35fc@mail.gmail.com>
+	 <Pine.LNX.4.64.0611051247550.13706@twinlark.arctic.org>
+	 <ef2613f30611051607t24fdcec0qe6f37227e4118b73@mail.gmail.com>
+	 <Pine.LNX.4.64.0611060028120.20361@twinlark.arctic.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20061106064233.GA2793@grok.co.za> (Thomas Andrews's message of "6 Nov 2006 06:43:29 -0000")
+In-Reply-To: <Pine.LNX.4.64.0611060028120.20361@twinlark.arctic.org>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Thomas Andrews <tandrews@grok.co.za>
-Cc: linux-raid@vger.kernel.org, Neil Brown <neilb@suse.de>
+To: dean gaudet <dean@arctic.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 6 Nov 2006, Thomas Andrews uttered the following:
-> Thanks Neil, I fixed my problem by creating the raid set using the "-e"
-> option:
+On 06/11/06, dean gaudet <dean@arctic.org> wrote:
 >
->     mdadm -C /dev/md0 -e 0.90 --level=raid1 --raid-devices=2  /dev/sda1 /dev/sdb1
 >
-> You're suggestion to use mdadm to assemble the array is not an option
-> for me because it is the root partition that is raided, but thanks for
-> putting me in the right direction.
+> On Mon, 6 Nov 2006, James Lee wrote:
+>
+> > Thanks for the reply Dean.  I looked through dmesg output from the
+> > boot up, to check whether this was just an ordering issue during the
+> > system start up (since both evms and mdadm attempt to activate the
+> > array, which could cause things to go wrong...).
+> >
+> > Looking through the dmesg output though, it looks like the 'missing'
+> > disk is being detected before the array is assembled, but that the
+> > disk is throwing up errors.  I've attached the full output of dmesg;
+> > grepping it for "hde" gives the following:
+> >
+> > [17179574.084000]     ide2: BM-DMA at 0xd400-0xd407, BIOS settings:
+> > hde:DMA, hdf:DMA
+> > [17179574.380000] hde: NetCell SyncRAID(TM) SR5000 JBOD, ATA DISK drive
+> > [17179575.312000] hde: max request size: 512KiB
+> > [17179575.312000] hde: 625134827 sectors (320069 MB), CHS=38912/255/63, (U)DMA
+> > [17179575.312000] hde: set_geometry_intr: status=0x51 { DriveReady
+> > SeekComplete Error }
+> > [17179575.312000] hde: set_geometry_intr: error=0x04 { DriveStatusError }
+> > [17179575.312000] hde: cache flushes supported
+>
+> is it possible that the "NetCell SyncRAID" implementation is stealing some
+> of the sectors (even though it's marked JBOD)?  anyhow it could be the
+> disk is bad, but i'd still be tempted to see if the problem stays with the
+> controller if you swap the disk with another in the array.
+>
+> -dean
+>
 
-You can still use mdadm to assemble root filesystems: you just need
-an initramfs or initrd to do the work before / is mounted. (As a
-bonus you can fsck it before it's mounted, as well.)
+Looks like you might be right.  I removed one of the other drives from
+the onboard controller, and moved the 'faulty' drive from the NetCell
+controller to the onboard one.  Booted up up the machine, and the
+drive is still not added to the array correctly (so the array now
+fails to assemble, as there's only 3 out of 5 drives).  I've run the
+Seagate diagnostics tools over the drive and they report successful
+when it's connected to the onboard controller and unsuccessful when
+it's connected to the NetCell controller (this may be a test tool
+issue though).
 
-Most distros have tools that can do this for you, or you can do it by
-hand (see e.g. <http://linux-raid.osdl.org/index.php/RAID_Boot>).
+I guess this indicates that either:
+1) The NetCell controller is faulty and just not reading/writing data properly.
+2) The NetCell controller's RAID implementation has somehow not been
+transparent to the OS and has overwritten/modified md's superblocks.
+3) EVMS somehow messed the config up on that drive when trying to
+reassemble the array after the first time the controller came up.
 
--- 
-`When we are born we have plenty of Hydrogen but as we age our
- Hydrogen pool becomes depleted.'
+I'll test for 1) by attaching another drive (not one of the ones in
+the array!) to the NetCell contoller and seeing if it passed
+diagnostics tests.  3) seems pretty unlikely.
+
+I bought the NetCell card mainly for its Linux compatibility - do they
+have known issues with mdadm?
+
+Thanks,
+James
