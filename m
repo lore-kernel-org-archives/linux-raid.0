@@ -1,34 +1,37 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [PATCH 000 of 9] md: udev notification, raid5 read improvements etc
-Date: Wed, 8 Nov 2006 09:09:21 +1100
-Message-ID: <20061108085917.12064.patches@notabene>
+Subject: [PATCH 009 of 9] md: Enable bypassing cache for reads.
+Date: Wed, 8 Nov 2006 09:10:07 +1100
+Message-ID: <1061107221007.12586@suse.de>
+References: <20061108085917.12064.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: Andrew Morton <akpm@osdl.org>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
 List-Id: linux-raid.ids
 
 
-Following are 9 patches for md in 2.6.19-rc4-mm2.
-The first two are suitable for 2.6.19.
-The third might be.  It seems straight forward, but is awkward to test.
-Possibly safest to keep it for .20...
-The rest should be held for .20.
+From: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
 
-4 is a minor tidyup
-5 is a resend with a bug fixed.
-6-9 are resends with attribution improved.
+Call the chunk_aligned_read where appropriate.
 
-Thanks,
-NeilBrown
+Signed-off-by: Neil Brown <neilb@suse.de>
 
+### Diffstat output
+ ./drivers/md/raid5.c |    5 +++++
+ 1 file changed, 5 insertions(+)
 
- [PATCH 001 of 9] md: Change ONLINE/OFFLINE events to a single CHANGE event
- [PATCH 002 of 9] md: Fix sizing problem with raid5-reshape and CONFIG_LBD=n
- [PATCH 003 of 9] md: Do not freeze md threads for suspend.
- [PATCH 004 of 9] md: Tidy up device-change notification when an md array is stopped
- [PATCH 005 of 9] md: Change lifetime rules for 'md' devices.
- [PATCH 006 of 9] md: Define raid5_mergeable_bvec
- [PATCH 007 of 9] md: Handle bypassing the read cache (assuming nothing fails).
- [PATCH 008 of 9] md: Allow reads that have bypassed the cache to be retried on failure.
- [PATCH 009 of 9] md: Enable bypassing cache for reads.
+diff .prev/drivers/md/raid5.c ./drivers/md/raid5.c
+--- .prev/drivers/md/raid5.c	2006-11-06 11:29:14.000000000 +1100
++++ ./drivers/md/raid5.c	2006-11-06 11:29:14.000000000 +1100
+@@ -2798,6 +2798,11 @@ static int make_request(request_queue_t 
+ 	disk_stat_inc(mddev->gendisk, ios[rw]);
+ 	disk_stat_add(mddev->gendisk, sectors[rw], bio_sectors(bi));
+ 
++	if ( bio_data_dir(bi) == READ &&
++	     mddev->reshape_position == MaxSector &&
++	     chunk_aligned_read(q,bi))
++            		return 0;
++
+ 	logical_sector = bi->bi_sector & ~((sector_t)STRIPE_SECTORS-1);
+ 	last_sector = bi->bi_sector + (bi->bi_size>>9);
+ 	bi->bi_next = NULL;
