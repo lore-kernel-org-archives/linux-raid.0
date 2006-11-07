@@ -1,45 +1,38 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: raid5 reshape bug with XFS
-Date: Tue, 7 Nov 2006 15:55:02 +1100
-Message-ID: <17744.4518.777235.655099@cse.unsw.edu.au>
-References: <454D459D.4000003@rcn.com>
-	<17742.27688.120840.900652@cse.unsw.edu.au>
-	<454ECCCA.9080704@rcn.com>
+Subject: Re: invalid (zero) superblock magic upon creation of a new RAID-1 array
+Date: Tue, 7 Nov 2006 15:57:23 +1100
+Message-ID: <17744.4659.23326.515464@cse.unsw.edu.au>
+References: <20061105085702.GD20184@grok.co.za>
+	<17742.25334.685135.990170@cse.unsw.edu.au>
+	<20061106064233.GA2793@grok.co.za>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Bill Cizek on Sunday November 5
+In-Reply-To: message from Thomas Andrews on Monday November 6
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Cizek <cizek@rcn.com>
+To: Thomas Andrews <tandrews@grok.co.za>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sunday November 5, cizek@rcn.com wrote:
-> Neil Brown wrote:
-> > On Saturday November 4, cizek@rcn.com wrote:
-> >   
-> >> Hi,
-> >>
-> >> I'm setting up a raid 5 system and I ran across a bug when reshaping an 
-> >> array with a mounted XFS filesystem on it.  This is under linux 2.6.18.2 
-> >> and mdadm 2.5.5
-> > You have CONFIG_LBD=n don't you?
-> >   
-> Yes,
+On Monday November 6, tandrews@grok.co.za wrote:
+> On Mon, Nov 06, 2006 at 09:17:26AM +1100, Neil Brown wrote:
+> > You mdadm to assemble the array, it is more flexible than auto-detect.
 > 
-> I have CONFIG_LBD=n
+> Thanks Neil, I fixed my problem by creating the raid set using the "-e"
+> option:
 > 
-> ...and the patch fixed the problem.
-
-Cool thanks.
+>     mdadm -C /dev/md0 -e 0.90 --level=raid1 --raid-devices=2  /dev/sda1 /dev/sdb1
 > 
-> Side Note: I just converted 2 raid0 drives into a 4 drive raid5 array 
-> in-place, with relative ease.
-> I couldn't have done it without the work you (and I'm sure others) have 
-> done. Thanks.
+> You're suggestion to use mdadm to assemble the array is not an option
+> for me because it is the root partition that is raided, but thanks for
+> putting me in the right direction.
 
-And without bug reports like yours others would have more problems.
+You can use mdadm to assemble the root partition with suitable
+initramfs magic, and I gather most distributions use initramfs (or
+initrd) by default now.  But getting the magic to work isn't always as
+straight forward as you would like.
 
-Thanks.
+You solution is should work fine so stick with it.
+
 NeilBrown
