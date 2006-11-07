@@ -1,78 +1,45 @@
-From: "James Lee" <james.lee@cantab.net>
-Subject: Re: RAID5 array showing as degraded after motherboard replacement
-Date: Tue, 7 Nov 2006 00:18:25 +0000
-Message-ID: <ef2613f30611061618n185978daqc8e4a07368b6baec@mail.gmail.com>
-References: <ef2613f30611050858m562386a0m7966667f803f35fc@mail.gmail.com>
-	 <Pine.LNX.4.64.0611051247550.13706@twinlark.arctic.org>
-	 <ef2613f30611051607t24fdcec0qe6f37227e4118b73@mail.gmail.com>
-	 <Pine.LNX.4.64.0611060028120.20361@twinlark.arctic.org>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: raid5 reshape bug with XFS
+Date: Tue, 7 Nov 2006 15:55:02 +1100
+Message-ID: <17744.4518.777235.655099@cse.unsw.edu.au>
+References: <454D459D.4000003@rcn.com>
+	<17742.27688.120840.900652@cse.unsw.edu.au>
+	<454ECCCA.9080704@rcn.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0611060028120.20361@twinlark.arctic.org>
-Content-Disposition: inline
+In-Reply-To: message from Bill Cizek on Sunday November 5
 Sender: linux-raid-owner@vger.kernel.org
-To: dean gaudet <dean@arctic.org>
+To: Bill Cizek <cizek@rcn.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 06/11/06, dean gaudet <dean@arctic.org> wrote:
->
->
-> On Mon, 6 Nov 2006, James Lee wrote:
->
-> > Thanks for the reply Dean.  I looked through dmesg output from the
-> > boot up, to check whether this was just an ordering issue during the
-> > system start up (since both evms and mdadm attempt to activate the
-> > array, which could cause things to go wrong...).
-> >
-> > Looking through the dmesg output though, it looks like the 'missing'
-> > disk is being detected before the array is assembled, but that the
-> > disk is throwing up errors.  I've attached the full output of dmesg;
-> > grepping it for "hde" gives the following:
-> >
-> > [17179574.084000]     ide2: BM-DMA at 0xd400-0xd407, BIOS settings:
-> > hde:DMA, hdf:DMA
-> > [17179574.380000] hde: NetCell SyncRAID(TM) SR5000 JBOD, ATA DISK drive
-> > [17179575.312000] hde: max request size: 512KiB
-> > [17179575.312000] hde: 625134827 sectors (320069 MB), CHS=38912/255/63, (U)DMA
-> > [17179575.312000] hde: set_geometry_intr: status=0x51 { DriveReady
-> > SeekComplete Error }
-> > [17179575.312000] hde: set_geometry_intr: error=0x04 { DriveStatusError }
-> > [17179575.312000] hde: cache flushes supported
->
-> is it possible that the "NetCell SyncRAID" implementation is stealing some
-> of the sectors (even though it's marked JBOD)?  anyhow it could be the
-> disk is bad, but i'd still be tempted to see if the problem stays with the
-> controller if you swap the disk with another in the array.
->
-> -dean
->
+On Sunday November 5, cizek@rcn.com wrote:
+> Neil Brown wrote:
+> > On Saturday November 4, cizek@rcn.com wrote:
+> >   
+> >> Hi,
+> >>
+> >> I'm setting up a raid 5 system and I ran across a bug when reshaping an 
+> >> array with a mounted XFS filesystem on it.  This is under linux 2.6.18.2 
+> >> and mdadm 2.5.5
+> > You have CONFIG_LBD=n don't you?
+> >   
+> Yes,
+> 
+> I have CONFIG_LBD=n
+> 
+> ...and the patch fixed the problem.
 
-Looks like you might be right.  I removed one of the other drives from
-the onboard controller, and moved the 'faulty' drive from the NetCell
-controller to the onboard one.  Booted up up the machine, and the
-drive is still not added to the array correctly (so the array now
-fails to assemble, as there's only 3 out of 5 drives).  I've run the
-Seagate diagnostics tools over the drive and they report successful
-when it's connected to the onboard controller and unsuccessful when
-it's connected to the NetCell controller (this may be a test tool
-issue though).
+Cool thanks.
+> 
+> Side Note: I just converted 2 raid0 drives into a 4 drive raid5 array 
+> in-place, with relative ease.
+> I couldn't have done it without the work you (and I'm sure others) have 
+> done. Thanks.
 
-I guess this indicates that either:
-1) The NetCell controller is faulty and just not reading/writing data properly.
-2) The NetCell controller's RAID implementation has somehow not been
-transparent to the OS and has overwritten/modified md's superblocks.
-3) EVMS somehow messed the config up on that drive when trying to
-reassemble the array after the first time the controller came up.
+And without bug reports like yours others would have more problems.
 
-I'll test for 1) by attaching another drive (not one of the ones in
-the array!) to the NetCell contoller and seeing if it passed
-diagnostics tests.  3) seems pretty unlikely.
-
-I bought the NetCell card mainly for its Linux compatibility - do they
-have known issues with mdadm?
-
-Thanks,
-James
+Thanks.
+NeilBrown
