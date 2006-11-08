@@ -1,52 +1,33 @@
-From: Kay Sievers <kay.sievers@vrfy.org>
-Subject: Re: [PATCH 001 of 6] md: Send online/offline uevents when an md
-	array starts/stops.
-Date: Wed, 08 Nov 2006 12:14:42 +0100
-Message-ID: <1162984482.16735.25.camel@pim.off.vrfy.org>
-References: <20061031164814.4884.patches@notabene>
-	 <1061031060046.5034@suse.de> <20061031211615.GC21597@suse.de>
-	 <3ae72650611020413q797cf62co66f76b058a57104b@mail.gmail.com>
-	 <17737.58737.398441.111674@cse.unsw.edu.au>
-	 <1162475516.7210.32.camel@pim.off.vrfy.org>
-	 <17738.59486.140951.821033@cse.unsw.edu.au>
-	 <1162542178.14310.26.camel@pim.off.vrfy.org>
-	 <17742.32612.870346.954568@cse.unsw.edu.au>
+From: Robin Bowes <robin-lists@robinbowes.com>
+Subject: Re: new array not starting
+Date: Wed, 08 Nov 2006 12:55:33 +0000
+Message-ID: <eisk45$1ef$1@sea.gmane.org>
+References: <eirdlc$l7j$1@sea.gmane.org> <eiredo$mmo$1@sea.gmane.org> <eirfst$pd7$1@sea.gmane.org> <eirgp8$rd7$1@sea.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17742.32612.870346.954568@cse.unsw.edu.au>
+In-Reply-To: <eirgp8$rd7$1@sea.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Greg KH <gregkh@suse.de>, Andrew Morton <akpm@osdl.org>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, 2006-11-06 at 11:18 +1100, Neil Brown wrote:
-> On Friday November 3, kay.sievers@vrfy.org wrote:
+Robin Bowes wrote:
+> 
+> Well, at the risk of having a complete conversation with myself, I've
+> created partitions of type "fd" on each disk and re-created the array
+> out of the partitions instead of the whole disk.
+> 
+> mdadm --create /dev/md2 --auto=yes --raid-devices=8 --level=6 /dev/sdc1
+> /dev/sdd1 /dev/sde1 /dev/sdf1 /dev/sdg1 /dev/sdh1 /dev/sdi1 /dev/sdj1
+> 
+> I'm hoping this will enable the array to be auto-detected and started at
+> boot.
 
-> > The persistent naming rules for /dev/disk/by-* are causing this. Md
-> > devices will probably just get their own rules file, which will handle
-> > this and which can be packaged and installed along with the md tools.
+That seemed to do the trick.
 
-> I'm still a bit concerned about the open->add->open infinite loop.
-> If anyone opens /dev/mdX while it isn't active (e.g. to check if it is
-> active), that will (given a patch that I would like to include) cause
-> and ADD event which will cause udev to start it's loop again.
-> Can we make udev ignore ADD for md and only watch for CHANGE?
+I left the array to build overnight and rebooted this morning, and
+/dev/md2 started normally.
 
-Is there a sysfs file or something similar(we could also call a md-tool)
-udev could look at, before it tries to open the device? Like:
-  KERNEL=="md*", ATTR{state}=="active", IMPORT{program}= ...
-
-If we currently ignore the "add" event, then we will not hook into the
-coldplug logic, where "add" events are requested for all devices to do
-the initial setup after bootup.
-
-If we can't read the state of the md device, to see if it's safe to open
-the device, we would need to be smarter with the coldplug logic by
-requesting "change" events if necessary, or by passing a "coldplug" flag
-with the synthesized event.
-
-Thanks,
-Kay
+R.
 
