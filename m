@@ -1,33 +1,57 @@
-From: Robin Bowes <robin-lists@robinbowes.com>
-Subject: Re: new array not starting
-Date: Wed, 08 Nov 2006 12:55:33 +0000
-Message-ID: <eisk45$1ef$1@sea.gmane.org>
-References: <eirdlc$l7j$1@sea.gmane.org> <eiredo$mmo$1@sea.gmane.org> <eirfst$pd7$1@sea.gmane.org> <eirgp8$rd7$1@sea.gmane.org>
+From: David <lists@edeca.net>
+Subject: Re: Checksums wrong on one disk of mirror
+Date: Wed, 08 Nov 2006 15:55:13 +0000
+Message-ID: <20061108155513.pfc7p91ugccc8sow@my.pengus.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII;
+	DelSp=Yes	format=flowed
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <eirgp8$rd7$1@sea.gmane.org>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Robin Bowes wrote:
-> 
-> Well, at the risk of having a complete conversation with myself, I've
-> created partitions of type "fd" on each disk and re-created the array
-> out of the partitions instead of the whole disk.
-> 
-> mdadm --create /dev/md2 --auto=yes --raid-devices=8 --level=6 /dev/sdc1
-> /dev/sdd1 /dev/sde1 /dev/sdf1 /dev/sdg1 /dev/sdh1 /dev/sdi1 /dev/sdj1
-> 
-> I'm hoping this will enable the array to be auto-detected and started at
-> boot.
+Quoting David <lists@edeca.net>:
+> Or is the correct way
+> to remove the "bad" superblock drive from the array, mount the md,
+> remove the file then resync the array?
 
-That seemed to do the trick.
+Common sense says this is correct.
 
-I left the array to build overnight and rebooted this morning, and
-/dev/md2 started normally.
+> If it is possible to do either of the above, how do I stop the
+> recovery?  It now starts automatically at live CD boot, repeating from
+> 15.7% over and over.  My knowledge of the tools is bad but I tried the
+> following:
+>
+> # mdadm /dev/md0 --remove /dev/sda1
+> and
+> # mdadm -f /dev/md0 --remove /dev/sda1 (no idea if the -f even makes
+> sense there)
 
-R.
+Looking at http://smartmontools.sourceforge.net/BadBlockHowTo.txt I  
+tried to figure out what file was in the bad blocks but it turned out  
+there wasn't one, it was just unused space.
 
+My fix, for completeness, was this:
+
+Force failure of the corrupt half of the mirror, using
+# mdadm --manage /dev/md0 --fail /dev/sda
+
+Mount the other one and fill free space with zeros
+# mount /dev/md0 /mnt/test
+# dd if=/dev/zero of=/mnt/test/bigfile
+# sync
+
+smartctl now showed that the pending sector had been reallocated, so I  
+removed the bigfile and hot added the other drive
+# mdadm --manage /dev/md0 --add /dev/sda
+
+The recovery went fine this time and both partitions were shown as  
+correct and active.  I had to fsck another md before it would boot  
+correctly but the machine is now back up and working correctly.
+
+Thanks for your help previously, it helped me along the right lines to  
+start fixing this one.
+
+David
