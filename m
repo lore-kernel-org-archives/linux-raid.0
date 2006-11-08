@@ -1,54 +1,43 @@
-From: Robin Bowes <robin-lists@robinbowes.com>
-Subject: Re: new array not starting
-Date: Wed, 08 Nov 2006 02:52:24 +0000
-Message-ID: <eirgp8$rd7$1@sea.gmane.org>
-References: <eirdlc$l7j$1@sea.gmane.org> <eiredo$mmo$1@sea.gmane.org> <eirfst$pd7$1@sea.gmane.org>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: FYI: [2.6.16 patch] drivers/md/md.c: update START_ARRAY printk
+Date: Wed, 8 Nov 2006 08:24:28 +0100
+Message-ID: <20061108072428.GQ4729@stusta.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <eirfst$pd7$1@sea.gmane.org>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: mingo@redhat.com, neilb@cse.unsw.edu.au
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Robin Bowes wrote:
-> Robin Bowes wrote:
->> This worked:
->>
->> # mdadm --assemble --auto=yes  /dev/md2 /dev/sdc /dev/sdd /dev/sde
->> /dev/sdf /dev/sdg /dev/sdh /dev/sdi /dev/sdj
->> mdadm: /dev/md2 has been started with 8 drives.
->>
->> However, I'm not sure why it didn't start automatically at boot. Do I
->> need to put it in /etc/mdadm.conf for it to star automatically? I
->> thought md start all arrays it found at a start up?
-> 
-> OK, I put /dev/md2 in /etc/mdadm.conf and it didn't make any difference.
-> 
-> This is mdadm.conf (uuids are on same line as ARRAY):
-> 
-> DEVICE partitions
-> ARRAY /dev/md1 level=raid1 num-devices=2
-> uuid=300c1309:53d26470:64ac883f:2e3de671
-> ARRAY /dev/md0 level=raid1 num-devices=2
-> uuid=89649359:d89365a6:0192407d:e0e399a3
-> ARRAY /dev/md2 level=raid6 num-devices=8
-> UUID=68c2ea69:a30c3cb0:9af9f0b8:1300276b
-> 
-> I saw an error fly by as the server was booting saying "/dev/md2 not found".
-> 
-> Do I need to create this device manually?
+FYI: I've just committed the patch below in the 2.6.16 tree.
 
-Well, at the risk of having a complete conversation with myself, I've
-created partitions of type "fd" on each disk and re-created the array
-out of the partitions instead of the whole disk.
+cu
+Adrian
 
-mdadm --create /dev/md2 --auto=yes --raid-devices=8 --level=6 /dev/sdc1
-/dev/sdd1 /dev/sde1 /dev/sdf1 /dev/sdg1 /dev/sdh1 /dev/sdi1 /dev/sdj1
 
-I'm hoping this will enable the array to be auto-detected and started at
-boot.
+commit f919643362f45c65457e01ddd9aed0682497b2f8
+Author: Adrian Bunk <bunk@stusta.de>
+Date:   Wed Nov 8 08:19:14 2006 +0100
 
-R.
+    drivers/md/md.c: update START_ARRAY printk
+    
+    START_ARRAY will not be removed in 2.6.16, therefore replace the date
+    reference with a kernel version reference.
+    
+    Signed-off-by: Adrian Bunk <bunk@stusta.de>
 
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index d05e312..78cca0c 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -3662,7 +3662,7 @@ static int md_ioctl(struct inode *inode,
+ 		if (cnt > 0 ) {
+ 			printk(KERN_WARNING
+ 			       "md: %s(pid %d) used deprecated START_ARRAY ioctl. "
+-			       "This will not be supported beyond July 2006\n",
++			       "START_ARRAY is removed in kernel 2.6.19 and above.\n",
+ 			       current->comm, current->pid);
+ 			cnt--;
+ 		}
