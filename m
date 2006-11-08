@@ -1,36 +1,35 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: FYI: [2.6.16 patch] drivers/md/md.c: update START_ARRAY printk
-Date: Thu, 9 Nov 2006 09:55:07 +1100
-Message-ID: <17746.24651.204927.943159@cse.unsw.edu.au>
-References: <20061108072428.GQ4729@stusta.de>
+From: Jure =?UTF-8?B?UGXEjWFy?= <pegasus@nerv.eu.org>
+Subject: bio too big device dm-XX (256 > 255) on 2.6.17
+Date: Thu, 9 Nov 2006 00:52:27 +0100
+Message-ID: <20061109005227.73b4fd14.pegasus@nerv.eu.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Adrian Bunk on Wednesday November 8
 Sender: linux-raid-owner@vger.kernel.org
-To: Adrian Bunk <bunk@stusta.de>
-Cc: mingo@redhat.com, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wednesday November 8, bunk@stusta.de wrote:
-> FYI: I've just committed the patch below in the 2.6.16 tree.
->
 
-Very appropriate, thanks.
+Hello,
 
-NeilBrown
+Recently I upgraded my home server. I moved EVMS volumes from 3ware hw =
+mirrors (lvm2) to a md raid1 (lvm2) and am now getting lots of these er=
+rors, which result in Input/output errors trying to read files from tho=
+se volumes. It's kind of ugly because I have all the data, I just canno=
+t read it ...
 
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index d05e312..78cca0c 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -3662,7 +3662,7 @@ static int md_ioctl(struct inode *inode,
->  		if (cnt > 0 ) {
->  			printk(KERN_WARNING
->  			       "md: %s(pid %d) used deprecated START_ARRAY ioctl. "
-> -			       "This will not be supported beyond July 2006\n",
-> +			       "START_ARRAY is removed in kernel 2.6.19 and above.\n",
->  			       current->comm, current->pid);
->  			cnt--;
->  		}
+Google comes up with mails from 2003 mentioning such problems. Are ther=
+e any known such problems in recent kernels or am I hitting something n=
+ew here?
+
+
+--=20
+
+Jure Pe=C4=8Dar
+http://jure.pecar.org/
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
