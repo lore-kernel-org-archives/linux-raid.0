@@ -1,118 +1,89 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: mdadm-2.5.4 issues and 2.6.18.1 kernel md issues
-Date: Thu, 9 Nov 2006 16:32:01 +1100
-Message-ID: <17746.48465.156017.828602@cse.unsw.edu.au>
-References: <1162479503.2898.338.camel@fc6.xsintricity.com>
+From: Michael Tokarev <mjt@tls.msk.ru>
+Subject: Re: [PATCH 001 of 6] md: Send online/offline uevents when an md array
+ starts/stops.
+Date: Thu, 09 Nov 2006 13:10:28 +0300
+Message-ID: <4552FE94.20400@tls.msk.ru>
+References: <20061031164814.4884.patches@notabene>	<1061031060046.5034@suse.de>	<20061031211615.GC21597@suse.de>	<3ae72650611020413q797cf62co66f76b058a57104b@mail.gmail.com>	<17737.58737.398441.111674@cse.unsw.edu.au>	<1162475516.7210.32.camel@pim.off.vrfy.org>	<17738.59486.140951.821033@cse.unsw.edu.au>	<1162542178.14310.26.camel@pim.off.vrfy.org>	<17742.32612.870346.954568@cse.unsw.edu.au>	<Pine.LNX.4.64.0611060030320.20361@twinlark.arctic.org> <17744.5139.805134.577609@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Doug Ledford on Thursday November 2
+In-Reply-To: <17744.5139.805134.577609@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Doug Ledford <dledford@redhat.com>
-Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: Neil Brown <neilb@suse.de>
+Cc: dean gaudet <dean@arctic.org>, Kay Sievers <kay.sievers@vrfy.org>, Greg KH <gregkh@suse.de>, Andrew Morton <akpm@osdl.org>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thursday November 2, dledford@redhat.com wrote:
-> If I use mdadm 2.5.4 to create a version 1 superblock raid1 device, it
-> starts a resync.  If I then reboot the computer part way through, when
-> it boots back up, the resync gets cancelled and the array is considered
-> clean.  This is against a 2.6.18.1 kernel.
-
-I cannot reproduce that (I tried exactly 2.6.18.1).
-Do you have kernel logs of the various stages?
-
+Neil Brown wrote:
+[/dev/mdx...]
+>> (much like how /dev/ptmx is used to create /dev/pts/N entries.)
+[]
+> I have the following patch sitting in my patch queue (since about
+> March).
+> It does what you suggest via /sys/module/md-mod/parameters/MAGIC_FILE
+> which is the only md-specific part of the /sys namespace that I could
+> find.
 > 
-> If I create a version 1 superblock raid1 array, mdadm -D <constituent
-> device> says that the device is not part of a raid array (and likewise
-> the kernel autorun facility fails to find the device).
+> However I'm not at all convinced that it is a good idea.  I would much
+> rather have mdadm control device naming than leave it up to udev.
 
-   mdadm -D <constituent device>
-is incorrect usage.  You want
-   mdadm -E <constituent device>
-or
-   mdadm -D <assembled array>
+This is again the same "device naming" question as pops up every time
+someone mentions udev.  And as usual, I'm suggesting the following, which
+should - hopefully - make everyone happy:
 
-in-kernel autorun does not work with version 1 metadata as it does not
-store a 'preferred minor'.
+  create kernel names *always*, be it /dev/mdN or /dev/sdF or whatever,
+  so that things like /proc/partitions, /proc/mdstat etc will be useful.
+  For this, the ideal solution - IMHO - is to have mini-devfs-like filesystem
+  mounted as /dev, so that it is possible to have "bare" names without any
+  help from any external programs like udev, but I don't want to start another
+  flamewar here, esp. since it's off-topic to *this* discussion.
+  Note /dev/mdN is as good as /dev/md/N - because there are only a few active
+  devices wich appear in /dev, there's no "risk" to have "too many" files in
+  /dev, hence no need to put them into subdirs like /dev/md/, /dev/sd/ etc.
 
-> 
-> If I create a version 1 superblock raid1 array, mdadm -E <constituent
-> device> sees the superblock.  If I then run mdadm -E --brief on that
-> same device, it prints out the 1 line ARRAY line, but it misprints the
-> UUID such that is a 10 digit hex number: 8 digit hex number: 8 digit hex
-> number: 6 digit hex number.
+  if so desired, create *symlinks* at /dev with appropriate user-controlled
+  names to those official kernel device nodes.  Be it like /dev/disk/by-label/
+  or /dev/cdrom0 or whatever.
+  The links can be created by mdadm, OR by udev - in this case, it's really
+  irrelevant.  Udev rules does a good job of creating /dev/disk/ hierarchy
+  already, and that seems to be sufficient - i see no reason to make other
+  device nodes (symlinks) by mdadm.
 
-Oops, so it does.  Fix below.  Thanks.
+By the way, unlike /dev/sdE and /dev/hdF entries, /dev/mdN nodes are pretty
+stable.  Even if scsi disks gets reordered, mdadm finds the component devices
+by UUID (if DEVICE partitions is given in config file), and you have /dev/md1
+pointing to the same "logical partition" (have the same filesystem or data)
+regardless how you shuffle your disks (IF mdadm was able to find all components
+and assemble the array, anyway).  So sometimes, I use md/mdadm on systems
+WITHOUT any "raided" drives, but where I suspect disk devices may change for
+whatever reason - I just create raid0 "arrays" composed of a single partition
+and let mdadm to find them in /dev/sd* and to assemble stable-numbered /dev/mdN
+devices - without any help of udev or anything else (I for one dislike udev for
+several reasons).
 
->                              It also prints the mdadm device in the
-> ARRAY line as /dev/md/# where as mdadm -D --brief prints the device
-> as /dev/md#.  Consistency would be nice.
+> An in any case, we have the semantic that opening an md device-file
+> creates the device, and we cannot get rid of that semantic without a
+> lot of warning and a lot of pain.  And adding a new semantic isn't
+> really going to help.
 
-It would be nice .... but how important is it really?
-If you create the same array with --name=fred, then
--Eb with give /dev/md/fred, while -Db will give /dev/md2.
-Both a right in a sense.
+I don't think so.  With new semantic in place, we've two options (provided
+current semantics stays, and I don't see a strong reason why it should be
+removed except of the bloat):
 
-Ofcourse if you say
-  mdadm -Db /dev/md/2
-then you get /dev/md/2.
-You only have /dev/md2 force on you with 
-  mdadm -Ds
-In that case mdadm doesn't really know what name you want to use for
-the md device....  I guess it could scan /dev.
+ a) with new mdadm utilizing new semantics, there's nothing to change in udev --
+    it will all Just Work, by mdadm opening /dev/md-control-node (how it's called)
+    and assembling devices using that, and during assemble, udev will receive proper
+    events about new "disks" appearing and will handle that as usual.
 
-> 
-> Does the superblock still not store any information about whether or not
-> the array is a single device or partitionable?  Would be nice if the
-> superblock gave some clue as to that fact so that it could be used to
-> set the auto= param on an mdadm -E --brief line to the right mode.
+ b) without new mdadm, it will work as before (now).  And in this case, let's not
+    send any udev events, as mdadm already created the nodes etc.
 
-No the superblock does not store any information about where or not
-the array has partitions.  Presumably the partition table does ...
+So if a user wants neat and nice md/udev integration, the way to go is case "a".
+If it's not required, either case will do.
 
-I would recommend that if you want to do everything automatically,
-then assemble all arrays as partitionable.  Then you can use it with
-or without partitions.
+Sure, eventually, long term, support for case "b" can be removed.  Or not - depending
+on how the things will be implemented, because when done properly, both cases will
+call the same routine(s), but case "b" will just skip sending uevents, so ioctl handlers
+becomes two- or one-liners (two in case a and one in case b), which isn't bloat really ;)
 
-
-> Mdadm assumes that the --name option passed in to create an array means
-> something in particular to the md array name and modifies subsequent
-> mdadm -D --brief and mdadm -E --brief outputs to include the name option
-> minus the hostname.  Aka, if I set the name to firewall:/boot, mdadm -E
-> --brief will then print out the ARRAY line device as /dev/md//boot.  I
-> don't think this is documented anywhere.  This also raises the question
-> of how partitionable md devices will be handled in regards to their name
-> component.
-
-The 'Auto Assembly' section talks about this a bit, though not in the
-context of --examine.
-
-The documentation for --auto suggest that in the above case,
-partitions would be
-   /dev/md/boot1
-   /dev/md/boot2
-
-I'm always keen to improve the documentation.  What would you like
-included where?
-
-NeilBrown
-
-
-### Diffstat output
- ./super1.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff .prev/super1.c ./super1.c
---- .prev/super1.c	2006-10-19 16:45:26.000000000 +1000
-+++ ./super1.c	2006-11-09 16:11:57.000000000 +1100
-@@ -345,8 +345,8 @@ static void brief_examine_super1(void *s
- 	       nm,
- 	       c?c:"-unknown-", __le32_to_cpu(sb->raid_disks));
- 	for (i=0; i<16; i++) {
--		printf("%02x", sb->set_uuid[i]);
- 		if ((i&3)==0 && i != 0) printf(":");
-+		printf("%02x", sb->set_uuid[i]);
- 	}
- 	if (sb->set_name[0])
- 		printf(" name=%.32s", sb->set_name);
+/mjt
