@@ -1,48 +1,126 @@
-From: Michael Tokarev <mjt@tls.msk.ru>
-Subject: Re: [PATCH 001 of 6] md: Send online/offline uevents when an md array
- starts/stops.
-Date: Thu, 09 Nov 2006 13:17:54 +0300
-Message-ID: <45530052.4010406@tls.msk.ru>
-References: <20061031164814.4884.patches@notabene>	<1061031060046.5034@suse.de>	<20061031211615.GC21597@suse.de>	<3ae72650611020413q797cf62co66f76b058a57104b@mail.gmail.com>	<17737.58737.398441.111674@cse.unsw.edu.au>	<1162475516.7210.32.camel@pim.off.vrfy.org>	<17738.59486.140951.821033@cse.unsw.edu.au>	<1162542178.14310.26.camel@pim.off.vrfy.org>	<17742.32612.870346.954568@cse.unsw.edu.au>	<Pine.LNX.4.64.0611060030320.20361@twinlark.arctic.org> <17744.5139.805134.577609@cse.unsw.edu.au> <4552FE94.20400@tls.msk.ru>
+From: Benjamin Schieder <blindcoder@scavenger.homeip.net>
+Subject: safely removing RAID information?
+Date: Thu, 9 Nov 2006 11:19:09 +0100
+Message-ID: <20061109101909.GA10711@scavenger.homeip.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="zYM0uCDKw75PZbzx"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4552FE94.20400@tls.msk.ru>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Michael Tokarev <mjt@tls.msk.ru>
-Cc: Neil Brown <neilb@suse.de>, dean gaudet <dean@arctic.org>, Kay Sievers <kay.sievers@vrfy.org>, Greg KH <gregkh@suse.de>, Andrew Morton <akpm@osdl.org>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Michael Tokarev wrote:
-> Neil Brown wrote:
-> [/dev/mdx...]
-[]
->> An in any case, we have the semantic that opening an md device-file
->> creates the device, and we cannot get rid of that semantic without a
->> lot of warning and a lot of pain.  And adding a new semantic isn't
->> really going to help.
-> 
-> I don't think so.  With new semantic in place, we've two options (provided
-> current semantics stays, and I don't see a strong reason why it should be
-> removed except of the bloat):
-> 
->  a) with new mdadm utilizing new semantics, there's nothing to change in udev --
->     it will all Just Work, by mdadm opening /dev/md-control-node (how it's called)
->     and assembling devices using that, and during assemble, udev will receive proper
->     events about new "disks" appearing and will handle that as usual.
-> 
->  b) without new mdadm, it will work as before (now).  And in this case, let's not
->     send any udev events, as mdadm already created the nodes etc.
 
-Forgot to add.  This is important point: do NOT change current behavour wrt uevents,
-ie, don't add uevents for current semantics at all.  Only send uevents (and in this
-case it will be normal "add" and "remove" events) when assembling arrays "the new way",
-using (stable!) /dev/mdcontrol misc device, after RUN_ARRAY and STOP_ARRAY actions has
-been performed.
+--zYM0uCDKw75PZbzx
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-/mjt
+Hi list.
 
-> So if a user wants neat and nice md/udev integration, the way to go is case "a".
-> If it's not required, either case will do.
+I have the following 'leftover setup' from testing:
 
+---snip---
+/dev/hda:
+          Magic : a92b4efc
+        Version : 00.90.00
+           UUID : 533fb996:8989f533:2dc6aaa9:74fdd762
+  Creation Time : Sat Jun 24 08:37:43 2006
+     Raid Level : raid5
+    Device Size : 244198464 (232.89 GiB 250.06 GB)
+     Array Size : 488396928 (465.77 GiB 500.12 GB)
+   Raid Devices : 3
+  Total Devices : 3
+Preferred Minor : 0
+
+    Update Time : Fri Jul  7 17:49:52 2006
+          State : clean
+ Active Devices : 3
+Working Devices : 3
+ Failed Devices : 0
+  Spare Devices : 0
+       Checksum : c0941be6 - correct
+         Events : 0.1780
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+      Number   Major   Minor   RaidDevice State
+this     1      34        0        1      active sync
+
+   0     0      33       64        0      active sync
+   1     1      34        0        1      active sync
+   2     2      34       64        2      active sync
+/dev/hda1:
+          Magic : a92b4efc
+        Version : 00.90.00
+           UUID : 3559ffcf:14eb9889:3826d6c2:c13731d7
+  Creation Time : Fri Jul  7 20:12:10 2006
+     Raid Level : raid1
+    Device Size : 497856 (486.27 MiB 509.80 MB)
+     Array Size : 497856 (486.27 MiB 509.80 MB)
+   Raid Devices : 3
+  Total Devices : 3
+Preferred Minor : 0
+
+    Update Time : Thu Nov  9 05:12:56 2006
+          State : clean
+ Active Devices : 3
+Working Devices : 3
+ Failed Devices : 0
+  Spare Devices : 0
+       Checksum : 76d7e7e8 - correct
+         Events : 0.1990
+
+
+      Number   Major   Minor   RaidDevice State
+this     1       3        1        1      active sync   /dev/hda1
+
+   0     0       3       65        0      active sync   /dev/hdb1
+   1     1       3        1        1      active sync   /dev/hda1
+   2     2      22        1        2      active sync   /dev/hdc1
+
+---snap---
+
+Now, /dev/hda1 (and hda[35678]) are parts of active RAID arrays.
+/dev/hda (whole disk) was part of an array I set up for testing/playing
+around with mdadm. I then created the partitions and set up RAIDs for them.
+
+Is it safe to issue the following command now:
+
+root@ceres:~# mdadm --zero-superblock /dev/hda
+
+or will that nuke my setup along with my precious data?
+My software versions are the following:
+
+root@ceres:/usr/src/wip/installer/package/base/installer# mdadm --version
+mdadm - v2.4 - 30 March 2006
+root@ceres:/usr/src/wip/installer/package/base/installer# uname -a
+Linux ceres 2.6.17.7-rock-dragon #2 SMP Wed Aug 30 17:21:35 CEST 2006 i686 =
+GNU/Linux
+
+
+Thanks in advance,
+	Benjamin
+--=20
+#!/bin/sh #!/bin/bash #!/bin/tcsh #!/bin/csh #!/bin/kiss #!/bin/ksh
+#!/bin/pdksh #!/usr/bin/perl #!/usr/bin/python #!/bin/zsh #!/bin/ash
+
+Feel at home? Got some of them? Want to show some magic?
+
+	http://shellscripts.org
+
+--zYM0uCDKw75PZbzx
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.3 (GNU/Linux)
+
+iD8DBQFFUwCdAsME5O4xgqgRAsO9AJ978QoCkNc8gqCHU70Aok2eMsZ8ZgCg8KTu
+VBiVef8EWYb8bWhE3/nD/8Y=
+=X0BA
+-----END PGP SIGNATURE-----
+
+--zYM0uCDKw75PZbzx--
