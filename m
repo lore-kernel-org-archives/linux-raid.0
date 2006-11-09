@@ -1,35 +1,48 @@
-From: Jure =?UTF-8?B?UGXEjWFy?= <pegasus@nerv.eu.org>
-Subject: bio too big device dm-XX (256 > 255) on 2.6.17
-Date: Thu, 9 Nov 2006 00:52:27 +0100
-Message-ID: <20061109005227.73b4fd14.pegasus@nerv.eu.org>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: [PATCH 001 of 6] md: Send online/offline uevents when an md
+	array starts/stops.
+Date: Thu, 9 Nov 2006 11:17:57 +1100
+Message-ID: <17746.29621.106336.339322@cse.unsw.edu.au>
+References: <20061031164814.4884.patches@notabene>
+	<1061031060046.5034@suse.de>
+	<20061031211615.GC21597@suse.de>
+	<3ae72650611020413q797cf62co66f76b058a57104b@mail.gmail.com>
+	<17737.58737.398441.111674@cse.unsw.edu.au>
+	<1162475516.7210.32.camel@pim.off.vrfy.org>
+	<17738.59486.140951.821033@cse.unsw.edu.au>
+	<1162542178.14310.26.camel@pim.off.vrfy.org>
+	<17742.32612.870346.954568@cse.unsw.edu.au>
+	<1162984482.16735.25.camel@pim.off.vrfy.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: message from Kay Sievers on Wednesday November 8
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Kay Sievers <kay.sievers@vrfy.org>
+Cc: Greg KH <gregkh@suse.de>, Andrew Morton <akpm@osdl.org>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Wednesday November 8, kay.sievers@vrfy.org wrote:
+> 
+> Is there a sysfs file or something similar(we could also call a md-tool)
+> udev could look at, before it tries to open the device? Like:
+>   KERNEL=="md*", ATTR{state}=="active", IMPORT{program}= ...
 
-Hello,
+If the /sys/block/mdX directory exists at all, it is safe to open the
+device-special file.  But that is racy.  It could disappear between
+checking that the dir exists, and opening the device-special-file.
 
-Recently I upgraded my home server. I moved EVMS volumes from 3ware hw =
-mirrors (lvm2) to a md raid1 (lvm2) and am now getting lots of these er=
-rors, which result in Input/output errors trying to read files from tho=
-se volumes. It's kind of ugly because I have all the data, I just canno=
-t read it ...
+I still think it would make SO much sense if /sys/block/md4/dev were a
+device-special-file instead of a (silly) ascii file with 9:4.  Then
+this race could be closed.  But I feel that is a battle I've never
+going to win.
 
-Google comes up with mails from 2003 mentioning such problems. Are ther=
-e any known such problems in recent kernels or am I hitting something n=
-ew here?
+You could look at /sys/block/mdX/md/array_state.  If that contains
+'clean' or 'inactive' then there is no point opening the device.
+Otherwise there might be a point, and the race would be a lot harder
+to lose.
 
+I guess it is time for me to learn about udev config files...
 
---=20
-
-Jure Pe=C4=8Dar
-http://jure.pecar.org/
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+NeilBrown
