@@ -1,20 +1,26 @@
-From: Louis-David Mitterrand <vindex+lists-linux-raid@apartia.org>
-Subject: Re: [solved] (was: supermicro ejecting disks)
-Date: Thu, 9 Nov 2006 15:43:03 +0100
-Message-ID: <20061109144303.GA6228@apartia.fr>
-References: <20061109141811.GA5805@apartia.fr> <20061109142731.GA9713@apartia.fr>
+From: Joachim Wagner <jwagner@computing.dcu.ie>
+Subject: md manpage of mdadm 2.5.6
+Date: Thu, 9 Nov 2006 15:04:19 +0000
+Message-ID: <200611091504.19745.jwagner@computing.dcu.ie>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20061109142731.GA9713@apartia.fr>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Nov 09, 2006 at 03:27:31PM +0100, Louis-David Mitterrand wrote:
-> I forgot to add that to help us solve this we are ready to hire a paid 
-> consultant please contact me by mail or phone at +33.1.46.47.21.30
+Hi Neil,
 
-Update: we eventually succeded in reassembling the partition, with two 
-missing disks.
+In man -l mdadm-2.5.6/md.4 I read
+
+"Firstly, after an unclear shutdown, the resync process will consult the 
+bitmap and only resync those blocks that correspond to bits in the bitmap 
+that are set. This can dramatically increase resync time."
+
+IMHO, "increase" should be changed to "decrease" or "time" to "speed". 
+
+Regards,
+Joachim
