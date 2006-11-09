@@ -1,39 +1,20 @@
-From: Dexter Filmore <Dexter.Filmore@gmx.de>
-Subject: Too much ECC?
-Date: Thu, 9 Nov 2006 15:30:55 +0100
-Message-ID: <200611091530.56024.Dexter.Filmore@gmx.de>
+From: Louis-David Mitterrand <vindex+lists-linux-raid@apartia.org>
+Subject: Re: [solved] (was: supermicro ejecting disks)
+Date: Thu, 9 Nov 2006 15:43:03 +0100
+Message-ID: <20061109144303.GA6228@apartia.fr>
+References: <20061109141811.GA5805@apartia.fr> <20061109142731.GA9713@apartia.fr>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
+In-Reply-To: <20061109142731.GA9713@apartia.fr>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I just ran smartctl -d ata on my sATA disks (Samsung) and got these raw 
-values:
+On Thu, Nov 09, 2006 at 03:27:31PM +0100, Louis-David Mitterrand wrote:
+> I forgot to add that to help us solve this we are ready to hire a paid 
+> consultant please contact me by mail or phone at +33.1.46.47.21.30
 
-195 Hardware_ECC_Recovered  3344107
-195 Hardware_ECC_Recovered  2786896
-195 Hardware_ECC_Recovered  617712
-195 Hardware_ECC_Recovered  773986
-
-Looking at a 5 year old 40GB Maxtor that's not been cooled too well I see "3" 
-as the raw value.
-Should I be worried or am I just not properly reading this?
-
-Dex
-
-
--- 
------BEGIN GEEK CODE BLOCK-----
-Version: 3.12
-GCS d--(+)@ s-:+ a- C++++ UL++ P+>++ L+++>++++ E-- W++ N o? K-
-w--(---) !O M+ V- PS+ PE Y++ PGP t++(---)@ 5 X+(++) R+(++) tv--(+)@ 
-b++(+++) DI+++ D- G++ e* h>++ r* y?
-------END GEEK CODE BLOCK------
-
-http://www.stop1984.com
-http://www.againsttcpa.com
+Update: we eventually succeded in reassembling the partition, with two 
+missing disks.
