@@ -1,38 +1,57 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: New features?
-Date: Fri, 10 Nov 2006 11:48:22 +1100
-Message-ID: <17747.52310.97538.80404@cse.unsw.edu.au>
-References: <20061031214301.GB17958@timor.isp-services.nl>
-	<17738.47603.308198.941749@cse.unsw.edu.au>
-	<20061103093342.GI25422@boogie.lpds.sztaki.hu>
+From: Jacob Schmidt Madsen <jacob@mungo.dk>
+Subject: How to recover from massive disk failure
+Date: Fri, 10 Nov 2006 01:50:39 +0100
+Message-ID: <200611100150.39878.jacob@mungo.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Gabor Gombas on Friday November 3
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Gabor Gombas <gombasg@sztaki.hu>
-Cc: Frido Ferdinand <frido@zolder.org>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Friday November 3, gombasg@sztaki.hu wrote:
-> On Fri, Nov 03, 2006 at 02:39:31PM +1100, Neil Brown wrote:
-> 
-> > mdadm could probably be changed to be able to remove the device
-> > anyway.  The only difficulty is: how do you tell it which device to
-> > remove", given that there is no name in /dev to use.
-> > Suggestions?
-> 
-> Major:minor? If /sys/block still holds an entry for the removed disk,
-> then the user can figure it out from the name. Or mdadm could just
-> accept a path under /sys/block instead of a device node.
+Hey
 
-I like the /sys/block idea.  So if given a directory we look for a
-'dev' file and read major:minor from that.
-I guess I could also just allow
-  mdadm /dev/mdX --remove failed
+I have a 2 controllers: Promise SATA150 TX4 and Promise SATA300 TX4.
 
-and all failed devices get removed.
+2 disks are connected to the SATA150 and 4 disks are connected to SATA300.
 
-Thanks for the suggestion.
-NeilBrown
+The 6 disks are part of a raid5 array.
+
+Today the SATA300 controller failed and the 4 disks were excluded from the 
+array.
+
+The array was inactive the moment the 4 disks were excluded. After rebooting 
+all controllers and disks are online again.
+
+But now i have trouble starting the array and i could really use some input 
+from smarter minds on this list.
+
+Here's some output i gathered:
+
+# cat /proc/mdstat:
+md5 : active raid5 sdg1[6](F) sdf1[7](F) sde1[8](F) sdd1[9](F) sdc1[5] sdb1[4]
+1562842880 blocks level 5, 64k chunk, algorithm 2 [6/2] [____UU]
+
+The 4 failed disks are the ones connected to the failed controller.
+
+The following is after the reboot.
+
+# cat /proc/mdstat:
+md5 : inactive sdb1[4] sdc1[5] sdg1[3] sdf1[2] sde1[1] sdd1[0]
+1875411456 blocks
+
+I then did the following in hope that it would help:
+
+# mdadm -S /dev/md5
+mdadm: stopped /dev/md5
+# mdadm -As /dev/md5
+mdadm: /dev/md5 assembled from 2 drives - not enough to start the array.
+
+No luck!
+
+What can i do to get it up and running again?
+
+Thanks!
