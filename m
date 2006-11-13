@@ -1,125 +1,74 @@
-From: Doug Ledford <dledford@redhat.com>
-Subject: Re: Recovering from default FC6 install
-Date: Sun, 12 Nov 2006 10:38:25 -0500
-Message-ID: <1163345905.4138.501.camel@fc6.xsintricity.com>
-References: <4556B86D.3030802@tmr.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: Re[2]: RAID1 submirror failure causes reboot?
+Date: Mon, 13 Nov 2006 18:17:57 +1100
+Message-ID: <17752.7205.373640.220014@cse.unsw.edu.au>
+References: <1007879814.20061110111729@2ka.mipt.ru>
+	<17748.15156.405065.904318@cse.unsw.edu.au>
+	<208777171.20061110155306@2ka.mipt.ru>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-9ShMH9vlt5CiIkHULKKc"
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4556B86D.3030802@tmr.com>
+In-Reply-To: message from Jim Klimov on Friday November 10
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: Jim Klimov <klimov@2ka.mipt.ru>
+Cc: Jens Axboe <jens.axboe@oracle.com>, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+On Friday November 10, klimov@2ka.mipt.ru wrote:
+> Hello Neil,
+> 
+> >> [87398.531579] blk: request botched
+> NB>                  ^^^^^^^^^^^^^^^^^^^^
+> 
+> NB> That looks bad.  Possible some bug in the IDE controller or elsewhere
+> NB> in the block layer.  Jens: What might cause that?
+> 
+> NB> --snip--
+> 
+> NB> That doesn't look like raid was involved.  If it was you would expect
+> NB> to see raid1_end_write_request or raid1_end_read_request in that
+> NB> trace.
+> So that might be the hard or soft part of IDE layer failing the
+> system, or a PCI problem for example?
 
---=-9ShMH9vlt5CiIkHULKKc
-Content-Type: multipart/mixed; boundary="=-2pR18qWx4s8mHZ6VhKNu"
+What I think is happening here (and Jens: if you could tell me how
+impossible this is, that would be good) is this:
 
+Some error handling somewhere in the low-level ide driver is getting
+confused and somehow one the sector counts in the 'struct request' is
+getting set wrongly.  blk_recalc_rq_sectors notices this and says
+"blk: request botched".  It tries to auto-correct by increasing
+rq->nr_sectors to be consistent with other counts.
+I'm *guessing* this is the wrong thing to do, and that it has a
+side-effect but bi_end_io is getting called on the Bi twice.
+The second time the bio has been freed and reused and the wrong
+b_end_io is called and it does the wrong thing.
 
---=-2pR18qWx4s8mHZ6VhKNu
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+This sounds a bit far-fetched, but it is the only explanation I can
+come up with for the observed back trace which is:
 
-On Sun, 2006-11-12 at 01:00 -0500, Bill Davidsen wrote:
-> I tried something new on a test system, using the install partitioning=20
-> tools to partition the disk. I had three drives and went with RAID-1 for=20
-> boot, and RAID-5+LVM for the rest. After the install was complete I=20
-> noted that it was solid busy on the drives, and found that the base RAID=20
-> appears to have been created (a) with no superblock and (b) with no=20
-> bitmap. That last is an issue, as a test system it WILL be getting hung=20
-> and rebooted, and recovering the 1.5TB took hours.
->=20
-> Is there an easy way to recover this? The LVM dropped on it has a lot of=20
-> partitions, and there is a lot of data in them asfter several hours of=20
-> feeding with GigE, so I can't readily back up and recreate by hand.
->=20
-> Suggestions?
+[87403.706012]  [<c0103871>] error_code+0x39/0x40
+[87403.710794]  [<c0180e0a>] mpage_end_io_read+0x5e/0x72
+[87403.716154]  [<c0164af9>] bio_endio+0x56/0x7b
+[87403.720798]  [<c0256778>] __end_that_request_first+0x1e0/0x301
+[87403.726985]  [<c02568a4>] end_that_request_first+0xb/0xd
+[87403.732699]  [<c02bd73c>] __ide_end_request+0x54/0xe1
+[87403.738214]  [<c02bd807>] ide_end_request+0x3e/0x5c
+[87403.743382]  [<c02c35df>] task_error+0x5b/0x97
+[87403.748113]  [<c02c36fa>] task_in_intr+0x6e/0xa2
+[87403.753120]  [<c02bf19e>] ide_intr+0xaf/0x12c
+[87403.757815]  [<c013e5a7>] handle_IRQ_event+0x23/0x57
+[87403.763135]  [<c013e66f>] __do_IRQ+0x94/0xfd
+[87403.767802]  [<c0105192>] do_IRQ+0x32/0x68
+[87403.772278]  [<c010372e>] common_interrupt+0x1a/0x20
 
-First, the Fedora installer *always* creates persistent arrays, so I'm
-not sure what is making you say it didn't, but they should be
-persistent.
+i.e. bio_endio goes straight to mpage_end_io despite the face that the
+filesystem is mounted over md/raid1.
 
-So, assuming that they are persistent, just recreate the arrays in place
-as version 1.0 superblocks with internal bitmap.  I did that exact thing
-on my FC6 machine I was testing with (raid1, not raid5, but no biggie
-there) and it worked fine.  The detailed list of instructions:
+Is the kernel compiled with CONFIG_DEBUG_SLAB=y and
+CONFIG_DEBUG_PAGEALLOC=y ??
+They might help trigger the error earlier and so make the problem more
+obvious.
 
-Reboot with a rescue CD, skip the finding of the installation, when you
-are at a prompt, use mdadm to examine the raid superblocks so you get
-all the pertinent data such as chunk size on the raid5 and ordering of
-constituent drives in the raid5 right.  Then recreate the arrays as
-version 1.0 superblocks with internal write intent bitmaps.  Then mount
-the partitions manually, bind mount things like /dev and /proc into
-wherever you mounted the root filesystem, edit the mdadm.conf on the
-root filesystem and remove the ARRAY lines (the GUIDs will be wrong
-now), use mdadm -Db or mdadm -Eb to get new ARRAY lines and append them
-to the mdadm.conf (possibly altering the device names for the arrays,
-and if you use -E remember to correct the printout of the GUID in the
-array line, it's 10:8:8:6 instead of 8:8:8:8), patch mkinitrd with
-something like the attached patch, patch /etc/rc.d/rc.sysinit with
-something like the other attached patch (or leave this patch out but
-manually add the correct auto=3D parameter to your ARRAY lines in the
-mdadm.conf), chroot into the root filesystem, remake your initrd image,
-fdisk the drives and switch the linux partition types from raid
-autodetect to plain linux, reboot, and you are done.
-
---=20
-Doug Ledford <dledford@redhat.com>
-              GPG KeyID: CFBFF194
-              http://people.redhat.com/dledford
-
-Infiniband specific RPMs available at
-              http://people.redhat.com/dledford/Infiniband
-
---=-2pR18qWx4s8mHZ6VhKNu
-Content-Disposition: attachment; filename=mkinitrd.patch
-Content-Type: text/x-patch; name=mkinitrd.patch; charset=ISO-8859-1
-Content-Transfer-Encoding: base64
-
-LS0tIC9zYmluL21raW5pdHJkCTIwMDYtMDktMjggMTI6NTE6MjguMDAwMDAwMDAwIC0wNDAwDQor
-KysgbWtpbml0cmQJMjAwNi0xMS0xMiAxMDoyODozMS4wMDAwMDAwMDAgLTA1MDANCkBAIC0xMDk2
-LDYgKzEwOTYsMTMgQEANCiAgICAgbWtub2QgJE1OVElNQUdFL2Rldi9lZmlydGMgYyAxMCAxMzYN
-CiBmaQ0KIA0KK2lmIFsgLW4gIiRyYWlkZGV2aWNlcyIgXTsgdGhlbg0KKyAgICBpbnN0IC9zYmlu
-L21kYWRtLnN0YXRpYyAiJE1OVElNQUdFL2Jpbi9tZGFkbSINCisgICAgaWYgWyAtZiAvZXRjL21k
-YWRtLmNvbmYgXTsgdGhlbg0KKyAgICAgICAgY3AgJHZlcmJvc2UgL2V0Yy9tZGFkbS5jb25mICIk
-TU5USU1BR0UvZXRjL21kYWRtLmNvbmYiDQorICAgIGZpDQorZmkNCisNCiAjIEZJWE1FIC0tIHRo
-aXMgY2FuIHJlYWxseSBnbyBwb29ybHkgd2l0aCBjbHZtIG9yIGR1cGxpY2F0ZSB2ZyBuYW1lcy4N
-CiAjIG5hc2ggc2hvdWxkIGRvIGx2bSBwcm9iaW5nIGZvciB1cyBhbmQgd3JpdGUgaXRzIG93biBj
-b25maWdzLg0KIGlmIFsgLW4gIiR2Z19saXN0IiBdOyB0aGVuDQpAQCAtMTIzNCw4ICsxMjQxLDcg
-QEANCiANCiBpZiBbIC1uICIkcmFpZGRldmljZXMiIF07IHRoZW4NCiAgICAgZm9yIGRldiBpbiAk
-cmFpZGRldmljZXM7IGRvDQotICAgICAgICBjcCAtYSAvZGV2LyR7ZGV2fSAkTU5USU1BR0UvZGV2
-DQotICAgICAgICBlbWl0ICJyYWlkYXV0b3J1biAvZGV2LyR7ZGV2fSINCisgICAgICAgIGVtaXQg
-Im1kYWRtIC1BcyAtLWF1dG89eWVzIC9kZXYvJHtkZXZ9Ig0KICAgICBkb25lDQogZmkNCiANCg==
-
-
---=-2pR18qWx4s8mHZ6VhKNu
-Content-Disposition: attachment; filename=rc.sysinit.patch
-Content-Type: text/x-patch; name=rc.sysinit.patch; charset=ISO-8859-1
-Content-Transfer-Encoding: base64
-
-LS0tIC9ldGMvcmMuZC9yYy5zeXNpbml0CTIwMDYtMTAtMDQgMTg6MTQ6NTMuMDAwMDAwMDAwIC0w
-NDAwDQorKysgcmMuc3lzaW5pdAkyMDA2LTExLTEyIDEwOjI5OjAzLjAwMDAwMDAwMCAtMDUwMA0K
-QEAgLTQwMyw3ICs0MDMsNyBAQA0KIHVwZGF0ZV9ib290X3N0YWdlIFJDcmFpZA0KIFsgLXggL3Ni
-aW4vbmFzaCBdICYmIGVjaG8gInJhaWRhdXRvcnVuIC9kZXYvbWQwIiB8IG5hc2ggLS1xdWlldA0K
-IGlmIFsgLWYgL2V0Yy9tZGFkbS5jb25mIF07IHRoZW4NCi0gICAgL3NiaW4vbWRhZG0gLUEgLXMN
-CisgICAgL3NiaW4vbWRhZG0gLUEgLXMgLS1hdXRvPXllcw0KIGZpDQogDQogIyBEZXZpY2UgbWFw
-cGVyICYgcmVsYXRlZCBpbml0aWFsaXphdGlvbg0K
-
-
---=-2pR18qWx4s8mHZ6VhKNu--
-
---=-9ShMH9vlt5CiIkHULKKc
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
-
-iD8DBQBFVz/xTzP9PM7pjw8RApsVAJ9tybf56mRKZ5Jb4kyLI3fGnEfbXQCfVON6
-Ag0iFLFgkFB9ymJ1vSI9lN4=
-=F4ox
------END PGP SIGNATURE-----
-
---=-9ShMH9vlt5CiIkHULKKc--
-
+NeilBrown
