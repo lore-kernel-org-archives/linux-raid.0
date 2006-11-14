@@ -1,64 +1,90 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [PATCH 004 of 4] md: Fix a couple more bugs in raid5/6 aligned reads
-Date: Tue, 14 Nov 2006 11:22:46 +1100
-Message-ID: <1061114002246.31198@suse.de>
+Subject: [PATCH 003 of 4] md: Misc fixes for aligned-read handling.
+Date: Tue, 14 Nov 2006 11:22:41 +1100
+Message-ID: <1061114002241.31180@suse.de>
 References: <20061114111600.31061.patches@notabene>
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S933247AbWKNAWv@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Andrew Morton <akpm@osdl.org>
 Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-1/ We don't de-reference the rdev when the read completes.
-   This means we need to record the rdev to so it is still
-   available in the end_io routine.  Fortunately
-   bi_next in the original bio is unused at this point so
-   we can stuff it in there.
+1/ When aligned requests fail (read error) they need to be retried 
+   via the normal method (stripe cache).  As we cannot be sure that
+   we can process a single read in one go (we may not be able to
+   allocate all the stripes needed) we store a bio-being-retried
+   and a list of bioes-that-still-need-to-be-retried.
+   When find a bio that needs to be retried, we should add it to 
+   the list, not to single-bio...
 
-2/ We leak a cloned by if the target rdev is not usasble.
+2/ The cloned bio is being used-after-free (to test BIO_UPTODATE).
+
+3/ We forgot to add rdev->data_offset when submitting
+   a bio for aligned-read
+4/ clone_bio calls blk_recount_segments and then we change bi_bdev,
+   so we need to invalidate the segment counts.
+
+5/ We were never incrementing 'scnt' when resubmitting failed
+   aligned requests.
 
 Signed-off-by: Neil Brown <neilb@suse.de>
 
 ### Diffstat output
- ./drivers/md/raid5.c |    7 +++++++
- 1 file changed, 7 insertions(+)
+ ./drivers/md/raid5.c |   14 +++++++++-----
+ 1 file changed, 9 insertions(+), 5 deletions(-)
 
 diff .prev/drivers/md/raid5.c ./drivers/md/raid5.c
---- .prev/drivers/md/raid5.c	2006-11-14 11:00:51.000000000 +1100
-+++ ./drivers/md/raid5.c	2006-11-14 11:06:44.000000000 +1100
-@@ -2699,6 +2699,7 @@ static int raid5_align_endio(struct bio 
+--- .prev/drivers/md/raid5.c	2006-11-14 10:34:17.000000000 +1100
++++ ./drivers/md/raid5.c	2006-11-14 10:34:33.000000000 +1100
+@@ -2658,8 +2658,8 @@ static void add_bio_to_retry(struct bio 
+ 
+ 	spin_lock_irqsave(&conf->device_lock, flags);
+ 
+-	bi->bi_next = conf->retry_read_aligned;
+-	conf->retry_read_aligned = bi;
++	bi->bi_next = conf->retry_read_aligned_list;
++	conf->retry_read_aligned_list = bi;
+ 
+ 	spin_unlock_irqrestore(&conf->device_lock, flags);
+ 	md_wakeup_thread(conf->mddev->thread);
+@@ -2698,6 +2698,7 @@ static int raid5_align_endio(struct bio 
+ 	struct bio* raid_bi  = bi->bi_private;
  	mddev_t *mddev;
  	raid5_conf_t *conf;
- 	int uptodate = test_bit(BIO_UPTODATE, &bi->bi_flags);
-+	mdk_rdev_t *rdev;
++	int uptodate = test_bit(BIO_UPTODATE, &bi->bi_flags);
  
  	if (bi->bi_size)
  		return 1;
-@@ -2706,6 +2707,10 @@ static int raid5_align_endio(struct bio 
- 
+@@ -2706,7 +2707,7 @@ static int raid5_align_endio(struct bio 
  	mddev = raid_bi->bi_bdev->bd_disk->queue->queuedata;
  	conf = mddev_to_conf(mddev);
-+	rdev = (void*)raid_bi->bi_next;
-+	raid_bi->bi_next = NULL;
-+
-+	rdev_dec_pending(rdev, conf->mddev);
  
- 	if (!error && uptodate) {
+-	if (!error && test_bit(BIO_UPTODATE, &bi->bi_flags)) {
++	if (!error && uptodate) {
  		bio_endio(raid_bi, bytes, 0);
-@@ -2762,6 +2767,7 @@ static int chunk_aligned_read(request_qu
+ 		if (atomic_dec_and_test(&conf->active_aligned_reads))
+ 			wake_up(&conf->wait_for_stripe);
+@@ -2759,9 +2760,11 @@ static int chunk_aligned_read(request_qu
+ 	rcu_read_lock();
+ 	rdev = rcu_dereference(conf->disks[dd_idx].rdev);
  	if (rdev && test_bit(In_sync, &rdev->flags)) {
+-		align_bi->bi_bdev =  rdev->bdev;
  		atomic_inc(&rdev->nr_pending);
  		rcu_read_unlock();
-+		raid_bio->bi_next = (void*)rdev;
- 		align_bi->bi_bdev =  rdev->bdev;
- 		align_bi->bi_flags &= ~(1 << BIO_SEG_VALID);
- 		align_bi->bi_sector += rdev->data_offset;
-@@ -2777,6 +2783,7 @@ static int chunk_aligned_read(request_qu
- 		return 1;
- 	} else {
- 		rcu_read_unlock();
-+		bio_put(align_bi);
- 		return 0;
- 	}
- }
++		align_bi->bi_bdev =  rdev->bdev;
++		align_bi->bi_flags &= ~(1 << BIO_SEG_VALID);
++		align_bi->bi_sector += rdev->data_offset;
+ 
+ 		spin_lock_irq(&conf->device_lock);
+ 		wait_event_lock_irq(conf->wait_for_stripe,
+@@ -3151,7 +3154,8 @@ static int  retry_aligned_read(raid5_con
+ 					conf);
+ 	last_sector = raid_bio->bi_sector + (raid_bio->bi_size>>9);
+ 
+-	for (; logical_sector < last_sector; logical_sector += STRIPE_SECTORS) {
++	for (; logical_sector < last_sector;
++	     logical_sector += STRIPE_SECTORS, scnt++) {
+ 
+ 		if (scnt < raid_bio->bi_hw_segments)
+ 			/* already done this stripe */
