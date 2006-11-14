@@ -1,65 +1,52 @@
-From: NeilBrown <neilb@suse.de>
-Subject: [PATCH 002 of 4] md: Fix newly introduced read-corruption with raid6.
-Date: Tue, 14 Nov 2006 11:22:36 +1100
-Message-ID: <1061114002236.31168@suse.de>
-References: <20061114111600.31061.patches@notabene>
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S933246AbWKNAXS@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Neil Brown <neilb@suse.de>
+Subject: Re: bio too big device dm-XX (256 > 255) on 2.6.17
+Date: Tue, 14 Nov 2006 15:25:08 +1100
+Message-ID: <17753.17700.818164.511147@cse.unsw.edu.au>
+References: <20061109005227.73b4fd14.pegasus@nerv.eu.org>
+	<20061114004120.30c821c8.pegasus@nerv.eu.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: message from Jure  =?ISO-8859-1?Q?=20Pe=1B$,1?=  =?ISO-8859-1?Q?=20-=1B(Bar?= on Tuesday November 14
+Sender: linux-raid-owner@vger.kernel.org
+To: Jure =?UTF-8?B?UGXEjWFy?= <pegasus@nerv.eu.org>
+Cc: linux-raid@vger.kernel.org, evms-devel@lists.sourceforge.net, dm-devel@redhat.com, reiserfs-list@namesys.com
 List-Id: linux-raid.ids
 
+On Tuesday November 14, pegasus@nerv.eu.org wrote:
+> 
+> Hello,
+> 
+> this is getting more and more annoying.
+> 
+> Somewhere in the stack reiserfs-dm-md-hd[bd] lies the problem that's causing "bio too big device dm-10 (256 > 255)" errors, which cause i/o failures.
+> 
+> It works as expected on reiserfs-dm-sda and on ext3-dm-md-hd[bd].
+> 
+> Debian Etch, 2.6.17-2.
+> 
 
-chunk_aligned_read and retry_aligned_read assume that
-    data_disks == raid_disks - 1
-which is not true for raid6.
-So when an aligned read request bypasses the cache, we can get the wrong data.
+Please try this patch (I can give more detailed instructions if needed).
 
-Also change the calculate of raid_disks in compute_blocknr to make it
-more obviously correct.
+NeilBrown
 
 Signed-off-by: Neil Brown <neilb@suse.de>
 
 ### Diffstat output
- ./drivers/md/raid5.c |    8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ ./drivers/md/dm-table.c |    3 +++
+ 1 file changed, 3 insertions(+)
 
-diff .prev/drivers/md/raid5.c ./drivers/md/raid5.c
---- .prev/drivers/md/raid5.c	2006-11-14 10:33:41.000000000 +1100
-+++ ./drivers/md/raid5.c	2006-11-14 10:34:17.000000000 +1100
-@@ -823,7 +823,8 @@ static sector_t raid5_compute_sector(sec
- static sector_t compute_blocknr(struct stripe_head *sh, int i)
- {
- 	raid5_conf_t *conf = sh->raid_conf;
--	int raid_disks = sh->disks, data_disks = raid_disks - 1;
-+	int raid_disks = sh->disks;
-+	int data_disks = raid_disks - conf->max_degraded;
- 	sector_t new_sector = sh->sector, check;
- 	int sectors_per_chunk = conf->chunk_size >> 9;
- 	sector_t stripe;
-@@ -859,7 +860,6 @@ static sector_t compute_blocknr(struct s
- 		}
- 		break;
- 	case 6:
--		data_disks = raid_disks - 2;
- 		if (i == raid6_next_disk(sh->pd_idx, raid_disks))
- 			return 0; /* It is the Q disk */
- 		switch (conf->algorithm) {
-@@ -2725,7 +2725,7 @@ static int chunk_aligned_read(request_qu
- 	mddev_t *mddev = q->queuedata;
- 	raid5_conf_t *conf = mddev_to_conf(mddev);
- 	const unsigned int raid_disks = conf->raid_disks;
--	const unsigned int data_disks = raid_disks - 1;
-+	const unsigned int data_disks = raid_disks - conf->max_degraded;
- 	unsigned int dd_idx, pd_idx;
- 	struct bio* align_bi;
- 	mdk_rdev_t *rdev;
-@@ -3145,7 +3145,7 @@ static int  retry_aligned_read(raid5_con
- 	logical_sector = raid_bio->bi_sector & ~((sector_t)STRIPE_SECTORS-1);
- 	sector = raid5_compute_sector(	logical_sector,
- 					conf->raid_disks,
--					conf->raid_disks-1,
-+					conf->raid_disks - conf->max_degraded,
- 					&dd_idx,
- 					&pd_idx,
- 					conf);
+diff .prev/drivers/md/dm-table.c ./drivers/md/dm-table.c
+--- .prev/drivers/md/dm-table.c	2006-11-14 15:23:08.000000000 +1100
++++ ./drivers/md/dm-table.c	2006-11-14 15:23:57.000000000 +1100
+@@ -99,6 +99,9 @@ static void combine_restrictions_low(str
+ 	lhs->max_segment_size =
+ 		min_not_zero(lhs->max_segment_size, rhs->max_segment_size);
+ 
++	lhs->max_hw_sectors = 
++		min_not_zero(lhs->max_hw_sectors, rhs->max_hw_sectors);
++
+ 	lhs->seg_boundary_mask =
+ 		min_not_zero(lhs->seg_boundary_mask, rhs->seg_boundary_mask);
+ 
