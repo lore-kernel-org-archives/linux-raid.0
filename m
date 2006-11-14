@@ -1,59 +1,30 @@
-From: Jure =?UTF-8?B?UGXEjWFy?= <pegasus@nerv.eu.org>
-Subject: Re: bio too big device dm-XX (256 > 255) on 2.6.17
-Date: Tue, 14 Nov 2006 00:41:20 +0100
-Message-ID: <20061114004120.30c821c8.pegasus@nerv.eu.org>
-References: <20061109005227.73b4fd14.pegasus@nerv.eu.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: NeilBrown <neilb@suse.de>
+Subject: [PATCH 000 of 4] md: Various fixes for new cache-bypassing-reads in raid5/6
+Date: Tue, 14 Nov 2006 11:22:23 +1100
+Message-ID: <20061114111600.31061.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20061109005227.73b4fd14.pegasus@nerv.eu.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: evms-devel@lists.sourceforge.net, dm-devel@redhat.com, reiserfs-list@namesys.com
+To: Andrew Morton <akpm@osdl.org>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
+The patches which enable reading from raid5 without going through the
+stripe cache have a bug which causes corruption when reading from a
+raid6.
+It might be appropriate to put out a hotfix for rc5-mm1 which reverts
 
-Hello,
+   md-enable-bypassing-cache-for-reads.patch
 
-this is getting more and more annoying.
+The follow 4 patches fix this bug and a few other bugs I found while
+re-reviewing and re-testing this code.  There are actually about 9
+separate bugs here, but I grouped some of them to avoid having lots
+of tiny patches.
 
-Somewhere in the stack reiserfs-dm-md-hd[bd] lies the problem that's ca=
-using "bio too big device dm-10 (256 > 255)" errors, which cause i/o fa=
-ilures.
-
-It works as expected on reiserfs-dm-sda and on ext3-dm-md-hd[bd].
-
-Debian Etch, 2.6.17-2.
-
-
-
-On Thu, 9 Nov 2006 00:52:27 +0100
-Jure Pe=C4=8Dar <pegasus@nerv.eu.org> wrote:
-
->=20
-> Hello,
->=20
-> Recently I upgraded my home server. I moved EVMS volumes from 3ware h=
-w
-> mirrors (lvm2) to a md raid1 (lvm2) and am now getting lots of these
-> errors, which result in Input/output errors trying to read files from
-> those volumes. It's kind of ugly because I have all the data, I just
-> cannot read it ...
->=20
-> Google comes up with mails from 2003 mentioning such problems. Are th=
-ere
-> any known such problems in recent kernels or am I hitting something n=
-ew
-> here?
+NeilBrown
 
 
---=20
 
-Jure Pe=C4=8Dar
-http://jure.pecar.org/
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+ [PATCH 001 of 4] md: Fix innocuous bug in raid6 stripe_to_pdidx
+ [PATCH 002 of 4] md: Fix newly introduced read-corruption with raid6.
+ [PATCH 003 of 4] md: Misc fixes for aligned-read handling.
+ [PATCH 004 of 4] md: Fix a couple more bugs in raid5/6 aligned reads
