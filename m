@@ -1,51 +1,44 @@
-From: "=?gb2312?B?0+HPyNOh?=" <yu_xianyin@dahuatech.com>
-Subject: How mdadm can support > 2T
-Date: Wed, 15 Nov 2006 12:36:38 +0800
-Message-ID: <200611151236376090234@dahuatech.com>
+From: Chris Allen <chris@cjx.com>
+Subject: Re: How mdadm can support > 2T
+Date: Wed, 15 Nov 2006 16:00:51 +0000
+Message-ID: <455B39B3.1080707@cjx.com>
+References: <200611151236376090234@dahuatech.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=GB2312
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <200611151236376090234@dahuatech.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
+To: =?GB2312?B?0+HPyNOh?= <yu_xianyin@dahuatech.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Ilinux-raid want to create raid0 use mdadm 2.5.6, kernel 2.6.18-iop3 on the intel iop80331(32bit). use 5 disks, and every hard disk is 500G. But it can't beyond > 2T.  How can support >2T on the 32bit cpu ?  
 
-command and log :
-#mdadm -C /dev/md0 -l0 -n5 /dev/sd[c,d,e,f,g]
-# mdadm --detail /dev/md0
+=D3=E1=CF=C8=D3=A1 wrote:
+> Ilinux-raid want to create raid0 use mdadm 2.5.6, kernel 2.6.18-iop3 =
+on the intel iop80331(32bit). use 5 disks, and every hard disk is 500G.=
+ But it can't beyond > 2T.  How can support >2T on the 32bit cpu ? =20
+>
+> command and log :
+> #mdadm -C /dev/md0 -l0 -n5 /dev/sd[c,d,e,f,g]
+> # mdadm --detail /dev/md0
+>
+>  =20
 
-root@iop:/# mdadm --detail /dev/md0
-/dev/md0:
-        Version : 00.90.03
-  Creation Time : Thu Jan  1 00:29:29 1970
-     Raid Level : raid0
-     Array Size : 294448832 (280.81 GiB 301.52 GB)
-   Raid Devices : 5
-  Total Devices : 5
-Preferred Minor : 0
-    Persistence : Superblock is persistent
+I have many arrays which are 12TB or greater - so I don't think this is
+your problem.
+It looks like mdadm is only using 60GB from each disk.
 
-    Update Time : Thu Jan  1 00:29:29 1970
-          State : clean
- Active Devices : 5
-Working Devices : 5
- Failed Devices : 0
-  Spare Devices : 0
+What output do you get from these commands:
 
-     Chunk Size : 64K
+fdisk -l /dev/sdc
 
-           UUID : ebdd57fe:8eb46fdf:884d06b0:5db18b9d
-         Events : 0.1
+mdadm --examine /dev/sdc
 
-    Number   Major   Minor   RaidDevice State
-       0       8       32        0      active sync   /dev/sdc
-       1       8       48        1      active sync   /dev/sdd
-       2       8       64        2      active sync   /dev/sde
-       3       8       80        3      active sync   /dev/sdf
-       4       8       96        4      active sync   /dev/sdg
+?
 
-
-
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
