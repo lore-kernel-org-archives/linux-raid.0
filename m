@@ -1,71 +1,51 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: Recovering from default FC6 install
-Date: Tue, 14 Nov 2006 13:34:23 -0500
-Message-ID: <455A0C2F.4050603@tmr.com>
-References: <4556B86D.3030802@tmr.com> <1163345905.4138.501.camel@fc6.xsintricity.com>
+From: "=?gb2312?B?0+HPyNOh?=" <yu_xianyin@dahuatech.com>
+Subject: How mdadm can support > 2T
+Date: Wed, 15 Nov 2006 12:36:38 +0800
+Message-ID: <200611151236376090234@dahuatech.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain;
+	charset="gb2312"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1163345905.4138.501.camel@fc6.xsintricity.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Doug Ledford <dledford@redhat.com>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Doug Ledford wrote:
+Ilinux-raid want to create raid0 use mdadm 2.5.6, kernel 2.6.18-iop3 on the intel iop80331(32bit). use 5 disks, and every hard disk is 500G. But it can't beyond > 2T.  How can support >2T on the 32bit cpu ?  
 
->On Sun, 2006-11-12 at 01:00 -0500, Bill Davidsen wrote:
->  
->
->>I tried something new on a test system, using the install partitioning 
->>tools to partition the disk. I had three drives and went with RAID-1 for 
->>boot, and RAID-5+LVM for the rest. After the install was complete I 
->>noted that it was solid busy on the drives, and found that the base RAID 
->>appears to have been created (a) with no superblock and (b) with no 
->>bitmap. That last is an issue, as a test system it WILL be getting hung 
->>and rebooted, and recovering the 1.5TB took hours.
->>
->>Is there an easy way to recover this? The LVM dropped on it has a lot of 
->>partitions, and there is a lot of data in them asfter several hours of 
->>feeding with GigE, so I can't readily back up and recreate by hand.
->>
->>Suggestions?
->>    
->>
->
->First, the Fedora installer *always* creates persistent arrays, so I'm
->not sure what is making you say it didn't, but they should be
->persistent.
->  
->
-I got the detail on the md device, then -E on the components, and got a 
-"no super block found" message, which made me think it wasn't there. 
-Given that, I didn't have much hope for the part which starts "assuming 
-that they are persistent" but I do thank you for the information, I'm 
-sure it will be useful.
+command and log :
+#mdadm -C /dev/md0 -l0 -n5 /dev/sd[c,d,e,f,g]
+# mdadm --detail /dev/md0
 
-I did try recreating, from the running FC6 rather than the rescue, since 
-the large data was on it's own RAID and I could umount the f/s and stop 
-the array. Alas, I think a "grow" is needed somewhere, after 
-configuration, start, and mount of the f/s on RAID-5, e2fsck told me my 
-data was toast. Shortest time to solution was to recreate the f/s and 
-reload the data.
+root@iop:/# mdadm --detail /dev/md0
+/dev/md0:
+        Version : 00.90.03
+  Creation Time : Thu Jan  1 00:29:29 1970
+     Raid Level : raid0
+     Array Size : 294448832 (280.81 GiB 301.52 GB)
+   Raid Devices : 5
+  Total Devices : 5
+Preferred Minor : 0
+    Persistence : Superblock is persistent
 
-The RAID-1 stuff is small, a total rebuild is acceptable in the case of 
-a failure.
+    Update Time : Thu Jan  1 00:29:29 1970
+          State : clean
+ Active Devices : 5
+Working Devices : 5
+ Failed Devices : 0
+  Spare Devices : 0
 
-FC install suggestion: more optional control over the RAID features 
-during creation. Maybe there's an "advanced features" button in the 
-install and I just missed it, but there should be, since the non-average 
-user might be able to do useful things with the chunk size, and specify 
-a bitmap. I would think that a bitmap would be the default on large 
-arrays, assuming that >1TB is still large for the moment.
+     Chunk Size : 64K
 
-Instructions and attachments save for future use, trimmed here.
+           UUID : ebdd57fe:8eb46fdf:884d06b0:5db18b9d
+         Events : 0.1
 
--- 
-bill davidsen <davidsen@tmr.com>
-  CTO TMR Associates, Inc
-  Doing interesting things with small computers since 1979
+    Number   Major   Minor   RaidDevice State
+       0       8       32        0      active sync   /dev/sdc
+       1       8       48        1      active sync   /dev/sdd
+       2       8       64        2      active sync   /dev/sde
+       3       8       80        3      active sync   /dev/sdf
+       4       8       96        4      active sync   /dev/sdg
+
+
 
