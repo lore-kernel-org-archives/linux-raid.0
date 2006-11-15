@@ -1,43 +1,42 @@
-From: Forrest Taylor <ftaylor@redhat.com>
-Subject: Re: safest way to swap in a new physical disk
-Date: Wed, 15 Nov 2006 16:02:52 -0700
-Message-ID: <1163631772.3742.55.camel@x1-6-00-0d-60-fd-e8-4c>
-References: <6D7E98FD-D24F-402D-A7F0-63179FA3C49E@gmail.com>
+From: "Danny Sung" <dsung@lantronix.com>
+Subject: Raid1 uses partially reconstructed drive
+Date: Wed, 15 Nov 2006 15:53:01 -0800
+Message-ID: <2F0FC2A92C0B154BB406D5E74CB3E6930336BDC1@3putt.int.lantronix.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-IkHkpI790U47leOPO8j6"
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <6D7E98FD-D24F-402D-A7F0-63179FA3C49E@gmail.com>
+Content-Class: urn:content-classes:message
 Sender: linux-raid-owner@vger.kernel.org
-To: Will Sheffler <willsheffler@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Perhaps this is the problem addressed in the 2.6.18.2 patch... But I
+thought I'd post it here just in case.
 
---=-IkHkpI790U47leOPO8j6
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I was cloning some drives, and ended up creating a 1 drive RAID1 array.
+After that was built, I decided to add my spare drive and allow the
+reconstruction to take care of things.  As soon as I saw that
+reconstruction was taking place, I shutdown the system, put the drives
+away and closed the case.
 
-Oops, I forgot to mention that the RAID should recover before you go on
-to the next disk.  Thus, number five should read:
+To my surprise, when I booted, I encountered numerous disk errors.
+Apparently the system decided to ues the partially reconstructed drive
+as the primary!  And of course, it had no knowledge that reconstruction
+needed to continue.  My data was hosed and I had to restart the cloning
+process.
 
-5.  Verify that the disk has rebuilt.
-   mdadm -D /dev/md0
-   cat /proc/mdstat
-    Once it has completed syncing, then repeat with the second drive.
+This was using on an FC5 system, using kernel 2.6.18.
+(2.6.18-1.2200-smp).
 
-Forrest
 
---=-IkHkpI790U47leOPO8j6
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+This appears to be the same issue that Doug Ledford had in his posting
+"mdadm-2.5.4 issues and 2.6.18.1 kernel md issues"
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.6 (GNU/Linux)
 
-iD8DBQBFW5ycaUnzBifbsNQRAkiRAJ98ObBBF5raK14Jm0hZS/HpdW/gDQCgkeoh
-6zaJGGWKf1RP5odFEdiTiuI=
-=fkJa
------END PGP SIGNATURE-----
-
---=-IkHkpI790U47leOPO8j6--
+(appologies for the disclaimer below... Please don't hate us because we
+have lawyers).
+**********************************************************************
+This e-mail is the property of Lantronix. It is intended only for the person or entity to which it is addressed and may contain information that is privileged, confidential, or otherwise protected from disclosure. Distribution or copying of this e-mail, or the information contained herein, to anyone other than the intended recipient is prohibited.
 
