@@ -1,77 +1,55 @@
-From: "Magnus Naeslund(k)" <mag@kite.se>
-Subject: Raid 1 (non) performance
-Date: Wed, 15 Nov 2006 17:53:29 +0100
-Message-ID: <455B4609.6090905@kite.se>
+From: martin f krafft <madduck@madduck.net>
+Subject: why not make everything partitionable?
+Date: Wed, 15 Nov 2006 18:22:34 +0100
+Message-ID: <20061115172234.GA32276@piper.oerlikon.madduck.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="9jxsPFA5p3P2qPhR"
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: linux-raid mailing list <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hello I might have a strange raid setup that results in bad raid 1 
-performance. I would be very happy if someone have any pointers about 
-this so that I can get some decent performance out of my box...
 
-This is an mailserver running postfix and dovecot (imap/pop). It's running Ubuntu Dapper amd64 with an 2.6.17.6 since the original dapper kernel doesn't support the sata controller.
-The motherboard is some kind of HT1000 based thing with a single opteron 146 processor with 2gb ram, the sata driver I use is sata_svw. The two disks forming the raid1 set are Maxtor 6V250F0 sata disks.
-The /var filesystem has some (+j) attributes set on the postfix directories.
+--9jxsPFA5p3P2qPhR
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-I'm not sure what more information is needed, please point out if something is missing.
+Hi folks,
 
-The raid setup:
+you cannot create partitions within partitions, but you can well use
+whole disks for a filesystem without any partitions.
 
-# cat /proc/mdstat
-Personalities : [raid1]
-md2 : active raid1 sda3[0] sdb3[1]
-      236725696 blocks [2/2] [UU]
+Along the same lines, I wonder why md/mdadm distinguish between
+partitionable and non-partitionable in the first place. Why isn't
+everything partitionable?
 
-md1 : active raid1 sda2[0] sdb2[1]
-      4192896 blocks [2/2] [UU]
+Thanks for any explanation(s)!
 
-md0 : active raid1 sda1[0] sdb1[1]
-      4192832 blocks [2/2] [UU]
+--=20
+martin;              (greetings from the heart of the sun.)
+  \____ echo mailto: !#^."<*>"|tr "<*> mailto:" net@madduck
+=20
+spamtraps: madduck.bogus@madduck.net
+=20
+the reason that every major university
+maintains a department of mathematics
+is that it's cheaper than
+institutionalizing all those people.
 
-unused devices: <none>
+--9jxsPFA5p3P2qPhR
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature (GPG/PGP)
+Content-Disposition: inline
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
 
-Partitions:
+iD8DBQFFW0zaIgvIgzMMSnURAtrGAJ93q9pK9znR1MzTGVOnD36RDiSDeQCg4GTn
+rEkAodECBtKKbSEfyVO/Weg=
+=X7za
+-----END PGP SIGNATURE-----
 
-# mount|grep ext
-/dev/md1 on / type ext3 (rw,noatime,errors=remount-ro)
-/dev/md2 on /var type ext3 (rw,noatime)
-
-The tune2fs options and journal sizes on the filesystems:
-
-/dev/md1: Journal size: 67108864 (64mb)
-	ext_attr, resize_inode, dir_index, filetype, sparse_super, large_file
-
-/dev/md2: Journal size: 402653184 (384mb)
-	resize_inode, dir_index, filetype, sparse_super, large_file
-
-Swaps:
-
-# swapon -s
-Filename                                Type            Size    Used 
-Priority
-/dev/md0                                partition       4192824 116     -1
-
-
-I've tried to modify the queuing by doing this, to disable the write cache and enable CFQ. The CFQ choice is rather random.
-
-for disk in sda sdb; do
-  blktool /dev/$disk wcache off
-  hdparm -q -W 0 /dev/$disk
-  echo cfq > /sys/block/$disk/queue/scheduler
-done
-
-When I search a imap account having 5 gb (approx 500000 mail) worth of mail the box seems to block alot, somehow processes monopolize the IO bandwidth, not like the many other systems I'm running.
-The raid1 should be an improvement over using the disks directly on the read side atleast.
-
-Any ideas as of why the performance/fairness is out the window?
-Do you need any more info?
-
-Regards,
-Magnus
-
+--9jxsPFA5p3P2qPhR--
