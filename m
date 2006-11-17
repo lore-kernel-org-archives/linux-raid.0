@@ -1,143 +1,93 @@
-From: Russell Hammer <russ@perneus.com>
-Subject: mdadm --misc --detail --test ... question
-Date: Fri, 17 Nov 2006 14:21:18 -0500
-Message-ID: <1163791278.2861.24.camel@a6000>
-Reply-To: russ@perneus.com
+From: Mike Hardy <mhardy@h3c.com>
+Subject: Re: raidreconf for 5 x 320GB -> 8 x 320GB
+Date: Fri, 17 Nov 2006 12:26:31 -0800
+Message-ID: <455E1AF7.5010201@h3c.com>
+References: <003301c70a5d$c8d1d6e0$0200a8c0@turalyon>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <003301c70a5d$c8d1d6e0$0200a8c0@turalyon>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Timo Bernack <timo.bernack@bernack.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I'm trying to test the status of a raid device using mdadm:
 
-# mdadm --misc --detail --test /dev/md0
+You don't want to use raidreconf unless I'm misunderstanding your goal -
+I have also had success with raidreconf but have had data-loss failures
+as well (I've posted to the list about it if you search). The data-loss
+failures were after I had run tests that showed me it should work.
 
-However this does not appear to work as documented.  As I read the man
-page, the return code is supposed to reflect the status of the raid
-device:
+raidreconf is no longer maintained, so it's a dead end to try to hunt
+down the failures.
 
-"
-MISC MODE
- ...
-       --detail
-              The  device  should be an active md device.  mdadm will
-              display a detailed description of the array. --brief or --scan
-              will cause the output to be less detailed and the format to be
-              suitable for inclusion in  /etc/mdadm.conf.   The  exit status
-              of mdadm will normally be 0 unless mdadm failed to get useful
-              information about the device(s).  However if the --test option
-              is given, then the exit status will be:
+Luckily, Neil Brown has added raid5 "reshape" support (same thing
+raidreconf did) to the md driver, so you can just use 'mdadm --grow'
+commands to do what you want.
 
-              0      The array is functioning normally.
+So I'd say to update your kernel to the newest 2.6.18.xx or whatever is
+out, and update mdadm give that a shot with your test partitions. The
+new versions are working fine as near as I can tell, and I've got them
+in use (FC5 machines - you can see their versions, and call me foolish
+for putting FC in production if you want) in a production environment
+with no issues.
 
-              1      The array has at least one failed device.
+-Mike
 
-              2      The array has multiple failed devices and hence is unusable (raid4 or raid5).
-
-              4      There was an error while trying to get information about the device.
-"
-
-Am I missing something here (see below)?
-
-Thanks,
-Russ
-
-------------------------------------------------------------------------
-# mdadm --misc --detail --test /dev/md0; echo -e "\nReturned --> $?"
-/dev/md0:
-        Version : 00.90.03
-  Creation Time : Mon Aug 23 12:49:46 2004
-     Raid Level : raid1
-     Array Size : 104320 (101.89 MiB 106.82 MB)
-    Device Size : 104320 (101.89 MiB 106.82 MB)
-   Raid Devices : 2
-  Total Devices : 2
-Preferred Minor : 0
-    Persistence : Superblock is persistent
-
-    Update Time : Thu Nov 16 13:38:40 2006
-          State : clean
- Active Devices : 2
-Working Devices : 2
- Failed Devices : 0
-  Spare Devices : 0
-
-           UUID : 403240c4:4a5c7f60:ce59447e:a08858a9
-         Events : 0.4476
-
-    Number   Major   Minor   RaidDevice State
-       0      33        1        0      active sync   /dev/hde1
-       1      34        1        1      active sync   /dev/hdg1
-
-Returned --> 0
-
-# mdadm --manage --fail /dev/md0 /dev/hdg1
-mdadm: set /dev/hdg1 faulty in /dev/md0
-
-# mdadm --misc --detail --test /dev/md0; echo -e "\nReturned --> $?"
-/dev/md0:
-        Version : 00.90.03
-  Creation Time : Mon Aug 23 12:49:46 2004
-     Raid Level : raid1
-     Array Size : 104320 (101.89 MiB 106.82 MB)
-    Device Size : 104320 (101.89 MiB 106.82 MB)
-   Raid Devices : 2
-  Total Devices : 2
-Preferred Minor : 0
-    Persistence : Superblock is persistent
-
-    Update Time : Fri Nov 17 14:08:33 2006
-          State : clean, degraded
- Active Devices : 1
-Working Devices : 1
- Failed Devices : 1
-  Spare Devices : 0
-
-           UUID : 403240c4:4a5c7f60:ce59447e:a08858a9
-         Events : 0.4478
-
-    Number   Major   Minor   RaidDevice State
-       0      33        1        0      active sync   /dev/hde1
-       1       0        0        1      removed
-
-       2      34        1        -      faulty spare   /dev/hdg1
-
-Returned --> 0
-
-# mdadm --manage --remove /dev/md0 /dev/hdg1
-mdadm: hot removed /dev/hdg1
-
-# mdadm --misc --detail --test /dev/md0; echo -e "\nReturned --> $?"
-/dev/md0:
-        Version : 00.90.03
-  Creation Time : Mon Aug 23 12:49:46 2004
-     Raid Level : raid1
-     Array Size : 104320 (101.89 MiB 106.82 MB)
-    Device Size : 104320 (101.89 MiB 106.82 MB)
-   Raid Devices : 2
-  Total Devices : 1
-Preferred Minor : 0
-    Persistence : Superblock is persistent
-
-    Update Time : Fri Nov 17 14:09:02 2006
-          State : clean, degraded
- Active Devices : 1
-Working Devices : 1
- Failed Devices : 0
-  Spare Devices : 0
-
-           UUID : 403240c4:4a5c7f60:ce59447e:a08858a9
-         Events : 0.4480
-
-    Number   Major   Minor   RaidDevice State
-       0      33        1        0      active sync   /dev/hde1
-       1       0        0        1      removed
-
-Returned --> 0
------------------------------------------------------------------------------------------
-
-
-
+Timo Bernack wrote:
+> Hi there,
+> 
+> i am running a 5-disk RAID5 using mdadm on a suse 10.1 system. As the
+> array is running out of space, i consider adding three more HDDs. Before
+> i set up the current array, i made a small test with raidreconf:
+> 
+> - build a 4-disk RAID5 /dev/md0 (with only 1.5gb for each partition)
+> with 4.5gb userspace in total
+> - put an ext3 filesystem on it
+> - copy some data to it -- some episodes of "American Dad" ;-)
+> - use raidreconf to add a 5th disk
+> - use resize2fs to make use of the new additional space
+> - check for the video-clips.. all fine (also compared checksums)
+> 
+> This test was a full success, but of course it was very small scaled, so
+> maybe there are issues that only come up when there is (much) more space
+> involved. That leads to my questions:
+> 
+> What are potential sources for failures (and thus, losing all data)
+> reconfiguring the array using the method described above? Loss of power
+> during the process (which would take quite some time, 24 hours minimum,
+> i think) is one of them, i suppose. But are there known issues with
+> raidreconf, concerning the 2TB-barrier, for example?
+> 
+> I know that raidreconf is quite outdated, but it did what it promised on
+> my system. I heard of the possibility to achieve the same result just by
+> using mdadm, but this required a newer version of mdadm, and upgrading
+> it and using a method that i can't test beforehand scares me a little --
+> a little more than letting out raidreconf on my precious data does ;-).
+> 
+> All comments will be greatly appreciated!
+> 
+> 
+> Timo
+> 
+> P.S.:
+> I do have a backup, but since it is scattered to a huge stack of CDs /
+> DVDs (about 660 disks) it would be a terrible pain-in-the-ass to be
+> forced to restore it again. In fact, getting away from storing my data
+> using a DVD-burner was the main reason to build up the array at all. It
+> took me about 1 week (!) to copy all these disks, as you can easily
+> imagine.
+> 
+> -----
+> Hardware:
+> - Board / CPU: ASUS M2NPV-VM (4 x S-ATA onboard) / AMD Sempron 3200+ AM2
+> - Add. S-ATA-Controller: Promise SATA300 TX4
+> - HDDs: 5 x Western Digital Caviar SE 320GB SATA II (WD3200JS)
+> 
+> Software (OpenSUSE 10.1 Default-Installation):
+> - Kernel: 2.6.16
+> - mdadm - v2.2 - 5 December 2005
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
