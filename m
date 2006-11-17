@@ -1,63 +1,63 @@
-From: "Roger Lucas" <roger@planbit.co.uk>
-Subject: Problem with RAID-1, inconsistent data returned if disks get out of sync
-Date: Fri, 17 Nov 2006 14:35:48 -0000
-Message-ID: <20061117143358.DAD2212EE5@bluewhale.planbit.co.uk>
+From: martin f krafft <madduck@madduck.net>
+Subject: Re: RAID5/10 chunk size and ext2/3 stride parameter
+Date: Fri, 17 Nov 2006 15:09:24 +0100
+Message-ID: <20061117140924.GB21007@lapse.madduck.net>
+References: <20061024160306.GA15393@lapse.madduck.net> <Pine.LNX.4.64.0611031103520.26057@twinlark.arctic.org> <20061104120049.GA16979@piper.madduck.net> <Pine.LNX.4.64.0611041852030.13706@twinlark.arctic.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="gj572EiMnwbLXET9"
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.64.0611041852030.13706@twinlark.arctic.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: linux-raid mailing list <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi,
 
-I am running the 2.6.16.20 kernel what is otherwise a Debian Sarge system.  I have two identical SATA hard drives in the system.
-Both have an identical boot partion at the start of the disks (/dev/sda1, /dev/sda2) and the remainder of the disks is used as
-RAID-1 on which I have LVM for my root partition and some other partitions.
+--gj572EiMnwbLXET9
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-dromedary:~# uname -a
-Linux dromedary 2.6.16.20.rwl2 #1 Wed Jul 26 12:52:43 BST 2006 i686 GNU/Linux
-dromedary:~# lvm version
-  LVM version:     2.02.14 (2006-11-10)
-  Library version: 1.02.12 (2006-10-13)
-  Driver version:  4.5.0
-dromedary:~# mdadm --version
-mdadm - v2.5.5 - 23 October 2006
-dromedary:~#
+also sprach dean gaudet <dean@arctic.org> [2006.11.05.0359 +0100]:
+> they're different in that with f2 you get essentially 4 disk raid0
+> read performance because the copies of each byte are half a disk
+> away... so it looks like a raid0 on the first half of the disks,
+> and another raid0 on the second half.
+>=20
+> in n2 the two copies are at the same offset... so it looks more
+> like a 2 disk raid0 for reading and writing.
 
-As part of my backup process, I snapshot the data LV and make a copy of the snapshot to another machine's disk.  I take an SHA1
-checksum of the snapshot so that I can verify its accuracy.
+I don't know what difference that would make on the parameters of
+the XFS filesystem, as determined by mkfs.
 
-During this process, the results of the SHA1 checksum of the shapshot was changing between two values.  I tracked this down to a
-single bit in the 10GB image which was returning 1/0, apparently randomly.
+Also, I doubt you can get 4 disk RAID0 disk performance with two
+disks, no matter what layout you choose. There are still only two
+disks, so you can only ever read two blocks at once.
 
-Checking the "/proc/mdstat" suggested that the RAID array was intact as did a more detailed check using "mdadm --detail /dev/md0",
-so I spent a long time digging through the LVM configuration to try to find the problem.
+Thanks for the info.
 
-After much digging, I found that by running the RAID-1 array in degraded mode with one disk, the erratic behaviour stopped and I got
-a consistent value returned.  When I rebooted the system with just the other disk, so again running the RAID-1 array in degraded
-mode, the erratic behaviour stopped but I got the other value returned.  This indicated that the problem was that the RAID array had
-inconsistent data on its disks and was returning either disk's value when a read request was made, probably whichever got returned
-first...
+--=20
+martin;              (greetings from the heart of the sun.)
+  \____ echo mailto: !#^."<*>"|tr "<*> mailto:" net@madduck
+=20
+spamtraps: madduck.bogus@madduck.net
+=20
+"was aus liebe getan wird,
+ geschieht immer jenseits von gut und b=F6se."
+                                                 - friedrich nietzsche
 
-I have since rebuilt the RAID array by marking one of the disk as faulty then adding it as a spare again, thus causing the array to
-rebuild.  The erratic behaviour has now stopped and everything is working properly again.
+--gj572EiMnwbLXET9
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature (GPG/PGP)
+Content-Disposition: inline
 
-This confused me, as I was (prehaps wrongly) expecting that a RAID-1 array would detect not just hard disk errors but also soft disk
-errors where the array returned inconsistent data from the two disks.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
 
-After more digging, I have found that it is considered "good practice" to regularly ask the array to check itself using the "echo
-check > /sys/block/md0/md/sync_action" and then check the "/proc/mdstat" and "/sys/block/mdX/md/mismatch_cnt" files to determine the
-results.
+iD8DBQFFXcKUIgvIgzMMSnURAjQGAJ9LfGV6GR5SWo+goconDHLY4p+q1gCeIrw7
+9n0eiNVu0gxDM6aaLWbPwQI=
+=rL8u
+-----END PGP SIGNATURE-----
 
-Is it in any way possible to make the array check both disks in the RAID-1 array when any data is read so that the returned data is
-verified "live" and then automatically raise a warning somehow?  I appreciate that this would cause a reduction in performance, but
-I am willing to have that in exchange for increased robustness and immediate notification of a disk problem.  
-
-Thanks,
-
-Roger
-
-
+--gj572EiMnwbLXET9--
