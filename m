@@ -1,67 +1,88 @@
-From: "Timo Bernack" <timo.bernack@bernack.de>
-Subject: raidreconf for 5 x 320GB -> 8 x 320GB
-Date: Fri, 17 Nov 2006 16:33:51 +0100
-Message-ID: <003301c70a5d$c8d1d6e0$0200a8c0@turalyon>
+From: "Danny Sung" <dsung@lantronix.com>
+Subject: RE: Raid1 uses partially reconstructed drive
+Date: Fri, 17 Nov 2006 10:01:13 -0800
+Message-ID: <2F0FC2A92C0B154BB406D5E74CB3E6930336BDC9@3putt.int.lantronix.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
-	format=flowed;
-	charset="iso-8859-1";
-	reply-type=original
-Content-Transfer-Encoding: 7bit
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Class: urn:content-classes:message
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi there,
+Uhh... I have no idea what metadata or bitmap anything I was using...
+Default I guess?  How do I safely get that info?  I didn't see anything
+obvious in the man page.
 
-i am running a 5-disk RAID5 using mdadm on a suse 10.1 system. As the array 
-is running out of space, i consider adding three more HDDs. Before i set up 
-the current array, i made a small test with raidreconf:
+I think what may have happened is that I had created the primary drive
+on hdb, then physically moved it to hda.
 
-- build a 4-disk RAID5 /dev/md0 (with only 1.5gb for each partition) with 
-4.5gb userspace in total
-- put an ext3 filesystem on it
-- copy some data to it -- some episodes of "American Dad" ;-)
-- use raidreconf to add a 5th disk
-- use resize2fs to make use of the new additional space
-- check for the video-clips.. all fine (also compared checksums)
-
-This test was a full success, but of course it was very small scaled, so 
-maybe there are issues that only come up when there is (much) more space 
-involved. That leads to my questions:
-
-What are potential sources for failures (and thus, losing all data) 
-reconfiguring the array using the method described above? Loss of power 
-during the process (which would take quite some time, 24 hours minimum, i 
-think) is one of them, i suppose. But are there known issues with 
-raidreconf, concerning the 2TB-barrier, for example?
-
-I know that raidreconf is quite outdated, but it did what it promised on my 
-system. I heard of the possibility to achieve the same result just by using 
-mdadm, but this required a newer version of mdadm, and upgrading it and 
-using a method that i can't test beforehand scares me a little -- a little 
-more than letting out raidreconf on my precious data does ;-).
-
-All comments will be greatly appreciated!
+I wish I wrote the exact commands and sequence down, but I think I did
+something like this:
+ - hda: temporary     hdb: primary raid
+   mdadm --create --level=1 --raid-devices=1 --force md0 /dev/hdb3
+ - fill data into hdb3 (via network)
+ - hda: primary raid  hdb: secondary raid
+   reboot
+ - mdadm --grow (??)   #  something to say it's now a 2-disk mirror, I
+think
+ - mdadm --add md0 /dev/hdb3     # adding the secondary into the raid
+set
+ - At this point, hdb3 is reconstructing
+ - reboot
+ - system uses hdb3 as primary?!?!
 
 
-Timo
+By "secondary" I mean the fresh disk I'm adding to the raid set. i.e.
+not the one I should be booting off.
 
-P.S.:
-I do have a backup, but since it is scattered to a huge stack of CDs / DVDs 
-(about 660 disks) it would be a terrible pain-in-the-ass to be forced to 
-restore it again. In fact, getting away from storing my data using a 
-DVD-burner was the main reason to build up the array at all. It took me 
-about 1 week (!) to copy all these disks, as you can easily imagine.
+BTW, in addition to using FC5's kernel 2.6.18 (smp), I was also using
+mdadm-2.3.1.
 
------
-Hardware:
-- Board / CPU: ASUS M2NPV-VM (4 x S-ATA onboard) / AMD Sempron 3200+ AM2
-- Add. S-ATA-Controller: Promise SATA300 TX4
-- HDDs: 5 x Western Digital Caviar SE 320GB SATA II (WD3200JS)
+If it's not reproduceable, I guess I feel a bit better about it.... It
+must mean I hit some sort of special case.
 
-Software (OpenSUSE 10.1 Default-Installation):
-- Kernel: 2.6.16
-- mdadm - v2.2 - 5 December 2005 
+
+-----Original Message-----
+From: Neil Brown [mailto:neilb@suse.de] 
+Sent: Thursday, November 16, 2006 9:24 PM
+To: Danny Sung
+Cc: linux-raid@vger.kernel.org
+Subject: Re: Raid1 uses partially reconstructed drive
+
+On Wednesday November 15, dsung@lantronix.com wrote:
+> Perhaps this is the problem addressed in the 2.6.18.2 patch... But I 
+> thought I'd post it here just in case.
+> 
+> I was cloning some drives, and ended up creating a 1 drive RAID1
+array.
+> After that was built, I decided to add my spare drive and allow the 
+> reconstruction to take care of things.  As soon as I saw that 
+> reconstruction was taking place, I shutdown the system, put the drives
+
+> away and closed the case.
+> 
+> To my surprise, when I booted, I encountered numerous disk errors.
+> Apparently the system decided to ues the partially reconstructed drive
+
+> as the primary!  And of course, it had no knowledge that 
+> reconstruction needed to continue.  My data was hosed and I had to 
+> restart the cloning process.
+
+I've been trying to reproduce this and have failed.  Can you give me
+some more details?
+Where you using version 1 metadata or the default version 0.90 (though
+/etc/mdadm.conf can override the default).
+Were you using a write-intent bitmap?  If so, internal or external?
+
+If you can come up with an exact sequence of actions to reproduce this
+I'd really appreciate it, but I don't really expect it.
+
+Thanks,
+NeilBrown
+**********************************************************************
+This e-mail is the property of Lantronix. It is intended only for the person or entity to which it is addressed and may contain information that is privileged, confidential, or otherwise protected from disclosure. Distribution or copying of this e-mail, or the information contained herein, to anyone other than the intended recipient is prohibited.
 
