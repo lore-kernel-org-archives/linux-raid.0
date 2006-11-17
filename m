@@ -1,88 +1,143 @@
-From: "Danny Sung" <dsung@lantronix.com>
-Subject: RE: Raid1 uses partially reconstructed drive
-Date: Fri, 17 Nov 2006 10:01:13 -0800
-Message-ID: <2F0FC2A92C0B154BB406D5E74CB3E6930336BDC9@3putt.int.lantronix.com>
+From: Russell Hammer <russ@perneus.com>
+Subject: mdadm --misc --detail --test ... question
+Date: Fri, 17 Nov 2006 14:21:18 -0500
+Message-ID: <1163791278.2861.24.camel@a6000>
+Reply-To: russ@perneus.com
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Class: urn:content-classes:message
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Uhh... I have no idea what metadata or bitmap anything I was using...
-Default I guess?  How do I safely get that info?  I didn't see anything
-obvious in the man page.
+I'm trying to test the status of a raid device using mdadm:
 
-I think what may have happened is that I had created the primary drive
-on hdb, then physically moved it to hda.
+# mdadm --misc --detail --test /dev/md0
 
-I wish I wrote the exact commands and sequence down, but I think I did
-something like this:
- - hda: temporary     hdb: primary raid
-   mdadm --create --level=1 --raid-devices=1 --force md0 /dev/hdb3
- - fill data into hdb3 (via network)
- - hda: primary raid  hdb: secondary raid
-   reboot
- - mdadm --grow (??)   #  something to say it's now a 2-disk mirror, I
-think
- - mdadm --add md0 /dev/hdb3     # adding the secondary into the raid
-set
- - At this point, hdb3 is reconstructing
- - reboot
- - system uses hdb3 as primary?!?!
+However this does not appear to work as documented.  As I read the man
+page, the return code is supposed to reflect the status of the raid
+device:
 
+"
+MISC MODE
+ ...
+       --detail
+              The  device  should be an active md device.  mdadm will
+              display a detailed description of the array. --brief or --scan
+              will cause the output to be less detailed and the format to be
+              suitable for inclusion in  /etc/mdadm.conf.   The  exit status
+              of mdadm will normally be 0 unless mdadm failed to get useful
+              information about the device(s).  However if the --test option
+              is given, then the exit status will be:
 
-By "secondary" I mean the fresh disk I'm adding to the raid set. i.e.
-not the one I should be booting off.
+              0      The array is functioning normally.
 
-BTW, in addition to using FC5's kernel 2.6.18 (smp), I was also using
-mdadm-2.3.1.
+              1      The array has at least one failed device.
 
-If it's not reproduceable, I guess I feel a bit better about it.... It
-must mean I hit some sort of special case.
+              2      The array has multiple failed devices and hence is unusable (raid4 or raid5).
 
+              4      There was an error while trying to get information about the device.
+"
 
------Original Message-----
-From: Neil Brown [mailto:neilb@suse.de] 
-Sent: Thursday, November 16, 2006 9:24 PM
-To: Danny Sung
-Cc: linux-raid@vger.kernel.org
-Subject: Re: Raid1 uses partially reconstructed drive
-
-On Wednesday November 15, dsung@lantronix.com wrote:
-> Perhaps this is the problem addressed in the 2.6.18.2 patch... But I 
-> thought I'd post it here just in case.
-> 
-> I was cloning some drives, and ended up creating a 1 drive RAID1
-array.
-> After that was built, I decided to add my spare drive and allow the 
-> reconstruction to take care of things.  As soon as I saw that 
-> reconstruction was taking place, I shutdown the system, put the drives
-
-> away and closed the case.
-> 
-> To my surprise, when I booted, I encountered numerous disk errors.
-> Apparently the system decided to ues the partially reconstructed drive
-
-> as the primary!  And of course, it had no knowledge that 
-> reconstruction needed to continue.  My data was hosed and I had to 
-> restart the cloning process.
-
-I've been trying to reproduce this and have failed.  Can you give me
-some more details?
-Where you using version 1 metadata or the default version 0.90 (though
-/etc/mdadm.conf can override the default).
-Were you using a write-intent bitmap?  If so, internal or external?
-
-If you can come up with an exact sequence of actions to reproduce this
-I'd really appreciate it, but I don't really expect it.
+Am I missing something here (see below)?
 
 Thanks,
-NeilBrown
-**********************************************************************
-This e-mail is the property of Lantronix. It is intended only for the person or entity to which it is addressed and may contain information that is privileged, confidential, or otherwise protected from disclosure. Distribution or copying of this e-mail, or the information contained herein, to anyone other than the intended recipient is prohibited.
+Russ
+
+------------------------------------------------------------------------
+# mdadm --misc --detail --test /dev/md0; echo -e "\nReturned --> $?"
+/dev/md0:
+        Version : 00.90.03
+  Creation Time : Mon Aug 23 12:49:46 2004
+     Raid Level : raid1
+     Array Size : 104320 (101.89 MiB 106.82 MB)
+    Device Size : 104320 (101.89 MiB 106.82 MB)
+   Raid Devices : 2
+  Total Devices : 2
+Preferred Minor : 0
+    Persistence : Superblock is persistent
+
+    Update Time : Thu Nov 16 13:38:40 2006
+          State : clean
+ Active Devices : 2
+Working Devices : 2
+ Failed Devices : 0
+  Spare Devices : 0
+
+           UUID : 403240c4:4a5c7f60:ce59447e:a08858a9
+         Events : 0.4476
+
+    Number   Major   Minor   RaidDevice State
+       0      33        1        0      active sync   /dev/hde1
+       1      34        1        1      active sync   /dev/hdg1
+
+Returned --> 0
+
+# mdadm --manage --fail /dev/md0 /dev/hdg1
+mdadm: set /dev/hdg1 faulty in /dev/md0
+
+# mdadm --misc --detail --test /dev/md0; echo -e "\nReturned --> $?"
+/dev/md0:
+        Version : 00.90.03
+  Creation Time : Mon Aug 23 12:49:46 2004
+     Raid Level : raid1
+     Array Size : 104320 (101.89 MiB 106.82 MB)
+    Device Size : 104320 (101.89 MiB 106.82 MB)
+   Raid Devices : 2
+  Total Devices : 2
+Preferred Minor : 0
+    Persistence : Superblock is persistent
+
+    Update Time : Fri Nov 17 14:08:33 2006
+          State : clean, degraded
+ Active Devices : 1
+Working Devices : 1
+ Failed Devices : 1
+  Spare Devices : 0
+
+           UUID : 403240c4:4a5c7f60:ce59447e:a08858a9
+         Events : 0.4478
+
+    Number   Major   Minor   RaidDevice State
+       0      33        1        0      active sync   /dev/hde1
+       1       0        0        1      removed
+
+       2      34        1        -      faulty spare   /dev/hdg1
+
+Returned --> 0
+
+# mdadm --manage --remove /dev/md0 /dev/hdg1
+mdadm: hot removed /dev/hdg1
+
+# mdadm --misc --detail --test /dev/md0; echo -e "\nReturned --> $?"
+/dev/md0:
+        Version : 00.90.03
+  Creation Time : Mon Aug 23 12:49:46 2004
+     Raid Level : raid1
+     Array Size : 104320 (101.89 MiB 106.82 MB)
+    Device Size : 104320 (101.89 MiB 106.82 MB)
+   Raid Devices : 2
+  Total Devices : 1
+Preferred Minor : 0
+    Persistence : Superblock is persistent
+
+    Update Time : Fri Nov 17 14:09:02 2006
+          State : clean, degraded
+ Active Devices : 1
+Working Devices : 1
+ Failed Devices : 0
+  Spare Devices : 0
+
+           UUID : 403240c4:4a5c7f60:ce59447e:a08858a9
+         Events : 0.4480
+
+    Number   Major   Minor   RaidDevice State
+       0      33        1        0      active sync   /dev/hde1
+       1       0        0        1      removed
+
+Returned --> 0
+-----------------------------------------------------------------------------------------
+
+
 
