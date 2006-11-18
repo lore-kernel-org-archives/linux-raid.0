@@ -1,93 +1,53 @@
-From: Mike Hardy <mhardy@h3c.com>
-Subject: Re: raidreconf for 5 x 320GB -> 8 x 320GB
-Date: Fri, 17 Nov 2006 12:26:31 -0800
-Message-ID: <455E1AF7.5010201@h3c.com>
-References: <003301c70a5d$c8d1d6e0$0200a8c0@turalyon>
+From: torrent@globetorrents.com
+Subject: Globe Torrents invitation
+Date: Sat, 18 Nov 2006 11:14:39 +0200
+Message-ID: <200611180914.kAI9EdT4029093@azeroth.cbox.biz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <003301c70a5d$c8d1d6e0$0200a8c0@turalyon>
 Sender: linux-raid-owner@vger.kernel.org
-To: Timo Bernack <timo.bernack@bernack.de>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+=C2=E8=E5 =E1=FF=F5=F2=E5 =EB=FE=E1=E5=E7=ED=EE =EF=EE=EA=E0=ED=E5=ED=E8=
+ =E2=FA=E2 Globe Torrents.
 
-You don't want to use raidreconf unless I'm misunderstanding your goal -
-I have also had success with raidreconf but have had data-loss failures
-as well (I've posted to the list about it if you search). The data-loss
-failures were after I had run tests that showed me it should work.
+=CD=E8=E5 =F1=EC=E5 =E3=EE=EB=FF=EC =D2=F0=E0=EA=E5=F0 =F1=FA=F1 =EC=ED=
+=EE=E3=EE =EF=EE=F2=F0=E5=E1=E8=F2=E5=EB=E8.. =EF=EE=F1=EB=E5=E4=ED=E8=F2=
+=E5 =F4=E8=EB=EC=EE=E2=E8 ,=EF=F0=EE=E3=F0=E0=EC=ED=E8 ,=EC=F3=E7=E8=EA=
+=E0=EB=ED=E8 ,=E8=E3=F0=E0=EB=ED=E8 =E8 XXX =F0=E5=EB=E8=E8=E7=E8.
+=D1=E0=E9=F2=E0 =E5 =C1=C5=C7=CF=CB=C0=D2=C5=CD =E8 =EC=EE=E6=E5=F2=E5 =
+=E4=E0 =F1=E2=E0=EB=FF=F2=E5 =EA=EE=EB=EA=EE=F2=EE =F1=E8 =E8=F1=EA=E0=F2=
+=E5 !
+=C7=E0 =E4=E0 =EF=EE=F2=E2=FA=F0=E4=E8=F8 =EF=EE=EA=E0=ED=E0=F2=E0 =F6=FA=
+=EA=ED=E5=F2=E5 =ED=E0 =E4=EE=EB=ED=E8=FF =EB=E8=ED=EA:
 
-raidreconf is no longer maintained, so it's a dead end to try to hunt
-down the failures.
+http://GlobeTorrents.com/signup.php
 
-Luckily, Neil Brown has added raid5 "reshape" support (same thing
-raidreconf did) to the md driver, so you can just use 'mdadm --grow'
-commands to do what you want.
+=D1=EB=E5=E4 =EA=E0=F2=EE =F1=E5 =F0=E5=E3=E8=F1=F2=F0=E8=F0=E0=F2=E5 =EC=
+=EE=E6=E5=F2=E5 =E4=E0 =E8=E7=EF=EE=EB=E7=E2=E0=F2=E5 =ED=E0=F8=E8=F2=E5=
+ =F1=EF=E5=F6=E8=E0=EB=ED=E8 =F3=F1=EB=F3=E3=E8.
+=CC=EE=EB=FF =E7=E0=EF=EE=E7=ED=E0=E9=F2=E5 =F1=E5 =F1=FA=F1 =CF=D0=C0=C2=
+=C8=CB=C0=D2=C0 =E8 =D7=C5=C2 =ED=E0 Globe Torrents.
+=CD=E5 =EE=F2=E3=EE=E2=E0=F0=FF=E9=F2=E5 =ED=E0 =F2=EE=E7=E8 email.
+-----------------------------------------------------------------------=
+-------------------------------------
+Vie bqhte liubezno pokaneni vyv Globe Torrents.
 
-So I'd say to update your kernel to the newest 2.6.18.xx or whatever is
-out, and update mdadm give that a shot with your test partitions. The
-new versions are working fine as near as I can tell, and I've got them
-in use (FC5 machines - you can see their versions, and call me foolish
-for putting FC in production if you want) in a production environment
-with no issues.
+Nie sme golqm tracker sys mnogo potrebiteli... poslednite Filmovi ,Prog=
+ramni ,Muzikalni ,Igralni i XXX reliizi .
+Saita e BEZPLATEN i mojete da svalqte kolkoto si iskate !
+Za da potvyrdish pokanata cykni na dolniq link:
 
--Mike
+http://GlobeTorrents.com/signup.php
 
-Timo Bernack wrote:
-> Hi there,
-> 
-> i am running a 5-disk RAID5 using mdadm on a suse 10.1 system. As the
-> array is running out of space, i consider adding three more HDDs. Before
-> i set up the current array, i made a small test with raidreconf:
-> 
-> - build a 4-disk RAID5 /dev/md0 (with only 1.5gb for each partition)
-> with 4.5gb userspace in total
-> - put an ext3 filesystem on it
-> - copy some data to it -- some episodes of "American Dad" ;-)
-> - use raidreconf to add a 5th disk
-> - use resize2fs to make use of the new additional space
-> - check for the video-clips.. all fine (also compared checksums)
-> 
-> This test was a full success, but of course it was very small scaled, so
-> maybe there are issues that only come up when there is (much) more space
-> involved. That leads to my questions:
-> 
-> What are potential sources for failures (and thus, losing all data)
-> reconfiguring the array using the method described above? Loss of power
-> during the process (which would take quite some time, 24 hours minimum,
-> i think) is one of them, i suppose. But are there known issues with
-> raidreconf, concerning the 2TB-barrier, for example?
-> 
-> I know that raidreconf is quite outdated, but it did what it promised on
-> my system. I heard of the possibility to achieve the same result just by
-> using mdadm, but this required a newer version of mdadm, and upgrading
-> it and using a method that i can't test beforehand scares me a little --
-> a little more than letting out raidreconf on my precious data does ;-).
-> 
-> All comments will be greatly appreciated!
-> 
-> 
-> Timo
-> 
-> P.S.:
-> I do have a backup, but since it is scattered to a huge stack of CDs /
-> DVDs (about 660 disks) it would be a terrible pain-in-the-ass to be
-> forced to restore it again. In fact, getting away from storing my data
-> using a DVD-burner was the main reason to build up the array at all. It
-> took me about 1 week (!) to copy all these disks, as you can easily
-> imagine.
-> 
-> -----
-> Hardware:
-> - Board / CPU: ASUS M2NPV-VM (4 x S-ATA onboard) / AMD Sempron 3200+ AM2
-> - Add. S-ATA-Controller: Promise SATA300 TX4
-> - HDDs: 5 x Western Digital Caviar SE 320GB SATA II (WD3200JS)
-> 
-> Software (OpenSUSE 10.1 Default-Installation):
-> - Kernel: 2.6.16
-> - mdadm - v2.2 - 5 December 2005
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Sled kato se registrirate mojete da izpolzvate nashite specialni uslugi=
+=2E
+Molq zapoznaite se sys PRAVILATA i 4EV na Globe Torrents.
+Ne otgovarqite na tozi email.
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
