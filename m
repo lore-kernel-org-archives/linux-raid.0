@@ -1,40 +1,49 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: Recovering from default FC6 install
-Date: Sat, 18 Nov 2006 07:24:38 -0500
-Message-ID: <455EFB86.1040604@tmr.com>
-References: <4556B86D.3030802@tmr.com>	<1163345905.4138.501.camel@fc6.xsintricity.com> <17755.42885.994680.290558@cse.unsw.edu.au>
+From: dean gaudet <dean@arctic.org>
+Subject: Re: safest way to swap in a new physical disk
+Date: Sat, 18 Nov 2006 10:55:12 -0800 (PST)
+Message-ID: <Pine.LNX.4.64.0611181052440.15092@twinlark.arctic.org>
+References: <6D7E98FD-D24F-402D-A7F0-63179FA3C49E@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17755.42885.994680.290558@cse.unsw.edu.au>
+In-Reply-To: <6D7E98FD-D24F-402D-A7F0-63179FA3C49E@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Doug Ledford <dledford@redhat.com>, Linux RAID <linux-raid@vger.kernel.org>
+To: Will Sheffler <willsheffler@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil Brown wrote:
-> On Sunday November 12, dledford@redhat.com wrote:
->   
->> So, assuming that they are persistent, just recreate the arrays in place
->> as version 1.0 superblocks with internal bitmap.  I did that exact thing
->> on my FC6 machine I was testing with (raid1, not raid5, but no biggie
->> there) and it worked fine.  The detailed list of instructions:
->>
->>     
->
-> You can add a bitmap to an array while it is active.
->   mdadm --grow --bitmap=internal /dev/mdX
->   
+On Tue, 14 Nov 2006, Will Sheffler wrote:
 
-Thank you!!! Works like a charm!
-> (Providing the kernel is new enough - I'm not sure when that went in,
-> but it was a while ago).
-The latest FC6 kernel is 2.6.18 something, should be okay.
+> Hi.
+> 
+> What is the safest way to switch out a disk in a software raid array created
+> with mdadm? I'm not talking about replacing a failed disk, I want to take a
+> healthy disk in the array and swap it for another physical disk. Specifically,
+> I have an array made up of 10 250gb software-raid partitions on 8 300gb disks
+> and 2 250gb disks, plus a hot spare. I want to switch the 250s to new 300gb
+> disks so everything matches. Is there a way to do this without risking a
+> rebuild? I can't back everything up, so I want to be as risk-free as possible.
+> 
+> I guess what I want is to do something like this:
+> 
+> (1) Unmount the array
+> (2) Un-create the array
+> (3) Somehow exactly duplicate partition X to a partition Y on a new disk
+> (4) Re-create array with X gone and Y in it's place
+> (5) Check if the array is OK without changing/activating it
+> (6) If there is a problem, switch from Y back to X and have it as though
+> nothing changed
+> 
+> The part I'm worried about is (3), as I've tried duplicating partition images
+> before and it never works right. Is there a way to do this with mdadm?
 
+if you have a recent enough kernel (2.6.15 i think) and recent enough 
+mdadm (2.2.x i think) you can do this all online without losing redundancy 
+for more than a few seconds... i placed a copy of instructions and further 
+discussions of what types of problems this method has here:
 
--- 
-bill davidsen <davidsen@tmr.com>
-  CTO TMR Associates, Inc
-  Doing interesting things with small computers since 1979
+http://arctic.org/~dean/proactive-raid5-disk-replacement.txt
 
+it's actually perfect for your situation.
+
+-dean
