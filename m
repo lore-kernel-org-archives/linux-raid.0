@@ -1,71 +1,60 @@
 From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: Raid 1 (non) performance
-Date: Mon, 20 Nov 2006 14:29:04 -0500
-Message-ID: <45620200.4010206@tmr.com>
-References: <455B4609.6090905@kite.se> <Pine.LNX.4.64.0611191107590.15092@twinlark.arctic.org> <4561B7C3.7030000@kite.se>
+Subject: Re: Problem booting linux 2.6.19-rc5, 2.6.19-rc5-git6,      2.6.19-rc5-mm2
+ with md raid 1 over lvm root
+Date: Mon, 20 Nov 2006 14:33:19 -0500
+Message-ID: <456202FF.8060709@tmr.com>
+References: <41884.81.64.156.37.1163631254.squirrel@rousalka.dyndns.org> <455BB01B.2080309@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4561B7C3.7030000@kite.se>
-Sender: linux-raid-owner@vger.kernel.org
-To: "Magnus Naeslund(k)" <mag@kite.se>
-Cc: dean gaudet <dean@arctic.org>, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <455BB01B.2080309@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Nicolas Mailhot <nicolas.mailhot@laposte.net>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org, neilb@cse.unsw.edu.au, mingo@redhat.com, dm-devel@redhat.com
 List-Id: linux-raid.ids
 
-Magnus Naeslund(k) wrote:
-> dean gaudet wrote:
->   
->> i see you have split /var and / on the same spindle... if your /home is on 
->> / then you're causing extra seek action by having two active filesystems 
->> on the same spindles.  another option to consider is to make / small and 
->> mostly read-only and move /home to /var/home (and use a symlink or mount 
->> --bind to place it at /home).
+Tejun Heo wrote:
+> Nicolas Mailhot wrote:
+>> The failing kernels (I tried -rc5, -rc5-git6, -rc5-mm2 only print :
 >>
->>     
->
-> Yes I have it like this now:
-> 	/var/bind/home on /home type bind (rw,bind,noatime)
->
->   
->> hopefully your swap isn't being used much anyhow.
+>> %<----
+>> device-mapper: ioctl: 4.7.0-ioctl (2006-06-24) initialised:
+>> dm-devel@redhat.com
+>> md: Autodetecting RAID arrays.
+>> md: autorun ...
+>> md: ... autorun DONE.
+>> %<-----
 >>
->>     
->
-> Zero used, infact.
->
->   
->> try "iostat -kx /dev/sd* 5" and see if the split is causing you troubles 
->> -- i/o activity on more than one partition at once.
+>> (I didn't bother copying the rest of the failing kernel dmesg, as sa=
+ta
+>> initialisation fills the first half of the screen, then dm is=20
+>> initialised,
+>> then you only get the logical consequences of failing to detect the =
+/
+>> volume. The sata part seems fine =E2=80=93 it prints the name of the=
+ hard drives
+>> we want to use)
 >>
->>     
+>> I'm attaching the dmesg for the working distro kernel (yes I know no=
+t=20
+>> 100%
+>> distro kernel, but very close to one), distro config , and the confi=
+g I
+>> used in my test. If anyone could help me to figure what's wrong I'd =
+be
+>> grateful.
 >
-> It seems to be roughly the same numbers on the disks.
+> Say 'y' not 'm' to SCSI disk support.
 >
->   
->> turning off write caching is a recipe for disasterous performance on most 
->> ata disks... unfortunately.  better to buy a UPS and set up nut or apcupsd 
->> or something to handle shutdown.  or just take your chances.
->>
->>     
->
-> This is a mail server, I would like it to not lose mail if there is an power outage.
-> Is there anything one can do without buying more hardware?
+That will probably work, but just building a new initrd is probably a=20
+lot easier. Although I thought the SCSI modules were included if built=20
+and installed if present.
 
-Nothing you can do will prevent loss of mail locally if the power goes 
-out when the mail has gotten to memory and not disk, or the metadata has 
-not been updated on the disk. Unless you want to hack your SMTP 
-interface to not return an "accepted" status until you have flushed 
-everything, get a UPS.
-
-Hint, I looked at this for an ISP internal mailer, and performance 
-trying to flush is so bad it's only justified for a very low volume of 
-mail. As in legal or financial stuff. If your mail is that critical you 
-buy expensive hardware when justified. Otherwise spend a few hundred 
-bucks on a good UPS and install the software.
-
--- 
+--=20
 bill davidsen <davidsen@tmr.com>
   CTO TMR Associates, Inc
   Doing interesting things with small computers since 1979
+
 
