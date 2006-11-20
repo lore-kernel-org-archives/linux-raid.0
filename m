@@ -1,50 +1,28 @@
-From: "Magnus Naeslund(k)" <mag@kite.se>
-Subject: Re: Raid 1 (non) performance
-Date: Mon, 20 Nov 2006 15:12:19 +0100
-Message-ID: <4561B7C3.7030000@kite.se>
-References: <455B4609.6090905@kite.se> <Pine.LNX.4.64.0611191107590.15092@twinlark.arctic.org>
+From: Lee Revell <rlrevell@joe-job.com>
+Subject: Re: Problem booting linux 2.6.19-rc5, 2.6.19-rc5-git6,
+	2.6.19-rc5-mm2 with md raid 1 over lvm root
+Date: Mon, 20 Nov 2006 13:49:15 -0500
+Message-ID: <1164048555.30805.78.camel@mindpipe>
+References: <41884.81.64.156.37.1163631254.squirrel@rousalka.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0611191107590.15092@twinlark.arctic.org>
+In-Reply-To: <41884.81.64.156.37.1163631254.squirrel@rousalka.dyndns.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: dean gaudet <dean@arctic.org>
-Cc: linux-raid@vger.kernel.org
+To: Nicolas Mailhot <nicolas.mailhot@laposte.net>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org, neilb@cse.unsw.edu.au, mingo@redhat.com, dm-devel@redhat.com
 List-Id: linux-raid.ids
 
-dean gaudet wrote:
-> 
-> i see you have split /var and / on the same spindle... if your /home is on 
-> / then you're causing extra seek action by having two active filesystems 
-> on the same spindles.  another option to consider is to make / small and 
-> mostly read-only and move /home to /var/home (and use a symlink or mount 
-> --bind to place it at /home).
-> 
+On Wed, 2006-11-15 at 23:54 +0100, Nicolas Mailhot wrote:
+> I have the following problem : based on the news that a working alsa
+> driver had just been published and pushed 2.6.19-way, I bought a new
+> sound card (expensive pro, if used one). Unfortunately using the
+> out-of-tree driver fails, so its author suggested to just try building
+> one of the 2.6.19 rcs. 
 
-Yes I have it like this now:
-	/var/bind/home on /home type bind (rw,bind,noatime)
+Just out of curiosity, which soundcard/driver?  I'm not aware of any pro
+soundcards that got ALSA support recently, just cheap consumer stuff.
 
-> hopefully your swap isn't being used much anyhow.
-> 
-
-Zero used, infact.
-
-> try "iostat -kx /dev/sd* 5" and see if the split is causing you troubles 
-> -- i/o activity on more than one partition at once.
-> 
-
-It seems to be roughly the same numbers on the disks.
-
-> turning off write caching is a recipe for disasterous performance on most 
-> ata disks... unfortunately.  better to buy a UPS and set up nut or apcupsd 
-> or something to handle shutdown.  or just take your chances.
-> 
-
-This is a mail server, I would like it to not lose mail if there is an power outage.
-Is there anything one can do without buying more hardware?
-
-
-Thanks for the feedback,
-Magnus
+Lee
 
