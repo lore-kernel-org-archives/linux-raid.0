@@ -1,45 +1,96 @@
-From: Nicolas Mailhot <nicolas.mailhot@laposte.net>
-Subject: Re: Problem booting linux 2.6.19-rc5, 2.6.19-rc5-git6,     
-	2.6.19-rc5-mm2 with md raid 1 over lvm root
-Date: Mon, 20 Nov 2006 20:47:26 +0100
-Message-ID: <1164052047.3004.25.camel@rousalka.dyndns.org>
-References: <41884.81.64.156.37.1163631254.squirrel@rousalka.dyndns.org>
-	 <455BB01B.2080309@gmail.com>  <456202FF.8060709@tmr.com>
+From: "Andre' Breiler" <andre.breiler@null-mx.org>
+Subject: kernel 2.4.33.4 md raid1 problem
+Date: Tue, 21 Nov 2006 07:18:14 +0000 (GMT)
+Message-ID: <Pine.LNX.4.33.0611210711400.30964-100000@pegasus.teamwerk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <456202FF.8060709@tmr.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: Tejun Heo <htejun@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org, neilb@cse.unsw.edu.au, mingo@redhat.com, dm-devel@redhat.com
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Le lundi 20 novembre 2006 =C3=A0 14:33 -0500, Bill Davidsen a =C3=A9cri=
-t :
-> Tejun Heo wrote:
+Hi,
 
-> >> I'm attaching the dmesg for the working distro kernel (yes I know =
-not=20
-> >> 100%
-> >> distro kernel, but very close to one), distro config , and the con=
-fig I
-> >> used in my test. If anyone could help me to figure what's wrong I'=
-d be
-> >> grateful.
-> >
-> > Say 'y' not 'm' to SCSI disk support.
-> >
-> That will probably work, but just building a new initrd is probably a=
-=20
-> lot easier. Although I thought the SCSI modules were included if buil=
-t=20
-> and installed if present.
+I've just moved to the above kernel (from 2.4.20) and found the following
+funny behaviour:
+- raid get autoassembled (correctly afaik)
+- size of raid is reported as 0
+(and the fs on the raid can't be mounted)
+.
 
-Absolutely no idea why the inird-ing works on distro kernels but not
-this one. Probably confused by the full-sata config
+The system is a SUN Netra t105.
 
-Regards,
+---- snip dmesg -----
+Booting Linux...
+PROMLIB: Sun IEEE Boot Prom 3.10.24 1999/08/16 17:37
+Linux version 2.4.33.4 (root@ewok) (gcc version 3.4.6 (Debian 3.4.6-4)) #2 Tue Nov 21 02:04:02 GMT 2006
+ARCH: SUN4U
 
---=20
-Nicolas Mailhot
+...
+
+md: raid1 personality registered as nr 3
+md: Autodetecting RAID arrays.
+ [events: 00000040]
+ [events: 00000048]
+ [events: 00000040]
+ [events: 00000048]
+md: autorun ...
+md: considering sdb7 ...
+md:  adding sdb7 ...
+md:  adding sda7 ...
+md: created md2
+md: bind<sda7,1>
+md: bind<sdb7,2>
+md: running: <sdb7><sda7>
+md: sdb7's event counter: 00000048
+md: sda7's event counter: 00000048
+md: RAID level 1 does not need chunksize! Continuing anyway.
+md2: max total readahead window set to 248k
+md2: 1 data-disks, max readahead per data-disk: 248k
+raid1: device sdb7 operational as mirror 1
+raid1: device sda7 operational as mirror 0
+raid1: raid set md2 active with 2 out of 2 mirrors
+md: updating md2 RAID superblock on device
+md: sdb7 [events: 00000049]<6>(write) sdb7's sb offset: 13460736
+md: sda7 [events: 00000049]<6>(write) sda7's sb offset: 13460736
+md: considering sdb5 ...
+md:  adding sdb5 ...
+md:  adding sda5 ...
+md: created md1
+md: bind<sda5,1>
+md: bind<sdb5,2>
+md: running: <sdb5><sda5>
+md: sdb5's event counter: 00000040
+md: sda5's event counter: 00000040
+md: RAID level 1 does not need chunksize! Continuing anyway.
+md1: max total readahead window set to 248k
+md1: 1 data-disks, max readahead per data-disk: 248k
+raid1: device sdb5 operational as mirror 1
+raid1: device sda5 operational as mirror 0
+raid1: raid set md1 active with 2 out of 2 mirrors
+md: updating md1 RAID superblock on device
+md: sdb5 [events: 00000041]<6>(write) sdb5's sb offset: 2046720
+md: sda5 [events: 00000041]<6>(write) sda5's sb offset: 2046720
+md: ... autorun DONE.
+md: md driver 0.90.0 MAX_MD_DEVS=256, MD_SB_DISKS=27
+---- snap kernel ----
+
+---- snip /proc/mdstat ----
+(none):~ # cat /proc/mdstat
+Personalities : [raid1]
+read_ahead not set
+md1 : active raid1 sdb5[1] sda5[0]
+      0 blocks [2/2] [UU]
+
+md2 : active raid1 sdb7[1] sda7[0]
+      0 blocks [2/2] [UU]
+
+unused devices: <none>
+---- snap /proc/mdstat ----
+
+Does someone have a guess/idea what went wrong ?
+
+Thanx,
+ Andre
+
+
