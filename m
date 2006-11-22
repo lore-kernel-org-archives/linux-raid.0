@@ -1,36 +1,34 @@
-From: Michael Tokarev <mjt@tls.msk.ru>
-Subject: Isn't raid1 obsolete by raid10 module?
-Date: Wed, 22 Nov 2006 16:40:04 +0300
-Message-ID: <45645334.4070203@tls.msk.ru>
+From: Gabor Gombas <gombasg@sztaki.hu>
+Subject: Re: Ubuntu - RAID Array not "assembling" on boot.
+Date: Wed, 22 Nov 2006 16:41:21 +0100
+Message-ID: <20061122154121.GI4783@boogie.lpds.sztaki.hu>
+References: <1164139592.12278.276853539@webmail.messagingengine.com> <45635DCC.3010500@idgmail.se> <1164147995.26591.276873647@webmail.messagingengine.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1164147995.26591.276873647@webmail.messagingengine.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
+To: John Reeves <john.reeves@mailc.net>
+Cc: Henrik Holst <henrik.holst@idgmail.se>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Just out of curiosity.  It looks like raid10 module
-provides all the functionality of raid1 too.  For
-example, for a 2-component raid1 array, the two:
+On Tue, Nov 21, 2006 at 10:26:35PM +0000, John Reeves wrote:
 
- mdadm -C -l1 -n2 /dev/md1 /dev/sda1 /dev/sdb1
+> # mdadm --detail --scan >> /etc/mdadm/mdadm.conf
+> 
+> And thats when the whole "assemble" on boot problem came from.  I
+> presume that the above command (--detail --scan)  is not the correct way
+> to make the mdadm.conf file - how should it be made?
 
-and
+It's correct, but as was already said it is not enough. On Debian you
+can use the /usr/share/mdadm/mkconf script that spits out a complete
+mdadm.conf.
 
- mdadm -C -l10 -n2 -ln2 /dev/md1 /dev/sda1 /dev/sdb1
+Gabor
 
-will create the same array.  Ditto for e.g 3-component
-raid1:
-
- mdadm -C -l1 -n3 /dev/md1 /dev/sd{a,b,c}1
-
-and
-
- mdadm -C -l10 -n3 -ln3 /dev/md1 /dev/sd{a,b,c}1
-
-will do the same.
-
-Shouldn't raid1 module be removed from kernel? :)
-
-/mjt
+-- 
+     ---------------------------------------------------------
+     MTA SZTAKI Computer and Automation Research Institute
+                Hungarian Academy of Sciences
+     ---------------------------------------------------------
