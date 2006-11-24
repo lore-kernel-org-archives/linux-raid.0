@@ -1,29 +1,34 @@
-From: Pat Fitzpatrick <Pat_Fitzpatrick@pmc-sierra.com>
-Subject: Problems with RAID Linear Grow
-Date: Thu, 23 Nov 2006 16:33:31 -0800
-Message-ID: <2502BD5D296162428745A16512D0B896C69BAF@bby1exm07.pmc_nt.nt.pmc-sierra.bc.ca>
+From: "Dragan Marinkovic" <marinkovic.dragan@gmail.com>
+Subject: Linux RAID version question
+Date: Thu, 23 Nov 2006 17:49:25 -0800
+Message-ID: <d33135570611231749p2d24eb51r7fc5a518afada0cd@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: "'linux-raid@vger.kernel.org'" <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I'm having issues trying to add a disk to a Linear RAID. I'm using mdadm 2.5.4 and kernel 2.6.18.
+I have two issues with metadata version 0.9 which I'm hoping are
+resolved with metadata version 1:
 
-I can create a two disk linear RAID as follows:
-mdadm -C /dev/md0 --level=linear -n2 /dev/sata1 /dev/sata2
-and all is well.
+1. endianes issue with metadata 0.9 (can't swap the RAIDs built on LE
+and BE machines)
+2. RAIDs built with metadata version 0.9 does not always continue
+rebuilding where they left off when last stopped (specifically on the
+clean shutdown while the raid is still rebuilding).
 
-I then attempt to add a third disk:
-mdadm --grow /dev/md0 --add /dev/sata3
-for example, but only get:
-mdadm: Cannot add new disk to this array
+I think that both issues are resolved with metadata version 1 in
+kernel 2.6.18 . Is this correct or there are patches to be applied for
+both issues?
 
-The new disk gets a superblock created on it matching the other two disks, but the bind_rdev_to_array call in add_new_disk (in md.c) is returning -ENOSPC. rdev->size is 160836416 (the size of the disk I'm trying to add) and mddev->size is 0.
+Is the subversion of metadata version 1 important (there are 1, 1.0,
+1.1 and 1.2)? If it is, which one is the best to use from the
+stability point of view?
 
-I'd appreciate any insight into what I'm doing wrong. Thanks.
+I would appreciate any help.
 
-Pat
-
-
+Cheers,
+Dragan
