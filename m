@@ -1,61 +1,29 @@
-From: Henrik Holst <henrik.holst@idgmail.se>
-Subject: Re: Is shrinking raid5 possible?
-Date: Wed, 22 Nov 2006 21:40:35 +0100
-Message-ID: <4564B5C3.9050501@idgmail.se>
-References: <44960C45.9050407@anu.edu.au>	 <17558.10906.59066.196870@cse.unsw.edu.au> <449B3A80.4070602@tmr.com>	 <17563.17224.85968.572754@cse.unsw.edu.au>	 <bb145bd20606231116g7808e467w29a9bf273ba0df52@mail.gmail.com>	 <17567.36792.303403.35943@cse.unsw.edu.au> <bb145bd20606260433w2bafccfdu3448732f5b5c1c5f@mail.gmail.com>
+From: Pat Fitzpatrick <Pat_Fitzpatrick@pmc-sierra.com>
+Subject: Problems with RAID Linear Grow
+Date: Thu, 23 Nov 2006 16:33:31 -0800
+Message-ID: <2502BD5D296162428745A16512D0B896C69BAF@bby1exm07.pmc_nt.nt.pmc-sierra.bc.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <bb145bd20606260433w2bafccfdu3448732f5b5c1c5f@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: "'linux-raid@vger.kernel.org'" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Christian Pernegger wrote:
->> This is shrinking an array by removing drives.  We were talking about
->> shrinking an array by reducing the size of drives - a very different
->> think.
-> 
-> Yes I know - I just wanted to get this in as an alternative shrinking
-> semantic.
-> 
-> As for reducing the RAID (partition) size on the individual drives I
-> can only see two reasons:
-> 
-> 1) One wants to replace / add a disk but the new disk is slightly
-> smaller than the existing ones. Actual capacity varies a lot for the
-> same nominal capacity, especially across brands.
-> 
-> 2) One wants to do something else with some of the space, although for
-> a RAID5 I don't quite see the point - you'd end up with n small
-> partitions. Shrinking a 2-way mirror or stripe this way sounds far
-> more useful.
-> 
-> Having RAID tightly integrated with volume management and partitions
-> would be nice, but that's a pipe dream. (EVMS just integrates the UI
-> somewhat, you still have to mess about with layers.)
-> 
->> I'm not sure it is really worth the effort I'm afraid.
-> 
-> Neither am I ... it just would have come in handy a few times, that's all.
-> 
-> Thanks,
-> 
-> C.
+I'm having issues trying to add a disk to a Linear RAID. I'm using mdadm 2.5.4 and kernel 2.6.18.
 
-I have an 8x120 GB RAID-5 volume. Or rather. But since of yesterday I
-only have 7 120 GB harddrives. Since 120 GB disks are out of the
-"priceworthy segment" for storage I want to reduce this to a
-non-degenerate 7x120 GB RAID and not buy a relative expensive 120 GB
-disk. And recreating the RAID as a 7x120 volume is out of the question
-since I don't have the extra storage to move ~700 GB of data.
+I can create a two disk linear RAID as follows:
+mdadm -C /dev/md0 --level=linear -n2 /dev/sata1 /dev/sata2
+and all is well.
 
-I think there IS an application for shrinking RAID:s, as well as
-growing- and that is not only one of "symmetric beauty".
+I then attempt to add a third disk:
+mdadm --grow /dev/md0 --add /dev/sata3
+for example, but only get:
+mdadm: Cannot add new disk to this array
 
-Is such a feature within the scope of software raid development? (I
-guess I'm asking Neil B. or Steinar H. G.)
+The new disk gets a superblock created on it matching the other two disks, but the bind_rdev_to_array call in add_new_disk (in md.c) is returning -ENOSPC. rdev->size is 160836416 (the size of the disk I'm trying to add) and mddev->size is 0.
 
-/Henrik Holst
+I'd appreciate any insight into what I'm doing wrong. Thanks.
+
+Pat
+
 
