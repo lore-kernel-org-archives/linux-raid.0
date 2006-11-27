@@ -1,34 +1,60 @@
-From: Nix <nix@esperi.org.uk>
-Subject: Re: Linux RAID version question
-Date: Mon, 27 Nov 2006 20:39:11 +0000
-Message-ID: <874pskwro0.fsf@hades.wkstn.nix>
-References: <d33135570611231749p2d24eb51r7fc5a518afada0cd@mail.gmail.com>
-	<981224FF5B88B349B7C1FED584D2620E07328A52@CORPUSMX50B.corp.emc.com>
-	<d33135570611242354l74e383b7r37bdd8c81c001672@mail.gmail.com>
-	<87vel1wyuf.fsf@hades.wkstn.nix>
-	<d33135570611262245s148e6d6g2779acc858443eba@mail.gmail.com>
+From: Richard Scobie <richard@sauce.co.nz>
+Subject: Observations of a failing disk
+Date: Tue, 28 Nov 2006 11:25:37 +1300
+Message-ID: <456B65E1.20204@sauce.co.nz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <d33135570611262245s148e6d6g2779acc858443eba@mail.gmail.com> (Dragan Marinkovic's message of "27 Nov 2006 06:45:25 -0000")
 Sender: linux-raid-owner@vger.kernel.org
-To: Dragan Marinkovic <marinkovic.dragan@gmail.com>
-Cc: "Foster_Brian@emc.com" <Foster_Brian@emc.com>, linux-raid@vger.kernel.org
+To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 27 Nov 2006, Dragan Marinkovic stated:
-> On 11/26/06, Nix <nix@esperi.org.uk> wrote:
->> Well, I assemble my arrays with the command
->>
->>     /sbin/mdadm --assemble --scan --auto=md
-[...]
->> No metadata versions needed anywhere.
-[...]
-> But you do have to specify the version (other than 0.90) when you want
-> to build the array for the first time, correct?
+I have a machine running Fedora 5, kernel 2.6.17-1.2187_FC5smp, with a 
+pair of software RAID 1 arrays (WD 500GB RE2), RAID 0'ed together. Every 
+14 days, one of the arrays has a "repair", (echo repair > 
+/sys/block/mdX/md/sync_action),  run on it, to hopefully pick up and fix 
+dead sectors.
 
-Unless you've specified it in mdadm.conf's CREATE stanza, sure.
+Over the weekend smartd emailed to say that there were "10 Currently 
+unreadable (pending) sectors" on /dev/sdc1.
 
--- 
-`The main high-level difference between Emacs and (say) UNIX, Windows,
- or BeOS... is that Emacs boots quicker.' --- PdS
+mdstat showed this drive was still active in the array and this was the 
+case after smartd notified 4 hours later that there were now 20 pending 
+sectors.
+
+After running a repair on the array, (confirmed by following resync 
+progress in mdstat), smartd was reporting 21 pending sectors.
+
+Thinking I had nothing to lose, I failed and removed the drive and ran a
+
+dd if=/dev/zero of=/dev/sdc1 bs=1048576
+
+and as can be seen from the periodic smartd reports while this was 
+running, these sectors were fixed and smartctl -a now shows 0 pending 
+sectors.
+
+Nov 28 08:07:30 bozo smartd[3066]: Device: /dev/sdc, 21 Currently 
+unreadable (pending) sectors
+Nov 28 08:37:31 bozo smartd[3066]: Device: /dev/sdc, 11 Currently 
+unreadable (pending) sectors
+Nov 28 09:07:31 bozo smartd[3066]: Device: /dev/sdc, 1 Currently 
+unreadable (pending) sectors
+Nov 28 09:37:31 bozo smartd[3066]: Device: /dev/sdc, 1 Currently 
+unreadable (pending) sectors
+Nov 28 10:07:31 bozo smartd[3066]: Device: /dev/sdc, 1 Currently 
+unreadable (pending) sectors
+
+Curiously, the Reallocated_Sector_Ct only shows 2 instead of the 21 I 
+would have expected.
+
+Anyway, my biggest concern is why
+
+echo repair > /sys/block/md5/md/sync_action
+
+appeared to have no effect at all, when I understand that it should 
+re-write unreadable sectors?
+
+Regards,
+
+Richard
