@@ -1,29 +1,46 @@
-From: Richard Scobie <richard@sauce.co.nz>
-Subject: Re: Observations of a failing disk
-Date: Tue, 28 Nov 2006 13:52:12 +1300
-Message-ID: <456B883C.4050304@sauce.co.nz>
-References: <456B65E1.20204@sauce.co.nz> <Pine.LNX.4.64.0611271623270.8068@twinlark.arctic.org>
+From: peter pilsl <pilsl@goldfisch.at>
+Subject: how does autoraid work ?
+Date: Tue, 28 Nov 2006 19:59:36 +0100
+Message-ID: <456C8718.2040406@goldfisch.at>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0611271623270.8068@twinlark.arctic.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-dean gaudet wrote:
 
-> one theory was that i lucked out and the pending sectors in the unused 
-> disk near the md superblock... but since that's in general only about 90KB 
-> of disk i was kind of skeptical.  it's certainly possible, but seems 
-> unlikely.
+I've currently a new server (first ubuntu I set up) and I've a problem 
+with a raiddevice. While the system itself (/ and /boot) do not use 
+raid, a /data-partition is setup as raid1 /dev/md0
 
-I can discount this one in my case, as sectors were being repaired 
-progressively across the disk, as can be seen in the smartd reports.
+Now I'v the problem that md0 is not started during boot, but only late 
+when the scripts in rc.d/ are processed for my runlevel. There is a 
+script mdadm-raid that actually assemlnbles the raid based on a 
+copnfig-file. This is not what I want/need.
 
-You can't have too many checks is the moral of the story I guess.
+On my other servers the raids are autodetected much earlier by the 
+kernel or a module much earlier without need of a configfile.
 
-Regards,
+The partitions of my raid are all labeld als linux-autoraid and I can 
+manually assemble my raid with mdadm -A -a yes -m 0 /dev/md0, so 
+everthing should be fine for the kernel to autostart my raid.
 
-Richard
+When exactely are the raids supposed to be assembled during boot. Which 
+module/script is actually responsible for doing this?  And are there any 
+  shots in the dark, why my ubuntu/debian is not doing so?
+
+The raid is on hde and hdf - can this be the problem? that the 
+raidmodule/script/whatever does not scan beyond the first two ide-buses?
+
+I tried  raid=autodetect on the bootline but this didnt help either.
+
+I hope I made my self a bit clear and any help is greatly appretiated...
+
+thnx
+peter
+
+
+
+
