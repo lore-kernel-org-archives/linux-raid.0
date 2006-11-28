@@ -1,39 +1,29 @@
-From: dean gaudet <dean@arctic.org>
+From: Richard Scobie <richard@sauce.co.nz>
 Subject: Re: Observations of a failing disk
-Date: Mon, 27 Nov 2006 16:29:15 -0800 (PST)
-Message-ID: <Pine.LNX.4.64.0611271623270.8068@twinlark.arctic.org>
-References: <456B65E1.20204@sauce.co.nz>
+Date: Tue, 28 Nov 2006 13:52:12 +1300
+Message-ID: <456B883C.4050304@sauce.co.nz>
+References: <456B65E1.20204@sauce.co.nz> <Pine.LNX.4.64.0611271623270.8068@twinlark.arctic.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <456B65E1.20204@sauce.co.nz>
+In-Reply-To: <Pine.LNX.4.64.0611271623270.8068@twinlark.arctic.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Richard Scobie <richard@sauce.co.nz>
-Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tue, 28 Nov 2006, Richard Scobie wrote:
+dean gaudet wrote:
 
-> Anyway, my biggest concern is why
-> 
-> echo repair > /sys/block/md5/md/sync_action
-> 
-> appeared to have no effect at all, when I understand that it should re-write
-> unreadable sectors?
+> one theory was that i lucked out and the pending sectors in the unused 
+> disk near the md superblock... but since that's in general only about 90KB 
+> of disk i was kind of skeptical.  it's certainly possible, but seems 
+> unlikely.
 
-i've had the same thing happen on a seagate 7200.8 pata 400GB... and went 
-through the same sequence of operations you described, and the dd fixed 
-it.
+I can discount this one in my case, as sectors were being repaired 
+progressively across the disk, as can be seen in the smartd reports.
 
-one theory was that i lucked out and the pending sectors in the unused 
-disk near the md superblock... but since that's in general only about 90KB 
-of disk i was kind of skeptical.  it's certainly possible, but seems 
-unlikely.
+You can't have too many checks is the moral of the story I guess.
 
-another theory is that a pending sector doesn't always result in a read 
-error -- i.e. depending on temperature?  but the question is, why wouldn't 
-the disk try rewriting it if it does get a successful read.
+Regards,
 
-i wish hard drives were a little less voodoo.
-
--dean
+Richard
