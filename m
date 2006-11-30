@@ -1,53 +1,44 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: Odd (slow) RAID performance
-Date: Thu, 30 Nov 2006 16:09:06 -0500
-Message-ID: <456F4872.2090900@tmr.com>
-References: <20061130153240.1300912EDE@bluewhale.planbit.co.uk>
+From: Patrik Jonsson <patrik@ucolick.org>
+Subject: --no-degraded in mdadm.conf?
+Date: Thu, 30 Nov 2006 14:26:55 -0800
+Message-ID: <456F5AAF.7000904@ucolick.org>
+References: <1162293818.32109.113.camel@kenny>	<17735.14472.835153.186432@cse.unsw.edu.au>	<456CE109.7000202@ucolick.org> <17772.60765.661612.780701@cse.unsw.edu.au> <456D0751.80507@ucolick.org> <456DE689.7000407@ucolick.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enig31A501B282DA2C13F9E4FD11"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20061130153240.1300912EDE@bluewhale.planbit.co.uk>
+In-Reply-To: <456DE689.7000407@ucolick.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roger Lucas <roger@planbit.co.uk>
-Cc: linux-raid@vger.kernel.org
+Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Roger Lucas wrote:
->>> What drive configuration are you using (SCSI / ATA / SATA), what chipset
->>>       
->> is
->>     
->>> providing the disk interface and what cpu are you running with?
->>>       
->> 3xSATA, Seagate 320 ST3320620AS, Intel 6600, ICH7 controller using the
->> ata-piix driver, with drive cache set to write-back. It's not obvious to
->> me why that matters, but if it helps you see the problem I''m glad to
->> provide the info. I'm seeing ~50MB/s on the raw drive, and 3x that on
->> plain stripes, so I'm assuming that either the RAID-5 code is not
->> working well or I haven't set it up optimally.
->>     
->
-> If it had been ATA, and you had two drives as master+slave on the same
-> cable, then they would be fast individually but slow as a pair.
->
-> RAID-5 is higher overhead than RAID-0/RAID-1 so if your CPU was slow then
-> you would see some degradation from that too.
->
-> We have similar hardware here so I'll run some tests here and see what I
-> get...
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enig31A501B282DA2C13F9E4FD11
+Content-Type: text/plain; charset=ISO-8859-2
+Content-Transfer-Encoding: quoted-printable
 
-Much appreciated. Since my last note I tried adding --bitmap=internal to 
-the array. Bot is that a write performance killer. I will have the chart 
-updated in a minute, but write dropped to ~15MB/s with bitmap. Since 
-Fedora can't seem to shut the last array down cleanly, I get a rebuild 
-on every boot :-( So the array for the LVM has bitmap on, as I hate to 
-rebuild 1.5TB regularly. Have to do some compromises on that!
+Hi,
+I'm wondering if there's a corresponding 'no-degraded' flag that can be
+put in the mdadm.conf?
 
-Thanks for looking!
+cheers,
 
--- 
-bill davidsen <davidsen@tmr.com>
-  CTO TMR Associates, Inc
-  Doing interesting things with small computers since 1979
+/Patrik
 
+
+--------------enig31A501B282DA2C13F9E4FD11
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.2 (MingW32)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
+
+iD8DBQFFb1qvT+KvsdUW5p8RAovpAJ9LfiRWK8B7WvUfjlJxfroiHCDZSACfXPj0
+pEpFfYvsyFmrmZofL2swG1Q=
+=P5CI
+-----END PGP SIGNATURE-----
+
+--------------enig31A501B282DA2C13F9E4FD11--
