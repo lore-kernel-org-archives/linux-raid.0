@@ -1,11 +1,11 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH 10/12] md: use async_tx and raid5_run_ops for raid5 expansion operations
-Date: Thu, 30 Nov 2006 13:10:50 -0700
-Message-ID: <20061130201050.21313.26868.stgit@dwillia2-linux.ch.intel.com>
+Subject: [PATCH 08/12] md: move raid5 parity checks to raid5_run_ops
+Date: Thu, 30 Nov 2006 13:10:40 -0700
+Message-ID: <20061130201040.21313.11515.stgit@dwillia2-linux.ch.intel.com>
 References: <e9c3a7c20611301155p4069c642j276d7705b0f81447@mail.gmail.com>
 Content-Type: text/plain; charset=utf-8; format=fixed
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1031332AbWK3UK7@vger.kernel.org>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1031330AbWK3UNj@vger.kernel.org>
 In-Reply-To: <e9c3a7c20611301155p4069c642j276d7705b0f81447@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: neilb@suse.de, jeff@garzik.org, christopher.leech@intel.com, akpm@osdl.org
@@ -14,99 +14,117 @@ List-Id: linux-raid.ids
 
 From: Dan Williams <dan.j.williams@intel.com>
 
-handle_stripe sets STRIPE_OP_POSTXOR without setting STRIPE_OP_BIODRAIN to
-carry out the postxor operation required by the expansion process.  This
-distinction is needed since all blocks will need to be written back to disk
-even though none of the blocks will have their 'written' pointer set.
+handle_stripe sets STRIPE_OP_CHECK to request a check operation in
+raid5_run_ops.  If raid5_run_ops is able to perform the check with a
+dma engine the parity will be preserved and not re-read from disk.
 
-The bulk copy operation to the new stripe is handled by async_tx.
+Check operations re-use the compute block facility to repair the parity.
+However since repairing the parity implies a write-back to disk the
+STRIPE_OP_MOD_REPAIR_PD flag is added to distinguish it from other compute
+block operations.
 
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
 
- drivers/md/raid5.c |   48 ++++++++++++++++++++++++++++++++++++------------
- 1 files changed, 36 insertions(+), 12 deletions(-)
+ drivers/md/raid5.c |   81 ++++++++++++++++++++++++++++++++++++++++------------
+ 1 files changed, 62 insertions(+), 19 deletions(-)
 
 diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 3c793dc..8b36611 100644
+index 8510183..1764fbb 100644
 --- a/drivers/md/raid5.c
 +++ b/drivers/md/raid5.c
-@@ -2582,18 +2582,32 @@ #endif
- 		}
+@@ -2465,32 +2465,75 @@ #endif
+ 			locked += handle_write_operations5(sh, rcw, 0);
  	}
  
--	if (expanded && test_bit(STRIPE_EXPANDING, &sh->state)) {
--		/* Need to write out all blocks after computing parity */
--		sh->disks = conf->raid_disks;
--		sh->pd_idx = stripe_to_pdidx(sh->sector, conf, conf->raid_disks);
--		compute_parity5(sh, RECONSTRUCT_WRITE);
-+	/* Finish postxor operations initiated by the expansion
-+	 * process
-+	 */
-+	if (test_bit(STRIPE_OP_POSTXOR, &sh->ops.complete) &&
-+		!test_bit(STRIPE_OP_BIODRAIN, &sh->ops.pending)) {
+-	/* maybe we need to check and possibly fix the parity for this stripe
+-	 * Any reads will already have been scheduled, so we just see if enough data
+-	 * is available
++	/* 1/ Maybe we need to check and possibly fix the parity for this stripe.
++	 *    Any reads will already have been scheduled, so we just see if enough data
++	 *    is available.
++	 * 2/ Hold off parity checks while parity dependent operations are in flight
++	 *    (conflicting writes are protected by the 'locked' variable)
+ 	 */
+-	if (syncing && locked == 0 &&
+-	    !test_bit(STRIPE_INSYNC, &sh->state)) {
++	if ((syncing && locked == 0 && !test_bit(STRIPE_OP_COMPUTE_BLK, &sh->ops.pending) &&
++		!test_bit(STRIPE_INSYNC, &sh->state)) ||
++	    	test_bit(STRIPE_OP_CHECK, &sh->ops.pending) ||
++	    	test_bit(STRIPE_OP_MOD_REPAIR_PD, &sh->ops.pending)) {
 +
-+		clear_bit(STRIPE_EXPANDING, &sh->state);
-+
-+		clear_bit(STRIPE_OP_POSTXOR, &sh->ops.pending);
-+		clear_bit(STRIPE_OP_POSTXOR, &sh->ops.ack);
-+		clear_bit(STRIPE_OP_POSTXOR, &sh->ops.complete);
-+
- 		for (i= conf->raid_disks; i--;) {
--			set_bit(R5_LOCKED, &sh->dev[i].flags);
--			locked++;
- 			set_bit(R5_Wantwrite, &sh->dev[i].flags);
-+			if (!test_and_set_bit(STRIPE_OP_IO, &sh->ops.pending))
+ 		set_bit(STRIPE_HANDLE, &sh->state);
+-		if (failed == 0) {
+-			BUG_ON(uptodate != disks);
+-			compute_parity5(sh, CHECK_PARITY);
+-			uptodate--;
+-			if (page_is_zero(sh->dev[sh->pd_idx].page)) {
+-				/* parity is correct (on disc, not in buffer any more) */
+-				set_bit(STRIPE_INSYNC, &sh->state);
+-			} else {
+-				conf->mddev->resync_mismatches += STRIPE_SECTORS;
+-				if (test_bit(MD_RECOVERY_CHECK, &conf->mddev->recovery))
+-					/* don't try to repair!! */
++		/* Take one of the following actions:
++		 * 1/ start a check parity operation if (uptodate == disks)
++		 * 2/ finish a check parity operation and act on the result
++		 * 3/ skip to the writeback section if we previously
++		 *    initiated a recovery operation
++		 */
++		if (failed == 0 && !test_bit(STRIPE_OP_MOD_REPAIR_PD, &sh->ops.pending)) {
++			if (!test_and_set_bit(STRIPE_OP_CHECK, &sh->ops.pending)) {
++				BUG_ON(uptodate != disks);
++				clear_bit(R5_UPTODATE, &sh->dev[sh->pd_idx].flags);
 +				sh->ops.count++;
- 		}
--		clear_bit(STRIPE_EXPANDING, &sh->state);
--	} else if (expanded) {
-+	}
++				uptodate--;
++			} else if (test_and_clear_bit(STRIPE_OP_CHECK, &sh->ops.complete)) {
++				clear_bit(STRIPE_OP_CHECK, &sh->ops.ack);
++				clear_bit(STRIPE_OP_CHECK, &sh->ops.pending);
 +
-+	if (expanded && test_bit(STRIPE_EXPANDING, &sh->state) &&
-+		!test_bit(STRIPE_OP_POSTXOR, &sh->ops.pending)) {
-+		/* Need to write out all blocks after computing parity */
-+		sh->disks = conf->raid_disks;
-+		sh->pd_idx = stripe_to_pdidx(sh->sector, conf, conf->raid_disks);
-+		locked += handle_write_operations5(sh, 0, 1);
-+	} else if (expanded && !test_bit(STRIPE_OP_POSTXOR, &sh->ops.pending)) {
- 		clear_bit(STRIPE_EXPAND_READY, &sh->state);
- 		atomic_dec(&conf->reshape_stripes);
- 		wake_up(&conf->wait_for_overlap);
-@@ -2604,6 +2618,7 @@ #endif
- 		/* We have read all the blocks in this stripe and now we need to
- 		 * copy some of them into a target stripe for expand.
- 		 */
-+		struct dma_async_tx_descriptor *tx = NULL;
- 		clear_bit(STRIPE_EXPAND_SOURCE, &sh->state);
- 		for (i=0; i< sh->disks; i++)
- 			if (i != sh->pd_idx) {
-@@ -2627,9 +2642,12 @@ #endif
- 					release_stripe(sh2);
- 					continue;
++				if (sh->ops.zero_sum_result == 0)
++					/* parity is correct (on disc, not in buffer any more) */
+ 					set_bit(STRIPE_INSYNC, &sh->state);
+ 				else {
+-					compute_block(sh, sh->pd_idx);
+-					uptodate++;
++					conf->mddev->resync_mismatches += STRIPE_SECTORS;
++					if (test_bit(MD_RECOVERY_CHECK, &conf->mddev->recovery))
++						/* don't try to repair!! */
++						set_bit(STRIPE_INSYNC, &sh->state);
++					else {
++						BUG_ON(test_and_set_bit(
++							STRIPE_OP_COMPUTE_BLK,
++							&sh->ops.pending));
++						set_bit(STRIPE_OP_MOD_REPAIR_PD,
++							&sh->ops.pending);
++						BUG_ON(test_and_set_bit(R5_Wantcompute,
++							&sh->dev[sh->pd_idx].flags));
++						sh->ops.target = sh->pd_idx;
++						sh->ops.count++;
++						uptodate++;
++					}
  				}
--				memcpy(page_address(sh2->dev[dd_idx].page),
--				       page_address(sh->dev[i].page),
--				       STRIPE_SIZE);
-+
-+				/* place all the copies on one channel */
-+				tx = async_memcpy(sh2->dev[dd_idx].page,
-+					sh->dev[i].page, 0, 0, STRIPE_SIZE,
-+					ASYNC_TX_DEP_ACK, tx, NULL, NULL);
-+
- 				set_bit(R5_Expanded, &sh2->dev[dd_idx].flags);
- 				set_bit(R5_UPTODATE, &sh2->dev[dd_idx].flags);
- 				for (j=0; j<conf->raid_disks; j++)
-@@ -2641,6 +2659,12 @@ #endif
- 					set_bit(STRIPE_HANDLE, &sh2->state);
- 				}
- 				release_stripe(sh2);
-+
-+				/* done submitting copies, wait for them to complete */
-+				if (i + 1 >= sh->disks) {
-+					async_tx_ack(tx);
-+					dma_wait_for_async_tx(tx);
-+				}
  			}
- 	}
- 
+ 		}
+-		if (!test_bit(STRIPE_INSYNC, &sh->state)) {
++
++		/* check if we can clear a parity disk reconstruct */
++		if (test_bit(STRIPE_OP_COMPUTE_BLK, &sh->ops.complete) &&
++			test_bit(STRIPE_OP_MOD_REPAIR_PD, &sh->ops.pending)) {
++
++			clear_bit(STRIPE_OP_MOD_REPAIR_PD, &sh->ops.pending);
++			clear_bit(STRIPE_OP_COMPUTE_BLK, &sh->ops.complete);
++			clear_bit(STRIPE_OP_COMPUTE_BLK, &sh->ops.ack);
++			clear_bit(STRIPE_OP_COMPUTE_BLK, &sh->ops.pending);
++		}
++
++		/* Wait for check parity and compute block operations to complete
++		 * before write-back
++		 */
++		if (!test_bit(STRIPE_INSYNC, &sh->state) &&
++			!test_bit(STRIPE_OP_CHECK, &sh->ops.pending) &&
++			!test_bit(STRIPE_OP_COMPUTE_BLK, &sh->ops.pending)) {
++
+ 			/* either failed parity check, or recovery is happening */
+ 			if (failed==0)
+ 				failed_num = sh->pd_idx;
