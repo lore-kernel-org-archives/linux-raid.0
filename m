@@ -1,35 +1,48 @@
-From: "Roger Lucas" <roger@planbit.co.uk>
-Subject: RE: Odd (slow) RAID performance
-Date: Thu, 30 Nov 2006 15:32:27 -0000
-Message-ID: <20061130153240.1300912EDE@bluewhale.planbit.co.uk>
-References: <456EF903.10502@tmr.com>
+From: "Dan Williams" <dan.j.williams@intel.com>
+Subject: [PATCH 00/12] md raid acceleration and the async_tx api
+Date: Thu, 30 Nov 2006 12:55:46 -0700
+Message-ID: <e9c3a7c20611301155p4069c642j276d7705b0f81447@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <456EF903.10502@tmr.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: 'Bill Davidsen' <davidsen@tmr.com>
-Cc: linux-raid@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S967856AbWK3Tzs@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.de>, Jeff Garzik <jeff@garzik.org>, Chris Leech <christopher.leech@intel.com>, akpm@osdl.org
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>, Linux RAID Mailing List <linux-raid@vger.kernel.org>, Olof Johansson <olof@lixom.net>
 List-Id: linux-raid.ids
 
-> > What drive configuration are you using (SCSI / ATA / SATA), what chipset
-> is
-> > providing the disk interface and what cpu are you running with?
-> 3xSATA, Seagate 320 ST3320620AS, Intel 6600, ICH7 controller using the
-> ata-piix driver, with drive cache set to write-back. It's not obvious to
-> me why that matters, but if it helps you see the problem I''m glad to
-> provide the info. I'm seeing ~50MB/s on the raw drive, and 3x that on
-> plain stripes, so I'm assuming that either the RAID-5 code is not
-> working well or I haven't set it up optimally.
+Here is the latest version of the raid acceleration patch set.  Since
+the last release I have created the async_tx api to address the
+concerns raised by Neil and Jeff.  With this api in place the raid5
+asynchronous and synchronous paths are no longer separated, i.e. there
+are no hardware specific concerns in the raid code.
 
-If it had been ATA, and you had two drives as master+slave on the same
-cable, then they would be fast individually but slow as a pair.
+The async_tx api is proposed as a special dmaengine management client
+that allows offload engines to be used for bulk memory
+transfers/transforms, and fallback to synchronous routines when an
+engine is not present.
 
-RAID-5 is higher overhead than RAID-0/RAID-1 so if your CPU was slow then
-you would see some degradation from that too.
+This implementation has been tested on iop13xx and iop33x platforms in
+both the synchronous case and the asynchronous case with the iop-adma
+driver.  The changes to the ioatdma driver have only been compile
+tested, and testing NET_DMA with iop-adma is pending.
 
-We have similar hardware here so I'll run some tests here and see what I
-get...
+Please consider for -mm.  These patches are against 2.6.19.
 
+Dan Williams:
+      dmaengine: add base support for the async_tx api
+      dmaengine: add the async_tx api
+      dmaengine: driver for the iop32x, iop33x, and iop13xx raid engines
+      md: add raid5_run_ops and support routines
+      md: workqueue for raid5 operations
+      md: move write operations to raid5_run_ops
+      md: move raid5 compute block operations to raid5_run_ops
+      md: move raid5 parity checks to raid5_run_ops
+      md: satisfy raid5 read requests via raid5_run_ops
+      md: use async_tx and raid5_run_ops for raid5 expansion operations
+      md: raid5 io requests to raid5_run_ops
+      md: remove raid5 compute_block and compute_parity5
+
+Regards,
+Dan
