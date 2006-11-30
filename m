@@ -1,121 +1,112 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH 09/12] md: satisfy raid5 read requests via raid5_run_ops
-Date: Thu, 30 Nov 2006 13:10:45 -0700
-Message-ID: <20061130201045.21313.73053.stgit@dwillia2-linux.ch.intel.com>
+Subject: [PATCH 10/12] md: use async_tx and raid5_run_ops for raid5 expansion operations
+Date: Thu, 30 Nov 2006 13:10:50 -0700
+Message-ID: <20061130201050.21313.26868.stgit@dwillia2-linux.ch.intel.com>
 References: <e9c3a7c20611301155p4069c642j276d7705b0f81447@mail.gmail.com>
 Content-Type: text/plain; charset=utf-8; format=fixed
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-raid-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1031332AbWK3UK7@vger.kernel.org>
 In-Reply-To: <e9c3a7c20611301155p4069c642j276d7705b0f81447@mail.gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: neilb@suse.de, jeff@garzik.org, christopher.leech@intel.com, akpm@osdl.org
 Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, olof@lixom.net
 List-Id: linux-raid.ids
 
 From: Dan Williams <dan.j.williams@intel.com>
 
-Use raid5_run_ops to carry out the memory copies for a raid5 read request.
+handle_stripe sets STRIPE_OP_POSTXOR without setting STRIPE_OP_BIODRAIN to
+carry out the postxor operation required by the expansion process.  This
+distinction is needed since all blocks will need to be written back to disk
+even though none of the blocks will have their 'written' pointer set.
+
+The bulk copy operation to the new stripe is handled by async_tx.
 
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
 
- drivers/md/raid5.c |   57 +++++++++++++++++++++++++++++-----------------------
- 1 files changed, 32 insertions(+), 25 deletions(-)
+ drivers/md/raid5.c |   48 ++++++++++++++++++++++++++++++++++++------------
+ 1 files changed, 36 insertions(+), 12 deletions(-)
 
 diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 1764fbb..3c793dc 100644
+index 3c793dc..8b36611 100644
 --- a/drivers/md/raid5.c
 +++ b/drivers/md/raid5.c
-@@ -2020,7 +2020,7 @@ static void handle_stripe5(struct stripe
- 	int i;
- 	int syncing, expanding, expanded;
- 	int locked=0, uptodate=0, to_read=0, to_write=0, failed=0, written=0;
--	int compute=0, req_compute=0, non_overwrite=0;
-+	int to_fill=0, compute=0, req_compute=0, non_overwrite=0;
- 	int failed_num=0;
- 	struct r5dev *dev;
+@@ -2582,18 +2582,32 @@ #endif
+ 		}
+ 	}
  
-@@ -2035,42 +2035,45 @@ static void handle_stripe5(struct stripe
- 	syncing = test_bit(STRIPE_SYNCING, &sh->state);
- 	expanding = test_bit(STRIPE_EXPAND_SOURCE, &sh->state);
- 	expanded = test_bit(STRIPE_EXPAND_READY, &sh->state);
--	/* Now to look around and see what can be done */
- 
-+	/* clear completed biofills */
-+	if (test_and_clear_bit(STRIPE_OP_BIOFILL, &sh->ops.complete)) {
-+		clear_bit(STRIPE_OP_BIOFILL, &sh->ops.ack);
-+		clear_bit(STRIPE_OP_BIOFILL, &sh->ops.pending);
+-	if (expanded && test_bit(STRIPE_EXPANDING, &sh->state)) {
+-		/* Need to write out all blocks after computing parity */
+-		sh->disks = conf->raid_disks;
+-		sh->pd_idx = stripe_to_pdidx(sh->sector, conf, conf->raid_disks);
+-		compute_parity5(sh, RECONSTRUCT_WRITE);
++	/* Finish postxor operations initiated by the expansion
++	 * process
++	 */
++	if (test_bit(STRIPE_OP_POSTXOR, &sh->ops.complete) &&
++		!test_bit(STRIPE_OP_BIODRAIN, &sh->ops.pending)) {
++
++		clear_bit(STRIPE_EXPANDING, &sh->state);
++
++		clear_bit(STRIPE_OP_POSTXOR, &sh->ops.pending);
++		clear_bit(STRIPE_OP_POSTXOR, &sh->ops.ack);
++		clear_bit(STRIPE_OP_POSTXOR, &sh->ops.complete);
++
+ 		for (i= conf->raid_disks; i--;) {
+-			set_bit(R5_LOCKED, &sh->dev[i].flags);
+-			locked++;
+ 			set_bit(R5_Wantwrite, &sh->dev[i].flags);
++			if (!test_and_set_bit(STRIPE_OP_IO, &sh->ops.pending))
++				sh->ops.count++;
+ 		}
+-		clear_bit(STRIPE_EXPANDING, &sh->state);
+-	} else if (expanded) {
 +	}
 +
-+	/* Now to look around and see what can be done */
- 	rcu_read_lock();
- 	for (i=disks; i--; ) {
- 		mdk_rdev_t *rdev;
- 		dev = &sh->dev[i];
- 		clear_bit(R5_Insync, &dev->flags);
- 
--		PRINTK("check %d: state 0x%lx read %p write %p written %p\n",
--			i, dev->flags, dev->toread, dev->towrite, dev->written);
-+		PRINTK("check %d: state 0x%lx toread %p read %p write %p written %p\n",
-+		i, dev->flags, dev->toread, dev->read, dev->towrite, dev->written);
++	if (expanded && test_bit(STRIPE_EXPANDING, &sh->state) &&
++		!test_bit(STRIPE_OP_POSTXOR, &sh->ops.pending)) {
++		/* Need to write out all blocks after computing parity */
++		sh->disks = conf->raid_disks;
++		sh->pd_idx = stripe_to_pdidx(sh->sector, conf, conf->raid_disks);
++		locked += handle_write_operations5(sh, 0, 1);
++	} else if (expanded && !test_bit(STRIPE_OP_POSTXOR, &sh->ops.pending)) {
+ 		clear_bit(STRIPE_EXPAND_READY, &sh->state);
+ 		atomic_dec(&conf->reshape_stripes);
+ 		wake_up(&conf->wait_for_overlap);
+@@ -2604,6 +2618,7 @@ #endif
+ 		/* We have read all the blocks in this stripe and now we need to
+ 		 * copy some of them into a target stripe for expand.
+ 		 */
++		struct dma_async_tx_descriptor *tx = NULL;
+ 		clear_bit(STRIPE_EXPAND_SOURCE, &sh->state);
+ 		for (i=0; i< sh->disks; i++)
+ 			if (i != sh->pd_idx) {
+@@ -2627,9 +2642,12 @@ #endif
+ 					release_stripe(sh2);
+ 					continue;
+ 				}
+-				memcpy(page_address(sh2->dev[dd_idx].page),
+-				       page_address(sh->dev[i].page),
+-				       STRIPE_SIZE);
 +
-+		/* maybe we can acknowledge completion of a biofill operation */
-+		if (test_bit(R5_Wantfill, &dev->flags) && !dev->toread)
-+			clear_bit(R5_Wantfill, &dev->flags);
++				/* place all the copies on one channel */
++				tx = async_memcpy(sh2->dev[dd_idx].page,
++					sh->dev[i].page, 0, 0, STRIPE_SIZE,
++					ASYNC_TX_DEP_ACK, tx, NULL, NULL);
 +
- 		/* maybe we can reply to a read */
-+		if (dev->read && !test_bit(R5_Wantfill, &dev->flags) &&
-+			!test_bit(STRIPE_OP_BIOFILL, &sh->ops.pending)) {
-+			return_bi = dev->read;
-+			dev->read = NULL;
-+		}
+ 				set_bit(R5_Expanded, &sh2->dev[dd_idx].flags);
+ 				set_bit(R5_UPTODATE, &sh2->dev[dd_idx].flags);
+ 				for (j=0; j<conf->raid_disks; j++)
+@@ -2641,6 +2659,12 @@ #endif
+ 					set_bit(STRIPE_HANDLE, &sh2->state);
+ 				}
+ 				release_stripe(sh2);
 +
-+		/* maybe we can start a biofill operation */
- 		if (test_bit(R5_UPTODATE, &dev->flags) && dev->toread) {
--			struct bio *rbi, *rbi2;
--			PRINTK("Return read for disc %d\n", i);
--			spin_lock_irq(&conf->device_lock);
--			rbi = dev->toread;
--			dev->toread = NULL;
--			if (test_and_clear_bit(R5_Overlap, &dev->flags))
--				wake_up(&conf->wait_for_overlap);
--			spin_unlock_irq(&conf->device_lock);
--			while (rbi && rbi->bi_sector < dev->sector + STRIPE_SECTORS) {
--				copy_data(0, rbi, dev->page, dev->sector);
--				rbi2 = r5_next_bio(rbi, dev->sector);
--				spin_lock_irq(&conf->device_lock);
--				if (--rbi->bi_phys_segments == 0) {
--					rbi->bi_next = return_bi;
--					return_bi = rbi;
--				}
--				spin_unlock_irq(&conf->device_lock);
--				rbi = rbi2;
--			}
-+			to_read--;
-+			if (!test_bit(STRIPE_OP_BIOFILL, &sh->ops.pending))
-+				set_bit(R5_Wantfill, &dev->flags);
- 		}
- 
- 		/* now count some things */
- 		if (test_bit(R5_LOCKED, &dev->flags)) locked++;
- 		if (test_bit(R5_UPTODATE, &dev->flags)) uptodate++;
-+		if (test_bit(R5_Wantfill, &dev->flags)) to_fill++;
- 		if (test_bit(R5_Wantcompute, &dev->flags)) BUG_ON(++compute > 1);
- 
- 		if (dev->toread) to_read++;
-@@ -2094,9 +2097,13 @@ static void handle_stripe5(struct stripe
- 			set_bit(R5_Insync, &dev->flags);
++				/* done submitting copies, wait for them to complete */
++				if (i + 1 >= sh->disks) {
++					async_tx_ack(tx);
++					dma_wait_for_async_tx(tx);
++				}
+ 			}
  	}
- 	rcu_read_unlock();
-+
-+	if (to_fill && !test_and_set_bit(STRIPE_OP_BIOFILL, &sh->ops.pending))
-+		sh->ops.count++;
-+
- 	PRINTK("locked=%d uptodate=%d to_read=%d"
--		" to_write=%d failed=%d failed_num=%d\n",
--		locked, uptodate, to_read, to_write, failed, failed_num);
-+		" to_write=%d to_fill=%d failed=%d failed_num=%d\n",
-+		locked, uptodate, to_read, to_write, to_fill, failed, failed_num);
- 	/* check if the array has lost two devices and, if so, some requests might
- 	 * need to be failed
- 	 */
+ 
