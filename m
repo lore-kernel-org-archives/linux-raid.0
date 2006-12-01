@@ -1,75 +1,50 @@
-From: Jacob Schmidt Madsen <jacob@mungo.dk>
-Subject: Re: Trouble when growing a raid5 array
-Date: Fri, 1 Dec 2006 12:18:29 +0100
-Message-ID: <200612011218.29088.jacob@mungo.dk>
-References: <200611300804.15031.jacob@mungo.dk>
+From: Mike Accetta <maccetta-bounce@laurelnetworks.com>
+Subject: Partitioned arrays initially missing from /proc/partitions
+Date: Fri, 01 Dec 2006 15:53:13 -0500
+Message-ID: <45709639.70104@laurelnetworks.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200611300804.15031.jacob@mungo.dk>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hey again :-)
+In setting up a partitioned array as the boot disk and using a nash 
+initrd to find the root file system by volume label, I see a delay in 
+the appearance of the /dev/md_d0p partitions in /proc/partitions.  When 
+the mdadm --assemble command completes, only /dev/md_d0 is visible. 
+Since the raid partitions are not visible after the assemble, the volume 
+label search will not consult them in looking for the root volume and 
+the boot gets aborted. When I run a similar assemble command while up 
+multi-user in a friendlier debug environment I see the same effect and 
+observe that pretty much any access of /dev/md_d0 has the side effect of 
+then making the /dev/md_d0p partitions visible in /proc/partitions.
 
-I'm starting to suspect that its a bug, since all I did was straight forward 
-and it worked many times before.
+I tried a few experiments changing the --assemble code in mdadm.  If I 
+open() and close() /dev/md_d0 after assembly *before* closing the file 
+descriptor which the assemble step used to assemble the array, there is 
+no effect.  Even doing a BLKRRPART ioctl call on the assembly fd or the 
+newly opened fd have no effect.  The kernel prints "unknown partition" 
+diagnostics on the console.  However, if the assembly fd is first 
+close()'d, a simple open() of /dev/md_d0 and immediate close() of that 
+fd has the side effect of making the /dev/md_d0p partitions visible and 
+one sees the console disk partitioning confirmation from the kernel as well.
 
-When I try to stop the array by executing "mdadm -S /dev/md5", then mdadm 
-stall (i'm suspecting it hit an error - maybe the same one).
+Adding the open()/close() after assembly within mdadm solves my problem, 
+but I thought I'd raise the issue on the list as it seems there is a bug 
+somewhere.  I see in the kernel md driver that the RUN_ARRAY ioctl() 
+calls do_md_run() which calls md_probe() which calls add_disk() and I 
+gather that this would normally have the side effect of making the 
+partitions visible.  However, my experiments at user level seem to imply 
+that the array isn't completely usable until the assembly file 
+descriptor is closed, even on return from the ioctl(), and hence the 
+kernel add_disk() isn't having the desired partitioning side effect at 
+the point it is being invoked.
 
-I also tryed to restart the computer and made sure the array didnt auto-start. 
-I then manually started it and the reshape process it shown when 
-executing "cat /proc/mdstat", but it doesnt proceed (it seems stalled right 
-away). When I try to stop it as shown above, it then stall mdadm like before.
-So I'm able to reproduce the error.
+This is all with kernel 2.6.18 and mdadm 2.3.1
+-- 
+Mike Accetta
 
-I've tryed with kernel 2.6.18.3, 2.6.18.4 and 2.6.19 - with the same results 
-as described above.
-
-In case its a bug, then I would really like to help out, so its fixed and 
-noone else will experience it (and I get my array fixed). What can I do to 
-make sure its a bug and if it is, then what kind of information will be 
-helpfull and where should I submit it?
-
-I've checked the source code (raid5.c), but there's no comment included in the 
-code, so I cant do much myself since my code experience with C is very small 
-when it comes to kernel programming.
-
-On Thursday 30 November 2006 08:04, Jacob Schmidt Madsen wrote:
-> Hey
->
-> I bought 2 new disks to be included in a big raid5 array.
->
-> I executed:
-> # mdadm /dev/md5 -a /dev/sdh1
-> # mdadm /dev/md5 -a /dev/sdi1
-> # mdadm --grow /dev/md5 --raid-disks=8
->
-> After 12 hours it stalled:
-> # cat /proc/mdstat
-> md5 : active raid5 sdc1[6] sdb1[7] sdi1[3] sdh1[2] sdg1[1] sdf1[0] sde1[4]
-> sdd1[5]
->       1562842880 blocks super 0.91 level 5, 64k chunk, algorithm 2 [8/8]
-> [UUUUUUUU]
->       [===================>.]  reshape = 98.1% (306783360/312568576)
-> finish=668.7min speed=144K/sec
->
-> Its been stuck at 306783360/312568576 for hours now.
->
-> When i check the kernel log it is full of "compute_blocknr: map not
-> correct".
->
-> I guess something went really bad? If someone know what is going on or if
-> someone know what i can do to fix this.
-> I would really be sad if all the data was gone.
->
-> Thanks!
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+ECI Telecom Ltd.
+Data Networking Division (previously Laurel Networks)
