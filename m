@@ -1,34 +1,47 @@
-From: "michael michael" <danshoe@gmail.com>
-Subject: Questions about RAID1/RAID5 read error handling
-Date: Tue, 5 Dec 2006 20:42:57 +0800
-Message-ID: <c03b90ed0612050442i2d41d274i3edf0c84c269b523@mail.gmail.com>
+From: "Ludo Ludo" <Garbunovas@8848.net>
+Subject: Welcome to XL Members Club!
+Date: Tue, 05 Dec 2006 23:53:33 +0000
+Message-ID: <576c01c718c8$01d6c7fc$52172051@oscar-fb568fb89>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+	format=flowed;
+	charset="Windows-1252";
+	reply-type=original
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Hansen Malene <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi,
+Hei dude
 
-I have several questions about RAID1/RAID5 read error handling.
-Any help is appreciated, thanks.
+Don't tell me why your sausage is so small,
+I will better help you to make it really Bigger!
 
-After I created a md, what will md driver do if a read error is
-encountered in the following conditions:
-1. during md is resyncing?
-2. after md is resync-ed?
-3. when md is degraded?
-4. during md is recovering?
+Why bigger? Because over 72% of all women need a longer
+weenie to satisfy their desire!
 
-My current kernel is 2.6.15.7, but I saw patches for the read errors
-handling in 2.6.16/18.
-What are the changes of read error handling after 2.6.16?
+Go there and get your solution: http://www.deceits.net
 
-Any help is appreciated, thanks.
+It'll really help you!
 
---
-Best Regards,
-Michael Yao
+We will ship it worldwide within 24 hours, and if
+you find our product useless - we'll refund all your money!
+
+
+
+-- 
+frkmkkkijqjmlsiihihphffkifhfhsiqljhfhoiuhfhpirmuishgii
+gndjknsdjdhfsweet
+perfectly well, yet you refuse to come forward.'
+     'I'm  sorry,  but  how  can  I,  when I  have  no more currency? ' was
+Dunchill's calm reply.
+     'Not even any diamonds, perhaps? ' asked the actor.
+     'No diamonds either.'
+     The  actor  hung his  head, reflected for  a moment,  then  clapped his
+hands.  From  the wings emerged a fashionably dressed middle-aged woman. The
+woman  looked worried as Dunchill stared  at her without the flicker  of  an
+eyelid.
+     'Who is this lady? ' the compere enquired of Dunchill.
+
+
