@@ -1,7 +1,7 @@
-From: "Ziborov Jury" <Martin@london.com>
-Subject: Bigger Size Bigger Pleasure
-Date: Wed, 06 Dec 2006 12:12:39 +0000
-Message-ID: <277c01c7192f$058ce060$55dc0058@85.Red-88-0-220.dynamicIP.rima-tde.net>
+From: "Mishelov Tartar" <Teaser@wawasan2020.com>
+Subject: Are you sure that you have enough size?
+Date: Wed, 06 Dec 2006 13:57:55 +0000
+Message-ID: <02ff01c7193e$0bacd380$7a600dc9@luciano>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	format=flowed;
@@ -10,18 +10,18 @@ Content-Type: text/plain;
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Thurnherr Bruno <linux-raid@vger.kernel.org>
+To: Idayan Andy <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-salute chap
+YO sir
 
-Don't tell me why your ramrod is so small,
+Don't tell me why your woody is so small,
 I will better help you to make it really Bigger!
 
 Why bigger? Because over 72% of all women need a longer
-sausage to satisfy their desire!
+thing to satisfy their desire!
 
-Go there and get your solution: http://mumbled.net
+Go there and get your solution: http://coaxed.net
 
 It'll really help you!
 
@@ -31,17 +31,17 @@ you find our product useless - we'll refund all your money!
 
 
 -- 
-kufjfffjgtgjjfgrftgogkihfkgigffjkogigrfngkgoggkfgfuhtl
-kdjfsekfjwererdf
-Still sobbing she dragged him into the chairman's office.
-     Once inside Vassily Stepanovich dropped his briefcase in horror.
-     Behind the huge desk with its massive inkwell sat an empty  suit. A dry
-pen was hurrying, unheld, across a sheet of paper. The suit had a shirt  and
-tie, a fountain  pen was clipped in its breast-pocket,  but above the collar
-there was no neck  and no head and there were no wrists protruding from  the
-cuffs. The  suit  was hard at work  and oblivious of the uproar round about.
-Hearing  someone  come  in,  the  suit  leaned  back in  its chair and  from
-somewhere  just  above  the  collar  came  the  familiar  voice  of  Prokhor
-Petrovich:
+utpkpipkqoqktiqsqgqnqloiphqhqipkulqhqupoqhqnqhugnuoink
+rkrgkjfdkgjsfdgkj
+     'I said something about being afraid of burglars and asked her to keep
+the money until my departure. She took it,  put it  in her handbag, began to
+kiss  me and said that she  would rather die  than  leave  me  alone in this
+condition, but  people were expecting her, she had to go but would come back
+the next day. She begged me not to be afraid.
+     'It was twilight, in mid-October. She went. I lay down on my divan and
+fell asleep without putting on the light. I was awakened by the feeling that
+the octopus was there. Fumbling in the dark I just  managed to switch on the
+lamp. My watch showed two o'clock in the morning. When I had  gone to bed  I
+had been  sickening; when I woke up I was an ill man. I had a sudden feeling
 
 
