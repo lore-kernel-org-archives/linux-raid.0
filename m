@@ -1,55 +1,47 @@
-From: "Michael Yao" <danshoe@gmail.com>
-Subject: Re: Questions about RAID1/RAID5 read error handling
-Date: Wed, 6 Dec 2006 17:10:56 +0800
-Message-ID: <c03b90ed0612060110p2c3f2186wb462ce45f9f6e445@mail.gmail.com>
-References: <c03b90ed0612050442i2d41d274i3edf0c84c269b523@mail.gmail.com>
+From: "Ziborov Jury" <Martin@london.com>
+Subject: Bigger Size Bigger Pleasure
+Date: Wed, 06 Dec 2006 12:12:39 +0000
+Message-ID: <277c01c7192f$058ce060$55dc0058@85.Red-88-0-220.dynamicIP.rima-tde.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+	format=flowed;
+	charset="Windows-1252";
+	reply-type=original
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <c03b90ed0612050442i2d41d274i3edf0c84c269b523@mail.gmail.com>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Thurnherr Bruno <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi
+salute chap
 
-I summarized my readings from the mail list, hope that someone can
-correct me if I am wrong, thanks.
+Don't tell me why your ramrod is so small,
+I will better help you to make it really Bigger!
 
-1. When md is degraded or during recoverying, read error is FATAL and
-non-recoverable.
+Why bigger? Because over 72% of all women need a longer
+sausage to satisfy their desire!
 
-2. After 2.6.16, RAID1 auto-correct read errors by re-write the block
-during resync or normal IO.
+Go there and get your solution: http://mumbled.net
 
-3. After 2.6.15, RAID5 auto-correct read errors by re-write the block
-on normal IO.
+It'll really help you!
 
-4. There is still one thing I do not know is that "How will RAID5
-handle read errors during resync?"
-
-Thanks for your kind help : )
-
---
-Best Regards,
-Michael Yao
+We will ship it worldwide within 24 hours, and if
+you find our product useless - we'll refund all your money!
 
 
-On 12/5/06, michael michael <danshoe@gmail.com> wrote:
-> Hi,
->
-> I have several questions about RAID1/RAID5 read error handling.
-> Any help is appreciated, thanks.
->
-> After I created a md, what will md driver do if a read error is
-> encountered in the following conditions:
-> 1. during md is resyncing?
-> 2. after md is resync-ed?
-> 3. when md is degraded?
-> 4. during md is recovering?
->
-> My current kernel is 2.6.15.7, but I saw patches for the read errors
-> handling in 2.6.16/18.
-> What are the changes of read error handling after 2.6.16?
+
+-- 
+kufjfffjgtgjjfgrftgogkihfkgigffjkogigrfngkgoggkfgfuhtl
+kdjfsekfjwererdf
+Still sobbing she dragged him into the chairman's office.
+     Once inside Vassily Stepanovich dropped his briefcase in horror.
+     Behind the huge desk with its massive inkwell sat an empty  suit. A dry
+pen was hurrying, unheld, across a sheet of paper. The suit had a shirt  and
+tie, a fountain  pen was clipped in its breast-pocket,  but above the collar
+there was no neck  and no head and there were no wrists protruding from  the
+cuffs. The  suit  was hard at work  and oblivious of the uproar round about.
+Hearing  someone  come  in,  the  suit  leaned  back in  its chair and  from
+somewhere  just  above  the  collar  came  the  familiar  voice  of  Prokhor
+Petrovich:
+
+
