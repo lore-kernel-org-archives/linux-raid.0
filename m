@@ -1,52 +1,41 @@
-From: linux-raid-kernel-org@moniker.net
-Subject: array sync looping
-Date: Fri, 08 Dec 2006 16:19:16 +1100
-Message-ID: <4578F5D4.8080205@moniker.net>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: Odd (slow) RAID performance
+Date: Fri, 8 Dec 2006 17:01:41 +1100
+Message-ID: <17784.65477.993729.508985@cse.unsw.edu.au>
+References: <456F4872.2090900@tmr.com>
+	<20061201092211.4ACDB12EDE@bluewhale.planbit.co.uk>
+	<45710EDC.9050805@tmr.com>
+	<e9c3a7c20612041733h5999ac0erc7ab4a7174882683@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: message from Dan Williams on Monday December 4
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Dan Williams <dan.j.williams@gmail.com>
+Cc: Bill Davidsen <davidsen@tmr.com>, Roger Lucas <roger@planbit.co.uk>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi -
+On Monday December 4, dan.j.williams@gmail.com wrote:
+> 
+> Here is where I step into supposition territory.  Perhaps the
+> discrepancy is related to the size of the requests going to the block
+> layer.  raid5 always makes page sized requests with the expectation
+> that they will coalesce into larger requests in the block layer.
+> Maybe we are missing coalescing opportunities in raid5 compared to
+> what happens in the raid0 case?  Are there any io scheduler knobs to
+> turn along these lines?
 
-I recently upgraded to the 2.6.17-2-686 SMP kernel image (debian).
+This can be measured.  /proc/diskstats reports the number of requests
+as well as the number of sectors.
+The number of write requests is column 8.  The number of write sectors
+is column 10.  Comparing these you can get an average request size.
 
-Now, when I hot-add a disk (mdadm /dev/md1 --add /dev/hdc3) the array 
-resyncs to 100%, a bunch of errors appear and then the array resync 
-starts from 0% again.
+I have found that the average request size is proportional to the size
+of the stripe cache (roughly, with limits) but increasing it doesn't
+increase through put.
+I have measured very slow write throughput for raid5 as well, though
+2.6.18 does seem to have the same problem.  I'll double check and do a
+git bisect and see what I can come up with.
 
-mdadm --zero-superblock on the "new" disk doesn't help.
-
-Any suggestions on what might be happening or how to debug/fix would 
-be welcome.
-
-Thanks -
-
-Leni
-
-$ dmesg  # output truncated
-...
-md: md1: sync done.
-hda: dma_intr: status=0x51 { DriveReady SeekComplete Error }
-hda: dma_intr: error=0x40 { UncorrectableError }, LBAsect=390716106, 
-high=23, low=4840138, sector=390716042
-ide: failed opcode was: unknown
-end_request: I/O error, dev hda, sector 390716042
-...
-raid1: hda: unrecoverable I/O read error for block 388499072
-RAID1 conf printout:
-  --- wd:1 rd:3
-  disk 0, wo:1, o:1, dev:hdc3
-  disk 2, wo:0, o:1, dev:hda3
-RAID1 conf printout:
-  --- wd:1 rd:3
-  disk 2, wo:0, o:1, dev:hda3
-RAID1 conf printout:
-  --- wd:1 rd:3
-  disk 0, wo:1, o:1, dev:hdc3
-  disk 2, wo:0, o:1, dev:hda3
-md: syncing RAID array md
-...
+NeilBrown
