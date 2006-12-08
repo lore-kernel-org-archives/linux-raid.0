@@ -1,34 +1,39 @@
-From: Gabor Gombas <gombasg@sztaki.hu>
-Subject: Re: Odd (slow) RAID performance
-Date: Fri, 8 Dec 2006 09:21:46 +0100
-Message-ID: <20061208082146.GF8696@boogie.lpds.sztaki.hu>
-References: <456F4872.2090900@tmr.com> <20061201092211.4ACDB12EDE@bluewhale.planbit.co.uk> <45710EDC.9050805@tmr.com> <e9c3a7c20612041733h5999ac0erc7ab4a7174882683@mail.gmail.com> <4578387D.4010209@tmr.com>
+From: Jacob Schmidt Madsen <jacob@mungo.dk>
+Subject: mdadm assemble question
+Date: Fri, 8 Dec 2006 14:27:21 +0100
+Message-ID: <200612081427.22117.jacob@mungo.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <4578387D.4010209@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: Dan Williams <dan.j.williams@gmail.com>, Roger Lucas <roger@planbit.co.uk>, linux-raid@vger.kernel.org, neilb@suse.de
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Dec 07, 2006 at 10:51:25AM -0500, Bill Davidsen wrote:
+Hey,
 
-> I also suspect that write are not being combined, since writing the 2GB 
-> test runs at one-drive speed writing 1MB blocks, but floppy speed 
-> writing 2k blocks. And no, I'm not running out of CPU to do the 
-> overhead, it jumps from 2-4% to 30% of one CPU, but on an unloaded SMP 
-> system it's not CPU bound.
+I've added 2 new disks to an existing raid5 array and started the grow 
+process.
 
-You could use blktrace to see the actual requests that the md code sends
-down to the device, including request merging actions. That may provide
-more insight into what really happens.
+The grow process was unsuccessfull because it stalled at 98.1% and the system 
+log show a long list of "compute_blocknr: map not correct".
 
-Gabor
+I'm not able to mount the array or stop it at all. The 'mount' command 
+and 'mdadm' just stall in middle of their execution.
 
--- 
-     ---------------------------------------------------------
-     MTA SZTAKI Computer and Automation Research Institute
-                Hungarian Academy of Sciences
-     ---------------------------------------------------------
+So now I want to recover as much data as possible, but its not possible since 
+I cant read from the filesystem on the array, because 'mount' stall.
+
+Now I want to assemble the array without starting the reshape process after 
+rebooting, but I cant find this option in the manual of mdadm.
+I'm suspecting the reshape process is the problem and thats why I dont want it 
+to start.
+I'm hoping it will be possible to use the array and read from it, if the 
+reshape process it not started.
+
+Am I just blind or is it not possible to start an array without starting the 
+reshape process?
+
+Thanks!
