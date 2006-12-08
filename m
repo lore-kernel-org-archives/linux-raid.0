@@ -1,39 +1,25 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: mdadm assemble question
-Date: Sat, 9 Dec 2006 09:59:30 +1100
-Message-ID: <17785.61010.745533.90298@cse.unsw.edu.au>
-References: <200612081427.22117.jacob@mungo.dk>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Radu Macovei <rkhvpa@franklinservice.com>
+Subject: Saue vp more bucks.,maria r gomes
+Date: Fri, 08 Dec 2006 15:22:15 -0800
+Message-ID: <k1P7klds9X6r4x0Gyt60LW97KkAE7A8g@franklinservice.com>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Jacob Schmidt Madsen on Friday December 8
 Sender: linux-raid-owner@vger.kernel.org
-To: Jacob Schmidt Madsen <jacob@mungo.dk>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Friday December 8, jacob@mungo.dk wrote:
-> Hey,
-> 
-> I've added 2 new disks to an existing raid5 array and started the grow 
-> process.
-> 
-> The grow process was unsuccessfull because it stalled at 98.1% and the system 
-> log show a long list of "compute_blocknr: map not correct".
+We wish you a merry christmas & a happy new year.
 
-Not good!
+http://newforholiday.com
 
-> 
-> Am I just blind or is it not possible to start an array without starting the 
-> reshape process?
+---------------------------------------------------------------------------------------------------------------------------------------------
+DEMANDTEC EMAIL NOTICE:
 
-Normally you wouldn't want to....
+NOTICE: This email transmission and all attached files contain information intended for the designated individual or entity to whom it is addressed and may contain information that is proprietary, privileged and/or exempt from disclosure under applicable law. If you are not the intended recipient or an employee or agent responsible for delivering this message to the intended recipient, you are hereby notified that any dissemination, distribution, copying, or other use of this email or its attachments is strictly prohibited. If you have received this email in error, please notify the sender immediately by replying to this message and please delete the original message without making any copies. 
 
-Can you post the output of "mdadm --examine" on each of the component
-devices please.  And tell me what version of the Linux kernel you are
-using, and what version of mdadm?  I'll see if I can figure out what
-happened and what the best way to fix it is.
 
-Thanks,
-NeilBrown
+WARNING: Computer viruses can be transmitted via email. The recipient should check this email and any attachments for the presence of viruses. Although we have taken reasonable precautions to ensure that this email and all attachments are free from viruses, we accept no liability for any loss or damage arising from the use of this email or its attachments.
+
+MARK  A JANICKE
+Wesley R Ellis Amy Lee Rue 
