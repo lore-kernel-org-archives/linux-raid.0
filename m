@@ -1,46 +1,142 @@
-From: Corey Hickey <bugfood-ml@fatooh.org>
-Subject: Re: RAID5, 2 out of 4 disks failed, Events value differs too much
-Date: Thu, 07 Dec 2006 16:34:00 -0800
-Message-ID: <4578B2F8.4060200@fatooh.org>
-References: <20061205084802.16720@gmx.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: NeilBrown <neilb@suse.de>
+Subject: [PATCH 001 of 5] md: Remove some old ifdefed-out code from raid5.c
+Date: Fri, 8 Dec 2006 12:05:31 +1100
+Message-ID: <1061208010531.21294@suse.de>
+References: <20061208120132.21203.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20061205084802.16720@gmx.net>
 Sender: linux-raid-owner@vger.kernel.org
-Cc: linux-raid@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-Bodo Thiesen wrote:
-> Hi, I have a little problem:
-> 
-> Some hours ago the second of four disks were kicked out of my RAID5 thus rendering it unusable. As of my current knowledge, the disks are still working correctly (I assume a cable connection problem) but that's not the problem. The real problem is, that the first failed disk has an event value of 9102893, the second failed disk has a value of 9324862 and the other two disks have a value of 9324869. In this case, what is the best to do to recover the RAID? Because just recreating the array with the 9324862-disk and the two 9324869-disks and later hotadding the 9102893-disk, is just unclean and as I understood it, this would trigger some silent data failures. Is there a chance to prevent this data failures to happen at all, or is it at least possible to tell, where this error(s) are (so I can manually check the data and take appropriate steps)? Remember that I still have the data from th
- e first failed disk, from which parts may still be relatively up to date.
-> 
-> Has anyone had this problem already and found a nice solution for this?
 
-If nobody gives you any better advice, I would follow this approach. 
-These commands are examples and may need to be fixed; I haven't had this 
-exact problem before (only similar ones) and I can't test anything right 
-now.
+There are some vestiges of old code that was used for bypassing the
+stripe cache on reads in raid5.c.  This was never updated after the
+change from buffer_heads to bios, but was left as a reminder.
 
-First, force the reassembly of the array using the three freshest disks.
-# mdadm --assemble --force --run /dev/md0 /dev/sdb /dev/sdc /dev/sdd
+That functionality has nowe been implemented in a completely different
+way, so the old code can go.
 
-Next, use whatever fsck program corresponds to your filesystem and do a 
-read-only check. Something like:
-# reiserfsck --check /dev/md0
 
-If fsck finds only a few problems, then it's probably safe to go ahead 
-and tell fsck to fix them; data loss will be minimal or nonexistent.
-# reiserfsck --fix-fixable /dev/md0
+Signed-off-by: Neil Brown <neilb@suse.de>
 
-Now you ought to be able to mount the filesystem and look around.
-# mount /dev/md0
+### Diffstat output
+ ./drivers/md/raid5.c |   63 ---------------------------------------------------
+ 1 file changed, 63 deletions(-)
 
-If all looks good, then hot-add the stale disk and let it resync.
-# mdadm /dev/md0 -a /dev/sda
-
-Good luck,
-Corey
+diff .prev/drivers/md/raid5.c ./drivers/md/raid5.c
+--- .prev/drivers/md/raid5.c	2006-12-06 14:23:10.000000000 +1100
++++ ./drivers/md/raid5.c	2006-12-06 14:31:26.000000000 +1100
+@@ -544,35 +544,7 @@ static int raid5_end_read_request(struct
+ 	}
+ 
+ 	if (uptodate) {
+-#if 0
+-		struct bio *bio;
+-		unsigned long flags;
+-		spin_lock_irqsave(&conf->device_lock, flags);
+-		/* we can return a buffer if we bypassed the cache or
+-		 * if the top buffer is not in highmem.  If there are
+-		 * multiple buffers, leave the extra work to
+-		 * handle_stripe
+-		 */
+-		buffer = sh->bh_read[i];
+-		if (buffer &&
+-		    (!PageHighMem(buffer->b_page)
+-		     || buffer->b_page == bh->b_page )
+-			) {
+-			sh->bh_read[i] = buffer->b_reqnext;
+-			buffer->b_reqnext = NULL;
+-		} else
+-			buffer = NULL;
+-		spin_unlock_irqrestore(&conf->device_lock, flags);
+-		if (sh->bh_page[i]==bh->b_page)
+-			set_buffer_uptodate(bh);
+-		if (buffer) {
+-			if (buffer->b_page != bh->b_page)
+-				memcpy(buffer->b_data, bh->b_data, bh->b_size);
+-			buffer->b_end_io(buffer, 1);
+-		}
+-#else
+ 		set_bit(R5_UPTODATE, &sh->dev[i].flags);
+-#endif
+ 		if (test_bit(R5_ReadError, &sh->dev[i].flags)) {
+ 			rdev = conf->disks[i].rdev;
+ 			printk(KERN_INFO "raid5:%s: read error corrected (%lu sectors at %llu on %s)\n",
+@@ -618,14 +590,6 @@ static int raid5_end_read_request(struct
+ 		}
+ 	}
+ 	rdev_dec_pending(conf->disks[i].rdev, conf->mddev);
+-#if 0
+-	/* must restore b_page before unlocking buffer... */
+-	if (sh->bh_page[i] != bh->b_page) {
+-		bh->b_page = sh->bh_page[i];
+-		bh->b_data = page_address(bh->b_page);
+-		clear_buffer_uptodate(bh);
+-	}
+-#endif
+ 	clear_bit(R5_LOCKED, &sh->dev[i].flags);
+ 	set_bit(STRIPE_HANDLE, &sh->state);
+ 	release_stripe(sh);
+@@ -1619,15 +1583,6 @@ static void handle_stripe5(struct stripe
+ 				} else if (test_bit(R5_Insync, &dev->flags)) {
+ 					set_bit(R5_LOCKED, &dev->flags);
+ 					set_bit(R5_Wantread, &dev->flags);
+-#if 0
+-					/* if I am just reading this block and we don't have
+-					   a failed drive, or any pending writes then sidestep the cache */
+-					if (sh->bh_read[i] && !sh->bh_read[i]->b_reqnext &&
+-					    ! syncing && !failed && !to_write) {
+-						sh->bh_cache[i]->b_page =  sh->bh_read[i]->b_page;
+-						sh->bh_cache[i]->b_data =  sh->bh_read[i]->b_data;
+-					}
+-#endif
+ 					locked++;
+ 					PRINTK("Reading block %d (sync=%d)\n", 
+ 						i, syncing);
+@@ -1645,9 +1600,6 @@ static void handle_stripe5(struct stripe
+ 			dev = &sh->dev[i];
+ 			if ((dev->towrite || i == sh->pd_idx) &&
+ 			    (!test_bit(R5_LOCKED, &dev->flags) 
+-#if 0
+-|| sh->bh_page[i]!=bh->b_page
+-#endif
+ 				    ) &&
+ 			    !test_bit(R5_UPTODATE, &dev->flags)) {
+ 				if (test_bit(R5_Insync, &dev->flags)
+@@ -1659,9 +1611,6 @@ static void handle_stripe5(struct stripe
+ 			/* Would I have to read this buffer for reconstruct_write */
+ 			if (!test_bit(R5_OVERWRITE, &dev->flags) && i != sh->pd_idx &&
+ 			    (!test_bit(R5_LOCKED, &dev->flags) 
+-#if 0
+-|| sh->bh_page[i] != bh->b_page
+-#endif
+ 				    ) &&
+ 			    !test_bit(R5_UPTODATE, &dev->flags)) {
+ 				if (test_bit(R5_Insync, &dev->flags)) rcw++;
+@@ -2197,15 +2146,6 @@ static void handle_stripe6(struct stripe
+ 				} else if (test_bit(R5_Insync, &dev->flags)) {
+ 					set_bit(R5_LOCKED, &dev->flags);
+ 					set_bit(R5_Wantread, &dev->flags);
+-#if 0
+-					/* if I am just reading this block and we don't have
+-					   a failed drive, or any pending writes then sidestep the cache */
+-					if (sh->bh_read[i] && !sh->bh_read[i]->b_reqnext &&
+-					    ! syncing && !failed && !to_write) {
+-						sh->bh_cache[i]->b_page =  sh->bh_read[i]->b_page;
+-						sh->bh_cache[i]->b_data =  sh->bh_read[i]->b_data;
+-					}
+-#endif
+ 					locked++;
+ 					PRINTK("Reading block %d (sync=%d)\n",
+ 						i, syncing);
+@@ -2224,9 +2164,6 @@ static void handle_stripe6(struct stripe
+ 			if (!test_bit(R5_OVERWRITE, &dev->flags)
+ 			    && i != pd_idx && i != qd_idx
+ 			    && (!test_bit(R5_LOCKED, &dev->flags)
+-#if 0
+-				|| sh->bh_page[i] != bh->b_page
+-#endif
+ 				    ) &&
+ 			    !test_bit(R5_UPTODATE, &dev->flags)) {
+ 				if (test_bit(R5_Insync, &dev->flags)) rcw++;
