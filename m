@@ -1,7 +1,7 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [PATCH 003 of 5] md: Assorted md and raid1 one-liners
-Date: Fri, 8 Dec 2006 12:05:42 +1100
-Message-ID: <1061208010542.21319@suse.de>
+Subject: [PATCH 004 of 5] md: Close a race between destroying and recreating an md device.
+Date: Fri, 8 Dec 2006 12:05:47 +1100
+Message-ID: <1061208010547.21331@suse.de>
 References: <20061208120132.21203.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
@@ -10,67 +10,67 @@ Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-Fix few bugs that meant that:
-  - superblocks weren't alway written at exactly the right time (this
-    could show up if the array was not written to - writting to the array
-    causes lots of superblock updates and so hides these errors).
+For each md device, we need a gendisk.  As that gendisk has a name
+that gets registered in sysfs, we need to make sure that when an md
+device is shut down, we don't create it again until the shutdown is
+complete and the gendisk has been deleted.
 
-  - restarting device recovery after a clean shutdown (version-1 metadata
-    only) didn't work as intended (or at all).
-
-1/ Ensure superblock is updated when a new device is added.
-2/ Remove an inappropriate test on MD_RECOVERY_SYNC in md_do_sync.
-   The body of this if takes one of two branches depending on whether
-   MD_RECOVERY_SYNC is set, so testing it in the clause of the if
-   is wrong.
-3/ Flag superblock for updating after a resync/recovery finishes.
-4/ If we find the neeed to restart a recovery in the middle (version-1
-   metadata only) make sure a full recovery (not just as guided by
-   bitmaps) does get done.
+This patches utilises the disks_mutex to ensure the proper exclusion.
 
 Signed-off-by: Neil Brown <neilb@suse.de>
 
 ### Diffstat output
- ./drivers/md/md.c    |    3 ++-
- ./drivers/md/raid1.c |    1 +
- 2 files changed, 3 insertions(+), 1 deletion(-)
+ ./drivers/md/md.c |   25 +++++++++++++++++++++----
+ 1 file changed, 21 insertions(+), 4 deletions(-)
 
 diff .prev/drivers/md/md.c ./drivers/md/md.c
---- .prev/drivers/md/md.c	2006-12-07 15:33:40.000000000 +1100
-+++ ./drivers/md/md.c	2006-12-07 15:44:53.000000000 +1100
-@@ -3729,6 +3729,7 @@ static int add_new_disk(mddev_t * mddev,
- 		if (err)
- 			export_rdev(rdev);
+--- .prev/drivers/md/md.c	2006-12-07 15:45:31.000000000 +1100
++++ ./drivers/md/md.c	2006-12-07 21:01:11.000000000 +1100
+@@ -222,18 +222,36 @@ static inline mddev_t *mddev_get(mddev_t
+ 	return mddev;
+ }
  
-+		md_update_sb(mddev, 1);
- 		set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
- 		md_wakeup_thread(mddev->thread);
- 		return err;
-@@ -5289,7 +5290,6 @@ void md_do_sync(mddev_t *mddev)
- 	mddev->pers->sync_request(mddev, max_sectors, &skipped, 1);
++static DEFINE_MUTEX(disks_mutex);
+ static void mddev_put(mddev_t *mddev)
+ {
++	/* We need to hold disks_mutex to safely destroy the gendisk
++	 * info before someone else creates a new gendisk with the same
++	 * name, but we don't want to take that mutex just to decrement
++	 * the ->active counter.  So we first test if this is the last
++	 * reference.  If it is, we put things back as they were found
++	 * and take disks_mutex before trying again.
++	 */
+ 	if (!atomic_dec_and_lock(&mddev->active, &all_mddevs_lock))
+ 		return;
++	atomic_inc(&mddev->active);
++	spin_unlock(&all_mddevs_lock);
++
++	mutex_lock(&disks_mutex);
++
++	if (!atomic_dec_and_lock(&mddev->active, &all_mddevs_lock)) {
++		mutex_unlock(&disks_mutex);
++		return;
++	}
+ 	list_del(&mddev->all_mddevs);
+ 	spin_unlock(&all_mddevs_lock);
  
- 	if (!test_bit(MD_RECOVERY_ERR, &mddev->recovery) &&
--	    test_bit(MD_RECOVERY_SYNC, &mddev->recovery) &&
- 	    !test_bit(MD_RECOVERY_CHECK, &mddev->recovery) &&
- 	    mddev->curr_resync > 2) {
- 		if (test_bit(MD_RECOVERY_SYNC, &mddev->recovery)) {
-@@ -5313,6 +5313,7 @@ void md_do_sync(mddev_t *mddev)
- 					rdev->recovery_offset = mddev->curr_resync;
- 		}
- 	}
-+	set_bit(MD_CHANGE_DEVS, &mddev->flags);
+-	del_gendisk(mddev->gendisk);
+-	mddev->gendisk = NULL;
++	if (mddev->gendisk)
++		del_gendisk(mddev->gendisk);
+ 	blk_cleanup_queue(mddev->queue);
+-	mddev->queue = NULL;
+ 	kobject_unregister(&mddev->kobj);
++
++	mutex_unlock(&disks_mutex);
+ }
  
-  skip:
- 	mddev->curr_resync = 0;
-
-diff .prev/drivers/md/raid1.c ./drivers/md/raid1.c
---- .prev/drivers/md/raid1.c	2006-12-07 15:33:40.000000000 +1100
-+++ ./drivers/md/raid1.c	2006-12-07 15:44:53.000000000 +1100
-@@ -1951,6 +1951,7 @@ static int run(mddev_t *mddev)
- 		    !test_bit(In_sync, &disk->rdev->flags)) {
- 			disk->head_position = 0;
- 			mddev->degraded++;
-+			conf->fullsync = 1;
- 		}
- 	}
- 	if (mddev->degraded == conf->raid_disks) {
+ static mddev_t * mddev_find(dev_t unit)
+@@ -2948,7 +2966,6 @@ int mdp_major = 0;
+ 
+ static struct kobject *md_probe(dev_t dev, int *part, void *data)
+ {
+-	static DEFINE_MUTEX(disks_mutex);
+ 	mddev_t *mddev = mddev_find(dev);
+ 	struct gendisk *disk;
+ 	int partitioned = (MAJOR(dev) != MD_MAJOR);
