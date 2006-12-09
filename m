@@ -1,31 +1,41 @@
-From: Jiri Slaby <jirislaby@gmail.com>
-Subject: oops on 2.6.19-rc6-mm2: deref of 0x28 at permission+0x7
-Date: Sat, 09 Dec 2006 02:19:49 +0059
-Message-ID: <457A0F4C.9060601@gmail.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: [PATCH 000 of 5] md: Assorted minor fixes for mainline
+Date: Sat, 9 Dec 2006 19:51:09 +1100
+Message-ID: <17786.30973.594360.165898@cse.unsw.edu.au>
+References: <20061208120132.21203.patches@notabene>
+	<20061208160455.05a81359.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: message from Andrew Morton on Friday December 8
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Cc: Andrew Morton <akpm@osdl.org>, mingo@redhat.com, neilb@cse.unsw.edu.au, linux-raid@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi!
+On Friday December 8, akpm@osdl.org wrote:
+> 
+> md-change-lifetime-rules-for-md-devices.patch still has a cloud over its
+> head (Jiri Kosina <jikos@jikos.cz>'s repeatable failure), so I staged these
+> new patches as below:
+> 
+> 
+>  md-fix-innocuous-bug-in-raid6-stripe_to_pdidx.patch
+>  #
+>  md-conditionalize-some-code.patch
+> +md-remove-some-old-ifdefed-out-code-from-raid5c.patch
+> +md-return-a-non-zero-error-to-bi_end_io-as-appropriate-in-raid5.patch
+> +md-assorted-md-and-raid1-one-liners.patch
+>  md-change-lifetime-rules-for-md-devices.patch
+> +md-close-a-race-between-destroying-and-recreating-an-md-device.patch
+> +md-allow-mddevs-to-live-a-bit-longer-to-avoid-a-loop-with-udev.patch
+> 
+> So the last three are maybe-not-for-2.6.20.
+> 
+> Does that sounds sane?
 
-I got this oops on 2.6.19-rc6-mm2 when starting the system. It happened only
-once -- when echo "raidautorun /dev/md0" | nash --quiet was executed. I don't
-know why it happened, after reboot it started OK.
+Yes, perfectly sane ... though I still hope to nail that bug :-)
 
-There is no md0, only md1, md2 and md3.
-
-See camera-shots here:
-http://www.fi.muni.cz/~xslaby/sklad/dm_oops1.png
-http://www.fi.muni.cz/~xslaby/sklad/dm_oops2.png
-
-regards,
--- 
-http://www.fi.muni.cz/~xslaby/            Jiri Slaby
-faculty of informatics, masaryk university, brno, cz
-e-mail: jirislaby gmail com, gpg pubkey fingerprint:
-B674 9967 0407 CE62 ACC8  22A0 32CC 55C3 39D4 7A7E
+Thanks,
+NeilBrown
