@@ -1,27 +1,21 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: Re: If this behavior is supported by raid5?
-Date: Mon, 11 Dec 2006 14:13:09 +1100
-Message-ID: <17788.52421.561186.490797@cse.unsw.edu.au>
-References: <200612111044527969802@nrchpc.ac.cn>
-	<17788.51224.119.668928@cse.unsw.edu.au>
-	<200612111105189684144@nrchpc.ac.cn>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+From: Jeff Breidenbach <jeff@jab.org>
+Subject: Norco DS-1220
+Date: Sun, 10 Dec 2006 15:48:43 -0800
+Message-ID: <E1GtYPT-0003D3-QA@nslu2.jab.org>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from liyiming on Monday December 11
 Sender: linux-raid-owner@vger.kernel.org
-To: liyiming <liyiming@nrchpc.ac.cn>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
+Cc: marshman@frozenbear.com
 List-Id: linux-raid.ids
 
-On Monday December 11, liyiming@nrchpc.ac.cn wrote:
-> 
-> 
-> 
-> thank you, does that mean the major/minor device number in superblock structure  can be ignore?
-> 
 
-Yes.
+Speaking of hardware disappointments, I was looking at the Norco
+DS-1220. This is a rackmount 12 bay SATA enclosure. I like the price
+point, but it uses SATA port multipliers. And Jeff Garzik's page says
+this is not supported by libata. Any ideas when Linux might be able to
+take advantage of such a fun piece of hardware without patching left,
+right and center?
 
-NeilBrown
+http://linux-ata.org/features.html
+
+Jeff
