@@ -1,38 +1,50 @@
 From: dean gaudet <dean@arctic.org>
 Subject: Re: disappointed with 3ware 9550sx
-Date: Sun, 10 Dec 2006 15:48:54 -0800 (PST)
-Message-ID: <Pine.LNX.4.64.0612101546030.22490@twinlark.arctic.org>
+Date: Sun, 10 Dec 2006 16:10:12 -0800 (PST)
+Message-ID: <Pine.LNX.4.64.0612101553460.22490@twinlark.arctic.org>
 References: <Pine.LNX.4.64.0611122028510.596@twinlark.arctic.org>
- <Pine.LNX.4.64.0612101823510.10950@p34.internal.lan>
+ <68c491a60612101343qe8ec7d3v9ecef097042d197@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: MULTIPART/MIXED; BOUNDARY="500119290-949313850-1165795812=:22490"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0612101823510.10950@p34.internal.lan>
+In-Reply-To: <68c491a60612101343qe8ec7d3v9ecef097042d197@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: linux-raid@vger.kernel.org
+To: =?ISO-8859-1?Q?Martin_Schr=F6der?= <martin@oneiros.de>
+Cc: Linux List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Sun, 10 Dec 2006, Justin Piszcz wrote:
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-> Have you contacted 3ware support?  They are very helpful.
+--500119290-949313850-1165795812=:22490
+Content-Type: TEXT/PLAIN; charset=ISO-8859-1
+Content-Transfer-Encoding: 8BIT
 
-i didn't find their answer to the 3-way mirror request very helpful at 
-all:
+On Sun, 10 Dec 2006, Martin Schröder wrote:
 
-> On Sun, 10 Dec 2006, dean gaudet wrote:
+> 2006/12/10, dean gaudet <dean@arctic.org>:
+> > not so the 9550sx.
 > 
-> > my first disappointment came when i tried to create a 3-way raid1 on the 
-> > 3x400 disks.  it doesn't support it at all.  i had become so accustomed to 
-> > using a 3-way raid1 with software raid it didn't even occur to me to find 
-> > out up front if the 3ware could support this.  apparently this is so 
-> > revolutionary an idea 3ware support was completely baffled when i opened a 
-> > ticket regarding it.  "why would you want that?  it will fail over to a 
-> > spare disk automatically."
+> Next time check http://www.vendorwatch.org/ before buying hardware.
 
-honestly, there are 3ware engineers reading this mailing list who are more 
-likely to understand the problems i had than their front-line support 
-will.  and especially when most of my complaints are lacks of features -- 
-front-line support just gets baffled.
+hmm maybe i'm missing something, but that site says 3ware is "somewhat 
+friendly" regarding documentation... and i've found this to be entirely 
+true -- their driver has been solid (and open source) since the hardware 
+appeared, and years ago when asked how to get SMART from their devices 
+their engineers gave out code on first request (hence the excellent
+smartmontools support).
+
+i don't care if they have support for anything other than linux and
+the website seems to be faulting them for not supporting OpenBSD... and
+frankly i can't blame 3ware for not supporting such an obscure OS ;)
+
+i'm totally happy with how 3ware has treated linux.
+
+although if i allow myself to be unrealistic i would love to see their DCB
+documented, and/or some industry standardization in that direction... i
+know there was some attempt at that but i'm not holding my breath waiting
+for such things.  md/mdadm give me so much more than i think i'll ever
+see from a hw raid costing ~$500.  (except NVRAM :)
 
 -dean
+--500119290-949313850-1165795812=:22490--
