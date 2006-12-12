@@ -1,162 +1,54 @@
-From: NeilBrown <neilb@suse.de>
-Subject: [PATCH] md: Don't assume that READ==0 and WRITE==1 - use the names explicitly.
-Date: Tue, 12 Dec 2006 09:56:19 +1100
-Message-ID: <1061211225619.9700@suse.de>
-References: <20061212095548.9668.patches@notabene>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: oops on 2.6.19-rc6-mm2: deref of 0x28 at permission+0x7
+Date: Tue, 12 Dec 2006 11:42:24 +1100
+Message-ID: <17789.64240.879603.161637@cse.unsw.edu.au>
+References: <457A0F4C.9060601@gmail.com>
+	<Pine.LNX.4.64.0612102027350.1665@twin.jikos.cz>
+	<17788.48732.53210.631230@cse.unsw.edu.au>
+	<Pine.LNX.4.64.0612111034480.1665@twin.jikos.cz>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: message from Jiri Kosina on Monday December 11
 Sender: linux-raid-owner@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>, raziebe@gmail.com
+To: Jiri Kosina <jikos@jikos.cz>
+Cc: Jiri Slaby <jirislaby@gmail.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, mingo@redhat.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-### Comments for Changeset
+On Monday December 11, jikos@jikos.cz wrote:
+> On Mon, 11 Dec 2006, Neil Brown wrote:
+> 
+> > > this nash thing is exactly the command which triggers a bit different 
+> > > oops in my case. On my side, the oops is fully reproducible. If you 
+> > > manage to make your case also reproducible, could you please try to 
+> > > revert md-change-lifetime-rules-for-md-devices.patch? This made the 
+> > > oops vanish in my case. I think Neil is working on it.
+> > Trying to work on it - not making a lot of progress.  I find it hard to 
+> > see how anything in md can cause the inode for a block-device file to 
+> > disappear... It is a bit of a long-shot, but this patch might change 
+> > things.  It changes the order in which things are de-allocated. Jiri and 
+> > Jiri: would either of both of you see if you can reproduce the bug with 
+> > this patch on 2.6.19-rc6-mm2 ???
+> 
+> Hi Neil,
+> 
+> sorry to say that, but it's still there after applying your patch.
 
-Thanks Jens for alerting me to this.
+Not a big surprise, but thanks a lot for testing.  I think I'm going
+to have to try harder to duplicate it myself.
 
-Cc: Jens Axboe <jens.axboe@oracle.com>
-Cc: raziebe@gmail.com
-Signed-off-by: Neil Brown <neilb@suse.de>
+If I remember rightly you are using FC - which version exactly?  (I've
+never installed FC before so this is going to be learning experience).
 
-### Diffstat output
- ./drivers/md/faulty.c |    2 +-
- ./drivers/md/raid1.c  |    2 +-
- ./drivers/md/raid10.c |    6 +++---
- ./drivers/md/raid5.c  |   20 ++++++++++----------
- 4 files changed, 15 insertions(+), 15 deletions(-)
+And you have no MD arrays at all - is that correct?
 
-diff .prev/drivers/md/faulty.c ./drivers/md/faulty.c
---- .prev/drivers/md/faulty.c	2006-12-12 09:47:58.000000000 +1100
-+++ ./drivers/md/faulty.c	2006-12-12 09:48:10.000000000 +1100
-@@ -173,7 +173,7 @@ static int make_request(request_queue_t 
- 	conf_t *conf = (conf_t*)mddev->private;
- 	int failit = 0;
- 
--	if (bio->bi_rw & 1) {
-+	if (bio_data_dir(bio) == WRITE) {
- 		/* write request */
- 		if (atomic_read(&conf->counters[WriteAll])) {
- 			/* special case - don't decrement, don't generic_make_request,
+And you compile your own kernel.  Is it monolithic, or are you using
+modules?  Do you boot with an initrd or just the kernel?
 
-diff .prev/drivers/md/raid10.c ./drivers/md/raid10.c
---- .prev/drivers/md/raid10.c	2006-12-12 09:42:11.000000000 +1100
-+++ ./drivers/md/raid10.c	2006-12-12 09:45:02.000000000 +1100
-@@ -1785,7 +1785,7 @@ static sector_t sync_request(mddev_t *md
- 						biolist = bio;
- 						bio->bi_private = r10_bio;
- 						bio->bi_end_io = end_sync_read;
--						bio->bi_rw = 0;
-+						bio->bi_rw = READ;
- 						bio->bi_sector = r10_bio->devs[j].addr +
- 							conf->mirrors[d].rdev->data_offset;
- 						bio->bi_bdev = conf->mirrors[d].rdev->bdev;
-@@ -1801,7 +1801,7 @@ static sector_t sync_request(mddev_t *md
- 						biolist = bio;
- 						bio->bi_private = r10_bio;
- 						bio->bi_end_io = end_sync_write;
--						bio->bi_rw = 1;
-+						bio->bi_rw = WRITE;
- 						bio->bi_sector = r10_bio->devs[k].addr +
- 							conf->mirrors[i].rdev->data_offset;
- 						bio->bi_bdev = conf->mirrors[i].rdev->bdev;
-@@ -1870,7 +1870,7 @@ static sector_t sync_request(mddev_t *md
- 			biolist = bio;
- 			bio->bi_private = r10_bio;
- 			bio->bi_end_io = end_sync_read;
--			bio->bi_rw = 0;
-+			bio->bi_rw = READ;
- 			bio->bi_sector = r10_bio->devs[i].addr +
- 				conf->mirrors[d].rdev->data_offset;
- 			bio->bi_bdev = conf->mirrors[d].rdev->bdev;
+I'd like to duplicate your installation as closely as possible, so any
+relevant details or recipes would be greatly appreciated.
 
-diff .prev/drivers/md/raid1.c ./drivers/md/raid1.c
---- .prev/drivers/md/raid1.c	2006-12-08 12:07:39.000000000 +1100
-+++ ./drivers/md/raid1.c	2006-12-12 09:45:10.000000000 +1100
-@@ -1736,7 +1736,7 @@ static sector_t sync_request(mddev_t *md
- 		/* take from bio_init */
- 		bio->bi_next = NULL;
- 		bio->bi_flags |= 1 << BIO_UPTODATE;
--		bio->bi_rw = 0;
-+		bio->bi_rw = READ;
- 		bio->bi_vcnt = 0;
- 		bio->bi_idx = 0;
- 		bio->bi_phys_segments = 0;
+Thanks,
 
-diff .prev/drivers/md/raid5.c ./drivers/md/raid5.c
---- .prev/drivers/md/raid5.c	2006-12-11 09:54:43.000000000 +1100
-+++ ./drivers/md/raid5.c	2006-12-12 09:49:53.000000000 +1100
-@@ -1827,16 +1827,16 @@ static void handle_stripe5(struct stripe
- 		struct bio *bi;
- 		mdk_rdev_t *rdev;
- 		if (test_and_clear_bit(R5_Wantwrite, &sh->dev[i].flags))
--			rw = 1;
-+			rw = WRITE;
- 		else if (test_and_clear_bit(R5_Wantread, &sh->dev[i].flags))
--			rw = 0;
-+			rw = READ;
- 		else
- 			continue;
-  
- 		bi = &sh->dev[i].req;
-  
- 		bi->bi_rw = rw;
--		if (rw)
-+		if (rw == WRITE)
- 			bi->bi_end_io = raid5_end_write_request;
- 		else
- 			bi->bi_end_io = raid5_end_read_request;
-@@ -1872,7 +1872,7 @@ static void handle_stripe5(struct stripe
- 				atomic_add(STRIPE_SECTORS, &rdev->corrected_errors);
- 			generic_make_request(bi);
- 		} else {
--			if (rw == 1)
-+			if (rw == WRITE)
- 				set_bit(STRIPE_DEGRADED, &sh->state);
- 			PRINTK("skip op %ld on disc %d for sector %llu\n",
- 				bi->bi_rw, i, (unsigned long long)sh->sector);
-@@ -2370,16 +2370,16 @@ static void handle_stripe6(struct stripe
- 		struct bio *bi;
- 		mdk_rdev_t *rdev;
- 		if (test_and_clear_bit(R5_Wantwrite, &sh->dev[i].flags))
--			rw = 1;
-+			rw = WRITE;
- 		else if (test_and_clear_bit(R5_Wantread, &sh->dev[i].flags))
--			rw = 0;
-+			rw = READ;
- 		else
- 			continue;
- 
- 		bi = &sh->dev[i].req;
- 
- 		bi->bi_rw = rw;
--		if (rw)
-+		if (rw == WRITE)
- 			bi->bi_end_io = raid5_end_write_request;
- 		else
- 			bi->bi_end_io = raid5_end_read_request;
-@@ -2415,7 +2415,7 @@ static void handle_stripe6(struct stripe
- 				atomic_add(STRIPE_SECTORS, &rdev->corrected_errors);
- 			generic_make_request(bi);
- 		} else {
--			if (rw == 1)
-+			if (rw == WRITE)
- 				set_bit(STRIPE_DEGRADED, &sh->state);
- 			PRINTK("skip op %ld on disc %d for sector %llu\n",
- 				bi->bi_rw, i, (unsigned long long)sh->sector);
-@@ -2567,7 +2567,7 @@ static int raid5_mergeable_bvec(request_
- 	unsigned int chunk_sectors = mddev->chunk_size >> 9;
- 	unsigned int bio_sectors = bio->bi_size >> 9;
- 
--	if (bio_data_dir(bio))
-+	if (bio_data_dir(bio) == WRITE)
- 		return biovec->bv_len; /* always allow writes to be mergeable */
- 
- 	max =  (chunk_sectors - ((sector & (chunk_sectors - 1)) + bio_sectors)) << 9;
-@@ -2751,7 +2751,7 @@ static int make_request(request_queue_t 
- 	disk_stat_inc(mddev->gendisk, ios[rw]);
- 	disk_stat_add(mddev->gendisk, sectors[rw], bio_sectors(bi));
- 
--	if (bio_data_dir(bi) == READ &&
-+	if (rw == READ &&
- 	     mddev->reshape_position == MaxSector &&
- 	     chunk_aligned_read(q,bi))
-             	return 0;
+NeilBrown
