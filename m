@@ -1,89 +1,91 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: Relabeling UUID
-Date: Wed, 13 Dec 2006 16:37:26 -0500
-Message-ID: <45807296.2040601@tmr.com>
-References: <457F3BAD.6060206@tmr.com>	<17791.18766.36228.208220@cse.unsw.edu.au>	<457F92D9.6020105@tmr.com> <17791.56072.269281.604820@cse.unsw.edu.au>
+From: Patrik Jonsson <patrik@ucolick.org>
+Subject: Frequent SATA errors / port timeouts in 2.6.18.3?
+Date: Wed, 13 Dec 2006 14:42:28 -0800
+Message-ID: <458081D4.9060704@ucolick.org>
+References: <4578F5D4.8080205@moniker.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enigD3C2CE5335F08A8A8C3327BC"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17791.56072.269281.604820@cse.unsw.edu.au>
+In-Reply-To: <4578F5D4.8080205@moniker.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Linux Raid List <linux-raid@vger.kernel.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil Brown wrote:
-> On Wednesday December 13, davidsen@tmr.com wrote:
->   
->> Before I tell you that doesn't work, could you provide a complete 
->> command line you expect to work rather than just one argument? Showing 
->> the array designator and the location of the actual new UUID to use? We 
->> think we have tried every combination of array name or array components 
->> in every order, and other than a fine collection of error messages have 
->> not had any luck.
->>
->> We would look at the example but found none.
->>     
->
-> Hmmm.... yes ..... well.....
->
-> # mdadm -V
-> mdadm - v2.5.6 - 9 November 2006
-> # mdadm -Dvb /dev/md1
-> ARRAY /dev/md1 level=raid5 num-devices=3 UUID=9f148061:9b31aaf3:1727f0dc:460ad0c5
->    devices=/dev/sdc,/dev/sdd,/dev/sde
-> # mdadm -S /dev/md1
-> mdadm: stopped /dev/md1
-> # mdadm -Aamd /dev/md1 --update=uuid --uuid=12345678:9abcdef0:fedcba98:76543210 /dev/sdc /dev/sdd /dev/sde
-> mdadm: Could not update uuid on /dev/sdc.
-> mdadm: Could not update uuid on /dev/sdd.
-> mdadm: Could not update uuid on /dev/sde.
-> mdadm: /dev/md1 has been started with 3 drives.
-> # mdadm -Dvb /dev/md1
-> ARRAY /dev/md1 level=raid5 num-devices=3 UUID=12345678:9abcdef0:fedcba98:76543210
->    devices=/dev/sdc,/dev/sdd,/dev/sde
->
-> Ok, so there is an error message, but it does actually change the
-> uuid.
->   
-I guess that in testing I should have checked to see if it worked, 
-but... I don't feel so dumb for not finding that now. Thanks!
-> In Assemble.c, 
-> 			if (strcmp(update, "uuid")==0 &&
-> 			    ident->bitmap_fd)
-> 				if (bitmap_update_uuid(ident->bitmap_fd, info.uuid) != 0)
-> 					fprintf(stderr, Name ": Could not update uuid on %s.\n",
-> 						devname);
->
-> should be
-> 			if (strcmp(update, "uuid")==0 &&
-> 			    ident->bitmap_fd >= 0)
-> 				if (bitmap_update_uuid(ident->bitmap_fd, info.uuid) != 0)
-> 					fprintf(stderr, Name ": Could not update uuid on %s.\n",
-> 						devname);
->
-> That will get rid of the error message.
-> I guess I should add '--update=uuid' to the regression test suite.
->   
-Prevents PITA users like me from whining. ;-)
-> Note that you need to use something other than the uuid to identify
-> the array.  A list of devices is the most obvious choice.
->   
-For something few people do that's certainly acceptable.
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enigD3C2CE5335F08A8A8C3327BC
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
 
-That said, it certainly would be the most convenient solution to allow 
-the uuid= option on the create in the first place. But this is a corner 
-case, so unless I find that I want to code it myself (may) other 
-solutions are fine.
-> Patches to the man page to add useful examples are always welcome.
-Hint taken.
+Hi all,
+this may not be the best list for this question, but I figure that the
+number of disks connected to users here should be pretty big...
 
-Thanks again for clarifying this, I assumed the error message meant I 
-had it wrong, and didn't check to see if it actually worked.
+I upgraded from 2.6.17-rc4 to 2.6.18.3 about a week ago, and I've since
+had 3 drives kicked out of my 10-drive RAID5 array. Previously, I had no
+kicks over almost a year. The kernel message is:
 
--- 
-bill davidsen <davidsen@tmr.com>
-  CTO TMR Associates, Inc
-  Doing interesting things with small computers since 1979
+ata7.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
+ata7.00: (BMDMA stat 0x20)
+ata7.00: tag 0 cmd 0xc8 Emask 0x1 stat 0x41 err 0x4 (device error)
+ata7: EH complete
+SCSI device sdc: 488397168 512-byte hdwr sectors (250059 MB)
+sdc: Write Protect is off
+sdc: Mode Sense: 00 3a 00 00
+SCSI device sdc: drive cache: write back
+ata7.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+ata7.00: (BMDMA stat 0x20)
+ata7.00: tag 0 cmd 0xca Emask 0x4 stat 0x40 err 0x0 (timeout)
+ata7: port is slow to respond, please be patient
+ata7: port failed to respond (30 secs)
+ata7: soft resetting port
+ata7: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+ata7.00: failed to IDENTIFY (I/O error, err_mask=3D0x2)
+ata7.00: revalidation failed (errno=3D-5)
+ata7: failed to recover some devices, retrying in 5 secs
+ata7: hard resetting port
+ata7: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+ata7.00: failed to IDENTIFY (I/O error, err_mask=3D0x2)
+ata7.00: revalidation failed (errno=3D-5)
+ata7: failed to recover some devices, retrying in 5 secs
+ata7: hard resetting port
+ata7: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+ata7.00: failed to IDENTIFY (I/O error, err_mask=3D0x2)
+ata7.00: revalidation failed (errno=3D-5)
+ata7.00: disabled
+ata7: EH complete
 
+
+First I thought it was a cabling or card issue, because the same drive
+got kicked twice. That drive was connected to a 2-port SIG sata_sil24
+card. However, I just had another drive kicked that's connected to
+sata_nv, which leads me to suspect that the upgraded kernel might have
+something to do with it. A quick googling seems to indicate that others
+are seeing this with 2.6.18, too, so I was wondering if anyone here
+knows more.
+
+I did at the same time also install an Areca ARC1260 controller and
+connected a bunch of drives to it, so another idea I had was cable
+interference or something (there are now 18 drives in the machine).
+
+Any ideas or thought would be appreciated,
+
+/Patrik
+
+
+--------------enigD3C2CE5335F08A8A8C3327BC
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.2 (MingW32)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
+
+iD8DBQFFgIHZT+KvsdUW5p8RAp+1AJ9rvofKHD2o3mOMSOs3nv5UMznoHgCgrimQ
+/UCU+QcKyyKOq4uVJLS4oZ4=
+=KVkr
+-----END PGP SIGNATURE-----
+
+--------------enigD3C2CE5335F08A8A8C3327BC--
