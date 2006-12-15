@@ -1,51 +1,35 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: Re: [RFC: 2.6 patch] simplify drivers/md/md.c:update_size()
-Date: Fri, 15 Dec 2006 01:45:12 +0100
-Message-ID: <20061215004512.GU3388@stusta.de>
-References: <20061215001902.GR3388@stusta.de> <1166142995.2745.319.camel@fc6.xsintricity.com>
+From: Nikolai Joukov <kolya@cs.sunysb.edu>
+Subject: Re: [ANNOUNCE] RAIF: Redundant Array of Independent Filesystems
+Date: Thu, 14 Dec 2006 20:13:36 -0500 (EST)
+Message-ID: <Pine.GSO.4.53.0612142008180.8234@compserv1>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1166142995.2745.319.camel@fc6.xsintricity.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Doug Ledford <dledford@redhat.com>
-Cc: Neil Brown <neilb@suse.de>, mingo@redhat.com, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+To: berk walker <berk@panix.com>
+Cc: Al Boldi <a1426z@gawab.com>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Dec 14, 2006 at 07:36:35PM -0500, Doug Ledford wrote:
-> On Fri, 2006-12-15 at 01:19 +0100, Adrian Bunk wrote:
-> > While looking at commit 8ddeeae51f2f197b4fafcba117ee8191b49d843e,
-> > I got the impression that this commit couldn't fix anything, since the 
-> > "size" variable can't be changed before "fit" gets used.
-> > 
-> > Is there any big thinko, or is the patch below that slightly simplifies 
-> > update_size() semantically equivalent to the current code?
-> 
-> No, this patch is broken.  Where it fails is specifically the case where
-> you want to autofit the largest possible size, you have different size
-> devices, and the first device is not the smallest.  When you hit the
-> first device, you will set size, then as you repeat the ITERATE_RDEV
-> loop, when you hit the smaller device, size will be non-0 and you'll
-> then trigger the later if and return -ENOSPC.  In the case of autofit,
-> you have to preserve the fit variable instead of looking at size so you
-> know whether or not to modify the size when you hit a smaller device
-> later in the list.
->...
+> Well, Congratulations, Doctor!!  [Must be nice to be exiled to Stony
+> Brook!!  Oh, well, not I]
 
-OK, sorry, I've got my thinko:
+Long Island is a very nice place with lots of vineries and perfect sand
+beaches - don't envy :-)
 
-ITERATE_RDEV() is a loop.
+> Here's hoping that source exists, and that it is available for us.
 
-That's what I missed.
+I guess, you are subscribed to the linux-raid list only.  Unfortunately, I
+didn't CC my post to that list and one of the replies was CC'd there
+without the link.  The original post is available here:
 
-cu
-Adrian
+  <http://marc.theaimsgroup.com/?l=linux-fsdevel&m=116603282106036&w=2>
 
--- 
+And the link to the sources is:
 
-       "Is there not promise of rain?" Ling Tan asked suddenly out
-        of the darkness. There had been need of rain for many days.
-       "Only a promise," Lao Er said.
-                                       Pearl S. Buck - Dragon Seed
+  <ftp://ftp.fsl.cs.sunysb.edu/pub/raif/>
 
+Nikolai.
+---------------------
+Nikolai Joukov, Ph.D.
+Filesystems and Storage Laboratory
+Stony Brook University
