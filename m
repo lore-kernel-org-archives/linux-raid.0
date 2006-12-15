@@ -1,52 +1,54 @@
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: sata badness in 2.6.20-rc1? [Was: Re: md patches in -mm]
-Date: Fri, 15 Dec 2006 23:27:24 +0100
-Message-ID: <200612152327.25706.rjw@sisk.pl>
-References: <20061204203410.6152efec.akpm@osdl.org> <20061215220618.06f1873c@localhost.localdomain> <45831F80.5060008@garzik.org>
+From: Bruno Costacurta <pubmb01@skynet.be>
+Subject: What is this RAID status and level ?
+Date: Fri, 15 Dec 2006 23:59:35 +0100
+Message-ID: <200612152359.35544.pubmb01@skynet.be>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-1"
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <45831F80.5060008@garzik.org>
 Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Alan <alan@lxorguk.ukuu.org.uk>, Andrew Morton <akpm@osdl.org>, Neil Brown <neilb@suse.de>, Jurriaan <thunder7@xs4all.nl>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, Tejun Heo <htejun@gmail.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Friday, 15 December 2006 23:19, Jeff Garzik wrote:
-> Alan wrote:
-> > On Fri, 15 Dec 2006 13:39:27 -0800
-> > Andrew Morton <akpm@osdl.org> wrote:
-> > 
-> >> On Fri, 15 Dec 2006 13:05:52 -0800
-> >> Andrew Morton <akpm@osdl.org> wrote:
-> >>
-> >>> Jeff, I shall send all the sata patches which I have at you one single time
-> >>> and I shall then drop the lot.  So please don't flub them.
-> >>>
-> >>> I'll then do a rc1-mm2 without them.
-> >> hm, this is looking like a lot of work for not much gain.  Rafael, are
-> >> you able to do a quick chop and tell us whether these:
-> > 
-> > The md one and the long history of reports about parallel I/O causing
-> > problems sounds a lot more like the kmap stuff you were worried about
-> > Andrew. I'd be very intereste dto know if it happens on x86_32 built with
-> > a standard memory split and no highmem....
-> 
-> 2.6.20-rc1 works, and 2.6.20-rc1 does not have the kmap_atomic() fix.
-> 
-> Upstream does kmap_atomic(KM_USER0) and -mm does kmap_atomic(KM_IRQ0)
+Hello,
 
-On x86_64 that shouldn't be a problem, I think, and my machine is an x86_64
-one.
+I expected to get a RAID setup after the installation a new Linux distro 
+(Fedora FC6) but I'm confused about its status and level...
+Please find hereafter some details about the config.
 
-Greetings,
-Rafael
+dmraid -r:
+/dev/sda: isw, "isw_cfaabdceig", GROUP, ok, 312581806 sectors, data@ 0
+/dev/sdb: isw, "isw_cfaabdceig", GROUP, ok, 320173054 sectors, data@ 0
 
+mount :
+/dev/mapper/VolGroup00-LogVol00 on / type ext3 (rw)
+proc on /proc type proc (rw)
+sysfs on /sys type sysfs (rw)
+devpts on /dev/pts type devpts (rw,gid=5,mode=620)
+/dev/mapper/isw_cfaabdceig_RAIDv0p1 on /boot type ext3 (rw)
+tmpfs on /dev/shm type tmpfs (rw)
+none on /proc/sys/fs/binfmt_misc type binfmt_misc (rw)
+sunrpc on /var/lib/nfs/rpc_pipefs type rpc_pipefs (rw)
 
--- 
-If you don't have the time to read,
-you don't have the time or the tools to write.
-		- Stephen King
+fdisk -l:
+Disk /dev/sda: 160.0 GB, 160041885696 bytes
+255 heads, 63 sectors/track, 19457 cylinders
+Units = cylinders of 16065 * 512 = 8225280 bytes
+
+ Device Boot      Start         End      Blocks   Id  System
+/dev/sda1   *           1          13      104391   83  Linux
+/dev/sda2              14       19189   154031220   8e  Linux LVM
+
+Disk /dev/sdb: 163.9 GB, 163928604672 bytes
+255 heads, 63 sectors/track, 19929 cylinders
+Units = cylinders of 16065 * 512 = 8225280 bytes
+
+   Device Boot      Start         End      Blocks   Id  System
+/dev/sdb1   *           1          13      104391   83  Linux
+/dev/sdb2              14       19189   154031220   8e  Linux LVM
+
+Thanks for advice.
+Bye,
+Bruno
