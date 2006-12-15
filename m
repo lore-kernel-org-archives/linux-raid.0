@@ -1,29 +1,23 @@
-From: Andrew Morton <akpm@osdl.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
 Subject: Re: sata badness in 2.6.20-rc1? [Was: Re: md patches in -mm]
-Date: Fri, 15 Dec 2006 13:05:52 -0800
-Message-ID: <20061215130552.95860b72.akpm@osdl.org>
-References: <20061204203410.6152efec.akpm@osdl.org>
-	<17780.63770.228659.234534@cse.unsw.edu.au>
-	<20061205061623.GA13749@amd64.of.nowhere>
-	<20061205062142.GA14784@amd64.of.nowhere>
-	<20061204224323.2e5d0494.akpm@osdl.org>
-	<20061205105928.GA6482@amd64.of.nowhere>
-	<17782.28505.303064.964551@cse.unsw.edu.au>
-	<20061215192146.GA3616@amd64.of.nowhere>
-	<17795.2681.523120.656367@cse.unsw.edu.au>
+Date: Fri, 15 Dec 2006 22:15:23 +0100
+Message-ID: <200612152215.23629.rjw@sisk.pl>
+References: <20061204203410.6152efec.akpm@osdl.org> <20061215192146.GA3616@amd64.of.nowhere> <17795.2681.523120.656367@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S965055AbWLOVNR@vger.kernel.org>
 In-Reply-To: <17795.2681.523120.656367@cse.unsw.edu.au>
-Sender: linux-raid-owner@vger.kernel.org
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
 To: Neil Brown <neilb@suse.de>
-Cc: Jurriaan <thunder7@xs4all.nl>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, Jeff Garzik <jeff@garzik.org>, Tejun Heo <htejun@gmail.com>
+Cc: Jurriaan <thunder7@xs4all.nl>, Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, 16 Dec 2006 07:50:01 +1100
-Neil Brown <neilb@suse.de> wrote:
+I don't think it's in -rc1, please see below.
 
+On Friday, 15 December 2006 21:50, Neil Brown wrote:
 > On Friday December 15, thunder7@xs4all.nl wrote:
 > > From: Neil Brown <neilb@suse.de>
 > > Date: Wed, Dec 06, 2006 at 06:20:57PM +1100
@@ -80,13 +74,23 @@ Neil Brown <neilb@suse.de> wrote:
 > That is the second report I have had of this with sata drives.  This
 > was raid456, the other was raid1.  Two different sata drivers are
 > involved (sata_nv in this case, sata_uli in the other case).
+
+The other box is mine and it works just fine with 2.6.20-rc1.
+
 > I think something bad happened in sata land just recently.
-> The device driver is returning -EIO for a write without printing any messages.
-> 
 
-OK, this is bad.  The wheels do appear to have fallen off sata in rc1-mm1.
+Yup.  Please see, for example:
 
-Jeff, I shall send all the sata patches which I have at you one single time
-and I shall then drop the lot.  So please don't flub them.
+http://marc.theaimsgroup.com/?l=linux-kernel&m=116621656432500&w=2
 
-I'll then do a rc1-mm2 without them.
+It looks like the breakage is in sata, in the patches that went in after
+2.6.19-rc6-mm2 (that one worked for me like charm).
+
+Greetings,
+Rafael
+
+
+-- 
+If you don't have the time to read,
+you don't have the time or the tools to write.
+		- Stephen King
