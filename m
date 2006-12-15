@@ -1,19 +1,31 @@
 From: Jeff Garzik <jeff@garzik.org>
 Subject: Re: sata badness in 2.6.20-rc1? [Was: Re: md patches in -mm]
-Date: Fri, 15 Dec 2006 16:48:44 -0500
-Message-ID: <4583183C.7000107@garzik.org>
-References: <20061204203410.6152efec.akpm@osdl.org>	<17780.63770.228659.234534@cse.unsw.edu.au>	<20061205061623.GA13749@amd64.of.nowhere>	<20061205062142.GA14784@amd64.of.nowhere>	<20061204224323.2e5d0494.akpm@osdl.org>	<20061205105928.GA6482@amd64.of.nowhere>	<17782.28505.303064.964551@cse.unsw.edu.au>	<20061215192146.GA3616@amd64.of.nowhere>	<17795.2681.523120.656367@cse.unsw.edu.au> <20061215130552.95860b72.akpm@osdl.org>
+Date: Fri, 15 Dec 2006 16:49:46 -0500
+Message-ID: <4583187A.4020602@garzik.org>
+References: <20061204203410.6152efec.akpm@osdl.org> <20061215192146.GA3616@amd64.of.nowhere> <17795.2681.523120.656367@cse.unsw.edu.au> <200612152215.23629.rjw@sisk.pl>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S965157AbWLOVs5@vger.kernel.org>
-In-Reply-To: <20061215130552.95860b72.akpm@osdl.org>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S965171AbWLOVuH@vger.kernel.org>
+In-Reply-To: <200612152215.23629.rjw@sisk.pl>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: Neil Brown <neilb@suse.de>, Jurriaan <thunder7@xs4all.nl>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, Tejun Heo <htejun@gmail.com>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Neil Brown <neilb@suse.de>, Jurriaan <thunder7@xs4all.nl>, Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-The "Re: Linux 2.6.20-rc1" sub-thread that had Jens and Alistair John 
-Strachan replying seemed to implicate some core block layer badness.
+Rafael J. Wysocki wrote:
+> The other box is mine and it works just fine with 2.6.20-rc1.
+> 
+>> I think something bad happened in sata land just recently.
+> 
+> Yup.  Please see, for example:
+> 
+> http://marc.theaimsgroup.com/?l=linux-kernel&m=116621656432500&w=2
+> 
+> It looks like the breakage is in sata, in the patches that went in after
+> 2.6.19-rc6-mm2 (that one worked for me like charm).
+
+
+So.... 2.6.20-rc1 works for you?
 
 	Jeff
