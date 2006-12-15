@@ -1,62 +1,41 @@
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: sata badness in 2.6.20-rc1? [Was: Re: md patches in -mm]
-Date: Sat, 16 Dec 2006 00:38:02 +0100
-Message-ID: <200612160038.03149.rjw@sisk.pl>
-References: <20061204203410.6152efec.akpm@osdl.org> <200612152322.26375.rjw@sisk.pl> <45832095.9000503@garzik.org>
+From: Ed Tomlinson <edt@aei.ca>
+Subject: Re: [ANNOUNCE] RAIF: Redundant Array of Independent Filesystems
+Date: Fri, 15 Dec 2006 18:58:19 -0500
+Message-ID: <200612151858.19935.edt@aei.ca>
+References: <Pine.GSO.4.53.0612122217360.22195@compserv1> <200612150747.02708.edt@aei.ca> <Pine.GSO.4.53.0612151504360.3466@compserv1>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-15"
+  charset="ansi_x3.4-1968"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <45832095.9000503@garzik.org>
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <Pine.GSO.4.53.0612151504360.3466@compserv1>
 Content-Disposition: inline
-Sender: linux-raid-owner@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Andrew Morton <akpm@osdl.org>, Neil Brown <neilb@suse.de>, Jurriaan <thunder7@xs4all.nl>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, Tejun Heo <htejun@gmail.com>, Alan <alan@lxorguk.ukuu.org.uk>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Nikolai Joukov <kolya@cs.sunysb.edu>
+Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Friday, 15 December 2006 23:24, Jeff Garzik wrote:
-> Rafael J. Wysocki wrote:
-> > On Friday, 15 December 2006 22:39, Andrew Morton wrote:
-> >> On Fri, 15 Dec 2006 13:05:52 -0800
-> >> Andrew Morton <akpm@osdl.org> wrote:
-> >>
-> >>> Jeff, I shall send all the sata patches which I have at you one single time
-> >>> and I shall then drop the lot.  So please don't flub them.
-> >>>
-> >>> I'll then do a rc1-mm2 without them.
-> >> hm, this is looking like a lot of work for not much gain.  Rafael, are
-> >> you able to do a quick chop and tell us whether these:
-> >>
-> >> pci-move-pci_vdevice-from-libata-to-core.patch
-> >> pata_cs5530-suspend-resume-support-tweak.patch
-> >> ata-fix-platform_device_register_simple-error-check.patch
-> >> initializer-entry-defined-twice-in-pata_rz1000.patch
-> >> pata_via-suspend-resume-support-fix.patch
-> >> sata_nv-add-suspend-resume-support.patch
-> >> libata-simulate-report-luns-for-atapi-devices.patch
-> >> user-of-the-jiffies-rounding-patch-ata-subsystem.patch
-> >> libata-fix-oops-with-sparsemem.patch
-> >> sata_nv-fix-kfree-ordering-in-remove.patch
-> >> libata-dont-initialize-sg-in-ata_exec_internal-if-dma_none-take-2.patch
-> >> pci-quirks-fix-the-festering-mess-that-claims-to-handle-ide-quirks-ide-fix.patch
-> >>
-> >> are innocent?
-> > 
-> > Yes, they are.
+On Friday 15 December 2006 15:11, Nikolai Joukov wrote:
+> > On Wednesday 13 December 2006 12:47, Nikolai Joukov wrote:
+> > > We have designed a new stackable file system that we called RAIF:
+> > > Redundant Array of Independent Filesystems
+> >
+> > Do you have a function similar to an an EMC cloneset?   Basicily a cloneset
+> > tracks what has changed in both the source and target luns (drives).  When one
+> > updates the cloneset the target is made identical to the source.  Its a great
+> > way to do backups.  Its an important feature to be able to write to the target drives.
+> > I would love to see this working at a filesystem level.
 > 
-> We all really appreciate your patience :)  This is good feedback.
-> 
-> To narrow down some more, does applying 2.6.20-rc1 + the attached patch 
-> work?  (ignoring -mm tree altogether)
+> Well, if you mount RAIF over your file system and a for-backups file
+> system, RAIF can replicate the files on both of them automatically.  I
+> guess that's what you need.
 
-Yes, it does.
+Yes and no.  The idea behind the cloneset is that most of the blocks (or files)
+do not change in either source or target.  This being the case its only necessary
+to update the changed elements.  This means updates are incremental.  Once
+the system has figured out what it needs to update its usable and if you access
+an element that should be updated you will see the correctly updated version - even 
+though backgound resyncing is still in progress.  This type of logic is great for backups.
 
-Greetings,
-Rafael
-
-
--- 
-If you don't have the time to read,
-you don't have the time or the tools to write.
-		- Stephen King
+Thanks
+Ed Tomlinson
