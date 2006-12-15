@@ -1,43 +1,62 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: md patches in -mm
-Date: Fri, 15 Dec 2006 12:06:03 -0800
-Message-ID: <20061215120603.41ff6fed.akpm@osdl.org>
-References: <20061204203410.6152efec.akpm@osdl.org>
-	<17780.63770.228659.234534@cse.unsw.edu.au>
-	<20061205061623.GA13749@amd64.of.nowhere>
-	<20061205062142.GA14784@amd64.of.nowhere>
-	<20061204224323.2e5d0494.akpm@osdl.org>
-	<20061205105928.GA6482@amd64.of.nowhere>
-	<17782.28505.303064.964551@cse.unsw.edu.au>
-	<20061215192146.GA3616@amd64.of.nowhere>
+From: John McMonagle <johnm@advocap.org>
+Subject: Raid corruption problems.
+Date: Fri, 15 Dec 2006 13:52:50 -0600
+Message-ID: <4582FD12.90806@advocap.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------090903040403040809000704"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20061215192146.GA3616@amd64.of.nowhere>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jurriaan <thunder7@xs4all.nl>
-Cc: Neil Brown <neilb@suse.de>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, 15 Dec 2006 20:21:46 +0100
-thunder7@xs4all.nl wrote:
+This is a multi-part message in MIME format.
+--------------090903040403040809000704
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-> From: Neil Brown <neilb@suse.de>
-> Date: Wed, Dec 06, 2006 at 06:20:57PM +1100
-> > i.e. current -mm is good for 2.6.20 (though I have a few other little
-> > things I'll be sending in soon, they aren't related to the raid6
-> > problem).
-> > 
-> 2.6.20-rc1-mm1 doesn't boot on my box, due to the fact that e2fsck gives
-> 
-> Buffer I/O error on device /dev/md0, logical block 0
-> 
-> and after that 1,2,3,4,5,6,7,8,9, at which points it complains it can't
-> read the superblock. It seems the raid6 problem hasn't gone away
-> completely, after all.
+Have a raid1  backup server that seems to get corrupted.
+This is the 3rd time in about a year.
+Have 2 other backup servers that were cloned from this one that have no 
+problems.
 
-Odd.  The only md patch in rc1-mm1 is the truly ancient 
-md-dm-reduce-stack-usage-with-stacked-block-devices.patch
+Done a couple kernel upgrades recently.
+Now has 2.6.18-2 kernel.
+It's based on Debian sarge.
 
-Does 2.6.20-rc1 work?
+It's a low end Intel server motherboard using ata_piix sata driver.
+Have another mother board just like doing raid1 with sata drives that 
+has had no problems but it has a much lighter disk load.
+smartctl has never shown any problems.
+In /sys/block/md2 did
+echo check > syncaction
+No error messages but mismatch_cnt  is 1152.
+rc0/errors and rc1/errors are both 0.
+
+I'm guessing a hardware problem.
+Any suggestions?
+
+John
+
+
+
+--------------090903040403040809000704
+Content-Type: text/x-vcard; charset=utf-8;
+ name="johnm.vcf"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="johnm.vcf"
+
+begin:vcard
+fn:John McMonagle
+n:McMonagle;John
+org:Advocap inc
+email;internet:johnm@advocap.org
+title:IT manager
+x-mozilla-html:FALSE
+url:http://www.advocap.org
+version:2.1
+end:vcard
+
+
+--------------090903040403040809000704--
