@@ -1,44 +1,88 @@
-From: Nikolai Joukov <kolya@cs.sunysb.edu>
-Subject: Re: [ANNOUNCE] RAIF: Redundant Array of Independent Filesystems
-Date: Thu, 14 Dec 2006 18:44:18 -0500 (EST)
-Message-ID: <Pine.GSO.4.53.0612141828220.8234@compserv1>
-References: <Pine.GSO.4.53.0612122217360.22195@compserv1>
- <200612141412.30686.a1426z@gawab.com>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: [RFC: 2.6 patch] simplify drivers/md/md.c:update_size()
+Date: Fri, 15 Dec 2006 01:19:02 +0100
+Message-ID: <20061215001902.GR3388@stusta.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <200612141412.30686.a1426z@gawab.com>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Al Boldi <a1426z@gawab.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1752062AbWLOATJ@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: Doug Ledford <dledford@redhat.com>, Neil Brown <neilb@suse.de>
+Cc: mingo@redhat.com, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-> > We started the project in April 2004.  Right now I am using it as my
-> > /home/kolya file system at home.  We believe that at this stage RAIF is
-> > mature enough for others to try it out.  The code is available at:
-> >
-> > 	<ftp://ftp.fsl.cs.sunysb.edu/pub/raif/>
-> >
-> > The code requires no kernel patches and compiles for a wide range of
-> > kernels as a module.  The latest kernel we used it for is 2.6.13 and we
-> > are in the process of porting it to 2.6.19.
-> >
-> > We will be happy to hear your back.
->
-> When removing a file from the underlying branch, the oops below happens.
-> Wouldn't it be possible to just fail the branch instead of oopsing?
+While looking at commit 8ddeeae51f2f197b4fafcba117ee8191b49d843e,
+I got the impression that this commit couldn't fix anything, since the 
+"size" variable can't be changed before "fit" gets used.
 
-This is a known problem of all Linux stackable file systems.  Users are
-not supposed to change the file systems below mounted stackable file
-systems (but they can read them).  One of the ways to enforce it is to use
-overlay mounts.  For example, mount the lower file systems at
-/raif/b0 ... /raif/bN and then mount RAIF at /raif.  Stackable file
-systems recently started getting into the kernel and we hope that there
-will be a better solution for this problem in the future.  Having said
-that, you are right: failing the branch would be the right thing to do.
+Is there any big thinko, or is the patch below that slightly simplifies 
+update_size() semantically equivalent to the current code?
 
-Nikolai.
----------------------
-Nikolai Joukov, Ph.D.
-Filesystems and Storage Laboratory
-Stony Brook University
+Signed-off-by: Adrian Bunk <bunk@stusta.de>
+
+---
+
+ drivers/md/md.c |    3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+--- linux-2.6.19-mm1/drivers/md/md.c.old	2006-12-15 00:57:05.000000000 +0100
++++ linux-2.6.19-mm1/drivers/md/md.c	2006-12-15 00:57:42.000000000 +0100
+@@ -4039,57 +4039,56 @@
+ 	 * Generate a 128 bit UUID
+ 	 */
+ 	get_random_bytes(mddev->uuid, 16);
+ 
+ 	mddev->new_level = mddev->level;
+ 	mddev->new_chunk = mddev->chunk_size;
+ 	mddev->new_layout = mddev->layout;
+ 	mddev->delta_disks = 0;
+ 
+ 	mddev->dead = 0;
+ 	return 0;
+ }
+ 
+ static int update_size(mddev_t *mddev, unsigned long size)
+ {
+ 	mdk_rdev_t * rdev;
+ 	int rv;
+ 	struct list_head *tmp;
+-	int fit = (size == 0);
+ 
+ 	if (mddev->pers->resize == NULL)
+ 		return -EINVAL;
+ 	/* The "size" is the amount of each device that is used.
+ 	 * This can only make sense for arrays with redundancy.
+ 	 * linear and raid0 always use whatever space is available
+ 	 * We can only consider changing the size if no resync
+ 	 * or reconstruction is happening, and if the new size
+ 	 * is acceptable. It must fit before the sb_offset or,
+ 	 * if that is <data_offset, it must fit before the
+ 	 * size of each device.
+ 	 * If size is zero, we find the largest size that fits.
+ 	 */
+ 	if (mddev->sync_thread)
+ 		return -EBUSY;
+ 	ITERATE_RDEV(mddev,rdev,tmp) {
+ 		sector_t avail;
+ 		avail = rdev->size * 2;
+ 
+-		if (fit && (size == 0 || size > avail/2))
++		if (size == 0)
+ 			size = avail/2;
+ 		if (avail < ((sector_t)size << 1))
+ 			return -ENOSPC;
+ 	}
+ 	rv = mddev->pers->resize(mddev, (sector_t)size *2);
+ 	if (!rv) {
+ 		struct block_device *bdev;
+ 
+ 		bdev = bdget_disk(mddev->gendisk, 0);
+ 		if (bdev) {
+ 			mutex_lock(&bdev->bd_inode->i_mutex);
+ 			i_size_write(bdev->bd_inode, (loff_t)mddev->array_size << 10);
+ 			mutex_unlock(&bdev->bd_inode->i_mutex);
+ 			bdput(bdev);
+ 		}
+ 	}
+ 	return rv;
+ }
