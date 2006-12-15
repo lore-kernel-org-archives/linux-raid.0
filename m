@@ -1,14 +1,14 @@
 From: Al Boldi <a1426z@gawab.com>
 Subject: Re: [ANNOUNCE] RAIF: Redundant Array of Independent Filesystems
-Date: Fri, 15 Dec 2006 08:03:01 +0300
-Message-ID: <200612150803.01246.a1426z@gawab.com>
-References: <Pine.GSO.4.53.0612122217360.22195@compserv1> <200612141412.30686.a1426z@gawab.com> <Pine.GSO.4.53.0612141828220.8234@compserv1>
+Date: Fri, 15 Dec 2006 08:02:55 +0300
+Message-ID: <200612150802.55396.a1426z@gawab.com>
+References: <Pine.GSO.4.53.0612122217360.22195@compserv1> <200612132257.24399.a1426z@gawab.com> <Pine.GSO.4.53.0612141538410.6095@compserv1>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="windows-1256"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S965100AbWLOFCE@vger.kernel.org>
-In-Reply-To: <Pine.GSO.4.53.0612141828220.8234@compserv1>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S965098AbWLOFCA@vger.kernel.org>
+In-Reply-To: <Pine.GSO.4.53.0612141538410.6095@compserv1>
 Content-Disposition: inline
 Sender: linux-kernel-owner@vger.kernel.org
 To: Nikolai Joukov <kolya@cs.sunysb.edu>
@@ -16,33 +16,50 @@ Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger
 List-Id: linux-raid.ids
 
 Nikolai Joukov wrote:
-> > > We started the project in April 2004.  Right now I am using it as my
-> > > /home/kolya file system at home.  We believe that at this stage RAIF
-> > > is mature enough for others to try it out.  The code is available at:
-> > >
-> > > 	<ftp://ftp.fsl.cs.sunysb.edu/pub/raif/>
-> > >
-> > > The code requires no kernel patches and compiles for a wide range of
-> > > kernels as a module.  The latest kernel we used it for is 2.6.13 and
-> > > we are in the process of porting it to 2.6.19.
-> > >
-> > > We will be happy to hear your back.
+> > Nikolai Joukov wrote:
+> > > We have designed a new stackable file system that we called RAIF:
+> > > Redundant Array of Independent Filesystems.
 > >
-> > When removing a file from the underlying branch, the oops below happens.
-> > Wouldn't it be possible to just fail the branch instead of oopsing?
+> > Great!
+> >
+> > > We have performed some benchmarking on a 3GHz PC with 2GB of RAM and
+> > > U320 SCSI disks.  Compared to the Linux RAID driver, RAIF has
+> > > overheads of about 20-25% under the Postmark v1.5 benchmark in case of
+> > > striping and replication.  In case of RAID4 and RAID5-like
+> > > configurations, RAIF performed about two times *better* than software
+> > > RAID and even better than an Adaptec 2120S RAID5 controller.
+> >
+> > I am not surprised.  RAID 4/5/6 performance is highly sensitive to the
+> > underlying hw, and thus needs a fair amount of fine tuning.
 >
-> This is a known problem of all Linux stackable file systems.  Users are
-> not supposed to change the file systems below mounted stackable file
-> systems (but they can read them).  One of the ways to enforce it is to use
-> overlay mounts.  For example, mount the lower file systems at
-> /raif/b0 ... /raif/bN and then mount RAIF at /raif.  Stackable file
-> systems recently started getting into the kernel and we hope that there
-> will be a better solution for this problem in the future.  Having said
-> that, you are right: failing the branch would be the right thing to do.
+> Nevertheless, performance is not the biggest advantage of RAIF.  For
+> read-biased workloads RAID is always slightly faster than RAIF.  The
+> biggest advantages of RAIF are flexible configurations (e.g., can combine
+> NFS and local file systems), per-file-type storage policies, and the fact
+> that files are stored as files on the lower file systems (which is
+> convenient).
 
-Good.  It seems that there is also some tmpfs/raif-over-nfs deadlock 
-situation.  Can't really tell if it's the kernel or the raif, but when do 
-you think the patches could be brought into sync with the current mainline?
+Ok, a I was just about to inform you of a three nfs-branch raif which was 
+unable to fill the net pipe.  So it looks like a 25% performance hit across 
+the board.  Should be possible to reduce to sub 3% though once RAIF matures, 
+don't you think?
+
+
+> > > This is because RAIF is located above
+> > > file system caches and can cache parity as normal data when needed. 
+> > > We have more performance details in a technical report, if anyone is
+> > > interested.
+> >
+> > Definitely interested.  Can you give a link?
+>
+> The main focus of the paper is on a general OS profiling method and not
+> on RAIF.  However, it has some details about the RAIF benchmarking with
+> Postmark in Chapter 9:
+>
+>   <http://www.fsl.cs.sunysb.edu/docs/joukov-phdthesis/thesis.pdf>
+>
+> Figures 9.7 and 9.8 also show profiles of the Linux RAID5 and RAIF5
+> operation under the same Postmark workload.
 
 
 Thanks!
