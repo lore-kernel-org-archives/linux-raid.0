@@ -1,59 +1,61 @@
-From: thunder7@xs4all.nl
-Subject: Re: RAID1 root and swap and initrd
-Date: Fri, 15 Dec 2006 19:30:04 +0100
-Message-ID: <20061215183004.GA15690@amd64.of.nowhere>
-References: <20061215175630.GA11400@aym.net2.nerim.net>
-Reply-To: Jurriaan <thunder7@xs4all.nl>
+From: Nikolai Joukov <kolya@cs.sunysb.edu>
+Subject: Re: [ANNOUNCE] RAIF: Redundant Array of Independent Filesystems
+Date: Fri, 15 Dec 2006 13:47:10 -0500 (EST)
+Message-ID: <Pine.GSO.4.53.0612151241290.26813@compserv1>
+References: <Pine.GSO.4.53.0612122217360.22195@compserv1>
+ <200612141412.30686.a1426z@gawab.com> <Pine.GSO.4.53.0612141828220.8234@compserv1>
+ <200612150803.01246.a1426z@gawab.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20061215175630.GA11400@aym.net2.nerim.net>
-Sender: linux-raid-owner@vger.kernel.org
-To: Andre Majorel <aym-xunil@teaser.fr>, linux-raid@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <200612150803.01246.a1426z@gawab.com>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Al Boldi <a1426z@gawab.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-From: Andre Majorel <aym-xunil@teaser.fr>
-Date: Fri, Dec 15, 2006 at 06:56:30PM +0100
-> Pardon the probably silly question but...
-> 
-> Can you use RAID1 devices for your root and swap with a "straight"
-> kernel ? (i.e. without the need for initrd/initramfs.)
-> 
-> If that matters, the boot manager would be LILO and each MD device
-> would be assembled from "parallel" logical partitions.
+> Nikolai Joukov wrote:
+> > > > We started the project in April 2004.  Right now I am using it as my
+> > > > /home/kolya file system at home.  We believe that at this stage RAIF
+> > > > is mature enough for others to try it out.  The code is available at:
+> > > >
+> > > > 	<ftp://ftp.fsl.cs.sunysb.edu/pub/raif/>
+> > > >
+> > > > The code requires no kernel patches and compiles for a wide range of
+> > > > kernels as a module.  The latest kernel we used it for is 2.6.13 and
+> > > > we are in the process of porting it to 2.6.19.
+> > > >
+> > > > We will be happy to hear your back.
+> > >
+> > > When removing a file from the underlying branch, the oops below happens.
+> > > Wouldn't it be possible to just fail the branch instead of oopsing?
+> >
+> > This is a known problem of all Linux stackable file systems.  Users are
+> > not supposed to change the file systems below mounted stackable file
+> > systems (but they can read them).  One of the ways to enforce it is to use
+> > overlay mounts.  For example, mount the lower file systems at
+> > /raif/b0 ... /raif/bN and then mount RAIF at /raif.  Stackable file
+> > systems recently started getting into the kernel and we hope that there
+> > will be a better solution for this problem in the future.  Having said
+> > that, you are right: failing the branch would be the right thing to do.
+>
+> Good.  It seems that there is also some tmpfs/raif-over-nfs deadlock
+> situation.  Can't really tell if it's the kernel or the raif, but when do
+> you think the patches could be brought into sync with the current mainline?
 
-Yes, I do that. Make the partitions type 0xfd and the kernel
-automagically assembles any raid-partitions it needs.
+It would be great if you could send us more details about how to recreate
+this deadlock and we will take a look at it.  It would be even better if
+you and everybody else who finds bugs in RAIF submit the bug reports to:
 
-Here are some parts of my dmesg:
+  <http://bugzilla.fsl.cs.sunysb.edu>
 
-Linux version 2.6.19-rc5-mm1 (jurriaan@middle) (gcc version 4.1.2 20061028 (prerelease) (Debian 4.1.1-19)) #5 SMP Mon Nov 13 15:55:41 CET 2006
-Command line: root=/dev/md2 video=nvidiafb:1600x1200-32@85 atkbd.softrepeat=1
-md: considering hdc7 ...
-md:  adding hdc7 ...
-md: hdc6 has different UUID to hdc7
-md: hdc5 has different UUID to hdc7
-md:  adding hda7 ...
-md: hda6 has different UUID to hdc7
-md: hda5 has different UUID to hdc7
-md: created md2
-md: bind<hda7>
-md: bind<hdc7>
-md: running: <hdc7><hda7>
-raid1: raid set md2 active with 2 out of 2 mirrors
-md2: bitmap initialized from disk: read 8/8 pages, set 89 bits, status: 0
-created bitmap (123 pages) for device md2
-EXT3-fs: mounted filesystem with ordered data mode.
-VFS: Mounted root (ext3 filesystem) readonly.
+We are in the process of porting RAIF to 2.6.19 right now.  Should be done
+in early January.  The trick is that we are trying to keep the same source
+good for a wide range of kernel versions.  In fact, not too long ago we
+even were able to compile it for 2.4.24!
 
-Kind regards,
-Jurriaan
--- 
-"No," Jewel said faintly, "I know who you are."
-She laughed, the laughter thawing the chill of her expression.
-"And who is that, exactly?"
-"Allasakar's kin."
-	Michelle West - The Shining Court
-Debian (Unstable) GNU/Linux 2.6.19-rc5-mm1 2x4826 bogomips load load 0.21
-the Jack Vance Integral Edition: http://www.integralarchive.org
+Nikolai.
+---------------------
+Nikolai Joukov, Ph.D.
+Filesystems and Storage Laboratory
+Stony Brook University
