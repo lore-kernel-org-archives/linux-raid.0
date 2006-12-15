@@ -1,42 +1,77 @@
 From: Nikolai Joukov <kolya@cs.sunysb.edu>
 Subject: Re: [ANNOUNCE] RAIF: Redundant Array of Independent Filesystems
-Date: Fri, 15 Dec 2006 11:48:40 -0500 (EST)
-Message-ID: <Pine.GSO.4.53.0612151138360.26813@compserv1>
+Date: Fri, 15 Dec 2006 12:41:02 -0500 (EST)
+Message-ID: <Pine.GSO.4.53.0612151156130.26813@compserv1>
 References: <Pine.GSO.4.53.0612122217360.22195@compserv1>
  <200612132257.24399.a1426z@gawab.com> <Pine.GSO.4.53.0612141538410.6095@compserv1>
- <200612151030.31846.manningc2@actrix.gen.nz>
+ <200612150802.55396.a1426z@gawab.com>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <200612151030.31846.manningc2@actrix.gen.nz>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Charles Manning <manningc2@actrix.gen.nz>
-Cc: Al Boldi <a1426z@gawab.com>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <200612150802.55396.a1426z@gawab.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Al Boldi <a1426z@gawab.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> On Friday 15 December 2006 10:01, Nikolai Joukov wrote:
+> Nikolai Joukov wrote:
 > > > Nikolai Joukov wrote:
 > > > > We have designed a new stackable file system that we called RAIF:
 > > > > Redundant Array of Independent Filesystems.
 > > >
 > > > Great!
+> > >
+> > > > We have performed some benchmarking on a 3GHz PC with 2GB of RAM and
+> > > > U320 SCSI disks.  Compared to the Linux RAID driver, RAIF has
+> > > > overheads of about 20-25% under the Postmark v1.5 benchmark in case of
+> > > > striping and replication.  In case of RAID4 and RAID5-like
+> > > > configurations, RAIF performed about two times *better* than software
+> > > > RAID and even better than an Adaptec 2120S RAID5 controller.
+> > >
+> > > I am not surprised.  RAID 4/5/6 performance is highly sensitive to the
+> > > underlying hw, and thus needs a fair amount of fine tuning.
+> >
+> > Nevertheless, performance is not the biggest advantage of RAIF.  For
+> > read-biased workloads RAID is always slightly faster than RAIF.  The
+> > biggest advantages of RAIF are flexible configurations (e.g., can combine
+> > NFS and local file systems), per-file-type storage policies, and the fact
+> > that files are stored as files on the lower file systems (which is
+> > convenient).
 >
-> Yes, definitely...
->
-> I see the major benefit being in the mobile, industrial and embedded systems
-> arena. Perhaps this might come as a suprise to people, but a very large and
-> ever growing number (perhaps even most) Linux devices don't use block devices
-> for storage. Instead they use flash file systems or nfs, niether of which use
-> local block devices.
->
-> It looks like RAIF gives a way to provide redundancy etc on these devices.
+> Ok, a I was just about to inform you of a three nfs-branch raif which was
+> unable to fill the net pipe.  So it looks like a 25% performance hit across
+> the board.  Should be possible to reduce to sub 3% though once RAIF matures,
+> don't you think?
 
-Good point!  Also, RAIF can store different file types differently.
-Therefore, it is possible to mount RAIF over file systems with lots of
-storage space and a flash file system (with usually less space).  In this
-case, RAIF can be configured to use flash to keep replicas of the most
-important data only.   And yes, thanks to the stackable nature of RAIF no
-explicit flash support is required.  RAIF can reuse existing file systems
-designed for flash media (e.g., JFFS2).
+Hmmm.  Which workload did you try?  Which RAIF level did you use: RAIF0
+(striping), replication (RAIF1, default), or striping with parity (RAIF4,
+5, 6)?  Which hardware did you use?  RAIF has to consume extra CPU time
+and on older machines the overheads seem to be higher (CPUs are getting
+faster than I/O devices at a faster pace).  Also, I guess you are
+comparing RAIF mounted over three NFS branches with NFS alone, right?
+It doesn't seem to be very fair to me :-)
+
+Recently we solved the double-caching problem, which improved RAIF's
+performance by an order of magnitude under I/O-intensive workloads.
+(Normally, Linux stackable file systems cache the data twice.)
+Unfortunately, many VFS meta-operations are synchronous (e.g., lookup).
+RAIF has to wait on such operations in sequence for every branch
+involved.  (This is different from, say, readpage operation.  We
+call readpage on all the branches right away and then wait for their
+simultaneous operation.)  Sequential waiting on lookups should be OK for
+multi-threaded workloads but may result in extra elapsed time for the
+single-threaded workloads.  Again, elegant solutions may require VFS API
+changes.  Alternatively, we can create kernel threads for every branch.
+
+I am not sure about 3% overheads in all the cases compared to NFS alone.
+On one hand, there should be some price to pay for the extra
+functionality.  On the other hand, for some workloads RAIF should
+even improve performance compared to a single NFS because of the load
+distribution.  In general, I agree that there are still many things we can
+optimize.
 
 Nikolai.
+---------------------
+Nikolai Joukov, Ph.D.
+Filesystems and Storage Laboratory
+Stony Brook University
