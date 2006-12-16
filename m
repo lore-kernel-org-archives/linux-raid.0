@@ -1,68 +1,62 @@
-From: Nikolai Joukov <kolya@cs.sunysb.edu>
-Subject: Re: [ANNOUNCE] RAIF: Redundant Array of Independent Filesystems
-Date: Sat, 16 Dec 2006 12:57:27 -0500 (EST)
-Message-ID: <Pine.GSO.4.53.0612161240380.24531@compserv1>
-References: <OFCB8FCFF5.BA0A74ED-ON88257246.0000FE7C-88257246.0001E5FD@us.ibm.com>
- <200612160946.20535.edt@aei.ca>
+From: Andre Majorel <aym-xunil@teaser.fr>
+Subject: Re: RAID1 root and swap and initrd
+Date: Sat, 16 Dec 2006 22:05:17 +0100
+Message-ID: <20061216210517.GB11400@aym.net2.nerim.net>
+References: <20061215175630.GA11400@aym.net2.nerim.net> <Pine.LNX.4.64.0612151909210.27298@lion.drogon.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <200612160946.20535.edt@aei.ca>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Ed Tomlinson <edt@aei.ca>
-Cc: Bryan Henderson <hbryan@us.ibm.com>, linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.64.0612151909210.27298@lion.drogon.net>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> On Friday 15 December 2006 19:20, Bryan Henderson wrote:
-> > >The idea behind the cloneset is that most of the blocks (or files)
-> > >do not change in either source or target.  This being the case its only
-> > necessary
-> > >to update the changed elements.  This means updates are incremental. Once
-> > >the system has figured out what it needs to update its usable and if you
-> > access
-> > >an element that should be updated you will see the correctly updated
-> > version - even
-> > >though backgound resyncing is still in progress.
-> >
-> > I still can't tell what you're describing.  With RAID1 as well, only
-> > changed elements ever get updated.  I have two identical filesystems,
-> > members of a RAIF set.  I change one file.  One file in each member
-> > filesystem gets updated, and I again have two identical filesystems.
+On 2006-12-15 19:14 +0000, Gordon Henderson wrote:
+> On Fri, 15 Dec 2006, Andre Majorel wrote:
 >
-> A cloneset is only syncronized at the point in time that you tell it to resync.
-> The source and target fs are useable independently.  When you resync the
-> target is reset to be indentical to the source at the point in time of the sync.
-> Its also immediatly useable - the sync and access to the source and target
-> are coordinated so users of the target see the correct data, even if the sync
-> is still running in background.
->
-> This allows things likes:
-> set oracle in backup mode
-> resync cloneset (this takes about 2 mins for a 2TB cloneset)
-> set oracle out of backup mode
-> (resyncing is still happening in background but accessing the cloneset gives a
-> consistant image)
-> backup oracle using cloneset files
-> or
-> start an instance of oracle using cloneset files (handly for a ro copy or if the main instance
-> needs certian types of service)
->
-> The overhead of the resync is minimized since it only updates the delta.  When
-> dealing with 2TB of data this is an important feature, reducing IO.  You can
-> only ask for a resync if the bg process from a previous resync is finished.
+> >Can you use RAID1 devices for your root and swap with a "straight"
+> >kernel ? (i.e. without the need for initrd/initramfs.)
+>=20
+> Yes - but you need the md (and ide/scsi/sata) drivers compiled
+> into your kernel, and make sure the parition types are 0xFD and
+> trust the kernel auto-detection.
+[...]
+> >If that matters, the boot manager would be LILO and each MD device
+> >would be assembled from "parallel" logical partitions.
+>=20
+> Lilo is fine. Even kernel auto-detection is fine for me.
 
-Although, it is not possible with the current code, it should be possible
-to do via failing the branches.  First, you fail the branch intended for
-backups and it becomes a backup copy.  Later you can "unfail" the same
-branch and fail the newer branch to start the on-line recovery.  If you
-enable atime updates on these lower file systems incremental (delta)
-updates should not be a problem.
+Thanks Jurriaan and Gordon. I think I may still be f*cked,
+however. The Lilo doc says you can't use raid-extra-boot=3Dmbr-only
+if boot=3D does not point to a raid device. Which it doesn't because
+in my setup, boot=3D/dev/sda.
 
-So I guess that if there is a demand for this functionality it won't be a
-problem to implement it and automate it.
+Using boot=3D/dev/md5 would solve the raid-extra-boot issue but the
+components of /dev/md5 are not primary partitions (/dev/sda5,
+/dev/sdb5) so I don't think that would work.
 
-Nikolai.
----------------------
-Nikolai Joukov, Ph.D.
-Filesystems and Storage Laboratory
-Stony Brook University
+I *could* run lilo once for each disk after tweaking boot=3D in
+lilo.conf, or just supply a different -M option but I'm not sure.
+The Lilo doc is not terribly enlightening. Not for me, anyway. :-)
+
+> A nice little tip I learned from someone else on the list is to
+> have your md devices named after the partition numbers. So:
+>=20
+> md1 is /dev/hda1 and /dev/hdc1
+> md2 is /dev/hda2 and /dev/hdc2
+
+That's an improvement on what I was doing. Just "renumbered" my
+devices that way (mdadm --assemble /dev/md8 -U super-minor
+/dev/sda8 /dev/sdb8 ...). Thanks.
+
+--=20
+Andr=E9 Majorel <URL:http://www.teaser.fr/~amajorel/>
+Do not use this account for regular correspondence.
+See the URL above for contact information.
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
