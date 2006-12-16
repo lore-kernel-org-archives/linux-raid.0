@@ -1,84 +1,68 @@
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: sata badness in 2.6.20-rc1? [Was: Re: md patches in -mm]
-Date: Sat, 16 Dec 2006 12:16:06 +0100
-Message-ID: <200612161216.07669.rjw@sisk.pl>
-References: <20061204203410.6152efec.akpm@osdl.org> <200612160038.03149.rjw@sisk.pl> <200612161056.26830.rjw@sisk.pl>
+From: Ed Tomlinson <edt@aei.ca>
+Subject: Re: [ANNOUNCE] RAIF: Redundant Array of Independent Filesystems
+Date: Sat, 16 Dec 2006 09:46:20 -0500
+Message-ID: <200612160946.20535.edt@aei.ca>
+References: <OFCB8FCFF5.BA0A74ED-ON88257246.0000FE7C-88257246.0001E5FD@us.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-15"
+  charset="ansi_x3.4-1968"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200612161056.26830.rjw@sisk.pl>
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <OFCB8FCFF5.BA0A74ED-ON88257246.0000FE7C-88257246.0001E5FD@us.ibm.com>
 Content-Disposition: inline
-Sender: linux-raid-owner@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: Jeff Garzik <jeff@garzik.org>, Neil Brown <neilb@suse.de>, Jurriaan <thunder7@xs4all.nl>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, Tejun Heo <htejun@gmail.com>, Alan <alan@lxorguk.ukuu.org.uk>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Bryan Henderson <hbryan@us.ibm.com>
+Cc: Nikolai Joukov <kolya@cs.sunysb.edu>, linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Saturday, 16 December 2006 10:56, Rafael J. Wysocki wrote:
-> On Saturday, 16 December 2006 00:38, Rafael J. Wysocki wrote:
-> > On Friday, 15 December 2006 23:24, Jeff Garzik wrote:
-> > > Rafael J. Wysocki wrote:
-> > > > On Friday, 15 December 2006 22:39, Andrew Morton wrote:
-> > > >> On Fri, 15 Dec 2006 13:05:52 -0800
-> > > >> Andrew Morton <akpm@osdl.org> wrote:
-> > > >>
-> > > >>> Jeff, I shall send all the sata patches which I have at you one single time
-> > > >>> and I shall then drop the lot.  So please don't flub them.
-> > > >>>
-> > > >>> I'll then do a rc1-mm2 without them.
-> > > >> hm, this is looking like a lot of work for not much gain.  Rafael, are
-> > > >> you able to do a quick chop and tell us whether these:
-> > > >>
-> > > >> pci-move-pci_vdevice-from-libata-to-core.patch
-> > > >> pata_cs5530-suspend-resume-support-tweak.patch
-> > > >> ata-fix-platform_device_register_simple-error-check.patch
-> > > >> initializer-entry-defined-twice-in-pata_rz1000.patch
-> > > >> pata_via-suspend-resume-support-fix.patch
-> > > >> sata_nv-add-suspend-resume-support.patch
-> > > >> libata-simulate-report-luns-for-atapi-devices.patch
-> > > >> user-of-the-jiffies-rounding-patch-ata-subsystem.patch
-> > > >> libata-fix-oops-with-sparsemem.patch
-> > > >> sata_nv-fix-kfree-ordering-in-remove.patch
-> > > >> libata-dont-initialize-sg-in-ata_exec_internal-if-dma_none-take-2.patch
-> > > >> pci-quirks-fix-the-festering-mess-that-claims-to-handle-ide-quirks-ide-fix.patch
-> > > >>
-> > > >> are innocent?
-> > > > 
-> > > > Yes, they are.
-> > > 
-> > > We all really appreciate your patience :)  This is good feedback.
-> > > 
-> > > To narrow down some more, does applying 2.6.20-rc1 + the attached patch 
-> > > work?  (ignoring -mm tree altogether)
-> > 
-> > Yes, it does.
+On Friday 15 December 2006 19:20, Bryan Henderson wrote:
+> >The idea behind the cloneset is that most of the blocks (or files)
+> >do not change in either source or target.  This being the case its only 
+> necessary
+> >to update the changed elements.  This means updates are incremental. Once
+> >the system has figured out what it needs to update its usable and if you 
+> access
+> >an element that should be updated you will see the correctly updated 
+> version - even 
+> >though backgound resyncing is still in progress.
 > 
-> I've applied the patches from -rc1-mm1 up to and including
+> I still can't tell what you're describing.  With RAID1 as well, only 
+> changed elements ever get updated.  I have two identical filesystems, 
+> members of a RAIF set.  I change one file.  One file in each member 
+> filesystem gets updated, and I again have two identical filesystems.
+
+A cloneset is only syncronized at the point in time that you tell it to resync.
+The source and target fs are useable independently.  When you resync the
+target is reset to be indentical to the source at the point in time of the sync.
+Its also immediatly useable - the sync and access to the source and target 
+are coordinated so users of the target see the correct data, even if the sync 
+is still running in background.
+
+This allows things likes:
+set oracle in backup mode
+resync cloneset (this takes about 2 mins for a 2TB cloneset)
+set oracle out of backup mode
+(resyncing is still happening in background but accessing the cloneset gives a
+consistant image)
+backup oracle using cloneset files
+or
+start an instance of oracle using cloneset files (handly for a ro copy or if the main instance
+needs certian types of service)
+
+The overhead of the resync is minimized since it only updates the delta.  When
+dealing with 2TB of data this is an important feature, reducing IO.  You can
+only ask for a resync if the bg process from a previous resync is finished.
+ 
+> How would a cloneset work differently, and how would it be better?
 > 
-> problem-phy-probe-not-working-properly-for-ibm_emac-ppc4xx.patch
+> >This type of logic is great for backups.
 > 
-> on top of 2.6.20-rc1 and they don't seem to break anything.  Will try some
-> more.
-
-The patch that breaks things is somewhere between
-
-dont-export-device-ids-to-userspace.patch
-
-and
-
-funsoft-is-bust-on-sparc.patch
-
-inclusive.
-
-Now I'll need to resync my disk arrays so if anyone has any suggestions
-what to try next, I'll be grateful. ;-)
-
-Greetings,
-Rafael
-
-
--- 
-If you don't have the time to read,
-you don't have the time or the tools to write.
-		- Stephen King
+> Can you give an example of using it for backup?
+> 
+> --
+> Bryan Henderson                     IBM Almaden Research Center
+> San Jose CA                         Filesystems
+> 
+> 
+> 
+> 
