@@ -1,105 +1,70 @@
-From: thunder7@xs4all.nl
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
 Subject: Re: sata badness in 2.6.20-rc1? [Was: Re: md patches in -mm]
-Date: Sat, 16 Dec 2006 07:03:29 +0100
-Message-ID: <20061216060328.GA9694@amd64.of.nowhere>
-References: <17780.63770.228659.234534@cse.unsw.edu.au> <20061205061623.GA13749@amd64.of.nowhere> <20061205062142.GA14784@amd64.of.nowhere> <20061204224323.2e5d0494.akpm@osdl.org> <20061205105928.GA6482@amd64.of.nowhere> <17782.28505.303064.964551@cse.unsw.edu.au> <20061215192146.GA3616@amd64.of.nowhere> <17795.2681.523120.656367@cse.unsw.edu.au> <20061215130552.95860b72.akpm@osdl.org> <4583183C.7000107@garzik.org>
-Reply-To: Jurriaan <thunder7@xs4all.nl>
+Date: Sat, 16 Dec 2006 10:56:25 +0100
+Message-ID: <200612161056.26830.rjw@sisk.pl>
+References: <20061204203410.6152efec.akpm@osdl.org> <45832095.9000503@garzik.org> <200612160038.03149.rjw@sisk.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <200612160038.03149.rjw@sisk.pl>
 Content-Disposition: inline
-In-Reply-To: <4583183C.7000107@garzik.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Andrew Morton <akpm@osdl.org>, Neil Brown <neilb@suse.de>, Jurriaan <thunder7@xs4all.nl>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, Tejun Heo <htejun@gmail.com>
+To: Andrew Morton <akpm@osdl.org>
+Cc: Jeff Garzik <jeff@garzik.org>, Neil Brown <neilb@suse.de>, Jurriaan <thunder7@xs4all.nl>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, Tejun Heo <htejun@gmail.com>, Alan <alan@lxorguk.ukuu.org.uk>
 List-Id: linux-raid.ids
 
-From: Jeff Garzik <jeff@garzik.org>
-Date: Fri, Dec 15, 2006 at 04:48:44PM -0500
-> The "Re: Linux 2.6.20-rc1" sub-thread that had Jens and Alistair John 
-> Strachan replying seemed to implicate some core block layer badness.
+On Saturday, 16 December 2006 00:38, Rafael J. Wysocki wrote:
+> On Friday, 15 December 2006 23:24, Jeff Garzik wrote:
+> > Rafael J. Wysocki wrote:
+> > > On Friday, 15 December 2006 22:39, Andrew Morton wrote:
+> > >> On Fri, 15 Dec 2006 13:05:52 -0800
+> > >> Andrew Morton <akpm@osdl.org> wrote:
+> > >>
+> > >>> Jeff, I shall send all the sata patches which I have at you one single time
+> > >>> and I shall then drop the lot.  So please don't flub them.
+> > >>>
+> > >>> I'll then do a rc1-mm2 without them.
+> > >> hm, this is looking like a lot of work for not much gain.  Rafael, are
+> > >> you able to do a quick chop and tell us whether these:
+> > >>
+> > >> pci-move-pci_vdevice-from-libata-to-core.patch
+> > >> pata_cs5530-suspend-resume-support-tweak.patch
+> > >> ata-fix-platform_device_register_simple-error-check.patch
+> > >> initializer-entry-defined-twice-in-pata_rz1000.patch
+> > >> pata_via-suspend-resume-support-fix.patch
+> > >> sata_nv-add-suspend-resume-support.patch
+> > >> libata-simulate-report-luns-for-atapi-devices.patch
+> > >> user-of-the-jiffies-rounding-patch-ata-subsystem.patch
+> > >> libata-fix-oops-with-sparsemem.patch
+> > >> sata_nv-fix-kfree-ordering-in-remove.patch
+> > >> libata-dont-initialize-sg-in-ata_exec_internal-if-dma_none-take-2.patch
+> > >> pci-quirks-fix-the-festering-mess-that-claims-to-handle-ide-quirks-ide-fix.patch
+> > >>
+> > >> are innocent?
+> > > 
+> > > Yes, they are.
+> > 
+> > We all really appreciate your patience :)  This is good feedback.
+> > 
+> > To narrow down some more, does applying 2.6.20-rc1 + the attached patch 
+> > work?  (ignoring -mm tree altogether)
 > 
-The original problem (not mounting my raid6 partition) is observable in
-2.6.20-rc1-mm1, but not in 2.6.20-rc1; ie. 2.6.20-rc1 is good for me.
+> Yes, it does.
 
-Linux version 2.6.20-rc1 (jurriaan@middle) (gcc version 4.1.2 20061115 (prerelease) (Debian 4.1.1-21)) #3 SMP Fri Dec 15 21:19:54 CET 2006
-<snip>
-md: Autodetecting RAID arrays.
-md: autorun ...
-md: considering sdh1 ...
-md:  adding sdh1 ...
-md:  adding sdg1 ...
-md:  adding sdf1 ...
-md:  adding sde1 ...
-md:  adding sdd1 ...
-md:  adding sdc1 ...
-md:  adding sdb1 ...
-md:  adding sda1 ...
-md: hdc9 has different UUID to sdh1
-md: hdc8 has different UUID to sdh1
-md: hdc7 has different UUID to sdh1
-md: hdc6 has different UUID to sdh1
-md: hdc5 has different UUID to sdh1
-md: hda9 has different UUID to sdh1
-md: hda8 has different UUID to sdh1
-md: hda7 has different UUID to sdh1
-md: hda6 has different UUID to sdh1
-md: hda5 has different UUID to sdh1
-md: created md0
-md: bind<sda1>
-md: bind<sdb1>
-md: bind<sdc1>
-md: bind<sdd1>
-md: bind<sde1>
-md: bind<sdf1>
-md: bind<sdg1>
-md: bind<sdh1>
-md: running: <sdh1><sdg1><sdf1><sde1><sdd1><sdc1><sdb1><sda1>
-raid5: device sdh1 operational as raid disk 1
-raid5: device sdg1 operational as raid disk 0
-raid5: device sdf1 operational as raid disk 5
-raid5: device sde1 operational as raid disk 6
-raid5: device sdd1 operational as raid disk 7
-raid5: device sdc1 operational as raid disk 3
-raid5: device sdb1 operational as raid disk 2
-raid5: device sda1 operational as raid disk 4
-raid5: allocated 8462kB for md0
-raid5: raid level 6 set md0 active with 8 out of 8 devices, algorithm 2
-RAID5 conf printout:
- --- rd:8 wd:8
- disk 0, o:1, dev:sdg1
- disk 1, o:1, dev:sdh1
- disk 2, o:1, dev:sdb1
- disk 3, o:1, dev:sdc1
- disk 4, o:1, dev:sda1
- disk 5, o:1, dev:sdf1
- disk 6, o:1, dev:sde1
- disk 7, o:1, dev:sdd1
-md0: bitmap initialized from disk: read 15/15 pages, set 1 bits, status: 0
-created bitmap (233 pages) for device md0
-md: considering hdc9 ...
-md:  adding hdc9 ...
-md: hdc8 has different UUID to hdc9
-md: hdc7 has different UUID to hdc9
-md: hdc6 has different UUID to hdc9
-md: hdc5 has different UUID to hdc9
-md:  adding hda9 ...
-md: hda8 has different UUID to hdc9
-md: hda7 has different UUID to hdc9
-md: hda6 has different UUID to hdc9
-md: hda5 has different UUID to hdc9
-md: created md4
-md: bind<hda9>
-md: bind<hdc9>
-md: running: <hdc9><hda9>
-raid1: raid set md4 active with 2 out of 2 mirrors
-md4: bitmap initialized from disk: read 10/10 pages, set 45 bits, status: 0
-<snip>
-EXT3 FS on md0, internal journal
-EXT3-fs: mounted filesystem with ordered data mode.
+I've applied the patches from -rc1-mm1 up to and including
 
-Jurriaan
+problem-phy-probe-not-working-properly-for-ibm_emac-ppc4xx.patch
+
+on top of 2.6.20-rc1 and they don't seem to break anything.  Will try some
+more.
+
+Greetings,
+Rafael
+
+
 -- 
-And I thought that the Borg were bad...
-Debian (Unstable) GNU/Linux 2.6.20-rc1 2x4023 bogomips load 5.55
-the Jack Vance Integral Edition: http://www.integralarchive.org
+If you don't have the time to read,
+you don't have the time or the tools to write.
+		- Stephen King
