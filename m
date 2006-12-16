@@ -1,57 +1,47 @@
-From: Michael Tokarev <mjt@tls.msk.ru>
+From: Andre Majorel <aym-xunil@teaser.fr>
 Subject: Re: RAID1 root and swap and initrd
-Date: Sun, 17 Dec 2006 00:50:59 +0300
-Message-ID: <45846A43.8070207@tls.msk.ru>
-References: <20061215175630.GA11400@aym.net2.nerim.net> <Pine.LNX.4.64.0612151909210.27298@lion.drogon.net> <20061216210517.GB11400@aym.net2.nerim.net>
+Date: Sun, 17 Dec 2006 00:01:16 +0100
+Message-ID: <20061216230116.GC11400@aym.net2.nerim.net>
+References: <20061215175630.GA11400@aym.net2.nerim.net> <Pine.LNX.4.64.0612151909210.27298@lion.drogon.net> <20061216210517.GB11400@aym.net2.nerim.net> <45846A43.8070207@tls.msk.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20061216210517.GB11400@aym.net2.nerim.net>
+Content-Disposition: inline
+In-Reply-To: <45846A43.8070207@tls.msk.ru>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andre Majorel <aym-xunil@teaser.fr>, linux-raid@vger.kernel.org
+To: Michael Tokarev <mjt@tls.msk.ru>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Andre Majorel wrote:
-[]
-> Thanks Jurriaan and Gordon. I think I may still be f*cked,
-> however. The Lilo doc says you can't use raid-extra-boot=mbr-only
-> if boot= does not point to a raid device. Which it doesn't because
-> in my setup, boot=/dev/sda.
-> 
-> Using boot=/dev/md5 would solve the raid-extra-boot issue but the
-> components of /dev/md5 are not primary partitions (/dev/sda5,
-> /dev/sdb5) so I don't think that would work.
+On 2006-12-17 00:50 +0300, Michael Tokarev wrote:
+> Andre Majorel wrote:
+> []
+> > Thanks Jurriaan and Gordon. I think I may still be f*cked,
+> > however. The Lilo doc says you can't use raid-extra-boot=3Dmbr-only
+> > if boot=3D does not point to a raid device. Which it doesn't becaus=
+e
+> > in my setup, boot=3D/dev/sda.
+> >=20
+> > Using boot=3D/dev/md5 would solve the raid-extra-boot issue but the
+> > components of /dev/md5 are not primary partitions (/dev/sda5,
+> > /dev/sdb5) so I don't think that would work.
+>=20
+> So just move it to sda1 (or sda2, sda3) from sda5
 
-So just move it to sda1 (or sda2, sda3) from sda5, ensure you've
-two identical drives (or at least your boot partitions are layed
-up identically), and use boot=/dev/md1 (or md2, md3).  Do NOT
-use raid-extra-boot (set it to "none"), but set up standard mbr
-code into boot sector of both drives (in debian, it's 'mbr' package;
-lilo can be used for that too - once for each drive), and mark your
-boot partition on both drives as active.
+Problem is, the disks are entirely used by an extended partition.
+There's nowhere to move sd?5 to.
 
-This is the most clean setup to boot off raid.  You'll have two
-drives, both will be bootable, and both will be updated when
-you'll run lilo.
+I think it's possible to turn the first logical partition into a
+primary partition by modifying the partition table on the MBR but
+I'm not sure I'm up for that.
 
-Another bonus - if you'll ever install a foreign OS on this system,
-which tends to update boot code, all your stuff will still be intact -
-the only thing you'll need to do to restore linux boot is to reset
-'active' flags for your partitions (and no, winnt disk manager does
-not allow you to do so - no ability to set non-dos (non-windows)
-partition active).
-
-> I *could* run lilo once for each disk after tweaking boot= in
-> lilo.conf, or just supply a different -M option but I'm not sure.
-> The Lilo doc is not terribly enlightening. Not for me, anyway. :-)
-
-No, don't do that. Even if you can automate it.  It's error-prone
-to say the best, and it will bite you at an unexpected moment.
-
->> A nice little tip I learned from someone else on the list is to
->> have your md devices named after the partition numbers. So:
-
-That'd be me... ;)
-
-/mjt
+--=20
+Andr=E9 Majorel <URL:http://www.teaser.fr/~amajorel/>
+Do not use this account for regular correspondence.
+See the URL above for contact information.
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
