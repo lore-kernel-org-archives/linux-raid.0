@@ -1,41 +1,91 @@
-From: Michael Tokarev <mjt@tls.msk.ru>
-Subject: Re: RAID1 root and swap and initrd
-Date: Sun, 17 Dec 2006 03:03:56 +0300
-Message-ID: <4584896C.7090009@tls.msk.ru>
-References: <20061215175630.GA11400@aym.net2.nerim.net> <Pine.LNX.4.64.0612151909210.27298@lion.drogon.net> <20061216210517.GB11400@aym.net2.nerim.net> <45846A43.8070207@tls.msk.ru> <20061216230116.GC11400@aym.net2.nerim.net>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: sata badness in 2.6.20-rc1? [Was: Re: md patches in -mm]
+Date: Sun, 17 Dec 2006 12:00:12 +0100
+Message-ID: <200612171200.13075.rjw@sisk.pl>
+References: <20061204203410.6152efec.akpm@osdl.org> <200612161056.26830.rjw@sisk.pl> <200612161216.07669.rjw@sisk.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="iso-8859-15"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20061216230116.GC11400@aym.net2.nerim.net>
+In-Reply-To: <200612161216.07669.rjw@sisk.pl>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Andre Majorel <aym-xunil@teaser.fr>, linux-raid@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: Jeff Garzik <jeff@garzik.org>, Neil Brown <neilb@suse.de>, Jurriaan <thunder7@xs4all.nl>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, Tejun Heo <htejun@gmail.com>, Alan <alan@lxorguk.ukuu.org.uk>, Luben Tuikov <ltuikov@yahoo.com>
 List-Id: linux-raid.ids
 
-Andre Majorel wrote:
-[]
->> So just move it to sda1 (or sda2, sda3) from sda5
+On Saturday, 16 December 2006 12:16, Rafael J. Wysocki wrote:
+> On Saturday, 16 December 2006 10:56, Rafael J. Wysocki wrote:
+> > On Saturday, 16 December 2006 00:38, Rafael J. Wysocki wrote:
+> > > On Friday, 15 December 2006 23:24, Jeff Garzik wrote:
+> > > > Rafael J. Wysocki wrote:
+> > > > > On Friday, 15 December 2006 22:39, Andrew Morton wrote:
+> > > > >> On Fri, 15 Dec 2006 13:05:52 -0800
+> > > > >> Andrew Morton <akpm@osdl.org> wrote:
+> > > > >>
+> > > > >>> Jeff, I shall send all the sata patches which I have at you one single time
+> > > > >>> and I shall then drop the lot.  So please don't flub them.
+> > > > >>>
+> > > > >>> I'll then do a rc1-mm2 without them.
+> > > > >> hm, this is looking like a lot of work for not much gain.  Rafael, are
+> > > > >> you able to do a quick chop and tell us whether these:
+> > > > >>
+> > > > >> pci-move-pci_vdevice-from-libata-to-core.patch
+> > > > >> pata_cs5530-suspend-resume-support-tweak.patch
+> > > > >> ata-fix-platform_device_register_simple-error-check.patch
+> > > > >> initializer-entry-defined-twice-in-pata_rz1000.patch
+> > > > >> pata_via-suspend-resume-support-fix.patch
+> > > > >> sata_nv-add-suspend-resume-support.patch
+> > > > >> libata-simulate-report-luns-for-atapi-devices.patch
+> > > > >> user-of-the-jiffies-rounding-patch-ata-subsystem.patch
+> > > > >> libata-fix-oops-with-sparsemem.patch
+> > > > >> sata_nv-fix-kfree-ordering-in-remove.patch
+> > > > >> libata-dont-initialize-sg-in-ata_exec_internal-if-dma_none-take-2.patch
+> > > > >> pci-quirks-fix-the-festering-mess-that-claims-to-handle-ide-quirks-ide-fix.patch
+> > > > >>
+> > > > >> are innocent?
+> > > > > 
+> > > > > Yes, they are.
+> > > > 
+> > > > We all really appreciate your patience :)  This is good feedback.
+> > > > 
+> > > > To narrow down some more, does applying 2.6.20-rc1 + the attached patch 
+> > > > work?  (ignoring -mm tree altogether)
+> > > 
+> > > Yes, it does.
+> > 
+> > I've applied the patches from -rc1-mm1 up to and including
+> > 
+> > problem-phy-probe-not-working-properly-for-ibm_emac-ppc4xx.patch
+> > 
+> > on top of 2.6.20-rc1 and they don't seem to break anything.  Will try some
+> > more.
 > 
-> Problem is, the disks are entirely used by an extended partition.
-> There's nowhere to move sd?5 to.
+> The patch that breaks things is somewhere between
+> 
+> dont-export-device-ids-to-userspace.patch
+> 
+> and
+> 
+> funsoft-is-bust-on-sparc.patch
+> 
+> inclusive.
+> 
+> Now I'll need to resync my disk arrays so if anyone has any suggestions
+> what to try next, I'll be grateful. ;-)
 
-You're using raid, so you've at least two disk drives.
+Okay, I have identified the patch that causes the problem to appear, which is
 
-remove one component off all your raid devices (second disk),
-repartition the disk, re-add the components back - this will copy
-data over to the second diks.  Next repeat the same procedure with
-the first disk.
+fix-sense-key-medium-error-processing-and-retry.patch
 
-Or something like that -- probably only single partition (on both
-disks) needs to be recreated this way.
+With this patch reverted -rc1-mm1 is happily running on my test box.
 
-> I think it's possible to turn the first logical partition into a
-> primary partition by modifying the partition table on the MBR but
-> I'm not sure I'm up for that.
+Greetings,
+Rafael
 
-It's possible to move sda5 to sda1, but not easy - because at the
-start of extended partition there's a (relatively large) space for
-the "logical partitions", you can't just "relabel" your partitions,
-you have to actually move data.
 
-/mjt
+-- 
+If you don't have the time to read,
+you don't have the time or the tools to write.
+		- Stephen King
