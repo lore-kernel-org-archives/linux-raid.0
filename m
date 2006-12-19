@@ -1,40 +1,78 @@
-From: thunder7@xs4all.nl
-Subject: Re: sata badness in 2.6.20-rc1? [Was: Re: md patches in -mm]
-Date: Sun, 17 Dec 2006 17:00:56 +0100
-Message-ID: <20061217160056.GA3555@amd64.of.nowhere>
-References: <20061204203410.6152efec.akpm@osdl.org> <200612161056.26830.rjw@sisk.pl> <200612161216.07669.rjw@sisk.pl> <200612171200.13075.rjw@sisk.pl> <20061217030539.a7ac1a68.akpm@osdl.org>
-Reply-To: Jurriaan <thunder7@xs4all.nl>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: RAID1 root and swap and initrd
+Date: Tue, 19 Dec 2006 16:30:46 -0500
+Message-ID: <45885A06.6070100@tmr.com>
+References: <20061215175630.GA11400@aym.net2.nerim.net> <Pine.LNX.4.64.0612151909210.27298@lion.drogon.net> <20061216210517.GB11400@aym.net2.nerim.net> <45846A43.8070207@tls.msk.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20061217030539.a7ac1a68.akpm@osdl.org>
+In-Reply-To: <45846A43.8070207@tls.msk.ru>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Jeff Garzik <jeff@garzik.org>, Neil Brown <neilb@suse.de>, Jurriaan <thunder7@xs4all.nl>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, Tejun Heo <htejun@gmail.com>, Alan <alan@lxorguk.ukuu.org.uk>, Luben Tuikov <ltuikov@yahoo.com>
+To: Michael Tokarev <mjt@tls.msk.ru>
+Cc: Andre Majorel <aym-xunil@teaser.fr>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-From: Andrew Morton <akpm@osdl.org>
-Date: Sun, Dec 17, 2006 at 03:05:39AM -0800
-> On Sun, 17 Dec 2006 12:00:12 +0100
-> "Rafael J. Wysocki" <rjw@sisk.pl> wrote:
-> 
-> > Okay, I have identified the patch that causes the problem to appear, which is
-> > 
-> > fix-sense-key-medium-error-processing-and-retry.patch
-> > 
-> > With this patch reverted -rc1-mm1 is happily running on my test box.
-> 
-> That was rather unexpected.   Thanks.
+Michael Tokarev wrote:
+> Andre Majorel wrote:
+> []
+>   
+>> Thanks Jurriaan and Gordon. I think I may still be f*cked,
+>> however. The Lilo doc says you can't use raid-extra-boot=mbr-only
+>> if boot= does not point to a raid device. Which it doesn't because
+>> in my setup, boot=/dev/sda.
+>>
+>> Using boot=/dev/md5 would solve the raid-extra-boot issue but the
+>> components of /dev/md5 are not primary partitions (/dev/sda5,
+>> /dev/sdb5) so I don't think that would work.
+>>     
 >
-I can confirm that 2.6.20-rc1-mm1 with this patch reverted mounts my
-raid6 partition without problems. This is x86_64 with SMP.
+> So just move it to sda1 (or sda2, sda3) from sda5, ensure you've
+> two identical drives (or at least your boot partitions are layed
+> up identically), and use boot=/dev/md1 (or md2, md3).  Do NOT
+> use raid-extra-boot (set it to "none"), but set up standard mbr
+> code into boot sector of both drives (in debian, it's 'mbr' package;
+> lilo can be used for that too - once for each drive), and mark your
+> boot partition on both drives as active.
+>
+> This is the most clean setup to boot off raid.  You'll have two
+> drives, both will be bootable, and both will be updated when
+> you'll run lilo.
+>
+> Another bonus - if you'll ever install a foreign OS on this system,
+> which tends to update boot code, all your stuff will still be intact -
+> the only thing you'll need to do to restore linux boot is to reset
+> 'active' flags for your partitions (and no, winnt disk manager does
+> not allow you to do so - no ability to set non-dos (non-windows)
+> partition active).
+>
+>   
+>> I *could* run lilo once for each disk after tweaking boot= in
+>> lilo.conf, or just supply a different -M option but I'm not sure.
+>> The Lilo doc is not terribly enlightening. Not for me, anyway. :-)
+>>     
+>
+> No, don't do that. Even if you can automate it.  It's error-prone
+> to say the best, and it will bite you at an unexpected moment.
 
-Kind regards,
-Jurriaan
+The desirable solution is to use the DOS MBR (boot active partition) and 
+put the boot stuff in the RAID device. However, you can just write the 
+MBR to the hda and then to hdb. Note that you don't play with the 
+partition names, the 2nd MBR will only be used if the 1st drive fails, 
+and therefore at the BIOS level the 2nd drive will now be hda (or C:) if 
+LILO stiff uses the BIOS to load the next sector.
+
+I tried that the hard way once, and didn't even know there was a failure 
+until I got mail from the md monitor I was using, saying that md0 was 
+degraded. From a sample size of one actual test, it works.
+
+Now the bad news: most BIOS setups will fail over if the 1st drive dies. 
+If the first drive returns a bad sector error it will not fail over, it 
+will give you some flavor of "I tried my best" message and not boot. 
+Sample size of three machines on that problem.
+
 -- 
-HORROR FILM WISDOM:
-9. If your car runs out of gas at night, do not go to the nearby
-deserted-looking house to phone for help.
-Debian (Unstable) GNU/Linux 2.6.20-rc1 2x2011 bogomips load 7.42
-the Jack Vance Integral Edition: http://www.integralarchive.org
+bill davidsen <davidsen@tmr.com>
+  CTO TMR Associates, Inc
+  Doing interesting things with small computers since 1979
+
