@@ -1,37 +1,33 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: sata badness in 2.6.20-rc1? [Was: Re: md patches in -mm]
-Date: Tue, 19 Dec 2006 16:08:40 -0800
-Message-ID: <20061219160840.bb6b155f.akpm@osdl.org>
-References: <20061217160056.GA3555@amd64.of.nowhere>
-	<362582.18476.qm@web31811.mail.mud.yahoo.com>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: [solved]
+Date: Tue, 19 Dec 2006 22:47:29 -0500
+Message-ID: <4588B251.9000807@tmr.com>
+References: <20061109141811.GA5805@apartia.fr> <20061109142731.GA9713@apartia.fr> <20061109144303.GA6228@apartia.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <362582.18476.qm@web31811.mail.mud.yahoo.com>
+In-Reply-To: <20061109144303.GA6228@apartia.fr>
 Sender: linux-raid-owner@vger.kernel.org
-To: ltuikov@yahoo.com
-Cc: Jurriaan <thunder7@xs4all.nl>, "Rafael J. Wysocki" <rjw@sisk.pl>, Jeff Garzik <jeff@garzik.org>, Neil Brown <neilb@suse.de>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, Tejun Heo <htejun@gmail.com>, Alan <alan@lxorguk.ukuu.org.uk>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, 19 Dec 2006 15:26:00 -0800 (PST)
-Luben Tuikov <ltuikov@yahoo.com> wrote:
+Louis-David Mitterrand wrote:
+> On Thu, Nov 09, 2006 at 03:27:31PM +0100, Louis-David Mitterrand wrote:
+>   
+>> I forgot to add that to help us solve this we are ready to hire a paid 
+>> consultant please contact me by mail or phone at +33.1.46.47.21.30
+>>     
+>
+> Update: we eventually succeded in reassembling the partition, with two 
+> missing disks.
 
-> The reason was that my dev tree was tainted by this bug:
-> 
->         if (good_bytes &&
-> -           scsi_end_request(cmd, 1, good_bytes, !!result) == NULL)
-> +           scsi_end_request(cmd, 1, good_bytes, result == 0) == NULL)
->                 return;
-> 
-> in scsi_io_completion().  I had there !!result which is wrong, and when
-> I diffed against master, it produced a bad patch.
+Your update would be far more interesting if you found out why it 
+ejected three drives at once... The obvious common failures, controller 
+and power supply would not prevent reassembly in a functional environment.
 
-Oh.  I thought that got sorted out.  It's a shame this wasn't made clear to
-me..
-
-> As James mentioned one of the chunks is good and can go in.
-
-Please send a new patch, not referential to any previous patch or email,
-including full changelogging.
+-- 
+bill davidsen <davidsen@tmr.com>
+  CTO TMR Associates, Inc
+  Doing interesting things with small computers since 1979
 
