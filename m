@@ -1,88 +1,73 @@
-From: Neil Brown <neilb@suse.de>
-Subject: ANNOUNCE: mdadm 2.6 - A tool for managing Soft RAID under Linux
-Date: Thu, 21 Dec 2006 17:27:42 +1100
-Message-ID: <17802.10590.536771.218057@cse.unsw.edu.au>
+From: Michael Tokarev <mjt@tls.msk.ru>
+Subject: Re: RAID1 root and swap and initrd
+Date: Thu, 21 Dec 2006 17:45:27 +0300
+Message-ID: <458A9E07.2040608@tls.msk.ru>
+References: <20061215175630.GA11400@aym.net2.nerim.net> <Pine.LNX.4.64.0612151909210.27298@lion.drogon.net> <20061216210517.GB11400@aym.net2.nerim.net> <45846A43.8070207@tls.msk.ru> <45885A06.6070100@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <45885A06.6070100@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: Andre Majorel <aym-xunil@teaser.fr>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+[A late follow-up]
 
+Bill Davidsen wrote:
+> Michael Tokarev wrote:
+>> Andre Majorel wrote:
+>> []
+>>  
+>>> Thanks Jurriaan and Gordon. I think I may still be f*cked,
+>>> however. The Lilo doc says you can't use raid-extra-boot=mbr-only
+>>> if boot= does not point to a raid device. Which it doesn't because
+>>> in my setup, boot=/dev/sda.
+>>>
+>>> Using boot=/dev/md5 would solve the raid-extra-boot issue but the
+>>> components of /dev/md5 are not primary partitions (/dev/sda5,
+>>> /dev/sdb5) so I don't think that would work.
+>>
+>> So just move it to sda1 (or sda2, sda3) from sda5, ensure you've
+>> two identical drives (or at least your boot partitions are layed
+>> up identically), and use boot=/dev/md1 (or md2, md3).  Do NOT
+>> use raid-extra-boot (set it to "none"), but set up standard mbr
+>> code into boot sector of both drives (in debian, it's 'mbr' package;
+>> lilo can be used for that too - once for each drive), and mark your
+>> boot partition on both drives as active.
+>>
+>> This is the most clean setup to boot off raid.  You'll have two
+>> drives, both will be bootable, and both will be updated when
+>> you'll run lilo.
+>>
+>> Another bonus - if you'll ever install a foreign OS on this system,
+>> which tends to update boot code, all your stuff will still be intact -
+>> the only thing you'll need to do to restore linux boot is to reset
+>> 'active' flags for your partitions (and no, winnt disk manager does
+>> not allow you to do so - no ability to set non-dos (non-windows)
+>> partition active).
+>>
+>>> I *could* run lilo once for each disk after tweaking boot= in
+>>> lilo.conf, or just supply a different -M option but I'm not sure.
+>>> The Lilo doc is not terribly enlightening. Not for me, anyway. :-)
+>>
+>> No, don't do that. Even if you can automate it.  It's error-prone
+>> to say the best, and it will bite you at an unexpected moment.
+> 
+> The desirable solution is to use the DOS MBR (boot active partition) and
+> put the boot stuff in the RAID device. However, you can just write the
+> MBR to the hda and then to hdb. Note that you don't play with the
+> partition names, the 2nd MBR will only be used if the 1st drive fails,
+> and therefore at the BIOS level the 2nd drive will now be hda (or C:) if
+> LILO stiff uses the BIOS to load the next sector.
 
-I am pleased to announce the availability of
-   mdadm version 2.6
+Just a small note.  DOS MBR can't boot from non-primary partition.
+In this case, the boot code is at sda5, which is on extended partition.
 
-It is available at the usual places:
-   http://www.cse.unsw.edu.au/~neilb/source/mdadm/
-and
-   countrycode=xx.
-   http://www.${countrycode}kernel.org/pub/linux/utils/raid/mdadm/
-and via git at
-   git://neil.brown.name/mdadm
-   http://neil.brown.name/git?p=mdadm
+But.  Lilo now has ability to write its own MBR, which, in turn, IS
+able to boot of logical partition.
 
-mdadm is a tool for creating, managing and monitoring
-device arrays using the "md" driver in Linux, also
-known as Software RAID arrays.
+ lilo -M /dev/sda ext
 
-Release 2.6 adds assorted fixes and improvements and a new major mode.
-"Incremental Assembly"  via -I or --incremental can be used to
-assemble an array one device at a time.  The idea is that you get
-udev to run  "mdadm -Iq devicename" on each new block device that it
-finds.  Anything that is part of an array gets included in an array as
-appropriate.
-Two special notes:
- 1/ This is very new code and is probably buggy.  It passes a few basic
-    tests, and helped me find some kernel bugs, but it is still fresh
-    and should not be considered 'stable'.  Please test and provide
-    feedback.
- 2/ There is a bug in the linux kernel that makes incremental assembly
-    not possible in general (you cannot safely remove a drive from an array
-    that has not yet been started. This is needed if an old device was
-    detected first).  If mdadm detects a kernel which might have the
-    bug, it rejects --incremental requests.
-    The bug will hopefully be fixed in 2.6.20 and this mdadm release
-    contains patches for 2.6.18, 2.6.18.6 and 2.6.19.  Apply the
-    appropriate patch to test --incremental.
-
-Changelog Entries:
-    -   Fixed UUID printing in "--detail --brief" for version1 metadata.
-    -   --update=resync did exactly the wrong thing for version1 metadata.
-	It caused a resync to not happen, rather than to happen.
-    -   Allow --assemble --force to mark a raid6 clean when it has two
-	missing devices (which is needed else if won't assemble.
-	Without this fix it would only assemble if one or zero
-	missing devices.
-    -   Support --update=devicesize for cases where the underlying device
-	can change size.
-    -   Default to --auto=yes so the array devices with 'standard' names
-	get created automatically, as this is almost always what is wanted.
-    -   Give useful message if raid4/5/6 cannot be started because it is
-	not clean and is also degraded.
-    -   Increase raid456 stripe cache size if needed to --grow the array.
-	The setting used unfortunately requires intimate knowledge of the
-	kernel, and it not reset when the reshape finishes.
-    -   Change 'Device Size' to 'Used Dev Size' because it only shows how
-	much of each device is actually used, not how big they are.
-    -   --wait or -W will wait for resync activity to finish on the given
-	devices.
-    -   Fix some problems with --update=uuid and add a test.
-    -   If two drives in a raid5 disappear at the same time, then "-Af"
-        will add them both in rather than just one and forcing the array
-	to 'clean'.  This is slightly safer in some cases.
-    -   Check device is large enough before hot-add: this improves quality
-	of error message.
-    -   Don't hold md device open for so long in --monitor mode - map_dev
-	can be slow and interferes with trying to stop the array.
-    -   Support --uuid= with --create to choose your own UUID.
-    -   New major more "--incremental" for incremental assemble of arrays,
-	intended for use with udev.
-
-Development of mdadm is sponsored by
- SUSE Labs, Novell Inc.
-
-NeilBrown  21st December 2006
-Blessed Christmas to all.
+/mjt
