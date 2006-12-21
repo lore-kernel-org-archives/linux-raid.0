@@ -1,102 +1,88 @@
-From: NeilBrown <neilb@suse.de>
-Subject: [PATCH] md: Fix a few problems with the interface (sysfs and ioctl) to md.
-Date: Thu, 21 Dec 2006 17:27:04 +1100
-Message-ID: <1061221062704.4950@suse.de>
-References: <20061221172556.4916.patches@notabene>
+From: Neil Brown <neilb@suse.de>
+Subject: ANNOUNCE: mdadm 2.6 - A tool for managing Soft RAID under Linux
+Date: Thu, 21 Dec 2006 17:27:42 +1100
+Message-ID: <17802.10590.536771.218057@cse.unsw.edu.au>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Following patch is suitable for 2.6.20.  It fixes some minor bugs that
-need to be fix in order to use new functionality in mdadm-2.6.
-Thanks,
-NeilBrown
 
 
-### Comments for Changeset
+I am pleased to announce the availability of
+   mdadm version 2.6
 
-While developing more functionality in mdadm I found some bugs in md...
+It is available at the usual places:
+   http://www.cse.unsw.edu.au/~neilb/source/mdadm/
+and
+   countrycode=xx.
+   http://www.${countrycode}kernel.org/pub/linux/utils/raid/mdadm/
+and via git at
+   git://neil.brown.name/mdadm
+   http://neil.brown.name/git?p=mdadm
 
-- When we remove a device from an inactive array (write 'remove' to 
-  the 'state' sysfs file - see 'state_store') would should not
-  update the superblock information - as we may not have
-  read and processed it all properly yet.
+mdadm is a tool for creating, managing and monitoring
+device arrays using the "md" driver in Linux, also
+known as Software RAID arrays.
 
-- initialise all raid_disk entries to '-1' else the 'slot sysfs file
-  will claim '0' for all devices in an array before the array is
-  started.
+Release 2.6 adds assorted fixes and improvements and a new major mode.
+"Incremental Assembly"  via -I or --incremental can be used to
+assemble an array one device at a time.  The idea is that you get
+udev to run  "mdadm -Iq devicename" on each new block device that it
+finds.  Anything that is part of an array gets included in an array as
+appropriate.
+Two special notes:
+ 1/ This is very new code and is probably buggy.  It passes a few basic
+    tests, and helped me find some kernel bugs, but it is still fresh
+    and should not be considered 'stable'.  Please test and provide
+    feedback.
+ 2/ There is a bug in the linux kernel that makes incremental assembly
+    not possible in general (you cannot safely remove a drive from an array
+    that has not yet been started. This is needed if an old device was
+    detected first).  If mdadm detects a kernel which might have the
+    bug, it rejects --incremental requests.
+    The bug will hopefully be fixed in 2.6.20 and this mdadm release
+    contains patches for 2.6.18, 2.6.18.6 and 2.6.19.  Apply the
+    appropriate patch to test --incremental.
 
-- all '\n' not to be present at the end of words written to
-  sysfs files
-- when we use SET_ARRAY_INFO to set the md metadata version,
-  set the flag to say that there is persistant metadata.
-- allow GET_BITMAP_FILE to be called on an array that hasn't
-  been started yet.
+Changelog Entries:
+    -   Fixed UUID printing in "--detail --brief" for version1 metadata.
+    -   --update=resync did exactly the wrong thing for version1 metadata.
+	It caused a resync to not happen, rather than to happen.
+    -   Allow --assemble --force to mark a raid6 clean when it has two
+	missing devices (which is needed else if won't assemble.
+	Without this fix it would only assemble if one or zero
+	missing devices.
+    -   Support --update=devicesize for cases where the underlying device
+	can change size.
+    -   Default to --auto=yes so the array devices with 'standard' names
+	get created automatically, as this is almost always what is wanted.
+    -   Give useful message if raid4/5/6 cannot be started because it is
+	not clean and is also degraded.
+    -   Increase raid456 stripe cache size if needed to --grow the array.
+	The setting used unfortunately requires intimate knowledge of the
+	kernel, and it not reset when the reshape finishes.
+    -   Change 'Device Size' to 'Used Dev Size' because it only shows how
+	much of each device is actually used, not how big they are.
+    -   --wait or -W will wait for resync activity to finish on the given
+	devices.
+    -   Fix some problems with --update=uuid and add a test.
+    -   If two drives in a raid5 disappear at the same time, then "-Af"
+        will add them both in rather than just one and forcing the array
+	to 'clean'.  This is slightly safer in some cases.
+    -   Check device is large enough before hot-add: this improves quality
+	of error message.
+    -   Don't hold md device open for so long in --monitor mode - map_dev
+	can be slow and interferes with trying to stop the array.
+    -   Support --uuid= with --create to choose your own UUID.
+    -   New major more "--incremental" for incremental assemble of arrays,
+	intended for use with udev.
 
-Signed-off-by: Neil Brown <neilb@suse.de>
+Development of mdadm is sponsored by
+ SUSE Labs, Novell Inc.
 
-### Diffstat output
- ./drivers/md/md.c |   13 ++++++++-----
- 1 file changed, 8 insertions(+), 5 deletions(-)
-
-diff .prev/drivers/md/md.c ./drivers/md/md.c
---- .prev/drivers/md/md.c	2006-12-21 16:29:31.000000000 +1100
-+++ ./drivers/md/md.c	2006-12-21 16:29:40.000000000 +1100
-@@ -1795,7 +1795,8 @@ state_store(mdk_rdev_t *rdev, const char
- 		else {
- 			mddev_t *mddev = rdev->mddev;
- 			kick_rdev_from_array(rdev);
--			md_update_sb(mddev, 1);
-+			if (mddev->pers)
-+				md_update_sb(mddev, 1);
- 			md_new_event(mddev);
- 			err = 0;
- 		}
-@@ -2007,6 +2008,7 @@ static mdk_rdev_t *md_import_device(dev_
- 
- 	rdev->desc_nr = -1;
- 	rdev->saved_raid_disk = -1;
-+	rdev->raid_disk = -1;
- 	rdev->flags = 0;
- 	rdev->data_offset = 0;
- 	rdev->sb_events = 0;
-@@ -2236,7 +2238,6 @@ static int update_raid_disks(mddev_t *md
- static ssize_t
- raid_disks_store(mddev_t *mddev, const char *buf, size_t len)
- {
--	/* can only set raid_disks if array is not yet active */
- 	char *e;
- 	int rv = 0;
- 	unsigned long n = simple_strtoul(buf, &e, 10);
-@@ -2634,7 +2635,7 @@ metadata_store(mddev_t *mddev, const cha
- 		return -EINVAL;
- 	buf = e+1;
- 	minor = simple_strtoul(buf, &e, 10);
--	if (e==buf || *e != '\n')
-+	if (e==buf || (*e && *e != '\n') )
- 		return -EINVAL;
- 	if (major >= sizeof(super_types)/sizeof(super_types[0]) ||
- 	    super_types[major].name == NULL)
-@@ -3984,6 +3985,7 @@ static int set_array_info(mddev_t * mdde
- 		mddev->major_version = info->major_version;
- 		mddev->minor_version = info->minor_version;
- 		mddev->patch_version = info->patch_version;
-+		mddev->persistent = ! info->not_persistent;
- 		return 0;
- 	}
- 	mddev->major_version = MD_MAJOR_VERSION;
-@@ -4309,9 +4311,10 @@ static int md_ioctl(struct inode *inode,
- 	 * Commands querying/configuring an existing array:
- 	 */
- 	/* if we are not initialised yet, only ADD_NEW_DISK, STOP_ARRAY,
--	 * RUN_ARRAY, and SET_BITMAP_FILE are allowed */
-+	 * RUN_ARRAY, and GET_ and SET_BITMAP_FILE are allowed */
- 	if (!mddev->raid_disks && cmd != ADD_NEW_DISK && cmd != STOP_ARRAY
--			&& cmd != RUN_ARRAY && cmd != SET_BITMAP_FILE) {
-+			&& cmd != RUN_ARRAY && cmd != SET_BITMAP_FILE
-+	    		&& cmd != GET_BITMAP_FILE) {
- 		err = -ENODEV;
- 		goto abort_unlock;
- 	}
+NeilBrown  21st December 2006
+Blessed Christmas to all.
