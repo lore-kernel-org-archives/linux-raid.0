@@ -1,82 +1,88 @@
-From: matt black <cache22@webkorner.com>
-Subject: boot root no /dev
-Date: Thu, 21 Dec 2006 11:35:54 -0500
-Message-ID: <458AB7EA.7010903@webkorner.com>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: RAID1 root and swap and initrd
+Date: Thu, 21 Dec 2006 13:47:35 -0500
+Message-ID: <458AD6C7.80405@tmr.com>
+References: <20061215175630.GA11400@aym.net2.nerim.net> <Pine.LNX.4.64.0612151909210.27298@lion.drogon.net> <20061216210517.GB11400@aym.net2.nerim.net> <45846A43.8070207@tls.msk.ru> <45885A06.6070100@tmr.com> <458A9E07.2040608@tls.msk.ru>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <458A9E07.2040608@tls.msk.ru>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Michael Tokarev <mjt@tls.msk.ru>
+Cc: Andre Majorel <aym-xunil@teaser.fr>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Greetings helpful people, welcome to me your kindly list  :)
+Michael Tokarev wrote:
+> [A late follow-up]
+>
+> Bill Davidsen wrote:
+>   
+>> Michael Tokarev wrote:
+>>     
+>>> Andre Majorel wrote:
+>>> []
+>>>  
+>>>       
+>>>> Thanks Jurriaan and Gordon. I think I may still be f*cked,
+>>>> however. The Lilo doc says you can't use raid-extra-boot=mbr-only
+>>>> if boot= does not point to a raid device. Which it doesn't because
+>>>> in my setup, boot=/dev/sda.
+>>>>
+>>>> Using boot=/dev/md5 would solve the raid-extra-boot issue but the
+>>>> components of /dev/md5 are not primary partitions (/dev/sda5,
+>>>> /dev/sdb5) so I don't think that would work.
+>>>>         
+>>> So just move it to sda1 (or sda2, sda3) from sda5, ensure you've
+>>> two identical drives (or at least your boot partitions are layed
+>>> up identically), and use boot=/dev/md1 (or md2, md3).  Do NOT
+>>> use raid-extra-boot (set it to "none"), but set up standard mbr
+>>> code into boot sector of both drives (in debian, it's 'mbr' package;
+>>> lilo can be used for that too - once for each drive), and mark your
+>>> boot partition on both drives as active.
+>>>
+>>> This is the most clean setup to boot off raid.  You'll have two
+>>> drives, both will be bootable, and both will be updated when
+>>> you'll run lilo.
+>>>
+>>> Another bonus - if you'll ever install a foreign OS on this system,
+>>> which tends to update boot code, all your stuff will still be intact -
+>>> the only thing you'll need to do to restore linux boot is to reset
+>>> 'active' flags for your partitions (and no, winnt disk manager does
+>>> not allow you to do so - no ability to set non-dos (non-windows)
+>>> partition active).
+>>>
+>>>       
+>>>> I *could* run lilo once for each disk after tweaking boot= in
+>>>> lilo.conf, or just supply a different -M option but I'm not sure.
+>>>> The Lilo doc is not terribly enlightening. Not for me, anyway. :-)
+>>>>         
+>>> No, don't do that. Even if you can automate it.  It's error-prone
+>>> to say the best, and it will bite you at an unexpected moment.
+>>>       
+>> The desirable solution is to use the DOS MBR (boot active partition) and
+>> put the boot stuff in the RAID device. However, you can just write the
+>> MBR to the hda and then to hdb. Note that you don't play with the
+>> partition names, the 2nd MBR will only be used if the 1st drive fails,
+>> and therefore at the BIOS level the 2nd drive will now be hda (or C:) if
+>> LILO stiff uses the BIOS to load the next sector.
+>>     
+>
+> Just a small note.  DOS MBR can't boot from non-primary partition.
+> In this case, the boot code is at sda5, which is on extended partition.
+>
+> But.  Lilo now has ability to write its own MBR, which, in turn, IS
+> able to boot of logical partition.
+>
+>  lilo -M /dev/sda ext
+>
+>   
 
-I set up raid-1 on new drive /dev/sdb, and copied files from /dev/sda. 
-I test boot to it with following grub.conf:
+Useful if you can't use a primary for /boot for some reason. grub can do 
+this as well, of course.
 
-title  Gentoo 2.6.18-r4-md
-root   (hd1,0)
-kernel /2.6.18-gentoo-r4-md root=/dev/md1 dxs_support=5 
-video=mtrr,vesafb:1024x768
-
-/dev/md1 corresponds to /dev/sd*2 which is root part. (/dev/sd*1 is /boot)
-
-Kernel autodetects and reiserfs looks happy with it, then I get 
-"Warning: unable to open an initial console."  This an error that occurs 
-in init/init.c after setting up the initial rootfs and freeing initial 
-memory.  After the warning init.c tries to run /sbin/init, /etc/init, 
-/bin/init, or /bin/sh.
-
-I believe it succeeds because then udev errors scroll by endlessly and 
-killing things with magic-sysrq give me the impression that bash is 
-running.  So I get the impression that /dev/md1 got mounted 
-automagically.  I did create an empty /dev dir on md1 for /dev to mount 
-to, but I didn't copy anything from original /dev (shouldn't have to 
-right?)  It just occurred to me to cd-boot and see if the original 
-system is cheating with static /dev/ entries--it was originally a devfs 
-system.
-
-The kernel docs imply (it wouldn't be appropriate to be crystal clear) 
-that there is always a default initramfs built in if not overridden, 
-correct?  In my source it looks like that would be:
-
----
-
-# This is a very simple, default initramfs
-
-dir /dev 0755 0 0
-nod /dev/console 0600 0 0 c 5 1
-dir /root 0700 0 0
-# file /kinit usr/kinit/kinit 0755 0 0
-# slink /init kinit 0755 0 0
-
----
-
-in the course of my wanderings I tried making my own initramfs list with 
-the addition of "nod /dev/md1 0600 0 0 b 9 1" which makes no difference.
-
-in my kernel config:
-
-CONFIG_INITRAMFS_SOURCE="/root/my_initramfs_list"
-CONFIG_INITRAMFS_ROOT_UID=0
-CONFIG_INITRAMFS_ROOT_GID=0
-
-# CONFIG_BLK_DEV_RAM is not set
-CONFIG_BLK_DEV_INITRD=y
-
-Note that sometime in 2.6.17 the CONFIG_BLK_DEV_RAM option was given to 
-break out ramdisk from INITRD.  CONFIG_BLK_DEV_INITRD now enables only 
-initramfs by itself but it has to be enabled along with 
-CONFIG_BLK_DEV_RAM if you want a ramdisk.  Maybe I'll build a 2.6.16 md 
-kernel and see what happens.
-
-Is it required that this initramfs be built-in so that I have /dev 
-nodes?  How can I verify it is doing so?  In init/initramfs.c it seems I 
-should get a message from  printk(KERN_INFO "Unpacking initramfs..."); 
-which I never see even when successfully booting this kernel from 
-/dev/sda.
-
-Thanks for any assistance...
-
+-- 
+bill davidsen <davidsen@tmr.com>
+  CTO TMR Associates, Inc
+  Doing interesting things with small computers since 1979
 
