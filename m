@@ -1,43 +1,42 @@
-From: Ric Wheeler <ric@emc.com>
+From: Lars Ellenberg <Lars.Ellenberg@linbit.com>
 Subject: Re: [patch] latency problem in md driver
-Date: Fri, 22 Dec 2006 10:37:14 -0500
-Message-ID: <458BFBAA.3060805@emc.com>
-References: <20061222143215.GD7477@soda.linbit> <458BF799.6010703@garzik.org>
-Reply-To: ric@emc.com
+Date: Fri, 22 Dec 2006 18:33:35 +0100
+Message-ID: <20061222173335.GB8199@soda.linbit>
+References: <20061222143215.GD7477@soda.linbit> <458BF799.6010703@garzik.org> <20061222154017.GA8199@soda.linbit>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <458BF799.6010703@garzik.org>
+Content-Disposition: inline
+In-Reply-To: <20061222154017.GA8199@soda.linbit>
 Sender: linux-raid-owner@vger.kernel.org
 To: Jeff Garzik <jeff@garzik.org>
-Cc: Lars Ellenberg <Lars.Ellenberg@linbit.com>, Ingo Molnar <mingo@redhat.com>, Neil Brown <neilb@cse.unsw.edu.au>, linux-raid@vger.kernel.org, Andrew Morton <akpm@osdl.org>, Jens Axboe <axboe@suse.de>
+Cc: Ingo Molnar <mingo@redhat.com>, Neil Brown <neilb@cse.unsw.edu.au>, linux-raid@vger.kernel.org, Andrew Morton <akpm@osdl.org>
 List-Id: linux-raid.ids
 
-Jeff Garzik wrote:
-> Lars Ellenberg wrote:
->> md raidX make_request functions strip off the BIO_RW_SYNC flag,
->> this introducing additional latency.
->>
->> below is a suggested patch for the raid1.c .
->> other suggested solutions would be to let the bio_clone do its work,
->> and not reassign thereby stripping off all flags.
->> at most strip off known unwanted flags (the BARRIER flag).
+/ 2006-12-22 16:40:17 +0100
+\ Lars Ellenberg:
+> the issue at hand is:
+> because md does special case the barrier bit, it strips off everything
+> else by re-assigning only the io direction and the barrier bit.
 > 
-> It sounds like a major bug to strip the barrier flag.  I quite 
-> understand that a barrier to a RAID device as a whole behaves 
-> differently from a barrier to an ATA or SCSI device, but that's no 
-> excuse to avoid the problem.
-> 
-> If MD does not pass barriers, it is unilaterally dropping the "data made 
-> it to the media" guarantee.
-> 
->     Jeff
+>  ==> I'd like it to also pass at least the sync bit.
 
-Exactly right - if we do not pass the barrier request down to the 
-members of the RAID group, then we lose the data integrity needed.
+some additional info maybe regarding the motivation for this patch.
+in drbd 0.7, we have some bitmap on some block device.
+this can grow pretty large (128MB), and the code reading/writing it
+does synchronous sector size io (which is stupid, and has been changed
+already in current drbd svn). --- ok, too much detail ---
 
-Of course, in a RAID group, this will be introduce latency, but that is 
-the correct behavior.
+anyways, initializing 128MB using 512 Byte bios at a time
+with BIO_RW_SYNC using current md raid1 code takes about 5 _minutes_.
 
-ric
+with the patch posted earlier, it takes about 5 _seconds_.
+
+this same performance loss will affect every users that are bound
+by many small synchronous updates, unless they explicitly unplug
+somewhere else.
+
+-- 
+: Lars Ellenberg                            Tel +43-1-8178292-55 :
+: LINBIT Information Technologies GmbH      Fax +43-1-8178292-82 :
+: Vivenotgasse 48, A-1120 Vienna/Europe    http://www.linbit.com :
