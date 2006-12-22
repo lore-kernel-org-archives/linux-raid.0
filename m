@@ -1,90 +1,72 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: [patch] latency problem in md driver
-Date: Sat, 23 Dec 2006 07:40:18 +1100
-Message-ID: <17804.17074.430522.825100@cse.unsw.edu.au>
-References: <20061222143215.GD7477@soda.linbit>
+From: Don Hiatt <Don_Hiatt@pmc-sierra.com>
+Subject: list of devices that belong to an array
+Date: Fri, 22 Dec 2006 14:43:04 -0800
+Message-ID: <5C1FD43E5F1B824E83985A74F396286E03EA2B03@bby1exm08.pmc_nt.nt.pmc-sierra.bc.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Lars Ellenberg on Friday December 22
 Sender: linux-raid-owner@vger.kernel.org
-To: Lars Ellenberg <Lars.Ellenberg@linbit.com>
-Cc: Ingo Molnar <mingo@redhat.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: Don Hiatt <Don_Hiatt@pmc-sierra.com>
 List-Id: linux-raid.ids
 
-On Friday December 22, Lars.Ellenberg@linbit.com wrote:
-> 
-> md raidX make_request functions strip off the BIO_RW_SYNC flag,
-> this introducing additional latency.
-> 
-> below is a suggested patch for the raid1.c .
-> other suggested solutions would be to let the bio_clone do its work,
-> and not reassign thereby stripping off all flags.
-> at most strip off known unwanted flags (the BARRIER flag).
-> 
-> similar pattern in the other raid versions.
+First off, Merry Christmas everyone! :)
 
-Thanks.  I think your patch is appropriate.
-I don't like the idea of passing down any flags by default.  If a flag
-makes failure more likely (like BIO_RW_AHEAD or BIO_RW_FAILFAST) then
-I *don't* want it passed down without making a conscious decision that
-it is a good idea.
+Secondly, given a device that is part of an array, is there a way to figure out
+all the other components if you are using the 1.2 superblock?
 
-So yes, _SYNC should be passed down in raid1/raid10.  More interesting
-stuff would be needed in raid456.
-_FAILFAST should probably never be passed down (well, maybe in
-multipath, but who uses md/multipath??)
-_META ... what is that ?? I'm not passing it down until I know!!
+With SB=0.90, you could issue a "--examine"  and it would report all the other
+devices (in the following example, that would be /dev/sata[1-4]). However, with
+SB=1.2 (included below) you aren't so lucky. :)
 
-I'll look into this after the holidays.  Meanwhile if you want to be
-certain that this is in 2.6.20,
-  - Fix the retry-read case as well (where ->bi_rw is assigned about
-    10 lines from the end of raid1d()
-  - Create a 'perfect patch',
-  - add Acked-by: NeilBrown <neilb@suse.de>
-  - and post it to akpm@osdl.org (and appropriate lists).
+Cheers,
 
-Thanks,
-NeilBrown
+don
 
-> 
-> cheers,
-> 
-> 	Lars
-> 
-> 
-> --- /mnt/kernel-src/linux-2.6.19/drivers/md/raid1.c.orig	2006-12-11 10:06:17.661776243 +0100
-> +++ /mnt/kernel-src/linux-2.6.19/drivers/md/raid1.c	2006-12-12 11:09:55.975762364 +0100
-> @@ -776,6 +776,7 @@ static int make_request(request_queue_t 
->  	struct page **behind_pages = NULL;
->  	const int rw = bio_data_dir(bio);
->  	int do_barriers;
-> +	int do_sync = bio_sync(bio);
->  
->  	/*
->  	 * Register the new request and wait if the reconstruction
-> @@ -835,7 +836,7 @@ static int make_request(request_queue_t 
->  		read_bio->bi_sector = r1_bio->sector + mirror->rdev->data_offset;
->  		read_bio->bi_bdev = mirror->rdev->bdev;
->  		read_bio->bi_end_io = raid1_end_read_request;
-> -		read_bio->bi_rw = READ;
-> +		read_bio->bi_rw = READ | do_sync;
->  		read_bio->bi_private = r1_bio;
->  
->  		generic_make_request(read_bio);
-> @@ -906,7 +907,7 @@ static int make_request(request_queue_t 
->  		mbio->bi_sector	= r1_bio->sector + conf->mirrors[i].rdev->data_offset;
->  		mbio->bi_bdev = conf->mirrors[i].rdev->bdev;
->  		mbio->bi_end_io	= raid1_end_write_request;
-> -		mbio->bi_rw = WRITE | do_barriers;
-> +		mbio->bi_rw = WRITE | do_barriers | do_sync;
->  		mbio->bi_private = r1_bio;
->  
->  		if (behind_pages) {
-> 
-> 
-> -- 
-> : Lars Ellenberg                            Tel +43-1-8178292-55 :
-> : LINBIT Information Technologies GmbH      Fax +43-1-8178292-82 :
-> : Vivenotgasse 48, A-1120 Vienna/Europe    http://www.linbit.com :
+
+0) Using 0.90 superblock
+mdadm --create /dev/md0 -e0.90 --level=5 --raid-devices=4 /dev/sata[1-4] ...
+mdadm --examine /dev/sata1
+...
+snip
+....
+      Number   Major   Minor   RaidDevice State
+this     0       8       32        0      active sync   /dev/sata1
+
+   0     0       8       32        0      active sync   /dev/sata1
+   1     1       8        0        1      active sync   /dev/sata2
+   2     2       8       16        2      active sync   /dev/sata3
+   3     3       0        0        3      faulty
+   4     4       8       48        4      spare   /dev/sata4  
+
+
+
+1) Using 1.2 superblock
+mdadm --create /dev/md0 -e1.2  --level=5 --raid-devices=4 /dev/sata[1-4] mdadm --examine /dev/sata1
+/dev/sata1:
+          Magic : a92b4efc
+        Version : 01
+    Feature Map : 0x0
+     Array UUID : efe9708d:c0fd30c2:53f83f15:ad0ac1bc
+           Name : 0
+  Creation Time : Fri Dec 22 19:54:27 2006
+     Raid Level : raid5
+   Raid Devices : 4
+
+    Device Size : 17882270235826847744 (5581842.00 TiB 6137300.18 T
+     Array Size : 482508672 (230.08 GiB 247.04 GB)
+      Used Size : 160836224 (76.69 GiB 82.35 GB)
+    Data Offset : 136 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : 49891598:1b3fa1af:8f8da6d6:6bcf4eff
+
+    Update Time : Fri Dec 22 19:54:27 2006
+       Checksum : 85bf273c - correct
+         Events : 0
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+    Array Slot : 0 (0, 1, 2, 65279)
+   Array State : Uuu_  
