@@ -1,39 +1,66 @@
-From: Nikolai Joukov <kolya@cs.sunysb.edu>
-Subject: Re: [ANNOUNCE] RAIF: Redundant Array of Independent Filesystems
-Date: Mon, 25 Dec 2006 10:13:10 -0500 (EST)
-Message-ID: <Pine.GSO.4.53.0612250942340.25572@compserv1>
-References: <OF582D7197.D6F604B1-ON88257248.0069CC60-88257248.006AE165@us.ibm.com>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: Raid corruption problems.
+Date: Mon, 25 Dec 2006 14:06:12 -0500
+Message-ID: <45902124.8080205@tmr.com>
+References: <4582FD12.90806@advocap.org> <45885C2A.40602@tmr.com> <458E880A.7030400@advocap.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <OF582D7197.D6F604B1-ON88257248.0069CC60-88257248.006AE165@us.ibm.com>
+In-Reply-To: <458E880A.7030400@advocap.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Bryan Henderson <hbryan@us.ibm.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+To: John McMonagle <johnm@advocap.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> > Every stackable file system caches the data at its own level and
-> > copies it from/to the lower file system's cached pages when necessary.
-> > ...
-> > this effectively reduces the system's cache memory size by two or more
-> > times.
+John McMonagle wrote:
+> Bill Davidsen wrote:
 >
-> It should not be that bad with a decent cache replacement policy; I
-> wonder if observing the problem (that you corrected in the various ways
-> you've described), you got some insight as to what exactly was happening.
+>   
+>> John McMonagle wrote:
+>>
+>>     
+>>> Have a raid1  backup server that seems to get corrupted.
+>>> This is the 3rd time in about a year.
+>>> Have 2 other backup servers that were cloned from this one that have
+>>> no problems.
+>>>
+>>> Done a couple kernel upgrades recently.
+>>> Now has 2.6.18-2 kernel.
+>>> It's based on Debian sarge.
+>>>
+>>> It's a low end Intel server motherboard using ata_piix sata driver.
+>>> Have another mother board just like doing raid1 with sata drives that
+>>> has had no problems but it has a much lighter disk load.
+>>> smartctl has never shown any problems.
+>>> In /sys/block/md2 did
+>>> echo check > syncaction
+>>> No error messages but mismatch_cnt  is 1152.
+>>> rc0/errors and rc1/errors are both 0.
+>>>
+>>> I'm guessing a hardware problem.
+>>> Any suggestions? 
+>>>       
+>> Since memory is the easiest to test, I'd try memtest86+ for at least
+>> 12 hr. If this were PATA I'd suggest replugging the cables, but it's
+>> lower probability with SATA. Still, probably worth trying.
+>>
+>>     
+> Ran  Memtest86+ for over 18 hours with no errors.
+> Also have ecc ram.
+> I can look at the cables next time I'm  there.
+> Doesn't  sata do some sort of error checking over the cables?
+> Anything else to try?
 
-I agree that appropriate replacement policies can partially eliminate
-the double caching problem for stackable file systems.  In fact, that's
-exactly what RAIF does: it forces the data pages of the lower file
-systems to be evicted right after they are written and are not needed
-anymore.  This solves the problem for most write-intensive workloads.
-Without this optimization the situation is much worse because Linux is
-trying to protect caches of different file systems from each other.  But,
-as you mentioned, any cache replacement policy is optimized for some set
-of workloads and is bad for some other set of workloads.  Also, caching
-the data at multiple layers not just increases the memory consumption but
-also adds CPU time overheads because of the data copying between the
-pages.  I believe that the real solution to the problem is the ability to
-share data pages between file systems.
+I wish I had another reasonable idea, but memory problems are the big 
+target. Is the firmware current level (if you can compare against the 
+servers which are working well that would really be good). Other than 
+that power supply is the only thing even reasonably likely, particularly 
+if it happens under heavy load. Have you looked at the BIOS voltage and 
+temp reports just to see if they suggest anything?
 
-Nikolai.
+-- 
+bill davidsen <davidsen@tmr.com>
+  CTO TMR Associates, Inc
+  Doing interesting things with small computers since 1979
+
