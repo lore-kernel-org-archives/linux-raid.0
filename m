@@ -1,55 +1,58 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: Can I abuse md like this?
-Date: Mon, 25 Dec 2006 14:10:42 -0500
-Message-ID: <45902232.6000706@tmr.com>
-References: <458DF579.1090603@tmr.com> <17805.63419.748876.939243@cse.unsw.edu.au>
+From: Lars Ellenberg <Lars.Ellenberg@linbit.com>
+Subject: Re: [patch] latency problem in md driver
+Date: Tue, 26 Dec 2006 14:09:37 +0100
+Message-ID: <20061226130937.GA19869@barkeeper1.linbit>
+References: <20061222143215.GD7477@soda.linbit> <17804.17074.430522.825100@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17805.63419.748876.939243@cse.unsw.edu.au>
+Content-Disposition: inline
+In-Reply-To: <17804.17074.430522.825100@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
 To: Neil Brown <neilb@suse.de>
-Cc: Linux Raid List <linux-raid@vger.kernel.org>
+Cc: Ingo Molnar <mingo@redhat.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil Brown wrote:
-> On Saturday December 23, davidsen@tmr.com wrote:
->   
->> I hope I can use the md code to solve a problem, although in a way 
->> probably not envisioned by the author(s).
->>
->> I have a disk image, a physical dump of every sector from start to 
->> finish, including the partition table. What I hope I can do is to create 
->> a one drive RAID-1 partitionable array, and then access it with fdisk or 
->> similar. These partitions are not "nice" types such as FAT, VFAT, ext2, 
->> etc, this is an odd disk, and I "saved it" by saving everything. Now I'd 
->> like to start dismembering the information and putting it into useful 
->> pieces. I even dare to hope that I could get the original software 
->> running on a virtual machine at some point.
->>
->> The other alternative is to loopback mount it, I'm somewhat reluctant to 
->> do that if I can avoid it.
->>
->> Yes, the partition table is standard in format if not in content.
->>     
->
-> Maybe...
-> Is this image in a file?
-> md only works with block devices, so you would need to use the 'loop'
-> driver to create a block-device "/dev/loopX".
->   
-I was thinking nbd, actually.
-> But as loop devices cannot be partitioned, you could then
->   mdadm -Bf /dev/md/d9 -amdp8 -l1 -f -n1 /dev/loopX
->   
-> and then look at the partitions in /dev/md/d9_*
->
-> Should work.
-Sounds worth a try. Will be a learning experience if nothing else.
+/ 2006-12-23 07:40:18 +1100
+\ Neil Brown:
+> On Friday December 22, Lars.Ellenberg@linbit.com wrote:
+> > 
+> > md raidX make_request functions strip off the BIO_RW_SYNC flag,
+> > this introducing additional latency.
+> > 
+> > below is a suggested patch for the raid1.c .
+> > other suggested solutions would be to let the bio_clone do its work,
+> > and not reassign thereby stripping off all flags.
+> > at most strip off known unwanted flags (the BARRIER flag).
+> > 
+> > similar pattern in the other raid versions.
+> 
+> Thanks.  I think your patch is appropriate.
+> I don't like the idea of passing down any flags by default.  If a flag
+> makes failure more likely (like BIO_RW_AHEAD or BIO_RW_FAILFAST) then
+> I *don't* want it passed down without making a conscious decision that
+> it is a good idea.
+> 
+> So yes, _SYNC should be passed down in raid1/raid10.  More interesting
+> stuff would be needed in raid456.
+> _FAILFAST should probably never be passed down (well, maybe in
+> multipath, but who uses md/multipath??)
+> _META ... what is that ?? I'm not passing it down until I know!!
+> 
+> I'll look into this after the holidays.  Meanwhile if you want to be
+> certain that this is in 2.6.20,
+>   - Fix the retry-read case as well (where ->bi_rw is assigned about
+>     10 lines from the end of raid1d()
+
+I don't think thats necessary,
+since an explicit unplug is in place there.
+but ok.
+
+>   - Create a 'perfect patch',
+>   - add Acked-by: NeilBrown <neilb@suse.de>
+>   - and post it to akpm@osdl.org (and appropriate lists).
 
 -- 
-bill davidsen <davidsen@tmr.com>
-  CTO TMR Associates, Inc
-  Doing interesting things with small computers since 1979
-
+: Lars Ellenberg                            Tel +43-1-8178292-55 :
+: LINBIT Information Technologies GmbH      Fax +43-1-8178292-82 :
+: Vivenotgasse 48, A-1120 Vienna/Europe    http://www.linbit.com :
