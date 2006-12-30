@@ -1,37 +1,36 @@
-From: Gordon Henderson <gordon@drogon.net>
-Subject: Re: A few questions before assembling Linux 7.5TB RAID 5 array
-Date: Sat, 30 Dec 2006 22:55:18 +0000 (GMT)
-Message-ID: <Pine.LNX.4.64.0612302250440.3127@lion.drogon.net>
-References: <slrneollp6.4ps.ylee@pobox.com> <4596E8AC.3050407@tmr.com>
+From: Jan Engelhardt <jengelh@linux01.gwdg.de>
+Subject: unknown ioctl32 cmd
+Date: Sun, 31 Dec 2006 00:20:46 +0100 (MET)
+Message-ID: <Pine.LNX.4.61.0612310014080.32449@yvahk01.tjqt.qr>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4596E8AC.3050407@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Yeechang Lee <ylee@pobox.com>
+To: Neil Brown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hi,
 
-   Yeechang Lee wrote:
-> [Also posted to 
-> comp.sys.ibm.pc.hardware.storage,comp.arch.storage,alt.comp.hardware.pc-homebuilt,comp.os.linux.hardware.]
-> 
-> I'm shortly going to be setting up a Linux software RAID 5 array using
-> 16 500GB SATA drives [...]
 
-I'm of the opinion that more drives means more chance of failure, but 
-maybe it's just me. I got bitten with a 2-drive failure once in an 8-drive 
-RAID-5 set a couple of years ago. Fortunately with the aid of mdadm, etc. 
-and having direct access to the drives rather than having them hidden away 
-behind some hardware device I was able to recover the data that time, and 
-now SMART is getting cleverer ... Howerver ...
 
-Did you consider RAID-6?
+this line in mdadm-2.5.4
 
-I've been using it for some time now (over a year?)
+Detail.c:
+185:  ioctl(fd, GET_BITMAP_FILE, &bmf) == 0 &&
 
-But maybe drives are becoming more reliable though - not lost a drive in 
-the past year!
+causes a dmesg warning when running `mdadm -D /dev/md0`:
 
-Gordon
+ioctl32(mdadm:2946): Unknown cmd fd(7) cmd(50000915){10} arg(ff2905d0) 
+on /dev/md0
+
+on Aurora Linux corona_2.90 with 2.6.18-1.2798.al3.1smp(sparc64). The 
+raid array was created using `mdadm -C /dev/md0 -l 1 -n 2 missing 
+/dev/sdb2 -e 1.0`. Given that "case GET_BITMAP_FILE" is handled in 
+(2.6.18.5), I wonder what exactly is causing this.
+
+
+Keep me on Cc, but you always do that. Thanks :)
+
+	-`J'
+-- 
