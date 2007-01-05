@@ -1,70 +1,79 @@
-From: "Francois Barre" <francois.barre@gmail.com>
-Subject: Re: Raid1 : mounting a 1.0-version raid as root at boot time not working
-Date: Fri, 5 Jan 2007 16:26:24 +0100
-Message-ID: <fd8d0180701050726y6d972a62w8ea080cf0d07d8d9@mail.gmail.com>
-References: <fd8d0180701050259m699e30b8o2c07cf8547e99406@mail.gmail.com>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: mdadm: what if - crashed OS
+Date: Fri, 05 Jan 2007 16:51:12 -0500
+Message-ID: <459EC850.1050509@tmr.com>
+References: <63442.70.104.60.127.1167978180.squirrel@spinellicreations.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <fd8d0180701050259m699e30b8o2c07cf8547e99406@mail.gmail.com>
-Content-Disposition: inline
+In-Reply-To: <63442.70.104.60.127.1167978180.squirrel@spinellicreations.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
+To: Vince@SpinelliCreations.com
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-From Documentation/md.txt
+Vince Spinelli wrote:
+> Hello,
+>
+> My name is Vince Spinelli, from Buffalo, NY (US).  I am currently using
+> 'mdadm' under Fedora Core 5 (32-bit) to run two Soft-RAID arrays.
+>
+> 1) RAID-1 (mirror) for mission critical data.  #drives = 2 ea. PATA ATA100
+> 2) RAID-5 (striped+parity) for multimedia data.  #drives = 5 ea. SATA 3G
+>
+> My question is this...
+>
+> In case of catastropic machine failure, such as the operating system
+> (which is on a separate PATA ATA100 drive) failing or even the OS hard
+> drive being physically destroyed, how would I go about rebuilding my RAID
+> arrays?
+>   
+May I say that if you don't want to lose your data, then the o/s is 
+"critical data." I regard boot, root, and swap as critical, because if 
+they fail you have a much more complex recovery issue. Also note that 
+you still need backup, because some hardware failure modes will write 
+bad data (maybe silently) without an actual "crash" you notice. Power 
+supplies, controllers, and disk drives will help you test your backup 
+procedures.
+> Obviously, this would assume that the 7 disks which make up my arrays had
+> survived and were not damaged.
+>
+> -I would obviously then build a new computer,
+> -install Linux, make sure 'mdadm' was installed,
+> -physically install all of my drives into the computer,
+> -copy my old /etc/mdadm.conf file (which has been saved on cd-rom but is
+> easily re-made) onto the new computer,
+> - and then what?
+>
+> I have thought about this, and I can't understand how 'mdadm' decides the
+> health of an array.
+>
+> For example, if I type at prompt:
+>
+> /sbin/mdadm --detail /dev/md1
+>
+> then I am given the current status of array 'md1'.  It may be clean,
+> degraded, recovering, or whatever.  Therefore, on a fresh install of
+> Linux, with a fresh copy of 'mdadm', I am led to believe that the result
+> of the previous command would be something like...
+>
+> Active Devices = 0
+> Working Devices = 4
+> Failed Devices = 0
+> Spare Devices = 4
+>
+> That, obviously would be no good.
+>
+> So, please, if anyone has rebuilt a Soft-RAID array from scratch WHILE
+> STILL PRESERVING THE DATA ON THAT ARRAY with 'mdadm', please explain how
+> this is accomplished, as I'm sitting on 1.5 TB of data that I truly do not
+> want to lose.
+You just set devices to PARTITIONS and use the -assemble command. Oh, 
+you use a superblock with uuid so assemble can figure out what to do.
 
-"As of kernel 2.6.9, only drives with a type 0 superblock can be
-autodetected and run at boot time."
+-- 
+bill davidsen <davidsen@tmr.com>
+  CTO TMR Associates, Inc
+  Doing interesting things with small computers since 1979
 
-Sorry for the noise, I shall have understood that by myself...
-
-In order to fix this issue, isn't it possible to implement in kernel a
-behaviour close to what we can find in util.c: guess_super() of the
-mdadm package ?
-Would that be too dangerous ?
-It seems to me that the tricky part is dealing with the ctime stuff of
-all possible superblocks found...
-
-Regards,
-
-2007/1/5, Francois Barre <francois.barre@gmail.com>:
-> Hi all,
->
-> First of all, best wishes for 2007, may the Penguin be with you for
-> the whole year on.
->
-> Then, my problem.
->
-> 1. The setup : x86_64 2x500GB sata, linux 2.6.18-6, raid 1 on
-> /dev/sd[ab]1 -> /dev/md0.
-> Raid1 is configured with a 1.0 superblock version, but no autoraid 0xfd stuff.
-> The aim is to have / mounted on md0.
-> Lilo has been teached to have root=/dev/md0 and
-> md=0,/dev/sda1,/dev/sdb1, and with an explicit "raid=noautodetect".
-> The rest is not (that) important.
->
-> 2. The symptoms :
-> At boot time, we do have the correct md: "Loading md0 :
-> /dev/sda1,/dev/sdb1" message
-> but while tryping to add /dev/sda1 in /dev/md0, we have :
-> "md: /dev/sda1 has invalid sb, not importing!"
-> Same thing for /dev/sdb1
->
-> 3. My guess...
-> I must test this a bit further, but my guess is as follows :
-> - not being autodetected, /dev/md0 device is created using a 0.9
-> version by default : in md.c: set_array_info(), as info is memset(),
-> info->major_version is zero.
-> - then at md.c: add_new_disk(), md_import_device() is called with
-> mddev->major_version=0.
-> - md_import_device() fails because it's told to load a superblock v0.x
-> and it finds no superblock magic where it looks at it.
->
-> 4. Conclusions
-> First, is my analysis correct ?
-> The box is being heavily used now (with a non-raid root...), so I
-> can't test any further before tonight, but I may test using a v0.9
-> superblock, and with autodetect stuff as well...
->
