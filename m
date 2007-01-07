@@ -1,32 +1,36 @@
-From: Chaitanya Patti <crpatti@cs.sunysb.edu>
-Subject: Re: [ANNOUNCE] RAIF: Redundant Array of Independent Filesystems
-Date: Sat, 6 Jan 2007 00:17:36 -0500 (EST)
-Message-ID: <Pine.GSO.4.53.0701060014080.5898@compserv1>
+From: Elliot Carver <carver.elliot@gmail.com>
+Subject: mdadm doesn't detect sw raid 5 array on boot
+Date: Sun, 7 Jan 2007 04:26:27 +0200
+Message-ID: <1918477969.20070107042627@gmail.com>
+Reply-To: Elliot Carver <carver.elliot@gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Nikolai Joukov <kolya@cs.sunysb.edu>, Al Boldi <a1426z@gawab.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+I have created software raid 5 array, which is not detected automatically during boot.
+I have put the needed information in mdadm.conf with the auto=yes option but mdadm
+can not start this particular array during boot. When I type manually mdadm -As /dev/md2,
+the array starts and works without any problems. What can be the reason for this?
+The disks of the problematic array are attached to a highpoint 1820a controller.With the old controller (Highpoint 1640) there weren't any problems.
+Kernel version is 2.6.11.OS is Mandriva 2005.   
+The other software array (disks attached directly to motherboard sata ports) works without any problem and starts
+automatically during boot. Below is /etc/mdadm.conf. 
+# MD0 Device mounted as raid
 
-> We are in the process of porting RAIF to 2.6.19 right now.  Should be done
-> in early January.  The trick is that we are trying to keep the same source
-> good for a wide range of kernel versions.  In fact, not too long ago we
-> even were able to compile it for 2.4.24!
->
-> Nikolai.
+DEVICE /dev/sda /dev/sdb /dev/sdc /dev/sdd
 
-We now have RAIF for the 2.6.19 kernel available at:
+ARRAY /dev/md0 level=raid5 num-devices=4 spares=1 UUID=24f177fd:80b039e6:d02c66bf:2859b089
 
-ftp://ftp.fsl.cs.sunysb.edu/pub/raif/raif-1.1.tar.gz
+# LAST HIGHPOINT 1820A (replaced HP RR 1640) <-- this is the problematic array.
 
-This version is more stable but there are for sure still some remaining
-bugs and we very much appreciate your feedback.
+DEVICE /dev/sde /dev/sdf /dev/sdg /dev/sdh
 
-Thank you.
+ARRAY /dev/md2 level=raid5 auto=yes num-devices=4 spares=1 UUID=a2f494ec:36aac1b0:691da55c:8f60459a 
 
-Chaitanya on behalf of the RAIF team.
-Filesystems and Storage Laboratory
-Stony Brook University
+Thanks in advance. Any help will be greatly appreciated. 
+
+
