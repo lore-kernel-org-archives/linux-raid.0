@@ -1,32 +1,170 @@
-From: Richard Scobie <richard@sauce.co.nz>
-Subject: Re: RAID1 repair issue with 2.6.16.36 kernel
-Date: Tue, 09 Jan 2007 08:45:57 +1300
-Message-ID: <45A29F75.1010106@sauce.co.nz>
-References: <20070108114943.GF17077@zoy.org>
+From: Andrew Morton <akpm@osdl.org>
+Subject: Re: [patch] md: pass down BIO_RW_SYNC in raid{1,10}
+Date: Mon, 8 Jan 2007 15:02:42 -0800
+Message-ID: <20070108150242.1b39eda2.akpm@osdl.org>
+References: <20070108090833.GF8125@soda.linbit>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20070108114943.GF17077@zoy.org>
+In-Reply-To: <20070108090833.GF8125@soda.linbit>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Lars Ellenberg <Lars.Ellenberg@linbit.com>
+Cc: Neil Brown <neilb@suse.de>, Ingo Molnar <mingo@redhat.com>, linux-raid@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>, stable@kernel.org
 List-Id: linux-raid.ids
 
-Michel Lespinasse wrote:
+On Mon, 8 Jan 2007 10:08:34 +0100
+Lars Ellenberg <Lars.Ellenberg@linbit.com> wrote:
 
-> Would you by any chance also know why the repair process did not work
-> with 2.6.16.36 ??? Has any related bug been fixed recently ? Should I
-> try again with a newer kernel, or should I rather avoid this for now ?
+> md raidX make_request functions strip off the BIO_RW_SYNC flag,
+> thus introducing additional latency.
+> 
+> fixing this in raid1 and raid10 seems to be straight forward enough.
+> 
+> for our particular usage case in DRBD, passing this flag improved
+> some initialization time from ~5 minutes to ~5 seconds.
 
-I have not had much luck with "repair" fixing things, using FC5 
-2.6.17-1.2187_FC5smp.
+That sounds like a significant fix.
 
-See:
+This patch also applies to 2.6.19 and I have tagged it for a -stable
+backport.  Neil, are you OK with that?
 
-  http://marc.theaimsgroup.com/?l=linux-raid&m=116466569611034&w=2
-
-for my experience and resolution.
-
-Regards,
-
-Richard
+> Acked-by: NeilBrown <neilb@suse.de>
+> Signed-off-by: Lars Ellenberg <lars@linbit.com>
+>
+> ---
+> 
+> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+> index b30f74b..164b25d 100644
+> --- a/drivers/md/raid1.c
+> +++ b/drivers/md/raid1.c
+> @@ -775,6 +775,7 @@ static int make_request(request_queue_t 
+>  	struct bio_list bl;
+>  	struct page **behind_pages = NULL;
+>  	const int rw = bio_data_dir(bio);
+> +	const int do_sync = bio_sync(bio);
+>  	int do_barriers;
+>  
+>  	/*
+> @@ -835,7 +836,7 @@ static int make_request(request_queue_t 
+>  		read_bio->bi_sector = r1_bio->sector + mirror->rdev->data_offset;
+>  		read_bio->bi_bdev = mirror->rdev->bdev;
+>  		read_bio->bi_end_io = raid1_end_read_request;
+> -		read_bio->bi_rw = READ;
+> +		read_bio->bi_rw = READ | do_sync;
+>  		read_bio->bi_private = r1_bio;
+>  
+>  		generic_make_request(read_bio);
+> @@ -906,7 +907,7 @@ #endif
+>  		mbio->bi_sector	= r1_bio->sector + conf->mirrors[i].rdev->data_offset;
+>  		mbio->bi_bdev = conf->mirrors[i].rdev->bdev;
+>  		mbio->bi_end_io	= raid1_end_write_request;
+> -		mbio->bi_rw = WRITE | do_barriers;
+> +		mbio->bi_rw = WRITE | do_barriers | do_sync;
+>  		mbio->bi_private = r1_bio;
+>  
+>  		if (behind_pages) {
+> @@ -941,6 +942,8 @@ #endif
+>  	blk_plug_device(mddev->queue);
+>  	spin_unlock_irqrestore(&conf->device_lock, flags);
+>  
+> +	if (do_sync)
+> +		md_wakeup_thread(mddev->thread);
+>  #if 0
+>  	while ((bio = bio_list_pop(&bl)) != NULL)
+>  		generic_make_request(bio);
+> @@ -1541,6 +1544,7 @@ static void raid1d(mddev_t *mddev)
+>  			 * We already have a nr_pending reference on these rdevs.
+>  			 */
+>  			int i;
+> +			const int do_sync = bio_sync(r1_bio->master_bio);
+>  			clear_bit(R1BIO_BarrierRetry, &r1_bio->state);
+>  			clear_bit(R1BIO_Barrier, &r1_bio->state);
+>  			for (i=0; i < conf->raid_disks; i++)
+> @@ -1561,7 +1565,7 @@ static void raid1d(mddev_t *mddev)
+>  						conf->mirrors[i].rdev->data_offset;
+>  					bio->bi_bdev = conf->mirrors[i].rdev->bdev;
+>  					bio->bi_end_io = raid1_end_write_request;
+> -					bio->bi_rw = WRITE;
+> +					bio->bi_rw = WRITE | do_sync;
+>  					bio->bi_private = r1_bio;
+>  					r1_bio->bios[i] = bio;
+>  					generic_make_request(bio);
+> @@ -1593,6 +1597,7 @@ static void raid1d(mddev_t *mddev)
+>  				       (unsigned long long)r1_bio->sector);
+>  				raid_end_bio_io(r1_bio);
+>  			} else {
+> +				const int do_sync = bio_sync(r1_bio->master_bio);
+>  				r1_bio->bios[r1_bio->read_disk] =
+>  					mddev->ro ? IO_BLOCKED : NULL;
+>  				r1_bio->read_disk = disk;
+> @@ -1608,7 +1613,7 @@ static void raid1d(mddev_t *mddev)
+>  				bio->bi_sector = r1_bio->sector + rdev->data_offset;
+>  				bio->bi_bdev = rdev->bdev;
+>  				bio->bi_end_io = raid1_end_read_request;
+> -				bio->bi_rw = READ;
+> +				bio->bi_rw = READ | do_sync;
+>  				bio->bi_private = r1_bio;
+>  				unplug = 1;
+>  				generic_make_request(bio);
+> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+> index f014191..a9401c0 100644
+> --- a/drivers/md/raid10.c
+> +++ b/drivers/md/raid10.c
+> @@ -782,6 +782,7 @@ static int make_request(request_queue_t 
+>  	int i;
+>  	int chunk_sects = conf->chunk_mask + 1;
+>  	const int rw = bio_data_dir(bio);
+> +	const int do_sync = bio_sync(bio);
+>  	struct bio_list bl;
+>  	unsigned long flags;
+>  
+> @@ -863,7 +864,7 @@ static int make_request(request_queue_t 
+>  			mirror->rdev->data_offset;
+>  		read_bio->bi_bdev = mirror->rdev->bdev;
+>  		read_bio->bi_end_io = raid10_end_read_request;
+> -		read_bio->bi_rw = READ;
+> +		read_bio->bi_rw = READ | do_sync;
+>  		read_bio->bi_private = r10_bio;
+>  
+>  		generic_make_request(read_bio);
+> @@ -909,7 +910,7 @@ static int make_request(request_queue_t 
+>  			conf->mirrors[d].rdev->data_offset;
+>  		mbio->bi_bdev = conf->mirrors[d].rdev->bdev;
+>  		mbio->bi_end_io	= raid10_end_write_request;
+> -		mbio->bi_rw = WRITE;
+> +		mbio->bi_rw = WRITE | do_sync;
+>  		mbio->bi_private = r10_bio;
+>  
+>  		atomic_inc(&r10_bio->remaining);
+> @@ -922,6 +923,9 @@ static int make_request(request_queue_t 
+>  	blk_plug_device(mddev->queue);
+>  	spin_unlock_irqrestore(&conf->device_lock, flags);
+>  
+> +	if (do_sync)
+> +		md_wakeup_thread(mddev->thread);
+> +
+>  	return 0;
+>  }
+>  
+> @@ -1563,6 +1567,7 @@ static void raid10d(mddev_t *mddev)
+>  				       (unsigned long long)r10_bio->sector);
+>  				raid_end_bio_io(r10_bio);
+>  			} else {
+> +				const int do_sync = bio_sync(r10_bio->master_bio);
+>  				rdev = conf->mirrors[mirror].rdev;
+>  				if (printk_ratelimit())
+>  					printk(KERN_ERR "raid10: %s: redirecting sector %llu to"
+> @@ -1574,7 +1579,7 @@ static void raid10d(mddev_t *mddev)
+>  				bio->bi_sector = r10_bio->devs[r10_bio->read_slot].addr
+>  					+ rdev->data_offset;
+>  				bio->bi_bdev = rdev->bdev;
+> -				bio->bi_rw = READ;
+> +				bio->bi_rw = READ | do_sync;
+>  				bio->bi_private = r10_bio;
+>  				bio->bi_end_io = raid10_end_read_request;
+>  				unplug = 1;
+> -- 
+> : Lars Ellenberg                            Tel +43-1-8178292-55 :
+> : LINBIT Information Technologies GmbH      Fax +43-1-8178292-82 :
+> : Vivenotgasse 48, A-1120 Vienna/Europe    http://www.linbit.com :
