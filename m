@@ -1,36 +1,160 @@
-From: Elliot Carver <carver.elliot@gmail.com>
-Subject: mdadm doesn't detect sw raid 5 array on boot
-Date: Sun, 7 Jan 2007 04:26:27 +0200
-Message-ID: <1918477969.20070107042627@gmail.com>
-Reply-To: Elliot Carver <carver.elliot@gmail.com>
+From: Lars Ellenberg <Lars.Ellenberg@linbit.com>
+Subject: [patch] md: pass down BIO_RW_SYNC in raid{1,10}
+Date: Mon, 8 Jan 2007 10:08:34 +0100
+Message-ID: <20070108090833.GF8125@soda.linbit>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: akpm@osdl.org
+Cc: Neil Brown <neilb@suse.de>, Ingo Molnar <mingo@redhat.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I have created software raid 5 array, which is not detected automatically during boot.
-I have put the needed information in mdadm.conf with the auto=yes option but mdadm
-can not start this particular array during boot. When I type manually mdadm -As /dev/md2,
-the array starts and works without any problems. What can be the reason for this?
-The disks of the problematic array are attached to a highpoint 1820a controller.With the old controller (Highpoint 1640) there weren't any problems.
-Kernel version is 2.6.11.OS is Mandriva 2005.   
-The other software array (disks attached directly to motherboard sata ports) works without any problem and starts
-automatically during boot. Below is /etc/mdadm.conf. 
-# MD0 Device mounted as raid
+md raidX make_request functions strip off the BIO_RW_SYNC flag,
+thus introducing additional latency.
 
-DEVICE /dev/sda /dev/sdb /dev/sdc /dev/sdd
+fixing this in raid1 and raid10 seems to be straight forward enough.
 
-ARRAY /dev/md0 level=raid5 num-devices=4 spares=1 UUID=24f177fd:80b039e6:d02c66bf:2859b089
+for our particular usage case in DRBD, passing this flag improved
+some initialization time from ~5 minutes to ~5 seconds.
 
-# LAST HIGHPOINT 1820A (replaced HP RR 1640) <-- this is the problematic array.
+Acked-by: NeilBrown <neilb@suse.de>
+Signed-off-by: Lars Ellenberg <lars@linbit.com>
 
-DEVICE /dev/sde /dev/sdf /dev/sdg /dev/sdh
+---
 
-ARRAY /dev/md2 level=raid5 auto=yes num-devices=4 spares=1 UUID=a2f494ec:36aac1b0:691da55c:8f60459a 
-
-Thanks in advance. Any help will be greatly appreciated. 
-
-
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index b30f74b..164b25d 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -775,6 +775,7 @@ static int make_request(request_queue_t 
+ 	struct bio_list bl;
+ 	struct page **behind_pages = NULL;
+ 	const int rw = bio_data_dir(bio);
++	const int do_sync = bio_sync(bio);
+ 	int do_barriers;
+ 
+ 	/*
+@@ -835,7 +836,7 @@ static int make_request(request_queue_t 
+ 		read_bio->bi_sector = r1_bio->sector + mirror->rdev->data_offset;
+ 		read_bio->bi_bdev = mirror->rdev->bdev;
+ 		read_bio->bi_end_io = raid1_end_read_request;
+-		read_bio->bi_rw = READ;
++		read_bio->bi_rw = READ | do_sync;
+ 		read_bio->bi_private = r1_bio;
+ 
+ 		generic_make_request(read_bio);
+@@ -906,7 +907,7 @@ #endif
+ 		mbio->bi_sector	= r1_bio->sector + conf->mirrors[i].rdev->data_offset;
+ 		mbio->bi_bdev = conf->mirrors[i].rdev->bdev;
+ 		mbio->bi_end_io	= raid1_end_write_request;
+-		mbio->bi_rw = WRITE | do_barriers;
++		mbio->bi_rw = WRITE | do_barriers | do_sync;
+ 		mbio->bi_private = r1_bio;
+ 
+ 		if (behind_pages) {
+@@ -941,6 +942,8 @@ #endif
+ 	blk_plug_device(mddev->queue);
+ 	spin_unlock_irqrestore(&conf->device_lock, flags);
+ 
++	if (do_sync)
++		md_wakeup_thread(mddev->thread);
+ #if 0
+ 	while ((bio = bio_list_pop(&bl)) != NULL)
+ 		generic_make_request(bio);
+@@ -1541,6 +1544,7 @@ static void raid1d(mddev_t *mddev)
+ 			 * We already have a nr_pending reference on these rdevs.
+ 			 */
+ 			int i;
++			const int do_sync = bio_sync(r1_bio->master_bio);
+ 			clear_bit(R1BIO_BarrierRetry, &r1_bio->state);
+ 			clear_bit(R1BIO_Barrier, &r1_bio->state);
+ 			for (i=0; i < conf->raid_disks; i++)
+@@ -1561,7 +1565,7 @@ static void raid1d(mddev_t *mddev)
+ 						conf->mirrors[i].rdev->data_offset;
+ 					bio->bi_bdev = conf->mirrors[i].rdev->bdev;
+ 					bio->bi_end_io = raid1_end_write_request;
+-					bio->bi_rw = WRITE;
++					bio->bi_rw = WRITE | do_sync;
+ 					bio->bi_private = r1_bio;
+ 					r1_bio->bios[i] = bio;
+ 					generic_make_request(bio);
+@@ -1593,6 +1597,7 @@ static void raid1d(mddev_t *mddev)
+ 				       (unsigned long long)r1_bio->sector);
+ 				raid_end_bio_io(r1_bio);
+ 			} else {
++				const int do_sync = bio_sync(r1_bio->master_bio);
+ 				r1_bio->bios[r1_bio->read_disk] =
+ 					mddev->ro ? IO_BLOCKED : NULL;
+ 				r1_bio->read_disk = disk;
+@@ -1608,7 +1613,7 @@ static void raid1d(mddev_t *mddev)
+ 				bio->bi_sector = r1_bio->sector + rdev->data_offset;
+ 				bio->bi_bdev = rdev->bdev;
+ 				bio->bi_end_io = raid1_end_read_request;
+-				bio->bi_rw = READ;
++				bio->bi_rw = READ | do_sync;
+ 				bio->bi_private = r1_bio;
+ 				unplug = 1;
+ 				generic_make_request(bio);
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index f014191..a9401c0 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -782,6 +782,7 @@ static int make_request(request_queue_t 
+ 	int i;
+ 	int chunk_sects = conf->chunk_mask + 1;
+ 	const int rw = bio_data_dir(bio);
++	const int do_sync = bio_sync(bio);
+ 	struct bio_list bl;
+ 	unsigned long flags;
+ 
+@@ -863,7 +864,7 @@ static int make_request(request_queue_t 
+ 			mirror->rdev->data_offset;
+ 		read_bio->bi_bdev = mirror->rdev->bdev;
+ 		read_bio->bi_end_io = raid10_end_read_request;
+-		read_bio->bi_rw = READ;
++		read_bio->bi_rw = READ | do_sync;
+ 		read_bio->bi_private = r10_bio;
+ 
+ 		generic_make_request(read_bio);
+@@ -909,7 +910,7 @@ static int make_request(request_queue_t 
+ 			conf->mirrors[d].rdev->data_offset;
+ 		mbio->bi_bdev = conf->mirrors[d].rdev->bdev;
+ 		mbio->bi_end_io	= raid10_end_write_request;
+-		mbio->bi_rw = WRITE;
++		mbio->bi_rw = WRITE | do_sync;
+ 		mbio->bi_private = r10_bio;
+ 
+ 		atomic_inc(&r10_bio->remaining);
+@@ -922,6 +923,9 @@ static int make_request(request_queue_t 
+ 	blk_plug_device(mddev->queue);
+ 	spin_unlock_irqrestore(&conf->device_lock, flags);
+ 
++	if (do_sync)
++		md_wakeup_thread(mddev->thread);
++
+ 	return 0;
+ }
+ 
+@@ -1563,6 +1567,7 @@ static void raid10d(mddev_t *mddev)
+ 				       (unsigned long long)r10_bio->sector);
+ 				raid_end_bio_io(r10_bio);
+ 			} else {
++				const int do_sync = bio_sync(r10_bio->master_bio);
+ 				rdev = conf->mirrors[mirror].rdev;
+ 				if (printk_ratelimit())
+ 					printk(KERN_ERR "raid10: %s: redirecting sector %llu to"
+@@ -1574,7 +1579,7 @@ static void raid10d(mddev_t *mddev)
+ 				bio->bi_sector = r10_bio->devs[r10_bio->read_slot].addr
+ 					+ rdev->data_offset;
+ 				bio->bi_bdev = rdev->bdev;
+-				bio->bi_rw = READ;
++				bio->bi_rw = READ | do_sync;
+ 				bio->bi_private = r10_bio;
+ 				bio->bi_end_io = raid10_end_read_request;
+ 				unplug = 1;
+-- 
+: Lars Ellenberg                            Tel +43-1-8178292-55 :
+: LINBIT Information Technologies GmbH      Fax +43-1-8178292-82 :
+: Vivenotgasse 48, A-1120 Vienna/Europe    http://www.linbit.com :
