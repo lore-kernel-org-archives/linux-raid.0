@@ -1,46 +1,65 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: FailSpare event?
-Date: Fri, 12 Jan 2007 09:59:15 +1100
-Message-ID: <17830.49475.108136.376489@notabene.brown>
-References: <eo6cn8$5se$1@sea.gmane.org>
-	<17830.47341.560158.521091@notabene.brown>
-	<20070111223628.GU32386@mikee.ath.cx>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Tweaking/Optimizing MD RAID: 195MB/s write, 181MB/s read (so far)
+Date: Thu, 11 Jan 2007 18:05:36 -0500 (EST)
+Message-ID: <Pine.LNX.4.64.0701111804310.3847@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Mike on Thursday January 11
 Sender: linux-raid-owner@vger.kernel.org
-To: Mike <mikee@mikee.ath.cx>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kerne.org
+Cc: xfs@oss.sgi.com
 List-Id: linux-raid.ids
 
-On Thursday January 11, mikee@mikee.ath.cx wrote:
-> 
-> So I'm ok for the moment? Yes, I need to find the error and fix everything
-> back to the (S) state.
+With 4 Raptor 150s & XFS (default XFS options):
 
-Yes, OK for the moment.
+# Stripe tests:
+echo 8192 > /sys/block/md3/md/stripe_cache_size
 
-> 
-> The messages in $HOST:/var/log/messages for the time of the email are:
-> 
-> Jan 11 16:04:25 elo kernel: sd 2:0:4:0: SCSI error: return code = 0x8000002
-> Jan 11 16:04:25 elo kernel: sde: Current: sense key: Hardware Error
-> Jan 11 16:04:25 elo kernel:     Additional sense: Internal target failure
-> Jan 11 16:04:25 elo kernel: Info fld=0x10b93c4d
-> Jan 11 16:04:25 elo kernel: end_request: I/O error, dev sde, sector 280575053
-> Jan 11 16:04:25 elo kernel: raid5: Disk failure on sde2, disabling device. Operation continuing on 5 devices
+# DD TESTS [WRITE]
 
-Given the sector number it looks likely that it was a superblock
-update.
-No idea how bad an 'internal target failure' is.  Maybe powercycling
-the drive would 'fix' it, maybe not.
+DEFAULT:
+$ dd if=/dev/zero of=10gb.no.optimizations.out bs=1M count=10240
+10240+0 records in
+10240+0 records out
+10737418240 bytes (11 GB) copied, 96.6988 seconds, 111 MB/s
 
-> 
-> On AIX boxes I can blink the drives to identify a bad/failing device. Is there
-> a way to blink the drives in linux?
+8192 STRIPE CACHE
+$ dd if=/dev/zero of=10gb.8192k.stripe.out bs=1M count=10240
+10240+0 records in
+10240+0 records out
+10737418240 bytes (11 GB) copied, 55.0628 seconds, 195 MB/s
+$
 
-Unfortunately not.
+16384 STRIPE CACHE
+$ dd if=/dev/zero of=10gb.16384k.stripe.out bs=1M count=10240
+10240+0 records in
+10240+0 records out
+10737418240 bytes (11 GB) copied, 56.2793 seconds, 191 MB/s
 
-NeilBrown
+# DD TESTS [READ]
+
+DEFAULT:
+$ dd if=10gb.16384k.stripe.out of=/dev/null bs=1M
+298+0 records in
+297+0 records out
+311427072 bytes (311 MB) copied, 3.5453 seconds, 87.8 MB/s
+
+2048K READ AHEAD
+$ dd if=10gb.16384k.stripe.out of=/dev/null bs=1M
+10240+0 records in
+10240+0 records out
+10737418240 bytes (11 GB) copied, 85.4632 seconds, 126 MB/s
+
+8192K READ AHEAD
+$ dd if=10gb.16384k.stripe.out of=/dev/null bs=1M
+10240+0 records in
+10240+0 records out
+10737418240 bytes (11 GB) copied, 64.9454 seconds, 165 MB/s
+
+16384K READ AHEAD
+$ dd if=10gb.16384k.stripe.out of=/dev/null bs=1M
+10240+0 records in
+10240+0 records out
+10737418240 bytes (11 GB) copied, 59.3119 seconds, 181 MB/s
+
+
