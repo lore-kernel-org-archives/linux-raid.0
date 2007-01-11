@@ -1,62 +1,57 @@
-From: Mike <mikee@mikee.ath.cx>
-Subject: FailSpare event?
-Date: Thu, 11 Jan 2007 22:11:52 +0000 (UTC)
-Message-ID: <eo6cn8$5se$1@sea.gmane.org>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: FailSpare event?
+Date: Fri, 12 Jan 2007 09:23:41 +1100
+Message-ID: <17830.47341.560158.521091@notabene.brown>
+References: <eo6cn8$5se$1@sea.gmane.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: message from Mike on Thursday January 11
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Mike <mikee@mikee.ath.cx>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Can someone tell me what this means please? I just received this in
-an email from one of my servers:
+On Thursday January 11, mikee@mikee.ath.cx wrote:
+> Can someone tell me what this means please? I just received this in
+> an email from one of my servers:
+> 
+....
 
+> 
+> A FailSpare event had been detected on md device /dev/md2.
+> 
+> It could be related to component device /dev/sde2.
 
-From: mdadm monitoring [root@$DOMAIN.com]
-To: root@$DOMAIN.com
-Subject: FailSpare event on /dev/md2:$HOST.$DOMAIN.com
+It means that mdadm has just noticed that /dev/sde2 is a spare and is faulty.
 
-This is an automatically generated mail message from mdadm
-running on $HOST.$DOMAIN.com
+You would normally expect this if the array is rebuilding a spare and
+a write to the spare fails however...
 
-A FailSpare event had been detected on md device /dev/md2.
+> 
+> md2 : active raid5 sdf2[4] sde2[5](F) sdd2[3] sdc2[2] sdb2[1] sda2[0]
+> 560732160 blocks level 5, 256k chunk, algorithm 2 [5/5] [UUUUU]
 
-It could be related to component device /dev/sde2.
+That isn't the case here - your array doesn't need rebuilding.
+Possible a superblock-update failed.  Possibly mdadm only just started
+monitoring the array and the spare has been faulty for some time.
 
-Faithfully yours, etc.
+> 
+> Does the email message mean drive sde2[5] has failed? I know the sde2 refers
+> to the second partition of /dev/sde. Here is the partition table
 
-On this machine I execute:
+It means that md thinks sde2 cannot be trusted.  To find out why you
+would need to look at kernel logs for IO errors.
 
-$ cat /proc/mdstat
-Personalities : [raid5] [raid4] [raid1] 
-md0 : active raid1 sdf1[2](S) sde1[3](S) sdd1[4](S) sdc1[5](S) sdb1[1] sda1[0]
-104320 blocks [2/2] [UU]
+> 
+> I have partition 2 of drive sde as one of the raid devices for md. Does the (S)
+> on sde3[2](S) mean the device is a spare for md1 and the same for md0?
+> 
 
-md1 : active raid1 sdf3[2](S) sde3[3](S) sdd3[4](S) sdc3[5](S) sdb3[1] sda3[0]
-3068288 blocks [2/2] [UU]
+Yes, (S) means the device is spare.  You don't have (S) next to sde2
+on md2 because (F) (failed) overrides (S).
+You can tell by the position [5], that it isn't part of the array
+(being a 5 disk array, the active positions are 0,1,2,3,4).
 
-md2 : active raid5 sdf2[4] sde2[5](F) sdd2[3] sdc2[2] sdb2[1] sda2[0]
-560732160 blocks level 5, 256k chunk, algorithm 2 [5/5] [UUUUU]
-
-unused devices: <none>
-
-
-Does the email message mean drive sde2[5] has failed? I know the sde2 refers
-to the second partition of /dev/sde. Here is the partition table
-
-# fdisk -l /dev/sde
-[root@elo ~]# fdisk -l /dev/sde
-
-Disk /dev/sde: 146.8 GB, 146815733760 bytes
-255 heads, 63 sectors/track, 17849 cylinders
-Units = cylinders of 16065 * 512 = 8225280 bytes
-
-   Device Boot      Start         End      Blocks   Id  System
-   /dev/sde1   *           1          13      104391   fd  Linux raid autodetect
-   /dev/sde2              14       17465   140183190   fd  Linux raid autodetect
-   /dev/sde3           17466       17847     3068415   fd  Linux raid autodetect
-
-I have partition 2 of drive sde as one of the raid devices for md. Does the (S)
-on sde3[2](S) mean the device is a spare for md1 and the same for md0?
-
-Mike
-
+NeilBrown
