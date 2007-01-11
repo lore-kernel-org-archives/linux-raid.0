@@ -1,39 +1,46 @@
-From: James Ralston <qralston+ml.linux-raid@andrew.cmu.edu>
-Subject: raid5 software vs hardware: parity calculations?
-Date: Thu, 11 Jan 2007 17:44:57 -0500
-Message-ID: <2A887D754684B6703B52E126@emerald.sei.cmu.edu>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: FailSpare event?
+Date: Fri, 12 Jan 2007 09:59:15 +1100
+Message-ID: <17830.49475.108136.376489@notabene.brown>
+References: <eo6cn8$5se$1@sea.gmane.org>
+	<17830.47341.560158.521091@notabene.brown>
+	<20070111223628.GU32386@mikee.ath.cx>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: message from Mike on Thursday January 11
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Mike <mikee@mikee.ath.cx>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I'm having a discussion with a coworker concerning the cost of md's
-raid5 implementation versus hardware raid5 implementations.
+On Thursday January 11, mikee@mikee.ath.cx wrote:
+> 
+> So I'm ok for the moment? Yes, I need to find the error and fix everything
+> back to the (S) state.
 
-Specifically, he states:
+Yes, OK for the moment.
 
-> The performance [of raid5 in hardware] is so much better with the
-> write-back caching on the card and the offload of the parity, it
-> seems to me that the minor increase in work of having to upgrade the
-> firmware if there's a buggy one is a highly acceptable trade-off to
-> the increased performance.  The md driver still commits you to
-> longer run queues since IO calls to disk, parity calculator and the
-> subsequent kflushd operations are non-interruptible in the CPU.  A
-> RAID card with write-back cache releases the IO operation virtually
-> instantaneously.
+> 
+> The messages in $HOST:/var/log/messages for the time of the email are:
+> 
+> Jan 11 16:04:25 elo kernel: sd 2:0:4:0: SCSI error: return code = 0x8000002
+> Jan 11 16:04:25 elo kernel: sde: Current: sense key: Hardware Error
+> Jan 11 16:04:25 elo kernel:     Additional sense: Internal target failure
+> Jan 11 16:04:25 elo kernel: Info fld=0x10b93c4d
+> Jan 11 16:04:25 elo kernel: end_request: I/O error, dev sde, sector 280575053
+> Jan 11 16:04:25 elo kernel: raid5: Disk failure on sde2, disabling device. Operation continuing on 5 devices
 
-It would seem that his comments have merit, as there appears to be
-work underway to move stripe operations outside of the spinlock:
+Given the sector number it looks likely that it was a superblock
+update.
+No idea how bad an 'internal target failure' is.  Maybe powercycling
+the drive would 'fix' it, maybe not.
 
-    http://lwn.net/Articles/184102/
+> 
+> On AIX boxes I can blink the drives to identify a bad/failing device. Is there
+> a way to blink the drives in linux?
 
-What I'm curious about is this: for real-world situations, how much
-does this matter?  In other words, how hard do you have to push md
-raid5 before doing dedicated hardware raid5 becomes a real win?
+Unfortunately not.
 
-James
-
+NeilBrown
