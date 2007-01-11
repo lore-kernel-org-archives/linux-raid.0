@@ -1,82 +1,39 @@
-From: Mike <mikee@mikee.ath.cx>
-Subject: Re: FailSpare event?
-Date: Thu, 11 Jan 2007 16:36:28 -0600
-Message-ID: <20070111223628.GU32386@mikee.ath.cx>
-References: <eo6cn8$5se$1@sea.gmane.org> <17830.47341.560158.521091@notabene.brown>
+From: James Ralston <qralston+ml.linux-raid@andrew.cmu.edu>
+Subject: raid5 software vs hardware: parity calculations?
+Date: Thu, 11 Jan 2007 17:44:57 -0500
+Message-ID: <2A887D754684B6703B52E126@emerald.sei.cmu.edu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <17830.47341.560158.521091@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, 12 Jan 2007, Neil Brown might have said:
+I'm having a discussion with a coworker concerning the cost of md's
+raid5 implementation versus hardware raid5 implementations.
 
-> On Thursday January 11, mikee@mikee.ath.cx wrote:
-> > Can someone tell me what this means please? I just received this in
-> > an email from one of my servers:
-> > 
-> ....
-> 
-> > 
-> > A FailSpare event had been detected on md device /dev/md2.
-> > 
-> > It could be related to component device /dev/sde2.
-> 
-> It means that mdadm has just noticed that /dev/sde2 is a spare and is faulty.
-> 
-> You would normally expect this if the array is rebuilding a spare and
-> a write to the spare fails however...
-> 
-> > 
-> > md2 : active raid5 sdf2[4] sde2[5](F) sdd2[3] sdc2[2] sdb2[1] sda2[0]
-> > 560732160 blocks level 5, 256k chunk, algorithm 2 [5/5] [UUUUU]
-> 
-> That isn't the case here - your array doesn't need rebuilding.
-> Possible a superblock-update failed.  Possibly mdadm only just started
-> monitoring the array and the spare has been faulty for some time.
-> 
-> > 
-> > Does the email message mean drive sde2[5] has failed? I know the sde2 refers
-> > to the second partition of /dev/sde. Here is the partition table
-> 
-> It means that md thinks sde2 cannot be trusted.  To find out why you
-> would need to look at kernel logs for IO errors.
-> 
-> > 
-> > I have partition 2 of drive sde as one of the raid devices for md. Does the (S)
-> > on sde3[2](S) mean the device is a spare for md1 and the same for md0?
-> > 
-> 
-> Yes, (S) means the device is spare.  You don't have (S) next to sde2
-> on md2 because (F) (failed) overrides (S).
-> You can tell by the position [5], that it isn't part of the array
-> (being a 5 disk array, the active positions are 0,1,2,3,4).
-> 
-> NeilBrown
-> 
+Specifically, he states:
 
-Thanks for the quick response.
+> The performance [of raid5 in hardware] is so much better with the
+> write-back caching on the card and the offload of the parity, it
+> seems to me that the minor increase in work of having to upgrade the
+> firmware if there's a buggy one is a highly acceptable trade-off to
+> the increased performance.  The md driver still commits you to
+> longer run queues since IO calls to disk, parity calculator and the
+> subsequent kflushd operations are non-interruptible in the CPU.  A
+> RAID card with write-back cache releases the IO operation virtually
+> instantaneously.
 
-So I'm ok for the moment? Yes, I need to find the error and fix everything
-back to the (S) state.
+It would seem that his comments have merit, as there appears to be
+work underway to move stripe operations outside of the spinlock:
 
-The messages in $HOST:/var/log/messages for the time of the email are:
+    http://lwn.net/Articles/184102/
 
-Jan 11 16:04:25 elo kernel: sd 2:0:4:0: SCSI error: return code = 0x8000002
-Jan 11 16:04:25 elo kernel: sde: Current: sense key: Hardware Error
-Jan 11 16:04:25 elo kernel:     Additional sense: Internal target failure
-Jan 11 16:04:25 elo kernel: Info fld=0x10b93c4d
-Jan 11 16:04:25 elo kernel: end_request: I/O error, dev sde, sector 280575053
-Jan 11 16:04:25 elo kernel: raid5: Disk failure on sde2, disabling device. Operation continuing on 5 devices
+What I'm curious about is this: for real-world situations, how much
+does this matter?  In other words, how hard do you have to push md
+raid5 before doing dedicated hardware raid5 becomes a real win?
 
-This is a dell box running Fedora Core with recent patches. It is a production
-box so I do not patch each night.
+James
 
-On AIX boxes I can blink the drives to identify a bad/failing device. Is there
-a way to blink the drives in linux?
-
-Mike
