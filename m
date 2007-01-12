@@ -1,62 +1,79 @@
-From: James Ralston <qralston+ml.linux-raid@andrew.cmu.edu>
-Subject: Re: raid5 software vs hardware: parity calculations?
-Date: Fri, 12 Jan 2007 15:34:43 -0500
-Message-ID: <F4B05AD60951BBA089A81535@emerald.sei.cmu.edu>
-References: <2A887D754684B6703B52E126@emerald.sei.cmu.edu> <Pine.LNX.4.64.0701120935000.18431@twinlark.arctic.org>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: Linux Software RAID 5 Performance Optimizations: 2.6.19.1: (211MB/s
+ read & 195MB/s write)
+Date: Fri, 12 Jan 2007 15:41:31 -0500
+Message-ID: <45A7F27B.3080402@tmr.com>
+References: <Pine.LNX.4.64.0701111832080.3673@p34.internal.lan> <Pine.LNX.4.64.0701120934260.21164@p34.internal.lan> <Pine.LNX.4.64.0701121236470.3840@p34.internal.lan> <200701122235.30288.a1426z@gawab.com> <Pine.LNX.4.64.0701121455550.6844@p34.internal.lan> <Pine.LNX.4.64.0701121459240.3650@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0701120935000.18431@twinlark.arctic.org>
-Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.64.0701121459240.3650@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: Al Boldi <a1426z@gawab.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, xfs@oss.sgi.com
 List-Id: linux-raid.ids
 
-On 2007-01-12 at 09:39-08 dean gaudet <dean@arctic.org> wrote:
+Justin Piszcz wrote:
+> # echo 3 > /proc/sys/vm/drop_caches
+> # dd if=/dev/md3 of=/dev/null bs=1M count=10240
+> 10240+0 records in
+> 10240+0 records out
+> 10737418240 bytes (11 GB) copied, 399.352 seconds, 26.9 MB/s
+> # for i in sde sdg sdi sdk; do   echo 192 > 
+> /sys/block/"$i"/queue/max_sectors_kb;   echo "Set 
+> /sys/block/"$i"/queue/max_sectors_kb to 192kb"; done
+> Set /sys/block/sde/queue/max_sectors_kb to 192kb
+> Set /sys/block/sdg/queue/max_sectors_kb to 192kb
+> Set /sys/block/sdi/queue/max_sectors_kb to 192kb
+> Set /sys/block/sdk/queue/max_sectors_kb to 192kb
+> # echo 3 > /proc/sys/vm/drop_caches
+> # dd if=/dev/md3 of=/dev/null bs=1M count=10240 
+> 10240+0 records in
+> 10240+0 records out
+> 10737418240 bytes (11 GB) copied, 398.069 seconds, 27.0 MB/s
+>
+> Awful performance with your numbers/drop_caches settings.. !
+>
+> What were your tests designed to show?
+>   
+To start, I expect then to show change in write, not read... and IIRC (I 
+didn't look it up) drop_caches just flushes the caches so you start with 
+known memory contents, none.
+>
+> Justin.
+>
+> On Fri, 12 Jan 2007, Justin Piszcz wrote:
+>
+>   
+>> On Fri, 12 Jan 2007, Al Boldi wrote:
+>>
+>>     
+>>> Justin Piszcz wrote:
+>>>       
+>>>> RAID 5 TWEAKED: 1:06.41 elapsed @ 60% CPU
+>>>>
+>>>> This should be 1:14 not 1:06(was with a similarly sized file but not the
+>>>> same) the 1:14 is the same file as used with the other benchmarks.  and to
+>>>> get that I used 256mb read-ahead and 16384 stripe size ++ 128
+>>>> max_sectors_kb (same size as my sw raid5 chunk size)
+>>>>         
+>>> max_sectors_kb is probably your key. On my system I get twice the read 
+>>> performance by just reducing max_sectors_kb from default 512 to 192.
+>>>
+>>> Can you do a fresh reboot to shell and then:
+>>> $ cat /sys/block/hda/queue/*
+>>> $ cat /proc/meminfo
+>>> $ echo 3 > /proc/sys/vm/drop_caches
+>>> $ dd if=/dev/hda of=/dev/null bs=1M count=10240
+>>> $ echo 192 > /sys/block/hda/queue/max_sectors_kb
+>>> $ echo 3 > /proc/sys/vm/drop_caches
+>>> $ dd if=/dev/hda of=/dev/null bs=1M count=10240
+>>>
+>>>       
 
-> On Thu, 11 Jan 2007, James Ralston wrote:
-> 
-> > I'm having a discussion with a coworker concerning the cost of
-> > md's raid5 implementation versus hardware raid5 implementations.
-> > 
-> > Specifically, he states:
-> > 
-> > > The performance [of raid5 in hardware] is so much better with
-> > > the write-back caching on the card and the offload of the
-> > > parity, it seems to me that the minor increase in work of having
-> > > to upgrade the firmware if there's a buggy one is a highly
-> > > acceptable trade-off to the increased performance.  The md
-> > > driver still commits you to longer run queues since IO calls to
-> > > disk, parity calculator and the subsequent kflushd operations
-> > > are non-interruptible in the CPU.  A RAID card with write-back
-> > > cache releases the IO operation virtually instantaneously.
-> > 
-> > It would seem that his comments have merit, as there appears to be
-> > work underway to move stripe operations outside of the spinlock:
-> > 
-> >     http://lwn.net/Articles/184102/
-> > 
-> > What I'm curious about is this: for real-world situations, how
-> > much does this matter?  In other words, how hard do you have to
-> > push md raid5 before doing dedicated hardware raid5 becomes a real
-> > win?
-> 
-> hardware with battery backed write cache is going to beat the
-> software at small write traffic latency essentially all the time but
-> it's got nothing to do with the parity computation.
-
-I'm not convinced that's true.  What my coworker is arguing is that md
-raid5 code spinlocks while it is performing this sequence of
-operations:
-
-    1.  executing the write
-    2.  reading the blocks necessary for recalculating the parity
-    3.  recalculating the parity
-    4.  updating the parity block
-
-My [admittedly cursory] read of the code, coupled with the link above,
-leads me to believe that my coworker is correct, which is why I was
-for trolling for [informed] opinions about how much of a performance
-hit the spinlock causes.
+-- 
+bill davidsen <davidsen@tmr.com>
+  CTO TMR Associates, Inc
+  Doing interesting things with small computers since 1979
 
