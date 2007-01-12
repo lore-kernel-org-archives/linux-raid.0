@@ -1,46 +1,59 @@
-From: Corey Hickey <bugfood-ml@fatooh.org>
-Subject: Re: FailSpare event?
-Date: Thu, 11 Jan 2007 16:40:18 -0800
-Message-ID: <45A6D8F2.3030800@fatooh.org>
-References: <eo6cn8$5se$1@sea.gmane.org> <17830.47341.560158.521091@notabene.brown> <20070111223628.GU32386@mikee.ath.cx> <17830.49475.108136.376489@notabene.brown> <20070111230636.GV32386@mikee.ath.cx>
+From: Michael Tokarev <mjt@tls.msk.ru>
+Subject: Re: Linux Software RAID 5 Performance Optimizations: 2.6.19.1: (211MB/s
+ read & 195MB/s write)
+Date: Fri, 12 Jan 2007 17:01:24 +0300
+Message-ID: <45A794B4.5020608@tls.msk.ru>
+References: <Pine.LNX.4.64.0701111832080.3673@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20070111230636.GV32386@mikee.ath.cx>
+In-Reply-To: <Pine.LNX.4.64.0701111832080.3673@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, xfs@oss.sgi.com
 List-Id: linux-raid.ids
 
-Mike wrote:
-> I found the smartctl command. I have a 'long' test running in the background.
-> I checked this drive and the other drives. This drive has been used the least
-> (confirms it is a spare?) and is the only one with 'Total uncorrected errors' > 0.
+Justin Piszcz wrote:
+> Using 4 raptor 150s:
 > 
-> How to determine the error, correct the error, or clear the error?
+> Without the tweaks, I get 111MB/s write and 87MB/s read.
+> With the tweaks, 195MB/s write and 211MB/s read.
 > 
-> Mike
+> Using kernel 2.6.19.1.
 > 
-
-[cut]
-
-> SMART Self-test log
-> Num  Test              Status                 segment  LifeTime  LBA_first_err [SK ASC ASQ]
->      Description                              number   (hours)
-> # 1  Background long   Completed, segment failed   -    3943                 - [-   -    -]
+> Without the tweaks and with the tweaks:
 > 
-> Long (extended) Self Test duration: 2726 seconds [45.4 minutes]
+> # Stripe tests:
+> echo 8192 > /sys/block/md3/md/stripe_cache_size
+> 
+> # DD TESTS [WRITE]
+> 
+> DEFAULT: (512K)
+> $ dd if=/dev/zero of=10gb.no.optimizations.out bs=1M count=10240
+> 10240+0 records in
+> 10240+0 records out
+> 10737418240 bytes (11 GB) copied, 96.6988 seconds, 111 MB/s
+[]
+> 8192K READ AHEAD
+> $ dd if=10gb.16384k.stripe.out of=/dev/null bs=1M
+> 10240+0 records in
+> 10240+0 records out
+> 10737418240 bytes (11 GB) copied, 64.9454 seconds, 165 MB/s
 
-Am I mistaken, or does the above information not say that the long 
-self-test actually failed? If a SMART test fails, that should be 
-sufficient cause to RMA the drive if it's still under warranty.
+What exactly are you measuring?  Linear read/write, like copying one
+device to another (or to /dev/null), in large chunks?
 
-It might not actually be that surprising to have a largely unused drive 
-fail. I've had a couple drives fail due to what I presume is bearing 
-wear: the drive gradually gets noisy (over many months) and eventually 
-starts having intermittent errors that get more and more frequent. If 
-your drive was spinning while it was a spare, then it would be just as 
-likely to wear out a bad bearing as any of your other drives. Of course, 
-it could be some other problem; that's just an example.
+I don't think it's an interesting test.  Hint: how many times a day
+you plan to perform such a copy?
 
--Corey
+(By the way, for a copy of one block device to another, try using
+O_DIRECT, with two dd processes doing the copy - one reading, and
+another writing - this way, you'll get best results without huge
+affect on other things running on the system.  Like this:
+
+ dd if=/dev/onedev bs=1M iflag=direct |
+ dd of=/dev/twodev bs=1M oflag=direct
+)
+
+/mjt
