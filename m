@@ -1,45 +1,43 @@
-From: dean gaudet <dean@arctic.org>
-Subject: Re: raid5 software vs hardware: parity calculations?
-Date: Fri, 12 Jan 2007 09:39:16 -0800 (PST)
-Message-ID: <Pine.LNX.4.64.0701120935000.18431@twinlark.arctic.org>
-References: <2A887D754684B6703B52E126@emerald.sei.cmu.edu>
+From: Al Boldi <a1426z@gawab.com>
+Subject: Re: Linux Software RAID 5 Performance Optimizations: 2.6.19.1: (211MB/s read & 195MB/s write)
+Date: Fri, 12 Jan 2007 22:49:13 +0300
+Message-ID: <200701122235.30288.a1426z@gawab.com>
+References: <Pine.LNX.4.64.0701111832080.3673@p34.internal.lan> <Pine.LNX.4.64.0701120934260.21164@p34.internal.lan> <Pine.LNX.4.64.0701121236470.3840@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+  charset="windows-1256"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <2A887D754684B6703B52E126@emerald.sei.cmu.edu>
+In-Reply-To: <Pine.LNX.4.64.0701121236470.3840@p34.internal.lan>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: James Ralston <qralston+ml.linux-raid@andrew.cmu.edu>
-Cc: linux-raid@vger.kernel.org
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, xfs@oss.sgi.com
 List-Id: linux-raid.ids
 
-On Thu, 11 Jan 2007, James Ralston wrote:
+Justin Piszcz wrote:
+> RAID 5 TWEAKED: 1:06.41 elapsed @ 60% CPU
+>
+> This should be 1:14 not 1:06(was with a similarly sized file but not the
+> same) the 1:14 is the same file as used with the other benchmarks.  and to
+> get that I used 256mb read-ahead and 16384 stripe size ++ 128
+> max_sectors_kb (same size as my sw raid5 chunk size)
 
-> I'm having a discussion with a coworker concerning the cost of md's
-> raid5 implementation versus hardware raid5 implementations.
-> 
-> Specifically, he states:
-> 
-> > The performance [of raid5 in hardware] is so much better with the
-> > write-back caching on the card and the offload of the parity, it
-> > seems to me that the minor increase in work of having to upgrade the
-> > firmware if there's a buggy one is a highly acceptable trade-off to
-> > the increased performance.  The md driver still commits you to
-> > longer run queues since IO calls to disk, parity calculator and the
-> > subsequent kflushd operations are non-interruptible in the CPU.  A
-> > RAID card with write-back cache releases the IO operation virtually
-> > instantaneously.
-> 
-> It would seem that his comments have merit, as there appears to be
-> work underway to move stripe operations outside of the spinlock:
-> 
->     http://lwn.net/Articles/184102/
-> 
-> What I'm curious about is this: for real-world situations, how much
-> does this matter?  In other words, how hard do you have to push md
-> raid5 before doing dedicated hardware raid5 becomes a real win?
+max_sectors_kb is probably your key. On my system I get twice the read 
+performance by just reducing max_sectors_kb from default 512 to 192.
 
-hardware with battery backed write cache is going to beat the software at 
-small write traffic latency essentially all the time but it's got nothing 
-to do with the parity computation.
+Can you do a fresh reboot to shell and then:
+$ cat /sys/block/hda/queue/*
+$ cat /proc/meminfo
+$ echo 3 > /proc/sys/vm/drop_caches
+$ dd if=/dev/hda of=/dev/null bs=1M count=10240
+$ echo 192 > /sys/block/hda/queue/max_sectors_kb
+$ echo 3 > /proc/sys/vm/drop_caches
+$ dd if=/dev/hda of=/dev/null bs=1M count=10240
 
--dean
+
+Thanks!
+
+--
+Al
+
