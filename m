@@ -1,108 +1,26 @@
-From: Mike Hardy <mhardy@h3c.com>
+From: "=?ISO-8859-1?Q?Martin_Schr=F6der?=" <martin@oneiros.de>
 Subject: Re: FailSpare event?
-Date: Thu, 11 Jan 2007 16:05:41 -0800
-Message-ID: <45A6D0D5.9010200@h3c.com>
-References: <eo6cn8$5se$1@sea.gmane.org> <17830.47341.560158.521091@notabene.brown> <20070111223628.GU32386@mikee.ath.cx> <17830.49475.108136.376489@notabene.brown> <20070111230636.GV32386@mikee.ath.cx>
+Date: Fri, 12 Jan 2007 01:48:55 +0100
+Message-ID: <68c491a60701111648s7c4c6b83x8ce44e6f682d6e53@mail.gmail.com>
+References: <eo6cn8$5se$1@sea.gmane.org>
+	 <17830.47341.560158.521091@notabene.brown>
+	 <20070111223628.GU32386@mikee.ath.cx>
+	 <17830.49475.108136.376489@notabene.brown>
+	 <20070111230636.GV32386@mikee.ath.cx>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20070111230636.GV32386@mikee.ath.cx>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Mike <mikee@mikee.ath.cx>
-Cc: linux-raid@vger.kernel.org
+To: Linux List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+2007/1/12, Mike <mikee@mikee.ath.cx>:
+> # 1  Background long   Completed, segment failed   -    3943
 
-google "BadBlockHowto"
+This should still be in warranty. Try to get a replacement.
 
-Any "just google it" response sounds glib, but this is actually how to
-do it :-)
-
-If you're new to md and mdadm, don't forget to actually remove the drive
-from the array before you start working on it with 'dd'
-
--Mike
-
-Mike wrote:
-> On Fri, 12 Jan 2007, Neil Brown might have said:
-> 
->> On Thursday January 11, mikee@mikee.ath.cx wrote:
->>> So I'm ok for the moment? Yes, I need to find the error and fix everything
->>> back to the (S) state.
->> Yes, OK for the moment.
->>
->>> The messages in $HOST:/var/log/messages for the time of the email are:
->>>
->>> Jan 11 16:04:25 elo kernel: sd 2:0:4:0: SCSI error: return code = 0x8000002
->>> Jan 11 16:04:25 elo kernel: sde: Current: sense key: Hardware Error
->>> Jan 11 16:04:25 elo kernel:     Additional sense: Internal target failure
->>> Jan 11 16:04:25 elo kernel: Info fld=0x10b93c4d
->>> Jan 11 16:04:25 elo kernel: end_request: I/O error, dev sde, sector 280575053
->>> Jan 11 16:04:25 elo kernel: raid5: Disk failure on sde2, disabling device. Operation continuing on 5 devices
->> Given the sector number it looks likely that it was a superblock
->> update.
->> No idea how bad an 'internal target failure' is.  Maybe powercycling
->> the drive would 'fix' it, maybe not.
->>
->>> On AIX boxes I can blink the drives to identify a bad/failing device. Is there
->>> a way to blink the drives in linux?
->> Unfortunately not.
->>
->> NeilBrown
->>
-> 
-> I found the smartctl command. I have a 'long' test running in the background.
-> I checked this drive and the other drives. This drive has been used the least
-> (confirms it is a spare?) and is the only one with 'Total uncorrected errors' > 0.
-> 
-> How to determine the error, correct the error, or clear the error?
-> 
-> Mike
-> 
-> [root@$HOST ~]# smartctl -a /dev/sde
-> smartctl version 5.36 [i686-redhat-linux-gnu] Copyright (C) 2002-6 Bruce Allen
-> Home page is http://smartmontools.sourceforge.net/
-> 
-> Device: SEAGATE  ST3146707LC      Version: D703
-> Serial number: 3KS30WY8
-> Device type: disk
-> Transport protocol: Parallel SCSI (SPI-4)
-> Local Time is: Thu Jan 11 17:00:26 2007 CST
-> Device supports SMART and is Enabled
-> Temperature Warning Enabled
-> SMART Health Status: OK
-> 
-> Current Drive Temperature:     48 C
-> Drive Trip Temperature:        68 C
-> Elements in grown defect list: 0
-> Vendor (Seagate) cache information
->   Blocks sent to initiator = 66108
->   Blocks received from initiator = 147374656
->   Blocks read from cache and sent to initiator = 42215
->   Number of read and write commands whose size <= segment size = 12635583
->   Number of read and write commands whose size > segment size = 0
-> Vendor (Seagate/Hitachi) factory information
->   number of hours powered up = 3943.42
->   number of minutes until next internal SMART test = 94
-> 
-> Error counter log:
->            Errors Corrected by           Total   Correction     Gigabytes    Total
->                ECC          rereads/    errors   algorithm      processed    uncorrected
->            fast | delayed   rewrites  corrected  invocations   [10^9 bytes]  errors
-> read:        354        0         0       354        354          0.546           0
-> write:         0        0         0         0          0        185.871           1
-> 
-> Non-medium error count:        0
-> 
-> SMART Self-test log
-> Num  Test              Status                 segment  LifeTime  LBA_first_err [SK ASC ASQ]
->      Description                              number   (hours)
-> # 1  Background long   Completed, segment failed   -    3943                 - [-   -    -]
-> 
-> Long (extended) Self Test duration: 2726 seconds [45.4 minutes]
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Best
+   Martin
