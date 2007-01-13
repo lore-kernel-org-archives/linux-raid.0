@@ -1,72 +1,68 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: Linux Software RAID 5 Performance Optimizations: 2.6.19.1: (211MB/s
- read & 195MB/s write)
-Date: Fri, 12 Jan 2007 15:32:13 -0500
-Message-ID: <45A7F04D.6030804@tmr.com>
-References: <Pine.LNX.4.64.0701111832080.3673@p34.internal.lan> <Pine.LNX.4.64.0701120934260.21164@p34.internal.lan> <Pine.LNX.4.64.0701121236470.3840@p34.internal.lan> <200701122235.30288.a1426z@gawab.com>
+From: Al Boldi <a1426z@gawab.com>
+Subject: Re: Linux Software RAID 5 Performance Optimizations: 2.6.19.1: (211MB/s read & 195MB/s write)
+Date: Sat, 13 Jan 2007 09:11:38 +0300
+Message-ID: <200701130911.38240.a1426z@gawab.com>
+References: <Pine.LNX.4.64.0701111832080.3673@p34.internal.lan> <200701130000.48717.a1426z@gawab.com> <Pine.LNX.4.64.0701121628100.3655@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+  charset="windows-1256"
 Content-Transfer-Encoding: 7bit
-Return-path: <xfs-bounce@oss.sgi.com>
-In-Reply-To: <200701122235.30288.a1426z@gawab.com>
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.64.0701121628100.3655@p34.internal.lan>
 Content-Disposition: inline
-Sender: xfs-bounce@oss.sgi.com
-Errors-to: xfs-bounce@oss.sgi.com
-To: Al Boldi <a1426z@gawab.com>
-Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, xfs@oss.sgi.com
+Sender: linux-raid-owner@vger.kernel.org
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, xfs@oss.sgi.com
 List-Id: linux-raid.ids
 
-Al Boldi wrote:
-> Justin Piszcz wrote:
->   
->> RAID 5 TWEAKED: 1:06.41 elapsed @ 60% CPU
->>
->> This should be 1:14 not 1:06(was with a similarly sized file but not the
->> same) the 1:14 is the same file as used with the other benchmarks.  and to
->> get that I used 256mb read-ahead and 16384 stripe size ++ 128
->> max_sectors_kb (same size as my sw raid5 chunk size)
->>     
+Justin Piszcz wrote:
+> On Sat, 13 Jan 2007, Al Boldi wrote:
+> > Justin Piszcz wrote:
+> > > Btw, max sectors did improve my performance a little bit but
+> > > stripe_cache+read_ahead were the main optimizations that made
+> > > everything go faster by about ~1.5x.   I have individual bonnie++
+> > > benchmarks of [only] the max_sector_kb tests as well, it improved the
+> > > times from 8min/bonnie run -> 7min 11 seconds or so, see below and
+> > > then after that is what you requested.
+> >
+> > Can you repeat with /dev/sda only?
 >
-> max_sectors_kb is probably your key. On my system I get twice the read 
-> performance by just reducing max_sectors_kb from default 512 to 192.
+> For sda-- (is a 74GB raptor only)-- but ok.
+
+Do you get the same results for the 150GB-raptor on sd{e,g,i,k}?
+
+> # uptime
+>  16:25:38 up 1 min,  3 users,  load average: 0.23, 0.14, 0.05
+> # cat /sys/block/sda/queue/max_sectors_kb
+> 512
+> # echo 3 > /proc/sys/vm/drop_caches
+> # dd if=/dev/sda of=/dev/null bs=1M count=10240
+> 10240+0 records in
+> 10240+0 records out
+> 10737418240 bytes (11 GB) copied, 150.891 seconds, 71.2 MB/s
+> # echo 192 > /sys/block/sda/queue/max_sectors_kb
+> # echo 3 > /proc/sys/vm/drop_caches
+> # dd if=/dev/sda of=/dev/null bs=1M count=10240
+> 10240+0 records in
+> 10240+0 records out
+> 10737418240 bytes (11 GB) copied, 150.192 seconds, 71.5 MB/s
+> # echo 128 > /sys/block/sda/queue/max_sectors_kb
+> # echo 3 > /proc/sys/vm/drop_caches
+> # dd if=/dev/sda of=/dev/null bs=1M count=10240
+> 10240+0 records in
+> 10240+0 records out
+> 10737418240 bytes (11 GB) copied, 150.15 seconds, 71.5 MB/s
 >
-> Can you do a fresh reboot to shell and then:
-> $ cat /sys/block/hda/queue/*
-> $ cat /proc/meminfo
-> $ echo 3 > /proc/sys/vm/drop_caches
-> $ dd if=/dev/hda of=/dev/null bs=1M count=10240
-> $ echo 192 > /sys/block/hda/queue/max_sectors_kb
-> $ echo 3 > /proc/sys/vm/drop_caches
-> $ dd if=/dev/hda of=/dev/null bs=1M count=10240
->   
-You can find even more joy on large writes, assuming you have a recent 
-2.6 kernel. Look at /proc/sys/vm/dirty-* values. by making the ratio 
-smaller, and the ratio smaller you can reduce or eliminate the bursty 
-behavior of Linux disk write. However, see my previous thread on poor 
-RAID-5 write performance, there's still something not optimal. Note that 
-RAID-10, which does more i/o, is faster with default tuning than RAID-5 
-by about N-1 taime (N = array drives).
+>
+> Does this show anything useful?
 
-I would say that the numbers posted are interesting, but most people 
-don't have a spare GB or more to use for buffer, particularly if you 
-have multiple arrays on your disks.
+Probably a latency issue.  md is highly latency sensitive.
 
-Before someone says "why do that..." here's why:
-  /boot - should be mirrored so the BIOS will boot if a drive fails
-  swap - RAID-1, because for an given tuning, it's faster than RAID-5. 
-Note: RAID-10 is faster yet, but Fedora
-    and SuSE rescue CDs don't like RAID-10 swap.
-  critical - stuff you can't afford to lose, RAID-6\
-  normal - RAID-5
-
-That's why I have partitions of the same drives at different RAID 
-levels, and with various tuning settings, depending on how they are used.
-
--- 
-bill davidsen <davidsen@tmr.com>
-  CTO TMR Associates, Inc
-  Doing interesting things with small computers since 1979
+What CPU type/speed do you have?  Bootlog/dmesg?
 
 
+Thanks!
 
-[[HTML alternate version deleted]]
+--
+Al
+
