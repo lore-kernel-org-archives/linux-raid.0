@@ -1,34 +1,37 @@
-From: Robin Bowes <robin-lists@robinbowes.com>
-Subject: Re: raid5 software vs hardware: parity calculations?
-Date: Sat, 13 Jan 2007 23:23:23 +0000
-Message-ID: <eobpl9$df3$1@sea.gmane.org>
-References: <2A887D754684B6703B52E126@emerald.sei.cmu.edu>	 <Pine.LNX.4.64.0701120935000.18431@twinlark.arctic.org>	 <F4B05AD60951BBA089A81535@emerald.sei.cmu.edu> <e9c3a7c20701130120o246f5cf1i8d364777123c50d8@mail.gmail.com> <45A917B8.2060706@tmr.com>
+From: Nix <nix@esperi.org.uk>
+Subject: Re: FailSpare event?
+Date: Sat, 13 Jan 2007 23:34:26 +0000
+Message-ID: <87odp2pkl9.fsf@hades.wkstn.nix>
+References: <eo6cn8$5se$1@sea.gmane.org>
+	<17830.47341.560158.521091@notabene.brown>
+	<200701121534.17618.earny@net4u.de> <873b6ere4s.fsf@hades.wkstn.nix>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <45A917B8.2060706@tmr.com>
+In-Reply-To: <873b6ere4s.fsf@hades.wkstn.nix> (nix@esperi.org.uk's message of "13 Jan 2007 18:25:19 -0000")
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: earny@net4u.de
+Cc: Neil Brown <neilb@suse.de>, Mike <mikee@mikee.ath.cx>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Bill Davidsen wrote:
+On 13 Jan 2007, nix@esperi.org.uk spake thusly:
+
+> On 12 Jan 2007, Ernst Herzberg told this:
+>> Then every about 60 sec 4 times
+>>
+>> event=SpareActive
+>> mddev=/dev/md3
 >
-> There have been several recent threads on the list regarding software
-> RAID-5 performance. The reference might be updated to reflect the poor
-> write performance of RAID-5 until/unless significant tuning is done.
-> Read that as tuning obscure parameters and throwing a lot of memory into
-> stripe cache. The reasons for hardware RAID should include "performance
-> of RAID-5 writes is usually much better than software RAID-5 with
-> default tuning.
+> I see exactly this on both my RAID-5 arrays, neither of which have any
+> spare device --- nor have any active devices transitioned to spare
+> (which is what that event is actually supposed to mean).
 
-Could you point me at a source of documentation describing how to
-perform such tuning?
+Hm, the manual says that it means that a spare has transitioned to
+active (which seems more likely). Perhaps the comment at line 82 of
+Monitor.c is wrong, or I just don't understand what a `reverse
+transition' is supposed to be.
 
-Specifically, I have 8x500GB WD STAT drives on a Supermicro PCI-X 8-port
-SATA card configured as a single RAID6 array (~3TB available space)
-
-Thanks,
-
-R.
-
+-- 
+`He accused the FSF of being "something of a hypocrit", which
+ shows that he neither understands hypocrisy nor can spell.'
+   --- jimmybgood
