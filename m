@@ -1,54 +1,58 @@
-From: Robin Bowes <robin-lists@robinbowes.com>
-Subject: Re: raid5 software vs hardware: parity calculations?
-Date: Mon, 15 Jan 2007 16:22:27 +0000
-Message-ID: <45ABAA43.2000902@robinbowes.com>
-References: <2A887D754684B6703B52E126@emerald.sei.cmu.edu>	 <Pine.LNX.4.64.0701120935000.18431@twinlark.arctic.org>	 <F4B05AD60951BBA089A81535@emerald.sei.cmu.edu> <e9c3a7c20701130120o246f5cf1i8d364777123c50d8@mail.gmail.com> <45A917B8.2060706@tmr.com> <eobpl9$df3$1@sea.gmane.org> <45AB9DC6.50509@tmr.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: FailSpare event?
+Date: Mon, 15 Jan 2007 08:20:10 +1100
+Message-ID: <17834.40586.985089.343283@notabene.brown>
+References: <eo6cn8$5se$1@sea.gmane.org>
+	<17830.47341.560158.521091@notabene.brown>
+	<200701121534.17618.earny@net4u.de>
+	<873b6ere4s.fsf@hades.wkstn.nix>
+	<87y7o5lkjx.fsf@hades.wkstn.nix>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <45AB9DC6.50509@tmr.com>
+In-Reply-To: message from Nix on Sunday January 14
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: linux-raid@vger.kernel.org
+To: Nix <nix@esperi.org.uk>
+Cc: earny@net4u.de, Mike <mikee@mikee.ath.cx>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Bill Davidsen wrote:
-> Robin Bowes wrote:
->> Bill Davidsen wrote:
->>  
->>> There have been several recent threads on the list regarding software
->>> RAID-5 performance. The reference might be updated to reflect the poor
->>> write performance of RAID-5 until/unless significant tuning is done.
->>> Read that as tuning obscure parameters and throwing a lot of memory into
->>> stripe cache. The reasons for hardware RAID should include "performance
->>> of RAID-5 writes is usually much better than software RAID-5 with
->>> default tuning.
->>>     
->>
->> Could you point me at a source of documentation describing how to
->> perform such tuning?
->>   
-> No. There has been a lot of discussion of this topic on this list, and a
-> trip through the archives of the last 60 days or so will let you pull
-> out a number of tuning tips which allow very good performance. My
-> concern was writing large blocks of data, 1MB per write, to RAID-5, and
-> didn't involve the overhead of small blocks at all, that leads through
-> other code and behavior.
+On Sunday January 14, nix@esperi.org.uk wrote:
+> On 13 Jan 2007, nix@esperi.org.uk uttered the following:
+> > mdadm-2.6 bug, I fear. I haven't tracked it down yet but will look
+> > shortly: I can't afford to not run mdadm --monitor... odd, that
+> > code hasn't changed during 2.6 development.
+> 
+> Whoo! Compile Monitor.c without optimization and the problem goes away.
+> 
+> Hunting: maybe it's a compiler bug (anyone not using GCC 4.1.1 seeing
+> this?), maybe mdadm is tripping undefined behaviour somewhere...
 
-Actually Bill, I'm running RAID6 (my mistake for not mentioning it
-explicitly before) - I found some material relating to RAID5 but nothing
-on RAID6.
+Probably....
 
-Are the concepts similar, or is RAID6 a different beast altogether?
+A quick look suggests that the following patch might make a
+difference, but there is more to it than that.  I think there are
+subtle differences due to the use of version-1 superblocks.  That
+might be just another one-line change, but I want to make sure first.
 
->> Specifically, I have 8x500GB WD STAT drives on a Supermicro PCI-X 8-port
->> SATA card configured as a single RAID6 array (~3TB available space)
->>   
-> No hot spare(s)?
+Thanks,
+NeilBrown
 
-I'm running RAID6 instead of RAID5+1 - I've had a couple of instances
-where a drive has failed in a RAID5+1 array and a second has failed
-during the rebuild after the hot-spare had kicked in.
 
-R.
+
+### Diffstat output
+ ./Monitor.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff .prev/Monitor.c ./Monitor.c
+--- .prev/Monitor.c	2006-12-21 17:15:55.000000000 +1100
++++ ./Monitor.c	2007-01-15 08:17:30.000000000 +1100
+@@ -383,7 +383,7 @@ int Monitor(mddev_dev_t devlist,
+ 						)
+ 						alert("SpareActive", dev, dv, mailaddr, mailfrom, alert_cmd, dosyslog);
+ 				}
+-				st->devstate[i] = disc.state;
++				st->devstate[i] = newstate;
+ 				st->devid[i] = makedev(disc.major, disc.minor);
+ 			}
+ 			st->active = array.active_disks;
