@@ -1,55 +1,71 @@
-From: Nix <nix@esperi.org.uk>
-Subject: Re: FailSpare event?
-Date: Sat, 13 Jan 2007 23:38:00 +0000
-Message-ID: <87k5zqpkfb.fsf@hades.wkstn.nix>
-References: <eo6cn8$5se$1@sea.gmane.org>
-	<17830.47341.560158.521091@notabene.brown>
-	<200701121534.17618.earny@net4u.de> <873b6ere4s.fsf@hades.wkstn.nix>
+From: dean gaudet <dean@arctic.org>
+Subject: Re: raid5 software vs hardware: parity calculations?
+Date: Sat, 13 Jan 2007 19:16:32 -0800 (PST)
+Message-ID: <Pine.LNX.4.64.0701131903270.16472@twinlark.arctic.org>
+References: <2A887D754684B6703B52E126@emerald.sei.cmu.edu>
+ <Pine.LNX.4.64.0701120935000.18431@twinlark.arctic.org>
+ <F4B05AD60951BBA089A81535@emerald.sei.cmu.edu>
+ <e9c3a7c20701130120o246f5cf1i8d364777123c50d8@mail.gmail.com>
+ <45A917B8.2060706@tmr.com> <eobpl9$df3$1@sea.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <873b6ere4s.fsf@hades.wkstn.nix> (nix@esperi.org.uk's message of "13 Jan 2007 18:25:19 -0000")
+In-Reply-To: <eobpl9$df3$1@sea.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: earny@net4u.de
-Cc: Neil Brown <neilb@suse.de>, Mike <mikee@mikee.ath.cx>, linux-raid@vger.kernel.org
+To: Robin Bowes <robin-lists@robinbowes.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 13 Jan 2007, nix@esperi.org.uk uttered the following:
+On Sat, 13 Jan 2007, Robin Bowes wrote:
 
-> On 12 Jan 2007, Ernst Herzberg told this:
->> Then every about 60 sec 4 times
->>
->> event=SpareActive
->> mddev=/dev/md3
->
-> I see exactly this on both my RAID-5 arrays, neither of which have any
-> spare device --- nor have any active devices transitioned to spare
-> (which is what that event is actually supposed to mean).
+> Bill Davidsen wrote:
+> >
+> > There have been several recent threads on the list regarding software
+> > RAID-5 performance. The reference might be updated to reflect the poor
+> > write performance of RAID-5 until/unless significant tuning is done.
+> > Read that as tuning obscure parameters and throwing a lot of memory into
+> > stripe cache. The reasons for hardware RAID should include "performance
+> > of RAID-5 writes is usually much better than software RAID-5 with
+> > default tuning.
+> 
+> Could you point me at a source of documentation describing how to
+> perform such tuning?
+> 
+> Specifically, I have 8x500GB WD STAT drives on a Supermicro PCI-X 8-port
+> SATA card configured as a single RAID6 array (~3TB available space)
 
-One oddity has already come to light. My /proc/mdstat says
+linux sw raid6 small write performance is bad because it reads the entire 
+stripe, merges the small write, and writes back the changed disks.  
+unlike raid5 where a small write can get away with a partial stripe read 
+(i.e. the smallest raid5 write will read the target disk, read the parity, 
+write the target, and write the updated parity)... afaik this optimization 
+hasn't been implemented in raid6 yet.
 
-md2 : active raid5 sdb7[0] hda5[3] sda7[1]
-      19631104 blocks super 1.2 level 5, 64k chunk, algorithm 2 [3/3] [UUU]
+depending on your use model you might want to go with raid5+spare.  
+benchmark if you're not sure.
 
-md1 : active raid5 sda6[0] hdc5[3] sdb6[1]
-      76807296 blocks super 1.2 level 5, 64k chunk, algorithm 2 [3/3] [UUU]
+for raid5/6 i always recommend experimenting with moving your fs journal 
+to a raid1 device instead (on separate spindles -- such as your root 
+disks).
 
-hda5 and hdc5 look odd. Indeed, --examine says
+if this is for a database or fs requiring lots of small writes then 
+raid5/6 are generally a mistake... raid10 is the only way to get 
+performance.  (hw raid5/6 with nvram support can help a bit in this area, 
+but you just can't beat raid10 if you need lots of writes/s.)
 
-    Number   Major   Minor   RaidDevice State
-       0       8        6        0      active sync   /dev/sda6
-       1       8       22        1      active sync   /dev/sdb6
-       3      22        5        2      active sync   /dev/hdc5
+beyond those config choices you'll want to become friendly with /sys/block 
+and all the myriad of subdirectories and options under there.
 
-    Number   Major   Minor   RaidDevice State
-       0       8       23        0      active sync   /dev/sdb7
-       1       8        7        1      active sync   /dev/sda7
-       3       3        5        2      active sync   /dev/hda5
+in particular:
 
-0, 1, and *3*. Where has number 2 gone? (And how does `Number' differ
-from `RaidDevice'? Why have both?)
+/sys/block/*/queue/scheduler
+/sys/block/*/queue/read_ahead_kb
+/sys/block/*/queue/nr_requests
+/sys/block/mdX/md/stripe_cache_size
 
--- 
-`He accused the FSF of being "something of a hypocrit", which
- shows that he neither understands hypocrisy nor can spell.'
-   --- jimmybgood
+for * = any of the component disks or the mdX itself...
+
+some systems have an /etc/sysfs.conf you can place these settings in to 
+have them take effect on reboot.  (sysfsutils package on debuntu)
+
+-dean
