@@ -1,71 +1,100 @@
-From: dean gaudet <dean@arctic.org>
-Subject: Re: raid5 software vs hardware: parity calculations?
-Date: Sat, 13 Jan 2007 19:16:32 -0800 (PST)
-Message-ID: <Pine.LNX.4.64.0701131903270.16472@twinlark.arctic.org>
-References: <2A887D754684B6703B52E126@emerald.sei.cmu.edu>
- <Pine.LNX.4.64.0701120935000.18431@twinlark.arctic.org>
- <F4B05AD60951BBA089A81535@emerald.sei.cmu.edu>
- <e9c3a7c20701130120o246f5cf1i8d364777123c50d8@mail.gmail.com>
- <45A917B8.2060706@tmr.com> <eobpl9$df3$1@sea.gmane.org>
+From: Andre Majorel <aym-xunil@teaser.fr>
+Subject: Man page patch (bold font for option names in MISC MODE section)
+Date: Sun, 14 Jan 2007 14:56:20 +0100
+Message-ID: <20070114135620.GA18756@aym.net2.nerim.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: multipart/mixed; boundary="mYCpIKhGyMATD0i+"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <eobpl9$df3$1@sea.gmane.org>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Robin Bowes <robin-lists@robinbowes.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, 13 Jan 2007, Robin Bowes wrote:
 
-> Bill Davidsen wrote:
-> >
-> > There have been several recent threads on the list regarding software
-> > RAID-5 performance. The reference might be updated to reflect the poor
-> > write performance of RAID-5 until/unless significant tuning is done.
-> > Read that as tuning obscure parameters and throwing a lot of memory into
-> > stripe cache. The reasons for hardware RAID should include "performance
-> > of RAID-5 writes is usually much better than software RAID-5 with
-> > default tuning.
-> 
-> Could you point me at a source of documentation describing how to
-> perform such tuning?
-> 
-> Specifically, I have 8x500GB WD STAT drives on a Supermicro PCI-X 8-port
-> SATA card configured as a single RAID6 array (~3TB available space)
+--mYCpIKhGyMATD0i+
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
 
-linux sw raid6 small write performance is bad because it reads the entire 
-stripe, merges the small write, and writes back the changed disks.  
-unlike raid5 where a small write can get away with a partial stripe read 
-(i.e. the smallest raid5 write will read the target disk, read the parity, 
-write the target, and write the updated parity)... afaik this optimization 
-hasn't been implemented in raid6 yet.
+In the MISC MODE section in mdadm(8), the names of the options
+should be in bold.
 
-depending on your use model you might want to go with raid5+spare.  
-benchmark if you're not sure.
+-- 
+André Majorel <URL:http://www.teaser.fr/~amajorel/>
+Do not use this account for regular correspondence.
+See the URL above for contact information.
 
-for raid5/6 i always recommend experimenting with moving your fs journal 
-to a raid1 device instead (on separate spindles -- such as your root 
-disks).
+--mYCpIKhGyMATD0i+
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: attachment; filename="mdadm-2.6-man1.diff"
 
-if this is for a database or fs requiring lots of small writes then 
-raid5/6 are generally a mistake... raid10 is the only way to get 
-performance.  (hw raid5/6 with nvram support can help a bit in this area, 
-but you just can't beat raid10 if you need lots of writes/s.)
+In the MISC MODE section in mdadm(8), the names of the options should be
+in bold.
 
-beyond those config choices you'll want to become friendly with /sys/block 
-and all the myriad of subdirectories and options under there.
+  -- AYM 2007-01-14
 
-in particular:
+diff -ur mdadm-2.6/mdadm.8 mdadm-2.6-man1/mdadm.8
+--- mdadm-2.6/mdadm.8	2006-12-21 07:11:01.000000000 +0100
++++ mdadm-2.6-man1/mdadm.8	2007-01-14 14:50:25.000000000 +0100
+@@ -1363,14 +1363,14 @@
+ MISC mode includes a number of distinct operations that
+ operate on distinct devices.  The operations are:
+ .TP
+---query
++.B --query
+ The device is examined to see if it is
+ (1) an active md array, or
+ (2) a component of an md array.
+ The information discovered is reported.
+ 
+ .TP
+---detail
++.B --detail
+ The device should be an active md device.
+ .B   mdadm
+ will display a detailed description of the array.
+@@ -1404,7 +1404,7 @@
+ .RE
+ 
+ .TP
+---examine
++.B --examine
+ The device should be a component of an md array.
+ .B mdadm
+ will read the md superblock of the device and display the contents.
+@@ -1423,27 +1423,27 @@
+ config file to be examined.
+ 
+ .TP
+---stop
++.B --stop
+ The devices should be active md arrays which will be deactivated, as
+ long as they are not currently in use.
+ 
+ .TP
+---run
++.B --run
+ This will fully activate a partially assembled md array.
+ 
+ .TP
+---readonly
++.B --readonly
+ This will mark an active array as read-only, providing that it is
+ not currently being used.
+ 
+ .TP
+---readwrite
++.B --readwrite
+ This will change a
+ .B readonly
+ array back to being read/write.
+ 
+ .TP
+---scan
++.B --scan
+ For all operations except
+ .BR --examine ,
+ .B --scan
 
-/sys/block/*/queue/scheduler
-/sys/block/*/queue/read_ahead_kb
-/sys/block/*/queue/nr_requests
-/sys/block/mdX/md/stripe_cache_size
-
-for * = any of the component disks or the mdX itself...
-
-some systems have an /etc/sysfs.conf you can place these settings in to 
-have them take effect on reboot.  (sysfsutils package on debuntu)
-
--dean
+--mYCpIKhGyMATD0i+--
