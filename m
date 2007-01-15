@@ -1,100 +1,54 @@
-From: Andre Majorel <aym-xunil@teaser.fr>
-Subject: Man page patch (bold font for option names in MISC MODE section)
-Date: Sun, 14 Jan 2007 14:56:20 +0100
-Message-ID: <20070114135620.GA18756@aym.net2.nerim.net>
+From: Robin Bowes <robin-lists@robinbowes.com>
+Subject: Re: raid5 software vs hardware: parity calculations?
+Date: Mon, 15 Jan 2007 16:22:27 +0000
+Message-ID: <45ABAA43.2000902@robinbowes.com>
+References: <2A887D754684B6703B52E126@emerald.sei.cmu.edu>	 <Pine.LNX.4.64.0701120935000.18431@twinlark.arctic.org>	 <F4B05AD60951BBA089A81535@emerald.sei.cmu.edu> <e9c3a7c20701130120o246f5cf1i8d364777123c50d8@mail.gmail.com> <45A917B8.2060706@tmr.com> <eobpl9$df3$1@sea.gmane.org> <45AB9DC6.50509@tmr.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="mYCpIKhGyMATD0i+"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <45AB9DC6.50509@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Bill Davidsen wrote:
+> Robin Bowes wrote:
+>> Bill Davidsen wrote:
+>>  
+>>> There have been several recent threads on the list regarding software
+>>> RAID-5 performance. The reference might be updated to reflect the poor
+>>> write performance of RAID-5 until/unless significant tuning is done.
+>>> Read that as tuning obscure parameters and throwing a lot of memory into
+>>> stripe cache. The reasons for hardware RAID should include "performance
+>>> of RAID-5 writes is usually much better than software RAID-5 with
+>>> default tuning.
+>>>     
+>>
+>> Could you point me at a source of documentation describing how to
+>> perform such tuning?
+>>   
+> No. There has been a lot of discussion of this topic on this list, and a
+> trip through the archives of the last 60 days or so will let you pull
+> out a number of tuning tips which allow very good performance. My
+> concern was writing large blocks of data, 1MB per write, to RAID-5, and
+> didn't involve the overhead of small blocks at all, that leads through
+> other code and behavior.
 
---mYCpIKhGyMATD0i+
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
+Actually Bill, I'm running RAID6 (my mistake for not mentioning it
+explicitly before) - I found some material relating to RAID5 but nothing
+on RAID6.
 
-In the MISC MODE section in mdadm(8), the names of the options
-should be in bold.
+Are the concepts similar, or is RAID6 a different beast altogether?
 
--- 
-André Majorel <URL:http://www.teaser.fr/~amajorel/>
-Do not use this account for regular correspondence.
-See the URL above for contact information.
+>> Specifically, I have 8x500GB WD STAT drives on a Supermicro PCI-X 8-port
+>> SATA card configured as a single RAID6 array (~3TB available space)
+>>   
+> No hot spare(s)?
 
---mYCpIKhGyMATD0i+
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: attachment; filename="mdadm-2.6-man1.diff"
+I'm running RAID6 instead of RAID5+1 - I've had a couple of instances
+where a drive has failed in a RAID5+1 array and a second has failed
+during the rebuild after the hot-spare had kicked in.
 
-In the MISC MODE section in mdadm(8), the names of the options should be
-in bold.
-
-  -- AYM 2007-01-14
-
-diff -ur mdadm-2.6/mdadm.8 mdadm-2.6-man1/mdadm.8
---- mdadm-2.6/mdadm.8	2006-12-21 07:11:01.000000000 +0100
-+++ mdadm-2.6-man1/mdadm.8	2007-01-14 14:50:25.000000000 +0100
-@@ -1363,14 +1363,14 @@
- MISC mode includes a number of distinct operations that
- operate on distinct devices.  The operations are:
- .TP
----query
-+.B --query
- The device is examined to see if it is
- (1) an active md array, or
- (2) a component of an md array.
- The information discovered is reported.
- 
- .TP
----detail
-+.B --detail
- The device should be an active md device.
- .B   mdadm
- will display a detailed description of the array.
-@@ -1404,7 +1404,7 @@
- .RE
- 
- .TP
----examine
-+.B --examine
- The device should be a component of an md array.
- .B mdadm
- will read the md superblock of the device and display the contents.
-@@ -1423,27 +1423,27 @@
- config file to be examined.
- 
- .TP
----stop
-+.B --stop
- The devices should be active md arrays which will be deactivated, as
- long as they are not currently in use.
- 
- .TP
----run
-+.B --run
- This will fully activate a partially assembled md array.
- 
- .TP
----readonly
-+.B --readonly
- This will mark an active array as read-only, providing that it is
- not currently being used.
- 
- .TP
----readwrite
-+.B --readwrite
- This will change a
- .B readonly
- array back to being read/write.
- 
- .TP
----scan
-+.B --scan
- For all operations except
- .BR --examine ,
- .B --scan
-
---mYCpIKhGyMATD0i+--
+R.
