@@ -1,226 +1,53 @@
-From: noah <noah123@gmail.com>
-Subject: md: bug in file drivers/md/md.c, line 1652
-Date: Tue, 16 Jan 2007 08:55:04 +0100
-Message-ID: <d00698fb0701152355l5e81acdfr596bcf9422484b05@mail.gmail.com>
+From: Troels Bang Jensen <troels@x.dtu.dk>
+Subject: RAID6 reassembly oddities
+Date: Tue, 16 Jan 2007 18:44:15 +0100
+Message-ID: <45AD0EEF.8060102@x.dtu.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi!
+Hello,
 
-I'm getting "md: bug in file drivers/md/md.c, line 1652" (see below) after
-writing data to a md-device using dd.
-Is it really a bug or am I just using mdadm in the wrong way? I'm unsure
-about the --assume-clean flag when creating the raid5 volume.
+I've had a RAID6, which has been running with a failed drive for a while.
+Last week I finally got around to ordering a handful of drives, which is
+just as well, since another drive failed this sunday.
 
-My kernel is 2.6.18.
+Now, as some of us know hard drives have an uncanny tendency to fail all
+at the same time, so after I had installed two new drives and hot-added
+one of them, another drive failed. This brought the RAID down to four
+drives out of seven, which of course isn't enough to run the array.
 
-Below are some printouts including instructions on howto reproduce the
-problem (at least on my system).
-I should mention I've played around with striping the disks/partitions
-involved aswell.
+However, the reason I'm not panicking yet is that the most recently thrown
+drives seems to be sorta-kinda working; when I reboot from the four-drive
+state, I can add the drive and the RAID then begins rebuilding with it
 
-I've tried to use --zero-superblock on the devices before creating the array
-but it didn't make the problems go away.
+(btw, what exactly goes on during that rebuild? It's just the minimal
+number of drives for the RAID to be functional)
 
+-after the rebuild I can mount the RAID, apparently without any file
+system corruption (I haven't tried a full scan, though - I've been more
+concerned with adding redundancy).
 
-# fdisk -l /dev/hda; fdisk -l /dev/hdc; fdisk -l /dev/hdh
+Because of the way the system maps the drives, I've had to reboot for
+everything to work properly - which it does. I get no weird log messages
+anywhere.
 
-Disk /dev/hda: 250.0 GB, 250059350016 bytes
-255 heads, 63 sectors/track, 30401 cylinders
-Units = cylinders of 16065 * 512 = 8225280 bytes
+I then hot-add one of the fresh drives, the system rebuilds...and when
+it's done, it drops the fresh drive *and* the one that was the last to be
+kicked from the array, leaving the array in a four-drive non-functional
+state <insert profanity here>.
 
-   Device Boot      Start         End      Blocks   Id  System
-/dev/hda1               1       10943    87899616   da  Non-FS data
-/dev/hda2           10944       30401   156296385   da  Non-FS data
+So, that puts me where I was, and I can start over again. I've done this
+procedure twice because I got the impression that the drive which gets
+kicked did this because it has intermittent errors, but I've become
+convinced that the problem is in software rather than hardware.
 
-Disk /dev/hdc: 250.0 GB, 250059350016 bytes
-255 heads, 63 sectors/track, 30401 cylinders
-Units = cylinders of 16065 * 512 = 8225280 bytes
+I'm using a 2.6.18 kernel in Debian Sarge with mdadm 2.5.6 - 9.nov 2006
 
-   Device Boot      Start         End      Blocks   Id  System
-/dev/hdc1               1       10943    87899616   da  Non-FS data
-/dev/hdc2           10944       30401   156296385   da  Non-FS data
+Any suggestions on what I can do about it will be greatly appreciated.
 
-Disk /dev/hdh: 200.0 GB, 200049647616 bytes
-255 heads, 63 sectors/track, 24321 cylinders
-Units = cylinders of 16065 * 512 = 8225280 bytes
-
-   Device Boot      Start         End      Blocks   Id  System
-/dev/hdh1               1       19459   156304386   da  Non-FS data
-/dev/hdh2           19460       24321    39054015   da  Non-FS data
-
-
-
-# cat /proc/mdstat
-Personalities : [raid0] [raid1] [raid6] [raid5] [raid4]
-md1 : active raid5 hdh1[2] hdc2[1] hda2[0]
-      312592512 blocks super 1.0 level 5, 64k chunk, algorithm 2 [3/3] [UUU]
-
-md0 : active raid1 hda1[0] hdc1[1]
-      87899544 blocks super 1.0 [2/2] [UU]
-
-unused devices: <none>
-
-
-
-How to reproduce:
------------------
-
-# mdadm --create --assume-clean /dev/md1 -n 3 -l raid5 -e 1.0 /dev/hda2
-/dev/hdc2 /dev/hdh1
-mdadm: /dev/hda2 appears to be part of a raid array:
-    level=raid5 devices=3 ctime=Tue Jan 16 08:13:32 2007
-mdadm: /dev/hdc2 appears to be part of a raid array:
-    level=raid5 devices=3 ctime=Tue Jan 16 08:13:32 2007
-mdadm: /dev/hdh1 appears to be part of a raid array:
-    level=raid5 devices=3 ctime=Tue Jan 16 08:13:32 2007
-Continue creating array? y
-mdadm: array /dev/md1 started.
-
-# tail -f /var/log/everything& dd if=/dev/zero of=/dev/md1 bs=1024k
-count=2000
-[1] 11612
-Jan 16 08:17:33 planet kernel: raid5: device hdh1 operational as raid disk 2
-Jan 16 08:17:33 planet kernel: raid5: device hdc2 operational as raid disk 1
-Jan 16 08:17:33 planet kernel: raid5: device hda2 operational as raid disk 0
-Jan 16 08:17:33 planet kernel: raid5: allocated 3162kB for md1
-Jan 16 08:17:33 planet kernel: raid5: raid level 5 set md1 active with 3 out
-of 3 devices, algorithm 2
-Jan 16 08:17:33 planet kernel: RAID5 conf printout:
-Jan 16 08:17:33 planet kernel:  --- rd:3 wd:3 fd:0
-Jan 16 08:17:33 planet kernel:  disk 0, o:1, dev:hda2
-Jan 16 08:17:33 planet kernel:  disk 1, o:1, dev:hdc2
-Jan 16 08:17:33 planet kernel:  disk 2, o:1, dev:hdh1
-
-2000+0 records in
-2000+0 records out
-2097152000 bytes (2.1 GB) copied, 20.1704 s, 97.6 MB/s
-# Jan 16 08:18:25 planet kernel: md: bug in file drivers/md/md.c, line 1652
-Jan 16 08:18:25 planet kernel:
-Jan 16 08:18:25 planet kernel: md:^I**********************************
-Jan 16 08:18:25 planet kernel: md:^I* <COMPLETE RAID STATE PRINTOUT> *
-Jan 16 08:18:25 planet kernel: md:^I**********************************
-Jan 16 08:18:25 planet kernel: md3:
-Jan 16 08:18:25 planet kernel: md2:
-Jan 16 08:18:25 planet kernel: md1: <hdh1><hdc2><hda2>
-Jan 16 08:18:25 planet kernel: md: rdev hdh1, SZ:156304256 F:0 S:1 DN:2
-Jan 16 08:18:25 planet kernel: md: rdev superblock:
-Jan 16 08:18:25 planet kernel: md:  SB: (V:1.0.0) ID:<
-dfe2a519.00000000.00000000.00000000> CT:4810920a
-Jan 16 08:18:25 planet kernel: md:     L370828101 S00000049 ND:0 RD:0 md0
-LO:65536 CS:-65534
-Jan 16 08:18:25 planet kernel: md:     UT:00000000 ST:0 AD:312608624 WD:0
-FD:312608752 SD:0 CSUM:00000000 E:00000000
-Jan 16 08:18:25 planet kernel:      D  0:  DISK<N:-1,(-1,-1),R:-1,S:-1>
-Jan 16 08:18:25 planet kernel:      D  1:  DISK<N:-1,(-1,-1),R:-1,S:-1>
-Jan 16 08:18:25 planet kernel:      D  2:  DISK<N:-1,(-1,-1),R:-1,S:-1>
-Jan 16 08:18:25 planet kernel:      D  3:  DISK<N:-1,(-1,-1),R:-1,S:-1>
-Jan 16 08:18:25 planet kernel:      D  4:
-DISK<N:1523622768,(2102314299,1854133953),R:-156999677,S:1106077391>
-Jan 16 08:18:25 planet kernel:      D  5:
-DISK<N:210652739,(-1798385262,-1893740592),R:-255389722,S:-686276843>
-Jan 16 08:18:26 planet kernel:      D  6:
-DISK<N:-2086715584,(-802597153,16977798),R:-124438632,S:2143986971>
-Jan 16 08:18:26 planet kernel:      D  7:
-DISK<N:367272331,(1828035126,-1723094824),R:1398921667,S:1323308299>
-Jan 16 08:18:26 planet kernel:      D  8:
-DISK<N:1380081680,(-2083157242,551551245),R:-2139027649,S:855329668>
-Jan 16 08:18:26 planet kernel:      D  9:
-DISK<N:1735239043,(-1541046209,-529921362),R:-1222307600,S:887119196>
-Jan 16 08:18:26 planet kernel:      D 10:
-DISK<N:1333588127,(-2104901122,558281879),R:-7033862,S:1671770600>
-Jan 16 08:18:26 planet kernel:      D 11:
-DISK<N:85030519,(-1114494749,-107508385),R:547372471,S:-495231153>
-Jan 16 08:18:26 planet kernel:      D 12:
-DISK<N:330896420,(1888697057,-505735736),R:409071801,S:-393483751>
-Jan 16 08:18:26 planet kernel:      D 13:
-DISK<N:-1540222231,(-671372187,979834932),R:-2028885087,S:-111956365>
-Jan 16 08:18:26 planet kernel:      D 14:
-DISK<N:-2003446222,(1181201804,483028273),R:-1155078818,S:1107831040>
-Jan 16 08:18:26 planet kernel:      D 15:
-DISK<N:-557073400,(2067195822,791861148),R:-1157357381,S:602122844>
-Jan 16 08:18:26 planet kernel:      D 16:
-DISK<N:-225482010,(-1725978464,-1520084405),R:1675525676,S:1556295757>
-Jan 16 08:18:26 planet kernel:      D 17:
-DISK<N:-908183734,(-1157632239,-1137972139),R:-1055596967,S:1269304326>
-Jan 16 08:18:26 planet kernel:      D 18:
-DISK<N:-603893280,(-569888368,1032504318),R:798618610,S:985240996>
-Jan 16 08:18:26 planet kernel:      D 19:
-DISK<N:490487460,(-206474683,1127296990),R:1084373025,S:-913096247>
-Jan 16 08:18:26 planet kernel:      D 20:
-DISK<N:-1542344191,(-155193184,-1948794740),R:2027961155,S:-750517592>
-Jan 16 08:18:26 planet kernel:      D 21:
-DISK<N:-309206828,(-1881161743,1426287870),R:-545517820,S:2035651849>
-Jan 16 08:18:26 planet kernel:      D 22:
-DISK<N:2114464545,(-1845664683,-1156768433),R:-1426597581,S:-311243219>
-Jan 16 08:18:26 planet kernel:      D 23:
-DISK<N:1199065145,(-514385948,1992573921),R:-560681972,S:-202215636>
-Jan 16 08:18:26 planet kernel:      D 24:
-DISK<N:35534958,(1096830985,-2141974010),R:1023385212,S:-2094570834>
-Jan 16 08:18:26 planet kernel:      D 25:
-DISK<N:1310971224,(1717308177,861401725),R:153135315,S:153387104>
-Jan 16 08:18:26 planet kernel:      D 26:
-DISK<N:-529200607,(-635468306,503453457),R:150656399,S:1633879690>
-Jan 16 08:18:26 planet kernel: md:     THIS:
-DISK<N:17697816,(478179968,1223536760),R:777010250,S:-1636575368>
-Jan 16 08:18:26 planet kernel: md: rdev hdc2, SZ:156296256 F:0 S:1 DN:1
-Jan 16 08:18:26 planet kernel: md: rdev superblock:
-Jan 16 08:18:26 planet kernel: md:  SB: (V:1.0.0) ID:<
-dfe2a519.00000000.00000000.00000000> CT:4810920a
-Jan 16 08:18:26 planet kernel: md:     L370828101 S00000049 ND:0 RD:0 md0
-LO:65536 CS:-65534
-Jan 16 08:18:26 planet kernel: md:     UT:00000000 ST:0 AD:312592624 WD:0
-FD:312592752 SD:0 CSUM:00000000 E:00000000
-Jan 16 08:18:26 planet kernel:      D  0:  DISK<N:-1,(-1,-1),R:-1,S:-1>
-Jan 16 08:18:26 planet kernel:      D  1:  DISK<N:-1,(-1,-1),R:-1,S:-1>
-Jan 16 08:18:26 planet kernel:      D  2:  DISK<N:-1,(-1,-1),R:-1,S:-1>
-Jan 16 08:18:26 planet kernel:      D  3:  DISK<N:-1,(-1,-1),R:-1,S:-1>
-Jan 16 08:18:26 planet kernel: md:     THIS:  DISK<N:0,(0,0),R:0,S:0>
-Jan 16 08:18:26 planet kernel: md: rdev hda2, SZ:156296256 F:0 S:1 DN:0
-Jan 16 08:18:26 planet kernel: md: rdev superblock:
-Jan 16 08:18:26 planet kernel: md:  SB: (V:1.0.0) ID:<
-dfe2a519.00000000.00000000.00000000> CT:4810920a
-Jan 16 08:18:26 planet kernel: md:     L370828101 S00000049 ND:0 RD:0 md0
-LO:65536 CS:-65534
-Jan 16 08:18:26 planet kernel: md:     UT:00000000 ST:0 AD:312592624 WD:0
-FD:312592752 SD:0 CSUM:00000000 E:00000000
-Jan 16 08:18:26 planet kernel:      D  0:  DISK<N:-1,(-1,-1),R:-1,S:-1>
-Jan 16 08:18:26 planet kernel:      D  1:  DISK<N:-1,(-1,-1),R:-1,S:-1>
-Jan 16 08:18:26 planet kernel:      D  2:  DISK<N:-1,(-1,-1),R:-1,S:-1>
-Jan 16 08:18:26 planet kernel:      D  3:  DISK<N:-1,(-1,-1),R:-1,S:-1>
-Jan 16 08:18:26 planet kernel: md:     THIS:  DISK<N:0,(0,0),R:0,S:0>
-Jan 16 08:18:26 planet kernel: md0: <hda1><hdc1>
-Jan 16 08:18:26 planet kernel: md: rdev hda1, SZ:87899544 F:0 S:1 DN:0
-Jan 16 08:18:26 planet kernel: md: rdev superblock:
-Jan 16 08:18:26 planet kernel: md:  SB: (V:1.0.0) ID:<
-b3e50782.79735b20.00005d73.00000000> CT:84bcf12d
-Jan 16 08:18:26 planet kernel: md:     L413983828 S1986622032 ND:544826209
-RD:1847620457 md1629516911 LO:65536 CS:-1
-Jan 16 08:18:26 planet kernel: md:     UT:00000000 ST:0 AD:175799088 WD:0
-FD:175799216 SD:0 CSUM:00000000 E:00000000
-Jan 16 08:18:26 planet kernel:      D  0:  DISK<N:-1,(-1,-1),R:-1,S:-1>
-Jan 16 08:18:26 planet kernel:      D  1:  DISK<N:-1,(-1,-1),R:-1,S:-1>
-Jan 16 08:18:26 planet kernel:      D  2:  DISK<N:-1,(-1,-1),R:-1,S:-1>
-Jan 16 08:18:26 planet kernel:      D  3:  DISK<N:-1,(-1,-1),R:-1,S:-1>
-Jan 16 08:18:26 planet kernel: md:     THIS:  DISK<N:0,(0,0),R:0,S:0>
-Jan 16 08:18:26 planet kernel: md: rdev hdc1, SZ:87899544 F:0 S:1 DN:1
-Jan 16 08:18:26 planet kernel: md: rdev superblock:
-Jan 16 08:18:26 planet kernel: md:  SB: (V:1.0.0) ID:<
-b3e50782.79735b20.00005d73.00000000> CT:84bcf12d
-Jan 16 08:18:26 planet kernel: md:     L413983828 S1986622032 ND:544826209
-RD:1847620457 md1629516911 LO:65536 CS:-1
-Jan 16 08:18:26 planet kernel: md:     UT:00000000 ST:0 AD:175799088 WD:0
-FD:175799216 SD:0 CSUM:00000000 E:00000000
-Jan 16 08:18:26 planet kernel:      D  0:  DISK<N:-1,(-1,-1),R:-1,S:-1>
-Jan 16 08:18:26 planet kernel:      D  1:  DISK<N:-1,(-1,-1),R:-1,S:-1>
-Jan 16 08:18:26 planet kernel:      D  2:  DISK<N:-1,(-1,-1),R:-1,S:-1>
-Jan 16 08:18:26 planet kernel:      D  3:  DISK<N:-1,(-1,-1),R:-1,S:-1>
-Jan 16 08:18:26 planet kernel: md:     THIS:  DISK<N:0,(0,0),R:0,S:0>
-Jan 16 08:18:27 planet kernel: md:^I**********************************
-Jan 16 08:18:27 planet kernel:
+Regards, Troels
