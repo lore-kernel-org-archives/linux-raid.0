@@ -1,76 +1,48 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: bad performance on RAID 5
-Date: Wed, 17 Jan 2007 17:38:08 -0500
-Message-ID: <45AEA550.5070005@lucidpixels.com>
-References: <45AE9640.1040500@start.no>
+From: Yuri Tikhonov <yur_t@mail.ru>
+Subject: =?koi8-r?Q?Re=3A_[PATCH_00/12]_md_raid_acceleration_and_the_async=5Ftx_api?=
+Date: Thu, 18 Jan 2007 12:03:10 +0300
+Message-ID: <E1H7TAs-0009kG-00.yur_t-mail-ru@f79.mail.ru>
+Reply-To: Yuri Tikhonov <yur_t@mail.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <45AE9640.1040500@start.no>
 Sender: linux-raid-owner@vger.kernel.org
-To: Sevrin Robstad <quackyo@start.no>
+To: Dan Williams <dan.j.williams@intel.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Sevrin Robstad wrote:
-> I'm suffering from bad performance on my RAID5.
->
-> a "echo check >/sys/block/md0/md/sync_action"
->
-> gives a speed at only about 5000K/sec , and HIGH load average :
->
-> # uptime
-> 20:03:55 up 8 days, 19:55,  1 user,  load average: 11.70, 4.04, 1.52
->
-> kernel is 2.6.18.1.2257.fc5
-> mdadm is v2.5.5
->
-> the system consist of an athlon XP1,2GHz and two Sil3114 4port S-ATA 
-> PCI cards with a total of 6  250gb S-ATA drives connected.
->
-> [root@compaq ~]# mdadm --detail /dev/md0
-> /dev/md0:
->        Version : 00.90.03
->  Creation Time : Tue Dec  5 00:33:01 2006
->     Raid Level : raid5
->     Array Size : 1218931200 (1162.46 GiB 1248.19 GB)
->    Device Size : 243786240 (232.49 GiB 249.64 GB)
->   Raid Devices : 6
->  Total Devices : 6
-> Preferred Minor : 0
->    Persistence : Superblock is persistent
->
->    Update Time : Wed Jan 17 23:14:39 2007
->          State : clean
-> Active Devices : 6
-> Working Devices : 6
-> Failed Devices : 0
->  Spare Devices : 0
->
->         Layout : left-symmetric
->     Chunk Size : 256K
->
->           UUID : 27dce477:6f45d11b:77377d08:732fa0e6
->         Events : 0.58
->
->    Number   Major   Minor   RaidDevice State
->       0       8        1        0      active sync   /dev/sda1
->       1       8       17        1      active sync   /dev/sdb1
->       2       8       33        2      active sync   /dev/sdc1
->       3       8       49        3      active sync   /dev/sdd1
->       4       8       65        4      active sync   /dev/sde1
->       5       8       81        5      active sync   /dev/sdf1
-> [root@compaq ~]#
->
->
-> Sevrin
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-If they are on the PCI bus, that is about right, you probably should be 
-getting 10-15MB/s, but it is about right.  If you had each drive on its 
-own PCI-e controller, then you would get much faster speeds.
+ Hello, Dan.
+
+ It seems there is a bug in your 06.11.30 raid acceleration patch-set. I tried to run the Linux s/w RAID-5 driver patched with your 06.11.30 patch-set and found that it fails during write operations when the RAID-5 array consists of 6 or more number of drives (I tested up to 8 drives). For 5 and less number of drives everything works as expected. There are no such problems with your 06.09.12 set of patches. Do you have any assumptions about the reasons of this fault? 
+
+ The kernel I used was 2.6.19, your 06.11.30 patch-set was applied without any warnings/errors. Here is the kernel Oops report:
+
+Oops: kernel access of bad area, sig: 11 [#1]
+NIP: C014F980 LR: C014FD0C CTR: 00000080
+REGS: eee49d40 TRAP: 0300   Not tainted  (2.6.19-g0726acdc-dirty)
+MSR: 00029000 <EE,ME>  CR: 44002042  XER: 20000000
+DAR: 17970004, DSISR: 00000000
+TASK = eed5a7d0[280] 'md0_raid5_ops/0' THREAD: eee48000
+GPR00: 0000007F EEE49DF0 EED5A7D0 00000080 EEDFC000 00000000 19D70000 17870000 
+GPR08: 00001000 C02B0000 EEDFC000 C014F950 EEDFC000 30000000 C015B8D8 17970000 
+GPR16: C08AC180 C02B0000 EEE0CB48 0000003A 0000000C 00001000 00000000 00000001 
+GPR24: 00000000 C015B8D8 00000004 0000003A EEDFC000 00000004 19D70000 17870000 
+NIP [C014F980] xor_32regs_4+0x30/0x158
+LR [C014FD0C] xor_block+0xc4/0x12c
+Call Trace:
+[EEE49E40] [EEE49E58] 0xeee49e58
+[EEE49E50] [C014EFAC] async_xor+0x134/0x200
+[EEE49EB0] [C015A960] ops_run_postxor+0xf8/0x198
+[EEE49F00] [C0162458] raid5_run_ops+0x8dc/0x994
+[EEE49F50] [C0029F7C] run_workqueue+0xa4/0x118
+[EEE49F70] [C002A198] worker_thread+0xf8/0x13c
+[EEE49FC0] [C002E20C] kthread+0xf8/0x100
+[EEE49FF0] [C0003DA0] kernel_thread+0x44/0x60
+Instruction dump:
+5463d97e 7c601b78 3400ffff 9421ffb0 bde1000c 7c6903a6 7c8c2378 7caf2b78 
+7cde3378 7cff3b78 41800124 80ac0000 <82ef0004> 82cf0008 82af000c 828f0010
+
+ Regards, Yuri.
 
