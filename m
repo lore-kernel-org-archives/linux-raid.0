@@ -1,114 +1,44 @@
-From: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
+From: Mark Hahn <hahn@physics.mcmaster.ca>
 Subject: Re: bad performance on RAID 5
-Date: Thu, 18 Jan 2007 21:56:34 +0200
-Message-ID: <5d96567b0701181156r33035927ub5ad20ed81a264db@mail.gmail.com>
+Date: Thu, 18 Jan 2007 14:02:28 -0500 (EST)
+Message-ID: <Pine.LNX.4.64.0701181353310.8989@coffee.psychology.mcmaster.ca>
 References: <45AE9640.1040500@start.no> <45AEA550.5070005@lucidpixels.com>
-	 <5d96567b0701180106x5441f24dp117ffebdf560a23f@mail.gmail.com>
-	 <45AFBA62.1060206@start.no>
+ <45AFBA3E.9070000@start.no>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <45AFBA62.1060206@start.no>
-Content-Disposition: inline
+In-Reply-To: <45AFBA3E.9070000@start.no>
 Sender: linux-raid-owner@vger.kernel.org
 To: Sevrin Robstad <quackyo@start.no>
-Cc: linux-raid@vger.kernel.org
+Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-iorder to understand what is going in your system you should:
-1. determine the access pattern to the volume. meaning:
-     sequetial ? random access ?
-     sync io ? async io ?
-     mostly read ? mostly write ?
-     Are you using small buffers ?  big buffers ?
+>>> gives a speed at only about 5000K/sec , and HIGH load average :
+>>> # uptime
+>>> 20:03:55 up 8 days, 19:55,  1 user,  load average: 11.70, 4.04, 1.52
 
-2. you should test the controller capabilty.
-     meaning :
-     see if dd'in for each disk in the system seperately reduces the total
-      throughput.
+loadav is a bit misleading - it doesn't mean you had >11 runnable jobs.
+you might just have more jobs waiting on IO, being starved by the 
+IO done by resync.
 
+>>>     Chunk Size : 256K
 
-On 1/18/07, Sevrin Robstad <quackyo@start.no> wrote:
-> I've tried to increase the cache size - I can't measure any difference.....
->
-> Raz Ben-Jehuda(caro) wrote:
-> > did u  increase the stripe cache size ?
-> >
-> >
-> > On 1/18/07, Justin Piszcz <jpiszcz@lucidpixels.com> wrote:
-> >> Sevrin Robstad wrote:
-> >> > I'm suffering from bad performance on my RAID5.
-> >> >
-> >> > a "echo check >/sys/block/md0/md/sync_action"
-> >> >
-> >> > gives a speed at only about 5000K/sec , and HIGH load average :
-> >> >
-> >> > # uptime
-> >> > 20:03:55 up 8 days, 19:55,  1 user,  load average: 11.70, 4.04, 1.52
-> >> >
-> >> > kernel is 2.6.18.1.2257.fc5
-> >> > mdadm is v2.5.5
-> >> >
-> >> > the system consist of an athlon XP1,2GHz and two Sil3114 4port S-ATA
-> >> > PCI cards with a total of 6  250gb S-ATA drives connected.
-> >> >
-> >> > [root@compaq ~]# mdadm --detail /dev/md0
-> >> > /dev/md0:
-> >> >        Version : 00.90.03
-> >> >  Creation Time : Tue Dec  5 00:33:01 2006
-> >> >     Raid Level : raid5
-> >> >     Array Size : 1218931200 (1162.46 GiB 1248.19 GB)
-> >> >    Device Size : 243786240 (232.49 GiB 249.64 GB)
-> >> >   Raid Devices : 6
-> >> >  Total Devices : 6
-> >> > Preferred Minor : 0
-> >> >    Persistence : Superblock is persistent
-> >> >
-> >> >    Update Time : Wed Jan 17 23:14:39 2007
-> >> >          State : clean
-> >> > Active Devices : 6
-> >> > Working Devices : 6
-> >> > Failed Devices : 0
-> >> >  Spare Devices : 0
-> >> >
-> >> >         Layout : left-symmetric
-> >> >     Chunk Size : 256K
-> >> >
-> >> >           UUID : 27dce477:6f45d11b:77377d08:732fa0e6
-> >> >         Events : 0.58
-> >> >
-> >> >    Number   Major   Minor   RaidDevice State
-> >> >       0       8        1        0      active sync   /dev/sda1
-> >> >       1       8       17        1      active sync   /dev/sdb1
-> >> >       2       8       33        2      active sync   /dev/sdc1
-> >> >       3       8       49        3      active sync   /dev/sdd1
-> >> >       4       8       65        4      active sync   /dev/sde1
-> >> >       5       8       81        5      active sync   /dev/sdf1
-> >> > [root@compaq ~]#
-> >> >
-> >> >
-> >> > Sevrin
-> >> > -
-> >> > To unsubscribe from this list: send the line "unsubscribe
-> >> linux-raid" in
-> >> > the body of a message to majordomo@vger.kernel.org
-> >> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >>
-> >> If they are on the PCI bus, that is about right, you probably should be
-> >> getting 10-15MB/s, but it is about right.  If you had each drive on its
-> >> own PCI-e controller, then you would get much faster speeds.
-> >>
-> >> -
-> >> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> >> the body of a message to majordomo@vger.kernel.org
-> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >>
-> >
-> >
->
->
+well, that's pretty big.  it means 6*256K is necessary to do a 
+whole-stripe update; your stripe cache may be too small to be effective.
 
+>> If they are on the PCI bus, that is about right, you probably should be 
+>> getting 10-15MB/s, but it is about right.  If you had each drive on its own 
+>> PCI-e controller, then you would get much faster speeds.
 
--- 
-Raz
+10-15 seems bizarrely low - one can certainly achieve >100 MB/s
+over the PCI bus, so where does the factor of 6-10 come in?
+seems like a R6 resync would do 4 reads and 2 writes for every
+4 chunks of throughput (so should achieve more like 50 MB/s if 
+the main limit is the bus at 100.)
+
+> There are two controllers, 4 disks connected to one controller on the PCI-bus 
+> and 2 disks connected to the other controller.
+
+well, you should probably look at the PCI topology ("lspci -v -t"),
+and perhaps even the PCI settings (as well as stripe cache size, 
+perhaps nr_requests, etc)
