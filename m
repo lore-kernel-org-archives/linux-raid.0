@@ -1,85 +1,114 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: 2.6.20-rc5: knwon unfixed regressions (v2) (part1)
-Date: Thu, 18 Jan 2007 20:47:56 +0100
-Message-ID: <20070118194756.GA9093@stusta.de>
-References: <Pine.LNX.4.64.0701121424520.11200@woody.osdl.org>
+From: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
+Subject: Re: bad performance on RAID 5
+Date: Thu, 18 Jan 2007 21:56:34 +0200
+Message-ID: <5d96567b0701181156r33035927ub5ad20ed81a264db@mail.gmail.com>
+References: <45AE9640.1040500@start.no> <45AEA550.5070005@lucidpixels.com>
+	 <5d96567b0701180106x5441f24dp117ffebdf560a23f@mail.gmail.com>
+	 <45AFBA62.1060206@start.no>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <45AFBA62.1060206@start.no>
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.64.0701121424520.11200@woody.osdl.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Randy Dunlap <rdunlap@xenotime.net>, sct@redhat.com, adilger@clusterfs.com, linux-ext4@vger.kernel.org, Berthold Cogel <cogel@rrz.uni-koeln.de>, =?iso-8859-1?Q?Fran=E7ois?= Valenduc <francois.valenduc@skynet.be>, Alexey Starikovskiy <alexey.y.starikovskiy@linux.intel.com>, greg@kroah.com, linux-usb-devel@lists.sourceforge.net, Prakash Punnoor <prakash@punnoor.de>, Oliver Neukum <oliver@neukum.org>, Duncan <1i5t5.duncan@cox.net>, mingo@redhat.com, neilb@cse.unsw.edu.au, linux-raid@vger.kernel.org, gd@spherenet.de, jgarzik@pobox.com, linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk, petero2@telia.com, Uwe Bugla <uwe.bugla@gmx.de>, B.Zolnierkiewicz@elka.pw.edu.pl, =?iso-8859-1?Q?Bj=F6rn?= Steinbrink <B.Steinbrink@gmx.de>, Robert Hancock <hancockr@shaw.ca>
+To: Sevrin Robstad <quackyo@start.no>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This email lists some known regressions in 2.6.20-rc5 compared to 2.6.1=
-9.
+iorder to understand what is going in your system you should:
+1. determine the access pattern to the volume. meaning:
+     sequetial ? random access ?
+     sync io ? async io ?
+     mostly read ? mostly write ?
+     Are you using small buffers ?  big buffers ?
 
-If you find your name in the Cc header, you are either submitter of one
-of the bugs, maintainer of an affectected subsystem or driver, a patch
-of you caused a breakage or I'm considering you in any other way possib=
-ly
-involved with one or more of these issues.
-
-Due to the huge amount of recipients, please trim the Cc when answering=
-=2E
-
-
-Subject    : ext3 with data=3Djournal hangs when running fsx-linux sinc=
-e -rc2
-References : http://bugzilla.kernel.org/show_bug.cgi?id=3D7844
-Submitter  : Randy Dunlap <rdunlap@xenotime.net>
-Status     : unknown
+2. you should test the controller capabilty.
+     meaning :
+     see if dd'in for each disk in the system seperately reduces the total
+      throughput.
 
 
-Subject    : reboot instead of powerdown  (CONFIG_USB_SUSPEND)
-References : http://lkml.org/lkml/2006/12/25/40
-             http://bugzilla.kernel.org/show_bug.cgi?id=3D7828
-Submitter  : Berthold Cogel <cogel@rrz.uni-koeln.de>
-             Fran=E7ois Valenduc <francois.valenduc@skynet.be>
-Handled-By : Alexey Starikovskiy <alexey.y.starikovskiy@linux.intel.com=
+On 1/18/07, Sevrin Robstad <quackyo@start.no> wrote:
+> I've tried to increase the cache size - I can't measure any difference.....
 >
-Status     : problem is being debugged
+> Raz Ben-Jehuda(caro) wrote:
+> > did u  increase the stripe cache size ?
+> >
+> >
+> > On 1/18/07, Justin Piszcz <jpiszcz@lucidpixels.com> wrote:
+> >> Sevrin Robstad wrote:
+> >> > I'm suffering from bad performance on my RAID5.
+> >> >
+> >> > a "echo check >/sys/block/md0/md/sync_action"
+> >> >
+> >> > gives a speed at only about 5000K/sec , and HIGH load average :
+> >> >
+> >> > # uptime
+> >> > 20:03:55 up 8 days, 19:55,  1 user,  load average: 11.70, 4.04, 1.52
+> >> >
+> >> > kernel is 2.6.18.1.2257.fc5
+> >> > mdadm is v2.5.5
+> >> >
+> >> > the system consist of an athlon XP1,2GHz and two Sil3114 4port S-ATA
+> >> > PCI cards with a total of 6  250gb S-ATA drives connected.
+> >> >
+> >> > [root@compaq ~]# mdadm --detail /dev/md0
+> >> > /dev/md0:
+> >> >        Version : 00.90.03
+> >> >  Creation Time : Tue Dec  5 00:33:01 2006
+> >> >     Raid Level : raid5
+> >> >     Array Size : 1218931200 (1162.46 GiB 1248.19 GB)
+> >> >    Device Size : 243786240 (232.49 GiB 249.64 GB)
+> >> >   Raid Devices : 6
+> >> >  Total Devices : 6
+> >> > Preferred Minor : 0
+> >> >    Persistence : Superblock is persistent
+> >> >
+> >> >    Update Time : Wed Jan 17 23:14:39 2007
+> >> >          State : clean
+> >> > Active Devices : 6
+> >> > Working Devices : 6
+> >> > Failed Devices : 0
+> >> >  Spare Devices : 0
+> >> >
+> >> >         Layout : left-symmetric
+> >> >     Chunk Size : 256K
+> >> >
+> >> >           UUID : 27dce477:6f45d11b:77377d08:732fa0e6
+> >> >         Events : 0.58
+> >> >
+> >> >    Number   Major   Minor   RaidDevice State
+> >> >       0       8        1        0      active sync   /dev/sda1
+> >> >       1       8       17        1      active sync   /dev/sdb1
+> >> >       2       8       33        2      active sync   /dev/sdc1
+> >> >       3       8       49        3      active sync   /dev/sdd1
+> >> >       4       8       65        4      active sync   /dev/sde1
+> >> >       5       8       81        5      active sync   /dev/sdf1
+> >> > [root@compaq ~]#
+> >> >
+> >> >
+> >> > Sevrin
+> >> > -
+> >> > To unsubscribe from this list: send the line "unsubscribe
+> >> linux-raid" in
+> >> > the body of a message to majordomo@vger.kernel.org
+> >> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> >>
+> >> If they are on the PCI bus, that is about right, you probably should be
+> >> getting 10-15MB/s, but it is about right.  If you had each drive on its
+> >> own PCI-e controller, then you would get much faster speeds.
+> >>
+> >> -
+> >> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> >> the body of a message to majordomo@vger.kernel.org
+> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> >>
+> >
+> >
+>
+>
 
 
-Subject    : usb somehow broken  (CONFIG_USB_SUSPEND)
-References : http://lkml.org/lkml/2007/1/11/146
-Submitter  : Prakash Punnoor <prakash@punnoor.de>
-Handled-By : Oliver Neukum <oliver@neukum.org>
-Status     : problem is being debugged
-
-
-Subject    : RAID-6 chunk_aligned_read problem
-References : http://bugzilla.kernel.org/show_bug.cgi?id=3D7835
-Submitter  : Duncan <1i5t5.duncan@cox.net>
-Status     : unknown
-
-
-Subject    : pktcdvd fails with pata_amd
-References : http://bugzilla.kernel.org/show_bug.cgi?id=3D7810
-Submitter  : gd@spherenet.de
-Status     : unknown
-
-
-Subject    : problems with CD burning
-References : http://www.spinics.net/lists/linux-ide/msg06545.html
-Submitter  : Uwe Bugla <uwe.bugla@gmx.de>
-Status     : unknown
-
-
-Subject    : sata_nv: SATA exceptions
-References : http://lkml.org/lkml/2007/1/14/108
-Submitter  : Bj=F6rn Steinbrink <B.Steinbrink@gmx.de>
-Caused-By  : Robert Hancock <hancockr@shaw.ca>
-             commit 2dec7555e6bf2772749113ea0ad454fcdb8cf861
-Handled-By : Robert Hancock <hancockr@shaw.ca>
-Status     : problem is being debugged
-
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Raz
