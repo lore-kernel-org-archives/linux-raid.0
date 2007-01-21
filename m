@@ -1,76 +1,36 @@
-From: Alessio Palmero Aprosio <alessio@apnetwork.it>
-Subject: Problem
-Date: Sun, 21 Jan 2007 03:05:22 +0100
-Message-ID: <45B2CA62.7050000@apnetwork.it>
+From: thunder7@xs4all.nl
+Subject: Re: 2.6.19.2, cp 18gb_file 18gb_file.2 = OOM killer, 100% reproducible
+Date: Sun, 21 Jan 2007 16:52:19 +0100
+Message-ID: <20070121155219.GA7413@amd64.of.nowhere>
+References: <Pine.LNX.4.64.0701201516450.3684@p34.internal.lan> <3aa654a40701201245s72b2f76hc70ddd94b70ba99c@mail.gmail.com> <Pine.LNX.4.64.0701201602570.4910@p34.internal.lan>
+Reply-To: Jurriaan <thunder7@xs4all.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.64.0701201602570.4910@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: Avuton Olrich <avuton@gmail.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi to all!
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Date: Sat, Jan 20, 2007 at 04:03:42PM -0500
+> 
+> 
+> My swap is on, 2GB ram and 2GB of swap on this machine.  I can't go back 
+> to 2.6.17.13 as it does not recognize the NICs in my machine correctly and 
+> the Alsa Intel HD Audio driver has bugs etc, I guess I am stuck with 
+> 2.6.19.2 :(
+> 
+Well, if you can't go back, you could always test 2.6.20-rc5. That's why
+it's out there :-) It can't be any worse!
 
-I have a strange problem with Raid. I admit I'm quite a newbie in RAID, 
-because I usually used it but never had problems. Now I had one.
-
-I have a server with a RAID1, in particular two 80gb SATA disks 
-(/dev/sda and /dev/sdb). In each of them there are two partitions: a 
-500mb swap partition and a 79 gb raid partition. I create /dev/md0 from 
-the two and I have now the array working well. I had a problem with one 
-of them (/dev/sda) and I decide to leave sdb alone during the time I 
-need to change sda. So I installed grub in sdb (as in 
-http://gentoo-wiki.com/HOWTO_Gentoo_Install_on_Software_RAID#Installing_Grub_onto_both_MBRs) 
-and I put it alone. All works perfectly. After some time, I noticed that 
-sdb too has the problem, and then I discovered that the problem wasn't 
-in the disks, but in another place, and I solved it. I put sda again and 
-I rebuild the array. Now, whenever I reboot the computer I have to 
-rebuild the array. I tried 3 times and all the times the Raid only found 
-a disk and I have to execute
-
-mdadm --manage /dev/md0 -a /dev/sdb2
-
-and then all works.
-
-This is my mdadm -D /dev/md0
------------------------------------------------------------
-/dev/md0:
-        Version : 00.90.01
-  Creation Time : Thu Oct 20 19:07:57 2005
-     Raid Level : raid1
-     Array Size : 79505600 (75.82 GiB 81.41 GB)
-    Device Size : 79505600 (75.82 GiB 81.41 GB)
-   Raid Devices : 2
-  Total Devices : 2
-Preferred Minor : 0
-    Persistence : Superblock is persistent
-
-    Update Time : Sun Jan 21 03:03:27 2007
-          State : clean
- Active Devices : 2
-Working Devices : 2
- Failed Devices : 0
-  Spare Devices : 0
-
-           UUID : 224a5dd6:1f81f7c4:d8c8c9f1:08088420
-         Events : 0.20140867
-
-    Number   Major   Minor   RaidDevice State
-       0       8       18        0      active sync   /dev/sdb2
-       1       8        2        1      active sync   /dev/sda2
------------------------------------------------------------
-
-and my /proc/mdstat
------------------------------------------------------------
-Personalities : [raid0] [raid1] [raid5]
-md0 : active raid1 sdb2[0] sda2[1]
-      79505600 blocks [2/2] [UU]
-
-unused devices: <none>
------------------------------------------------------------
-
-How can I solve the problem?
-Thans very much
-
-Alessio Palmero (from Italy)
+Good luck,
+Jurriaan
+-- 
+It might look like I'm doing nothing, but at the cellular level I'm really
+quite busy.
+	Hans Haas
+Debian (Unstable) GNU/Linux 2.6.20-rc5 2x2011 bogomips load 1.97
+the Jack Vance Integral Edition: http://www.integralarchive.org
