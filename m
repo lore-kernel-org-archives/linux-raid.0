@@ -1,7 +1,7 @@
 From: Justin Piszcz <jpiszcz@lucidpixels.com>
 Subject: Re: 2.6.19.2, cp 18gb_file 18gb_file.2 = OOM killer, 100% reproducible
-Date: Sun, 21 Jan 2007 10:54:09 -0500 (EST)
-Message-ID: <Pine.LNX.4.64.0701211053370.15334@p34.internal.lan>
+Date: Sun, 21 Jan 2007 11:48:07 -0500 (EST)
+Message-ID: <Pine.LNX.4.64.0701211146530.15334@p34.internal.lan>
 References: <Pine.LNX.4.64.0701201516450.3684@p34.internal.lan>
  <3aa654a40701201245s72b2f76hc70ddd94b70ba99c@mail.gmail.com>
  <Pine.LNX.4.64.0701201602570.4910@p34.internal.lan> <20070121155219.GA7413@amd64.of.nowhere>
@@ -38,14 +38,14 @@ On Sun, 21 Jan 2007, thunder7@xs4all.nl wrote:
 > 	Hans Haas
 > Debian (Unstable) GNU/Linux 2.6.20-rc5 2x2011 bogomips load 1.97
 > the Jack Vance Integral Edition: http://www.integralarchive.org
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > 
 
-It is worse-- NAT doesn't work and HDDTEMP doesn't work anymore either.
+The HDD temp bug -- OK, nice.
 
+What about all of the changes with NAT?  I see that it operates on 
+level-3/network wise, I enabled that and backward compatiblity support as 
+well, but when my iptables rules kick in, it says no such driver/etc for 
+`nat'-- is there a new target for iptables now or did I miss a kernel 
+option?
 
 Justin.
-
