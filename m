@@ -1,63 +1,76 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: 2.6.19.2, cp 18gb_file 18gb_file.2 = OOM killer, 100% reproducible
-Date: Sat, 20 Jan 2007 16:24:25 -0500 (EST)
-Message-ID: <Pine.LNX.4.64.0701201623570.5597@p34.internal.lan>
-References: <Pine.LNX.4.64.0701201516450.3684@p34.internal.lan>
- <3aa654a40701201245s72b2f76hc70ddd94b70ba99c@mail.gmail.com>
- <Pine.LNX.4.64.0701201602570.4910@p34.internal.lan>
+From: Alessio Palmero Aprosio <alessio@apnetwork.it>
+Subject: Problem
+Date: Sun, 21 Jan 2007 03:05:22 +0100
+Message-ID: <45B2CA62.7050000@apnetwork.it>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0701201602570.4910@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: Avuton Olrich <avuton@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hi to all!
 
-On Sat, 20 Jan 2007, Justin Piszcz wrote:
+I have a strange problem with Raid. I admit I'm quite a newbie in RAID, 
+because I usually used it but never had problems. Now I had one.
 
-> 
-> 
-> On Sat, 20 Jan 2007, Avuton Olrich wrote:
-> 
-> > On 1/20/07, Justin Piszcz <jpiszcz@lucidpixels.com> wrote:
-> > > Perhaps its time to back to a stable (2.6.17.13 kernel)?
-> > >
-> > > Anyway, when I run a cp 18gb_file 18gb_file.2 on a dual raptor sw raid1
-> > > partition, the OOM killer goes into effect and kills almost all my
-> > > processes.
-> > >
-> > > Completely 100% reproducible.
-> > >
-> > > Does 2.6.19.2 have some of memory allocation bug as well?
-> > 
-> > I had been seeing something similar (also with 2.6.19.2), but it's not
-> > outputting anything to dmesg, so I was waiting for something to happen
-> > before I reported it. It's mostly the same thing, but I've only seen
-> > it happen when copying something large (2+ GB) over NFS. Interactivity
-> > completely goes away and lockups last 10-15 seconds a piece. Then
-> > realized I turned the swap off, so I turned it on and didn't lockup
-> > any longer.
-> > -- 
-> > avuton
-> > --
-> > Anyone who quotes me in their sig is an idiot. -- Rusty Russell.
-> > 
-> > 
-> 
-> My swap is on, 2GB ram and 2GB of swap on this machine.  I can't go back 
-> to 2.6.17.13 as it does not recognize the NICs in my machine correctly and 
-> the Alsa Intel HD Audio driver has bugs etc, I guess I am stuck with 
-> 2.6.19.2 :(
-> 
-> Justin.
-> 
-> 
+I have a server with a RAID1, in particular two 80gb SATA disks 
+(/dev/sda and /dev/sdb). In each of them there are two partitions: a 
+500mb swap partition and a 79 gb raid partition. I create /dev/md0 from 
+the two and I have now the array working well. I had a problem with one 
+of them (/dev/sda) and I decide to leave sdb alone during the time I 
+need to change sda. So I installed grub in sdb (as in 
+http://gentoo-wiki.com/HOWTO_Gentoo_Install_on_Software_RAID#Installing_Grub_onto_both_MBRs) 
+and I put it alone. All works perfectly. After some time, I noticed that 
+sdb too has the problem, and then I discovered that the problem wasn't 
+in the disks, but in another place, and I solved it. I put sda again and 
+I rebuild the array. Now, whenever I reboot the computer I have to 
+rebuild the array. I tried 3 times and all the times the Raid only found 
+a disk and I have to execute
 
-The weird part is nothing shows high memory usage in top or via ps, the 
-kernel just freaks and kill -9's almost all of my processes.
+mdadm --manage /dev/md0 -a /dev/sdb2
 
-Nasty VM bug?
+and then all works.
 
-Justin.
+This is my mdadm -D /dev/md0
+-----------------------------------------------------------
+/dev/md0:
+        Version : 00.90.01
+  Creation Time : Thu Oct 20 19:07:57 2005
+     Raid Level : raid1
+     Array Size : 79505600 (75.82 GiB 81.41 GB)
+    Device Size : 79505600 (75.82 GiB 81.41 GB)
+   Raid Devices : 2
+  Total Devices : 2
+Preferred Minor : 0
+    Persistence : Superblock is persistent
+
+    Update Time : Sun Jan 21 03:03:27 2007
+          State : clean
+ Active Devices : 2
+Working Devices : 2
+ Failed Devices : 0
+  Spare Devices : 0
+
+           UUID : 224a5dd6:1f81f7c4:d8c8c9f1:08088420
+         Events : 0.20140867
+
+    Number   Major   Minor   RaidDevice State
+       0       8       18        0      active sync   /dev/sdb2
+       1       8        2        1      active sync   /dev/sda2
+-----------------------------------------------------------
+
+and my /proc/mdstat
+-----------------------------------------------------------
+Personalities : [raid0] [raid1] [raid5]
+md0 : active raid1 sdb2[0] sda2[1]
+      79505600 blocks [2/2] [UU]
+
+unused devices: <none>
+-----------------------------------------------------------
+
+How can I solve the problem?
+Thans very much
+
+Alessio Palmero (from Italy)
