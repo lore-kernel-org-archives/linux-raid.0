@@ -1,90 +1,45 @@
-From: "Liang Yang" <multisyncfe991@hotmail.com>
-Subject: Re: change strip_cache_size freeze the whole raid
-Date: Mon, 22 Jan 2007 09:10:39 -0700
-Message-ID: <BAY125-DAV14DB3B267D410F37358DFA93AE0@phx.gbl>
-References: <001801c73e14$c3177170$28df0f3d@kylecea1512a3f> <Pine.LNX.4.64.0701220717200.30260@p34.internal.lan>
+From: "Dan Williams" <dan.j.williams@gmail.com>
+Subject: Re: What is the exacting meaning of Striped_Cache_Size?
+Date: Mon, 22 Jan 2007 09:36:36 -0700
+Message-ID: <e9c3a7c20701220836m29a1650cocd538aa9a66e7394@mail.gmail.com>
+References: <Pine.LNX.4.64.0701200718290.29223@p34.internal.lan>
+	 <Pine.LNX.4.64.0701200745420.3756@p34.internal.lan>
+	 <BAY125-DAV159818650D5FE72FE853E393AE0@phx.gbl>
+	 <e9c3a7c20701212206p2316e02he13eebe8efc3889e@mail.gmail.com>
+	 <BAY125-DAV20A23F0F57329431B65FBE93AE0@phx.gbl>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	format=flowed;
-	charset="iso-8859-1";
-	reply-type=original
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <BAY125-DAV20A23F0F57329431B65FBE93AE0@phx.gbl>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>, kyle <kylewong@southa.com>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Liang Yang <multisyncfe991@hotmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Do we need to consider the chunk size when we adjust the value of 
-Striped_Cache_Szie for the MD-RAID5 array?
+On 1/21/07, Liang Yang <multisyncfe991@hotmail.com> wrote:
+> Dan,
+>
+> Thanks for your reply. Still get two questions left.
+>
+> Suppose I have a MD-RAID5 array which consists of 8 disks.
+> 1. Do we need to consider the chunk size of the RAID array when we set the
+> value of Striped_Cache_Size? For example, if the chunk size is changed from
+> 64k to 256k, do we need to adjust the Striped_Cache_Size accordingly?
+>
+stripe_cache_size and the chunk size are completely independent
+settings.  The chunk size only determines how much data will be
+accessed from one disk before proceeding to the next disk.
 
-Liang
+> 2. The performance improvement of large size I/O packets (128k, 256k) is
+> larger than small size I/O packets (512B, 1KB) when I change the
+> Striped_Cache_Size. How do you explain the difference here?
+>
+With smaller I/Os the chances that you are staying within one stripe
+are higher so you would see less benefit of having more stripes in the
+cache.
+> Liang
+>
 
------ Original Message ----- 
-From: "Justin Piszcz" <jpiszcz@lucidpixels.com>
-To: "kyle" <kylewong@southa.com>
-Cc: <linux-raid@vger.kernel.org>; <linux-kernel@vger.kernel.org>
-Sent: Monday, January 22, 2007 5:18 AM
-Subject: Re: change strip_cache_size freeze the whole raid
-
-
->
->
-> On Mon, 22 Jan 2007, kyle wrote:
->
->> Hi,
->>
->> Yesterday I tried to increase the value of strip_cache_size to see if I 
->> can
->> get better performance or not. I increase the value from 2048 to 
->> something
->> like 16384. After I did that, the raid5 freeze. Any proccess read / write 
->> to
->> it stucked at D state. I tried to change it back to 2048, read
->> strip_cache_active, cat /proc/mdstat, mdadm stop, etc. All didn't return 
->> back.
->> I even cannot shutdown the machine. Finally I need to press the reset 
->> button
->> in order to get back my control.
->>
->> Kernel is 2.6.17.8 x86-64, running at AMD Athlon3000+, 2GB Ram, 8 x 
->> Seagate
->> 8200.10 250GB HDD, nvidia chipset.
->>
->> cat /proc/mdstat (after reboot):
->> Personalities : [raid1] [raid5] [raid4]
->> md1 : active raid1 hdc2[1] hda2[0]
->>      6144768 blocks [2/2] [UU]
->>
->> md2 : active raid5 sdf1[7] sde1[6] sdd1[5] sdc1[4] sdb1[3] sda1[2] 
->> hdc4[1]
->> hda4[0]
->>      1664893440 blocks level 5, 512k chunk, algorithm 2 [8/8] [UUUUUUUU]
->>
->> md0 : active raid1 hdc1[1] hda1[0]
->>      104320 blocks [2/2] [UU]
->>
->> Kyle
->>
->> -
->> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->
-> Yes, I noticed this bug too, if you change it too many times or change it
-> at the 'wrong' time, it hangs up when you echo numbr >
-> /proc/stripe_cache_size.
->
-> Basically don't run it more than once and don't run it at the 'wrong' time
-> and it works.  Not sure where the bug lies, but yeah I've seen that on 3
-> different machines!
->
-> Justin.
->
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
+Dan
