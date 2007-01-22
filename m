@@ -1,55 +1,89 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: 2.6.19.2, cp 18gb_file 18gb_file.2 = OOM killer, 100% reproducible (multi-threaded USB no go)
-Date: Sun, 21 Jan 2007 22:33:38 -0800
-Message-ID: <20070122063338.GA32300@kroah.com>
-References: <Pine.LNX.4.64.0701201516450.3684@p34.internal.lan> <3aa654a40701201245s72b2f76hc70ddd94b70ba99c@mail.gmail.com> <Pine.LNX.4.64.0701201602570.4910@p34.internal.lan> <20070121155219.GA7413@amd64.of.nowhere> <Pine.LNX.4.64.0701211146530.15334@p34.internal.lan> <20070121170249.GA19956@amd64.of.nowhere> <Pine.LNX.4.64.0701211208310.15334@p34.internal.lan> <Pine.LNX.4.64.0701211228320.3666@p34.internal.lan>
+From: "yang yin" <yinyang801120@gmail.com>
+Subject: [patch] md: bitmap read_page error
+Date: Mon, 22 Jan 2007 16:03:51 +0800
+Message-ID: <34781ae60701220003v76bd43c8h79c59b2b474b3c57@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751263AbXAVIDy@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.64.0701211228320.3666@p34.internal.lan>
-Sender: linux-raid-owner@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: thunder7@xs4all.nl, Avuton Olrich <avuton@gmail.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, Jan 21, 2007 at 12:29:51PM -0500, Justin Piszcz wrote:
-> 
-> 
-> On Sun, 21 Jan 2007, Justin Piszcz wrote:
-> 
-> > 
-> > 
-> > > 
-> > > Good luck,
-> > > Jurriaan
-> > > -- 
-> > > > What does ELF stand for (in respect to Linux?)
-> > > ELF is the first rock group that Ronnie James Dio performed with back in 
-> > > the early 1970's.  In constrast, a.out is a misspelling	 of the French word 
-> > > for the month of August.  What the two have in common is beyond me, but 
-> > > Linux users seem to use the two words together.
-> > > 	seen on c.o.l.misc
-> > > Debian (Unstable) GNU/Linux 2.6.20-rc5 2x2011 bogomips load 0.83
-> > > the Jack Vance Integral Edition: http://www.integralarchive.org
-> > > -
-> > > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> > > the body of a message to majordomo@vger.kernel.org
-> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > > 
-> > 
-> > Thanks, I'll give it another go in a bit!
-> > 
-> > Justin.
-> > -
-> 
-> Running 2.6.20-rc5 now, the multi-threaded USB probing causes my UPS not 
-> to work, probably because udev has problems or something, it is also the 
-> only USB device I have plugged into the machine.
+If the bitmap size is less than one page including super_block and
+bitmap and the inode's i_blkbits is also small, when doing the
+read_page function call to read the sb_page, it may return a error.
+For example, if the device is 12800 chunks, its bitmap file size is
+about 1.6KB include the bitmap super block. But the inode i_blkbits
+value of the bitmap file is 10,  the read_page will submit 4 bh to
+load the sb_page. Because the size of bitmap is only 1.6KB, in the
+while loop, the error will ocurr when do bmap operation for the block
+2, which will  return 0. Then the bitmap can't be initated because of
+ther read sb page fail.
 
-multi-threaded USB is about to go away as it caused too many problems
-for people, and they didn't read the Kconfig help entry about it :(
+Another error is in the bitmap_init_from_disk function.  Before doing
+read_page,. calculating the count value misses the size of super
+block. When the bitmap just needs one page, It will read two pages
+adding the super block. But at the second read, the count value will
+be set to 0, and not all the bitmap will be read from the disk and
+some bitmap will missed at the second page.
 
-thanks,
+I give a patch as following:
 
-greg k-h
+---------
+diff -Nur linux-2.6.19.2.orig/drivers/md/bitmap.c
+linux-2.6.19.2/drivers/md/bitmap.c
+--- linux-2.6.19.2.orig/drivers/md/bitmap.c     2007-01-11
+03:10:37.000000000 +0800
++++ linux-2.6.19.2/drivers/md/bitmap.c  2007-01-20 20:45:32.000000000 +0800
+@@ -352,6 +352,7 @@
+        struct inode *inode = file->f_dentry->d_inode;
+        struct buffer_head *bh;
+        sector_t block;
++       loff_t read_size = 0;
+
+        PRINTK("read bitmap file (%dB @ %Lu)\n", (int)PAGE_SIZE,
+                        (unsigned long long)index << PAGE_SHIFT);
+@@ -371,7 +372,7 @@
+        attach_page_buffers(page, bh);
+        block = index << (PAGE_SHIFT - inode->i_blkbits);
+        while (bh) {
+-               if (count == 0)
++               if (count == 0 || (read_size >= (inode->i_size -
+(index << PAGE_SHIFT))))
+                        bh->b_blocknr = 0;
+                else {
+                        bh->b_blocknr = bmap(inode, block);
+@@ -394,6 +395,7 @@
+                        set_buffer_mapped(bh);
+                        submit_bh(READ, bh);
+                }
++               read_size += (1 << inode->i_blkbits);
+                block++;
+                bh = bh->b_this_page;
+        }
+@@ -877,7 +879,7 @@
+                        int count;
+                        /* unmap the old page, we're done with it */
+                        if (index == num_pages-1)
+-                               count = bytes - index * PAGE_SIZE;
++                               count = bytes + sizeof(bitmap_super_t)
+- index * PAGE_SIZE;
+                        else
+                                count = PAGE_SIZE;
+                        if (index == 0) {
+
+
+yinyang
+
+________________________________
+Tel: (86)10-62600547
+Fax: (86)10-6265-7255
+Mailing: P. O. Box 2704# Beijing
+Postcode: 100080
+National Research Centre for High Performance Computer
+Institute of Computing Technology,Chinese Academy of Sciences
+6,South Kexueyuan Road,
+Haidian District, Beijing, China
