@@ -1,73 +1,40 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
+From: Steve Cousins <steve.cousins@maine.edu>
 Subject: Re: change strip_cache_size freeze the whole raid
-Date: Mon, 22 Jan 2007 09:56:05 -0500 (EST)
-Message-ID: <Pine.LNX.4.64.0701220954540.1711@p34.internal.lan>
-References: <001801c73e14$c3177170$28df0f3d@kylecea1512a3f>
- <Pine.LNX.4.64.0701220717200.30260@p34.internal.lan>
- <005501c73e33$7d9046d0$28df0f3d@kylecea1512a3f>
+Date: Mon, 22 Jan 2007 09:57:49 -0500
+Message-ID: <45B4D0ED.7030500@maine.edu>
+References: <001801c73e14$c3177170$28df0f3d@kylecea1512a3f> <Pine.LNX.4.64.0701220717200.30260@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <005501c73e33$7d9046d0$28df0f3d@kylecea1512a3f>
+In-Reply-To: <Pine.LNX.4.64.0701220717200.30260@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: kyle <kylewong@southa.com>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: kyle <kylewong@southa.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
 
 
-On Mon, 22 Jan 2007, kyle wrote:
+Justin Piszcz wrote:
+> Yes, I noticed this bug too, if you change it too many times or change it 
+> at the 'wrong' time, it hangs up when you echo numbr > 
+> /proc/stripe_cache_size.
+> 
+> Basically don't run it more than once and don't run it at the 'wrong' time 
+> and it works.  Not sure where the bug lies, but yeah I've seen that on 3 
+> different machines!
 
-> >
-> > On Mon, 22 Jan 2007, kyle wrote:
-> >
-> > > Hi,
-> > >
-> > > Yesterday I tried to increase the value of strip_cache_size to see if I
-> > > can
-> > > get better performance or not. I increase the value from 2048 to something
-> > > like 16384. After I did that, the raid5 freeze. Any proccess read / write
-> > > to
-> > > it stucked at D state. I tried to change it back to 2048, read
-> > > strip_cache_active, cat /proc/mdstat, mdadm stop, etc. All didn't return
-> > > back.
-> > > I even cannot shutdown the machine. Finally I need to press the reset
-> > > button
-> > > in order to get back my control.
-> 
-> > Yes, I noticed this bug too, if you change it too many times or change it
-> > at the 'wrong' time, it hangs up when you echo numbr >
-> > /proc/stripe_cache_size.
-> >
-> > Basically don't run it more than once and don't run it at the 'wrong' time
-> > and it works.  Not sure where the bug lies, but yeah I've seen that on 3
-> > different machines!
-> >
-> > Justin.
-> >
-> >
-> 
-> I just change it once, then it freeze. It's hard to get the 'right time'
-> 
-> Actually I tried it several times before. As I remember there was once it
-> freezed for around 1 or 2 minutes , then back to normal operation. This is the
-> first time it completely freezed and I waited after around 10 minutes it still
-> didn't wake up.
-> 
-> Kyle
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Can you tell us when the "right" time is or maybe what the "wrong" time 
+is?  Also, is this kernel specific?  Does it (increasing 
+stripe_cache_size) work with RAID6 too?
 
-What kernel version are you using?  It normally works the first time for 
-me, I put it in my startup scripts, as one of the last items.  However, if 
-I change it a few times, it will hang and there is no way to reboot except 
-via SYSRQ or pressing the reboot button on the machine.
+Thanks,
 
-This seems to be true of 2.6.19.1 and 2.6.19.2, I did not try under 
-2.6.20-rc5 because I am tired of hanging my machine :)
+Steve
+-- 
+______________________________________________________________________
+  Steve Cousins, Ocean Modeling Group    Email: cousins@umit.maine.edu
+  Marine Sciences, 452 Aubert Hall       http://rocky.umeoce.maine.edu
+  Univ. of Maine, Orono, ME 04469        Phone: (207) 581-4302
 
-Justin.
+
