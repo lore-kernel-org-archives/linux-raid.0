@@ -1,74 +1,42 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: 2.6.19.2, cp 18gb_file 18gb_file.2 = OOM killer, 100% reproducible
- (multi-threaded USB no go)
-Date: Mon, 22 Jan 2007 05:56:52 -0500 (EST)
-Message-ID: <Pine.LNX.4.64.0701220556260.30260@p34.internal.lan>
-References: <Pine.LNX.4.64.0701201516450.3684@p34.internal.lan>
- <3aa654a40701201245s72b2f76hc70ddd94b70ba99c@mail.gmail.com>
- <Pine.LNX.4.64.0701201602570.4910@p34.internal.lan> <20070121155219.GA7413@amd64.of.nowhere>
- <Pine.LNX.4.64.0701211146530.15334@p34.internal.lan> <20070121170249.GA19956@amd64.of.nowhere>
- <Pine.LNX.4.64.0701211208310.15334@p34.internal.lan>
- <Pine.LNX.4.64.0701211228320.3666@p34.internal.lan> <20070122063338.GA32300@kroah.com>
+From: "kyle" <kylewong@southa.com>
+Subject: change strip_cache_size freeze the whole raid
+Date: Mon, 22 Jan 2007 19:02:08 +0800
+Message-ID: <001801c73e14$c3177170$28df0f3d@kylecea1512a3f>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+	format=flowed;
+	charset="big5";
+	reply-type=original
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20070122063338.GA32300@kroah.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Greg KH <greg@kroah.com>
-Cc: thunder7@xs4all.nl, Avuton Olrich <avuton@gmail.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hi,
 
+Yesterday I tried to increase the value of strip_cache_size to see if I can 
+get better performance or not. I increase the value from 2048 to something 
+like 16384. After I did that, the raid5 freeze. Any proccess read / write to 
+it stucked at D state. I tried to change it back to 2048, read 
+strip_cache_active, cat /proc/mdstat, mdadm stop, etc. All didn't return 
+back. I even cannot shutdown the machine. Finally I need to press the reset 
+button in order to get back my control.
 
-On Sun, 21 Jan 2007, Greg KH wrote:
+Kernel is 2.6.17.8 x86-64, running at AMD Athlon3000+, 2GB Ram, 8 x Seagate 
+8200.10 250GB HDD, nvidia chipset.
 
-> On Sun, Jan 21, 2007 at 12:29:51PM -0500, Justin Piszcz wrote:
-> > 
-> > 
-> > On Sun, 21 Jan 2007, Justin Piszcz wrote:
-> > 
-> > > 
-> > > 
-> > > > 
-> > > > Good luck,
-> > > > Jurriaan
-> > > > -- 
-> > > > > What does ELF stand for (in respect to Linux?)
-> > > > ELF is the first rock group that Ronnie James Dio performed with back in 
-> > > > the early 1970's.  In constrast, a.out is a misspelling	 of the French word 
-> > > > for the month of August.  What the two have in common is beyond me, but 
-> > > > Linux users seem to use the two words together.
-> > > > 	seen on c.o.l.misc
-> > > > Debian (Unstable) GNU/Linux 2.6.20-rc5 2x2011 bogomips load 0.83
-> > > > the Jack Vance Integral Edition: http://www.integralarchive.org
-> > > > -
-> > > > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> > > > the body of a message to majordomo@vger.kernel.org
-> > > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > > > 
-> > > 
-> > > Thanks, I'll give it another go in a bit!
-> > > 
-> > > Justin.
-> > > -
-> > 
-> > Running 2.6.20-rc5 now, the multi-threaded USB probing causes my UPS not 
-> > to work, probably because udev has problems or something, it is also the 
-> > only USB device I have plugged into the machine.
-> 
-> multi-threaded USB is about to go away as it caused too many problems
-> for people, and they didn't read the Kconfig help entry about it :(
-> 
-> thanks,
-> 
-> greg k-h
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+cat /proc/mdstat (after reboot):
+Personalities : [raid1] [raid5] [raid4]
+md1 : active raid1 hdc2[1] hda2[0]
+      6144768 blocks [2/2] [UU]
 
-Ah-- ok-- still experiencing the copy bug though.  When I copy an 18gb 
-file to 18gbfile.2 on the same volume, havoc ensues.
+md2 : active raid5 sdf1[7] sde1[6] sdd1[5] sdc1[4] sdb1[3] sda1[2] hdc4[1] 
+hda4[0]
+      1664893440 blocks level 5, 512k chunk, algorithm 2 [8/8] [UUUUUUUU]
 
-Justin.
+md0 : active raid1 hdc1[1] hda1[0]
+      104320 blocks [2/2] [UU]
+
+Kyle
+
