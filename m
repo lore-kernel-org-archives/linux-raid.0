@@ -1,14 +1,14 @@
 From: Justin Piszcz <jpiszcz@lucidpixels.com>
 Subject: Re: change strip_cache_size freeze the whole raid
-Date: Mon, 22 Jan 2007 10:01:37 -0500 (EST)
-Message-ID: <Pine.LNX.4.64.0701221000330.1711@p34.internal.lan>
+Date: Mon, 22 Jan 2007 10:10:50 -0500 (EST)
+Message-ID: <Pine.LNX.4.64.0701221010370.1711@p34.internal.lan>
 References: <001801c73e14$c3177170$28df0f3d@kylecea1512a3f>
  <Pine.LNX.4.64.0701220717200.30260@p34.internal.lan> <45B4D0ED.7030500@maine.edu>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751883AbXAVPBk@vger.kernel.org>
+Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <45B4D0ED.7030500@maine.edu>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-raid-owner@vger.kernel.org
 To: Steve Cousins <steve.cousins@maine.edu>
 Cc: kyle <kylewong@southa.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
@@ -41,12 +41,12 @@ On Mon, 22 Jan 2007, Steve Cousins wrote:
 >  Univ. of Maine, Orono, ME 04469        Phone: (207) 581-4302
 > 
 > 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > 
 
-The wrong time (for me anyway) is when/or around the time in which kernel 
-is auto-detecting arrays/udev starts, when I put it there I get OOPSES all 
-over the screen and it gets really nasty.  Basically the best time appears 
-to be right after the system has started up but I/O hasn't started hitting 
-the array yet.  Tricky, I know.
+Also, I have not tested the stripe_cache_size under RAID6, I am unsure.
 
 Justin.
