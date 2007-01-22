@@ -1,157 +1,71 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: 2.6.20-rc5: cp 18gb 18gb.2 = OOM killer, reproducible just like
- 2.16.19.2
-Date: Mon, 22 Jan 2007 15:20:16 -0500 (EST)
-Message-ID: <Pine.LNX.4.64.0701221519380.16473@p34.internal.lan>
-References: <Pine.LNX.4.64.0701211424170.2552@p34.internal.lan>
- <20070122115703.97ed54f3.akpm@osdl.org>
+From: Chuck Ebbert <cebbert@redhat.com>
+Subject: Re: Kernel 2.6.19.2 New RAID 5 Bug (oops when writing Samba -> RAID5)
+Date: Mon, 22 Jan 2007 16:01:15 -0500
+Message-ID: <45B5261B.1050104@redhat.com>
+References: <Pine.LNX.4.64.0701200718290.29223@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20070122115703.97ed54f3.akpm@osdl.org>
+In-Reply-To: <Pine.LNX.4.64.0701200718290.29223@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, xfs@oss.sgi.com
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, xfs@oss.sgi.com, Neil Brown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-> What's that?   Software raid or hardware raid?  If the latter, which 
-driver?
+Justin Piszcz wrote:
+> My .config is attached, please let me know if any other information is 
+> needed and please CC (lkml) as I am not on the list, thanks!
+>
+> Running Kernel 2.6.19.2 on a MD RAID5 volume.  Copying files over Samba to 
+> the RAID5 running XFS.
+>
+> Any idea what happened here?
+>
+> [473795.214705] BUG: unable to handle kernel paging request at virtual 
+> address fffb92b0
+> [473795.214715]  printing eip:
+> [473795.214718] c0358b14
+> [473795.214721] *pde = 00003067
+> [473795.214723] *pte = 00000000
+> [473795.214726] Oops: 0000 [#1]
+> [473795.214729] PREEMPT SMP 
+> [473795.214736] CPU:    0
+> [473795.214737] EIP:    0060:[<c0358b14>]    Not tainted VLI
+> [473795.214738] EFLAGS: 00010286   (2.6.19.2 #1)
+> [473795.214746] EIP is at copy_data+0x6c/0x179
+> [473795.214750] eax: 00000000   ebx: 00001000   ecx: 00000354   edx: fffb9000
+> [473795.214754] esi: fffb92b0   edi: da86c2b0   ebp: 00001000   esp: f7927dc4
+> [473795.214757] ds: 007b   es: 007b   ss: 0068
+> [473795.214761] Process md4_raid5 (pid: 1305, ti=f7926000 task=f7ea9030 task.ti=f7926000)
+> [473795.214765] Stack: c1ba7c40 00000003 f5538c80 00000001 da86c000 00000009 00000000 0000006c 
+> [473795.214790]        00001000 da8536a8 aa6fee90 f5538c80 00000190 c0358d00 aa6fee88 0000ffff 
+> [473795.214863]        d7c5794c 00000001 da853488 f6fbec70 f6fbebc0 00000001 00000005 00000001 
+> [473795.214876] Call Trace:
+> [473795.214880]  [<c0358d00>] compute_parity5+0xdf/0x497
+> [473795.214887]  [<c035b0dd>] handle_stripe+0x930/0x2986
+> [473795.214892]  [<c01146b9>] find_busiest_group+0x124/0x4fd
+> [473795.214898]  [<c03580e0>] release_stripe+0x21/0x2e
+> [473795.214902]  [<c035d233>] raid5d+0x100/0x161
+> [473795.214907]  [<c036b03c>] md_thread+0x40/0x103
+> [473795.214912]  [<c012dbbe>] autoremove_wake_function+0x0/0x4b
+> [473795.214917]  [<c036affc>] md_thread+0x0/0x103
+> [473795.214922]  [<c012da1a>] kthread+0xfc/0x100
+> [473795.214926]  [<c012d91e>] kthread+0x0/0x100
+> [473795.214930]  [<c0103b4b>] kernel_thread_helper+0x7/0x1c
+> [473795.214935]  =======================
+> [473795.214938] Code: 14 39 d1 0f 8d 10 01 00 00 89 c8 01 c0 01 c8 01 c0 
+> 01 c0 89 44 24 1c eb 51 89 d9 c1 e9 02 8b 7c 24 10 01 f7 8b 44 24 18 8d 34 
+> 02 <f3> a5 89 d9 83 e1 03 74 02 f3 a4 c7 44 24 04 03 00 00 00 89 14 
+> [473795.215017] EIP: [<c0358b14>] copy_data+0x6c/0x179 SS:ESP 
+> 0068:f7927dc4
+>   
+Without digging too deeply, I'd say you've hit the same bug Sami Farin 
+and others
+have reported starting with 2.6.19: pages mapped with kmap_atomic() 
+become unmapped
+during memcpy() or similar operations.  Try disabling preempt -- that 
+seems to be the
+common factor.
 
-Software RAID (md)
-
-On Mon, 22 Jan 2007, Andrew Morton wrote:
-
-> > On Sun, 21 Jan 2007 14:27:34 -0500 (EST) Justin Piszcz <jpiszcz@lucidpixels.com> wrote:
-> > Why does copying an 18GB on a 74GB raptor raid1 cause the kernel to invoke 
-> > the OOM killer and kill all of my processes?
-> 
-> What's that?   Software raid or hardware raid?  If the latter, which driver?
-> 
-> > Doing this on a single disk 2.6.19.2 is OK, no issues.  However, this 
-> > happens every time!
-> > 
-> > Anything to try?  Any other output needed?  Can someone shed some light on 
-> > this situation?
-> > 
-> > Thanks.
-> > 
-> > 
-> > The last lines of vmstat 1 (right before it kill -9'd my shell/ssh)
-> > 
-> > procs -----------memory---------- ---swap-- -----io---- -system-- 
-> > ----cpu----
-> >  r  b   swpd   free   buff  cache   si   so    bi    bo   in   cs us sy id 
-> > wa
-> >  0  7    764  50348     12 1269988    0    0 53632   172 1902 4600  1  8 
-> > 29 62
-> >  0  7    764  49420     12 1260004    0    0 53632 34368 1871 6357  2 11 
-> > 48 40
-> 
-> The wordwrapping is painful :(
-> 
-> > 
-> > The last lines of dmesg:
-> > [ 5947.199985] lowmem_reserve[]: 0 0 0
-> > [ 5947.199992] DMA: 0*4kB 1*8kB 1*16kB 0*32kB 1*64kB 1*128kB 1*256kB 
-> > 0*512kB 1*1024kB 1*2048kB 0*4096kB = 3544kB
-> > [ 5947.200010] Normal: 1*4kB 0*8kB 1*16kB 1*32kB 0*64kB 1*128kB 0*256kB 
-> > 1*512kB 0*1024kB 1*2048kB 0*4096kB = 2740kB
-> > [ 5947.200035] HighMem: 98*4kB 35*8kB 9*16kB 69*32kB 4*64kB 1*128kB 
-> > 1*256kB 0*512kB 0*1024kB 0*2048kB 0*4096kB = 3664kB
-> > [ 5947.200052] Swap cache: add 789, delete 189, find 16/17, race 0+0
-> > [ 5947.200055] Free swap  = 2197628kB
-> > [ 5947.200058] Total swap = 2200760kB
-> > [ 5947.200060] Free swap:       2197628kB
-> > [ 5947.205664] 517888 pages of RAM 
-> > [ 5947.205671] 288512 pages of HIGHMEM
-> > [ 5947.205673] 5666 reserved pages 
-> > [ 5947.205675] 257163 pages shared
-> > [ 5947.205678] 600 pages swap cached 
-> > [ 5947.205680] 88876 pages dirty
-> > [ 5947.205682] 115111 pages writeback
-> > [ 5947.205684] 5608 pages mapped
-> > [ 5947.205686] 49367 pages slab
-> > [ 5947.205688] 541 pages pagetables
-> > [ 5947.205795] Out of memory: kill process 1853 (named) score 9937 or a 
-> > child
-> > [ 5947.205801] Killed process 1853 (named)
-> > [ 5947.206616] bash invoked oom-killer: gfp_mask=0x84d0, order=0, 
-> > oomkilladj=0
-> > [ 5947.206621]  [<c013e33b>] out_of_memory+0x17b/0x1b0
-> > [ 5947.206631]  [<c013fcac>] __alloc_pages+0x29c/0x2f0
-> > [ 5947.206636]  [<c01479ad>] __pte_alloc+0x1d/0x90
-> > [ 5947.206643]  [<c0148bf7>] copy_page_range+0x357/0x380
-> > [ 5947.206649]  [<c0119d75>] copy_process+0x765/0xfc0
-> > [ 5947.206655]  [<c012c3f9>] alloc_pid+0x1b9/0x280
-> > [ 5947.206662]  [<c011a839>] do_fork+0x79/0x1e0
-> > [ 5947.206674]  [<c015f91f>] do_pipe+0x5f/0xc0
-> > [ 5947.206680]  [<c0101176>] sys_clone+0x36/0x40
-> > [ 5947.206686]  [<c0103138>] syscall_call+0x7/0xb
-> > [ 5947.206691]  [<c0420033>] __sched_text_start+0x853/0x950
-> > [ 5947.206698]  ======================= 
-> 
-> Important information from the oom-killing event is missing.  Please send
-> it all.
-> 
-> >From your earlier reports we have several hundred MB of ZONE_NORMAL memory
-> which has gone awol.
-> 
-> Please include /proc/meminfo from after the oom-killing.
-> 
-> Please work out what is using all that slab memory, via /proc/slabinfo.
-> 
-> After the oom-killing, please see if you can free up the ZONE_NORMAL memory
-> via a few `echo 3 > /proc/sys/vm/drop_caches' commands.  See if you can
-> work out what happened to the missing couple-of-hundred MB from
-> ZONE_NORMAL.
-> 
-> 
-
-I believe this is the first part of it (hopefully):
-
-2908kB active:86104kB inactive:1061904kB present:1145032kB pages_scanned:0 
-all_unreclaimable? no
-[ 5947.199985] lowmem_reserve[]: 0 0 0
-[ 5947.199992] DMA: 0*4kB 1*8kB 1*16kB 0*32kB 1*64kB 1*128kB 1*256kB 
-0*512kB 1*1024kB 1*2048kB 0*4096kB = 3544kB
-[ 5947.200010] Normal: 1*4kB 0*8kB 1*16kB 1*32kB 0*64kB 1*128kB 0*256kB 
-1*512kB 0*1024kB 1*2048kB 0*4096kB = 2740kB
-[ 5947.200035] HighMem: 98*4kB 35*8kB 9*16kB 69*32kB 4*64kB 1*128kB 
-1*256kB 0*512kB 0*1024kB 0*2048kB 0*4096kB = 3664kB
-[ 5947.200052] Swap cache: add 789, delete 189, find 16/17, race 0+0
-[ 5947.200055] Free swap  = 2197628kB
-[ 5947.200058] Total swap = 2200760kB
-[ 5947.200060] Free swap:       2197628kB
-[ 5947.205664] 517888 pages of RAM
-[ 5947.205671] 288512 pages of HIGHMEM
-[ 5947.205673] 5666 reserved pages
-[ 5947.205675] 257163 pages shared
-[ 5947.205678] 600 pages swap cached
-[ 5947.205680] 88876 pages dirty
-[ 5947.205682] 115111 pages writeback
-[ 5947.205684] 5608 pages mapped
-[ 5947.205686] 49367 pages slab
-[ 5947.205688] 541 pages pagetables
-[ 5947.205795] Out of memory: kill process 1853 (named) score 9937 or a 
-child
-[ 5947.205801] Killed process 1853 (named)
-[ 5947.206616] bash invoked oom-killer: gfp_mask=0x84d0, order=0, 
-oomkilladj=0
-[ 5947.206621]  [<c013e33b>] out_of_memory+0x17b/0x1b0
-[ 5947.206631]  [<c013fcac>] __alloc_pages+0x29c/0x2f0
-[ 5947.206636]  [<c01479ad>] __pte_alloc+0x1d/0x90
-[ 5947.206643]  [<c0148bf7>] copy_page_range+0x357/0x380
-[ 5947.206649]  [<c0119d75>] copy_process+0x765/0xfc0
-[ 5947.206655]  [<c012c3f9>] alloc_pid+0x1b9/0x280
-[ 5947.206662]  [<c011a839>] do_fork+0x79/0x1e0
-[ 5947.206674]  [<c015f91f>] do_pipe+0x5f/0xc0
-[ 5947.206680]  [<c0101176>] sys_clone+0x36/0x40
-[ 5947.206686]  [<c0103138>] syscall_call+0x7/0xb
-[ 5947.206691]  [<c0420033>] __sched_text_start+0x853/0x950
-[ 5947.206698]  =======================
-
-I will have to include the other parts when I am near the machine and can 
-reboot it locally :)
-
-Justin.
 
