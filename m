@@ -1,70 +1,55 @@
-From: "Liang Yang" <multisyncfe991@hotmail.com>
-Subject: RE: What is the exacting meaning of Striped_Cache_Size?
-Date: Sun, 21 Jan 2007 23:22:24 -0700
-Message-ID: <BAY125-DAV20A23F0F57329431B65FBE93AE0@phx.gbl>
-References: <Pine.LNX.4.64.0701200718290.29223@p34.internal.lan> <Pine.LNX.4.64.0701200745420.3756@p34.internal.lan> <BAY125-DAV159818650D5FE72FE853E393AE0@phx.gbl> <e9c3a7c20701212206p2316e02he13eebe8efc3889e@mail.gmail.com>
+From: Greg KH <greg@kroah.com>
+Subject: Re: 2.6.19.2, cp 18gb_file 18gb_file.2 = OOM killer, 100% reproducible (multi-threaded USB no go)
+Date: Sun, 21 Jan 2007 22:33:38 -0800
+Message-ID: <20070122063338.GA32300@kroah.com>
+References: <Pine.LNX.4.64.0701201516450.3684@p34.internal.lan> <3aa654a40701201245s72b2f76hc70ddd94b70ba99c@mail.gmail.com> <Pine.LNX.4.64.0701201602570.4910@p34.internal.lan> <20070121155219.GA7413@amd64.of.nowhere> <Pine.LNX.4.64.0701211146530.15334@p34.internal.lan> <20070121170249.GA19956@amd64.of.nowhere> <Pine.LNX.4.64.0701211208310.15334@p34.internal.lan> <Pine.LNX.4.64.0701211228320.3666@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-Message-ID: <000d01c73ded$ae7894f0$0401a8c0@bellevue>
-In-Reply-To: <e9c3a7c20701212206p2316e02he13eebe8efc3889e@mail.gmail.com>
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.64.0701211228320.3666@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Dan Williams' <dan.j.williams@intel.com>
-Cc: linux-raid@vger.kernel.org
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: thunder7@xs4all.nl, Avuton Olrich <avuton@gmail.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Dan,
+On Sun, Jan 21, 2007 at 12:29:51PM -0500, Justin Piszcz wrote:
+> 
+> 
+> On Sun, 21 Jan 2007, Justin Piszcz wrote:
+> 
+> > 
+> > 
+> > > 
+> > > Good luck,
+> > > Jurriaan
+> > > -- 
+> > > > What does ELF stand for (in respect to Linux?)
+> > > ELF is the first rock group that Ronnie James Dio performed with back in 
+> > > the early 1970's.  In constrast, a.out is a misspelling	 of the French word 
+> > > for the month of August.  What the two have in common is beyond me, but 
+> > > Linux users seem to use the two words together.
+> > > 	seen on c.o.l.misc
+> > > Debian (Unstable) GNU/Linux 2.6.20-rc5 2x2011 bogomips load 0.83
+> > > the Jack Vance Integral Edition: http://www.integralarchive.org
+> > > -
+> > > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> > > the body of a message to majordomo@vger.kernel.org
+> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > > 
+> > 
+> > Thanks, I'll give it another go in a bit!
+> > 
+> > Justin.
+> > -
+> 
+> Running 2.6.20-rc5 now, the multi-threaded USB probing causes my UPS not 
+> to work, probably because udev has problems or something, it is also the 
+> only USB device I have plugged into the machine.
 
-Thanks for your reply. Still get two questions left.
+multi-threaded USB is about to go away as it caused too many problems
+for people, and they didn't read the Kconfig help entry about it :(
 
-Suppose I have a MD-RAID5 array which consists of 8 disks. 
-1. Do we need to consider the chunk size of the RAID array when we set the
-value of Striped_Cache_Size? For example, if the chunk size is changed from
-64k to 256k, do we need to adjust the Striped_Cache_Size accordingly?
+thanks,
 
-2. The performance improvement of large size I/O packets (128k, 256k) is
-larger than small size I/O packets (512B, 1KB) when I change the
-Striped_Cache_Size. How do you explain the difference here?
-
-Liang
-
------Original Message-----
-From: dan.j.williams@gmail.com [mailto:dan.j.williams@gmail.com] On Behalf
-Of Dan Williams
-Sent: Sunday, January 21, 2007 11:07 PM
-To: Liang Yang
-Cc: linux-raid@vger.kernel.org
-Subject: Re: What is the exacting meaning of Striped_Cache_Size?
-
-On 1/21/07, Liang Yang <multisyncfe991@hotmail.com> wrote:
-> Hello,
->
-> I have tried to increase the Striped_Cache_Size from 256 (default for my
-> MD-RAID5 array) to 8192, it does improve the MD-RAID5 Write performance
-> which varies with the size of I/O packet.
->
-> However, I'm still not very clean the meaning and the potential
-performance
-> impact of this Striped_Cache_Size? Is the unit for this parameter Byte or
-> KiloByte?
->
-> Could anyone here explain with a little bit more details?
->
-stripe_cache_size is the number of stripes in the cache.  Each stripe
-(strip) is composed one PAGE_SIZE block per disk.  If your page size
-is 4k and you have 4 disks in your array then a stripe_cache_size of
-256 is 4k * 4 * 256 = 4MB.
-
-Increasing this number increases the chances that a write to the array
-will not generate reads to satisfy the parity calculation.
-
-> Thanks,
->
-> Liang
->
-Regards,
-
-Dan
-
+greg k-h
