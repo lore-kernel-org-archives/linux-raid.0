@@ -1,20 +1,42 @@
-From: "Dan Williams" <dan.j.williams@intel.com>
-Subject: Re: What is the exacting meaning of Striped_Cache_Size?
-Date: Sun, 21 Jan 2007 23:06:37 -0700
-Message-ID: <e9c3a7c20701212206p2316e02he13eebe8efc3889e@mail.gmail.com>
-References: <Pine.LNX.4.64.0701200718290.29223@p34.internal.lan>
-	 <Pine.LNX.4.64.0701200745420.3756@p34.internal.lan>
-	 <BAY125-DAV159818650D5FE72FE853E393AE0@phx.gbl>
+From: "Liang Yang" <multisyncfe991@hotmail.com>
+Subject: RE: What is the exacting meaning of Striped_Cache_Size?
+Date: Sun, 21 Jan 2007 23:22:24 -0700
+Message-ID: <BAY125-DAV20A23F0F57329431B65FBE93AE0@phx.gbl>
+References: <Pine.LNX.4.64.0701200718290.29223@p34.internal.lan> <Pine.LNX.4.64.0701200745420.3756@p34.internal.lan> <BAY125-DAV159818650D5FE72FE853E393AE0@phx.gbl> <e9c3a7c20701212206p2316e02he13eebe8efc3889e@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+	charset="US-ASCII"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <BAY125-DAV159818650D5FE72FE853E393AE0@phx.gbl>
-Content-Disposition: inline
+Message-ID: <000d01c73ded$ae7894f0$0401a8c0@bellevue>
+In-Reply-To: <e9c3a7c20701212206p2316e02he13eebe8efc3889e@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Liang Yang <multisyncfe991@hotmail.com>
+To: 'Dan Williams' <dan.j.williams@intel.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+Dan,
+
+Thanks for your reply. Still get two questions left.
+
+Suppose I have a MD-RAID5 array which consists of 8 disks. 
+1. Do we need to consider the chunk size of the RAID array when we set the
+value of Striped_Cache_Size? For example, if the chunk size is changed from
+64k to 256k, do we need to adjust the Striped_Cache_Size accordingly?
+
+2. The performance improvement of large size I/O packets (128k, 256k) is
+larger than small size I/O packets (512B, 1KB) when I change the
+Striped_Cache_Size. How do you explain the difference here?
+
+Liang
+
+-----Original Message-----
+From: dan.j.williams@gmail.com [mailto:dan.j.williams@gmail.com] On Behalf
+Of Dan Williams
+Sent: Sunday, January 21, 2007 11:07 PM
+To: Liang Yang
+Cc: linux-raid@vger.kernel.org
+Subject: Re: What is the exacting meaning of Striped_Cache_Size?
 
 On 1/21/07, Liang Yang <multisyncfe991@hotmail.com> wrote:
 > Hello,
@@ -23,7 +45,8 @@ On 1/21/07, Liang Yang <multisyncfe991@hotmail.com> wrote:
 > MD-RAID5 array) to 8192, it does improve the MD-RAID5 Write performance
 > which varies with the size of I/O packet.
 >
-> However, I'm still not very clean the meaning and the potential performance
+> However, I'm still not very clean the meaning and the potential
+performance
 > impact of this Striped_Cache_Size? Is the unit for this parameter Byte or
 > KiloByte?
 >
@@ -44,3 +67,4 @@ will not generate reads to satisfy the parity calculation.
 Regards,
 
 Dan
+
