@@ -1,61 +1,75 @@
-From: "Francois Barre" <francois.barre@gmail.com>
-Subject: Re: Ooops on read-only raid5 while unmounting as xfs
-Date: Tue, 23 Jan 2007 15:42:26 +0100
-Message-ID: <fd8d0180701230642rd9d35e9y7e1058546254bad4@mail.gmail.com>
-References: <fd8d0180701180218o66a48176q172b029673c22660@mail.gmail.com>
-	 <17845.25989.10063.901037@notabene.brown>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: Kernel 2.6.19.2 New RAID 5 Bug (oops when writing Samba -> RAID5)
+Date: Tue, 23 Jan 2007 12:05:44 -0500
+Message-ID: <45B64068.9020500@tmr.com>
+References: <Pine.LNX.4.64.0701200718290.29223@p34.internal.lan> <45B5261B.1050104@redhat.com> <17845.13256.284461.992275@notabene.brown> <Pine.LNX.4.64.0701230556050.8978@p34.internal.lan> <45B5ECAA.6000100@tls.msk.ru> <Pine.LNX.4.64.0701230657380.8978@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17845.25989.10063.901037@notabene.brown>
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <xfs-bounce@oss.sgi.com>
+In-Reply-To: <Pine.LNX.4.64.0701230657380.8978@p34.internal.lan>
 Content-Disposition: inline
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
+Sender: xfs-bounce@oss.sgi.com
+Errors-to: xfs-bounce@oss.sgi.com
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: Michael Tokarev <mjt@tls.msk.ru>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, xfs@oss.sgi.com, Alan Piszcz <ap@solarrain.com>
 List-Id: linux-raid.ids
 
-> > 3. mark the array read-only (mdadm -o)
+Justin Piszcz wrote:
+> On Tue, 23 Jan 2007, Michael Tokarev wrote:
 >
-> You shouldn't be able to do this.  It should only be possible to set
-> an array to read-only when it is not in use.  The fact that you canno=
-t
-> suggests something else if wrong.
-Should I ? I assumed that mdadm -o could be run with a running & used
-array, and it seemed true. I never asked myself about -o semantics.
-But I'll double-check as soon as possible. Anyway, if marking an array
--o is only possible when the array is not used, then it completely
-changes my issue.
-
-> Are you able to stop the array (mdadm -S) while the xfs filesystem is
-> still mounte?d?
-I guess not. I never managed, and I didn't either in this case. But I'l=
-l try.
-
-> >
-> > May it be possible to relax the BUG_ON() and be able to send to
-> > upper-layer a more gentle message ?
+>   
+>> Justin Piszcz wrote:
+>> []
+>>     
+>>> Is this a bug that can or will be fixed or should I disable pre-emption on 
+>>> critical and/or server machines?
+>>>       
+>> Disabling pre-emption on critical and/or server machines seems to be a good
+>> idea in the first place.  IMHO anyway.. ;)
+>>
+>> /mjt
+>>
+>>     
 >
-> Maybe... but I think I would rather make sure that you cannot set to
-> read-only while mounted.
+> So for a server system, the following options should be as follows:
 >
-> If there some particular reason you were doing this?
-Well, I was in a recovery process, I wanted to watch my data and mount
-the xfs partition without altering the array.
-
-My question is then : what prevents the upper layer to open the array
-read-write, submit a write and make the md code BUG_ON() ?
-
+> Preemption Model (No Forced Preemption (Server))  --->
+> [ ] Preempt The Big Kernel Lock
 >
-> Thanks,
-> NeilBrown
+> Also, my mobo has HPET timer support in the BIOS, is there any reason to 
+> use this on a server? I do run X on it via the Intel 965 chipset video.
 >
+> So bottom line is make sure not to use preemption on servers or else you 
+> will get weird spinlock/deadlocks on RAID devices--GOOD To know!
 
-Thanks for your tips&answers,
+I should actually think it's BAD to know, it has nothing to do with 
+servers, either PREEMPT works safely or it doesn't, like being pregnant 
+there are no grey areas.
 
-=46ran=E7ois.
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Justin Piszcz wrote:
+
+
+    This is not a reason. The reason is that preemption usually works worse
+    on servers, esp. high-loaded servers - the more often you interrupt a
+    (kernel) work, the more nedleess context switches you'll have, and the
+    more slow the whole thing works.
+
+    Another point is that with preemption enabled, we have more chances to
+    hit one or another bug somewhere. Those bugs should be found and fixed
+    for sure, but important servers/data isn't a place usually for 
+bughunting.
+
+Unfortunately bugs, like big horn sheep, must be hunted where they can be found, however inconvenient that may be.
+
+
+I am curious to know if this applies to voluntary preempt as well.
+
+-- 
+bill davidsen <davidsen@tmr.com>
+  CTO TMR Associates, Inc
+  Doing interesting things with small computers since 1979
+
+
+
+[[HTML alternate version deleted]]
