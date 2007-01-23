@@ -1,35 +1,50 @@
-From: Michael Tokarev <mjt@tls.msk.ru>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
 Subject: Re: Kernel 2.6.19.2 New RAID 5 Bug (oops when writing Samba -> RAID5)
-Date: Tue, 23 Jan 2007 15:48:03 +0300
-Message-ID: <45B60403.1060201@tls.msk.ru>
-References: <Pine.LNX.4.64.0701200718290.29223@p34.internal.lan> <45B5261B.1050104@redhat.com> <17845.13256.284461.992275@notabene.brown> <Pine.LNX.4.64.0701230556050.8978@p34.internal.lan> <45B5ECAA.6000100@tls.msk.ru> <Pine.LNX.4.64.0701230657380.8978@p34.internal.lan>
+Date: Tue, 23 Jan 2007 08:46:48 -0500 (EST)
+Message-ID: <Pine.LNX.4.64.0701230846410.8978@p34.internal.lan>
+References: <Pine.LNX.4.64.0701200718290.29223@p34.internal.lan>
+ <45B5261B.1050104@redhat.com> <17845.13256.284461.992275@notabene.brown>
+ <Pine.LNX.4.64.0701230556050.8978@p34.internal.lan> <45B5ECAA.6000100@tls.msk.ru>
+ <Pine.LNX.4.64.0701230657380.8978@p34.internal.lan> <45B60403.1060201@tls.msk.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0701230657380.8978@p34.internal.lan>
+In-Reply-To: <45B60403.1060201@tls.msk.ru>
 Sender: linux-raid-owner@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
+To: Michael Tokarev <mjt@tls.msk.ru>
 Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, xfs@oss.sgi.com, Alan Piszcz <ap@solarrain.com>
 List-Id: linux-raid.ids
 
-Justin Piszcz wrote:
+
+
+On Tue, 23 Jan 2007, Michael Tokarev wrote:
+
+> Justin Piszcz wrote:
+> > 
+> > On Tue, 23 Jan 2007, Michael Tokarev wrote:
+> > 
+> >> Disabling pre-emption on critical and/or server machines seems to be a good
+> >> idea in the first place.  IMHO anyway.. ;)
+> >
+> > So bottom line is make sure not to use preemption on servers or else you 
+> > will get weird spinlock/deadlocks on RAID devices--GOOD To know!
 > 
-> On Tue, 23 Jan 2007, Michael Tokarev wrote:
+> This is not a reason.  The reason is that preemption usually works worse
+> on servers, esp. high-loaded servers - the more often you interrupt a
+> (kernel) work, the more nedleess context switches you'll have, and the
+> more slow the whole thing works.
 > 
->> Disabling pre-emption on critical and/or server machines seems to be a good
->> idea in the first place.  IMHO anyway.. ;)
->
-> So bottom line is make sure not to use preemption on servers or else you 
-> will get weird spinlock/deadlocks on RAID devices--GOOD To know!
+> Another point is that with preemption enabled, we have more chances to
+> hit one or another bug somewhere.  Those bugs should be found and fixed
+> for sure, but important servers/data isn't a place usually for bughunting.
+> 
+> /mjt
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
-This is not a reason.  The reason is that preemption usually works worse
-on servers, esp. high-loaded servers - the more often you interrupt a
-(kernel) work, the more nedleess context switches you'll have, and the
-more slow the whole thing works.
+Thanks for the update/info.
 
-Another point is that with preemption enabled, we have more chances to
-hit one or another bug somewhere.  Those bugs should be found and fixed
-for sure, but important servers/data isn't a place usually for bughunting.
-
-/mjt
+Justin.
