@@ -1,131 +1,32 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH 2.6.20-rc5 07/12] md: move raid5 parity checks to raid5_run_ops
-Date: Tue, 23 Jan 2007 11:48:04 -0700
-Message-ID: <20070123184804.2482.49941.stgit@dwillia2-linux.ch.intel.com>
-References: <20070123184141.2482.75179.stgit@dwillia2-linux.ch.intel.com>
-Content-Type: text/plain; charset=utf-8; format=fixed
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S965425AbXAWSvP@vger.kernel.org>
-In-Reply-To: <20070123184141.2482.75179.stgit@dwillia2-linux.ch.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+From: Neil Brown <neilb@suse.de>
+Subject: Re: Ooops on read-only raid5 while unmounting as xfs
+Date: Wed, 24 Jan 2007 10:54:12 +1100
+Message-ID: <17846.40996.525616.51618@notabene.brown>
+References: <fd8d0180701180218o66a48176q172b029673c22660@mail.gmail.com>
+	<17845.25989.10063.901037@notabene.brown>
+	<fd8d0180701230642rd9d35e9y7e1058546254bad4@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: message from Francois Barre on Tuesday January 23
+Sender: linux-raid-owner@vger.kernel.org
+To: Francois Barre <francois.barre@gmail.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-From: Dan Williams <dan.j.williams@intel.com>
+On Tuesday January 23, francois.barre@gmail.com wrote:
+> 
+> My question is then : what prevents the upper layer to open the array
+> read-write, submit a write and make the md code BUG_ON() ?
 
-handle_stripe sets STRIPE_OP_CHECK to request a check operation in
-raid5_run_ops.  If raid5_run_ops is able to perform the check with a
-dma engine the parity will be preserved in memory removing the need to
-re-read it from disk, as is necessary in the synchronous case.
+The theory is that when you tell an md array to become read-only, it
+tells the block layer that it is read-only, and then if some process
+tries to open it read/write, it gets an array.
 
-'Repair' operations re-use the same logic as compute block, with the caveat
-that the results of the compute block are immediately written back to the
-parity disk.  To differentiate these operations the STRIPE_OP_MOD_REPAIR_PD
-flag is added.
+I say "theory" because I have never really tested any of the read-only
+stuff.  I have had a feeling for a long time that it really needs a
+bit of thought and testing and documentation, but it never quite
+seemed important enough to get that love-and-care....
 
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
-
- drivers/md/raid5.c |   81 ++++++++++++++++++++++++++++++++++++++++------------
- 1 files changed, 62 insertions(+), 19 deletions(-)
-
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 279a30c..2422253 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -2411,32 +2411,75 @@ static void handle_stripe5(struct stripe_head *sh)
- 			locked += handle_write_operations5(sh, rcw, 0);
- 	}
- 
--	/* maybe we need to check and possibly fix the parity for this stripe
--	 * Any reads will already have been scheduled, so we just see if enough data
--	 * is available
-+	/* 1/ Maybe we need to check and possibly fix the parity for this stripe.
-+	 *    Any reads will already have been scheduled, so we just see if enough data
-+	 *    is available.
-+	 * 2/ Hold off parity checks while parity dependent operations are in flight
-+	 *    (conflicting writes are protected by the 'locked' variable)
- 	 */
--	if (syncing && locked == 0 &&
--	    !test_bit(STRIPE_INSYNC, &sh->state)) {
-+	if ((syncing && locked == 0 && !test_bit(STRIPE_OP_COMPUTE_BLK, &sh->ops.pending) &&
-+		!test_bit(STRIPE_INSYNC, &sh->state)) ||
-+	    	test_bit(STRIPE_OP_CHECK, &sh->ops.pending) ||
-+	    	test_bit(STRIPE_OP_MOD_REPAIR_PD, &sh->ops.pending)) {
-+
- 		set_bit(STRIPE_HANDLE, &sh->state);
--		if (failed == 0) {
--			BUG_ON(uptodate != disks);
--			compute_parity5(sh, CHECK_PARITY);
--			uptodate--;
--			if (page_is_zero(sh->dev[sh->pd_idx].page)) {
--				/* parity is correct (on disc, not in buffer any more) */
--				set_bit(STRIPE_INSYNC, &sh->state);
--			} else {
--				conf->mddev->resync_mismatches += STRIPE_SECTORS;
--				if (test_bit(MD_RECOVERY_CHECK, &conf->mddev->recovery))
--					/* don't try to repair!! */
-+		/* Take one of the following actions:
-+		 * 1/ start a check parity operation if (uptodate == disks)
-+		 * 2/ finish a check parity operation and act on the result
-+		 * 3/ skip to the writeback section if we previously
-+		 *    initiated a recovery operation
-+		 */
-+		if (failed == 0 && !test_bit(STRIPE_OP_MOD_REPAIR_PD, &sh->ops.pending)) {
-+			if (!test_and_set_bit(STRIPE_OP_CHECK, &sh->ops.pending)) {
-+				BUG_ON(uptodate != disks);
-+				clear_bit(R5_UPTODATE, &sh->dev[sh->pd_idx].flags);
-+				sh->ops.count++;
-+				uptodate--;
-+			} else if (test_and_clear_bit(STRIPE_OP_CHECK, &sh->ops.complete)) {
-+				clear_bit(STRIPE_OP_CHECK, &sh->ops.ack);
-+				clear_bit(STRIPE_OP_CHECK, &sh->ops.pending);
-+
-+				if (sh->ops.zero_sum_result == 0)
-+					/* parity is correct (on disc, not in buffer any more) */
- 					set_bit(STRIPE_INSYNC, &sh->state);
- 				else {
--					compute_block(sh, sh->pd_idx);
--					uptodate++;
-+					conf->mddev->resync_mismatches += STRIPE_SECTORS;
-+					if (test_bit(MD_RECOVERY_CHECK, &conf->mddev->recovery))
-+						/* don't try to repair!! */
-+						set_bit(STRIPE_INSYNC, &sh->state);
-+					else {
-+						BUG_ON(test_and_set_bit(
-+							STRIPE_OP_COMPUTE_BLK,
-+							&sh->ops.pending));
-+						set_bit(STRIPE_OP_MOD_REPAIR_PD,
-+							&sh->ops.pending);
-+						BUG_ON(test_and_set_bit(R5_Wantcompute,
-+							&sh->dev[sh->pd_idx].flags));
-+						sh->ops.target = sh->pd_idx;
-+						sh->ops.count++;
-+						uptodate++;
-+					}
- 				}
- 			}
- 		}
--		if (!test_bit(STRIPE_INSYNC, &sh->state)) {
-+
-+		/* check if we can clear a parity disk reconstruct */
-+		if (test_bit(STRIPE_OP_COMPUTE_BLK, &sh->ops.complete) &&
-+			test_bit(STRIPE_OP_MOD_REPAIR_PD, &sh->ops.pending)) {
-+
-+			clear_bit(STRIPE_OP_MOD_REPAIR_PD, &sh->ops.pending);
-+			clear_bit(STRIPE_OP_COMPUTE_BLK, &sh->ops.complete);
-+			clear_bit(STRIPE_OP_COMPUTE_BLK, &sh->ops.ack);
-+			clear_bit(STRIPE_OP_COMPUTE_BLK, &sh->ops.pending);
-+		}
-+
-+		/* Wait for check parity and compute block operations to complete
-+		 * before write-back
-+		 */
-+		if (!test_bit(STRIPE_INSYNC, &sh->state) &&
-+			!test_bit(STRIPE_OP_CHECK, &sh->ops.pending) &&
-+			!test_bit(STRIPE_OP_COMPUTE_BLK, &sh->ops.pending)) {
-+
- 			/* either failed parity check, or recovery is happening */
- 			if (failed==0)
- 				failed_num = sh->pd_idx;
+NeilBrown
