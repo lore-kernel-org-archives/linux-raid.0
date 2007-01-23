@@ -1,31 +1,61 @@
-From: "kyle" <kylewong@southa.com>
-Subject: Re: change strip_cache_size freeze the whole raid
-Date: Tue, 23 Jan 2007 22:22:51 +0800
-Message-ID: <009101c73ef9$fdb561d0$28df0f3d@kylecea1512a3f>
-References: <001801c73e14$c3177170$28df0f3d@kylecea1512a3f> <Pine.LNX.4.64.0701220717200.30260@p34.internal.lan> <45B4D0ED.7030500@maine.edu> <Pine.LNX.4.64.0701221000330.1711@p34.internal.lan>
+From: "Francois Barre" <francois.barre@gmail.com>
+Subject: Re: Ooops on read-only raid5 while unmounting as xfs
+Date: Tue, 23 Jan 2007 15:42:26 +0100
+Message-ID: <fd8d0180701230642rd9d35e9y7e1058546254bad4@mail.gmail.com>
+References: <fd8d0180701180218o66a48176q172b029673c22660@mail.gmail.com>
+	 <17845.25989.10063.901037@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	format=flowed;
-	charset="iso-8859-1";
-	reply-type=original
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S933001AbXAWOXP@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>, Steve Cousins <steve.cousins@maine.edu>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <17845.25989.10063.901037@notabene.brown>
+Content-Disposition: inline
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-> I can try and do this later this week possibly.
+> > 3. mark the array read-only (mdadm -o)
+>
+> You shouldn't be able to do this.  It should only be possible to set
+> an array to read-only when it is not in use.  The fact that you canno=
+t
+> suggests something else if wrong.
+Should I ? I assumed that mdadm -o could be run with a running & used
+array, and it seemed true. I never asked myself about -o semantics.
+But I'll double-check as soon as possible. Anyway, if marking an array
+-o is only possible when the array is not used, then it completely
+changes my issue.
 
-> Justin.
->>
->> alt-sysrq-T or "echo t > /proc/sysrq-trigger" can be really helpful to
->> diagnose this sort of problem (providing the system isn't so badly
->> stuck that the kernel logs don't get stored).
->>
->> It is probably hitting a memory-allocation deadlock, though I cannot
->> see exactly where the deadlock would be.  If you are able to reproduce
->> it and can get the kernel logs after 'alt-sysrq-T' I would really
->> appreciate it.
->> Justin,Maybe you can try freeze it once more and get the kernel logs 
->> before try Neil's patch ...... :D~Kyle 
+> Are you able to stop the array (mdadm -S) while the xfs filesystem is
+> still mounte?d?
+I guess not. I never managed, and I didn't either in this case. But I'l=
+l try.
+
+> >
+> > May it be possible to relax the BUG_ON() and be able to send to
+> > upper-layer a more gentle message ?
+>
+> Maybe... but I think I would rather make sure that you cannot set to
+> read-only while mounted.
+>
+> If there some particular reason you were doing this?
+Well, I was in a recovery process, I wanted to watch my data and mount
+the xfs partition without altering the array.
+
+My question is then : what prevents the upper layer to open the array
+read-write, submit a write and make the md code BUG_ON() ?
+
+>
+> Thanks,
+> NeilBrown
+>
+
+Thanks for your tips&answers,
+
+=46ran=E7ois.
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
