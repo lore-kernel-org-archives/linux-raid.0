@@ -1,50 +1,31 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: Kernel 2.6.19.2 New RAID 5 Bug (oops when writing Samba -> RAID5)
-Date: Tue, 23 Jan 2007 08:46:48 -0500 (EST)
-Message-ID: <Pine.LNX.4.64.0701230846410.8978@p34.internal.lan>
-References: <Pine.LNX.4.64.0701200718290.29223@p34.internal.lan>
- <45B5261B.1050104@redhat.com> <17845.13256.284461.992275@notabene.brown>
- <Pine.LNX.4.64.0701230556050.8978@p34.internal.lan> <45B5ECAA.6000100@tls.msk.ru>
- <Pine.LNX.4.64.0701230657380.8978@p34.internal.lan> <45B60403.1060201@tls.msk.ru>
+From: "kyle" <kylewong@southa.com>
+Subject: Re: change strip_cache_size freeze the whole raid
+Date: Tue, 23 Jan 2007 22:22:51 +0800
+Message-ID: <009101c73ef9$fdb561d0$28df0f3d@kylecea1512a3f>
+References: <001801c73e14$c3177170$28df0f3d@kylecea1512a3f> <Pine.LNX.4.64.0701220717200.30260@p34.internal.lan> <45B4D0ED.7030500@maine.edu> <Pine.LNX.4.64.0701221000330.1711@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <45B60403.1060201@tls.msk.ru>
-Sender: linux-raid-owner@vger.kernel.org
-To: Michael Tokarev <mjt@tls.msk.ru>
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, xfs@oss.sgi.com, Alan Piszcz <ap@solarrain.com>
+Content-Type: text/plain;
+	format=flowed;
+	charset="iso-8859-1";
+	reply-type=original
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S933001AbXAWOXP@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Justin Piszcz <jpiszcz@lucidpixels.com>, Steve Cousins <steve.cousins@maine.edu>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
+> I can try and do this later this week possibly.
 
-
-On Tue, 23 Jan 2007, Michael Tokarev wrote:
-
-> Justin Piszcz wrote:
-> > 
-> > On Tue, 23 Jan 2007, Michael Tokarev wrote:
-> > 
-> >> Disabling pre-emption on critical and/or server machines seems to be a good
-> >> idea in the first place.  IMHO anyway.. ;)
-> >
-> > So bottom line is make sure not to use preemption on servers or else you 
-> > will get weird spinlock/deadlocks on RAID devices--GOOD To know!
-> 
-> This is not a reason.  The reason is that preemption usually works worse
-> on servers, esp. high-loaded servers - the more often you interrupt a
-> (kernel) work, the more nedleess context switches you'll have, and the
-> more slow the whole thing works.
-> 
-> Another point is that with preemption enabled, we have more chances to
-> hit one or another bug somewhere.  Those bugs should be found and fixed
-> for sure, but important servers/data isn't a place usually for bughunting.
-> 
-> /mjt
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
-Thanks for the update/info.
-
-Justin.
+> Justin.
+>>
+>> alt-sysrq-T or "echo t > /proc/sysrq-trigger" can be really helpful to
+>> diagnose this sort of problem (providing the system isn't so badly
+>> stuck that the kernel logs don't get stored).
+>>
+>> It is probably hitting a memory-allocation deadlock, though I cannot
+>> see exactly where the deadlock would be.  If you are able to reproduce
+>> it and can get the kernel logs after 'alt-sysrq-T' I would really
+>> appreciate it.
+>> Justin,Maybe you can try freeze it once more and get the kernel logs 
+>> before try Neil's patch ...... :D~Kyle 
