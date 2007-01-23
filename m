@@ -1,56 +1,19 @@
-From: Pavel Machek <pavel@ucw.cz>
-Subject: Re: 2.6.20-rc5: cp 18gb 18gb.2 = OOM killer, reproducible just like 2.16.19.2
-Date: Tue, 23 Jan 2007 00:47:59 +0100
-Message-ID: <20070122234759.GF17637@elf.ucw.cz>
-References: <Pine.LNX.4.64.0701211424170.2552@p34.internal.lan> <20070122133735.GB4493@ucw.cz> <Pine.LNX.4.64.0701221348020.11525@p34.internal.lan>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: NeilBrown <neilb@suse.de>
+Subject: [PATCH 000 of 4] md: Introduction - Assorted bugfixes
+Date: Tue, 23 Jan 2007 11:26:42 +1100
+Message-ID: <20070123112437.29357.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.64.0701221348020.11525@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, xfs@oss.sgi.com
+To: Andrew Morton <akpm@osdl.org>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon 2007-01-22 13:48:44, Justin Piszcz wrote:
-> 
-> 
-> On Mon, 22 Jan 2007, Pavel Machek wrote:
-> 
-> > On Sun 2007-01-21 14:27:34, Justin Piszcz wrote:
-> > > Why does copying an 18GB on a 74GB raptor raid1 cause the kernel to invoke 
-> > > the OOM killer and kill all of my processes?
-> > > 
-> > > Doing this on a single disk 2.6.19.2 is OK, no issues.  However, this 
-> > > happens every time!
-> > > 
-> > > Anything to try?  Any other output needed?  Can someone shed some light on 
-> > > this situation?
-> > 
-> > Is it highmem-related? Can you try it with mem=256M?
-> > 
-> > 							Pavel
-> > -- 
-> > (english) http://www.livejournal.com/~pavelmachek
-> > (cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
-> > -
-> > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > 
-> 
-> I will give this a try later or tomorrow, I cannot have my machine crash 
-> at the moment.
-> 
-> Also, the onboard video on the Intel 965 chipset uses 128MB, not sure if 
-> that has anything to do with it because after the system kill -9's all the 
-> processes etc, my terminal looks like garbage.
+Following are 4 patches suitable for inclusion in 2.6.20.
 
-That looks like separate problem. Switch to text mode console (vgacon,
-not fbcon) for tests.
-								Pavel
+Thanks,
+NeilBrown
 
--- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+ [PATCH 001 of 4] md: Update email address and status for MD in MAINTAINERS.
+ [PATCH 002 of 4] md: Make 'repair' actually work for raid1.
+ [PATCH 003 of 4] md: Make sure the events count in an md array never returns to zero.
+ [PATCH 004 of 4] md: Avoid reading past the end of a bitmap file.
