@@ -1,204 +1,55 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH 05/12] md: move write operations to raid5_run_ops
-Date: Mon, 22 Jan 2007 20:29:20 -0700
-Message-ID: <20070123032920.29114.62441.stgit@dwillia2-linux.ch.intel.com>
-References: <1169522364.8362.113.camel@dwillia2-linux.ch.intel.com>
-Content-Type: text/plain; charset=utf-8; format=fixed
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932758AbXAWDcu@vger.kernel.org>
-In-Reply-To: <1169522364.8362.113.camel@dwillia2-linux.ch.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: neilb@suse.de, linux-raid@vger.kernel.org
-Cc: johnpol@2ka.mipt.ru, christopher.leech@intel.com, arjan@infradead.org, linux-kernel@vger.kernel.org
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: Kernel 2.6.19.2 New RAID 5 Bug (oops when writing Samba -> RAID5)
+Date: Tue, 23 Jan 2007 05:56:28 -0500 (EST)
+Message-ID: <Pine.LNX.4.64.0701230556050.8978@p34.internal.lan>
+References: <Pine.LNX.4.64.0701200718290.29223@p34.internal.lan>
+ <45B5261B.1050104@redhat.com> <17845.13256.284461.992275@notabene.brown>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <17845.13256.284461.992275@notabene.brown>
+Sender: linux-raid-owner@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: Chuck Ebbert <cebbert@redhat.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, xfs@oss.sgi.com
 List-Id: linux-raid.ids
 
-From: Dan Williams <dan.j.williams@intel.com>
 
-handle_stripe sets STRIPE_OP_PREXOR, STRIPE_OP_BIODRAIN, STRIPE_OP_POSTXOR
-to request a write to the stripe cache.  raid5_run_ops is triggerred to run
-and executes the request outside the stripe lock.
 
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
+On Tue, 23 Jan 2007, Neil Brown wrote:
 
- drivers/md/raid5.c |  152 +++++++++++++++++++++++++++++++++++++++++++++-------
- 1 files changed, 131 insertions(+), 21 deletions(-)
+> On Monday January 22, cebbert@redhat.com wrote:
+> > Justin Piszcz wrote:
+> > > My .config is attached, please let me know if any other information is 
+> > > needed and please CC (lkml) as I am not on the list, thanks!
+> > >
+> > > Running Kernel 2.6.19.2 on a MD RAID5 volume.  Copying files over Samba to 
+> > > the RAID5 running XFS.
+> > >
+> > > Any idea what happened here?
+> ....
+> > >   
+> > Without digging too deeply, I'd say you've hit the same bug Sami Farin 
+> > and others
+> > have reported starting with 2.6.19: pages mapped with kmap_atomic() 
+> > become unmapped
+> > during memcpy() or similar operations.  Try disabling preempt -- that 
+> > seems to be the
+> > common factor.
+> 
+> That is exactly the conclusion I had just come to (a kmap_atomic page
+> must be being unmapped during memcpy).  I wasn't aware that others had
+> reported it - thanks for that.
+> 
+> Turning off CONFIG_PREEMPT certainly seems like a good idea.
+> 
+> NeilBrown
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 2c74f9b..2390657 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -1788,7 +1788,75 @@ static void compute_block_2(struct stripe_head *sh, int dd_idx1, int dd_idx2)
- 	}
- }
- 
-+static int handle_write_operations5(struct stripe_head *sh, int rcw, int expand)
-+{
-+	int i, pd_idx = sh->pd_idx, disks = sh->disks;
-+	int locked=0;
-+
-+	if (rcw == 0) {
-+		/* skip the drain operation on an expand */
-+		if (!expand) {
-+			BUG_ON(test_and_set_bit(STRIPE_OP_BIODRAIN,
-+				&sh->ops.pending));
-+			sh->ops.count++;
-+		}
-+
-+		BUG_ON(test_and_set_bit(STRIPE_OP_POSTXOR, &sh->ops.pending));
-+		sh->ops.count++;
-+
-+		for (i=disks ; i-- ;) {
-+			struct r5dev *dev = &sh->dev[i];
-+
-+			if (dev->towrite) {
-+				set_bit(R5_LOCKED, &dev->flags);
-+				if (!expand)
-+					clear_bit(R5_UPTODATE, &dev->flags);
-+				locked++;
-+			}
-+		}
-+	} else {
-+		BUG_ON(!(test_bit(R5_UPTODATE, &sh->dev[pd_idx].flags) ||
-+			test_bit(R5_Wantcompute, &sh->dev[pd_idx].flags)));
-+
-+		BUG_ON(test_and_set_bit(STRIPE_OP_PREXOR, &sh->ops.pending) ||
-+			test_and_set_bit(STRIPE_OP_BIODRAIN, &sh->ops.pending) ||
-+			test_and_set_bit(STRIPE_OP_POSTXOR, &sh->ops.pending));
-+
-+		sh->ops.count += 3;
-+
-+		for (i=disks ; i-- ;) {
-+			struct r5dev *dev = &sh->dev[i];
-+			if (i==pd_idx)
-+				continue;
- 
-+			/* For a read-modify write there may be blocks that are
-+			 * locked for reading while others are ready to be written
-+			 * so we distinguish these blocks by the R5_Wantprexor bit
-+			 */
-+			if (dev->towrite &&
-+			    (test_bit(R5_UPTODATE, &dev->flags) ||
-+			    test_bit(R5_Wantcompute, &dev->flags))) {
-+				set_bit(R5_Wantprexor, &dev->flags);
-+				set_bit(R5_LOCKED, &dev->flags);
-+				clear_bit(R5_UPTODATE, &dev->flags);
-+				locked++;
-+			}
-+		}
-+	}
-+
-+	/* keep the parity disk locked while asynchronous operations
-+	 * are in flight
-+	 */
-+	set_bit(R5_LOCKED, &sh->dev[pd_idx].flags);
-+	clear_bit(R5_UPTODATE, &sh->dev[pd_idx].flags);
-+	locked++;
-+
-+	PRINTK("%s: stripe %llu locked: %d pending: %lx\n",
-+		__FUNCTION__, (unsigned long long)sh->sector,
-+		locked, sh->ops.pending);
-+
-+	return locked;
-+}
- 
- /*
-  * Each stripe/dev can have one or more bion attached.
-@@ -2151,8 +2219,67 @@ static void handle_stripe5(struct stripe_head *sh)
- 		set_bit(STRIPE_HANDLE, &sh->state);
- 	}
- 
--	/* now to consider writing and what else, if anything should be read */
--	if (to_write) {
-+	/* Now we check to see if any write operations have recently
-+	 * completed
-+	 */
-+
-+	/* leave prexor set until postxor is done, allows us to distinguish
-+	 * a rmw from a rcw during biodrain
-+	 */
-+	if (test_bit(STRIPE_OP_PREXOR, &sh->ops.complete) &&
-+		test_bit(STRIPE_OP_POSTXOR, &sh->ops.complete)) {
-+
-+		clear_bit(STRIPE_OP_PREXOR, &sh->ops.complete);
-+		clear_bit(STRIPE_OP_PREXOR, &sh->ops.ack);
-+		clear_bit(STRIPE_OP_PREXOR, &sh->ops.pending);
-+
-+		for (i=disks; i--;)
-+			clear_bit(R5_Wantprexor, &sh->dev[i].flags);
-+	}
-+
-+	/* if only POSTXOR is set then this is an 'expand' postxor */
-+	if (test_bit(STRIPE_OP_BIODRAIN, &sh->ops.complete) &&
-+		test_bit(STRIPE_OP_POSTXOR, &sh->ops.complete)) {
-+
-+		clear_bit(STRIPE_OP_BIODRAIN, &sh->ops.complete);
-+		clear_bit(STRIPE_OP_BIODRAIN, &sh->ops.ack);
-+		clear_bit(STRIPE_OP_BIODRAIN, &sh->ops.pending);
-+
-+		clear_bit(STRIPE_OP_POSTXOR, &sh->ops.complete);
-+		clear_bit(STRIPE_OP_POSTXOR, &sh->ops.ack);
-+		clear_bit(STRIPE_OP_POSTXOR, &sh->ops.pending);
-+
-+		/* All the 'written' buffers and the parity block are ready to be
-+		 * written back to disk
-+		 */
-+		BUG_ON(!test_bit(R5_UPTODATE, &sh->dev[sh->pd_idx].flags));
-+		for (i=disks; i--;) {
-+			dev = &sh->dev[i];
-+			if (test_bit(R5_LOCKED, &dev->flags) &&
-+				(i == sh->pd_idx || dev->written)) {
-+				PRINTK("Writing block %d\n", i);
-+				set_bit(R5_Wantwrite, &dev->flags);
-+				if (!test_and_set_bit(STRIPE_OP_IO, &sh->ops.pending))
-+					sh->ops.count++;
-+				if (!test_bit(R5_Insync, &dev->flags)
-+				    || (i==sh->pd_idx && failed == 0))
-+					set_bit(STRIPE_INSYNC, &sh->state);
-+			}
-+		}
-+		if (test_and_clear_bit(STRIPE_PREREAD_ACTIVE, &sh->state)) {
-+			atomic_dec(&conf->preread_active_stripes);
-+			if (atomic_read(&conf->preread_active_stripes) < IO_THRESHOLD)
-+				md_wakeup_thread(conf->mddev->thread);
-+		}
-+	}
-+
-+	/* 1/ Now to consider new write requests and what else, if anything should be read
-+	 * 2/ Check operations clobber the parity block so do not start new writes while
-+	 *    a check is in flight
-+	 * 3/ Write operations do not stack
-+	 */
-+	if (to_write && !test_bit(STRIPE_OP_POSTXOR, &sh->ops.pending) &&
-+		!test_bit(STRIPE_OP_CHECK, &sh->ops.pending)) {
- 		int rmw=0, rcw=0;
- 		for (i=disks ; i--;) {
- 			/* would I have to read this buffer for read_modify_write */
-@@ -2219,25 +2346,8 @@ static void handle_stripe5(struct stripe_head *sh)
- 			}
- 		/* now if nothing is locked, and if we have enough data, we can start a write request */
- 		if (locked == 0 && (rcw == 0 ||rmw == 0) &&
--		    !test_bit(STRIPE_BIT_DELAY, &sh->state)) {
--			PRINTK("Computing parity...\n");
--			compute_parity5(sh, rcw==0 ? RECONSTRUCT_WRITE : READ_MODIFY_WRITE);
--			/* now every locked buffer is ready to be written */
--			for (i=disks; i--;)
--				if (test_bit(R5_LOCKED, &sh->dev[i].flags)) {
--					PRINTK("Writing block %d\n", i);
--					locked++;
--					set_bit(R5_Wantwrite, &sh->dev[i].flags);
--					if (!test_bit(R5_Insync, &sh->dev[i].flags)
--					    || (i==sh->pd_idx && failed == 0))
--						set_bit(STRIPE_INSYNC, &sh->state);
--				}
--			if (test_and_clear_bit(STRIPE_PREREAD_ACTIVE, &sh->state)) {
--				atomic_dec(&conf->preread_active_stripes);
--				if (atomic_read(&conf->preread_active_stripes) < IO_THRESHOLD)
--					md_wakeup_thread(conf->mddev->thread);
--			}
--		}
-+		    !test_bit(STRIPE_BIT_DELAY, &sh->state))
-+			locked += handle_write_operations5(sh, rcw, 0);
- 	}
- 
- 	/* maybe we need to check and possibly fix the parity for this stripe
+Is this a bug that can or will be fixed or should I disable pre-emption on 
+critical and/or server machines?
+
+Justin.
