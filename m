@@ -1,105 +1,58 @@
-From: "yang yin" <yinyang801120@gmail.com>
-Subject: Re: [patch] md: bitmap read_page error
-Date: Tue, 23 Jan 2007 09:31:15 +0800
-Message-ID: <34781ae60701221731k508d8e97yed69929de5a38977@mail.gmail.com>
-References: <34781ae60701220003v76bd43c8h79c59b2b474b3c57@mail.gmail.com>
-	 <17845.16620.741319.612842@notabene.brown>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: Ooops on read-only raid5 while unmounting as xfs
+Date: Tue, 23 Jan 2007 12:31:49 +1100
+Message-ID: <17845.25989.10063.901037@notabene.brown>
+References: <fd8d0180701180218o66a48176q172b029673c22660@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17845.16620.741319.612842@notabene.brown>
-Content-Disposition: inline
+In-Reply-To: message from Francois Barre on Thursday January 18
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Francois Barre <francois.barre@gmail.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-I think your patch is not enough to slove the read_page error
-completely. I think in the bitmap_init_from_disk we also need to check
-the 'count' never exceeds the size of file before calling the
-read_page function. How do your think about it.
-Thanks your reply.
+On Thursday January 18, francois.barre@gmail.com wrote:
+> Hi all,
+> 
+> I've hit the following bug while unmounting a xfs partition
+> 
+> ----------- [cut here ] --------- [please bite here ] ---------
+> Kernel BUG at drivers/md/md.c:5035
+....
+> 
+> Kernel : stock-kernel 2.6.18.6, x86_64
+> Setup : xfs on raid5, on 5 250Go ieee1394 drives
+> Way to reproduce :
+> 1. assemble the array
+> 2. mount the xfs array
+> 3. mark the array read-only (mdadm -o)
 
-2007/1/23, Neil Brown <neilb@suse.de>:
-> On Monday January 22, yinyang801120@gmail.com wrote:
-> > If the bitmap size is less than one page including super_block and
-> > bitmap and the inode's i_blkbits is also small, when doing the
-> > read_page function call to read the sb_page, it may return a error.
-> > For example, if the device is 12800 chunks, its bitmap file size is
-> > about 1.6KB include the bitmap super block. But the inode i_blkbits
-> > value of the bitmap file is 10,  the read_page will submit 4 bh to
-> > load the sb_page. Because the size of bitmap is only 1.6KB, in the
-> > while loop, the error will ocurr when do bmap operation for the block
-> > 2, which will  return 0. Then the bitmap can't be initated because of
-> > ther read sb page fail.
-> >
-> > Another error is in the bitmap_init_from_disk function.  Before doing
-> > read_page,. calculating the count value misses the size of super
-> > block. When the bitmap just needs one page, It will read two pages
-> > adding the super block. But at the second read, the count value will
-> > be set to 0, and not all the bitmap will be read from the disk and
-> > some bitmap will missed at the second page.
-> >
-> > I give a patch as following:
->
-> Thanks a lot for this.
-> Rather than checking the file size in read_page, I would like to make
-> sure the 'count' that is passed in never exceeds the size of the
-> file.  This should have the same effect.
->
-> So this is that patch I plan to submit.
->
-> Thanks again,
-> NeilBrown
->
->
-> ------------------
-> Avoid reading past the end of a bitmap file.
->
-> In most cases we check the size of the bitmap file before
-> reading data from it.  However when reading the superblock,
-> we always read the first PAGE_SIZE bytes, which might not
-> always be appropriate.  So limit that read to the size of the
-> file if appropriate.
->
-> Also, we get the count of available bytes wrong in one place,
-> so that too can read past the end of the file.
->
-> Cc:  "yang yin" <yinyang801120@gmail.com>
-> Signed-off-by: Neil Brown <neilb@suse.de>
->
-> ### Diffstat output
->  ./drivers/md/bitmap.c |   12 ++++++++----
->  1 file changed, 8 insertions(+), 4 deletions(-)
->
-> diff .prev/drivers/md/bitmap.c ./drivers/md/bitmap.c
-> --- .prev/drivers/md/bitmap.c   2007-01-23 09:44:11.000000000 +1100
-> +++ ./drivers/md/bitmap.c       2007-01-23 09:44:59.000000000 +1100
-> @@ -479,9 +479,12 @@ static int bitmap_read_sb(struct bitmap
->         int err = -EINVAL;
->
->         /* page 0 is the superblock, read it... */
-> -       if (bitmap->file)
-> -               bitmap->sb_page = read_page(bitmap->file, 0, bitmap, PAGE_SIZE);
-> -       else {
-> +       if (bitmap->file) {
-> +               loff_t isize = i_size_read(bitmap->file->f_mapping->host);
-> +               int bytes = isize > PAGE_SIZE ? PAGE_SIZE : isize;
-> +
-> +               bitmap->sb_page = read_page(bitmap->file, 0, bitmap, bytes);
-> +       } else {
->                 bitmap->sb_page = read_sb_page(bitmap->mddev, bitmap->offset, 0);
->         }
->         if (IS_ERR(bitmap->sb_page)) {
-> @@ -877,7 +880,8 @@ static int bitmap_init_from_disk(struct
->                         int count;
->                         /* unmap the old page, we're done with it */
->                         if (index == num_pages-1)
-> -                               count = bytes - index * PAGE_SIZE;
-> +                               count = bytes + sizeof(bitmap_super_t)
-> +                                       - index * PAGE_SIZE;
->                         else
->                                 count = PAGE_SIZE;
->                         if (index == 0) {
->
+You shouldn't be able to do this.  It should only be possible to set
+an array to read-only when it is not in use.  The fact that you cannot
+suggests something else if wrong.
+Are you able to stop the array (mdadm -S) while the xfs filesystem is
+still mounte?d?
+
+
+> 4. umount the xfs array...
+> 
+> I guess the problem is hit in md.c:  md_write_start(), at the
+> BUG_ON(mddev->ro == 1). It is obvious that my mddev->ro is set to 1,
+> because I set it read-only.
+> Nowhere before md_write_start() the check on mddev->ro == 1 is done,
+> so that the upper layer never sees that the underlying device is
+> read-only. As a result, when xfs wishes to write to it, bad things
+> happen.
+> 
+> May it be possible to relax the BUG_ON() and be able to send to
+> upper-layer a more gentle message ?
+
+Maybe... but I think I would rather make sure that you cannot set to
+read-only while mounted.
+
+If there some particular reason you were doing this?
+
+Thanks,
+NeilBrown
