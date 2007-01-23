@@ -1,55 +1,82 @@
 From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: Kernel 2.6.19.2 New RAID 5 Bug (oops when writing Samba -> RAID5)
-Date: Tue, 23 Jan 2007 05:56:28 -0500 (EST)
-Message-ID: <Pine.LNX.4.64.0701230556050.8978@p34.internal.lan>
-References: <Pine.LNX.4.64.0701200718290.29223@p34.internal.lan>
- <45B5261B.1050104@redhat.com> <17845.13256.284461.992275@notabene.brown>
+Subject: Re: change strip_cache_size freeze the whole raid
+Date: Tue, 23 Jan 2007 05:57:15 -0500 (EST)
+Message-ID: <Pine.LNX.4.64.0701230556540.8978@p34.internal.lan>
+References: <001801c73e14$c3177170$28df0f3d@kylecea1512a3f>
+ <17845.7488.24108.298825@notabene.brown>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17845.13256.284461.992275@notabene.brown>
+In-Reply-To: <17845.7488.24108.298825@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: Neil Brown <neilb@suse.de>
-Cc: Chuck Ebbert <cebbert@redhat.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, xfs@oss.sgi.com
+Cc: kyle <kylewong@southa.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+I can try and do this later this week possibly.
 
+Justin.
 
 On Tue, 23 Jan 2007, Neil Brown wrote:
 
-> On Monday January 22, cebbert@redhat.com wrote:
-> > Justin Piszcz wrote:
-> > > My .config is attached, please let me know if any other information is 
-> > > needed and please CC (lkml) as I am not on the list, thanks!
-> > >
-> > > Running Kernel 2.6.19.2 on a MD RAID5 volume.  Copying files over Samba to 
-> > > the RAID5 running XFS.
-> > >
-> > > Any idea what happened here?
-> ....
-> > >   
-> > Without digging too deeply, I'd say you've hit the same bug Sami Farin 
-> > and others
-> > have reported starting with 2.6.19: pages mapped with kmap_atomic() 
-> > become unmapped
-> > during memcpy() or similar operations.  Try disabling preempt -- that 
-> > seems to be the
-> > common factor.
+> On Monday January 22, kylewong@southa.com wrote:
+> > Hi,
+> > 
+> > Yesterday I tried to increase the value of strip_cache_size to see if I can 
+> > get better performance or not. I increase the value from 2048 to something 
+> > like 16384. After I did that, the raid5 freeze. Any proccess read / write to 
+> > it stucked at D state. I tried to change it back to 2048, read 
+> > strip_cache_active, cat /proc/mdstat, mdadm stop, etc. All didn't return 
+> > back. I even cannot shutdown the machine. Finally I need to press the reset 
+> > button in order to get back my control.
 > 
-> That is exactly the conclusion I had just come to (a kmap_atomic page
-> must be being unmapped during memcpy).  I wasn't aware that others had
-> reported it - thanks for that.
+> Thanks for reporting this.
 > 
-> Turning off CONFIG_PREEMPT certainly seems like a good idea.
+> alt-sysrq-T or "echo t > /proc/sysrq-trigger" can be really helpful to
+> diagnose this sort of problem (providing the system isn't so badly
+> stuck that the kernel logs don't get stored).
+> 
+> It is probably hitting a memory-allocation deadlock, though I cannot
+> see exactly where the deadlock would be.  If you are able to reproduce
+> it and can get the kernel logs after 'alt-sysrq-T' I would really
+> appreciate it.
+> 
+> This patch will almost certainly fix the problem, though I would like
+> to completely understand it first....
 > 
 > NeilBrown
+> 
+> 
+> 
+> Signed-off-by: Neil Brown <neilb@suse.de>
+> 
+> ### Diffstat output
+>  ./drivers/md/raid5.c |    4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff .prev/drivers/md/raid5.c ./drivers/md/raid5.c
+> --- .prev/drivers/md/raid5.c	2007-01-22 09:08:16.000000000 +1100
+> +++ ./drivers/md/raid5.c	2007-01-23 07:17:25.000000000 +1100
+> @@ -205,7 +205,7 @@ static int grow_buffers(struct stripe_he
+>  	for (i=0; i<num; i++) {
+>  		struct page *page;
+>  
+> -		if (!(page = alloc_page(GFP_KERNEL))) {
+> +		if (!(page = alloc_page(GFP_IO))) {
+>  			return 1;
+>  		}
+>  		sh->dev[i].page = page;
+> @@ -321,7 +321,7 @@ static struct stripe_head *get_active_st
+>  static int grow_one_stripe(raid5_conf_t *conf)
+>  {
+>  	struct stripe_head *sh;
+> -	sh = kmem_cache_alloc(conf->slab_cache, GFP_KERNEL);
+> +	sh = kmem_cache_alloc(conf->slab_cache, GFP_IO);
+>  	if (!sh)
+>  		return 0;
+>  	memset(sh, 0, sizeof(*sh) + (conf->raid_disks-1)*sizeof(struct r5dev));
 > -
 > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > 
-
-Is this a bug that can or will be fixed or should I disable pre-emption on 
-critical and/or server machines?
-
-Justin.
