@@ -1,58 +1,53 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: Ooops on read-only raid5 while unmounting as xfs
-Date: Tue, 23 Jan 2007 12:31:49 +1100
-Message-ID: <17845.25989.10063.901037@notabene.brown>
-References: <fd8d0180701180218o66a48176q172b029673c22660@mail.gmail.com>
+From: "Dan Williams" <dan.j.williams@gmail.com>
+Subject: Re: Kernel 2.6.19.2 New RAID 5 Bug (oops when writing Samba -> RAID5)
+Date: Mon, 22 Jan 2007 18:44:11 -0700
+Message-ID: <e9c3a7c20701221744i7f0de470r4c8183dd3bcd20b5@mail.gmail.com>
+References: <Pine.LNX.4.64.0701200718290.29223@p34.internal.lan>
+	 <45B5261B.1050104@redhat.com>
+	 <17845.13256.284461.992275@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Francois Barre on Thursday January 18
+In-Reply-To: <17845.13256.284461.992275@notabene.brown>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Francois Barre <francois.barre@gmail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Neil Brown <neilb@suse.de>
+Cc: Chuck Ebbert <cebbert@redhat.com>, Justin Piszcz <jpiszcz@lucidpixels.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, xfs@oss.sgi.com
 List-Id: linux-raid.ids
 
-On Thursday January 18, francois.barre@gmail.com wrote:
-> Hi all,
-> 
-> I've hit the following bug while unmounting a xfs partition
-> 
-> ----------- [cut here ] --------- [please bite here ] ---------
-> Kernel BUG at drivers/md/md.c:5035
-....
-> 
-> Kernel : stock-kernel 2.6.18.6, x86_64
-> Setup : xfs on raid5, on 5 250Go ieee1394 drives
-> Way to reproduce :
-> 1. assemble the array
-> 2. mount the xfs array
-> 3. mark the array read-only (mdadm -o)
+On 1/22/07, Neil Brown <neilb@suse.de> wrote:
+> On Monday January 22, cebbert@redhat.com wrote:
+> > Justin Piszcz wrote:
+> > > My .config is attached, please let me know if any other information is
+> > > needed and please CC (lkml) as I am not on the list, thanks!
+> > >
+> > > Running Kernel 2.6.19.2 on a MD RAID5 volume.  Copying files over Samba to
+> > > the RAID5 running XFS.
+> > >
+> > > Any idea what happened here?
+> ....
+> > >
+> > Without digging too deeply, I'd say you've hit the same bug Sami Farin
+> > and others
+> > have reported starting with 2.6.19: pages mapped with kmap_atomic()
+> > become unmapped
+> > during memcpy() or similar operations.  Try disabling preempt -- that
+> > seems to be the
+> > common factor.
+>
+> That is exactly the conclusion I had just come to (a kmap_atomic page
+> must be being unmapped during memcpy).  I wasn't aware that others had
+> reported it - thanks for that.
+>
+> Turning off CONFIG_PREEMPT certainly seems like a good idea.
+>
+Coming from an ARM background I am not yet versed in the inner
+workings of kmap_atomic, but if you have time for a question I am
+curious as to why spin_lock(&sh->lock)  is not sufficient pre-emption
+protection for copy_data() in this case?
 
-You shouldn't be able to do this.  It should only be possible to set
-an array to read-only when it is not in use.  The fact that you cannot
-suggests something else if wrong.
-Are you able to stop the array (mdadm -S) while the xfs filesystem is
-still mounte?d?
+> NeilBrown
 
-
-> 4. umount the xfs array...
-> 
-> I guess the problem is hit in md.c:  md_write_start(), at the
-> BUG_ON(mddev->ro == 1). It is obvious that my mddev->ro is set to 1,
-> because I set it read-only.
-> Nowhere before md_write_start() the check on mddev->ro == 1 is done,
-> so that the upper layer never sees that the underlying device is
-> read-only. As a result, when xfs wishes to write to it, bad things
-> happen.
-> 
-> May it be possible to relax the BUG_ON() and be able to send to
-> upper-layer a more gentle message ?
-
-Maybe... but I think I would rather make sure that you cannot set to
-read-only while mounted.
-
-If there some particular reason you were doing this?
-
-Thanks,
-NeilBrown
+Regards,
+Dan
