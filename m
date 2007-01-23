@@ -1,69 +1,105 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: 2.6.20-rc5: cp 18gb 18gb.2 = OOM killer, reproducible just like
- 2.16.19.2
-Date: Mon, 22 Jan 2007 17:12:06 -0800
-Message-ID: <20070122171206.fc2faf5f.akpm@osdl.org>
-References: <Pine.LNX.4.64.0701211424170.2552@p34.internal.lan>
-	<20070122115703.97ed54f3.akpm@osdl.org>
-	<45B558B5.6080403@sgi.com>
+From: "yang yin" <yinyang801120@gmail.com>
+Subject: Re: [patch] md: bitmap read_page error
+Date: Tue, 23 Jan 2007 09:31:15 +0800
+Message-ID: <34781ae60701221731k508d8e97yed69929de5a38977@mail.gmail.com>
+References: <34781ae60701220003v76bd43c8h79c59b2b474b3c57@mail.gmail.com>
+	 <17845.16620.741319.612842@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <45B558B5.6080403@sgi.com>
+In-Reply-To: <17845.16620.741319.612842@notabene.brown>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Donald Douwsma <donaldd@sgi.com>
-Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, xfs@oss.sgi.com
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, 23 Jan 2007 11:37:09 +1100
-Donald Douwsma <donaldd@sgi.com> wrote:
+I think your patch is not enough to slove the read_page error
+completely. I think in the bitmap_init_from_disk we also need to check
+the 'count' never exceeds the size of file before calling the
+read_page function. How do your think about it.
+Thanks your reply.
 
-> Andrew Morton wrote:
-> >> On Sun, 21 Jan 2007 14:27:34 -0500 (EST) Justin Piszcz <jpiszcz@lucidpixels.com> wrote:
-> >> Why does copying an 18GB on a 74GB raptor raid1 cause the kernel to invoke 
-> >> the OOM killer and kill all of my processes?
-> > 
-> > What's that?   Software raid or hardware raid?  If the latter, which driver?
-> 
-> I've hit this using local disk while testing xfs built against 2.6.20-rc4 (SMP x86_64)
-> 
-> dmesg follows, I'm not sure if anything in this is useful after the first event as our automated tests continued on
-> after the failure.
-
-This looks different.
-
-> ...
+2007/1/23, Neil Brown <neilb@suse.de>:
+> On Monday January 22, yinyang801120@gmail.com wrote:
+> > If the bitmap size is less than one page including super_block and
+> > bitmap and the inode's i_blkbits is also small, when doing the
+> > read_page function call to read the sb_page, it may return a error.
+> > For example, if the device is 12800 chunks, its bitmap file size is
+> > about 1.6KB include the bitmap super block. But the inode i_blkbits
+> > value of the bitmap file is 10,  the read_page will submit 4 bh to
+> > load the sb_page. Because the size of bitmap is only 1.6KB, in the
+> > while loop, the error will ocurr when do bmap operation for the block
+> > 2, which will  return 0. Then the bitmap can't be initated because of
+> > ther read sb page fail.
+> >
+> > Another error is in the bitmap_init_from_disk function.  Before doing
+> > read_page,. calculating the count value misses the size of super
+> > block. When the bitmap just needs one page, It will read two pages
+> > adding the super block. But at the second read, the count value will
+> > be set to 0, and not all the bitmap will be read from the disk and
+> > some bitmap will missed at the second page.
+> >
+> > I give a patch as following:
 >
-> Mem-info:
-> Node 0 DMA per-cpu:
-> CPU    0: Hot: hi:    0, btch:   1 usd:   0   Cold: hi:    0, btch:   1 usd:   0
-> CPU    1: Hot: hi:    0, btch:   1 usd:   0   Cold: hi:    0, btch:   1 usd:   0
-> CPU    2: Hot: hi:    0, btch:   1 usd:   0   Cold: hi:    0, btch:   1 usd:   0
-> CPU    3: Hot: hi:    0, btch:   1 usd:   0   Cold: hi:    0, btch:   1 usd:   0
-> Node 0 DMA32 per-cpu:
-> CPU    0: Hot: hi:  186, btch:  31 usd:  31   Cold: hi:   62, btch:  15 usd:  53
-> CPU    1: Hot: hi:  186, btch:  31 usd:   2   Cold: hi:   62, btch:  15 usd:  60
-> CPU    2: Hot: hi:  186, btch:  31 usd:  20   Cold: hi:   62, btch:  15 usd:  47
-> CPU    3: Hot: hi:  186, btch:  31 usd:  25   Cold: hi:   62, btch:  15 usd:  56
-> Active:76 inactive:495856 dirty:0 writeback:0 unstable:0 free:3680 slab:9119 mapped:32 pagetables:637
-
-No dirty pages, no pages under writeback.
-
-> Node 0 DMA free:8036kB min:24kB low:28kB high:36kB active:0kB inactive:1856kB present:9376kB pages_scanned:3296
-> all_unreclaimable? yes
-> lowmem_reserve[]: 0 2003 2003
-> Node 0 DMA32 free:6684kB min:5712kB low:7140kB high:8568kB active:304kB inactive:1981624kB present:2052068kB
-
-Inactive list is filled.
-
-> pages_scanned:4343329 all_unreclaimable? yes
-
-We scanned our guts out and decided that nothing was reclaimable.
-
-> No available memory (MPOL_BIND): kill process 3492 (hald) score 0 or a child
-> No available memory (MPOL_BIND): kill process 7914 (top) score 0 or a child
-> No available memory (MPOL_BIND): kill process 4166 (nscd) score 0 or a child
-> No available memory (MPOL_BIND): kill process 17869 (xfs_repair) score 0 or a child
-
-But in all cases a constrained memory policy was in use.
+> Thanks a lot for this.
+> Rather than checking the file size in read_page, I would like to make
+> sure the 'count' that is passed in never exceeds the size of the
+> file.  This should have the same effect.
+>
+> So this is that patch I plan to submit.
+>
+> Thanks again,
+> NeilBrown
+>
+>
+> ------------------
+> Avoid reading past the end of a bitmap file.
+>
+> In most cases we check the size of the bitmap file before
+> reading data from it.  However when reading the superblock,
+> we always read the first PAGE_SIZE bytes, which might not
+> always be appropriate.  So limit that read to the size of the
+> file if appropriate.
+>
+> Also, we get the count of available bytes wrong in one place,
+> so that too can read past the end of the file.
+>
+> Cc:  "yang yin" <yinyang801120@gmail.com>
+> Signed-off-by: Neil Brown <neilb@suse.de>
+>
+> ### Diffstat output
+>  ./drivers/md/bitmap.c |   12 ++++++++----
+>  1 file changed, 8 insertions(+), 4 deletions(-)
+>
+> diff .prev/drivers/md/bitmap.c ./drivers/md/bitmap.c
+> --- .prev/drivers/md/bitmap.c   2007-01-23 09:44:11.000000000 +1100
+> +++ ./drivers/md/bitmap.c       2007-01-23 09:44:59.000000000 +1100
+> @@ -479,9 +479,12 @@ static int bitmap_read_sb(struct bitmap
+>         int err = -EINVAL;
+>
+>         /* page 0 is the superblock, read it... */
+> -       if (bitmap->file)
+> -               bitmap->sb_page = read_page(bitmap->file, 0, bitmap, PAGE_SIZE);
+> -       else {
+> +       if (bitmap->file) {
+> +               loff_t isize = i_size_read(bitmap->file->f_mapping->host);
+> +               int bytes = isize > PAGE_SIZE ? PAGE_SIZE : isize;
+> +
+> +               bitmap->sb_page = read_page(bitmap->file, 0, bitmap, bytes);
+> +       } else {
+>                 bitmap->sb_page = read_sb_page(bitmap->mddev, bitmap->offset, 0);
+>         }
+>         if (IS_ERR(bitmap->sb_page)) {
+> @@ -877,7 +880,8 @@ static int bitmap_init_from_disk(struct
+>                         int count;
+>                         /* unmap the old page, we're done with it */
+>                         if (index == num_pages-1)
+> -                               count = bytes - index * PAGE_SIZE;
+> +                               count = bytes + sizeof(bitmap_super_t)
+> +                                       - index * PAGE_SIZE;
+>                         else
+>                                 count = PAGE_SIZE;
+>                         if (index == 0) {
+>
