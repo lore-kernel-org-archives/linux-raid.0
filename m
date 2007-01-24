@@ -1,34 +1,24 @@
-From: Nix <nix@esperi.org.uk>
-Subject: Re: Ooops on read-only raid5 while unmounting as xfs
-Date: Wed, 24 Jan 2007 22:23:58 +0000
-Message-ID: <87odoogj29.fsf@hades.wkstn.nix>
-References: <fd8d0180701180218o66a48176q172b029673c22660@mail.gmail.com>
-	<17845.25989.10063.901037@notabene.brown>
-	<fd8d0180701230642rd9d35e9y7e1058546254bad4@mail.gmail.com>
-	<17846.40996.525616.51618@notabene.brown>
+From: "Vidar Sonerud" <vidar.sonerud@gmail.com>
+Subject: Raid-1 to Raid-5 conversion possible?
+Date: Wed, 24 Jan 2007 23:33:03 +0100
+Message-ID: <584a96130701241433m340fc79fhc04a6cf5c9456c16@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17846.40996.525616.51618@notabene.brown> (Neil Brown's message of "23 Jan 2007 23:54:47 -0000")
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Francois Barre <francois.barre@gmail.com>, linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 23 Jan 2007, Neil Brown said:
+I have for a long time been wondering if it is possible to convert a 2
+disk Raid-1 array to a  3 disk Raid-5 array using mdadm?
 
-> On Tuesday January 23, francois.barre@gmail.com wrote:
->> 
->> My question is then : what prevents the upper layer to open the array
->> read-write, submit a write and make the md code BUG_ON() ?
->
-> The theory is that when you tell an md array to become read-only, it
-> tells the block layer that it is read-only, and then if some process
-> tries to open it read/write, it gets an array.
+Tonight I stumbled upon this article:
 
-Um. Do you mean it gets an *error*? ;}
+http://www.n8gray.org/blog/2006/09/05/stupid-raid-tricks-with-evms-and-mdadm/
 
--- 
-`The serial comma, however, is correct and proper, and abandoning it will
-surely lead to chaos, anarchy, rioting in the streets, the Terrorists
-taking over, and possibly the complete collapse of Human Civilization.'
+Is this safe / ok to do? Any comments from you mdadm experts?
+
+Best regards
+Vidar Sonerud
