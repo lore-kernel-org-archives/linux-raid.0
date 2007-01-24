@@ -1,65 +1,34 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: 2.6.20-rc5: known unfixed regressions (v3) (part 1)
-Date: Wed, 24 Jan 2007 16:46:34 +0100
-Message-ID: <20070124154634.GJ17836@stusta.de>
-References: <Pine.LNX.4.64.0701121424520.11200@woody.osdl.org>
+From: Nix <nix@esperi.org.uk>
+Subject: Re: Ooops on read-only raid5 while unmounting as xfs
+Date: Wed, 24 Jan 2007 22:23:58 +0000
+Message-ID: <87odoogj29.fsf@hades.wkstn.nix>
+References: <fd8d0180701180218o66a48176q172b029673c22660@mail.gmail.com>
+	<17845.25989.10063.901037@notabene.brown>
+	<fd8d0180701230642rd9d35e9y7e1058546254bad4@mail.gmail.com>
+	<17846.40996.525616.51618@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ext4-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.64.0701121424520.11200@woody.osdl.org>
-Sender: linux-ext4-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Justin Piszcz <jpiszcz@lucidpixels.com>, mingo@redhat.com, neilb@cse.unsw.edu.au, linux-raid@vger.kernel.org, Duncan <1i5t5.duncan@cox.net>, Randy Dunlap <rdunlap@xenotime.net>, sct@redhat.com, adilger@clusterfs.com, linux-ext4@vger.kernel.org, Berthold Cogel <cogel@rrz.uni-koeln.de>, =?utf-8?B?RnJhbsOnb2lz?= Valenduc <francois.valenduc@skynet.be>, Alexey Starikovskiy <alexey.y.starikovskiy@linux.intel.com>, greg@kroah.com, linux-usb-devel@lists.sourceforge.net, Prakash Punnoor <prakash@punnoor.de>, Oliver Neukum <oliver@neukum.org>, Alan Stern <stern@rowland.harvard.edu>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <17846.40996.525616.51618@notabene.brown> (Neil Brown's message of "23 Jan 2007 23:54:47 -0000")
+Sender: linux-raid-owner@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: Francois Barre <francois.barre@gmail.com>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-This email lists some known regressions in 2.6.20-rc5 compared to 2.6.1=
-9
-that are not yet fixed in Linus' tree.
+On 23 Jan 2007, Neil Brown said:
 
-If you find your name in the Cc header, you are either submitter of one
-of the bugs, maintainer of an affectected subsystem or driver, a patch
-of you caused a breakage or I'm considering you in any other way possib=
-ly
-involved with one or more of these issues.
-
-Due to the huge amount of recipients, please trim the Cc when answering=
-=2E
-
-
-Subject    : raid1: copying a big file triggers OOM killer
-References : http://lkml.org/lkml/2007/1/20/69
-Submitter  : Justin Piszcz <jpiszcz@lucidpixels.com>
-Status     : unknown
-
-
-Subject    : RAID-6 chunk_aligned_read problem
-References : http://bugzilla.kernel.org/show_bug.cgi?id=3D7835
-Submitter  : Duncan <1i5t5.duncan@cox.net>
-Status     : unknown
-
-
-Subject    : ext3 with data=3Djournal hangs when running fsx-linux sinc=
-e -rc2
-References : http://bugzilla.kernel.org/show_bug.cgi?id=3D7844
-Submitter  : Randy Dunlap <rdunlap@xenotime.net>
-Status     : unknown
-
-
-Subject    : reboot instead of powerdown  (CONFIG_USB_SUSPEND)
-References : http://lkml.org/lkml/2006/12/25/40
-             http://bugzilla.kernel.org/show_bug.cgi?id=3D7828
-Submitter  : Berthold Cogel <cogel@rrz.uni-koeln.de>
-             Fran=C3=A7ois Valenduc <francois.valenduc@skynet.be>
-Handled-By : Alexey Starikovskiy <alexey.y.starikovskiy@linux.intel.com=
+> On Tuesday January 23, francois.barre@gmail.com wrote:
+>> 
+>> My question is then : what prevents the upper layer to open the array
+>> read-write, submit a write and make the md code BUG_ON() ?
 >
-Status     : problem is being debugged
+> The theory is that when you tell an md array to become read-only, it
+> tells the block layer that it is read-only, and then if some process
+> tries to open it read/write, it gets an array.
 
+Um. Do you mean it gets an *error*? ;}
 
-Subject    : usb somehow broken  (CONFIG_USB_SUSPEND)
-References : http://lkml.org/lkml/2007/1/11/146
-Submitter  : Prakash Punnoor <prakash@punnoor.de>
-Handled-By : Oliver Neukum <oliver@neukum.org>
-             Alan Stern <stern@rowland.harvard.edu>
-Status     : problem is being debugged
+-- 
+`The serial comma, however, is correct and proper, and abandoning it will
+surely lead to chaos, anarchy, rioting in the streets, the Terrorists
+taking over, and possibly the complete collapse of Human Civilization.'
