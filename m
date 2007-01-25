@@ -1,30 +1,30 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: Synchronous mdadm --add/--re-add operations
-Date: Fri, 26 Jan 2007 09:19:24 +1100
-Message-ID: <17849.11500.153192.854079@notabene.brown>
-References: <20070125220031.GA30106@aym.net2.nerim.net>
+From: Mark Hahn <hahn@mcmaster.ca>
+Subject: Re: 2.6.20-rc5: cp 18gb 18gb.2 = OOM killer, reproducible just like
+ 2.16.19.2
+Date: Thu, 25 Jan 2007 17:34:31 -0500 (EST)
+Message-ID: <Pine.LNX.4.64.0701251731160.20455@coffee.psychology.mcmaster.ca>
+References: <Pine.LNX.4.64.0701211424170.2552@p34.internal.lan>
+ <20070122133735.GB4493@ucw.cz> <Pine.LNX.4.64.0701221348020.11525@p34.internal.lan>
+ <Pine.LNX.4.64.0701241837550.2930@p34.internal.lan> <20070125003242.GA23343@elf.ucw.cz>
+ <Pine.LNX.4.64.0701250407590.3673@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Andre Majorel on Thursday January 25
-Sender: linux-raid-owner@vger.kernel.org
-To: Andre Majorel <aym-xunil@teaser.fr>
-Cc: linux-raid@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030518AbXAZAJR@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.64.0701250407590.3673@p34.internal.lan>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: Pavel Machek <pavel@ucw.cz>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, xfs@oss.sgi.com
 List-Id: linux-raid.ids
 
-On Thursday January 25, aym-xunil@teaser.fr wrote:
-> How do I serialise mdadm --add/--re-add calls other than by
-> writing some shell to poll /proc/mdstat ? Is there a way to make
-> mdadm synchronous i.e., waiting until the operation completes or
-> fails instead of starting it in the background and returning.
+> Something is seriously wrong with that OOM killer.
 
-Something has to poll mdstat (or some /sys file).
-In mdadm-2.6 where is a '-W' option which will wait for
-resync/recovery to complete. So
-  mdadm /dev/mdX -add /dev/thing
-  mdadm -W /dev/mdX
+do you know you don't have to operate in OOM-slaughter mode?
 
-might be what you want.
+"vm.overcommit_memory = 2" in your /etc/sysctl.conf puts you 
+into a mode where the kernel tracks your "committed" memory 
+needs, and will eventually cause some allocations to fail.
+this is often much nicer than the default random OOM slaughter.
+(you probably also need to adjust vm.overcommit_ratio with 
+some knowlege of your MemTotal and SwapTotal.)
 
-NeilBrown
+regards, mark hahn.
