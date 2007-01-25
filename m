@@ -1,113 +1,89 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: 2.6.20-rc5: cp 18gb 18gb.2 = OOM killer, reproducible just like
- 2.16.19.2
-Date: Wed, 24 Jan 2007 19:10:16 -0500 (EST)
-Message-ID: <Pine.LNX.4.64.0701241909120.2930@p34.internal.lan>
-References: <Pine.LNX.4.64.0701211424170.2552@p34.internal.lan>
- <20070122115703.97ed54f3.akpm@osdl.org>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: change strip_cache_size freeze the whole raid
+Date: Thu, 25 Jan 2007 11:13:51 +1100
+Message-ID: <17847.63039.766387.855859@notabene.brown>
+References: <001801c73e14$c3177170$28df0f3d@kylecea1512a3f>
+	<17845.7488.24108.298825@notabene.brown>
+	<Pine.LNX.4.64.0701241822040.16771@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20070122115703.97ed54f3.akpm@osdl.org>
+In-Reply-To: message from Justin Piszcz on Wednesday January 24
 Sender: linux-raid-owner@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, xfs@oss.sgi.com
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: kyle <kylewong@southa.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Wednesday January 24, jpiszcz@lucidpixels.com wrote:
+> Here you go Neil:
+> 
+> p34:~# echo 512 > /sys/block/md3/md/stripe_cache_size
+> p34:~# echo 1024 > /sys/block/md3/md/stripe_cache_size
+> p34:~# echo 2048 > /sys/block/md3/md/stripe_cache_size
+> p34:~# echo 4096 > /sys/block/md3/md/stripe_cache_size
+> p34:~# echo 8192 > /sys/block/md3/md/stripe_cache_size
+> <...... FROZEN ........> 
+> 
+> I ran echo t > /proc/sysrq-trigger and then copied the relevant parts of 
+> kern.log and I am attaching them to this e-mail.
+> 
+> Please confirm this is what you needed.
 
+Perfect.  Thanks.
 
-On Mon, 22 Jan 2007, Andrew Morton wrote:
+This bit:
 
-> > On Sun, 21 Jan 2007 14:27:34 -0500 (EST) Justin Piszcz <jpiszcz@lucidpixels.com> wrote:
-> > Why does copying an 18GB on a 74GB raptor raid1 cause the kernel to invoke 
-> > the OOM killer and kill all of my processes?
-> 
-> What's that?   Software raid or hardware raid?  If the latter, which driver?
-> 
-> > Doing this on a single disk 2.6.19.2 is OK, no issues.  However, this 
-> > happens every time!
-> > 
-> > Anything to try?  Any other output needed?  Can someone shed some light on 
-> > this situation?
-> > 
-> > Thanks.
-> > 
-> > 
-> > The last lines of vmstat 1 (right before it kill -9'd my shell/ssh)
-> > 
-> > procs -----------memory---------- ---swap-- -----io---- -system-- 
-> > ----cpu----
-> >  r  b   swpd   free   buff  cache   si   so    bi    bo   in   cs us sy id 
-> > wa
-> >  0  7    764  50348     12 1269988    0    0 53632   172 1902 4600  1  8 
-> > 29 62
-> >  0  7    764  49420     12 1260004    0    0 53632 34368 1871 6357  2 11 
-> > 48 40
-> 
-> The wordwrapping is painful :(
-> 
-> > 
-> > The last lines of dmesg:
-> > [ 5947.199985] lowmem_reserve[]: 0 0 0
-> > [ 5947.199992] DMA: 0*4kB 1*8kB 1*16kB 0*32kB 1*64kB 1*128kB 1*256kB 
-> > 0*512kB 1*1024kB 1*2048kB 0*4096kB = 3544kB
-> > [ 5947.200010] Normal: 1*4kB 0*8kB 1*16kB 1*32kB 0*64kB 1*128kB 0*256kB 
-> > 1*512kB 0*1024kB 1*2048kB 0*4096kB = 2740kB
-> > [ 5947.200035] HighMem: 98*4kB 35*8kB 9*16kB 69*32kB 4*64kB 1*128kB 
-> > 1*256kB 0*512kB 0*1024kB 0*2048kB 0*4096kB = 3664kB
-> > [ 5947.200052] Swap cache: add 789, delete 189, find 16/17, race 0+0
-> > [ 5947.200055] Free swap  = 2197628kB
-> > [ 5947.200058] Total swap = 2200760kB
-> > [ 5947.200060] Free swap:       2197628kB
-> > [ 5947.205664] 517888 pages of RAM 
-> > [ 5947.205671] 288512 pages of HIGHMEM
-> > [ 5947.205673] 5666 reserved pages 
-> > [ 5947.205675] 257163 pages shared
-> > [ 5947.205678] 600 pages swap cached 
-> > [ 5947.205680] 88876 pages dirty
-> > [ 5947.205682] 115111 pages writeback
-> > [ 5947.205684] 5608 pages mapped
-> > [ 5947.205686] 49367 pages slab
-> > [ 5947.205688] 541 pages pagetables
-> > [ 5947.205795] Out of memory: kill process 1853 (named) score 9937 or a 
-> > child
-> > [ 5947.205801] Killed process 1853 (named)
-> > [ 5947.206616] bash invoked oom-killer: gfp_mask=0x84d0, order=0, 
-> > oomkilladj=0
-> > [ 5947.206621]  [<c013e33b>] out_of_memory+0x17b/0x1b0
-> > [ 5947.206631]  [<c013fcac>] __alloc_pages+0x29c/0x2f0
-> > [ 5947.206636]  [<c01479ad>] __pte_alloc+0x1d/0x90
-> > [ 5947.206643]  [<c0148bf7>] copy_page_range+0x357/0x380
-> > [ 5947.206649]  [<c0119d75>] copy_process+0x765/0xfc0
-> > [ 5947.206655]  [<c012c3f9>] alloc_pid+0x1b9/0x280
-> > [ 5947.206662]  [<c011a839>] do_fork+0x79/0x1e0
-> > [ 5947.206674]  [<c015f91f>] do_pipe+0x5f/0xc0
-> > [ 5947.206680]  [<c0101176>] sys_clone+0x36/0x40
-> > [ 5947.206686]  [<c0103138>] syscall_call+0x7/0xb
-> > [ 5947.206691]  [<c0420033>] __sched_text_start+0x853/0x950
-> > [ 5947.206698]  ======================= 
-> 
-> Important information from the oom-killing event is missing.  Please send
-> it all.
-> 
-> >From your earlier reports we have several hundred MB of ZONE_NORMAL memory
-> which has gone awol.
-> 
-> Please include /proc/meminfo from after the oom-killing.
-> 
-> Please work out what is using all that slab memory, via /proc/slabinfo.
-> 
-> After the oom-killing, please see if you can free up the ZONE_NORMAL memory
-> via a few `echo 3 > /proc/sys/vm/drop_caches' commands.  See if you can
-> work out what happened to the missing couple-of-hundred MB from
-> ZONE_NORMAL.
-> 
-> 
+   574	Jan 24 18:22:21 p34 kernel: [273475.825645] bash          D C7BEBAAC     0 16821  16820                     (NOTLB)
+   575	Jan 24 18:22:21 p34 kernel: [273475.825653]        c7bebac0 00000082 00000002 c7bebaac c7bebaa8 00000000 5b48e428 c6cdc560 
+   576	Jan 24 18:22:21 p34 kernel: [273475.825665]        c7bebad8 00010b03 00000011 00000009 cb093a53 0000f8b2 00017216 c6cdc66c 
+   577	Jan 24 18:22:21 p34 kernel: [273475.825838]        c1fe3280 00000001 c20c70c0 c3272058 f75c4a80 c7bebad8 c016a258 f7b12520 
+   578	Jan 24 18:22:21 p34 kernel: [273475.825850] Call Trace:
+   579	Jan 24 18:22:21 p34 kernel: [273475.825853]  [<c016a258>] dput+0x18/0x150
+   580	Jan 24 18:22:21 p34 kernel: [273475.825857]  [<c0161f84>] __link_path_walk+0xb04/0xc90
+   581	Jan 24 18:22:21 p34 kernel: [273475.825862]  [<c03600ad>] md_write_start+0x8d/0x120
+   582	Jan 24 18:22:21 p34 kernel: [273475.825867]  [<c012eac0>] autoremove_wake_function+0x0/0x50
+   583	Jan 24 18:22:21 p34 kernel: [273475.825871]  [<c03557a8>] make_request+0x38/0x560
+   584	Jan 24 18:22:21 p34 kernel: [273475.825876]  [<c02409ce>] xfs_log_move_tail+0x3e/0x1b0
+   585	Jan 24 18:22:21 p34 kernel: [273475.825881]  [<c023c9fa>] xfs_iomap+0x2ca/0x720
+   586	Jan 24 18:22:21 p34 kernel: [273475.825885]  [<c026d77a>] generic_make_request+0xda/0x150
+   587	Jan 24 18:22:21 p34 kernel: [273475.825890]  [<c026fe32>] submit_bio+0x72/0x110
+   588	Jan 24 18:22:21 p34 kernel: [273475.825895]  [<c013da6b>] mempool_alloc+0x2b/0xf0
+   589	Jan 24 18:22:21 p34 kernel: [273475.825899]  [<c034f1a0>] raid5_mergeable_bvec+0x0/0x90
+   590	Jan 24 18:22:21 p34 kernel: [273475.825904]  [<c017c052>] __bio_add_page+0x102/0x190
+   591	Jan 24 18:22:21 p34 kernel: [273475.825909]  [<c017c117>] bio_add_page+0x37/0x50
+   592	Jan 24 18:22:21 p34 kernel: [273475.826073]  [<c025be8b>] xfs_submit_ioend_bio+0x1b/0x30
+   593	Jan 24 18:22:21 p34 kernel: [273475.826078]  [<c025c10e>] xfs_page_state_convert+0x26e/0xff0
+   594	Jan 24 18:22:21 p34 kernel: [273475.826082]  [<c0155509>] slab_destroy+0x59/0x90
+   595	Jan 24 18:22:21 p34 kernel: [273475.826088]  [<c025d102>] xfs_vm_writepage+0x62/0x100
+   596	Jan 24 18:22:21 p34 kernel: [273475.826092]  [<c014396d>] shrink_inactive_list+0x5dd/0x8a0
+   597	Jan 24 18:22:21 p34 kernel: [273475.826097]  [<c0143cd1>] shrink_zone+0xa1/0x100
+   598	Jan 24 18:22:21 p34 kernel: [273475.826102]  [<c01447e0>] try_to_free_pages+0x140/0x260
+   599	Jan 24 18:22:21 p34 kernel: [273475.826106]  [<c013fb4f>] __alloc_pages+0x13f/0x2f0
+   600	Jan 24 18:22:21 p34 kernel: [273475.826111]  [<c0350dd3>] grow_one_stripe+0x93/0x100
+   601	Jan 24 18:22:21 p34 kernel: [273475.826115]  [<c0350ee6>] raid5_store_stripe_cache_size+0xa6/0xc0
+   602	Jan 24 18:22:21 p34 kernel: [273475.826120]  [<c0361a83>] md_attr_store+0x73/0x90
+   603	Jan 24 18:22:21 p34 kernel: [273475.826125]  [<c0192302>] sysfs_write_file+0xa2/0x100
+   604	Jan 24 18:22:21 p34 kernel: [273475.826129]  [<c01595f6>] vfs_write+0xa6/0x160
+   605	Jan 24 18:22:21 p34 kernel: [273475.826134]  [<c0192260>] sysfs_write_file+0x0/0x100
+   606	Jan 24 18:22:21 p34 kernel: [273475.826138]  [<c0159d31>] sys_write+0x41/0x70
+   607	Jan 24 18:22:21 p34 kernel: [273475.826303]  [<c0103138>] syscall_call+0x7/0xb
+   608	Jan 24 18:22:21 p34 kernel: [273475.826307]  =======================
 
-Running with PREEMPT OFF lets me copy the file!!  The machine LAGS 
-occasionally every 5-30-60 seconds or so VERY BADLY, talking 5-10 seconds 
-of lag, but hey, it does not crash!! I will boot the older kernel with 
-preempt on and see if I can get you that information you requested.
+Tells me what is happening.
+We try to allocate memory to increase the stripe cache (__alloc_pages)
+which requires memory to be freed, so shrink_zone gets called which
+calls into the 'xfs' filesystem which eventually trying to write to
+the raid5 array.  The raid5 array is currently 'clean' so we need to
+mark the superblock as dirty first (md_write_start), but that needs a
+lock that is being held while we grow the stripe cache.  Deadlock.
 
-Justin.
+So the patch I posted (changing GFP_KERNEL to GFP_NOIO) will avoid
+this as it will then fail the allocation rather than initiate IO.
+However it might be better if I can find a way to avoid the
+deadlock....
 
+I'll see what I can come up with.
+
+Thanks,
+NeilBrown
