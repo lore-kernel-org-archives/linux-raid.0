@@ -1,86 +1,78 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: 2.6.19.2, cp 18gb_file 18gb_file.2 = OOM killer, 100% reproducible
-Date: Fri, 26 Jan 2007 12:50:45 -0500 (EST)
-Message-ID: <Pine.LNX.4.64.0701261250240.12467@p34.internal.lan>
-References: <Pine.LNX.4.64.0701201516450.3684@p34.internal.lan>
- <3aa654a40701201245s72b2f76hc70ddd94b70ba99c@mail.gmail.com>
- <Pine.LNX.4.64.0701201602570.4910@p34.internal.lan> <20070121155219.GA7413@amd64.of.nowhere>
- <Pine.LNX.4.64.0701211053370.15334@p34.internal.lan> <20070126174928.GL17836@stusta.de>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: 2.6.20-rc6: known unfixed regressions (part 1)
+Date: Fri, 26 Jan 2007 19:10:36 +0100
+Message-ID: <20070126181036.GM17836@stusta.de>
+References: <Pine.LNX.4.64.0701241847360.25027@woody.linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20070126174928.GL17836@stusta.de>
-Sender: linux-raid-owner@vger.kernel.org
-To: Adrian Bunk <bunk@stusta.de>
-Cc: thunder7@xs4all.nl, Avuton Olrich <avuton@gmail.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ext4-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.64.0701241847360.25027@woody.linux-foundation.org>
+Sender: linux-ext4-owner@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@osdl.org>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Jens Axboe <jens.axboe@oracle.com>, Justin Piszcz <jpiszcz@lucidpixels.com>, mingo@redhat.com, neilb@cse.unsw.edu.au, linux-raid@vger.kernel.org, Randy Dunlap <rdunlap@xenotime.net>, sct@redhat.com, adilger@clusterfs.com, linux-ext4@vger.kernel.org, Berthold Cogel <cogel@rrz.uni-koeln.de>, =?utf-8?B?RnJhbsOnb2lz?= Valenduc <francois.valenduc@skynet.be>, Alan Stern <stern@rowland.harvard.edu>, greg@kroah.com, linux-usb-devel@lists.sourceforge.net, Prakash Punnoor <prakash@punnoor.de>, Oliver Neukum <oliver@neukum.org>, Lennart Sorensen <lsorense@csclub.uwaterloo.ca>, takada <takada@mbf.nifty.com>, Jordan Crouse <jordan.crouse@amd.com>
 List-Id: linux-raid.ids
 
+This email lists some known regressions in 2.6.20-rc6 compared to 2.6.1=
+9
+that are not yet fixed in Linus' tree.
+
+If you find your name in the Cc header, you are either submitter of one
+of the bugs, maintainer of an affectected subsystem or driver, a patch
+of you caused a breakage or I'm considering you in any other way possib=
+ly
+involved with one or more of these issues.
+
+Due to the huge amount of recipients, please trim the Cc when answering=
+=2E
 
 
-On Fri, 26 Jan 2007, Adrian Bunk wrote:
+Subject    : NULL pointer dereference at as_move_to_dispatch()
+References : http://lkml.org/lkml/2007/1/22/141
+Submitter  : Andrew Vasquez <andrew.vasquez@qlogic.com>
+Status     : unknown
 
-> On Sun, Jan 21, 2007 at 10:54:09AM -0500, Justin Piszcz wrote:
-> > On Sun, 21 Jan 2007, thunder7@xs4all.nl wrote:
-> > 
-> > > From: Justin Piszcz <jpiszcz@lucidpixels.com>
-> > > Date: Sat, Jan 20, 2007 at 04:03:42PM -0500
-> > > > 
-> > > > 
-> > > > My swap is on, 2GB ram and 2GB of swap on this machine.  I can't go back 
-> > > > to 2.6.17.13 as it does not recognize the NICs in my machine correctly and 
-> > > > the Alsa Intel HD Audio driver has bugs etc, I guess I am stuck with 
-> > > > 2.6.19.2 :(
-> > > > 
-> > > Well, if you can't go back, you could always test 2.6.20-rc5. That's why
-> > > it's out there :-) It can't be any worse!
-> > > 
-> > > Good luck,
-> > > Jurriaan
-> > > -- 
-> > > It might look like I'm doing nothing, but at the cellular level I'm really
-> > > quite busy.
-> > > 	Hans Haas
-> > > Debian (Unstable) GNU/Linux 2.6.20-rc5 2x2011 bogomips load 1.97
-> > > the Jack Vance Integral Edition: http://www.integralarchive.org
-> > > -
-> > > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> > > the body of a message to majordomo@vger.kernel.org
-> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > > 
-> > 
-> > It is worse-- NAT doesn't work and HDDTEMP doesn't work anymore either.
-> 
-> 
-> Do I understand it correctly from the further emails in this thread that 
-> the NAT problem was the known netfilter options mess when upgrading from 
-> 2.6.19 to 2.6.20, and enabling some more netfilter options fixed it?
-> 
-> 
-> hddtemp has a known bug:
-> 
-> Subject    : `hddtemp' no longer works
-> References : http://lkml.org/lkml/2006/12/14/272
->              http://bugzilla.kernel.org/show_bug.cgi?id=7581
-> Submitter  : Alistair John Strachan <s0348365@sms.ed.ac.uk>
->              Nicolas Mailhot <Nicolas.Mailhot@LaPoste.net>
-> Handled-By : Jens Axboe <jens.axboe@oracle.com>
-> Status     : bug in hddtemp: http://bugzilla.kernel.org/show_bug.cgi?id=7581
-> 
-> 
-> > Justin.
-> 
-> cu
-> Adrian
-> 
-> -- 
-> 
->        "Is there not promise of rain?" Ling Tan asked suddenly out
->         of the darkness. There had been need of rain for many days.
->        "Only a promise," Lao Er said.
->                                        Pearl S. Buck - Dragon Seed
-> 
 
-Yes, it was because the options changed positions/places, it is working 
-now.
+Subject    : raid1: copying a big file triggers OOM killer
+References : http://lkml.org/lkml/2007/1/20/69
+Submitter  : Justin Piszcz <jpiszcz@lucidpixels.com>
+Handled-By : Jens Axboe <jens.axboe@oracle.com>
+Status     : problem is being debugged
 
-Justin.
+
+Subject    : ext3 with data=3Djournal hangs when running fsx-linux sinc=
+e -rc2
+References : http://bugzilla.kernel.org/show_bug.cgi?id=3D7844
+Submitter  : Randy Dunlap <rdunlap@xenotime.net>
+Handled-By : Linus Torvalds <torvalds@linux-foundation.org>
+             Randy Dunlap <rdunlap@xenotime.net>
+             Andrew Morton <akpm@osdl.org>
+Status     : problem is being debugged
+
+
+Subject    : reboot instead of powerdown  (CONFIG_USB_SUSPEND)
+References : http://lkml.org/lkml/2006/12/25/40
+             http://bugzilla.kernel.org/show_bug.cgi?id=3D7828
+Submitter  : Berthold Cogel <cogel@rrz.uni-koeln.de>
+             Fran=C3=A7ois Valenduc <francois.valenduc@skynet.be>
+Handled-By : Alan Stern <stern@rowland.harvard.edu>
+Status     : problem is being debugged
+
+
+Subject    : usb somehow broken  (CONFIG_USB_SUSPEND)
+References : http://lkml.org/lkml/2007/1/11/146
+Submitter  : Prakash Punnoor <prakash@punnoor.de>
+Handled-By : Oliver Neukum <oliver@neukum.org>
+             Alan Stern <stern@rowland.harvard.edu>
+Status     : problem is being debugged
+
+
+Subject    : fix geode_configure()
+References : http://lkml.org/lkml/2007/1/9/216
+Submitter  : Lennart Sorensen <lsorense@csclub.uwaterloo.ca>
+Caused-By  : takada <takada@mbf.nifty.com>
+             commit e4f0ae0ea63caceff37a13f281a72652b7ea71ba
+Handled-By : takada <takada@mbf.nifty.com>
+             Lennart Sorensen <lsorense@csclub.uwaterloo.ca>
+Status     : patches are being discussed
