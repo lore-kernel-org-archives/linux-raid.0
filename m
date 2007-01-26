@@ -1,7 +1,7 @@
 From: Justin Piszcz <jpiszcz@lucidpixels.com>
 Subject: Re: Kernel 2.6.19.2 New RAID 5 Bug (oops when writing Samba -> RAID5)
-Date: Fri, 26 Jan 2007 04:37:55 -0500 (EST)
-Message-ID: <Pine.LNX.4.64.0701260437090.11888@p34.internal.lan>
+Date: Fri, 26 Jan 2007 07:31:50 -0500 (EST)
+Message-ID: <Pine.LNX.4.64.0701260731200.9593@p34.internal.lan>
 References: <Pine.LNX.4.64.0701200718290.29223@p34.internal.lan>
  <45B5261B.1050104@redhat.com> <Pine.LNX.4.64.0701241836590.2930@p34.internal.lan>
  <20070126012505.d8cb07f2.akpm@osdl.org>
@@ -14,7 +14,8 @@ To: Andrew Morton <akpm@osdl.org>
 Cc: Chuck Ebbert <cebbert@redhat.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, xfs@oss.sgi.com, Neil Brown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-
+Just re-ran the test 4-5 times, could not reproduce this one, but I'll 
+keep running this kernel w/patch for a while and see if it happens again.
 
 On Fri, 26 Jan 2007, Andrew Morton wrote:
 
@@ -92,10 +93,3 @@ On Fri, 26 Jan 2007, Andrew Morton wrote:
 >  	if (!PageHighMem(page))
 > _
 > 
-> 
-
-The RAID5 bug may be hard to trigger, I have only made it happen once so 
-far (but only tried it once, don't like locking up the raid :)), I will 
-re-run the test after applying this patch.
-
-Justin.
