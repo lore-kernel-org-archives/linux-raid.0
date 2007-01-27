@@ -1,63 +1,67 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: 2.6.20-rc6: known regressions with patches
-Date: Fri, 26 Jan 2007 19:18:53 +0100
-Message-ID: <20070126181853.GO17836@stusta.de>
-References: <Pine.LNX.4.64.0701241847360.25027@woody.linux-foundation.org>
+From: Iustin Pop <iusty@k1024.org>
+Subject: [PATCH 2.6.20-rc6] md: expose uuid and degraded attributes in sysfs
+Date: Sat, 27 Jan 2007 02:59:48 +0100
+Message-ID: <20070127015948.GA24479@teal.hq.k1024.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-acpi-owner@vger.kernel.org>
+Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.64.0701241847360.25027@woody.linux-foundation.org>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@osdl.org>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Duncan <1i5t5.duncan@cox.net>, Neil Brown <neilb@suse.de>, mingo@redhat.com, linux-raid@vger.kernel.org, Dave Jones <davej@redhat.com>, cpufreq@lists.linux.org.uk, lenb@kernel.org, linux-acpi@vger.kernel.org, Jan Altenberg <jan@linutronix.de>, Ralf Baechle <ralf@linux-mips.org>, linux-mips@linux-mips.org, Andrew Clayton <andrew@digital-domain.net>, Trond Myklebust <trond.myklebust@fys.uio.no>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This email lists some known regressions in 2.6.20-rc6 compared to 2.6.19
-with patches available.
+From: Iustin Pop <iusty@k1024.org>
 
-If you find your name in the Cc header, you are either submitter of one
-of the bugs, maintainer of an affectected subsystem or driver, a patch
-of you caused a breakage or I'm considering you in any other way possibly
-involved with one or more of these issues.
+This patch exposes the uuid and the degraded status of an assembled
+array through sysfs.
 
-Due to the huge amount of recipients, please trim the Cc when answering.
+The uuid is useful in the case when multiple arrays exist on a system
+and userspace needs to identify them; currently, the only portable way
+that I know of is using 'mdadm -D' on each device until the desired uuid
+is found. Having the uuid visible in sysfs is much more cleaner, IMHO.
+Note on the method to format the uuid: I'm not sure if this is the best
+way, I've copied and transformed the one in print_sb.
 
+The 'degraded' attribute is also useful to quickly determine if the
+array is degraded, instead of, again, parsing 'mdadm -D' output or
+relying on the other techniques (number of working devices against
+number of defined devices, etc.). The md code already keeps track of
+this attribute, so it's useful to export it.
 
-Subject    : RAID: annoying "hunk_aligned_read : non aligned" messages
-References : http://bugzilla.kernel.org/show_bug.cgi?id=7835
-Submitter  : Duncan <1i5t5.duncan@cox.net>
-Handled-By : Neil Brown <neilb@suse.de>
-Patch      : http://bugzilla.kernel.org/show_bug.cgi?id=7835
-Status     : patch available
+Signed-off-by: Iustin Pop <iusty@k1024.org>
+---
 
-
-Subject    : ACPI: fix cpufreq regression
-References : http://lkml.org/lkml/2007/1/16/120
-Submitter  : Ingo Molnar <mingo@elte.hu>
-Caused-By  : Dave Jones <davej@redhat.com>
-             commit 0916bd3ebb7cefdd0f432e8491abe24f4b5a101e
-Handled-By : Ingo Molnar <mingo@elte.hu>
-Patch      : http://lkml.org/lkml/2007/1/16/120
-Status     : patch available
-
-
-Subject    : MIPS Malta: CONFIG_MTD=n compile error
-References : http://lkml.org/lkml/2007/1/25/122
-Submitter  : Jan Altenberg <jan@linutronix.de>
-Caused-By  : Ralf Baechle <ralf@linux-mips.org>
-             commit b228f4c54df37b53c6f364aa7f3efa4280bcc4f0
-Handled-By : Jan Altenberg <jan@linutronix.de>
-Patch      : http://lkml.org/lkml/2007/1/25/122
-Status     : patch available
-
-
-Subject    : NFS triggers WARN_ON() in invalidate_inode_pages2_range()
-References : http://bugzilla.kernel.org/show_bug.cgi?id=7826
-Submitter  : Andrew Clayton <andrew@digital-domain.net>
-Caused-By  : Andrew Morton <akpm@osdl.org>
-             commit 8258d4a574d3a8c01f0ef68aa26b969398a0e140
-Handled-By : Trond Myklebust <trond.myklebust@fys.uio.no>
-Patch      : http://lkml.org/lkml/2007/1/24/323
-Status     : patch available
-
+--- linux-2.6.20-rc6/drivers/md/md.c.orig	2007-01-27 02:31:11.496575360 +0100
++++ linux-2.6.20-rc6/drivers/md/md.c	2007-01-27 02:32:51.746741201 +0100
+@@ -2856,6 +2856,22 @@
+ static struct md_sysfs_entry md_suspend_hi =
+ __ATTR(suspend_hi, S_IRUGO|S_IWUSR, suspend_hi_show, suspend_hi_store);
+ 
++static ssize_t
++uuid_show(mddev_t *mddev, char *page)
++{
++	__u32 *p = (__u32*)mddev->uuid;
++	return sprintf(page, "%08x:%08x:%08x:%08x\n", p[0], p[1], p[2], p[3]);
++}
++static struct md_sysfs_entry md_uuid =
++__ATTR_RO(uuid);
++
++static ssize_t
++degraded_show(mddev_t *mddev, char *page)
++{
++	return sprintf(page, "%i\n", mddev->degraded);
++}
++static struct md_sysfs_entry md_degraded =
++__ATTR_RO(degraded);
+ 
+ static struct attribute *md_default_attrs[] = {
+ 	&md_level.attr,
+@@ -2881,6 +2897,8 @@
+ 	&md_suspend_lo.attr,
+ 	&md_suspend_hi.attr,
+ 	&md_bitmap.attr,
++	&md_uuid.attr,
++	&md_degraded.attr,
+ 	NULL,
+ };
+ static struct attribute_group md_redundancy_group = {
