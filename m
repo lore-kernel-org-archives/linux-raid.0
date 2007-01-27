@@ -1,67 +1,33 @@
-From: Iustin Pop <iusty@k1024.org>
-Subject: [PATCH 2.6.20-rc6] md: expose uuid and degraded attributes in sysfs
-Date: Sat, 27 Jan 2007 02:59:48 +0100
-Message-ID: <20070127015948.GA24479@teal.hq.k1024.org>
+From: kenneth johansson <ken@kenjo.org>
+Subject: md autodetect only detects one disk in raid1
+Date: Sat, 27 Jan 2007 19:52:39 +0100
+Message-ID: <1169923959.18828.41.camel@duo>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-From: Iustin Pop <iusty@k1024.org>
+I run raid1 on my root partition /dev/md0. Now I had a bad disk so I had
+to replace it but did not notice until I got home that I got a SATA
+instead of a PATA. Since I had a free sata interface I just put in in
+that. I had no problem adding the disk to the raid1 device that is until
+I rebooted the computer. 
 
-This patch exposes the uuid and the degraded status of an assembled
-array through sysfs.
+both the PATA disk and the SATA disk are detected before md start up the
+raid but only the PATA disk is activated. So the raid device is always
+booting in degraded mode. since this is the root disk I use the
+autodetect feature with partition type fd.
 
-The uuid is useful in the case when multiple arrays exist on a system
-and userspace needs to identify them; currently, the only portable way
-that I know of is using 'mdadm -D' on each device until the desired uuid
-is found. Having the uuid visible in sysfs is much more cleaner, IMHO.
-Note on the method to format the uuid: I'm not sure if this is the best
-way, I've copied and transformed the one in print_sb.
+Also Something else in the system claim use of the device since I can
+not add the SATA disk after the system has done a complete boot. I guess
+it has something to do with device mapper and LVM that I also run on the
+data disks but I'm not sure. any tip on what it can be??
 
-The 'degraded' attribute is also useful to quickly determine if the
-array is degraded, instead of, again, parsing 'mdadm -D' output or
-relying on the other techniques (number of working devices against
-number of defined devices, etc.). The md code already keeps track of
-this attribute, so it's useful to export it.
+If I add the SATA disk to md0 early enough in the boot it works but why
+is it not autodetected ?
 
-Signed-off-by: Iustin Pop <iusty@k1024.org>
----
 
---- linux-2.6.20-rc6/drivers/md/md.c.orig	2007-01-27 02:31:11.496575360 +0100
-+++ linux-2.6.20-rc6/drivers/md/md.c	2007-01-27 02:32:51.746741201 +0100
-@@ -2856,6 +2856,22 @@
- static struct md_sysfs_entry md_suspend_hi =
- __ATTR(suspend_hi, S_IRUGO|S_IWUSR, suspend_hi_show, suspend_hi_store);
- 
-+static ssize_t
-+uuid_show(mddev_t *mddev, char *page)
-+{
-+	__u32 *p = (__u32*)mddev->uuid;
-+	return sprintf(page, "%08x:%08x:%08x:%08x\n", p[0], p[1], p[2], p[3]);
-+}
-+static struct md_sysfs_entry md_uuid =
-+__ATTR_RO(uuid);
-+
-+static ssize_t
-+degraded_show(mddev_t *mddev, char *page)
-+{
-+	return sprintf(page, "%i\n", mddev->degraded);
-+}
-+static struct md_sysfs_entry md_degraded =
-+__ATTR_RO(degraded);
- 
- static struct attribute *md_default_attrs[] = {
- 	&md_level.attr,
-@@ -2881,6 +2897,8 @@
- 	&md_suspend_lo.attr,
- 	&md_suspend_hi.attr,
- 	&md_bitmap.attr,
-+	&md_uuid.attr,
-+	&md_degraded.attr,
- 	NULL,
- };
- static struct attribute_group md_redundancy_group = {
+
