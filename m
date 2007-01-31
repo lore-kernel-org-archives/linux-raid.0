@@ -1,39 +1,57 @@
-From: Dave Jones <davej@redhat.com>
-Subject: Re: 2.6.20-rc6: known regressions with patches
-Date: Mon, 29 Jan 2007 07:58:55 -0500
-Message-ID: <20070129125855.GA30599@redhat.com>
-References: <Pine.LNX.4.64.0701241847360.25027@woody.linux-foundation.org> <20070126181853.GO17836@stusta.de> <20070129084548.GA10578@elte.hu>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: md device on Redhat Linux 3
+Date: Wed, 31 Jan 2007 11:52:17 +1100
+Message-ID: <17855.59457.265701.451229@notabene.brown>
+References: <207069.41342.qm@web30301.mail.mud.yahoo.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-mips-bounce@linux-mips.org>
-Content-Disposition: inline
-In-Reply-To: <20070129084548.GA10578@elte.hu>
-Sender: linux-mips-bounce@linux-mips.org
-Errors-to: linux-mips-bounce@linux-mips.org
-To: Ingo Molnar <mingo@elte.hu>
-Cc: Adrian Bunk <bunk@stusta.de>, Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@osdl.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Duncan <1i5t5.duncan@cox.net>, Neil Brown <neilb@suse.de>, mingo@redhat.com, linux-raid@vger.kernel.org, cpufreq@lists.linux.org.uk, lenb@kernel.org, linux-acpi@vger.kernel.org, Jan Altenberg <jan@linutronix.de>, Ralf Baechle <ralf@linux-mips.org>, linux-mips@linux-mips.org, Andrew Clayton <andrew@digital-domain.net>, Trond Myklebust <trond.myklebust@fys.uio.no>
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: message from David Shine on Tuesday January 30
+Sender: linux-raid-owner@vger.kernel.org
+To: David Shine <davidshine@yahoo.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Jan 29, 2007 at 09:45:48AM +0100, Ingo Molnar wrote:
- > 
- > * Adrian Bunk <bunk@stusta.de> wrote:
- > 
- > > Subject    : ACPI: fix cpufreq regression
- > > References : http://lkml.org/lkml/2007/1/16/120
- > > Submitter  : Ingo Molnar <mingo@elte.hu>
- > > Caused-By  : Dave Jones <davej@redhat.com>
- > >              commit 0916bd3ebb7cefdd0f432e8491abe24f4b5a101e
- > > Handled-By : Ingo Molnar <mingo@elte.hu>
- > > Patch      : http://lkml.org/lkml/2007/1/16/120
- > > Status     : patch available
- > 
- > this is commit e4233dec749a3519069d9390561b5636a75c7579 meanwhile.
+On Tuesday January 30, davidshine@yahoo.com wrote:
+> Hi there,
+> 
+> I am currenlty building a site ysing the following
+> 
+> 2 * IBM DS4300 (SANS)
+> 2 * IBM X346 (intel systems)
+> 2 * HBA on each node
+> 
+> I am using the md device driver to tie the two SANS together and use them in a mirrored environement. So the layout is 3 file systems sitting under and LVM volume group siting under a mirrored SAN (/dev/sdb, /dev/sdc) on 2 g.b. fibre using md driver.
+> 
+> The problem when we write to one of the SANS when he mirror is
+> broken and then take this offline and ring the other SAN online and
+> switch on the RAID array and  varyon the volume group and  finally
+> mount the file system and then dismount the file system,swithc of
+> both the volume group and the RAID array and thn reboot the server
+> it finds the most recently updated disk to be the one written to not
+> the one last mounted. 
 
-Thanks for pushing this on in my absense btw.
-FWIW, it has my belated ACK :)
-I've asked for it to be in 19.3 too as the same bug exists there.
+It's not really clear to me what you are trying to do here.... maybe
+if you explain your motivations and expectations.
 
-		Dave
+> 
+> How does this work? Where is the date and time stamp written. I
+> thought it would be at the point of doing a aidstart and the supper
+> block would be updated, can you confirm this please? 
 
--- 
-http://www.codemonkey.org.uk
+There is a timestamp on superblock but it isn't used much.  The 'event
+count' is used more.
+So if you have a mirrored pair and :
+  - stop it
+  - restart with just one device - do some stuff, and stop it
+  - restart with just the other device, do some stuff, and stop
+  - reassemble the pair
+then the 'primary' could easily be either of the two, depending on
+which got the most event updates.
+
+Just don't do this.
+
+Again: what do you really want to do?
+
+NeilBrown
