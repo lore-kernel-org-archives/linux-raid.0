@@ -1,57 +1,56 @@
-From: "Ahmed S. Darwish" <darwish.07@gmail.com>
-Subject: [PATCH 2.6.20] drivers/md.c: Use ARRAY_SIZE macro when appropriate
-Date: Tue, 6 Feb 2007 18:06:57 +0200
-Message-ID: <20070206160657.GI8991@Ahmed>
-References: <20070206160204.GA8991@Ahmed>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: Could "bio_vec" be referenced any time?
+Date: Wed, 7 Feb 2007 06:45:41 +1100
+Message-ID: <17864.56037.855359.839197@notabene.brown>
+References: <005a01c74a01$ec1832a0$0100a8c0@sslabmayasky>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932965AbXBFQHW@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20070206160204.GA8991@Ahmed>
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1752287AbXBFTqS@vger.kernel.org>
+In-Reply-To: message from Yu-Chen Wu on Tuesday February 6
 Sender: linux-kernel-owner@vger.kernel.org
-To: mingo@redhat.com
+To: Yu-Chen Wu <g944370@oz.nthu.edu.tw>
 Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi all,
+On Tuesday February 6, g944370@oz.nthu.edu.tw wrote:
+> Hi all,
+> 	I write a module that creates a kernel thread to show the BIOs from
+> MD modules.
+> 	The kernel thread will call show_bio() when md passing a BIO to my
+> module,else sleep.
+> 	Sometimes, show_bio() continues working successfully ,but it
+> somtimes makes "general protection fault".
+> 	The show_bio() always works when I comment the
+> "bio_for_each_segment" loop. 
+> 	Is the zone I comment the cause of the fault? 
+> 	As above, I consider it's the main problem.Also, I strongly want to
+> know your opinions.Thank you for help.
+> 
+> 	THX
 
-A patch to use ARRAY_SIZE macro already defined in kernel.h
+Without seeing how the bio gets to show_bio it is hard to be certain,
+but my guess would be that by the time show_bio tries to inspect the
+bio, the IO request involving it has already completed and the bio has
+been freed, so you are accessing freed memory.
 
-Signed-off-by: Ahmed S. Darwish <darwish.07@gmail.com>
----
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index e8807ea..6f6d9e5 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -33,6 +33,7 @@
- */
- 
- #include <linux/module.h>
-+#include <linux/kernel.h>
- #include <linux/kthread.h>
- #include <linux/linkage.h>
- #include <linux/raid/md.h>
-@@ -2635,8 +2636,7 @@ metadata_store(mddev_t *mddev, const char *buf, size_t len)
- 	minor = simple_strtoul(buf, &e, 10);
- 	if (e==buf || (*e && *e != '\n') )
- 		return -EINVAL;
--	if (major >= sizeof(super_types)/sizeof(super_types[0]) ||
--	    super_types[major].name == NULL)
-+	if (major >= ARRAY_SIZE(super_types) || super_types[major].name == NULL)
- 		return -ENOENT;
- 	mddev->major_version = major;
- 	mddev->minor_version = minor;
-@@ -3973,7 +3973,7 @@ static int set_array_info(mddev_t * mddev, mdu_array_info_t *info)
- 	if (info->raid_disks == 0) {
- 		/* just setting version number for superblock loading */
- 		if (info->major_version < 0 ||
--		    info->major_version >= sizeof(super_types)/sizeof(super_types[0]) ||
-+		    info->major_version >= ARRAY_SIZE(super_types) ||
- 		    super_types[info->major_version].name == NULL) {
- 			/* maybe try to auto-load a module? */
- 			printk(KERN_INFO 
+> Feb  6 22:00:28 RAID-SUSE kernel: Code: 8b 00 f6 c4 08 74 0e 48 c7 c7 14 9c
+> 45 88 31 c0 e8 b5 bf e2
 
+If you feed this line into ksymoops you get:
 
--- 
-Ahmed S. Darwish
-http://darwish-07.blogspot.com
+Code;  0000000000000000 Before first symbol
+   0:   8b 00                     mov    (%rax),%eaxC
+...
+
+so it is trying to dereference $rax.
+
+> Feb  6 22:00:28 RAID-SUSE kernel: RAX: 6b6b6b6b6b6b6b6b RBX:
+> ffff810037f52668 RCX: 0000000000040000
+
+Which contains 6b6b6b6b6b6b6b6b.
+which is lots of copies of 'POISON_FREE' (defined in
+include/linux/poison.h) which makes it really look like that memory
+has already been freed.
+
+NeilBrown
