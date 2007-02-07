@@ -1,143 +1,114 @@
-From: Michael Tokarev <mjt@tls.msk.ru>
-Subject: Re: Move superblock on partition resize?
-Date: Wed, 07 Feb 2007 21:50:14 +0300
-Message-ID: <45CA1F66.4080907@tls.msk.ru>
-References: <44918.192.168.0.1.1170871062.squirrel@bymeinc.com>
+From: Neil Brown <neilb@suse.de>
+Subject: [PATCH] md: Avoid possible BUG_ON in md bitmap handling.
+Date: Thu, 8 Feb 2007 09:28:28 +1100
+Message-ID: <17866.21132.606116.583062@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------040103000303070406000000"
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <44918.192.168.0.1.1170871062.squirrel@bymeinc.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Rob Bray <raid@bymeinc.com>
-Cc: linux-raid@vger.kernel.org
+To: akpm@linux-foundation.org
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, stable@kernel.org
 List-Id: linux-raid.ids
 
-This is a multi-part message in MIME format.
---------------040103000303070406000000
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
 
-Rob Bray wrote:
-> I am trying to grow a raid5 volume in-place. I would like to expand the
-> partition boundaries, then grow raid5 into the newly-expanded partitions.
-> I was wondering if there is a way to move the superblock from the end of
-> the "old" partition to the end of the "new" partition. I've tried dd
-> if=/dev/sdX1 of=/dev/sdX1 bs=512 count=256
-> skip=(sizeOfOldPartitionInBlocks - 256) seek=(sizeOfNewPartitionInBlocks -
-> 256) unsuccessfully. Also, copying the last 128KB (256 blocks) of the old
-> partition before the table modification to a file, and placing that data
-> at the tail of the new partition also yields no beans. I can drop one
-> drive at a time from the group, change the partition table, then hot-add
-> it, but a resync times 7 drives is a lot of juggling. Any ideas?
+[[This patch is against 2.6.20 rather than -mm as the new plugging stuff
+  in -mm breaks md/raid1/bitmap so I couldn't test it there...
+  It is probably appropriate for -stable though I expect the failure
+  case is fairly uncommon (raid1 over multipath).... but what would I
+  know about how common things are :-?
+]]
 
-The superblock location is somewhat tricky to calculate correctly.
 
-I've used a tiny program (attached) for exactly this purpose.
+md/bitmap tracks how many active write requests are pending on blocks
+associated with each bit in the bitmap, so that it knows when it can
+clear the bit (when count hits zero).
 
-/mjt
+The counter has 14 bits of space, so if there are ever more than 16383,
+we cannot cope.
 
---------------040103000303070406000000
-Content-Type: text/x-csrc;
- name="mdsuper.c"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="mdsuper.c"
+Currently the code just calles BUG_ON as "all" drivers have request queue
+limits much smaller than this.
 
-/* mdsuper: read or write a linux software raid superbloc (version 0.90)
- * from or to a given device.
- * 
- * GPL.
- * Written by Michael Tokarev (mjt@tls.msk.ru)
- */
+However is seems that some don't.  Apparently some multipath configurations
+can allow more than 16383 concurrent write requests.
 
-#define _GNU_SOURCE
-#include <sys/types.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <errno.h>
-#include <stdlib.h>
-#include <fcntl.h>
-#include <string.h>
-#include <sys/ioctl.h>
-#include <linux/ioctl.h>
-#include <linux/types.h>
-#include <linux/raid/md_p.h>
-#include <linux/fs.h>
+So, in this unlikely situation, instead of calling BUG_ON we now wait
+for the count to drop down a bit.  This requires a new wait_queue_head,
+some waiting code, and a wakeup call.
 
-int main(int argc, char **argv) {
-  unsigned long long dsize;
-  unsigned long long offset;
-  int mdfd;
-  int n;
-  mdp_super_t super;
-  const char *dev;
+Tested by limiting the counter to 20 instead of 16383 (writes go a lot slower
+in that case...).
 
-  if (argc != 3) {
-    fprintf(stderr, "mdsuper: usage: mdsuper {read|write} mddev\n");
-    return 1;
-  }
+Signed-off-by: Neil Brown <neilb@suse.de>
 
-  if (strcmp(argv[1], "read") == 0)
-    n = O_RDONLY;
-  else if (strcmp(argv[1], "write") == 0)
-    n = O_WRONLY;
-  else {
-    fprintf(stderr, "mdsuper: read or write arg required, not \"%s\"\n",
-            argv[1]);
-    return 1;
-  }
+### Diffstat output
+ ./drivers/md/bitmap.c         |   22 +++++++++++++++++++++-
+ ./include/linux/raid/bitmap.h |    1 +
+ 2 files changed, 22 insertions(+), 1 deletion(-)
 
-  dev = argv[2];
-  mdfd = open(dev, n, 0);
-  if (mdfd < 0) {
-    perror(dev);
-    return 1;
-  }
+diff .prev/drivers/md/bitmap.c ./drivers/md/bitmap.c
+--- .prev/drivers/md/bitmap.c	2007-02-07 13:03:56.000000000 +1100
++++ ./drivers/md/bitmap.c	2007-02-07 21:34:47.000000000 +1100
+@@ -1160,6 +1160,22 @@ int bitmap_startwrite(struct bitmap *bit
+ 			return 0;
+ 		}
+ 
++		if (unlikely((*bmc & COUNTER_MAX) == COUNTER_MAX)) {
++			DEFINE_WAIT(__wait);
++			/* note that it is safe to do the prepare_to_wait
++			 * after the test as long as we do it before dropping
++			 * the spinlock.
++			 */
++			prepare_to_wait(&bitmap->overflow_wait, &__wait,
++					TASK_UNINTERRUPTIBLE);
++			spin_unlock_irq(&bitmap->lock);
++			bitmap->mddev->queue
++				->unplug_fn(bitmap->mddev->queue);
++			schedule();
++			finish_wait(&bitmap->overflow_wait, &__wait);
++			continue;
++		}
++
+ 		switch(*bmc) {
+ 		case 0:
+ 			bitmap_file_set_bit(bitmap, offset);
+@@ -1169,7 +1185,7 @@ int bitmap_startwrite(struct bitmap *bit
+ 		case 1:
+ 			*bmc = 2;
+ 		}
+-		BUG_ON((*bmc & COUNTER_MAX) == COUNTER_MAX);
++
+ 		(*bmc)++;
+ 
+ 		spin_unlock_irq(&bitmap->lock);
+@@ -1207,6 +1223,9 @@ void bitmap_endwrite(struct bitmap *bitm
+ 		if (!success && ! (*bmc & NEEDED_MASK))
+ 			*bmc |= NEEDED_MASK;
+ 
++		if ((*bmc & COUNTER_MAX) == COUNTER_MAX)
++			wake_up(&bitmap->overflow_wait);
++
+ 		(*bmc)--;
+ 		if (*bmc <= 2) {
+ 			set_page_attr(bitmap,
+@@ -1431,6 +1450,7 @@ int bitmap_create(mddev_t *mddev)
+ 	spin_lock_init(&bitmap->lock);
+ 	atomic_set(&bitmap->pending_writes, 0);
+ 	init_waitqueue_head(&bitmap->write_wait);
++	init_waitqueue_head(&bitmap->overflow_wait);
+ 
+ 	bitmap->mddev = mddev;
+ 
 
-  if (ioctl(mdfd, BLKGETSIZE64, &dsize) < 0) {
-    perror(dev);
-    return 1;
-  }
-
-  if (dsize < MD_RESERVED_SECTORS*2) {
-    fprintf(stderr, "mdsuper: %s is too small\n", dev);
-    return 1;
-  }
-
-  offset = MD_NEW_SIZE_SECTORS(dsize>>9);
-
-  fprintf(stderr, "size=%Lu (%Lu sect), offset=%Lu (%Lu sect)\n",
-          dsize, dsize>>9, offset * 512, offset);
-  offset *= 512;
-
-  if (n == O_RDONLY) {
-    if (pread64(mdfd, &super, sizeof(super), offset) != sizeof(super)) {
-      perror(dev);
-      return 1;
-    }
-    if (super.md_magic != MD_SB_MAGIC) {
-      fprintf(stderr, "%s: bad magic (0x%08x, should be 0x%08x)\n",
-              dev, super.md_magic, MD_SB_MAGIC);
-      return 1;
-    }
-    if (write(1, &super, sizeof(super)) != sizeof(super)) {
-      perror("write");
-      return 1;
-    }
-  }
-  else {
-    if (read(0, &super, sizeof(super)) != sizeof(super)) {
-      perror("read");
-      return 1;
-    }
-    if (pwrite64(mdfd, &super, sizeof(super), offset) != sizeof(super)) {
-      perror(dev);
-      return 1;
-    }
-  }
-
-  return 0;
-}
-
---------------040103000303070406000000--
+diff .prev/include/linux/raid/bitmap.h ./include/linux/raid/bitmap.h
+--- .prev/include/linux/raid/bitmap.h	2007-02-07 13:03:56.000000000 +1100
++++ ./include/linux/raid/bitmap.h	2007-02-07 20:57:57.000000000 +1100
+@@ -247,6 +247,7 @@ struct bitmap {
+ 
+ 	atomic_t pending_writes; /* pending writes to the bitmap file */
+ 	wait_queue_head_t write_wait;
++	wait_queue_head_t overflow_wait;
+ 
+ };
+ 
