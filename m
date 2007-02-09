@@ -1,17 +1,43 @@
-From: Neil Brown <neilb@suse.de>
+From: jahammonds prost <gmitch64@yahoo.com>
 Subject: Re: mdadm RAID5 array failure
-Date: Thu, 8 Feb 2007 14:57:47 +1100
-Message-ID: <17866.40891.652153.345571@notabene.brown>
-References: <24264.46597.qm@web55801.mail.re3.yahoo.com>
+Date: Thu, 8 Feb 2007 19:15:57 -0800 (PST)
+Message-ID: <798742.72217.qm@web55812.mail.re3.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from jahammonds prost on Thursday February 8
 Sender: linux-raid-owner@vger.kernel.org
-To: jahammonds prost <gmitch64@yahoo.com>
+To: Neil Brown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+> mdadm -Af /dev/md0 should get it back for you. 
+
+It did indeed... Thank you.
+
+> But you really want to find out why it died.
+
+Well, it looks like I have a bad section on hde, which got tickled as I was copying files onto it... As the rebuild progressed, and hit around 6%, it hit the same spot on the disk again, and locked the box up solid. I ended up setting speed_limit_min and speed_limit_max to 0 so that the rebuild didn't happen, activated my LVM volume groups, and mounted the first of the logical volumes. I've just copied off all the files on that LV, and tomorrow I'll get the other 2 done. I do have a spare drive in the array... any idea why it wasn't being activated when hde went offline?
+
+> What kernel version are you running?
+
+Kernel is 2.6.17-1.2142.FC4, and mdadm is V1.11.0 11 April 2005
+
+I am assuming that the underlying RAID doesn't do any bad block handling?
+
+
+Once again, thank you for your help.
+
+
+Graham
+
+----- Original Message ----
+From: Neil Brown <neilb@suse.de>
+To: jahammonds prost <gmitch64@yahoo.com>
+Cc: linux-raid@vger.kernel.org
+Sent: Wednesday, 7 February, 2007 10:57:47 PM
+Subject: Re: mdadm RAID5 array failure
+
 
 On Thursday February 8, gmitch64@yahoo.com wrote:
 
@@ -42,3 +68,9 @@ with the highest event count and reject anything with an event count 2
 or more less than that.
 
 NeilBrown
+
+
+		
+___________________________________________________________ 
+What kind of emailer are you? Find out today - get a free analysis of your email personality. Take the quiz at the Yahoo! Mail Championship. 
+http://uk.rd.yahoo.com/evt=44106/*http://mail.yahoo.net/uk 
