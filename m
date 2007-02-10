@@ -1,41 +1,40 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: [PATCH 2.6.20-rc6] md: expose uuid and degraded attributes in
- sysfs
-Date: Sat, 10 Feb 2007 13:09:33 -0500
-Message-ID: <45CE0A5D.6040409@tmr.com>
-References: <20070127015948.GA24479@teal.hq.k1024.org> <20070210111836.GA7953@teal.hq.k1024.org>
+From: Arne Jansen <sensille@gmx.net>
+Subject: Raid on USB flash disk
+Date: Sat, 10 Feb 2007 19:24:25 +0100
+Message-ID: <45CE0DD9.4050009@gmx.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20070210111836.GA7953@teal.hq.k1024.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
-Cc: iusty@k1024.org, Neil Brown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-Iustin Pop wrote:
-> On Sat, Jan 27, 2007 at 02:59:48AM +0100, Iustin Pop wrote:
->   
->> From: Iustin Pop <iusty@k1024.org>
->>
->> This patch exposes the uuid and the degraded status of an assembled
->> array through sysfs.
->>     
-> [...]
->
-> Sorry to ask, this was my first patch and I'm not sure what is the
-> procedure to get it considered for merging... I was under the impression
-> that just sending it to this list is enough. What do I have to do?
-Normally I would expect Neil to pick it up and forward it, but I would 
-have expected an ack from him. He's been busy with other problems, NFS 
-as I recall, and may have missed it, so I cc'd him this time.
+Hi,
 
-Neil, I would think this is 2.6.21 material unless you see a problem I 
-missed.
+I just tried to setup a one-device raid onto an USB flash drive.
+Creating, setting up ext3 and filling with data was no problem.
+But when I tried to work with it afterwards the metadevice was
+unresponsive. I tried both linear and raid0 levels, but that
+made no difference.
+For my uneducated eye it looks like something is deadlocking if
+md tries to read from the device.
 
--- 
-bill davidsen <davidsen@tmr.com>
-  CTO TMR Associates, Inc
-  Doing interesting things with small computers since 1979
+I'm using kernel 2.6.18 (gentoo) on a VIA EPIA CN10000 mainboard
+with a 2GB USB flash drive (extreme). Please ask if I should provide
+more information like dmesg or lspci.
 
+The main reason why I'm trying this weird setup is that the USB
+drive is always enumerated last in my kernel, and I want to boot
+from it. That means every time I add a disk or remove one I have
+to edit grub.conf and fstab. Very inconvenient. So my idea was
+to create a single device md on it and leave it to the autodetection
+to find the device. So I never have to edit /etc/fstab again for
+a simple hardware change and I'm independent of any enumeration
+changes in future kernel releases.
+
+But unfortunately it doesn't work :-(
+
+Any help appreciated.
+
+--Arne
