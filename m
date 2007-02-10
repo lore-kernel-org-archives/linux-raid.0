@@ -1,45 +1,60 @@
-From: TJ <systemloc@earthlink.net>
-Subject: Hard disk wierdness in raid array
-Date: Fri, 9 Feb 2007 18:01:57 -0500 (GMT-05:00)
-Message-ID: <8110270.1171062117832.JavaMail.root@elwamui-norfolk.atl.sa.earthlink.net>
-Reply-To: TJ <systemloc@earthlink.net>
+From: Eyal Lebedinsky <eyal@eyal.emu.id.au>
+Subject: slow 'check'
+Date: Sat, 10 Feb 2007 16:41:58 +1100
+Message-ID: <45CD5B26.5030707@eyal.emu.id.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: linux-raid list <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi,
-      I've got a 6x200GB RAID 5 array that I've kept up for some time. I've always had a bit of trouble with stability and I've suspected a cranky controller, or disk, or a combo that simply doesn't work together, but I managed to get it up and stable for approximately 12 months. Now I'm adding a disk to the array and this problem has come round to bite me again and I'm hoping someone here can confirm my logic. I have 3 controller cards, a Promise IDE, a Maxtor branded SiI 680 IDE, and a SiI 3112 SATA. Previously, I had my drives configured so that each was a single drive, not in a master/slave config, but this is getting to be too much in the way of cabling, and I really think with modern UDMA drives that this should be necessary. I changed the config to get rid of some of those PATA cables. Here's a basic list of the new drive/controller config:
+I have a six-disk RAID5 over sata. First two disks are on the mobo and last four
+are on a Promise SATA-II-150-TX4. The sixth disk was added recently and I decided
+to run a 'check' periodically, and started one manually to see how long it should
+take. Vanilla 2.6.20.
 
-SiI 680
-/dev/hda  Seagate Barracuda 200GB
-/dev/hdb  Seagate Barracuda 200GB
-/dev/hdc
-/dev/hdd
-PDC 20269
-/dev/hde  Western Digital Caviar 40GB (Boot device, not part of RAID5)
-/dev/hdf   Western Digital Caviar 200GB
-/dev/hdg   Western Digital Caviar 200GB
-/dev/hdh   Western Digital Caviar 200GB
-SiI 3112
-/dev/sda  Seagate Barracuda 200GB
-/dev/sdb  Seagate Barracuda 200GB
+A 'dd' test shows:
 
-I do know that WD drives are cranky in that they have different jumper settings for single vs master, and my jumpers were/are set correctly. Immediately on adopting this configuration, the array would come up, but on resyncing, I would recieve this error:
+# dd if=/dev/md0 of=/dev/null bs=1024k count=10240
+10240+0 records in
+10240+0 records out
+10737418240 bytes transferred in 84.449870 seconds (127145468 bytes/sec)
 
-hdg: dma_intr: status=0x51 { DriveReady SeekComplete Error }
-hdg: dma_intr: error=0x40 { UncorrectableError }, LBAsect=248725, high=0, low=248725, sector=248639
-ide: failed opcode was: unknown
-end_request: I/O error, dev hdg, sector 248639
-raid5 Disk failure on hdg1, disabling device. Operation continuing on 4 devices
+This is good for this setup. A check shows:
 
-Then the machine would freeze. I'm confident that hdg did not suddenly die, as I've gotten these messages before when I was previously having stability issues. I repeated the procedure and got the error again and again on hdg. In order to find the problematic component, I switched the cable connecting hdg and hdh to the SiI 680 controller, making them hdc and hdd. On trying to resync, I got the same error message, but at a different sector, and on hdc (which would be the same drive). I feel that this isolated the problem to one WD 200GB drive which seems to always error when in a master/slave config on either controller. In order to recover my data, I changed the configuration again so that the problematic drive was in a single configuration again, making sure to set the jumper accordingly. I am now half-way through rebuilding the array.
+$ cat /proc/mdstat
+Personalities : [raid6] [raid5] [raid4]
+md0 : active raid5 sda1[0] sdf1[5] sde1[4] sdd1[3] sdc1[2] sdb1[1]
+      1562842880 blocks level 5, 256k chunk, algorithm 2 [6/6] [UUUUUU]
+      [>....................]  check =  0.8% (2518144/312568576) finish=2298.3min speed=2246K/sec
 
-I would simply like someone to confirm my assumption that although this drive functions correctly in a single configuration, it has some sort of hardware problem and needs to be RMA'd. I don't believe anything else to be at fault as I swapped which controller the drive was on, still saw errors, and I also ran the drive that was slaved to it with another drive and that drive never caused any trouble. 
+unused devices: <none>
 
-Thanks for any input, and feel free to ask for more info, or suggest testing,
-TJ Harrell
+which is an order of magnitude slower (the speed is per-disk, call it 13MB/s
+for the six). There is no activity on the RAID. Is this expected? I assume
+that the simple dd does the same amount of work (don't we check parity on
+read?).
 
+I have these tweaked at bootup:
+	echo 4096 >/sys/block/md0/md/stripe_cache_size
+	blockdev --setra 32768 /dev/md0
+
+Changing the above parameters seems to not have a significant effect.
+
+The check logs the following:
+
+md: data-check of RAID array md0
+md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
+md: using maximum available idle IO bandwidth (but not more than 200000 KB/sec) for data-check.
+md: using 128k window, over a total of 312568576 blocks.
+
+Does it need a larger window (whatever a window is)? If so, can it
+be set dynamically?
+
+TIA
+
+-- 
+Eyal Lebedinsky (eyal@eyal.emu.id.au) <http://samba.org/eyal/>
+	attach .zip as .dat
