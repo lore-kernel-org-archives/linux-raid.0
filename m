@@ -1,20 +1,21 @@
-From: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
 Subject: Re: slow 'check'
-Date: Sat, 10 Feb 2007 09:41:47 +0200
-Message-ID: <5d96567b0702092341u7d307284ga88ee0f947c80c0f@mail.gmail.com>
+Date: Sat, 10 Feb 2007 04:25:47 -0500 (EST)
+Message-ID: <Pine.LNX.4.64.0702100425150.8446@p34.internal.lan>
 References: <45CD5B26.5030707@eyal.emu.id.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <45CD5B26.5030707@eyal.emu.id.au>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: Eyal Lebedinsky <eyal@eyal.emu.id.au>
-Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+Cc: linux-raid list <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 2/10/07, Eyal Lebedinsky <eyal@eyal.emu.id.au> wrote:
+
+
+On Sat, 10 Feb 2007, Eyal Lebedinsky wrote:
+
 > I have a six-disk RAID5 over sata. First two disks are on the mobo and last four
 > are on a Promise SATA-II-150-TX4. The sixth disk was added recently and I decided
 > to run a 'check' periodically, and started one manually to see how long it should
@@ -26,8 +27,7 @@ On 2/10/07, Eyal Lebedinsky <eyal@eyal.emu.id.au> wrote:
 > 10240+0 records in
 > 10240+0 records out
 > 10737418240 bytes transferred in 84.449870 seconds (127145468 bytes/sec)
-try dd with bs of 4x(5x256) = 5 M.
-
+>
 > This is good for this setup. A check shows:
 >
 > $ cat /proc/mdstat
@@ -44,15 +44,11 @@ try dd with bs of 4x(5x256) = 5 M.
 > read?).
 >
 > I have these tweaked at bootup:
->        echo 4096 >/sys/block/md0/md/stripe_cache_size
->        blockdev --setra 32768 /dev/md0
+> 	echo 4096 >/sys/block/md0/md/stripe_cache_size
+> 	blockdev --setra 32768 /dev/md0
 >
 > Changing the above parameters seems to not have a significant effect.
-Stripe cache size is less effective than previous versions
-of raid5 since in some cases it is being bypassed.
-Why do you check random access to the raid
-and not sequential access.
-
+>
 > The check logs the following:
 >
 > md: data-check of RAID array md0
@@ -65,15 +61,18 @@ and not sequential access.
 >
 > TIA
 >
-> --
+> -- 
 > Eyal Lebedinsky (eyal@eyal.emu.id.au) <http://samba.org/eyal/>
->        attach .zip as .dat
+> 	attach .zip as .dat
 > -
 > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 >
 
+As you add disks onto the PCI bus it will get slower.  For 6 disks you 
+should get faster than 2MB/s however..
 
--- 
-Raz
+You can try increasing the min speed of the raid rebuild.
+
+Justin.
