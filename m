@@ -1,157 +1,139 @@
-From: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
-Subject: Re: slow 'check'
-Date: Sun, 11 Feb 2007 11:30:11 +0200
-Message-ID: <5d96567b0702110130u5b404af2y37d27c794d6ddfcc@mail.gmail.com>
-References: <45CD5B26.5030707@eyal.emu.id.au>
-	 <Pine.LNX.4.64.0702100425150.8446@p34.internal.lan>
-	 <45CD9B32.20202@eyal.emu.id.au>
-	 <Pine.LNX.4.64.0702100522270.8446@p34.internal.lan>
-	 <45CE2C7A.2060106@tmr.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: md: md6_raid5 crash 2.6.20
+Date: Mon, 12 Feb 2007 09:02:33 +1100
+Message-ID: <17871.37497.786198.834303@notabene.brown>
+References: <20070211071527.M31642@liquid-nexus.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <45CE2C7A.2060106@tmr.com>
-Content-Disposition: inline
+In-Reply-To: message from Marc Marais on Sunday February 11
 Sender: linux-raid-owner@vger.kernel.org
-To: Eyal Lebedinsky <eyal@eyal.emu.id.au>
-Cc: linux-raid list <linux-raid@vger.kernel.org>
+To: Marc Marais <marcm@liquid-nexus.net>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-I suggest you test all drives concurrently with dd.
-load dd on sda , then sdb slowly one after the other and
-see whether the throughput degrades. use iostat.
-furtheremore, dd is not the measure for random access.
+On Sunday February 11, marcm@liquid-nexus.net wrote:
+> Greetings,
+> 
+> I've been running md on my server for some time now and a few days ago one of
+> the (3) drives in the raid5 array starting giving read errors. The result was
+> usually system hangs and this was with kernel 2.6.17.13. I upgraded to the
+> latest production 2.6.20 kernel and experienced the same behaviour. 
 
-On 2/10/07, Bill Davidsen <davidsen@tmr.com> wrote:
-> Justin Piszcz wrote:
-> >
-> >
-> > On Sat, 10 Feb 2007, Eyal Lebedinsky wrote:
-> >
-> >> Justin Piszcz wrote:
-> >>>
-> >>>
-> >>> On Sat, 10 Feb 2007, Eyal Lebedinsky wrote:
-> >>>
-> >>>> I have a six-disk RAID5 over sata. First two disks are on the mobo and
-> >>>> last four
-> >>>> are on a Promise SATA-II-150-TX4. The sixth disk was added recently
-> >>>> and I decided
-> >>>> to run a 'check' periodically, and started one manually to see how
-> >>>> long it should
-> >>>> take. Vanilla 2.6.20.
-> >>>>
-> >>>> A 'dd' test shows:
-> >>>>
-> >>>> # dd if=/dev/md0 of=/dev/null bs=1024k count=10240
-> >>>> 10240+0 records in
-> >>>> 10240+0 records out
-> >>>> 10737418240 bytes transferred in 84.449870 seconds (127145468
-> >>>> bytes/sec)
-> >>>>
-> >>>> This is good for this setup. A check shows:
-> >>>>
-> >>>> $ cat /proc/mdstat
-> >>>> Personalities : [raid6] [raid5] [raid4]
-> >>>> md0 : active raid5 sda1[0] sdf1[5] sde1[4] sdd1[3] sdc1[2] sdb1[1]
-> >>>>      1562842880 blocks level 5, 256k chunk, algorithm 2 [6/6] [UUUUUU]
-> >>>>      [>....................]  check =  0.8% (2518144/312568576)
-> >>>> finish=2298.3min speed=2246K/sec
-> >>>>
-> >>>> unused devices: <none>
-> >>>>
-> >>>> which is an order of magnitude slower (the speed is per-disk, call it
-> >>>> 13MB/s
-> >>>> for the six). There is no activity on the RAID. Is this expected? I
-> >>>> assume
-> >>>> that the simple dd does the same amount of work (don't we check
-> >>>> parity on
-> >>>> read?).
-> >>>>
-> >>>> I have these tweaked at bootup:
-> >>>>     echo 4096 >/sys/block/md0/md/stripe_cache_size
-> >>>>     blockdev --setra 32768 /dev/md0
-> >>>>
-> >>>> Changing the above parameters seems to not have a significant effect.
-> >>>>
-> >>>> The check logs the following:
-> >>>>
-> >>>> md: data-check of RAID array md0
-> >>>> md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
-> >>>> md: using maximum available idle IO bandwidth (but not more than
-> >>>> 200000 KB/sec) for data-check.
-> >>>> md: using 128k window, over a total of 312568576 blocks.
-> >>>>
-> >>>> Does it need a larger window (whatever a window is)? If so, can it
-> >>>> be set dynamically?
-> >>>>
-> >>>> TIA
-> >>>>
-> >>>> --
-> >>>> Eyal Lebedinsky (eyal@eyal.emu.id.au) <http://samba.org/eyal/>
-> >>>>     attach .zip as .dat
-> >>>
-> >>> As you add disks onto the PCI bus it will get slower.  For 6 disks you
-> >>> should get faster than 2MB/s however..
-> >>>
-> >>> You can try increasing the min speed of the raid rebuild.
-> >>
-> >> Interesting - this does help. I wonder why it used much more i/o by
-> >> default before. It still uses only ~16% CPU.
-> >>
-> >> # echo 20000 >/sys/block/md0/md/sync_speed_min
-> >> # echo check >/sys/block/md0/md/sync_action
-> >> ... wait about 10s for the process to settle...
-> >> # cat /proc/mdstat
-> >> Personalities : [raid6] [raid5] [raid4]
-> >> md0 : active raid5 sda1[0] sdf1[5] sde1[4] sdd1[3] sdc1[2] sdb1[1]
-> >>      1562842880 blocks level 5, 256k chunk, algorithm 2 [6/6] [UUUUUU]
-> >>      [>....................]  check =  0.1% (364928/312568576)
-> >> finish=256.6min speed=20273K/sec
-> >> # echo idle >/sys/block/md0/md/sync_action
-> >>
-> >> Raising it further only manages about 21MB/s (the _max is set to
-> >> 200MB/s)
-> >> as expected; this is what the TX4 delivers with four disks. I need a
-> >> better
-> >> controller (or is the linux driver slow?).
-> >>
-> >>> Justin.
-> >
-> > You are maxing out the PCI Bus, remember each bit/parity/verify
-> > operation has to go to each disk.  If you get an entirely PCI-e system
-> > you will see rates 50-100-150-200MB/s easily.  I used to have 10 x
-> > 400GB drives on a PCI bus, after 2 or 3 drives, you max out the PCI
-> > bus, this is why you need PCI-e, each slot has its own lane of bandwidth.
->
-> >
-> > 21MB/s is about right for 5-6 disks, when you go to 10 it drops to
-> > about 5-8MB/s on a PCI system.
-> Wait, let's say that we have three drives and 1m chunk size. So we read
-> 1M here, 1M there, and 1M somewhere else, and get 2M data and 1M parity
-> which we check. With five we would read 4M data and 1M parity, but have
-> 4M checked. The end case is that for each stripe we read N*chunk bytes
-> and verify (N-1)*chunk. In fact the data is (N-1)/N of the stripe, and
-> the percentage gets higher (not lower) as you add drives. I see no
-> reason why more drives would be slower, a higher percentage of the bytes
-> read are data.
->
-> That doesn't mean that you can't run out of Bus bandwidth, but number of
-> drives is not obviously the issue.
->
-> --
-> bill davidsen <davidsen@tmr.com>
->   CTO TMR Associates, Inc
->   Doing interesting things with small computers since 1979
->
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+System hangs suggest a problem with the drive controller.  However
+this "kernel BUG" is something newly introduced in 2.6.20 which should
+be fixed in 2.6.20.1.  Patch is below.
+
+If you still get hangs with this patch installed, then please report
+detail, and probably copy to linux-ide@vger.kernel.org.
+
+NeilBrown
 
 
+Fix various bugs with aligned reads in RAID5.
 
--- 
-Raz
+It is possible for raid5 to be sent a bio that is too big
+for an underlying device.  So if it is a READ that we
+pass stright down to a device, it will fail and confuse
+RAID5.
+
+So in 'chunk_aligned_read' we check that the bio fits within the
+parameters for the target device and if it doesn't fit, fall back
+on reading through the stripe cache and making lots of one-page
+requests.
+
+Note that this is the earliest time we can check against the device
+because earlier we don't have a lock on the device, so it could change
+underneath us.
+
+Also, the code for handling a retry through the cache when a read
+fails has not been tested and was badly broken.  This patch fixes that
+code.
+
+Signed-off-by: Neil Brown <neilb@suse.de>
+
+### Diffstat output
+ ./drivers/md/raid5.c |   42 +++++++++++++++++++++++++++++++++++++++---
+ 1 file changed, 39 insertions(+), 3 deletions(-)
+
+diff .prev/drivers/md/raid5.c ./drivers/md/raid5.c
+--- .prev/drivers/md/raid5.c	2007-02-07 10:22:22.000000000 +1100
++++ ./drivers/md/raid5.c	2007-02-06 19:19:01.000000000 +1100
+@@ -2570,7 +2570,7 @@ static struct bio *remove_bio_from_retry
+ 	}
+ 	bi = conf->retry_read_aligned_list;
+ 	if(bi) {
+-		conf->retry_read_aligned = bi->bi_next;
++		conf->retry_read_aligned_list = bi->bi_next;
+ 		bi->bi_next = NULL;
+ 		bi->bi_phys_segments = 1; /* biased count of active stripes */
+ 		bi->bi_hw_segments = 0; /* count of processed stripes */
+@@ -2619,6 +2619,27 @@ static int raid5_align_endio(struct bio 
+ 	return 0;
+ }
+ 
++static int bio_fits_rdev(struct bio *bi)
++{
++	request_queue_t *q = bdev_get_queue(bi->bi_bdev);
++
++	if ((bi->bi_size>>9) > q->max_sectors)
++		return 0;
++	blk_recount_segments(q, bi);
++	if (bi->bi_phys_segments > q->max_phys_segments ||
++	    bi->bi_hw_segments > q->max_hw_segments)
++		return 0;
++
++	if (q->merge_bvec_fn)
++		/* it's too hard to apply the merge_bvec_fn at this stage,
++		 * just just give up
++		 */
++		return 0;
++
++	return 1;
++}
++
++
+ static int chunk_aligned_read(request_queue_t *q, struct bio * raid_bio)
+ {
+ 	mddev_t *mddev = q->queuedata;
+@@ -2665,6 +2686,13 @@ static int chunk_aligned_read(request_qu
+ 		align_bi->bi_flags &= ~(1 << BIO_SEG_VALID);
+ 		align_bi->bi_sector += rdev->data_offset;
+ 
++		if (!bio_fits_rdev(align_bi)) {
++			/* too big in some way */
++			bio_put(align_bi);
++			rdev_dec_pending(rdev, mddev);
++			return 0;
++		}
++
+ 		spin_lock_irq(&conf->device_lock);
+ 		wait_event_lock_irq(conf->wait_for_stripe,
+ 				    conf->quiesce == 0,
+@@ -3055,7 +3083,9 @@ static int  retry_aligned_read(raid5_con
+ 	last_sector = raid_bio->bi_sector + (raid_bio->bi_size>>9);
+ 
+ 	for (; logical_sector < last_sector;
+-	     logical_sector += STRIPE_SECTORS, scnt++) {
++	     logical_sector += STRIPE_SECTORS,
++		     sector += STRIPE_SECTORS,
++		     scnt++) {
+ 
+ 		if (scnt < raid_bio->bi_hw_segments)
+ 			/* already done this stripe */
+@@ -3071,7 +3101,13 @@ static int  retry_aligned_read(raid5_con
+ 		}
+ 
+ 		set_bit(R5_ReadError, &sh->dev[dd_idx].flags);
+-		add_stripe_bio(sh, raid_bio, dd_idx, 0);
++		if (!add_stripe_bio(sh, raid_bio, dd_idx, 0)) {
++			release_stripe(sh);
++			raid_bio->bi_hw_segments = scnt;
++			conf->retry_read_aligned = raid_bio;
++			return handled;
++		}
++
+ 		handle_stripe(sh, NULL);
+ 		release_stripe(sh);
+ 		handled++;
