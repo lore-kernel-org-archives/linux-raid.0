@@ -1,42 +1,90 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: md: md6_raid5 crash 2.6.20
-Date: Mon, 12 Feb 2007 11:15:38 +1100
-Message-ID: <17871.45482.186152.158022@notabene.brown>
-References: <20070211071527.M31642@liquid-nexus.net>
-	<17871.37497.786198.834303@notabene.brown>
-	<20070212000042.M73586@liquid-nexus.net>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: [PATCH 2.6.20-rc6] md: expose uuid and degraded attributes in
+ sysfs
+Date: Sun, 11 Feb 2007 23:51:34 -0500
+Message-ID: <45CFF256.8000609@tmr.com>
+References: <20070127015948.GA24479@teal.hq.k1024.org>	<20070210111836.GA7953@teal.hq.k1024.org>	<45CE0A5D.6040409@tmr.com> <17870.13811.570367.617924@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Marc Marais on Monday February 12
+In-Reply-To: <17870.13811.570367.617924@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Marc Marais <marcm@liquid-nexus.net>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org, iusty@k1024.org
 List-Id: linux-raid.ids
 
-On Monday February 12, marcm@liquid-nexus.net wrote:
-> 
-> Thanks for the quick response Neil unfortunately the kernel doesn't build with
-> this patch due to a missing symbol:
-> 
-> WARNING: "blk_recount_segments" [drivers/md/raid456.ko] undefined!
-> 
-> Is that in another file that needs patching or within raid5.c?
+Neil Brown wrote:
+> On Saturday February 10, davidsen@tmr.com wrote:
+>   
+>> Iustin Pop wrote:
+>>     
+>>> On Sat, Jan 27, 2007 at 02:59:48AM +0100, Iustin Pop wrote:
+>>>   
+>>>       
+>>>> From: Iustin Pop <iusty@k1024.org>
+>>>>
+>>>> This patch exposes the uuid and the degraded status of an assembled
+>>>> array through sysfs.
+>>>>     
+>>>>         
+>>> [...]
+>>>
+>>> Sorry to ask, this was my first patch and I'm not sure what is the
+>>> procedure to get it considered for merging... I was under the impression
+>>> that just sending it to this list is enough. What do I have to do?
+>>>       
+>> Normally I would expect Neil to pick it up and forward it, but I would 
+>> have expected an ack from him. He's been busy with other problems, NFS 
+>> as I recall, and may have missed it, so I cc'd him this time.
+>>
+>> Neil, I would think this is 2.6.21 material unless you see a problem I 
+>> missed.
+>>
+>>     
+>
+> yeh - sorry about that. mail is somewhat of a lossy protocol for me.
+> I usually try to reply, but sometimes it just doesn't happen.
+> Resending after a suitable pause (1-2 weeks) is never a bad idea.
+>
+> Exposing the 'degraded' status is probably a good idea.  I'll take
+> that.
+>
+> Exposing the UUID isn't - and if it were it should be in
+> "md_default_attrs" rather than "md_redundancy_attrs".
+>   
+I don't think moving it would get much argument, but having it visible 
+has advantages as noted in the original post, and opens the door to 
+someone writing code to allow the uuid to be changed with a write to a 
+sys file. We had a discussion of setting uuid a few months ago, I think 
+you agreed it was a reasonable thing to do.
+> The UUID isn't an intrinsic aspect of the array.  It is simply part of
+> the metadata that is used to match up different devices from the same
+> array.
+> I plan to add support for the 'DDF' metadata format (an 'industry
+> standard') and that will be managed entirely in user-space.  The
+> kernel won't know the uuid at all.
+>   
+Outside of forcing changes for all of us using uuid, what does this 
+standard compliance buy us as users? Or you as a maintainer? Does this 
+let Linux get run on a million computers which can't now because of lack 
+or standard compliance? I'm always worried when things change without a 
+visible benefit, so feel free to make the benefits visible. Managed in 
+user space is not a big item for me, it means there will be more more 
+places for errors to creep in.
+> So any solution for easy access to uuids should be done in user-space.
+> Maybe mdadm could create a link
+>    /dev/md/by-uuid/xxxxxxxx -> /dev/whatever.
+> ??
+>
+>   
+Which would be kept in sync how when the uuid is changed?
 
-Yes.  I keep forgetting about that bit. Sorry.
+I'm not trying to argue with you, just trying to cover the benefits and 
+possible exposures from the change.
 
+-- 
+bill davidsen <davidsen@tmr.com>
+  CTO TMR Associates, Inc
+  Doing interesting things with small computers since 1979
 
-diff -puN block/ll_rw_blk.c~md-fix-various-bugs-with-aligned-reads-in-raid5-fix block/ll_rw_blk.c
---- a/block/ll_rw_blk.c~md-fix-various-bugs-with-aligned-reads-in-raid5-fix
-+++ a/block/ll_rw_blk.c
-@@ -1264,7 +1264,7 @@ new_hw_segment:
- 	bio->bi_hw_segments = nr_hw_segs;
- 	bio->bi_flags |= (1 << BIO_SEG_VALID);
- }
--
-+EXPORT_SYMBOL(blk_recount_segments);
- 
- static int blk_phys_contig_segment(request_queue_t *q, struct bio *bio,
- 				   struct bio *nxt)
-_
