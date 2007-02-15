@@ -1,51 +1,29 @@
-From: Dan Pritts <danno@internet2.edu>
-Subject: [danno@internet2.edu: minor cosmetic bug in md]
-Date: Thu, 15 Feb 2007 13:45:08 -0500
-Message-ID: <20070215184508.GC11881@internet2.edu>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: Changing chunk size
+Date: Fri, 16 Feb 2007 10:24:43 +1100
+Message-ID: <17876.60347.983953.748979@notabene.brown>
+References: <45D4955C.60008@tmr.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: message from Bill Davidsen on Thursday February 15
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-(sorry for the direct spam, neil)
+On Thursday February 15, davidsen@tmr.com wrote:
+> I have determined that a large array was created with an overly-large 
+> chunk size. Best way to resize?
 
------ Forwarded message from Dan Pritts <danno@internet2.edu> -----
+Dump and restore.
 
-Date: Thu, 15 Feb 2007 13:42:36 -0500
-From: Dan Pritts <danno@internet2.edu>
-To: neilb@suse.de
-Subject: minor cosmetic bug in md 
+in-place reshapes (such as raid5 + 1 disk => raid6 or
+change-chunk-size) are on my list of 'that might be interesting to
+implement', but there are plenty of more interesting things.  And it
+would be very slow.  It would need to copy some number of stripes to a
+backup somewhere, then copy them back in the new layout, so every
+block in the array would be written twice.
 
-Hi,
-
-I wanted a linear device that included two partitions on the same disk
-(I have my reasons).
-
-I created it, it worked, yada yada.
-
-But I got this error in my "dmesg" output:  
-
-  md0: WARNING: hda5 appears to be on the same physical disk as hda7. True
-       protection against single-disk failure might be compromised.
-
-Seems silly to give this warning for a linear.   Or, presumably, for a raid0.
-
-thanks for all your good work!
-
-danno
---
-Dan Pritts, System Administrator
-Internet2
-office: +1-734-352-4953 | mobile: +1-734-834-7224
-
------ End forwarded message -----
-
-
-danno
---
-Dan Pritts, System Administrator
-Internet2
-office: +1-734-352-4953 | mobile: +1-734-834-7224
+NeilBrown
