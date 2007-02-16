@@ -1,40 +1,42 @@
-From: Neil Brown <neilb@suse.de>
+From: Corey Hickey <bugfood-ml@fatooh.org>
 Subject: Re: 2.6.20: reproducible hard lockup with RAID-5 resync
-Date: Fri, 16 Feb 2007 18:59:54 +1100
-Message-ID: <17877.25722.404051.470040@notabene.brown>
-References: <45D55366.4010904@fatooh.org>
+Date: Fri, 16 Feb 2007 00:11:46 -0800
+Message-ID: <45D56742.8090302@fatooh.org>
+References: <45D55366.4010904@fatooh.org> <17877.25722.404051.470040@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Corey Hickey on Thursday February 15
+In-Reply-To: <17877.25722.404051.470040@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Corey Hickey <bugfood-ml@fatooh.org>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thursday February 15, bugfood-ml@fatooh.org wrote:
-> I think I have found an easily-reproducible bug in Linux 2.6.20. I have
-> already applied the "Fix various bugs with aligned reads in RAID5"
-> patch, and that had no effect. It appears to be related to the resync
-> process, and makes the system lock up, hard.
-
-I'm guessing that the problem is at a lower level than raid.
-What IDE/SATA controllers do you have?  Google to see if anyone else
-has had problems with them in 2.6.20.
+Neil Brown wrote:
+> On Thursday February 15, bugfood-ml@fatooh.org wrote:
+>> I think I have found an easily-reproducible bug in Linux 2.6.20. I have
+>> already applied the "Fix various bugs with aligned reads in RAID5"
+>> patch, and that had no effect. It appears to be related to the resync
+>> process, and makes the system lock up, hard.
 > 
-> During the lock up, nothing is printed to the console, and the magic
-> SysRQ key has no effect; I have to poke the reset button.
+> I'm guessing that the problem is at a lower level than raid.
+> What IDE/SATA controllers do you have?  Google to see if anyone else
+> has had problems with them in 2.6.20.
+>> During the lock up, nothing is printed to the console, and the magic
+>> SysRQ key has no effect; I have to poke the reset button.
+> 
+> Sound's like interrupts are disabled, but x86_64 always enables the
+> NMI watchdog which should trigger if interrupts are off for too long. 
+> 
+> Do you have CONFIG_DETECT_SOFTLOCKUP=y in your .config (it is in the
+> kernel debugging options menu I think).  If not, setting that would be
+> worth a try.
+> 
+> A raid5 resync across 5 sata drives on a couple of different
+> silicon-image controllers doesn't lock up for me.
 
-Sound's like interrupts are disabled, but x86_64 always enables the
-NMI watchdog which should trigger if interrupts are off for too long. 
+Wow, thanks for the quick response. I have to go to bed now, but I'll
+try to get you that information tomorrow.
 
-Do you have CONFIG_DETECT_SOFTLOCKUP=y in your .config (it is in the
-kernel debugging options menu I think).  If not, setting that would be
-worth a try.
-
-A raid5 resync across 5 sata drives on a couple of different
-silicon-image controllers doesn't lock up for me.
-
-NeilBrown
-
+Thanks,
+Corey
