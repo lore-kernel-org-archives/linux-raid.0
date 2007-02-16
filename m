@@ -1,29 +1,127 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: Changing chunk size
-Date: Fri, 16 Feb 2007 10:24:43 +1100
-Message-ID: <17876.60347.983953.748979@notabene.brown>
-References: <45D4955C.60008@tmr.com>
+Subject: Re: RAID 10 resync leading to attempt to access beyond end of device
+Date: Fri, 16 Feb 2007 13:25:51 +1100
+Message-ID: <17877.5679.419453.554504@notabene.brown>
+References: <e1e9d81a0702141408k4f42887by4d4c4c9aa9d536c0@mail.gmail.com>
+	<17875.40267.951634.476979@notabene.brown>
+	<e1e9d81a0702141606r7dea6288qea942cee2d978ee2@mail.gmail.com>
+	<17875.57273.543122.581106@notabene.brown>
+	<e1e9d81a0702142051v152c4c8dme2b20e1c53e1f4b2@mail.gmail.com>
+	<e1e9d81a0702151002t2b5b7e43v84ceedb7b6eed2b5@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Bill Davidsen on Thursday February 15
+In-Reply-To: message from John Stilson on Thursday February 15
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: John Stilson <john9601@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thursday February 15, davidsen@tmr.com wrote:
-> I have determined that a large array was created with an overly-large 
-> chunk size. Best way to resize?
+On Thursday February 15, john9601@gmail.com wrote:
+> Ok tried the patch and got a kernel BUG this time (BUG_ON(k == conf->copies)?)
 
-Dump and restore.
+Thanks.... obviously I missed some subtlety.   I think I have it right
+now.
+I've tested this against a setup which I think is sufficiently
+identical to yours this time (now that I know what the important
+parameters are: device size), but if you could test it too, that would
+be great.
 
-in-place reshapes (such as raid5 + 1 disk => raid6 or
-change-chunk-size) are on my list of 'that might be interesting to
-implement', but there are plenty of more interesting things.  And it
-would be very slow.  It would need to copy some number of stripes to a
-backup somewhere, then copy them back in the new layout, so every
-block in the array would be written twice.
+This patch is in place of the previous patch.
 
+Thanks,
 NeilBrown
+
+
+Signed-off-by: Neil Brown <neilb@suse.de>
+
+### Diffstat output
+ ./drivers/md/raid10.c |   39 +++++++++++++++++++++------------------
+ 1 file changed, 21 insertions(+), 18 deletions(-)
+
+diff .prev/drivers/md/raid10.c ./drivers/md/raid10.c
+--- .prev/drivers/md/raid10.c	2007-02-15 13:57:34.000000000 +1100
++++ ./drivers/md/raid10.c	2007-02-16 13:23:55.000000000 +1100
+@@ -420,7 +420,7 @@ static sector_t raid10_find_virt(conf_t 
+ 		if (dev < 0)
+ 			dev += conf->raid_disks;
+ 	} else {
+-		while (sector > conf->stride) {
++		while (sector >= conf->stride) {
+ 			sector -= conf->stride;
+ 			if (dev < conf->near_copies)
+ 				dev += conf->raid_disks - conf->near_copies;
+@@ -1747,6 +1747,8 @@ static sector_t sync_request(mddev_t *md
+ 						for (k=0; k<conf->copies; k++)
+ 							if (r10_bio->devs[k].devnum == i)
+ 								break;
++
++						BUG_ON(k == conf->copies);
+ 						bio = r10_bio->devs[1].bio;
+ 						bio->bi_next = biolist;
+ 						biolist = bio;
+@@ -1967,19 +1969,30 @@ static int run(mddev_t *mddev)
+ 	if (!conf->tmppage)
+ 		goto out_free_conf;
+ 
++	conf->mddev = mddev;
++	conf->raid_disks = mddev->raid_disks;
+ 	conf->near_copies = nc;
+ 	conf->far_copies = fc;
+ 	conf->copies = nc*fc;
+ 	conf->far_offset = fo;
+ 	conf->chunk_mask = (sector_t)(mddev->chunk_size>>9)-1;
+ 	conf->chunk_shift = ffz(~mddev->chunk_size) - 9;
++	size = mddev->size >> (conf->chunk_shift-1);
++	sector_div(size, fc);
++	size = size * conf->raid_disks;
++	sector_div(size, nc);
++	/* 'size' is now the number of chunks in the array */
++	/* calculate "used chunks per device" in 'stride' */
++	stride = size * conf->copies;
++	sector_div(stride, conf->raid_disks);
++	mddev->size = stride  << (conf->chunk_shift-1);
++
+ 	if (fo)
+-		conf->stride = 1 << conf->chunk_shift;
+-	else {
+-		stride = mddev->size >> (conf->chunk_shift-1);
++		stride = 1;
++	else
+ 		sector_div(stride, fc);
+-		conf->stride = stride << conf->chunk_shift;
+-	}
++	conf->stride = stride << conf->chunk_shift;
++
+ 	conf->r10bio_pool = mempool_create(NR_RAID10_BIOS, r10bio_pool_alloc,
+ 						r10bio_pool_free, conf);
+ 	if (!conf->r10bio_pool) {
+@@ -2009,8 +2022,6 @@ static int run(mddev_t *mddev)
+ 
+ 		disk->head_position = 0;
+ 	}
+-	conf->raid_disks = mddev->raid_disks;
+-	conf->mddev = mddev;
+ 	spin_lock_init(&conf->device_lock);
+ 	INIT_LIST_HEAD(&conf->retry_list);
+ 
+@@ -2052,16 +2063,8 @@ static int run(mddev_t *mddev)
+ 	/*
+ 	 * Ok, everything is just fine now
+ 	 */
+-	if (conf->far_offset) {
+-		size = mddev->size >> (conf->chunk_shift-1);
+-		size *= conf->raid_disks;
+-		size <<= conf->chunk_shift;
+-		sector_div(size, conf->far_copies);
+-	} else
+-		size = conf->stride * conf->raid_disks;
+-	sector_div(size, conf->near_copies);
+-	mddev->array_size = size/2;
+-	mddev->resync_max_sectors = size;
++	mddev->array_size = size << (conf->chunk_shift-1);
++	mddev->resync_max_sectors = size << conf->chunk_shift;
+ 
+ 	mddev->queue->issue_flush_fn = raid10_issue_flush;
+ 	mddev->queue->backing_dev_info.congested_fn = raid10_congested;
