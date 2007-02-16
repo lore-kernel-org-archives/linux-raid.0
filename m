@@ -1,69 +1,42 @@
-From: Corey Hickey <bugfood-ml@fatooh.org>
-Subject: Re: 2.6.20: reproducible hard lockup with RAID-5 resync
-Date: Fri, 16 Feb 2007 13:23:33 -0800
-Message-ID: <45D620D5.3060805@fatooh.org>
-References: <45D55366.4010904@fatooh.org> <17877.25722.404051.470040@notabene.brown>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: Changing chunk size
+Date: Fri, 16 Feb 2007 18:09:34 -0500
+Message-ID: <45D639AE.10509@tmr.com>
+References: <45D4955C.60008@tmr.com> <17876.60347.983953.748979@notabene.brown> <45D5E05E.4000706@tmr.com> <45D5FCC7.7000503@maine.edu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17877.25722.404051.470040@notabene.brown>
+In-Reply-To: <45D5FCC7.7000503@maine.edu>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Steve Cousins <steve.cousins@maine.edu>
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Neil Brown wrote:
-> On Thursday February 15, bugfood-ml@fatooh.org wrote:
->> I think I have found an easily-reproducible bug in Linux 2.6.20. I have
->> already applied the "Fix various bugs with aligned reads in RAID5"
->> patch, and that had no effect. It appears to be related to the resync
->> process, and makes the system lock up, hard.
-> 
-> I'm guessing that the problem is at a lower level than raid.
-> What IDE/SATA controllers do you have?  Google to see if anyone else
-> has had problems with them in 2.6.20.
+Steve Cousins wrote:
+>
+>
+> Bill Davidsen wrote:
+>>
+>> I'm sure "slow" is a relative term, compared to backing up TBs of 
+>> data and trying to restore them. Not to mention the lack of 
+>> inexpensive TB size backup media. That's totally unavailable at the 
+>> moment, I'll live with what I have, thanks.
+>
+> You don't backup your RAID arrays?  Yikes! For certain data this would 
+> be fine (data that you can recreate easily) but it sounds like this 
+> isn't the case for you otherwise you'd just wipe the array and 
+> recreate the data. There are other modes of failure than just the 
+> drives themselves (file system corruption for instance) so it is wise 
+> to do backups, even on "redundant" systems. 
 
-I have an nForce3 motherboard. lspci calls my IDE:
-nVidia Corporation CK8S Parallel ATA Controller (v2.5) (rev a2)
-...and my SATA:
-nVidia Corporation CK8S Serial ATA Controller (v2.5) (rev a2)
+My personal and business system are backed up. On "projects" those who 
+write the budget set the policy and I just make sure I have a risk 
+assessment with their acceptance in writing. University is not like real 
+life in many cases.
 
-I'm using libata for my SATA drives and the old IDE driver for my IDE 
-drive. For reference, I have uploaded my kernel configuration and the 
-output of lspci:
-http://fatooh.org/files/tmp/config-2.6.20
-http://fatooh.org/files/tmp/lspci-v
+-- 
+bill davidsen <davidsen@tmr.com>
+  CTO TMR Associates, Inc
+  Doing interesting things with small computers since 1979
 
-Anyway, I googled a bit, and I also looked through the recent threads in 
-the linux-kernel archives, but I haven't found anything. I don't follow 
-kernel development closely, though, so it's quite possible I missed 
-something.
-
-When I get home (late) tonight I'll try running dd and badblocks on the 
-corresponding drives and partitions.
-
->> During the lock up, nothing is printed to the console, and the magic
->> SysRQ key has no effect; I have to poke the reset button.
-> 
-> Sound's like interrupts are disabled, but x86_64 always enables the
-> NMI watchdog which should trigger if interrupts are off for too long. 
-
-How long is "too long"? I waited a few minutes, at least, on the first 
-few tries.
-
-> Do you have CONFIG_DETECT_SOFTLOCKUP=y in your .config (it is in the
-> kernel debugging options menu I think).  If not, setting that would be
-> worth a try.
-
-I do indeed have CONFIG_DETECT_SOFTLOCKUP enabled. The Kconfig 
-description says it should detect lockups > 10 seconds, I've waited 
-longer than that many times.
-
-> A raid5 resync across 5 sata drives on a couple of different
-> silicon-image controllers doesn't lock up for me.
-
-Heck. ;)  Would it by any chance make a difference that I'm running 
-RAID-5 across a mixture of drives and partitions?
-
-Thanks again,
-Corey
