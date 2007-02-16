@@ -1,60 +1,40 @@
-From: Vignesh Babu BM <vignesh.babu@wipro.com>
-Subject: [KJ] [PATCH] is_power_of_2 in md
-Date: Fri, 16 Feb 2007 17:35:16 +0530
-Message-ID: <1171627516.6127.2.camel@wriver-t81fb058.linuxcoe>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: Changing chunk size
+Date: Fri, 16 Feb 2007 11:48:30 -0500
+Message-ID: <45D5E05E.4000706@tmr.com>
+References: <45D4955C.60008@tmr.com> <17876.60347.983953.748979@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <kernel-janitors-bounces@lists.osdl.org>
-List-Unsubscribe: <https://lists.osdl.org/mailman/listinfo/kernel-janitors>,
-	<mailto:kernel-janitors-request@lists.osdl.org?subject=unsubscribe>
-List-Archive: <http://lists.osdl.org/pipermail/kernel-janitors>
-List-Post: <mailto:kernel-janitors@lists.osdl.org>
-List-Help: <mailto:kernel-janitors-request@lists.osdl.org?subject=help>
-List-Subscribe: <https://lists.osdl.org/mailman/listinfo/kernel-janitors>,
-	<mailto:kernel-janitors-request@lists.osdl.org?subject=subscribe>
-Sender: kernel-janitors-bounces@lists.osdl.org
-Errors-To: kernel-janitors-bounces@lists.osdl.org
-To: Kernel Janitors List <kernel-janitors@lists.osdl.org>
-Cc: neilb@suse.de, linux-raid@vger.kernel.org, mingo@redhat.com
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <17876.60347.983953.748979@notabene.brown>
+Sender: linux-raid-owner@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+Neil Brown wrote:
+> On Thursday February 15, davidsen@tmr.com wrote:
+>   
+>> I have determined that a large array was created with an overly-large 
+>> chunk size. Best way to resize?
+>>     
+>
+> Dump and restore.
+>
+> in-place reshapes (such as raid5 + 1 disk => raid6 or
+> change-chunk-size) are on my list of 'that might be interesting to
+> implement', but there are plenty of more interesting things.  And it
+> would be very slow.  It would need to copy some number of stripes to a
+> backup somewhere, then copy them back in the new layout, so every
+> block in the array would be written twice.
+I'm sure "slow" is a relative term, compared to backing up TBs of data 
+and trying to restore them. Not to mention the lack of inexpensive TB 
+size backup media. That's totally unavailable at the moment, I'll live 
+with what I have, thanks.
 
-Replacing (n & (n-1)) in the context of power of 2 checks
-with is_power_of_2
+-- 
+bill davidsen <davidsen@tmr.com>
+  CTO TMR Associates, Inc
+  Doing interesting things with small computers since 1979
 
-
-diff --git a/drivers/md/dm-snap.c b/drivers/md/dm-snap.c
-index 0821a2b..f2d4b23 100644
---- a/drivers/md/dm-snap.c
-+++ b/drivers/md/dm-snap.c
-@@ -17,6 +17,7 @@
- #include <linux/module.h>
- #include <linux/slab.h>
- #include <linux/vmalloc.h>
-+#include <linux/log2.h>
- =
-
- #include "dm-snap.h"
- #include "dm-bio-list.h"
-@@ -414,7 +415,7 @@ static int set_chunk_size(struct dm_snapshot *s, const =
-char *chunk_size_arg,
- 	chunk_size =3D round_up(chunk_size, PAGE_SIZE >> 9);
- =
-
- 	/* Check chunk_size is a power of 2 */
--	if (chunk_size & (chunk_size - 1)) {
-+	if (!is_power_of_2(chunk_size)) {
- 		*error =3D "Chunk size is not a power of 2";
- 		return -EINVAL;
- 	}
-
--- =
-
-Regards,  =
-
-Vignesh Babu BM  =
-
-_____________________________________________________________  =
-
-"Why is it that every time I'm with you, makes me believe in magic?"
