@@ -1,157 +1,89 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: [danno@internet2.edu: minor cosmetic bug in md]
-Date: Fri, 16 Feb 2007 15:24:41 +1100
-Message-ID: <17877.12809.923487.393013@notabene.brown>
-References: <20070215184508.GC11881@internet2.edu>
+From: Corey Hickey <bugfood-ml@fatooh.org>
+Subject: 2.6.20: reproducible hard lockup with RAID-5 resync
+Date: Thu, 15 Feb 2007 22:47:02 -0800
+Message-ID: <45D55366.4010904@fatooh.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Dan Pritts on Thursday February 15
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Pritts <danno@internet2.edu>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thursday February 15, danno@internet2.edu wrote:
-> 
-> Hi,
-> 
-> I wanted a linear device that included two partitions on the same disk
-> (I have my reasons).
-> 
-> I created it, it worked, yada yada.
-> 
-> But I got this error in my "dmesg" output:  
-> 
->   md0: WARNING: hda5 appears to be on the same physical disk as hda7. True
->        protection against single-disk failure might be compromised.
-> 
-> Seems silly to give this warning for a linear.   Or, presumably, for a raid0.
-> 
-> thanks for all your good work!
+I think I have found an easily-reproducible bug in Linux 2.6.20. I have
+already applied the "Fix various bugs with aligned reads in RAID5"
+patch, and that had no effect. It appears to be related to the resync
+process, and makes the system lock up, hard.
 
-Fair comment.  See below.
+The steps to reproduce are:
+1. Be running Linux 2.6.20 and do whatever is necessary to prepare for a
+crash (close open files, sync, unmount filesystems, or whatever).
+Alternatively, just boot with 'init=/bin/bash'.
+2. Run 'mdadm -S /dev/md2', where /dev/md2 is a RAID-5.
+3. Run 'mdadm -A /dev/md2 -U resync'.
+4. Wait about 1 second. The system will lock up.
 
-NeilBrown
+During the lock up, nothing is printed to the console, and the magic
+SysRQ key has no effect; I have to poke the reset button. Normally, I
+wouldn't rule out a hardware problem, but I have reasonable faith in my
+computer. Neither memtest86+ nor cpuburn nor normal operation have
+flushed out any instability.
 
+Upon reboot, 2.6.20 will lock up almost immediately when it tries to
+resync the array. This appears to occur regardless of whether the resync
+is just starting; if I run 2.6.19 for a while until the resync is, say,
+50% done and then reboot to 2.6.20, the lockup still happens.
 
+I have provided what I hope is enough information below.
 
-Move warning about creating a raid array on partitions of the one device.
+--------------------------------------------------------------------
+System information:
+Athlon64 3400+
+64-bit Linux 2.6.20 compiled with GCC 4.1.2
+64-bit Debian Sid
+RAID-5 of 5 devices:
+   /dev/hda   (IDE hard drive)
+   /dev/sda6  (partition on SATA hard drive)
+   /dev/sdb   (SATA hard drive)
+   /dev/sdc6  (partition on SATA hard drive)
+   /dev/sdd   (SATA hard drive)
 
-md tries to warn the user if they e.g. create a raid1 using two partitions
-of the same device, as this does not provide true redundancy.
+--------------------------------------------------------------------
+bugfood:~# mdadm -D /dev/md2
+/dev/md2:
+        Version : 00.90.03
+  Creation Time : Mon May 29 22:13:47 2006
+     Raid Level : raid5
+     Array Size : 781433344 (745.23 GiB 800.19 GB)
+    Device Size : 195358336 (186.31 GiB 200.05 GB)
+   Raid Devices : 5
+  Total Devices : 5
+Preferred Minor : 2
+    Persistence : Superblock is persistent
 
-However it also warns if a raid0 is created like this, and there is
-nothing wrong with that.
+    Update Time : Thu Feb 15 22:07:26 2007
+          State : active, resyncing
+ Active Devices : 5
+Working Devices : 5
+ Failed Devices : 0
+  Spare Devices : 0
 
-At the place where the warning is currently printer, we don't necessarily
-know what level the array will be, so move the warning from the point
-where the device is added to the point where the array is started.
+         Layout : left-symmetric
+     Chunk Size : 64K
 
+ Rebuild Status : 26% complete
 
-Signed-off-by: Neil Brown <neilb@suse.de>
+           UUID : d016a205:bd3106ef:b19cb15b:b6d70494
+         Events : 0.3971003
 
-### Diffstat output
- ./drivers/md/md.c |   63 +++++++++++++++++++++++++++++++-----------------------
- 1 file changed, 37 insertions(+), 26 deletions(-)
+    Number   Major   Minor   RaidDevice State
+       0       8        6        0      active sync   /dev/sda6
+       1       8       38        1      active sync   /dev/sdc6
+       2       3        0        2      active sync   /dev/hda
+       3       8       16        3      active sync   /dev/sdb
+       4       8       48        4      active sync   /dev/sdd
 
-diff .prev/drivers/md/md.c ./drivers/md/md.c
---- .prev/drivers/md/md.c	2007-02-16 15:21:36.000000000 +1100
-+++ ./drivers/md/md.c	2007-02-16 14:28:03.000000000 +1100
-@@ -1297,27 +1297,17 @@ static struct super_type super_types[] =
- 		.sync_super	= super_1_sync,
- 	},
- };
--	
--static mdk_rdev_t * match_dev_unit(mddev_t *mddev, mdk_rdev_t *dev)
--{
--	struct list_head *tmp;
--	mdk_rdev_t *rdev;
--
--	ITERATE_RDEV(mddev,rdev,tmp)
--		if (rdev->bdev->bd_contains == dev->bdev->bd_contains)
--			return rdev;
--
--	return NULL;
--}
- 
- static int match_mddev_units(mddev_t *mddev1, mddev_t *mddev2)
- {
--	struct list_head *tmp;
--	mdk_rdev_t *rdev;
-+	struct list_head *tmp, *tmp2;
-+	mdk_rdev_t *rdev, *rdev2;
- 
- 	ITERATE_RDEV(mddev1,rdev,tmp)
--		if (match_dev_unit(mddev2, rdev))
--			return 1;
-+		ITERATE_RDEV(mddev2, rdev2, tmp2)
-+			if (rdev->bdev->bd_contains ==
-+			    rdev2->bdev->bd_contains)
-+				return 1;
- 
- 	return 0;
- }
-@@ -1326,8 +1316,7 @@ static LIST_HEAD(pending_raid_disks);
- 
- static int bind_rdev_to_array(mdk_rdev_t * rdev, mddev_t * mddev)
- {
--	mdk_rdev_t *same_pdev;
--	char b[BDEVNAME_SIZE], b2[BDEVNAME_SIZE];
-+	char b[BDEVNAME_SIZE];
- 	struct kobject *ko;
- 	char *s;
- 
-@@ -1343,14 +1332,6 @@ static int bind_rdev_to_array(mdk_rdev_t
- 		else
- 			mddev->size = rdev->size;
- 	}
--	same_pdev = match_dev_unit(mddev, rdev);
--	if (same_pdev)
--		printk(KERN_WARNING
--			"%s: WARNING: %s appears to be on the same physical"
--	 		" disk as %s. True\n     protection against single-disk"
--			" failure might be compromised.\n",
--			mdname(mddev), bdevname(rdev->bdev,b),
--			bdevname(same_pdev->bdev,b2));
- 
- 	/* Verify rdev->desc_nr is unique.
- 	 * If it is -1, assign a free number, else
-@@ -3109,6 +3090,36 @@ static int do_md_run(mddev_t * mddev)
- 		return -EINVAL;
- 	}
- 
-+	if (pers->sync_request) {
-+		/* Warn if this is a potentially silly
-+		 * configuration.
-+		 */
-+		char b[BDEVNAME_SIZE], b2[BDEVNAME_SIZE];
-+		mdk_rdev_t *rdev2;
-+		struct list_head *tmp2;
-+		int warned = 0;
-+		ITERATE_RDEV(mddev, rdev, tmp) {
-+			ITERATE_RDEV(mddev, rdev2, tmp2) {
-+				if (rdev < rdev2 &&
-+				    rdev->bdev->bd_contains ==
-+				    rdev2->bdev->bd_contains) {
-+					printk(KERN_WARNING
-+					       "%s: WARNING: %s appears to be"
-+					       " on the same physical disk as"
-+					       " %s.\n",
-+					       mdname(mddev),
-+					       bdevname(rdev->bdev,b),
-+					       bdevname(rdev2->bdev,b2));
-+					warned = 1;
-+				}
-+			}
-+		}
-+		if (warned)
-+			printk(KERN_WARNING
-+			       "True protection against single-disk"
-+			       " failure might be compromised.\n");
-+	}
-+
- 	mddev->recovery = 0;
- 	mddev->resync_max_sectors = mddev->size << 1; /* may be over-ridden by personality */
- 	mddev->barriers_work = 1;
+--------------------------------------------------------------------
+
+Thank you,
+Corey
