@@ -1,35 +1,47 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: mdadm --grow failed
-Date: Sat, 17 Feb 2007 16:30:21 -0500 (EST)
-Message-ID: <Pine.LNX.4.64.0702171630140.612@p34.internal.lan>
-References: <20070217030514.M74974@liquid-nexus.net> <45D7490E.6080309@tmr.com>
- <Pine.LNX.4.64.0702171415500.29573@p34.internal.lan> <17879.28386.46081.159672@notabene.brown>
+From: berk walker <berk@panix.com>
+Subject: Re: Changing chunk size
+Date: Sat, 17 Feb 2007 20:51:40 -0500
+Message-ID: <45D7B12C.4010109@panix.com>
+References: <45D4955C.60008@tmr.com> <17876.60347.983953.748979@notabene.brown> <45D5E05E.4000706@tmr.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17879.28386.46081.159672@notabene.brown>
+In-Reply-To: <45D5E05E.4000706@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Bill Davidsen <davidsen@tmr.com>, Marc Marais <marcm@liquid-nexus.net>, linux-raid@vger.kernel.org
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: Neil Brown <neilb@suse.de>, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
 
 
-On Sun, 18 Feb 2007, Neil Brown wrote:
-
-> On Saturday February 17, jpiszcz@lucidpixels.com wrote:
+Bill Davidsen wrote:
+> Neil Brown wrote:
+>> On Thursday February 15, davidsen@tmr.com wrote:
+>>  
+>>> I have determined that a large array was created with an 
+>>> overly-large chunk size. Best way to resize?
+>>>     
 >>
->> Is growing an array with > 1 disk at a time permissible?  I've grown a
->> raid 5 from 1.8tb to 3.3tb but always 1 disk at a time.
->
-> Sure is.  >0 is the current requirement.
-> You can grow a 2 drive raid5 directly to a 10drive if you like.
->
-> NeilBrown
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+>> Dump and restore.
+>>
+>> in-place reshapes (such as raid5 + 1 disk => raid6 or
+>> change-chunk-size) are on my list of 'that might be interesting to
+>> implement', but there are plenty of more interesting things.  And it
+>> would be very slow.  It would need to copy some number of stripes to a
+>> backup somewhere, then copy them back in the new layout, so every
+>> block in the array would be written twice.
+> I'm sure "slow" is a relative term, compared to backing up TBs of data 
+> and trying to restore them. Not to mention the lack of inexpensive TB 
+> size backup media. That's totally unavailable at the moment, I'll live 
+> with what I have, thanks.
 
-Wow! Thanks for the info, was not aware of this.
+
+> If you were to be a gambler, Bill - Get 2 disks big enough to store 
+> your data, create a RAID5 mising one, and copy over the data.  Re do 
+> the original array, and copy back.
+Yeah, $0.02 doesn't buy much anymore.  Besides, you'll be needing bigger 
+disks for the next machine you build,eh?
+
+b-
+
