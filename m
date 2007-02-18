@@ -1,47 +1,63 @@
-From: berk walker <berk@panix.com>
-Subject: Re: Changing chunk size
-Date: Sat, 17 Feb 2007 20:51:40 -0500
-Message-ID: <45D7B12C.4010109@panix.com>
-References: <45D4955C.60008@tmr.com> <17876.60347.983953.748979@notabene.brown> <45D5E05E.4000706@tmr.com>
+From: "Marc Marais" <marcm@liquid-nexus.net>
+Subject: Re: mdadm --grow failed
+Date: Sun, 18 Feb 2007 17:20:47 +0800
+Message-ID: <20070218091504.M97223@liquid-nexus.net>
+References: <20070217030514.M74974@liquid-nexus.net> <17878.49009.771973.884472@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset=iso-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <45D5E05E.4000706@tmr.com>
+In-Reply-To: <17878.49009.771973.884472@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: Neil Brown <neilb@suse.de>, Linux RAID <linux-raid@vger.kernel.org>
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Ok, I understand the risks which is why I did a full backup before doing 
+this. I have subsequently recreated the array and restored my data from 
+backup.
+
+Just for information, the e2fsck -n on the drive hung (unresponsive with no 
+I/O) so I assume the filesystem was hosed. I suspect resyncing the array 
+after the grow failed was a bad idea. 
+
+I'm not sure how the grow operation is performed but to me it seems that 
+their is no fault tolerance during the operation so any failure will cause a 
+corrupt array. My 2c would be that if any drive fails during a grow 
+operation that the operation is aborted in such a way as to allow a restart 
+later (if possible) - as in my case a retry would've probably worked. 
+
+Anyway, if you need more info to help improve growing arrays let me know.
+
+As a side note, either my hardware (Promise TX4000) card is acting up or 
+there are still some unresolved issues with libata in general and/or 
+sata_promise itself. 
+
+Regards,
+Marc
+
+On Sat, 17 Feb 2007 19:40:17 +1100, Neil Brown wrote
+> On Saturday February 17, marcm@liquid-nexus.net wrote:
+> > 
+> > Is my array destroyed? Seeing as the sda disk wasn't completely synced 
+I'm 
+> > wonder how it was using to resync the array when sdc went offline. I've 
+got 
+> > a bad feeling about this :|
+> 
+> I can understand your bad feeling...
+> What happened there shouldn't happen, but obviously it did.  There is
+> evidence that all is not lost but obviously I cannot be sure yet.
+> 
+> Can you "fsck -n" the array?  does the data still seem to be intact?
+> 
+> Can you report exactly what version of Linux kernel, and of mdadm you
+> are using, and give the output of "mdadm -E" on each drive.
+> 
+> I'll try to work out what happened and how to go forward, but am
+> unlikely to get back to you for 24-48 hours (I have a busy weekend:-).
+> 
+> NeilBrown
 
 
-Bill Davidsen wrote:
-> Neil Brown wrote:
->> On Thursday February 15, davidsen@tmr.com wrote:
->>  
->>> I have determined that a large array was created with an 
->>> overly-large chunk size. Best way to resize?
->>>     
->>
->> Dump and restore.
->>
->> in-place reshapes (such as raid5 + 1 disk => raid6 or
->> change-chunk-size) are on my list of 'that might be interesting to
->> implement', but there are plenty of more interesting things.  And it
->> would be very slow.  It would need to copy some number of stripes to a
->> backup somewhere, then copy them back in the new layout, so every
->> block in the array would be written twice.
-> I'm sure "slow" is a relative term, compared to backing up TBs of data 
-> and trying to restore them. Not to mention the lack of inexpensive TB 
-> size backup media. That's totally unavailable at the moment, I'll live 
-> with what I have, thanks.
-
-
-> If you were to be a gambler, Bill - Get 2 disks big enough to store 
-> your data, create a RAID5 mising one, and copy over the data.  Re do 
-> the original array, and copy back.
-Yeah, $0.02 doesn't buy much anymore.  Besides, you'll be needing bigger 
-disks for the next machine you build,eh?
-
-b-
-
+--
