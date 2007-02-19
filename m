@@ -1,28 +1,47 @@
-From: William <enonl@bottermaio.com>
-Subject: Informational Superhighway,'' computer networking seems to be moving toward the status of TV sets and microwave ovens.
-Date: Mon, 19 Feb 2007 17:41:00 +0300
-Message-ID: <696397482.07305352573142@thebat.net>
+From: Eyal Lebedinsky <eyal@eyal.emu.id.au>
+Subject: Re: PATA/SATA Disk Reliability paper
+Date: Tue, 20 Feb 2007 08:42:32 +1100
+Message-ID: <45DA19C8.8000002@eyal.emu.id.au>
+References: <45D89FF5.3020303@sauce.co.nz> <200702191426.16567.a1426z@gawab.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset=us-ascii
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <200702191426.16567.a1426z@gawab.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Al Boldi <a1426z@gawab.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-annual meeting in huge variety of  activities prepared by two annual meeting in 
+Disks are sealed, and a dessicant is present in each to keep humidity down.
+If you ever open a disk drive (e.g. for the magnets, or the mirror quality
+platters, or for fun) then you can see the dessicant sachet.
 
-Nothing could be better than 
- &#9679; CARBON RACE CORP (CBRJ.PK) &#9679; SHARE!!!
+cheers
 
-New CBRJ.PK STOCK this is EXCELLENT OPPORTUNITY  to BE a rich man!!!
-Forecasts for YOU is only positive just buy this CBRJ.PK SHARE!!!
-Trust us cause we ASSURE YOU the real profit!!!
+Al Boldi wrote:
+> Richard Scobie wrote:
+> 
+>>Thought this paper may be of interest. A study done by Google on over
+>>100,000 drives they have/had in service.
+>>
+>>http://labs.google.com/papers/disk_failures.pdf
+> 
+> 
+> Interesting link.  They seem to point out that smart not necessarily warns of  
+> pending failure.  This is probably worse than not having smart at all, as it 
+> gives you the illusion of safety.
+> 
+> If there is one thing to watch out for, it is "dew".
+> 
+> I remember video machines sensing for dew, so do any drives sense for "dew"?
+> 
+> 
+> Thanks!
+> 
+> --
+> Al
 
-CBRJ.PK based on advanced composite materials using proprietary "Carbon Fiber" technology
-For more information about CBRJ.PK check brokers web-site!!!
-
-Hurry up U have to grab this CBRJ.PK STOCK on TuesDAY: 02.20.07
-
-has a A lack of spontaneous about creating "super children" contribute toGervasio said her 
+-- 
+Eyal Lebedinsky (eyal@eyal.emu.id.au) <http://samba.org/eyal/>
+	attach .zip as .dat
