@@ -1,349 +1,139 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: mdadm --grow failed
-Date: Mon, 19 Feb 2007 08:25:18 -0500 (EST)
-Message-ID: <Pine.LNX.4.64.0702190824490.27885@p34.internal.lan>
-References: <20070217030514.M74974@liquid-nexus.net> <17878.49009.771973.884472@notabene.brown>
- <20070218091504.M97223@liquid-nexus.net> <17880.7869.963793.706096@notabene.brown>
- <20070218105242.M29958@liquid-nexus.net> <20070218115626.M47438@liquid-nexus.net>
- <Pine.LNX.4.64.0702180712340.9820@p34.internal.lan> <20070219053902.M44109@liquid-nexus.net>
+From: "John Stilson" <john9601@gmail.com>
+Subject: Re: RAID 10 resync leading to attempt to access beyond end of device
+Date: Mon, 19 Feb 2007 12:16:39 -0500
+Message-ID: <e1e9d81a0702190916o3c1511d4q376a25fc4caa6cab@mail.gmail.com>
+References: <e1e9d81a0702141408k4f42887by4d4c4c9aa9d536c0@mail.gmail.com>
+	 <17875.40267.951634.476979@notabene.brown>
+	 <e1e9d81a0702141606r7dea6288qea942cee2d978ee2@mail.gmail.com>
+	 <17875.57273.543122.581106@notabene.brown>
+	 <e1e9d81a0702142051v152c4c8dme2b20e1c53e1f4b2@mail.gmail.com>
+	 <e1e9d81a0702151002t2b5b7e43v84ceedb7b6eed2b5@mail.gmail.com>
+	 <17877.5679.419453.554504@notabene.brown>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20070219053902.M44109@liquid-nexus.net>
+In-Reply-To: <17877.5679.419453.554504@notabene.brown>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Marc Marais <marcm@liquid-nexus.net>
+To: Neil Brown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hey Neil,
 
+I tested this new patch and it seems to work! I'm going to do some
+more vigorous testing, and I'll let you know if any more issues bubble
+out. Thanks!
 
-On Mon, 19 Feb 2007, Marc Marais wrote:
+-John
 
-> On Sun, 18 Feb 2007 07:13:28 -0500 (EST), Justin Piszcz wrote
->> On Sun, 18 Feb 2007, Marc Marais wrote:
->>
->>> On Sun, 18 Feb 2007 20:39:09 +1100, Neil Brown wrote
->>>> On Sunday February 18, marcm@liquid-nexus.net wrote:
->>>>> Ok, I understand the risks which is why I did a full backup before doing
->>>>> this. I have subsequently recreated the array and restored my data from
->>>>> backup.
->>>>
->>>> Could you still please tell me exactly what kernel/mdadm version you
->>>> were using?
->>>>
->>>> Thanks,
->>>> NeilBrown
->>>
->>> 2.6.20 with the patch you supplied in response to the "md6_raid5 crash
->>> email" I posted in linux-raid a few days ago. Just as background, I replaced
->>> the failing drive and at the same time bought an additional drive in order
->>> to increase the array size.
->>>
->>> mdadm -V = v2.6 - 21 December 2006. Compiled under Debian (stable).
->>>
->>> Also, I've just noticed another drive failure with the new array with a
->>> similar error to what happened during the grow operation (although on a
->>> different drive) - I wonder if I should post this to linux-ide?
->>>
->>> Feb 18 00:58:10 xerces kernel: ata4: command timeout
->>> Feb 18 00:58:10 xerces kernel: ata4: no sense translation for status: 0x40
->>> Feb 18 00:58:10 xerces kernel: ata4: translated ATA stat/err 0x40/00 to SCSI
->>> SK/ASC/ASCQ 0xb/00/00
->>> Feb 18 00:58:10 xerces kernel: ata4: status=0x40 { DriveReady }
->>> Feb 18 00:58:10 xerces kernel: sd 4:0:0:0: SCSI error: return code =
->>> 0x08000002
->>> Feb 18 00:58:10 xerces kernel: sdd: Current [descriptor]: sense key: Aborted
->>> Command
->>> Feb 18 00:58:10 xerces kernel:     Additional sense: No additional sense
->>> information
->>> Feb 18 00:58:10 xerces kernel: Descriptor sense data with sense descriptors
->>> (in hex):
->>> Feb 18 00:58:10 xerces kernel:         72 0b 00 00 00 00 00 0c 00 0a 80 00
->>> 00 00 00 00
->>> Feb 18 00:58:10 xerces kernel:         00 00 00 00
->>> Feb 18 00:58:10 xerces kernel: end_request: I/O error, dev sdd, sector
->>> 35666775
->>> Feb 18 00:58:10 xerces kernel: raid5: Disk failure on sdd1, disabling
->>> device. Operation continuing on 3 devices
->>>
->>> Regards,
->>> Marc
->>>
->>> -
->>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>>
->>
->> Just out of curiosity:
->>
->> Feb 18 00:58:10 xerces kernel: end_request: I/O error, dev sdd,
->>  sector 35666775
->>
->> Can you run:
->>
->> smartctl -d ata -t short /dev/sdd
->> wait 5 min
->> smartctl -d ata -t long /dev/sdd
->> wait 2-3 hr
->> smartctl -d ata -a /dev/sdd
->>
->> And then e-mail that output to the list?
->>
->> Justin.
+On 2/15/07, Neil Brown <neilb@suse.de> wrote:
+> On Thursday February 15, john9601@gmail.com wrote:
+> > Ok tried the patch and got a kernel BUG this time (BUG_ON(k == conf->copies)?)
 >
-> Ok here we go:
+> Thanks.... obviously I missed some subtlety.   I think I have it right
+> now.
+> I've tested this against a setup which I think is sufficiently
+> identical to yours this time (now that I know what the important
+> parameters are: device size), but if you could test it too, that would
+> be great.
 >
-> /dev/sdd:
+> This patch is in place of the previous patch.
 >
-> smartctl version 5.32 Copyright (C) 2002-4 Bruce Allen Home page is
-> http://smartmontools.sourceforge.net/
+> Thanks,
+> NeilBrown
 >
-> === START OF INFORMATION SECTION ===
-> Device Model:     WDC WD1600JB-00EVA0
-> Serial Number:    WD-WMAEK2751794
-> Firmware Version: 15.05R15
-> Device is:        In smartctl database [for details use: -P show]
-> ATA Version is:   6
-> ATA Standard is:  Exact ATA specification draft version not indicated
-> Local Time is:    Mon Feb 19 14:38:16 2007 GMT-9
-> SMART support is: Available - device has SMART capability.
-> SMART support is: Enabled
 >
-> === START OF READ SMART DATA SECTION === SMART overall-health self-assessment
-> test result: PASSED
+> Signed-off-by: Neil Brown <neilb@suse.de>
 >
-> General SMART Values:
-> Offline data collection status:  (0x84)	Offline data collection activity
-> 					was suspended by an interrupting command from host.
-> 					Auto Offline Data Collection: Enabled.
-> Self-test execution status:      (   0)	The previous self-test routine completed
-> 					without error or no self-test has ever
-> 					been run.
-> Total time to complete Offline
-> data collection: 		 (5073) seconds.
-> Offline data collection
-> capabilities: 			 (0x79) SMART execute Offline immediate.
-> 					No Auto Offline data collection support.
-> 					Suspend Offline collection upon new
-> 					command.
-> 					Offline surface scan supported.
-> 					Self-test supported.
-> 					Conveyance Self-test supported.
-> 					Selective Self-test supported.
-> SMART capabilities:            (0x0003)	Saves SMART data before entering
-> 					power-saving mode.
-> 					Supports SMART auto save timer.
-> Error logging capability:        (0x01)	Error logging supported.
-> 					No General Purpose Logging support.
-> Short self-test routine
-> recommended polling time: 	 (   2) minutes.
-> Extended self-test routine
-> recommended polling time: 	 (  67) minutes.
-> Conveyance self-test routine
-> recommended polling time: 	 (   5) minutes.
+> ### Diffstat output
+>  ./drivers/md/raid10.c |   39 +++++++++++++++++++++------------------
+>  1 file changed, 21 insertions(+), 18 deletions(-)
 >
-> SMART Attributes Data Structure revision number: 16 Vendor Specific SMART
-> Attributes with Thresholds:
-> ID# ATTRIBUTE_NAME          FLAG     VALUE WORST THRESH TYPE      UPDATED
-> WHEN_FAILED RAW_VALUE
->  1 Raw_Read_Error_Rate     0x000b   200   200   051    Pre-fail  Always
-> -       0
->  3 Spin_Up_Time            0x0007   148   144   021    Pre-fail  Always
-> -       3141
->  4 Start_Stop_Count        0x0032   100   100   040    Old_age   Always
-> -       91
->  5 Reallocated_Sector_Ct   0x0033   200   200   140    Pre-fail  Always
-> -       0
->  7 Seek_Error_Rate         0x000b   200   200   051    Pre-fail  Always
-> -       0
->  9 Power_On_Hours          0x0032   094   094   000    Old_age   Always
-> -       5070
-> 10 Spin_Retry_Count        0x0013   100   253   051    Pre-fail  Always
-> -       0
-> 11 Calibration_Retry_Count 0x0013   100   253   051    Pre-fail  Always
-> -       0
-> 12 Power_Cycle_Count       0x0032   100   100   000    Old_age   Always
-> -       90
-> 194 Temperature_Celsius     0x0022   116   253   000    Old_age   Always
-> -       34
-> 196 Reallocated_Event_Count 0x0032   200   200   000    Old_age   Always
-> -       0
-> 197 Current_Pending_Sector  0x0012   200   200   000    Old_age   Always
-> -       0
-> 198 Offline_Uncorrectable   0x0012   200   200   000    Old_age   Always
-> -       0
-> 199 UDMA_CRC_Error_Count    0x000a   200   253   000    Old_age   Always
-> -       0
-> 200 Multi_Zone_Error_Rate   0x0009   200   155   051    Pre-fail  Offline
-> -       0
+> diff .prev/drivers/md/raid10.c ./drivers/md/raid10.c
+> --- .prev/drivers/md/raid10.c   2007-02-15 13:57:34.000000000 +1100
+> +++ ./drivers/md/raid10.c       2007-02-16 13:23:55.000000000 +1100
+> @@ -420,7 +420,7 @@ static sector_t raid10_find_virt(conf_t
+>                 if (dev < 0)
+>                         dev += conf->raid_disks;
+>         } else {
+> -               while (sector > conf->stride) {
+> +               while (sector >= conf->stride) {
+>                         sector -= conf->stride;
+>                         if (dev < conf->near_copies)
+>                                 dev += conf->raid_disks - conf->near_copies;
+> @@ -1747,6 +1747,8 @@ static sector_t sync_request(mddev_t *md
+>                                                 for (k=0; k<conf->copies; k++)
+>                                                         if (r10_bio->devs[k].devnum == i)
+>                                                                 break;
+> +
+> +                                               BUG_ON(k == conf->copies);
+>                                                 bio = r10_bio->devs[1].bio;
+>                                                 bio->bi_next = biolist;
+>                                                 biolist = bio;
+> @@ -1967,19 +1969,30 @@ static int run(mddev_t *mddev)
+>         if (!conf->tmppage)
+>                 goto out_free_conf;
 >
-> SMART Error Log Version: 1
-> No Errors Logged
+> +       conf->mddev = mddev;
+> +       conf->raid_disks = mddev->raid_disks;
+>         conf->near_copies = nc;
+>         conf->far_copies = fc;
+>         conf->copies = nc*fc;
+>         conf->far_offset = fo;
+>         conf->chunk_mask = (sector_t)(mddev->chunk_size>>9)-1;
+>         conf->chunk_shift = ffz(~mddev->chunk_size) - 9;
+> +       size = mddev->size >> (conf->chunk_shift-1);
+> +       sector_div(size, fc);
+> +       size = size * conf->raid_disks;
+> +       sector_div(size, nc);
+> +       /* 'size' is now the number of chunks in the array */
+> +       /* calculate "used chunks per device" in 'stride' */
+> +       stride = size * conf->copies;
+> +       sector_div(stride, conf->raid_disks);
+> +       mddev->size = stride  << (conf->chunk_shift-1);
+> +
+>         if (fo)
+> -               conf->stride = 1 << conf->chunk_shift;
+> -       else {
+> -               stride = mddev->size >> (conf->chunk_shift-1);
+> +               stride = 1;
+> +       else
+>                 sector_div(stride, fc);
+> -               conf->stride = stride << conf->chunk_shift;
+> -       }
+> +       conf->stride = stride << conf->chunk_shift;
+> +
+>         conf->r10bio_pool = mempool_create(NR_RAID10_BIOS, r10bio_pool_alloc,
+>                                                 r10bio_pool_free, conf);
+>         if (!conf->r10bio_pool) {
+> @@ -2009,8 +2022,6 @@ static int run(mddev_t *mddev)
 >
-> SMART Self-test log structure revision number 1
-> Num  Test_Description    Status                  Remaining  LifeTime(hours)
-> LBA_of_first_error
-> # 1  Short offline       Completed without error       00%       691         -
-> # 2  Extended offline    Completed without error       00%       686         -
-> # 3  Short offline       Completed without error       00%       685         -
-> # 4  Short offline       Completed without error       00%       620         -
-> # 5  Extended offline    Completed without error       00%       598         -
-> # 6  Short offline       Completed without error       00%       597         -
-> # 7  Short offline       Completed without error       00%       573         -
-> # 8  Short offline       Completed without error       00%       549         -
-> # 9  Short offline       Completed without error       00%       525         -
-> #10  Short offline       Completed without error       00%       501         -
-> #11  Short offline       Completed without error       00%       477         -
-> #12  Short offline       Completed without error       00%       453         -
-> #13  Short offline       Completed without error       00%       382         -
-> #14  Short offline       Completed without error       00%       358         -
-> #15  Short offline       Completed without error       00%       334         -
-> #16  Short offline       Completed without error       00%       310         -
-> #17  Short offline       Completed without error       00%       286         -
-> #18  Extended offline    Completed without error       00%       264         -
-> #19  Short offline       Completed without error       00%       263         -
-> #20  Short offline       Completed without error       00%       239         -
-> #21  Short offline       Completed without error       00%       215         -
+>                 disk->head_position = 0;
+>         }
+> -       conf->raid_disks = mddev->raid_disks;
+> -       conf->mddev = mddev;
+>         spin_lock_init(&conf->device_lock);
+>         INIT_LIST_HEAD(&conf->retry_list);
 >
-> SMART Selective self-test log data structure revision number 1  SPAN  MIN_LBA
-> MAX_LBA  CURRENT_TEST_STATUS
->    1        0        0  Not_testing
->    2        0        0  Not_testing
->    3        0        0  Not_testing
->    4        0        0  Not_testing
->    5        0        0  Not_testing
-> Selective self-test flags (0x0):
->  After scanning selected spans, do NOT read-scan remainder of disk.
-> If Selective self-test is pending on power-up, resume after 0 minute delay.
+> @@ -2052,16 +2063,8 @@ static int run(mddev_t *mddev)
+>         /*
+>          * Ok, everything is just fine now
+>          */
+> -       if (conf->far_offset) {
+> -               size = mddev->size >> (conf->chunk_shift-1);
+> -               size *= conf->raid_disks;
+> -               size <<= conf->chunk_shift;
+> -               sector_div(size, conf->far_copies);
+> -       } else
+> -               size = conf->stride * conf->raid_disks;
+> -       sector_div(size, conf->near_copies);
+> -       mddev->array_size = size/2;
+> -       mddev->resync_max_sectors = size;
+> +       mddev->array_size = size << (conf->chunk_shift-1);
+> +       mddev->resync_max_sectors = size << conf->chunk_shift;
 >
-> --
-> /dev/sdc:
+>         mddev->queue->issue_flush_fn = raid10_issue_flush;
+>         mddev->queue->backing_dev_info.congested_fn = raid10_congested;
 >
-> smartctl version 5.32 Copyright (C) 2002-4 Bruce Allen Home page is
-> http://smartmontools.sourceforge.net/
->
-> === START OF INFORMATION SECTION ===
-> Device Model:     WDC WD1600JB-00REA0
-> Serial Number:    WD-WCANM4681863
-> Firmware Version: 20.00K20
-> Device is:        In smartctl database [for details use: -P show]
-> ATA Version is:   7
-> ATA Standard is:  Exact ATA specification draft version not indicated
-> Local Time is:    Mon Feb 19 14:38:11 2007 GMT-9
-> SMART support is: Available - device has SMART capability.
-> SMART support is: Enabled
->
-> === START OF READ SMART DATA SECTION === SMART overall-health self-assessment
-> test result: PASSED
->
-> General SMART Values:
-> Offline data collection status:  (0x85)	Offline data collection activity
-> 					was aborted by an interrupting command from host.
-> 					Auto Offline Data Collection: Enabled.
-> Self-test execution status:      (   0)	The previous self-test routine completed
-> 					without error or no self-test has ever
-> 					been run.
-> Total time to complete Offline
-> data collection: 		 (4980) seconds.
-> Offline data collection
-> capabilities: 			 (0x7b) SMART execute Offline immediate.
-> 					Auto Offline data collection on/off support.
-> 					Suspend Offline collection upon new
-> 					command.
-> 					Offline surface scan supported.
-> 					Self-test supported.
-> 					Conveyance Self-test supported.
-> 					Selective Self-test supported.
-> SMART capabilities:            (0x0003)	Saves SMART data before entering
-> 					power-saving mode.
-> 					Supports SMART auto save timer.
-> Error logging capability:        (0x01)	Error logging supported.
-> 					General Purpose Logging supported.
-> Short self-test routine
-> recommended polling time: 	 (   2) minutes.
-> Extended self-test routine
-> recommended polling time: 	 (  60) minutes.
-> Conveyance self-test routine
-> recommended polling time: 	 (   6) minutes.
->
-> SMART Attributes Data Structure revision number: 16 Vendor Specific SMART
-> Attributes with Thresholds:
-> ID# ATTRIBUTE_NAME          FLAG     VALUE WORST THRESH TYPE      UPDATED
-> WHEN_FAILED RAW_VALUE
->  1 Raw_Read_Error_Rate     0x000f   200   200   051    Pre-fail  Always
-> -       0
->  3 Spin_Up_Time            0x0003   184   184   021    Pre-fail  Always
-> -       3775
->  4 Start_Stop_Count        0x0032   100   100   000    Old_age   Always
-> -       19
->  5 Reallocated_Sector_Ct   0x0033   200   200   140    Pre-fail  Always
-> -       0
->  7 Seek_Error_Rate         0x000f   200   200   051    Pre-fail  Always
-> -       0
->  9 Power_On_Hours          0x0032   094   094   000    Old_age   Always
-> -       4834
-> 10 Spin_Retry_Count        0x0013   100   253   051    Pre-fail  Always
-> -       0
-> 11 Calibration_Retry_Count 0x0012   100   253   051    Old_age   Always
-> -       0
-> 12 Power_Cycle_Count       0x0032   100   100   000    Old_age   Always
-> -       18
-> 194 Temperature_Celsius     0x0022   114   095   000    Old_age   Always
-> -       33
-> 196 Reallocated_Event_Count 0x0032   200   200   000    Old_age   Always
-> -       0
-> 197 Current_Pending_Sector  0x0012   200   200   000    Old_age   Always
-> -       0
-> 198 Offline_Uncorrectable   0x0010   200   200   000    Old_age   Offline
-> -       0
-> 199 UDMA_CRC_Error_Count    0x003e   200   200   000    Old_age   Always
-> -       0
-> 200 Multi_Zone_Error_Rate   0x0009   200   200   051    Pre-fail  Offline
-> -       0
->
-> SMART Error Log Version: 1
-> No Errors Logged
->
-> SMART Self-test log structure revision number 1
-> Num  Test_Description    Status                  Remaining  LifeTime(hours)
-> LBA_of_first_error
-> # 1  Short offline       Completed without error       00%      4823         -
-> # 2  Extended offline    Completed without error       00%      4819         -
-> # 3  Short offline       Completed without error       00%      4817         -
-> # 4  Short offline       Completed without error       00%      4799         -
-> # 5  Short offline       Completed without error       00%      4775         -
-> # 6  Short offline       Completed without error       00%      4751         -
-> # 7  Extended offline    Completed without error       00%      4728         -
-> # 8  Short offline       Completed without error       00%      4727         -
-> # 9  Short offline       Completed without error       00%      4703         -
-> #10  Short offline       Completed without error       00%      4679         -
-> #11  Short offline       Completed without error       00%      4655         -
-> #12  Short offline       Completed without error       00%      4631         -
-> #13  Short offline       Completed without error       00%      4607         -
-> #14  Short offline       Completed without error       00%      4583         -
-> #15  Short offline       Completed without error       00%      4511         -
-> #16  Short offline       Completed without error       00%      4487         -
-> #17  Short offline       Completed without error       00%      4463         -
-> #18  Short offline       Completed without error       00%      4439         -
-> #19  Short offline       Completed without error       00%      4415         -
-> #20  Extended offline    Completed without error       00%      4393         -
-> #21  Short offline       Completed without error       00%      4391         -
->
-> SMART Selective self-test log data structure revision number 1  SPAN  MIN_LBA
-> MAX_LBA  CURRENT_TEST_STATUS
->    1        0        0  Not_testing
->    2        0        0  Not_testing
->    3        0        0  Not_testing
->    4        0        0  Not_testing
->    5        0        0  Not_testing
-> Selective self-test flags (0x0):
->  After scanning selected spans, do NOT read-scan remainder of disk.
-> If Selective self-test is pending on power-up, resume after 0 minute delay.
->
-
-Strange, sounds like an interrupt problem to me then, what does cat 
-/proc/interrupts say?  What does dmesg say?  Any errors there?  Your disks 
-appear to be fine.
-
-Justin.
