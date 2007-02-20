@@ -1,40 +1,47 @@
-From: rabbit@rabbit.us (Peter Rabbitson)
-Subject: RAID10 Resync fails with specific chunk size and drive sizes (reproducible)
-Date: Tue, 20 Feb 2007 06:35:49 -0500
-Message-ID: <20070220113549.GB5584@rabbit.us>
+From: Al Boldi <a1426z@gawab.com>
+Subject: Re: PATA/SATA Disk Reliability paper
+Date: Tue, 20 Feb 2007 15:15:01 +0300
+Message-ID: <200702201515.01677.a1426z@gawab.com>
+References: <45D89FF5.3020303@sauce.co.nz> <200702191426.16567.a1426z@gawab.com> <45DA19C8.8000002@eyal.emu.id.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <45DA19C8.8000002@eyal.emu.id.au>
 Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Eyal Lebedinsky <eyal@eyal.emu.id.au>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+Eyal Lebedinsky wrote:
+> Disks are sealed, and a dessicant is present in each to keep humidity
+> down. If you ever open a disk drive (e.g. for the magnets, or the mirror
+> quality platters, or for fun) then you can see the dessicant sachet.
 
-I think I've hit a reproducible bug in the raid 10 driver, tried on two 
-different machines with kernels 2.6.20 and 2.6.18. This is a script to 
-simulate the problem:
+Actually, they aren't sealed 100%.  
 
-======================
-#!/bin/bash
+On wd's at least, there is a hole with a warning printed on its side:
 
-modprobe loop
+                      DO NOT COVER HOLE BELOW
+                      V       V      V      V
 
-for ID in 1 2 3 ; do
-    echo -n "Creating loopback device $ID... "
-    dd if=/dev/zero of=dsk${ID}.img bs=512 count=995967
-    losetup /dev/loop${ID} dsk${ID}.img
-    echo "done."
-done
+                                  o
 
-mdadm -C /dev/md2 -l 10 -n 3 -p o2 -c 2048 /dev/loop1 /dev/loop2 /dev/loop3
-echo "Raid device assembled, check /proc/mdstat's output when resync is finished"
-======================
 
-This is the output I get in /proc/mdstat after the resync settles:
+In contrast, older models from the last century, don't have that hole.
 
-======================
-md2 : active raid10 loop3[2] loop2[3](F) loop1[0]
-      746496 blocks 2048K chunks 2 offset-copies [3/2] [U_U]
-======================
+> Al Boldi wrote:
+> >
+> > If there is one thing to watch out for, it is "dew".
+> >
+> > I remember video machines sensing for dew, so do any drives sense for
+> > "dew"?
+
+
+Thanks!
+
+--
+Al
+
