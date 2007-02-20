@@ -1,509 +1,359 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [PATCH 002 of 6] md: RAID6: clean up CPUID and FPU enter/exit code
-Date: Tue, 20 Feb 2007 17:34:53 +1100
-Message-ID: <1070220063453.16145@suse.de>
+Subject: [PATCH 006 of 6] md: Add support for reshape of a raid6
+Date: Tue, 20 Feb 2007 17:35:16 +1100
+Message-ID: <1070220063516.16208@suse.de>
 References: <20070220172544.15678.patches@notabene>
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S964780AbXBTGgF@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
 To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, "H . Peter Anvin" <hpa@zytor.com>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-From: "H. Peter Anvin" <hpa@anvin.org>
+i.e. one or more drives can be added and the array will re-stripe
+while on-line.
+Most of the interesting work was already done for raid5.
+This just extends it to raid6.
 
-- Use kernel_fpu_begin() and kernel_fpu_end()
-- Use boot_cpu_has() for feature testing even in userspace
+mdadm newer than 2.6 is needed for complete safety, however any
+version of mdadm which support raid5 reshape will do a good enough job
+in almost all cases (an 'echo repair > /sys/block/mdX/md/sync_action'
+is recommended after a reshape that was aborted and had to be
+restarted with an such a version of mdadm).
 
-Signed-off-by: H. Peter Anvin <hpa@zytor.com>
 Signed-off-by: Neil Brown <neilb@suse.de>
 
 ### Diffstat output
- ./drivers/md/raid6mmx.c  |   16 ---
- ./drivers/md/raid6sse1.c |   17 ---
- ./drivers/md/raid6sse2.c |   22 +---
- ./drivers/md/raid6x86.h  |  218 +++--------------------------------------------
- 4 files changed, 32 insertions(+), 241 deletions(-)
+ ./drivers/md/raid5.c |  157 ++++++++++++++++++++++++++++++++++++++++-----------
+ 1 file changed, 124 insertions(+), 33 deletions(-)
 
-diff .prev/drivers/md/raid6mmx.c ./drivers/md/raid6mmx.c
---- .prev/drivers/md/raid6mmx.c	2007-02-20 17:11:51.000000000 +1100
-+++ ./drivers/md/raid6mmx.c	2007-02-20 17:11:51.000000000 +1100
-@@ -30,14 +30,8 @@ const struct raid6_mmx_constants {
- 
- static int raid6_have_mmx(void)
+diff .prev/drivers/md/raid5.c ./drivers/md/raid5.c
+--- .prev/drivers/md/raid5.c	2007-02-20 17:14:35.000000000 +1100
++++ ./drivers/md/raid5.c	2007-02-20 17:14:48.000000000 +1100
+@@ -1050,7 +1050,7 @@ static void compute_parity5(struct strip
+ static void compute_parity6(struct stripe_head *sh, int method)
  {
--#ifdef __KERNEL__
- 	/* Not really "boot_cpu" but "all_cpus" */
- 	return boot_cpu_has(X86_FEATURE_MMX);
--#else
--	/* User space test code */
--	u32 features = cpuid_features();
--	return ( (features & (1<<23)) == (1<<23) );
--#endif
- }
- 
- /*
-@@ -48,13 +42,12 @@ static void raid6_mmx1_gen_syndrome(int 
- 	u8 **dptr = (u8 **)ptrs;
- 	u8 *p, *q;
- 	int d, z, z0;
--	raid6_mmx_save_t sa;
- 
- 	z0 = disks - 3;		/* Highest data disk */
- 	p = dptr[z0+1];		/* XOR parity */
- 	q = dptr[z0+2];		/* RS syndrome */
- 
--	raid6_before_mmx(&sa);
-+	kernel_fpu_begin();
- 
- 	asm volatile("movq %0,%%mm0" : : "m" (raid6_mmx_constants.x1d));
- 	asm volatile("pxor %mm5,%mm5");	/* Zero temp */
-@@ -78,7 +71,7 @@ static void raid6_mmx1_gen_syndrome(int 
- 		asm volatile("pxor %mm4,%mm4");
- 	}
- 
--	raid6_after_mmx(&sa);
-+	kernel_fpu_end();
- }
- 
- const struct raid6_calls raid6_mmxx1 = {
-@@ -96,13 +89,12 @@ static void raid6_mmx2_gen_syndrome(int 
- 	u8 **dptr = (u8 **)ptrs;
- 	u8 *p, *q;
- 	int d, z, z0;
--	raid6_mmx_save_t sa;
- 
- 	z0 = disks - 3;		/* Highest data disk */
- 	p = dptr[z0+1];		/* XOR parity */
- 	q = dptr[z0+2];		/* RS syndrome */
- 
--	raid6_before_mmx(&sa);
-+	kernel_fpu_begin();
- 
- 	asm volatile("movq %0,%%mm0" : : "m" (raid6_mmx_constants.x1d));
- 	asm volatile("pxor %mm5,%mm5");	/* Zero temp */
-@@ -137,7 +129,7 @@ static void raid6_mmx2_gen_syndrome(int 
- 		asm volatile("movq %%mm6,%0" : "=m" (q[d+8]));
- 	}
- 
--	raid6_after_mmx(&sa);
-+	kernel_fpu_end();
- }
- 
- const struct raid6_calls raid6_mmxx2 = {
-
-diff .prev/drivers/md/raid6sse1.c ./drivers/md/raid6sse1.c
---- .prev/drivers/md/raid6sse1.c	2007-02-20 17:11:51.000000000 +1100
-+++ ./drivers/md/raid6sse1.c	2007-02-20 17:11:51.000000000 +1100
-@@ -33,16 +33,10 @@ extern const struct raid6_mmx_constants 
- 
- static int raid6_have_sse1_or_mmxext(void)
+ 	raid6_conf_t *conf = sh->raid_conf;
+-	int i, pd_idx = sh->pd_idx, qd_idx, d0_idx, disks = conf->raid_disks, count;
++	int i, pd_idx = sh->pd_idx, qd_idx, d0_idx, disks = sh->disks, count;
+ 	struct bio *chosen;
+ 	/**** FIX THIS: This could be very bad if disks is close to 256 ****/
+ 	void *ptrs[disks];
+@@ -1131,8 +1131,7 @@ static void compute_parity6(struct strip
+ /* Compute one missing block */
+ static void compute_block_1(struct stripe_head *sh, int dd_idx, int nozero)
  {
--#ifdef __KERNEL__
- 	/* Not really boot_cpu but "all_cpus" */
- 	return boot_cpu_has(X86_FEATURE_MMX) &&
- 		(boot_cpu_has(X86_FEATURE_XMM) ||
- 		 boot_cpu_has(X86_FEATURE_MMXEXT));
--#else
--	/* User space test code - this incorrectly breaks on some Athlons */
--	u32 features = cpuid_features();
--	return ( (features & (5<<23)) == (5<<23) );
--#endif
- }
- 
- /*
-@@ -53,14 +47,12 @@ static void raid6_sse11_gen_syndrome(int
- 	u8 **dptr = (u8 **)ptrs;
- 	u8 *p, *q;
- 	int d, z, z0;
--	raid6_mmx_save_t sa;
- 
- 	z0 = disks - 3;		/* Highest data disk */
- 	p = dptr[z0+1];		/* XOR parity */
- 	q = dptr[z0+2];		/* RS syndrome */
- 
--	/* This is really MMX code, not SSE */
--	raid6_before_mmx(&sa);
-+	kernel_fpu_begin();
- 
- 	asm volatile("movq %0,%%mm0" : : "m" (raid6_mmx_constants.x1d));
- 	asm volatile("pxor %mm5,%mm5");	/* Zero temp */
-@@ -94,8 +86,8 @@ static void raid6_sse11_gen_syndrome(int
- 		asm volatile("movntq %%mm4,%0" : "=m" (q[d]));
- 	}
- 
--	raid6_after_mmx(&sa);
- 	asm volatile("sfence" : : : "memory");
-+	kernel_fpu_end();
- }
- 
- const struct raid6_calls raid6_sse1x1 = {
-@@ -113,13 +105,12 @@ static void raid6_sse12_gen_syndrome(int
- 	u8 **dptr = (u8 **)ptrs;
- 	u8 *p, *q;
- 	int d, z, z0;
--	raid6_mmx_save_t sa;
- 
- 	z0 = disks - 3;		/* Highest data disk */
- 	p = dptr[z0+1];		/* XOR parity */
- 	q = dptr[z0+2];		/* RS syndrome */
- 
--	raid6_before_mmx(&sa);
-+	kernel_fpu_begin();
- 
- 	asm volatile("movq %0,%%mm0" : : "m" (raid6_mmx_constants.x1d));
- 	asm volatile("pxor %mm5,%mm5");	/* Zero temp */
-@@ -157,8 +148,8 @@ static void raid6_sse12_gen_syndrome(int
- 		asm volatile("movntq %%mm6,%0" : "=m" (q[d+8]));
- 	}
- 
--	raid6_after_mmx(&sa);
- 	asm volatile("sfence" : :: "memory");
-+	kernel_fpu_end();
- }
- 
- const struct raid6_calls raid6_sse1x2 = {
-
-diff .prev/drivers/md/raid6sse2.c ./drivers/md/raid6sse2.c
---- .prev/drivers/md/raid6sse2.c	2007-02-20 17:11:51.000000000 +1100
-+++ ./drivers/md/raid6sse2.c	2007-02-20 17:11:51.000000000 +1100
-@@ -30,17 +30,11 @@ static const struct raid6_sse_constants 
- 
- static int raid6_have_sse2(void)
+-	raid6_conf_t *conf = sh->raid_conf;
+-	int i, count, disks = conf->raid_disks;
++	int i, count, disks = sh->disks;
+ 	void *ptr[MAX_XOR_BLOCKS], *p;
+ 	int pd_idx = sh->pd_idx;
+ 	int qd_idx = raid6_next_disk(pd_idx, disks);
+@@ -1170,8 +1169,7 @@ static void compute_block_1(struct strip
+ /* Compute two missing blocks */
+ static void compute_block_2(struct stripe_head *sh, int dd_idx1, int dd_idx2)
  {
--#ifdef __KERNEL__
- 	/* Not really boot_cpu but "all_cpus" */
- 	return boot_cpu_has(X86_FEATURE_MMX) &&
- 		boot_cpu_has(X86_FEATURE_FXSR) &&
- 		boot_cpu_has(X86_FEATURE_XMM) &&
- 		boot_cpu_has(X86_FEATURE_XMM2);
--#else
--	/* User space test code */
--	u32 features = cpuid_features();
--	return ( (features & (15<<23)) == (15<<23) );
--#endif
- }
+-	raid6_conf_t *conf = sh->raid_conf;
+-	int i, count, disks = conf->raid_disks;
++	int i, count, disks = sh->disks;
+ 	int pd_idx = sh->pd_idx;
+ 	int qd_idx = raid6_next_disk(pd_idx, disks);
+ 	int d0_idx = raid6_next_disk(qd_idx, disks);
+@@ -1887,11 +1885,11 @@ static void handle_stripe5(struct stripe
+ static void handle_stripe6(struct stripe_head *sh, struct page *tmp_page)
+ {
+ 	raid6_conf_t *conf = sh->raid_conf;
+-	int disks = conf->raid_disks;
++	int disks = sh->disks;
+ 	struct bio *return_bi= NULL;
+ 	struct bio *bi;
+ 	int i;
+-	int syncing;
++	int syncing, expanding, expanded;
+ 	int locked=0, uptodate=0, to_read=0, to_write=0, failed=0, written=0;
+ 	int non_overwrite = 0;
+ 	int failed_num[2] = {0, 0};
+@@ -1909,6 +1907,8 @@ static void handle_stripe6(struct stripe
+ 	clear_bit(STRIPE_DELAYED, &sh->state);
  
- /*
-@@ -51,13 +45,12 @@ static void raid6_sse21_gen_syndrome(int
- 	u8 **dptr = (u8 **)ptrs;
- 	u8 *p, *q;
- 	int d, z, z0;
--	raid6_sse_save_t sa;
+ 	syncing = test_bit(STRIPE_SYNCING, &sh->state);
++	expanding = test_bit(STRIPE_EXPAND_SOURCE, &sh->state);
++	expanded = test_bit(STRIPE_EXPAND_READY, &sh->state);
+ 	/* Now to look around and see what can be done */
  
- 	z0 = disks - 3;		/* Highest data disk */
- 	p = dptr[z0+1];		/* XOR parity */
- 	q = dptr[z0+2];		/* RS syndrome */
- 
--	raid6_before_sse2(&sa);
-+	kernel_fpu_begin();
- 
- 	asm volatile("movdqa %0,%%xmm0" : : "m" (raid6_sse_constants.x1d[0]));
- 	asm volatile("pxor %xmm5,%xmm5");	/* Zero temp */
-@@ -93,8 +86,8 @@ static void raid6_sse21_gen_syndrome(int
- 		asm volatile("pxor %xmm4,%xmm4");
- 	}
- 
--	raid6_after_sse2(&sa);
- 	asm volatile("sfence" : : : "memory");
-+	kernel_fpu_end();
- }
- 
- const struct raid6_calls raid6_sse2x1 = {
-@@ -112,13 +105,12 @@ static void raid6_sse22_gen_syndrome(int
- 	u8 **dptr = (u8 **)ptrs;
- 	u8 *p, *q;
- 	int d, z, z0;
--	raid6_sse_save_t sa;
- 
- 	z0 = disks - 3;		/* Highest data disk */
- 	p = dptr[z0+1];		/* XOR parity */
- 	q = dptr[z0+2];		/* RS syndrome */
- 
--	raid6_before_sse2(&sa);
-+	kernel_fpu_begin();
- 
- 	asm volatile("movdqa %0,%%xmm0" : : "m" (raid6_sse_constants.x1d[0]));
- 	asm volatile("pxor %xmm5,%xmm5"); /* Zero temp */
-@@ -156,8 +148,8 @@ static void raid6_sse22_gen_syndrome(int
- 		asm volatile("movntdq %%xmm6,%0" : "=m" (q[d+16]));
- 	}
- 
--	raid6_after_sse2(&sa);
- 	asm volatile("sfence" : : : "memory");
-+	kernel_fpu_end();
- }
- 
- const struct raid6_calls raid6_sse2x2 = {
-@@ -179,13 +171,12 @@ static void raid6_sse24_gen_syndrome(int
- 	u8 **dptr = (u8 **)ptrs;
- 	u8 *p, *q;
- 	int d, z, z0;
--	raid6_sse16_save_t sa;
- 
- 	z0 = disks - 3;		/* Highest data disk */
- 	p = dptr[z0+1];		/* XOR parity */
- 	q = dptr[z0+2];		/* RS syndrome */
- 
--	raid6_before_sse16(&sa);
-+	kernel_fpu_begin();
- 
- 	asm volatile("movdqa %0,%%xmm0" :: "m" (raid6_sse_constants.x1d[0]));
- 	asm volatile("pxor %xmm2,%xmm2");	/* P[0] */
-@@ -256,8 +247,9 @@ static void raid6_sse24_gen_syndrome(int
- 		asm volatile("movntdq %%xmm14,%0" : "=m" (q[d+48]));
- 		asm volatile("pxor %xmm14,%xmm14");
- 	}
+ 	rcu_read_lock();
+@@ -2114,13 +2114,15 @@ static void handle_stripe6(struct stripe
+ 	 * parity, or to satisfy requests
+ 	 * or to load a block that is being partially written.
+ 	 */
+-	if (to_read || non_overwrite || (to_write && failed) || (syncing && (uptodate < disks))) {
++	if (to_read || non_overwrite || (to_write && failed) ||
++	    (syncing && (uptodate < disks)) || expanding) {
+ 		for (i=disks; i--;) {
+ 			dev = &sh->dev[i];
+ 			if (!test_bit(R5_LOCKED, &dev->flags) && !test_bit(R5_UPTODATE, &dev->flags) &&
+ 			    (dev->toread ||
+ 			     (dev->towrite && !test_bit(R5_OVERWRITE, &dev->flags)) ||
+ 			     syncing ||
++			     expanding ||
+ 			     (failed >= 1 && (sh->dev[failed_num[0]].toread || to_write)) ||
+ 			     (failed >= 2 && (sh->dev[failed_num[1]].toread || to_write))
+ 				    )
+@@ -2355,6 +2357,79 @@ static void handle_stripe6(struct stripe
+ 				}
+ 			}
+ 		}
 +
- 	asm volatile("sfence" : : : "memory");
--	raid6_after_sse16(&sa);
-+	kernel_fpu_end();
- }
++	if (expanded && test_bit(STRIPE_EXPANDING, &sh->state)) {
++		/* Need to write out all blocks after computing P&Q */
++		sh->disks = conf->raid_disks;
++		sh->pd_idx = stripe_to_pdidx(sh->sector, conf,
++					     conf->raid_disks);
++		compute_parity6(sh, RECONSTRUCT_WRITE);
++		for (i = conf->raid_disks ; i-- ;  ) {
++			set_bit(R5_LOCKED, &sh->dev[i].flags);
++			locked++;
++			set_bit(R5_Wantwrite, &sh->dev[i].flags);
++		}
++		clear_bit(STRIPE_EXPANDING, &sh->state);
++	} else if (expanded) {
++		clear_bit(STRIPE_EXPAND_READY, &sh->state);
++		atomic_dec(&conf->reshape_stripes);
++		wake_up(&conf->wait_for_overlap);
++		md_done_sync(conf->mddev, STRIPE_SECTORS, 1);
++	}
++
++	if (expanding && locked == 0) {
++		/* We have read all the blocks in this stripe and now we need to
++		 * copy some of them into a target stripe for expand.
++		 */
++		clear_bit(STRIPE_EXPAND_SOURCE, &sh->state);
++		for (i = 0; i < sh->disks ; i++)
++			if (i != pd_idx && i != qd_idx) {
++				int dd_idx2, pd_idx2, j;
++				struct stripe_head *sh2;
++
++				sector_t bn = compute_blocknr(sh, i);
++				sector_t s = raid5_compute_sector(
++					bn, conf->raid_disks,
++					conf->raid_disks - conf->max_degraded,
++					&dd_idx2, &pd_idx2, conf);
++				sh2 = get_active_stripe(conf, s,
++							conf->raid_disks,
++						       pd_idx2, 1);
++				if (sh2 == NULL)
++					/* so for only the early blocks of
++					 * this stripe have been requests.
++					 * When later blocks get requests, we
++					 * will try again
++					 */
++					continue;
++				if (!test_bit(STRIPE_EXPANDING, &sh2->state) ||
++				    test_bit(R5_Expanded,
++					     &sh2->dev[dd_idx2].flags)) {
++					/* must have already done this block */
++					release_stripe(sh2);
++					continue;
++				}
++				memcpy(page_address(sh2->dev[dd_idx2].page),
++				       page_address(sh->dev[i].page),
++				       STRIPE_SIZE);
++				set_bit(R5_Expanded, &sh2->dev[dd_idx2].flags);
++				set_bit(R5_UPTODATE, &sh2->dev[dd_idx2].flags);
++				for (j = 0 ; j < conf->raid_disks ; j++)
++					if (j != sh2->pd_idx &&
++					    j != raid6_next_disk(sh2->pd_idx,
++							   sh2->disks) &&
++					    !test_bit(R5_Expanded,
++						      &sh2->dev[j].flags))
++						break;
++				if (j == conf->raid_disks) {
++					set_bit(STRIPE_EXPAND_READY,
++						&sh2->state);
++					set_bit(STRIPE_HANDLE, &sh2->state);
++				}
++				release_stripe(sh2);
++			}
++	}
++
+ 	spin_unlock(&sh->lock);
  
- const struct raid6_calls raid6_sse2x4 = {
-
-diff .prev/drivers/md/raid6x86.h ./drivers/md/raid6x86.h
---- .prev/drivers/md/raid6x86.h	2007-02-16 18:44:19.000000000 +1100
-+++ ./drivers/md/raid6x86.h	2007-02-20 17:11:51.000000000 +1100
-@@ -21,224 +21,40 @@
+ 	while ((bi=return_bi)) {
+@@ -2395,7 +2470,7 @@ static void handle_stripe6(struct stripe
+ 		rcu_read_unlock();
  
- #if defined(__i386__) || defined(__x86_64__)
+ 		if (rdev) {
+-			if (syncing)
++			if (syncing || expanding || expanded)
+ 				md_sync_acct(rdev->bdev, STRIPE_SECTORS);
  
--#ifdef __x86_64__
--
--typedef struct {
--	unsigned int fsave[27];
--	unsigned long cr0;
--} raid6_mmx_save_t __attribute__((aligned(16)));
--
--/* N.B.: For SSE we only save %xmm0-%xmm7 even for x86-64, since
--   the code doesn't know about the additional x86-64 registers */
--typedef struct {
--	unsigned int sarea[8*4+2];
--	unsigned long cr0;
--} raid6_sse_save_t __attribute__((aligned(16)));
--
--/* This is for x86-64-specific code which uses all 16 XMM registers */
--typedef struct {
--	unsigned int sarea[16*4+2];
--	unsigned long cr0;
--} raid6_sse16_save_t __attribute__((aligned(16)));
--
--/* On x86-64 the stack *SHOULD* be 16-byte aligned, but currently this
--   is buggy in the kernel and it's only 8-byte aligned in places, so
--   we need to do this anyway.  Sigh. */
--#define SAREA(x) ((unsigned int *)((((unsigned long)&(x)->sarea)+15) & ~15))
--
--#else /* __i386__ */
--
--typedef struct {
--	unsigned int fsave[27];
--	unsigned long cr0;
--} raid6_mmx_save_t;
--
--/* On i386, the stack is only 8-byte aligned, but SSE requires 16-byte
--   alignment.  The +3 is so we have the slack space to manually align
--   a properly-sized area correctly.  */
--typedef struct {
--	unsigned int sarea[8*4+3];
--	unsigned long cr0;
--} raid6_sse_save_t;
--
--/* Find the 16-byte aligned save area */
--#define SAREA(x) ((unsigned int *)((((unsigned long)&(x)->sarea)+15) & ~15))
--
--#endif
--
- #ifdef __KERNEL__ /* Real code */
+ 			bi->bi_bdev = rdev->bdev;
+@@ -2915,8 +2990,9 @@ static sector_t reshape_request(mddev_t 
+ 	struct stripe_head *sh;
+ 	int pd_idx;
+ 	sector_t first_sector, last_sector;
+-	int raid_disks;
+-	int data_disks;
++	int raid_disks = conf->previous_raid_disks;
++	int data_disks = raid_disks - conf->max_degraded;
++	int new_data_disks = conf->raid_disks - conf->max_degraded;
+ 	int i;
+ 	int dd_idx;
+ 	sector_t writepos, safepos, gap;
+@@ -2925,7 +3001,7 @@ static sector_t reshape_request(mddev_t 
+ 	    conf->expand_progress != 0) {
+ 		/* restarting in the middle, skip the initial sectors */
+ 		sector_nr = conf->expand_progress;
+-		sector_div(sector_nr, conf->raid_disks-1);
++		sector_div(sector_nr, new_data_disks);
+ 		*skipped = 1;
+ 		return sector_nr;
+ 	}
+@@ -2939,14 +3015,14 @@ static sector_t reshape_request(mddev_t 
+ 	 * to after where expand_lo old_maps to
+ 	 */
+ 	writepos = conf->expand_progress +
+-		conf->chunk_size/512*(conf->raid_disks-1);
+-	sector_div(writepos, conf->raid_disks-1);
++		conf->chunk_size/512*(new_data_disks);
++	sector_div(writepos, new_data_disks);
+ 	safepos = conf->expand_lo;
+-	sector_div(safepos, conf->previous_raid_disks-1);
++	sector_div(safepos, data_disks);
+ 	gap = conf->expand_progress - conf->expand_lo;
  
--/* Note: %cr0 is 32 bits on i386 and 64 bits on x86-64 */
--
--static inline unsigned long raid6_get_fpu(void)
--{
--	unsigned long cr0;
--
--	preempt_disable();
--	asm volatile("mov %%cr0,%0 ; clts" : "=r" (cr0));
--	return cr0;
--}
--
--static inline void raid6_put_fpu(unsigned long cr0)
--{
--	asm volatile("mov %0,%%cr0" : : "r" (cr0));
--	preempt_enable();
--}
-+#include <asm/i387.h>
+ 	if (writepos >= safepos ||
+-	    gap > (conf->raid_disks-1)*3000*2 /*3Meg*/) {
++	    gap > (new_data_disks)*3000*2 /*3Meg*/) {
+ 		/* Cannot proceed until we've updated the superblock... */
+ 		wait_event(conf->wait_for_overlap,
+ 			   atomic_read(&conf->reshape_stripes)==0);
+@@ -2976,6 +3052,9 @@ static sector_t reshape_request(mddev_t 
+ 			sector_t s;
+ 			if (j == sh->pd_idx)
+ 				continue;
++			if (conf->level == 6 &&
++			    j == raid6_next_disk(sh->pd_idx, sh->disks))
++				continue;
+ 			s = compute_blocknr(sh, j);
+ 			if (s < (mddev->array_size<<1)) {
+ 				skipped = 1;
+@@ -2999,21 +3078,20 @@ static sector_t reshape_request(mddev_t 
+ 	 * The source stripes are determined by mapping the first and last
+ 	 * block on the destination stripes.
+ 	 */
+-	raid_disks = conf->previous_raid_disks;
+-	data_disks = raid_disks - 1;
+ 	first_sector =
+-		raid5_compute_sector(sector_nr*(conf->raid_disks-1),
++		raid5_compute_sector(sector_nr*(new_data_disks),
+ 				     raid_disks, data_disks,
+ 				     &dd_idx, &pd_idx, conf);
+ 	last_sector =
+ 		raid5_compute_sector((sector_nr+conf->chunk_size/512)
+-				     *(conf->raid_disks-1) -1,
++				     *(new_data_disks) -1,
+ 				     raid_disks, data_disks,
+ 				     &dd_idx, &pd_idx, conf);
+ 	if (last_sector >= (mddev->size<<1))
+ 		last_sector = (mddev->size<<1)-1;
+ 	while (first_sector <= last_sector) {
+-		pd_idx = stripe_to_pdidx(first_sector, conf, conf->previous_raid_disks);
++		pd_idx = stripe_to_pdidx(first_sector, conf,
++					 conf->previous_raid_disks);
+ 		sh = get_active_stripe(conf, first_sector,
+ 				       conf->previous_raid_disks, pd_idx, 0);
+ 		set_bit(STRIPE_EXPAND_SOURCE, &sh->state);
+@@ -3348,35 +3426,44 @@ static int run(mddev_t *mddev)
+ 		 */
+ 		sector_t here_new, here_old;
+ 		int old_disks;
++		int max_degraded = (mddev->level == 5 ? 1 : 2);
  
- #else /* Dummy code for user space testing */
+ 		if (mddev->new_level != mddev->level ||
+ 		    mddev->new_layout != mddev->layout ||
+ 		    mddev->new_chunk != mddev->chunk_size) {
+-			printk(KERN_ERR "raid5: %s: unsupported reshape required - aborting.\n",
++			printk(KERN_ERR "raid5: %s: unsupported reshape "
++			       "required - aborting.\n",
+ 			       mdname(mddev));
+ 			return -EINVAL;
+ 		}
+ 		if (mddev->delta_disks <= 0) {
+-			printk(KERN_ERR "raid5: %s: unsupported reshape (reduce disks) required - aborting.\n",
++			printk(KERN_ERR "raid5: %s: unsupported reshape "
++			       "(reduce disks) required - aborting.\n",
+ 			       mdname(mddev));
+ 			return -EINVAL;
+ 		}
+ 		old_disks = mddev->raid_disks - mddev->delta_disks;
+ 		/* reshape_position must be on a new-stripe boundary, and one
+-		 * further up in new geometry must map after here in old geometry.
++		 * further up in new geometry must map after here in old
++		 * geometry.
+ 		 */
+ 		here_new = mddev->reshape_position;
+-		if (sector_div(here_new, (mddev->chunk_size>>9)*(mddev->raid_disks-1))) {
+-			printk(KERN_ERR "raid5: reshape_position not on a stripe boundary\n");
++		if (sector_div(here_new, (mddev->chunk_size>>9)*
++			       (mddev->raid_disks - max_degraded))) {
++			printk(KERN_ERR "raid5: reshape_position not "
++			       "on a stripe boundary\n");
+ 			return -EINVAL;
+ 		}
+ 		/* here_new is the stripe we will write to */
+ 		here_old = mddev->reshape_position;
+-		sector_div(here_old, (mddev->chunk_size>>9)*(old_disks-1));
+-		/* here_old is the first stripe that we might need to read from */
++		sector_div(here_old, (mddev->chunk_size>>9)*
++			   (old_disks-max_degraded));
++		/* here_old is the first stripe that we might need to read
++		 * from */
+ 		if (here_new >= here_old) {
+ 			/* Reading from the same stripe as writing to - bad */
+-			printk(KERN_ERR "raid5: reshape_position too early for auto-recovery - aborting.\n");
++			printk(KERN_ERR "raid5: reshape_position too early for "
++			       "auto-recovery - aborting.\n");
+ 			return -EINVAL;
+ 		}
+ 		printk(KERN_INFO "raid5: reshape will continue\n");
+@@ -3829,8 +3916,7 @@ static int raid5_start_reshape(mddev_t *
+ 	int added_devices = 0;
+ 	unsigned long flags;
  
--static inline unsigned long raid6_get_fpu(void)
--{
--	return 0xf00ba6;
--}
--
--static inline void raid6_put_fpu(unsigned long cr0)
--{
--	(void)cr0;
--}
--
--#endif
--
--static inline void raid6_before_mmx(raid6_mmx_save_t *s)
--{
--	s->cr0 = raid6_get_fpu();
--	asm volatile("fsave %0 ; fwait" : "=m" (s->fsave[0]));
--}
--
--static inline void raid6_after_mmx(raid6_mmx_save_t *s)
--{
--	asm volatile("frstor %0" : : "m" (s->fsave[0]));
--	raid6_put_fpu(s->cr0);
--}
--
--static inline void raid6_before_sse(raid6_sse_save_t *s)
-+static inline void kernel_fpu_begin(void)
- {
--	unsigned int *rsa = SAREA(s);
--
--	s->cr0 = raid6_get_fpu();
--
--	asm volatile("movaps %%xmm0,%0" : "=m" (rsa[0]));
--	asm volatile("movaps %%xmm1,%0" : "=m" (rsa[4]));
--	asm volatile("movaps %%xmm2,%0" : "=m" (rsa[8]));
--	asm volatile("movaps %%xmm3,%0" : "=m" (rsa[12]));
--	asm volatile("movaps %%xmm4,%0" : "=m" (rsa[16]));
--	asm volatile("movaps %%xmm5,%0" : "=m" (rsa[20]));
--	asm volatile("movaps %%xmm6,%0" : "=m" (rsa[24]));
--	asm volatile("movaps %%xmm7,%0" : "=m" (rsa[28]));
- }
+-	if (mddev->degraded ||
+-	    test_bit(MD_RECOVERY_RUNNING, &mddev->recovery))
++	if (test_bit(MD_RECOVERY_RUNNING, &mddev->recovery))
+ 		return -EBUSY;
  
--static inline void raid6_after_sse(raid6_sse_save_t *s)
-+static inline void kernel_fpu_end(void)
- {
--	unsigned int *rsa = SAREA(s);
--
--	asm volatile("movaps %0,%%xmm0" : : "m" (rsa[0]));
--	asm volatile("movaps %0,%%xmm1" : : "m" (rsa[4]));
--	asm volatile("movaps %0,%%xmm2" : : "m" (rsa[8]));
--	asm volatile("movaps %0,%%xmm3" : : "m" (rsa[12]));
--	asm volatile("movaps %0,%%xmm4" : : "m" (rsa[16]));
--	asm volatile("movaps %0,%%xmm5" : : "m" (rsa[20]));
--	asm volatile("movaps %0,%%xmm6" : : "m" (rsa[24]));
--	asm volatile("movaps %0,%%xmm7" : : "m" (rsa[28]));
--
--	raid6_put_fpu(s->cr0);
- }
+ 	ITERATE_RDEV(mddev, rdev, rtmp)
+@@ -3838,7 +3924,7 @@ static int raid5_start_reshape(mddev_t *
+ 		    !test_bit(Faulty, &rdev->flags))
+ 			spares++;
  
--static inline void raid6_before_sse2(raid6_sse_save_t *s)
--{
--	unsigned int *rsa = SAREA(s);
--
--	s->cr0 = raid6_get_fpu();
-+#define X86_FEATURE_MMX		(0*32+23) /* Multimedia Extensions */
-+#define X86_FEATURE_FXSR	(0*32+24) /* FXSAVE and FXRSTOR instructions
-+					   * (fast save and restore) */
-+#define X86_FEATURE_XMM		(0*32+25) /* Streaming SIMD Extensions */
-+#define X86_FEATURE_XMM2	(0*32+26) /* Streaming SIMD Extensions-2 */
-+#define X86_FEATURE_MMXEXT	(1*32+22) /* AMD MMX extensions */
+-	if (spares < mddev->delta_disks-1)
++	if (spares - mddev->degraded < mddev->delta_disks - conf->max_degraded)
+ 		/* Not enough devices even to make a degraded array
+ 		 * of that size
+ 		 */
+@@ -3901,7 +3987,8 @@ static void end_reshape(raid5_conf_t *co
+ 	struct block_device *bdev;
  
--	asm volatile("movdqa %%xmm0,%0" : "=m" (rsa[0]));
--	asm volatile("movdqa %%xmm1,%0" : "=m" (rsa[4]));
--	asm volatile("movdqa %%xmm2,%0" : "=m" (rsa[8]));
--	asm volatile("movdqa %%xmm3,%0" : "=m" (rsa[12]));
--	asm volatile("movdqa %%xmm4,%0" : "=m" (rsa[16]));
--	asm volatile("movdqa %%xmm5,%0" : "=m" (rsa[20]));
--	asm volatile("movdqa %%xmm6,%0" : "=m" (rsa[24]));
--	asm volatile("movdqa %%xmm7,%0" : "=m" (rsa[28]));
--}
--
--static inline void raid6_after_sse2(raid6_sse_save_t *s)
-+/* Should work well enough on modern CPUs for testing */
-+static inline int boot_cpu_has(int flag)
- {
--	unsigned int *rsa = SAREA(s);
-+	u32 eax = (flag >> 5) ? 0x80000001 : 1;
-+	u32 edx;
+ 	if (!test_bit(MD_RECOVERY_INTR, &conf->mddev->recovery)) {
+-		conf->mddev->array_size = conf->mddev->size * (conf->raid_disks-1);
++		conf->mddev->array_size = conf->mddev->size *
++			(conf->raid_disks - conf->max_degraded);
+ 		set_capacity(conf->mddev->gendisk, conf->mddev->array_size << 1);
+ 		conf->mddev->changed = 1;
  
--	asm volatile("movdqa %0,%%xmm0" : : "m" (rsa[0]));
--	asm volatile("movdqa %0,%%xmm1" : : "m" (rsa[4]));
--	asm volatile("movdqa %0,%%xmm2" : : "m" (rsa[8]));
--	asm volatile("movdqa %0,%%xmm3" : : "m" (rsa[12]));
--	asm volatile("movdqa %0,%%xmm4" : : "m" (rsa[16]));
--	asm volatile("movdqa %0,%%xmm5" : : "m" (rsa[20]));
--	asm volatile("movdqa %0,%%xmm6" : : "m" (rsa[24]));
--	asm volatile("movdqa %0,%%xmm7" : : "m" (rsa[28]));
-+	asm volatile("cpuid"
-+		     : "+a" (eax), "=d" (edx)
-+		     : : "ecx", "ebx");
- 
--	raid6_put_fpu(s->cr0);
-+	return (edx >> (flag & 31)) & 1;
- }
- 
--#ifdef __x86_64__
--
--static inline void raid6_before_sse16(raid6_sse16_save_t *s)
--{
--	unsigned int *rsa = SAREA(s);
--
--	s->cr0 = raid6_get_fpu();
--
--	asm volatile("movdqa %%xmm0,%0" : "=m" (rsa[0]));
--	asm volatile("movdqa %%xmm1,%0" : "=m" (rsa[4]));
--	asm volatile("movdqa %%xmm2,%0" : "=m" (rsa[8]));
--	asm volatile("movdqa %%xmm3,%0" : "=m" (rsa[12]));
--	asm volatile("movdqa %%xmm4,%0" : "=m" (rsa[16]));
--	asm volatile("movdqa %%xmm5,%0" : "=m" (rsa[20]));
--	asm volatile("movdqa %%xmm6,%0" : "=m" (rsa[24]));
--	asm volatile("movdqa %%xmm7,%0" : "=m" (rsa[28]));
--	asm volatile("movdqa %%xmm8,%0" : "=m" (rsa[32]));
--	asm volatile("movdqa %%xmm9,%0" : "=m" (rsa[36]));
--	asm volatile("movdqa %%xmm10,%0" : "=m" (rsa[40]));
--	asm volatile("movdqa %%xmm11,%0" : "=m" (rsa[44]));
--	asm volatile("movdqa %%xmm12,%0" : "=m" (rsa[48]));
--	asm volatile("movdqa %%xmm13,%0" : "=m" (rsa[52]));
--	asm volatile("movdqa %%xmm14,%0" : "=m" (rsa[56]));
--	asm volatile("movdqa %%xmm15,%0" : "=m" (rsa[60]));
--}
--
--static inline void raid6_after_sse16(raid6_sse16_save_t *s)
--{
--	unsigned int *rsa = SAREA(s);
--
--	asm volatile("movdqa %0,%%xmm0" : : "m" (rsa[0]));
--	asm volatile("movdqa %0,%%xmm1" : : "m" (rsa[4]));
--	asm volatile("movdqa %0,%%xmm2" : : "m" (rsa[8]));
--	asm volatile("movdqa %0,%%xmm3" : : "m" (rsa[12]));
--	asm volatile("movdqa %0,%%xmm4" : : "m" (rsa[16]));
--	asm volatile("movdqa %0,%%xmm5" : : "m" (rsa[20]));
--	asm volatile("movdqa %0,%%xmm6" : : "m" (rsa[24]));
--	asm volatile("movdqa %0,%%xmm7" : : "m" (rsa[28]));
--	asm volatile("movdqa %0,%%xmm8" : : "m" (rsa[32]));
--	asm volatile("movdqa %0,%%xmm9" : : "m" (rsa[36]));
--	asm volatile("movdqa %0,%%xmm10" : : "m" (rsa[40]));
--	asm volatile("movdqa %0,%%xmm11" : : "m" (rsa[44]));
--	asm volatile("movdqa %0,%%xmm12" : : "m" (rsa[48]));
--	asm volatile("movdqa %0,%%xmm13" : : "m" (rsa[52]));
--	asm volatile("movdqa %0,%%xmm14" : : "m" (rsa[56]));
--	asm volatile("movdqa %0,%%xmm15" : : "m" (rsa[60]));
--
--	raid6_put_fpu(s->cr0);
--}
--
--#endif /* __x86_64__ */
--
--/* User space test hack */
--#ifndef __KERNEL__
--static inline int cpuid_features(void)
--{
--	u32 eax = 1;
--	u32 ebx, ecx, edx;
--
--	asm volatile("cpuid" :
--		     "+a" (eax), "=b" (ebx), "=c" (ecx), "=d" (edx));
--
--	return edx;
--}
- #endif /* ndef __KERNEL__ */
- 
- #endif
+@@ -3974,6 +4061,10 @@ static struct mdk_personality raid6_pers
+ 	.spare_active	= raid5_spare_active,
+ 	.sync_request	= sync_request,
+ 	.resize		= raid5_resize,
++#ifdef CONFIG_MD_RAID5_RESHAPE
++	.check_reshape	= raid5_check_reshape,
++	.start_reshape  = raid5_start_reshape,
++#endif
+ 	.quiesce	= raid5_quiesce,
+ };
+ static struct mdk_personality raid5_personality =
