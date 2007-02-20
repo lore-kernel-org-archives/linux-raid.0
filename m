@@ -1,41 +1,31 @@
-From: "H. Peter Anvin" <hpa@zytor.com>
-Subject: Re: PATA/SATA Disk Reliability paper
-Date: Mon, 19 Feb 2007 19:03:21 -0800
-Message-ID: <45DA64F9.5070908@zytor.com>
-References: <45D89FF5.3020303@sauce.co.nz>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: NeilBrown <neilb@suse.de>
+Subject: [PATCH 000 of 6] md: Assorted fixes and features for md for 2.6.21
+Date: Tue, 20 Feb 2007 17:34:41 +1100
+Message-ID: <20070220172544.15678.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <45D89FF5.3020303@sauce.co.nz>
 Sender: linux-raid-owner@vger.kernel.org
-To: Richard Scobie <richard@sauce.co.nz>
-Cc: linux-raid@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, stable@kernel.org
 List-Id: linux-raid.ids
 
-Richard Scobie wrote:
-> Thought this paper may be of interest. A study done by Google on over=
-=20
-> 100,000 drives they have/had in service.
->=20
-> http://labs.google.com/papers/disk_failures.pdf
->=20
+Following 6 patches are against 2.6.20 and are suitable for 2.6.21.
+They are not against -mm because the new plugging makes raid5 not work
+and so not testable, and there are a few fairly minor intersections between
+these patches and those patches.
+There is also a very minor conflict with the hardware-xor patches - one line
+of context is different.
 
-Bastards:
+Patch 1 should probably go in -stable - the bug could cause data
+corruption in a fairly uncommon raid10 configuration, so that one and
+this intro are Cc:ed to stable@kernel.org.
 
-"Failure rates are known to be highly correlated with drive
-models, manufacturers and vintages [18]. Our results do
-not contradict this fact. For example, Figure 2 changes
-signi=EF=AC=81cantly when we normalize failure rates per each
-drive model. Most age-related results are impacted by
-drive vintages. However, in this paper, we do not show a
-breakdown of drives per manufacturer, model, or vintage
-due to the proprietary nature of these data."
+Thanks,
+NeilBrown
 
-	-hpa
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+ [PATCH 001 of 6] md: Fix raid10 recovery problem.
+ [PATCH 002 of 6] md: RAID6: clean up CPUID and FPU enter/exit code
+ [PATCH 003 of 6] md: Move warning about creating a raid array on partitions of the one device.
+ [PATCH 004 of 6] md: Clean out unplug and other queue function on md shutdown
+ [PATCH 005 of 6] md: Restart a (raid5) reshape that has been aborted due to a read/write error.
+ [PATCH 006 of 6] md: Add support for reshape of a raid6
