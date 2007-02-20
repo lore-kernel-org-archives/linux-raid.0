@@ -1,31 +1,118 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [PATCH 000 of 6] md: Assorted fixes and features for md for 2.6.21
-Date: Tue, 20 Feb 2007 17:34:41 +1100
-Message-ID: <20070220172544.15678.patches@notabene>
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
+Subject: [PATCH 001 of 6] md: Fix raid10 recovery problem.
+Date: Tue, 20 Feb 2007 17:34:47 +1100
+Message-ID: <1070220063447.16129@suse.de>
+References: <20070220172544.15678.patches@notabene>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932844AbXBTGfg@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Andrew Morton <akpm@linux-foundation.org>
 Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, stable@kernel.org
 List-Id: linux-raid.ids
 
-Following 6 patches are against 2.6.20 and are suitable for 2.6.21.
-They are not against -mm because the new plugging makes raid5 not work
-and so not testable, and there are a few fairly minor intersections between
-these patches and those patches.
-There is also a very minor conflict with the hardware-xor patches - one line
-of context is different.
 
-Patch 1 should probably go in -stable - the bug could cause data
-corruption in a fairly uncommon raid10 configuration, so that one and
-this intro are Cc:ed to stable@kernel.org.
+There are two errors that can lead to recovery problems with raid10
+when used in 'far' more (not the default).
 
-Thanks,
-NeilBrown
+Due to a '>' instead of '>=' the wrong block is located which would
+result in garbage being written to some random location, quite
+possible outside the range of the device, causing the newly
+reconstructed device to fail.
 
+The device size calculation had some rounding errors (it didn't round
+when it should) and so recovery would go a few blocks too far which
+would again cause a write to a random block address and probably
+a device error.
 
- [PATCH 001 of 6] md: Fix raid10 recovery problem.
- [PATCH 002 of 6] md: RAID6: clean up CPUID and FPU enter/exit code
- [PATCH 003 of 6] md: Move warning about creating a raid array on partitions of the one device.
- [PATCH 004 of 6] md: Clean out unplug and other queue function on md shutdown
- [PATCH 005 of 6] md: Restart a (raid5) reshape that has been aborted due to a read/write error.
- [PATCH 006 of 6] md: Add support for reshape of a raid6
+The code for working with device sizes was fairly confused and spread
+out, so this has been tided up a bit.
+
+Signed-off-by: Neil Brown <neilb@suse.de>
+
+### Diffstat output
+ ./drivers/md/raid10.c |   38 ++++++++++++++++++++------------------
+ 1 file changed, 20 insertions(+), 18 deletions(-)
+
+diff .prev/drivers/md/raid10.c ./drivers/md/raid10.c
+--- .prev/drivers/md/raid10.c	2007-02-20 17:10:15.000000000 +1100
++++ ./drivers/md/raid10.c	2007-02-20 17:11:41.000000000 +1100
+@@ -429,7 +429,7 @@ static sector_t raid10_find_virt(conf_t 
+ 		if (dev < 0)
+ 			dev += conf->raid_disks;
+ 	} else {
+-		while (sector > conf->stride) {
++		while (sector >= conf->stride) {
+ 			sector -= conf->stride;
+ 			if (dev < conf->near_copies)
+ 				dev += conf->raid_disks - conf->near_copies;
+@@ -1801,6 +1801,7 @@ static sector_t sync_request(mddev_t *md
+ 						for (k=0; k<conf->copies; k++)
+ 							if (r10_bio->devs[k].devnum == i)
+ 								break;
++						BUG_ON(k == conf->copies);
+ 						bio = r10_bio->devs[1].bio;
+ 						bio->bi_next = biolist;
+ 						biolist = bio;
+@@ -2021,19 +2022,30 @@ static int run(mddev_t *mddev)
+ 	if (!conf->tmppage)
+ 		goto out_free_conf;
+ 
++	conf->mddev = mddev;
++	conf->raid_disks = mddev->raid_disks;
+ 	conf->near_copies = nc;
+ 	conf->far_copies = fc;
+ 	conf->copies = nc*fc;
+ 	conf->far_offset = fo;
+ 	conf->chunk_mask = (sector_t)(mddev->chunk_size>>9)-1;
+ 	conf->chunk_shift = ffz(~mddev->chunk_size) - 9;
++	size = mddev->size >> (conf->chunk_shift-1);
++	sector_div(size, fc);
++	size = size * conf->raid_disks;
++	sector_div(size, nc);
++	/* 'size' is now the number of chunks in the array */
++	/* calculate "used chunks per device" in 'stride' */
++	stride = size * conf->copies;
++	sector_div(stride, conf->raid_disks);
++	mddev->size = stride  << (conf->chunk_shift-1);
++
+ 	if (fo)
+-		conf->stride = 1 << conf->chunk_shift;
+-	else {
+-		stride = mddev->size >> (conf->chunk_shift-1);
++		stride = 1;
++	else
+ 		sector_div(stride, fc);
+-		conf->stride = stride << conf->chunk_shift;
+-	}
++	conf->stride = stride << conf->chunk_shift;
++
+ 	conf->r10bio_pool = mempool_create(NR_RAID10_BIOS, r10bio_pool_alloc,
+ 						r10bio_pool_free, conf);
+ 	if (!conf->r10bio_pool) {
+@@ -2063,8 +2075,6 @@ static int run(mddev_t *mddev)
+ 
+ 		disk->head_position = 0;
+ 	}
+-	conf->raid_disks = mddev->raid_disks;
+-	conf->mddev = mddev;
+ 	spin_lock_init(&conf->device_lock);
+ 	INIT_LIST_HEAD(&conf->retry_list);
+ 
+@@ -2106,16 +2116,8 @@ static int run(mddev_t *mddev)
+ 	/*
+ 	 * Ok, everything is just fine now
+ 	 */
+-	if (conf->far_offset) {
+-		size = mddev->size >> (conf->chunk_shift-1);
+-		size *= conf->raid_disks;
+-		size <<= conf->chunk_shift;
+-		sector_div(size, conf->far_copies);
+-	} else
+-		size = conf->stride * conf->raid_disks;
+-	sector_div(size, conf->near_copies);
+-	mddev->array_size = size/2;
+-	mddev->resync_max_sectors = size;
++	mddev->array_size = size << (conf->chunk_shift-1);
++	mddev->resync_max_sectors = size << conf->chunk_shift;
+ 
+ 	mddev->queue->unplug_fn = raid10_unplug;
+ 	mddev->queue->issue_flush_fn = raid10_issue_flush;
