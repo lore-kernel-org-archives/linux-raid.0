@@ -1,33 +1,31 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: Reshaping raid0/10
-Date: Thu, 22 Feb 2007 06:59:38 +1100
-Message-ID: <17884.42154.248251.261955@notabene.brown>
-References: <Pine.LNX.4.61.0702211726500.12039@yvahk01.tjqt.qr>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH 006 of 6] md: Add support for reshape of a raid6
+Date: Wed, 21 Feb 2007 14:48:06 -0800
+Message-ID: <20070221144806.e6eed85c.akpm@linux-foundation.org>
+References: <20070220172544.15678.patches@notabene>
+	<1070220063516.16208@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Jan Engelhardt on Wednesday February 21
+In-Reply-To: <1070220063516.16208@suse.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jan Engelhardt <jengelh@linux01.gwdg.de>
-Cc: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wednesday February 21, jengelh@linux01.gwdg.de wrote:
-> Hello,
-> 
-> 
-> 
-> are there any plans to support reshaping
-> on raid0 and raid10?
-> 
+On Tue, 20 Feb 2007 17:35:16 +1100
+NeilBrown <neilb@suse.de> wrote:
 
-No concrete plans.  It largely depends on time and motivation.
-I expect that the various flavours of raid5/raid6 reshape will come
-first.
-Then probably converting raid0->raid5.
+> +		for (i = conf->raid_disks ; i-- ;  ) {
 
-I really haven't given any thought to how you might reshape a
-raid10...
+That statement should be dragged out, shot, stomped on then ceremonially
+incinerated.
 
-NeilBrown
+What's wrong with doing
+
+	for (i = 0; i < conf->raid_disks; i++) {
+
+in a manner which can be understood without alcoholic fortification?
+
+ho hum.
