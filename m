@@ -1,45 +1,50 @@
-From: Neil Brown <neilb@suse.de>
-Subject: ANNOUNCE: mdadm 2.6.1 - A tool for managing Soft RAID under Linux
-Date: Thu, 22 Feb 2007 15:12:24 +1100
-Message-ID: <17885.6184.283089.605103@notabene.brown>
+From: dean gaudet <dean@arctic.org>
+Subject: Re: Reshaping raid0/10
+Date: Wed, 21 Feb 2007 22:09:36 -0800 (PST)
+Message-ID: <Pine.LNX.4.64.0702212110120.23743@twinlark.arctic.org>
+References: <Pine.LNX.4.61.0702211726500.12039@yvahk01.tjqt.qr>
+ <17884.42154.248251.261955@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <17884.42154.248251.261955@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: Jan Engelhardt <jengelh@linux01.gwdg.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Thu, 22 Feb 2007, Neil Brown wrote:
 
+> On Wednesday February 21, jengelh@linux01.gwdg.de wrote:
+> > Hello,
+> > 
+> > 
+> > 
+> > are there any plans to support reshaping
+> > on raid0 and raid10?
+> > 
+> 
+> No concrete plans.  It largely depends on time and motivation.
+> I expect that the various flavours of raid5/raid6 reshape will come
+> first.
+> Then probably converting raid0->raid5.
+> 
+> I really haven't given any thought to how you might reshape a
+> raid10...
 
-I am pleased to announce the availability of
-   mdadm version 2.6.1
+i've got a 4x250 near2 i want to turn into a 4x750 near2.  i was 
+considering doing straight dd from each of the 250 to the respective 750 
+then doing an mdadm --create on the 750s (in the same ordering as the 
+original array)... so i'd end up with a new array with more stripes.  it 
+seems like this should work.
 
-It is available at the usual places:
-   http://www.cse.unsw.edu.au/~neilb/source/mdadm/
-and
-   countrycode=xx.
-   http://www.${countrycode}kernel.org/pub/linux/utils/raid/mdadm/
-and via git at
-   git://neil.brown.name/mdadm
-   http://neil.brown.name/git?p=mdadm
+the same thing should work for all nearN with a multiple of N disks... and 
+offsetN should work as well right?  but farN sounds like a nightmare.
 
-mdadm is a tool for creating, managing and monitoring
-device arrays using the "md" driver in Linux, also
-known as Software RAID arrays.
+if we had a generic "proactive disk replacement" method it could handle 
+the 4x250->4x750 step.  (i haven't decided yet if i want to try my hacky 
+bitmap method of doing proactive replacement... i'm not sure what'll 
+happen if i add a 750GB disk back into an array with 250s... i suppose 
+it'll work... i'll have to experiment.)
 
-Release 2.6.1  adds a  few minor bug  fixes to 2.6  including improved
-support for growing a RAID6 array.
-
-Changelog Entries:
-    -   --monitor was producing some meaningless warnings due to a bug.
-    -   Fix some compiler warnings.
-    -   Fully support --grow for raid6.  If a reshape crashed during the
-	critical period, mdadm wouldn't restore the Q information
-	properly.
-    -   Update documentation for --grow.
-
-Development of mdadm is sponsored by
- SUSE Labs, Novell Inc.
-
-NeilBrown  22nd February 2007
+-dean
