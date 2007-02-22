@@ -1,50 +1,47 @@
-From: dean gaudet <dean@arctic.org>
-Subject: Re: Reshaping raid0/10
-Date: Wed, 21 Feb 2007 22:09:36 -0800 (PST)
-Message-ID: <Pine.LNX.4.64.0702212110120.23743@twinlark.arctic.org>
-References: <Pine.LNX.4.61.0702211726500.12039@yvahk01.tjqt.qr>
- <17884.42154.248251.261955@notabene.brown>
+From: Nix <nix@esperi.org.uk>
+Subject: Re: PATA/SATA Disk Reliability paper
+Date: Thu, 22 Feb 2007 22:27:43 +0000
+Message-ID: <87y7mphlpc.fsf@hades.wkstn.nix>
+References: <45D89FF5.3020303@sauce.co.nz>
+	<200702191426.16567.a1426z@gawab.com>
+	<45DA19C8.8000002@eyal.emu.id.au>
+	<200702201515.01677.a1426z@gawab.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17884.42154.248251.261955@notabene.brown>
+In-Reply-To: <200702201515.01677.a1426z@gawab.com> (Al Boldi's message of "20 Feb 2007 12:13:10 -0000")
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Jan Engelhardt <jengelh@linux01.gwdg.de>, linux-raid@vger.kernel.org
+To: Al Boldi <a1426z@gawab.com>
+Cc: Eyal Lebedinsky <eyal@eyal.emu.id.au>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, 22 Feb 2007, Neil Brown wrote:
+On 20 Feb 2007, Al Boldi outgrape:
+> Eyal Lebedinsky wrote:
+>> Disks are sealed, and a dessicant is present in each to keep humidity
+>> down. If you ever open a disk drive (e.g. for the magnets, or the mirror
+>> quality platters, or for fun) then you can see the dessicant sachet.
+>
+> Actually, they aren't sealed 100%.  
 
-> On Wednesday February 21, jengelh@linux01.gwdg.de wrote:
-> > Hello,
-> > 
-> > 
-> > 
-> > are there any plans to support reshaping
-> > on raid0 and raid10?
-> > 
-> 
-> No concrete plans.  It largely depends on time and motivation.
-> I expect that the various flavours of raid5/raid6 reshape will come
-> first.
-> Then probably converting raid0->raid5.
-> 
-> I really haven't given any thought to how you might reshape a
-> raid10...
+I'd certainly hope not, unless you like the sound of imploding drives
+when you carry one up a mountain.
 
-i've got a 4x250 near2 i want to turn into a 4x750 near2.  i was 
-considering doing straight dd from each of the 250 to the respective 750 
-then doing an mdadm --create on the 750s (in the same ordering as the 
-original array)... so i'd end up with a new array with more stripes.  it 
-seems like this should work.
+> On wd's at least, there is a hole with a warning printed on its side:
+>
+>                       DO NOT COVER HOLE BELOW
+>                       V       V      V      V
+>
+>                                   o
 
-the same thing should work for all nearN with a multiple of N disks... and 
-offsetN should work as well right?  but farN sounds like a nightmare.
+I suspect that's for air-pressure equalization.
 
-if we had a generic "proactive disk replacement" method it could handle 
-the 4x250->4x750 step.  (i haven't decided yet if i want to try my hacky 
-bitmap method of doing proactive replacement... i'm not sure what'll 
-happen if i add a 750GB disk back into an array with 250s... i suppose 
-it'll work... i'll have to experiment.)
+> In contrast, older models from the last century, don't have that hole.
 
--dean
+It was my understanding that disks have had some way of equalizing
+pressure with their surroundings for many years; but I haven't verified
+this so you may well be right that this is a recent thing. (Anyone know
+for sure?)
+
+-- 
+`In the future, company names will be a 32-character hex string.'
+  --- Bruce Schneier on the shortage of company names
