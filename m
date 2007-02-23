@@ -1,87 +1,55 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: Linux Software RAID a bit of a weakness?
-Date: Fri, 23 Feb 2007 15:08:56 -0500 (EST)
-Message-ID: <Pine.LNX.4.64.0702231508370.14178@p34.internal.lan>
-References: <1172258378.21648.51.camel@cowie> <45DF46B7.3040707@maine.edu>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: Reshaping raid0/10
+Date: Sat, 24 Feb 2007 07:17:12 +1100
+Message-ID: <17887.19400.179239.281711@notabene.brown>
+References: <Pine.LNX.4.61.0702211726500.12039@yvahk01.tjqt.qr>
+	<17884.42154.248251.261955@notabene.brown>
+	<Pine.LNX.4.61.0702231357420.9736@yvahk01.tjqt.qr>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <45DF46B7.3040707@maine.edu>
+In-Reply-To: message from Jan Engelhardt on Friday February 23
 Sender: linux-raid-owner@vger.kernel.org
-To: Steve Cousins <steve.cousins@maine.edu>
-Cc: Colin Simpson <csimpson@csl.co.uk>, linux-raid@vger.kernel.org
+To: Jan Engelhardt <jengelh@linux01.gwdg.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This is the most useful thing I have found in a long time!
+On Friday February 23, jengelh@linux01.gwdg.de wrote:
+> 
+> On Feb 22 2007 06:59, Neil Brown wrote:
+> >On Wednesday February 21, jengelh@linux01.gwdg.de wrote:
+> >> 
+> >> are there any plans to support reshaping
+> >> on raid0 and raid10?
+> >> 
+> >
+> >No concrete plans.  It largely depends on time and motivation.
+> >I expect that the various flavours of raid5/raid6 reshape will come
+> >first.
+> >Then probably converting raid0->raid5.
+> >
+> >I really haven't given any thought to how you might reshape a
+> >raid10...
+> 
+> It should not be any different from raid0/raid5 reshaping, should it?
 
-p34:~# echo check > /sys/block/md0/md/sync_action
-$ cat /sys/block/md[0-4]/md/mismatch_cnt
-512
-0
-0
-0
-0
+Depends on what level you look at.
 
-Wow!
+If I wanted to reshape a raid0, I would just morph it into a raid4
+with a missing parity drive, then use the raid5 code to restripe it.
+Then morph it back to regular raid0.
 
-Justin.
+With raid10 I cannot do that.  I would need to do the restriping
+inside the raid10 module.  But raid10 doesn't have a stripe-cache like
+raid5 does, and the stripe cache is a very integral part of the
+restripe process.
 
-On Fri, 23 Feb 2007, Steve Cousins wrote:
+So there would be a substantial amount of design and coding to effect
+a raid10 reshape - at least as much as the work to produce the initial
+raid5 reshape and probably more.
 
-> Colin Simpson wrote:
->> Hi, 
->> We had a small server here that was configured with a RAID 1 mirror,
->> using two IDE disks. 
->> Last week one of the drives failed in this. So we replaced the drive and
->> set the array to rebuild. The "good" disk then found a bad block and the
->> mirror failed.
->> 
->> Now I presume that the "good" disk must have had an underlying bad block
->> in either unallocated space or a file I never access. Now as RAID works
->> at the block level you only ever see this on an array rebuild when it's
->> often catastrophic. Is this a bit of a flaw? 
->> I know there is the definite probability of two drives failing within a
->> short period of time. But this is a bit different as it's the
->> probability of two drives failing but over a much larger time scale if
->> one of the flaws is hidden in unallocated space (maybe a dirt particle
->> finds it's way onto the surface or something). This would make RAID buy
->> you a lot less in reliability, I'd have thought. 
->> I seem to remember seeing in the log file for a Dell perc something
->> about scavenging for bad blocks. Do hardware RAID systems have a
->> mechanism that at times of low activity search the disks for bad blocks
->> to help guard against this sort of failure (so a disk error is reported
->> early)?
->> 
->> On Software RAID, I was thinking apart from a three way mirror, which I
->> don't think is at present supported. Is there any merit in say, cat'ing
->> the whole disk devices to /dev/null every so often to check that the
->> whole surface is readable (I presume just reading the raw device won't
->> upset thing, don't worry I don't plan on trying it on a production
->> system). 
->> Any thoughts? As I presume people have thought of this before and I must
->> be missing something.
->
-> Yes, this is an important thing to keep on top of, both for hardware RAID and 
-> software RAID.  For md:
->
-> 	echo check > /sys/block/md0/md/sync_action
->
-> This should be done regularly. I have cron do it once a week.
->
-> Check out: http://neil.brown.name/blog/20050727141521-002
->
-> Good luck,
->
-> Steve
-> -- 
-> ______________________________________________________________________
-> Steve Cousins, Ocean Modeling Group    Email: cousins@umit.maine.edu
-> Marine Sciences, 452 Aubert Hall       http://rocky.umeoce.maine.edu
-> Univ. of Maine, Orono, ME 04469        Phone: (207) 581-4302
->
->
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+So conceptually it might be very similar, but at the code level, it is
+likely to be very different.
+
+NeilBrown
