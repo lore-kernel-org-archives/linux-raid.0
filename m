@@ -1,41 +1,39 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: [PATCH 006 of 6] md: Add support for reshape of a raid6
-Date: Fri, 23 Feb 2007 10:52:08 -0500
-Message-ID: <45DF0DA8.9010305@tmr.com>
-References: <20070220172544.15678.patches@notabene>	<1070220063516.16208@suse.de> <20070221144806.e6eed85c.akpm@linux-foundation.org>
+From: Al Boldi <a1426z@gawab.com>
+Subject: Re: PATA/SATA Disk Reliability paper
+Date: Fri, 23 Feb 2007 21:22:16 +0300
+Message-ID: <200702232122.16730.a1426z@gawab.com>
+References: <45D89FF5.3020303@sauce.co.nz> <87y7mphlpc.fsf@hades.wkstn.nix> <20070222233021.GA10618@seas.ucla.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20070221144806.e6eed85c.akpm@linux-foundation.org>
+In-Reply-To: <20070222233021.GA10618@seas.ucla.edu>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Stephen C Woods <scw@seas.ucla.edu>, Nix <nix@esperi.org.uk>
+Cc: Eyal Lebedinsky <eyal@eyal.emu.id.au>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Andrew Morton wrote:
-> On Tue, 20 Feb 2007 17:35:16 +1100
-> NeilBrown <neilb@suse.de> wrote:
->
->   
->> +		for (i = conf->raid_disks ; i-- ;  ) {
->>     
->
-> That statement should be dragged out, shot, stomped on then ceremonially
-> incinerated.
->
-> What's wrong with doing
->
-> 	for (i = 0; i < conf->raid_disks; i++) {
->
-> in a manner which can be understood without alcoholic fortification?
+Stephen C Woods wrote:
+>   So drives do need to be ventilated, not so much wory about exploding,
+> but rather subtle distortion of the case as the atmospheric preasure
+> changed.
 
-I don't find either hard to read, but you suggestion isn't equivalent, 
-since it increments rather than decrements the index.
-I admit I probably would write it the same way Neil did...
+I have a '94 Caviar without any apparent holes; and as a bonus, the drive 
+still works.
 
--- 
-bill davidsen <davidsen@tmr.com>
-  CTO TMR Associates, Inc
-  Doing interesting things with small computers since 1979
+In contrast, ever since these holes appeared, drive failures became the norm.
+
+>    Doe anyone rememnber that you had to let you drives acclimate to your
+> machine room for a day or so before you used them.
+
+The problem is, that's not enough; the room temperature/humidity has to be 
+controlled too.  In a desktop environment, that's not really feasible.
+
+
+Thanks!
+
+--
+Al
 
