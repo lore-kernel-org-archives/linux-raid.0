@@ -1,36 +1,25 @@
 From: Jan Engelhardt <jengelh@linux01.gwdg.de>
-Subject: Re: Reshaping raid0/10
-Date: Fri, 23 Feb 2007 13:59:04 +0100 (MET)
-Message-ID: <Pine.LNX.4.61.0702231357420.9736@yvahk01.tjqt.qr>
-References: <Pine.LNX.4.61.0702211726500.12039@yvahk01.tjqt.qr>
- <17884.42154.248251.261955@notabene.brown>
+Subject: Re: 2.6.20: stripe_cache_size goes boom with 32mb
+Date: Fri, 23 Feb 2007 14:11:50 +0100 (MET)
+Message-ID: <Pine.LNX.4.61.0702231411130.9736@yvahk01.tjqt.qr>
+References: <Pine.LNX.4.64.0702230640430.3781@p34.internal.lan>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17884.42154.248251.261955@notabene.brown>
+In-Reply-To: <Pine.LNX.4.64.0702230640430.3781@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-On Feb 22 2007 06:59, Neil Brown wrote:
->On Wednesday February 21, jengelh@linux01.gwdg.de wrote:
->> 
->> are there any plans to support reshaping
->> on raid0 and raid10?
->> 
+On Feb 23 2007 06:41, Justin Piszcz wrote:
 >
->No concrete plans.  It largely depends on time and motivation.
->I expect that the various flavours of raid5/raid6 reshape will come
->first.
->Then probably converting raid0->raid5.
->
->I really haven't given any thought to how you might reshape a
->raid10...
+> I was able to Alt-SysRQ+b but I could not access the console/X/etc, it appeared
+> to be frozen.
 
-It should not be any different from raid0/raid5 reshaping, should it?
-
+No sysrq+t? (Ah, unblanking might hang.) Well, netconsole/serial to the rescue,
+then ;-)
 
 
 Jan
