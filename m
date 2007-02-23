@@ -1,37 +1,38 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: 2.6.20: stripe_cache_size goes boom with 32mb
-Date: Fri, 23 Feb 2007 06:41:51 -0500 (EST)
-Message-ID: <Pine.LNX.4.64.0702230640430.3781@p34.internal.lan>
+From: Helge Hafting <helge.hafting@aitel.hist.no>
+Subject: Re: [PATCH 006 of 6] md: Add support for reshape of a raid6
+Date: Fri, 23 Feb 2007 13:15:10 +0100
+Message-ID: <45DEDACE.2000601@aitel.hist.no>
+References: <20070220172544.15678.patches@notabene>	<1070220063516.16208@suse.de>	<20070221144806.e6eed85c.akpm@linux-foundation.org>	<17885.636.133245.572876@notabene.brown> <20070221185739.0d509c0d.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932274AbXBWMSP@vger.kernel.org>
+In-Reply-To: <20070221185739.0d509c0d.akpm@linux-foundation.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-Each of these are averaged over three runs with 6 SATA disks in a SW RAID 
-5 configuration:
+Andrew Morton wrote:
+> On Thu, 22 Feb 2007 13:39:56 +1100 Neil Brown <neilb@suse.de> wrote:
+>
+>   
+>> I must right code that Andrew can read.
+>>     
+>
+> That's write.
+>
+> But more importantly, things that people can immediately see and understand
+> help reduce the possibility of mistakes.  Now and in the future.
+>
+> If we did all loops like that, then it'd be the the best way to do it in new code,
+> because people's eyes and brains are locked into that idiom and we just
+> don't have to think about it when we see it.
+I have done lots of loops like that and understood it immediately.
+Nice, short, _clear_ and no - a loop that counts down instead of
+up is not difficult at all. 
+Testing "i--" instead of "i >= 0" is also something I consider trivial,
+even though I don't code that much.  If this is among the worst you
+see, then the kernel source must be in great shape ;-)
 
-(dd if=/dev/zero of=file_1 bs=1M count=2000)
-
-128k_stripe: 69.2MB/s
-256k_stripe: 105.3MB/s
-512k_stripe: 142.0MB/s
-1024k_stripe: 144.6MB/s
-2048k_stripe: 208.3MB/s
-4096k_stripe: 223.6MB/s
-8192k_stripe: 226.0MB/s
-16384k_stripe: 215.0MB/s
-
-When I tried a 32768k stripe, this happened:
-p34:~# echo 32768 > /sys/block/md4/md/stripe_cache_size
-Connection to p34 closed
-
-I was able to Alt-SysRQ+b but I could not access the console/X/etc, it 
-appeared to be frozen.
-
-FYI.
-
-Justin.
-
+Helge Hafting
