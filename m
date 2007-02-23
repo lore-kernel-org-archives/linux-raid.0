@@ -1,38 +1,35 @@
-From: Helge Hafting <helge.hafting@aitel.hist.no>
-Subject: Re: [PATCH 006 of 6] md: Add support for reshape of a raid6
-Date: Fri, 23 Feb 2007 13:15:10 +0100
-Message-ID: <45DEDACE.2000601@aitel.hist.no>
-References: <20070220172544.15678.patches@notabene>	<1070220063516.16208@suse.de>	<20070221144806.e6eed85c.akpm@linux-foundation.org>	<17885.636.133245.572876@notabene.brown> <20070221185739.0d509c0d.akpm@linux-foundation.org>
+From: Tomka Gergely <gergely@tomka.hu>
+Subject: beginner error detection
+Date: Fri, 23 Feb 2007 13:11:20 +0100 (CET)
+Message-ID: <Pine.LNX.4.64.0702231301180.3550@tomka.hu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932274AbXBWMSP@vger.kernel.org>
-In-Reply-To: <20070221185739.0d509c0d.akpm@linux-foundation.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Andrew Morton wrote:
-> On Thu, 22 Feb 2007 13:39:56 +1100 Neil Brown <neilb@suse.de> wrote:
->
->   
->> I must right code that Andrew can read.
->>     
->
-> That's write.
->
-> But more importantly, things that people can immediately see and understand
-> help reduce the possibility of mistakes.  Now and in the future.
->
-> If we did all loops like that, then it'd be the the best way to do it in new code,
-> because people's eyes and brains are locked into that idiom and we just
-> don't have to think about it when we see it.
-I have done lots of loops like that and understood it immediately.
-Nice, short, _clear_ and no - a loop that counts down instead of
-up is not difficult at all. 
-Testing "i--" instead of "i >= 0" is also something I consider trivial,
-even though I don't code that much.  If this is among the worst you
-see, then the kernel source must be in great shape ;-)
+Hi!
 
-Helge Hafting
+I have a simple sw raid1, over two sata disks. One of the disks started to 
+complain (s.m.a.r.t. errors). I think in the near future i witness a disk 
+failure. But i don't know how this thing is happening with raid1, so i 
+have some questions. If these questions answered somewhere (faq, manpage, 
+url), then feel free to redirect me to this source(s). 
+
+Can the raid1 detect and handle disk errors? If one block goes wrong, how 
+can the raid1 driver choose which was the correct, original value?
+
+Sata systems can die gracefully? When in a good scsi system happens a 
+total disk failure, then the scsi makes the disk fail, mdadm removes 
+the disk from the array, and in the morning i see a nice e-mail. When a 
+PATA disk dies, the system goes down, so i need to call a cab. I dont know 
+how the sata behaves in this situation.
+
+The kernel 2.6.20 (with skas patch), the controller :
+nVidia Corporation CK804 Serial ATA Controller (rev f3)
+
+Thanks.
+
+-- 
+Tomka Gergely, gergely@tomka.hu
