@@ -1,39 +1,29 @@
-From: Al Boldi <a1426z@gawab.com>
-Subject: Re: PATA/SATA Disk Reliability paper
-Date: Fri, 23 Feb 2007 21:22:16 +0300
-Message-ID: <200702232122.16730.a1426z@gawab.com>
-References: <45D89FF5.3020303@sauce.co.nz> <87y7mphlpc.fsf@hades.wkstn.nix> <20070222233021.GA10618@seas.ucla.edu>
+From: "Dan Williams" <dan.j.williams@intel.com>
+Subject: Re: 2.6.20: stripe_cache_size goes boom with 32mb
+Date: Fri, 23 Feb 2007 12:11:44 -0700
+Message-ID: <e9c3a7c20702231111l1cb8767ar7f670c5e3c2338b4@mail.gmail.com>
+References: <Pine.LNX.4.64.0702230640430.3781@p34.internal.lan>
+	 <1172234460.4419.7.camel@merlin>
+	 <Pine.LNX.4.64.0702230741540.3781@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20070222233021.GA10618@seas.ucla.edu>
+In-Reply-To: <Pine.LNX.4.64.0702230741540.3781@p34.internal.lan>
 Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Stephen C Woods <scw@seas.ucla.edu>, Nix <nix@esperi.org.uk>
-Cc: Eyal Lebedinsky <eyal@eyal.emu.id.au>, linux-raid@vger.kernel.org
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: Jason Rainforest <l3mming@iinet.net.au>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Stephen C Woods wrote:
->   So drives do need to be ventilated, not so much wory about exploding,
-> but rather subtle distortion of the case as the atmospheric preasure
-> changed.
+On 2/23/07, Justin Piszcz <jpiszcz@lucidpixels.com> wrote:
+> I have 2GB On this machine.  For me, 8192 seems to be the sweet spot, I
+> will probably keep it at 8mb.
+>
+Just a note stripe_cache_size = 8192 = 192MB with six disks.
 
-I have a '94 Caviar without any apparent holes; and as a bonus, the drive 
-still works.
-
-In contrast, ever since these holes appeared, drive failures became the norm.
-
->    Doe anyone rememnber that you had to let you drives acclimate to your
-> machine room for a day or so before you used them.
-
-The problem is, that's not enough; the room temperature/humidity has to be 
-controlled too.  In a desktop environment, that's not really feasible.
-
-
-Thanks!
+The calculation is:
+stripe_cache_size * num_disks * PAGE_SIZE = stripe_cache_size_bytes
 
 --
-Al
-
+Dan
