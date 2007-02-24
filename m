@@ -1,32 +1,35 @@
-From: Chris Wedgwood <cw@f00f.org>
-Subject: Re: end to end error recovery musings
-Date: Sat, 24 Feb 2007 10:39:15 -0800
-Message-ID: <20070224183915.GB13940@tuatara.stupidest.org>
-References: <45DEF6EF.3020509@emc.com> <45DF80C9.5080606@zytor.com> <20070224003723.GS10715@schatzie.adilger.int> <20070224023229.GB4380@thunk.org>
+From: Mark Hahn <hahn@mcmaster.ca>
+Subject: Re: PATA/SATA Disk Reliability paper
+Date: Sat, 24 Feb 2007 17:27:54 -0500 (EST)
+Message-ID: <Pine.LNX.4.64.0702241716130.28888@coffee.psychology.mcmaster.ca>
+References: <45D89FF5.3020303@sauce.co.nz> <87y7mphlpc.fsf@hades.wkstn.nix>
+ <20070222233021.GA10618@seas.ucla.edu> <200702232122.16730.a1426z@gawab.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20070224023229.GB4380@thunk.org>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Theodore Tso <tytso@mit.edu>, "H. Peter Anvin" <hpa@zytor.com>, Ric Wheeler <ric@emc.com>, Linux-ide <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-raid@vger.kernel.org, Tejun Heo <htejun@gmail.com>, James Bottomley <James.Bottomley@SteelEye.com>, Mark Lord <mlord@pobox.com>, Neil Brown <neilb@suse.de>, Jens Axboe <jens.axboe@oracle.com>, "Clark, Nathan" <Clark_Nathan@emc.com>, "Singh, Arvinder" <Singh_Arvinder@emc.com>, "De Smet, Jochen" <DeSmet_Jochen@emc.com>, "Farmer, Matt" <Farmer_Matt@emc.com>, linux-fsdevel@vger.kernel.org, "Mizar, Sunita" <Mizar_Sunita@emc.com>
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <200702232122.16730.a1426z@gawab.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Al Boldi <a1426z@gawab.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, Feb 23, 2007 at 09:32:29PM -0500, Theodore Tso wrote:
+> In contrast, ever since these holes appeared, drive failures became the norm.
 
-> And having a way of making this list available to both the
-> filesystem and to a userspace utility, so they can more easily deal
-> with doing a forced rewrite of the bad sector, after determining
-> which file is involved and perhaps doing something intelligent (up
-> to and including automatically requesting a backup system to fetch a
-> backup version of the file, and if it can be determined that the
-> file shouldn't have been changed since the last backup,
-> automatically fixing up the corrupted data block :-).
+wow, great conspiracy theory!  maybe the hole is plugged at 
+the factory with a substance which evaporates at 1/warranty-period ;)
 
-i had a small c program + perl script that would take a badblocks list
-and figure out which files on an xfs filesystem were trashed, though
-in the case of xfs it's somewhat easier because you can dump the
-extents for a file something more generic wouldn't be hard to make
-work, it also wouldn't be hard to extend this to inodes in some cases
-though im not sure that there is much you can do there beyond fsck
+seriously, isn't it easy to imagine a bladder-like arrangement that 
+permits equilibration without net flow?  disk spec-sheets do limit
+this - I checked the seagate 7200.10: 10k feet operating, 40k max.
+amusingly -200 feet is the min either way...
 
+>>    Doe anyone rememnber that you had to let you drives acclimate to your
+>> machine room for a day or so before you used them.
+>
+> The problem is, that's not enough; the room temperature/humidity has to be
+> controlled too.  In a desktop environment, that's not really feasible.
+
+5-90% humidity, operating, 95% non-op, and 30%/hour.  seems pretty easy
+to me.  in fact, I frequently ask people to justify the assumption that 
+a good machineroom needs tight control over humidity.  (assuming, like 
+most machinerooms, you aren't frequently handling the innards.)
