@@ -1,37 +1,37 @@
-From: Theodore Tso <tytso@mit.edu>
-Subject: Re: end to end error recovery musings
-Date: Fri, 23 Feb 2007 21:32:29 -0500
-Message-ID: <20070224023229.GB4380@thunk.org>
-References: <45DEF6EF.3020509@emc.com> <45DF80C9.5080606@zytor.com> <20070224003723.GS10715@schatzie.adilger.int>
+From: Richard Scobie <richard@sauce.co.nz>
+Subject: Re: Linux Software RAID a bit of a weakness?
+Date: Sat, 24 Feb 2007 17:14:53 +1300
+Message-ID: <45DFBBBD.7020808@sauce.co.nz>
+References: <1172258378.21648.51.camel@cowie> <17887.19894.548422.683023@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20070224003723.GS10715@schatzie.adilger.int>
-Sender: linux-ide-owner@vger.kernel.org
-To: "H. Peter Anvin" <hpa@zytor.com>, Ric Wheeler <ric@emc.com>, Linux-ide <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-raid@vger.kernel.org, Tejun Heo <htejun@gmail.com>, James Bottomley <James.Bottomley@SteelEye.com>, Mark Lord <mlord@pobox.com>, Neil Brown <neilb@suse.de>, Jens Axboe <jens.axboe@oracle.com>, "Clark, Nathan" <Clark_Nathan@emc.com>, "Singh, Arvinder" <Singh_Arvinder@emc.com>, "De Smet, Jochen" <DeSmet_Jochen@emc.com>, "Farmer, Matt" <Farmer_Matt@emc.com>, linux-fsdevel@vger.kernel.org, "Mizar, Sunita" <Mizar_Sunita@emc.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <17887.19894.548422.683023@notabene.brown>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, Feb 23, 2007 at 05:37:23PM -0700, Andreas Dilger wrote:
-> > Probably the only sane thing to do is to remember the bad sectors and 
-> > avoid attempting reading them; that would mean marking "automatic" 
-> > versus "explicitly requested" requests to determine whether or not to 
-> > filter them against a list of discovered bad blocks.
+Neil Brown wrote:
+
+> The 'check' process reads all copies and compares them with one
+> another,  If there is a difference it is reported.  If you use
+> 'repair' instead of 'check', the difference is arbitrarily corrected.
+> If a read error is detected during the 'check', md/raid1 will attempt
+> to write the data from the good drive to the bad drive, then read it
+> back.  If this works, the drive is assumed to be fixed.  If not, the
+> bad drive is failed out of the array.
 > 
-> And clearing this list when the sector is overwritten, as it will almost
-> certainly be relocated at the disk level.  For that matter, a huge win
-> would be to have the MD RAID layer rewrite only the bad sector (in hopes
-> of the disk relocating it) instead of failing the whiole disk.  Otherwise,
-> a few read errors on different disks in a RAID set can take the whole
-> system offline.  Apologies if this is already done in recent kernels...
 
-And having a way of making this list available to both the filesystem
-and to a userspace utility, so they can more easily deal with doing a
-forced rewrite of the bad sector, after determining which file is
-involved and perhaps doing something intelligent (up to and including
-automatically requesting a backup system to fetch a backup version of
-the file, and if it can be determined that the file shouldn't have
-been changed since the last backup, automatically fixing up the
-corrupted data block :-).
+One thing to note here is that 'repair' was broken for RAID1 until 
+recently - see
 
-						- Ted
+http://marc.theaimsgroup.com/?l=linux-raid&m=116951242005315&w=2
+
+As this patch was submitted just prior to the release of 2.6.20, this 
+may be the first "fixed" kernel, but I have not checked.
+
+Regards,
+
+Richard
+
