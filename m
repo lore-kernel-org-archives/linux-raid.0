@@ -1,28 +1,32 @@
-From: Frank van Maarseveen <frankvm@frankvm.com>
+From: "Christian Pernegger" <pernegger@gmail.com>
 Subject: Re: nonzero mismatch_cnt with no earlier error
-Date: Sun, 25 Feb 2007 19:33:32 +0100
-Message-ID: <20070225183332.GA10098@janus>
-References: <45DF859B.2050108@eyal.emu.id.au>
+Date: Sun, 25 Feb 2007 20:58:15 +0100
+Message-ID: <bb145bd20702251158o339093ecu223220d69d2031b3@mail.gmail.com>
+References: <45DF859B.2050108@eyal.emu.id.au> <20070225183332.GA10098@janus>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20070225183332.GA10098@janus>
 Content-Disposition: inline
-In-Reply-To: <45DF859B.2050108@eyal.emu.id.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Eyal Lebedinsky <eyal@eyal.emu.id.au>
-Cc: linux-raid list <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, Feb 24, 2007 at 11:23:55AM +1100, Eyal Lebedinsky wrote:
-[...]
-> 
-> fsck (ext3 with logging) found no errors but I may have bad data
-> somewhere.
+Sorry to hijack the thread a little but I just noticed that the
+mismatch_cnt for my mirror is at 256.
 
-I've written a program for fast MD5/SHA256 summing which may be useful
-for tracking these kind of silent corruptions. See
+I'd always thought the monthly check done by the mdadm Debian package
+does repair as well - apparently it doesn't.
 
-	http://www.frankvm.com/fsindex
+So I guess I should run repair but I'm wondering ...
+- is it safe / bugfree considering my oldish software? (mdadm 2.5.2 +
+linux 2.6.17.4)
+- is there any way to check which files (if any) have been corrupted?
+- I have grub installed by hand on both mirror components, but that
+shouldn't show up as mismatch, should it?
 
--- 
-Frank
+The box in question is in production so I'd rather not update mdadm
+and/or kernel if possible.
+
+Chris
