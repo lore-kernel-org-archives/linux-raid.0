@@ -1,30 +1,28 @@
-From: Richard Scobie <richard@sauce.co.nz>
-Subject: Re: Linux Software RAID a bit of a weakness?
-Date: Mon, 26 Feb 2007 08:15:29 +1300
-Message-ID: <45E1E051.1020908@sauce.co.nz>
-References: <1172258378.21648.51.camel@cowie>  <45DF46B7.3040707@maine.edu> <1172406243.3765.29.camel@cowie>
+From: Frank van Maarseveen <frankvm@frankvm.com>
+Subject: Re: nonzero mismatch_cnt with no earlier error
+Date: Sun, 25 Feb 2007 19:33:32 +0100
+Message-ID: <20070225183332.GA10098@janus>
+References: <45DF859B.2050108@eyal.emu.id.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1172406243.3765.29.camel@cowie>
+Content-Disposition: inline
+In-Reply-To: <45DF859B.2050108@eyal.emu.id.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: Eyal Lebedinsky <eyal@eyal.emu.id.au>
+Cc: linux-raid list <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Colin Simpson wrote:
+On Sat, Feb 24, 2007 at 11:23:55AM +1100, Eyal Lebedinsky wrote:
+[...]
+> 
+> fsck (ext3 with logging) found no errors but I may have bad data
+> somewhere.
 
-> They therefore do not have the "check" option in the kernel. Is there
-> anything else I can do? Would forcing a resync achieve the same result
-> (or is that down right dangerous as the array is not considered
-> consistent for a while). Any thoughts apart from my one being to upgrade
-> them to RH5 when that appears with a probably 2.6.18 kernel (which will
-> presumably have "check")? Any thoughts?
+I've written a program for fast MD5/SHA256 summing which may be useful
+for tracking these kind of silent corruptions. See
 
-You could configure smartd to do regular long selftests, which would 
-notify you on failures and allow you to take the drive offline and dd, 
-replace etc.
+	http://www.frankvm.com/fsindex
 
-Regards,
-
-Richard
+-- 
+Frank
