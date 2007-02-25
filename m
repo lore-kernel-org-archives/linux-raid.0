@@ -1,73 +1,92 @@
-From: Al Boldi <a1426z@gawab.com>
-Subject: Re: PATA/SATA Disk Reliability paper
-Date: Sun, 25 Feb 2007 14:22:28 +0300
-Message-ID: <200702251422.28079.a1426z@gawab.com>
-References: <45D89FF5.3020303@sauce.co.nz> <200702232122.16730.a1426z@gawab.com> <Pine.LNX.4.64.0702241716130.28888@coffee.psychology.mcmaster.ca>
+From: "Colin Simpson" <csimpson@csl.co.uk>
+Subject: Re: Linux Software RAID a bit of a weakness?
+Date: Sun, 25 Feb 2007 12:24:03 +0000
+Message-ID: <1172406243.3765.29.camel@cowie>
+References: <1172258378.21648.51.camel@cowie>  <45DF46B7.3040707@maine.edu>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0702241716130.28888@coffee.psychology.mcmaster.ca>
-Content-Disposition: inline
+In-Reply-To: <45DF46B7.3040707@maine.edu>
+Content-Class: urn:content-classes:message
 Sender: linux-raid-owner@vger.kernel.org
-To: Mark Hahn <hahn@mcmaster.ca>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Mark Hahn wrote:
-> > In contrast, ever since these holes appeared, drive failures became the
-> > norm.
->
-> wow, great conspiracy theory!
+On Fri, 2007-02-23 at 14:55 -0500, Steve Cousins wrote:
+> Yes, this is an important thing to keep on top of, both for hardware 
+> RAID and software RAID.  For md:
+> 
+> 	echo check > /sys/block/md0/md/sync_action
+> 
+> This should be done regularly. I have cron do it once a week.
+> 
+> Check out: http://neil.brown.name/blog/20050727141521-002
+> 
+> Good luck,
+> 
+> Steve
 
-I think you misunderstand.  I just meant plain old-fashioned mis-engineering.
+Thanks for all the info. 
 
-> maybe the hole is plugged at
-> the factory with a substance which evaporates at 1/warranty-period ;)
+A further search around seems to reveal the seriousness of this issue. 
+So called "Disk/Data Scrubbing" seems to be vital for keeping a modern
+large RAID healthy.
 
-Actually it's plugged with a thin paper-like filter, which does not seem to 
-evaporate easily.
+I've found a few interesting links. 
 
-And it's got nothing to do with warranty, although if you get lucky and the 
-failure happens within the warranty period, you can probably demand a 
-replacement drive to make you feel better.
+http://www.ashtech.net/~syntax/blog/archives/53-Data-Scrub-with-Linux-RAID-or-Die.html
 
-But remember, the google report mentions a great number of drives failing for 
-no apparent reason, not even a smart warning, so failing within the warranty 
-period is just pure luck.
+The link of particular interest from the above is
 
-> seriously, isn't it easy to imagine a bladder-like arrangement that
-> permits equilibration without net flow?  disk spec-sheets do limit
-> this - I checked the seagate 7200.10: 10k feet operating, 40k max.
-> amusingly -200 feet is the min either way...
+http://www.nber.org/sys-admin/linux-nas-raid.html
 
-Well, it looks like filtered net flow on wd's.
+The really scary item is entitled, "Why do drive failures come in
+pairs?", it has the following :
 
-What's it look like on seagate?
+===
+Let's repeat the reliability calculation with our new knowledge of the
+situation. In our experience perhaps half of drives have at least one
+unreadable sector in the first year. Again assume a 6 percent chance of
+a single failure. The chance of at least one of the remaining two drives
+having a bad sector is 75% (1-(1-.5)^2). So the RAID 5 failure rate is
+about 4.5%/year, which is .5% MORE than the 4% failure rate one would
+expect from a two drive RAID 0 with the same capacity. Alternatively, if
+you just had two drives with a partition on each and no RAID of any
+kind, the chance of a failure would still be 4%/year but only half the
+data loss per incident, which is considerably better than the RAID 5 can
+even hope for under the current reconstruction policy even with the most
+expensive hardware.
+===
 
-> >>    Doe anyone rememnber that you had to let you drives acclimate to
-> >> your machine room for a day or so before you used them.
-> >
-> > The problem is, that's not enough; the room temperature/humidity has to
-> > be controlled too.  In a desktop environment, that's not really
-> > feasible.
->
-> 5-90% humidity, operating, 95% non-op, and 30%/hour.  seems pretty easy
-> to me.  in fact, I frequently ask people to justify the assumption that
-> a good machineroom needs tight control over humidity.  (assuming, like
-> most machinerooms, you aren't frequently handling the innards.)
+That's got my attention! My RAID 5 is worse than a 2 disk RAID 0. It
+goes on about a surface scan being used to mitigate this problem. The
+article also talks about how on reconstruction perhaps the md driver
+should not just give up is it finds bad blocks on the disk but do
+something cleverer. I don't know if that's valid or not.
 
-I agree, but reality has a different opinion, and it may take down that 
-drive, specs or no specs.
+But this all leaves me with a big problem. As the systems I have
+Software RAID running are fully supported RH 4 ES systems (running the
+2.6.9-42.0.8 kernel, I can't really change it without losing RH
+support). 
 
-A good way to deal with reality is to find the real reasons for failure.  
-Once these reasons are known, engineering quality drives becomes, thank GOD, 
-really rather easy.
+They therefore do not have the "check" option in the kernel. Is there
+anything else I can do? Would forcing a resync achieve the same result
+(or is that down right dangerous as the array is not considered
+consistent for a while). Any thoughts apart from my one being to upgrade
+them to RH5 when that appears with a probably 2.6.18 kernel (which will
+presumably have "check")? Any thoughts?
+
+Is this something that should be added to the "Software-RAID-HOWTO"? 
+
+Just for reference the current Dell Perc 5i controllers has a thing
+called "Patrol Read", which goes off and does a scrub in the background.
+
+Thanks again
+
+Colin
 
 
-Thanks!
+This email and any files transmitted with it are confidential and are intended solely for the use of the individual or entity to whom they are addressed.  If you are not the original recipient or the person responsible for delivering the email to the intended recipient, be advised that you have received this email in error, and that any use, dissemination, forwarding, printing, or copying of this email is strictly prohibited. If you received this email in error, please immediately notify the sender and delete the original.
 
---
-Al
 
