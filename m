@@ -1,63 +1,55 @@
-From: Bill Davidsen <davidsen@tmr.com>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
 Subject: Re: nonzero mismatch_cnt with no earlier error
-Date: Sun, 25 Feb 2007 15:02:42 -0500
-Message-ID: <45E1EB62.40106@tmr.com>
-References: <45DF859B.2050108@eyal.emu.id.au>  <45DFE217.3020703@eyal.emu.id.au>  <Pine.LNX.4.64.0702240413570.21012@p34.internal.lan>  <Pine.LNX.4.64.0702240437070.21012@p34.internal.lan> <1172310529.4431.9.camel@merlin> <45E01D01.4080205@tls.msk.ru> <Pine.LNX.4.64.0702240611320.31123@p34.internal.lan>
+Date: Sun, 25 Feb 2007 16:07:41 -0500 (EST)
+Message-ID: <Pine.LNX.4.64.0702251606160.31647@p34.internal.lan>
+References: <45DF859B.2050108@eyal.emu.id.au> <20070225183332.GA10098@janus>
+ <bb145bd20702251158o339093ecu223220d69d2031b3@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0702240611320.31123@p34.internal.lan>
+In-Reply-To: <bb145bd20702251158o339093ecu223220d69d2031b3@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: Michael Tokarev <mjt@tls.msk.ru>, Jason Rainforest <l3mming@iinet.net.au>, Eyal Lebedinsky <eyal@eyal.emu.id.au>, linux-raid list <linux-raid@vger.kernel.org>
+To: Christian Pernegger <pernegger@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Justin Piszcz wrote:
->
->
-> On Sat, 24 Feb 2007, Michael Tokarev wrote:
->
->> Jason Rainforest wrote:
->>> I tried doing a check, found a mismatch_cnt of 8 (7*250Gb SW RAID5,
->>> multiple controllers on Linux 2.6.19.2, SMP x86-64 on Athlon64 X2 4200
->>> +).
->>>
->>> I then ordered a resync. The mismatch_cnt returned to 0 at the start of
->>
->> As pointed out later it was repair, not resync.
->>
->>> the resync, but around the same time that it went up to 8 with the
->>> check, it went up to 8 in the resync. After the resync, it still is 
->>> 8. I
->>> haven't ordered a check since the resync completed.
->>
->> As far as I understand, repair will do the same as check does, but ALSO
->> will try to fix the problems found.  So the number in mismatch_cnt after
->> a repair will indicate the amount of mismatches found _and fixed_
->>
->> /mjt
->>
->
-> That is what I thought too (I will have to wait until I get another 
-> mismatch to verify), but FYI--
->
-> Yesterday I had 512 mismatches for my swap partition (RAID1) after I 
-> ran the check.
->
-> I ran repair.
->
-> I catted the mismatch_cnt again, still 512.
->
-> I re-ran the check, back to 0. 
 
-AFAIK the "repair" action will give you a count of the repairs it does, 
-and will fail a drive if a read does not succeed after the sector is 
-rewritten. That's the way I read it, and the way it seems to work.
 
--- 
-bill davidsen <davidsen@tmr.com>
-  CTO TMR Associates, Inc
-  Doing interesting things with small computers since 1979
+On Sun, 25 Feb 2007, Christian Pernegger wrote:
 
+> Sorry to hijack the thread a little but I just noticed that the
+> mismatch_cnt for my mirror is at 256.
+>
+> I'd always thought the monthly check done by the mdadm Debian package
+> does repair as well - apparently it doesn't.
+>
+> So I guess I should run repair but I'm wondering ...
+> - is it safe / bugfree considering my oldish software? (mdadm 2.5.2 +
+> linux 2.6.17.4)
+> - is there any way to check which files (if any) have been corrupted?
+> - I have grub installed by hand on both mirror components, but that
+> shouldn't show up as mismatch, should it?
+>
+> The box in question is in production so I'd rather not update mdadm
+> and/or kernel if possible.
+>
+> Chris
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+
+That is a very good question.. Also I hope you are not running XFS with 
+2.6.17.4.  (corruption bug)
+
+Besides that, I wonder if it would be possible (with bitmaps perhaps(?)) 
+to have the kernel increment that and then post via ring buffer/dmesg, 
+something like:
+
+kernel: md1: mismatch_cnt: 512, file corrupted: /etc/resolv.conf
+
+I would take a performance hit for something like that :)
+
+Justin.
 
