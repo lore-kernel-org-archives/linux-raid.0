@@ -1,63 +1,63 @@
-From: Al Boldi <a1426z@gawab.com>
-Subject: Re: PATA/SATA Disk Reliability paper
-Date: Mon, 26 Feb 2007 00:07:10 +0300
-Message-ID: <200702260007.10205.a1426z@gawab.com>
-References: <45D89FF5.3020303@sauce.co.nz> <200702252057.22963.a1426z@gawab.com> <Pine.LNX.4.64.0702251256060.21918@coffee.psychology.mcmaster.ca>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: nonzero mismatch_cnt with no earlier error
+Date: Sun, 25 Feb 2007 15:02:42 -0500
+Message-ID: <45E1EB62.40106@tmr.com>
+References: <45DF859B.2050108@eyal.emu.id.au>  <45DFE217.3020703@eyal.emu.id.au>  <Pine.LNX.4.64.0702240413570.21012@p34.internal.lan>  <Pine.LNX.4.64.0702240437070.21012@p34.internal.lan> <1172310529.4431.9.camel@merlin> <45E01D01.4080205@tls.msk.ru> <Pine.LNX.4.64.0702240611320.31123@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0702251256060.21918@coffee.psychology.mcmaster.ca>
-Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.64.0702240611320.31123@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mark Hahn <hahn@mcmaster.ca>
-Cc: linux-raid@vger.kernel.org
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: Michael Tokarev <mjt@tls.msk.ru>, Jason Rainforest <l3mming@iinet.net.au>, Eyal Lebedinsky <eyal@eyal.emu.id.au>, linux-raid list <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Mark Hahn wrote:
->  	- disks are very complicated, so their failure rates are a
->  	combination of conditional failure rates of many components.
->  	to take a fully reductionist approach would require knowing
->  	how each of ~1k parts responds to age, wear, temp, handling, etc.
->  	and none of those can be assumed to be independent.  those are the
->  	"real reasons", but most can't be measured directly outside a lab
->  	and the number of combinatorial interactions is huge.
+Justin Piszcz wrote:
+>
+>
+> On Sat, 24 Feb 2007, Michael Tokarev wrote:
+>
+>> Jason Rainforest wrote:
+>>> I tried doing a check, found a mismatch_cnt of 8 (7*250Gb SW RAID5,
+>>> multiple controllers on Linux 2.6.19.2, SMP x86-64 on Athlon64 X2 4200
+>>> +).
+>>>
+>>> I then ordered a resync. The mismatch_cnt returned to 0 at the start of
+>>
+>> As pointed out later it was repair, not resync.
+>>
+>>> the resync, but around the same time that it went up to 8 with the
+>>> check, it went up to 8 in the resync. After the resync, it still is 
+>>> 8. I
+>>> haven't ordered a check since the resync completed.
+>>
+>> As far as I understand, repair will do the same as check does, but ALSO
+>> will try to fix the problems found.  So the number in mismatch_cnt after
+>> a repair will indicate the amount of mismatches found _and fixed_
+>>
+>> /mjt
+>>
+>
+> That is what I thought too (I will have to wait until I get another 
+> mismatch to verify), but FYI--
+>
+> Yesterday I had 512 mismatches for my swap partition (RAID1) after I 
+> ran the check.
+>
+> I ran repair.
+>
+> I catted the mismatch_cnt again, still 512.
+>
+> I re-ran the check, back to 0. 
 
-It seems to me that the biggest problem are the 7.2k+ rpm platters 
-themselves, especially with those heads flying closely on top of them.  So, 
-we can probably forget the rest of the ~1k non-moving parts, as they have 
-proven to be pretty reliable, most of the time.
+AFAIK the "repair" action will give you a count of the repairs it does, 
+and will fail a drive if a read does not succeed after the sector is 
+rewritten. That's the way I read it, and the way it seems to work.
 
->  	- factorial analysis of the data.  temperature is a good
->  	example, because both low and high temperature affect AFR,
->  	and in ways that interact with age and/or utilization.  this
->  	is a common issue in medical studies, which are strikingly
->  	similar in design (outcome is subject or disk dies...)  there
->  	is a well-established body of practice for factorial analysis.
+-- 
+bill davidsen <davidsen@tmr.com>
+  CTO TMR Associates, Inc
+  Doing interesting things with small computers since 1979
 
-Agreed.  We definitely need more sensors.
-
->  	- recognition that the relative results are actually quite good,
->  	even if the absolute results are not amazing.  for instance,
->  	assume we have 1k drives, and a 10% overall failure rate.  using
->  	all SMART but temp detects 64 of the 100 failures and misses 36.
->  	essentially, the failure rate is now .036.  I'm guessing that if
->  	utilization and temperature were included, the rate would be much
->  	lower.  feedback from active testing (especially scrubbing)
->  	and performance under the normal workload would also help.
-
-Are you saying, you are content with pre-mature disk failure, as long as 
-there is a smart warning sign?
-
-If so, then I don't think that is enough.
-
-I think the sensors should trigger some kind of shutdown mechanism as a 
-protective measure, when some threshold is reached.  Just like the 
-protective measure you see for CPUs to prevent meltdown.
-
-Thanks!
-
---
-Al
 
