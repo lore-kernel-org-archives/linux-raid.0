@@ -1,35 +1,33 @@
-From: Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE>
-Subject: Re: beginner error detection
-Date: Mon, 26 Feb 2007 15:24:56 +0100
-Message-ID: <eruqjo$nvi$2@sea.gmane.org>
-References: <Pine.LNX.4.64.0702231301180.3550@tomka.hu>
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: end to end error recovery musings
+Date: Mon, 26 Feb 2007 09:17:19 -0600
+Message-ID: <1172503039.3344.4.camel@mulgrave.il.steeleye.com>
+References: <45DEF6EF.3020509@emc.com> <45DF80C9.5080606@zytor.com>
+	 <20070224003723.GS10715@schatzie.adilger.int>
+	 <20070224023229.GB4380@thunk.org>
+	 <17890.28977.989203.938339@notabene.brown>
+	 <20070226132511.GB8154@thunk.org>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20070226132511.GB8154@thunk.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: Theodore Tso <tytso@mit.edu>
+Cc: Neil Brown <neilb@suse.de>, "H. Peter Anvin" <hpa@zytor.com>, Ric Wheeler <ric@emc.com>, Linux-ide <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-raid@vger.kernel.org, Tejun Heo <htejun@gmail.com>, Mark Lord <mlord@pobox.com>, Jens Axboe <jens.axboe@oracle.com>, "Clark, Nathan" <Clark_Nathan@emc.com>, "Singh, Arvinder" <Singh_Arvinder@emc.com>, "De Smet, Jochen" <DeSmet_Jochen@emc.com>, "Farmer, Matt" <Farmer_Matt@emc.com>, linux-fsdevel@vger.kernel.org, "Mizar, Sunita" <Mizar_Sunita@emc.com>
 List-Id: linux-raid.ids
 
-Tomka Gergely <gergely@tomka.hu> wrote:
-> Can the raid1 detect and handle disk errors?
+On Mon, 2007-02-26 at 08:25 -0500, Theodore Tso wrote:
+> Somewhat off-topic, but my one big regret with how the dm vs. evms
+> competition settled out was that evms had the ability to perform block
+> device snapshots using a non-LVM volume as the base --- and that EVMS
+> allowed a single drive to be partially managed by the LVM layer, and
+> partially managed by evms.  
 
-This is what it is designed for :)
+If all you want is a snapshot, md can do this today ... you just create
+a RAID-1 resync it and then break it ... of course, you have to have the
+filesystem mounted above an md device initially ...
 
-> If one block goes wrong, how 
-> can the raid1 driver choose which was the correct, original value?
+James
 
-RAID1 depends on the disk to state errors. RAID1 does not ensure data
-integrity. RAID1 cannot correctly handle a disk returning wrong data
-(i.e. other data than written before). Only RAID2 is designed for such.
-However, since todays disks have their own data integrity detection
-(i.e. ECC), they should normally not return wrong data but read-errors
-instead.
-
-And assuming a drive returns either correct data or a read-error, it is
-simple to choose which was the correct, original value :)
-
-
-regards
-   Mario
--- 
-> As Luke Leighton said once on samba-ntdom, "now, what was that about
-> rebooting?   that was so long ago, i had to look it up with man -k."
 
