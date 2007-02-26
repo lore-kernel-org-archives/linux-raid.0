@@ -1,31 +1,28 @@
-From: "H. Peter Anvin" <hpa@zytor.com>
-Subject: Re: end to end error recovery musings
-Date: Mon, 26 Feb 2007 10:59:50 -0800
-Message-ID: <45E32E26.1050000@zytor.com>
-References: <45DEF6EF.3020509@emc.com> <45DF80C9.5080606@zytor.com> <20070224003723.GS10715@schatzie.adilger.int> <20070224023229.GB4380@thunk.org> <17890.28977.989203.938339@notabene.brown> <20070226132511.GB8154@thunk.org>
+From: Joshua Baker-LePain <jlb17@duke.edu>
+Subject: Re: Linux Software RAID a bit of a weakness?
+Date: Mon, 26 Feb 2007 14:40:18 -0500 (EST)
+Message-ID: <alpine.LRH.0.82.0702261439030.302@chaos.egr.duke.edu>
+References: <1172258378.21648.51.camel@cowie> <45DF46B7.3040707@maine.edu>
+ <1172406243.3765.29.camel@cowie> <45E1E051.1020908@sauce.co.nz>
+ <72dbd3150702260856p5053d028je85cacffb15a5536@mail.gmail.com>
+ <1172510818.11898.33.camel@cowie>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20070226132511.GB8154@thunk.org>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Theodore Tso <tytso@mit.edu>, Neil Brown <neilb@suse.de>, "H. Peter Anvin" <hpa@zytor.com>, Ric Wheeler <ric@emc.com>, Linux-ide <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-raid@vger.kernel.org, Tejun Heo <htejun@gmail.com>, James Bottomley <James.Bottomley@SteelEye.com>, Mark Lord <mlord@pobox.com>, Jens Axboe <jens.axboe@oracle.com>, "Clark, Nathan" <Clark_Nathan@emc.com>, "Singh, Arvinder" <Singh_Arvinder@emc.com>, "De Smet, Jochen" <DeSmet_Jochen@emc.com>, "Farmer, Matt" <Farmer_Matt@emc.com>, linux-fsdevel@vger.kernel.org, "Mizar, Sunita" <Mizar_Sunita@emc.com>
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1172510818.11898.33.camel@cowie>
+Sender: linux-raid-owner@vger.kernel.org
+To: Colin Simpson <csimpson@csl.co.uk>
+Cc: David Rees <drees76@gmail.com>, Richard Scobie <richard@sauce.co.nz>, Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Theodore Tso wrote:
-> 
-> In any case, the reason why I bring this up is that it would be really
-> nice if there was a way with a single laptop drive to be able to do
-> snapshots and background fsck's without having to use initrd's with
-> device mapper.
-> 
+On Mon, 26 Feb 2007 at 5:26pm, Colin Simpson wrote
 
-This is a major part of why I've been trying to push integrated klibc to 
-have all that stuff as a unified "kernel" deliverable.  Unfortunately, 
-as you know, Linus apparently rejected the concept "at least for now" at 
-LKS last year.
+> SATA isn't supported on RH 4's SMART.
 
-With klibc this stuff could still be in one single wrapper without funny 
-dependencies, but wouldn't have to be ported to kernel space.
+Not true (for many SATA chipsets at least).  Just pass '-d ata' to 
+smartctl.
 
-	-hpa
+-- 
+Joshua Baker-LePain
+Department of Biomedical Engineering
+Duke University
