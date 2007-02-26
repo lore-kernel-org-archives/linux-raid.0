@@ -1,37 +1,35 @@
-From: jahammonds prost <gmitch64@yahoo.com>
-Subject: Re: trouble creating array
-Date: Mon, 26 Feb 2007 06:16:22 -0800 (PST)
-Message-ID: <951660.37205.qm@web55812.mail.re3.yahoo.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+From: Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE>
+Subject: Re: beginner error detection
+Date: Mon, 26 Feb 2007 15:24:56 +0100
+Message-ID: <eruqjo$nvi$2@sea.gmane.org>
+References: <Pine.LNX.4.64.0702231301180.3550@tomka.hu>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Rebooted and checked that there were no arrays defined. I have 2 cards in the server - one is a VIA based card, with a single Maxtor, the other this a Promise based card, with 2 Maxtors by Seagate on it. I've been into the config utilites on both cards, and none of them have arrays defined on them.
+Tomka Gergely <gergely@tomka.hu> wrote:
+> Can the raid1 detect and handle disk errors?
 
------ Original Message ----
-From: Neil Brown <neilb@suse.de>
-To: jahammonds prost <gmitch64@yahoo.com>
-Cc: Justin Piszcz <jpiszcz@lucidpixels.com>; linux-raid@vger.kernel.org
-Sent: Sunday, 25 February, 2007 11:40:26 PM
-Subject: Re: trouble creating array
+This is what it is designed for :)
 
+> If one block goes wrong, how 
+> can the raid1 driver choose which was the correct, original value?
 
-On Sunday February 25, gmitch64@yahoo.com wrote:
-> 
-> 
-> Any ideas how to find out what has it open? I can happily write all over the disk with dd... I can create and delete the partition, and it's all good... I will try deleting the sd{b,c}1 partitions, reboot, and see what happens.
-> 
+RAID1 depends on the disk to state errors. RAID1 does not ensure data
+integrity. RAID1 cannot correctly handle a disk returning wrong data
+(i.e. other data than written before). Only RAID2 is designed for such.
+However, since todays disks have their own data integrity detection
+(i.e. ECC), they should normally not return wrong data but read-errors
+instead.
 
-ls -l /sys/block/*/holders/* ??
-
-NeilBrown
+And assuming a drive returns either correct data or a read-error, it is
+simple to choose which was the correct, original value :)
 
 
-		
-___________________________________________________________ 
-The all-new Yahoo! Mail goes wherever you go - free your email address from your Internet provider. http://uk.docs.yahoo.com/nowyoucan.html
+regards
+   Mario
+-- 
+> As Luke Leighton said once on samba-ntdom, "now, what was that about
+> rebooting?   that was so long ago, i had to look it up with man -k."
+
