@@ -1,31 +1,41 @@
-From: Ric Wheeler <ric@emc.com>
-Subject: Re: end to end error recovery musings
-Date: Mon, 26 Feb 2007 11:42:07 -0500
-Message-ID: <45E30DDF.9090902@emc.com>
-References: <45DEF6EF.3020509@emc.com>	<45DF80C9.5080606@zytor.com>	<20070224003723.GS10715@schatzie.adilger.int>	<20070224023229.GB4380@thunk.org>	<17890.28977.989203.938339@notabene.brown>	<20070226132511.GB8154@thunk.org>	<20070226151507.13a1701e@lxorguk.ukuu.org.uk>	<45E2FA3E.3040201@emc.com> <20070226170118.54371f1e@lxorguk.ukuu.org.uk>
-Reply-To: ric@emc.com
+From: "David Rees" <drees76@gmail.com>
+Subject: Re: Linux Software RAID a bit of a weakness?
+Date: Mon, 26 Feb 2007 08:56:44 -0800
+Message-ID: <72dbd3150702260856p5053d028je85cacffb15a5536@mail.gmail.com>
+References: <1172258378.21648.51.camel@cowie> <45DF46B7.3040707@maine.edu>
+	 <1172406243.3765.29.camel@cowie> <45E1E051.1020908@sauce.co.nz>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20070226170118.54371f1e@lxorguk.ukuu.org.uk>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Alan <alan@lxorguk.ukuu.org.uk>
-Cc: Theodore Tso <tytso@mit.edu>, Neil Brown <neilb@suse.de>, "H. Peter Anvin" <hpa@zytor.com>, Linux-ide <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-raid@vger.kernel.org, Tejun Heo <htejun@gmail.com>, James Bottomley <James.Bottomley@SteelEye.com>, Mark Lord <mlord@pobox.com>, Jens Axboe <jens.axboe@oracle.com>, "Clark, Nathan" <Clark_Nathan@emc.com>, "Singh, Arvinder" <Singh_Arvinder@emc.com>, "De Smet, Jochen" <DeSmet_Jochen@emc.com>, "Farmer, Matt" <Farmer_Matt@emc.com>, linux-fsdevel@vger.kernel.org, "Mizar, Sunita" <Mizar_Sunita@emc.com>
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <45E1E051.1020908@sauce.co.nz>
+Content-Disposition: inline
+Sender: linux-raid-owner@vger.kernel.org
+To: Richard Scobie <richard@sauce.co.nz>
+Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+On 2/25/07, Richard Scobie <richard@sauce.co.nz> wrote:
+> Colin Simpson wrote:
+> > They therefore do not have the "check" option in the kernel. Is there
+> > anything else I can do? Would forcing a resync achieve the same result
+> > (or is that down right dangerous as the array is not considered
+> > consistent for a while). Any thoughts apart from my one being to upgrade
+> > them to RH5 when that appears with a probably 2.6.18 kernel (which will
+> > presumably have "check")? Any thoughts?
+>
+> You could configure smartd to do regular long selftests, which would
+> notify you on failures and allow you to take the drive offline and dd,
+> replace etc.
 
-Alan wrote:
->> I think that this is mostly true, but we also need to balance this against the 
->> need for higher levels to get a timely response.  In a really large IO, a naive 
->> retry of a very large write could lead to a non-responsive system for a very 
->> large time...
-> 
-> And losing the I/O could result in a system that is non responsive until
-> the tape restore completes two days later....
+So what do you do when your drives in your array don't support SMART
+self tests for some reason?
 
-Which brings us back to a recent discussion at the file system workshop on being 
-more repair oriented in file system design so we can survive situations like 
-this a bit more reliably ;-)
+The best solution I have thought of so far is to do a `dd if=/dev/mdX
+of=/dev/null` periodically, but this isn't as nice as running a check
+in the later kernels as it's not guaranteed to read blocks from all
+disks. I guess you could instead do the same thing but with the
+underlying disks instead of the raid device, then make sure you watch
+the logs for disk read errors.
 
-ric
+-Dave
