@@ -1,51 +1,35 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: end to end error recovery musings
-Date: Tue, 27 Feb 2007 11:50:29 -0500
-Message-ID: <yq14pp78rze.fsf@sermon.lab.mkp.net>
-References: <664A4EBB07F29743873A87CF62C26D705D6DDB@NAMAIL4.ad.lsil.com>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: Linux Software RAID Bitmap Question
+Date: Tue, 27 Feb 2007 12:42:23 -0500
+Message-ID: <45E46D7F.9000501@tmr.com>
+References: <Pine.LNX.4.64.0702250903120.21821@p34.internal.lan> <17890.24681.249414.635536@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <664A4EBB07F29743873A87CF62C26D705D6DDB@NAMAIL4.ad.lsil.com> (Eric Moore's message of "Mon, 26 Feb 2007 18:10:57 -0700")
-Sender: linux-ide-owner@vger.kernel.org
-To: "Moore, Eric" <Eric.Moore@lsi.com>
-Cc: ric@emc.com, Alan <alan@lxorguk.ukuu.org.uk>, Theodore Tso <tytso@mit.edu>, Neil Brown <neilb@suse.de>, "H. Peter Anvin" <hpa@zytor.com>, Linux-ide <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-raid@vger.kernel.org, Tejun Heo <htejun@gmail.com>, James Bottomley <James.Bottomley@SteelEye.com>, Mark Lord <mlord@pobox.com>, Jens Axboe <jens.axboe@oracle.com>, "Clark, Nathan" <Clark_Nathan@emc.com>, "Singh, Arvinder" <Singh_Arvinder@emc.com>, "De Smet, Jochen" <DeSmet_Jochen@emc.com>, "Farmer, Matt" <Farmer_Matt@emc.com>, linux-fsdevel@vger.kernel.org, "Mizar, Sunita" <Mizar_Sunita@emc.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <17890.24681.249414.635536@notabene.brown>
+Sender: linux-raid-owner@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
->>>>> "Eric" == Moore, Eric <Eric.Moore@lsi.com> writes:
+Neil Brown wrote:
+> When md find a bad block (read failure) it either fixes it (by
+> successfully over-writing the correct date) or fails the drive.
+>
+> The count of the times that this has happened is available via
+>    /sys/block/mdX/md/errors
+>   
+What kernel provides this? I have system running everything from 2.6.15 
+to 2.6.20-get14, and there is no such file in any of them. There is a 
+per-device errors file one level down, but that presumably wouldn't be 
+in the superblock.
 
-Eric> Martin K. Petersen on Data Intergrity Feature, which is also
-Eric> called EEDP(End to End Data Protection), which he presented some
-Eric> ideas/suggestions of adding an API in linux for this.  
-
-T10 DIF is interesting for a few things: 
-
- - Ensuring that the data integrity is preserved when writing a buffer
-   to disk
-
- - Ensuring that the write ends up on the right hardware sector
-
-These features make the most sense in terms of WRITE.  Disks already
-have plenty of CRC on the data so if a READ fails on a regular drive
-we already know about it.
-
-We can, however, leverage DIF with my proposal to expose the
-protection data to host memory.  This will allow us to verify the data
-integrity information before passing it to the filesystem or
-application.  We can say "this is really the information the disk
-sent. It hasn't been mangled along the way".
-
-And by using the APP tag we can mark a sector as - say - metadata or
-data to ease putting the recovery puzzle back together.
-
-It would be great if the app tag was more than 16 bits.  Ted mentioned
-that ideally he'd like to store the inode number in the app tag.  But
-as it stands there isn't room.
-
-In any case this is all slightly orthogonal to Ric's original post
-about finding the right persistence heuristics in the error handling
-path...
+Do I have to go from 0.90 to v1 or later superblocks to get this, and if 
+so is that a safe thing to do?
 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+bill davidsen <davidsen@tmr.com>
+  CTO TMR Associates, Inc
+  Doing interesting things with small computers since 1979
 
