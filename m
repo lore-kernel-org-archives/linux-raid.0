@@ -1,62 +1,68 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: PATA/SATA Disk Reliability paper
-Date: Tue, 27 Feb 2007 14:06:15 -0500
-Message-ID: <45E48127.9020007@tmr.com>
-References: <45D89FF5.3020303@sauce.co.nz> <200702191426.16567.a1426z@gawab.com> <45DA19C8.8000002@eyal.emu.id.au> <200702201515.01677.a1426z@gawab.com> <87y7mphlpc.fsf@hades.wkstn.nix> <20070222233021.GA10618@seas.ucla.edu>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: end to end error recovery musings
+Date: Tue, 27 Feb 2007 14:07:12 -0500
+Message-ID: <yq1r6sb7733.fsf@sermon.lab.mkp.net>
+References: <664A4EBB07F29743873A87CF62C26D705D6DDB@NAMAIL4.ad.lsil.com>
+	<yq14pp78rze.fsf@sermon.lab.mkp.net>
+	<20070227190236.58323a40@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20070222233021.GA10618@seas.ucla.edu>
-Sender: linux-raid-owner@vger.kernel.org
-To: Stephen C Woods <scw@seas.ucla.edu>
-Cc: Nix <nix@esperi.org.uk>, Al Boldi <a1426z@gawab.com>, Eyal Lebedinsky <eyal@eyal.emu.id.au>, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <20070227190236.58323a40@lxorguk.ukuu.org.uk> (alan@lxorguk.ukuu.org.uk's message of "Tue, 27 Feb 2007 19:02:36 +0000")
+Sender: linux-scsi-owner@vger.kernel.org
+To: Alan <alan@lxorguk.ukuu.org.uk>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, "Moore, Eric" <Eric.Moore@lsi.com>, ric@emc.com, Theodore Tso <tytso@mit.edu>, Neil Brown <neilb@suse.de>, "H. Peter Anvin" <hpa@zytor.com>, Linux-ide <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-raid@vger.kernel.org, Tejun Heo <htejun@gmail.com>, James Bottomley <James.Bottomley@SteelEye.com>, Mark Lord <mlord@pobox.com>, Jens Axboe <jens.axboe@oracle.com>, "Clark, Nathan" <Clark_Nathan@emc.com>, "Singh, Arvinder" <Singh_Arvinder@emc.com>, "De Smet, Jochen" <DeSmet_Jochen@emc.com>, "Farmer, Matt" <Farmer_Matt@emc.com>, linux-fsdevel@vger.kernel.org, "Mizar, Sunita" <Mizar_Sunita@emc.com>
 List-Id: linux-raid.ids
 
-Stephen C Woods wrote:
->    As he leans on his cane, the old codger says....
-> Well Disks used to come in open cannisters,  that is you took the bottom
-> cover off, and then put the whould pack into the drive, and then
-> unscrewed the top cover and took it out.. Clearly ventilated.  C 1975.
->
->   Later we got sealed drives, Kennedy 180 MB Winchesters they were
-> called (the used IBM 3030 technology).  The had a vent pipe with two
-> filters, you replaced the outer one every 90days (as part of the PM
-> process).  The inner one you didn't touch.  Aparently they figured that
-> it'd be a long time before the inner one got really clogged at 10 min
-> exposure every 90 days.  C 1980
->
->   Still later we had a Mainframe running Un*x, it used IBM 3080 drives
-> these had huge HDA boxes that wree sealed but hav vent filters that had
-> to be changed every PM  (30 days,  2 hours of down time to do them
-> all).  C 1985.
->
->   So drives do need to be ventilated, not so much wory about exploding,
-> but rather subtle distortion of the case as the atmospheric preasure
-> changed.
->
->    Doe anyone rememnber that you had to let you drives acclimate to your
-> machine room for a day or so before you used them.
->
->    Ah the good old days...
->      HUH???
->
->   <scw>
-I remember the DSU-10, 16 million 36 bit words of storage, which not 
-only wanted to be acclimatized, but had platters so large, over a meter 
-in diameter, that ther was a short crane mounting point on the box. 
-Failure rate went WAY down after better air filters were installed.
+>>>>> "Alan" == Alan  <alan@lxorguk.ukuu.org.uk> writes:
 
-I think they were made for GE by CDC, but never knew for sure. GE was a 
-mainframe manufacturer until 1970, their big claim to fame was the 
-GE-645, the development platform for MULTICS. They sold the computer 
-business, mainframe and industrial control, in 1970 to put money into 
-nuclear energy, and haven't built a power plant since. Then the 
-developed a personal computer in 1978, built a plant to manufacture it 
-in Waynesboro VA, and decided there was no market for a small computer.
+>> These features make the most sense in terms of WRITE.  Disks
+>> already have plenty of CRC on the data so if a READ fails on a
+>> regular drive we already know about it.
+
+Alan> Don't bet on it. 
+
+This is why I mentioned that I want to expose the protection data to
+the host.  As written, DIF only protects the path between initiator
+and target.
+
+See below...
+
+
+Alan> If you want to do this seriously you need an end to end (media
+Alan> to host ram) checksum. We do see bizarre and quite evil things
+Alan> happen to people occasionally because they rely on bus level
+Alan> protection - both faulty network cards and faulty disk or
+Alan> controller RAM can cause very bad things to happen in a critical
+Alan> environment and are very very hard to detect and test for.
+
+Not sure you're up-to-date on the T10 data integrity feature.
+Essentially it's an extension of the 520 byte sectors common in disk
+arrays.  For each 512 byte sector (or 4KB ditto) you get 8 bytes of
+protection data.  There's a 2 byte CRC (GUARD tag), a 2 byte
+user-defined tag (APP) and a 4-byte reference tag (REF).  Depending on
+how the drive is formatted, the REF tag usually needs to match the
+lower 32-bits of the target sector #.
+
+For each sector coming in the disk firmware verifies that the CRC and
+the reference tags are in accordance with the contents of the sector
+and the CDB start sector + offset.  If they don't match the drive will
+reject the request.
+
+If an HBA is capable of exposing the protection tuples to the host we
+can precalculate the checksum and the LBA when submitting a WRITE.  My
+current proposal involves passing them down in two separate buffers to
+minimize the risk of in-memory corruption (Besides, it would suck if
+you had to interleave data and protection data.  The scatterlists
+would become long and twisted).
+
+And that's when the READ case becomes interesting.  Because then the
+fs can verify that the checksum of the in-buffer matches of the GUARD
+tag.  In that case we'll know there's been no corruption in the
+middle.
+
+And of course this also opens up using the APP field to tag sector
+contents.
 
 -- 
-bill davidsen <davidsen@tmr.com>
-  CTO TMR Associates, Inc
-  Doing interesting things with small computers since 1979
-
+Martin K. Petersen	Oracle Linux Engineering
