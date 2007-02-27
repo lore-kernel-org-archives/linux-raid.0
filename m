@@ -1,101 +1,54 @@
-From: "Moore, Eric" <Eric.Moore@lsi.com>
-Subject: RE: end to end error recovery musings
-Date: Mon, 26 Feb 2007 18:10:57 -0700
-Message-ID: <664A4EBB07F29743873A87CF62C26D705D6DDB@NAMAIL4.ad.lsil.com>
+From: berk walker <berk@panix.com>
+Subject: Re: Linux Software RAID a bit of a weakness?
+Date: Mon, 26 Feb 2007 23:10:08 -0500
+Message-ID: <45E3AF20.7030303@panix.com>
+References: <1172258378.21648.51.camel@cowie> <45DF46B7.3040707@maine.edu>	 <1172406243.3765.29.camel@cowie> <45E1E051.1020908@sauce.co.nz> <72dbd3150702260856p5053d028je85cacffb15a5536@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
-Sender: linux-scsi-owner@vger.kernel.org
-To: ric@emc.com, Alan <alan@lxorguk.ukuu.org.uk>
-Cc: Theodore Tso <tytso@mit.edu>, Neil Brown <neilb@suse.de>, "H. Peter Anvin" <hpa@zytor.com>, Linux-ide <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-raid@vger.kernel.org, Tejun Heo <htejun@gmail.com>, James Bottomley <James.Bottomley@SteelEye.com>, Mark Lord <mlord@pobox.com>, Jens Axboe <jens.axboe@oracle.com>, "Clark, Nathan" <Clark_Nathan@emc.com>, "Singh, Arvinder" <Singh_Arvinder@emc.com>, "De Smet, Jochen" <DeSmet_Jochen@emc.com>, "Farmer, Matt" <Farmer_Matt@emc.com>, linux-fsdevel@vger.kernel.org, "Mizar, Sunita" <Mizar_Sunita@emc.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <72dbd3150702260856p5053d028je85cacffb15a5536@mail.gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: David Rees <drees76@gmail.com>
+Cc: Richard Scobie <richard@sauce.co.nz>, Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Monday, February 26, 2007 9:42 AM,  Ric Wheeler wrote:
-> Which brings us back to a recent discussion at the file 
-> system workshop on being 
-> more repair oriented in file system design so we can survive 
-> situations like 
-> this a bit more reliably ;-)
-> 
-
-On the second day of the workshop, there was a presentation given by
-Martin K. Petersen on  Data Intergrity Feature, which is also called
-EEDP(End to End Data Protection), which he presented some
-ideas/suggestions of adding an API in linux for this.   I have his
-presentation if anyone is interested.  One thing is scsi mid layer needs
-32 byte cdbs support.
-
-mpt fusion supports EEDP for some versions of Fibre products, and we
-plan to add this for next generation sas products.   We support EEDP in
-the windows driver where the driver generates its own tags.  Our Linux
-driver don't.
-
-Here is our 32 byte passthru structure for SCSI_IO, defined in
-mpi_init.h, which as you may notice has some tags and flags for EEDP.
 
 
-typedef struct _MSG_SCSI_IO32_REQUEST
-{
-    U8                          Port;                           /* 00h
-*/
-    U8                          Reserved1;                      /* 01h
-*/
-    U8                          ChainOffset;                    /* 02h
-*/
-    U8                          Function;                       /* 03h
-*/
-    U8                          CDBLength;                      /* 04h
-*/
-    U8                          SenseBufferLength;              /* 05h
-*/
-    U8                          Flags;                          /* 06h
-*/
-    U8                          MsgFlags;                       /* 07h
-*/
-    U32                         MsgContext;                     /* 08h
-*/
-    U8                          LUN[8];                         /* 0Ch
-*/
-    U32                         Control;                        /* 14h
-*/
-    MPI_SCSI_IO32_CDB_UNION     CDB;                            /* 18h
-*/
-    U32                         DataLength;                     /* 38h
-*/
-    U32                         BidirectionalDataLength;        /* 3Ch
-*/
-    U32                         SecondaryReferenceTag;          /* 40h
-*/
-    U16                         SecondaryApplicationTag;        /* 44h
-*/
-    U16                         Reserved2;                      /* 46h
-*/
-    U16                         EEDPFlags;                      /* 48h
-*/
-    U16                         ApplicationTagTranslationMask;  /* 4Ah
-*/
-    U32                         EEDPBlockSize;                  /* 4Ch
-*/
-    MPI_SCSI_IO32_ADDRESS       DeviceAddress;                  /* 50h
-*/
-    U8                          SGLOffset0;                     /* 58h
-*/
-    U8                          SGLOffset1;                     /* 59h
-*/
-    U8                          SGLOffset2;                     /* 5Ah
-*/
-    U8                          SGLOffset3;                     /* 5Bh
-*/
-    U32                         Reserved3;                      /* 5Ch
-*/
-    U32                         Reserved4;                      /* 60h
-*/
-    U32                         SenseBufferLowAddr;             /* 64h
-*/
-    SGE_IO_UNION                SGL;                            /* 68h
-*/
-} MSG_SCSI_IO32_REQUEST, MPI_POINTER PTR_MSG_SCSI_IO32_REQUEST,
-  SCSIIO32Request_t, MPI_POINTER pSCSIIO32Request_t;
+David Rees wrote:
+> On 2/25/07, Richard Scobie <richard@sauce.co.nz> wrote:
+>> Colin Simpson wrote:
+>> > They therefore do not have the "check" option in the kernel. Is there
+>> > anything else I can do? Would forcing a resync achieve the same result
+>> > (or is that down right dangerous as the array is not considered
+>> > consistent for a while). Any thoughts apart from my one being to 
+>> upgrade
+>> > them to RH5 when that appears with a probably 2.6.18 kernel (which 
+>> will
+>> > presumably have "check")? Any thoughts?
+>>
+>> You could configure smartd to do regular long selftests, which would
+>> notify you on failures and allow you to take the drive offline and dd,
+>> replace etc.
+>
+> So what do you do when your drives in your array don't support SMART
+> self tests for some reason?
+>
+> The best solution I have thought of so far is to do a `dd if=/dev/mdX
+> of=/dev/null` periodically, but this isn't as nice as running a check
+> in the later kernels as it's not guaranteed to read blocks from all
+> disks. I guess you could instead do the same thing but with the
+> underlying disks instead of the raid device, then make sure you watch
+> the logs for disk read errors.
+>
+> -Dave
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+> Doing a dd to each drive always seemed to work for me
+> .
+
+b-
+
