@@ -1,68 +1,76 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: end to end error recovery musings
-Date: Tue, 27 Feb 2007 14:07:12 -0500
-Message-ID: <yq1r6sb7733.fsf@sermon.lab.mkp.net>
-References: <664A4EBB07F29743873A87CF62C26D705D6DDB@NAMAIL4.ad.lsil.com>
-	<yq14pp78rze.fsf@sermon.lab.mkp.net>
-	<20070227190236.58323a40@lxorguk.ukuu.org.uk>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: PATA/SATA Disk Reliability paper
+Date: Tue, 27 Feb 2007 14:21:33 -0500
+Message-ID: <45E484BD.5010501@tmr.com>
+References: <45D89FF5.3020303@sauce.co.nz> <200702232122.16730.a1426z@gawab.com> <Pine.LNX.4.64.0702241716130.28888@coffee.psychology.mcmaster.ca> <200702251422.28079.a1426z@gawab.com> <Pine.LNX.4.64.0702251119300.21918@coffee.psychology.mcmaster.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20070227190236.58323a40@lxorguk.ukuu.org.uk> (alan@lxorguk.ukuu.org.uk's message of "Tue, 27 Feb 2007 19:02:36 +0000")
-Sender: linux-scsi-owner@vger.kernel.org
-To: Alan <alan@lxorguk.ukuu.org.uk>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, "Moore, Eric" <Eric.Moore@lsi.com>, ric@emc.com, Theodore Tso <tytso@mit.edu>, Neil Brown <neilb@suse.de>, "H. Peter Anvin" <hpa@zytor.com>, Linux-ide <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-raid@vger.kernel.org, Tejun Heo <htejun@gmail.com>, James Bottomley <James.Bottomley@SteelEye.com>, Mark Lord <mlord@pobox.com>, Jens Axboe <jens.axboe@oracle.com>, "Clark, Nathan" <Clark_Nathan@emc.com>, "Singh, Arvinder" <Singh_Arvinder@emc.com>, "De Smet, Jochen" <DeSmet_Jochen@emc.com>, "Farmer, Matt" <Farmer_Matt@emc.com>, linux-fsdevel@vger.kernel.org, "Mizar, Sunita" <Mizar_Sunita@emc.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.64.0702251119300.21918@coffee.psychology.mcmaster.ca>
+Sender: linux-raid-owner@vger.kernel.org
+To: Mark Hahn <hahn@mcmaster.ca>
+Cc: Al Boldi <a1426z@gawab.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
->>>>> "Alan" == Alan  <alan@lxorguk.ukuu.org.uk> writes:
+Mark Hahn wrote:
+>>>> In contrast, ever since these holes appeared, drive failures became 
+>>>> the
+>>>> norm.
+>>>
+>>> wow, great conspiracy theory!
+>>
+>> I think you misunderstand.  I just meant plain old-fashioned 
+>> mis-engineering.
+>
+> I should have added a smilie.  but I find it dubious that the whole 
+> industry would have made a major bungle if so many failures are due to 
+> the hole...
+>
+>> But remember, the google report mentions a great number of drives 
+>> failing for
+>> no apparent reason, not even a smart warning, so failing within the 
+>> warranty
+>> period is just pure luck.
+>
+> are we reading the same report?  I look at it and see:
+>
+>         - lowest failures from medium-utilization drives, 30-35C.
+>         - higher failures from young drives in general, but especially
+>         if cold or used hard.
+>         - higher failures from end-of-life drives, especially > 40C.
+>     - scan errors, realloc counts, offline realloc and probation
+>     counts are all significant in drives which fail.
+>
+> the paper seems unnecessarily gloomy about these results.  to me, they're
+> quite exciting, and provide good reason to pay a lot of attention to 
+> these
+> factors.  I hate to criticize such a valuable paper, but I think they've
+> missed a lot by not considering the results in a fully factorial analysis
+> as most medical/behavioral/social studies do.  for instance, they bemoan
+> a 56% false negative rate from only SMART signals, and mention that if
+>> 40C is added, the FN rate falls to 36%.  also incorporating the 
+>> low-young
+> risk factor would help.  I would guess that a full-on model, especially
+> if it incorporated utilization, age, performance could comfortable 
+> levels. 
+The big thing I notice is that drives with SMART errors are quite likely 
+to fail, but drives which fail aren't all that likely to have SMART 
+errors. So while I might proactively move a drive with errors out or to 
+non-critical service, seeing no errors doesn't mean the drive won't fail.
 
->> These features make the most sense in terms of WRITE.  Disks
->> already have plenty of CRC on the data so if a READ fails on a
->> regular drive we already know about it.
+I haven't looked at drive temp vs. ambient, I am collecting what data I 
+can, but I no longer have thousands of drives to monitor (I'm grateful).
 
-Alan> Don't bet on it. 
-
-This is why I mentioned that I want to expose the protection data to
-the host.  As written, DIF only protects the path between initiator
-and target.
-
-See below...
-
-
-Alan> If you want to do this seriously you need an end to end (media
-Alan> to host ram) checksum. We do see bizarre and quite evil things
-Alan> happen to people occasionally because they rely on bus level
-Alan> protection - both faulty network cards and faulty disk or
-Alan> controller RAM can cause very bad things to happen in a critical
-Alan> environment and are very very hard to detect and test for.
-
-Not sure you're up-to-date on the T10 data integrity feature.
-Essentially it's an extension of the 520 byte sectors common in disk
-arrays.  For each 512 byte sector (or 4KB ditto) you get 8 bytes of
-protection data.  There's a 2 byte CRC (GUARD tag), a 2 byte
-user-defined tag (APP) and a 4-byte reference tag (REF).  Depending on
-how the drive is formatted, the REF tag usually needs to match the
-lower 32-bits of the target sector #.
-
-For each sector coming in the disk firmware verifies that the CRC and
-the reference tags are in accordance with the contents of the sector
-and the CDB start sector + offset.  If they don't match the drive will
-reject the request.
-
-If an HBA is capable of exposing the protection tuples to the host we
-can precalculate the checksum and the LBA when submitting a WRITE.  My
-current proposal involves passing them down in two separate buffers to
-minimize the risk of in-memory corruption (Besides, it would suck if
-you had to interleave data and protection data.  The scatterlists
-would become long and twisted).
-
-And that's when the READ case becomes interesting.  Because then the
-fs can verify that the checksum of the in-buffer matches of the GUARD
-tag.  In that case we'll know there's been no corruption in the
-middle.
-
-And of course this also opens up using the APP field to tag sector
-contents.
+Interesting speculation: on drives with cyclic load, does spinning down 
+off-shift help or hinder? I have two boxes full of WD, Seagate and 
+Maxtor drives, all cheap commodity drives, which have about 6.8 years 
+power on time, 11-14 power cycles, and 2200-2500 spin-up cycles, due to 
+spin down nights and weekends. Does anyone have a large enough 
+collection of similar use drives to contribute results?
 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+bill davidsen <davidsen@tmr.com>
+  CTO TMR Associates, Inc
+  Doing interesting things with small computers since 1979
+
