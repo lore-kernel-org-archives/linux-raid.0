@@ -1,64 +1,62 @@
-From: Ric Wheeler <ric@emc.com>
-Subject: Re: end to end error recovery musings
-Date: Tue, 27 Feb 2007 13:51:39 -0500
-Message-ID: <45E47DBB.4050002@emc.com>
-References: <664A4EBB07F29743873A87CF62C26D705D6DDB@NAMAIL4.ad.lsil.com> <yq14pp78rze.fsf@sermon.lab.mkp.net>
-Reply-To: ric@emc.com
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: PATA/SATA Disk Reliability paper
+Date: Tue, 27 Feb 2007 14:06:15 -0500
+Message-ID: <45E48127.9020007@tmr.com>
+References: <45D89FF5.3020303@sauce.co.nz> <200702191426.16567.a1426z@gawab.com> <45DA19C8.8000002@eyal.emu.id.au> <200702201515.01677.a1426z@gawab.com> <87y7mphlpc.fsf@hades.wkstn.nix> <20070222233021.GA10618@seas.ucla.edu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <yq14pp78rze.fsf@sermon.lab.mkp.net>
-Sender: linux-ide-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: "Moore, Eric" <Eric.Moore@lsi.com>, Alan <alan@lxorguk.ukuu.org.uk>, Theodore Tso <tytso@mit.edu>, Neil Brown <neilb@suse.de>, "H. Peter Anvin" <hpa@zytor.com>, Linux-ide <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-raid@vger.kernel.org, Tejun Heo <htejun@gmail.com>, James Bottomley <James.Bottomley@SteelEye.com>, Mark Lord <mlord@pobox.com>, Jens Axboe <jens.axboe@oracle.com>, "Clark, Nathan" <Clark_Nathan@emc.com>, "Singh, Arvinder" <Singh_Arvinder@emc.com>, "De Smet, Jochen" <DeSmet_Jochen@emc.com>, "Farmer, Matt" <Farmer_Matt@emc.com>, linux-fsdevel@vger.kernel.org, "Mizar, Sunita" <Mizar_Sunita@emc.com>
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20070222233021.GA10618@seas.ucla.edu>
+Sender: linux-raid-owner@vger.kernel.org
+To: Stephen C Woods <scw@seas.ucla.edu>
+Cc: Nix <nix@esperi.org.uk>, Al Boldi <a1426z@gawab.com>, Eyal Lebedinsky <eyal@eyal.emu.id.au>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Martin K. Petersen wrote:
->>>>>> "Eric" == Moore, Eric <Eric.Moore@lsi.com> writes:
-> 
-> Eric> Martin K. Petersen on Data Intergrity Feature, which is also
-> Eric> called EEDP(End to End Data Protection), which he presented some
-> Eric> ideas/suggestions of adding an API in linux for this.  
-> 
-> T10 DIF is interesting for a few things: 
-> 
->  - Ensuring that the data integrity is preserved when writing a buffer
->    to disk
-> 
->  - Ensuring that the write ends up on the right hardware sector
-> 
-> These features make the most sense in terms of WRITE.  Disks already
-> have plenty of CRC on the data so if a READ fails on a regular drive
-> we already know about it.
+Stephen C Woods wrote:
+>    As he leans on his cane, the old codger says....
+> Well Disks used to come in open cannisters,  that is you took the bottom
+> cover off, and then put the whould pack into the drive, and then
+> unscrewed the top cover and took it out.. Clearly ventilated.  C 1975.
+>
+>   Later we got sealed drives, Kennedy 180 MB Winchesters they were
+> called (the used IBM 3030 technology).  The had a vent pipe with two
+> filters, you replaced the outer one every 90days (as part of the PM
+> process).  The inner one you didn't touch.  Aparently they figured that
+> it'd be a long time before the inner one got really clogged at 10 min
+> exposure every 90 days.  C 1980
+>
+>   Still later we had a Mainframe running Un*x, it used IBM 3080 drives
+> these had huge HDA boxes that wree sealed but hav vent filters that had
+> to be changed every PM  (30 days,  2 hours of down time to do them
+> all).  C 1985.
+>
+>   So drives do need to be ventilated, not so much wory about exploding,
+> but rather subtle distortion of the case as the atmospheric preasure
+> changed.
+>
+>    Doe anyone rememnber that you had to let you drives acclimate to your
+> machine room for a day or so before you used them.
+>
+>    Ah the good old days...
+>      HUH???
+>
+>   <scw>
+I remember the DSU-10, 16 million 36 bit words of storage, which not 
+only wanted to be acclimatized, but had platters so large, over a meter 
+in diameter, that ther was a short crane mounting point on the box. 
+Failure rate went WAY down after better air filters were installed.
 
-There are paths through a read that could still benefit from the extra 
-data integrity.  The CRC gets validated on the physical sector, but we 
-don't have the same level of strict data checking once it is read into 
-the disk's write cache or being transferred out of cache on the way to 
-the transport...
+I think they were made for GE by CDC, but never knew for sure. GE was a 
+mainframe manufacturer until 1970, their big claim to fame was the 
+GE-645, the development platform for MULTICS. They sold the computer 
+business, mainframe and industrial control, in 1970 to put money into 
+nuclear energy, and haven't built a power plant since. Then the 
+developed a personal computer in 1978, built a plant to manufacture it 
+in Waynesboro VA, and decided there was no market for a small computer.
 
-> 
-> We can, however, leverage DIF with my proposal to expose the
-> protection data to host memory.  This will allow us to verify the data
-> integrity information before passing it to the filesystem or
-> application.  We can say "this is really the information the disk
-> sent. It hasn't been mangled along the way".
-> 
-> And by using the APP tag we can mark a sector as - say - metadata or
-> data to ease putting the recovery puzzle back together.
-> 
-> It would be great if the app tag was more than 16 bits.  Ted mentioned
-> that ideally he'd like to store the inode number in the app tag.  But
-> as it stands there isn't room.
-> 
-> In any case this is all slightly orthogonal to Ric's original post
-> about finding the right persistence heuristics in the error handling
-> path...
-> 
-
-Still all a very relevant discussion - I agree that we could really use 
-more than just 16 bits...
-
-ric
+-- 
+bill davidsen <davidsen@tmr.com>
+  CTO TMR Associates, Inc
+  Doing interesting things with small computers since 1979
 
