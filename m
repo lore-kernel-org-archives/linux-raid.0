@@ -1,42 +1,44 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: end to end error recovery musings
-Date: Tue, 27 Feb 2007 17:51:44 -0500
-Message-ID: <yq1mz2z6wov.fsf@sermon.lab.mkp.net>
-References: <664A4EBB07F29743873A87CF62C26D705D6DDB@NAMAIL4.ad.lsil.com>
-	<yq14pp78rze.fsf@sermon.lab.mkp.net>
-	<20070227190236.58323a40@lxorguk.ukuu.org.uk>
-	<yq1r6sb7733.fsf@sermon.lab.mkp.net>
-	<20070227233946.7ad33a50@lxorguk.ukuu.org.uk>
+From: "Dan Williams" <dan.j.williams@intel.com>
+Subject: Re: DMRAID feature direction?
+Date: Tue, 27 Feb 2007 15:54:17 -0700
+Message-ID: <e9c3a7c20702271454k12035400r8b33148169952b99@mail.gmail.com>
+References: <20070227222346.GB23712@percy.comedia.it>
+	 <39B20DF628532344BC7A2692CB6AEE07FB3BBE@orsmsx420.amr.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20070227233946.7ad33a50@lxorguk.ukuu.org.uk> (alan@lxorguk.ukuu.org.uk's message of "Tue, 27 Feb 2007 23:39:46 +0000")
+In-Reply-To: <39B20DF628532344BC7A2692CB6AEE07FB3BBE@orsmsx420.amr.corp.intel.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Alan <alan@lxorguk.ukuu.org.uk>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, "Moore, Eric" <Eric.Moore@lsi.com>, ric@emc.com, Theodore Tso <tytso@mit.edu>, Neil Brown <neilb@suse.de>, "H. Peter Anvin" <hpa@zytor.com>, Linux-ide <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-raid@vger.kernel.org, Tejun Heo <htejun@gmail.com>, James Bottomley <James.Bottomley@SteelEye.com>, Mark Lord <mlord@pobox.com>, Jens Axboe <jens.axboe@oracle.com>, "Clark, Nathan" <Clark_Nathan@emc.com>, "Singh, Arvinder" <Singh_Arvinder@emc.com>, "De Smet, Jochen" <DeSmet_Jochen@emc.com>, "Farmer, Matt" <Farmer_Matt@emc.com>, linux-fsdevel@vger.kernel.org, "Mizar, Sunita" <Mizar_Sunita@emc.com>
+To: "Gaston, Jason D" <jason.d.gaston@intel.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
->>>>> "Alan" == Alan  <alan@lxorguk.ukuu.org.uk> writes:
+On 2/27/07, Gaston, Jason D <jason.d.gaston@intel.com> wrote:
+> Hello,
+>
+> Can someone point me to where I can search a linux-raid mailing list
+> archive?
+>
+I use:
+http://marc.theaimsgroup.com/?l=linux-raid&r=1&w=2
 
->> Not sure you're up-to-date on the T10 data integrity feature.
->> Essentially it's an extension of the 520 byte sectors common in
->> disk
+> I am looking for information about where things are going with DMRAID
+> features and any discussion on where things stand in regards to the
+> possibility of merging MD and DMRAID.  My guess, from what I have found
+> in google, is that this was a heated discussion.  Mainly I am looking at
+> what direction people think is correct for getting more functionality to
+> support "fakeraid" volumes.
+>
+Also interesting is the discussion around surrounding the proposed EMD solution.
 
-[...]
+> I appreciate any information!
+>
+> Thanks,
+>
+> Jason
+> -
 
-Alan> but here's a minor bit of passing bad news - quite a few older
-Alan> ATA controllers can't issue DMA transfers that are not a
-Alan> multiple of 512 bytes without crapping themselves (eg
-Alan> READ_LONG). Guess we may need to add
-Alan> ap-> i_do_not_suck or similar 8)
-
-I'm afraid it stops even before you get that far.  There doesn't seem
-to be any interest in adopting the Data Integrity Feature (or anything
-similar) in the ATA camp.  So for now it's a SCSI-only thing.
-
-I encourage people to lean on their favorite disk manufacturer.  This
-would be a great feature to have on SATA too...
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
-
+Regards,
+Dan
