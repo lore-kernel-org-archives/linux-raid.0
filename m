@@ -1,44 +1,67 @@
-From: "Dan Williams" <dan.j.williams@intel.com>
-Subject: Re: DMRAID feature direction?
-Date: Tue, 27 Feb 2007 15:54:17 -0700
-Message-ID: <e9c3a7c20702271454k12035400r8b33148169952b99@mail.gmail.com>
-References: <20070227222346.GB23712@percy.comedia.it>
-	 <39B20DF628532344BC7A2692CB6AEE07FB3BBE@orsmsx420.amr.corp.intel.com>
+From: jahammonds prost <gmitch64@yahoo.com>
+Subject: Re: trouble creating array
+Date: Tue, 27 Feb 2007 19:10:36 -0600 (CST)
+Message-ID: <745810.19299.qm@web55812.mail.re3.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <39B20DF628532344BC7A2692CB6AEE07FB3BBE@orsmsx420.amr.corp.intel.com>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: "Gaston, Jason D" <jason.d.gaston@intel.com>
-Cc: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 2/27/07, Gaston, Jason D <jason.d.gaston@intel.com> wrote:
-> Hello,
->
-> Can someone point me to where I can search a linux-raid mailing list
-> archive?
->
-I use:
-http://marc.theaimsgroup.com/?l=linux-raid&r=1&w=2
+Just an update for everyone on this (and for the archives), Did some digging, and had a look at the device mapper config
 
-> I am looking for information about where things are going with DMRAID
-> features and any discussion on where things stand in regards to the
-> possibility of merging MD and DMRAID.  My guess, from what I have found
-> in google, is that this was a heated discussion.  Mainly I am looking at
-> what direction people think is correct for getting more functionality to
-> support "fakeraid" volumes.
->
-Also interesting is the discussion around surrounding the proposed EMD solution.
+# dmsetup -C info
 
-> I appreciate any information!
->
-> Thanks,
->
-> Jason
-> -
+Name             Maj Min Stat Open Targ Event  UUID
+mpath0           253   0 L--w    1    1      0 
+VolGroup00-LogVol01 253   3 L--w    1    1      0 LVM-2sahQifzg9s9k0xSkpnzpGCYd7JNVXzUof6XmQ0fhzJ6jIbQLciAbm6lJLwK0Aex
+VolGroup00-LogVol00 253   2 L--w    1    1      0 LVM-2sahQifzg9s9k0xSkpnzpGCYd7JNVXzUt3sJ3nwvJF8cr6ebv5AdnY0j4Ajl6U0I
+mpath0p1         253   1 L--w    0    1      0 
 
-Regards,
-Dan
+
+Those 2 multipath devices shouldn't have been there, and indeed mpath0p1 were my 2 recalcitrant disks.
+
+# dmsetup -C remove mpath0p1
+# dmsetup -C remove mpath0
+
+And they were both gone (you need to start at the bottom of the tree when removing them).
+
+A quick fdisk of my disks to create sdb1 and sdc1 partitions, and my array will be synched in 204 mins...:)
+
+Thanks to everyones help for pointing me in the right direction.. It was a trip I would have preferred not to have made, but like all trips like that, it's been illuminating.
+
+Thanks again.
+
+
+Graham
+
+
+
+----- Original Message ----
+From: Neil Brown <neilb@suse.de>
+To: jahammonds prost <gmitch64@yahoo.com>
+Cc: Justin Piszcz <jpiszcz@lucidpixels.com>; linux-raid@vger.kernel.org
+Sent: Sunday, 25 February, 2007 11:40:26 PM
+Subject: Re: trouble creating array
+
+
+On Sunday February 25, gmitch64@yahoo.com wrote:
+> 
+> 
+> Any ideas how to find out what has it open? I can happily write all over the disk with dd... I can create and delete the partition, and it's all good... I will try deleting the sd{b,c}1 partitions, reboot, and see what happens.
+> 
+
+ls -l /sys/block/*/holders/* ??
+
+NeilBrown
+
+
+	
+	
+		
+___________________________________________________________ 
+New Yahoo! Mail is the ultimate force in competitive emailing. Find out more at the Yahoo! Mail Championships. Plus: play games and win prizes. 
+http://uk.rd.yahoo.com/evt=44106/*http://mail.yahoo.net/uk 
