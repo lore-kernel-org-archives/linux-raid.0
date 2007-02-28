@@ -1,31 +1,61 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: end to end error recovery musings
-Date: Wed, 28 Feb 2007 11:52:41 -0600
-Message-ID: <1172685161.3374.18.camel@mulgrave.il.steeleye.com>
-References: <664A4EBB07F29743873A87CF62C26D705D6DDB@NAMAIL4.ad.lsil.com>
-	 <yq14pp78rze.fsf@sermon.lab.mkp.net>
-	 <20070227190236.58323a40@lxorguk.ukuu.org.uk>
-	 <yq1r6sb7733.fsf@sermon.lab.mkp.net>
-	 <20070227233946.7ad33a50@lxorguk.ukuu.org.uk>
-	 <yq1mz2z6wov.fsf@sermon.lab.mkp.net> <45E587C2.5010209@torque.net>
-	 <yq1zm6y42z0.fsf@sermon.lab.mkp.net>
-	 <1172683822.3374.13.camel@mulgrave.il.steeleye.com>
-	 <yq1hct641s0.fsf@sermon.lab.mkp.net>
+From: dean gaudet <dean@arctic.org>
+Subject: Re: Linux Software RAID Bitmap Question
+Date: Wed, 28 Feb 2007 11:30:56 -0800 (PST)
+Message-ID: <Pine.LNX.4.64.0702281126120.19818@twinlark.arctic.org>
+References: <Pine.LNX.4.64.0702250903120.21821@p34.internal.lan>
+ <17890.24681.249414.635536@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <yq1hct641s0.fsf@sermon.lab.mkp.net>
-Sender: linux-scsi-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: dougg@torque.net, Alan <alan@lxorguk.ukuu.org.uk>, "Moore, Eric" <Eric.Moore@lsi.com>, ric@emc.com, Theodore Tso <tytso@mit.edu>, Neil Brown <neilb@suse.de>, "H. Peter Anvin" <hpa@zytor.com>, Linux-ide <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-raid@vger.kernel.org, Tejun Heo <htejun@gmail.com>, Mark Lord <mlord@pobox.com>, Jens Axboe <jens.axboe@oracle.com>, "Clark, Nathan" <Clark_Nathan@emc.com>, "Singh, Arvinder" <Singh_Arvinder@emc.com>, "De Smet, Jochen" <DeSmet_Jochen@emc.com>, "Farmer, Matt" <Farmer_Matt@emc.com>, linux-fsdevel@vger.kernel.org, "Mizar, Sunita" <Mizar_Sunita@emc.com>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <17890.24681.249414.635536@notabene.brown>
+Sender: linux-raid-owner@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 2007-02-28 at 12:42 -0500, Martin K. Petersen wrote:
-> 4104.  It's 8 bytes per hardware sector.  At least for T10...
+On Mon, 26 Feb 2007, Neil Brown wrote:
 
-Er ... that won't look good to the 512 ATA compatibility remapping ...
+> On Sunday February 25, jpiszcz@lucidpixels.com wrote:
+> > I believe Neil stated that using bitmaps does incur a 10% performance 
+> > penalty.  If one's box never (or rarely) crashes, is a bitmap needed?
+> 
+> I think I said it "can" incur such a penalty.  The actual cost is very
+> dependant on work-load.
 
-James
+i did a crude benchmark recently... to get some data for a common setup
+i use (external journals and bitmaps on raid1, xfs fs on raid5).
+
+emphasis on "crude":
+
+time sh -c 'tar xf /var/tmp/linux-2.6.20.tar; sync'
+
+xfs journal     raid5 bitmap    times
+internal        none            0.18s user 2.14s system 2% cpu 1:27.95 total
+internal        internal        0.16s user 2.16s system 1% cpu 2:01.12 total
+raid1           none            0.07s user 2.02s system 2% cpu 1:20.62 total
+raid1           internal        0.14s user 2.01s system 1% cpu 1:55.18 total
+raid1           raid1           0.14s user 2.03s system 2% cpu 1:20.61 total
 
 
+raid5:
+- 4x seagate 7200.10 400GB on marvell MV88SX6081
+- mdadm --create --level=5 --raid-devices=4 /dev/md4 /dev/sd[abcd]1
+
+raid1:
+- 2x maxtor 6Y200P0 on 3ware 7504
+- two 128MiB partitions starting at cyl 1
+- mdadm --create --level=1 --raid-disks=2 --auto=yes --assume-clean /dev/md1 /dev/sd[fg]1
+- mdadm --create --level=1 --raid-disks=2 --auto=yes --assume-clean /dev/md2 /dev/sd[fg]2
+- md1 is used for external xfs journal
+- md2 has an ext3 filesystem for the external md4 bitmap
+
+xfs:
+- mkfs.xfs issued before each run using the defaults (aside from -l logdev=/dev/md1)
+- mount -o noatime,nodiratime[,logdev=/dev/md1] 
+
+system:
+- dual opteron 848 (2.2ghz), 8GiB ddr 266
+- tyan s2882
+- 2.6.20
+
+-dean
