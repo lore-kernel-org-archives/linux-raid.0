@@ -1,41 +1,37 @@
-From: Laurent CARON <lcaron@unix-scripts.info>
-Subject: Growing a raid 6 array
-Date: Thu, 01 Mar 2007 20:11:05 +0100
-Message-ID: <45E72549.2080108@unix-scripts.info>
+From: rabbit@rabbit.us (Peter Rabbitson)
+Subject: swap on raid
+Date: Thu, 1 Mar 2007 17:27:40 -0500
+Message-ID: <20070301222739.GA4835@rabbit.us>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 Hi,
 
-As our storage needs are growing i'm in the process of growing a 6TB
-array to 9TB by changing the disks one by one (500GB to 750GB).
+I need to use a raid volume for swap, utilizing partitions from 4 
+physical drives I have available. From my experience I have three 
+options - raid5, raid10 with 2 offset chunks, and two raid 1 volumes 
+that are swapon-ed with equal priority. However I have a hard time 
+figuring out what to use as I am not really sure how can I detect the 
+usage patterns of swap, left alone benchmark it. Has anyone done 
+anything like this, or is there information on what kind of reads/writes 
+the kernel performs when paging in and out?
 
-I'll have to partition the new drives with bigger partitions and then
-fail the array, remove a drive, add a new 750GB disk.... repeat it as
-long as 500GB disks are remaining in the system.
-
-The question now is to know if i'm right, or ... simply wrong in
-thinking that this operation is then just as simple as:
-
-server:~# mdadm -G /dev/mdX -n number_of_disks(same as original array)
-
-once done, i'll have to grow the filesystem (ext3) by issuing
-
-server:~# resize2fs -p /dev/mdX
+Before you answer my question - yes, I am painfully aware of the 
+paradigm "swap on raid is bad", and I know there are other ways to solve 
+it, but my situation requires me to have swap. Several weeks ago a drive 
+failed and took a full partition away bringing the system to its knees 
+and causied massive data corruption. I am also aware that I can use a 
+file that will reside alongside my other data, but fragmentation makes 
+this approach inefficient. So I am looking into placing the swap 
+directly on a raid voulme.
 
 
+Thanks 
 
-Does the fact that the ext3 partition is nearly full involves a bigger
-risk of screwing the data ?
+Peter
 
-Would it be better/worse to have a bitmap (internal one) on the mdX
-device while growing it ?
-
-Thanks
-
-Laurent
