@@ -1,52 +1,25 @@
-From: Neil Brown <neilb@suse.de>
-Subject: RE: DMRAID feature direction?
-Date: Thu, 1 Mar 2007 09:38:40 +1100
-Message-ID: <17894.1136.671425.475589@notabene.brown>
-References: <e9c3a7c20702271454k12035400r8b33148169952b99@mail.gmail.com>
-	<39B20DF628532344BC7A2692CB6AEE070100019B@orsmsx420.amr.corp.intel.com>
+From: "H. Peter Anvin" <hpa@zytor.com>
+Subject: Re: end to end error recovery musings
+Date: Wed, 28 Feb 2007 17:28:28 -0800
+Message-ID: <45E62C3C.5090906@zytor.com>
+References: <664A4EBB07F29743873A87CF62C26D705D6DDB@NAMAIL4.ad.lsil.com>	 <yq14pp78rze.fsf@sermon.lab.mkp.net>	 <20070227190236.58323a40@lxorguk.ukuu.org.uk>	 <yq1r6sb7733.fsf@sermon.lab.mkp.net>	 <20070227233946.7ad33a50@lxorguk.ukuu.org.uk>	 <yq1mz2z6wov.fsf@sermon.lab.mkp.net> <45E587C2.5010209@torque.net>	 <yq1zm6y42z0.fsf@sermon.lab.mkp.net>	 <1172683822.3374.13.camel@mulgrave.il.steeleye.com>	 <yq1hct641s0.fsf@sermon.lab.mkp.net> <1172685161.3374.18.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Gaston, Jason D on Wednesday February 28
-Sender: linux-raid-owner@vger.kernel.org
-To: "Gaston, Jason D" <jason.d.gaston@intel.com>
-Cc: "Williams, Dan J" <dan.j.williams@intel.com>, linux-raid@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1172685161.3374.18.camel@mulgrave.il.steeleye.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, dougg@torque.net, Alan <alan@lxorguk.ukuu.org.uk>, "Moore, Eric" <Eric.Moore@lsi.com>, ric@emc.com, Theodore Tso <tytso@mit.edu>, Neil Brown <neilb@suse.de>, Linux-ide <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-raid@vger.kernel.org, Tejun Heo <htejun@gmail.com>, Mark Lord <mlord@pobox.com>, Jens Axboe <jens.axboe@oracle.com>, "Clark, Nathan" <Clark_Nathan@emc.com>, "Singh, Arvinder" <Singh_Arvinder@emc.com>, "De Smet, Jochen" <DeSmet_Jochen@emc.com>, "Farmer, Matt" <Farmer_Matt@emc.com>, linux-fsdevel@vger.kernel.org, "Mizar, Sunita" <Mizar_Sunita@emc.com>
 List-Id: linux-raid.ids
 
-On Wednesday February 28, jason.d.gaston@intel.com wrote:
-> Thanks for the archive link, very interesting discussions with EMD...
+James Bottomley wrote:
+> On Wed, 2007-02-28 at 12:42 -0500, Martin K. Petersen wrote:
+>> 4104.  It's 8 bytes per hardware sector.  At least for T10...
 > 
-> What was the final outcome with EMD?  Is it still a valid project?
+> Er ... that won't look good to the 512 ATA compatibility remapping ...
 > 
-> We would like to start helping with RAID feature enhancements, but we
-> need to maintain support vendor specific metadata.  What is the best way
-> to approach this?  Pick up EMD again, add to DMRAID, add to MD RAID or
-> something else?  We want to do the right thing by the community.  Can
-> anyone point me in the right direction with where to begin?
 
-I'm keen on making md/raid work with vendor-specific metadata.  I aim
-to achieve that by making it possible to do all the metadata handling
-in userspace, and then maybe support loadable modules in mdadm for
-different specific metadata.
+Well, in that case you'd only see 8x512 data bytes, no metadata...
 
-I've been aiming to get DDF supported, but things keep distracting me
-:-(
-
-I only vaguely remember the EMD effort.  My memory is that a pile of
-code appeared that did a variety of useful things, but there were lots
-of aspects that I wasn't comfortable with.  i.e. it needed a bit of
-revision before it was suitable for mainline, but there was no
-followup from the coders.
-
-I would suggest that the "right thing by the community" is to present
-some details on what specifically you want to achieve and start a
-discussion on how best to achieve that.  Then see where things lead.
-
-For raid1/4/5/6, I would strongly recommend starting with the md
-code-base.  If it seems like a good idea to put a 'dm' interface on
-top of that, then it could probably be arranged.  If more
-functionality is needed internally, or better interfaces needed to
-achieve particular ends, then that is certainly possible to.
-
-NeilBrown
+	-hpa
