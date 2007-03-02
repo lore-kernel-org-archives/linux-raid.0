@@ -1,45 +1,40 @@
-From: rabbit@rabbit.us (Peter Rabbitson)
-Subject: Re: RAID0 to RAID5 upgrade
-Date: Thu, 1 Mar 2007 18:39:05 -0500
-Message-ID: <20070301233905.GA13126@rabbit.us>
-References: <45E75DE0.6060900@tmr.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: Growing a raid 6 array
+Date: Fri, 2 Mar 2007 12:59:13 +1100
+Message-ID: <17895.34033.867599.954940@notabene.brown>
+References: <45E72549.2080108@unix-scripts.info>
+	<Pine.LNX.4.64.0703011728270.7560@p34.internal.lan>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <45E75DE0.6060900@tmr.com>
+In-Reply-To: message from Justin Piszcz on Thursday March 1
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: Laurent CARON <lcaron@unix-scripts.info>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Mar 01, 2007 at 06:12:32PM -0500, Bill Davidsen wrote:
-> I have three drives, with some various partitions, currently set up like 
-> this.
-> 
->  drive0    drive1    drive2
-> 
->   hdb1      hdi1      hdk1
->   \_________RAID1________/
-> 
->   hdb2      hdi2      hdk2
->  unused     \___RAID0____/
->   200GB       100GB x 2
-> 
->             hdi3      hdk3
->             \___unused___/
->                100GB x 2
-> 
-> What I want to have is 3 x 200 = 400GB RAID5.
-> 
-> I would like to avoid copying 200GB of data to another machine and back 
+On Thursday March 1, jpiszcz@lucidpixels.com wrote:
+> You can only grow a RAID5 array in Linux as of 2.6.20 AFAIK.
 
-Can't you do the following:
+There are two dimensions for growth.
+You can increase the amount of each device that is used, or you can
+increase the number of devices.
 
-* copy the data from raid0 to hdb2 ( raid0 <= hdb2 you can even do a dd)
-* degrade raid1 to only contain drive0
-* since you have all your data on drive0, wipe drive1 and drive2 clean, 
-create a degraded raid5
-* copy stuff from drive0 to the new array (enw fs as well I presume)
-* resync the raid5 with drive0
+You are correct that increasing the number of devices only works for
+RAID5 (and RAID1, but you don't get extra space) in 2.6.20 (RAID6
+coming in 2.6.21).
 
+However this question is about growing an array the first way:
+increasing the amount of space used on each devices, and that is
+supported for RAID1/4/5/6.
+
+And Laurent:
+  1/ Yes, it is that easy
+  2/ I doubt a nearly-full ext3 array increases the risk
+  3/ The effect of adding a bitmap is that if you suffer a crash while
+     the array is degraded, it will resync faster so you have less
+     exposure to multiple failure.
+
+NeilBrown
 
