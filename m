@@ -1,32 +1,28 @@
-From: Gabor Gombas <gombasg@sztaki.hu>
-Subject: Re: RAID1, hot-swap and boot integrity
-Date: Fri, 2 Mar 2007 17:02:27 +0100
-Message-ID: <20070302160227.GD31010@boogie.lpds.sztaki.hu>
-References: <45E82EF8.9000106@laurelnetworks.com> <Pine.LNX.4.64.0703021039520.13743@p34.internal.lan>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Does anyone on this list have a Raptor74/150 sw raid with > 8 drives?
+Date: Fri, 2 Mar 2007 12:54:13 -0500 (EST)
+Message-ID: <Pine.LNX.4.64.0703021252050.22009@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.64.0703021039520.13743@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: Mike Accetta <maccetta@laurelnetworks.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, Mar 02, 2007 at 10:40:32AM -0500, Justin Piszcz wrote:
+Who runs software raid with PCI-e or dedicated PCI-X controllers?
 
-> AFAIK mdadm/kernel raid can handle this, I had a number of occaisons when 
-> my UPS shut my machine down when I was rebuilding a RAID5 array, when the 
-> box came back up, the rebuild picked up where it left off.
+I was wondering what would one get with 10 150GB raptors, each on their 
+own dedicated PCI-e card...
 
-_If_ the resync got far enough that the kernel image is already copied.
-The original mail is about the case when the sectors where the
-kernel/initramfs should be are not yet synced...
+When I max out two separate raids on my PCI-e based motherboard, I see 
+speeds in excess of 430-450MB/s.
 
-Gabor
+1. 4 raptor 150s
+2. 5 (at the time of benchmark) 400s (now 6)
 
--- 
-     ---------------------------------------------------------
-     MTA SZTAKI Computer and Automation Research Institute
-                Hungarian Academy of Sciences
-     ---------------------------------------------------------
+I was wondering what kind of throughput you get?
+
+With 4 raptors, it is generally in the 188-210MB/s range for RAID5.
+RAID0 is 320-327MB/s both ways.
+
+Justin.
