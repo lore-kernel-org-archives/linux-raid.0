@@ -1,36 +1,35 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH] md: Fix for raid6 reshape.
-Date: Fri, 2 Mar 2007 17:40:20 +1100
-Message-ID: <17895.50900.585915.565155@notabene.brown>
-References: <20070302155626.19014.patches@notabene>
-	<1070302045655.19069@suse.de>
-	<20070301223619.d9957521.akpm@linux-foundation.org>
+From: Laurent CARON <lcaron@unix-scripts.info>
+Subject: Re: Growing a raid 6 array
+Date: Fri, 02 Mar 2007 10:51:18 +0100
+Message-ID: <45E7F396.9020000@unix-scripts.info>
+References: <45E72549.2080108@unix-scripts.info>	<Pine.LNX.4.64.0703011728270.7560@p34.internal.lan> <17895.34033.867599.954940@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Andrew Morton on Thursday March 1
+In-Reply-To: <17895.34033.867599.954940@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thursday March 1, akpm@linux-foundation.org wrote:
-> On Fri, 2 Mar 2007 15:56:55 +1100 NeilBrown <neilb@suse.de> wrote:
-> 
-> > -	conf->expand_progress = (sector_nr + i)*(conf->raid_disks-1);
-> > +	conf->expand_progress = (sector_nr + i) * new_data_disks);
-> 
-> ahem.
+Neil Brown a =E9crit :
+> And Laurent:
+>   1/ Yes, it is that easy
+>   2/ I doubt a nearly-full ext3 array increases the risk
+>   3/ The effect of adding a bitmap is that if you suffer a crash whil=
+e
+>      the array is degraded, it will resync faster so you have less
+>      exposure to multiple failure.
+>=20
 
+Ok,
 
-It wasn't like that when I tested it, honest...
-But the original got caught up with some other changes which were not
-really related so I removed them all and just made this change
-manually.... and totally messed it up (again).  Sorry.
+Thanks for your advice.
 
-Of course it should be
-
-> > +	conf->expand_progress = (sector_nr + i) * new_data_disks;
-
-NeilBrown
+Laurent
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
