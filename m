@@ -1,37 +1,44 @@
-From: Mark Hahn <hahn@mcmaster.ca>
-Subject: Re: swap on raid
-Date: Thu, 1 Mar 2007 23:45:49 -0500 (EST)
-Message-ID: <Pine.LNX.4.64.0703012334350.16780@coffee.psychology.mcmaster.ca>
-References: <20070301222739.GA4835@rabbit.us> <45E75CBC.2050003@sauce.co.nz>
- <20070301233420.GA12963@rabbit.us>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+From: NeilBrown <neilb@suse.de>
+Subject: [PATCH] md: Fix for raid6 reshape.
+Date: Fri, 2 Mar 2007 15:56:55 +1100
+Message-ID: <1070302045655.19069@suse.de>
+References: <20070302155626.19014.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20070301233420.GA12963@rabbit.us>
 Sender: linux-raid-owner@vger.kernel.org
-To: Peter Rabbitson <rabbit@rabbit.us>
-Cc: linux-raid@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
->> The fact that you mention you are using partitions on disks that
->> possibly have other partions doing other things, means raw performance
->> will be compromised anyway.
+### Comments for Changeset
 
-with normal unraided swap (partition or file), swapouts are not a performance
-problem, since they're lazy, relatively cheap, cpu-wise, and not likely to be
-voluminous.  if you ever have more than a trivial number of swapins, you'll
-be crawling; this is merely a crutch until you can fix your memory problem.
+Recent patch for raid6 reshape had a change missing that showed up in
+subsequent review.
 
-swap over raid5 is somewhat opposed to this: the swapouts now start
-eating more CPU.  but non-degraded raid5 swapins run like an N-1 disk raid0.
+Many places in the raid5 code used "conf->raid_disks-1" to mean
+"number of data disks".  With raid6 that had to be changed to
+"conf->raid_disk - conf->max_degraded" or similar.  One place was missed.
 
-> (mostly reads). In this light it actually might be better to keep the
-> swap in a file on my raid10 (-p n3) which occupies most of these 4
-> drives, and hope that the md code will be able to distribute the io
-> across idle drives. Does this sound about right?
+This bug means that if a raid6 reshape were aborted in the middle the
+recorded position would be wrong.  On restart it would either fail (as
+the position wasn't on an appropriate boundary) or would leave a section
+of the array unreshaped, causing data corruption.
 
-yes.  especially better than the absurd way some installers insist on 
-putting swap partitions at the slow/distant tail of the disk...
 
-but if you're planning to actually _use_ swap, you should probably 
-start over, planning more memory instead.
+Signed-off-by: Neil Brown <neilb@suse.de>
+
+### Diffstat output
+ ./drivers/md/raid5.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff .prev/drivers/md/raid5.c ./drivers/md/raid5.c
+--- .prev/drivers/md/raid5.c	2007-03-02 15:47:51.000000000 +1100
++++ ./drivers/md/raid5.c	2007-03-02 15:48:35.000000000 +1100
+@@ -3071,7 +3071,7 @@ static sector_t reshape_request(mddev_t 
+ 		release_stripe(sh);
+ 	}
+ 	spin_lock_irq(&conf->device_lock);
+-	conf->expand_progress = (sector_nr + i)*(conf->raid_disks-1);
++	conf->expand_progress = (sector_nr + i) * new_data_disks);
+ 	spin_unlock_irq(&conf->device_lock);
+ 	/* Ok, those stripe are ready. We can start scheduling
+ 	 * reads on the source stripes.
