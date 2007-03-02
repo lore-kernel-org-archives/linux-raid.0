@@ -1,44 +1,22 @@
-From: NeilBrown <neilb@suse.de>
-Subject: [PATCH] md: Fix for raid6 reshape.
-Date: Fri, 2 Mar 2007 15:56:55 +1100
-Message-ID: <1070302045655.19069@suse.de>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH] md: Fix for raid6 reshape.
+Date: Thu, 1 Mar 2007 22:36:19 -0800
+Message-ID: <20070301223619.d9957521.akpm@linux-foundation.org>
 References: <20070302155626.19014.patches@notabene>
+	<1070302045655.19069@suse.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1070302045655.19069@suse.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
+To: NeilBrown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-### Comments for Changeset
+On Fri, 2 Mar 2007 15:56:55 +1100 NeilBrown <neilb@suse.de> wrote:
 
-Recent patch for raid6 reshape had a change missing that showed up in
-subsequent review.
+> -	conf->expand_progress = (sector_nr + i)*(conf->raid_disks-1);
+> +	conf->expand_progress = (sector_nr + i) * new_data_disks);
 
-Many places in the raid5 code used "conf->raid_disks-1" to mean
-"number of data disks".  With raid6 that had to be changed to
-"conf->raid_disk - conf->max_degraded" or similar.  One place was missed.
-
-This bug means that if a raid6 reshape were aborted in the middle the
-recorded position would be wrong.  On restart it would either fail (as
-the position wasn't on an appropriate boundary) or would leave a section
-of the array unreshaped, causing data corruption.
-
-
-Signed-off-by: Neil Brown <neilb@suse.de>
-
-### Diffstat output
- ./drivers/md/raid5.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff .prev/drivers/md/raid5.c ./drivers/md/raid5.c
---- .prev/drivers/md/raid5.c	2007-03-02 15:47:51.000000000 +1100
-+++ ./drivers/md/raid5.c	2007-03-02 15:48:35.000000000 +1100
-@@ -3071,7 +3071,7 @@ static sector_t reshape_request(mddev_t 
- 		release_stripe(sh);
- 	}
- 	spin_lock_irq(&conf->device_lock);
--	conf->expand_progress = (sector_nr + i)*(conf->raid_disks-1);
-+	conf->expand_progress = (sector_nr + i) * new_data_disks);
- 	spin_unlock_irq(&conf->device_lock);
- 	/* Ok, those stripe are ready. We can start scheduling
- 	 * reads on the source stripes.
+ahem.
