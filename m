@@ -1,29 +1,29 @@
-From: Iustin Pop <iusty@k1024.org>
-Subject: Re: Unexpectedly slow raid1 benchmark results.
-Date: Sun, 4 Mar 2007 13:52:38 +0100
-Message-ID: <20070304125238.GA3118@teal.hq.k1024.org>
-References: <003801c75e5b$7db61bb0$bc01a8c0@apmsafe.com>
+From: "H. Peter Anvin" <hpa@zytor.com>
+Subject: Re: RAID1, hot-swap and boot integrity
+Date: Sun, 04 Mar 2007 09:31:23 -0800
+Message-ID: <45EB026B.1040503@zytor.com>
+References: <45E82EF8.9000106@laurelnetworks.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <003801c75e5b$7db61bb0$bc01a8c0@apmsafe.com>
+In-Reply-To: <45E82EF8.9000106@laurelnetworks.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan <kasper37@netzero.com>
+To: Mike Accetta <maccetta@laurelnetworks.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, Mar 04, 2007 at 04:47:19AM -0800, Dan wrote:
-> Just about the only stat in these tests that show a marked improvement between
-> one and two drives is Random Seeks (which makes sense).  What doesn't make sense
-> is that none of the Sequential Input numbers increase.  Shouldn't I be seeing
-> close to a 100% improvement?
+Mike Accetta wrote:
+> 
+> I've been considering trying something like having the re-sync algorithm
+> on a whole disk array defer the copy for sector 0 to the very end of the
+> re-sync operation.  Assuming the BIOS makes at least a minimal consistency
+> check on sector 0 before electing to boot from the drive, this would keep
+> it from selecting a partially re-sync'd drive that was not previously 
+> bootable.
 
-This is not raid0! Since the drives are identical copies, you can't
-really optimize the sequential input since the input data is not
-stripped... OTOH, if you have two processes doing sequential input, then
-yes, each drive should work close or at the normal sequential input
-speed.
+The only check that it will make is to look for 55 AA at the end of the MBR.
 
-Regards,
-Iustin
+Note that typically the MBR is not part of any of your MD volumes.
+
+	-hpa
