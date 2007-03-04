@@ -1,50 +1,37 @@
-From: Neil Brown <neilb@suse.de>
+From: "Christian Pernegger" <pernegger@gmail.com>
 Subject: Re: mismatch_cnt questions
-Date: Sun, 4 Mar 2007 22:50:01 +1100
-Message-ID: <17898.45673.573800.56474@notabene.brown>
+Date: Sun, 4 Mar 2007 13:01:05 +0100
+Message-ID: <bb145bd20703040401h413d996av24d55eb21fae63a8@mail.gmail.com>
 References: <bb145bd20703040322g1e5e8784i93a933c0c61b43f6@mail.gmail.com>
+	 <17898.45673.573800.56474@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Christian Pernegger on Sunday March 4
+In-Reply-To: <17898.45673.573800.56474@notabene.brown>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Christian Pernegger <pernegger@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sunday March 4, pernegger@gmail.com wrote:
-> Hello,
-> 
-> these questions apparently got buried in another thread, so here goes again ...
-> 
-> I have a mismatch_cnt of 384 on a 2-way mirror.
-> The box runs 2.6.17.4 and can't really be rebooted or have its kernel
-> updated easily
-> 
-> 1) Where does the mismatch come from?
->  The box hasn't been down since the creation of the array.
+Hey, that was quick ... thanks!
 
-Do you have swap on the mirror at all? 
-I recently discovered/realised that when 'swap' writes to a raid1 it
-can end up with different data on the different devices.  This is
-perfectly acceptable as in that case the data will never be read.
+> > 1) Where does the mismatch come from? The box hasn't been down since the creation of
+> >  the array.
+>
+> Do you have swap on the mirror at all?
 
-If you don't have swap, then I don't know what is happening.
+As a matter of fact I do, /dev/md0_p2 is a swap partition.
 
-> 
-> 2) How much data is 384? Blocks? Chunks? Bytes?
+> I recently discovered/realised that when 'swap' writes to a raid1 it can end up with different
+> data on the different devices.  This is perfectly acceptable as in that case the data will never
+> be read.
 
-The units is 'sectors', but the granularity is about 64K.
-so '384' means 3 different 64K sections of the device showed an
-error.  One day I might reduce the granularity.
+Interesting ... care to elaborate a little?
 
-> 
-> 3) Is the "repair" sync action safe to use on the above kernel? Any
-> other methods / additional steps for fixing this?
+Would disabling swap, running mkswap again and rerunning check return
+0 in this case?
 
-"repair" is safe, though it may not be effective.
-"repair" for raid1 was did not work until Jan 26th this year.
-Before then it was identical in effect to 'check'.
+Regards,
 
-NeilBrown
+C.
