@@ -1,29 +1,35 @@
-From: "H. Peter Anvin" <hpa@zytor.com>
-Subject: Re: RAID1, hot-swap and boot integrity
-Date: Sun, 04 Mar 2007 09:31:23 -0800
-Message-ID: <45EB026B.1040503@zytor.com>
-References: <45E82EF8.9000106@laurelnetworks.com>
+From: Eyal Lebedinsky <eyal@eyal.emu.id.au>
+Subject: Re: mismatch_cnt questions
+Date: Mon, 05 Mar 2007 08:21:43 +1100
+Message-ID: <45EB3867.8050907@eyal.emu.id.au>
+References: <bb145bd20703040322g1e5e8784i93a933c0c61b43f6@mail.gmail.com> <17898.45673.573800.56474@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <45E82EF8.9000106@laurelnetworks.com>
+In-Reply-To: <17898.45673.573800.56474@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mike Accetta <maccetta@laurelnetworks.com>
-Cc: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: Christian Pernegger <pernegger@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Mike Accetta wrote:
+Neil Brown wrote:
+> On Sunday March 4, pernegger@gmail.com wrote:
+>>I have a mismatch_cnt of 384 on a 2-way mirror.
+[trim]
+>>3) Is the "repair" sync action safe to use on the above kernel? Any
+>>other methods / additional steps for fixing this?
 > 
-> I've been considering trying something like having the re-sync algorithm
-> on a whole disk array defer the copy for sector 0 to the very end of the
-> re-sync operation.  Assuming the BIOS makes at least a minimal consistency
-> check on sector 0 before electing to boot from the drive, this would keep
-> it from selecting a partially re-sync'd drive that was not previously 
-> bootable.
+> "repair" is safe, though it may not be effective.
+> "repair" for raid1 was did not work until Jan 26th this year.
+> Before then it was identical in effect to 'check'.
 
-The only check that it will make is to look for 55 AA at the end of the MBR.
+How is "repair" safe but not effective? When it finds a mismatch, how does
+it know which part is correct and which should be fixed (which copy of
+raid1, or which block in raid5)?
 
-Note that typically the MBR is not part of any of your MD volumes.
+When a disk fails we know what to rewrite, but when we discover a mismatch
+we do not have this knowledge. It may corrupt the good copy of a raid1.
 
-	-hpa
+-- 
+Eyal Lebedinsky (eyal@eyal.emu.id.au) <http://samba.org/eyal/>
