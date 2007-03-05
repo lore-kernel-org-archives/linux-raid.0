@@ -1,51 +1,58 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: no journaling and loops on softraid?
-Date: Tue, 6 Mar 2007 10:32:51 +1100
-Message-ID: <17900.43171.838082.323657@notabene.brown>
-References: <200703052355.15363.Dexter.Filmore@gmx.de>
+From: Mike Accetta <maccetta@laurelnetworks.com>
+Subject: Re: RAID1, hot-swap and boot integrity
+Date: Mon, 05 Mar 2007 18:38:17 -0500
+Message-ID: <45ECA9E9.3090507@laurelnetworks.com>
+References: <45E82EF8.9000106@laurelnetworks.com> <12470.45E88FAA.5020106@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Dexter Filmore on Monday March 5
+In-Reply-To: <12470.45E88FAA.5020106@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dexter Filmore <Dexter.Filmore@gmx.de>
+To: Bill Davidsen <davidsen@tmr.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Monday March 5, Dexter.Filmore@gmx.de wrote:
-> http://gentoo-wiki.com/HOWTO_Gentoo_Install_on_Software_RAID#Data_Scrubbing
+Bill Davidsen wrote:
+> Gabor Gombas wrote:
+>> On Fri, Mar 02, 2007 at 09:04:40AM -0500, Mike Accetta wrote:
+>>
+>>  
+>>> Thoughts or other suggestions anyone?
+>>>     
+>>
+>> This is a case where a very small /boot partition is still a very good
+>> idea... 50-100MB is a good choice (some initramfs generators require
+>> quite a bit of space under /boot while generating the initramfs image
+>> esp. if you use distro-provided 
+>> "contains-everything-and-the-kitchen-sink"
+>> kernels, so it is not wise to make /boot _too_ small).
+>>   
+> You are exactly right on that! Some (many) BIOS implementations will 
+> read the boot sector off the drive, and if there is no error will run 
+> the boot sector.
+>> But if you do not want /boot to be separate a moderately sized root
+>> partition is equally good. What you want to avoid is the "whole disk is
+>> a single partition/file system" kind of setup.
+>>
+>>   
+> Actually, the solution is moderately simple, install the replacement 
+> drive, create the partitions, and **don't mark the boot partition 
+> active** until the copy is complete. The BIOS will boot from the 1st 
+> active partition it finds (again, in sane cases).
 > 
-> "Warning: Be aware that the combination of RAID5 and loop-devices will most 
-> likely cause severe filesystem damage, especially when using ext3 and 
-> ReiserFS. Some users suggest that XFS is not affected by this, but this has 
-> not been entirely confirmed. See kernel bug 6242 for updates on this bug.
-> 
-> Note: There are also reports that Journaled Filesystems are problematic on all 
-> Software-RAID levels. No kernel bugs have been submitted regarding this bug 
-> as of yet. A number of the reports involve using cryptoloops which are known 
-> to cause corruption. See http://forums.gentoo.org/viewtopic-t-412467.html for 
-> more information. This thread should be taken with a grain of salt."
-> 
-> Can someone shed some light on this? I have XFS on my raid and *had* problems 
-> when unpacking large archives with many small files.
+> I never have anything changing in /boot in normal operation, so I admit 
+> to using dd to do a copy with the array stopped. No particular reason to 
+> think it works better than just a rebuild. After the partition is valid 
+> I set the active flag in the partition.
 > 
 
-Bugs that get mentioned on wiki's but never reported to maintainers
-are unlikely to get fixed......
+I gathered the impression somewhere, perhaps incorrectly, that the active
+flag was a function of the boot block, not the BIOS.  We use Grub in the MBR
+and don't even have an active flag set in the partition table.  The system
+still boots.
+-- 
+Mike Accetta
 
-Back in 2.2 days ext3 over md/raid had problems if the raid was
-rebuilding, but that was fixed in 2.4.
-
-More recently there was an incompatibility between raid5 and dm-crypt
-that could cause corruption, but that has been fixed on both sides
-(there are two ways to report errors for a block-device request.
-raid5 was setting only one of them and dm-crypt was listening only to
-the other - there were "I don't have resources at the moment" errors
-for read-ahead requests).
-
-
-If you have problems with XFS on raid, I suggest you report it to the
-XFS and RAID mailing lists - see the MAINTAINERS file for both.
-
-NeilBrown
+ECI Telecom Ltd.
+Data Networking Division (previously Laurel Networks)
