@@ -1,41 +1,46 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: mismatch_cnt questions
-Date: Tue, 6 Mar 2007 10:40:53 +1100
-Message-ID: <17900.43653.510415.553440@notabene.brown>
-References: <bb145bd20703040322g1e5e8784i93a933c0c61b43f6@mail.gmail.com>
-	<17898.45673.573800.56474@notabene.brown>
-	<45EB3867.8050907@eyal.emu.id.au>
-	<17899.18568.523543.478792@notabene.brown>
-	<45EBCA83.40106@eyal.emu.id.au>
+From: Mike Accetta <maccetta@laurelnetworks.com>
+Subject: Re: RAID1, hot-swap and boot integrity
+Date: Mon, 05 Mar 2007 18:47:57 -0500
+Message-ID: <45ECAC2D.4010404@laurelnetworks.com>
+References: <45E82EF8.9000106@laurelnetworks.com> <12721.45EB026B.1040503@zytor.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Eyal Lebedinsky on Monday March 5
+In-Reply-To: <12721.45EB026B.1040503@zytor.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Eyal Lebedinsky <eyal@eyal.emu.id.au>
-Cc: Christian Pernegger <pernegger@gmail.com>, linux-raid@vger.kernel.org
+To: "H. Peter Anvin" <hpa@zytor.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Monday March 5, eyal@eyal.emu.id.au wrote:
-> Neil Brown wrote:
-> [trim Q re how resync fixes data]
-> > For raid1 we 'fix' and inconsistency by arbitrarily choosing one copy
-> > and writing it over all other copies.
-> > For raid5 we assume the data is correct and update the parity.
+H. Peter Anvin wrote:
+> Mike Accetta wrote:
+>>
+>> I've been considering trying something like having the re-sync algorithm
+>> on a whole disk array defer the copy for sector 0 to the very end of the
+>> re-sync operation.  Assuming the BIOS makes at least a minimal 
+>> consistency
+>> check on sector 0 before electing to boot from the drive, this would keep
+>> it from selecting a partially re-sync'd drive that was not previously 
+>> bootable.
 > 
-> Can raid6 identify the bad block (two parity blocks could allow this
-> if only one block has bad data in a stripe)? If so, does it?
+> The only check that it will make is to look for 55 AA at the end of the 
+> MBR.
+> 
+> Note that typically the MBR is not part of any of your MD volumes.
 
-No, it doesn't.
+Yes, that is also what I've observed in the case of our BIOS.  I'm still
+trying to get our BIOS vendor to confirm that it will fail over to the next
+drive in the boot list on a read error of sector 0.  We're contemplating
+some GRUB hacking to fail-over to the "other" drive once it is in control
+and sees problems.
 
-I guess that maybe it could:
-   Rebuild each block in turn based on the xor parity, and then test 
-   if the Q-syndrome is satisfied.
-but I doubt the gain would be worth the pain.
+I wonder if having the MBR typically outside of the array and the relative
+newness of partitioned arrays are related?  When I was considering how to
+architect the RAID1 layout it seemed like a partitioned array on the
+entire disk worked most naturally.
+-- 
+Mike Accetta
 
-What we really want in drives that store 520 byte sectors so that a
-checksum can be passed all the way up and down through the stack
-.... or something like that.
-
-NeilBrown
+ECI Telecom Ltd.
+Data Networking Division (previously Laurel Networks)
