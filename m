@@ -1,65 +1,89 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: mismatch_cnt questions
-Date: Mon, 5 Mar 2007 09:30:32 +1100
-Message-ID: <17899.18568.523543.478792@notabene.brown>
-References: <bb145bd20703040322g1e5e8784i93a933c0c61b43f6@mail.gmail.com>
-	<17898.45673.573800.56474@notabene.brown>
-	<45EB3867.8050907@eyal.emu.id.au>
+From: "Gunny Smith" <gunny74@gmail.com>
+Subject: RAID & ext dire straits
+Date: Mon, 5 Mar 2007 14:38:51 +1100
+Message-ID: <905a9b190703041938t14d948f0q6a68ea21ef60ec0@mail.gmail.com>
+References: <905a9b190703041929jbf71e6bk1097abfe40775a98@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Eyal Lebedinsky on Monday March 5
+In-Reply-To: <905a9b190703041929jbf71e6bk1097abfe40775a98@mail.gmail.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Eyal Lebedinsky <eyal@eyal.emu.id.au>
-Cc: Christian Pernegger <pernegger@gmail.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Monday March 5, eyal@eyal.emu.id.au wrote:
-> Neil Brown wrote:
-> > On Sunday March 4, pernegger@gmail.com wrote:
-> >>I have a mismatch_cnt of 384 on a 2-way mirror.
-> [trim]
-> >>3) Is the "repair" sync action safe to use on the above kernel? Any
-> >>other methods / additional steps for fixing this?
-> > 
-> > "repair" is safe, though it may not be effective.
-> > "repair" for raid1 was did not work until Jan 26th this year.
-> > Before then it was identical in effect to 'check'.
-> 
-> How is "repair" safe but not effective? When it finds a mismatch, how does
-> it know which part is correct and which should be fixed (which copy of
-> raid1, or which block in raid5)?
+Hi all.
 
-It is not 'effective' in that before 26jan2007 it did not actually
-copy the chosen data on to the other drives.  i.e. a 'repair' had the
-same effect as a 'check', which is 'safe'.
+I've run into some dire straits (punishment for not using one's brains
+when called for) and would appreciate any help.
 
-> 
-> When a disk fails we know what to rewrite, but when we discover a mismatch
-> we do not have this knowledge. It may corrupt the good copy of a raid1.
+I formerly had a gentoo box with a 4x250GB software RAID5, no LVM,
+ext3 filesystem, using disks sdc,sdd,sde and sdf. sda and sdb were the
+OS disks.
+I was to move the RAID over to a new machine running debian. Further
+to this, my backup of the data turned out to be only partial.
 
-If a block differs between the different drives in a raid1, then no
-copy is 'good'.  It is possible that one copy is the one you think you
-want, but you probably wouldn't know by looking at it.
-The worst situation is the have inconsistent data. If you read and get
-one value, then later read and get another value, that is really bad.
+The new disks in the system appeared as sda, sdb, sdc and sdd.
 
-For raid1 we 'fix' and inconsistency by arbitrarily choosing one copy
-and writing it over all other copies.
-For raid5 we assume the data is correct and update the parity.
+I've then done a series of damaging things with them:
 
-You might be able to imagine a failure scenario where this produces
-the 'wrong' result, but I'm confident that is the majority of cases it
-is as good as any other option.
+1. I've added 3 of them as spares rather than as drives with existing data.
+2. When trying to assemble the array, this started rebuilding
+(effectively, wiping) the fourth disk. I did this several times (and I
+suspect I've clobbered data on more than one drive) before realizing I
+can sidestep this by assembling three drives at a time - which raises
+the array as degraded and doesn't kick off anything that can be
+destructive.
+3. I've run --create
+4. I've cleared the persistent superblocks off the drives and
+attempted to recreate them.
 
-If we had something like ZFS which tracks checksums for all blocks,
-and could somehow get that information usefully into the md level,
-than maybe we could do something better.
+Roughly at this point I decided this was unsalvageable and went to the
+backup, only to find out it failed to back up parts of the data. A
+memorable moment in my life.
 
-I suspect that it would be very rare for raid5 to detect a mismatch
-during a 'check', and raid1 would only see them when a write was
-aborted, such as swap can do, and filesystems might do occasionally
-(e.g. truncate a file that was recently written to).
+I've then blocked together a bunch of other harddrives to assemble a
+~800GB volume, plonked an LVM on it, shared it as nfs, and made "dd
+if=/dev/sdX ..." copies in files of all raw RAID drives over LAN. At
+least I have a snapshot of things as they are right now before I start
+"fixing" things again.
 
-NeilBrown
+I attempted assembling a, b and c (d is the one I suspect is most
+damaged) - Raid5 degraded with 1 drive missing, and asking mke2fs
+where superblocks should lie.
+Half of these locations have superblocks fsck is willing to go on. The
+other doesn't. I just ran fsck -y on the md device, it's been "fixing"
+things for 6 hours now and I suspect whatever is left afterwards will
+not be of much use. I think the RAID mechanism is getting the stripes
+wrong, resulting in a total mish-mash of filesystem internals for
+e2fsck.
+
+I can attempt doing that with all the valid superblocks I found (about
+8) and I can attempt assembling other combinations of the four
+physical drives. My most serious concern is a lot of photos that lived
+on this box, so mild filesystem corruption that will affect some
+percent of the small files would be more than tolerable.
+
+My questions:
+1. Short of seeing a specialist shop, is there any recommended course
+of action to restore data off the array data? (technical suggestions
+more than welcome, recommendations for sanely-priced commercial
+software are also welcome)
+My current plan is to try and salvage some stuff attempting fsck using
+the various valid superblocks, copy off any files that look half-sane,
+then trying again with a different subset of the four drives. This is
+very time-consuming (a restoration of the 3 drives is ~10hrs over Gig
+ethernet) but seems the first thing to try.
+
+2. Is there some minimally-destructive and readily available way to
+pool all four drives together and rather than reconstruct one entire
+drive from the data on the other thre, attempt reconstructing every
+stripe separately (based on the assumption drive X can help
+reconstruct a stripe where drive Y got clobbered and vice versa)?
+
+3. If you think I should be flogged for not verifying the backup is
+AOK before diving in, kindly take a number and stand in line. I shall
+be distributing low-differential SCSI cables for flogging shortly.
+
+Thank you!
