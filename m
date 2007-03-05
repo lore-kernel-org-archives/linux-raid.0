@@ -1,30 +1,42 @@
-From: Eyal Lebedinsky <eyal@eyal.emu.id.au>
-Subject: Re: mismatch_cnt questions
-Date: Mon, 05 Mar 2007 18:45:07 +1100
-Message-ID: <45EBCA83.40106@eyal.emu.id.au>
-References: <bb145bd20703040322g1e5e8784i93a933c0c61b43f6@mail.gmail.com>	<17898.45673.573800.56474@notabene.brown>	<45EB3867.8050907@eyal.emu.id.au> <17899.18568.523543.478792@notabene.brown>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+From: =?ISO-8859-1?Q?Ralf_M=FCller?= <ralf@bj-ig.de>
+Subject: Replace drive in RAID5 without losing redundancy?
+Date: Mon, 5 Mar 2007 11:55:39 +0100
+Message-ID: <37643E71-0FD9-4F8A-AE68-A8565FEB0247@bj-ig.de>
+Mime-Version: 1.0 (Apple Message framework v752.3)
+Content-Type: text/plain; charset=US-ASCII; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17899.18568.523543.478792@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Christian Pernegger <pernegger@gmail.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil Brown wrote:
-[trim Q re how resync fixes data]
-> For raid1 we 'fix' and inconsistency by arbitrarily choosing one copy
-> and writing it over all other copies.
-> For raid5 we assume the data is correct and update the parity.
+Hi
 
-Can raid6 identify the bad block (two parity blocks could allow this
-if only one block has bad data in a stripe)? If so, does it?
+The day before I grew a 4 times 300GB disk RAID5. I replaced the 300GB
+drives by 750GB ones. As far as I can see the proposed way to do that
+is to kick a drive from RAID and let a spare drive take over - for
+sensible data this is scary - at least for me, because I lose
+redundancy for the whole time of rebuild. Everything worked fine - so
+no harm is done - but is there a way to replace a disk without losing
+redundancy?
 
-This will surely mean more value for raid6 than just the two-disk-failure
-protection.
+Is it possible to mark a disk as "to be replaced by an existing spare",
+then migrate to the spare disk and kick the old disk _after_ migration
+has been done? Or not even kick - but mark as new spare.
+
+This feature would be even more interesting for partially degraded
+arrays with read problems on different disks which do not apply to the
+same RAID chunk (up to now I've seen one array in such a state and this
+one was able to recover by automatically rewriting the unreadable
+sectors). The point is - I would have felt better if I had been able to
+mark the old disks read only and migrate disk by disk without losing
+the partially damaged redundancy.
+
+Best Regards
+Ralf Mueller
 
 -- 
-Eyal Lebedinsky (eyal@eyal.emu.id.au) <http://samba.org/eyal/>
-	attach .zip as .dat
+Van Roy's Law: -------------------------------------------------------
+        An unbreakable toy is useful for breaking other toys.
+
+
