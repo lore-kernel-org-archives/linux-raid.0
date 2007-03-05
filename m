@@ -1,43 +1,42 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: Replace drive in RAID5 without losing redundancy?
-Date: Tue, 6 Mar 2007 09:29:16 +1100
-Message-ID: <17900.39356.684798.56121@notabene.brown>
-References: <37643E71-0FD9-4F8A-AE68-A8565FEB0247@bj-ig.de>
+From: Dexter Filmore <Dexter.Filmore@gmx.de>
+Subject: no journaling and loops on softraid?
+Date: Mon, 5 Mar 2007 23:55:15 +0100
+Message-ID: <200703052355.15363.Dexter.Filmore@gmx.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Ralf Muller on Monday March 5
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: =?ISO-8859-1?Q?Ralf_M=FCller?= <ralf@bj-ig.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Monday March 5, ralf@bj-ig.de wrote:
-> 
-> Is it possible to mark a disk as "to be replaced by an existing spare",
-> then migrate to the spare disk and kick the old disk _after_ migration
-> has been done? Or not even kick - but mark as new spare.
+http://gentoo-wiki.com/HOWTO_Gentoo_Install_on_Software_RAID#Data_Scrubbing
 
-No, this is not possible yet.
-You can get nearly all the way there by:
+"Warning: Be aware that the combination of RAID5 and loop-devices will most 
+likely cause severe filesystem damage, especially when using ext3 and 
+ReiserFS. Some users suggest that XFS is not affected by this, but this has 
+not been entirely confirmed. See kernel bug 6242 for updates on this bug.
 
-  - add an internal bitmap.
-  - fail one drive
-  - --build a raid1 with that drive (and the other missing)
-  - re-add the raid1 into the raid5
-  - add the new drive to the raid1
-  - wait for resync
+Note: There are also reports that Journaled Filesystems are problematic on all 
+Software-RAID levels. No kernel bugs have been submitted regarding this bug 
+as of yet. A number of the reports involve using cryptoloops which are known 
+to cause corruption. See http://forums.gentoo.org/viewtopic-t-412467.html for 
+more information. This thread should be taken with a grain of salt."
 
-This has just a very tiny window when the array is degraded.  The
-bitmap allows the re-added drive to be resynced very quickly.
-The next step should be:
-  - fail out the raid1
-  - disassemble the raid1
-  - re-add the new drive to the raid5
-However that won't work as the superblock will be in the wrong place
-on the new drive.
-It wouldn't be hard to relocate the superblock, but there currently is
-no code to do this.
+Can someone shed some light on this? I have XFS on my raid and *had* problems 
+when unpacking large archives with many small files.
 
-NeilBrown
+Dex
+
+-- 
+-----BEGIN GEEK CODE BLOCK-----
+Version: 3.12
+GCS d--(+)@ s-:+ a- C++++ UL++ P+>++ L+++>++++ E-- W++ N o? K-
+w--(---) !O M+ V- PS+ PE Y++ PGP t++(---)@ 5 X+(++) R+(++) tv--(+)@ 
+b++(+++) DI+++ D- G++ e* h>++ r* y?
+------END GEEK CODE BLOCK------
+
+http://www.stop1984.com
+http://www.againsttcpa.com
