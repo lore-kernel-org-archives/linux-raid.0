@@ -1,58 +1,41 @@
-From: Mike Accetta <maccetta@laurelnetworks.com>
-Subject: Re: RAID1, hot-swap and boot integrity
-Date: Mon, 05 Mar 2007 18:38:17 -0500
-Message-ID: <45ECA9E9.3090507@laurelnetworks.com>
-References: <45E82EF8.9000106@laurelnetworks.com> <12470.45E88FAA.5020106@tmr.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: mismatch_cnt questions
+Date: Tue, 6 Mar 2007 10:40:53 +1100
+Message-ID: <17900.43653.510415.553440@notabene.brown>
+References: <bb145bd20703040322g1e5e8784i93a933c0c61b43f6@mail.gmail.com>
+	<17898.45673.573800.56474@notabene.brown>
+	<45EB3867.8050907@eyal.emu.id.au>
+	<17899.18568.523543.478792@notabene.brown>
+	<45EBCA83.40106@eyal.emu.id.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <12470.45E88FAA.5020106@tmr.com>
+In-Reply-To: message from Eyal Lebedinsky on Monday March 5
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: linux-raid@vger.kernel.org
+To: Eyal Lebedinsky <eyal@eyal.emu.id.au>
+Cc: Christian Pernegger <pernegger@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Bill Davidsen wrote:
-> Gabor Gombas wrote:
->> On Fri, Mar 02, 2007 at 09:04:40AM -0500, Mike Accetta wrote:
->>
->>  
->>> Thoughts or other suggestions anyone?
->>>     
->>
->> This is a case where a very small /boot partition is still a very good
->> idea... 50-100MB is a good choice (some initramfs generators require
->> quite a bit of space under /boot while generating the initramfs image
->> esp. if you use distro-provided 
->> "contains-everything-and-the-kitchen-sink"
->> kernels, so it is not wise to make /boot _too_ small).
->>   
-> You are exactly right on that! Some (many) BIOS implementations will 
-> read the boot sector off the drive, and if there is no error will run 
-> the boot sector.
->> But if you do not want /boot to be separate a moderately sized root
->> partition is equally good. What you want to avoid is the "whole disk is
->> a single partition/file system" kind of setup.
->>
->>   
-> Actually, the solution is moderately simple, install the replacement 
-> drive, create the partitions, and **don't mark the boot partition 
-> active** until the copy is complete. The BIOS will boot from the 1st 
-> active partition it finds (again, in sane cases).
+On Monday March 5, eyal@eyal.emu.id.au wrote:
+> Neil Brown wrote:
+> [trim Q re how resync fixes data]
+> > For raid1 we 'fix' and inconsistency by arbitrarily choosing one copy
+> > and writing it over all other copies.
+> > For raid5 we assume the data is correct and update the parity.
 > 
-> I never have anything changing in /boot in normal operation, so I admit 
-> to using dd to do a copy with the array stopped. No particular reason to 
-> think it works better than just a rebuild. After the partition is valid 
-> I set the active flag in the partition.
-> 
+> Can raid6 identify the bad block (two parity blocks could allow this
+> if only one block has bad data in a stripe)? If so, does it?
 
-I gathered the impression somewhere, perhaps incorrectly, that the active
-flag was a function of the boot block, not the BIOS.  We use Grub in the MBR
-and don't even have an active flag set in the partition table.  The system
-still boots.
--- 
-Mike Accetta
+No, it doesn't.
 
-ECI Telecom Ltd.
-Data Networking Division (previously Laurel Networks)
+I guess that maybe it could:
+   Rebuild each block in turn based on the xor parity, and then test 
+   if the Q-syndrome is satisfied.
+but I doubt the gain would be worth the pain.
+
+What we really want in drives that store 520 byte sectors so that a
+checksum can be passed all the way up and down through the stack
+.... or something like that.
+
+NeilBrown
