@@ -1,35 +1,37 @@
-From: Dexter Filmore <Dexter.Filmore@gmx.de>
-Subject: high mismatch count after scrub
-Date: Tue, 6 Mar 2007 03:06:45 +0100
-Message-ID: <200703060306.46082.Dexter.Filmore@gmx.de>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: high mismatch count after scrub
+Date: Tue, 6 Mar 2007 15:18:08 +1100
+Message-ID: <17900.60288.751357.807885@notabene.brown>
+References: <200703060306.46082.Dexter.Filmore@gmx.de>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: message from Dexter Filmore on Tuesday March 6
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Dexter Filmore <Dexter.Filmore@gmx.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-So I practiced what I learned today and scrubbed the array.
-Getting this:
+On Tuesday March 6, Dexter.Filmore@gmx.de wrote:
+> So I practiced what I learned today and scrubbed the array.
+> Getting this:
+> 
+> xerxes:/sys/block/md0/md# cat mismatch_cnt
+> 147248
+> 
+> 4x 250GB Samsung sATA, smartctl says all fine.
+> 
+> Need to worry?
+> 
 
-xerxes:/sys/block/md0/md# cat mismatch_cnt
-147248
+If you have a swap file on this array, then that could explain it, so
+don't worry.
 
-4x 250GB Samsung sATA, smartctl says all fine.
+If not... maybe worry?
 
-Need to worry?
+I assume you did a 'check' or 'repair' before looking at this file?
+If not and it is a newly created array, then it is just telling that
+the drives didn't have the same content when you started....
 
-
--- 
------BEGIN GEEK CODE BLOCK-----
-Version: 3.12
-GCS d--(+)@ s-:+ a- C++++ UL++ P+>++ L+++>++++ E-- W++ N o? K-
-w--(---) !O M+ V- PS+ PE Y++ PGP t++(---)@ 5 X+(++) R+(++) tv--(+)@ 
-b++(+++) DI+++ D- G++ e* h>++ r* y?
-------END GEEK CODE BLOCK------
-
-http://www.stop1984.com
-http://www.againsttcpa.com
+NeilBrown
