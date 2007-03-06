@@ -1,60 +1,49 @@
-From: =?ISO-8859-1?Q?Ralf_M=FCller?= <ralf@bj-ig.de>
-Subject: Re: Replace drive in RAID5 without losing redundancy?
-Date: Tue, 6 Mar 2007 13:02:46 +0100
-Message-ID: <86703DF2-EAE4-4638-9608-8E3B5E5D8D7C@bj-ig.de>
-References: <37643E71-0FD9-4F8A-AE68-A8565FEB0247@bj-ig.de> <17900.39356.684798.56121@notabene.brown> <Pine.LNX.4.64.0703052315250.27855@twinlark.arctic.org>
-Mime-Version: 1.0 (Apple Message framework v752.3)
-Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
+From: Dexter Filmore <Dexter.Filmore@gmx.de>
+Subject: Re: high mismatch count after scrub
+Date: Tue, 6 Mar 2007 13:45:03 +0100
+Message-ID: <200703061345.03675.Dexter.Filmore@gmx.de>
+References: <200703060306.46082.Dexter.Filmore@gmx.de> <17900.60288.751357.807885@notabene.brown>
+Mime-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0703052315250.27855@twinlark.arctic.org>
+In-Reply-To: <17900.60288.751357.807885@notabene.brown>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: dean gaudet <dean@arctic.org>
-Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-
-Am 06.03.2007 um 08:37 schrieb dean gaudet:
+> > xerxes:/sys/block/md0/md# cat mismatch_cnt
+> > 147248
+> > Need to worry?
 >
-> On Tue, 6 Mar 2007, Neil Brown wrote:
+> If you have a swap file on this array, then that could explain it, so
+> don't worry.
+
+Nope, swap is not on the array.
+Couple of loops tho.
+
 >
->> On Monday March 5, ralf@bj-ig.de wrote:
->>>
->>> Is it possible to mark a disk as "to be replaced by an existing  
->>> spare",
->>> then migrate to the spare disk and kick the old disk _after_  
->>> migration
->>> has been done? Or not even kick - but mark as new spare.
->>
->> No, this is not possible yet.
->> You can get nearly all the way there by:
->>
->>   - add an internal bitmap.
->>   - fail one drive
->>   - --build a raid1 with that drive (and the other missing)
->>   - re-add the raid1 into the raid5
->>   - add the new drive to the raid1
->>   - wait for resync
+> If not... maybe worry?
 >
-> i have an example at
-> <http://arctic.org/~dean/proactive-raid5-disk-replacement.txt>... plus
-> discussion as to why this isn't the best solution.
+> I assume you did a 'check' or 'repair' before looking at this file?
 
-Oops - you are right. While in raid1-resync-state there is no redundancy
-for the disk that should be replaced and therefore I lose a lot of  
-redundancy
-for the raid5 above it. When I replace a disk that is in a good state -
-everything is fine. When I replace one with read problems - I simply  
-lose.
-Not as good as I thought first ...
+Correct, "check".
 
-A build in solution would be able to avoid such problems - right.
+> If not and it is a newly created array, then it is just telling that
+> the drives didn't have the same content when you started....
 
-Ralf Mueller
-
+Array has been in use for quite a while.
 
 -- 
-Van Roy's Law: -------------------------------------------------------
-        An unbreakable toy is useful for breaking other toys.
+-----BEGIN GEEK CODE BLOCK-----
+Version: 3.12
+GCS d--(+)@ s-:+ a- C++++ UL++ P+>++ L+++>++++ E-- W++ N o? K-
+w--(---) !O M+ V- PS+ PE Y++ PGP t++(---)@ 5 X+(++) R+(++) tv--(+)@ 
+b++(+++) DI+++ D- G++ e* h>++ r* y?
+------END GEEK CODE BLOCK------
 
-
+http://www.stop1984.com
+http://www.againsttcpa.com
