@@ -1,34 +1,24 @@
-From: Gabor Gombas <gombasg@sztaki.hu>
-Subject: Re: RAID1, hot-swap and boot integrity
-Date: Tue, 6 Mar 2007 11:01:49 +0100
-Message-ID: <20070306100149.GG14942@boogie.lpds.sztaki.hu>
-References: <45E82EF8.9000106@laurelnetworks.com> <9782.20070302161004.GE31010@boogie.lpds.sztaki.hu> <45ECA890.5000701@laurelnetworks.com>
+From: Peter Rabbitson <rabbit@rabbit.us>
+Subject: Re: mismatch_cnt questions - how about raid10?
+Date: Tue, 06 Mar 2007 11:04:33 +0100
+Message-ID: <45ED3CB1.8070003@rabbit.us>
+References: <bb145bd20703040322g1e5e8784i93a933c0c61b43f6@mail.gmail.com>	<17898.45673.573800.56474@notabene.brown>	<bb145bd20703040401h413d996av24d55eb21fae63a8@mail.gmail.com> <17899.17901.429001.702653@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <45ECA890.5000701@laurelnetworks.com>
+In-Reply-To: <17899.17901.429001.702653@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mike Accetta <maccetta@laurelnetworks.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Mar 05, 2007 at 06:32:32PM -0500, Mike Accetta wrote:
+Neil Brown wrote:
+> When we write to a raid1, the data is DMAed from memory out to each
+> device independently, so if the memory changes between the two (or
+> more) DMA operations, you will get inconsistency between the devices.
 
-> Yes, we actually have a separate (smallish) boot partition at the front of
-> the array.  This does reduce the at-risk window substantially.  I'll have to
-> ponder whether it reduces it close enough to negligible to then ignore, but
-> that is indeed a good point to consider.
-
-Replacing a failed disk requires a human to pull out the old disk and
-insert the new one. The /boot partition should resync in less than 1
-minute (if not, it's _way_ too big), so the same human should still be
-around to kick the machine if something goes wrong.
-
-Gabor
-
--- 
-     ---------------------------------------------------------
-     MTA SZTAKI Computer and Automation Research Institute
-                Hungarian Academy of Sciences
-     ---------------------------------------------------------
+Does this apply to raid 10 devices too? And in case of LVM if swap is on 
+top of a LV which is a part of a VG which has a single PV as the raid 
+array - will this happen as well? Or will the LVM layer take the data 
+once and distribute exact copies of it to the PVs (in this case just the 
+raid) effectively giving the raid array invariable data?
