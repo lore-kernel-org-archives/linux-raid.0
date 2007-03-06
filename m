@@ -1,61 +1,34 @@
-From: =?ISO-8859-1?Q?Ralf_M=FCller?= <ralf@bj-ig.de>
-Subject: Re: Replace drive in RAID5 without losing redundancy?
-Date: Tue, 6 Mar 2007 10:18:13 +0100
-Message-ID: <A7E5669B-057D-493A-BF5C-F2324AD80136@bj-ig.de>
-Mime-Version: 1.0 (Apple Message framework v752.3)
-Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Gabor Gombas <gombasg@sztaki.hu>
+Subject: Re: RAID1, hot-swap and boot integrity
+Date: Tue, 6 Mar 2007 11:01:49 +0100
+Message-ID: <20070306100149.GG14942@boogie.lpds.sztaki.hu>
+References: <45E82EF8.9000106@laurelnetworks.com> <9782.20070302161004.GE31010@boogie.lpds.sztaki.hu> <45ECA890.5000701@laurelnetworks.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <45ECA890.5000701@laurelnetworks.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
+To: Mike Accetta <maccetta@laurelnetworks.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Mon, Mar 05, 2007 at 06:32:32PM -0500, Mike Accetta wrote:
 
-Am 05.03.2007 um 23:29 schrieb Neil Brown:
+> Yes, we actually have a separate (smallish) boot partition at the front of
+> the array.  This does reduce the at-risk window substantially.  I'll have to
+> ponder whether it reduces it close enough to negligible to then ignore, but
+> that is indeed a good point to consider.
 
-> On Monday March 5, ralf@bj-ig.de wrote:
->>
->> Is it possible to mark a disk as "to be replaced by an existing  
->> spare",
->> then migrate to the spare disk and kick the old disk _after_  
->> migration
->> has been done? Or not even kick - but mark as new spare.
->
-> No, this is not possible yet.
+Replacing a failed disk requires a human to pull out the old disk and
+insert the new one. The /boot partition should resync in less than 1
+minute (if not, it's _way_ too big), so the same human should still be
+around to kick the machine if something goes wrong.
 
-It's a pity - this would be a cool feature. It would take a lot of
-worrying out of RAID5 maintenance. Even when you have a backup it takes
-hours over hours to rebuild data from it when you crash a big RAID.  
-Do you
-know if such a thing is on a ToDo list somewhere?
-
-> You can get nearly all the way there by:
->
->   - add an internal bitmap.
-> [ ... ]
->   - disassemble the raid1
->   - re-add the new drive to the raid5
-> However that won't work as the superblock will be in the wrong place
-> on the new drive.
-> It wouldn't be hard to relocate the superblock, but there currently is
-> no code to do this.
-
-There has been an idea in PM to initially create the RAID5 out of  
-RAID1's
-with only one disk. For migration one could add a disk to one of the  
-RAID1's,
-let it sync and fail out the old disk. The question left had been if  
-a RAID1
-with only one disk would propagate read errors to the RAID5 above -  
-so that
-the RAID5 is be able to rewrite this sector - or simply fail the single
-drive left.
-
-Best regards
-Ralf Mueller
+Gabor
 
 -- 
-Van Roy's Law: -------------------------------------------------------
-        An unbreakable toy is useful for breaking other toys.
-
-
+     ---------------------------------------------------------
+     MTA SZTAKI Computer and Automation Research Institute
+                Hungarian Academy of Sciences
+     ---------------------------------------------------------
