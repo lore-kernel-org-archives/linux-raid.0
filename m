@@ -1,68 +1,60 @@
-From: Peter Rabbitson <rabbit@rabbit.us>
-Subject: Help with chunksize on raid10 -p o3 array
-Date: Tue, 06 Mar 2007 12:26:25 +0100
-Message-ID: <45ED4FE1.5020105@rabbit.us>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1251; format=flowed
+From: =?ISO-8859-1?Q?Ralf_M=FCller?= <ralf@bj-ig.de>
+Subject: Re: Replace drive in RAID5 without losing redundancy?
+Date: Tue, 6 Mar 2007 13:02:46 +0100
+Message-ID: <86703DF2-EAE4-4638-9608-8E3B5E5D8D7C@bj-ig.de>
+References: <37643E71-0FD9-4F8A-AE68-A8565FEB0247@bj-ig.de> <17900.39356.684798.56121@notabene.brown> <Pine.LNX.4.64.0703052315250.27855@twinlark.arctic.org>
+Mime-Version: 1.0 (Apple Message framework v752.3)
+Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.64.0703052315250.27855@twinlark.arctic.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: dean gaudet <dean@arctic.org>
+Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
-I have been trying to figure out the best chunk size for raid10 before 
-migrating my server to it (currently raid1). I am looking at 3 offset 
-stripes, as I want to have two drive failure redundancy, and offset 
-striping is said to have the best write performance, with read 
-performance equal to far. Information on the internet is scarce so I 
-decided to test chunking myself. I used the script 
-http://rabbit.us/pool/misc/raid_test.txt to iterate through different 
-chunk sizes, and try to dd the resulting array to /dev/null. I 
-deliberately did not make a filesystem on top of the array - I was just 
-looking for raw performance, and since the FS layer is not involved no 
-caching/optimization is taking place. I also monitored the process with 
-dstat in a separate window, and memory usage confirmed that this method 
-is valid.
-I got some pretty weird results: 
-http://rabbit.us/pool/misc/raid_test_results.txt
- From all my readings so far I thought that with chunk size increase the 
-large block access throughput decreases while small block reads 
-increase, and it is just a matter of finding a "sweet spot" balancing 
-them out. The results, however, clearly show something else. There are 
-some inconsistencies, which I attribute to my non-scientific approach, 
-but the trend is clearly showing.
 
-Here are the questions I have:
+Am 06.03.2007 um 08:37 schrieb dean gaudet:
+>
+> On Tue, 6 Mar 2007, Neil Brown wrote:
+>
+>> On Monday March 5, ralf@bj-ig.de wrote:
+>>>
+>>> Is it possible to mark a disk as "to be replaced by an existing  
+>>> spare",
+>>> then migrate to the spare disk and kick the old disk _after_  
+>>> migration
+>>> has been done? Or not even kick - but mark as new spare.
+>>
+>> No, this is not possible yet.
+>> You can get nearly all the way there by:
+>>
+>>   - add an internal bitmap.
+>>   - fail one drive
+>>   - --build a raid1 with that drive (and the other missing)
+>>   - re-add the raid1 into the raid5
+>>   - add the new drive to the raid1
+>>   - wait for resync
+>
+> i have an example at
+> <http://arctic.org/~dean/proactive-raid5-disk-replacement.txt>... plus
+> discussion as to why this isn't the best solution.
 
-* Why did the test show best consistent performance over a 16k chunk? Is 
-there a way to determine this number without running a lengthy 
-benchmark, just from knowing the drive performance?
+Oops - you are right. While in raid1-resync-state there is no redundancy
+for the disk that should be replaced and therefore I lose a lot of  
+redundancy
+for the raid5 above it. When I replace a disk that is in a good state -
+everything is fine. When I replace one with read problems - I simply  
+lose.
+Not as good as I thought first ...
 
-* Why although I have 3 identical chunks of data at any time, dstat 
-never showed simultaneous reading from more than 2 drives. Every dd run 
-was accompanied by maxing out one of the drives at 58MB/s and another 
-one was trying to catch up to various degrees depending on the chunk 
-size. Then on the next dd run two other drives would be (seemingly 
-random) selected and the process would repeat.
+A build in solution would be able to avoid such problems - right.
 
-* What the test results don't show but dstat did is how the array resync 
-behaved after the array creation. Although my system can sustain reads 
-from all 4 drives at the max speed of 58MB/s, here is what the resync at 
-different chunk sizes looked like:
+Ralf Mueller
 
-32k	-	simultaneous reads from all 4 drives at 47MB/s sustained
-64k	-	simultaneous reads from all 4 drives at 56MB/s sustained
-128k	-	simultaneous reads from all 4 drives at 54MB/s sustained
-512k	-	simultaneous reads from all 4 drives at 30MB/s sustained
-1024k	-	simultaneous reads from all 4 drives at 38MB/s sustained
-4096k	-	simultaneous reads from all 4 drives at 44MB/s sustained
-16384k	-	simultaneous reads from all 4 drives at 46MB/s sustained
-32768k	-	simultaneous reads from 2 drives at 58MB/s sustained and
-  		the other two at 26MB/s sustained alternating the speed
-		between the pairs of drives every 3 seconds or so
-65536k	-	All 4 drives started at 58MB/s sustained gradually
-		reducing to 44MB/s sustained at the same time
 
-I repeated just the creation of arrays - the results are consistent. Is 
-there any explanation for this?
+-- 
+Van Roy's Law: -------------------------------------------------------
+        An unbreakable toy is useful for breaking other toys.
+
+
