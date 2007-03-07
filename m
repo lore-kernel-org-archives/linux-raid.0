@@ -1,14 +1,35 @@
-From: Mrs Felicia Hines <feliciahines1903@yahoo.co.uk>
-Subject: IN HIS LOVE/GET BACK TO ME
-Date: Tue, 6 Mar 2007 20:50:05 +0100
-Message-ID: <200703061950.l26Jo5cO003442@n7.sivit.org>
-Reply-To: feliciahines1903@yahoo.co.uk
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: detecting/correcting _slightly_ flaky disks
+Date: Tue, 06 Mar 2007 19:14:26 -0500
+Message-ID: <45EE03E2.5000309@tmr.com>
+References: <bb145bd20703040322g1e5e8784i93a933c0c61b43f6@mail.gmail.com> <17898.45673.573800.56474@notabene.brown> <45EB3867.8050907@eyal.emu.id.au> <17899.18568.523543.478792@notabene.brown> <45EBCA83.40106@eyal.emu.id.au> <45EC2F89.2070703@pobox.com> <Pine.LNX.4.64.0703051008190.14012@p34.internal.lan> <45EC4CFD.3050106@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <45EC4CFD.3050106@pobox.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: mjstumpf@pobox.com
+Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-<<< No Message Collected >>>
+Michael Stumpf wrote:
+> This is the drive I think is most suspect.  What isn't obvious, 
+> because it isn't listed in the self test log, is between #1 and #2 
+> there was an aborted, hung test.   The #4 short test that was aborted 
+> was also a hung test that I eventually, manually aborted--heard 
+> clicking from drives at that time, can't swear it was from this drive 
+> though.
+>
+> Not sure I fully understand the nuances of this report.  If anything 
+> jumps out at you, I'd appreciate a tip on how you read it.  (to me, 
+> looks mostly healthy)
+>
+For what it's worth, if you are getting hung tests, either your drive or 
+power supply should be redeployed as a paperweight. My opinion...
+
+-- 
+bill davidsen <davidsen@tmr.com>
+  CTO TMR Associates, Inc
+  Doing interesting things with small computers since 1979
+
