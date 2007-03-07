@@ -1,28 +1,33 @@
-From: Peter Rabbitson <rabbit@rabbit.us>
-Subject: Re: Help with chunksize on raid10 -p o3 array
-Date: Wed, 07 Mar 2007 10:28:46 +0100
-Message-ID: <45EE85CE.6010501@rabbit.us>
-References: <45ED4FE1.5020105@rabbit.us> <45EE07EB.8050604@tmr.com>
+From: Dexter Filmore <Dexter.Filmore@gmx.de>
+Subject: Re: high mismatch count after scrub
+Date: Wed, 7 Mar 2007 14:10:17 +0100
+Message-ID: <200703071410.17320.Dexter.Filmore@gmx.de>
+References: <200703060306.46082.Dexter.Filmore@gmx.de> <200703061345.03675.Dexter.Filmore@gmx.de> <Pine.LNX.4.64.0703060751160.29188@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <45EE07EB.8050604@tmr.com>
+In-Reply-To: <Pine.LNX.4.64.0703060751160.29188@p34.internal.lan>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Bill Davidsen wrote:
-> Peter Rabbitson wrote:
->> Hi,
->> I have been trying to figure out the best chunk size for raid10 before 
+> Neil,
+>
+> So in his case, is there anyway to determine which files are potentially
+> corrupted?
 
-> By any chance did you remember to increase stripe_cache_size to match 
-> the chunk size? If not, there you go.
+I'd like to know that, too...
 
-At the end of /usr/src/linux/Documentation/md.txt it specifically says 
-that stripe_cache_size is raid5 specific, and it made sense to me, as 
-caching stuff to avoid re-doing parity is beneficial. I will test later 
-today trying to set the cache higher. Are there any guidelines on how 
-large should it be in relation to the chunk size/number of drives for 
-raid10?
+-- 
+-----BEGIN GEEK CODE BLOCK-----
+Version: 3.12
+GCS d--(+)@ s-:+ a- C++++ UL++ P+>++ L+++>++++ E-- W++ N o? K-
+w--(---) !O M+ V- PS+ PE Y++ PGP t++(---)@ 5 X+(++) R+(++) tv--(+)@ 
+b++(+++) DI+++ D- G++ e* h>++ r* y?
+------END GEEK CODE BLOCK------
+
+http://www.stop1984.com
+http://www.againsttcpa.com
