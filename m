@@ -1,46 +1,83 @@
 From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: mismatch_cnt questions
-Date: Tue, 06 Mar 2007 19:22:37 -0500
-Message-ID: <45EE05CD.7080007@tmr.com>
-References: <bb145bd20703040322g1e5e8784i93a933c0c61b43f6@mail.gmail.com>	<17898.45673.573800.56474@notabene.brown>	<45EB3867.8050907@eyal.emu.id.au>	<17899.18568.523543.478792@notabene.brown>	<45EBCA83.40106@eyal.emu.id.au> <17900.43653.510415.553440@notabene.brown>
+Subject: Re: Help with chunksize on raid10 -p o3 array
+Date: Tue, 06 Mar 2007 19:31:39 -0500
+Message-ID: <45EE07EB.8050604@tmr.com>
+References: <45ED4FE1.5020105@rabbit.us>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17900.43653.510415.553440@notabene.brown>
+In-Reply-To: <45ED4FE1.5020105@rabbit.us>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Eyal Lebedinsky <eyal@eyal.emu.id.au>, Christian Pernegger <pernegger@gmail.com>, linux-raid@vger.kernel.org
+To: Peter Rabbitson <rabbit@rabbit.us>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil Brown wrote:
-> On Monday March 5, eyal@eyal.emu.id.au wrote:
->   
->> Neil Brown wrote:
->> [trim Q re how resync fixes data]
->>     
->>> For raid1 we 'fix' and inconsistency by arbitrarily choosing one copy
->>> and writing it over all other copies.
->>> For raid5 we assume the data is correct and update the parity.
->>>       
->> Can raid6 identify the bad block (two parity blocks could allow this
->> if only one block has bad data in a stripe)? If so, does it?
->>     
+Peter Rabbitson wrote:
+> Hi,
+> I have been trying to figure out the best chunk size for raid10 before 
+> migrating my server to it (currently raid1). I am looking at 3 offset 
+> stripes, as I want to have two drive failure redundancy, and offset 
+> striping is said to have the best write performance, with read 
+> performance equal to far. Information on the internet is scarce so I 
+> decided to test chunking myself. I used the script 
+> http://rabbit.us/pool/misc/raid_test.txt to iterate through different 
+> chunk sizes, and try to dd the resulting array to /dev/null. I 
+> deliberately did not make a filesystem on top of the array - I was 
+> just looking for raw performance, and since the FS layer is not 
+> involved no caching/optimization is taking place. I also monitored the 
+> process with dstat in a separate window, and memory usage confirmed 
+> that this method is valid.
+> I got some pretty weird results: 
+> http://rabbit.us/pool/misc/raid_test_results.txt
+> From all my readings so far I thought that with chunk size increase 
+> the large block access throughput decreases while small block reads 
+> increase, and it is just a matter of finding a "sweet spot" balancing 
+> them out. The results, however, clearly show something else. There are 
+> some inconsistencies, which I attribute to my non-scientific approach, 
+> but the trend is clearly showing.
 >
-> No, it doesn't.
+> Here are the questions I have:
 >
-> I guess that maybe it could:
->    Rebuild each block in turn based on the xor parity, and then test 
->    if the Q-syndrome is satisfied.
-> but I doubt the gain would be worth the pain.
-What's the value of "I have a drive which returned bad data" vs. "I have 
-a whole array and some part of it returned bad data?" What's the cost of 
-doing that identification, since it need only be done when the data are 
-inconsistent between the drives and give a parity or Q mismatch? It 
-seems easy, given that you are going to read all the pertinent sectors 
-into memory anyway.
+> * Why did the test show best consistent performance over a 16k chunk? 
+> Is there a way to determine this number without running a lengthy 
+> benchmark, just from knowing the drive performance?
+>
+By any chance did you remember to increase stripe_cache_size to match 
+the chunk size? If not, there you go.
+> * Why although I have 3 identical chunks of data at any time, dstat 
+> never showed simultaneous reading from more than 2 drives. Every dd 
+> run was accompanied by maxing out one of the drives at 58MB/s and 
+> another one was trying to catch up to various degrees depending on the 
+> chunk size. Then on the next dd run two other drives would be 
+> (seemingly random) selected and the process would repeat.
+>
+> * What the test results don't show but dstat did is how the array 
+> resync behaved after the array creation. Although my system can 
+> sustain reads from all 4 drives at the max speed of 58MB/s, here is 
+> what the resync at different chunk sizes looked like:
+>
+> 32k    -    simultaneous reads from all 4 drives at 47MB/s sustained
+> 64k    -    simultaneous reads from all 4 drives at 56MB/s sustained
+> 128k    -    simultaneous reads from all 4 drives at 54MB/s sustained
+> 512k    -    simultaneous reads from all 4 drives at 30MB/s sustained
+> 1024k    -    simultaneous reads from all 4 drives at 38MB/s sustained
+> 4096k    -    simultaneous reads from all 4 drives at 44MB/s sustained
+> 16384k    -    simultaneous reads from all 4 drives at 46MB/s sustained
+> 32768k    -    simultaneous reads from 2 drives at 58MB/s sustained and
+>          the other two at 26MB/s sustained alternating the speed
+>         between the pairs of drives every 3 seconds or so
+> 65536k    -    All 4 drives started at 58MB/s sustained gradually
+>         reducing to 44MB/s sustained at the same time
+>
+> I repeated just the creation of arrays - the results are consistent. 
+> Is there any explanation for this?
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-If the drive can be identified the data can be rewritten with confidence.
 
 -- 
 bill davidsen <davidsen@tmr.com>
