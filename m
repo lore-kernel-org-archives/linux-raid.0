@@ -1,123 +1,107 @@
 From: Greg KH <gregkh@suse.de>
-Subject: [patch 045/101] md: Fix raid10 recovery problem.
-Date: Wed, 07 Mar 2007 09:11:20 -0800
-Message-ID: <20070307171345.549073334@mini.kroah.org>
+Subject: [patch 021/101] md: Avoid possible BUG_ON in md bitmap handling.
+Date: Wed, 07 Mar 2007 09:10:56 -0800
+Message-ID: <20070307171226.114733654@mini.kroah.org>
 References: <20070307171035.150802805@mini.kroah.org>
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1422829AbXCGRP2@vger.kernel.org>
-Content-Disposition: inline; filename=md-fix-raid10-recovery-problem.patch
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, stable@kernel.org, Andrew Morton <akpm@linux-foundation.org>
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline; filename=md-avoid-possible-bug_on-in-md-bitmap-handling.patch
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org, stable@kernel.org, akpm@linux-foundation.org
 Cc: Justin Forbes <jmforbes@linuxtx.org>, Zwane Mwaikambo <zwane@arm.linux.org.uk>, Theodore Ts'o <tytso@mit.edu>, Randy Dunlap <rdunlap@xenotime.net>, Dave Jones <davej@redhat.com>, Chuck Wolber <chuckw@quantumlinux.com>, Chris Wedgwood <reviews@ml.cw.f00f.org>, Michael Krufky <mkrufky@linuxtv.org>, Chuck Ebbert <cebbert@redhat.com>, torvalds@linux-foundation.org, alan@lxorguk.ukuu.org.uk, linux-raid@vger.kernel.org, Neil Brown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-From: NeilBrown <neilb@suse.de>
+From: Neil Brown <neilb@suse.de>
 
-There are two errors that can lead to recovery problems with raid10
-when used in 'far' more (not the default).
+md/bitmap tracks how many active write requests are pending on blocks
+associated with each bit in the bitmap, so that it knows when it can
+clear the bit (when count hits zero).
 
-Due to a '>' instead of '>=' the wrong block is located which would
-result in garbage being written to some random location, quite
-possible outside the range of the device, causing the newly
-reconstructed device to fail.
+The counter has 14 bits of space, so if there are ever more than 16383,
+we cannot cope.
 
-The device size calculation had some rounding errors (it didn't round
-when it should) and so recovery would go a few blocks too far which
-would again cause a write to a random block address and probably
-a device error.
+Currently the code just calles BUG_ON as "all" drivers have request queue
+limits much smaller than this.
 
-The code for working with device sizes was fairly confused and spread
-out, so this has been tided up a bit.
+However is seems that some don't.  Apparently some multipath configurations
+can allow more than 16383 concurrent write requests.
+
+So, in this unlikely situation, instead of calling BUG_ON we now wait
+for the count to drop down a bit.  This requires a new wait_queue_head,
+some waiting code, and a wakeup call.
+
+Tested by limiting the counter to 20 instead of 16383 (writes go a lot slower
+in that case...).
 
 Signed-off-by: Neil Brown <neilb@suse.de>
 Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
 
-
+diff .prev/drivers/md/bitmap.c ./drivers/md/bitmap.c
 ---
- drivers/md/raid10.c |   38 ++++++++++++++++++++------------------
- 1 file changed, 20 insertions(+), 18 deletions(-)
+ drivers/md/bitmap.c         |   22 +++++++++++++++++++++-
+ include/linux/raid/bitmap.h |    1 +
+ 2 files changed, 22 insertions(+), 1 deletion(-)
 
---- linux-2.6.20.1.orig/drivers/md/raid10.c
-+++ linux-2.6.20.1/drivers/md/raid10.c
-@@ -429,7 +429,7 @@ static sector_t raid10_find_virt(conf_t 
- 		if (dev < 0)
- 			dev += conf->raid_disks;
- 	} else {
--		while (sector > conf->stride) {
-+		while (sector >= conf->stride) {
- 			sector -= conf->stride;
- 			if (dev < conf->near_copies)
- 				dev += conf->raid_disks - conf->near_copies;
-@@ -1801,6 +1801,7 @@ static sector_t sync_request(mddev_t *md
- 						for (k=0; k<conf->copies; k++)
- 							if (r10_bio->devs[k].devnum == i)
- 								break;
-+						BUG_ON(k == conf->copies);
- 						bio = r10_bio->devs[1].bio;
- 						bio->bi_next = biolist;
- 						biolist = bio;
-@@ -2021,19 +2022,30 @@ static int run(mddev_t *mddev)
- 	if (!conf->tmppage)
- 		goto out_free_conf;
+--- linux-2.6.20.1.orig/drivers/md/bitmap.c
++++ linux-2.6.20.1/drivers/md/bitmap.c
+@@ -1160,6 +1160,22 @@ int bitmap_startwrite(struct bitmap *bit
+ 			return 0;
+ 		}
  
-+	conf->mddev = mddev;
-+	conf->raid_disks = mddev->raid_disks;
- 	conf->near_copies = nc;
- 	conf->far_copies = fc;
- 	conf->copies = nc*fc;
- 	conf->far_offset = fo;
- 	conf->chunk_mask = (sector_t)(mddev->chunk_size>>9)-1;
- 	conf->chunk_shift = ffz(~mddev->chunk_size) - 9;
-+	size = mddev->size >> (conf->chunk_shift-1);
-+	sector_div(size, fc);
-+	size = size * conf->raid_disks;
-+	sector_div(size, nc);
-+	/* 'size' is now the number of chunks in the array */
-+	/* calculate "used chunks per device" in 'stride' */
-+	stride = size * conf->copies;
-+	sector_div(stride, conf->raid_disks);
-+	mddev->size = stride  << (conf->chunk_shift-1);
++		if (unlikely((*bmc & COUNTER_MAX) == COUNTER_MAX)) {
++			DEFINE_WAIT(__wait);
++			/* note that it is safe to do the prepare_to_wait
++			 * after the test as long as we do it before dropping
++			 * the spinlock.
++			 */
++			prepare_to_wait(&bitmap->overflow_wait, &__wait,
++					TASK_UNINTERRUPTIBLE);
++			spin_unlock_irq(&bitmap->lock);
++			bitmap->mddev->queue
++				->unplug_fn(bitmap->mddev->queue);
++			schedule();
++			finish_wait(&bitmap->overflow_wait, &__wait);
++			continue;
++		}
 +
- 	if (fo)
--		conf->stride = 1 << conf->chunk_shift;
--	else {
--		stride = mddev->size >> (conf->chunk_shift-1);
-+		stride = 1;
-+	else
- 		sector_div(stride, fc);
--		conf->stride = stride << conf->chunk_shift;
--	}
-+	conf->stride = stride << conf->chunk_shift;
+ 		switch(*bmc) {
+ 		case 0:
+ 			bitmap_file_set_bit(bitmap, offset);
+@@ -1169,7 +1185,7 @@ int bitmap_startwrite(struct bitmap *bit
+ 		case 1:
+ 			*bmc = 2;
+ 		}
+-		BUG_ON((*bmc & COUNTER_MAX) == COUNTER_MAX);
 +
- 	conf->r10bio_pool = mempool_create(NR_RAID10_BIOS, r10bio_pool_alloc,
- 						r10bio_pool_free, conf);
- 	if (!conf->r10bio_pool) {
-@@ -2063,8 +2075,6 @@ static int run(mddev_t *mddev)
+ 		(*bmc)++;
  
- 		disk->head_position = 0;
- 	}
--	conf->raid_disks = mddev->raid_disks;
--	conf->mddev = mddev;
- 	spin_lock_init(&conf->device_lock);
- 	INIT_LIST_HEAD(&conf->retry_list);
+ 		spin_unlock_irq(&bitmap->lock);
+@@ -1207,6 +1223,9 @@ void bitmap_endwrite(struct bitmap *bitm
+ 		if (!success && ! (*bmc & NEEDED_MASK))
+ 			*bmc |= NEEDED_MASK;
  
-@@ -2106,16 +2116,8 @@ static int run(mddev_t *mddev)
- 	/*
- 	 * Ok, everything is just fine now
- 	 */
--	if (conf->far_offset) {
--		size = mddev->size >> (conf->chunk_shift-1);
--		size *= conf->raid_disks;
--		size <<= conf->chunk_shift;
--		sector_div(size, conf->far_copies);
--	} else
--		size = conf->stride * conf->raid_disks;
--	sector_div(size, conf->near_copies);
--	mddev->array_size = size/2;
--	mddev->resync_max_sectors = size;
-+	mddev->array_size = size << (conf->chunk_shift-1);
-+	mddev->resync_max_sectors = size << conf->chunk_shift;
++		if ((*bmc & COUNTER_MAX) == COUNTER_MAX)
++			wake_up(&bitmap->overflow_wait);
++
+ 		(*bmc)--;
+ 		if (*bmc <= 2) {
+ 			set_page_attr(bitmap,
+@@ -1431,6 +1450,7 @@ int bitmap_create(mddev_t *mddev)
+ 	spin_lock_init(&bitmap->lock);
+ 	atomic_set(&bitmap->pending_writes, 0);
+ 	init_waitqueue_head(&bitmap->write_wait);
++	init_waitqueue_head(&bitmap->overflow_wait);
  
- 	mddev->queue->unplug_fn = raid10_unplug;
- 	mddev->queue->issue_flush_fn = raid10_issue_flush;
+ 	bitmap->mddev = mddev;
+ 
+--- linux-2.6.20.1.orig/include/linux/raid/bitmap.h
++++ linux-2.6.20.1/include/linux/raid/bitmap.h
+@@ -247,6 +247,7 @@ struct bitmap {
+ 
+ 	atomic_t pending_writes; /* pending writes to the bitmap file */
+ 	wait_queue_head_t write_wait;
++	wait_queue_head_t overflow_wait;
+ 
+ };
+ 
 
 --
