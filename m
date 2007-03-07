@@ -1,60 +1,43 @@
 From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: detecting/correcting _slightly_ flaky disks
-Date: Wed, 07 Mar 2007 10:01:23 -0500
-Message-ID: <45EED3C3.5030108@tmr.com>
-References: <bb145bd20703040322g1e5e8784i93a933c0c61b43f6@mail.gmail.com> <17898.45673.573800.56474@notabene.brown> <45EB3867.8050907@eyal.emu.id.au> <17899.18568.523543.478792@notabene.brown> <45EBCA83.40106@eyal.emu.id.au> <45EC2F89.2070703@pobox.com> <Pine.LNX.4.64.0703051008190.14012@p34.internal.lan> <45EC4CFD.3050106@pobox.com> <45EE03E2.5000309@tmr.com> <45EE1775.7020906@pobox.com>
+Subject: Re: Replace drive in RAID5 without losing redundancy?
+Date: Wed, 07 Mar 2007 10:14:56 -0500
+Message-ID: <45EED6F0.6010107@tmr.com>
+References: <37643E71-0FD9-4F8A-AE68-A8565FEB0247@bj-ig.de> <17900.39356.684798.56121@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <45EE1775.7020906@pobox.com>
+In-Reply-To: <17900.39356.684798.56121@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: mjstumpf@pobox.com
-Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: =?ISO-8859-1?Q?Ralf_M=FCller?= <ralf@bj-ig.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Michael Stumpf wrote:
-> Bill Davidsen wrote:
->> Michael Stumpf wrote:
->>> This is the drive I think is most suspect.  What isn't obvious, 
->>> because it isn't listed in the self test log, is between #1 and #2 
->>> there was an aborted, hung test.   The #4 short test that was 
->>> aborted was also a hung test that I eventually, manually 
->>> aborted--heard clicking from drives at that time, can't swear it was 
->>> from this drive though.
->>>
->>> Not sure I fully understand the nuances of this report.  If anything 
->>> jumps out at you, I'd appreciate a tip on how you read it.  (to me, 
->>> looks mostly healthy)
->>>
->> For what it's worth, if you are getting hung tests, either your drive 
->> or power supply should be redeployed as a paperweight. My opinion...
->>
-> I don't disagree but I'd like to find something more concrete or 
-> repeatable, especially given that these give an audible click when 
-> failing.  The problem I'm having is that I can't nail down precisely 
-> where the problem is, although your suggestion makes a lot of sense.
-Well, here's thought if you are inclined... power up and go into BIOS 
-config mode. That will leave the drives powered but not in use. Now pull 
-the power cable out on one of them. Does the drive make a familiar click 
-as the heads do an emergency park? That's the easiest thing to check 
-which might cause the click. One thing your SMART doesn't include is 
-Temp, which might or might now tell you anything. You could try hddtemp, 
-but SMART would probably report it if the sensor was there.
+Neil Brown wrote:
+> On Monday March 5, ralf@bj-ig.de wrote:
+>   
+>> Is it possible to mark a disk as "to be replaced by an existing spare",
+>> then migrate to the spare disk and kick the old disk _after_ migration
+>> has been done? Or not even kick - but mark as new spare.
+>>     
 >
-> After running Justin's suggested badblocks test, I'm kind-of-disturbed 
-> to see that all these drives are passing with flying colors.
->
-> Firmware issue?  WD had it in the past.
-Certainly you could check for newer firmware, and to see if all drives 
-have the same level.
->
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+> No, this is not possible yet.
 
+I was thinking about this, and looked at the code a bit. It would seem 
+(as someone who doesn't have to write code) that the capabilities are 
+all there. There is rebuild on spare, write-mostly, and therefore a 
+"migrate" might be done by just using the pieces cleverly.
+
+What I was thinking is to trigger the code to rebuild on spare, but to 
+only rebuild the data from parity of the drive being replaced were 
+unreadable. That should make the process run much faster. any write 
+would present a different problem, I would say the data would go to the 
+new drive, and if bitmap was enabled the bit would be set for the old 
+drive but no write done. If the new drive failed during the migrate the 
+old drive could then be resynced. Without a bitmap you DO want to write 
+the old drive if it's good, DON'T if you think it's failing.
+
+Thoughts on this?
 
 -- 
 bill davidsen <davidsen@tmr.com>
