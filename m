@@ -1,43 +1,55 @@
 From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: Replace drive in RAID5 without losing redundancy?
-Date: Wed, 07 Mar 2007 10:14:56 -0500
-Message-ID: <45EED6F0.6010107@tmr.com>
-References: <37643E71-0FD9-4F8A-AE68-A8565FEB0247@bj-ig.de> <17900.39356.684798.56121@notabene.brown>
+Subject: Re: no journaling and loops on softraid?
+Date: Wed, 07 Mar 2007 11:49:09 -0500
+Message-ID: <45EEED05.5030600@tmr.com>
+References: <200703052355.15363.Dexter.Filmore@gmx.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17900.39356.684798.56121@notabene.brown>
+In-Reply-To: <200703052355.15363.Dexter.Filmore@gmx.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: =?ISO-8859-1?Q?Ralf_M=FCller?= <ralf@bj-ig.de>, linux-raid@vger.kernel.org
+To: Dexter Filmore <Dexter.Filmore@gmx.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil Brown wrote:
-> On Monday March 5, ralf@bj-ig.de wrote:
->   
->> Is it possible to mark a disk as "to be replaced by an existing spare",
->> then migrate to the spare disk and kick the old disk _after_ migration
->> has been done? Or not even kick - but mark as new spare.
->>     
+Dexter Filmore wrote:
+> http://gentoo-wiki.com/HOWTO_Gentoo_Install_on_Software_RAID#Data_Scrubbing
 >
-> No, this is not possible yet.
+> "Warning: Be aware that the combination of RAID5 and loop-devices will most 
+> likely cause severe filesystem damage, especially when using ext3 and 
+> ReiserFS. Some users suggest that XFS is not affected by this, but this has 
+> not been entirely confirmed. See kernel bug 6242 for updates on this bug.
+>
+> Note: There are also reports that Journaled Filesystems are problematic on all 
+> Software-RAID levels. No kernel bugs have been submitted regarding this bug 
+> as of yet. A number of the reports involve using cryptoloops which are known 
+> to cause corruption. See http://forums.gentoo.org/viewtopic-t-412467.html for 
+> more information. This thread should be taken with a grain of salt."
+>
+> Can someone shed some light on this? I have XFS on my raid and *had* problems 
+> when unpacking large archives with many small files.
+>   
 
-I was thinking about this, and looked at the code a bit. It would seem 
-(as someone who doesn't have to write code) that the capabilities are 
-all there. There is rebuild on spare, write-mostly, and therefore a 
-"migrate" might be done by just using the pieces cleverly.
+To start, the report mentions a number of unrelated layers, evms, 
+dm-crypt, and some total misinformation, claiming that evms is needed to 
+allow growing of raid. I can't speak to XFS over RAID, I've seen report 
+of XFS problems on native partitions, and just don't have enough 
+information to have a good opinion.
 
-What I was thinking is to trigger the code to rebuild on spare, but to 
-only rebuild the data from parity of the drive being replaced were 
-unreadable. That should make the process run much faster. any write 
-would present a different problem, I would say the data would go to the 
-new drive, and if bitmap was enabled the bit would be set for the old 
-drive but no write done. If the new drive failed during the migrate the 
-old drive could then be resynced. Without a bitmap you DO want to write 
-the old drive if it's good, DON'T if you think it's failing.
+But I have been running ext3 over RAID1 and RAID5 for years, and just 
+haven't seen the problems you mention, or anything else which concerns 
+me. There were recovery issues in early kernels, but I have no reason to 
+think that there's any basic problem at this point. Reports of problems 
+often outlive the problem, and problems with multiple layers of device 
+manipulation you increase the chance of failure, because a chain is as 
+strong as the weakest link, and decrease the chances if identifying 
+which layer is actually a problem. If you have any hardware issues, you 
+now depend on every layer not only handling them, but passing them up 
+and down layers.
 
-Thoughts on this?
+I have put lvm over raid, but even that would be an issue to debug. I 
+would simplify if I had your problem.
 
 -- 
 bill davidsen <davidsen@tmr.com>
