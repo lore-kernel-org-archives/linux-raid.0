@@ -1,67 +1,48 @@
-From: =?ISO-8859-1?Q?Ralf_M=FCller?= <ralf@bj-ig.de>
-Subject: Re: Replace drive in RAID5 without losing redundancy?
-Date: Thu, 8 Mar 2007 15:56:53 +0100
-Message-ID: <9D3015E0-6044-4BE3-8DE3-4B53B86CB1B9@bj-ig.de>
-References: <37643E71-0FD9-4F8A-AE68-A8565FEB0247@bj-ig.de> <17900.39356.684798.56121@notabene.brown> <45EED6F0.6010107@tmr.com>
-Mime-Version: 1.0 (Apple Message framework v752.3)
-Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Andy Isaacson <adi@hexapodia.org>
+Subject: [PATCH] fix read past end of array in md/linear.c
+Date: Thu, 8 Mar 2007 12:52:04 -0800
+Message-ID: <20070308205204.GA12152@hexapodia.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <45EED6F0.6010107@tmr.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Andrew Morton <akpm@linux-foundation.org>, Neil Brown <neilb@suse.de>, Bill Davidsen <davidsen@tmr.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+When iterating through an array, one must be careful to test one's index
+variable rather than another similarly-named variable.  
 
-Am 07.03.2007 um 16:14 schrieb Bill Davidsen:
-> Neil Brown wrote:
->> On Monday March 5, ralf@bj-ig.de wrote:
->>> Is it possible to mark a disk as "to be replaced by an existing  
->>> spare",
->>> then migrate to the spare disk and kick the old disk _after_  
->>> migration
->>> has been done? Or not even kick - but mark as new spare.
->>
->> No, this is not possible yet.
->
-> I was thinking about this, and looked at the code a bit.
-> [ ... ]
-> What I was thinking is to trigger the code to rebuild on spare, but  
-> to only rebuild the data from parity of the drive being replaced  
-> were unreadable.
+The loop will read off the end of conf->disks[] in the following
+(pathological) case:
 
-Sounds good to me ...
+% dd bs=1 seek=840716287 if=/dev/zero of=d1 count=1
+% for i in 2 3 4; do dd if=/dev/zero of=d$i bs=1k count=$(($i+150)); done
+% ./vmlinux ubd0=root ubd1=d1 ubd2=d2 ubd3=d3 ubd4=d4
+# mdadm -C /dev/md0 --level=linear --raid-devices=4 /dev/ubd[1234]
 
-> That should make the process run much faster. any write would  
-> present a different problem, I would say the data would go to the  
-> new drive, and if bitmap was enabled the bit would be set for the  
-> old drive but no write done.
+adding some printks, I saw this:
+[42949374.960000] hash_spacing = 821120
+[42949374.960000] cnt          = 4
+[42949374.960000] min_spacing  = 801
+[42949374.960000] j=0 size=820928 sz=820928
+[42949374.960000] i=0 sz=820928 hash_spacing=820928
+[42949374.960000] j=1 size=64 sz=64
+[42949374.960000] j=2 size=64 sz=128
+[42949374.960000] j=3 size=64 sz=192
+[42949374.960000] j=4 size=1515870810 sz=1515871002
 
-But then you need to copy the whole block that is covered by a bit in
-the bitmap to the new drive on every write that is done to the raid -  
-am I
-right? For small random writes this could be a real performance hit.
-
-> If the new drive failed during the migrate the old drive could then  
-> be resynced. Without a bitmap you DO want to write the old drive if  
-> it's good, DON'T if you think it's failing.
-
-Without a bitmap I would suggest to try to write to the old _and_ the  
-new drive.
-In case of a write error on the old drive it seems best to me to not  
-kick
-it - as it would be done normally - but ignore the error and hope the  
-next time
-one tries to write this sector it is still not writable (just in case  
-we have to
-stop migration for any reason). Or is there any way to mark a sector  
-as invalid
-on a raid without bitmap?
-
-In case the new drive fails it should be kicked as usual ...
-
-Ok ... for not having any idea what the raid code actually does this was
-quite a lot of text ... hopefully it was not only noise.
-
-Ralf
+Index: linus/drivers/md/linear.c
+===================================================================
+--- linus.orig/drivers/md/linear.c	2007-03-02 11:35:55.000000000 -0800
++++ linus/drivers/md/linear.c	2007-03-07 13:10:30.000000000 -0800
+@@ -188,7 +188,7 @@
+ 	for (i=0; i < cnt-1 ; i++) {
+ 		sector_t sz = 0;
+ 		int j;
+-		for (j=i; i<cnt-1 && sz < min_spacing ; j++)
++		for (j=i; j<cnt-1 && sz < min_spacing ; j++)
+ 			sz += conf->disks[j].size;
+ 		if (sz >= min_spacing && sz < conf->hash_spacing)
+ 			conf->hash_spacing = sz;
