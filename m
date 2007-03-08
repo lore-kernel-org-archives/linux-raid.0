@@ -1,74 +1,67 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: mismatch_cnt questions
-Date: Thu, 08 Mar 2007 08:54:10 -0500
-Message-ID: <yq1tzwvj0xp.fsf@sermon.lab.mkp.net>
-References: <bb145bd20703040322g1e5e8784i93a933c0c61b43f6@mail.gmail.com>
-	<17898.45673.573800.56474@notabene.brown>
-	<45EB3867.8050907@eyal.emu.id.au>
-	<17899.18568.523543.478792@notabene.brown>
-	<45EBCA83.40106@eyal.emu.id.au>
-	<17900.43653.510415.553440@notabene.brown>
-	<45EFAFB8.3070703@zytor.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: =?ISO-8859-1?Q?Ralf_M=FCller?= <ralf@bj-ig.de>
+Subject: Re: Replace drive in RAID5 without losing redundancy?
+Date: Thu, 8 Mar 2007 15:56:53 +0100
+Message-ID: <9D3015E0-6044-4BE3-8DE3-4B53B86CB1B9@bj-ig.de>
+References: <37643E71-0FD9-4F8A-AE68-A8565FEB0247@bj-ig.de> <17900.39356.684798.56121@notabene.brown> <45EED6F0.6010107@tmr.com>
+Mime-Version: 1.0 (Apple Message framework v752.3)
+Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <45EFAFB8.3070703@zytor.com> (H. Peter Anvin's message of "Wed, 07 Mar 2007 22:39:52 -0800")
+In-Reply-To: <45EED6F0.6010107@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "H. Peter Anvin" <hpa@zytor.com>
-Cc: Neil Brown <neilb@suse.de>, Eyal Lebedinsky <eyal@eyal.emu.id.au>, Christian Pernegger <pernegger@gmail.com>, linux-raid@vger.kernel.org
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
->>>>> "hpa" == H Peter Anvin <hpa@zytor.com> writes:
 
->> What we really want in drives that store 520 byte sectors so that a
->> checksum can be passed all the way up and down through the stack
->> .... or something like that.
->> 
+Am 07.03.2007 um 16:14 schrieb Bill Davidsen:
+> Neil Brown wrote:
+>> On Monday March 5, ralf@bj-ig.de wrote:
+>>> Is it possible to mark a disk as "to be replaced by an existing  
+>>> spare",
+>>> then migrate to the spare disk and kick the old disk _after_  
+>>> migration
+>>> has been done? Or not even kick - but mark as new spare.
+>>
+>> No, this is not possible yet.
+>
+> I was thinking about this, and looked at the code a bit.
+> [ ... ]
+> What I was thinking is to trigger the code to rebuild on spare, but  
+> to only rebuild the data from parity of the drive being replaced  
+> were unreadable.
 
-hpa> A lot of SCSI disks have that option, but I believe it's not
-hpa> arbitrary bytes.  In particular, the integrity check portion is
-hpa> only 2 bytes, 16 bits.
+Sounds good to me ...
 
-It's important to distinguish between drives that support 520 byte
-sectors and drives that include the Data Integrity Feature which also
-uses 520 byte sectors.
+> That should make the process run much faster. any write would  
+> present a different problem, I would say the data would go to the  
+> new drive, and if bitmap was enabled the bit would be set for the  
+> old drive but no write done.
 
-Most regular SCSI drives can be formatted with 520 byte sectors and a
-lot of disk arrays use the extra space to store an internal checksum.
-The downside to 520 byte sectors is that it makes buffer management a
-pain as 512 bytes of data is followed by 8 bytes of protection data.
-That sucks when writing - say - a 4KB block because your scatterlist
-becomes long and twisted having to interleave data and protection
-data every sector.
+But then you need to copy the whole block that is covered by a bit in
+the bitmap to the new drive on every write that is done to the raid -  
+am I
+right? For small random writes this could be a real performance hit.
 
-The data integrity feature also uses 520 byte byte sectors.  The
-difference is that the format of the 8 bytes is well defined.  And
-that both initiator and target are capable of verifying the integrity
-of an I/O.  It is correct that the CRC is only 16 bits.
+> If the new drive failed during the migrate the old drive could then  
+> be resynced. Without a bitmap you DO want to write the old drive if  
+> it's good, DON'T if you think it's failing.
 
-DIF is strictly between HBA and disk.  I'm lobbying HBA vendors to
-expose it to the OS so we can use it.  I'm also lobbying to get them
-to allow us to submit the data and the protection data in separate
-scatterlists so we don't have to do the interleaving at the OS level.
+Without a bitmap I would suggest to try to write to the old _and_ the  
+new drive.
+In case of a write error on the old drive it seems best to me to not  
+kick
+it - as it would be done normally - but ignore the error and hope the  
+next time
+one tries to write this sector it is still not writable (just in case  
+we have to
+stop migration for any reason). Or is there any way to mark a sector  
+as invalid
+on a raid without bitmap?
 
+In case the new drive fails it should be kicked as usual ...
 
-hpa> One option, of course, would be to store, say, 16
-hpa> sectors/pages/blocks in 17 physical sectors/pages/blocks, where
-hpa> the last one is a packing of some sort of high-powered integrity
-hpa> checks, e.g. SHA-256, or even an ECC block.  This would hurt
-hpa> performance substantially, but it would be highly useful for very
-hpa> high data integrity applications.
+Ok ... for not having any idea what the raid code actually does this was
+quite a lot of text ... hopefully it was not only noise.
 
-A while ago I tinkered with something like that.  I actually cheated
-and stored the checking data in a different partition on the same
-drive.  It was a pretty simple test using my DIF code (i.e. 8 bytes
-per sector).
-
-I wanted to see how badly the extra seeks would affect us.  The
-results weren't too discouraging but I decided I liked the ZFS
-approach better (having the checksum in the fs parent block which
-you'll be reading anyway).
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
-
+Ralf
