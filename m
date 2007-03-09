@@ -1,40 +1,41 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: mismatch_cnt questions
-Date: Fri, 09 Mar 2007 00:20:11 -0500
-Message-ID: <45F0EE8B.2020004@tmr.com>
-References: <bb145bd20703040322g1e5e8784i93a933c0c61b43f6@mail.gmail.com>	<17898.45673.573800.56474@notabene.brown>	<45EB3867.8050907@eyal.emu.id.au>	<17899.18568.523543.478792@notabene.brown>	<45EBCA83.40106@eyal.emu.id.au>	<17900.43653.510415.553440@notabene.brown>	<45EFAFB8.3070703@zytor.com> <yq1tzwvj0xp.fsf@sermon.lab.mkp.net> <45F0BFBA.5010201@tmr.com> <45F0E094.4060809@zytor.com>
+From: Andy Isaacson <adi@hexapodia.org>
+Subject: Re: [PATCH] fix read past end of array in md/linear.c
+Date: Thu, 8 Mar 2007 22:33:27 -0800
+Message-ID: <20070309063327.GM29544@hexapodia.org>
+References: <20070308205204.GA12152@hexapodia.org> <45F0C87A.9000400@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <45F0E094.4060809@zytor.com>
+Content-Disposition: inline
+In-Reply-To: <45F0C87A.9000400@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "H. Peter Anvin" <hpa@zytor.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Neil Brown <neilb@suse.de>, Eyal Lebedinsky <eyal@eyal.emu.id.au>, Christian Pernegger <pernegger@gmail.com>, linux-raid@vger.kernel.org
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: linux-kernel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-H. Peter Anvin wrote:
-> Bill Davidsen wrote:
->>
->> When last I looked at Hamming code, and that would be 1989 or 1990, I 
->> believe that I learned that the number of Hamming bits needed to 
->> cover N data bits was 1+log2(N), which for 512 bytes would be 1+12, 
->> and fit into a 16 bit field nicely. I don't know that I would go that 
->> way, fix any one bit error, detect any two bit error, rather than a 
->> CRC which gives me only one chance in 64k of an undetected data 
->> error, but I find it interesting.
->>
->
-> A Hamming code across the bytes of a sector is pretty darn pointless, 
-> since that's not a typical failure pattern.
-I just thought it was perhaps one of those little known facts that 
-meaningful ECC could fit in 16 bits. I mentioned that I wouldn't go that 
-way, mainly because it would be less effective catching multibit errors. 
-This was a "fun fact" for all those folks who missed Hamming codes in 
-their education, because they are old tech.
+On Thu, Mar 08, 2007 at 09:37:46PM -0500, Bill Davidsen wrote:
+> Andy Isaacson wrote:
+> >% dd bs=1 seek=840716287 if=/dev/zero of=d1 count=1
+> >% for i in 2 3 4; do dd if=/dev/zero of=d$i bs=1k count=$(($i+150)); done
+[snip]
+> >-		for (j=i; i<cnt-1 && sz < min_spacing ; j++)
+> >+		for (j=i; j<cnt-1 && sz < min_spacing ; j++)
+> > 			sz += conf->disks[j].size;
+> 
+> After looking at that code, I have to wonder how this ever worked, or if 
+> in fact anyone ever took this path. I assume that the value of sz caused 
+> the loop exit in all cases, since this has been in the code at least 
+> since 2.6.15, oldest thing I have handy.
 
--- 
-bill davidsen <davidsen@tmr.com>
-  CTO TMR Associates, Inc
-  Doing interesting things with small computers since 1979
+Well, just about any sane set of device sizes causes sz to rapidly
+exceed min_spacing.  You'll notice that my failure case is
+{ 800MB, 151kB, 152kB, 153kB, 154kB }.
 
+And even in the failure case, it's just a read from uninitialized
+memory, which is probably either a small value (so it won't make the
+answer very wrong) or a large value (so it will be rejected in the
+immediately following code).  In my case it happened to be some slab
+poison of 0xa5a5a5a5 or something like that, and the code went on just
+fine.
+
+-andy
