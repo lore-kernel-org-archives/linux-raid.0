@@ -1,109 +1,127 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: Reshaping raid0/10
-Date: Mon, 12 Mar 2007 09:36:39 +1100
-Message-ID: <17908.33911.135761.236374@notabene.brown>
-References: <Pine.LNX.4.61.0702211726500.12039@yvahk01.tjqt.qr>
-	<17884.42154.248251.261955@notabene.brown>
-	<Pine.LNX.4.61.0702231357420.9736@yvahk01.tjqt.qr>
-	<17887.19400.179239.281711@notabene.brown>
-	<45F3134C.7070500@zytor.com>
+Subject: Re: Help with chunksize on raid10 -p o3 array
+Date: Mon, 12 Mar 2007 15:28:55 +1100
+Message-ID: <17908.55047.408840.852816@notabene.brown>
+References: <45ED4FE1.5020105@rabbit.us>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from H. Peter Anvin on Saturday March 10
+In-Reply-To: message from Peter Rabbitson on Tuesday March 6
 Sender: linux-raid-owner@vger.kernel.org
-To: "H. Peter Anvin" <hpa@zytor.com>
-Cc: Jan Engelhardt <jengelh@linux01.gwdg.de>, linux-raid@vger.kernel.org
+To: Peter Rabbitson <rabbit@rabbit.us>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Saturday March 10, hpa@zytor.com wrote:
-> Neil Brown wrote:
-> > 
-> > If I wanted to reshape a raid0, I would just morph it into a raid4
-> > with a missing parity drive, then use the raid5 code to restripe it.
-> > Then morph it back to regular raid0.
-> > 
+On Tuesday March 6, rabbit@rabbit.us wrote:
+> Hi,
+> I have been trying to figure out the best chunk size for raid10 before 
+> migrating my server to it (currently raid1). I am looking at 3 offset 
+> stripes, as I want to have two drive failure redundancy, and offset 
+> striping is said to have the best write performance, with read 
+> performance equal to far. Information on the internet is scarce so I 
+> decided to test chunking myself. I used the script 
+> http://rabbit.us/pool/misc/raid_test.txt to iterate through different 
+
+The different block sizes in the reads will make very little
+difference to the results as the kernel will be doing read-ahead for
+you.  If you want to really test throughput at different block sizes
+you need to insert random seeks.
+
+> chunk sizes, and try to dd the resulting array to /dev/null. I 
+> deliberately did not make a filesystem on top of the array - I was just 
+> looking for raw performance, and since the FS layer is not involved no 
+> caching/optimization is taking place. I also monitored the process with 
+> dstat in a separate window, and memory usage confirmed that this method 
+> is valid.
+> I got some pretty weird results: 
+> http://rabbit.us/pool/misc/raid_test_results.txt
+>  From all my readings so far I thought that with chunk size increase the 
+> large block access throughput decreases while small block reads 
+> increase, and it is just a matter of finding a "sweet spot" balancing 
+> them out. The results, however, clearly show something else. There are 
+> some inconsistencies, which I attribute to my non-scientific approach, 
+> but the trend is clearly showing.
 > 
-> Wow, that made my brain hurt.
+> Here are the questions I have:
 > 
-> Given the fact that we're going to have to do this on kernel.org soon, 
-> what would be the concrete steps involved (we're going to have to change 
-> 3-member raid0 into 4-member raid0)...
+> * Why did the test show best consistent performance over a 16k chunk? Is 
+> there a way to determine this number without running a lengthy 
+> benchmark, just from knowing the drive performance?
 
-Well.... it's not straight forward at all.
+When you are doing a large sequential read from a raid10-offset array,
+it will (should) read from all drives for the first chunk, then skip
+over the offset-copy(s) of that chunk and read again.  Thus you get a
+read-seek-read-seek pattern.
+The time that each read takes will be proportional to the chunk size.
+The time that the seek take will be pretty stable (mostly head
+settling time I believe).  So for small chunks, the seek time
+dominates.  For large chunks, the read starts to dominate.
 
-Firstly: it can only work if all your drives are the same size
-(rounded to 64K).  If they aren't raid0 will use all the available
-space on each drive, while raid5 will only use the amount that is
-available on the first drive.
+I think this is what you are seeing.  When you get to 16M chunks (16K
+kilobytes) the seek time is a smaller fraction of the read time and so
+you spend more time reading.
 
-If that condition is met, then you can safely convert to a raid4 with
-one extra (missing) device by simply creating an array with the same
-drives (so you have to stop and restart the array - you cannot do that
-bit while the array is live).  You seem to need --assume-clean
-to create the raid4 degraded... That is probably a bug in mdadm.
+The fact that it drops off again at 32M is probably due to some limit
+in the amount of read-ahead that the kernel will initiate.  If it
+won't issue the request to the last drive before the request to the
+first drive completes, you will obviously get slower throughput.
 
-md/raid5 won't grow a degraded array, so now you have to add the new
-drive and let it sync the parity information onto it even though you
-aren't going to ultimately use it.  This is a bit of a bore.  It could
-probably be fixed but it wouldn't be entirely trivial (meaning a day
-rather than an hour).
 
-Once you have the non-degraded raid4, the next step would be
-  mdadm -G /dev/mdX -n 5 --backup-file=/root/something
-(a 5 drive raid4 contains your 4drive raid0).  Growing to a degraded
-array is not a problem.  However md won't currently let you do this
-on a raid4.   The patch to fix this is trivial and is below.
+> 
+> * Why although I have 3 identical chunks of data at any time, dstat 
+> never showed simultaneous reading from more than 2 drives. Every dd run 
+> was accompanied by maxing out one of the drives at 58MB/s and another 
+> one was trying to catch up to various degrees depending on the chunk 
+> size. Then on the next dd run two other drives would be (seemingly 
+> random) selected and the process would repeat.
 
-The --backup-file is needed as there is no spare for mdadm to store
-some temporary data on.
+Poor read-balancing code.  It really needs more thought.
+Possibly for raid10 we shouldn't try to balance at all.  Just read
+from the 'first' copy in each case....
 
-Once the grow finishes, you can unmount, stop the array, and create it
-as a raid0.
 
-This seems to work - I just tried it on a rather small filesystem
-(100M per drive) and it all went quite smoothly.
+> 
+> * What the test results don't show but dstat did is how the array resync 
+> behaved after the array creation. Although my system can sustain reads 
+> from all 4 drives at the max speed of 58MB/s, here is what the resync at 
+> different chunk sizes looked like:
+> 
+> 32k	-	simultaneous reads from all 4 drives at 47MB/s sustained
+> 64k	-	simultaneous reads from all 4 drives at 56MB/s sustained
+> 128k	-	simultaneous reads from all 4 drives at 54MB/s sustained
+> 512k	-	simultaneous reads from all 4 drives at 30MB/s sustained
+> 1024k	-	simultaneous reads from all 4 drives at 38MB/s sustained
+> 4096k	-	simultaneous reads from all 4 drives at 44MB/s sustained
+> 16384k	-	simultaneous reads from all 4 drives at 46MB/s sustained
+> 32768k	-	simultaneous reads from 2 drives at 58MB/s sustained and
+>   		the other two at 26MB/s sustained alternating the speed
+> 		between the pairs of drives every 3 seconds or so
+> 65536k	-	All 4 drives started at 58MB/s sustained gradually
+> 		reducing to 44MB/s sustained at the same time
+> 
+> I repeated just the creation of arrays - the results are consistent. Is 
+> there any explanation for this?
 
-I hope to be able to get all this automated one days so you can just
-  mdadm -G /dev/mdX -n 4
-on a raid0 and it will work.
+A raid10 resync involves reading all copies of each block and doing
+comparisons.  If we find a difference, we write out one copy over the
+rest.
 
-The need to sync the new disk first adds some real awkwardnesses.  It
-would actually be a lot easier if the parity device was the first of
-the array instead of the last.. retro fitting a new raid4 layout which
-you cannot accidentally corrupt be using an old kernel might be
-awkward though... not impossible.
+We issue the requests in sequential order for the blocks.  If you think
+about how the blocks are laid out, you will see that this is not
+always sequential order on each individual device.  In some cases we
+will ask to read a later device block before an earlier device block.
 
-Changing a raid0 to a raid4 while on-line is also non-trivial.  Raid0
-doesn't keep track of requests-in-flight so knowing when all raid0
-requests have completed and it is ok to start handling requests via
-raid4 will need some care..
+For small chunk sizes, the amount of backward-seeking will be fairly
+small and the elevator will probably absorb all of it.
+For larger chunk sizes, you will get longer backward seeking that
+doesn't get rearranged by the elevator and so you will get lower
+throughout.
 
-But with the following patch and a small down-time window at each end,
-you can use md to grow a raid0 today...  But I suggest you try it on
-test data first.
+Exactly where the interesting 32M artifact comes from I don't know.
+It could relate to the window size used by md - there is a limit to
+how many outstanding resync requests there can be at one time.
+It limits to 32 requests each 64K is size which multiplies out to
+2Meg..... not obvious how that connects, is it?
 
 NeilBrown
-
-
-Signed-off-by: Neil Brown <neilb@suse.de>
-
-### Diffstat output
- ./drivers/md/raid5.c |    6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
-
-diff .prev/drivers/md/raid5.c ./drivers/md/raid5.c
---- .prev/drivers/md/raid5.c	2007-03-02 15:48:35.000000000 +1100
-+++ ./drivers/md/raid5.c	2007-03-12 09:02:41.000000000 +1100
-@@ -4104,6 +4104,10 @@ static struct mdk_personality raid4_pers
- 	.spare_active	= raid5_spare_active,
- 	.sync_request	= sync_request,
- 	.resize		= raid5_resize,
-+#ifdef CONFIG_MD_RAID5_RESHAPE
-+	.check_reshape	= raid5_check_reshape,
-+	.start_reshape  = raid5_start_reshape,
-+#endif
- 	.quiesce	= raid5_quiesce,
- };
- 
