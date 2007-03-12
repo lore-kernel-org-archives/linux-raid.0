@@ -1,43 +1,50 @@
 From: Peter Rabbitson <rabbit@rabbit.us>
-Subject: Re: mismatch_cnt questions - how about raid10?
-Date: Mon, 12 Mar 2007 15:26:49 +0100
-Message-ID: <45F56329.4000407@rabbit.us>
-References: <bb145bd20703040322g1e5e8784i93a933c0c61b43f6@mail.gmail.com>	<17898.45673.573800.56474@notabene.brown>	<bb145bd20703040401h413d996av24d55eb21fae63a8@mail.gmail.com>	<17899.17901.429001.702653@notabene.brown>	<45ED3CB1.8070003@rabbit.us>	<17901.16476.282987.982971@notabene.brown>	<45ED48DB.6030002@rabbit.us> <17908.59047.688420.79050@notabene.brown>
+Subject: Re: Help with chunksize on raid10 -p o3 array
+Date: Mon, 12 Mar 2007 15:46:19 +0100
+Message-ID: <45F567BB.3090804@rabbit.us>
+References: <45ED4FE1.5020105@rabbit.us> <17908.55047.408840.852816@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17908.59047.688420.79050@notabene.brown>
+In-Reply-To: <17908.55047.408840.852816@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 Neil Brown wrote:
-> On Tuesday March 6, rabbit@rabbit.us wrote:
- >
-> Though it is less likely, a regular filesystem could still (I think)
-> genuinely write different data to difference devices in a raid1/10.
+> The different block sizes in the reads will make very little
+> difference to the results as the kernel will be doing read-ahead for
+> you.  If you want to really test throughput at different block sizes
+> you need to insert random seeks.
 > 
-> So relying on mismatch_cnt for early problem detection probably isn't
-> really workable.
+
+Neil, thank you for the time and effort to answer my previous email. 
+Excellent insights. I thought that read-ahead is filesystem specific, 
+and subsequently I would be safe to use the raw device. I will 
+definitely test with bonnie again.
+
+>> * Why although I have 3 identical chunks of data at any time, dstat 
+>> never showed simultaneous reading from more than 2 drives. Every dd run 
+>> was accompanied by maxing out one of the drives at 58MB/s and another 
+>> one was trying to catch up to various degrees depending on the chunk 
+>> size. Then on the next dd run two other drives would be (seemingly 
+>> random) selected and the process would repeat.
 > 
-> And I think that if a drive is returning bad data without signalling
-> an error, then you are very much into the 'late' side of problem
-> detection.
+> Poor read-balancing code.  It really needs more thought.
+> Possibly for raid10 we shouldn't try to balance at all.  Just read
+> from the 'first' copy in each case....
 
-I agree with the later, but my concern is not that much with the cause, 
-but with the effect. From past discussion on the list I gather that no 
-special effort is made to determine which chunk to take as 'valid', even 
-though more than 2 logically identical chunks might be present 
-(raid1/10). And you also seem to think that the DMA syndrome might even 
-apply to plain fast-changing filesystems, left alone something with 
-multiple layers (fs on lvm on raid).
-So here is my question: how (theoretically) safe it is to use a raid1/10 
-array for something very disk intensive, e.g. a mail spool? How likely 
-it is that the effect you described above will creep different blocks 
-onto disks, and subsequently will return the wrong data to the kernel? 
-Should I look into raid5/6 for this kind of activity, in case both 
-uptime and data integrity are my number one priorities, and I am willing 
-to sacrifice performance?
+Is this anywhere near the top of the todo list, or for now raid10 users 
+are bound to a maximum read speed of a two drive combination?
 
-Thank you
+And a last question - earlier in this thread Bill Davidsen suggested to 
+play with the stripe_cache_size. I tried to increase it (did just two 
+tests though) with no apparent effect. Does this setting apply to 
+raid1/10 at all or it is strictly in the raid5/6 domain? If so, are 
+there any tweaks apart from the chunk size and the layout that can 
+affect raid10 performance?
+
+Once again thank you for the help.
+
+Peter
