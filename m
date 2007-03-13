@@ -1,81 +1,25 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
+From: Tomka Gergely <gergely@tomka.hu>
 Subject: Re: sw raid0 read bottleneck
-Date: Tue, 13 Mar 2007 12:48:38 -0400 (EDT)
-Message-ID: <Pine.LNX.4.64.0703131248260.29504@p34.internal.lan>
+Date: Tue, 13 Mar 2007 18:34:28 +0100 (CET)
+Message-ID: <Pine.LNX.4.64.0703131815050.18749@localhost.localdomain>
 References: <Pine.LNX.4.64.0703131713280.18749@localhost.localdomain>
+ <Pine.LNX.4.64.0703131248260.29504@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0703131713280.18749@localhost.localdomain>
+In-Reply-To: <Pine.LNX.4.64.0703131248260.29504@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: Tomka Gergely <gergely@tomka.hu>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Tue, 13 Mar 2007, Justin Piszcz wrote:
 
+> Have you tried increasing your readahead values for the md device?
 
-On Tue, 13 Mar 2007, Tomka Gergely wrote:
+Yes. No real change. According to my humble mental image, readahead not a 
+too useful thing, when we read 1-4 thread with sdd. The io subsystem 
+already reading with the possible maximum speed, so don't have time to 
+read ahead. Correct me, if i wrong. 
 
-> Hi!
->
-> I am currently testing 3ware raid cards. Now i have 15 disks, and on these
-> a swraid0. The write speed seems good (700 MBps), but the read performance
-> only 350 MBps. Another problem when i try to read with two process, then
-> the _sum_ of the read speeds fall back to 200 MBps. So there is a
-> bottleneck, or something i need to know, but i dont have ideas.
->
-> The details:
->
-> /dev/md0:
->        Version : 00.90.03
->  Creation Time : Tue Mar 13 16:57:32 2007
->     Raid Level : raid0
->     Array Size : 7325797440 (6986.43 GiB 7501.62 GB)
->   Raid Devices : 15
->  Total Devices : 15
-> Preferred Minor : 0
->    Persistence : Superblock is persistent
->
->    Update Time : Tue Mar 13 16:57:32 2007
->          State : clean
-> Active Devices : 15
-> Working Devices : 15
-> Failed Devices : 0
->  Spare Devices : 0
->
->     Chunk Size : 64K
->
-> # uname -a
-> Linux ursula 2.6.18-4-686-bigmem #1 SMP Wed Feb 21 17:30:22 UTC 2007 i686
-> GNU/Linux
->
-> # xfs_info /mnt/
-> meta-data=/dev/md0               isize=256    agcount=32, agsize=57232784
-> blks
->         =                       sectsz=512   attr=0
-> data     =                       bsize=4096   blocks=1831449088,
-> imaxpct=25
->         =                       sunit=16     swidth=240 blks, unwritten=1
-> naming   =version 2              bsize=4096
-> log      =internal               bsize=4096   blocks=32768, version=1
->         =                       sectsz=512   sunit=0 blks
-> realtime =none                   extsz=983040 blocks=0, rtextents=0
->
-> (all software Debian Etch)
->
-> four Intel(R) Xeon(TM) CPU 3.00GHz
->
-> two 3ware 9590SE-8ML on PCIe
->
-> Intel Corporation 5000P Chipset
->
->
-> -- 
-> Tomka Gergely, gergely@tomka.hu
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-Have you tried increasing your readahead values for the md device?
-
+-- 
+Tomka Gergely, gergely@tomka.hu
