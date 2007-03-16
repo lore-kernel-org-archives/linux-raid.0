@@ -1,140 +1,51 @@
-From: "Dan Williams" <dan.j.williams@intel.com>
-Subject: Re: [PATCH] [PPC32] ADMA support for PPC 440SPe processors.
-Date: Fri, 16 Mar 2007 11:00:30 -0700
-Message-ID: <e9c3a7c20703161100j70a52e5cg25ff3616a5cda8d5@mail.gmail.com>
-References: <20070315232956.37DAB353A6C@atlas.denx.de>
+From: "William L. Thomson Jr." <wltjr@gentoo.org>
+Subject: mdadm file system type check
+Date: Fri, 16 Mar 2007 19:57:04 -0400
+Message-ID: <1174089424.22511.26.camel@wlt.obsidian-studios.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-pqXwGbTIElCjwcAO0d0G"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20070315232956.37DAB353A6C@atlas.denx.de>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Wolfgang Denk <wd@denx.de>
-Cc: linuxppc-dev@ozlabs.org, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Here are some additional comments/nits:
 
-> +/*
-> + *  Init DMA0/1 and XOR engines; allocate memory for DMAx FIFOs; set platform_device
-> + * memory resources addresses
-> + */
-> +static void ppc440spe_configure_raid_devices(void)
+--=-pqXwGbTIElCjwcAO0d0G
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Any reason not to move most of this function into spe_adma_probe?  The
-"set resource address" section is the only piece that spe_adma_probe
-should not handle.
+To whom it may concern,
 
-> +++ b/drivers/dma/spe-adma.c
-> @@ -0,0 +1,1071 @@
-> +/*
-> + * Copyright(c) 2006 DENX Engineering. All rights reserved.
-> + *
-> + * Author: Yuri Tikhonov <yur@emcraft.com>
-> + *
-> + * This program is free software; you can redistribute it and/or modify it
-> + * under the terms of the GNU General Public License as published by the Free
-> + * Software Foundation; either version 2 of the License, or (at your option)
-> + * any later version.
-> + *
-> + * This program is distributed in the hope that it will be useful, but WITHOUT
-> + * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-> + * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-> + * more details.
-> + *
-> + * You should have received a copy of the GNU General Public License along with
-> + * this program; if not, write to the Free Software Foundation, Inc., 59
-> + * Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-> + *
-> + * The full GNU General Public License is included in this distribution in the
-> + * file called COPYING.
-> + */
-> +
-> +/*
-> + *  This driver supports the asynchrounous DMA copy and RAID engines available
-> + * on the AMCC PPC440SPe Processors.
-> + *  Based on the Intel Xscale(R) family of I/O Processors (SPE 32x, 33x, 134x)
-SPE should be IOP on this line.
+	It seems mdadm does not check, warn, abort, or etc if a partition has
+an incorrect file system type. This has come up for me on a few
+occasions while building servers with software raid. On one occasion I
+had a machine fully up and running on raid partitions that were ext3 not
+linux auto raid/fd.
 
-../..
+	If possible would really be nice if it could do a check for that. Since
+one usually has to start over when they discover the problem and go to
+correct it. Since raidtools is not deprecated, others migrating from it
+on Gentoo are running into it at as well. At the present time mostly
+developers. Really would not want users running into it :)
 
-> +static inline void
-> +spe_adma_slot_cleanup(struct spe_adma_chan *spe_chan)
-> +{
-> +       spin_lock_bh(&spe_chan->lock);
-> +       __spe_adma_slot_cleanup(spe_chan);
-> +       spin_unlock_bh(&spe_chan->lock);
-> +}
-> +
-> +static struct spe_adma_chan *spe_adma_chan_array[3];
-> +static void spe_adma0_task(unsigned long data)
-> +{
-> +       __spe_adma_slot_cleanup(spe_adma_chan_array[0]);
-> +}
-> +
-> +static void spe_adma1_task(unsigned long data)
-> +{
-> +       __spe_adma_slot_cleanup(spe_adma_chan_array[1]);
-> +}
-> +
-> +static void spe_adma2_task(unsigned long data)
-> +{
-> +       __spe_adma_slot_cleanup(spe_adma_chan_array[2]);
-> +}
-> +
-> +DECLARE_TASKLET(spe_adma0_tasklet, spe_adma0_task, 0);
-> +DECLARE_TASKLET(spe_adma1_tasklet, spe_adma1_task, 0);
-> +DECLARE_TASKLET(spe_adma2_tasklet, spe_adma2_task, 0);
-> +struct tasklet_struct *spe_adma_tasklet[] = {
-> +       &spe_adma0_tasklet,
-> +       &spe_adma1_tasklet,
-> +       &spe_adma2_tasklet,
-> +};
-> +
-This is something I am cleaning up in iop-adma by adding a struct
-tasklet * to each channel.    I'll post an incremental diff of my
-iop-adma changes so you can see what I have cleaned up since the
-2.6.20-rc5 posting.
+	Anyway if that could be addressed that would be great. Not sure if this
+is the right place for this or not. If not please advise, thank you.
 
-> +static dma_addr_t spe_adma_map_page(struct dma_chan *chan, struct page *page,
-> +                                       unsigned long offset, size_t size,
-> +                                       int direction)
-> +{
-> +       struct spe_adma_chan *spe_chan = to_spe_adma_chan(chan);
-> +       return dma_map_page(&spe_chan->device->pdev->dev, page, offset, size,
-> +                       direction);
-> +}
-> +
-> +static dma_addr_t spe_adma_map_single(struct dma_chan *chan, void *cpu_addr,
-> +                                       size_t size, int direction)
-> +{
-> +       struct spe_adma_chan *spe_chan = to_spe_adma_chan(chan);
-> +       return dma_map_single(&spe_chan->device->pdev->dev, cpu_addr, size,
-> +                       direction);
-> +}
-> +
-> +static void spe_adma_unmap_page(struct dma_chan *chan, dma_addr_t handle,
-> +                               size_t size, int direction)
-> +{
-> +       struct spe_adma_chan *spe_chan = to_spe_adma_chan(chan);
-> +       dma_unmap_page(&spe_chan->device->pdev->dev, handle, size, direction);
-> +}
-> +
-> +static void spe_adma_unmap_single(struct dma_chan *chan, dma_addr_t handle,
-> +                               size_t size, int direction)
-> +{
-> +       struct spe_adma_chan *spe_chan = to_spe_adma_chan(chan);
-> +       dma_unmap_single(&spe_chan->device->pdev->dev, handle, size, direction);
-> +}
-> +
-...these are gone as well in the latest code.
+--=20
+William L. Thomson Jr.
+Gentoo/Java
 
-> +static int __devinit spe_adma_probe(struct platform_device *pdev)
-../..
+--=-pqXwGbTIElCjwcAO0d0G
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-> +       printk(KERN_INFO "Intel(R) SPE ADMA Engine found [%d]: "
-Intel(R)? :-)
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.3 (GNU/Linux)
 
-Regards,
-Dan
+iD8DBQBF+y7QPrChP8zZLyYRAuAVAJ4oYIACkD3el5MQAldH1fkETNsW5wCg3wA+
+jhRdzghYVexgrCe7o0uSR3g=
+=WdHi
+-----END PGP SIGNATURE-----
+
+--=-pqXwGbTIElCjwcAO0d0G--
+
