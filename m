@@ -1,54 +1,42 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: mdadm file system type check
-Date: Sat, 17 Mar 2007 16:40:02 +1100
-Message-ID: <17915.32562.482059.394771@notabene.brown>
-References: <1174089424.22511.26.camel@wlt.obsidian-studios.com>
-	<17915.17571.333717.668140@notabene.brown>
-	<1174099334.13073.46.camel@wlt.obsidian-studios.com>
+From: Stefan Roese <sr@denx.de>
+Subject: Re: [PATCH] [PPC32] ADMA support for PPC 440SPe processors.
+Date: Sat, 17 Mar 2007 09:09:13 +0100
+Message-ID: <200703170909.13869.sr@denx.de>
+References: <20070315232956.37DAB353A6C@atlas.denx.de> <e9c3a7c20703161100j70a52e5cg25ff3616a5cda8d5@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from William L. Thomson Jr. on Friday March 16
+In-Reply-To: <e9c3a7c20703161100j70a52e5cg25ff3616a5cda8d5@mail.gmail.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: "William L. Thomson Jr." <wltjr@gentoo.org>
-Cc: linux-raid@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: linuxppc-dev@ozlabs.org, Wolfgang Denk <wd@denx.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Friday March 16, wltjr@gentoo.org wrote:
-> 
-> Instead of passing along an interpretation, here are some IRC log
-> snippets that pertain from #gentoo-dev @ freenode.net
-> 
-> kingtaco|work: livecd ~ # mdadm --create --level=1 --raid-devices=2 /dev/md0 /dev/sda1 /dev/sdb1
-> kingtaco|work: mdadm: /dev/sda1 is too small: 0K
-> kingtaco|work: mdadm: create aborted
-> 
-> Now despite suggesting it pretty early on, it took a bit of time to
-> realize that error was existing only because of file system type. Once
-> he realized the problem and changed fs type. All was well, and he was
-> able to create the arrays and move on.
-> 
-> kingtaco|work: wltjr, see, raidtools would have let me create an array eventhough the type wasn't fs
-> kingtaco|work: er, fd
-> kingtaco|work: mdadm just isn't that smart
-> kingtaco|work: (and that fixed it)
-> 
-> So ot to sure about the error or why they would get that just because of
-> file system type.
+Dan,
 
+I just noticed that your patch "dmaengine: add the async_tx api":
 
-This failure has nothing do to with the partition type. As I
-mentioned, mdadm doesn't see the partition type at all.
+@@ -22,6 +22,17 @@ config NET_DMA
+ 	  Since this is the main user of the DMA engine, it should be enabled;
+ 	  say Y here.
+ 
++config ASYNC_TX_DMA
++	tristate "Asynchronous Bulk Memory Transfers/Transforms API"
++	default y
++	---help---
++	  This enables the async_tx management layer for dma engines.
++	  Subsystems coded to this API will use offload engines for bulk
++	  memory operations where present.  Software implementations are
++	  called when a dma engine is not present or fails to allocate
++	  memory to carry out the transaction.
++	  Current subsystems ported to async_tx: MD_RAID4,5
++
 
-When you change the partition type, fdisk (or whatever) normally tells
-the kernel to reread the partition table.  It would seem that the
-partition table hadn't been read properly before this point, so
-/dev/sda1 didn't exist.  After running fdisk that partition table had
-been read by the kernel and everything was fine.
-I.e. it was using fdisk to write the partition table that 'fixed' the
-problem, not changing the partition type.  And the problem was not
-causes by mdadm but by something else not setting up the partitions
-properly (or removing them maybe).
+adds ASYNC_TX_DMA unconditionally to _all_ platforms. You might what to bundle 
+this with something like DMA_ENGINE.
 
-NeilBrown
+Best regards,
+Stefan
