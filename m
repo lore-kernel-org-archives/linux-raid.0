@@ -1,86 +1,60 @@
-From: "William L. Thomson Jr." <wltjr@gentoo.org>
-Subject: Re: mdadm file system type check
-Date: Fri, 16 Mar 2007 22:42:14 -0400
-Message-ID: <1174099334.13073.46.camel@wlt.obsidian-studios.com>
-References: <1174089424.22511.26.camel@wlt.obsidian-studios.com>
-	 <17915.17571.333717.668140@notabene.brown>
+From: "Michael Schwarz" <mschwarz@multitool.net>
+Subject: Failed reads from RAID-0 array (from newbie who has read the FAQ)
+Date: Fri, 16 Mar 2007 20:20:31 -0600 (CST)
+Message-ID: <1536.72.21.237.163.1174098031.squirrel@www.multitool.net>
+Reply-To: mschwarz@multitool.net
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-xLUHrVXlrY2PYcCUVqF/"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17915.17571.333717.668140@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+I'm not a Linux newbie (I've even written a couple of books and done some
+very light device driver work), but I'm completely new to the software
+raid subsystem.
 
---=-xLUHrVXlrY2PYcCUVqF/
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I'm doing something rather oddball. I'm making an array of USB flash
+drives and comparing read and write rates.
 
-On Sat, 2007-03-17 at 12:30 +1100, Neil Brown wrote:
->=20
-> It would be very awkward for mdadm to get at the partition type
-> information.=20
-> And there is very little software that actually cares.  mdadm
-> certainly doesn't care what the partition type is.
+Well, I've had great success writing. I've got seven flash drives on a
+hub. I've joined them up both linear and raid0 and written large amounts
+of data to them. But come time to read from them, linear works, but raid0
+hangs after transferring just shy of 2G of data. It doesn't matter if it
+reading from one file or from many files whose cumulative size is just shy
+of 2G. It doesn't matter if I'm using "dd" or "cp" to read the file or
+files.
 
-I got it reversed. :) There was an error when the file system was not
-linux auto raid. More on that below.
+The process doing the transfer is unkillable. Not with a kill -15 or a
+kill -9. It won't die, but it also won't make progress.
 
-> I don't understand why you would have to 'start over'.  If you
-> discover that the partition type isn't what you want for some reason,
-> just change it.
+"Linear" always works. Raid-0 always hangs.
 
-It might have been that simple, it was quite some time ago. But it was a
-memorable event since it stuck in my head as one of the things to check
-when having problems with mdadm. But obviously not a clear memory.
+Here are my mdadm commands to create the array:
 
-> This is the right place, thanks.
+mdadm --create /dev/md0 --level=linear --auto=md --chunk=32
+--raid-devices=7 /dev/sd?
 
-Good to know ;)
+(The wildcard works because the seven flash drives are the only scsi
+devices on the system).
 
-> But maybe I don't really understand what the problem is.
-> Could you give more details?  Exactly what didn't work the way you
-> expected it to?
+The command for the raid-0 array is the same as above except for the
+"--level=0" it takes to make a raid 0 array.
 
-Instead of passing along an interpretation, here are some IRC log
-snippets that pertain from #gentoo-dev @ freenode.net
+I then use "mkfs" to make the filesystem and mount the resulting array at
+"/mnt"
 
-kingtaco|work: livecd ~ # mdadm --create --level=3D1 --raid-devices=3D2 /de=
-v/md0 /dev/sda1 /dev/sdb1
-kingtaco|work: mdadm: /dev/sda1 is too small: 0K
-kingtaco|work: mdadm: create aborted
+Can anyone give a raid newbiw some tips? Is there something obvious I'm
+missing? Would it help to provide strace/ltrace/ptrace of the hanging copy
+command?
 
-Now despite suggesting it pretty early on, it took a bit of time to
-realize that error was existing only because of file system type. Once
-he realized the problem and changed fs type. All was well, and he was
-able to create the arrays and move on.
+Any help (including URLs of manuals I should RTFM) would be most welcome.
 
-kingtaco|work: wltjr, see, raidtools would have let me create an array even=
-though the type wasn't fs
-kingtaco|work: er, fd
-kingtaco|work: mdadm just isn't that smart
-kingtaco|work: (and that fixed it)
+Thanks!
 
-So ot to sure about the error or why they would get that just because of
-file system type.
 
---=20
-William L. Thomson Jr.
-Gentoo/Java
+-- 
+Michael Schwarz
 
---=-xLUHrVXlrY2PYcCUVqF/
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.3 (GNU/Linux)
-
-iD8DBQBF+1WGPrChP8zZLyYRAlmNAJ45OnLo4GuOEgAl/fOxdOabwSFpEQCeO5Mn
-+xaIXhGdn92W1NAn4NFeWtk=
-=OAsu
------END PGP SIGNATURE-----
-
---=-xLUHrVXlrY2PYcCUVqF/--
 
