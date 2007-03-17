@@ -1,42 +1,93 @@
-From: Stefan Roese <sr@denx.de>
-Subject: Re: [PATCH] [PPC32] ADMA support for PPC 440SPe processors.
-Date: Sat, 17 Mar 2007 09:09:13 +0100
-Message-ID: <200703170909.13869.sr@denx.de>
-References: <20070315232956.37DAB353A6C@atlas.denx.de> <e9c3a7c20703161100j70a52e5cg25ff3616a5cda8d5@mail.gmail.com>
+From: "William L. Thomson Jr." <wltjr@gentoo.org>
+Subject: Re: mdadm file system type check
+Date: Sat, 17 Mar 2007 04:20:18 -0400
+Message-ID: <1174119618.14762.11.camel@wlt.obsidian-studios.com>
+References: <1174089424.22511.26.camel@wlt.obsidian-studios.com>
+	 <17915.17571.333717.668140@notabene.brown>
+	 <1174099334.13073.46.camel@wlt.obsidian-studios.com>
+	 <17915.32562.482059.394771@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ij91v2/Pkdc2TV3Mf6B/"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <e9c3a7c20703161100j70a52e5cg25ff3616a5cda8d5@mail.gmail.com>
-Content-Disposition: inline
+In-Reply-To: <17915.32562.482059.394771@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: linuxppc-dev@ozlabs.org, Wolfgang Denk <wd@denx.de>, linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Dan,
 
-I just noticed that your patch "dmaengine: add the async_tx api":
+--=-ij91v2/Pkdc2TV3Mf6B/
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-@@ -22,6 +22,17 @@ config NET_DMA
- 	  Since this is the main user of the DMA engine, it should be enabled;
- 	  say Y here.
- 
-+config ASYNC_TX_DMA
-+	tristate "Asynchronous Bulk Memory Transfers/Transforms API"
-+	default y
-+	---help---
-+	  This enables the async_tx management layer for dma engines.
-+	  Subsystems coded to this API will use offload engines for bulk
-+	  memory operations where present.  Software implementations are
-+	  called when a dma engine is not present or fails to allocate
-+	  memory to carry out the transaction.
-+	  Current subsystems ported to async_tx: MD_RAID4,5
-+
+On Sat, 2007-03-17 at 16:40 +1100, Neil Brown wrote:
+> On Friday March 16, wltjr@gentoo.org wrote:
+> >=20
+> > Instead of passing along an interpretation, here are some IRC log
+> > snippets that pertain from #gentoo-dev @ freenode.net
+> >=20
+> > kingtaco|work: livecd ~ # mdadm --create --level=3D1 --raid-devices=3D2=
+ /dev/md0 /dev/sda1 /dev/sdb1
+> > kingtaco|work: mdadm: /dev/sda1 is too small: 0K
+> > kingtaco|work: mdadm: create aborted
+>
+> This failure has nothing do to with the partition type. As I
+> mentioned, mdadm doesn't see the partition type at all.
 
-adds ASYNC_TX_DMA unconditionally to _all_ platforms. You might what to bundle 
-this with something like DMA_ENGINE.
+Not to contradict but only thing that was changed and the problem was fs
+type.
 
-Best regards,
-Stefan
+> When you change the partition type, fdisk (or whatever) normally tells
+> the kernel to reread the partition table.  It would seem that the
+> partition table hadn't been read properly before this point, so
+> /dev/sda1 didn't exist.
+
+Not to sure about that, part that I did not post after the above snippet
+still left, and before the other one I removed.
+
+wltjr: kingtaco|work: likely something else, partition off, wrong fs type, =
+or etc
+kingtaco|work: /dev/sda1 1 17 136521 83 Linux
+kingtaco|work: /dev/sdb1 1 17 136521 83 Linux
+
+So they for sure existed 83/ext3, and were changed to fd.
+
+>   After running fdisk that partition table had
+> been read by the kernel and everything was fine.
+
+That's likely, but the kernel was aware of the partitions prior to the
+fs type change.
+
+> I.e. it was using fdisk to write the partition table that 'fixed' the
+> problem, not changing the partition type.  And the problem was not
+> causes by mdadm but by something else not setting up the partitions
+> properly (or removing them maybe).
+
+Well we can rule it out to funky partition creation or etc. But the
+partitions were just created via fdisk. With the next logical step being
+to setup the array, format, etc. So that the partitions being off, and
+re-running fdisk updated kernel or etc is all possible. But kinda
+doubtful or odd at the least.
+
+Unless udev or etc was doing something once the partition type changed.
+So the problem wasn't with mdadm but something else that detected the
+change in fs type.
+
+--=20
+William L. Thomson Jr.
+Gentoo/Java
+
+--=-ij91v2/Pkdc2TV3Mf6B/
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.3 (GNU/Linux)
+
+iD8DBQBF+6TCPrChP8zZLyYRApG7AKDlrIo0FVXau0JJeaJ4eWN2JK7szwCaA7aZ
+yulTJO7AEeT9Q7mrXqPhnwo=
+=HDaO
+-----END PGP SIGNATURE-----
+
+--=-ij91v2/Pkdc2TV3Mf6B/--
+
