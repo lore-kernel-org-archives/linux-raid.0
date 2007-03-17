@@ -1,93 +1,126 @@
-From: "William L. Thomson Jr." <wltjr@gentoo.org>
-Subject: Re: mdadm file system type check
-Date: Sat, 17 Mar 2007 04:20:18 -0400
-Message-ID: <1174119618.14762.11.camel@wlt.obsidian-studios.com>
-References: <1174089424.22511.26.camel@wlt.obsidian-studios.com>
-	 <17915.17571.333717.668140@notabene.brown>
-	 <1174099334.13073.46.camel@wlt.obsidian-studios.com>
-	 <17915.32562.482059.394771@notabene.brown>
+From: Yuri Tikhonov <yur@emcraft.com>
+Subject: Re: [PATCH] [PPC32] ADMA support for PPC 440SPe processors.
+Date: Sat, 17 Mar 2007 11:57:57 +0300
+Message-ID: <200703171157.58056.yur@emcraft.com>
+References: <20070315232956.37DAB353A6C@atlas.denx.de>
+	<e9c3a7c20703161100j70a52e5cg25ff3616a5cda8d5@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ij91v2/Pkdc2TV3Mf6B/"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17915.32562.482059.394771@notabene.brown>
-Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org>
+In-Reply-To: <e9c3a7c20703161100j70a52e5cg25ff3616a5cda8d5@mail.gmail.com>
+Content-Disposition: inline
+List-Unsubscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@ozlabs.org?subject=unsubscribe>
+List-Archive: <http://ozlabs.org/pipermail/linuxppc-dev>
+List-Post: <mailto:linuxppc-dev@ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@ozlabs.org?subject=help>
+List-Subscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@ozlabs.org?subject=subscribe>
+Sender: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
+Errors-To: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
+To: Dan Williams <dan.j.williams@intel.com>, linuxppc-dev@ozlabs.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+ Hi Dan,
 
---=-ij91v2/Pkdc2TV3Mf6B/
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Sat, 2007-03-17 at 16:40 +1100, Neil Brown wrote:
-> On Friday March 16, wltjr@gentoo.org wrote:
-> >=20
-> > Instead of passing along an interpretation, here are some IRC log
-> > snippets that pertain from #gentoo-dev @ freenode.net
-> >=20
-> > kingtaco|work: livecd ~ # mdadm --create --level=3D1 --raid-devices=3D2=
- /dev/md0 /dev/sda1 /dev/sdb1
-> > kingtaco|work: mdadm: /dev/sda1 is too small: 0K
-> > kingtaco|work: mdadm: create aborted
+On Friday 16 March 2007 21:00, you wrote:
+> Here are some additional comments/nits:
+> > +/*
+> > + *  Init DMA0/1 and XOR engines; allocate memory for DMAx FIFOs; set
+> > platform_device + * memory resources addresses
+> > + */
+> > +static void ppc440spe_configure_raid_devices(void)
 >
-> This failure has nothing do to with the partition type. As I
-> mentioned, mdadm doesn't see the partition type at all.
+> Any reason not to move most of this function into spe_adma_probe?  
+> The "set resource address" section is the only piece that spe_adma_probe
+> should not handle.
 
-Not to contradict but only thing that was changed and the problem was fs
-type.
+ Two ppc440spe's DMA1 and DMA2 engines have to be configured together with one 
+I2O engine (all these units share the same pointer to the FIFO area in the 
+main memory but use different parts of this common area). So, setting-up of 
+this common FIFO area should be performed in the 
+ppc440spe_configure_raid_devices(). As regarding other code in this function 
+(except "set resource address"), it might be moved to the spe_adma_probe() 
+indeed.
 
-> When you change the partition type, fdisk (or whatever) normally tells
-> the kernel to reread the partition table.  It would seem that the
-> partition table hadn't been read properly before this point, so
-> /dev/sda1 didn't exist.
+> > +++ b/drivers/dma/spe-adma.c
+...
+> > + *
+> > + * The full GNU General Public License is included in this distribution
+> > in the + * file called COPYING.
+> > + */
+> > +
+> > +/*
+> > + *  This driver supports the asynchrounous DMA copy and RAID engines
+> > available + * on the AMCC PPC440SPe Processors.
+> > + *  Based on the Intel Xscale(R) family of I/O Processors (SPE 32x, 33x,
+> > 134x)
+>
+> SPE should be IOP on this line.
 
-Not to sure about that, part that I did not post after the above snippet
-still left, and before the other one I removed.
+ Correct.
+...
+> > +
+> > +DECLARE_TASKLET(spe_adma0_tasklet, spe_adma0_task, 0);
+> > +DECLARE_TASKLET(spe_adma1_tasklet, spe_adma1_task, 0);
+> > +DECLARE_TASKLET(spe_adma2_tasklet, spe_adma2_task, 0);
+> > +struct tasklet_struct *spe_adma_tasklet[] = {
+> > +       &spe_adma0_tasklet,
+> > +       &spe_adma1_tasklet,
+> > +       &spe_adma2_tasklet,
+> > +};
+> > +
+>
+> This is something I am cleaning up in iop-adma by adding a struct
+> tasklet * to each channel.    I'll post an incremental diff of my
+> iop-adma changes so you can see what I have cleaned up since the
+> 2.6.20-rc5 posting.
 
-wltjr: kingtaco|work: likely something else, partition off, wrong fs type, =
-or etc
-kingtaco|work: /dev/sda1 1 17 136521 83 Linux
-kingtaco|work: /dev/sdb1 1 17 136521 83 Linux
+ Thanks.
 
-So they for sure existed 83/ext3, and were changed to fd.
+> > +static dma_addr_t spe_adma_map_page(struct dma_chan *chan, struct page
+> > *page, +                                       unsigned long offset,
+> > size_t size, +                                       int direction)
+> > +{
+> > +       struct spe_adma_chan *spe_chan = to_spe_adma_chan(chan);
+> > +       return dma_map_page(&spe_chan->device->pdev->dev, page, offset,
+> > size, +                       direction);
+> > +}
+> > +
+> > +static dma_addr_t spe_adma_map_single(struct dma_chan *chan, void
+> > *cpu_addr, +                                       size_t size, int
+> > direction) +{
+> > +       struct spe_adma_chan *spe_chan = to_spe_adma_chan(chan);
+> > +       return dma_map_single(&spe_chan->device->pdev->dev, cpu_addr,
+> > size, +                       direction);
+> > +}
+> > +
+> > +static void spe_adma_unmap_page(struct dma_chan *chan, dma_addr_t
+> > handle, +                               size_t size, int direction)
+> > +{
+> > +       struct spe_adma_chan *spe_chan = to_spe_adma_chan(chan);
+> > +       dma_unmap_page(&spe_chan->device->pdev->dev, handle, size,
+> > direction); +}
+> > +
+> > +static void spe_adma_unmap_single(struct dma_chan *chan, dma_addr_t
+> > handle, +                               size_t size, int direction)
+> > +{
+> > +       struct spe_adma_chan *spe_chan = to_spe_adma_chan(chan);
+> > +       dma_unmap_single(&spe_chan->device->pdev->dev, handle, size,
+> > direction); +}
+> > +
+>
+> ....these are gone as well in the latest code.
+>
+> > +static int __devinit spe_adma_probe(struct platform_device *pdev)
+>
+> .../..
+>
+> > +       printk(KERN_INFO "Intel(R) SPE ADMA Engine found [%d]: "
+>
+> Intel(R)? :-)
 
->   After running fdisk that partition table had
-> been read by the kernel and everything was fine.
+ Right : )
 
-That's likely, but the kernel was aware of the partitions prior to the
-fs type change.
-
-> I.e. it was using fdisk to write the partition table that 'fixed' the
-> problem, not changing the partition type.  And the problem was not
-> causes by mdadm but by something else not setting up the partitions
-> properly (or removing them maybe).
-
-Well we can rule it out to funky partition creation or etc. But the
-partitions were just created via fdisk. With the next logical step being
-to setup the array, format, etc. So that the partitions being off, and
-re-running fdisk updated kernel or etc is all possible. But kinda
-doubtful or odd at the least.
-
-Unless udev or etc was doing something once the partition type changed.
-So the problem wasn't with mdadm but something else that detected the
-change in fs type.
-
---=20
-William L. Thomson Jr.
-Gentoo/Java
-
---=-ij91v2/Pkdc2TV3Mf6B/
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.3 (GNU/Linux)
-
-iD8DBQBF+6TCPrChP8zZLyYRApG7AKDlrIo0FVXau0JJeaJ4eWN2JK7szwCaA7aZ
-yulTJO7AEeT9Q7mrXqPhnwo=
-=HDaO
------END PGP SIGNATURE-----
-
---=-ij91v2/Pkdc2TV3Mf6B/--
-
+ Regards, Yuri.
