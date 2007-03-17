@@ -1,54 +1,59 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: mdadm file system type check
-Date: Sat, 17 Mar 2007 12:30:11 +1100
-Message-ID: <17915.17571.333717.668140@notabene.brown>
-References: <1174089424.22511.26.camel@wlt.obsidian-studios.com>
+From: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
+Subject: raid6 array ,  part id 'fd' not assembling at boot .
+Date: Fri, 16 Mar 2007 18:48:06 -0700 (PDT)
+Message-ID: <Pine.LNX.4.64.0703161838110.11877@filesrv1.baby-dragons.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from William L. Thomson Jr. on Friday March 16
 Sender: linux-raid-owner@vger.kernel.org
-To: "William L. Thomson Jr." <wltjr@gentoo.org>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid maillist <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Friday March 16, wltjr@gentoo.org wrote:
-> To whom it may concern,
-> 
-> 	It seems mdadm does not check, warn, abort, or etc if a partition has
-> an incorrect file system type. This has come up for me on a few
-> occasions while building servers with software raid. On one occasion I
-> had a machine fully up and running on raid partitions that were ext3 not
-> linux auto raid/fd.
+ 	Hello All ,  I am having a dickens of a time with preparing this system 
+to replace my present one .
+ 	I created a raid6 array over 6 147GB scsi drives .
+ 	steps I followed were .
 
-It would be very awkward for mdadm to get at the partition type
-information. 
-And there is very little software that actually cares.  mdadm
-certainly doesn't care what the partition type is.
+ 	fdisk /dev/sd[c-h] ( one at a time of course )
+ 	  created a partition starting at cyl 2 & -10 Cyls from the end of the drive .
+ 	  typed the partion FD
+ 	  w
+ 	repeat until all six drives partitioned .
 
-> 
-> 	If possible would really be nice if it could do a check for that. Since
-> one usually has to start over when they discover the problem and go to
-> correct it. Since raidtools is not deprecated, others migrating from it
-> on Gentoo are running into it at as well. At the present time mostly
-> developers. Really would not want users running into it :)
+ 	mdadm --create /dev/md3 --chunk=64 --metadata=1.2 --verbose --bitmap=internal --level=6 --raid-devices=6 --spare-devices=0 /dev/sd[cdefgh]1
+ 	Built just fine .
 
-I don't understand why you would have to 'start over'.  If you
-discover that the partition type isn't what you want for some reason,
-just change it.
+ 	mkfs.ext3 -c -b 4096 -j -L HOME -R stride=96 /dev/md3
+ 	Again no problems noted .
 
-(and if raidtools isn't deprecated, it should be.  raidstart certainly
-is deprecated).
+ 	reboot .
 
-> 
-> 	Anyway if that could be addressed that would be great. Not sure if this
-> is the right place for this or not. If not please advise, thank you.
+ 	Array does not get reassembled ,  Here is the snippit out of a reboot .
 
-This is the right place, thanks.
-But maybe I don't really understand what the problem is.
-Could you give more details?  Exactly what didn't work the way you
-expected it to?
+md: Autodetecting RAID arrays.
+md: invalid raid superblock magic on sdc1
+md: sdc1 has invalid sb, not importing!
+md: invalid raid superblock magic on sdd1
+md: sdd1 has invalid sb, not importing!
+md: invalid raid superblock magic on sde1
+md: sde1 has invalid sb, not importing!
+md: invalid raid superblock magic on sdf1
+md: sdf1 has invalid sb, not importing!
+md: invalid raid superblock magic on sdg1
+md: sdg1 has invalid sb, not importing!
+md: invalid raid superblock magic on sdh1
+md: sdh1 has invalid sb, not importing!
 
-Thanks,
-NeilBrown
+ 	Here is the WHOLE enchalada .  Too big to put on the list so I posted 
+them to my webpage . 
+http://www.baby-dragons.com/linux-2.6.20.2a.config
+http://www.baby-dragons.com/filesrv1b-raid6-reassemble-problem.log
+
+ 		Tia ,  JimL
+
+-- 
++-----------------------------------------------------------------+
+| James   W.   Laferriere | System   Techniques | Give me VMS     |
+| Network        Engineer | 663  Beaumont  Blvd |  Give me Linux  |
+| babydr@baby-dragons.com | Pacifica, CA. 94044 |   only  on  AXP |
++-----------------------------------------------------------------+
