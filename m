@@ -1,87 +1,60 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: mdadm file system type check
-Date: Sat, 17 Mar 2007 13:10:51 -0500
-Message-ID: <45FC2F2B.7070506@tmr.com>
-References: <1174089424.22511.26.camel@wlt.obsidian-studios.com>	 <17915.17571.333717.668140@notabene.brown> <1174099334.13073.46.camel@wlt.obsidian-studios.com>
+From: "Dan Williams" <dan.j.williams@intel.com>
+Subject: Re: [PATCH] [PPC32] ADMA support for PPC 440SPe processors.
+Date: Sat, 17 Mar 2007 11:17:58 -0700
+Message-ID: <e9c3a7c20703171117w7989adfehda99416265eef906@mail.gmail.com>
+References: <20070315232956.37DAB353A6C@atlas.denx.de>
+	 <e9c3a7c20703161100j70a52e5cg25ff3616a5cda8d5@mail.gmail.com>
+	 <200703170909.13869.sr@denx.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1174099334.13073.46.camel@wlt.obsidian-studios.com>
+In-Reply-To: <200703170909.13869.sr@denx.de>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: "William L. Thomson Jr." <wltjr@gentoo.org>
-Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
+To: Stefan Roese <sr@denx.de>
+Cc: linuxppc-dev@ozlabs.org, Wolfgang Denk <wd@denx.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-William L. Thomson Jr. wrote:
-> On Sat, 2007-03-17 at 12:30 +1100, Neil Brown wrote:
->   
->> It would be very awkward for mdadm to get at the partition type
->> information. 
->> And there is very little software that actually cares.  mdadm
->> certainly doesn't care what the partition type is.
->>     
+On 3/17/07, Stefan Roese <sr@denx.de> wrote:
+> Dan,
 >
-> I got it reversed. :) There was an error when the file system was not
-> linux auto raid. More on that below.
+> I just noticed that your patch "dmaengine: add the async_tx api":
 >
->   
->> I don't understand why you would have to 'start over'.  If you
->> discover that the partition type isn't what you want for some reason,
->> just change it.
->>     
+> @@ -22,6 +22,17 @@ config NET_DMA
+>           Since this is the main user of the DMA engine, it should be enabled;
+>           say Y here.
 >
-> It might have been that simple, it was quite some time ago. But it was a
-> memorable event since it stuck in my head as one of the things to check
-> when having problems with mdadm. But obviously not a clear memory.
+> +config ASYNC_TX_DMA
+> +       tristate "Asynchronous Bulk Memory Transfers/Transforms API"
+> +       default y
+> +       ---help---
+> +         This enables the async_tx management layer for dma engines.
+> +         Subsystems coded to this API will use offload engines for bulk
+> +         memory operations where present.  Software implementations are
+> +         called when a dma engine is not present or fails to allocate
+> +         memory to carry out the transaction.
+> +         Current subsystems ported to async_tx: MD_RAID4,5
+> +
 >
->   
->> This is the right place, thanks.
->>     
+> adds ASYNC_TX_DMA unconditionally to _all_ platforms. You might what to bundle
+> this with something like DMA_ENGINE.
 >
-> Good to know ;)
->
->   
->> But maybe I don't really understand what the problem is.
->> Could you give more details?  Exactly what didn't work the way you
->> expected it to?
->>     
->
-> Instead of passing along an interpretation, here are some IRC log
-> snippets that pertain from #gentoo-dev @ freenode.net
->
-> kingtaco|work: livecd ~ # mdadm --create --level=1 --raid-devices=2 /dev/md0 /dev/sda1 /dev/sdb1
-> kingtaco|work: mdadm: /dev/sda1 is too small: 0K
-> kingtaco|work: mdadm: create aborted
->
-> Now despite suggesting it pretty early on, it took a bit of time to
-> realize that error was existing only because of file system type. Once
-> he realized the problem and changed fs type. All was well, and he was
-> able to create the arrays and move on.
->   
-First, please learn the difference between file system type (user data 
-ON the device), and partition type (a byte in the partition table). It 
-will at least let people understand your question...
+Yes, defaulting to 'y' is not necessary, but ASYNC_TX_DMA=y &&
+DMA_ENGINE=n is an explicit feature of the interface.  When DMA_ENGINE
+is not selected all the asynchronous paths in the API are compiled
+out.  This allows subsytems, like md-raid5, to be written in an
+asynchronous fashion without regard for the architecture[1] or
+availability of offload engines.
 
-Second, mdadm cares not a bit about the partition type, although some 
-init scripts might. The reason it didn't work was because the partition 
-was zero size or missing, and would not work regardless of the partition 
-type.
-> kingtaco|work: wltjr, see, raidtools would have let me create an array eventhough the type wasn't fs
-> kingtaco|work: er, fd
-> kingtaco|work: mdadm just isn't that smart
-> kingtaco|work: (and that fixed it)
->
-> So ot to sure about the error or why they would get that just because of
-> file system type.
->
->   
-If raidtools creates or resizes partitions, that's certainly not 
-documented, nor is it in any way "smart," since it's guessing what you 
-want to do and where you want to do it.
+> Best regards,
+> Stefan
 
--- 
-bill davidsen <davidsen@tmr.com>
-  CTO TMR Associates, Inc
-  Doing interesting things with small computers since 1979
+Regards,
+Dan
 
+[1] The API implicitly handles channel switching depending on the
+offload engine architecture.  Where an iop13xx engine can handle a
+copy+xor sequence on one channel, a 440sp or iop3xx platform will need
+to switch between copy and xor capable engines.  Resolving operation
+dependencies and channel switching is handled behind the scenes.
