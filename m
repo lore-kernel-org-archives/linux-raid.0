@@ -1,126 +1,72 @@
-From: Yuri Tikhonov <yur@emcraft.com>
-Subject: Re: [PATCH] [PPC32] ADMA support for PPC 440SPe processors.
-Date: Sat, 17 Mar 2007 11:57:57 +0300
-Message-ID: <200703171157.58056.yur@emcraft.com>
-References: <20070315232956.37DAB353A6C@atlas.denx.de>
-	<e9c3a7c20703161100j70a52e5cg25ff3616a5cda8d5@mail.gmail.com>
+From: Chris Lindley <ferg@scotgate.org>
+Subject: Re: mdadm file system type check
+Date: Sat, 17 Mar 2007 09:27:20 +0000
+Message-ID: <1174123640.12326.10.camel@scotgate>
+References: <1174089424.22511.26.camel@wlt.obsidian-studios.com>
+	 <45FB46DA.7090307@panix.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org>
-In-Reply-To: <e9c3a7c20703161100j70a52e5cg25ff3616a5cda8d5@mail.gmail.com>
-Content-Disposition: inline
-List-Unsubscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
-	<mailto:linuxppc-dev-request@ozlabs.org?subject=unsubscribe>
-List-Archive: <http://ozlabs.org/pipermail/linuxppc-dev>
-List-Post: <mailto:linuxppc-dev@ozlabs.org>
-List-Help: <mailto:linuxppc-dev-request@ozlabs.org?subject=help>
-List-Subscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
-	<mailto:linuxppc-dev-request@ozlabs.org?subject=subscribe>
-Sender: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
-Errors-To: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
-To: Dan Williams <dan.j.williams@intel.com>, linuxppc-dev@ozlabs.org, linux-raid@vger.kernel.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <45FB46DA.7090307@panix.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
- Hi Dan,
+What I think the OP is getting at is that MDADM will create an array
+with partitions whose type is not set to FD (Linux Raid Auto), but are
+perhaps 83.
 
-On Friday 16 March 2007 21:00, you wrote:
-> Here are some additional comments/nits:
-> > +/*
-> > + *  Init DMA0/1 and XOR engines; allocate memory for DMAx FIFOs; set
-> > platform_device + * memory resources addresses
-> > + */
-> > +static void ppc440spe_configure_raid_devices(void)
->
-> Any reason not to move most of this function into spe_adma_probe?  
-> The "set resource address" section is the only piece that spe_adma_probe
-> should not handle.
+The issue with that is that upon a reboot mdadm will not be able to
+start the array.  If you use MDADM to manually reassemble the array then
+it will work fine. But until you reset the partition type to be FD, you
+will have to run this step every time you reboot the machine.
 
- Two ppc440spe's DMA1 and DMA2 engines have to be configured together with one 
-I2O engine (all these units share the same pointer to the FIFO area in the 
-main memory but use different parts of this common area). So, setting-up of 
-this common FIFO area should be performed in the 
-ppc440spe_configure_raid_devices(). As regarding other code in this function 
-(except "set resource address"), it might be moved to the spe_adma_probe() 
-indeed.
+Please note that I'm not disagreeing or agreeing whether the OP's idea
+was a good idea, just trying to clarify the issue!
 
-> > +++ b/drivers/dma/spe-adma.c
-...
-> > + *
-> > + * The full GNU General Public License is included in this distribution
-> > in the + * file called COPYING.
-> > + */
-> > +
-> > +/*
-> > + *  This driver supports the asynchrounous DMA copy and RAID engines
-> > available + * on the AMCC PPC440SPe Processors.
-> > + *  Based on the Intel Xscale(R) family of I/O Processors (SPE 32x, 33x,
-> > 134x)
->
-> SPE should be IOP on this line.
+Cheers
+Ferg
 
- Correct.
-...
-> > +
-> > +DECLARE_TASKLET(spe_adma0_tasklet, spe_adma0_task, 0);
-> > +DECLARE_TASKLET(spe_adma1_tasklet, spe_adma1_task, 0);
-> > +DECLARE_TASKLET(spe_adma2_tasklet, spe_adma2_task, 0);
-> > +struct tasklet_struct *spe_adma_tasklet[] = {
-> > +       &spe_adma0_tasklet,
-> > +       &spe_adma1_tasklet,
-> > +       &spe_adma2_tasklet,
-> > +};
-> > +
->
-> This is something I am cleaning up in iop-adma by adding a struct
-> tasklet * to each channel.    I'll post an incremental diff of my
-> iop-adma changes so you can see what I have cleaned up since the
-> 2.6.20-rc5 posting.
+-- 
+                               
+  scotgate.org AIM#fergycool jabber#fergy IRC#Ferg MSN#fergycool
+  Climb up it, kayak down it + make sure it runs on GNU/Linux
+  "cease to exist, giving my goodbye, drive my car into the ocean,
+  you think I'm dead, but i sail away, on a wave of mutilation!"
 
- Thanks.
 
-> > +static dma_addr_t spe_adma_map_page(struct dma_chan *chan, struct page
-> > *page, +                                       unsigned long offset,
-> > size_t size, +                                       int direction)
-> > +{
-> > +       struct spe_adma_chan *spe_chan = to_spe_adma_chan(chan);
-> > +       return dma_map_page(&spe_chan->device->pdev->dev, page, offset,
-> > size, +                       direction);
-> > +}
-> > +
-> > +static dma_addr_t spe_adma_map_single(struct dma_chan *chan, void
-> > *cpu_addr, +                                       size_t size, int
-> > direction) +{
-> > +       struct spe_adma_chan *spe_chan = to_spe_adma_chan(chan);
-> > +       return dma_map_single(&spe_chan->device->pdev->dev, cpu_addr,
-> > size, +                       direction);
-> > +}
-> > +
-> > +static void spe_adma_unmap_page(struct dma_chan *chan, dma_addr_t
-> > handle, +                               size_t size, int direction)
-> > +{
-> > +       struct spe_adma_chan *spe_chan = to_spe_adma_chan(chan);
-> > +       dma_unmap_page(&spe_chan->device->pdev->dev, handle, size,
-> > direction); +}
-> > +
-> > +static void spe_adma_unmap_single(struct dma_chan *chan, dma_addr_t
-> > handle, +                               size_t size, int direction)
-> > +{
-> > +       struct spe_adma_chan *spe_chan = to_spe_adma_chan(chan);
-> > +       dma_unmap_single(&spe_chan->device->pdev->dev, handle, size,
-> > direction); +}
-> > +
->
-> ....these are gone as well in the latest code.
->
-> > +static int __devinit spe_adma_probe(struct platform_device *pdev)
->
-> .../..
->
-> > +       printk(KERN_INFO "Intel(R) SPE ADMA Engine found [%d]: "
->
-> Intel(R)? :-)
 
- Right : )
 
- Regards, Yuri.
+
+On Fri, 2007-03-16 at 20:39 -0500, berk walker wrote:
+> 
+> William L. Thomson Jr. wrote:
+> > To whom it may concern,
+> >
+> > 	It seems mdadm does not check, warn, abort, or etc if a partition has
+> > an incorrect file system type. This has come up for me on a few
+> > occasions while building servers with software raid. On one occasion I
+> > had a machine fully up and running on raid partitions that were ext3 not
+> > linux auto raid/fd.
+> >
+> > 	If possible would really be nice if it could do a check for that. Since
+> > one usually has to start over when they discover the problem and go to
+> > correct it. Since raidtools is not deprecated, others migrating from it
+> > on Gentoo are running into it at as well. At the present time mostly
+> > developers. Really would not want users running into it :)
+> >
+> > 	Anyway if that could be addressed that would be great. Not sure if this
+> > is the right place for this or not. If not please advise, thank you.
+> >
+> >   
+> Mdadm has no need to know or care about file systems.  It exists on the 
+> hardware, /dev level, upon which file systems, if any, are built.
+> 
+> b-
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
