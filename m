@@ -1,8 +1,8 @@
 From: Alan Stern <stern@rowland.harvard.edu>
 Subject: Re: [Linux-usb-users] Failed reads from RAID-0 array (from newbie
      who has read the FAQ)
-Date: Sat, 17 Mar 2007 22:06:46 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0703172204450.15801-100000@netrider.rowland.org>
+Date: Sat, 17 Mar 2007 22:12:06 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0703172208400.16306-100000@netrider.rowland.org>
 References: <2885.72.21.237.163.1174167308.squirrel@www.multitool.net>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
@@ -15,18 +15,17 @@ List-Id: linux-raid.ids
 
 On Sat, 17 Mar 2007, Michael Schwarz wrote:
 
-> Comments/questions below...
-> 
-> -- 
-> Michael Schwarz
->
-> > This isn't much help.  The important processes here are khubd,
-> > usb-storage, and scsi_eh_*.  Possibly some raid-related processes too, but
-> > I don't know which they would be.
-> 
-> I have no copy khubd running.
+> Nasty big stack trace set follows:
 
-That in itself is a very bad sign.  You need to look at the dmesg log.
+This format is kind of awkward.  For one thing, a lot of lines were 
+wrapped by your email program.
+
+For another, you copied the stack trace from the syslog log file.  That is 
+not a good way to do it; syslogd is liable to miss bits and pieces of 
+the kernel log when a lot of information comes along all at once.  You're 
+much better off getting the stack trace data directly from dmesg.  (And 
+when you do, you don't end up with 30 columns of wasted data added to the 
+beginning of each line.)
 
 Alan Stern
 
