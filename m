@@ -1,36 +1,32 @@
-From: Nix <nix@esperi.org.uk>
-Subject: Re: mdadm file system type check
-Date: Sat, 17 Mar 2007 23:08:48 +0000
-Message-ID: <87wt1fmprz.fsf@hades.wkstn.nix>
-References: <1174089424.22511.26.camel@wlt.obsidian-studios.com>
-	<45FB46DA.7090307@panix.com> <1174123640.12326.10.camel@scotgate>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [Linux-usb-users] Failed reads from RAID-0 array (from newbie
+     who has read the FAQ)
+Date: Sat, 17 Mar 2007 22:06:46 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0703172204450.15801-100000@netrider.rowland.org>
+References: <2885.72.21.237.163.1174167308.squirrel@www.multitool.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1174123640.12326.10.camel@scotgate> (Chris Lindley's message of "17 Mar 2007 09:53:52 -0000")
+In-Reply-To: <2885.72.21.237.163.1174167308.squirrel@www.multitool.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Chris Lindley <ferg@scotgate.org>
-Cc: linux-raid@vger.kernel.org
+To: Michael Schwarz <mschwarz@multitool.net>
+Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org, linux-usb-users@lists.sourceforge.net
 List-Id: linux-raid.ids
 
-On 17 Mar 2007, Chris Lindley told this:
+On Sat, 17 Mar 2007, Michael Schwarz wrote:
 
-> What I think the OP is getting at is that MDADM will create an array
-> with partitions whose type is not set to FD (Linux Raid Auto), but are
-> perhaps 83.
+> Comments/questions below...
+> 
+> -- 
+> Michael Schwarz
 >
-> The issue with that is that upon a reboot mdadm will not be able to
-> start the array.
+> > This isn't much help.  The important processes here are khubd,
+> > usb-storage, and scsi_eh_*.  Possibly some raid-related processes too, but
+> > I don't know which they would be.
+> 
+> I have no copy khubd running.
 
-I think you mean that the Linux kernel's auto-assembly code won't be
-able to start the array. mdadm doesn't care.
+That in itself is a very bad sign.  You need to look at the dmesg log.
 
->                   If you use MDADM to manually reassemble the array then
-> it will work fine. But until you reset the partition type to be FD, you
-> will have to run this step every time you reboot the machine.
+Alan Stern
 
-That's what initramfs/initrd is good at :)
-
--- 
-`In the future, company names will be a 32-character hex string.'
-  --- Bruce Schneier on the shortage of company names
