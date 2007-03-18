@@ -1,40 +1,78 @@
-From: Sander Smeenk <ssmeenk@freshdot.net>
-Subject: Re: Data corruption on software raid.
-Date: Sun, 18 Mar 2007 18:38:49 +0100
-Message-ID: <20070318173849.GM6063@freshdot.net>
-References: <20070318131606.GJ6063@freshdot.net> <Pine.LNX.4.64.0703180959090.32397@p34.internal.lan> <45FD6DCF.3040300@tmr.com>
+From: "Michael Schwarz" <mschwarz@multitool.net>
+Subject: Re: Failed reads from RAID-0 array; still no joy in Mudville.
+Date: Sun, 18 Mar 2007 11:39:11 -0600 (CST)
+Message-ID: <3666.72.21.237.163.1174239551.squirrel@www.multitool.net>
+References: <1536.72.21.237.163.1174098031.squirrel@www.multitool.net>      
+    <17915.32057.221461.617241@notabene.brown> <45FC33A4.2090408@tmr.com>  
+     <2745.72.21.237.163.1174158791.squirrel@www.multitool.net>
+    <2760.72.21.237.163.1174159273.squirrel@www.multitool.net>
+    <45FD753F.6050804@tmr.com>
+Reply-To: mschwarz@multitool.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <45FD6DCF.3040300@tmr.com>
+In-Reply-To: <45FD753F.6050804@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: linux-raid@vger.kernel.org, linux-usb-users@lists.sourceforge.net
 List-Id: linux-raid.ids
 
-Quoting Bill Davidsen (davidsen@tmr.com):
+I've tried both single and multiple files. The files are not sparse. They
+are highly compressed files (mpeg files) that would, to the filesystem, be
+nearly random with no repeated patterns or voids.
 
-> >>I'm having an odd problem with using software raid on two Western
-> >>Digital disks type WD2500JD-00F (250gb) connected to a Silicon Image
-> >>Sil3112 PCI SATA conroller running with Linux 2.6.20, mdadm 2.5.6
-> Your comments below are thoughts on the PATA RAID1, not the one which is 
-> giving trouble, the SATA.
-
-Although your comment here is right, i was indeed questioning about the
-SATA disks, Justin did make me realise i forgot to check SMART status
-with smartctl.
-
-It turns out sdb is a bit dodgy. It aparently had a read error earlier,
-and during the 'long' SMART test just now, it also failed.
-But this still amazes me, as i ran 'mke2fs -c -c' on the disk AND copied
-about 95% of the disks capacity to it with no corruption or errors at all.
-
-I don't know if i completely understood your comments about user buffers.
-I can hardly believe the buffer to change it's contents before actually
-being written to disk? Or did i misunderstand?
-
-Regards,
-Sander.
 -- 
-| When she saw her first strands of gray hair, she thought she'd dye.
-| 1024D/08CEC94D - 34B3 3314 B146 E13C 70C8  9BDB D463 7E41 08CE C94D
+Michael Schwarz
+
+> Michael Schwarz wrote:
+>> Update:
+>>
+>> (For those who've been waiting breathlessly). It hangs at a particular
+>> point in a particular file. In other words, it doesn't depend on the
+>> total
+>> number of bytes transfered. Rather, when it reaches a particular point
+>> in
+>> a particular file (12267520 bytes into a file that is 1073709056 bytes
+>> long) it hangs.
+>>
+>
+> I have an odd thought, have you tried copying that same file to
+> /dev/null or similar? The reason I ask is that if it were by any chance
+> a sparse file, while the program is reading all those unwritten bytes
+> odd things may happen. Sorry, I haven't seen this is years, but I do
+> remember seeing a filesystem on the destination end running out of space
+> because all those unwritten pages were now being "really written" as
+> zeros.
+>
+> Use of cp with the --sparse= flag may change the behavior if this is the
+> case.
+>> I begin to suspect that I have a "dead spot" in my USB hub. But what
+>> gets
+>> me if that is true is why does the write work? Do cp and dd not check to
+>> see if writes succeed?
+>>
+>> I know it isn't a particular flash drive because I've used two different
+>> sets of 7 USB drives and it seems to fail consistently no matter which.
+>>
+>> Nonetheless, I'm beginning to think I'm dealing with a hardware issue,
+>> not
+>> a kernel issue, just because it is so consistent.
+>>
+>> Thanks again for all the help.
+>>
+>>
+>>
+>
+>
+> --
+> bill davidsen <davidsen@tmr.com>
+>   CTO TMR Associates, Inc
+>   Doing interesting things with small computers since 1979
+>
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+
