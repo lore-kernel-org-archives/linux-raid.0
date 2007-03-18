@@ -1,42 +1,90 @@
-From: Wolfgang Denk <wd@denx.de>
+From: Bill Davidsen <davidsen@tmr.com>
 Subject: Re: Data corruption on software raid.
-Date: Sun, 18 Mar 2007 16:17:53 +0100
-Message-ID: <20070318151753.7A725353A42@atlas.denx.de>
-References: <20070318131606.GJ6063@freshdot.net>
+Date: Sun, 18 Mar 2007 11:50:23 -0500
+Message-ID: <45FD6DCF.3040300@tmr.com>
+References: <20070318131606.GJ6063@freshdot.net> <Pine.LNX.4.64.0703180959090.32397@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-reply-to: Your message of "Sun, 18 Mar 2007 14:16:06 +0100."
-             <20070318131606.GJ6063@freshdot.net>
+In-Reply-To: <Pine.LNX.4.64.0703180959090.32397@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: Sander Smeenk <ssmeenk@freshdot.net>
-Cc: linux-raid@vger.kernel.org
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: Sander Smeenk <ssmeenk@freshdot.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-In message <20070318131606.GJ6063@freshdot.net> you wrote:
-> 
-> But what amazes me is that no media errors can be detected by doing a
-> write/read check on every sector of the disk with mke2fs, and no data
-> corruption occurs when moving data to the set locally!
-> 
-> Can anyone shed some light on what i can try next to isolate what is
-> causing all this?  It's not the software raid code, the IDE set is
-
-If it happens only with downloaded data, you may see data corruption
-in the NIC hardware and/or driver. Try using another network card
-(other vendor, other type).
-
-Another possible culprit is memory - you may see memory errors  under
-certain usage patterns. Make sur to run a memory test, and/or try
-changing RAM.
-
-Best regards,
-
-Wolfgang Denk
+Justin Piszcz wrote:
+>
+>
+> On Sun, 18 Mar 2007, Sander Smeenk wrote:
+>
+>> Hello!  Long story. Get some coke.
+>>
+>> I'm having an odd problem with using software raid on two Western
+>> Digital disks type WD2500JD-00F (250gb) connected to a Silicon Image
+>> Sil3112 PCI SATA conroller running with Linux 2.6.20, mdadm 2.5.6
+>
+> [[ .. snip .. ]]
+>
+> See comments below.
+>
+> | Personalities : [raid1]
+> | md0 : active raid1 hda2[0] hdb1[1]
+> |       120060736 blocks [2/2] [UU]
+Your comments below are thoughts on the PATA RAID1, not the one which is 
+giving trouble, the SATA. Unless you think that making the working array 
+faster, perhaps he's looking for ideas on fixing the array which isn't 
+working as expected.
+>
+> My main question:
+>
+> Why the 'heck' are you running a RAID1 with a master/slave 
+> combination? That is probably the -worst- way to run it.  When using 
+> any form of RAID, make sure you do not share an IDE channel for any 
+> one raid device.
+>
+> Advice?  Hook up each drive as a master, then your rebuild speed 
+> should go to 30-60MB/s.
+>
+> Traditional Troubleshooting:
+>
+> What does fdisk -l /dev/hda
+>           fdisk -l /dev/hdb
+>
+> Report?
+>
+> Also,
+>
+> What does:
+>
+> smartctl -a /dev/hda
+> smartctl -a /dev/hdb
+>
+> show?
+>
+> Then,
+>
+> smartctl -t short /dev/hda
+> smartctl -t short /dev/hdb
+>
+> Wait 5-10 minutes, re-run the commands (-a) above.
+>
+> Then,
+>
+> smartctl -t long /dev/hda
+> smartctl -t long /dev/hdb
+>
+> Then re-run the (-a) smartctl above.
+>
+> --------
+>
+> Those errors look really weird, I would separate the two disks, each 
+> on their own IDE channel and see if your problem goes away.
+>
+> Justin.
 
 -- 
-DENX Software Engineering GmbH, HRB 165235 Munich, CEO: Wolfgang Denk
-Office:  Kirchenstr. 5,       D-82194 Groebenzell,            Germany
-Phone: (+49)-8142-66989-10 Fax: (+49)-8142-66989-80 Email: wd@denx.de
-Time is an illusion perpetrated by the manufacturers of space.
+bill davidsen <davidsen@tmr.com>
+  CTO TMR Associates, Inc
+  Doing interesting things with small computers since 1979
+
