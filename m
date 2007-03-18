@@ -1,78 +1,93 @@
 From: "Michael Schwarz" <mschwarz@multitool.net>
-Subject: Re: Failed reads from RAID-0 array; still no joy in Mudville.
-Date: Sun, 18 Mar 2007 11:39:11 -0600 (CST)
-Message-ID: <3666.72.21.237.163.1174239551.squirrel@www.multitool.net>
-References: <1536.72.21.237.163.1174098031.squirrel@www.multitool.net>      
-    <17915.32057.221461.617241@notabene.brown> <45FC33A4.2090408@tmr.com>  
-     <2745.72.21.237.163.1174158791.squirrel@www.multitool.net>
-    <2760.72.21.237.163.1174159273.squirrel@www.multitool.net>
-    <45FD753F.6050804@tmr.com>
+Subject: Re: [Linux-usb-users] Failed reads from RAID-0 array (from newbie  
+                   who has read the FAQ)
+Date: Sun, 18 Mar 2007 11:44:34 -0600 (CST)
+Message-ID: <3679.72.21.237.163.1174239874.squirrel@www.multitool.net>
+References: <2885.72.21.237.163.1174167308.squirrel@www.multitool.net>      
+    <Pine.LNX.4.44L0.0703172208400.16306-100000@netrider.rowland.org>   
+    <3123.72.21.237.163.1174192963.squirrel@www.multitool.net>
+    <3612.72.21.237.163.1174236988.squirrel@www.multitool.net>
 Reply-To: mschwarz@multitool.net
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <45FD753F.6050804@tmr.com>
+In-Reply-To: <3612.72.21.237.163.1174236988.squirrel@www.multitool.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: linux-raid@vger.kernel.org, linux-usb-users@lists.sourceforge.net
+To: mschwarz@multitool.net
+Cc: Alan Stern <stern@rowland.harvard.edu>, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org, linux-usb-users@lists.sourceforge.net
 List-Id: linux-raid.ids
 
-I've tried both single and multiple files. The files are not sparse. They
-are highly compressed files (mpeg files) that would, to the filesystem, be
-nearly random with no repeated patterns or voids.
+As I suspected, majordomo doesn't like attachments.
+
+I looked through the logs. The only odd thing I see before the read that
+hangs is this message:
+
+smartd[3069]: Device: /dev/hda, 1 Currently unreadable (pending) sectors
+
+Which I only see in /var/log/messages because the stack dump blows
+whatever buffer size if reserved for dmesg (the whole stack trace doesn't
+make it in).
+
+I'm going to try a different computer running a different OS next.
+
+Alan, Neil, I wasn't able to make anything of those logs. I've also
+grabbed /var/log/message to get the gap between dmesg-4-* and dmesg-5-*.
+I'll send that to you two in a separate message.
+
+If anyone else would like my logs, let me know.
+
 
 -- 
 Michael Schwarz
 
-> Michael Schwarz wrote:
->> Update:
->>
->> (For those who've been waiting breathlessly). It hangs at a particular
->> point in a particular file. In other words, it doesn't depend on the
->> total
->> number of bytes transfered. Rather, when it reaches a particular point
->> in
->> a particular file (12267520 bytes into a file that is 1073709056 bytes
->> long) it hangs.
->>
+> Okay. I've verified my hardware (by doing large write/reads to non-raid
+> file systems on each of the seven USB flash drives on the hub).
 >
-> I have an odd thought, have you tried copying that same file to
-> /dev/null or similar? The reason I ask is that if it were by any chance
-> a sparse file, while the program is reading all those unwritten bytes
-> odd things may happen. Sorry, I haven't seen this is years, but I do
-> remember seeing a filesystem on the destination end running out of space
-> because all those unwritten pages were now being "really written" as
-> zeros.
+> So this morning I booted cold and began gathering log data. I'm sending it
+> to you guys (you hsould know this) before looking at it myself.  Here's
+> the sequence:
 >
-> Use of cp with the --sparse= flag may change the behavior if this is the
-> case.
->> I begin to suspect that I have a "dead spot" in my USB hub. But what
->> gets
->> me if that is true is why does the write work? Do cp and dd not check to
->> see if writes succeed?
->>
->> I know it isn't a particular flash drive because I've used two different
->> sets of 7 USB drives and it seems to fail consistently no matter which.
->>
->> Nonetheless, I'm beginning to think I'm dealing with a hardware issue,
->> not
->> a kernel issue, just because it is so consistent.
->>
->> Thanks again for all the help.
->>
->>
->>
+> Cold boot
+> Gnome login
+> echo t > /proc/sysrq-trigger
+> dmesg > dmesg-0-beforehub.log
+> Attached hub with 7 drives
+> dmesg > dmesg-1-afterhub.log
+> mdadm --create /dev/md0 --auto=md --level=0 --raid-devices=7 /dev/sd?
+> dmesg > dmesg-2-aftermdcreate.log
+> mke2fs -b 4096 -R stride=16 /dev/md0
+> dmesg > dmesg-3-aftermkfs.log
+> mount /dev/md0 /mnt
+> cp -rv ~mschwarz/FUTURAMA_S2D2/* /mnt
+> dmesg > dmesg-4-afterbigwrite.log
+> cp -rv /mnt/* fs2d2/
 >
+> At this point, the process hangs. So I ran:
+>
+> echo t > /proc/sysrq-trigger
+> dmesg > dmesg-5-hungread.log
+>
+> ...in a different root window. All these operations were performed as root
+> (in order to be as dangerous as possible -- actually, in order to reduce
+> possible permissions issues; although I don't think there are any)
+>
+> All of these dmesg logs are attached in gzip format. I don't know what
+> majordomo will do with those, but the cc's going directly to Alan and Neil
+> should come through. I'm going to start combing these files myself, so if
+> you guys want to save time, you can certainly give me a couple hours to
+> get started! ;-)
+>
+> As always, I'm very grateful for your assistance and that of the group!
 >
 > --
-> bill davidsen <davidsen@tmr.com>
->   CTO TMR Associates, Inc
->   Doing interesting things with small computers since 1979
+> Michael Schwarz
 >
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> Yeah, I understand that.
+>>
+>> Sorry, I use squirrelmail. Pretty limited...
+>>
+>> I'll get you a "raw" dmseg output when I replicate the problem.
+>>
 >
 
