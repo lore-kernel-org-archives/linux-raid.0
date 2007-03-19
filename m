@@ -1,184 +1,130 @@
-From: "Michael Schwarz" <mschwarz@multitool.net>
-Subject: Re: Failed reads from RAID-0 array (from newbie
- who has read the FAQ)
-Date: Sun, 18 Mar 2007 21:27:57 -0600 (CST)
-Message-ID: <3923.72.21.237.163.1174274877.squirrel@www.multitool.net>
-References: <2885.72.21.237.163.1174167308.squirrel@www.multitool.net>
-	<Pine.LNX.4.44L0.0703172208400.16306-100000@netrider.rowland.org>
-	<3123.72.21.237.163.1174192963.squirrel@www.multitool.net>
-	<3612.72.21.237.163.1174236988.squirrel@www.multitool.net>
-	<17917.46554.169905.698240@notabene.brown>
-Reply-To: mschwarz@multitool.net
+From: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
+Subject: Re: raid6 array ,  part id 'fd' not assembling at boot .
+Date: Sun, 18 Mar 2007 20:33:22 -0700 (PDT)
+Message-ID: <Pine.LNX.4.64.0703182011080.24036@filesrv1.baby-dragons.com>
+References: <Pine.LNX.4.64.0703161838110.11877@filesrv1.baby-dragons.com>
+ <17915.32343.270875.583164@notabene.brown> <45FC3158.3020104@tmr.com>
+ <17917.45509.654906.432675@notabene.brown> <45FDC355.5000106@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-usb-users-bounces@lists.sourceforge.net>
-In-Reply-To: <17917.46554.169905.698240@notabene.brown>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-users>,
-	<mailto:linux-usb-users-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-usb-users>
-List-Post: <mailto:linux-usb-users@lists.sourceforge.net>
-List-Help: <mailto:linux-usb-users-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-users>,
-	<mailto:linux-usb-users-request@lists.sourceforge.net?subject=subscribe>
-Sender: linux-usb-users-bounces@lists.sourceforge.net
-Errors-To: linux-usb-users-bounces@lists.sourceforge.net
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>, linux-usb-users@lists.sourceforge.net
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <45FDC355.5000106@tmr.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid maillist <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-More than ever, I am convinced that it is actually a hardware problem, but
-I am curious for the opinions of both of you on whether the "system"
-(meaning, I guess, the combination of usb-storage driver and raid) is
-really doing the best with what it has.
+ 	Hello Neil & Bill ,
 
-My last effort was to switch to a different computer. When I did, I got in
-the dmesg log (unfortunately, not preserved, although I should be able to
-recreate) that one of the flash drives had bad blocks. Some part of the
-system eventually decided it was a "dead device" (I believe dmesg indicate
-the scsi subsystem said so). The device (it happened to be /dev/sdc) was
-peremptorially dropped from the system. This appears to be what hanged the
-raid system.
+On Sun, 18 Mar 2007, Bill Davidsen wrote:
+> Neil Brown wrote:
+>> On Saturday March 17, davidsen@tmr.com wrote:
+>>> Neil Brown wrote:
+>>>> In-kernel auto-assembly using partition type 0xFD only works for
+>>>> metadata=0.90.  This is deliberate.
+>>>> 
+>>>> Don't use 0xFD partitions.  Use mdadm to assemble your array, either
+>>>> via an initrd or (if it don't hold the root filesystem) via an init.d
+>>>> script.
+>>>> 
+>>> Could you clarify why someone thought it was a good idea to make it 
+>>> complex for users to move to current versions of the superblock? Having 
+>>> worked with users for way too many years, expecting end users to diddle 
+>>> init scripts without shooting themselves in the foot is optimism not 
+>>> justified by past results. At least past results as observed by me ;-)
+>>> 
+>> 
+>> That's a loaded question isn't it?  Of course no-one thought it was a
+>> good idea to make life complex for anyone.
+>> 
+> Note smiley!
+>> However I do not want to perpetuate a past design mistake of
+>> auto-assembling raid array based solely on partition type, and didn't
+>> want to burden version-1 superblocks with the information required to
+>> support that.  So I didn't. 
+> Having something as critical as booting the system depend on an init script 
+> of any description just seems inherently less reliably than having the kernel 
+> do the job. Scripts depend on an interpreter, the interpreter depends on the 
+> library, and while failure is rare, it's not unheard of. So I respectfully 
+> disagree on assembly in the kernel being a design mistake, but /boot is not a 
+> problem with a 0.90 superblock, so it's not holding anything back.
 
-(Why these messages never appeared on the other computer is beyond me;
-obviously some difference in how the actual USB controller reports errors,
-but, as I said, I've never studied USB drivers or hardware. In fact, once
-you get beyond the UARTs you are getting sophisticated to me)
+ 	I agree with you Bill ,  Partially .
+ 	But much less agree with Neil on this subject .
+ 	Neil suggests that the kernel is the wrong place to assemble arrays .
+ 	Neil ,  Is that a correct staement ?  But you did stipulate that by
+ 	saying 'By partition type' in a previous email .
 
-I've built an array of five known-good devices and so far it works
-swimmingly (at least on the hardware that was better at error reporting).
+ 	Bill suggests that shell scripts of any type 'can' fail .
 
-So it seems to me that there is probably nothing actually wrong with the
-drivers or their interactions at it leaves me only asking if there should
-be some sort of improvement in error reporting/recovery up to userland.
+ 	Why can't we have assembling of arrays by UUID IN Kernel ?
 
-If I am right and the scsi system was marking a device as dead, shouldn't
-the userland read against the md device get an error instead of an
-indefinite hang?
+ 	The UUID's could be placed in the boot command line ,  Yes I know it's
+ 	a limited resource ,  But a viable resource still .
+ 	Or even some sort of Signature .  Well that's a uuid in its way .
+ 	Some sort of signature ,  small enought to be put on the boot command
+ 	line or where the Kernel can read it . or EVEN in the Kernal .
 
-Beyond this question which I leave to you (although I'd love to hear your
-answers/thoughts), I think we can safely say that the problem was hardware
-(even if hard to find). If either of you would like, I'd be happy to find
-time this week to recreate the error on my "better" PC and send that
-along.
+More below ,  for my reasoning of the above .
 
-As for rolling a custom kernel with more message buffer, well, I'm going
-to be getting into a new device driver in the coming months, so a custom
-debug kernel is definitely in my future, but I'm not sure when.
+>> But neither am I forcing anyone to use version-1 metadata.  Most of
+>> the new functionality I have made available in v-1 metadata has also
+>> been added to v-0.90 metadata (not quite all, but there are very few
+>> needs that would drive someone to use v-1).
+>> 
+> With superblocks as with real estate, location is important. My prime reason 
+> for preferring 1.1 metadata (and I wish there was a painless way to update 
+> old arrays).
+>> If someone is keen to use the newest features, then I am happy with
+>> that, and am happy to provide support and advice.  In doing so I learn
+>> about ways that mdadm can be improved to make life easier.  But if you
+>> want to use the newest features, you need to understand all the
+>> implications there-of.
+>> 
+>> As a contrast, Debian does force (or strongly encourages) people to use
+>> version-1 metadata by putting "CREATE metadata=1" in
+>> /etc/mdadm/mdadm.conf.
+>> But then Debian also provides all the infrastructure for building an
+>> initrd that assembles md arrays for you quite smoothly.   So they
+>> provide a complete package that just works (most of the time).
+>> 
+>> I primarily provide functionality.  It needs to work for everyone:
+>> those with legacy configurations that I would not recommend using on
+>> new systems, and those who build new systems with different
+>> requirements.  I have to provide a variety of options. It is up to the
+>> system integrator to choose which bits of functionality to use.
+>> 
+>> I would be good to create a document discussing the various issues and
+>> setting out the preferred config approach for new systems, and I have
+>> considered doing this, but unfortunately it hasn't happened yet.
+>> 
+>> It would suggest:
+>>  - If root/swap are on an md device, use an initrd to assemble those
+>>     (swap needed for resume-from-hibernate)
+>>  - Set homehost in mdadm.conf and use "mdadm -As" to auto-assemble
+>>    everything that is meant to be assembled on this host.
+>>  - Assemble all arrays as partitionable.
+>>  - Use version-1.1 metadata (superblocks at the start cause less
+>>    confusion I think)
+>>  - run 'repair' every month and don't worry about the mismatch_cnt.
+>> 
+>> That's all I can think of at the moment.
+>> 
+> I'm not sure I see the advantage of partitionable arrays for most things, and 
+> since it's likely that 90+% of users will do what their distribution install 
+> does for them, this sounds like a "best practices" document. Any plans to 
+> make 'repair' on RAID levels 5,6,10 check to attempt to identify the bad 
+> chunk before rewriting? I hope you vote on RAID-1 with >2 copies, and rewrite 
+> the odd man out.
 
-I must say, the kernel has become a much more complex beastie since 2.2.x!
-(Although it also appears to be improved and somewhat more organized --
-but definitely MUCH larger!)
-
-Thank you both so much! I wouldn't even have diagnosed my hardware problem
-without your prompts. I'm very grateful. Let me know if you'd like those
-dmesg logs or if you'd just like to let it go!
-
+ 	What I don't see is the reasoning behind the use of initrd .  It's a
+ 	kernel ran to put the dev tree in order ,  start up devices ,... Just to
+ 	start the kernel again ?
+ 	In otherwords I beleive that initrd's are essentially pointless .  But
+ 	that's just my opinion .
+ 		Twyl ,  JimL
 -- 
-Michael Schwarz
-
-> On Sunday March 18, mschwarz@multitool.net wrote:
->> cp -rv /mnt/* fs2d2/
->>
->> At this point, the process hangs. So I ran:
->>
->> echo t > /proc/sysrq-trigger
->> dmesg > dmesg-5-hungread.log
->
-> Unfortunate (as you say) the whole trace doesn't fit.
-> Could you try compiling the kernel with a larger value for
-> CONFIG_LOG_BUF_SHIFT ??  It looks like you have 17.  21 is the max.
-> 19 should probably be sufficient.
->
-> Two things look a bit odd.
-> 1/ hald-addon-st (process 3974) seems to be hung doing a
->   'test_unit_ready' after a media-changed signal.  Any idea why?
->   Could you try killing of hald while running the test?
->
-> 2/ one usb-storage thread (3667) appears to be waiting for
->   IO to complete (though that is just a guess really).
->
-> Maybe usb-storage is waiting for the hald test-unit-ready?
->
-> But I'm a bit out of my depth here, so I'll leave it to the USB
-> experts.
->
-> NeilBrown
->
->  =======================
-> hald-addon-st D EF9FBD00  2812  3974   2935          3977  3966 (NOTLB)
->        ef9fbd14 00000086 00000002 ef9fbd00 ef9fbcfc 00000000 00000000
-> ed4fcbe4
->        c04dc5cc 00000086 0000000a ed407770 c06fb480 18f88700 00000206
-> 00000000
->        ed40787c c1c8c480 00000000 ebe7adc0 001d605d db30e9c8 00000096
-> ffffffff
-> Call Trace:
->  [<c04dc5cc>] elv_next_request+0xfe/0x1ac
->  [<c061e701>] wait_for_completion+0x73/0x98
->  [<c04226ab>] default_wake_function+0x0/0xc
->  [<c04df415>] blk_execute_rq+0xcf/0xe5
->  [<c04de74f>] blk_end_sync_rq+0x0/0x23
->  [<c04dbdf0>] elv_set_request+0x14/0x22
->  [<c04decda>] get_request+0x205/0x2b2
->  [<c04df4e7>] get_request_wait+0x26/0x16c
->  [<f8de1116>] scsi_execute+0xc6/0xd9 [scsi_mod]
->  [<f8de11e0>] scsi_execute_req+0xb7/0xd5 [scsi_mod]
->  [<f8de1241>] scsi_test_unit_ready+0x43/0x80 [scsi_mod]
->  [<f8d726a5>] sd_media_changed+0x60/0xb5 [sd_mod]
->  [<c04e8c82>] kobject_get+0xf/0x13
->  [<c0491481>] check_disk_change+0x16/0x5c
->  [<c055890a>] class_device_get+0xe/0x14
->  [<f8d72b70>] sd_open+0x92/0x120 [sd_mod]
->  [<c04e14cc>] exact_match+0x0/0x4
->  [<c0491b65>] do_open+0x19f/0x255
->  [<c0491d8e>] blkdev_open+0x0/0x4d
->  [<c0491db3>] blkdev_open+0x25/0x4d
->  [<c0470cac>] __dentry_open+0xc3/0x17a
->  [<c0470ddd>] nameidata_to_filp+0x24/0x33
->  [<c0470e1e>] do_filp_open+0x32/0x39
->  [<c061f0e0>] do_nanosleep+0x42/0x66
->  [<c0470bdf>] get_unused_fd+0xb3/0xbd
->  [<c0470e67>] do_sys_open+0x42/0xbe
->  [<c0470f1c>] sys_open+0x1c/0x1e
->  [<c0403f64>] syscall_call+0x7/0xb
->  =======================
-> usb-storage   S 00000010  3048  3667      7          3669  3666 (L-TLB)
->        ebcaee78 00000046 f88459c0 00000010 ebc6b7dc f6de08e4 c0587c0e
-> 00000010
->        00000000 c06fb480 0000000a ed5f2bb0 d80fa9b0 e8b0e880 00000205
-> 00000000
->        ed5f2cbc c1c8c480 00000000 ebe7a9c0 001d5d31 00000205 00000000
-> ffffffff
-> Call Trace:
->  [<c0587c0e>] usb_hcd_submit_urb+0x6cd/0x773
->  [<c061ecc2>] schedule_timeout+0x13/0x8d
->  [<c061e925>] wait_for_completion_interruptible_timeout+0x99/0xd5
->  [<c04226ab>] default_wake_function+0x0/0xc
->  [<f8db090c>] usb_stor_msg_common+0xc9/0xe8 [usb_storage]
->  [<f8db0d5f>] usb_stor_bulk_transfer_buf+0x61/0x98 [usb_storage]
->  [<f8db12a9>] usb_stor_Bulk_transport+0xcb/0x221 [usb_storage]
->  [<f8db2022>] usb_stor_control_thread+0x0/0x1a3 [usb_storage]
->  [<f8db1414>] usb_stor_invoke_transport+0x15/0x259 [usb_storage]
->  [<c061fa40>] __down_interruptible+0xde/0xf0
->  [<c04226ab>] default_wake_function+0x0/0xc
->  [<f8db2022>] usb_stor_control_thread+0x0/0x1a3 [usb_storage]
->  [<f8db214a>] usb_stor_control_thread+0x128/0x1a3 [usb_storage]
->  [<c0420a03>] complete+0x39/0x48
->  [<f8db2022>] usb_stor_control_thread+0x0/0x1a3 [usb_storage]
->  [<c043779f>] kthread+0xb0/0xd9
->  [<c04376ef>] kthread+0x0/0xd9
->  [<c0404b33>] kernel_thread_helper+0x7/0x10
->  =======================
->
-
-
--------------------------------------------------------------------------
-Take Surveys. Earn Cash. Influence the Future of IT
-Join SourceForge.net's Techsay panel and you'll get the chance to share your
-opinions on IT & business topics through brief surveys-and earn cash
-http://www.techsay.com/default.php?page=join.php&p=sourceforge&CID=DEVDEV
-_______________________________________________
-Linux-usb-users@lists.sourceforge.net
-To unsubscribe, use the last form field at:
-https://lists.sourceforge.net/lists/listinfo/linux-usb-users
++-----------------------------------------------------------------+
+| James   W.   Laferriere | System   Techniques | Give me VMS     |
+| Network        Engineer | 663  Beaumont  Blvd |  Give me Linux  |
+| babydr@baby-dragons.com | Pacifica, CA. 94044 |   only  on  AXP |
++-----------------------------------------------------------------+
