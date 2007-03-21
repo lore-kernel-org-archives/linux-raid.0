@@ -1,36 +1,24 @@
-From: Sam Ravnborg <sam@ravnborg.org>
-Subject: Re: BLK_DEV_MD with CONFIG_NET
-Date: Wed, 21 Mar 2007 13:02:46 +0100
-Message-ID: <20070321120246.GB18195@uranus.ravnborg.org>
-References: <20070320200538.5270d636.randy.dunlap@oracle.com> <20070320.202621.74740974.davem@davemloft.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1752590AbXCUMCO@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20070320.202621.74740974.davem@davemloft.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: David Miller <davem@davemloft.net>
-Cc: randy.dunlap@oracle.com, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+From: Segher Boessenkool <segher@kernel.crashing.org>
+Subject: Re: [PATCH] [PPC32] ADMA support for PPC 440SPe processors.
+Date: Wed, 21 Mar 2007 15:10:46 +0100
+Message-ID: <582f77296616b0b85ff7533bb7fea05c@kernel.crashing.org>
+References: <20070315232956.37DAB353A6C@atlas.denx.de> <200703170909.13869.sr@denx.de> <e9c3a7c20703171117w7989adfehda99416265eef906@mail.gmail.com> <200703171943.27465.sr@denx.de> <e9c3a7c20703171209m55fd9dfsbba0e4fff5c6350d@mail.gmail.com> <1174320799.5044.21.camel@localhost.localdomain>
+Mime-Version: 1.0 (Apple Message framework v623)
+Content-Type: text/plain; charset=US-ASCII; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1174320799.5044.21.camel@localhost.localdomain>
+Sender: linux-raid-owner@vger.kernel.org
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: linux-raid@vger.kernel.org, Dan Williams <dan.j.williams@gmail.com>, linuxppc-dev@ozlabs.org, Stefan Roese <sr@denx.de>
 List-Id: linux-raid.ids
 
-On Tue, Mar 20, 2007 at 08:26:21PM -0700, David Miller wrote:
-> From: Randy Dunlap <randy.dunlap@oracle.com>
-> Date: Tue, 20 Mar 2007 20:05:38 -0700
-> 
-> > Build a kernel with CONFIG_NET-n and CONFIG_BLK_DEV_MD=m.
-> > Unless csum_partial() is built and kept by some arch Makefile,
-> > the result is:
-> > ERROR: "csum_partial" [drivers/md/md-mod.ko] undefined!
-> > make[1]: *** [__modpost] Error 1
-> > make: *** [modules] Error 2
-> > 
-> > 
-> > Any suggested solutions?
-> 
-> Anything which is every exported to modules, which ought to
-> be the situation in this case, should be obj-y not lib-y
-> right?
-That is also my understanding of lib-y - I should update makefiles.txt
-to reflect this..
+> BTW folks. Would it be hard to change your spe_ prefixes to something
+> else ? There's already enough confusion between the freescale SPE unit
+> and the cell SPEs :-)
 
-	Sam
+Will you change _your_ prefixes too?  :-) :-)
+
+
+Segher
+
