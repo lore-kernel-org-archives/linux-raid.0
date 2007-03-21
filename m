@@ -1,40 +1,30 @@
-From: Segher Boessenkool <segher@kernel.crashing.org>
-Subject: Re: [PATCH] [PPC32] ADMA support for PPC 440SPe processors.
-Date: Wed, 21 Mar 2007 21:03:27 +0100
-Message-ID: <0e5aac2ffcd189dc51f59d5891b2366c@kernel.crashing.org>
-References: <20070315232956.37DAB353A6C@atlas.denx.de> <200703170909.13869.sr@denx.de> <e9c3a7c20703171117w7989adfehda99416265eef906@mail.gmail.com> <200703171943.27465.sr@denx.de> <e9c3a7c20703171209m55fd9dfsbba0e4fff5c6350d@mail.gmail.com> <1174320799.5044.21.camel@localhost.localdomain> <582f77296616b0b85ff7533bb7fea05c@kernel.crashing.org> <1174506924.10836.2.camel@localhost.localdomain>
-Mime-Version: 1.0 (Apple Message framework v623)
-Content-Type: text/plain; charset=US-ASCII; format=flowed
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: BLK_DEV_MD with CONFIG_NET
+Date: Wed, 21 Mar 2007 23:30:24 +0100
+Message-ID: <200703212330.24502.arnd@arndb.de>
+References: <20070320200538.5270d636.randy.dunlap@oracle.com> <20070320.202621.74740974.davem@davemloft.net> <20070321120246.GB18195@uranus.ravnborg.org>
+Mime-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1174506924.10836.2.camel@localhost.localdomain>
+In-Reply-To: <20070321120246.GB18195@uranus.ravnborg.org>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: linux-raid@vger.kernel.org, Dan Williams <dan.j.williams@gmail.com>, linuxppc-dev@ozlabs.org, Stefan Roese <sr@denx.de>
+To: Sam Ravnborg <sam@ravnborg.org>
+Cc: David Miller <davem@davemloft.net>, randy.dunlap@oracle.com, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
->>> BTW folks. Would it be hard to change your spe_ prefixes to something
->>> else ? There's already enough confusion between the freescale SPE 
->>> unit
->>> and the cell SPEs :-)
->>
->> Will you change _your_ prefixes too?  :-) :-)
+On Wednesday 21 March 2007 13:02:46 Sam Ravnborg wrote:
+> > Anything which is every exported to modules, which ought to
+> > be the situation in this case, should be obj-y not lib-y
+> > right?
 >
-> Which ones ? I'm not in charge of the fsl spe thingy nor the spe
-> scheduler code :-)
+> That is also my understanding of lib-y - I should update makefiles.txt
+> to reflect this..
 
-I meant the Cell code of course.
+Strictly speaking, it could well be obj-m instead of obj-y if it
+is _only_ used by modules. OTOH, it makes the Makefile a lot simpler
+to not optimize for this case.
 
-> Beside, that code is already in vs. new code getting
-> in. Thus I fail to see your point.
-
-My point was that spe_ on the existing code is a bad
-prefix, too.  And there were a lot of smileys, I don't
-actually expect anything to change.
-
-Let's stop this now, there are too many innocents on CC:.
-Sorry people.
-
-
-Segher
-
+	Arnd <><
