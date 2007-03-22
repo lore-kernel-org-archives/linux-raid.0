@@ -1,47 +1,33 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: Re: BLK_DEV_MD with CONFIG_NET
-Date: Thu, 22 Mar 2007 12:15:31 +0100
-Message-ID: <20070322111531.GT752@stusta.de>
-References: <20070320200538.5270d636.randy.dunlap@oracle.com> <20070320.202621.74740974.davem@davemloft.net> <20070321120246.GB18195@uranus.ravnborg.org> <200703212330.24502.arnd@arndb.de>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH] [PPC32] ADMA support for PPC 440SPe processors.
+Date: Thu, 22 Mar 2007 12:38:57 +0100
+Message-ID: <20070322113857.GA13547@lst.de>
+References: <20070315232956.37DAB353A6C@atlas.denx.de> <200703170909.13869.sr@denx.de> <e9c3a7c20703171117w7989adfehda99416265eef906@mail.gmail.com> <200703171943.27465.sr@denx.de> <e9c3a7c20703171209m55fd9dfsbba0e4fff5c6350d@mail.gmail.com> <1174320799.5044.21.camel@localhost.localdomain> <582f77296616b0b85ff7533bb7fea05c@kernel.crashing.org> <1174506924.10836.2.camel@localhost.localdomain> <0e5aac2ffcd189dc51f59d5891b2366c@kernel.crashing.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <200703212330.24502.arnd@arndb.de>
+In-Reply-To: <0e5aac2ffcd189dc51f59d5891b2366c@kernel.crashing.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Sam Ravnborg <sam@ravnborg.org>, David Miller <davem@davemloft.net>, randy.dunlap@oracle.com, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+To: Segher Boessenkool <segher@kernel.crashing.org>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, linux-raid@vger.kernel.org, Dan Williams <dan.j.williams@gmail.com>, Stefan Roese <sr@denx.de>, linuxppc-dev@ozlabs.org
 List-Id: linux-raid.ids
 
-On Wed, Mar 21, 2007 at 11:30:24PM +0100, Arnd Bergmann wrote:
-> On Wednesday 21 March 2007 13:02:46 Sam Ravnborg wrote:
-> > > Anything which is every exported to modules, which ought to
-> > > be the situation in this case, should be obj-y not lib-y
-> > > right?
+On Wed, Mar 21, 2007 at 09:03:27PM +0100, Segher Boessenkool wrote:
+> >>> BTW folks. Would it be hard to change your spe_ prefixes to something
+> >>> else ? There's already enough confusion between the freescale SPE 
+> >>> unit
+> >>> and the cell SPEs :-)
+> >>
+> >> Will you change _your_ prefixes too?  :-) :-)
 > >
-> > That is also my understanding of lib-y - I should update makefiles.txt
-> > to reflect this..
+> > Which ones ? I'm not in charge of the fsl spe thingy nor the spe
+> > scheduler code :-)
 > 
-> Strictly speaking, it could well be obj-m instead of obj-y if it
-> is _only_ used by modules. OTOH, it makes the Makefile a lot simpler
-> to not optimize for this case.
+> I meant the Cell code of course.
 
-No, it is only used by modules only if CONFIG_BLK_DEV_MD=m and CONFIG_NET=n...
+Did you ever take a look at the cell code?  The only place 'spe'
+is used in a prefix are a handfull of hardware datatstructures and the
+sony crap hypervisor hvcalls.  Everything else uses spu_ as a prefix.
 
-And except for some legacy drivers, there shouldn't be any module-only 
-code in the kernel.
-
-The solution is either obj-y or obj-$(CONFIG_CSUM_PARIAL).
-
-> 	Arnd
-
-cu
-Adrian
-
--- 
-
-       "Is there not promise of rain?" Ling Tan asked suddenly out
-        of the darkness. There had been need of rain for many days.
-       "Only a promise," Lao Er said.
-                                       Pearl S. Buck - Dragon Seed
-
+But yeah, grep is hard and life is a bitch.. :)
