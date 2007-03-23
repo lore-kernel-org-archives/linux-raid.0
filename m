@@ -1,203 +1,137 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH 2.6.21-rc4 06/15] md: move write operations to raid5_run_ops
-Date: Thu, 22 Mar 2007 23:52:07 -0700
-Message-ID: <20070323065207.15570.15540.stgit@dwillia2-linux.ch.intel.com>
+Subject: [PATCH 2.6.21-rc4 11/15] md: move raid5 io requests to raid5_run_ops
+Date: Thu, 22 Mar 2007 23:52:33 -0700
+Message-ID: <20070323065233.15570.29295.stgit@dwillia2-linux.ch.intel.com>
 References: <20070323064856.15570.45052.stgit@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S933848AbXCWGw7@vger.kernel.org>
 In-Reply-To: <20070323064856.15570.45052.stgit@dwillia2-linux.ch.intel.com>
-Sender: linux-raid-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: neilb@suse.de, christopher.leech@intel.com, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 Cc: akpm@linux-foundation.org, torvalds@linux-foundation.org, yur@emcraft.com, wd@denx.de, arjan@linux.intel.com, rmk+kernel@arm.linux.org.uk
 List-Id: linux-raid.ids
 
-handle_stripe sets STRIPE_OP_PREXOR, STRIPE_OP_BIODRAIN, STRIPE_OP_POSTXOR
-to request a write to the stripe cache.  raid5_run_ops is triggerred to run
-and executes the request outside the stripe lock.
+handle_stripe now only updates the state of stripes.  All execution of
+operations is moved to raid5_run_ops.
 
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
 
- drivers/md/raid5.c |  152 +++++++++++++++++++++++++++++++++++++++++++++-------
- 1 files changed, 131 insertions(+), 21 deletions(-)
+ drivers/md/raid5.c |   68 ++++++++--------------------------------------------
+ 1 files changed, 10 insertions(+), 58 deletions(-)
 
 diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 0397e33..4d1adb5 100644
+index 84a3f35..0be26c2 100644
 --- a/drivers/md/raid5.c
 +++ b/drivers/md/raid5.c
-@@ -1788,7 +1788,75 @@ static void compute_block_2(struct stripe_head *sh, int dd_idx1, int dd_idx2)
+@@ -2360,6 +2360,8 @@ static void handle_stripe5(struct stripe_head *sh)
+ 						PRINTK("Read_old block %d for r-m-w\n", i);
+ 						set_bit(R5_LOCKED, &dev->flags);
+ 						set_bit(R5_Wantread, &dev->flags);
++						if (!test_and_set_bit(STRIPE_OP_IO, &sh->ops.pending))
++							sh->ops.count++;
+ 						locked++;
+ 					} else {
+ 						set_bit(STRIPE_DELAYED, &sh->state);
+@@ -2380,6 +2382,8 @@ static void handle_stripe5(struct stripe_head *sh)
+ 						PRINTK("Read_old block %d for Reconstruct\n", i);
+ 						set_bit(R5_LOCKED, &dev->flags);
+ 						set_bit(R5_Wantread, &dev->flags);
++						if (!test_and_set_bit(STRIPE_OP_IO, &sh->ops.pending))
++							sh->ops.count++;
+ 						locked++;
+ 					} else {
+ 						set_bit(STRIPE_DELAYED, &sh->state);
+@@ -2479,6 +2483,8 @@ static void handle_stripe5(struct stripe_head *sh)
+ 
+ 			set_bit(R5_LOCKED, &dev->flags);
+ 			set_bit(R5_Wantwrite, &dev->flags);
++			if (!test_and_set_bit(STRIPE_OP_IO, &sh->ops.pending))
++				sh->ops.count++;
+ 			clear_bit(STRIPE_DEGRADED, &sh->state);
+ 			locked++;
+ 			set_bit(STRIPE_INSYNC, &sh->state);
+@@ -2500,12 +2506,16 @@ static void handle_stripe5(struct stripe_head *sh)
+ 		dev = &sh->dev[failed_num];
+ 		if (!test_bit(R5_ReWrite, &dev->flags)) {
+ 			set_bit(R5_Wantwrite, &dev->flags);
++			if (!test_and_set_bit(STRIPE_OP_IO, &sh->ops.pending))
++				sh->ops.count++;
+ 			set_bit(R5_ReWrite, &dev->flags);
+ 			set_bit(R5_LOCKED, &dev->flags);
+ 			locked++;
+ 		} else {
+ 			/* let's read it back */
+ 			set_bit(R5_Wantread, &dev->flags);
++			if (!test_and_set_bit(STRIPE_OP_IO, &sh->ops.pending))
++				sh->ops.count++;
+ 			set_bit(R5_LOCKED, &dev->flags);
+ 			locked++;
+ 		}
+@@ -2615,64 +2625,6 @@ static void handle_stripe5(struct stripe_head *sh)
+ 			      test_bit(BIO_UPTODATE, &bi->bi_flags)
+ 			        ? 0 : -EIO);
  	}
+-	for (i=disks; i-- ;) {
+-		int rw;
+-		struct bio *bi;
+-		mdk_rdev_t *rdev;
+-		if (test_and_clear_bit(R5_Wantwrite, &sh->dev[i].flags))
+-			rw = WRITE;
+-		else if (test_and_clear_bit(R5_Wantread, &sh->dev[i].flags))
+-			rw = READ;
+-		else
+-			continue;
+- 
+-		bi = &sh->dev[i].req;
+- 
+-		bi->bi_rw = rw;
+-		if (rw == WRITE)
+-			bi->bi_end_io = raid5_end_write_request;
+-		else
+-			bi->bi_end_io = raid5_end_read_request;
+- 
+-		rcu_read_lock();
+-		rdev = rcu_dereference(conf->disks[i].rdev);
+-		if (rdev && test_bit(Faulty, &rdev->flags))
+-			rdev = NULL;
+-		if (rdev)
+-			atomic_inc(&rdev->nr_pending);
+-		rcu_read_unlock();
+- 
+-		if (rdev) {
+-			if (syncing || expanding || expanded)
+-				md_sync_acct(rdev->bdev, STRIPE_SECTORS);
+-
+-			bi->bi_bdev = rdev->bdev;
+-			PRINTK("for %llu schedule op %ld on disc %d\n",
+-				(unsigned long long)sh->sector, bi->bi_rw, i);
+-			atomic_inc(&sh->count);
+-			bi->bi_sector = sh->sector + rdev->data_offset;
+-			bi->bi_flags = 1 << BIO_UPTODATE;
+-			bi->bi_vcnt = 1;	
+-			bi->bi_max_vecs = 1;
+-			bi->bi_idx = 0;
+-			bi->bi_io_vec = &sh->dev[i].vec;
+-			bi->bi_io_vec[0].bv_len = STRIPE_SIZE;
+-			bi->bi_io_vec[0].bv_offset = 0;
+-			bi->bi_size = STRIPE_SIZE;
+-			bi->bi_next = NULL;
+-			if (rw == WRITE &&
+-			    test_bit(R5_ReWrite, &sh->dev[i].flags))
+-				atomic_add(STRIPE_SECTORS, &rdev->corrected_errors);
+-			generic_make_request(bi);
+-		} else {
+-			if (rw == WRITE)
+-				set_bit(STRIPE_DEGRADED, &sh->state);
+-			PRINTK("skip op %ld on disc %d for sector %llu\n",
+-				bi->bi_rw, i, (unsigned long long)sh->sector);
+-			clear_bit(R5_LOCKED, &sh->dev[i].flags);
+-			set_bit(STRIPE_HANDLE, &sh->state);
+-		}
+-	}
  }
  
-+static int handle_write_operations5(struct stripe_head *sh, int rcw, int expand)
-+{
-+	int i, pd_idx = sh->pd_idx, disks = sh->disks;
-+	int locked=0;
-+
-+	if (rcw == 0) {
-+		/* skip the drain operation on an expand */
-+		if (!expand) {
-+			BUG_ON(test_and_set_bit(STRIPE_OP_BIODRAIN,
-+				&sh->ops.pending));
-+			sh->ops.count++;
-+		}
-+
-+		BUG_ON(test_and_set_bit(STRIPE_OP_POSTXOR, &sh->ops.pending));
-+		sh->ops.count++;
-+
-+		for (i=disks ; i-- ;) {
-+			struct r5dev *dev = &sh->dev[i];
-+
-+			if (dev->towrite) {
-+				set_bit(R5_LOCKED, &dev->flags);
-+				if (!expand)
-+					clear_bit(R5_UPTODATE, &dev->flags);
-+				locked++;
-+			}
-+		}
-+	} else {
-+		BUG_ON(!(test_bit(R5_UPTODATE, &sh->dev[pd_idx].flags) ||
-+			test_bit(R5_Wantcompute, &sh->dev[pd_idx].flags)));
-+
-+		BUG_ON(test_and_set_bit(STRIPE_OP_PREXOR, &sh->ops.pending) ||
-+			test_and_set_bit(STRIPE_OP_BIODRAIN, &sh->ops.pending) ||
-+			test_and_set_bit(STRIPE_OP_POSTXOR, &sh->ops.pending));
-+
-+		sh->ops.count += 3;
-+
-+		for (i=disks ; i-- ;) {
-+			struct r5dev *dev = &sh->dev[i];
-+			if (i==pd_idx)
-+				continue;
- 
-+			/* For a read-modify write there may be blocks that are
-+			 * locked for reading while others are ready to be written
-+			 * so we distinguish these blocks by the R5_Wantprexor bit
-+			 */
-+			if (dev->towrite &&
-+			    (test_bit(R5_UPTODATE, &dev->flags) ||
-+			    test_bit(R5_Wantcompute, &dev->flags))) {
-+				set_bit(R5_Wantprexor, &dev->flags);
-+				set_bit(R5_LOCKED, &dev->flags);
-+				clear_bit(R5_UPTODATE, &dev->flags);
-+				locked++;
-+			}
-+		}
-+	}
-+
-+	/* keep the parity disk locked while asynchronous operations
-+	 * are in flight
-+	 */
-+	set_bit(R5_LOCKED, &sh->dev[pd_idx].flags);
-+	clear_bit(R5_UPTODATE, &sh->dev[pd_idx].flags);
-+	locked++;
-+
-+	PRINTK("%s: stripe %llu locked: %d pending: %lx\n",
-+		__FUNCTION__, (unsigned long long)sh->sector,
-+		locked, sh->ops.pending);
-+
-+	return locked;
-+}
- 
- /*
-  * Each stripe/dev can have one or more bion attached.
-@@ -2151,8 +2219,67 @@ static void handle_stripe5(struct stripe_head *sh)
- 		set_bit(STRIPE_HANDLE, &sh->state);
- 	}
- 
--	/* now to consider writing and what else, if anything should be read */
--	if (to_write) {
-+	/* Now we check to see if any write operations have recently
-+	 * completed
-+	 */
-+
-+	/* leave prexor set until postxor is done, allows us to distinguish
-+	 * a rmw from a rcw during biodrain
-+	 */
-+	if (test_bit(STRIPE_OP_PREXOR, &sh->ops.complete) &&
-+		test_bit(STRIPE_OP_POSTXOR, &sh->ops.complete)) {
-+
-+		clear_bit(STRIPE_OP_PREXOR, &sh->ops.complete);
-+		clear_bit(STRIPE_OP_PREXOR, &sh->ops.ack);
-+		clear_bit(STRIPE_OP_PREXOR, &sh->ops.pending);
-+
-+		for (i=disks; i--;)
-+			clear_bit(R5_Wantprexor, &sh->dev[i].flags);
-+	}
-+
-+	/* if only POSTXOR is set then this is an 'expand' postxor */
-+	if (test_bit(STRIPE_OP_BIODRAIN, &sh->ops.complete) &&
-+		test_bit(STRIPE_OP_POSTXOR, &sh->ops.complete)) {
-+
-+		clear_bit(STRIPE_OP_BIODRAIN, &sh->ops.complete);
-+		clear_bit(STRIPE_OP_BIODRAIN, &sh->ops.ack);
-+		clear_bit(STRIPE_OP_BIODRAIN, &sh->ops.pending);
-+
-+		clear_bit(STRIPE_OP_POSTXOR, &sh->ops.complete);
-+		clear_bit(STRIPE_OP_POSTXOR, &sh->ops.ack);
-+		clear_bit(STRIPE_OP_POSTXOR, &sh->ops.pending);
-+
-+		/* All the 'written' buffers and the parity block are ready to be
-+		 * written back to disk
-+		 */
-+		BUG_ON(!test_bit(R5_UPTODATE, &sh->dev[sh->pd_idx].flags));
-+		for (i=disks; i--;) {
-+			dev = &sh->dev[i];
-+			if (test_bit(R5_LOCKED, &dev->flags) &&
-+				(i == sh->pd_idx || dev->written)) {
-+				PRINTK("Writing block %d\n", i);
-+				set_bit(R5_Wantwrite, &dev->flags);
-+				if (!test_and_set_bit(STRIPE_OP_IO, &sh->ops.pending))
-+					sh->ops.count++;
-+				if (!test_bit(R5_Insync, &dev->flags)
-+				    || (i==sh->pd_idx && failed == 0))
-+					set_bit(STRIPE_INSYNC, &sh->state);
-+			}
-+		}
-+		if (test_and_clear_bit(STRIPE_PREREAD_ACTIVE, &sh->state)) {
-+			atomic_dec(&conf->preread_active_stripes);
-+			if (atomic_read(&conf->preread_active_stripes) < IO_THRESHOLD)
-+				md_wakeup_thread(conf->mddev->thread);
-+		}
-+	}
-+
-+	/* 1/ Now to consider new write requests and what else, if anything should be read
-+	 * 2/ Check operations clobber the parity block so do not start new writes while
-+	 *    a check is in flight
-+	 * 3/ Write operations do not stack
-+	 */
-+	if (to_write && !test_bit(STRIPE_OP_POSTXOR, &sh->ops.pending) &&
-+		!test_bit(STRIPE_OP_CHECK, &sh->ops.pending)) {
- 		int rmw=0, rcw=0;
- 		for (i=disks ; i--;) {
- 			/* would I have to read this buffer for read_modify_write */
-@@ -2219,25 +2346,8 @@ static void handle_stripe5(struct stripe_head *sh)
- 			}
- 		/* now if nothing is locked, and if we have enough data, we can start a write request */
- 		if (locked == 0 && (rcw == 0 ||rmw == 0) &&
--		    !test_bit(STRIPE_BIT_DELAY, &sh->state)) {
--			PRINTK("Computing parity...\n");
--			compute_parity5(sh, rcw==0 ? RECONSTRUCT_WRITE : READ_MODIFY_WRITE);
--			/* now every locked buffer is ready to be written */
--			for (i=disks; i--;)
--				if (test_bit(R5_LOCKED, &sh->dev[i].flags)) {
--					PRINTK("Writing block %d\n", i);
--					locked++;
--					set_bit(R5_Wantwrite, &sh->dev[i].flags);
--					if (!test_bit(R5_Insync, &sh->dev[i].flags)
--					    || (i==sh->pd_idx && failed == 0))
--						set_bit(STRIPE_INSYNC, &sh->state);
--				}
--			if (test_and_clear_bit(STRIPE_PREREAD_ACTIVE, &sh->state)) {
--				atomic_dec(&conf->preread_active_stripes);
--				if (atomic_read(&conf->preread_active_stripes) < IO_THRESHOLD)
--					md_wakeup_thread(conf->mddev->thread);
--			}
--		}
-+		    !test_bit(STRIPE_BIT_DELAY, &sh->state))
-+			locked += handle_write_operations5(sh, rcw, 0);
- 	}
- 
- 	/* maybe we need to check and possibly fix the parity for this stripe
+ static void handle_stripe6(struct stripe_head *sh, struct page *tmp_page)
