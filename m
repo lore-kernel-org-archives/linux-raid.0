@@ -1,215 +1,113 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH 2.6.21-rc4 07/15] md: move raid5 compute block operations to
-	raid5_run_ops
-Date: Thu, 22 Mar 2007 23:52:12 -0700
-Message-ID: <20070323065212.15570.38346.stgit@dwillia2-linux.ch.intel.com>
+Subject: [PATCH 2.6.21-rc4 10/15] md: use async_tx and raid5_run_ops for raid5
+	expansion operations
+Date: Thu, 22 Mar 2007 23:52:28 -0700
+Message-ID: <20070323065228.15570.85214.stgit@dwillia2-linux.ch.intel.com>
 References: <20070323064856.15570.45052.stgit@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1422686AbXCWGwi@vger.kernel.org>
 In-Reply-To: <20070323064856.15570.45052.stgit@dwillia2-linux.ch.intel.com>
-Sender: linux-raid-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: neilb@suse.de, christopher.leech@intel.com, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 Cc: akpm@linux-foundation.org, torvalds@linux-foundation.org, yur@emcraft.com, wd@denx.de, arjan@linux.intel.com, rmk+kernel@arm.linux.org.uk
 List-Id: linux-raid.ids
 
-handle_stripe sets STRIPE_OP_COMPUTE_BLK to request servicing from
-raid5_run_ops.  It also sets a flag for the block being computed to let
-other parts of handle_stripe submit dependent operations.  raid5_run_ops
-guarantees that the compute operation completes before any dependent
-operation starts.
+The parity calculation for an expansion operation is the same as the
+calculation performed at the end of a write with the caveat that all blocks
+in the stripe are scheduled to be written.  An expansion operation is
+identified as a stripe with the POSTXOR flag set and the BIODRAIN flag not
+set.
+
+The bulk copy operation to the new stripe is handled inline by async_tx.
 
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
 
- drivers/md/raid5.c |  125 +++++++++++++++++++++++++++++++++++++++-------------
- 1 files changed, 93 insertions(+), 32 deletions(-)
+ drivers/md/raid5.c |   48 ++++++++++++++++++++++++++++++++++++------------
+ 1 files changed, 36 insertions(+), 12 deletions(-)
 
 diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 4d1adb5..9856742 100644
+index bcd23fb..84a3f35 100644
 --- a/drivers/md/raid5.c
 +++ b/drivers/md/raid5.c
-@@ -1980,7 +1980,7 @@ static void handle_stripe5(struct stripe_head *sh)
- 	int i;
- 	int syncing, expanding, expanded;
- 	int locked=0, uptodate=0, to_read=0, to_write=0, failed=0, written=0;
--	int non_overwrite = 0;
-+	int compute=0, req_compute=0, non_overwrite=0;
- 	int failed_num=0;
- 	struct r5dev *dev;
- 	unsigned long pending=0;
-@@ -2032,8 +2032,8 @@ static void handle_stripe5(struct stripe_head *sh)
- 		/* now count some things */
- 		if (test_bit(R5_LOCKED, &dev->flags)) locked++;
- 		if (test_bit(R5_UPTODATE, &dev->flags)) uptodate++;
-+		if (test_bit(R5_Wantcompute, &dev->flags)) BUG_ON(++compute > 1);
- 
--		
- 		if (dev->toread) to_read++;
- 		if (dev->towrite) {
- 			to_write++;
-@@ -2188,31 +2188,82 @@ static void handle_stripe5(struct stripe_head *sh)
- 	 * parity, or to satisfy requests
- 	 * or to load a block that is being partially written.
- 	 */
--	if (to_read || non_overwrite || (syncing && (uptodate < disks)) || expanding) {
--		for (i=disks; i--;) {
--			dev = &sh->dev[i];
--			if (!test_bit(R5_LOCKED, &dev->flags) && !test_bit(R5_UPTODATE, &dev->flags) &&
--			    (dev->toread ||
--			     (dev->towrite && !test_bit(R5_OVERWRITE, &dev->flags)) ||
--			     syncing ||
--			     expanding ||
--			     (failed && (sh->dev[failed_num].toread ||
--					 (sh->dev[failed_num].towrite && !test_bit(R5_OVERWRITE, &sh->dev[failed_num].flags))))
--				    )
--				) {
--				/* we would like to get this block, possibly
--				 * by computing it, but we might not be able to
-+	if (to_read || non_overwrite || (syncing && (uptodate + compute < disks)) || expanding ||
-+		test_bit(STRIPE_OP_COMPUTE_BLK, &sh->ops.pending)) {
-+
-+		/* Clear completed compute operations.  Parity recovery
-+		 * (STRIPE_OP_MOD_REPAIR_PD) implies a write-back which is handled
-+		 * later on in this routine
-+		 */
-+		if (test_bit(STRIPE_OP_COMPUTE_BLK, &sh->ops.complete) &&
-+			!test_bit(STRIPE_OP_MOD_REPAIR_PD, &sh->ops.pending)) {
-+			clear_bit(STRIPE_OP_COMPUTE_BLK, &sh->ops.complete);
-+			clear_bit(STRIPE_OP_COMPUTE_BLK, &sh->ops.ack);
-+			clear_bit(STRIPE_OP_COMPUTE_BLK, &sh->ops.pending);
-+		}
-+
-+		/* look for blocks to read/compute, skip this if a compute
-+		 * is already in flight, or if the stripe contents are in the
-+		 * midst of changing due to a write
-+		 */
-+		if (!test_bit(STRIPE_OP_COMPUTE_BLK, &sh->ops.pending) &&
-+			!test_bit(STRIPE_OP_PREXOR, &sh->ops.pending) &&
-+			!test_bit(STRIPE_OP_POSTXOR, &sh->ops.pending)) {
-+			for (i=disks; i--;) {
-+				dev = &sh->dev[i];
-+
-+				/* don't schedule compute operations or reads on
-+				 * the parity block while a check is in flight
- 				 */
--				if (uptodate == disks-1) {
--					PRINTK("Computing block %d\n", i);
--					compute_block(sh, i);
--					uptodate++;
--				} else if (test_bit(R5_Insync, &dev->flags)) {
--					set_bit(R5_LOCKED, &dev->flags);
--					set_bit(R5_Wantread, &dev->flags);
--					locked++;
--					PRINTK("Reading block %d (sync=%d)\n", 
--						i, syncing);
-+				if ((i == sh->pd_idx) && test_bit(STRIPE_OP_CHECK, &sh->ops.pending))
-+					continue;
-+
-+				if (!test_bit(R5_LOCKED, &dev->flags) && !test_bit(R5_UPTODATE, &dev->flags) &&
-+				     (dev->toread ||
-+				     (dev->towrite && !test_bit(R5_OVERWRITE, &dev->flags)) ||
-+				     syncing ||
-+				     expanding ||
-+				     (failed && (sh->dev[failed_num].toread ||
-+						 (sh->dev[failed_num].towrite &&
-+						 	!test_bit(R5_OVERWRITE, &sh->dev[failed_num].flags))))
-+					    )
-+					) {
-+					/* 1/ We would like to get this block, possibly
-+					 * by computing it, but we might not be able to.
-+					 *
-+					 * 2/ Since parity check operations potentially
-+					 * make the parity block !uptodate it will need
-+					 * to be refreshed before any compute operations
-+					 * on data disks are scheduled.
-+					 *
-+					 * 3/ We hold off parity block re-reads until check
-+					 * operations have quiesced.
-+					 */
-+					if ((uptodate == disks-1) && !test_bit(STRIPE_OP_CHECK, &sh->ops.pending)) {
-+						set_bit(STRIPE_OP_COMPUTE_BLK, &sh->ops.pending);
-+						set_bit(R5_Wantcompute, &dev->flags);
-+						sh->ops.target = i;
-+						BUG_ON(req_compute++);
-+						sh->ops.count++;
-+						/* Careful: from this point on 'uptodate' is in the eye of
-+						 * raid5_run_ops which services 'compute' operations before
-+						 * writes. R5_Wantcompute flags a block that will be R5_UPTODATE
-+						 * by the time it is needed for a subsequent operation.
-+						 */
-+						uptodate++;
-+					} else if ((uptodate < disks-1) && test_bit(R5_Insync, &dev->flags)) {
-+						/* Note: we hold off compute operations while checks are in flight,
-+						 * but we still prefer 'compute' over 'read' hence we only read if
-+						 * (uptodate < disks-1)
-+						 */
-+						set_bit(R5_LOCKED, &dev->flags);
-+						set_bit(R5_Wantread, &dev->flags);
-+						if (!test_and_set_bit(STRIPE_OP_IO, &sh->ops.pending))
-+							sh->ops.count++;
-+						locked++;
-+						PRINTK("Reading block %d (sync=%d)\n",
-+							i, syncing);
-+					}
- 				}
- 			}
+@@ -2511,18 +2511,32 @@ static void handle_stripe5(struct stripe_head *sh)
  		}
-@@ -2287,7 +2338,7 @@ static void handle_stripe5(struct stripe_head *sh)
- 			if ((dev->towrite || i == sh->pd_idx) &&
- 			    (!test_bit(R5_LOCKED, &dev->flags) 
- 				    ) &&
--			    !test_bit(R5_UPTODATE, &dev->flags)) {
-+			    !(test_bit(R5_UPTODATE, &dev->flags) || test_bit(R5_Wantcompute, &dev->flags))) {
- 				if (test_bit(R5_Insync, &dev->flags)
- /*				    && !(!mddev->insync && i == sh->pd_idx) */
- 					)
-@@ -2298,7 +2349,7 @@ static void handle_stripe5(struct stripe_head *sh)
- 			if (!test_bit(R5_OVERWRITE, &dev->flags) && i != sh->pd_idx &&
- 			    (!test_bit(R5_LOCKED, &dev->flags) 
- 				    ) &&
--			    !test_bit(R5_UPTODATE, &dev->flags)) {
-+			    !(test_bit(R5_UPTODATE, &dev->flags) || test_bit(R5_Wantcompute, &dev->flags))) {
- 				if (test_bit(R5_Insync, &dev->flags)) rcw++;
- 				else rcw += 2*disks;
- 			}
-@@ -2311,7 +2362,8 @@ static void handle_stripe5(struct stripe_head *sh)
- 			for (i=disks; i--;) {
- 				dev = &sh->dev[i];
- 				if ((dev->towrite || i == sh->pd_idx) &&
--				    !test_bit(R5_LOCKED, &dev->flags) && !test_bit(R5_UPTODATE, &dev->flags) &&
-+				    !test_bit(R5_LOCKED, &dev->flags) &&
-+				    !(test_bit(R5_UPTODATE, &dev->flags) || test_bit(R5_Wantcompute, &dev->flags)) &&
- 				    test_bit(R5_Insync, &dev->flags)) {
- 					if (test_bit(STRIPE_PREREAD_ACTIVE, &sh->state))
- 					{
-@@ -2330,7 +2382,8 @@ static void handle_stripe5(struct stripe_head *sh)
- 			for (i=disks; i--;) {
- 				dev = &sh->dev[i];
- 				if (!test_bit(R5_OVERWRITE, &dev->flags) && i != sh->pd_idx &&
--				    !test_bit(R5_LOCKED, &dev->flags) && !test_bit(R5_UPTODATE, &dev->flags) &&
-+				    !test_bit(R5_LOCKED, &dev->flags) &&
-+				    !(test_bit(R5_UPTODATE, &dev->flags) || test_bit(R5_Wantcompute, &dev->flags)) &&
- 				    test_bit(R5_Insync, &dev->flags)) {
- 					if (test_bit(STRIPE_PREREAD_ACTIVE, &sh->state))
- 					{
-@@ -2345,8 +2398,16 @@ static void handle_stripe5(struct stripe_head *sh)
+ 	}
+ 
+-	if (expanded && test_bit(STRIPE_EXPANDING, &sh->state)) {
+-		/* Need to write out all blocks after computing parity */
+-		sh->disks = conf->raid_disks;
+-		sh->pd_idx = stripe_to_pdidx(sh->sector, conf, conf->raid_disks);
+-		compute_parity5(sh, RECONSTRUCT_WRITE);
++	/* Finish postxor operations initiated by the expansion
++	 * process
++	 */
++	if (test_bit(STRIPE_OP_POSTXOR, &sh->ops.complete) &&
++		!test_bit(STRIPE_OP_BIODRAIN, &sh->ops.pending)) {
++
++		clear_bit(STRIPE_EXPANDING, &sh->state);
++
++		clear_bit(STRIPE_OP_POSTXOR, &sh->ops.pending);
++		clear_bit(STRIPE_OP_POSTXOR, &sh->ops.ack);
++		clear_bit(STRIPE_OP_POSTXOR, &sh->ops.complete);
++
+ 		for (i= conf->raid_disks; i--;) {
+-			set_bit(R5_LOCKED, &sh->dev[i].flags);
+-			locked++;
+ 			set_bit(R5_Wantwrite, &sh->dev[i].flags);
++			if (!test_and_set_bit(STRIPE_OP_IO, &sh->ops.pending))
++				sh->ops.count++;
+ 		}
+-		clear_bit(STRIPE_EXPANDING, &sh->state);
+-	} else if (expanded) {
++	}
++
++	if (expanded && test_bit(STRIPE_EXPANDING, &sh->state) &&
++		!test_bit(STRIPE_OP_POSTXOR, &sh->ops.pending)) {
++		/* Need to write out all blocks after computing parity */
++		sh->disks = conf->raid_disks;
++		sh->pd_idx = stripe_to_pdidx(sh->sector, conf, conf->raid_disks);
++		locked += handle_write_operations5(sh, 0, 1);
++	} else if (expanded && !test_bit(STRIPE_OP_POSTXOR, &sh->ops.pending)) {
+ 		clear_bit(STRIPE_EXPAND_READY, &sh->state);
+ 		atomic_dec(&conf->reshape_stripes);
+ 		wake_up(&conf->wait_for_overlap);
+@@ -2533,6 +2547,7 @@ static void handle_stripe5(struct stripe_head *sh)
+ 		/* We have read all the blocks in this stripe and now we need to
+ 		 * copy some of them into a target stripe for expand.
+ 		 */
++		struct dma_async_tx_descriptor *tx = NULL;
+ 		clear_bit(STRIPE_EXPAND_SOURCE, &sh->state);
+ 		for (i=0; i< sh->disks; i++)
+ 			if (i != sh->pd_idx) {
+@@ -2556,9 +2571,12 @@ static void handle_stripe5(struct stripe_head *sh)
+ 					release_stripe(sh2);
+ 					continue;
  				}
+-				memcpy(page_address(sh2->dev[dd_idx].page),
+-				       page_address(sh->dev[i].page),
+-				       STRIPE_SIZE);
++
++				/* place all the copies on one channel */
++				tx = async_memcpy(sh2->dev[dd_idx].page,
++					sh->dev[i].page, 0, 0, STRIPE_SIZE,
++					ASYNC_TX_DEP_ACK, tx, NULL, NULL);
++
+ 				set_bit(R5_Expanded, &sh2->dev[dd_idx].flags);
+ 				set_bit(R5_UPTODATE, &sh2->dev[dd_idx].flags);
+ 				for (j=0; j<conf->raid_disks; j++)
+@@ -2570,6 +2588,12 @@ static void handle_stripe5(struct stripe_head *sh)
+ 					set_bit(STRIPE_HANDLE, &sh2->state);
+ 				}
+ 				release_stripe(sh2);
++
++				/* done submitting copies, wait for them to complete */
++				if (i + 1 >= sh->disks) {
++					async_tx_ack(tx);
++					dma_wait_for_async_tx(tx);
++				}
  			}
- 		/* now if nothing is locked, and if we have enough data, we can start a write request */
--		if (locked == 0 && (rcw == 0 ||rmw == 0) &&
--		    !test_bit(STRIPE_BIT_DELAY, &sh->state))
-+		/* since handle_stripe can be called at any time we need to handle the case
-+		 * where a compute block operation has been submitted and then a subsequent
-+		 * call wants to start a write request.  raid5_run_ops only handles the case where
-+		 * compute block and postxor are requested simultaneously.  If this
-+		 * is not the case then new writes need to be held off until the compute
-+		 * completes.
-+		 */
-+		if ((req_compute || !test_bit(STRIPE_OP_COMPUTE_BLK, &sh->ops.pending)) &&
-+			(locked == 0 && (rcw == 0 ||rmw == 0) &&
-+			!test_bit(STRIPE_BIT_DELAY, &sh->state)))
- 			locked += handle_write_operations5(sh, rcw, 0);
  	}
  
