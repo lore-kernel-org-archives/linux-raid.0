@@ -1,130 +1,39 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH 2.6.21-rc4 08/15] md: move raid5 parity checks to raid5_run_ops
-Date: Thu, 22 Mar 2007 23:52:18 -0700
-Message-ID: <20070323065218.15570.19058.stgit@dwillia2-linux.ch.intel.com>
-References: <20070323064856.15570.45052.stgit@dwillia2-linux.ch.intel.com>
+From: Peter Rabbitson <rabbit@rabbit.us>
+Subject: Re: XFS sunit/swidth for raid10
+Date: Fri, 23 Mar 2007 09:20:32 +0100
+Message-ID: <46038DD0.1060803@rabbit.us>
+References: <4601BE85.8050005@rabbit.us> <Pine.LNX.4.64.0703220108270.13419@twinlark.arctic.org> <460270F4.1080604@rabbit.us> <Pine.LNX.4.64.0703222347450.9269@twinlark.arctic.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20070323064856.15570.45052.stgit@dwillia2-linux.ch.intel.com>
+In-Reply-To: <Pine.LNX.4.64.0703222347450.9269@twinlark.arctic.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de, christopher.leech@intel.com, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: akpm@linux-foundation.org, torvalds@linux-foundation.org, yur@emcraft.com, wd@denx.de, arjan@linux.intel.com, rmk+kernel@arm.linux.org.uk
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-handle_stripe sets STRIPE_OP_CHECK to request a check operation in
-raid5_run_ops.  If raid5_run_ops is able to perform the check with a
-dma engine the parity will be preserved in memory removing the need to
-re-read it from disk, as is necessary in the synchronous case.
+dean gaudet wrote:
+> On Thu, 22 Mar 2007, Peter Rabbitson wrote:
+> 
+>> dean gaudet wrote:
+>>> On Thu, 22 Mar 2007, Peter Rabbitson wrote:
+>>>
+>>>> Hi,
+>>>> How does one determine the XFS sunit and swidth sizes for a software
+>>>> raid10
+>>>> with 3 copies?
+>>> mkfs.xfs uses the GET_ARRAY_INFO ioctl to get the data it needs from
+>>> software raid and select an appropriate sunit/swidth...
+>>>
+>>> although i'm not sure i agree entirely with its choice for raid10:
+>> So do I, especially as it makes no checks for the amount of copies (3 in my
+>> case, not 2).
+>>
+>>> it probably doesn't matter.
+>> This was essentially my question. For an array -pf3 -c1024 I get swidth = 4 *
+>> sunit = 4MiB. Is it about right and does it matter at all?
+> 
+> how many drives?
+> 
 
-'Repair' operations re-use the same logic as compute block, with the caveat
-that the results of the compute block are immediately written back to the
-parity disk.  To differentiate these operations the STRIPE_OP_MOD_REPAIR_PD
-flag is added.
-
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
-
- drivers/md/raid5.c |   81 ++++++++++++++++++++++++++++++++++++++++------------
- 1 files changed, 62 insertions(+), 19 deletions(-)
-
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 9856742..17a114c 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -2411,32 +2411,75 @@ static void handle_stripe5(struct stripe_head *sh)
- 			locked += handle_write_operations5(sh, rcw, 0);
- 	}
- 
--	/* maybe we need to check and possibly fix the parity for this stripe
--	 * Any reads will already have been scheduled, so we just see if enough data
--	 * is available
-+	/* 1/ Maybe we need to check and possibly fix the parity for this stripe.
-+	 *    Any reads will already have been scheduled, so we just see if enough data
-+	 *    is available.
-+	 * 2/ Hold off parity checks while parity dependent operations are in flight
-+	 *    (conflicting writes are protected by the 'locked' variable)
- 	 */
--	if (syncing && locked == 0 &&
--	    !test_bit(STRIPE_INSYNC, &sh->state)) {
-+	if ((syncing && locked == 0 && !test_bit(STRIPE_OP_COMPUTE_BLK, &sh->ops.pending) &&
-+		!test_bit(STRIPE_INSYNC, &sh->state)) ||
-+	    	test_bit(STRIPE_OP_CHECK, &sh->ops.pending) ||
-+	    	test_bit(STRIPE_OP_MOD_REPAIR_PD, &sh->ops.pending)) {
-+
- 		set_bit(STRIPE_HANDLE, &sh->state);
--		if (failed == 0) {
--			BUG_ON(uptodate != disks);
--			compute_parity5(sh, CHECK_PARITY);
--			uptodate--;
--			if (page_is_zero(sh->dev[sh->pd_idx].page)) {
--				/* parity is correct (on disc, not in buffer any more) */
--				set_bit(STRIPE_INSYNC, &sh->state);
--			} else {
--				conf->mddev->resync_mismatches += STRIPE_SECTORS;
--				if (test_bit(MD_RECOVERY_CHECK, &conf->mddev->recovery))
--					/* don't try to repair!! */
-+		/* Take one of the following actions:
-+		 * 1/ start a check parity operation if (uptodate == disks)
-+		 * 2/ finish a check parity operation and act on the result
-+		 * 3/ skip to the writeback section if we previously
-+		 *    initiated a recovery operation
-+		 */
-+		if (failed == 0 && !test_bit(STRIPE_OP_MOD_REPAIR_PD, &sh->ops.pending)) {
-+			if (!test_and_set_bit(STRIPE_OP_CHECK, &sh->ops.pending)) {
-+				BUG_ON(uptodate != disks);
-+				clear_bit(R5_UPTODATE, &sh->dev[sh->pd_idx].flags);
-+				sh->ops.count++;
-+				uptodate--;
-+			} else if (test_and_clear_bit(STRIPE_OP_CHECK, &sh->ops.complete)) {
-+				clear_bit(STRIPE_OP_CHECK, &sh->ops.ack);
-+				clear_bit(STRIPE_OP_CHECK, &sh->ops.pending);
-+
-+				if (sh->ops.zero_sum_result == 0)
-+					/* parity is correct (on disc, not in buffer any more) */
- 					set_bit(STRIPE_INSYNC, &sh->state);
- 				else {
--					compute_block(sh, sh->pd_idx);
--					uptodate++;
-+					conf->mddev->resync_mismatches += STRIPE_SECTORS;
-+					if (test_bit(MD_RECOVERY_CHECK, &conf->mddev->recovery))
-+						/* don't try to repair!! */
-+						set_bit(STRIPE_INSYNC, &sh->state);
-+					else {
-+						BUG_ON(test_and_set_bit(
-+							STRIPE_OP_COMPUTE_BLK,
-+							&sh->ops.pending));
-+						set_bit(STRIPE_OP_MOD_REPAIR_PD,
-+							&sh->ops.pending);
-+						BUG_ON(test_and_set_bit(R5_Wantcompute,
-+							&sh->dev[sh->pd_idx].flags));
-+						sh->ops.target = sh->pd_idx;
-+						sh->ops.count++;
-+						uptodate++;
-+					}
- 				}
- 			}
- 		}
--		if (!test_bit(STRIPE_INSYNC, &sh->state)) {
-+
-+		/* check if we can clear a parity disk reconstruct */
-+		if (test_bit(STRIPE_OP_COMPUTE_BLK, &sh->ops.complete) &&
-+			test_bit(STRIPE_OP_MOD_REPAIR_PD, &sh->ops.pending)) {
-+
-+			clear_bit(STRIPE_OP_MOD_REPAIR_PD, &sh->ops.pending);
-+			clear_bit(STRIPE_OP_COMPUTE_BLK, &sh->ops.complete);
-+			clear_bit(STRIPE_OP_COMPUTE_BLK, &sh->ops.ack);
-+			clear_bit(STRIPE_OP_COMPUTE_BLK, &sh->ops.pending);
-+		}
-+
-+		/* Wait for check parity and compute block operations to complete
-+		 * before write-back
-+		 */
-+		if (!test_bit(STRIPE_INSYNC, &sh->state) &&
-+			!test_bit(STRIPE_OP_CHECK, &sh->ops.pending) &&
-+			!test_bit(STRIPE_OP_COMPUTE_BLK, &sh->ops.pending)) {
-+
- 			/* either failed parity check, or recovery is happening */
- 			if (failed==0)
- 				failed_num = sh->pd_idx;
+Sorry. 4 drives, 3 far copies (so any 2 drives can fail), 1M chunk.
