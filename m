@@ -1,117 +1,49 @@
-From: linux@horizon.com
-Subject: Re: 2.6.20.3 AMD64 oops in CFQ code
-Date: 23 Mar 2007 13:46:30 -0400
-Message-ID: <20070323174630.31051.qmail@science.horizon.com>
-References: <17923.8970.917375.917772@notabene.brown>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: Swap initialised as an md?
+Date: Fri, 23 Mar 2007 16:22:09 -0400
+Message-ID: <460436F1.2080003@tmr.com>
+References: <20061110102955.ljws9mgxf4o4kgw8@my.pengus.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17923.8970.917375.917772@notabene.brown>
+In-Reply-To: <20061110102955.ljws9mgxf4o4kgw8@my.pengus.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: dan.j.williams@intel.com, linux-ide@vger.kernel.org, neilb@suse.de
-Cc: cebbert@redhat.com, jens.axboe@oracle.com, linux-kernel@dale.us, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux@horizon.com
+To: David <lists@edeca.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-As an additional data point, here's a libata problem I'm having trying to
-rebuild the array.
+David wrote:
+> I have two devices mirrored which are partitioned like this:
+>
+>    Device Boot      Start         End      Blocks   Id  System
+> /dev/sda1   *          63    30716279    15358108+  fd  Linux raid 
+> autodetect
+> /dev/sda2        30716280    71682029    20482875   fd  Linux raid 
+> autodetect
+> /dev/sda3        71682030   112647779    20482875   fd  Linux raid 
+> autodetect
+> /dev/sda4       112647780   156248189    21800205    5  Extended
+> /dev/sda5       112647843   122881184     5116671   82  Linux swap / 
+> Solaris
+> /dev/sda6       122881248   156248189    16683471   fd  Linux raid 
+> autodetect
+>
+> My aim was to have the two swap partitions both mounted, no RAID (as I 
+> didn't see any benefit to that, but if I'm wrong then I'd appreciate 
+> being told!).  However it seems that sda5 seems to be recognised as an 
+> md anyway at boot, so swapon does not work correctly.  When 
+> initialising the partitions with mkswap, the RAID array is confused 
+> and refuses to boot until the superblocks are fixed.
+If you use RAID0 on an array it will be faster (usually) than just 
+partitions, but any process with swapped pages will crash if you lose 
+either drive. With RAID1 operation will be more reliable but no faster. 
+If you use RAID10 the array will be faster and more reliable, but most 
+recovery CDs don't know about RAID10 swap. Any reliable swap will also 
+have the array size smaller than the sum of the partitions (you knew that).
 
-I have six identical 400 GB drives (ST3400832AS), and one is giving
-me hassles.  I've run SMART short and long diagnostics, badblocks, and
-Seagate's "seatools" diagnostic software, and none of these find problems.
-It is the only one of the six with a non-zero reallocated sector count
-(it's 26).
+-- 
+bill davidsen <davidsen@tmr.com>
+  CTO TMR Associates, Inc
+  Doing interesting things with small computers since 1979
 
-Anyway, the drive is partitioned into a 45G RAID-10 part and a 350G RAID-5
-part.  The RAID-10 part integrated successfully, but the RAID-5 got to
-about 60% and then puked:
-
-ata5.00: exception Emask 0x0 SAct 0x1ef SErr 0x0 action 0x2 frozen
-ata5.00: cmd 61/c0:00:d2:d0:b9/00:00:1c:00:00/40 tag 0 cdb 0x0 data 98304 out
-         res 40/00:01:01:4f:c2/00:00:00:00:00/00 Emask 0x4 (timeout)
-ata5.00: cmd 61/40:08:92:d1:b9/00:00:1c:00:00/40 tag 1 cdb 0x0 data 32768 out
-         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
-ata5.00: cmd 61/00:10:d2:d1:b9/01:00:1c:00:00/40 tag 2 cdb 0x0 data 131072 out
-         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
-ata5.00: cmd 61/00:18:d2:d2:b9/01:00:1c:00:00/40 tag 3 cdb 0x0 data 131072 out
-         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
-ata5.00: cmd 61/00:28:d2:d3:b9/01:00:1c:00:00/40 tag 5 cdb 0x0 data 131072 out
-         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
-ata5.00: cmd 61/00:30:d2:d4:b9/01:00:1c:00:00/40 tag 6 cdb 0x0 data 131072 out
-         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
-ata5.00: cmd 61/00:38:d2:d5:b9/01:00:1c:00:00/40 tag 7 cdb 0x0 data 131072 out
-         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
-ata5.00: cmd 61/00:40:d2:d6:b9/01:00:1c:00:00/40 tag 8 cdb 0x0 data 131072 out
-         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
-ata5: soft resetting port
-ata5: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-ata5.00: configured for UDMA/100
-ata5: EH complete
-SCSI device sde: 781422768 512-byte hdwr sectors (400088 MB)
-sde: Write Protect is off
-SCSI device sde: write cache: enabled, read cache: enabled, doesn't support DPO or FUA
-ata5.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-ata5.00: cmd ea/00:00:00:00:00/00:00:00:00:00/a0 tag 0 cdb 0x0 data 0 
-         res 40/00:01:01:4f:c2/00:00:00:00:00/00 Emask 0x4 (timeout)
-ata5: soft resetting port
-ata5: softreset failed (timeout)
-ata5: softreset failed, retrying in 5 secs
-ata5: hard resetting port
-ata5: softreset failed (timeout)
-ata5: follow-up softreset failed, retrying in 5 secs
-ata5: hard resetting port
-ata5: softreset failed (timeout)
-ata5: reset failed, giving up
-ata5.00: disabled
-ata5: EH complete
-sd 4:0:0:0: SCSI error: return code = 0x00040000
-end_request: I/O error, dev sde, sector 91795259
-md: super_written gets error=-5, uptodate=0
-raid10: Disk failure on sde3, disabling device. 
-        Operation continuing on 5 devices
-sd 4:0:0:0: SCSI error: return code = 0x00040000
-end_request: I/O error, dev sde, sector 481942994
-raid5: Disk failure on sde4, disabling device. Operation continuing on 5 devices
-sd 4:0:0:0: SCSI error: return code = 0x00040000
-end_request: I/O error, dev sde, sector 481944018
-md: md5: recovery done.
-RAID10 conf printout:
- --- wd:5 rd:6
- disk 0, wo:0, o:1, dev:sdb3
- disk 1, wo:0, o:1, dev:sdc3
- disk 2, wo:0, o:1, dev:sdd3
- disk 3, wo:1, o:0, dev:sde3
- disk 4, wo:0, o:1, dev:sdf3
- disk 5, wo:0, o:1, dev:sda3
-RAID10 conf printout:
- --- wd:5 rd:6
- disk 0, wo:0, o:1, dev:sdb3
- disk 1, wo:0, o:1, dev:sdc3
- disk 2, wo:0, o:1, dev:sdd3
- disk 4, wo:0, o:1, dev:sdf3
- disk 5, wo:0, o:1, dev:sda3
-RAID5 conf printout:
- --- rd:6 wd:5
- disk 0, o:1, dev:sda4
- disk 1, o:1, dev:sdb4
- disk 2, o:1, dev:sdc4
- disk 3, o:1, dev:sdd4
- disk 4, o:0, dev:sde4
- disk 5, o:1, dev:sdf4
-RAID5 conf printout:
- --- rd:6 wd:5
- disk 0, o:1, dev:sda4
- disk 1, o:1, dev:sdb4
- disk 2, o:1, dev:sdc4
- disk 3, o:1, dev:sdd4
- disk 5, o:1, dev:sdf4
-
-The first error address is just barely inside the RAID-10 part (which ends at
-sector 91,795,410), while the second and third errors (at 481,942,994)
-look like where the reconstruction was working.
-
-
-Anyway, what's annoying is that I can't figure out how to bring the
-drive back on line without resetting the box.  It's in a hot-swap enclosure,
-but power cycling the drive doesn't seem to help.  I thought libata hotplug
-was working?  (SiI3132 card, using the sil24 driver.)
-
-(H'm... after rebooting, reallocated sectors jumped from 26 to 39.
-Something is up with that drive.)
