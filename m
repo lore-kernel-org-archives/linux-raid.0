@@ -1,884 +1,160 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH 2.6.21-rc4 14/15] iop13xx: Surface the iop13xx adma units to
-	the iop-adma driver
-Date: Thu, 22 Mar 2007 23:52:48 -0700
-Message-ID: <20070323065248.15570.80376.stgit@dwillia2-linux.ch.intel.com>
+Subject: [PATCH 2.6.21-rc4 05/15] md: use raid5_run_ops for stripe cache
+	operations
+Date: Thu, 22 Mar 2007 23:52:02 -0700
+Message-ID: <20070323065202.15570.78438.stgit@dwillia2-linux.ch.intel.com>
 References: <20070323064856.15570.45052.stgit@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1422652AbXCWGwQ@vger.kernel.org>
 In-Reply-To: <20070323064856.15570.45052.stgit@dwillia2-linux.ch.intel.com>
-Sender: linux-raid-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: neilb@suse.de, christopher.leech@intel.com, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 Cc: akpm@linux-foundation.org, torvalds@linux-foundation.org, yur@emcraft.com, wd@denx.de, arjan@linux.intel.com, rmk+kernel@arm.linux.org.uk
 List-Id: linux-raid.ids
 
-Adds the platform device definitions and the architecture specific
-support routines (i.e. register initialization and descriptor formats) for the
-iop-adma driver.
-
-Changelog:
-* added 'descriptor pool size' to the platform data
-* add base support for buffer sizes larger than 16MB (hw max)
-* build error fix from Kirill A. Shutemov
-* rebase for async_tx changes
-* add interrupt support
-* do not call platform register macros in driver code
+Each stripe has three flag variables to reflect the state of operations
+(pending, ack, and complete).
+-pending: set to request servicing in raid5_run_ops
+-ack: set to reflect that raid5_runs_ops has seen this request
+-complete: set when the operation is complete and it is ok for handle_stripe5
+to clear 'pending' and 'ack'.
 
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
 
- arch/arm/mach-iop13xx/setup.c          |  194 +++++++++++
- include/asm-arm/arch-iop13xx/adma.h    |  545 ++++++++++++++++++++++++++++++++
- include/asm-arm/arch-iop13xx/iop13xx.h |   34 +-
- 3 files changed, 752 insertions(+), 21 deletions(-)
+ drivers/md/raid5.c |   65 +++++++++++++++++++++++++++++++++++++++++++++-------
+ 1 files changed, 56 insertions(+), 9 deletions(-)
 
-diff --git a/arch/arm/mach-iop13xx/setup.c b/arch/arm/mach-iop13xx/setup.c
-index 9a46bcd..43189c8 100644
---- a/arch/arm/mach-iop13xx/setup.c
-+++ b/arch/arm/mach-iop13xx/setup.c
-@@ -25,6 +25,7 @@
- #include <asm/hardware.h>
- #include <asm/irq.h>
- #include <asm/io.h>
-+#include <asm/hardware/iop_adma.h>
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index b7185a1..0397e33 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -126,6 +126,7 @@ static void __release_stripe(raid5_conf_t *conf, struct stripe_head *sh)
+ 			}
+ 			md_wakeup_thread(conf->mddev->thread);
+ 		} else {
++			BUG_ON(sh->ops.pending);
+ 			if (test_and_clear_bit(STRIPE_PREREAD_ACTIVE, &sh->state)) {
+ 				atomic_dec(&conf->preread_active_stripes);
+ 				if (atomic_read(&conf->preread_active_stripes) < IO_THRESHOLD)
+@@ -225,7 +226,8 @@ static void init_stripe(struct stripe_head *sh, sector_t sector, int pd_idx, int
  
- #define IOP13XX_UART_XTAL 33334000
- #define IOP13XX_SETUP_DEBUG 0
-@@ -236,6 +237,140 @@ static unsigned long iq8134x_probe_flash_size(void)
- }
- #endif
+ 	BUG_ON(atomic_read(&sh->count) != 0);
+ 	BUG_ON(test_bit(STRIPE_HANDLE, &sh->state));
+-	
++	BUG_ON(sh->ops.pending || sh->ops.ack || sh->ops.complete);
++
+ 	CHECK_DEVLOCK();
+ 	PRINTK("init_stripe called, stripe %llu\n", 
+ 		(unsigned long long)sh->sector);
+@@ -241,11 +243,11 @@ static void init_stripe(struct stripe_head *sh, sector_t sector, int pd_idx, int
+ 	for (i = sh->disks; i--; ) {
+ 		struct r5dev *dev = &sh->dev[i];
  
-+/* ADMA Channels */
-+static struct resource iop13xx_adma_0_resources[] = {
-+	[0] = {
-+		.start = IOP13XX_ADMA_PHYS_BASE(0),
-+		.end = IOP13XX_ADMA_UPPER_PA(0),
-+		.flags = IORESOURCE_MEM,
-+	},
-+	[1] = {
-+		.start = IRQ_IOP13XX_ADMA0_EOT,
-+		.end = IRQ_IOP13XX_ADMA0_EOT,
-+		.flags = IORESOURCE_IRQ
-+	},
-+	[2] = {
-+		.start = IRQ_IOP13XX_ADMA0_EOC,
-+		.end = IRQ_IOP13XX_ADMA0_EOC,
-+		.flags = IORESOURCE_IRQ
-+	},
-+	[3] = {
-+		.start = IRQ_IOP13XX_ADMA0_ERR,
-+		.end = IRQ_IOP13XX_ADMA0_ERR,
-+		.flags = IORESOURCE_IRQ
-+	}
-+};
-+
-+static struct resource iop13xx_adma_1_resources[] = {
-+	[0] = {
-+		.start = IOP13XX_ADMA_PHYS_BASE(1),
-+		.end = IOP13XX_ADMA_UPPER_PA(1),
-+		.flags = IORESOURCE_MEM,
-+	},
-+	[1] = {
-+		.start = IRQ_IOP13XX_ADMA1_EOT,
-+		.end = IRQ_IOP13XX_ADMA1_EOT,
-+		.flags = IORESOURCE_IRQ
-+	},
-+	[2] = {
-+		.start = IRQ_IOP13XX_ADMA1_EOC,
-+		.end = IRQ_IOP13XX_ADMA1_EOC,
-+		.flags = IORESOURCE_IRQ
-+	},
-+	[3] = {
-+		.start = IRQ_IOP13XX_ADMA1_ERR,
-+		.end = IRQ_IOP13XX_ADMA1_ERR,
-+		.flags = IORESOURCE_IRQ
-+	}
-+};
-+
-+static struct resource iop13xx_adma_2_resources[] = {
-+	[0] = {
-+		.start = IOP13XX_ADMA_PHYS_BASE(2),
-+		.end = IOP13XX_ADMA_UPPER_PA(2),
-+		.flags = IORESOURCE_MEM,
-+	},
-+	[1] = {
-+		.start = IRQ_IOP13XX_ADMA2_EOT,
-+		.end = IRQ_IOP13XX_ADMA2_EOT,
-+		.flags = IORESOURCE_IRQ
-+	},
-+	[2] = {
-+		.start = IRQ_IOP13XX_ADMA2_EOC,
-+		.end = IRQ_IOP13XX_ADMA2_EOC,
-+		.flags = IORESOURCE_IRQ
-+	},
-+	[3] = {
-+		.start = IRQ_IOP13XX_ADMA2_ERR,
-+		.end = IRQ_IOP13XX_ADMA2_ERR,
-+		.flags = IORESOURCE_IRQ
-+	}
-+};
-+
-+static u64 iop13xx_adma_dmamask = DMA_64BIT_MASK;
-+static struct iop_adma_platform_data iop13xx_adma_0_data = {
-+	.hw_id = 0,
-+	.capabilities =	DMA_CAP_MEMCPY | DMA_CAP_XOR | DMA_CAP_DUAL_XOR |
-+			DMA_CAP_ZERO_SUM | DMA_CAP_MEMSET |
-+			DMA_CAP_MEMCPY_CRC32C | DMA_CAP_INTERRUPT,
-+	.pool_size = PAGE_SIZE,
-+};
-+
-+static struct iop_adma_platform_data iop13xx_adma_1_data = {
-+	.hw_id = 1,
-+	.capabilities =	DMA_CAP_MEMCPY | DMA_CAP_XOR | DMA_CAP_DUAL_XOR |
-+			DMA_CAP_ZERO_SUM | DMA_CAP_MEMSET |
-+			DMA_CAP_MEMCPY_CRC32C | DMA_CAP_INTERRUPT,
-+	.pool_size = PAGE_SIZE,
-+};
-+
-+static struct iop_adma_platform_data iop13xx_adma_2_data = {
-+	.hw_id = 2,
-+	.capabilities =	DMA_CAP_MEMCPY | DMA_CAP_XOR | DMA_CAP_DUAL_XOR |
-+			DMA_CAP_ZERO_SUM | DMA_CAP_MEMSET |
-+			DMA_CAP_MEMCPY_CRC32C | DMA_CAP_PQ_XOR |
-+			DMA_CAP_PQ_UPDATE | DMA_CAP_PQ_ZERO_SUM |
-+			DMA_CAP_INTERRUPT,
-+	.pool_size = PAGE_SIZE,
-+};
-+
-+/* The ids are fixed up later in iop13xx_platform_init */
-+static struct platform_device iop13xx_adma_0_channel = {
-+	.name = "IOP-ADMA",
-+	.id = 0,
-+	.num_resources = 4,
-+	.resource = iop13xx_adma_0_resources,
-+	.dev = {
-+		.dma_mask = &iop13xx_adma_dmamask,
-+		.coherent_dma_mask = DMA_64BIT_MASK,
-+		.platform_data = (void *) &iop13xx_adma_0_data,
-+	},
-+};
-+
-+static struct platform_device iop13xx_adma_1_channel = {
-+	.name = "IOP-ADMA",
-+	.id = 0,
-+	.num_resources = 4,
-+	.resource = iop13xx_adma_1_resources,
-+	.dev = {
-+		.dma_mask = &iop13xx_adma_dmamask,
-+		.coherent_dma_mask = DMA_64BIT_MASK,
-+		.platform_data = (void *) &iop13xx_adma_1_data,
-+	},
-+};
-+
-+static struct platform_device iop13xx_adma_2_channel = {
-+	.name = "IOP-ADMA",
-+	.id = 0,
-+	.num_resources = 4,
-+	.resource = iop13xx_adma_2_resources,
-+	.dev = {
-+		.dma_mask = &iop13xx_adma_dmamask,
-+		.coherent_dma_mask = DMA_64BIT_MASK,
-+		.platform_data = (void *) &iop13xx_adma_2_data,
-+	},
-+};
-+
- void __init iop13xx_map_io(void)
- {
- 	/* Initialize the Static Page Table maps */
-@@ -244,11 +379,12 @@ void __init iop13xx_map_io(void)
- 
- static int init_uart = 0;
- static int init_i2c = 0;
-+static int init_adma = 0;
- 
- void __init iop13xx_platform_init(void)
- {
- 	int i;
--	u32 uart_idx, i2c_idx, plat_idx;
-+	u32 uart_idx, i2c_idx, adma_idx, plat_idx;
- 	struct platform_device *iop13xx_devices[IQ81340_MAX_PLAT_DEVICES];
- 
- 	/* set the bases so we can read the device id */
-@@ -298,6 +434,12 @@ void __init iop13xx_platform_init(void)
+-		if (dev->toread || dev->towrite || dev->written ||
++		if (dev->toread || dev->read || dev->towrite || dev->written ||
+ 		    test_bit(R5_LOCKED, &dev->flags)) {
+-			printk("sector=%llx i=%d %p %p %p %d\n",
++			printk("sector=%llx i=%d %p %p %p %p %d\n",
+ 			       (unsigned long long)sh->sector, i, dev->toread,
+-			       dev->towrite, dev->written,
++			       dev->read, dev->towrite, dev->written,
+ 			       test_bit(R5_LOCKED, &dev->flags));
+ 			BUG();
  		}
- 	}
- 
-+	if (init_adma == IOP13XX_INIT_ADMA_DEFAULT) {
-+		init_adma |= IOP13XX_INIT_ADMA_0;
-+		init_adma |= IOP13XX_INIT_ADMA_1;
-+		init_adma |= IOP13XX_INIT_ADMA_2;
-+	}
-+
- 	plat_idx = 0;
- 	uart_idx = 0;
- 	i2c_idx = 0;
-@@ -336,6 +478,26 @@ void __init iop13xx_platform_init(void)
- 		}
- 	}
- 
-+	adma_idx = 0;
-+	for(i = 0; i < IQ81340_NUM_ADMA; i++) {
-+		if ((init_adma & (1 << i)) && IOP13XX_SETUP_DEBUG)
-+			printk("Adding adma%d to platform device list\n", i);
-+		switch(init_adma & (1 << i)) {
-+		case IOP13XX_INIT_ADMA_0:
-+			iop13xx_adma_0_channel.id = adma_idx++;
-+			iop13xx_devices[plat_idx++] = &iop13xx_adma_0_channel;
-+			break;
-+		case IOP13XX_INIT_ADMA_1:
-+			iop13xx_adma_1_channel.id = adma_idx++;
-+			iop13xx_devices[plat_idx++] = &iop13xx_adma_1_channel;
-+			break;
-+		case IOP13XX_INIT_ADMA_2:
-+			iop13xx_adma_2_channel.id = adma_idx++;
-+			iop13xx_devices[plat_idx++] = &iop13xx_adma_2_channel;
-+			break;
-+		}
-+	}
-+
- #ifdef CONFIG_MTD_PHYSMAP
- 	iq8134x_flash_resource.end = iq8134x_flash_resource.start +
- 				iq8134x_probe_flash_size() - 1;
-@@ -403,5 +565,35 @@ static int __init iop13xx_init_i2c_setup(char *str)
- 	return 1;
+@@ -325,6 +327,43 @@ static struct stripe_head *get_active_stripe(raid5_conf_t *conf, sector_t sector
+ 	return sh;
  }
  
-+static int __init iop13xx_init_adma_setup(char *str)
-+{
-+	if (str)	{
-+		while (*str != '\0') {
-+			switch(*str) {
-+			case '0':
-+				init_adma |= IOP13XX_INIT_ADMA_0;
-+				break;
-+			case '1':
-+				init_adma |= IOP13XX_INIT_ADMA_1;
-+				break;
-+			case '2':
-+				init_adma |= IOP13XX_INIT_ADMA_2;
-+				break;
-+			case ',':
-+			case '=':
-+				break;
-+			default:
-+				PRINTK("\"iop13xx_init_adma\" malformed"
-+					    " at character: \'%c\'", *str);
-+				*(str + 1) = '\0';
-+				init_adma = IOP13XX_INIT_ADMA_DEFAULT;
-+			}
-+			str++;
-+		}
-+	}
-+	return 1;
-+}
++/* check_op() ensures that we only dequeue an operation once */
++#define check_op(op) do {\
++	if (test_bit(op, &sh->ops.pending) &&\
++		!test_bit(op, &sh->ops.complete)) {\
++		if (test_and_set_bit(op, &sh->ops.ack))\
++			clear_bit(op, &pending);\
++		else\
++			ack++;\
++	} else\
++		clear_bit(op, &pending);\
++} while(0)
 +
-+__setup("iop13xx_init_adma", iop13xx_init_adma_setup);
- __setup("iop13xx_init_uart", iop13xx_init_uart_setup);
- __setup("iop13xx_init_i2c", iop13xx_init_i2c_setup);
-diff --git a/include/asm-arm/arch-iop13xx/adma.h b/include/asm-arm/arch-iop13xx/adma.h
-new file mode 100644
-index 0000000..f0a5041
---- /dev/null
-+++ b/include/asm-arm/arch-iop13xx/adma.h
-@@ -0,0 +1,545 @@
-+/*
-+ * Copyright(c) 2006 Intel Corporation. All rights reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms of the GNU General Public License as published by the Free
-+ * Software Foundation; either version 2 of the License, or (at your option)
-+ * any later version.
-+ *
-+ * This program is distributed in the hope that it will be useful, but WITHOUT
-+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-+ * more details.
-+ *
-+ * You should have received a copy of the GNU General Public License along with
-+ * this program; if not, write to the Free Software Foundation, Inc., 59
-+ * Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-+ *
-+ * The full GNU General Public License is included in this distribution in the
-+ * file called COPYING.
++/* find new work to run, do not resubmit work that is already
++ * in flight
 + */
-+#ifndef _ADMA_H
-+#define _ADMA_H
-+#include <linux/types.h>
-+#include <asm/io.h>
-+#include <asm/hardware.h>
-+#include <asm/hardware/iop_adma.h>
-+
-+#define ADMA_ACCR(chan)	(chan->mmr_base + 0x0)
-+#define ADMA_ACSR(chan)	(chan->mmr_base + 0x4)
-+#define ADMA_ADAR(chan)	(chan->mmr_base + 0x8)
-+#define ADMA_IIPCR(chan)	(chan->mmr_base + 0x18)
-+#define ADMA_IIPAR(chan)	(chan->mmr_base + 0x1c)
-+#define ADMA_IIPUAR(chan)	(chan->mmr_base + 0x20)
-+#define ADMA_ANDAR(chan)	(chan->mmr_base + 0x24)
-+#define ADMA_ADCR(chan)	(chan->mmr_base + 0x28)
-+#define ADMA_CARMD(chan)	(chan->mmr_base + 0x2c)
-+#define ADMA_ABCR(chan)	(chan->mmr_base + 0x30)
-+#define ADMA_DLADR(chan)	(chan->mmr_base + 0x34)
-+#define ADMA_DUADR(chan)	(chan->mmr_base + 0x38)
-+#define ADMA_SLAR(src, chan)	(chan->mmr_base + (0x3c + (src <<3)))
-+#define ADMA_SUAR(src, chan)	(chan->mmr_base + (0x40 + (src <<3)))
-+
-+struct iop13xx_adma_src {
-+	u32 src_addr;
-+	union {
-+		u32 upper_src_addr;
-+		struct {
-+			unsigned int pq_upper_src_addr:24;
-+			unsigned int pq_dmlt:8;
-+		};
-+	};
-+};
-+
-+struct iop13xx_adma_desc_ctrl {
-+	unsigned int int_en:1;
-+	unsigned int xfer_dir:2;
-+	unsigned int src_select:4;
-+	unsigned int zero_result:1;
-+	unsigned int block_fill_en:1;
-+	unsigned int crc_gen_en:1;
-+	unsigned int crc_xfer_dis:1;
-+	unsigned int crc_seed_fetch_dis:1;
-+	unsigned int status_write_back_en:1;
-+	unsigned int endian_swap_en:1;
-+	unsigned int reserved0:2;
-+	unsigned int pq_update_xfer_en:1;
-+	unsigned int dual_xor_en:1;
-+	unsigned int pq_xfer_en:1;
-+	unsigned int p_xfer_dis:1;
-+	unsigned int reserved1:10;
-+	unsigned int relax_order_en:1;
-+	unsigned int no_snoop_en:1;
-+};
-+
-+struct iop13xx_adma_byte_count {
-+	unsigned int byte_count:24;
-+	unsigned int host_if:3;
-+	unsigned int reserved:2;
-+	unsigned int zero_result_err_q:1;
-+	unsigned int zero_result_err:1;
-+	unsigned int tx_complete:1;
-+};
-+
-+struct iop13xx_adma_desc_hw {
-+	u32 next_desc;
-+	union {
-+		u32 desc_ctrl;
-+		struct iop13xx_adma_desc_ctrl desc_ctrl_field;
-+	};
-+	union {
-+		u32 crc_addr;
-+		u32 block_fill_data;
-+		u32 q_dest_addr;
-+	};
-+	union {
-+		u32 byte_count;
-+		struct iop13xx_adma_byte_count byte_count_field;
-+	};
-+	union {
-+		u32 dest_addr;
-+		u32 p_dest_addr;
-+	};
-+	union {
-+		u32 upper_dest_addr;
-+		u32 pq_upper_dest_addr;
-+	};
-+	struct iop13xx_adma_src src[1];
-+};
-+
-+struct iop13xx_adma_desc_dual_xor {
-+	u32 next_desc;
-+	u32 desc_ctrl;
-+	u32 reserved;
-+	u32 byte_count;
-+	u32 h_dest_addr;
-+	u32 h_upper_dest_addr;
-+	u32 src0_addr;
-+	u32 upper_src0_addr;
-+	u32 src1_addr;
-+	u32 upper_src1_addr;
-+	u32 h_src_addr;
-+	u32 h_upper_src_addr;
-+	u32 d_src_addr;
-+	u32 d_upper_src_addr;
-+	u32 d_dest_addr;
-+	u32 d_upper_dest_addr;
-+};
-+
-+struct iop13xx_adma_desc_pq_update {
-+	u32 next_desc;
-+	u32 desc_ctrl;
-+	u32 reserved;
-+	u32 byte_count;
-+	u32 p_dest_addr;
-+	u32 p_upper_dest_addr;
-+	u32 src0_addr;
-+	u32 upper_src0_addr;
-+	u32 src1_addr;
-+	u32 upper_src1_addr;
-+	u32 p_src_addr;
-+	u32 p_upper_src_addr;
-+	u32 q_src_addr;
-+	struct {
-+		unsigned int q_upper_src_addr:24;
-+		unsigned int q_dmlt:8;
-+	};
-+	u32 q_dest_addr;
-+	u32 q_upper_dest_addr;
-+};
-+
-+static inline int iop_adma_get_max_xor(void)
++static unsigned long get_stripe_work(struct stripe_head *sh)
 +{
-+	return 16;
++	unsigned long pending;
++	int ack = 0;
++
++	pending = sh->ops.pending;
++
++	check_op(STRIPE_OP_BIOFILL);
++	check_op(STRIPE_OP_COMPUTE_BLK);
++	check_op(STRIPE_OP_PREXOR);
++	check_op(STRIPE_OP_BIODRAIN);
++	check_op(STRIPE_OP_POSTXOR);
++	check_op(STRIPE_OP_CHECK);
++	if (test_and_clear_bit(STRIPE_OP_IO, &sh->ops.pending))
++		ack++;
++
++	sh->ops.count -= ack;
++	BUG_ON(sh->ops.count < 0);
++
++	return pending;
 +}
 +
-+static inline u32 iop_chan_get_current_descriptor(struct iop_adma_chan *chan)
-+{
-+	return __raw_readl(ADMA_ADAR(chan));
-+}
+ static int
+ raid5_end_read_request(struct bio * bi, unsigned int bytes_done, int error);
+ static int
+@@ -1859,7 +1898,6 @@ static int stripe_to_pdidx(sector_t stripe, raid5_conf_t *conf, int disks)
+  *    schedule a write of some buffers
+  *    return confirmation of parity correctness
+  *
+- * Parity calculations are done inside the stripe lock
+  * buffers are taken off read_list or write_list, and bh_cache buffers
+  * get BH_Lock set before the stripe lock is released.
+  *
+@@ -1877,10 +1915,11 @@ static void handle_stripe5(struct stripe_head *sh)
+ 	int non_overwrite = 0;
+ 	int failed_num=0;
+ 	struct r5dev *dev;
++	unsigned long pending=0;
+ 
+-	PRINTK("handling stripe %llu, cnt=%d, pd_idx=%d\n",
+-		(unsigned long long)sh->sector, atomic_read(&sh->count),
+-		sh->pd_idx);
++	PRINTK("handling stripe %llu, state=%#lx cnt=%d, pd_idx=%d ops=%lx:%lx:%lx\n",
++	       (unsigned long long)sh->sector, sh->state, atomic_read(&sh->count),
++	       sh->pd_idx, sh->ops.pending, sh->ops.ack, sh->ops.complete);
+ 
+ 	spin_lock(&sh->lock);
+ 	clear_bit(STRIPE_HANDLE, &sh->state);
+@@ -2330,8 +2369,14 @@ static void handle_stripe5(struct stripe_head *sh)
+ 			}
+ 	}
+ 
++	if (sh->ops.count)
++		pending = get_stripe_work(sh);
 +
-+static inline void iop_chan_set_next_descriptor(struct iop_adma_chan *chan,
-+						u32 next_desc_addr)
-+{
-+	__raw_writel(next_desc_addr, ADMA_ANDAR(chan));
-+}
+ 	spin_unlock(&sh->lock);
+ 
++	if (pending)
++		raid5_run_ops(sh, pending);
 +
-+#define ADMA_STATUS_BUSY (1 << 13)
-+
-+static inline char iop_chan_is_busy(struct iop_adma_chan *chan)
-+{
-+	if (__raw_readl(ADMA_ACSR(chan)) &
-+		ADMA_STATUS_BUSY)
-+		return 1;
-+	else
-+		return 0;
-+}
-+
-+static inline int iop_chan_get_desc_align(struct iop_adma_chan *chan, int num_slots)
-+{
-+	return 1;
-+}
-+#define iop_desc_is_aligned(x, y) 1
-+
-+static inline int iop_chan_memcpy_slot_count(size_t len, int *slots_per_op)
-+{
-+	*slots_per_op = 1;
-+	return 1;
-+}
-+
-+#define iop_chan_interrupt_slot_count(s, c) iop_chan_memcpy_slot_count(0, s)
-+
-+static inline int iop_chan_memset_slot_count(size_t len, int *slots_per_op)
-+{
-+	*slots_per_op = 1;
-+	return 1;
-+}
-+
-+static inline int iop_chan_xor_slot_count(size_t len, int src_cnt, int *slots_per_op)
-+{
-+	int num_slots;
-+	/* slots_to_find = 1 for basic descriptor + 1 per 4 sources above 1
-+	 * (1 source => 8 bytes) (1 slot => 32 bytes)
-+	 */
-+	num_slots = 1 + (((src_cnt - 1) << 3) >> 5);
-+	if (((src_cnt - 1) << 3) & 0x1f)
-+		num_slots++;
-+
-+	*slots_per_op = num_slots;
-+
-+	return num_slots;
-+}
-+
-+#define ADMA_MAX_BYTE_COUNT	(16 * 1024 * 1024)
-+#define IOP_ADMA_MAX_BYTE_COUNT ADMA_MAX_BYTE_COUNT
-+#define IOP_ADMA_ZERO_SUM_MAX_BYTE_COUNT ADMA_MAX_BYTE_COUNT
-+#define IOP_ADMA_XOR_MAX_BYTE_COUNT ADMA_MAX_BYTE_COUNT
-+#define iop_chan_zero_sum_slot_count(l, s, o) iop_chan_xor_slot_count(l, s, o)
-+
-+static inline u32 iop_desc_get_dest_addr(struct iop_adma_desc_slot *desc,
-+					struct iop_adma_chan *chan)
-+{
-+	struct iop13xx_adma_desc_hw *hw_desc = desc->hw_desc;
-+	return hw_desc->dest_addr;
-+}
-+
-+static inline u32 iop_desc_get_byte_count(struct iop_adma_desc_slot *desc,
-+					struct iop_adma_chan *chan)
-+{
-+	struct iop13xx_adma_desc_hw *hw_desc = desc->hw_desc;
-+	return hw_desc->byte_count_field.byte_count;
-+}
-+
-+static inline u32 iop_desc_get_src_addr(struct iop_adma_desc_slot *desc,
-+					struct iop_adma_chan *chan,
-+					int src_idx)
-+{
-+	struct iop13xx_adma_desc_hw *hw_desc = desc->hw_desc;
-+	return hw_desc->src[src_idx].src_addr;
-+}
-+
-+static inline u32 iop_desc_get_src_count(struct iop_adma_desc_slot *desc,
-+					struct iop_adma_chan *chan)
-+{
-+	struct iop13xx_adma_desc_hw *hw_desc = desc->hw_desc;
-+	return hw_desc->desc_ctrl_field.src_select + 1;
-+}
-+
-+static inline void
-+iop_desc_init_memcpy(struct iop_adma_desc_slot *desc, int int_en)
-+{
-+	struct iop13xx_adma_desc_hw *hw_desc = desc->hw_desc;
-+	union {
-+		u32 value;
-+		struct iop13xx_adma_desc_ctrl field;
-+	} u_desc_ctrl;
-+
-+	u_desc_ctrl.value = 0;
-+	u_desc_ctrl.field.xfer_dir = 3; /* local to internal bus */
-+	u_desc_ctrl.field.int_en = int_en;
-+	hw_desc->desc_ctrl = u_desc_ctrl.value;
-+	hw_desc->crc_addr = 0;
-+}
-+
-+static inline void
-+iop_desc_init_memset(struct iop_adma_desc_slot *desc, int int_en)
-+{
-+	struct iop13xx_adma_desc_hw *hw_desc = desc->hw_desc;
-+	union {
-+		u32 value;
-+		struct iop13xx_adma_desc_ctrl field;
-+	} u_desc_ctrl;
-+
-+	u_desc_ctrl.value = 0;
-+	u_desc_ctrl.field.xfer_dir = 3; /* local to internal bus */
-+	u_desc_ctrl.field.block_fill_en = 1;
-+	u_desc_ctrl.field.int_en = int_en;
-+	hw_desc->desc_ctrl = u_desc_ctrl.value;
-+	hw_desc->crc_addr = 0;
-+}
-+
-+/* to do: support buffers larger than ADMA_MAX_BYTE_COUNT */
-+static inline void
-+iop_desc_init_xor(struct iop_adma_desc_slot *desc, int src_cnt, int int_en)
-+{
-+	struct iop13xx_adma_desc_hw *hw_desc = desc->hw_desc;
-+	union {
-+		u32 value;
-+		struct iop13xx_adma_desc_ctrl field;
-+	} u_desc_ctrl;
-+
-+	u_desc_ctrl.value = 0;
-+	u_desc_ctrl.field.src_select = src_cnt - 1;
-+	u_desc_ctrl.field.xfer_dir = 3; /* local to internal bus */
-+	u_desc_ctrl.field.int_en = int_en;
-+	hw_desc->desc_ctrl = u_desc_ctrl.value;
-+	hw_desc->crc_addr = 0;
-+
-+}
-+#define iop_desc_init_null_xor(d, s, i) iop_desc_init_xor(d, s, i)
-+
-+/* to do: support buffers larger than ADMA_MAX_BYTE_COUNT */
-+static inline int
-+iop_desc_init_zero_sum(struct iop_adma_desc_slot *desc, int src_cnt, int int_en)
-+{
-+	struct iop13xx_adma_desc_hw *hw_desc = desc->hw_desc;
-+	union {
-+		u32 value;
-+		struct iop13xx_adma_desc_ctrl field;
-+	} u_desc_ctrl;
-+
-+	u_desc_ctrl.value = 0;
-+	u_desc_ctrl.field.src_select = src_cnt - 1;
-+	u_desc_ctrl.field.xfer_dir = 3; /* local to internal bus */
-+	u_desc_ctrl.field.zero_result = 1;
-+	u_desc_ctrl.field.status_write_back_en = 1;
-+	u_desc_ctrl.field.int_en = int_en;
-+	hw_desc->desc_ctrl = u_desc_ctrl.value;
-+	hw_desc->crc_addr = 0;
-+
-+	return 1;
-+}
-+
-+static inline void iop_desc_set_byte_count(struct iop_adma_desc_slot *desc,
-+					struct iop_adma_chan *chan,
-+					u32 byte_count)
-+{
-+	struct iop13xx_adma_desc_hw *hw_desc = desc->hw_desc;
-+	hw_desc->byte_count = byte_count;
-+}
-+
-+static inline void iop_desc_set_zero_sum_byte_count(struct iop_adma_desc_slot *desc,
-+					u32 len)
-+{
-+	int slots_per_op = desc->slots_per_op;
-+	struct iop13xx_adma_desc_hw *hw_desc = desc->hw_desc, *iter;
-+	int i = 0;
-+
-+	if (len <= IOP_ADMA_ZERO_SUM_MAX_BYTE_COUNT) {
-+		hw_desc->byte_count = len;
-+	} else {
-+		do {
-+			iter = iop_hw_desc_slot_idx(hw_desc, i);
-+			iter->byte_count = IOP_ADMA_ZERO_SUM_MAX_BYTE_COUNT;
-+			len -= IOP_ADMA_ZERO_SUM_MAX_BYTE_COUNT;
-+			i += slots_per_op;
-+		} while (len > IOP_ADMA_ZERO_SUM_MAX_BYTE_COUNT);
-+
-+		if (len) {
-+			iter = iop_hw_desc_slot_idx(hw_desc, i);
-+			iter->byte_count = len;
+ 	while ((bi=return_bi)) {
+ 		int bytes = bi->bi_size;
+ 
+@@ -3828,8 +3873,10 @@ static void raid5d (mddev_t *mddev)
+ 			handled++;
+ 		}
+ 
+-		if (list_empty(&conf->handle_list))
++		if (list_empty(&conf->handle_list)) {
++			async_tx_issue_pending_all();
+ 			break;
 +		}
-+	}
-+}
-+
-+
-+static inline void iop_desc_set_dest_addr(struct iop_adma_desc_slot *desc,
-+					struct iop_adma_chan *chan,
-+					dma_addr_t addr)
-+{
-+	struct iop13xx_adma_desc_hw *hw_desc = desc->hw_desc;
-+	hw_desc->dest_addr = addr;
-+	hw_desc->upper_dest_addr = 0;
-+}
-+
-+static inline void iop_desc_set_memcpy_src_addr(struct iop_adma_desc_slot *desc,
-+					dma_addr_t addr)
-+{
-+	struct iop13xx_adma_desc_hw *hw_desc = desc->hw_desc;
-+	hw_desc->src[0].src_addr = addr;
-+	hw_desc->src[0].upper_src_addr = 0;
-+}
-+
-+static inline void iop_desc_set_xor_src_addr(struct iop_adma_desc_slot *desc,
-+					int src_idx, dma_addr_t addr)
-+{
-+	int slot_cnt = desc->slot_cnt, slots_per_op = desc->slots_per_op;
-+	struct iop13xx_adma_desc_hw *hw_desc = desc->hw_desc, *iter;
-+	int i = 0;
-+
-+	do {
-+		iter = iop_hw_desc_slot_idx(hw_desc, i);
-+		iter->src[src_idx].src_addr = addr;
-+		iter->src[src_idx].upper_src_addr = 0;
-+		slot_cnt -= slots_per_op;
-+		if (slot_cnt) {
-+			i += slots_per_op;
-+			addr += IOP_ADMA_XOR_MAX_BYTE_COUNT;
-+		}
-+	} while (slot_cnt);
-+}
-+
-+static inline void
-+iop_desc_init_interrupt(struct iop_adma_desc_slot *desc,
-+	struct iop_adma_chan *chan)
-+{
-+	iop_desc_init_memcpy(desc, 1);
-+	iop_desc_set_byte_count(desc, chan, 0);
-+	iop_desc_set_dest_addr(desc, chan, 0);
-+	iop_desc_set_memcpy_src_addr(desc, 0);
-+}
-+
-+#define iop_desc_set_zero_sum_src_addr iop_desc_set_xor_src_addr
-+
-+static inline void iop_desc_set_next_desc(struct iop_adma_desc_slot *desc,
-+					u32 next_desc_addr)
-+{
-+	struct iop13xx_adma_desc_hw *hw_desc = desc->hw_desc;
-+	BUG_ON(hw_desc->next_desc);
-+	hw_desc->next_desc = next_desc_addr;
-+}
-+
-+static inline u32 iop_desc_get_next_desc(struct iop_adma_desc_slot *desc)
-+{
-+	struct iop13xx_adma_desc_hw *hw_desc = desc->hw_desc;
-+	return hw_desc->next_desc;
-+}
-+
-+static inline void iop_desc_clear_next_desc(struct iop_adma_desc_slot *desc)
-+{
-+	struct iop13xx_adma_desc_hw *hw_desc = desc->hw_desc;
-+	hw_desc->next_desc = 0;
-+}
-+
-+static inline void iop_desc_set_block_fill_val(struct iop_adma_desc_slot *desc,
-+						u32 val)
-+{
-+	struct iop13xx_adma_desc_hw *hw_desc = desc->hw_desc;
-+	hw_desc->block_fill_data = val;
-+}
-+
-+static inline int iop_desc_get_zero_result(struct iop_adma_desc_slot *desc)
-+{
-+	struct iop13xx_adma_desc_hw *hw_desc = desc->hw_desc;
-+	struct iop13xx_adma_desc_ctrl desc_ctrl = hw_desc->desc_ctrl_field;
-+	struct iop13xx_adma_byte_count byte_count = hw_desc->byte_count_field;
-+
-+	BUG_ON(!(byte_count.tx_complete && desc_ctrl.zero_result));
-+
-+	if(desc_ctrl.pq_xfer_en)
-+		return byte_count.zero_result_err_q;
-+	else
-+		return byte_count.zero_result_err;
-+}
-+
-+static inline void iop_chan_append(struct iop_adma_chan *chan)
-+{
-+	u32 adma_accr;
-+
-+	adma_accr = __raw_readl(ADMA_ACCR(chan));
-+	adma_accr |= 0x2;
-+	__raw_writel(adma_accr, ADMA_ACCR(chan));
-+}
-+
-+static inline void iop_chan_idle(int busy, struct iop_adma_chan *chan)
-+{
-+	do { } while (0);
-+}
-+
-+static inline u32 iop_chan_get_status(struct iop_adma_chan *chan)
-+{
-+	return __raw_readl(ADMA_ACSR(chan));
-+}
-+
-+static inline void iop_chan_disable(struct iop_adma_chan *chan)
-+{
-+	u32 adma_chan_ctrl = __raw_readl(ADMA_ACCR(chan));
-+	adma_chan_ctrl &= ~0x1;
-+	__raw_writel(adma_chan_ctrl, ADMA_ACCR(chan));
-+}
-+
-+static inline void iop_chan_enable(struct iop_adma_chan *chan)
-+{
-+	u32 adma_chan_ctrl;
-+
-+	/* drain write buffer */
-+	asm volatile ("mcr p15, 0, r1, c7, c10, 4" : : : "%r1");
-+	adma_chan_ctrl = __raw_readl(ADMA_ACCR(chan));
-+	adma_chan_ctrl |= 0x1;
-+	__raw_writel(adma_chan_ctrl, ADMA_ACCR(chan));
-+}
-+
-+static inline void iop_adma_device_clear_eot_status(struct iop_adma_chan *chan)
-+{
-+	u32 status = __raw_readl(ADMA_ACSR(chan));
-+	status &= (1 << 12);
-+	__raw_writel(status, ADMA_ACSR(chan));
-+}
-+
-+static inline void iop_adma_device_clear_eoc_status(struct iop_adma_chan *chan)
-+{
-+	u32 status = __raw_readl(ADMA_ACSR(chan));
-+	status &= (1 << 11);
-+	__raw_writel(status, ADMA_ACSR(chan));
-+}
-+
-+static inline void iop_adma_device_clear_err_status(struct iop_adma_chan *chan)
-+{
-+	u32 status = __raw_readl(ADMA_ACSR(chan));
-+	status &= (1 << 9) | (1 << 5) | (1 << 4) | (1 << 3);
-+	__raw_writel(status, ADMA_ACSR(chan));
-+}
-+
-+static inline int
-+iop_is_err_int_parity(unsigned long status, struct iop_adma_chan *chan)
-+{
-+	return test_bit(9, &status);
-+}
-+
-+static inline int
-+iop_is_err_mcu_abort(unsigned long status, struct iop_adma_chan *chan)
-+{
-+	return test_bit(5, &status);
-+}
-+
-+static inline int
-+iop_is_err_int_tabort(unsigned long status, struct iop_adma_chan *chan)
-+{
-+	return test_bit(4, &status);
-+}
-+
-+static inline int
-+iop_is_err_int_mabort(unsigned long status, struct iop_adma_chan *chan)
-+{
-+	return test_bit(3, &status);
-+}
-+
-+static inline int
-+iop_is_err_pci_tabort(unsigned long status, struct iop_adma_chan *chan)
-+{
-+	return 0;
-+}
-+
-+static inline int
-+iop_is_err_pci_mabort(unsigned long status, struct iop_adma_chan *chan)
-+{
-+	return 0;
-+}
-+
-+static inline int
-+iop_is_err_split_tx(unsigned long status, struct iop_adma_chan *chan)
-+{
-+	return 0;
-+}
-+
-+#endif /* _ADMA_H */
-diff --git a/include/asm-arm/arch-iop13xx/iop13xx.h b/include/asm-arm/arch-iop13xx/iop13xx.h
-index d26b755..57c0f7d 100644
---- a/include/asm-arm/arch-iop13xx/iop13xx.h
-+++ b/include/asm-arm/arch-iop13xx/iop13xx.h
-@@ -161,12 +161,22 @@ static inline int iop13xx_cpu_id(void)
- #define IOP13XX_INIT_I2C_1	      (1 << 1)
- #define IOP13XX_INIT_I2C_2	      (1 << 2)
  
--#define IQ81340_NUM_UART     2
--#define IQ81340_NUM_I2C      3
--#define IQ81340_NUM_PHYS_MAP_FLASH 1
-+/* ADMA selection flags */
-+/* INIT_ADMA_DEFAULT = Rely on CONFIG_IOP13XX_ADMA* */
-+#define IOP13XX_INIT_ADMA_DEFAULT     (0)
-+#define IOP13XX_INIT_ADMA_0           (1 << 0)
-+#define IOP13XX_INIT_ADMA_1           (1 << 1)
-+#define IOP13XX_INIT_ADMA_2           (1 << 2)
-+
-+/* Platform devices */
-+#define IQ81340_NUM_UART     		2
-+#define IQ81340_NUM_I2C      		3
-+#define IQ81340_NUM_PHYS_MAP_FLASH	1
-+#define IQ81340_NUM_ADMA     		3
- #define IQ81340_MAX_PLAT_DEVICES (IQ81340_NUM_UART +\
- 				IQ81340_NUM_I2C +\
--				IQ81340_NUM_PHYS_MAP_FLASH)
-+				IQ81340_NUM_PHYS_MAP_FLASH +\
-+				IQ81340_NUM_ADMA)
- 
- /*========================== PMMR offsets for key registers ============*/
- #define IOP13XX_ATU0_PMMR_OFFSET   	0x00048000
-@@ -410,22 +420,6 @@ static inline int iop13xx_cpu_id(void)
- /*==============================ADMA UNITS===============================*/
- #define IOP13XX_ADMA_PHYS_BASE(chan)	IOP13XX_REG_ADDR32_PHYS((chan << 9))
- #define IOP13XX_ADMA_UPPER_PA(chan)	(IOP13XX_ADMA_PHYS_BASE(chan) + 0xc0)
--#define IOP13XX_ADMA_OFFSET(chan, ofs)	IOP13XX_REG_ADDR32((chan << 9) + (ofs))
--
--#define IOP13XX_ADMA_ACCR(chan)      IOP13XX_ADMA_OFFSET(chan, 0x0)
--#define IOP13XX_ADMA_ACSR(chan)      IOP13XX_ADMA_OFFSET(chan, 0x4)
--#define IOP13XX_ADMA_ADAR(chan)      IOP13XX_ADMA_OFFSET(chan, 0x8)
--#define IOP13XX_ADMA_IIPCR(chan)     IOP13XX_ADMA_OFFSET(chan, 0x18)
--#define IOP13XX_ADMA_IIPAR(chan)     IOP13XX_ADMA_OFFSET(chan, 0x1c)
--#define IOP13XX_ADMA_IIPUAR(chan)    IOP13XX_ADMA_OFFSET(chan, 0x20)
--#define IOP13XX_ADMA_ANDAR(chan)     IOP13XX_ADMA_OFFSET(chan, 0x24)
--#define IOP13XX_ADMA_ADCR(chan)      IOP13XX_ADMA_OFFSET(chan, 0x28)
--#define IOP13XX_ADMA_CARMD(chan)     IOP13XX_ADMA_OFFSET(chan, 0x2c)
--#define IOP13XX_ADMA_ABCR(chan)      IOP13XX_ADMA_OFFSET(chan, 0x30)
--#define IOP13XX_ADMA_DLADR(chan)     IOP13XX_ADMA_OFFSET(chan, 0x34)
--#define IOP13XX_ADMA_DUADR(chan)     IOP13XX_ADMA_OFFSET(chan, 0x38)
--#define IOP13XX_ADMA_SLAR(src, chan) IOP13XX_ADMA_OFFSET(chan, 0x3c + (src <<3))
--#define IOP13XX_ADMA_SUAR(src, chan) IOP13XX_ADMA_OFFSET(chan, 0x40 + (src <<3))
- 
- /*==============================XSI BRIDGE===============================*/
- #define IOP13XX_XBG_BECSR		IOP13XX_REG_ADDR32(0x178c)
+ 		first = conf->handle_list.next;
+ 		sh = list_entry(first, struct stripe_head, lru);
