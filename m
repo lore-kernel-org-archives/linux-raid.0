@@ -1,162 +1,55 @@
-From: Robert Stanford <rob@stanford.com.au>
-Subject: addingdrive to raid 1
-Date: Sun, 25 Mar 2007 16:44:49 +1000
-Message-ID: <46061A61.7030806@stanford.com.au>
+From: dean gaudet <dean@arctic.org>
+Subject: Re: XFS sunit/swidth for raid10
+Date: Sun, 25 Mar 2007 12:16:20 -0700 (PDT)
+Message-ID: <Pine.LNX.4.64.0703251214460.30863@twinlark.arctic.org>
+References: <4601BE85.8050005@rabbit.us> <Pine.LNX.4.64.0703220108270.13419@twinlark.arctic.org>
+ <460270F4.1080604@rabbit.us> <Pine.LNX.4.64.0703222347450.9269@twinlark.arctic.org>
+ <46038DD0.1060803@rabbit.us>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <46038DD0.1060803@rabbit.us>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Peter Rabbitson <rabbit@rabbit.us>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi All, Long time Linux software raid user, first real problem.
+On Fri, 23 Mar 2007, Peter Rabbitson wrote:
 
-I built md2 with 1 missing drive and am now trying to add a drive (hda4)
+> dean gaudet wrote:
+> > On Thu, 22 Mar 2007, Peter Rabbitson wrote:
+> > 
+> > > dean gaudet wrote:
+> > > > On Thu, 22 Mar 2007, Peter Rabbitson wrote:
+> > > > 
+> > > > > Hi,
+> > > > > How does one determine the XFS sunit and swidth sizes for a software
+> > > > > raid10
+> > > > > with 3 copies?
+> > > > mkfs.xfs uses the GET_ARRAY_INFO ioctl to get the data it needs from
+> > > > software raid and select an appropriate sunit/swidth...
+> > > > 
+> > > > although i'm not sure i agree entirely with its choice for raid10:
+> > > So do I, especially as it makes no checks for the amount of copies (3 in
+> > > my
+> > > case, not 2).
+> > > 
+> > > > it probably doesn't matter.
+> > > This was essentially my question. For an array -pf3 -c1024 I get swidth =
+> > > 4 *
+> > > sunit = 4MiB. Is it about right and does it matter at all?
+> > 
+> > how many drives?
+> > 
+> 
+> Sorry. 4 drives, 3 far copies (so any 2 drives can fail), 1M chunk.
 
-The partition that is hda4 was previously part of another  raid array 
-md1 that no longer exists.
+my mind continues to be blown by linux raid10.
 
-I have zeroed the superblock in hda4, however when I try to add it it 
-sync's instantly, no rebuild.
+so that's like raid1 on 4 disks except the copies are offset by 1/4th of 
+the disk?
 
-The original raid array md1 is several years old and was built with the 
-old raidtools package.
+i think swidth = 4*sunit is the right config then -- 'cause a read of 4MiB 
+will stride all 4 disks...
 
-I even ran
-dd if=/dev/zero of=/dev/hda4
-just to be sure that nothing was left on the partition from the previous 
-raid setup and still no joy.
-
-Any help would be appreciated
-
-Kind Regards
-Robert Stanford
-
----------------------------------------------------------
-/proc/mdstat
-Personalities : [raid1]
-md2 : active raid1 hdc4[0]
-      72894848 blocks [2/1] [U_]
-
-
-
-mdadm --examine /dev/hdc4
-/dev/hdc4:
-          Magic : a92b4efc
-        Version : 00.90.03
-           UUID : 90844a43:c57dd8a1:5a5eed64:48faee6c
-  Creation Time : Sat Mar 24 06:33:03 2007
-     Raid Level : raid1
-   Raid Devices : 2
-  Total Devices : 1
-Preferred Minor : 2
-
-    Update Time : Sun Mar 25 16:30:59 2007
-          State : clean
- Active Devices : 1
-Working Devices : 1
- Failed Devices : 1
-  Spare Devices : 0
-       Checksum : 32ea145b - correct
-         Events : 0.5610
-
-
-      Number   Major   Minor   RaidDevice State
-this     0      22        4        0      active sync   /dev/hdc4
-
-   0     0      22        4        0      active sync   /dev/hdc4
-   1     1       0        0        1      faulty removed
-
-
-
-mdadm --examine /dev/hda4
-mdadm: No super block found on /dev/hda4 (Expected magic a92b4efc, got 
-00000000)
-
-
-
-mdadm --add /dev/md2 /dev/hda4
-mdadm: hot added /dev/hda4
-
-
-
-Personalities : [raid1]
-md2 : active raid1 hda4[1] hdc4[0]
-      72894848 blocks [2/2] [UU]
-
-
-
- /var/log/kern.log
-Mar 25 16:33:11 server kernel: md: bind<hda4>
-Mar 25 16:33:11 server kernel: RAID1 conf printout:
-Mar 25 16:33:11 server kernel:  --- wd:1 rd:2
-Mar 25 16:33:11 server kernel:  disk 0, wo:0, o:1, dev:hdc4
-Mar 25 16:33:11 server kernel:  disk 1, wo:1, o:1, dev:hda4
-Mar 25 16:33:11 server kernel: md: syncing RAID array md2
-Mar 25 16:33:11 server kernel: md: minimum _guaranteed_ reconstruction 
-speed: 1000 KB/sec/disc.
-Mar 25 16:33:11 server kernel: md: using maximum available idle IO 
-bandwidth (but not more than 200000 KB/sec) for reconstruction.
-Mar 25 16:33:11 server kernel: md: using 128k window, over a total of 
-72894848 blocks.
-Mar 25 16:33:11 server kernel: md: md2: sync done.
-Mar 25 16:33:11 server kernel: RAID1 conf printout:
-Mar 25 16:33:11 server kernel:  --- wd:2 rd:2
-Mar 25 16:33:11 server kernel:  disk 0, wo:0, o:1, dev:hdc4
-Mar 25 16:33:11 server kernel:  disk 1, wo:0, o:1, dev:hda4
-
-
-
-mdadm --set-faulty  /dev/md2 /dev/hda4
-mdadm: set /dev/hda4 faulty in /dev/md2
-mdadm -r  /dev/md2 /dev/hda4
-mdadm: hot removed /dev/hda4
-mdadm --zero-superblock /dev/hda4
-
-
-
-/var/log/kern.log
-Mar 25 16:34:09 server kernel: raid1: Disk failure on hda4, disabling 
-device.
-Mar 25 16:34:09 server kernel: ^IOperation continuing on 1 devices
-Mar 25 16:34:09 server kernel: RAID1 conf printout:
-Mar 25 16:34:09 server kernel:  --- wd:1 rd:2
-Mar 25 16:34:09 server kernel:  disk 0, wo:0, o:1, dev:hdc4
-Mar 25 16:34:09 server kernel:  disk 1, wo:1, o:0, dev:hda4
-Mar 25 16:34:09 server kernel: RAID1 conf printout:
-Mar 25 16:34:09 server kernel:  --- wd:1 rd:2
-Mar 25 16:34:09 server kernel:  disk 0, wo:0, o:1, dev:hdc4
-Mar 25 16:34:13 server kernel: md: unbind<hda4>
-Mar 25 16:34:13 server kernel: md: export_rdev(hda4)
-
-
-
-mdadm --examine /dev/hda4
-/dev/hda4:
-          Magic : a92b4efc
-        Version : 00.90.03
-           UUID : 90844a43:c57dd8a1:5a5eed64:48faee6c
-  Creation Time : Sat Mar 24 06:33:03 2007
-     Raid Level : raid1
-   Raid Devices : 2
-  Total Devices : 2
-Preferred Minor : 2
-
-    Update Time : Sun Mar 25 16:33:11 2007
-          State : clean
- Active Devices : 2
-Working Devices : 2
- Failed Devices : 0
-  Spare Devices : 0
-       Checksum : 32ea14e0 - correct
-         Events : 0.5616
-
-
-      Number   Major   Minor   RaidDevice State
-this     1       3        4        1      active sync   /dev/hda4
-
-   0     0      22        4        0      active sync   /dev/hdc4
-   1     1       3        4        1      active sync   /dev/hda4
-
-
+-dean
