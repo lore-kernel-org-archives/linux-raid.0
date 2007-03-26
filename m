@@ -1,55 +1,50 @@
-From: dean gaudet <dean@arctic.org>
-Subject: Re: XFS sunit/swidth for raid10
-Date: Sun, 25 Mar 2007 12:16:20 -0700 (PDT)
-Message-ID: <Pine.LNX.4.64.0703251214460.30863@twinlark.arctic.org>
-References: <4601BE85.8050005@rabbit.us> <Pine.LNX.4.64.0703220108270.13419@twinlark.arctic.org>
- <460270F4.1080604@rabbit.us> <Pine.LNX.4.64.0703222347450.9269@twinlark.arctic.org>
- <46038DD0.1060803@rabbit.us>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: Swap initialised as an md?
+Date: Sun, 25 Mar 2007 23:45:53 -0400
+Message-ID: <460741F1.5060407@tmr.com>
+References: <20061110102955.ljws9mgxf4o4kgw8@my.pengus.net> <460436F1.2080003@tmr.com> <460439FE.8070605@tls.msk.ru>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <46038DD0.1060803@rabbit.us>
+In-Reply-To: <460439FE.8070605@tls.msk.ru>
 Sender: linux-raid-owner@vger.kernel.org
-To: Peter Rabbitson <rabbit@rabbit.us>
-Cc: linux-raid@vger.kernel.org
+To: Michael Tokarev <mjt@tls.msk.ru>
+Cc: David <lists@edeca.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, 23 Mar 2007, Peter Rabbitson wrote:
+Michael Tokarev wrote:
+> Bill Davidsen wrote:
+> []
+>   
+>> If you use RAID0 on an array it will be faster (usually) than just
+>> partitions, but any process with swapped pages will crash if you lose
+>> either drive. With RAID1 operation will be more reliable but no faster.
+>> If you use RAID10 the array will be faster and more reliable, but most
+>> recovery CDs don't know about RAID10 swap. Any reliable swap will also
+>> have the array size smaller than the sum of the partitions (you knew that).
+>>     
+>
+> You seems to forgot to mention 2 more things:
+>
+>  o swap isn't usually needed for recovery CDs
+>   
+That's system dependent, but at least two report problems with swap if 
+configured as RAID10. Confusing error messages are not a plus when you 
+get to the stage of using a recovery CD. The need for swap depends on 
+configuration.
+>  o kernel vm subsystem already can do equivalent of raid0 for swap internally,
+>    by means of allocating several block devices for swap space with the
+>    same priority.
+>
+> If reliability (of swapped processes) is important, one can create several
+> RAID1 arrays and "raid0 them" using regular vm techniques.  The result will
+> be RAID10 for swap.
 
-> dean gaudet wrote:
-> > On Thu, 22 Mar 2007, Peter Rabbitson wrote:
-> > 
-> > > dean gaudet wrote:
-> > > > On Thu, 22 Mar 2007, Peter Rabbitson wrote:
-> > > > 
-> > > > > Hi,
-> > > > > How does one determine the XFS sunit and swidth sizes for a software
-> > > > > raid10
-> > > > > with 3 copies?
-> > > > mkfs.xfs uses the GET_ARRAY_INFO ioctl to get the data it needs from
-> > > > software raid and select an appropriate sunit/swidth...
-> > > > 
-> > > > although i'm not sure i agree entirely with its choice for raid10:
-> > > So do I, especially as it makes no checks for the amount of copies (3 in
-> > > my
-> > > case, not 2).
-> > > 
-> > > > it probably doesn't matter.
-> > > This was essentially my question. For an array -pf3 -c1024 I get swidth =
-> > > 4 *
-> > > sunit = 4MiB. Is it about right and does it matter at all?
-> > 
-> > how many drives?
-> > 
-> 
-> Sorry. 4 drives, 3 far copies (so any 2 drives can fail), 1M chunk.
+Sorry, no. It will be RAID0+1, not the same thing. See RAID10 description.
 
-my mind continues to be blown by linux raid10.
+-- 
+bill davidsen <davidsen@tmr.com>
+  CTO TMR Associates, Inc
+  Doing interesting things with small computers since 1979
 
-so that's like raid1 on 4 disks except the copies are offset by 1/4th of 
-the disk?
-
-i think swidth = 4*sunit is the right config then -- 'cause a read of 4MiB 
-will stride all 4 disks...
-
--dean
