@@ -1,26 +1,30 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: LILO 22.6.1-9.3 not compatible with SW RAID1 metdata >= 1.0
-Date: Mon, 26 Mar 2007 07:46:20 -0400 (EDT)
-Message-ID: <Pine.LNX.4.64.0703260741270.18194@p34.internal.lan>
+From: "Dan Williams" <dan.j.williams@gmail.com>
+Subject: Re: [PATCH 2.6.21-rc4 01/15] dmaengine: add base support for the async_tx api
+Date: Mon, 26 Mar 2007 09:48:06 -0700
+Message-ID: <e9c3a7c20703260948r46044a2esa38c933495a0008f@mail.gmail.com>
+References: <20070323064856.15570.45052.stgit@dwillia2-linux.ch.intel.com>
+	 <20070323065142.15570.98231.stgit@dwillia2-linux.ch.intel.com>
+	 <200703231718.01770.yur@emcraft.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <200703231718.01770.yur@emcraft.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: johninsd@san.rr.com
+To: Yuri Tikhonov <yur@emcraft.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil,
+On 3/23/07, Yuri Tikhonov <yur@emcraft.com> wrote:
+>  Hi Dan,
+>
+>  Functions dma_async_memcpy_buf_to_buf(), dma_async_memcpy_buf_to_pg() and
+> dma_async_memcpy_pg_to_pg() are practically identical. Maybe it makes sense
+> to extract the common part into a separate inline function? Somehow like
+> this:
+>
+ok, I'll pull this in.
 
-Using: Debian Etch.
-
-I picked this up via http://anti.teamidiot.de/nei/2006/10/softraid_lilo/ 
-via google cache.  Basically, LILO will not even run correctly if the 
-metadata is not 0.90.  After I had done that, LILO ran successfully for 
-the boot md device, but I still could not boot my system until I made all of
-the root raid array volumes with 0.90 metadata.
-
-Any chance the LILO guys will fix this so it works with all forms of MD 
-metadata?
-
-Justin.
+Thanks,
+Dan
