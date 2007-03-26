@@ -1,30 +1,30 @@
-From: "Dan Williams" <dan.j.williams@gmail.com>
-Subject: Re: [PATCH 2.6.21-rc4 01/15] dmaengine: add base support for the async_tx api
-Date: Mon, 26 Mar 2007 09:48:06 -0700
-Message-ID: <e9c3a7c20703260948r46044a2esa38c933495a0008f@mail.gmail.com>
-References: <20070323064856.15570.45052.stgit@dwillia2-linux.ch.intel.com>
-	 <20070323065142.15570.98231.stgit@dwillia2-linux.ch.intel.com>
-	 <200703231718.01770.yur@emcraft.com>
+From: "Ed L. Cashin" <ecashin@coraid.com>
+Subject: md bitmaps on 2.6.16.y
+Date: Mon, 26 Mar 2007 13:27:13 -0400
+Message-ID: <20070326172713.GE19673@coraid.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200703231718.01770.yur@emcraft.com>
 Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Yuri Tikhonov <yur@emcraft.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 3/23/07, Yuri Tikhonov <yur@emcraft.com> wrote:
->  Hi Dan,
->
->  Functions dma_async_memcpy_buf_to_buf(), dma_async_memcpy_buf_to_pg() and
-> dma_async_memcpy_pg_to_pg() are practically identical. Maybe it makes sense
-> to extract the common part into a separate inline function? Somehow like
-> this:
->
-ok, I'll pull this in.
+I have been testing an md RAID 1 created using mdadm 2.6.1 on a
+2.6.16.35 kernel, and the initial results are encouraging.  (The
+2.6.16.y kernel is a long-term stable branch, unlike most stable
+kernels, which are maintained only until the next stable branch
+becomes active.)
 
-Thanks,
-Dan
+I see bitmap-related patches with fixes for later kernels being
+discussed in the linux-raid mailing list, but I do not see
+bitmap-related patches in the ChangeLogs for the 2.6.16.y kernel.  My
+hope is that these fixes are only part of the natural churn in the
+newer kernel branches and are not needed for the 2.6.16.y kernels.
+
+Are there any known issues that would make the use of md bitmaps in a
+2.6.16.y kernel problematic?  I do see an important RAID 1 fix in
+2.6.16.40, so I know that 2.6.16.35 isn't good enough.
+
+-- 
+  Ed L Cashin <ecashin@coraid.com>
