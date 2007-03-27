@@ -1,30 +1,20 @@
-From: "Dirk Jagdmann" <jagdmann@gmail.com>
-Subject: split raid1 into to arrays
-Date: Tue, 27 Mar 2007 04:54:47 +0200
-Message-ID: <5d0f60990703261954l2bb8c225ocbc3cf66e868723a@mail.gmail.com>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Software RAID (non-preempt) server blocking question. (2.6.20.4)
+Date: Tue, 27 Mar 2007 05:59:34 -0400 (EDT)
+Message-ID: <Pine.LNX.4.64.0703270557360.31853@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello experts,
+I ran a check on my SW RAID devices this morning.  However, when I did so, 
+I had a few lftp sessions open pulling files.  After I executed the check, 
+the lftp processes entered 'D' state and I could do 'nothing' in the 
+process until the check finished.  Is this normal?  Should a check block 
+all I/O to the device and put the processes writing to a particular device 
+in 'D' state until it is finished?
 
-I have a raid1 array with two drives working. It /dev/md0 built from
-/dev/hda and /dev/hdb. Now I'd like to split it into two array with
-one drive each (and then later add spares to my two arrays again). I
-know that I can remove one drive from the array with: mdadm /dev/md0
--f /dev/hdb -r /dev/hdb , however I'm not sure what the superblock of
-/dev/hdb now contains and how I could use the contents of /dev/hdb as
-the starting point for my new /dev/md1 array? I did not find anything
-in the manpage of mdadm which would provide me an automatic split.
-
-So what are your advises?
-
--- 
----> Dirk Jagdmann
-----> http://cubic.org/~doj
------> http://llg.cubic.org
+Justin.
