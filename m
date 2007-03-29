@@ -1,44 +1,27 @@
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Subject: Re: Software RAID (non-preempt) server blocking question. (2.6.20.4)
-Date: Thu, 29 Mar 2007 05:56:12 -0300
-Message-ID: <20070329085612.GA19278@khazad-dum.debian.net>
-References: <Pine.LNX.4.64.0703270557360.31853@p34.internal.lan> <17931.23488.160031.119117@notabene.brown> <Pine.LNX.4.64.0703290410260.32099@p34.internal.lan>
+From: "Dirk Jagdmann" <jagdmann@gmail.com>
+Subject: Re: split raid1 into to arrays
+Date: Thu, 29 Mar 2007 12:01:39 +0200
+Message-ID: <5d0f60990703290301o641abce4wb4e2b9e73afe7995@mail.gmail.com>
+References: <5d0f60990703261954l2bb8c225ocbc3cf66e868723a@mail.gmail.com>
+	 <46093ED8.8020201@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <46093ED8.8020201@tmr.com>
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.64.0703290410260.32099@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: Neil Brown <neilb@suse.de>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, 29 Mar 2007, Justin Piszcz wrote:
-> >Did you look at "cat /proc/mdstat" ?? What sort of speed was the check
-> >running at?
-> Around 44MB/s.
-> 
-> I do use the following optimization, perhaps a bad idea if I want other 
-> processes to 'stay alive'?
-> 
-> echo "Setting minimum resync speed to 200MB/s..."
-> echo "This improves the resync speed from 2.1MB/s to 44MB/s"
-> echo 200000 > /sys/block/md0/md/sync_speed_min
-> echo 200000 > /sys/block/md1/md/sync_speed_min
-> echo 200000 > /sys/block/md2/md/sync_speed_min
-> echo 200000 > /sys/block/md3/md/sync_speed_min
-> echo 200000 > /sys/block/md4/md/sync_speed_min
+> The fast way (not redundant):
+>   You can mark hdb as failed, then remove it. Then you can create a new
+> array using hdb and a missing device.
 
-md RAID1 resync reacts *extremely* badly to CFQ.  Just a data point, you may
-want to check on it.  Might mean other RAID types also get screwed, and also
-that md "check" is also disturbed by CFQ (or disturbs CFQ, whatever).
-
-I reverted everything here to non-CFQ while the RAID did its resync (which
-fixed all issues immediately), and we went back to 2.6.16.x later for other
-reasons.
+Used this way and it worked.
 
 -- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+---> Dirk Jagdmann
+----> http://cubic.org/~doj
+-----> http://llg.cubic.org
