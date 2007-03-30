@@ -1,74 +1,99 @@
 From: Bill Davidsen <davidsen@tmr.com>
 Subject: Re: is this raid5 OK ?
-Date: Fri, 30 Mar 2007 21:00:38 -0400
-Message-ID: <460DB2B6.1040207@tmr.com>
-References: <237230840.20070329193857@kaneda.iguw.tuwien.ac.at> <17932.22575.558925.535963@notabene.brown> <460CF7EF.1000203@kaneda.iguw.tuwien.ac.at> <460D3A9F.7010800@tmr.com> <460D55AB.1080309@kaneda.iguw.tuwien.ac.at> <Pine.LNX.4.64.0703301655270.11067@p34.internal.lan>
+Date: Fri, 30 Mar 2007 12:28:15 -0400
+Message-ID: <460D3A9F.7010800@tmr.com>
+References: <237230840.20070329193857@kaneda.iguw.tuwien.ac.at> <17932.22575.558925.535963@notabene.brown> <460CF7EF.1000203@kaneda.iguw.tuwien.ac.at>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0703301655270.11067@p34.internal.lan>
+In-Reply-To: <460CF7EF.1000203@kaneda.iguw.tuwien.ac.at>
 Sender: linux-raid-owner@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: Rainer Fuegenstein <rfu@kaneda.iguw.tuwien.ac.at>, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
+To: Rainer Fuegenstein <rfu@kaneda.iguw.tuwien.ac.at>
+Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Justin Piszcz wrote:
+Rainer Fuegenstein wrote:
+> hi,
 >
-> On Fri, 30 Mar 2007, Rainer Fuegenstein wrote:
+> 1) the kernel was:
+> [root@alfred ~]# uname -a
+> Linux alfred 2.6.19-1.2288.fc5xen0 #1 SMP Sat Feb 10 16:57:02 EST 2007 
+> i686 athlon i386 GNU/Linux
 >
->> Bill Davidsen wrote:
->>
->>> This still looks odd, why should it behave like this. I have created 
->>> a lot of arrays (when I was doing the RAID5 speed testing thread), 
->>> and never had anything like this. I'd like to see dmesg to see if 
->>> there was an error reported regarding this.
->>>
->>> I think there's more going on, the original post showed the array as 
->>> up rather than some building status, also indicates some issue, 
->>> perhaps. What is the partition type of each of these partitions? 
->>> Perhaps there's a clue there.
->>
->> partition type is FD (linux raid autodetect) on all disks.
->>
->> here's some more info:
->> the hardware is pretty old, an 800MHz ASUS board with AMD cpu and an 
->> extra onboard promise IDE controller with two channels. the server 
->> was working well with a 60 GB hda disk (system) and a single 400 GB 
->> disk (hde) for data. kernel was 2.6.19-1.2288.fc5xen0.
->>
->> when I added 3 more 400 GB disks (hdf to hdh) and created the raid5, 
->> the server crashed (rebooted, freezed, ...) as soon as there was more 
->> activity on the raid (kernel panics indicating trouble with 
->> interrupts, inpage errors etc.) I then upgraded to a 400W power 
->> supply, which didn't help.  I went back to two single (non-raid) 400 
->> GB disks - same problem.
->>
->> finally, I figured out that the non-xen kernel works without 
->> problems. I'm filling the raid5 since several hours now and the 
->> system is still stable.
->>
->> I haven't tried to re-create the raid5 using the non-xen kernel, it 
->> was created using the xen kernel. maybe xen could be the problem ?
->>
->> I was wrong in my last post - OS  is actually fedora core 5 (sorry 
->> for the typo)
->>
->> PCI: Disabling Via external APIC routing
+> now upgraded to:
 >
-> I will note there is the ominous '400GB' lockup bug with certain promise
-> controllers.
+> [root@alfred ~]# uname -a
+> Linux alfred 2.6.20-1.2307.fc5xen0 #1 SMP Sun Mar 18 21:59:42 EDT 2007 
+> i686 athlon i386 GNU/Linux
 >
-> With the Promise ATA/133 controllers in some configurations you will get
-> a DRQ/lockup no matter what, replacing with an ATA/100 card and no
-> issues.  But I see you have a 20265 with is an ATA/100 promise/chipset.
+> OS is fedora core 6
 >
-> Just out of curiosity have you tried writing or running badblocks on
-> each parition simultaenously, this would simulate (somewhat) the I/O
-> sent/received to the drives during a RAID5 rebuild.
+> [root@alfred ~]# mdadm --version
+> mdadm - v2.3.1 - 6 February 2006
+>
+> 2) I got the impression that the old 350W power supply was to weak, I 
+> replaced it by a 400W version.
+>
+> 3) re-created the raid:
+>
+> [root@alfred ~]# mdadm --misc --zero-superblock /dev/hde1
+> [root@alfred ~]# mdadm --misc --zero-superblock /dev/hdf1
+> [root@alfred ~]# mdadm --misc --zero-superblock /dev/hdg1
+> [root@alfred ~]# mdadm --misc --zero-superblock /dev/hdh1
+> [root@alfred ~]# mdadm --create --verbose /dev/md0 --level=5 
+> --raid-devices=4 --spare-devices=0 /dev/hde1 /dev/hdf1 /dev/hdg1 
+> /dev/hdh1
+> mdadm: layout defaults to left-symmetric
+> mdadm: chunk size defaults to 64K
+> mdadm: size set to 390708736K
+> mdadm: array /dev/md0 started.
+> [root@alfred ~]# cat /proc/mdstat
+> Personalities : [raid6] [raid5] [raid4]
+> md0 : active raid5 hdh1[4] hdg1[2] hdf1[1] hde1[0]
+>       1172126208 blocks level 5, 64k chunk, algorithm 2 [4/3] [UUU_]
+>
+> unused devices: <none>
+>
+> same as before.
+>
+> 4) did as dan suggested:
+>
+> [root@alfred ~]# mdadm -S /dev/md0
+> [root@alfred ~]# mdadm --misc --zero-superblock /dev/hde1
+> [root@alfred ~]# mdadm --misc --zero-superblock /dev/hdf1
+> [root@alfred ~]# mdadm --misc --zero-superblock /dev/hdg1
+> [root@alfred ~]# mdadm --misc --zero-superblock /dev/hdh1
+> [root@alfred ~]# mdadm --create /dev/md0 -n 4 -l 5 /dev/hd[efg]1 missing
+> mdadm: array /dev/md0 started.
+> [root@alfred ~]# cat /proc/mdstat
+> Personalities : [raid6] [raid5] [raid4]
+> md0 : active raid5 hdg1[2] hdf1[1] hde1[0]
+>       1172126208 blocks level 5, 64k chunk, algorithm 2 [4/3] [UUU_]
+>
+> unused devices: <none>
+> [root@alfred ~]# mdadm --add /dev/md0 /dev/hdh1
+> mdadm: added /dev/hdh1
+> [root@alfred ~]# cat /proc/mdstat
+> Personalities : [raid6] [raid5] [raid4]
+> md0 : active raid5 hdh1[4] hdg1[2] hdf1[1] hde1[0]
+>       1172126208 blocks level 5, 64k chunk, algorithm 2 [4/3] [UUU_]
+>       [>....................]  recovery =  0.0% (47984/390708736) 
+> finish=406.9min speed=15994K/sec
+>
+> unused devices: <none>
+>
+> seems like it's working now - tnx !
 
-These are all things which could be related, but any clue why the 
-non-xen kernel works?
+This still looks odd, why should it behave like this. I have created a 
+lot of arrays (when I was doing the RAID5 speed testing thread), and 
+never had anything like this. I'd like to see dmesg to see if there was 
+an error reported regarding this.
+
+I think there's more going on, the original post showed the array as up 
+rather than some building status, also indicates some issue, perhaps. 
+What is the partition type of each of these partitions? Perhaps there's 
+a clue there.
 
 -- 
 bill davidsen <davidsen@tmr.com>
