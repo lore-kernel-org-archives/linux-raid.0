@@ -1,101 +1,133 @@
 From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: is this raid5 OK ?
-Date: Fri, 30 Mar 2007 12:28:15 -0400
-Message-ID: <460D3A9F.7010800@tmr.com>
-References: <237230840.20070329193857@kaneda.iguw.tuwien.ac.at> <17932.22575.558925.535963@notabene.brown> <460CF7EF.1000203@kaneda.iguw.tuwien.ac.at>
+Subject: Re: mdadm: RUN_ARRAY failed: Cannot allocate memory
+Date: Fri, 30 Mar 2007 12:37:25 -0400
+Message-ID: <460D3CC5.10004@tmr.com>
+References: <Pine.LNX.4.64.0703212139010.2224@filesrv1.baby-dragons.com>	<Pine.LNX.4.64.0703241216590.21973@filesrv1.baby-dragons.com> <17931.28833.443823.720207@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <460CF7EF.1000203@kaneda.iguw.tuwien.ac.at>
+In-Reply-To: <17931.28833.443823.720207@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Rainer Fuegenstein <rfu@kaneda.iguw.tuwien.ac.at>
-Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: "Mr. James W. Laferriere" <babydr@baby-dragons.com>, linux-raid maillist <linux-raid@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>
 List-Id: linux-raid.ids
 
-Rainer Fuegenstein wrote:
-> hi,
+Neil Brown wrote:
+> On Saturday March 24, babydr@baby-dragons.com wrote:
+>   
+>>  	Hello Neil ,  I found the problem that caused the 'cannot allcate 
+>> memory' ,  DON'T use '--bitmap=' .
+>>  	But that said ,  Hmmmm ,  Shouldn't mdadm just stop & say ...
+>>  	'md: bitmaps not supported for this level.'
+>>  	Like it puts out into  dmesg .
+>>
+>>  	Also think this message in dmesg is interesting .
+>>  	"raid0: bad disk number -1 - aborting!'
+>>
+>>  		Hth ,  JimL
+>>     
 >
-> 1) the kernel was:
-> [root@alfred ~]# uname -a
-> Linux alfred 2.6.19-1.2288.fc5xen0 #1 SMP Sat Feb 10 16:57:02 EST 2007 
-> i686 athlon i386 GNU/Linux
+> Yeah.... mdadm should be fixed too, but this kernel patch should make
+> it behave a bit better.  I'll queue it for 2.6.22.
+>   
+Given the release cycle, this might fit 2.6.21-rc6 (is is a fix), or 
+stable 2.6.21.1 if 21 comes out soon. In any case it could go in -mm for 
+testing and to be sure it would be pushed at an appropriate time.
+> Thanks,
+> NeilBrown
 >
-> now upgraded to:
 >
-> [root@alfred ~]# uname -a
-> Linux alfred 2.6.20-1.2307.fc5xen0 #1 SMP Sun Mar 18 21:59:42 EDT 2007 
-> i686 athlon i386 GNU/Linux
+> Move test for whether level supports bitmap to correct place.
 >
-> OS is fedora core 6
+> We need to check for internal-consistency of superblock in
+> load_super.  validate_super is for inter-device consistency.
 >
-> [root@alfred ~]# mdadm --version
-> mdadm - v2.3.1 - 6 February 2006
 >
-> 2) I got the impression that the old 350W power supply was to weak, I 
-> replaced it by a 400W version.
+> Signed-off-by: Neil Brown <neilb@suse.de>
 >
-> 3) re-created the raid:
+> ### Diffstat output
+>  ./drivers/md/md.c |   42 ++++++++++++++++++++++++++----------------
+>  1 file changed, 26 insertions(+), 16 deletions(-)
 >
-> [root@alfred ~]# mdadm --misc --zero-superblock /dev/hde1
-> [root@alfred ~]# mdadm --misc --zero-superblock /dev/hdf1
-> [root@alfred ~]# mdadm --misc --zero-superblock /dev/hdg1
-> [root@alfred ~]# mdadm --misc --zero-superblock /dev/hdh1
-> [root@alfred ~]# mdadm --create --verbose /dev/md0 --level=5 
-> --raid-devices=4 --spare-devices=0 /dev/hde1 /dev/hdf1 /dev/hdg1 
-> /dev/hdh1
-> mdadm: layout defaults to left-symmetric
-> mdadm: chunk size defaults to 64K
-> mdadm: size set to 390708736K
-> mdadm: array /dev/md0 started.
-> [root@alfred ~]# cat /proc/mdstat
-> Personalities : [raid6] [raid5] [raid4]
-> md0 : active raid5 hdh1[4] hdg1[2] hdf1[1] hde1[0]
->       1172126208 blocks level 5, 64k chunk, algorithm 2 [4/3] [UUU_]
->
-> unused devices: <none>
->
-> same as before.
->
-> 4) did as dan suggested:
->
-> [root@alfred ~]# mdadm -S /dev/md0
-> [root@alfred ~]# mdadm --misc --zero-superblock /dev/hde1
-> [root@alfred ~]# mdadm --misc --zero-superblock /dev/hdf1
-> [root@alfred ~]# mdadm --misc --zero-superblock /dev/hdg1
-> [root@alfred ~]# mdadm --misc --zero-superblock /dev/hdh1
-> [root@alfred ~]# mdadm --create /dev/md0 -n 4 -l 5 /dev/hd[efg]1 missing
-> mdadm: array /dev/md0 started.
-> [root@alfred ~]# cat /proc/mdstat
-> Personalities : [raid6] [raid5] [raid4]
-> md0 : active raid5 hdg1[2] hdf1[1] hde1[0]
->       1172126208 blocks level 5, 64k chunk, algorithm 2 [4/3] [UUU_]
->
-> unused devices: <none>
-> [root@alfred ~]# mdadm --add /dev/md0 /dev/hdh1
-> mdadm: added /dev/hdh1
-> [root@alfred ~]# cat /proc/mdstat
-> Personalities : [raid6] [raid5] [raid4]
-> md0 : active raid5 hdh1[4] hdg1[2] hdf1[1] hde1[0]
->       1172126208 blocks level 5, 64k chunk, algorithm 2 [4/3] [UUU_]
->       [>....................]  recovery =  0.0% (47984/390708736) 
-> finish=406.9min speed=15994K/sec
->
-> unused devices: <none>
->
-> seems like it's working now - tnx !
-
-This still looks odd, why should it behave like this. I have created a 
-lot of arrays (when I was doing the RAID5 speed testing thread), and 
-never had anything like this. I'd like to see dmesg to see if there was 
-an error reported regarding this.
-
-I think there's more going on, the original post showed the array as up 
-rather than some building status, also indicates some issue, perhaps. 
-What is the partition type of each of these partitions? Perhaps there's 
-a clue there.
-
+> diff .prev/drivers/md/md.c ./drivers/md/md.c
+> --- .prev/drivers/md/md.c	2007-03-29 16:42:18.000000000 +1000
+> +++ ./drivers/md/md.c	2007-03-29 16:49:26.000000000 +1000
+> @@ -695,6 +695,17 @@ static int super_90_load(mdk_rdev_t *rde
+>  	rdev->data_offset = 0;
+>  	rdev->sb_size = MD_SB_BYTES;
+>  
+> +	if (sb->state & (1<<MD_SB_BITMAP_PRESENT)) {
+> +		if (sb->level != 1 && sb->level != 4
+> +		    && sb->level != 5 && sb->level != 6
+> +		    && sb->level != 10) {
+> +			/* FIXME use a better test */
+> +			printk(KERN_WARNING
+> +			       "md: bitmaps not supported for this level.\n");
+> +			goto abort;
+> +		}
+> +	}
+> +
+>  	if (sb->level == LEVEL_MULTIPATH)
+>  		rdev->desc_nr = -1;
+>  	else
+> @@ -793,16 +804,8 @@ static int super_90_validate(mddev_t *md
+>  		mddev->max_disks = MD_SB_DISKS;
+>  
+>  		if (sb->state & (1<<MD_SB_BITMAP_PRESENT) &&
+> -		    mddev->bitmap_file == NULL) {
+> -			if (mddev->level != 1 && mddev->level != 4
+> -			    && mddev->level != 5 && mddev->level != 6
+> -			    && mddev->level != 10) {
+> -				/* FIXME use a better test */
+> -				printk(KERN_WARNING "md: bitmaps not supported for this level.\n");
+> -				return -EINVAL;
+> -			}
+> +		    mddev->bitmap_file == NULL)
+>  			mddev->bitmap_offset = mddev->default_bitmap_offset;
+> -		}
+>  
+>  	} else if (mddev->pers == NULL) {
+>  		/* Insist on good event counter while assembling */
+> @@ -1059,6 +1062,18 @@ static int super_1_load(mdk_rdev_t *rdev
+>  		       bdevname(rdev->bdev,b));
+>  		return -EINVAL;
+>  	}
+> +	if ((le32_to_cpu(sb->feature_map) & MD_FEATURE_BITMAP_OFFSET)) {
+> +		if (sb->level != cpu_to_le32(1) &&
+> +		    sb->level != cpu_to_le32(4) &&
+> +		    sb->level != cpu_to_le32(5) &&
+> +		    sb->level != cpu_to_le32(6) &&
+> +		    sb->level != cpu_to_le32(10)) {
+> +			printk(KERN_WARNING
+> +			       "md: bitmaps not supported for this level.\n");
+> +			return -EINVAL;
+> +		}
+> +	}
+> +
+>  	rdev->preferred_minor = 0xffff;
+>  	rdev->data_offset = le64_to_cpu(sb->data_offset);
+>  	atomic_set(&rdev->corrected_errors, le32_to_cpu(sb->cnt_corrected_read));
+> @@ -1142,14 +1157,9 @@ static int super_1_validate(mddev_t *mdd
+>  		mddev->max_disks =  (4096-256)/2;
+>  
+>  		if ((le32_to_cpu(sb->feature_map) & MD_FEATURE_BITMAP_OFFSET) &&
+> -		    mddev->bitmap_file == NULL ) {
+> -			if (mddev->level != 1 && mddev->level != 5 && mddev->level != 6
+> -			    && mddev->level != 10) {
+> -				printk(KERN_WARNING "md: bitmaps not supported for this level.\n");
+> -				return -EINVAL;
+> -			}
+> +		    mddev->bitmap_file == NULL )
+>  			mddev->bitmap_offset = (__s32)le32_to_cpu(sb->bitmap_offset);
+> -		}
+> +
+>  		if ((le32_to_cpu(sb->feature_map) & MD_FEATURE_RESHAPE_ACTIVE)) {
+>  			mddev->reshape_position = le64_to_cpu(sb->reshape_position);
+>  			mddev->delta_disks = le32_to_cpu(sb->delta_disks);
+>   
 -- 
+
 bill davidsen <davidsen@tmr.com>
   CTO TMR Associates, Inc
   Doing interesting things with small computers since 1979
