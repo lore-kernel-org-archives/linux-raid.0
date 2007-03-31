@@ -1,86 +1,110 @@
-From: Rainer Fuegenstein <rfu@kaneda.iguw.tuwien.ac.at>
+From: Bill Davidsen <davidsen@tmr.com>
 Subject: Re: is this raid5 OK ?
-Date: Fri, 30 Mar 2007 13:43:43 +0200
-Message-ID: <460CF7EF.1000203@kaneda.iguw.tuwien.ac.at>
-References: <237230840.20070329193857@kaneda.iguw.tuwien.ac.at> <17932.22575.558925.535963@notabene.brown>
+Date: Fri, 30 Mar 2007 20:59:30 -0400
+Message-ID: <460DB272.5090000@tmr.com>
+References: <237230840.20070329193857@kaneda.iguw.tuwien.ac.at> <17932.22575.558925.535963@notabene.brown> <460CF7EF.1000203@kaneda.iguw.tuwien.ac.at> <460D3A9F.7010800@tmr.com> <460D55AB.1080309@kaneda.iguw.tuwien.ac.at>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17932.22575.558925.535963@notabene.brown>
+In-Reply-To: <460D55AB.1080309@kaneda.iguw.tuwien.ac.at>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: Rainer Fuegenstein <rfu@kaneda.iguw.tuwien.ac.at>
+Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-hi,
+-wheneverRainer Fuegenstein wrote:
+> Bill Davidsen wrote:
+>
+>> This still looks odd, why should it behave like this. I have created 
+>> a lot of arrays (when I was doing the RAID5 speed testing thread), 
+>> and never had anything like this. I'd like to see dmesg to see if 
+>> there was an error reported regarding this.
+>>
+>> I think there's more going on, the original post showed the array as 
+>> up rather than some building status, also indicates some issue, 
+>> perhaps. What is the partition type of each of these partitions? 
+>> Perhaps there's a clue there.
+>
+> partition type is FD (linux raid autodetect) on all disks.
+>
+> here's some more info:
+> the hardware is pretty old, an 800MHz ASUS board with AMD cpu and an 
+> extra onboard promise IDE controller with two channels. the server was 
+> working well with a 60 GB hda disk (system) and a single 400 GB disk 
+> (hde) for data. kernel was 2.6.19-1.2288.fc5xen0.
+>
+> when I added 3 more 400 GB disks (hdf to hdh) and created the raid5, 
+> the server crashed (rebooted, freezed, ...) as soon as there was more 
+> activity on the raid (kernel panics indicating trouble with 
+> interrupts, inpage errors etc.) I then upgraded to a 400W power 
+> supply, which didn't help.  I went back to two single (non-raid) 400 
+> GB disks - same problem.
+>
+> finally, I figured out that the non-xen kernel works without problems. 
+> I'm filling the raid5 since several hours now and the system is still 
+> stable.
+>
+> I haven't tried to re-create the raid5 using the non-xen kernel, it 
+> was created using the xen kernel. maybe xen could be the problem ?
+I think it sounds likely at this point, I have been having issues with 
+xen FC6 kernels, so perhaps the build or testing environment has changed.
 
-1) the kernel was:
-[root@alfred ~]# uname -a
-Linux alfred 2.6.19-1.2288.fc5xen0 #1 SMP Sat Feb 10 16:57:02 EST 2007 
-i686 athlon i386 GNU/Linux
+However, I would round up the usual suspects, check all cables tight, 
+check master/slave jumper settings on drives, etc. Be sure you have the 
+appropriate cables, 80 pin where needed. Unless you need the xen kernel 
+you might be better off without it for now.
 
-now upgraded to:
+The rest of your details were complete but didn't give me a clue, sorry.
+>
+> I was wrong in my last post - OS  is actually fedora core 5 (sorry for 
+> the typo)
+>
+> current state of the raid5:
+>
+> [root@alfred ~]# mdadm --detail --scan
+> ARRAY /dev/md0 level=raid5 num-devices=4 spares=1 
+> UUID=e96cd8fe:c56c3438:6d9b6c14:9f0eebda
+> [root@alfred ~]# mdadm --misc --detail /dev/md0
+> /dev/md0:
+>         Version : 00.90.03
+>   Creation Time : Fri Mar 30 15:55:42 2007
+>      Raid Level : raid5
+>      Array Size : 1172126208 (1117.83 GiB 1200.26 GB)
+>     Device Size : 390708736 (372.61 GiB 400.09 GB)
+>    Raid Devices : 4
+>   Total Devices : 4
+> Preferred Minor : 0
+>     Persistence : Superblock is persistent
+>
+>     Update Time : Fri Mar 30 20:22:27 2007
+>           State : active, degraded, recovering
+>  Active Devices : 3
+> Working Devices : 4
+>  Failed Devices : 0
+>   Spare Devices : 1
+>
+>          Layout : left-symmetric
+>      Chunk Size : 64K
+>
+>  Rebuild Status : 12% complete
+>
+>            UUID : e96cd8fe:c56c3438:6d9b6c14:9f0eebda
+>          Events : 0.26067
+>
+>     Number   Major   Minor   RaidDevice State
+>        0      33        1        0      active sync   /dev/hde1
+>        1      33       65        1      active sync   /dev/hdf1
+>        2      34        1        2      active sync   /dev/hdg1
+>        4      34       65        3      spare rebuilding   /dev/hdh1
+>
+>
+> here's the dmesg of the last reboot (when the raid was already 
+> created, but still syncing):
+[ since it told me nothing useful I deleted it ]
 
-[root@alfred ~]# uname -a
-Linux alfred 2.6.20-1.2307.fc5xen0 #1 SMP Sun Mar 18 21:59:42 EDT 2007 
-i686 athlon i386 GNU/Linux
+-- 
+bill davidsen <davidsen@tmr.com>
+  CTO TMR Associates, Inc
+  Doing interesting things with small computers since 1979
 
-OS is fedora core 6
-
-[root@alfred ~]# mdadm --version
-mdadm - v2.3.1 - 6 February 2006
-
-2) I got the impression that the old 350W power supply was to weak, I 
-replaced it by a 400W version.
-
-3) re-created the raid:
-
-[root@alfred ~]# mdadm --misc --zero-superblock /dev/hde1
-[root@alfred ~]# mdadm --misc --zero-superblock /dev/hdf1
-[root@alfred ~]# mdadm --misc --zero-superblock /dev/hdg1
-[root@alfred ~]# mdadm --misc --zero-superblock /dev/hdh1
-[root@alfred ~]# mdadm --create --verbose /dev/md0 --level=5 
---raid-devices=4 --spare-devices=0 /dev/hde1 /dev/hdf1 /dev/hdg1 /dev/hdh1
-mdadm: layout defaults to left-symmetric
-mdadm: chunk size defaults to 64K
-mdadm: size set to 390708736K
-mdadm: array /dev/md0 started.
-[root@alfred ~]# cat /proc/mdstat
-Personalities : [raid6] [raid5] [raid4]
-md0 : active raid5 hdh1[4] hdg1[2] hdf1[1] hde1[0]
-       1172126208 blocks level 5, 64k chunk, algorithm 2 [4/3] [UUU_]
-
-unused devices: <none>
-
-same as before.
-
-4) did as dan suggested:
-
-[root@alfred ~]# mdadm -S /dev/md0
-[root@alfred ~]# mdadm --misc --zero-superblock /dev/hde1
-[root@alfred ~]# mdadm --misc --zero-superblock /dev/hdf1
-[root@alfred ~]# mdadm --misc --zero-superblock /dev/hdg1
-[root@alfred ~]# mdadm --misc --zero-superblock /dev/hdh1
-[root@alfred ~]# mdadm --create /dev/md0 -n 4 -l 5 /dev/hd[efg]1 missing
-mdadm: array /dev/md0 started.
-[root@alfred ~]# cat /proc/mdstat
-Personalities : [raid6] [raid5] [raid4]
-md0 : active raid5 hdg1[2] hdf1[1] hde1[0]
-       1172126208 blocks level 5, 64k chunk, algorithm 2 [4/3] [UUU_]
-
-unused devices: <none>
-[root@alfred ~]# mdadm --add /dev/md0 /dev/hdh1
-mdadm: added /dev/hdh1
-[root@alfred ~]# cat /proc/mdstat
-Personalities : [raid6] [raid5] [raid4]
-md0 : active raid5 hdh1[4] hdg1[2] hdf1[1] hde1[0]
-       1172126208 blocks level 5, 64k chunk, algorithm 2 [4/3] [UUU_]
-       [>....................]  recovery =  0.0% (47984/390708736) 
-finish=406.9min speed=15994K/sec
-
-unused devices: <none>
-
-seems like it's working now - tnx !
-
-cu
