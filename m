@@ -1,69 +1,100 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: is this raid5 OK ?
-Date: Fri, 30 Mar 2007 16:58:05 -0400 (EDT)
-Message-ID: <Pine.LNX.4.64.0703301655270.11067@p34.internal.lan>
-References: <237230840.20070329193857@kaneda.iguw.tuwien.ac.at>
- <17932.22575.558925.535963@notabene.brown> <460CF7EF.1000203@kaneda.iguw.tuwien.ac.at>
- <460D3A9F.7010800@tmr.com> <460D55AB.1080309@kaneda.iguw.tuwien.ac.at>
+From: Nix <nix@esperi.org.uk>
+Subject: Re: raid6 array ,  part id 'fd' not assembling at boot .
+Date: Sat, 31 Mar 2007 12:58:00 +0100
+Message-ID: <873b3l1v7b.fsf@hades.wkstn.nix>
+References: <Pine.LNX.4.64.0703161838110.11877@filesrv1.baby-dragons.com>
+	<17915.32343.270875.583164@notabene.brown> <45FC3158.3020104@tmr.com>
+	<17917.45509.654906.432675@notabene.brown> <45FDC355.5000106@tmr.com>
+	<Pine.LNX.4.64.0703182011080.24036@filesrv1.baby-dragons.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <460D55AB.1080309@kaneda.iguw.tuwien.ac.at>
+In-Reply-To: <Pine.LNX.4.64.0703182011080.24036@filesrv1.baby-dragons.com> (James W. Laferriere's message of "19 Mar 2007 03:33:34 -0000")
 Sender: linux-raid-owner@vger.kernel.org
-To: Rainer Fuegenstein <rfu@kaneda.iguw.tuwien.ac.at>
-Cc: Bill Davidsen <davidsen@tmr.com>, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
+To: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
+Cc: linux-raid maillist <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+On 19 Mar 2007, James W. Laferriere outgrabe:
+> 	What I don't see is the reasoning behind the use of initrd .  It's a
+> 	kernel ran to put the dev tree in order ,  start up devices ,... Just to
+> 	start the kernel again ?
 
-On Fri, 30 Mar 2007, Rainer Fuegenstein wrote:
+That's not what initrds do. No second kernel is started, and
+constructing /dev is not one of the jobs of initrds in any case. (There
+*is* something that runs a second kernel if the first one dies ---
+google for `kexec crash dump' --- but it's entirely different in design
+and intent from initrds, and isn't an early-boot thing but a kernel-
+crash-reporting thing.)
 
-> Bill Davidsen wrote:
->
->> This still looks odd, why should it behave like this. I have created a lot 
->> of arrays (when I was doing the RAID5 speed testing thread), and never had 
->> anything like this. I'd like to see dmesg to see if there was an error 
->> reported regarding this.
->> 
->> I think there's more going on, the original post showed the array as up 
->> rather than some building status, also indicates some issue, perhaps. What 
->> is the partition type of each of these partitions? Perhaps there's a clue 
->> there.
->
-> partition type is FD (linux raid autodetect) on all disks.
->
-> here's some more info:
-> the hardware is pretty old, an 800MHz ASUS board with AMD cpu and an extra 
-> onboard promise IDE controller with two channels. the server was working well 
-> with a 60 GB hda disk (system) and a single 400 GB disk (hde) for data. 
-> kernel was 2.6.19-1.2288.fc5xen0.
->
-> when I added 3 more 400 GB disks (hdf to hdh) and created the raid5, the 
-> server crashed (rebooted, freezed, ...) as soon as there was more activity on 
-> the raid (kernel panics indicating trouble with interrupts, inpage errors 
-> etc.) I then upgraded to a 400W power supply, which didn't help.  I went back 
-> to two single (non-raid) 400 GB disks - same problem.
->
-> finally, I figured out that the non-xen kernel works without problems. I'm 
-> filling the raid5 since several hours now and the system is still stable.
->
-> I haven't tried to re-create the raid5 using the non-xen kernel, it was 
-> created using the xen kernel. maybe xen could be the problem ?
->
-> I was wrong in my last post - OS  is actually fedora core 5 (sorry for the 
-> typo)
->
-> PCI: Disabling Via external APIC routing
+There are three different ways to enter userspace for the first time.
 
-I will note there is the ominous '400GB' lockup bug with certain promise
-controllers.
+ - You can boot with an initramfs. This is the recommended way and may
+   eventually deprecate all the others. initramfses consist of gzipped
+   cpio archives, either constructed by hand or built automatically
+   by the kernel build system during the build process; and either
+   linked into the kernel image or pointed at by the bootloader as if
+   they were initrds (or both: the two images are automatically merged).
+   These are extracted into the `rootfs', which is the (nonswappable)
+   ramfs filesystem which is the root of the mount tree. A minimal rootfs
+   (with nothing on it) is linked into the kernel if nothing else is.
 
-With the Promise ATA/133 controllers in some configurations you will get
-a DRQ/lockup no matter what, replacing with an ATA/100 card and no
-issues.  But I see you have a 20265 with is an ATA/100 promise/chipset.
+   The executable /init in the initramfs is run to switch to userspace
+   if such exists, You switch from the rootfs to the real root
+   filesystem once you mount it by erasing everything on the rootfs and
+   `exec chroot'ing and/or `mount --move'ing it into place. (busybox
+   contains a `switch_root' built-in command to do this.)
 
-Just out of curiosity have you tried writing or running badblocks on
-each parition simultaenously, this would simulate (somewhat) the I/O
-sent/received to the drives during a RAID5 rebuild.
+   (I prefer directly linking an initramfs into the kernel, because the
+   kernel image is still stand-alone then and you don't have to engage
+   in messes involving tracking which initramfs archive is used by which
+   kernel if you run multiple kernels.)
 
-Justin.
+ - You can boot with an initrd, which is a compressed *filesystem image*
+   loaded from an external file (which the kernel is pointed at by the
+   bootloader). The kernel runs /linuxrc to switch to userspace, and
+   userspace should use the `pivot_root' command to flip over to the real
+   root filesystem. (There is an older way of switching roots involving
+   echoing device numbers into a file under /proc. Ignore it, it's
+   disgusting.)
 
+   In both these cases it is the initramfs / initrd's responsibility to
+   parse things like the root= and init= kernel command-line parameters
+   (and any new ones that you choose to define).
+
+   (This is a far older method than initramfs, which explains the
+   apparent duplication of effort. initramfs arose largely out of
+   dissatisfaction with the limitations of initrds.)
+
+ - You can boot with neither. In this case the kernel mounts / for you,
+   either from a local block device, from auto-assembled md arrays with
+   v0.90 superblocks, or remotely off NFS. Because it doesn't fsck the
+   root filesystem before mounting it, this is slightly risky compared
+   to the other options (where your initramfs/initrd image can fsck
+   before mounting as usual). (initramfs archives are safest of all here
+   because the filesystem is newly constructed by the kernel at boot
+   time, so it is *impossible* for it to be damaged.)
+
+   This option is the one where the RAID auto-assembly kicks in, and the
+   only one so inflexible that such is needed. H. Peter Anvin has an
+   ongoing project to move everything this option does into a default
+   initramfs, and remove this crud from the kernel entirely.
+
+   When that happens, there'll be little excuse for assembling RAID
+   arrays using the auto-assembler :)
+
+> 	In otherwords I beleive that initrd's are essentially pointless .  But
+> 	that's just my opinion .
+
+It's wrong, sorry. Try mounting / on a RAID array atop LVM partially
+scattered across the network via the network block device, for instance
+(I was running like this for some time after some unfortunate disk
+failures left me with too little storage on one critical machine to
+store all the stuff it needed to run).
+
+Hell, try mounting / on LVM at all. You need userspace to get LVM up
+and running, so you *need* an initrd or initramfs to do that.
+
+-- 
+`In the future, company names will be a 32-character hex string.'
+  --- Bruce Schneier on the shortage of company names
