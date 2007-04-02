@@ -1,37 +1,24 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: raid10 kernel panic on sparc64
-Date: Sun, 01 Apr 2007 20:13:39 -0700 (PDT)
-Message-ID: <20070401.201339.108809035.davem@davemloft.net>
-References: <Pine.LNX.4.61.0704020211380.1245@yvahk01.tjqt.qr>
+From: Nevyn <nevynh@gmail.com>
+Subject: Desperate plea for help
+Date: Mon, 2 Apr 2007 15:14:37 +1200
+Message-ID: <bcdb9ee50704012014o2a78fdc0pfc40060a5bf7ce20@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <sparclinux-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.61.0704020211380.1245@yvahk01.tjqt.qr>
-Sender: sparclinux-owner@vger.kernel.org
-To: jengelh@linux01.gwdg.de
-Cc: linux-raid@vger.kernel.org, sparclinux@vger.kernel.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-From: Jan Engelhardt <jengelh@linux01.gwdg.de>
-Date: Mon, 2 Apr 2007 02:15:57 +0200 (MEST)
+I've recently had a raid 5 array fail on me - 2 drives suddenly just
+up and showed a failure. Of course this means that the metadata is
+stuffed. I've had a look at the howto and found the mdadm --assemble
+--force command but it's not working in this case. The 2 drives show
+up as spares.
 
-> just when I did
-> # mdadm -C /dev/md2 -b internal -e 1.0 -l 10 -n 4 /dev/sd[cdef]4
-> (created)
-> # mdadm -D /dev/md2
-> Killed
-> 
-> dmesg filled up with a kernel oops. A few seconds later, the box
-> locked solid. Since I was only in by ssh and there is not (yet) any
-> possibility to reset it remotely, this is all I can give right now,
-> the last 80x25 screen:
+A friend has suggested that perhaps I could try reconstructing the
+array but suggested that I should ask the question on here first.
 
-Unfortunately the beginning of the OOPS is the most important part,
-that says where exactly the kernel died, the rest of the log you
-showed only gives half the registers and the rest of the call trace.
-
-Please try to capture the whole thing.
-
-Please also provide hardware type information as well, which you
-should give in any bug report like this.
+Is there some way I can reconstruct the array at least long enough to
+back the data up?
