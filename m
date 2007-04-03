@@ -1,32 +1,40 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: parity check for read?
-Date: Wed, 4 Apr 2007 07:07:53 +1000
-Message-ID: <17938.49705.840745.66635@notabene.brown>
-References: <461254DF.3050503@web.de>
+Subject: Re: md126-7
+Date: Wed, 4 Apr 2007 07:15:12 +1000
+Message-ID: <17938.50144.495779.735588@notabene.brown>
+References: <46127910.9070006@corky.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Mirko Benz on Tuesday April 3
+In-Reply-To: message from Just Marc on Tuesday April 3
 Sender: linux-raid-owner@vger.kernel.org
-To: Mirko Benz <mirko.benz@web.de>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: Just Marc <marc@corky.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday April 3, mirko.benz@web.de wrote:
-> Hi,
+On Tuesday April 3, marc@corky.net wrote:
+> Hi everyone,
 > 
-> Is parity calculation and validation for read operations supported?
+> I've been using the RAID subsystem quite a bit over the years.  This 
+> week, for the first time, I created a RAID6 array over loop devices that 
+> point to files.
+> 
+> To my surprise the device showing in /proc/mdstat for this new array is 
+> /dev/md127.   This is a fresh system and RAID has never been configured 
+> on it.  I tried re-doing everything from scratch again and was sometimes 
+> even given /dev/md126 (though I wasn't able to reproduce this one, it 
+> happened once). 
+> 
+> My kernel is 2.6.20.4.    Can anyone give me a hint about what's going on?
 
-I guess what you are asking is:
+Maybe if you tell us what commands you ran, we could explain what you
+did?
+Maybe you did
 
-   With raid5, I would like the drive to handle a read request by
-   reading all the blocks in the stripe and checking the parity.  If
-   the parity is correct, return the data blocks.  If it is not, then
-   fail the read request.  Is that possible?
+   mdadm -C /dev/bigdev -amd -l6 -n5 /dev/sd[a-e]
 
-No, it is not.
-
-If you are really asking something else, please be more specific.
+As the name "bigdev" doesn't look like "md%d", it will just choose an
+unused number up around 127.
 
 NeilBrown
