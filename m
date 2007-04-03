@@ -1,28 +1,65 @@
-From: Just Marc <marc@corky.net>
-Subject: md126-7
-Date: Tue, 03 Apr 2007 16:56:00 +0100
-Message-ID: <46127910.9070006@corky.net>
+From: Stefan Seyfried <seife@suse.de>
+Subject: Re: [Suspend-devel] s2disk and raid
+Date: Tue, 3 Apr 2007 18:34:26 +0200
+Message-ID: <20070403163425.GC5798@suse.de>
+References: <20070403175521.70e6c876@commensaal.drs.p>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20070403175521.70e6c876@commensaal.drs.p>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Tim Dijkstra <newsuser@famdijkstra.org>
+Cc: suspend-devel List <suspend-devel@lists.sourceforge.net>, linux-raid@vger.kernel.org, 415441@bugs.debian.org
 List-Id: linux-raid.ids
 
-Hi everyone,
+On Tue, Apr 03, 2007 at 05:55:21PM +0200, Tim Dijkstra wrote:
+> Hi,
+> 
+> I've got a bugreport [0] from a user trying to use raid and uswsusp. He's
+> using initramfs-tools available in debian. I'll describe the problem
+> and my analysis, maybe you can comment on what you think. A warning: I only
+> have a casual understanding of raid, never looked at any code related to it.
+> 
+> This is a setup where root maybe on raid, but swap isn't. Swap on raid
+> will be very difficult to support, I think.
 
-I've been using the RAID subsystem quite a bit over the years.  This 
-week, for the first time, I created a RAID6 array over loop devices that 
-point to files.
+"it depends" :-)
 
-To my surprise the device showing in /proc/mdstat for this new array is 
-/dev/md127.   This is a fresh system and RAID has never been configured 
-on it.  I tried re-doing everything from scratch again and was sometimes 
-even given /dev/md126 (though I wasn't able to reproduce this one, it 
-happened once). 
+> Now comes a crucial point. The script that finds the raid array, finds
+> the array in an unclean state and starts syncing.
 
-My kernel is 2.6.20.4.    Can anyone give me a hint about what's going on?
+bad. Don't do that. Data will be lost.
 
-Thanks,
-Marc
+> After this, resume finds an image in the swap partition and starts the
+> resume process. Part of this process is freezing everything but itself,
+> which fails on the process/thread that does the syncing.
+> 
+> IMO, the problem comes from the fact we started syncing, before we could
+> start resume. 
+
+Yes.
+ 
+> Now the problem could theoretically be solved by not starting the
+> assembly of the array once it is discovered, but modifying the 
+> initramfs to do the assembly after we have had the chance to resume.
+
+Yes.
+
+> The debian-maintainer of mdadm thinks that the suspend process should
+> have left the array in a clean state, but this is IMHO impossible. We
+> are freezing userspace. A mdamd process looking after the array will
+> probably get into trouble if we come back from suspend and we have
+> done something to the array in the mean time.
+
+Yes.
+ 
+> What do you think?
+
+You are right, he is wrong.
+Do not touch anything before resume.
+-- 
+Stefan Seyfried
+
+"Any ideas, John?"
+"Well, surrounding them's out." 
