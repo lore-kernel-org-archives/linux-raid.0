@@ -1,40 +1,91 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: md126-7
-Date: Wed, 4 Apr 2007 07:15:12 +1000
-Message-ID: <17938.50144.495779.735588@notabene.brown>
-References: <46127910.9070006@corky.net>
+Subject: Re: s2disk and raid
+Date: Wed, 4 Apr 2007 15:20:56 +1000
+Message-ID: <17939.13752.164747.486393@notabene.brown>
+References: <20070403175521.70e6c876@commensaal.drs.p>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Just Marc on Tuesday April 3
-Sender: linux-raid-owner@vger.kernel.org
-To: Just Marc <marc@corky.net>
-Cc: linux-raid@vger.kernel.org
+Return-path: <suspend-devel-bounces@lists.sourceforge.net>
+In-Reply-To: message from Tim Dijkstra on Tuesday April 3
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/suspend-devel>,
+	<mailto:suspend-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=suspend-devel>
+List-Post: <mailto:suspend-devel@lists.sourceforge.net>
+List-Help: <mailto:suspend-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/suspend-devel>,
+	<mailto:suspend-devel-request@lists.sourceforge.net?subject=subscribe>
+Sender: suspend-devel-bounces@lists.sourceforge.net
+Errors-To: suspend-devel-bounces@lists.sourceforge.net
+To: Tim Dijkstra <newsuser@famdijkstra.org>
+Cc: suspend-devel List <suspend-devel@lists.sourceforge.net>, linux-raid@vger.kernel.org, 415441@bugs.debian.org
 List-Id: linux-raid.ids
 
-On Tuesday April 3, marc@corky.net wrote:
-> Hi everyone,
+On Tuesday April 3, newsuser@famdijkstra.org wrote:
+> Hi,
 > 
-> I've been using the RAID subsystem quite a bit over the years.  This 
-> week, for the first time, I created a RAID6 array over loop devices that 
-> point to files.
+> I've got a bugreport [0] from a user trying to use raid and uswsusp. He's
+> using initramfs-tools available in debian. I'll describe the problem
+> and my analysis, maybe you can comment on what you think. A warning: I only
+> have a casual understanding of raid, never looked at any code related to it.
 > 
-> To my surprise the device showing in /proc/mdstat for this new array is 
-> /dev/md127.   This is a fresh system and RAID has never been configured 
-> on it.  I tried re-doing everything from scratch again and was sometimes 
-> even given /dev/md126 (though I wasn't able to reproduce this one, it 
-> happened once). 
+> This is a setup where root maybe on raid, but swap isn't. Swap on raid
+> will be very difficult to support, I think.
+
+Nah... shouldn't be a problem.... well, maybe raid5.
+
 > 
-> My kernel is 2.6.20.4.    Can anyone give me a hint about what's going on?
+> When s2disk is started, nothing special is done to the array. It may be
+> in an unclean state (just like filesystems). Image is written to disk.
+> 
+> After the power cycle the kernel boots, devices are discovered, among
+> which the ones holding raid. Then we try to find the device that holds
+> swap in case of resume and / in case of a normal boot.
+> 
+> Now comes a crucial point. The script that finds the raid array, finds
+> the array in an unclean state and starts syncing.
 
-Maybe if you tell us what commands you ran, we could explain what you
-did?
-Maybe you did
+Uhm, so you are finding the device for the root filesystem before you
+have decided which case it will be (resume or normal boot).  Can that
+be delayed until after the decision.  It's probably not important but
+it seems neater.
+Or do you need the root device even when resuming (I guess if swap is
+in a file on the root filesystem....)
 
-   mdadm -C /dev/bigdev -amd -l6 -n5 /dev/sd[a-e]
+The trick is to use the 'start_ro' module parameter.
+  echo 1 > /sys/module/md_mod/parameters/start_ro
 
-As the name "bigdev" doesn't look like "md%d", it will just choose an
-unused number up around 127.
+Then md will start arrays assuming read-only.  No resync will be
+started, no superblock will be written.  They stay this way until the
+first write at which point they become normal read-write and any
+required resync starts.
+
+So you can start arrays 'readonly', and resume off a raid1 without any
+risk of the the resync starting when it shouldn't.
+
+It is probably best to 'echo 0 > ....' once you have committed to a
+normal boot, but it isn't really critical.
+
+> 
+> The debian-maintainer of mdadm thinks that the suspend process should
+> have left the array in a clean state, but this is IMHO impossible.
+
+It probably would be best if suspend left the process in a clean
+state.  It shouldn't be too hard, but it needs to be done in the
+kernel.
+However it isn't critical to all of this working well.
+
+I mentioned above that if swap in on raid5 it might be awkward.  This
+is because raid5 caches some data that is on disk.  If you snapshot
+the raid5 memory, then resume raid5 so it can write to disk, when you
+come back from suspend you could have old data in the cache.  It
+should be possible to fix this, but it is currently a potential
+problem that might be worth warning people against.
 
 NeilBrown
+
+-------------------------------------------------------------------------
+Take Surveys. Earn Cash. Influence the Future of IT
+Join SourceForge.net's Techsay panel and you'll get the chance to share your
+opinions on IT & business topics through brief surveys-and earn cash
+http://www.techsay.com/default.php?page=join.php&p=sourceforge&CID=DEVDEV
