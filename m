@@ -1,51 +1,52 @@
 From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: raid1 does not seem faster
-Date: Wed, 04 Apr 2007 19:11:50 -0400
-Message-ID: <461430B6.9060703@tmr.com>
-References: <Pine.LNX.4.61.0704011417470.8018@yvahk01.tjqt.qr> <200704011558.31670.a1426z@gawab.com> <46118473.10205@tmr.com> <200704031642.27701.a1426z@gawab.com>
+Subject: Re: 2.6.20.3 AMD64 oops in CFQ code
+Date: Wed, 04 Apr 2007 19:22:32 -0400
+Message-ID: <46143338.3020808@tmr.com>
+References: <20070323174630.31051.qmail@science.horizon.com> <4611EADC.3000306@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200704031642.27701.a1426z@gawab.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Al Boldi <a1426z@gawab.com>
-Cc: linux-raid@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <4611EADC.3000306@suse.de>
+Sender: linux-ide-owner@vger.kernel.org
+To: Tejun Heo <teheo@suse.de>
+Cc: linux@horizon.com, dan.j.williams@intel.com, linux-ide@vger.kernel.org, neilb@suse.de, cebbert@redhat.com, jens.axboe@oracle.com, linux-kernel@dale.us, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Al Boldi wrote:
-> Bill Davidsen wrote:
->   
->> Al Boldi wrote:
->>     
->>> The problem is that raid1 one doesn't do striped reads, but rather uses
->>> read-balancing per proc.  Try your test with parallel reads; it should
->>> be faster.
->>>       
-> :
-> :
->   
->> It would be nice if reads larger than some size were considered as
->> candidates for multiple devices. By setting the readahead larger than
->> that value speed increases would be noted for sequential access.
->>     
+Tejun Heo wrote:
+> [resending.  my mail service was down for more than a week and this
+> message didn't get delivered.]
 >
-> Actually, that's what I thought for a long time too, but as Neil once pointed 
-> out, for striped reads to be efficient, each chunk should be located 
-> sequentially, as to avoid any seeks.  This is only possible by introducing 
-> some offset layout, as in raid10, which infers a loss of raid1's 
-> single-disk-image compatibility.
+> linux@horizon.com wrote:
 >   
-I can't imaging that the offset needs to be physical, there's a 
-translation done from the chunk address on the array to the physical 
-address on the drive, and beyond that usually a translation from the 
-logical position in a partition to a physical LBA location on the drive 
-as a whole.
-> What could be feasible, is some kind of an initial burst striped readahead, 
-> which could possibly improve small reads < (readahead * nr_of_disks).
-You are correct, but I think if an optimization were to be done, some balance between the read time, seek time, and read size could be done. Using more than one drive only makes sense when the read transfer time is significantly longer than the seek time. With an aggressive readahead set for the array that would happen regularly.
+>>> Anyway, what's annoying is that I can't figure out how to bring the
+>>> drive back on line without resetting the box.  It's in a hot-swap
+>>>       
+> enclosure,
+>   
+>>> but power cycling the drive doesn't seem to help.  I thought libata
+>>>       
+> hotplug
+>   
+>>> was working?  (SiI3132 card, using the sil24 driver.)
+>>>       
+>
+> Yeah, it's working but failing resets are considered highly dangerous
+> (in that the controller status is unknown and may cause something
+> dangerous like screaming interrupts) and port is muted after that.  The
+> plan is to handle this with polling hotplug such that libata tries to
+> revive the port if PHY status change is detected by polling.  Patches
+> are available but they need other things to resolved to get integrated.
+>  I think it'll happen before the summer.
+>
+> Anyways, you can tell libata to retry the port by manually telling it to
+> rescan the port (echo - - - > /sys/class/scsi_host/hostX/scan).
+>   
+I won't say that's voodoo, but if I ever did it I'd wipe down my 
+keyboard with holy water afterward. ;-)
 
-It's possible, it just takes the time to do it, like many other "nice" things.
+Well, I did save the message in my tricks file, but it sounds like a 
+last ditch effort after something get very wrong.
 
 -- 
 bill davidsen <davidsen@tmr.com>
