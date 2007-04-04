@@ -1,82 +1,51 @@
 From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: raidtools to mdadm
-Date: Wed, 04 Apr 2007 18:56:27 -0400
-Message-ID: <46142D1B.2080401@tmr.com>
-References: <46103C8B.4030001@gmail.com>
+Subject: Re: raid1 does not seem faster
+Date: Wed, 04 Apr 2007 19:11:50 -0400
+Message-ID: <461430B6.9060703@tmr.com>
+References: <Pine.LNX.4.61.0704011417470.8018@yvahk01.tjqt.qr> <200704011558.31670.a1426z@gawab.com> <46118473.10205@tmr.com> <200704031642.27701.a1426z@gawab.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <46103C8B.4030001@gmail.com>
+In-Reply-To: <200704031642.27701.a1426z@gawab.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Casey Boone <caseyboone@gmail.com>
+To: Al Boldi <a1426z@gawab.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Casey Boone wrote:
-> ok so i am trying to recover some data for a friend.  what i am 
-> wanting to do is forcibly set up /dev/mdN to be a raid0 of /dev/sda 
-> and /dev/sdb
+Al Boldi wrote:
+> Bill Davidsen wrote:
+>   
+>> Al Boldi wrote:
+>>     
+>>> The problem is that raid1 one doesn't do striped reads, but rather uses
+>>> read-balancing per proc.  Try your test with parallel reads; it should
+>>> be faster.
+>>>       
+> :
+> :
+>   
+>> It would be nice if reads larger than some size were considered as
+>> candidates for multiple devices. By setting the readahead larger than
+>> that value speed increases would be noted for sequential access.
+>>     
 >
-> i do not want to actually change any of the contents of these drives, 
-> just mount very simply as a raid0.  the raid was originally created 
-> using an onboard nvidia raid on the motherboard these drives used to 
-> be hooked to.  my friend thought he could shove them into another 
-> windows box (that is what he was running on them) and have windows 
-> recover the raid.  all this did was totally destroy the superblock on 
-> one of the two drives.  dmraid now wont see them as a matched pair so 
-> that is out.  the actual data areas of both drives seems to be intact, 
-> but unless i can get them into raid0 i dont know how i can recover the 
-> data.  it figures he gives me the drives after he makes it a notch or 
-> two more of a pain :\
->
-I have friends like that too. ;-)
+> Actually, that's what I thought for a long time too, but as Neil once pointed 
+> out, for striped reads to be efficient, each chunk should be located 
+> sequentially, as to avoid any seeks.  This is only possible by introducing 
+> some offset layout, as in raid10, which infers a loss of raid1's 
+> single-disk-image compatibility.
+>   
+I can't imaging that the offset needs to be physical, there's a 
+translation done from the chunk address on the array to the physical 
+address on the drive, and beyond that usually a translation from the 
+logical position in a partition to a physical LBA location on the drive 
+as a whole.
+> What could be feasible, is some kind of an initial burst striped readahead, 
+> which could possibly improve small reads < (readahead * nr_of_disks).
+You are correct, but I think if an optimization were to be done, some balance between the read time, seek time, and read size could be done. Using more than one drive only makes sense when the read transfer time is significantly longer than the seek time. With an aggressive readahead set for the array that would happen regularly.
 
->
-> now before the advent of mdadm i would use /etc/raidtab and have no 
-> issues setting up the raid device. \
-
-I haven't used raidtools for ages, but can't you bring yourself to using 
-them now? I seem to remember that there was no superblock to be written 
-in a bad place, which might be an advantage. mdadm has several versions 
-which write the superblock in various places on the drives, and you may 
-want "none of the above."
-
-Alternatively, if these are fairly small, write a tiny program to open 
-both physical devices, read a chunk from one, then the other, repeat 
-while writing to something not hosed.
->
->
-> as best i can tell i am using the correct commands for what i want but 
-> i pretty much get nothing but errors:
->
-> root@Knoppix:/media# mdadm --build /dev/md1 --chunk=128 --level=0 
-> --raid-devices=2 /dev/sda /dev/sdb
-> mdadm: error opening /dev/md1: No such device or address
-> root@Knoppix:/media# mdadm --build -n 2 -c 128 -l 0 /dev/md1 /dev/sda 
-> /dev/sdb
-> mdadm: error opening /dev/md1: No such device or address
->
->
-> when i run those commands i do get /dev/mdN entries created, but they 
-> do not point to a valid block device (as tested with fdisk -l and with 
-> dmraid -b)
->
->
-> for the life of me i dont understand why anyone would put important 
-> data on a raid0, but that is what happened in this case.
->
->
-> If i have to i will drop down to an older knoppix release to get 
-> raidtools back, as i have never had any issues in recovering crap 
-> onboard raid arrays nor windows software raid arrays under it.  i am 
-> sure it can be done with mdadm but for the life of me i cannot seem to 
-> figure out exactly how.
->
-> any help on this would be greatly appreciated
->
-> Casey 
-
+It's possible, it just takes the time to do it, like many other "nice" things.
 
 -- 
 bill davidsen <davidsen@tmr.com>
