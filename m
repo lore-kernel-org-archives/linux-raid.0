@@ -1,87 +1,83 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: raid1 does not seem faster
-Date: Thu, 05 Apr 2007 15:19:15 -0400
-Message-ID: <46154BB3.3010006@tmr.com>
-References: <Pine.LNX.4.61.0704011417470.8018@yvahk01.tjqt.qr> <200704011558.31670.a1426z@gawab.com> <46118473.10205@tmr.com> <200704031642.27701.a1426z@gawab.com> <461430B6.9060703@tmr.com> <20070405045819.GA5525@teal.hq.k1024.org> <Pine.LNX.4.64.0704050410290.12619@p34.internal.lan> <20070405153138.GA12661@teal.hq.k1024.org> <Pine.LNX.4.64.0704051156480.23524@p34.internal.lan>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: RAID1 "out of memory" error, was Re: 2.6.21-rc5-mm4
+Date: Thu, 5 Apr 2007 13:21:48 -0700
+Message-ID: <20070405132148.04d01bad.akpm@linux-foundation.org>
+References: <20070402224745.71a25af7.akpm@linux-foundation.org>
+	<461524BF.7050304@reub.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0704051156480.23524@p34.internal.lan>
+In-Reply-To: <461524BF.7050304@reub.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: Iustin Pop <iusty@k1024.org>, Al Boldi <a1426z@gawab.com>, linux-raid@vger.kernel.org
+To: Reuben Farrelly <reuben-linuxkernel@reub.net>
+Cc: neilb@suse.de, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Justin Piszcz wrote:
->
->
-> On Thu, 5 Apr 2007, Iustin Pop wrote:
->
->> On Thu, Apr 05, 2007 at 04:11:35AM -0400, Justin Piszcz wrote:
->>>
->>>
->>> On Thu, 5 Apr 2007, Iustin Pop wrote:
->>>
->>>> On Wed, Apr 04, 2007 at 07:11:50PM -0400, Bill Davidsen wrote:
->>>>> You are correct, but I think if an optimization were to be done, some
->>>>> balance between the read time, seek time, and read size could be 
->>>>> done.
->>>>> Using more than one drive only makes sense when the read transfer 
->>>>> time is
->>>>> significantly longer than the seek time. With an aggressive 
->>>>> readahead set
->>>>> for the array that would happen regularly.
->>>>>
->>>>> It's possible, it just takes the time to do it, like many other 
->>>>> "nice"
->>>>> things.
->>>>
->>>> Maybe yes, but why optimise the single-reader case? raid1 already can
->>>> read in parallel from the drives when multiple processes read from the
->>>> raid1. Optimising the single reader can help in hdparm or other
->>>> benchmark cases, but in real life I see very often the total 
->>>> throughput
->>>> of a (two drive) raid1 being around two times the throughput of a 
->>>> single
->>>> drive.
->>>>
->>>> regards,
->>>> iustin
->>>> -
->>>> To unsubscribe from this list: send the line "unsubscribe 
->>>> linux-raid" in
->>>> the body of a message to majordomo@vger.kernel.org
->>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>>>
->>>
->>> Really? I have copied a file from a SW RAID1 (5GB) and I only saw
->>> 60MB/s not the 120MB/s the (RAID1) is capable of to the
->>> destination (which can easily do > 160MB/s sustained read/write).
->>
->> Did you copy it multi-threaded? I said "*multiple-readers* show improved
->> speed" and you said "I copied *one* file". Try copying two files in
->> parallel.
->>
->> I'm doing in two xterms "cat file1 >/dev/null", "cat file2 >/dev/null"
->> and my raid1 shows ~110 MB/s, each drive doing about half.  On file only
->> does about 60 MB/s (this is over a PCI raid controller so the max 110
->> MB/s is a PCI bus limitation).
->>
->> Iustin
->> -
->> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->
-> Ah, nope, I only did a single copy, I did not parallelize the operations.
-And it would be nice not to have to jump through hoops to get better 
-performance... You can implement raid[01] at the user level, too, why 
-bother to have it in the kernel? ;-)
+On Fri, 06 Apr 2007 02:33:03 +1000
+Reuben Farrelly <reuben-linuxkernel@reub.net> wrote:
 
--- 
-bill davidsen <davidsen@tmr.com>
-  CTO TMR Associates, Inc
-  Doing interesting things with small computers since 1979
+> Hi,
+> 
+> On 3/04/2007 3:47 PM, Andrew Morton wrote:
+> > ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.21-rc5/2.6.21-rc5-mm4/
+> > 
+> > - The oops in git-net.patch has been fixed, so that tree has been restored. 
+> >   It is huge.
+> > 
+> > - Added the device-mapper development tree to the -mm lineup (Alasdair
+> >   Kergon).  It is a quilt tree, living at
+> >   ftp://ftp.kernel.org/pub/linux/kernel/people/agk/patches/2.6/editing/.
+> > 
+> > - Added davidel's signalfd stuff.
+> 
+> Looks like some damage, or maybe intolerance to on-disk damage, to RAID-1.
+> 
+> md1 is the first array on the disk, and it refuses to start up on boot, or after 
+> boot.
+> 
+> ...
+> 
+> tornado ~ # mdadm --assemble /dev/md1 /dev/sda1 /dev/sdc1
+> mdadm: device /dev/md1 already active - cannot assemble it
+> tornado ~ # mdadm --run /dev/md1
+> mdadm: failed to run array /dev/md1: Cannot allocate memory
+> tornado ~ #
+> 
+> and looking at a dmesg, this is logged:
+> 
+> md: bind<sdc1>
+> md: bind<sda1>
+> raid1: raid set md1 active with 2 out of 2 mirrors
+> md1: bitmap initialized from disk: read 0/1 pages, set 0 bits, status: -12
+> md1: failed to create bitmap (-12)
+> md: pers->run() failed ...
+> 
+> tornado ~ # uname -a
+> Linux tornado 2.6.21-rc5-mm4 #1 SMP Thu Apr 5 23:47:42 EST 2007 x86_64 Intel(R) 
+> Pentium(R) 4 CPU 3.00GHz GenuineIntel GNU/Linux
+> tornado ~ #
+> 
+> The last known version that worked was 2.6.21-rc3-mm1 - I haven't been testing 
+> out the -mm releases so much lately.
+
+OK.  I assume that bitmap->chunks in bitmap_init_from_disk() has some
+unexpectedly large value.
+
+I don't _think_ there's anything in -mm which would have triggered this. 
+Does mainline do the same thing?
+
+I guess it's possible that the code in git-md-accel.patch accidentally
+broke things.  Perhaps try disabling CONFIG_DMA_ENGINE?
+
+> Also, Andrew, can you please restart posting/cc'ing your -mm announcements to 
+> the linux-kernel-announce@vger.kernel.org list?  Seems this stopped around about 
+> 2.6.20, it was handy.
+
+hm.  I always Bcc linux-kernel-announce@vger.kernel.org.  I assume that its
+filters didn't get updated after the s/osdl/linux-foundation/ thing.  I'll
+talk to people, thanks.
+
+> .config is up at http://www.reub.net/files/kernel/configs/2.6.21-rc5-mm4
+> 
 
