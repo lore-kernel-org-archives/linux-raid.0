@@ -1,68 +1,29 @@
-From: Casey Boone <caseyboone@gmail.com>
-Subject: Re: raidtools to mdadm
-Date: Wed, 04 Apr 2007 22:26:20 -0500
-Message-ID: <46146C5C.8080502@gmail.com>
-References: <46103C8B.4030001@gmail.com> <46142D1B.2080401@tmr.com>
+From: "Lee Revell" <rlrevell@joe-job.com>
+Subject: Re: 2.6.20.3 AMD64 oops in CFQ code
+Date: Thu, 5 Apr 2007 00:13:55 -0400
+Message-ID: <75b66ecd0704042113mebd1275w2fa40bf159416811@mail.gmail.com>
+References: <20070323174630.31051.qmail@science.horizon.com>
+	 <4611EADC.3000306@suse.de> <46143338.3020808@tmr.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <46142D1B.2080401@tmr.com>
-Sender: linux-raid-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <46143338.3020808@tmr.com>
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 To: Bill Davidsen <davidsen@tmr.com>
-Cc: linux-raid@vger.kernel.org
+Cc: Tejun Heo <teheo@suse.de>, linux@horizon.com, dan.j.williams@intel.com, linux-ide@vger.kernel.org, neilb@suse.de, cebbert@redhat.com, jens.axboe@oracle.com, linux-kernel@dale.us, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-
->> i do not want to actually change any of the contents of these drives, 
->> just mount very simply as a raid0.  the raid was originally created 
->> using an onboard nvidia raid on the motherboard these drives used to 
->> be hooked to.  my friend thought he could shove them into another 
->> windows box (that is what he was running on them) and have windows 
->> recover the raid.  all this did was totally destroy the superblock on 
->> one of the two drives.  dmraid now wont see them as a matched pair so 
->> that is out.  the actual data areas of both drives seems to be 
->> intact, but unless i can get them into raid0 i dont know how i can 
->> recover the data.  it figures he gives me the drives after he makes 
->> it a notch or two more of a pain :\
->>
-> I have friends like that too. ;-)
+On 4/4/07, Bill Davidsen <davidsen@tmr.com> wrote:
+> I won't say that's voodoo, but if I ever did it I'd wipe down my
+> keyboard with holy water afterward. ;-)
 >
+> Well, I did save the message in my tricks file, but it sounds like a
+> last ditch effort after something get very wrong.
 
-gotta love 'em
+Would it reallty be an impediment to development if the kernel
+maintainers simply refuse to merge patches that add new sysfs entries
+without corresponding documentation?
 
-wish i was getting paid for this one
-
-
-
->>
->> now before the advent of mdadm i would use /etc/raidtab and have no 
->> issues setting up the raid device. \
->
-> I haven't used raidtools for ages, but can't you bring yourself to 
-> using them now? I seem to remember that there was no superblock to be 
-> written in a bad place, which might be an advantage. mdadm has several 
-> versions which write the superblock in various places on the drives, 
-> and you may want "none of the above."
->
-> Alternatively, if these are fairly small, write a tiny program to open 
-> both physical devices, read a chunk from one, then the other, repeat 
-> while writing to something not hosed.
-
-
-at the suggestion of another on the list (thanks neil brown!) i tried 
-modprobing a slew of things related to the disk mapper to no avail, then 
-i gave up using knoppix and tried with a fedora 6 box (after i dd-ed the 
-drives off to a larger drive) and it worked great.  i can definitely say 
-that while mdadm is quite foreign territory for me, i love the fact i 
-can specify everything i want to happen on one command line.
-
-btw once i actually did get the drives raided it turns out that while 
-the partition table was intact, somehow the partition itself was 
-fubarred enough that i couldnt mount it to save my life.  finally just 
-told the guy "you screwed it by trying to recover it, next time bring me 
-the drives the MOMENT you have a problem"
-
-Casey
-
-
+Lee
