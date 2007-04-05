@@ -1,31 +1,36 @@
-From: Lennert Buytenhek <buytenh@wantstofly.org>
+From: Gordon Henderson <gordon@drogon.net>
 Subject: Re: raid6 rebuild
-Date: Thu, 5 Apr 2007 07:50:30 +0200
-Message-ID: <20070405055030.GA6978@xi.wantstofly.org>
-References: <20070404194638.GB3712@xi.wantstofly.org> <e9c3a7c20704042022p6088bdcdl97740d2a95818caf@mail.gmail.com>
+Date: Thu, 5 Apr 2007 07:03:08 +0100 (BST)
+Message-ID: <Pine.LNX.4.64.0704050701310.20368@lion.drogon.net>
+References: <20070404194638.GB3712@xi.wantstofly.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <e9c3a7c20704042022p6088bdcdl97740d2a95818caf@mail.gmail.com>
+In-Reply-To: <20070404194638.GB3712@xi.wantstofly.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: mingo@redhat.com, neilb@suse.de, linux-raid@vger.kernel.org
+To: Lennert Buytenhek <buytenh@wantstofly.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Apr 04, 2007 at 08:22:00PM -0700, Dan Williams wrote:
+On Wed, 4 Apr 2007, Lennert Buytenhek wrote:
 
-> >While my RAID6 array was rebuilding after one disk had failed (which
-> >I replaced), a second disk failed[*], and this caused the rebuild
-> >process to start over from the beginning.
-> >
-> >Why would the rebuild need to start over from the beginning in this
-> >case?  Why couldn't it just continue from where it was?
-> 
-> I believe it is because raid5 and raid6 share the same error handler
-> which sets MD_RECOVERY_ERR after losing any disk.  It should probably
-> not set this flag in 1-disk lost raid6 case, but I might be
-> overlooking something else.
+> (please CC on replies, not subscribed to linux-raid@)
+>
+> Hi!
+>
+> While my RAID6 array was rebuilding after one disk had failed (which
+> I replaced), a second disk failed[*], and this caused the rebuild
+> process to start over from the beginning.
+>
+> Why would the rebuild need to start over from the beginning in this
+> case?  Why couldn't it just continue from where it was?
 
-Right, so you're saying that it's probably a bug rather than an
-intentional 'feature'?
+I can't answer your question, just make the comment: Hurrah for RAID-6!
+
+I presume the restarted rebuild went OK?
+
+> [*] probably an entirely defective batch of 14 Samsung Spinpoint 500G disks
+
+Lets hope not... Keep checking those SMART values...
+
+Gordon
