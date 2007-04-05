@@ -1,38 +1,87 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: Kernel 2.6.20.4: Software RAID 5: ata13.00: (irq_stat 0x00020002,
- failed to transmit command FIS)
-Date: Thu, 5 Apr 2007 13:41:55 -0400 (EDT)
-Message-ID: <Pine.LNX.4.64.0704051339470.3810@p34.internal.lan>
-References: <Pine.LNX.4.64.0704051243080.3810@p34.internal.lan>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: raid1 does not seem faster
+Date: Thu, 05 Apr 2007 15:19:15 -0400
+Message-ID: <46154BB3.3010006@tmr.com>
+References: <Pine.LNX.4.61.0704011417470.8018@yvahk01.tjqt.qr> <200704011558.31670.a1426z@gawab.com> <46118473.10205@tmr.com> <200704031642.27701.a1426z@gawab.com> <461430B6.9060703@tmr.com> <20070405045819.GA5525@teal.hq.k1024.org> <Pine.LNX.4.64.0704050410290.12619@p34.internal.lan> <20070405153138.GA12661@teal.hq.k1024.org> <Pine.LNX.4.64.0704051156480.23524@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0704051243080.3810@p34.internal.lan>
+In-Reply-To: <Pine.LNX.4.64.0704051156480.23524@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-raid@vger.kernel.org
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: Iustin Pop <iusty@k1024.org>, Al Boldi <a1426z@gawab.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Justin Piszcz wrote:
+>
+>
+> On Thu, 5 Apr 2007, Iustin Pop wrote:
+>
+>> On Thu, Apr 05, 2007 at 04:11:35AM -0400, Justin Piszcz wrote:
+>>>
+>>>
+>>> On Thu, 5 Apr 2007, Iustin Pop wrote:
+>>>
+>>>> On Wed, Apr 04, 2007 at 07:11:50PM -0400, Bill Davidsen wrote:
+>>>>> You are correct, but I think if an optimization were to be done, some
+>>>>> balance between the read time, seek time, and read size could be 
+>>>>> done.
+>>>>> Using more than one drive only makes sense when the read transfer 
+>>>>> time is
+>>>>> significantly longer than the seek time. With an aggressive 
+>>>>> readahead set
+>>>>> for the array that would happen regularly.
+>>>>>
+>>>>> It's possible, it just takes the time to do it, like many other 
+>>>>> "nice"
+>>>>> things.
+>>>>
+>>>> Maybe yes, but why optimise the single-reader case? raid1 already can
+>>>> read in parallel from the drives when multiple processes read from the
+>>>> raid1. Optimising the single reader can help in hdparm or other
+>>>> benchmark cases, but in real life I see very often the total 
+>>>> throughput
+>>>> of a (two drive) raid1 being around two times the throughput of a 
+>>>> single
+>>>> drive.
+>>>>
+>>>> regards,
+>>>> iustin
+>>>> -
+>>>> To unsubscribe from this list: send the line "unsubscribe 
+>>>> linux-raid" in
+>>>> the body of a message to majordomo@vger.kernel.org
+>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>>
+>>>
+>>> Really? I have copied a file from a SW RAID1 (5GB) and I only saw
+>>> 60MB/s not the 120MB/s the (RAID1) is capable of to the
+>>> destination (which can easily do > 160MB/s sustained read/write).
+>>
+>> Did you copy it multi-threaded? I said "*multiple-readers* show improved
+>> speed" and you said "I copied *one* file". Try copying two files in
+>> parallel.
+>>
+>> I'm doing in two xterms "cat file1 >/dev/null", "cat file2 >/dev/null"
+>> and my raid1 shows ~110 MB/s, each drive doing about half.  On file only
+>> does about 60 MB/s (this is over a PCI raid controller so the max 110
+>> MB/s is a PCI bus limitation).
+>>
+>> Iustin
+>> -
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+>
+> Ah, nope, I only did a single copy, I did not parallelize the operations.
+And it would be nice not to have to jump through hoops to get better 
+performance... You can implement raid[01] at the user level, too, why 
+bother to have it in the kernel? ;-)
 
-
-On Thu, 5 Apr 2007, Justin Piszcz wrote:
-
-> Had a quick question, this is the first time I have seen this happen, and it 
-> was not even under during heavy I/O, hardly anything was going on with the 
-> box at the time.
-
-.. snip ..
-
-# /usr/bin/time badblocks -b 512 -s -v -w /dev/sdl
-Checking for bad blocks in read-write mode
-From block 0 to 293046768
-Testing with pattern 0xaa: done
-Reading and comparing: done
-
-Not a single bad block on the drive so far.  I have not changed anything
-the box physically, with the exception of the BIOS version to V1666 for
-an Intel P965 motherboard (DG965WHMKR).  Any idea what or why this
-happened?  Is it a kernel or actual HW issue?  What caused this to
-occur?  Any thoughts or ideas?
-
-Justin.
+-- 
+bill davidsen <davidsen@tmr.com>
+  CTO TMR Associates, Inc
+  Doing interesting things with small computers since 1979
 
