@@ -1,39 +1,34 @@
-From: Tejun Heo <teheo@suse.de>
-Subject: Re: 2.6.20.3 AMD64 oops in CFQ code
-Date: Thu, 05 Apr 2007 13:29:06 +0900
-Message-ID: <46147B12.60109@suse.de>
-References: <20070323174630.31051.qmail@science.horizon.com>	 <4611EADC.3000306@suse.de> <46143338.3020808@tmr.com> <75b66ecd0704042113mebd1275w2fa40bf159416811@mail.gmail.com>
+From: Iustin Pop <iusty@k1024.org>
+Subject: Re: raid1 does not seem faster
+Date: Thu, 5 Apr 2007 06:58:19 +0200
+Message-ID: <20070405045819.GA5525@teal.hq.k1024.org>
+References: <Pine.LNX.4.61.0704011417470.8018@yvahk01.tjqt.qr> <200704011558.31670.a1426z@gawab.com> <46118473.10205@tmr.com> <200704031642.27701.a1426z@gawab.com> <461430B6.9060703@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <75b66ecd0704042113mebd1275w2fa40bf159416811@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Lee Revell <rlrevell@joe-job.com>
-Cc: Bill Davidsen <davidsen@tmr.com>, linux@horizon.com, dan.j.williams@intel.com, linux-ide@vger.kernel.org, neilb@suse.de, cebbert@redhat.com, jens.axboe@oracle.com, linux-kernel@dale.us, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <461430B6.9060703@tmr.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: Al Boldi <a1426z@gawab.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Lee Revell wrote:
-> On 4/4/07, Bill Davidsen <davidsen@tmr.com> wrote:
->> I won't say that's voodoo, but if I ever did it I'd wipe down my
->> keyboard with holy water afterward. ;-)
->>
->> Well, I did save the message in my tricks file, but it sounds like a
->> last ditch effort after something get very wrong.
+On Wed, Apr 04, 2007 at 07:11:50PM -0400, Bill Davidsen wrote:
+> You are correct, but I think if an optimization were to be done, some 
+> balance between the read time, seek time, and read size could be done. 
+> Using more than one drive only makes sense when the read transfer time is 
+> significantly longer than the seek time. With an aggressive readahead set 
+> for the array that would happen regularly.
+> 
+> It's possible, it just takes the time to do it, like many other "nice" 
+> things.
 
-Which actually is true.  ATA ports failing to reset indicate something
-is very wrong.  Either the attached device or the controller is broken
-and libata shuts down the port to protect the rest of the system from
-it.  The manual scan requests tell libata to give it one more shot and
-polling hotplug can do that automatically.  Anyways, this shouldn't
-happen unless you have a broken piece of hardware.
+Maybe yes, but why optimise the single-reader case? raid1 already can
+read in parallel from the drives when multiple processes read from the
+raid1. Optimising the single reader can help in hdparm or other
+benchmark cases, but in real life I see very often the total throughput
+of a (two drive) raid1 being around two times the throughput of a single
+drive.
 
-> Would it reallty be an impediment to development if the kernel
-> maintainers simply refuse to merge patches that add new sysfs entries
-> without corresponding documentation?
-
-SCSI host scan nodes have been there for a long time.  I think it's
-documented somewhere.
-
--- 
-tejun
+regards,
+iustin
