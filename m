@@ -1,49 +1,38 @@
-From: "Dan Williams" <dan.j.williams@intel.com>
-Subject: Re: raid6 rebuild
-Date: Thu, 5 Apr 2007 09:59:10 -0700
-Message-ID: <e9c3a7c20704050959t7a1866b3j8e3bcc64a893854c@mail.gmail.com>
-References: <20070404194638.GB3712@xi.wantstofly.org>
-	 <e9c3a7c20704042022p6088bdcdl97740d2a95818caf@mail.gmail.com>
-	 <20070405055030.GA6978@xi.wantstofly.org> <4614FF86.3020007@tmr.com>
-	 <20070405140626.GA8726@xi.wantstofly.org>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: Kernel 2.6.20.4: Software RAID 5: ata13.00: (irq_stat 0x00020002,
+ failed to transmit command FIS)
+Date: Thu, 5 Apr 2007 13:41:55 -0400 (EDT)
+Message-ID: <Pine.LNX.4.64.0704051339470.3810@p34.internal.lan>
+References: <Pine.LNX.4.64.0704051243080.3810@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20070405140626.GA8726@xi.wantstofly.org>
-Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.64.0704051243080.3810@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: Lennert Buytenhek <buytenh@wantstofly.org>
-Cc: Bill Davidsen <davidsen@tmr.com>, mingo@redhat.com, neilb@suse.de, linux-raid@vger.kernel.org
+To: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 4/5/07, Lennert Buytenhek <buytenh@wantstofly.org> wrote:
-> On Thu, Apr 05, 2007 at 09:54:14AM -0400, Bill Davidsen wrote:
->
-> > I confess, I would feel safer with my data if the rebuild started
-> > over, I would like to be sure that when it (finally) finishes the
-> > data are valid.
->
-> With disk #3 about to die, I'd have felt safer if it first finished
-> rebuilding the replacement disk for failed disk #1 (that rebuild had
-> almost completed at that point), safeguarding the array against a
-> third disk failure.
->
-I agree, the current arrangement seems to throw away a significant
-amount of work.  Yes, you will need to resync when re-adding the
-second disk, but in the meantime might as well try to get a redundant
-mode at all costs.
 
-> Yeah, I know, you're not supposed to lose three disks within one day.
->
->
-> > If you replaced the 2nd drive, then a full rebuild would be required
-> > in any case, to get ALL drives valid.
->
-> You could finish the last little bit of the resync of the replacement
-> for failed disk #1 (by looking at P+Q), and then re-sync the replacement
-> for failed disk #2 (by looking only at P..)
-> -
 
---
-Dan
+On Thu, 5 Apr 2007, Justin Piszcz wrote:
+
+> Had a quick question, this is the first time I have seen this happen, and it 
+> was not even under during heavy I/O, hardly anything was going on with the 
+> box at the time.
+
+.. snip ..
+
+# /usr/bin/time badblocks -b 512 -s -v -w /dev/sdl
+Checking for bad blocks in read-write mode
+From block 0 to 293046768
+Testing with pattern 0xaa: done
+Reading and comparing: done
+
+Not a single bad block on the drive so far.  I have not changed anything
+the box physically, with the exception of the BIOS version to V1666 for
+an Intel P965 motherboard (DG965WHMKR).  Any idea what or why this
+happened?  Is it a kernel or actual HW issue?  What caused this to
+occur?  Any thoughts or ideas?
+
+Justin.
+
