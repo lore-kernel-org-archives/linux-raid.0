@@ -1,158 +1,197 @@
-From: Reuben Farrelly <reuben-linuxkernel@reub.net>
-Subject: RAID1 "out of memory" error, was Re: 2.6.21-rc5-mm4
-Date: Fri, 06 Apr 2007 02:33:03 +1000
-Message-ID: <461524BF.7050304@reub.net>
-References: <20070402224745.71a25af7.akpm@linux-foundation.org>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Kernel 2.6.20.4: Software RAID 5: ata13.00: (irq_stat 0x00020002,
+ failed to transmit command FIS)
+Date: Thu, 5 Apr 2007 12:47:40 -0400 (EDT)
+Message-ID: <Pine.LNX.4.64.0704051243080.3810@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753149AbXDEQdL@vger.kernel.org>
-In-Reply-To: <20070402224745.71a25af7.akpm@linux-foundation.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, neilb@suse.de
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Return-path: <linux-ide-owner@vger.kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+Had a quick question, this is the first time I have seen this happen, and 
+it was not even under during heavy I/O, hardly anything was going on with 
+the box at the time.
 
-On 3/04/2007 3:47 PM, Andrew Morton wrote:
-> ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.21-rc5/2.6.21-rc5-mm4/
-> 
-> - The oops in git-net.patch has been fixed, so that tree has been restored. 
->   It is huge.
-> 
-> - Added the device-mapper development tree to the -mm lineup (Alasdair
->   Kergon).  It is a quilt tree, living at
->   ftp://ftp.kernel.org/pub/linux/kernel/people/agk/patches/2.6/editing/.
-> 
-> - Added davidel's signalfd stuff.
+Any idea what could have caused this?  I am running a badblocks test right 
+now, but so far the disk looks OK.
 
-Looks like some damage, or maybe intolerance to on-disk damage, to RAID-1.
+[369143.916093] ata13.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
+[369143.916100] ata13.00: (irq_stat 0x00020002, failed to transmit command FIS)
+[369143.916107] ata13.00: cmd ca/00:00:97:1a:d5/00:00:00:00:00/e9 tag 0 cdb 0x0 data 131072 out
+[369143.916109]          res 93/37:00:00:00:00/00:00:40:00:93/00 Emask 0x12 (ATA bus error)
+[369143.916116] ata13: hard resetting port
+[369146.145915] ata13: softreset failed (port not ready)
+[369146.145922] ata13: follow-up softreset failed, retrying in 5 secs
+[369151.146035] ata13: hard resetting port
+[369153.376736] ata13: softreset failed (port not ready)
+[369153.376743] ata13: follow-up softreset failed, retrying in 5 secs
+[369158.376664] ata13: hard resetting port
+[369160.608025] ata13: softreset failed (port not ready)
+[369160.608033] ata13: reset failed, giving up
+[369160.608036] ata13.00: disabled
+[369160.608043] ata13: EH pending after completion, repeating EH (cnt=4)
+[369160.718365] ata13: exception Emask 0x10 SAct 0x0 SErr 0x4050000 action 0x6 frozen
+[369160.718370] ata13: (irq_stat 0x00060002, failed to transmit command FIS)
+[369161.238432] ata13: waiting for device to spin up (8 secs)
+[369168.715610] ata13: hard resetting port
+[369170.946658] ata13: softreset failed (port not ready)
+[369170.946666] ata13: follow-up softreset failed, retrying in 5 secs
+[369175.946249] ata13: hard resetting port
+[369178.167644] ata13: softreset failed (port not ready)
+[369178.167651] ata13: follow-up softreset failed, retrying in 5 secs
+[369183.167742] ata13: hard resetting port
+[369185.398497] ata13: softreset failed (port not ready)
+[369185.398504] ata13: reset failed, giving up
+[369185.398522] sd 12:0:0:0: SCSI error: return code = 0x08000002
+[369185.398526] sdl: Current [descriptor]: sense key: Aborted Command
+[369185.398532]     Additional sense: Scsi parity error
+[369185.398539] Descriptor sense data with sense descriptors (in hex):
+[369185.398544]         72 0b 47 00 00 00 00 0c 00 0a 80 00 00 00 00 00 
+[369185.398572]         00 00 00 00 
+[369185.398581] end_request: I/O error, dev sdl, sector 164960919
+[369185.398586] raid5: Disk failure on sdl1, disabling device. Operation continuing on 3 devices
+[369185.398617] sd 12:0:0:0: rejecting I/O to offline device
+[369185.398625] ata13: EH complete
+[369185.398635] ata13.00: detaching (SCSI 12:0:0:0)
+[369185.398676] sd 12:0:0:0: SCSI error: return code = 0x00010000
+[369185.398680] end_request: I/O error, dev sdl, sector 164961175
+[369185.398702] raid5:md3: read error not correctable (sector 164962304 on sdl1).
+[369185.398707] raid5:md3: read error not correctable (sector 164962312 on sdl1).
+[369185.398711] raid5:md3: read error not correctable (sector 164962320 on sdl1).
+[369185.398716] raid5:md3: read error not correctable (sector 164962328 on sdl1).
+[369185.398760] Synchronizing SCSI cache for disk sdl: 
+[369185.398784] FAILED
+[369185.398785]   status = 0, message = 00, host = 4, driver = 00
+[369185.398786]   <3>scsi 12:0:0:0: rejecting I/O to dead device
+[369185.404619] scsi 12:0:0:0: rejecting I/O to dead device
+[369185.404641] scsi 12:0:0:0: rejecting I/O to dead device
+[369185.404662] scsi 12:0:0:0: rejecting I/O to dead device
+[369185.404682] scsi 12:0:0:0: rejecting I/O to dead device
+[369185.404686] scsi 12:0:0:0: rejecting I/O to dead device
+[369185.404691] scsi 12:0:0:0: rejecting I/O to dead device
+[369185.404712] scsi 12:0:0:0: rejecting I/O to dead device
+[369185.404732] scsi 12:0:0:0: rejecting I/O to dead device
+[369185.404753] scsi 12:0:0:0: rejecting I/O to dead device
+[369185.404774] scsi 12:0:0:0: rejecting I/O to dead device
+[369185.404794] scsi 12:0:0:0: rejecting I/O to dead device
+[369185.404815] scsi 12:0:0:0: rejecting I/O to dead device
+[369185.404844] scsi 12:0:0:0: rejecting I/O to dead device
+[369185.404863] scsi 12:0:0:0: rejecting I/O to dead device
+[369185.404882] scsi 12:0:0:0: rejecting I/O to dead device
+[369185.404900] scsi 12:0:0:0: rejecting I/O to dead device
+[369185.404918] scsi 12:0:0:0: rejecting I/O to dead device
+[369185.404937] scsi 12:0:0:0: rejecting I/O to dead device
+[369185.404956] scsi 12:0:0:0: rejecting I/O to dead device
+[369185.413938] RAID5 conf printout:
+[369185.413944]  --- rd:4 wd:3
+[369185.413948]  disk 0, o:1, dev:sdi1
+[369185.413950]  disk 1, o:1, dev:sdj1
+[369185.413953]  disk 2, o:0, dev:sdl1
+[369185.413956]  disk 3, o:1, dev:sdg1
+[369185.418873] RAID5 conf printout:
+[369185.418878]  --- rd:4 wd:3
+[369185.418881]  disk 0, o:1, dev:sdi1
+[369185.418884]  disk 1, o:1, dev:sdj1
+[369185.418887]  disk 3, o:1, dev:sdg1
 
-md1 is the first array on the disk, and it refuses to start up on boot, or after 
-boot.
+Relevant SMART data:
 
-tornado ~ # cat /proc/mdstat
-Personalities : [raid1]
-md1 : inactive sda1[0] sdc1[1]
-       208640 blocks
+SMART Attributes Data Structure revision number: 16
+Vendor Specific SMART Attributes with Thresholds:
+ID# ATTRIBUTE_NAME          FLAG     VALUE WORST THRESH TYPE      UPDATED 
+WHEN_FAILED RAW_VALUE
+   1 Raw_Read_Error_Rate     0x000b   200   200   051    Pre-fail  Always 
+-       0
+   3 Spin_Up_Time            0x0007   192   165   021    Pre-fail  Always 
+-       3441
+   4 Start_Stop_Count        0x0032   100   100   040    Old_age   Always 
+-       34
+   5 Reallocated_Sector_Ct   0x0033   200   200   140    Pre-fail  Always 
+-       0
+   7 Seek_Error_Rate         0x000a   200   200   051    Old_age   Always 
+-       0
+   9 Power_On_Hours          0x0032   098   098   000    Old_age   Always 
+-       1988
+  10 Spin_Retry_Count        0x0012   100   253   051    Old_age   Always 
+-       0
+  11 Calibration_Retry_Count 0x0012   100   253   051    Old_age   Always 
+-       0
+  12 Power_Cycle_Count       0x0032   100   100   000    Old_age   Always 
+-       34
+194 Temperature_Celsius     0x0022   120   107   000    Old_age   Always 
+-       27
+196 Reallocated_Event_Count 0x0032   200   200   000    Old_age   Always 
+-       0
+197 Current_Pending_Sector  0x0012   200   200   000    Old_age   Always 
+-       0
+198 Offline_Uncorrectable   0x0012   200   200   000    Old_age   Always 
+-       0
+199 UDMA_CRC_Error_Count    0x000a   200   253   000    Old_age   Always 
+-       1
+200 Multi_Zone_Error_Rate   0x0008   200   200   051    Old_age   Offline 
+-       0
 
-md3 : active raid1 sdc3[1] sda3[0]
-       20008832 blocks [2/2] [UU]
-       bitmap: 0/153 pages [0KB], 64KB chunk
+SMART Error Log Version: 1
+No Errors Logged
 
-md5 : active raid1 sdc5[1] sda5[0]
-       10008384 blocks [2/2] [UU]
-       bitmap: 4/153 pages [16KB], 32KB chunk
+SMART Self-test log structure revision number 1
+Num  Test_Description    Status                  Remaining 
+LifeTime(hours)  LBA_of_first_error
+# 1  Short offline       Completed without error       00%      1977 
+-
+# 2  Short offline       Completed without error       00%      1954 
+-
+# 3  Short offline       Completed without error       00%      1931 
+-
+# 4  Short offline       Completed without error       00%      1908 
+-
+# 5  Short offline       Completed without error       00%      1861 
+-
+# 6  Short offline       Completed without error       00%      1814 
+-
+# 7  Short offline       Completed without error       00%      1791 
+-
+# 8  Short offline       Completed without error       00%      1768 
+-
+# 9  Short offline       Completed without error       00%      1745 
+-
+#10  Short offline       Completed without error       00%      1698 
+-
+#11  Short offline       Completed without error       00%      1651 
+-
+#12  Short offline       Completed without error       00%      1628 
+-
+#13  Short offline       Completed without error       00%      1605 
+-
+#14  Short offline       Completed without error       00%      1581 
+-
+#15  Short offline       Completed without error       00%      1535 
+-
+#16  Short offline       Completed without error       00%      1488 
+-
+#17  Short offline       Completed without error       00%      1464 
+-
+#18  Short offline       Completed without error       00%      1441 
+-
+#19  Short offline       Completed without error       00%      1418 
+-
+#20  Short offline       Completed without error       00%      1372 
+-
+#21  Short offline       Completed without error       00%      1326 
+-
 
-md6 : active raid1 sdc6[1] sda6[0]
-       10008384 blocks [2/2] [UU]
-       bitmap: 0/153 pages [0KB], 32KB chunk
-
-md8 : active raid1 sdc8[1] sda8[0]
-       1003904 blocks [2/2] [UU]
-       bitmap: 0/123 pages [0KB], 4KB chunk
-
-md10 : active raid1 sdc10[1] sda10[0]
-       119933120 blocks [2/2] [UU]
-       bitmap: 1/229 pages [4KB], 256KB chunk
-
-md2 : active raid1 sdc2[1] sda2[0]
-       100004544 blocks [2/2] [UU]
-       bitmap: 10/191 pages [40KB], 256KB chunk
-
-unused devices: <none>
-tornado ~ #
-
-tornado ~ # mdadm --examine /dev/sda1
-/dev/sda1:
-           Magic : a92b4efc
-         Version : 00.90.00
-            UUID : f5c2e565:5ed956c0:33b08c07:16154426
-   Creation Time : Fri Feb  2 10:16:29 2007
-      Raid Level : raid1
-   Used Dev Size : 104320 (101.89 MiB 106.82 MB)
-      Array Size : 104320 (101.89 MiB 106.82 MB)
-    Raid Devices : 2
-   Total Devices : 2
-Preferred Minor : 1
-
-     Update Time : Fri Apr  6 02:06:17 2007
-           State : clean
-Internal Bitmap : present
-  Active Devices : 2
-Working Devices : 2
-  Failed Devices : 0
-   Spare Devices : 0
-        Checksum : d3668aaa - correct
-          Events : 0.368
-
-
-       Number   Major   Minor   RaidDevice State
-this     0       8        1        0      active sync   /dev/sda1
-
-    0     0       8        1        0      active sync   /dev/sda1
-    1     1       8       33        1      active sync   /dev/sdc1
-tornado ~ # mdadm --examine /dev/sdc1
-/dev/sdc1:
-           Magic : a92b4efc
-         Version : 00.90.00
-            UUID : f5c2e565:5ed956c0:33b08c07:16154426
-   Creation Time : Fri Feb  2 10:16:29 2007
-      Raid Level : raid1
-   Used Dev Size : 104320 (101.89 MiB 106.82 MB)
-      Array Size : 104320 (101.89 MiB 106.82 MB)
-    Raid Devices : 2
-   Total Devices : 2
-Preferred Minor : 1
-
-     Update Time : Fri Apr  6 02:06:17 2007
-           State : clean
-Internal Bitmap : present
-  Active Devices : 2
-Working Devices : 2
-  Failed Devices : 0
-   Spare Devices : 0
-        Checksum : d3668acc - correct
-          Events : 0.368
+SMART Selective self-test log data structure revision number 1
+  SPAN  MIN_LBA  MAX_LBA  CURRENT_TEST_STATUS
+     1        0        0  Not_testing
+     2        0        0  Not_testing
+     3        0        0  Not_testing
+     4        0        0  Not_testing
+     5        0        0  Not_testing
+Selective self-test flags (0x0):
+   After scanning selected spans, do NOT read-scan remainder of disk.
+If Selective self-test is pending on power-up, resume after 0 minute 
+delay.
 
 
-       Number   Major   Minor   RaidDevice State
-this     1       8       33        1      active sync   /dev/sdc1
-
-    0     0       8        1        0      active sync   /dev/sda1
-    1     1       8       33        1      active sync   /dev/sdc1
-tornado ~ #
-
-
-tornado ~ # mdadm --assemble /dev/md1 /dev/sda1 /dev/sdc1
-mdadm: device /dev/md1 already active - cannot assemble it
-tornado ~ # mdadm --run /dev/md1
-mdadm: failed to run array /dev/md1: Cannot allocate memory
-tornado ~ #
-
-and looking at a dmesg, this is logged:
-
-md: bind<sdc1>
-md: bind<sda1>
-raid1: raid set md1 active with 2 out of 2 mirrors
-md1: bitmap initialized from disk: read 0/1 pages, set 0 bits, status: -12
-md1: failed to create bitmap (-12)
-md: pers->run() failed ...
-
-tornado ~ # uname -a
-Linux tornado 2.6.21-rc5-mm4 #1 SMP Thu Apr 5 23:47:42 EST 2007 x86_64 Intel(R) 
-Pentium(R) 4 CPU 3.00GHz GenuineIntel GNU/Linux
-tornado ~ #
-
-The last known version that worked was 2.6.21-rc3-mm1 - I haven't been testing 
-out the -mm releases so much lately.
-
-Also, Andrew, can you please restart posting/cc'ing your -mm announcements to 
-the linux-kernel-announce@vger.kernel.org list?  Seems this stopped around about 
-2.6.20, it was handy.
-
-.config is up at http://www.reub.net/files/kernel/configs/2.6.21-rc5-mm4
-
-Thanks,
-Reuben
