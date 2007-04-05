@@ -1,35 +1,59 @@
-From: Lennert Buytenhek <buytenh@wantstofly.org>
-Subject: Re: raid6 rebuild
-Date: Thu, 5 Apr 2007 16:06:27 +0200
-Message-ID: <20070405140626.GA8726@xi.wantstofly.org>
-References: <20070404194638.GB3712@xi.wantstofly.org> <e9c3a7c20704042022p6088bdcdl97740d2a95818caf@mail.gmail.com> <20070405055030.GA6978@xi.wantstofly.org> <4614FF86.3020007@tmr.com>
+From: Iustin Pop <iusty@k1024.org>
+Subject: Re: raid1 does not seem faster
+Date: Thu, 5 Apr 2007 17:31:39 +0200
+Message-ID: <20070405153138.GA12661@teal.hq.k1024.org>
+References: <Pine.LNX.4.61.0704011417470.8018@yvahk01.tjqt.qr> <200704011558.31670.a1426z@gawab.com> <46118473.10205@tmr.com> <200704031642.27701.a1426z@gawab.com> <461430B6.9060703@tmr.com> <20070405045819.GA5525@teal.hq.k1024.org> <Pine.LNX.4.64.0704050410290.12619@p34.internal.lan>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <4614FF86.3020007@tmr.com>
+In-Reply-To: <Pine.LNX.4.64.0704050410290.12619@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: Dan Williams <dan.j.williams@intel.com>, mingo@redhat.com, neilb@suse.de, linux-raid@vger.kernel.org
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: Bill Davidsen <davidsen@tmr.com>, Al Boldi <a1426z@gawab.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Apr 05, 2007 at 09:54:14AM -0400, Bill Davidsen wrote:
+On Thu, Apr 05, 2007 at 04:11:35AM -0400, Justin Piszcz wrote:
+> 
+> 
+> On Thu, 5 Apr 2007, Iustin Pop wrote:
+> 
+> >On Wed, Apr 04, 2007 at 07:11:50PM -0400, Bill Davidsen wrote:
+> >>You are correct, but I think if an optimization were to be done, some
+> >>balance between the read time, seek time, and read size could be done.
+> >>Using more than one drive only makes sense when the read transfer time is
+> >>significantly longer than the seek time. With an aggressive readahead set
+> >>for the array that would happen regularly.
+> >>
+> >>It's possible, it just takes the time to do it, like many other "nice"
+> >>things.
+> >
+> >Maybe yes, but why optimise the single-reader case? raid1 already can
+> >read in parallel from the drives when multiple processes read from the
+> >raid1. Optimising the single reader can help in hdparm or other
+> >benchmark cases, but in real life I see very often the total throughput
+> >of a (two drive) raid1 being around two times the throughput of a single
+> >drive.
+> >
+> >regards,
+> >iustin
+> >-
+> >To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> >the body of a message to majordomo@vger.kernel.org
+> >More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> >
+> 
+> Really? I have copied a file from a SW RAID1 (5GB) and I only saw 
+> 60MB/s not the 120MB/s the (RAID1) is capable of to the 
+> destination (which can easily do > 160MB/s sustained read/write).
 
-> I confess, I would feel safer with my data if the rebuild started
-> over, I would like to be sure that when it (finally) finishes the
-> data are valid.
+Did you copy it multi-threaded? I said "*multiple-readers* show improved
+speed" and you said "I copied *one* file". Try copying two files in
+parallel.
 
-With disk #3 about to die, I'd have felt safer if it first finished
-rebuilding the replacement disk for failed disk #1 (that rebuild had
-almost completed at that point), safeguarding the array against a
-third disk failure.
+I'm doing in two xterms "cat file1 >/dev/null", "cat file2 >/dev/null"
+and my raid1 shows ~110 MB/s, each drive doing about half.  On file only
+does about 60 MB/s (this is over a PCI raid controller so the max 110
+MB/s is a PCI bus limitation).
 
-Yeah, I know, you're not supposed to lose three disks within one day.
-
-
-> If you replaced the 2nd drive, then a full rebuild would be required
-> in any case, to get ALL drives valid.
-
-You could finish the last little bit of the resync of the replacement
-for failed disk #1 (by looking at P+Q), and then re-sync the replacement
-for failed disk #2 (by looking only at P..)
+Iustin
