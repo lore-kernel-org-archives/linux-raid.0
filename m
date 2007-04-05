@@ -1,65 +1,47 @@
-From: Andre Noll <maan@systemlinux.org>
-Subject: Re: raid6 rebuild
-Date: Thu, 5 Apr 2007 12:13:03 +0200
-Message-ID: <20070405101303.GY4252@skl-net.de>
-References: <20070404194638.GB3712@xi.wantstofly.org>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: raid1 does not seem faster
+Date: Thu, 05 Apr 2007 09:45:52 -0400
+Message-ID: <4614FD90.2050205@tmr.com>
+References: <Pine.LNX.4.61.0704011417470.8018@yvahk01.tjqt.qr> <200704011558.31670.a1426z@gawab.com> <46118473.10205@tmr.com> <200704031642.27701.a1426z@gawab.com> <461430B6.9060703@tmr.com> <20070405045819.GA5525@teal.hq.k1024.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="Sx3M3By4KbPIrykT"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20070404194638.GB3712@xi.wantstofly.org>
+In-Reply-To: <20070405045819.GA5525@teal.hq.k1024.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Lennert Buytenhek <buytenh@wantstofly.org>
-Cc: mingo@redhat.com, neilb@suse.de, linux-raid@vger.kernel.org
+To: Bill Davidsen <davidsen@tmr.com>, Al Boldi <a1426z@gawab.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Iustin Pop wrote:
+> On Wed, Apr 04, 2007 at 07:11:50PM -0400, Bill Davidsen wrote:
+>   
+>> You are correct, but I think if an optimization were to be done, some 
+>> balance between the read time, seek time, and read size could be done. 
+>> Using more than one drive only makes sense when the read transfer time is 
+>> significantly longer than the seek time. With an aggressive readahead set 
+>> for the array that would happen regularly.
+>>
+>> It's possible, it just takes the time to do it, like many other "nice" 
+>> things.
+>>     
+>
+> Maybe yes, but why optimise the single-reader case? raid1 already can
+> read in parallel from the drives when multiple processes read from the
+> raid1. Optimising the single reader can help in hdparm or other
+> benchmark cases, but in real life I see very often the total throughput
+> of a (two drive) raid1 being around two times the throughput of a single
+> drive.
 
---Sx3M3By4KbPIrykT
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Why optimize the single thread case? Any process which has low CPU 
+requirements (by current standards) becomes i/o bound. The obvious 
+candidates are grep, sed, dd, or awk. And don't overlook the benefits of 
+reliable swap.
 
-On 21:46, Lennert Buytenhek wrote:
+Test script modifications taking place as I type, I post the script and 
+some results later this week, barring urgent support issues.
 
-> While my RAID6 array was rebuilding after one disk had failed (which
-> I replaced), a second disk failed[*], and this caused the rebuild
-> process to start over from the beginning.
->=20
-> Why would the rebuild need to start over from the beginning in this
-> case?  Why couldn't it just continue from where it was?
+-- 
+bill davidsen <davidsen@tmr.com>
+  CTO TMR Associates, Inc
+  Doing interesting things with small computers since 1979
 
-I think this is because an easier algorithm may be used to rebuild from
-a one disk failure than what is needed in case of a two disk failure.
-In case of a one disk failure you can simply do the following:
-
-rebuild P or Q: Just recompute it from the data disks
-rebuild data: xor remaining data and P as in raid5 (in fact, the raid5
-code is used in this case)
-
-It's only the rebuild from a two disk failure that requires deeper
-and more expensive math.
-
-So if a second disk dies during the rebuild, the raid6 code must
-switch from the easy algorithm to the "difficult" algorithm to finish
-rebuilding the first failed disk. Theoretically this could be done
-on the fly, but I think the current code doesn't do this now.
-
-Andre
---=20
-The only person who always got his work done by Friday was Robinson Crusoe
-
---Sx3M3By4KbPIrykT
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
-
-iD8DBQFGFMuvWto1QDEAkw8RAtLFAJ9kXM8CziFQyElybMOdsKJOLniIWACfSGn2
-KNQCxbez5uT++vbxKvTIO8E=
-=MTix
------END PGP SIGNATURE-----
-
---Sx3M3By4KbPIrykT--
