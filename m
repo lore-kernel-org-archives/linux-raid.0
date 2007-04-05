@@ -1,45 +1,51 @@
-From: Lennert Buytenhek <buytenh@wantstofly.org>
-Subject: Re: raid6 rebuild
-Date: Thu, 5 Apr 2007 08:21:14 +0200
-Message-ID: <20070405062114.GB6978@xi.wantstofly.org>
-References: <20070404194638.GB3712@xi.wantstofly.org> <Pine.LNX.4.64.0704050701310.20368@lion.drogon.net>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: raid1 does not seem faster
+Date: Thu, 5 Apr 2007 04:11:35 -0400 (EDT)
+Message-ID: <Pine.LNX.4.64.0704050410290.12619@p34.internal.lan>
+References: <Pine.LNX.4.61.0704011417470.8018@yvahk01.tjqt.qr>
+ <200704011558.31670.a1426z@gawab.com> <46118473.10205@tmr.com>
+ <200704031642.27701.a1426z@gawab.com> <461430B6.9060703@tmr.com>
+ <20070405045819.GA5525@teal.hq.k1024.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.64.0704050701310.20368@lion.drogon.net>
+In-Reply-To: <20070405045819.GA5525@teal.hq.k1024.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Gordon Henderson <gordon@drogon.net>
-Cc: linux-raid@vger.kernel.org
+To: Iustin Pop <iusty@k1024.org>
+Cc: Bill Davidsen <davidsen@tmr.com>, Al Boldi <a1426z@gawab.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Apr 05, 2007 at 07:03:08AM +0100, Gordon Henderson wrote:
-
-> > While my RAID6 array was rebuilding after one disk had failed (which
-> > I replaced), a second disk failed[*], and this caused the rebuild
-> > process to start over from the beginning.
-> >
-> > Why would the rebuild need to start over from the beginning in this
-> > case?  Why couldn't it just continue from where it was?
-> 
-> I can't answer your question, just make the comment: Hurrah for RAID-6!
-
-Agreed, although I'm still only just in the testing phase with this
-array.  It isn't in production yet, and I don't have any important data
-on the array that I don't have backups of.
 
 
-> I presume the restarted rebuild went OK?
+On Thu, 5 Apr 2007, Iustin Pop wrote:
 
-Yep, it had just finished when I just woke up, so now it's back from
-double-degraded to degraded.  Just in time for the third disk to start
-failing, which will probably fail during the rebuild of the second
-failed disk after I swap that one out in a couple of minutes..
+> On Wed, Apr 04, 2007 at 07:11:50PM -0400, Bill Davidsen wrote:
+>> You are correct, but I think if an optimization were to be done, some
+>> balance between the read time, seek time, and read size could be done.
+>> Using more than one drive only makes sense when the read transfer time is
+>> significantly longer than the seek time. With an aggressive readahead set
+>> for the array that would happen regularly.
+>>
+>> It's possible, it just takes the time to do it, like many other "nice"
+>> things.
+>
+> Maybe yes, but why optimise the single-reader case? raid1 already can
+> read in parallel from the drives when multiple processes read from the
+> raid1. Optimising the single reader can help in hdparm or other
+> benchmark cases, but in real life I see very often the total throughput
+> of a (two drive) raid1 being around two times the throughput of a single
+> drive.
+>
+> regards,
+> iustin
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
+Really? I have copied a file from a SW RAID1 (5GB) and I only saw 
+60MB/s not the 120MB/s the (RAID1) is capable of to the 
+destination (which can easily do > 160MB/s sustained read/write).
 
-> > [*] probably an entirely defective batch of 14 Samsung Spinpoint
-> > 500G disks
-> 
-> Lets hope not... Keep checking those SMART values...
-
-Failed disk #2 still reports a SMART status of "PASSED"..
+Justin.
