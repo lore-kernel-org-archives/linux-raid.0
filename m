@@ -1,36 +1,46 @@
-From: Luca Berra <bluca@comedia.it>
-Subject: Re: s2disk and raid
-Date: Fri, 6 Apr 2007 11:08:35 +0200
-Message-ID: <20070406090834.GA31189@percy.comedia.it>
-References: <20070403175521.70e6c876@commensaal.drs.p> <17939.13752.164747.486393@notabene.brown>
+From: Andy Smith <andy@lug.org.uk>
+Subject: raid10_make_request bug: can't convert block across chunks or bigger [...]
+Date: Sat, 7 Apr 2007 03:10:27 +0000
+Message-ID: <20070407031027.GT2737@bitfolk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="C92BGBoQeSqt4vh9"
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <17939.13752.164747.486393@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wed, Apr 04, 2007 at 03:20:56PM +1000, Neil Brown wrote:
->The trick is to use the 'start_ro' module parameter.
->  echo 1 > /sys/module/md_mod/parameters/start_ro
->
->Then md will start arrays assuming read-only.  No resync will be
->started, no superblock will be written.  They stay this way until the
->first write at which point they become normal read-write and any
->required resync starts.
->
-uh, i tought a read-only array was supposed to remain read-only, and
-that write attempts would fail.
-My bad for not testing my assumptions.
 
-L.
+--C92BGBoQeSqt4vh9
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
--- 
-Luca Berra -- bluca@comedia.it
-        Communication Media & Services S.r.l.
- /"\
- \ /     ASCII RIBBON CAMPAIGN
-  X        AGAINST HTML MAIL
- / \
+I'm now seeing the exact same problem as Ask did in:
+
+http://www.mail-archive.com/linux-raid@vger.kernel.org/msg06762.html
+
+again using md raid10 under LVM, trying to export an LV to a xen
+domain.
+
+This is on the latest Debian Etch kernel based on 2.6.18.4.
+
+Ask didn't seem to get any on list replies - can anyone shed any light?
+
+Cheers,
+Andy
+
+--C92BGBoQeSqt4vh9
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.1 (GNU/Linux)
+
+iD8DBQFGFwujIJm2TL8VSQsRApEyAJ4uyuGvnjPnqlHKkJ6FVlpZjhUNAACbB8DS
+k3XvlwCbVGo95La5vLlHLeE=
+=GxNG
+-----END PGP SIGNATURE-----
+
+--C92BGBoQeSqt4vh9--
