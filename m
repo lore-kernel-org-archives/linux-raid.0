@@ -1,31 +1,34 @@
-From: "Aaron C. de Bruyn" <aaron@darkpixel.com>
-Subject: Moron Destroyed RAID6 Array Superblocks
-Date: Sat, 07 Apr 2007 21:10:06 -0700
-Message-ID: <46186B1E.4010500@darkpixel.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: Andrew Burgess <aab@cichlid.com>
+Subject: Re: Moron Destroyed RAID6 Array Superblocks
+Date: Sun, 8 Apr 2007 08:21:58 -0700
+Message-ID: <200704081521.l38FLwGU017164@cichlid.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: aaron@darkpixel.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Ok--I'm a moron.
-Long story short, I was messing around with my RAID6 array and I managed
-to screw up two of the drives in my 7-drive 1-spare array.
-I had problems in the middle of a kernel upgrade and I kept getting
-errors about various drives having bad superblocks.
+>After reading through the linux-raid archives I have been lead to
+>believe that I can recover my array by doing a --create and listing the
+>7 drives in the exact order I originally created them in.  Is this correct?
 
-So without knowing much about what I was doing, I did a
---zero-superblock on all the drives in the array.
-So now I can't reassemble the array.
+>If so, the kernel upgrade managed to shuffle the drive names around...is
+>there any way I can figure out what order they should be in?
 
-After reading through the linux-raid archives I have been lead to
-believe that I can recover my array by doing a --create and listing the
-7 drives in the exact order I originally created them in.  Is this correct?
+If you know the old order just boot the old kernel and recreate there
 
-If so, the kernel upgrade managed to shuffle the drive names around...is
-there any way I can figure out what order they should be in?
+If you are using kernel rpms, you always want to 'install' new kernels
+and not 'upgrade', that keeps both the old and new kernel available.
 
+Otherwise, if you pick just 5 for the 7 drives from a raid 6 array
+it seems to me you have 5 factorial combinations = 120. You could write
+a script that tries them all and then tests by trying a read-only mount?
 
--A
+Good luck. I mashed a 3.5 TB array once by rerunning the lvm
+creation which zeros the first chunk of the resulting device. I was
+used to mdadm not hurting user data when creating. Grrr.
+
+BTW when you test recreate the array make sure you dont start syncing, thats
+another reason to just use 5 drives.
+
+HTH
+
