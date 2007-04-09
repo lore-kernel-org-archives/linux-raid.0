@@ -1,47 +1,64 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Kernel 2.6.20.4: Software RAID 5: ata13.00: (irq_stat 0x00020002,
- failed to transmit command FIS)
-Date: Mon, 09 Apr 2007 16:48:58 +0900
-Message-ID: <4619EFEA.9030003@gmail.com>
-References: <Pine.LNX.4.64.0704051243080.3810@p34.internal.lan> <Pine.LNX.4.64.0704051339470.3810@p34.internal.lan>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: raid1 does not seem faster
+Date: Mon, 9 Apr 2007 06:53:26 -0400 (EDT)
+Message-ID: <Pine.LNX.4.64.0704090652230.15675@p34.internal.lan>
+References: <Pine.LNX.4.61.0704011417470.8018@yvahk01.tjqt.qr>
+ <200704011558.31670.a1426z@gawab.com> <46118473.10205@tmr.com>
+ <200704031642.27701.a1426z@gawab.com> <461430B6.9060703@tmr.com>
+ <20070405045819.GA5525@teal.hq.k1024.org> <Pine.LNX.4.64.0704050410290.12619@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0704051339470.3810@p34.internal.lan>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-raid@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.64.0704050410290.12619@p34.internal.lan>
+Sender: linux-raid-owner@vger.kernel.org
+To: Iustin Pop <iusty@k1024.org>
+Cc: Bill Davidsen <davidsen@tmr.com>, Al Boldi <a1426z@gawab.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Justin Piszcz wrote:
-> 
-> 
-> On Thu, 5 Apr 2007, Justin Piszcz wrote:
-> 
->> Had a quick question, this is the first time I have seen this happen,
->> and it was not even under during heavy I/O, hardly anything was going
->> on with the box at the time.
-> 
-> .. snip ..
-> 
-> # /usr/bin/time badblocks -b 512 -s -v -w /dev/sdl
-> Checking for bad blocks in read-write mode
-> From block 0 to 293046768
-> Testing with pattern 0xaa: done
-> Reading and comparing: done
-> 
-> Not a single bad block on the drive so far.  I have not changed anything
-> the box physically, with the exception of the BIOS version to V1666 for
-> an Intel P965 motherboard (DG965WHMKR).  Any idea what or why this
-> happened?  Is it a kernel or actual HW issue?  What caused this to
-> occur?  Any thoughts or ideas?
 
-My bet is on harddisk firmware acting weird.  You can prove this by
-reconnecting the disk to known working port without cutting power.  Or,
-you can prove that the original port works by removing the harddisk and
-putting a different one.  You'll need to issue manual scan using SCSI
-sysfs node.  It's very rare but some drives do choke like that.
 
--- 
-tejun
+On Thu, 5 Apr 2007, Justin Piszcz wrote:
+
+>
+>
+> On Thu, 5 Apr 2007, Iustin Pop wrote:
+>
+>> On Wed, Apr 04, 2007 at 07:11:50PM -0400, Bill Davidsen wrote:
+>>> You are correct, but I think if an optimization were to be done, some
+>>> balance between the read time, seek time, and read size could be done.
+>>> Using more than one drive only makes sense when the read transfer time is
+>>> significantly longer than the seek time. With an aggressive readahead set
+>>> for the array that would happen regularly.
+>>> 
+>>> It's possible, it just takes the time to do it, like many other "nice"
+>>> things.
+>> 
+>> Maybe yes, but why optimise the single-reader case? raid1 already can
+>> read in parallel from the drives when multiple processes read from the
+>> raid1. Optimising the single reader can help in hdparm or other
+>> benchmark cases, but in real life I see very often the total throughput
+>> of a (two drive) raid1 being around two times the throughput of a single
+>> drive.
+>> 
+>> regards,
+>> iustin
+>> -
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> 
+>
+> Really? I have copied a file from a SW RAID1 (5GB) and I only saw 60MB/s not 
+> the 120MB/s the (RAID1) is capable of to the destination (which can easily do 
+>> 160MB/s sustained read/write).
+>
+> Justin.
+>
+
+Using 2 threads made no difference either.
+
+It was not until I did 3 simultaneous copies that I saw 110-130MB/s 
+through vmstat 1, until then, it only used one drive, even with two cp's, 
+how come it needs to be three or more?
+
+Justin.
