@@ -1,34 +1,47 @@
-From: Andrew Burgess <aab@cichlid.com>
-Subject: Re: Moron Destroyed RAID6 Array Superblocks
-Date: Sun, 8 Apr 2007 08:21:58 -0700
-Message-ID: <200704081521.l38FLwGU017164@cichlid.com>
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: aaron@darkpixel.com, linux-raid@vger.kernel.org
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: Kernel 2.6.20.4: Software RAID 5: ata13.00: (irq_stat 0x00020002,
+ failed to transmit command FIS)
+Date: Mon, 09 Apr 2007 16:48:58 +0900
+Message-ID: <4619EFEA.9030003@gmail.com>
+References: <Pine.LNX.4.64.0704051243080.3810@p34.internal.lan> <Pine.LNX.4.64.0704051339470.3810@p34.internal.lan>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.64.0704051339470.3810@p34.internal.lan>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
->After reading through the linux-raid archives I have been lead to
->believe that I can recover my array by doing a --create and listing the
->7 drives in the exact order I originally created them in.  Is this correct?
+Justin Piszcz wrote:
+> 
+> 
+> On Thu, 5 Apr 2007, Justin Piszcz wrote:
+> 
+>> Had a quick question, this is the first time I have seen this happen,
+>> and it was not even under during heavy I/O, hardly anything was going
+>> on with the box at the time.
+> 
+> .. snip ..
+> 
+> # /usr/bin/time badblocks -b 512 -s -v -w /dev/sdl
+> Checking for bad blocks in read-write mode
+> From block 0 to 293046768
+> Testing with pattern 0xaa: done
+> Reading and comparing: done
+> 
+> Not a single bad block on the drive so far.  I have not changed anything
+> the box physically, with the exception of the BIOS version to V1666 for
+> an Intel P965 motherboard (DG965WHMKR).  Any idea what or why this
+> happened?  Is it a kernel or actual HW issue?  What caused this to
+> occur?  Any thoughts or ideas?
 
->If so, the kernel upgrade managed to shuffle the drive names around...is
->there any way I can figure out what order they should be in?
+My bet is on harddisk firmware acting weird.  You can prove this by
+reconnecting the disk to known working port without cutting power.  Or,
+you can prove that the original port works by removing the harddisk and
+putting a different one.  You'll need to issue manual scan using SCSI
+sysfs node.  It's very rare but some drives do choke like that.
 
-If you know the old order just boot the old kernel and recreate there
-
-If you are using kernel rpms, you always want to 'install' new kernels
-and not 'upgrade', that keeps both the old and new kernel available.
-
-Otherwise, if you pick just 5 for the 7 drives from a raid 6 array
-it seems to me you have 5 factorial combinations = 120. You could write
-a script that tries them all and then tests by trying a read-only mount?
-
-Good luck. I mashed a 3.5 TB array once by rerunning the lvm
-creation which zeros the first chunk of the resulting device. I was
-used to mdadm not hurting user data when creating. Grrr.
-
-BTW when you test recreate the array make sure you dont start syncing, thats
-another reason to just use 5 drives.
-
-HTH
-
+-- 
+tejun
