@@ -1,69 +1,52 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: RAID5 superblocks partly messed up after degradation
-Date: Wed, 11 Apr 2007 09:32:38 +1000
-Message-ID: <17948.7830.809009.253759@notabene.brown>
-References: <461A8037.7050300@gmx.net>
+Subject: Re: raid6 rebuild
+Date: Wed, 11 Apr 2007 11:43:20 +1000
+Message-ID: <17948.15672.420527.629228@notabene.brown>
+References: <20070404194638.GB3712@xi.wantstofly.org>
+	<e9c3a7c20704042022p6088bdcdl97740d2a95818caf@mail.gmail.com>
+	<20070405055030.GA6978@xi.wantstofly.org>
+	<4614FF86.3020007@tmr.com>
+	<20070405140626.GA8726@xi.wantstofly.org>
+	<e9c3a7c20704050959t7a1866b3j8e3bcc64a893854c@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Frank Baumgart on Monday April 9
+In-Reply-To: message from Dan Williams on Thursday April 5
 Sender: linux-raid-owner@vger.kernel.org
-To: Frank Baumgart <frank.baumgart@gmx.net>
-Cc: linux-raid@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Lennert Buytenhek <buytenh@wantstofly.org>, Bill Davidsen <davidsen@tmr.com>, mingo@redhat.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Monday April 9, frank.baumgart@gmx.net wrote:
-> Hello,
-> 
-> hopefully someone can help me.
+On Thursday April 5, dan.j.williams@intel.com wrote:
+> On 4/5/07, Lennert Buytenhek <buytenh@wantstofly.org> wrote:
+> > On Thu, Apr 05, 2007 at 09:54:14AM -0400, Bill Davidsen wrote:
+> >
+> > > I confess, I would feel safer with my data if the rebuild started
+> > > over, I would like to be sure that when it (finally) finishes the
+> > > data are valid.
+> >
+> > With disk #3 about to die, I'd have felt safer if it first finished
+> > rebuilding the replacement disk for failed disk #1 (that rebuild had
+> > almost completed at that point), safeguarding the array against a
+> > third disk failure.
+> >
+> I agree, the current arrangement seems to throw away a significant
+> amount of work.  Yes, you will need to resync when re-adding the
+> second disk, but in the meantime might as well try to get a redundant
+> mode at all costs.
 
-I'll see what I can do :-)
+Yes, I think you are right.
+If you want it to restart from the beginning you can alway abort the
+current resync by 'echo idle > sync_action'.
+The question is: is it really as simple to do as it sounds.
+I seem to remember that aborting the recovery on any error was any
+easy way to avoid some nasty race, but I have no idea what the race
+was.
+One would need the enumerate all the interesting cases and make sure
+they will all work as expected.  I cannot think of an problems
+immediately but that doesn't mean there aren't any...
 
-> 
-> The 4 x 300 RAID can not be assembled anymore.
-> 
-> mdadm --assemble --verbose --no-degraded /dev/md5 /dev/hdc1 /dev/sdb1
-> /dev/sdc1 /dev/sdd1
-> 
-> mdadm: looking for devices for /dev/md5
-> mdadm: /dev/hdc1 is identified as a member of /dev/md5, slot 2.
-> mdadm: /dev/sdb1 is identified as a member of /dev/md5, slot 3.
-> mdadm: /dev/sdc1 is identified as a member of /dev/md5, slot 0.
-> mdadm: /dev/sdd1 is identified as a member of /dev/md5, slot 1.
-> mdadm: added /dev/sdd1 to /dev/md5 as 1
-> mdadm: failed to add /dev/hdc1 to /dev/md5: Invalid argument
-> mdadm: failed to add /dev/sdb1 to /dev/md5: Invalid argument
-> mdadm: failed to add /dev/sdc1 to /dev/md5: Invalid argument
-> mdadm: /dev/md5 assembled from 0 drives (out of 4), but not started.
-
-That is a little odd.
-Looking at the 'Event' number on the devices as given below, sdd1 is
-way behind all the others, and so mdadm should not be including
-it... and even if it is, the kernel should simply let the one with the
-higher event count over-ride.
-
-Are there any kernel logs that this time which might make it clear
-what is happening?
-
-> 
-> Detaching sdb (the faulty disk) does not make any difference.
-
-sdd1 seems to be the problem.  Can you run the above 'mdadm' command
-but without listing /dev/sdd1 ?
-
-> /dev/sdb1:
-....
-> 
->       Number   Major   Minor   RaidDevice State
-> this     3       8       49        3      active sync
-> /dev/sdd1         <- what's this? why "SDD"? This is "SDB"! also, this
-> is the faulty device!
-
-/dev/sdd1 is the device with major/minor numbers 8,49.
-The last time the array was assembled, the device at slot '3' had
-major/minor numbers 8,49.  It is telling you what the situation used
-to be, not what it is now.  Just ignore it...
-
+It is now on my todo list...
 
 NeilBrown
