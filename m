@@ -1,52 +1,46 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: raid6 rebuild
-Date: Wed, 11 Apr 2007 11:43:20 +1000
-Message-ID: <17948.15672.420527.629228@notabene.brown>
-References: <20070404194638.GB3712@xi.wantstofly.org>
-	<e9c3a7c20704042022p6088bdcdl97740d2a95818caf@mail.gmail.com>
-	<20070405055030.GA6978@xi.wantstofly.org>
-	<4614FF86.3020007@tmr.com>
-	<20070405140626.GA8726@xi.wantstofly.org>
-	<e9c3a7c20704050959t7a1866b3j8e3bcc64a893854c@mail.gmail.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: [PATCH RFC 0/4] raid5: write-back caching policy and write performance
+Date: Tue, 10 Apr 2007 23:00:21 -0700
+Message-ID: <20070411055729.15745.51513.stgit@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Dan Williams on Thursday April 5
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Lennert Buytenhek <buytenh@wantstofly.org>, Bill Davidsen <davidsen@tmr.com>, mingo@redhat.com, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thursday April 5, dan.j.williams@intel.com wrote:
-> On 4/5/07, Lennert Buytenhek <buytenh@wantstofly.org> wrote:
-> > On Thu, Apr 05, 2007 at 09:54:14AM -0400, Bill Davidsen wrote:
-> >
-> > > I confess, I would feel safer with my data if the rebuild started
-> > > over, I would like to be sure that when it (finally) finishes the
-> > > data are valid.
-> >
-> > With disk #3 about to die, I'd have felt safer if it first finished
-> > rebuilding the replacement disk for failed disk #1 (that rebuild had
-> > almost completed at that point), safeguarding the array against a
-> > third disk failure.
-> >
-> I agree, the current arrangement seems to throw away a significant
-> amount of work.  Yes, you will need to resync when re-adding the
-> second disk, but in the meantime might as well try to get a redundant
-> mode at all costs.
+These patches are presented to further the discussion of raid5 write
+performance and are not yet meant for mainline or -mm inclusion.  Raz's
+delayed-activation patch showed interesting results so it has been
+ported/included in this series.  The question to be answered is whether
+the sequential write performance of a raid5 array, out of the box, can
+approach that of a similarly configured raid0 array (minus one disk).
+Currently, on an iop13xx platform, tiobench is reporting a 2x advantage
+for the N-1 raid0 array, so it seems there is room for improvement.
 
-Yes, I think you are right.
-If you want it to restart from the beginning you can alway abort the
-current resync by 'echo idle > sync_action'.
-The question is: is it really as simple to do as it sounds.
-I seem to remember that aborting the recovery on any error was any
-easy way to avoid some nasty race, but I have no idea what the race
-was.
-One would need the enumerate all the interesting cases and make sure
-they will all work as expected.  I cannot think of an problems
-immediately but that doesn't mean there aren't any...
+The third patch in the series adds a write-back caching capability to md
+to investigate the raw throughput to the stripe cache.  Since battery
+backed memory is not being used this patch makes the system markedly
+less safe, so only use it with data that can be thrown away.  Initial
+testing with dd shows the performance of this policy can be ~1.8x that
+of the default write-through policy.  That is, when the data set is
+smaller than the cache size.  Once cache pressure begins to force the
+writes to disk performance drops well below the write-through case.  So
+work remains to be done to see how the write-through case achieves
+better sustained throughput numbers.
 
-It is now on my todo list...
+I am interested in the performance of these patches on other
+platforms/configurations and comments on the implementation.
 
-NeilBrown
+[ based on 2.6.21-rc6 + git-md-accel.patch from -mm ]
+      md: introduce struct stripe_head_state
+      md: refactor raid5 cache policy code using 'struct stripe_cache_policy'
+      md: writeback caching policy for raid5 [experimental]
+      md: delayed stripe activation
+
+The patches can also be pulled via git:
+git pull git://lost.foo-projects.org/~dwillia2/git/iop md-accel+experimental
+
+--
+Dan
