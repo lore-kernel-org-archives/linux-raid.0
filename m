@@ -1,65 +1,63 @@
-From: Jan Engelhardt <jengelh@linux01.gwdg.de>
-Subject: [PATCH 14/30] Use menuconfig objects - MD
-Date: Tue, 10 Apr 2007 23:18:18 +0200 (MEST)
-Message-ID: <Pine.LNX.4.61.0704102317230.32056@yvahk01.tjqt.qr>
-References: <Pine.LNX.4.61.0704102046520.32056@yvahk01.tjqt.qr>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: RAID1 "out of memory" error, was Re: 2.6.21-rc5-mm4
+Date: Wed, 11 Apr 2007 13:31:07 +1000
+Message-ID: <17948.22139.163549.68639@notabene.brown>
+References: <20070402224745.71a25af7.akpm@linux-foundation.org>
+	<461524BF.7050304@reub.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030669AbXDJVTu@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.61.0704102046520.32056@yvahk01.tjqt.qr>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Ingo Molnar <mingo@redhat.com>
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: message from Reuben Farrelly on Friday April 6
+Sender: linux-raid-owner@vger.kernel.org
+To: Reuben Farrelly <reuben-linuxkernel@reub.net>
+Cc: Andrew Morton <akpm@linux-foundation.org>, stable@kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Friday April 6, reuben-linuxkernel@reub.net wrote:
+> 
+> Looks like some damage, or maybe intolerance to on-disk damage, to RAID-1.
 
-Use menuconfigs instead of menus, so the whole menu can be disabled at        
-once instead of going through all options.
+Difference is that kzalloc(0, ) now returns NULL.  Maybe it is a
+SLUB/SLAB difference? (So maybe it did use memory it shouldn't have
+before, but now it fails, which is the better behaviour).
 
-Signed-off-by: Jan Engelhardt <jengelh@gmx.de>
+This patch fixes the maths and should probably go in various 'stable'
+kernels.  Bug is in 2.6.18, but not 2.6.16.
 
-Index: linux-2.6.21-rc5/drivers/md/Kconfig
-===================================================================
---- linux-2.6.21-rc5.orig/drivers/md/Kconfig
-+++ linux-2.6.21-rc5/drivers/md/Kconfig
-@@ -2,19 +2,17 @@
- # Block device driver configuration
- #
+Patch won't work for 2.6.18 as DIV_ROUND_UP is missing, but 2.6.19 and
+later have it.
+
+Thanks for the bug report.
+
+NeilBrown
+
+
+-----------------------------
+Fix calculation for size of filemap_attr array in md/bitmap.
+
+If 'num_pages' were ever 1 more than a multiple of 8 (32bit platforms)
+for of 16 (64 bit platforms). filemap_attr would be allocated one
+'unsigned long' shorter than required.  We need a round-up in there.
+
+
+Signed-off-by: Neil Brown <neilb@suse.de>
+
+### Diffstat output
+ ./drivers/md/bitmap.c |    4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
+
+diff .prev/drivers/md/bitmap.c ./drivers/md/bitmap.c
+--- .prev/drivers/md/bitmap.c	2007-04-11 13:24:50.000000000 +1000
++++ ./drivers/md/bitmap.c	2007-04-11 13:24:59.000000000 +1000
+@@ -863,9 +863,7 @@ static int bitmap_init_from_disk(struct 
  
--if BLOCK
--
--menu "Multi-device support (RAID and LVM)"
--
--config MD
-+menuconfig MD
- 	bool "Multiple devices driver support (RAID and LVM)"
-+	depends on BLOCK
- 	help
- 	  Support multiple physical spindles through a single logical device.
- 	  Required for RAID and logical volume management.
- 
-+if MD
-+
- config BLK_DEV_MD
- 	tristate "RAID support"
--	depends on MD
- 	---help---
- 	  This driver lets you combine several hard disk partitions into one
- 	  logical block device. This can be used to simply append one
-@@ -189,7 +187,6 @@ config MD_FAULTY
- 
- config BLK_DEV_DM
- 	tristate "Device mapper support"
--	depends on MD
- 	---help---
- 	  Device-mapper is a low level volume manager.  It works by allowing
- 	  people to specify mappings for ranges of logical sectors.  Various
-@@ -262,6 +259,4 @@ config DM_MULTIPATH_EMC
- 	---help---
- 	  Multipath support for EMC CX/AX series hardware.
- 
--endmenu
--
--endif
-+endif # MD
-#<EOF>
+ 	/* We need 4 bits per page, rounded up to a multiple of sizeof(unsigned long) */
+ 	bitmap->filemap_attr = kzalloc(
+-		(((num_pages*4/8)+sizeof(unsigned long)-1)
+-		 /sizeof(unsigned long))
+-		*sizeof(unsigned long),
++		roundup( DIV_ROUND_UP(num_pages*4, 8), sizeof(unsigned long)),
+ 		GFP_KERNEL);
+ 	if (!bitmap->filemap_attr)
+ 		goto out;
