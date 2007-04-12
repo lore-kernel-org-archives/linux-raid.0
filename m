@@ -1,38 +1,56 @@
-From: "matt s." <cache22@webkorner.com>
-Subject: Re: LINEAR RAID, little help
-Date: Thu, 12 Apr 2007 07:19:37 -0400
-Message-ID: <461E15C9.7010306@webkorner.com>
-References: <46177DD8.9080707@pcfusion.co.uk>	<20070407173352.GA23645@gmail.com>	<4617E5E2.2090609@pcfusion.co.uk>	<17948.6604.619118.556382@notabene.brown>	<461DE4CA.9020406@pcfusion.co.uk>	<461DE688.4070808@pcfusion.co.uk> <17949.59661.6968.6058@notabene.brown>
+From: Brice Figureau <brice+lklm@daysofwonder.com>
+Subject: Same UUID for every member of all array ?
+Date: Thu, 12 Apr 2007 14:57:57 +0200
+Message-ID: <1176382677.14496.17.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17949.59661.6968.6058@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil Brown wrote:
->=20
-> md/raid0 makes use of all available space (modulo chunk size).
-> To quote from "man md"
->=20
->=20
->        If devices in the array are not all the same size, then once t=
-he small=E2=80=90
->        est device has been  exhausted,  the  RAID0  driver  starts  c=
-ollecting
->        chunks  into smaller stripes that only span the drives which s=
-till have
->        remaining space.
->=20
+Hi,
 
-And at the point where the space is exhausted on all drives but one, I=20
-assume it will keep writing to that last one, non-striped?
+While I was trying to understand while an old server (which was happily
+running linux 2.6.16 without initrd) was not booting anymore after a
+migration to Etch and a new kernel (2.6.20.6 with initrd), I found the
+following issue:
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+$ mdadm --detail --scan
+ARRAY /dev/md0 level=raid1 num-devices=2
+UUID=6b8b4567:327b23c6:643c9869:66334873
+ARRAY /dev/md8 level=raid1 num-devices=2
+UUID=6b8b4567:327b23c6:643c9869:66334873
+ARRAY /dev/md7 level=raid1 num-devices=2
+UUID=6b8b4567:327b23c6:643c9869:66334873
+ARRAY /dev/md6 level=raid1 num-devices=2
+UUID=6b8b4567:327b23c6:643c9869:66334873
+ARRAY /dev/md5 level=raid1 num-devices=2
+UUID=6b8b4567:327b23c6:643c9869:66334873
+ARRAY /dev/md4 level=raid1 num-devices=2
+UUID=6b8b4567:327b23c6:643c9869:66334873
+ARRAY /dev/md3 level=raid1 num-devices=2
+UUID=6b8b4567:327b23c6:643c9869:66334873
+ARRAY /dev/md2 level=raid1 num-devices=2
+UUID=6b8b4567:327b23c6:643c9869:66334873
+ARRAY /dev/md1 level=raid1 num-devices=2
+UUID=6b8b4567:327b23c6:643c9869:66334873
+
+As you can see, all the UUIDs are the same, and indeed there is no
+possibility for mdadm to assemble such arrays as it uses the UUID to
+find matching members.
+
+Now, I don't know why all the UUID are equals (my other machines are not
+affected).
+
+Is there a possibility to "hot" change the UUID of each array (and
+change the corresponding superblocks of each member) so that my next
+boot will work ?
+
+I'm not subscribed to the list, so please CC: me on replies.
+
+Thanks,
+--
+Brice Figureau
+
