@@ -1,53 +1,75 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: LINEAR RAID, little help
-Date: Thu, 12 Apr 2007 10:55:23 -0400
-Message-ID: <461E485B.50409@tmr.com>
-References: <46177DD8.9080707@pcfusion.co.uk>	<20070407173352.GA23645@gmail.com>	<4617E5E2.2090609@pcfusion.co.uk>	<17948.6604.619118.556382@notabene.brown>	<461DE4CA.9020406@pcfusion.co.uk>	<461DE688.4070808@pcfusion.co.uk> <17949.59661.6968.6058@notabene.brown>
+From: "John Stoffel" <john@stoffel.org>
+Subject: md0: invalid bitmap page request: 249 (> 223)
+Date: Thu, 12 Apr 2007 12:04:08 -0400
+Message-ID: <17950.22648.37421.148022@smtp.charter.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-2022-JP
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17949.59661.6968.6058@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Rich <rich@pcfusion.co.uk>, gmccullagh@gmail.com, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil Brown wrote:
-> On Thursday April 12, rich@pcfusion.co.uk wrote:
->   
->> I forgot to ask something, sorry. With RAID0 and all the odd size drives 
->> I have I'd get a lot of left over unused space. Is there anyway to make 
->> use of this slack?
->>     
->
-> md/raid0 makes use of all available space (modulo chunk size).
-> To quote from "man md"
->
->    RAID0
->        A  RAID0  array  (which has zero redundancy) is also known as a striped
->        array.  A RAID0 array is configured at creation with a Chunk Size which
->        must be a power of two, and at least 4 kibibytes.
->
->        The  RAID0  driver  assigns  the  first chunk of the array to the first
->        device, the second chunk to the second device,  and  so  on  until  all
->        drives have been assigned one chunk.  This collection of chunks forms a
->        stripe.  Further chunks are gathered into stripes in the same way which
->        are assigned to the remaining space in the drives.
->
->        If devices in the array are not all the same size, then once the small‐
->        est device has been  exhausted,  the  RAID0  driver  starts  collecting
->        chunks  into smaller stripes that only span the drives which still have
->        remaining space.
 
-That has to result in some bizarre transfer rate changes! I saved this
-explanation in my RAID stuff folder, clearly you could use techniques
-from raster graphics to make transfer rate more uniform, but since the
-most used will also be the fastest currently, that's probably not an
-optimization.
+Hi Neil,
 
--- 
-bill davidsen <davidsen@tmr.com>
-  CTO TMR Associates, Inc
-  Doing interesting things with small computers since 1979
+I've just installed a new SATA controller and a pair of 320Gb disks
+into my system.  Went great.  I'm running 2.6.21-rc6, with the ATA
+drivers for my disks.
 
+I had a RAID1 mirror consisting of two 120gb disks.  I used mdadm and
+grew the number of disks in md0 to four, then added in the two new
+disks.  Let it resync overnight, and then this morning I removed the
+two old disks.  Went really really really well.
+
+But now I'm trying to grow (using mdadm v2.5.6, Debian unstable
+system) the array to use the full space now available.  Then I'll grow
+the PVs and LVs I have on top of these to make them bigger as well.
+
+The re-sync is going:
+
+    > cat /proc/mdstat
+    Personalities : [linear] [raid0] [raid1] [raid10] [raid6] [raid5]
+    [raid4] 
+    md0 : active raid1 sdd1[1] sdc1[0]
+	  312568000 blocks [2/2] [UU]
+	  [========>............]  resync = 42.1% (131637248/312568000)
+    finish=373264.5min speed=0K/sec
+	  bitmap: 1/224 pages [4KB], 256KB chunk
+
+    unused devices: <none>
+
+
+But it's going slowly and dragging down the whole system with pauses,
+and I'm getting tons of the following messages in my dmesg output:
+
+    [50683.698708] md0: invalid bitmap page request: 251 (> 223)
+    [50683.763687] md0: invalid bitmap page request: 251 (> 223)
+    [50683.828621] md0: invalid bitmap page request: 251 (> 223)
+    [50683.893520] md0: invalid bitmap page request: 251 (> 223)
+    [50683.958396] md0: invalid bitmap page request: 251 (> 223)
+    [50684.023265] md0: invalid bitmap page request: 251 (> 223)
+    [50684.088202] md0: invalid bitmap page request: 251 (> 223)
+    [50684.153196] md0: invalid bitmap page request: 251 (> 223)
+    [50684.218129] md0: invalid bitmap page request: 251 (> 223)
+    [50684.283044] md0: invalid bitmap page request: 251 (> 223)
+
+
+Is there anyway I can interrupt the command I used:
+
+	mdadm --grow /dev/md0 --size=#####
+
+which I know now I should have used the --size=max paramter instead,
+but it wasn't in the man page or the online help.  Oh well...
+
+I tried removing the bitmap with:
+
+	mdadm --grow /dev/md0 --bitmap=none
+
+but of course it won't let me do that.  Would I have to hot-fail one
+of my disks to interrupt the re-sync, so I can remove the bitmap, so I
+can then grow the RAID1 to the max volume size?
+
+Thanks,
+John
+john@stoffel.org
