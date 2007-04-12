@@ -1,113 +1,100 @@
-From: Luis Rodrigo Gallardo Cruz <rodrigo@nul-unu.com>
-Subject: Re: s2disk and raid
-Date: Thu, 12 Apr 2007 00:37:53 -0500
-Message-ID: <20070412053753.GA3602@lisa.rodrigo.nul-unu.com>
-References: <20070403175521.70e6c876@commensaal.drs.p>
-	<17939.13752.164747.486393@notabene.brown>
-	<46140EF5.8080603@tls.msk.ru>
+From: Neil Brown <neilb@suse.de>
+Subject: RE: [PATCH RFC 3/4] md: writeback caching policy for raid5 [experimental]
+Date: Thu, 12 Apr 2007 16:21:32 +1000
+Message-ID: <17949.53228.365167.89832@notabene.brown>
+References: <Pine.LNX.4.64.0704111837410.5557@coffee.psychology.mcmaster.ca>
+	<0C7297FA1D2D244A9C7F6959C0BF1E5201AE23CF@azsmsx413.amr.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="===============0106891800=="
-Return-path: <suspend-devel-bounces@lists.sourceforge.net>
-In-Reply-To: <46140EF5.8080603@tls.msk.ru>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/suspend-devel>,
-	<mailto:suspend-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=suspend-devel>
-List-Post: <mailto:suspend-devel@lists.sourceforge.net>
-List-Help: <mailto:suspend-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/suspend-devel>,
-	<mailto:suspend-devel-request@lists.sourceforge.net?subject=subscribe>
-Sender: suspend-devel-bounces@lists.sourceforge.net
-Errors-To: suspend-devel-bounces@lists.sourceforge.net
-To: Michael Tokarev <mjt@tls.msk.ru>
-Cc: Neil Brown <neilb@suse.de>, suspend-devel List <suspend-devel@lists.sourceforge.net>, linux-raid@vger.kernel.org, 415441@bugs.debian.org
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: message from Williams, Dan J on Wednesday April 11
+Sender: linux-raid-owner@vger.kernel.org
+To: "Williams, Dan J" <dan.j.williams@intel.com>
+Cc: Mark Hahn <hahn@mcmaster.ca>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Wednesday April 11, dan.j.williams@intel.com wrote:
+> > From: Mark Hahn [mailto:hahn@mcmaster.ca]
+> > 
+> > > In its current implementation write-back mode acknowledges writes
+> before
+> > > they have reached non-volatile media.
+> > 
+> > which is basically normal for unix, no?
+> I am referring to when bi_end_io is called on the bio submitted to MD.
+> Normally it is not called until after the bi_end_io event for the bio
+> submitted to the backing disk.
+> 
+> > 
+> > are you planning to support barriers?  (which are the block system's
+> way
+> > of supporting filesystem atomicity).
+> Not as a part of these performance experiments.  But, I have wondered
+> what the underlying issues are behind raid5 not supporting barriers.
+> Currently in raid5.c:make_request:
+> 
+> 	if (unlikely(bio_barrier(bi))) {
+> 		bio_endio(bi, bi->bi_size, -EOPNOTSUPP);
+> 		return 0;
+> 	}
 
---===============0106891800==
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="a8Wt8u1KmwUX3Y2C"
-Content-Disposition: inline
+I should be getting this explanation down to a fine art.  I seem to be
+delivering it in multiple forums.
 
+My position is that for a virtual device that stores some blocks on
+some devices and other blocks on other devices (e.g. raid0, raid5,
+linear, LVM, but not raid1) barrier support in the individual devices
+is unusable, and that to achieve the goal it is just as easy for the
+filesystem to order requests and to use blkdev_issue_flush to force
+sync-to-disk. 
 
---a8Wt8u1KmwUX3Y2C
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+The semantics of a barrier (as I understand it) is that all writes
+prior to the barrier are safe before the barrier write is commenced,
+and that write itself is safe before any subsequence write is
+commenced. (I think those semantics are stronger than we should be
+exporting - just the first half should be enough - but such is life).
 
-[I'm the original bug reporter. Sorry for getting so late into the
-conversation]
+On a single drive, this is achieved by not re-ordering requests around
+a barrier, and asking the device to not re-order requests either.
+When you have multiple devices, you cannot ask them not to re-order
+requests with respect to each other, so the same mechanism cannot be
+used.
 
-On Thu, Apr 05, 2007 at 12:47:49AM +0400, Michael Tokarev wrote:
-> Neil Brown wrote:
-> > On Tuesday April 3, newsuser@famdijkstra.org wrote:
-> []
-> >> After the power cycle the kernel boots, devices are discovered, among
-> >> which the ones holding raid. Then we try to find the device that holds
-> >> swap in case of resume and / in case of a normal boot.
-> >>
-> >> Now comes a crucial point. The script that finds the raid array, finds
-> >> the array in an unclean state and starts syncing.
-> []
-> > So you can start arrays 'readonly', and resume off a raid1 without any
-> > risk of the the resync starting when it shouldn't.
->=20
-> But I wonder why this raid is necessary in the first place.
+Instead, you would have to plug the meta-device, unplug all the lower
+level queues, wait for all writes to complete, call blkdev_issue_flush
+to make sure the data is safe, issue the barrier write and wait for it
+to complete, call blkdev_issue_flush again (Well, maybe the barrier
+write could have been sent with BIO_RW_BARRIER for the same effect)
+then unplug the queue.
 
-In the case of my original report, the array is not actually necesary,
-since the resume image is in another (normal) partition. The array
-gets resumed since the mdadm scripts run before the resume ones in the
-initrd and they by default start *every* array in the system.
+And the thing is that all of that complexity ALREADY needs to be in the
+filesystem.  Because if a device doesn't support barriers, the
+filesystem should wait for all dependant writes to complete and then
+issue the 'barrier' write (and probably call blkdev_issue_flush as
+well).
 
-But at least the mdadm maintainer seems to think that having the
-resume image in a raid device, or in an lvm logical volume inside a
-raid device, or other such esoteric arangements, is an use case worth
-supporting.
+And the filesystem is positioned to do this BETTER because it can know
+which writes are really dependant and which might be incidental.
 
-Something that I seem to not have said. It's not *all* arrays that are
-unclean on reboot, just one (that is used as physical volume for
-LVM. I don't know if that's relevant). Also worth mentioning is that
-kernel space suspend on 2.6.17 did not have this problem (or didn't
-show it in my system, anyways).
+Ext3 gets this right except that it never bothers with
+blkdev_issue_flush.  XFS doesn't even bother trying (it's designed to
+be used with reliable drives).  reiserfs might actually get it
+completely right as it does have a call to blkdev_issue_flush in what
+looks like the right place, but I cannot be sure without lots of code
+review. 
 
-After reading through the responses, I have come to think this is a
-kernel issue, and have posted a report (#418823) to debian's linux-2.6
-package. I'll wait to see what they have to say.
---a8Wt8u1KmwUX3Y2C
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
+dm/stripe currently gets this wrong.  If it gets a barrier request it
+just passes it down to the one target drive thus failing to ensure any
+ordering wrt other drives.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
+All that said:  raid5 is probably in a better position than most to
+implement a barrier as it keeps careful track of everything that is
+happening, and could easily wait for all prior writes to complete.
+This might mesH well with the write-behind approach to caching.  But I
+would still rather than the filesystem just got it right for us.
+With a single drive, the drive can implement a barrier more
+efficiently than the filesystem.  With multiple drives, the
+meta-device can at best be as efficient as the filesystem.
 
-iD8DBQFGHcWxAZmDGK3JvCgRAv/tAJ0Vgc4mrVUTdUaLLWlgljIH5SrxCgCeI482
-qAKQqtWJGeR/JoWlVouu6yk=
-=3rVC
------END PGP SIGNATURE-----
-
---a8Wt8u1KmwUX3Y2C--
-
-
---===============0106891800==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
--------------------------------------------------------------------------
-Take Surveys. Earn Cash. Influence the Future of IT
-Join SourceForge.net's Techsay panel and you'll get the chance to share your
-opinions on IT & business topics through brief surveys-and earn cash
-http://www.techsay.com/default.php?page=join.php&p=sourceforge&CID=DEVDEV
---===============0106891800==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
-_______________________________________________
-Suspend-devel mailing list
-Suspend-devel@lists.sourceforge.net
-https://lists.sourceforge.net/lists/listinfo/suspend-devel
-
---===============0106891800==--
+NeilBrown
