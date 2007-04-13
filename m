@@ -1,63 +1,59 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: Manually hacking superblocks
-Date: Fri, 13 Apr 2007 22:17:21 +1000
-Message-ID: <17951.29905.260517.958206@notabene.brown>
-References: <461F3B2B.4030006@trn.iki.fi>
-	<461F5A20.4010203@dgreaves.com>
+From: Brice Figureau <brice+lklm@daysofwonder.com>
+Subject: Re: Same UUID for every member of all array ?
+Date: Fri, 13 Apr 2007 14:44:54 +0200
+Message-ID: <1176468294.25857.31.camel@localhost.localdomain>
+References: <1176382677.14496.17.camel@localhost.localdomain>
+	 <20070413073228.GA15415@teal.hq.k1024.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from David Greaves on Friday April 13
+In-Reply-To: <20070413073228.GA15415@teal.hq.k1024.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Greaves <david@dgreaves.com>
-Cc: =?UTF-8?B?TGFzc2UgS8Okcmtrw6RpbmVu?= <tronic+owm8@trn.iki.fi>, linux-raid@vger.kernel.org
+To: Iustin Pop <iusty@k1024.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Friday April 13, david@dgreaves.com wrote:
-> Lasse K=E4rkk=E4inen wrote:
-> >=20
-> > disk 0, o:1, dev:sdc1
-> > disk 1, o:1, dev:sde1
-> > disk 2, o:1, dev:sdg1
-> > disk 3, o:1, dev:sdi1
-> > disk 4, o:1, dev:sdh1
-> > disk 5, o:1, dev:sdf1
-> > disk 6, o:1, dev:sdd1
-> >=20
-> > I gather that I need a way to alter the superblocks of sde and sdd =
-so
-> > that they seem to be clean up-to-date disks, with their original di=
-sk
-> > numbers 1 and 6. A hex editor comes to mind, but are there any bett=
-er
-> > tools for that?
->=20
-=2E.
->=20
-> I *THINK* you should try something like (untested):
-> mdadm --assemble /dev/md0 --force /dev/sdc1 /dev/sde1 /dev/sdg1 /dev/=
-sdi1
-> missing /dev/sdf1 /dev/sdf1
->=20
-> The order is important and should match the original order.
-> There's more you could do by looking at device event counts (--examin=
-e)
+Hi,
 
-You will need a --create
+Thanks for the answer,
 
---assemble ignores the order in which the devices are given.  It uses
-the information on the drives.  Once you do a --add, you lose that
-information.
-It is good that you know the original order.  You --examine the
-confirm the chunk size or any other details you might not be sure of
-and recreate the array.  Leave one disk (the least likely to be
-uptodate) as 'missing' and then try 'fsck -n' to ensure the data is
-ok.
+On Fri, 2007-04-13 at 09:32 +0200, Iustin Pop wrote:
+> On Thu, Apr 12, 2007 at 02:57:57PM +0200, Brice Figureau wrote:
+> > Now, I don't know why all the UUID are equals (my other machines are not
+> > affected).
+> I think at some point either in sarge or in testing between sarge and
+> etch, there was included a version of mdadm which had this bug (all
+> arrays had the same uuid). Yeah, it bit me too a little :)
 
-NeilBrown
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I wasn't aware of the issue - guess I should have noticed that issue
+when creating the arrays first.
+
+After searching, the problem appeared because Debian packaged mdadm
+version 1.8.1 which wasn't stable. 
+Here is one of the debian bug report:
+http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=290363
+
+> > Is there a possibility to "hot" change the UUID of each array (and
+> > change the corresponding superblocks of each member) so that my next
+> > boot will work ?
+> did you read the manpage for mdadm (the version in etch)? It has a -U
+> argument to assemble which does what you want.
+
+Yes, I read it (and now twice :-)). 
+
+The problem is that right now the server is up and running (booting with
+an old kernel without initrd starts the arrays without any issue, that's
+strange), so I can't change the UUID (as it has to be done while
+assembling the array).
+
+I first need to reboot with an initrd kernel that fails to assemble the
+root array, and issue the mdadm assemble by hand. To do that I must be
+physically in front of the console. And this will incur downtime for the
+users of this particular server, hence my question about "hot" changing
+the UUID...
+
+Anyway, many thanks for your help,
+-- 
+Brice Figureau <brice+lklm@daysofwonder.com>
+
