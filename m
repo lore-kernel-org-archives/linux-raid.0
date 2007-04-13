@@ -1,30 +1,56 @@
-From: Iustin Pop <iusty@k1024.org>
-Subject: Re: Same UUID for every member of all array ?
-Date: Fri, 13 Apr 2007 09:32:28 +0200
-Message-ID: <20070413073228.GA15415@teal.hq.k1024.org>
-References: <1176382677.14496.17.camel@localhost.localdomain>
+From: Laurent CARON <lcaron@unix-scripts.info>
+Subject: Re: Growing a raid 6 array
+Date: Fri, 13 Apr 2007 10:15:05 +0200
+Message-ID: <461F3C09.1030909@unix-scripts.info>
+References: <45E72549.2080108@unix-scripts.info>	<Pine.LNX.4.64.0703011728270.7560@p34.internal.lan> <17895.34033.867599.954940@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1176382677.14496.17.camel@localhost.localdomain>
+In-Reply-To: <17895.34033.867599.954940@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Brice Figureau <brice+lklm@daysofwonder.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: Neil Brown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-On Thu, Apr 12, 2007 at 02:57:57PM +0200, Brice Figureau wrote:
-> Now, I don't know why all the UUID are equals (my other machines are not
-> affected).
-I think at some point either in sarge or in testing between sarge and
-etch, there was included a version of mdadm which had this bug (all
-arrays had the same uuid). Yeah, it bit me too a little :)
+Neil Brown a =E9crit :
+> On Thursday March 1, jpiszcz@lucidpixels.com wrote:
+>> You can only grow a RAID5 array in Linux as of 2.6.20 AFAIK.
+>=20
+> There are two dimensions for growth.
+> You can increase the amount of each device that is used, or you can
+> increase the number of devices.
+>=20
+> You are correct that increasing the number of devices only works for
+> RAID5 (and RAID1, but you don't get extra space) in 2.6.20 (RAID6
+> coming in 2.6.21).
+>=20
+> However this question is about growing an array the first way:
+> increasing the amount of space used on each devices, and that is
+> supported for RAID1/4/5/6.
+>=20
+> And Laurent:
+>   1/ Yes, it is that easy
+>   2/ I doubt a nearly-full ext3 array increases the risk
+>   3/ The effect of adding a bitmap is that if you suffer a crash whil=
+e
+>      the array is degraded, it will resync faster so you have less
+>      exposure to multiple failure.
 
-> Is there a possibility to "hot" change the UUID of each array (and
-> change the corresponding superblocks of each member) so that my next
-> boot will work ?
-did you read the manpage for mdadm (the version in etch)? It has a -U
-argument to assemble which does what you want.
+I just finished changing disks, growing the array, and then the filesys=
+tem.
 
-regards,
-iustin
+It worked flawlessy.
+
+Just a little notice: I had to unmount my ext3 filesystem to be able to
+resize it. (Took ~8 hours to fsck + resize the 15 disks array from 6 to
+9TB on a dual Xeon with 4GB RAM).
+
+Thanks
+
+Laurent
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
