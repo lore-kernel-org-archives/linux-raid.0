@@ -1,39 +1,30 @@
-From: Jan Engelhardt <jengelh@linux01.gwdg.de>
-Subject: Re: raid10 kernel panic on sparc64
-Date: Thu, 12 Apr 2007 23:28:23 +0200 (MEST)
-Message-ID: <Pine.LNX.4.61.0704122326450.14441@yvahk01.tjqt.qr>
-References: <Pine.LNX.4.61.0704020211380.1245@yvahk01.tjqt.qr>
- <20070412.142628.27805319.davem@davemloft.net>
+From: Iustin Pop <iusty@k1024.org>
+Subject: Re: Same UUID for every member of all array ?
+Date: Fri, 13 Apr 2007 09:32:28 +0200
+Message-ID: <20070413073228.GA15415@teal.hq.k1024.org>
+References: <1176382677.14496.17.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20070412.142628.27805319.davem@davemloft.net>
+Content-Disposition: inline
+In-Reply-To: <1176382677.14496.17.camel@localhost.localdomain>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Miller <davem@davemloft.net>
-Cc: linux-raid@vger.kernel.org, sparclinux@vger.kernel.org
+To: Brice Figureau <brice+lklm@daysofwonder.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Thu, Apr 12, 2007 at 02:57:57PM +0200, Brice Figureau wrote:
+> Now, I don't know why all the UUID are equals (my other machines are not
+> affected).
+I think at some point either in sarge or in testing between sarge and
+etch, there was included a version of mdadm which had this bug (all
+arrays had the same uuid). Yeah, it bit me too a little :)
 
-On Apr 12 2007 14:26, David Miller wrote:
->From: Jan Engelhardt <jengelh@linux01.gwdg.de>
->Date: Mon, 2 Apr 2007 02:15:57 +0200 (MEST)
->
->> Kernel is kernel-smp-2.6.16-1.2128sp4.sparc64.rpm from Aurora Corona.
->> Perhaps it helps, otherwise hold your breath until I reproduce it.
->
->Jan, if you can reproduce this with the current 2.6.20 vanilla
->kernel I'd be very interested in a full trace so that I can
->try to fix this.
->
->With the combination of an old kernel and only part of the
->crash trace, there isn't much I can do with this report.
+> Is there a possibility to "hot" change the UUID of each array (and
+> change the corresponding superblocks of each member) so that my next
+> boot will work ?
+did you read the manpage for mdadm (the version in etch)? It has a -U
+argument to assemble which does what you want.
 
-Hi David,
-
-I have not forgotten this issue, but the fact that there is not any serial
-console attached right now makes it kinda hard to get the system back up
-in case I let it oops. Apologies for the delay it takes.
-
-
-Jan
--- 
+regards,
+iustin
