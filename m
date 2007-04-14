@@ -1,7 +1,7 @@
 From: "Aaron C. de Bruyn" <aaron@darkpixel.com>
 Subject: Re: Moron Destroyed RAID6 Array Superblocks
-Date: Fri, 13 Apr 2007 19:59:28 -0700
-Message-ID: <1176519568.7325.3.camel@localhost.localdomain>
+Date: Fri, 13 Apr 2007 23:42:03 -0700
+Message-ID: <1176532924.7325.12.camel@localhost.localdomain>
 References: <200704081521.l38FLwGU017164@cichlid.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -13,15 +13,21 @@ To: Andrew Burgess <aab@cichlid.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Ok--I got moved in to my new place and am back and running on the 'net.
-I sat down for a few hours and attempted to write a script to try all
-possible combinations of drives...but I have to admit that I'm lost.
+If the array consisted of 7 drives, two of them would be parity and I'd
+need to leave them out of the array in order to avoid resyncing.
 
-I have 8 drives in the array--and I can output every possible
-combination of those.  But what the heck would be the logic to output
-all combinations of the 8 drives using only 6 at a time?  My head hurts.
+Would I need to specify them as 'missing' so the drives are in the
+correct order?
+
+For example
+mdadm --raid-devices=7 --level=6 --foo /dev/md0 /dev/sda1 /dev/sdc1
+missing /dev/sdb1 /dev/sdg1 missing /dev/sdh1
+
+Or alternatively with the --assume-clean switch, should I specify all 7
+drives and see if it mounts?
 
 -A
+
 
 On Sun, 2007-04-08 at 08:21 -0700, Andrew Burgess wrote:
 > >After reading through the linux-raid archives I have been lead to
