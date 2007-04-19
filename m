@@ -1,110 +1,119 @@
-From: Tim Dijkstra <newsuser@famdijkstra.org>
-Subject: Re: Bug#415441: s2disk and raid
-Date: Tue, 17 Apr 2007 20:58:18 +0200
-Message-ID: <20070417205818.22fd2d9d@commensaal.drs.p>
-References: <20070403175521.70e6c876@commensaal.drs.p>
-	<17939.13752.164747.486393@notabene.brown>
-	<46140EF5.8080603@tls.msk.ru>
-	<20070412053753.GA3602@lisa.rodrigo.nul-unu.com>
+From: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
+Subject: Re: raid5 write performance
+Date: Thu, 19 Apr 2007 11:28:48 +0300
+Message-ID: <5d96567b0704190128q17b09dc9ld7c95a57a1edfb9f@mail.gmail.com>
+References: <5d96567b0607020702p25d66490i79445bac606e5210@mail.gmail.com>
+	 <17576.18978.563672.656847@cse.unsw.edu.au>
+	 <5d96567b0608130619w60d8d883q4ffbfefcf650ee82@mail.gmail.com>
+	 <17650.29175.778076.964022@cse.unsw.edu.au>
+	 <5d96567b0703301444j9b416c2nbc5ce27487eef5bc@mail.gmail.com>
+	 <17950.50209.580439.607958@notabene.brown>
+	 <5d96567b0704161329n5c3ca008p56df00baaa16eacb@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="===============1069514279=="
-Return-path: <suspend-devel-bounces@lists.sourceforge.net>
-In-Reply-To: <20070412053753.GA3602@lisa.rodrigo.nul-unu.com>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/suspend-devel>,
-	<mailto:suspend-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=suspend-devel>
-List-Post: <mailto:suspend-devel@lists.sourceforge.net>
-List-Help: <mailto:suspend-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/suspend-devel>,
-	<mailto:suspend-devel-request@lists.sourceforge.net?subject=subscribe>
-Sender: suspend-devel-bounces@lists.sourceforge.net
-Errors-To: suspend-devel-bounces@lists.sourceforge.net
-To: Luis Rodrigo Gallardo Cruz <rodrigo@nul-unu.com>, 415441@bugs.debian.org
-Cc: Neil Brown <neilb@suse.de>, suspend-devel List <suspend-devel@lists.sourceforge.net>, Michael Tokarev <mjt@tls.msk.ru>, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <5d96567b0704161329n5c3ca008p56df00baaa16eacb@mail.gmail.com>
+Content-Disposition: inline
+Sender: linux-raid-owner@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---===============1069514279==
-Content-Type: multipart/signed; boundary="Sig_iueao+HOn0/LKkentQFcptL";
-	protocol="application/pgp-signature"; micalg=PGP-SHA1
+On 4/16/07, Raz Ben-Jehuda(caro) <raziebe@gmail.com> wrote:
+> On 4/13/07, Neil Brown <neilb@suse.de> wrote:
+> > On Saturday March 31, raziebe@gmail.com wrote:
+> > >
+> > > 4.
+> > > I am going to work on this with other configurations, such as raid5's
+> > > with more disks and raid50.  I will be happy to hear your opinion on
+> > > this matter. what puzzles me is why deadline must be so long as 10 ms?
+> > >  the less deadline the more reads I am getting.
+> >
+> > I've finally had a bit of a look at this.
+> >
+> > The extra reads are being caused because for the 3msec unplug
+> > timeout. Once you plug a queue it will automatically get unplugged 3
+> > msec later.  When this happens, any stripes that are on the pending
+> > list (waiting to see if more blocks will be written to them) get
+> > processed and some pre-reading happens.
+> >
+> > If you remove the 3msec timeout (I changed it to 300msec) in
+> > block/ll_rw_blk.c, the reads go away.  However that isn't a good
+> > solution.
+> >
+> > Your patch effectively ensures that a stripe gets to last at least N
+> > msec before being unplugged and pre-reading starts.
+> > Why does it need to be 10 msec?  Let's see.
+> >
+> > When you start writing, you will quickly fill up the stripe cache and
+> > then have to wait for stripes to be fully written and become free
+> > before you can start attaching more write requests.
+> > You could have to wait for a full chunk-wide stripe to be written
+> > before another chunk of stripes can proceed.  The first blocks of the
+> > second stripe could stay in the stripe cache for the time it takes to
+> > write out a stripe.
+> >
+> > With a 1024K chunk size and 30Meg/second write speed it will take 1/30
+> > of a second to write out a chunk-wide stripe, or about 33msec.  So I'm
+> > surprised you get by with a deadline of 'only' 10msec.  Maybe there is
+> > some over-lapping of chunks that I wasn't taking into account (I did
+> > oversimplify the model a bit).
+> >
+> > So, what is the right heuristic to use to determine when we should
+> > start write-processing on an incomplete stripe?  Obviously '3msec' is
+> > bad.
+> >
+> > It seems we don't want to start processing incomplete stripes while
+> > there are full stripes being written, but we also don't want to hold
+> > up incomplete stripes forever if some other thread is successfully
+> > writing complete stripes.
+> >
+> > So maybe something like this:
+> >  - We keep a (cyclic) counter of the number of stripes on which we
+> >    have started write, and the number which have completed.
+> >  - every time we add a write request to a stripe, we set the deadline
+> >    to 3msec in the future, and we record in the stripe the current
+> >    value of the number that have started write.
+> >  - We process a stripe requiring preread when both the deadline
+> >    has expired, and the count of completed writes reaches the recorded
+> >    count of commenced writes.
+> >
+> > Does that make sense?  Would you like to try it?
+> >
+> > NeilBrown
+> >
 
---Sig_iueao+HOn0/LKkentQFcptL
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Neil Hello
+I have been doing some thinking. I feel we should take a different path here.
+In my tests  I actually accumulate the user's buffers and when ready I submit
+them, an elevator like algorithm.
 
-On Thu, 12 Apr 2007 00:37:53 -0500
-Luis Rodrigo Gallardo Cruz <rodrigo@nul-unu.com> wrote:
+The main problem is the amount of IO's the stripe cache can hold which is
+too small. My suggestion is to add an elevator of bios before moving them to the
+stripe cache, trying to postpone as much as needed allocation of a new stripe.
+This way we will be able to move as much as IOs to the "raid logic"
+without congesting
+it and still filling stripes if possible.
 
+Psuedo code;
 
-> On Thu, Apr 05, 2007 at 12:47:49AM +0400, Michael Tokarev wrote:
-> > Neil Brown wrote:
-> > > On Tuesday April 3, newsuser@famdijkstra.org wrote:
-> > []
-> > >> After the power cycle the kernel boots, devices are discovered, among
-> > >> which the ones holding raid. Then we try to find the device that hol=
-ds
-> > >> swap in case of resume and / in case of a normal boot.
-> > >>
-> > >> Now comes a crucial point. The script that finds the raid array, fin=
-ds
-> > >> the array in an unclean state and starts syncing.
-> > []
-> > > So you can start arrays 'readonly', and resume off a raid1 without any
-> > > risk of the the resync starting when it shouldn't.
-> >=20
+ make_request()
+...
+   if IO direction is WRITE and IO not in stripe cache
+     add IO to raid elevator
+..
 
-> Something that I seem to not have said. It's not *all* arrays that are
-> unclean on reboot, just one (that is used as physical volume for
-> LVM. I don't know if that's relevant). Also worth mentioning is that
-> kernel space suspend on 2.6.17 did not have this problem (or didn't
-> show it in my system, anyways).
->=20
-> After reading through the responses, I have come to think this is a
-> kernel issue, and have posted a report (#418823) to debian's linux-2.6
-> package. I'll wait to see what they have to say.
+raid5d()
+  ...
+  Is there a set of IOs in raid elevator such that they make a full stripe
+    move IOs to raid handling
+  while oldest IO in raid elevator is deadlined( 3ms ? )
+      move IO to raid handling
+ ....
 
-Maybe there is a kernel issue, but we still are doing something wrong;
-We shouldn't try to write to raid before we resume, that is just asking
-for problems.
+Does it make any sense ?
 
-I'll look into the `readonly' option. That would fix or problem IMHO.
-
-grts Tim
-
---Sig_iueao+HOn0/LKkentQFcptL
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
-
-iD8DBQFGJRjPlR+JLH/tVJsRArt/AKDOOFFGeFcZshzkH4CgdaqKS0amcwCggz+V
-ARTjKIQ/f7oZNWWJlGvp/cU=
-=A42J
------END PGP SIGNATURE-----
-
---Sig_iueao+HOn0/LKkentQFcptL--
-
-
---===============1069514279==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
--------------------------------------------------------------------------
-This SF.net email is sponsored by DB2 Express
-Download DB2 Express C - the FREE version of DB2 express and take
-control of your XML. No limits. Just data. Click to get it now.
-http://sourceforge.net/powerbar/db2/
---===============1069514279==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
-_______________________________________________
-Suspend-devel mailing list
-Suspend-devel@lists.sourceforge.net
-https://lists.sourceforge.net/lists/listinfo/suspend-devel
-
---===============1069514279==--
+thank you
+-- 
+Raz
