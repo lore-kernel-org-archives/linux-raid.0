@@ -1,171 +1,143 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: major performance drop on raid5 due to context switches caused
- by small max_hw_sectors [partially resolved]
-Date: Sun, 22 Apr 2007 06:23:12 -0400 (EDT)
-Message-ID: <Pine.LNX.4.64.0704220619390.14170@p34.internal.lan>
-References: <200704202306.14880.dap@mail.index.hu> <200704220242.42285.dap@mail.index.hu>
- <Pine.LNX.4.64.0704220446530.10830@p34.internal.lan> <200704221152.18747.dap@mail.index.hu>
+From: Pallai Roland <dap@mail.index.hu>
+Subject: Re: major performance drop on raid5 due to context switches caused by small max_hw_sectors [partially resolved]
+Date: Sun, 22 Apr 2007 13:38:45 +0200
+Message-ID: <200704221338.45759.dap@mail.index.hu>
+References: <200704202306.14880.dap@mail.index.hu> <200704221152.18747.dap@mail.index.hu> <Pine.LNX.4.64.0704220619390.14170@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: Multipart/Mixed;
+  boundary="Boundary-00=_Fl0KGlMaGICxWTM"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200704221152.18747.dap@mail.index.hu>
+In-Reply-To: <Pine.LNX.4.64.0704220619390.14170@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: Pallai Roland <dap@mail.index.hu>
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
 Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+--Boundary-00=_Fl0KGlMaGICxWTM
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 
-On Sun, 22 Apr 2007, Pallai Roland wrote:
-
+On Sunday 22 April 2007 12:23:12 Justin Piszcz wrote:
+> On Sun, 22 Apr 2007, Pallai Roland wrote:
+> > On Sunday 22 April 2007 10:47:59 Justin Piszcz wrote:
+> >> On Sun, 22 Apr 2007, Pallai Roland wrote:
+> >>> On Sunday 22 April 2007 02:18:09 Justin Piszcz wrote:
+> >>>> How did you run your read test?
+> >>>
+> >>> I did run 100 parallel reader process (dd) top of XFS file system, try
+> >>> this: for i in `seq 1 100`; do dd of=$i if=/dev/zero bs=64k
+> >>> 2>/dev/null; done for i in `seq 1 100`; do dd if=$i of=/dev/zero bs=64k
+> >>> 2>/dev/null & done
+> >>>
+> >>> and don't forget to set max_sectors_kb below chunk size (eg. 64/128Kb)
+> >>> /sys/block# for i in sd*; do echo 64 >$i/queue/max_sectors_kb; done
+> >>>
+> >>> I also set 2048/4096 readahead sectors with blockdev --setra
+> >>>
+> >>> You need 50-100 reader processes for this issue, I think so. My kernel
+> >>> version is 2.6.20.3
+> >>
+> >> In one xterm:
+> >> for i in `seq 1 100`; do dd of=$i if=/dev/zero bs=64k 2>/dev/null; done
+> >>
+> >> In another:
+> >> for i in `seq 1 100`; do dd if=/dev/md3 of=$i.out bs=64k & done
+> >
+> > Write and read files top of XFS, not on the block device. $i isn't a
+> > typo, you should write into 100 files and read back by 100 threads in
+> > parallel when done. I've 1Gb of RAM, maybe you should use mem= kernel
+> > parameter on boot.
+> >
+> > 1. for i in `seq 1 100`; do dd of=$i if=/dev/zero bs=1M count=100
+> > 2>/dev/null; done
+> > 2. for i in `seq 1 100`; do dd if=$i of=/dev/zero bs=64k 2>/dev/null &
+> > done
+> >
 >
-> On Sunday 22 April 2007 10:47:59 Justin Piszcz wrote:
->> On Sun, 22 Apr 2007, Pallai Roland wrote:
->>> On Sunday 22 April 2007 02:18:09 Justin Piszcz wrote:
->>>>
->>>> How did you run your read test?
->>>>
->>>
->>> I did run 100 parallel reader process (dd) top of XFS file system, try
->>> this: for i in `seq 1 100`; do dd of=$i if=/dev/zero bs=64k 2>/dev/null;
->>> done for i in `seq 1 100`; do dd if=$i of=/dev/zero bs=64k 2>/dev/null &
->>> done
->>>
->>> and don't forget to set max_sectors_kb below chunk size (eg. 64/128Kb)
->>> /sys/block# for i in sd*; do echo 64 >$i/queue/max_sectors_kb; done
->>>
->>> I also set 2048/4096 readahead sectors with blockdev --setra
->>>
->>> You need 50-100 reader processes for this issue, I think so. My kernel
->>> version is 2.6.20.3
->>>
->>
->> In one xterm:
->> for i in `seq 1 100`; do dd of=$i if=/dev/zero bs=64k 2>/dev/null; done
->>
->> In another:
->> for i in `seq 1 100`; do dd if=/dev/md3 of=$i.out bs=64k & done
->
-> Write and read files top of XFS, not on the block device. $i isn't a typo, you
-> should write into 100 files and read back by 100 threads in parallel when
-> done. I've 1Gb of RAM, maybe you should use mem= kernel parameter on boot.
->
-> 1. for i in `seq 1 100`; do dd of=$i if=/dev/zero bs=1M count=100 2>/dev/null;
-> done
-> 2. for i in `seq 1 100`; do dd if=$i of=/dev/zero bs=64k 2>/dev/null & done
->
->
-> --
-> d
->
+> I use a combination of 4 Silicon Image controllers (SiI) and the Intel 965
+> chipset.  My max_sectors_kb is 128kb, my chunk size is 128kb, why do you
+> set the max_sectors_kb less than the chunk size?
+ It's the maximum on Marvell SATA chips under Linux. Maybe hardware 
+limitation. I just would used 128Kb chunk but I hit this issue.
 
-I use a combination of 4 Silicon Image controllers (SiI) and the Intel 965 
-chipset.  My max_sectors_kb is 128kb, my chunk size is 128kb, why do you 
-set the max_sectors_kb less than the chunk size?  For read-ahead, there 
-are some good benchmarks by SGI(?) I believe and some others that states 
-16MB is the best value, over that, you lose on reads/writes or the other, 
-16MB appears to be optimal for best overall value.  Do these values look 
-good to you, or?
+> For read-ahead, there 
+> are some good benchmarks by SGI(?) I believe and some others that states
+> 16MB is the best value, over that, you lose on reads/writes or the other,
+> 16MB appears to be optimal for best overall value.  Do these values look
+> good to you, or?
+ Where can I found this bechmark? I did some test on this topic, too. I think 
+the optimal readahead size always depend on the number of sequentally reading 
+processes and the available RAM. If you've 100 processes and 1Gb of RAM, max 
+optimal readahead is about 5-6Mb, if you set it bigger that turns into 
+readahead thrashing and undesirable context switches. Anyway, I tried 16Mb 
+now, but the readahead size doesn't matter in this bug, same context switch 
+storm appears with any readahead window size.
 
-Read 100 files on XFS simultaneously:
+> Read 100 files on XFS simultaneously:
+ max_sectors_kb is 128kb is here? I think so. I see some anomaly, but maybe 
+just you've too big readahead window for so many processes, it's not the bug 
+what I'm talking about in my original post. High interrupt and CS count has 
+been building slowly, it may a sign of readahead thrashing. In my case the CS 
+storm began in the first second and no high interrupt count:
 
-procs -----------memory---------- ---swap-- -----io---- -system-- ----cpu----
-  r  b   swpd   free   buff  cache   si   so    bi    bo   in   cs us sy id wa
-  0  0    104 146680    460 3179400    0    0   138    17   77  161  1  0 99  0
-  0  0    104 146680    460 3179400    0    0     0     0 1095  190  0  0 100  0
-16 84    104 149024    460 3162880    0    0 57492    25 1481 1284  2 10 88  1
-  0 88    104 148728    396 2982628    0    0 296904     8 2816 4728  1 48  0 51
-  0 88    104 147796     40 2894752    0    0 204080     0 2815 3507  0  8  0 92
-  0 87    104 149272     40 2845688    0    0 116200     0 2781 2836  0  6  0 94
-  0 87    104 147872     40 2770888    0    0 188260     0 2948 3043  0  9  0 91
-  0 87    104 148244     40 2583700    0    0 218440     0 2856 3218  0 12  0 88
-  1 87    104 147528     40 2385668    0    0 181352     0 3225 4211  1  9  0 90
-  0 87    104 147784     40 2343868    0    0 225716     0 3205 3725  0  9  0 91
-  0 88    104 146112     40 2233272    0    0 202968     8 3956 5669  0  9  0 91
-  0 88    104 146452     40 2325332    0    0 241196     0 4374 4927  0  7  0 93
-  0 88    104 147792     40 2463600    0    0 239788     0 3216 1139  1  5  0 94
-  1 88    104 148600     40 2468352    0    0 187488     0 3107 2883  0  6  0 94
-  0 88    104 147240     40 2553940    0    0 168236     0 3559 2795  0  5  0 95
-  0 87    104 147772     40 2682932    0    0 278092     0 5531 7507  0  9  0 91
-  0 87    104 148200     40 2813376    0    0 201324     0 4346 5726  0  6  0 94
-  1 87    104 148196     40 2774932    0    0 193620     0 5433 11595  0 10  0 90
-  0 87    104 148488     40 2785256    0    0 227568     0 4081 6121  0 11  0 89
-  0 87    104 148240     40 2798024    0    0 201800     0 5064 10857  1 11  0 89
-  0 87    104 148684     40 2825632    0    0 206564    20 5244 9451  0 10  0 90
-  2 86    104 149060     40 2899464    0    0 182584     0 6610 15984  0 10  0 90
-  0 86    104 148004     40 2925044    0    0 167044     0 5725 13011  0 13  0 87
-  0 84    104 148344     40 3025508    0    0 149640     0 6860 18340  0  9  0 91
-  0 81    104 146152     40 3074460    0    0 167780     0 7572 19434  1 16  0 84
-  0 79    104 149172     40 3127748    0    0 191064     0 5373 11928  0 10  0 90
-  0 77    104 146972     40 3101440    0    0 135968     0 9232 28208  1 18  0 82
-  0 70    104 148896     40 3081860    0    0 144372     0 7790 22857  0 16  0 84
-  0 69    104 148492     40 3173532    0    0 154024     0 8002 22211  0 10  0 90
-  1 68    104 145804     40 3192788    0    0 111412     0 9612 30604  0 14  0 86
-  0 66    104 147324     40 3173004    0    0 137800     0 9858 31132  0 13  0 87
-  0 65    104 145456     40 3121436    0    0 141348     0 6521 17443  1 13  0 87
-  1 64    104 148408     40 3154056    0    0 149308     0 9575 29755  0 13  0 87
-  0 61    104 145396     40 3187312    0    0 161976     0 9709 29021  0 13  0 87
-  0 61    104 147860     40 3189972    0    0 154844     0 7345 20033  0 10  0 90
-  2 61    104 148264     40 3162276    0    0 135804     0 10865 33643  0 15  1 8
-5
-  0 59    104 147264     40 3203068    0    0 70464     0 9340 29345  0 11  0 89
-  1 58    104 147344     40 3203468    0    0 108072    48 12206 39011  0 15  0 8
-5
-  0 58    104 146696     40 3204660    0    0 102492    32 12800 43578  0 15  0 8
-5
-  1 58    104 145712     40 3201916    0    0 198728     8 10537 34621  0 15  0 8
-5
-  2 56    104 148732     40 3195160    0    0 119700     0 10647 35077  1 15  0 8
-4
-  0 54    104 148628     40 3203856    0    0 92588     0 8757 26257  0 12  0 88
-  0 54    104 147128     40 3203956    0    0 207224     0 9706 29997  0 14  0 86
-  1 54    104 146788     40 3165980    0    0 150120    36 10611 36721  0 17  0 8
-3
-  1 52    104 146984     40 3121696    0    0 160080     8 8714 28264  0 14  0 86
-  0 51    104 147556     40 3123932    0    0 223940     0 6088 15013  0 13  0 87
-  0 50    104 147268     40 3172724    0    0 154592     0 8949 26645  0 13  0 87
-  0 46    104 148692     40 3135296    0    0 153708     0 7146 19844  1 15  0 85
-  0 45    104 148116     40 3168180    0    0 165740    20 7884 22111  0 14  0 86
-  0 43    104 147388     40 3209160    0    0 179588     8 9244 27501  0 14  0 86
-  0 41    104 147760     40 3208860    0    0 131216    24 8205 24867  0 10  0 90
-  0 41    104 148868     40 3122048    0    0 188260     0 9812 30872  0 14  0 86
-  1 40    104 146832     40 3210452    0    0 168388     0 8798 27378  0 12  0 88
-  1 39    104 146388     40 3211436    0    0 96044     0 13197 45162  0 15  2 83
-  0 37    104 144716     40 3213412    0    0 151044    12 9877 30263  1 14  0 85
-  0 37    104 146056     40 3212088    0    0 95988    27 13179 44933  0 15  5 80
-  3 36    104 146776     40 3211552    0    0 66580     0 13651 46636  0 16  9 76
-  1 37    104 146504     40 3212192    0    0 77196     0 16353 57091  0 18  0 82
-  1 37    104 146864     40 3211648    0    0 135312     0 13350 45859  0 17  1 8
-3
-  2 35    104 148924     40 3209796    0    0 81228     0 13459 43748  0 15  0 85
-  1 36    104 147792     40 3211332    0    0 107248     0 15935 57007  0 21  0 7
-9
-  2 35    104 146916     40 3212444    0    0 84328     0 16471 57611  0 18  0 82
-  0 35    104 146500     40 3212944    0    0 98524     0 16049 55775  0 19  0 81
-  0 34    104 148448     40 3211220    0    0 114116     0 14166 51140  1 17  2 8
-1
-  0 32    104 145220     40 3215024    0    0 96068     0 16008 58012  0 21  0 79
-  1 29    104 145376     40 3215416    0    0 102604     0 12294 41704  0 16  1 8
-4
-  2 27    104 146764     40 3214384    0    0 132004     0 13076 44026  1 15  3 8
-2
-  0 27    104 148888     40 3212460    0    0 118908     0 16100 57546  0 19  0 8
-1
-  0 26    104 144932     40 3216260    0    0 101220    24 15687 55236  0 20  2 7
-8
-  1 24    104 147848     40 3214344    0    0 125152     8 13737 48996  0 19  0 8
-1
-  2 21    104 147024     40 3215676    0    0 71300     0 18828 65151  0 22  0 78
-  1 22    104 145124     40 3217852    0    0 85228     0 19031 65807  1 20  0 80
-  2 21    104 147472     40 3215532    0    0 96188     0 16644 60505  0 20  0 80
-  2 18    104 146064     40 3217544    0    0 83316     0 16788 60762  1 21  0 79
-  6 13    104 145824     40 3218832    0    0 56188     0 15100 51145  0 16  1 83
-  0  6    104 147988     40 3218048    0    0 75836    20 19925 69456  0 22  0 78
-  0  0    104 148592     40 3218292    0    0 20328     0 6190 17793  0  6 70 24
-  0  0    104 148796     40 3218392    0    0    36     0 1199  372  1  0 98  1
-  0  0    104 148796     40 3218392    0    0     0     0 1090  192  0  0 100  0
-  0  0    104 149044     40 3218420    0    0    16     0 1110  349  0  0 100  0
-  0  0    104 149044     40 3218420    0    0     0    17 1105  212  0  0 100  0
-  0  0    104 149308     40 3218436    0    0     0     0 1143  317  0  0 100  0
+procs -----------memory---------- ---swap-- -----io---- --system-- ----cpu----
+ r  b   swpd   free   buff  cache   si   so    bi    bo   in    cs us sy id wa
+0  0      0   7220      0 940972    0    0     0     0  256    20  0  0 100  0
+0 13      0 383636      0 535520    0    0 144904    32 2804 63834  1 42  0 57
+24 20     0 353312      0 558200    0    0 121524     0 2669 67604  1 40  0 59
+15 21      0 314808      0 557068    0    0 91300    33 2572 53442  0 29  0 71
+
+ I attached a small kernel patch, you can measure readahead thrashing ratio 
+with this (see tail of /proc/vmstat). I think it's a handy tool to find the 
+optimal RA-size. And if you're interested in the bug what I'm talking about, 
+set max_sectors_kb to 64Kb.
 
 
+--
+ d
+
+
+--Boundary-00=_Fl0KGlMaGICxWTM
+Content-Type: text/x-diff;
+  charset="iso-8859-1";
+  name="01_2618+_rathr-d1.diff"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename="01_2618+_rathr-d1.diff"
+
+--- linux-2.6.18.2/include/linux/vmstat.h.orig	2006-09-20 05:42:06.000000000 +0200
++++ linux-2.6.18.2/include/linux/vmstat.h	2006-11-06 02:09:25.000000000 +0100
+@@ -30,6 +30,7 @@
+ 		FOR_ALL_ZONES(PGSCAN_DIRECT),
+ 		PGINODESTEAL, SLABS_SCANNED, KSWAPD_STEAL, KSWAPD_INODESTEAL,
+ 		PAGEOUTRUN, ALLOCSTALL, PGROTATED,
++		RATHRASHED,
+ 		NR_VM_EVENT_ITEMS
+ };
+ 
+--- linux-2.6.18.2/mm/vmstat.c.orig	2006-11-06 01:55:58.000000000 +0100
++++ linux-2.6.18.2/mm/vmstat.c	2006-11-06 02:05:14.000000000 +0100
+@@ -502,6 +502,8 @@
+ 	"allocstall",
+ 
+ 	"pgrotated",
++
++	"rathrashed",
+ #endif
+ };
+ 
+--- linux-2.6.18.2/mm/readahead.c.orig	2006-09-20 05:42:06.000000000 +0200
++++ linux-2.6.18.2/mm/readahead.c	2006-11-06 02:13:12.000000000 +0100
+@@ -568,6 +568,7 @@
+ 	ra->flags |= RA_FLAG_MISS;
+ 	ra->flags &= ~RA_FLAG_INCACHE;
+ 	ra->cache_hit = 0;
++	count_vm_event(RATHRASHED);
+ }
+ 
+ /*
+
+--Boundary-00=_Fl0KGlMaGICxWTM--
