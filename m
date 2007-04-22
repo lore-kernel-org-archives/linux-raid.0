@@ -1,214 +1,60 @@
-From: Pallai Roland <dap@mail.index.hu>
-Subject: Re: major performance drop on raid5 due to context switches caused by small max_hw_sectors [partially resolved]
-Date: Sun, 22 Apr 2007 16:38:11 +0200
-Message-ID: <200704221638.11837.dap@mail.index.hu>
-References: <200704202306.14880.dap@mail.index.hu> <200704221338.45759.dap@mail.index.hu> <Pine.LNX.4.64.0704220742080.14170@p34.internal.lan>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: major performance drop on raid5 due to context switches caused
+ by small max_hw_sectors [partially resolved]
+Date: Sun, 22 Apr 2007 10:48:11 -0400 (EDT)
+Message-ID: <Pine.LNX.4.64.0704221047570.21579@p34.internal.lan>
+References: <200704202306.14880.dap@mail.index.hu> <200704221338.45759.dap@mail.index.hu>
+ <Pine.LNX.4.64.0704220742080.14170@p34.internal.lan> <200704221638.11837.dap@mail.index.hu>
 Mime-Version: 1.0
-Content-Type: Multipart/Mixed;
-  boundary="Boundary-00=_TN3KGDu9XGHsO0c"
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0704220742080.14170@p34.internal.lan>
+In-Reply-To: <200704221638.11837.dap@mail.index.hu>
 Sender: linux-raid-owner@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
+To: Pallai Roland <dap@mail.index.hu>
 Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Boundary-00=_TN3KGDu9XGHsO0c
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
 
 
-On Sunday 22 April 2007 13:42:43 Justin Piszcz wrote:
-> http://www.rhic.bnl.gov/hepix/talks/041019pm/schoen.pdf
-> Check page 13 of 20.
- Thanks, interesting presentation. I'm working in the same area now, big media 
-files and many clients. I spent some days to build a low-cost, high 
-performance server. With my experience, I think, some results of this 
-presentation can't be applied to recent kernels.
+On Sun, 22 Apr 2007, Pallai Roland wrote:
 
- It's off-topic in this thread, sorry, but I like to swagger what can be done 
-with Linux! :)
+>
+> On Sunday 22 April 2007 13:42:43 Justin Piszcz wrote:
+>> http://www.rhic.bnl.gov/hepix/talks/041019pm/schoen.pdf
+>> Check page 13 of 20.
+> Thanks, interesting presentation. I'm working in the same area now, big media
+> files and many clients. I spent some days to build a low-cost, high
+> performance server. With my experience, I think, some results of this
+> presentation can't be applied to recent kernels.
+>
+> It's off-topic in this thread, sorry, but I like to swagger what can be done
+> with Linux! :)
+>
+> ASUS P5B-E Plus, P4 641, 1024Mb RAM, 6 disks on 965P's south bridge, 1 disk on
+> Jmicron (both driven by AHCI driver), 1 disk on Silicon Image 3132, 8 disks
+> on HPT2320 (hpt's driver). 16x Seagate 500Gb 16Mb cache.
+> kernel 2.6.20.3
+> anticipatory scheduler
+> chunk size 64Kb
+> XFS file system
+> file size is 400Mb, I read 200 of them in each test
+>
+> The yellow points are marking thrashing thresholds, I computed it based on
+> process number and RAM size. It's not an exact threshold.
+>
+> - now see the attached picture :)
+>
+> Awesome performance, near disk-platter speed with big RA! It's even better
+> with ~+15% if I use the -mm tree with the new adaptive readahead! Bigger
+> files, bigger chunk also helps, but in my case, it's constant
+> (unfortunately).
+>
+> The rule of readahead size is simple: the much is better, till no thrashing.
+>
+>
+> --
+> d
+>
+>
 
-ASUS P5B-E Plus, P4 641, 1024Mb RAM, 6 disks on 965P's south bridge, 1 disk on 
-Jmicron (both driven by AHCI driver), 1 disk on Silicon Image 3132, 8 disks 
-on HPT2320 (hpt's driver). 16x Seagate 500Gb 16Mb cache.
- kernel 2.6.20.3
- anticipatory scheduler
- chunk size 64Kb
- XFS file system
- file size is 400Mb, I read 200 of them in each test
-
- The yellow points are marking thrashing thresholds, I computed it based on 
-process number and RAM size. It's not an exact threshold.
-
-- now see the attached picture :)
-
- Awesome performance, near disk-platter speed with big RA! It's even better 
-with ~+15% if I use the -mm tree with the new adaptive readahead! Bigger 
-files, bigger chunk also helps, but in my case, it's constant 
-(unfortunately).
-
- The rule of readahead size is simple: the much is better, till no thrashing.
-
-
---
- d
-
-
---Boundary-00=_TN3KGDu9XGHsO0c
-Content-Type: image/png;
-  name="r1.png"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment;
-	filename="r1.png"
-
-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
-AAAAAElFTkSuQmCC
-
---Boundary-00=_TN3KGDu9XGHsO0c--
+Have you also optimized your stripe cache for writes?
