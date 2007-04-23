@@ -1,184 +1,204 @@
-From: David Greaves <david@dgreaves.com>
-Subject: Re: Partitioned arrays initially missing from /proc/partitions
-Date: Mon, 23 Apr 2007 15:56:27 +0100
-Message-ID: <462CC91B.8030008@dgreaves.com>
-References: <45709639.70104@laurelnetworks.com>
+From: "Leon Woestenberg" <leon.woestenberg@gmail.com>
+Subject: Multiple disk failure, but slot numbers are corrupt and preventing assembly.
+Date: Mon, 23 Apr 2007 19:17:21 +0200
+Message-ID: <c384c5ea0704231017i2fd01aceva845a2f61f0aae3@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <45709639.70104@laurelnetworks.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Mike Accetta <maccetta@laurelnetworks.com>, Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Neil
+Hello,
 
-I think this is a bug.
+it's recovery time again. Problem at hand: raid5 consisting of four
+partitions, each on a drive. Two disks have failed. Assembly fails
+because the slot numbers of the array components seem to be corrupt.
 
-Essentially if I create an auto=part md device then I get md_d0p? partitions.
-If I stop the array and just re-assemble, I don't.
+/dev/md0 consisting of /dev/sd[abcd]1, of which b,c failed and of
+which c seems really bad in SMART, b looks reasonably OK judging from
+SMART.
 
-It looks like the same (?) problem as Mike (see below - Mike do you have a
-patch?) but I'm on 2.6.20.7 with mdadm v2.5.6
+Checksum of the failed component superblocks was bad.
 
-FWIW I upgraded from 2.6.16 where it worked (but used in-kernel detection which
-isn't working in 2.6.20 for some reason but I don't mind).
+Using mdadm.conf we have already tried updating the superblocks. This
+partly succeeded in the sense that checksums came up ok, the slot
+numbers did not.
 
+mdadm refuses to assemble, even with --force.
 
-Here's a simple sequence of commands:
+Could you guys peek over the array configuration (mdadm --examine) and
+see if there is a non-destructive way to try and mount the array. If
+not, what is the least intrusive way to do a non-syncing (re)create?
 
-teak:~# mdadm --stop /dev/md_d0
-mdadm: stopped /dev/md_d0
+Data recovery is our prime concern here.
 
-teak:~# mdadm --create /dev/md_d0 -l5 -n5 --bitmap=internal -e1.2 --auto=part
---name media --force /dev/sde1 /dev/sdc1 /dev/sdd1 missing /dev/sdf1
-mdadm: /dev/sde1 appears to be part of a raid array:
-    level=raid5 devices=5 ctime=Mon Apr 23 15:02:13 2007
-mdadm: /dev/sdc1 appears to be part of a raid array:
-    level=raid5 devices=5 ctime=Mon Apr 23 15:02:13 2007
-mdadm: /dev/sdd1 appears to be part of a raid array:
-    level=raid5 devices=5 ctime=Mon Apr 23 15:02:13 2007
-mdadm: /dev/sdf1 appears to be part of a raid array:
-    level=raid5 devices=5 ctime=Mon Apr 23 15:02:13 2007
-Continue creating array? y
-mdadm: array /dev/md_d0 started.
+Below the uname -a, --examine output of all four drives, mdadm.conf of
+what we think the array should look like and finally, the mdadm
+--assemble command and output.
 
-teak:~# grep md /proc/partitions
- 254     0 1250241792 md_d0
- 254     1 1250144138 md_d0p1
- 254     2      97652 md_d0p2
+Note the slot numbers on /dev/sd[bc].
 
-teak:~# mdadm --stop /dev/md_d0
-mdadm: stopped /dev/md_d0
+Thanks for any help,
 
-teak:~# mdadm --assemble /dev/md_d0 --auto=part  /dev/sde1 /dev/sdc1 /dev/sdd1
-/dev/sdf1
-mdadm: /dev/md_d0 has been started with 4 drives (out of 5).
+with kind regards,
 
-teak:~# grep md /proc/partitions
- 254     0 1250241792 md_d0
+Leon Woestenberg
 
 
-If I then run cfdisk it finds the partition table. I write this and get:
-teak:~# cfdisk /dev/md_d0
-
-Disk has been changed.
-
-WARNING: If you have created or modified any
-DOS 6.x partitions, please see the cfdisk manual
-page for additional information.
-teak:~# grep md /proc/partitions
- 254     0 1250241792 md_d0
- 254     1 1250144138 md_d0p1
- 254     2      97652 md_d0p2
 
 
-and the syslog:
-Apr 23 15:13:13 localhost kernel: md: md_d0 stopped.
-Apr 23 15:13:13 localhost kernel: md: unbind<sde1>
-Apr 23 15:13:13 localhost kernel: md: export_rdev(sde1)
-Apr 23 15:13:13 localhost kernel: md: unbind<sdf1>
-Apr 23 15:13:13 localhost kernel: md: export_rdev(sdf1)
-Apr 23 15:13:13 localhost kernel: md: unbind<sdd1>
-Apr 23 15:13:13 localhost kernel: md: export_rdev(sdd1)
-Apr 23 15:13:13 localhost kernel: md: unbind<sdc1>
-Apr 23 15:13:13 localhost kernel: md: export_rdev(sdc1)
-Apr 23 15:13:13 localhost mdadm: DeviceDisappeared event detected on md device
-/dev/md_d0
-Apr 23 15:13:36 localhost kernel: md: bind<sde1>
-Apr 23 15:13:36 localhost kernel: md: bind<sdc1>
-Apr 23 15:13:36 localhost kernel: md: bind<sdd1>
-Apr 23 15:13:36 localhost kernel: md: bind<sdf1>
-Apr 23 15:13:36 localhost kernel: raid5: device sdf1 operational as raid disk 4
-Apr 23 15:13:36 localhost kernel: raid5: device sdd1 operational as raid disk 2
-Apr 23 15:13:36 localhost kernel: raid5: device sdc1 operational as raid disk 1
-Apr 23 15:13:36 localhost kernel: raid5: device sde1 operational as raid disk 0
-Apr 23 15:13:36 localhost kernel: raid5: allocated 5236kB for md_d0
-Apr 23 15:13:36 localhost kernel: raid5: raid level 5 set md_d0 active with 4
-out of 5 devices, algorithm 2
-Apr 23 15:13:36 localhost kernel: RAID5 conf printout:
-Apr 23 15:13:36 localhost kernel:  --- rd:5 wd:4
-Apr 23 15:13:36 localhost kernel:  disk 0, o:1, dev:sde1
-Apr 23 15:13:36 localhost kernel:  disk 1, o:1, dev:sdc1
-Apr 23 15:13:36 localhost kernel:  disk 2, o:1, dev:sdd1
-Apr 23 15:13:36 localhost kernel:  disk 4, o:1, dev:sdf1
-Apr 23 15:13:36 localhost kernel: md_d0: bitmap initialized from disk: read 1/1
-pages, set 19078 bits, status: 0
-Apr 23 15:13:36 localhost kernel: created bitmap (10 pages) for device md_d0
-Apr 23 15:13:36 localhost kernel:  md_d0: p1 p2
-Apr 23 15:13:54 localhost kernel: md: md_d0 stopped.
-Apr 23 15:13:54 localhost kernel: md: unbind<sdf1>
-Apr 23 15:13:54 localhost kernel: md: export_rdev(sdf1)
-Apr 23 15:13:54 localhost kernel: md: unbind<sdd1>
-Apr 23 15:13:54 localhost kernel: md: export_rdev(sdd1)
-Apr 23 15:13:54 localhost kernel: md: unbind<sdc1>
-Apr 23 15:13:54 localhost kernel: md: export_rdev(sdc1)
-Apr 23 15:13:54 localhost kernel: md: unbind<sde1>
-Apr 23 15:13:54 localhost kernel: md: export_rdev(sde1)
-Apr 23 15:13:54 localhost mdadm: DeviceDisappeared event detected on md device
-/dev/md_d0
-Apr 23 15:14:04 localhost kernel: md: md_d0 stopped.
-Apr 23 15:14:04 localhost kernel: md: bind<sdc1>
-Apr 23 15:14:04 localhost kernel: md: bind<sdd1>
-Apr 23 15:14:04 localhost kernel: md: bind<sdf1>
-Apr 23 15:14:04 localhost kernel: md: bind<sde1>
-Apr 23 15:14:04 localhost kernel: raid5: device sde1 operational as raid disk 0
-Apr 23 15:14:04 localhost kernel: raid5: device sdf1 operational as raid disk 4
-Apr 23 15:14:04 localhost kernel: raid5: device sdd1 operational as raid disk 2
-Apr 23 15:14:04 localhost kernel: raid5: device sdc1 operational as raid disk 1
-Apr 23 15:14:04 localhost kernel: raid5: allocated 5236kB for md_d0
-Apr 23 15:14:04 localhost kernel: raid5: raid level 5 set md_d0 active with 4
-out of 5 devices, algorithm 2
-Apr 23 15:14:04 localhost kernel: RAID5 conf printout:
-Apr 23 15:14:04 localhost kernel:  --- rd:5 wd:4
-Apr 23 15:14:04 localhost kernel:  disk 0, o:1, dev:sde1
-Apr 23 15:14:04 localhost kernel:  disk 1, o:1, dev:sdc1
-Apr 23 15:14:04 localhost kernel:  disk 2, o:1, dev:sdd1
-Apr 23 15:14:04 localhost kernel:  disk 4, o:1, dev:sdf1
-Apr 23 15:14:04 localhost kernel: md_d0: bitmap initialized from disk: read 1/1
-pages, set 0 bits, status: 0
-Apr 23 15:14:04 localhost kernel: created bitmap (10 pages) for device md_d0
-Apr 23 15:14:04 localhost kernel:  md_d0: unknown partition table
+Linux localhost 2.6.16.14-axon1 #1 SMP PREEMPT Mon May 8 17:01:33 CEST
+2006 i486 pentium4 i386 GNU/Linux
 
-after cfdisk write:
-Apr 23 15:33:00 localhost kernel:  md_d0: p1 p2
+[root@localhost ~]# mdadm --examine /dev/sda1
+/dev/sda1:
+          Magic : a92b4efc
+        Version : 00.90.00
+           UUID : 51a95144:00af4c77:c1cd173b:94cb1446
+  Creation Time : Mon Sep  5 13:16:42 2005
+     Raid Level : raid5
+    Device Size : 390620352 (372.52 GiB 400.00 GB)
+   Raid Devices : 4
+  Total Devices : 4
+Preferred Minor : 0
+
+    Update Time : Tue Apr 17 07:03:46 2007
+          State : active
+ Active Devices : 4
+Working Devices : 4
+ Failed Devices : 0
+  Spare Devices : 0
+       Checksum : f98ed71b - correct
+         Events : 0.115909229
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+      Number   Major   Minor   RaidDevice State
+this     0       8        1        0      active sync   /dev/sda1
+
+   0     0       8        1        0      active sync   /dev/sda1
+   1     1       8       17        1      active sync   /dev/sdb1
+   2     2       8       33        2      active sync   /dev/sdc1
+   3     3       8       49        3      active sync   /dev/sdd1
+[root@localhost ~]# mdadm --examine /dev/sdb1
+/dev/sdb1:
+          Magic : a92b4efc
+        Version : 00.90.00
+           UUID : 51a95144:00af4c77:c1cd173b:94cb1446
+  Creation Time : Mon Sep  5 13:16:42 2005
+     Raid Level : raid5
+    Device Size : 390620352 (372.52 GiB 400.00 GB)
+   Raid Devices : 4
+  Total Devices : 5
+Preferred Minor : 0
+
+    Update Time : Tue Apr 17 07:03:46 2007
+          State : clean
+ Active Devices : 5
+Working Devices : 4
+ Failed Devices : 1
+  Spare Devices : 0
+       Checksum : e6d35288 - correct
+         Events : 0.115909230
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+      Number   Major   Minor   RaidDevice State
+this -11221199   -1288577935    -1551230943    2035285809      faulty
+active removed
+
+   0     0       8        1        0      active sync   /dev/sda1
+   1     1       8       17        1      active sync   /dev/sdb1
+   2     2       8       33        2      active sync   /dev/sdc1
+   3     3       8       49        3      active sync   /dev/sdd1
+[root@localhost ~]# mdadm --examine /dev/sdc1
+/dev/sdc1:
+          Magic : a92b4efc
+        Version : 00.90.00
+           UUID : 51a95144:00af4c77:c1cd173b:94cb1446
+  Creation Time : Mon Sep  5 13:16:42 2005
+     Raid Level : raid5
+    Device Size : 390620352 (372.52 GiB 400.00 GB)
+   Raid Devices : 4
+  Total Devices : 9
+Preferred Minor : 0
+
+    Update Time : Tue Apr 17 07:03:46 2007
+          State : clean
+ Active Devices : 8
+Working Devices : 8
+ Failed Devices : 1
+  Spare Devices : 0
+       Checksum : 33e911c - correct
+         Events : 0.115909230
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+      Number   Major   Minor   RaidDevice State
+this 1038288281   293191225    29538921    -2128142983      faulty
+active write-mostly
+
+   0     0       8        1        0      active sync   /dev/sda1
+   1     1       8       17        1      active sync   /dev/sdb1
+   2     2       8       33        2      active sync   /dev/sdc1
+   3     3       8       49        3      active sync   /dev/sdd1
+[root@localhost ~]# mdadm --examine /dev/sdd1
+/dev/sdd1:
+          Magic : a92b4efc
+        Version : 00.90.00
+           UUID : 51a95144:00af4c77:c1cd173b:94cb1446
+  Creation Time : Mon Sep  5 13:16:42 2005
+     Raid Level : raid5
+    Device Size : 390620352 (372.52 GiB 400.00 GB)
+   Raid Devices : 4
+  Total Devices : 4
+Preferred Minor : 0
+
+    Update Time : Tue Apr 17 07:03:46 2007
+          State : clean
+ Active Devices : 4
+Working Devices : 4
+ Failed Devices : 0
+  Spare Devices : 0
+       Checksum : 7779c2 - correct
+         Events : 0.115909230
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+      Number   Major   Minor   RaidDevice State
+this     3       8       49        3      active sync   /dev/sdd1
+
+   0     0       8        1        0      active sync   /dev/sda1
+   1     1       8       17        1      active sync   /dev/sdb1
+   2     2       8       33        2      active sync   /dev/sdc1
+   3     3       8       49        3      active sync   /dev/sdd1
+[root@localhost ~]#
+
+[root@localhost ~]# cat /tmp/mdadm.conf
+DEVICE /dev/sda1 /dev/sdb1/ /dev/sdc1 /dev/sdd1
+ARRAY /dev/md0 devices=/dev/sda1,/dev/sdb1,/dev/sdc1,/dev/sdd1
+
+[root@localhost ~]# mdadm -v --assemble --scan --config=/tmp/mdadm.conf --force
+mdadm: looking for devices for /dev/md0
+mdadm: /dev/sda1 is identified as a member of /dev/md0, slot 0.
+mdadm: /dev/sdb1 is identified as a member of /dev/md0, slot 2035285809.
+mdadm: /dev/sdc1 is identified as a member of /dev/md0, slot -2128142983.
+mdadm: /dev/sdd1 is identified as a member of /dev/md0, slot 3.
+mdadm: no uptodate device for slot 1 of /dev/md0
+mdadm: no uptodate device for slot 2 of /dev/md0
+mdadm: added /dev/sdd1 to /dev/md0 as 3
+mdadm: added /dev/sda1 to /dev/md0 as 0
+mdadm: /dev/md0 assembled from 2 drives - not enough to start the array.
 
 
-Back in dec 2006,Mike Accetta wrote:
-> In setting up a partitioned array as the boot disk and using a nash
-> initrd to find the root file system by volume label, I see a delay in
-> the appearance of the /dev/md_d0p partitions in /proc/partitions.  When
-> the mdadm --assemble command completes, only /dev/md_d0 is visible.
-> Since the raid partitions are not visible after the assemble, the volume
-> label search will not consult them in looking for the root volume and
-> the boot gets aborted. When I run a similar assemble command while up
-> multi-user in a friendlier debug environment I see the same effect and
-> observe that pretty much any access of /dev/md_d0 has the side effect of
-> then making the /dev/md_d0p partitions visible in /proc/partitions.
->
-> I tried a few experiments changing the --assemble code in mdadm.  If I
-> open() and close() /dev/md_d0 after assembly *before* closing the file
-> descriptor which the assemble step used to assemble the array, there is
-> no effect.  Even doing a BLKRRPART ioctl call on the assembly fd or the
-> newly opened fd have no effect.  The kernel prints "unknown partition"
-> diagnostics on the console.  However, if the assembly fd is first
-> close()'d, a simple open() of /dev/md_d0 and immediate close() of that
-> fd has the side effect of making the /dev/md_d0p partitions visible and
-> one sees the console disk partitioning confirmation from the kernel as
-> well.
->
-> Adding the open()/close() after assembly within mdadm solves my problem,
-> but I thought I'd raise the issue on the list as it seems there is a bug
-> somewhere.  I see in the kernel md driver that the RUN_ARRAY ioctl()
-> calls do_md_run() which calls md_probe() which calls add_disk() and I
-> gather that this would normally have the side effect of making the
-> partitions visible.  However, my experiments at user level seem to imply
-> that the array isn't completely usable until the assembly file
-> descriptor is closed, even on return from the ioctl(), and hence the
-> kernel add_disk() isn't having the desired partitioning side effect at
-> the point it is being invoked.
->
-> This is all with kernel 2.6.18 and mdadm 2.3.1
 
+
+-- 
+Leon
