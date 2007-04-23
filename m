@@ -1,50 +1,32 @@
-From: Mike Accetta <maccetta@laurelnetworks.com>
+From: Neil Brown <neilb@suse.de>
 Subject: Re: Partitioned arrays initially missing from /proc/partitions
-Date: Mon, 23 Apr 2007 15:31:47 -0400
-Message-ID: <16046.1177356707@mdt.dhcp.pit.laurelnetworks.com>
+Date: Tue, 24 Apr 2007 09:52:32 +1000
+Message-ID: <17965.18112.135843.417561@notabene.brown>
 References: <462CC91B.8030008@dgreaves.com>
+	<16046.1177356707@mdt.dhcp.pit.laurelnetworks.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-reply-to: Your message of "Mon, 23 Apr 2007 15:56:27 BST."
-             <462CC91B.8030008@dgreaves.com>
+In-Reply-To: message from Mike Accetta on Monday April 23
 Sender: linux-raid-owner@vger.kernel.org
-To: David Greaves <david@dgreaves.com>
-Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
+To: Mike Accetta <maccetta@laurelnetworks.com>
+Cc: David Greaves <david@dgreaves.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-David Greaves writes:
 
-...
-> It looks like the same (?) problem as Mike (see below - Mike do you have a
-> patch?) but I'm on 2.6.20.7 with mdadm v2.5.6
-...
+This problem is very hard to solve inside the kernel.
+The partitions will not be visible until the array is opened *after*
+it has been created.  Making the partitions visible before that would
+be possible, but would be very easy.
 
-We have since started assembling the array from the initrd using
---homehost and --auto-update-homehost which takes a different path through
-the code, and in this path the kernel figures out there are partitions
-on the array before mdadm exists.
+I think the best solution is Mike's solution which is to simply
+open/close the array after it has been assembled.  I will make sure
+this is in the next release of mdadm.
 
-For the previous code path, we had been ruuning with the patch I described
-in my original post which I've included below.  I'd guess that the bug
-is actually in the kernel code and I looked at it briefly but couldn't
-figure out how things all fit together well enough to come up with a
-patch there.  The user level patch is a bit of a hack and there may be
-other code paths that also need a similar patch.  I only made this patch
-in the assembly code path we were executing at the time.
+Note that you can still access the partitions even though they do not
+appear in /proc/partitions.  Any attempt to access and of them will
+make them all appear in /proc/partitions.  But I understand there is
+sometimes value in seeing them before accessing them.
 
-==== BUILD/mdadm/mdadm.c#2 (text) - BUILD/mdadm/mdadm.c#3 (text) ==== content
-@@ -983,6 +983,10 @@
-                                                               NULL,
-                                                               readonly, runstop, NULL, verbose-quiet, force);
-                                        close(mdfd);
-+                                       mdfd = open(array_list->devname, O_RDONLY); 
-+                                       if (mdfd >= 0) {
-+                                           close(mdfd);
-+                                       }
-                                }
-                }
-                break;
---
-Mike Accetta
-
-ECI Telecom Ltd.
-Data Networking Division (previously Laurel Networks)
+NeilBrown
