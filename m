@@ -1,60 +1,42 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: major performance drop on raid5 due to context switches caused
- by small max_hw_sectors [partially resolved]
-Date: Sun, 22 Apr 2007 16:35:51 -0400 (EDT)
-Message-ID: <Pine.LNX.4.64.0704221635460.31628@p34.internal.lan>
-References: <200704202306.14880.dap@mail.index.hu> <200704221638.11837.dap@mail.index.hu>
- <Pine.LNX.4.64.0704221047570.21579@p34.internal.lan> <200704221709.56271.dap@mail.index.hu>
- <Pine.LNX.4.64.0704221151250.23473@p34.internal.lan>
- <Pine.LNX.4.64.0704221200030.537@filesrv1.baby-dragons.com>
+From: "Guy Watkins" <linux-raid@watkins-home.com>
+Subject: mkinitrd and RAID6 on FC5
+Date: Mon, 23 Apr 2007 01:11:27 -0400
+Message-ID: <200704230511.l3N5BW701448@www.watkins-home.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0704221200030.537@filesrv1.baby-dragons.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
-Cc: Pallai Roland <dap@mail.index.hu>, Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+For many months now my FC5 can't do mkinitrd automatically when I upgrade
+the kernel.  Well it does make the initrd, but will not boot.
 
+It seems the modules raid4, raid5 and raid6 have been combined into 1 module
+raid456.
 
-On Sun, 22 Apr 2007, Mr. James W. Laferriere wrote:
+My "/" filesystem is RAID6.  I am guessing this is the problem.  If so, I
+guess anyone using RAID4, 5 or 6 would have this problem.
 
-> 	Hello Justin ,
->
-> On Sun, 22 Apr 2007, Justin Piszcz wrote:
->> On Sun, 22 Apr 2007, Pallai Roland wrote:
->>> On Sunday 22 April 2007 16:48:11 Justin Piszcz wrote:
->>>> Have you also optimized your stripe cache for writes?
->>> Not yet. Is it worth it?
->>> --
->>> d
->> Yes, it is-- well, if write speed is important to you that is?
->> Each of these write tests are averaged over three runs:
->> 
->> 128k_stripe: 69.2MB/s
->> 256k_stripe: 105.3MB/s
->> 512k_stripe: 142.0MB/s
->> 1024k_stripe: 144.6MB/s
->> 2048k_stripe: 208.3MB/s
->> 4096k_stripe: 223.6MB/s
->> 8192k_stripe: 226.0MB/s
->> 16384k_stripe: 215.0MB/s
->> 
->> What is your /sys/block/md[0-9]/md/stripe_cache_size?
-> 	On which filesystem type ?  ie: ext3,xfs,rieser?,...
-> 		Tia ,  JimL
-> -- 
-> +-----------------------------------------------------------------+
-> | James   W.   Laferriere | System   Techniques | Give me VMS     |
-> | Network        Engineer | 663  Beaumont  Blvd |  Give me Linux  |
-> | babydr@baby-dragons.com | Pacifica, CA. 94044 |   only  on  AXP |
-> +-----------------------------------------------------------------+
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+I found out how to manually create the initrd:
+mkinitrd -v -f --with=raid456 /boot/initrd-2.6.20-1.2307.fc5smp.img
+2.6.20-1.2307.fc5smp
 
-XFS
+There is a bugzilla number/url:
+https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=211030
+
+That bugzilla was opened over six months ago.
+
+Is this ever going to be fixed?
+
+Is this a REDHAT only problem/bug?  If so, since bugzilla.redhat.com gets
+ignored, where do I complain?
+
+Sorry to sound rude.  md has been good to me for years now, but this issue
+has caused me some headaches that I don't need!
+
+Thanks,
+Guy
 
