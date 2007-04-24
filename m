@@ -1,32 +1,45 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: Partitioned arrays initially missing from /proc/partitions
-Date: Tue, 24 Apr 2007 09:52:32 +1000
-Message-ID: <17965.18112.135843.417561@notabene.brown>
-References: <462CC91B.8030008@dgreaves.com>
-	<16046.1177356707@mdt.dhcp.pit.laurelnetworks.com>
+From: "Guy Watkins" <linux-raid@watkins-home.com>
+Subject: RE: mkinitrd and RAID6 on FC5
+Date: Mon, 23 Apr 2007 20:59:42 -0400
+Message-ID: <200704240059.l3O0xl704469@www.watkins-home.com>
+References: <462CF17A.3030902@zytor.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Mike Accetta on Monday April 23
+In-Reply-To: <462CF17A.3030902@zytor.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mike Accetta <maccetta@laurelnetworks.com>
-Cc: David Greaves <david@dgreaves.com>, linux-raid@vger.kernel.org
+To: "'H. Peter Anvin'" <hpa@zytor.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+} -----Original Message-----
+} From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
+} owner@vger.kernel.org] On Behalf Of H. Peter Anvin
+} Sent: Monday, April 23, 2007 1:49 PM
+} To: Guy Watkins
+} Cc: linux-raid@vger.kernel.org
+} Subject: Re: mkinitrd and RAID6 on FC5
+} 
+} Guy Watkins wrote:
+} > Is this a REDHAT only problem/bug?  If so, since bugzilla.redhat.com
+} gets
+} > ignored, where do I complain?
+} 
+} Yes, this is Redhat only, and as far as I know, it was fixed a long time
+} ago.  I suspect you need to make sure you upgrade your entire system,
+} especially mkinitrd, not just the kernel.
+} 
+} 	-hpa
 
-This problem is very hard to solve inside the kernel.
-The partitions will not be visible until the array is opened *after*
-it has been created.  Making the partitions visible before that would
-be possible, but would be very easy.
+I tried to update/upgrade and no updates are available for mkinitrd.  Do you
+know what version has the fix?  The bugzilla was never closed, so it seems
+it has not been fixed.
 
-I think the best solution is Mike's solution which is to simply
-open/close the array after it has been assembled.  I will make sure
-this is in the next release of mdadm.
+My version:
+mkinitrd.i386                            5.0.32-2               installed
 
-Note that you can still access the partitions even though they do not
-appear in /proc/partitions.  Any attempt to access and of them will
-make them all appear in /proc/partitions.  But I understand there is
-sometimes value in seeing them before accessing them.
+Thanks,
+Guy
 
-NeilBrown
