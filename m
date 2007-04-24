@@ -1,93 +1,71 @@
-From: David Greaves <david@dgreaves.com>
+From: Neil Brown <neilb@suse.de>
 Subject: Re: Partitioned arrays initially missing from /proc/partitions
-Date: Tue, 24 Apr 2007 11:49:06 +0100
-Message-ID: <462DE0A2.6000701@dgreaves.com>
-References: <462CC91B.8030008@dgreaves.com>	<16046.1177356707@mdt.dhcp.pit.laurelnetworks.com> <17965.18112.135843.417561@notabene.brown>
+Date: Tue, 24 Apr 2007 20:57:09 +1000
+Message-ID: <17965.57989.120710.460711@notabene.brown>
+References: <462CC91B.8030008@dgreaves.com>
+	<16046.1177356707@mdt.dhcp.pit.laurelnetworks.com>
+	<17965.18112.135843.417561@notabene.brown>
+	<462DCC4E.2020108@dgreaves.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------070707020607000404060703"
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17965.18112.135843.417561@notabene.brown>
+In-Reply-To: message from David Greaves on Tuesday April 24
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: David Greaves <david@dgreaves.com>
+Cc: Mike Accetta <maccetta@laurelnetworks.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This is a multi-part message in MIME format.
---------------070707020607000404060703
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-
-Neil Brown wrote:
-> This problem is very hard to solve inside the kernel.
-> The partitions will not be visible until the array is opened *after*
-> it has been created.  Making the partitions visible before that would
-> be possible, but would be very easy.
+On Tuesday April 24, david@dgreaves.com wrote:
+> Neil Brown wrote:
+> > This problem is very hard to solve inside the kernel.
+> > The partitions will not be visible until the array is opened *after*
+> > it has been created.  Making the partitions visible before that would
+> > be possible, but would be very easy.
+> > 
+> > I think the best solution is Mike's solution which is to simply
+> > open/close the array after it has been assembled.  I will make sure
+> > this is in the next release of mdadm.
+> > 
+> > Note that you can still access the partitions even though they do not
+> > appear in /proc/partitions. Any attempt to access and of them will
+> > make them all appear in /proc/partitions.  But I understand there is
+> > sometimes value in seeing them before accessing them.
+> > 
+> > NeilBrown
 > 
-> I think the best solution is Mike's solution which is to simply
-> open/close the array after it has been assembled.  I will make sure
-> this is in the next release of mdadm.
-> 
-> Note that you can still access the partitions even though they do not
-> appear in /proc/partitions.  Any attempt to access and of them will
-> make them all appear in /proc/partitions.  But I understand there is
-> sometimes value in seeing them before accessing them.
-> 
-> NeilBrown
+> Um. Are you sure?
 
-For anyone else who is in this boat and doesn't fancy finding somewhere in mdadm
- to hack, here's a simple program that issues the BLKRRPART ioctl.
-This re-reads the block device partition table and 'works for me'.
+"Works for me".
 
-I think partx -a would do the same job but for some reason partx isn't in
-utils-linux for Debian...
+What happens if you
+  blockdev --rereadpt /dev/md_d0
+?? It probably works then.
+It sounds like someone is deliberately removing all the partition
+info.
 
-Neil, isn't it easy to just do this after an assemble?
+Can you try this patch and see if it reports anyone calling
+'2' on md_d0 ??
 
-David
-
-
---------------070707020607000404060703
-Content-Type: text/x-csrc;
- name="raid_readparts.c"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="raid_readparts.c"
-
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/ioctl.h>
-#include <stdlib.h>
-#include <fcntl.h>
-#include <stdio.h>
-
-#include <linux/raid/md_u.h>
-#include <linux/major.h>
-#include </usr/include/linux/fs.h>
-
-int main(int argc, char *argv[])
-{
-    int fd;
-
-	if (argc != 2)
-       fprintf(stderr, "Usage: %s <md device>\n", argv[0]);
-
-	
-    if ((fd = open(argv[1], O_RDONLY)) == -1) {
-       fprintf(stderr, "Can't open md device %s\n", argv[1]);
-       return -1;
-    }
-
-	if (ioctl(fd,  BLKRRPART, NULL) != 0) {
-       fprintf(stderr, "ioctl failed\n");
-        close (fd);
-        return -1;
-    }
-
-    close (fd);
-
-    return 0;
-}
+diff .prev/block/ioctl.c ./block/ioctl.c
+--- .prev/block/ioctl.c	2007-04-17 11:42:15.000000000 +1000
++++ ./block/ioctl.c	2007-04-24 20:55:41.000000000 +1000
+@@ -17,6 +17,7 @@ static int blkpg_ioctl(struct block_devi
+ 	long long start, length;
+ 	int part;
+ 	int i;
++	char b[BDEVNAME_SIZE];
+ 
+ 	if (!capable(CAP_SYS_ADMIN))
+ 		return -EACCES;
+@@ -30,6 +31,8 @@ static int blkpg_ioctl(struct block_devi
+ 	part = p.pno;
+ 	if (part <= 0 || part >= disk->minors)
+ 		return -EINVAL;
++	printk("blkpg_ioctl: %s called %d on %s\n",
++	       current->comm, a.op, bdevname(bdev, b));
+ 	switch (a.op) {
+ 		case BLKPG_ADD_PARTITION:
+ 			start = p.start >> 9;
 
 
---------------070707020607000404060703--
