@@ -1,77 +1,74 @@
 From: David Greaves <david@dgreaves.com>
 Subject: Re: Partitioned arrays initially missing from /proc/partitions
-Date: Tue, 24 Apr 2007 10:22:22 +0100
-Message-ID: <462DCC4E.2020108@dgreaves.com>
-References: <462CC91B.8030008@dgreaves.com>	<16046.1177356707@mdt.dhcp.pit.laurelnetworks.com> <17965.18112.135843.417561@notabene.brown>
+Date: Tue, 24 Apr 2007 10:37:42 +0100
+Message-ID: <462DCFE6.4050708@dgreaves.com>
+References: <16046.1177356707@mdt.dhcp.pit.laurelnetworks.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17965.18112.135843.417561@notabene.brown>
+In-Reply-To: <16046.1177356707@mdt.dhcp.pit.laurelnetworks.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Mike Accetta <maccetta@laurelnetworks.com>, linux-raid@vger.kernel.org
+To: Mike Accetta <maccetta@laurelnetworks.com>, Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil Brown wrote:
-> This problem is very hard to solve inside the kernel.
-> The partitions will not be visible until the array is opened *after*
-> it has been created.  Making the partitions visible before that would
-> be possible, but would be very easy.
+Mike Accetta wrote:
+> David Greaves writes:
 > 
-> I think the best solution is Mike's solution which is to simply
-> open/close the array after it has been assembled.  I will make sure
-> this is in the next release of mdadm.
+> ...
+>> It looks like the same (?) problem as Mike (see below - Mike do you have a
+>> patch?) but I'm on 2.6.20.7 with mdadm v2.5.6
+> ...
 > 
-> Note that you can still access the partitions even though they do not
-> appear in /proc/partitions. Any attempt to access and of them will
-> make them all appear in /proc/partitions.  But I understand there is
-> sometimes value in seeing them before accessing them.
-> 
-> NeilBrown
+> We have since started assembling the array from the initrd using
+> --homehost and --auto-update-homehost which takes a different path through
+> the code, and in this path the kernel figures out there are partitions
+> on the array before mdadm exists.
+Just tried that - doesn't work :)
 
-Um. Are you sure?
-The reason I noticed is that I couldn't mount them until they appeared; see
-these cut'n'pastes from my terminal history:
 
-teak:~# mount /media/
+> For the previous code path, we had been ruuning with the patch I described
+> in my original post which I've included below.  I'd guess that the bug
+> is actually in the kernel code and I looked at it briefly but couldn't
+> figure out how things all fit together well enough to come up with a
+> patch there.  The user level patch is a bit of a hack and there may be
+> other code paths that also need a similar patch.  I only made this patch
+> in the assembly code path we were executing at the time.
+> 
+> ==== BUILD/mdadm/mdadm.c#2 (text) - BUILD/mdadm/mdadm.c#3 (text) ==== content
+> @@ -983,6 +983,10 @@
+>                                                                NULL,
+>                                                                readonly, runstop, NULL, verbose-quiet, force);
+>                                         close(mdfd);
+> +                                       mdfd = open(array_list->devname, O_RDONLY); 
+> +                                       if (mdfd >= 0) {
+> +                                           close(mdfd);
+> +                                       }
+>                                 }
+>                 }
+>                 break;
+
+Thanks Mike
+
+But this doesn't work for me either :(
+
+I changed array_list to devlist inline with 2.6.9 and it compiles and runs OK.
+
+teak:~# mdadm --stop /dev/md_d0
+mdadm: stopped /dev/md_d0
+teak:~# /everything/devel/mdadm/mdadm-2.5.6/mdadm --assemble /dev/md_d0
+/dev/sd[bcdef]1
+mdadm: With Fudge.
+mdadm: /dev/md_d0 has been started with 5 drives.
+mdadm: Fudging partition creation.
+teak:~# mount /media
 mount: /dev/md_d0p1 is not a valid block device
+teak:~#
 
-teak:~# mount /dev/md_d0p1 /media
-mount: you must specify the filesystem type
+I also wrote a small c program to call the RAID_AUTORUN ioctl - that didn't work
+either because I'd compiled RAID as a module so the ioctl isn't defined.
 
-teak:~# xfs_repair -ln /dev/md_d0p2 /dev/md_d0p1
-Usage: xfs_repair [-nLvV] [-o subopt[=value]] [-l logdev] [-r rtdev] devname
-teak:~# ll /dev/md*
-brw-rw---- 1 root disk 254, 0 2007-04-23 15:44 /dev/md_d0
-brw-rw---- 1 root disk 254, 1 2007-04-23 14:46 /dev/md_d0p1
-brw-rw---- 1 root disk 254, 2 2007-04-23 14:46 /dev/md_d0p2
-brw-rw---- 1 root disk 254, 3 2007-04-23 15:44 /dev/md_d0p3
-brw-rw---- 1 root disk 254, 4 2007-04-23 15:44 /dev/md_d0p4
-
-/dev/md:
-total 0
-teak:~# /etc/init.d/mdadm-raid stop
-Stopping MD array md_d0...done (stopped).
-teak:~# /etc/init.d/mdadm-raid start
-Assembling MD array md_d0...done (degraded [4/5]).
-Generating udev events for MD arrays...done.
-teak:~# cfdisk /dev/md_d0
-
-teak:~# mount /dev/md_d0p1
-mount: /dev/md_d0p1 is not a valid block device
-
-and so on...
-
-Notice the cfdisk command above. I did this to check the on-array table (it was
-good). I assume cfdisk opens the array - but the partitions were still not there
-afterwards. I did not do a 'Write' from in cfdisk this time.
-
-I wouldn't be so concerned at a cosmetic thing in /proc/partitions - the problem
-is that I can't mount my array after doing an assemble and I have to --create
-each time - not the nicest solution.
-
-Oh, I'm using udev FWIW.
+currently recompiling the kernel to allow autorun...
 
 David
-
