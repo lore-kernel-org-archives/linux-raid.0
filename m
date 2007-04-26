@@ -1,55 +1,50 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: Multiple disk failure, but slot numbers are corrupt and preventing assembly.
-Date: Thu, 26 Apr 2007 16:47:41 +1000
-Message-ID: <17968.19213.125326.288897@notabene.brown>
-References: <c384c5ea0704231017i2fd01aceva845a2f61f0aae3@mail.gmail.com>
-	<462CF303.6030004@dgreaves.com>
-	<c384c5ea0704240004r176372e1nb384c06e558dd1f@mail.gmail.com>
-	<c384c5ea0704240017m6963deet58b28b67377e8f91@mail.gmail.com>
-	<462DC0B0.9010105@dgreaves.com>
-	<c384c5ea0704240544vd15e939kdf46bd75d341f30a@mail.gmail.com>
+From: David Greaves <david@dgreaves.com>
+Subject: Re: Multiple disk failure, but slot numbers are corrupt and preventing
+ assembly.
+Date: Thu, 26 Apr 2007 20:46:32 +0100
+Message-ID: <46310198.8090503@dgreaves.com>
+References: <c384c5ea0704231017i2fd01aceva845a2f61f0aae3@mail.gmail.com>	 <462CF303.6030004@dgreaves.com>	 <c384c5ea0704240004r176372e1nb384c06e558dd1f@mail.gmail.com>	 <c384c5ea0704240017m6963deet58b28b67377e8f91@mail.gmail.com>	 <462DC0B0.9010105@dgreaves.com> <c384c5ea0704240544vd15e939kdf46bd75d341f30a@mail.gmail.com> <462FD6AF.3070403@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Leon Woestenberg on Tuesday April 24
+In-Reply-To: <462FD6AF.3070403@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Leon Woestenberg <leon.woestenberg@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: Leon Woestenberg <leon.woestenberg@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday April 24, leon.woestenberg@gmail.com wrote:
-> David,
+Bill Davidsen wrote:
+> Leon Woestenberg wrote:
+>> We will try to make disk clones first. Will dd suffice or do I need
+>> something more fancy that maybe copes with source drive read errors in
+>> a better fashion? 
 > 
-> thanks for all the advice so far.
+> Yes to both. dd will be fine in most cases, and I suggest using noerror
+> to continue after errors, and oflag=direct just for performance. You
+> could use ddrescue, it supposedly copes better with errors, although I
+> don't know details.
 > 
-> On 4/24/07, David Greaves <david@dgreaves.com> wrote:
-> >
-> > Essentially all --create does is create superblocks with the data you want (eg
-> > slot numbers). It does not touch other 'on disk data'.
-> > It is safe to run the *exact same* create command on a dormant array at any time
-> > after initial creation - the main side effect is a new UUID.
-> > (Neil - yell if I'm wrong).
 
-Close enough.  The "active/clean" flag also gets changed.
-And for raid5, you want "--force" or it will make a degraded array
-with one spare which may not be what you want.
+Hi Bill
 
+IIRC dd will continue to operate on error but just retries a set number of times
+and continues to the next sector.
 
-> >
-> In first instance we were searching for ways to tell mdadm what we
-> know about the array (through mdadm.conf) but from all advice we got
+ddrescue does clever things like jumping a few sectors when it hits an error,
+then, after it has retrieved as much data off the disk as possible it starts to
+bisect the error area.
 
-"mdadm.conf" doesn't really know anything about the shape of the
-array.  It just describes how to discover and recognise component
-devices.   The metadata on the device is authoritative, and if it is
-corrupt.... it is corrupt.
+This type of algorithm is good because disks often die after a few minutes of
+being powered and deteriorate rapidly as data is recovered - hammering them on
+retries on an error on sector 312, 313, 314.... when you have millions of
+(currently) readable sectors elsewhere is a bad idea because it can minimise the
+time you have left to read your data.
 
-> we have to take the 'usual' non-syncing-recreate approach.
+It's also very fast, provides continuous updates to the screen as to where it is
+and the io rates it is currently seeing and those it's averaging, it also writes
+a log of what it's done to local file to allow restarts.
+etc etc etcc..
+try it - IMHO it's the right tool for the (data-recovery) job :)
 
-If "mdadm -f" doesn't work, then there is rarely any other option but
-re-creating the array.  If you a reasonably careful the data will
-still be there (unless it was corrupted by whatever corrupted the
-metadata). 
-
-NeilBrown
+David
