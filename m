@@ -1,58 +1,53 @@
-From: Clem Pryke <pryke@focus.uchicago.edu>
-Subject: filesystem corruption with md raid6
-Date: Thu, 26 Apr 2007 14:26:07 -0500
-Message-ID: <200704261926.l3QJQ73d023414@focus.uchicago.edu>
+From: "Leon Woestenberg" <leon.woestenberg@gmail.com>
+Subject: Re: Multiple disk failure, but slot numbers are corrupt and preventing assembly.
+Date: Fri, 27 Apr 2007 01:36:49 +0200
+Message-ID: <c384c5ea0704261636r216d8ed6w6bf961f044e3caa6@mail.gmail.com>
+References: <c384c5ea0704231017i2fd01aceva845a2f61f0aae3@mail.gmail.com>
+	 <462CF303.6030004@dgreaves.com>
+	 <c384c5ea0704240004r176372e1nb384c06e558dd1f@mail.gmail.com>
+	 <c384c5ea0704240017m6963deet58b28b67377e8f91@mail.gmail.com>
+	 <462DC0B0.9010105@dgreaves.com>
+	 <c384c5ea0704240544vd15e939kdf46bd75d341f30a@mail.gmail.com>
+	 <462FD6AF.3070403@tmr.com> <46310198.8090503@dgreaves.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <46310198.8090503@dgreaves.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: pryke@focus.uchicago.edu
+To: David Greaves <david@dgreaves.com>
+Cc: Bill Davidsen <davidsen@tmr.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
- have a system with 12 SATA disks attached via SAS. When copying into the 
-array during re-sync I get filesystem errors and corruption for raid6 but not 
-for raid5. This problem is repeatable. I actually have 2 separate 12 disk 
-arrays and get the same behavior on both.
+Hello all,
 
-Does this sound familiar to anyone?
+On 4/26/07, David Greaves <david@dgreaves.com> wrote:
+> Bill Davidsen wrote:
+> > Leon Woestenberg wrote:
+> >> We will try to make disk clones first. Will dd suffice or do I need
+> >> something more fancy that maybe copes with source drive read errors in
+> >> a better fashion?
+> >
+> > Yes to both. dd will be fine in most cases, and I suggest using noerror
+> > to continue after errors, and oflag=direct just for performance. You
+> > could use ddrescue, it supposedly copes better with errors, although I
+>
 
-Here's a little more detail:
+OK, despite that we missed a deadline to present the on-disk data by
+one day, one of my colleagues flew in to the remote machine,
+dd_rescue'd four 500 GB disks to clones, cloned them again at the lab,
+then did the 'mdadm create force missing' approach. Everything mounted
+read-only cleanly and we could extract the data.
 
-- 8 core AMD64 system running RHEL4U4 kernel 2.6.9-42.0.3.ELsmp
-- 12 Seagate ST3750640NS disks via LSI SAS1068 card and mptsas driver provided 
-with kernel. Disk chassis is Promise VTrak J300s
-- build raid5/6 arrays using mdadm in the normal way
-- build filesystem using e2fs in the normal way
-- mount the array
-- fail out and re-add a disk using "mdadm -f/-r/-a /dev/sdd1"
-- while re-sync in progress start an rsync to copy large amount of data into 
-the array
+Thanks for helping us out on the details (Specify missing to not sync,
+and --force to prevent spares, dd_rescue instead of dd). Especially
+helping understand what happens at each step is precious.
 
-For raid 5 array while rsync is running re-sync slows down enormously (as 
-shown in /proc/mdstat), then speeds up again once rsync complete and all is 
-good. Unmounting the array and running e2fsck shows no errors.
+Next time we will be more confidently doing this over SSH directly on
+the subject, unless data recovery has highest priority and we take the
+disk-over-airplane approach.
 
-For raid 6 re-sync slows down once rsync starts, but then after a few minutes 
-I see the errors below and rsync stops. In this case unmounting and running 
-e2fsck shows loads of errors.
+Kudo's!
 
-Apr 26 11:30:50 spt kernel: attempt to access beyond end of device
-Apr 26 11:30:50 spt kernel: md0: rw=1, want=14801215240, limit=14651489280
-Apr 26 11:30:50 spt kernel: Aborting journal on device md0.
-Apr 26 11:30:50 spt kernel: ext3_abort called.
-Apr 26 11:30:50 spt kernel: EXT3-fs error (device md0): ext3_journal_start_sb: 
-Detected aborted journal
-Apr 26 11:30:50 spt kernel: Remounting filesystem read-only
-Apr 26 11:30:50 spt kernel: EXT3-fs error (device md0) in start_transaction: 
-Journal has aborted
-
--- 
-**********************************************************************
-Clem Pryke - Assistant Professor - Astronomy and Astrophysics
-University of Chicago,
-Room 120, LASR, 933 East 56th Street, Chicago, Illinois 60637, USA
-Tel: 773 702-7853  Fax: 773 702-6645  email: pryke@focus.uchicago.edu
-**********************************************************************
-
-
+Regards, Leon.
