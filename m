@@ -1,70 +1,65 @@
 From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: filesystem corruption with md raid6
-Date: Fri, 27 Apr 2007 14:41:53 -0400
-Message-ID: <463243F1.3060602@tmr.com>
-References: <200704261926.l3QJQ73d023414@focus.uchicago.edu> <17969.38699.375955.735895@notabene.brown>
+Subject: Re: Multiple disk failure, but slot numbers are corrupt and preventing
+ assembly.
+Date: Fri, 27 Apr 2007 15:01:20 -0400
+Message-ID: <46324880.7060404@tmr.com>
+References: <c384c5ea0704231017i2fd01aceva845a2f61f0aae3@mail.gmail.com>	 <462CF303.6030004@dgreaves.com>	 <c384c5ea0704240004r176372e1nb384c06e558dd1f@mail.gmail.com>	 <c384c5ea0704240017m6963deet58b28b67377e8f91@mail.gmail.com>	 <462DC0B0.9010105@dgreaves.com> <c384c5ea0704240544vd15e939kdf46bd75d341f30a@mail.gmail.com> <462FD6AF.3070403@tmr.com> <46310198.8090503@dgreaves.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17969.38699.375955.735895@notabene.brown>
+In-Reply-To: <46310198.8090503@dgreaves.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Clem Pryke <pryke@focus.uchicago.edu>, linux-raid@vger.kernel.org
+To: David Greaves <david@dgreaves.com>
+Cc: Leon Woestenberg <leon.woestenberg@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil Brown wrote:
-> On Thursday April 26, pryke@focus.uchicago.edu wrote:
+David Greaves wrote:
+> Bill Davidsen wrote:
 >   
->>  have a system with 12 SATA disks attached via SAS. When copying into the 
->> array during re-sync I get filesystem errors and corruption for raid6 but not 
->> for raid5. This problem is repeatable. I actually have 2 separate 12 disk 
->> arrays and get the same behavior on both.
+>> Leon Woestenberg wrote:
+>>     
+>>> We will try to make disk clones first. Will dd suffice or do I need
+>>> something more fancy that maybe copes with source drive read errors in
+>>> a better fashion? 
+>>>       
+>> Yes to both. dd will be fine in most cases, and I suggest using noerror
+>> to continue after errors, and oflag=direct just for performance. You
+>> could use ddrescue, it supposedly copes better with errors, although I
+>> don't know details.
 >>
->> Does this sound familiar to anyone?
 >>     
 >
-> Yes.
+> Hi Bill
+>
+> IIRC dd will continue to operate on error but just retries a set number of times
+> and continues to the next sector.
 >
 >   
->> Here's a little more detail:
->>
->> - 8 core AMD64 system running RHEL4U4 kernel 2.6.9-42.0.3.ELsmp
->>     
->                                                ^^^^^
+As I read the O.P. that's fine in this case, two drives believed just 
+fine, one showing okay in SMART, all should copy with dd. The last drive 
+is probably not recoverable, and if the other three are recovered RAID5 
+will recover in any case without it.
+> ddrescue does clever things like jumping a few sectors when it hits an error,
+> then, after it has retrieved as much data off the disk as possible it starts to
+> bisect the error area.
 >
-> 2.6.9 is very old.  If you want support for RHEL, you should really be
-> asking RedHat.
->
-> Tell them it might be fixed by 
->    http://linux.bkbits.net:8080/linux-2.6/?PAGE=gnupatch&REV=1.1938.340.65
->
-> (I'm not sure how stable that URL is ... maybe take a copy now. it
-> should start
-> #### ChangeSet ####
-> 2004-11-11 13:48:33-08:00, neilb@cse.unsw.edu.au 
->   [PATCH] md: fix raid6 problem
+> This type of algorithm is good because disks often die after a few minutes of
+> being powered and deteriorate rapidly as data is recovered - hammering them on
+> retries on an error on sector 312, 313, 314.... when you have millions of
+> (currently) readable sectors elsewhere is a bad idea because it can minimise the
+> time you have left to read your data. It's also very fast, provides continuous updates to the screen as to where it is and the io rates it is currently seeing and those it's averaging, it also writes
+> a log of what it's done to local file to allow restarts.
+> etc etc etcc..
+> try it - IMHO it's the right tool for the (data-recovery) job :)
 >   
->   Sometimes it didn't read all (working) drives before a parity calculation.
-> )
->
-> but I cannot be certain (it was a long time ago).
-> That patch came out after 2.6.9 but about 2 months.
-> So another option is to build a more recent kernel.
->   
+I won't recommend a tool I haven't tried, and in this case I don't think 
+is going to be needed. I mentioned it existed, that's as far as I want 
+to go. I wouldn't suggest someone else use a tool I haven't used (or 
+written) myself.
 
-Generally if you run RHEL you don't build a newer kernel. Both because 
-there are often stability issues being addresses by using RHEL, and 
-because RH kernels are often patched in odd ways compared to mainline 
-and the system may expect subtly different behavior from the kernel.
-
-For what RH charges, send them a copy of Neil's possible issue and let 
-them fix it.
-
-Oh, and dropping a lot of data into a rebuilding array is generally not 
-desirable, often the total time will exceed rebuild and update as serial 
-operations. When it comes to write performance RAID6 is good for 
-reliability. ;-)
+If you've used it and found it worked on a drive with actual bad spots, 
+you offered your information which is appropriate.
 
 -- 
 bill davidsen <davidsen@tmr.com>
