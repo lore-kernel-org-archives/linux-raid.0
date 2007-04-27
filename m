@@ -1,53 +1,51 @@
-From: "Leon Woestenberg" <leon.woestenberg@gmail.com>
-Subject: Re: Multiple disk failure, but slot numbers are corrupt and preventing assembly.
-Date: Fri, 27 Apr 2007 01:36:49 +0200
-Message-ID: <c384c5ea0704261636r216d8ed6w6bf961f044e3caa6@mail.gmail.com>
-References: <c384c5ea0704231017i2fd01aceva845a2f61f0aae3@mail.gmail.com>
-	 <462CF303.6030004@dgreaves.com>
-	 <c384c5ea0704240004r176372e1nb384c06e558dd1f@mail.gmail.com>
-	 <c384c5ea0704240017m6963deet58b28b67377e8f91@mail.gmail.com>
-	 <462DC0B0.9010105@dgreaves.com>
-	 <c384c5ea0704240544vd15e939kdf46bd75d341f30a@mail.gmail.com>
-	 <462FD6AF.3070403@tmr.com> <46310198.8090503@dgreaves.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: filesystem corruption with md raid6
+Date: Fri, 27 Apr 2007 16:24:43 +1000
+Message-ID: <17969.38699.375955.735895@notabene.brown>
+References: <200704261926.l3QJQ73d023414@focus.uchicago.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <46310198.8090503@dgreaves.com>
-Content-Disposition: inline
+In-Reply-To: message from Clem Pryke on Thursday April 26
 Sender: linux-raid-owner@vger.kernel.org
-To: David Greaves <david@dgreaves.com>
-Cc: Bill Davidsen <davidsen@tmr.com>, linux-raid@vger.kernel.org
+To: Clem Pryke <pryke@focus.uchicago.edu>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello all,
+On Thursday April 26, pryke@focus.uchicago.edu wrote:
+>  have a system with 12 SATA disks attached via SAS. When copying into the 
+> array during re-sync I get filesystem errors and corruption for raid6 but not 
+> for raid5. This problem is repeatable. I actually have 2 separate 12 disk 
+> arrays and get the same behavior on both.
+> 
+> Does this sound familiar to anyone?
 
-On 4/26/07, David Greaves <david@dgreaves.com> wrote:
-> Bill Davidsen wrote:
-> > Leon Woestenberg wrote:
-> >> We will try to make disk clones first. Will dd suffice or do I need
-> >> something more fancy that maybe copes with source drive read errors in
-> >> a better fashion?
-> >
-> > Yes to both. dd will be fine in most cases, and I suggest using noerror
-> > to continue after errors, and oflag=direct just for performance. You
-> > could use ddrescue, it supposedly copes better with errors, although I
->
+Yes.
 
-OK, despite that we missed a deadline to present the on-disk data by
-one day, one of my colleagues flew in to the remote machine,
-dd_rescue'd four 500 GB disks to clones, cloned them again at the lab,
-then did the 'mdadm create force missing' approach. Everything mounted
-read-only cleanly and we could extract the data.
+> 
+> Here's a little more detail:
+> 
+> - 8 core AMD64 system running RHEL4U4 kernel 2.6.9-42.0.3.ELsmp
+                                               ^^^^^
 
-Thanks for helping us out on the details (Specify missing to not sync,
-and --force to prevent spares, dd_rescue instead of dd). Especially
-helping understand what happens at each step is precious.
+2.6.9 is very old.  If you want support for RHEL, you should really be
+asking RedHat.
 
-Next time we will be more confidently doing this over SSH directly on
-the subject, unless data recovery has highest priority and we take the
-disk-over-airplane approach.
+Tell them it might be fixed by 
+   http://linux.bkbits.net:8080/linux-2.6/?PAGE=gnupatch&REV=1.1938.340.65
 
-Kudo's!
+(I'm not sure how stable that URL is ... maybe take a copy now. it
+should start
+#### ChangeSet ####
+2004-11-11 13:48:33-08:00, neilb@cse.unsw.edu.au 
+  [PATCH] md: fix raid6 problem
+  
+  Sometimes it didn't read all (working) drives before a parity calculation.
+)
 
-Regards, Leon.
+but I cannot be certain (it was a long time ago).
+That patch came out after 2.6.9 but about 2 months.
+So another option is to build a more recent kernel.
+
+NeilBrown
