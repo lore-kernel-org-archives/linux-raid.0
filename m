@@ -1,30 +1,37 @@
-From: Andi Kleen <andi@firstfloor.org>
-Subject: Re: XFS on x86_64 Linux Question
-Date: 28 Apr 2007 19:32:11 +0200
-Message-ID: <p73lkgc1k2s.fsf@bingen.suse.de>
-References: <Pine.LNX.4.64.0704280633510.7998@p34.internal.lan>
+From: "Guy Watkins" <linux-raid@watkins-home.com>
+Subject: RAID6 question
+Date: Sat, 28 Apr 2007 20:52:24 -0400
+Message-ID: <200704290052.l3T0qT721940@www.watkins-home.com>
+References: <1487079138.1177772039666.JavaMail.root@gateway.korstad.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <xfs-bounce@oss.sgi.com>
-In-Reply-To: <Pine.LNX.4.64.0704280633510.7998@p34.internal.lan>
-Sender: xfs-bounce@oss.sgi.com
-Errors-to: xfs-bounce@oss.sgi.com
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: xfs@oss.sgi.com, linux-raid@linux-kernel.vger.kernel.org
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1487079138.1177772039666.JavaMail.root@gateway.korstad.net>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Justin Piszcz <jpiszcz@lucidpixels.com> writes:
+I read in processor.com that Adaptec has a RAID 6/60 that is patented.
 
-> Had a quick question, if I re-provision a host with an Intel Core Duo
-> CPU with x86_64 Linux; I create a software raid array and use the XFS
-> filesystem-- all in 64bit space...
-> 
-> If I boot a recovery image such as Knoppix, it will not be able to
-> work on the filesystem correct?  I would need a 64bit live CD?
+Does Linux RAID6 have a conflict?
 
-There used to be a XFS bug that 32bit journals couldn't 
-be replayed on 64bit and vice versa. This means you couldn't mount
-a dirty file system on the other architecture. But this bug has been 
-long fixed and mounting clean file systems always worked.
+Thanks,
+Guy
 
--Andi
+Adaptec also has announced a new family of Unified Serial (meaning 3Gbps
+SAS/SATA) RAID controllers for PCI Express. Five models include cards with
+four, eight, 12, and 16 internal ports, plus one groundbreaking SKU with
+eight external ports and dual path failover. The new controllers support
+RAIDs 0, 1, 5, 10, 50, 5EE, and the patented RAID 6/60, which Adaptec says
+can survive two simultaneous drive failures. 
+investor.adaptec.com/ReleaseDetail.cfm?ReleaseID=233555 
+investor.adaptec.com/ReleaseDetail.cfm?ReleaseID=233556
+
+http://www.processor.com/editorial/article.asp?article=articles%2Fp2912%2F02
+p12%2F02p12.asp&guid=&searchtype=&WordList=&bJumpTo=True
+
+http://tinyurl.com/2kdzcb
+
+
