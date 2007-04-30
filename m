@@ -1,37 +1,68 @@
-From: "Guy Watkins" <linux-raid@watkins-home.com>
-Subject: RAID6 question
-Date: Sat, 28 Apr 2007 20:52:24 -0400
-Message-ID: <200704290052.l3T0qT721940@www.watkins-home.com>
-References: <1487079138.1177772039666.JavaMail.root@gateway.korstad.net>
+From: Jan Engelhardt <jengelh@linux01.gwdg.de>
+Subject: [PATCH 16/36] Use menuconfig objects II - MD
+Date: Mon, 30 Apr 2007 13:38:49 +0200 (MEST)
+Message-ID: <Pine.LNX.4.61.0704301337570.29151@yvahk01.tjqt.qr>
+References: <Pine.LNX.4.61.0704301225060.29151@yvahk01.tjqt.qr>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1487079138.1177772039666.JavaMail.root@gateway.korstad.net>
+In-Reply-To: <Pine.LNX.4.61.0704301225060.29151@yvahk01.tjqt.qr>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I read in processor.com that Adaptec has a RAID 6/60 that is patented.
 
-Does Linux RAID6 have a conflict?
+Change Kconfig objects from "menu, config" into "menuconfig" so
+that the user can disable the whole feature without having to
+enter the menu first.
 
-Thanks,
-Guy
+Signed-off-by: Jan Engelhardt <jengelh@gmx.de>
 
-Adaptec also has announced a new family of Unified Serial (meaning 3Gbps
-SAS/SATA) RAID controllers for PCI Express. Five models include cards with
-four, eight, 12, and 16 internal ports, plus one groundbreaking SKU with
-eight external ports and dual path failover. The new controllers support
-RAIDs 0, 1, 5, 10, 50, 5EE, and the patented RAID 6/60, which Adaptec says
-can survive two simultaneous drive failures. 
-investor.adaptec.com/ReleaseDetail.cfm?ReleaseID=233555 
-investor.adaptec.com/ReleaseDetail.cfm?ReleaseID=233556
+---
+ drivers/md/Kconfig |   15 +++++----------
+ 1 file changed, 5 insertions(+), 10 deletions(-)
 
-http://www.processor.com/editorial/article.asp?article=articles%2Fp2912%2F02
-p12%2F02p12.asp&guid=&searchtype=&WordList=&bJumpTo=True
-
-http://tinyurl.com/2kdzcb
-
-
+--- linux-2.6.21-mm_20070428.orig/drivers/md/Kconfig
++++ linux-2.6.21-mm_20070428/drivers/md/Kconfig
+@@ -2,20 +2,18 @@
+ # Block device driver configuration
+ #
+ 
+-if BLOCK
+-
+-menu "Multi-device support (RAID and LVM)"
+-
+-config MD
++menuconfig MD
+ 	bool "Multiple devices driver support (RAID and LVM)"
++	depends on BLOCK
+ 	select ASYNC_TX_DMA
+ 	help
+ 	  Support multiple physical spindles through a single logical device.
+ 	  Required for RAID and logical volume management.
+ 
++if MD
++
+ config BLK_DEV_MD
+ 	tristate "RAID support"
+-	depends on MD
+ 	---help---
+ 	  This driver lets you combine several hard disk partitions into one
+ 	  logical block device. This can be used to simply append one
+@@ -190,7 +188,6 @@ config MD_FAULTY
+ 
+ config BLK_DEV_DM
+ 	tristate "Device mapper support"
+-	depends on MD
+ 	---help---
+ 	  Device-mapper is a low level volume manager.  It works by allowing
+ 	  people to specify mappings for ranges of logical sectors.  Various
+@@ -272,6 +269,4 @@ config DM_DELAY
+ 
+ 	If unsure, say N.
+ 
+-endmenu
+-
+-endif
++endif # MD
