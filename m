@@ -1,7 +1,7 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH 09/16] md: move raid5 parity checks to raid5_run_ops
-Date: Tue, 01 May 2007 23:19:11 -0700
-Message-ID: <20070502061911.7066.33604.stgit@dwillia2-linux.ch.intel.com>
+Subject: [PATCH 10/16] md: satisfy raid5 read requests via raid5_run_ops
+Date: Tue, 01 May 2007 23:19:41 -0700
+Message-ID: <20070502061941.7066.92570.stgit@dwillia2-linux.ch.intel.com>
 References: <20070502060949.7066.357.stgit@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,120 +13,115 @@ To: neilb@suse.de, akpm@linux-foundation.org, christopher.leech@intel.com
 Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-handle_stripe sets STRIPE_OP_CHECK to request a check operation in
-raid5_run_ops.  If raid5_run_ops is able to perform the check with a
-dma engine the parity will be preserved in memory removing the need to
-re-read it from disk, as is necessary in the synchronous case.
-
-'Repair' operations re-use the same logic as compute block, with the caveat
-that the results of the compute block are immediately written back to the
-parity disk.  To differentiate these operations the STRIPE_OP_MOD_REPAIR_PD
-flag is added.
+Use raid5_run_ops to carry out the memory copies for a raid5 read request.
 
 Changelog:
-* remove test_and_set/test_and_clear BUG_ONs, Neil Brown
+* cleanup to_read and to_fill accounting
+* do not fail reads that have reached the cache
 
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
 
- drivers/md/raid5.c |   80 ++++++++++++++++++++++++++++++++++++++++------------
- 1 files changed, 61 insertions(+), 19 deletions(-)
+ drivers/md/raid5.c |   61 ++++++++++++++++++++++++++--------------------------
+ 1 files changed, 30 insertions(+), 31 deletions(-)
 
 diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 844bd9b..f8a4522 100644
+index f8a4522..6bde174 100644
 --- a/drivers/md/raid5.c
 +++ b/drivers/md/raid5.c
-@@ -2430,32 +2430,74 @@ static void handle_stripe5(struct stripe_head *sh)
- 			locked += handle_write_operations5(sh, rcw == 0, 0);
- 	}
+@@ -1998,7 +1998,7 @@ static void handle_stripe5(struct stripe_head *sh)
+ 	int i;
+ 	int syncing, expanding, expanded;
+ 	int locked=0, uptodate=0, to_read=0, to_write=0, failed=0, written=0;
+-	int compute=0, req_compute=0, non_overwrite=0;
++	int to_fill=0, compute=0, req_compute=0, non_overwrite=0;
+ 	int failed_num=0;
+ 	struct r5dev *dev;
+ 	unsigned long pending=0;
+@@ -2022,37 +2022,29 @@ static void handle_stripe5(struct stripe_head *sh)
+ 		dev = &sh->dev[i];
+ 		clear_bit(R5_Insync, &dev->flags);
  
--	/* maybe we need to check and possibly fix the parity for this stripe
--	 * Any reads will already have been scheduled, so we just see if enough data
--	 * is available
-+	/* 1/ Maybe we need to check and possibly fix the parity for this stripe.
-+	 *    Any reads will already have been scheduled, so we just see if enough data
-+	 *    is available.
-+	 * 2/ Hold off parity checks while parity dependent operations are in flight
-+	 *    (conflicting writes are protected by the 'locked' variable)
+-		PRINTK("check %d: state 0x%lx read %p write %p written %p\n",
+-			i, dev->flags, dev->toread, dev->towrite, dev->written);
+-		/* maybe we can reply to a read */
+-		if (test_bit(R5_UPTODATE, &dev->flags) && dev->toread) {
+-			struct bio *rbi, *rbi2;
+-			PRINTK("Return read for disc %d\n", i);
+-			spin_lock_irq(&conf->device_lock);
+-			rbi = dev->toread;
+-			dev->toread = NULL;
+-			if (test_and_clear_bit(R5_Overlap, &dev->flags))
+-				wake_up(&conf->wait_for_overlap);
+-			spin_unlock_irq(&conf->device_lock);
+-			while (rbi && rbi->bi_sector < dev->sector + STRIPE_SECTORS) {
+-				copy_data(0, rbi, dev->page, dev->sector);
+-				rbi2 = r5_next_bio(rbi, dev->sector);
+-				spin_lock_irq(&conf->device_lock);
+-				if (--rbi->bi_phys_segments == 0) {
+-					rbi->bi_next = return_bi;
+-					return_bi = rbi;
+-				}
+-				spin_unlock_irq(&conf->device_lock);
+-				rbi = rbi2;
+-			}
+-		}
++		PRINTK("check %d: state 0x%lx toread %p read %p write %p written %p\n",
++		i, dev->flags, dev->toread, dev->read, dev->towrite, dev->written);
++
++		/* maybe we can request a biofill operation
++		 *
++		 * new wantfill requests are only permitted while
++		 * STRIPE_OP_BIOFILL is clear
++		 */
++		if (test_bit(R5_UPTODATE, &dev->flags) && dev->toread &&
++			!test_bit(STRIPE_OP_BIOFILL, &sh->ops.pending))
++			set_bit(R5_Wantfill, &dev->flags);
+ 
+ 		/* now count some things */
+ 		if (test_bit(R5_LOCKED, &dev->flags)) locked++;
+ 		if (test_bit(R5_UPTODATE, &dev->flags)) uptodate++;
++
++		if (test_bit(R5_Wantfill, &dev->flags))
++			to_fill++;
++		else if (dev->toread)
++			to_read++;
++
+ 		if (test_bit(R5_Wantcompute, &dev->flags)) BUG_ON(++compute > 1);
+ 
+-		if (dev->toread) to_read++;
+ 		if (dev->towrite) {
+ 			to_write++;
+ 			if (!test_bit(R5_OVERWRITE, &dev->flags))
+@@ -2073,9 +2065,13 @@ static void handle_stripe5(struct stripe_head *sh)
+ 			set_bit(R5_Insync, &dev->flags);
+ 	}
+ 	rcu_read_unlock();
++
++	if (to_fill && !test_and_set_bit(STRIPE_OP_BIOFILL, &sh->ops.pending))
++		sh->ops.count++;
++
+ 	PRINTK("locked=%d uptodate=%d to_read=%d"
+-		" to_write=%d failed=%d failed_num=%d\n",
+-		locked, uptodate, to_read, to_write, failed, failed_num);
++		" to_write=%d to_fill=%d failed=%d failed_num=%d\n",
++		locked, uptodate, to_read, to_write, to_fill, failed, failed_num);
+ 	/* check if the array has lost two devices and, if so, some requests might
+ 	 * need to be failed
  	 */
--	if (syncing && locked == 0 &&
--	    !test_bit(STRIPE_INSYNC, &sh->state)) {
-+	if ((syncing && locked == 0 && !test_bit(STRIPE_OP_COMPUTE_BLK, &sh->ops.pending) &&
-+		!test_bit(STRIPE_INSYNC, &sh->state)) ||
-+	    	test_bit(STRIPE_OP_CHECK, &sh->ops.pending) ||
-+	    	test_bit(STRIPE_OP_MOD_REPAIR_PD, &sh->ops.pending)) {
-+
- 		set_bit(STRIPE_HANDLE, &sh->state);
--		if (failed == 0) {
--			BUG_ON(uptodate != disks);
--			compute_parity5(sh, CHECK_PARITY);
--			uptodate--;
--			if (page_is_zero(sh->dev[sh->pd_idx].page)) {
--				/* parity is correct (on disc, not in buffer any more) */
--				set_bit(STRIPE_INSYNC, &sh->state);
--			} else {
--				conf->mddev->resync_mismatches += STRIPE_SECTORS;
--				if (test_bit(MD_RECOVERY_CHECK, &conf->mddev->recovery))
--					/* don't try to repair!! */
-+		/* Take one of the following actions:
-+		 * 1/ start a check parity operation if (uptodate == disks)
-+		 * 2/ finish a check parity operation and act on the result
-+		 * 3/ skip to the writeback section if we previously
-+		 *    initiated a recovery operation
-+		 */
-+		if (failed == 0 && !test_bit(STRIPE_OP_MOD_REPAIR_PD, &sh->ops.pending)) {
-+			if (!test_and_set_bit(STRIPE_OP_CHECK, &sh->ops.pending)) {
-+				BUG_ON(uptodate != disks);
-+				clear_bit(R5_UPTODATE, &sh->dev[sh->pd_idx].flags);
-+				sh->ops.count++;
-+				uptodate--;
-+			} else if (test_and_clear_bit(STRIPE_OP_CHECK, &sh->ops.complete)) {
-+				clear_bit(STRIPE_OP_CHECK, &sh->ops.ack);
-+				clear_bit(STRIPE_OP_CHECK, &sh->ops.pending);
-+
-+				if (sh->ops.zero_sum_result == 0)
-+					/* parity is correct (on disc, not in buffer any more) */
- 					set_bit(STRIPE_INSYNC, &sh->state);
- 				else {
--					compute_block(sh, sh->pd_idx);
--					uptodate++;
-+					conf->mddev->resync_mismatches += STRIPE_SECTORS;
-+					if (test_bit(MD_RECOVERY_CHECK, &conf->mddev->recovery))
-+						/* don't try to repair!! */
-+						set_bit(STRIPE_INSYNC, &sh->state);
-+					else {
-+						set_bit(STRIPE_OP_COMPUTE_BLK,
-+							&sh->ops.pending);
-+						set_bit(STRIPE_OP_MOD_REPAIR_PD,
-+							&sh->ops.pending);
-+						set_bit(R5_Wantcompute,
-+							&sh->dev[sh->pd_idx].flags);
-+						sh->ops.target = sh->pd_idx;
-+						sh->ops.count++;
-+						uptodate++;
-+					}
- 				}
+@@ -2127,9 +2123,12 @@ static void handle_stripe5(struct stripe_head *sh)
+ 				bi = bi2;
  			}
- 		}
--		if (!test_bit(STRIPE_INSYNC, &sh->state)) {
-+
-+		/* check if we can clear a parity disk reconstruct */
-+		if (test_bit(STRIPE_OP_COMPUTE_BLK, &sh->ops.complete) &&
-+			test_bit(STRIPE_OP_MOD_REPAIR_PD, &sh->ops.pending)) {
-+
-+			clear_bit(STRIPE_OP_MOD_REPAIR_PD, &sh->ops.pending);
-+			clear_bit(STRIPE_OP_COMPUTE_BLK, &sh->ops.complete);
-+			clear_bit(STRIPE_OP_COMPUTE_BLK, &sh->ops.ack);
-+			clear_bit(STRIPE_OP_COMPUTE_BLK, &sh->ops.pending);
-+		}
-+
-+		/* Wait for check parity and compute block operations to complete
-+		 * before write-back
-+		 */
-+		if (!test_bit(STRIPE_INSYNC, &sh->state) &&
-+			!test_bit(STRIPE_OP_CHECK, &sh->ops.pending) &&
-+			!test_bit(STRIPE_OP_COMPUTE_BLK, &sh->ops.pending)) {
-+
- 			/* either failed parity check, or recovery is happening */
- 			if (failed==0)
- 				failed_num = sh->pd_idx;
+ 
+-			/* fail any reads if this device is non-operational */
+-			if (!test_bit(R5_Insync, &sh->dev[i].flags) ||
+-			    test_bit(R5_ReadError, &sh->dev[i].flags)) {
++			/* fail any reads if this device is non-operational and
++			 * the data has not reached the cache yet.
++			 */
++			if (!test_bit(R5_Wantfill, &sh->dev[i].flags) &&
++			    (!test_bit(R5_Insync, &sh->dev[i].flags) ||
++			      test_bit(R5_ReadError, &sh->dev[i].flags))) {
+ 				bi = sh->dev[i].toread;
+ 				sh->dev[i].toread = NULL;
+ 				if (test_and_clear_bit(R5_Overlap, &sh->dev[i].flags))
