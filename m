@@ -1,58 +1,72 @@
-From: David Greaves <david@dgreaves.com>
-Subject: Re: RAID rebuild on Create
-Date: Mon, 30 Apr 2007 21:12:21 +0100
-Message-ID: <46364DA5.3070409@dgreaves.com>
-References: <Pine.LNX.4.61.0704301958530.29151@yvahk01.tjqt.qr>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: [PATCH 00/16] raid acceleration and asynchronous offload api for
+	2.6.22
+Date: Tue, 01 May 2007 23:14:40 -0700
+Message-ID: <20070502060949.7066.357.stgit@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.61.0704301958530.29151@yvahk01.tjqt.qr>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jan Engelhardt <jengelh@linux01.gwdg.de>
-Cc: linux-raid@vger.kernel.org
+To: neilb@suse.de, akpm@linux-foundation.org, christopher.leech@intel.com
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Jan Engelhardt wrote:
-> Hi list,
-> 
-> 
-> when a user does `mdadm -C /dev/md0 -l <any> -n <whatever fits> 
-> <devices>`, the array gets rebuilt for at least RAID1 and RAID5, even if 
-> the disk contents are most likely not of importance (otherwise we would 
-> not be creating a raid array right now). Could not this needless resync 
-> be skipped - what do you think?
-> 
-> 
-> Jan
+I am pleased to release this latest spin of the raid acceleration
+patches for merge consideration.  This release aims to address all
+pending review items including MD bug fixes and async_tx api changes
+from Neil, and concerns on channel management from Chris and others.
 
-This is an FAQ - and I'll put it there RSN :)
+Data integrity tests using home grown scripts and 'iozone -V' are
+passing.  I am open to suggestions for additional testing criteria.  I
+have also verified that git bisect is not broken by this set.
 
-Here's one answer from Neil from the archives (google "avoiding the initial
-resync on --create"):
+The short log below highlights the most recent changes.  The patches
+will be sent as a reply to this message, and they are also available via
+git:
 
-Otherwise I agree.  There is no real need to perform the sync of a
-raid1 at creation.
-However it seems to be a good idea to regularly 'check' an array to
-make sure that all blocks on all disks get read to find sleeping bad
-blocks early.  If you didn't sync first, then every check will find
-lots of errors.  Ofcourse you could 'repair' instead of 'check'.  Or
-do that once.  Or something.
+	git pull git://lost.foo-projects.org/~dwillia2/git/iop md-accel-linus
 
-For raid6 it is also safe to not sync first, though with the same
-caveat as raid1.  Raid6 always updates parity by reading all blocks in
-the stripe that aren't known and calculating P and Q.  So the first
-write to a stripe will make P and Q correct for that stripe.
-This is current behaviour.  I don't think I can guarantee it will
-never changed.
+Additional comments and feedback welcome.
 
-For raid5 it is NOT safe to skip the initial sync.  It is possible for
-all updates to be "read-modify-write" updates which assume the parity
-is correct.  If it is wrong, it stays wrong.  Then when you lose a
-drive, the parity blocks are wrong so the data you recover using them
-is wrong.
+Thanks,
+Dan
 
-In summary, it is safe to use --assume-clean on a raid1 or raid1o,
-though I would recommend a "repair" before too long.  For other raid
-levels it is best avoided.
+--
+01/16: dmaengine: add base support for the async_tx api
+	* convert channel capabilities to a 'cpumask_t like' bitmap
+02/16: dmaengine: move channel management to the client
+	* this patch is new to this series
+03/16: ARM: Add drivers/dma to arch/arm/Kconfig
+04/16: dmaengine: add the async_tx api
+	* remove the per operation type list, and distribute operation
+	  capabilities evenly amongst the available channels
+	* simplify async_tx_find_channel to optimize the fast path
+05/16: md: add raid5_run_ops and support routines
+	* explicitly handle the 2-disk raid5 case (xor becomes memcpy)
+	* fix race between async engines and bi_end_io call for reads,
+	  Neil Brown
+	* remove unnecessary spin_lock from ops_complete_biofill
+	* remove test_and_set/test_and_clear BUG_ONs, Neil Brown
+	* remove explicit interrupt handling, Neil Brown
+06/16: md: use raid5_run_ops for stripe cache operations
+07/16: md: move write operations to raid5_run_ops
+	* remove test_and_set/test_and_clear BUG_ONs, Neil Brown
+08/16: md: move raid5 compute block operations to raid5_run_ops
+	* remove the req_compute BUG_ON
+09/16: md: move raid5 parity checks to raid5_run_ops
+	* remove test_and_set/test_and_clear BUG_ONs, Neil Brown
+10/16: md: satisfy raid5 read requests via raid5_run_ops
+	* cleanup to_read and to_fill accounting
+	* do not fail reads that have reached the cache
+11/16: md: use async_tx and raid5_run_ops for raid5 expansion operations
+12/16: md: move raid5 io requests to raid5_run_ops
+13/16: md: remove raid5 compute_block and compute_parity5
+14/16: dmaengine: driver for the iop32x, iop33x, and iop13xx raid engines
+	* fix locking bug in iop_adma_alloc_chan_resources, Benjamin
+	  Herrenschmidt
+	* convert capabilities over to dma_cap_mask_t
+15/16: iop13xx: Surface the iop13xx adma units to the iop-adma driver
+16/16: iop3xx: Surface the iop3xx DMA and AAU units to the iop-adma driver
 
+(previous release: http://marc.info/?l=linux-raid&m=117463257423193&w=2)
