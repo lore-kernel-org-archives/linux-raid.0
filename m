@@ -1,7 +1,7 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH 06/16] md: use raid5_run_ops for stripe cache operations
-Date: Tue, 01 May 2007 23:17:41 -0700
-Message-ID: <20070502061741.7066.21778.stgit@dwillia2-linux.ch.intel.com>
+Subject: [PATCH 04/16] dmaengine: add the async_tx api
+Date: Tue, 01 May 2007 23:16:41 -0700
+Message-ID: <20070502061640.7066.55802.stgit@dwillia2-linux.ch.intel.com>
 References: <20070502060949.7066.357.stgit@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,147 +13,1716 @@ To: neilb@suse.de, akpm@linux-foundation.org, christopher.leech@intel.com
 Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Each stripe has three flag variables to reflect the state of operations
-(pending, ack, and complete).
--pending: set to request servicing in raid5_run_ops
--ack: set to reflect that raid5_runs_ops has seen this request
--complete: set when the operation is complete and it is ok for handle_stripe5
-to clear 'pending' and 'ack'.
+The async_tx api provides methods for describing a chain of asynchronous
+bulk memory transfers/transforms with support for inter-transactional
+dependencies.  It is implemented as a dmaengine client that smooths over
+the details of different hardware offload engine implementations.  Code
+that is written to the api can optimize for asynchrnous operation and
+the api will fit the chain of operations to the available offload
+resources. 
+ 
+Currently the raid5 implementation in the MD raid456 driver has been
+converted to the async_tx api.  A driver for the offload engines on the
+Intel Xscale series of I/O processors, iop-adma, is provided.  With the
+iop-adma driver and async_tx, raid456 is able to offload copy, xor, and
+xor-zero-sum operations to hardware engines.
+ 
+On iop342 tiobench showed higher throughput for sequential writes (20 -
+30% improvement) and sequential reads to a degraded array (40 - 55%
+improvement).  For the other cases performance was roughly equal, +/- a
+few percentage points.  On a x86-smp platform the performance of the
+async_tx implementation (in synchronous mode) was also +/- a few
+percentage points of the original implementation.  According to 'top'
+CPU utilization was positively affected in the offload case, but exact
+measurements have yet to be taken.
+ 
+The tiobench command line used for testing was: tiobench --size 2048
+--block 4096 --block 131072 --dir /mnt/raid --numruns 5 * iop342 had 1GB
+of memory available
+
+Xor operations are handled by async_tx, to this end xor.c is moved into
+drivers/dma and is changed to take an explicit destination address and a
+series of sources to match the hardware engine implementation.
+
+When CONFIG_DMA_ENGINE is not set the asynchrounous path is compiled
+away.
+
+Changelog:
+* fixed a leftover debug print
+* don't allow callbacks in async_interrupt_cond
+* fixed xor_block changes
+* fixed usage of ASYNC_TX_XOR_DROP_DEST
+* drop dma mapping methods, suggested by Chris Leech
+* printk warning fixups from Andrew Morton
+* don't use inline in C files, Adrian Bunk
+* select the API when MD is enabled
+* BUG_ON xor source counts <= 1
+* implicitly handle hardware concerns like channel switching and
+  interrupts, Neil Brown
+* remove the per operation type list, and distribute operation capabilities
+  evenly amongst the available channels
+* simplify async_tx_find_channel to optimize the fast path
 
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
 
- drivers/md/raid5.c |   65 +++++++++++++++++++++++++++++++++++++++++++++-------
- 1 files changed, 56 insertions(+), 9 deletions(-)
+ drivers/Makefile         |    1 
+ drivers/dma/Kconfig      |   15 +
+ drivers/dma/Makefile     |    1 
+ drivers/dma/async_tx.c   |  889 ++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/dma/xor.c        |  153 ++++++++
+ drivers/md/Kconfig       |    3 
+ drivers/md/Makefile      |    6 
+ drivers/md/raid5.c       |   52 +--
+ drivers/md/xor.c         |  154 --------
+ include/linux/async_tx.h |  173 +++++++++
+ include/linux/raid/xor.h |    5 
+ 11 files changed, 1263 insertions(+), 189 deletions(-)
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 0251bca..14e9f6a 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -126,6 +126,7 @@ static void __release_stripe(raid5_conf_t *conf, struct stripe_head *sh)
- 			}
- 			md_wakeup_thread(conf->mddev->thread);
- 		} else {
-+			BUG_ON(sh->ops.pending);
- 			if (test_and_clear_bit(STRIPE_PREREAD_ACTIVE, &sh->state)) {
- 				atomic_dec(&conf->preread_active_stripes);
- 				if (atomic_read(&conf->preread_active_stripes) < IO_THRESHOLD)
-@@ -225,7 +226,8 @@ static void init_stripe(struct stripe_head *sh, sector_t sector, int pd_idx, int
+diff --git a/drivers/Makefile b/drivers/Makefile
+index 3a718f5..2e8de9e 100644
+--- a/drivers/Makefile
++++ b/drivers/Makefile
+@@ -62,6 +62,7 @@ obj-$(CONFIG_I2C)		+= i2c/
+ obj-$(CONFIG_W1)		+= w1/
+ obj-$(CONFIG_HWMON)		+= hwmon/
+ obj-$(CONFIG_PHONE)		+= telephony/
++obj-$(CONFIG_ASYNC_TX_DMA)	+= dma/
+ obj-$(CONFIG_MD)		+= md/
+ obj-$(CONFIG_BT)		+= bluetooth/
+ obj-$(CONFIG_ISDN)		+= isdn/
+diff --git a/drivers/dma/Kconfig b/drivers/dma/Kconfig
+index 30d021d..292ddad 100644
+--- a/drivers/dma/Kconfig
++++ b/drivers/dma/Kconfig
+@@ -7,8 +7,8 @@ menu "DMA Engine support"
+ config DMA_ENGINE
+ 	bool "Support for DMA engines"
+ 	---help---
+-	  DMA engines offload copy operations from the CPU to dedicated
+-	  hardware, allowing the copies to happen asynchronously.
++          DMA engines offload bulk memory operations from the CPU to dedicated
++          hardware, allowing the operations to happen asynchronously.
  
- 	BUG_ON(atomic_read(&sh->count) != 0);
- 	BUG_ON(test_bit(STRIPE_HANDLE, &sh->state));
--	
-+	BUG_ON(sh->ops.pending || sh->ops.ack || sh->ops.complete);
+ comment "DMA Clients"
+ 
+@@ -22,6 +22,16 @@ config NET_DMA
+ 	  Since this is the main user of the DMA engine, it should be enabled;
+ 	  say Y here.
+ 
++config ASYNC_TX_DMA
++	tristate "Asynchronous Bulk Memory Transfers/Transforms API"
++	---help---
++	  This enables the async_tx management layer for dma engines.
++	  Subsystems coded to this API will use offload engines for bulk
++	  memory operations where present.  Software implementations are
++	  called when a dma engine is not present or fails to allocate
++	  memory to carry out the transaction.
++	  Current subsystems ported to async_tx: MD_RAID4,5
 +
- 	CHECK_DEVLOCK();
- 	PRINTK("init_stripe called, stripe %llu\n", 
- 		(unsigned long long)sh->sector);
-@@ -241,11 +243,11 @@ static void init_stripe(struct stripe_head *sh, sector_t sector, int pd_idx, int
- 	for (i = sh->disks; i--; ) {
- 		struct r5dev *dev = &sh->dev[i];
+ comment "DMA Devices"
  
--		if (dev->toread || dev->towrite || dev->written ||
-+		if (dev->toread || dev->read || dev->towrite || dev->written ||
- 		    test_bit(R5_LOCKED, &dev->flags)) {
--			printk("sector=%llx i=%d %p %p %p %d\n",
-+			printk("sector=%llx i=%d %p %p %p %p %d\n",
- 			       (unsigned long long)sh->sector, i, dev->toread,
--			       dev->towrite, dev->written,
-+			       dev->read, dev->towrite, dev->written,
- 			       test_bit(R5_LOCKED, &dev->flags));
- 			BUG();
- 		}
-@@ -325,6 +327,43 @@ static struct stripe_head *get_active_stripe(raid5_conf_t *conf, sector_t sector
- 	return sh;
- }
- 
-+/* check_op() ensures that we only dequeue an operation once */
-+#define check_op(op) do {\
-+	if (test_bit(op, &sh->ops.pending) &&\
-+		!test_bit(op, &sh->ops.complete)) {\
-+		if (test_and_set_bit(op, &sh->ops.ack))\
-+			clear_bit(op, &pending);\
-+		else\
-+			ack++;\
-+	} else\
-+		clear_bit(op, &pending);\
-+} while(0)
-+
-+/* find new work to run, do not resubmit work that is already
-+ * in flight
+ config INTEL_IOATDMA
+@@ -30,5 +40,4 @@ config INTEL_IOATDMA
+ 	default m
+ 	---help---
+ 	  Enable support for the Intel(R) I/OAT DMA engine.
+-
+ endmenu
+diff --git a/drivers/dma/Makefile b/drivers/dma/Makefile
+index bdcfdbd..6a99341 100644
+--- a/drivers/dma/Makefile
++++ b/drivers/dma/Makefile
+@@ -1,3 +1,4 @@
+ obj-$(CONFIG_DMA_ENGINE) += dmaengine.o
+ obj-$(CONFIG_NET_DMA) += iovlock.o
+ obj-$(CONFIG_INTEL_IOATDMA) += ioatdma.o
++obj-$(CONFIG_ASYNC_TX_DMA) += async_tx.o xor.o
+diff --git a/drivers/dma/async_tx.c b/drivers/dma/async_tx.c
+new file mode 100644
+index 0000000..6bbbacc
+--- /dev/null
++++ b/drivers/dma/async_tx.c
+@@ -0,0 +1,889 @@
++/*
++ * Copyright(c) 2006 Intel Corporation. All rights reserved.
++ *
++ *	Dan Williams <dan.j.williams@intel.com>
++ *
++ *	with architecture considerations by:
++ *	Neil Brown <neilb@suse.de>
++ *	Jeff Garzik <jeff@garzik.org>
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms of the GNU General Public License as published by the Free
++ * Software Foundation; either version 2 of the License, or (at your option)
++ * any later version.
++ *
++ * This program is distributed in the hope that it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
++ * more details.
++ *
++ * You should have received a copy of the GNU General Public License along with
++ * this program; if not, write to the Free Software Foundation, Inc., 59
++ * Temple Place - Suite 330, Boston, MA  02111-1307, USA.
++ *
++ * The full GNU General Public License is included in this distribution in the
++ * file called COPYING.
 + */
-+static unsigned long get_stripe_work(struct stripe_head *sh)
++#include <linux/kernel.h>
++#include <linux/interrupt.h>
++#include <linux/dma-mapping.h>
++#include <linux/raid/xor.h>
++#include <linux/async_tx.h>
++
++#ifdef CONFIG_DMA_ENGINE
++static int
++dma_channel_add_remove(struct dma_client *client,
++	struct dma_chan *chan, enum dma_state state);
++
++static struct dma_client async_tx_dma = {
++	.event_callback = dma_channel_add_remove,
++	/* .cap_mask == 0 defaults to all channels */
++};
++
++/**
++ * dma_cap_mask_all - enable iteration over all operation types 
++ */
++dma_cap_mask_t dma_cap_mask_all;
++
++/**
++ * chan_ref_percpu - tracks channel allocations per core/opertion
++ */
++struct chan_ref_percpu {
++	struct dma_chan_ref *ref;
++};
++
++/* guarantee that calls that happen before init will not find a channel */
++static struct chan_ref_percpu __initdata null_chan_ref[NR_CPUS];
++
++static struct chan_ref_percpu *channel_table[] = {
++	DMA_TX_ARRAY_INIT(null_chan_ref)
++};
++
++/**
++ * async_tx_lock - protect modification of async_tx_master_list and serialize
++ *	rebalance operations
++ */
++static spinlock_t async_tx_lock;
++
++struct list_head async_tx_master_list = LIST_HEAD_INIT(async_tx_master_list);
++EXPORT_SYMBOL_GPL(async_tx_master_list);
++
++static void
++free_dma_chan_ref(struct rcu_head *rcu)
 +{
-+	unsigned long pending;
-+	int ack = 0;
-+
-+	pending = sh->ops.pending;
-+
-+	check_op(STRIPE_OP_BIOFILL);
-+	check_op(STRIPE_OP_COMPUTE_BLK);
-+	check_op(STRIPE_OP_PREXOR);
-+	check_op(STRIPE_OP_BIODRAIN);
-+	check_op(STRIPE_OP_POSTXOR);
-+	check_op(STRIPE_OP_CHECK);
-+	if (test_and_clear_bit(STRIPE_OP_IO, &sh->ops.pending))
-+		ack++;
-+
-+	sh->ops.count -= ack;
-+	BUG_ON(sh->ops.count < 0);
-+
-+	return pending;
++	struct dma_chan_ref *ref;
++	ref = container_of(rcu, struct dma_chan_ref, rcu);
++	dma_chan_put(ref->chan);
++	kfree(ref);
 +}
 +
- static int
- raid5_end_read_request(struct bio * bi, unsigned int bytes_done, int error);
- static int
-@@ -1878,7 +1917,6 @@ static int stripe_to_pdidx(sector_t stripe, raid5_conf_t *conf, int disks)
-  *    schedule a write of some buffers
-  *    return confirmation of parity correctness
-  *
-- * Parity calculations are done inside the stripe lock
-  * buffers are taken off read_list or write_list, and bh_cache buffers
-  * get BH_Lock set before the stripe lock is released.
-  *
-@@ -1896,10 +1934,11 @@ static void handle_stripe5(struct stripe_head *sh)
- 	int non_overwrite = 0;
- 	int failed_num=0;
- 	struct r5dev *dev;
-+	unsigned long pending=0;
++static void
++init_dma_chan_ref(struct dma_chan_ref *ref, struct dma_chan *chan)
++{
++	INIT_LIST_HEAD(&ref->node);
++	INIT_RCU_HEAD(&ref->rcu);
++	ref->chan = chan;
++	atomic_set(&ref->count, 0);
++}
++
++/**
++ * get_chan_ref_by_cap - returns the nth channel of the given capability
++ * 	defaults to returning the channel with the desired capability and the
++ * 	lowest reference count if the index can not be satisfied
++ * @cap: capability to match
++ * @index: nth channel desired, passing -1 has the effect of forcing the
++ *  default return value
++ */
++static struct dma_chan_ref *
++get_chan_ref_by_cap(enum dma_transaction_type cap, int index)
++{
++	struct dma_chan_ref *ret_ref = NULL, *min_ref = NULL, *ref;
++
++	list_for_each_entry_rcu(ref, &async_tx_master_list, node)
++		if (dma_has_cap(cap, ref->chan->device->cap_mask)) {
++			if (!min_ref)
++				min_ref = ref;
++			else if (atomic_read(&ref->count) <
++				atomic_read(&min_ref->count))
++				min_ref = ref;
++
++			if (index-- == 0) {
++				ret_ref = ref;
++				break;
++			}
++		}
++
++	if (!ret_ref)
++		ret_ref = min_ref;
++
++	if (ret_ref)
++		atomic_inc(&ret_ref->count);
++
++	return ret_ref;
++}
++
++/**
++ * async_tx_rebalance - redistribute the available channels, optimize
++ * for cpu isolation in the SMP case, and opertaion isolation in the
++ * uniprocessor case
++ */
++static void async_tx_rebalance(void)
++{
++	int cpu, cap, cpu_idx = 0;
++	unsigned long flags;
++
++	spin_lock_irqsave(&async_tx_lock, flags);
++	
++	/* undo the last distribution */
++	for_each_dma_cap_mask(cap, dma_cap_mask_all)
++		for_each_possible_cpu(cpu) {
++			struct dma_chan_ref *ref =
++				per_cpu_ptr(channel_table[cap], cpu)->ref;
++			if (ref) {
++				atomic_set(&ref->count, 0);
++				per_cpu_ptr(channel_table[cap], cpu)->ref = NULL;
++			}
++		}
++
++	for_each_dma_cap_mask(cap, dma_cap_mask_all)
++		for_each_online_cpu(cpu) {
++			struct dma_chan_ref *new;
++			if (NR_CPUS > 1)
++				new = get_chan_ref_by_cap(cap, cpu_idx++);
++			else
++				new = get_chan_ref_by_cap(cap, -1);
++
++			per_cpu_ptr(channel_table[cap], cpu)->ref = new;
++		}
++
++	spin_unlock_irqrestore(&async_tx_lock, flags);
++}
++
++static int
++dma_channel_add_remove(struct dma_client *client,
++	struct dma_chan *chan, enum dma_state state)
++{
++	unsigned long found, ack = 0, flags;
++	struct dma_chan_ref *master_ref, *ref;
++
++	switch (state) {
++	case DMA_RESOURCE_AVAILABLE:
++		found = 0;
++		rcu_read_lock();
++		list_for_each_entry_rcu(ref, &async_tx_master_list, node)
++			if (ref->chan == chan) {
++				found = 1;
++				break;
++			}
++		rcu_read_unlock();
++
++		pr_debug("async_tx: dma resource available [%s]\n", found ? "old" : "new");
++
++		if (!found)
++			ack = 1;
++		else
++			break;
++
++		/* add the channel to the generic management list */
++		master_ref = kmalloc(sizeof(*master_ref), GFP_KERNEL);
++		if (master_ref) {
++			/* keep a reference until async_tx is unloaded */
++			dma_chan_get(chan);
++			init_dma_chan_ref(master_ref, chan);
++			spin_lock_irqsave(&async_tx_lock, flags);
++			list_add_tail_rcu(&master_ref->node,
++				&async_tx_master_list);
++			spin_unlock_irqrestore(&async_tx_lock,
++				flags);
++		} else {
++			printk(KERN_WARNING "async_tx: unable to create"
++				" new master entry in response to"
++				" a DMA_RESOURCE_ADDED event"
++				" (-ENOMEM)\n");
++			return 0;
++		}
++
++		async_tx_rebalance();
++		break;
++	case DMA_RESOURCE_REMOVED:
++		found = 0;
++		spin_lock_irqsave(&async_tx_lock, flags);
++		list_for_each_entry_rcu(ref, &async_tx_master_list, node)
++			if (ref->chan == chan) {
++				dma_chan_put(ref->chan); /* permit backing devices to go away */
++				list_del_rcu(&ref->node);
++				call_rcu(&ref->rcu, free_dma_chan_ref);
++				found = 1;
++				break;
++			}
++		spin_unlock_irqrestore(&async_tx_lock, flags);
++
++		pr_debug("async_tx: dma resource removed [%s]\n", found ? "ours" : "not ours");
++
++		if (found)
++			ack = 1;
++		else
++			break;
++
++		async_tx_rebalance();
++		break;
++	case DMA_RESOURCE_SUSPEND:
++	case DMA_RESOURCE_RESUME:
++		printk(KERN_WARNING "async_tx: does not support dma channel"
++			" suspend/resume\n");
++		break;
++	default:
++		BUG();
++	}
++
++	return ack;
++}
++
++static int __init
++async_tx_init(void)
++{
++	enum dma_transaction_type cap;
++
++	spin_lock_init(&async_tx_lock);
++	bitmap_fill(dma_cap_mask_all.bits, DMA_TX_TYPE_END);
++
++	/* an interrupt will never be an explicit operation type.
++	 * clearing this bit prevents allocation to a slot in 'channel_table'
++	 */
++	clear_bit(DMA_INTERRUPT, dma_cap_mask_all.bits);
++
++	for_each_dma_cap_mask(cap, dma_cap_mask_all) {
++		channel_table[cap] = alloc_percpu(struct chan_ref_percpu);
++		if (!channel_table[cap])
++			goto err;
++	}
++
++	dma_async_client_register(&async_tx_dma);
++	dma_async_client_chan_request(&async_tx_dma);
++
++	printk("async_tx: api initialized (async)\n");
++
++	return 0;
++err:
++	printk("async_tx: initialization failure\n");
++
++	while (--cap >= 0)
++		free_percpu(channel_table[cap]);
++
++	return 1;
++}
++
++static void __exit async_tx_exit(void)
++{
++	unsigned long flags;
++	struct dma_chan_ref *ref;
++	enum dma_transaction_type cap;
++
++	dma_async_client_unregister(&async_tx_dma);
++
++	for_each_dma_cap_mask(cap, dma_cap_mask_all)
++		if (channel_table[cap])
++			free_percpu(channel_table[cap]);
++
++	/* free all the channels on the master list */
++	spin_lock_irqsave(&async_tx_lock, flags);
++	list_for_each_entry_rcu(ref, &async_tx_master_list, node) {
++		dma_chan_put(ref->chan); /* permit backing devices to go away */
++		list_del_rcu(&ref->node);
++		call_rcu(&ref->rcu, free_dma_chan_ref);
++	}
++	spin_unlock_irqrestore(&async_tx_lock, flags);
++}
++
++/**
++ * async_tx_find_channel - find a channel to carry out the operation or let
++ *	the transaction execute synchronously
++ * @depend_tx: transaction dependency
++ * @tx_type: transaction type
++ */
++static struct dma_chan *
++async_tx_find_channel(struct dma_async_tx_descriptor *depend_tx,
++	enum dma_transaction_type tx_type)
++{
++	/* see if we can keep the chain on one channel */
++	if (depend_tx &&
++		dma_has_cap(tx_type, depend_tx->chan->device->cap_mask))
++		return depend_tx->chan;
++	else {
++		struct dma_chan_ref *ref;
++		int cpu = get_cpu();
++		ref = per_cpu_ptr(channel_table[tx_type], cpu)->ref;
++		put_cpu();
++		return ref ? ref->chan : NULL;
++	}
++}
++#else
++static int __init async_tx_init(void)
++{
++	printk("async_tx: api initialized (sync-only)\n");
++	return 0;
++}
++
++static void __exit async_tx_exit(void)
++{
++	do { } while (0);
++}
++
++static struct dma_chan *
++async_tx_find_channel(struct dma_async_tx_descriptor *depend_tx,
++	enum dma_transaction_type tx_type)
++{
++	return NULL;
++}
++#endif
++
++static void
++async_tx_submit(struct dma_chan *chan, struct dma_async_tx_descriptor *tx,
++	enum async_tx_flags flags, struct dma_async_tx_descriptor *depend_tx,
++	dma_async_tx_callback callback, void *callback_param)
++{
++	tx->callback = callback;
++	tx->callback_param = callback_param;
++
++	/* set this new tx to run after depend_tx if:
++	 * 1/ a dependency exists (depend_tx is !NULL)
++	 * 2/ the tx can not be submitted to the current channel
++	 */
++	if (depend_tx && depend_tx->chan != chan) {
++		/* if ack is already set then we cannot be sure
++		 * we are referring to the correct operation
++		 */
++		BUG_ON(depend_tx->ack);
++
++		tx->parent = depend_tx;
++		spin_lock_bh(&depend_tx->lock);
++		list_add_tail(&tx->depend_node, &depend_tx->depend_list);
++		if (depend_tx->cookie == 0) {
++			struct dma_chan *dep_chan = depend_tx->chan;
++			struct dma_device *dep_dev = dep_chan->device;
++			dep_dev->device_dependency_added(dep_chan);
++		}
++		spin_unlock_bh(&depend_tx->lock);
++
++		/* schedule an interrupt to trigger the channel switch */
++		async_trigger_callback(ASYNC_TX_ACK, depend_tx, NULL, NULL);
++	} else {
++		tx->parent = NULL;
++		chan->device->device_tx_submit(tx);
++	}
++
++	if (flags & ASYNC_TX_ACK)
++		async_tx_ack(tx);
++
++	if (depend_tx && (flags & ASYNC_TX_DEP_ACK))
++		async_tx_ack(depend_tx);
++}
++
++/**
++ * sync_epilog - actions to take if an operation is run synchronously
++ * @flags: async_tx flags
++ * @depend_tx: transaction depends on depend_tx
++ * @callback: function to call when the transaction completes
++ * @callback_param: parameter to pass to the callback routine
++ */
++static void
++sync_epilog(unsigned long flags, struct dma_async_tx_descriptor *depend_tx,
++	dma_async_tx_callback callback, void *callback_param)
++{
++	if (callback)
++		callback(callback_param);
++
++	if (depend_tx && (flags & ASYNC_TX_DEP_ACK))
++		async_tx_ack(depend_tx);
++}
++
++static void
++do_async_xor(struct dma_async_tx_descriptor *tx, struct dma_device *device,
++	struct dma_chan *chan, struct page *dest, struct page **src_list,
++	unsigned int offset, unsigned int src_cnt, size_t len,
++	enum async_tx_flags flags, struct dma_async_tx_descriptor *depend_tx,
++	dma_async_tx_callback callback, void *callback_param)
++{
++	dma_addr_t dma_addr;
++	enum dma_data_direction dir;
++	int i;
++
++	pr_debug("%s: len: %zu\n", __FUNCTION__, len);
++
++	dir = (flags & ASYNC_TX_ASSUME_COHERENT) ?
++		DMA_NONE : DMA_FROM_DEVICE;
++
++	dma_addr = dma_map_page(device->dev, dest, offset, len, dir);
++     	device->device_set_dest(dma_addr, tx, 0);
++
++	dir = (flags & ASYNC_TX_ASSUME_COHERENT) ?
++		DMA_NONE : DMA_TO_DEVICE;
++
++	for (i = 0; i < src_cnt; i++) {
++		dma_addr = dma_map_page(device->dev, src_list[i],
++			offset, len, dir);
++	     	device->device_set_src(dma_addr, tx, i);
++	}
++
++	async_tx_submit(chan, tx, flags, depend_tx, callback,
++		callback_param);
++}
++
++static void
++do_sync_xor(struct page *dest, struct page **src_list, unsigned int offset,
++	unsigned int src_cnt, size_t len, enum async_tx_flags flags,
++	struct dma_async_tx_descriptor *depend_tx,
++	dma_async_tx_callback callback, void *callback_param)
++{
++	void *_dest;
++	int i;
++
++	pr_debug("%s: len: %zu\n", __FUNCTION__, len);
++
++	/* reuse the 'src_list' array to convert to buffer pointers */
++	for (i = 0; i < src_cnt; i++)
++		src_list[i] = (struct page *)
++			(page_address(src_list[i]) + offset);
++
++	/* set destination address */
++	_dest = page_address(dest) + offset;
++
++	if (flags & ASYNC_TX_XOR_ZERO_DST)
++		memset(_dest, 0, len);
++
++	xor_block(src_cnt, len, _dest,
++		(void **) src_list);
++
++	sync_epilog(flags, depend_tx, callback, callback_param);
++}
++
++/**
++ * async_xor - attempt to xor a set of blocks with a dma engine.
++ *	xor_block always uses the dest as a source so the ASYNC_TX_XOR_ZERO_DST
++ *	flag must be set to not include dest data in the calculation.  The
++ *	assumption with dma eninges is that they only use the destination
++ *	buffer as a source when it is explicity specified in the source list.
++ * @dest: destination page
++ * @src_list: array of source pages (if the dest is also a source it must be
++ *	at index zero).  The contents of this array may be overwritten.
++ * @offset: offset in pages to start transaction
++ * @src_cnt: number of source pages
++ * @len: length in bytes
++ * @flags: ASYNC_TX_XOR_ZERO_DST, ASYNC_TX_XOR_DROP_DEST,
++ 	ASYNC_TX_ASSUME_COHERENT, ASYNC_TX_ACK, ASYNC_TX_DEP_ACK
++ * @depend_tx: xor depends on the result of this transaction.
++ * @callback: function to call when the xor completes
++ * @callback_param: parameter to pass to the callback routine
++ */
++struct dma_async_tx_descriptor *
++async_xor(struct page *dest, struct page **src_list, unsigned int offset,
++	int src_cnt, size_t len, enum async_tx_flags flags,
++	struct dma_async_tx_descriptor *depend_tx,
++	dma_async_tx_callback callback, void *callback_param)
++{
++	struct dma_chan *chan = async_tx_find_channel(depend_tx, DMA_XOR);
++	struct dma_device *device = chan ? chan->device : NULL;
++	struct dma_async_tx_descriptor *tx = NULL;
++	dma_async_tx_callback _callback;
++	void *_callback_param;
++	unsigned long local_flags;
++	int xor_src_cnt;
++	int i = 0, src_off = 0, int_en;
++
++	BUG_ON(src_cnt <= 1);
++
++	while (src_cnt) {
++		local_flags = flags;
++		if (device) { /* run the xor asynchronously */
++			xor_src_cnt = min(src_cnt, device->max_xor);
++			/* if we are submitting additional xors
++			 * only set the callback on the last transaction
++			 */
++			if (src_cnt > xor_src_cnt) {
++				local_flags &= ~ASYNC_TX_ACK;
++				_callback = NULL;
++				_callback_param = NULL;
++			} else {
++				_callback = callback;
++				_callback_param = callback_param;
++			}
++
++			int_en = _callback ? 1 : 0;
++
++			tx = device->device_prep_dma_xor(
++				chan, xor_src_cnt, len, int_en);
++
++			if (tx) {
++				do_async_xor(tx, device, chan, dest,
++				&src_list[src_off], offset, xor_src_cnt, len,
++				local_flags, depend_tx, _callback,
++				_callback_param);
++			} else /* fall through */
++				goto xor_sync;
++		} else { /* run the xor synchronously */
++xor_sync:
++			/* in the sync case the dest is an implied source
++			 * (assumes the dest is at the src_off index)
++			 */
++			if (flags & ASYNC_TX_XOR_DROP_DST) {
++				src_cnt--;
++				src_off++;
++			}
++
++			/* process up to 'MAX_XOR_BLOCKS' sources */
++			xor_src_cnt = min(src_cnt, MAX_XOR_BLOCKS);
++
++			/* if we are submitting additional xors
++			 * only set the callback on the last transaction
++			 */
++			if (src_cnt > xor_src_cnt) {
++				local_flags &= ~ASYNC_TX_ACK;
++				_callback = NULL;
++				_callback_param = NULL;
++			} else {
++				_callback = callback;
++				_callback_param = callback_param;
++			}
++
++			/* wait for any prerequisite operations */
++			if (depend_tx) {
++				/* if ack is already set then we cannot be sure
++				 * we are referring to the correct operation
++				 */
++				BUG_ON(depend_tx->ack);
++				if (dma_wait_for_async_tx(depend_tx) == DMA_ERROR)
++					panic("%s: DMA_ERROR waiting for depend_tx\n",
++						__FUNCTION__);
++			}
++
++			do_sync_xor(dest, &src_list[src_off], offset,
++				xor_src_cnt, len, local_flags, depend_tx,
++				_callback, _callback_param);
++		}
++
++		/* the previous tx is hidden from the client,
++		 * so ack it
++		 */
++		if (i && depend_tx)
++			async_tx_ack(depend_tx);
++
++		depend_tx = tx;
++
++		if (src_cnt > xor_src_cnt) {
++			/* drop completed sources */
++			src_cnt -= xor_src_cnt;
++			src_off += xor_src_cnt;
++
++			/* unconditionally preserve the destination */
++			flags &= ~ASYNC_TX_XOR_ZERO_DST;
++
++			/* use the intermediate result a source, but remember
++			 * it's dropped, because it's implied, in the sync case
++			 */
++			src_list[--src_off] = dest;
++			src_cnt++;
++			flags |= ASYNC_TX_XOR_DROP_DST;
++		} else
++			src_cnt = 0;
++		i++;
++	}
++
++	return tx;
++}
++EXPORT_SYMBOL_GPL(async_xor);
++
++static int page_is_zero(struct page *p, size_t len)
++{
++	char *a = page_address(p);
++	return ((*(u32*)a) == 0 &&
++		memcmp(a, a+4, len-4)==0);
++}
++
++/**
++ * async_xor_zero_sum - attempt a xor parity check with a dma engine.
++ * @dest: destination page used if the xor is performed synchronously
++ * @src_list: array of source pages.  The dest page must be listed as a source
++ * 	at index zero.  The contents of this array may be overwritten.
++ * @offset: offset in pages to start transaction
++ * @src_cnt: number of source pages
++ * @len: length in bytes
++ * @result: 0 if sum == 0 else non-zero
++ * @flags: ASYNC_TX_ASSUME_COHERENT, ASYNC_TX_ACK, ASYNC_TX_DEP_ACK
++ * @depend_tx: xor depends on the result of this transaction.
++ * @callback: function to call when the xor completes
++ * @callback_param: parameter to pass to the callback routine
++ */
++struct dma_async_tx_descriptor *
++async_xor_zero_sum(struct page *dest, struct page **src_list,
++	unsigned int offset, int src_cnt, size_t len,
++	u32 *result, enum async_tx_flags flags,
++	struct dma_async_tx_descriptor *depend_tx,
++	dma_async_tx_callback callback, void *callback_param)
++{
++	struct dma_chan *chan = async_tx_find_channel(depend_tx, DMA_ZERO_SUM);
++	struct dma_device *device = chan ? chan->device : NULL;
++	int int_en = callback ? 1 : 0;
++	struct dma_async_tx_descriptor *tx = device ?
++		device->device_prep_dma_zero_sum(chan, src_cnt, len, result,
++			int_en) : NULL;
++	int i;
++
++	BUG_ON(src_cnt <= 1);
++
++	if (tx) {
++		dma_addr_t dma_addr;
++		enum dma_data_direction dir;
++
++		pr_debug("%s: (async) len: %zu\n", __FUNCTION__, len);
++
++		dir = (flags & ASYNC_TX_ASSUME_COHERENT) ?
++			DMA_NONE : DMA_TO_DEVICE;
++
++		for (i = 0; i < src_cnt; i++) {
++			dma_addr = dma_map_page(device->dev, src_list[i],
++				offset, len, dir);
++		     	device->device_set_src(dma_addr, tx, i);
++		}
++
++		async_tx_submit(chan, tx, flags, depend_tx, callback,
++			callback_param);
++	} else {
++		unsigned long xor_flags = flags;
++
++		pr_debug("%s: (sync) len: %zu\n", __FUNCTION__, len);
++
++		xor_flags |= ASYNC_TX_XOR_DROP_DST;
++		xor_flags &= ~ASYNC_TX_ACK;
++
++		tx = async_xor(dest, src_list, offset, src_cnt, len, xor_flags,
++			depend_tx, NULL, NULL);
++
++		if (tx) {
++			if (dma_wait_for_async_tx(tx) == DMA_ERROR)
++				panic("%s: DMA_ERROR waiting for tx\n",
++					__FUNCTION__);
++			async_tx_ack(tx);
++		}
++
++		*result = page_is_zero(dest, len) ? 0 : 1;
++
++		tx = NULL;
++
++		sync_epilog(flags, depend_tx, callback, callback_param);
++	}
++
++	return tx;
++}
++EXPORT_SYMBOL_GPL(async_xor_zero_sum);
++
++/**
++ * async_memcpy - attempt to copy memory with a dma engine.
++ * @dest: destination page
++ * @src: src page
++ * @offset: offset in pages to start transaction
++ * @len: length in bytes
++ * @flags: ASYNC_TX_ASSUME_COHERENT, ASYNC_TX_ACK, ASYNC_TX_DEP_ACK,
++ *	ASYNC_TX_KMAP_SRC, ASYNC_TX_KMAP_DST
++ * @depend_tx: memcpy depends on the result of this transaction
++ * @callback: function to call when the memcpy completes
++ * @callback_param: parameter to pass to the callback routine
++ */
++struct dma_async_tx_descriptor *
++async_memcpy(struct page *dest, struct page *src, unsigned int dest_offset,
++	unsigned int src_offset, size_t len, enum async_tx_flags flags,
++	struct dma_async_tx_descriptor *depend_tx,
++	dma_async_tx_callback callback, void *callback_param)
++{
++	struct dma_chan *chan = async_tx_find_channel(depend_tx, DMA_MEMCPY);
++	struct dma_device *device = chan ? chan->device : NULL;
++	int int_en = callback ? 1 : 0;
++	struct dma_async_tx_descriptor *tx = device ?
++		device->device_prep_dma_memcpy(chan, len,
++		int_en) : NULL;
++
++	if (tx) { /* run the memcpy asynchronously */
++		dma_addr_t dma_addr;
++		enum dma_data_direction dir;
++
++		pr_debug("%s: (async) len: %zu\n", __FUNCTION__, len);
++
++		dir = (flags & ASYNC_TX_ASSUME_COHERENT) ?
++			DMA_NONE : DMA_FROM_DEVICE;
++
++		dma_addr = dma_map_page(device->dev, dest, dest_offset, len, dir);
++	     	device->device_set_dest(dma_addr, tx, 0);
++
++		dir = (flags & ASYNC_TX_ASSUME_COHERENT) ?
++			DMA_NONE : DMA_TO_DEVICE;
++
++		dma_addr = dma_map_page(device->dev, src, src_offset, len, dir);
++	     	device->device_set_src(dma_addr, tx, 0);
++
++		async_tx_submit(chan, tx, flags, depend_tx, callback,
++			callback_param);
++	} else { /* run the memcpy synchronously */
++		void *dest_buf, *src_buf;
++		pr_debug("%s: (sync) len: %zu\n", __FUNCTION__, len);
++
++		/* wait for any prerequisite operations */
++		if (depend_tx) {
++			/* if ack is already set then we cannot be sure
++			 * we are referring to the correct operation
++			 */
++			BUG_ON(depend_tx->ack);
++			if (dma_wait_for_async_tx(depend_tx) == DMA_ERROR)
++				panic("%s: DMA_ERROR waiting for depend_tx\n",
++					__FUNCTION__);
++		}
++
++		if (flags & ASYNC_TX_KMAP_DST)
++			dest_buf = kmap_atomic(dest, KM_USER0) + dest_offset;
++		else
++			dest_buf = page_address(dest) + dest_offset;
++
++		if (flags & ASYNC_TX_KMAP_SRC)
++			src_buf = kmap_atomic(src, KM_USER0) + src_offset;
++		else
++			src_buf = page_address(src) + src_offset;
++
++		memcpy(dest_buf, src_buf, len);
++
++		if (flags & ASYNC_TX_KMAP_DST)
++			kunmap_atomic(dest_buf, KM_USER0);
++
++		if (flags & ASYNC_TX_KMAP_SRC)
++			kunmap_atomic(src_buf, KM_USER0);
++
++		sync_epilog(flags, depend_tx, callback, callback_param);
++	}
++
++	return tx;
++}
++EXPORT_SYMBOL_GPL(async_memcpy);
++
++/**
++ * async_memset - attempt to fill memory with a dma engine.
++ * @dest: destination page
++ * @val: fill value
++ * @offset: offset in pages to start transaction
++ * @len: length in bytes
++ * @flags: ASYNC_TX_ASSUME_COHERENT, ASYNC_TX_ACK, ASYNC_TX_DEP_ACK
++ * @depend_tx: memset depends on the result of this transaction
++ * @callback: function to call when the memcpy completes
++ * @callback_param: parameter to pass to the callback routine
++ */
++struct dma_async_tx_descriptor *
++async_memset(struct page *dest, int val, unsigned int offset,
++	size_t len, enum async_tx_flags flags,
++	struct dma_async_tx_descriptor *depend_tx,
++	dma_async_tx_callback callback, void *callback_param)
++{
++	struct dma_chan *chan = async_tx_find_channel(depend_tx, DMA_MEMSET);
++	struct dma_device *device = chan ? chan->device : NULL;
++	int int_en = callback ? 1 : 0;
++	struct dma_async_tx_descriptor *tx = device ?
++		device->device_prep_dma_memset(chan, val, len,
++			int_en) : NULL;
++
++	if (tx) { /* run the memset asynchronously */
++		dma_addr_t dma_addr;
++		enum dma_data_direction dir;
++
++		pr_debug("%s: (async) len: %zu\n", __FUNCTION__, len);
++		dir = (flags & ASYNC_TX_ASSUME_COHERENT) ?
++			DMA_NONE : DMA_FROM_DEVICE;
++
++		dma_addr = dma_map_page(device->dev, dest, offset, len, dir);
++	     	device->device_set_dest(dma_addr, tx, 0);
++
++		async_tx_submit(chan, tx, flags, depend_tx, callback,
++			callback_param);
++	} else { /* run the memset synchronously */
++		void *dest_buf;
++		pr_debug("%s: (sync) len: %zu\n", __FUNCTION__, len);
++
++		dest_buf = (void *) (((char *) page_address(dest)) + offset);
++
++		/* wait for any prerequisite operations */
++		if (depend_tx) {
++			/* if ack is already set then we cannot be sure
++			 * we are referring to the correct operation
++			 */
++			BUG_ON(depend_tx->ack);
++			if (dma_wait_for_async_tx(depend_tx) == DMA_ERROR)
++				panic("%s: DMA_ERROR waiting for depend_tx\n",
++					__FUNCTION__);
++		}
++
++		memset(dest_buf, val, len);
++
++		sync_epilog(flags, depend_tx, callback, callback_param);
++	}
++
++	return tx;
++}
++EXPORT_SYMBOL_GPL(async_memset);
++
++/**
++ * async_trigger_callback - schedules the callback function to be run after
++ * any dependent operations have been completed.
++ * @flags: ASYNC_TX_ACK, ASYNC_TX_DEP_ACK
++ * @depend_tx: 'callback' requires the completion of this transaction
++ * @callback: function to call after depend_tx completes
++ * @callback_param: parameter to pass to the callback routine
++ */
++struct dma_async_tx_descriptor *
++async_trigger_callback(enum async_tx_flags flags,
++	struct dma_async_tx_descriptor *depend_tx,
++	dma_async_tx_callback callback, void *callback_param)
++{
++	struct dma_chan *chan;
++	struct dma_device *device;
++	struct dma_async_tx_descriptor *tx;
++
++	if (depend_tx) {
++		chan = depend_tx->chan;
++		device = chan->device;
++
++		/* see if we can schedule an interrupt
++		 * otherwise poll for completion
++		 */
++		if (device && !dma_has_cap(DMA_INTERRUPT, device->cap_mask))
++			device = NULL;
++
++		tx = device ? device->device_prep_dma_interrupt(chan) : NULL;
++	} else
++		tx = NULL;
++
++	if (tx) {
++		pr_debug("%s: (async)\n", __FUNCTION__);
++
++		async_tx_submit(chan, tx, flags, depend_tx, callback,
++			callback_param);
++	} else {
++		pr_debug("%s: (sync)\n", __FUNCTION__);
++
++		/* wait for any prerequisite operations */
++		if (depend_tx) {
++			/* if ack is already set then we cannot be sure
++			 * we are referring to the correct operation
++			 */
++			BUG_ON(depend_tx->ack);
++			if (dma_wait_for_async_tx(depend_tx) == DMA_ERROR)
++				panic("%s: DMA_ERROR waiting for depend_tx\n",
++					__FUNCTION__);
++		}
++
++		sync_epilog(flags, depend_tx, callback, callback_param);
++	}
++
++	return tx;
++}
++EXPORT_SYMBOL_GPL(async_trigger_callback);
++
++module_init(async_tx_init);
++module_exit(async_tx_exit);
++
++MODULE_AUTHOR("Intel Corporation");
++MODULE_DESCRIPTION("Asynchronous Bulk Memory Transactions API");
++MODULE_LICENSE("GPL");
+diff --git a/drivers/dma/xor.c b/drivers/dma/xor.c
+new file mode 100644
+index 0000000..6eb3416
+--- /dev/null
++++ b/drivers/dma/xor.c
+@@ -0,0 +1,153 @@
++/*
++ * xor.c : Multiple Devices driver for Linux
++ *
++ * Copyright (C) 1996, 1997, 1998, 1999, 2000,
++ * Ingo Molnar, Matti Aarnio, Jakub Jelinek, Richard Henderson.
++ *
++ * Dispatch optimized RAID-5 checksumming functions.
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2, or (at your option)
++ * any later version.
++ *
++ * You should have received a copy of the GNU General Public License
++ * (for example /usr/src/linux/COPYING); if not, write to the Free
++ * Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
++ */
++
++#define BH_TRACE 0
++#include <linux/module.h>
++#include <linux/raid/md.h>
++#include <linux/raid/xor.h>
++#include <asm/xor.h>
++
++/* The xor routines to use.  */
++static struct xor_block_template *active_template;
++
++void
++xor_block(unsigned int src_count, unsigned int bytes, void *dest, void **srcs)
++{
++	unsigned long *p1, *p2, *p3, *p4;
++
++	p1 = (unsigned long *) srcs[0];
++	if (src_count == 1) {
++		active_template->do_2(bytes, dest, p1);
++		return;
++	}
++
++	p2 = (unsigned long *) srcs[1];
++	if (src_count == 2) {
++		active_template->do_3(bytes, dest, p1, p2);
++		return;
++	}
++
++	p3 = (unsigned long *) srcs[2];
++	if (src_count == 3) {
++		active_template->do_4(bytes, dest, p1, p2, p3);
++		return;
++	}
++
++	p4 = (unsigned long *) srcs[3];
++	active_template->do_5(bytes, dest, p1, p2, p3, p4);
++}
++
++/* Set of all registered templates.  */
++static struct xor_block_template *template_list;
++
++#define BENCH_SIZE (PAGE_SIZE)
++
++static void
++do_xor_speed(struct xor_block_template *tmpl, void *b1, void *b2)
++{
++	int speed;
++	unsigned long now;
++	int i, count, max;
++
++	tmpl->next = template_list;
++	template_list = tmpl;
++
++	/*
++	 * Count the number of XORs done during a whole jiffy, and use
++	 * this to calculate the speed of checksumming.  We use a 2-page
++	 * allocation to have guaranteed color L1-cache layout.
++	 */
++	max = 0;
++	for (i = 0; i < 5; i++) {
++		now = jiffies;
++		count = 0;
++		while (jiffies == now) {
++			mb();
++			tmpl->do_2(BENCH_SIZE, b1, b2);
++			mb();
++			count++;
++			mb();
++		}
++		if (count > max)
++			max = count;
++	}
++
++	speed = max * (HZ * BENCH_SIZE / 1024);
++	tmpl->speed = speed;
++
++	printk("   %-10s: %5d.%03d MB/sec\n", tmpl->name,
++	       speed / 1000, speed % 1000);
++}
++
++static int
++calibrate_xor_block(void)
++{
++	void *b1, *b2;
++	struct xor_block_template *f, *fastest;
++
++	b1 = (void *) __get_free_pages(GFP_KERNEL, 2);
++	if (! b1) {
++		printk("xor: Yikes!  No memory available.\n");
++		return -ENOMEM;
++	}
++	b2 = b1 + 2*PAGE_SIZE + BENCH_SIZE;
++
++	/*
++	 * If this arch/cpu has a short-circuited selection, don't loop through all
++	 * the possible functions, just test the best one
++	 */
++
++	fastest = NULL;
++
++#ifdef XOR_SELECT_TEMPLATE
++		fastest = XOR_SELECT_TEMPLATE(fastest);
++#endif
++
++#define xor_speed(templ)	do_xor_speed((templ), b1, b2)
++
++	if (fastest) {
++		printk(KERN_INFO "xor: automatically using best checksumming function: %s\n",
++			fastest->name);
++		xor_speed(fastest);
++	} else {
++		printk(KERN_INFO "xor: measuring software checksumming speed\n");
++		XOR_TRY_TEMPLATES;
++		fastest = template_list;
++		for (f = fastest; f; f = f->next)
++			if (f->speed > fastest->speed)
++				fastest = f;
++	}
++
++	printk("xor: using function: %s (%d.%03d MB/sec)\n",
++	       fastest->name, fastest->speed / 1000, fastest->speed % 1000);
++
++#undef xor_speed
++
++	free_pages((unsigned long)b1, 2);
++
++	active_template = fastest;
++	return 0;
++}
++
++static __exit void xor_exit(void) { }
++
++EXPORT_SYMBOL(xor_block);
++MODULE_LICENSE("GPL");
++
++module_init(calibrate_xor_block);
++module_exit(xor_exit);
+diff --git a/drivers/md/Kconfig b/drivers/md/Kconfig
+index 4540ade..79a361e 100644
+--- a/drivers/md/Kconfig
++++ b/drivers/md/Kconfig
+@@ -8,6 +8,7 @@ menu "Multi-device support (RAID and LVM)"
  
--	PRINTK("handling stripe %llu, cnt=%d, pd_idx=%d\n",
--		(unsigned long long)sh->sector, atomic_read(&sh->count),
--		sh->pd_idx);
-+	PRINTK("handling stripe %llu, state=%#lx cnt=%d, pd_idx=%d ops=%lx:%lx:%lx\n",
-+	       (unsigned long long)sh->sector, sh->state, atomic_read(&sh->count),
-+	       sh->pd_idx, sh->ops.pending, sh->ops.ack, sh->ops.complete);
+ config MD
+ 	bool "Multiple devices driver support (RAID and LVM)"
++	select ASYNC_TX_DMA
+ 	help
+ 	  Support multiple physical spindles through a single logical device.
+ 	  Required for RAID and logical volume management.
+@@ -108,7 +109,7 @@ config MD_RAID10
  
- 	spin_lock(&sh->lock);
- 	clear_bit(STRIPE_HANDLE, &sh->state);
-@@ -2349,8 +2388,14 @@ static void handle_stripe5(struct stripe_head *sh)
+ config MD_RAID456
+ 	tristate "RAID-4/RAID-5/RAID-6 mode"
+-	depends on BLK_DEV_MD
++	depends on BLK_DEV_MD && ASYNC_TX_DMA
+ 	---help---
+ 	  A RAID-5 set of N drives with a capacity of C MB per drive provides
+ 	  the capacity of C * (N - 1) MB, and protects against a failure
+diff --git a/drivers/md/Makefile b/drivers/md/Makefile
+index 34957a6..23c3049 100644
+--- a/drivers/md/Makefile
++++ b/drivers/md/Makefile
+@@ -17,15 +17,15 @@ raid456-objs	:= raid5.o raid6algos.o raid6recov.o raid6tables.o \
+ hostprogs-y	:= mktables
+ 
+ # Note: link order is important.  All raid personalities
+-# and xor.o must come before md.o, as they each initialise 
+-# themselves, and md.o may use the personalities when it 
++# must come before md.o, as they each initialise
++# themselves, and md.o may use the personalities when it
+ # auto-initialised.
+ 
+ obj-$(CONFIG_MD_LINEAR)		+= linear.o
+ obj-$(CONFIG_MD_RAID0)		+= raid0.o
+ obj-$(CONFIG_MD_RAID1)		+= raid1.o
+ obj-$(CONFIG_MD_RAID10)		+= raid10.o
+-obj-$(CONFIG_MD_RAID456)	+= raid456.o xor.o
++obj-$(CONFIG_MD_RAID456)	+= raid456.o
+ obj-$(CONFIG_MD_MULTIPATH)	+= multipath.o
+ obj-$(CONFIG_MD_FAULTY)		+= faulty.o
+ obj-$(CONFIG_BLK_DEV_MD)	+= md-mod.o
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 8d59914..ab8702d 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -916,25 +916,25 @@ static void copy_data(int frombio, struct bio *bio,
+ 	}
+ }
+ 
+-#define check_xor() 	do { 						\
+-			   if (count == MAX_XOR_BLOCKS) {		\
+-				xor_block(count, STRIPE_SIZE, ptr);	\
+-				count = 1;				\
+-			   }						\
++#define check_xor()	do {						       \
++		     	   if (count == MAX_XOR_BLOCKS) {		       \
++				xor_block(count, STRIPE_SIZE, dest, ptr);      \
++				count = 0;				       \
++			   }						       \
+ 			} while(0)
+ 
+ 
+ static void compute_block(struct stripe_head *sh, int dd_idx)
+ {
+ 	int i, count, disks = sh->disks;
+-	void *ptr[MAX_XOR_BLOCKS], *p;
++	void *ptr[MAX_XOR_BLOCKS], *dest, *p;
+ 
+ 	PRINTK("compute_block, stripe %llu, idx %d\n", 
+ 		(unsigned long long)sh->sector, dd_idx);
+ 
+-	ptr[0] = page_address(sh->dev[dd_idx].page);
+-	memset(ptr[0], 0, STRIPE_SIZE);
+-	count = 1;
++	dest = page_address(sh->dev[dd_idx].page);
++	memset(dest, 0, STRIPE_SIZE);
++	count = 0;
+ 	for (i = disks ; i--; ) {
+ 		if (i == dd_idx)
+ 			continue;
+@@ -948,8 +948,8 @@ static void compute_block(struct stripe_head *sh, int dd_idx)
+ 
+ 		check_xor();
+ 	}
+-	if (count != 1)
+-		xor_block(count, STRIPE_SIZE, ptr);
++	if (count)
++		xor_block(count, STRIPE_SIZE, dest, ptr);
+ 	set_bit(R5_UPTODATE, &sh->dev[dd_idx].flags);
+ }
+ 
+@@ -957,14 +957,14 @@ static void compute_parity5(struct stripe_head *sh, int method)
+ {
+ 	raid5_conf_t *conf = sh->raid_conf;
+ 	int i, pd_idx = sh->pd_idx, disks = sh->disks, count;
+-	void *ptr[MAX_XOR_BLOCKS];
++	void *ptr[MAX_XOR_BLOCKS], *dest;
+ 	struct bio *chosen;
+ 
+ 	PRINTK("compute_parity5, stripe %llu, method %d\n",
+ 		(unsigned long long)sh->sector, method);
+ 
+-	count = 1;
+-	ptr[0] = page_address(sh->dev[pd_idx].page);
++	count = 0;
++	dest = page_address(sh->dev[pd_idx].page);
+ 	switch(method) {
+ 	case READ_MODIFY_WRITE:
+ 		BUG_ON(!test_bit(R5_UPTODATE, &sh->dev[pd_idx].flags));
+@@ -987,7 +987,7 @@ static void compute_parity5(struct stripe_head *sh, int method)
+ 		}
+ 		break;
+ 	case RECONSTRUCT_WRITE:
+-		memset(ptr[0], 0, STRIPE_SIZE);
++		memset(dest, 0, STRIPE_SIZE);
+ 		for (i= disks; i-- ;)
+ 			if (i!=pd_idx && sh->dev[i].towrite) {
+ 				chosen = sh->dev[i].towrite;
+@@ -1003,9 +1003,9 @@ static void compute_parity5(struct stripe_head *sh, int method)
+ 	case CHECK_PARITY:
+ 		break;
+ 	}
+-	if (count>1) {
+-		xor_block(count, STRIPE_SIZE, ptr);
+-		count = 1;
++	if (count) {
++		xor_block(count, STRIPE_SIZE, dest, ptr);
++		count = 0;
+ 	}
+ 	
+ 	for (i = disks; i--;)
+@@ -1037,8 +1037,8 @@ static void compute_parity5(struct stripe_head *sh, int method)
+ 				check_xor();
  			}
  	}
+-	if (count != 1)
+-		xor_block(count, STRIPE_SIZE, ptr);
++	if (count)
++		xor_block(count, STRIPE_SIZE, dest, ptr);
+ 	
+ 	if (method != CHECK_PARITY) {
+ 		set_bit(R5_UPTODATE, &sh->dev[pd_idx].flags);
+@@ -1132,7 +1132,7 @@ static void compute_parity6(struct stripe_head *sh, int method)
+ static void compute_block_1(struct stripe_head *sh, int dd_idx, int nozero)
+ {
+ 	int i, count, disks = sh->disks;
+-	void *ptr[MAX_XOR_BLOCKS], *p;
++	void *ptr[MAX_XOR_BLOCKS], *dest, *p;
+ 	int pd_idx = sh->pd_idx;
+ 	int qd_idx = raid6_next_disk(pd_idx, disks);
  
-+	if (sh->ops.count)
-+		pending = get_stripe_work(sh);
-+
- 	spin_unlock(&sh->lock);
+@@ -1143,9 +1143,9 @@ static void compute_block_1(struct stripe_head *sh, int dd_idx, int nozero)
+ 		/* We're actually computing the Q drive */
+ 		compute_parity6(sh, UPDATE_PARITY);
+ 	} else {
+-		ptr[0] = page_address(sh->dev[dd_idx].page);
+-		if (!nozero) memset(ptr[0], 0, STRIPE_SIZE);
+-		count = 1;
++		dest = page_address(sh->dev[dd_idx].page);
++		if (!nozero) memset(dest, 0, STRIPE_SIZE);
++		count = 0;
+ 		for (i = disks ; i--; ) {
+ 			if (i == dd_idx || i == qd_idx)
+ 				continue;
+@@ -1159,8 +1159,8 @@ static void compute_block_1(struct stripe_head *sh, int dd_idx, int nozero)
  
-+	if (pending)
-+		raid5_run_ops(sh, pending);
-+
- 	while ((bi=return_bi)) {
- 		int bytes = bi->bi_size;
- 
-@@ -3847,8 +3892,10 @@ static void raid5d (mddev_t *mddev)
- 			handled++;
+ 			check_xor();
  		}
+-		if (count != 1)
+-			xor_block(count, STRIPE_SIZE, ptr);
++		if (count)
++			xor_block(count, STRIPE_SIZE, dest, ptr);
+ 		if (!nozero) set_bit(R5_UPTODATE, &sh->dev[dd_idx].flags);
+ 		else clear_bit(R5_UPTODATE, &sh->dev[dd_idx].flags);
+ 	}
+diff --git a/drivers/md/xor.c b/drivers/md/xor.c
+deleted file mode 100644
+index 324897c..0000000
+--- a/drivers/md/xor.c
++++ /dev/null
+@@ -1,154 +0,0 @@
+-/*
+- * xor.c : Multiple Devices driver for Linux
+- *
+- * Copyright (C) 1996, 1997, 1998, 1999, 2000,
+- * Ingo Molnar, Matti Aarnio, Jakub Jelinek, Richard Henderson.
+- *
+- * Dispatch optimized RAID-5 checksumming functions.
+- *
+- * This program is free software; you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License as published by
+- * the Free Software Foundation; either version 2, or (at your option)
+- * any later version.
+- *
+- * You should have received a copy of the GNU General Public License
+- * (for example /usr/src/linux/COPYING); if not, write to the Free
+- * Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+- */
+-
+-#define BH_TRACE 0
+-#include <linux/module.h>
+-#include <linux/raid/md.h>
+-#include <linux/raid/xor.h>
+-#include <asm/xor.h>
+-
+-/* The xor routines to use.  */
+-static struct xor_block_template *active_template;
+-
+-void
+-xor_block(unsigned int count, unsigned int bytes, void **ptr)
+-{
+-	unsigned long *p0, *p1, *p2, *p3, *p4;
+-
+-	p0 = (unsigned long *) ptr[0];
+-	p1 = (unsigned long *) ptr[1];
+-	if (count == 2) {
+-		active_template->do_2(bytes, p0, p1);
+-		return;
+-	}
+-
+-	p2 = (unsigned long *) ptr[2];
+-	if (count == 3) {
+-		active_template->do_3(bytes, p0, p1, p2);
+-		return;
+-	}
+-
+-	p3 = (unsigned long *) ptr[3];
+-	if (count == 4) {
+-		active_template->do_4(bytes, p0, p1, p2, p3);
+-		return;
+-	}
+-
+-	p4 = (unsigned long *) ptr[4];
+-	active_template->do_5(bytes, p0, p1, p2, p3, p4);
+-}
+-
+-/* Set of all registered templates.  */
+-static struct xor_block_template *template_list;
+-
+-#define BENCH_SIZE (PAGE_SIZE)
+-
+-static void
+-do_xor_speed(struct xor_block_template *tmpl, void *b1, void *b2)
+-{
+-	int speed;
+-	unsigned long now;
+-	int i, count, max;
+-
+-	tmpl->next = template_list;
+-	template_list = tmpl;
+-
+-	/*
+-	 * Count the number of XORs done during a whole jiffy, and use
+-	 * this to calculate the speed of checksumming.  We use a 2-page
+-	 * allocation to have guaranteed color L1-cache layout.
+-	 */
+-	max = 0;
+-	for (i = 0; i < 5; i++) {
+-		now = jiffies;
+-		count = 0;
+-		while (jiffies == now) {
+-			mb();
+-			tmpl->do_2(BENCH_SIZE, b1, b2);
+-			mb();
+-			count++;
+-			mb();
+-		}
+-		if (count > max)
+-			max = count;
+-	}
+-
+-	speed = max * (HZ * BENCH_SIZE / 1024);
+-	tmpl->speed = speed;
+-
+-	printk("   %-10s: %5d.%03d MB/sec\n", tmpl->name,
+-	       speed / 1000, speed % 1000);
+-}
+-
+-static int
+-calibrate_xor_block(void)
+-{
+-	void *b1, *b2;
+-	struct xor_block_template *f, *fastest;
+-
+-	b1 = (void *) __get_free_pages(GFP_KERNEL, 2);
+-	if (! b1) {
+-		printk("raid5: Yikes!  No memory available.\n");
+-		return -ENOMEM;
+-	}
+-	b2 = b1 + 2*PAGE_SIZE + BENCH_SIZE;
+-
+-	/*
+-	 * If this arch/cpu has a short-circuited selection, don't loop through all
+-	 * the possible functions, just test the best one
+-	 */
+-
+-	fastest = NULL;
+-
+-#ifdef XOR_SELECT_TEMPLATE
+-		fastest = XOR_SELECT_TEMPLATE(fastest);
+-#endif
+-
+-#define xor_speed(templ)	do_xor_speed((templ), b1, b2)
+-
+-	if (fastest) {
+-		printk(KERN_INFO "raid5: automatically using best checksumming function: %s\n",
+-			fastest->name);
+-		xor_speed(fastest);
+-	} else {
+-		printk(KERN_INFO "raid5: measuring checksumming speed\n");
+-		XOR_TRY_TEMPLATES;
+-		fastest = template_list;
+-		for (f = fastest; f; f = f->next)
+-			if (f->speed > fastest->speed)
+-				fastest = f;
+-	}
+-
+-	printk("raid5: using function: %s (%d.%03d MB/sec)\n",
+-	       fastest->name, fastest->speed / 1000, fastest->speed % 1000);
+-
+-#undef xor_speed
+-
+-	free_pages((unsigned long)b1, 2);
+-
+-	active_template = fastest;
+-	return 0;
+-}
+-
+-static __exit void xor_exit(void) { }
+-
+-EXPORT_SYMBOL(xor_block);
+-MODULE_LICENSE("GPL");
+-
+-module_init(calibrate_xor_block);
+-module_exit(xor_exit);
+diff --git a/include/linux/async_tx.h b/include/linux/async_tx.h
+new file mode 100644
+index 0000000..f91e294
+--- /dev/null
++++ b/include/linux/async_tx.h
+@@ -0,0 +1,173 @@
++/*
++ * Copyright(c) 2006 Intel Corporation. All rights reserved.
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms of the GNU General Public License as published by the Free
++ * Software Foundation; either version 2 of the License, or (at your option)
++ * any later version.
++ *
++ * This program is distributed in the hope that it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
++ * more details.
++ *
++ * You should have received a copy of the GNU General Public License along with
++ * this program; if not, write to the Free Software Foundation, Inc., 59
++ * Temple Place - Suite 330, Boston, MA  02111-1307, USA.
++ *
++ * The full GNU General Public License is included in this distribution in the
++ * file called COPYING.
++ */
++#ifndef _ASYNC_TX_H_
++#define _ASYNC_TX_H_
++#include <linux/dmaengine.h>
++#include <linux/spinlock.h>
++#include <linux/interrupt.h>
++
++/**
++ * dma_chan_ref - object used to manage dma channels received from the
++ *   dmaengine core.
++ * @chan - the channel being tracked
++ * @node - node for the channel to be placed on async_tx_master_list
++ * @rcu - for list_del_rcu
++ * @count - number of times this channel is listed in the pool
++ *	(for channels with multiple capabiities)
++ */
++struct dma_chan_ref {
++	struct dma_chan *chan;
++	struct list_head node;
++	struct rcu_head rcu;
++	atomic_t count;
++};
++
++/**
++ * async_tx_flags - modifiers for the async_* calls
++ * @ASYNC_TX_XOR_ZERO_DST: this flag must be used for xor operations where the
++ * the destination address is not a source.  The asynchronous case handles this
++ * implicitly, the synchronous case needs to zero the destination block.
++ * @ASYNC_TX_XOR_DROP_DST: this flag must be used if the destination address is
++ * also one of the source addresses.  In the synchronous case the destination
++ * address is an implied source, whereas the asynchronous case it must be listed
++ * as a source.  The destination address must be the first address in the source
++ * array.
++ * @ASYNC_TX_ASSUME_COHERENT: skip cache maintenance operations
++ * @ASYNC_TX_ACK: immediately ack the descriptor, precludes setting up a
++ * dependency chain
++ * @ASYNC_TX_DEP_ACK: ack the dependency descriptor.  Useful for chaining.
++ * @ASYNC_TX_KMAP_SRC: if the transaction is to be performed synchronously
++ * take an atomic mapping (KM_USER0) on the source page(s)
++ * @ASYNC_TX_KMAP_DST: if the transaction is to be performed synchronously
++ * take an atomic mapping (KM_USER0) on the dest page(s)
++ */
++enum async_tx_flags {
++	ASYNC_TX_XOR_ZERO_DST	 = (1 << 0),
++	ASYNC_TX_XOR_DROP_DST	 = (1 << 1),
++	ASYNC_TX_ASSUME_COHERENT = (1 << 2),
++	ASYNC_TX_ACK		 = (1 << 3),
++	ASYNC_TX_DEP_ACK	 = (1 << 4),
++	ASYNC_TX_KMAP_SRC	 = (1 << 5),
++	ASYNC_TX_KMAP_DST	 = (1 << 6),
++};
++
++#ifdef CONFIG_DMA_ENGINE
++static inline enum dma_status
++dma_wait_for_async_tx(struct dma_async_tx_descriptor *tx)
++{
++	enum dma_status status;
++	struct dma_async_tx_descriptor *iter;
++
++	if (!tx)
++		return DMA_SUCCESS;
++
++	/* poll through the dependency chain, return when tx is complete */
++	do {
++		iter = tx;
++		while (iter->cookie == -EBUSY)
++			iter = iter->parent;
++
++		status = dma_sync_wait(iter->chan, iter->cookie);
++	} while (status == DMA_IN_PROGRESS || (iter != tx));
++
++	return status;
++}
++
++extern struct list_head async_tx_master_list;
++static inline void async_tx_issue_pending_all(void)
++{
++	struct dma_chan_ref *ref;
++
++	rcu_read_lock();
++	list_for_each_entry_rcu(ref, &async_tx_master_list, node)
++		ref->chan->device->device_issue_pending(ref->chan);
++	rcu_read_unlock();
++}
++
++static inline void
++async_tx_run_dependencies(struct dma_async_tx_descriptor *tx,
++	struct dma_chan *host_chan)
++{
++	struct dma_async_tx_descriptor *dep_tx, *_dep_tx;
++	struct dma_device *dev;
++	struct dma_chan *chan;
++
++	list_for_each_entry_safe(dep_tx, _dep_tx, &tx->depend_list,
++		depend_node) {
++		chan = dep_tx->chan;
++		dev = chan->device;
++		/* we can't depend on ourselves */
++		BUG_ON(chan == host_chan);
++		list_del(&dep_tx->depend_node);
++		dev->device_tx_submit(dep_tx);
++
++		/* we need to poke the engine as client code does not
++		 * know about dependency submission events
++		 */
++		dev->device_issue_pending(chan);
++	}
++}
++#else
++static inline void
++async_tx_run_dependencies(struct dma_async_tx_descriptor *tx,
++	struct dma_chan *host_chan)
++{
++	do { } while (0);
++}
++
++static inline enum dma_status
++dma_wait_for_async_tx(struct dma_async_tx_descriptor *tx)
++{
++	return DMA_SUCCESS;
++}
++
++static inline void async_tx_issue_pending_all(void)
++{
++	do { } while (0);
++}
++#endif
++
++struct dma_async_tx_descriptor *
++async_xor(struct page *dest, struct page **src_list, unsigned int offset,
++	int src_cnt, size_t len, enum async_tx_flags flags,
++	struct dma_async_tx_descriptor *depend_tx,
++	dma_async_tx_callback callback, void *callback_param);
++struct dma_async_tx_descriptor *
++async_xor_zero_sum(struct page *dest, struct page **src_list,
++	unsigned int offset, int src_cnt, size_t len,
++	u32 *result, enum async_tx_flags flags,
++	struct dma_async_tx_descriptor *depend_tx,
++	dma_async_tx_callback callback, void *callback_param);
++struct dma_async_tx_descriptor *
++async_memcpy(struct page *dest, struct page *src, unsigned int dest_offset,
++	unsigned int src_offset, size_t len, enum async_tx_flags flags,
++	struct dma_async_tx_descriptor *depend_tx,
++	dma_async_tx_callback callback, void *callback_param);
++struct dma_async_tx_descriptor *
++async_memset(struct page *dest, int val, unsigned int offset,
++	size_t len, enum async_tx_flags flags,
++	struct dma_async_tx_descriptor *depend_tx,
++	dma_async_tx_callback callback, void *callback_param);
++struct dma_async_tx_descriptor *
++async_trigger_callback(enum async_tx_flags flags,
++	struct dma_async_tx_descriptor *depend_tx,
++	dma_async_tx_callback callback, void *callback_param);
++#endif
+diff --git a/include/linux/raid/xor.h b/include/linux/raid/xor.h
+index f0d67cb..d151f16 100644
+--- a/include/linux/raid/xor.h
++++ b/include/linux/raid/xor.h
+@@ -3,9 +3,10 @@
  
--		if (list_empty(&conf->handle_list))
-+		if (list_empty(&conf->handle_list)) {
-+			async_tx_issue_pending_all();
- 			break;
-+		}
+ #include <linux/raid/md.h>
  
- 		first = conf->handle_list.next;
- 		sh = list_entry(first, struct stripe_head, lru);
+-#define MAX_XOR_BLOCKS 5
++#define MAX_XOR_BLOCKS 4
+ 
+-extern void xor_block(unsigned int count, unsigned int bytes, void **ptr);
++extern void xor_block(unsigned int count, unsigned int bytes,
++	void *dest, void **srcs);
+ 
+ struct xor_block_template {
+         struct xor_block_template *next;
