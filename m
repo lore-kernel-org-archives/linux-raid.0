@@ -1,46 +1,71 @@
-From: "Guy Watkins" <linux-raid@watkins-home.com>
-Subject: RE: RAID6 question
-Date: Fri, 4 May 2007 19:14:51 -0400
-Message-ID: <200705042314.l44NEu712387@www.watkins-home.com>
-References: <200704290052.l3T0qT721940@www.watkins-home.com>
+From: Ruslan Sivak <rsivak@istandfor.com>
+Subject: Re: raid10 on centos 5
+Date: Fri, 04 May 2007 19:21:35 -0400
+Message-ID: <463BBFFF.70000@istandfor.com>
+References: <200705042313.l44NDL712377@www.watkins-home.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200704290052.l3T0qT721940@www.watkins-home.com>
+In-Reply-To: <200705042313.l44NDL712377@www.watkins-home.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Guy Watkins <linux-raid@watkins-home.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-} -----Original Message-----
-} From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
-} owner@vger.kernel.org] On Behalf Of Guy Watkins
-} Sent: Saturday, April 28, 2007 8:52 PM
-} To: linux-raid@vger.kernel.org
-} Subject: RAID6 question
-} 
-} I read in processor.com that Adaptec has a RAID 6/60 that is patented.
-} 
-} Does Linux RAID6 have a conflict?
-} 
-} Thanks,
-} Guy
-} 
-} Adaptec also has announced a new family of Unified Serial (meaning 3Gbps
-} SAS/SATA) RAID controllers for PCI Express. Five models include cards with
-} four, eight, 12, and 16 internal ports, plus one groundbreaking SKU with
-} eight external ports and dual path failover. The new controllers support
-} RAIDs 0, 1, 5, 10, 50, 5EE, and the patented RAID 6/60, which Adaptec says
-} can survive two simultaneous drive failures.
-} investor.adaptec.com/ReleaseDetail.cfm?ReleaseID=233555
-} investor.adaptec.com/ReleaseDetail.cfm?ReleaseID=233556
-} 
-} http://www.processor.com/editorial/article.asp?article=articles%2Fp2912%2F
-} 02
-} p12%2F02p12.asp&guid=&searchtype=&WordList=&bJumpTo=True
-} 
-} http://tinyurl.com/2kdzcb
+Guy Watkins wrote:
+> } -----Original Message-----
+> } From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
+> } owner@vger.kernel.org] On Behalf Of Ruslan Sivak
+> } Sent: Friday, May 04, 2007 12:22 PM
+> } To: linux-raid@vger.kernel.org
+> } Subject: raid10 on centos 5
+> } 
+> } I am trying to set up raid 10 and so far with no luck.  I have 4 drives,
+> } and Anaconda will not let me do raid 10.  mdadm doesn't have the raid 10
+> } personality loaded.  When I create the array manually like so:
+> } 
+> } 2 drives in /dev/md11 as raid1
+> } 2 drives in /dev/md12 as raid1
+> } md11 and md12 in /dev/md10 as raid0
+> } 
+> } Everything looks fine from the shell, but anaconda only sees md11 and
+> } md12.
+> } 
+> } The only choice I see is to set up LVM over md11 and md12.  Is this
+> } really raid10?
+> } 
+> } Russ
+>
+> You are making a RAID1+RAID0 array.
+> Try making a real RAID10 array with 4 drives.  This way you would only have
+> 1 array with 4 drives.
+>
+> >From the mdadm man page:
+> Currently, Linux supports LINEAR md devices,  RAID0  (striping),  RAID1
+>        (mirroring), RAID4, RAID5, RAID6, RAID10, MULTIPATH, and FAULTY.
+>
+> Notice RAID10 is listed, use that.  Man mdadm for more info.
+>
+> However, I would (and do) use RAID6.  With RAID6 any 2 disks can fail
+> without data loss.  With RAID1+RAID0, any one disk can fail, a second
+> failure has a 1 in 3 chance of vast data loss.
+>
+> I hope this helps,
+> Guy
+>
+> -
+>   
 
-No feedback.  Is no news good news?
+
+Guy,
+
+That's what I've been trying to do.  Unfortunatelly, my distro, CentOS 5 
+(based on RHEL 5, I believe), does not have the RAID10 personality in 
+the kernel.  I guess I would have to compile my own kernel and load the 
+module through a driver disk.  Would that work?  Are there some 
+instructions somewhere I can follow?
+
+Russ
+
 
