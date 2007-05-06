@@ -1,50 +1,36 @@
-From: "martin f krafft" <madduck@madduck.net>
-Subject: Re: what does md do if it finds an inconsistency?
-Date: Sun, 6 May 2007 15:36:14 +0200 (CEST)
-Message-ID: <3655.195.137.231.42.1178458574.squirrel@albatross.madduck.net>
-References: <20070506004539.GA17736@lapse.madduck.net>
-    <20070506090642.GA22083@lapse.madduck.net>
-    <463DB709.8010900@eyal.emu.id.au>
+From: Mark Hahn <hahn@mcmaster.ca>
+Subject: Re: Speed variation depending on disk position (was: Linux SW RAID:
+ HW Raid Controller/JBOD vs. Multiple PCI-e Cards?)
+Date: Sun, 6 May 2007 11:29:45 -0400 (EDT)
+Message-ID: <Pine.LNX.4.64.0705061121280.30950@coffee.psychology.mcmaster.ca>
+References: <Pine.LNX.4.64.0705051228300.12744@p34.internal.lan>
+ <20070505205456.GA17112@tuatara.stupidest.org> <463CF908.6000602@rabbit.us>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <463DB709.8010900@eyal.emu.id.au>
+In-Reply-To: <463CF908.6000602@rabbit.us>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid mailing list <linux-raid@vger.kernel.org>
+To: Peter Rabbitson <rabbit@rabbit.us>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> The first time it reports that it found (and repaired) 128 items.
-> It does not mean that you now *have* 128 mismatches.
->
-> The next run ('repair' or 'check') will find none (hopefully...)
-> and report zero.
+> very same question. Is the behavior you are describing above
+> manufacturer dependent or it is pretty much dictated by the general
+> design of modern drives?
 
-Oh, this makes perfect sense, thanks for the explanation.
+the latter.  the industry keyword is "Zone Bit Recording", which 
+simply tries to record data as densely as possible - determined 
+by linear spacing along a track.  the only real question is how wide
+the recording zone is: higher-end disks (usually scsi/fc and higher RPM)
+emphasize low seek times, and thus narrow recording zones.  that means
+that they have relatively small difference between fast/outer and slow
+tracks.  mass-market disks optimize for density, so have a wide zone 
+which therefore has more decrease in bandwidth.
 
-As the mdadm maintainer for Debian, I would like to come up with a way to
-handle mismatches somewhat intelligently. I already have the check
-sync_action run once a month on all machines by default (can be turned
-on/off via debconf), and now I would like to find a good way to react when
-mismatch_count is non-zero. I don't want to write to the components
-without the admin's consent though.
+> I have an array of 4 Maxtor sata drives, and
+> raw read performance at the end of the disk is 38mb/s compared to 62mb/s
+> at the beginning.
 
-Maybe the ideal way would be to have mdadm --monitor send an email on
-mismatch_count>0 or a cronjob that regularly sends reminders, until the
-admin logs in and runs e.g. /usr/share/mdadm/repairarray.
+that's pretty typical.
 
-Thoughts?
-
-Also, if a mismatch is found on a RAID1, how does md decide which copy is
-mismatched and which is correct? What about RAID 5/6/10?
-
-Thanks for your time!
--martin
-
->
-> --
-> Eyal Lebedinsky (eyal@eyal.emu.id.au) <http://samba.org/eyal/>
-> 	attach .zip as .dat
->
->
-
+regards, mark hahn.
