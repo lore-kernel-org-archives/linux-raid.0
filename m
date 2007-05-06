@@ -1,51 +1,30 @@
-From: martin f krafft <madduck@madduck.net>
-Subject: what does md do if it finds an inconsistency?
-Date: Sun, 6 May 2007 02:45:39 +0200
-Message-ID: <20070506004539.GA17736@lapse.madduck.net>
+From: Benjamin Davenport <linux-raid-reg@monkeysushi.net>
+Subject: Re: Speed variation depending on disk position
+Date: Sun, 06 May 2007 00:02:16 -0500
+Message-ID: <463D6158.7030807@monkeysushi.net>
+References: <Pine.LNX.4.64.0705051228300.12744@p34.internal.lan> <20070505205456.GA17112@tuatara.stupidest.org> <463CF908.6000602@rabbit.us>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="LQksG6bCIzRHxTLp"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <463CF908.6000602@rabbit.us>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid mailing list <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Peter Rabbitson wrote:
+> Is the behavior you are describing above [decaying STR]
+> manufacturer dependent or it is pretty much dictated by the general
+> design of modern drives?
 
---LQksG6bCIzRHxTLp
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+It's an artifact of the physical layout of the disk.  Disks are divided into
+tracks (concentric circles laid out across the surface of the drive).  Clearly,
+the outer tracks are longer than the inner tracks.  For a very long time, drives
+have therefore stored more information on these outer tracks.  Since the disk's
+spindle speed is constant, reading these outer tracks therefore means more data
+passes under the active read head in a given second.  That's why you see
+sequential transfer rates decay from the start (outer tracks) of the disk to the
+end (inner tracks).  This is the opposite of the behavior seen on CDs, because
+the start of a CD is the inside track.
 
-Neil,
-
-With the check feature of the recent md feature, the question popped
-up what happens when an inconsistency is found. Does it fix it? If
-so, which disk it assumes to be wrong if an inconsistency is found?
-
-Cheers,
-
---=20
-martin;              (greetings from the heart of the sun.)
-  \____ echo mailto: !#^."<*>"|tr "<*> mailto:" net@madduck
-=20
-spamtraps: madduck.bogus@madduck.net
-=20
-"frank harris has been received
- in all the great houses -- once!"
-                                                        -- oscar wilde
-
---LQksG6bCIzRHxTLp
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature (GPG/PGP)
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
-
-iD8DBQFGPSUzIgvIgzMMSnURAopUAJwNSVru7E62Y5FKyc5dtxoE0EupKQCbBGRu
-gNbb7k1bqQfSzoZ33HZixFw=
-=dQF7
------END PGP SIGNATURE-----
-
---LQksG6bCIzRHxTLp--
+-Ben
