@@ -1,36 +1,37 @@
-From: Mark Hahn <hahn@mcmaster.ca>
-Subject: Re: Speed variation depending on disk position (was: Linux SW RAID:
- HW Raid Controller/JBOD vs. Multiple PCI-e Cards?)
-Date: Sun, 6 May 2007 11:29:45 -0400 (EDT)
-Message-ID: <Pine.LNX.4.64.0705061121280.30950@coffee.psychology.mcmaster.ca>
-References: <Pine.LNX.4.64.0705051228300.12744@p34.internal.lan>
- <20070505205456.GA17112@tuatara.stupidest.org> <463CF908.6000602@rabbit.us>
+From: Gavin McCullagh <gmccullagh@gmail.com>
+Subject: Re: what does md do if it finds an inconsistency?
+Date: Sun, 6 May 2007 16:59:54 +0100
+Message-ID: <20070506155954.GB27948@gmail.com>
+References: <20070506004539.GA17736@lapse.madduck.net> <20070506090642.GA22083@lapse.madduck.net> <463DB709.8010900@eyal.emu.id.au> <3655.195.137.231.42.1178458574.squirrel@albatross.madduck.net>
+Reply-To: Gavin McCullagh <gmccullagh@gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <463CF908.6000602@rabbit.us>
+Content-Disposition: inline
+In-Reply-To: <3655.195.137.231.42.1178458574.squirrel@albatross.madduck.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Peter Rabbitson <rabbit@rabbit.us>
-Cc: linux-raid@vger.kernel.org
+To: martin f krafft <madduck@madduck.net>
+Cc: linux-raid mailing list <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-> very same question. Is the behavior you are describing above
-> manufacturer dependent or it is pretty much dictated by the general
-> design of modern drives?
+On Sun, 06 May 2007, martin f krafft wrote:
 
-the latter.  the industry keyword is "Zone Bit Recording", which 
-simply tries to record data as densely as possible - determined 
-by linear spacing along a track.  the only real question is how wide
-the recording zone is: higher-end disks (usually scsi/fc and higher RPM)
-emphasize low seek times, and thus narrow recording zones.  that means
-that they have relatively small difference between fast/outer and slow
-tracks.  mass-market disks optimize for density, so have a wide zone 
-which therefore has more decrease in bandwidth.
+> Maybe the ideal way would be to have mdadm --monitor send an email on
+> mismatch_count>0 or a cronjob that regularly sends reminders, until the
+> admin logs in and runs e.g. /usr/share/mdadm/repairarray.
+> 
+> Also, if a mismatch is found on a RAID1, how does md decide which copy is
+> mismatched and which is correct? What about RAID 5/6/10?
 
-> I have an array of 4 Maxtor sata drives, and
-> raw read performance at the end of the disk is 38mb/s compared to 62mb/s
-> at the beginning.
+I think it just picks one at random.  After all, how could you reliably
+know which is right in a raid1 array?  With raid5, I understand it just
+updates the parity.
 
-that's pretty typical.
+I had an idea to write an interactive userspace program which ran through
+each block on each disk device to figure out which ones didn't match up and
+then figure out whether it's within allocated filesystem space and if so,
+which file or filesystem data was affected.  This would hopefully enable a
+user to figure out which block is wrong and correct things.
 
-regards, mark hahn.
+Gavin
+
