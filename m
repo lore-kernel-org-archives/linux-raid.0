@@ -1,32 +1,51 @@
-From: Peter Rabbitson <rabbit@rabbit.us>
-Subject: Speed variation depending on disk position (was: Linux SW RAID: HW
- Raid Controller/JBOD vs. Multiple PCI-e Cards?)
-Date: Sat, 05 May 2007 23:37:12 +0200
-Message-ID: <463CF908.6000602@rabbit.us>
-References: <Pine.LNX.4.64.0705051228300.12744@p34.internal.lan> <20070505205456.GA17112@tuatara.stupidest.org>
+From: martin f krafft <madduck@madduck.net>
+Subject: what does md do if it finds an inconsistency?
+Date: Sun, 6 May 2007 02:45:39 +0200
+Message-ID: <20070506004539.GA17736@lapse.madduck.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="LQksG6bCIzRHxTLp"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20070505205456.GA17112@tuatara.stupidest.org>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-Cc: linux-raid@vger.kernel.org
+To: linux-raid mailing list <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Chris Wedgwood wrote:
-> <snip>
-> 
-> Also, 'dd performance' varies between the start of a disk and the end.
-> Typically you get better performance at the start of the disk so dd
-> might not be a very good benchmark here.
-> 
 
-Hi,
-Sorry for hijacking this thread, but I was actually planning to ask this
-very same question. Is the behavior you are describing above
-manufacturer dependent or it is pretty much dictated by the general
-design of modern drives? I have an array of 4 Maxtor sata drives, and
-raw read performance at the end of the disk is 38mb/s compared to 62mb/s
-at the beginning.
+--LQksG6bCIzRHxTLp
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Thanks
+Neil,
+
+With the check feature of the recent md feature, the question popped
+up what happens when an inconsistency is found. Does it fix it? If
+so, which disk it assumes to be wrong if an inconsistency is found?
+
+Cheers,
+
+--=20
+martin;              (greetings from the heart of the sun.)
+  \____ echo mailto: !#^."<*>"|tr "<*> mailto:" net@madduck
+=20
+spamtraps: madduck.bogus@madduck.net
+=20
+"frank harris has been received
+ in all the great houses -- once!"
+                                                        -- oscar wilde
+
+--LQksG6bCIzRHxTLp
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature (GPG/PGP)
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.6 (GNU/Linux)
+
+iD8DBQFGPSUzIgvIgzMMSnURAopUAJwNSVru7E62Y5FKyc5dtxoE0EupKQCbBGRu
+gNbb7k1bqQfSzoZ33HZixFw=
+=dQF7
+-----END PGP SIGNATURE-----
+
+--LQksG6bCIzRHxTLp--
