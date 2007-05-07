@@ -1,158 +1,183 @@
-From: David Greaves <david@dgreaves.com>
+From: Neil Brown <neilb@suse.de>
 Subject: Re: Partitioned arrays initially missing from /proc/partitions
-Date: Mon, 07 May 2007 09:28:11 +0100
-Message-ID: <463EE31B.7000601@dgreaves.com>
-References: <462CC91B.8030008@dgreaves.com>	<16046.1177356707@mdt.dhcp.pit.laurelnetworks.com>	<17965.18112.135843.417561@notabene.brown>	<462DE0A2.6000701@dgreaves.com> <17965.60458.702567.463105@notabene.brown> <462DF8F1.3000306@dgreaves.com>
+Date: Mon, 7 May 2007 19:01:25 +1000
+Message-ID: <17982.60133.905805.651286@notabene.brown>
+References: <462CC91B.8030008@dgreaves.com>
+	<16046.1177356707@mdt.dhcp.pit.laurelnetworks.com>
+	<17965.18112.135843.417561@notabene.brown>
+	<462DE0A2.6000701@dgreaves.com>
+	<17965.60458.702567.463105@notabene.brown>
+	<462DF8F1.3000306@dgreaves.com>
+	<463EE31B.7000601@dgreaves.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <462DF8F1.3000306@dgreaves.com>
+In-Reply-To: message from David Greaves on Monday May 7
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
+To: David Greaves <david@dgreaves.com>
 Cc: linux-raid@vger.kernel.org, Doug Ledford <dledford@redhat.com>
 List-Id: linux-raid.ids
 
-Hi Neil
-
-Just wondering what the status is here - do you need any more from me or is it
-on your stack?
-
-The patch helped but didn't cure.
-After a clean boot it mounted correctly first try.
-Then I unmounted, stopped and re-assembled the array.
-The next mount failed.
-The subsequent mount succeeded.
-
-How do other block devices initialise their partitions on 'discovery'?
-
-David
-
-David Greaves wrote:
-> Neil Brown wrote:
->> On Tuesday April 24, david@dgreaves.com wrote:
->>> Neil, isn't it easy to just do this after an assemble?
->> Yes, but it should not be needed, and I'd like to understand why it
->> is.
->> One of the last things do_md_run does is
->>    mddev->changed = 1;
->>
->> When you next open /dev/md_d0, md_open is called which calls
->> check_disk_change().
->> This will call into md_fops->md_media_changed which will return the
->> value of mddev->changed, which will be '1'.
->> So check_disk_change will then call md_fops->revalidate_disk which
->> will set mddev->changed to 0, and will then set bd_invalidated to 1
->> (as bd_disk->minors > 1 (being 64)).
->>
->> md_open will then return into do_open (in fs/block_dev.c) and because
->> bd_invalidated is true, it will call rescan_partitions and the
->> partitions will appear.
->>
->> Hmmm... there is room for a race there.  If some other process opens
->> /dev/md_d0 before mdadm gets to close it, it will call
->> rescan_partitions before first calling  bd_set_size to update the size
->> of the bdev.  So when we try to read the partition table, it will
->> appear to be reading past the EOF, and will not actually read
->> anything..
->>
->> I guess udev must be opening the block device at exactly the wrong
->> time. 
->>
->> I can simulate this by holding /dev/md_d0 open while assembling the
->> array.  If I do that, the partitions don't get created.
->> Yuck.
->>
->> Maybe I could call bd_set_size in md_open before calling
->> check_disk_change..
->>
->> Yep, this patch seems to fix it.  Could you confirm?
-> almost...
+On Monday May 7, david@dgreaves.com wrote:
+> Hi Neil
 > 
-> teak:~# mdadm --assemble /dev/md_d0 --auto=parts /dev/sd[bcdef]1
-> mdadm: /dev/md_d0 has been started with 5 drives.
-> teak:~# mount /media
-> teak:~# umount /media
-> teak:~# mdadm --stop /dev/md_d0
-> mdadm: stopped /dev/md_d0
-> teak:~# mdadm --assemble /dev/md_d0 --auto=parts /dev/sd[bcdef]1
-> mdadm: /dev/md_d0 has been started with 5 drives.
-> teak:~# mount /media
-> mount: No such file or directory
-> teak:~# mount /media
-> teak:~#
-> (second mount succeeds second time around)
+> Just wondering what the status is here - do you need any more from me or is it
+> on your stack?
 > 
-> 
-> 
-> md: md_d0 stopped.
-> md: bind<sdc1>
-> md: bind<sdd1>
-> md: bind<sdb1>
-> md: bind<sdf1>
-> md: bind<sde1>
-> raid5: device sde1 operational as raid disk 0
-> raid5: device sdf1 operational as raid disk 4
-> raid5: device sdb1 operational as raid disk 3
-> raid5: device sdd1 operational as raid disk 2
-> raid5: device sdc1 operational as raid disk 1
-> raid5: allocated 5236kB for md_d0
-> raid5: raid level 5 set md_d0 active with 5 out of 5 devices, algorithm 2
-> RAID5 conf printout:
->  --- rd:5 wd:5
->  disk 0, o:1, dev:sde1
->  disk 1, o:1, dev:sdc1
->  disk 2, o:1, dev:sdd1
->  disk 3, o:1, dev:sdb1
->  disk 4, o:1, dev:sdf1
-> md_d0: bitmap initialized from disk: read 1/1 pages, set 0 bits, status: 0
-> created bitmap (10 pages) for device md_d0
->  md_d0: p1 p2
-> Filesystem "md_d0p1": Disabling barriers, not supported with external log device
-> XFS mounting filesystem md_d0p1
-> Ending clean XFS mount for filesystem: md_d0p1
-> md: md_d0 stopped.
-> md: unbind<sde1>
-> md: export_rdev(sde1)
-> md: unbind<sdf1>
-> md: export_rdev(sdf1)
-> md: unbind<sdb1>
-> md: export_rdev(sdb1)
-> md: unbind<sdd1>
-> md: export_rdev(sdd1)
-> md: unbind<sdc1>
-> md: export_rdev(sdc1)
-> md: md_d0 stopped.
-> md: bind<sdc1>
-> md: bind<sdd1>
-> md: bind<sdb1>
-> md: bind<sdf1>
-> md: bind<sde1>
-> raid5: device sde1 operational as raid disk 0
-> raid5: device sdf1 operational as raid disk 4
-> raid5: device sdb1 operational as raid disk 3
-> raid5: device sdd1 operational as raid disk 2
-> raid5: device sdc1 operational as raid disk 1
-> raid5: allocated 5236kB for md_d0
-> raid5: raid level 5 set md_d0 active with 5 out of 5 devices, algorithm 2
-> RAID5 conf printout:
->  --- rd:5 wd:5
->  disk 0, o:1, dev:sde1
->  disk 1, o:1, dev:sdc1
->  disk 2, o:1, dev:sdd1
->  disk 3, o:1, dev:sdb1
->  disk 4, o:1, dev:sdf1
-> md_d0: bitmap initialized from disk: read 1/1 pages, set 0 bits, status: 0
-> created bitmap (10 pages) for device md_d0
->  md_d0: p1 p2
-> XFS: Invalid device [/dev/md_d0p2], error=-2
-> Filesystem "md_d0p1": Disabling barriers, not supported with external log device
-> XFS mounting filesystem md_d0p1
-> Ending clean XFS mount for filesystem: md_d0p1
-> 
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> The patch helped but didn't cure.
+> After a clean boot it mounted correctly first try.
+> Then I unmounted, stopped and re-assembled the array.
+> The next mount failed.
+> The subsequent mount succeeded.
 
+I just wrote the following patch.  I think it does what you want.
+Let me know how it goes.
+
+> 
+> How do other block devices initialise their partitions on 'discovery'?
+> 
+
+They don't call add_disk() until the disk actually exists.
+md has to call add_disk before the array exists, so that it can be
+created.
+
+NeilBrown
+
+-----------------------------------
+Improve partition detection in md array.
+
+md currently uses ->media_changed to make sure rescan_partitions
+is call on md array after they are assembled.
+
+However that doesn't happen until the array is opened, which is later
+than some people would like.
+
+So use blkdev_ioctl to do the rescan immediately that the
+array has been assembled.
+
+This means we can remove all the ->change infrastructure as it was only used
+to trigger a partition rescan.
+
+Signed-off-by: Neil Brown <neilb@suse.de>
+
+### Diffstat output
+ ./drivers/md/md.c           |   26 ++++++++------------------
+ ./drivers/md/raid1.c        |    1 -
+ ./drivers/md/raid5.c        |    2 --
+ ./include/linux/raid/md_k.h |    6 +++---
+ 4 files changed, 11 insertions(+), 24 deletions(-)
+
+diff .prev/drivers/md/md.c ./drivers/md/md.c
+--- .prev/drivers/md/md.c	2007-05-07 16:43:02.000000000 +1000
++++ ./drivers/md/md.c	2007-05-07 17:47:15.000000000 +1000
+@@ -3104,6 +3104,7 @@ static int do_md_run(mddev_t * mddev)
+ 	struct gendisk *disk;
+ 	struct mdk_personality *pers;
+ 	char b[BDEVNAME_SIZE];
++	struct block_device *bdev;
+ 
+ 	if (list_empty(&mddev->disks))
+ 		/* cannot run an array with no devices.. */
+@@ -3331,7 +3332,13 @@ static int do_md_run(mddev_t * mddev)
+ 	md_wakeup_thread(mddev->thread);
+ 	md_wakeup_thread(mddev->sync_thread); /* possibly kick off a reshape */
+ 
+-	mddev->changed = 1;
++	bdev = bdget_disk(mddev->gendisk, 0);
++	if (bdev) {
++		bd_set_size(bdev, mddev->array_size << 1);
++		blkdev_ioctl(bdev->bd_inode, NULL, BLKRRPART, 0);
++		bdput(bdev);
++	}
++
+ 	md_new_event(mddev);
+ 	kobject_uevent(&mddev->gendisk->kobj, KOBJ_CHANGE);
+ 	return 0;
+@@ -3453,7 +3460,6 @@ static int do_md_stop(mddev_t * mddev, i
+ 			mddev->pers = NULL;
+ 
+ 			set_capacity(disk, 0);
+-			mddev->changed = 1;
+ 
+ 			if (mddev->ro)
+ 				mddev->ro = 0;
+@@ -4593,20 +4599,6 @@ static int md_release(struct inode *inod
+ 	return 0;
+ }
+ 
+-static int md_media_changed(struct gendisk *disk)
+-{
+-	mddev_t *mddev = disk->private_data;
+-
+-	return mddev->changed;
+-}
+-
+-static int md_revalidate(struct gendisk *disk)
+-{
+-	mddev_t *mddev = disk->private_data;
+-
+-	mddev->changed = 0;
+-	return 0;
+-}
+ static struct block_device_operations md_fops =
+ {
+ 	.owner		= THIS_MODULE,
+@@ -4614,8 +4606,6 @@ static struct block_device_operations md
+ 	.release	= md_release,
+ 	.ioctl		= md_ioctl,
+ 	.getgeo		= md_getgeo,
+-	.media_changed	= md_media_changed,
+-	.revalidate_disk= md_revalidate,
+ };
+ 
+ static int md_thread(void * arg)
+
+diff .prev/drivers/md/raid1.c ./drivers/md/raid1.c
+--- .prev/drivers/md/raid1.c	2007-05-07 16:43:01.000000000 +1000
++++ ./drivers/md/raid1.c	2007-05-07 17:02:27.000000000 +1000
+@@ -2063,7 +2063,6 @@ static int raid1_resize(mddev_t *mddev, 
+ 	 */
+ 	mddev->array_size = sectors>>1;
+ 	set_capacity(mddev->gendisk, mddev->array_size << 1);
+-	mddev->changed = 1;
+ 	if (mddev->array_size > mddev->size && mddev->recovery_cp == MaxSector) {
+ 		mddev->recovery_cp = mddev->size << 1;
+ 		set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+
+diff .prev/drivers/md/raid5.c ./drivers/md/raid5.c
+--- .prev/drivers/md/raid5.c	2007-05-07 16:43:01.000000000 +1000
++++ ./drivers/md/raid5.c	2007-05-07 17:03:05.000000000 +1000
+@@ -4514,7 +4514,6 @@ static int raid5_resize(mddev_t *mddev, 
+ 	sectors &= ~((sector_t)mddev->chunk_size/512 - 1);
+ 	mddev->array_size = (sectors * (mddev->raid_disks-conf->max_degraded))>>1;
+ 	set_capacity(mddev->gendisk, mddev->array_size << 1);
+-	mddev->changed = 1;
+ 	if (sectors/2  > mddev->size && mddev->recovery_cp == MaxSector) {
+ 		mddev->recovery_cp = mddev->size << 1;
+ 		set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+@@ -4649,7 +4648,6 @@ static void end_reshape(raid5_conf_t *co
+ 		conf->mddev->array_size = conf->mddev->size *
+ 			(conf->raid_disks - conf->max_degraded);
+ 		set_capacity(conf->mddev->gendisk, conf->mddev->array_size << 1);
+-		conf->mddev->changed = 1;
+ 
+ 		bdev = bdget_disk(conf->mddev->gendisk, 0);
+ 		if (bdev) {
+
+diff .prev/include/linux/raid/md_k.h ./include/linux/raid/md_k.h
+--- .prev/include/linux/raid/md_k.h	2007-05-07 16:43:02.000000000 +1000
++++ ./include/linux/raid/md_k.h	2007-05-07 17:00:19.000000000 +1000
+@@ -201,9 +201,9 @@ struct mddev_s
+ 	struct mutex			reconfig_mutex;
+ 	atomic_t			active;
+ 
+-	int				changed;	/* true if we might need to reread partition info */
+-	int				degraded;	/* whether md should consider
+-							 * adding a spare
++	int				degraded;	/* whether md should
++							 * consider adding a
++							 * spare
+ 							 */
+ 	int				barriers_work;	/* initialised to true, cleared as soon
+ 							 * as a barrier request to slave
