@@ -1,27 +1,41 @@
-From: "=?ISO-8859-2?Q?S=B3awomir_Nowakowski?=" <nailman23@gmail.com>
-Subject: Fwd: attempt to access beyond end of device on RAID0 with mdadm
-Date: Mon, 7 May 2007 14:53:53 +0200
-Message-ID: <50ed5c760705070553j2f0c0e14ued36a573fbe0e0d2@mail.gmail.com>
-References: <50ed5c760705070541g72b1ea6du47188990543d9ab1@mail.gmail.com>
+From: "Jeffrey B. Layton" <laytonjb@charter.net>
+Subject: mdadm array not found on reboot
+Date: Mon, 07 May 2007 12:45:10 -0400
+Message-ID: <463F5796.1060808@charter.net>
+Reply-To: laytonjb@charter.net
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <50ed5c760705070541g72b1ea6du47188990543d9ab1@mail.gmail.com>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 Hello,
 
-Thank you for the answer. Now I am sure that data corruption is
-related to dm-crypt.
-I have a few questions:
-Could you please let me know if bug fix in kernel 2.6.19 to dm-crypt
-over RAID5 is also related to RAID0?
-Generally from which kernel version it is safe to use dm-crypt over RAID?
+I apologize if this is a FAQ question or a typical newbie question,
+but by google efforts have yielded anything yet.
 
-Thanks again very much
+I built a RAID-1 using mdadm (Centos 4.2 with 2.6.16.19 kernel
+and mdadm 1.6.0-2). It's just two SATA drives that I created using:
 
-Bruce
+mdadm --create --verbose /dev/md1 --level=raid1 --raid-devices=2 
+/dev/sda1 /dev/sdb1
+
+The md built correctly and I built an ext3 on it. I created /etc/mdadm.conf
+and modified /etc/fstab to mount the device. But when I reboot, the kernel
+drops into RAID repair mode because it can't seem to find /dev/md1 and
+yells about not finding any valid superblock (I can get the exact message
+if needed). However I can mount /dev/sda1 with no problems.
+
+The only way I can get md1 back is to issue the command:
+
+mdadm -A /dev/md1 /dev/sda1 /dev/sdb1
+
+and everything works. I want to have /dev/md1 mounted automatically
+on boot. I'm missing something simple here - how do I do this?
+
+TIA!
+
+Jeff
+
