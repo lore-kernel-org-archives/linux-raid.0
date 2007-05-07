@@ -1,37 +1,58 @@
-From: raider@computeca.com
-Subject: RAID defns
-Date: Mon, 7 May 2007 20:08:06 GMT
-Message-ID: <20070507200806.25D5A586D4@computeca.com>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: Raid1 replaced with raid10?
+Date: Mon, 07 May 2007 17:22:34 -0400
+Message-ID: <463F989A.8090109@tmr.com>
+References: <45FF1BDF.6060304@rabbit.us>	<463B2D15.7020305@rabbit.us>	<463B4C4F.9030504@tmr.com> <17982.42974.461499.127486@notabene.brown>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <17982.42974.461499.127486@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: raider@computeca.com
+To: Neil Brown <neilb@suse.de>
+Cc: Peter Rabbitson <rabbit@rabbit.us>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Sorry for the rookie question, but I'm looking for clarity
-with regard to some software RAID terms that different sites
-and people seem to confuse with each other.  I'm wondering
-if I've been using the wrong terms all along?
+Neil Brown wrote:
+> On Friday May 4, davidsen@tmr.com wrote:
+>   
+>> Peter Rabbitson wrote:
+>>     
+>>> Hi,
+>>>
+>>> I asked this question back in march but received no answers, so here it
+>>> goes again. Is it safe to replace raid1 with raid10 where the amount of
+>>> disks is equal to the amount of far/near/offset copies? I understand it
+>>> has the downside of not being a bit-by-bit mirror of a plain filesystem.
+>>> Are there any other caveats?
+>>>   
+>>>       
+>> Clearly you have reduced capacity, since there's a mirror AND a CRC, 
+>> otherwise I don't see any drawbacks. The performance should be much better.
+>>     
+>
+> CRC ??? md/raid10 doesn't have any CRC.
+> What CRC are you thinking of?
+>   
+There is an entire paragraph missing here, no doubt a finger check due 
+to trying to post and get out to lunch. I was rambling on about raid6, 
+mirroring 1+5, and other things which never made it. The post can be 
+scrubbed, I was just rambling on at length about various other solutions 
+possible.
 
-Are these correct?
+Not worth a repost, since I was way over answering his question...
+> To answer the original question, I assume you mean "replace" as in
+> "backup, create new array, then restore".
+> You will get different performance characteristics.  Whether they
+> better suit your needs or not will depend largely on your needs.
+>
+> NeilBrown
+>
+>   
 
-Stripe width = number of devices in the RAID array (or is it number of
-bytes in one stripe across all RAID devices?)
 
-Chunk size = the smallest amount of data that can be written to each device
-in the RAID stripe (mdadm's "--chunk" parameter)
-
-Stripe size = the number of chunks to put on each device in one pass
-through the stripe (mdadm's "--size" parameter)
-
-Stride = the number of filesystem blocks, per single stripe across all
-devices.  
-
-So...  (--chunk=32kiB)*(--size=4)*(stripe width of 3) = (stride of 96)
-assuming 4kiB fileystem blocks?
-
-Any clarity would be much appreciated.  Thanks,
-
--Marc
-
+-- 
+bill davidsen <davidsen@tmr.com>
+  CTO TMR Associates, Inc
+  Doing interesting things with small computers since 1979
 
