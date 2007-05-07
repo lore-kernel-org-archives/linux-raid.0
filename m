@@ -1,62 +1,39 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: what does md do if it finds an inconsistency?
-Date: Mon, 7 May 2007 14:08:53 +1000
-Message-ID: <17982.42581.742226.970559@notabene.brown>
-References: <20070506004539.GA17736@lapse.madduck.net>
-	<20070506090642.GA22083@lapse.madduck.net>
-	<463DB709.8010900@eyal.emu.id.au>
-	<3655.195.137.231.42.1178458574.squirrel@albatross.madduck.net>
-	<20070506155954.GB27948@gmail.com>
+Subject: Re: Raid1 replaced with raid10?
+Date: Mon, 7 May 2007 14:15:26 +1000
+Message-ID: <17982.42974.461499.127486@notabene.brown>
+References: <45FF1BDF.6060304@rabbit.us>
+	<463B2D15.7020305@rabbit.us>
+	<463B4C4F.9030504@tmr.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Gavin McCullagh on Sunday May 6
+In-Reply-To: message from Bill Davidsen on Friday May 4
 Sender: linux-raid-owner@vger.kernel.org
-To: Gavin McCullagh <gmccullagh@gmail.com>
-Cc: martin f krafft <madduck@madduck.net>, linux-raid mailing list <linux-raid@vger.kernel.org>
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: Peter Rabbitson <rabbit@rabbit.us>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sunday May 6, gmccullagh@gmail.com wrote:
-> On Sun, 06 May 2007, martin f krafft wrote:
-> 
-> > Maybe the ideal way would be to have mdadm --monitor send an email on
-> > mismatch_count>0 or a cronjob that regularly sends reminders, until the
-> > admin logs in and runs e.g. /usr/share/mdadm/repairarray.
+On Friday May 4, davidsen@tmr.com wrote:
+> Peter Rabbitson wrote:
+> > Hi,
+> >
+> > I asked this question back in march but received no answers, so here it
+> > goes again. Is it safe to replace raid1 with raid10 where the amount of
+> > disks is equal to the amount of far/near/offset copies? I understand it
+> > has the downside of not being a bit-by-bit mirror of a plain filesystem.
+> > Are there any other caveats?
+> >   
+> Clearly you have reduced capacity, since there's a mirror AND a CRC, 
+> otherwise I don't see any drawbacks. The performance should be much better.
 
-You could certainly do that.  If you configure mdadm to run a program
-for each 'monitor' event, you can detect the mismatch count from
-argv[3] when argv[1] ==  RebuildFinished.
+CRC ??? md/raid10 doesn't have any CRC.
+What CRC are you thinking of?
 
-Though I suspect many people would be happy with running the 'repair'
-every month rather than just a 'check'.  Maybe that should be a config
-option.
-
-> > 
-> > Also, if a mismatch is found on a RAID1, how does md decide which copy is
-> > mismatched and which is correct? What about RAID 5/6/10?
-> 
-> I think it just picks one at random.  After all, how could you reliably
-> know which is right in a raid1 array?  With raid5, I understand it just
-> updates the parity.
-
-I prefer to say "arbitrary" rather than "random".
-I think the current implementation uses the first readable device as
-the 'correct' one.
-Otherwise, this is correct.
-
-> 
-> I had an idea to write an interactive userspace program which ran through
-> each block on each disk device to figure out which ones didn't match up and
-> then figure out whether it's within allocated filesystem space and if so,
-> which file or filesystem data was affected.  This would hopefully enable a
-> user to figure out which block is wrong and correct things.
-> 
-
-That would be awfully difficult as doing a reverse mapping (block ->
-file) is no-trivial in almost any filesystem, and you would want to
-(ultimately) do it for every filesystem...
-
-Might be educational though :-)
+To answer the original question, I assume you mean "replace" as in
+"backup, create new array, then restore".
+You will get different performance characteristics.  Whether they
+better suit your needs or not will depend largely on your needs.
 
 NeilBrown
