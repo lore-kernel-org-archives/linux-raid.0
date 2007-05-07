@@ -1,37 +1,37 @@
-From: Richard Scobie <richard@sauce.co.nz>
-Subject: Re: mdadm array not found on reboot
-Date: Tue, 08 May 2007 07:53:36 +1200
-Message-ID: <463F83C0.9070701@sauce.co.nz>
-References: <463F5796.1060808@charter.net> <Pine.LNX.4.64.0705071258410.968@p34.internal.lan> <463F5CA6.6090407@charter.net> <Pine.LNX.4.64.0705071302200.968@p34.internal.lan> <463F5EB6.2090605@charter.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+From: raider@computeca.com
+Subject: RAID defns
+Date: Mon, 7 May 2007 20:08:06 GMT
+Message-ID: <20070507200806.25D5A586D4@computeca.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <463F5EB6.2090605@charter.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
+Cc: raider@computeca.com
 List-Id: linux-raid.ids
 
-Jeffrey B. Layton wrote:
+Sorry for the rookie question, but I'm looking for clarity
+with regard to some software RAID terms that different sites
+and people seem to confuse with each other.  I'm wondering
+if I've been using the wrong terms all along?
 
-> 
-> CentOS 4.2. I've been reading something about raidautorun. Would help in 
-> this case?
+Are these correct?
 
-Try adding:
+Stripe width = number of devices in the RAID array (or is it number of
+bytes in one stripe across all RAID devices?)
 
-DEVICE partitions
+Chunk size = the smallest amount of data that can be written to each device
+in the RAID stripe (mdadm's "--chunk" parameter)
 
-to the top of your mdadm.conf and:
+Stripe size = the number of chunks to put on each device in one pass
+through the stripe (mdadm's "--size" parameter)
 
-auto=part
+Stride = the number of filesystem blocks, per single stripe across all
+devices.  
 
-to the end of your /dev/md1 definition.
+So...  (--chunk=32kiB)*(--size=4)*(stripe width of 3) = (stride of 96)
+assuming 4kiB fileystem blocks?
 
-eg. ARRAY /dev/md1 level=raid1 num-devices=2 
-UUID=e235ee6c:415f1494:23c28b59:afd20140 devices=/dev/sda1,/dev/sdb1 
-auto=part
+Any clarity would be much appreciated.  Thanks,
 
-Regards,
+-Marc
 
-Richard
+
