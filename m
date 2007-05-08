@@ -1,40 +1,38 @@
-From: Lars Marowsky-Bree <lmb@suse.de>
-Subject: Re: Raid-1 on top of multipath
-Date: Tue, 8 May 2007 11:52:07 +0200
-Message-ID: <20070508095207.GF7053@marowsky-bree.de>
-References: <2282.68.254.47.243.1177099055.squirrel@bymeinc.com>
+From: Brad Campbell <brad@wasp.net.au>
+Subject: Swapping out for larger disks
+Date: Tue, 08 May 2007 14:50:29 +0400
+Message-ID: <464055F5.2090108@wasp.net.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <2282.68.254.47.243.1177099055.squirrel@bymeinc.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Rob Bray <raid@bymeinc.com>, linux-raid@vger.kernel.org
+To: RAID Linux <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 2007-04-20T15:57:35, Rob Bray <raid@bymeinc.com> wrote:
+G'day all,
 
-> I'm attempting to do host-based mirroring with one LUN on each of two=
- EMC
-> CX storage units, each with two service processors. Connection is via
-> Emulex LP9802, using lpfc driver, and sg.
+I've got 3 arrays here. A 3 drive raid-5, a 10 drive raid-5 and a 15 drive raid-6. They are all 
+currently 250GB SATA drives.
 
-Use dm-multipath (multipath-tools package), not md multipath. And then
-md-raid1 on top. That works.
+I'm contemplating an upgrade to 500GB drives on one or more of the arrays and wondering the best way 
+to do the physical swap.
 
+The slow and steady way would be to degrade the array, remove a disk, add the new disk, lather, 
+rinse, repeat. After which I could use mdadm --grow. There is the concern of a degraded array here 
+though (and one of the reasons I'm looking to swap is some of the disks have about 30,000 hours on 
+the clock and are growing the odd defect).
 
-Sincerely,
-    Lars
+I was more wondering about the feasibility of using dd to copy the drive contents to the larger 
+drives (then I could do 5 at a time) and working it from there.
 
---=20
-Teamlead Kernel, SuSE Labs, Research and Development
-SUSE LINUX Products GmbH, GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
-"Experience is the name everyone gives to their mistakes." -- Oscar Wil=
-de
+It occurs though that the superblocks would be in the wrong place for the new drives and I'm 
+wondering if the kernel or mdadm might not find them.
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Ideas? Suggestions ?
+
+Brad
+-- 
+"Human beings, who are almost unique in having the ability
+to learn from the experience of others, are also remarkable
+for their apparent disinclination to do so." -- Douglas Adams
