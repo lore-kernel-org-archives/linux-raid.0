@@ -1,39 +1,32 @@
 From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: what does md do if it finds an inconsistency?
-Date: Tue, 08 May 2007 09:27:53 -0400
-Message-ID: <46407AD9.1060400@tmr.com>
-References: <20070506004539.GA17736@lapse.madduck.net>    <20070506090642.GA22083@lapse.madduck.net>    <463DB709.8010900@eyal.emu.id.au> <3655.195.137.231.42.1178458574.squirrel@albatross.madduck.net>
+Subject: Re: Speed variation depending on disk position
+Date: Tue, 08 May 2007 09:34:12 -0400
+Message-ID: <46407C54.7030306@tmr.com>
+References: <Pine.LNX.4.64.0705051228300.12744@p34.internal.lan> <20070505205456.GA17112@tuatara.stupidest.org> <463CF908.6000602@rabbit.us> <463E2EF0.6010408@sauce.co.nz>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <3655.195.137.231.42.1178458574.squirrel@albatross.madduck.net>
+In-Reply-To: <463E2EF0.6010408@sauce.co.nz>
 Sender: linux-raid-owner@vger.kernel.org
-To: martin f krafft <madduck@madduck.net>
-Cc: linux-raid mailing list <linux-raid@vger.kernel.org>
+To: Richard Scobie <richard@sauce.co.nz>
+Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-martin f krafft wrote:
->> The first time it reports that it found (and repaired) 128 items.
->> It does not mean that you now *have* 128 mismatches.
->>
->> The next run ('repair' or 'check') will find none (hopefully...)
->> and report zero.
->>     
+Richard Scobie wrote:
+> Peter Rabbitson wrote:
 >
-> Oh, this makes perfect sense, thanks for the explanation.
+>> design of modern drives? I have an array of 4 Maxtor sata drives, and
+>> raw read performance at the end of the disk is 38mb/s compared to 62mb/s
+>> at the beginning.
 >
-> As the mdadm maintainer for Debian, I would like to come up with a way to
-> handle mismatches somewhat intelligently. I already have the check
-> sync_action run once a month on all machines by default (can be turned
-> on/off via debconf), and now I would like to find a good way to react when
-> mismatch_count is non-zero. I don't want to write to the components
-> without the admin's consent though.
->   
-That sounds right. Some arrarys have persistent mismatches if they are 
-in use, you are unlikely to want to even attempt to take corrective 
-action. You might want to have a config file and just run a program 
-which reads the config regularly and acts based on what it finds.
+> At least one supplier of terabyte arrays mitigates this effect and 
+> improves seek times, by using 750GB drives and only utilising the 
+> first 500GB.
+You can do some tuning using partitions this way, assuming you have data 
+which are small, and/or accessed infrequently, and some other data where 
+transfer rate is important. Same idea, but you get to use all of the 
+drive capacity.
 
 -- 
 bill davidsen <davidsen@tmr.com>
