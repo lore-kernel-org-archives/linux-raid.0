@@ -1,44 +1,62 @@
-From: David Greaves <david@dgreaves.com>
-Subject: Re: Swapping out for larger disks
-Date: Tue, 08 May 2007 12:35:47 +0100
-Message-ID: <46406093.2080205@dgreaves.com>
-References: <464055F5.2090108@wasp.net.au>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Linux MD Raid Bug(?) w/Kernel sync_speed_min Option
+Date: Tue, 8 May 2007 08:27:35 -0400 (EDT)
+Message-ID: <Pine.LNX.4.64.0705080821350.16228@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <464055F5.2090108@wasp.net.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Brad Campbell <brad@wasp.net.au>
-Cc: RAID Linux <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Brad Campbell wrote:
-> G'day all,
-> 
-> I've got 3 arrays here. A 3 drive raid-5, a 10 drive raid-5 and a 15
-> drive raid-6. They are all currently 250GB SATA drives.
-> 
-> I'm contemplating an upgrade to 500GB drives on one or more of the
-> arrays and wondering the best way to do the physical swap.
-> 
-> The slow and steady way would be to degrade the array, remove a disk,
-> add the new disk, lather, rinse, repeat. After which I could use mdadm
-> --grow. There is the concern of a degraded array here though (and one of
-> the reasons I'm looking to swap is some of the disks have about 30,000
-> hours on the clock and are growing the odd defect).
+Kernel: 2.6.21.1
 
+Here is the bug:
 
-Assuming hotswap and for maximum uptime/minimal exposure to risk... a while back
-there was a discussion of a fiddly way that involved adding a disk, making a
-mirror, removing the old disk, breaking the mirror. ( See archive for details)
+md2: RAID1 (works fine)
+md3: RAID5 (only syncs at the sync_speed_min set by the kernel)
 
-> 
-> I was more wondering about the feasibility of using dd to copy the drive
-> contents to the larger drives (then I could do 5 at a time) and working
-> it from there.
-Err, if you can dd the drives, why can't you create a new array and use xfsdump
-or equivalent? Is downtime due to copying that bad?
+If I do not run this command:
+echo 55000 > /sys/block/md3/md/sync_speed_min
 
-David
+I will get 2 megabytes per second check speed for RAID 5.
 
+However, the odd part is I can leave it the default for RAID1 and it will 
+use the maximum IO available between both drives to run the check.
+
+I think there is some kind of bug, essentially with RAID5 check's-- it 
+only runs at the minimum value set (default in the kernel for raid5 is 
+~2mb/s).
+
+md2 : active raid1 sdb3[1] sda3[0]
+       55681216 blocks [2/2] [UU]
+       [===========>.........]  check = 59.1% (32937536/55681216) 
+finish=7.4min speed=50947K/sec
+
+md3 : active raid5 sdl1[9] sdk1[8] sdj1[7] sdi1[6] sdh1[5] sdg1[4] sdf1[3] 
+sde1[
+2] sdd1[1] sdc1[0]
+       1318686336 blocks level 5, 128k chunk, algorithm 2 [10/10] 
+[UUUUUUUUUU]
+       [====>................]  check = 24.2% (35578816/146520704) 
+finish=33.3min speed=55464K/sec
+
+Set to default kernel settings, either 2000 or 2100:
+
+echo 2000 > /sys/block/md3/md/sync_speed_min
+
+Then,
+
+md3 : active raid5 sdl1[9] sdk1[8] sdj1[7] sdi1[6] sdh1[5] sdg1[4] sdf1[3] 
+sde1[
+2] sdd1[1] sdc1[0]
+       1318686336 blocks level 5, 128k chunk, algorithm 2 [10/10] 
+[UUUUUUUUUU]
+       [======>..............]  check = 31.5% (46191744/146520704) 
+finish=715.7min speed=2335K/sec
+
+There is some kind of nasty bug going on here with RAID 5 devices in the 
+kernel.  Also, incase you wondered, there is little to no I/O on the RAID 
+5 device when this check is being run, same for the root volume.
+
+Justin.
