@@ -1,62 +1,35 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Linux MD Raid Bug(?) w/Kernel sync_speed_min Option
-Date: Tue, 8 May 2007 08:27:35 -0400 (EDT)
-Message-ID: <Pine.LNX.4.64.0705080821350.16228@p34.internal.lan>
+From: Brad Campbell <brad@wasp.net.au>
+Subject: Re: Swapping out for larger disks
+Date: Tue, 08 May 2007 16:43:02 +0400
+Message-ID: <46407056.8000607@wasp.net.au>
+References: <464055F5.2090108@wasp.net.au> <46406093.2080205@dgreaves.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <46406093.2080205@dgreaves.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: David Greaves <david@dgreaves.com>
+Cc: RAID Linux <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Kernel: 2.6.21.1
+David Greaves wrote:
 
-Here is the bug:
+>> I was more wondering about the feasibility of using dd to copy the drive
+>> contents to the larger drives (then I could do 5 at a time) and working
+>> it from there.
 
-md2: RAID1 (works fine)
-md3: RAID5 (only syncs at the sync_speed_min set by the kernel)
+> Err, if you can dd the drives, why can't you create a new array and use xfsdump
+> or equivalent? Is downtime due to copying that bad?
 
-If I do not run this command:
-echo 55000 > /sys/block/md3/md/sync_speed_min
+I can only do 5 at a time. (10 slots, 5 source - 5 destination).
 
-I will get 2 megabytes per second check speed for RAID 5.
+I'm not worried about the downtime so much as the constant swapping of disks. This way I can do it 
+in 2 or 3 blocks at most.
 
-However, the odd part is I can leave it the default for RAID1 and it will 
-use the maximum IO available between both drives to run the check.
 
-I think there is some kind of bug, essentially with RAID5 check's-- it 
-only runs at the minimum value set (default in the kernel for raid5 is 
-~2mb/s).
-
-md2 : active raid1 sdb3[1] sda3[0]
-       55681216 blocks [2/2] [UU]
-       [===========>.........]  check = 59.1% (32937536/55681216) 
-finish=7.4min speed=50947K/sec
-
-md3 : active raid5 sdl1[9] sdk1[8] sdj1[7] sdi1[6] sdh1[5] sdg1[4] sdf1[3] 
-sde1[
-2] sdd1[1] sdc1[0]
-       1318686336 blocks level 5, 128k chunk, algorithm 2 [10/10] 
-[UUUUUUUUUU]
-       [====>................]  check = 24.2% (35578816/146520704) 
-finish=33.3min speed=55464K/sec
-
-Set to default kernel settings, either 2000 or 2100:
-
-echo 2000 > /sys/block/md3/md/sync_speed_min
-
-Then,
-
-md3 : active raid5 sdl1[9] sdk1[8] sdj1[7] sdi1[6] sdh1[5] sdg1[4] sdf1[3] 
-sde1[
-2] sdd1[1] sdc1[0]
-       1318686336 blocks level 5, 128k chunk, algorithm 2 [10/10] 
-[UUUUUUUUUU]
-       [======>..............]  check = 31.5% (46191744/146520704) 
-finish=715.7min speed=2335K/sec
-
-There is some kind of nasty bug going on here with RAID 5 devices in the 
-kernel.  Also, incase you wondered, there is little to no I/O on the RAID 
-5 device when this check is being run, same for the root volume.
-
-Justin.
+Brad
+-- 
+"Human beings, who are almost unique in having the ability
+to learn from the experience of others, are also remarkable
+for their apparent disinclination to do so." -- Douglas Adams
