@@ -1,21 +1,20 @@
-From: Peter Rabbitson <rabbit@rabbit.us>
-Subject: Re: Raid1 replaced with raid10?
-Date: Mon, 07 May 2007 23:29:16 +0200
-Message-ID: <463F9A2C.1050406@rabbit.us>
-References: <45FF1BDF.6060304@rabbit.us>	<463B2D15.7020305@rabbit.us>	<463B4C4F.9030504@tmr.com> <17982.42974.461499.127486@notabene.brown> <463F989A.8090109@tmr.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+From: NeilBrown <neilb@suse.de>
+Subject: [PATCH 000 of 5] md: assorted bug fixes and minor features
+Date: Tue, 8 May 2007 14:29:12 +1000
+Message-ID: <20070508142718.28571.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <463F989A.8090109@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-Cc: linux-raid@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Neil Brown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-Bill Davidsen wrote:
-> Not worth a repost, since I was way over answering his question...
+Following are 5 patches for md suitable for 2.6.22.  None are needed for -stable.
 
-Erm... and now you made me curios :) Please share your thoughts if it is
-not too much trouble. Thank you for your time.
+Thanks
+NeilBrown
 
-Peter
+ [PATCH 001 of 5] md: Move test for whether level supports bitmap to correct place.
+ [PATCH 002 of 5] md: Stop using csum_partial for checksum calculation in md.
+ [PATCH 003 of 5] md: Remove the slash from the name of a kmem_cache used by raid5.
+ [PATCH 004 of 5] md: Allow reshape_position for md arrays to be set via sysfs.
+ [PATCH 005 of 5] md: Improve partition detection in md array.
