@@ -1,38 +1,60 @@
-From: Brad Campbell <brad@wasp.net.au>
-Subject: Swapping out for larger disks
-Date: Tue, 08 May 2007 14:50:29 +0400
-Message-ID: <464055F5.2090108@wasp.net.au>
+From: Michael Tokarev <mjt@tls.msk.ru>
+Subject: Re: Swapping out for larger disks
+Date: Tue, 08 May 2007 15:28:08 +0400
+Message-ID: <46405EC8.4020605@msgid.tls.msk.ru>
+References: <464055F5.2090108@wasp.net.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <464055F5.2090108@wasp.net.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: RAID Linux <linux-raid@vger.kernel.org>
+To: Brad Campbell <brad@wasp.net.au>
+Cc: RAID Linux <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-G'day all,
+Brad Campbell wrote:
+[]
+> It occurs though that the superblocks would be in the wrong place for
+> the new drives and I'm wondering if the kernel or mdadm might not find
+> them.
 
-I've got 3 arrays here. A 3 drive raid-5, a 10 drive raid-5 and a 15 drive raid-6. They are all 
-currently 250GB SATA drives.
+I once had a similar issue.  And wrote a tiny program (a hack, sort of),
+to read or write md superblock from/to a component device.  The only
+thing it really does is to calculate the superblock location - exactly
+as it is done in mdadm.  Here it is:
 
-I'm contemplating an upgrade to 500GB drives on one or more of the arrays and wondering the best way 
-to do the physical swap.
+  http://www.corpit.ru/mjt/mdsuper.c
 
-The slow and steady way would be to degrade the array, remove a disk, add the new disk, lather, 
-rinse, repeat. After which I could use mdadm --grow. There is the concern of a degraded array here 
-though (and one of the reasons I'm looking to swap is some of the disks have about 30,000 hours on 
-the clock and are growing the odd defect).
+Usage is like:
 
-I was more wondering about the feasibility of using dd to copy the drive contents to the larger 
-drives (then I could do 5 at a time) and working it from there.
+ mdsuper read /dev/old-device | mdsuper write /dev/new-device
 
-It occurs though that the superblocks would be in the wrong place for the new drives and I'm 
-wondering if the kernel or mdadm might not find them.
+(or using an intermediate file).
 
-Ideas? Suggestions ?
+So you're doing like this:
 
-Brad
--- 
-"Human beings, who are almost unique in having the ability
-to learn from the experience of others, are also remarkable
-for their apparent disinclination to do so." -- Douglas Adams
+ shutdown array
+ for i in all-devices-in-array
+   dd if=old-device[i] of=new-device[i] iflag=direct oflag=direct
+   mdsuper read old-device | mdsuper write new-device
+ done
+ assemble-array-on-new-devices
+ mdadm -G --size=max /dev/mdx
+
+or something like that.
+
+Note that the program does not work for anything but 0.90
+superblocks (i haven't used 1.0 superblocks yet - 0.90 works
+for me just fine).  However, it should be trivial to extend
+it to handle v1 superblocks too.
+
+Note also that it's trivial to do something like that in shell
+too, with blockdev --getsz to get the device size, some shell-
+style $((math)), and dd magic.
+
+And 3rd note: using direct as above speeds up the copying *alot*,
+while keeping system load at zero.  Without direct, one pair of
+disks and the system is doing nothing but the copying...
+
+/mjt
