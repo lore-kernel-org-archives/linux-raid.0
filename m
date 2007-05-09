@@ -1,66 +1,33 @@
-From: Michael Tokarev <mjt@tls.msk.ru>
-Subject: Re: Recovery of software RAID5 using FC6 rescue?
-Date: Wed, 09 May 2007 15:34:50 +0400
-Message-ID: <4641B1DA.7030607@msgid.tls.msk.ru>
-References: <Pine.LNX.4.64.0705080821350.16228@p34.internal.lan>	<17984.29974.116526.922404@notabene.brown>	<7EF2C690-263B-4437-BCE2-42762484CB5B@dartmouth.edu>	<4640D7E0.9010102@msgid.tls.msk.ru> <87vef2wlw3.fsf@hades.wkstn.nix>
+From: Bernd Schubert <bschubert@q-leap.de>
+Subject: Re: "No such device" on --remove
+Date: Wed, 09 May 2007 13:42:17 +0200
+Message-ID: <f1sc2p$33q$1@sea.gmane.org>
+References: <20070508170441.GB4333@scavenger.homeip.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7Bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87vef2wlw3.fsf@hades.wkstn.nix>
 Sender: linux-raid-owner@vger.kernel.org
-To: Nix <nix@esperi.org.uk>
-Cc: "Mark A. O'Neil" <mark.a.oneil@Dartmouth.EDU>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Nix wrote:
-> On 8 May 2007, Michael Tokarev told this:
->> BTW, for such recovery purposes, I use initrd (initramfs really, but
->> does not matter) with a normal (but tiny) set of commands inside,
->> thanks to busybox.  So everything can be done without any help from
->> external "recovery CD".  Very handy at times, especially since all
->> the network drivers are here on the initramfs too, so I can even
->> start a netcat server while in initramfs, and perform recovery from
->> remote system... ;)
+Benjamin Schieder wrote:
+
+
+> root@crazyhorse:~# mdadm /dev/md/2 -r /dev/hdh5
+> mdadm: hot remove failed for /dev/hdh5: No such device
 > 
-> What you should probably do is drop into the shell that's being used to
-> run init if mount fails (or, more generally, if after mount runs it
+> md1 and md2 are supposed to be raid5 arrays.
 
-That's exactly what my initscript does ;)
+You are probably using udev, don't you? Somehow there's presently
+no /dev/hdh5, but to remove /dev/hdh5 out of the raid, mdadm needs this
+device. There's a workaround, you need to create the device in /dev using
+mknod and then you can remove it with mdadm.
 
-chk() {
-  while ! "$@"; do
-    warn "the following command failed:"
-    warn "$*"
-    p="** Continue(Ignore)/Shell/Retry (C/s/r)? "
-    while : ; do
-      if ! read -t 10 -p "$p" x 2>&1; then
-        echo "(timeout, continuing)"
-        return 1
-      fi
-      case "$x" in
-        [Ss!]*) /bin/sh 2>&1 ;;
-        [Rr]*) break;;
-        [CcIi]*|"") return 1;;
-        *) echo "(unrecognized response)";;
-      esac
-    done
-  done
-}
+We are presently running into a similar problem, which I'm going to describe
+on this and hotplug list right now.
 
-chk mount -n -t proc proc /proc
-chk mount -n -t sysfs sysfs /sys
-...
-info "mounting $rootfstype fs on $root (options: $rootflags)"
-chk mount -n -t $rootfstype -o $rootflags $root /root
-if [ $? != 0 ] && ! grep -q "^[^ ]\\+ /root " /proc/mounts; then
-  warn "root filesystem ($rootfstype on $root) is NOT mounted!"
-fi
-...
 
-> hasn't ended up mounting anything: there's no need to rely on mount's
-> success/failure status). [...]
+Hope it helps,
+Bernd
 
-Well, so far exitcode has been reliable.
-
-/mjt
