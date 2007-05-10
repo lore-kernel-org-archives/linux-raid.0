@@ -1,37 +1,29 @@
-From: Jan Engelhardt <jengelh@linux01.gwdg.de>
-Subject: Re: Chaining sg lists for big I/O commands: Question
-Date: Thu, 10 May 2007 20:41:05 +0200 (MEST)
-Message-ID: <Pine.LNX.4.61.0705102040090.6426@yvahk01.tjqt.qr>
-References: <Pine.LNX.4.64.0705090918390.12857@p34.internal.lan>
- <20070509133830.GV4163@kernel.dk>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: Please revert 5b479c91da90eef605f851508744bfe8269591a0 (md
+ partition rescan)
+Date: Thu, 10 May 2007 12:04:35 -0700
+Message-ID: <20070510120435.4b44af90.akpm@linux-foundation.org>
+References: <17986.26930.952993.510918@notabene.brown>
+	<alpine.LFD.0.98.0705091848370.4062@woody.linux-foundation.org>
+	<Pine.LNX.4.61.0705101650340.24536@yvahk01.tjqt.qr>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20070509133830.GV4163@kernel.dk>
+In-Reply-To: <Pine.LNX.4.61.0705101650340.24536@yvahk01.tjqt.qr>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, Alan Piszcz <ap@solarrain.com>
+To: Jan Engelhardt <jengelh@linux01.gwdg.de>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, David Greaves <david@dgreaves.com>, Doug Ledford <dledford@redhat.com>
 List-Id: linux-raid.ids
 
-On May 9 2007 15:38, Jens Axboe wrote:
->> I am a mdadm/disk/hard drive fanatic, I was curious:
->> 
->> >On i386, we can at most fit 256 scatterlist elements into a page,
->> >and on x86-64 we are stuck with 128. So that puts us somewhere
->> >between 512kb and 1024kb for a single IO.
->> 
->> How come 32bit is 256 and 64 is only 128?
->>
->> I am sure it is something very fundamental/simple but I was curious, I 
->> would think x86_64 would fit/support more scatterlists in a page.
->
->Because of the size of the scatterlist structure. As pointers are bigger
->on 64-bit archs, the scatterlist structure ends up being bigger. The
->page size on x86-64 is 4kb, hence the number of structures you can fit
->in a page is smaller.
+On Thu, 10 May 2007 16:51:31 +0200 (MEST) Jan Engelhardt <jengelh@linux01.gwdg.de> wrote:
 
-I take it this problem "goes away" on arches with 8KB page_size?
+> On May 9 2007 18:51, Linus Torvalds wrote:
+> >
+> >(But Andrew never saw your email, I suspect: "akpm@suse.de" is probably 
+> >some strange mixup of Andrew Morton and Andi Kleen in your mind ;)
+> 
+> What do the letters kp stand for?
+> 
 
-
-	Jan
--- 
+Some say "Kernel Programmer".  My parents said "Keith Paul".
