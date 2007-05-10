@@ -1,58 +1,34 @@
-From: Tomasz Chmielewski <mangoo@wpkg.org>
-Subject: Re: [PATCH 00/16] raid acceleration and asynchronous offload api
- for 2.6.22
-Date: Thu, 10 May 2007 17:32:03 +0200
-Message-ID: <46433AF3.1040707@wpkg.org>
-References: <4643283B.2060203@wpkg.org>
+From: "Satyam Sharma" <satyam.sharma@gmail.com>
+Subject: Re: Please revert 5b479c91da90eef605f851508744bfe8269591a0 (md partition rescan)
+Date: Thu, 10 May 2007 22:18:46 +0530
+Message-ID: <a781481a0705100948x71279953ja4dc1903adda177@mail.gmail.com>
+References: <17986.26930.952993.510918@notabene.brown>
+	 <alpine.LFD.0.98.0705091848370.4062@woody.linux-foundation.org>
+	 <Pine.LNX.4.61.0705101650340.24536@yvahk01.tjqt.qr>
+	 <1178809197.7699.4.camel@frg-rhel40-em64t-04>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-2; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4643283B.2060203@wpkg.org>
+In-Reply-To: <1178809197.7699.4.camel@frg-rhel40-em64t-04>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, rshitrit@marvell.com, dan.j.williams@intel.com, nickpiggin@yahoo.com.au, Justin Piszcz <jpiszcz@lucidpixels.com>, ilmari@ilmari.org
+To: Xavier Bestel <xavier.bestel@free.fr>
+Cc: Jan Engelhardt <jengelh@linux01.gwdg.de>, Linus Torvalds <torvalds@linux-foundation.org>, Neil Brown <neilb@suse.de>, Andrew Morton <akpm@linux-foundation.org>, linux-raid@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, David Greaves <david@dgreaves.com>, Doug Ledford <dledford@redhat.com>
 List-Id: linux-raid.ids
 
-Tomasz Chmielewski schrieb:
-> Ronen Shitrit wrote:
-> 
->> The resync numbers you sent, looks very promising :)
->> Do you have any performance numbers that you can share for these set of
->> patches, which shows the Rd/Wr IO bandwidth.
-> 
-> I have some simple tests made with hdparm, with the results I don't 
-> understand.
-> 
-> We see hdparm results are fine if we access the whole device:
-> 
-> thecus:~# hdparm -Tt /dev/sdd
-> 
-> /dev/sdd:
->  Timing cached reads:   392 MB in  2.00 seconds = 195.71 MB/sec
->  Timing buffered disk reads:  146 MB in  3.01 seconds =  48.47 MB/sec
-> 
-> 
-> But are 10 times worse (Timing buffered disk reads) when we access 
-> partitions:
+On 5/10/07, Xavier Bestel <xavier.bestel@free.fr> wrote:
+> On Thu, 2007-05-10 at 16:51 +0200, Jan Engelhardt wrote:
+> > >(But Andrew never saw your email, I suspect: "akpm@suse.de" is
+> > probably
+> > >some strange mixup of Andrew Morton and Andi Kleen in your mind ;)
+> >
+> > What do the letters kp stand for?
 
-There seems to be another side effect when comparing DMA engine in 
-2.6.17-iop1 to 2.6.21-iop1: network performance.
+Heh ... I've always wanted to know that myself. It's funny, no one
+seems to have asked that on lkml during all these years (at least none
+that a Google search would throw up).
 
+> "Keep Patching" ?
 
-For simple network tests, I use "netperf" tool to measure network 
-performance.
-
-With 2.6.17-iop1 and all DMA offloading options enabled (selectable in 
-System type ---> IOP3xx Implementation Options  --->), I get nearly 25 
-MB/s throughput.
-
-With 2.6.21-iop1 and all DMA offloading optons enabled (moved to Device 
-Drivers  ---> DMA Engine support  --->), I get only about 10 MB/s 
-throughput.
-Additionally, on 2.6.21-iop1, I get lots of "dma_cookie < 0" printed by 
-the kernel.
-
-
--- 
-Tomasz Chmielewski
-http://wpkg.org
+Unlikely. "akpm" seems to be a pre-Linux-kernel nick.
