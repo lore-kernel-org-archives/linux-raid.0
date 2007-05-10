@@ -1,29 +1,52 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: Please revert 5b479c91da90eef605f851508744bfe8269591a0 (md
- partition rescan)
-Date: Thu, 10 May 2007 12:04:35 -0700
-Message-ID: <20070510120435.4b44af90.akpm@linux-foundation.org>
-References: <17986.26930.952993.510918@notabene.brown>
-	<alpine.LFD.0.98.0705091848370.4062@woody.linux-foundation.org>
-	<Pine.LNX.4.61.0705101650340.24536@yvahk01.tjqt.qr>
+From: "Liang Yang" <multisyncfe991@hotmail.com>
+Subject: Questions about the speed when MD-RAID array is being initialized.
+Date: Thu, 10 May 2007 14:09:26 -0700
+Message-ID: <BAY125-DAV2F4ABCF54BCB7458BA3D7933A0@phx.gbl>
+References: <20070508170441.GB4333@scavenger.homeip.net>  <f1sc2p$33q$1@sea.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+	format=flowed;
+	charset="iso-8859-1";
+	reply-type=original
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.61.0705101650340.24536@yvahk01.tjqt.qr>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jan Engelhardt <jengelh@linux01.gwdg.de>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, David Greaves <david@dgreaves.com>, Doug Ledford <dledford@redhat.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, 10 May 2007 16:51:31 +0200 (MEST) Jan Engelhardt <jengelh@linux01.gwdg.de> wrote:
+Hi,
 
-> On May 9 2007 18:51, Linus Torvalds wrote:
-> >
-> >(But Andrew never saw your email, I suspect: "akpm@suse.de" is probably 
-> >some strange mixup of Andrew Morton and Andi Kleen in your mind ;)
-> 
-> What do the letters kp stand for?
-> 
+I created a MD-RAID5 array using 8 Maxtor SAS Disk Drives (chunk size is 
+256k). I have measured the data transfer speed for single SAS disk drive 
+(physical drive, not filesystem on it), it is roughly about 80~90MB/s.
 
-Some say "Kernel Programmer".  My parents said "Keith Paul".
+However, I notice MD also reports the speed for the RAID5 array when it is 
+being initialized (cat /proc/mdstat). The speed reported by MD is not 
+constant which is roughly from 70MB/s to 90MB/s (average is 85MB/s which is 
+very close to the single disk data transfer speed).
+
+I just have three questions:
+1. What is the exact meaning of the array speed reported by MD? Is that 
+mesured for the whole array (I used 8 disks) or for just single underlying 
+disk? If it is for the whole array, then 70~90B/s seems too low considering 
+8 disks are used for this array.
+
+2. How is this speed measured and what is the I/O packet size being used 
+when the speed is measured?
+
+3. From the beginning when MD-RAID 5 array is initialized to the end when 
+the intialization is done, the speed reports by MD gradually decrease from 
+90MB/s down to 70MB/s. Why does the speed change? Why does the speed 
+gradually decrease?
+
+Could anyone give me some explanation?
+
+I'm using RHEL 4U4 with 2.6.18 kernel. MDADM version is 1.6.
+
+Thanks a lot,
+
+Liang
+
+
+
+
