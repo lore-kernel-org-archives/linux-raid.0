@@ -1,53 +1,62 @@
-From: Jan Engelhardt <jengelh@linux01.gwdg.de>
-Subject: Re: [PATCH 002 of 2] md: Improve the is_mddev_idle test
-Date: Thu, 10 May 2007 14:52:45 +0200 (MEST)
-Message-ID: <Pine.LNX.4.61.0705101450210.32349@yvahk01.tjqt.qr>
-References: <20070510161940.20204.patches@notabene> <1070510062231.20403@suse.de>
- <Pine.LNX.4.61.0705101143540.32349@yvahk01.tjqt.qr> <17986.60947.483379.159313@notabene.brown>
+From: Tomasz Chmielewski <mangoo@wpkg.org>
+Subject: RE: [PATCH 00/16] raid acceleration and asynchronous offload api
+ for 2.6.22
+Date: Thu, 10 May 2007 16:12:11 +0200
+Message-ID: <4643283B.2060203@wpkg.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17986.60947.483379.159313@notabene.brown>
-Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-2; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1762332AbXEJONv@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, rshitrit@marvell.com, dan.j.williams@intel.com, nickpiggin@yahoo.com.au, Justin Piszcz <jpiszcz@lucidpixels.com>, ilmari@ilmari.org
 List-Id: linux-raid.ids
 
+Ronen Shitrit wrote:
 
-On May 10 2007 20:04, Neil Brown wrote:
->> >-		if ((curr_events - rdev->last_events + 4096) > 8192) {
->> >+		if ((long)curr_events - (long)rdev->last_events > 4096) {
->> > 			rdev->last_events = curr_events;
->> > 			idle = 0;
->> > 		}
->> 
->/* sync IO will cause sync_io to increase before the disk_stats
-> * as sync_io is counted when a request starts, and 
-> * disk_stats is counted when it completes.
-> * So resync activity will cause curr_events to be smaller than
-> * when there was no such activity.
-> * non-sync IO will cause disk_stat to increase without
-> * increasing sync_io so curr_events will (eventually)
-> * be larger than it was before.  Once it becomes
-> * substantially larger, the test below will cause
-> * the array to appear non-idle, and resync will slow
-> * down.
-> * If there is a lot of outstanding resync activity when
-> * we set last_event to curr_events, then all that activity
-> * completing might cause the array to appear non-idle
-> * and resync will be slowed down even though there might
-> * not have been non-resync activity.  This will only
-> * happen once though.  'last_events' will soon reflect
-> * the state where there is little or no outstanding
-> * resync requests, and further resync activity will
-> * always make curr_events less than last_events.
-> *
-> */
->
->Does that read at all well?
+> The resync numbers you sent, looks very promising :)
+> Do you have any performance numbers that you can share for these set of
+> patches, which shows the Rd/Wr IO bandwidth.
 
-It is a more verbose explanation of your patch description, yes.
+I have some simple tests made with hdparm, with the results I don't 
+understand.
+
+We see hdparm results are fine if we access the whole device:
+
+thecus:~# hdparm -Tt /dev/sdd
+
+/dev/sdd:
+  Timing cached reads:   392 MB in  2.00 seconds = 195.71 MB/sec
+  Timing buffered disk reads:  146 MB in  3.01 seconds =  48.47 MB/sec
 
 
-	Jan
+But are 10 times worse (Timing buffered disk reads) when we access 
+partitions:
+
+thecus:/# hdparm -Tt /dev/sdc1 /dev/sdd1
+
+/dev/sdc1:
+  Timing cached reads:   396 MB in  2.01 seconds = 197.18 MB/sec
+  Timing buffered disk reads:   16 MB in  3.32 seconds =   4.83 MB/sec
+
+/dev/sdd1:
+  Timing cached reads:   394 MB in  2.00 seconds = 196.89 MB/sec
+  Timing buffered disk reads:   16 MB in  3.13 seconds =   5.11 MB/sec
+
+
+Why is it so much worse?
+
+
+I used 2.6.21-iop1 patches from http://sf.net/projects/xscaleiop; right 
+now I use 2.6.17-iop1, for which the results are ~35 MB/s when accessing 
+a device (/dev/sdd) or a partition (/dev/sdd1).
+
+
+In kernel config, I enabled Intel DMA engines.
+
+The device I use is Thecus n4100, it is "Platform: IQ31244 (XScale)", 
+and has 600 MHz CPU.
+
+
 -- 
+Tomasz Chmielewski
+http://wpkg.org
