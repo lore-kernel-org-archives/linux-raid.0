@@ -1,69 +1,137 @@
-From: Bill Davidsen <davidsen@tmr.com>
+From: David Greaves <david@dgreaves.com>
 Subject: Re: removed disk && md-device
-Date: Fri, 11 May 2007 16:47:39 -0400
-Message-ID: <4644D66B.1050706@tmr.com>
-References: <200705091417.09033.bs@q-leap.de>	<20070509131450.GA31985@lapse.madduck.net>	<200705091539.53863.bs@q-leap.de>	<17986.50678.340484.891578@notabene.brown>
-	<17988.2648.848008.141952@notabene.brown>
+Date: Fri, 11 May 2007 09:52:01 +0100
+Message-ID: <46442EB1.9060001@dgreaves.com>
+References: <200705091417.09033.bs@q-leap.de>	<20070509131450.GA31985@lapse.madduck.net>	<200705091539.53863.bs@q-leap.de>	<17986.50678.340484.891578@notabene.brown>	<46432D4B.4010302@dgreaves.com> <17987.51381.756955.577977@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-hotplug-devel-bounces@lists.sourceforge.net>
-In-Reply-To: <17988.2648.848008.141952@notabene.brown>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-hotplug-devel>,
-	<mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-hotplug-devel>
-List-Post: <mailto:linux-hotplug-devel@lists.sourceforge.net>
-List-Help: <mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-hotplug-devel>,
-	<mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=subscribe>
-Sender: linux-hotplug-devel-bounces@lists.sourceforge.net
-Errors-To: linux-hotplug-devel-bounces@lists.sourceforge.net
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <17987.51381.756955.577977@notabene.brown>
+Sender: linux-raid-owner@vger.kernel.org
 To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org, 416512@bugs.debian.org, linux-hotplug-devel@lists.sourceforge.net
+Cc: Bernd Schubert <bs@q-leap.de>, linux-raid@vger.kernel.org, linux-hotplug-devel@lists.sourceforge.net, 416512@bugs.debian.org
 List-Id: linux-raid.ids
 
+Sorry, rushed email - it wasn't clear. I think there is something important here
+though.
+
+Oh, it may be worth distinguishing between a drive identifier (/dev/sdb) and a
+drive slot (md0, slot2).
+
 Neil Brown wrote:
-> On Thursday May 10, neilb@suse.de wrote:
->   
->> No, I haven't, but it is getting near the top of my list.
->>     
->
-> I have just committed a change to the mdadm .git so that
->    mdadm /dev/md4 --fail detached
->
-> will fail any components of /dev/md4 that appear to be detached (open
-> returns -ENXIO). and
->    mdadm /dev/md4 --remove detached
-> will remove any such devices (that are failed or spare).
-> so
->
->    mdadm /dev/md4 --fail detached --remove detached
->
-> will get rid of any detached devices completely, as will
->
->    mdadm /dev/md4 --fail detached --remove failed
->
-> though that will also remove any failed devices that don't happen to
-> be detached.
+> On Thursday May 10, david@dgreaves.com wrote:
+>> Neil Brown wrote:
+>>> On Wednesday May 9, bs@q-leap.de wrote:
+>>>> Neil Brown <neilb@suse.de> [2007.04.02.0953 +0200]:
+>>>>> Hmmm... this is somewhat awkward.  You could argue that udev should be
+>>>>> taught to remove the device from the array before removing the device
+>>>> >from /dev.  But I'm not convinced that you always want to 'fail' the
+>>>>> device.   It is possible in this case that the array is quiescent and
+>>>>> you might like to shut it down without registering a device failure...
+>>>> Hmm, the the kernel advised hotplug to remove the device from /dev, but you 
+>>>> don't want to remove it from md? Do you have an example for that case?
+>>> Until there is known to be an inconsistency among the devices in an
+>>> array, you don't want to record that there is.
+>>>
+>>> Suppose I have two USB drives with a mounted but quiescent filesystem
+>>> on a raid1 across them.
+>>> I pull them both out, one after the other, to take them to my friends
+>>> place.
+>>>
+>>> I plug them both in and find that the array is degraded, because as
+>>> soon as I unplugged on, the other was told that it was now the only
+>>> one.
+>> And, in truth, so it was.
+> 
+> So what was?
+Sorry; so it was, as you said, "the only one".
+Once you unplugged drive B, drive A was the only drive in the array. From the OS
+perspective.
 
-Good... but now we need a way to say "go look for any reattached parts" 
-of the array, somewhat as is done at boot in most cases. Look at all 
-unused devices and partitions for a superblock and UUID (or whatever).
+> It is true that now one drive is "the only one plugged in", but is
+> that relevant?
+Not immediately - which is why I don't think it's an error or an I/O and hence
+doesn't deserve an I/O event count increment.
+(which is what I meant by "Who updated the event count though?")
 
-If we had this, picture RAID1 on two drives and a USB stick. And someone 
-who finger checks typing the fail before pulling the USB for the night. 
-The doofus who trips over the USB cord or the power cord cord for the 
-USB drive, they are all clients :-( Anything which would help recover 
-from their learning experiences with removable media would be helpful.
+So md should distinguish between "removed" and "removed and out of sync".
+(aside : what does 'failed' mean anyway? What does it give you that you don't
+know better from event count?)
 
--- 
-bill davidsen <davidsen@tmr.com>
-  CTO TMR Associates, Inc
-  Doing interesting things with small computers since 1979
+> Is it true that the one drive is "the only drive in the array"??
+> That depends on what you mean by "the array".  If I am moving "the
+> array" to another computer, then the one drive still plugged into the
+> first computer is not "the only drive in the array" from my
+> perspective.
+Yes, but I think that's only the same as saying they all have the same UUID -
+'human you' doesn't (directly) care/know about the event count match status -
+you just want a working array.
+
+> If there is a write request, and it can only be written to one drive
+> (because the other is unplugged), then it becomes appropriate to tell
+> the still-present drive that it is the only drive in the array.
+Ah, now here I think it's relevant to tell the other drive(s) that the unplugged
+drive is not only removed - it's failed.
+There's a minor error handling optimisation - md could know that a drive was
+removed so not even bother writing to it, just mark it failed in the remaining
+drives.
+
+>> Who updated the event count though?
+> Sorry, not enough words.  I don't know what you are asking.
+See below
+
+>>> Not good.  Best to wait for an IO request that actually returns an
+>>> errors. 
+>> Ah, now would that be a good time to update the event count?
+> 
+> Yes.  Of course.  It is an event (IO failed).  That makes it a good
+> time to update the event count...... am I missing something here?
+I think so: a remove event shouldn't update the event count to other drives. A
+failed write should (of course).
+
+Well, not 'of course'.
+If I do I/O to slot1 and slot2 then the event count goes up.
+If slot3 is missing, fails etc etc then why do we tell slots 1+2?
+Surely md would just do an event count comparison on assembly?
 
 
--------------------------------------------------------------------------
-This SF.net email is sponsored by DB2 Express
-Download DB2 Express C - the FREE version of DB2 express and take
-control of your XML. No limits. Just data. Click to get it now.
-http://sourceforge.net/powerbar/db2/
+>> Maybe you should allow drives to be removed even if they aren't faulty or spare?
+>> A write to a removed device would mark it faulty in the other devices without
+>> waiting for a timeout.
+> 
+> Maybe, but I'm not sure what the real gain would be.
+See below.
+
+>> But joggling a usb stick (similar to your use case) would probably be OK since
+>> it would be hot-removed and then hot-added.
+> 
+> This still needs user-space interaction.
+> If the USB layer detects a removal and a re-insert, sdb may well come
+> back a something different (sdp?) - though I'm not completely familiar
+> with how USB storage works.
+Yes, so, assuming my proposal, in the case where you hot remove sdb (not fail)
+then hot add sdp (same drive slot different drive identifier, maybe different
+usb controller) the on-disk superblock can reliably ensure that the array just
+continues (also assuming quiescence)?
+
+> In any case, it should really be a user-space decision what happens
+> then.  A hot re-add may well be appropriate, but I wouldn't want to
+> have the kernel make that decision.
+
+udev is userspace though - you could have a conservative no-add policy ruleset.
+
+
+My proposal is simply to allow a hot-remove of a drive without marking it
+faulty. This remove event would not update the event counts in other drives.
+This allows transient (stupid human in the OP report) drive removal to be
+properly communicated via udev to md. You don't end up in the situation of "the
+drive formerly known as..."
+
+Just out of interest.
+Currently, if I unplug /dev/sdp (which is md0 slot3), wait, plug in a random
+non-md usb drive which appears as /dev/sdp, what does md do? Just write to the
+new /dev/sdp assuming it's the old one?
+
+David
+
