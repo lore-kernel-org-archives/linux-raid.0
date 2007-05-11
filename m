@@ -1,7 +1,7 @@
 From: David Greaves <david@dgreaves.com>
 Subject: Re: removed disk && md-device
-Date: Fri, 11 May 2007 09:52:01 +0100
-Message-ID: <46442EB1.9060001@dgreaves.com>
+Date: Fri, 11 May 2007 16:05:31 +0100
+Message-ID: <4644863B.4030504@dgreaves.com>
 References: <200705091417.09033.bs@q-leap.de>	<20070509131450.GA31985@lapse.madduck.net>	<200705091539.53863.bs@q-leap.de>	<17986.50678.340484.891578@notabene.brown>	<46432D4B.4010302@dgreaves.com> <17987.51381.756955.577977@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
@@ -13,6 +13,7 @@ To: Neil Brown <neilb@suse.de>
 Cc: Bernd Schubert <bs@q-leap.de>, linux-raid@vger.kernel.org, linux-hotplug-devel@lists.sourceforge.net, 416512@bugs.debian.org
 List-Id: linux-raid.ids
 
+[Repost - didn't seem to make it to the lists, sorry cc's]
 Sorry, rushed email - it wasn't clear. I think there is something important here
 though.
 
@@ -134,4 +135,5 @@ non-md usb drive which appears as /dev/sdp, what does md do? Just write to the
 new /dev/sdp assuming it's the old one?
 
 David
+
 
