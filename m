@@ -1,63 +1,62 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: Neil, bug in the minimum guaranteed patch?
-Date: Sat, 12 May 2007 04:08:04 -0400 (EDT)
-Message-ID: <Pine.LNX.4.64.0705120407040.2957@p34.internal.lan>
-References: <Pine.LNX.4.64.0705112016050.18017@p34.internal.lan>
+From: evoltech@2inches.com
+Subject: /proc/mdstat showing a device missing from array
+Date: Sun, 13 May 2007 11:33:54 -0700
+Message-ID: <1179081234.46475a12d46ba@mail.2inches.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0705112016050.18017@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
 
-On Fri, 11 May 2007, Justin Piszcz wrote:
+Hello all,
 
-> It worked for a while but this time I ran my raid check while doing an rsync, 
-> for a while, it guaranteed 1MB/s but then:
->
-> $ cat /proc/mdstat
-> Personalities : [raid1] [raid6] [raid5] [raid4]
-> md1 : active raid1 sdb2[1] sda2[0]
->      136448 blocks [2/2] [UU]
->        resync=DELAYED
->
-> md2 : active raid1 sdb3[1] sda3[0]
->      55681216 blocks [2/2] [UU]
->      [============>........]  check = 62.1% (34605376/55681216) 
-> finish=7.5min speed=46277K/sec
->
-> md3 : active raid5 sdl1[9] sdk1[8] sdj1[7] sdi1[6] sdh1[5] sdg1[4] sdf1[3] 
-> sde1[2] sdd1[1] sdc1[0]
->      1318686336 blocks level 5, 128k chunk, algorithm 2 [10/10] [UUUUUUUUUU]
->      [=>...................]  check =  7.7% (11329412/146520704) 
-> finish=45.5min speed=49515K/sec
->
-> md0 : active raid1 sdb1[1] sda1[0]
->      16787776 blocks [2/2] [UU]
->
-> unused devices: <none>
->
-> It spiked back to 49MB/s its now 56MB/s -- something is wrong here.  The 
-> rsync is now in dstate:
->
-> root     18039 20.0  0.7  39200 30508 pts/9    D+
->
-> Everything is very lagged, it is almost as if it is taking all of the 
-> available resources for the check!
->
-> Justin.
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+I just set up a new raid 5 array of 4 750G disks and am having a strange
+experience where /proc/mdstat is showing that one device is missing from the
+array.  The output from a "--detail" shows that there is some unnamed device
+that has been removed from the array and I don't understand why or how to fix
+it.  Can someone please shed some light?
 
-Maybe not a bug in your patch rather-- but a bug somewhere, the scp was 
-already running before the echo check > /sys/../sync_action took place, 
-it worked for about 5-10 minutes and then the check took 100% precedence 
-over the rsync.
+kernel version: 2.6.20-1.2312.fc5xen0 (this is a fedora core 5 prebuilt kernel)
+mdadm version: mdadm - v2.3.1 - 6 February 2006
 
-Justin.
+[root@storage ~]# cat /proc/mdstat
+Personalities : [raid6] [raid5] [raid4]
+md2 : active raid5 sdg[4] sdf[2] sde[1] sdd[0]
+      2197723392 blocks level 5, 64k chunk, algorithm 2 [4/3] [UUU_]
+
+[root@storage ~]# mdadm --query --detail /dev/md2
+/dev/md2:
+        Version : 00.90.03
+  Creation Time : Sat May 12 17:22:30 2007
+     Raid Level : raid5
+     Array Size : 2197723392 (2095.91 GiB 2250.47 GB)
+    Device Size : 732574464 (698.64 GiB 750.16 GB)
+   Raid Devices : 4
+  Total Devices : 4
+Preferred Minor : 2
+    Persistence : Superblock is persistent
+
+    Update Time : Sun May 13 04:07:57 2007
+          State : clean
+ Active Devices : 4
+Working Devices : 4
+ Failed Devices : 0
+  Spare Devices : 0
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+           UUID : 6a0d59e6:e00ec820:d08e477f:3b7ef9bc
+         Events : 0.68
+
+    Number   Major   Minor   RaidDevice State
+       0       8       48        0      active sync   /dev/sdd
+       1       8       64        1      active sync   /dev/sde
+       2       8       80        2      active sync   /dev/sdf
+       0       0        0        0      removed
+
+       4       8       96        4      active sync   /dev/sdg
