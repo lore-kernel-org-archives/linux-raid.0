@@ -1,50 +1,77 @@
-From: Goswin von Brederlow <brederlo@informatik.uni-tuebingen.de>
-Subject: Re: removed disk && md-device
-Date: Tue, 15 May 2007 11:52:09 +0200
-Message-ID: <878xbqpg6u.fsf@informatik.uni-tuebingen.de>
-References: <200705091417.09033.bs@q-leap.de>
-	<17987.51381.756955.577977@notabene.brown>
-	<46442E9C.3050603@msgid.tls.msk.ru> <200705111122.17389.bs@q-leap.de>
-	<4644D487.9030003@tmr.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: how to synchronize two devices (RAID-1, but not really?)
+Date: Tue, 15 May 2007 20:16:47 +1000
+Message-ID: <17993.34959.150157.200536@notabene.brown>
+References: <4649760A.1060805@wpkg.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-hotplug-devel-bounces@lists.sourceforge.net>
-In-Reply-To: <4644D487.9030003@tmr.com> (Bill Davidsen's message of "Fri, 11
-	May 2007 16:39:35 -0400")
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-hotplug-devel>,
-	<mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-hotplug-devel>
-List-Post: <mailto:linux-hotplug-devel@lists.sourceforge.net>
-List-Help: <mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-hotplug-devel>,
-	<mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=subscribe>
-Sender: linux-hotplug-devel-bounces@lists.sourceforge.net
-Errors-To: linux-hotplug-devel-bounces@lists.sourceforge.net
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: linux-hotplug-devel@lists.sourceforge.net, Goswin von Brederlow <brederlo@informatik.uni-tuebingen.de>, Neil Brown <neilb@suse.de>, Michael Tokarev <mjt@tls.msk.ru>, linux-raid@vger.kernel.org, 416512@bugs.debian.org, David Greaves <david@dgreaves.com>
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: message from Tomasz Chmielewski on Tuesday May 15
+Sender: linux-raid-owner@vger.kernel.org
+To: Tomasz Chmielewski <mangoo@wpkg.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Bill Davidsen <davidsen@tmr.com> writes:
+On Tuesday May 15, mangoo@wpkg.org wrote:
+> 
+> Now, is there a way I can synchronize the contents of RAID-10, or 
+> /dev/md10, with the contents of RAID-5, or /dev/sdr, when /dev/sdr is 
+> bigger then /dev/md10, and /dev/md10 has to be synchronized on /dev/sdr, 
+> not the way around (I would expand the filesystem later with ext3online)?
 
-> Bernd Schubert wrote:
->> Yep, thats exactly what I'm talking about and its not only limited
->> to usb, but happens with sata as well.
->>
->
-> And real SCSI hot plug drives if you pull the wrong one.
+Yes, you can do this.
 
-The right thing to do would be to change the raid superblock before
-the first write. That would allow pulling disks out and re adding them
-as long as no change is written to the raid. Coupling the change in
-meta data with the actual change in real data is clearly the best
-approach. No false positives or negatives.
+You want a raid1 with no metadata, an external bitmap, and a
+write-mostly, write-behind device.  Simple?
 
-MfG
-        Goswin
+No metadata means no superblock is stored on the device.  You get to
+use all of it for data, which is good if it is already all in use for
+data.
+The down-side of not having a superblock is that you have to track
+which device is which yourself and after a restart, manually assemble
+it.  But for a short-term situation, that isn't a big problem.
 
--------------------------------------------------------------------------
-This SF.net email is sponsored by DB2 Express
-Download DB2 Express C - the FREE version of DB2 express and take
-control of your XML. No limits. Just data. Click to get it now.
-http://sourceforge.net/powerbar/db2/
+An external bitmap means that if the link goes down, it keeps track of
+which blocks are in sync and which aren't, and when the link comes
+back up you re-add the missing device and the rebuild continues where
+it left off.
+
+A write-mostly device means that it will never read over the slow link
+(unless the local device dies).  It will only write over the slow
+link.
+
+A write-behind device means that writes to the array will be as fast
+as writes to the local device.  There are limits to this.  Long-term,
+the write throughput will be limited to the slowest device, but bursts
+to the array will happen at the full speed of the local device.
+
+How do you do this?  First make sure you have a recent kernel and
+mdadm.
+
+Then you build the array with
+
+  mdadm --build /dev/md22 --level=1 --bitmap=/root/mybitmap \
+     --write-behind --raid-disks=2 /dev/localdevice --write-mostly /dev/remotedevice
+
+then use /dev/md22 instead of /dev/localdevice.
+This will not destroy the contents of /dev/localdevice.  They will
+remain unchanged.  But it will start copying those contents to /dev/remotedevice
+
+Obviously you need to unmount /dev/localdevice first, then set up the
+raid1, then mount /dev/md22 in it's place.
+
+You will want to test this of course - I cannot guarantee that I have
+that command exactly right.
+
+If the remote device fails (link breaks) it should get marked faulty
+in the array.  Once you have it working again you can use mdadm to
+remove (--remove) and re-add (--re-add) the device.  It should
+complete the copy correctly.   You should test that this actually
+works as expected. 
+
+Feel free to ask questions if you choose to attempt this route.
+
+Good luck.
+
+NeilBrown
