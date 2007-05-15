@@ -1,50 +1,50 @@
-From: Tomasz Chmielewski <mangoo@wpkg.org>
-Subject: Re: how to synchronize two devices (RAID-1, but not really?)
-Date: Tue, 15 May 2007 11:50:04 +0200
-Message-ID: <4649824C.1010005@wpkg.org>
-References: <4649760A.1060805@wpkg.org> <46497A78.6030109@rabbit.us> <46497CF4.3050807@wpkg.org> <46498053.9000807@dgreaves.com>
+From: Goswin von Brederlow <brederlo@informatik.uni-tuebingen.de>
+Subject: Re: removed disk && md-device
+Date: Tue, 15 May 2007 11:52:09 +0200
+Message-ID: <878xbqpg6u.fsf@informatik.uni-tuebingen.de>
+References: <200705091417.09033.bs@q-leap.de>
+	<17987.51381.756955.577977@notabene.brown>
+	<46442E9C.3050603@msgid.tls.msk.ru> <200705111122.17389.bs@q-leap.de>
+	<4644D487.9030003@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <46498053.9000807@dgreaves.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: David Greaves <david@dgreaves.com>
-Cc: linux-raid@vger.kernel.org, Peter Rabbitson <rabbit@rabbit.us>
+Return-path: <linux-hotplug-devel-bounces@lists.sourceforge.net>
+In-Reply-To: <4644D487.9030003@tmr.com> (Bill Davidsen's message of "Fri, 11
+	May 2007 16:39:35 -0400")
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-hotplug-devel>,
+	<mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-hotplug-devel>
+List-Post: <mailto:linux-hotplug-devel@lists.sourceforge.net>
+List-Help: <mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-hotplug-devel>,
+	<mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=subscribe>
+Sender: linux-hotplug-devel-bounces@lists.sourceforge.net
+Errors-To: linux-hotplug-devel-bounces@lists.sourceforge.net
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: linux-hotplug-devel@lists.sourceforge.net, Goswin von Brederlow <brederlo@informatik.uni-tuebingen.de>, Neil Brown <neilb@suse.de>, Michael Tokarev <mjt@tls.msk.ru>, linux-raid@vger.kernel.org, 416512@bugs.debian.org, David Greaves <david@dgreaves.com>
 List-Id: linux-raid.ids
 
-David Greaves schrieb:
+Bill Davidsen <davidsen@tmr.com> writes:
 
-(...)
-
->> So I want to synchronize /dev/LVM2/my-volume (ext3) with /dev/sdr (now
->> empty; bigger than /dev/LVM2/my-volume).
+> Bernd Schubert wrote:
+>> Yep, thats exactly what I'm talking about and its not only limited
+>> to usb, but happens with sata as well.
 >>
->>
->> (sda2, sdb2, sdc2, sdd2) -> RAID-10 -> LVM-2 -> my volume -> ext3
->>
->>
-> 
-> 
-> I've not used iSCSI but I wonder about using nbd : network block device
-> 
-> Use nbd to export /dev/md5 from machine 2.
-> Import /dev/nbd0 on machine 1.
-> Add nbd0 to the VG on machine 1
-> pvmove the data from /dev/md10 to /dev/nbd0 (ie the md5 on machine2 via nbd)
-> remove /dev/md10 from the VG.
+>
+> And real SCSI hot plug drives if you pull the wrong one.
 
+The right thing to do would be to change the raid superblock before
+the first write. That would allow pulling disks out and re adding them
+as long as no change is written to the raid. Coupling the change in
+meta data with the actual change in real data is clearly the best
+approach. No false positives or negatives.
 
-Hmm, maybe using LVM's mirror would help me here:
+MfG
+        Goswin
 
-CONFIG_DM_MIRROR: 
-
-
-Allow volume managers to mirror logical volumes, also 
- 
-      needed for live data migration tools such as 'pvmove'.
-
-
--- 
-Tomasz Chmielewski
-http://wpkg.org
+-------------------------------------------------------------------------
+This SF.net email is sponsored by DB2 Express
+Download DB2 Express C - the FREE version of DB2 express and take
+control of your XML. No limits. Just data. Click to get it now.
+http://sourceforge.net/powerbar/db2/
