@@ -1,57 +1,65 @@
-From: David Greaves <david@dgreaves.com>
+From: Tomasz Chmielewski <mangoo@wpkg.org>
 Subject: Re: how to synchronize two devices (RAID-1, but not really?)
-Date: Tue, 15 May 2007 10:41:39 +0100
-Message-ID: <46498053.9000807@dgreaves.com>
-References: <4649760A.1060805@wpkg.org> <46497A78.6030109@rabbit.us> <46497CF4.3050807@wpkg.org>
+Date: Tue, 15 May 2007 11:44:34 +0200
+Message-ID: <46498102.6030005@wpkg.org>
+References: <4649760A.1060805@wpkg.org> <Pine.LNX.4.64.0705151019070.30502@lion.drogon.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <46497CF4.3050807@wpkg.org>
+In-Reply-To: <Pine.LNX.4.64.0705151019070.30502@lion.drogon.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Tomasz Chmielewski <mangoo@wpkg.org>
-Cc: linux-raid@vger.kernel.org, Peter Rabbitson <rabbit@rabbit.us>
+To: Gordon Henderson <gordon@drogon.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Tomasz Chmielewski wrote:
-> Peter Rabbitson schrieb:
->> Tomasz Chmielewski wrote:
->>> I have a RAID-10 setup of four 400 GB HDDs. As the data grows by several
->>> GBs a day, I want to migrate it somehow to RAID-5 on separate disks in a
->>> separate machine.
->>>
->>> Which would be easy, if I didn't have to do it online, without stopping
->>> any services.
->>>
->>>
+Gordon Henderson schrieb:
+> On Tue, 15 May 2007, Tomasz Chmielewski wrote:
+> 
+>> I have a RAID-10 setup of four 400 GB HDDs. As the data grows by 
+>> several GBs a day, I want to migrate it somehow to RAID-5 on separate 
+>> disks in a separate machine.
 >>
->> Your /dev/md10 - what is directly on top of it? LVM? XFS? EXT3?
+>> Which would be easy, if I didn't have to do it online, without 
+>> stopping any services.
+>>
+>>
+>> M1 - machine 1, RAID-10
+>> M2 - machine 2, RAID-5
+>>
+>>
+>> My first idea was to copy the data with rsync two or three times 
+>> (because the files change, I would stop the services for the last run) 
+>> - which turned out to be totally unrealistic - I started rsync process 
+>> two days ago, and it still calculates files to be copied (over 100 
+>> million files, with hardlinks etc.).
 > 
-> Good point. I don't want to copy the whole RAID-10.
-> I want to copy only one LVM-2 volume (which is like 90% of that RAID-10,
-> anyway).
+> I have recent experience of copying up to 1TB parititions to offsite 
+> backup servers via rsync (and a 10Mb line), and it can be done.
 > 
-> 
-> So I want to synchronize /dev/LVM2/my-volume (ext3) with /dev/sdr (now
-> empty; bigger than /dev/LVM2/my-volume).
-> 
-> 
-> (sda2, sdb2, sdc2, sdd2) -> RAID-10 -> LVM-2 -> my volume -> ext3
-> 
-> 
+> You do need a recent version of rsync and a lot of memory in both 
+> servers. I'm really surprised it takes days to do this on your server - 
+> although maybe the source server really is busy?
+
+Yes, the server is really busy and reads/writes a lot - that's one. Two, 
+it's being done over iSCSI in a pretty complicated scenario:
 
 
-I've not used iSCSI but I wonder about using nbd : network block device
+                     100 Mbit
+M1 (RAID-10 storage) <--> very busy virtual machine in Xen
+                            /
+                           / 1 Gbit
+                          /
+      machine with rsync process <--> M2 (RAID-5 storage)
+                                1 Gbit
 
-Use nbd to export /dev/md5 from machine 2.
-Import /dev/nbd0 on machine 1.
-Add nbd0 to the VG on machine 1
-pvmove the data from /dev/md10 to /dev/nbd0 (ie the md5 on machine2 via nbd)
-remove /dev/md10 from the VG.
-The VG should now exist only on /dev/nbd0 on machine 2
-stop the services and lvm on machine 1
-start the lvm and services on machine 2.
+So there is a slow point of just 100 Mbit to access the storage, which 
+is normally fully filled anyway.
 
-I'd suggest testing this first <grin>.
+rsync, even 3.0, just doesn't fit here - it has to be done in sort of a 
+"mirror" way.
 
-David
+
+-- 
+Tomasz Chmielewski
+htp://wpkg.org
