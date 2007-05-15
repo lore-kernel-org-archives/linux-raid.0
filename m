@@ -1,77 +1,57 @@
-From: Neil Brown <neilb@suse.de>
+From: Tomasz Chmielewski <mangoo@wpkg.org>
 Subject: Re: how to synchronize two devices (RAID-1, but not really?)
-Date: Tue, 15 May 2007 20:16:47 +1000
-Message-ID: <17993.34959.150157.200536@notabene.brown>
-References: <4649760A.1060805@wpkg.org>
+Date: Tue, 15 May 2007 12:36:36 +0200
+Message-ID: <46498D34.1060901@wpkg.org>
+References: <4649760A.1060805@wpkg.org> <17993.34959.150157.200536@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Tomasz Chmielewski on Tuesday May 15
+In-Reply-To: <17993.34959.150157.200536@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Tomasz Chmielewski <mangoo@wpkg.org>
+To: Neil Brown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday May 15, mangoo@wpkg.org wrote:
+Neil Brown schrieb:
+
+(...)
+
+> You will want to test this of course - I cannot guarantee that I have
+> that command exactly right.
 > 
-> Now, is there a way I can synchronize the contents of RAID-10, or 
-> /dev/md10, with the contents of RAID-5, or /dev/sdr, when /dev/sdr is 
-> bigger then /dev/md10, and /dev/md10 has to be synchronized on /dev/sdr, 
-> not the way around (I would expand the filesystem later with ext3online)?
+> If the remote device fails (link breaks) it should get marked faulty
+> in the array.  Once you have it working again you can use mdadm to
+> remove (--remove) and re-add (--re-add) the device.  It should
+> complete the copy correctly.   You should test that this actually
+> works as expected. 
+> 
+> Feel free to ask questions if you choose to attempt this route.
 
-Yes, you can do this.
+Interesting lecture, thanks a lot. I'm gonna take that path.
 
-You want a raid1 with no metadata, an external bitmap, and a
-write-mostly, write-behind device.  Simple?
+I have one more question, though.
 
-No metadata means no superblock is stored on the device.  You get to
-use all of it for data, which is good if it is already all in use for
-data.
-The down-side of not having a superblock is that you have to track
-which device is which yourself and after a restart, manually assemble
-it.  But for a short-term situation, that isn't a big problem.
+I want to migrate:
+- from 4x400GB HDD RAID-10
+- to 4x400GB HDD RAID-5
 
-An external bitmap means that if the link goes down, it keeps track of
-which blocks are in sync and which aren't, and when the link comes
-back up you re-add the missing device and the rebuild continues where
-it left off.
+Obviously, I need 8 disks for that, but I have only 6.
 
-A write-mostly device means that it will never read over the slow link
-(unless the local device dies).  It will only write over the slow
-link.
+So my idea was to kick one disk from RAID-10, and use it for RAID-5 for 
+the time of migration.
 
-A write-behind device means that writes to the array will be as fast
-as writes to the local device.  There are limits to this.  Long-term,
-the write throughput will be limited to the slowest device, but bursts
-to the array will happen at the full speed of the local device.
+This means, I would have only 3 disks out of 4 in RAID-5 array.
 
-How do you do this?  First make sure you have a recent kernel and
-mdadm.
 
-Then you build the array with
+Is it possible to create a degraded, 4 disk RAID-5 array with just 3 
+drives? I would add the 4th drive once migration from RAID-10 is done.
 
-  mdadm --build /dev/md22 --level=1 --bitmap=/root/mybitmap \
-     --write-behind --raid-disks=2 /dev/localdevice --write-mostly /dev/remotedevice
 
-then use /dev/md22 instead of /dev/localdevice.
-This will not destroy the contents of /dev/localdevice.  They will
-remain unchanged.  But it will start copying those contents to /dev/remotedevice
+(I'm aware of the risks - that my degraded RAID-10 will be "vulnerable" 
+during the migration).
 
-Obviously you need to unmount /dev/localdevice first, then set up the
-raid1, then mount /dev/md22 in it's place.
 
-You will want to test this of course - I cannot guarantee that I have
-that command exactly right.
-
-If the remote device fails (link breaks) it should get marked faulty
-in the array.  Once you have it working again you can use mdadm to
-remove (--remove) and re-add (--re-add) the device.  It should
-complete the copy correctly.   You should test that this actually
-works as expected. 
-
-Feel free to ask questions if you choose to attempt this route.
-
-Good luck.
-
-NeilBrown
+-- 
+Tomasz Chmielewski
+http://wpkg.org
