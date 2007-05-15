@@ -1,71 +1,57 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: /proc/mdstat showing a device missing from array
-Date: Tue, 15 May 2007 09:35:09 +1000
-Message-ID: <17992.61997.544536.744615@notabene.brown>
-References: <1179081234.46475a12d46ba@mail.2inches.com>
-	<17991.46650.304434.640289@notabene.brown>
-	<1179171731.4648bb938d688@mail.2inches.com>
+From: Tomasz Chmielewski <mangoo@wpkg.org>
+Subject: how to synchronize two devices (RAID-1, but not really?)
+Date: Tue, 15 May 2007 10:57:46 +0200
+Message-ID: <4649760A.1060805@wpkg.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-2022-jp
+Content-Type: text/plain; charset=ISO-8859-2; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from evoltech@2inches.com on Monday May 14
 Sender: linux-raid-owner@vger.kernel.org
-To: evoltech@2inches.com
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Monday May 14, evoltech@2inches.com wrote:
-> Quoting Neil Brown <neilb@suse.de>:
-> 
-> > 
-> > A raid5 is always created with one missing device and one spare.  This
-> > is because recovery onto a spare is faster than resync of a brand new
-> > array.
-> 
-> This is unclear to me.  Do you mean that is how mdadm implements raid5 creation
->  or do you mean that is how raid5 is designed?  I havn't read about this in any
-> raid5 documentation or mdadm documentation.  Can you point me in the right
-> direction?
+I have a RAID-10 setup of four 400 GB HDDs. As the data grows by several 
+GBs a day, I want to migrate it somehow to RAID-5 on separate disks in a 
+separate machine.
 
-In the OPTIONS section of mdadm.8, under "For create, build, or
-grow:", it says:
-       -f, --force
-              Insist that mdadm accept the geometry and layout specified with‐
-              out  question.   Normally  mdadm  will  not allow creation of an
-              array with only one device, and will try to create a raid5 array
-              with  one  missing  drive (as this makes the initial resync work
-              faster).  With --force, mdadm will not try to be so clever.
+Which would be easy, if I didn't have to do it online, without stopping 
+any services.
 
-This is a feature specific to the md implementation of raid5, not
-necessarily general to all raid5 implementations.
-When md/raid5 performs a "sync", it assumes that most parity blocks
-are correct.  So it simply reads all drives in parallel and check that
-the parity block is correct.  When it finds one that isn't (which
-should not happen often) it will write the correct data.  This
-requires a backward seek and breaks the streaming flow of data off the
-drives.
 
-For a new array, it is likely that most if not all parity blocks are
-wrong.  The above algorithm will cause every parity block to be first
-read, and then written, producing lots of seeks and much slower
-throughput.
+M1 - machine 1, RAID-10
+M2 - machine 2, RAID-5
 
-If you create a new array degraded and add a spare, it will recover
-the spare by reading all the good drives in parallel, computing the
-missing drive, and writing that purely sequentially.  That goes much
-faster.
 
-e.g. on my test machine with 5 SATA drives, I get 42Meg/sec recovery
-speed, but only around 30Meg/sec resync on a new array.
+My first idea was to copy the data with rsync two or three times 
+(because the files change, I would stop the services for the last run) - 
+which turned out to be totally unrealistic - I started rsync process two 
+days ago, and it still calculates files to be copied (over 100 million 
+files, with hardlinks etc.).
 
-> > 
-> > This bug was fixed in mdadm-2.5.2
-> 
-> The recovery of the array has started, thanks!
 
-Excellent.  I have since realised that there is a kernel bug as
-well.  I will get that fixed in the next release so that the old mdadm
-will also work properly.
+So my second idea is to do some sort of RAID-1-over-iSCSI of these two 
+arrays - I don't care if it's gonna take long, what's important, I don't 
+want to stop the services.
 
-NeilBrown
+So let's say M2 exports RAID-5 md to M1 over iSCSI, and M2's RAID-5 is 
+available to M1 as /dev/sdr.
+
+Now, is there a way I can synchronize the contents of RAID-10, or 
+/dev/md10, with the contents of RAID-5, or /dev/sdr, when /dev/sdr is 
+bigger then /dev/md10, and /dev/md10 has to be synchronized on /dev/sdr, 
+not the way around (I would expand the filesystem later with ext3online)?
+
+Perhaps "dd" tool would be fine if the data didn't change.
+
+RAID-1 would be great, as it tracks changes, but I'd have to create 
+RAID-1 over: /dev/md10 and /dev/sdr. Wouldn't it destroy the contents of 
+/dev/md10?
+
+
+Ideas how to synchronize the contents of two devices (device1 -> device2)?
+
+
+-- 
+Tomasz Chmielewski
+
+
