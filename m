@@ -1,91 +1,53 @@
-From: "Jeff Zheng" <Jeff.Zheng@endace.com>
-Subject: RE: Software raid0 will crash the file-system, when each disk is 5TB
-Date: Wed, 16 May 2007 13:56:35 +1200
-Message-ID: <659F626D666070439A4A5965CD6EBF406B31C5@gazelle.ad.endace.com>
-References: <659F626D666070439A4A5965CD6EBF406836C6@gazelle.ad.endace.com><6bffcb0e0705151629j78920ca2r9337dccdfc1bb6a9@mail.gmail.com> <17994.19043.771733.453896@notabene.brown>
+From: "Colin McCabe" <colin.p.mccabe@gmail.com>
+Subject: unreadable drives can be synchronized?
+Date: Wed, 16 May 2007 11:50:15 -0400
+Message-ID: <7296208f0705160850u74d9b52en835d3c9b21f54728@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
-In-Reply-To: <17994.19043.771733.453896@notabene.brown>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>, Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
-Cc: Ingo Molnar <mingo@elte.hu>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Here is the information of the created raid0. Hope it is enough.
+Hi all,
 
-Jeff
+I am running software RAID on Linux 2.6.21.
 
-The crashing one:
-md: bind<sdd>
-md: bind<sde>
-md: raid0 personality registered for level 0
-md0: setting max_sectors to 4096, segment boundary to 1048575
-raid0: looking at sde
-raid0:   comparing sde(5859284992) with sde(5859284992)
-raid0:   END
-raid0:   ==> UNIQUE
-raid0: 1 zones
-raid0: looking at sdd
-raid0:   comparing sdd(5859284992) with sde(5859284992)
-raid0:   EQUAL
-raid0: FINAL 1 zones
-raid0: done.
-raid0 : md_size is 11718569984 blocks.
-raid0 : conf->hash_spacing is 11718569984 blocks.
-raid0 : nb_zone is 2.
-raid0 : Allocating 8 bytes for hash.
-JFS: nTxBlock = 8192, nTxLock = 65536
+While experimenting with adding and removing devices from the RAID array, I
+noticed something very troubling. I have a bad drive (let's call it drive B)
+which gets random read errors. I also have a good drive, call it drive A.
 
-The working one:
-md: bind<sde>
-md: bind<sdf>
-md: bind<sdg>
-md: bind<sdd>
-md0: setting max_sectors to 4096, segment boundary to 1048575
-raid0: looking at sdd
-raid0:   comparing sdd(2929641472) with sdd(2929641472)
-raid0:   END
-raid0:   ==> UNIQUE
-raid0: 1 zones
-raid0: looking at sdg
-raid0:   comparing sdg(2929641472) with sdd(2929641472)
-raid0:   EQUAL
-raid0: looking at sdf
-raid0:   comparing sdf(2929641472) with sdd(2929641472)
-raid0:   EQUAL
-raid0: looking at sde
-raid0:   comparing sde(2929641472) with sdd(2929641472)
-raid0:   EQUAL
-raid0: FINAL 1 zones
-raid0: done.
-raid0 : md_size is 11718565888 blocks.
-raid0 : conf->hash_spacing is 11718565888 blocks.
-raid0 : nb_zone is 2.
-raid0 : Allocating 8 bytes for hash.
-JFS: nTxBlock = 8192, nTxLock = 65536
+B can synchronize with A. But then, if I remove A from the raid array, A
+cannot be re-added. This is because the bad drive, B, cannot be read from.
 
------Original Message-----
-From: Neil Brown [mailto:neilb@suse.de] 
-Sent: Wednesday, 16 May 2007 12:04 p.m.
-To: Michal Piotrowski
-Cc: Jeff Zheng; Ingo Molnar; linux-raid@vger.kernel.org;
-linux-kernel@vger.kernel.org; linux-fsdevel@vger.kernel.org
-Subject: Re: Software raid0 will crash the file-system, when each disk
-is 5TB
+Basically, B appears to be "write-only"; it will never return an error on a
+write, but just try to read from it, and you will be sorry.
 
-On Wednesday May 16, michal.k.k.piotrowski@gmail.com wrote:
-> >
-> > Anybody have a clue?
-> >
+Writing is fine:
+[root@cmccabe-devel root]# dd if=/dev/zero of=/dev/sdb bs=524288
+dd: writing `/dev/sdb': No space left on device
+114464+0 records in
+114463+0 records out
 
-No...
-When a raid0 array is assemble, quite a lot of message get printed
-about number of zones and hash_spacing etc.  Can you collect and post
-those.  Both for the failing case (2*5.5T) and the working case
-(4*2.55T) is possible.
+Reading is not:
+[root@cmccabe-devel root]# dd if=/dev/sdb of=/dev/null bs=524288
+ata1.00: exception Emask 0x0 SAct 0x3 SErr 0x0 action 0x2 frozen
+ata1.00: cmd 60/00:00:00:b0:01/01:00:00:00:00/40 tag 0 cdb 0x0 data 131072 in
+[ ... copious errors ... ]
 
-NeilBrown
+I have disabled write caching using hdparm -W0.
+Both drives are: Fujitsu MHV2060BH, 60 GB, Serial ATA
+The SATA controller is: ICH6
+
+My problem is that even though B gets into the synchronized state, it is no
+good at all. This is potentially misleading, and if someone removes A after
+synchronizing B, the system will probably crash, since there will be no good
+drives left.
+
+I wonder if anyone else is interested in a "paranoid recovery" mode where the
+md layer tests the data that has been written. Even if this doubles the
+recovery time, I think that it would be desirable for many applications.
+
+Colin
