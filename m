@@ -1,105 +1,75 @@
 From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: Software raid0 will crash the file-system, when each disk is
- 5TB
-Date: Wed, 16 May 2007 13:28:03 -0400
-Message-ID: <464B3F23.50105@tmr.com>
-References: <659F626D666070439A4A5965CD6EBF406836C6@gazelle.ad.endace.com><6bffcb0e0705151629j78920ca2r9337dccdfc1bb6a9@mail.gmail.com> <17994.19043.771733.453896@notabene.brown> <659F626D666070439A4A5965CD6EBF406B31C5@gazelle.ad.endace.com>
+Subject: Re: how to synchronize two devices (RAID-1, but not really?)
+Date: Wed, 16 May 2007 13:36:06 -0400
+Message-ID: <464B4106.6020508@tmr.com>
+References: <4649760A.1060805@wpkg.org> <46497A78.6030109@rabbit.us> <46497CF4.3050807@wpkg.org> <46498053.9000807@dgreaves.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1763016AbXEPR1y@vger.kernel.org>
-In-Reply-To: <659F626D666070439A4A5965CD6EBF406B31C5@gazelle.ad.endace.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jeff Zheng <Jeff.Zheng@endace.com>
-Cc: Neil Brown <neilb@suse.de>, Michal Piotrowski <michal.k.k.piotrowski@gmail.com>, Ingo Molnar <mingo@elte.hu>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <46498053.9000807@dgreaves.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: David Greaves <david@dgreaves.com>
+Cc: Tomasz Chmielewski <mangoo@wpkg.org>, linux-raid@vger.kernel.org, Peter Rabbitson <rabbit@rabbit.us>
 List-Id: linux-raid.ids
 
-Jeff Zheng wrote:
-> Here is the information of the created raid0. Hope it is enough.
->
+David Greaves wrote:
+> Tomasz Chmielewski wrote:
 >   
-If I read this correctly, the problem is with JFS rather than RAID? Have 
-you tried not mounting the JFS filesystem but just starting the array 
-which crashes, so you can read bits of it, etc, and verify that the 
-array itself is working?
-
-And can you run an fsck on the filesystem, if that makes sense? I assume 
-you got to actually write a f/s at one time, and I've never used JFS 
-under Linux. I spent five+ years using it on AIX, though, complex but 
-robust.
-> The crashing one:
-> md: bind<sdd>
-> md: bind<sde>
-> md: raid0 personality registered for level 0
-> md0: setting max_sectors to 4096, segment boundary to 1048575
-> raid0: looking at sde
-> raid0:   comparing sde(5859284992) with sde(5859284992)
-> raid0:   END
-> raid0:   ==> UNIQUE
-> raid0: 1 zones
-> raid0: looking at sdd
-> raid0:   comparing sdd(5859284992) with sde(5859284992)
-> raid0:   EQUAL
-> raid0: FINAL 1 zones
-> raid0: done.
-> raid0 : md_size is 11718569984 blocks.
-> raid0 : conf->hash_spacing is 11718569984 blocks.
-> raid0 : nb_zone is 2.
-> raid0 : Allocating 8 bytes for hash.
-> JFS: nTxBlock = 8192, nTxLock = 65536
->
-> The working one:
-> md: bind<sde>
-> md: bind<sdf>
-> md: bind<sdg>
-> md: bind<sdd>
-> md0: setting max_sectors to 4096, segment boundary to 1048575
-> raid0: looking at sdd
-> raid0:   comparing sdd(2929641472) with sdd(2929641472)
-> raid0:   END
-> raid0:   ==> UNIQUE
-> raid0: 1 zones
-> raid0: looking at sdg
-> raid0:   comparing sdg(2929641472) with sdd(2929641472)
-> raid0:   EQUAL
-> raid0: looking at sdf
-> raid0:   comparing sdf(2929641472) with sdd(2929641472)
-> raid0:   EQUAL
-> raid0: looking at sde
-> raid0:   comparing sde(2929641472) with sdd(2929641472)
-> raid0:   EQUAL
-> raid0: FINAL 1 zones
-> raid0: done.
-> raid0 : md_size is 11718565888 blocks.
-> raid0 : conf->hash_spacing is 11718565888 blocks.
-> raid0 : nb_zone is 2.
-> raid0 : Allocating 8 bytes for hash.
-> JFS: nTxBlock = 8192, nTxLock = 65536
->
-> -----Original Message-----
-> From: Neil Brown [mailto:neilb@suse.de] 
-> Sent: Wednesday, 16 May 2007 12:04 p.m.
-> To: Michal Piotrowski
-> Cc: Jeff Zheng; Ingo Molnar; linux-raid@vger.kernel.org;
-> linux-kernel@vger.kernel.org; linux-fsdevel@vger.kernel.org
-> Subject: Re: Software raid0 will crash the file-system, when each disk
-> is 5TB
->
-> On Wednesday May 16, michal.k.k.piotrowski@gmail.com wrote:
->   
->>> Anybody have a clue?
->>>
+>> Peter Rabbitson schrieb:
+>>     
+>>> Tomasz Chmielewski wrote:
 >>>       
+>>>> I have a RAID-10 setup of four 400 GB HDDs. As the data grows by several
+>>>> GBs a day, I want to migrate it somehow to RAID-5 on separate disks in a
+>>>> separate machine.
+>>>>
+>>>> Which would be easy, if I didn't have to do it online, without stopping
+>>>> any services.
+>>>>
+>>>>
+>>>>         
+>>> Your /dev/md10 - what is directly on top of it? LVM? XFS? EXT3?
+>>>       
+>> Good point. I don't want to copy the whole RAID-10.
+>> I want to copy only one LVM-2 volume (which is like 90% of that RAID-10,
+>> anyway).
+>>
+>>
+>> So I want to synchronize /dev/LVM2/my-volume (ext3) with /dev/sdr (now
+>> empty; bigger than /dev/LVM2/my-volume).
+>>
+>>
+>> (sda2, sdb2, sdc2, sdd2) -> RAID-10 -> LVM-2 -> my volume -> ext3
+>>
+>>
+>>     
 >
-> No...
-> When a raid0 array is assemble, quite a lot of message get printed
-> about number of zones and hash_spacing etc.  Can you collect and post
-> those.  Both for the failing case (2*5.5T) and the working case
-> (4*2.55T) is possible.
+>
+> I've not used iSCSI but I wonder about using nbd : network block device
+>
+> Use nbd to export /dev/md5 from machine 2.
+> Import /dev/nbd0 on machine 1.
+> Add nbd0 to the VG on machine 1
+> pvmove the data from /dev/md10 to /dev/nbd0 (ie the md5 on machine2 via nbd)
+> remove /dev/md10 from the VG.
+> The VG should now exist only on /dev/nbd0 on machine 2
+> stop the services and lvm on machine 1
+> start the lvm and services on machine 2.
+>
+> I'd suggest testing this first <grin>.
 >   
 
+Posts to the kernel mailing list indicate that people, including me, 
+have had issues with this since 2.6.10-rc versions. I got no "me too" 
+responses, so I figured something have changed, although yesterday 
+someone reported a hard crash using nbd.
+
+Test it well, but it's the ideal solution, combined with a bitmap, for 
+getting in sync.
 
 -- 
 bill davidsen <davidsen@tmr.com>
   CTO TMR Associates, Inc
   Doing interesting things with small computers since 1979
+
