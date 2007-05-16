@@ -1,75 +1,28 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: how to synchronize two devices (RAID-1, but not really?)
-Date: Wed, 16 May 2007 13:36:06 -0400
-Message-ID: <464B4106.6020508@tmr.com>
-References: <4649760A.1060805@wpkg.org> <46497A78.6030109@rabbit.us> <46497CF4.3050807@wpkg.org> <46498053.9000807@dgreaves.com>
+From: david@lang.hm
+Subject: Re: Software raid0 will crash the file-system, when each disk is
+ 5TB
+Date: Wed, 16 May 2007 10:58:37 -0700 (PDT)
+Message-ID: <Pine.LNX.4.64.0705161058080.1280@asgard.lang.hm>
+References: <659F626D666070439A4A5965CD6EBF406836C6@gazelle.ad.endace.com><6bffcb0e0705151629j78920ca2r9337dccdfc1bb6a9@mail.gmail.com>
+ <17994.19043.771733.453896@notabene.brown> <659F626D666070439A4A5965CD6EBF406B31C5@gazelle.ad.endace.com>
+ <464B3F23.50105@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <46498053.9000807@dgreaves.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: David Greaves <david@dgreaves.com>
-Cc: Tomasz Chmielewski <mangoo@wpkg.org>, linux-raid@vger.kernel.org, Peter Rabbitson <rabbit@rabbit.us>
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1763085AbXEPSDm@vger.kernel.org>
+In-Reply-To: <464B3F23.50105@tmr.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: Jeff Zheng <Jeff.Zheng@endace.com>, Neil Brown <neilb@suse.de>, Michal Piotrowski <michal.k.k.piotrowski@gmail.com>, Ingo Molnar <mingo@elte.hu>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org
 List-Id: linux-raid.ids
 
-David Greaves wrote:
-> Tomasz Chmielewski wrote:
->   
->> Peter Rabbitson schrieb:
->>     
->>> Tomasz Chmielewski wrote:
->>>       
->>>> I have a RAID-10 setup of four 400 GB HDDs. As the data grows by several
->>>> GBs a day, I want to migrate it somehow to RAID-5 on separate disks in a
->>>> separate machine.
->>>>
->>>> Which would be easy, if I didn't have to do it online, without stopping
->>>> any services.
->>>>
->>>>
->>>>         
->>> Your /dev/md10 - what is directly on top of it? LVM? XFS? EXT3?
->>>       
->> Good point. I don't want to copy the whole RAID-10.
->> I want to copy only one LVM-2 volume (which is like 90% of that RAID-10,
->> anyway).
->>
->>
->> So I want to synchronize /dev/LVM2/my-volume (ext3) with /dev/sdr (now
->> empty; bigger than /dev/LVM2/my-volume).
->>
->>
->> (sda2, sdb2, sdc2, sdd2) -> RAID-10 -> LVM-2 -> my volume -> ext3
->>
->>
->>     
->
->
-> I've not used iSCSI but I wonder about using nbd : network block device
->
-> Use nbd to export /dev/md5 from machine 2.
-> Import /dev/nbd0 on machine 1.
-> Add nbd0 to the VG on machine 1
-> pvmove the data from /dev/md10 to /dev/nbd0 (ie the md5 on machine2 via nbd)
-> remove /dev/md10 from the VG.
-> The VG should now exist only on /dev/nbd0 on machine 2
-> stop the services and lvm on machine 1
-> start the lvm and services on machine 2.
->
-> I'd suggest testing this first <grin>.
->   
+On Wed, 16 May 2007, Bill Davidsen wrote:
 
-Posts to the kernel mailing list indicate that people, including me, 
-have had issues with this since 2.6.10-rc versions. I got no "me too" 
-responses, so I figured something have changed, although yesterday 
-someone reported a hard crash using nbd.
+> Jeff Zheng wrote:
+>>  Here is the information of the created raid0. Hope it is enough.
+>>
+>> 
+> If I read this correctly, the problem is with JFS rather than RAID?
 
-Test it well, but it's the ideal solution, combined with a bitmap, for 
-getting in sync.
+he had the same problem with xfs.
 
--- 
-bill davidsen <davidsen@tmr.com>
-  CTO TMR Associates, Inc
-  Doing interesting things with small computers since 1979
-
+David Lang
