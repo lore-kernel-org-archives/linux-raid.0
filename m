@@ -1,48 +1,46 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: unreadable drives can be synchronized?
-Date: Thu, 17 May 2007 10:54:07 +1000
-Message-ID: <17995.42927.362919.938781@notabene.brown>
-References: <7296208f0705160850u74d9b52en835d3c9b21f54728@mail.gmail.com>
+Subject: Re: Md corruption using RAID10 on linux-2.6.21
+Date: Thu, 17 May 2007 11:54:16 +1000
+Message-ID: <17995.46536.195175.894763@notabene.brown>
+References: <632b79000705161138h359f71egdf4ad5d483731dbe@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Colin McCabe on Wednesday May 16
+In-Reply-To: message from Don Dupuis on Wednesday May 16
 Sender: linux-raid-owner@vger.kernel.org
-To: Colin McCabe <colin.p.mccabe@gmail.com>
+To: Don Dupuis <dondster@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wednesday May 16, colin.p.mccabe@gmail.com wrote:
-> Hi all,
+On Wednesday May 16, dondster@gmail.com wrote:
+...
 > 
-> I am running software RAID on Linux 2.6.21.
-> 
-> While experimenting with adding and removing devices from the RAID array, I
-> noticed something very troubling. I have a bad drive (let's call it drive B)
-> which gets random read errors. I also have a good drive, call it drive A.
-> 
-> B can synchronize with A. But then, if I remove A from the raid array, A
-> cannot be re-added. This is because the bad drive, B, cannot be read from.
+> The problem arises when I do a drive removal such as sda and then I
+> remove power from the system. Most of the time I will have a corrupted
+> partition on the md device. Other corruption will be my root partition
+> which is an ext3 filesystem. I seem to have a better chance of booting
+> a least 1 time with no errors with bitmap turned on, but If I repeat
+> the process, I will have corruption as well. Also with bitmap turned
+> on, adding the new drive into the md device will take way to too long.
+> I only get about 3MB per second on the resync. With bitmap turned off,
+> I will get between 10MB to 15MB resync rate. Has anyone else seen this
+> behavior, or is this situation is no tested very often? I would think
+> that I shouldn't get corruption with this raid  setup and jornaling of
+> my filesytems? Any help would be appreciated.
 
-Well, if you remove A, then you have the situation of trusting your
-data to a single drive.  And we all know that isn't very safe.
 
-> 
-> I wonder if anyone else is interested in a "paranoid recovery" mode where the
-> md layer tests the data that has been written. Even if this doubles the
-> recovery time, I think that it would be desirable for many applications.
+The resync rate should be the same whether you have a bitmap or not,
+so that observation is very strange.  Can you double check, and report
+the contents of "/proc/mdstat" in the two situations.
 
-I think it is just as easy to run a 'check' pass after recovery has
-completed.
+You say you have corruption on your root filesystem.  Presumably that
+is not on the raid?  Maybe the drive doesn't get a chance to flush
+it's cache when you power-off.  Do you get the same corruption if you
+simulate a crash without turning off the power. e.g.
+   echo b > /proc/sysrq-trigger
 
-Whenever you are commissioning new hardware, it makes sense to do some
-testing before you trust it with valuable data.
-It sounds like this particular hardware failure lends itself to easy
-discovery with a bit of testing - indeed, you found it while testing
-your hardware.  So I don't think it is a failure mode we need to put
-any extra care in to.
-It is the failure modes that are hard to find with basic testing that
-we should worry about.
+Do you get the same corruption in the raid10 if you turn it off
+*without* removing a drive first?
 
 NeilBrown
