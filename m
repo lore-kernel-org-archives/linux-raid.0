@@ -1,58 +1,48 @@
 From: Neil Brown <neilb@suse.de>
-Subject: RE: Software raid0 will crash the file-system, when each disk is 5TB
-Date: Thu, 17 May 2007 10:48:02 +1000
-Message-ID: <17995.42562.870806.396617@notabene.brown>
-References: <659F626D666070439A4A5965CD6EBF406836C6@gazelle.ad.endace.com>
-	<6bffcb0e0705151629j78920ca2r9337dccdfc1bb6a9@mail.gmail.com>
-	<17994.19043.771733.453896@notabene.brown>
-	<659F626D666070439A4A5965CD6EBF406B31C5@gazelle.ad.endace.com>
+Subject: Re: unreadable drives can be synchronized?
+Date: Thu, 17 May 2007 10:54:07 +1000
+Message-ID: <17995.42927.362919.938781@notabene.brown>
+References: <7296208f0705160850u74d9b52en835d3c9b21f54728@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: message from Jeff Zheng on Wednesday May 16
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Jeff Zheng <Jeff.Zheng@endace.com>
-Cc: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>, Ingo Molnar <mingo@elte.hu>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: message from Colin McCabe on Wednesday May 16
+Sender: linux-raid-owner@vger.kernel.org
+To: Colin McCabe <colin.p.mccabe@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wednesday May 16, Jeff.Zheng@endace.com wrote:
-> Here is the information of the created raid0. Hope it is enough.
+On Wednesday May 16, colin.p.mccabe@gmail.com wrote:
+> Hi all,
+> 
+> I am running software RAID on Linux 2.6.21.
+> 
+> While experimenting with adding and removing devices from the RAID array, I
+> noticed something very troubling. I have a bad drive (let's call it drive B)
+> which gets random read errors. I also have a good drive, call it drive A.
+> 
+> B can synchronize with A. But then, if I remove A from the raid array, A
+> cannot be re-added. This is because the bad drive, B, cannot be read from.
 
-Thanks.
-Everything looks fine here.
+Well, if you remove A, then you have the situation of trusting your
+data to a single drive.  And we all know that isn't very safe.
 
-The only difference of any significance between the working and
-non-working configurations is that in the non-working, the component
-devices are larger than 2Gig, and hence have sector offsets greater
-than 32 bits.
+> 
+> I wonder if anyone else is interested in a "paranoid recovery" mode where the
+> md layer tests the data that has been written. Even if this doubles the
+> recovery time, I think that it would be desirable for many applications.
 
-This does cause a slightly different code path in one place, but I
-cannot see it making a difference.  But maybe it does.
+I think it is just as easy to run a 'check' pass after recovery has
+completed.
 
-What architecture is this running on?
-What C compiler are you using?
+Whenever you are commissioning new hardware, it makes sense to do some
+testing before you trust it with valuable data.
+It sounds like this particular hardware failure lends itself to easy
+discovery with a bit of testing - indeed, you found it while testing
+your hardware.  So I don't think it is a failure mode we need to put
+any extra care in to.
+It is the failure modes that are hard to find with basic testing that
+we should worry about.
 
-Can you try with this patch?  It is the only thing that I can find
-that could conceivably go wrong.
-
-Thanks,
 NeilBrown
-
-Signed-off-by: Neil Brown <neilb@suse.de>
-
-### Diffstat output
- ./drivers/md/raid0.c |    1 +
- 1 file changed, 1 insertion(+)
-
-diff .prev/drivers/md/raid0.c ./drivers/md/raid0.c
---- .prev/drivers/md/raid0.c	2007-05-17 10:33:30.000000000 +1000
-+++ ./drivers/md/raid0.c	2007-05-17 10:34:02.000000000 +1000
-@@ -461,6 +461,7 @@ static int raid0_make_request (request_q
-  
- 	while (block >= (zone->zone_offset + zone->size)) 
- 		zone++;
-+	BUG_ON(block < zone->zone_offset);
-     
- 	sect_in_chunk = bio->bi_sector & ((chunk_size<<1) -1);
- 
