@@ -1,40 +1,60 @@
-From: Neil Brown <neilb@suse.de>
-Subject: RE: Software raid0 will crash the file-system, when each disk is 5TB
-Date: Thu, 17 May 2007 12:45:22 +1000
-Message-ID: <17995.49602.427417.500049@notabene.brown>
-References: <659F626D666070439A4A5965CD6EBF406836C6@gazelle.ad.endace.com>
-	<6bffcb0e0705151629j78920ca2r9337dccdfc1bb6a9@mail.gmail.com>
-	<17994.19043.771733.453896@notabene.brown>
-	<659F626D666070439A4A5965CD6EBF406B31C5@gazelle.ad.endace.com>
-	<17995.42562.870806.396617@notabene.brown>
-	<659F626D666070439A4A5965CD6EBF406B33ED@gazelle.ad.endace.com>
+From: "Don Dupuis" <dondster@gmail.com>
+Subject: Re: Md corruption using RAID10 on linux-2.6.21
+Date: Wed, 16 May 2007 21:57:42 -0500
+Message-ID: <632b79000705161957j5443e3b9h1d6da8593395f736@mail.gmail.com>
+References: <632b79000705161138h359f71egdf4ad5d483731dbe@mail.gmail.com>
+	 <17995.46536.195175.894763@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: message from Jeff Zheng on Thursday May 17
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Jeff Zheng <Jeff.Zheng@endace.com>
-Cc: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>, Ingo Molnar <mingo@elte.hu>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <17995.46536.195175.894763@notabene.brown>
+Content-Disposition: inline
+Sender: linux-raid-owner@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thursday May 17, Jeff.Zheng@endace.com wrote:
-> 
-> > The only difference of any significance between the working 
-> > and non-working configurations is that in the non-working, 
-> > the component devices are larger than 2Gig, and hence have 
-> > sector offsets greater than 32 bits.
-> 
-> Do u mean 2T here?, but in both configuartion, the component devices are
-> larger than 2T (2.25T&5.5T).
+On 5/16/07, Neil Brown <neilb@suse.de> wrote:
+> On Wednesday May 16, dondster@gmail.com wrote:
+> ...
+> >
+> > The problem arises when I do a drive removal such as sda and then I
+> > remove power from the system. Most of the time I will have a corrupted
+> > partition on the md device. Other corruption will be my root partition
+> > which is an ext3 filesystem. I seem to have a better chance of booting
+> > a least 1 time with no errors with bitmap turned on, but If I repeat
+> > the process, I will have corruption as well. Also with bitmap turned
+> > on, adding the new drive into the md device will take way to too long.
+> > I only get about 3MB per second on the resync. With bitmap turned off,
+> > I will get between 10MB to 15MB resync rate. Has anyone else seen this
+> > behavior, or is this situation is no tested very often? I would think
+> > that I shouldn't get corruption with this raid  setup and jornaling of
+> > my filesytems? Any help would be appreciated.
+>
+>
+> The resync rate should be the same whether you have a bitmap or not,
+> so that observation is very strange.  Can you double check, and report
+> the contents of "/proc/mdstat" in the two situations.
+>
+> You say you have corruption on your root filesystem.  Presumably that
+> is not on the raid?  Maybe the drive doesn't get a chance to flush
+> it's cache when you power-off.  Do you get the same corruption if you
+> simulate a crash without turning off the power. e.g.
+>    echo b > /proc/sysrq-trigger
+>
+> Do you get the same corruption in the raid10 if you turn it off
+> *without* removing a drive first?
+>
+> NeilBrown
+>
+Powering off with all drives will not have corruption. When I have a
+drive missing and the md device does a full resync, I will get the
+corruption. Usually the md partition table is corrupt or gone. and
+with the first drive gone it happens more frequently. If the partition
+table is not corrupt, then the rootfilesystem or one of the other
+filesystems on the md device will be corrupted. Yes my root filesystem
+is on the raid device. I will update with the bitmap resync rate stuff
+later.
 
-Yes, I meant 2T, and yes, the components are always over 2T.  So I'm
-at a complete loss.  The raid0 code follows the same paths and does
-the same things and uses 64bit arithmetic where needed.
-
-So I have no idea how there could be a difference between these two
-cases.  
-
-I'm at a loss...
-
-NeilBrown
+Don
