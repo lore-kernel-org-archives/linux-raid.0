@@ -1,90 +1,52 @@
-From: "Don Dupuis" <dondster@gmail.com>
-Subject: Re: Md corruption using RAID10 on linux-2.6.21
-Date: Wed, 16 May 2007 22:50:43 -0500
-Message-ID: <632b79000705162050w70a2feb1w14919fde6e98818c@mail.gmail.com>
-References: <632b79000705161138h359f71egdf4ad5d483731dbe@mail.gmail.com>
-	 <17995.46536.195175.894763@notabene.brown>
-	 <632b79000705161957j5443e3b9h1d6da8593395f736@mail.gmail.com>
-	 <632b79000705161958m67a192bav73ab3dafc08825d0@mail.gmail.com>
+From: Neil Brown <neilb@suse.de>
+Subject: RE: Software raid0 will crash the file-system, when each disk is 5TB
+Date: Thu, 17 May 2007 14:32:11 +1000
+Message-ID: <17995.56011.742143.418388@notabene.brown>
+References: <659F626D666070439A4A5965CD6EBF406836C6@gazelle.ad.endace.com>
+	<6bffcb0e0705151629j78920ca2r9337dccdfc1bb6a9@mail.gmail.com>
+	<17994.19043.771733.453896@notabene.brown>
+	<659F626D666070439A4A5965CD6EBF406B31C5@gazelle.ad.endace.com>
+	<17995.42562.870806.396617@notabene.brown>
+	<659F626D666070439A4A5965CD6EBF406B33ED@gazelle.ad.endace.com>
+	<17995.49602.427417.500049@notabene.brown>
+	<659F626D666070439A4A5965CD6EBF406B3428@gazelle.ad.endace.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <632b79000705161958m67a192bav73ab3dafc08825d0@mail.gmail.com>
-Content-Disposition: inline
-Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: message from Jeff Zheng on Thursday May 17
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Jeff Zheng <Jeff.Zheng@endace.com>
+Cc: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>, Ingo Molnar <mingo@elte.hu>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 5/16/07, Don Dupuis <dondster@gmail.com> wrote:
-> On 5/16/07, Don Dupuis <dondster@gmail.com> wrote:
-> > On 5/16/07, Neil Brown <neilb@suse.de> wrote:
-> > > On Wednesday May 16, dondster@gmail.com wrote:
-> > > ...
-> > > >
-> > > > The problem arises when I do a drive removal such as sda and then I
-> > > > remove power from the system. Most of the time I will have a corrupted
-> > > > partition on the md device. Other corruption will be my root partition
-> > > > which is an ext3 filesystem. I seem to have a better chance of booting
-> > > > a least 1 time with no errors with bitmap turned on, but If I repeat
-> > > > the process, I will have corruption as well. Also with bitmap turned
-> > > > on, adding the new drive into the md device will take way to too long.
-> > > > I only get about 3MB per second on the resync. With bitmap turned off,
-> > > > I will get between 10MB to 15MB resync rate. Has anyone else seen this
-> > > > behavior, or is this situation is no tested very often? I would think
-> > > > that I shouldn't get corruption with this raid  setup and jornaling of
-> > > > my filesytems? Any help would be appreciated.
-> > >
-> > >
-> > > The resync rate should be the same whether you have a bitmap or not,
-> > > so that observation is very strange.  Can you double check, and report
-> > > the contents of "/proc/mdstat" in the two situations.
-> > >
-> > > You say you have corruption on your root filesystem.  Presumably that
-> > > is not on the raid?  Maybe the drive doesn't get a chance to flush
-> > > it's cache when you power-off.  Do you get the same corruption if you
-> > > simulate a crash without turning off the power. e.g.
-> > >    echo b > /proc/sysrq-trigger
-> > >
-> > > Do you get the same corruption in the raid10 if you turn it off
-> > > *without* removing a drive first?
-> > >
-> > > NeilBrown
-> > >
-> > Powering off with all drives will not have corruption. When I have a
-> > drive missing and the md device does a full resync, I will get the
-> > corruption. Usually the md partition table is corrupt or gone. and
-> > with the first drive gone it happens more frequently. If the partition
-> > table is not corrupt, then the rootfilesystem or one of the other
-> > filesystems on the md device will be corrupted. Yes my root filesystem
-> > is on the raid device. I will update with the bitmap resync rate stuff
-> > later.
-> >
-> > Don
-> >
-> Forgot to tell you that I have the drive write cache disabled on all my drives.
->
-> Don
->
-Here is the /proc/mdstat output doing a recover after adding a drive
-to the md device:
-unused devices: <none>
--bash-3.1$ cat /proc/mdstat
-Personalities : [raid10]
-md_d0 : active raid10 sda2[4] sdd2[3] sdc2[2] sdb2[1]
-      3646464 blocks 256K chunks 3 near-copies [4/3] [_UUU]
-      [>....................]  recovery =  2.6% (73216/2734848)
-finish=4.8min speed=9152K/sec
+On Thursday May 17, Jeff.Zheng@endace.com wrote:
+> I tried the patch, same problem show up, but no bug_on report
+> 
+> Is there any other things I can do?
+> 
 
-unused devices: <none>
--bash-3.1$ cat /proc/mdstat
-Personalities : [raid10]
-md_d0 : active raid10 sda2[4] sdd2[3] sdc2[2] sdb2[1]
-      3646464 blocks 256K chunks 3 near-copies [4/3] [_UUU]
-      [>....................]  recovery =  3.4% (93696/2734848)
-finish=4.6min speed=9369K/sec
+What is the nature of the corruption?  Is it data in a file that is
+wrong when you read it back, or does the filesystem metadata get
+corrupted?
 
-I am still trying to get where I had the low recover rate with the
-bitmap turned on. I will get back with you
-Don
+Can you try the configuration that works, and sha1sum the files after
+you have written them to make sure that they really are correct?
+My thought here is "maybe there is a bad block on one device, and the
+block is used for data in the 'working' config, and for metadata in
+the 'broken' config.
+
+Can you try a degraded raid10 configuration. e.g.
+
+   mdadm -C /dev/md1 --level=10 --raid-disks=4 /dev/first missing \
+   /dev/second missing
+
+That will lay out the data in exactly the same place as with raid0,
+but will use totally different code paths to access it.  If you still
+get a problem, then it isn't in the raid0 code.
+
+Maybe try version 1 metadata (mdadm --metadata=1).  I doubt that would
+make a difference, but as I am grasping at straws already, it may be a
+straw woth trying.
+
+NeilBrown
