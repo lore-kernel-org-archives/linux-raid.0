@@ -1,98 +1,50 @@
-From: "Don Dupuis" <dondster@gmail.com>
-Subject: Re: Md corruption using RAID10 on linux-2.6.21
-Date: Mon, 21 May 2007 14:32:26 -0500
-Message-ID: <632b79000705211232gfb57e0focae8cdd0bf25bef@mail.gmail.com>
-References: <632b79000705161138h359f71egdf4ad5d483731dbe@mail.gmail.com>
-	 <17995.46536.195175.894763@notabene.brown>
-	 <632b79000705161957j5443e3b9h1d6da8593395f736@mail.gmail.com>
-	 <632b79000705161958m67a192bav73ab3dafc08825d0@mail.gmail.com>
-	 <632b79000705162050w70a2feb1w14919fde6e98818c@mail.gmail.com>
+From: thunder7@xs4all.nl
+Subject: Re: not resyncing after power cut.
+Date: Mon, 21 May 2007 22:03:25 +0200
+Message-ID: <20070521200324.GB21027@amd64.of.nowhere>
+References: <215ff4410705210808g779ba32dhee018f0bd81382d8@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <632b79000705162050w70a2feb1w14919fde6e98818c@mail.gmail.com>
 Content-Disposition: inline
+In-Reply-To: <215ff4410705210808g779ba32dhee018f0bd81382d8@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
+To: Chris Fanning <christopher.fanning@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 5/16/07, Don Dupuis <dondster@gmail.com> wrote:
-> On 5/16/07, Don Dupuis <dondster@gmail.com> wrote:
-> > On 5/16/07, Don Dupuis <dondster@gmail.com> wrote:
-> > > On 5/16/07, Neil Brown <neilb@suse.de> wrote:
-> > > > On Wednesday May 16, dondster@gmail.com wrote:
-> > > > ...
-> > > > >
-> > > > > The problem arises when I do a drive removal such as sda and then I
-> > > > > remove power from the system. Most of the time I will have a corrupted
-> > > > > partition on the md device. Other corruption will be my root partition
-> > > > > which is an ext3 filesystem. I seem to have a better chance of booting
-> > > > > a least 1 time with no errors with bitmap turned on, but If I repeat
-> > > > > the process, I will have corruption as well. Also with bitmap turned
-> > > > > on, adding the new drive into the md device will take way to too long.
-> > > > > I only get about 3MB per second on the resync. With bitmap turned off,
-> > > > > I will get between 10MB to 15MB resync rate. Has anyone else seen this
-> > > > > behavior, or is this situation is no tested very often? I would think
-> > > > > that I shouldn't get corruption with this raid  setup and jornaling of
-> > > > > my filesytems? Any help would be appreciated.
-> > > >
-> > > >
-> > > > The resync rate should be the same whether you have a bitmap or not,
-> > > > so that observation is very strange.  Can you double check, and report
-> > > > the contents of "/proc/mdstat" in the two situations.
-> > > >
-> > > > You say you have corruption on your root filesystem.  Presumably that
-> > > > is not on the raid?  Maybe the drive doesn't get a chance to flush
-> > > > it's cache when you power-off.  Do you get the same corruption if you
-> > > > simulate a crash without turning off the power. e.g.
-> > > >    echo b > /proc/sysrq-trigger
-> > > >
-> > > > Do you get the same corruption in the raid10 if you turn it off
-> > > > *without* removing a drive first?
-> > > >
-> > > > NeilBrown
-> > > >
-> > > Powering off with all drives will not have corruption. When I have a
-> > > drive missing and the md device does a full resync, I will get the
-> > > corruption. Usually the md partition table is corrupt or gone. and
-> > > with the first drive gone it happens more frequently. If the partition
-> > > table is not corrupt, then the rootfilesystem or one of the other
-> > > filesystems on the md device will be corrupted. Yes my root filesystem
-> > > is on the raid device. I will update with the bitmap resync rate stuff
-> > > later.
-> > >
-> > > Don
-> > >
-> > Forgot to tell you that I have the drive write cache disabled on all my drives.
-> >
-> > Don
-> >
-> Here is the /proc/mdstat output doing a recover after adding a drive
-> to the md device:
-> unused devices: <none>
-> -bash-3.1$ cat /proc/mdstat
-> Personalities : [raid10]
-> md_d0 : active raid10 sda2[4] sdd2[3] sdc2[2] sdb2[1]
->       3646464 blocks 256K chunks 3 near-copies [4/3] [_UUU]
->       [>....................]  recovery =  2.6% (73216/2734848)
-> finish=4.8min speed=9152K/sec
->
-> unused devices: <none>
-> -bash-3.1$ cat /proc/mdstat
-> Personalities : [raid10]
-> md_d0 : active raid10 sda2[4] sdd2[3] sdc2[2] sdb2[1]
->       3646464 blocks 256K chunks 3 near-copies [4/3] [_UUU]
->       [>....................]  recovery =  3.4% (93696/2734848)
-> finish=4.6min speed=9369K/sec
->
-> I am still trying to get where I had the low recover rate with the
-> bitmap turned on. I will get back with you
-> Don
->
-Any new updates Neil?
-Any new things to try to get you additional info?
-THanks
+=46rom: Chris Fanning <christopher.fanning@gmail.com>
+Date: Mon, May 21, 2007 at 05:08:47PM +0200
+> Hi,
+>=20
+> I've got a couple of doubts.
+>=20
+> Since more than a year ago I setup mdadm raid1 on new instalations
+> (thanks for your work).
+> On the older machines, mdadm -D shows them in a dirty state. I know
+> that this is/was as expected. If there is a power cut, the machine
+> boots and a dirty array is resynced, =BFright?
+>=20
+> On newer installations, mdadm -D shows arrays in a clean state. I had
+> always thought that this was ok becuase I'd read somewhere that the
+> term 'dirty' was causing confusion and it got changed.
+> So, state: clean, is what I should expect?
+>=20
+If the newer machines have bitmaps on, the resync is generally faster
+than finishing booting - so when you can log in, the array is clean
+again.
 
-Don
+Do they use bitmaps?
+
+Kind regards,
+Jurriaan
+--=20
+Look - either dualism sucks, or it doesn't.
+Debian (Unstable) GNU/Linux 2.6.21-mm2 2x4021 bogomips load load 3.73
+the Jack Vance Integral Edition: http://www.integralarchive.org
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
