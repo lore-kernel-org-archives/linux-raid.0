@@ -1,50 +1,77 @@
-From: thunder7@xs4all.nl
-Subject: Re: not resyncing after power cut.
-Date: Mon, 21 May 2007 22:03:25 +0200
-Message-ID: <20070521200324.GB21027@amd64.of.nowhere>
-References: <215ff4410705210808g779ba32dhee018f0bd81382d8@mail.gmail.com>
+From: Christian <cjs@dhp.com>
+Subject: Adding larger disks to RAID5
+Date: Mon, 21 May 2007 16:44:26 -0400
+Message-ID: <465204AA.90301@dhp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <215ff4410705210808g779ba32dhee018f0bd81382d8@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Chris Fanning <christopher.fanning@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-=46rom: Chris Fanning <christopher.fanning@gmail.com>
-Date: Mon, May 21, 2007 at 05:08:47PM +0200
-> Hi,
->=20
-> I've got a couple of doubts.
->=20
-> Since more than a year ago I setup mdadm raid1 on new instalations
-> (thanks for your work).
-> On the older machines, mdadm -D shows them in a dirty state. I know
-> that this is/was as expected. If there is a power cut, the machine
-> boots and a dirty array is resynced, =BFright?
->=20
-> On newer installations, mdadm -D shows arrays in a clean state. I had
-> always thought that this was ok becuase I'd read somewhere that the
-> term 'dirty' was causing confusion and it got changed.
-> So, state: clean, is what I should expect?
->=20
-If the newer machines have bitmaps on, the resync is generally faster
-than finishing booting - so when you can log in, the array is clean
-again.
+Hello,
 
-Do they use bitmaps?
+I have 8x250gig hard drives in a RAID5 configuration.  What I'm trying
+to do is add more storage to the raid by replacing the 250's with
+larger disks one-by-one over time.  I just replaced the first disk
+with a 750, and the raid resync'd, but now I'm unable to grow it to
+the additional space.  The raid is just using the first 250 gigs and
+nothing more on the drive.   The command I issued in attempt to grow
+it was 'mdadm --grow /dev/md0 -z max', but nothing happens.  Is what
+I'm trying to do possible?  I'm running kernel 2.6.21 w/ raid5 expansion
+enabled.
 
-Kind regards,
-Jurriaan
---=20
-Look - either dualism sucks, or it doesn't.
-Debian (Unstable) GNU/Linux 2.6.21-mm2 2x4021 bogomips load load 3.73
-the Jack Vance Integral Edition: http://www.integralarchive.org
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks,
+Christian
+
+SCSI device sda: 1465149168 512-byte hdwr sectors (750156 MB)
+SCSI device sdb: 488397168 512-byte hdwr sectors (250059 MB)
+SCSI device sdc: 488397168 512-byte hdwr sectors (250059 MB)
+SCSI device sdd: 488397168 512-byte hdwr sectors (250059 MB)
+SCSI device sde: 488397168 512-byte hdwr sectors (250059 MB)
+SCSI device sdf: 488397168 512-byte hdwr sectors (250059 MB)
+SCSI device sdg: 488397168 512-byte hdwr sectors (250059 MB)
+SCSI device sdh: 488397168 512-byte hdwr sectors (250059 MB)
+SCSI device sdi: 488397168 512-byte hdwr sectors (250059 MB)
+
+
+Personalities : [raid6] [raid5] [raid4]
+md0 : active raid5 sda[0] sdb[1] sdh[7] sdg[6] sdf[5] sde[4] sdd[3] sdc[2]
+      1709389248 blocks level 5, 64k chunk, algorithm 2 [8/8] [UUUUUUUU]
+
+
+/dev/md0:
+        Version : 00.90.03
+  Creation Time : Fri May 18 01:49:46 2007
+     Raid Level : raid5
+     Array Size : 1709389248 (1630.20 GiB 1750.41 GB)
+  Used Dev Size : 244198464 (232.89 GiB 250.06 GB)
+   Raid Devices : 8
+  Total Devices : 8
+Preferred Minor : 0
+    Persistence : Superblock is persistent
+
+    Update Time : Mon May 21 13:27:34 2007
+          State : clean
+ Active Devices : 8
+Working Devices : 8
+ Failed Devices : 0
+  Spare Devices : 0
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+           UUID : 905a278f:a088d952:fab6e626:2309d439
+         Events : 0.94
+
+    Number   Major   Minor   RaidDevice State
+       0       8        0        0      active sync   /dev/sda
+       1       8       16        1      active sync   /dev/sdb
+       2       8       32        2      active sync   /dev/sdc
+       3       8       48        3      active sync   /dev/sdd
+       4       8       64        4      active sync   /dev/sde
+       5       8       80        5      active sync   /dev/sdf
+       6       8       96        6      active sync   /dev/sdg
+       7       8      112        7      active sync   /dev/sdh
+
