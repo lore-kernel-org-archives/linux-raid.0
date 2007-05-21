@@ -1,31 +1,87 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [PATCH 000 of 7] md: Introduction EXPLAIN PATCH SET HERE
-Date: Mon, 21 May 2007 11:32:57 +1000
-Message-ID: <20070521111837.20906.patches@notabene>
+Subject: [PATCH 002 of 7] md: Don't write more than is required of the last page of a bitmap
+Date: Mon, 21 May 2007 11:33:10 +1000
+Message-ID: <1070521013310.6687@suse.de>
+References: <20070521111837.20906.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Jeff Zheng <Jeff.Zheng@endace.com>, Neil Brown <neilb@suse.de>, stable@kernel.org
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Neil Brown <neilb@suse.de>, stable@kernel.org
 List-Id: linux-raid.ids
 
-Following are 7 patches for md in current main-line.
 
-The first two fix bugs that can cause data corruption, and so are suitable for -stable. 
+It is possible that real data or metadata follows the bitmap
+without full page alignment.
+So limit the last write to be only the required number of bytes,
+rounded up to the hard sector size of the device.
 
-The next fixes some problems with hot-adding a device to a linear array.  As has not
-been tested by my test-suite until now, it hasn't worked properly until now :-(
+Signed-off-by: Neil Brown <neilb@suse.de>
+Cc: stable@kernel.org
 
-The remainder are mainly cleaning up code and comments.  They could
-wait for 2.6.23, but are probably safe to go into 2.6.22 (maybe sit a week in -mm??)
+### Diffstat output
+ ./drivers/md/bitmap.c         |   17 ++++++++++++-----
+ ./include/linux/raid/bitmap.h |    1 +
+ 2 files changed, 13 insertions(+), 5 deletions(-)
 
-Thanks,
-NeilBrown
+diff .prev/drivers/md/bitmap.c ./drivers/md/bitmap.c
+--- .prev/drivers/md/bitmap.c	2007-05-18 11:49:18.000000000 +1000
++++ ./drivers/md/bitmap.c	2007-05-18 11:49:18.000000000 +1000
+@@ -255,19 +255,25 @@ static struct page *read_sb_page(mddev_t
+ 
+ }
+ 
+-static int write_sb_page(mddev_t *mddev, long offset, struct page *page, int wait)
++static int write_sb_page(struct bitmap *bitmap, struct page *page, int wait)
+ {
+ 	mdk_rdev_t *rdev;
+ 	struct list_head *tmp;
++	mddev_t *mddev = bitmap->mddev;
+ 
+ 	ITERATE_RDEV(mddev, rdev, tmp)
+ 		if (test_bit(In_sync, &rdev->flags)
+-		    && !test_bit(Faulty, &rdev->flags))
++		    && !test_bit(Faulty, &rdev->flags)) {
++			int size = PAGE_SIZE;
++			if (page->index == bitmap->file_pages-1)
++				size = roundup(bitmap->last_page_size,
++					       bdev_hardsect_size(rdev->bdev));
+ 			md_super_write(mddev, rdev,
+-				       (rdev->sb_offset<<1) + offset
++				       (rdev->sb_offset<<1) + bitmap->offset
+ 				       + page->index * (PAGE_SIZE/512),
+-				       PAGE_SIZE,
++				       size,
+ 				       page);
++		}
+ 
+ 	if (wait)
+ 		md_super_wait(mddev);
+@@ -282,7 +288,7 @@ static int write_page(struct bitmap *bit
+ 	struct buffer_head *bh;
+ 
+ 	if (bitmap->file == NULL)
+-		return write_sb_page(bitmap->mddev, bitmap->offset, page, wait);
++		return write_sb_page(bitmap, page, wait);
+ 
+ 	bh = page_buffers(page);
+ 
+@@ -923,6 +929,7 @@ static int bitmap_init_from_disk(struct 
+ 			}
+ 
+ 			bitmap->filemap[bitmap->file_pages++] = page;
++			bitmap->last_page_size = count;
+ 		}
+ 		paddr = kmap_atomic(page, KM_USER0);
+ 		if (bitmap->flags & BITMAP_HOSTENDIAN)
 
-
- [PATCH 001 of 7] md: Avoid overflow in raid0 calculation with large components.
- [PATCH 002 of 7] md: Don't write more than is required of the last page of a bitmap
- [PATCH 003 of 7] md: Fix bug with linear hot-add and elsewhere.
- [PATCH 004 of 7] md: Improve message about invalid superblock during autodetect.
- [PATCH 005 of 7] md: Improve the is_mddev_idle test fix
- [PATCH 006 of 7] md: Check that internal bitmap does not overlap other data.
- [PATCH 007 of 7] md: Change bitmap_unplug and others to void functions.
+diff .prev/include/linux/raid/bitmap.h ./include/linux/raid/bitmap.h
+--- .prev/include/linux/raid/bitmap.h	2007-05-18 11:49:18.000000000 +1000
++++ ./include/linux/raid/bitmap.h	2007-05-18 11:49:18.000000000 +1000
+@@ -232,6 +232,7 @@ struct bitmap {
+ 	struct page **filemap; /* list of cache pages for the file */
+ 	unsigned long *filemap_attr; /* attributes associated w/ filemap pages */
+ 	unsigned long file_pages; /* number of pages in the file */
++	int last_page_size; /* bytes in the last page */
+ 
+ 	unsigned long flags;
+ 
