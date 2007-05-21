@@ -1,96 +1,98 @@
-From: Chris Wright <chrisw@sous-sol.org>
-Subject: [patch 39/69] md: Avoid a possibility that a read error can wrongly propagate through md/raid1 to a filesystem.
-Date: Mon, 21 May 2007 12:16:51 -0700
-Message-ID: <20070521191734.512551000@sous-sol.org>
-References: <20070521191612.800400000@sous-sol.org>
+From: "Don Dupuis" <dondster@gmail.com>
+Subject: Re: Md corruption using RAID10 on linux-2.6.21
+Date: Mon, 21 May 2007 14:32:26 -0500
+Message-ID: <632b79000705211232gfb57e0focae8cdd0bf25bef@mail.gmail.com>
+References: <632b79000705161138h359f71egdf4ad5d483731dbe@mail.gmail.com>
+	 <17995.46536.195175.894763@notabene.brown>
+	 <632b79000705161957j5443e3b9h1d6da8593395f736@mail.gmail.com>
+	 <632b79000705161958m67a192bav73ab3dafc08825d0@mail.gmail.com>
+	 <632b79000705162050w70a2feb1w14919fde6e98818c@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline; filename=md-avoid-a-possibility-that-a-read-error-can-wrongly-propagate-through-md-raid1-to-a-filesystem.patch
+In-Reply-To: <632b79000705162050w70a2feb1w14919fde6e98818c@mail.gmail.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, stable@kernel.org, Andrew Morton <akpm@linux-foundation.org>
-Cc: Justin Forbes <jmforbes@linuxtx.org>, Zwane Mwaikambo <zwane@arm.linux.org.uk>, Theodore Ts'o <tytso@mit.edu>, Randy Dunlap <rdunlap@xenotime.net>, Dave Jones <davej@redhat.com>, Chuck Wolber <chuckw@quantumlinux.com>, Chris Wedgwood <reviews@ml.cw.f00f.org>, Michael Krufky <mkrufky@linuxtv.org>, Chuck Ebbert <cebbert@redhat.com>, torvalds@linux-foundation.org, alan@lxorguk.ukuu.org.uk, NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
--stable review patch.  If anyone has any objections, please let us know.
----------------------
+On 5/16/07, Don Dupuis <dondster@gmail.com> wrote:
+> On 5/16/07, Don Dupuis <dondster@gmail.com> wrote:
+> > On 5/16/07, Don Dupuis <dondster@gmail.com> wrote:
+> > > On 5/16/07, Neil Brown <neilb@suse.de> wrote:
+> > > > On Wednesday May 16, dondster@gmail.com wrote:
+> > > > ...
+> > > > >
+> > > > > The problem arises when I do a drive removal such as sda and then I
+> > > > > remove power from the system. Most of the time I will have a corrupted
+> > > > > partition on the md device. Other corruption will be my root partition
+> > > > > which is an ext3 filesystem. I seem to have a better chance of booting
+> > > > > a least 1 time with no errors with bitmap turned on, but If I repeat
+> > > > > the process, I will have corruption as well. Also with bitmap turned
+> > > > > on, adding the new drive into the md device will take way to too long.
+> > > > > I only get about 3MB per second on the resync. With bitmap turned off,
+> > > > > I will get between 10MB to 15MB resync rate. Has anyone else seen this
+> > > > > behavior, or is this situation is no tested very often? I would think
+> > > > > that I shouldn't get corruption with this raid  setup and jornaling of
+> > > > > my filesytems? Any help would be appreciated.
+> > > >
+> > > >
+> > > > The resync rate should be the same whether you have a bitmap or not,
+> > > > so that observation is very strange.  Can you double check, and report
+> > > > the contents of "/proc/mdstat" in the two situations.
+> > > >
+> > > > You say you have corruption on your root filesystem.  Presumably that
+> > > > is not on the raid?  Maybe the drive doesn't get a chance to flush
+> > > > it's cache when you power-off.  Do you get the same corruption if you
+> > > > simulate a crash without turning off the power. e.g.
+> > > >    echo b > /proc/sysrq-trigger
+> > > >
+> > > > Do you get the same corruption in the raid10 if you turn it off
+> > > > *without* removing a drive first?
+> > > >
+> > > > NeilBrown
+> > > >
+> > > Powering off with all drives will not have corruption. When I have a
+> > > drive missing and the md device does a full resync, I will get the
+> > > corruption. Usually the md partition table is corrupt or gone. and
+> > > with the first drive gone it happens more frequently. If the partition
+> > > table is not corrupt, then the rootfilesystem or one of the other
+> > > filesystems on the md device will be corrupted. Yes my root filesystem
+> > > is on the raid device. I will update with the bitmap resync rate stuff
+> > > later.
+> > >
+> > > Don
+> > >
+> > Forgot to tell you that I have the drive write cache disabled on all my drives.
+> >
+> > Don
+> >
+> Here is the /proc/mdstat output doing a recover after adding a drive
+> to the md device:
+> unused devices: <none>
+> -bash-3.1$ cat /proc/mdstat
+> Personalities : [raid10]
+> md_d0 : active raid10 sda2[4] sdd2[3] sdc2[2] sdb2[1]
+>       3646464 blocks 256K chunks 3 near-copies [4/3] [_UUU]
+>       [>....................]  recovery =  2.6% (73216/2734848)
+> finish=4.8min speed=9152K/sec
+>
+> unused devices: <none>
+> -bash-3.1$ cat /proc/mdstat
+> Personalities : [raid10]
+> md_d0 : active raid10 sda2[4] sdd2[3] sdc2[2] sdb2[1]
+>       3646464 blocks 256K chunks 3 near-copies [4/3] [_UUU]
+>       [>....................]  recovery =  3.4% (93696/2734848)
+> finish=4.6min speed=9369K/sec
+>
+> I am still trying to get where I had the low recover rate with the
+> bitmap turned on. I will get back with you
+> Don
+>
+Any new updates Neil?
+Any new things to try to get you additional info?
+THanks
 
-From: NeilBrown <neilb@suse.de>
-
-When a raid1 has only one working drive, we want read error to
-propagate up to the filesystem as there is no point failing the last
-drive in an array.
-
-Currently the code perform this check is racy.  If a write and a read
-a both submitted to a device on a 2-drive raid1, and the write fails
-followed by the read failing, the read will see that there is only one
-working drive and will pass the failure up, even though the one
-working drive is actually the *other* one.
-
-So, tighten up the locking.
-
-Signed-off-by: Neil Brown <neilb@suse.de>
-Signed-off-by: Chris Wright <chrisw@sous-sol.org>
----
-
- drivers/md/raid1.c |   33 +++++++++++++++++++--------------
- 1 file changed, 19 insertions(+), 14 deletions(-)
-
-diff .prev/drivers/md/raid1.c ./drivers/md/raid1.c
---- linux-2.6.21.1.orig/drivers/md/raid1.c
-+++ linux-2.6.21.1/drivers/md/raid1.c
-@@ -271,21 +271,25 @@ static int raid1_end_read_request(struct
- 	 */
- 	update_head_pos(mirror, r1_bio);
- 
--	if (uptodate || (conf->raid_disks - conf->mddev->degraded) <= 1) {
--		/*
--		 * Set R1BIO_Uptodate in our master bio, so that
--		 * we will return a good error code for to the higher
--		 * levels even if IO on some other mirrored buffer fails.
--		 *
--		 * The 'master' represents the composite IO operation to
--		 * user-side. So if something waits for IO, then it will
--		 * wait for the 'master' bio.
-+	if (uptodate)
-+		set_bit(R1BIO_Uptodate, &r1_bio->state);
-+	else {
-+		/* If all other devices have failed, we want to return
-+		 * the error upwards rather than fail the last device.
-+		 * Here we redefine "uptodate" to mean "Don't want to retry"
- 		 */
--		if (uptodate)
--			set_bit(R1BIO_Uptodate, &r1_bio->state);
-+		unsigned long flags;
-+		spin_lock_irqsave(&conf->device_lock, flags);
-+		if (r1_bio->mddev->degraded == conf->raid_disks ||
-+		    (r1_bio->mddev->degraded == conf->raid_disks-1 &&
-+		     !test_bit(Faulty, &conf->mirrors[mirror].rdev->flags)))
-+			uptodate = 1;
-+		spin_unlock_irqrestore(&conf->device_lock, flags);
-+	}
- 
-+	if (uptodate)
- 		raid_end_bio_io(r1_bio);
--	} else {
-+	else {
- 		/*
- 		 * oops, read error:
- 		 */
-@@ -992,13 +996,14 @@ static void error(mddev_t *mddev, mdk_rd
- 		unsigned long flags;
- 		spin_lock_irqsave(&conf->device_lock, flags);
- 		mddev->degraded++;
-+		set_bit(Faulty, &rdev->flags);
- 		spin_unlock_irqrestore(&conf->device_lock, flags);
- 		/*
- 		 * if recovery is running, make sure it aborts.
- 		 */
- 		set_bit(MD_RECOVERY_ERR, &mddev->recovery);
--	}
--	set_bit(Faulty, &rdev->flags);
-+	} else
-+		set_bit(Faulty, &rdev->flags);
- 	set_bit(MD_CHANGE_DEVS, &mddev->flags);
- 	printk(KERN_ALERT "raid1: Disk failure on %s, disabling device. \n"
- 		"	Operation continuing on %d devices\n",
-
--- 
+Don
