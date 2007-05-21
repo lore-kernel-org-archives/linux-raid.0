@@ -1,70 +1,31 @@
-From: Maciej 'Agaran' Pijanka <agaran@pld-linux.org>
-Subject: mdadm, raid10, and problem
-Date: Sun, 20 May 2007 17:35:35 +0200
-Message-ID: <20070520153535.GA563@ep09.pld-linux.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: NeilBrown <neilb@suse.de>
+Subject: [PATCH 000 of 7] md: Introduction EXPLAIN PATCH SET HERE
+Date: Mon, 21 May 2007 11:32:57 +1000
+Message-ID: <20070521111837.20906.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: neilb@suse.de
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Jeff Zheng <Jeff.Zheng@endace.com>, Neil Brown <neilb@suse.de>, stable@kernel.org
 List-Id: linux-raid.ids
 
+Following are 7 patches for md in current main-line.
 
-Hello
+The first two fix bugs that can cause data corruption, and so are suitable for -stable. 
 
+The next fixes some problems with hot-adding a device to a linear array.  As has not
+been tested by my test-suite until now, it hasn't worked properly until now :-(
 
-i was trying to build raid 10 from six devices (currently loops but need
-to check before i try to do same on physical drives).
+The remainder are mainly cleaning up code and comments.  They could
+wait for 2.6.23, but are probably safe to go into 2.6.22 (maybe sit a week in -mm??)
 
-and mdadm gets bit mad, 
-
-mdadm -C -l10 -n6 /dev/loop1 /dev/loop2 /dev/loop3 missing missing
-missing
-produced weird result 
-
-when tried loop missing loop missing loop missing it worked
-
-i understand that its logical to give three pairs of devices but
-content of error wasn't logical in any way
-
-mdadm 2.6
-
-[root@develbox /]# mdadm --create  /dev/md0 -l10 -n6 -R /dev/loop0 /dev/loop1 /dev/loop2  missing missing missing
-mdadm: /dev/loop0 appears to be part of a raid array:
-level=raid10 devices=6 ctime=Sun May 20 17:32:43 2007
-mdadm: /dev/loop1 appears to be part of a raid array:
-level=raid10 devices=6 ctime=Sun May 20 17:32:43 2007
-mdadm: /dev/loop2 appears to be part of a raid array:
-level=raid10 devices=6 ctime=Sun May 20 17:32:43 2007
-mdadm: RUN_ARRAY failed: Input/output error
-mdadm: stopped /dev/md0
-[root@develbox /]#
-
--from dmesg:
-md: bind<loop0>
-md: bind<loop1>
-md: bind<loop2>
-md: md0: raid array is not clean -- starting background reconstruction
-raid10: not enough operational mirrors for md0
-md: pers->run() failed ...
-md: md0 stopped.
-md: unbind<loop2>
-md: export_rdev(loop2)
-md: unbind<loop1>
-md: export_rdev(loop1)
-md: unbind<loop0>
-md: export_rdev(loop0)
-[root@develbox /]#
+Thanks,
+NeilBrown
 
 
-ps. am not subscribed, please cc to me
-
-best regards
-maciej pijanka
-
-
--- 
-agaran at pld dash linux dot org :: PLD Linux Developer [#133161]
-I do not fear computers. I fear the lack of them. [Isaac Asimov]
+ [PATCH 001 of 7] md: Avoid overflow in raid0 calculation with large components.
+ [PATCH 002 of 7] md: Don't write more than is required of the last page of a bitmap
+ [PATCH 003 of 7] md: Fix bug with linear hot-add and elsewhere.
+ [PATCH 004 of 7] md: Improve message about invalid superblock during autodetect.
+ [PATCH 005 of 7] md: Improve the is_mddev_idle test fix
+ [PATCH 006 of 7] md: Check that internal bitmap does not overlap other data.
+ [PATCH 007 of 7] md: Change bitmap_unplug and others to void functions.
