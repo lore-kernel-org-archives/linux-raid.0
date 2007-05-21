@@ -1,48 +1,60 @@
-From: Neil Brown <neilb@suse.de>
-Subject: ANNOUNCE: mdadm 2.6.2 - A tool for managing Soft RAID under Linux
-Date: Mon, 21 May 2007 14:55:01 +1000
-Message-ID: <18001.9765.808761.531809@notabene.brown>
+From: "Chris Fanning" <christopher.fanning@gmail.com>
+Subject: not resyncing after power cut.
+Date: Mon, 21 May 2007 17:08:47 +0200
+Message-ID: <215ff4410705210808g779ba32dhee018f0bd81382d8@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hi,
 
-I am pleased to announce the availability of
-   mdadm version 2.6.2
+I've got a couple of doubts.
 
-It is available at the usual places:
-   http://www.cse.unsw.edu.au/~neilb/source/mdadm/
-and
-   countrycode=xx.
-   http://www.${countrycode}kernel.org/pub/linux/utils/raid/mdadm/
-and via git at
-   git://neil.brown.name/mdadm
-   http://neil.brown.name/git?p=mdadm
+Since more than a year ago I setup mdadm raid1 on new instalations
+(thanks for your work).
+On the older machines, mdadm -D shows them in a dirty state. I know
+that this is/was as expected. If there is a power cut, the machine
+boots and a dirty array is resynced, =BFright?
 
-mdadm is a tool for creating, managing and monitoring
-device arrays using the "md" driver in Linux, also
-known as Software RAID arrays.
+On newer installations, mdadm -D shows arrays in a clean state. I had
+always thought that this was ok becuase I'd read somewhere that the
+term 'dirty' was causing confusion and it got changed.
+So, state: clean, is what I should expect?
 
-Release 2.6.2  adds a  few minor bug  fixes to 2.6.1
+Last week we had a power cut and when the machines booted all arrays
+where brought up.
+I'm running debian etch and got
+INITRDSTART=3D'all'
+AUTOSTART=3D"all"
+Soon after one of the machines booted, I got users calling me saying
+that documents were disappearing ar becoming corrupted. I looked at
+cat /proc/mdstat and saw that nothing was being resynced.
+I stopped the array, then removed and added one of the partitions to
+resync it (could I have done the same using
+/usr/share/mdadm/checkarray ?)
+Then I ran fsck.ext3 on it (the /dev/md1) . it came back clean. so I
+ran fsck.ext3 -f and got lots of errors. Anyway, things are back to
+normal now.
 
-Changelog Entries:
-    -   --fail detached and --remove faulty can be used to fail and
-	remove devices that are no longer physically present.
-    -   --export option for --detail or present information in a format
-	that can be processed by udev.
-    -   fix internal bitmap allocation problems with v1.1, v1.2 metadata.
-    -   --help now goes to stdout so you can direct it to a pager.
-    -   Various manpage updates.
-    -   Make "--grow --add" for linear arrays really work.
-    -   --auto-detect to trigger in-kernel autodetect.
-    -   Make return code for "--detail --test" more reliable.  Missing
-	devices as well as failed devices cause an error.
+So today I installed etch on a new box to try and learn more about this=
+=2E
+To test, I start copying onto the mdadm device and then hit the reset
+button on the pc.
+On boot, everything starts as normal. no resync, nothing.
 
-Development of mdadm is sponsored by
- SUSE Labs, Novell Inc.
+Can someone shed some light on this for me please?
+Does it have something to do with initramfs?
 
-NeilBrown  21st May 2007
+Thanks.
+Chris.
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
