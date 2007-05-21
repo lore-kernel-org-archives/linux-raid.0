@@ -1,87 +1,49 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [PATCH 002 of 7] md: Don't write more than is required of the last page of a bitmap
-Date: Mon, 21 May 2007 11:33:10 +1000
-Message-ID: <1070521013310.6687@suse.de>
+Subject: [PATCH 001 of 7] md: Avoid overflow in raid0 calculation with large components.
+Date: Mon, 21 May 2007 11:33:03 +1000
+Message-ID: <1070521013303.6655@suse.de>
 References: <20070521111837.20906.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Neil Brown <neilb@suse.de>, stable@kernel.org
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Jeff Zheng <Jeff.Zheng@endace.com>, Neil Brown <neilb@suse.de>, stable@kernel.org
 List-Id: linux-raid.ids
 
 
-It is possible that real data or metadata follows the bitmap
-without full page alignment.
-So limit the last write to be only the required number of bytes,
-rounded up to the hard sector size of the device.
+If a raid0 has a component device larger than 4TB, and is accessed on
+a 32bit machines, then as 'chunk' is unsigned lock,
+   chunk << chunksize_bits
+can overflow (this can be as high as the size of the device in KB).
+chunk itself will not overflow (without triggering a BUG).
 
+So change 'chunk' to be 'sector_t, and get rid of the 'BUG' as it becomes
+impossible to hit.
+
+Cc: "Jeff Zheng" <Jeff.Zheng@endace.com>
 Signed-off-by: Neil Brown <neilb@suse.de>
 Cc: stable@kernel.org
 
 ### Diffstat output
- ./drivers/md/bitmap.c         |   17 ++++++++++++-----
- ./include/linux/raid/bitmap.h |    1 +
- 2 files changed, 13 insertions(+), 5 deletions(-)
+ ./drivers/md/raid0.c |    3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff .prev/drivers/md/bitmap.c ./drivers/md/bitmap.c
---- .prev/drivers/md/bitmap.c	2007-05-18 11:49:18.000000000 +1000
-+++ ./drivers/md/bitmap.c	2007-05-18 11:49:18.000000000 +1000
-@@ -255,19 +255,25 @@ static struct page *read_sb_page(mddev_t
+diff .prev/drivers/md/raid0.c ./drivers/md/raid0.c
+--- .prev/drivers/md/raid0.c	2007-05-18 11:48:57.000000000 +1000
++++ ./drivers/md/raid0.c	2007-05-18 11:48:57.000000000 +1000
+@@ -415,7 +415,7 @@ static int raid0_make_request (request_q
+ 	raid0_conf_t *conf = mddev_to_conf(mddev);
+ 	struct strip_zone *zone;
+ 	mdk_rdev_t *tmp_dev;
+-	unsigned long chunk;
++	sector_t chunk;
+ 	sector_t block, rsect;
+ 	const int rw = bio_data_dir(bio);
  
- }
+@@ -470,7 +470,6 @@ static int raid0_make_request (request_q
  
--static int write_sb_page(mddev_t *mddev, long offset, struct page *page, int wait)
-+static int write_sb_page(struct bitmap *bitmap, struct page *page, int wait)
- {
- 	mdk_rdev_t *rdev;
- 	struct list_head *tmp;
-+	mddev_t *mddev = bitmap->mddev;
+ 		sector_div(x, zone->nb_dev);
+ 		chunk = x;
+-		BUG_ON(x != (sector_t)chunk);
  
- 	ITERATE_RDEV(mddev, rdev, tmp)
- 		if (test_bit(In_sync, &rdev->flags)
--		    && !test_bit(Faulty, &rdev->flags))
-+		    && !test_bit(Faulty, &rdev->flags)) {
-+			int size = PAGE_SIZE;
-+			if (page->index == bitmap->file_pages-1)
-+				size = roundup(bitmap->last_page_size,
-+					       bdev_hardsect_size(rdev->bdev));
- 			md_super_write(mddev, rdev,
--				       (rdev->sb_offset<<1) + offset
-+				       (rdev->sb_offset<<1) + bitmap->offset
- 				       + page->index * (PAGE_SIZE/512),
--				       PAGE_SIZE,
-+				       size,
- 				       page);
-+		}
- 
- 	if (wait)
- 		md_super_wait(mddev);
-@@ -282,7 +288,7 @@ static int write_page(struct bitmap *bit
- 	struct buffer_head *bh;
- 
- 	if (bitmap->file == NULL)
--		return write_sb_page(bitmap->mddev, bitmap->offset, page, wait);
-+		return write_sb_page(bitmap, page, wait);
- 
- 	bh = page_buffers(page);
- 
-@@ -923,6 +929,7 @@ static int bitmap_init_from_disk(struct 
- 			}
- 
- 			bitmap->filemap[bitmap->file_pages++] = page;
-+			bitmap->last_page_size = count;
- 		}
- 		paddr = kmap_atomic(page, KM_USER0);
- 		if (bitmap->flags & BITMAP_HOSTENDIAN)
-
-diff .prev/include/linux/raid/bitmap.h ./include/linux/raid/bitmap.h
---- .prev/include/linux/raid/bitmap.h	2007-05-18 11:49:18.000000000 +1000
-+++ ./include/linux/raid/bitmap.h	2007-05-18 11:49:18.000000000 +1000
-@@ -232,6 +232,7 @@ struct bitmap {
- 	struct page **filemap; /* list of cache pages for the file */
- 	unsigned long *filemap_attr; /* attributes associated w/ filemap pages */
- 	unsigned long file_pages; /* number of pages in the file */
-+	int last_page_size; /* bytes in the last page */
- 
- 	unsigned long flags;
- 
+ 		x = block >> chunksize_bits;
+ 		tmp_dev = zone->dev[sector_div(x, zone->nb_dev)];
