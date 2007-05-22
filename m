@@ -1,50 +1,40 @@
-From: "Chris Fanning" <christopher.fanning@gmail.com>
-Subject: Re: not resyncing after power cut.
-Date: Tue, 22 May 2007 12:21:47 +0200
-Message-ID: <215ff4410705220321l315d7351qcd480fc4d5343abd@mail.gmail.com>
-References: <215ff4410705210808g779ba32dhee018f0bd81382d8@mail.gmail.com>
-	 <18002.45945.265950.221863@notabene.brown>
+From: "Bill Rugolsky Jr." <brugolsky@telemetry-investments.com>
+Subject: Re: Adding larger disks to RAID5
+Date: Tue, 22 May 2007 08:15:44 -0400
+Message-ID: <20070522121544.GA4349@ti88.telemetry-investments.com>
+References: <465204AA.90301@dhp.com> <18002.11374.159035.143026@notabene.brown> <20070521235735.GA26776@ti88.telemetry-investments.com> <18002.15343.525501.64958@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18002.45945.265950.221863@notabene.brown>
 Content-Disposition: inline
+In-Reply-To: <18002.15343.525501.64958@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+Cc: Christian <cjs@dhp.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+> On Monday May 21, brugolsky@telemetry-investments.com wrote:
+> > One could start a RAID 4/5/6 array over a degraded RAID1 for each
+> > component, (i.e., a degraded RAID1).
+ 
+That was supposed to say "a degraded RAID5+1".
 
-> > Can someone shed some light on this for me please?
->
-> Sounds like it could be a kernel bug.  What version (exactly) are you
-> running?
->
+On Tue, May 22, 2007 at 10:40:15AM +1000, Neil Brown wrote:
+> This doesn't really have anything to do with the metadata used - it is
+> primarily an implementation issue (though you would need to be careful
+> picking up the pieces after a crash).
+ 
+Right.  Doing it all automatically would be great, but involves some
+kernel work.
 
-On the test machine I installed yesterday I'm running a stock debian
-etch. 2.6.18-4-686. I didn't do anything tricky during the
-installation but just simply followed the installation interface
-steps.
+What I was suggesting is that one administratively stop an array
+built conventionally, and manually start a degraded RAID1 for each
+component.  It seems that is possible using "--build".  Then one can
+manually assemble the RAID5+1 from those RAID1s, and proceed with the
+disk-by-disk replacement while the array is online.  Looks as if that
+ought to be possible.  I'll have to give it a try, as soon as I have an
+afternoon to tinker [say, ... mid-summer :-/].
 
-The machine that gave me the problems is a 2.6.16 686 booting from xen-3.0.2-2
-I also have a second 2.6.16 booting from xen-3.0.2-2.
-All machines are debian etch.
+Many thanks, Neil.
 
-I've done this on both the 2.6.16 and the 2.6.18.4
-Start copying onto the mdadm device and then hit the reset button on the pc.
-On boot, everything starts as normal. no resync, nothing.
-Both of them.
-The 2.6.16 is compiled by me, but the 2.6.18-4 is etch out of the box.
-
-When I shutdown these machines gracefully, I also get
-Stopping array md1 (failed, busy)
-....
-on the arrays that initramfs setup (I think).
-
-Thanks.
-Chris.
-
-> NeilBrown
->
+	-Bill
