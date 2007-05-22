@@ -1,73 +1,55 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: Adding larger disks to RAID5
-Date: Tue, 22 May 2007 10:40:15 +1000
-Message-ID: <18002.15343.525501.64958@notabene.brown>
-References: <465204AA.90301@dhp.com>
-	<18002.11374.159035.143026@notabene.brown>
-	<20070521235735.GA26776@ti88.telemetry-investments.com>
+Subject: Re: mdadm, raid10, and problem
+Date: Tue, 22 May 2007 10:43:34 +1000
+Message-ID: <18002.15542.445123.221297@notabene.brown>
+References: <20070520153535.GA563@ep09.pld-linux.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Bill Rugolsky Jr. on Monday May 21
+In-Reply-To: message from Maciej 'Agaran' Pijanka on Sunday May 20
 Sender: linux-raid-owner@vger.kernel.org
-To: "Bill Rugolsky Jr." <brugolsky@telemetry-investments.com>
-Cc: Christian <cjs@dhp.com>, linux-raid@vger.kernel.org
+To: Maciej 'Agaran' Pijanka <agaran@pld-linux.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Monday May 21, brugolsky@telemetry-investments.com wrote:
-> Neil,
+On Sunday May 20, agaran@pld-linux.org wrote:
 > 
-> What seems desirable to me is a way to take a new (larger) spare drive and
-> add it to a RAID1 for a particular RAID 4/5/6 component, and then when
-> it's sync'd, replace the now redundant small drive with another larger
-> drive.  Wash, rinse, repeat.  This way the array is never degraded.
-> Though I imagine that this particular arrangement doesn't have the
-> benefit of the stripe rewrite when encountering a latent error on the
-> drive that is being migrated.  [Presumably the failing addresses could
-> be cycled through the check from userland though, by doing a read above
-> the stacked RAID.]
+> Hello
 > 
-> One could start a RAID 4/5/6 array over a degraded RAID1 for each
-> component, (i.e., a degraded RAID1).
 > 
-> I haven't been following the metadata changes closely.  Is it possible
-> to do this with external MD metadata?  It can also be done with
-> device-mapper, but dm-mirror is very immature compared to MD RAID1.
+> i was trying to build raid 10 from six devices (currently loops but need
+> to check before i try to do same on physical drives).
 > 
-> Comments?
+> and mdadm gets bit mad, 
+> 
+> mdadm -C -l10 -n6 /dev/loop1 /dev/loop2 /dev/loop3 missing missing
+> missing
+> produced weird result 
 
-This doesn't really have anything to do with the metadata used - it is
-primarily an implementation issue (though you would need to be careful
-picking up the pieces after a crash).
+What did you expect :-?
 
-If we could freeze an array (so that all writes block), then we could
-do much of what you suggest:
-  - freeze the array
-  - remove the target device
-  - create a raid1 of the target and the new
-  - re-add the raid1
-  - unfreeze the array.
+> mdadm: RUN_ARRAY failed: Input/output error
+> mdadm: stopped /dev/md0
 
-The issue of dealing with read errors on the target device is much
-more awkward to deal with.  The approach that seems right to me is:
+Yes, lots of mdadm's errors are - like this - quite unhelpful.  It is
+something that I would like to get improved, but it just doesn't get a
+high priority.
 
-  - create a raid1 variant which does a passive resync:  When the
-    next-needed block is read or written, write it to the second
-    device and advance the "next-needed" pointer.
-  - Get this raid1 to simply return read errors (which might be OK
-    already) so that a read-error won't be fatal.  But a read request
-    that be behind the "next-needed" pointer gets served from the
-    second device if the first does fail.
-  - Implement a 'check-one-disk' operation on raid5 (and others) so
-    that instead of reading all devices, it just reads all through
-    one.  If this one is really a raid1-variant, doing that read will
-    effect a resync on the raid1, and any read error will be handled
-    correctly.
+> -from dmesg:
+> md: bind<loop0>
+> md: bind<loop1>
+> md: bind<loop2>
+> md: md0: raid array is not clean -- starting background reconstruction
+> raid10: not enough operational mirrors for md0
 
-So it is all quite possible, and I agree that it could be valuable.
-It just needs someone to do it, and work out all the fine details.
+"not enough" means "you don't have the right drives".
 
-Anyone want to try some coding ????
+For every level other than raid10, it doesn't matter which drives you
+have, it just matter how many there are.
+For raid10, you do that to have are set of drives that provides all
+blocks.  But I just re-used the error message from raid1.
+
+Patches always welcome...
 
 NeilBrown
