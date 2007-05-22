@@ -1,55 +1,49 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: mdadm, raid10, and problem
-Date: Tue, 22 May 2007 10:43:34 +1000
-Message-ID: <18002.15542.445123.221297@notabene.brown>
-References: <20070520153535.GA563@ep09.pld-linux.org>
+Subject: Re: Md corruption using RAID10 on linux-2.6.21
+Date: Tue, 22 May 2007 10:50:23 +1000
+Message-ID: <18002.15951.765872.809204@notabene.brown>
+References: <632b79000705161138h359f71egdf4ad5d483731dbe@mail.gmail.com>
+	<17995.46536.195175.894763@notabene.brown>
+	<632b79000705161957j5443e3b9h1d6da8593395f736@mail.gmail.com>
+	<632b79000705161958m67a192bav73ab3dafc08825d0@mail.gmail.com>
+	<632b79000705162050w70a2feb1w14919fde6e98818c@mail.gmail.com>
+	<632b79000705211232gfb57e0focae8cdd0bf25bef@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Maciej 'Agaran' Pijanka on Sunday May 20
+In-Reply-To: message from Don Dupuis on Monday May 21
 Sender: linux-raid-owner@vger.kernel.org
-To: Maciej 'Agaran' Pijanka <agaran@pld-linux.org>
+To: Don Dupuis <dondster@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sunday May 20, agaran@pld-linux.org wrote:
+On Monday May 21, dondster@gmail.com wrote:
+> On 5/16/07, Don Dupuis <dondster@gmail.com> wrote:
+> >
+> > I am still trying to get where I had the low recover rate with the
+> > bitmap turned on. I will get back with you
+> > Don
+> >
+> Any new updates Neil?
+> Any new things to try to get you additional info?
+> THanks
 > 
-> Hello
-> 
-> 
-> i was trying to build raid 10 from six devices (currently loops but need
-> to check before i try to do same on physical drives).
-> 
-> and mdadm gets bit mad, 
-> 
-> mdadm -C -l10 -n6 /dev/loop1 /dev/loop2 /dev/loop3 missing missing
-> missing
-> produced weird result 
+> Don
 
-What did you expect :-?
+You said "I will get back with you" and I was waiting for that... I
+hoped that your further testing might reveal some details that would
+shine a light on the situation.
 
-> mdadm: RUN_ARRAY failed: Input/output error
-> mdadm: stopped /dev/md0
-
-Yes, lots of mdadm's errors are - like this - quite unhelpful.  It is
-something that I would like to get improved, but it just doesn't get a
-high priority.
-
-> -from dmesg:
-> md: bind<loop0>
-> md: bind<loop1>
-> md: bind<loop2>
-> md: md0: raid array is not clean -- starting background reconstruction
-> raid10: not enough operational mirrors for md0
-
-"not enough" means "you don't have the right drives".
-
-For every level other than raid10, it doesn't matter which drives you
-have, it just matter how many there are.
-For raid10, you do that to have are set of drives that provides all
-blocks.  But I just re-used the error message from raid1.
-
-Patches always welcome...
+One question:  Your description seems to say that you get corruption
+after the resync has finished.  Is the corruption there before the
+resync starts?
+I guess what I would like it:
+   Start with fully active array.  Check for corruption.
+   Remove one drive.  Check for corruptions.
+   Turn off system.  Turn it on again, array assembles with one
+   missing device.  Check for corruption.
+   Add device, resync starts.  Check for corruption.
+   Wait for resync to finish.  Check for corruption.
 
 NeilBrown
