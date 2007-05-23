@@ -1,38 +1,67 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: mdadm on huge raid sets
-Date: Wed, 23 May 2007 08:12:09 +1000
-Message-ID: <18003.27321.583707.520299@notabene.brown>
-References: <465349B9.3030702@soe.ucsc.edu>
+From: Alberto Alonso <alberto@ggsys.net>
+Subject: I/O errors, server unresponsive, array NOT-degraded
+Date: Tue, 22 May 2007 21:59:28 -0500
+Message-ID: <1179889168.21028.53.camel@w100>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Erich Weiler on Tuesday May 22
 Sender: linux-raid-owner@vger.kernel.org
-To: Erich Weiler <weiler@soe.ucsc.edu>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday May 22, weiler@soe.ucsc.edu wrote:
-> Greetings all-
-> 
-> Quick question.  We've got one of these new Sun x4500's, it is basically 
-> a machine with 48 disks in it, no hardware RAID controller, so you have 
-> to use software RAID, in our case mdadm because we're running RHEL 4.4.
-> 
-> When we try to create the raid set (RAID6), we're getting an error: 
-> "Invalid number of devices" (47 devices).  We tried lowering the number, 
-> and eventually it worked when we brought the number down to 27.  But 
-> looking at the source code, it looks like it supports up to 256 devices 
-> for RAID6... ?  Any insight would be much appreciated!!
+I've been having a recurring problem for about two months 
+now.
 
-Use "--metadata=1" to mdadm.  The 0.90 superblock has a limit of 27
-devices. version 1 has no fixed limit, but the code might not support
-more than 384 very well.
+I have a brand new server where suddenly everything except
+the web service stops responding.
 
-> 
-> Thanks a million,
+When looking at the console I can see messages like:
 
-That would be a megathank :-?
+end_request: I/O error, dev sdb, sector 42644555
+end_request: I/O error, dev sdb, sector 42644555
+end_request: I/O error, dev sdb, sector 42644555
+end_request: I/O error, dev sdb, sector 124365763
+end_request: I/O error, dev sdb, sector 124365763
+[...]
 
-NeilBrown
+My array setup can be summarized as follows:
+
+# cat /proc/mdstat
+Personalities : [raid1]
+md2 : active raid1 sda3[0] sdb3[1]
+      75473280 blocks [2/2] [UU]
+      [===>.................]  resync = 19.0% (14366720/75473280)
+finish=51.4min speed=19791K/sec
+
+md3 : active raid1 sda4[0] sdb4[1]
+      803136 blocks [2/2] [UU]
+
+md1 : active raid1 sda2[0] sdb2[1]
+      3911744 blocks [2/2] [UU]
+
+md0 : active raid1 sda1[0] sdb1[1]
+      224768 blocks [2/2] [UU]
+
+
+After a while the array rebuilds without problems. Then the
+system runs anywhere from 5 to 15 days and crashes again.
+
+This is using kernel: 2.6.18-4-686 #1 SMP (Debian kernel)
+
+I have two questions that I hope someone can answer:
+
+* Am I safe to assume that since the array rebuilds that the
+disks themselves should be OK?
+
+* Why is the md device not being downgraded?
+
+Thanks,
+
+Alberto
+
+-- 
+Alberto Alonso                        Global Gate Systems LLC.
+(512) 351-7233                        http://www.ggsys.net
+Hardware, consulting, sysadmin, monitoring and remote backups
+
