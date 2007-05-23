@@ -1,45 +1,52 @@
-From: Holger Kiehl <Holger.Kiehl@dwd.de>
-Subject: Re: Raid-5 long write wait while reading
-Date: Wed, 23 May 2007 06:34:00 +0000 (GMT)
-Message-ID: <Pine.LNX.4.64.0705230622320.14733@praktifix.dwd.de>
-References: <4653306B.4090500@jager.no>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: unreadable drives can be synchronized?
+Date: Wed, 23 May 2007 13:46:23 -0400
+Message-ID: <46547DEF.8040403@tmr.com>
+References: <200705181447.l4IElO2a000640@cichlid.com>	 <464DC06F.2080609@wpkg.org> <7296208f0705181118n32537ddck4d94bed08625b79f@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4653306B.4090500@jager.no>
+In-Reply-To: <7296208f0705181118n32537ddck4d94bed08625b79f@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Thomas Jager <lists@jager.no>
-Cc: linux-raid@vger.kernel.org
+To: Colin McCabe <colin.p.mccabe@gmail.com>
+Cc: Tomasz Chmielewski <mangoo@wpkg.org>, Andrew Burgess <aab@cichlid.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello
-
-On Tue, 22 May 2007, Thomas Jager wrote:
-
-> Hi list.
+Colin McCabe wrote:
+> On 5/18/07, Tomasz Chmielewski <mangoo@wpkg.org> wrote:
+>> Andrew Burgess schrieb:
+>> >> Basically, B appears to be "write-only"; it will never return an 
+>> error on a
+>> >> write, but just try to read from it, and you will be sorry.
+>> >
+>> > It would be interesting to see what SMART says about drive B, 
+>> especially
+>> > the short and long self tests.
+>>
+>> I wouldn't rely on SMART.
+>>
+>> I have a broken drive, which has lots of badblocks - but SMART happily
+>> claims it's fine (short/long tests are completed without errors).
+>>
 >
-> I run a file server on MD raid-5.
-> If a client reads one big file and at the same time another client tries to 
-> write a file, the thread writing just sits in uninterruptible sleep until the 
-> reader has finished. Only very small amount of writes get trough while the 
-> reader is still working.
+> If you haven't seen Google's hard drive study yet, you should take a 
+> look.
+> It's at http://labs.google.com/papers/disk_failures.pdf
 >
-I assume from the vmstat numbers the reader does a lot of seeks (iowait > 80%!).
+> The conclusion says that "some of the SMART parameters are
+> well-correlated with higher failure probabilities," but also that "a
+> large fraction of [google's] failed drives have shown no SMART error
+> signals whatsoever."
+Having covered that in a presentation to a user group related to SMART. 
+may I offer a paraphrase which may be more obvious to people who are not 
+native speakers of English:
 
-> I'm having some trouble pinpointing the problem.
-> It's not consistent either sometimes it works as expected both the reader and 
-> writer gets some transactions. On huge reads I've seen the writer blocked for 
-> 30-40 minutes without any significant writes happening (Maybe a few 
-> megabytes, of several gigs waiting). It happens with NFS, SMB and FTP, and 
-> local with dd. And seems to be connected to raid-5. This does not happen on 
-> block devices without raid-5. I'm also wondering if it can have anything to 
-> do with loop-aes? I use loop-aes on top of the md, but then again i have not 
-> observed this problem on loop-devices with disk backend. I do know that 
-> loop-aes degrades performance but i didn't think it would do something like 
-> this?
->
-What IO scheduler are you using? Maybe try using a different scheduler
-(eg. deadline) if that does make any difference.
+High counts of some SMART parameters indicate that the drive is likely 
+to fail. However, most drives fail without warning.
 
-Holger
+-- 
+bill davidsen <davidsen@tmr.com>
+  CTO TMR Associates, Inc
+  Doing interesting things with small computers since 1979
 
