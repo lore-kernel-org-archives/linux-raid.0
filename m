@@ -1,67 +1,45 @@
-From: Alberto Alonso <alberto@ggsys.net>
-Subject: I/O errors, server unresponsive, array NOT-degraded
-Date: Tue, 22 May 2007 21:59:28 -0500
-Message-ID: <1179889168.21028.53.camel@w100>
+From: Holger Kiehl <Holger.Kiehl@dwd.de>
+Subject: Re: Raid-5 long write wait while reading
+Date: Wed, 23 May 2007 06:34:00 +0000 (GMT)
+Message-ID: <Pine.LNX.4.64.0705230622320.14733@praktifix.dwd.de>
+References: <4653306B.4090500@jager.no>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4653306B.4090500@jager.no>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Thomas Jager <lists@jager.no>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I've been having a recurring problem for about two months 
-now.
+Hello
 
-I have a brand new server where suddenly everything except
-the web service stops responding.
+On Tue, 22 May 2007, Thomas Jager wrote:
 
-When looking at the console I can see messages like:
+> Hi list.
+>
+> I run a file server on MD raid-5.
+> If a client reads one big file and at the same time another client tries to 
+> write a file, the thread writing just sits in uninterruptible sleep until the 
+> reader has finished. Only very small amount of writes get trough while the 
+> reader is still working.
+>
+I assume from the vmstat numbers the reader does a lot of seeks (iowait > 80%!).
 
-end_request: I/O error, dev sdb, sector 42644555
-end_request: I/O error, dev sdb, sector 42644555
-end_request: I/O error, dev sdb, sector 42644555
-end_request: I/O error, dev sdb, sector 124365763
-end_request: I/O error, dev sdb, sector 124365763
-[...]
+> I'm having some trouble pinpointing the problem.
+> It's not consistent either sometimes it works as expected both the reader and 
+> writer gets some transactions. On huge reads I've seen the writer blocked for 
+> 30-40 minutes without any significant writes happening (Maybe a few 
+> megabytes, of several gigs waiting). It happens with NFS, SMB and FTP, and 
+> local with dd. And seems to be connected to raid-5. This does not happen on 
+> block devices without raid-5. I'm also wondering if it can have anything to 
+> do with loop-aes? I use loop-aes on top of the md, but then again i have not 
+> observed this problem on loop-devices with disk backend. I do know that 
+> loop-aes degrades performance but i didn't think it would do something like 
+> this?
+>
+What IO scheduler are you using? Maybe try using a different scheduler
+(eg. deadline) if that does make any difference.
 
-My array setup can be summarized as follows:
-
-# cat /proc/mdstat
-Personalities : [raid1]
-md2 : active raid1 sda3[0] sdb3[1]
-      75473280 blocks [2/2] [UU]
-      [===>.................]  resync = 19.0% (14366720/75473280)
-finish=51.4min speed=19791K/sec
-
-md3 : active raid1 sda4[0] sdb4[1]
-      803136 blocks [2/2] [UU]
-
-md1 : active raid1 sda2[0] sdb2[1]
-      3911744 blocks [2/2] [UU]
-
-md0 : active raid1 sda1[0] sdb1[1]
-      224768 blocks [2/2] [UU]
-
-
-After a while the array rebuilds without problems. Then the
-system runs anywhere from 5 to 15 days and crashes again.
-
-This is using kernel: 2.6.18-4-686 #1 SMP (Debian kernel)
-
-I have two questions that I hope someone can answer:
-
-* Am I safe to assume that since the array rebuilds that the
-disks themselves should be OK?
-
-* Why is the md device not being downgraded?
-
-Thanks,
-
-Alberto
-
--- 
-Alberto Alonso                        Global Gate Systems LLC.
-(512) 351-7233                        http://www.ggsys.net
-Hardware, consulting, sysadmin, monitoring and remote backups
+Holger
 
