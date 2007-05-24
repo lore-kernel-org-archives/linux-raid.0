@@ -1,54 +1,81 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: raid5: I lost a XFS file system due to a minor IDE cable problem
-Date: Thu, 24 May 2007 07:20:35 -0400 (EDT)
-Message-ID: <Pine.LNX.4.64.0705240720040.16751@p34.internal.lan>
-References: <200705241318.30711.dap@mail.index.hu>
+From: Colin McCabe <Colin.P.McCabe@gmail.com>
+Subject: Re: Fwd: Identify SATA Disks
+Date: Thu, 24 May 2007 11:53:15 -0400
+Message-ID: <4655B4EB.5050102@gmail.com>
+References: <8c4e120705230023v71a2ffa3p182f1e02ccb9cd54@mail.gmail.com> <8c4e120705231629q727718f2yb0704ff33b7012c@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200705241318.30711.dap@mail.index.hu>
+In-Reply-To: <8c4e120705231629q727718f2yb0704ff33b7012c@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Pallai Roland <dap@mail.index.hu>
-Cc: Linux-Raid <linux-raid@vger.kernel.org>, xfs@oss.sgi.com
+Cc: Linux-Raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Including XFS mailing list on this one.
+lewis shobbrook wrote:
+> Hi All,
+> I'm wondering if anyone has discovered any nice tricks to assist in
+> identification of hdd devices.
+> I have an 8 bay hotswap array, pretty lights and have been wondering
+> what others out there might be doing to determine which disk in an
+> array is which.
+> 
+> I've noted that device allocation can change with the generation of
+> new initrd's and installation of new kernels; i.e. /dev/sdc becomes
+> /dev/sda depending upon what order the modules load etc.
+> I'm wondering if one could send a looped read/write task to a swap
+> partition or something to determine which the device is?
+> 
 
-On Thu, 24 May 2007, Pallai Roland wrote:
+The device UUID in the RAID superblock doesn't change across a reboot.
 
->
-> Hi,
->
-> I wondering why the md raid5 does accept writes after 2 disks failed. I've an
-> array built from 7 drives, filesystem is XFS. Yesterday, an IDE cable failed
-> (my friend kicked it off from the box on the floor:) and 2 disks have been
-> kicked but my download (yafc) not stopped, it tried and could write the file
-> system for whole night!
-> Now I changed the cable, tried to reassembly the array (mdadm -f --run),
-> event counter increased from 4908158 up to 4929612 on the failed disks, but I
-> cannot mount the file system and the 'xfs_repair -n' shows lot of errors
-> there. This is expainable by the partially successed writes. Ext3 and JFS
-> has "error=" mount option to switch filesystem read-only on any error, but
-> XFS hasn't: why? It's a good question too, but I think the md layer could
-> save dumb filesystems like XFS if denies writes after 2 disks are failed, and
-> I cannot see a good reason why it's not behave this way.
->
-> Do you have better idea how can I avoid such filesystem corruptions in the
-> future? No, I don't want to use ext3 on this box. :)
->
->
-> my mount error:
-> XFS: Log inconsistent (didn't find previous header)
-> XFS: failed to find log head
-> XFS: log mount/recovery failed: error 5
-> XFS: log mount failed
->
->
-> --
-> d
->
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+If you run mdadm --examine on the disk, you should see something like
+[root@ss-110 root]# mdadm --examine /dev/sda
+/dev/sda:
+           Magic : a92b4efc
+         Version : 01
+     Feature Map : 0x0
+      Array UUID : eab59421:6ddd9761:05e6ca46:d2342b03
+            Name : 408088ETX1:single
+   Creation Time : Mon Dec  4 21:25:55 2006
+      Raid Level : raid1
+    Raid Devices : 2
+
+     Device Size : 117210096 (55.89 GiB 60.01 GB)
+      Array Size : 117187500 (55.88 GiB 60.00 GB)
+       Used Size : 117187500 (55.88 GiB 60.00 GB)
+    Super Offset : 117210224 sectors
+           State : active
+==>Device UUID : 06795ada:d2fb18a1:2e7de09f:af66a7e3 <==
+
+     Update Time : Thu May 24 11:49:21 2007
+        Checksum : 7a695b9f - correct
+          Events : 4346975
+
+That number should always uniquely identify your disks.
+
+Maybe even a better way is to run:
+[root@ss-110 root]# smartctl -d ata /dev/sda -i
+smartctl version 5.36 [i686-pc-linux-gnu] Copyright (C) 2002-6 Bruce Allen
+Home page is http://smartmontools.sourceforge.net/
+
+=== START OF INFORMATION SECTION ===
+Device Model:     FUJITSU MHV2060BH
+====> Serial Number:    NW02T6826LM5 <====
+Firmware Version: 00000028
+User Capacity:    60,011,642,880 bytes
+Device is:        Not in smartctl database [for details use: -P showall]
+ATA Version is:   7
+ATA Standard is:  ATA/ATAPI-7 T13 1532D revision 4a
+Local Time is:    Thu May 24 11:51:16 2007 EDT
+SMART support is: Available - device has SMART capability.
+SMART support is: Enabled
+
+That serial number never changes, even if you wipe the disk.
+
+Colin
+
+> Cheers,
+> 
+> Lew
+
