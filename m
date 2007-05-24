@@ -1,54 +1,52 @@
-From: Gabor Gombas <gombasg@sztaki.hu>
-Subject: Re: Fwd: Identify SATA Disks
-Date: Thu, 24 May 2007 23:00:30 +0200
-Message-ID: <20070524210030.GF6533@boogie.lpds.sztaki.hu>
-References: <8c4e120705230023v71a2ffa3p182f1e02ccb9cd54@mail.gmail.com> <8c4e120705231629q727718f2yb0704ff33b7012c@mail.gmail.com>
+From: Thomas Jager <lists@jager.no>
+Subject: Re: Raid-5 long write wait while reading
+Date: Fri, 25 May 2007 00:23:22 +0200
+Message-ID: <4656105A.7000303@jager.no>
+References: <4653306B.4090500@jager.no>
+	<Pine.LNX.4.64.0705230622320.14733@praktifix.dwd.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <8c4e120705231629q727718f2yb0704ff33b7012c@mail.gmail.com>
+In-Reply-To: <Pine.LNX.4.64.0705230622320.14733@praktifix.dwd.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: lewis shobbrook <lewis@blue-matrix.org>
-Cc: Linux-Raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, May 24, 2007 at 09:29:04AM +1000, lewis shobbrook wrote:
+Holger Kiehl wrote:
+> Hello
+>
+> On Tue, 22 May 2007, Thomas Jager wrote:
+>
+>> Hi list.
+>>
+>> I run a file server on MD raid-5.
+>> If a client reads one big file and at the same time another client 
+>> tries to write a file, the thread writing just sits in 
+>> uninterruptible sleep until the reader has finished. Only very small 
+>> amount of writes get trough while the reader is still working.
+>>
+> I assume from the vmstat numbers the reader does a lot of seeks 
+> (iowait > 80%!).
+I don't think so unless the file is really fragmented. But I doubt it.
+>
+>> I'm having some trouble pinpointing the problem.
+>> It's not consistent either sometimes it works as expected both the 
+>> reader and writer gets some transactions. On huge reads I've seen the 
+>> writer blocked for 30-40 minutes without any significant writes 
+>> happening (Maybe a few megabytes, of several gigs waiting). It 
+>> happens with NFS, SMB and FTP, and local with dd. And seems to be 
+>> connected to raid-5. This does not happen on block devices without 
+>> raid-5. I'm also wondering if it can have anything to do with 
+>> loop-aes? I use loop-aes on top of the md, but then again i have not 
+>> observed this problem on loop-devices with disk backend. I do know 
+>> that loop-aes degrades performance but i didn't think it would do 
+>> something like this?
+>>
+> What IO scheduler are you using? Maybe try using a different scheduler
+> (eg. deadline) if that does make any difference.
+I was using deadline. I tried switching to CFQ but I'm still seeing the 
+same strange problems.
 
-> I've noted that device allocation can change with the generation of
-> new initrd's and installation of new kernels; i.e. /dev/sdc becomes
-> /dev/sda depending upon what order the modules load etc.
-> I'm wondering if one could send a looped read/write task to a swap
-> partition or something to determine which the device is?
-
-If you're using a relatively modern distro with udev then you can use
-paths under /dev/disk/by-{id,path}. Unless you're using a RAID card that
-hides the disk IDs...
-
-> Also I've not had much joy in attempting to "hotswap" SATA on a live 
-> system.
-> Can anyone attest to successful hotswap (or blanket rule out as
-> doesn't work) using std on board SATA controllers,  cf dedicated raid
-> card, or suggest further reading?
-
-Make sure you have a chipset that supports hotplug (some older ones do
-not). Make sure its driver supports hotplug. Make sure you stop using
-the disk before pulling it out (umount, swapoff, mdadm --remove,
-pvremove whatever). Power down the disk before pulling it out if your
-backplane/enclosure does not do that for you. Then it should work.
-
-If the chipset does not support sending interrupt on hotswap or if the
-driver does not implement hotswap signalling, you may need explicit
-"scsiadd -r" before yanking out the old drive and "scsiadd -s" after
-inserting the new one.
-
-Also remember that this area is rather new and still evolving, so be
-sure to try the latest kernel if you encounter problems.
-
-Gabor
-
--- 
-     ---------------------------------------------------------
-     MTA SZTAKI Computer and Automation Research Institute
-                Hungarian Academy of Sciences
-     ---------------------------------------------------------
