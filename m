@@ -1,52 +1,88 @@
-From: Thomas Jager <lists@jager.no>
-Subject: Re: Raid-5 long write wait while reading
-Date: Fri, 25 May 2007 00:23:22 +0200
-Message-ID: <4656105A.7000303@jager.no>
-References: <4653306B.4090500@jager.no>
-	<Pine.LNX.4.64.0705230622320.14733@praktifix.dwd.de>
+From: David Chinner <dgc@sgi.com>
+Subject: Re: raid5: I lost a XFS file system due to a minor IDE cable problem
+Date: Fri, 25 May 2007 10:05:47 +1000
+Message-ID: <20070525000547.GH85884050@sgi.com>
+References: <200705241318.30711.dap@mail.index.hu> <Pine.LNX.4.64.0705240720040.16751@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0705230622320.14733@praktifix.dwd.de>
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.64.0705240720040.16751@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: Pallai Roland <dap@mail.index.hu>, Linux-Raid <linux-raid@vger.kernel.org>, xfs@oss.sgi.com
 List-Id: linux-raid.ids
 
-Holger Kiehl wrote:
-> Hello
->
-> On Tue, 22 May 2007, Thomas Jager wrote:
->
->> Hi list.
->>
->> I run a file server on MD raid-5.
->> If a client reads one big file and at the same time another client 
->> tries to write a file, the thread writing just sits in 
->> uninterruptible sleep until the reader has finished. Only very small 
->> amount of writes get trough while the reader is still working.
->>
-> I assume from the vmstat numbers the reader does a lot of seeks 
-> (iowait > 80%!).
-I don't think so unless the file is really fragmented. But I doubt it.
->
->> I'm having some trouble pinpointing the problem.
->> It's not consistent either sometimes it works as expected both the 
->> reader and writer gets some transactions. On huge reads I've seen the 
->> writer blocked for 30-40 minutes without any significant writes 
->> happening (Maybe a few megabytes, of several gigs waiting). It 
->> happens with NFS, SMB and FTP, and local with dd. And seems to be 
->> connected to raid-5. This does not happen on block devices without 
->> raid-5. I'm also wondering if it can have anything to do with 
->> loop-aes? I use loop-aes on top of the md, but then again i have not 
->> observed this problem on loop-devices with disk backend. I do know 
->> that loop-aes degrades performance but i didn't think it would do 
->> something like this?
->>
-> What IO scheduler are you using? Maybe try using a different scheduler
-> (eg. deadline) if that does make any difference.
-I was using deadline. I tried switching to CFQ but I'm still seeing the 
-same strange problems.
+On Thu, May 24, 2007 at 07:20:35AM -0400, Justin Piszcz wrote:
+> Including XFS mailing list on this one.
 
+Thanks Justin.
+
+> On Thu, 24 May 2007, Pallai Roland wrote:
+> 
+> >
+> >Hi,
+> >
+> >I wondering why the md raid5 does accept writes after 2 disks failed. I've 
+> >an
+> >array built from 7 drives, filesystem is XFS. Yesterday, an IDE cable 
+> >failed
+> >(my friend kicked it off from the box on the floor:) and 2 disks have been
+> >kicked but my download (yafc) not stopped, it tried and could write the 
+> >file
+> >system for whole night!
+> >Now I changed the cable, tried to reassembly the array (mdadm -f --run),
+> >event counter increased from 4908158 up to 4929612 on the failed disks, 
+> >but I
+> >cannot mount the file system and the 'xfs_repair -n' shows lot of errors
+> >there. This is expainable by the partially successed writes. Ext3 and JFS
+> >has "error=" mount option to switch filesystem read-only on any error, but
+> >XFS hasn't: why?
+
+"-o ro,norecovery" will allow you to mount the filesystem and get any
+uncorrupted data off it.
+
+You still may get shutdowns if you trip across corrupted metadata in
+the filesystem, though.
+
+> >It's a good question too, but I think the md layer could
+> >save dumb filesystems like XFS if denies writes after 2 disks are failed, 
+> >and
+> >I cannot see a good reason why it's not behave this way.
+
+How is *any* filesystem supposed to know that the underlying block
+device has gone bad if it is not returning errors?
+
+I did mention this exact scenario in the filesystems workshop back
+in february - we'd *really* like to know if a RAID block device has gone
+into degraded mode (i.e. lost a disk) so we can throttle new writes
+until the rebuil dhas been completed. Stopping writes completely on a
+fatal error (like 2 lost disks in RAID5, and 3 lost disks in RAID6)
+would also be possible if only we could get the information out
+of the block layer.
+
+> >Do you have better idea how can I avoid such filesystem corruptions in the
+> >future? No, I don't want to use ext3 on this box. :)
+
+Well, the problem is a bug in MD - it should have detected
+drives going away and stopped access to the device until it was
+repaired. You would have had the same problem with ext3, or JFS,
+or reiser or any other filesystem, too.
+
+> >my mount error:
+> >XFS: Log inconsistent (didn't find previous header)
+> >XFS: failed to find log head
+> >XFS: log mount/recovery failed: error 5
+> >XFS: log mount failed
+
+You MD device is still hosed - error 5 = EIO; the md device is
+reporting errors back the filesystem now. You need to fix that
+before trying to recover any data...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
