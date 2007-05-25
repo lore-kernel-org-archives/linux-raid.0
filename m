@@ -1,52 +1,50 @@
-From: Pallai Roland <dap@mail.index.hu>
-Subject: Re: raid5: I lost a XFS file system due to a minor IDE cable problem
-Date: Fri, 25 May 2007 16:35:36 +0200
-Message-ID: <200705251635.36533.dap@mail.index.hu>
-References: <200705241318.30711.dap@mail.index.hu> <1180056948.6183.10.camel@daptopfc.localdomain> <20070525045500.GF86004887@sgi.com>
+From: Phillip Susi <psusi@cfl.rr.com>
+Subject: Re: Re: [RFD] BIO_RW_BARRIER - what it means for devices,
+	filesystems, and dm/md.
+Date: Fri, 25 May 2007 10:49:39 -0400
+Message-ID: <4656F783.3000603@cfl.rr.com>
+References: <18006.38689.818186.221707@notabene.brown>
+	<20070525111557.GP85884050@sgi.com>
+	<20070525114910.GQ7653@kernel.dk>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20070525045500.GF86004887@sgi.com>
-Content-Disposition: inline
-Sender: linux-raid-owner@vger.kernel.org
-To: David Chinner <dgc@sgi.com>
-Cc: Linux-Raid <linux-raid@vger.kernel.org>, xfs@oss.sgi.com
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <20070525114910.GQ7653@kernel.dk>
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: device-mapper development <dm-devel@redhat.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org, David Chinner <dgc@sgi.com>, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
+Jens Axboe wrote:
+> A barrier write will include a flush, but it may also use the FUA bit to
+> ensure data is on platter. So the only situation where a fallback from a
+> barrier to flush would be valid, is if the device lied and told you it
+> could do FUA but it could not and that is the reason why the barrier
+> write failed. If that is the case, the block layer should stop using FUA
+> and fallback to flush-write-flush. And if it does that, then there's
+> never a valid reason to switch from using barrier writes to
+> blkdev_issue_flush() since both methods would either both work or both
+> fail.
 
-On Friday 25 May 2007 06:55:00 David Chinner wrote:
-> Oh, did you look at your logs and find that XFS had spammed them
-> about writes that were failing?
+IIRC, the FUA bit only forces THAT request to hit the platter before it 
+is completed; it does not flush any previous requests still sitting in 
+the write back queue.  Because all io before the barrier must be on the 
+platter as well, setting the FUA bit on the barrier request means you 
+don't have to follow it with a flush, but you still have to precede it 
+with a flush.
 
-The first message after the incident:
+> It's not block layer breakage, it's a device issue.
 
-May 24 01:53:50 hq kernel: Filesystem "loop1": XFS internal error xfs_btree_check_sblock at line 336 of file fs/xfs/xfs_btree.c.  Caller 0xf8ac14f8
-May 24 01:53:50 hq kernel: <f8adae69> xfs_btree_check_sblock+0x4f/0xc2 [xfs]  <f8ac14f8> xfs_alloc_lookup+0x34e/0x47b [xfs]
-May 24 01:53:50 HF kernel: <f8ac14f8> xfs_alloc_lookup+0x34e/0x47b [xfs]  <f8b1a9c7> kmem_zone_zalloc+0x1b/0x43 [xfs]
-May 24 01:53:50 hq kernel: <f8abe645> xfs_alloc_ag_vextent+0x24d/0x1110 [xfs]  <f8ac0647> xfs_alloc_vextent+0x3bd/0x53b [xfs]
-May 24 01:53:50 hq kernel: <f8ad2f7e> xfs_bmapi+0x1ac4/0x23cd [xfs]  <f8acab97> xfs_bmap_search_multi_extents+0x8e/0xd8 [xfs]
-May 24 01:53:50 hq kernel: <f8b00001> xlog_dealloc_log+0x49/0xea [xfs]  <f8afdaee> xfs_iomap_write_allocate+0x2d9/0x58b [xfs]
-May 24 01:53:50 hq kernel: <f8afc3ae> xfs_iomap+0x60e/0x82d [xfs]  <c0113bc8> __wake_up_common+0x39/0x59
-May 24 01:53:50 hq kernel: <f8b1ae11> xfs_map_blocks+0x39/0x6c [xfs]  <f8b1bd7b> xfs_page_state_convert+0x644/0xf9c [xfs]
-May 24 01:53:50 hq kernel: <c036f384> schedule+0x5d1/0xf4d  <f8b1c780> xfs_vm_writepage+0x0/0xe0 [xfs]
-May 24 01:53:50 hq kernel: <f8b1c7d7> xfs_vm_writepage+0x57/0xe0 [xfs]  <c01830e8> mpage_writepages+0x1fb/0x3bb
-May 24 01:53:50 hq kernel: <c0183020> mpage_writepages+0x133/0x3bb  <f8b1c780> xfs_vm_writepage+0x0/0xe0 [xfs]
-May 24 01:53:50 hq kernel: <c0147bb3> do_writepages+0x35/0x3b  <c018135c> __writeback_single_inode+0x88/0x387
-May 24 01:53:50 hq kernel: <c01819b7> sync_sb_inodes+0x1b4/0x2a8  <c0181c63> writeback_inodes+0x63/0xdc
-May 24 01:53:50 hq kernel: <c0147943> background_writeout+0x66/0x9f  <c01482b3> pdflush+0x0/0x1ad
-May 24 01:53:50 hq kernel: <c01483a2> pdflush+0xef/0x1ad  <c01478dd> background_writeout+0x0/0x9f
-May 24 01:53:50 hq kernel: <c012d10b> kthread+0xc2/0xc6  <c012d049> kthread+0x0/0xc6
-May 24 01:53:50 hq kernel: <c0100dd5> kernel_thread_helper+0x5/0xb
-
-..and I've spammed such messages. This "internal error" isn't a good reason to shut down
-the file system? I think if there's a sign of corrupted file system, the first thing we should do
-is to stop writes (or the entire FS) and let the admin to examine the situation.
- I'm not talking about my case where the md raid5 was a braindead, I'm talking about
-general situations.
-
-
---
- d
-
+How isn't it block layer breakage?  If the device does not support 
+barriers, isn't it the job of the block layer ( probably the scheduler ) 
+to fall back to flush-write-flush?
