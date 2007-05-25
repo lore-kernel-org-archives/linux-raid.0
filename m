@@ -1,51 +1,60 @@
-From: David Chinner <dgc@sgi.com>
-Subject: Re: raid5: I lost a XFS file system due to a minor IDE cable problem
-Date: Fri, 25 May 2007 14:55:00 +1000
-Message-ID: <20070525045500.GF86004887@sgi.com>
-References: <200705241318.30711.dap@mail.index.hu> <Pine.LNX.4.64.0705240720040.16751@p34.internal.lan> <20070525000547.GH85884050@sgi.com> <1180056948.6183.10.camel@daptopfc.localdomain>
+From: Alberto Alonso <alberto@ggsys.net>
+Subject: Re: raid5: I lost a XFS file system due to a minor IDE cable
+	problem
+Date: Fri, 25 May 2007 00:43:51 -0500
+Message-ID: <1180071831.21028.125.camel@w100>
+References: <200705241318.30711.dap@mail.index.hu>
+	 <Pine.LNX.4.64.0705240720040.16751@p34.internal.lan>
+	 <20070525000547.GH85884050@sgi.com>
+	 <1180056948.6183.10.camel@daptopfc.localdomain>
+	 <20070525045500.GF86004887@sgi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1180056948.6183.10.camel@daptopfc.localdomain>
+In-Reply-To: <20070525045500.GF86004887@sgi.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Pallai Roland <dap@mail.index.hu>
-Cc: David Chinner <dgc@sgi.com>, Linux-Raid <linux-raid@vger.kernel.org>, xfs@oss.sgi.com
+To: David Chinner <dgc@sgi.com>
+Cc: Pallai Roland <dap@mail.index.hu>, Linux-Raid <linux-raid@vger.kernel.org>, xfs@oss.sgi.com
 List-Id: linux-raid.ids
 
-On Fri, May 25, 2007 at 03:35:48AM +0200, Pallai Roland wrote:
-> On Fri, 2007-05-25 at 10:05 +1000, David Chinner wrote:
-> > > >It's a good question too, but I think the md layer could
-> > > >save dumb filesystems like XFS if denies writes after 2 disks are failed, 
-> > > >and
-> > > >I cannot see a good reason why it's not behave this way.
-> > 
-> > How is *any* filesystem supposed to know that the underlying block
-> > device has gone bad if it is not returning errors?
->  It is returning errors, I think so. If I try to write raid5 with 2
-> failed disks with dd, I've got errors on the missing chunks.
 
-Oh, did you look at your logs and find that XFS had spammed them
-about writes that were failing?
+> >  The difference between ext3 and XFS is that ext3 will remount to
+> > read-only on the first write error but the XFS won't, XFS only fails
+> > only the current operation, IMHO. The method of ext3 isn't perfect, but
+> > in practice, it's working well.
+> 
+> XFS will shutdown the filesystem if metadata corruption will occur
+> due to a failed write. We don't immediately fail the filesystem on
+> data write errors because on large systems you can get *transient*
+> I/O errors (e.g. FC path failover) and so retrying failed data
+> writes is useful for preventing unnecessary shutdowns of the
+> filesystem.
+> 
+> Different design criteria, different solutions...
 
->  The difference between ext3 and XFS is that ext3 will remount to
-> read-only on the first write error but the XFS won't, XFS only fails
-> only the current operation, IMHO. The method of ext3 isn't perfect, but
-> in practice, it's working well.
+I think his point was that going into a read only mode causes a
+less catastrophic situation (ie. a web server can still serve
+pages). I think that is a valid point, rather than shutting down
+the file system completely, an automatic switch to where the least
+disruption of service can occur is always desired.
 
-XFS will shutdown the filesystem if metadata corruption will occur
-due to a failed write. We don't immediately fail the filesystem on
-data write errors because on large systems you can get *transient*
-I/O errors (e.g. FC path failover) and so retrying failed data
-writes is useful for preventing unnecessary shutdowns of the
-filesystem.
+Maybe the automatic failure mode could be something that is 
+configurable via the mount options.
 
-Different design criteria, different solutions...
+I personally have found the XFS file system to be great for
+my needs (except issues with NFS interaction, where the bug report
+never got answered), but that doesn't mean it can not be improved.
 
-Cheers,
+Just my 2 cents,
 
-Dave.
+Alberto
+
+> Cheers,
+> 
+> Dave.
 -- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+Alberto Alonso                        Global Gate Systems LLC.
+(512) 351-7233                        http://www.ggsys.net
+Hardware, consulting, sysadmin, monitoring and remote backups
+
