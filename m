@@ -1,40 +1,63 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: raid10 kernel panic on sparc64
-Date: Sat, 26 May 2007 15:50:01 -0700 (PDT)
-Message-ID: <20070526.155001.112603157.davem@davemloft.net>
-References: <Pine.LNX.4.61.0704020211380.1245@yvahk01.tjqt.qr>
-	<20070412.142628.27805319.davem@davemloft.net>
-	<Pine.LNX.4.61.0705261710130.7344@yvahk01.tjqt.qr>
+From: tj <lists@jager.no>
+Subject: Re: Raid-5 long write wait while reading
+Date: Sun, 27 May 2007 02:06:34 +0200
+Message-ID: <4658CB8A.8080503@jager.no>
+References: <4653306B.4090500@jager.no>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain;
+	charset=ISO-8859-1;
+	format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.61.0705261710130.7344@yvahk01.tjqt.qr>
+In-Reply-To: <4653306B.4090500@jager.no>
 Sender: linux-raid-owner@vger.kernel.org
-To: jengelh@linux01.gwdg.de
-Cc: linux-raid@vger.kernel.org, sparclinux@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: Thomas Jager <lists@jager.no>
 List-Id: linux-raid.ids
 
-From: Jan Engelhardt <jengelh@linux01.gwdg.de>
-Date: Sat, 26 May 2007 17:10:30 +0200 (MEST)
+Thomas Jager wrote:
+> Hi list.
+>
+> I run a file server on MD raid-5.
+> If a client reads one big file and at the same time another client 
+> tries to write a file, the thread writing just sits in uninterruptible 
+> sleep until the reader has finished. Only very small amount of writes 
+> get trough while the reader is still working.
+> I'm having some trouble pinpointing the problem.
+> It's not consistent either sometimes it works as expected both the 
+> reader and writer gets some transactions. On huge reads I've seen the 
+> writer blocked for 30-40 minutes without any significant writes 
+> happening (Maybe a few megabytes, of several gigs waiting). It happens 
+> with NFS, SMB and FTP, and local with dd. And seems to be connected to 
+> raid-5. This does not happen on block devices without raid-5. I'm also 
+> wondering if it can have anything to do with loop-aes? I use loop-aes 
+> on top of the md, but then again i have not observed this problem on 
+> loop-devices with disk backend. I do know that loop-aes degrades 
+> performance but i didn't think it would do something like this?
+>
+> I've seen this problem in 2.6.16-2.6.21
+>
+> All disks in the array is connected to a controller with a SiI 3114 chip.
 
-> 
-> On Apr 12 2007 14:26, David Miller wrote:
-> >
-> >> Kernel is kernel-smp-2.6.16-1.2128sp4.sparc64.rpm from Aurora Corona.
-> >> Perhaps it helps, otherwise hold your breath until I reproduce it.
-> >
-> >Jan, if you can reproduce this with the current 2.6.20 vanilla
-> >kernel I'd be very interested in a full trace so that I can
-> >try to fix this.
-> >
-> >With the combination of an old kernel and only part of the
-> >crash trace, there isn't much I can do with this report.
-> 
-> Does not seem to happen under 2.6.21-1.3149.al3.2smp anymore.
+I just noticed something else. A couple of slow readers where running on 
+my raid-5 array. Then i started a copy from another local disk to the 
+array. Then i got the extremely long wait. I noticed something in iostat:
 
-Thanks for following up on this Jan.
+avg-cpu:  %user   %nice %system %iowait  %steal   %idle
+           3.90    0.00   48.05   31.93    0.00   16.12
 
-I'd personally really appreciate reports against upstream
-instead of dist kernels in the future, and I'm sure the
-linux-raid maintainers feel similarly :-)
+Device:            tps    kB_read/s    kB_wrtn/s    kB_read    kB_wrtn
+....
+sdg               0.80        25.55         0.00        128          0
+sdh             154.89       632.34         0.00       3168          0
+sdi               0.20        12.77         0.00         64          0
+sdj               0.40        25.55         0.00        128          0
+sdk               0.40        25.55         0.00        128          0
+sdl               0.80        25.55         0.00        128          0
+sdm               0.80        25.55         0.00        128          0
+sdn               0.60        23.95         0.00        120          0
+md0             199.20       796.81         0.00       3992          0
+
+All disks are member of the same raid array (md0). One of the disks has 
+a ton of transactions compared to the other disks. Read operations as 
+far as i can tell. Why? May be connected with my problem?
