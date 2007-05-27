@@ -1,63 +1,125 @@
-From: tj <lists@jager.no>
-Subject: Re: Raid-5 long write wait while reading
-Date: Sun, 27 May 2007 02:06:34 +0200
-Message-ID: <4658CB8A.8080503@jager.no>
-References: <4653306B.4090500@jager.no>
+From: Tim Harvey <tim_harvey@yahoo.com>
+Subject: assemble array without rebuild - readonly mode?
+Date: Sat, 26 May 2007 18:44:15 -0700 (PDT)
+Message-ID: <308187.13773.qm@web35614.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4653306B.4090500@jager.no>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
-Cc: Thomas Jager <lists@jager.no>
 List-Id: linux-raid.ids
 
-Thomas Jager wrote:
-> Hi list.
->
-> I run a file server on MD raid-5.
-> If a client reads one big file and at the same time another client 
-> tries to write a file, the thread writing just sits in uninterruptible 
-> sleep until the reader has finished. Only very small amount of writes 
-> get trough while the reader is still working.
-> I'm having some trouble pinpointing the problem.
-> It's not consistent either sometimes it works as expected both the 
-> reader and writer gets some transactions. On huge reads I've seen the 
-> writer blocked for 30-40 minutes without any significant writes 
-> happening (Maybe a few megabytes, of several gigs waiting). It happens 
-> with NFS, SMB and FTP, and local with dd. And seems to be connected to 
-> raid-5. This does not happen on block devices without raid-5. I'm also 
-> wondering if it can have anything to do with loop-aes? I use loop-aes 
-> on top of the md, but then again i have not observed this problem on 
-> loop-devices with disk backend. I do know that loop-aes degrades 
-> performance but i didn't think it would do something like this?
->
-> I've seen this problem in 2.6.16-2.6.21
->
-> All disks in the array is connected to a controller with a SiI 3114 chip.
+Greetings,
 
-I just noticed something else. A couple of slow readers where running on 
-my raid-5 array. Then i started a copy from another local disk to the 
-array. Then i got the extremely long wait. I noticed something in iostat:
+I've got a RAID5 array running on 4 PATA IDE drives on a linux 2.6.15 kernel
+which has had a drive go out.  When I replace the drive and force a re-assembly
+a rebuild starts but at a certain point through the rebuild an uncorrectable
+error occurs on another disk and kicks the 2nd disk out.  This occurs at the
+same LBA every time.  I am wondering what some suggestions are for getting my
+data off the array without causing the particular LBA to be read on the 2nd
+disk thats got a problem.
 
-avg-cpu:  %user   %nice %system %iowait  %steal   %idle
-           3.90    0.00   48.05   31.93    0.00   16.12
+Is there a way to assemble an array that has a disk replaced without causing a
+rebuild and if so, is there a way to keep the array read-only so that I
+minimize the chance of another error occurring while I'm pulling data off (or
+does it really matter?).  I figure if I could mount the array in the safest way
+possible with three disks out of 4 I can copy data off the array avoiding to
+copy the file(s) that exist at the particular LBA causing the issue (by trial
+and error).
 
-Device:            tps    kB_read/s    kB_wrtn/s    kB_read    kB_wrtn
-....
-sdg               0.80        25.55         0.00        128          0
-sdh             154.89       632.34         0.00       3168          0
-sdi               0.20        12.77         0.00         64          0
-sdj               0.40        25.55         0.00        128          0
-sdk               0.40        25.55         0.00        128          0
-sdl               0.80        25.55         0.00        128          0
-sdm               0.80        25.55         0.00        128          0
-sdn               0.60        23.95         0.00        120          0
-md0             199.20       796.81         0.00       3992          0
+Below are the messages from syslog showing the failure that occurs during the
+rebuild.  I assume there is nothing else I can do about getting around this
+error?
 
-All disks are member of the same raid array (md0). One of the disks has 
-a ton of transactions compared to the other disks. Read operations as 
-far as i can tell. Why? May be connected with my problem?
+
+login as: root
+root@nas2's password:
+Last login: Sat May 26 15:25:01 2007 from darwin.home.harvey
+[root@nas2 ~]# tail -f /var/log/messages
+May 26 15:26:45 nas2 kernel: RAID5 conf printout:
+May 26 15:26:45 nas2 kernel:  --- rd:4 wd:3 fd:1
+May 26 15:26:45 nas2 kernel:  disk 0, o:1, dev:hde1
+May 26 15:26:45 nas2 kernel:  disk 1, o:1, dev:hdf1
+May 26 15:26:45 nas2 kernel:  disk 2, o:1, dev:hdg1
+May 26 15:26:45 nas2 kernel:  disk 3, o:1, dev:hdh1
+May 26 15:26:45 nas2 kernel: md: syncing RAID array md0
+May 26 15:26:45 nas2 kernel: md: minimum _guaranteed_ reconstruction speed:
+1000                                                                        
+KB/sec/disc.
+May 26 15:26:45 nas2 kernel: md: using maximum available idle IO bandwidth (but
+                                                                        not
+more than 200000 KB/sec) for reconstruction.
+May 26 15:26:45 nas2 kernel: md: using 128k window, over a total of 292969216
+bl                                                                        ocks.
+
+May 26 15:26:45 nas2 kernel: md: syncing RAID array md0
+May 26 15:26:45 nas2 kernel: md: minimum _guaranteed_ reconstruction speed:
+1000 KB/sec/disc.
+May 26 15:26:45 nas2 kernel: md: using maximum available idle IO bandwidth (but
+not more than 200000 KB/sec) for reconstruction.
+May 26 15:26:45 nas2 kernel: md: using 128k window, over a total of 292969216
+blocks.
+...
+May 26 18:09:05 nas2 kernel: hdh: dma_intr: status=0x51 { DriveReady
+SeekComplete Error }
+May 26 18:09:05 nas2 kernel: hdh: dma_intr: error=0x40 { UncorrectableError },
+LBAsect=385347135, high=22, low=16248383, sector=385347103
+May 26 18:09:05 nas2 kernel: ide: failed opcode was: unknown
+May 26 18:09:05 nas2 kernel: end_request: I/O error, dev hdh, sector 385347103
+May 26 18:09:05 nas2 kernel: raid5: read error not correctable.
+May 26 18:09:05 nas2 kernel: raid5: Disk failure on hdh1, disabling device.
+Operation continuing on 2 devices
+May 26 18:09:07 nas2 kernel: hdh: dma_intr: status=0x51 { DriveReady
+SeekComplete Error }
+May 26 18:09:07 nas2 kernel: hdh: dma_intr: error=0x40 { UncorrectableError },
+LBAsect=385347135, high=22, low=16248383, sector=385347111
+May 26 18:09:07 nas2 kernel: ide: failed opcode was: unknown
+May 26 18:09:07 nas2 kernel: end_request: I/O error, dev hdh, sector 385347111
+May 26 18:09:07 nas2 kernel: raid5: read error not correctable.
+May 26 18:09:09 nas2 kernel: hdh: dma_intr: status=0x51 { DriveReady
+SeekComplete Error }
+May 26 18:09:09 nas2 kernel: hdh: dma_intr: error=0x40 { UncorrectableError },
+LBAsect=385347135, high=22, low=16248383, sector=385347119
+May 26 18:09:09 nas2 kernel: ide: failed opcode was: unknown
+May 26 18:09:09 nas2 kernel: end_request: I/O error, dev hdh, sector 385347119
+May 26 18:09:09 nas2 kernel: raid5: read error not correctable.
+May 26 18:09:11 nas2 kernel: hdh: dma_intr: status=0x51 { DriveReady
+SeekComplete Error }
+May 26 18:09:11 nas2 kernel: hdh: dma_intr: error=0x40 { UncorrectableError },
+LBAsect=385347135, high=22, low=16248383, sector=385347127
+May 26 18:09:11 nas2 kernel: ide: failed opcode was: unknown
+May 26 18:09:11 nas2 kernel: end_request: I/O error, dev hdh, sector 385347127
+May 26 18:09:11 nas2 kernel: raid5: read error not correctable.
+May 26 18:09:13 nas2 kernel: hdh: dma_intr: status=0x51 { DriveReady
+SeekComplete Error }
+May 26 18:09:13 nas2 kernel: hdh: dma_intr: error=0x40 { UncorrectableError },
+LBAsect=385347135, high=22, low=16248383, sector=385347135
+May 26 18:09:13 nas2 kernel: ide: failed opcode was: unknown
+May 26 18:09:13 nas2 kernel: end_request: I/O error, dev hdh, sector 385347135
+May 26 18:09:13 nas2 kernel: raid5: read error not correctable.
+May 26 18:09:13 nas2 kernel: md: md0: sync done.
+May 26 18:09:13 nas2 kernel: RAID5 conf printout:
+May 26 18:09:13 nas2 kernel:  --- rd:4 wd:2 fd:2
+May 26 18:09:13 nas2 kernel:  disk 0, o:1, dev:hde1
+May 26 18:09:13 nas2 kernel:  disk 1, o:1, dev:hdf1
+May 26 18:09:13 nas2 kernel:  disk 2, o:1, dev:hdg1
+May 26 18:09:13 nas2 kernel:  disk 3, o:0, dev:hdh1
+May 26 18:09:13 nas2 kernel: RAID5 conf printout:
+May 26 18:09:13 nas2 kernel:  --- rd:4 wd:2 fd:2
+May 26 18:09:13 nas2 kernel:  disk 0, o:1, dev:hde1
+May 26 18:09:13 nas2 kernel:  disk 2, o:1, dev:hdg1
+May 26 18:09:13 nas2 kernel:  disk 3, o:0, dev:hdh1
+May 26 18:09:13 nas2 kernel: RAID5 conf printout:
+May 26 18:09:13 nas2 kernel:  --- rd:4 wd:2 fd:2
+May 26 18:09:13 nas2 kernel:  disk 0, o:1, dev:hde1
+May 26 18:09:13 nas2 kernel:  disk 2, o:1, dev:hdg1
+May 26 18:09:13 nas2 kernel:  disk 3, o:0, dev:hdh1
+May 26 18:09:13 nas2 kernel: RAID5 conf printout:
+May 26 18:09:13 nas2 kernel:  --- rd:4 wd:2 fd:2
+May 26 18:09:13 nas2 kernel:  disk 0, o:1, dev:hde1
+May 26 18:09:13 nas2 kernel:  disk 2, o:1, dev:hdg1
+
+Thanks for any advice.
+
+Tim
