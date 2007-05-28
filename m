@@ -1,58 +1,63 @@
-From: Nikita Danilov <nikita@clusterfs.com>
-Subject: Re: [RFD] BIO_RW_BARRIER - what it means for devices,
-	filesystems, and dm/md.
-Date: Mon, 28 May 2007 15:17:41 +0400
-Message-ID: <18010.47701.751118.336431@gargle.gargle.HOWL>
-References: <18006.38689.818186.221707@notabene.brown>
+From: Pallai Roland <dap@mail.index.hu>
+Subject: Re: raid5: I lost a XFS file system due to a minor IDE cable problem
+Date: Mon, 28 May 2007 14:53:55 +0200
+Message-ID: <200705281453.55618.dap@mail.index.hu>
+References: <200705241318.30711.dap@mail.index.hu> <Pine.LNX.4.64.0705240720040.16751@p34.internal.lan> <20070525000547.GH85884050@sgi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18006.38689.818186.221707@notabene.brown>
+In-Reply-To: <20070525000547.GH85884050@sgi.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: device-mapper development <dm-devel@redhat.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org, David Chinner <dgc@sgi.com>, linux-kernel@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>
+To: David Chinner <dgc@sgi.com>
+Cc: Linux-Raid <linux-raid@vger.kernel.org>, xfs@oss.sgi.com
 List-Id: linux-raid.ids
 
-Neil Brown writes:
- > 
 
-[...]
+On Friday 25 May 2007 02:05:47 David Chinner wrote:
+> "-o ro,norecovery" will allow you to mount the filesystem and get any
+> uncorrupted data off it.
+>
+> You still may get shutdowns if you trip across corrupted metadata in
+> the filesystem, though.
+This filesystem is completely dead.
 
- > Thus the general sequence might be:
- > 
- >   a/ issue all "preceding writes".
- >   b/ issue the commit write with BIO_RW_BARRIER
- >   c/ wait for the commit to complete.
- >          If it was successful - done.
- >          If it failed other than with EOPNOTSUPP, abort
- >          else continue
- >   d/ wait for all 'preceding writes' to complete
- >   e/ call blkdev_issue_flush
- >   f/ issue commit write without BIO_RW_BARRIER
- >   g/ wait for commit write to complete
- >        if it failed, abort
- >   h/ call blkdev_issue
- >   DONE
- > 
- > steps b and c can be left out if it is known that the device does not
- > support barriers.  The only way to discover this to try and see if it
- > fails.
- > 
- > I don't think any filesystem follows all these steps.
+hq:~# mount -o ro,norecovery /dev/loop1 /mnt/r5
+May 28 13:41:50 hq kernel: Mounting filesystem "loop1" in no-recovery mode.  
+Filesystem will be inconsistent.
+May 28 13:41:50 hq kernel: XFS: failed to read root inode
 
-It seems that steps b/ -- h/ are quite generic, and can be implemented
-once in a generic code (with some synchronization mechanism like
-wait-queue at d/).
+hq:~# xfs_db /dev/loop1
+xfs_db: cannot read root inode (22)
+xfs_db: cannot read realtime bitmap inode (22)
+Segmentation fault
 
-Nikita.
+hq:~# strace xfs_db /dev/loop1
+_llseek(4, 0, [0], SEEK_SET)            = 0
+read(4, "XFSB\0\0\20\0\0\0\0\0\6\374\253\0\0\0\0\0\0\0\0\0\0\0\0"..., 512) = 
+512
+pread(4, "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"..., 512, 
+480141901312) = 512
+pread(4, "\30G$L\203\33OE \256=\207@\340\264O\"\324\2074DY\323\6"..., 8192, 
+131072) = 8192
+write(2, "xfs_db: cannot read root inode ("..., 36xfs_db: cannot read root 
+inode (22)
+) = 36
+pread(4, "\30G$L\203\33OE \256=\207@\340\264O\"\324\2074DY\323\6"..., 8192, 
+131072) = 8192
+write(2, "xfs_db: cannot read realtime bit"..., 47xfs_db: cannot read realtime 
+bitmap inode (22)
+) = 47
+--- SIGSEGV (Segmentation fault) @ 0 (0) ---
++++ killed by SIGSEGV +++
 
-[...]
 
- > 
- > Thank you for your attention.
- > 
- > NeilBrown
- > 
+Browsing with hexdump -C, seems like a part of a PDF file is at 128Kb, on the 
+place of the root inode. :(
 
-Nikita.
+
+--
+ d
+
