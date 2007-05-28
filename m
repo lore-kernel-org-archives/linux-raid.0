@@ -1,63 +1,37 @@
-From: Pallai Roland <dap@mail.index.hu>
-Subject: Re: raid5: I lost a XFS file system due to a minor IDE cable problem
-Date: Mon, 28 May 2007 14:53:55 +0200
-Message-ID: <200705281453.55618.dap@mail.index.hu>
-References: <200705241318.30711.dap@mail.index.hu> <Pine.LNX.4.64.0705240720040.16751@p34.internal.lan> <20070525000547.GH85884050@sgi.com>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: raid state diagram
+Date: Mon, 28 May 2007 10:10:22 -0400
+Message-ID: <465AE2CE.1080901@tmr.com>
+References: <46582FBC.3030305@avaxio.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-2; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20070525000547.GH85884050@sgi.com>
-Content-Disposition: inline
+In-Reply-To: <46582FBC.3030305@avaxio.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Chinner <dgc@sgi.com>
-Cc: Linux-Raid <linux-raid@vger.kernel.org>, xfs@oss.sgi.com
+To: Tomka Gergely <tomka@avaxio.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-
-On Friday 25 May 2007 02:05:47 David Chinner wrote:
-> "-o ro,norecovery" will allow you to mount the filesystem and get any
-> uncorrupted data off it.
+Tomka Gergely wrote:
+> Hi!
 >
-> You still may get shutdowns if you trip across corrupted metadata in
-> the filesystem, though.
-This filesystem is completely dead.
+> I am drawing this picture for teaching:
+>
+> http://gergely.tomka.hu/kep/raidstates.png
+>
+> Is this a correct picture? I am not sure in the difference between 
+> active/clean and resync/recover.
+>
+> thanks for any comment.
 
-hq:~# mount -o ro,norecovery /dev/loop1 /mnt/r5
-May 28 13:41:50 hq kernel: Mounting filesystem "loop1" in no-recovery mode.  
-Filesystem will be inconsistent.
-May 28 13:41:50 hq kernel: XFS: failed to read root inode
+Looks good to me, perhaps a copyright and creative commons license 
+statement would be useful to clarify what is fair use. That allows 
+others to use it for free projects, but you would still control 
+commercial use.
 
-hq:~# xfs_db /dev/loop1
-xfs_db: cannot read root inode (22)
-xfs_db: cannot read realtime bitmap inode (22)
-Segmentation fault
-
-hq:~# strace xfs_db /dev/loop1
-_llseek(4, 0, [0], SEEK_SET)            = 0
-read(4, "XFSB\0\0\20\0\0\0\0\0\6\374\253\0\0\0\0\0\0\0\0\0\0\0\0"..., 512) = 
-512
-pread(4, "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"..., 512, 
-480141901312) = 512
-pread(4, "\30G$L\203\33OE \256=\207@\340\264O\"\324\2074DY\323\6"..., 8192, 
-131072) = 8192
-write(2, "xfs_db: cannot read root inode ("..., 36xfs_db: cannot read root 
-inode (22)
-) = 36
-pread(4, "\30G$L\203\33OE \256=\207@\340\264O\"\324\2074DY\323\6"..., 8192, 
-131072) = 8192
-write(2, "xfs_db: cannot read realtime bit"..., 47xfs_db: cannot read realtime 
-bitmap inode (22)
-) = 47
---- SIGSEGV (Segmentation fault) @ 0 (0) ---
-+++ killed by SIGSEGV +++
-
-
-Browsing with hexdump -C, seems like a part of a PDF file is at 128Kb, on the 
-place of the root inode. :(
-
-
---
- d
+-- 
+bill davidsen <davidsen@tmr.com>
+  CTO TMR Associates, Inc
+  Doing interesting things with small computers since 1979
 
