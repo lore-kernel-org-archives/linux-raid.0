@@ -1,69 +1,83 @@
-From: Pallai Roland <dap@mail.index.hu>
-Subject: Re: raid5: I lost a XFS file system due to a minor IDE cable problem
-Date: Mon, 28 May 2007 17:30:52 +0200
-Message-ID: <200705281730.53343.dap@mail.index.hu>
-References: <200705241318.30711.dap@mail.index.hu> <20070525000547.GH85884050@sgi.com> <200705281453.55618.dap@mail.index.hu>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: Raid-5 long write wait while reading
+Date: Mon, 28 May 2007 12:01:10 -0400
+Message-ID: <465AFCC6.8040006@tmr.com>
+References: <4653306B.4090500@jager.no> <4658CB8A.8080503@jager.no>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200705281453.55618.dap@mail.index.hu>
-Content-Disposition: inline
+In-Reply-To: <4658CB8A.8080503@jager.no>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Chinner <dgc@sgi.com>
-Cc: Linux-Raid <linux-raid@vger.kernel.org>, xfs@oss.sgi.com
+To: tj <lists@jager.no>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-
-On Monday 28 May 2007 14:53:55 Pallai Roland wrote:
-> On Friday 25 May 2007 02:05:47 David Chinner wrote:
-> > "-o ro,norecovery" will allow you to mount the filesystem and get any
-> > uncorrupted data off it.
-> >
-> > You still may get shutdowns if you trip across corrupted metadata in
-> > the filesystem, though.
+tj wrote:
+> Thomas Jager wrote:
+>> Hi list.
+>>
+>> I run a file server on MD raid-5.
+>> If a client reads one big file and at the same time another client 
+>> tries to write a file, the thread writing just sits in 
+>> uninterruptible sleep until the reader has finished. Only very small 
+>> amount of writes get trough while the reader is still working.
+>> I'm having some trouble pinpointing the problem.
+>> It's not consistent either sometimes it works as expected both the 
+>> reader and writer gets some transactions. On huge reads I've seen the 
+>> writer blocked for 30-40 minutes without any significant writes 
+>> happening (Maybe a few megabytes, of several gigs waiting). It 
+>> happens with NFS, SMB and FTP, and local with dd. And seems to be 
+>> connected to raid-5. This does not happen on block devices without 
+>> raid-5. I'm also wondering if it can have anything to do with 
+>> loop-aes? I use loop-aes on top of the md, but then again i have not 
+>> observed this problem on loop-devices with disk backend. I do know 
+>> that loop-aes degrades performance but i didn't think it would do 
+>> something like this?
+>>
+>> I've seen this problem in 2.6.16-2.6.21
+>>
+>> All disks in the array is connected to a controller with a SiI 3114 
+>> chip.
 >
-> This filesystem is completely dead.
-> [...]
+> I just noticed something else. A couple of slow readers where running 
+> on my raid-5 array. Then i started a copy from another local disk to 
+> the array. Then i got the extremely long wait. I noticed something in 
+> iostat:
+>
+> avg-cpu:  %user   %nice %system %iowait  %steal   %idle
+>           3.90    0.00   48.05   31.93    0.00   16.12
+>
+> Device:            tps    kB_read/s    kB_wrtn/s    kB_read    kB_wrtn
+> ....
+> sdg               0.80        25.55         0.00        128          0
+> sdh             154.89       632.34         0.00       3168          0
+> sdi               0.20        12.77         0.00         64          0
+> sdj               0.40        25.55         0.00        128          0
+> sdk               0.40        25.55         0.00        128          0
+> sdl               0.80        25.55         0.00        128          0
+> sdm               0.80        25.55         0.00        128          0
+> sdn               0.60        23.95         0.00        120          0
+> md0             199.20       796.81         0.00       3992          0
+>
+> All disks are member of the same raid array (md0). One of the disks 
+> has a ton of transactions compared to the other disks. Read operations 
+> as far as i can tell. Why? May be connected with my problem? 
+Two thoughts on that, if you are doing a lot of directory operations, 
+it's possible that the inodes being used most are all in one chunk.
 
- I tried to make a md patch to stop writes if a raid5 array got 2+ failed 
-drives, but I found it's already done, oops. :) handle_stripe5() ignores 
-writes in this case quietly, I tried and works.
+The other possibility is that these a journal writes and reflect updates 
+to the atime. The way to see if this is in some way  related is to mount 
+(remount) with noatime: "mount -o remount,noatime /dev/md0 /wherever" 
+and retest. If this is journal activity you can do several things to 
+reduce the problem, which I'll go into (a) if it seems to be the 
+problem, and (b) if someone else doesn't point you to an existing 
+document or old post on the topic. Oh, you could also try mounting the 
+filesystem as etc2, assuming that it's ext3 now. I wouldn't run that 
+way, but it's useful as a diagnostic tool.
 
- So how I lost my file system? My first guess about partially successed writes 
-wasn't right: there wasn't real write to the disks after the second disk has 
-been kicked, so the scenario is same to a simple power loss from this point 
-of view. Am I thinking right?
-
-
- There's an another layer I used on this box between md and xfs: loop-aes. I 
-used it since years and rock stable, but now it's my first suspect, cause I 
-found a bug in it today:
- I assembled my array from n-1 disks, and I failed a second disk for a test 
-and I found /dev/loop1 still provides *random* data where /dev/md1 serves 
-nothing, it's definitely a loop-aes bug:
-
-/dev/loop1: [0700]:180907 (/dev/md1) encryption=AES128 multi-key-v3
-hq:~# dd if=/dev/md1 bs=1k count=128 skip=128 >/dev/null
-dd: reading `/dev/md1': Input/output error
-0+0 records in
-0+0 records out
-hq:~# dd if=/dev/loop1 bs=1k count=128 skip=128 | md5sum
-128+0 records in
-128+0 records out
-131072 bytes (131 kB) copied, 0.027775 seconds, 4.7 MB/s
-e2548a924a0e835bb45fb50058acba98  - (!!!)
-hq:~# dd if=/dev/loop1 bs=1k count=128 skip=128 | md5sum
-128+0 records in
-128+0 records out
-131072 bytes (131 kB) copied, 0.030311 seconds, 4.3 MB/s
-c6a23412fb75eb5a7eb1d6a7813eb86b  - (!!!)
-
- It's not an explanation to my screwed up file system, but for me it's enough 
-to drop loop-aes. Eh.
-
-
---
- d
+-- 
+bill davidsen <davidsen@tmr.com>
+  CTO TMR Associates, Inc
+  Doing interesting things with small computers since 1979
 
