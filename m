@@ -1,59 +1,95 @@
 From: David Chinner <dgc@sgi.com>
-Subject: Re: raid5: I lost a XFS file system due to a minor IDE cable problem
-Date: Mon, 28 May 2007 12:17:18 +1000
-Message-ID: <20070528021718.GZ85884050@sgi.com>
-References: <200705241318.30711.dap@mail.index.hu> <200705251635.36533.dap@mail.index.hu> <20070528003010.GS85884050@sgi.com> <200705280350.18384.dap@mail.index.hu>
+Subject: Re: [RFD] BIO_RW_BARRIER - what it means for devices, filesystems, and dm/md.
+Date: Mon, 28 May 2007 12:45:59 +1000
+Message-ID: <20070528024559.GA85884050@sgi.com>
+References: <18006.38689.818186.221707@notabene.brown> <18010.12472.209452.148229@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <200705280350.18384.dap@mail.index.hu>
-Sender: linux-raid-owner@vger.kernel.org
-To: Pallai Roland <dap@mail.index.hu>
-Cc: David Chinner <dgc@sgi.com>, Linux-Raid <linux-raid@vger.kernel.org>, xfs@oss.sgi.com
+In-Reply-To: <18010.12472.209452.148229@notabene.brown>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, dm-devel@redhat.com, linux-raid@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>, David Chinner <dgc@sgi.com>, Phillip Susi <psusi@cfl.rr.com>, Stefan Bader <Stefan.Bader@de.ibm.com>, Andreas Dilger <adilger@clusterfs.com>, Tejun Heo <htejun@gmail.com>
 List-Id: linux-raid.ids
 
-On Mon, May 28, 2007 at 03:50:17AM +0200, Pallai Roland wrote:
-> On Monday 28 May 2007 02:30:11 David Chinner wrote:
-> > On Fri, May 25, 2007 at 04:35:36PM +0200, Pallai Roland wrote:
-> > > .and I've spammed such messages. This "internal error" isn't a good
-> > > reason to shut down the file system?
-> >
-> > Actaully, that error does shut the filesystem down in most cases. When you
-> > see that output, the function is returning -EFSCORRUPTED. You've got a
-> > corrupted freespace btree.
-> >
-> > The reason why you get spammed is that this is happening during background
-> > writeback, and there is no one to return the -EFSCORRUPTED error to. The
-> > background writeback path doesn't specifically detect shut down filesystems
-> > or trigger shutdowns on errors because that happens in different layers so
-> > you just end up with failed data writes. These errors will occur on the
-> > next foreground data or metadata allocation and that will shut the
-> > filesystem down at that point.
-> >
-> > I'm not sure that we should be ignoring EFSCORRUPTED errors here; maybe in
-> > this case we should be shutting down the filesystem.  That would certainly
-> > cut down on the spamming and would not appear to change anything other
-> > behaviour....
->  If I remember correctly, my file system wasn't shutted down at all, it 
-> was "writeable" for whole night, the yafc slowly "written" files to it. Maybe 
-> all write operations had failed, but yafc doesn't warn.
+On Mon, May 28, 2007 at 11:30:32AM +1000, Neil Brown wrote:
+> 
+> Thanks everyone for your input.  There was some very valuable
+> observations in the various emails.
+> I will try to pull most of it together and bring out what seem to be
+> the important points.
+> 
+> 
+> 1/ A BIO_RW_BARRIER request should never fail with -EOPNOTSUP.
 
-So you never created new files or directories, unlinked files or
-directories, did synchronous writes, etc? Just had slowly growing files?
+Sounds good to me, but how do we test to see if the underlying
+device supports barriers? Do we just assume that they do and
+only change behaviour if -o nobarrier is specified in the mount
+options?
 
->  Spamming is just annoying when we need to find out what went wrong (My 
-> kernel.log is 300Mb), but for data security it's important to react to 
-> EFSCORRUPTED error in any case, I think so. Please consider this.
+> 2/ Maybe barriers provide stronger semantics than are required.
+> 
+>  All write requests are synchronised around a barrier write.  This is
+>  often more than is required and apparently can cause a measurable
+>  slowdown.
+> 
+>  Also the FUA for the actual commit write might not be needed.  It is
+>  important for consistency that the preceding writes are in safe
+>  storage before the commit write, but it is not so important that the
+>  commit write is immediately safe on storage.  That isn't needed until
+>  a 'sync' or 'fsync' or similar.
 
-The filesystem has responded correctly to the corruption in terms of
-data security (i.e. failed the data write and warned noisily about
-it), but it probably hasn't done everything it should....
+The use of barriers in XFS assumes the commit write to be on stable
+storage before it returns.  One of the ordering guarantees that we
+need is that the transaction (commit write) is on disk before the
+metadata block containing the change in the transaction is written
+to disk and the current barrier behaviour gives us that.
 
-Hmmmm. A quick look at the linux code makes me thikn that background
-writeback on linux has never been able to cause a shutdown in this
-case. However, the same error on Irix will definitely cause a
-shutdown, though....
+>  One possible alternative is:
+>    - writes can overtake barriers, but barrier cannot overtake writes.
+
+No, that breaks the above usage of a barrier....
+
+>    - flush before the barrier, not after.
+> 
+>  This is considerably weaker, and hence cheaper. But I think it is
+>  enough for all filesystems (providing it is still an option to call
+>  blkdev_issue_flush on 'fsync').
+
+No, not enough for XFS.
+
+>  Another alternative would be to tag each bio was being in a
+>  particular barrier-group.  Then bio's in different groups could
+>  overtake each other in either direction, but a BARRIER request must
+>  be totally ordered w.r.t. other requests in the barrier group.
+>  This would require an extra bio field, and would give the filesystem
+>  more appearance of control.  I'm not yet sure how much it would
+>  really help...
+
+And that assumes the filesystem is tracking exact dependencies
+between I/Os.  Such a mechanism would probably require filesystems
+to be redesigned to use this, but I can see how it would be useful
+for doing things like ensuring ordering between just an inode and
+it's data writes.  What would the overhead of having to support
+several hundred thousand different barrier groups be (i.e. one per
+dirty inode in a system)?
+
+> I think the implementation priorities here are:
+
+Depending on the answer to my first question:
+
+0/ implement a specific test for filesystems to run at mount time
+   to determine if barriers are supported or not.
+
+> 1/ implement a zero-length BIO_RW_BARRIER option.
+> 2/ Use it (or otherwise) to make all dm and md modules handle
+>    barriers (and loop?).
+> 3/ Devise and implement appropriate fall-backs with-in the block layer
+>    so that  -EOPNOTSUP is never returned.
+> 4/ Remove unneeded cruft from filesystems (and elsewhere).
+
+Sounds like a good start. ;)
 
 Cheers,
 
