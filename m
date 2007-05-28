@@ -1,66 +1,69 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: [RFD] BIO_RW_BARRIER - what it means for devices,
- filesystems, and dm/md.
-Date: Mon, 28 May 2007 10:43:49 -0400
-Message-ID: <465AEAA5.7000407@tmr.com>
-References: <18006.38689.818186.221707@notabene.brown>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: Pallai Roland <dap@mail.index.hu>
+Subject: Re: raid5: I lost a XFS file system due to a minor IDE cable problem
+Date: Mon, 28 May 2007 17:30:52 +0200
+Message-ID: <200705281730.53343.dap@mail.index.hu>
+References: <200705241318.30711.dap@mail.index.hu> <20070525000547.GH85884050@sgi.com> <200705281453.55618.dap@mail.index.hu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <18006.38689.818186.221707@notabene.brown>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Neil Brown <neilb@suse.de>
-Cc: David Chinner <dgc@sgi.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, dm-devel@redhat.com, Jens Axboe <jens.axboe@oracle.com>, linux-fsdevel@vger.kernel.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <200705281453.55618.dap@mail.index.hu>
+Content-Disposition: inline
+Sender: linux-raid-owner@vger.kernel.org
+To: David Chinner <dgc@sgi.com>
+Cc: Linux-Raid <linux-raid@vger.kernel.org>, xfs@oss.sgi.com
 List-Id: linux-raid.ids
 
-Neil Brown wrote:
-> We can think of there being three types of devices:
->  
-> 1/ SAFE.  With a SAFE device, there is no write-behind cache, or if
->           there is it is non-volatile.  Once a write completes it is 
->           completely safe.  Such a device does not require barriers
->           or ->issue_flush_fn, and can respond to them either by a
-> 	  no-op or with -EOPNOTSUPP (the former is preferred).
+
+On Monday 28 May 2007 14:53:55 Pallai Roland wrote:
+> On Friday 25 May 2007 02:05:47 David Chinner wrote:
+> > "-o ro,norecovery" will allow you to mount the filesystem and get any
+> > uncorrupted data off it.
+> >
+> > You still may get shutdowns if you trip across corrupted metadata in
+> > the filesystem, though.
 >
-> 2/ FLUSHABLE.
->           A FLUSHABLE device may have a volatile write-behind cache.
->           This cache can be flushed with a call to blkdev_issue_flush.
-> 	  It may not support barrier requests.
->
-> 3/ BARRIER.
-> 	  A BARRIER device supports both blkdev_issue_flush and
->           BIO_RW_BARRIER.  Either may be used to synchronise any
-> 	  write-behind cache to non-volatile storage (media).
->
-> Handling of SAFE and FLUSHABLE devices is essentially the same and can
-> work on a BARRIER device.  The BARRIER device has the option of more
-> efficient handling.
->   
-There are two things I'm not sure you covered.
+> This filesystem is completely dead.
+> [...]
 
-First, disks which don't support flush but do have a "cache dirty" 
-status bit you can poll at times like shutdown. If there are no drivers 
-which support these, it can be ignored.
+ I tried to make a md patch to stop writes if a raid5 array got 2+ failed 
+drives, but I found it's already done, oops. :) handle_stripe5() ignores 
+writes in this case quietly, I tried and works.
 
-Second, NAS (including nbd?). Is there enough information to handle this 
-"really rigt?"
+ So how I lost my file system? My first guess about partially successed writes 
+wasn't right: there wasn't real write to the disks after the second disk has 
+been kicked, so the scenario is same to a simple power loss from this point 
+of view. Am I thinking right?
 
-Otherwise looks good as a statement of issues. It seems to me that the 
-filesystem should be able to pass the barrier request to the block layer 
-and have it taken care of, rather than have code in each f/s to cope 
-with odd behavior.
 
--- 
-bill davidsen <davidsen@tmr.com>
-  CTO TMR Associates, Inc
-  Doing interesting things with small computers since 1979
+ There's an another layer I used on this box between md and xfs: loop-aes. I 
+used it since years and rock stable, but now it's my first suspect, cause I 
+found a bug in it today:
+ I assembled my array from n-1 disks, and I failed a second disk for a test 
+and I found /dev/loop1 still provides *random* data where /dev/md1 serves 
+nothing, it's definitely a loop-aes bug:
+
+/dev/loop1: [0700]:180907 (/dev/md1) encryption=AES128 multi-key-v3
+hq:~# dd if=/dev/md1 bs=1k count=128 skip=128 >/dev/null
+dd: reading `/dev/md1': Input/output error
+0+0 records in
+0+0 records out
+hq:~# dd if=/dev/loop1 bs=1k count=128 skip=128 | md5sum
+128+0 records in
+128+0 records out
+131072 bytes (131 kB) copied, 0.027775 seconds, 4.7 MB/s
+e2548a924a0e835bb45fb50058acba98  - (!!!)
+hq:~# dd if=/dev/loop1 bs=1k count=128 skip=128 | md5sum
+128+0 records in
+128+0 records out
+131072 bytes (131 kB) copied, 0.030311 seconds, 4.3 MB/s
+c6a23412fb75eb5a7eb1d6a7813eb86b  - (!!!)
+
+ It's not an explanation to my screwed up file system, but for me it's enough 
+to drop loop-aes. Eh.
+
+
+--
+ d
+
