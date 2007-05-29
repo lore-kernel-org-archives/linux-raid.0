@@ -1,39 +1,25 @@
-From: Thomas Jarosch <thomas.jarosch@intra2net.com>
-Subject: Re: ANNOUNCE: mdadm 2.6.2 - A tool for managing Soft RAID under Linux
-Date: Tue, 29 May 2007 18:29:54 +0200
-Message-ID: <200705291829.54274.thomas.jarosch@intra2net.com>
-References: <18001.9765.808761.531809@notabene.brown>
+From: Jan Engelhardt <jengelh@linux01.gwdg.de>
+Subject: RAID SB 1.x autodetection
+Date: Tue, 29 May 2007 21:15:38 +0200 (MEST)
+Message-ID: <Pine.LNX.4.61.0705292036400.11140@yvahk01.tjqt.qr>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18001.9765.808761.531809@notabene.brown>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello Neil,
-
-On Monday, 21. May 2007, you wrote:
-> I am pleased to announce the availability of
->    mdadm version 2.6.2
-
-Thanks for releasing mdadm 2.6.2. It contains a fix for "--test"
-I was looking for right at the moment :-)
-
-mdadm fails to compile if you enable "-O2" using gcc 4.1.1 because of -Werror:
-
-cc1: warnings being treated as errors
-sysfs.c: In function 'sysfs_read':
-sysfs.c:97: warning: value computed is not used
-sysfs.c:119: warning: value computed is not used
-sysfs.c:127: warning: value computed is not used
-sysfs.c:133: warning: value computed is not used
-sysfs.c:139: warning: value computed is not used
-sysfs.c:178: warning: value computed is not used
+Hi,
 
 
-Cheers,
-Thomas
+from your post at 
+http://www.mail-archive.com/linux-raid@vger.kernel.org/msg07384.html I 
+read that autodetecting arrays with a 1.x superblock is currently 
+impossible. Does it at least work to force the kernel to always assume a 
+1.x sb? There are some 'broken' distros out there that still don't use 
+mdadm in initramfs, and recreating the initramfs each time is a bit 
+cumbersome...
+
+
+	Jan
+-- 
