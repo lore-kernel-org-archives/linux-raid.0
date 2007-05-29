@@ -1,47 +1,52 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: ANNOUNCE: mdadm 2.6.2 - A tool for managing Soft RAID under Linux
-Date: Wed, 30 May 2007 06:49:40 +1000
-Message-ID: <18012.37348.161496.473678@notabene.brown>
-References: <18001.9765.808761.531809@notabene.brown>
-	<200705291829.54274.thomas.jarosch@intra2net.com>
+From: Alasdair G Kergon <agk@redhat.com>
+Subject: Re: Re: [RFD] BIO_RW_BARRIER - what it means for devices,
+	filesystems, and dm/md.
+Date: Tue, 29 May 2007 23:05:00 +0100
+Message-ID: <20070529220500.GA6513@agk.fab.redhat.com>
+References: <18006.38689.818186.221707@notabene.brown>
+	<18010.12472.209452.148229@notabene.brown>
+	<20070528094358.GM25091@agk.fab.redhat.com>
+	<5201e28f0705290225v14fdac44hb0382a4137a84d01@mail.gmail.com>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Thomas Jarosch on Tuesday May 29
-Sender: linux-raid-owner@vger.kernel.org
-To: Thomas Jarosch <thomas.jarosch@intra2net.com>
-Cc: linux-raid@vger.kernel.org
+Return-path: <dm-devel-bounces@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <5201e28f0705290225v14fdac44hb0382a4137a84d01@mail.gmail.com>
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: Stefan Bader <sbader3@googlemail.com>
+Cc: Tejun Heo <htejun@gmail.com>, David Chinner <dgc@sgi.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, device-mapper development <dm-devel@redhat.com>, Jens Axboe <jens.axboe@oracle.com>, linux-fsdevel@vger.kernel.org, Andreas Dilger <adilger@clusterfs.com>
 List-Id: linux-raid.ids
 
-On Tuesday May 29, thomas.jarosch@intra2net.com wrote:
-> Hello Neil,
-> 
-> On Monday, 21. May 2007, you wrote:
-> > I am pleased to announce the availability of
-> >    mdadm version 2.6.2
-> 
-> Thanks for releasing mdadm 2.6.2. It contains a fix for "--test"
-> I was looking for right at the moment :-)
-> 
-> mdadm fails to compile if you enable "-O2" using gcc 4.1.1 because of -Werror:
-> 
-> cc1: warnings being treated as errors
-> sysfs.c: In function 'sysfs_read':
-> sysfs.c:97: warning: value computed is not used
-> sysfs.c:119: warning: value computed is not used
-> sysfs.c:127: warning: value computed is not used
-> sysfs.c:133: warning: value computed is not used
-> sysfs.c:139: warning: value computed is not used
-> sysfs.c:178: warning: value computed is not used
+On Tue, May 29, 2007 at 11:25:42AM +0200, Stefan Bader wrote:
+> doing a sort of suspend, issuing the
+> barrier request, calling flush to all mapped devices and then wait for
+> in-flight I/O to go to zero? 
 
-Those are bogus warnings. Each is
-	strcpy(base, "xxxxx");
-and base most certainly is used., though I can see how gcc might not
-notice if it is being too clever. Maybe you need to get gcc-4.1.2?
-or 
-   make CWFLAGS=-Wall
+Something like that is needed for some dm targets to support barriers.
+(We needn't always wait for *all* in-flight I/O.)
+When faced with -EOPNOTSUP, do all callers fall back to a sync in
+the places a barrier would have been used, or are there any more
+sophisticated strategies attempting to optimise code without barriers?
 
-Thanks for the report.
+> I am not a hundred percent sure about
+> that but I think that just passing the barrier flag on to mapped
+> devices might in some (maybe they are rare) cases cause a layer above
+> to think all data is on-disk while this isn't necessarily true (see my
+> previous post). What do you think?
 
-NeilBrown
+An efficient I/O barrier implementation would not normally involve
+flushing AFAIK: dm surely wouldn't "cause" a higher layer to assume
+stronger semantics than are provided.
+ 
+Alasdair
+-- 
+agk@redhat.com
