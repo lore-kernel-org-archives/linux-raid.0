@@ -1,38 +1,23 @@
-From: "H. Peter Anvin" <hpa@zytor.com>
-Subject: Re: Reshaping raid0/10
-Date: Mon, 28 May 2007 21:51:16 -0700
-Message-ID: <465BB144.2060003@zytor.com>
-References: <Pine.LNX.4.61.0702211726500.12039@yvahk01.tjqt.qr>	<17884.42154.248251.261955@notabene.brown>	<Pine.LNX.4.61.0702231357420.9736@yvahk01.tjqt.qr>	<17887.19400.179239.281711@notabene.brown>	<45F3134C.7070500@zytor.com> <17908.33911.135761.236374@notabene.brown>
+From: Jeremy Higdon <jeremy@sgi.com>
+Subject: Re: [RFD] BIO_RW_BARRIER - what it means for devices, filesystems, and dm/md.
+Date: Mon, 28 May 2007 23:45:59 -0700
+Message-ID: <20070529064559.GB531679@sgi.com>
+References: <18006.38689.818186.221707@notabene.brown> <18010.12472.209452.148229@notabene.brown> <20070528024559.GA85884050@sgi.com> <980E945058C35F7E3117FE88@timothy-shimmins-power-mac-g5.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17908.33911.135761.236374@notabene.brown>
+Content-Disposition: inline
+In-Reply-To: <980E945058C35F7E3117FE88@timothy-shimmins-power-mac-g5.local>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Jan Engelhardt <jengelh@linux01.gwdg.de>, linux-raid@vger.kernel.org
+To: Timothy Shimmin <tes@sgi.com>
+Cc: David Chinner <dgc@sgi.com>, Neil Brown <neilb@suse.de>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, dm-devel@redhat.com, linux-raid@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>, Phillip Susi <psusi@cfl.rr.com>, Stefan Bader <Stefan.Bader@de.ibm.com>, Andreas Dilger <adilger@clusterfs.com>, Tejun Heo <htejun@gmail.com>
 List-Id: linux-raid.ids
 
-Back in March, Neil Brown wrote:
-> 
-> Well.... it's not straight forward at all.
-> 
-> Firstly: it can only work if all your drives are the same size
-> (rounded to 64K).  If they aren't raid0 will use all the available
-> space on each drive, while raid5 will only use the amount that is
-> available on the first drive.
-> 
-> If that condition is met, then you can safely convert to a raid4 with
-> one extra (missing) device by simply creating an array with the same
-> drives (so you have to stop and restart the array - you cannot do that
-> bit while the array is live).  You seem to need --assume-clean
-> to create the raid4 degraded... That is probably a bug in mdadm.
-> 
+On Mon, May 28, 2007 at 02:48:45PM +1000, Timothy Shimmin wrote:
+> I'm taking it that the FUA write will just guarantee that that
+> particular write has made it to disk on i/o completion
+> (and no write cache flush is done).
 
-[rest of procedure deleted]
+Correct.  It only applies to that one write command.
 
-I just wanted to let you know we performed this procedure on
-mirrors1.kernel.org.  It was successful, and saved us from copying 3 TB
-of data across the Internet.
-
-	-hpa
+jeremy
