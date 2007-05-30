@@ -1,30 +1,35 @@
 From: Bill Davidsen <davidsen@tmr.com>
-Subject: dm-crypt issue
-Date: Wed, 30 May 2007 16:34:21 -0400
-Message-ID: <465DDFCD.7010900@tmr.com>
+Subject: Re: RAID SB 1.x autodetection
+Date: Wed, 30 May 2007 16:35:21 -0400
+Message-ID: <465DE009.7060202@tmr.com>
+References: <Pine.LNX.4.61.0705292036400.11140@yvahk01.tjqt.qr> <877iqqul7a.fsf@hades.wkstn.nix>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <877iqqul7a.fsf@hades.wkstn.nix>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>
+To: Nix <nix@esperi.org.uk>
+Cc: Jan Engelhardt <jengelh@linux01.gwdg.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I'm not sure this is the right place, or that there IS a right pace for 
-this, but it involves RAID, so... ;-)
-
-I have an array I mount with cryptoloop, to hole some information with 
-AES encryption. I keep hearing that the way to do this is with dm-crypt, 
-but I can't find anyone who will explain how to do that. If I had the 
-luxury of starting over I could use dm-crypt to start from scratch, but 
-the only practical solution in terms of time and requirement for 
-encrypted backup would be to be able to mount the same partitions, using 
-the same encryption, just using dm-crypt. I don't think I can do that, 
-but if someone wants to assure me that it can be done and point me to 
-documentation, I'll be grateful.
-
-I have a LOT of partial sets of this data in the field in DVD, same 
-requirement, I can't replace them, they have to work as is.
+Nix wrote:
+> On 29 May 2007, Jan Engelhardt uttered the following:
+>
+>   
+>> from your post at 
+>> http://www.mail-archive.com/linux-raid@vger.kernel.org/msg07384.html I 
+>> read that autodetecting arrays with a 1.x superblock is currently 
+>> impossible. Does it at least work to force the kernel to always assume a 
+>> 1.x sb? There are some 'broken' distros out there that still don't use 
+>> mdadm in initramfs, and recreating the initramfs each time is a bit 
+>> cumbersome...
+>>     
+>
+> The kernel build system should be able to do that for you, shouldn't it?
+>
+>   
+That would be an improvement, yes.
 
 -- 
 bill davidsen <davidsen@tmr.com>
