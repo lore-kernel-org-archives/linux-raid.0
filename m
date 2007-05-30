@@ -1,43 +1,42 @@
-From: Jan Engelhardt <jengelh@linux01.gwdg.de>
-Subject: Re: Creating RAID1 with bitmap fails
-Date: Wed, 30 May 2007 14:09:54 +0200 (MEST)
-Message-ID: <Pine.LNX.4.61.0705301409180.11140@yvahk01.tjqt.qr>
-References: <Pine.LNX.4.61.0705301229370.11140@yvahk01.tjqt.qr>
- <18013.26771.126894.425898@notabene.brown>
+From: Phillip Susi <psusi@cfl.rr.com>
+Subject: Re: [RFD] BIO_RW_BARRIER - what it means for devices, filesystems,
+ and dm/md.
+Date: Wed, 30 May 2007 12:45:09 -0400
+Message-ID: <465DAA15.3070703@cfl.rr.com>
+References: <18006.38689.818186.221707@notabene.brown> <18010.12472.209452.148229@notabene.brown> <20070528024559.GA85884050@sgi.com> <465C871F.708@cfl.rr.com> <20070529234832.GT85884050@sgi.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18013.26771.126894.425898@notabene.brown>
-Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <20070529234832.GT85884050@sgi.com>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: David Chinner <dgc@sgi.com>
+Cc: Neil Brown <neilb@suse.de>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, dm-devel@redhat.com, linux-raid@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>, Stefan Bader <Stefan.Bader@de.ibm.com>, Andreas Dilger <adilger@clusterfs.com>, Tejun Heo <htejun@gmail.com>
 List-Id: linux-raid.ids
 
+David Chinner wrote:
+>> Barrier != synchronous write,
+> 
+> Of course. FYI, XFS only issues barriers on *async* writes.
+> 
+> But barrier semantics - as far as they've been described by everyone
+> but you indicate that the barrier write is guaranteed to be on stable
+> storage when it returns.
 
-On May 30 2007 22:05, Neil Brown wrote:
->> 
->> the following command strangely gives -EIO ...
->> 12:27 sun:~ # mdadm -C /dev/md4 -l 1 -n 2 -e 1.0 -b internal /dev/ram0 
->> missing
->> 
->> md: md4: raid array is not clean -- starting background reconstruction
->> md4: failed to create bitmap (-5)
->> md: pers->run() failed ...
->> mdadm: RUN_ARRAY failed: Input/output error
->> mdadm: stopped /dev/md4
->> 
->> Leaving out -b internal creates the array. /dev/ram0 or /dev/sda5 - EIO 
->> happens on both. (But the disk is fine, like ram0)
->> Where could I start looking?
->> 
->> Linux sun 2.6.21-1.3149.al3.8smp #3 SMP Wed May 30 09:43:00 CEST 2007 
->> sparc64 sparc64 sparc64 GNU/Linux
->> mdadm 2.5.4
->
->I'm fairly sure this is fixed in 2.6.2.  It is certainly worth a try.
+Hrm... I may have misunderstood the perspective you were talking from. 
+Yes, when the bio is completed it must be on the media, but the 
+filesystem should issue both requests, and then really not care when 
+they complete.  That is to say, the filesystem should not wait for block 
+A to finish before issuing block B; it should issue both, and use 
+barriers to make sure they hit the disk in the correct order.
 
-The same command works on a x86_64 with mdadm 2.5.3...
+> XFS relies on the block being stable before any other write
+> goes to disk. That is the semantic that the barrier I/Os currently
+> have. How that is implemented in the device is irrelevant to me,
+> but if I issue a barrier I/O, I do not expect *any* I/O to be
+> reordered around it.
+
+Right... it just needs to control the order of the requests, just not 
+wait on one to finish before issuing the next.
 
 
-	Jan
--- 
