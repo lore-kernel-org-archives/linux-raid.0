@@ -1,53 +1,70 @@
 From: Holger Kiehl <Holger.Kiehl@dwd.de>
-Subject: Re: ANNOUNCE: mdadm 2.6.2 - A tool for managing Soft RAID under
- Linux
-Date: Wed, 30 May 2007 06:23:51 +0000 (GMT)
-Message-ID: <Pine.LNX.4.64.0705300621160.31301@praktifix.dwd.de>
-References: <18001.9765.808761.531809@notabene.brown>
- <200705291829.54274.thomas.jarosch@intra2net.com> <18012.37348.161496.473678@notabene.brown>
+Subject: Re: Raid-5 long write wait while reading
+Date: Wed, 30 May 2007 06:32:52 +0000 (GMT)
+Message-ID: <Pine.LNX.4.64.0705300627570.31301@praktifix.dwd.de>
+References: <4653306B.4090500@jager.no> <4658CB8A.8080503@jager.no>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18012.37348.161496.473678@notabene.brown>
+In-Reply-To: <4658CB8A.8080503@jager.no>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Thomas Jarosch <thomas.jarosch@intra2net.com>, linux-raid@vger.kernel.org
+To: tj <lists@jager.no>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 30 May 2007, Neil Brown wrote:
+On Sun, 27 May 2007, tj wrote:
 
-> On Tuesday May 29, thomas.jarosch@intra2net.com wrote:
->> Hello Neil,
->>
->> On Monday, 21. May 2007, you wrote:
->>> I am pleased to announce the availability of
->>>    mdadm version 2.6.2
->>
->> Thanks for releasing mdadm 2.6.2. It contains a fix for "--test"
->> I was looking for right at the moment :-)
->>
->> mdadm fails to compile if you enable "-O2" using gcc 4.1.1 because of -Werror:
->>
->> cc1: warnings being treated as errors
->> sysfs.c: In function 'sysfs_read':
->> sysfs.c:97: warning: value computed is not used
->> sysfs.c:119: warning: value computed is not used
->> sysfs.c:127: warning: value computed is not used
->> sysfs.c:133: warning: value computed is not used
->> sysfs.c:139: warning: value computed is not used
->> sysfs.c:178: warning: value computed is not used
+> Thomas Jager wrote:
+>> Hi list.
+>> 
+>> I run a file server on MD raid-5.
+>> If a client reads one big file and at the same time another client tries to 
+>> write a file, the thread writing just sits in uninterruptible sleep until 
+>> the reader has finished. Only very small amount of writes get trough while 
+>> the reader is still working.
+>> I'm having some trouble pinpointing the problem.
+>> It's not consistent either sometimes it works as expected both the reader 
+>> and writer gets some transactions. On huge reads I've seen the writer 
+>> blocked for 30-40 minutes without any significant writes happening (Maybe a 
+>> few megabytes, of several gigs waiting). It happens with NFS, SMB and FTP, 
+>> and local with dd. And seems to be connected to raid-5. This does not 
+>> happen on block devices without raid-5. I'm also wondering if it can have 
+>> anything to do with loop-aes? I use loop-aes on top of the md, but then 
+>> again i have not observed this problem on loop-devices with disk backend. I 
+>> do know that loop-aes degrades performance but i didn't think it would do 
+>> something like this?
+>> 
+>> I've seen this problem in 2.6.16-2.6.21
+>> 
+>> All disks in the array is connected to a controller with a SiI 3114 chip.
 >
-> Those are bogus warnings. Each is
-> 	strcpy(base, "xxxxx");
-> and base most certainly is used., though I can see how gcc might not
-> notice if it is being too clever. Maybe you need to get gcc-4.1.2?
-> or
->   make CWFLAGS=-Wall
+> I just noticed something else. A couple of slow readers where running on my 
+> raid-5 array. Then i started a copy from another local disk to the array. 
+> Then i got the extremely long wait. I noticed something in iostat:
 >
-Maybe the compiler warns about the return of strcpy() not being used.
-The correct fix would then be:
+> avg-cpu:  %user   %nice %system %iowait  %steal   %idle
+>          3.90    0.00   48.05   31.93    0.00   16.12
+>
+> Device:            tps    kB_read/s    kB_wrtn/s    kB_read    kB_wrtn
+> ....
+> sdg               0.80        25.55         0.00        128          0
+> sdh             154.89       632.34         0.00       3168          0
+> sdi               0.20        12.77         0.00         64          0
+> sdj               0.40        25.55         0.00        128          0
+> sdk               0.40        25.55         0.00        128          0
+> sdl               0.80        25.55         0.00        128          0
+> sdm               0.80        25.55         0.00        128          0
+> sdn               0.60        23.95         0.00        120          0
+> md0             199.20       796.81         0.00       3992          0
+>
+> All disks are member of the same raid array (md0). One of the disks has a ton 
+> of transactions compared to the other disks. Read operations as far as i can 
+> tell. Why? May be connected with my problem?
+>
+If you are using ext2/3 check if when creating the filesystem the stride
+option helps you, see: http://tldp.org/HOWTO/Software-RAID-HOWTO-5.html#ss5.11
 
-        (void)strcpy(base, "xxxxx");
+There is a newer howto or wiki but I forgot its location.
 
 Holger
 
