@@ -1,62 +1,43 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: mismatch_cnt = 128 for root (/) md raid1 device
-Date: Wed, 30 May 2007 08:06:48 -0400 (EDT)
-Message-ID: <Pine.LNX.4.64.0705300806410.5844@p34.internal.lan>
-References: <Pine.LNX.4.64.0705260510040.25381@p34.internal.lan>
+From: Jan Engelhardt <jengelh@linux01.gwdg.de>
+Subject: Re: Creating RAID1 with bitmap fails
+Date: Wed, 30 May 2007 14:09:54 +0200 (MEST)
+Message-ID: <Pine.LNX.4.61.0705301409180.11140@yvahk01.tjqt.qr>
+References: <Pine.LNX.4.61.0705301229370.11140@yvahk01.tjqt.qr>
+ <18013.26771.126894.425898@notabene.brown>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0705260510040.25381@p34.internal.lan>
+In-Reply-To: <18013.26771.126894.425898@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Asking again..
 
-On Sat, 26 May 2007, Justin Piszcz wrote:
+On May 30 2007 22:05, Neil Brown wrote:
+>> 
+>> the following command strangely gives -EIO ...
+>> 12:27 sun:~ # mdadm -C /dev/md4 -l 1 -n 2 -e 1.0 -b internal /dev/ram0 
+>> missing
+>> 
+>> md: md4: raid array is not clean -- starting background reconstruction
+>> md4: failed to create bitmap (-5)
+>> md: pers->run() failed ...
+>> mdadm: RUN_ARRAY failed: Input/output error
+>> mdadm: stopped /dev/md4
+>> 
+>> Leaving out -b internal creates the array. /dev/ram0 or /dev/sda5 - EIO 
+>> happens on both. (But the disk is fine, like ram0)
+>> Where could I start looking?
+>> 
+>> Linux sun 2.6.21-1.3149.al3.8smp #3 SMP Wed May 30 09:43:00 CEST 2007 
+>> sparc64 sparc64 sparc64 GNU/Linux
+>> mdadm 2.5.4
+>
+>I'm fairly sure this is fixed in 2.6.2.  It is certainly worth a try.
 
-> Kernel 2.6.21.3
->
-> Fri May 25 20:00:02 EDT 2007: Executing RAID health check for /dev/md0...
-> Fri May 25 20:00:03 EDT 2007: Executing RAID health check for /dev/md1...
-> Fri May 25 20:00:04 EDT 2007: Executing RAID health check for /dev/md2...
-> Fri May 25 20:00:05 EDT 2007: Executing RAID health check for /dev/md3...
-> Sat May 26 04:40:09 EDT 2007: cat /sys/block/md0/md/mismatch_cnt
-> Sat May 26 04:40:09 EDT 2007: 0
-> Sat May 26 04:40:09 EDT 2007: cat /sys/block/md1/md/mismatch_cnt
-> Sat May 26 04:40:09 EDT 2007: 0
-> Sat May 26 04:40:09 EDT 2007: cat /sys/block/md2/md/mismatch_cnt
-> Sat May 26 04:40:09 EDT 2007: 128
-> Sat May 26 04:40:09 EDT 2007: cat /sys/block/md3/md/mismatch_cnt
-> Sat May 26 04:40:09 EDT 2007: 0
-> Sat May 26 04:40:09 EDT 2007: The meta-device /dev/md0 has no mismatched
-> sectors.
-> Sat May 26 04:40:10 EDT 2007: The meta-device /dev/md1 has no mismatched
-> sectors.
-> Sat May 26 04:40:11 EDT 2007: The meta-device /dev/md2 has 128 mismatched
-> sectors.
-> Sat May 26 04:40:11 EDT 2007: Executing repair on /dev/md2
-> Sat May 26 04:40:12 EDT 2007: The meta-device /dev/md3 has no mismatched
-> sectors.
-> Sat May 26 05:00:14 EDT 2007: cat /sys/block/md0/md/mismatch_cnt
-> Sat May 26 05:00:14 EDT 2007: 0
-> Sat May 26 05:00:14 EDT 2007: cat /sys/block/md1/md/mismatch_cnt
-> Sat May 26 05:00:14 EDT 2007: 0
-> Sat May 26 05:00:14 EDT 2007: cat /sys/block/md2/md/mismatch_cnt
-> Sat May 26 05:00:14 EDT 2007: 0
-> Sat May 26 05:00:14 EDT 2007: cat /sys/block/md3/md/mismatch_cnt
-> Sat May 26 05:00:14 EDT 2007: 0
->
-> I often see 128 or so for the root volume (/) for my RAID1.  Any idea?  I 
-> know when you reboot/shutdown a system with md raid1 it does not mount 
-> uncleanly (I believe?).
->
-> Just curious why it happens on the root volume and if its something I should 
-> be worried about?
->
-> md0=swap
-> md1=boot
-> md2=root
-> md3=raid5_volume
->
->
+The same command works on a x86_64 with mdadm 2.5.3...
+
+
+	Jan
+-- 
