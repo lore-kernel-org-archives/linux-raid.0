@@ -1,44 +1,46 @@
-From: Jon Nelson <jnelson-linux-raid@jamponi.net>
-Subject: very strange (maybe) raid1 testing results
-Date: Tue, 29 May 2007 21:52:32 -0500 (CDT)
-Message-ID: <Pine.LNX.4.64.0705292135200.4266@gheavc.wnzcbav.cig>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+From: Mike Accetta <maccetta@laurelnetworks.com>
+Subject: Re: When does a disk get flagged as bad?
+Date: Wed, 30 May 2007 22:28:18 -0400
+Message-ID: <5822.1180578498@mdt.dhcp.pit.laurelnetworks.com>
+References: <1180066595.21028.112.camel@w100>
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-reply-to: Your message of "Thu, 24 May 2007 23:16:35 CDT."
+             <1180066595.21028.112.camel@w100>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Alberto Alonso <alberto@ggsys.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Alberto Alonso writes:
+> OK, lets see if I can understand how a disk gets flagged
+> as bad and removed from an array. I was under the impression
+> that any read or write operation failure flags the drive as
+> bad and it gets removed automatically from the array.
+> 
+> However, as I indicated in a prior post I am having problems
+> where the array is never degraded. Does an error of type:
+> end_request: I/O error, dev sdb, sector ....
+> not count as a read/write error?
 
-I assembled a 3-component raid1 out of 3 4GB partitions.
-After syncing, I ran the following script:
+I was also under the impression that any read or write error would
+fail the drive out of the array but some recent experiments with error
+injecting seem to indicate otherwise at least for raid1.  My working
+hypothesis is that only write errors fail the drive.  Read errors appear
+to just redirect the sector to a different mirror.
 
-for bs in 32 64 128 192 256 384 512 768 1024 ; do \
- let COUNT="2048 * 1024 / ${bs}"; \
- echo -n "${bs}K bs - "; \
- dd if=/dev/md1 of=/dev/null bs=${bs}k count=$COUNT iflag=direct 2>&1 | 
- grep 'copied' ; \
-done
-
-I also ran 'dstat' (like iostat) in another terminal. What I noticed was 
-very unexpected to me, so I re-ran it several times.  I confirmed my 
-initial observation - every time a new dd process ran, *all* of the read 
-I/O for that process came from a single disk. It does not (appear to) 
-have to do with block size -  if I stop and re-run the script the next 
-drive in line will take all of the I/O - it goes sda, sdc, sdb and back 
-to sda and so on.
-
-I am getting 70-80MB/s read rates as reported via dstat, and 60-80MB/s 
-as reported by dd. What I don't understand is why just one disk is being 
-used here, instead of two or more. I tried different versions of 
-metadata, and using a bitmap makes no difference. I created the array 
-with (allowing for variations of bitmap and metadata version):
-
-mdadm --create --level=1 --raid-devices=3 /dev/md1 /dev/sda3 /dev/sdb3 /dev/sdc3
-
-I am running 2.6.18.8-0.3-default on x86_64, openSUSE 10.2.
-
-Am I doing something wrong or is something weird going on?
-
+I actually ran across what looks like a bug in the raid1
+recovery/check/repair read error logic that I posted about
+last week but which hasn't generated any response yet (cf.
+http://article.gmane.org/gmane.linux.raid/15354).  This bug results in
+sending a zero length write request down to the underlying device driver.
+A consequence of issuing a zero length write is that it fails at the
+device level, which raid1 sees as a write failure, which then fails the
+array.  The fix I proposed actually has the effect of *not* failing the
+array in this case since the spurious failing write is never generated.
+I'm not sure what is actually supposed to happen in this case.  Hopefully,
+someone more knowledgeable will comment soon.
 --
-Jon Nelson <jnelson-linux-raid@jamponi.net>
+Mike Accetta
+
+ECI Telecom Ltd.
+Data Networking Division (previously Laurel Networks)
