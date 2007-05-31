@@ -1,51 +1,91 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: Creating RAID1 with bitmap fails
-Date: Thu, 31 May 2007 09:09:49 +1000
-Message-ID: <18014.1085.785167.411655@notabene.brown>
-References: <Pine.LNX.4.61.0705301229370.11140@yvahk01.tjqt.qr>
-	<18013.26771.126894.425898@notabene.brown>
-	<Pine.LNX.4.61.0705301409180.11140@yvahk01.tjqt.qr>
+From: David Chinner <dgc@sgi.com>
+Subject: Re: [RFD] BIO_RW_BARRIER - what it means for devices, filesystems, and dm/md.
+Date: Thu, 31 May 2007 10:20:11 +1000
+Message-ID: <20070531002011.GC85884050@sgi.com>
+References: <18006.38689.818186.221707@notabene.brown> <18010.12472.209452.148229@notabene.brown> <20070528024559.GA85884050@sgi.com> <465C871F.708@cfl.rr.com> <20070529234832.GT85884050@sgi.com> <Pine.LNX.4.64.0705291653230.31474@asgard.lang.hm> <20070530061723.GY85884050@sgi.com> <Pine.LNX.4.64.0705300946220.8246@asgard.lang.hm>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Jan Engelhardt on Wednesday May 30
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.64.0705300946220.8246@asgard.lang.hm>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jan Engelhardt <jengelh@linux01.gwdg.de>
-Cc: linux-raid@vger.kernel.org
+To: david@lang.hm
+Cc: David Chinner <dgc@sgi.com>, Phillip Susi <psusi@cfl.rr.com>, Neil Brown <neilb@suse.de>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, dm-devel@redhat.com, linux-raid@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>, Stefan Bader <Stefan.Bader@de.ibm.com>, Andreas Dilger <adilger@clusterfs.com>, Tejun Heo <htejun@gmail.com>
 List-Id: linux-raid.ids
 
-On Wednesday May 30, jengelh@linux01.gwdg.de wrote:
+On Wed, May 30, 2007 at 09:52:49AM -0700, david@lang.hm wrote:
+> On Wed, 30 May 2007, David Chinner wrote:
+> >with the barrier is on stable storage when I/o completion is
+> >signalled.  The existing barrier implementation (where it works)
+> >provide these requirements. We need barriers to retain these
+> >semantics, otherwise we'll still have to do special stuff in
+> >the filesystems to get the semantics that we need.
 > 
-> On May 30 2007 22:05, Neil Brown wrote:
-> >> 
-> >> the following command strangely gives -EIO ...
-> >> 12:27 sun:~ # mdadm -C /dev/md4 -l 1 -n 2 -e 1.0 -b internal /dev/ram0 
-> >> missing
-> >> 
-> >> md: md4: raid array is not clean -- starting background reconstruction
-> >> md4: failed to create bitmap (-5)
-> >> md: pers->run() failed ...
-> >> mdadm: RUN_ARRAY failed: Input/output error
-> >> mdadm: stopped /dev/md4
-> >> 
-> >> Leaving out -b internal creates the array. /dev/ram0 or /dev/sda5 - EIO 
-> >> happens on both. (But the disk is fine, like ram0)
-> >> Where could I start looking?
-> >> 
-> >> Linux sun 2.6.21-1.3149.al3.8smp #3 SMP Wed May 30 09:43:00 CEST 2007 
-> >> sparc64 sparc64 sparc64 GNU/Linux
-> >> mdadm 2.5.4
-> >
-> >I'm fairly sure this is fixed in 2.6.2.  It is certainly worth a try.
-> 
-> The same command works on a x86_64 with mdadm 2.5.3...
+> one of us is misunderstanding barriers here.
 
-Are you sure?
-I suspect that the difference is more in the kernel version.
-mdadm used to create some arrays with the bitmap positioned so that it
-overlapped the data.  Recent kernels check for that and reject the
-array if there is an overlap.  mdadm-2.6.2 makes sure not to create
-any overlap.
+No, I thinkwe are both on the same level here - it's what
+barriers are used for that is not clear understood, I think.
 
-NeilBrown
+> you are understanding barriers to be the same as syncronous writes. (and 
+> therefor the data is on persistant media before the call returns)
+
+No, I'm describing the high level behaviour that is expected by
+a filesystem. The reasons for this are below....
+
+> I am understanding barriers to only indicate ordering requirements. things 
+> before the barrier can be reordered freely, things after the barrier can 
+> be reordered freely, but things cannot be reordered across the barrier.
+
+Ok, that's my understanding of how *device based barriers* can work,
+but there's more to it than that. As far as the filesystem is
+concerned the barrier write needs to *behave* exactly like a sync
+write because of the guarantees the filesystem has to provide
+userspace. Specifically - sync, sync writes and fsync.
+
+This is the big problem, right? If we use barriers for commit
+writes, the filesystem can return to userspace after a sync write or
+fsync() and an *ordered barrier device implementation* may not have
+written the blocks to persistent media. If we then pull the plug on
+the box, we've just lost data that sync or fsync said was
+successfully on disk. That's BAD.
+
+Right now a barrier write on the last block of the fsync/sync write
+is sufficient to prevent that because of the FUA on the barrier
+block write. A purely ordered barrier implementation does not
+provide this guarantee.
+
+This is the crux of my argument - from a filesystem perspective,
+there is a *major* difference between a barrier implemented to just
+guaranteeing ordering and a barrier implemented with a flush+FUA or
+flush+write+flush.
+
+IOWs, there are two parts to the problem:
+
+	1 - guaranteeing I/O ordering
+	2 - guaranteeing blocks are on persistent storage.
+
+Right now, a single barrier I/O is used to provide both of these
+guarantees. In most cases, all we really need to provide is 1); the
+need for 2) is a much rarer condition but still needs to be
+provided.
+
+> if I am understanding it correctly, the big win for barriers is that you 
+> do NOT have to stop and wait until the data is on persistant media before 
+> you can continue.
+
+Yes, if we define a barrier to only guarantee 1), then yes this
+would be a big win (esp. for XFS). But that requires all filesystems
+to handle sync writes differently, and sync_blockdev() needs to
+call blkdev_issue_flush() as well....
+
+So, what do we do here? Do we define a barrier I/O to only provide
+ordering, or do we define it to also provide persistent storage
+writeback? Whatever we decide, it needs to be documented....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
