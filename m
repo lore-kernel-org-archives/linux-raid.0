@@ -1,72 +1,45 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: [RFD] BIO_RW_BARRIER - what it means for devices,
-	filesystems, and dm/md.
-Date: Thu, 31 May 2007 13:31:00 +1000
-Message-ID: <18014.16756.192137.738569@notabene.brown>
-References: <18006.38689.818186.221707@notabene.brown>
-	<18010.47701.751118.336431@gargle.gargle.HOWL>
+From: Jan Engelhardt <jengelh@linux01.gwdg.de>
+Subject: Re: Creating RAID1 with bitmap fails
+Date: Thu, 31 May 2007 06:07:50 +0200 (MEST)
+Message-ID: <Pine.LNX.4.61.0705310606540.11140@yvahk01.tjqt.qr>
+References: <Pine.LNX.4.61.0705301229370.11140@yvahk01.tjqt.qr>
+ <18013.26771.126894.425898@notabene.brown> <Pine.LNX.4.61.0705301409180.11140@yvahk01.tjqt.qr>
+ <18014.1085.785167.411655@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Nikita Danilov on Monday May 28
+In-Reply-To: <18014.1085.785167.411655@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Nikita Danilov <nikita@clusterfs.com>
-Cc: device-mapper development <dm-devel@redhat.com>, linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org, David Chinner <dgc@sgi.com>, linux-kernel@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Monday May 28, nikita@clusterfs.com wrote:
-> Neil Brown writes:
->  > 
-> 
-> [...]
-> 
->  > Thus the general sequence might be:
->  > 
->  >   a/ issue all "preceding writes".
->  >   b/ issue the commit write with BIO_RW_BARRIER
->  >   c/ wait for the commit to complete.
->  >          If it was successful - done.
->  >          If it failed other than with EOPNOTSUPP, abort
->  >          else continue
->  >   d/ wait for all 'preceding writes' to complete
->  >   e/ call blkdev_issue_flush
->  >   f/ issue commit write without BIO_RW_BARRIER
->  >   g/ wait for commit write to complete
->  >        if it failed, abort
->  >   h/ call blkdev_issue
->  >   DONE
->  > 
->  > steps b and c can be left out if it is known that the device does not
->  > support barriers.  The only way to discover this to try and see if it
->  > fails.
->  > 
->  > I don't think any filesystem follows all these steps.
-> 
-> It seems that steps b/ -- h/ are quite generic, and can be implemented
-> once in a generic code (with some synchronization mechanism like
-> wait-queue at d/).
 
-Yes and no.
-It depends on what you mean by "preceding write".
+On May 31 2007 09:09, Neil Brown wrote:
+>> >> the following command strangely gives -EIO ...
+>> >> 12:27 sun:~ # mdadm -C /dev/md4 -l 1 -n 2 -e 1.0 -b internal /dev/ram0 
+>> >> missing
+>> >> Where could I start looking?
+>> >> 
+>> >> Linux sun 2.6.21-1.3149.al3.8smp #3 SMP Wed May 30 09:43:00 CEST 2007 
+>> >> sparc64 sparc64 sparc64 GNU/Linux
+>> >> mdadm 2.5.4
+>> >
+>> >I'm fairly sure this is fixed in 2.6.2.  It is certainly worth a try.
+>> 
+>> The same command works on a x86_64 with mdadm 2.5.3...
+  [ with 2.6.18.8 ]
 
-If you implement this in the filesystem, the filesystem can wait only
-for those writes where it has an ordering dependency.   If you
-implement it in common code, then you have to wait for all writes
-that were previously issued.
+>Are you sure?
+>I suspect that the difference is more in the kernel version.
+>mdadm used to create some arrays with the bitmap positioned so that it
+>overlapped the data.  Recent kernels check for that and reject the
+>array if there is an overlap.  mdadm-2.6.2 makes sure not to create
+>any overlap.
 
-e.g.
-  If you have two different filesystems on two different partitions on
-  the one device, why should writes in one filesystem wait for a
-  barrier issued in the other filesystem.
-  If you have a single filesystem with one thread doing lot of
-  over-writes (no metadata changes) and the another doing lots of
-  metadata changes (requiring journalling and barriers) why should the
-  data write be held up by the metadata updates?
+Regarding above x86_64/2.5.3/2.6.18.8 created array, is there a way to
+check whether it overlaps?
 
-So I'm not actually convinced that doing this is common code is the
-best approach.  But it is the easiest.  The common code should provide
-the barrier and flushing primitives, and the filesystem gets to use
-them however it likes.
 
-NeilBrown
+	Jan
+-- 
