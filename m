@@ -1,48 +1,72 @@
-From: Jon Nelson <jnelson-linux-raid@jamponi.net>
-Subject: Re: very strange (maybe) raid1 testing results
-Date: Wed, 30 May 2007 22:05:13 -0500 (CDT)
-Message-ID: <Pine.LNX.4.64.0705302202230.4266@gheavc.wnzcbav.cig>
-References: <Pine.LNX.4.64.0705292135200.4266@gheavc.wnzcbav.cig>
- <465E346B.7090701@sauce.co.nz> <Pine.LNX.4.64.0705302154050.4266@gheavc.wnzcbav.cig>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: [RFD] BIO_RW_BARRIER - what it means for devices,
+	filesystems, and dm/md.
+Date: Thu, 31 May 2007 13:31:00 +1000
+Message-ID: <18014.16756.192137.738569@notabene.brown>
+References: <18006.38689.818186.221707@notabene.brown>
+	<18010.47701.751118.336431@gargle.gargle.HOWL>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0705302154050.4266@gheavc.wnzcbav.cig>
+In-Reply-To: message from Nikita Danilov on Monday May 28
 Sender: linux-raid-owner@vger.kernel.org
-Cc: linux-raid@vger.kernel.org
+To: Nikita Danilov <nikita@clusterfs.com>
+Cc: device-mapper development <dm-devel@redhat.com>, linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org, David Chinner <dgc@sgi.com>, linux-kernel@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>
 List-Id: linux-raid.ids
 
-On Wed, 30 May 2007, Jon Nelson wrote:
-
-> On Thu, 31 May 2007, Richard Scobie wrote:
+On Monday May 28, nikita@clusterfs.com wrote:
+> Neil Brown writes:
+>  > 
 > 
-> > Jon Nelson wrote:
-> > 
-> > > I am getting 70-80MB/s read rates as reported via dstat, and 60-80MB/s as
-> > > reported by dd. What I don't understand is why just one disk is being used
-> > > here, instead of two or more. I tried different versions of metadata, and
-> > > using a bitmap makes no difference. I created the array with (allowing for
-> > > variations of bitmap and metadata version):
-> > 
-> > This is normal for md RAID1. What you should find is that for 
-> > concurrent reads, each read will be serviced by a different disk, 
-> > until no. of reads = no. of drives.
+> [...]
 > 
-> Alright. To clarify, let's assume some process (like a single-threaded 
-> webserver) using a raid1 to store content (who knows why, let's just say 
-> it is), and also assume that the I/O load is 100% reads. Given that the 
-> server does not fork (or create a thread) for each request, does that 
-> mean that every single web request is essentially serviced from one 
-> disk, always? What mechanism determines which disk actually services the 
-> request?
+>  > Thus the general sequence might be:
+>  > 
+>  >   a/ issue all "preceding writes".
+>  >   b/ issue the commit write with BIO_RW_BARRIER
+>  >   c/ wait for the commit to complete.
+>  >          If it was successful - done.
+>  >          If it failed other than with EOPNOTSUPP, abort
+>  >          else continue
+>  >   d/ wait for all 'preceding writes' to complete
+>  >   e/ call blkdev_issue_flush
+>  >   f/ issue commit write without BIO_RW_BARRIER
+>  >   g/ wait for commit write to complete
+>  >        if it failed, abort
+>  >   h/ call blkdev_issue
+>  >   DONE
+>  > 
+>  > steps b and c can be left out if it is known that the device does not
+>  > support barriers.  The only way to discover this to try and see if it
+>  > fails.
+>  > 
+>  > I don't think any filesystem follows all these steps.
+> 
+> It seems that steps b/ -- h/ are quite generic, and can be implemented
+> once in a generic code (with some synchronization mechanism like
+> wait-queue at d/).
 
-It's probably bad form to reply to one's own posts, but I just found
+Yes and no.
+It depends on what you mean by "preceding write".
 
-static int read_balance(conf_t *conf, r1bio_t *r1_bio)
+If you implement this in the filesystem, the filesystem can wait only
+for those writes where it has an ordering dependency.   If you
+implement it in common code, then you have to wait for all writes
+that were previously issued.
 
-in raid1.c which, if I'm reading the rest of the source correctly, 
-basically says "pick the disk whose current head position is closest". 
-This *could* explain the behavior I was seeing. Is that not correct?
+e.g.
+  If you have two different filesystems on two different partitions on
+  the one device, why should writes in one filesystem wait for a
+  barrier issued in the other filesystem.
+  If you have a single filesystem with one thread doing lot of
+  over-writes (no metadata changes) and the another doing lots of
+  metadata changes (requiring journalling and barriers) why should the
+  data write be held up by the metadata updates?
 
---
-Jon Nelson <jnelson-linux-raid@jamponi.net>
+So I'm not actually convinced that doing this is common code is the
+best approach.  But it is the easiest.  The common code should provide
+the barrier and flushing primitives, and the filesystem gets to use
+them however it likes.
+
+NeilBrown
