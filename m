@@ -1,75 +1,54 @@
-From: Philip Bergen <philip.bergen@gmail.com>
-Subject: MD device flag from spare to active
-Date: Thu, 31 May 2007 21:21:22 +0200
-Message-ID: <9AADDC4D-F3E2-4B0B-B82F-6A43BAC5FA18@gmail.com>
-Mime-Version: 1.0 (Apple Message framework v752.3)
-Content-Type: multipart/signed; micalg=sha1; boundary=Apple-Mail-5-468619491; protocol="application/pkcs7-signature"
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+From: david@lang.hm
+Subject: Re: [RFD] BIO_RW_BARRIER - what it means for devices,
+ filesystems, and dm/md.
+Date: Thu, 31 May 2007 12:21:31 -0700 (PDT)
+Message-ID: <Pine.LNX.4.64.0705311220080.17389@asgard.lang.hm>
+References: <20070528024559.GA85884050@sgi.com> <465C871F.708@cfl.rr.com>
+	<20070529234832.GT85884050@sgi.com>
+	<Pine.LNX.4.64.0705291653230.31474@asgard.lang.hm>
+	<20070530061723.GY85884050@sgi.com>
+	<Pine.LNX.4.64.0705300946220.8246@asgard.lang.hm>
+	<20070531002011.GC85884050@sgi.com> <20070531062644.GI32105@kernel.dk>
+	<20070531070307.GK85884050@sgi.com> <465F1479.70100@cfl.rr.com>
+	<20070531190013.GD32105@kernel.dk>
+Reply-To: device-mapper development <dm-devel@redhat.com>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <20070531190013.GD32105@kernel.dk>
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: Tejun Heo <htejun@gmail.com>, David Chinner <dgc@sgi.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, Andreas Dilger <adilger@clusterfs.com>
 List-Id: linux-raid.ids
 
+On Thu, 31 May 2007, Jens Axboe wrote:
 
---Apple-Mail-5-468619491
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain;
-	charset=US-ASCII;
-	delsp=yes;
-	format=flowed
+> On Thu, May 31 2007, Phillip Susi wrote:
+>> David Chinner wrote:
+>>> That sounds like a good idea - we can leave the existing
+>>> WRITE_BARRIER behaviour unchanged and introduce a new WRITE_ORDERED
+>>> behaviour that only guarantees ordering. The filesystem can then
+>>> choose which to use where appropriate....
+>>
+>> So what if you want a synchronous write, but DON'T care about the order?
+>>   They need to be two completely different flags which you can choose
+>> to combine, or use individually.
+>
+> If you have a use case for that, we can easily support it as well...
+> Depending on the drive capabilities (FUA support or not), it may be
+> nearly as slow as a "real" barrier write.
 
-Hi,
-Can you tell me of someone that can help me?
+true, but a "real" barrier write could have significant side effects on 
+other writes that wouldn't happen with a synchronous wrote (a sync wrote 
+can have other, unrelated writes re-ordered around it, a barrier write 
+can't)
 
-I had a hard drive failure and mistakenly added a device to my  
-raid-5, but I should have used assemble, so now the disk that holds  
-data is spare and should be active.
-
-How can I remove the 'Spare' flag from that device?
-
-Please, please, please help me. I have nowhere else to go.
-
-Sincerely,
-Philip Bergen (Copenhagen, Denmark)
---Apple-Mail-5-468619491
-Content-Transfer-Encoding: base64
-Content-Type: application/pkcs7-signature;
-	name=smime.p7s
-Content-Disposition: attachment;
-	filename=smime.p7s
-
-MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIIFdjCCBXIw
-ggRaoAMCAQICBEVaTnYwDQYJKoZIhvcNAQEFBQAwMTELMAkGA1UEBhMCREsxDDAKBgNVBAoTA1RE
-QzEUMBIGA1UEAxMLVERDIE9DRVMgQ0EwHhcNMDcwMzAyMTAzNTQzWhcNMDkwMzAyMTEwNTQzWjB1
-MQswCQYDVQQGEwJESzEpMCcGA1UEChMgSW5nZW4gb3JnYW5pc2F0b3Jpc2sgdGlsa255dG5pbmcx
-OzAUBgNVBAMTDVBoaWxpcCBCZXJnZW4wIwYDVQQFExxQSUQ6OTIwOC0yMDAyLTItMTgxMTYyNjgw
-OTkyMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCjB66ZosRlIo6Ziqo0PaoaQ0sVwbGp+cSE
-0IL1UzGA263JihEAzaUYwuClzSRk5iIMjM2B/K2gx7a+CiwajeqlykqBeMMB4T+MknmP2l74l2Wk
-cgJqlfMc0lHBYjKSkcB+iwy1cs3c0ma+j71tjiloidjsagFFokAp1ToYBwN8iQIDAQABo4IC0DCC
-AswwDgYDVR0PAQH/BAQDAgP4MCsGA1UdEAQkMCKADzIwMDcwMzAyMTAzNTQzWoEPMjAwOTAzMDIx
-MTA1NDNaMIIBNwYDVR0gBIIBLjCCASowggEmBgoqgVCBKQEBAQEDMIIBFjAvBggrBgEFBQcCARYj
-aHR0cDovL3d3dy5jZXJ0aWZpa2F0LmRrL3JlcG9zaXRvcnkwgeIGCCsGAQUFBwICMIHVMAoWA1RE
-QzADAgEBGoHGRm9yIGFudmVuZGVsc2UgYWYgY2VydGlmaWthdGV0IGfmbGRlciBPQ0VTIHZpbGvl
-ciwgQ1BTIG9nIE9DRVMgQ1AsIGRlciBrYW4gaGVudGVzIGZyYSB3d3cuY2VydGlmaWthdC5kay9y
-ZXBvc2l0b3J5LiBCZW3mcmssIGF0IFREQyBlZnRlciB2aWxr5XJlbmUgaGFyIGV0IGJlZ3LmbnNl
-dCBhbnN2YXIgaWZ0LiBwcm9mZXNzaW9uZWxsZSBwYXJ0ZXIuMEEGCCsGAQUFBwEBBDUwMzAxBggr
-BgEFBQcwAYYlaHR0cDovL29jc3AuY2VydGlmaWthdC5kay9vY3NwL3N0YXR1czAiBgNVHREEGzAZ
-gRdwaGlsaXAuYmVyZ2VuQGdtYWlsLmNvbTCBhAYDVR0fBH0wezBLoEmgR6RFMEMxCzAJBgNVBAYT
-AkRLMQwwCgYDVQQKEwNUREMxFDASBgNVBAMTC1REQyBPQ0VTIENBMRAwDgYDVQQDEwdDUkwxODA4
-MCygKqAohiZodHRwOi8vY3JsLm9jZXMuY2VydGlmaWthdC5kay9vY2VzLmNybDAfBgNVHSMEGDAW
-gBRgtYXsVmR+EhknZx1QFUtzrjv5EjAdBgNVHQ4EFgQUV0KlJy4TmStg8tgRsCN5nzKMAu4wCQYD
-VR0TBAIwADAZBgkqhkiG9n0HQQAEDDAKGwRWNy4xAwIDqDANBgkqhkiG9w0BAQUFAAOCAQEAnVMr
-Uf5gkqfGEkPg8nfMMGoh3K6h/ZQVORttEUr9AN8yAspF4xf+MWw1gKUvMBAn3GYjJx0GArM/6Uyt
-h81Gz3eiLV3rhfWVFReGyqc0EoDMg2zZ2jTG9Trepj11VuDwrkVm2y0oYvwgjJcxm6mYxG/QllJ1
-hAVnHIxtBPbbGs+9UBK8acz3I3R+pcuCXpNP75eptBuX+DfWX6XY1C/Au3Qzg7sxitWmC2uNLYLW
-F3yi6zfdcnMa2rC4pzjnpYH4FO9DaeLlFlF8Hj03AMUT4kuffiezZNz11Czr1JepYz8MeLguGdyc
-b4YReMgLvVCVLvLdgs5tZXvB6HekDVXBwDGCAdUwggHRAgEBMDkwMTELMAkGA1UEBhMCREsxDDAK
-BgNVBAoTA1REQzEUMBIGA1UEAxMLVERDIE9DRVMgQ0ECBEVaTnYwCQYFKw4DAhoFAKCB8zAYBgkq
-hkiG9w0BCQMxCwYJKoZIhvcNAQcBMBwGCSqGSIb3DQEJBTEPFw0wNzA1MzExOTIxMjJaMCMGCSqG
-SIb3DQEJBDEWBBTskImINr2u5+N5F4B8isv7FgnLkTBIBgkrBgEEAYI3EAQxOzA5MDExCzAJBgNV
-BAYTAkRLMQwwCgYDVQQKEwNUREMxFDASBgNVBAMTC1REQyBPQ0VTIENBAgRFWk52MEoGCyqGSIb3
-DQEJEAILMTugOTAxMQswCQYDVQQGEwJESzEMMAoGA1UEChMDVERDMRQwEgYDVQQDEwtUREMgT0NF
-UyBDQQIERVpOdjANBgkqhkiG9w0BAQEFAASBgBepzrmXkZ1/MRsdxRyrToPC2aaLGgO8ACqiz3jt
-Z0F8y2OOoK0I7kbh/NkA9+8c3Ut6ocgpdmRzcrCfpyF5DhnlaUhI2sGuepp8jbRLw43vcqSwfyai
-cb9KdVG7goXU7bqViOI2T1lo+2q4zs6BcTMU5t5PTkIkU/kDuoWWXKTqAAAAAAAA
-
---Apple-Mail-5-468619491--
+David Lang
