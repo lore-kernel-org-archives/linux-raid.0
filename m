@@ -1,30 +1,55 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: When does a disk get flagged as bad?
-Date: Thu, 31 May 2007 16:10:33 +1000
-Message-ID: <18014.26329.836246.525012@notabene.brown>
-References: <5822.1180578498@mdt.dhcp.pit.laurelnetworks.com>
-	<1180579742.20508.18.camel@w100>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: Re: [RFD] BIO_RW_BARRIER - what it means for devices,
+	filesystems, and dm/md.
+Date: Thu, 31 May 2007 08:24:04 +0200
+Message-ID: <20070531062404.GH32105@kernel.dk>
+References: <18006.38689.818186.221707@notabene.brown>
+	<18010.12472.209452.148229@notabene.brown>
+	<20070528024559.GA85884050@sgi.com> <465C871F.708@cfl.rr.com>
+	<20070529234832.GT85884050@sgi.com>
+	<465DAA15.3070703@cfl.rr.com> <465DDE1D.3000809@cfl.rr.com>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Alberto Alonso on Wednesday May 30
-Sender: linux-raid-owner@vger.kernel.org
-To: Alberto Alonso <alberto@ggsys.net>
-Cc: linux-raid@vger.kernel.org
+Return-path: <dm-devel-bounces@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <465DDE1D.3000809@cfl.rr.com>
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: Phillip Susi <psusi@cfl.rr.com>
+Cc: Tejun Heo <htejun@gmail.com>, David Chinner <dgc@sgi.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, device-mapper development <dm-devel@redhat.com>, linux-fsdevel@vger.kernel.org, Andreas Dilger <adilger@clusterfs.com>
 List-Id: linux-raid.ids
 
-On Wednesday May 30, alberto@ggsys.net wrote:
+On Wed, May 30 2007, Phillip Susi wrote:
+> >That would be the exactly how I understand Documentation/block/barrier.txt:
+> >
+> >"In other words, I/O barrier requests have the following two properties.
+> >1. Request ordering
+> >...
+> >2. Forced flushing to physical medium"
+> >
+> >"So, I/O barriers need to guarantee that requests actually get written
+> >to non-volatile medium in order." 
 > 
-> After thinking about your post, I guess I can see some logic behind
-> not failing on the read, although I would say that after x amount of
-> read failures a drive should be kicked out no matter what.
+> I think you misinterpret this, and it probably could be worded a bit 
+> better.  The barrier request is about constraining the order.  The 
+> forced flushing is one means to implement that constraint.  The other 
+> alternative mentioned there is to use ordered tags.  The key part there 
+> is "requests actually get written to non-volatile medium _in order_", 
+> not "before the request completes", which would be synchronous IO.
 
-When md gets a read error, it collects the correct data from elsewhere
-and tries to write it to the drive that apparently failed.
-If that succeeds, it tries to read it back again.  If that succeeds as
-well, it assumes that the problem has been fixed.  Otherwise it fails
-the drive.
+No Stephan is right, the barrier is both an ordering and integrity
+constraint. If a driver completes a barrier request before that request
+and previously submitted requests are on STABLE storage, then it
+violates that principle. Look at the code and the various ordering
+options.
 
-
-NeilBrown
+-- 
+Jens Axboe
