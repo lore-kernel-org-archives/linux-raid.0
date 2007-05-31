@@ -1,82 +1,30 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: Md corruption using RAID10 on linux-2.6.21
-Date: Thu, 31 May 2007 15:16:12 +1000
-Message-ID: <18014.23068.659646.633140@notabene.brown>
-References: <632b79000705161138h359f71egdf4ad5d483731dbe@mail.gmail.com>
-	<17995.46536.195175.894763@notabene.brown>
-	<632b79000705161957j5443e3b9h1d6da8593395f736@mail.gmail.com>
-	<632b79000705161958m67a192bav73ab3dafc08825d0@mail.gmail.com>
-	<632b79000705162050w70a2feb1w14919fde6e98818c@mail.gmail.com>
-	<632b79000705211232gfb57e0focae8cdd0bf25bef@mail.gmail.com>
-	<18002.15951.765872.809204@notabene.brown>
-	<632b79000705211947k471cc6fdr76dc74f334b8112c@mail.gmail.com>
-	<18002.27283.485975.942744@notabene.brown>
-	<632b79000705301852p743be9f1la4fe440940b8f10e@mail.gmail.com>
+Subject: Re: When does a disk get flagged as bad?
+Date: Thu, 31 May 2007 16:10:33 +1000
+Message-ID: <18014.26329.836246.525012@notabene.brown>
+References: <5822.1180578498@mdt.dhcp.pit.laurelnetworks.com>
+	<1180579742.20508.18.camel@w100>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Don Dupuis on Wednesday May 30
+In-Reply-To: message from Alberto Alonso on Wednesday May 30
 Sender: linux-raid-owner@vger.kernel.org
-To: Don Dupuis <dondster@gmail.com>
+To: Alberto Alonso <alberto@ggsys.net>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wednesday May 30, dondster@gmail.com wrote:
-> Neil, I sent the scripts to you. Any update on this issue?
+On Wednesday May 30, alberto@ggsys.net wrote:
+> 
+> After thinking about your post, I guess I can see some logic behind
+> not failing on the read, although I would say that after x amount of
+> read failures a drive should be kicked out no matter what.
 
-Sorry, I got distracted.
+When md gets a read error, it collects the correct data from elsewhere
+and tries to write it to the drive that apparently failed.
+If that succeeds, it tries to read it back again.  If that succeeds as
+well, it assumes that the problem has been fixed.  Otherwise it fails
+the drive.
 
-Your scripts are way more complicated than needed.  Most of the logic
-in there is already in mdadm.
-
-   mdadm --assemble /dev/md_d0 --run --uuid=$BOOTUUID /dev/sd[abcd]2
-
-can replace most of it.  And you don't need to wait for resync to
-complete before mounting filesystems.
-
-That said: I cannot see anything in your script that would actually do
-the wrong thing.
-
-Hmmm... I see now I wasn't quite testing the right thing.  I need to
-trigger a resync with one device missing.
-i.e
-  mdadm -C /dev/md0 -l10 -n4 -p n3 /dev/sd[abcd]1
-  mkfs /dev/md0
-  mdadm /dev/md0 -f /dev/sda1
-  mdadm -S /dev/md0
-  mdadm -A /dev/md0 -R --update=resync /dev/sd[bcd]1
-  fsck -f /dev/md0
-
-This fails just as you say.
-Following patch fixes it as well as another problem I found while
-doing this testing.
-
-Thanks for pursuing this.
 
 NeilBrown
-
-diff .prev/drivers/md/raid10.c ./drivers/md/raid10.c
---- .prev/drivers/md/raid10.c	2007-05-21 11:18:23.000000000 +1000
-+++ ./drivers/md/raid10.c	2007-05-31 15:11:42.000000000 +1000
-@@ -1866,6 +1866,7 @@ static sector_t sync_request(mddev_t *md
- 			int d = r10_bio->devs[i].devnum;
- 			bio = r10_bio->devs[i].bio;
- 			bio->bi_end_io = NULL;
-+			clear_bit(BIO_UPTODATE, &bio->bi_flags);
- 			if (conf->mirrors[d].rdev == NULL ||
- 			    test_bit(Faulty, &conf->mirrors[d].rdev->flags))
- 				continue;
-@@ -2036,6 +2037,11 @@ static int run(mddev_t *mddev)
- 	/* 'size' is now the number of chunks in the array */
- 	/* calculate "used chunks per device" in 'stride' */
- 	stride = size * conf->copies;
-+
-+	/* We need to round up when dividing by raid_disks to
-+	 * get the stride size.
-+	 */
-+	stride += conf->raid_disks - 1;
- 	sector_div(stride, conf->raid_disks);
- 	mddev->size = stride  << (conf->chunk_shift-1);
- 
-
