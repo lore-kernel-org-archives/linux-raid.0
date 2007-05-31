@@ -1,48 +1,44 @@
-From: David Chinner <dgc@sgi.com>
-Subject: Re: Re: [RFD] BIO_RW_BARRIER - what it means for devices,
-	filesystems, and dm/md.
-Date: Thu, 31 May 2007 11:11:27 +1000
-Message-ID: <20070531011127.GO86004887@sgi.com>
-References: <18006.38689.818186.221707@notabene.brown>
-	<18010.12472.209452.148229@notabene.brown>
-	<20070528024559.GA85884050@sgi.com>
-	<18010.17713.76863.245176@notabene.brown>
-	<20070528042926.GC85884050@sgi.com>
-	<18014.6860.989819.665778@notabene.brown>
-	<20070531010739.GR25091@agk.fab.redhat.com>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: "Don Dupuis" <dondster@gmail.com>
+Subject: Re: Md corruption using RAID10 on linux-2.6.21
+Date: Wed, 30 May 2007 20:52:16 -0500
+Message-ID: <632b79000705301852p743be9f1la4fe440940b8f10e@mail.gmail.com>
+References: <632b79000705161138h359f71egdf4ad5d483731dbe@mail.gmail.com>
+	 <17995.46536.195175.894763@notabene.brown>
+	 <632b79000705161957j5443e3b9h1d6da8593395f736@mail.gmail.com>
+	 <632b79000705161958m67a192bav73ab3dafc08825d0@mail.gmail.com>
+	 <632b79000705162050w70a2feb1w14919fde6e98818c@mail.gmail.com>
+	 <632b79000705211232gfb57e0focae8cdd0bf25bef@mail.gmail.com>
+	 <18002.15951.765872.809204@notabene.brown>
+	 <632b79000705211947k471cc6fdr76dc74f334b8112c@mail.gmail.com>
+	 <18002.27283.485975.942744@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <dm-devel-bounces@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <18002.27283.485975.942744@notabene.brown>
 Content-Disposition: inline
-In-Reply-To: <20070531010739.GR25091@agk.fab.redhat.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: device-mapper development <dm-devel@redhat.com>, David Chinner <dgc@sgi.com>, Tejun Heo <htejun@gmail.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>, linux-fsdevel@vger.kernel.org, Andreas Dilger <adilger@clusterfs.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, May 31, 2007 at 02:07:39AM +0100, Alasdair G Kergon wrote:
-> On Thu, May 31, 2007 at 10:46:04AM +1000, Neil Brown wrote:
-> > If a filesystem cares, it could 'ask' as suggested above.
-> > What would be a good interface for asking?
-> 
-> XFS already tests:
->   bd_disk->queue->ordered == QUEUE_ORDERED_NONE
+Neil, I sent the scripts to you. Any update on this issue?
 
-The side effects of removing that check is what started
-this whole discussion.
+Thanks
+Don
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+On 5/21/07, Neil Brown <neilb@suse.de> wrote:
+> On Monday May 21, dondster@gmail.com wrote:
+> > I was going to get back with you concerning the low resync rates. The
+> > data corruption happens like this.
+> > 1.  Start with fully active array. Everything is fine.
+> > 2.  I remove a drive. Everything is fine. I then will power off the machine.
+> > 3.  I powerup and load up an initramfs which has my initial root
+> > filesystem and scripts for handling the assembly of the array. My init
+> > script will determine which drive was remove and assemble the
+> > remaining 3.
+>
+> Could I see this script please?
+>
+> NeilBrown
+>
