@@ -1,53 +1,53 @@
-From: Hubert Verstraete <hubskml@free.fr>
-Subject: problems with faulty disks and superblocks 1.0, 1.1 and 1.2
-Date: Thu, 31 May 2007 11:20:17 +0200
-Message-ID: <465E9351.2070505@free.fr>
+From: "Stefan Bader" <Stefan.Bader@de.ibm.com>
+Subject: Re: [dm-devel] Re: [RFD] BIO_RW_BARRIER - what it means for devices, filesystems, and dm/md.
+Date: Thu, 31 May 2007 13:14:20 +0200
+Message-ID: <5201e28f0705310414u1a9aebc4je135748274543946@mail.gmail.com>
+References: <18006.38689.818186.221707@notabene.brown>
+	 <18010.12472.209452.148229@notabene.brown>
+	 <20070528094358.GM25091@agk.fab.redhat.com>
+	 <5201e28f0705290225v14fdac44hb0382a4137a84d01@mail.gmail.com>
+	 <20070529220500.GA6513@agk.fab.redhat.com>
+	 <5201e28f0705300212g3be16464u5ee1a4c80db27a11@mail.gmail.com>
+	 <465DAC72.1010201@cfl.rr.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <465DAC72.1010201@cfl.rr.com>
+Content-Disposition: inline
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Phillip Susi <psusi@cfl.rr.com>
+Cc: device-mapper development <dm-devel@redhat.com>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>, David Chinner <dgc@sgi.com>, Andreas Dilger <adilger@clusterfs.com>, Tejun Heo <htejun@gmail.com>
 List-Id: linux-raid.ids
 
-Hello
+2007/5/30, Phillip Susi <psusi@cfl.rr.com>:
+> Stefan Bader wrote:
+> >
+> > Since drive a supports barrier request we don't get -EOPNOTSUPP but
+> > the request with block y might get written before block x since the
+> > disk are independent. I guess the chances of this are quite low since
+> > at some point a barrier request will also hit drive b but for the time
+> > being it might be better to indicate -EOPNOTSUPP right from
+> > device-mapper.
+>
+> The device mapper needs to ensure that ALL underlying devices get a
+> barrier request when one comes down from above, even if it has to
+> construct zero length barriers to send to most of them.
+>
 
-I'm having problems with a RAID-1 configuration. I cannot re-add a disk 
-that I've failed, because each time I do this, the re-added disk is 
-still seen as failed.
-After some investigations, I found that this problem only occur when I 
-create the RAID array with superblocks 1.0, 1.1 and 1.2.
-With the superblock 0.90 I don't encounter this issue.
+And somehow also make sure all of the barriers have been processed
+before returning the barrier that came in. Plus it would have to queue
+all mapping requests until the barrier is done (if strictly acting
+according to barrier.txt).
 
-Here are the commands to easily reproduce the issue
+But I am wondering a bit whether the requirements to barriers are
+really that tight as described in Tejun's document (barrier request is
+only started if everything before is safe, the barrier itself isn't
+returned until it is safe, too, and all requests after the barrier
+aren't started before the barrier is done). Is it really necessary to
+defer any further requests until the barrier has been written to save
+storage? Or would it be sufficient to guarantee that, if a barrier
+request returns, everything up to (including the barrier) is on safe
+storage?
 
-mdadm -C /dev/md_d0 -e 1.0 -l 1 -n 2 -b internal -R /dev/sda /dev/sdb
-mdadm /dev/md_d0 -f /dev/sda
-mdadm /dev/md_d0 -r /dev/sda
-mdadm /dev/md_d0 -a /dev/sda
-cat /proc/mdstat
-
-The output of mdstat is:
-Personalities : [raid1]
-md_d0 : active raid1 sda[0](F) sdb[1]
-       104849 blocks super 1.2 [2/1] [_U]
-       bitmap: 0/7 pages [0KB], 8KB chunk
-unused devices: <none>
-
-I'm wondering if the way I'm failing and re-adding a disk is correct. 
-Did I make something wrong?
-
-If I change the superblock to "-e 0.90", there's no problem with this 
-set of commands.
-
-For now, I found a work-around with superblock 1.0 which consists in 
-zeroing the superblock before re-adding the disk. But I suppose that 
-doing so will force a full rebuild of the re-added disk, and I don't 
-want this, because I'm using write-intent bitmaps.
-
-I'm using mdadm - v2.5.6 on Debian Etch with kernel 2.6.18-4.
-
-Bug or misunderstanding from myself? Any help would be appreciated :)
-
-Thanks
-Hubert
+Stefan
