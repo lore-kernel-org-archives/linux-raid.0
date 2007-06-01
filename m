@@ -1,96 +1,115 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [RFD] BIO_RW_BARRIER - what it means for devices,
-	filesystems, and dm/md.
-Date: Fri, 1 Jun 2007 10:21:41 +0200
-Message-ID: <20070601082140.GP32105@kernel.dk>
-References: <465C871F.708@cfl.rr.com> <20070529234832.GT85884050@sgi.com>
-	<Pine.LNX.4.64.0705291653230.31474@asgard.lang.hm>
-	<20070530061723.GY85884050@sgi.com>
-	<Pine.LNX.4.64.0705300946220.8246@asgard.lang.hm>
-	<20070531002011.GC85884050@sgi.com>
-	<20070531062644.GI32105@kernel.dk>
-	<20070531070307.GK85884050@sgi.com>
-	<20070531070656.GK32105@kernel.dk> <465F8F71.20302@gmail.com>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: Jens Laas <jens.laas@data.slu.se>
+Subject: possible logic bug in raid5.c
+Date: Fri, 1 Jun 2007 10:31:40 +0200 (CEST)
+Message-ID: <Pine.LNX.4.64.0706011012150.7173@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <dm-devel-bounces@redhat.com>
-Content-Disposition: inline
-In-Reply-To: <465F8F71.20302@gmail.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Tejun Heo <htejun@gmail.com>
-Cc: david@lang.hm, David Chinner <dgc@sgi.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, Andreas Dilger <adilger@clusterfs.com>
+Content-Type: TEXT/PLAIN; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: jens.laas@data.slu.se
 List-Id: linux-raid.ids
 
-On Fri, Jun 01 2007, Tejun Heo wrote:
-> Jens Axboe wrote:
-> > On Thu, May 31 2007, David Chinner wrote:
-> >> On Thu, May 31, 2007 at 08:26:45AM +0200, Jens Axboe wrote:
-> >>> On Thu, May 31 2007, David Chinner wrote:
-> >>>> IOWs, there are two parts to the problem:
-> >>>>
-> >>>> 	1 - guaranteeing I/O ordering
-> >>>> 	2 - guaranteeing blocks are on persistent storage.
-> >>>>
-> >>>> Right now, a single barrier I/O is used to provide both of these
-> >>>> guarantees. In most cases, all we really need to provide is 1); the
-> >>>> need for 2) is a much rarer condition but still needs to be
-> >>>> provided.
-> >>>>
-> >>>>> if I am understanding it correctly, the big win for barriers is that you 
-> >>>>> do NOT have to stop and wait until the data is on persistant media before 
-> >>>>> you can continue.
-> >>>> Yes, if we define a barrier to only guarantee 1), then yes this
-> >>>> would be a big win (esp. for XFS). But that requires all filesystems
-> >>>> to handle sync writes differently, and sync_blockdev() needs to
-> >>>> call blkdev_issue_flush() as well....
-> >>>>
-> >>>> So, what do we do here? Do we define a barrier I/O to only provide
-> >>>> ordering, or do we define it to also provide persistent storage
-> >>>> writeback? Whatever we decide, it needs to be documented....
-> >>> The block layer already has a notion of the two types of barriers, with
-> >>> a very small amount of tweaking we could expose that. There's absolutely
-> >>> zero reason we can't easily support both types of barriers.
-> >> That sounds like a good idea - we can leave the existing
-> >> WRITE_BARRIER behaviour unchanged and introduce a new WRITE_ORDERED
-> >> behaviour that only guarantees ordering. The filesystem can then
-> >> choose which to use where appropriate....
-> > 
-> > Precisely. The current definition of barriers are what Chris and I came
-> > up with many years ago, when solving the problem for reiserfs
-> > originally. It is by no means the only feasible approach.
-> > 
-> > I'll add a WRITE_ORDERED command to the #barrier branch, it already
-> > contains the empty-bio barrier support I posted yesterday (well a
-> > slightly modified and cleaned up version).
-> 
-> Would that be very different from issuing barrier and not waiting for
-> its completion?  For ATA and SCSI, we'll have to flush write back cache
-> anyway, so I don't see how we can get performance advantage by
-> implementing separate WRITE_ORDERED.  I think zero-length barrier
-> (haven't looked at the code yet, still recovering from jet lag :-) can
-> serve as genuine barrier without the extra write tho.
 
-As always, it depends :-)
+Hello!
 
-If you are doing pure flush barriers, then there's no difference. Unless
-you only guarantee ordering wrt previously submitted requests, in which
-case you can eliminate the post flush.
+It appears to me that raid5 assumes the number of raid_disks (in=20
+conf-raid_disks for example) to directly map to the rdev list in mddev.
 
-If you are doing ordered tags, then just setting the ordered bit is
-enough. That is different from the barrier in that we don't need a flush
-of FUA bit set.
+This is not always the case. We encountered the problem when we had one=
+=20
+"ghost" device in this list. Maybe this can be triggered some other way=
+=20
+too.
 
-In reality maybe the difference isn't all that great, at least we can
-start by having WRITE_ORDERED == WRITE_BARRIER.
+Example:
+in run() in raid5.c
 
--- 
-Jens Axboe
+when counting working_disks:
+
+        ITERATE_RDEV(mddev,rdev,tmp) {
+                 raid_disk =3D rdev->raid_disk;
+                 if (raid_disk >=3D conf->raid_disks
+                     || raid_disk < 0)
+                         continue;
+
+If there are more disks in mddev's list than conf->raid_disks this loop
+will ignore the tail of the list.
+
+The test "if (raid_disk >=3D conf->raid_disks" makes sure that in our c=
+ase=20
+the "ghost" disk is tested (and not added) and the following disk (whic=
+h=20
+is a working raid disk) is ignored.
+
+Without being familiar with the code I think it should either make sure=
+=20
+that "ghost" devices cannot be added or that the above kind of tests ar=
+e=20
+changed.
+
+In our "ghost"-disk case this is what mdadm reports:
+(some parts of output deleted)
+$ mdadm --detail /dev/md0
+    Raid Devices : 4
+   Total Devices : 4
+  Active Devices : 4
+Working Devices : 4
+  Failed Devices : 0
+   Spare Devices : 0
+
+     Number   Major   Minor   RaidDevice State
+        0       8       33        0      active sync   /dev/sdc1
+        1       8       49        1      active sync   /dev/sdd1
+        2       8       65        2      active sync   /dev/sde1
+        3       0        0        3      removed
+        4       8       81        4      active sync   /dev/sdf1
+
+This is how it looks like in /sys:
+# ls -l /sys/block/md0/md/
+total 0
+-rw-r--r-- 1 root root 4096 Jun  1 10:27 array_state
+--w------- 1 root root 4096 Jun  1 10:27 bitmap_set_bits
+-rw-r--r-- 1 root root 4096 Jun  1 10:27 chunk_size
+-rw-r--r-- 1 root root 4096 Jun  1 10:27 component_size
+drwxr-xr-x 2 root root    0 Jun  1 09:47 dev-sdc1
+drwxr-xr-x 2 root root    0 Jun  1 02:27 dev-sdd1
+drwxr-xr-x 2 root root    0 Jun  1 02:27 dev-sde1
+drwxr-xr-x 2 root root    0 Jun  1 02:27 dev-sdf1
+-rw-r--r-- 1 root root 4096 Jun  1 10:27 layout
+-rw-r--r-- 1 root root 4096 Jun  1 10:27 level
+-rw-r--r-- 1 root root 4096 Jun  1 10:27 metadata_version
+-r--r--r-- 1 root root 4096 Jun  1 10:27 mismatch_cnt
+--w------- 1 root root 4096 Jun  1 10:27 new_dev
+-rw-r--r-- 1 root root 4096 Jun  1 10:27 raid_disks
+lrwxrwxrwx 1 root root    0 Jun  1 10:27 rd0 ->=20
+=2E./../../block/md0/md/dev-sdc1
+lrwxrwxrwx 1 root root    0 Jun  1 10:27 rd1 ->=20
+=2E./../../block/md0/md/dev-sdd1
+lrwxrwxrwx 1 root root    0 Jun  1 10:27 rd2 ->=20
+=2E./../../block/md0/md/dev-sde1
+lrwxrwxrwx 1 root root    0 Jun  1 10:27 rd4 ->=20
+=2E./../../block/md0/md/dev-sdf1
+
+Cheers,
+Jens L=E5=E5s
+
+-----------------------------------------------------------------------
+     'In theory, there is no difference between theory and practice.
+      But, in practice, there is.'
+-----------------------------------------------------------------------
+     Jens L=E5=E5s                              Email: jens.laas@data.s=
+lu.se
+     Department of Computer Services, SLU   Phone: +46 18 67 35 15
+     Vindbrov=E4gen 1
+     P.O. Box 7079
+     S-750 07 Uppsala
+     SWEDEN
+-----------------------------------------------------------------------
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
