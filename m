@@ -1,35 +1,63 @@
-From: David Chinner <dgc@sgi.com>
-Subject: Re: [RFD] BIO_RW_BARRIER - what it means for devices, filesystems, and dm/md.
-Date: Fri, 1 Jun 2007 09:34:49 +1000
-Message-ID: <20070531233449.GT86004887@sgi.com>
-References: <20070528024559.GA85884050@sgi.com> <465C871F.708@cfl.rr.com> <20070529234832.GT85884050@sgi.com> <Pine.LNX.4.64.0705291653230.31474@asgard.lang.hm> <20070530061723.GY85884050@sgi.com> <Pine.LNX.4.64.0705300946220.8246@asgard.lang.hm> <20070531002011.GC85884050@sgi.com> <20070531062644.GI32105@kernel.dk> <20070531070307.GK85884050@sgi.com> <465F1479.70100@cfl.rr.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: raid1 check/repair read error recovery in 2.6.20
+Date: Fri, 1 Jun 2007 10:18:52 +1000
+Message-ID: <18015.26092.718913.90023@notabene.brown>
+References: <6834.1180063677@mdt.dhcp.pit.laurelnetworks.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <465F1479.70100@cfl.rr.com>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Phillip Susi <psusi@cfl.rr.com>
-Cc: David Chinner <dgc@sgi.com>, Jens Axboe <jens.axboe@oracle.com>, david@lang.hm, Neil Brown <neilb@suse.de>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, dm-devel@redhat.com, linux-raid@vger.kernel.org, Stefan Bader <Stefan.Bader@de.ibm.com>, Andreas Dilger <adilger@clusterfs.com>, Tejun Heo <htejun@gmail.com>
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: message from Mike Accetta on Thursday May 24
+Sender: linux-raid-owner@vger.kernel.org
+To: Mike Accetta <maccetta@laurelnetworks.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, May 31, 2007 at 02:31:21PM -0400, Phillip Susi wrote:
-> David Chinner wrote:
-> >That sounds like a good idea - we can leave the existing
-> >WRITE_BARRIER behaviour unchanged and introduce a new WRITE_ORDERED
-> >behaviour that only guarantees ordering. The filesystem can then
-> >choose which to use where appropriate....
+On Thursday May 24, maccetta@laurelnetworks.com wrote:
+> I believe I've come across a bug in the disk read error recovery logic
+> for raid1 check/repair operations in 2.6.20.  The raid1.c file looks
+> identical in 2.6.21 so the problem should still exist there as well.
+
+Yes, you have found a bug, thanks.
+
 > 
-> So what if you want a synchronous write, but DON'T care about the order? 
+> I tried the following patch to raid1.c which short-ciruits the data
+> comparison in the read error case but otherwise does the rest of the
+> sbio prep for the mirror with the error.  It seems to have eliminated
+> the ATA warning at least.  Is it a correct thing to do?
 
-submit_bio(WRITE_SYNC, bio);
+Yes, that is the correct thing to do.  I'll get this (with maybe some
+small cosmetic changes) upstream.
 
-Already there, already used by XFS, JFS and direct I/O.
+Thanks again,
+NeilBrown
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+> 
+> @@ -1235,17 +1242,20 @@
+>  			}
+>  		r1_bio->read_disk = primary;
+>  		for (i=0; i<mddev->raid_disks; i++)
+> -			if (r1_bio->bios[i]->bi_end_io == end_sync_read &&
+> -			    test_bit(BIO_UPTODATE, &r1_bio->bios[i]->bi_flags)) {
+> +			if (r1_bio->bios[i]->bi_end_io == end_sync_read) {
+>  				int j;
+>  				int vcnt = r1_bio->sectors >> (PAGE_SHIFT- 9);
+>  				struct bio *pbio = r1_bio->bios[primary];
+>  				struct bio *sbio = r1_bio->bios[i];
+> -				for (j = vcnt; j-- ; )
+> -					if (memcmp(page_address(pbio->bi_io_vec[j].bv_page),
+> -						   page_address(sbio->bi_io_vec[j].bv_page),
+> -						   PAGE_SIZE))
+> -						break;
+> +				if (test_bit(BIO_UPTODATE, &sbio->bi_flags)) {
+> +					for (j = vcnt; j-- ; )
+> +						if (memcmp(page_address(pbio->bi_io_vec[j].bv_page),
+> +							   page_address(sbio->bi_io_vec[j].bv_page),
+> +							   PAGE_SIZE))
+> +							break;
+> +				} else {
+> +					j = 0;
+> +				}
+>  				if (j >= 0)
+>  					mddev->resync_mismatches += r1_bio->sectors;
+>  				if (j < 0 || test_bit(MD_RECOVERY_CHECK, &mddev->recovery)) {
