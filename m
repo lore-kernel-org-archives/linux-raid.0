@@ -1,90 +1,143 @@
-From: "Don Dupuis" <dondster@gmail.com>
-Subject: Re: Md corruption using RAID10 on linux-2.6.21
-Date: Fri, 1 Jun 2007 10:58:32 -0500
-Message-ID: <632b79000706010858y7bbafc11r2867aacf7d25ba69@mail.gmail.com>
-References: <632b79000705161138h359f71egdf4ad5d483731dbe@mail.gmail.com>
-	 <632b79000705161957j5443e3b9h1d6da8593395f736@mail.gmail.com>
-	 <632b79000705161958m67a192bav73ab3dafc08825d0@mail.gmail.com>
-	 <632b79000705162050w70a2feb1w14919fde6e98818c@mail.gmail.com>
-	 <632b79000705211232gfb57e0focae8cdd0bf25bef@mail.gmail.com>
-	 <18002.15951.765872.809204@notabene.brown>
-	 <632b79000705211947k471cc6fdr76dc74f334b8112c@mail.gmail.com>
-	 <18002.27283.485975.942744@notabene.brown>
-	 <632b79000705301852p743be9f1la4fe440940b8f10e@mail.gmail.com>
-	 <18014.23068.659646.633140@notabene.brown>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: [RFD] BIO_RW_BARRIER - what it means for devices, filesystems,
+  and dm/md.
+Date: Fri, 01 Jun 2007 12:04:50 -0400
+Message-ID: <466043A2.5040002@tmr.com>
+References: <465C871F.708@cfl.rr.com> <20070529234832.GT85884050@sgi.com> <Pine.LNX.4.64.0705291653230.31474@asgard.lang.hm> <20070530061723.GY85884050@sgi.com> <Pine.LNX.4.64.0705300946220.8246@asgard.lang.hm> <20070531002011.GC85884050@sgi.com> <20070531062644.GI32105@kernel.dk> <20070531070307.GK85884050@sgi.com> <20070531070656.GK32105@kernel.dk> <465ECDDB.9030304@tmr.com> <20070531133649.GY32105@kernel.dk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18014.23068.659646.633140@notabene.brown>
-Content-Disposition: inline
+In-Reply-To: <20070531133649.GY32105@kernel.dk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: David Chinner <dgc@sgi.com>, david@lang.hm, Phillip Susi <psusi@cfl.rr.com>, Neil Brown <neilb@suse.de>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, dm-devel@redhat.com, linux-raid@vger.kernel.org, Stefan Bader <Stefan.Bader@de.ibm.com>, Andreas Dilger <adilger@clusterfs.com>, Tejun Heo <htejun@gmail.com>
 List-Id: linux-raid.ids
 
-Thanks Neil. This took care of my issue. I was doing a full set of
-tests to make sure before I replied. Thanks for all your hard work.
+Jens Axboe wrote:
+> On Thu, May 31 2007, Bill Davidsen wrote:
+>   
+>> Jens Axboe wrote:
+>>     
+>>> On Thu, May 31 2007, David Chinner wrote:
+>>>  
+>>>       
+>>>> On Thu, May 31, 2007 at 08:26:45AM +0200, Jens Axboe wrote:
+>>>>    
+>>>>         
+>>>>> On Thu, May 31 2007, David Chinner wrote:
+>>>>>      
+>>>>>           
+>>>>>> IOWs, there are two parts to the problem:
+>>>>>>
+>>>>>> 	1 - guaranteeing I/O ordering
+>>>>>> 	2 - guaranteeing blocks are on persistent storage.
+>>>>>>
+>>>>>> Right now, a single barrier I/O is used to provide both of these
+>>>>>> guarantees. In most cases, all we really need to provide is 1); the
+>>>>>> need for 2) is a much rarer condition but still needs to be
+>>>>>> provided.
+>>>>>>
+>>>>>>        
+>>>>>>             
+>>>>>>> if I am understanding it correctly, the big win for barriers is that 
+>>>>>>> you do NOT have to stop and wait until the data is on persistant media 
+>>>>>>> before you can continue.
+>>>>>>>          
+>>>>>>>               
+>>>>>> Yes, if we define a barrier to only guarantee 1), then yes this
+>>>>>> would be a big win (esp. for XFS). But that requires all filesystems
+>>>>>> to handle sync writes differently, and sync_blockdev() needs to
+>>>>>> call blkdev_issue_flush() as well....
+>>>>>>
+>>>>>> So, what do we do here? Do we define a barrier I/O to only provide
+>>>>>> ordering, or do we define it to also provide persistent storage
+>>>>>> writeback? Whatever we decide, it needs to be documented....
+>>>>>>        
+>>>>>>             
+>>>>> The block layer already has a notion of the two types of barriers, with
+>>>>> a very small amount of tweaking we could expose that. There's absolutely
+>>>>> zero reason we can't easily support both types of barriers.
+>>>>>      
+>>>>>           
+>>>> That sounds like a good idea - we can leave the existing
+>>>> WRITE_BARRIER behaviour unchanged and introduce a new WRITE_ORDERED
+>>>> behaviour that only guarantees ordering. The filesystem can then
+>>>> choose which to use where appropriate....
+>>>>    
+>>>>         
+>>> Precisely. The current definition of barriers are what Chris and I came
+>>> up with many years ago, when solving the problem for reiserfs
+>>> originally. It is by no means the only feasible approach.
+>>>
+>>> I'll add a WRITE_ORDERED command to the #barrier branch, it already
+>>> contains the empty-bio barrier support I posted yesterday (well a
+>>> slightly modified and cleaned up version).
+>>>
+>>>  
+>>>       
+>> Wait. Do filesystems expect (depend on) anything but ordering now? Does 
+>> md? Having users of barriers as they currently behave suddenly getting 
+>> SYNC behavior where they expect ORDERED is likely to have a negative 
+>> effect on performance. Or do I misread what is actually guaranteed by 
+>> WRITE_BARRIER now, and a flush is currently happening in all cases?
+>>     
+>
+> See the above stuff you quote, it's answered there. It's not a change,
+> this is how the Linux barrier write has always worked since I first
+> implemented it. What David and I are talking about is adding a more
+> relaxed version as well, that just implies ordering.
+>   
 
-Don
+I was reading the documentation in block/biodoc.txt, which seems to just 
+say ordered:
 
-On 5/31/07, Neil Brown <neilb@suse.de> wrote:
-> On Wednesday May 30, dondster@gmail.com wrote:
-> > Neil, I sent the scripts to you. Any update on this issue?
+    1.2.1 I/O Barriers
+
+    There is a way to enforce strict ordering for i/os through barriers.
+    All requests before a barrier point must be serviced before the barrier
+    request and any other requests arriving after the barrier will not be
+    serviced until after the barrier has completed. This is useful for
+    higher
+    level control on write ordering, e.g flushing a log of committed updates
+    to disk before the corresponding updates themselves.
+
+    A flag in the bio structure, BIO_BARRIER is used to identify a
+    barrier i/o.
+    The generic i/o scheduler would make sure that it places the barrier
+    request and
+    all other requests coming after it after all the previous requests
+    in the
+    queue. Barriers may be implemented in different ways depending on the
+    driver. A SCSI driver for example could make use of ordered tags to
+    preserve the necessary ordering with a lower impact on throughput.
+    For IDE
+    this might be two sync cache flush: a pre and post flush when
+    encountering
+    a barrier write.
+
+The "flush" comment is associated with IDE, so it wasn't clear that the 
+device cache is always cleared to force the data to the platter.
+
+>> And will this also be available to user space f/s, since I just proposed 
+>> a project which uses one? :-(
+>>     
 >
-> Sorry, I got distracted.
+> I see several uses for that, so I'd hope so.
 >
-> Your scripts are way more complicated than needed.  Most of the logic
-> in there is already in mdadm.
+>   
+>> I think the goal is good, more choice is almost always better choice, I 
+>> just want to be sure there won't be big disk performance regressions.
+>>     
 >
->    mdadm --assemble /dev/md_d0 --run --uuid=$BOOTUUID /dev/sd[abcd]2
+> We can't get more heavy weight than the current barrier, it's about as
+> conservative as you can get.
 >
-> can replace most of it.  And you don't need to wait for resync to
-> complete before mounting filesystems.
->
-> That said: I cannot see anything in your script that would actually do
-> the wrong thing.
->
-> Hmmm... I see now I wasn't quite testing the right thing.  I need to
-> trigger a resync with one device missing.
-> i.e
->   mdadm -C /dev/md0 -l10 -n4 -p n3 /dev/sd[abcd]1
->   mkfs /dev/md0
->   mdadm /dev/md0 -f /dev/sda1
->   mdadm -S /dev/md0
->   mdadm -A /dev/md0 -R --update=resync /dev/sd[bcd]1
->   fsck -f /dev/md0
->
-> This fails just as you say.
-> Following patch fixes it as well as another problem I found while
-> doing this testing.
->
-> Thanks for pursuing this.
->
-> NeilBrown
->
-> diff .prev/drivers/md/raid10.c ./drivers/md/raid10.c
-> --- .prev/drivers/md/raid10.c   2007-05-21 11:18:23.000000000 +1000
-> +++ ./drivers/md/raid10.c       2007-05-31 15:11:42.000000000 +1000
-> @@ -1866,6 +1866,7 @@ static sector_t sync_request(mddev_t *md
->                         int d = r10_bio->devs[i].devnum;
->                         bio = r10_bio->devs[i].bio;
->                         bio->bi_end_io = NULL;
-> +                       clear_bit(BIO_UPTODATE, &bio->bi_flags);
->                         if (conf->mirrors[d].rdev == NULL ||
->                             test_bit(Faulty, &conf->mirrors[d].rdev->flags))
->                                 continue;
-> @@ -2036,6 +2037,11 @@ static int run(mddev_t *mddev)
->         /* 'size' is now the number of chunks in the array */
->         /* calculate "used chunks per device" in 'stride' */
->         stride = size * conf->copies;
-> +
-> +       /* We need to round up when dividing by raid_disks to
-> +        * get the stride size.
-> +        */
-> +       stride += conf->raid_disks - 1;
->         sector_div(stride, conf->raid_disks);
->         mddev->size = stride  << (conf->chunk_shift-1);
->
->
->
+>   
+
+
+-- 
+bill davidsen <davidsen@tmr.com>
+  CTO TMR Associates, Inc
+  Doing interesting things with small computers since 1979
+
