@@ -1,44 +1,35 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: RAID 6 grow problem
-Date: Sat, 2 Jun 2007 12:19:50 -0400 (EDT)
-Message-ID: <Pine.LNX.4.64.0706021219380.13025@p34.internal.lan>
-References: <C2874B9F.7EBD%groups@email.iain.rauch.co.uk>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: multiple xor_block() functions
+Date: Sat, 2 Jun 2007 20:57:46 +0200
+Message-ID: <20070602185746.GI5500@stusta.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <C2874B9F.7EBD%groups@email.iain.rauch.co.uk>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Iain Rauch <groups@email.iain.rauch.co.uk>
-Cc: linux-raid@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>, mingo@redhat.com, neilb@suse.de, "John W. Linville" <linville@tuxdriver.com>, Jouni Malinen <j@w1.fi>
+Cc: linux-raid@vger.kernel.org, linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
+include/linux/raid/xor.h:extern void xor_block(unsigned int count, unsigned int bytes, void **ptr);
+drivers/md/xor.c:xor_block(unsigned int count, unsigned int bytes, void **ptr)
+drivers/md/xor.c:EXPORT_SYMBOL(xor_block);
+
+and
+
+net/ieee80211/ieee80211_crypt_ccmp.c:static inline void xor_block(u8 * b, u8 * a, size_t len)
 
 
-On Sat, 2 Jun 2007, Iain Rauch wrote:
+At least one of them has to be renamed.
 
-> Hello, when I run:
->
-> mdadm /dev/md1 --grow --raid-devices 16 --backup-file=/md1backup
->
-> I get:
->
-> mdadm: Need to backup 1792K of critical section..
-> mdadm: Cannot set device size/shape for /dev/md1: Invalid argument
->
-> Any help?
->
->
-> Iain
->
->
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
 
-Yup, I got the same thing, first, what is your chunk size?
+cu
+Adrian
 
-mdadm -D /dev/md1
+-- 
 
-Justin.
+       "Is there not promise of rain?" Ling Tan asked suddenly out
+        of the darkness. There had been need of rain for many days.
+       "Only a promise," Lao Er said.
+                                       Pearl S. Buck - Dragon Seed
+
