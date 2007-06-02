@@ -1,48 +1,77 @@
-From: Iain Rauch <groups@email.iain.rauch.co.uk>
-Subject: Re: RAID 6 grow problem
-Date: Sat, 02 Jun 2007 23:35:34 +0100
-Message-ID: <C287AF46.7EDF%groups@email.iain.rauch.co.uk>
-References: <18017.59934.688277.311357@notabene.brown>
+From: "Guy Watkins" <linux-raid@watkins-home.com>
+Subject: RE: [RFD] BIO_RW_BARRIER - what it means for devices, filesystems,   and dm/md.
+Date: Sat, 2 Jun 2007 18:57:11 -0400
+Message-ID: <200706022257.l52MvGc06632@www.watkins-home.com>
+References: <20070602143438.GB32105@kernel.dk>
 Mime-Version: 1.0
 Content-Type: text/plain;
-	charset="US-ASCII"
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18017.59934.688277.311357@notabene.brown>
+In-Reply-To: <20070602143438.GB32105@kernel.dk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, Justin Piszcz <jpiszcz@lucidpixels.com>
+To: 'Jens Axboe' <jens.axboe@oracle.com>, 'Tejun Heo' <htejun@gmail.com>
+Cc: 'David Chinner' <dgc@sgi.com>, david@lang.hm, 'Phillip Susi' <psusi@cfl.rr.com>, 'Neil Brown' <neilb@suse.de>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, dm-devel@redhat.com, linux-raid@vger.kernel.org, 'Stefan Bader' <Stefan.Bader@de.ibm.com>, 'Andreas Dilger' <adilger@clusterfs.com>
 List-Id: linux-raid.ids
 
->>> raid6 reshape wasn't added until 2.6.21.  Before that only raid5 was
->>> supported.
->>> You also need to ensure that CONFIG_MD_RAID5_RESHAPE=y.
->> 
->> I don't see that in the config. Should I add it? Then reboot?
-> 
-> You reported that you were running a 2.6.20 kernel, which doesn't
-> support raid6 reshape.
-> You need to compile a 2.6.21 kernel (or
->    apt-get install linux-image-2.6.21-1-amd64
-> or whatever) and ensure that CONFIG_MD_RAID5_RESHAPE=y is in the
-> .config before compiling.
+} -----Original Message-----
+} From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
+} owner@vger.kernel.org] On Behalf Of Jens Axboe
+} Sent: Saturday, June 02, 2007 10:35 AM
+} To: Tejun Heo
+} Cc: David Chinner; david@lang.hm; Phillip Susi; Neil Brown; linux-
+} fsdevel@vger.kernel.org; linux-kernel@vger.kernel.org; dm-
+} devel@redhat.com; linux-raid@vger.kernel.org; Stefan Bader; Andreas Dilger
+} Subject: Re: [RFD] BIO_RW_BARRIER - what it means for devices,
+} filesystems, and dm/md.
+} 
+} On Sat, Jun 02 2007, Tejun Heo wrote:
+} > Hello,
+} >
+} > Jens Axboe wrote:
+} > >> Would that be very different from issuing barrier and not waiting for
+} > >> its completion?  For ATA and SCSI, we'll have to flush write back
+} cache
+} > >> anyway, so I don't see how we can get performance advantage by
+} > >> implementing separate WRITE_ORDERED.  I think zero-length barrier
+} > >> (haven't looked at the code yet, still recovering from jet lag :-)
+} can
+} > >> serve as genuine barrier without the extra write tho.
+} > >
+} > > As always, it depends :-)
+} > >
+} > > If you are doing pure flush barriers, then there's no difference.
+} Unless
+} > > you only guarantee ordering wrt previously submitted requests, in
+} which
+} > > case you can eliminate the post flush.
+} > >
+} > > If you are doing ordered tags, then just setting the ordered bit is
+} > > enough. That is different from the barrier in that we don't need a
+} flush
+} > > of FUA bit set.
+} >
+} > Hmmm... I'm feeling dense.  Zero-length barrier also requires only one
+} > flush to separate requests before and after it (haven't looked at the
+} > code yet, will soon).  Can you enlighten me?
+} 
+} Yeah, that's what the zero-length barrier implementation I posted does.
+} Not sure if you have a question beyond that, if so fire away :-)
+} 
+} --
+} Jens Axboe
 
-There only seems to be version 2.6.20 does this matter a lot? Also how do I
-specify what is in the config when using apt-get install?
+I must admit I have only read some of the barrier related posts, so this
+issue may have been covered.  If so, sorry.
 
->> I used apt-get install mdadm to first install it, which gave me 2.5.x then I
->> downloaded the new source and typed make then make install. Now mdadm -V
->> shows "mdadm - v2.6.2 - 21st May 2007".
->> Is there anyway to check it is installed correctly?
-> 
-> The "mdadm -V" check is sufficient.
+What I have read seems to be related to a single disk.  What if a logical
+disk is used (md, LVM, ...)?  If a barrier is issued to a logical disk and
+that driver issues barriers to all related devices (logical or physical),
+all the devices MUST honor the barrier together.  If 1 device crosses the
+barrier before another reaches the barrier, corruption should be assumed.
+It seems to me each block device that represents more than 2 other devices
+must do a flush at a barrier so that all devices will cross the barrier at
+the same time.
 
-Are you sure because at first I just did the make/make install and mdadm -V
-did tell me v2.6.2 but I don't believe it was installed properly because it
-didn't recognise my array nor did it make a config file, and cat
-/proc/mdstat said no file/directory??
-
-
-Iain
-
+Guy
 
