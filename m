@@ -1,50 +1,34 @@
 From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: [dm-devel] Re: [RFD] BIO_RW_BARRIER - what it means for devices,
-  filesystems, and dm/md.
-Date: Fri, 01 Jun 2007 20:04:19 -0400
-Message-ID: <4660B403.3000202@tmr.com>
-References: <18006.38689.818186.221707@notabene.brown> <18010.12472.209452.148229@notabene.brown> <20070528024559.GA85884050@sgi.com> <465C871F.708@cfl.rr.com> <20070529234832.GT85884050@sgi.com> <465DAA15.3070703@cfl.rr.com> <465DDE1D.3000809@cfl.rr.com> <20070531062404.GH32105@kernel.dk> <465F15ED.1070304@cfl.rr.com> <20070531185836.GC32105@kernel.dk>
+Subject: Re: When does a disk get flagged as bad?
+Date: Fri, 01 Jun 2007 20:07:56 -0400
+Message-ID: <4660B4DC.1080408@tmr.com>
+References: <5822.1180578498@mdt.dhcp.pit.laurelnetworks.com>	<1180579742.20508.18.camel@w100> <18014.26329.836246.525012@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <20070531185836.GC32105@kernel.dk>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: Phillip Susi <psusi@cfl.rr.com>, device-mapper development <dm-devel@redhat.com>, David Chinner <dgc@sgi.com>, Tejun Heo <htejun@gmail.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org, Andreas Dilger <adilger@clusterfs.com>, Stefan Bader <Stefan.Bader@de.ibm.com>
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <18014.26329.836246.525012@notabene.brown>
+Sender: linux-raid-owner@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: Alberto Alonso <alberto@ggsys.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Jens Axboe wrote:
-> On Thu, May 31 2007, Phillip Susi wrote:
+Neil Brown wrote:
+> On Wednesday May 30, alberto@ggsys.net wrote:
 >   
->> Jens Axboe wrote:
->>     
->>> No Stephan is right, the barrier is both an ordering and integrity
->>> constraint. If a driver completes a barrier request before that request
->>> and previously submitted requests are on STABLE storage, then it
->>> violates that principle. Look at the code and the various ordering
->>> options.
->>>       
->> I am saying that is the wrong thing to do.  Barrier should be about 
->> ordering only.  So long as the order they hit the media is maintained, 
->> the order the requests are completed in can change.  barrier.txt bears 
+>> After thinking about your post, I guess I can see some logic behind
+>> not failing on the read, although I would say that after x amount of
+>> read failures a drive should be kicked out no matter what.
 >>     
 >
-> But you can't guarentee ordering without flushing the data out as well.
-> It all depends on the type of cache on the device, of course. If you
-> look at the ordinary sata/ide drive with write back caching, you can't
-> just issue the requests in order and pray that the drive cache will make
-> it to platter.
->
-> If you don't have write back caching, or if the cache is battery backed
-> and thus guarenteed to never be lost, maintaining order is naturally
-> enough.
+> When md gets a read error, it collects the correct data from elsewhere
+> and tries to write it to the drive that apparently failed.
+> If that succeeds, it tries to read it back again.  If that succeeds as
+> well, it assumes that the problem has been fixed.  Otherwise it fails
+> the drive.
 >   
-
-Do I misread this? If ordered doesn't reach all the way to the platter 
-then there will be failure modes which result in order not preserved. 
-Battery backed cache doesn't prevect failures between the cache and the 
-platter.
+That's the way it should work, but hopefully the error is logged 
+somewhere. Other than as a SMART relocate?
 
 -- 
 bill davidsen <davidsen@tmr.com>
