@@ -1,37 +1,45 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: When does a disk get flagged as bad?
-Date: Fri, 01 Jun 2007 20:07:56 -0400
-Message-ID: <4660B4DC.1080408@tmr.com>
-References: <5822.1180578498@mdt.dhcp.pit.laurelnetworks.com>	<1180579742.20508.18.camel@w100> <18014.26329.836246.525012@notabene.brown>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [RFD] BIO_RW_BARRIER - what it means for devices, filesystems,
+  and dm/md.
+Date: Sat, 02 Jun 2007 18:20:38 +0900
+Message-ID: <46613666.7010800@gmail.com>
+References: <465C871F.708@cfl.rr.com> <20070529234832.GT85884050@sgi.com> <Pine.LNX.4.64.0705291653230.31474@asgard.lang.hm> <20070530061723.GY85884050@sgi.com> <Pine.LNX.4.64.0705300946220.8246@asgard.lang.hm> <20070531002011.GC85884050@sgi.com> <20070531062644.GI32105@kernel.dk> <20070531070307.GK85884050@sgi.com> <20070531070656.GK32105@kernel.dk> <465F8F71.20302@gmail.com> <20070601082140.GP32105@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18014.26329.836246.525012@notabene.brown>
-Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Alberto Alonso <alberto@ggsys.net>, linux-raid@vger.kernel.org
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <20070601082140.GP32105@kernel.dk>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: David Chinner <dgc@sgi.com>, david@lang.hm, Phillip Susi <psusi@cfl.rr.com>, Neil Brown <neilb@suse.de>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, dm-devel@redhat.com, linux-raid@vger.kernel.org, Stefan Bader <Stefan.Bader@de.ibm.com>, Andreas Dilger <adilger@clusterfs.com>
 List-Id: linux-raid.ids
 
-Neil Brown wrote:
-> On Wednesday May 30, alberto@ggsys.net wrote:
->   
->> After thinking about your post, I guess I can see some logic behind
->> not failing on the read, although I would say that after x amount of
->> read failures a drive should be kicked out no matter what.
->>     
->
-> When md gets a read error, it collects the correct data from elsewhere
-> and tries to write it to the drive that apparently failed.
-> If that succeeds, it tries to read it back again.  If that succeeds as
-> well, it assumes that the problem has been fixed.  Otherwise it fails
-> the drive.
->   
-That's the way it should work, but hopefully the error is logged 
-somewhere. Other than as a SMART relocate?
+Hello,
+
+Jens Axboe wrote:
+>> Would that be very different from issuing barrier and not waiting for
+>> its completion?  For ATA and SCSI, we'll have to flush write back cache
+>> anyway, so I don't see how we can get performance advantage by
+>> implementing separate WRITE_ORDERED.  I think zero-length barrier
+>> (haven't looked at the code yet, still recovering from jet lag :-) can
+>> serve as genuine barrier without the extra write tho.
+> 
+> As always, it depends :-)
+> 
+> If you are doing pure flush barriers, then there's no difference. Unless
+> you only guarantee ordering wrt previously submitted requests, in which
+> case you can eliminate the post flush.
+> 
+> If you are doing ordered tags, then just setting the ordered bit is
+> enough. That is different from the barrier in that we don't need a flush
+> of FUA bit set.
+
+Hmmm... I'm feeling dense.  Zero-length barrier also requires only one
+flush to separate requests before and after it (haven't looked at the
+code yet, will soon).  Can you enlighten me?
+
+Thanks.
 
 -- 
-bill davidsen <davidsen@tmr.com>
-  CTO TMR Associates, Inc
-  Doing interesting things with small computers since 1979
+tejun
 
