@@ -1,87 +1,196 @@
-From: tj <lists@jager.no>
-Subject: Re: Raid-5 long write wait while reading
-Date: Sun, 03 Jun 2007 02:14:27 +0200
-Message-ID: <466207E3.60307@jager.no>
-References: <4653306B.4090500@jager.no> <4658CB8A.8080503@jager.no> <465AFCC6.8040006@tmr.com>
+From: Karsten Desler <kdesler@soohrt.org>
+Subject: 5 HDD RAID5 not starting after controller failure
+Date: Sun, 3 Jun 2007 11:47:14 +0200
+Message-ID: <20070603094714.GI22122@soohrt.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <465AFCC6.8040006@tmr.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Bill Davidsen wrote:
-> tj wrote:
->> Thomas Jager wrote:
->>> Hi list.
->>>
->>> I run a file server on MD raid-5.
->>> If a client reads one big file and at the same time another client 
->>> tries to write a file, the thread writing just sits in 
->>> uninterruptible sleep until the reader has finished. Only very small 
->>> amount of writes get trough while the reader is still working.
->>> I'm having some trouble pinpointing the problem.
->>> It's not consistent either sometimes it works as expected both the 
->>> reader and writer gets some transactions. On huge reads I've seen 
->>> the writer blocked for 30-40 minutes without any significant writes 
->>> happening (Maybe a few megabytes, of several gigs waiting). It 
->>> happens with NFS, SMB and FTP, and local with dd. And seems to be 
->>> connected to raid-5. This does not happen on block devices without 
->>> raid-5. I'm also wondering if it can have anything to do with 
->>> loop-aes? I use loop-aes on top of the md, but then again i have not 
->>> observed this problem on loop-devices with disk backend. I do know 
->>> that loop-aes degrades performance but i didn't think it would do 
->>> something like this?
->>>
->>> I've seen this problem in 2.6.16-2.6.21
->>>
->>> All disks in the array is connected to a controller with a SiI 3114 
->>> chip.
->>
->> I just noticed something else. A couple of slow readers where running 
->> on my raid-5 array. Then i started a copy from another local disk to 
->> the array. Then i got the extremely long wait. I noticed something in 
->> iostat:
->>
->> avg-cpu:  %user   %nice %system %iowait  %steal   %idle
->>           3.90    0.00   48.05   31.93    0.00   16.12
->>
->> Device:            tps    kB_read/s    kB_wrtn/s    kB_read    kB_wrtn
->> ....
->> sdg               0.80        25.55         0.00        128          0
->> sdh             154.89       632.34         0.00       3168          0
->> sdi               0.20        12.77         0.00         64          0
->> sdj               0.40        25.55         0.00        128          0
->> sdk               0.40        25.55         0.00        128          0
->> sdl               0.80        25.55         0.00        128          0
->> sdm               0.80        25.55         0.00        128          0
->> sdn               0.60        23.95         0.00        120          0
->> md0             199.20       796.81         0.00       3992          0
->>
->> All disks are member of the same raid array (md0). One of the disks 
->> has a ton of transactions compared to the other disks. Read 
->> operations as far as i can tell. Why? May be connected with my problem? 
-> Two thoughts on that, if you are doing a lot of directory operations, 
-> it's possible that the inodes being used most are all in one chunk.
-Hi thanks for the reply.
+Hello,
 
-It's not directory operations AFAIK. Reading a few files (3 in this 
-case) and writing one.
->
-> The other possibility is that these a journal writes and reflect 
-> updates to the atime. The way to see if this is in some way  related 
-> is to mount (remount) with noatime: "mount -o remount,noatime /dev/md0 
-> /wherever" and retest. If this is journal activity you can do several 
-> things to reduce the problem, which I'll go into (a) if it seems to be 
-> the problem, and (b) if someone else doesn't point you to an existing 
-> document or old post on the topic. Oh, you could also try mounting the 
-> filesystem as etc2, assuming that it's ext3 now. I wouldn't run that 
-> way, but it's useful as a diagnostic tool.
-I don't use ext3 i use ReiserFS. ( It seemed like a good idea at the 
-time. ) It's mounted with  -o  noatime.
-I've done some more testing and i seems like it might be connected to 
-mount --bind. If i write to a binded mount i get the slow writes. But if 
-i write directly to the real mount i don't. It might just be a random 
-occurrence, as the problem always has been inconsistent. Thoughts?
+I have a RAID5 that recently failed. sda-sdd are on the same SATA controller and
+every thing was running fine, until Linux decided it was a good idea to disable
+the controllers interrupt. After a reboot the RAID isn't starting anymore.
+
+Before I do something stupid, I wanted to ask if the following command will
+probably restore the array with minimal data corruption.
+
+  mdadm --assemble /dev/md6 --run --force /dev/sda8 /dev/sdb8 /dev/sdc8 /dev/sdd8
+  mdadm /dev/md6 -a /dev/sde1
+
+Looking at the events counter, sda-sdc agree and sdd is very close so I'd guess
+that I have the best chances at getting as little corruption as possible. Or does
+it make more sense to start it with all disks active?
+
+img2:~# mdadm -E /dev/sda8
+/dev/sda8:
+          Magic : a92b4efc
+        Version : 00.90.03
+           UUID : f52098d4:862caf6c:4c56c819:9f529bcc
+  Creation Time : Thu Jan 25 02:41:06 2007
+     Raid Level : raid5
+    Device Size : 381431168 (363.76 GiB 390.59 GB)
+     Array Size : 1525724672 (1455.04 GiB 1562.34 GB)
+   Raid Devices : 5
+  Total Devices : 5
+Preferred Minor : 6
+
+    Update Time : Sun Jun  3 11:10:03 2007
+          State : clean
+ Active Devices : 5
+Working Devices : 5
+ Failed Devices : 0
+  Spare Devices : 0
+       Checksum : b3017829 - correct
+         Events : 0.253660
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+      Number   Major   Minor   RaidDevice State
+this     0       8        8        0      active sync   /dev/sda8
+
+   0     0       8        8        0      active sync   /dev/sda8
+   1     1       8       24        1      active sync   /dev/sdb8
+   2     2       8       40        2      active sync   /dev/sdc8
+   3     3       8       56        3      active sync   /dev/sdd8
+   4     4       8       65        4      active sync   /dev/sde1
+img2:~# mdadm -E /dev/sdb8
+/dev/sdb8:
+          Magic : a92b4efc
+        Version : 00.90.03
+           UUID : f52098d4:862caf6c:4c56c819:9f529bcc
+  Creation Time : Thu Jan 25 02:41:06 2007
+     Raid Level : raid5
+    Device Size : 381431168 (363.76 GiB 390.59 GB)
+     Array Size : 1525724672 (1455.04 GiB 1562.34 GB)
+   Raid Devices : 5
+  Total Devices : 5
+Preferred Minor : 6
+
+    Update Time : Sun Jun  3 11:10:03 2007
+          State : clean
+ Active Devices : 5
+Working Devices : 5
+ Failed Devices : 0
+  Spare Devices : 0
+       Checksum : b301783b - correct
+         Events : 0.253660
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+      Number   Major   Minor   RaidDevice State
+this     1       8       24        1      active sync   /dev/sdb8
+
+   0     0       8        8        0      active sync   /dev/sda8
+   1     1       8       24        1      active sync   /dev/sdb8
+   2     2       8       40        2      active sync   /dev/sdc8
+   3     3       8       56        3      active sync   /dev/sdd8
+   4     4       8       65        4      active sync   /dev/sde1
+img2:~# mdadm -E /dev/sdc8
+/dev/sdc8:
+          Magic : a92b4efc
+        Version : 00.90.03
+           UUID : f52098d4:862caf6c:4c56c819:9f529bcc
+  Creation Time : Thu Jan 25 02:41:06 2007
+     Raid Level : raid5
+    Device Size : 381431168 (363.76 GiB 390.59 GB)
+     Array Size : 1525724672 (1455.04 GiB 1562.34 GB)
+   Raid Devices : 5
+  Total Devices : 5
+Preferred Minor : 6
+
+    Update Time : Sun Jun  3 11:10:03 2007
+          State : clean
+ Active Devices : 5
+Working Devices : 5
+ Failed Devices : 0
+  Spare Devices : 0
+       Checksum : b301784d - correct
+         Events : 0.253660
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+      Number   Major   Minor   RaidDevice State
+this     2       8       40        2      active sync   /dev/sdc8
+
+   0     0       8        8        0      active sync   /dev/sda8
+   1     1       8       24        1      active sync   /dev/sdb8
+   2     2       8       40        2      active sync   /dev/sdc8
+   3     3       8       56        3      active sync   /dev/sdd8
+   4     4       8       65        4      active sync   /dev/sde1
+img2:~# mdadm -E /dev/sdd8
+/dev/sdd8:
+          Magic : a92b4efc
+        Version : 00.90.03
+           UUID : f52098d4:862caf6c:4c56c819:9f529bcc
+  Creation Time : Thu Jan 25 02:41:06 2007
+     Raid Level : raid5
+    Device Size : 381431168 (363.76 GiB 390.59 GB)
+     Array Size : 1525724672 (1455.04 GiB 1562.34 GB)
+   Raid Devices : 5
+  Total Devices : 5
+Preferred Minor : 6
+
+    Update Time : Sun Jun  3 11:10:02 2007
+          State : active
+ Active Devices : 5
+Working Devices : 5
+ Failed Devices : 0
+  Spare Devices : 0
+       Checksum : b2fd9982 - correct
+         Events : 0.253661
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+      Number   Major   Minor   RaidDevice State
+this     3       8       56        3      active sync   /dev/sdd8
+
+   0     0       8        8        0      active sync   /dev/sda8
+   1     1       8       24        1      active sync   /dev/sdb8
+   2     2       8       40        2      active sync   /dev/sdc8
+   3     3       8       56        3      active sync   /dev/sdd8
+   4     4       8       65        4      active sync   /dev/sde1
+img2:~# mdadm -E /dev/sde1
+/dev/sde1:
+          Magic : a92b4efc
+        Version : 00.90.03
+           UUID : f52098d4:862caf6c:4c56c819:9f529bcc
+  Creation Time : Thu Jan 25 02:41:06 2007
+     Raid Level : raid5
+    Device Size : 381431168 (363.76 GiB 390.59 GB)
+     Array Size : 1525724672 (1455.04 GiB 1562.34 GB)
+   Raid Devices : 5
+  Total Devices : 5
+Preferred Minor : 6
+
+    Update Time : Sun Jun  3 11:12:47 2007
+          State : clean
+ Active Devices : 1
+Working Devices : 1
+ Failed Devices : 3
+  Spare Devices : 0
+       Checksum : b3017954 - correct
+         Events : 0.253664
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+      Number   Major   Minor   RaidDevice State
+this     4       8       65        4      active sync   /dev/sde1
+
+   0     0       0        0        0      removed
+   1     1       0        0        1      faulty removed
+   2     2       0        0        2      faulty removed
+   3     3       0        0        3      faulty removed
+   4     4       8       65        4      active sync   /dev/sde1
+
+Best Regards,
+ Karsten Desler
