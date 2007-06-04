@@ -1,22 +1,64 @@
-From: carlos@fisica.ufpr.br (Carlos Carvalho)
-Subject: minimum speed for raid5 check
-Date: Mon, 4 Jun 2007 11:31:21 -0300
-Message-ID: <18020.8761.82894.369329@fisica.ufpr.br>
+From: Hubert Verstraete <hubskml@free.fr>
+Subject: Re: problems with faulty disks and superblocks 1.0, 1.1 and 1.2
+Date: Mon, 04 Jun 2007 18:43:32 +0200
+Message-ID: <46644134.6050404@free.fr>
+References: <465E9351.2070505@free.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <465E9351.2070505@free.fr>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I'd like the check speed in a raid5 array to have a minimum speed. I
-put the value at sync_speed_min but it only works when the array is
-idle. Is there a way to set a minimum check speed independent of the
-array load? Otherwise it'll never finish because the machine is always
-reading from the disks.
+Hubert Verstraete wrote:
+> Hello
+>
+> I'm having problems with a RAID-1 configuration. I cannot re-add a 
+> disk that I've failed, because each time I do this, the re-added disk 
+> is still seen as failed.
+> After some investigations, I found that this problem only occur when I 
+> create the RAID array with superblocks 1.0, 1.1 and 1.2.
+> With the superblock 0.90 I don't encounter this issue.
+>
+> Here are the commands to easily reproduce the issue
+>
+> mdadm -C /dev/md_d0 -e 1.0 -l 1 -n 2 -b internal -R /dev/sda /dev/sdb
+> mdadm /dev/md_d0 -f /dev/sda
+> mdadm /dev/md_d0 -r /dev/sda
+> mdadm /dev/md_d0 -a /dev/sda
+> cat /proc/mdstat
+>
+> The output of mdstat is:
+> Personalities : [raid1]
+> md_d0 : active raid1 sda[0](F) sdb[1]
+>       104849 blocks super 1.2 [2/1] [_U]
+>       bitmap: 0/7 pages [0KB], 8KB chunk
+> unused devices: <none>
+>
+> I'm wondering if the way I'm failing and re-adding a disk is correct. 
+> Did I make something wrong?
+>
+> If I change the superblock to "-e 0.90", there's no problem with this 
+> set of commands.
+>
+> For now, I found a work-around with superblock 1.0 which consists in 
+> zeroing the superblock before re-adding the disk. But I suppose that 
+> doing so will force a full rebuild of the re-added disk, and I don't 
+> want this, because I'm using write-intent bitmaps.
+>
+> I'm using mdadm - v2.5.6 on Debian Etch with kernel 2.6.18-4.
+>
+> Bug or misunderstanding from myself? Any help would be appreciated :)
+>
+> Thanks
+> Hubert
+The kernel 2.6.20 Changelog says:
 
-This is a different request from the others that have appeared
-recently in the list... I'm using 2.6.20.11 and CFQ. It seems changing
-the IO scheduler wouldn't make a difference because the check is
-really only using the idle bandwidth, which is scarce.
+- restarting device recovery after a clean shutdown (version-1 metadata only) didn't work as intended (or at all).
+
+That might be my problem, and I confirm 2.6.20.12 is working correctly.
+
+Hubert
+
