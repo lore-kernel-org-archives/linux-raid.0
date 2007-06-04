@@ -1,44 +1,58 @@
-From: "Williams, Dan J" <dan.j.williams@intel.com>
-Subject: RE: multiple xor_block() functions
-Date: Mon, 4 Jun 2007 10:48:35 -0700
-Message-ID: <0C7297FA1D2D244A9C7F6959C0BF1E5201F034A9@azsmsx413.amr.corp.intel.com>
-References: <20070602185746.GI5500@stusta.de>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: RAID 6 grow problem
+Date: Mon, 04 Jun 2007 16:29:02 -0400
+Message-ID: <4664760E.8040606@tmr.com>
+References: <C287AF46.7EDF%groups@email.iain.rauch.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
-In-Reply-To: <20070602185746.GI5500@stusta.de>
+In-Reply-To: <C287AF46.7EDF%groups@email.iain.rauch.co.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Adrian Bunk <bunk@stusta.de>, mingo@redhat.com, neilb@suse.de, "John W. Linville" <linville@tuxdriver.com>, Jouni Malinen <j@w1.fi>
-Cc: linux-raid@vger.kernel.org, linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Iain Rauch <groups@email.iain.rauch.co.uk>
+Cc: Neil Brown <neilb@suse.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, Justin Piszcz <jpiszcz@lucidpixels.com>
 List-Id: linux-raid.ids
 
-> From: Adrian Bunk [mailto:bunk@stusta.de]
-> include/linux/raid/xor.h:extern void xor_block(unsigned int count,
-unsigned
-> int bytes, void **ptr);
-> drivers/md/xor.c:xor_block(unsigned int count, unsigned int bytes,
-void **ptr)
-> drivers/md/xor.c:EXPORT_SYMBOL(xor_block);
-> 
-> and
-> 
-> net/ieee80211/ieee80211_crypt_ccmp.c:static inline void xor_block(u8 *
-b, u8 *
-> a, size_t len)
-> 
-> 
-> At least one of them has to be renamed.
-> 
-I'll rename the raid version to 'xor_blocks' in the md-accel series.  [
-I would have suggested xor_n_blocks except that xor_blocks is limited to
-5-blocks (MAX_XOR_BLOCKS) ]
+Iain Rauch wrote:
+>>>> raid6 reshape wasn't added until 2.6.21.  Before that only raid5 was
+>>>> supported.
+>>>> You also need to ensure that CONFIG_MD_RAID5_RESHAPE=y.
+>>>>         
+>>> I don't see that in the config. Should I add it? Then reboot?
+>>>       
+>> You reported that you were running a 2.6.20 kernel, which doesn't
+>> support raid6 reshape.
+>> You need to compile a 2.6.21 kernel (or
+>>    apt-get install linux-image-2.6.21-1-amd64
+>> or whatever) and ensure that CONFIG_MD_RAID5_RESHAPE=y is in the
+>> .config before compiling.
+>>     
+>
+> There only seems to be version 2.6.20 does this matter a lot? Also how do I
+> specify what is in the config when using apt-get install?
+>   
 
-> 
-> cu
-> Adrian
-> 
+2.6.20 doesn't support the feature you want, only you can tell if that 
+matters a lot. You don't, either get a raw kernel source and configure, 
+or run what the vendor provides for config. Sorry, those are the option.
+>   
+>>> I used apt-get install mdadm to first install it, which gave me 2.5.x then I
+>>> downloaded the new source and typed make then make install. Now mdadm -V
+>>> shows "mdadm - v2.6.2 - 21st May 2007".
+>>> Is there anyway to check it is installed correctly?
+>>>       
+>> The "mdadm -V" check is sufficient.
+>>     
+>
+> Are you sure because at first I just did the make/make install and mdadm -V
+> did tell me v2.6.2 but I don't believe it was installed properly because it
+> didn't recognise my array nor did it make a config file, and cat
+> /proc/mdstat said no file/directory??
+mdadm doesn't control the /proc/mdstat file, it's written by the kernel. 
+The kernel had no active array to mention in the mdstat file.
 
-Dan
+-- 
+bill davidsen <davidsen@tmr.com>
+  CTO TMR Associates, Inc
+  Doing interesting things with small computers since 1979
+
