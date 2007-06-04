@@ -1,64 +1,44 @@
-From: Hubert Verstraete <hubskml@free.fr>
-Subject: Re: problems with faulty disks and superblocks 1.0, 1.1 and 1.2
-Date: Mon, 04 Jun 2007 18:43:32 +0200
-Message-ID: <46644134.6050404@free.fr>
-References: <465E9351.2070505@free.fr>
+From: "Williams, Dan J" <dan.j.williams@intel.com>
+Subject: RE: multiple xor_block() functions
+Date: Mon, 4 Jun 2007 10:48:35 -0700
+Message-ID: <0C7297FA1D2D244A9C7F6959C0BF1E5201F034A9@azsmsx413.amr.corp.intel.com>
+References: <20070602185746.GI5500@stusta.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <465E9351.2070505@free.fr>
+Content-class: urn:content-classes:message
+In-Reply-To: <20070602185746.GI5500@stusta.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Adrian Bunk <bunk@stusta.de>, mingo@redhat.com, neilb@suse.de, "John W. Linville" <linville@tuxdriver.com>, Jouni Malinen <j@w1.fi>
+Cc: linux-raid@vger.kernel.org, linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hubert Verstraete wrote:
-> Hello
->
-> I'm having problems with a RAID-1 configuration. I cannot re-add a 
-> disk that I've failed, because each time I do this, the re-added disk 
-> is still seen as failed.
-> After some investigations, I found that this problem only occur when I 
-> create the RAID array with superblocks 1.0, 1.1 and 1.2.
-> With the superblock 0.90 I don't encounter this issue.
->
-> Here are the commands to easily reproduce the issue
->
-> mdadm -C /dev/md_d0 -e 1.0 -l 1 -n 2 -b internal -R /dev/sda /dev/sdb
-> mdadm /dev/md_d0 -f /dev/sda
-> mdadm /dev/md_d0 -r /dev/sda
-> mdadm /dev/md_d0 -a /dev/sda
-> cat /proc/mdstat
->
-> The output of mdstat is:
-> Personalities : [raid1]
-> md_d0 : active raid1 sda[0](F) sdb[1]
->       104849 blocks super 1.2 [2/1] [_U]
->       bitmap: 0/7 pages [0KB], 8KB chunk
-> unused devices: <none>
->
-> I'm wondering if the way I'm failing and re-adding a disk is correct. 
-> Did I make something wrong?
->
-> If I change the superblock to "-e 0.90", there's no problem with this 
-> set of commands.
->
-> For now, I found a work-around with superblock 1.0 which consists in 
-> zeroing the superblock before re-adding the disk. But I suppose that 
-> doing so will force a full rebuild of the re-added disk, and I don't 
-> want this, because I'm using write-intent bitmaps.
->
-> I'm using mdadm - v2.5.6 on Debian Etch with kernel 2.6.18-4.
->
-> Bug or misunderstanding from myself? Any help would be appreciated :)
->
-> Thanks
-> Hubert
-The kernel 2.6.20 Changelog says:
+> From: Adrian Bunk [mailto:bunk@stusta.de]
+> include/linux/raid/xor.h:extern void xor_block(unsigned int count,
+unsigned
+> int bytes, void **ptr);
+> drivers/md/xor.c:xor_block(unsigned int count, unsigned int bytes,
+void **ptr)
+> drivers/md/xor.c:EXPORT_SYMBOL(xor_block);
+> 
+> and
+> 
+> net/ieee80211/ieee80211_crypt_ccmp.c:static inline void xor_block(u8 *
+b, u8 *
+> a, size_t len)
+> 
+> 
+> At least one of them has to be renamed.
+> 
+I'll rename the raid version to 'xor_blocks' in the md-accel series.  [
+I would have suggested xor_n_blocks except that xor_blocks is limited to
+5-blocks (MAX_XOR_BLOCKS) ]
 
-- restarting device recovery after a clean shutdown (version-1 metadata only) didn't work as intended (or at all).
+> 
+> cu
+> Adrian
+> 
 
-That might be my problem, and I confirm 2.6.20.12 is working correctly.
-
-Hubert
-
+Dan
