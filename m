@@ -1,48 +1,22 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [RFD] BIO_RW_BARRIER - what it means for devices, filesystems,
-   and dm/md.
-Date: Mon, 04 Jun 2007 16:39:45 +0900
-Message-ID: <4663C1C1.5000009@gmail.com>
-References: <Pine.LNX.4.64.0705291653230.31474@asgard.lang.hm> <20070530061723.GY85884050@sgi.com> <Pine.LNX.4.64.0705300946220.8246@asgard.lang.hm> <20070531002011.GC85884050@sgi.com> <20070531062644.GI32105@kernel.dk> <20070531070307.GK85884050@sgi.com> <20070531070656.GK32105@kernel.dk> <465F8F71.20302@gmail.com> <20070601082140.GP32105@kernel.dk> <46613666.7010800@gmail.com> <20070602143438.GB32105@kernel.dk>
+From: carlos@fisica.ufpr.br (Carlos Carvalho)
+Subject: minimum speed for raid5 check
+Date: Mon, 4 Jun 2007 11:31:21 -0300
+Message-ID: <18020.8761.82894.369329@fisica.ufpr.br>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <20070602143438.GB32105@kernel.dk>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: David Chinner <dgc@sgi.com>, david@lang.hm, Phillip Susi <psusi@cfl.rr.com>, Neil Brown <neilb@suse.de>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, dm-devel@redhat.com, linux-raid@vger.kernel.org, Stefan Bader <Stefan.Bader@de.ibm.com>, Andreas Dilger <adilger@clusterfs.com>
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Jens Axboe wrote:
-> On Sat, Jun 02 2007, Tejun Heo wrote:
->> Hello,
->>
->> Jens Axboe wrote:
->>>> Would that be very different from issuing barrier and not waiting for
->>>> its completion?  For ATA and SCSI, we'll have to flush write back cache
->>>> anyway, so I don't see how we can get performance advantage by
->>>> implementing separate WRITE_ORDERED.  I think zero-length barrier
->>>> (haven't looked at the code yet, still recovering from jet lag :-) can
->>>> serve as genuine barrier without the extra write tho.
->>> As always, it depends :-)
->>>
->>> If you are doing pure flush barriers, then there's no difference. Unless
->>> you only guarantee ordering wrt previously submitted requests, in which
->>> case you can eliminate the post flush.
->>>
->>> If you are doing ordered tags, then just setting the ordered bit is
->>> enough. That is different from the barrier in that we don't need a flush
->>> of FUA bit set.
->> Hmmm... I'm feeling dense.  Zero-length barrier also requires only one
->> flush to separate requests before and after it (haven't looked at the
->> code yet, will soon).  Can you enlighten me?
-> 
-> Yeah, that's what the zero-length barrier implementation I posted does.
-> Not sure if you have a question beyond that, if so fire away :-)
+I'd like the check speed in a raid5 array to have a minimum speed. I
+put the value at sync_speed_min but it only works when the array is
+idle. Is there a way to set a minimum check speed independent of the
+array load? Otherwise it'll never finish because the machine is always
+reading from the disks.
 
-I thought you were talking about adding BIO_RW_ORDERED instead of
-exposing zero length BIO_RW_BARRIER.  Sorry about the confusion.  :-)
-
--- 
-tejun
+This is a different request from the others that have appeared
+recently in the list... I'm using 2.6.20.11 and CFQ. It seems changing
+the IO scheduler wouldn't make a difference because the check is
+really only using the idle bandwidth, which is scarce.
