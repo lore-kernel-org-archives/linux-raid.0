@@ -1,45 +1,48 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: RAID6 clean?
-Date: Mon, 4 Jun 2007 16:59:11 +1000
-Message-ID: <18019.47167.814394.650255@notabene.brown>
-References: <H00000670006c6c4.1180913607.www.korstad.net@MHS>
-	<200706040647.l546ldc14291@www.watkins-home.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [RFD] BIO_RW_BARRIER - what it means for devices, filesystems,
+   and dm/md.
+Date: Mon, 04 Jun 2007 16:39:45 +0900
+Message-ID: <4663C1C1.5000009@gmail.com>
+References: <Pine.LNX.4.64.0705291653230.31474@asgard.lang.hm> <20070530061723.GY85884050@sgi.com> <Pine.LNX.4.64.0705300946220.8246@asgard.lang.hm> <20070531002011.GC85884050@sgi.com> <20070531062644.GI32105@kernel.dk> <20070531070307.GK85884050@sgi.com> <20070531070656.GK32105@kernel.dk> <465F8F71.20302@gmail.com> <20070601082140.GP32105@kernel.dk> <46613666.7010800@gmail.com> <20070602143438.GB32105@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Guy Watkins on Monday June 4
-Sender: linux-raid-owner@vger.kernel.org
-To: Guy Watkins <linux-raid@watkins-home.com>
-Cc: 'linux-raid' <linux-raid@vger.kernel.org>
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <20070602143438.GB32105@kernel.dk>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: David Chinner <dgc@sgi.com>, david@lang.hm, Phillip Susi <psusi@cfl.rr.com>, Neil Brown <neilb@suse.de>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, dm-devel@redhat.com, linux-raid@vger.kernel.org, Stefan Bader <Stefan.Bader@de.ibm.com>, Andreas Dilger <adilger@clusterfs.com>
 List-Id: linux-raid.ids
 
-On Monday June 4, linux-raid@watkins-home.com wrote:
-> I have a RAID6 array.  1 drive is bad and now un-plugged because the system
-> hangs waiting on the disk.
+Jens Axboe wrote:
+> On Sat, Jun 02 2007, Tejun Heo wrote:
+>> Hello,
+>>
+>> Jens Axboe wrote:
+>>>> Would that be very different from issuing barrier and not waiting for
+>>>> its completion?  For ATA and SCSI, we'll have to flush write back cache
+>>>> anyway, so I don't see how we can get performance advantage by
+>>>> implementing separate WRITE_ORDERED.  I think zero-length barrier
+>>>> (haven't looked at the code yet, still recovering from jet lag :-) can
+>>>> serve as genuine barrier without the extra write tho.
+>>> As always, it depends :-)
+>>>
+>>> If you are doing pure flush barriers, then there's no difference. Unless
+>>> you only guarantee ordering wrt previously submitted requests, in which
+>>> case you can eliminate the post flush.
+>>>
+>>> If you are doing ordered tags, then just setting the ordered bit is
+>>> enough. That is different from the barrier in that we don't need a flush
+>>> of FUA bit set.
+>> Hmmm... I'm feeling dense.  Zero-length barrier also requires only one
+>> flush to separate requests before and after it (haven't looked at the
+>> code yet, will soon).  Can you enlighten me?
 > 
-> The system won't boot because / is "not clean".  I booted a rescue CD and
-> managed to start my arrays using --force.  I tried to stop and start the
-> arrays but they still required --force.  I then used "echo repair >
-> sync_action" to make the arrays "clean".  I can now stop and start the RAID6
-> array without --force.  I can now boot normally with 1 missing disk.
-> 
-> Is there an easier method?  Some sort of boot option?  This was a real pain
-> in the @$$.
-> 
-> It would be nice if there was an array option to allow an "un-clean" array
-> to be started.  An option that would be set in the md superblock.
+> Yeah, that's what the zero-length barrier implementation I posted does.
+> Not sure if you have a question beyond that, if so fire away :-)
 
-Documentation/md.txt
+I thought you were talking about adding BIO_RW_ORDERED instead of
+exposing zero length BIO_RW_BARRIER.  Sorry about the confusion.  :-)
 
-search for 'clean' - no luck.
-search for 'dirty'
-
-|
-|So, to boot with a root filesystem of a dirty degraded raid[56], use
-|
-|   md-mod.start_dirty_degraded=1
-|
-
-NeilBrown
-
+-- 
+tejun
