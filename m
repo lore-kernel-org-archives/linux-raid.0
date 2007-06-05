@@ -1,97 +1,71 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: Raid-5 long write wait while reading
-Date: Mon, 04 Jun 2007 16:31:37 -0400
-Message-ID: <466476A9.1000405@tmr.com>
-References: <4653306B.4090500@jager.no> <4658CB8A.8080503@jager.no> <465AFCC6.8040006@tmr.com> <466207E3.60307@jager.no>
+From: Iain Rauch <groups@email.iain.rauch.co.uk>
+Subject: Re: RAID 6 grow problem
+Date: Tue, 05 Jun 2007 18:08:10 +0100
+Message-ID: <C28B570A.7F4E%groups@email.iain.rauch.co.uk>
+References: <4664760E.8040606@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+	charset="US-ASCII"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <466207E3.60307@jager.no>
+In-Reply-To: <4664760E.8040606@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: tj <lists@jager.no>
-Cc: linux-raid@vger.kernel.org
+To: Bill Davidsen <davidsen@tmr.com>, Daniel Korstad <dan@korstad.net>, Neil Brown <neilb@suse.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, Justin Piszcz <jpiszcz@lucidpixels.com>
 List-Id: linux-raid.ids
 
-tj wrote:
-> Bill Davidsen wrote:
->> tj wrote:
->>> Thomas Jager wrote:
->>>> Hi list.
->>>>
->>>> I run a file server on MD raid-5.
->>>> If a client reads one big file and at the same time another client 
->>>> tries to write a file, the thread writing just sits in 
->>>> uninterruptible sleep until the reader has finished. Only very 
->>>> small amount of writes get trough while the reader is still working.
->>>> I'm having some trouble pinpointing the problem.
->>>> It's not consistent either sometimes it works as expected both the 
->>>> reader and writer gets some transactions. On huge reads I've seen 
->>>> the writer blocked for 30-40 minutes without any significant writes 
->>>> happening (Maybe a few megabytes, of several gigs waiting). It 
->>>> happens with NFS, SMB and FTP, and local with dd. And seems to be 
->>>> connected to raid-5. This does not happen on block devices without 
->>>> raid-5. I'm also wondering if it can have anything to do with 
->>>> loop-aes? I use loop-aes on top of the md, but then again i have 
->>>> not observed this problem on loop-devices with disk backend. I do 
->>>> know that loop-aes degrades performance but i didn't think it would 
->>>> do something like this?
->>>>
->>>> I've seen this problem in 2.6.16-2.6.21
->>>>
->>>> All disks in the array is connected to a controller with a SiI 3114 
->>>> chip.
->>>
->>> I just noticed something else. A couple of slow readers where 
->>> running on my raid-5 array. Then i started a copy from another local 
->>> disk to the array. Then i got the extremely long wait. I noticed 
->>> something in iostat:
->>>
->>> avg-cpu:  %user   %nice %system %iowait  %steal   %idle
->>>           3.90    0.00   48.05   31.93    0.00   16.12
->>>
->>> Device:            tps    kB_read/s    kB_wrtn/s    kB_read    kB_wrtn
->>> ....
->>> sdg               0.80        25.55         0.00        128          0
->>> sdh             154.89       632.34         0.00       3168          0
->>> sdi               0.20        12.77         0.00         64          0
->>> sdj               0.40        25.55         0.00        128          0
->>> sdk               0.40        25.55         0.00        128          0
->>> sdl               0.80        25.55         0.00        128          0
->>> sdm               0.80        25.55         0.00        128          0
->>> sdn               0.60        23.95         0.00        120          0
->>> md0             199.20       796.81         0.00       3992          0
->>>
->>> All disks are member of the same raid array (md0). One of the disks 
->>> has a ton of transactions compared to the other disks. Read 
->>> operations as far as i can tell. Why? May be connected with my problem? 
->> Two thoughts on that, if you are doing a lot of directory operations, 
->> it's possible that the inodes being used most are all in one chunk.
-> Hi thanks for the reply.
->
-> It's not directory operations AFAIK. Reading a few files (3 in this 
-> case) and writing one.
->>
->> The other possibility is that these a journal writes and reflect 
->> updates to the atime. The way to see if this is in some way  related 
->> is to mount (remount) with noatime: "mount -o remount,noatime 
->> /dev/md0 /wherever" and retest. If this is journal activity you can 
->> do several things to reduce the problem, which I'll go into (a) if it 
->> seems to be the problem, and (b) if someone else doesn't point you to 
->> an existing document or old post on the topic. Oh, you could also try 
->> mounting the filesystem as etc2, assuming that it's ext3 now. I 
->> wouldn't run that way, but it's useful as a diagnostic tool.
-> I don't use ext3 i use ReiserFS. ( It seemed like a good idea at the 
-> time. ) It's mounted with  -o  noatime.
-> I've done some more testing and i seems like it might be connected to 
-> mount --bind. If i write to a binded mount i get the slow writes. But 
-> if i write directly to the real mount i don't. It might just be a 
-> random occurrence, as the problem always has been inconsistent. Thoughts? 
+>>>>> raid6 reshape wasn't added until 2.6.21.  Before that only raid5 was
+>>>>> supported.
+>>>>> You also need to ensure that CONFIG_MD_RAID5_RESHAPE=y.
+>>>>>         
+>>>> I don't see that in the config. Should I add it? Then reboot?
+>>>> 
+Don't know how I missed it first time, but that is in my config.
 
-I don't beat on the bind mounts, let me do a test and get back.
+>>> You reported that you were running a 2.6.20 kernel, which doesn't
+>>> support raid6 reshape.
+>>> You need to compile a 2.6.21 kernel (or
+>>>    apt-get install linux-image-2.6.21-1-amd64
+>>> or whatever) and ensure that CONFIG_MD_RAID5_RESHAPE=y is in the
+>>> .config before compiling.
+>>>     
+>> 
+>> There only seems to be version 2.6.20 does this matter a lot? Also how do I
+>> specify what is in the config when using apt-get install?
+>>   
+> 
+> 2.6.20 doesn't support the feature you want, only you can tell if that
+> matters a lot. You don't, either get a raw kernel source and configure,
+> or run what the vendor provides for config. Sorry, those are the option.
+I have finally managed to compile a new kernel (2.6.21) and boot it.
 
--- 
-bill davidsen <davidsen@tmr.com>
-  CTO TMR Associates, Inc
-  Doing interesting things with small computers since 1979
+>>>> I used apt-get install mdadm to first install it, which gave me 2.5.x then
+>>>> I
+>>>> downloaded the new source and typed make then make install. Now mdadm -V
+>>>> shows "mdadm - v2.6.2 - 21st May 2007".
+>>>> Is there anyway to check it is installed correctly?
+>>>
+>>> The "mdadm -V" check is sufficient.
+>> 
+>> Are you sure because at first I just did the make/make install and mdadm -V
+>> did tell me v2.6.2 but I don't believe it was installed properly because it
+>> didn't recognise my array nor did it make a config file, and cat
+>> /proc/mdstat said no file/directory??
+> mdadm doesn't control the /proc/mdstat file, it's written by the kernel.
+> The kernel had no active array to mention in the mdstat file.
+I see, thanks. I think it is working OK.
+
+I am currently growing a 4 disk array to an 8 disk array as a test, and if
+it that works I'll use those 8 and add them to my original 8 to make a 16
+disk array. This will be a while yet as this first grow is going to take
+2000 minutes. It looks like it's going to work fine, but I'll report back in
+a couple of days.
+
+Thank you so much for your help; Dan, Bill, Neil, Justin and everyone else.
+
+The last thing I would like to know is if it is possible to 'clean' the
+super blocks to make sure they are all OK. TIA.
+
+
+Iain
+
 
