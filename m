@@ -1,18 +1,42 @@
-From: Iain Rauch <groups@email.iain.rauch.co.uk>
-Subject: Re: RAID 6 grow problem
-Date: Tue, 05 Jun 2007 18:08:10 +0100
-Message-ID: <C28B570A.7F4E%groups@email.iain.rauch.co.uk>
-References: <4664760E.8040606@tmr.com>
+From: "Daniel Korstad" <dan@korstad.net>
+Subject: RE:  RAID 6 grow problem
+Date: Tue, 5 Jun 2007 14:21:21 -0500
+Message-ID: <2076428235.1181071281354.JavaMail.root@gateway.korstad.net>
+References: <C28B570A.7F4E%groups@email.iain.rauch.co.uk>
 Mime-Version: 1.0
 Content-Type: text/plain;
-	charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
+	charset="us-ascii"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4664760E.8040606@tmr.com>
+In-Reply-To: <C28B570A.7F4E%groups@email.iain.rauch.co.uk>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>, Daniel Korstad <dan@korstad.net>, Neil Brown <neilb@suse.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, Justin Piszcz <jpiszcz@lucidpixels.com>
+To: Iain Rauch <groups@email.iain.rauch.co.uk>, Bill Davidsen <davidsen@tmr.com>, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org, Justin Piszcz <jpiszcz@lucidpixels.com>
 List-Id: linux-raid.ids
 
+Sounds like you are well on your way.
+ 
+I am not too surprised on the time to completion.  I probably underestimated/exaggerated a bit when I said after a few hours :)
+ 
+It took me over a day to grow one disk as well.  But my experience was on a system with an older AMD 754 x64 Mother Board with a couple SATA on board and the rest on two PCI cards each with 4 SATA ports.  So I have 8 SATA drives on my PCI (33Mhz x 4 bytes (32bits) = 133MB/s) bus of which is saturated basically after three drives.
+ 
+But this box sets in the basement and acts as my NAS.  So for file access across the 100Mb/s network or wireless network, it does just fine.
+ 
+When I do hdparm -tT /dev/md1 I get read access speeds from 110MB/s - 130MB/s  and for my individual drives at around 50 - 60 MB/s so the RAID6 outperforms (reads) any one drive and I am happy.  Bonnie/Bonnie++ is probably a better tool for testing, but I was just looking for quick and dirty numbers.
+ 
+I have friends that have newer MB with half a dozen or almost a dozen SATA connectors and PCI-express SATA controller cards.  Getting rid of the slow PCI bus limitation increases the speed by magnitudes...  But this is another topic/thread...
+  
+ 
+Congrats on your new kernel and progress!
+Cheers,
+Dan.
+  
+----- Original Message -----
+From: Iain Rauch 
+Sent: Tue, 6/5/2007 12:09pm
+To: Bill Davidsen ; Daniel Korstad ; Neil Brown ; linux-raid@vger.kernel.org; Justin Piszcz 
+Subject: Re: RAID 6 grow problem 
+ 
+ 
 >>>>> raid6 reshape wasn't added until 2.6.21.  Before that only raid5 was
 >>>>> supported.
 >>>>> You also need to ensure that CONFIG_MD_RAID5_RESHAPE=y.
@@ -67,5 +91,3 @@ super blocks to make sure they are all OK. TIA.
 
 
 Iain
-
-
