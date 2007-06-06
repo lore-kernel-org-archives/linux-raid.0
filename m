@@ -1,40 +1,87 @@
-From: Neil Brown <neilb@suse.de>
-Subject: RE:  RAID 6 grow problem
-Date: Wed, 6 Jun 2007 10:46:00 +1000
-Message-ID: <18022.968.613733.320715@notabene.brown>
-References: <2076428235.1181071281354.JavaMail.root@gateway.korstad.net>
-	<Pine.LNX.4.64.0706051612400.5806@gheavc.wnzcbav.cig>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: [PATCH] md: comment add_stripe_bio
+Date: Tue, 05 Jun 2007 18:09:14 -0700
+Message-ID: <1181092154.11156.10.camel@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Jon Nelson on Tuesday June 5
 Sender: linux-raid-owner@vger.kernel.org
-To: Jon Nelson <jnelson-linux-raid@jamponi.net>
+To: NeilBrown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday June 5, jnelson-linux-raid@jamponi.net wrote:
-> 
-> I have an EPoX 570SLI motherboard with 3 SATAII drives, all 320GiB: one 
-> Hitachi, one Samsung, one Seagate. I built a RAID5 out of a partition 
-> carved from each. I can issue a 'check' command and the rebuild speed 
-> hovers around 70MB/s, sometimes up to 73MB/s, and dstat/iostat/whatever 
-> confirms that each drive is sustaining approximately 70MB/s reads. 
-> Therefore, 3x70MB/s = 210MB/s which is a bunch more than 133MB/s. lspci 
-> -v reveals, for one of the interfaces (the others are pretty much the 
-> same):
+From: Dan Williams <dan.j.williams@intel.com>
 
-...
-> 
-> I'm trying to determine what the limiting factor of my raid is: Is it 
-> the drives, ....
+Document the overloading of struct bio fields.
 
-If look at the data sheets for the drives (I just had a look at a
-Seagate one, fairly easy to find on their web site) you should fine
-the Maximum Sustained Transfer Rate, which will be about 70MB/s for
-current 7200rpm drives.
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+---
 
-So I think the drive is the limiting factor.
+[ drop this if you think it is too much commenting/unnecessary, but I figured I would leave some
+  breadcrumbs for the next guy. ]
 
-NeilBrown
+ drivers/md/raid5.c |   26 ++++++++++++++++++++++----
+ 1 files changed, 22 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 061375e..065b8dc 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -1231,10 +1231,13 @@ static void compute_block_2(struct stripe_head *sh, int dd_idx1, int dd_idx2)
+ 
+ 
+ 
+-/*
+- * Each stripe/dev can have one or more bion attached.
+- * toread/towrite point to the first in a chain.
+- * The bi_next chain must be in order.
++/* add_stripe_bio - attach a bio to the toread/towrite list for an
++ *	rdev in the given stripe.  This routine assumes that the toread/towrite
++ *	lists are in submission order
++ * @sh: stripe targeted by bi->bi_sector
++ * @bi: bio to add (this routines assumes ownership of the bi->bi_next field)
++ * @dd_idx: data disk determined from the logical sector
++ * @forwrite: read/write flag
+  */
+ static int add_stripe_bio(struct stripe_head *sh, struct bio *bi, int dd_idx, int forwrite)
+ {
+@@ -1249,12 +1252,18 @@ static int add_stripe_bio(struct stripe_head *sh, struct bio *bi, int dd_idx, in
+ 
+ 	spin_lock(&sh->lock);
+ 	spin_lock_irq(&conf->device_lock);
++	
++	/* pick the list to manipulate */
+ 	if (forwrite) {
+ 		bip = &sh->dev[dd_idx].towrite;
+ 		if (*bip == NULL && sh->dev[dd_idx].written == NULL)
+ 			firstwrite = 1;
+ 	} else
+ 		bip = &sh->dev[dd_idx].toread;
++
++	/* scroll through the list to see if this bio overlaps with a
++	 * pending request
++	 */
+ 	while (*bip && (*bip)->bi_sector < bi->bi_sector) {
+ 		if ((*bip)->bi_sector + ((*bip)->bi_size >> 9) > bi->bi_sector)
+ 			goto overlap;
+@@ -1263,10 +1272,19 @@ static int add_stripe_bio(struct stripe_head *sh, struct bio *bi, int dd_idx, in
+ 	if (*bip && (*bip)->bi_sector < bi->bi_sector + ((bi->bi_size)>>9))
+ 		goto overlap;
+ 
++	/* add this bio into the chain and make sure we are not dropping
++	 * a link that was previously established
++	 */
+ 	BUG_ON(*bip && bi->bi_next && (*bip) != bi->bi_next);
+ 	if (*bip)
+ 		bi->bi_next = *bip;
++
++	/* attach the bio to the end of the list, if this is the first bio
++	 * added then we are directly manipulating toread/towrite
++	 */
+ 	*bip = bi;
++
++	/* keep count of the number of stripes that this bio touches */
+ 	bi->bi_phys_segments ++;
+ 	spin_unlock_irq(&conf->device_lock);
+ 	spin_unlock(&sh->lock);
