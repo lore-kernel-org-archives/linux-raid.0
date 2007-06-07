@@ -1,33 +1,32 @@
-From: Peter Rabbitson <rabbit@rabbit.us>
-Subject: Re: Customize the error emails of  `mdadm --monitor`
-Date: Wed, 06 Jun 2007 22:59:08 +0200
-Message-ID: <4667201C.5050304@rabbit.us>
-References: <46619542.6010507@rabbit.us> <46669B20.6030706@rabbit.us> <20070606121121.GA23486@teal.hq.k1024.org> <4666A743.3050900@rabbit.us> <20070606141035.GA9404@boogie.lpds.sztaki.hu> <4666C39F.6040504@rabbit.us> <20070606204925.GA23777@boogie.lpds.sztaki.hu>
+From: Neil Brown <neilb@suse.de>
+Subject: RE:   RAID 6 grow problem
+Date: Thu, 7 Jun 2007 14:44:04 +1000
+Message-ID: <18023.36116.726823.425259@notabene.brown>
+References: <1501701006.1181142416422.JavaMail.root@gateway.korstad.net>
+	<Pine.LNX.4.64.0706061021530.5806@gheavc.wnzcbav.cig>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20070606204925.GA23777@boogie.lpds.sztaki.hu>
+In-Reply-To: message from Jon Nelson on Wednesday June 6
 Sender: linux-raid-owner@vger.kernel.org
-To: Gabor Gombas <gombasg@sztaki.hu>
-Cc: linux-raid@vger.kernel.org
+To: Jon Nelson <jnelson-linux-raid@jamponi.net>
+Cc: Daniel Korstad <dan@korstad.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Gabor Gombas wrote:
-> On Wed, Jun 06, 2007 at 04:24:31PM +0200, Peter Rabbitson wrote:
+On Wednesday June 6, jnelson-linux-raid@jamponi.net wrote:
 > 
->> So I was asking if the component _number_, which is unique to a specific 
->> device regardless of the assembly mechanism, can be reported in case of a 
->> failure.
-> 
-> So you need to write an event-handling script and pass it to mdadm
-> (--program). In the script you can walk sysfs and/or call the
-> appropriate helper programs to extract all the information you need and
-> format it in the way you want. For example, if you want the slot number
-> of a failed disk, you can get it from /sys/block/$2/md/dev-$3/slot
-> (according to the manpage, not tested).
-> 
+> A question posed by a friend is this: assuming 64K blocks, if I read a 
+> single stripe from a raid (128K, right?) then two drives will be used 
+> (say, drive A and drive B). If I want the "next" 128K then which drives 
+> are most likely to be used? Drive A will now have the parity block in 
+> it's "next" block for head position, but drive B has the next data 
+> block. Nobody knows where drive C is. Does raid5 use an algorithm 
+> similar to raid1 in that it chooses the 2 drives whose heads are closest 
+> or does it utilize some other algorithm? 
 
-Now that's some real advice. I have not thought of that. Thank you!
+No.  When it wants data, it just reads the data.  It doesn't try to be
+clever an read the parity block and calculate the data (unless the
+data block doesn't exist of course).
 
-Peter
+NeilBrown
