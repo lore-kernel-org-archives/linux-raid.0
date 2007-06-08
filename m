@@ -1,118 +1,55 @@
-From: Bill Davidsen <davidsen@tmr.com>
+From: "Tuomas Leikola" <tuomas.leikola@gmail.com>
 Subject: Re: Raid-5 long write wait while reading
-Date: Thu, 07 Jun 2007 13:41:01 -0400
-Message-ID: <4668432D.8060904@tmr.com>
-References: <4653306B.4090500@jager.no> <4658CB8A.8080503@jager.no> <465AFCC6.8040006@tmr.com> <466207E3.60307@jager.no>
+Date: Fri, 8 Jun 2007 08:49:28 +0300
+Message-ID: <5b170a7d0706072249i4dbdcb13h826aba07cf31333e@mail.gmail.com>
+References: <4653306B.4090500@jager.no> <4658CB8A.8080503@jager.no>
+	 <465AFCC6.8040006@tmr.com> <466207E3.60307@jager.no>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <466207E3.60307@jager.no>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: tj <lists@jager.no>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-tj wrote:
-> Bill Davidsen wrote:
->> tj wrote:
->>> Thomas Jager wrote:
->>>> Hi list.
->>>>
->>>> I run a file server on MD raid-5.
->>>> If a client reads one big file and at the same time another client 
->>>> tries to write a file, the thread writing just sits in 
->>>> uninterruptible sleep until the reader has finished. Only very 
->>>> small amount of writes get trough while the reader is still working.
->>>> I'm having some trouble pinpointing the problem.
->>>> It's not consistent either sometimes it works as expected both the 
->>>> reader and writer gets some transactions. On huge reads I've seen 
->>>> the writer blocked for 30-40 minutes without any significant writes 
->>>> happening (Maybe a few megabytes, of several gigs waiting). It 
->>>> happens with NFS, SMB and FTP, and local with dd. And seems to be 
->>>> connected to raid-5. This does not happen on block devices without 
->>>> raid-5. I'm also wondering if it can have anything to do with 
->>>> loop-aes? I use loop-aes on top of the md, but then again i have 
->>>> not observed this problem on loop-devices with disk backend. I do 
->>>> know that loop-aes degrades performance but i didn't think it would 
->>>> do something like this?
->>>>
->>>> I've seen this problem in 2.6.16-2.6.21
->>>>
->>>> All disks in the array is connected to a controller with a SiI 3114 
->>>> chip.
->>>
->>> I just noticed something else. A couple of slow readers where 
->>> running on my raid-5 array. Then i started a copy from another local 
->>> disk to the array. Then i got the extremely long wait. I noticed 
->>> something in iostat:
->>>
->>> avg-cpu:  %user   %nice %system %iowait  %steal   %idle
->>>           3.90    0.00   48.05   31.93    0.00   16.12
->>>
->>> Device:            tps    kB_read/s    kB_wrtn/s    kB_read    kB_wrtn
->>> ....
->>> sdg               0.80        25.55         0.00        128          0
->>> sdh             154.89       632.34         0.00       3168          0
->>> sdi               0.20        12.77         0.00         64          0
->>> sdj               0.40        25.55         0.00        128          0
->>> sdk               0.40        25.55         0.00        128          0
->>> sdl               0.80        25.55         0.00        128          0
->>> sdm               0.80        25.55         0.00        128          0
->>> sdn               0.60        23.95         0.00        120          0
->>> md0             199.20       796.81         0.00       3992          0
->>>
->>> All disks are member of the same raid array (md0). One of the disks 
->>> has a ton of transactions compared to the other disks. Read 
->>> operations as far as i can tell. Why? May be connected with my problem? 
->> Two thoughts on that, if you are doing a lot of directory operations, 
->> it's possible that the inodes being used most are all in one chunk.
-> Hi thanks for the reply.
->
-> It's not directory operations AFAIK. Reading a few files (3 in this 
-> case) and writing one.
->>
->> The other possibility is that these a journal writes and reflect 
->> updates to the atime. The way to see if this is in some way  related 
->> is to mount (remount) with noatime: "mount -o remount,noatime 
->> /dev/md0 /wherever" and retest. If this is journal activity you can 
->> do several things to reduce the problem, which I'll go into (a) if it 
->> seems to be the problem, and (b) if someone else doesn't point you to 
->> an existing document or old post on the topic. Oh, you could also try 
->> mounting the filesystem as etc2, assuming that it's ext3 now. I 
->> wouldn't run that way, but it's useful as a diagnostic tool.
-> I don't use ext3 i use ReiserFS. ( It seemed like a good idea at the 
+On 6/3/07, tj <lists@jager.no> wrote:
+> >> I just noticed something else. A couple of slow readers where running
+> >> on my raid-5 array. Then i started a copy from another local disk to
+> >> the array. Then i got the extremely long wait. I noticed something in
+> >> iostat:
+> >>
+> >> avg-cpu:  %user   %nice %system %iowait  %steal   %idle
+> >>           3.90    0.00   48.05   31.93    0.00   16.12
+> >>
+> >> Device:            tps    kB_read/s    kB_wrtn/s    kB_read    kB_wrtn
+> >> ....
+> >> sdg               0.80        25.55         0.00        128          0
+> >> sdh             154.89       632.34         0.00       3168          0
+> >> sdi               0.20        12.77         0.00         64          0
+> >> sdj               0.40        25.55         0.00        128          0
+> >> sdk               0.40        25.55         0.00        128          0
+> >> sdl               0.80        25.55         0.00        128          0
+> >> sdm               0.80        25.55         0.00        128          0
+> >> sdn               0.60        23.95         0.00        120          0
+> >> md0             199.20       796.81         0.00       3992          0
+> >>
+> I don't use ext3 i use ReiserFS. ( It seemed like a good idea at the
 > time. ) It's mounted with  -o  noatime.
-> I've done some more testing and i seems like it might be connected to 
-> mount --bind. If i write to a binded mount i get the slow writes. But 
-> if i write directly to the real mount i don't. It might just be a 
-> random occurrence, as the problem always has been inconsistent. Thoughts? 
 
-I said I would test, and I did. I don't see a difference with ext3 in 
-reads at all. I don't see a difference in bind vs. direct for write, 
-either, but all of my space large enough to have room for a few GB write 
-had internal bitmaps.
+I've seen similar read patterns on reiserfs-raid5. I have a 6 disk set
+with chunk size of 64, and it seems reiserfs's tree is only located on
+2 of the disks. It appears reiserfs stores the tree in blocks
+dispersed along the entire disk with some interval, and that's not
+always optimal for raid.
 
-Other info: block size made no consistent difference, changing the 
-stripe_cache_size helped but was very non-linear in effect, and direct 
-raid over partitions had the same performance as LVM over raid on other 
-partitions of the same disks.
+Another thing you should look into is stripe cache trashing. On
+certain kernel versions all raid5 operations go through stripe cache,
+which results in a lot of memory copy operations and might present a
+bottleneck if there's a lot of random access. If writes occupy the
+entire cache, there's no free slots for reads to go through. I might
+be wrong here, though, as this is just a guess.
 
-Neil: is there a reason (other than ease of coding) why the bitmap isn't 
-distributed to minimize seeks? ie. put the bitmap for given stripes at 
-the end of those strips rather than the end of the space.
-
-I have added to my tests-to-do list partitioning a disk such that I have 
-a small partition and a large, making RAID-10 no bitmap on the small 
-(multiple drive, obviously) and then RAID-5 on the large, with the 
-bitmap for RAID-5 on the RAID-10 raw array. The only reason I have any 
-interest is that I did something like this with JFS, putting the journal 
-on a dedicated partition with a different chunk size, and it really 
-helped. If this gives any useful information I'll report, but I'm 
-building a few analysis tools first, so it will be several weeks.
-
--- 
-bill davidsen <davidsen@tmr.com>
-  CTO TMR Associates, Inc
-  Doing interesting things with small computers since 1979
-
+- tuomas
