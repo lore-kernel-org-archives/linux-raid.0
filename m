@@ -1,93 +1,279 @@
-From: Chris Wright <chrisw@sous-sol.org>
-Subject: [patch 06/54] md: Dont write more than is required of the last page of a bitmap
-Date: Fri, 08 Jun 2007 00:21:33 -0700
-Message-ID: <20070608072149.560764000@sous-sol.org>
-References: <20070608072127.352723000@sous-sol.org>
+From: phyros <dlopuch@mit.edu>
+Subject: Help on Recovering a Corrupted raid5 Partition
+Date: Fri, 8 Jun 2007 12:32:45 -0700 (PDT)
+Message-ID: <11032621.post@talk.nabble.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline; filename=md-don-t-write-more-than-is-required-of-the-last-page-of-a-bitmap.patch
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, stable@kernel.org, akpm@linux-foundation.org
-Cc: Justin Forbes <jmforbes@linuxtx.org>, Zwane Mwaikambo <zwane@arm.linux.org.uk>, Theodore Ts'o <tytso@mit.edu>, Randy Dunlap <rdunlap@xenotime.net>, Dave Jones <davej@redhat.com>, Chuck Wolber <chuckw@quantumlinux.com>, Chris Wedgwood <reviews@ml.cw.f00f.org>, Michael Krufky <mkrufky@linuxtv.org>, Chuck Ebbert <cebbert@redhat.com>, Domenico Andreoli <cavokz@gmail.com>, torvalds@linux-foundation.org, alan@lxorguk.ukuu.org.uk, NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org, Greg Kroah-Hartman <gregkh@suse.de>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
--stable review patch.  If anyone has any objections, please let us know.
----------------------
 
-From: NeilBrown <neilb@suse.de>
+Hey guys, I'd like some help recovering from a corrupted software Raid-5
+setup. The raid-5 setup is on an embedded linux NAS (the Buffalo Terastation
+Pro, if anyone's familiar with it), so I can't really give all that many
+details as to the distro, version, setup, etc. All of that is hidden and
+proprietary. The tech support told me that all I can do is scrap my data,
+but this is stupid... they're manufacturing a redundant data server; they
+should know better and have some corruption-recovery procedure in place. 
+Welcome to capitalism.
 
-It is possible that real data or metadata follows the bitmap
-without full page alignment.
-So limit the last write to be only the required number of bytes,
-rounded up to the hard sector size of the device.
+Anyways, a hacked firmware does allow me to telnet into the device as root
+(and probably void my warranty, but my data is more important than my
+warranty... buffalo should realize that), so if any pertinent information is
+discoverable, I can attempt to reverse engineer this thing if you tell me
+what to do (my linux experience is about a few month's worth... enough to
+get by but lacking in the deeper understandings of things). Google has been
+surprisingly unhelpful in finding a comprehensive tutorial on
+troubleshooting a raid configuration, so I'm hoping someone here can help
+me.
 
-Signed-off-by: Neil Brown <neilb@suse.de>
-Signed-off-by: Chris Wright <chrisw@sous-sol.org>
-Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
----
+Anyways, here's what I do know about the setup: it uses four 500gb SATA
+drives in a RAID-5 configuration, and the raid arrays are mounted as md
+devices. There's two main partitions of interest: /md0 is a system partition
+and /md1 is the partition of data that I'm trying to recover. I suspect the
+problem is a corrupted superblock, but I'm not quite sure on how to recover
+from that.
 
- drivers/md/bitmap.c         |   17 ++++++++++++-----
- include/linux/raid/bitmap.h |    1 +
- 2 files changed, 13 insertions(+), 5 deletions(-)
+Here's what I've discovered by poking around with mdadm. Looking at the
+system partition...
 
-diff .prev/drivers/md/bitmap.c ./drivers/md/bitmap.c
---- linux-2.6.21.4.orig/drivers/md/bitmap.c
-+++ linux-2.6.21.4/drivers/md/bitmap.c
-@@ -255,19 +255,25 @@ static struct page *read_sb_page(mddev_t
- 
- }
- 
--static int write_sb_page(mddev_t *mddev, long offset, struct page *page, int wait)
-+static int write_sb_page(struct bitmap *bitmap, struct page *page, int wait)
- {
- 	mdk_rdev_t *rdev;
- 	struct list_head *tmp;
-+	mddev_t *mddev = bitmap->mddev;
- 
- 	ITERATE_RDEV(mddev, rdev, tmp)
- 		if (test_bit(In_sync, &rdev->flags)
--		    && !test_bit(Faulty, &rdev->flags))
-+		    && !test_bit(Faulty, &rdev->flags)) {
-+			int size = PAGE_SIZE;
-+			if (page->index == bitmap->file_pages-1)
-+				size = roundup(bitmap->last_page_size,
-+					       bdev_hardsect_size(rdev->bdev));
- 			md_super_write(mddev, rdev,
--				       (rdev->sb_offset<<1) + offset
-+				       (rdev->sb_offset<<1) + bitmap->offset
- 				       + page->index * (PAGE_SIZE/512),
--				       PAGE_SIZE,
-+				       size,
- 				       page);
-+		}
- 
- 	if (wait)
- 		md_super_wait(mddev);
-@@ -282,7 +288,7 @@ static int write_page(struct bitmap *bit
- 	struct buffer_head *bh;
- 
- 	if (bitmap->file == NULL)
--		return write_sb_page(bitmap->mddev, bitmap->offset, page, wait);
-+		return write_sb_page(bitmap, page, wait);
- 
- 	bh = page_buffers(page);
- 
-@@ -923,6 +929,7 @@ static int bitmap_init_from_disk(struct 
- 			}
- 
- 			bitmap->filemap[bitmap->file_pages++] = page;
-+			bitmap->last_page_size = count;
- 		}
- 		paddr = kmap_atomic(page, KM_USER0);
- 		if (bitmap->flags & BITMAP_HOSTENDIAN)
---- linux-2.6.21.4.orig/include/linux/raid/bitmap.h
-+++ linux-2.6.21.4/include/linux/raid/bitmap.h
-@@ -232,6 +232,7 @@ struct bitmap {
- 	struct page **filemap; /* list of cache pages for the file */
- 	unsigned long *filemap_attr; /* attributes associated w/ filemap pages */
- 	unsigned long file_pages; /* number of pages in the file */
-+	int last_page_size; /* bytes in the last page */
- 
- 	unsigned long flags;
- 
+================
+================
+root@HAXD_HELPER:/etc# mdadm --examine /dev/md0
+mdadm: No super block found on /dev/md0 (Expected magic a92b4efc, got
+00000000)
 
+
+root@HAXD_HELPER:/etc# mdadm --detail /dev/md0
+/dev/md0:
+        Version : 00.90.02
+  Creation Time : Sat Jan 14 12:32:49 2006
+     Raid Level : raid1
+     Array Size : 385408 (376.38 MiB 394.66 MB)
+    Device Size : 385408 (376.38 MiB 394.66 MB)
+   Raid Devices : 4
+  Total Devices : 4
+Preferred Minor : 0
+    Persistence : Superblock is persistent
+
+    Update Time : Wed Jun  6 21:26:53 2007
+          State : active
+Active Devices : 4
+Working Devices : 4
+Failed Devices : 0
+  Spare Devices : 0
+
+           UUID : e87531ac:9fe1f96a:121f55a1:1220867e
+         Events : 0.110
+
+    Number   Major   Minor   RaidDevice State
+       0       8        1        0      active sync   /dev/sda1
+       1       8       33        1      active sync   /dev/sdc1
+       2       8       49        2      active sync   /dev/sdd1
+       3       8       17        3      active sync   /dev/sdb1
+================
+================
+
+
+I may not be understanding it correctly (or just not knowing what a good
+working config looks like), but it seems that all the --details are fine
+while the --examine says uh-oh. This is also weird since this is supposed to
+be the system partition (and the system works since, well, I'm in it and
+running commands), but it supposedly has a bad superblock.
+
+Anyways, there's probably some implementation magic that makes things
+happen. Thats not too important. I'm really just concerned about my data,
+which is on /md1.
+
+
+================
+================
+root@HAXD_HELPER:/etc# mdadm --examine /dev/md1     
+mdadm: No super block found on /dev/md1 (Expected magic a92b4efc, got
+7d7d7d7d)
+
+
+root@HAXD_HELPER:/etc# mdadm --detail /dev/md1
+/dev/md1:
+        Version : 00.90.02
+  Creation Time : Tue Dec 27 16:09:40 2005
+     Raid Level : raid5
+     Array Size : 1462862592 (1395.09 GiB 1497.97 GB)
+    Device Size : 487620864 (465.03 GiB 499.32 GB)
+   Raid Devices : 4
+  Total Devices : 1
+Preferred Minor : 1
+    Persistence : Superblock is persistent
+
+    Update Time : Wed Jun  6 22:22:04 2007
+          State : active, degraded
+Active Devices : 1
+Working Devices : 1
+Failed Devices : 0
+  Spare Devices : 0
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+           UUID : 37d97fb5:083ede07:8d3e9c16:0f299b85
+         Events : 0.300
+
+    Number   Major   Minor   RaidDevice State
+       0       8        3        0      active sync   /dev/sda3
+       1       8       19        1      active sync   /dev/sdb3
+       2       8       35        2      active sync   /dev/sdc3
+       3       8       51        3      active sync   /dev/sdd3
+================
+================
+
+
+What concerns me here are the lines that say there are 4 raid devices, but
+only 1 total device. The md device doesn't have a good superblock, but when
+I --examine the individual sd*3 partitions, they do appear to have good
+superblocks, so this makes me think that all hope is not yet lost...
+
+
+================
+================
+root@HAXD_HELPER:/etc# mdadm -E /dev/sd[abcd]3
+/dev/sda3:
+          Magic : a92b4efc
+        Version : 00.90.02
+           UUID : 37d97fb5:083ede07:8d3e9c16:0f299b85
+  Creation Time : Tue Dec 27 16:09:40 2005
+     Raid Level : raid5
+   Raid Devices : 4
+  Total Devices : 1
+Preferred Minor : 1
+
+    Update Time : Wed Jun  6 22:22:04 2007
+          State : active
+Active Devices : 4
+Working Devices : 1
+Failed Devices : 0
+  Spare Devices : 0
+       Checksum : 2cd505c9 - correct
+         Events : 0.300
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+      Number   Major   Minor   RaidDevice State
+this     0       8        3        0      active sync   /dev/sda3
+
+   0     0       8        3        0      active sync   /dev/sda3
+   1     1       8       19        1      active sync   /dev/sdb3
+   2     2       8       35        2      active sync   /dev/sdc3
+   3     3       8       51        3      active sync   /dev/sdd3
+/dev/sdb3:
+          Magic : a92b4efc
+        Version : 00.90.02
+           UUID : 37d97fb5:083ede07:8d3e9c16:0f299b85
+  Creation Time : Tue Dec 27 16:09:40 2005
+     Raid Level : raid5
+   Raid Devices : 4
+  Total Devices : 1
+Preferred Minor : 1
+
+    Update Time : Wed Jun  6 22:22:04 2007
+          State : active
+Active Devices : 4
+Working Devices : 1
+Failed Devices : 0
+  Spare Devices : 0
+       Checksum : 2cd505db - correct
+         Events : 0.300
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+      Number   Major   Minor   RaidDevice State
+this     1       8       19        1      active sync   /dev/sdb3
+
+   0     0       8        3        0      active sync   /dev/sda3
+   1     1       8       19        1      active sync   /dev/sdb3
+   2     2       8       35        2      active sync   /dev/sdc3
+   3     3       8       51        3      active sync   /dev/sdd3
+/dev/sdc3:
+          Magic : a92b4efc
+        Version : 00.90.02
+           UUID : 37d97fb5:083ede07:8d3e9c16:0f299b85
+  Creation Time : Tue Dec 27 16:09:40 2005
+     Raid Level : raid5
+   Raid Devices : 4
+  Total Devices : 1
+Preferred Minor : 1
+
+    Update Time : Wed Jun  6 22:22:04 2007
+          State : active
+Active Devices : 4
+Working Devices : 1
+Failed Devices : 0
+  Spare Devices : 0
+       Checksum : 2cd505ed - correct
+         Events : 0.300
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+      Number   Major   Minor   RaidDevice State
+this     2       8       35        2      active sync   /dev/sdc3
+
+   0     0       8        3        0      active sync   /dev/sda3
+   1     1       8       19        1      active sync   /dev/sdb3
+   2     2       8       35        2      active sync   /dev/sdc3
+   3     3       8       51        3      active sync   /dev/sdd3
+/dev/sdd3:
+          Magic : a92b4efc
+        Version : 00.90.02
+           UUID : 37d97fb5:083ede07:8d3e9c16:0f299b85
+  Creation Time : Tue Dec 27 16:09:40 2005
+     Raid Level : raid5
+   Raid Devices : 4
+  Total Devices : 1
+Preferred Minor : 1
+
+    Update Time : Wed Jun  6 22:22:04 2007
+          State : active
+Active Devices : 4
+Working Devices : 1
+Failed Devices : 0
+  Spare Devices : 0
+       Checksum : 2cd505ff - correct
+         Events : 0.300
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+      Number   Major   Minor   RaidDevice State
+this     3       8       51        3      active sync   /dev/sdd3
+
+   0     0       8        3        0      active sync   /dev/sda3
+   1     1       8       19        1      active sync   /dev/sdb3
+   2     2       8       35        2      active sync   /dev/sdc3
+   3     3       8       51        3      active sync   /dev/sdd3
+================
+================
+
+
+So... it seems to me like the individual sd*3 devices have the right
+superblock info, but the superblock info on the md1 device got bust. Is
+there any way I can tell the md1 device to look at the individual sd*3
+devices for its superblock? I'm not sure how to phrase this in terms of
+proper raid/mdadm terminology (or if I even have the right idea).
+
+Finally, it may help to figure out how these devices are scripted to be set
+up at boot-time. Again, this is a embedded linux NAS device, so all of this
+is hidden and would have to be reverse-engineered. I've been told that
+creating a /initrd directory un-hides all of the boot-time scripts/ramdisk
+(and indeed this works for my device), but I have no idea what to look for
+in here or where to start.
+
+Any help from a raid guru would be infinitely helpful.
 -- 
+View this message in context: http://www.nabble.com/Help-on-Recovering-a-Corrupted-raid5-Partition-tf3891709.html#a11032621
+Sent from the linux-raid mailing list archive at Nabble.com.
+
