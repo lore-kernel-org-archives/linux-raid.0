@@ -1,62 +1,47 @@
-From: Nix <nix@esperi.org.uk>
-Subject: Re: below 10MB/s write on raid5
-Date: Mon, 11 Jun 2007 23:24:10 +0100
-Message-ID: <87tzteku45.fsf@hades.wkstn.nix>
-References: <200706111446.55813.Dexter.Filmore@gmx.de>
-	<Pine.LNX.4.64.0706110847380.31708@p34.internal.lan>
-	<200706111528.11828.Dexter.Filmore@gmx.de>
-	<Pine.LNX.4.64.0706110928420.31708@p34.internal.lan>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: Some RAID levels do not support bitmap
+Date: Mon, 11 Jun 2007 19:15:59 -0400
+Message-ID: <466DD7AF.7030107@tmr.com>
+References: <Pine.LNX.4.64.0706111448500.19578@fbirervta.pbzchgretzou.qr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0706110928420.31708@p34.internal.lan> (Justin Piszcz's message of "11 Jun 2007 14:29:24 +0100")
+In-Reply-To: <Pine.LNX.4.64.0706111448500.19578@fbirervta.pbzchgretzou.qr>
 Sender: linux-raid-owner@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: Dexter Filmore <Dexter.Filmore@gmx.de>, linux-raid@vger.kernel.org
+To: Jan Engelhardt <jengelh@computergmbh.de>
+Cc: linux-raid@vger.kernel.org, neilb@suse.de
 List-Id: linux-raid.ids
 
-On 11 Jun 2007, Justin Piszcz told this:
-> You can do a read test.
+Jan Engelhardt wrote:
+> Hi,
 >
-> 10gb read test:
 >
-> dd if=/dev/md0 bs=1M count=10240 of=/dev/null
+> RAID levels 0 and 4 do not seem to like the -b internal. Is this 
+> intentional? Runs 2.6.20.2 on i586.
+> (BTW, do you already have a PAGE_SIZE=8K fix?)
 >
-> What is the result?
+> 14:47 ichi:/dev # mdadm -C /dev/md0 -l 4 -e 1.0 -b internal -n 2 /dev/ram[01]
+> mdadm: RUN_ARRAY failed: Input/output error
+> mdadm: stopped /dev/md0
+> 14:47 ichi:/dev # mdadm -C /dev/md0 -l 0 -e 1.0 -b internal -n 2 /dev/ram[01]
+> mdadm: RUN_ARRAY failed: Cannot allocate memory
+> mdadm: stopped /dev/md0
 >
-> I've read that LVM can incur a 30-50% slowdown.
+> Right... md: bitmaps not supported for this level.
+>   
 
-FWIW I see a much smaller penalty than that.
+Bitmaps show what data has been modified but not written. For RAID-0 
+there is no copy, therefore there can be no bitmap to show what "still 
+needs to be updated." I would have thought that RAID-4 would support 
+bitmaps, but maybe it was just never added because use of RAID-4 is 
+pretty uncommon.
 
-loki:~# lvs -o +devices
-  LV           VG    Attr   LSize   Origin Snap%  Move Log Copy%  Devices
-[...]
-  usr          raid  -wi-ao   6.00G                               /dev/md1(50)
-
-loki:~# time dd if=/dev/md1 bs=1000 count=502400 of=/dev/null
-502400+0 records in
-502400+0 records out
-502400000 bytes (502 MB) copied, 16.2995 s, 30.8 MB/s
-
-real    0m16.360s
-user    0m0.310s
-sys     0m11.780s
-
-loki:~# time dd if=/dev/raid/usr bs=1000 count=502400 of=/dev/null
-502400+0 records in
-502400+0 records out
-502400000 bytes (502 MB) copied, 18.6172 s, 27.0 MB/s
-
-real    0m18.790s
-user    0m0.380s
-sys     0m14.750s
-
-
-So there's a penalty, sure, accounted for mostly in sys time, but it's
-only about 10%: small enough that I at least can ignore it in exchange
-for the administrative convenience of LVM.
+BTW: RAID-4 seems to work fine with an external bitmap. Were you trying 
+to do "internal?"
 
 -- 
-`... in the sense that dragons logically follow evolution so they would
- be able to wield metal.' --- Kenneth Eng's colourless green ideas sleep
- furiously
+bill davidsen <davidsen@tmr.com>
+  CTO TMR Associates, Inc
+  Doing interesting things with small computers since 1979
+
