@@ -1,108 +1,52 @@
-From: Tomka Gergely <tomka@avaxio.net>
-Subject: spare group
-Date: Mon, 11 Jun 2007 15:45:18 +0200
-Message-ID: <466D51EE.7030509@avaxio.net>
-Reply-To: tomka@avaxio.net
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: below 10MB/s write on raid5
+Date: Mon, 11 Jun 2007 10:07:24 -0400 (EDT)
+Message-ID: <Pine.LNX.4.64.0706111007010.31708@p34.internal.lan>
+References: <200706111446.55813.Dexter.Filmore@gmx.de>
+ <200706111528.11828.Dexter.Filmore@gmx.de> <Pine.LNX.4.64.0706110928420.31708@p34.internal.lan>
+ <200706111606.11006.Dexter.Filmore@gmx.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-2; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <200706111606.11006.Dexter.Filmore@gmx.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Linux, Raid lista" <linux-raid@vger.kernel.org>
+To: Dexter Filmore <Dexter.Filmore@gmx.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Good day!
 
-I have problems with spare-groups. The problem: spare groups dont work 
-for me. How can i use ths function?
 
-The test :
+On Mon, 11 Jun 2007, Dexter Filmore wrote:
 
-# mdadm26 -D /dev/md0
-/dev/md0:
-         Version : 01.02.03
-   Creation Time : Mon Jun 11 15:25:23 2007
-      Raid Level : raid5
-      Array Size : 19534720 (18.63 GiB 20.00 GB)
-   Used Dev Size : 19534720 (9.31 GiB 10.00 GB)
-    Raid Devices : 3
-   Total Devices : 3
-Preferred Minor : 0
-     Persistence : Superblock is persistent
+>> 10gb read test:
+>>
+>> dd if=/dev/md0 bs=1M count=10240 of=/dev/null
+>>
+>> What is the result?
+>
+> 71,7MB/s - but that's reading to null. *writing* real data however looks quite
+> different.
+>
+>>
+>> I've read that LVM can incur a 30-50% slowdown.
+>>
+> Even then the 8-10MB/s I get would be a little low.
+>
+>
+>
+> -- 
+> -----BEGIN GEEK CODE BLOCK-----
+> Version: 3.12
+> GCS d--(+)@ s-:+ a- C++++ UL++ P+>++ L+++>++++ E-- W++ N o? K-
+> w--(---) !O M+ V- PS+ PE Y++ PGP t++(---)@ 5 X+(++) R+(++) tv--(+)@
+> b++(+++) DI+++ D- G++ e* h>++ r* y?
+> ------END GEEK CODE BLOCK------
+>
+> http://www.stop1984.com
+> http://www.againsttcpa.com
+>
 
-     Update Time : Mon Jun 11 16:05:21 2007
-           State : clean, degraded
-  Active Devices : 2
-Working Devices : 2
-  Failed Devices : 1
-   Spare Devices : 0
+Would it be possible to trash the LVM and write directly to the MD device? 
+I'd be really curious to see what it gets with XFS ontop of MD.
 
-          Layout : left-symmetric
-      Chunk Size : 64K
-
-            Name : ursula:T1  (local to host ursula)
-            UUID : 3e420024:281f9bb1:fd9ef39b:c18153b1
-          Events : 10
-
-     Number   Major   Minor   RaidDevice State
-        0       0        0        0      removed
-        1       8       17        1      active sync   /dev/sdb1
-        3       8       33        2      active sync   /dev/sdc1
-
-        0       8        1        -      faulty spare   /dev/sda1
-
-# mdadm26 -D /dev/md1
-/dev/md1:
-         Version : 01.02.03
-   Creation Time : Mon Jun 11 15:35:40 2007
-      Raid Level : raid5
-      Array Size : 19534720 (18.63 GiB 20.00 GB)
-   Used Dev Size : 19534720 (9.31 GiB 10.00 GB)
-    Raid Devices : 3
-   Total Devices : 4
-Preferred Minor : 1
-     Persistence : Superblock is persistent
-
-     Update Time : Mon Jun 11 15:38:23 2007
-           State : clean
-  Active Devices : 3
-Working Devices : 4
-  Failed Devices : 0
-   Spare Devices : 1
-
-          Layout : left-symmetric
-      Chunk Size : 64K
-
-            Name : ursula:T2  (local to host ursula)
-            UUID : fb8ece28:9a6a31f8:700f37f6:7ee91bcf
-          Events : 6
-
-     Number   Major   Minor   RaidDevice State
-        0       8       49        0      active sync   /dev/sdd1
-        1       8       65        1      active sync   /dev/sde1
-        3       8       81        2      active sync   /dev/sdf1
-
-        4       8       97        -      spare   /dev/sdg1
-
-# cat /etc/mdadm/mdadm.conf
-DEVICE /dev/sd[a-g]1
-
-HOMEHOST ursula
-
-ARRAY /dev/md1 level=raid5 devices=/dev/sd[defg]1 num-devices=3 
-spares=1 spare-group=ubul name=ursula:T2 
-UUID=fb8ece28:9a6a31f8:700f37f6:7ee91bcf
-ARRAY /dev/md0 level=raid5 devices=/dev/sd[abc]1 num-devices=3 
-spare-group=ubul name=ursula:T1 UUID=3e420024:281f9bb1:fd9ef39b:c18153b1
-
-According to the source:
-
-* If an array has active < raid && spare == 0 && spare_group !=NULL
-* Look for another array with spare > 0 and active == raid and same 
-spare_group
-* if found, choose a device and hotremove/hotadd
-
-This is not happening. What is my mistake?
-
-tg
-
+Justin.
