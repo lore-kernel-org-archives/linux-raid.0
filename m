@@ -1,115 +1,55 @@
-From: simon redfern <simon@musicpictures.com>
-Subject: what is the best approach for fixing a degraded RAID5 (one drive
- failed) using mdadm?
-Date: Mon, 11 Jun 2007 15:34:09 +0200
-Message-ID: <466D4F51.40009@musicpictures.com>
+From: Jon Nelson <jnelson-linux-raid@jamponi.net>
+Subject: Re: below 10MB/s write on raid5
+Date: Mon, 11 Jun 2007 08:45:14 -0500 (CDT)
+Message-ID: <Pine.LNX.4.64.0706110844280.5806@gheavc.wnzcbav.cig>
+References: <200706111446.55813.Dexter.Filmore@gmx.de>
+ <Pine.LNX.4.64.0706110847380.31708@p34.internal.lan> <200706111528.11828.Dexter.Filmore@gmx.de>
+ <Pine.LNX.4.64.0706110928420.31708@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.64.0706110928420.31708@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Folks,
+On Mon, 11 Jun 2007, Justin Piszcz wrote:
 
-Greetings from Berlin.
+> 
+> 
+> On Mon, 11 Jun 2007, Dexter Filmore wrote:
+> 
+> > On Monday 11 June 2007 14:47:50 Justin Piszcz wrote:
+> > > On Mon, 11 Jun 2007, Dexter Filmore wrote:
+> > > > I recently upgraded my file server, yet I'm still unsatisfied with the
+> > > > write speed.
+> > > > Machine now is a Athlon64 3400+ (Socket 754) equipped with 1GB of RAM.
+> > > > The four RAID disks are attached to the board's onbaord sATA controller
+> > > > (Sil3114 attached via PCI)
+> > > > Kernel is 2.6.21.1, custom on Slackware 11.0.
+> > > > RAID is on four Samsung SpinPoint disks, has LVM, 3 volumes atop of each
+> > > > XFS.
+> > > >
+> > > > The machine does some other work, too, but still I would have suspected
+> > > > to get into the 20-30MB/s area. Too much asked for?
+> > > >
+> > > > Dex
+> > >
+> > > What do you get without LVM?
+> >
+> > Hard to tell: the PV hogs all of the disk space, can't really do non-LVM
+> > tests.
+> 
+> You can do a read test.
+> 
+> 10gb read test:
+> 
+> dd if=/dev/md0 bs=1M count=10240 of=/dev/null
 
-We have a RAID5 (originally with 4 drives) - but it seems 1 drive has 
-failed although it still appears in lsscsi.
-Of the remaining 3 drives, 2 have the correct Event that matches the 
-Array Event.
-
-My question is: what is the best way to get the array to a readable 
-state? Do we need to replace the failed drive or should we be able to 
-recover with the remaining 3 drives?
-
-Here is some more info:
-
-At boot we have messages like the following:
-
-raid5 failed to run raid set md0
-....
-mdadm: failed to RUN_ARRAY
-......
-could not bd_claim sda2
-......
-md0 already running, cannot run sdb2
-.......
-
-here is our mdadm.conf:
-
-cat /etc/mdadm.conf
-
-/dev/md0 <- the raid
-
-/dev/sda2 <- the raid members.
-/dev/sdb2
-/dev/sdc2
-/dev/sdd2
-
-
-and our mdstat:
-
-cat /proc/mdstat
-
-Personalities : [raid5]
-md0 : inactive sda2[0] sdd2[3] sdc2[2]
-a-number blocks
-
-unused devices <none>
-
-Thus it seems we are missing sdb2[1] from the array.
+eek! Make sure to use iflag=direct
+with that otherwise you'll get cached reads and that will throw
+the numbers off considerably.
 
 
-mdadm --detail /dev/md0
-
-Device Site: 288.47 GB
-Raid Devices: 4
-Total Devices: 3
-Preferred Minor : 0
-Persistance: Superblock is persistent
-
-Update Time: Jun 1 2004 (note: system date is june 17 2007)
-State: active, degraded
-Active devices: 3
-Working devices: 3
-Failed Devices: 0
-Spare Devices: 0
-Layout: left-symetric
-Chunk Size: 128K
-
-UUID: a-long-char-string.
-Events: 0.35025133
-
-
-Number     Major    Minor     RaidDevice     State
-0        8        2        0            active sync     /dev/sda2
-1        0        0        -            removed   
-2        8        34        2            active sync     /dev/sdc2
-3        8        50        3            active sync     /dev/sdd2
-
------------------- 
-
-It seems that the array is both dirty and degraded. Only two of the drives have the same "Event" 
-and one would hope that at least 3 (in a 4 drive array) would have the same "Event" number.
-Guess this is the number of operations on each drive since they (all) joined the raid.
-
-this is discovered thus:
-
-mdadm -E /dev/sd[b-i]1 | grep Event
-
-
-Events : 0.32012979 <- different!
-Events : 0.35025133
-Events : 0.35025133
-
-However, lsscsi shows all 4 drives (as ATA drives)
-
-Any suggestions much appreciated!
-
-cheers,
-
-Simon.
-
-
+--
+Jon Nelson <jnelson-linux-raid@jamponi.net>
