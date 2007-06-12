@@ -1,63 +1,67 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: spare group
-Date: Tue, 12 Jun 2007 19:54:28 +1000
-Message-ID: <18030.27988.798462.933425@notabene.brown>
-References: <466D51EE.7030509@avaxio.net>
-	<18029.57132.285522.284156@notabene.brown>
-	<466E3E58.8050105@avaxio.net>
-	<18030.17507.290572.911043@notabene.brown>
-	<466E5206.20200@avaxio.net>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: Some RAID levels do not support bitmap
+Date: Tue, 12 Jun 2007 11:52:47 -0400
+Message-ID: <466EC14F.1080501@tmr.com>
+References: <Pine.LNX.4.64.0706111448500.19578@fbirervta.pbzchgretzou.qr>	<466DD7AF.7030107@tmr.com> <18029.56610.868907.654059@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Tomka Gergely on Tuesday June 12
+In-Reply-To: <18029.56610.868907.654059@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: tomka@avaxio.net
-Cc: "Linux, Raid lista" <linux-raid@vger.kernel.org>
+To: Neil Brown <neilb@suse.de>
+Cc: Jan Engelhardt <jengelh@computergmbh.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday June 12, tomka@avaxio.net wrote:
-> 
-> I am very sorry, but it wont works with .9 superblocks also :( We 
-> missing something small, but important here. Before you start to code. 
-> mdadm was running in monitor mode, and reported a Fail. mdadm is the 
-> latest version, 2.6.2.
-> 
-> tg
+Neil Brown wrote:
+> On Monday June 11, davidsen@tmr.com wrote:
+>   
+>> Jan Engelhardt wrote:
+>>     
+>>> Hi,
+>>>
+>>>
+>>> RAID levels 0 and 4 do not seem to like the -b internal. Is this 
+>>> intentional? Runs 2.6.20.2 on i586.
+>>> (BTW, do you already have a PAGE_SIZE=8K fix?)
+>>>
+>>> 14:47 ichi:/dev # mdadm -C /dev/md0 -l 4 -e 1.0 -b internal -n 2 /dev/ram[01]
+>>> mdadm: RUN_ARRAY failed: Input/output error
+>>> mdadm: stopped /dev/md0
+>>> 14:47 ichi:/dev # mdadm -C /dev/md0 -l 0 -e 1.0 -b internal -n 2 /dev/ram[01]
+>>> mdadm: RUN_ARRAY failed: Cannot allocate memory
+>>> mdadm: stopped /dev/md0
+>>>
+>>> Right... md: bitmaps not supported for this level.
+>>>   
+>>>       
+>> Bitmaps show what data has been modified but not written. For RAID-0 
+>> there is no copy, therefore there can be no bitmap to show what "still 
+>> needs to be updated." I would have thought that RAID-4 would support 
+>> bitmaps, but maybe it was just never added because use of RAID-4 is 
+>> pretty uncommon.
+>>     
+>
+> "added late" rather than "never added".  2.6.21 supports bitmaps on
+> RAID-4,  The patch is about 2 lines and would apply to 2.6.20 with no
+> trouble.
+>
+> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=3d37890baa4ca962f8a6b77525b8f3d0698eee09
+>
+>
+>   
+>> BTW: RAID-4 seems to work fine with an external bitmap. Were you trying 
+>> to do "internal?"
+>>     
+>
+> I suspect you were using 2.6.21-rc6 or later?
 
-Hmmm..... 
-[tests code]
+No, the machine I had for trial was 2.6.15 with a few patches, none in 
+RAID. Seemed to work just fine if I put the bitmap on an external 
+device. Was that not as expected?
 
-Yes, you are right.  It looks like a bug was introduced in 2.6 which
-broke various aspects of --monitor.  I guess I need to add some
---monitor tests to my regression test suite.
+-- 
+bill davidsen <davidsen@tmr.com>
+  CTO TMR Associates, Inc
+  Doing interesting things with small computers since 1979
 
-This patch should fix it.
-
-Thanks again,
-NeilBrown
-
-
--------------------------------
-Fix spare migration and other problems with --monitor.
-
-2.6 broke --monitor in various ways, including spare migration
-stopped working.  This fixes it.
-
-
-### Diffstat output
- ./Monitor.c |    1 +
- 1 file changed, 1 insertion(+)
-
-diff .prev/Monitor.c ./Monitor.c
---- .prev/Monitor.c	2007-02-22 14:59:11.000000000 +1100
-+++ ./Monitor.c	2007-06-12 19:48:34.000000000 +1000
-@@ -328,6 +328,7 @@ int Monitor(mddev_dev_t devlist,
- 			for (i=0; i<MaxDisks && i <= array.raid_disks + array.nr_disks;
- 			     i++) {
- 				mdu_disk_info_t disc;
-+				disc.number = i;
- 				if (ioctl(fd, GET_DISK_INFO, &disc) >= 0) {
- 					info[i].state = disc.state;
- 					info[i].major = disc.major;
