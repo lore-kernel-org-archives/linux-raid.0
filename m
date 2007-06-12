@@ -1,46 +1,37 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: spare group
-Date: Tue, 12 Jun 2007 16:59:47 +1000
-Message-ID: <18030.17507.290572.911043@notabene.brown>
-References: <466D51EE.7030509@avaxio.net>
-	<18029.57132.285522.284156@notabene.brown>
-	<466E3E58.8050105@avaxio.net>
+From: "Thorsten Wolf" <T_Wolf@gmx.net>
+Subject: SLES 9 SP3 and mdadm 2.6.1 (via rpm)
+Date: Tue, 12 Jun 2007 09:24:08 +0200
+Message-ID: <20070612072408.19140@gmx.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Tomka Gergely on Tuesday June 12
 Sender: linux-raid-owner@vger.kernel.org
-To: tomka@avaxio.net
-Cc: "Linux, Raid lista" <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday June 12, tomka@avaxio.net wrote:
-> >> According to the source:
-> >>
-> >> * If an array has active < raid && spare == 0 && spare_group !=NULL
-> >> * Look for another array with spare > 0 and active == raid and same 
-> >> spare_group
-> >> * if found, choose a device and hotremove/hotadd
-> >>
-> >> This is not happening. What is my mistake?
-> > 
-> > Is "mdadm --monitor" running?  That is required to perform
-> > spare-migration.
-> 
-> Yes, of course.
+Hello everyone.
 
-Good - I need to get the obvious things out of the way first :-)
+I've got a SLES9 SP3 running and I've been quite happy with it so far.
 
-(reads code).
+Recently, I've created a 4 disk spanning RAID-5 on our company server. Runs quite nice and we're happy with that too. I created that RAID using the SLES mdadm (1.4 I believe) package.
 
-Ahhh. You are using version-1 superblocks aren't you?  That code only
-works for version-0.90 superblocks.  That was careless of me.  It
-shouldn't be hard to make it work more generally, but it looks like it
-will be slightly more than trivial.  I'll try to get you a patch in
-the next day or so (feel free to remind me if I seem to have
-forgotten).
+After discovering that there is a much newer mdadm out here (2.6.1), I decided to upgrade. It went just fine. Raid still running at 120 MB/sec.
 
-Thanks for testing and reporting this problem.
+After adding a disk to the raid, which went fine as well...... BUT:
 
-NeilBrown
+The added disk /dev/sda1 shows up in /proc/mdstat, but does not have the "spare (s)" flag.
+
+Plus... the --grow doesn't work...
+
+I get the: mdadm: /dev/md0: Cannot get array details from sysfs error which has been discussed before. Can it be that this is caused by the 2.6.5-7.2xx Kernel? Any ideas?
+
+regards,
+
+Thorsten
+-- 
+Contact me on ICQ: 7656468
+skype://sysfried
+
+GMX FreeMail: 1 GB Postfach, 5 E-Mail-Adressen, 10 Free SMS.
+Alle Infos und kostenlose Anmeldung: http://www.gmx.net/de/go/freemail
