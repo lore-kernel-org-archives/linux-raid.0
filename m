@@ -1,114 +1,63 @@
-From: Tomka Gergely <tomka@avaxio.net>
+From: Neil Brown <neilb@suse.de>
 Subject: Re: spare group
-Date: Tue, 12 Jun 2007 09:57:58 +0200
-Message-ID: <466E5206.20200@avaxio.net>
-References: <466D51EE.7030509@avaxio.net>	<18029.57132.285522.284156@notabene.brown>	<466E3E58.8050105@avaxio.net> <18030.17507.290572.911043@notabene.brown>
-Reply-To: tomka@avaxio.net
+Date: Tue, 12 Jun 2007 19:54:28 +1000
+Message-ID: <18030.27988.798462.933425@notabene.brown>
+References: <466D51EE.7030509@avaxio.net>
+	<18029.57132.285522.284156@notabene.brown>
+	<466E3E58.8050105@avaxio.net>
+	<18030.17507.290572.911043@notabene.brown>
+	<466E5206.20200@avaxio.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18030.17507.290572.911043@notabene.brown>
+In-Reply-To: message from Tomka Gergely on Tuesday June 12
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
+To: tomka@avaxio.net
 Cc: "Linux, Raid lista" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Neil Brown =EDrta:
-> (reads code).
->=20
-> Ahhh. You are using version-1 superblocks aren't you?  That code only
-> works for version-0.90 superblocks.  That was careless of me.  It
-> shouldn't be hard to make it work more generally, but it looks like i=
-t
-> will be slightly more than trivial.  I'll try to get you a patch in
-> the next day or so (feel free to remind me if I seem to have
-> forgotten).
->=20
-> Thanks for testing and reporting this problem.
->=20
-> NeilBrown
+On Tuesday June 12, tomka@avaxio.net wrote:
+> 
+> I am very sorry, but it wont works with .9 superblocks also :( We 
+> missing something small, but important here. Before you start to code. 
+> mdadm was running in monitor mode, and reported a Fail. mdadm is the 
+> latest version, 2.6.2.
+> 
+> tg
 
-# mdadm26 --detail /dev/md0
-/dev/md0:
-         Version : 00.90.03
-   Creation Time : Tue Jun 12 10:31:08 2007
-      Raid Level : raid5
-      Array Size : 19534848 (18.63 GiB 20.00 GB)
-   Used Dev Size : 9767424 (9.31 GiB 10.00 GB)
-    Raid Devices : 3
-   Total Devices : 4
-Preferred Minor : 0
-     Persistence : Superblock is persistent
+Hmmm..... 
+[tests code]
 
-     Update Time : Tue Jun 12 10:33:35 2007
-           State : clean
-  Active Devices : 3
-Working Devices : 4
-  Failed Devices : 0
-   Spare Devices : 1
+Yes, you are right.  It looks like a bug was introduced in 2.6 which
+broke various aspects of --monitor.  I guess I need to add some
+--monitor tests to my regression test suite.
 
-          Layout : left-symmetric
-      Chunk Size : 64K
+This patch should fix it.
 
-            UUID : 5fd83926:01739a55:36458d87:119f8994 (local to host=20
-ursula)
-          Events : 0.4
+Thanks again,
+NeilBrown
 
-     Number   Major   Minor   RaidDevice State
-        0       8        1        0      active sync   /dev/sda1
-        1       8       17        1      active sync   /dev/sdb1
-        2       8       33        2      active sync   /dev/sdc1
 
-        3       8       49        -      spare   /dev/sdd1
+-------------------------------
+Fix spare migration and other problems with --monitor.
 
-/dev/md1:
-         Version : 00.90.03
-   Creation Time : Tue Jun 12 10:31:29 2007
-      Raid Level : raid5
-      Array Size : 19534848 (18.63 GiB 20.00 GB)
-   Used Dev Size : 9767424 (9.31 GiB 10.00 GB)
-    Raid Devices : 3
-   Total Devices : 3
-Preferred Minor : 1
-     Persistence : Superblock is persistent
+2.6 broke --monitor in various ways, including spare migration
+stopped working.  This fixes it.
 
-     Update Time : Tue Jun 12 10:36:18 2007
-           State : clean, degraded
-  Active Devices : 2
-Working Devices : 2
-  Failed Devices : 1
-   Spare Devices : 0
 
-          Layout : left-symmetric
-      Chunk Size : 64K
+### Diffstat output
+ ./Monitor.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-            UUID : 815d6fc4:a55c2602:36458d87:119f8994 (local to host=20
-ursula)
-          Events : 0.6
-
-     Number   Major   Minor   RaidDevice State
-        0       8       65        0      active sync   /dev/sde1
-        1       8       81        1      active sync   /dev/sdf1
-        2       0        0        2      removed
-
-        3       8       97        -      faulty spare   /dev/sdg1
-
-ARRAY /dev/md1 level=3Draid5 num-devices=3D3 spare-group=3Dubul=20
-UUID=3D815d6fc4:a55c2602:36458d87:119f8994
-ARRAY /dev/md0 level=3Draid5 num-devices=3D3 spares=3D1 spare-group=3Du=
-bul=20
-UUID=3D5fd83926:01739a55:36458d87:119f8994
-
-I am very sorry, but it wont works with .9 superblocks also :( We=20
-missing something small, but important here. Before you start to code.=20
-mdadm was running in monitor mode, and reported a Fail. mdadm is the=20
-latest version, 2.6.2.
-
-tg
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff .prev/Monitor.c ./Monitor.c
+--- .prev/Monitor.c	2007-02-22 14:59:11.000000000 +1100
++++ ./Monitor.c	2007-06-12 19:48:34.000000000 +1000
+@@ -328,6 +328,7 @@ int Monitor(mddev_dev_t devlist,
+ 			for (i=0; i<MaxDisks && i <= array.raid_disks + array.nr_disks;
+ 			     i++) {
+ 				mdu_disk_info_t disc;
++				disc.number = i;
+ 				if (ioctl(fd, GET_DISK_INFO, &disc) >= 0) {
+ 					info[i].state = disc.state;
+ 					info[i].major = disc.major;
