@@ -1,48 +1,50 @@
-From: NeilBrown <neilb@suse.de>
-Subject: [PATCH 001 of 2] md: Fix two raid10 bugs.
-Date: Tue, 12 Jun 2007 11:09:29 +1000
-Message-ID: <1070612010929.25355@suse.de>
-References: <20070612110634.25171.patches@notabene>
+From: Jon Nelson <jnelson-linux-raid@jamponi.net>
+Subject: Re: below 10MB/s write on raid5
+Date: Mon, 11 Jun 2007 21:35:30 -0500 (CDT)
+Message-ID: <Pine.LNX.4.64.0706112134510.5806@gheavc.wnzcbav.cig>
+References: <200706111446.55813.Dexter.Filmore@gmx.de>
+ <Pine.LNX.4.64.0706110847380.31708@p34.internal.lan> <200706111528.11828.Dexter.Filmore@gmx.de>
+ <Pine.LNX.4.64.0706110928420.31708@p34.internal.lan> <87tzteku45.fsf@hades.wkstn.nix>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <87tzteku45.fsf@hades.wkstn.nix>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Neil Brown <neilb@suse.de>, stable@kernel.org
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Mon, 11 Jun 2007, Nix wrote:
 
-1/ When resyncing a degraded raid10 which has more than 2 copies of each block,
-  garbage can get synced on top of good data.
+> On 11 Jun 2007, Justin Piszcz told this:
+> > You can do a read test.
+> >
+> > 10gb read test:
+> >
+> > dd if=/dev/md0 bs=1M count=10240 of=/dev/null
+> >
+> > What is the result?
+> >
+> > I've read that LVM can incur a 30-50% slowdown.
+> 
+> FWIW I see a much smaller penalty than that.
+> 
+> loki:~# lvs -o +devices
+>   LV           VG    Attr   LSize   Origin Snap%  Move Log Copy%  Devices
+> [...]
+>   usr          raid  -wi-ao   6.00G                               /dev/md1(50)
+> 
+> loki:~# time dd if=/dev/md1 bs=1000 count=502400 of=/dev/null
+> 502400+0 records in
+> 502400+0 records out
+> 502400000 bytes (502 MB) copied, 16.2995 s, 30.8 MB/s
+> 
+> loki:~# time dd if=/dev/raid/usr bs=1000 count=502400 of=/dev/null
+> 502400+0 records in
+> 502400+0 records out
+> 502400000 bytes (502 MB) copied, 18.6172 s, 27.0 MB/s
 
-2/ We round the wrong way in part of the device size calculation, which
-  can cause confusion.
+And what is it like with 'iflag=direct' which I really feel you have to 
+use, otherwise you get caching.
 
-Signed-off-by: Neil Brown <neilb@suse.de>
-Cc: stable@kernel.org
-
-### Diffstat output
- ./drivers/md/raid10.c |    6 ++++++
- 1 file changed, 6 insertions(+)
-
-diff .prev/drivers/md/raid10.c ./drivers/md/raid10.c
---- .prev/drivers/md/raid10.c	2007-06-12 10:19:04.000000000 +1000
-+++ ./drivers/md/raid10.c	2007-06-12 10:20:31.000000000 +1000
-@@ -1866,6 +1866,7 @@ static sector_t sync_request(mddev_t *md
- 			int d = r10_bio->devs[i].devnum;
- 			bio = r10_bio->devs[i].bio;
- 			bio->bi_end_io = NULL;
-+			clear_bit(BIO_UPTODATE, &bio->bi_flags);
- 			if (conf->mirrors[d].rdev == NULL ||
- 			    test_bit(Faulty, &conf->mirrors[d].rdev->flags))
- 				continue;
-@@ -2036,6 +2037,11 @@ static int run(mddev_t *mddev)
- 	/* 'size' is now the number of chunks in the array */
- 	/* calculate "used chunks per device" in 'stride' */
- 	stride = size * conf->copies;
-+
-+	/* We need to round up when dividing by raid_disks to
-+	 * get the stride size.
-+	 */
-+	stride += conf->raid_disks - 1;
- 	sector_div(stride, conf->raid_disks);
- 	mddev->size = stride  << (conf->chunk_shift-1);
- 
+--
+Jon Nelson <jnelson-linux-raid@jamponi.net>
