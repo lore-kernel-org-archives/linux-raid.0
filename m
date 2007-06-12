@@ -1,37 +1,42 @@
 From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: [PATCH 000 of 2] md: Introduction - bugfixes for md/raid{1,10}
-Date: Tue, 12 Jun 2007 13:04:46 -0400
-Message-ID: <466ED22E.8050506@tmr.com>
-References: <20070612110634.25171.patches@notabene>
+Subject: Re: below 10MB/s write on raid5
+Date: Tue, 12 Jun 2007 13:16:38 -0400
+Message-ID: <466ED4F6.5060204@tmr.com>
+References: <200706111446.55813.Dexter.Filmore@gmx.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20070612110634.25171.patches@notabene>
+In-Reply-To: <200706111446.55813.Dexter.Filmore@gmx.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Mike Accetta <maccetta@laurelnetworks.com>, stable@kernel.org
+To: Dexter Filmore <Dexter.Filmore@gmx.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-NeilBrown wrote:
-> Following are a couple of bugfixes for raid10 and raid1.  They only
-> affect fairly uncommon configurations (more than 2 mirrors) and can
-> cause data corruption.  Thay are suitable for 2.6.22 and 21-stable.
+Dexter Filmore wrote:
+> I recently upgraded my file server, yet I'm still unsatisfied with the write 
+> speed.
+> Machine now is a Athlon64 3400+ (Socket 754) equipped with 1GB of RAM.
+> The four RAID disks are attached to the board's onbaord sATA controller 
+> (Sil3114 attached via PCI)
+> Kernel is 2.6.21.1, custom on Slackware 11.0.
+> RAID is on four Samsung SpinPoint disks, has LVM, 3 volumes atop of each XFS.
 >
-> Thanks,
-> NeilBrown
->
->
->  [PATCH 001 of 2] md: Fix two raid10 bugs.
->  [PATCH 002 of 2] md: Fix bug in error handling during raid1 repair.
+> The machine does some other work, too, but still I would have suspected to get 
+> into the 20-30MB/s area. Too much asked for?
+>   
 
-I don't know about uncommon, given that I have six machines in this 
-building with three way RAID-1 for the boot partition, to be sure I can 
-get off the ground enough to get the other partitions up.
+Increase your stripe cache size in /sys/block/mdX/md/stripe_cache_size. 
+If you have a chunk size of 256, try setting the cache size to 8192 and 
+see if your write performance ends up ~100MB/s or so.
 
-And since you added "write-mostly" for remote mirrors I do have a few 
-systems doing >2 mirrors as well. This set of patches definitely will be 
-in my kernel by this afternoon.
+   echo 8192 > /sys/block/mdX/md/stripe_cache_size
+
+Where "X" is your array name, of course.
+
+Note, larger values will help more, but it's definitely diminishing 
+returns, so don't get carried away. There was a report of problems with 
+size > 32768, I don't remember the details, so I would avoid that as well.
 
 -- 
 bill davidsen <davidsen@tmr.com>
