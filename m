@@ -1,56 +1,46 @@
-From: Tomka Gergely <tomka@avaxio.net>
+From: Neil Brown <neilb@suse.de>
 Subject: Re: spare group
-Date: Tue, 12 Jun 2007 08:34:00 +0200
-Message-ID: <466E3E58.8050105@avaxio.net>
-References: <466D51EE.7030509@avaxio.net> <18029.57132.285522.284156@notabene.brown>
-Reply-To: tomka@avaxio.net
+Date: Tue, 12 Jun 2007 16:59:47 +1000
+Message-ID: <18030.17507.290572.911043@notabene.brown>
+References: <466D51EE.7030509@avaxio.net>
+	<18029.57132.285522.284156@notabene.brown>
+	<466E3E58.8050105@avaxio.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18029.57132.285522.284156@notabene.brown>
+In-Reply-To: message from Tomka Gergely on Tuesday June 12
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
+To: tomka@avaxio.net
 Cc: "Linux, Raid lista" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Neil Brown =EDrta:
-> On Monday June 11, tomka@avaxio.net wrote:
->> ARRAY /dev/md1 level=3Draid5 devices=3D/dev/sd[defg]1 num-devices=3D=
-3=20
->> spares=3D1 spare-group=3Dubul name=3Dursula:T2=20
->> UUID=3Dfb8ece28:9a6a31f8:700f37f6:7ee91bcf
->> ARRAY /dev/md0 level=3Draid5 devices=3D/dev/sd[abc]1 num-devices=3D3=
-=20
->> spare-group=3Dubul name=3Dursula:T1 UUID=3D3e420024:281f9bb1:fd9ef39=
-b:c18153b1
->=20
-> You don't want the "devices=3D" entries in there.  If you leave them
-> there, and sdg1 does get moved to md0, then on the next restart, md0
-> won't get assembled properly.
+On Tuesday June 12, tomka@avaxio.net wrote:
+> >> According to the source:
+> >>
+> >> * If an array has active < raid && spare == 0 && spare_group !=NULL
+> >> * Look for another array with spare > 0 and active == raid and same 
+> >> spare_group
+> >> * if found, choose a device and hotremove/hotadd
+> >>
+> >> This is not happening. What is my mistake?
+> > 
+> > Is "mdadm --monitor" running?  That is required to perform
+> > spare-migration.
+> 
+> Yes, of course.
 
-Thanks.
+Good - I need to get the obvious things out of the way first :-)
 
->> According to the source:
->>
->> * If an array has active < raid && spare =3D=3D 0 && spare_group !=3D=
-NULL
->> * Look for another array with spare > 0 and active =3D=3D raid and s=
-ame=20
->> spare_group
->> * if found, choose a device and hotremove/hotadd
->>
->> This is not happening. What is my mistake?
->=20
-> Is "mdadm --monitor" running?  That is required to perform
-> spare-migration.
+(reads code).
 
-Yes, of course.
+Ahhh. You are using version-1 superblocks aren't you?  That code only
+works for version-0.90 superblocks.  That was careless of me.  It
+shouldn't be hard to make it work more generally, but it looks like it
+will be slightly more than trivial.  I'll try to get you a patch in
+the next day or so (feel free to remind me if I seem to have
+forgotten).
 
-tg
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks for testing and reporting this problem.
+
+NeilBrown
