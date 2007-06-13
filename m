@@ -1,113 +1,144 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: SLES 9 SP3 and mdadm 2.6.1 (via rpm)
-Date: Wed, 13 Jun 2007 07:50:06 -0400 (EDT)
-Message-ID: <Pine.LNX.4.64.0706130749390.31068@p34.internal.lan>
-References: <20070612072408.19140@gmx.net> <18030.19615.898281.457910@notabene.brown>
- <20070613114553.235550@gmx.net>
+From: "Mike Snitzer" <snitzer@gmail.com>
+Subject: Re: raid1 with nbd member hangs MD on SLES10 and RHEL5
+Date: Wed, 13 Jun 2007 14:23:01 -0400
+Message-ID: <170fa0d20706131123q17e4fb9ehe6be25a07462cc30@mail.gmail.com>
+References: <170fa0d20706121930g3b89ddeex8b31c8923d2a0ff6@mail.gmail.com>
+	 <18031.22930.243723.550238@notabene.brown>
+	 <170fa0d20706121959w480213bcvaba1b6881710379f@mail.gmail.com>
+	 <170fa0d20706122009h5e3db54ek7487be4940a3d780@mail.gmail.com>
+	 <18031.25581.353761.802283@notabene.brown>
+	 <170fa0d20706122130q2c77d365tbe9261bab1a5b1b@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="-1463747160-579206122-1181735406=:31068"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20070613114553.235550@gmx.net>
+In-Reply-To: <170fa0d20706122130q2c77d365tbe9261bab1a5b1b@mail.gmail.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Thorsten Wolf <T_Wolf@gmx.net>
-Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Herbert Xu <herbert@gondor.apana.org.au>, Paul Clements <Paul.Clements@SteelEye.com>
 List-Id: linux-raid.ids
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+On 6/13/07, Mike Snitzer <snitzer@gmail.com> wrote:
+> On 6/12/07, Neil Brown <neilb@suse.de> wrote:
+...
+> > > > On 6/12/07, Neil Brown <neilb@suse.de> wrote:
+> > > > > On Tuesday June 12, snitzer@gmail.com wrote:
+> > > > > >
+> > > > > > I can provided more detailed information; please just ask.
+> > > > > >
+> > > > >
+> > > > > A complete sysrq trace (all processes) might help.
 
----1463747160-579206122-1181735406=:31068
-Content-Type: TEXT/PLAIN; charset=iso-8859-1; format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Bringing this back to a wider audience.  I provided the full sysrq
+trace of the RHEL5 kernel to Neil; in it we saw that md0_raid1 had the
+following trace:
 
-You don't even need that, just do this:
+md0_raid1     D ffff810026183ce0  5368 31663     11          3822 29488 (L-TLB)
+ ffff810026183ce0 ffff810031e9b5f8 0000000000000008 000000000000000a
+ ffff810037eef040 ffff810037e17100 00043e64d2983c1f 0000000000004c7f
+ ffff810037eef210 0000000100000001 000000081c506640 00000000ffffffff
+Call Trace:
+ [<ffffffff8003e371>] keventd_create_kthread+0x0/0x61
+ [<ffffffff801b9364>] md_super_wait+0xa8/0xbc
+ [<ffffffff8003e711>] autoremove_wake_function+0x0/0x2e
+ [<ffffffff801b9adb>] md_update_sb+0x1dd/0x23a
+ [<ffffffff801bed2a>] md_check_recovery+0x15f/0x449
+ [<ffffffff882a1af3>] :raid1:raid1d+0x27/0xc1e
+ [<ffffffff80233209>] thread_return+0x0/0xde
+ [<ffffffff8023279c>] __sched_text_start+0xc/0xa79
+ [<ffffffff8003e371>] keventd_create_kthread+0x0/0x61
+ [<ffffffff80233a9f>] schedule_timeout+0x1e/0xad
+ [<ffffffff8003e371>] keventd_create_kthread+0x0/0x61
+ [<ffffffff801bd06c>] md_thread+0xf8/0x10e
+ [<ffffffff8003e711>] autoremove_wake_function+0x0/0x2e
+ [<ffffffff801bcf74>] md_thread+0x0/0x10e
+ [<ffffffff8003e5e7>] kthread+0xd4/0x109
+ [<ffffffff8000a505>] child_rip+0xa/0x11
+ [<ffffffff8003e371>] keventd_create_kthread+0x0/0x61
+ [<ffffffff8003e513>] kthread+0x0/0x109
+ [<ffffffff8000a4fb>] child_rip+0x0/0x11
 
-1. echo 'DEVICE /dev/hd*[0-9] /dev/sd*[0-9]' > mdadm.conf
-2. mdadm  --examine  --scan --config=3Dmdadm.conf
+To which Neil had the following to say:
 
-This will search all partitions and give the relevant SW raid information:
-
-ARRAY /dev/md/4 level=3Draid5 metadata=3D1 num-devices=3D5=20
-UUID=3D7f453e1889:3e4dd96e:8103724c:724f49 name=3D4
-ARRAY /dev/md/3 level=3Draid5 metadata=3D1 num-devices=3D4=20
-UUID=3Db3d7134904:52828f3d:0f0245a2:e8226d name=3D3
-
-Then edit these lines so they look like this:
-
-ARRAY /dev/md3 level=3Draid5 metadata=3D1 num-devices=3D4=20
-UUID=3Db3d7134904:52828f3d:0f0245a2:e8226d name=3D3
-ARRAY /dev/md4 level=3Draid5 metadata=3D1 num-devices=3D5=20
-UUID=3D7f453e1889:3e4dd96e:8103724c:724f49 name=3D4
-
-Then run:
-
-1. mdadm -As /dev/md3
-2. mdadm -As /dev/md4
-
-p34:/etc/mdadm# mdadm -As /dev/md3
-mdadm: /dev/md3 has been started with 4 drives.
-p34:/etc/mdadm# mdadm -As /dev/md4
-mdadm: /dev/md4 has been started with 5 drives.
-
-Done.
-
-
-On Wed, 13 Jun 2007, Thorsten Wolf wrote:
-
-> Dear Neil,
-> hi everyone else.
+> > md0_raid1 is holding the lock on the array and trying to write out the
+> > superblocks for some reason, and the write isn't completing.
+> > As it is holding the locks, mdadm and /proc/mdstat are hanging.
+> >
+> > You seem to have nbd-servers running on this machine.  Are they
+> > serving the device that md is using. (i.e. a loop-back situation).  I
+> > would expect memory deadlocks would be very easy to hit in that
+> > situation, but I don't know if that is what has happened.
+> >
+> > Nothing else stands out.
+> >
+> > Could you clarify the arrangement of nbd.  Where are the servers and
+> > what are they serving?
 >
-> I've been reading a lot about the mdadm tools lately, and I believe that =
-it is possible, but I haven't found the right documentation yet.
->
-> Is it possible to re-mount the RAID I have from another Linux installatio=
-n? Do I need more than the 'mdadm --detail --scan > /etc/mdadm.conf' info s=
-aved to another location (so I can re-import it)?
->
-> Regards,
->
-> Thorsten
->
->> On Tuesday June 12, T_Wolf@gmx.net wrote:
->>> Hello everyone.
->>>
->>> I've got a SLES9 SP3 running and I've been quite happy with it so far.
->>>
->>> Recently, I've created a 4 disk spanning RAID-5 on our company
->>> server. Runs quite nice and we're happy with that too. I created
->>> that RAID using the SLES mdadm (1.4 I believe) package.
->>>
->>> After discovering that there is a much newer mdadm out here (2.6.1),
->>> I decided to upgrade. It went just fine. Raid still running at 120
->>> MB/sec.
->>>
->>> After adding a disk to the raid, which went fine as well...... BUT:
->>>
->>> The added disk /dev/sda1 shows up in /proc/mdstat, but does not have
->>> the "spare (s)" flag.
->>>
->>> Plus... the --grow doesn't work...
->>>
->>> I get the: mdadm: /dev/md0: Cannot get array details from sysfs
->>> error which has been discussed before. Can it be that this is caused
->>> by the 2.6.5-7.2xx Kernel? Any ideas?
->>
->> Yes.  All of your issues are caused by using a 2.6.5 based kernel.
->> However even upgrading to SLES10 would not get you raid5-grow.  That
->> came a little later.  You would need to compile a mainline kernel or
->> wait for SLES11.
->>
->> NeilBrown
->
-> --=20
-> Contact me on ICQ: 7656468
-> skype://sysfried
->
-> Der GMX SmartSurfer hilft bis zu 70% Ihrer Onlinekosten zu sparen!
-> Ideal f=FCr Modem und ISDN: http://www.gmx.net/de/go/smartsurfer
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
----1463747160-579206122-1181735406=:31068--
+> We're using MD+NBD for disaster recovery (one local scsi device, one
+> remote via nbd).  The nbd-server is not contributing to md0.  The
+> nbd-server is connected to a remote machine that is running a raid1
+> remotely
+
+To take this further I've now collected a full sysrq trace of this
+hang on a SLES10 SP1 RC5 2.6.16.46-0.12-smp kernel, the relevant
+md0_raid1 trace is comparable to the RHEL5 trace from above:
+
+md0_raid1     D ffff810001089780     0  8583     51          8952  8260 (L-TLB)
+ffff810812393ca8 0000000000000046 ffff8107b7fbac00 000000000000000a
+       ffff81081f3c6a18 ffff81081f3c67d0 ffff8104ffe8f100 000044819ddcd5e2
+       000000000000eb8b 00000007028009c7
+Call Trace: <ffffffff801e1f94>{generic_make_request+501}
+       <ffffffff8026946c>{md_super_wait+168}
+<ffffffff80145aa2>{autoremove_wake_function+0}
+       <ffffffff8026f056>{write_page+128} <ffffffff80269ac7>{md_update_sb+220}
+       <ffffffff8026bda5>{md_check_recovery+361}
+<ffffffff883a97f5>{:raid1:raid1d+38}
+       <ffffffff8013ad8f>{lock_timer_base+27}
+<ffffffff8013ae01>{try_to_del_timer_sync+81}
+       <ffffffff8013ae16>{del_timer_sync+12}
+<ffffffff802d9adf>{schedule_timeout+146}
+       <ffffffff801456a9>{keventd_create_kthread+0}
+<ffffffff8026d5d8>{md_thread+248}
+       <ffffffff80145aa2>{autoremove_wake_function+0}
+<ffffffff8026d4e0>{md_thread+0}
+       <ffffffff80145965>{kthread+236} <ffffffff8010bdce>{child_rip+8}
+       <ffffffff801456a9>{keventd_create_kthread+0}
+<ffffffff80145879>{kthread+0}
+       <ffffffff8010bdc6>{child_rip+0}
+
+Taking a step back, here is what was done to reproduce on SLES10:
+1) establish a raid1 mirror (md0) using one local member (sdc1) and
+one remote member (nbd0)
+2) power off the remote machine, whereby severing nbd0's connection
+3) perform IO to the filesystem that is on the md0 device to enduce
+the MD layer to mark the nbd device as "faulty"
+4) cat /proc/mdstat hangs, sysrq trace was collected and showed the
+above md0_raid1 trace.
+
+To be clear, the MD superblock update hangs indefinitely on RHEL5.
+But with SLES10 it eventually succeeds (and MD marks the nbd0 member
+faulty); and the other tasks that were blocking waiting for the MD
+lock (e.g. 'cat /proc/mdstat') then complete immediately.
+
+It should be noted that this MD+NBD configuration has worked
+flawlessly using a stock kernel.org 2.6.15.7 kernel (ontop of a
+RHEL4U4 distro).  Steps have not been taken to try to reproduce  with
+2.6.15.7 on SLES10; it may be useful to pursue but I'll defer to
+others to suggest I do so.
+
+2.6.15.7 does not have the SMP race fixes that were made in 2.6.16;
+yet both SLES10 and RHEL5 kernels do:
+http://www.kernel.org/git/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=4b2f0260c74324abca76ccaa42d426af163125e7
+
+If not this specific NBD change, something appears to have changed
+with how NBD behaves in the face of it's connection to the server
+being lost.  Almost like the MD superblock update that would be
+written to nbd0 is blocking within nbd or the network layer because of
+a network timeout issue?
+
+I will try to get a better understanding of what is _really_ happening
+with systemtap; but others' suggestions/insight is very welcome.
+
+regards,
+Mike
