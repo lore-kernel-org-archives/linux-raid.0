@@ -1,84 +1,48 @@
-From: Michael Tokarev <mjt@tls.msk.ru>
-Subject: RFC: dealing with bad blocks: another view
-Date: Wed, 13 Jun 2007 11:15:31 +0400
-Message-ID: <466F9993.6040007@msgid.tls.msk.ru>
+From: Tomka Gergely <tomka@avaxio.net>
+Subject: Re: spare group
+Date: Wed, 13 Jun 2007 09:25:44 +0200
+Message-ID: <466F9BF8.9000101@avaxio.net>
+References: <466D51EE.7030509@avaxio.net>	<18029.57132.285522.284156@notabene.brown>	<466E3E58.8050105@avaxio.net>	<18030.17507.290572.911043@notabene.brown>	<466E5206.20200@avaxio.net> <18030.27988.798462.933425@notabene.brown>
+Reply-To: tomka@avaxio.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <18030.27988.798462.933425@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
+To: Neil Brown <neilb@suse.de>
+Cc: "Linux, Raid lista" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Now MD subsystem does a very good job at trying to
-recover a bad block on a disk, by re-writing its
-content (to force drive to reallocate the block in
-question) and verifying it's written ok.
+Neil Brown =EDrta:
+> On Tuesday June 12, tomka@avaxio.net wrote:
+>> I am very sorry, but it wont works with .9 superblocks also :( We=20
+>> missing something small, but important here. Before you start to cod=
+e.=20
+>> mdadm was running in monitor mode, and reported a Fail. mdadm is the=
+=20
+>> latest version, 2.6.2.
+>>
+>> tg
+>=20
+> Hmmm.....=20
+> [tests code]
+>=20
+> Yes, you are right.  It looks like a bug was introduced in 2.6 which
+> broke various aspects of --monitor.  I guess I need to add some
+> --monitor tests to my regression test suite.
+>=20
+> This patch should fix it.
+>=20
+> Thanks again,
+> NeilBrown
 
-But I wonder if it's worth the effort to go further
-than that.
+Thanks, the patch is working.
 
-Now, md can use bitmaps.  And a bitmap can be used
-not only to mark "clean vs dirty" chunks, but also,
-for example, "good vs bad" chunks.
-
-That to say.  If we discover a read error on one
-component of an array, we tried to re-write it but
-rewrite (or reread) failed.  Now current implementation
-will kick the bad drive from the array.  But here it
-is possible to not kick it, but to turn corresponding
-bit(s) in the bitmap that says the data on this location
-on this drive is wrong, don't try to read from it.  And
-continue using this drive as before (modulo the bits/parts
-just turned on).
-
-The rationale is -- each time we kick the whole drive from
-an array, for whatever reason, -- we greatly reduce chances
-of the whole array to be in working condition.
-
-For some reason, drives from the same batch tend to discover
-bad blocks close to each other - i mean, we see a bad block
-on one drive, and pretty soon we see another bad block on
-another drive (at least from our expirience).  So by kicking
-one drive, we increase failure probability even more.
-
-We had a large batch of seagate 36g scsi drives, which all
-has some issue with firmware -- each time a drive detects
-a bad sector, and we try to mitigate it (by rewriting it),
-the drive reports "defect list manipulation error" (I don't
-remember exact sense code), and only on second attempt it
-rewrites the sector in question successefully.  Seagate
-refused to acknowlege this problem, no matter how we
-argued -- they said it's "mishandling" (like, we improperly
-handled the drives).
-
-That to show just one example of numerous cases when such
-kicking of the whole drive is not good idea.
-
-Even more.  If we see *read* error, there's no need to mark
-this chunk as "bad" in the bitmap -- only if we see *write*
-error while writing some *new* data.  Ie, that "bad" bit in
-the bitmap may mean "data at this place is out of sync", like
-"extended dirty".  When interpreted like that, there's no
-need to allocate new bit, but existing "dirty" bit can be
-used.  On resync, we try to write again, and just keep that
-"dirty" bit if write failed.
-
-Obviously, we should not try to read from those "dirty"
-places.  And if there's no components left to read from,
-just return read error - for this single read, but continue
-running the array (maybe in read-only mode, whatever).
-
-It seems like it's pretty simple to implement with existing
-code.  The only requiriment is to have a bitmap - obviously,
-without the bitmap the whole idea does not work.
-
-This fits perfectly the "policy does not belong to the kernel"
-model as well.  Never, ever, try to do something "large" (like
-kicking off the whole disk), but let userspace to descide what
-to do...  Mdadm event handlers (scripts called when something
-goes wrong) can kick the disk off just fine.
-
-Comments, anyone?
-
-/mjt
+tg
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
