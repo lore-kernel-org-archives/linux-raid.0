@@ -1,7 +1,7 @@
 From: Nix <nix@esperi.org.uk>
 Subject: Re: below 10MB/s write on raid5
-Date: Thu, 14 Jun 2007 00:55:14 +0100
-Message-ID: <87hcpb2yvx.fsf@hades.wkstn.nix>
+Date: Thu, 14 Jun 2007 00:54:56 +0100
+Message-ID: <87ir9r2ywf.fsf@hades.wkstn.nix>
 References: <200706111446.55813.Dexter.Filmore@gmx.de>
 	<Pine.LNX.4.64.0706110847380.31708@p34.internal.lan>
 	<200706111528.11828.Dexter.Filmore@gmx.de>
@@ -14,7 +14,6 @@ Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <Pine.LNX.4.64.0706112134510.5806@gheavc.wnzcbav.cig> (Jon Nelson's message of "12 Jun 2007 03:35:40 +0100")
 Sender: linux-raid-owner@vger.kernel.org
 To: Jon Nelson <jnelson-linux-raid@jamponi.net>
-Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 On 12 Jun 2007, Jon Nelson told this:
