@@ -1,57 +1,108 @@
-From: Jon Nelson <jnelson-linux-raid@jamponi.net>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
 Subject: Re: Removing devices from RAID-5
-Date: Thu, 14 Jun 2007 14:27:26 -0500 (CDT)
-Message-ID: <Pine.LNX.4.64.0706141419450.5806@gheavc.wnzcbav.cig>
-References: <m3ejkel7yy.fsf@shadow.org.uk>
+Date: Thu, 14 Jun 2007 15:33:26 -0400 (EDT)
+Message-ID: <Pine.LNX.4.64.0706141532480.23938@p34.internal.lan>
+References: <m3ejkel7yy.fsf@shadow.org.uk> <Pine.LNX.4.64.0706141422580.3306@p34.internal.lan>
+ <m3abv2jrfy.fsf@shadow.org.uk> <Pine.LNX.4.64.0706141515060.23451@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <m3ejkel7yy.fsf@shadow.org.uk>
+In-Reply-To: <Pine.LNX.4.64.0706141515060.23451@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
+To: Rich Walker <rw@shadowrobot.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, 14 Jun 2007, Rich Walker wrote:
+> > > I would think that
+> > > mdadm --grow --raid-devices=4 -z max /dev/md1 /dev/hdg2 /dev/hde2
+> > > /dev/sda2 /dev/hdk2
 
-> 
-> Hi,
-> 
-> I've been having some problems with a machine, and now want to reduce
-> the number of drives in the array.
-> 
-> It started out as an array of 160GB drives, but over time they have
-> mostly been replaced by 250GB drives:
+Make sure the new device is added as a spare first the -z should not be 
+needed, by default it should use all space on the new drive.
 
-If you've been having trouble with a machine, doing risky stuff like 
-restructuring raids and/or putting them in degraded mode (even 
-temporarily) is a bad idea. That said, ...
- 
-If you had another 250G disk available you could do it, but it would 
-involve the creation of a new array and use of pvmove. You said you 
-could knock the space down to just 3x160 which is 480G which 2x250 
-should be able to cover.
+On Thu, 14 Jun 2007, Justin Piszcz wrote:
 
-Assuming you had another 250G to play with (you only need it 
-temporarily):
-
-1. remove one 250G from array
-2. make new array from second drive and the one you just removed 
-   (/dev/mdNEW) (degraded 2/3 raid5)
-3. add new array to volume group 
-4. use pvmove or whatever to move all physical extents from /dev/md1 to 
-   /dev/mdNEW
-5. When complete, disable /dev/md1, remove /dev/md1 from LVM
-   (don't forget to zero the superblocks, that one always bites me)
-6. take one of the now-available 250's and add it to /dev/mdNEW,
-   allowing it to reconstruct
-7. You now have a 3x250 RAID5 and 2 unused drives, with no
-   downtime (except adding a new 250G)
-8. Update mdadm.conf and other files as necessary.
-9. Since you only needed a 250G drive temporarily, you could play games 
-   with fault+remove of the "borrowed" drive and replace it or whatever 
-   you want to do...
-
-Otherwise, I don't think you can use mdadm to accomplish this.
-
---
-Jon Nelson <jnelson-linux-raid@jamponi.net>
+>
+>
+> On Thu, 14 Jun 2007, Rich Walker wrote:
+>
+>> Justin Piszcz <jpiszcz@lucidpixels.com> writes:
+>> 
+>>> On Thu, 14 Jun 2007, Rich Walker wrote:
+>> 
+>> [snip]
+>>>> 
+>>>> The array is used as a single PV/VG for LVM.
+>>>> 
+>>>> What I want to do is to
+>>>> (a) reduce the PV/VG so it would fit in 160*3 rather than 160*4
+>>>> (b) remove the last 160GB drive, (hdi), taking the array from 4+1 to 4+0
+>>>> (c) rearrange the array from 4+0 to 3+1
+>>>> (d) grow the array to 250*3
+>>>> (e) enlarge the PV/VG again.
+>>>> 
+>>>> I would think that
+>>>> mdadm --grow --raid-devices=4 -z max /dev/md1 /dev/hdg2 /dev/hde2 
+>>>> /dev/sda2 /dev/hdk2
+>>>> would do steps (b),(c),(d) in one go - is this correct?
+>>>> 
+>>>> The linux kernel version running is 2.6.21.3 SMP.
+>>> 
+>>> As far as I know you cannot shrink any md raid in Linux.
+>>> 
+>>> Justin.
+>> 
+>> Step (c) shrinks the array, which would be a problem.
+>> 
+>> But the mdadm command given *should* actually grow the array (from 640GB
+>> to 750GB) whilst reducing the number of disks...
+>> 
+>> Is this likely to work?
+>> 
+>> mdadm says:
+>> 
+>> thoth:/--# mdadm --grow --help
+>> Usage: mdadm --grow device options
+>> 
+>> This usage causes mdadm to attempt to reconfigure a running array.
+>> This is only possibly if the kernel being used supports a particular
+>> reconfiguration.  This version only supports changing the number of
+>> devices in a RAID1, and changing the active size of all devices in
+>> a RAID1/4/5/6.
+>> 
+>> Options that are valid with the grow (-G --grow) mode are:
+>>  --size=        -z   : Change the active size of devices in an array.
+>>                      : This is useful if all devices have been replaced
+>>                      : with larger devices.
+>>  --raid-disks=  -n   : Change the number of active devices in a RAID1
+>>                      : array.
+>> thoth:/--# mdadm -V
+>> mdadm - v2.5.6 - 9 November 2006
+>> thoth:/--#
+>> 
+>> which makes me think it wouldn't...
+>> 
+>> cheers, Rich.
+>> 
+>> -- 
+>> rich walker         |  Shadow Robot Company | rw@shadow.org.uk
+>> technical director     251 Liverpool Road   |
+>> need a Hand?           London  N1 1LX       | +UK 20 7700 2487
+>> www.shadowrobot.com/hand/overview.shtml
+>> 
+>> -
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> 
+>
+> You can try it, otherwise grab the latest version of mdadm and go ahead and 
+> grow it.  I have grown a 1.8TB array to 3.3TB and it was a pretty old version 
+> of mdadm.
+>
+> Justin.
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
