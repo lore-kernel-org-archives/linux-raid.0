@@ -1,65 +1,39 @@
-From: "Mike Snitzer" <snitzer@gmail.com>
-Subject: Re: raid1 with nbd member hangs MD on SLES10 and RHEL5
-Date: Thu, 14 Jun 2007 21:21:09 -0400
-Message-ID: <170fa0d20706141821t5204ecddl30f846a98b262573@mail.gmail.com>
-References: <170fa0d20706121930g3b89ddeex8b31c8923d2a0ff6@mail.gmail.com>
-	 <170fa0d20706122130q2c77d365tbe9261bab1a5b1b@mail.gmail.com>
-	 <170fa0d20706131123q17e4fb9ehe6be25a07462cc30@mail.gmail.com>
-	 <170fa0d20706131630p6cd29aa5i8f51856780a9c691@mail.gmail.com>
-	 <4671AD7C.4010109@tmr.com> <4671E018.4090105@steeleye.com>
-	 <170fa0d20706141801u6d6effd9ub362f3ae397f3d32@mail.gmail.com>
-	 <4671E5D3.6010903@steeleye.com>
-	 <170fa0d20706141810x39cf0c48v645a8292f84a9eb7@mail.gmail.com>
-	 <4671E85E.30100@steeleye.com>
+From: "Dan Williams" <dan.j.williams@intel.com>
+Subject: Re: raid5: coding style cleanup / refactor
+Date: Thu, 14 Jun 2007 19:39:41 -0700
+Message-ID: <e9c3a7c20706141939g12ad831gc1c49bf4887fdb12@mail.gmail.com>
+References: <20070612142532.b45ee9bf.akpm@linux-foundation.org>
+	 <0C7297FA1D2D244A9C7F6959C0BF1E5201FDE2CB@azsmsx413.amr.corp.intel.com>
+	 <e9c3a7c20706121509x43dda6f6uc3b4d70a01c0c891@mail.gmail.com>
+	 <e9c3a7c20706131153l289490f2t60db3b5c251a362a@mail.gmail.com>
+	 <4671AE5E.4090602@tmr.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754665AbXFOBVY@vger.kernel.org>
-In-Reply-To: <4671E85E.30100@steeleye.com>
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4671AE5E.4090602@tmr.com>
 Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Paul Clements <paul.clements@steeleye.com>
-Cc: Bill Davidsen <davidsen@tmr.com>, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, nbd-general@lists.sourceforge.net, Herbert Xu <herbert@gondor.apana.org.au>
+Sender: linux-raid-owner@vger.kernel.org
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, NeilBrown <neilb@suse.de>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 6/14/07, Paul Clements <paul.clements@steeleye.com> wrote:
-> Mike Snitzer wrote:
-> > On 6/14/07, Paul Clements <paul.clements@steeleye.com> wrote:
-> >> Mike Snitzer wrote:
-> >>
-> >> > Here are the steps to reproduce reliably on SLES10 SP1:
-> >> > 1) establish a raid1 mirror (md0) using one local member (sdc1) and
-> >> > one remote member (nbd0)
-> >> > 2) power off the remote machine, whereby severing nbd0's connection
-> >> > 3) perform IO to the filesystem that is on the md0 device to enduce
-> >> > the MD layer to mark the nbd device as "faulty"
-> >> > 4) cat /proc/mdstat hangs, sysrq trace was collected
-> >>
-> >> That's working as designed. NBD works over TCP. You're going to have to
-> >> wait for TCP to time out before an error occurs. Until then I/O will
-> >> hang.
-> >
-> > With kernel.org 2.6.15.7 (uni-processor) I've not seen NBD hang in the
-> > kernel like I am with RHEL5 and SLES10.  This hang (tcp timeout) is
-> > indefinite oh RHEL5 and ~5min on SLES10.
-> >
-> > Should/can I be playing with TCP timeout values?  Why was this not a
-> > concern with kernel.org 2.6.15.7; I was able to "feel" the nbd
-> > connection break immediately; no MD superblock update hangs, no
-> > longwinded (or indefinite) TCP timeout.
+On 6/14/07, Bill Davidsen <davidsen@tmr.com> wrote:
+> When you are ready for wider testing, if you have a patch against a
+> released kernel it makes testing easy, characteristics are pretty well
+> known already.
 >
-> I don't know. I've never seen nbd immediately start returning I/O
-> errors. Perhaps something was different about the configuration?
-> If the other other machine rebooted quickly, for instance, you'd get a
-> connection reset, which would kill the nbd connection.
+Thanks I went ahead and put a separate snapshot up on SourceForge:
+http://downloads.sourceforge.net/xscaleiop/md-accel-2.6.22-rc4-20070614.patch
+[ It's actually based on current git but should apply cleanly to 2.6.22-rc4. ]
 
-OK, I'll retest the 2.6.15.7 setup.  As for SLES10 and RHEL5, I've
-been leaving the remote server powered off.  As such I'm at the full
-mercy of the TCP timeout.  It is odd that RHEL5 has been hanging
-indefinitely but I'll dig deeper on that once I come to terms with how
-kernel.org and SLES10 behaves.
+If you are so inclined the most up-to-date version is available via git.
+git pull git://lost.foo-projects.org/~dwillia2/git/iop md-accel-linus
 
-I'll update with my findings for completeness.
+It should perform identically to vanilla 2.6.22-rc4 MD.
 
-Thanks for your insight!
-Mike
+> --
+> bill davidsen <davidsen@tmr.com>
+
+Regards,
+Dan
