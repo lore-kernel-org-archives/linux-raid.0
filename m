@@ -1,45 +1,128 @@
-From: Brad Campbell <brad@wasp.net.au>
-Subject: Machine hanging on synchronize cache on shutdown 2.6.22-rc4-git[45678]
-Date: Sat, 16 Jun 2007 15:52:33 +0400
-Message-ID: <4673CF01.6010402@wasp.net.au>
+From: David Greaves <david@dgreaves.com>
+Subject: Re: limits on raid
+Date: Sat, 16 Jun 2007 14:33:14 +0100
+Message-ID: <4673E69A.4020309@dgreaves.com>
+References: <Pine.LNX.4.64.0706141957020.29630@asgard.lang.hm>	<18034.479.256870.600360@notabene.brown>	<Pine.LNX.4.64.0706142034400.29630@asgard.lang.hm>	<18034.3676.477575.490448@notabene.brown>	<20070616020320.GB2002@animx.eu.org> <18035.23867.576212.859440@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <18035.23867.576212.859440@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-ide@vger.kernel.org, RAID Linux <linux-raid@vger.kernel.org>
+To: Neil Brown <neilb@suse.de>
+Cc: Wakko Warner <wakko@animx.eu.org>, david@lang.hm, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-G'day all,
+Neil Brown wrote:
+> On Friday June 15, wakko@animx.eu.org wrote:
+>  
+>>                                                   As I understand the way
+>> raid works, when you write a block to the array, it will have to read all
+>> the other blocks in the stripe and recalculate the parity and write it out.
+> 
+> Your understanding is incomplete.
 
-I've got a box here based on current Debian Stable.
-It's got 15 Maxtor SATA drives in it on 4 Promise TX4 controllers.
+Does this help?
+[for future reference so you can paste a url and save the typing for code :) ]
 
-Using kernel 2.6.21.x it shuts down, but of course with a huge "clack" as 15 drives all do emergency 
-head parks simultaneously. I thought I'd upgrade to 2.6.22-rc to get around this but the machine 
-just hangs up hard apparently trying to sync cache on a drive.
+http://linux-raid.osdl.org/index.php/Initial_Array_Creation
 
-I've run this process manually, so I know it is being performed properly.
+David
 
-Prior to shutdown, all nfsd processes are stopped, filesystems unmounted and md arrays stopped.
-/proc/mdstat shows
-root@storage1:~# cat /proc/mdstat
-Personalities : [raid6] [raid5] [raid4]
-unused devices: <none>
-root@storage1:~#
 
-Here is the final hangup.
 
-http://www.fnarfbargle.com/CIMG1029.JPG
+Initial Creation
 
-They keyboard is responsive up until the "hard resetting port" when it just locks solid and requires 
-a power-cycle.
+When mdadm asks the kernel to create a raid array the most noticeable activity 
+is what's called the "initial resync".
 
-It's not really something I want to bisect if I can avoid it give the lovely noise it makes when I 
-power it off. (this box only has a hard power switch, no reset or soft power buttons)
+The kernel takes one (or two for raid6) disks and marks them as 'spare'; it then 
+creates the array in degraded mode. It then marks spare disks as 'rebuilding' 
+and starts to read from the 'good' disks, calculate the parity and determines 
+what should be on any spare disks and then writes it. Once all this is done the 
+array is clean and all disks are active.
 
-Brad
--- 
-"Human beings, who are almost unique in having the ability
-to learn from the experience of others, are also remarkable
-for their apparent disinclination to do so." -- Douglas Adams
+This can take quite a time and the array is not fully resilient whilst this is 
+happening (it is however fully useable).
+
+--assume-clean
+
+Some people have noticed the --assume-clean option in mdadm and speculated that 
+this can be used to skip the initial resync. Which it does. But this is a bad 
+idea in some cases - and a *very* bad idea in others.
+
+raid5
+
+For raid5 especially it is NOT safe to skip the initial sync. The raid5 
+implementation optimises use of the component disks and it is possible for all 
+updates to be "read-modify-write" updates which assume the parity is correct. If 
+it is wrong, it stays wrong. Then when you lose a drive, the parity blocks are 
+wrong so the data you recover using them is wrong. In other words - you will get 
+data corruption.
+
+For raid5 on an array with more than 3 drive, if you attempt to write a single 
+block, it will:
+
+     * read the current value of the block, and the parity block.
+     * "subtract" the old value of the block from the parity, and "add" the new 
+value.
+     * write out the new data and the new parity.
+
+If the parity was wrong before, it will still be wrong. If you then lose a 
+drive, you lose your data.
+
+linear, raid0,1,10
+
+These raid levels do not need an initial sync.
+
+linear and raid0 have no redundancy.
+
+raid1 always writes all data to all disks.
+
+raid10 always writes all data to all relevant disks.
+
+
+Other raid levels
+
+Probably the most noticeable effect for the other raid levels is that if you 
+don't sync first, then every check will find lots of errors. (Of course you 
+could 'repair' instead of 'check'. Or do that once. Or something.)
+
+For raid6 it is also safe to not sync first, though with the same caveat. Raid6 
+always updates parity by reading all blocks in the stripe that aren't known and 
+calculating P and Q. So the first write to a stripe will make P and Q correct 
+for that stripe. This is current behaviour. There is no guarantee it will never 
+changed (so theoretically one day you may upgrade your kernel and suffer data 
+corruption on an old raid6 array).
+
+Summary
+
+In summary, it is safe to use --assume-clean on a raid1 or raid1o, though a 
+"repair" is recommended before too long. For other raid levels it is best avoided.
+
+Potential 'Solutions'
+
+There have been 'solutions' suggested including the use of bitmaps to 
+efficiently store 'not yet synced' information about the array. It would be 
+possible to have a 'this is not initialised' flag on the array, and if that is 
+not set, always do a reconstruct-write rather than a read-modify-write. But the 
+first time you have an unclean shutdown you are going to resync all the parity 
+anyway (unless you have a bitmap....) so you may as well resync at the start. So 
+essentially, at the moment, there is no interest in implementing this since the 
+added complexity is not justified.
+
+What's the problem anyway?
+
+First of all RAID is all about being safe with your data.
+
+And why is it such a big deal anyway? The initial resync doesn't stop you from 
+using the array. If you wanted to put an array into production instantly and 
+couldn't afford any slowdown due to resync, then you might want to skip the 
+initial resync.... but is that really likely?
+
+So what is --assume-clean for then?
+
+Disaster recovery. If you want to build an array from components that used to be 
+in a raid then this stops the kernel from scribbling on them. As the man page says :
+
+"Use this ony if you really know what you are doing."
