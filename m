@@ -1,38 +1,46 @@
-From: "Dan Merillat" <dan.merillat@gmail.com>
+From: david@lang.hm
 Subject: Re: limits on raid
-Date: Sat, 16 Jun 2007 00:40:17 -0400
-Message-ID: <a56dfcf00706152140s36d01ff6sb9a6bb716b8afe65@mail.gmail.com>
+Date: Sat, 16 Jun 2007 00:48:57 -0700 (PDT)
+Message-ID: <Pine.LNX.4.64.0706160037220.7557@asgard.lang.hm>
 References: <Pine.LNX.4.64.0706141957020.29630@asgard.lang.hm>
-	 <18034.479.256870.600360@notabene.brown>
-	 <Pine.LNX.4.64.0706142034400.29630@asgard.lang.hm>
-	 <18034.3676.477575.490448@notabene.brown>
-	 <20070616020320.GB2002@animx.eu.org>
-	 <18035.23867.576212.859440@notabene.brown>
+ <18034.479.256870.600360@notabene.brown> <Pine.LNX.4.64.0706142034400.29630@asgard.lang.hm>
+ <18034.3676.477575.490448@notabene.brown> <20070616020320.GB2002@animx.eu.org>
+ <18035.23867.576212.859440@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <18035.23867.576212.859440@notabene.brown>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: Neil Brown <neilb@suse.de>
-Cc: Wakko Warner <wakko@animx.eu.org>, david@lang.hm, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+Cc: Wakko Warner <wakko@animx.eu.org>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> For raid5 on an array with more than 3 drive, if you attempt to write
-> a single block, it will:
->
->  - read the current value of the block, and the parity block.
->  - "subtract" the old value of the block from the parity, and "add"
->    the new value.
->  - write out the new data and the new parity.
->
-> If the parity was wrong before, it will still be wrong.  If you then
-> lose a drive, you lose your data.
+On Sat, 16 Jun 2007, Neil Brown wrote:
 
-Wow, that really needs to be put somewhere in 120 point red blinking
-text.  A lot of us are used to uninitialized disks calculating the
-parity-on-first-write, but if linux MD is forgoeing that
-'dangerous-no-resync' sounds really REALLY bad.  How about at least a
-'Warning: unlike other systems this WILL cause corruption if you
-forego reconstruction' on mkraid?
+> It would be possible to have a 'this is not initialised' flag on the
+> array, and if that is not set, always do a reconstruct-write rather
+> than a read-modify-write.  But the first time you have an unclean
+> shutdown you are going to resync all the parity anyway (unless you
+> have a bitmap....) so you may as well resync at the start.
+>
+> And why is it such a big deal anyway?  The initial resync doesn't stop
+> you from using the array.  I guess if you wanted to put an array into
+> production instantly and couldn't afford any slowdown due to resync,
+> then you might want to skip the initial resync.... but is that really
+> likely?
+
+in my case it takes 2+ days to resync the array before I can do any 
+performance testing with it. for some reason it's only doing the rebuild 
+at ~5M/sec (even though I've increased the min and max rebuild speeds and 
+a dd to the array seems to be ~44M/sec, even during the rebuild)
+
+I want to test several configurations, from a 45 disk raid6 to a 45 disk 
+raid0. at 2-3 days per test (or longer, depending on the tests) this 
+becomes a very slow process.
+
+also, when a rebuild is slow enough (and has enough of a performance 
+impact) it's not uncommon to want to operate in degraded mode just long 
+enought oget to a maintinance window and then recreate the array and 
+reload from backup.
+
+David Lang
