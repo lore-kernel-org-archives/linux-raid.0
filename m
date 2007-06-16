@@ -1,74 +1,42 @@
-From: Avi Kivity <avi@argo.co.il>
-Subject: Re: limits on raid
-Date: Sat, 16 Jun 2007 20:23:01 +0300
-Message-ID: <46741C75.3000003@argo.co.il>
-References: <Pine.LNX.4.64.0706141957020.29630@asgard.lang.hm>	<18034.479.256870.600360@notabene.brown>	<Pine.LNX.4.64.0706142034400.29630@asgard.lang.hm>	<18034.3676.477575.490448@notabene.brown>	<467273AB.9010202@argo.co.il> <18035.3009.568832.785308@notabene.brown>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: Mikael Pettersson <mikpe@it.uu.se>
+Subject: Re: Machine hanging on synchronize cache on shutdown 2.6.22-rc4-git[45678]
+Date: Sat, 16 Jun 2007 21:09:26 +0200 (MEST)
+Message-ID: <200706161909.l5GJ9Q9P021615@harpo.it.uu.se>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18035.3009.568832.785308@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: david@lang.hm, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+To: brad@wasp.net.au, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil Brown wrote:
->>>   
->>>       
->> Some things are not achievable with block-level raid.  For example, with
->> redundancy integrated into the filesystem, you can have three copies for
->> metadata, two copies for small files, and parity blocks for large files,
->> effectively using different raid levels for different types of data on
->> the same filesystem.
->>     
->
-> Absolutely.  And doing that is a very good idea quite independent of
-> underlying RAID.  Even ext2 stores multiple copies of the superblock.
->
-> Having the filesystem duplicate data, store checksums, and be able to
-> find a different copy if the first one it chose was bad is very
-> sensible and cannot be done by just putting the filesystem on RAID.
->   
+On Sat, 16 Jun 2007 15:52:33 +0400, Brad Campbell wrote:
+> I've got a box here based on current Debian Stable.
+> It's got 15 Maxtor SATA drives in it on 4 Promise TX4 controllers.
+> 
+> Using kernel 2.6.21.x it shuts down, but of course with a huge "clack" as 15 drives all do emergency 
+> head parks simultaneously. I thought I'd upgrade to 2.6.22-rc to get around this but the machine 
+> just hangs up hard apparently trying to sync cache on a drive.
+> 
+> I've run this process manually, so I know it is being performed properly.
+> 
+> Prior to shutdown, all nfsd processes are stopped, filesystems unmounted and md arrays stopped.
+> /proc/mdstat shows
+> root@storage1:~# cat /proc/mdstat
+> Personalities : [raid6] [raid5] [raid4]
+> unused devices: <none>
+> root@storage1:~#
+> 
+> Here is the final hangup.
+> 
+> http://www.fnarfbargle.com/CIMG1029.JPG
 
-It would need to know a lot about the RAID geometry in order not to put
-the the copies on the same disks.
+Something sent a command to the disk on ata15 after the PHY had been
+offlined and the interface had been put in SLUMBER state (SStatus 614).
+Consequently the command timed out. Libata tried a soft reset, and then
+a hard reset, after which the machine hung.
 
-> Having the filesystem keep multiple copies of each data block so that
-> when one drive dies, another block is used does not excite me quite so
-> much.  If you are going to do that, then you want to be able to
-> reconstruct the data that should be on a failed drive onto a new
-> drive.
-> For a RAID system, that reconstruction can go at the full speed of the
-> drive subsystem - but needs to copy every block, whether used or not.
-> For in-filesystem duplication, it is easy to imagine that being quite
-> slow and complex.  It would depend a lot on how you arrange data,
-> and maybe there is some clever approach to data layout that I haven't
-> thought of.  But I think that sort of thing is much easier to do in a
-> RAID layer below the filesystem.
->   
+I don't think sata_promise is the guilty party here. Looks like some
+layer above sata_promise got confused about the state of the interface.
 
-You'd need a reverse mapping of extents to files.  While maintaining
-that is expensive, it brings a lot of benefits:
+I did a quick sata_promise test here with kernel 2.6.22-rc4-git8 and FC4
+userspace, and there was no problem shutting the machine down.
 
-- rebuild a failed drive, without rebuilding free space
-- evacuate a drive in anticipation of taking it offline
-- efficient defragmentation
-
-Reverse mapping storage could serve as free space store too.
-
-> Combining these thoughts, it would make a lot of sense for the
-> filesystem to be able to say to the block device "That blocks looks
-> wrong - can you find me another copy to try?".  That is an example of
-> the sort of closer integration between filesystem and RAID that would
-> make sense.
->   
-
-It's a step forward, but still quite limited compared to combining the
-two layers together.  Sticking with the example above, you still can't
-have a mix of parity-protected files and mirror-protected files; the
-RAID decides that for you.
-
--- 
-Do not meddle in the internals of kernels, for they are subtle and quick to panic.
-
+/Mikael
