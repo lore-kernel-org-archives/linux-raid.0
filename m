@@ -1,34 +1,52 @@
-From: David Greaves <david@dgreaves.com>
+From: Wakko Warner <wakko@animx.eu.org>
 Subject: Re: limits on raid
-Date: Sat, 16 Jun 2007 14:38:36 +0100
-Message-ID: <4673E7DC.80508@dgreaves.com>
-References: <Pine.LNX.4.64.0706141957020.29630@asgard.lang.hm> <18034.479.256870.600360@notabene.brown> <Pine.LNX.4.64.0706142034400.29630@asgard.lang.hm> <18034.3676.477575.490448@notabene.brown> <20070616020320.GB2002@animx.eu.org> <18035.23867.576212.859440@notabene.brown> <Pine.LNX.4.64.0706160037220.7557@asgard.lang.hm>
+Date: Sat, 16 Jun 2007 10:08:57 -0400
+Message-ID: <20070616140857.GA4206@animx.eu.org>
+References: <Pine.LNX.4.64.0706141957020.29630@asgard.lang.hm> <18034.479.256870.600360@notabene.brown> <Pine.LNX.4.64.0706142034400.29630@asgard.lang.hm> <18034.3676.477575.490448@notabene.brown> <20070616020320.GB2002@animx.eu.org> <18035.23867.576212.859440@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0706160037220.7557@asgard.lang.hm>
+Content-Disposition: inline
+In-Reply-To: <18035.23867.576212.859440@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: david@lang.hm
-Cc: Neil Brown <neilb@suse.de>, Wakko Warner <wakko@animx.eu.org>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: david@lang.hm, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-david@lang.hm wrote:
-> On Sat, 16 Jun 2007, Neil Brown wrote:
+Neil Brown wrote:
+> On Friday June 15, wakko@animx.eu.org wrote:
+>  
+> >                                                   As I understand the way
+> > raid works, when you write a block to the array, it will have to read all
+> > the other blocks in the stripe and recalculate the parity and write it out.
 > 
-> I want to test several configurations, from a 45 disk raid6 to a 45 disk 
-> raid0. at 2-3 days per test (or longer, depending on the tests) this 
-> becomes a very slow process.
-Are you suggesting the code that is written to enhance data integrity is 
-optimised (or even touched) to support this kind of test scenario?
-Seriously? :)
+> Your understanding is incomplete.
+> For raid5 on an array with more than 3 drive, if you attempt to write
+> a single block, it will:
+> 
+>  - read the current value of the block, and the parity block.
+>  - "subtract" the old value of the block from the parity, and "add"
+>    the new value.
+>  - write out the new data and the new parity.
+> 
+> If the parity was wrong before, it will still be wrong.  If you then
+> lose a drive, you lose your data.
 
-> also, when a rebuild is slow enough (and has enough of a performance 
-> impact) it's not uncommon to want to operate in degraded mode just long 
-> enought oget to a maintinance window and then recreate the array and 
-> reload from backup.
+I see, I didn't know that the MD's raid5 did this.
 
-so would mdadm --remove the rebuilding disk help?
+> And why is it such a big deal anyway?  The initial resync doesn't stop
+> you from using the array.  I guess if you wanted to put an array into
+> production instantly and couldn't afford any slowdown due to resync,
+> then you might want to skip the initial resync.... but is that really
+> likely?
 
-David
+When I've had an unclean shutdown on one of my systems (10x 50gb raid5) it's
+always slowed the system down when booting up.  Quite significantly I must
+say.  I wait until I can login and change the rebuild max speed to slow it
+down while I'm using it.   But that is another thing.
 
+Thanks for the clarification on raid5.
+
+-- 
+ Lab tests show that use of micro$oft causes cancer in lab animals
+ Got Gas???
