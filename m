@@ -1,75 +1,74 @@
-From: david@lang.hm
+From: Avi Kivity <avi@argo.co.il>
 Subject: Re: limits on raid
-Date: Sat, 16 Jun 2007 10:16:17 -0700 (PDT)
-Message-ID: <Pine.LNX.4.64.0706160947350.7557@asgard.lang.hm>
-References: <Pine.LNX.4.64.0706141957020.29630@asgard.lang.hm>
- <18034.479.256870.600360@notabene.brown> <Pine.LNX.4.64.0706142034400.29630@asgard.lang.hm>
- <18034.3676.477575.490448@notabene.brown> <20070616020320.GB2002@animx.eu.org>
- <18035.23867.576212.859440@notabene.brown> <Pine.LNX.4.64.0706160037220.7557@asgard.lang.hm>
- <4673E7DC.80508@dgreaves.com>
+Date: Sat, 16 Jun 2007 20:23:01 +0300
+Message-ID: <46741C75.3000003@argo.co.il>
+References: <Pine.LNX.4.64.0706141957020.29630@asgard.lang.hm>	<18034.479.256870.600360@notabene.brown>	<Pine.LNX.4.64.0706142034400.29630@asgard.lang.hm>	<18034.3676.477575.490448@notabene.brown>	<467273AB.9010202@argo.co.il> <18035.3009.568832.785308@notabene.brown>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4673E7DC.80508@dgreaves.com>
+In-Reply-To: <18035.3009.568832.785308@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Greaves <david@dgreaves.com>
-Cc: Neil Brown <neilb@suse.de>, Wakko Warner <wakko@animx.eu.org>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: david@lang.hm, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, 16 Jun 2007, David Greaves wrote:
-
-> david@lang.hm wrote:
->>  On Sat, 16 Jun 2007, Neil Brown wrote:
->>
->>  I want to test several configurations, from a 45 disk raid6 to a 45 disk
->>  raid0. at 2-3 days per test (or longer, depending on the tests) this
->>  becomes a very slow process.
-> Are you suggesting the code that is written to enhance data integrity is 
-> optimised (or even touched) to support this kind of test scenario?
-> Seriously? :)
-
-actually, if it can be done without a huge impact to the maintainability 
-of the code I think it would be a good idea for the simple reason that I 
-think the increased experimentation would result in people finding out 
-what raid level is really appropriate for their needs.
-
-there is a _lot_ of confusion around about what the performance 
-implications of different raid levels are (especially when you consider 
-things like raid 10/50/60 where you have two layers combined) and anything 
-that encourages experimentation would be a good thing.
-
->>  also, when a rebuild is slow enough (and has enough of a performance
->>  impact) it's not uncommon to want to operate in degraded mode just long
->>  enought oget to a maintinance window and then recreate the array and
->>  reload from backup.
+Neil Brown wrote:
+>>>   
+>>>       
+>> Some things are not achievable with block-level raid.  For example, with
+>> redundancy integrated into the filesystem, you can have three copies for
+>> metadata, two copies for small files, and parity blocks for large files,
+>> effectively using different raid levels for different types of data on
+>> the same filesystem.
+>>     
 >
-> so would mdadm --remove the rebuilding disk help?
+> Absolutely.  And doing that is a very good idea quite independent of
+> underlying RAID.  Even ext2 stores multiple copies of the superblock.
+>
+> Having the filesystem duplicate data, store checksums, and be able to
+> find a different copy if the first one it chose was bad is very
+> sensible and cannot be done by just putting the filesystem on RAID.
+>   
 
-no. let me try again
+It would need to know a lot about the RAID geometry in order not to put
+the the copies on the same disks.
 
-drive fails monday morning
+> Having the filesystem keep multiple copies of each data block so that
+> when one drive dies, another block is used does not excite me quite so
+> much.  If you are going to do that, then you want to be able to
+> reconstruct the data that should be on a failed drive onto a new
+> drive.
+> For a RAID system, that reconstruction can go at the full speed of the
+> drive subsystem - but needs to copy every block, whether used or not.
+> For in-filesystem duplication, it is easy to imagine that being quite
+> slow and complex.  It would depend a lot on how you arrange data,
+> and maybe there is some clever approach to data layout that I haven't
+> thought of.  But I think that sort of thing is much easier to do in a
+> RAID layer below the filesystem.
+>   
 
-scenerio 1
+You'd need a reverse mapping of extents to files.  While maintaining
+that is expensive, it brings a lot of benefits:
 
-replace the failed drive, start the rebuild. system will be slow (degraded 
-mode + rebuild) for the next three days.
+- rebuild a failed drive, without rebuilding free space
+- evacuate a drive in anticipation of taking it offline
+- efficient defragmentation
 
-scenerio 2
+Reverse mapping storage could serve as free space store too.
 
-leave it in degraded mode until monday night (accepting the speed penalty 
-for degraded mode, but not the rebuild penalty)
+> Combining these thoughts, it would make a lot of sense for the
+> filesystem to be able to say to the block device "That blocks looks
+> wrong - can you find me another copy to try?".  That is an example of
+> the sort of closer integration between filesystem and RAID that would
+> make sense.
+>   
 
-monday night shutdown the system, put in the new drive, reinitialize the 
-array, reload the system from backup.
+It's a step forward, but still quite limited compared to combining the
+two layers together.  Sticking with the example above, you still can't
+have a mix of parity-protected files and mirror-protected files; the
+RAID decides that for you.
 
-system is back to full speed tuesday morning.
-
-scenerio 2 isn't supported with md today, although it sounds as if the 
-skip rebuild could do this except for raid 5
-
-on my test system, the rebuild says it's running at 5M/s a DD to a file on 
-the array says it's doing 45M/s (even while the rebuild is running), so it 
-seems to me that there may be value in this approach.
-
-David Lang
+-- 
+Do not meddle in the internals of kernels, for they are subtle and quick to panic.
 
