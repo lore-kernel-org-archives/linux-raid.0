@@ -1,46 +1,45 @@
-From: david@lang.hm
-Subject: Re: limits on raid
-Date: Sat, 16 Jun 2007 00:48:57 -0700 (PDT)
-Message-ID: <Pine.LNX.4.64.0706160037220.7557@asgard.lang.hm>
-References: <Pine.LNX.4.64.0706141957020.29630@asgard.lang.hm>
- <18034.479.256870.600360@notabene.brown> <Pine.LNX.4.64.0706142034400.29630@asgard.lang.hm>
- <18034.3676.477575.490448@notabene.brown> <20070616020320.GB2002@animx.eu.org>
- <18035.23867.576212.859440@notabene.brown>
+From: Brad Campbell <brad@wasp.net.au>
+Subject: Machine hanging on synchronize cache on shutdown 2.6.22-rc4-git[45678]
+Date: Sat, 16 Jun 2007 15:52:33 +0400
+Message-ID: <4673CF01.6010402@wasp.net.au>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18035.23867.576212.859440@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Wakko Warner <wakko@animx.eu.org>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+To: linux-ide@vger.kernel.org, RAID Linux <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Sat, 16 Jun 2007, Neil Brown wrote:
+G'day all,
 
-> It would be possible to have a 'this is not initialised' flag on the
-> array, and if that is not set, always do a reconstruct-write rather
-> than a read-modify-write.  But the first time you have an unclean
-> shutdown you are going to resync all the parity anyway (unless you
-> have a bitmap....) so you may as well resync at the start.
->
-> And why is it such a big deal anyway?  The initial resync doesn't stop
-> you from using the array.  I guess if you wanted to put an array into
-> production instantly and couldn't afford any slowdown due to resync,
-> then you might want to skip the initial resync.... but is that really
-> likely?
+I've got a box here based on current Debian Stable.
+It's got 15 Maxtor SATA drives in it on 4 Promise TX4 controllers.
 
-in my case it takes 2+ days to resync the array before I can do any 
-performance testing with it. for some reason it's only doing the rebuild 
-at ~5M/sec (even though I've increased the min and max rebuild speeds and 
-a dd to the array seems to be ~44M/sec, even during the rebuild)
+Using kernel 2.6.21.x it shuts down, but of course with a huge "clack" as 15 drives all do emergency 
+head parks simultaneously. I thought I'd upgrade to 2.6.22-rc to get around this but the machine 
+just hangs up hard apparently trying to sync cache on a drive.
 
-I want to test several configurations, from a 45 disk raid6 to a 45 disk 
-raid0. at 2-3 days per test (or longer, depending on the tests) this 
-becomes a very slow process.
+I've run this process manually, so I know it is being performed properly.
 
-also, when a rebuild is slow enough (and has enough of a performance 
-impact) it's not uncommon to want to operate in degraded mode just long 
-enought oget to a maintinance window and then recreate the array and 
-reload from backup.
+Prior to shutdown, all nfsd processes are stopped, filesystems unmounted and md arrays stopped.
+/proc/mdstat shows
+root@storage1:~# cat /proc/mdstat
+Personalities : [raid6] [raid5] [raid4]
+unused devices: <none>
+root@storage1:~#
 
-David Lang
+Here is the final hangup.
+
+http://www.fnarfbargle.com/CIMG1029.JPG
+
+They keyboard is responsive up until the "hard resetting port" when it just locks solid and requires 
+a power-cycle.
+
+It's not really something I want to bisect if I can avoid it give the lovely noise it makes when I 
+power it off. (this box only has a hard power switch, no reset or soft power buttons)
+
+Brad
+-- 
+"Human beings, who are almost unique in having the ability
+to learn from the experience of others, are also remarkable
+for their apparent disinclination to do so." -- Douglas Adams
