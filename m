@@ -1,80 +1,100 @@
-From: "frank jenkins" <fjenkins873@hotmail.com>
-Subject: RE: raid5 recover after a 2 disk failure
-Date: Sun, 17 Jun 2007 07:14:20 +0000
-Message-ID: <BAY123-F328D6B9928888CCA33986AEB1C0@phx.gbl>
-References: <BAY123-F18A64D0231FBB48D99F87FEB1C0@phx.gbl>
+From: David Greaves <david@dgreaves.com>
+Subject: Re: [linux-lvm] 2.6.22-rc4 XFS fails after hibernate/resume
+Date: Sun, 17 Jun 2007 12:38:31 +0100
+Message-ID: <46751D37.5020608@dgreaves.com>
+References: <46744065.6060605@dgreaves.com> <4674645F.5000906@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <BAY123-F18A64D0231FBB48D99F87FEB1C0@phx.gbl>
+In-Reply-To: <4674645F.5000906@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: David Robinson <zxvdr.au@gmail.com>
+Cc: LVM general discussion and development <linux-lvm@redhat.com>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, linux-pm <linux-pm@lists.osdl.org>, LinuxRaid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-To clarify, all I want to do is temporarily mount the array so I can copy as 
-much data off as possible, then blow the entire array away and find out if 
-sdc really is bad, or its just a bad block or bad cable or whatever. I get 
-the feeling that sdc is mostly fine, in which case I should be able to 
-recover most of the data on the array.
+David Robinson wrote:
+> David Greaves wrote:
+>> This isn't a regression.
+>>
+>> I was seeing these problems on 2.6.21 (but 22 was in -rc so I waited 
+>> to try it).
+>> I tried 2.6.22-rc4 (with Tejun's patches) to see if it had improved - no.
+>>
+>> Note this is a different (desktop) machine to that involved my recent 
+>> bugs.
+>>
+>> The machine will work for days (continually powered up) without a 
+>> problem and then exhibits a filesystem failure within minutes of a 
+>> resume.
+>>
+>> I know xfs/raid are OK with hibernate. Is lvm?
+> 
+> I have LVM working with hibernate w/o any problems (w/ ext3). If there 
+> were a problem it wouldn't be with LVM but with device-mapper, and I 
+> doubt there's a problem with either. The stack trace shows that you're 
+> within XFS code (but it's likely its hibernate).
 
-Also, is it possible to set this disks read only so that mdadm won't write 
-to them no matter what I do? That would make me feel a lot better when 
-trying various options to force mdadm into mounting them.
+Thanks - that's good to know.
+The suspicion arises because I have xfs on raid1 as root and have *never* had a 
+problem with that filesystem. It's *always* xfs on lvm on raid5. I also have 
+another system (previously discussed) that reliably hibernated xfs on raid6.
 
-Thanks, Frank
+(Clearly raid5 is in my suspect list)
+
+> You can easily check whether its LVM/device-mapper:
+> 
+> 1) check "dmsetup table" - it should be the same before hibernating and 
+> after resuming.
+> 
+> 2) read directly from the LV - ie, "dd if=/dev/mapper/video_vg-video_lv 
+> of=/dev/null bs=10M count=200".
+> 
+> If dmsetup shows the same info and you can read directly from the LV I 
+> doubt it would be a LVM/device-mapper problem.
+
+OK, that gave me an idea.
+
+Freeze the filesystem
+md5sum the lvm
+hibernate
+resume
+md5sum the lvm
+
+so:
 
 
->From: "frank jenkins" <fjenkins873@hotmail.com>
->To: linux-raid@vger.kernel.org
->Subject: raid5 recover after a 2 disk failure
->Date: Sun, 17 Jun 2007 06:57:55 +0000
->
->I have a 5 disk raid5 array that had a disk failure. I removed the disk, 
->added a new one (and a spare), and recovery began. Halfway through 
->recovery, a second disk failed.
->
->However, while the first disk really was dead, the second seems to have 
->been a transient error, as the smart data and disk testing seem to show the 
->disk is fine.
->
->The question is, how can I tell mdadm to unfail this second disk. From what 
->I've found in the archives, I think I need to use the --force option, but 
->I'm concern about getting device names in the wrong order (and totally 
->destroying my array in the process), so thought I'd ask here first. Here is 
->my /proc/mdstat when recovery initially began:
->
->Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5] 
->[raid4] [raid10]
->md1 : active raid5 sdc1[0](S) sdf1[5] sdb1[4] sda1[3] sde1[2] sdd1[1]
->      976783616 blocks level 5, 32k chunk, algorithm 2 [5/4] [_UUUU]
->      [>....................]  recovery =  0.0% (237952/244195904) 
->finish=427.0min speed=9518K/sec
->
->and here is my current mdstat:
->Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5] 
->[raid4] [raid10]
->md1 : active raid5 sdc1[5](S) sdf1[6](S) sdb1[4] sda1[3] sde1[7](F) sdd1[1]
->      976783616 blocks level 5, 32k chunk, algorithm 2 [5/3] [_U_UU]
->
->sde is the disk that is now marked as failed, and which I would like to put 
->back into service.
->
->
->Also, what does the number in []'s mean after each device, and why did that 
->number change on sdc, sde, and sdf?
->
->Thanks, Frank
->
->_________________________________________________________________
->Get a preview of Live Earth, the hottest event this summer - only on MSN 
->http://liveearth.msn.com?source=msntaglineliveearthhm
->
->-
->To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
+haze:~# xfs_freeze -f /scratch/
 
-_________________________________________________________________
-Get a preview of Live Earth, the hottest event this summer - only on MSN 
-http://liveearth.msn.com?source=msntaglineliveearthhm
+Without this sync, the next two md5sums differed..
+haze:~# sync
+haze:~# dd if=/dev/video_vg/video_lv bs=10M count=200 | md5sum
+200+0 records in
+200+0 records out
+2097152000 bytes (2.1 GB) copied, 41.2495 seconds, 50.8 MB/s
+f42539366bb4269623fa4db14e8e8be2  -
+haze:~# dd if=/dev/video_vg/video_lv bs=10M count=200 | md5sum
+200+0 records in
+200+0 records out
+2097152000 bytes (2.1 GB) copied, 41.8111 seconds, 50.2 MB/s
+f42539366bb4269623fa4db14e8e8be2  -
+
+
+haze:~# echo platform > /sys/power/disk
+haze:~# echo disk > /sys/power/state
+
+
+haze:~# dd if=/dev/video_vg/video_lv bs=10M count=200 | md5sum
+200+0 records in
+200+0 records out
+2097152000 bytes (2.1 GB) copied, 42.0478 seconds, 49.9 MB/s
+f42539366bb4269623fa4db14e8e8be2  -
+haze:~# xfs_freeze -u /scratch/
+
+So the lvm and below looks OK...
+
+I'll see how it behaves now the filesystem has been frozen/thawed over the 
+hibernate...
+
+David
 
