@@ -1,91 +1,34 @@
-From: linux@horizon.com
-Subject: 2.6.22-rc4 BUG
-Date: 17 Jun 2007 07:38:33 -0400
-Message-ID: <20070617113833.12181.qmail@science.horizon.com>
+From: Andi Kleen <andi@firstfloor.org>
+Subject: Re: limits on raid
+Date: 17 Jun 2007 15:00:24 +0200
+Message-ID: <p738xaisplj.fsf@bingen.suse.de>
+References: <Pine.LNX.4.64.0706141957020.29630@asgard.lang.hm>
+	<18034.479.256870.600360@notabene.brown>
+	<Pine.LNX.4.64.0706142034400.29630@asgard.lang.hm>
+	<18034.3676.477575.490448@notabene.brown>
+	<467273AB.9010202@argo.co.il>
+	<18035.3009.568832.785308@notabene.brown>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <18035.3009.568832.785308@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: linux@horizon.com
+To: Neil Brown <neilb@suse.de>
+Cc: Avi Kivity <avi@argo.co.il>, david@lang.hm, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-(Errors start at 09:06:56)
-hdk: dma_timer_expiry: dma status == 0x20
-hdk: DMA timeout retry
-hdk: timeout waiting for DMA
-hdk: dma_timer_expiry: dma status == 0x20
-hdk: DMA timeout retry
-hdk: timeout waiting for DMA
-hdk: task_out_intr: status=0x58 { DriveReady SeekComplete DataRequest }
-ide: failed opcode was: unknown
-pdc202xx_new: Secondary channel reset.
-ide5: reset: success
-hdk: task_out_intr: status=0x58 { DriveReady SeekComplete DataRequest }
-ide: failed opcode was: unknown
-pdc202xx_new: Secondary channel reset.
-ide5: reset: success
-hdk: task_out_intr: status=0x58 { DriveReady SeekComplete DataRequest }
-ide: failed opcode was: unknown
-pdc202xx_new: Secondary channel reset.
-ide5: reset: success
+Neil Brown <neilb@suse.de> writes:
+> 
+> Having the filesystem duplicate data, store checksums, and be able to
+> find a different copy if the first one it chose was bad is very
+> sensible and cannot be done by just putting the filesystem on RAID.
 
-(repeat many times)
+Apropos checksums: since RAID5 copies/xors anyways it would
+be nice to combine that with the file system. During the xor
+a simple checksum could be computed in parallel and stored
+in the file system.
 
-(Time is now 10:45:44)
-ide5: reset: success
-hdk: task_out_intr: status=0x50 { DriveReady SeekComplete }
-ide: failed opcode was: unknown
-hdk: task_out_intr: status=0x50 { DriveReady SeekComplete }
-ide: failed opcode was: unknown
-hdk: task_out_intr: status=0x58 { DriveReady SeekComplete DataRequest }
-ide: failed opcode was: unknown
-pdc202xx_new: Secondary channel reset.
-ide5: reset: success
-hdk: task_out_intr: status=0x50 { DriveReady SeekComplete }
-ide: failed opcode was: unknown
-BUG: unable to handle kernel paging request at virtual address 30000000
- printing eip:
-b02554b1
-*pde = 00000000
-Oops: 0000 [#1]
-CPU:    0
-EIP:    0060:[<b02554b1>]    Not tainted VLI
-EFLAGS: 00010246   (2.6.22-rc4 #27)
-EIP is at ide_outsl+0x5/0x9
-eax: 00009400   ebx: b0457624   ecx: 00000080   edx: 00009400
-esi: 30000000   edi: b0457624   ebp: 00000080   esp: efc7dda8
-ds: 007b   es: 007b   fs: 0000  gs: 0000  ss: 0068
-Process md7_raid10 (pid: 360, ti=efc7d000 task=eff1e500 task.ti=efc7d000)
-Stack: b04576b8 b025605d 30000000 b0457624 30000000 b0457624 b04576b8 b025875c 
-       00000001 b1985000 00000004 b04576b8 00000001 b0850370 b025910f b0850370 
-       b04576b8 06e94ed8 b025933a 00000000 00000019 efc7de64 b03e6520 b04576b8 
-Call Trace:
- [<b025605d>] ata_output_data+0x4d/0x64
- [<b025875c>] ide_pio_sector+0xea/0x121
- [<b025910f>] ide_pio_datablock+0x46/0x5c
- [<b025933a>] pre_task_out_intr+0x9a/0xa5
- [<b0254a3b>] ide_do_request+0x6e7/0x89a
- [<b01d4505>] blk_remove_plug+0x4e/0x5a
- [<b01d452e>] __generic_unplug_device+0x1d/0x1f
- [<b01d51a8>] __make_request+0x386/0x489
- [<b01d3901>] generic_make_request+0x186/0x1b3
- [<b0290f63>] md_wakeup_thread+0x25/0x27
- [<b029640c>] md_check_recovery+0x3ff/0x407
- [<b01d535c>] generic_unplug_device+0x3e/0x44
- [<b01d4505>] blk_remove_plug+0x4e/0x5a
- [<b028eab6>] raid10d+0xaa/0x8a5
- [<b010245b>] common_interrupt+0x23/0x28
- [<b033e722>] schedule_timeout+0x13/0x95
- [<b029584b>] md_thread+0xc1/0xd7
- [<b0121405>] autoremove_wake_function+0x0/0x35
- [<b029578a>] md_thread+0x0/0xd7
- [<b01212b0>] kthread+0x36/0x5a
- [<b012127a>] kthread+0x0/0x5a
- [<b01025db>] kernel_thread_helper+0x7/0x10
- =======================
-Code: 89 c2 f3 66 6d 5f c3 57 89 d7 89 c2 f3 6d 5f c3 89 d0 89 ca ee c3 0f b7 c0 66 ef c3 56 89 d6 89 c2 f3 66 6f 5e c3 56 89 d6 89 c2 <f3> 6f 5e c3 c7 80 08 05 00 00 a3 64 25 b0 c7 80 0c 05 00 00 96 
-EIP: [<b02554b1>] ide_outsl+0x5/0x9 SS:ESP 0068:efc7dda8
-note: md7_raid10[360] exited with preempt_count 1
+And the copy/checksum passes will hopefully at some
+point be combined.
 
-This is 2.6.22-rv4 + linuxpps, on a venerable and stable 32-bit system
-(P3 processor, 400BX motherboard, ECC RAM).  That drive has been giving me
-hassles from time to time...
+-Andi
