@@ -1,109 +1,50 @@
 From: Bill Davidsen <davidsen@tmr.com>
 Subject: Re: limits on raid
-Date: Sun, 17 Jun 2007 13:14:10 -0400
-Message-ID: <46756BE2.7010401@tmr.com>
-References: <Pine.LNX.4.64.0706141957020.29630@asgard.lang.hm>	<18034.479.256870.600360@notabene.brown>	<Pine.LNX.4.64.0706142034400.29630@asgard.lang.hm> <18034.3676.477575.490448@notabene.brown>
+Date: Sun, 17 Jun 2007 13:16:30 -0400
+Message-ID: <46756C6E.1070106@tmr.com>
+References: <Pine.LNX.4.64.0706141957020.29630@asgard.lang.hm> <18034.479.256870.600360@notabene.brown> <Pine.LNX.4.64.0706142034400.29630@asgard.lang.hm> <18034.3676.477575.490448@notabene.brown> <20070616020320.GB2002@animx.eu.org> <18035.23867.576212.859440@notabene.brown> <Pine.LNX.4.64.0706160037220.7557@asgard.lang.hm>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18034.3676.477575.490448@notabene.brown>
+In-Reply-To: <Pine.LNX.4.64.0706160037220.7557@asgard.lang.hm>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: david@lang.hm, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+To: david@lang.hm
+Cc: Neil Brown <neilb@suse.de>, Wakko Warner <wakko@animx.eu.org>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil Brown wrote:
-> On Thursday June 14, david@lang.hm wrote:
->   
->> On Fri, 15 Jun 2007, Neil Brown wrote:
+david@lang.hm wrote:
+> On Sat, 16 Jun 2007, Neil Brown wrote:
+>
+>> It would be possible to have a 'this is not initialised' flag on the
+>> array, and if that is not set, always do a reconstruct-write rather
+>> than a read-modify-write.  But the first time you have an unclean
+>> shutdown you are going to resync all the parity anyway (unless you
+>> have a bitmap....) so you may as well resync at the start.
 >>
->>     
->>> On Thursday June 14, david@lang.hm wrote:
->>>       
->>>> what is the limit for the number of devices that can be in a single array?
->>>>
->>>> I'm trying to build a 45x750G array and want to experiment with the
->>>> different configurations. I'm trying to start with raid6, but mdadm is
->>>> complaining about an invalid number of drives
->>>>
->>>> David Lang
->>>>         
->>> "man mdadm"  search for "limits".  (forgive typos).
->>>       
->> thanks.
->>
->> why does it still default to the old format after so many new versions? 
->> (by the way, the documetnation said 28 devices, but I couldn't get it to 
->> accept more then 27)
->>     
+>> And why is it such a big deal anyway?  The initial resync doesn't stop
+>> you from using the array.  I guess if you wanted to put an array into
+>> production instantly and couldn't afford any slowdown due to resync,
+>> then you might want to skip the initial resync.... but is that really
+>> likely?
 >
-> Dunno - maybe I can't count...
+> in my case it takes 2+ days to resync the array before I can do any 
+> performance testing with it. for some reason it's only doing the 
+> rebuild at ~5M/sec (even though I've increased the min and max rebuild 
+> speeds and a dd to the array seems to be ~44M/sec, even during the 
+> rebuild)
 >
->   
->> it's now churning away 'rebuilding' the brand new array.
->>
->> a few questions/thoughts.
->>
->> why does it need to do a rebuild when makeing a new array? couldn't it 
->> just zero all the drives instead? (or better still just record most of the 
->> space as 'unused' and initialize it as it starts useing it?)
->>     
+> I want to test several configurations, from a 45 disk raid6 to a 45 
+> disk raid0. at 2-3 days per test (or longer, depending on the tests) 
+> this becomes a very slow process.
 >
-> Yes, it could zero all the drives first.  But that would take the same
-> length of time (unless p/q generation was very very slow), and you
-> wouldn't be able to start writing data until it had finished.
-> You can "dd" /dev/zero onto all drives and then create the array with
-> --assume-clean if you want to.  You could even write a shell script to
-> do it for you.
->
-> Yes, you could record which space is used vs unused, but I really
-> don't think the complexity is worth it.
->
->   
-How about a simple solution which would get an array on line and still 
-be safe? All it would take is a flag which forced reconstruct writes for 
-RAID-5. You could set it with an option, or automatically if someone 
-puts --assume-clean with --create, leave it in the superblock until the 
-first "repair" runs to completion. And for repair you could make some 
-assumptions about bad parity not being caused by error but just unwritten.
-
-Thought 2: I think the unwritten bit is easier than you think, you only 
-need it on parity blocks for RAID5, not on data blocks. When a write is 
-done, if the bit is set do a reconstruct, write the parity block, and 
-clear the bit. Keeping a bit per data block is madness, and appears to 
-be unnecessary as well.
->> while I consider zfs to be ~80% hype, one advantage it could have (but I 
->> don't know if it has) is that since the filesystem an raid are integrated 
->> into one layer they can optimize the case where files are being written 
->> onto unallocated space and instead of reading blocks from disk to 
->> calculate the parity they could just put zeros in the unallocated space, 
->> potentially speeding up the system by reducing the amount of disk I/O.
->>     
->
-> Certainly.  But the raid doesn't need to be tightly integrated
-> into the filesystem to achieve this.  The filesystem need only know
-> the geometry of the RAID and when it comes to write, it tries to write
-> full stripes at a time.  If that means writing some extra blocks full
-> of zeros, it can try to do that.  This would require a little bit
-> better communication between filesystem and raid, but not much.  If
-> anyone has a filesystem that they want to be able to talk to raid
-> better, they need only ask...
->  
->   
->> is there any way that linux would be able to do this sort of thing? or is 
->> it impossible due to the layering preventing the nessasary knowledge from 
->> being in the right place?
->>     
->
-> Linux can do anything we want it to.  Interfaces can be changed.  All
-> it takes is a fairly well defined requirement, and the will to make it
-> happen (and some technical expertise, and lots of time .... and
-> coffee?).
->   
-Well, I gave you two thoughts, one which would be slow until a repair 
-but sounds easy to do, and one which is slightly harder but works better 
-and minimizes performance impact.
+I've been doing stuff like this, but I just build the array on a 
+partition per drive so the init is livable. For the stuff I'm doing a 
+total of 500-100GB is ample to do performance testing.
+> also, when a rebuild is slow enough (and has enough of a performance 
+> impact) it's not uncommon to want to operate in degraded mode just 
+> long enought oget to a maintinance window and then recreate the array 
+> and reload from backup.
 
 -- 
 bill davidsen <davidsen@tmr.com>
