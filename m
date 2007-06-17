@@ -1,31 +1,51 @@
-From: dean gaudet <dean@arctic.org>
-Subject: Re: limits on raid
-Date: Sat, 16 Jun 2007 18:47:35 -0700 (PDT)
-Message-ID: <Pine.LNX.4.64.0706161845180.24938@twinlark.arctic.org>
-References: <Pine.LNX.4.64.0706141957020.29630@asgard.lang.hm>
- <18034.479.256870.600360@notabene.brown> <Pine.LNX.4.64.0706142034400.29630@asgard.lang.hm>
- <18034.3676.477575.490448@notabene.brown> <20070616020320.GB2002@animx.eu.org>
- <18035.23867.576212.859440@notabene.brown> <20070616140857.GA4206@animx.eu.org>
+From: "frank jenkins" <fjenkins873@hotmail.com>
+Subject: raid5 recover after a 2 disk failure
+Date: Sun, 17 Jun 2007 06:57:55 +0000
+Message-ID: <BAY123-F18A64D0231FBB48D99F87FEB1C0@phx.gbl>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1759203AbXFQBro@vger.kernel.org>
-In-Reply-To: <20070616140857.GA4206@animx.eu.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Wakko Warner <wakko@animx.eu.org>
-Cc: Neil Brown <neilb@suse.de>, david@lang.hm, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+Content-Type: text/plain; format=flowed
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, 16 Jun 2007, Wakko Warner wrote:
+I have a 5 disk raid5 array that had a disk failure. I removed the disk, 
+added a new one (and a spare), and recovery began. Halfway through recovery, 
+a second disk failed.
 
-> When I've had an unclean shutdown on one of my systems (10x 50gb raid5) it's
-> always slowed the system down when booting up.  Quite significantly I must
-> say.  I wait until I can login and change the rebuild max speed to slow it
-> down while I'm using it.   But that is another thing.
+However, while the first disk really was dead, the second seems to have been 
+a transient error, as the smart data and disk testing seem to show the disk 
+is fine.
 
-i use an external write-intent bitmap on a raid1 to avoid this... you 
-could use internal bitmap but that slows down i/o too much for my tastes.  
-i also use an external xfs journal for the same reason.  2 disk raid1 for 
-root/journal/bitmap, N disk raid5 for bulk storage.  no spindles in 
-common.
+The question is, how can I tell mdadm to unfail this second disk. From what 
+I've found in the archives, I think I need to use the --force option, but 
+I'm concern about getting device names in the wrong order (and totally 
+destroying my array in the process), so thought I'd ask here first. Here is 
+my /proc/mdstat when recovery initially began:
 
--dean
+Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5] [raid4] 
+[raid10]
+md1 : active raid5 sdc1[0](S) sdf1[5] sdb1[4] sda1[3] sde1[2] sdd1[1]
+      976783616 blocks level 5, 32k chunk, algorithm 2 [5/4] [_UUUU]
+      [>....................]  recovery =  0.0% (237952/244195904) 
+finish=427.0min speed=9518K/sec
+
+and here is my current mdstat:
+Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5] [raid4] 
+[raid10]
+md1 : active raid5 sdc1[5](S) sdf1[6](S) sdb1[4] sda1[3] sde1[7](F) sdd1[1]
+      976783616 blocks level 5, 32k chunk, algorithm 2 [5/3] [_U_UU]
+
+sde is the disk that is now marked as failed, and which I would like to put 
+back into service.
+
+
+Also, what does the number in []'s mean after each device, and why did that 
+number change on sdc, sde, and sdf?
+
+Thanks, Frank
+
+_________________________________________________________________
+Get a preview of Live Earth, the hottest event this summer - only on MSN 
+http://liveearth.msn.com?source=msntaglineliveearthhm
+
