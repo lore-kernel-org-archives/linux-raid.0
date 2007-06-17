@@ -1,79 +1,92 @@
-From: david@lang.hm
-Subject: Re: limits on raid
-Date: Sun, 17 Jun 2007 13:46:47 -0700 (PDT)
-Message-ID: <Pine.LNX.4.64.0706171345320.31145@asgard.lang.hm>
-References: <Pine.LNX.4.64.0706141957020.29630@asgard.lang.hm>
- <18034.479.256870.600360@notabene.brown> <Pine.LNX.4.64.0706142034400.29630@asgard.lang.hm>
- <18034.3676.477575.490448@notabene.brown> <20070616020320.GB2002@animx.eu.org>
- <18035.23867.576212.859440@notabene.brown> <20070616140857.GA4206@animx.eu.org>
- <Pine.LNX.4.64.0706161845180.24938@twinlark.arctic.org> <20070617132809.GB7806@animx.eu.org>
- <Pine.LNX.4.64.0706171019490.24938@twinlark.arctic.org> <20070617193025.GA8770@animx.eu.org>
- <Pine.LNX.4.64.0706171242390.24938@twinlark.arctic.org>
+From: greenjelly <big_green_jelly_Bean@yahoo.com>
+Subject: Software based SATA RAID-5 expandable arrays?
+Date: Sun, 17 Jun 2007 15:16:52 -0700 (PDT)
+Message-ID: <11167521.post@talk.nabble.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0706171242390.24938@twinlark.arctic.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: dean gaudet <dean@arctic.org>
-Cc: Wakko Warner <wakko@animx.eu.org>, Neil Brown <neilb@suse.de>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, 17 Jun 2007, dean gaudet wrote:
 
-> On Sun, 17 Jun 2007, Wakko Warner wrote:
->
->> What benefit would I gain by using an external journel and how big would it
->> need to be?
->
-> i don't know how big the journal needs to be... i'm limited by xfs'
-> maximum journal size of 128MiB.
->
-> i don't have much benchmark data -- but here are some rough notes i took
-> when i was evaluating a umem NVRAM card.  since the pata disks in the
-> raid1 have write caching enabled it's somewhat of an unfair comparison,
-> but the important info is the 88 seconds for internal journal vs. 81
-> seconds for external journal.
+I am researching my option to build a Media NAS server.  Sorry for the long
+message, but I wanted to provide as much details as possible to my problem,
+for the best solution.  I have Bolded sections as to save people who don't
+have the time to read all of this.
 
-if you turn on disk write caching the difference will be much larger.
+Option 1: Expand My current Dream Machine!
+I could buying a RAID-5 Hardware card for my current system (vista ultimate
+64 with a extreme 6800 and 1066mb 2 gig RAM).  The Adaptec RAID controller
+(model "3805", you can search NewEgg for the infomation) will cost me near
+$500 (consume 23w) and support 8 drives (I have 6).  This controller
+contains a 800mhz processor with a large cache of memory.  It will support
+expandable RAID-5 array!  I would also buy a 750w+ PSU (for the additional
+safety and security).  The drives in this machine would be placed in shock
+absorbing (noise reduction) 3 slot 4 drive bay containers with fans ( I have
+2 of these) and I will be removing a IDE based Pioneer DVD Burner (1 of 3)
+because of its flaky performance given the p965 intel chip set lack of
+native IDE support and thus the Motherboards Micron SATA to IDE device.  Ive
+already installed 4 drives in this machine (on the native MB SATA
+controller) only to find a fan fail on me within days of the installation. 
+One of the drives went bad (may or may not have to do with the heat).  There
+are 5mm between these drives, and I would now replace both fans with higher
+RPM ball baring fans for added reliability (more noise).  I would also need
+to find a Freeware SMART monitor software which at this time I can not find
+for Vista, to warn me of increased temps due to failure of fan, increased
+environmental heat, etc.  The only option is commercial SMART monitoring
+software (which may not work with the Adaptec RAID adapter.
 
-> -dean
->
-> time sh -c 'tar xf /var/tmp/linux-2.6.20.tar; sync'
+Option 2: Build a server.
+I have a copy of Windows 2003 server, which I have yet to find out if it
+supports native software expandable RAID-5 arrays.  I can also use Linux
+(which I have very little experience with) but have always wanted to use and
+learn. 
 
-I know that sync will force everything to get as far as the journal, will 
-it force the journal to be flushed?
+To do either of the last two options, I would still need to buy a new power
+supply for my current VISTA machine (for added reliability).  The current
+PSU is 550w and with a power hungry RADEON, 3 DVD Drives and a X-Fi sound
+card... My nerves are getting frayed. 
 
-David Lang
+I would buy a cheap motherboard, processor and 1gig or less of RAM.  Lastly
+I would want a VERY large Case.  I have a 7300 NVidia PCI card that was
+replaced with a X1950GT on my Home Theater PC so that I may play back
+HD/Blue Ray DVD's.
 
->
-> xfs journal     raid5 bitmap    times
-> internal        none            0.18s user 2.14s system 2% cpu 1:27.95 total
-> internal        internal        0.16s user 2.16s system 1% cpu 2:01.12 total
-> raid1           none            0.07s user 2.02s system 2% cpu 1:20.62 total
-> raid1           internal        0.14s user 2.01s system 1% cpu 1:55.18 total
-> raid1           raid1           0.14s user 2.03s system 2% cpu 1:20.61 total
-> umem            none            0.13s user 2.07s system 2% cpu 1:20.77 total
-> umem            internal        0.15s user 2.16s system 2% cpu 1:51.28 total
-> umem            umem            0.12s user 2.13s system 2% cpu 1:20.50 total
->
->
-> raid5:
-> - 4x seagate 7200.10 400GB on marvell MV88SX6081
-> - mdadm --create --level=5 --raid-devices=4 /dev/md4 /dev/sd[abcd]1
->
-> raid1:
-> - 2x maxtor 6Y200P0 on 3ware 7504
-> - two 128MiB partitions starting at cyl 1
-> - mdadm --create --level=1 --raid-disks=2 --auto=yes --assume-clean /dev/md1 /dev/sd[fg]1
-> - mdadm --create --level=1 --raid-disks=2 --auto=yes --assume-clean /dev/md2 /dev/sd[fg]2
-> - md1 is used for external xfs journal
-> - md2 has an ext3 filesystem for the external md4 bitmap
->
-> xfs:
-> - mkfs.xfs issued before each run using the defaults (aside from -l logdev=/dev/md1)
-> - mount -o noatime,nodiratime[,logdev=/dev/md1]
->
-> umem:
-> - 512MiB Micro Memory MM-5415CN
-> - 2 partitions similar to the raid1 setup
->
+The server option may cost a bit more then the $500 for the Adaptec Raid
+controller.  This will only work if Linux or Windows 2003 supports my much
+needed requirements.  My Linux OS will be installed on a 40mb IDE Drive (not
+part of the Array).  
+
+The options I seek are to be able to start with a 6 Drive array RAID-5
+array, then as my demand for more space increases in the future I want to be
+able to plug in more drives and incorporate them into the Array without the
+need to backup the data.  Basically I need the software to add the
+drive/drives to the Array, then Rebuild the array incorporating the new
+drives while preserving the data on the original array.
+
+QUESTIONS
+Since this is a media server, and would only be used to serve Movies and
+Video to my two machines It wouldn't have to be powered up full time (My
+Music consumes less space and will be contained on two seperate machines). 
+Is there a way to considerably lower the power consumption of this server
+the 90% of time its not in use?
+
+Can Linux support Drive Arrays of Significant Sizes (4-8 terabytes)?
+
+Can Linux Software support RAID-5 expandability, allowing me to increase the
+number of disks in the array, without the need to backup the media, recreate
+the array from scratch and then copy the backup to the machine (something I
+will be unable to do)?
+
+I know this is a Linux forum, but I figure many of you guys work with
+Windows Server.  If so does Windows 2003 provide the same support for the
+requested requirements above?
+
+Thanks
+GreenJelly
+-- 
+View this message in context: http://www.nabble.com/Software-based-SATA-RAID-5-expandable-arrays--tf3937421.html#a11167521
+Sent from the linux-raid mailing list archive at Nabble.com.
+
