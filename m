@@ -1,100 +1,91 @@
-From: David Greaves <david@dgreaves.com>
-Subject: Re: [linux-lvm] 2.6.22-rc4 XFS fails after hibernate/resume
-Date: Sun, 17 Jun 2007 12:38:31 +0100
-Message-ID: <46751D37.5020608@dgreaves.com>
-References: <46744065.6060605@dgreaves.com> <4674645F.5000906@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: linux@horizon.com
+Subject: 2.6.22-rc4 BUG
+Date: 17 Jun 2007 07:38:33 -0400
+Message-ID: <20070617113833.12181.qmail@science.horizon.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4674645F.5000906@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Robinson <zxvdr.au@gmail.com>
-Cc: LVM general discussion and development <linux-lvm@redhat.com>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, linux-pm <linux-pm@lists.osdl.org>, LinuxRaid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
+Cc: linux@horizon.com
 List-Id: linux-raid.ids
 
-David Robinson wrote:
-> David Greaves wrote:
->> This isn't a regression.
->>
->> I was seeing these problems on 2.6.21 (but 22 was in -rc so I waited 
->> to try it).
->> I tried 2.6.22-rc4 (with Tejun's patches) to see if it had improved - no.
->>
->> Note this is a different (desktop) machine to that involved my recent 
->> bugs.
->>
->> The machine will work for days (continually powered up) without a 
->> problem and then exhibits a filesystem failure within minutes of a 
->> resume.
->>
->> I know xfs/raid are OK with hibernate. Is lvm?
-> 
-> I have LVM working with hibernate w/o any problems (w/ ext3). If there 
-> were a problem it wouldn't be with LVM but with device-mapper, and I 
-> doubt there's a problem with either. The stack trace shows that you're 
-> within XFS code (but it's likely its hibernate).
+(Errors start at 09:06:56)
+hdk: dma_timer_expiry: dma status == 0x20
+hdk: DMA timeout retry
+hdk: timeout waiting for DMA
+hdk: dma_timer_expiry: dma status == 0x20
+hdk: DMA timeout retry
+hdk: timeout waiting for DMA
+hdk: task_out_intr: status=0x58 { DriveReady SeekComplete DataRequest }
+ide: failed opcode was: unknown
+pdc202xx_new: Secondary channel reset.
+ide5: reset: success
+hdk: task_out_intr: status=0x58 { DriveReady SeekComplete DataRequest }
+ide: failed opcode was: unknown
+pdc202xx_new: Secondary channel reset.
+ide5: reset: success
+hdk: task_out_intr: status=0x58 { DriveReady SeekComplete DataRequest }
+ide: failed opcode was: unknown
+pdc202xx_new: Secondary channel reset.
+ide5: reset: success
 
-Thanks - that's good to know.
-The suspicion arises because I have xfs on raid1 as root and have *never* had a 
-problem with that filesystem. It's *always* xfs on lvm on raid5. I also have 
-another system (previously discussed) that reliably hibernated xfs on raid6.
+(repeat many times)
 
-(Clearly raid5 is in my suspect list)
+(Time is now 10:45:44)
+ide5: reset: success
+hdk: task_out_intr: status=0x50 { DriveReady SeekComplete }
+ide: failed opcode was: unknown
+hdk: task_out_intr: status=0x50 { DriveReady SeekComplete }
+ide: failed opcode was: unknown
+hdk: task_out_intr: status=0x58 { DriveReady SeekComplete DataRequest }
+ide: failed opcode was: unknown
+pdc202xx_new: Secondary channel reset.
+ide5: reset: success
+hdk: task_out_intr: status=0x50 { DriveReady SeekComplete }
+ide: failed opcode was: unknown
+BUG: unable to handle kernel paging request at virtual address 30000000
+ printing eip:
+b02554b1
+*pde = 00000000
+Oops: 0000 [#1]
+CPU:    0
+EIP:    0060:[<b02554b1>]    Not tainted VLI
+EFLAGS: 00010246   (2.6.22-rc4 #27)
+EIP is at ide_outsl+0x5/0x9
+eax: 00009400   ebx: b0457624   ecx: 00000080   edx: 00009400
+esi: 30000000   edi: b0457624   ebp: 00000080   esp: efc7dda8
+ds: 007b   es: 007b   fs: 0000  gs: 0000  ss: 0068
+Process md7_raid10 (pid: 360, ti=efc7d000 task=eff1e500 task.ti=efc7d000)
+Stack: b04576b8 b025605d 30000000 b0457624 30000000 b0457624 b04576b8 b025875c 
+       00000001 b1985000 00000004 b04576b8 00000001 b0850370 b025910f b0850370 
+       b04576b8 06e94ed8 b025933a 00000000 00000019 efc7de64 b03e6520 b04576b8 
+Call Trace:
+ [<b025605d>] ata_output_data+0x4d/0x64
+ [<b025875c>] ide_pio_sector+0xea/0x121
+ [<b025910f>] ide_pio_datablock+0x46/0x5c
+ [<b025933a>] pre_task_out_intr+0x9a/0xa5
+ [<b0254a3b>] ide_do_request+0x6e7/0x89a
+ [<b01d4505>] blk_remove_plug+0x4e/0x5a
+ [<b01d452e>] __generic_unplug_device+0x1d/0x1f
+ [<b01d51a8>] __make_request+0x386/0x489
+ [<b01d3901>] generic_make_request+0x186/0x1b3
+ [<b0290f63>] md_wakeup_thread+0x25/0x27
+ [<b029640c>] md_check_recovery+0x3ff/0x407
+ [<b01d535c>] generic_unplug_device+0x3e/0x44
+ [<b01d4505>] blk_remove_plug+0x4e/0x5a
+ [<b028eab6>] raid10d+0xaa/0x8a5
+ [<b010245b>] common_interrupt+0x23/0x28
+ [<b033e722>] schedule_timeout+0x13/0x95
+ [<b029584b>] md_thread+0xc1/0xd7
+ [<b0121405>] autoremove_wake_function+0x0/0x35
+ [<b029578a>] md_thread+0x0/0xd7
+ [<b01212b0>] kthread+0x36/0x5a
+ [<b012127a>] kthread+0x0/0x5a
+ [<b01025db>] kernel_thread_helper+0x7/0x10
+ =======================
+Code: 89 c2 f3 66 6d 5f c3 57 89 d7 89 c2 f3 6d 5f c3 89 d0 89 ca ee c3 0f b7 c0 66 ef c3 56 89 d6 89 c2 f3 66 6f 5e c3 56 89 d6 89 c2 <f3> 6f 5e c3 c7 80 08 05 00 00 a3 64 25 b0 c7 80 0c 05 00 00 96 
+EIP: [<b02554b1>] ide_outsl+0x5/0x9 SS:ESP 0068:efc7dda8
+note: md7_raid10[360] exited with preempt_count 1
 
-> You can easily check whether its LVM/device-mapper:
-> 
-> 1) check "dmsetup table" - it should be the same before hibernating and 
-> after resuming.
-> 
-> 2) read directly from the LV - ie, "dd if=/dev/mapper/video_vg-video_lv 
-> of=/dev/null bs=10M count=200".
-> 
-> If dmsetup shows the same info and you can read directly from the LV I 
-> doubt it would be a LVM/device-mapper problem.
-
-OK, that gave me an idea.
-
-Freeze the filesystem
-md5sum the lvm
-hibernate
-resume
-md5sum the lvm
-
-so:
-
-
-haze:~# xfs_freeze -f /scratch/
-
-Without this sync, the next two md5sums differed..
-haze:~# sync
-haze:~# dd if=/dev/video_vg/video_lv bs=10M count=200 | md5sum
-200+0 records in
-200+0 records out
-2097152000 bytes (2.1 GB) copied, 41.2495 seconds, 50.8 MB/s
-f42539366bb4269623fa4db14e8e8be2  -
-haze:~# dd if=/dev/video_vg/video_lv bs=10M count=200 | md5sum
-200+0 records in
-200+0 records out
-2097152000 bytes (2.1 GB) copied, 41.8111 seconds, 50.2 MB/s
-f42539366bb4269623fa4db14e8e8be2  -
-
-
-haze:~# echo platform > /sys/power/disk
-haze:~# echo disk > /sys/power/state
-
-
-haze:~# dd if=/dev/video_vg/video_lv bs=10M count=200 | md5sum
-200+0 records in
-200+0 records out
-2097152000 bytes (2.1 GB) copied, 42.0478 seconds, 49.9 MB/s
-f42539366bb4269623fa4db14e8e8be2  -
-haze:~# xfs_freeze -u /scratch/
-
-So the lvm and below looks OK...
-
-I'll see how it behaves now the filesystem has been frozen/thawed over the 
-hibernate...
-
-David
-
+This is 2.6.22-rv4 + linuxpps, on a venerable and stable 32-bit system
+(P3 processor, 400BX motherboard, ECC RAM).  That drive has been giving me
+hassles from time to time...
