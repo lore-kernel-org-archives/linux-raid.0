@@ -1,115 +1,61 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: XFS Tunables for High Speed Linux SW RAID5 Systems?
-Date: Mon, 18 Jun 2007 07:07:39 -0400 (EDT)
-Message-ID: <Pine.LNX.4.64.0706180643560.31683@p34.internal.lan>
-References: <Pine.LNX.4.64.0706151634130.26033@p34.internal.lan>
- <20070618000502.GU86004887@sgi.com>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20070618000502.GU86004887@sgi.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: David Chinner <dgc@sgi.com>
-Cc: xfs@oss.sgi.com, linux-raid@vger.kernel.org
+From: Mikael Pettersson <mikpe@it.uu.se>
+Subject: Re: Machine hanging on synchronize cache on shutdown 2.6.22-rc4-git[45678]
+Date: Mon, 18 Jun 2007 13:29:00 +0200 (MEST)
+Message-ID: <200706181129.l5IBT0Sa002063@harpo.it.uu.se>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: htejun@gmail.com, mikpe@it.uu.se
+Cc: brad@wasp.net.au, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Dave,
+On Mon, 18 Jun 2007 16:09:49 +0900, Tejun Heo wrote:
+> Mikael Pettersson wrote:
+> > On Sat, 16 Jun 2007 15:52:33 +0400, Brad Campbell wrote:
+> >> I've got a box here based on current Debian Stable.
+> >> It's got 15 Maxtor SATA drives in it on 4 Promise TX4 controllers.
+> >>
+> >> Using kernel 2.6.21.x it shuts down, but of course with a huge "clack" as 15 drives all do emergency 
+> >> head parks simultaneously. I thought I'd upgrade to 2.6.22-rc to get around this but the machine 
+> >> just hangs up hard apparently trying to sync cache on a drive.
+> >>
+> >> I've run this process manually, so I know it is being performed properly.
+> >>
+> >> Prior to shutdown, all nfsd processes are stopped, filesystems unmounted and md arrays stopped.
+> >> /proc/mdstat shows
+> >> root@storage1:~# cat /proc/mdstat
+> >> Personalities : [raid6] [raid5] [raid4]
+> >> unused devices: <none>
+> >> root@storage1:~#
+> >>
+> >> Here is the final hangup.
+> >>
+> >> http://www.fnarfbargle.com/CIMG1029.JPG
+> > 
+> > Something sent a command to the disk on ata15 after the PHY had been
+> > offlined and the interface had been put in SLUMBER state (SStatus 614).
+> > Consequently the command timed out. Libata tried a soft reset, and then
+> > a hard reset, after which the machine hung.
+> 
+> Hmm... weird.  Maybe device initiated power saving (DIPS) is active?
+> 
+> > I don't think sata_promise is the guilty party here. Looks like some
+> > layer above sata_promise got confused about the state of the interface.
+> 
+> But locking up hard after hardreset is a problem of sata_promise, no?
 
-Questions inline and below.
+Maybe, maybe not. The original report doesn't specify where/how
+the machine hung.
 
-On Mon, 18 Jun 2007, David Chinner wrote:
+Brad: can you enable sysrq and check if the kernel responds to
+sysrq when it appears to hang, and if so, where it's executing?
 
-> On Fri, Jun 15, 2007 at 04:36:07PM -0400, Justin Piszcz wrote:
->> Hi,
->>
->> I was wondering if the XFS folks can recommend any optimizations for high
->> speed disk arrays using RAID5?
->
-> [sysctls snipped]
->
-> None of those options will make much difference to performance.
-> mkfs parameters are the big ticket item here....
->
->
->> There is also vm/dirty tunable in /proc.
->
-> That changes benchmark times by starting writeback earlier, but
-> doesn't affect actual writeback speed.
->
->> I was wondering what are some things to tune for speed?  I've already
->> tuned the MD layer but is there anything with XFS I can also tune?
->>
->> echo "Setting read-ahead to 64MB for /dev/md3"
->> blockdev --setra 65536 /dev/md3
-This proved to give the fastest performance, I have always used 4GB then 
-recently 8GB of memory in the machine.
+sata_promise just passes sata_std_hardreset to ata_do_eh.
+I've certainly seen EH hardresets work before, so I'm assuming
+that something in this particular situation (PHY offlined,
+kernel close to shutting down) breaks things.
 
-http://www.rhic.bnl.gov/hepix/talks/041019pm/schoen.pdf
+FWIW, I'm seeing scsi layer accesses (cache flushes) after things
+like rmmod sata_promise. They error out and don't seem to cause
+any harm, but the fact that they occur at all makes me nervous.
 
-See page 13.
-
->
-> Why so large? That's likely to cause readahead thrashing problems
-> under low memory....
->
->> echo "Setting stripe_cache_size to 16MB for /dev/md3"
->> echo 16384 > /sys/block/md3/md/stripe_cache_size
->>
->> (also set max_sectors_kb) to 128K (chunk size) and disable NCQ
->
-> Why do that? You want XFS to issue large I/Os and the block layer
-> to split them across all the disks. i.e. you are preventing full
-> stripe writes from occurring by doing that.
-I use a 128k stripe, what should I use for the max_sectors_kb? I read that 
-128kb was optimal.
-
-Can you please comment on all of the optimizations below?
-
-#!/bin/bash
-
-# source profile
-. /etc/profile
-
-echo "Optimizing RAID Arrays..."
-
-
-# This step must come first.
-# See: http://www.3ware.com/KB/article.aspx?id=11050
-
-echo "Setting max_sectors_kb to chunk size of RAID5 arrays..."
-for i in sdc sdd sde sdf sdg sdh sdi sdj sdk sdl
-do
-   echo "Setting /dev/$i to 128K..."
-   echo 128 > /sys/block/"$i"/queue/max_sectors_kb
-done
-
-echo "Setting read-ahead to 64MB for /dev/md3"
-blockdev --setra 65536 /dev/md3
-
-echo "Setting stripe_cache_size to 16MB for /dev/md3"
-echo 16384 > /sys/block/md3/md/stripe_cache_size
-
-# if you use more than the default 64kb stripe with raid5
-# this feature is broken so you need to limit it to 30MB/s
-# neil has a patch, not sure when it will be merged.
-echo "Setting minimum and maximum resync speed to 30MB/s..."
-echo 30000 > /sys/block/md0/md/sync_speed_min
-echo 30000 > /sys/block/md0/md/sync_speed_max
-echo 30000 > /sys/block/md1/md/sync_speed_min
-echo 30000 > /sys/block/md1/md/sync_speed_max
-echo 30000 > /sys/block/md2/md/sync_speed_min
-echo 30000 > /sys/block/md2/md/sync_speed_max
-echo 30000 > /sys/block/md3/md/sync_speed_min
-echo 30000 > /sys/block/md3/md/sync_speed_max
-
-# Disable NCQ.
-echo "Disabling NCQ..."
-for i in sdc sdd sde sdf sdg sdh sdi sdj sdk sdl
-do
-   echo "Disabling NCQ on $i"
-   echo 1 > /sys/block/"$i"/device/queue_depth
-done
-
-
-
-
+/Mikael
