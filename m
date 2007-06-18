@@ -1,26 +1,45 @@
-From: Mike <mikee@mikee.ath.cx>
-Subject: suggestions for inexpensive linux jbod?
-Date: Mon, 18 Jun 2007 14:55:31 +0000 (UTC)
-Message-ID: <f566d2$84u$1@sea.gmane.org>
+From: Dexter Filmore <Dexter.Filmore@gmx.de>
+Subject: Re: resync to last 27h - usually 3. what's this?
+Date: Mon, 18 Jun 2007 18:26:51 +0200
+Message-ID: <200706181826.51387.Dexter.Filmore@gmx.de>
+References: <200706181659.32119.Dexter.Filmore@gmx.de> <4676A31E.8090902@dgreaves.com>
+Mime-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4676A31E.8090902@dgreaves.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: David Greaves <david@dgreaves.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I'm creating a larger backup server that uses bacula (this
-software works well). The way I'm going about this I need
-lots of space in the filesystem where temporary files are
-stored. I have been looking at the Norco (link at the bottom),
-but there seem to be some grumblings that the adapter card
-does not play well with linux.
+On Monday 18 June 2007 17:22:06 David Greaves wrote:
+> Dexter Filmore wrote:
+> > 1661 minutes is *way* too long. it's a 4x250GiB sATA array and usually
+> > takes 3 hours to resync or check, for that matter.
+> >
+> > So, what's this?
+>
+> kernel, mdadm verisons?
+>
+> I seem to recall a long fixed ETA calculation bug some time back...
+>
 
-Has anyone used this device or have another suggestion? I'm
-looking at something that will present lots of disk to the
-linux box (fedore core 5, kernel 2.6.20) that I will put
-under md/RAID and LVM. I want to have between 1.5TB and 3.0TB
-of usable space after all the RAID'ing.
+2.6.21.1, mdadm 2.5.3.
+First time I sync since upgrade from 2.6.17.
 
-Mike
+Definetly no calc bug, only 4% progress in one hour.
 
-http://www.newegg.com/Product/Product.aspx?Item=N82E16816133001
 
+-- 
+-----BEGIN GEEK CODE BLOCK-----
+Version: 3.12
+GCS d--(+)@ s-:+ a- C++++ UL++ P+>++ L+++>++++ E-- W++ N o? K-
+w--(---) !O M+ V- PS+ PE Y++ PGP t++(---)@ 5 X+(++) R+(++) tv--(+)@ 
+b++(+++) DI+++ D- G++ e* h>++ r* y?
+------END GEEK CODE BLOCK------
+
+http://www.stop1984.com
+http://www.againsttcpa.com
