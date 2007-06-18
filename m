@@ -1,71 +1,29 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: resync to last 27h - usually 3. what's this?
-Date: Mon, 18 Jun 2007 12:57:38 -0400 (EDT)
-Message-ID: <Pine.LNX.4.64.0706181256541.31683@p34.internal.lan>
-References: <200706181659.32119.Dexter.Filmore@gmx.de> <4676A31E.8090902@dgreaves.com>
- <200706181826.51387.Dexter.Filmore@gmx.de>
+From: Brendan Conoboy <blc@redhat.com>
+Subject: Re: limits on raid
+Date: Mon, 18 Jun 2007 11:20:02 -0600
+Message-ID: <4676BEC2.7090809@redhat.com>
+References: <Pine.LNX.4.64.0706141957020.29630@asgard.lang.hm> <18034.479.256870.600360@notabene.brown> <Pine.LNX.4.64.0706142034400.29630@asgard.lang.hm> <18034.3676.477575.490448@notabene.brown> <20070616020320.GB2002@animx.eu.org> <18035.23867.576212.859440@notabene.brown> <Pine.LNX.4.64.0706160037220.7557@asgard.lang.hm>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200706181826.51387.Dexter.Filmore@gmx.de>
+In-Reply-To: <Pine.LNX.4.64.0706160037220.7557@asgard.lang.hm>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dexter Filmore <Dexter.Filmore@gmx.de>
-Cc: David Greaves <david@dgreaves.com>, linux-raid@vger.kernel.org
+To: david@lang.hm
+Cc: Neil Brown <neilb@suse.de>, Wakko Warner <wakko@animx.eu.org>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+david@lang.hm wrote:
+> in my case it takes 2+ days to resync the array before I can do any 
+> performance testing with it. for some reason it's only doing the rebuild 
+> at ~5M/sec (even though I've increased the min and max rebuild speeds 
+> and a dd to the array seems to be ~44M/sec, even during the rebuild)
 
+With performance like that, it sounds like you're saturating a bus 
+somewhere along the line.  If you're using scsi, for instance, it's very 
+easy for a long chain of drives to overwhelm a channel.  You might also 
+want to consider some other RAID layouts like 1+0 or 5+0 depending upon 
+your space vs. reliability needs.
 
-On Mon, 18 Jun 2007, Dexter Filmore wrote:
-
-> On Monday 18 June 2007 17:22:06 David Greaves wrote:
->> Dexter Filmore wrote:
->>> 1661 minutes is *way* too long. it's a 4x250GiB sATA array and usually
->>> takes 3 hours to resync or check, for that matter.
->>>
->>> So, what's this?
->>
->> kernel, mdadm verisons?
->>
->> I seem to recall a long fixed ETA calculation bug some time back...
->>
->
-> 2.6.21.1, mdadm 2.5.3.
-> First time I sync since upgrade from 2.6.17.
->
-> Definetly no calc bug, only 4% progress in one hour.
->
->
-> -- 
-> -----BEGIN GEEK CODE BLOCK-----
-> Version: 3.12
-> GCS d--(+)@ s-:+ a- C++++ UL++ P+>++ L+++>++++ E-- W++ N o? K-
-> w--(---) !O M+ V- PS+ PE Y++ PGP t++(---)@ 5 X+(++) R+(++) tv--(+)@
-> b++(+++) DI+++ D- G++ e* h>++ r* y?
-> ------END GEEK CODE BLOCK------
->
-> http://www.stop1984.com
-> http://www.againsttcpa.com
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-
-Hi.
-
-What is your stripe size?
-
-What if you set this higher? By default it will use 1MB/s or so if you do 
-not FORCE it to use more than the idle I/O on the box.
-
-echo "Setting minimum and maximum resync speed to 30MB/s..."
-echo 30000 > /sys/block/md0/md/sync_speed_min
-echo 30000 > /sys/block/md0/md/sync_speed_max
-echo 30000 > /sys/block/md1/md/sync_speed_min
-echo 30000 > /sys/block/md1/md/sync_speed_max
-echo 30000 > /sys/block/md2/md/sync_speed_min
-echo 30000 > /sys/block/md2/md/sync_speed_max
-echo 30000 > /sys/block/md3/md/sync_speed_min
-echo 30000 > /sys/block/md3/md/sync_speed_max
-
-
+-- 
+Brendan Conoboy / Red Hat, Inc. / blc@redhat.com
