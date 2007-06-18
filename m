@@ -1,22 +1,64 @@
-From: Brendan Conoboy <blc@redhat.com>
-Subject: Re: limits on raid
-Date: Mon, 18 Jun 2007 13:11:26 -0600
-Message-ID: <4676D8DE.3050903@redhat.com>
-References: <18034.479.256870.600360@notabene.brown> <Pine.LNX.4.64.0706142034400.29630@asgard.lang.hm> <18034.3676.477575.490448@notabene.brown> <20070616020320.GB2002@animx.eu.org> <18035.23867.576212.859440@notabene.brown> <Pine.LNX.4.64.0706160037220.7557@asgard.lang.hm> <4676BEC2.7090809@redhat.com> <Pine.LNX.4.64.0706181026170.12717@asgard.lang.hm> <20070618180327.GP10008@csclub.uwaterloo.ca> <Pine.LNX.4.64.0706181111020.12717@asgard.lang.hm> <20070618183324.GL10006@csclub.uwaterloo.ca> <Pine.LNX.4.64.0706181138210.12717@asgard.lang.hm>
+From: David Greaves <david@dgreaves.com>
+Subject: Re: [linux-lvm] 2.6.22-rc4 XFS fails after hibernate/resume
+Date: Mon, 18 Jun 2007 20:14:06 +0100
+Message-ID: <4676D97E.4000403@dgreaves.com>
+References: <46744065.6060605@dgreaves.com> <4674645F.5000906@gmail.com> <46751D37.5020608@dgreaves.com> <4676390E.6010202@dgreaves.com> <20070618145007.GE85884050@sgi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0706181138210.12717@asgard.lang.hm>
+In-Reply-To: <20070618145007.GE85884050@sgi.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: david@lang.hm
-Cc: Lennart Sorensen <lsorense@csclub.uwaterloo.ca>, Neil Brown <neilb@suse.de>, Wakko Warner <wakko@animx.eu.org>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+To: David Chinner <dgc@sgi.com>
+Cc: David Robinson <zxvdr.au@gmail.com>, LVM general discussion and development <linux-lvm@redhat.com>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, linux-pm <linux-pm@lists.osdl.org>, LinuxRaid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-david@lang.hm wrote:
-> yes, sorry, ultra 320 wide.
+OK, just an quick ack
 
-Exactly how many channels and drives?
+When I resumed tonight (having done a freeze/thaw over the suspend) some libata 
+errors threw up during the resume and there was an eventual hard hang. Maybe I 
+spoke to soon?
 
--- 
-Brendan Conoboy / Red Hat, Inc. / blc@redhat.com
+I'm going to have to do some more testing...
+
+David Chinner wrote:
+> On Mon, Jun 18, 2007 at 08:49:34AM +0100, David Greaves wrote:
+>> David Greaves wrote:
+>> So doing:
+>> xfs_freeze -f /scratch
+>> sync
+>> echo platform > /sys/power/disk
+>> echo disk > /sys/power/state
+>> # resume
+>> xfs_freeze -u /scratch
+>>
+>> Works (for now - more usage testing tonight)
+> 
+> Verrry interesting.
+Good :)
+
+
+> What you were seeing was an XFS shutdown occurring because the free space
+> btree was corrupted. IOWs, the process of suspend/resume has resulted
+> in either bad data being written to disk, the correct data not being
+> written to disk or the cached block being corrupted in memory.
+That's the kind of thing I was suspecting, yes.
+
+> If you run xfs_check on the filesystem after it has shut down after a resume,
+> can you tell us if it reports on-disk corruption? Note: do not run xfs_repair
+> to check this - it does not check the free space btrees; instead it simply
+> rebuilds them from scratch. If xfs_check reports an error, then run xfs_repair
+> to fix it up.
+OK, I can try this tonight...
+
+> FWIW, I'm on record stating that "sync" is not sufficient to quiesce an XFS
+> filesystem for a suspend/resume to work safely and have argued that the only
+> safe thing to do is freeze the filesystem before suspend and thaw it after
+> resume. This is why I originally asked you to test that with the other problem
+> that you reported. Up until this point in time, there's been no evidence to
+> prove either side of the argument......
+> 
+> Cheers,
+> 
+> Dave.
+
