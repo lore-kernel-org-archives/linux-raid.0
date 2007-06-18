@@ -1,52 +1,29 @@
 From: David Chinner <dgc@sgi.com>
-Subject: Re: XFS Tunables for High Speed Linux SW RAID5 Systems?
-Date: Mon, 18 Jun 2007 10:05:02 +1000
-Message-ID: <20070618000502.GU86004887@sgi.com>
-References: <Pine.LNX.4.64.0706151634130.26033@p34.internal.lan>
+Subject: Re: limits on raid
+Date: Mon, 18 Jun 2007 14:57:59 +1000
+Message-ID: <20070618045759.GD85884050@sgi.com>
+References: <Pine.LNX.4.64.0706141957020.29630@asgard.lang.hm> <18034.479.256870.600360@notabene.brown> <Pine.LNX.4.64.0706142034400.29630@asgard.lang.hm> <18034.3676.477575.490448@notabene.brown> <467273AB.9010202@argo.co.il> <18035.3009.568832.785308@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1758843AbXFRE64@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.64.0706151634130.26033@p34.internal.lan>
-Sender: linux-raid-owner@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: xfs@oss.sgi.com, linux-raid@vger.kernel.org
+In-Reply-To: <18035.3009.568832.785308@notabene.brown>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: Avi Kivity <avi@argo.co.il>, david@lang.hm, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, Jun 15, 2007 at 04:36:07PM -0400, Justin Piszcz wrote:
-> Hi,
-> 
-> I was wondering if the XFS folks can recommend any optimizations for high 
-> speed disk arrays using RAID5?
+On Sat, Jun 16, 2007 at 07:59:29AM +1000, Neil Brown wrote:
+> Combining these thoughts, it would make a lot of sense for the
+> filesystem to be able to say to the block device "That blocks looks
+> wrong - can you find me another copy to try?".  That is an example of
+> the sort of closer integration between filesystem and RAID that would
+> make sense.
 
-[sysctls snipped]
-
-None of those options will make much difference to performance.
-mkfs parameters are the big ticket item here....
-
-
-> There is also vm/dirty tunable in /proc.
-
-That changes benchmark times by starting writeback earlier, but
-doesn't affect actual writeback speed.
-
-> I was wondering what are some things to tune for speed?  I've already 
-> tuned the MD layer but is there anything with XFS I can also tune?
-> 
-> echo "Setting read-ahead to 64MB for /dev/md3"
-> blockdev --setra 65536 /dev/md3
-
-Why so large? That's likely to cause readahead thrashing problems
-under low memory....
-
-> echo "Setting stripe_cache_size to 16MB for /dev/md3"
-> echo 16384 > /sys/block/md3/md/stripe_cache_size
-> 
-> (also set max_sectors_kb) to 128K (chunk size) and disable NCQ
-
-Why do that? You want XFS to issue large I/Os and the block layer
-to split them across all the disks. i.e. you are preventing full
-stripe writes from occurring by doing that.
+I think that this would only be useful on devices that store
+discrete copies of the blocks on different devices i.e. mirrors. If
+it's an XOR based RAID, you don't have another copy you can
+retreive....
 
 Cheers,
 
