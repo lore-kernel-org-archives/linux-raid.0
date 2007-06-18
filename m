@@ -1,72 +1,115 @@
-From: David Greaves <david@dgreaves.com>
-Subject: Re: [linux-lvm] 2.6.22-rc4 XFS fails after hibernate/resume
-Date: Mon, 18 Jun 2007 08:49:34 +0100
-Message-ID: <4676390E.6010202@dgreaves.com>
-References: <46744065.6060605@dgreaves.com> <4674645F.5000906@gmail.com> <46751D37.5020608@dgreaves.com>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: XFS Tunables for High Speed Linux SW RAID5 Systems?
+Date: Mon, 18 Jun 2007 07:07:39 -0400 (EDT)
+Message-ID: <Pine.LNX.4.64.0706180643560.31683@p34.internal.lan>
+References: <Pine.LNX.4.64.0706151634130.26033@p34.internal.lan>
+ <20070618000502.GU86004887@sgi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <46751D37.5020608@dgreaves.com>
+In-Reply-To: <20070618000502.GU86004887@sgi.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Robinson <zxvdr.au@gmail.com>
-Cc: LVM general discussion and development <linux-lvm@redhat.com>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, linux-pm <linux-pm@lists.osdl.org>, LinuxRaid <linux-raid@vger.kernel.org>
+To: David Chinner <dgc@sgi.com>
+Cc: xfs@oss.sgi.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-David Greaves wrote:
-> David Robinson wrote:
->> David Greaves wrote:
->>> This isn't a regression.
->>>
->>> I was seeing these problems on 2.6.21 (but 22 was in -rc so I waited 
->>> to try it).
->>> I tried 2.6.22-rc4 (with Tejun's patches) to see if it had improved - 
->>> no.
->>>
->>> Note this is a different (desktop) machine to that involved my recent 
->>> bugs.
->>>
->>> The machine will work for days (continually powered up) without a 
->>> problem and then exhibits a filesystem failure within minutes of a 
->>> resume.
+Dave,
 
-<snip>
+Questions inline and below.
 
-> OK, that gave me an idea.
-> 
-> Freeze the filesystem
-> md5sum the lvm
-> hibernate
-> resume
-> md5sum the lvm
-<snip>
-> So the lvm and below looks OK...
-> 
-> I'll see how it behaves now the filesystem has been frozen/thawed over 
-> the hibernate...
+On Mon, 18 Jun 2007, David Chinner wrote:
+
+> On Fri, Jun 15, 2007 at 04:36:07PM -0400, Justin Piszcz wrote:
+>> Hi,
+>>
+>> I was wondering if the XFS folks can recommend any optimizations for high
+>> speed disk arrays using RAID5?
+>
+> [sysctls snipped]
+>
+> None of those options will make much difference to performance.
+> mkfs parameters are the big ticket item here....
+>
+>
+>> There is also vm/dirty tunable in /proc.
+>
+> That changes benchmark times by starting writeback earlier, but
+> doesn't affect actual writeback speed.
+>
+>> I was wondering what are some things to tune for speed?  I've already
+>> tuned the MD layer but is there anything with XFS I can also tune?
+>>
+>> echo "Setting read-ahead to 64MB for /dev/md3"
+>> blockdev --setra 65536 /dev/md3
+This proved to give the fastest performance, I have always used 4GB then 
+recently 8GB of memory in the machine.
+
+http://www.rhic.bnl.gov/hepix/talks/041019pm/schoen.pdf
+
+See page 13.
+
+>
+> Why so large? That's likely to cause readahead thrashing problems
+> under low memory....
+>
+>> echo "Setting stripe_cache_size to 16MB for /dev/md3"
+>> echo 16384 > /sys/block/md3/md/stripe_cache_size
+>>
+>> (also set max_sectors_kb) to 128K (chunk size) and disable NCQ
+>
+> Why do that? You want XFS to issue large I/Os and the block layer
+> to split them across all the disks. i.e. you are preventing full
+> stripe writes from occurring by doing that.
+I use a 128k stripe, what should I use for the max_sectors_kb? I read that 
+128kb was optimal.
+
+Can you please comment on all of the optimizations below?
+
+#!/bin/bash
+
+# source profile
+. /etc/profile
+
+echo "Optimizing RAID Arrays..."
 
 
-And it appears to behave well. (A few hours compile/clean cycling kernel builds 
-on that filesystem were OK).
+# This step must come first.
+# See: http://www.3ware.com/KB/article.aspx?id=11050
+
+echo "Setting max_sectors_kb to chunk size of RAID5 arrays..."
+for i in sdc sdd sde sdf sdg sdh sdi sdj sdk sdl
+do
+   echo "Setting /dev/$i to 128K..."
+   echo 128 > /sys/block/"$i"/queue/max_sectors_kb
+done
+
+echo "Setting read-ahead to 64MB for /dev/md3"
+blockdev --setra 65536 /dev/md3
+
+echo "Setting stripe_cache_size to 16MB for /dev/md3"
+echo 16384 > /sys/block/md3/md/stripe_cache_size
+
+# if you use more than the default 64kb stripe with raid5
+# this feature is broken so you need to limit it to 30MB/s
+# neil has a patch, not sure when it will be merged.
+echo "Setting minimum and maximum resync speed to 30MB/s..."
+echo 30000 > /sys/block/md0/md/sync_speed_min
+echo 30000 > /sys/block/md0/md/sync_speed_max
+echo 30000 > /sys/block/md1/md/sync_speed_min
+echo 30000 > /sys/block/md1/md/sync_speed_max
+echo 30000 > /sys/block/md2/md/sync_speed_min
+echo 30000 > /sys/block/md2/md/sync_speed_max
+echo 30000 > /sys/block/md3/md/sync_speed_min
+echo 30000 > /sys/block/md3/md/sync_speed_max
+
+# Disable NCQ.
+echo "Disabling NCQ..."
+for i in sdc sdd sde sdf sdg sdh sdi sdj sdk sdl
+do
+   echo "Disabling NCQ on $i"
+   echo 1 > /sys/block/"$i"/device/queue_depth
+done
 
 
-Historically I've done:
-sync
-echo platform > /sys/power/disk
-echo disk > /sys/power/state
-# resume
 
-and had filesystem corruption (only on this machine, my other hibernating xfs 
-machines don't have this problem)
 
-So doing:
-xfs_freeze -f /scratch
-sync
-echo platform > /sys/power/disk
-echo disk > /sys/power/state
-# resume
-xfs_freeze -u /scratch
-
-Works (for now - more usage testing tonight)
-
-David
