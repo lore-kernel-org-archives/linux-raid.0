@@ -1,25 +1,26 @@
-From: David Greaves <david@dgreaves.com>
-Subject: Re: resync to last 27h - usually 3. what's this?
-Date: Mon, 18 Jun 2007 16:22:06 +0100
-Message-ID: <4676A31E.8090902@dgreaves.com>
-References: <200706181659.32119.Dexter.Filmore@gmx.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Mike <mikee@mikee.ath.cx>
+Subject: suggestions for inexpensive linux jbod?
+Date: Mon, 18 Jun 2007 14:55:31 +0000 (UTC)
+Message-ID: <f566d2$84u$1@sea.gmane.org>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200706181659.32119.Dexter.Filmore@gmx.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dexter Filmore <Dexter.Filmore@gmx.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Dexter Filmore wrote:
-> 1661 minutes is *way* too long. it's a 4x250GiB sATA array and usually takes 3 
-> hours to resync or check, for that matter.
-> 
-> So, what's this? 
-kernel, mdadm verisons?
+I'm creating a larger backup server that uses bacula (this
+software works well). The way I'm going about this I need
+lots of space in the filesystem where temporary files are
+stored. I have been looking at the Norco (link at the bottom),
+but there seem to be some grumblings that the adapter card
+does not play well with linux.
 
-I seem to recall a long fixed ETA calculation bug some time back...
+Has anyone used this device or have another suggestion? I'm
+looking at something that will present lots of disk to the
+linux box (fedore core 5, kernel 2.6.20) that I will put
+under md/RAID and LVM. I want to have between 1.5TB and 3.0TB
+of usable space after all the RAID'ing.
 
-David
+Mike
+
+http://www.newegg.com/Product/Product.aspx?Item=N82E16816133001
+
