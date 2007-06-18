@@ -1,55 +1,72 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Machine hanging on synchronize cache on shutdown 2.6.22-rc4-git[45678]
-Date: Mon, 18 Jun 2007 16:09:49 +0900
-Message-ID: <46762FBD.20209@gmail.com>
-References: <200706161909.l5GJ9Q9P021615@harpo.it.uu.se>
+From: David Greaves <david@dgreaves.com>
+Subject: Re: [linux-lvm] 2.6.22-rc4 XFS fails after hibernate/resume
+Date: Mon, 18 Jun 2007 08:49:34 +0100
+Message-ID: <4676390E.6010202@dgreaves.com>
+References: <46744065.6060605@dgreaves.com> <4674645F.5000906@gmail.com> <46751D37.5020608@dgreaves.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <200706161909.l5GJ9Q9P021615@harpo.it.uu.se>
-Sender: linux-ide-owner@vger.kernel.org
-To: Mikael Pettersson <mikpe@it.uu.se>
-Cc: brad@wasp.net.au, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <46751D37.5020608@dgreaves.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: David Robinson <zxvdr.au@gmail.com>
+Cc: LVM general discussion and development <linux-lvm@redhat.com>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, linux-pm <linux-pm@lists.osdl.org>, LinuxRaid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hello,
+David Greaves wrote:
+> David Robinson wrote:
+>> David Greaves wrote:
+>>> This isn't a regression.
+>>>
+>>> I was seeing these problems on 2.6.21 (but 22 was in -rc so I waited 
+>>> to try it).
+>>> I tried 2.6.22-rc4 (with Tejun's patches) to see if it had improved - 
+>>> no.
+>>>
+>>> Note this is a different (desktop) machine to that involved my recent 
+>>> bugs.
+>>>
+>>> The machine will work for days (continually powered up) without a 
+>>> problem and then exhibits a filesystem failure within minutes of a 
+>>> resume.
 
-Mikael Pettersson wrote:
-> On Sat, 16 Jun 2007 15:52:33 +0400, Brad Campbell wrote:
->> I've got a box here based on current Debian Stable.
->> It's got 15 Maxtor SATA drives in it on 4 Promise TX4 controllers.
->>
->> Using kernel 2.6.21.x it shuts down, but of course with a huge "clack" as 15 drives all do emergency 
->> head parks simultaneously. I thought I'd upgrade to 2.6.22-rc to get around this but the machine 
->> just hangs up hard apparently trying to sync cache on a drive.
->>
->> I've run this process manually, so I know it is being performed properly.
->>
->> Prior to shutdown, all nfsd processes are stopped, filesystems unmounted and md arrays stopped.
->> /proc/mdstat shows
->> root@storage1:~# cat /proc/mdstat
->> Personalities : [raid6] [raid5] [raid4]
->> unused devices: <none>
->> root@storage1:~#
->>
->> Here is the final hangup.
->>
->> http://www.fnarfbargle.com/CIMG1029.JPG
+<snip>
+
+> OK, that gave me an idea.
 > 
-> Something sent a command to the disk on ata15 after the PHY had been
-> offlined and the interface had been put in SLUMBER state (SStatus 614).
-> Consequently the command timed out. Libata tried a soft reset, and then
-> a hard reset, after which the machine hung.
+> Freeze the filesystem
+> md5sum the lvm
+> hibernate
+> resume
+> md5sum the lvm
+<snip>
+> So the lvm and below looks OK...
+> 
+> I'll see how it behaves now the filesystem has been frozen/thawed over 
+> the hibernate...
 
-Hmm... weird.  Maybe device initiated power saving (DIPS) is active?
 
-> I don't think sata_promise is the guilty party here. Looks like some
-> layer above sata_promise got confused about the state of the interface.
+And it appears to behave well. (A few hours compile/clean cycling kernel builds 
+on that filesystem were OK).
 
-But locking up hard after hardreset is a problem of sata_promise, no?
 
-Thanks.
+Historically I've done:
+sync
+echo platform > /sys/power/disk
+echo disk > /sys/power/state
+# resume
 
--- 
-tejun
+and had filesystem corruption (only on this machine, my other hibernating xfs 
+machines don't have this problem)
+
+So doing:
+xfs_freeze -f /scratch
+sync
+echo platform > /sys/power/disk
+echo disk > /sys/power/state
+# resume
+xfs_freeze -u /scratch
+
+Works (for now - more usage testing tonight)
+
+David
