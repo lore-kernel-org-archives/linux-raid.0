@@ -1,34 +1,55 @@
-From: David Chinner <dgc@sgi.com>
-Subject: Re: limits on raid
-Date: Mon, 18 Jun 2007 14:57:59 +1000
-Message-ID: <20070618045759.GD85884050@sgi.com>
-References: <Pine.LNX.4.64.0706141957020.29630@asgard.lang.hm> <18034.479.256870.600360@notabene.brown> <Pine.LNX.4.64.0706142034400.29630@asgard.lang.hm> <18034.3676.477575.490448@notabene.brown> <467273AB.9010202@argo.co.il> <18035.3009.568832.785308@notabene.brown>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: Machine hanging on synchronize cache on shutdown 2.6.22-rc4-git[45678]
+Date: Mon, 18 Jun 2007 16:09:49 +0900
+Message-ID: <46762FBD.20209@gmail.com>
+References: <200706161909.l5GJ9Q9P021615@harpo.it.uu.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1758843AbXFRE64@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <18035.3009.568832.785308@notabene.brown>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Avi Kivity <avi@argo.co.il>, david@lang.hm, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <200706161909.l5GJ9Q9P021615@harpo.it.uu.se>
+Sender: linux-ide-owner@vger.kernel.org
+To: Mikael Pettersson <mikpe@it.uu.se>
+Cc: brad@wasp.net.au, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, Jun 16, 2007 at 07:59:29AM +1000, Neil Brown wrote:
-> Combining these thoughts, it would make a lot of sense for the
-> filesystem to be able to say to the block device "That blocks looks
-> wrong - can you find me another copy to try?".  That is an example of
-> the sort of closer integration between filesystem and RAID that would
-> make sense.
+Hello,
 
-I think that this would only be useful on devices that store
-discrete copies of the blocks on different devices i.e. mirrors. If
-it's an XOR based RAID, you don't have another copy you can
-retreive....
+Mikael Pettersson wrote:
+> On Sat, 16 Jun 2007 15:52:33 +0400, Brad Campbell wrote:
+>> I've got a box here based on current Debian Stable.
+>> It's got 15 Maxtor SATA drives in it on 4 Promise TX4 controllers.
+>>
+>> Using kernel 2.6.21.x it shuts down, but of course with a huge "clack" as 15 drives all do emergency 
+>> head parks simultaneously. I thought I'd upgrade to 2.6.22-rc to get around this but the machine 
+>> just hangs up hard apparently trying to sync cache on a drive.
+>>
+>> I've run this process manually, so I know it is being performed properly.
+>>
+>> Prior to shutdown, all nfsd processes are stopped, filesystems unmounted and md arrays stopped.
+>> /proc/mdstat shows
+>> root@storage1:~# cat /proc/mdstat
+>> Personalities : [raid6] [raid5] [raid4]
+>> unused devices: <none>
+>> root@storage1:~#
+>>
+>> Here is the final hangup.
+>>
+>> http://www.fnarfbargle.com/CIMG1029.JPG
+> 
+> Something sent a command to the disk on ata15 after the PHY had been
+> offlined and the interface had been put in SLUMBER state (SStatus 614).
+> Consequently the command timed out. Libata tried a soft reset, and then
+> a hard reset, after which the machine hung.
 
-Cheers,
+Hmm... weird.  Maybe device initiated power saving (DIPS) is active?
 
-Dave.
+> I don't think sata_promise is the guilty party here. Looks like some
+> layer above sata_promise got confused about the state of the interface.
+
+But locking up hard after hardreset is a problem of sata_promise, no?
+
+Thanks.
+
 -- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+tejun
