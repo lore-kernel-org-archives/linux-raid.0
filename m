@@ -1,56 +1,23 @@
 From: David Greaves <david@dgreaves.com>
-Subject: Re: Software based SATA RAID-5 expandable arrays?
-Date: Tue, 19 Jun 2007 09:35:47 +0100
-Message-ID: <46779563.3040609@dgreaves.com>
-References: <11167521.post@talk.nabble.com> <200706182314.35979.Dexter.Filmore@gmx.de>
+Subject: Re: raid5 recover after a 2 disk failure
+Date: Tue, 19 Jun 2007 09:42:35 +0100
+Message-ID: <467796FB.80803@dgreaves.com>
+References: <663967.19910.qm@web57308.mail.re1.yahoo.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200706182314.35979.Dexter.Filmore@gmx.de>
+In-Reply-To: <663967.19910.qm@web57308.mail.re1.yahoo.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dexter Filmore <Dexter.Filmore@gmx.de>
-Cc: greenjelly <big_green_jelly_Bean@yahoo.com>, linux-raid@vger.kernel.org
+To: Frank Jenkins <fjenkins873@yahoo.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Dexter Filmore wrote:
-> Why dontcha just cut all the "look how big my ePenis is" chatter and tell us 
-> what you wanna do?
-> Nobody gives a rat if your ultra1337 sound cards needs a 10 megawatt power 
-> supply.
+Frank Jenkins wrote:
+> So here's the /proc/mdstat prior to the array failure:
 
-Chill Dexter.
-
-
-How many faults have you seen on this list attributed to poor PSUs?
-How many people whinge about the performance of their controllers/setups 'cos 
-they find out _after_ they bought them just how naff they are?
-
-Sure he went a bit OTT in the description - but if you'd rather see "Hey dudez, 
-what do I need for a really quick server" then #linux is good :)
-
-He's clearly new to linux, (and granted, maybe a bit over-excited by hardware!) 
-but give the guy a break.
-
-He very clearly told us what he wanted to do in the QUESTIONs bit.
-
-greenjelly (btw most people use real names in the linux kernel part of the 
-world), feel free to search the archives, read the FAQs and continue to ask 
-questions :)
-
-And don't think too badly of Dexter, he's usually OK.
+I'll take a look through this and see if I can see any problems Frank. Bit busy 
+now - give me a few minutes.
 
 David
 
-PS, Dex, I wonder who posted these noobie sounding question in April last year:
-
-I'm currently planning my first raid array.
-I intend to go for softraid (budget's the limiting factor), not sure about 5
-or 6 yet.
-
-Plan so far: build a raid5 from 3 disks, later add a disk and reconf to raid6.
-Question: is that possible at all? Can a raid5 be reconfed to a raid6 with
-raidreconf?
-Next Question: how stable is it? Will I likely get away without making backups
-or is there like a 10% chance of failure?
-Other precautions advised?
