@@ -1,46 +1,42 @@
-From: Mike <mikee@mikee.ath.cx>
+From: linux@horizon.com
 Subject: Re: suggestions for inexpensive linux jbod?
-Date: Tue, 19 Jun 2007 02:26:22 +0000 (UTC)
-Message-ID: <f57ese$lsi$1@sea.gmane.org>
-References: <f566d2$84u$1@sea.gmane.org> <Pine.LNX.4.64.0706181255540.31683@p34.internal.lan>
+Date: 19 Jun 2007 01:43:38 -0400
+Message-ID: <20070619054338.8539.qmail@science.horizon.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: mikee@mikee.ath.cx
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-In article <Pine.LNX.4.64.0706181255540.31683@p34.internal.lan>, Justin Piszcz wrote:
-> 
-> 
-> On Mon, 18 Jun 2007, Mike wrote:
-> 
->> I'm creating a larger backup server that uses bacula (this
->> software works well). The way I'm going about this I need
->> lots of space in the filesystem where temporary files are
->> stored. I have been looking at the Norco (link at the bottom),
->> but there seem to be some grumblings that the adapter card
->> does not play well with linux.
->>
->> Has anyone used this device or have another suggestion? I'm
->> looking at something that will present lots of disk to the
->> linux box (fedore core 5, kernel 2.6.20) that I will put
->> under md/RAID and LVM. I want to have between 1.5TB and 3.0TB
->> of usable space after all the RAID'ing.
->>
->> Mike
->>
->> http://www.newegg.com/Product/Product.aspx?Item=N82E16816133001
-> 
 > Get 3 Hitachi 1TB drives and use SW RAID5 on an Intel 965 motherboard OR 
 > use PCI-e cards that use the Silicon Image chipset.
 > 
 > 04:00.0 RAID bus controller: Silicon Image, Inc. SiI 3132 Serial ATA Raid 
 > II Controller (rev 01)
-> 
-> Justin.
 
-Any idea if the Hitachi 1 TB drives will work in a Dell PowerEdge 800? I
-have two 80GB drives in the box right now that I would like to replace
-with four of the 1 TB drives.
+What he said.  After some thinking, I loaded up a machine with 3x
+SiI3132 and figured I'll expand by port multiplier.  Port multipliers
+are documented in the standard, not vendor-defined, and are currently
+made only by, guess who, Silicon Image.  I haven't used any yet, but
+apparently they're working, and you know that both the manufacturer and
+the linux-ide deveopers have tested them throroughly with SiI controllers.
 
-Mike
+03:00.0 Mass storage controller: Silicon Image, Inc. SiI 3132 Serial ATA Raid II Controller (rev 01)
+04:00.0 Mass storage controller: Silicon Image, Inc. SiI 3132 Serial ATA Raid II Controller (rev 01)
+05:00.0 Mass storage controller: Silicon Image, Inc. SiI 3132 Serial ATA Raid II Controller (rev 01)
 
+md4 : active raid10 sdf3[4] sde3[3] sdd3[2] sdc3[1] sdb3[0] sda3[5]
+      131837184 blocks 256K chunks 2 near-copies [6/6] [UUUUUU]
+      bitmap: 2/126 pages [8KB], 512KB chunk
+
+md5 : active raid5 sdf4[5] sde4[4] sdd4[3] sdc4[2] sdb4[1] sda4[0]
+      1719155200 blocks level 5, 64k chunk, algorithm 2 [6/6] [UUUUUU]
+      bitmap: 27/164 pages [108KB], 1024KB chunk
+
+md0 : active raid1 sdf1[5] sde1[4] sdd1[3] sdc1[2] sdb1[1] sda1[0]
+      979840 blocks [6/6] [UUUUUU]
+      bitmap: 0/120 pages [0KB], 4KB chunk
+
+md0 is the boot partition, md4 is root, and md5 is the main backup data.
+Note the way the drives ar arranged on the RAID-10; mirrored pairs are
+aplit across different SATA controllers.
