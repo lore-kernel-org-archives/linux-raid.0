@@ -1,43 +1,46 @@
-From: "Dan Williams" <dan.j.williams@intel.com>
-Subject: Re: [PATCH git-md-accel 1/2] raid5: refactor handle_stripe5 and handle_stripe6
-Date: Mon, 18 Jun 2007 17:53:38 -0700
-Message-ID: <e9c3a7c20706181753x506af4daue8b3f530da3a0817@mail.gmail.com>
-References: <20070618210546.19865.7170.stgit@dwillia2-linux.ch.intel.com>
-	 <20070618210724.19865.94357.stgit@dwillia2-linux.ch.intel.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Mike <mikee@mikee.ath.cx>
+Subject: Re: suggestions for inexpensive linux jbod?
+Date: Tue, 19 Jun 2007 02:26:22 +0000 (UTC)
+Message-ID: <f57ese$lsi$1@sea.gmane.org>
+References: <f566d2$84u$1@sea.gmane.org> <Pine.LNX.4.64.0706181255540.31683@p34.internal.lan>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20070618210724.19865.94357.stgit@dwillia2-linux.ch.intel.com>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 6/18/07, Dan Williams <dan.j.williams@intel.com> wrote:
-...
-> +static void handle_stripe_expansion(raid5_conf_t *conf, struct stripe_head *sh,
-> +                               struct r6_state *r6s)
-> +{
-> +       int i;
-> +
-> +       /* We have read all the blocks in this stripe and now we need to
-> +        * copy some of them into a target stripe for expand.
-> +        */
-> +       clear_bit(STRIPE_EXPAND_SOURCE, &sh->state);
-> +       for (i = 0; i < sh->disks; i++)
-> +               if (i != sh->pd_idx && (r6s && i != r6s->qd_idx)) {
-> +                       int dd_idx, pd_idx, j;
-> +                       struct stripe_head *sh2;
-> +
-> +                       sector_t bn = compute_blocknr(sh, i);
-> +                       sector_t s = raid5_compute_sector(bn, conf->raid_disks,
-> +                                               conf->raid_disks-1, &dd_idx,
-> +                                               &pd_idx, conf);
-this bug made it through the regression test:
+In article <Pine.LNX.4.64.0706181255540.31683@p34.internal.lan>, Justin Piszcz wrote:
+> 
+> 
+> On Mon, 18 Jun 2007, Mike wrote:
+> 
+>> I'm creating a larger backup server that uses bacula (this
+>> software works well). The way I'm going about this I need
+>> lots of space in the filesystem where temporary files are
+>> stored. I have been looking at the Norco (link at the bottom),
+>> but there seem to be some grumblings that the adapter card
+>> does not play well with linux.
+>>
+>> Has anyone used this device or have another suggestion? I'm
+>> looking at something that will present lots of disk to the
+>> linux box (fedore core 5, kernel 2.6.20) that I will put
+>> under md/RAID and LVM. I want to have between 1.5TB and 3.0TB
+>> of usable space after all the RAID'ing.
+>>
+>> Mike
+>>
+>> http://www.newegg.com/Product/Product.aspx?Item=N82E16816133001
+> 
+> Get 3 Hitachi 1TB drives and use SW RAID5 on an Intel 965 motherboard OR 
+> use PCI-e cards that use the Silicon Image chipset.
+> 
+> 04:00.0 RAID bus controller: Silicon Image, Inc. SiI 3132 Serial ATA Raid 
+> II Controller (rev 01)
+> 
+> Justin.
 
-'conf->raid_disks-1' should be 'conf->raid_disks - conf->max_degraded'
+Any idea if the Hitachi 1 TB drives will work in a Dell PowerEdge 800? I
+have two 80GB drives in the box right now that I would like to replace
+with four of the 1 TB drives.
 
---
-Dan
+Mike
+
