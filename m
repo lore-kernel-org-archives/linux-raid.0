@@ -1,67 +1,72 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [linux-lvm] 2.6.22-rc5 XFS fails after
-	hibernate/resume
-Date: Tue, 19 Jun 2007 18:44:54 +0900
-Message-ID: <4677A596.7090404@gmail.com>
-References: <46744065.6060605@dgreaves.com> <4674645F.5000906@gmail.com>
-	<46751D37.5020608@dgreaves.com> <4676390E.6010202@dgreaves.com>
-	<20070618145007.GE85884050@sgi.com>
-	<4676D97E.4000403@dgreaves.com> <4677A0C7.4000306@dgreaves.com>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: [linux-lvm] 2.6.22-rc5 XFS fails after hibernate/resume
+Date: Tue, 19 Jun 2007 13:21:06 +0200
+Message-ID: <200706191321.07278.rjw@sisk.pl>
+References: <46744065.6060605@dgreaves.com> <4676D97E.4000403@dgreaves.com> <4677A0C7.4000306@dgreaves.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-pm-bounces@lists.linux-foundation.org>
+Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <4677A0C7.4000306@dgreaves.com>
-List-Unsubscribe: <https://lists.linux-foundation.org/mailman/listinfo/linux-pm>,
-	<mailto:linux-pm-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linux-foundation.org/pipermail/linux-pm>
-List-Post: <mailto:linux-pm@lists.linux-foundation.org>
-List-Help: <mailto:linux-pm-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linux-foundation.org/mailman/listinfo/linux-pm>,
-	<mailto:linux-pm-request@lists.linux-foundation.org?subject=subscribe>
-Sender: linux-pm-bounces@lists.linux-foundation.org
-Errors-To: linux-pm-bounces@lists.linux-foundation.org
+Content-Disposition: inline
+Sender: linux-raid-owner@vger.kernel.org
 To: David Greaves <david@dgreaves.com>
-Cc: David Chinner <dgc@sgi.com>, linux-pm <linux-pm@lists.osdl.org>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, LinuxRaid <linux-raid@vger.kernel.org>, LVM general discussion and development <linux-lvm@redhat.com>, David Robinson <zxvdr.au@gmail.com>
+Cc: David Chinner <dgc@sgi.com>, Tejun Heo <htejun@gmail.com>, David Robinson <zxvdr.au@gmail.com>, LVM general discussion and development <linux-lvm@redhat.com>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, linux-pm <linux-pm@lists.osdl.org>, LinuxRaid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hello,
-
-David Greaves wrote:
->> Good :)
+On Tuesday, 19 June 2007 11:24, David Greaves wrote:
+> David Greaves wrote:
+> > I'm going to have to do some more testing...
+> done
+> 
+> 
+> > David Chinner wrote:
+> >> On Mon, Jun 18, 2007 at 08:49:34AM +0100, David Greaves wrote:
+> >>> David Greaves wrote:
+> >>> So doing:
+> >>> xfs_freeze -f /scratch
+> >>> sync
+> >>> echo platform > /sys/power/disk
+> >>> echo disk > /sys/power/state
+> >>> # resume
+> >>> xfs_freeze -u /scratch
+> >>>
+> >>> Works (for now - more usage testing tonight)
+> >>
+> >> Verrry interesting.
+> > Good :)
 > Now, not so good :)
-
-Oh, crap.  :-)
-
-> So I hibernated last night and resumed this morning.
-> Before hibernating I froze and sync'ed. After resume I thawed it. (Sorry
-> Dave)
 > 
-> Here are some photos of the screen during resume. This is not 100%
-> reproducable - it seems to occur only if the system is shutdown for
-> 30mins or so.
 > 
-> Tejun, I wonder if error handling during resume is problematic? I got
-> the same errors in 2.6.21. I have never seen these (or any other libata)
-> errors other than during resume.
+> >> What you were seeing was an XFS shutdown occurring because the free space
+> >> btree was corrupted. IOWs, the process of suspend/resume has resulted
+> >> in either bad data being written to disk, the correct data not being
+> >> written to disk or the cached block being corrupted in memory.
+> > That's the kind of thing I was suspecting, yes.
+> > 
+> >> If you run xfs_check on the filesystem after it has shut down after a 
+> >> resume,
+> >> can you tell us if it reports on-disk corruption? Note: do not run 
+> >> xfs_repair
+> >> to check this - it does not check the free space btrees; instead it 
+> >> simply
+> >> rebuilds them from scratch. If xfs_check reports an error, then run 
+> >> xfs_repair
+> >> to fix it up.
+> > OK, I can try this tonight...
 > 
-> http://www.dgreaves.com/pub/2.6.22-rc5-resume-failure.jpg
-> (hard to read, here's one from 2.6.21
-> http://www.dgreaves.com/pub/2.6.21-resume-failure.jpg
+> 
+> This is on 2.6.22-rc5
 
-Your controller is repeatedly reporting PHY readiness changed exception.
- Are you reading the system image from the device attached to the first
-SATA port?
+Is the Tejun's patch
 
-> I _think_ I've only seen the xfs problem when a resume shows these errors.
+http://www.sisk.pl/kernel/hibernation_and_suspend/2.6.22-rc5/patches/30-block-always-requeue-nonfs-requests-at-the-front.patch
 
-The error handling itself tries very hard to ensure that there is no
-data corruption in case of errors.  All commands which experience
-exceptions are retried but if the drive itself is doing something
-stupid, there's only so much the driver can do.
+applied on top of that?
 
-How reproducible is the problem?  Does the problem go away or occur more
-often if you change the drive you write the memory image to?
+Rafael
+
 
 -- 
-tejun
+"Premature optimization is the root of all evil." - Donald Knuth
