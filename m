@@ -1,25 +1,43 @@
-From: Brendan Conoboy <blc@redhat.com>
-Subject: Re: limits on raid
-Date: Mon, 18 Jun 2007 16:00:49 -0600
-Message-ID: <46770091.2080109@redhat.com>
-References: <18035.23867.576212.859440@notabene.brown> <Pine.LNX.4.64.0706160037220.7557@asgard.lang.hm> <4676BEC2.7090809@redhat.com> <Pine.LNX.4.64.0706181026170.12717@asgard.lang.hm> <20070618180327.GP10008@csclub.uwaterloo.ca> <Pine.LNX.4.64.0706181111020.12717@asgard.lang.hm> <20070618183324.GL10006@csclub.uwaterloo.ca> <Pine.LNX.4.64.0706181138210.12717@asgard.lang.hm> <4676D8DE.3050903@redhat.com> <Pine.LNX.4.64.0706181349290.14890@asgard.lang.hm> <20070618214633.GA15468@animx.eu.org> <Pine.LNX.4.64.0706181453090.14890@asgard.lang.hm>
+From: "Dan Williams" <dan.j.williams@intel.com>
+Subject: Re: [PATCH git-md-accel 1/2] raid5: refactor handle_stripe5 and handle_stripe6
+Date: Mon, 18 Jun 2007 17:53:38 -0700
+Message-ID: <e9c3a7c20706181753x506af4daue8b3f530da3a0817@mail.gmail.com>
+References: <20070618210546.19865.7170.stgit@dwillia2-linux.ch.intel.com>
+	 <20070618210724.19865.94357.stgit@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0706181453090.14890@asgard.lang.hm>
+In-Reply-To: <20070618210724.19865.94357.stgit@dwillia2-linux.ch.intel.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: david@lang.hm
-Cc: Wakko Warner <wakko@animx.eu.org>, Lennart Sorensen <lsorense@csclub.uwaterloo.ca>, Neil Brown <neilb@suse.de>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-david@lang.hm wrote:
-> yes, I'm useing promise drive shelves, I have them configured to export 
-> the 15 drives as 15 LUNs on a single ID.
+On 6/18/07, Dan Williams <dan.j.williams@intel.com> wrote:
+...
+> +static void handle_stripe_expansion(raid5_conf_t *conf, struct stripe_head *sh,
+> +                               struct r6_state *r6s)
+> +{
+> +       int i;
+> +
+> +       /* We have read all the blocks in this stripe and now we need to
+> +        * copy some of them into a target stripe for expand.
+> +        */
+> +       clear_bit(STRIPE_EXPAND_SOURCE, &sh->state);
+> +       for (i = 0; i < sh->disks; i++)
+> +               if (i != sh->pd_idx && (r6s && i != r6s->qd_idx)) {
+> +                       int dd_idx, pd_idx, j;
+> +                       struct stripe_head *sh2;
+> +
+> +                       sector_t bn = compute_blocknr(sh, i);
+> +                       sector_t s = raid5_compute_sector(bn, conf->raid_disks,
+> +                                               conf->raid_disks-1, &dd_idx,
+> +                                               &pd_idx, conf);
+this bug made it through the regression test:
 
-Well, that would account for it.  Your bus is very, very saturated.  If 
-all your drives are active, you can't get more than ~7MB/s per disk 
-under perfect conditions.
+'conf->raid_disks-1' should be 'conf->raid_disks - conf->max_degraded'
 
--- 
-Brendan Conoboy / Red Hat, Inc. / blc@redhat.com
+--
+Dan
