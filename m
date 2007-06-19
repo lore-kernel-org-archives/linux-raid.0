@@ -1,29 +1,39 @@
-From: Phillip Susi <psusi@cfl.rr.com>
-Subject: Re: limits on raid
-Date: Tue, 19 Jun 2007 11:07:54 -0400
-Message-ID: <4677F14A.5060909@cfl.rr.com>
-References: <18034.479.256870.600360@notabene.brown> <Pine.LNX.4.64.0706142034400.29630@asgard.lang.hm> <18034.3676.477575.490448@notabene.brown> <20070616020320.GB2002@animx.eu.org> <18035.23867.576212.859440@notabene.brown> <Pine.LNX.4.64.0706160037220.7557@asgard <Pine.LNX.4.64.0706181349290.14890@asgard.lang.hm>
+From: David Greaves <david@dgreaves.com>
+Subject: Re: [linux-lvm] 2.6.22-rc5 XFS fails after
+	hibernate/resume
+Date: Tue, 19 Jun 2007 16:31:45 +0100
+Message-ID: <4677F6E1.50108@dgreaves.com>
+References: <46744065.6060605@dgreaves.com> <4676D97E.4000403@dgreaves.com>
+	<4677A0C7.4000306@dgreaves.com> <200706191321.07278.rjw@sisk.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1758933AbXFSPH6@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0706181349290.14890@asgard.lang.hm>
-Sender: linux-kernel-owner@vger.kernel.org
-To: david@lang.hm
-Cc: Brendan Conoboy <blc@redhat.com>, Lennart Sorensen <lsorense@csclub.uwaterloo.ca>, Neil Brown <neilb@suse.de>, Wakko Warner <wakko@animx.eu.org>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+Return-path: <linux-pm-bounces@lists.linux-foundation.org>
+In-Reply-To: <200706191321.07278.rjw@sisk.pl>
+List-Unsubscribe: <https://lists.linux-foundation.org/mailman/listinfo/linux-pm>,
+	<mailto:linux-pm-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linux-foundation.org/pipermail/linux-pm>
+List-Post: <mailto:linux-pm@lists.linux-foundation.org>
+List-Help: <mailto:linux-pm-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linux-foundation.org/mailman/listinfo/linux-pm>,
+	<mailto:linux-pm-request@lists.linux-foundation.org?subject=subscribe>
+Sender: linux-pm-bounces@lists.linux-foundation.org
+Errors-To: linux-pm-bounces@lists.linux-foundation.org
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Tejun Heo <htejun@gmail.com>, David Chinner <dgc@sgi.com>, linux-pm <linux-pm@lists.osdl.org>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, LinuxRaid <linux-raid@vger.kernel.org>, LVM general discussion and development <linux-lvm@redhat.com>, David Robinson <zxvdr.au@gmail.com>
 List-Id: linux-raid.ids
 
-david@lang.hm wrote:
-> one channel, 2 OS drives plus the 45 drives in the array.
+Rafael J. Wysocki wrote:
+>> This is on 2.6.22-rc5
+> 
+> Is the Tejun's patch
+> 
+> http://www.sisk.pl/kernel/hibernation_and_suspend/2.6.22-rc5/patches/30-block-always-requeue-nonfs-requests-at-the-front.patch
+> 
+> applied on top of that?
 
-Huh?  You can only have 16 devices on a scsi bus, counting the host 
-adapter.  And I don't think you can even manage that much reliably with 
-the newer higher speed versions, at least not without some very special 
-cables.
+2.6.22-rc5 includes it.
 
-> yes I realize that there will be bottlenecks with this, the large 
-> capacity is to handle longer history (it's going to be a 30TB circular 
-> buffer being fed by a pair of OC-12 links)
+(but, when I was testing rc4, I did apply this patch)
 
-Building one of those nice packet sniffers for the NSA to install on 
-AT&Ts network eh? ;)
+David
