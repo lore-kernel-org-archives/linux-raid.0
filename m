@@ -1,43 +1,21 @@
-From: david@lang.hm
-Subject: Re: limits on raid
-Date: Tue, 19 Jun 2007 13:51:36 -0700 (PDT)
-Message-ID: <Pine.LNX.4.64.0706191350030.26701@asgard.lang.hm>
-References: <4676BEC2.7090809@redhat.com> <Pine.LNX.4.64.0706181026170.12717@asgard.lang.hm>
- <20070618180327.GP10008@csclub.uwaterloo.ca> <Pine.LNX.4.64.0706181111020.12717@asgard.lang.hm>
- <20070618183324.GL10006@csclub.uwaterloo.ca> <Pine.LNX.4.64.0706181138210.12717@asgard.lang.hm>
- <4676D8DE.3050903@redhat.com> <Pine.LNX.4.64.0706181349290.14890@asgard.lang.hm>
- <20070618214633.GA15468@animx.eu.org> <Pine.LNX.4.64.0706181453090.14890@asgard.lang.hm>
- <20070619201111.GQ10008@csclub.uwaterloo.ca>
+From: Nix <nix@esperi.org.uk>
+Subject: Re: Software based SATA RAID-5 expandable arrays?
+Date: Tue, 19 Jun 2007 22:30:49 +0100
+Message-ID: <87ps3rzl6e.fsf@hades.wkstn.nix>
+References: <89636.92221.qm@web54110.mail.re2.yahoo.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20070619201111.GQ10008@csclub.uwaterloo.ca>
+In-Reply-To: <89636.92221.qm@web54110.mail.re2.yahoo.com> (Michael's message of "19 Jun 2007 15:42:30 +0100")
 Sender: linux-raid-owner@vger.kernel.org
-To: Lennart Sorensen <lsorense@csclub.uwaterloo.ca>
-Cc: Wakko Warner <wakko@animx.eu.org>, Brendan Conoboy <blc@redhat.com>, Neil Brown <neilb@suse.de>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+To: Michael <big_green_jelly_bean@yahoo.com>
+Cc: Dexter Filmore <Dexter.Filmore@gmx.de>, David Greaves <david@dgreaves.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, 19 Jun 2007, Lennart Sorensen wrote:
+On 19 Jun 2007, Michael outgrape:
+[regarding `welcome to my killfile']
+> Grow up man, and I thanks for the threat.  I will take that into
+> account if anything bad happens to my computer system.
 
-> On Mon, Jun 18, 2007 at 02:56:10PM -0700, david@lang.hm wrote:
->> yes, I'm useing promise drive shelves, I have them configured to export
->> the 15 drives as 15 LUNs on a single ID.
->>
->> I'm going to be useing this as a huge circular buffer that will just be
->> overwritten eventually 99% of the time, but once in a while I will need to
->> go back into the buffer and extract and process the data.
->
-> I would guess that if you ran 15 drives per channel on 3 different
-> channels, you would resync in 1/3 the time.  Well unless you end up
-> saturating the PCI bus instead.
->
-> hardware raid of course has an advantage there in that it doesn't have
-> to go across the bus to do the work (although if you put 45 drives on
-> one scsi channel on hardware raid, it will still be limited).
-
-I fully realize that the channel will be the bottleneck, I just didn't 
-understand what /proc/mdstat was telling me. I thought that it was telling 
-me that the resync was processing 5M/sec, not that it was writing 5M/sec 
-on each of the two parity locations.
-
-David Lang
+Read <http://en.wikipedia.org/wiki/Killfile> and learn. All he's saying
+is `I am automatically ignoring you'.
