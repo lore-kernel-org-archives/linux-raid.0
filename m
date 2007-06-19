@@ -1,37 +1,29 @@
-From: Michael <big_green_jelly_bean@yahoo.com>
-Subject: Re: Software based SATA RAID-5 expandable arrays?
-Date: Tue, 19 Jun 2007 07:42:23 -0700 (PDT)
-Message-ID: <89636.92221.qm@web54110.mail.re2.yahoo.com>
+From: Phillip Susi <psusi@cfl.rr.com>
+Subject: Re: limits on raid
+Date: Tue, 19 Jun 2007 11:07:54 -0400
+Message-ID: <4677F14A.5060909@cfl.rr.com>
+References: <18034.479.256870.600360@notabene.brown> <Pine.LNX.4.64.0706142034400.29630@asgard.lang.hm> <18034.3676.477575.490448@notabene.brown> <20070616020320.GB2002@animx.eu.org> <18035.23867.576212.859440@notabene.brown> <Pine.LNX.4.64.0706160037220.7557@asgard <Pine.LNX.4.64.0706181349290.14890@asgard.lang.hm>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: Dexter Filmore <Dexter.Filmore@gmx.de>, David Greaves <david@dgreaves.com>
-Cc: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1758933AbXFSPH6@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.64.0706181349290.14890@asgard.lang.hm>
+Sender: linux-kernel-owner@vger.kernel.org
+To: david@lang.hm
+Cc: Brendan Conoboy <blc@redhat.com>, Lennart Sorensen <lsorense@csclub.uwaterloo.ca>, Neil Brown <neilb@suse.de>, Wakko Warner <wakko@animx.eu.org>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Sadly Dexter didn't feel like posting his response to the thread... So I will, for it is such a exciting and interesting conclusion to the attitude of this individual.
+david@lang.hm wrote:
+> one channel, 2 OS drives plus the 45 drives in the array.
 
-Grow up man, and I thanks for the threat.  I will take that into account if anything bad happens to my computer system.  Statements like that can get you into trouble even if you have absolutely nothing to do with an incident.
+Huh?  You can only have 16 devices on a scsi bus, counting the host 
+adapter.  And I don't think you can even manage that much reliably with 
+the newer higher speed versions, at least not without some very special 
+cables.
 
-GreenJelly
+> yes I realize that there will be bottlenecks with this, the large 
+> capacity is to handle longer history (it's going to be a 30TB circular 
+> buffer being fed by a pair of OC-12 links)
 
-
------ Original Message ----
-From: Dexter Filmore <Dexter.Filmore@gmx.de>
-To: David Greaves <david@dgreaves.com>
-Cc: greenjelly <big_green_jelly_Bean@yahoo.com>; linux-raid@vger.kernel.org
-Sent: Tuesday, June 19, 2007 4:14:09 AM
-Subject: Re: Software based SATA RAID-5 expandable arrays?
-
-Dude I don't need to be saved and I don't need your f?!*ing advice on how to 
-lead my life.
-And now welcome to my killfile.
-
-
-
-
-       
-____________________________________________________________________________________Ready for the edge of your seat? 
-Check out tonight's top picks on Yahoo! TV. 
-http://tv.yahoo.com/
+Building one of those nice packet sniffers for the NSA to install on 
+AT&Ts network eh? ;)
