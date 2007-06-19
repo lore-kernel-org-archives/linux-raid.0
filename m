@@ -1,44 +1,54 @@
-From: david@lang.hm
-Subject: Re: limits on raid
-Date: Tue, 19 Jun 2007 12:28:02 -0700 (PDT)
-Message-ID: <Pine.LNX.4.64.0706191225060.25045@asgard.lang.hm>
-References: <18034.479.256870.600360@notabene.brown>
- <Pine.LNX.4.64.0706142034400.29630@asgard.lang.hm> <18034.3676.477575.490448@notabene.brown>
- <20070616020320.GB2002@animx.eu.org> <18035.23867.576212.859440@notabene.brown>
- <Pine.LNX.4.64.0706160037220.7557@asgard <Pine.LNX.4.64.0706181349290.14890@asgard.lang.hm>
- <4677F14A.5060909@cfl.rr.com>
+From: Richard Michael <rmichael-raid@edgeofthenet.org>
+Subject: Auto rebuild of Firewire/USB drive in 3-way RAID1
+Date: Tue, 19 Jun 2007 15:40:41 -0400
+Message-ID: <20070619194041.GM6050@server>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4677F14A.5060909@cfl.rr.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Phillip Susi <psusi@cfl.rr.com>
-Cc: Brendan Conoboy <blc@redhat.com>, Lennart Sorensen <lsorense@csclub.uwaterloo.ca>, Neil Brown <neilb@suse.de>, Wakko Warner <wakko@animx.eu.org>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, 19 Jun 2007, Phillip Susi wrote:
+Hello all,
 
-> david@lang.hm wrote:
->>  one channel, 2 OS drives plus the 45 drives in the array.
->
-> Huh?  You can only have 16 devices on a scsi bus, counting the host adapter. 
-> And I don't think you can even manage that much reliably with the newer 
-> higher speed versions, at least not without some very special cables.
+I'm looking for comments on a setup I'm working on..
 
-6 devices on the bus (2 OS drives, 3 promise drive shelves, controller 
-card)
+I'm building three-way mirror with (at least) one removable drive.  My
+intention is solve the offsite backup problem by allowing my users to
+simply unplug the removable drive, take it away, and replug it (or a
+replacement later) without having to think about anything.  It's
+three-way so I have redundancy when the removable is gone.
 
->>  yes I realize that there will be bottlenecks with this, the large capacity
->>  is to handle longer history (it's going to be a 30TB circular buffer being
->>  fed by a pair of OC-12 links)
->
-> Building one of those nice packet sniffers for the NSA to install on AT&Ts 
-> network eh? ;)
+I'm experimenting with mdadm to figure out various solutions to build
+the setup.  My approach is to use the PROGRAM feature of mdadm to run a
+script when the removable device "fails", the script will briefly sleep
+to let subsystems settle down, then call mdadm to remove to failed
+device.  On reconnect of the device, I can use udev to tell me which
+socket the drive was connected (to determine if it's RAID related even I
+care about), briefly sleep again, then call mdadm to add the device back
+to the array.
 
-just for going back in time to track hacker actions at a bank.
+I could write a udev rule to make the dev names permanent, i.e.
+corresponding to the socket so I don't have to deal with incremental or
+varying sda, sdb, sdc, style names.  But it might not be worth it..
 
-I'm hopeing that once I figure out the drives the rest of the software 
-will basicly boil down to tcpdump with the right options to write to a 
-circular buffer of files.
+I'll just be using "mdadm <MD> --remove detached", and "mdadm <MD> --add
+<NEW_DEV_PATH>".
 
-David Lang
+I'm just wondering if I understand things correctly.  Should I be
+looking at writing the array config into mdadm.conf and doing something
+mdadm --assemble?  I think not because the array will already be active
+(and therefore assembled), just degraded.
+
+Thoughts?
+
+Ultimately, I'd like to do this ontop of an EVMS BBR (bad block
+relocation) segment manager to buy me time when bad blocks are
+encountered on array drives.  (As opposed to have the entire drive
+offlined immediately.)
+
+
+Thanks,
+Richard
