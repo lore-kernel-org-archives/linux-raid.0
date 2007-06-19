@@ -1,56 +1,61 @@
-From: Sven Rudolph <Sven_Rudolph@drewag.de>
-Subject: Re: suggestions for inexpensive linux jbod?
-Date: Tue, 19 Jun 2007 14:50:06 +0200
-Message-ID: <xfkk5u0w1kx.fsf@uxkm53.drewag.de>
-References: <f566d2$84u$1@sea.gmane.org>
+From: Michael <big_green_jelly_bean@yahoo.com>
+Subject: Re: Software based SATA RAID-5 expandable arrays?
+Date: Tue, 19 Jun 2007 06:43:27 -0700 (PDT)
+Message-ID: <335871.82002.qm@web54105.mail.re2.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <f566d2$84u$1@sea.gmane.org> (mikee@mikee.ath.cx's message of
- "Mon, 18 Jun 2007 14:55:31 +0000 (UTC)")
 Sender: linux-raid-owner@vger.kernel.org
-To: Mike <mikee@mikee.ath.cx>
+To: Dexter Filmore <Dexter.Filmore@gmx.de>, David Greaves <david@dgreaves.com>, Daniel Korstad <dan@korstad.net>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Mike <mikee@mikee.ath.cx> writes:
+Look at your sig...
 
-> I'm creating a larger backup server that uses bacula (this
-> software works well).
 
-I have no idea how the "Current Implementation Restrictions" (listed
-in <http://www.bacula.org/dev-manual/Current_State_Bacula.html>)
-affect your backup process. From reading that list I believe that
-bacula would not "work well" in my environment (differential
-backups). So the following might be very subjective or
-environment-dependent too.
+-- 
 
-> Has anyone used this device or have another suggestion? I'm
-> looking at something that will present lots of disk to the
-> linux box (fedore core 5, kernel 2.6.20) that I will put
-> under md/RAID and LVM. I want to have between 1.5TB and 3.0TB
-> of usable space after all the RAID'ing.
+-----BEGIN GEEK CODE BLOCK-----
 
-As others already suggested you could try to avoid eSATA and SATA port
-multipliers by using very large SATA disks and some kind of internal
-(non-eSATA) enclosure. I don't count eSATA and SATA port multipliers
-as proven and reliable technology, and I avoid it. 
+Version: 3.12
 
-> http://www.newegg.com/Product/Product.aspx?Item=N82E16816133001
+GCS d--(+)@ s-:+ a- C++++ UL++ P+>++ L+++>++++ E-- W++ N o? K-
 
-Some of these comments seem to confirm my feelings.
+w--(---) !O M+ V- PS+ PE Y++ PGP t++(---)@ 5 X+(++) R+(++) tv--(+)@ 
 
-When I needed large capacity externel JBODs I started trying SAS JBODs
-with SATA disks. I finally bought DELLs MD1000 wit 500GB SATA
-disks. The enclosures are connected to LSI Logic SAS controllers
-(3442X-R and 3442E-R), and I run Linux SoftRAID (MD) (so this is at
-least partially on-topic...) .
+b++(+++) DI+++ D- G++ e* h>++ r* y?
 
-Works fine now (after I upgraded the LSI controller firmware).
+------END GEEK CODE BLOCK------
 
-At least another well-known vendors offers SAS JBODs (with SATA disks)
-too (Hewlett-Packard), and some more from small and near-no-name
-companies.
 
-	Sven
 
+http://www.stop1984.com
+
+http://www.againsttcpa.com
+
+
+
+You should get out more, maybe learn to interact with people.  Its sad that my post could effect you the way it did.  You have    Slinging insults has done nothing to provide a solution to my build, and has distracted from the quality of this forum.  Maybe someone can recommend a different Linux Forum that is better moderated and/or not filled with a person so near sighted that I cant get a solution due to the fact that things tend to deteriorate into flame wars.  Dexter why must you focus on information sharing as being negative.  
+
+Am I proud of my gaming/work machine... absolutely... Just like I'm proud of my car and house.  Did I share this info to brag to people on a RAID Linux forum?  Absolutely not... Thats what OCForums is for:)  I provided this information as to the reasons why I decided to build a separate machine, and to provide information on what resources I have.  A great example is the idea to pull my  550w PSU from my work horse and place it into my NAS machine.  I also was hoping for someone to come up with a unorthodox solution, that may save me money.  
+
+This forum doesn't seem to be a place for answers, though I really appreciate the instructions from Daniel Korstad dan@korstad.net on how to put the drives to sleep.  I have created a mail folder for such great responses. I have yet to get info on what build and/or distro I should use.  What commands I need in Linux to build an array.  What commands I need in Linux to expand the array, and what type of RAID-5 setup linux option I should use to   What SATA adapter cards I should use.  Or any other ideas and suggestions.
+
+Thanks Dexter for providing an environment where such info is unobtainable.
+
+GreenJelly
+
+PS  The reason I use my Alias is the fact that their are socially inept, super critical, highly judgmental individuals who see asking for help, as begin a weakness.  Or simply individuals who like to tear you down because you don't do things like they feel should be done.
+
+
+
+
+
+
+
+
+
+       
+____________________________________________________________________________________
+Moody friends. Drama queens. Your life? Nope! - their life, your story. Play Sims Stories at Yahoo! Games.
+http://sims.yahoo.com/  
