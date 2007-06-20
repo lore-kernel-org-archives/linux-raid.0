@@ -1,66 +1,78 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [linux-lvm] 2.6.22-rc5 XFS fails after hibernate/resume
-Date: Wed, 20 Jun 2007 17:03:34 +0900
-Message-ID: <4678DF56.1020903@gmail.com>
-References: <46744065.6060605@dgreaves.com> <4674645F.5000906@gmail.com> <46751D37.5020608@dgreaves.com> <4676390E.6010202@dgreaves.com> <20070618145007.GE85884050@sgi.com> <4676D97E.4000403@dgreaves.com> <4677A0C7.4000306@dgreaves.com> <4677A596.7090404@gmail.com> <4677E496.3080506@dgreaves.com>
+From: Brad Campbell <brad@wasp.net.au>
+Subject: Re: Software based SATA RAID-5 expandable arrays?
+Date: Thu, 21 Jun 2007 00:52:38 +0400
+Message-ID: <46799396.8010800@wasp.net.au>
+References: <11167521.post@talk.nabble.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4677E496.3080506@dgreaves.com>
+In-Reply-To: <11167521.post@talk.nabble.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Greaves <david@dgreaves.com>
-Cc: David Chinner <dgc@sgi.com>, David Robinson <zxvdr.au@gmail.com>, LVM general discussion and development <linux-lvm@redhat.com>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, linux-pm <linux-pm@lists.osdl.org>, LinuxRaid <linux-raid@vger.kernel.org>, "Rafael J. Wysocki" <rjw@sisk.pl>
+To: greenjelly <big_green_jelly_Bean@yahoo.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-David Greaves wrote:
-> Tejun Heo wrote:
->> Your controller is repeatedly reporting PHY readiness changed exception.
->>  Are you reading the system image from the device attached to the first
->> SATA port?
-> 
-> Yes if you mean 1st as in the one after the zero-th ...
+greenjelly wrote:
 
-I meant the first first (0th).
+> The options I seek are to be able to start with a 6 Drive array RAID-5
+> array, then as my demand for more space increases in the future I want to be
+> able to plug in more drives and incorporate them into the Array without the
+> need to backup the data.  Basically I need the software to add the
+> drive/drives to the Array, then Rebuild the array incorporating the new
+> drives while preserving the data on the original array.
 
->> How reproducible is the problem?  Does the problem go away or occur more
->> often if you change the drive you write the memory image to?
-> 
-> I don't think there should be activity on the sda drive during resume
-> itself.
-> 
-> [I broke my / md mirror and am using some of that for swap/resume for now]
-> 
-> I did change the swap/resume device to sdd2 (different controller,
-> onboard sata_via) and there was no EH during resume. The system seemed
-> OK, wrote a few Gb of video and did a kernel compile.
-> I repeated this test, no EH during resume, no problems.
-> I even ran xfs_fsr, the defragment utility, to stress the fs.
-> 
-> I retain this configuration and try again tonight but it looks like
-> there _may_ be a link between EH during resume and my problems...
-> 
-> Of course, I don't understand why it *should* EH during resume, it
-> doesn't during boot or normal operation...
+I've got 2 boxes. One has 14 drives and a 480W PSU and the other has 15 drives and a 600W PSU. It's 
+not rocket science. Put a lot of drives in a box, make sure you have enough sata ports and power to 
+go around (watch your peak 12V consumption on spin up really) and use linux md. Easy.. Oh, but make 
+sure the drives stay cool!
 
-EH occurs during boot, suspend and resume all the time.  It just runs in
-quiet mode to avoid disturbing the users too much.  In your case, EH is
-kicking in due to actual exception conditions so it's being verbose to
-give clue about what's going on.
+For a cheap-o home server (which is what I have) I'd certainly not bother with a dedicated RAID 
+card. You are not even going to need GB ethernet really.. I've got 15 drives on a single PCI bus, 
+it's as slow as a wet week in may (in the southern hemisphere), but I'm streaming to 3 head units 
+which total a combined 5MB/s if I'm lucky.. Rebuilds can take up to 10 hours though.
 
-It's really weird tho.  The PHY RDY status changed events are coming
-from the device which is NOT used while resuming and it's before any
-actual PM events are triggered.  Your kernel just boots, swsusp realizes
-it's resuming and tries to read memory image from the swap device.
-While reading, the disk controller raises consecutive PHY readiness
-changed interrupts.  EH recovers them alright but the end result seems
-to indicate that the loaded image is corrupt.
+> QUESTIONS
+> Since this is a media server, and would only be used to serve Movies and
+> Video to my two machines It wouldn't have to be powered up full time (My
+> Music consumes less space and will be contained on two seperate machines). 
+> Is there a way to considerably lower the power consumption of this server
+> the 90% of time its not in use?
 
-So, there's no device suspend/resume code involved at all.  The kernel
-just booted and is trying to read data from the drive.  Please try with
-only the first drive attached and see what happens.
+Yes, don't poll for SMART and spin down the drives when idle (man hdparm). Use S3 sleep and WOL if 
+you are really clever. (I'm not, my boxes live in a dedicated server room with its own AC, but 
+that's because I'm nuts). I also have over 25k hours on the drives because I don't spin them down. I 
+figure the extra power is a trade off for drive life. They've got less than 50 spin cycles on them 
+in over 25k hours..
 
-Thanks.
+> Can Linux support Drive Arrays of Significant Sizes (4-8 terabytes)?
 
+Yes, easily (6TB here)
+
+> Can Linux Software support RAID-5 expandability, allowing me to increase the
+> number of disks in the array, without the need to backup the media, recreate
+> the array from scratch and then copy the backup to the machine (something I
+> will be unable to do)?
+
+Yes but get a cheap UPS at least (it's cheap insurance)
+
+> I know this is a Linux forum, but I figure many of you guys work with
+> Windows Server.  If so does Windows 2003 provide the same support for the
+> requested requirements above?
+
+Why would you even _ask_ ??
+
+Read the man page for mdadm, then read it again (and a third time). Then google for "Raid-5 two 
+drive failure linux" just to familiarise yourself with the background.
+
+What you are doing has been done before many, many times. There are some well written sites out 
+there relating to building exactly what you want to build with great detail.
+
+If you are serious about using windows, I pity you.. Linux (actually a combination of the kernel md 
+layer and mdadm) makes it so easy you'd be nuts to beat your head against the wall with the alternative.
+
+Brad
 -- 
-tejun
+"Human beings, who are almost unique in having the ability
+to learn from the experience of others, are also remarkable
+for their apparent disinclination to do so." -- Douglas Adams
