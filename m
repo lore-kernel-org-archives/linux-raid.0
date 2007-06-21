@@ -1,32 +1,108 @@
-From: David Greaves <david@dgreaves.com>
-Subject: Re: limits on raid
-Date: Thu, 21 Jun 2007 09:59:36 +0100
-Message-ID: <467A3DF8.2080008@dgreaves.com>
-References: <Pine.LNX.4.64.0706141957020.29630@asgard.lang.hm> <18034.479.256870.600360@notabene.brown> <Pine.LNX.4.64.0706142034400.29630@asgard.lang.hm> <18034.3676.477575.490448@notabene.brown> <467273AB.9010202@argo.co.il> <18035.3009.568832.785308@notabene.brown> <20070618045759.GD85884050@sgi.com> <18041.59628.370832.633244@notabene.brown> <20070621063936.GT85884050@sgi.com> <Pine.LNX.4.64.0706202341080.31603@asgard.lang.hm>
+From: Michael <big_green_jelly_bean@yahoo.com>
+Subject: Re: Software based SATA RAID-5 expandable arrays?
+Date: Thu, 21 Jun 2007 02:22:32 -0700 (PDT)
+Message-ID: <269659.69089.qm@web54108.mail.re2.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0706202341080.31603@asgard.lang.hm>
 Sender: linux-raid-owner@vger.kernel.org
-To: david@lang.hm
-Cc: David Chinner <dgc@sgi.com>, Neil Brown <neilb@suse.de>, Avi Kivity <avi@argo.co.il>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+To: Brad Campbell <brad@wasp.net.au>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-david@lang.hm wrote:
-> On Thu, 21 Jun 2007, David Chinner wrote:
-> one of the 'killer features' of zfs is that it does checksums of every 
-> file on disk. so many people don't consider the disk infallable.
-> 
-> several other filesystems also do checksums
-> 
-> both bitkeeper and git do checksums of files to detect disk corruption
+Thank you;
 
-How different is that to raid1/5/6 being set to a 'paranoid' "read-verify" mode 
-(as per Dan's recent email) where a read reads from _all_ spindles and verifies 
-(and with R6 maybe corrects) the stripe before returning it?
+Not that I want to, but where did you find a SATA PCI card that fit 15 drives?
 
-Doesn't solve DaveC's issue about the fs doing redundancy but isn't that 
-essentially just fs level mirroring?
+The most expensive part of the build has been finding drive controllers....  Also, how did you come up with that power requirement.  Seems like allot of power for 29 drives....  I will be able to fit near that many in the case Im buying...
 
-David
+I have SATA drives, not PATA, which is a shame cause the controllers cost so much... As for windows, its just familiar to me... I know it like the back of my hand... BUT... it is about time I learn more of Linux.  I have been getting away with IT departments, and simply putting in server change/software installation requests for MySQL   Its kinda nice.. I dont even need to figure out the connection string.
+
+I knew DOS very well, but Linux is frustrating for me...  I just don't have anyone to goto for quick answers.... especially when I dont know the question or whats wrong...  "The computer just hangs randomly" doesnt get very far in forum discussions...
+
+Again, thank you for your insight...  I am VERY serous about doing this, and am running out of time (aka disk space) every day.
+
+GreenJelly
+
+
+
+----- Original Message ----
+From: Brad Campbell <brad@wasp.net.au>
+To: greenjelly <big_green_jelly_Bean@yahoo.com>
+Cc: linux-raid@vger.kernel.org
+Sent: Wednesday, June 20, 2007 4:52:38 PM
+Subject: Re: Software based SATA RAID-5 expandable arrays?
+
+greenjelly wrote:
+
+> The options I seek are to be able to start with a 6 Drive array RAID-5
+> array, then as my demand for more space increases in the future I want to be
+> able to plug in more drives and incorporate them into the Array without the
+> need to backup the data.  Basically I need the software to add the
+> drive/drives to the Array, then Rebuild the array incorporating the new
+> drives while preserving the data on the original array.
+
+I've got 2 boxes. One has 14 drives and a 480W PSU and the other has 15 drives and a 600W PSU. It's 
+not rocket science. Put a lot of drives in a box, make sure you have enough sata ports and power to 
+go around (watch your peak 12V consumption on spin up really) and use linux md. Easy.. Oh, but make 
+sure the drives stay cool!
+
+For a cheap-o home server (which is what I have) I'd certainly not bother with a dedicated RAID 
+card. You are not even going to need GB ethernet really.. I've got 15 drives on a single PCI bus, 
+it's as slow as a wet week in may (in the southern hemisphere), but I'm streaming to 3 head units 
+which total a combined 5MB/s if I'm lucky.. Rebuilds can take up to 10 hours though.
+
+> QUESTIONS
+> Since this is a media server, and would only be used to serve Movies and
+> Video to my two machines It wouldn't have to be powered up full time (My
+> Music consumes less space and will be contained on two seperate machines). 
+> Is there a way to considerably lower the power consumption of this server
+> the 90% of time its not in use?
+
+Yes, don't poll for SMART and spin down the drives when idle (man hdparm). Use S3 sleep and WOL if 
+you are really clever. (I'm not, my boxes live in a dedicated server room with its own AC, but 
+that's because I'm nuts). I also have over 25k hours on the drives because I don't spin them down. I 
+figure the extra power is a trade off for drive life. They've got less than 50 spin cycles on them 
+in over 25k hours..
+
+> Can Linux support Drive Arrays of Significant Sizes (4-8 terabytes)?
+
+Yes, easily (6TB here)
+
+> Can Linux Software support RAID-5 expandability, allowing me to increase the
+> number of disks in the array, without the need to backup the media, recreate
+> the array from scratch and then copy the backup to the machine (something I
+> will be unable to do)?
+
+Yes but get a cheap UPS at least (it's cheap insurance)
+
+> I know this is a Linux forum, but I figure many of you guys work with
+> Windows Server.  If so does Windows 2003 provide the same support for the
+> requested requirements above?
+
+Why would you even _ask_ ??
+
+Read the man page for mdadm, then read it again (and a third time). Then google for "Raid-5 two 
+drive failure linux" just to familiarise yourself with the background.
+
+What you are doing has been done before many, many times. There are some well written sites out 
+there relating to building exactly what you want to build with great detail.
+
+If you are serious about using windows, I pity you.. Linux (actually a combination of the kernel md 
+layer and mdadm) makes it so easy you'd be nuts to beat your head against the wall with the alternative.
+
+Brad
+-- 
+"Human beings, who are almost unique in having the ability
+to learn from the experience of others, are also remarkable
+for their apparent disinclination to do so." -- Douglas Adams
+
+
+
+
+
+ 
+____________________________________________________________________________________
+TV dinner still cooling? 
+Check out "Tonight's Picks" on Yahoo! TV.
+http://tv.yahoo.com/
