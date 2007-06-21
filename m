@@ -1,38 +1,27 @@
-From: Nix <nix@esperi.org.uk>
-Subject: Re: limits on raid
-Date: Thu, 21 Jun 2007 21:08:54 +0100
-Message-ID: <87d4zp1355.fsf@hades.wkstn.nix>
-References: <Pine.LNX.4.64.0706141957020.29630@asgard.lang.hm>
-	<18034.479.256870.600360@notabene.brown>
-	<Pine.LNX.4.64.0706142034400.29630@asgard.lang.hm>
-	<18034.3676.477575.490448@notabene.brown>
-	<467273AB.9010202@argo.co.il>
-	<18035.3009.568832.785308@notabene.brown>
-	<20070618045759.GD85884050@sgi.com>
-	<18041.59628.370832.633244@notabene.brown>
+From: Richard Scobie <richard@sauce.co.nz>
+Subject: Re: Software based SATA RAID-5 expandable arrays?
+Date: Fri, 22 Jun 2007 08:16:43 +1200
+Message-ID: <467ADCAB.5030702@sauce.co.nz>
+References: <269659.69089.qm@web54108.mail.re2.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18041.59628.370832.633244@notabene.brown> (Neil Brown's message of "21 Jun 2007 03:57:09 +0100")
+In-Reply-To: <269659.69089.qm@web54108.mail.re2.yahoo.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: David Chinner <dgc@sgi.com>, Avi Kivity <avi@argo.co.il>, david@lang.hm, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 21 Jun 2007, Neil Brown stated:
-> I have that - apparently naive - idea that drives use strong checksum,
-> and will never return bad data, only good data or an error.  If this
-> isn't right, then it would really help to understand what the cause of
-> other failures are before working out how to handle them....
+Michael wrote:
+> Thank you;
+> 
+> Not that I want to, but where did you find a SATA PCI card that fit 15 drives?
 
-Look at the section `Disks and errors' in Val Henson's excellent report
-on last year's filesystems workshop: <http://lwn.net/Articles/190223/>.
-Most of the error modes given there lead to valid checksums and wrong
-data...
+Areca have a few -  a range of PCI-X cards that do up to 24 SATA drives
+(ARC-1170) and PCI-e up to 24 drives (ARC-1280).
 
-(while you're there, read the first part too :) )
+Regards,
 
--- 
-`... in the sense that dragons logically follow evolution so they would
- be able to wield metal.' --- Kenneth Eng's colourless green ideas sleep
- furiously
+Richard
+
+
