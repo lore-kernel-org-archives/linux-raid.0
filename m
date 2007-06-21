@@ -1,43 +1,59 @@
-From: david@lang.hm
+From: David Greaves <david@dgreaves.com>
 Subject: Re: limits on raid
-Date: Wed, 20 Jun 2007 23:45:25 -0700 (PDT)
-Message-ID: <Pine.LNX.4.64.0706202341080.31603@asgard.lang.hm>
-References: <Pine.LNX.4.64.0706141957020.29630@asgard.lang.hm>
- <18034.479.256870.600360@notabene.brown> <Pine.LNX.4.64.0706142034400.29630@asgard.lang.hm>
- <18034.3676.477575.490448@notabene.brown> <467273AB.9010202@argo.co.il>
- <18035.3009.568832.785308@notabene.brown> <20070618045759.GD85884050@sgi.com>
- <18041.59628.370832.633244@notabene.brown> <20070621063936.GT85884050@sgi.com>
+Date: Thu, 21 Jun 2007 09:49:06 +0100
+Message-ID: <467A3B82.1030607@dgreaves.com>
+References: <Pine.LNX.4.64.0706141957020.29630@asgard.lang.hm>	<18034.479.256870.600360@notabene.brown>	<Pine.LNX.4.64.0706142034400.29630@asgard.lang.hm>	<18034.3676.477575.490448@notabene.brown>	<20070616020320.GB2002@animx.eu.org>	<18035.23867.576212.859440@notabene.brown>	<4673E69A.4020309@dgreaves.com> <18041.59928.812167.453118@notabene.brown>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20070621063936.GT85884050@sgi.com>
+In-Reply-To: <18041.59928.812167.453118@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Chinner <dgc@sgi.com>
-Cc: Neil Brown <neilb@suse.de>, Avi Kivity <avi@argo.co.il>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: Wakko Warner <wakko@animx.eu.org>, david@lang.hm, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, 21 Jun 2007, David Chinner wrote:
+Neil Brown wrote:
+> 
+> This isn't quite right.
+Thanks :)
 
-> On Thu, Jun 21, 2007 at 12:56:44PM +1000, Neil Brown wrote:
->
->> I have that - apparently naive - idea that drives use strong checksum,
->> and will never return bad data, only good data or an error.  If this
->> isn't right, then it would really help to understand what the cause of
->> other failures are before working out how to handle them....
->
-> The drive is not the only source of errors, though.  You could
-> have a path problem that is corrupting random bits between the drive
-> and the filesystem. So the data on the disk might be fine, and
-> reading it via a redundant path might be all that is needed.
+> Firstly, it is mdadm which decided to make one drive a 'spare' for
+> raid5, not the kernel.
+> Secondly, it only applies to raid5, not raid6 or raid1 or raid10.
+> 
+> For raid6, the initial resync (just like the resync after an unclean
+> shutdown) reads all the data blocks, and writes all the P and Q
+> blocks.
+> raid5 can do that, but it is faster the read all but one disk, and
+> write to that one disk.
 
-one of the 'killer features' of zfs is that it does checksums of every 
-file on disk. so many people don't consider the disk infallable.
+How about this:
 
-several other filesystems also do checksums
+Initial Creation
 
-both bitkeeper and git do checksums of files to detect disk corruption
+When mdadm asks the kernel to create a raid array the most noticeable activity 
+is what's called the "initial resync".
 
-as david C points out there are many points in the path where the data 
-could get corrupted besides on the platter.
+Raid level 0 doesn't have any redundancy so there is no initial resync.
 
-David Lang
+For raid levels 1,4,6 and 10 mdadm creates the array and starts a resync. The 
+raid algorithm then reads the data blocks and writes the appropriate 
+parity/mirror (P+Q) blocks across all the relevant disks. There is some sample 
+output in a section below...
+
+For raid5 there is an optimisation: mdadm takes one of the disks and marks it as 
+'spare'; it then creates the array in degraded mode. The kernel marks the spare 
+disk as 'rebuilding' and starts to read from the 'good' disks, calculate the 
+parity and determines what should be on the spare disk and then just writes to it.
+
+Once all this is done the array is clean and all disks are active.
+
+This can take quite a time and the array is not fully resilient whilst this is 
+happening (it is however fully useable).
+
+
+
+
+
+Also is raid4 like raid5 or raid6 in this respect?
