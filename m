@@ -1,78 +1,46 @@
-From: Brad Campbell <brad@wasp.net.au>
-Subject: Re: Software based SATA RAID-5 expandable arrays?
-Date: Thu, 21 Jun 2007 00:52:38 +0400
-Message-ID: <46799396.8010800@wasp.net.au>
-References: <11167521.post@talk.nabble.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: limits on raid
+Date: Thu, 21 Jun 2007 12:56:44 +1000
+Message-ID: <18041.59628.370832.633244@notabene.brown>
+References: <Pine.LNX.4.64.0706141957020.29630@asgard.lang.hm>
+	<18034.479.256870.600360@notabene.brown>
+	<Pine.LNX.4.64.0706142034400.29630@asgard.lang.hm>
+	<18034.3676.477575.490448@notabene.brown>
+	<467273AB.9010202@argo.co.il>
+	<18035.3009.568832.785308@notabene.brown>
+	<20070618045759.GD85884050@sgi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <11167521.post@talk.nabble.com>
+In-Reply-To: message from David Chinner on Monday June 18
 Sender: linux-raid-owner@vger.kernel.org
-To: greenjelly <big_green_jelly_Bean@yahoo.com>
-Cc: linux-raid@vger.kernel.org
+To: David Chinner <dgc@sgi.com>
+Cc: Avi Kivity <avi@argo.co.il>, david@lang.hm, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-greenjelly wrote:
+On Monday June 18, dgc@sgi.com wrote:
+> On Sat, Jun 16, 2007 at 07:59:29AM +1000, Neil Brown wrote:
+> > Combining these thoughts, it would make a lot of sense for the
+> > filesystem to be able to say to the block device "That blocks looks
+> > wrong - can you find me another copy to try?".  That is an example of
+> > the sort of closer integration between filesystem and RAID that would
+> > make sense.
+> 
+> I think that this would only be useful on devices that store
+> discrete copies of the blocks on different devices i.e. mirrors. If
+> it's an XOR based RAID, you don't have another copy you can
+> retreive....
 
-> The options I seek are to be able to start with a 6 Drive array RAID-5
-> array, then as my demand for more space increases in the future I want to be
-> able to plug in more drives and incorporate them into the Array without the
-> need to backup the data.  Basically I need the software to add the
-> drive/drives to the Array, then Rebuild the array incorporating the new
-> drives while preserving the data on the original array.
+You could reconstruct the block in question from all the other blocks
+(including parity) and see if that differs from the data block read
+from disk...  For RAID6, there would be a number of different ways to
+calculate alternate blocks.   Not convinced that it is actually
+something we want to do, but it is a possibility.
 
-I've got 2 boxes. One has 14 drives and a 480W PSU and the other has 15 drives and a 600W PSU. It's 
-not rocket science. Put a lot of drives in a box, make sure you have enough sata ports and power to 
-go around (watch your peak 12V consumption on spin up really) and use linux md. Easy.. Oh, but make 
-sure the drives stay cool!
+I have that - apparently naive - idea that drives use strong checksum,
+and will never return bad data, only good data or an error.  If this
+isn't right, then it would really help to understand what the cause of
+other failures are before working out how to handle them....
 
-For a cheap-o home server (which is what I have) I'd certainly not bother with a dedicated RAID 
-card. You are not even going to need GB ethernet really.. I've got 15 drives on a single PCI bus, 
-it's as slow as a wet week in may (in the southern hemisphere), but I'm streaming to 3 head units 
-which total a combined 5MB/s if I'm lucky.. Rebuilds can take up to 10 hours though.
-
-> QUESTIONS
-> Since this is a media server, and would only be used to serve Movies and
-> Video to my two machines It wouldn't have to be powered up full time (My
-> Music consumes less space and will be contained on two seperate machines). 
-> Is there a way to considerably lower the power consumption of this server
-> the 90% of time its not in use?
-
-Yes, don't poll for SMART and spin down the drives when idle (man hdparm). Use S3 sleep and WOL if 
-you are really clever. (I'm not, my boxes live in a dedicated server room with its own AC, but 
-that's because I'm nuts). I also have over 25k hours on the drives because I don't spin them down. I 
-figure the extra power is a trade off for drive life. They've got less than 50 spin cycles on them 
-in over 25k hours..
-
-> Can Linux support Drive Arrays of Significant Sizes (4-8 terabytes)?
-
-Yes, easily (6TB here)
-
-> Can Linux Software support RAID-5 expandability, allowing me to increase the
-> number of disks in the array, without the need to backup the media, recreate
-> the array from scratch and then copy the backup to the machine (something I
-> will be unable to do)?
-
-Yes but get a cheap UPS at least (it's cheap insurance)
-
-> I know this is a Linux forum, but I figure many of you guys work with
-> Windows Server.  If so does Windows 2003 provide the same support for the
-> requested requirements above?
-
-Why would you even _ask_ ??
-
-Read the man page for mdadm, then read it again (and a third time). Then google for "Raid-5 two 
-drive failure linux" just to familiarise yourself with the background.
-
-What you are doing has been done before many, many times. There are some well written sites out 
-there relating to building exactly what you want to build with great detail.
-
-If you are serious about using windows, I pity you.. Linux (actually a combination of the kernel md 
-layer and mdadm) makes it so easy you'd be nuts to beat your head against the wall with the alternative.
-
-Brad
--- 
-"Human beings, who are almost unique in having the ability
-to learn from the experience of others, are also remarkable
-for their apparent disinclination to do so." -- Douglas Adams
+NeilBrown
