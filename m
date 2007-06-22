@@ -1,48 +1,80 @@
-From: David Greaves <david@dgreaves.com>
-Subject: Re: Degraded array on every reboot
-Date: Fri, 22 Jun 2007 14:15:52 +0100
-Message-ID: <467BCB88.9000603@dgreaves.com>
-References: <4755.10.3.3.3.1182516663.squirrel@swilver.dyndns.org>
+From: Raz <raziebe@gmail.com>
+Subject: Re: stripe_cache_size and performance
+Date: Fri, 22 Jun 2007 18:01:59 +0300
+Message-ID: <5d96567b0706220801v76c1c19cl7448050e62e0860b@mail.gmail.com>
+References: <Pine.LNX.4.64.0706211312480.5806@gheavc.wnzcbav.cig>
+	 <5d96567b0706211242p7f03bd1cw9102ae3e44d67cee@mail.gmail.com>
+	 <Pine.LNX.4.64.0706211808140.5806@gheavc.wnzcbav.cig>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4755.10.3.3.3.1182516663.squirrel@swilver.dyndns.org>
+In-Reply-To: <Pine.LNX.4.64.0706211808140.5806@gheavc.wnzcbav.cig>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: John Hendrikx <hjohn@xs4all.nl>
+To: jnelson-linux-raid@jamponi.net
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-John Hendrikx wrote:
-> I'm not sure why this keeps going wrong, but I do know I made a mistake
-> when initially reconstructing the array.  What I did was the following:
-> 
-> # mdadm /dev/md1 --add /dev/hde
-> 
-> Releazing that I didn't want to add the complete drive (/dev/hde) but only
-> one of its partitions (/dev/hde1) I then did (while it was still
-> rebuilding):
-> 
-> # mdadm /dev/md1 --fail /dev/hde
-> # mdadm /dev/md1 --remove /dev/hde
+On 6/22/07, Jon Nelson <jnelson-linux-raid@jamponi.net> wrote:
+> On Thu, 21 Jun 2007, Raz wrote:
+>
+> > What is your raid configuration ?
+> > Please note that the stripe_cache_size is acting as a bottle neck in some
+> > cases.
+>
+> Well, it's 3x SATA drives in raid5. 320G drives each, and I'm using a
+> 314G partition from each disk (the rest of the space is quiescent).
+what is the chunk size ?. Please note that a raid performance is dependent
+on the access pattern to the disks. What is this raid aimed to do ?
+more reads ? more writes ? If you can control the access pattern ,
+you might be able to increase performance.
+> > On 6/21/07, Jon Nelson <jnelson-linux-raid@jamponi.net> wrote:
+> > >
+> > > I've been futzing with stripe_cache_size on a 3x component raid5,
+> > > using 2.6.18.8-0.3-default on x86_64 (openSUSE 10.2).
+> > >
+> > > With the value set at 4096 I get pretty great write numbers.
+> > > 2048 and on down the write numbers slowly drop.
+> > >
+> > > However, at values above 512 the 'check' performance is terrible. By
+> > > 'check' performance I mean the value displayed by /proc/mdstat after
+> > > I issue:
+> > >
+> > > echo check > /sys/block/md0/md/sync_action
+> > >
+> > > When I say "terrible" I mean < 3MB/s.
+> > > When I use 384, the performance goes to ~70MB/s
+> > > 512.. 72-73MB/s
+> > > 640.. 73-74MB/s
+> > >
+> > > 768.. 3300 K/s. Wow!
+> > >
+> > > Can somebody 'splain to me what is going on?
+> > >
+> > > --
+> > > Jon Nelson <jnelson-linux-raid@jamponi.net>
+> > > -
+> > > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> > > the body of a message to majordomo@vger.kernel.org
+> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > >
+> >
+> >
+> > --
+> > Raz
+> >
+> >
+> >
+>
+> --
+> Jon Nelson <jnelson-linux-raid@jamponi.net>
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-I'm not 100% sure but it *may* have rebuilt the superblock.
 
-do:
-  mdadm --examine /dev/hde
-  mdadm --examine /dev/hde1
-
-If hde has a superblock then that could be picked up before the hde1 one.
-
-(ah, read more of your email and you were on the right tracks :) )
-
-To fix this do:
-  mdadm --zero-superblock /dev/hde
-
-Once all this is done you may want to run a check on the array.
-
-There's probably other stuff going on with partition table caches too - blockdev 
--rereadpt may make a difference... but I suspect the --zero-superblock will just 
-fix it all on the next boot.
-
-David
+-- 
+Raz
