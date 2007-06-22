@@ -1,46 +1,105 @@
-From: David Greaves <david@dgreaves.com>
-Subject: Re: limits on raid
-Date: Fri, 22 Jun 2007 13:39:34 +0100
-Message-ID: <467BC306.9010008@dgreaves.com>
-References: <Pine.LNX.4.64.0706141957020.29630@asgard.lang.hm> <18034.479.256870.600360@notabene.brown> <Pine.LNX.4.64.0706142034400.29630@asgard.lang.hm> <18034.3676.477575.490448@notabene.brown> <46756BE2.7010401@tmr.com> <467B03C1.50809@tmr.com> <18043.13037.40956.366334@notabene.brown> <467B840F.4080402@dgreaves.com> <Pine.LNX.4.64.0706220235590.9657@asgard.lang.hm>
+From: "John Hendrikx" <hjohn@xs4all.nl>
+Subject: Degraded array on every reboot
+Date: Fri, 22 Jun 2007 14:51:03 +0200 (CEST)
+Message-ID: <4755.10.3.3.3.1182516663.squirrel@swilver.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0706220235590.9657@asgard.lang.hm>
 Sender: linux-raid-owner@vger.kernel.org
-To: david@lang.hm
-Cc: Neil Brown <neilb@suse.de>, Bill Davidsen <davidsen@tmr.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-david@lang.hm wrote:
-> On Fri, 22 Jun 2007, David Greaves wrote:
-> 
->> That's not a bad thing - until you look at the complexity it brings - 
->> and then consider the impact and exceptions when you do, eg hardware 
->> acceleration? md information fed up to the fs layer for xfs? simple 
->> long term maintenance?
->>
->> Often these problems are well worth the benefits of the feature.
->>
->> I _wonder_ if this is one where the right thing is to "just say no" :)
-> so for several reasons I don't see this as something that's deserving of 
-> an atomatic 'no'
-> 
-> David Lang
+Hi, I currently have a little problem where one my drives is kicked from
+the raid array on every reboot.  dmesg claims the following:
 
-Err, re-read it, I hope you'll see that I agree with you - I actually just meant 
-the --assume-clean workaround stuff :)
+md: md1 stoppped.
+md: bind<sda1>
+md: bind<sdc1>
+md: could not open unknown-block(33,1).
+md: md_import_device returned -6
+md: bind<hdg1>
+md: bind<hde>
+md: bind<sdb1>
+md: kicking non-fresh hde from array!
+md: unbind<hde>
+md: export_rdev(hde)
+raid5: allocated 6284kB for md1
+raid5: raid level 5 set md1 active with 5 out of 6 device, algorithm 2
 
-If you end up 'fiddling' in md because someone specified --assume-clean on a 
-raid5 [in this case just to save a few minutes *testing time* on system with a 
-heavily choked bus!] then that adds *even more* complexity and exception cases 
-into all the stuff you described.
+I'm not sure why this keeps going wrong, but I do know I made a mistake
+when initially reconstructing the array.  What I did was the following:
 
-I'm very much for the fs layer reading the lower block structure so I don't have 
-to fiddle with arcane tuning parameters - yes, *please* help make xfs self-tuning!
+# mdadm /dev/md1 --add /dev/hde
 
-Keeping life as straightforward as possible low down makes the upwards interface 
-more manageable and that goal more realistic...
+Releazing that I didn't want to add the complete drive (/dev/hde) but only
+one of its partitions (/dev/hde1) I then did (while it was still
+rebuilding):
 
-David
+# mdadm /dev/md1 --fail /dev/hde
+# mdadm /dev/md1 --remove /dev/hde
+
+Then I recreated the partition /dev/hde1 because of course the partition
+table was destroyed during the partial rebuild:
+
+# fdisk /dev/hde
+# fdisk -l /dev/hde
+
+Disk /dev/hde: 300.0 GB, 300001443840 bytes
+255 heads, 63 sectors/track, 36473 cylinders
+Units = cylinders of 16065 * 512 = 8225280 bytes
+
+   Device Boot         Start        End    Blocks   Id   System
+/dev/hde1                  1      36473 292969341   83   Linux
+
+I then did:
+
+# mdadm /dev/md1 --add /dev/hde1
+
+I let it rebuild, and the system is working fine.  However, after a reboot
+I get the above text in dmesg, and I have to re-add /dev/hde1 to the array
+again.  Why it is trying to add /dev/hde I donot understand.  Another
+funny thing is that when I try to re-add /dev/hde1 again, it won't work
+immediately:
+
+# mdadm /dev/md1 --add /dev/hde1
+mdadm: cannot find /dev/hde1: No such file or directory
+
+Which is odd, because fdisk still claims the partition is there:
+
+# fdisk -l /dev/hde
+
+Disk /dev/hde: 300.0 GB, 300001443840 bytes
+255 heads, 63 sectors/track, 36473 cylinders
+Units = cylinders of 16065 * 512 = 8225280 bytes
+
+   Device Boot         Start        End    Blocks   Id   System
+/dev/hde1                  1      36473 292969341   83   Linux
+
+This clearly shows there is a /dev/hde1, no idea why mdadm doesn't see it.
+ So I just run fdisk again, drop the partition, add a new one, and write
+the table again.  Then mdadm sees it without problem.
+
+# mdadm /dev/md1 --add /dev/hde1
+mdadm: re-added /dev/hde1
+
+One thing I noticed which may shed some light on this problem is the
+following.  When I use mdadm --examine and examine when of the correctly
+working drives, then I see a superblock on /dev/sda1 for example, but no
+superblock when I use /dev/sda (which seems correct).
+
+However, when I do this with /dev/hde1 and /dev/hde, both have a md
+superblock, which may the cause of the confusion.  I'm not sure how to fix
+this exactly (or why it happened in the first place) but I'm assuming that
+if I can remove the md superblock from /dev/hde that the problem will be
+gone.
+
+I'm considering simply wiping /dev/hde completely so there's no trace of
+the superblock and then re-adding it correctly, but perhaps there's a less
+drastic way to do it.
+
+Any insights would be appreciated :)
+
+--John
+
+
