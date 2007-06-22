@@ -1,63 +1,52 @@
-From: Jon Nelson <jnelson-linux-raid@jamponi.net>
-Subject: Re: stripe_cache_size and performance
-Date: Thu, 21 Jun 2007 18:09:37 -0500 (CDT)
-Message-ID: <Pine.LNX.4.64.0706211808140.5806@gheavc.wnzcbav.cig>
-References: <Pine.LNX.4.64.0706211312480.5806@gheavc.wnzcbav.cig>
- <5d96567b0706211242p7f03bd1cw9102ae3e44d67cee@mail.gmail.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: limits on raid
+Date: Fri, 22 Jun 2007 12:24:45 +1000
+Message-ID: <18043.13037.40956.366334@notabene.brown>
+References: <Pine.LNX.4.64.0706141957020.29630@asgard.lang.hm>
+	<18034.479.256870.600360@notabene.brown>
+	<Pine.LNX.4.64.0706142034400.29630@asgard.lang.hm>
+	<18034.3676.477575.490448@notabene.brown>
+	<46756BE2.7010401@tmr.com>
+	<467B03C1.50809@tmr.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5d96567b0706211242p7f03bd1cw9102ae3e44d67cee@mail.gmail.com>
+In-Reply-To: message from Bill Davidsen on Thursday June 21
 Sender: linux-raid-owner@vger.kernel.org
-Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: david@lang.hm, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, 21 Jun 2007, Raz wrote:
+On Thursday June 21, davidsen@tmr.com wrote:
+> I didn't get a comment on my suggestion for a quick and dirty fix for 
+> -assume-clean issues...
+> 
+> Bill Davidsen wrote:
+> > How about a simple solution which would get an array on line and still 
+> > be safe? All it would take is a flag which forced reconstruct writes 
+> > for RAID-5. You could set it with an option, or automatically if 
+> > someone puts --assume-clean with --create, leave it in the superblock 
+> > until the first "repair" runs to completion. And for repair you could 
+> > make some assumptions about bad parity not being caused by error but 
+> > just unwritten.
 
-> What is your raid configuration ?
-> Please note that the stripe_cache_size is acting as a bottle neck in some
-> cases.
+It is certainly possible, and probably not a lot of effort.  I'm not
+really excited about it though.
 
-Well, it's 3x SATA drives in raid5. 320G drives each, and I'm using a 
-314G partition from each disk (the rest of the space is quiescent).
+So if someone to submit a patch that did the right stuff,  I would
+probably accept it, but I am unlikely to do it myself.
 
-> On 6/21/07, Jon Nelson <jnelson-linux-raid@jamponi.net> wrote:
-> >
-> > I've been futzing with stripe_cache_size on a 3x component raid5,
-> > using 2.6.18.8-0.3-default on x86_64 (openSUSE 10.2).
-> >
-> > With the value set at 4096 I get pretty great write numbers.
-> > 2048 and on down the write numbers slowly drop.
-> >
-> > However, at values above 512 the 'check' performance is terrible. By
-> > 'check' performance I mean the value displayed by /proc/mdstat after
-> > I issue:
-> >
-> > echo check > /sys/block/md0/md/sync_action
-> >
-> > When I say "terrible" I mean < 3MB/s.
-> > When I use 384, the performance goes to ~70MB/s
-> > 512.. 72-73MB/s
-> > 640.. 73-74MB/s
-> >
-> > 768.. 3300 K/s. Wow!
-> >
-> > Can somebody 'splain to me what is going on?
-> >
-> > --
-> > Jon Nelson <jnelson-linux-raid@jamponi.net>
-> > -
-> > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >
-> 
-> 
-> -- 
-> Raz
-> 
-> 
-> 
 
---
-Jon Nelson <jnelson-linux-raid@jamponi.net>
+> >
+> > Thought 2: I think the unwritten bit is easier than you think, you 
+> > only need it on parity blocks for RAID5, not on data blocks. When a 
+> > write is done, if the bit is set do a reconstruct, write the parity 
+> > block, and clear the bit. Keeping a bit per data block is madness, and 
+> > appears to be unnecessary as well.
+
+Where do you propose storing those bits?  And how many would you cache
+in memory?  And what performance hit would you suffer for accessing
+them?  And would it be worth it?
+
+NeilBrown
