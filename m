@@ -1,28 +1,27 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: Degraded array on every reboot
-Date: Sat, 23 Jun 2007 08:49:37 +1000
-Message-ID: <18044.20993.729540.359384@notabene.brown>
-References: <4755.10.3.3.3.1182516663.squirrel@swilver.dyndns.org>
+From: Richard Scobie <richard@sauce.co.nz>
+Subject: RAID 5 Grow
+Date: Sat, 23 Jun 2007 16:16:06 +1200
+Message-ID: <467C9E86.5070505@sauce.co.nz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from John Hendrikx on Friday June 22
 Sender: linux-raid-owner@vger.kernel.org
-To: John Hendrikx <hjohn@xs4all.nl>
-Cc: linux-raid@vger.kernel.org
+To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Friday June 22, hjohn@xs4all.nl wrote:
-> 
-> I'm considering simply wiping /dev/hde completely so there's no trace of
-> the superblock and then re-adding it correctly, but perhaps there's a less
-> drastic way to do it.
-> 
-> Any insights would be appreciated :)
+I will soon be adding another same sized drive to an existing 3 drive 
+RAID 5 array.
 
-mdadm --zero-superblock /dev/hde
+The machine is running Fedora Core 6 with kernel 2.6.20-1.2952.fc6 and 
+mdadm 2.5.4, both of which are the latest available Fedora packages.
 
-should fix this for you.
+Is anyone aware of any obvious bugs in either of these that will 
+jeopardise this resize?
 
-NeilBrown
+I can compile and install later versions if required, but I'd rather 
+leave the system "standard" if I can.
+
+Thanks.
+
+Richard
