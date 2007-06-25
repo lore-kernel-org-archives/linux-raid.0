@@ -1,32 +1,56 @@
-From: Bill Davidsen <davidsen@tmr.com>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
 Subject: Re: stripe_cache_size and performance
-Date: Mon, 25 Jun 2007 12:48:21 -0400
-Message-ID: <467FF1D5.6080007@tmr.com>
-References: <Pine.LNX.4.64.0706211312480.5806@gheavc.wnzcbav.cig>  <5d96567b0706211242p7f03bd1cw9102ae3e44d67cee@mail.gmail.com>  <Pine.LNX.4.64.0706211808140.5806@gheavc.wnzcbav.cig> <5d96567b0706220801v76c1c19cl7448050e62e0860b@mail.gmail.com> <Pine.LNX.4.64.0706221110220.4196@p34.internal.lan>
+Date: Mon, 25 Jun 2007 13:00:32 -0400 (EDT)
+Message-ID: <Pine.LNX.4.64.0706251259430.15590@p34.internal.lan>
+References: <Pine.LNX.4.64.0706211312480.5806@gheavc.wnzcbav.cig>
+ <5d96567b0706211242p7f03bd1cw9102ae3e44d67cee@mail.gmail.com>
+ <Pine.LNX.4.64.0706211808140.5806@gheavc.wnzcbav.cig>
+ <5d96567b0706220801v76c1c19cl7448050e62e0860b@mail.gmail.com>
+ <Pine.LNX.4.64.0706221110220.4196@p34.internal.lan> <467FF1D5.6080007@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0706221110220.4196@p34.internal.lan>
+In-Reply-To: <467FF1D5.6080007@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
+To: Bill Davidsen <davidsen@tmr.com>
 Cc: Raz <raziebe@gmail.com>, jnelson-linux-raid@jamponi.net, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Justin Piszcz wrote:
-> I have found a 16MB stripe_cache_size results in optimal performance 
-> after testing many many values :)
 
-We have discussed this before, my experience has been that after 8 x 
-stripe size the performance gains hit diminishing returns, particularly 
-for typical write instead of big aligned blocks, possibly with O_DIRECT. 
-I would suggest that as a target even on a low memory machine.
 
-Do your tests show similar? I was only able to test three and four drive 
-setups using dedicated drives.
+On Mon, 25 Jun 2007, Bill Davidsen wrote:
 
--- 
-bill davidsen <davidsen@tmr.com>
-  CTO TMR Associates, Inc
-  Doing interesting things with small computers since 1979
+> Justin Piszcz wrote:
+>> I have found a 16MB stripe_cache_size results in optimal performance after 
+>> testing many many values :)
+>
+> We have discussed this before, my experience has been that after 8 x stripe 
+> size the performance gains hit diminishing returns, particularly for typical 
+> write instead of big aligned blocks, possibly with O_DIRECT. I would suggest 
+> that as a target even on a low memory machine.
+>
+> Do your tests show similar? I was only able to test three and four drive 
+> setups using dedicated drives.
+>
+> -- 
+> bill davidsen <davidsen@tmr.com>
+> CTO TMR Associates, Inc
+> Doing interesting things with small computers since 1979
+>
 
+I will re-benchmark with my current setup, however:
+
+Each of these are averaged over three runs:
+
+128k_stripe: 69.2MB/s
+256k_stripe: 105.3MB/s
+512k_stripe: 142.0MB/s
+1024k_stripe: 144.6MB/s
+2048k_stripe: 208.3MB/s
+4096k_stripe: 223.6MB/s
+8192k_stripe: 226.0MB/s
+16384k_stripe: 215.0MB/s
+
+This was with 6 sata disks.
+
+Justin.
