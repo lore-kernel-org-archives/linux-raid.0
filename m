@@ -1,32 +1,93 @@
-From: "Dan Williams" <dan.j.williams@intel.com>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
 Subject: Re: stripe_cache_size and performance
-Date: Mon, 25 Jun 2007 15:19:37 -0700
-Message-ID: <e9c3a7c20706251519u3f6db295n3c653869ecbfbb0c@mail.gmail.com>
+Date: Mon, 25 Jun 2007 18:21:01 -0400 (EDT)
+Message-ID: <Pine.LNX.4.64.0706251820310.27372@p34.internal.lan>
 References: <Pine.LNX.4.64.0706211312480.5806@gheavc.wnzcbav.cig>
-	 <5d96567b0706211242p7f03bd1cw9102ae3e44d67cee@mail.gmail.com>
-	 <Pine.LNX.4.64.0706211808140.5806@gheavc.wnzcbav.cig>
-	 <Pine.LNX.4.64.0706251705040.5806@gheavc.wnzcbav.cig>
+ <5d96567b0706211242p7f03bd1cw9102ae3e44d67cee@mail.gmail.com>
+ <Pine.LNX.4.64.0706211808140.5806@gheavc.wnzcbav.cig>
+ <Pine.LNX.4.64.0706251705040.5806@gheavc.wnzcbav.cig>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <Pine.LNX.4.64.0706251705040.5806@gheavc.wnzcbav.cig>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: Jon Nelson <jnelson-linux-raid@jamponi.net>
 Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+
+
+On Mon, 25 Jun 2007, Jon Nelson wrote:
+
+> On Thu, 21 Jun 2007, Jon Nelson wrote:
+>
+>> On Thu, 21 Jun 2007, Raz wrote:
+>>
+>>> What is your raid configuration ?
+>>> Please note that the stripe_cache_size is acting as a bottle neck in some
+>>> cases.
+>
+> Well, that's kind of the point of my email. I'll try to restate things,
+> as my question appears to have gotten lost.
+>
+> 1. I have a 3x component raid5, ~314G per component. Each component
+> happens to be the 4th partition of a 320G SATA drive. Each drive
+> can sustain approx. 70MB/s reads/writes. Except for the first
+> drive, none of the other partitions are used for anything else at this
+> time. The system is nominally quiescent during these tests.
+>
+> 2. The kernel is 2.6.18.8-0.3-default on x86_64 (openSUSE 10.2).
+>
+> 3. My best sustained write performance comes with a stripe_cache_size of
+> 4096. Larger than that seems to reduce performance, although only very
+> slightly.
+>
+> 4. At values below 4096, the absolute write performance is less than the
+> best, but only marginally.
+>
+> 5. HOWEVER, at any value *above* 512 the 'check' performance is REALLY
+> BAD. By 'check' performance I mean the value displayed by /proc/mdstat
+> after I issue:
+>
+> echo check > /sys/block/md0/md/sync_action
+>
+> When I say "REALLY BAD" I mean < 3MB/s.
+>
+> 6. Here is a short incomplete table of stripe_cache_size to 'check'
+> performance:
+>
+> 384.... 72-73MB/s
+> 512.... 72-73MB/s
+> 640.... 73-74MB/s
+> 768.....3-3.4MB/s
+>
+> And the performance stays "bad" as I increase the stripe_cache_size.
+>
 > 7. And now, the question: the best absolute 'write' performance comes
 > with a stripe_cache_size value of 4096 (for my setup). However, any
 > value of stripe_cache_size above 384 really, really hurts 'check' (and
 > rebuild, one can assume) performance.  Why?
 >
-Question:
-After performance goes "bad" does it go back up if you reduce the size
-back down to 384?
-
 > --
 > Jon Nelson <jnelson-linux-raid@jamponi.net>
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-Dan
+Neil has a patch for the bad speed.
+
+In the mean time, do this (or better to set it to 30, for instance):
+
+# Set minimum and maximum raid rebuild speed to 60MB/s.
+echo "Setting minimum and maximum resync speed to 60 MiB/s..."
+echo 60000 > /sys/block/md0/md/sync_speed_min
+echo 60000 > /sys/block/md0/md/sync_speed_max
+echo 60000 > /sys/block/md1/md/sync_speed_min
+echo 60000 > /sys/block/md1/md/sync_speed_max
+echo 60000 > /sys/block/md2/md/sync_speed_min
+echo 60000 > /sys/block/md2/md/sync_speed_max
+echo 60000 > /sys/block/md3/md/sync_speed_min
+echo 60000 > /sys/block/md3/md/sync_speed_max
+
