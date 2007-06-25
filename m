@@ -1,111 +1,67 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: stripe_cache_size and performance [BUG with =64kb]
-Date: Mon, 25 Jun 2007 16:42:29 -0400 (EDT)
-Message-ID: <Pine.LNX.4.64.0706251642220.6260@p34.internal.lan>
+From: Jon Nelson <jnelson-linux-raid@jamponi.net>
+Subject: Re: stripe_cache_size and performance
+Date: Mon, 25 Jun 2007 17:12:08 -0500 (CDT)
+Message-ID: <Pine.LNX.4.64.0706251705040.5806@gheavc.wnzcbav.cig>
 References: <Pine.LNX.4.64.0706211312480.5806@gheavc.wnzcbav.cig>
  <5d96567b0706211242p7f03bd1cw9102ae3e44d67cee@mail.gmail.com>
  <Pine.LNX.4.64.0706211808140.5806@gheavc.wnzcbav.cig>
- <5d96567b0706220801v76c1c19cl7448050e62e0860b@mail.gmail.com>
- <Pine.LNX.4.64.0706221110220.4196@p34.internal.lan> <467FF1D5.6080007@tmr.com>
- <Pine.LNX.4.64.0706251442260.15590@p34.internal.lan>
- <Pine.LNX.4.64.0706251547490.3920@p34.internal.lan>
- <Pine.LNX.4.64.0706251548510.3920@p34.internal.lan>
- <Pine.LNX.4.64.0706251636180.6115@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0706251636180.6115@p34.internal.lan>
+In-Reply-To: <Pine.LNX.4.64.0706211808140.5806@gheavc.wnzcbav.cig>
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: Raz <raziebe@gmail.com>, jnelson-linux-raid@jamponi.net, linux-raid@vger.kernel.org
+To: Jon Nelson <jnelson-linux-raid@jamponi.net>
+Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+On Thu, 21 Jun 2007, Jon Nelson wrote:
 
+> On Thu, 21 Jun 2007, Raz wrote:
+> 
+> > What is your raid configuration ?
+> > Please note that the stripe_cache_size is acting as a bottle neck in some
+> > cases.
 
-On Mon, 25 Jun 2007, Justin Piszcz wrote:
+Well, that's kind of the point of my email. I'll try to restate things, 
+as my question appears to have gotten lost.
 
->
->
-> On Mon, 25 Jun 2007, Justin Piszcz wrote:
->
->> 
->> 
->> On Mon, 25 Jun 2007, Justin Piszcz wrote:
->> 
->>> 
->>> 
->>> On Mon, 25 Jun 2007, Justin Piszcz wrote:
->>> 
->>>> 
->>>> 
->>>> On Mon, 25 Jun 2007, Bill Davidsen wrote:
->>>> 
->>>>> Justin Piszcz wrote:
->>>>>> I have found a 16MB stripe_cache_size results in optimal performance 
->>>>>> after testing many many values :)
->>>>> 
->>>>> We have discussed this before, my experience has been that after 8 x 
->>>>> stripe size the performance gains hit diminishing returns, particularly 
->>>>> for typical write instead of big aligned blocks, possibly with O_DIRECT. 
->>>>> I would suggest that as a target even on a low memory machine.
->>>>> 
->>>>> Do your tests show similar? I was only able to test three and four drive 
->>>>> setups using dedicated drives.
->>>>> 
->>>>> -- 
->>>>> bill davidsen <davidsen@tmr.com>
->>>>> CTO TMR Associates, Inc
->>>>> Doing interesting things with small computers since 1979
->>>>> 
->>>>> -
->>>>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->>>>> the body of a message to majordomo@vger.kernel.org
->>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>>>> 
->>>> 
->>>> Running test with 10 RAPTOR 150 hard drives, expect it to take awhile 
->>>> until I get the results, avg them etc. :)
->>>> 
->>>> 128k,256k,512k,1024k,2048k,4096k,8192k,16384k
->>>> 
->>>> Justin.
->>>> 
->>> 
->>> Definitely a kernel bug, I set it to 64kb and it stayed in D-state until I 
->>> ran alt-sysrq-b.
->>> 
->>> Pretty nasty!
->>> 
->>> Justin.
->>> 
->> 
->> Ack, help??
->> 
->> [   64.032895] Starting XFS recovery on filesystem: md3 (logdev: internal)
->> [   66.210602] XFS: xlog_recover_process_data: bad clientid
->> [   66.210656] XFS: log mount/recovery failed: error 5
->> [   66.210709] XFS: log mount failed
->> 
->> After I ran 64kb it killed my RAID!
->> -
->> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->> 
->
-> Yeah, I won't be trying that anymore :P
->
-> p34:/r1# find lost+found/|wc
->    157     157    3369
-> p34:/r1# du -sh lost+found/
-> 166G    lost+found/
-> p34:/r1#
->
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+1. I have a 3x component raid5, ~314G per component. Each component 
+happens to be the 4th partition of a 320G SATA drive. Each drive 
+can sustain approx. 70MB/s reads/writes. Except for the first 
+drive, none of the other partitions are used for anything else at this 
+time. The system is nominally quiescent during these tests.
 
-16MB is best performance per previous benchmarks.
+2. The kernel is 2.6.18.8-0.3-default on x86_64 (openSUSE 10.2).
 
+3. My best sustained write performance comes with a stripe_cache_size of 
+4096. Larger than that seems to reduce performance, although only very 
+slightly.
+
+4. At values below 4096, the absolute write performance is less than the 
+best, but only marginally. 
+
+5. HOWEVER, at any value *above* 512 the 'check' performance is REALLY 
+BAD. By 'check' performance I mean the value displayed by /proc/mdstat 
+after I issue:
+
+echo check > /sys/block/md0/md/sync_action
+
+When I say "REALLY BAD" I mean < 3MB/s. 
+
+6. Here is a short incomplete table of stripe_cache_size to 'check' 
+performance:
+
+384.... 72-73MB/s
+512.... 72-73MB/s
+640.... 73-74MB/s
+768.....3-3.4MB/s
+
+And the performance stays "bad" as I increase the stripe_cache_size.
+
+7. And now, the question: the best absolute 'write' performance comes 
+with a stripe_cache_size value of 4096 (for my setup). However, any 
+value of stripe_cache_size above 384 really, really hurts 'check' (and 
+rebuild, one can assume) performance.  Why?
+
+--
+Jon Nelson <jnelson-linux-raid@jamponi.net>
