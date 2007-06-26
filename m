@@ -1,55 +1,122 @@
-From: Brad Campbell <brad@wasp.net.au>
-Subject: Re: Linux Software RAID is really RAID?
-Date: Tue, 26 Jun 2007 22:34:39 +0400
-Message-ID: <46815C3F.6090204@wasp.net.au>
-References: <cd98e0260706261043t32fe6609ye1e4e252c722358c@mail.gmail.com>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: raid=noautodetect is apparently ignored?
+Date: Tue, 26 Jun 2007 15:04:00 -0400
+Message-ID: <46816320.7030801@tmr.com>
+References: <1182837145.3627.27.camel@sibyl.beware.dropbear.id.au>	 <18048.46195.870920.626128@notabene.brown> <1182843195.3627.34.camel@sibyl.beware.dropbear.id.au>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <cd98e0260706261043t32fe6609ye1e4e252c722358c@mail.gmail.com>
+In-Reply-To: <1182843195.3627.34.camel@sibyl.beware.dropbear.id.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Johny Mail list <maillist.johny@gmail.com>
-Cc: linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
+To: Ian Dall <ian@beware.dropbear.id.au>
+Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Johny Mail list wrote:
-> Hello list,
-> I have a little question about software RAID on Linux.
-> I have installed Software Raid on all my SC1425 servers DELL by
-> believing that the md raid was a strong driver.
-> And recently i make some test on a server and try to view if the RAID
-> hard drive power failure work fine, so i power up my server and after
-> booting and the prompt appear I disconnected the power cable of my
-> SATA hard drive. Normaly the MD should eleminate the failure hard
-> drive of the logical drive it build, and the server continue to work
-> fine like nothing happen. Oddly the server stop to respond and i get
-> this messages :
-> ata4.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-> ata4.00: cmd e7/00:00:00:00:00/00:00:00:00:00/a0 tag 0 cdb 0x0 data 0
->              res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
-> ata4: port is slow to respond, please be patient (Status 0xd0)
-> ata4: port failed to respond (30sec, Status 0xd0)
-> ata4: soft resetting port
-> 
-> After that my system is frozen. Normaly in a basic RAID the device is
-> "disable" in the logical RAID device (md0) and it only use the last
-> disk.
+Ian Dall wrote:
+> On Tue, 2007-06-26 at 16:38 +1000, Neil Brown wrote:
+>   
+>> On Tuesday June 26, ian@beware.dropbear.id.au wrote:
+>>     
+>>> When I try and disable auto detection, with kernel boot parameters, it
+>>> goes ahead and auto assembles and runs anyway. The md= parameters seem
+>>> to be noticed, but don't seem to have any other effect (beyond resulting
+>>> in a dmesg).
+>>>       
+>> Odd....
+>>  Maybe you have an initrd which is loading md as a module, then
+>>  running "raidautorun" or similar?
+>>     
+>
+> I don't think so. lsmod doesn't show a md module (even though md is
+> clearly available).
+>   
 
-cc to linux-ide added.
+I suspect that the last comment is the clue, after pivotroot I bet it 
+runs another init, not from the boot/initrd images, but from the init.d 
+in the root filesystem. I seem to remember setting up my systems to 
+start all the arrays found, by using PARTITIONS in my config file. Look 
+at the setup in /etc /rc.d files for more info.
+> Also if I break open the current initrd, init (the script) looks like
+> this:
+>
+> #!/bin/nash
+>
+> mount -t proc /proc /proc
+> setquiet
+> echo Mounting proc filesystem
+> echo Mounting sysfs filesystem
+> mount -t sysfs /sys /sys
+> echo Creating /dev
+> mount -o mode=0755 -t tmpfs /dev /dev
+> mkdir /dev/pts
+> mount -t devpts -o gid=5,mode=620 /dev/pts /dev/pts
+> mkdir /dev/shm
+> mkdir /dev/mapper
+> echo Creating initial device nodes
+> mknod /dev/null c 1 3
+> mknod /dev/zero c 1 5
+> mknod /dev/systty c 4 0
+> mknod /dev/tty c 5 0
+> mknod /dev/console c 5 1
+> mknod /dev/ptmx c 5 2
+> mknod /dev/rtc c 10 135
+> mknod /dev/tty0 c 4 0
+> mknod /dev/tty1 c 4 1
+> mknod /dev/tty2 c 4 2
+> mknod /dev/tty3 c 4 3
+> mknod /dev/tty4 c 4 4
+> mknod /dev/tty5 c 4 5
+> mknod /dev/tty6 c 4 6
+> mknod /dev/tty7 c 4 7
+> mknod /dev/tty8 c 4 8
+> mknod /dev/tty9 c 4 9
+> mknod /dev/tty10 c 4 10
+> mknod /dev/tty11 c 4 11
+> mknod /dev/tty12 c 4 12
+> mknod /dev/ttyS0 c 4 64
+> mknod /dev/ttyS1 c 4 65
+> mknod /dev/ttyS2 c 4 66
+> mknod /dev/ttyS3 c 4 67
+> echo Setting up hotplug.
+> hotplug
+> echo Creating block device nodes.
+> mkblkdevs
+> echo "Loading scsi_mod.ko module"
+> insmod /lib/scsi_mod.ko 
+> echo "Loading sd_mod.ko module"
+> insmod /lib/sd_mod.ko 
+> echo "Loading qla1280.ko module"
+> insmod /lib/qla1280.ko 
+> echo "Loading jbd.ko module"
+> insmod /lib/jbd.ko 
+> echo "Loading ext3.ko module"
+> insmod /lib/ext3.ko 
+> echo "Loading dm-mod.ko module"
+> insmod /lib/dm-mod.ko 
+> echo "Loading dm-mirror.ko module"
+> insmod /lib/dm-mirror.ko 
+> echo "Loading dm-zero.ko module"
+> insmod /lib/dm-zero.ko 
+> echo "Loading dm-snapshot.ko module"
+> insmod /lib/dm-snapshot.ko 
+> mkblkdevs
+> resume /dev/sda7
+> echo Creating root device.
+> mkrootdev -t ext3 -o defaults,ro /dev/sda8
+> echo Mounting root filesystem.
+> mount /sysroot
+> echo Setting up other filesystems.
+> setuproot
+> echo Switching to new root and running init.
+> switchroot
+>
+>
+>   
 
-Unfortunately this is not an artifact of the linux raid driver, rather it appears to be an issue 
-with the SATA driver and related error recovery. Some information about what kernel, configuration, 
-drives, controller cards and other relevant system information would be good.
 
-See the information at this URL for the sort of extra information that would be handy.
-
-http://www.kernel.org/pub/linux/docs/lkml/reporting-bugs.html
-
-
-Regards,
-Brad
 -- 
-"Human beings, who are almost unique in having the ability
-to learn from the experience of others, are also remarkable
-for their apparent disinclination to do so." -- Douglas Adams
+bill davidsen <davidsen@tmr.com>
+  CTO TMR Associates, Inc
+  Doing interesting things with small computers since 1979
+
