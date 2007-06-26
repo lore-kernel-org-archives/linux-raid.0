@@ -1,76 +1,64 @@
-From: Ian Dall <ian@beware.dropbear.id.au>
-Subject: Re: raid=noautodetect is apparently ignored?
-Date: Wed, 27 Jun 2007 00:23:51 +0930
-Message-ID: <1182869632.4115.20.camel@sibyl.beware.dropbear.id.au>
-References: <1182837145.3627.27.camel@sibyl.beware.dropbear.id.au>
-	 <18048.46195.870920.626128@notabene.brown>
+From: Jon Nelson <jnelson-linux-raid@jamponi.net>
+Subject: Re: stripe_cache_size and performance
+Date: Tue, 26 Jun 2007 10:22:51 -0500 (CDT)
+Message-ID: <Pine.LNX.4.64.0706261021070.5806@gheavc.wnzcbav.cig>
+References: <Pine.LNX.4.64.0706211312480.5806@gheavc.wnzcbav.cig>
+ <5d96567b0706211242p7f03bd1cw9102ae3e44d67cee@mail.gmail.com>
+ <Pine.LNX.4.64.0706211808140.5806@gheavc.wnzcbav.cig>
+ <Pine.LNX.4.64.0706251705040.5806@gheavc.wnzcbav.cig>
+ <Pine.LNX.4.64.0706251820310.27372@p34.internal.lan>
+ <Pine.LNX.4.64.0706260853582.5806@gheavc.wnzcbav.cig>
+ <Pine.LNX.4.64.0706261000100.3561@p34.internal.lan>
+ <Pine.LNX.4.64.0706260916070.5806@gheavc.wnzcbav.cig>
+ <Pine.LNX.4.64.0706261036560.3561@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18048.46195.870920.626128@notabene.brown>
+In-Reply-To: <Pine.LNX.4.64.0706261036560.3561@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Ha! I think I have almost figured this out and it is to do with initrd.
-I went back to 2.16.17 kernel, which I happened to have the source tree
-for, and put in some printks.
+On Tue, 26 Jun 2007, Justin Piszcz wrote:
 
-First, if there is a ramdisk, the kernel doesn't auto detect
-raids /regardless/ of whether raid=noautodetect is specified or not.
-
-This is because md_run_setup() is never called, which in turn is because
-of the following code in init/main.c  
-
-	 * check if there is an early userspace init.  If yes, let it do all
-	 * the work
-	 */
-
-	if (!ramdisk_execute_command)
-		ramdisk_execute_command = "/init";
-
-	if (sys_access((const char __user *) ramdisk_execute_command, 0) != 0) {
-		ramdisk_execute_command = NULL;
-		prepare_namespace();   /* which eventually calls md_run_setup() */
-	}
-
-The only other way the kernel's raid autodetection can be triggered is
-from userspace with a RAID_AUTORUN ioctl. Something in the initrd is
-sending the ioctl. It must be one of the functions of nash, but I don't
-have the source handy to check.
-
-This all seems reasonable enough, but it would be good if the
-documentation for md mentioned that the options would be ignored if you
-use an initrd.
-
-One thing, changing the partition type seems to have fixed my immediate
-problem.
-
-Ian
-
-On Tue, 2007-06-26 at 16:38 +1000, Neil Brown wrote:
-> On Tuesday June 26, ian@beware.dropbear.id.au wrote:
-> > When I try and disable auto detection, with kernel boot parameters, it
-> > goes ahead and auto assembles and runs anyway. The md= parameters seem
-> > to be noticed, but don't seem to have any other effect (beyond resulting
-> > in a dmesg).
 > 
-> Odd....
->  Maybe you have an initrd which is loading md as a module, then
->  running "raidautorun" or similar?
 > 
-> > 
-> > This is driving me nuts. Maybe changing the type of the hda partitions
-> > would help?
+> On Tue, 26 Jun 2007, Jon Nelson wrote:
 > 
-> Definitely.  Change the partition types.
-> 
-> NeilBrown
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
--- 
-Ian Dall <ian@beware.dropbear.id.au>
+> > On Tue, 26 Jun 2007, Justin Piszcz wrote:
+> >
+> > >
+> > >
+> > > On Tue, 26 Jun 2007, Jon Nelson wrote:
+> > >
+> > > > On Mon, 25 Jun 2007, Justin Piszcz wrote:
+> > > >
+> > > > > Neil has a patch for the bad speed.
+> > > >
+> > > > What does the patch do?
+
+I repeat: what does the patch do (or is this no longer applicable)?
+
+
+> > > > sync_speed_max defaults to 200000 on this box already.
+
+Altering sync_speed_min...
+
+> > > > I tried a binary search of values between the default (1000)
+> > > > and 60000 which resulted in some pretty weird behavior:
+> > > >
+> > > > at values below 26000 the rate (also confirmed via dstat output) stayed
+> > > > low.  2-3MB/s.  At 26000 and up, the value jumped more or less instantly
+> > > > to 70-74MB/s. What makes 26000 special? If I set the value to 20000 why
+> > > > do I still get 2-3MB/s actual?
+
+> Sounds quite strange, what chunk size are you using for your RAID?
+
+The default: 64
+
+md0 : active raid5 sdc4[2] sda4[0] sdb4[1]
+      613409664 blocks level 5, 64k chunk, algorithm 2 [3/3] [UUU]
+
+
+--
+Jon Nelson <jnelson-linux-raid@jamponi.net>
