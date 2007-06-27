@@ -1,8 +1,8 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [md-accel PATCH 01/19] dmaengine: refactor dmaengine around
-	dma_async_tx_descriptor
-Date: Tue, 26 Jun 2007 18:50:39 -0700
-Message-ID: <20070627015039.18962.61041.stgit@dwillia2-linux.ch.intel.com>
+Subject: [md-accel PATCH 03/19] xor: make 'xor_blocks' a library routine for
+	use with async_tx
+Date: Tue, 26 Jun 2007 18:50:50 -0700
+Message-ID: <20070627015049.18962.54083.stgit@dwillia2-linux.ch.intel.com>
 References: <20070627014823.18962.96398.stgit@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -14,1052 +14,491 @@ To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 Cc: neilb@suse.de, akpm@linux-foundation.org, davem@davemloft.net, christopher.leech@intel.com, shannon.nelson@intel.com, herbert@gondor.apana.org.au, jeff@garzik.org
 List-Id: linux-raid.ids
 
-The current dmaengine interface defines mutliple routines per operation,
-i.e. dma_async_memcpy_buf_to_buf, dma_async_memcpy_buf_to_page etc.  Adding
-more operation types (xor, crc, etc) to this model would result in an
-unmanageable number of method permutations.
+The async_tx api tries to use a dma engine for an operation, but will fall
+back to an optimized software routine otherwise.  Xor support is
+implemented using the raid5 xor routines.  For organizational purposes this
+routine is moved to a common area.
 
-	Are we really going to add a set of hooks for each DMA engine
-	whizbang feature?
-		- Jeff Garzik
-
-The descriptor creation process is refactored using the new common
-dma_async_tx_descriptor structure.  Instead of per driver
-do_<operation>_<dest>_to_<src> methods, drivers integrate
-dma_async_tx_descriptor into their private software descriptor and then
-define a 'prep' routine per operation.  The prep routine allocates a
-descriptor and ensures that the tx_set_src, tx_set_dest, tx_submit routines
-are valid.  Descriptor creation and submission becomes:
-
-struct dma_device *dev;
-struct dma_chan *chan;
-struct dma_async_tx_descriptor *tx;
-
-tx = dev->device_prep_dma_<operation>(chan, len, int_flag)
-tx->tx_set_src(dma_addr_t, tx, index /* for multi-source ops */)
-tx->tx_set_dest(dma_addr_t, tx, index)
-tx->tx_submit(tx)
-
-In addition to the refactoring, dma_async_tx_descriptor also lays the
-groundwork for definining cross-channel-operation dependencies, and a
-callback facility for asynchronous notification of operation completion.
-
-Changelog:
-* drop dma mapping methods, suggested by Chris Leech
-* fix ioat_dma_dependency_added, also caught by Andrew Morton
-* fix dma_sync_wait, change from Andrew Morton
-* uninline large functions, change from Andrew Morton
-* add tx->callback = NULL to dmaengine calls to interoperate with async_tx
-  calls
-* hookup ioat_tx_submit
-* convert channel capabilities to a 'cpumask_t like' bitmap
-* removed DMA_TX_ARRAY_INIT, no longer needed
+The following fixes are also made:
+* rename xor_block => xor_blocks, suggested by Adrian Bunk
+* ensure that xor.o initializes before md.o in the built-in case
 * checkpatch.pl fixes
-* make set_src, set_dest, and tx_submit descriptor specific methods
+* mark calibrate_xor_blocks __init, Adrian Bunk
 
-Cc: Jeff Garzik <jeff@garzik.org>
-Cc: Chris Leech <christopher.leech@intel.com>
-Cc: Shannon Nelson <shannon.nelson@intel.com>
+Cc: Adrian Bunk <bunk@stusta.de>
+Cc: NeilBrown <neilb@suse.de>
+Cc: Herbert Xu <herbert@gondor.apana.org.au>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
 
- drivers/dma/dmaengine.c   |  182 ++++++++++++++++++++++++++++++
- drivers/dma/ioatdma.c     |  277 ++++++++++++++++++++-------------------------
- drivers/dma/ioatdma.h     |    8 +
- include/linux/dmaengine.h |  230 +++++++++++++++++++++++--------------
- 4 files changed, 455 insertions(+), 242 deletions(-)
+ crypto/Kconfig           |    6 ++
+ crypto/Makefile          |    6 ++
+ crypto/xor.c             |  156 ++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/md/Kconfig       |    1 
+ drivers/md/Makefile      |    4 +
+ drivers/md/md.c          |    2 -
+ drivers/md/raid5.c       |   10 +--
+ drivers/md/xor.c         |  154 ---------------------------------------------
+ include/linux/raid/xor.h |    2 -
+ 9 files changed, 178 insertions(+), 163 deletions(-)
 
-diff --git a/drivers/dma/dmaengine.c b/drivers/dma/dmaengine.c
-index 322ee29..379809f 100644
---- a/drivers/dma/dmaengine.c
-+++ b/drivers/dma/dmaengine.c
-@@ -59,6 +59,7 @@
- 
- #include <linux/init.h>
- #include <linux/module.h>
-+#include <linux/mm.h>
- #include <linux/device.h>
- #include <linux/dmaengine.h>
- #include <linux/hardirq.h>
-@@ -66,6 +67,7 @@
- #include <linux/percpu.h>
- #include <linux/rcupdate.h>
- #include <linux/mutex.h>
-+#include <linux/jiffies.h>
- 
- static DEFINE_MUTEX(dma_list_mutex);
- static LIST_HEAD(dma_device_list);
-@@ -165,6 +167,24 @@ static struct dma_chan *dma_client_chan_alloc(struct dma_client *client)
- 	return NULL;
- }
- 
-+enum dma_status dma_sync_wait(struct dma_chan *chan, dma_cookie_t cookie)
-+{
-+	enum dma_status status;
-+	unsigned long dma_sync_wait_timeout = jiffies + msecs_to_jiffies(5000);
+diff --git a/crypto/Kconfig b/crypto/Kconfig
+index 4ca0ab3..b749a1a 100644
+--- a/crypto/Kconfig
++++ b/crypto/Kconfig
+@@ -1,4 +1,10 @@
+ #
++# Generic algorithms support
++#
++config XOR_BLOCKS
++	tristate
 +
-+	dma_async_issue_pending(chan);
-+	do {
-+		status = dma_async_is_tx_complete(chan, cookie, NULL, NULL);
-+		if (time_after_eq(jiffies, dma_sync_wait_timeout)) {
-+			printk(KERN_ERR "dma_sync_wait_timeout!\n");
-+			return DMA_ERROR;
++#
+ # Cryptographic API Configuration
+ #
+ 
+diff --git a/crypto/Makefile b/crypto/Makefile
+index cce46a1..68e934b 100644
+--- a/crypto/Makefile
++++ b/crypto/Makefile
+@@ -50,3 +50,9 @@ obj-$(CONFIG_CRYPTO_MICHAEL_MIC) += michael_mic.o
+ obj-$(CONFIG_CRYPTO_CRC32C) += crc32c.o
+ 
+ obj-$(CONFIG_CRYPTO_TEST) += tcrypt.o
++
++#
++# generic algorithms and the async_tx api
++#
++obj-$(CONFIG_XOR_BLOCKS) += xor.o
++
+diff --git a/crypto/xor.c b/crypto/xor.c
+new file mode 100644
+index 0000000..8281ac5
+--- /dev/null
++++ b/crypto/xor.c
+@@ -0,0 +1,156 @@
++/*
++ * xor.c : Multiple Devices driver for Linux
++ *
++ * Copyright (C) 1996, 1997, 1998, 1999, 2000,
++ * Ingo Molnar, Matti Aarnio, Jakub Jelinek, Richard Henderson.
++ *
++ * Dispatch optimized RAID-5 checksumming functions.
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2, or (at your option)
++ * any later version.
++ *
++ * You should have received a copy of the GNU General Public License
++ * (for example /usr/src/linux/COPYING); if not, write to the Free
++ * Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
++ */
++
++#define BH_TRACE 0
++#include <linux/module.h>
++#include <linux/raid/md.h>
++#include <linux/raid/xor.h>
++#include <asm/xor.h>
++
++/* The xor routines to use.  */
++static struct xor_block_template *active_template;
++
++void
++xor_blocks(unsigned int count, unsigned int bytes, void **ptr)
++{
++	unsigned long *p0, *p1, *p2, *p3, *p4;
++
++	p0 = (unsigned long *) ptr[0];
++	p1 = (unsigned long *) ptr[1];
++	if (count == 2) {
++		active_template->do_2(bytes, p0, p1);
++		return;
++	}
++
++	p2 = (unsigned long *) ptr[2];
++	if (count == 3) {
++		active_template->do_3(bytes, p0, p1, p2);
++		return;
++	}
++
++	p3 = (unsigned long *) ptr[3];
++	if (count == 4) {
++		active_template->do_4(bytes, p0, p1, p2, p3);
++		return;
++	}
++
++	p4 = (unsigned long *) ptr[4];
++	active_template->do_5(bytes, p0, p1, p2, p3, p4);
++}
++EXPORT_SYMBOL(xor_blocks);
++
++/* Set of all registered templates.  */
++static struct xor_block_template *template_list;
++
++#define BENCH_SIZE (PAGE_SIZE)
++
++static void
++do_xor_speed(struct xor_block_template *tmpl, void *b1, void *b2)
++{
++	int speed;
++	unsigned long now;
++	int i, count, max;
++
++	tmpl->next = template_list;
++	template_list = tmpl;
++
++	/*
++	 * Count the number of XORs done during a whole jiffy, and use
++	 * this to calculate the speed of checksumming.  We use a 2-page
++	 * allocation to have guaranteed color L1-cache layout.
++	 */
++	max = 0;
++	for (i = 0; i < 5; i++) {
++		now = jiffies;
++		count = 0;
++		while (jiffies == now) {
++			mb(); /* prevent loop optimzation */
++			tmpl->do_2(BENCH_SIZE, b1, b2);
++			mb();
++			count++;
++			mb();
 +		}
-+	} while (status == DMA_IN_PROGRESS);
-+
-+	return status;
-+}
-+EXPORT_SYMBOL(dma_sync_wait);
-+
- /**
-  * dma_chan_cleanup - release a DMA channel's resources
-  * @kref: kernel reference structure that contains the DMA channel device
-@@ -322,6 +342,25 @@ int dma_async_device_register(struct dma_device *device)
- 	if (!device)
- 		return -ENODEV;
- 
-+	/* validate device routines */
-+	BUG_ON(dma_has_cap(DMA_MEMCPY, device->cap_mask) &&
-+		!device->device_prep_dma_memcpy);
-+	BUG_ON(dma_has_cap(DMA_XOR, device->cap_mask) &&
-+		!device->device_prep_dma_xor);
-+	BUG_ON(dma_has_cap(DMA_ZERO_SUM, device->cap_mask) &&
-+		!device->device_prep_dma_zero_sum);
-+	BUG_ON(dma_has_cap(DMA_MEMSET, device->cap_mask) &&
-+		!device->device_prep_dma_memset);
-+	BUG_ON(dma_has_cap(DMA_ZERO_SUM, device->cap_mask) &&
-+		!device->device_prep_dma_interrupt);
-+
-+	BUG_ON(!device->device_alloc_chan_resources);
-+	BUG_ON(!device->device_free_chan_resources);
-+	BUG_ON(!device->device_dependency_added);
-+	BUG_ON(!device->device_is_tx_complete);
-+	BUG_ON(!device->device_issue_pending);
-+	BUG_ON(!device->dev);
-+
- 	init_completion(&device->done);
- 	kref_init(&device->refcount);
- 	device->dev_id = id++;
-@@ -397,6 +436,149 @@ void dma_async_device_unregister(struct dma_device *device)
- }
- EXPORT_SYMBOL(dma_async_device_unregister);
- 
-+/**
-+ * dma_async_memcpy_buf_to_buf - offloaded copy between virtual addresses
-+ * @chan: DMA channel to offload copy to
-+ * @dest: destination address (virtual)
-+ * @src: source address (virtual)
-+ * @len: length
-+ *
-+ * Both @dest and @src must be mappable to a bus address according to the
-+ * DMA mapping API rules for streaming mappings.
-+ * Both @dest and @src must stay memory resident (kernel memory or locked
-+ * user space pages).
-+ */
-+dma_cookie_t
-+dma_async_memcpy_buf_to_buf(struct dma_chan *chan, void *dest,
-+			void *src, size_t len)
-+{
-+	struct dma_device *dev = chan->device;
-+	struct dma_async_tx_descriptor *tx;
-+	dma_addr_t addr;
-+	dma_cookie_t cookie;
-+	int cpu;
-+
-+	tx = dev->device_prep_dma_memcpy(chan, len, 0);
-+	if (!tx)
-+		return -ENOMEM;
-+
-+	tx->ack = 1;
-+	tx->callback = NULL;
-+	addr = dma_map_single(dev->dev, src, len, DMA_TO_DEVICE);
-+	tx->tx_set_src(addr, tx, 0);
-+	addr = dma_map_single(dev->dev, dest, len, DMA_FROM_DEVICE);
-+	tx->tx_set_dest(addr, tx, 0);
-+	cookie = tx->tx_submit(tx);
-+
-+	cpu = get_cpu();
-+	per_cpu_ptr(chan->local, cpu)->bytes_transferred += len;
-+	per_cpu_ptr(chan->local, cpu)->memcpy_count++;
-+	put_cpu();
-+
-+	return cookie;
-+}
-+EXPORT_SYMBOL(dma_async_memcpy_buf_to_buf);
-+
-+/**
-+ * dma_async_memcpy_buf_to_pg - offloaded copy from address to page
-+ * @chan: DMA channel to offload copy to
-+ * @page: destination page
-+ * @offset: offset in page to copy to
-+ * @kdata: source address (virtual)
-+ * @len: length
-+ *
-+ * Both @page/@offset and @kdata must be mappable to a bus address according
-+ * to the DMA mapping API rules for streaming mappings.
-+ * Both @page/@offset and @kdata must stay memory resident (kernel memory or
-+ * locked user space pages)
-+ */
-+dma_cookie_t
-+dma_async_memcpy_buf_to_pg(struct dma_chan *chan, struct page *page,
-+			unsigned int offset, void *kdata, size_t len)
-+{
-+	struct dma_device *dev = chan->device;
-+	struct dma_async_tx_descriptor *tx;
-+	dma_addr_t addr;
-+	dma_cookie_t cookie;
-+	int cpu;
-+
-+	tx = dev->device_prep_dma_memcpy(chan, len, 0);
-+	if (!tx)
-+		return -ENOMEM;
-+
-+	tx->ack = 1;
-+	tx->callback = NULL;
-+	addr = dma_map_single(dev->dev, kdata, len, DMA_TO_DEVICE);
-+	tx->tx_set_src(addr, tx, 0);
-+	addr = dma_map_page(dev->dev, page, offset, len, DMA_FROM_DEVICE);
-+	tx->tx_set_dest(addr, tx, 0);
-+	cookie = tx->tx_submit(tx);
-+
-+	cpu = get_cpu();
-+	per_cpu_ptr(chan->local, cpu)->bytes_transferred += len;
-+	per_cpu_ptr(chan->local, cpu)->memcpy_count++;
-+	put_cpu();
-+
-+	return cookie;
-+}
-+EXPORT_SYMBOL(dma_async_memcpy_buf_to_pg);
-+
-+/**
-+ * dma_async_memcpy_pg_to_pg - offloaded copy from page to page
-+ * @chan: DMA channel to offload copy to
-+ * @dest_pg: destination page
-+ * @dest_off: offset in page to copy to
-+ * @src_pg: source page
-+ * @src_off: offset in page to copy from
-+ * @len: length
-+ *
-+ * Both @dest_page/@dest_off and @src_page/@src_off must be mappable to a bus
-+ * address according to the DMA mapping API rules for streaming mappings.
-+ * Both @dest_page/@dest_off and @src_page/@src_off must stay memory resident
-+ * (kernel memory or locked user space pages).
-+ */
-+dma_cookie_t
-+dma_async_memcpy_pg_to_pg(struct dma_chan *chan, struct page *dest_pg,
-+	unsigned int dest_off, struct page *src_pg, unsigned int src_off,
-+	size_t len)
-+{
-+	struct dma_device *dev = chan->device;
-+	struct dma_async_tx_descriptor *tx;
-+	dma_addr_t addr;
-+	dma_cookie_t cookie;
-+	int cpu;
-+
-+	tx = dev->device_prep_dma_memcpy(chan, len, 0);
-+	if (!tx)
-+		return -ENOMEM;
-+
-+	tx->ack = 1;
-+	tx->callback = NULL;
-+	addr = dma_map_page(dev->dev, src_pg, src_off, len, DMA_TO_DEVICE);
-+	tx->tx_set_src(addr, tx, 0);
-+	addr = dma_map_page(dev->dev, dest_pg, dest_off, len, DMA_FROM_DEVICE);
-+	tx->tx_set_dest(addr, tx, 0);
-+	cookie = tx->tx_submit(tx);
-+
-+	cpu = get_cpu();
-+	per_cpu_ptr(chan->local, cpu)->bytes_transferred += len;
-+	per_cpu_ptr(chan->local, cpu)->memcpy_count++;
-+	put_cpu();
-+
-+	return cookie;
-+}
-+EXPORT_SYMBOL(dma_async_memcpy_pg_to_pg);
-+
-+void dma_async_tx_descriptor_init(struct dma_async_tx_descriptor *tx,
-+	struct dma_chan *chan)
-+{
-+	tx->chan = chan;
-+	spin_lock_init(&tx->lock);
-+	INIT_LIST_HEAD(&tx->depend_node);
-+	INIT_LIST_HEAD(&tx->depend_list);
-+}
-+EXPORT_SYMBOL(dma_async_tx_descriptor_init);
-+
- static int __init dma_bus_init(void)
- {
- 	mutex_init(&dma_list_mutex);
-diff --git a/drivers/dma/ioatdma.c b/drivers/dma/ioatdma.c
-index fcbab07..6df2a3e 100644
---- a/drivers/dma/ioatdma.c
-+++ b/drivers/dma/ioatdma.c
-@@ -39,6 +39,7 @@
- #define to_ioat_chan(chan) container_of(chan, struct ioat_dma_chan, common)
- #define to_ioat_device(dev) container_of(dev, struct ioat_device, common)
- #define to_ioat_desc(lh) container_of(lh, struct ioat_desc_sw, node)
-+#define tx_to_ioat_desc(tx) container_of(tx, struct ioat_desc_sw, async_tx)
- 
- /* internal functions */
- static int __devinit ioat_probe(struct pci_dev *pdev, const struct pci_device_id *ent);
-@@ -78,6 +79,70 @@ static int enumerate_dma_channels(struct ioat_device *device)
- 	return device->common.chancnt;
- }
- 
-+static void
-+ioat_set_src(dma_addr_t addr, struct dma_async_tx_descriptor *tx, int index)
-+{
-+	struct ioat_desc_sw *iter, *desc = tx_to_ioat_desc(tx);
-+	struct ioat_dma_chan *ioat_chan = to_ioat_chan(tx->chan);
-+
-+	pci_unmap_addr_set(desc, src, addr);
-+
-+	list_for_each_entry(iter, &desc->group_list, node) {
-+		iter->hw->src_addr = addr;
-+		addr += ioat_chan->xfercap;
++		if (count > max)
++			max = count;
 +	}
 +
++	speed = max * (HZ * BENCH_SIZE / 1024);
++	tmpl->speed = speed;
++
++	printk(KERN_INFO "   %-10s: %5d.%03d MB/sec\n", tmpl->name,
++	       speed / 1000, speed % 1000);
 +}
 +
-+static void
-+ioat_set_dest(dma_addr_t addr, struct dma_async_tx_descriptor *tx, int index)
++static int __init
++calibrate_xor_blocks(void)
 +{
-+	struct ioat_desc_sw *iter, *desc = tx_to_ioat_desc(tx);
-+	struct ioat_dma_chan *ioat_chan = to_ioat_chan(tx->chan);
++	void *b1, *b2;
++	struct xor_block_template *f, *fastest;
 +
-+	pci_unmap_addr_set(desc, dst, addr);
-+
-+	list_for_each_entry(iter, &desc->group_list, node) {
-+		iter->hw->dst_addr = addr;
-+		addr += ioat_chan->xfercap;
++	b1 = (void *) __get_free_pages(GFP_KERNEL, 2);
++	if (!b1) {
++		printk(KERN_WARNING "xor: Yikes!  No memory available.\n");
++		return -ENOMEM;
 +	}
++	b2 = b1 + 2*PAGE_SIZE + BENCH_SIZE;
++
++	/*
++	 * If this arch/cpu has a short-circuited selection, don't loop through
++	 * all the possible functions, just test the best one
++	 */
++
++	fastest = NULL;
++
++#ifdef XOR_SELECT_TEMPLATE
++		fastest = XOR_SELECT_TEMPLATE(fastest);
++#endif
++
++#define xor_speed(templ)	do_xor_speed((templ), b1, b2)
++
++	if (fastest) {
++		printk(KERN_INFO "xor: automatically using best "
++			"checksumming function: %s\n",
++			fastest->name);
++		xor_speed(fastest);
++	} else {
++		printk(KERN_INFO "xor: measuring checksumming speed\n");
++		XOR_TRY_TEMPLATES;
++		fastest = template_list;
++		for (f = fastest; f; f = f->next)
++			if (f->speed > fastest->speed)
++				fastest = f;
++	}
++
++	printk(KERN_INFO "xor: using function: %s (%d.%03d MB/sec)\n",
++	       fastest->name, fastest->speed / 1000, fastest->speed % 1000);
++
++#undef xor_speed
++
++	free_pages((unsigned long)b1, 2);
++
++	active_template = fastest;
++	return 0;
 +}
 +
-+static dma_cookie_t
-+ioat_tx_submit(struct dma_async_tx_descriptor *tx)
-+{
-+	struct ioat_dma_chan *ioat_chan = to_ioat_chan(tx->chan);
-+	struct ioat_desc_sw *desc = tx_to_ioat_desc(tx);
-+	struct ioat_desc_sw *group_start = list_entry(desc->group_list.next,
-+		struct ioat_desc_sw, node);
-+	int append = 0;
-+	dma_cookie_t cookie;
++static __exit void xor_exit(void) { }
 +
-+	spin_lock_bh(&ioat_chan->desc_lock);
-+	/* cookie incr and addition to used_list must be atomic */
-+	cookie = ioat_chan->common.cookie;
-+	cookie++;
-+	if (cookie < 0)
-+		cookie = 1;
-+	ioat_chan->common.cookie = desc->async_tx.cookie = cookie;
++MODULE_LICENSE("GPL");
 +
-+	/* write address into NextDescriptor field of last desc in chain */
-+	to_ioat_desc(ioat_chan->used_desc.prev)->hw->next = group_start->phys;
-+	list_splice_init(&desc->group_list, ioat_chan->used_desc.prev);
-+
-+	ioat_chan->pending += desc->group_count;
-+	if (ioat_chan->pending >= 4) {
-+		append = 1;
-+		ioat_chan->pending = 0;
-+	}
-+	spin_unlock_bh(&ioat_chan->desc_lock);
-+
-+	if (append)
-+		ioatdma_chan_write8(ioat_chan, IOAT_CHANCMD_OFFSET,
-+					IOAT_CHANCMD_APPEND);
-+	return cookie;
-+}
-+
- static struct ioat_desc_sw *ioat_dma_alloc_descriptor(
- 	struct ioat_dma_chan *ioat_chan,
- 	gfp_t flags)
-@@ -99,6 +164,11 @@ static struct ioat_desc_sw *ioat_dma_alloc_descriptor(
++/* when built-in xor.o must initialize before drivers/md/md.o */
++core_initcall(calibrate_xor_blocks);
++module_exit(xor_exit);
+diff --git a/drivers/md/Kconfig b/drivers/md/Kconfig
+index 7df934d..24d93d0 100644
+--- a/drivers/md/Kconfig
++++ b/drivers/md/Kconfig
+@@ -109,6 +109,7 @@ config MD_RAID10
+ config MD_RAID456
+ 	tristate "RAID-4/RAID-5/RAID-6 mode"
+ 	depends on BLK_DEV_MD
++	select XOR_BLOCKS
+ 	---help---
+ 	  A RAID-5 set of N drives with a capacity of C MB per drive provides
+ 	  the capacity of C * (N - 1) MB, and protects against a failure
+diff --git a/drivers/md/Makefile b/drivers/md/Makefile
+index 3875408..71eb45f 100644
+--- a/drivers/md/Makefile
++++ b/drivers/md/Makefile
+@@ -17,7 +17,7 @@ raid456-objs	:= raid5.o raid6algos.o raid6recov.o raid6tables.o \
+ hostprogs-y	:= mktables
+ 
+ # Note: link order is important.  All raid personalities
+-# and xor.o must come before md.o, as they each initialise 
++# and must come before md.o, as they each initialise 
+ # themselves, and md.o may use the personalities when it 
+ # auto-initialised.
+ 
+@@ -25,7 +25,7 @@ obj-$(CONFIG_MD_LINEAR)		+= linear.o
+ obj-$(CONFIG_MD_RAID0)		+= raid0.o
+ obj-$(CONFIG_MD_RAID1)		+= raid1.o
+ obj-$(CONFIG_MD_RAID10)		+= raid10.o
+-obj-$(CONFIG_MD_RAID456)	+= raid456.o xor.o
++obj-$(CONFIG_MD_RAID456)	+= raid456.o
+ obj-$(CONFIG_MD_MULTIPATH)	+= multipath.o
+ obj-$(CONFIG_MD_FAULTY)		+= faulty.o
+ obj-$(CONFIG_BLK_DEV_MD)	+= md-mod.o
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 1c54f3c..33beaa7 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -5814,7 +5814,7 @@ static __exit void md_exit(void)
  	}
- 
- 	memset(desc, 0, sizeof(*desc));
-+	dma_async_tx_descriptor_init(&desc_sw->async_tx, &ioat_chan->common);
-+	desc_sw->async_tx.tx_set_src = ioat_set_src;
-+	desc_sw->async_tx.tx_set_dest = ioat_set_dest;
-+	desc_sw->async_tx.tx_submit = ioat_tx_submit;
-+	INIT_LIST_HEAD(&desc_sw->group_list);
- 	desc_sw->hw = desc;
- 	desc_sw->phys = phys;
- 
-@@ -215,45 +285,25 @@ static void ioat_dma_free_chan_resources(struct dma_chan *chan)
- 	ioatdma_chan_write16(ioat_chan, IOAT_CHANCTRL_OFFSET, chanctrl);
  }
  
--/**
-- * do_ioat_dma_memcpy - actual function that initiates a IOAT DMA transaction
-- * @ioat_chan: IOAT DMA channel handle
-- * @dest: DMA destination address
-- * @src: DMA source address
-- * @len: transaction length in bytes
+-module_init(md_init)
++subsys_initcall(md_init);
+ module_exit(md_exit)
+ 
+ static int get_ro(char *buffer, struct kernel_param *kp)
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 061375e..5adbe0b 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -918,7 +918,7 @@ static void copy_data(int frombio, struct bio *bio,
+ 
+ #define check_xor() 	do { 						\
+ 			   if (count == MAX_XOR_BLOCKS) {		\
+-				xor_block(count, STRIPE_SIZE, ptr);	\
++				xor_blocks(count, STRIPE_SIZE, ptr);	\
+ 				count = 1;				\
+ 			   }						\
+ 			} while(0)
+@@ -949,7 +949,7 @@ static void compute_block(struct stripe_head *sh, int dd_idx)
+ 		check_xor();
+ 	}
+ 	if (count != 1)
+-		xor_block(count, STRIPE_SIZE, ptr);
++		xor_blocks(count, STRIPE_SIZE, ptr);
+ 	set_bit(R5_UPTODATE, &sh->dev[dd_idx].flags);
+ }
+ 
+@@ -1004,7 +1004,7 @@ static void compute_parity5(struct stripe_head *sh, int method)
+ 		break;
+ 	}
+ 	if (count>1) {
+-		xor_block(count, STRIPE_SIZE, ptr);
++		xor_blocks(count, STRIPE_SIZE, ptr);
+ 		count = 1;
+ 	}
+ 	
+@@ -1038,7 +1038,7 @@ static void compute_parity5(struct stripe_head *sh, int method)
+ 			}
+ 	}
+ 	if (count != 1)
+-		xor_block(count, STRIPE_SIZE, ptr);
++		xor_blocks(count, STRIPE_SIZE, ptr);
+ 	
+ 	if (method != CHECK_PARITY) {
+ 		set_bit(R5_UPTODATE, &sh->dev[pd_idx].flags);
+@@ -1160,7 +1160,7 @@ static void compute_block_1(struct stripe_head *sh, int dd_idx, int nozero)
+ 			check_xor();
+ 		}
+ 		if (count != 1)
+-			xor_block(count, STRIPE_SIZE, ptr);
++			xor_blocks(count, STRIPE_SIZE, ptr);
+ 		if (!nozero) set_bit(R5_UPTODATE, &sh->dev[dd_idx].flags);
+ 		else clear_bit(R5_UPTODATE, &sh->dev[dd_idx].flags);
+ 	}
+diff --git a/drivers/md/xor.c b/drivers/md/xor.c
+deleted file mode 100644
+index 324897c..0000000
+--- a/drivers/md/xor.c
++++ /dev/null
+@@ -1,154 +0,0 @@
+-/*
+- * xor.c : Multiple Devices driver for Linux
+- *
+- * Copyright (C) 1996, 1997, 1998, 1999, 2000,
+- * Ingo Molnar, Matti Aarnio, Jakub Jelinek, Richard Henderson.
+- *
+- * Dispatch optimized RAID-5 checksumming functions.
+- *
+- * This program is free software; you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License as published by
+- * the Free Software Foundation; either version 2, or (at your option)
+- * any later version.
+- *
+- * You should have received a copy of the GNU General Public License
+- * (for example /usr/src/linux/COPYING); if not, write to the Free
+- * Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 - */
 -
--static dma_cookie_t do_ioat_dma_memcpy(struct ioat_dma_chan *ioat_chan,
--                                       dma_addr_t dest,
--                                       dma_addr_t src,
--                                       size_t len)
-+static struct dma_async_tx_descriptor *
-+ioat_dma_prep_memcpy(struct dma_chan *chan, size_t len, int int_en)
- {
--	struct ioat_desc_sw *first;
--	struct ioat_desc_sw *prev;
--	struct ioat_desc_sw *new;
--	dma_cookie_t cookie;
-+	struct ioat_dma_chan *ioat_chan = to_ioat_chan(chan);
-+	struct ioat_desc_sw *first, *prev, *new;
- 	LIST_HEAD(new_chain);
- 	u32 copy;
- 	size_t orig_len;
--	dma_addr_t orig_src, orig_dst;
--	unsigned int desc_count = 0;
--	unsigned int append = 0;
+-#define BH_TRACE 0
+-#include <linux/module.h>
+-#include <linux/raid/md.h>
+-#include <linux/raid/xor.h>
+-#include <asm/xor.h>
 -
--	if (!ioat_chan || !dest || !src)
--		return -EFAULT;
-+	int desc_count = 0;
- 
- 	if (!len)
--		return ioat_chan->common.cookie;
-+		return NULL;
- 
- 	orig_len = len;
--	orig_src = src;
--	orig_dst = dest;
- 
- 	first = NULL;
- 	prev = NULL;
- 
- 	spin_lock_bh(&ioat_chan->desc_lock);
+-/* The xor routines to use.  */
+-static struct xor_block_template *active_template;
 -
- 	while (len) {
- 		if (!list_empty(&ioat_chan->free_desc)) {
- 			new = to_ioat_desc(ioat_chan->free_desc.next);
-@@ -270,9 +320,8 @@ static dma_cookie_t do_ioat_dma_memcpy(struct ioat_dma_chan *ioat_chan,
- 
- 		new->hw->size = copy;
- 		new->hw->ctl = 0;
--		new->hw->src_addr = src;
--		new->hw->dst_addr = dest;
--		new->cookie = 0;
-+		new->async_tx.cookie = 0;
-+		new->async_tx.ack = 1;
- 
- 		/* chain together the physical address list for the HW */
- 		if (!first)
-@@ -281,130 +330,26 @@ static dma_cookie_t do_ioat_dma_memcpy(struct ioat_dma_chan *ioat_chan,
- 			prev->hw->next = (u64) new->phys;
- 
- 		prev = new;
+-void
+-xor_block(unsigned int count, unsigned int bytes, void **ptr)
+-{
+-	unsigned long *p0, *p1, *p2, *p3, *p4;
 -
- 		len  -= copy;
--		dest += copy;
--		src  += copy;
--
- 		list_add_tail(&new->node, &new_chain);
- 		desc_count++;
- 	}
--	new->hw->ctl = IOAT_DMA_DESCRIPTOR_CTL_CP_STS;
--	new->hw->next = 0;
- 
--	/* cookie incr and addition to used_list must be atomic */
-+	list_splice(&new_chain, &new->group_list);
- 
--	cookie = ioat_chan->common.cookie;
--	cookie++;
--	if (cookie < 0)
--		cookie = 1;
--	ioat_chan->common.cookie = new->cookie = cookie;
-+	new->hw->ctl = IOAT_DMA_DESCRIPTOR_CTL_CP_STS;
-+	new->hw->next = 0;
-+	new->group_count = desc_count;
-+	new->async_tx.ack = 0; /* client is in control of this ack */
-+	new->async_tx.cookie = -EBUSY;
- 
--	pci_unmap_addr_set(new, src, orig_src);
--	pci_unmap_addr_set(new, dst, orig_dst);
- 	pci_unmap_len_set(new, src_len, orig_len);
- 	pci_unmap_len_set(new, dst_len, orig_len);
--
--	/* write address into NextDescriptor field of last desc in chain */
--	to_ioat_desc(ioat_chan->used_desc.prev)->hw->next = first->phys;
--	list_splice_init(&new_chain, ioat_chan->used_desc.prev);
--
--	ioat_chan->pending += desc_count;
--	if (ioat_chan->pending >= 4) {
--		append = 1;
--		ioat_chan->pending = 0;
+-	p0 = (unsigned long *) ptr[0];
+-	p1 = (unsigned long *) ptr[1];
+-	if (count == 2) {
+-		active_template->do_2(bytes, p0, p1);
+-		return;
 -	}
 -
- 	spin_unlock_bh(&ioat_chan->desc_lock);
- 
--	if (append)
--		ioatdma_chan_write8(ioat_chan,
--		                    IOAT_CHANCMD_OFFSET,
--		                    IOAT_CHANCMD_APPEND);
--	return cookie;
-+	return new ? &new->async_tx : NULL;
- }
- 
--/**
-- * ioat_dma_memcpy_buf_to_buf - wrapper that takes src & dest bufs
-- * @chan: IOAT DMA channel handle
-- * @dest: DMA destination address
-- * @src: DMA source address
-- * @len: transaction length in bytes
-- */
+-	p2 = (unsigned long *) ptr[2];
+-	if (count == 3) {
+-		active_template->do_3(bytes, p0, p1, p2);
+-		return;
+-	}
 -
--static dma_cookie_t ioat_dma_memcpy_buf_to_buf(struct dma_chan *chan,
--                                               void *dest,
--                                               void *src,
--                                               size_t len)
--{
--	dma_addr_t dest_addr;
--	dma_addr_t src_addr;
--	struct ioat_dma_chan *ioat_chan = to_ioat_chan(chan);
+-	p3 = (unsigned long *) ptr[3];
+-	if (count == 4) {
+-		active_template->do_4(bytes, p0, p1, p2, p3);
+-		return;
+-	}
 -
--	dest_addr = pci_map_single(ioat_chan->device->pdev,
--		dest, len, PCI_DMA_FROMDEVICE);
--	src_addr = pci_map_single(ioat_chan->device->pdev,
--		src, len, PCI_DMA_TODEVICE);
--
--	return do_ioat_dma_memcpy(ioat_chan, dest_addr, src_addr, len);
+-	p4 = (unsigned long *) ptr[4];
+-	active_template->do_5(bytes, p0, p1, p2, p3, p4);
 -}
 -
--/**
-- * ioat_dma_memcpy_buf_to_pg - wrapper, copying from a buf to a page
-- * @chan: IOAT DMA channel handle
-- * @page: pointer to the page to copy to
-- * @offset: offset into that page
-- * @src: DMA source address
-- * @len: transaction length in bytes
-- */
+-/* Set of all registered templates.  */
+-static struct xor_block_template *template_list;
 -
--static dma_cookie_t ioat_dma_memcpy_buf_to_pg(struct dma_chan *chan,
--                                              struct page *page,
--                                              unsigned int offset,
--                                              void *src,
--                                              size_t len)
+-#define BENCH_SIZE (PAGE_SIZE)
+-
+-static void
+-do_xor_speed(struct xor_block_template *tmpl, void *b1, void *b2)
 -{
--	dma_addr_t dest_addr;
--	dma_addr_t src_addr;
--	struct ioat_dma_chan *ioat_chan = to_ioat_chan(chan);
+-	int speed;
+-	unsigned long now;
+-	int i, count, max;
 -
--	dest_addr = pci_map_page(ioat_chan->device->pdev,
--		page, offset, len, PCI_DMA_FROMDEVICE);
--	src_addr = pci_map_single(ioat_chan->device->pdev,
--		src, len, PCI_DMA_TODEVICE);
+-	tmpl->next = template_list;
+-	template_list = tmpl;
 -
--	return do_ioat_dma_memcpy(ioat_chan, dest_addr, src_addr, len);
+-	/*
+-	 * Count the number of XORs done during a whole jiffy, and use
+-	 * this to calculate the speed of checksumming.  We use a 2-page
+-	 * allocation to have guaranteed color L1-cache layout.
+-	 */
+-	max = 0;
+-	for (i = 0; i < 5; i++) {
+-		now = jiffies;
+-		count = 0;
+-		while (jiffies == now) {
+-			mb();
+-			tmpl->do_2(BENCH_SIZE, b1, b2);
+-			mb();
+-			count++;
+-			mb();
+-		}
+-		if (count > max)
+-			max = count;
+-	}
+-
+-	speed = max * (HZ * BENCH_SIZE / 1024);
+-	tmpl->speed = speed;
+-
+-	printk("   %-10s: %5d.%03d MB/sec\n", tmpl->name,
+-	       speed / 1000, speed % 1000);
 -}
 -
--/**
-- * ioat_dma_memcpy_pg_to_pg - wrapper, copying between two pages
-- * @chan: IOAT DMA channel handle
-- * @dest_pg: pointer to the page to copy to
-- * @dest_off: offset into that page
-- * @src_pg: pointer to the page to copy from
-- * @src_off: offset into that page
-- * @len: transaction length in bytes. This is guaranteed not to make a copy
-- *	 across a page boundary.
-- */
--
--static dma_cookie_t ioat_dma_memcpy_pg_to_pg(struct dma_chan *chan,
--                                             struct page *dest_pg,
--                                             unsigned int dest_off,
--                                             struct page *src_pg,
--                                             unsigned int src_off,
--                                             size_t len)
+-static int
+-calibrate_xor_block(void)
 -{
--	dma_addr_t dest_addr;
--	dma_addr_t src_addr;
--	struct ioat_dma_chan *ioat_chan = to_ioat_chan(chan);
+-	void *b1, *b2;
+-	struct xor_block_template *f, *fastest;
 -
--	dest_addr = pci_map_page(ioat_chan->device->pdev,
--		dest_pg, dest_off, len, PCI_DMA_FROMDEVICE);
--	src_addr = pci_map_page(ioat_chan->device->pdev,
--		src_pg, src_off, len, PCI_DMA_TODEVICE);
+-	b1 = (void *) __get_free_pages(GFP_KERNEL, 2);
+-	if (! b1) {
+-		printk("raid5: Yikes!  No memory available.\n");
+-		return -ENOMEM;
+-	}
+-	b2 = b1 + 2*PAGE_SIZE + BENCH_SIZE;
 -
--	return do_ioat_dma_memcpy(ioat_chan, dest_addr, src_addr, len);
+-	/*
+-	 * If this arch/cpu has a short-circuited selection, don't loop through all
+-	 * the possible functions, just test the best one
+-	 */
+-
+-	fastest = NULL;
+-
+-#ifdef XOR_SELECT_TEMPLATE
+-		fastest = XOR_SELECT_TEMPLATE(fastest);
+-#endif
+-
+-#define xor_speed(templ)	do_xor_speed((templ), b1, b2)
+-
+-	if (fastest) {
+-		printk(KERN_INFO "raid5: automatically using best checksumming function: %s\n",
+-			fastest->name);
+-		xor_speed(fastest);
+-	} else {
+-		printk(KERN_INFO "raid5: measuring checksumming speed\n");
+-		XOR_TRY_TEMPLATES;
+-		fastest = template_list;
+-		for (f = fastest; f; f = f->next)
+-			if (f->speed > fastest->speed)
+-				fastest = f;
+-	}
+-
+-	printk("raid5: using function: %s (%d.%03d MB/sec)\n",
+-	       fastest->name, fastest->speed / 1000, fastest->speed % 1000);
+-
+-#undef xor_speed
+-
+-	free_pages((unsigned long)b1, 2);
+-
+-	active_template = fastest;
+-	return 0;
 -}
- 
- /**
-  * ioat_dma_memcpy_issue_pending - push potentially unrecognized appended descriptors to hw
-@@ -467,8 +412,8 @@ static void ioat_dma_memcpy_cleanup(struct ioat_dma_chan *chan)
- 		 * exceeding xfercap, perhaps. If so, only the last one will
- 		 * have a cookie, and require unmapping.
- 		 */
--		if (desc->cookie) {
--			cookie = desc->cookie;
-+		if (desc->async_tx.cookie) {
-+			cookie = desc->async_tx.cookie;
- 
- 			/* yes we are unmapping both _page and _single alloc'd
- 			   regions with unmap_page. Is this *really* that bad?
-@@ -484,13 +429,18 @@ static void ioat_dma_memcpy_cleanup(struct ioat_dma_chan *chan)
- 		}
- 
- 		if (desc->phys != phys_complete) {
--			/* a completed entry, but not the last, so cleanup */
--			list_del(&desc->node);
--			list_add_tail(&desc->node, &chan->free_desc);
-+			/* a completed entry, but not the last, so cleanup
-+			 * if the client is done with the descriptor
-+			 */
-+			if (desc->async_tx.ack) {
-+				list_del(&desc->node);
-+				list_add_tail(&desc->node, &chan->free_desc);
-+			} else
-+				desc->async_tx.cookie = 0;
- 		} else {
- 			/* last used desc. Do not remove, so we can append from
- 			   it, but don't look at it next time, either */
--			desc->cookie = 0;
-+			desc->async_tx.cookie = 0;
- 
- 			/* TODO check status bits? */
- 			break;
-@@ -506,6 +456,17 @@ static void ioat_dma_memcpy_cleanup(struct ioat_dma_chan *chan)
- 	spin_unlock(&chan->cleanup_lock);
- }
- 
-+static void ioat_dma_dependency_added(struct dma_chan *chan)
-+{
-+	struct ioat_dma_chan *ioat_chan = to_ioat_chan(chan);
-+	spin_lock_bh(&ioat_chan->desc_lock);
-+	if (ioat_chan->pending == 0) {
-+		spin_unlock_bh(&ioat_chan->desc_lock);
-+		ioat_dma_memcpy_cleanup(ioat_chan);
-+	} else
-+		spin_unlock_bh(&ioat_chan->desc_lock);
-+}
-+
- /**
-  * ioat_dma_is_complete - poll the status of a IOAT DMA transaction
-  * @chan: IOAT DMA channel handle
-@@ -607,6 +568,7 @@ static void ioat_start_null_desc(struct ioat_dma_chan *ioat_chan)
- 
- 	desc->hw->ctl = IOAT_DMA_DESCRIPTOR_NUL;
- 	desc->hw->next = 0;
-+	desc->async_tx.ack = 1;
- 
- 	list_add_tail(&desc->node, &ioat_chan->used_desc);
- 	spin_unlock_bh(&ioat_chan->desc_lock);
-@@ -633,6 +595,8 @@ static int ioat_self_test(struct ioat_device *device)
- 	u8 *src;
- 	u8 *dest;
- 	struct dma_chan *dma_chan;
-+	struct dma_async_tx_descriptor *tx;
-+	dma_addr_t addr;
- 	dma_cookie_t cookie;
- 	int err = 0;
- 
-@@ -658,7 +622,15 @@ static int ioat_self_test(struct ioat_device *device)
- 		goto out;
- 	}
- 
--	cookie = ioat_dma_memcpy_buf_to_buf(dma_chan, dest, src, IOAT_TEST_SIZE);
-+	tx = ioat_dma_prep_memcpy(dma_chan, IOAT_TEST_SIZE, 0);
-+	async_tx_ack(tx);
-+	addr = dma_map_single(dma_chan->device->dev, src, IOAT_TEST_SIZE,
-+			DMA_TO_DEVICE);
-+	ioat_set_src(addr, tx, 0);
-+	addr = dma_map_single(dma_chan->device->dev, dest, IOAT_TEST_SIZE,
-+			DMA_FROM_DEVICE);
-+	ioat_set_dest(addr, tx, 0);
-+	cookie = ioat_tx_submit(tx);
- 	ioat_dma_memcpy_issue_pending(dma_chan);
- 	msleep(1);
- 
-@@ -754,13 +726,14 @@ static int __devinit ioat_probe(struct pci_dev *pdev,
- 	INIT_LIST_HEAD(&device->common.channels);
- 	enumerate_dma_channels(device);
- 
-+	dma_cap_set(DMA_MEMCPY, device->common.cap_mask);
- 	device->common.device_alloc_chan_resources = ioat_dma_alloc_chan_resources;
- 	device->common.device_free_chan_resources = ioat_dma_free_chan_resources;
--	device->common.device_memcpy_buf_to_buf = ioat_dma_memcpy_buf_to_buf;
--	device->common.device_memcpy_buf_to_pg = ioat_dma_memcpy_buf_to_pg;
--	device->common.device_memcpy_pg_to_pg = ioat_dma_memcpy_pg_to_pg;
--	device->common.device_memcpy_complete = ioat_dma_is_complete;
--	device->common.device_memcpy_issue_pending = ioat_dma_memcpy_issue_pending;
-+	device->common.device_prep_dma_memcpy = ioat_dma_prep_memcpy;
-+	device->common.device_is_tx_complete = ioat_dma_is_complete;
-+	device->common.device_issue_pending = ioat_dma_memcpy_issue_pending;
-+	device->common.device_dependency_added = ioat_dma_dependency_added;
-+	device->common.dev = &pdev->dev;
- 	printk(KERN_INFO "Intel(R) I/OAT DMA Engine found, %d channels\n",
- 		device->common.chancnt);
- 
-diff --git a/drivers/dma/ioatdma.h b/drivers/dma/ioatdma.h
-index 62b26a9..fed259a 100644
---- a/drivers/dma/ioatdma.h
-+++ b/drivers/dma/ioatdma.h
-@@ -105,15 +105,20 @@ struct ioat_dma_chan {
- /**
-  * struct ioat_desc_sw - wrapper around hardware descriptor
-  * @hw: hardware DMA descriptor
-+ * @async_tx:
-  * @node:
-+ * @group_list:
-+ * @group_cnt:
-  * @cookie:
-  * @phys:
-  */
- 
- struct ioat_desc_sw {
- 	struct ioat_dma_descriptor *hw;
-+	struct dma_async_tx_descriptor async_tx;
- 	struct list_head node;
--	dma_cookie_t cookie;
-+	struct list_head group_list;
-+	int group_count;
- 	dma_addr_t phys;
- 	DECLARE_PCI_UNMAP_ADDR(src)
- 	DECLARE_PCI_UNMAP_LEN(src_len)
-@@ -122,4 +127,3 @@ struct ioat_desc_sw {
- };
- 
- #endif /* IOATDMA_H */
 -
-diff --git a/include/linux/dmaengine.h b/include/linux/dmaengine.h
-index c94d8f1..0f21375 100644
---- a/include/linux/dmaengine.h
-+++ b/include/linux/dmaengine.h
-@@ -21,13 +21,12 @@
- #ifndef DMAENGINE_H
- #define DMAENGINE_H
- 
--#ifdef CONFIG_DMA_ENGINE
+-static __exit void xor_exit(void) { }
 -
- #include <linux/device.h>
- #include <linux/uio.h>
- #include <linux/kref.h>
- #include <linux/completion.h>
- #include <linux/rcupdate.h>
-+#include <linux/dma-mapping.h>
+-EXPORT_SYMBOL(xor_block);
+-MODULE_LICENSE("GPL");
+-
+-module_init(calibrate_xor_block);
+-module_exit(xor_exit);
+diff --git a/include/linux/raid/xor.h b/include/linux/raid/xor.h
+index f0d67cb..7d6c20b 100644
+--- a/include/linux/raid/xor.h
++++ b/include/linux/raid/xor.h
+@@ -5,7 +5,7 @@
  
- /**
-  * enum dma_event - resource PNP/power managment events
-@@ -65,6 +64,31 @@ enum dma_status {
- };
+ #define MAX_XOR_BLOCKS 5
  
- /**
-+ * enum dma_transaction_type - DMA transaction types/indexes
-+ */
-+enum dma_transaction_type {
-+	DMA_MEMCPY,
-+	DMA_XOR,
-+	DMA_PQ_XOR,
-+	DMA_DUAL_XOR,
-+	DMA_PQ_UPDATE,
-+	DMA_ZERO_SUM,
-+	DMA_PQ_ZERO_SUM,
-+	DMA_MEMSET,
-+	DMA_MEMCPY_CRC32C,
-+	DMA_INTERRUPT,
-+};
-+
-+/* last transaction type for creation of the capabilities mask */
-+#define DMA_TX_TYPE_END (DMA_INTERRUPT + 1)
-+
-+/**
-+ * dma_cap_mask_t - capabilities bitmap modeled after cpumask_t.
-+ * See linux/cpumask.h
-+ */
-+typedef struct { DECLARE_BITMAP(bits, DMA_TX_TYPE_END); } dma_cap_mask_t;
-+
-+/**
-  * struct dma_chan_percpu - the per-CPU part of struct dma_chan
-  * @refcount: local_t used for open-coded "bigref" counting
-  * @memcpy_count: transaction counter
-@@ -157,48 +181,99 @@ struct dma_client {
- 	struct list_head	global_node;
- };
+-extern void xor_block(unsigned int count, unsigned int bytes, void **ptr);
++extern void xor_blocks(unsigned int count, unsigned int bytes, void **ptr);
  
-+typedef void (*dma_async_tx_callback)(void *dma_async_param);
-+/**
-+ * struct dma_async_tx_descriptor - async transaction descriptor
-+ * @cookie: tracking cookie for this transaction, set to -EBUSY if
-+ *	this tx is sitting on a dependency list
-+ * @ack: the descriptor can not be reused until the client acknowledges
-+ *	receipt, i.e. has has a chance to establish any dependency chains
-+ * @callback: routine to call after this operation is complete
-+ * @callback_param: general parameter to pass to the callback routine
-+ * @chan: target channel for this operation
-+ * @tx_submit: execute an operation
-+ * @tx_set_dest: set a destination address in a hardware descriptor
-+ * @tx_set_src: set a source address in a hardware descriptor
-+ * @depend_list: at completion this list of transactions are submitted
-+ * @depend_node: allow this transaction to be executed after another
-+ *	transaction has completed
-+ * @parent: pointer to the next level up in the dependency chain
-+ * @lock: protect the dependency list
-+ */
-+struct dma_async_tx_descriptor {
-+	dma_cookie_t cookie;
-+	int ack;
-+	dma_async_tx_callback callback;
-+	void *callback_param;
-+	struct dma_chan *chan;
-+	dma_cookie_t (*tx_submit)(struct dma_async_tx_descriptor *tx);
-+	void (*tx_set_dest)(dma_addr_t addr,
-+		struct dma_async_tx_descriptor *tx, int index);
-+	void (*tx_set_src)(dma_addr_t addr,
-+		struct dma_async_tx_descriptor *tx, int index);
-+	struct list_head depend_list;
-+	struct list_head depend_node;
-+	struct dma_async_tx_descriptor *parent;
-+	spinlock_t lock;
-+};
-+
- /**
-  * struct dma_device - info on the entity supplying DMA services
-  * @chancnt: how many DMA channels are supported
-  * @channels: the list of struct dma_chan
-  * @global_node: list_head for global dma_device_list
-+ * @cap_mask: one or more dma_capability flags
-+ * @max_xor: maximum number of xor sources, 0 if no capability
-  * @refcount: reference count
-  * @done: IO completion struct
-  * @dev_id: unique device ID
-+ * @dev: struct device reference for dma mapping api
-  * @device_alloc_chan_resources: allocate resources and return the
-  *	number of allocated descriptors
-  * @device_free_chan_resources: release DMA channel's resources
-- * @device_memcpy_buf_to_buf: memcpy buf pointer to buf pointer
-- * @device_memcpy_buf_to_pg: memcpy buf pointer to struct page
-- * @device_memcpy_pg_to_pg: memcpy struct page/offset to struct page/offset
-- * @device_memcpy_complete: poll the status of an IOAT DMA transaction
-- * @device_memcpy_issue_pending: push appended descriptors to hardware
-+ * @device_prep_dma_memcpy: prepares a memcpy operation
-+ * @device_prep_dma_xor: prepares a xor operation
-+ * @device_prep_dma_zero_sum: prepares a zero_sum operation
-+ * @device_prep_dma_memset: prepares a memset operation
-+ * @device_prep_dma_interrupt: prepares an end of chain interrupt operation
-+ * @device_dependency_added: async_tx notifies the channel about new deps
-+ * @device_issue_pending: push pending transactions to hardware
-  */
- struct dma_device {
- 
- 	unsigned int chancnt;
- 	struct list_head channels;
- 	struct list_head global_node;
-+	dma_cap_mask_t  cap_mask;
-+	int max_xor;
- 
- 	struct kref refcount;
- 	struct completion done;
- 
- 	int dev_id;
-+	struct device *dev;
- 
- 	int (*device_alloc_chan_resources)(struct dma_chan *chan);
- 	void (*device_free_chan_resources)(struct dma_chan *chan);
--	dma_cookie_t (*device_memcpy_buf_to_buf)(struct dma_chan *chan,
--			void *dest, void *src, size_t len);
--	dma_cookie_t (*device_memcpy_buf_to_pg)(struct dma_chan *chan,
--			struct page *page, unsigned int offset, void *kdata,
--			size_t len);
--	dma_cookie_t (*device_memcpy_pg_to_pg)(struct dma_chan *chan,
--			struct page *dest_pg, unsigned int dest_off,
--			struct page *src_pg, unsigned int src_off, size_t len);
--	enum dma_status (*device_memcpy_complete)(struct dma_chan *chan,
-+
-+	struct dma_async_tx_descriptor *(*device_prep_dma_memcpy)(
-+		struct dma_chan *chan, size_t len, int int_en);
-+	struct dma_async_tx_descriptor *(*device_prep_dma_xor)(
-+		struct dma_chan *chan, unsigned int src_cnt, size_t len,
-+		int int_en);
-+	struct dma_async_tx_descriptor *(*device_prep_dma_zero_sum)(
-+		struct dma_chan *chan, unsigned int src_cnt, size_t len,
-+		u32 *result, int int_en);
-+	struct dma_async_tx_descriptor *(*device_prep_dma_memset)(
-+		struct dma_chan *chan, int value, size_t len, int int_en);
-+	struct dma_async_tx_descriptor *(*device_prep_dma_interrupt)(
-+		struct dma_chan *chan);
-+
-+	void (*device_dependency_added)(struct dma_chan *chan);
-+	enum dma_status (*device_is_tx_complete)(struct dma_chan *chan,
- 			dma_cookie_t cookie, dma_cookie_t *last,
- 			dma_cookie_t *used);
--	void (*device_memcpy_issue_pending)(struct dma_chan *chan);
-+	void (*device_issue_pending)(struct dma_chan *chan);
- };
- 
- /* --- public DMA engine API --- */
-@@ -207,96 +282,72 @@ struct dma_client *dma_async_client_register(dma_event_callback event_callback);
- void dma_async_client_unregister(struct dma_client *client);
- void dma_async_client_chan_request(struct dma_client *client,
- 		unsigned int number);
-+dma_cookie_t dma_async_memcpy_buf_to_buf(struct dma_chan *chan,
-+	void *dest, void *src, size_t len);
-+dma_cookie_t dma_async_memcpy_buf_to_pg(struct dma_chan *chan,
-+	struct page *page, unsigned int offset, void *kdata, size_t len);
-+dma_cookie_t dma_async_memcpy_pg_to_pg(struct dma_chan *chan,
-+	struct page *dest_pg, unsigned int dest_off, struct page *src_pg,
-+	unsigned int src_off, size_t len);
-+void dma_async_tx_descriptor_init(struct dma_async_tx_descriptor *tx,
-+	struct dma_chan *chan);
- 
--/**
-- * dma_async_memcpy_buf_to_buf - offloaded copy between virtual addresses
-- * @chan: DMA channel to offload copy to
-- * @dest: destination address (virtual)
-- * @src: source address (virtual)
-- * @len: length
-- *
-- * Both @dest and @src must be mappable to a bus address according to the
-- * DMA mapping API rules for streaming mappings.
-- * Both @dest and @src must stay memory resident (kernel memory or locked
-- * user space pages).
-- */
--static inline dma_cookie_t dma_async_memcpy_buf_to_buf(struct dma_chan *chan,
--	void *dest, void *src, size_t len)
--{
--	int cpu = get_cpu();
--	per_cpu_ptr(chan->local, cpu)->bytes_transferred += len;
--	per_cpu_ptr(chan->local, cpu)->memcpy_count++;
--	put_cpu();
- 
--	return chan->device->device_memcpy_buf_to_buf(chan, dest, src, len);
-+static inline void
-+async_tx_ack(struct dma_async_tx_descriptor *tx)
-+{
-+	tx->ack = 1;
- }
- 
--/**
-- * dma_async_memcpy_buf_to_pg - offloaded copy from address to page
-- * @chan: DMA channel to offload copy to
-- * @page: destination page
-- * @offset: offset in page to copy to
-- * @kdata: source address (virtual)
-- * @len: length
-- *
-- * Both @page/@offset and @kdata must be mappable to a bus address according
-- * to the DMA mapping API rules for streaming mappings.
-- * Both @page/@offset and @kdata must stay memory resident (kernel memory or
-- * locked user space pages)
-- */
--static inline dma_cookie_t dma_async_memcpy_buf_to_pg(struct dma_chan *chan,
--	struct page *page, unsigned int offset, void *kdata, size_t len)
-+#define first_dma_cap(mask) __first_dma_cap(&(mask))
-+static inline int __first_dma_cap(const dma_cap_mask_t *srcp)
- {
--	int cpu = get_cpu();
--	per_cpu_ptr(chan->local, cpu)->bytes_transferred += len;
--	per_cpu_ptr(chan->local, cpu)->memcpy_count++;
--	put_cpu();
-+	return min_t(int, DMA_TX_TYPE_END,
-+		find_first_bit(srcp->bits, DMA_TX_TYPE_END));
-+}
- 
--	return chan->device->device_memcpy_buf_to_pg(chan, page, offset,
--	                                             kdata, len);
-+#define next_dma_cap(n, mask) __next_dma_cap((n), &(mask))
-+static inline int __next_dma_cap(int n, const dma_cap_mask_t *srcp)
-+{
-+	return min_t(int, DMA_TX_TYPE_END,
-+		find_next_bit(srcp->bits, DMA_TX_TYPE_END, n+1));
- }
- 
--/**
-- * dma_async_memcpy_pg_to_pg - offloaded copy from page to page
-- * @chan: DMA channel to offload copy to
-- * @dest_pg: destination page
-- * @dest_off: offset in page to copy to
-- * @src_pg: source page
-- * @src_off: offset in page to copy from
-- * @len: length
-- *
-- * Both @dest_page/@dest_off and @src_page/@src_off must be mappable to a bus
-- * address according to the DMA mapping API rules for streaming mappings.
-- * Both @dest_page/@dest_off and @src_page/@src_off must stay memory resident
-- * (kernel memory or locked user space pages).
-- */
--static inline dma_cookie_t dma_async_memcpy_pg_to_pg(struct dma_chan *chan,
--	struct page *dest_pg, unsigned int dest_off, struct page *src_pg,
--	unsigned int src_off, size_t len)
-+#define dma_cap_set(tx, mask) __dma_cap_set((tx), &(mask))
-+static inline void
-+__dma_cap_set(enum dma_transaction_type tx_type, dma_cap_mask_t *dstp)
- {
--	int cpu = get_cpu();
--	per_cpu_ptr(chan->local, cpu)->bytes_transferred += len;
--	per_cpu_ptr(chan->local, cpu)->memcpy_count++;
--	put_cpu();
-+	set_bit(tx_type, dstp->bits);
-+}
- 
--	return chan->device->device_memcpy_pg_to_pg(chan, dest_pg, dest_off,
--	                                            src_pg, src_off, len);
-+#define dma_has_cap(tx, mask) __dma_has_cap((tx), &(mask))
-+static inline int
-+__dma_has_cap(enum dma_transaction_type tx_type, dma_cap_mask_t *srcp)
-+{
-+	return test_bit(tx_type, srcp->bits);
- }
- 
-+#define for_each_dma_cap_mask(cap, mask) \
-+	for ((cap) = first_dma_cap(mask);	\
-+		(cap) < DMA_TX_TYPE_END;	\
-+		(cap) = next_dma_cap((cap), (mask)))
-+
- /**
-- * dma_async_memcpy_issue_pending - flush pending copies to HW
-+ * dma_async_issue_pending - flush pending transactions to HW
-  * @chan: target DMA channel
-  *
-  * This allows drivers to push copies to HW in batches,
-  * reducing MMIO writes where possible.
-  */
--static inline void dma_async_memcpy_issue_pending(struct dma_chan *chan)
-+static inline void dma_async_issue_pending(struct dma_chan *chan)
- {
--	return chan->device->device_memcpy_issue_pending(chan);
-+	return chan->device->device_issue_pending(chan);
- }
- 
-+#define dma_async_memcpy_issue_pending(chan) dma_async_issue_pending(chan)
-+
- /**
-- * dma_async_memcpy_complete - poll for transaction completion
-+ * dma_async_is_tx_complete - poll for transaction completion
-  * @chan: DMA channel
-  * @cookie: transaction identifier to check status of
-  * @last: returns last completed cookie, can be NULL
-@@ -306,12 +357,15 @@ static inline void dma_async_memcpy_issue_pending(struct dma_chan *chan)
-  * internal state and can be used with dma_async_is_complete() to check
-  * the status of multiple cookies without re-checking hardware state.
-  */
--static inline enum dma_status dma_async_memcpy_complete(struct dma_chan *chan,
-+static inline enum dma_status dma_async_is_tx_complete(struct dma_chan *chan,
- 	dma_cookie_t cookie, dma_cookie_t *last, dma_cookie_t *used)
- {
--	return chan->device->device_memcpy_complete(chan, cookie, last, used);
-+	return chan->device->device_is_tx_complete(chan, cookie, last, used);
- }
- 
-+#define dma_async_memcpy_complete(chan, cookie, last, used)\
-+	dma_async_is_tx_complete(chan, cookie, last, used)
-+
- /**
-  * dma_async_is_complete - test a cookie against chan state
-  * @cookie: transaction identifier to test status of
-@@ -334,6 +388,7 @@ static inline enum dma_status dma_async_is_complete(dma_cookie_t cookie,
- 	return DMA_IN_PROGRESS;
- }
- 
-+enum dma_status dma_sync_wait(struct dma_chan *chan, dma_cookie_t cookie);
- 
- /* --- DMA device --- */
- 
-@@ -362,5 +417,4 @@ dma_cookie_t dma_memcpy_pg_to_iovec(struct dma_chan *chan, struct iovec *iov,
- 	struct dma_pinned_list *pinned_list, struct page *page,
- 	unsigned int offset, size_t len);
- 
--#endif /* CONFIG_DMA_ENGINE */
- #endif /* DMAENGINE_H */
+ struct xor_block_template {
+         struct xor_block_template *next;
