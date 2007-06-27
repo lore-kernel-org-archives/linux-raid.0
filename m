@@ -1,29 +1,32 @@
-From: Ian Dall <ian@beware.dropbear.id.au>
-Subject: Does "--write-behind=" have to be done at create time?
-Date: Thu, 28 Jun 2007 23:22:07 +0930
-Message-ID: <1183038727.3792.9.camel@sibyl.beware.dropbear.id.au>
+From: Pavel Machek <pavel@ucw.cz>
+Subject: Re: [linux-lvm] 2.6.22-rc4 XFS fails after hibernate/resume
+Date: Wed, 27 Jun 2007 20:49:24 +0000
+Message-ID: <20070627204924.GA4777@ucw.cz>
+References: <46744065.6060605@dgreaves.com> <4674645F.5000906@gmail.com> <46751D37.5020608@dgreaves.com> <4676390E.6010202@dgreaves.com> <20070618145007.GE85884050@sgi.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20070618145007.GE85884050@sgi.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: David Chinner <dgc@sgi.com>
+Cc: David Greaves <david@dgreaves.com>, David Robinson <zxvdr.au@gmail.com>, LVM general discussion and development <linux-lvm@redhat.com>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, linux-pm <linux-pm@lists.osdl.org>, LinuxRaid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-I was wanting to try out the "--write-behind" option. I have a raid1
-with bitmaps and write-mostly enabled, which are all the pre-requisites,
-I think.
+Hi!
 
-It would be nice if you could tweak this parameter on a live array, but
-failing that, it is hard to see why it couldn't be done at assemble
-time. mdadm wont let me though.
+> FWIW, I'm on record stating that "sync" is not sufficient to quiesce an XFS
+> filesystem for a suspend/resume to work safely and have argued that the only
 
-Is this a fundamental limitation?
+Hmm, so XFS writes to disk even when its threads are frozen?
 
-A related question, if I do recreate the same array, with exactly the
-same parameters (except for the write-behind value) will my data still
-be OK?
+> safe thing to do is freeze the filesystem before suspend and thaw it after
+> resume. This is why I originally asked you to test that with the other problem
 
+Could you add that to the XFS threads if it is really required? They
+do know that they are being frozen for suspend.
 
+							Pavel
 -- 
-Ian Dall <ian@beware.dropbear.id.au>
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
