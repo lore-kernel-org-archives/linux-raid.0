@@ -1,8 +1,8 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [md-accel PATCH 13/19] md: handle_stripe5 - add request/completion
-	logic for async expand ops
-Date: Tue, 26 Jun 2007 18:51:40 -0700
-Message-ID: <20070627015140.18962.28368.stgit@dwillia2-linux.ch.intel.com>
+Subject: [md-accel PATCH 15/19] md: remove raid5 compute_block and
+	compute_parity5
+Date: Tue, 26 Jun 2007 18:51:50 -0700
+Message-ID: <20070627015150.18962.29466.stgit@dwillia2-linux.ch.intel.com>
 References: <20070627014823.18962.96398.stgit@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -14,106 +14,147 @@ To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 Cc: neilb@suse.de, akpm@linux-foundation.org, davem@davemloft.net, christopher.leech@intel.com, shannon.nelson@intel.com, herbert@gondor.apana.org.au, jeff@garzik.org
 List-Id: linux-raid.ids
 
-When a stripe is being expanded bulk copying takes place to move the data
-from the old stripe to the new.  Since raid5_run_ops only operates on one
-stripe at a time these bulk copies are handled in-line under the stripe
-lock.  In the dma offload case we poll for the completion of the operation.
-
-After the data has been copied into the new stripe the parity needs to be
-recalculated across the new disks.  We reuse the existing postxor
-functionality to carry out this calculation.  By setting STRIPE_OP_POSTXOR
-without setting STRIPE_OP_BIODRAIN the completion path in handle stripe
-can differentiate expand operations from normal write operations.
+replaced by raid5_run_ops
 
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 Acked-By: NeilBrown <neilb@suse.de>
 ---
 
- drivers/md/raid5.c |   50 ++++++++++++++++++++++++++++++++++++++------------
- 1 files changed, 38 insertions(+), 12 deletions(-)
+ drivers/md/raid5.c |  124 ----------------------------------------------------
+ 1 files changed, 0 insertions(+), 124 deletions(-)
 
 diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 3d0dca9..e0ae26d 100644
+index a09bc5f..0579d1f 100644
 --- a/drivers/md/raid5.c
 +++ b/drivers/md/raid5.c
-@@ -2646,6 +2646,7 @@ static void handle_stripe_expansion(raid5_conf_t *conf, struct stripe_head *sh,
- 	/* We have read all the blocks in this stripe and now we need to
- 	 * copy some of them into a target stripe for expand.
- 	 */
-+	struct dma_async_tx_descriptor *tx = NULL;
- 	clear_bit(STRIPE_EXPAND_SOURCE, &sh->state);
- 	for (i = 0; i < sh->disks; i++)
- 		if (i != sh->pd_idx && (r6s && i != r6s->qd_idx)) {
-@@ -2671,9 +2672,12 @@ static void handle_stripe_expansion(raid5_conf_t *conf, struct stripe_head *sh,
- 				release_stripe(sh2);
- 				continue;
- 			}
--			memcpy(page_address(sh2->dev[dd_idx].page),
--			       page_address(sh->dev[i].page),
--			       STRIPE_SIZE);
-+
-+			/* place all the copies on one channel */
-+			tx = async_memcpy(sh2->dev[dd_idx].page,
-+				sh->dev[i].page, 0, 0, STRIPE_SIZE,
-+				ASYNC_TX_DEP_ACK, tx, NULL, NULL);
-+
- 			set_bit(R5_Expanded, &sh2->dev[dd_idx].flags);
- 			set_bit(R5_UPTODATE, &sh2->dev[dd_idx].flags);
- 			for (j = 0; j < conf->raid_disks; j++)
-@@ -2686,6 +2690,12 @@ static void handle_stripe_expansion(raid5_conf_t *conf, struct stripe_head *sh,
- 				set_bit(STRIPE_HANDLE, &sh2->state);
- 			}
- 			release_stripe(sh2);
-+
-+			/* done submitting copies, wait for them to complete */
-+			if (i + 1 >= sh->disks) {
-+				async_tx_ack(tx);
-+				dma_wait_for_async_tx(tx);
-+			}
- 		}
- }
+@@ -1509,130 +1509,6 @@ static void copy_data(int frombio, struct bio *bio,
+ 			   }						  \
+ 			} while(0)
  
-@@ -2924,18 +2934,34 @@ static void handle_stripe5(struct stripe_head *sh)
- 		}
- 	}
- 
--	if (s.expanded && test_bit(STRIPE_EXPANDING, &sh->state)) {
--		/* Need to write out all blocks after computing parity */
--		sh->disks = conf->raid_disks;
--		sh->pd_idx = stripe_to_pdidx(sh->sector, conf, conf->raid_disks);
--		compute_parity5(sh, RECONSTRUCT_WRITE);
-+	/* Finish postxor operations initiated by the expansion
-+	 * process
-+	 */
-+	if (test_bit(STRIPE_OP_POSTXOR, &sh->ops.complete) &&
-+		!test_bit(STRIPE_OP_BIODRAIN, &sh->ops.pending)) {
-+
-+		clear_bit(STRIPE_EXPANDING, &sh->state);
-+
-+		clear_bit(STRIPE_OP_POSTXOR, &sh->ops.pending);
-+		clear_bit(STRIPE_OP_POSTXOR, &sh->ops.ack);
-+		clear_bit(STRIPE_OP_POSTXOR, &sh->ops.complete);
-+
- 		for (i = conf->raid_disks; i--; ) {
+-
+-static void compute_block(struct stripe_head *sh, int dd_idx)
+-{
+-	int i, count, disks = sh->disks;
+-	void *ptr[MAX_XOR_BLOCKS], *dest, *p;
+-
+-	pr_debug("compute_block, stripe %llu, idx %d\n",
+-		(unsigned long long)sh->sector, dd_idx);
+-
+-	dest = page_address(sh->dev[dd_idx].page);
+-	memset(dest, 0, STRIPE_SIZE);
+-	count = 0;
+-	for (i = disks ; i--; ) {
+-		if (i == dd_idx)
+-			continue;
+-		p = page_address(sh->dev[i].page);
+-		if (test_bit(R5_UPTODATE, &sh->dev[i].flags))
+-			ptr[count++] = p;
+-		else
+-			printk(KERN_ERR "compute_block() %d, stripe %llu, %d"
+-				" not present\n", dd_idx,
+-				(unsigned long long)sh->sector, i);
+-
+-		check_xor();
+-	}
+-	if (count)
+-		xor_blocks(count, STRIPE_SIZE, dest, ptr);
+-	set_bit(R5_UPTODATE, &sh->dev[dd_idx].flags);
+-}
+-
+-static void compute_parity5(struct stripe_head *sh, int method)
+-{
+-	raid5_conf_t *conf = sh->raid_conf;
+-	int i, pd_idx = sh->pd_idx, disks = sh->disks, count;
+-	void *ptr[MAX_XOR_BLOCKS], *dest;
+-	struct bio *chosen;
+-
+-	pr_debug("compute_parity5, stripe %llu, method %d\n",
+-		(unsigned long long)sh->sector, method);
+-
+-	count = 0;
+-	dest = page_address(sh->dev[pd_idx].page);
+-	switch(method) {
+-	case READ_MODIFY_WRITE:
+-		BUG_ON(!test_bit(R5_UPTODATE, &sh->dev[pd_idx].flags));
+-		for (i=disks ; i-- ;) {
+-			if (i==pd_idx)
+-				continue;
+-			if (sh->dev[i].towrite &&
+-			    test_bit(R5_UPTODATE, &sh->dev[i].flags)) {
+-				ptr[count++] = page_address(sh->dev[i].page);
+-				chosen = sh->dev[i].towrite;
+-				sh->dev[i].towrite = NULL;
+-
+-				if (test_and_clear_bit(R5_Overlap, &sh->dev[i].flags))
+-					wake_up(&conf->wait_for_overlap);
+-
+-				BUG_ON(sh->dev[i].written);
+-				sh->dev[i].written = chosen;
+-				check_xor();
+-			}
+-		}
+-		break;
+-	case RECONSTRUCT_WRITE:
+-		memset(dest, 0, STRIPE_SIZE);
+-		for (i= disks; i-- ;)
+-			if (i!=pd_idx && sh->dev[i].towrite) {
+-				chosen = sh->dev[i].towrite;
+-				sh->dev[i].towrite = NULL;
+-
+-				if (test_and_clear_bit(R5_Overlap, &sh->dev[i].flags))
+-					wake_up(&conf->wait_for_overlap);
+-
+-				BUG_ON(sh->dev[i].written);
+-				sh->dev[i].written = chosen;
+-			}
+-		break;
+-	case CHECK_PARITY:
+-		break;
+-	}
+-	if (count) {
+-		xor_blocks(count, STRIPE_SIZE, dest, ptr);
+-		count = 0;
+-	}
+-	
+-	for (i = disks; i--;)
+-		if (sh->dev[i].written) {
+-			sector_t sector = sh->dev[i].sector;
+-			struct bio *wbi = sh->dev[i].written;
+-			while (wbi && wbi->bi_sector < sector + STRIPE_SECTORS) {
+-				copy_data(1, wbi, sh->dev[i].page, sector);
+-				wbi = r5_next_bio(wbi, sector);
+-			}
+-
 -			set_bit(R5_LOCKED, &sh->dev[i].flags);
--			s.locked++;
- 			set_bit(R5_Wantwrite, &sh->dev[i].flags);
-+			if (!test_and_set_bit(STRIPE_OP_IO, &sh->ops.pending))
-+				sh->ops.count++;
- 		}
--		clear_bit(STRIPE_EXPANDING, &sh->state);
--	} else if (s.expanded) {
-+	}
-+
-+	if (s.expanded && test_bit(STRIPE_EXPANDING, &sh->state) &&
-+		!test_bit(STRIPE_OP_POSTXOR, &sh->ops.pending)) {
-+		/* Need to write out all blocks after computing parity */
-+		sh->disks = conf->raid_disks;
-+		sh->pd_idx = stripe_to_pdidx(sh->sector, conf,
-+			conf->raid_disks);
-+		s.locked += handle_write_operations5(sh, 0, 1);
-+	} else if (s.expanded &&
-+		!test_bit(STRIPE_OP_POSTXOR, &sh->ops.pending)) {
- 		clear_bit(STRIPE_EXPAND_READY, &sh->state);
- 		atomic_dec(&conf->reshape_stripes);
- 		wake_up(&conf->wait_for_overlap);
+-			set_bit(R5_UPTODATE, &sh->dev[i].flags);
+-		}
+-
+-	switch(method) {
+-	case RECONSTRUCT_WRITE:
+-	case CHECK_PARITY:
+-		for (i=disks; i--;)
+-			if (i != pd_idx) {
+-				ptr[count++] = page_address(sh->dev[i].page);
+-				check_xor();
+-			}
+-		break;
+-	case READ_MODIFY_WRITE:
+-		for (i = disks; i--;)
+-			if (sh->dev[i].written) {
+-				ptr[count++] = page_address(sh->dev[i].page);
+-				check_xor();
+-			}
+-	}
+-	if (count)
+-		xor_blocks(count, STRIPE_SIZE, dest, ptr);
+-
+-	if (method != CHECK_PARITY) {
+-		set_bit(R5_UPTODATE, &sh->dev[pd_idx].flags);
+-		set_bit(R5_LOCKED,   &sh->dev[pd_idx].flags);
+-	} else
+-		clear_bit(R5_UPTODATE, &sh->dev[pd_idx].flags);
+-}
+-
+ static void compute_parity6(struct stripe_head *sh, int method)
+ {
+ 	raid6_conf_t *conf = sh->raid_conf;
