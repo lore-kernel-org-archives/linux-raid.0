@@ -1,33 +1,42 @@
-From: David Greaves <david@dgreaves.com>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
 Subject: Re: Fastest Chunk Size w/XFS For MD Software RAID = 1024k
-Date: Thu, 28 Jun 2007 08:53:54 +0100
-Message-ID: <46836912.4000508@dgreaves.com>
-References: <Pine.LNX.4.64.0706271918010.29111@p34.internal.lan> <Pine.LNX.4.64.0706271920350.29111@p34.internal.lan> <20070628050837.GG989688@sgi.com>
+Date: Thu, 28 Jun 2007 04:07:36 -0400 (EDT)
+Message-ID: <Pine.LNX.4.64.0706280406520.1406@p34.internal.lan>
+References: <Pine.LNX.4.64.0706271918010.29111@p34.internal.lan>
+ <46832E60.9000006@rabbit.us>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20070628050837.GG989688@sgi.com>
+In-Reply-To: <46832E60.9000006@rabbit.us>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Chinner <dgc@sgi.com>
-Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, linux-raid@vger.kernel.org, xfs@oss.sgi.com, Alan Piszcz <ap@solarrain.com>
+To: Peter Rabbitson <rabbit@rabbit.us>
+Cc: linux-raid@vger.kernel.org, xfs@oss.sgi.com, Alan Piszcz <ap@solarrain.com>
 List-Id: linux-raid.ids
 
-David Chinner wrote:
-> On Wed, Jun 27, 2007 at 07:20:42PM -0400, Justin Piszcz wrote:
->> For drives with 16MB of cache (in this case, raptors).
-> 
-> That's four (4) drives, right?
+mdadm --create \
+       --verbose /dev/md3 \
+       --level=5 \
+       --raid-devices=10 \
+       --chunk=1024 \
+       --force \
+       --run
+       /dev/sd[cdefghijkl]1
 
-I'm pretty sure he's using 10 - email a few days back...
->>>>>> Justin Piszcz wrote:
->>>>> Running test with 10 RAPTOR 150 hard drives, expect it to take 
->>>>> awhile until I get the results, avg them etc. :)
+Justin.
 
-> If so, how do you get a block read rate of 578MB/s from
-> 4 drives? That's 145MB/s per drive....
 
-Which gives a far more reasonable 60MB/s per drive...
+On Thu, 28 Jun 2007, Peter Rabbitson wrote:
 
-David
-
+> Justin Piszcz wrote:
+>> The results speak for themselves:
+>> 
+>> http://home.comcast.net/~jpiszcz/chunk/index.html
+>> 
+>
+>
+> What is the array layout (-l ? -n ? -p ?)
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
