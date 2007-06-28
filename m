@@ -1,15 +1,15 @@
 From: Justin Piszcz <jpiszcz@lucidpixels.com>
 Subject: Re: Fastest Chunk Size w/XFS For MD Software RAID = 1024k
-Date: Thu, 28 Jun 2007 04:42:29 -0400 (EDT)
-Message-ID: <Pine.LNX.4.64.0706280441450.1406@p34.internal.lan>
+Date: Thu, 28 Jun 2007 04:46:19 -0400 (EDT)
+Message-ID: <Pine.LNX.4.64.0706280444270.1406@p34.internal.lan>
 References: <Pine.LNX.4.64.0706271918010.29111@p34.internal.lan>
  <46832E60.9000006@rabbit.us> <Pine.LNX.4.64.0706280406520.1406@p34.internal.lan>
  <46837056.4050306@rabbit.us> <Pine.LNX.4.64.0706280426500.1406@p34.internal.lan>
- <46837307.20005@rabbit.us>
+ <46837307.20005@rabbit.us> <Pine.LNX.4.64.0706280441450.1406@p34.internal.lan>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <46837307.20005@rabbit.us>
+In-Reply-To: <Pine.LNX.4.64.0706280441450.1406@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
 To: Peter Rabbitson <rabbit@rabbit.us>
 Cc: linux-raid@vger.kernel.org
@@ -17,71 +17,100 @@ List-Id: linux-raid.ids
 
 
 
-On Thu, 28 Jun 2007, Peter Rabbitson wrote:
+On Thu, 28 Jun 2007, Justin Piszcz wrote:
 
-> Justin Piszcz wrote:
->> 
->> On Thu, 28 Jun 2007, Peter Rabbitson wrote:
->> 
->>> Interesting, I came up with the same results (1M chunk being superior) 
->>> with a completely different raid set with XFS on top:
+>
+>
+> On Thu, 28 Jun 2007, Peter Rabbitson wrote:
+>
+>> Justin Piszcz wrote:
 >>> 
->>> ...
+>>> On Thu, 28 Jun 2007, Peter Rabbitson wrote:
 >>> 
->>> Could it be attributed to XFS itself?
+>>>> Interesting, I came up with the same results (1M chunk being superior) 
+>>>> with a completely different raid set with XFS on top:
+>>>> 
+>>>> ...
+>>>> 
+>>>> Could it be attributed to XFS itself?
+>>>> 
+>>>> Peter
+>>>> 
 >>> 
->>> Peter
+>>> Good question, by the way how much cache do the drives have that you are 
+>>> testing with?
 >>> 
 >> 
->> Good question, by the way how much cache do the drives have that you are 
->> testing with?
+>> I believe 8MB, but I am not sure I am looking at the right number:
+>> 
+>> root@Arzamas:~# hdparm -i /dev/sda
+>> 
+>> /dev/sda:
+>> 
+>> Model=aMtxro7 2Y050M                          , FwRev=AY5RH10W, 
+>> SerialNo=6YB6Z7E4
+>> Config={ Fixed }
+>> RawCHS=16383/16/63, TrkSize=0, SectSize=0, ECCbytes=4
+>> BuffType=DualPortCache, BuffSize=7936kB, MaxMultSect=16, MultSect=?0?
+>> CurCHS=16383/16/63, CurSects=16514064, LBA=yes, LBAsects=268435455
+>> IORDY=on/off, tPIO={min:120,w/IORDY:120}, tDMA={min:120,rec:120}
+>> PIO modes:  pio0 pio1 pio2 pio3 pio4
+>> DMA modes:  mdma0 mdma1 mdma2
+>> UDMA modes: udma0 udma1 udma2 udma3 udma4 udma5
+>> AdvancedPM=yes: disabled (255) WriteCache=enabled
+>> Drive conforms to: ATA/ATAPI-7 T13 1532D revision 0:  ATA/ATAPI-1 
+>> ATA/ATAPI-2 ATA/ATAPI-3 ATA/ATAPI-4 ATA/ATAPI-5 ATA/ATAPI-6 ATA/ATAPI-7
+>> 
+>> * signifies the current active mode
+>> 
+>> root@Arzamas:~#
+>> 
+>> 1M chunk consistently delivered best performance with:
+>> 
+>> o A plain dumb dd run
+>> o bonnie
+>> o two bonnie threads
+>> o iozone with 4 threads
+>> 
+>> My RA is set at 256 for the drives and 16384 for the array (128k and 8M 
+>> respectively)
+>> -
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 >> 
 >
-> I believe 8MB, but I am not sure I am looking at the right number:
+> Have you also tried tuning:
 >
-> root@Arzamas:~# hdparm -i /dev/sda
+> 1. nr_requests per each disk? I noticed 10-20 seconds faster speed (overall) 
+> with bonnie tests when I set all disks in the array to 512k.
+>  echo 512 > /sys/block/"$i"/queue/nr_requests
 >
-> /dev/sda:
+> 2. Also disable NCQ.
+>  echo 1 > /sys/block/"$i"/device/queue_depth
 >
-> Model=aMtxro7 2Y050M                          , FwRev=AY5RH10W, 
-> SerialNo=6YB6Z7E4
-> Config={ Fixed }
-> RawCHS=16383/16/63, TrkSize=0, SectSize=0, ECCbytes=4
-> BuffType=DualPortCache, BuffSize=7936kB, MaxMultSect=16, MultSect=?0?
-> CurCHS=16383/16/63, CurSects=16514064, LBA=yes, LBAsects=268435455
-> IORDY=on/off, tPIO={min:120,w/IORDY:120}, tDMA={min:120,rec:120}
-> PIO modes:  pio0 pio1 pio2 pio3 pio4
-> DMA modes:  mdma0 mdma1 mdma2
-> UDMA modes: udma0 udma1 udma2 udma3 udma4 udma5
-> AdvancedPM=yes: disabled (255) WriteCache=enabled
-> Drive conforms to: ATA/ATAPI-7 T13 1532D revision 0:  ATA/ATAPI-1 
-> ATA/ATAPI-2 ATA/ATAPI-3 ATA/ATAPI-4 ATA/ATAPI-5 ATA/ATAPI-6 ATA/ATAPI-7
->
-> * signifies the current active mode
->
-> root@Arzamas:~#
->
-> 1M chunk consistently delivered best performance with:
->
-> o A plain dumb dd run
-> o bonnie
-> o two bonnie threads
-> o iozone with 4 threads
->
-> My RA is set at 256 for the drives and 16384 for the array (128k and 8M 
-> respectively)
 > -
 > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 >
 
-Have you also tried tuning:
+Also per XFS:
 
-1. nr_requests per each disk? I noticed 10-20 seconds faster speed 
-(overall) with bonnie tests when I set all disks in the array to 512k.
-   echo 512 > /sys/block/"$i"/queue/nr_requests
+noatime,logbufs=8
 
-2. Also disable NCQ.
-   echo 1 > /sys/block/"$i"/device/queue_depth
+I am testing various options, so far the logbufs=8 option is detrimental, 
+making the entire bonnie++ run a little slower.  I believe the default is 
+2 and it uses 32k(?) buffers (shown below) if the blocksize is less than 
+16K I am trying with: noatime,logbufs=8,logbsize=262144 currently.
+
+        logbufs=value
+               Set  the  number  of in-memory log buffers.  Valid numbers range
+               from 2-8 inclusive.  The default value is 8 buffers for filesys-
+               tems  with  a blocksize of 64K, 4 buffers for filesystems with a
+               blocksize of 32K, 3 buffers for filesystems with a blocksize  of
+               16K, and 2 buffers for all other configurations.  Increasing the
+               number of buffers may increase performance on some workloads  at
+               the  cost  of the memory used for the additional log buffers and
+               their associated control structures.
 
