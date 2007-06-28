@@ -1,26 +1,51 @@
-From: Jon Nelson <jnelson-linux-raid@jamponi.net>
-Subject: Re: Fastest Chunk Size w/XFS For MD Software RAID = 1024k
-Date: Thu, 28 Jun 2007 08:27:54 -0500 (CDT)
-Message-ID: <Pine.LNX.4.64.0706280827170.5806@gheavc.wnzcbav.cig>
-References: <Pine.LNX.4.64.0706271918010.29111@p34.internal.lan>
- <46832E60.9000006@rabbit.us> <Pine.LNX.4.64.0706280406520.1406@p34.internal.lan>
- <46837056.4050306@rabbit.us> <20070628090551.GG4504@mea-ext.zmailer.org>
+From: Ian Dall <ian@beware.dropbear.id.au>
+Subject: Re: raid=noautodetect is apparently ignored?
+Date: Thu, 28 Jun 2007 23:06:33 +0930
+Message-ID: <1183037793.3462.14.camel@sibyl.beware.dropbear.id.au>
+References: <1_07062612032611867@cichlid.com>
+	 <200706271548.l5RFmn5x026702@cichlid.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20070628090551.GG4504@mea-ext.zmailer.org>
+In-Reply-To: <200706271548.l5RFmn5x026702@cichlid.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Matti Aarnio <matti.aarnio@zmailer.org>
-Cc: Peter Rabbitson <rabbit@rabbit.us>, Justin Piszcz <jpiszcz@lucidpixels.com>, linux-raid@vger.kernel.org, xfs@oss.sgi.com, Alan Piszcz <ap@solarrain.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, 28 Jun 2007, Matti Aarnio wrote:
+On Wed, 2007-06-27 at 08:48 -0700, Andrew Burgess wrote:
+> >>> Odd....
+> >>>  Maybe you have an initrd which is loading md as a module, then
+> >>>  running "raidautorun" or similar?
+> ..
+> >I suspect that the last comment is the clue, after pivotroot I bet it 
+> >runs another init, not from the boot/initrd images, but from the init.d 
+> >in the root filesystem.
 
-> I do have LVM in between the MD-RAID5 and XFS, so I did also align
-> the LVM to that  3 * 256k.
+You are absolutely correct. On Fedora core5, in rc.sysinit
 
-How did you align the LVM ?
+        echo "raidautorun /dev/md0" | nash --quiet
+        if [ -f /etc/mdadm.conf ]; then
+            /sbin/mdadm -A -s
+        fi
+        
 
+But my original observation was correct. The noautodetect was/is being
+ignored because (whenever) there is an initrd. FC5 doesn't support raid
+root partitions (mkinitrd doesn't put the right stuff in initrd), but
+FC7 tries to. I have upgraded and things are mostly correct. Albeit, FC7
+doesn't support my nested raid configuration and so it took some coaxing
+to get the the upgrade done and a hack to coax mkinitrd into doing the
+right thing.
 
---
-Jon Nelson <jnelson-linux-raid@jamponi.net>
+Putting mdadm.conf on a floppy disk plus a little intervention with a
+virtual console early in the upgrade process worked wonders.
+
+> One quick way to test this is to boot with "init=/bin/sh"
+> This lets all the initrd stuff run but nothing from the
+> root filesystem.
+
+Neat idea. I'll try and remember that for the future.
+
+-- 
+Ian Dall <ian@beware.dropbear.id.au>
