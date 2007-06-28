@@ -1,39 +1,40 @@
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: [linux-lvm] 2.6.22-rc4 XFS fails after hibernate/resume
-Date: Thu, 28 Jun 2007 17:27:34 +0200
-Message-ID: <200706281727.35430.rjw@sisk.pl>
-References: <46744065.6060605@dgreaves.com> <20070618145007.GE85884050@sgi.com> <20070627204924.GA4777@ucw.cz>
+From: Simon <simon.xhz@gmail.com>
+Subject: Re: spare not becoming active
+Date: Thu, 28 Jun 2007 12:06:09 -0400
+Message-ID: <4683DC71.3050200@gmail.com>
+References: <4682C9ED.9040503@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20070627204924.GA4777@ucw.cz>
-Content-Disposition: inline
+In-reply-to: <4682C9ED.9040503@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Pavel Machek <pavel@ucw.cz>
-Cc: David Chinner <dgc@sgi.com>, David Greaves <david@dgreaves.com>, David Robinson <zxvdr.au@gmail.com>, LVM general discussion and development <linux-lvm@redhat.com>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, linux-pm <linux-pm@lists.osdl.org>, LinuxRaid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wednesday, 27 June 2007 22:49, Pavel Machek wrote:
-> Hi!
+>     Number   Major   Minor   RaidDevice State
+>        0       0        0        0      removed
+>        1       8       34        1      active sync   /dev/sdc2
+>        2       0        0        2      removed
 > 
-> > FWIW, I'm on record stating that "sync" is not sufficient to quiesce an XFS
-> > filesystem for a suspend/resume to work safely and have argued that the only
-> 
-> Hmm, so XFS writes to disk even when its threads are frozen?
-> 
-> > safe thing to do is freeze the filesystem before suspend and thaw it after
-> > resume. This is why I originally asked you to test that with the other problem
-> 
-> Could you add that to the XFS threads if it is really required? They
-> do know that they are being frozen for suspend.
+>        3       8       82        -      spare   /dev/sdf2
+>        4       8       66        -      spare   /dev/sde2
+>        5       8       50        -      faulty spare
+>        6       8       18        -      faulty spare
 
-Well, do you remember the workqueues?  They are still nonfreezable.
+I was trying a couple things, but never got to change this status.
+At one point I stopped the array and restarted it, and it didn't work. (I did it 
+before, so i don't see why...)
 
-Greetings,
-Rafael
+# /sbin/mdadm -R /dev/md0
+mdadm: failed to run array /dev/md0: Invalid argument
+
+I'm starting to think the documentation i read was very outdated, or only 
+touched the subject in surface, can you guys recommend a good reading, like a 
+companion to the man page?
+
+Thanks,
+   Simon
 
 
--- 
-"Premature optimization is the root of all evil." - Donald Knuth
+
