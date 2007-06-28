@@ -1,56 +1,50 @@
-From: David Chinner <dgc@sgi.com>
-Subject: Re: Fastest Chunk Size w/XFS For MD Software RAID = 1024k
-Date: Fri, 29 Jun 2007 08:05:37 +1000
-Message-ID: <20070628220537.GC31489@sgi.com>
-References: <Pine.LNX.4.64.0706271918010.29111@p34.internal.lan> <46832E60.9000006@rabbit.us> <Pine.LNX.4.64.0706280406520.1406@p34.internal.lan> <46837056.4050306@rabbit.us> <Pine.LNX.4.64.0706280426500.1406@p34.internal.lan>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: [linux-pm] Re: [linux-lvm] 2.6.22-rc4 XFS fails after hibernate/resume
+Date: Fri, 29 Jun 2007 00:16:44 +0200
+Message-ID: <200706290016.45719.rjw@sisk.pl>
+References: <46744065.6060605@dgreaves.com> <200706281727.35430.rjw@sisk.pl> <20070628220045.GA4521@elf.ucw.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20070628220045.GA4521@elf.ucw.cz>
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.64.0706280426500.1406@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: Peter Rabbitson <rabbit@rabbit.us>, linux-raid@vger.kernel.org, xfs@oss.sgi.com, Alan Piszcz <ap@solarrain.com>
+To: Pavel Machek <pavel@ucw.cz>
+Cc: David Chinner <dgc@sgi.com>, linux-pm <linux-pm@lists.osdl.org>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, LinuxRaid <linux-raid@vger.kernel.org>, LVM general discussion and development <linux-lvm@redhat.com>, David Robinson <zxvdr.au@gmail.com>, David Greaves <david@dgreaves.com>, Oleg Nesterov <oleg@tv-sign.ru>
 List-Id: linux-raid.ids
 
-On Thu, Jun 28, 2007 at 04:27:15AM -0400, Justin Piszcz wrote:
+On Friday, 29 June 2007 00:00, Pavel Machek wrote:
+> On Thu 2007-06-28 17:27:34, Rafael J. Wysocki wrote:
+> > On Wednesday, 27 June 2007 22:49, Pavel Machek wrote:
+> > > Hi!
+> > > 
+> > > > FWIW, I'm on record stating that "sync" is not sufficient to quiesce an XFS
+> > > > filesystem for a suspend/resume to work safely and have argued that the only
+> > > 
+> > > Hmm, so XFS writes to disk even when its threads are frozen?
+> > > 
+> > > > safe thing to do is freeze the filesystem before suspend and thaw it after
+> > > > resume. This is why I originally asked you to test that with the other problem
+> > > 
+> > > Could you add that to the XFS threads if it is really required? They
+> > > do know that they are being frozen for suspend.
+> > 
+> > Well, do you remember the workqueues?  They are still nonfreezable.
 > 
-> 
-> On Thu, 28 Jun 2007, Peter Rabbitson wrote:
-> 
-> >Justin Piszcz wrote:
-> >>mdadm --create \
-> >>      --verbose /dev/md3 \
-> >>      --level=5 \
-> >>      --raid-devices=10 \
-> >>      --chunk=1024 \
-> >>      --force \
-> >>      --run
-> >>      /dev/sd[cdefghijkl]1
-> >>
-> >>Justin.
-> >
-> >Interesting, I came up with the same results (1M chunk being superior) 
-> >with a completely different raid set with XFS on top:
-> >
-> >mdadm	--create \
-> >	--level=10 \
-> >	--chunk=1024 \
-> >	--raid-devices=4 \
-> >	--layout=f3 \
-> >	...
-> >
-> >Could it be attributed to XFS itself?
+> Oops, that would explain it :-(. Can we make XFS stop using them?
 
-More likely it's related to the I/O size being sent to the disks. The larger
-the chunk size, the larger the I/o hitting each disk. I think the maximum I/O
-size is 512k ATM on x86(_64), so a chunk of 1MB will guarantee that there are
-maximally sized I/Os being sent to the disk....
+I'm afraid that we can't.
 
-Cheers,
+There are two solutions possible, IMO.  One would be to make these workqueues
+freezable, which is possible, but hacky and Oleg didn't like that very much.
+The second would be to freeze XFS from within the hibernation code path,
+using freeze_bdev().
 
-Dave.
+Greetings,
+Rafael
+
+
 -- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+"Premature optimization is the root of all evil." - Donald Knuth
