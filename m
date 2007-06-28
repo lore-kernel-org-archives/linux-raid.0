@@ -1,21 +1,37 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: XFS mount option performance on Linux Software RAID 5
-Date: Thu, 28 Jun 2007 12:31:22 -0400 (EDT)
-Message-ID: <Pine.LNX.4.64.0706281230091.2402@p34.internal.lan>
+From: Pavel Machek <pavel@ucw.cz>
+Subject: Re: [linux-pm] Re: [linux-lvm] 2.6.22-rc4 XFS fails after hibernate/resume
+Date: Fri, 29 Jun 2007 00:00:45 +0200
+Message-ID: <20070628220045.GA4521@elf.ucw.cz>
+References: <46744065.6060605@dgreaves.com> <20070618145007.GE85884050@sgi.com> <20070627204924.GA4777@ucw.cz> <200706281727.35430.rjw@sisk.pl>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: xfs@oss.sgi.com, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932192AbXF1WBV@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <200706281727.35430.rjw@sisk.pl>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: David Chinner <dgc@sgi.com>, linux-pm <linux-pm@lists.osdl.org>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, LinuxRaid <linux-raid@vger.kernel.org>, LVM general discussion and development <linux-lvm@redhat.com>, David Robinson <zxvdr.au@gmail.com>, David Greaves <david@dgreaves.com>
 List-Id: linux-raid.ids
 
+On Thu 2007-06-28 17:27:34, Rafael J. Wysocki wrote:
+> On Wednesday, 27 June 2007 22:49, Pavel Machek wrote:
+> > Hi!
+> > 
+> > > FWIW, I'm on record stating that "sync" is not sufficient to quiesce an XFS
+> > > filesystem for a suspend/resume to work safely and have argued that the only
+> > 
+> > Hmm, so XFS writes to disk even when its threads are frozen?
+> > 
+> > > safe thing to do is freeze the filesystem before suspend and thaw it after
+> > > resume. This is why I originally asked you to test that with the other problem
+> > 
+> > Could you add that to the XFS threads if it is really required? They
+> > do know that they are being frozen for suspend.
+> 
+> Well, do you remember the workqueues?  They are still nonfreezable.
 
-Still reviewing but it appears 8 + 256k looks good.
-
-p34-noatime-logbufs=2-lbsize=256k,15696M,78172.3,99,450320,86.6667,178683,29,79808,99,565741,42.3333,610.067,0,16:100000:16/64,2362,19.6667,15751.7,46,3993.33,22,2545.67,24.3333,13976,41,3781.33,28.6667
-p34-noatime-logbufs=8-lbsize=256k,15696M,78238,99,455532,86.6667,182382,30,79741.7,99,571631,43,597.633,0,16:100000:16/64,3421,29,12130,38.3333,5943.33,33,3671.33,35.6667,13521.3,41.3333,5162.33,38.3333
-p34-noatime-logbufs=8-lbsize=default,15696M,77872,98.6667,438661,86.6667,179848,29.3333,79368,99,555999,42,632.733,0.333333,16:100000:16/64,2090,17.6667,11183,33,3922.67,23,2271.33,22.3333,11709,35,3391.33,26.3333
-p34-noatime-only,15696M,77473,99,449689,86.6667,176960,29.3333,80186.3,99,568503,42.6667,592.633,0,16:100000:16/64,2102,18,15935.3,44.6667,3825.67,22.3333,2353,23.6667,9727.33,29.3333,3265,25.6667
-
-http://home.comcast.net/~jpiszcz/chunk/logbufs.html
-
+Oops, that would explain it :-(. Can we make XFS stop using them?
+									Pavel
+-- 
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
