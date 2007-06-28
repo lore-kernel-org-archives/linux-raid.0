@@ -1,116 +1,87 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
+From: Matti Aarnio <matti.aarnio@zmailer.org>
 Subject: Re: Fastest Chunk Size w/XFS For MD Software RAID = 1024k
-Date: Thu, 28 Jun 2007 04:46:19 -0400 (EDT)
-Message-ID: <Pine.LNX.4.64.0706280444270.1406@p34.internal.lan>
-References: <Pine.LNX.4.64.0706271918010.29111@p34.internal.lan>
- <46832E60.9000006@rabbit.us> <Pine.LNX.4.64.0706280406520.1406@p34.internal.lan>
- <46837056.4050306@rabbit.us> <Pine.LNX.4.64.0706280426500.1406@p34.internal.lan>
- <46837307.20005@rabbit.us> <Pine.LNX.4.64.0706280441450.1406@p34.internal.lan>
+Date: Thu, 28 Jun 2007 12:05:51 +0300
+Message-ID: <20070628090551.GG4504@mea-ext.zmailer.org>
+References: <Pine.LNX.4.64.0706271918010.29111@p34.internal.lan> <46832E60.9000006@rabbit.us> <Pine.LNX.4.64.0706280406520.1406@p34.internal.lan> <46837056.4050306@rabbit.us>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0706280441450.1406@p34.internal.lan>
+Content-Disposition: inline
+In-Reply-To: <46837056.4050306@rabbit.us>
 Sender: linux-raid-owner@vger.kernel.org
 To: Peter Rabbitson <rabbit@rabbit.us>
-Cc: linux-raid@vger.kernel.org
+Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, linux-raid@vger.kernel.org, xfs@oss.sgi.com, Alan Piszcz <ap@solarrain.com>
 List-Id: linux-raid.ids
 
+On Thu, Jun 28, 2007 at 10:24:54AM +0200, Peter Rabbitson wrote:
+> Interesting, I came up with the same results (1M chunk being superior) 
+> with a completely different raid set with XFS on top:
+> 
+> mdadm	--create \
+> 	--level=10 \
+> 	--chunk=1024 \
+> 	--raid-devices=4 \
+> 	--layout=f3 \
+> 	...
+> 
+> Could it be attributed to XFS itself?
+
+Sort of..
+
+ /dev/md4:
+         Version : 00.90.03
+      Raid Level : raid5
+    Raid Devices : 4
+   Total Devices : 4
+ Preferred Minor : 4
+ 
+  Active Devices : 4
+ Working Devices : 4
+
+          Layout : left-symmetric
+      Chunk Size : 256K
+
+This means there are 3x 256k for the user data..
+Now I had to carefully tune the XFS  bsize/sunit/swidth  to match that:
+
+ meta-data=/dev/DataDisk/lvol0    isize=256    agcount=32, agsize=7325824 blks
+          =                       sectsz=512   attr=1
+ data     =                       bsize=4096   blocks=234426368, imaxpct=25
+          =                       sunit=64     swidth=192 blks, unwritten=1
+ ...
+
+That is, 4k * 64 = 256k,   and   64 * 3 = 192
+With that, bulk writing on the file system runs without need to
+read back blocks of disk-space to calculate RAID5 parity data because
+the filesystem's idea of block does not align with RAID5 surface.
+
+I do have LVM in between the MD-RAID5 and XFS, so I did also align
+the LVM to that  3 * 256k.
+
+Doing this alignment thing did boost write performance by nearly
+a factor of 2 from mkfs.xfs with default parameters.
 
 
-On Thu, 28 Jun 2007, Justin Piszcz wrote:
+With very wide RAID5, like the original question...  I would find it
+very surprising if the alignment of upper layers to MD-RAID level
+would not be important there as well.
 
->
->
-> On Thu, 28 Jun 2007, Peter Rabbitson wrote:
->
->> Justin Piszcz wrote:
->>> 
->>> On Thu, 28 Jun 2007, Peter Rabbitson wrote:
->>> 
->>>> Interesting, I came up with the same results (1M chunk being superior) 
->>>> with a completely different raid set with XFS on top:
->>>> 
->>>> ...
->>>> 
->>>> Could it be attributed to XFS itself?
->>>> 
->>>> Peter
->>>> 
->>> 
->>> Good question, by the way how much cache do the drives have that you are 
->>> testing with?
->>> 
->> 
->> I believe 8MB, but I am not sure I am looking at the right number:
->> 
->> root@Arzamas:~# hdparm -i /dev/sda
->> 
->> /dev/sda:
->> 
->> Model=aMtxro7 2Y050M                          , FwRev=AY5RH10W, 
->> SerialNo=6YB6Z7E4
->> Config={ Fixed }
->> RawCHS=16383/16/63, TrkSize=0, SectSize=0, ECCbytes=4
->> BuffType=DualPortCache, BuffSize=7936kB, MaxMultSect=16, MultSect=?0?
->> CurCHS=16383/16/63, CurSects=16514064, LBA=yes, LBAsects=268435455
->> IORDY=on/off, tPIO={min:120,w/IORDY:120}, tDMA={min:120,rec:120}
->> PIO modes:  pio0 pio1 pio2 pio3 pio4
->> DMA modes:  mdma0 mdma1 mdma2
->> UDMA modes: udma0 udma1 udma2 udma3 udma4 udma5
->> AdvancedPM=yes: disabled (255) WriteCache=enabled
->> Drive conforms to: ATA/ATAPI-7 T13 1532D revision 0:  ATA/ATAPI-1 
->> ATA/ATAPI-2 ATA/ATAPI-3 ATA/ATAPI-4 ATA/ATAPI-5 ATA/ATAPI-6 ATA/ATAPI-7
->> 
->> * signifies the current active mode
->> 
->> root@Arzamas:~#
->> 
->> 1M chunk consistently delivered best performance with:
->> 
->> o A plain dumb dd run
->> o bonnie
->> o two bonnie threads
->> o iozone with 4 threads
->> 
->> My RA is set at 256 for the drives and 16384 for the array (128k and 8M 
->> respectively)
->> -
->> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->> 
->
-> Have you also tried tuning:
->
-> 1. nr_requests per each disk? I noticed 10-20 seconds faster speed (overall) 
-> with bonnie tests when I set all disks in the array to 512k.
->  echo 512 > /sys/block/"$i"/queue/nr_requests
->
-> 2. Also disable NCQ.
->  echo 1 > /sys/block/"$i"/device/queue_depth
->
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+Very small continuous writing does not make good use of disk mechanism,
+(seek time, rotation delay), so something in order of 128k-1024k will
+speed things up -- presuming that when you are writing, you are doing
+it many MB at the time.  Database transactions are a lot smaller, and
+are indeed harmed by such large megachunk-IO oriented surfaces.
 
-Also per XFS:
+RAID-levels 0 and 1 (and 10)  do not have the need of reading back parts
+of the surface because a subset of it was not altered by incoming write.
 
-noatime,logbufs=8
+Some DB application on top of the filesystem would benefit if we had
+a way for it to ask about these alignment boundary issues, so it could
+read whole alignment block even though it writes out only a subset of it.
+(Theory being that those same blocks would also exist in memory cache
+and thus be available for write-back parity calculation.)
 
-I am testing various options, so far the logbufs=8 option is detrimental, 
-making the entire bonnie++ run a little slower.  I believe the default is 
-2 and it uses 32k(?) buffers (shown below) if the blocksize is less than 
-16K I am trying with: noatime,logbufs=8,logbsize=262144 currently.
 
-        logbufs=value
-               Set  the  number  of in-memory log buffers.  Valid numbers range
-               from 2-8 inclusive.  The default value is 8 buffers for filesys-
-               tems  with  a blocksize of 64K, 4 buffers for filesystems with a
-               blocksize of 32K, 3 buffers for filesystems with a blocksize  of
-               16K, and 2 buffers for all other configurations.  Increasing the
-               number of buffers may increase performance on some workloads  at
-               the  cost  of the memory used for the additional log buffers and
-               their associated control structures.
+> Peter
 
+/Matti Aarnio
