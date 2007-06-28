@@ -1,51 +1,50 @@
-From: Ian Dall <ian@beware.dropbear.id.au>
-Subject: Re: raid=noautodetect is apparently ignored?
-Date: Thu, 28 Jun 2007 23:06:33 +0930
-Message-ID: <1183037793.3462.14.camel@sibyl.beware.dropbear.id.au>
-References: <1_07062612032611867@cichlid.com>
-	 <200706271548.l5RFmn5x026702@cichlid.com>
+From: Richard Michael <rmichael-raid@edgeofthenet.org>
+Subject: Re: mdadm usage: creating arrays with helpful names?
+Date: Thu, 28 Jun 2007 09:37:17 -0400
+Message-ID: <20070628133717.GA31927@server>
+References: <20070626235402.GA27852@server> <46821682.6050602@dgreaves.com> <20070627235739.GA30527@server> <46836D88.9010708@dgreaves.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200706271548.l5RFmn5x026702@cichlid.com>
+Content-Disposition: inline
+In-Reply-To: <46836D88.9010708@dgreaves.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: David Greaves <david@dgreaves.com>
+Cc: Richard Michael <rmichael-raid@edgeofthenet.org>, Neil Brown <neilb@suse.de>, LinuxRaid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wed, 2007-06-27 at 08:48 -0700, Andrew Burgess wrote:
-> >>> Odd....
-> >>>  Maybe you have an initrd which is loading md as a module, then
-> >>>  running "raidautorun" or similar?
-> ..
-> >I suspect that the last comment is the clue, after pivotroot I bet it 
-> >runs another init, not from the boot/initrd images, but from the init.d 
-> >in the root filesystem.
+On Thu, Jun 28, 2007 at 09:12:56AM +0100, David Greaves wrote:
+> (back on list for google's benefit ;) and because there are some good 
+> questions and I don't know all the answers... )
 
-You are absolutely correct. On Fedora core5, in rc.sysinit
+Thanks, I didn't realize I didn't 'reply-all' to stay on the list.
 
-        echo "raidautorun /dev/md0" | nash --quiet
-        if [ -f /etc/mdadm.conf ]; then
-            /sbin/mdadm -A -s
-        fi
-        
+> Hopefully it will snowball as people who use it then contribute back
+> <hint> ;)
 
-But my original observation was correct. The noautodetect was/is being
-ignored because (whenever) there is an initrd. FC5 doesn't support raid
-root partitions (mkinitrd doesn't put the right stuff in initrd), but
-FC7 tries to. I have upgraded and things are mostly correct. Albeit, FC7
-doesn't support my nested raid configuration and so it took some coaxing
-to get the the upgrade done and a hack to coax mkinitrd into doing the
-right thing.
+I will, I'm also keeping notes and changes to the man page. :)
 
-Putting mdadm.conf on a floppy disk plus a little intervention with a
-virtual console early in the upgrade process worked wonders.
+> --auto md
 
-> One quick way to test this is to boot with "init=/bin/sh"
-> This lets all the initrd stuff run but nothing from the
-> root filesystem.
+Ah. Thanks for the example(s).
 
-Neat idea. I'll try and remember that for the future.
+> >Also, when I use "--create /dev/nicename --auto=p1" (for example), I
+> >also see /dev/md_d126 created.  Why?  There is then a /sys/block/md_d126
+> >entry (presumably created by the md driver), but no /sys/block/nicename
+> >entry.  Why?
+> Not sure who creates this, mdadm or udev
 
--- 
-Ian Dall <ian@beware.dropbear.id.au>
+I'm guessing the kernel's md driver creates it; neither mdmadm nor udev
+(just as the kernel creates, for example, sd* disk entries in /sys, but
+udev creates the nice entries in /dev).
+
+> The code isn't that hard to read and you sound like you'd follow it if
+> you fancied a skim-read...
+
+I read it for the --create option to see who created /dev/mdXX. :) I'll
+take another look.
+
+Thanks David.
+
+Cheers.
