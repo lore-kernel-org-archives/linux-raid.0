@@ -1,7 +1,7 @@
 From: Justin Piszcz <jpiszcz@lucidpixels.com>
 Subject: Re: Fastest Chunk Size w/XFS For MD Software RAID = 1024k
-Date: Thu, 28 Jun 2007 04:38:19 -0400 (EDT)
-Message-ID: <Pine.LNX.4.64.0706280437170.1406@p34.internal.lan>
+Date: Thu, 28 Jun 2007 04:42:29 -0400 (EDT)
+Message-ID: <Pine.LNX.4.64.0706280441450.1406@p34.internal.lan>
 References: <Pine.LNX.4.64.0706271918010.29111@p34.internal.lan>
  <46832E60.9000006@rabbit.us> <Pine.LNX.4.64.0706280406520.1406@p34.internal.lan>
  <46837056.4050306@rabbit.us> <Pine.LNX.4.64.0706280426500.1406@p34.internal.lan>
@@ -70,10 +70,18 @@ On Thu, 28 Jun 2007, Peter Rabbitson wrote:
 >
 > My RA is set at 256 for the drives and 16384 for the array (128k and 8M 
 > respectively)
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 >
 
-8MB yup: BuffSize=7936kB.
+Have you also tried tuning:
 
-My read ahead is set to 64 megabytes and 16384 for the stripe_size_cache.
+1. nr_requests per each disk? I noticed 10-20 seconds faster speed 
+(overall) with bonnie tests when I set all disks in the array to 512k.
+   echo 512 > /sys/block/"$i"/queue/nr_requests
 
-Justin.
+2. Also disable NCQ.
+   echo 1 > /sys/block/"$i"/device/queue_depth
+
