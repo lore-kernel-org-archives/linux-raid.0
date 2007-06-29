@@ -1,27 +1,46 @@
 From: David Greaves <david@dgreaves.com>
-Subject: Re: [linux-pm] Re: [linux-lvm] 2.6.22-rc4 XFS fails after hibernate/resume
-Date: Fri, 29 Jun 2007 08:54:12 +0100
-Message-ID: <4684BAA4.4010905@dgreaves.com>
-References: <46744065.6060605@dgreaves.com> <200706281727.35430.rjw@sisk.pl> <20070628220045.GA4521@elf.ucw.cz> <200706290016.45719.rjw@sisk.pl> <20070629050024.GO31489@sgi.com> <4684B750.5030001@dgreaves.com> <20070629074322.GT31489@sgi.com>
+Subject: Re: [linux-lvm] 2.6.22-rc5 XFS fails after hibernate/resume
+Date: Fri, 29 Jun 2007 09:20:45 +0100
+Message-ID: <4684C0DD.4080702@dgreaves.com>
+References: <46744065.6060605@dgreaves.com> <4674645F.5000906@gmail.com> <46751D37.5020608@dgreaves.com> <4676390E.6010202@dgreaves.com> <20070618145007.GE85884050@sgi.com> <4676D97E.4000403@dgreaves.com> <4677A0C7.4000306@dgreaves.com> <4677A596.7090404@gmail.com> <4677E496.3080506@dgreaves.com> <4678DF56.1020903@gmail.com> <467ABE25.7060303@dgreaves.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20070629074322.GT31489@sgi.com>
+In-Reply-To: <467ABE25.7060303@dgreaves.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Chinner <dgc@sgi.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Pavel Machek <pavel@ucw.cz>, linux-pm <linux-pm@lists.osdl.org>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, LinuxRaid <linux-raid@vger.kernel.org>, LVM general discussion and development <linux-lvm@redhat.com>, David Robinson <zxvdr.au@gmail.com>, Oleg Nesterov <oleg@tv-sign.ru>
+To: Tejun Heo <htejun@gmail.com>, David Chinner <dgc@sgi.com>
+Cc: David Robinson <zxvdr.au@gmail.com>, LVM general discussion and development <linux-lvm@redhat.com>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, linux-pm <linux-pm@lists.osdl.org>, LinuxRaid <linux-raid@vger.kernel.org>, "Rafael J. Wysocki" <rjw@sisk.pl>
 List-Id: linux-raid.ids
 
-David Chinner wrote:
-> On Fri, Jun 29, 2007 at 08:40:00AM +0100, David Greaves wrote:
->> What happens if a filesystem is frozen and I hibernate?
->> Will it be thawed when I resume?
-> 
-> If you froze it yourself, then you'll have to thaw it yourself.
+David Greaves wrote:
+> been away, back now...
+again...
 
-So hibernate will not attempt to re-freeze a frozen fs and, during resume, it 
-will only thaw filesystems that were frozen by the suspend?
+David Greaves wrote:
+> When I move the swap/resume partition to a different controller (ie when 
+> I broke the / mirror and used the freed space) the problem seems to go 
+> away.
+No, it's not gone away - but it's taking longer to show up.
+I can try and put together a test loop that does work, hibernates, resumes and 
+repeats but since I know it crashes at some point there doesn't seem much point 
+unless I'm looking for something.
+There's not much in the logs - is there any other instrumentation that people 
+could suggest?
+DaveC, given this is happening without (obvious) libata errors do you think it 
+may be something in the XFS/md/hibernate area?
+
+If there's anything to be tried then I'll also move to 2.6.22-rc6.
+
+
+ > Tejun Heo wrote:
+ >> It's really weird tho.  The PHY RDY status changed events are coming
+ >> from the device which is NOT used while resuming
+
+There is an obvious problem there though Tejun (the errors even when sda isn't 
+involved in the OS boot) - can I start another thread about that issue/bug 
+later? I need to reshuffle partitions so I'd rather get the hibernate working 
+first and then go back to it if that's OK?
 
 David
 
