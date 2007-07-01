@@ -1,45 +1,45 @@
-From: Maurice Hilarius <maurice@harddata.com>
-Subject: best way to create RAID10 on an CentOS5 install
-Date: Sat, 30 Jun 2007 02:05:30 -0600
-Message-ID: <46860ECA.7050707@harddata.com>
+From: Michael Frotscher <infomails@tronserver.dyndns.org>
+Subject: RAID5 not being reassembled correctly after device swap
+Date: Sun, 1 Jul 2007 23:21:48 +0200
+Message-ID: <200707012321.48346.infomails@tronserver.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: LinuxRaid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello all again.
+Hello RAID-Experts,
 
-Extending from an earlier question:
-"deliberately degrading RAID1 to a single disk, then back again"
+I have three RAID5 consisting of different partitions on 3 disks (Debian 
+stable) running the root-filesystem on a md (/boot is a separate non-raid 
+partition) which is running rather nicely. For convenience I plugged all 
+drives into the first ide controller making them hda, hdb and hdc. So far, so 
+good. The partitions are flagged "fd", i.e. Linux raid autodetect.
 
-I got some useful answers, which I appreciate.
+As I have another builtin-ide-controller onboard, I'd like to distribute the 
+disks for performance reasons, moving hdb to hde and hdc to hdg. The arrays 
+would then consist of drives hda, hde and hdg.
 
-Taking this the next step, I want to create a RAID10 using 4 disks on a
-CentOS install
-I also want to be able to stop and remove a pair of disks periodically ,
-so I ma y exchange them as backup media.
-Then add new disks and re-start it.
+This should not be a problem, as the arrays should assemble themselves using 
+the superblocks on the partitions, shouldn't it? 
 
-First challenge I see is the actual RAID10 creation in the install.
+However, when I switch one drive (hdc), the array starts degraded with two 
+drives present because it is still looking for hdc, which of course now is 
+hdg. This shouldn't be happening. 
 
-Second challenge is the syntax to stop the (correct) pair of disks and
-remove them, then re-add them and restart the array so that is re-synchs.
+Well, then I re-added hdg to the degraded array, which went well and the array 
+rebuilded itself. I now had healthy arrays consisting of hda, hdb and hdg. 
+But after a reboot the array was degraded again and the system wanted its hdc 
+drive.
 
-Can anyone lend me some syntax and tips please?
+And yes, I edited /boot/grub/device.map and changed hdc to hdg, so that can't 
+be the reason.
 
-
+I seem to be missing something here, but what is it?
 -- 
-
-With our best regards,
-
-
-Maurice W. Hilarius        Telephone: 01-780-456-9771
-Hard Data Ltd.  FAX:       01-780-456-9772
-11060 - 166 Avenue         email:maurice@harddata.com
-Edmonton, AB, Canada       http://www.harddata.com/
-   T5X 1Y3
-
-
+YT,
+Michael
