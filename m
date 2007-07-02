@@ -1,52 +1,29 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: RAID5 not being reassembled correctly after device swap
-Date: Mon, 2 Jul 2007 08:12:14 +1000
-Message-ID: <18056.9918.537787.152462@notabene.brown>
-References: <200707012321.48346.infomails@tronserver.dyndns.org>
+From: jahammonds prost <gmitch64@yahoo.com>
+Subject: RAID5 Expansion
+Date: Sun, 1 Jul 2007 18:16:14 -0700 (PDT)
+Message-ID: <5375.21564.qm@web55809.mail.re3.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Michael Frotscher on Sunday July 1
 Sender: linux-raid-owner@vger.kernel.org
-To: Michael Frotscher <infomails@tronserver.dyndns.org>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sunday July 1, infomails@tronserver.dyndns.org wrote:
-> Hello RAID-Experts,
-> 
-> I have three RAID5 consisting of different partitions on 3 disks (Debian 
-> stable) running the root-filesystem on a md (/boot is a separate non-raid 
-> partition) which is running rather nicely. For convenience I plugged all 
-> drives into the first ide controller making them hda, hdb and hdc. So far, so 
-> good. The partitions are flagged "fd", i.e. Linux raid autodetect.
-> 
-> As I have another builtin-ide-controller onboard, I'd like to distribute the 
-> disks for performance reasons, moving hdb to hde and hdc to hdg. The arrays 
-> would then consist of drives hda, hde and hdg.
-> 
-> This should not be a problem, as the arrays should assemble themselves using 
-> the superblocks on the partitions, shouldn't it? 
-> 
-> However, when I switch one drive (hdc), the array starts degraded with two 
-> drives present because it is still looking for hdc, which of course now is 
-> hdg. This shouldn't be happening. 
-> 
-> Well, then I re-added hdg to the degraded array, which went well and the array 
-> rebuilded itself. I now had healthy arrays consisting of hda, hdb and hdg. 
-> But after a reboot the array was degraded again and the system wanted its hdc 
-> drive.
-> 
-> And yes, I edited /boot/grub/device.map and changed hdc to hdg, so that can't 
-> be the reason.
-> 
-> I seem to be missing something here, but what is it?
+I've just finished adding some extra disks to my server, and I've got a couple of questions I can't quite work out...
 
-Kernel logs from the boot would help here.
-Maybe /etc/mdadm/mdadm.conf lists "device=...." where it shouldn't.
-Maybe the other IDE controller uses a module that it loaded late.
-Logs would help.
 
-NeilBrown
-<
+I've just added 3 more 320Gb drives into the server, and I want to expand my existing md0 with /dev/sd1 and /dev/hde1. Do I need to do these individually, or can they both be done at the same time. Also can you (and is there any point in) changing the stripe size? most of the files on this disk will be 350Mb+ video files.
+
+
+Also, when I started building this server, I was using a mix of 300Gb and 320Gb drives, so for the 320Gb drives, I made /dev/hda2 with the remaining 20Gb. As time has gone on, I've replaced all the 300Gb drives with 320Gb ones. Is there any easy way to pull these extra 20Gb partitions into the main array? I've got them set as /dev/md1 at the moment, and I use lvm, so I could pull them into my filesystem that way. Killing /dev/md1 is an option (I can back up the data elsewhere). Killing /dev/md0 isn't.. All the data is backed up, but it would be a full weekend of swapping DVDs in and out to restore it.
+
+Thanks.
+
+
+Graham
+
+
+      ___________________________________________________________
+Yahoo! Answers - Got a question? Someone out there knows the answer. Try it
+now.
+http://uk.answers.yahoo.com/ 
