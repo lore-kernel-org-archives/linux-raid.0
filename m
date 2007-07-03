@@ -1,72 +1,64 @@
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: [linux-lvm] 2.6.22-rc5 XFS fails after hibernate/resume
-Date: Mon, 2 Jul 2007 22:15:11 +0200
-Message-ID: <200707022215.12200.rjw@sisk.pl>
-References: <46744065.6060605@dgreaves.com> <200707021712.50323.rjw@sisk.pl> <4689298B.2000407@dgreaves.com>
+From: "Michael Schwarz" <mschwarz@multitool.net>
+Subject: Behavior of mdadm depending on user
+Date: Mon, 2 Jul 2007 21:10:04 -0500 (CDT)
+Message-ID: <4168.72.21.237.163.1183428604.squirrel@www.multitool.net>
+Reply-To: mschwarz@multitool.net
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4689298B.2000407@dgreaves.com>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: David Greaves <david@dgreaves.com>
-Cc: Tejun Heo <htejun@gmail.com>, David Chinner <dgc@sgi.com>, David Robinson <zxvdr.au@gmail.com>, LVM general discussion and development <linux-lvm@redhat.com>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, linux-pm <linux-pm@lists.osdl.org>, LinuxRaid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Monday, 2 July 2007 18:36, David Greaves wrote:
-> Rafael J. Wysocki wrote:
-> > On Monday, 2 July 2007 16:32, David Greaves wrote:
-> >> Rafael J. Wysocki wrote:
-> >>> On Monday, 2 July 2007 12:56, Tejun Heo wrote:
-> >>>> David Greaves wrote:
-> >>>>>> Tejun Heo wrote:
-> >>>>>>> It's really weird tho.  The PHY RDY status changed events are coming
-> >>>>>>> from the device which is NOT used while resuming
-> >>>>> There is an obvious problem there though Tejun (the errors even when sda
-> >>>>> isn't involved in the OS boot) - can I start another thread about that
-> >>>>> issue/bug later? I need to reshuffle partitions so I'd rather get the
-> >>>>> hibernate working first and then go back to it if that's OK?
-> >>>> Yeah, sure.  The problem is that we don't know whether or how those two
-> >>>> are related.  It would be great if there's a way to verify memory image
-> >>>> read from hibernation is intact.  Rafael, any ideas?
-> >>> Well, s2disk has an option to compute an MD5 checksum of the image during
-> >>> the hibernation and verify it while reading the image.
-> >> (Assuming you mean the mainline version)
-> >>
-> >> Sounds like a good think to try next...
-> >> Couldn't see anything on this in ../Documentation/power/*
-> >> How do I enable it?
-> > 
-> > Add 'compute checksum = y' to the s2disk's configuration file.
-> 
-> Ah, right - that's uswsusp isn't it? Which isn't what I'm having problems with 
-> AFAIK?
-> 
-> My suspend procedure is:
-> 
-> xfs_freeze -f /scratch
-> sync
-> echo platform > /sys/power/disk
-> echo disk > /sys/power/state
-> xfs_freeze -u /scratch
-> 
-> Which should work (actually it should work without the sync/xfs_freeze too).
-> 
-> So to debug the problem I'd like to minimally extend this process rather than 
-> replace it with another approach.
+This ia just a couple of quick questions.
 
-Well, this is not entirely "another approach".  Only the saving of the image is
-done differently, the rest is the same.
+I'm charged with developing a prototype application that will assemble and
+mount a hot-swapped drive array, mount it, transfer files to it, unmount it,
+and stop the array. And it is an application delivered by a local webserver
+(don't ask).
 
-> I take it there isn't an 'echo y > /sys/power/do_image_checksum'?
+I don't want to do any of the incredibly stupid acts of making madadm and
+mount/umount setuid root, nor do I want to run the webserver as root.
 
-No, there is not anything like that.
+Instead, I took the slightly less stupid approach of invoking madadm and
+mount/umount with a hardcoded C application that is setuid root. (We can
+debate the stupidity of this -- I know it isn't best, but it is fast and less
+stupid than the alternatives presented above).
 
-Greetings,
-Rafael
+An important part of the functionality uses the array's UUID to recognize the
+owner and account of the array. (Yes, a password not stored on the array is
+still required).
 
+Anyways, my little C wrapper works. But to get the UUID of the array I thought
+I could just run "mdadm" as an unprivledged user, provided that user had rw
+access to the md device. This turns out not to be the case. If I run:
+
+mdadm -D /dev/md5
+
+as the non-priv user, it tells me /dev/md5 doesn't appear to be an MD device.
+The user has group rw permission on the device.
+
+Run the same thing as root and you get all the info, including UUID.
+
+So: Two quick questions:
+
+1) Is it possible for a non-root user to get the UUID of an active MD drive
+array with "mdadm."
+
+2) If not, is there another way (or better way) to get the UUID of an active
+MD drive array? I did a cursory poke around /proc but didn't see anything.
+
+Obviously, feel free to tell me to RTFM or RTFC, but a direction to the
+appropriate FM or FC (effing code) would be most welcome.
+
+In any case, a big "thank you" to everyone who works on Linux software RAID. I
+have had a complete BLAST using the feature. I now routinely make 2-3 USB
+drive RAID 0 arrays just for fun (and faster write speed!).
+
+It is a very nice feature and set of tools!
 
 -- 
-"Premature optimization is the root of all evil." - Donald Knuth
+Michael Schwarz
+
+
