@@ -1,41 +1,49 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: Fastest Chunk Size w/XFS For MD Software RAID = 1024k
-Date: Tue, 3 Jul 2007 04:42:53 -0400 (EDT)
-Message-ID: <Pine.LNX.4.64.0707030442080.19015@p34.internal.lan>
-References: <Pine.LNX.4.64.0706271918010.29111@p34.internal.lan>
- <46832E60.9000006@rabbit.us> <Pine.LNX.4.64.0706280406520.1406@p34.internal.lan>
- <46837056.4050306@rabbit.us> <Pine.LNX.4.64.0706280426500.1406@p34.internal.lan>
- <46837307.20005@rabbit.us> <Pine.LNX.4.64.0706280437170.1406@p34.internal.lan>
- <Pine.LNX.4.64.0707022120380.2378@filesrv1.baby-dragons.com>
+From: "Johny Mail list" <maillist.johny@gmail.com>
+Subject: Re: Linux Software RAID is really RAID?
+Date: Tue, 3 Jul 2007 14:17:31 +0200
+Message-ID: <cd98e0260707030517y1fbb60ban29063439f2665834@mail.gmail.com>
+References: <cd98e0260706261043t32fe6609ye1e4e252c722358c@mail.gmail.com>
+	 <46815C3F.6090204@wasp.net.au> <468A05A4.60006@gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0707022120380.2378@filesrv1.baby-dragons.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
-Cc: linux-raid maillist <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <468A05A4.60006@gmail.com>
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Brad Campbell <brad@wasp.net.au>, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-raid.ids
 
-
-
-On Mon, 2 Jul 2007, Mr. James W. Laferriere wrote:
-
-> 	Hello Justin (& all) ,
+2007/7/3, Tejun Heo <htejun@gmail.com>:
+> Brad Campbell wrote:
+> > Johny Mail list wrote:
+> >> Hello list,
+> >> I have a little question about software RAID on Linux.
+> >> I have installed Software Raid on all my SC1425 servers DELL by
+> >> believing that the md raid was a strong driver.
+> >> And recently i make some test on a server and try to view if the RAID
+> >> hard drive power failure work fine, so i power up my server and after
+> >> booting and the prompt appear I disconnected the power cable of my
+> >> SATA hard drive. Normaly the MD should eleminate the failure hard
+> >> drive of the logical drive it build, and the server continue to work
+> >> fine like nothing happen. Oddly the server stop to respond and i get
+> >> this messages :
+> >> ata4.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+> >> ata4.00: cmd e7/00:00:00:00:00/00:00:00:00:00/a0 tag 0 cdb 0x0 data 0
+> >>              res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+> >> ata4: port is slow to respond, please be patient (Status 0xd0)
+> >> ata4: port failed to respond (30sec, Status 0xd0)
+> >> ata4: soft resetting port
+> >>
+> >> After that my system is frozen.
 >
->> 
->> My read ahead is set to 64 megabytes and 16384 for the stripe_size_cache.
+> How hard is it frozen?  Can you blink the Numlock LED?
 >
-> 	Might you know of a tool for acquiring these (*) parameters for a 
-> scsi drive ?  hdrarm really doesn't like real scsi drives so that doesn't 
-> seem to work for me .
+> --
+> tejun
 >
-> (*)	"BuffType=DualPortCache, BuffSize=7936kB,"  Stolen from above .
->
->
-> 		Tia ,  JimL
-
-Best bet is to benchmark and test, try 128,256,512,1024 for the chunk 
-size, also if your drives are on the PCI bus, it probably won't matter 
-much.
-
-Justin.
+Hello tejun
+It froze just when the "ata4: port failed to respond (30sec, Status
+0xd0)" is printed and yes my Numblock LED not respond when i press the
+numlock key.
