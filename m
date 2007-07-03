@@ -1,83 +1,69 @@
-From: Michael Frotscher <infomails@tronserver.dyndns.org>
-Subject: Re: RAID5 not being reassembled correctly after device swap
-Date: Tue, 3 Jul 2007 21:29:10 +0200
-Message-ID: <200707032129.10787.infomails@tronserver.dyndns.org>
-References: <200707012321.48346.infomails@tronserver.dyndns.org> <200707031916.50502.infomails@tronserver.dyndns.org> <468A98D5.9090206@dgreaves.com>
+From: Simon <simon.xhz@gmail.com>
+Subject: Re: spare not becoming active
+Date: Tue, 3 Jul 2007 15:53:46 -0500
+Message-ID: <f7de5e030707031353o14c4a7bbjb2a270646f75fe54@mail.gmail.com>
+References: <4682C9ED.9040503@gmail.com> <4683DC71.3050200@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <468A98D5.9090206@dgreaves.com>
+In-Reply-To: <4683DC71.3050200@gmail.com>
 Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I forgot, in case it's of any help. 
-mdadm -D gives after reassembly:
+I got a ghost in my system!
 
-/dev/md3:
+Ok, I'm still having weird issues and as nobody replied, I'm still
+unsure how to proceed...
+Here, I tried reformating (dd'ed some zeros on the whole drives),
+repartitionning them.
+
+   Device Boot      Start         End      Blocks   Id  System
+/dev/sdb1               1           1         961   83  Linux
+/dev/sdb2               2        1015     1005888   fd  Linux raid autodetect
+
+I have 3 identical drives, fresh made, i issue the command:
+mdadm --create --verbose /dev/md1 --level=raid5 --raid-devices=3
+/dev/sdb2 /dev/sdc2 /dev/sdd2
+
+My system is a new install (nothing left in /etc, etc...), so I really
+don't get what's going on, check the output of several programs:
+
+/dev/md1:
         Version : 00.90.03
-  Creation Time : Sun Jan 14 21:17:53 2007
+  Creation Time : Tue Jul  3 16:29:38 2007
      Raid Level : raid5
-     Array Size : 20980736 (20.01 GiB 21.48 GB)
-    Device Size : 10490368 (10.00 GiB 10.74 GB)
+     Array Size : 2011648 (1964.83 MiB 2059.93 MB)
+  Used Dev Size : 1005824 (982.41 MiB 1029.96 MB)
    Raid Devices : 3
   Total Devices : 3
-Preferred Minor : 3
+Preferred Minor : 1
     Persistence : Superblock is persistent
 
-    Update Time : Tue Jul  3 21:21:53 2007
-          State : clean
- Active Devices : 3
+    Update Time : Tue Jul  3 16:31:05 2007
+          State : clean, degraded, recovering
+ Active Devices : 2
 Working Devices : 3
  Failed Devices : 0
-  Spare Devices : 0
+  Spare Devices : 1
 
          Layout : left-symmetric
-     Chunk Size : 4K
+     Chunk Size : 64K
 
-           UUID : 36bbe21d:f49e8b5d:f504154c:a6f12a51
-         Events : 0.6995604
+ Rebuild Status : 39% complete
 
-    Number   Major   Minor   RaidDevice State
-       0       3        3        0      active sync   /dev/hda3
-       1       3       67        1      active sync   /dev/hdb3
-       2      22        3        2      active sync   /dev/hdc3
-
-and after the next boot:
-
-/dev/md3:
-        Version : 00.90.03
-  Creation Time : Sun Jan 14 21:17:53 2007
-     Raid Level : raid5
-     Array Size : 20980736 (20.01 GiB 21.48 GB)
-    Device Size : 10490368 (10.00 GiB 10.74 GB)
-   Raid Devices : 3
-  Total Devices : 2
-Preferred Minor : 3
-    Persistence : Superblock is persistent
-
-    Update Time : Tue Jul  3 21:27:08 2007
-          State : clean, degraded
- Active Devices : 2
-Working Devices : 2
- Failed Devices : 0
-  Spare Devices : 0
-
-         Layout : left-symmetric
-     Chunk Size : 4K
-
-           UUID : 36bbe21d:f49e8b5d:f504154c:a6f12a51
-         Events : 0.6995718
+           UUID : 84aa4aaf:8b2c555e:3f9ae70d:2eedd5b3
+         Events : 0.4
 
     Number   Major   Minor   RaidDevice State
-       0       3        3        0      active sync   /dev/hda3
-       1       3       67        1      active sync   /dev/hdb3
-       2       0        0        2      removed
-
-Any ideas on why the drive keeps being removed?
--- 
-YT,
-Michael
+       0       8       18        0      active sync   /dev/sdb2
+       1       8       34        1      active sync   /dev/sdc2
+       3       8       50        2      spare rebuilding   /dev/sdd2
+================================================================================
+[dev   9,   1] /dev/md1         84AA4AAF.8B2C555E.3F9AE70D.2EEDD5B3 online
+[dev   8,  18] /dev/sdb2        84AA4AAF.8B2C555E.3F9AE70D.2EEDD5B3 good
+[dev   8,  34] /dev/sdc2        84AA4AAF.8B2C555E.3F9AE70D.2EEDD5B3 good
+[dev   ?,   ?] (unknown)        00000000.00000000.00000000.00000000 missing
+[dev   8,  50] /dev/sdd2        84AA4AAF.8B2C555E.3F9AE70D.2EEDD5B3 spare
