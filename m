@@ -1,38 +1,37 @@
-From: "Michael Schwarz" <mschwarz@multitool.net>
-Subject: Re: Behavior of mdadm depending on user
-Date: Tue, 3 Jul 2007 11:53:15 -0500 (CDT)
-Message-ID: <2077.72.21.237.163.1183481595.squirrel@www.multitool.net>
-References: <4168.72.21.237.163.1183428604.squirrel@www.multitool.net>
-    <1183466429.395.44.camel@sibyl.beware.dropbear.id.au>
-Reply-To: mschwarz@multitool.net
+From: Michael Frotscher <infomails@tronserver.dyndns.org>
+Subject: Re: RAID5 not being reassembled correctly after device swap
+Date: Tue, 3 Jul 2007 19:16:50 +0200
+Message-ID: <200707031916.50502.infomails@tronserver.dyndns.org>
+References: <200707012321.48346.infomails@tronserver.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1183466429.395.44.camel@sibyl.beware.dropbear.id.au>
+In-Reply-To: <200707012321.48346.infomails@tronserver.dyndns.org>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Ian Dall <ian@beware.dropbear.id.au>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-The problem with that approach is that it opens up the applications in
-question to *any parameters* unlike the setuid C program which hardcodes the
-parameters to the commands.
+Hello all,
 
-There is still a risk the binary may be modified, but it is lower than the
-risk an attacker might be able to execute arbitrary "mdadm" and "mount/umount"
-commands using sudo.
+I guess you can say that I'm at my wit's end. I really don't get it. An RAID 
+array is suppose to recognize its members purely by its uuid, isn't it? So 
+technically, I can remove a drive from one bus, reconnect it to another 
+giving it a new device name and the array should not even need to sync.
 
+Somehow it doesn't. Somehow the array remembers of which devices it's supposed 
+to be assembled and boots in degraded mode, funnily not always missing the 
+swapped drive.
+
+Suppose I lose a whole ide-controller and want to restart the box with a 
+seconday controller? That one would surely not have the devices hda through 
+hdd and my array would refuse to start.
+
+Does anyone have a suggestion of what I can try? Ok, the array runs fine as 
+long as it is connected to its original bus, but I really don't want to take 
+chances here.
 -- 
-Michael Schwarz
-
-> This isn't really an answer to your question, but isn't this an ideal
-> application for sudo? Make a shell script with the mdadm command(s) you
-> want. And set it up so apache or whatever your web server runs as able
-> to run your shell script as root without authentication.
->
-> Ian
-> --
-> Ian Dall <ian@beware.dropbear.id.au>
->
-
+YT,
+Michael
