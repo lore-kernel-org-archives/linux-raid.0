@@ -1,32 +1,38 @@
-From: David Greaves <david@dgreaves.com>
-Subject: Re: Proposed enhancement to mdadm:  Allow "--write-behind=" to be
- done	in grow mode.
-Date: Tue, 03 Jul 2007 15:03:10 +0100
-Message-ID: <468A571E.7040304@dgreaves.com>
-References: <1183038727.3792.9.camel@sibyl.beware.dropbear.id.au>	 <1183130939.4544.6.camel@sibyl.beware.dropbear.id.au> <1183468329.395.59.camel@sibyl.beware.dropbear.id.au>
+From: "Michael Schwarz" <mschwarz@multitool.net>
+Subject: Re: Behavior of mdadm depending on user
+Date: Tue, 3 Jul 2007 11:53:15 -0500 (CDT)
+Message-ID: <2077.72.21.237.163.1183481595.squirrel@www.multitool.net>
+References: <4168.72.21.237.163.1183428604.squirrel@www.multitool.net>
+    <1183466429.395.44.camel@sibyl.beware.dropbear.id.au>
+Reply-To: mschwarz@multitool.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1183468329.395.59.camel@sibyl.beware.dropbear.id.au>
+In-Reply-To: <1183466429.395.44.camel@sibyl.beware.dropbear.id.au>
 Sender: linux-raid-owner@vger.kernel.org
 To: Ian Dall <ian@beware.dropbear.id.au>
-Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Ian Dall wrote:
-> There doesn't seem to be any designated place to send bug reports and
-> feature requests to mdadm, so I hope I am doing the right thing by
-> sending it here.
-> 
-> I have a small patch to mdamd which allows the write-behind amount to be
-> set a array grow time (instead of currently only at grow or create
-> time). I have tested this fairly extensively on some arrays built out of
-> loop back devices, and once on a real live array. I haven't lot any data
-> and it seems to work OK, though it is possible I am missing something.
+The problem with that approach is that it opens up the applications in
+question to *any parameters* unlike the setuid C program which hardcodes the
+parameters to the commands.
 
-Sounds like a useful feature...
+There is still a risk the binary may be modified, but it is lower than the
+risk an attacker might be able to execute arbitrary "mdadm" and "mount/umount"
+commands using sudo.
 
-Did you test the bitmap cases you mentioned?
+-- 
+Michael Schwarz
 
-David
+> This isn't really an answer to your question, but isn't this an ideal
+> application for sudo? Make a shell script with the mdadm command(s) you
+> want. And set it up so apache or whatever your web server runs as able
+> to run your shell script as root without authentication.
+>
+> Ian
+> --
+> Ian Dall <ian@beware.dropbear.id.au>
+>
+
