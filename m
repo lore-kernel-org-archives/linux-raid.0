@@ -1,37 +1,34 @@
-From: Andi Kleen <andi@firstfloor.org>
-Subject: Re: [RFC PATCH 0/2] raid5: 65% sequential-write performance improvement, stripe-queue take2
-Date: 04 Jul 2007 13:41:26 +0200
-Message-ID: <p73wsxg2y6x.fsf@bingen.suse.de>
-References: <20070703231838.17500.34505.stgit@dwillia2-linux.ch.intel.com>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: RAID5 not being reassembled correctly after device swap
+Date: Wed, 04 Jul 2007 09:35:18 -0400
+Message-ID: <468BA216.40103@tmr.com>
+References: <200707012321.48346.infomails@tronserver.dyndns.org> <200707031916.50502.infomails@tronserver.dyndns.org> <468A98D5.9090206@dgreaves.com> <200707032129.10787.infomails@tronserver.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20070703231838.17500.34505.stgit@dwillia2-linux.ch.intel.com>
+In-Reply-To: <200707032129.10787.infomails@tronserver.dyndns.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: neilb@suse.de, raziebe@gmail.com, akpm@linux-foundation.org, davidsen@tmr.com, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+To: Michael Frotscher <infomails@tronserver.dyndns.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Dan Williams <dan.j.williams@intel.com> writes:
+Michael Frotscher wrote:
+> I forgot, in case it's of any help. 
+> mdadm -D gives after reassembly:
+>
+> [snip]
+>
+> Any ideas on why the drive keeps being removed?
+>   
+Do you see anything in dmesg which would indicate an error on the drive? 
+And could you share an "fdisk -l" output so we can see what the kernel 
+thinks is on the drive? My guess is that for some reason the device is 
+being considered unread, has the wrong partition type, or was low level 
+formatted on a Monday. Okay, that last is unlikely ;-)
 
-> The write performance numbers are better than I expected and would seem
-> to address the concerns raised in the thread "Odd (slow) RAID
-> performance"[2].  The read performance drop was not expected.  However,
-> the numbers suggest some additional changes to be made to the queuing
-> model.
-
-Have you considered supporting copy-xor in MD for non accelerated
-RAID? I've been looking at fixing the old dubious slow crufty x86 SSE
-XOR functions. One thing I discovered is that it seems fairly
-pointless to make them slower with cache avoidance when most of the data is
-copied before anyways. I think much more advantage could be gotten by
-supporting copy-xor because XORing during a copy should be nearly
-free.
-
-On the other hand ext3 write() also uses a cache avoiding copy now
-and for the XOR it would need to load the data from memory again.
-Perhaps this could be also optimized somehow (e.g. setting a flag
-somewhere and using a normal copy for the RAID-5 case)
-
--Andi
+-- 
+bill davidsen <davidsen@tmr.com>
+  CTO TMR Associates, Inc
+  Doing interesting things with small computers since 1979
 
