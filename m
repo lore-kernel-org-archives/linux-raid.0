@@ -1,160 +1,291 @@
-From: Michael Frotscher <infomails@tronserver.dyndns.org>
-Subject: Re: RAID5 not being reassembled correctly after device swap
-Date: Wed, 4 Jul 2007 18:31:13 +0200
-Message-ID: <200707041831.13393.infomails@tronserver.dyndns.org>
-References: <200707012321.48346.infomails@tronserver.dyndns.org> <200707032129.10787.infomails@tronserver.dyndns.org> <468B5E22.7080805@dgreaves.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: Linux Software RAID is really RAID?
+Date: Wed, 04 Jul 2007 14:56:09 -0400
+Message-ID: <468BED49.2030301@rtr.ca>
+References: <cd98e0260706261043t32fe6609ye1e4e252c722358c@mail.gmail.com>	 <46815C3F.6090204@wasp.net.au> <468A05A4.60006@gmail.com> <cd98e0260707030517y1fbb60ban29063439f2665834@mail.gmail.com> <468AD708.2010806@rtr.ca> <468AF5F8.9060703@gmail.com>
 Mime-Version: 1.0
-Content-Type: Multipart/Mixed;
-  boundary="Boundary-00=_Rt8iGcVd2EAGr9v"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <468B5E22.7080805@dgreaves.com>
+In-Reply-To: <468AF5F8.9060703@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Johny Mail list <maillist.johny@gmail.com>, Brad Campbell <brad@wasp.net.au>, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-raid.ids
 
---Boundary-00=_Rt8iGcVd2EAGr9v
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Tejun Heo wrote:
+> Mark Lord wrote:
+>> I believe he said it was ICH5 (different post/thread).
+>>
+>> My observation on ICH5 is that if one unplugs a drive,
+>> then the chipset/cpu locks up hard when toggling SRST
+>> in the EH code.
+>>
+>> Specifically, it locks up at the instruction
+>> which restores SRST back to the non-asserted state,
+>> which likely corresponds to the chipset finally actually
+>> sending a FIS to the drive.
+>>
+>> A hard(ware) lockup, not software.
+>> That's why Intel says ICH5 doesn't do hotplug.
+> 
+> OIC.  I don't think there's much left to do from the driver side then.
+> Or is there any workaround?
 
-On Wednesday 04 July 2007 10:45:22 David Greaves wrote:
+The workaround I have, for 2.6.18.8, is to provide an "offline()" method
+for ICH5 that polls for device present before attempting SRST.
 
-> mdadm --examine /dev/hd[abc]3
+I hope to eventually clean this up and submit it for you,
+after your existing polling-hp code goes upstream.
 
-I'll attach that as a file as it's quite lenghty. It is of the reassembled 
-array - if it helps, I can reboot again and provide the same with the 
-degraded array that exists after reboot.
+Here's my present hack (below).  Feel free to use/ignore.
 
-> And could you share an "fdisk -l" output
+***
 
-fdisk shows nothing unusual:
+Implement ICH5 chipset handling for drive hot insertion/removal.
+This cannot go upstream, as it conflicts with a more generic
+polled-hotplug framework that is currently in development.
 
-Disk /dev/hdc: 250.0 GB, 250059350016 bytes
-255 heads, 63 sectors/track, 30401 cylinders
-Units = cylinders of 16065 * 512 = 8225280 bytes
+Hot-inserted drives are automatically detected within a second or two,
+and are ready-to-use within 30 seconds or so.
 
-   Device Boot      Start         End      Blocks   Id  System
-/dev/hdc1               1           4       32098+  83  Linux
-/dev/hdc2               5          68      514080   fd  Linux raid autodetect
-/dev/hdc3              69        1374    10490445   fd  Linux raid autodetect
-/dev/hdc4            1375       24321   184321777+  fd  Linux raid autodetect
+Hot-removed drives are *not* noticed by the kernel until the next
+time they are accessed.  If you want this to happen quickly,
+then just launch a script like this from /etc/inittab at boot time:
 
-yes, the last partition does not extend to the end of the drive due to the 
-fact that hda is only a 200GB drive:
+   #!/bin/bash
+   ( while ( /bin/true ) ; do /sbin/hdparm -C /dev/sd[a-z] ; sleep 5 ; done ) &>/dev/null &
 
-Disk /dev/hda: 200.0 GB, 200049647616 bytes
-255 heads, 63 sectors/track, 24321 cylinders
-Units = cylinders of 16065 * 512 = 8225280 bytes
+Signed-off-by: Mark Lord <mlord@pobox.com>
+---
 
-   Device Boot      Start         End      Blocks   Id  System
-/dev/hda1   *           1           4       32098+  83  Linux
-/dev/hda2               5          68      514080   fd  Linux raid autodetect
-/dev/hda3              69        1374    10490445   fd  Linux raid autodetect
-/dev/hda4            1375       24321   184321777+  fd  Linux raid autodetect
-
-Thanks for the help everyone!
--- 
-YT,
-Michael
-
---Boundary-00=_Rt8iGcVd2EAGr9v
-Content-Type: text/plain;
-  charset="iso-8859-1";
-  name="md3-array.txt"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
-	filename="md3-array.txt"
-
-/dev/hda3:
-          Magic : a92b4efc
-        Version : 00.90.00
-           UUID : 36bbe21d:f49e8b5d:f504154c:a6f12a51
-  Creation Time : Sun Jan 14 21:17:53 2007
-     Raid Level : raid5
-    Device Size : 10490368 (10.00 GiB 10.74 GB)
-     Array Size : 20980736 (20.01 GiB 21.48 GB)
-   Raid Devices : 3
-  Total Devices : 3
-Preferred Minor : 3
-
-    Update Time : Wed Jul  4 18:24:59 2007
-          State : clean
- Active Devices : 3
-Working Devices : 3
- Failed Devices : 0
-  Spare Devices : 0
-       Checksum : fe26fd74 - correct
-         Events : 0.6996556
-
-         Layout : left-symmetric
-     Chunk Size : 4K
-
-      Number   Major   Minor   RaidDevice State
-this     0       3        3        0      active sync   /dev/hda3
-
-   0     0       3        3        0      active sync   /dev/hda3
-   1     1       3       67        1      active sync   /dev/hdb3
-   2     2      22        3        2      active sync   /dev/hdc3
-/dev/hdb3:
-          Magic : a92b4efc
-        Version : 00.90.00
-           UUID : 36bbe21d:f49e8b5d:f504154c:a6f12a51
-  Creation Time : Sun Jan 14 21:17:53 2007
-     Raid Level : raid5
-    Device Size : 10490368 (10.00 GiB 10.74 GB)
-     Array Size : 20980736 (20.01 GiB 21.48 GB)
-   Raid Devices : 3
-  Total Devices : 3
-Preferred Minor : 3
-
-    Update Time : Wed Jul  4 18:25:02 2007
-          State : clean
- Active Devices : 3
-Working Devices : 3
- Failed Devices : 0
-  Spare Devices : 0
-       Checksum : fe26fdb9 - correct
-         Events : 0.6996556
-
-         Layout : left-symmetric
-     Chunk Size : 4K
-
-      Number   Major   Minor   RaidDevice State
-this     1       3       67        1      active sync   /dev/hdb3
-
-   0     0       3        3        0      active sync   /dev/hda3
-   1     1       3       67        1      active sync   /dev/hdb3
-   2     2      22        3        2      active sync   /dev/hdc3
-/dev/hdc3:
-          Magic : a92b4efc
-        Version : 00.90.00
-           UUID : 36bbe21d:f49e8b5d:f504154c:a6f12a51
-  Creation Time : Sun Jan 14 21:17:53 2007
-     Raid Level : raid5
-    Device Size : 10490368 (10.00 GiB 10.74 GB)
-     Array Size : 20980736 (20.01 GiB 21.48 GB)
-   Raid Devices : 3
-  Total Devices : 3
-Preferred Minor : 3
-
-    Update Time : Wed Jul  4 18:25:02 2007
-          State : clean
- Active Devices : 3
-Working Devices : 3
- Failed Devices : 0
-  Spare Devices : 0
-       Checksum : fe26fd8e - correct
-         Events : 0.6996556
-
-         Layout : left-symmetric
-     Chunk Size : 4K
-
-      Number   Major   Minor   RaidDevice State
-this     2      22        3        2      active sync   /dev/hdc3
-
-   0     0       3        3        0      active sync   /dev/hda3
-   1     1       3       67        1      active sync   /dev/hdb3
-   2     2      22        3        2      active sync   /dev/hdc3
-
---Boundary-00=_Rt8iGcVd2EAGr9v--
+diff -u --recursive --new-file --exclude-from=old/Documentation/dontdiff old/drivers/scsi/ata_piix.c linux/drivers/scsi/ata_piix.c
+--- old/drivers/scsi/ata_piix.c	2007-04-20 14:08:46.000000000 -0400
++++ linux/drivers/scsi/ata_piix.c	2007-06-26 07:23:21.000000000 -0400
+@@ -106,6 +106,8 @@
+ 	PIIX_FLAG_AHCI		= (1 << 27), /* AHCI possible */
+ 	PIIX_FLAG_CHECKINTR	= (1 << 28), /* make sure PCI INTx enabled */
+ 
++	PIIX_HOTPLUG_POLL_TM	= (2 * (HZ)),	/* polling interval for hotplug */
++
+ 	/* combined mode.  if set, PATA is channel 0.
+ 	 * if clear, PATA is channel 1.
+ 	 */
+@@ -150,6 +152,171 @@
+ 	const struct piix_map_db *map_db;
+ };
+ 
++struct piix_port_priv {
++	int pcs_hotplug_supported;
++	struct timer_list hotplug_timer;
++	u16 old_pcs;
++};
++
++static u32 ich_scr_read (struct ata_port *ap, unsigned int reg)
++{
++	u32 scr = 0;
++
++	if (reg == SCR_STATUS) {
++		struct piix_port_priv *pp = ap->private_data;
++		if (pp && pp->pcs_hotplug_supported) {
++			u16 pcs, port_bit = (1 << ap->hard_port_no);
++			struct pci_dev *pdev = to_pci_dev(ap->dev);
++
++			pci_read_config_word(pdev, ICH5_PCS, &pcs);
++			if (pcs & (port_bit << 4))
++				scr = 0x113;
++		}
++	}
++	return scr;
++}
++
++static int ich_port_offline (struct ata_port *ap)
++{
++	struct pci_dev *pdev;
++	u16 pcs, port_bit = (1 << ap->hard_port_no);
++	struct piix_port_priv *pp = ap->private_data;
++	u8 ostatus;
++	unsigned int offline;
++
++	if (!pp || !pp->pcs_hotplug_supported) {
++		u32 sstatus;
++		if (!sata_scr_read(ap, SCR_STATUS, &sstatus) && (sstatus & 0xf) != 0x3)
++			return 1;
++		return 0;
++	}
++
++	/*
++	 * ICH5 with a mostly good/working PCS register.
++	 * The only flaw is, it doesn't seem to detect *removed* drives
++	 * unless we toggle the enable line before checking.
++	 */
++	ostatus = ata_altstatus(ap);
++	pdev = to_pci_dev(ap->dev);
++	pci_read_config_word(pdev, ICH5_PCS, &pcs);
++	offline = ((pcs & (port_bit << 4)) == 0);
++
++	if (!offline) {
++		unsigned int usecs;
++
++		/* Cycle PCS register to force it to redetect devices: */
++		pci_write_config_word(pdev, ICH5_PCS, pcs & ~port_bit);
++		udelay(1);
++		pci_write_config_word(pdev, ICH5_PCS, 0x0003);
++
++		/* Wait for SATA PHY to sync up; typically 5->6 usecs */
++		for (usecs = 0; usecs < 100; ++usecs) {
++			pci_read_config_word(pdev,  ICH5_PCS, &pcs);
++			offline = ((pcs & (port_bit << 4)) == 0);
++			if (!offline)
++				break;
++			udelay(1);
++		}
++		if (!offline) {
++			unsigned int msecs;
++			/* Wait for drive to become not-BUSY, typically 10->62 msecs */
++			for (msecs = 1; msecs < 150; msecs += 3) {
++				u8 status;
++				msleep(3);
++				status = ata_altstatus(ap);
++				if (status && !(status & ATA_BUSY))
++					break;
++			}
++			usecs += msecs * 1000;
++		}
++		printk("ata%u (port %u): status=%02x pcs=0x%04x offline=%u delay=%u usecs\n",
++			ap->id, ap->hard_port_no, ostatus, pcs, offline, usecs);
++	}
++	if (offline)
++		ata_port_disable(ap);
++	return offline;
++}
++
++static void pcs_hotplug_poll (unsigned long data)
++{
++	struct ata_port *ap = (void *)data;
++	struct pci_dev *pdev = to_pci_dev(ap->dev);
++	u16 old, new, port_bit = ((1 << ap->hard_port_no) << 4);
++	struct piix_port_priv *pp = ap->private_data;
++	int check_hotplug = 0;
++	unsigned long flags;
++
++	spin_lock_irqsave(ap->lock, flags);
++
++	if (!ap->qc_active) {
++		pci_read_config_word(pdev, ICH5_PCS, &new);
++		old = pp->old_pcs;
++		pp->old_pcs = new;
++
++		//printk("pcs_hotplug_poll(%d.%d) old=%04x new=%04x\n", ap->id, ap->hard_port_no, old, new);
++
++		if ((new & port_bit) != (old & port_bit)) {
++			check_hotplug = 1;
++		} else if (old & port_bit) {
++			//if (ap->hard_port_no == 1)	//FIXME FIXME FIXME
++			//	check_hotplug = 1;
++		}
++
++		if (check_hotplug) {
++			struct ata_eh_info *ehi = &ap->eh_info;
++
++			ata_port_printk(ap, KERN_INFO, "pcs_hotplug_poll: old=%04x new=%04x\n", old, new);
++			ata_ehi_clear_desc(ehi);
++			ata_ehi_hotplugged(ehi);
++			ata_ehi_push_desc(ehi, "hotplug event");
++			ata_port_freeze(ap);
++		}
++	}
++	if (pp->pcs_hotplug_supported)
++		mod_timer(&pp->hotplug_timer, jiffies + PIIX_HOTPLUG_POLL_TM);
++	spin_unlock_irqrestore(ap->lock, flags);
++}
++
++static int ich_port_start (struct ata_port *ap)
++{
++	struct pci_dev *pdev = to_pci_dev(ap->dev);
++	int rc;
++
++	rc = ata_port_start(ap);
++	if (rc == 0) {
++		if (pdev->vendor == 0x8086 && pdev->device == 0x24d1) {
++			struct piix_port_priv *pp;
++			pp = kzalloc(sizeof(*pp), GFP_KERNEL);
++			if (pp) {
++				pp->pcs_hotplug_supported = 1;
++				if (ap->private_data)
++					printk(KERN_ERR "port_start: huh? private_data=%p instead of NULL\n", ap->private_data);
++				ap->private_data = pp;
++				setup_timer(&pp->hotplug_timer, pcs_hotplug_poll, (unsigned long)ap);
++				pp->hotplug_timer.expires = jiffies + PIIX_HOTPLUG_POLL_TM;
++				add_timer(&pp->hotplug_timer);
++			} else {
++				printk(KERN_ERR "ich_port_start: failed to alloc %d bytes for port_priv\n", sizeof(*pp));
++			}
++		}
++	} else {
++		printk(KERN_ERR "ich_port_start: ata_port_start failed, rc=%d\n", rc);
++	}
++	return rc;
++}
++
++static void ich_port_stop (struct ata_port *ap)
++{
++	struct piix_port_priv *pp = ap->private_data;
++
++	if (pp) {
++		pp->pcs_hotplug_supported = 0;
++		del_timer_sync(&pp->hotplug_timer);
++		ap->private_data = NULL;
++		kfree(pp);
++	}
++}
++
+ static int piix_init_one (struct pci_dev *pdev,
+ 				    const struct pci_device_id *ent);
+ static void piix_host_stop(struct ata_host_set *host_set);
+@@ -289,8 +456,11 @@
+ 	.irq_handler		= ata_interrupt,
+ 	.irq_clear		= ata_bmdma_irq_clear,
+ 
+-	.port_start		= ata_port_start,
+-	.port_stop		= ata_port_stop,
++	.scr_read		= ich_scr_read,
++
++	.port_offline		= ich_port_offline,
++	.port_start		= ich_port_start,
++	.port_stop		= ich_port_stop,
+ 	.host_stop		= piix_host_stop,
+ };
+ 
+diff -u --recursive --new-file --exclude-from=old/Documentation/dontdiff old/drivers/scsi/libata-core.c linux/drivers/scsi/libata-core.c
+--- old/drivers/scsi/libata-core.c	2007-04-20 14:08:45.000000000 -0400
++++ linux/drivers/scsi/libata-core.c	2007-06-26 07:22:19.000000000 -0400
+@@ -4914,7 +4914,7 @@
+  */
+ int sata_scr_write(struct ata_port *ap, int reg, u32 val)
+ {
+-	if (sata_scr_valid(ap)) {
++	if (sata_scr_valid(ap) && ap->ops->scr_write) {
+ 		ap->ops->scr_write(ap, reg, val);
+ 		return 0;
+ 	}
+@@ -4987,6 +4987,8 @@
+ {
+ 	u32 sstatus;
+ 
++	if (ap->ops->port_offline)
++		return ap->ops->port_offline(ap);
+ 	if (!sata_scr_read(ap, SCR_STATUS, &sstatus) && (sstatus & 0xf) != 0x3)
+ 		return 1;
+ 	return 0;
+diff -u --recursive --new-file --exclude-from=old/Documentation/dontdiff old/include/linux/libata.h linux/include/linux/libata.h
+--- old/include/linux/libata.h	2007-06-26 07:22:26.000000000 -0400
++++ linux/include/linux/libata.h	2007-06-26 07:22:19.000000000 -0400
+@@ -614,6 +614,7 @@
+ 
+ 	int (*port_start) (struct ata_port *ap);
+ 	void (*port_stop) (struct ata_port *ap);
++	int (*port_offline) (struct ata_port *ap);
+ 
+ 	void (*host_stop) (struct ata_host_set *host_set);
+ 
