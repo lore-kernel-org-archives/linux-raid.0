@@ -1,65 +1,99 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: Proposed enhancement to mdadm:  Allow "--write-behind=" to be
- done	in grow mode.
-Date: Wed, 04 Jul 2007 09:45:52 -0400
-Message-ID: <468BA490.8000806@tmr.com>
-References: <1183038727.3792.9.camel@sibyl.beware.dropbear.id.au>	 <1183130939.4544.6.camel@sibyl.beware.dropbear.id.au>	 <1183468329.395.59.camel@sibyl.beware.dropbear.id.au>	 <468A571E.7040304@dgreaves.com> <1183516204.17720.16.camel@sibyl.beware.dropbear.id.au>
+From: "Heinzmann, Robert" <Heinzmann@cc-dresden.de>
+Subject: I/O is retried forever if last disk in a md device fails
+Date: Wed, 4 Jul 2007 16:18:19 +0200
+Message-ID: <7AAD212492598A4A92463C3F5D34C54F3DD36C@ccd3.cc.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1183516204.17720.16.camel@sibyl.beware.dropbear.id.au>
+Content-class: urn:content-classes:message
 Sender: linux-raid-owner@vger.kernel.org
-To: Ian Dall <ian@beware.dropbear.id.au>
-Cc: David Greaves <david@dgreaves.com>, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: "Heinzmann, Robert" <Heinzmann@cc-dresden.de>
 List-Id: linux-raid.ids
 
-Ian Dall wrote:
-> On Tue, 2007-07-03 at 15:03 +0100, David Greaves wrote:
->   
->> Ian Dall wrote:
->>     
->>> There doesn't seem to be any designated place to send bug reports and
->>> feature requests to mdadm, so I hope I am doing the right thing by
->>> sending it here.
->>>
->>> I have a small patch to mdamd which allows the write-behind amount to be
->>> set a array grow time (instead of currently only at grow or create
->>> time). I have tested this fairly extensively on some arrays built out of
->>> loop back devices, and once on a real live array. I haven't lot any data
->>> and it seems to work OK, though it is possible I am missing something.
->>>       
->> Sounds like a useful feature...
->>
->> Did you test the bitmap cases you mentioned?
->>     
->
-> Yes. And I can use mdadm -X to see that the write behind parameter is
-> set in the superblock. I don't know any way to monitor how much the
-> write behind feature is being used though.
->
-> My motivation was for doing this was to enable me to experiment to see
-> how effective it is. Currently I have a Raid 0 array across 3 very fast
-> (15k rpm) scsi disks. This array is mirrored by a single large vanilla
-> ata (7.2k rpm) disk. I figure that the read performance of the
-> combination is basically the read performance of the Raid 0, and the
-> sustained write performance is basically that of the ata disk, which is
-> about 6:1 read to write speed. I also see typically about 6 times the
-> read traffic to write traffic. So I figure it should be close to optimal
-> IF the bursts of write activity are not too long.
->
-> Does anyone know how I can monitor the number of pending writes? Where
-> are these queued? Are they simply stuck on the block device queue (and I
-> could see with iostat) or does the md device maintain its own special
-> queue for this?
->   
-Sort of... you can look at the stats in /proc/diskstats while you do a 
-write burst. You should be able to note the increasing number of blocks 
-written to the fast disks vs. the slow, and thereby see how behind the 
-slow one gets.
+Hello list,=20
 
--- 
-bill davidsen <davidsen@tmr.com>
-  CTO TMR Associates, Inc
-  Doing interesting things with small computers since 1979
+we use linux software raid (md) to do host based mirroring of 2 SAN sto=
+rage systems. We also use clustering for high availability. We use DMMP=
+ for multipathing. This enables us to build fully redundant disaster re=
+covery solutions. Our setup look like this (logical view):
 
+-----------------------------
+|        filesystem (xfs)   |
+----------------------------
+|         lvm lv            |
+-----------------------------
+|         lvm vg            |
+-----------------------------
+|    md device  (/dev/mdY)  |
+-----------------------------
+| dmmp device | dmmp device |
+| (/dev/dm-X) | (/dev/dm-Y) |
+-----------------------------
+|  sda | sdb  |  sdc | sdd  |
+-----------------------------
+| Storage LUN | Storage LUN |
+| (Storage 1) | (Storage 2) |
+-----------------------------
+
+However, we did some testing of our setup and one test was pulling all =
+fibre channel cables from a server. During the test we used a broken Mi=
+rror (only one DMMP device active in the mirror). The remaining disk wa=
+s a DMMP Device: /dev/dm-X. DMMP is configured to report I/O errors up =
+the stack if all path's are dead (no_path_retry=3Dfail). When we pulled=
+ all the cables, DMMP detects the path failures after aprox. 60 seconds=
+=2E Because all path's are dead, the DMMP device is declared dead. I/O =
+to the DMMP device fails.
+
+  mdadm -E /dev/dm-X returns "Could not read md superblock on device"
+
+  dd if=3D/dev/dm-X of=3D/dev/null bs=3D1M count=3D1
+
+also returns I/O errors.
+
+The problem is that all I/O to the md device is queued and retried fore=
+ver. The /var/log/messages file shows:=20
+
+SCSI ERROR .. Return code =3D 0x10000
+[... Many times ...]
+SCSI ERROR .. Return code =3D 0x10000
+raid1: dm-12 resheduling sector 0
+
+This returns in an endless loop until I shut down the machine.=20
+
+This does not allow our cluster to do a clean failover of the device, b=
+ecause it can not deactivate lv logical volumes on top of the md device=
+=2E The "lvchange -an" call hangs forever. I think this issue is no DMM=
+P sepcific and should be the same for all devices.=20
+
+The kernel we use is SLES9 SP3 kernel on IA64.=20
+
+Is there a config option or a later version of the MD kernel code / too=
+ls that report I/O errors up the stack if the last disk in a md device =
+fails ?=20
+
+If there is a later version, we may be able to get the patch back to th=
+e SLES9 kernel by our SuSE support agreement.=20
+
+Regards,=20
+Robert=20
+
+-----------------------------------------------------------------------=
+-
+COMPUTER CONCEPT=20
+CC Computersysteme und Kommunikationstechnik GmbH=20
+Robert Heinzmann
+Wiener Str. 114 - 116		Email:	heinzmann@cc-dresden.de
+01219 Dresden			Telefon:	+49 (351) 8 76 92-0
+					Telefax:	+49 (351) 8 76 92-99
+					Internet:	http://www.cc-dresden.de
+Handelregister Dresden, HRB 214
+Gesch=E4ftsf=FChrer: Gerd Jelinek
+-----------------------------------------------------------------------=
+-=20
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
