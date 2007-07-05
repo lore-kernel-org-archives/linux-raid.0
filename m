@@ -1,49 +1,83 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [RFD] BIO_RW_BARRIER - what it means for devices, filesystems,
- and dm/md.
-Date: Thu, 05 Jul 2007 21:28:17 +0900
-Message-ID: <468CE3E1.3000503@gmail.com>
-References: <18006.38689.818186.221707@notabene.brown> <18010.12472.209452.148229@notabene.brown> <20070530093503.GA15559@kernel.dk>
+From: Simon <simon.xhz@gmail.com>
+Subject: Re: AW: The array is functioning normally (?)
+Date: Thu, 05 Jul 2007 11:29:51 -0400
+Message-ID: <468D0E6F.7090303@gmail.com>
+References: <7AAD212492598A4A92463C3F5D34C54F3DD373@ccd3.cc.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20070530093503.GA15559@kernel.dk>
+In-reply-to: <7AAD212492598A4A92463C3F5D34C54F3DD373@ccd3.cc.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: Neil Brown <neilb@suse.de>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, dm-devel@redhat.com, linux-raid@vger.kernel.org, David Chinner <dgc@sgi.com>, Phillip Susi <psusi@cfl.rr.com>, Stefan Bader <Stefan.Bader@de.ibm.com>, Andreas Dilger <adilger@clusterfs.com>
+To: "Heinzmann, Robert" <Heinzmann@cc-dresden.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello, Jens.
-
-Jens Axboe wrote:
-> On Mon, May 28 2007, Neil Brown wrote:
->> I think the implementation priorities here are:
->>
->> 1/ implement a zero-length BIO_RW_BARRIER option.
->> 2/ Use it (or otherwise) to make all dm and md modules handle
->>    barriers (and loop?).
->> 3/ Devise and implement appropriate fall-backs with-in the block layer
->>    so that  -EOPNOTSUP is never returned.
->> 4/ Remove unneeded cruft from filesystems (and elsewhere).
+>> I made the 3 devices faulty.  I wonder why it's still clean 
+>> and --test says it's functionning normally?!
 > 
-> This is the start of 1/ above. It's very lightly tested, it's verified
-> to DTRT here at least and not crash :-)
-> 
-> It gets rid of the ->issue_flush_fn() queue callback, all the driver
-> knowledge resides in ->prepare_flush_fn() anyways. blkdev_issue_flush()
-> then just reuses the empty-bio approach to queue an empty barrier, this
-> should work equally well for stacked and non-stacked devices.
-> 
-> While this patch isn't complete yet, it's clearly the right direction to
-> go.
+> Same here with a RAID1 when I kill the last disk.
 
-Finally took a brief look. :-) I think the sequencing for zero-length
-barrier can be better done by pre-setting QUEUE_ORDSEQ_BAR in
-start_ordered() rather than short circuiting the request after it's
-issued.  What do you think?
+Additionally, when I try to remove one of these faulty devices and add it again, 
+THEN i get some indication that the array is not so good anymore:
 
-Thanks.
+# mdadm /dev/md1 -r /dev/sdd2
+mdadm: hot removed /dev/sdd2
+# mdadm /dev/md1 -a /dev/sdd2
+mdadm: cannot find valid superblock in this array - HELP
 
--- 
-tejun
+I got the same exact message when I tried with the 3 drives, obviously it is 
+because the array is no longer there...  and a final output of several programs 
+give the output below.  Stoping the array prevents me from starting it again. 
+Assembling fails too (not enough disk to start the array):
+
+mdadm: /dev/sdd2 is identified as a member of /dev/md1, slot 3.
+mdadm: /dev/sdb2 is identified as a member of /dev/md1, slot 2.
+mdadm: /dev/sdc2 is identified as a member of /dev/md1, slot 1.
+mdadm: no uptodate device for slot 0 of /dev/md1
+mdadm: added /dev/sdc2 to /dev/md1 as 1
+mdadm: added /dev/sdd2 to /dev/md1 as 3
+mdadm: added /dev/sdb2 to /dev/md1 as 2
+mdadm: /dev/md1 assembled from 1 drive and 1 spare - not enough to start the array.
+(or with -R, ends with)
+mdadm: failed to RUN_ARRAY /dev/md1: Input/output error
+mdadm: Not enough devices to start the array.
+
+
+===(`/sbin/mdadm -v -v --detail /dev/md1`)======================================
+/dev/md1:
+         Version : 00.90.03
+   Creation Time : Tue Jul  3 16:29:38 2007
+      Raid Level : raid5
+      Array Size : 2011648 (1964.83 MiB 2059.93 MB)
+   Used Dev Size : 1005824 (982.41 MiB 1029.96 MB)
+    Raid Devices : 3
+   Total Devices : 0
+Preferred Minor : 1
+     Persistence : Superblock is persistent
+
+     Update Time : Thu Jul  5 11:25:32 2007
+           State : clean, degraded
+  Active Devices : 0
+Working Devices : 0
+  Failed Devices : 0
+   Spare Devices : 0
+
+          Layout : left-symmetric
+      Chunk Size : 64K
+
+     Number   Major   Minor   RaidDevice State
+        0       0        0        0      removed
+        1       0        0        1      removed
+        2       0        0        2      removed
+-------------------------  Return was: 0  ---[ 0 = running | 256 = inactive ]---
+===(`/sbin/lsraid -a /dev/md1`)=================================================
+[dev   9,   1] /dev/md1         00000000.00000000.00000000.00000000 online
+[dev   ?,   ?] (unknown)        00000000.00000000.00000000.00000000 missing
+[dev   ?,   ?] (unknown)        00000000.00000000.00000000.00000000 missing
+[dev   ?,   ?] (unknown)        00000000.00000000.00000000.00000000 missing
+
+------------------------------------------------------------  Return was: 0  ---
+Return from `/sbin/mdadm /dev/md1 --detail --test` gave:
+mdadm: The array is functioning normally.
+================================================================================
