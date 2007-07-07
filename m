@@ -1,43 +1,68 @@
-From: David Greaves <david@dgreaves.com>
-Subject: Re: nested raid possible?
-Date: Fri, 06 Jul 2007 08:57:37 +0100
-Message-ID: <468DF5F1.8010004@dgreaves.com>
-References: <8585506.1183693119573.JavaMail.root@wombat.diezmil.com> <468DD806.6070608@ieee.org>
+From: Ryan_MichaelS@emc.com
+Subject: md looping on recovery of raid1 array
+Date: Sat, 7 Jul 2007 19:21:42 -0400
+Message-ID: <D09BBFE8953B884BBAB9F6A5198837B70CA9FD6B@CORPUSMX50A.corp.emc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <468DD806.6070608@ieee.org>
+Content-class: urn:content-classes:message
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
-Cc: turbo@weasel.com
 List-Id: linux-raid.ids
 
-Simon Valiquette wrote:
-> turbo@weasel.com un jour =C3=A9crivit:
->> I have a raid-5 array of six 250gb hard drives.
->> I just bought four 500gb hard drives.
+Md loops forever when attempting to recover a 2 disk raid 1 array:
 
-Simon raised some sensible points.
+Jul  7 16:32:35 soho user.info kernel: md: recovery of RAID array md0
+Jul  7 16:32:35 soho user.info kernel: md: minimum _guaranteed_  speed:
+1000 B/sec/disk.
+Jul  7 16:32:35 soho user.info kernel: md: using maximum available idle
+IO bandwidth (but not more than 200000 KB/sec) for recovery.
+Jul  7 16:32:35 soho user.info kernel: md: using 128k window, over a
+total of 2096384 blocks.
+Jul  7 16:32:35 soho user.err kernel: scsi 1:0:0:0: rejecting I/O to
+dead device
+Jul  7 16:32:35 soho user.err kernel: scsi 1:0:0:0: rejecting I/O to
+dead device
+Jul  7 16:32:35 soho user.alert kernel: raid1: dm-1: unrecoverable I/O
+read error for block 0
+Jul  7 16:32:35 soho user.err kernel: scsi 1:0:0:0: rejecting I/O to
+dead device
+Jul  7 16:32:35 soho user.alert kernel: raid1: dm-1: unrecoverable I/O
+read error for block 128
+Jul  7 16:32:35 soho user.info kernel: md: md0: recovery done.
+Jul  7 16:32:35 soho user.err kernel: scsi 1:0:0:0: rejecting I/O to
+dead device
+Jul  7 16:32:35 soho user.err kernel: scsi 1:0:0:0: rejecting I/O to
+dead device
+Jul  7 16:32:35 soho user.alert kernel: raid1: dm-1: unrecoverable I/O
+read error for block 256
+Jul  7 16:32:35 soho user.err kernel: scsi 1:0:0:0: rejecting I/O to
+dead device
+Jul  7 16:32:35 soho user.alert kernel: raid1: dm-1: unrecoverable I/O
+read error for block 384
+Jul  7 16:32:35 soho user.err kernel: scsi 1:0:0:0: rejecting I/O to
+dead device
+Jul  7 16:32:35 soho user.warn kernel: md: super_written gets error=-5,
+uptodate=0
+Jul  7 16:32:35 soho user.warn kernel: RAID1 conf printout:
+Jul  7 16:32:35 soho user.warn kernel:  --- wd:1 rd:2
+Jul  7 16:32:35 soho user.warn kernel:  disk 0, wo:1, o:1, dev:dm-7 Jul
+7 16:32:35 soho user.warn kernel:  disk 1, wo:0, o:1, dev:dm-1
+Jul  7 16:32:35 soho user.warn kernel: RAID1 conf printout:
+Jul  7 16:32:35 soho user.warn kernel:  --- wd:1 rd:2
+Jul  7 16:32:35 soho user.warn kernel:  disk 1, wo:0, o:1, dev:dm-1
+Jul  7 16:32:35 soho user.warn kernel: RAID1 conf printout:
+Jul  7 16:32:35 soho user.warn kernel:  --- wd:1 rd:2
+Jul  7 16:32:35 soho user.warn kernel:  disk 0, wo:1, o:1, dev:dm-7
+Jul  7 16:32:35 soho user.warn kernel:  disk 1, wo:0, o:1, dev:dm-1
+Jul  7 16:32:35 soho user.info kernel: md: recovery of RAID array md0
+...
 
-Also consider a raid5 of the 4x500 drives and using LVM to join them to=
- a raid 5=20
-of the 6x250s
+This occurs after hotswap removing both drives of the raid1 array and
+reinserting them.  The kernel version is 2.6.19.  Is anyone familiar
+with this scenario?  Can anyone shed any light on what's happening here?
 
-The benefit using raid0 to join the 250s may be that you can replace ea=
-ch of the=20
-2x250 with 1x500 as time passes. In that case you may want a raid6 made=
- of :
-  500 500 500 500 250+250 250+250 250+250
-
-One thing I'd ceertainly suggest is creating partitions of 498Gb to all=
-ow for=20
-geometry variations....
-
-David
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks.
+- Michael
