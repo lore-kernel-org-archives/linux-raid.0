@@ -1,65 +1,100 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: Proposed enhancement to mdadm:  Allow "--write-behind=" to be
- done	in grow mode.
-Date: Thu, 05 Jul 2007 11:37:45 -0400
-Message-ID: <468D1049.1090705@tmr.com>
-References: <1183038727.3792.9.camel@sibyl.beware.dropbear.id.au>	 <1183130939.4544.6.camel@sibyl.beware.dropbear.id.au>	 <1183468329.395.59.camel@sibyl.beware.dropbear.id.au>	 <468A571E.7040304@dgreaves.com> <1183516204.17720.16.camel@sibyl.beware.dropbear.id.au>
+From: Rogier Wolff <R.E.Wolff@BitWizard.nl>
+Subject: Fwd: Re: RAID performance is not too well....
+Date: Mon, 9 Jul 2007 13:39:16 +0200
+Message-ID: <20070709113916.GA9781@bitwizard.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1183516204.17720.16.camel@sibyl.beware.dropbear.id.au>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Ian Dall <ian@beware.dropbear.id.au>
-Cc: David Greaves <david@dgreaves.com>, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Ian Dall wrote:
-> On Tue, 2007-07-03 at 15:03 +0100, David Greaves wrote:
->   
->> Ian Dall wrote:
->>     
->>> There doesn't seem to be any designated place to send bug reports and
->>> feature requests to mdadm, so I hope I am doing the right thing by
->>> sending it here.
->>>
->>> I have a small patch to mdamd which allows the write-behind amount to be
->>> set a array grow time (instead of currently only at grow or create
->>> time). I have tested this fairly extensively on some arrays built out of
->>> loop back devices, and once on a real live array. I haven't lot any data
->>> and it seems to work OK, though it is possible I am missing something.
->>>       
->> Sounds like a useful feature...
->>
->> Did you test the bitmap cases you mentioned?
->>     
->
-> Yes. And I can use mdadm -X to see that the write behind parameter is
-> set in the superblock. I don't know any way to monitor how much the
-> write behind feature is being used though.
->
-> My motivation was for doing this was to enable me to experiment to see
-> how effective it is. Currently I have a Raid 0 array across 3 very fast
-> (15k rpm) scsi disks. This array is mirrored by a single large vanilla
-> ata (7.2k rpm) disk. I figure that the read performance of the
-> combination is basically the read performance of the Raid 0, and the
-> sustained write performance is basically that of the ata disk, which is
-> about 6:1 read to write speed. I also see typically about 6 times the
-> read traffic to write traffic. So I figure it should be close to optimal
-> IF the bursts of write activity are not too long.
->
-> Does anyone know how I can monitor the number of pending writes? Where
-> are these queued? Are they simply stuck on the block device queue (and I
-> could see with iostat) or does the md device maintain its own special
-> queue for this?
->   
 
-I didn't mention, one of the parameters for the drive (not partition) in 
-diskstats is the number of I/O in progress, field nine of the report for 
-the drive as a whole. Hope that's all you need.
+Bill Told me to report this to linux-raid. But Possibly
+the raid code can't be blamed, because it is the filesystem
+code that messes up. 
+
+
+
+----- Forwarded message from Bill Davidsen <davidsen@tmr.com> -----
+> 
+> From: Bill Davidsen <davidsen@tmr.com>
+> To: Rogier Wolff <R.E.Wolff@BitWizard.nl>
+> CC: linux-kernel@vger.kernel.org
+> Date: Thu, 05 Jul 2007 15:35:36 -0400
+> Subject: Re: RAID performance is not too well....
+> X-Spam-Status: No, score=3.0 required=5.0 tests=AWL,BAYES_99 autolearn=no 
+	version=3.1.7-deb
+
+> Rogier Wolff wrote:
+> >Hi,
+> >
+> >I have an application that creates some 228 thousand files,
+> >spread over about 4000 directories. Total is not more than 
+> >1.3Gb.  (I'm not sure, and I don't care if it's 10% or 90% of
+> >that number)
+> >
+> >Anyway, I've loaded all of the 1.3Gb into the cache (the machine
+> >has 8Gb of RAM), so that only writes need to take place. 
+> >
+> >After a while the machine goes into a routine of writing
+> >about 500 to 1000kbytes per second. 
+> >
+> >Sync seems to take a long time: 
+> >
+> >zebigbos:/recover7/bd4256_jense/tree> time sync 
+> >0.004u 0.136s 5:44.66 0.0%      0+0k 0+0io 0pf+0w
+> >zebigbos:/recover7/bd4256_jense/tree> 
+> >
+> >The machine normally reads up to about 150 Mbytes per second without
+> >trouble. 
+> >
+> >I'm suspecting that the writes to the inodes and files all end
+> >up "fragmented" such that reads to complete the RAID stripes 
+> >need to be performed: 
+> >
+> >Iostat shows: 
+> >
+> >Device:            tps    kB_read/s    kB_wrtn/s    kB_read    kB_wrtn
+> >sda              75.25       277.23       126.73        280        128
+> >sdb              91.09       400.00       134.65        404        136
+> >sdc              71.29       253.47        95.05        256         96
+> >sdd             100.99       221.78       304.95        224        308
+> >
+> >However, I would say that all those new files should be "clustered" 
+> >such that the chances of writing a full stripe becomes reasonable. 
+> >Moreover, clustering should, even with reading other parts of the
+> >stripe result in a performance on the order of 10 to 50 times better. 
+> >
+> >Raid block (stripe) size  is 64k.  (Next time I format a partition, 
+This should be chunk size. ^^^^^^^^ 
+> >I will chose 512k, causing the readperformance to increasae from 150Mb
+> >per second to about 200Mb per second). 
+> >
+> I'm not sure what you mean by "Raid block," and a stripe size on 64k is 
+> improbably low. That sounds like a chunk size using common nomenclature. 
+
+OK. chunk size. 
+
+> You don't say what RAID level you are using, nor what filesystem type, 
+
+RAID 5. 
+
+> so it's really hard to give you any useful help, other than "send more 
+> information, use standard terms, send to the linux-raid list, not kernel."
+> 
+> By "format a partition" do you mean "create an array?" Or ???
+
+Ehh. Yes. 
+
+	Roger. 
+
 
 -- 
-bill davidsen <davidsen@tmr.com>
-  CTO TMR Associates, Inc
-  Doing interesting things with small computers since 1979
-
+** R.E.Wolff@BitWizard.nl ** http://www.BitWizard.nl/ ** +31-15-2600998 **
+**    Delftechpark 26 2628 XH  Delft, The Netherlands. KVK: 27239233    **
+*-- BitWizard writes Linux device drivers for any device you may have! --*
+Q: It doesn't work. A: Look buddy, doesn't work is an ambiguous statement. 
+Does it sit on the couch all day? Is it unemployed? Please be specific! 
+Define 'it' and what it isn't doing. --------- Adapted from lxrbot FAQ
