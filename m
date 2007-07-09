@@ -1,120 +1,52 @@
-From: Frank Jenkins <fjenkins873@yahoo.com>
-Subject: Re: raid5 recover after a 2 disk failure
-Date: Sun, 8 Jul 2007 02:54:46 -0700 (PDT)
-Message-ID: <852300.80170.qm@web57312.mail.re1.yahoo.com>
-References: <4677C27A.80006@dgreaves.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: Proposed enhancement to mdadm:  Allow "--write-behind=" to be done
+	in grow mode.
+Date: Mon, 9 Jul 2007 11:30:21 +1000
+Message-ID: <18065.36781.477223.658707@notabene.brown>
+References: <1183038727.3792.9.camel@sibyl.beware.dropbear.id.au>
+	<1183130939.4544.6.camel@sibyl.beware.dropbear.id.au>
+	<1183468329.395.59.camel@sibyl.beware.dropbear.id.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4677C27A.80006@dgreaves.com>
+In-Reply-To: message from Ian Dall on Tuesday July 3
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Ian Dall <ian@beware.dropbear.id.au>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-First, I'd like to extend a HUGE thank you. I was able
-to get some irreplaceable family photos off my raid
-array before things went south. 
+On Tuesday July 3, ian@beware.dropbear.id.au wrote:
+> There doesn't seem to be any designated place to send bug reports and
+> feature requests to mdadm, so I hope I am doing the right thing by
+> sending it here.
 
-Sadly, another disk seems to have died, so now it
-seems completely dead. There is one thing I'm confused
-about.
+Yes. Exactly the right thing, thanks.
 
-The Events number has gone way up on the disks I was
-using for that array. From 0.67378 to 0.78038. Isn't
-the event number only updated when the array is
-written to? I thought I mounted the array read-only,
-so I'm not sure why that would have gone up.
+I have applied the patch and pushed it out into .git.  It will appear
+in the next release of mdadm.
 
-Thanks, Frank
+Thank,
+NeilBrown
 
-
-
---- David Greaves <david@dgreaves.com> wrote:
-
-> All looked OK, a few comments...
 > 
-> Frank Jenkins wrote:
-> Logically this comes first...
-> > This should force the array back into a useable
-> state,
-> > yes? 
-> > (assuming that I'm correct and sde isn't really
-> > busted).
-> correct.
-> Since you have a spare you may want to use ddrescue
-> to transfer data from sde to 
-> the spare as a 'backup'. That way, if you do get
-> problems with sde you have the 
-> best chance of recovery.
+> I have a small patch to mdamd which allows the write-behind amount to be
+> set a array grow time (instead of currently only at grow or create
+> time). I have tested this fairly extensively on some arrays built out of
+> loop back devices, and once on a real live array. I haven't lot any data
+> and it seems to work OK, though it is possible I am missing something.
 > 
-> If you do that, then you can use the backup as your
-> new sde.
-> 
-> either way...
-> 
-> > I think what I need to do is run:
-> > mdadm -ARf /dev/md1 missing /dev/sd[baed]1
-> I don't think you want -R.
-> If enough drives are present to provide data then it
-> will run with a -f.
-> 
-> If you get the order wrong here, it won't damage
-> anything *provided you have a 
-> missing disk and the array is degraded* (which you
-> do) so there is no need to 
-> worry about having rw devices.
-> 
-> The event counts from abcdf are the same and sde is
-> only slightly off so you 
-> should find it assembles just fine.
-> 
-> At this point can copy data off the disks - bear in
-> mind you may have fs or data 
-> corruption due to the inconsistency in sde.
-> 
-> If you are confident that sde is actually OK, you
-> can now add in the spare:
->    mdadm /dev/md1 --add /dev/sdc1
-> and allow a rebuild.
-> 
-> Then do an xfs_repair (or ext3 or whatever).
-> You can do this whilst the resync is running.
-> 
-> At that point you should be back up and running - no
-> need for a restore.
+> --- mdadm-2.6.1/mdadm.c.writebehind	2006-12-21 16:12:50.000000000 +1030
+> +++ mdadm-2.6.1/mdadm.c	2007-06-30 13:16:22.000000000 +0930
+> @@ -827,6 +827,7 @@
+>  			bitmap_chunk = bitmap_chunk ? bitmap_chunk * 1024 : 512;
+>  			continue;
+>  
+> +		case O(GROW, WriteBehind):
+>  		case O(BUILD, WriteBehind):
+>  		case O(CREATE, WriteBehind): /* write-behind mode */
+>  			write_behind = DEFAULT_MAX_WRITE_BEHIND;
 > 
 > 
-> > And more importantly, if anyone can tell me how to
-> > lock down the 
-> > disks so they are readonly so I can play around
-> with
-> > mdadm 
-> > re-assembly options without having to worry about
-> > compeletly 
-> > destroying the array, that'd be awesome.
-> Not sure you can do this.
-> 
-> > As usual, any help would be greatly appreciated.
-> > 
-> > I'll include the -E output from the drives in
-> their
-> > current state, if that helps:
-> It did.
-> 
-> 
-> -
-> To unsubscribe from this list: send the line
-> "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at 
-> http://vger.kernel.org/majordomo-info.html
-> 
-
-
-
- 
-____________________________________________________________________________________
-Be a PS3 game guru.
-Get your game face on with the latest PS3 news and previews at Yahoo! Games.
-http://videogames.yahoo.com/platform?platform=120121
+> -- 
+> Ian Dall <ian@beware.dropbear.id.au>
