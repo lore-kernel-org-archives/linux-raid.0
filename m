@@ -1,182 +1,69 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: Software based SATA RAID-5 expandable arrays?
-Date: Wed, 11 Jul 2007 10:21:42 -0400
-Message-ID: <4694E776.3010509@tmr.com>
-References: <195733459.1184009461155.JavaMail.root@gateway.korstad.net>
+From: jahammonds prost <gmitch64@yahoo.com>
+Subject: Re:   Software based SATA RAID-5 expandable arrays?
+Date: Wed, 11 Jul 2007 18:26:14 +0100 (BST)
+Message-ID: <745823.56492.qm@web55802.mail.re3.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <195733459.1184009461155.JavaMail.root@gateway.korstad.net>
 Sender: linux-raid-owner@vger.kernel.org
 To: Daniel Korstad <dan@korstad.net>
-Cc: Michael <big_green_jelly_bean@yahoo.com>, linux-raid@vger.kernel.org
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Daniel Korstad wrote:
-> You have lots of options.  This will be a lengthy response and will g=
-ive just some ideas for just some of the options...
-> =20
->  =20
-Just a few thoughts below interspersed with your comments.
-> For my server, I had started out with a single drive.  I later migrat=
-ed to migrate to a RAID 1 mirror (after having to deal with reinstalls =
-after drive failures I wised up).  Since I already had an OS that I wan=
-ted to keep, my RAID-1 setup was a bit more involved.  I following this=
- migration to get me there;
-> http://wiki.clug.org.za/wiki/RAID-1_in_a_hurry_with_grub_and_mdadm
-> =20
-> Since you are starting from scratch, it should be easier for you.  Mo=
-st distros will have an installer that will guide you though the proces=
-s.  When you get to hard drive partitioning, look for an advance option=
- or review and modify partition layout option or something similar othe=
-rwise it might just make a guess of what you want and that would not be=
- RAID.  In this advance partition setup, you will be able to create you=
-r RAID.  First you make equal size partitions on both physical drives. =
- For example, first carve out 100M partition on each of the two physica=
-l OS drives, than make a RAID 1 md0 with each of this partitions and th=
-an make this your /boot.  Do this again for other partitions you want t=
-o have RAIDed.  You can do this for /boot, /var, /home, /tmp, /usr.  Th=
-is is can be nice to have a separations incase a user fills /home/foo w=
-ith crap and this will not effect other parts of the OS, or if mail spo=
-ol fills up, it will not hang the OS.  Only problem it determining how =
-big to make them during the install.  At a minimum, I would do three pa=
-rtitions; /boot, swap, and /  This means all the others (/var, /home, /=
-tmp, /usr) are in the / partition but this way you don't have to worry =
-about sizing them all correctly.=20
-> =20
-> For the simplest setup, I would do RAID 1 for /boot (md0), swap (md1)=
-, and / (md2)  (Alternatively, your could make a swap file in / and not=
- have a swap partition, tons of options...)  Do you need to RAID your s=
-wap?  Well, I would RAID it or make a swap file within a RAID partition=
-=2E  If you don't and your system is using swap and you lose a drive th=
-at has swap information/partition on it, you might have issues dependin=
-g on how important that information in the failed drive was.  You syste=
-ms might hang.
-> =20
->  =20
-Note that RAID-10 generally performs better than mirroring, particularl=
-y=20
-when more than a few drives are involved. This can have performance=20
-implications for swap, when large i/o pushes program pages out of=20
-memory. The other side of that coin is that "recovery CDs" don't seem t=
-o=20
-know how to use RAID-10 swap, which might be an issue on some systems.
-> After you go through the install and have a bootable OS that is runni=
-ng on mdadm RAID, I would test it to make sure grub was installed corre=
-ctly to both the physical drives.  If grub is not installed to both dri=
-ves, and you lose one drive down the road and if that one was the one w=
-ith grub, you will have a system that will not boot even though it has =
-a second drive with a copy of all the files.  If this were to happen, y=
-ou can recover by booting with a bootable linux CD or recover disk and =
-manually installing grub too. For example say you only had grub install=
-ed to hda and it failed, boot with a live linux cd and type (assuming /=
-dev/hdd is the surviving second drive);
-> grub
->  device (hd0) /dev/hdd
->  root (hd0,0)
->  setup (hd0)
->  quit
-> You say you are using two 500G drives for the OS.  You don't necessar=
-y have to use all the space for the OS.  You can make your partitions a=
-nd take the left over space and throw it into a logical volume.  This l=
-ogical volume would not be fault tolerant, but would be the sum of the =
-left over capacity from both drives.  For example, you use 100M for /bo=
-ot and 200G for / and 2G for swap.  Take the rest and make a standard e=
-xt3 partition for the remaining space on both drives and put them in a =
-logical volume giving over 500G to play with for non critical crap.
-> =20
-> Why do I use RAID6?  For the extra redundancy and I have 10 drives in=
- my arrary. =20
-> I have been an advocate for RAID 6, especially with the every increas=
-ing drive capacity and the number of drives in the array is above say s=
-ix;
-> http://www.intel.com/technology/magazine/computing/RAID-6-0505.htm=20
-> =20
->  =20
-Other configurations will perform better for writes, know your i/o=20
-performance requirements.
-> http://storageadvisors.adaptec.com/2005/10/13/raid-5-pining-for-the-f=
-jords/=20
-> "...for using RAID-6, the single biggest reason is based on the chanc=
-e of drive errors during an array rebuild after just a single drive fai=
-lure. Rebuilding the data on a failed drive requires that all the other=
- data on the other drives be pristine and error free. If there is a sin=
-gle error in a single sector, then the data for the corresponding secto=
-r on the replacement drive cannot be reconstructed. Data is lost. In th=
-e drive industry, the measurement of how often this occurs is called th=
-e Bit Error Rate (BER). Simple calculations will show that the chance o=
-f data loss due to BER is much greater than all the other reasons combi=
-ned. Also, PATA and SATA drives have historically had much greater BERs=
-, i.e., more bit errors per drive, than SCSI and SAS drives, causing so=
-me vendors to recommend RAID-6 for SATA drives if they=E2=80=99re used =
-for mission critical data."
-> =20
-> Since you are using only four drives for your data array, the overhea=
-d for RAID6 (two drives for parity) might not be worth it. =20
-> =20
-> With four drives you would be just fine with a RAID5.
-> However, I would make a cron for the command to run every once in awh=
-ile.  Add this to your crontab...
->
-> #check for bad blocks once a week (every Mon at 2:30am)if bad blocks =
-are found, they are corrected from parity information=20
-> 30 2 * * Mon echo check /sys/block/md0/md/sync_action
-> =20
-> With this, you will keep hidden bad blocks to a minimum and when a dr=
-ive fails, you won't be likely bitten by a hidden bad block(s) during a=
- rebuild.
-> =20
->  =20
-I think a comment on "check" vs. "repair" is appropriate here. At the=20
-least "see the man page" is appropriate.
-> For your data array, I would make one partition of Linux raid (FD) an=
-d have one partition for the whole drive in each physical drive.  Than =
-create your raid. =20
-> =20
-> mdadm --create /dev/md3 -l 5 -n 4 /dev/<your data drive1-partition> /=
-dev/<your data drive2-partition> /dev/<your data drive3-partition> /dev=
-/<your data drive4-partition>  <---the /dev/md3 can be what you want an=
-d will depend on how many other previous raid arrays you have, so long =
-as you use a number not currently used. =20
-> =20
-> My filesystem of choice is XFS, but you get to pick your own poison:
-> mkfs.xfs /-f /dev/md3
-> =20
-> Mount the device :
-> mount /dev/md3 /foo
-> =20
-> I would edit your /etc/fstab to have it automounted for each startup.
-> =20
-> Dan.
-> =20
-Other misc comments: mirroring your boot partition on drives which the=20
-BIOS won't use is a waste of bytes. If you have more than, say four,=20
-drives fail to function you probably have a system problem other than=20
-disk. And some BIOS versions will boot a secondary drive if the primary=
-=20
-fails hard but not if it has a parity or other error, which can enter a=
-=20
-retry loop (I *must* keep trying to boot). This behavior can be seen on=
-=20
-at least one major server hardware from a big name vendor, it's not jus=
-t=20
-cheap desktops. The solution, ugly as it is, is to use the firmware=20
-"RAID" on the motherboard controller for boot, and I have several=20
-systems with low cost small PATA drives in mirror just for boot (after=20
-which they are spun down with hdparm settings) for this reason.
+Ahh... guess it's time to upgrade again.... My plan was to start off with 3 drives in a RAID5, and slowly grow it up to maybe 6 or 7 drives before converting it over to a RAID6, and then topping it out at 12 drives (all I can fit in the case).... The performace hit isn't going to bother me too much - it's mainly going to be for video for my media server for the house...
 
-Really good notes, people should hang onto them!
-
---=20
-bill davidsen <davidsen@tmr.com>
-  CTO TMR Associates, Inc
-  Doing interesting things with small computers since 1979
+So.. Can I expand a RAID6 now, which is good.... But can I change from RAID5 to RAID6 whilst online?
 
 
+Graham
+
+----- Original Message ----
+From: Daniel Korstad <dan@korstad.net>
+To: gmitch64@yahoo.com
+Cc: linux-raid@vger.kernel.org
+Sent: Wednesday, 11 July, 2007 11:03:34 AM
+Subject: RE: Software based SATA RAID-5 expandable arrays?
+
+
+That was true up to kernel 2.6.21 and 2.6 mdadm where support for RAID 6 reshape arrived.
+
+I have reshaped (added additional drives) to my RAID 6 twice now with no problems in the past few months.
+
+You mentioned that as the only disadvantage.  There are other things to consider.  The overhead for parity of course.  You can't have a RAID 6 with only three drives unless you build it with a missing drive and run degraded.  Also (my opinion) it might not worth the overhead with only 4 drives, unless you plan to reshape (add drives) down the road.  When you have an array with several drives, than it is more advantages as the percentage of disk space lost to parity goes down [((2/N)*100) where N is the number of drives in the array] so your storage efficiency increases ((Number of Drives -2)/Number of Drives).  And with more drives the statistics of getting hit with a bit error after you lose a drive and you are trying to rebuild increases.
+
+Also, there is a very slight performance drop for write speeds on RAID6 since you are calculating p and q parity. 
+
+But for what I use my system for, family digital photos, file storage and media server I mostly read data and not bothered with slight performance hit in write.
+
+I have been using RAID6 with 10 disk for over a year and it has saved me at least once.  
+
+As far as converting the RAID6 to RAID5 or RAID4...  Never had a need to do this, but no probably not.
+
+Dan.
+
+
+
+----- Inline Message Follows -----
+To: Daniel Korstad ; Michael 
+Cc: linux-raid@vger.kernel.org
+From: jahammonds prost
+Subject: Re: Software based SATA RAID-5 expandable arrays?
+
+
+
+> Why do I use RAID6?  For the extra redundancy 
+
+I've been thinking about RAID6 too, having been bitten a couple of times.... the only disadvantage that I can see at the moment is that you can't convert and grow it... ie... I can't convert from a 4 drive RAID5 array to a 5 drive RAID6 one when I add an additional drive... I also don't think that you can grow a RAID6 array at the moment - I'd want to add additional drives over a few months as they come on sale.... Or am I wrong on both counts?
+
+
+Graham
 -
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
 the body of a message to majordomo@vger.kernel.org
 More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+      ___________________________________________________________
+Yahoo! Answers - Got a question? Someone out there knows the answer. Try it
+now.
+http://uk.answers.yahoo.com/ 
