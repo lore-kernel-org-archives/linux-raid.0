@@ -1,41 +1,33 @@
-From: Ric Wheeler <ric@emc.com>
-Subject: Re: [dm-devel] Re: [RFD] BIO_RW_BARRIER - what it means for devices,
- filesystems, and dm/md.
-Date: Wed, 11 Jul 2007 18:44:21 -0400
-Message-ID: <46955D45.8010606@emc.com>
-References: <18006.38689.818186.221707@notabene.brown> <18010.12472.209452.148229@notabene.brown> <20070528094358.GM25091@agk.fab.redhat.com> <5201e28f0705290225v14fdac44hb0382a4137a84d01@mail.gmail.com> <20070529220500.GA6513@agk.fab.redhat.com> <5201e28f0705300212g3be16464u5ee1a4c80db27a11@mail.gmail.com> <465DAC72.1010201@cfl.rr.com> <5201e28f0705310414u1a9aebc4je135748274543946@mail.gmail.com> <465F9197.7060002@gmail.com> <Pine.LNX.4.64.0705312144400.6705@asgard.lang.hm> <465FC7B1.3060309@gmail.com>            <4693D26D.2060004@emc.com> <4758.1184110800@turing-police.cc.vt.edu>
-Reply-To: ric@emc.com
+From: Nix <nix@esperi.org.uk>
+Subject: Re: Software based SATA RAID-5 expandable arrays?
+Date: Thu, 12 Jul 2007 00:29:14 +0100
+Message-ID: <87wsx6senp.fsf@hades.wkstn.nix>
+References: <95941.71200.qm@web54102.mail.re2.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <4758.1184110800@turing-police.cc.vt.edu>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Valdis.Kletnieks@vt.edu
-Cc: Tejun Heo <htejun@gmail.com>, david@lang.hm, Stefan Bader <Stefan.Bader@de.ibm.com>, Phillip Susi <psusi@cfl.rr.com>, device-mapper development <dm-devel@redhat.com>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>, David Chinner <dgc@sgi.com>, Andreas Dilger <adilger@clusterfs.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <95941.71200.qm@web54102.mail.re2.yahoo.com> (Michael's message of "11 Jul 2007 21:08:55 +0100")
+Sender: linux-raid-owner@vger.kernel.org
+To: Michael <big_green_jelly_bean@yahoo.com>
+Cc: Bill Davidsen <davidsen@tmr.com>, Daniel Korstad <dan@korstad.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On 11 Jul 2007, Michael stated:
+> I am running Suse, and the check program is not available
 
-Valdis.Kletnieks@vt.edu wrote:
-> On Tue, 10 Jul 2007 14:39:41 EDT, Ric Wheeler said:
-> 
->> All of the high end arrays have non-volatile cache (read, on power loss, it is a 
->> promise that it will get all of your data out to permanent storage). You don't 
->> need to ask this kind of array to drain the cache. In fact, it might just ignore 
->> you if you send it that kind of request ;-)
-> 
-> OK, I'll bite - how does the kernel know whether the other end of that
-> fiberchannel cable is attached to a DMX-3 or to some no-name product that
-> may not have the same assurances?  Is there a "I'm a high-end array" bit
-> in the sense data that I'm unaware of?
-> 
+`check' isn't a program. The line suggested has a typo: it should
+be something like this:
 
-There are ways to query devices (think of hdparm -I in S-ATA/P-ATA drives, SCSI 
-has similar queries) to see what kind of device you are talking to. I am not 
-sure it is worth the trouble to do any automatic detection/handling of this.
+30 2 * * Mon   echo check > /sys/block/md0/md/sync_action
 
-In this specific case, it is more a case of when you attach a high end (or 
-mid-tier) device to a server, you should configure it without barriers for its 
-exported LUNs.
+The only program that line needs is `echo' and I'm sure you've got
+that. (You also need to have sysfs mounted at /sys, but virtually
+everyone has their systems set up like that nowadays.)
 
-ric
+(obviously you can check more than one array: just stick in other lines
+that echo `check' into some other mdN at some other time of day.)
+
+-- 
+`... in the sense that dragons logically follow evolution so they would
+ be able to wield metal.' --- Kenneth Eng's colourless green ideas sleep
+ furiously
