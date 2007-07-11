@@ -1,51 +1,47 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [dm-devel] Re: [RFD] BIO_RW_BARRIER - what it means for devices,
- filesystems, and dm/md.
-Date: Wed, 11 Jul 2007 11:51:40 +0900
-Message-ID: <469445BC.1010709@gmail.com>
-References: <18006.38689.818186.221707@notabene.brown>  <18010.12472.209452.148229@notabene.brown>  <20070528094358.GM25091@agk.fab.redhat.com>  <5201e28f0705290225v14fdac44hb0382a4137a84d01@mail.gmail.com>  <20070529220500.GA6513@agk.fab.redhat.com>  <5201e28f0705300212g3be16464u5ee1a4c80db27a11@mail.gmail.com>  <465DAC72.1010201@cfl.rr.com> <5201e28f0705310414u1a9aebc4je135748274543946@mail.gmail.com> <465F9197.7060002@gmail.com> <Pine.LNX.4.64.0705312144400.6705@asgard.lang.hm> <465FC7B1.3060309@gmail.com> <4693D26D.2060004@emc.com>
+From: "Daniel Korstad" <dan@korstad.net>
+Subject: RE:   Software based SATA RAID-5 expandable arrays?
+Date: Wed, 11 Jul 2007 10:03:34 -0500
+Message-ID: <920282231.1184166214119.JavaMail.root@gateway.korstad.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <4693D26D.2060004@emc.com>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: ric@emc.com
-Cc: david@lang.hm, Stefan Bader <Stefan.Bader@de.ibm.com>, Phillip Susi <psusi@cfl.rr.com>, device-mapper development <dm-devel@redhat.com>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>, David Chinner <dgc@sgi.com>, Andreas Dilger <adilger@clusterfs.com>
+Content-Type: text/plain;
+	charset="us-ascii"
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-raid-owner@vger.kernel.org
+To: gmitch64@yahoo.com
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Ric Wheeler wrote:
->> Don't those thingies usually have NV cache or backed by battery such
->> that ORDERED_DRAIN is enough?
-> 
-> All of the high end arrays have non-volatile cache (read, on power loss,
-> it is a promise that it will get all of your data out to permanent
-> storage). You don't need to ask this kind of array to drain the cache.
-> In fact, it might just ignore you if you send it that kind of request ;-)
-> 
-> The size of the NV cache can run from a few gigabytes up to hundreds of
-> gigabytes, so you really don't want to invoke cache flushes here if you
-> can avoid it.
-> 
-> For this class of device, you can get the required in order completion
-> and data integrity semantics as long as we send the IO's to the device
-> in the correct order.
+  
+That was true up to kernel 2.6.21 and 2.6 mdadm where support for RAID 6 reshape arrived.
+ 
+I have reshaped (added additional drives) to my RAID 6 twice now with no problems in the past few months.
+ 
+You mentioned that as the only disadvantage.  There are other things to consider.  The overhead for parity of course.  You can't have a RAID 6 with only three drives unless you build it with a missing drive and run degraded.  Also (my opinion) it might not worth the overhead with only 4 drives, unless you plan to reshape (add drives) down the road.  When you have an array with several drives, than it is more advantages as the percentage of disk space lost to parity goes down [((2/N)*100) where N is the number of drives in the array] so your storage efficiency increases ((Number of Drives -2)/Number of Drives).  And with more drives the statistics of getting hit with a bit error after you lose a drive and you are trying to rebuild increases.
+ 
+Also, there is a very slight performance drop for write speeds on RAID6 since you are calculating p and q parity. 
 
-Thanks for clarification.
+But for what I use my system for, family digital photos, file storage and media server I mostly read data and not bothered with slight performance hit in write.
+ 
+I have been using RAID6 with 10 disk for over a year and it has saved me at least once.  
+ 
+As far as converting the RAID6 to RAID5 or RAID4...  Never had a need to do this, but no probably not.
+ 
+Dan.
 
->> The problem is that the interface between the host and a storage device
->> (ATA or SCSI) is not built to communicate that kind of information
->> (grouped flush, relaxed ordering...).  I think battery backed
->> ORDERED_DRAIN combined with fine-grained host queue flush would be
->> pretty good.  It doesn't require some fancy new interface which isn't
->> gonna be used widely anyway and can achieve most of performance gain if
->> the storage plays it smart.
-> 
-> I am not really sure that you need this ORDERED_DRAIN for big arrays...
+ 
 
-ORDERED_DRAIN is to properly order requests from host request queue
-(elevator/iosched).  We can make it finer-grained but we do need to put
-some ordering restrictions.
+----- Inline Message Follows -----
+To: Daniel Korstad ; Michael 
+Cc: linux-raid@vger.kernel.org
+From: jahammonds prost
+Subject: Re: Software based SATA RAID-5 expandable arrays?
 
--- 
-tejun
+
+
+> Why do I use RAID6?  For the extra redundancy 
+
+I've been thinking about RAID6 too, having been bitten a couple of times.... the only disadvantage that I can see at the moment is that you can't convert and grow it... ie... I can't convert from a 4 drive RAID5 array to a 5 drive RAID6 one when I add an additional drive... I also don't think that you can grow a RAID6 array at the moment - I'd want to add additional drives over a few months as they come on sale.... Or am I wrong on both counts?
+
+
+Graham
