@@ -1,55 +1,90 @@
-From: "Grzegorz Nosek" <grzegorz.nosek@gmail.com>
-Subject: Resizing RAID1 on top of LVM2 LVs
-Date: Wed, 11 Jul 2007 20:38:55 +0200
-Message-ID: <121a28810707111138y67b0c746o66ebb11e4417c795@mail.gmail.com>
+From: "Daniel Korstad" <dan@korstad.net>
+Subject: RE:    Software based SATA RAID-5 expandable arrays?
+Date: Wed, 11 Jul 2007 14:13:53 -0500
+Message-ID: <1864305413.1184181233902.JavaMail.root@gateway.korstad.net>
+References: <745823.56492.qm@web55802.mail.re3.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <745823.56492.qm@web55802.mail.re3.yahoo.com>
 Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: jahammonds prost <gmitch64@yahoo.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello all,
+Currently, no you can't.
+ 
+However it is on the TODO list.
+ http://neil.brown.name/blog/20050727143147-003
+ 
+Maybe by the end of the year, Neil hit his goal on the raid6 grow for kernel 2.6.21... But Neil states the raid 5 to raid 6 is more complex to implement...
+ 
+Dan.
+ 
+----- Original Message -----
+From: jahammonds prost 
+Sent: Wed, 7/11/2007 12:26pm
+To: Daniel Korstad 
+Cc: linux-raid@vger.kernel.org
+Subject: Re: Software based SATA RAID-5 expandable arrays? 
+ 
+ 
+Ahh... guess it's time to upgrade again.... My plan was to start off with 3 drives in a RAID5, and slowly grow it up to maybe 6 or 7 drives before converting it over to a RAID6, and then topping it out at 12 drives (all I can fit in the case).... The performace hit isn't going to bother me too much - it's mainly going to be for video for my media server for the house...
 
-I'm trying to make an online-resizeable RAID1 array on a pair of
-hot-swap disks. My achievements :) so far include:
+So.. Can I expand a RAID6 now, which is good.... But can I change from RAID5 to RAID6 whilst online?
 
- - creating two VGs (one per disk) with one LV on each. I have created
-both LVs a little smaller than the VG size (1.1G out of 1.9G)
- - creating a RAID1 array via mdadm (2.5.6) from the two LVs
- - creating an XFS filesystem and torturing it with bonnie
 
-Now, the problem arises when I try to resize the array. I can resize
-the LVs to cover the entire VG area (and blockdev --getsize64 confirms
-this), however, I cannot get mdadm to notice the size change. mdadm -G
--z max /dev/md2 seems to do nothing and giving the size explicitely
-(mdadm -G -z <size> /dev/md2), both with size being 1990656 (expr
-`blockdev --getsize /dev/vg1/lv1` / 2), and with a smaller size
-(1990000, to leave some room for the superblock).
+Graham
 
-I failed and removed one LV and wanted to hot-add it but mdadm won't let me:
+----- Original Message ----
+From: Daniel Korstad <dan@korstad.net>
+To: gmitch64@yahoo.com
+Cc: linux-raid@vger.kernel.org
+Sent: Wednesday, 11 July, 2007 11:03:34 AM
+Subject: RE: Software based SATA RAID-5 expandable arrays?
 
-# mdadm --force -av /dev/md2 /dev/vg2/lv2
-mdadm: cannot find valid superblock in this array - HELP
 
-I also tried to zero the /dev/vg2/lv2 device completely but it still
-fails with the exact same message.
+That was true up to kernel 2.6.21 and 2.6 mdadm where support for RAID 6 reshape arrived.
 
-Possibly relevant version numbers:
- - base system: Debian etch 4.0 (pure vanilla install)
- - lvm2 tools:
-  LVM version:     2.02.07 (2006-07-17)
-  Library version: 1.02.08 (2006-07-17)
-  Driver version:  4.7.0
- - mdadm: 2.5.6-9 (Debian)
- - kernel: 2.6.18-4 (Debian)
+I have reshaped (added additional drives) to my RAID 6 twice now with no problems in the past few months.
 
-Any suggestions? Am I doing something wrong? I'd like to do it this
-way (instead of googled lvm-linear over a bunch of /dev/mdX) as it
-seems "cleaner".
+You mentioned that as the only disadvantage.  There are other things to consider.  The overhead for parity of course.  You can't have a RAID 6 with only three drives unless you build it with a missing drive and run degraded.  Also (my opinion) it might not worth the overhead with only 4 drives, unless you plan to reshape (add drives) down the road.  When you have an array with several drives, than it is more advantages as the percentage of disk space lost to parity goes down [((2/N)*100) where N is the number of drives in the array] so your storage efficiency increases ((Number of Drives -2)/Number of Drives).  And with more drives the statistics of getting hit with a bit error after you lose a drive and you are trying to rebuild increases.
 
-Please CC me on any answers as I'm not subscribed to the list.
-Best regards,
- Grzegorz Nosek
+Also, there is a very slight performance drop for write speeds on RAID6 since you are calculating p and q parity. 
+
+But for what I use my system for, family digital photos, file storage and media server I mostly read data and not bothered with slight performance hit in write.
+
+I have been using RAID6 with 10 disk for over a year and it has saved me at least once.  
+
+As far as converting the RAID6 to RAID5 or RAID4...  Never had a need to do this, but no probably not.
+
+Dan.
+
+
+
+----- Inline Message Follows -----
+To: Daniel Korstad ; Michael 
+Cc: linux-raid@vger.kernel.org
+From: jahammonds prost
+Subject: Re: Software based SATA RAID-5 expandable arrays?
+
+
+
+> Why do I use RAID6?  For the extra redundancy 
+
+I've been thinking about RAID6 too, having been bitten a couple of times.... the only disadvantage that I can see at the moment is that you can't convert and grow it... ie... I can't convert from a 4 drive RAID5 array to a 5 drive RAID6 one when I add an additional drive... I also don't think that you can grow a RAID6 array at the moment - I'd want to add additional drives over a few months as they come on sale.... Or am I wrong on both counts?
+
+
+Graham
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+      ___________________________________________________________
+Yahoo! Answers - Got a question? Someone out there knows the answer. Try it
+now.
+http://uk.answers.yahoo.com/
