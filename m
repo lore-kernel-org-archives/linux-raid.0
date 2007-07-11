@@ -1,36 +1,52 @@
 From: "Daniel Korstad" <dan@korstad.net>
-Subject: RE:    Software based SATA RAID-5 expandable arrays?
-Date: Wed, 11 Jul 2007 14:13:53 -0500
-Message-ID: <1864305413.1184181233902.JavaMail.root@gateway.korstad.net>
-References: <745823.56492.qm@web55802.mail.re3.yahoo.com>
+Subject: RE:     Software based SATA RAID-5 expandable arrays?
+Date: Wed, 11 Jul 2007 14:26:51 -0500
+Message-ID: <1523438849.1184182011829.JavaMail.root@gateway.korstad.net>
+References: <1864305413.1184181233902.JavaMail.root@gateway.korstad.net>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="us-ascii"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <745823.56492.qm@web55802.mail.re3.yahoo.com>
+In-Reply-To: <1864305413.1184181233902.JavaMail.root@gateway.korstad.net>
 Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: jahammonds prost <gmitch64@yahoo.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Currently, no you can't.
+ And if I were a betting man, I would guess you will need to add a physical drive to execute a RAID5 to RAID6 conversation for adding additional parity even if your current RAID5 is not full of data.
  
-However it is on the TODO list.
- http://neil.brown.name/blog/20050727143147-003
+So if your case only holds 12 Drives, I would not grow your RAID5 to 12 drives and expect to be able to convert to RAID6 with the same 12 drives even if they are not full of data.
  
-Maybe by the end of the year, Neil hit his goal on the raid6 grow for kernel 2.6.21... But Neil states the raid 5 to raid 6 is more complex to implement...
+But that is just my guess on a feature that does not even exist yet...
  
 Dan.
  
+----- Original Message -----
+From: linux-raid-owner@vger.kernel.org on behalf of Daniel Korstad 
+Sent: Wed, 7/11/2007 2:14pm
+To: jahammonds prost 
+Cc: linux-raid@vger.kernel.org
+Subject: RE: Software based SATA RAID-5 expandable arrays? 
+ 
+ 
+Currently, no you can't.
+
+However it is on the TODO list.
+http://neil.brown.name/blog/20050727143147-003
+
+Maybe by the end of the year, Neil hit his goal on the raid6 grow for kernel 2.6.21... But Neil states the raid 5 to raid 6 is more complex to implement...
+
+Dan.
+
 ----- Original Message -----
 From: jahammonds prost 
 Sent: Wed, 7/11/2007 12:26pm
 To: Daniel Korstad 
 Cc: linux-raid@vger.kernel.org
 Subject: Re: Software based SATA RAID-5 expandable arrays? 
- 
- 
+
+
 Ahh... guess it's time to upgrade again.... My plan was to start off with 3 drives in a RAID5, and slowly grow it up to maybe 6 or 7 drives before converting it over to a RAID6, and then topping it out at 12 drives (all I can fit in the case).... The performace hit isn't going to bother me too much - it's mainly going to be for video for my media server for the house...
 
 So.. Can I expand a RAID6 now, which is good.... But can I change from RAID5 to RAID6 whilst online?
@@ -88,3 +104,7 @@ More majordomo info at  http://vger.kernel.org/majordomo-info.html
 Yahoo! Answers - Got a question? Someone out there knows the answer. Try it
 now.
 http://uk.answers.yahoo.com/
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
