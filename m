@@ -1,70 +1,56 @@
-From: Jon Collette <jon@etelos.com>
-Subject: Re: mdadm create to existing raid5
-Date: Fri, 13 Jul 2007 11:25:20 -0700
-Message-ID: <4697C390.8000501@etelos.com>
-References: <200707122318.l6CNIao08247@www.watkins-home.com> <469736E2.7040802@dgreaves.com> <469754B0.4020104@dgreaves.com>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: 3ware 9650 tips
+Date: Fri, 13 Jul 2007 14:35:18 -0400 (EDT)
+Message-ID: <Pine.LNX.4.64.0707131434470.31742@p34.internal.lan>
+References: <alpine.LRH.0.999.0707131356520.25773@chaos.egr.duke.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <469754B0.4020104@dgreaves.com>
+In-Reply-To: <alpine.LRH.0.999.0707131356520.25773@chaos.egr.duke.edu>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Greaves <david@dgreaves.com>
-Cc: Guy Watkins <linux-raid@watkins-home.com>, linux-raid@vger.kernel.org
+To: Joshua Baker-LePain <jlb17@duke.edu>
+Cc: linux-ide-arrays@lists.math.uh.edu, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-The mdadm --create with missing instead of a drive is a good idea.  Do 
-you actually say missing or just leave out a drive?  However doesn't it 
-do a sync everytime you create?  So wouldn't you run the risk of 
-corrupting another drive each time?  Or does it not sync because of the 
-saying missing?
-
-To bad I am intent on learning things the hard way.
-
-/etc/mdadm.conf from before I recreated
-ARRAY /dev/md2 level=raid5 num-devices=4 spares=1 
-UUID=4f935928:2b7a1633:71d575d6:dab4d6bc
-
-/etc/mdadm.conf after I recreated
-ARRAY /dev/md1 level=raid5 num-devices=4 
-UUID=81bdd737:901c0a8f:af38cb94:41c4e3da
-
-Well before I heard back from you guys .  I noticed this problem and in 
-my fountain of infinite wisdom I did mdadm --zero-superblock to all my 
-raid drives and created them again thinking if I got it to look the same 
-it woud just fix it.  Well they do look the same now, I am at work or I 
-would give you the new mdadm.conf.
-
-I really need to learn patients :(
 
 
-David Greaves wrote:
-> David Greaves wrote:
->> For a simple 4 device array I there are 24 permutations - doable by 
->> hand, if you have 5 devices then it's 120, 6 is 720 - getting tricky ;)
+On Fri, 13 Jul 2007, Joshua Baker-LePain wrote:
+
+> My new system has a 3ware 9650SE-24M8 controller hooked to 24 500GB WD 
+> drives.  The controller is set up as a RAID6 w/ a hot spare.  OS is CentOS 5 
+> x86_64.  It's all running on a couple of Xeon 5130s on a Supermicro X7DBE 
+> motherboard w/ 4GB of RAM.
 >
-> Oh, wait, for 4 devices there are 24 permutations - and you need to do 
-> it 4 times, substituting 'missing' for each device - so 96 trials.
+> Trying to stick with a supported config as much as possible, I need to run 
+> ext3.  As per usual, though, initial ext3 numbers are less than impressive. 
+> Using bonnie++ to get a baseline, I get (after doing 'blockdev --setra 65536' 
+> on the device):
+> Write: 136MB/s
+> Read:  384MB/s
 >
-> 4320 trials for a 6 device array.
+> Proving it's not the hardware, with XFS the numbers look like:
+> Write: 333MB/s
+> Read:  465MB/s
 >
-> Hmm. I've got a 7 device raid 6 - I think I'll go an make a note of 
-> how it's put together... <grin>
+> How many folks are using these?  Any tuning tips?
 >
+> Thanks.
 >
-> Have a look at this section and the linked script.
-> I can't test it until later
+> -- 
+> Joshua Baker-LePain
+> Department of Biomedical Engineering
+> Duke University
 >
-> http://linux-raid.osdl.org/index.php/RAID_Recovery
->
-> http://linux-raid.osdl.org/index.php/Permute_array.pl
->
->
-> David
->
->
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+Let's try that again with the right address :)
+
+
+You are using HW RAID then?  Those numbers seem pretty awful for that
+setup, including linux-raid@ even it though it appears you're running HW raid,
+this is rather peculiar.
+
+To give you an example I get 464MB/s write and 627MB/s with a 10 disk
+raptor software raid5.
+
+Justin.
 
