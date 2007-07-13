@@ -1,27 +1,51 @@
-From: mail <lists@gmnet.net>
-Subject: Re-building an array
-Date: Fri, 13 Jul 2007 14:54:36 -0400
-Message-ID: <1184352876.24282.82.camel@thor.greenbuzz.net>
+From: Joshua Baker-LePain <jlb17@duke.edu>
+Subject: Re: 3ware 9650 tips
+Date: Fri, 13 Jul 2007 15:04:30 -0400 (EDT)
+Message-ID: <alpine.LRH.0.999.0707131501350.25773@chaos.egr.duke.edu>
+References: <alpine.LRH.0.999.0707131356520.25773@chaos.egr.duke.edu>
+ <Pine.LNX.4.64.0707131434470.31742@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; format=flowed; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.64.0707131434470.31742@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: linux-ide-arrays@lists.math.uh.edu, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi List,
+On Fri, 13 Jul 2007 at 2:35pm, Justin Piszcz wrote
 
-I am very new to raid, and I am having a problem.
+> On Fri, 13 Jul 2007, Joshua Baker-LePain wrote:
+>
+>> My new system has a 3ware 9650SE-24M8 controller hooked to 24 500GB WD 
+>> drives.  The controller is set up as a RAID6 w/ a hot spare.  OS is CentOS 
+>> 5 x86_64.  It's all running on a couple of Xeon 5130s on a Supermicro X7DBE 
+>> motherboard w/ 4GB of RAM.
+>> 
+>> Trying to stick with a supported config as much as possible, I need to run 
+>> ext3.  As per usual, though, initial ext3 numbers are less than impressive. 
+>> Using bonnie++ to get a baseline, I get (after doing 'blockdev --setra 
+>> 65536' on the device):
+>> Write: 136MB/s
+>> Read:  384MB/s
+>> 
+>> Proving it's not the hardware, with XFS the numbers look like:
+>> Write: 333MB/s
+>> Read:  465MB/s
+>> 
+>> How many folks are using these?  Any tuning tips?
+>> 
+>> Thanks.
+>
+> You are using HW RAID then?  Those numbers seem pretty awful for that
+> setup, including linux-raid@ even it though it appears you're running HW 
+> raid,
+> this is rather peculiar.
 
-I made a raid10 array, but I only used 2 disks.  Since then, one failed,
-and my system crashes with a kernel panic.
+Yep, hardware RAID -- I need the hot swappability (which, AFAIK, is still 
+an issue with md).
 
-I copied all the data, and I would like to start over.  How can I start
-from scratch? I need to get rid of my /dev/md0, fully test the discs,
-and build them over again as raid1 ?
-
-Thanks!
-Rick
-
-
+-- 
+Joshua Baker-LePain
+Department of Biomedical Engineering
+Duke University
