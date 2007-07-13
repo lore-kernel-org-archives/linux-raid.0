@@ -1,40 +1,33 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: Re-building an array
-Date: Fri, 13 Jul 2007 15:37:18 -0400 (EDT)
-Message-ID: <Pine.LNX.4.64.0707131537110.2064@p34.internal.lan>
-References: <1184352876.24282.82.camel@thor.greenbuzz.net>
+From: Bryan Christ <bryan.christ@hp.com>
+Subject: Raid array is not automatically detected.
+Date: Fri, 13 Jul 2007 15:36:01 -0500
+Message-ID: <4697E231.3070906@hp.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1184352876.24282.82.camel@thor.greenbuzz.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: mail <lists@gmnet.net>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+My apologies if this is not the right place to ask this question. 
+Hopefully it is.
 
+I created a RAID5 array with:
 
-On Fri, 13 Jul 2007, mail wrote:
+mdadm --create /dev/md0 --level=5 --raid-devices=5 /dev/sda1 /dev/sdb1 
+/dev/sdc1 /dev/sdd1 /dev/sde1
 
-> Hi List,
->
-> I am very new to raid, and I am having a problem.
->
-> I made a raid10 array, but I only used 2 disks.  Since then, one failed,
-> and my system crashes with a kernel panic.
->
-> I copied all the data, and I would like to start over.  How can I start
-> from scratch? I need to get rid of my /dev/md0, fully test the discs,
-> and build them over again as raid1 ?
->
-> Thanks!
-> Rick
->
->
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+mdadm -D /dev/md0 verifies the devices has a persistent super-block, but 
+upon reboot, /dev/md0 does not get automatically assembled (an hence is 
+not a installable/bootable device).
 
-man mdadm, check --zero-superblock option
+I have created several raid1 arrays and one raid5 array this way and 
+have never had this problem.  In all fairness, this is the first time I 
+have used mdadm for the job.  Usually, I boot to something like 
+SysRescueCD, used raidtools to create my array and then reboot with my 
+Slackware install CD.
+
+Anyone know why this might be happening?
+
+Bryan
