@@ -1,41 +1,35 @@
-From: "Williams, Dan J" <dan.j.williams@intel.com>
-Subject: RE: [-mm PATCH 0/2] 74% decrease in dispatched writes, stripe-queue take3
-Date: Fri, 13 Jul 2007 16:28:30 -0700
-Message-ID: <0C7297FA1D2D244A9C7F6959C0BF1E5202234496@azsmsx413.amr.corp.intel.com>
-References: <20070713160117.0db9d36d.akpm@linux-foundation.org>
+From: Michael Tokarev <mjt@tls.msk.ru>
+Subject: Re: 3ware 9650 tips
+Date: Sat, 14 Jul 2007 03:30:51 +0400
+Message-ID: <46980B2B.4070101@msgid.tls.msk.ru>
+References: <alpine.LRH.0.999.0707131356520.25773@chaos.egr.duke.edu> <Pine.LNX.4.64.0707131434470.31742@p34.internal.lan> <alpine.LRH.0.999.0707131501350.25773@chaos.egr.duke.edu>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
-In-Reply-To: <20070713160117.0db9d36d.akpm@linux-foundation.org>
+In-Reply-To: <alpine.LRH.0.999.0707131501350.25773@chaos.egr.duke.edu>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: neilb@suse.de, raziebe@gmail.com, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, "Nelson, Shannon" <shannon.nelson@intel.com>
+To: Joshua Baker-LePain <jlb17@duke.edu>
+Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, linux-ide-arrays@lists.math.uh.edu, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> -----Original Message-----
-> From: Andrew Morton [mailto:akpm@linux-foundation.org]
-> 
-> But your ongoing maintenance activity will continue to be held in
-those
-> trees, won't it?
+Joshua Baker-LePain wrote:
+[]
+> Yep, hardware RAID -- I need the hot swappability (which, AFAIK, is
+> still an issue with md).
 
-For now:
-	git://lost.foo-projects.org/~dwillia2/git/iop
-ioat-md-accel-for-linus
+Just out of curiocity - what do you mean by "swappability" ?
 
-is where the latest combined tree is located.  However, Shannon Nelson
-is coming online to own the i/oat driver so we may need to revisit this
-situation.  We want to avoid the git-ioat/git-md-accel collisions that
-happened in the past.  I will talk with Shannon about how we will
-coordinate this going forward.
+For many years we're using linux software raid, we had no problems
+with "swappability" of the component drives (in case of drive
+failures and what not).  With non-hotswappable drives (old scsi
+and ide ones), rebooting is needed for the system to recognize the
+drives.  For modern sas/sata drives, i can replace a faulty drive
+without anyone noticing...  Maybe you're referring to something
+else?
 
-The code ownership looks like this:
-ioat dma driver - Shannon
-net dma offload implementation - Shannon
-dmaengine core - shared
-async_tx api - shared
-iop-adma dma driver - Dan
-md-accel implementation - Dan
+Thanks.
+
+/mjt
+
+
