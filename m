@@ -1,38 +1,38 @@
 From: Andrew Klaassen <clawsoon@yahoo.com>
 Subject: Re: 3ware 9650 tips
-Date: Sat, 14 Jul 2007 09:11:58 -0700 (PDT)
-Message-ID: <164595.17925.qm@web60020.mail.yahoo.com>
-References: <Pine.LNX.4.64.0707141100230.29164@uplift.swm.pp.se>
+Date: Sat, 14 Jul 2007 09:14:12 -0700 (PDT)
+Message-ID: <240460.11630.qm@web60012.mail.yahoo.com>
+References: <Pine.LNX.4.64.0707141211240.3534@p34.internal.lan>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0707141100230.29164@uplift.swm.pp.se>
+In-Reply-To: <Pine.LNX.4.64.0707141211240.3534@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mikael Abrahamsson <swmike@swm.pp.se>, Justin Piszcz <jpiszcz@lucidpixels.com>
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
 Cc: Joshua Baker-LePain <jlb17@duke.edu>, linux-ide-arrays@lists.math.uh.edu, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---- Mikael Abrahamsson <swmike@swm.pp.se> wrote:
+--- Justin Piszcz <jpiszcz@lucidpixels.com> wrote:
 
-> Take your 3ware HW-raid, do a dd (read or write) to
-> the device and see it 
-> being very quick (because it can fit all the data
-> into its cache as it 
-> either reads or writes), then put a filesystem on it
-> and do writes there, 
-> especially journaled writes, and see write speed go
-> down to 1/10 or so.
+> 03:00.0 RAID bus controller: Silicon Image, Inc. SiI
+> 3132 Serial ATA Raid 
+> II Controller (rev 01)
+> 
+> $19.99 2 port SYBA cards (Silicon Image 3132s)
+> 
+> http://www.directron.com/sdsa2pex2ir.html
 
-How does non-cached performance tend to compare?
+Cool, thanks.
+
+What are your bonnie++ rewrite numbers?
 
 Andrew
 
 
 
 
-
        
 ____________________________________________________________________________________
-Looking for a deal? Find great prices on flights and hotels with Yahoo! FareChase.
-http://farechase.yahoo.com/
+Be a better Globetrotter. Get better travel answers from someone who knows. Yahoo! Answers - Check it out.
+http://answers.yahoo.com/dir/?link=list&sid=396545469
