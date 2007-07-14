@@ -1,66 +1,94 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: 3ware 9650 tips
-Date: Sat, 14 Jul 2007 12:18:12 -0400 (EDT)
-Message-ID: <Pine.LNX.4.64.0707141215200.3534@p34.internal.lan>
-References: <240460.11630.qm@web60012.mail.yahoo.com>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: Raid array is not automatically detected.
+Date: Sat, 14 Jul 2007 13:10:49 -0400
+Message-ID: <46990399.2020506@tmr.com>
+References: <4697E231.3070906@hp.com> <4698D4FC.2060100@tmr.com> <Pine.LNX.4.64.0707140952440.31528@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <240460.11630.qm@web60012.mail.yahoo.com>
+In-Reply-To: <Pine.LNX.4.64.0707140952440.31528@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andrew Klaassen <clawsoon@yahoo.com>
-Cc: Joshua Baker-LePain <jlb17@duke.edu>, linux-ide-arrays@lists.math.uh.edu, linux-raid@vger.kernel.org
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: Bryan Christ <bryan.christ@hp.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-
-
-On Sat, 14 Jul 2007, Andrew Klaassen wrote:
-
-> --- Justin Piszcz <jpiszcz@lucidpixels.com> wrote:
+Justin Piszcz wrote:
 >
->> 03:00.0 RAID bus controller: Silicon Image, Inc. SiI
->> 3132 Serial ATA Raid
->> II Controller (rev 01)
+>
+> On Sat, 14 Jul 2007, Bill Davidsen wrote:
+>
+>> Bryan Christ wrote:
+>>> My apologies if this is not the right place to ask this question. 
+>>> Hopefully it is.
+>>>
+>>> I created a RAID5 array with:
+>>>
+>>> mdadm --create /dev/md0 --level=5 --raid-devices=5 /dev/sda1 
+>>> /dev/sdb1 /dev/sdc1 /dev/sdd1 /dev/sde1
+>>>
+>>> mdadm -D /dev/md0 verifies the devices has a persistent super-block, 
+>>> but upon reboot, /dev/md0 does not get automatically assembled (an 
+>>> hence is not a installable/bootable device).
+>>>
+>>> I have created several raid1 arrays and one raid5 array this way and 
+>>> have never had this problem.  In all fairness, this is the first 
+>>> time I have used mdadm for the job.  Usually, I boot to something 
+>>> like SysRescueCD, used raidtools to create my array and then reboot 
+>>> with my Slackware install CD.
+>>>
+>>> Anyone know why this might be happening? 
 >>
->> $19.99 2 port SYBA cards (Silicon Image 3132s)
+>> Old type arrays are assembled due to having the proper partition 
+>> type, 0xfd "Linux auto RAID" and are assembled by the kernel. All 
+>> others are assembled by mdadm running out of initrd or similar, and 
+>> failures there result from not having a proper config file in the 
+>> initrd image.
 >>
->> http://www.directron.com/sdsa2pex2ir.html
+>> IIRC raidtools does set the array partitions to the auto-assemble 
+>> partition type. Hope that points you in the right direction. Running
+>>   "fdisk -l"
+>> as root will let you see all the partitions, types, etc, for 
+>> everything on your system.
+>>
+>> I may be wrong, I thought auto-assemble only worked with type 0 or 1.
+>>
+>> -- 
+>> bill davidsen <davidsen@tmr.com>
+>> CTO TMR Associates, Inc
+>> Doing interesting things with small computers since 1979
+>>
+>> -
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
 >
-> Cool, thanks.
+> I use auto-assemble (in conjunction with Debian's own startup scripts) 
+> and for my root RAID1 device,swap and /boot, it is automatically taken 
+> care of by the kernel.  For RAID5, it seems to work the same:
 >
-> What are your bonnie++ rewrite numbers?
+Are those partitions type "Linux RAID" or is the assemble being run from 
+the init scripts? I suspect the latter.
+> [   58.919378] RAID5 conf printout:
+> [   58.919418]  --- rd:10 wd:10
+> [   58.919457]  disk 0, o:1, dev:sdc1
+> [   58.919498]  disk 1, o:1, dev:sdd1
+> [   58.919539]  disk 2, o:1, dev:sde1
+> [   58.919579]  disk 3, o:1, dev:sdf1
+> [   58.919619]  disk 4, o:1, dev:sdg1
+> [   58.919659]  disk 5, o:1, dev:sdh1
+> [   58.919719]  disk 6, o:1, dev:sdi1
+> [   58.919759]  disk 7, o:1, dev:sdj1
+> [   58.919799]  disk 8, o:1, dev:sdk1
+> [   58.919839]  disk 9, o:1, dev:sdl1
 >
-> Andrew
-
-3 runs:
-p34,16G,77169,99,413276,80,155348,26,78932,99,535482,41,607.0,0,16:100000:16/64,1500,12,4886,15,1790,16,1821,17,6081,19,2159,19
-p34,16G,77659,99,451593,87,167267,28,79058,99,584310,45,613.1,0,16:100000:16/64,1843,15,6006,31,1325,11,1204,12,3629,12,3324,31
-p34,16G,77873,99,441881,87,166384,28,75182,99,566384,43,619.4,0,16:100000:16/64,1537,13,4474,15,1827,18,880,8,7658,22,3864,36
-
-avg: 
-p34,16G,77567,99,435583,84.6667,163000,27.3333,77724,99,562059,43,613.167,0,16:100000:16/64,1626.67,13.3333,5122,20.3333,1647.33,15,1301.67,12.3333,5789.33,17.6667,3115.67,28.6667
-
-rewrite:
-163000 KiB/s
-
-When tarring 4.4GB (of backup files) it takes about 20 seconds on XFS.
-
-Seems to vary as I change my configuration a lot:
-
-Here is from a while back:
-
-Version  1.03       ------Sequential Output------ --Sequential Input- 
---Random-
-                     -Per Chr- --Block-- -Rewrite- -Per Chr- --Block-- 
---Seeks--
-Machine        Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP 
-/sec %CP
-p34-raid5    15696M 73755  99 411445  75 198639  34 78721  99 483169  39 
-584.8   0
-                     ------Sequential Create------ --------Random 
-Create--------
-
-p34-raid5,15696M,73755,99,411445,75,198639,34,78721,99,483169,39,584.8,0,16:100000:16/64,919,8,9940,28,2841,18,922,8,3225,10,2422,18
+> Justin.
+>
 
 
-Justin.
+-- 
+bill davidsen <davidsen@tmr.com>
+  CTO TMR Associates, Inc
+  Doing interesting things with small computers since 1979
+
