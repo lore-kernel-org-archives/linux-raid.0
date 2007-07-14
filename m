@@ -1,44 +1,51 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: Software based SATA RAID-5 expandable arrays?
-Date: Sat, 14 Jul 2007 11:49:10 -0400
-Message-ID: <4698F076.7080507@tmr.com>
-References: <920282231.1184166214119.JavaMail.root@gateway.korstad.net>
+From: Andrew Klaassen <clawsoon@yahoo.com>
+Subject: Re: 3ware 9650 tips
+Date: Sat, 14 Jul 2007 09:10:03 -0700 (PDT)
+Message-ID: <947472.17759.qm@web60025.mail.yahoo.com>
+References: <Pine.LNX.4.64.0707140407310.3663@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <920282231.1184166214119.JavaMail.root@gateway.korstad.net>
+In-Reply-To: <Pine.LNX.4.64.0707140407310.3663@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: Daniel Korstad <dan@korstad.net>
-Cc: gmitch64@yahoo.com, linux-raid@vger.kernel.org
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: Joshua Baker-LePain <jlb17@duke.edu>, linux-ide-arrays@lists.math.uh.edu, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Daniel Korstad wrote:
->   
-> That was true up to kernel 2.6.21 and 2.6 mdadm where support for RAID 6 reshape arrived.
->  
-> I have reshaped (added additional drives) to my RAID 6 twice now with no problems in the past few months.
->  
-> You mentioned that as the only disadvantage.  There are other things to consider.  The overhead for parity of course.  You can't have a RAID 6 with only three drives unless you build it with a missing drive and run degraded.  Also (my opinion) it might not worth the overhead with only 4 drives, unless you plan to reshape (add drives) down the road.  When you have an array with several drives, than it is more advantages as the percentage of disk space lost to parity goes down [((2/N)*100) where N is the number of drives in the array] so your storage efficiency increases ((Number of Drives -2)/Number of Drives).  And with more drives the statistics of getting hit with a bit error after you lose a drive and you are trying to rebuild increases.
->  
-> Also, there is a very slight performance drop for write speeds on RAID6 since you are calculating p and q parity. 
->
->   
-I would expect (and see) a fairly substantial drop in write performance. 
-With RAID-5 only the parity needs to be read on a data change, and the 
-old data chunk. Then several XORs are done and the new data and new 
-parity written. With RAID-6, I believe that all the data in the stripe 
-need be read for calculating the q parity.
-> But for what I use my system for, family digital photos, file storage and media server I mostly read data and not bothered with slight performance hit in write.
->  
-> I have been using RAID6 with 10 disk for over a year and it has saved me at least once.  
->  
-> As far as converting the RAID6 to RAID5 or RAID4...  Never had a need to do this, but no probably not.
-Agree, for many things the write performance is not an issue, while the 
-reliability is. Backups are still desirable, of course.
+--- Justin Piszcz <jpiszcz@lucidpixels.com> wrote:
 
--- 
-bill davidsen <davidsen@tmr.com>
-  CTO TMR Associates, Inc
-  Doing interesting things with small computers since 1979
+> 
+> 
+> On Fri, 13 Jul 2007, Andrew Klaassen wrote:
+> 
+> > --- Justin Piszcz <jpiszcz@lucidpixels.com> wrote:
+> >
+> >> To give you an example I get 464MB/s write and
+> >> 627MB/s with a 10 disk
+> >> raptor software raid5.
+> >
+> > Is that with the 9650?
+> >
+> > Andrew
+> >
+> >
+> 
+> Sorry no, its with software raid 5 and the 965
+> chipset + three SATA PCI-e 
+> cards.
 
+Which cards?  Those are pretty good numbers, so I'm
+interested.
+
+Andrew
+
+
+
+
+
+ 
+____________________________________________________________________________________
+Never miss an email again!
+Yahoo! Toolbar alerts you the instant new Mail arrives.
+http://tools.search.yahoo.com/toolbar/features/mail/
