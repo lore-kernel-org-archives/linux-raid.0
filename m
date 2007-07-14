@@ -1,48 +1,43 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [-mm PATCH 0/2] 74% decrease in dispatched writes, stripe-queue
- take3
-Date: Fri, 13 Jul 2007 17:01:47 -0700
-Message-ID: <20070713170147.6129fc3b.akpm@linux-foundation.org>
-References: <20070713160117.0db9d36d.akpm@linux-foundation.org>
-	<0C7297FA1D2D244A9C7F6959C0BF1E5202234496@azsmsx413.amr.corp.intel.com>
+From: Zivago Lee <z@ziff.net>
+Subject: Re: Raid array is not automatically detected.
+Date: Fri, 13 Jul 2007 17:03:03 -0700
+Message-ID: <1184371385.29034.7.camel@miyagip>
+References: <4697E231.3070906@hp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <0C7297FA1D2D244A9C7F6959C0BF1E5202234496@azsmsx413.amr.corp.intel.com>
+In-Reply-To: <4697E231.3070906@hp.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Williams, Dan J" <dan.j.williams@intel.com>
-Cc: neilb@suse.de, raziebe@gmail.com, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, "Nelson, Shannon" <shannon.nelson@intel.com>
+To: Bryan Christ <bryan.christ@hp.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, 13 Jul 2007 16:28:30 -0700
-"Williams, Dan J" <dan.j.williams@intel.com> wrote:
+On Fri, 2007-07-13 at 15:36 -0500, Bryan Christ wrote:
+> My apologies if this is not the right place to ask this question. 
+> Hopefully it is.
+> 
+> I created a RAID5 array with:
+> 
+> mdadm --create /dev/md0 --level=5 --raid-devices=5 /dev/sda1 /dev/sdb1 
+> /dev/sdc1 /dev/sdd1 /dev/sde1
+> 
+> mdadm -D /dev/md0 verifies the devices has a persistent super-block, but 
+> upon reboot, /dev/md0 does not get automatically assembled (an hence is 
+> not a installable/bootable device).
+> 
+> I have created several raid1 arrays and one raid5 array this way and 
+> have never had this problem.  In all fairness, this is the first time I 
+> have used mdadm for the job.  Usually, I boot to something like 
+> SysRescueCD, used raidtools to create my array and then reboot with my 
+> Slackware install CD.
+> 
+> Anyone know why this might be happening?
 
-> > -----Original Message-----
-> > From: Andrew Morton [mailto:akpm@linux-foundation.org]
-> > 
-> > But your ongoing maintenance activity will continue to be held in
-> those
-> > trees, won't it?
-> 
-> For now:
-> 	git://lost.foo-projects.org/~dwillia2/git/iop
-> ioat-md-accel-for-linus
-> 
-> is where the latest combined tree is located.  However, Shannon Nelson
-> is coming online to own the i/oat driver so we may need to revisit this
-> situation.  We want to avoid the git-ioat/git-md-accel collisions that
-> happened in the past.  I will talk with Shannon about how we will
-> coordinate this going forward.
-> 
-> The code ownership looks like this:
-> ioat dma driver - Shannon
-> net dma offload implementation - Shannon
-> dmaengine core - shared
-> async_tx api - shared
-> iop-adma dma driver - Dan
-> md-accel implementation - Dan
+Are you trying to boot on this raid device?  I believe there is a
+limitation as what raid type you can boot off of (IIRC. only raid0 and
+raid1).
 
-oh my, how scary.  I'll go into hiding until the dust has settled.  Please
-send me the git URLs when it's all set up, thanks.
+-- 
+Zivago Lee <z@ziff.net>
 
