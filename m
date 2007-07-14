@@ -1,51 +1,38 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
+From: Andrew Klaassen <clawsoon@yahoo.com>
 Subject: Re: 3ware 9650 tips
-Date: Sat, 14 Jul 2007 12:11:44 -0400 (EDT)
-Message-ID: <Pine.LNX.4.64.0707141211240.3534@p34.internal.lan>
-References: <947472.17759.qm@web60025.mail.yahoo.com>
+Date: Sat, 14 Jul 2007 09:11:58 -0700 (PDT)
+Message-ID: <164595.17925.qm@web60020.mail.yahoo.com>
+References: <Pine.LNX.4.64.0707141100230.29164@uplift.swm.pp.se>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <947472.17759.qm@web60025.mail.yahoo.com>
+In-Reply-To: <Pine.LNX.4.64.0707141100230.29164@uplift.swm.pp.se>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andrew Klaassen <clawsoon@yahoo.com>
+To: Mikael Abrahamsson <swmike@swm.pp.se>, Justin Piszcz <jpiszcz@lucidpixels.com>
 Cc: Joshua Baker-LePain <jlb17@duke.edu>, linux-ide-arrays@lists.math.uh.edu, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+--- Mikael Abrahamsson <swmike@swm.pp.se> wrote:
+
+> Take your 3ware HW-raid, do a dd (read or write) to
+> the device and see it 
+> being very quick (because it can fit all the data
+> into its cache as it 
+> either reads or writes), then put a filesystem on it
+> and do writes there, 
+> especially journaled writes, and see write speed go
+> down to 1/10 or so.
+
+How does non-cached performance tend to compare?
+
+Andrew
 
 
-On Sat, 14 Jul 2007, Andrew Klaassen wrote:
 
-> --- Justin Piszcz <jpiszcz@lucidpixels.com> wrote:
->
->>
->>
->> On Fri, 13 Jul 2007, Andrew Klaassen wrote:
->>
->>> --- Justin Piszcz <jpiszcz@lucidpixels.com> wrote:
->>>
->>>> To give you an example I get 464MB/s write and
->>>> 627MB/s with a 10 disk
->>>> raptor software raid5.
->>>
->>> Is that with the 9650?
->>>
->>> Andrew
->>>
->>>
->>
->> Sorry no, its with software raid 5 and the 965
->> chipset + three SATA PCI-e
->> cards.
->
-> Which cards?  Those are pretty good numbers, so I'm
-> interested.
->
-> Andrew
 
-03:00.0 RAID bus controller: Silicon Image, Inc. SiI 3132 Serial ATA Raid 
-II Controller (rev 01)
 
-$19.99 2 port SYBA cards (Silicon Image 3132s)
-
-http://www.directron.com/sdsa2pex2ir.html
+       
+____________________________________________________________________________________
+Looking for a deal? Find great prices on flights and hotels with Yahoo! FareChase.
+http://farechase.yahoo.com/
