@@ -1,11 +1,12 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Subject: Re: raid5:md3: read error corrected ,  followed by ,  Machine Check
  Exception: .
-Date: Sat, 14 Jul 2007 20:11:04 -0400 (EDT)
-Message-ID: <Pine.LNX.4.64.0707142010250.20845@p34.internal.lan>
+Date: Sun, 15 Jul 2007 02:04:54 +0100
+Message-ID: <20070715020454.19de921f@the-village.bc.nu>
 References: <Pine.LNX.4.64.0707141658210.16611@filesrv1.baby-dragons.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <Pine.LNX.4.64.0707141658210.16611@filesrv1.baby-dragons.com>
 Sender: linux-raid-owner@vger.kernel.org
@@ -13,25 +14,32 @@ To: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
 Cc: linux-raid maillist <linux-raid@vger.kernel.org>, Linux Kernel Maillist <linux-kernel@vger.kernel.org>
 List-Id: linux-raid.ids
 
+On Sat, 14 Jul 2007 17:08:27 -0700 (PDT)
+"Mr. James W. Laferriere" <babydr@baby-dragons.com> wrote:
 
+>  	Hello All ,  I was under the impression that a 'machine check' would be 
+> caused by some near to the CPU hardware failure ,  Not a bad disk ?
 
-On Sat, 14 Jul 2007, Mr. James W. Laferriere wrote:
+It indicates a hardware failure
 
-> 	Hello All ,  I was under the impression that a 'machine check' would 
-> be caused by some near to the CPU hardware failure ,  Not a bad disk ?
-> 	I was also under the impression that software raid s/b a little more 
-> resilient than this .
-> 	But then maybe one or the other of the subsystems walked all over the 
-> other one trying to correct itself .  Who knows .
-> 	The below is ALL I'll be able to get .  A log of a previous boot is 
-> available at ...
->
-> http://www.baby-dragons.com/test-2.6.21.5-mptscsi-4.00.10.00-2007006161326.log
+> Jul 14 23:00:26 filesrv2 kernel: sd 2:0:1:0: SCSI error: return code = 0x08000002
+> Jul 14 23:00:26 filesrv2 kernel: sdd: Current: sense key: Medium Error
+> Jul 14 23:00:26 filesrv2 kernel:     Additional sense: Read retries exhausted
 
-Looks like /dev/sdd is on its way out, repace the drive?  I'm not sure
-however why you'd get those MCEs at the end unless you really have bad
-CPUs or memory in the system?
+So your disk throws a fit
 
-Justin.
+> Jul 14 23:17:06 filesrv2 kernel: raid5:md3: read error corrected (8 sectors at 72269184 on sdd)
+> Jul 14 23:17:06 filesrv2 kernel: raid5:md3: read error corrected (8 sectors at 72269192 on sdd)
 
+Raid happily recovers the mess
 
+> Jul 14 23:20:28 filesrv2 kernel: raid5:md3: read error corrected (8 sectors at 76388336 on sdd)
+> Jul 14 23:20:28 filesrv2 kernel: raid5:md3: read error corrected (8 sectors at 76388344 on sdd)
+> Jul 14 23:38:48 filesrv2 -- MARK --
+> CPU 5: Machine Check Exception: 0000000000000004
+> CPU 4: Machine Check Exception: 0000000000000004
+
+And at some point at least 18 minutes after the raid incident you log
+CPU problems.
+
+Are you sure the box or the room it is in didn't get excessively hot ?
