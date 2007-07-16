@@ -1,36 +1,35 @@
-From: Eric Sandeen <sandeen@sandeen.net>
-Subject: Re: 3ware 9650 tips
-Date: Mon, 16 Jul 2007 10:50:34 -0500
-Message-ID: <469B93CA.30801@sandeen.net>
-References: <alpine.LRH.0.999.0707131356520.25773@chaos.egr.duke.edu> <Pine.LNX.4.64.0707131434470.31742@p34.internal.lan> <4697CA4D.6020304@etelos.com> <Pine.LNX.4.64.0707131535270.2064@p34.internal.lan> <20070716024115.GJ12413810@sgi.com> <20070716122225.GB31489@sgi.com>
+From: David Greaves <david@dgreaves.com>
+Subject: Re: Raid array is not automatically detected.
+Date: Mon, 16 Jul 2007 16:21:41 +0100
+Message-ID: <469B8D05.1080003@dgreaves.com>
+References: <4697E231.3070906@hp.com> <4698D4FC.2060100@tmr.com> <Pine.LNX.4.64.0707140952440.31528@p34.internal.lan> <469B7E75.3030907@hp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <xfs-bounce@oss.sgi.com>
-In-Reply-To: <20070716122225.GB31489@sgi.com>
-Sender: xfs-bounce@oss.sgi.com
-Errors-to: xfs-bounce@oss.sgi.com
-To: David Chinner <dgc@sgi.com>
-Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, Jon Collette <jon@etelos.com>, Joshua Baker-LePain <jlb17@duke.edu>, linux-ide-arrays@lists.math.uh.edu, linux-raid@vger.kernel.org, xfs@oss.sgi.com
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <469B7E75.3030907@hp.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Bryan Christ <bryan.christ@hp.com>
+Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, Bill Davidsen <davidsen@tmr.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-David Chinner wrote:
-> On Mon, Jul 16, 2007 at 12:41:15PM +1000, David Chinner wrote:
->> On Fri, Jul 13, 2007 at 03:36:46PM -0400, Justin Piszcz wrote:
-...
->> If you've got any sort of serious disk array, ext3 is not the filesystem
->> to use....
-> 
-> To show what the difference is, I used blktrace and Chris Mason's
-> seekwatcher script on a simple, single threaded dd command on
-> a 12 disk dm RAID0 stripe:
-> 
-> # dd if=/dev/zero of=/mnt/scratch/fred bs=1024k count=10k; sync
-> 
-> http://oss.sgi.com/~dgc/writes/ext3_write.png
-> http://oss.sgi.com/~dgc/writes/xfs_write.png
+Bryan Christ wrote:
+> I do have the type set to 0xfd.  Others have said that auto-assemble 
+> only works on RAID 0 and 1, but just as Justin mentioned, I too have 
+> another box with RAID5 that gets auto assembled by the kernel (also no 
+> initrd).  I expected the same behavior when I built this array--again 
+> using mdadm instead of raidtools.
 
-Were those all with default mkfs & mount options?  ext3 in writeback
-mode might be an interesting comparison too.
+Any md arrays with partition type 0xfd using a 0.9 superblock should be 
+auto-assembled by a standard kernel.
 
--Eric
+If you want to boot from them you must ensure the kernel image is on a partition 
+that the bootloader can read - ie RAID 0. This is nothing to do with auto-assembly.
+
+So some questions:
+* are the partitions 0xfd ? yes.
+* is the kernel standard?
+* are the superblocks version 0.9? (mdadm --examine /dev/component)
+
+David
+
