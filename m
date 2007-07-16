@@ -1,53 +1,38 @@
-From: David Chinner <dgc@sgi.com>
-Subject: Re: 3ware 9650 tips
-Date: Tue, 17 Jul 2007 08:21:24 +1000
-Message-ID: <20070716222124.GF31489@sgi.com>
-References: <alpine.LRH.0.999.0707131356520.25773@chaos.egr.duke.edu> <Pine.LNX.4.64.0707131434470.31742@p34.internal.lan> <4697CA4D.6020304@etelos.com> <Pine.LNX.4.64.0707131535270.2064@p34.internal.lan> <20070716024115.GJ12413810@sgi.com> <20070716122225.GB31489@sgi.com> <469B93CA.30801@sandeen.net>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: Software RAID across multiple SATA host controllers - OK?
+Date: Mon, 16 Jul 2007 18:22:31 -0400 (EDT)
+Message-ID: <Pine.LNX.4.64.0707161822130.23875@p34.internal.lan>
+References: <469BE63D.8070504@covchurch.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <469B93CA.30801@sandeen.net>
+In-Reply-To: <469BE63D.8070504@covchurch.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: David Chinner <dgc@sgi.com>, Justin Piszcz <jpiszcz@lucidpixels.com>, Jon Collette <jon@etelos.com>, Joshua Baker-LePain <jlb17@duke.edu>, linux-ide-arrays@lists.math.uh.edu, linux-raid@vger.kernel.org, xfs@oss.sgi.com
+To: Greg Neumarke <greg.neumarke@covchurch.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Jul 16, 2007 at 10:50:34AM -0500, Eric Sandeen wrote:
-> David Chinner wrote:
-> > On Mon, Jul 16, 2007 at 12:41:15PM +1000, David Chinner wrote:
-> >> On Fri, Jul 13, 2007 at 03:36:46PM -0400, Justin Piszcz wrote:
-> ...
-> >> If you've got any sort of serious disk array, ext3 is not the filesystem
-> >> to use....
-> > 
-> > To show what the difference is, I used blktrace and Chris Mason's
-> > seekwatcher script on a simple, single threaded dd command on
-> > a 12 disk dm RAID0 stripe:
-> > 
-> > # dd if=/dev/zero of=/mnt/scratch/fred bs=1024k count=10k; sync
-> > 
-> > http://oss.sgi.com/~dgc/writes/ext3_write.png
-> > http://oss.sgi.com/~dgc/writes/xfs_write.png
-> 
-> Were those all with default mkfs & mount options?  ext3 in writeback
-> mode might be an interesting comparison too.
 
-Defaults. i.e.
 
-# mkfs.ext3 /dev/mapper/dm0
+On Mon, 16 Jul 2007, Greg Neumarke wrote:
 
-# mkfs.xfs /dev/mapper/dm0
+> Hi. I'm looking at setting up software RAID across 5 drives on an Intel 
+> motherboard that has a ICH7R 4-port SATA controller and also an additional 4 
+> SATA ports on a Marvell controller.
+>
+> Is there anything I should be aware of when creating a software RAID5 array 
+> with drives hosted on more that one controller? Is this a bad idea, or no 
+> problem?
+>
+> Thanks
+> -Greg
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-The mkfs.xfs picked up sunit/swidth correctly from the dm volume.
+I do it with 6 ports on 965 + 2 port sata controllers, no issues in my 
+case.
 
-Last time I checked, writeback made little difference to ext3 throughput;
-maybe 5-10% at most. I'll run it again later today...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+Justin.
