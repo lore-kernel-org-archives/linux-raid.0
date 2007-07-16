@@ -1,45 +1,66 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: FC7 install still lacks a feature
-Date: Sun, 15 Jul 2007 08:28:20 -0400
-Message-ID: <469A12E4.40008@tmr.com>
-References: <4699609D.7020705@tmr.com>
-Reply-To: For users of Fedora <fedora-list@redhat.com>
+From: David Chinner <dgc@sgi.com>
+Subject: Re: 3ware 9650 tips
+Date: Mon, 16 Jul 2007 12:41:15 +1000
+Message-ID: <20070716024115.GJ12413810@sgi.com>
+References: <alpine.LRH.0.999.0707131356520.25773@chaos.egr.duke.edu> <Pine.LNX.4.64.0707131434470.31742@p34.internal.lan> <4697CA4D.6020304@etelos.com> <Pine.LNX.4.64.0707131535270.2064@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <fedora-list-bounces@redhat.com>
-In-Reply-To: <4699609D.7020705@tmr.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/fedora-list>,
-	<mailto:fedora-list-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/fedora-list>
-List-Post: <mailto:fedora-list@redhat.com>
-List-Help: <mailto:fedora-list-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/fedora-list>,
-	<mailto:fedora-list-request@redhat.com?subject=subscribe>
-Sender: fedora-list-bounces@redhat.com
-Errors-To: fedora-list-bounces@redhat.com
-To: Linux RAID <linux-raid@vger.kernel.org>, For users of Fedora <fedora-list@redhat.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.64.0707131535270.2064@p34.internal.lan>
+Sender: linux-raid-owner@vger.kernel.org
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: Jon Collette <jon@etelos.com>, Joshua Baker-LePain <jlb17@duke.edu>, linux-ide-arrays@lists.math.uh.edu, linux-raid@vger.kernel.org, xfs@oss.sgi.com
 List-Id: linux-raid.ids
 
-Bill Davidsen wrote:
-> When configuring RAID arrays, advanced users should be offered the 
-> option to set the chunk size. And using ext3 or any other f/s which 
-> knows a little about RAID, the stride= option check be set to the size 
-> of a stripe, the number of data drives times the chunk size.
+On Fri, Jul 13, 2007 at 03:36:46PM -0400, Justin Piszcz wrote:
+> On Fri, 13 Jul 2007, Jon Collette wrote:
 > 
-> Booting a rescue or "Live-CD" and doing the partitioning will solve the 
-> first, not the 2nd.
+> >Wouldn't Raid 6 be slower than Raid 5 because of the extra fault tolerance?
+> >  http://www.enterprisenetworksandservers.com/monthly/art.php?1754 - 20% 
+> >drop according to this article
+> >
+> >His 500GB WD drives are 7200RPM compared to the Raptors 10K.  So his 
+> >numbers will be slower. 
+> >Justin what file system do you have running on the Raptors?  I think thats 
+> >an interesting point made by Joshua.
 > 
-I'm wrong, if I lay down a filesystem with the stride I want, and tell 
-the installer not to reformat, I can get what I want. Woke up this 
-morning with that thought.
+> I use XFS:
 
--- 
-Bill Davidsen <davidsen@tmr.com>
-   "We have more to fear from the bungling of the incompetent than from
-the machinations of the wicked."  - from Slashdot
+When it comes to bandwidth, there is good reason for that.
 
+> >>>Trying to stick with a supported config as much as possible, I need to 
+> >>>run ext3.  As per usual, though, initial ext3 numbers are less than 
+> >>>impressive. Using bonnie++ to get a baseline, I get (after doing 
+> >>>'blockdev --setra 65536' on the device):
+> >>>Write: 136MB/s
+> >>>Read:  384MB/s
+> >>>
+> >>>Proving it's not the hardware, with XFS the numbers look like:
+> >>>Write: 333MB/s
+> >>>Read:  465MB/s
+> >>>
+
+Those are pretty typical numbers. In my experience, ext3 is limited to about
+250MB/s buffered write speed. It's not disk limited, it's design limited. e.g.
+on a disk subsystem where XFS was getting 4-5GB/s buffered write, ext3 was doing
+250MB/s.
+
+http://oss.sgi.com/projects/xfs/papers/ols2006/ols-2006-paper.pdf
+
+If you've got any sort of serious disk array, ext3 is not the filesystem
+to use....
+
+> >>>How many folks are using these?  Any tuning tips?
+
+Make sure you tell XFS the correct sunit/swidth. For hardware
+raid5/6, sunit = per-disk chunksize, swidth = number of *data* disks in
+array.
+
+Cheers,
+
+Dave.
 -- 
-fedora-list mailing list
-fedora-list@redhat.com
-To unsubscribe: https://www.redhat.com/mailman/listinfo/fedora-list
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
