@@ -1,23 +1,30 @@
-From: Andrew Burgess <aab@cichlid.com>
-Subject: Re: raid5:md3: read error corrected , followed by , Machine Check
-Date: Tue, 17 Jul 2007 08:18:30 -0700
-Message-ID: <200707171518.l6HFIUBU022021@cichlid.com>
+From: Tobias Rehn <tr@crontex.de>
+Subject: Software Raid 5, multiple raid controller disk mixup problem
+Date: Tue, 17 Jul 2007 18:25:10 +0200
+Message-ID: <469CED66.50109@crontex.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> 	The 'MCE's have been ongoing for sometime .  I have replaced every item 
->in the system except the chassis & scsi backplane & power supply(750Watts) .
-> 	Everything .  MB,cpu,memory,scsi controllers, ...
-> 	These MCE's only happen when I am trying to build or bonnie++ test the 
->md3 .  It consists of (now 7+1spare) 146GB drives in the SuperMicro 
->SYS-6035B-8B's backplane attached to a LSI22320 .
+Hey Guys,
 
-Probably every old timer has a story about chasing a hardware problem
-where changing the power supply finally fixed it. I keep spares now.
+I am currently having a strange problem. I have a system with 4 onboard 
+sata ports. The system also has four 4-port sata controllers plugged 
+into it.
 
-If an MCE (which means bad cpu) doesn't go away after changing the cpu
-it would either have to be temperature, power or a bug in the MCE code.
-What else could it be?
+The raid works fine but if i reboot the system, sometimes my harddisks 
+are mixed up so that my system disk(normally sda) is sometimes sdb or 
+sdc... My system disk is plugged to one of onboard sata ports.
 
+I already tried to bind the disks statically via udev to a certain 
+device name, but no chance.
+
+Are there any other methods to stop this mixing of the drives? Or does 
+anyone have the same problem?
+
+Kind regards,
+Tobias Rehn
