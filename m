@@ -1,50 +1,57 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: Slow Soft-RAID 5 performance
-Date: Wed, 18 Jul 2007 06:28:46 -0400 (EDT)
-Message-ID: <Pine.LNX.4.64.0707180626481.7659@p34.internal.lan>
-References: <469DE3BB.9070604@grupopie.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH] block: cosmetic changes
+Date: Wed, 18 Jul 2007 19:56:55 +0900
+Message-ID: <20070718105655.GB22374@htj.dyndns.org>
+References: <18006.38689.818186.221707@notabene.brown>
+	<18010.12472.209452.148229@notabene.brown>
+	<20070530093503.GA15559@kernel.dk>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <469DE3BB.9070604@grupopie.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Rui Santos <rsantos@grupopie.com>
-Cc: Linux RAID <linux-raid@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Ingo Molnar <mingo@redhat.com>, Neil Brown <neilb@suse.de>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <dm-devel-bounces@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <20070530093503.GA15559@kernel.dk>
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: David Chinner <dgc@sgi.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, Phillip Susi <psusi@cfl.rr.com>, Andreas Dilger <adilger@clusterfs.com>
 List-Id: linux-raid.ids
 
+Cosmetic changes.  This is taken from Jens' zero-length barrier patch.
 
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+Cc: Jens Axboe <jes.axboe@oracle.com>
+---
+ block/ll_rw_blk.c |    5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-On Wed, 18 Jul 2007, Rui Santos wrote:
-
-> Hi,
->
-> I'm getting a strange slow performance behavior on a recently installed
-> Server. Here are the details:
->
-> Server: Asus AS-TS500-E4A
-> Board: Asus DSBV-D (
-> http://uk.asus.com/products.aspx?l1=9&l2=39&l3=299&l4=0&model=1210&modelmenu=2
-> )
-> Hard Drives: 3x Seagate ST3400620AS (
-> http://www.seagate.com/ww/v/index.jsp?vgnextoid=8eff99f4fa74c010VgnVCM100000dd04090aRCRD&locale=en-US
-> )
-> I'm using the AHCI driver, although with ata_piix, the behavior is the
-> same. Here's some info about the AHCI controler:
->
-
-With three disks, if everything was perfect yeah 120MB/s writes.  When I 
-had started out with 4 raptors I was getting 164MB/s read and write.  By 
-default with no optimizations you will not get good speed.
-
-With no optimizations with 10 raptors I get 180-200MB/s, with 
-optimizations, 464MB/s write and 622MB/s read.
-
-1. Use XFS if you wan't speed.
-2. Use 128k, 256k or 1MiB chunk size.
-3. Use 8192k, 16384k stripe_cache_size.
-4. Use 65536 readahead size.
-
-These are only some of the optimizations I use.
-
-Justin.
-
+Index: work/block/ll_rw_blk.c
+===================================================================
+--- work.orig/block/ll_rw_blk.c
++++ work/block/ll_rw_blk.c
+@@ -443,7 +443,8 @@ static inline struct request *start_orde
+ 	rq_init(q, rq);
+ 	if (bio_data_dir(q->orig_bar_rq->bio) == WRITE)
+ 		rq->cmd_flags |= REQ_RW;
+-	rq->cmd_flags |= q->ordered & QUEUE_ORDERED_FUA ? REQ_FUA : 0;
++	if (q->ordered & QUEUE_ORDERED_FUA)
++		rq->cmd_flags |= REQ_FUA;
+ 	rq->elevator_private = NULL;
+ 	rq->elevator_private2 = NULL;
+ 	init_request_from_bio(rq, q->orig_bar_rq->bio);
+@@ -3167,7 +3168,7 @@ end_io:
+ 			break;
+ 		}
+ 
+-		if (unlikely(bio_sectors(bio) > q->max_hw_sectors)) {
++		if (unlikely(nr_sectors > q->max_hw_sectors)) {
+ 			printk("bio too big device %s (%u > %u)\n", 
+ 				bdevname(bio->bi_bdev, b),
+ 				bio_sectors(bio),
