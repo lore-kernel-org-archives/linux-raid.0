@@ -1,43 +1,54 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
+From: Sander <sander@humilis.net>
 Subject: Re: Software RAID5 Horrible Write Speed On 3ware Controller!!
-Date: Wed, 18 Jul 2007 08:01:15 -0400 (EDT)
-Message-ID: <Pine.LNX.4.64.0707180800280.7659@p34.internal.lan>
-References: <Pine.LNX.4.64.0707180614480.7659@p34.internal.lan>
- <200707181359.21710.a1426z@gawab.com>
+Date: Wed, 18 Jul 2007 14:09:22 +0200
+Message-ID: <20070718120922.GC8029@cumulus>
+References: <Pine.LNX.4.64.0707180614480.7659@p34.internal.lan> <20070718112612.GA8029@cumulus> <Pine.LNX.4.64.0707180734340.7659@p34.internal.lan>
+Reply-To: sander@humilis.net
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200707181359.21710.a1426z@gawab.com>
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.64.0707180734340.7659@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: Al Boldi <a1426z@gawab.com>
-Cc: linux-ide-arrays@lists.math.uh.edu, xfs@oss.sgi.com, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: Sander <sander@humilis.net>, linux-ide-arrays@lists.math.uh.edu, xfs@oss.sgi.com, linux-raid@vger.kernel.org, linux@vger.kernel.org
 List-Id: linux-raid.ids
 
-
-
-On Wed, 18 Jul 2007, Al Boldi wrote:
-
-> Justin Piszcz wrote:
->> UltraDense-AS-3ware-R5-9-disks,16G,50676,89,96019,34,46379,9,60267,99,5010
->> 98,56,248.5,0,16:100000:16/64,240,3,21959,84,1109,10,286,4,22923,91,544,6
->> UltraDense-AS-3ware-R5-9-disks,16G,49983,88,96902,37,47951,10,59002,99,529
->> 121,60,210.3,0,16:100000:16/64,250,3,25506,98,1163,10,268,3,18003,71,772,8
->> UltraDense-AS-3ware-R5-9-disks,16G,49811,87,95759,35,48214,10,60153,99,538
->> 559,61,276.8,0,16:100000:16/64,233,3,25514,97,1100,9,279,3,21398,84,839,9
+Justin Piszcz wrote (ao):
+> On Wed, 18 Jul 2007, Sander wrote:
+>> Justin Piszcz wrote (ao):
+>>> Its too bad that there are no regular > 4 port SATA PCI-e controllers
+>>> out there.
+>>
+>> Is there a disadvantage to using a SaS controller from for example
+>> lsi.com ?
+>>
+>> http://lsi.com/storage_home/products_home/host_bus_adapters/sas_hbas/index.html
+>>
+>> I haven't tried them yet, but on paper it looks like an option, no?
 >
-> Is there any easy way to decipher these numbers?
->
->
-> Thanks!
->
-> --
-> Al
->
->
+> Hmm that is also a good idea- but I am afraid there could be a
+> similiar issue where it tries to do weird caching stuff, even when the
+> drives are in JBOD. Unless they offer a !raid SAS controller that
+> supports SATA drives.
 
-Yeah, I put them in that format so people crawling the mailing list later 
-could re-produce the HTML version:
+I guess they are cheap enough to try (I haven't yet):
 
-cat that_file_containing_that_output | /usr/bin/bon_csv2html > out.html
+PCIe:
+http://lsi.com/storage_home/products_home/host_bus_adapters/sas_hbas/lsisas3080xr/index.html
 
-Justin.
+PCI-X
+http://lsi.com/storage_home/products_home/host_bus_adapters/sas_hbas/lsisas3081er/index.html
+
+All SaS hardware (controllers, chassis, etc) support SATA disks AFAIK.
+
+I have good experience with the Supermicro 8-Port SATA Card
+http://www.supermicro.nl/products/accessories/addon/AoC-SAT2-MV8.cfm
+
+But that is PCI-X while you requested PCIe.
+
+	With kind regards, Sander
+
+-- 
+Humilis IT Services and Solutions
+http://www.humilis.net
