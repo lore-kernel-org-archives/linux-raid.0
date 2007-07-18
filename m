@@ -1,49 +1,71 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: Software RAID5 Horrible Write Speed On 3ware Controller!!
-Date: Wed, 18 Jul 2007 12:26:29 -0400 (EDT)
-Message-ID: <Pine.LNX.4.64.0707181225560.26004@p34.internal.lan>
-References: <Pine.LNX.4.64.0707180614480.7659@p34.internal.lan>
- <469DF039.4040906@theendofthetunnel.de>
+From: Rui Santos <rsantos@grupopie.com>
+Subject: Re: Slow Soft-RAID 5 performance
+Date: Wed, 18 Jul 2007 18:13:19 +0100
+Message-ID: <469E4A2F.2010807@grupopie.com>
+References: <469DE3BB.9070604@grupopie.com> <Pine.LNX.4.64.0707180626481.7659@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <469DF039.4040906@theendofthetunnel.de>
+In-Reply-To: <Pine.LNX.4.64.0707180626481.7659@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: Hannes Dorbath <light@theendofthetunnel.de>
-Cc: linux-ide-arrays@lists.math.uh.edu, xfs@oss.sgi.com, linux-raid@vger.kernel.org, linux@vger.kernel.org
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: Linux RAID <linux-raid@vger.kernel.org>, Ingo Molnar <mingo@redhat.com>, Neil Brown <neilb@suse.de>
 List-Id: linux-raid.ids
 
+Justin Piszcz wrote:
+>
+>
+> On Wed, 18 Jul 2007, Rui Santos wrote:
+>
+>> Hi,
+>>
+>> I'm getting a strange slow performance behavior on a recently installed
+>> Server. Here are the details:
+>>
+>> Server: Asus AS-TS500-E4A
+>> Board: Asus DSBV-D (
+>> http://uk.asus.com/products.aspx?l1=9&l2=39&l3=299&l4=0&model=1210&modelmenu=2
+>>
+>> )
+>> Hard Drives: 3x Seagate ST3400620AS (
+>> http://www.seagate.com/ww/v/index.jsp?vgnextoid=8eff99f4fa74c010VgnVCM100000dd04090aRCRD&locale=en-US
+>>
+>> )
+>> I'm using the AHCI driver, although with ata_piix, the behavior is the
+>> same. Here's some info about the AHCI controler:
+>>
+>
+> With three disks, if everything was perfect yeah 120MB/s writes.  When
+> I had started out with 4 raptors I was getting 164MB/s read and
+> write.  By default with no optimizations you will not get good speed.
+>
+> With no optimizations with 10 raptors I get 180-200MB/s, with
+> optimizations, 464MB/s write and 622MB/s read.
+>
+> 1. Use XFS if you wan't speed.
+> 2. Use 128k, 256k or 1MiB chunk size.
+> 3. Use 8192k, 16384k stripe_cache_size.
+> 4. Use 65536 readahead size.
+>
+> These are only some of the optimizations I use.
+Thank you for your reply.
 
+I've used: 1) xfs, 2) 256k, 3) 16384k and 4) 65536 readahead.
 
-On Wed, 18 Jul 2007, Hannes Dorbath wrote:
+Also tryed ext3 with --stride option. The speed is just a bit slower...
 
-> On 18.07.2007 12:23, Justin Piszcz wrote:
->> I am sure one of your questions is, well, why use SW RAID5 on the 
->> controller?  Because SW RAID5 is usually much faster than HW RAID5, at 
->> least in my tests:
+I can get ~100MB/sec.
+
+The hardware is capable of doing better tough...
+
+Thanks for your help.
 >
-> Though that's no answer to your question, I really can't confirm that. I'm 
-> running a 3Ware 9650 with 8x 7200 SATAs in HW RAID 6. Writes are between 
-> 340-360MB/sec and reads peak at 430-450MB/sec. That seems to be the absolute 
-> possible maximum those drives can deliver. The card even seems to do some 
-> really smart stuff, as the read speed is in excess of the physical raw speed 
-> of 6 drives.
->
-> You have done the usual settings, 3Ware recommends?
->
-> echo 64 > /sys/block/sda/queue/max_sectors_kb
-> echo 512 > /sys/block/sda/queue/nr_requests
-> echo "deadline" > /sys/block/sda/queue/scheduler
-> blockdev --setra 16384 /dev/sdX
->
-> Have you set the correct su,sw options for XFS?
+> Justin.
+Rui Santos
+
 >
 >
-> -- 
-> Regards,
-> Hannes Dorbath
+>
 >
 
-I will try these options during future testing and re-visit the speeds of 
-regular HW RAID5, thanks!  I know they are part of the 3ware doc and I 
-need to re-bench with these.
