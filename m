@@ -1,38 +1,49 @@
-From: David Greaves <david@dgreaves.com>
-Subject: Re: Raid array is not automatically detected.
-Date: Wed, 18 Jul 2007 09:52:04 +0100
-Message-ID: <469DD4B4.4080103@dgreaves.com>
-References: <4697E231.3070906@hp.com> <4698D4FC.2060100@tmr.com> <Pine.LNX.4.64.0707140952440.31528@p34.internal.lan> <469B7E75.3030907@hp.com> <469B8D05.1080003@dgreaves.com> <Pine.LNX.4.64.0707172227490.16002@twinlark.arctic.org>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: Possible data corruption sata_sil24?
+Date: Wed, 18 Jul 2007 17:53:39 +0900
+Message-ID: <469DD513.7070202@gmail.com>
+References: <20070706012432.GB29789@jabberwocky.com> <4693A5A0.5070306@gmail.com> <20070713014252.GA17811@jabberwocky.com> <46972AEE.2040805@gmail.com> <20070713115919.GC17811@jabberwocky.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0707172227490.16002@twinlark.arctic.org>
+In-Reply-To: <20070713115919.GC17811@jabberwocky.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: dean gaudet <dean@arctic.org>
-Cc: Bryan Christ <bryan.christ@hp.com>, Justin Piszcz <jpiszcz@lucidpixels.com>, Bill Davidsen <davidsen@tmr.com>, linux-raid@vger.kernel.org
+To: dshaw@jabberwocky.com
+Cc: linux-ide@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-dean gaudet wrote:
+David Shaw wrote:
+>>> It fails whether I use a raw /dev/sdd or partition it into one large
+>>> /dev/sdd1, or partition into multiple partitions.  sata_sil24 seems to
+>>> work by itself, as does dm, but as soon as I mix sata_sil24+dm, I get
+>>> corruption.
+>> Hmmmm.... Can you reproduce the corruption by accessing both devices
+>> simultaneously without using dm?  Considering ich5 does fine, it looks
+>> like hardware and/or driver problem and I really wanna rule out dm.
 > 
-> On Mon, 16 Jul 2007, David Greaves wrote:
+> I think I wasn't clear enough before.  The corruption happens when I
+> use dm to create two dm mappings that both reside on the same real
+> device.  Using two different devices, or two different partitions on
+> the same physical device works properly.  ich5 does fine with these 3
+> tests, but sata_sil24 fails:
 > 
->> Bryan Christ wrote:
->>> I do have the type set to 0xfd.  Others have said that auto-assemble only
->>> works on RAID 0 and 1, but just as Justin mentioned, I too have another box
->>> with RAID5 that gets auto assembled by the kernel (also no initrd).  I
->>> expected the same behavior when I built this array--again using mdadm
->>> instead of raidtools.
->> Any md arrays with partition type 0xfd using a 0.9 superblock should be
->> auto-assembled by a standard kernel.
+>  * /dev/sdd, create 2 dm linear mappings on it, mke2fs and use those
+>    dm "devices" == corruption
 > 
-> no... debian (and probably ubuntu) do not build md into the kernel, they 
-> build it as a module, and the module does not auto-detect 0xfd.  i don't 
-> know anything about slackware, but i just felt it worth commenting that "a 
-> standard kernel" is not really descriptive enough.
+>  * Partition /dev/sdd into /dev/sdd1 and /dev/sdd2, mke2fs and use
+>    those partitions == no corruption
+> 
+>  * Partition /dev/sdd into /dev/sdd1 and /dev/sdd2, create 2 dm linear
+>    mappings on /dev/sdd1, mke2fs and use those dm "devices" ==
+>    corruption
 
-Good point - I should have mentioned the non-module bit!
+I'm not sure whether this is problem of sata_sil24 or dm layer.  Cc'ing
+linux-raid for help.  How much memory do you have?  One big difference
+between ata_piix and sata_sil24 is that sil24 can handle 64bit DMA.
+Maybe dma mapping or something interacts weirdly with dm there?
 
-http://linux-raid.osdl.org/index.php/Autodetect
+Thanks.
 
-David
+-- 
+tejun
