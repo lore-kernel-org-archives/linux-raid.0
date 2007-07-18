@@ -1,40 +1,44 @@
-From: Hannes Dorbath <light@theendofthetunnel.de>
+From: Gabor Gombas <gombasg@sztaki.hu>
 Subject: Re: Software RAID5 Horrible Write Speed On 3ware Controller!!
-Date: Wed, 18 Jul 2007 12:49:29 +0200
-Message-ID: <469DF039.4040906@theendofthetunnel.de>
-References: <Pine.LNX.4.64.0707180614480.7659@p34.internal.lan>
+Date: Wed, 18 Jul 2007 16:26:37 +0200
+Message-ID: <20070718142637.GG13772@boogie.lpds.sztaki.hu>
+References: <Pine.LNX.4.64.0707180614480.7659@p34.internal.lan> <20070718110525.GF13772@boogie.lpds.sztaki.hu> <Pine.LNX.4.64.0707180718000.7659@p34.internal.lan> <469DF8D3.8020908@theendofthetunnel.de> <20070718125116.GB29835@cthulhu.home.robinhill.me.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0707180614480.7659@p34.internal.lan>
+Content-Disposition: inline
+In-Reply-To: <20070718125116.GB29835@cthulhu.home.robinhill.me.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: linux-ide-arrays@lists.math.uh.edu, xfs@oss.sgi.com, linux-raid@vger.kernel.org, linux@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 18.07.2007 12:23, Justin Piszcz wrote:
-> I am sure one of your questions is, well, why use SW RAID5 on the 
-> controller?  Because SW RAID5 is usually much faster than HW RAID5, at 
-> least in my tests:
+On Wed, Jul 18, 2007 at 01:51:16PM +0100, Robin Hill wrote:
 
-Though that's no answer to your question, I really can't confirm that. 
-I'm running a 3Ware 9650 with 8x 7200 SATAs in HW RAID 6. Writes are 
-between 340-360MB/sec and reads peak at 430-450MB/sec. That seems to be 
-the absolute possible maximum those drives can deliver. The card even 
-seems to do some really smart stuff, as the read speed is in excess of 
-the physical raw speed of 6 drives.
+> Just to pick up on this one (as I'm about to reformat my array as XFS) -
+> does this actually work with a hardware controller?  Is there any
+> assurance that the XFS stripes align with the hardware RAID stripes?  Or
+> could you just end up offsetting everything so that every 128k chunk on
+> the XFS side of things fits half-and-half into two hardware raid chunks
+> (especially if the array has been partitioned)?
 
-You have done the usual settings, 3Ware recommends?
+If you partition the device and does not explicitely align the
+partitions on a stripe boundary then you'll get that effect. Also if you
+do not use partitions but use LVM instead, then the stripe size should
+be a power of 2 meaning the number of data disks should also be a power
+of 2 to get the best performance.
 
-echo 64 > /sys/block/sda/queue/max_sectors_kb
-echo 512 > /sys/block/sda/queue/nr_requests
-echo "deadline" > /sys/block/sda/queue/scheduler
-blockdev --setra 16384 /dev/sdX
+> In which case would
+> it be better (performance-wise) to provide the su,sw values or not?
 
-Have you set the correct su,sw options for XFS?
+Only testing can tell... But if one logical file system block spans
+multiple stripes then you will lose some performance; if that will be
+noticable or not depends on your usage pattern.
 
+Gabor
 
 -- 
-Regards,
-Hannes Dorbath
+     ---------------------------------------------------------
+     MTA SZTAKI Computer and Automation Research Institute
+                Hungarian Academy of Sciences
+     ---------------------------------------------------------
