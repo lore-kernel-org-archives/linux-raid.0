@@ -1,42 +1,49 @@
-From: Bryan Christ <bryan.christ@hp.com>
-Subject: Re: Raid array is not automatically detected.
-Date: Wed, 18 Jul 2007 10:49:32 -0500
-Message-ID: <469E368C.6010002@hp.com>
-References: <4697E231.3070906@hp.com> <4698D4FC.2060100@tmr.com> <Pine.LNX.4.64.0707140952440.31528@p34.internal.lan> <469B7E75.3030907@hp.com> <469B8D05.1080003@dgreaves.com> <469E2626.30204@hp.com> <469E35ED.3040500@dgreaves.com>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: Software RAID5 Horrible Write Speed On 3ware Controller!!
+Date: Wed, 18 Jul 2007 12:26:29 -0400 (EDT)
+Message-ID: <Pine.LNX.4.64.0707181225560.26004@p34.internal.lan>
+References: <Pine.LNX.4.64.0707180614480.7659@p34.internal.lan>
+ <469DF039.4040906@theendofthetunnel.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <469E35ED.3040500@dgreaves.com>
+In-Reply-To: <469DF039.4040906@theendofthetunnel.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Greaves <david@dgreaves.com>
-Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, Bill Davidsen <davidsen@tmr.com>, linux-raid@vger.kernel.org
+To: Hannes Dorbath <light@theendofthetunnel.de>
+Cc: linux-ide-arrays@lists.math.uh.edu, xfs@oss.sgi.com, linux-raid@vger.kernel.org, linux@vger.kernel.org
 List-Id: linux-raid.ids
 
-Ya.  I saw my mistake just a little while ago and running --examine on 
-the component worked fine.  I didn't see anything suspicious.
 
-David Greaves wrote:
-> Bryan Christ wrote:
->> I'm now very confused...
-> It's all that top-posting...
-> 
-> 
->> When I run mdadm --examine /dev/md0 I get the error message:  No 
->> superblock detected on /dev/md0
->>
->> However, when I run mdadm -D /dev/md0 the report clearly states 
->> "Superblock is persistent"
-> 
->> David Greaves wrote:
->>> * are the superblocks version 0.9? (mdadm --examine /dev/component)
-> 
-> See where it says 'component' ? :)
-> 
-> I wish mdadm --detail and --examine were just aliases and the output 
-> varied according to whether you looked at a component (eg /dev/sda1) or 
-> an md device (/dev/md0)
-> 
-> I get that wrong *all* the time...
-> 
-> David
+
+On Wed, 18 Jul 2007, Hannes Dorbath wrote:
+
+> On 18.07.2007 12:23, Justin Piszcz wrote:
+>> I am sure one of your questions is, well, why use SW RAID5 on the 
+>> controller?  Because SW RAID5 is usually much faster than HW RAID5, at 
+>> least in my tests:
+>
+> Though that's no answer to your question, I really can't confirm that. I'm 
+> running a 3Ware 9650 with 8x 7200 SATAs in HW RAID 6. Writes are between 
+> 340-360MB/sec and reads peak at 430-450MB/sec. That seems to be the absolute 
+> possible maximum those drives can deliver. The card even seems to do some 
+> really smart stuff, as the read speed is in excess of the physical raw speed 
+> of 6 drives.
+>
+> You have done the usual settings, 3Ware recommends?
+>
+> echo 64 > /sys/block/sda/queue/max_sectors_kb
+> echo 512 > /sys/block/sda/queue/nr_requests
+> echo "deadline" > /sys/block/sda/queue/scheduler
+> blockdev --setra 16384 /dev/sdX
+>
+> Have you set the correct su,sw options for XFS?
+>
+>
+> -- 
+> Regards,
+> Hannes Dorbath
+>
+
+I will try these options during future testing and re-visit the speeds of 
+regular HW RAID5, thanks!  I know they are part of the 3ware doc and I 
+need to re-bench with these.
