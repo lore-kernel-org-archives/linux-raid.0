@@ -1,58 +1,76 @@
 From: "Bryan J. Smith" <b.j.smith@ieee.org>
 Subject: Re: Software RAID5 Horrible Write Speed On 3ware Controller!!
-Date: Wed, 18 Jul 2007 13:18:54 -0400
-Message-ID: <1184779134.3641.17.camel@portatux64.mobile.smithconcepts.com>
+Date: Wed, 18 Jul 2007 13:57:04 -0400
+Message-ID: <1184781424.3641.50.camel@portatux64.mobile.smithconcepts.com>
 References: <Pine.LNX.4.64.0707180614480.7659@p34.internal.lan>
-	 <469DF039.4040906@theendofthetunnel.de>
-	 <Pine.LNX.4.64.0707181225560.26004@p34.internal.lan>
+	 <469DF6B1.7030000@mandriva.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0707181225560.26004@p34.internal.lan>
+In-Reply-To: <469DF6B1.7030000@mandriva.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: Hannes Dorbath <light@theendofthetunnel.de>, linux-ide-arrays@lists.math.uh.edu, xfs@oss.sgi.com, linux-raid@vger.kernel.org, linux@vger.kernel.org
+To: Giuseppe =?ISO-8859-1?Q?Ghib=F2?= <ghibo@mandriva.com>
+Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, linux-ide-arrays@lists.math.uh.edu, xfs@oss.sgi.com, linux-raid@vger.kernel.org, linux@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 2007-07-18 at 12:26 -0400, Justin Piszcz wrote:
-> I will try these options during future testing and re-visit the speeds of 
-> regular HW RAID5, thanks!  I know they are part of the 3ware doc and I 
-> need to re-bench with these.
+On Wed, 2007-07-18 at 13:17 +0200, Giuseppe Ghib=C3=B2 wrote:
+> Indeed not exists for PCI-e but Oden has spotted this PCI-X card
+> (which is around 97$), based on marvell chipset:
+> http://www.supermicro.com/products/accessories/addon/AoC-SAT2-MV8.cfm
 
-3Ware cards should be "tuned" for optimal performance, especially if you
-have the battery backup unit (BBU) on the 9500 and later cards** , and
-some of the settings can be made more "lax."  It's hard to gage hardware
-RAID v. software RAID, especially since the latter can cache commits --
-at least from the standpoint of various benchmark utilities (like
-Bonnie).  There are various arguments that go back'n forth on this.
+Yes!  There are several Broadcom and Marvell ASICs that are eight (8)
+SATA (and now even some SAS) channels in a single chip, of which, there
+are several vendors selling them for $100 boards.  You do _not_ want an
+on-board intelligence being an "intermediary" with software RAID, you
+want _direct_ access to the SATA (or SAS) channels.  Besides, they are
+cheaper.
 
-But if you're using 3Ware in JBOD with software RAID because you've been
-fed the standard and quite _incorrect_ statement that you can do
-hot-swap, understand that you can't get fully supported hot-swap without
-using the 3Ware's hardware RAID volume management (with the segmentation
-of its on-board microcontroller intelligence).  3Ware gets a bad rep
-because too many MD advocates out there proliferate the 3Ware supports
-hot-swap in JBOD -- you need to leverage kernel hot-plug and other
-kernel facilities for hot-swap if you use MD software RAID.
+Justin Piszcz ha scritto: =20
+> I am sure one of your questions is, well, why use SW RAID5 on the=20
+> controller?  Because SW RAID5 is usually much faster than HW RAID5,
+> at least in my tests ...
 
-You don't need to use the various kernel facilities if you let the 3Ware
-intelligence management the volumes.  That's a major, major, missing
-piece of information that I've seen far too many MD advocates omit.
+Benchmarking direct disk access is a rather poor test of hardware RAID.
+to truly evaluate if the off-load from the main system interconnect**
+that a hardware RAID gives you, you need to benchmark your actual
+_server_ application -- one with MD, the other with hardware RAID.
+That's where you can tell if hardware RAID is going to buy you anything=
+=2E
 
--- Bryan
+**NOTE:  It's the system interconnect bottleneck that is of concern, no=
+t
+so much the CPU.  A modern, superscalar, multi-core x86-64 CPU can do
+XORs in its sleep, with just MMX (won't even peg your CPU 10%).  It's
+the LOAD/STO push just to get the XOR that ties up your system
+interconnect (often with your CPU only being 10% busy if your
+application is not processor-bound, but I/O ;-) that's the problem.
 
-**NOTE:  Earlier cards (6000-9000, pre-9500) only use SRAM logic, no
-DRAM cell, so they don't need a BBU.  Long story, SRAM combinational
-circuits don't need to be "refreshed" and the board's capacitors can
-store enough charge to keep values in SRAM circuits (at least long
-enough to flush to disk or once the disks are powered again).  Of
-course, on those earlier cards, the SRAM is small, too small to buffer
-most sustained RAID-5 writes so I'd only use RAID-10 on them.
+It's been my experience that for web services, hardware RAID buys you
+_little_, because you're more processor bound than I/O bound, so you
+have cycles you can use while your interconnect is doing I/O processing=
+=2E
+But more on the database and file server side, I pair a hardware RAID
+(e.g., AMCC/3Ware PPC400-based or Areca IOP/X-Scale-based) with a RX TO=
+E
+(_Receive_ TCP Off-load Engine) HBA "NIC" (e.g., LeWiz 4-port GbE PCIe)=
+,
+which keeps the system inteconnect free for pushing the application dat=
+a
+(instead of doing what is, essentially, "programmed I/O" for the XOR
+software RAID operation).
 
--- 
+Again benchmark your server _application_, not the disk I/O.
+
+
+--=20
 Bryan J. Smith         Professional, Technical Annoyance
 mailto:b.j.smith@ieee.org   http://thebs413.blogspot.com
 --------------------------------------------------------
         Fission Power:  An Inconvenient Solution
 
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
