@@ -1,57 +1,33 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH] block: cosmetic changes
-Date: Wed, 18 Jul 2007 19:56:55 +0900
-Message-ID: <20070718105655.GB22374@htj.dyndns.org>
-References: <18006.38689.818186.221707@notabene.brown>
-	<18010.12472.209452.148229@notabene.brown>
-	<20070530093503.GA15559@kernel.dk>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: Al Boldi <a1426z@gawab.com>
+Subject: Re: Software RAID5 Horrible Write Speed On 3ware Controller!!
+Date: Wed, 18 Jul 2007 13:59:21 +0300
+Message-ID: <200707181359.21710.a1426z@gawab.com>
+References: <Pine.LNX.4.64.0707180614480.7659@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <dm-devel-bounces@redhat.com>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.64.0707180614480.7659@p34.internal.lan>
 Content-Disposition: inline
-In-Reply-To: <20070530093503.GA15559@kernel.dk>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: David Chinner <dgc@sgi.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, Phillip Susi <psusi@cfl.rr.com>, Andreas Dilger <adilger@clusterfs.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Justin Piszcz <jpiszcz@lucidpixels.com>, linux-ide-arrays@lists.math.uh.edu, xfs@oss.sgi.com
+Cc: linux-raid@vger.kernel.org, linux@vger.kernel.org
 List-Id: linux-raid.ids
 
-Cosmetic changes.  This is taken from Jens' zero-length barrier patch.
+Justin Piszcz wrote:
+> UltraDense-AS-3ware-R5-9-disks,16G,50676,89,96019,34,46379,9,60267,99,5010
+>98,56,248.5,0,16:100000:16/64,240,3,21959,84,1109,10,286,4,22923,91,544,6
+> UltraDense-AS-3ware-R5-9-disks,16G,49983,88,96902,37,47951,10,59002,99,529
+>121,60,210.3,0,16:100000:16/64,250,3,25506,98,1163,10,268,3,18003,71,772,8
+> UltraDense-AS-3ware-R5-9-disks,16G,49811,87,95759,35,48214,10,60153,99,538
+>559,61,276.8,0,16:100000:16/64,233,3,25514,97,1100,9,279,3,21398,84,839,9
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
-Cc: Jens Axboe <jes.axboe@oracle.com>
----
- block/ll_rw_blk.c |    5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+Is there any easy way to decipher these numbers?
 
-Index: work/block/ll_rw_blk.c
-===================================================================
---- work.orig/block/ll_rw_blk.c
-+++ work/block/ll_rw_blk.c
-@@ -443,7 +443,8 @@ static inline struct request *start_orde
- 	rq_init(q, rq);
- 	if (bio_data_dir(q->orig_bar_rq->bio) == WRITE)
- 		rq->cmd_flags |= REQ_RW;
--	rq->cmd_flags |= q->ordered & QUEUE_ORDERED_FUA ? REQ_FUA : 0;
-+	if (q->ordered & QUEUE_ORDERED_FUA)
-+		rq->cmd_flags |= REQ_FUA;
- 	rq->elevator_private = NULL;
- 	rq->elevator_private2 = NULL;
- 	init_request_from_bio(rq, q->orig_bar_rq->bio);
-@@ -3167,7 +3168,7 @@ end_io:
- 			break;
- 		}
- 
--		if (unlikely(bio_sectors(bio) > q->max_hw_sectors)) {
-+		if (unlikely(nr_sectors > q->max_hw_sectors)) {
- 			printk("bio too big device %s (%u > %u)\n", 
- 				bdevname(bio->bi_bdev, b),
- 				bio_sectors(bio),
+
+Thanks!
+
+--
+Al
+
