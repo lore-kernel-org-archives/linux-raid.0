@@ -1,64 +1,51 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: Software RAID5 Horrible Write Speed On 3ware Controller!!
-Date: Wed, 18 Jul 2007 08:19:20 -0400 (EDT)
-Message-ID: <Pine.LNX.4.64.0707180818520.7659@p34.internal.lan>
-References: <Pine.LNX.4.64.0707180614480.7659@p34.internal.lan>
- <20070718112612.GA8029@cumulus> <Pine.LNX.4.64.0707180734340.7659@p34.internal.lan>
- <20070718120922.GC8029@cumulus>
+From: David Shaw <dshaw@jabberwocky.com>
+Subject: Re: Possible data corruption sata_sil24?
+Date: Wed, 18 Jul 2007 08:31:00 -0400
+Message-ID: <20070718123100.GB3932@jabberwocky.com>
+References: <20070706012432.GB29789@jabberwocky.com> <4693A5A0.5070306@gmail.com> <20070713014252.GA17811@jabberwocky.com> <46972AEE.2040805@gmail.com> <20070713115919.GC17811@jabberwocky.com> <469DD513.7070202@gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20070718120922.GC8029@cumulus>
-Sender: linux-raid-owner@vger.kernel.org
-To: Sander <sander@humilis.net>
-Cc: linux-ide-arrays@lists.math.uh.edu, xfs@oss.sgi.com, linux-raid@vger.kernel.org, linux@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <469DD513.7070202@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Wed, Jul 18, 2007 at 05:53:39PM +0900, Tejun Heo wrote:
+> David Shaw wrote:
+> >>> It fails whether I use a raw /dev/sdd or partition it into one large
+> >>> /dev/sdd1, or partition into multiple partitions.  sata_sil24 seems to
+> >>> work by itself, as does dm, but as soon as I mix sata_sil24+dm, I get
+> >>> corruption.
+> >> Hmmmm.... Can you reproduce the corruption by accessing both devices
+> >> simultaneously without using dm?  Considering ich5 does fine, it looks
+> >> like hardware and/or driver problem and I really wanna rule out dm.
+> > 
+> > I think I wasn't clear enough before.  The corruption happens when I
+> > use dm to create two dm mappings that both reside on the same real
+> > device.  Using two different devices, or two different partitions on
+> > the same physical device works properly.  ich5 does fine with these 3
+> > tests, but sata_sil24 fails:
+> > 
+> >  * /dev/sdd, create 2 dm linear mappings on it, mke2fs and use those
+> >    dm "devices" == corruption
+> > 
+> >  * Partition /dev/sdd into /dev/sdd1 and /dev/sdd2, mke2fs and use
+> >    those partitions == no corruption
+> > 
+> >  * Partition /dev/sdd into /dev/sdd1 and /dev/sdd2, create 2 dm linear
+> >    mappings on /dev/sdd1, mke2fs and use those dm "devices" ==
+> >    corruption
+> 
+> I'm not sure whether this is problem of sata_sil24 or dm layer.  Cc'ing
+> linux-raid for help.  How much memory do you have?  One big difference
+> between ata_piix and sata_sil24 is that sil24 can handle 64bit DMA.
+> Maybe dma mapping or something interacts weirdly with dm there?
 
+The machine has 640 megs of RAM.  FWIW, I tried this with 512 megs of
+RAM with the same results.  Running Memtest86+ shows the memory is
+good.
 
-On Wed, 18 Jul 2007, Sander wrote:
-
-> Justin Piszcz wrote (ao):
->> On Wed, 18 Jul 2007, Sander wrote:
->>> Justin Piszcz wrote (ao):
->>>> Its too bad that there are no regular > 4 port SATA PCI-e controllers
->>>> out there.
->>>
->>> Is there a disadvantage to using a SaS controller from for example
->>> lsi.com ?
->>>
->>> http://lsi.com/storage_home/products_home/host_bus_adapters/sas_hbas/index.html
->>>
->>> I haven't tried them yet, but on paper it looks like an option, no?
->>
->> Hmm that is also a good idea- but I am afraid there could be a
->> similiar issue where it tries to do weird caching stuff, even when the
->> drives are in JBOD. Unless they offer a !raid SAS controller that
->> supports SATA drives.
->
-> I guess they are cheap enough to try (I haven't yet):
->
-> PCIe:
-> http://lsi.com/storage_home/products_home/host_bus_adapters/sas_hbas/lsisas3080xr/index.html
->
-> PCI-X
-> http://lsi.com/storage_home/products_home/host_bus_adapters/sas_hbas/lsisas3081er/index.html
->
-> All SaS hardware (controllers, chassis, etc) support SATA disks AFAIK.
->
-> I have good experience with the Supermicro 8-Port SATA Card
-> http://www.supermicro.nl/products/accessories/addon/AoC-SAT2-MV8.cfm
->
-> But that is PCI-X while you requested PCIe.
->
-> 	With kind regards, Sander
->
-> -- 
-> Humilis IT Services and Solutions
-> http://www.humilis.net
->
-
-
-Those links are reversed, but thanks, checking them out now!
-
-Justin.
+David
