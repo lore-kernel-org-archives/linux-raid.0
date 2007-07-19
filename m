@@ -1,31 +1,41 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Possible data corruption sata_sil24?
-Date: Thu, 19 Jul 2007 17:03:02 +0900
-Message-ID: <469F1AB6.3000105@gmail.com>
-References: <20070706012432.GB29789@jabberwocky.com> <4693A5A0.5070306@gmail.com> <20070713014252.GA17811@jabberwocky.com> <46972AEE.2040805@gmail.com> <20070713115919.GC17811@jabberwocky.com> <469DD513.7070202@gmail.com> <20070718123100.GB3932@jabberwocky.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: asynchronous write
+Date: Thu, 19 Jul 2007 21:41:14 +1000
+Message-ID: <18079.19930.835893.78600@notabene.brown>
+References: <200707180824.l6I8O7Ik006820@betty.it.uc3m.es>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20070718123100.GB3932@jabberwocky.com>
+In-Reply-To: message from Peter T. Breuer on Wednesday July 18
 Sender: linux-raid-owner@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org
+To: ptb@inv.it.uc3m.es
+Cc: linux raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-David Shaw wrote:
->> I'm not sure whether this is problem of sata_sil24 or dm layer.  Cc'ing
->> linux-raid for help.  How much memory do you have?  One big difference
->> between ata_piix and sata_sil24 is that sil24 can handle 64bit DMA.
->> Maybe dma mapping or something interacts weirdly with dm there?
+On Wednesday July 18, ptb@inv.it.uc3m.es wrote:
+> Did the asynchronous write stuff (as it was in fr1) ever get into kernel
+> software raid?
+
+Hmmm... what was 'fr1' again??.. asks google.
+
+  http://www.it.uc3m.es/ptb/fr1/
+
+Yes, that sound like the 'bitmap' support currently in md.
+The bitmap is stored on disk which I think is different from what fr1
+did.
+Possibly having a volatile bitmap would be valuable.  It would remove
+the current extra cost of writes, and would still allow fast recovery
+if you fail, then re-add a drive...
+
 > 
-> The machine has 640 megs of RAM.  FWIW, I tried this with 512 megs of
-> RAM with the same results.  Running Memtest86+ shows the memory is
-> good.
+> I see from the raid acceleration ("ioat") patching going on that some
+> sort of asynchronicity is being contemplated, but blessed if I can make
+> head or tail of the descriptions I've read.  It looks vaguely like
+> purely memory-management stuff to me (what?) for external hardware raid,
+> but what do I know ...
 
-Hmmm... I see, so no DMA to the wrong address problem then.  Let's see
-whether dm people can help us out.
+Yes.  The ,'ioat' is for raid5/6 and allows the xor calculation,
+memcpys and some other functions to be off-loaded to a co-processor.
 
-Thanks.
-
--- 
-tejun
+NeilBrown
