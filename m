@@ -1,43 +1,43 @@
-From: Anton Altaparmakov <aia21@cam.ac.uk>
-Subject: Re: [RFH] Partion table recovery
-Date: Fri, 20 Jul 2007 08:35:45 +0100
-Message-ID: <4FEA8E81-3BA7-4F8C-AFD2-6B93487A9AD5@cam.ac.uk>
-References: <200707200813.03553.a1426z@gawab.com>
-Mime-Version: 1.0 (Apple Message framework v752.3)
-Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S934613AbXGTHgN@vger.kernel.org>
-In-Reply-To: <200707200813.03553.a1426z@gawab.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Al Boldi <a1426z@gawab.com>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: 2.6.19-rc5: Can't get built-in raid support, modular works
+ correctly
+Date: Fri, 20 Jul 2007 06:13:47 -0400 (EDT)
+Message-ID: <Pine.LNX.4.64.0707200613170.13189@p34.internal.lan>
+References: <469F6CFC.5050700@bfn.org> <Pine.LNX.4.64.0707191204010.13957@p34.internal.lan>
+ <469FDD95.1090402@bfn.org>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <469FDD95.1090402@bfn.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: "J. Hart" <af804@bfn.org>
+Cc: linux raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 20 Jul 2007, at 06:13, Al Boldi wrote:
-> As always, a good friend of mine managed to scratch my partion  
-> table by
-> cat'ing /dev/full into /dev/sda.  I was able to push him out of the  
-> way, but
-> at least the first 100MB are gone.  I can probably live without the  
-> first
-> partion, but there are many partitions after that, which I hope should
-> easily be recoverable.
+
+
+On Fri, 20 Jul 2007, J. Hart wrote:
+
+> Justin Piszcz wrote:
 >
-> I tried parted, but it's not working out for me.  Does anybody know  
-> of a
-> simple partition recovery tool, that would just scan the disk for lost
-> partions?
+>> 
+>> Any reason you are using 2.6.19-rc5? Why not use 2.6.22.(1)?
+>
+> I just wanted to try to understand the reason for the problem before changing 
+> to a new kernel.  I had not heard that any such problem had been encountered, 
+> though I could have missed the news.
+> Have you heard anything about it ?
+>
+> J. Hart
+>
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-parted and its derivatives are pile of crap...  They cause corruption  
-to totally healthy systems at the best of times.  Don't go near them.
+I (normally) do not run -rcX release and I always compile in RAID support 
+and have not seen that issue; then again, I did not try 2.6.19-rc5 that I 
+can remember.
 
-Use TestDisk (http://www.cgsecurity.org/wiki/TestDisk) and be happy.   
-(-:
-
-Best regards,
-
-	Anton
--- 
-Anton Altaparmakov <aia21 at cam.ac.uk> (replace at with @)
-Unix Support, Computing Service, University of Cambridge, CB2 3QH, UK
-Linux NTFS maintainer, http://www.linux-ntfs.org/
+Justin.
