@@ -1,47 +1,40 @@
-From: "Jeffrey V. Merkey" <jmerkey@wolfmountaingroup.com>
+From: Willy Tarreau <w@1wt.eu>
 Subject: Re: [RFH] Partion table recovery
-Date: Fri, 20 Jul 2007 00:47:32 -0600
-Message-ID: <46A05A84.6050305@wolfmountaingroup.com>
+Date: Fri, 20 Jul 2007 07:35:27 +0200
+Message-ID: <20070720053526.GG943@1wt.eu>
 References: <200707200813.03553.a1426z@gawab.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1761181AbXGTFfk@vger.kernel.org>
+Content-Disposition: inline
 In-Reply-To: <200707200813.03553.a1426z@gawab.com>
-Sender: linux-raid-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: Al Boldi <a1426z@gawab.com>
 Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-Al Boldi wrote:
+On Fri, Jul 20, 2007 at 08:13:03AM +0300, Al Boldi wrote:
+> As always, a good friend of mine managed to scratch my partion table by 
+> cat'ing /dev/full into /dev/sda.  I was able to push him out of the way, but 
+> at least the first 100MB are gone.  I can probably live without the first 
+> partion, but there are many partitions after that, which I hope should 
+> easily be recoverable.
+> 
+> I tried parted, but it's not working out for me.  Does anybody know of a 
+> simple partition recovery tool, that would just scan the disk for lost 
+> partions?
 
->As always, a good friend of mine managed to scratch my partion table by 
->cat'ing /dev/full into /dev/sda.  I was able to push him out of the way, but 
->at least the first 100MB are gone.  I can probably live without the first 
->partion, but there are many partitions after that, which I hope should 
->easily be recoverable.
->
->I tried parted, but it's not working out for me.  Does anybody know of a 
->simple partition recovery tool, that would just scan the disk for lost 
->partions?
->
->
->Thanks!
->
->--
->Al
->
->-
->To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
->Please read the FAQ at  http://www.tux.org/lkml/
->
->  
->
-One thing NetWare always did was to stamp a copy of the partition table 
-at the time a partition was created as the second logical sector (offset 
-1) from the start of a newly created partition. This allowed the disk to 
-be scanned for the original (or last) partition table copy.
+The best one is simply "fdisk", because you can manually enter your
+cylinders numbers. You have to find by hand the beginning of each partition,
+and for this, you have to remember what filesystems you used and see how to
+identify them (using a magic). Then with an hex editor, you scan the disk to
+find such entries and note the possible sectors on a paper. Then comes fdisk.
+You create the part, exit and try to mount it. If it fails, fdisk again and
+try other values.
 
-Jeff
+I've saved many disks that way, it may sound harder than it really is. It
+should not take you more than half an hour to get the first part. Knowing
+your approximate partitions size will help too.
+
+Good luck!
+Willy
