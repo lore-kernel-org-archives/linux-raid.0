@@ -1,52 +1,49 @@
-From: Jan-Benedict Glaw <jbglaw@lug-owl.de>
+From: Anton Altaparmakov <aia21@cam.ac.uk>
 Subject: Re: [RFH] Partition table recovery
-Date: Fri, 20 Jul 2007 13:39:14 +0200
-Message-ID: <20070720113914.GJ22998@lug-owl.de>
-References: <200707200813.03553.a1426z@gawab.com> <20070720053526.GG943@1wt.eu> <Pine.LNX.4.64.0707200858030.31013@fbirervta.pbzchgretzou.qr> <200707201429.34419.a1426z@gawab.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="8tZVdKiiYitVG083"
+Date: Fri, 20 Jul 2007 12:53:42 +0100
+Message-ID: <F862477F-F191-4971-A479-5EEA598FEC62@cam.ac.uk>
+References: <200707200813.03553.a1426z@gawab.com> <aa4c40ff0707192225r6b5e971fy59f78a525697f864@mail.gmail.com> <200707201429.54241.a1426z@gawab.com>
+Mime-Version: 1.0 (Apple Message framework v752.3)
+Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <200707201429.34419.a1426z@gawab.com>
+In-Reply-To: <200707201429.54241.a1426z@gawab.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Al Boldi <a1426z@gawab.com>
 Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
+On 20 Jul 2007, at 12:29, Al Boldi wrote:
+> Anton Altaparmakov wrote:
+>> parted and its derivatives are pile of crap...  They cause corruption
+>> to totally healthy systems at the best of times.  Don't go near them.
+>>
+>> Use TestDisk (http://www.cgsecurity.org/wiki/TestDisk) and be happy.
+>> (-:
+>
+> This one really worked best, without getting confused about older  
+> partitions.
 
---8tZVdKiiYitVG083
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Yes, TestDisk is very good.
 
-On Fri, 2007-07-20 14:29:34 +0300, Al Boldi <a1426z@gawab.com> wrote:
->=20
-> But, I want something much more automated.  And the partition table backu=
-p=20
-> per partition entry isn't really a bad idea.
+> Thanks everybody!
 
-That's called `gpart'.
+You are welcome.
 
-MfG, JBG
+> BTW, what's a partion table?
 
---=20
-      Jan-Benedict Glaw      jbglaw@lug-owl.de              +49-172-7608481
-Signature of:              Fortschritt bedeutet, einen Schritt so zu machen,
-the second  :                   da=C3=9F man den n=C3=A4chsten auch noch ma=
-chen kann.
+Are you kidding?  If not read those two and you shall be enlightened  
+(or utterly confused (-;)...
 
---8tZVdKiiYitVG083
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
+http://en.wikipedia.org/wiki/Partition_(computing)
+http://www.ata-atapi.com/hiwtab.htm
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
+Best regards,
 
-iD8DBQFGoJ7iHb1edYOZ4bsRAl3aAJ4gOJPY2NfDUDayqUPLlwSBzaDHdwCfQQIh
-J726Wvlhh4MI/mllOiOJc+I=
-=YqGJ
------END PGP SIGNATURE-----
+	Anton
+-- 
+Anton Altaparmakov <aia21 at cam.ac.uk> (replace at with @)
+Unix Support, Computing Service, University of Cambridge, CB2 3QH, UK
+Linux NTFS maintainer, http://www.linux-ntfs.org/
 
---8tZVdKiiYitVG083--
+
