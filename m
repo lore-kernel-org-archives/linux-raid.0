@@ -1,40 +1,68 @@
-From: mullaly <mullaly@hotmail.com>
-Subject: A raid in a raid.
-Date: Fri, 20 Jul 2007 07:52:28 -0700 (PDT)
-Message-ID: <11709647.post@talk.nabble.com>
+From: Theodore Tso <tytso@mit.edu>
+Subject: Re: [RFH] Partition table recovery
+Date: Fri, 20 Jul 2007 12:06:15 -0400
+Message-ID: <20070720160614.GG26752@thunk.org>
+References: <200707200813.03553.a1426z@gawab.com> <200707201429.34419.a1426z@gawab.com> <20070720113914.GJ22998@lug-owl.de> <200707201522.17270.a1426z@gawab.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S940629AbXGTQGf@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <200707201522.17270.a1426z@gawab.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Al Boldi <a1426z@gawab.com>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Fri, Jul 20, 2007 at 03:22:17PM +0300, Al Boldi wrote:
+> 
+> Oh, gpart is great, but if we had a backup copy of the partition table on 
+> every partition location on disk, then this backup copy could easily be 
+> reused to reconstruct the original partition table without further 
+> searching.  Just like the NetWare approach, and in some respect like the 
+> ext2/3 superblock backups.
 
-Hi,
+It wouldn't be that hard to put a backup partition table at the
+beginning of an ext2/3 filesystem.  No one is currently using the
+space between offset 512 and 1023 bytes, and it would be an easy place
+to stash a backup copy of the partition table.  We wouldn't be able to
+use the MBR format, since information about extended partitions are
+stored scattered across the disk.
 
-I have a raid array setup with 6 sata drives (500gb) and 4 ide drives
-(250gb). My intention was to setup the disks as follows.
-Personalities : [raid0] [raid6] [raid5] [raid4]
-md2 : active raid6 md1[6](S) md0[7] sda[0] sdf[5] sde[4] sdd[3] sdc[2]
-sdb[1]
-      2930318976 blocks level 6, 64k chunk, algorithm 2 [8/6] [UUUUUU__]
-      [>....................]  recovery =  0.0% (249556/488386496)
-finish=880.0min speed=9242K/sec
+So for the sake of argument, I'll propose the following partition
+backup, starting at offset 512 and going for 512 bytes to byte #1023:
 
-md1 : active raid0 hdh[0] hdc[1]
-      488396928 blocks 64k chunks
+offset 
+from 512  Description
+-------   -----------
+0..7      Signature ASCII: "PARTBAK1"
+8..9      Part-type: 1=MBR
+10	  # of heads
+11	  # sectors
+12	  # of partitions in the backup
+13..15    Reserved (must be zero)
+16..31	  first part entry
+...
+496..511 31st partition entry
 
-md0 : active raid0 hde[0] hdb[1]
-      488396928 blocks 64k chunks
+Partition entry (16 bytes)
 
-unused devices: <none>
+offset    description
+------    -----------
+0	  Flags
+1	  Type
+2..3	  Reserved (must be zero)
+4..11	  Start LBA (little endian)
+12..15	  # of LBA in partition
 
-All works well until a system reboot. md2 appears to be brought up before
-md0 and md1 which causes the raid to start without two of its drives.
+Obviously this won't work for LVM or EFI volume partition tables, but
+they have enough redundancy into their on-disk formats that it
+shouldn't be an issue.
 
-Is there anyway to fix this?
--- 
-View this message in context: http://www.nabble.com/A-raid-in-a-raid.-tf4117582.html#a11709647
-Sent from the linux-raid mailing list archive at Nabble.com.
+Someone want to write a stand-alone function which pulls the
+information from the MBR (and extended MBR's) and put it into a 512
+byte buffer?  If so, I'll integrate it into mke2fs and e2fsck (so that
+when the user upgrades to a new enough e2fsprogs, it will
+automatically back up the partition information just before the
+superblock.
 
+						- Ted
