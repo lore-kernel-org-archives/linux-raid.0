@@ -1,55 +1,52 @@
-From: Al Boldi <a1426z@gawab.com>
+From: Jan-Benedict Glaw <jbglaw@lug-owl.de>
 Subject: Re: [RFH] Partition table recovery
-Date: Fri, 20 Jul 2007 14:29:54 +0300
-Message-ID: <200707201429.54241.a1426z@gawab.com>
-References: <200707200813.03553.a1426z@gawab.com> <aa4c40ff0707192225r6b5e971fy59f78a525697f864@mail.gmail.com>
+Date: Fri, 20 Jul 2007 13:39:14 +0200
+Message-ID: <20070720113914.GJ22998@lug-owl.de>
+References: <200707200813.03553.a1426z@gawab.com> <20070720053526.GG943@1wt.eu> <Pine.LNX.4.64.0707200858030.31013@fbirervta.pbzchgretzou.qr> <200707201429.34419.a1426z@gawab.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="8tZVdKiiYitVG083"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <aa4c40ff0707192225r6b5e971fy59f78a525697f864@mail.gmail.com>
 Content-Disposition: inline
+In-Reply-To: <200707201429.34419.a1426z@gawab.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+To: Al Boldi <a1426z@gawab.com>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-James Lamanna wrote:
-> On 7/19/07, Al Boldi <a1426z@gawab.com> wrote:
-> > As always, a good friend of mine managed to scratch my partion table by
-> > cat'ing /dev/full into /dev/sda.  I was able to push him out of the way,
-> > but at least the first 100MB are gone.  I can probably live without the
-> > first partion, but there are many partitions after that, which I hope
-> > should easily be recoverable.
-> >
-> > I tried parted, but it's not working out for me.  Does anybody know of a
-> > simple partition recovery tool, that would just scan the disk for lost
-> > partions?
->
-> Tried gpart?
-> http://www.stud.uni-hannover.de/user/76201/gpart/
 
-This definitely looks like the ticket.  And also rescuept from util-linux.  
-There is only one small problem; I have been regularly adding / deleting / 
-resizing partitions, which kind of confuses the scanner.  But still, it's 
-better than nothing.
+--8tZVdKiiYitVG083
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Anton Altaparmakov wrote:
-> parted and its derivatives are pile of crap...  They cause corruption
-> to totally healthy systems at the best of times.  Don't go near them.
->
-> Use TestDisk (http://www.cgsecurity.org/wiki/TestDisk) and be happy.
-> (-:
+On Fri, 2007-07-20 14:29:34 +0300, Al Boldi <a1426z@gawab.com> wrote:
+>=20
+> But, I want something much more automated.  And the partition table backu=
+p=20
+> per partition entry isn't really a bad idea.
 
-This one really worked best, without getting confused about older partitions.
+That's called `gpart'.
 
+MfG, JBG
 
-Thanks everybody!
+--=20
+      Jan-Benedict Glaw      jbglaw@lug-owl.de              +49-172-7608481
+Signature of:              Fortschritt bedeutet, einen Schritt so zu machen,
+the second  :                   da=C3=9F man den n=C3=A4chsten auch noch ma=
+chen kann.
 
+--8tZVdKiiYitVG083
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
 
-BTW, what's a partion table?
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.6 (GNU/Linux)
 
---
-Al
+iD8DBQFGoJ7iHb1edYOZ4bsRAl3aAJ4gOJPY2NfDUDayqUPLlwSBzaDHdwCfQQIh
+J726Wvlhh4MI/mllOiOJc+I=
+=YqGJ
+-----END PGP SIGNATURE-----
 
+--8tZVdKiiYitVG083--
