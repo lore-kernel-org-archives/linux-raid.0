@@ -1,52 +1,44 @@
-From: =?ISO-8859-1?Q?D=E2niel?= Fraga <fragabr@gmail.com>
-Subject: Re: pata_via with software raid1: "attempt to access beyond end of
- device"
-Date: Thu, 19 Jul 2007 15:23:18 -0300
-Message-ID: <mpm4n4-dr3.ln1@tux.abusar.org>
-References: <dju2n4-lcf.ln1@tux.abusar.org>
-	<18078.57482.951240.250360@notabene.brown>
+From: "Dan Williams" <dan.j.williams@intel.com>
+Subject: [RFT] 2.6.22.1-iop1 for improved sequential write performance (stripe-queue)
+Date: Thu, 19 Jul 2007 17:17:36 -0700
+Message-ID: <e9c3a7c20707191717s4809eab1s4966f7e0c21c6424@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: linux-raid maillist <linux-raid@vger.kernel.org>
+Cc: Neil Brown <neilb@suse.de>, "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>, Bill Davidsen <davidsen@tmr.com>
 List-Id: linux-raid.ids
 
-On Thu, 19 Jul 2007 13:54:50 +1000
-Neil Brown <neilb@suse.de> wrote:
+Per Bill Davidsen's request I have made available a 2.6.22.1 based
+kernel with the current raid5 performance changes I have been working
+on:
+1/ Offload engine acceleration (recently merged for the 2.6.23
+development cycle)
+2/ Stripe-queue, an evolutionary change to the raid5 queuing model (take4)
 
-> The resierfs filesystem is trying to access beyond the end of the
-> raid1 array.  Maybe some indexing information in the array is
-> corrupted.
-> Did you recreate the array (mdadm --create) after changing to the new
-> drivers?  If so, could you have accidentally made it a little smaller?
-> 
-> Possibly try running fsck and see if it finds anything to fix.
+The offload engine work only helps platforms with offload engines and
+should not affect performance otherwise.  The stripe-queue work is an
+attempt to increase sequential write performance and should benefit
+most platforms.
 
-	Hi Neil, I recreated the array after changing to libata. I
-checked the whole filesystem with reiserfsck --rebuild-tree, then
-started it again and the problem happens suddenly.
+The patch series is available on the Xscale(r) IOP SourceForge page:
+	http://downloads.sourceforge.net/xscaleiop/patches-2.6.22.1-iop1-x86fix.tar.gz
 
-	And regarding the size of array, I just added the whole
-partition to the array:
+Use quilt to apply the series on top of a fresh 2.6.22.1 source tree:
+$ wget http://www.kernel.org/pub/linux/kernel/v2.6/linux-2.6.22.1.tar.bz2
+$ tar xjf linux-2.6.22.1.tar.bz2
+$ cd linux-2.6.22.1
+$ tar xzvf patches-2.6.22.1-iop1.tar.gz
+$ cp patches/series.x86 patches/series
+$ quilt push -a
 
-Filesystem           1K-blocks      Used Available Use% Mounted on
-/dev/md1              77639736  30127524  47512212  39% /
+Configure and build the kernel as normal, there are no configuration
+options for stripe-queue.
 
-     Array Size : 77642048 (74.05 GiB 79.51 GB)
-  Used Dev Size : 77642048 (74.05 GiB 79.51 GB)
+Any feedback, bug report, fix, or suggestion is welcome.
 
-	Can I compare both values (77639736 with 77642048)? If so,
-there is a difference, if not, I don't know.
-
-	Thank you!
-
-	Ps: the error is difficult to appear, but I'll keep looking on
-it and try to ellaborate a more detailed report. 
-
--- 
-Linux 2.6.22: Holy Dancing Manatees, Batman!
-http://www.lastfm.pt/user/danielfraga
-http://u-br.net
-
+Thanks,
+Dan
