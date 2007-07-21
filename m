@@ -1,26 +1,70 @@
-From: Michael Tokarev <mjt@tls.msk.ru>
-Subject: Re: A raid in a raid.
-Date: Sat, 21 Jul 2007 15:29:04 +0400
-Message-ID: <46A1EE00.1090404@msgid.tls.msk.ru>
-References: <11709647.post@talk.nabble.com>
+From: Seb <seb@h-k.fr>
+Subject: Re: Partitions with == or \approx same size ?
+Date: Sat, 21 Jul 2007 14:41:38 +0200 (CEST)
+Message-ID: <Pine.LNX.4.58.0707211437420.4449@ybpnyubfg.ybpnyqbznva>
+References: <Pine.LNX.4.58.0707201908020.30683@ybpnyubfg.ybpnyqbznva>
+ <18081.11720.547650.571674@notabene.brown> <Pine.LNX.4.58.0707210235000.30683@ybpnyubfg.ybpnyqbznva>
+ <18081.44931.299829.724158@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <11709647.post@talk.nabble.com>
+In-Reply-To: <18081.44931.299829.724158@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: mullaly <mullaly@hotmail.com>
+To: Neil Brown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-mullaly wrote:
-[]
-> All works well until a system reboot. md2 appears to be brought up before
-> md0 and md1 which causes the raid to start without two of its drives.
-> 
-> Is there anyway to fix this?
 
-How about listing the arrays in proper order in mdadm.conf ?
+Hello Neil,
 
-/mjt
 
+Thanks for the confirmations!
+It's all very clear now. Case closed.
+
+
+Best,
+Seb.
+
+On Sat, 21 Jul 2007, Neil Brown wrote:
+
+| On Saturday July 21, seb@h-k.fr wrote:
+| >
+| > Hi Neil,
+| >
+| >
+| > | > Could you tell me if such a mechanism exists in mdadm?
+| > | > Or should I accept the "loss" of the 150 GB?
+| > | When you give mdadm a collection of drives to turn into a RAID array,
+| > | use bases the size of the array on the smallest device.
+| >
+| > I'm sorry I don't know what "bases" are in a RAID array and I can't find
+| > this term in the man page. Could you elaborate?
+|
+| Typo.  Should be
+|     It bases the size of the array ...
+|
+| i.e. it works out which is the smaller device, and uses that size to
+| determine the size of the array.  e.g. if you are making a raid5 with
+| 4 drives, then the array will be 3 times the size of the smallest array.
+|
+| >
+| > | You might want to make it a little smaller still in case you have to
+| > | replace a device with a slightly smaller device (it happens).  You can
+| > | use "--size" to reduce the used space a little further if you like.
+| >
+| > Thanks for the pointer to --size! I had overlooked this option. The man
+| > page says that "If  this is not specified (as it normally is not) the
+| > smallest drive (or partition) sets the size". This implies that partitions
+| > need not have exactly the same size and 'mdadm' will still manage.
+|
+| Exactly.
+|
+| >
+| > So I'll use 249,9GB out of 250GB, skip over the small resulting
+| > differences, let mdadm work its magic and when new disks will be inserted
+| > after a failure it will suffice to use their total space.
+|
+| Again, exactly correct.
+|
+| NeilBrown
+|
