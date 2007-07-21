@@ -1,48 +1,51 @@
-From: =?ISO-8859-1?Q?D=E2niel?= Fraga <fragabr@gmail.com>
-Subject: Re: pata_via with software raid1: "attempt to access beyond end of
- device"
-Date: Sat, 21 Jul 2007 18:18:35 -0300
-Message-ID: <bq9an4-rm6.ln1@tux.abusar.org>
-References: <dju2n4-lcf.ln1@tux.abusar.org>
-	<18078.57482.951240.250360@notabene.brown>
-	<mpm4n4-dr3.ln1@tux.abusar.org>
-	<18080.6791.774446.512592@notabene.brown>
-	<9fj5n4-uh5.ln1@tux.abusar.org>
-	<18080.9501.524388.160581@notabene.brown>
+From: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
+Subject: Re: raid5:md3: read error corrected , followed by , Machine Check
+Date: Sat, 21 Jul 2007 16:25:31 -0700 (PDT)
+Message-ID: <Pine.LNX.4.64.0707211610120.29412@filesrv1.baby-dragons.com>
+References: <200707171518.l6HFIUBU022021@cichlid.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <200707171518.l6HFIUBU022021@cichlid.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Andrew Burgess <aab@cichlid.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, 20 Jul 2007 12:59:41 +1000
-Neil Brown <neilb@suse.de> wrote:
+ 	Hello Andrew ,
 
-> So reiserfs thinks the devices is 64K larger than it really is. I
-> wonder how that happened.
+On Tue, 17 Jul 2007, Andrew Burgess wrote:
+>> 	The 'MCE's have been ongoing for sometime .  I have replaced every item
+>> in the system except the chassis & scsi backplane & power supply(750Watts) .
+>> 	Everything .  MB,cpu,memory,scsi controllers, ...
+>> 	These MCE's only happen when I am trying to build or bonnie++ test the
+>> md3 .  It consists of (now 7+1spare) 146GB drives in the SuperMicro
+>> SYS-6035B-8B's backplane attached to a LSI22320 .
+>
+> Probably every old timer has a story about chasing a hardware problem
+> where changing the power supply finally fixed it. I keep spares now.
+>
+> If an MCE (which means bad cpu) doesn't go away after changing the cpu
+> it would either have to be temperature, power or a bug in the MCE code.
+> What else could it be?
 
->    resize_reiserfs -s -64K /dev/md1
+ 	Thank you for the idea of 'changing out the PS' .  So I did it a bit 
+differant .  I removed the system PS from the raid backplane & dropped in a 
+known good ps of proper wattage & re-tested .  But left the systems ps attached 
+to only the MB & fans .
+ 	It doesn't appear to be power load related .  I tried rebuilding my 7 
+disk raid6 array & I got the same thing ,  MCE .
+ 	Now the raid backplane is still in the air stream in front of the cpu's 
+and memory slots .  So it could be a marginal cpu or memory stick .
 
-	Neil, I discovered how the "64k larger" issue happened...
+ 	But here's the clincher ,  when I don't use the two drives in from of 
+the PS & cpu & memory slots .  The array completes it's resync .  So I'm back to 
+testing memory (again) ,  If that passes then I'll try the new cpu(s) route .
 
-	It was my fault.. I created the Reiser filesystem *before* the
-raid device. So when I create the raid device, it warns about a
-existing reiserfs filesystem and if I want to continue. This way, the
-underlying filesystem will be always 64k large than the raid device.
-
-	If, instead, I use the correct method of creating the raid
-device *before*, everything is ok, because then I can "mkreiserfs" the
-raid device and the filesystem will have the correct size the raid
-device expects.
-
-	Sorry for my mistake and thanks again!
-
+ 		Tnx All ,  JimL
 -- 
-Linux 2.6.22: Holy Dancing Manatees, Batman!
-http://www.lastfm.pt/user/danielfraga
-http://u-br.net
-Marilyn Manson - "Dried Up, Tied and Dead to the World" (Antichrist
-Superstar - 1996)
-
++-----------------------------------------------------------------+
+| James   W.   Laferriere | System   Techniques | Give me VMS     |
+| Network        Engineer | 663  Beaumont  Blvd |  Give me Linux  |
+| babydr@baby-dragons.com | Pacifica, CA. 94044 |   only  on  AXP |
++-----------------------------------------------------------------+
