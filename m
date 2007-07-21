@@ -1,64 +1,50 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: 3ware Auto-Carve Question
-Date: Sat, 21 Jul 2007 11:59:13 -0400 (EDT)
-Message-ID: <Pine.LNX.4.64.0707211159030.441@p34.internal.lan>
-References: <Pine.LNX.4.64.0707211146420.32707@p34.internal.lan>
- <Pine.LNX.4.64.0707211151060.32707@p34.internal.lan>
+From: "Mike Snitzer" <snitzer@gmail.com>
+Subject: Need clarification on raid1 resync behavior with bitmap support
+Date: Sat, 21 Jul 2007 12:59:49 -0400
+Message-ID: <170fa0d20707210959q11153d38u3281062c98d3adb7@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0707211151060.32707@p34.internal.lan>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-ide-arrays@lists.math.uh.edu
+To: NeilBrown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On 6/1/06, NeilBrown <neilb@suse.de> wrote:
+>
+> When an array has a bitmap, a device can be removed and re-added
+> and only blocks changes since the removal (as recorded in the bitmap)
+> will be resynced.
 
+Neil,
 
-On Sat, 21 Jul 2007, Justin Piszcz wrote:
+Does the same apply when a bitmap-enabled raid1's member goes faulty?
+Meaning even if a member is faulty, when the user removes and re-adds
+the faulty device the raid1 rebuild _should_ leverage the bitmap
+during a resync right?
 
->
->
-> On Sat, 21 Jul 2007, Justin Piszcz wrote:
->
->> Quick question-- under Kernel 2.4 without 2TB support enabled, the only 
->> other option is to use auto-carving to get the maximum amount of space 
->> easily, however, after doing this (2TB, 2TB, 1.8TB) for a 10 x 750GB array, 
->> only the first partition remains afer reboot.
->> 
->> Before reboot:
->> 
->> /dev/sdb1 (2TB)
->> /dev/sdc1 (2TB)
->> /dev/sdd1 (2TB)
->> 
->> After reboot
->> 
->> /dev/sdb1 (2TB)
->> sdc1 <vanished>
->> sdd1 <vanished>
->> 
->> I also tried formatting and then labeling /dev/sdc1 and /dev/sdd1 with 
->> mkfs.ext3 and then e2label, same thing, sdc/sdd disappear after reboot. Is 
->> there some option somewhere to ensure that sdc/sdd 'carved partitions' are 
->> not forgotten about?
->> 
->> Thanks,
->> 
->> Justin.
->> 
->
-> Ah this appears to be my issue:
->
-> http://www.3ware.com/KB/article.aspx?id=14177
->
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+I've seen messages like:
+[12068875.690255] raid1: raid set md0 active with 2 out of 2 mirrors
+[12068875.690284] md0: bitmap file is out of date (0 < 1) -- forcing
+full recovery
+[12068875.690289] md0: bitmap file is out of date, doing full recovery
+[12068875.710214] md0: bitmap initialized from disk: read 5/5 pages,
+set 131056 bits, status: 0
+[12068875.710222] created bitmap (64 pages) for device md0
 
-Hm, did not appear to help.
+Could you share the other situations where a bitmap-enabled raid1
+_must_ perform a full recovery?
+- Correct me if I'm wrong, but one that comes to mind is when a server
+reboots (after cleanly stopping a raid1 array that had a faulty
+member) and then either:
+1) assembles the array with the previously faulty member now available
 
-The card is a 9550SXU-12- any thoughts?
+2) assembles the array with the same faulty member missing.  The user
+later re-adds the faulty member
 
+AFAIK both scenarios would bring about a full resync.
+
+regards,
+Mike
