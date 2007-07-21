@@ -1,70 +1,37 @@
-From: Seb <seb@h-k.fr>
-Subject: Re: Partitions with == or \approx same size ?
-Date: Sat, 21 Jul 2007 14:41:38 +0200 (CEST)
-Message-ID: <Pine.LNX.4.58.0707211437420.4449@ybpnyubfg.ybpnyqbznva>
-References: <Pine.LNX.4.58.0707201908020.30683@ybpnyubfg.ybpnyqbznva>
- <18081.11720.547650.571674@notabene.brown> <Pine.LNX.4.58.0707210235000.30683@ybpnyubfg.ybpnyqbznva>
- <18081.44931.299829.724158@notabene.brown>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: 3ware Auto-Carve Question
+Date: Sat, 21 Jul 2007 11:49:39 -0400 (EDT)
+Message-ID: <Pine.LNX.4.64.0707211146420.32707@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18081.44931.299829.724158@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
+To: linux-ide-arrays@lists.math.uh.edu
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Quick question-- under Kernel 2.4 without 2TB support enabled, the only 
+other option is to use auto-carving to get the maximum amount of space 
+easily, however, after doing this (2TB, 2TB, 1.8TB) for a 10 x 750GB 
+array, only the first partition remains afer reboot.
 
-Hello Neil,
+Before reboot:
 
+/dev/sdb1 (2TB)
+/dev/sdc1 (2TB)
+/dev/sdd1 (2TB)
 
-Thanks for the confirmations!
-It's all very clear now. Case closed.
+After reboot
 
+/dev/sdb1 (2TB)
+sdc1 <vanished>
+sdd1 <vanished>
 
-Best,
-Seb.
+I also tried formatting and then labeling /dev/sdc1 and /dev/sdd1 with 
+mkfs.ext3 and then e2label, same thing, sdc/sdd disappear after reboot. 
+Is there some option somewhere to ensure that sdc/sdd 'carved partitions' 
+are not forgotten about?
 
-On Sat, 21 Jul 2007, Neil Brown wrote:
+Thanks,
 
-| On Saturday July 21, seb@h-k.fr wrote:
-| >
-| > Hi Neil,
-| >
-| >
-| > | > Could you tell me if such a mechanism exists in mdadm?
-| > | > Or should I accept the "loss" of the 150 GB?
-| > | When you give mdadm a collection of drives to turn into a RAID array,
-| > | use bases the size of the array on the smallest device.
-| >
-| > I'm sorry I don't know what "bases" are in a RAID array and I can't find
-| > this term in the man page. Could you elaborate?
-|
-| Typo.  Should be
-|     It bases the size of the array ...
-|
-| i.e. it works out which is the smaller device, and uses that size to
-| determine the size of the array.  e.g. if you are making a raid5 with
-| 4 drives, then the array will be 3 times the size of the smallest array.
-|
-| >
-| > | You might want to make it a little smaller still in case you have to
-| > | replace a device with a slightly smaller device (it happens).  You can
-| > | use "--size" to reduce the used space a little further if you like.
-| >
-| > Thanks for the pointer to --size! I had overlooked this option. The man
-| > page says that "If  this is not specified (as it normally is not) the
-| > smallest drive (or partition) sets the size". This implies that partitions
-| > need not have exactly the same size and 'mdadm' will still manage.
-|
-| Exactly.
-|
-| >
-| > So I'll use 249,9GB out of 250GB, skip over the small resulting
-| > differences, let mdadm work its magic and when new disks will be inserted
-| > after a failure it will suffice to use their total space.
-|
-| Again, exactly correct.
-|
-| NeilBrown
-|
+Justin.
