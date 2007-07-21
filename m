@@ -1,46 +1,48 @@
-From: Willy Tarreau <w@1wt.eu>
-Subject: Re: [RFH] Partion table recovery
-Date: Sat, 21 Jul 2007 21:40:28 +0200
-Message-ID: <20070721194027.GH943@1wt.eu>
-References: <200707200813.03553.a1426z@gawab.com> <4FEA8E81-3BA7-4F8C-AFD2-6B93487A9AD5@cam.ac.uk>
+From: =?ISO-8859-1?Q?D=E2niel?= Fraga <fragabr@gmail.com>
+Subject: Re: pata_via with software raid1: "attempt to access beyond end of
+ device"
+Date: Sat, 21 Jul 2007 18:18:35 -0300
+Message-ID: <bq9an4-rm6.ln1@tux.abusar.org>
+References: <dju2n4-lcf.ln1@tux.abusar.org>
+	<18078.57482.951240.250360@notabene.brown>
+	<mpm4n4-dr3.ln1@tux.abusar.org>
+	<18080.6791.774446.512592@notabene.brown>
+	<9fj5n4-uh5.ln1@tux.abusar.org>
+	<18080.9501.524388.160581@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4FEA8E81-3BA7-4F8C-AFD2-6B93487A9AD5@cam.ac.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Anton Altaparmakov <aia21@cam.ac.uk>
-Cc: Al Boldi <a1426z@gawab.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, Jul 20, 2007 at 08:35:45AM +0100, Anton Altaparmakov wrote:
-> On 20 Jul 2007, at 06:13, Al Boldi wrote:
-> >As always, a good friend of mine managed to scratch my partion  
-> >table by
-> >cat'ing /dev/full into /dev/sda.  I was able to push him out of the  
-> >way, but
-> >at least the first 100MB are gone.  I can probably live without the  
-> >first
-> >partion, but there are many partitions after that, which I hope should
-> >easily be recoverable.
-> >
-> >I tried parted, but it's not working out for me.  Does anybody know  
-> >of a
-> >simple partition recovery tool, that would just scan the disk for lost
-> >partions?
-> 
-> parted and its derivatives are pile of crap...  They cause corruption  
-> to totally healthy systems at the best of times.  Don't go near them.
-> 
-> Use TestDisk (http://www.cgsecurity.org/wiki/TestDisk) and be happy.   
-> (-:
+On Fri, 20 Jul 2007 12:59:41 +1000
+Neil Brown <neilb@suse.de> wrote:
 
-Thanks for this link Anton, it looks awesome and I'll add it to my
-collection :-)
+> So reiserfs thinks the devices is 64K larger than it really is. I
+> wonder how that happened.
 
-I mostly use vche (virtual console hex editor) to look for strings, find
-offsets and/or fix data by hand. This should make me save some time !
+>    resize_reiserfs -s -64K /dev/md1
 
-Regards,
-Willy
+	Neil, I discovered how the "64k larger" issue happened...
+
+	It was my fault.. I created the Reiser filesystem *before* the
+raid device. So when I create the raid device, it warns about a
+existing reiserfs filesystem and if I want to continue. This way, the
+underlying filesystem will be always 64k large than the raid device.
+
+	If, instead, I use the correct method of creating the raid
+device *before*, everything is ok, because then I can "mkreiserfs" the
+raid device and the filesystem will have the correct size the raid
+device expects.
+
+	Sorry for my mistake and thanks again!
+
+-- 
+Linux 2.6.22: Holy Dancing Manatees, Batman!
+http://www.lastfm.pt/user/danielfraga
+http://u-br.net
+Marilyn Manson - "Dried Up, Tied and Dead to the World" (Antichrist
+Superstar - 1996)
 
