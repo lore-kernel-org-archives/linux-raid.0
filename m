@@ -1,57 +1,97 @@
-From: Neil Brown <neilb@suse.de>
+From: Luca Berra <bluca@comedia.it>
 Subject: Re: Partitions with == or \approx same size ?
-Date: Sat, 21 Jul 2007 17:02:27 +1000
-Message-ID: <18081.44931.299829.724158@notabene.brown>
+Date: Sat, 21 Jul 2007 11:25:08 +0200
+Message-ID: <20070721092507.GC18424@percy.comedia.it>
 References: <Pine.LNX.4.58.0707201908020.30683@ybpnyubfg.ybpnyqbznva>
-	<18081.11720.547650.571674@notabene.brown>
-	<Pine.LNX.4.58.0707210235000.30683@ybpnyubfg.ybpnyqbznva>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Seb on Saturday July 21
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.58.0707201908020.30683@ybpnyubfg.ybpnyqbznva>
 Sender: linux-raid-owner@vger.kernel.org
-To: Seb <seb@h-k.fr>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Saturday July 21, seb@h-k.fr wrote:
-> 
-> Hi Neil,
-> 
-> 
-> | > Could you tell me if such a mechanism exists in mdadm?
-> | > Or should I accept the "loss" of the 150 GB?
-> | When you give mdadm a collection of drives to turn into a RAID array,
-> | use bases the size of the array on the smallest device.
-> 
-> I'm sorry I don't know what "bases" are in a RAID array and I can't find
-> this term in the man page. Could you elaborate?
+On Fri, Jul 20, 2007 at 07:54:54PM +0200, Seb wrote:
+>
+>Dear all,
+>
+>
+>First I'd like to thank you for the great work you've done with mdadm.
+>It's flexible, powerful and reasonably easy to use.
+>
+>I have a question that seems both important for the redundancy of my R=
+AID6
+>devices and too sharp for me, my friends and the newsgroup
+>fr.comp.stockage . I think your understanding of the inner workings of
+>mdadm should allow you to already know the answer.
+>
+>A 12-disks machine was recently assembled with disks coming from sever=
+al
+>sources (Linux Ubuntu server, kernel 2.6.15, RAID6 array). All 12 disk=
+s
+>are S-ATA with 250=A0GB capacity.
+>
+>I understand that partitions should have the same size, meaning the sa=
+me
+>number of bytes. All 12 disks have exactly 250059350016 bytes, but the
+>number of blocks that can be allocated are not the same from one disk =
+to
+>another, ranging from 244196001 to 244198384. Small difference, but
+>significant nonetheless if this means that data can be lost. So I look=
+ed
+>for a number of blocks that would be the same for all disks. But the
+>number of blocks cannot be imposed when creating a partition, only the
+>number of cylinders.
 
-Typo.  Should be
-    It bases the size of the array ...
+since we are living with machines based on a 1980 design,
+the usable size of a partitioned device is rounded to disk geometry,
+and geometry is read from the partition table (if there is one)
+oh, geometry has no real meaning in modern disk drives.
 
-i.e. it works out which is the smaller device, and uses that size to
-determine the size of the array.  e.g. if you are making a raid5 with
-4 drives, then the array will be 3 times the size of the smallest array.
 
-> 
-> | You might want to make it a little smaller still in case you have to
-> | replace a device with a slightly smaller device (it happens).  You can
-> | use "--size" to reduce the used space a little further if you like.
-> 
-> Thanks for the pointer to --size! I had overlooked this option. The man
-> page says that "If  this is not specified (as it normally is not) the
-> smallest drive (or partition) sets the size". This implies that partitions
-> need not have exactly the same size and 'mdadm' will still manage.
+>On the disks with 244196001 blocks, 'fdisk -l' says:
+>	Units =3D cylinders of 16065 * 512 =3D 8225280 bytes
+this disk has 255 head and 63 sectors per track
+usable space is
+int(size/H/S/512)*H*S*512-S*512   # the subtraction here is to account
+                                  # for space used by partition table
+int (250059350016/255/63/512) =3D 30401
+30401*255*63*512-63*512 =3D 250056705024
+250056705024 / 1024 =3D 244196001 *BINGO*
 
-Exactly.
+>For the other half, it says:
+>	Units =3D cylinders of 2048 * 512 =3D 1048576 bytes
+this one might be 128H 16S, or any other combination for that matter,
+let's see
+int (250059350016/1048576) =3D 238475
+238475 * 1048576 =3D 250059161600
+your resulting space is 244198384K
+244198384 * 1024 =3D 250059145216
+250059161600 - 250059145216 =3D 16384 (space used by partition)
+16384k is 32 sectors...
+so geometry for this one is 238475 Cyl, 64 Heads, 32 Sectors
 
-> 
-> So I'll use 249,9GB out of 250GB, skip over the small resulting
-> differences, let mdadm work its magic and when new disks will be inserted
-> after a failure it will suffice to use their total space.
+best thing you can do is make all disk have the same apparent geometry.
+usually if you zap partition tables and reboot all disks should come up
+with similar geometry.
+another issue is to partition your drives with sfdisk, using -C, -H, -S
+options to force a geometry.
 
-Again, exactly correct.
+L.
 
-NeilBrown
+
+--=20
+Luca Berra -- bluca@comedia.it
+        Communication Media & Services S.r.l.
+ /"\
+ \ /     ASCII RIBBON CAMPAIGN
+  X        AGAINST HTML MAIL
+ / \
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
