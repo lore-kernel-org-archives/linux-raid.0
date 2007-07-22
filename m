@@ -1,298 +1,148 @@
-From: Rene Herman <rene.herman@gmail.com>
-Subject: Re: [RFH] Partition table recovery
-Date: Sun, 22 Jul 2007 11:11:49 +0200
-Message-ID: <46A31F55.2000009@gmail.com>
-References: <200707200813.03553.a1426z@gawab.com> <200707201429.34419.a1426z@gawab.com> <20070720113914.GJ22998@lug-owl.de> <200707201522.17270.a1426z@gawab.com> <20070720160614.GG26752@thunk.org> <46A24846.7050803@gmail.com> <20070722011141.GJ26752@thunk.org>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: [GIT PATCH 0/2] stripe-queue for 2.6.23 consideration
+Date: Sun, 22 Jul 2007 02:44:52 -0700
+Message-ID: <20070722094115.18906.64495.stgit@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------020807070509090408090102"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20070722011141.GJ26752@thunk.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Theodore Tso <tytso@mit.edu>, Rene Herman <rene.herman@gmail.com>, Al Boldi <a1426z@gawab.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+To: akpm@linux-foundation.org, neilb@suse.de
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This is a multi-part message in MIME format.
---------------020807070509090408090102
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
-Content-Transfer-Encoding: 7bit
+Andrew, Neil,
 
-On 07/22/2007 03:11 AM, Theodore Tso wrote:
+The stripe-queue patches are showing solid performance improvement.
 
->> This is a problem. Today the CHS fields in the partition entries don't
->> mean much of anything anymore and Linux happily ignores them but DOS
->> and (hence) Windows 9x do not. From time to time I still have the
->> Windows 98 install that's sitting in a corner of my disk throw a fit
->> just by having set the BIOS from LBA to Large (meaning the geometry the
->> BIOS pretends the disk has changes) for example. Old DOS installs that
->> I keep around for the purpose of hardware testing with the originally
->> supplied drivers make for even more of a "don't touch, don't touch!"
->> thing -- various version of DOS throw fits for various reasons.
-> 
-> This is true, but that's due to the fundamentally broken nature of CHS.
-> You need them to boot, and that's about it.  I will say up front that I
-> don't particularly care about legacy operating system such as DOS,
-> Windows 98, or Minix 3.  So the idea of simply having the number of heads
-> and sectors in the partition header is that we can reconstruct CHS fields
-> such that it is likely with modern hardware you will get it right.
+	git://lost.foo-projects.org/~dwillia2/git/iop md-for-linus
 
-Well, I still don't believe this all to be a great idea but it was sort of 
-fun so the attached does largely what you want -- build a list of all data 
-partitions.
+ drivers/md/raid5.c         | 1484 ++++++++++++++++++++++++++++++++------------
+ include/linux/raid/raid5.h |   87 +++-
+ 2 files changed, 1164 insertions(+), 407 deletions(-)
 
-The heads/sectors fields it for now just gets from the HDIO_GETGEO call. A 
-better source would be guessing the values from the partition table itself 
-but that _also_ doesn't make too much sense. If you're reconstructing a 
-sanitized version of the table anyway, it makes better sense to reconstruct 
-it with the values HDIO_GETGEO returns at restoration time.
+Dan Williams (2):
+      raid5: add the stripe_queue object for tracking raid io requests (take2)
+      raid5: use stripe_queues to prioritize the "most deserving" requests (take4)
 
-I kept your suggested format, but in fact, the 64-bit "start" value seems 
-not very useful if we're getting the value from a 32-bit field in the old 
-partition tables anyway. With that shrunk down to 32-bit again, there would 
-be enough room for the complete partition table entry...
+I initially considered them 2.6.24 material but after fixing the sync+io
+data corruption regression, fixing the large 'stripe_cache_size' values
+performance regression, and seeing how well it performed on my IA
+platform I would like them to be considered for 2.6.23.  That being said
+I have not yet tested expand operations or raid6.
 
-> For ancient systems that do all sorts of weird things such as ECHS,
-> etc., yeah, you're pretty much doomed, and the bigger danger comes
-> from futzing with BIOS settings, et. al.  But it's 2007, gosh darn it!
-> "Here's a quarter, kid, buy yourself a real computer".  :-)
+Without any tuning a 4 disk (SATA) RAID5 array can reach 190MB/s.  Previously
+performance was around 90MB/s.  Blktrace data confirms that less reads are
+occurring and more writes are being merged.
 
-Thanks, but real computers won't host my ISA cards...
+$ mdadm --create /dev/md0 /dev/sd[abcd] -n 4 -l 5 --assume-clean
+$ blktrace /dev/sd[abcd] &
+$ for i in `seq 1 3`; do dd if=/dev/zero of=/dev/md0 bs=1024k count=1024; done
+$ fg ^C
+$ blkparse /dev/sda /dev/sdb /dev/sdc /dev/sdd
 
-> Yes, I'm very aware of the extended partitioning scheme mess.  What I
-> was proposing to back up here is only the real partitions, not the
-> fake extended partitions.  The idea is to store *just* enough
-> information so that a partition table manager can recover the
-> partition tables in such a way that the original filesystem
-> information can be recovered.
+=====pre-patch=====
+Total (sda):
+ Reads Queued:       3,136,   12,544KiB	 Writes Queued:     187,068,  748,272KiB
+ Read Dispatches:      676,   12,384KiB	 Write Dispatches:   30,949,  737,052KiB
+ Reads Requeued:         0		 Writes Requeued:         0
+ Reads Completed:      662,   12,080KiB	 Writes Completed:   30,630,  736,964KiB
+ Read Merges:        2,452,    9,808KiB	 Write Merges:      155,885,  623,540KiB
+ IO unplugs:             1        	 Timer unplugs:           1
 
-This should do I guess. It enters all data partitions into the list, in the 
-order in which they are encountered and sets a flag to signify that a 
-partition was a logical rather than primary. Another option would be to just 
-reserve the first 4 entries for the primaries and the rest for the logicals 
-but this saves entries if there are fewer than 4 primaries and was in fact 
-easier...
+Total (sdb):
+ Reads Queued:       1,541,    6,164KiB	 Writes Queued:      91,224,  364,896KiB
+ Read Dispatches:      323,    6,184KiB	 Write Dispatches:   14,603,  335,528KiB
+ Reads Requeued:         0		 Writes Requeued:         0
+ Reads Completed:      303,    6,124KiB	 Writes Completed:   13,650,  328,520KiB
+ Read Merges:        1,209,    4,836KiB	 Write Merges:       76,080,  304,320KiB
+ IO unplugs:             0        	 Timer unplugs:           0
 
-The program enters partitions in what should be the same order as Linux 
-itself does. Primaries from slot 0 to 3 as normal (but not backed up to 
-entry 0 to 3 as said -- the LOGICAL flag indentifies them), extended 
-partitions in the MBR in the order as encountered, with the logicals in the 
-second-level table as encountered, and following only the first extented in 
-the second-level table.
+Total (sdc):
+ Reads Queued:       1,372,    5,488KiB	 Writes Queued:      82,995,  331,980KiB
+ Read Dispatches:      297,    5,280KiB	 Write Dispatches:   13,258,  304,020KiB
+ Reads Requeued:         0		 Writes Requeued:         0
+ Reads Completed:      268,    4,948KiB	 Writes Completed:   12,320,  298,668KiB
+ Read Merges:        1,067,    4,268KiB	 Write Merges:       69,154,  276,616KiB
+ IO unplugs:             0        	 Timer unplugs:           0
 
-Made it into a generic C program -- didn't look at e2fsprogs sources yet.
-
-Need to be off now and haven't yet stared at this as long as I'd like so 
-don't slap me if I've left a few bugs in (although it seems to work nicely). 
-The program dumps the backup sector to stdout -- it's ofcourse easy to 
-change it to print the entries out so they're easy to compare against, say, 
-"fdisk -l -us".
-
-Oh, and once you've looked at it, please throw it away. As said, I still 
-don't think it's a great idea ;-)
-
-Rene.
+Total (sdd):
+ Reads Queued:       1,383,    5,532KiB	 Writes Queued:      80,186,  320,744KiB
+ Read Dispatches:      307,    5,008KiB	 Write Dispatches:   13,241,  298,400KiB
+ Reads Requeued:         0		 Writes Requeued:         0
+ Reads Completed:      276,    4,888KiB	 Writes Completed:   12,677,  294,324KiB
+ Read Merges:        1,050,    4,200KiB	 Write Merges:       66,772,  267,088KiB
+ IO unplugs:             0        	 Timer unplugs:           0
 
 
---------------020807070509090408090102
-Content-Type: text/plain;
- name="backup.c"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="backup.c"
+=====post-patch=====
+Total (sda):
+ Reads Queued:         117,      468KiB	 Writes Queued:      71,511,  286,044KiB
+ Read Dispatches:       17,      308KiB	 Write Dispatches:    8,412,  699,204KiB
+ Reads Requeued:         0		 Writes Requeued:         0
+ Reads Completed:        6,       96KiB	 Writes Completed:    3,704,  321,552KiB
+ Read Merges:           96,      384KiB	 Write Merges:       67,880,  271,520KiB
+ IO unplugs:            14        	 Timer unplugs:          15
 
-/*
- * Public Domain 2007, Rene Herman
- *
- * gcc -W -Wall -DTEST -D_LARGEFILE64_SOURCE -o backup backup.c
- *
- */
+Total (sdb):
+ Reads Queued:          88,      352KiB	 Writes Queued:      56,687,  226,748KiB
+ Read Dispatches:       11,      288KiB	 Write Dispatches:    8,142,  686,412KiB
+ Reads Requeued:         0		 Writes Requeued:         0
+ Reads Completed:        8,      184KiB	 Writes Completed:    2,770,  257,740KiB
+ Read Merges:           76,      304KiB	 Write Merges:       54,005,  216,020KiB
+ IO unplugs:            16        	 Timer unplugs:          17
 
-#include <stdlib.h>
+Total (sdc):
+ Reads Queued:          60,      240KiB	 Writes Queued:      61,863,  247,452KiB
+ Read Dispatches:        7,      248KiB	 Write Dispatches:    8,302,  699,832KiB
+ Reads Requeued:         0		 Writes Requeued:         0
+ Reads Completed:        5,      144KiB	 Writes Completed:    2,907,  258,900KiB
+ Read Merges:           50,      200KiB	 Write Merges:       58,926,  235,704KiB
+ IO unplugs:            20        	 Timer unplugs:          23
 
-enum {
-	DOS_EXTENDED   = 0x05,
-	WIN98_EXTENDED = 0x0f,
-	LINUX_EXTENDED = 0x85,
-};
+Total (sdd):
+ Reads Queued:          61,      244KiB	 Writes Queued:      66,330,  265,320KiB
+ Read Dispatches:       10,      180KiB	 Write Dispatches:    9,326,  694,012KiB
+ Reads Requeued:         0		 Writes Requeued:         0
+ Reads Completed:        4,      112KiB	 Writes Completed:    3,562,  285,912KiB
+ Read Merges:           47,      188KiB	 Write Merges:       62,751,  251,004KiB
+ IO unplugs:            16        	 Timer unplugs:          17
 
-struct partition {
-        unsigned char boot_ind;
-	unsigned char __1[3];
-        unsigned char sys_ind;
-	unsigned char __2[3];
-        unsigned int start;
-        unsigned int size;
-} __attribute__((packed));
+Tiobench measures >90% performance increases on my IA platform with none of the read
+performance anomalies seen on previous takes:
 
-struct entry {
-	unsigned char flags;
-	unsigned char type;
-	unsigned short __1;
-	unsigned long long start;
-	unsigned int size;
-} __attribute__((packed));
+File Size (MB)
+Blk Size (KB)
+Avg Rate (MB/s)
 
-enum {
-	ENTRY_FLAG_LOGICAL  = 0x01,
-	ENTRY_FLAG_BOOTABLE = 0x80,
-};
+=====pre-patch=====
+File   Blk      Num     Avg
+Size   Size     Thr     Rate
+----   -----    ---     ------
+2048   4096     1       71.79
+2048   4096     2       55.86
+2048   4096     4       43.43
+2048   4096     8       40.88
+2048   131072   1       72.02
+2048   131072   2       54.67
+2048   131072   4       42.85
+2048   131072   8       41.51
 
-struct backup {
-	unsigned char signature[8];
-	unsigned short type;
-	unsigned char heads;
-	unsigned char sectors;
-	unsigned char count;
-	unsigned char __1[3];
-	struct entry table[31];
-} __attribute__((packed));
+=====post-patch=====
+File   Blk      Num     Avg
+Size   Size     Thr     Rate
+----   -----    ---     ------
+2048   4096     1       142.34
+2048   4096     2       71.6
+2048   4096     4       53.28
+2048   4096     8       50.46
+2048   131072   1       140.86
+2048   131072   2       72.94
+2048   131072   4       52.16
+2048   131072   8       50.18
 
-#define BACKUP_SIGNATURE "PARTBAK1"
+Andrew, please add this git tree to -mm.  Neil, if you are comfortable with the
+current state please ack and I will send a last minute pull request for 2.6.23.
 
-enum {
-	BACKUP_TYPE_MBR = 1,
-};
-
-struct backup backup = {
-	.signature = BACKUP_SIGNATURE,
-	.type	   = BACKUP_TYPE_MBR,
-};
-
-int is_extended(struct partition *entry)
-{
-	int ret = 0;
-
-	switch (entry->sys_ind) {
-	case DOS_EXTENDED:
-	case WIN98_EXTENDED:
-	case LINUX_EXTENDED:
-		ret = 1;
-	}
-	return ret;
-}
-
-unsigned char *get_sector(unsigned int n);
-void put_sector(unsigned char *sector);
-
-int do_sector(unsigned int offset, unsigned int start)
-{
-	unsigned char *sector;
-	struct partition *partition;
-	struct partition *extended = NULL;
-
-	start += offset;
-	sector = get_sector(start);
-	if (!sector) 
-		return -1;
-
-	if (sector[510] != 0x55 || sector[511] != 0xaa) {
-		put_sector(sector);
-		return -1;
-	}
-
-	partition = (struct partition *)(sector + 510 - 4 * sizeof *partition);
-	do {
-		struct entry *entry;
-
-		if (!partition->size)
-			continue;
-
-		if (is_extended(partition)) {
-			if (!offset)
-				do_sector(partition->start, 0);
-			else if (!extended)
-				extended = partition;
-			continue;
-		}
-		entry = backup.table + backup.count++;
-
-		entry->flags = partition->boot_ind;
-		if (offset)
-			entry->flags |= ENTRY_FLAG_LOGICAL;
-		entry->type  = partition->sys_ind;
-		entry->start = start + partition->start;
-		entry->size  = partition->size;
-
-	} while (++partition < (struct partition *)(sector + 510));
-
-	if (extended)
-		do_sector(offset, extended->start);
-
-	put_sector(sector);
-	return 0;
-}
-
-#ifdef TEST
-#include <stdio.h>
-
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/ioctl.h>
-#include <unistd.h>
-#include <fcntl.h>
-
-#include <linux/hdreg.h>
-
-int fd;
-
-unsigned char *get_sector(unsigned int n)
-{
-	unsigned char *sector = malloc(512);
-
-	if (!sector)
-		return NULL;
-
-	if (lseek64(fd, (off64_t)n << 9, SEEK_SET) < 0)
-		goto free;
-
-	if (read(fd, sector, 512) != 512) {
-  free:		
-		free(sector);
-		sector = NULL;
-	}
-	return sector;
-}
-
-void put_sector(unsigned char *sector)
-{
-	free(sector);
-}
-
-int main(int argc, char *argv[])
-{
-	struct stat buf;
-	struct hd_geometry geometry;
-
-	if (argc != 2) {
-		printf("%s <blkdev>\n", argv[0]);
-		return EXIT_FAILURE;
-	}
-	fd = open(argv[1], O_RDONLY);
-	if (fd < 0) {
-		perror("open");
-		return EXIT_FAILURE;
-	}
-	if (fstat(fd, &buf) < 0 || !S_ISBLK(buf.st_mode)) {
-		perror("stat");
-		return EXIT_FAILURE;
-	}
-	if (ioctl(fd, HDIO_GETGEO, &geometry) == 0) {
-		backup.heads = geometry.heads;
-		backup.sectors = geometry.sectors;
-	}
-	if (do_sector(0, 0) < 0)
-		return EXIT_FAILURE;
-
-	if (close(fd) < 0) {
-		perror("close");
-		return EXIT_FAILURE;
-	}
-	if (write(STDOUT_FILENO, &backup, sizeof backup) != sizeof backup) {
-		perror("write");
-		return EXIT_FAILURE;
-	}
-	return EXIT_SUCCESS;
-}
-#endif
-
---------------020807070509090408090102--
+Thanks,
+Dan
