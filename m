@@ -1,51 +1,89 @@
-From: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
-Subject: Re: raid5:md3: read error corrected , followed by , Machine Check
-Date: Sat, 21 Jul 2007 16:25:31 -0700 (PDT)
-Message-ID: <Pine.LNX.4.64.0707211610120.29412@filesrv1.baby-dragons.com>
-References: <200707171518.l6HFIUBU022021@cichlid.com>
+From: Michal Soltys <nozo@ziu.info>
+Subject: RAID and filesystem setup / tuning questions regarding specific scenario
+Date: Sun, 22 Jul 2007 02:29:01 +0200
+Message-ID: <46A2A4CD.7030003@ziu.info>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-2; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200707171518.l6HFIUBU022021@cichlid.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andrew Burgess <aab@cichlid.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
- 	Hello Andrew ,
+I'm making raid 5 consisting of 4 disks, 500 GB each, with one spare 
+standby. In future to be expanded with extra disks. Server will be running 
+with ups, and with extra machine doing daily rsync backup of the system and 
+stuff deemed important. On top of the raid, there will probably be simple 
+lvm2 setup - linear with large extents (512 MB or 1 GB). Files will be 
+accessed primarily through samba shares, by 10 - 20 people at the same time. 
+Server will have 2GB ram (increasing it, if it's necessary, won't be a 
+problem), core2 duo cpu, running 64bit linux. Disks are on ICH9R, in ahci mode.
 
-On Tue, 17 Jul 2007, Andrew Burgess wrote:
->> 	The 'MCE's have been ongoing for sometime .  I have replaced every item
->> in the system except the chassis & scsi backplane & power supply(750Watts) .
->> 	Everything .  MB,cpu,memory,scsi controllers, ...
->> 	These MCE's only happen when I am trying to build or bonnie++ test the
->> md3 .  It consists of (now 7+1spare) 146GB drives in the SuperMicro
->> SYS-6035B-8B's backplane attached to a LSI22320 .
->
-> Probably every old timer has a story about chasing a hardware problem
-> where changing the power supply finally fixed it. I keep spares now.
->
-> If an MCE (which means bad cpu) doesn't go away after changing the cpu
-> it would either have to be temperature, power or a bug in the MCE code.
-> What else could it be?
+Currently, users have ~200 GB partition, almost filled up, with ca. 700,000 
+files - which gives rather small value ~300 KB / file. From what they say, 
+it will be more or less the same on the new machine.
 
- 	Thank you for the idea of 'changing out the PS' .  So I did it a bit 
-differant .  I removed the system PS from the raid backplane & dropped in a 
-known good ps of proper wattage & re-tested .  But left the systems ps attached 
-to only the MB & fans .
- 	It doesn't appear to be power load related .  I tried rebuilding my 7 
-disk raid6 array & I got the same thing ,  MCE .
- 	Now the raid backplane is still in the air stream in front of the cpu's 
-and memory slots .  So it could be a marginal cpu or memory stick .
 
- 	But here's the clincher ,  when I don't use the two drives in from of 
-the PS & cpu & memory slots .  The array completes it's resync .  So I'm back to 
-testing memory (again) ,  If that passes then I'll try the new cpu(s) route .
+The two basic questions - raid parameters and filesystem choice. I'll of 
+course make tests, but potential combination of parameters is not so small, 
+so I'm looking for starting tips.
 
- 		Tnx All ,  JimL
--- 
-+-----------------------------------------------------------------+
-| James   W.   Laferriere | System   Techniques | Give me VMS     |
-| Network        Engineer | 663  Beaumont  Blvd |  Give me Linux  |
-| babydr@baby-dragons.com | Pacifica, CA. 94044 |   only  on  AXP |
-+-----------------------------------------------------------------+
+
+Regarding parameters - I've googled / searched this list, and found some
+suggestions regarding parameters like chunk_size, nr_requests, read ahead 
+setting, etc. Still I have feeling, that suggested settings are rather 
+tailored more towards big filesizes - and it's certainly not the case here. 
+Wouldn't values - like 64 MB read ahead on whole raid device, 1MB chunks - a 
+bit overkill in my scenario ? Maybe someone is running something similar, 
+and could provide some insights ?
+
+
+Regarding filesystem - I've thought about actually using ext3 without the 
+journal (so effectively ext2), considering ups and regular backups to 
+separate machine. Also, judging from what I've found so far, XFS is not that 
+great in case of many small files. As for ext2/3, googling revealed 
+documents like http://ext2.sourceforge.net/2005-ols/paper-html/index.html , 
+which are quite encouraging (besides, document is already 2 years old). 
+Another advantage of ext2/3, is that it can be shrinked, whereas XFS cannot,
+afaik.
+
+How much of a performance gain would I get from using journalless ext3 ? 
+Either way, is testing ext2/3 worthwhile here, or should I jump right to XFS ?
+
+
+Misc. more specific questions:
+
+- lvm2
+
+In my scenario - linear, big extents - is there a [significant] performance 
+hit coming from using it ? Any other caveats I should be aware of ?
+
+- read ahead
+
+All the elements of the final setup - drives themselves, RAID, LVM2 - have 
+read ahead parameter. How should they be set, relatively to each other ? 
+Also, basing on  http://www.rhic.bnl.gov/hepix/talks/041019pm/schoen.pdf - 
+too big read ahead can hurt performance in multiuser setup. And as mentioned 
+above - 64 MB seems a bit crazy... Availabilty of memory is not an issue though.
+
+Any other "stacking" parameters that should be set properly ?
+
+- nr_requests
+
+I've also found suggestion about increasing this parameter - to 256 or 512, 
+in http://marc.info/?l=linux-raid&m=118302016516950&w=2 . It was also 
+mentioned in some 3ware technical doc. Any comments on that ?
+
+- max_sectors_kb
+
+Any suggestions regarding this one ? I've found suggestions to set it to 
+chunk size, but it seems strange (?)
+
+- journal on separate devices
+
+Generaly - how fast should be the extra drive, compared to the RAID array ? 
+Also how big ? Any side effects of setting it big (on ext3, there's limit 
+when the journal is set on the main partition due to memory requirements; 
+but there's no limit when it's on separate drive) ?
+
+
