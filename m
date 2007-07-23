@@ -1,45 +1,70 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: [GIT PATCH 0/2] stripe-queue for 2.6.23 consideration
-Date: Mon, 23 Jul 2007 17:10:02 +1000
-Message-ID: <18084.21578.171810.48265@notabene.brown>
-References: <20070722094115.18906.64495.stgit@dwillia2-linux.ch.intel.com>
+Subject: Re: Need clarification on raid1 resync behavior with bitmap support
+Date: Mon, 23 Jul 2007 17:21:35 +1000
+Message-ID: <18084.22271.122052.80056@notabene.brown>
+References: <170fa0d20707210959q11153d38u3281062c98d3adb7@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Dan Williams on Sunday July 22
+In-Reply-To: message from Mike Snitzer on Saturday July 21
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+To: Mike Snitzer <snitzer@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sunday July 22, dan.j.williams@intel.com wrote:
-> Andrew, Neil,
+On Saturday July 21, snitzer@gmail.com wrote:
+> On 6/1/06, NeilBrown <neilb@suse.de> wrote:
+> >
+> > When an array has a bitmap, a device can be removed and re-added
+> > and only blocks changes since the removal (as recorded in the bitmap)
+> > will be resynced.
 > 
-> The stripe-queue patches are showing solid performance improvement.
+> Neil,
 > 
-> 	git://lost.foo-projects.org/~dwillia2/git/iop md-for-linus
-> 
->  drivers/md/raid5.c         | 1484 ++++++++++++++++++++++++++++++++------------
->  include/linux/raid/raid5.h |   87 +++-
->  2 files changed, 1164 insertions(+), 407 deletions(-)
-> 
-> Dan Williams (2):
->       raid5: add the stripe_queue object for tracking raid io requests (take2)
->       raid5: use stripe_queues to prioritize the "most deserving" requests (take4)
-> 
-> I initially considered them 2.6.24 material but after fixing the sync+io
-> data corruption regression, fixing the large 'stripe_cache_size' values
-> performance regression, and seeing how well it performed on my IA
-> platform I would like them to be considered for 2.6.23.  That being said
-> I have not yet tested expand operations or raid6.
- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> Does the same apply when a bitmap-enabled raid1's member goes faulty?
+> Meaning even if a member is faulty, when the user removes and re-adds
+> the faulty device the raid1 rebuild _should_ leverage the bitmap
+> during a resync right?
 
-I think we really shouldn't aim for 2.6.23 at this stage.  The merge
-window is shut, and this is a little more that a bug fix.  It's sounds
-great though.  I'd really like to hear more success reports, and will
-do my own review a testing either this week or next.
+Yes and no.
 
-Certainly good for -mm.
+While the array is degraded, bits are never cleared from the bitmap.
+So if you remove and re-add a device from a degraded array, then all
+the block that have changed since the array became degraded will need
+to be recovered.  This will likely be more than where changed while
+the device was temporarily removed from the array, but probably much
+less than the entire array.
+
+> 
+> I've seen messages like:
+> [12068875.690255] raid1: raid set md0 active with 2 out of 2 mirrors
+> [12068875.690284] md0: bitmap file is out of date (0 < 1) -- forcing
+> full recovery
+> [12068875.690289] md0: bitmap file is out of date, doing full recovery
+> [12068875.710214] md0: bitmap initialized from disk: read 5/5 pages,
+> set 131056 bits, status: 0
+> [12068875.710222] created bitmap (64 pages) for device md0
+> 
+> Could you share the other situations where a bitmap-enabled raid1
+> _must_ perform a full recovery?
+
+When you add a new drive.  When you create a new bitmap.  I think that
+should be all.
+
+> - Correct me if I'm wrong, but one that comes to mind is when a server
+> reboots (after cleanly stopping a raid1 array that had a faulty
+> member) and then either:
+> 1) assembles the array with the previously faulty member now
+> available
+> 
+> 2) assembles the array with the same faulty member missing.  The user
+> later re-adds the faulty member
+> 
+> AFAIK both scenarios would bring about a full resync.
+
+Only if the drive is not recognised as the original member.
+Can you test this out and report a sequence of events that causes a
+full resync?
 
 NeilBrown
