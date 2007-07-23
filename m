@@ -1,61 +1,26 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: [RFH] Partition table recovery
-Date: Mon, 23 Jul 2007 16:22:29 -0400
-Message-ID: <46A50E05.3080905@tmr.com>
-References: <200707200813.03553.a1426z@gawab.com> <46A24846.7050803@gmail.com> <20070722011141.GJ26752@thunk.org> <200707220710.31402.a1426z@gawab.com> <20070722162802.GA20174@thunk.org> <46A46399.5090406@gmail.com> <20070723084146.GP22998@lug-owl.de> <46A488EB.2050305@gmail.com>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [GIT PATCH 0/2] stripe-queue for 2.6.23 consideration
+Date: Mon, 23 Jul 2007 14:43:00 -0700
+Message-ID: <20070723144300.8c3f05db.akpm@linux-foundation.org>
+References: <20070722094115.18906.64495.stgit@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <46A488EB.2050305@gmail.com>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Rene Herman <rene.herman@gmail.com>
-Cc: Jan-Benedict Glaw <jbglaw@lug-owl.de>, Theodore Tso <tytso@mit.edu>, linux-fsdevel@vger.kernel.org, Al Boldi <a1426z@gawab.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20070722094115.18906.64495.stgit@dwillia2-linux.ch.intel.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: neilb@suse.de, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Rene Herman wrote:
-> On 07/23/2007 10:41 AM, Jan-Benedict Glaw wrote:
->
->> As multibyte on-disk variables, these will need LE/BE conversion.
->
-> Indeed, thanks -- has been updated in the version that is attached.
->
-> Also fixes a bug that snuck in (failed to add offset to entry->start).
->
->>> struct entry {
->>>     uint8_t flags;
->>>     uint8_t type;
->>>     uint16_t __1;
->>>     uint64_t start;
->>>     uint32_t size;
->>
->> Dito.
->
-> This can stay for now. The partition table backup would indeed need 
-> some defined byte-order but it might be "whatever order the filesystem 
-> it's backed up onto uses". Since it's not directly written to any 
-> filesystem for now, host order will do currently.
->
->> Looks like a useful program, but you'd definively fix the LE/BE issues.
->> If you do that, it'll be able to even run on BE machines, too.
->
-> I might disagree with the usefulness. I believe that preferably a 
-> backup should be made with help from the kernel (if only by walking 
-> sysfs) to avoid things getting out of sync between kernel and backup 
-> program.
->
-> (this program largely does the same as the kernel does but even now 
-> there's already a difference in so far that I didn't bother to 
-> de-garbage the 3rd and 4th entries in the second level extendeds).
->
-How can I politely say this code really needs comments?
-To quote the late R. W. Benway, "If it was hard to write it should be 
-hard to understand."
-(regarding code in FORTRAN II on punched cards, ca 1965)
-> Rene.
+On Sun, 22 Jul 2007 02:44:52 -0700
+Dan Williams <dan.j.williams@intel.com> wrote:
 
--- 
-bill davidsen <davidsen@tmr.com>
-  CTO TMR Associates, Inc
-  Doing interesting things with small computers since 1979
+> The stripe-queue patches are showing solid performance improvement.
+> 
+> 	git://lost.foo-projects.org/~dwillia2/git/iop md-for-linus
 
+It's a slippery little tree that one.  I was using md-accel-linus, only I
+nuked it because it was empty, or was causing problems or something.
+
+Oh well, I shall switch to md-for-linus and shall see what happens.
