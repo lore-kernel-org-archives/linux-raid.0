@@ -1,29 +1,68 @@
-From: Rene Herman <rene.herman@gmail.com>
-Subject: Re: [RFH] Partition table recovery
-Date: Mon, 23 Jul 2007 14:39:11 +0200
-Message-ID: <46A4A16F.7070100@gmail.com>
-References: <200707200813.03553.a1426z@gawab.com> <46A24846.7050803@gmail.com> <20070722011141.GJ26752@thunk.org> <200707220710.31402.a1426z@gawab.com> <20070722162802.GA20174@thunk.org> <46A46399.5090406@gmail.com> <20070723084146.GP22998@lug-owl.de> <46A488EB.2050305@gmail.com>
+From: "Mike Snitzer" <snitzer@gmail.com>
+Subject: Re: Need clarification on raid1 resync behavior with bitmap support
+Date: Mon, 23 Jul 2007 08:47:31 -0400
+Message-ID: <170fa0d20707230547y3accc5c9v14805fdb3637e9c0@mail.gmail.com>
+References: <170fa0d20707210959q11153d38u3281062c98d3adb7@mail.gmail.com>
+	 <18084.22271.122052.80056@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <46A488EB.2050305@gmail.com>
+In-Reply-To: <18084.22271.122052.80056@notabene.brown>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Jan-Benedict Glaw <jbglaw@lug-owl.de>
-Cc: Theodore Tso <tytso@mit.edu>, linux-fsdevel@vger.kernel.org, Al Boldi <a1426z@gawab.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 07/23/2007 12:54 PM, Rene Herman wrote:
+On 7/23/07, Neil Brown <neilb@suse.de> wrote:
+> On Saturday July 21, snitzer@gmail.com wrote:
 
-> static inline uint32_t le_32(uint32_t n)
-> {
-> #ifdef __LITTLE_ENDIAN
-> 	return n;
-> #else
-> 	return bswap_32(n);
-> #endif
-> }
+> > Could you share the other situations where a bitmap-enabled raid1
+> > _must_ perform a full recovery?
+>
+> When you add a new drive.  When you create a new bitmap.  I think that
+> should be all.
+>
+> > - Correct me if I'm wrong, but one that comes to mind is when a server
+> > reboots (after cleanly stopping a raid1 array that had a faulty
+> > member) and then either:
+> > 1) assembles the array with the previously faulty member now
+> > available
+> >
+> > 2) assembles the array with the same faulty member missing.  The user
+> > later re-adds the faulty member
+> >
+> > AFAIK both scenarios would bring about a full resync.
+>
+> Only if the drive is not recognised as the original member.
+> Can you test this out and report a sequence of events that causes a
+> full resync?
 
-#if __BYTE_ORDER == __LITTLE_ENDIAN, that is. sigh.
+Sure, using an internal-bitmap-enabled raid1 with 2 loopback devices
+on a stock 2.6.20.1 kernel, the following sequences result in a full
+resync.  (FYI, I'm fairly certain I've seen this same behavior on
+2.6.18 and 2.6.15 kernels too but would need to retest):
 
-Rene.
+1)
+mdadm /dev/md0 --manage --fail /dev/loop0
+mdadm -S /dev/md0
+mdadm --assemble /dev/md0 /dev/loop0 /dev/loop1
+  mdadm: /dev/md0 has been started with 1 drive (out of 2).
+  NOTE: kernel log says:  md: kicking non-fresh loop0 from array!
+mdadm /dev/md0 --manage --re-add /dev/loop0
+
+2)
+mdadm /dev/md0 --manage --fail /dev/loop0
+mdadm /dev/md0 --manage --remove /dev/loop0
+mdadm -S /dev/md0
+mdadm --assemble /dev/md0 /dev/loop0 /dev/loop1
+  mdadm: /dev/md0 has been started with 1 drive (out of 2).
+  NOTE: kernel log says:  md: kicking non-fresh loop0 from array!
+mdadm /dev/md0 --manage --re-add /dev/loop0
+
+Is stopping the MD (either with mdadm -S or a server reboot) tainting
+that faulty member's ability to come back in using a quick
+bitmap-based resync?
+
+Mike
