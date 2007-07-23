@@ -1,34 +1,38 @@
-From: John David Stone <stone@math.grinnell.edu>
-Subject: Re: Consequences of Saturday's power cutoff
-Date: Mon, 23 Jul 2007 11:00:14 -0500
-Message-ID: <200707231600.l6NG0ESX008362@jevons.math.grinnell.edu>
-Reply-To: stone@math.grinnell.edu
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: [RFH] Partion table recovery
+Date: Mon, 23 Jul 2007 16:08:54 -0400
+Message-ID: <46A50AD6.6050806@tmr.com>
+References: <200707200813.03553.a1426z@gawab.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <200707200813.03553.a1426z@gawab.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: faculty@math.grinnell.edu, lewismic@grinnell.edu, youngian@grinnell.edu, erbveron@grinnell.edu, buckelij@grinnell.edu, oneileri@grinnell.edu, contrer1@grinnell.edu, gerpheid@grinnell.edu, lubinski@grinnell.edu, cooperth@grinnell.edu, duke@grinnell.edu, willig@grinnell.edu, mcritchi@grinnell.edu, swartz@grinnell.edu, dale@grinnell.edu, francisb@grinnell.edu, linux-raid@vger.kernel.org
+To: Al Boldi <a1426z@gawab.com>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+Al Boldi wrote:
+> As always, a good friend of mine managed to scratch my partion table by 
+> cat'ing /dev/full into /dev/sda.  I was able to push him out of the way, but 
+> at least the first 100MB are gone.  I can probably live without the first 
+> partion, but there are many partitions after that, which I hope should 
+> easily be recoverable.
+>
+> I tried parted, but it's not working out for me.  Does anybody know of a 
+> simple partition recovery tool, that would just scan the disk for lost 
+> partions?
+>   
+You have gotten a bunch of thoughts on this, I will just say that plain 
+old "fdisk -l" saved somewhere safe is probably all you need, in human 
+readable format. Doesn't do you any good now, but all the complicated 
+schemes discussed don't thrill me, I want to be able to see this, and 
+recovery by partition table manual rebuild is so rare I would rather do 
+it by hand than trust some software I rarely use.
 
-        I'm happy to report that I've been able to rebuild the disk array
-and that the file-system integrity checker now reports that the data is
-okay.  I have restarted the license managers for our proprietary math
-software and checked that all three programs (MATLAB, Maple, and
-Mathematica) start up and shut down correctly.
+-- 
+bill davidsen <davidsen@tmr.com>
+  CTO TMR Associates, Inc
+  Doing interesting things with small computers since 1979
 
-        Having skirted catastrophe, I wish to express my appreciation to
-the maintainers of the software that manage our RAID ("redundant array of
-inexpensive drives") system -- they are the last of the addressees
-above.  The principal maintainer is Neil Brown of the Computing Support
-Group in the School of Computer Science and Engineering of the University
-of New South Wales.  Thanks a bunch!
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
-Comment: Processed by Mailcrypt 3.5.8+ <http://mailcrypt.sourceforge.net/>
-
-iD8DBQFGpNCEbBGsCPR0ElQRAjxjAKDGm0D06v39NsewZ/xDiIw1IkfXLwCgnyc+
-HPPAhCy5JSOMSdskw3jqsFs=
-=CBUj
------END PGP SIGNATURE-----
