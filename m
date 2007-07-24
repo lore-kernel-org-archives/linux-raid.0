@@ -1,76 +1,86 @@
-From: Rene Herman <rene.herman@gmail.com>
-Subject: Re: [RFH] Partition table recovery
-Date: Tue, 24 Jul 2007 06:08:32 +0200
-Message-ID: <46A57B40.9010807@gmail.com>
-References: <200707200813.03553.a1426z@gawab.com> <46A24846.7050803@gmail.com> <20070722011141.GJ26752@thunk.org> <200707220710.31402.a1426z@gawab.com> <20070722162802.GA20174@thunk.org> <46A46399.5090406@gmail.com> <20070723135832.GD19927@thunk.org>
+From: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
+Subject: Re: raid5:md3: read error corrected , followed by , Machine Check
+Date: Mon, 23 Jul 2007 21:44:20 -0700 (PDT)
+Message-ID: <Pine.LNX.4.64.0707231939520.24752@filesrv1.baby-dragons.com>
+References: <200707171518.l6HFIUBU022021@cichlid.com>
+ <Pine.LNX.4.64.0707211610120.29412@filesrv1.baby-dragons.com>
+ <46A5347A.2080903@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20070723135832.GD19927@thunk.org>
+In-Reply-To: <46A5347A.2080903@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Theodore Tso <tytso@mit.edu>
-Cc: linux-fsdevel@vger.kernel.org, Al Boldi <a1426z@gawab.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: Andrew Burgess <aab@cichlid.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 07/23/2007 03:58 PM, Theodore Tso wrote:
+ 	Hello Bill ,
 
-> Well, I'm considering this to be a MBR backup scheme, so Minix and BSD 
-> slices are legacy systems which are out of scope.  If they are busted in
-> the same way as MBR in terms of not having redundant backups of critical
-> data, when they have a lot fewer excuses that MBR, and they can address
-> that issue in their own way.  The number of Linux users that also have
-> Minix and BSD partitions are a vanishingly small number in any case.
+On Mon, 23 Jul 2007, Bill Davidsen wrote:
+> Mr. James W. Laferriere wrote:
+>>     Hello Andrew ,
+>> 
+>> On Tue, 17 Jul 2007, Andrew Burgess wrote:
+>>>>     The 'MCE's have been ongoing for sometime .  I have replaced every 
+>>>> item
+>>>> in the system except the chassis & scsi backplane & power 
+>>>> supply(750Watts) .
+>>>>     Everything .  MB,cpu,memory,scsi controllers, ...
+>>>>     These MCE's only happen when I am trying to build or bonnie++ test 
+>>>> the
+>>>> md3 .  It consists of (now 7+1spare) 146GB drives in the SuperMicro
+>>>> SYS-6035B-8B's backplane attached to a LSI22320 .
+>>> 
+>>> Probably every old timer has a story about chasing a hardware problem
+>>> where changing the power supply finally fixed it. I keep spares now.
+>>> 
+>>> If an MCE (which means bad cpu) doesn't go away after changing the cpu
+>>> it would either have to be temperature, power or a bug in the MCE code.
+>>> What else could it be?
+>>
+>>     Thank you for the idea of 'changing out the PS' .  So I did it a bit 
+>> differant .  I removed the system PS from the raid backplane & dropped in a 
+>> known good ps of proper wattage & re-tested .  But left the systems ps 
+>> attached to only the MB & fans .
+>>     It doesn't appear to be power load related .  I tried rebuilding my 7 
+>> disk raid6 array & I got the same thing ,  MCE .
+>>     Now the raid backplane is still in the air stream in front of the cpu's 
+>> and memory slots .  So it could be a marginal cpu or memory stick .
+>>
+>>     But here's the clincher ,  when I don't use the two drives in from of 
+>> the PS & cpu & memory slots .  The array completes it's resync .  So I'm 
+>> back to testing memory (again) ,  If that passes then I'll try the new 
+>> cpu(s) route .
+>> 
+> It does sound like a cooling problem, which does not have to imply the 
+> overheated parts are bad, although that may be true.
+ 	Fyi ,  memtest86+ @ 19 passes (~ 52hours) on 8GB of memory ,  no errors .
 
-I'd in fact expect quite a few people to have a FreeBSD partition around. 
-And MINIX if they are in university and in an operating systems course...
+> Could be the total number of i/o in flight, etc.
+ 	Hmmm ,  I didn't think of this one .
 
-But "they should take whatever precautions they want themselves" is a valid 
-argument.
+> Have you tried dropping two other drives?
+ 	Well ,  no .  I dropped those two in front of the CPU as a test in 
+working my way up the scsi backplane(BP) trying to find a point that worked & 
+the last two drives in the BP just happened to be in front of the cpu/memory 
+air path .  The minute I put those in the MD build tree within the usual time 
+frame I get a MCE .  What I have'nt tried is what you are probably suggesting 
+make sure it is the drives in the air path by putting them in the MD build and 
+leaving another two out .  I'll try that as well .
 
-[ blkid ]
+> Can you put in a bit more fan?
+ 	Nope ,  It's maxed out .  sounds like a 747 on take off as it is .
+ 	It's a supermicro SYS-6035B-8B if you have the time to go look at the 
+specs & pics .
 
-> Yeah, good point, I'd have to add that support into blkid.  It's been
-> on my todo list, but I just haven't gotten around to it yet.
+> Read the system board and CPU temps with the "sensors" package?
+ 	Not yet ,  I am building the need items into the kernel now .
+ 	Will report back (hopefully) sometime this weekend .
 
-I'll for now stop updating the partbackup thingy as posted. Given that Linux 
-  only follows the first extended in the list of extendeds (which sort of 
-destroys the nice recursion anyway) it might want to be iterative instead of 
-recursive if the thing has a future -- not very important though.
-
-> My concern of sysfs is that #1, it won't work on older kernels since
-> you would need to add new fields to backup what we want,
-
-I'd be okay with that.
-
-> and #2, I'm still fundamentally distrustful of sysfs because there isn't
-> a bright line between what is an exported interface that will never
-> change, and something which is considered an "internal implementation
-> detail" that can change whenever some kernel hacker feels like it.  (Or
-> when some kernel hacker is careless...)  So as far as I'm concerned sysfs
-> is a terrible, TERRIBLE way to export a published interface where we 
-> promise stability to userspace.
-
-Oh come on, that's going overboard a bit, it's not all _that_ bad! Finding 
-say "sda" will be possible without breaking too many times. Admittedly, the 
-kernel's partittion scanning order is also not likely to change as it would 
-certainly break userspace, but code duplication, with the possiblity of bugs 
-slipping in at least userspace-ways (considering the kernel the reference no 
-matter what it does) is a concern. Somewhat. A little.
-
-> So I'd just as soon do this in userspace; after all, the entire partition
-> manager (and there are multiple ones; fdisk, sfdisk, gpart, etc.) all in
-> userspace, and that needs to be in synch with the kernel partition
-> reading code anyway.  So one more userspace implementation is in my mind
-> much cleaner than trying to push the needed functionality into sysfs, and
-> then hoping against hope that it doesn't accidentally change in the
-> future.
-
-* rene envisions /lib/libpart.so...
-
-Not to mention my Grand Visions of a totally new Linux native partitioning 
-scheme probably modelled after BSD slices (as also mentioned in a previous 
-message just now). Or perhaps LVM already fills that role comfortably. It's 
-certainly what I hear everyone talking about these days.
-
-Rene.
+ 		Tia ,  JimL
+-- 
++-----------------------------------------------------------------+
+| James   W.   Laferriere | System   Techniques | Give me VMS     |
+| Network        Engineer | 663  Beaumont  Blvd |  Give me Linux  |
+| babydr@baby-dragons.com | Pacifica, CA. 94044 |   only  on  AXP |
++-----------------------------------------------------------------+
