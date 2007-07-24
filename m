@@ -1,96 +1,46 @@
 From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: raid5:md3: read error corrected , followed by , Machine Check
-Date: Tue, 24 Jul 2007 14:59:01 -0400
-Message-ID: <46A64BF5.5070408@tmr.com>
-References: <200707171518.l6HFIUBU022021@cichlid.com> <Pine.LNX.4.64.0707211610120.29412@filesrv1.baby-dragons.com> <46A5347A.2080903@tmr.com> <Pine.LNX.4.64.0707231939520.24752@filesrv1.baby-dragons.com>
+Subject: Re: Software Raid 5, multiple raid controller disk mixup problem
+Date: Tue, 24 Jul 2007 15:18:52 -0400
+Message-ID: <46A6509C.6000302@tmr.com>
+References: <469CED66.50109@crontex.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0707231939520.24752@filesrv1.baby-dragons.com>
+In-Reply-To: <469CED66.50109@crontex.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
-Cc: Andrew Burgess <aab@cichlid.com>, linux-raid@vger.kernel.org
+To: Tobias Rehn <tr@crontex.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Mr. James W. Laferriere wrote:
+Tobias Rehn wrote:
+> Hey Guys,
+>
+> I am currently having a strange problem. I have a system with 4 
+> onboard sata ports. The system also has four 4-port sata controllers 
+> plugged into it.
+>
+> The raid works fine but if i reboot the system, sometimes my harddisks 
+> are mixed up so that my system disk(normally sda) is sometimes sdb or 
+> sdc... My system disk is plugged to one of onboard sata ports.
+>
+> I already tried to bind the disks statically via udev to a certain 
+> device name, but no chance.
+>
+> Are there any other methods to stop this mixing of the drives? Or does 
+> anyone have the same problem?
+I was really hoping one of the hardware guys would answer this. My only 
+thought is that you have a feature enabled which allows simultaneous 
+discovery, and that the 1st drive spun up is sda,, etc. If you could 
+save your dmesg from a good and bad boot, and make them available, 
+someone may see the problem, I can't guess beyond what I've said already.
 
-One more thought below...
-> On Mon, 23 Jul 2007, Bill Davidsen wrote:
->> Mr. James W. Laferriere wrote:
->>>     Hello Andrew ,
->>>
->>> On Tue, 17 Jul 2007, Andrew Burgess wrote:
->>>>>     The 'MCE's have been ongoing for sometime .  I have replaced 
->>>>> every item
->>>>> in the system except the chassis & scsi backplane & power 
->>>>> supply(750Watts) .
->>>>>     Everything .  MB,cpu,memory,scsi controllers, ...
->>>>>     These MCE's only happen when I am trying to build or bonnie++ 
->>>>> test the
->>>>> md3 .  It consists of (now 7+1spare) 146GB drives in the SuperMicro
->>>>> SYS-6035B-8B's backplane attached to a LSI22320 .
->>>>
->>>> Probably every old timer has a story about chasing a hardware problem
->>>> where changing the power supply finally fixed it. I keep spares now.
->>>>
->>>> If an MCE (which means bad cpu) doesn't go away after changing the cpu
->>>> it would either have to be temperature, power or a bug in the MCE 
->>>> code.
->>>> What else could it be?
->>>
->>>     Thank you for the idea of 'changing out the PS' .  So I did it a 
->>> bit differant .  I removed the system PS from the raid backplane & 
->>> dropped in a known good ps of proper wattage & re-tested .  But left 
->>> the systems ps attached to only the MB & fans .
->>>     It doesn't appear to be power load related .  I tried rebuilding 
->>> my 7 disk raid6 array & I got the same thing ,  MCE .
->>>     Now the raid backplane is still in the air stream in front of 
->>> the cpu's and memory slots .  So it could be a marginal cpu or 
->>> memory stick .
->>>
->>>     But here's the clincher ,  when I don't use the two drives in 
->>> from of the PS & cpu & memory slots .  The array completes it's 
->>> resync .  So I'm back to testing memory (again) ,  If that passes 
->>> then I'll try the new cpu(s) route .
->>>
->> It does sound like a cooling problem, which does not have to imply 
->> the overheated parts are bad, although that may be true.
->     Fyi ,  memtest86+ @ 19 passes (~ 52hours) on 8GB of memory ,  no 
-> errors .
->
->> Could be the total number of i/o in flight, etc.
->     Hmmm ,  I didn't think of this one .
->
-Those are a PITA to find of that's it, doesn't sound likely to be power 
-supply, as an unlikely but cheap test, have you reseated the p/s to 
-backplane connectors? Oh and checked that the system board is grounded 
-to the case?
->> Have you tried dropping two other drives?
->     Well ,  no .  I dropped those two in front of the CPU as a test in 
-> working my way up the scsi backplane(BP) trying to find a point that 
-> worked & the last two drives in the BP just happened to be in front of 
-> the cpu/memory air path .  The minute I put those in the MD build tree 
-> within the usual time frame I get a MCE .  What I have'nt tried is 
-> what you are probably suggesting make sure it is the drives in the air 
-> path by putting them in the MD build and leaving another two out .  
-> I'll try that as well .
->
->> Can you put in a bit more fan?
->     Nope ,  It's maxed out .  sounds like a 747 on take off as it is .
->     It's a supermicro SYS-6035B-8B if you have the time to go look at 
-> the specs & pics .
->
-What I was thinking is that some of my cases actually have room to 
-install fans in front of the drives, allowing push as well as pull. 
-Haven't had to do it in several years, but looking at my tall tower 
-cases, I believe I could.
->> Read the system board and CPU temps with the "sensors" package?
->     Not yet ,  I am building the need items into the kernel now .
->     Will report back (hopefully) sometime this weekend .
->
-Keep us posted, you have picked the low-hanging fruit, when you find out 
-what causes this I'm sure it will be something interesting.
+If you are building the arrays using UUID in the config file, it should 
+matter what they are called, of course. Mine just list devices 
+PARTITIONS and then a bunch of arrays based on UUID. It makes for a huge 
+dmesg file, of course, filled meaningless babble about "found this" and 
+"that doesn't match." But it works every blessed time, which is more 
+important in the long run.
 
 -- 
 bill davidsen <davidsen@tmr.com>
