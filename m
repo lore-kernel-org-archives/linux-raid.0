@@ -1,39 +1,50 @@
-From: Arne Redlich <agr@powerkom-dd.de>
-Subject: [PATCH] md: handle writes to broken raid10 arrays gracefully
-Date: Fri, 27 Jul 2007 16:44:35 +0200
-Message-ID: <1185547475.25852.5.camel@confield.dd.xiranet.com>
-Mime-Version: 1.0
-Content-Type: text/plain
+From: Max Amanshauser <linux-raid@lambdalifting.org>
+Subject: Homehost suddenly changed on some components
+Date: Fri, 27 Jul 2007 20:49:23 +0200
+Message-ID: <A2BCA40B-B212-4ECD-BEE1-29C50A7A13ED@lambdalifting.org>
+Mime-Version: 1.0 (Apple Message framework v752.3)
+Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-When writing to a broken array, raid10 currently happily emits empty bio
-lists. IOW, the master bio will never be completed, sending writers to
-UNINTERRUPTIBLE_SLEEP forever.
+Hello!
 
-Signed-off-by: Arne Redlich <agr@powerkom-dd.de>
+After growing my RAID-5 from 8 to 10 devices, everything worked  
+smoothly for a day. Then I rebooted into another kernel, still with  
+the old mdadm.conf. The array did not assemble correctly, so I fixed  
+mdadm.conf by correcting the number of devices. After rebooting once  
+again four components had a different UUID, the homehost part is  
+different. I am not aware that the machine's hostname has ever changed.
 
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index ea1b3e3..957932e 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -917,6 +917,13 @@ static int make_request(struct request_queue *q, struct bio * bio)
- 		bio_list_add(&bl, mbio);
- 	}
- 
-+	if (unlikely(!atomic_read(&r10_bio->remaining))) {
-+		/* the array is dead */
-+		md_write_end(mddev);
-+		raid_end_bio_io(r10_bio);
-+		return 0;
-+	}
-+
- 	bitmap_startwrite(mddev->bitmap, bio->bi_sector, r10_bio->sectors, 0);
- 	spin_lock_irqsave(&conf->device_lock, flags);
- 	bio_list_merge(&conf->pending_bio_list, &bl);
+Six devices look like this: http://phpfi.com/252263
+Four devices look like this: http://phpfi.com/252264
+
+Since then assembling fails. Only six devices are added.
+
+It's worth mentioning that the four rogue devices all are on the same  
+controller, which worked flawlessly for two years.
+lspci output: http://phpfi.com/252755
+
+
+I am most concerned with repairing the UUID so the array assembles  
+again. I tried several tricks with mdadm's --assemble --update flag,  
+but to no avail. Everything I tried aborted with:
+
+mdadm: superblock on /dev/hde1 doesn't match others - assembly aborted
+
+
+Tried both mdadm v2.6.2 and v2.5.6. The system is an Ubuntu Feisty  
+Server, growing was done with a custom 2.6.22 kernel, stock kernel is  
+2.6.20.
+
+Current mdadm.conf: http://phpfi.com/252752
+Old one only differs in number of devices for md0.
+
+-- 
+Regards,
+Max Amanshauser.
 
 
