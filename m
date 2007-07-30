@@ -1,67 +1,46 @@
-From: "Tomas France" <tomfra@centrum.cz>
-Subject: Re: Is it possible to grow a RAID-10 array with mdadm?
-Date: Mon, 30 Jul 2007 13:51:03 +0200
-Message-ID: <0e5701c7d2a0$0ad0b9c0$332317ac@Cortex>
-References: <loom.20070727T225545-192@post.gmane.org><46ABAC5A.2000103@ziu.info><46ABB830.1000204@ziu.info><0dc901c7d20b$be23d100$332317ac@Cortex><18093.42484.733479.935581@notabene.brown><0e3e01c7d293$d85086d0$332317ac@Cortex> <18093.50791.844421.294015@notabene.brown>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: bonnie++ benchmarks for ext2,ext3,ext4,jfs,reiserfs,xfs,zfs on
+ software raid 5
+Date: Mon, 30 Jul 2007 10:29:23 -0400 (EDT)
+Message-ID: <Pine.LNX.4.64.0707301021090.12456@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	format=flowed;
-	charset="ISO-8859-1";
-	reply-type=original
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Oops... my faul Neil, sorry for that. I must have been reading the man page 
-for an older version. It's all well documented in 2.6.2. I apologize 
-again...
+CONFIG:
 
-Tomas
+Software RAID 5 (400GB x 6): Default mkfs parameters for all filesystems.
+Kernel was 2.6.21 or 2.6.22, did these awhile ago.
+Hardware was SATA with PCI-e only, nothing on the PCI bus.
 
-P.S. And I almost forgot - thanks for creating mdadm! It's a powerful stuff 
-for sure. I will soon be playing with it in a live environment...which, 
-looking at all the options and reading the documentation, makes me somewhat 
-scared :)
+ZFS was userspace+fuse of course.
+Reiser was V3.
+EXT4 was created using the recommended options on its project page.
 
+RAW:
 
------ Original Message ----- 
-From: "Neil Brown" <neilb@suse.de>
-To: "Tomas France" <tomfra@centrum.cz>
-Cc: <linux-raid@vger.kernel.org>
-Sent: Monday, July 30, 2007 1:07 PM
-Subject: Re: Is it possible to grow a RAID-10 array with mdadm?
+ext2,7760M,56728,96.3333,180505,51,85484,17.3333,50946.7,80.3333,235541,21.3333,373.667,0,16:100000:16/64,2354,27,0,0,8455.67,14.6667,2211.67,26.3333,0,0,9724,22.3333
+ext3,7760M,52702.7,94.3333,165005,60,82294.7,20.6667,52664,83.6667,258788,33.3333,335.8,0,16:100000:16/64,858.333,10.6667,10250.3,28.6667,4084,15,897,12.6667,4024.33,12.3333,2754,11.3333
+ext4,7760M,53129.7,95,164515,59.3333,101678,31.6667,62194.3,98.6667,266716,22.3333,405.767,0,16:100000:16/64,1963.67,23.6667,0,0,20859,73.6667,1731,21.3333,9022,23.6667,16410,65.6667
+jfs,7760M,54606,92,191997,52,112764,33.6667,63585.3,99,274921,22.3333,383.8,0,16:100000:16/64,344,1,0,0,539.667,0,297.667,1,0,0,340,0
+reiserfs,7760M,51056.7,96,180607,67,106907,38.3333,61231.3,97.6667,275339,29.3333,441.167,0,16:100000:16/64,2516,60.6667,19174.3,60.6667,8194.33,54.3333,2011,42.6667,6963.67,19.6667,9168.33,68.6667
+xfs,7760M,52985.7,93,158342,45,79682,14,60547.3,98,239101,20.3333,359.667,0,16:100000:16/64,415,4,0,0,1774.67,10.6667,454,4.66667,14526.3,40,1572,12.6667
+zfs,7760M,25601,43.3333,32198.7,4,13266.3,2,44145.3,68.6667,129278,9,245.167,0,16:100000:16/64,218.333,2,2698.33,11.6667,7434.67,14.3333,244,2,2191.33,11.6667,5613.33,13.3333
 
+HTML
 
-> On Monday July 30, tomfra@centrum.cz wrote:
->> Thanks for the answer Neil!
->>
->> >> The man page for mdadm does not mention it because it is not 
->> >> supported.
->> >> <<
->>
->> It doesn't actually even mention the possibility to create a RAID-10 
->> array
->> (without creating RAID-0 on top of RAID-1 pairs), yet from the info I 
->> found,
->> a lot of people have been using it for quite a while. Almost as if it was 
->> a
->> complete secret ;) As for the RAID-10 growing / layout change - I'd
->> absolutely love to see that implemented in the (hopefully near) future.
->> IMHO, RAID-10 is becoming very popular because of the falling hard drive
->> prices.
->
-> What version of mdadm do you have installed (the bottom of the man
-> page will tell you).
-> My v2.6.2 manpage mentions raid10 5 times, and "man md" mentions it 9
-> times.
-> If you have a recent mdadm and there was some particular place in the
-> man page were you were looking and didn't find raid10, please let me
-> know and I will try to improve that part of the documentation.
->
-> Thanks,
-> NeilBrown
->
-> 
+http://home.comcast.net/~jpiszcz/benchmark/allfs.html
 
+THOUGHTS
+
+Overall JFS seems the fastest but reviewing the mailing list for JFS it 
+seems like there a lot of problems, especially when people who use JFS > 1 
+year, their speed goes to 5 MiB/s over time and the defragfs tool has been 
+removed(?) from the source/Makefile and on Google it says not to use it 
+due to corruption.
+
+Justin.
