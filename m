@@ -1,59 +1,80 @@
-From: Luca Berra <bluca@comedia.it>
-Subject: Re: raid1 resync data direction defined?
-Date: Mon, 30 Jul 2007 10:09:08 +0200
-Message-ID: <20070730080908.GA7044@percy.comedia.it>
-References: <20070727130713.GA12058@janus>
+From: Maik Hampel <m.hampel@gmx.de>
+Subject: Re: md: raid10: fix use-after-free of bio
+Date: Mon, 30 Jul 2007 10:11:51 +0200
+Message-ID: <1185783111.2684.15.camel@c64>
+References: <1185547583.2663.10.camel@c64>
+	 <20070728235519.1edc6ccb.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20070727130713.GA12058@janus>
+In-Reply-To: <20070728235519.1edc6ccb.akpm@linux-foundation.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Neil Brown <neilb@suse.de>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Fri, Jul 27, 2007 at 03:07:13PM +0200, Frank van Maarseveen wrote:
->I'm experimenting with a "live" migration of /dev/sda1 using mdadm -B
->and network block device as in:
->
->	mdadm -B -ayes -n2 -l1 /dev/md1 /dev/sda1 \
->		--write-mostly -b /tmp/bitm$$ --write-behind /dev/nbd1
-not a good idea
+Am Samstag, den 28.07.2007, 23:55 -0700 schrieb Andrew Morton:
+> On Fri, 27 Jul 2007 16:46:23 +0200 Maik Hampel <m.hampel@gmx.de> wrote:
+> 
+> > In case of read errors raid10d tries to print a nice error message,
+> > unfortunately using data from an already put bio.
+> > 
+> > Signed-off-by: Maik Hampel <m.hampel@gmx.de>
+> > 
+> > diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+> > index f730a14..ea1b3e3 100644
+> > --- a/drivers/md/raid10.c
+> > +++ b/drivers/md/raid10.c
+> > @@ -1557,7 +1557,6 @@ static void raid10d(mddev_t *mddev)
+> >  			bio = r10_bio->devs[r10_bio->read_slot].bio;
+> >  			r10_bio->devs[r10_bio->read_slot].bio =
+> >  				mddev->ro ? IO_BLOCKED : NULL;
+> > -			bio_put(bio);
+> >  			mirror = read_balance(conf, r10_bio);
+> >  			if (mirror == -1) {
+> >  				printk(KERN_ALERT "raid10: %s: unrecoverable I/O"
+> > @@ -1567,6 +1566,7 @@ static void raid10d(mddev_t *mddev)
+> >  				raid_end_bio_io(r10_bio);
+> >  			} else {
+> >  				const int do_sync = bio_sync(r10_bio->master_bio);
+> > +				bio_put(bio);
+> >  				rdev = conf->mirrors[mirror].rdev;
+> >  				if (printk_ratelimit())
+> >  					printk(KERN_ERR "raid10: %s: redirecting sector %llu to"
+> > 
+> > 
+> 
+> Surely we just leaked that bio if (mirror == -1)?
+> 
+> better:
+> 
+> --- a/drivers/md/raid10.c~md-raid10-fix-use-after-free-of-bio
+> +++ a/drivers/md/raid10.c
+> @@ -1534,7 +1534,6 @@ static void raid10d(mddev_t *mddev)
+>  			bio = r10_bio->devs[r10_bio->read_slot].bio;
+>  			r10_bio->devs[r10_bio->read_slot].bio =
+>  				mddev->ro ? IO_BLOCKED : NULL;
+> -			bio_put(bio);
+>  			mirror = read_balance(conf, r10_bio);
+>  			if (mirror == -1) {
+>  				printk(KERN_ALERT "raid10: %s: unrecoverable I/O"
+> @@ -1542,8 +1541,10 @@ static void raid10d(mddev_t *mddev)
+>  				       bdevname(bio->bi_bdev,b),
+>  				       (unsigned long long)r10_bio->sector);
+>  				raid_end_bio_io(r10_bio);
+> +				bio_put(bio);
+raid_end_bio_io() calls put_all_bios(), which does a bio_put() to
+corresponding r10_bio->devs[i]. So this looks like redundant code for
+me.
+>  			} else {
+>  				const int do_sync = bio_sync(r10_bio->master_bio);
+> +				bio_put(bio);
+>  				rdev = conf->mirrors[mirror].rdev;
+>  				if (printk_ratelimit())
+>  					printk(KERN_ERR "raid10: %s: redirecting sector %llu to"
 
->/dev/sda1 is to be migrated. During the migration the local system
->mounts from /dev/md1 instead. Stracing shows that data flows to the
->remote side. But when I do
->	echo repair >/sys/block/md1/md/sync_action
->
->then the data flows in the other direction: the local disk is written
->using data read from the remote side.
-I believe stracing nbd will give you a partial view of what happens.
-anyway in the first case since the second device is write-mostly, all
-data is read from local and changes are written to remote
-In the second one the data is read from both sides to be compared, that
-is what you are seing on strace, i am unsure as to which copy is
-considered correct, since md does not have info about that.
+Regards, 
+Maik Hampel
 
->If that would happen in the first command then it would destroy all
-yes
->data instead of migrating it so I wonder if this behavior is defined:
-no
->Do mdadm --build and mdadm --create always use the first component device
->on the command-line as the source for raid1 resync?
-no
 
-if you are doing a migration, build the initial array with the second
-device as "missing"
-then hot-add it and it will resync correctly
-i.e
-mdadm -B -ayes -n2 -l1 /dev/md1 /dev/sda1 \
-        --write-mostly -b /tmp/bitm$$ --write-behind missing
-mdadm -a /dev/md1 /dev/sda1 
-
--- 
-Luca Berra -- bluca@comedia.it
-        Communication Media & Services S.r.l.
- /"\
- \ /     ASCII RIBBON CAMPAIGN
-  X        AGAINST HTML MAIL
- / \
