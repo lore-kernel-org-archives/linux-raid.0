@@ -1,67 +1,71 @@
-From: Michal Soltys <nozo@ziu.info>
-Subject: Re: RAID on partitions and partitions on RAID
-Date: Sun, 29 Jul 2007 21:11:07 +0200
-Message-ID: <46ACE64B.6030801@ziu.info>
-References: <loom.20070727T225545-192@post.gmane.org> <46ABAC5A.2000103@ziu.info> <46ABB830.1000204@ziu.info> <loom.20070729T091941-198@post.gmane.org>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: + md-raid10-fix-use-after-free-of-bio.patch added to -mm tree
+Date: Mon, 30 Jul 2007 17:34:02 +1000
+Message-ID: <18093.37994.408428.500569@notabene.brown>
+References: <200707290655.l6T6tOfA012547@imap1.linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <loom.20070729T091941-198@post.gmane.org>
+In-Reply-To: message from akpm@linux-foundation.org on Saturday July 28
 Sender: linux-raid-owner@vger.kernel.org
-To: Cry Regarder <cry_regarder@yahoo.com>
-Cc: linux-raid@vger.kernel.org
+To: akpm@linux-foundation.org
+Cc: m.hampel@gmx.de, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Cry Regarder wrote:
+On Saturday July 28, akpm@linux-foundation.org wrote:
 > 
-> Thanks!  A couple questions:
+> The patch titled
+>      md: raid10: fix use-after-free of bio
+> has been added to the -mm tree.  Its filename is
+>      md-raid10-fix-use-after-free-of-bio.patch
 > 
-> 1.  Are you sharing that spare with an other array?  If not, why not do a raid-6
-> instead of a raid-5?
+> *** Remember to use Documentation/SubmitChecklist when testing your code ***
 > 
-
-No, the spare is not shared. Now that I think about it and you reminded 
-about raid-6...
-
-I can think of one small plus of my setup - that spare is not spinning
-(it's stopped with sdparm -C stop). So the disk should be in almost unused
-condition if the need for it arrives. Excluding vibrations from the rest of 
-the disks, and barely active electronics.
-
-> 2.  I noticed that you built your raid partitions on corresponding disk
-> partitions.  Why do that instead of making one monolithic raid volume and then
-> partitioning that into the desired pieces?
+> See http://www.zip.com.au/~akpm/linux/patches/stuff/added-to-mm.txt to find
+> out what to do about this
 > 
-
-few reasons:
-
-1) I wanted /boot out of any raid
-2) I wanted LVM for some of the partitions
-3) I prefered regular mbr on the whole disks.
-4) I wanted properly aligned XFS, so I can use its su/sw options
-
-Alternatives:
-
-- create separate md0 (for lvm) md1 (for xfs), but it seemed wrong when 
-there is support for partitionable arrays
-- or I could just put everything on lvm and don't bother with xfs alignment.
-
-All things considered, it looked like a decent compromise. Of course, I'm 
-open for suggestions.
-
+> ------------------------------------------------------
+> Subject: md: raid10: fix use-after-free of bio
+> From: Maik Hampel <m.hampel@gmx.de>
 > 
-> 1.  Adjust the partition table on each of the component disks so that I can
-> assemble the drives from /dev/sd?1 instead of /dev/sd?
+> In case of read errors raid10d tries to print a nice error message,
+> unfortunately using data from an already put bio.
 > 
 
-No can do here, afaik. When you assemble from /dev/sd? , there're no 
-partitions to start with on those disks. Either way, I'm not aware of any 
-tools allowing - shrink raid, shift it, create fitting mbr ...
+Thanks for catching that Maik!
 
-> 2.  Adjust my /dev/md0 so that it is partitioned into /dev/md0_1 /dev/md0_2 or
-> something of that ilk.
 > 
+> diff -puN drivers/md/raid10.c~md-raid10-fix-use-after-free-of-bio drivers/md/raid10.c
+> --- a/drivers/md/raid10.c~md-raid10-fix-use-after-free-of-bio
+> +++ a/drivers/md/raid10.c
+> @@ -1534,7 +1534,6 @@ static void raid10d(mddev_t *mddev)
+>  			bio = r10_bio->devs[r10_bio->read_slot].bio;
+>  			r10_bio->devs[r10_bio->read_slot].bio =
+>  				mddev->ro ? IO_BLOCKED : NULL;
+> -			bio_put(bio);
+>  			mirror = read_balance(conf, r10_bio);
+>  			if (mirror == -1) {
+>  				printk(KERN_ALERT "raid10: %s: unrecoverable I/O"
+> @@ -1542,8 +1541,10 @@ static void raid10d(mddev_t *mddev)
+>  				       bdevname(bio->bi_bdev,b),
+>  				       (unsigned long long)r10_bio->sector);
+>  				raid_end_bio_io(r10_bio);
+> +				bio_put(bio);
 
-No idea if you can easily switch from non-partitionable to partitionable raid.
+and for catching that Andrew!
 
+Acked-By: NeilBrown <neilb@suse.de>
+
+
+>  			} else {
+>  				const int do_sync = bio_sync(r10_bio->master_bio);
+> +				bio_put(bio);
+>  				rdev = conf->mirrors[mirror].rdev;
+>  				if (printk_ratelimit())
+>  					printk(KERN_ERR "raid10: %s: redirecting sector %llu to"
+> _
+> 
+> Patches currently in -mm which might be from m.hampel@gmx.de are
+> 
+> md-raid10-fix-use-after-free-of-bio.patch
