@@ -1,42 +1,53 @@
-From: Max Amanshauser <linux-raid@lambdalifting.org>
-Subject: Re: Homehost suddenly changed on some components
-Date: Mon, 30 Jul 2007 21:01:49 +0200
-Message-ID: <B6D3B554-A931-4CA4-8779-E2F9510191AC@lambdalifting.org>
-References: <A2BCA40B-B212-4ECD-BEE1-29C50A7A13ED@lambdalifting.org>
-Mime-Version: 1.0 (Apple Message framework v752.3)
-Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Cry Regarder <cry_regarder@yahoo.com>
+Subject: Re: =?utf-8?b?cGF0YV92aWE=?= with software raid1: "attempt to access beyond end of device"
+Date: Mon, 30 Jul 2007 19:01:52 +0000 (UTC)
+Message-ID: <loom.20070730T203850-197@post.gmane.org>
+References: <dju2n4-lcf.ln1@tux.abusar.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <A2BCA40B-B212-4ECD-BEE1-29C50A7A13ED@lambdalifting.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Max Amanshauser <linux-raid@lambdalifting.org>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-For the record:
+D=C3=A2niel Fraga <fragabr <at> gmail.com> writes:
 
-After reading in the archives about similar problems, which were  
-probably caused by something else but still close enough, I recreated  
-the array with the exact same parameters from the superblock and one  
-missing disk.
+> 	I have 2 PATA HDs and they always worked perfectly with
+> software (kernel) raid1 using the old IDE kernel drivers. Now I use
+> the new libata drivers (VIA), and it keep giving those erros messages=
+:
+>=20
+> attempt to access beyond end of device
+> md1: rw=3D0, want=3D155284112, limit=3D155284096
 
- > mdadm -C /dev/md0 -l 5 -n 10 -c 64 -p ls /dev/sdb1 /dev/sdd1 /dev/ 
-sde1 /dev/hde1 /dev/hdb1 /dev/hdf1 /dev/hdh1 /dev/hdg1 /dev/sdc1 missing
+Isn't this the standard problem that some hard drives have reserved
+areas that the operating system isn't supposed to use?  The old IDE
+drivers didn't honor the drive's request not to use.  libata, however,
+now behaves correctly and honors it.
 
-Seems to have done the trick, fsck is working right now.
+libata.ignore_hpa=3D1
+
+https://www.redhat.com/archives/fedora-devel-list/2007-May/msg01695.htm=
+l
+
+and
+
+http://fedoraproject.org/wiki/Bugs/F7Common
 
 
-Funny things seem to happen to the superblocks more often than I  
-thought. Recreating with one missing disk appears more like a hack  
-than a solution to me. Maybe mdadm should have some kind of explicit  
-superblock manipulation, like copying from other components or  
-importing/exporting from/to a file, so such problems can be solved in  
-a safe way?
+Now if someone can explain to me if it is safe to write the partition t=
+able
+saying I only have one partition when I built a raid-5 on /dev/sd? inst=
+ead of
+/dev/sd?1
 
-Just a quick thought. :)
+Thanks!
 
+Cry
 
---
-Regards,
-Max Amanshauser
-
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
