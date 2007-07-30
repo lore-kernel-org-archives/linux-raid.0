@@ -1,39 +1,42 @@
-From: "Dan Williams" <dan.j.williams@intel.com>
-Subject: Re: bonnie++ benchmarks for ext2,ext3,ext4,jfs,reiserfs,xfs,zfs on software raid 5
-Date: Mon, 30 Jul 2007 11:28:26 -0700
-Message-ID: <e9c3a7c20707301128h180956f3p40b998dd63b96ba@mail.gmail.com>
-References: <Pine.LNX.4.64.0707301021090.12456@p34.internal.lan>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+From: Max Amanshauser <linux-raid@lambdalifting.org>
+Subject: Re: Homehost suddenly changed on some components
+Date: Mon, 30 Jul 2007 21:01:49 +0200
+Message-ID: <B6D3B554-A931-4CA4-8779-E2F9510191AC@lambdalifting.org>
+References: <A2BCA40B-B212-4ECD-BEE1-29C50A7A13ED@lambdalifting.org>
+Mime-Version: 1.0 (Apple Message framework v752.3)
+Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0707301021090.12456@p34.internal.lan>
-Content-Disposition: inline
+In-Reply-To: <A2BCA40B-B212-4ECD-BEE1-29C50A7A13ED@lambdalifting.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
+To: Max Amanshauser <linux-raid@lambdalifting.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-[trimmed all but linux-raid from the cc]
+For the record:
 
-On 7/30/07, Justin Piszcz <jpiszcz@lucidpixels.com> wrote:
-> CONFIG:
->
-> Software RAID 5 (400GB x 6): Default mkfs parameters for all filesystems.
-> Kernel was 2.6.21 or 2.6.22, did these awhile ago.
-Can you give 2.6.22.1-iop1 a try to see what affect it has on
-sequential write performance?
+After reading in the archives about similar problems, which were  
+probably caused by something else but still close enough, I recreated  
+the array with the exact same parameters from the superblock and one  
+missing disk.
 
-Download:
-http://downloads.sourceforge.net/xscaleiop/patches-2.6.22.1-iop1-x86fix.tar.gz
+ > mdadm -C /dev/md0 -l 5 -n 10 -c 64 -p ls /dev/sdb1 /dev/sdd1 /dev/ 
+sde1 /dev/hde1 /dev/hdb1 /dev/hdf1 /dev/hdh1 /dev/hdg1 /dev/sdc1 missing
 
-Unpack into your 2.6.22.1 source tree.  Install the x86 series file
-"cp patches/series.x86 patches/series".  Apply the series with quilt
-"quilt push -a".
+Seems to have done the trick, fsck is working right now.
 
-I recommend trying the default chunk size and default
-stripe_cache_size as my tests have shown improvement without needing
-to perform any tuning.
 
-Thanks,
-Dan
+Funny things seem to happen to the superblocks more often than I  
+thought. Recreating with one missing disk appears more like a hack  
+than a solution to me. Maybe mdadm should have some kind of explicit  
+superblock manipulation, like copying from other components or  
+importing/exporting from/to a file, so such problems can be solved in  
+a safe way?
+
+Just a quick thought. :)
+
+
+--
+Regards,
+Max Amanshauser
+
