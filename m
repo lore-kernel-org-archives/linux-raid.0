@@ -1,31 +1,39 @@
-From: David Greaves <david@dgreaves.com>
-Subject: Re: Software based SATA RAID-5 expandable arrays?
-Date: Wed, 01 Aug 2007 18:13:19 +0100
-Message-ID: <46B0BF2F.3090603@dgreaves.com>
-References: <312225.34192.qm@web54110.mail.re2.yahoo.com>
+From: ymerej@yerot.com
+Subject: possibility of using raid5 to detect hd corruption?
+Date: Wed, 1 Aug 2007 16:28:09 -0500 (CDT)
+Message-ID: <Pine.LNX.4.64.0708011627090.22394@yerot.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <312225.34192.qm@web54110.mail.re2.yahoo.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Michael <big_green_jelly_bean@yahoo.com>
-Cc: Daniel Korstad <dan@korstad.net>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Michael wrote:
-> I have removed the drives from my machine, the problem Im having is that I dont know the order (ports) they go back into the machine.
-Does anyone know how to determine the order, or how to fix the drive array if 
-the order is not correct?
+Raid Gurus,
 
-If you are not attempting a (complex) repair then it won't matter.
+I have a need to determine whether a linux partion has been corrupted (say 
+by s/w running amok on a window partition).  I think that it should be 
+possible to detect this by having two raid5 linux partitions attempt to 
+sync and then check whether any error was reported via a mismatching 
+parity.     I'm using mdadm 1.6 (CentOS 4.4).  Can someone tell me what 
+commands could be used for this?
 
-Assuming you can identify the boot device and get the OS running then just do an 
-'assemble' and md/mdadm will figure out the correct order.
+If my linux raid5 drives are /dev/sda1 and /dev/sdb1
 
-You may however want to record the (new) order for future reference in case you 
-need to do a complex repair.
+Would something like the following work?
 
+#force resync
+mdadm --fail /dev/md0 /dev/sdb1
+mdadm --remove /dev/md0 /dev/sdb1
+mdadm --add /dev/md0 /dev/sdb1
 
-David
-PS Next time you have a new problem you may want to start a new thread.
+#then check for an error?
+/sys/block/md0/stat
+
+Since the raid drive is configured for auto checking during boot-up would 
+that set any flag in the /sys/block/md0/stat file that I could use?
+
+I'm just trying to avoid creating a bunch of checksums... (takes about 10 
+minutes to create/check checksums on my 20GB drive).
+
+Regards
