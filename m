@@ -1,68 +1,76 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: checkarray script
-Date: Thu, 2 Aug 2007 16:12:39 -0400 (EDT)
-Message-ID: <Pine.LNX.4.64.0708021612210.7163@p34.internal.lan>
-References: <Pine.LNX.4.64.0708020832050.25624@yerot.com>
- <Pine.LNX.4.64.0708021033180.16248@p34.internal.lan> <20070802191831.48360@gmx.net>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: Need clarification on raid1 resync behavior with bitmap support
+Date: Fri, 3 Aug 2007 16:42:48 +1000
+Message-ID: <18098.52840.936611.7816@notabene.brown>
+References: <170fa0d20707210959q11153d38u3281062c98d3adb7@mail.gmail.com>
+	<18084.22271.122052.80056@notabene.brown>
+	<170fa0d20707230547y3accc5c9v14805fdb3637e9c0@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20070802191831.48360@gmx.net>
+In-Reply-To: message from Mike Snitzer on Monday July 23
 Sender: linux-raid-owner@vger.kernel.org
-To: Thorsten Wolf <T_Wolf@gmx.net>
+To: Mike Snitzer <snitzer@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I believe its because a guy from Debian wrote it and that's why maybe its 
-only included in the Debian packages?
+On Monday July 23, snitzer@gmail.com wrote:
+> On 7/23/07, Neil Brown <neilb@suse.de> wrote:
+> > Can you test this out and report a sequence of events that causes a
+> > full resync?
+> 
+> Sure, using an internal-bitmap-enabled raid1 with 2 loopback devices
+> on a stock 2.6.20.1 kernel, the following sequences result in a full
+> resync.  (FYI, I'm fairly certain I've seen this same behavior on
+> 2.6.18 and 2.6.15 kernels too but would need to retest):
+> 
+> 1)
+> mdadm /dev/md0 --manage --fail /dev/loop0
+> mdadm -S /dev/md0
+> mdadm --assemble /dev/md0 /dev/loop0 /dev/loop1
+>   mdadm: /dev/md0 has been started with 1 drive (out of 2).
+>   NOTE: kernel log says:  md: kicking non-fresh loop0 from array!
+> mdadm /dev/md0 --manage --re-add /dev/loop0
 
-On Thu, 2 Aug 2007, Thorsten Wolf wrote:
 
-> it's not included in the RPM downloadable from the site mentioned, though.
->
-> Regards,
->
-> Thorsten Wkolf
-> -------- Original-Nachricht --------
-> Datum: Thu, 2 Aug 2007 10:33:21 -0400 (EDT)
-> Von: Justin Piszcz <jpiszcz@lucidpixels.com>
-> An: ymerej@yerot.com
-> CC: linux-raid@vger.kernel.org
-> Betreff: Re: checkarray script
->
->> # dpkg -L mdadm|grep check
->> /etc/logcheck
->> /etc/logcheck/ignore.d.server
->> /etc/logcheck/ignore.d.server/mdadm
->> /etc/logcheck/violations.d
->> /etc/logcheck/violations.d/mdadm
->> /usr/share/mdadm/checkarray
->> /usr/share/doc/mdadm/README.checkarray
->>
->>
->> On Thu, 2 Aug 2007, ymerej@yerot.com wrote:
->>
->>> Does anyone know where I can get this script?  I see posts about it on
->>> google, but everyone speeks as if it is included in 2.5+ versions of
->> mdadm.
->>> I've downloaded all versions up to 2.6 from
->>> http://www.cse.unsw.edu.au/~neilb/source/mdadm/
->>> but can't locate the checkarray script...
->>>
->>> -
->>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>>
->> -
->> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-> -- 
-> Contact me on ICQ: 7656468
-> skype://sysfried
->
-> GMX FreeMail: 1 GB Postfach, 5 E-Mail-Adressen, 10 Free SMS.
-> Alle Infos und kostenlose Anmeldung: http://www.gmx.net/de/go/freemail
->
+sorry for the slow response.
+
+It looks like commit 1757128438d41670ded8bc3bc735325cc07dc8f9
+(December 2006) set conf->fullsync a litte too often.
+
+This seems to fix it, and I'm fairly sure it is correct.
+
+Thanks,
+NeilBrown
+
+----------------------------------
+Make sure a re-add after a restart honours bitmap when resyncing.
+
+Commit 1757128438d41670ded8bc3bc735325cc07dc8f9 was slightly bad.
+If and array has a write-intent bitmap, and you remove a drive,
+then readd it, only the changes parts should be resynced.
+This only works if the array has not been shut down and restarted.
+
+The above mentioned commit sets 'fullsync' at little more often
+than it should.  This patch is more careful.
+
+Signed-off-by: Neil Brown <neilb@suse.de>
+
+### Diffstat output
+ ./drivers/md/raid1.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff .prev/drivers/md/raid1.c ./drivers/md/raid1.c
+--- .prev/drivers/md/raid1.c	2007-07-31 11:21:29.000000000 +1000
++++ ./drivers/md/raid1.c	2007-08-03 16:24:23.000000000 +1000
+@@ -1918,7 +1918,8 @@ static int run(mddev_t *mddev)
+ 		    !test_bit(In_sync, &disk->rdev->flags)) {
+ 			disk->head_position = 0;
+ 			mddev->degraded++;
+-			conf->fullsync = 1;
++			if (disk->rdev)
++				conf->fullsync = 1;
+ 		}
+ 	}
+ 	if (mddev->degraded == conf->raid_disks) {
