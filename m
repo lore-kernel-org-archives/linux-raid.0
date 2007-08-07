@@ -1,31 +1,38 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: mdadm and superblock format > 1
-Date: Tue, 7 Aug 2007 20:47:03 +1000
-Message-ID: <18104.19879.613392.675207@notabene.brown>
-References: <46B8479C.5010600@ziu.info>
+Subject: Re: Linux RAID migration
+Date: Tue, 7 Aug 2007 21:18:01 +1000
+Message-ID: <18104.21737.341407.654022@notabene.brown>
+References: <c70ff3ad0708070116k20605787pf897f9eccc93cd65@mail.gmail.com>
+	<5b170a7d0708070126t52cb4be5x4549b22bac643450@mail.gmail.com>
+	<c70ff3ad0708070302g1d23f4c8qd53c230d4118fd51@mail.gmail.com>
+	<18104.18410.623573.929770@notabene.brown>
+	<c70ff3ad0708070332n33296a9cp719a6e1b8860ec4b@mail.gmail.com>
+	<c70ff3ad0708070346u4b538be9j6d1b5cf83f535de6@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Michal Soltys on Tuesday August 7
+In-Reply-To: message from saeed bishara on Tuesday August 7
 Sender: linux-raid-owner@vger.kernel.org
-To: Michal Soltys <nozo@ziu.info>
-Cc: linux-raid@vger.kernel.org
+To: saeed bishara <saeed.bishara@gmail.com>
+Cc: Tuomas Leikola <tuomas.leikola@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday August 7, nozo@ziu.info wrote:
-> I've noticed, that whenever I use 1.1 or 1.2 superblock format, mdadm 
-> will always report version 1, when i.e. mdadm -E --scan is issued.
-> 
-> Also, in these two cases, mdadm -A --scan won't work, unless proper 
-> ARRAY line is present in mdadm.conf (and if metadata is part of the 
-> description, it must be either 1.1 or 1.2).
+On Tuesday August 7, saeed.bishara@gmail.com wrote:
+> how can I create raid 5 array that preserves the contents of a given
+> disk (part of the array)?
+> I can do that in two steps, raid 5 on two disks then reshape it to be
+> real raid5, but is there a direct way to do it?
 
-This is fixed in the current git repository.  It will be in the next
-release whenever I get around to making one.
+What do you mean by "real raid 5".  Two disks are just as much an
+array as 10.
+What do you mean by "direct".  If I understand your requirements
+correctly, there are two obvious steps.
+  1/ make the data appear in a raid5
+  2/ change the number of devices in the raid5.
 
-This is that patch that fixes it.
+Are two steps too many?
 
-http://neil.brown.name/git?p=mdadm;a=commitdiff;h=a17a3de364806681fc7c1395364d11061a638ff3
+I guess I don't understand your question.
 
 NeilBrown
