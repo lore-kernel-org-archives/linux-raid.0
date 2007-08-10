@@ -1,32 +1,30 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: Another RAID level migration question
-Date: Fri, 10 Aug 2007 11:55:45 +1000
-Message-ID: <18107.50593.330335.913673@notabene.brown>
-References: <46BB8B32.9010007@tmr.com>
+Subject: Re: Need clarification on raid1 resync behavior with bitmap support
+Date: Fri, 10 Aug 2007 15:15:59 +1000
+Message-ID: <18107.62607.784138.245455@notabene.brown>
+References: <170fa0d20707210959q11153d38u3281062c98d3adb7@mail.gmail.com>
+	<18084.22271.122052.80056@notabene.brown>
+	<170fa0d20707230547y3accc5c9v14805fdb3637e9c0@mail.gmail.com>
+	<18098.52840.936611.7816@notabene.brown>
+	<170fa0d20708030641l258ff0adrfdfa7726f746969e@mail.gmail.com>
+	<18099.40761.348959.46664@notabene.brown>
+	<170fa0d20708060830r1b897539sad7b2cc8ef44f912@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Bill Davidsen on Thursday August 9
+In-Reply-To: message from Mike Snitzer on Monday August 6
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: Mike Snitzer <snitzer@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thursday August 9, davidsen@tmr.com wrote:
-> I have an array on two drives which was set up as a RAID-0, because I 
-> needed the space and performance. Now I have another identical drive, 
-> ideally I would like to get to RAID-5, but I don't think that is going 
-> to fly, so how about RAID-4? I could create with a missing parity drive, 
-> then add the drive and see if it will rebuild.
+On Monday August 6, snitzer@gmail.com wrote:
 > 
-> I hope to test this using loop devices, but time is fairly short right now.
+> Thanks for your help, any idea when this fix will make it upstream?
+> 
 
-Providing the two drives are exactly the same size (which rounded down
-to a multiple of 64K), this  will work.  The parity drive is the last
-in the list so
-   mdadm -C /dev/mdX -l4 -n3 -c WHATEVER /dev/sda1 /dev/sdb1 missing
-
-is the sort of thing you want.
+Thanks for the confirmation.... yes, I guess I should send it upstream
+soon.  Probably early next week at the latest.
 
 NeilBrown
