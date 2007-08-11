@@ -1,30 +1,38 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: Need clarification on raid1 resync behavior with bitmap support
-Date: Fri, 10 Aug 2007 15:15:59 +1000
-Message-ID: <18107.62607.784138.245455@notabene.brown>
-References: <170fa0d20707210959q11153d38u3281062c98d3adb7@mail.gmail.com>
-	<18084.22271.122052.80056@notabene.brown>
-	<170fa0d20707230547y3accc5c9v14805fdb3637e9c0@mail.gmail.com>
-	<18098.52840.936611.7816@notabene.brown>
-	<170fa0d20708030641l258ff0adrfdfa7726f746969e@mail.gmail.com>
-	<18099.40761.348959.46664@notabene.brown>
-	<170fa0d20708060830r1b897539sad7b2cc8ef44f912@mail.gmail.com>
+From: Michal Soltys <nozo@ziu.info>
+Subject: mdadm (on partitionable arrays) and partition uevents
+Date: Sat, 11 Aug 2007 14:05:39 +0200
+Message-ID: <46BDA613.1020604@ziu.info>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-2; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Mike Snitzer on Monday August 6
 Sender: linux-raid-owner@vger.kernel.org
-To: Mike Snitzer <snitzer@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Monday August 6, snitzer@gmail.com wrote:
-> 
-> Thanks for your help, any idea when this fix will make it upstream?
-> 
+During doing some tests, I've found a slight delay of partition related 
+uevents, when raid devices are assembled/stopped.
 
-Thanks for the confirmation.... yes, I guess I should send it upstream
-soon.  Probably early next week at the latest.
+For example - consider md/d0 with 1 partition created. The array is unassembled.
 
-NeilBrown
+1) mdadm -A /dev/md/d0
+
+will generate "change" even properly for md/d0, but "add' uevent for its 
+partition, will be delayed until some next mdadm operation or some partition 
+related operation - fdisk, etc.
+
+2) mdadm -S /dev/md/d0
+
+Analogously, "remove" for partitions will be run on some later mdadm 
+command, or even unsuccessful attempt to fdisk that array.
+
+To not cause any potential conflicts, mdadm.conf had symlinks=no, and mdadm 
+was used only with directory based names, whereas udev had no custom rules 
+regarding any md devices (so only standard /dev/md_d[0-9]* and /dev/md[0-9]* 
+were created).
+
+Tested under udev 114, mdadm 2.6.2 on two different systems (one arch 64bit, 
+the other 32bit).
+
+I'm not actually sure if it's even a bug in the first place, or if it has 
+anything to do with mdadm, but reporting it nonetheless.
