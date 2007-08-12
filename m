@@ -1,73 +1,64 @@
-From: Al Boldi <a1426z@gawab.com>
-Subject: Re: [RFD] Layering: Use-Case Composers (was: DRBD - what is it, anyways? [compare with e.g. NBD + MD raid])
-Date: Sun, 12 Aug 2007 18:28:03 +0300
-Message-ID: <200708121828.03184.a1426z@gawab.com>
-References: <200708121335.17267.a1426z@gawab.com> <20070812115126.GA14770@2ka.mipt.ru>
+From: david@lang.hm
+Subject: Re: [RFD] Layering: Use-Case Composers (was: DRBD - what is it,
+ anyways? [compare with e.g. NBD + MD raid])
+Date: Sun, 12 Aug 2007 09:39:54 -0700 (PDT)
+Message-ID: <Pine.LNX.4.64.0708120933210.19502@asgard.lang.hm>
+References: <200708121335.17267.a1426z@gawab.com>
+ <Pine.LNX.4.64.0708121325170.28963@fbirervta.pbzchgretzou.qr>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <20070812115126.GA14770@2ka.mipt.ru>
-Content-Disposition: inline
-Sender: netdev-owner@vger.kernel.org
-To: Evgeniy Polyakov <johnpol@2ka.mipt.ru>
-Cc: linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, netdev@vger.kernel.org, linux-raid@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.64.0708121325170.28963@fbirervta.pbzchgretzou.qr>
+Sender: linux-raid-owner@vger.kernel.org
+To: Jan Engelhardt <jengelh@computergmbh.de>
+Cc: Al Boldi <a1426z@gawab.com>, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, netdev@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Evgeniy Polyakov wrote:
-> Al Boldi (a1426z@gawab.com) wrote:
-> > Look at ZFS; it illegally violates layering by combining md/dm/lvm with
-> > the fs, but it does this based on a realistic understanding of the
-> > problems involved, which enables it to improve performance, flexibility,
-> > and functionality specific to its use case.
-> >
-> > This implies that there are two distinct forces at work here:
-> >
-> >   1. Layer components
-> >   2. Use-Case composers
-> >
-> > Layer components should technically not implement any use case (other
-> > than providing a plumbing framework), as that would incur unnecessary
-> > dependencies, which could reduce its generality and thus reusability.
-> >
-> > Use-Case composers can now leverage layer components from across the
-> > layering hierarchy, to yield a specific use case implementation.
-> >
-> > DRBD is such a Use-Case composer, as is mdm / dm / lvm and any fs in
-> > general, whereas aoe / nbd / loop and the VFS / FUSE are examples of
-> > layer components.
-> >
-> > It follows that Use-case composers, like DRBD, need common functionality
-> > that should be factored out into layer components, and then recompose to
-> > implement a specific use case.
+On Sun, 12 Aug 2007, Jan Engelhardt wrote:
+
+> On Aug 12 2007 13:35, Al Boldi wrote:
+>> Lars Ellenberg wrote:
+>>> meanwhile, please, anyone interessted,
+>>> the drbd paper for LinuxConf Eu 2007 is finalized.
+>>> http://www.drbd.org/fileadmin/drbd/publications/
+>>> drbd8.linux-conf.eu.2007.pdf
+>>>
+>>> but it does give a good overview about what DRBD actually is,
+>>> what exact problems it tries to solve,
+>>> and what developments to expect in the near future.
+>>>
+>>> so you can make up your mind about
+>>>  "Do we need it?", and
+>>>  "Why DRBD? Why not NBD + MD-RAID?"
 >
-> Out of curiosity, did you try ndb+dm+raid1 compared to drbd and/or zfs
-> on top of distributed storage (which is a urprise to me, that holy zfs
-> suppors that)?
+> I may have made a mistake when asking for how it compares to NBD+MD.
+> Let me retry: what's the functional difference between
+> GFS2 on a DRBD .vs. GFS2 on a DAS SAN?
 
-Actually, I may not have been very clear in my Use-Case composer description 
-to mean internal in-kernel Use-Case composer as opposed to external Userland 
-Use-Case composer.
+GFS is a distributed filesystem, DRDB is a replicated block device. you 
+wouldn't do GFS on top of DRDB, you would do ext2/3, XFS, etc
 
-So, nbd+dm+raid1 would be an external Userland Use-Case composition, which 
-obviously could have some drastic performance issues.
+DRDB is much closer to the NBD+MD option.
 
-DRBD and ZFS are examples of internal in-kernel Use-Case composers, which 
-obviously could show some drastic performance improvements.  
+now, I am not an expert on either option, but three are a couple things 
+that I would question about the DRDB+MD option
 
-Although you could allow in-kernel Use-Case composers to be run on top of 
-Userland Use-Case composers, that wouldn't be the preferred mode of 
-operation.  Instead, you would for example recompose ZFS to incorporate an 
-in-kernel distributed storage layer component, like nbd.
+1. when the remote machine is down, how does MD deal with it for reads and 
+writes?
 
-All this boils down to refactoring Use-Case composers to produce layer 
-components with both in-kernel and userland interfaces.  Once we have that, 
-it becomes a matter of plug-and-play to produce something awesome like ZFS.
+2. MD over local drive will alternate reads between mirrors (or so I've 
+been told), doing so over the network is wrong.
 
+3. when writing, will MD wait for the network I/O to get the data saved on 
+the backup before returning from the syscall? or can it sync the data out 
+lazily
 
-Thanks!
+>> Now, shared remote block access should theoretically be handled, as does
+>> DRBD, by a block layer driver, but realistically it may be more appropriate
+>> to let it be handled by the combining end user, like OCFS or GFS.
 
---
-Al
+there are times when you want to replicate at the block layer, and there 
+are times when you want to have a filesystem do the work. don't force a 
+filesystem on use-cases where a block device is the right answer.
 
+David Lang
