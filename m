@@ -1,38 +1,81 @@
-From: Michal Soltys <nozo@ziu.info>
-Subject: mdadm (on partitionable arrays) and partition uevents
-Date: Sat, 11 Aug 2007 14:05:39 +0200
-Message-ID: <46BDA613.1020604@ziu.info>
+From: Al Boldi <a1426z@gawab.com>
+Subject: [RFD] Layering: Use-Case Composers (was: DRBD - what is it, anyways? [compare with e.g. NBD + MD raid])
+Date: Sun, 12 Aug 2007 13:35:17 +0300
+Message-ID: <200708121335.17267.a1426z@gawab.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-2; format=flowed
+Content-Type: text/plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: linux-fsdevel@vger.kernel.org, netdev@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-During doing some tests, I've found a slight delay of partition related 
-uevents, when raid devices are assembled/stopped.
+Lars Ellenberg wrote:
+> meanwhile, please, anyone interessted,
+> the drbd paper for LinuxConf Eu 2007 is finalized.
+> http://www.drbd.org/fileadmin/drbd/publications/
+> drbd8.linux-conf.eu.2007.pdf
+>
+> it does not give too much implementation detail (would be inapropriate
+> for conference proceedings, imo; some paper commenting on the source
+> code should follow).
+>
+> but it does give a good overview about what DRBD actually is,
+> what exact problems it tries to solve,
+> and what developments to expect in the near future.
+>
+> so you can make up your mind about
+>  "Do we need it?", and
+>  "Why DRBD? Why not NBD + MD-RAID?"
 
-For example - consider md/d0 with 1 partition created. The array is unassembled.
+Ok, conceptually your driver sounds really interresting, but when I read the 
+pdf I got completely turned off.  The problem is that the concepts are not 
+clearly implemented, when in fact the concepts are really simple:
 
-1) mdadm -A /dev/md/d0
+  Allow shared access to remote block storage with fault tolerance.
 
-will generate "change" even properly for md/d0, but "add' uevent for its 
-partition, will be delayed until some next mdadm operation or some partition 
-related operation - fdisk, etc.
+The first thing to tackle here would be write serialization.  Then start 
+thinking about fault tolerance.
 
-2) mdadm -S /dev/md/d0
+Now, shared remote block access should theoretically be handled, as does 
+DRBD, by a block layer driver, but realistically it may be more appropriate 
+to let it be handled by the combining end user, like OCFS or GFS.
 
-Analogously, "remove" for partitions will be run on some later mdadm 
-command, or even unsuccessful attempt to fdisk that array.
+The idea here is to simplify lower layer implementations while removing any 
+preconceived dependencies, and let upper layers reign free without incurring 
+redundant overhead.
 
-To not cause any potential conflicts, mdadm.conf had symlinks=no, and mdadm 
-was used only with directory based names, whereas udev had no custom rules 
-regarding any md devices (so only standard /dev/md_d[0-9]* and /dev/md[0-9]* 
-were created).
+Look at ZFS; it illegally violates layering by combining md/dm/lvm with the 
+fs, but it does this based on a realistic understanding of the problems 
+involved, which enables it to improve performance, flexibility, and 
+functionality specific to its use case.
 
-Tested under udev 114, mdadm 2.6.2 on two different systems (one arch 64bit, 
-the other 32bit).
+This implies that there are two distinct forces at work here:
 
-I'm not actually sure if it's even a bug in the first place, or if it has 
-anything to do with mdadm, but reporting it nonetheless.
+  1. Layer components
+  2. Use-Case composers
+
+Layer components should technically not implement any use case (other than 
+providing a plumbing framework), as that would incur unnecessary 
+dependencies, which could reduce its generality and thus reusability.
+
+Use-Case composers can now leverage layer components from across the layering 
+hierarchy, to yield a specific use case implementation.
+
+DRBD is such a Use-Case composer, as is mdm / dm / lvm and any fs in general, 
+whereas aoe / nbd / loop and the VFS / FUSE are examples of layer 
+components.
+
+It follows that Use-case composers, like DRBD, need common functionality that 
+should be factored out into layer components, and then recompose to 
+implement a specific use case.
+
+
+Thanks!
+
+--
+Al
+
