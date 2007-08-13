@@ -1,46 +1,87 @@
-From: David Greaves <david@dgreaves.com>
-Subject: Re: [RFD] Layering: Use-Case Composers (was: DRBD - what is it, anyways?
- [compare with e.g. NBD + MD raid])
-Date: Mon, 13 Aug 2007 13:43:55 +0100
-Message-ID: <46C0520B.20804@dgreaves.com>
-References: <200708121335.17267.a1426z@gawab.com> <Pine.LNX.4.64.0708121325170.28963@fbirervta.pbzchgretzou.qr> <Pine.LNX.4.64.0708120933210.19502@asgard.lang.hm> <Pine.LNX.4.64.0708121901290.28963@fbirervta.pbzchgretzou.qr> <20070812174549.GA2915@teal.hq.k1024.org> <46BFB6BB.80406@steeleye.com> <Pine.LNX.4.64.0708122016100.22470@asgard.lang.hm> <46C01052.4050708@dgreaves.com> <Pine.LNX.4.64.0708130127260.22470@asgard.lang.hm>
+From: vignesh babu <vignesh.babu@wipro.com>
+Subject: [kj] is_power_of_2 in drivers/md/dm-raid1.c
+Date: Mon, 13 Aug 2007 18:22:06 +0530
+Message-ID: <1187009526.7273.2.camel@merlin.linuxcoe.com>
+Reply-To: vigneshbabu@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0708130127260.22470@asgard.lang.hm>
-Sender: netdev-owner@vger.kernel.org
-To: david@lang.hm
-Cc: Paul Clements <paul.clements@steeleye.com>, Jan Engelhardt <jengelh@computergmbh.de>, Al Boldi <a1426z@gawab.com>, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, netdev@vger.kernel.org, linux-raid@vger.kernel.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: mingo@redhat.com, neilb@suse.de
+Cc: linux-raid@vger.kernel.org, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-raid.ids
 
-david@lang.hm wrote:
->> Would this just be relevant to network devices or would it improve 
->> support for jostled usb and sata hot-plugging I wonder?
-> 
-> good question, I suspect that some of the error handling would be 
-> similar (for devices that are unreachable not haning the system for 
-> example), but a lot of the rest would be different (do you really want 
-> to try to auto-resync to a drive that you _think_ just reappeared,
-Well, omit 'think' and the answer may be "yes". A lot of systems are quite 
-simple and RAID is common on the desktop now. If jostled USB fits into this 
-category - then "yes".
+Replacing n & (n - 1) for power of 2 check by is_power_of_2(n)
 
-> what 
-> if it's a different drive? how can you be sure?
-And that's the key isn't it. We have the RAID device UUID and the superblock 
-info. Isn't that enough? If not then given the work involved an extended 
-superblock wouldn't be unreasonable.
-And I suspect the capability of devices would need recording in the superblock 
-too? eg 'retry-on-fail'
-I can see how md would fail a device but may now periodically retry it. If a 
-retry shows that it's back then it would validate it (UUID) and then resync it.
+Signed-off-by: vignesh babu <vignesh.babu@wipro.com>
+---
+diff --git a/drivers/md/dm-raid1.c b/drivers/md/dm-raid1.c
+index 144071e..969b398 100644
+--- a/drivers/md/dm-raid1.c
++++ b/drivers/md/dm-raid1.c
+@@ -19,6 +19,7 @@
+ #include <linux/time.h>
+ #include <linux/vmalloc.h>
+ #include <linux/workqueue.h>
++#include <linux/log2.h>
+ 
+ #define DM_MSG_PREFIX "raid1"
+ #define DM_IO_PAGES 64
+@@ -994,7 +995,7 @@ static void free_context(struct mirror_set *ms, struct dm_target *ti,
+ 
+ static inline int _check_region_size(struct dm_target *ti, uint32_t size)
+ {
+-	return !(size % (PAGE_SIZE >> 9) || (size & (size - 1)) ||
++	return !(size % (PAGE_SIZE >> 9) || !is_power_of_2(size) ||
+ 		 size > ti->len);
+ }
+ 
+diff --git a/drivers/md/dm-snap.c b/drivers/md/dm-snap.c
+index 83ddbfe..ad2836a 100644
+--- a/drivers/md/dm-snap.c
++++ b/drivers/md/dm-snap.c
+@@ -17,6 +17,7 @@
+ #include <linux/module.h>
+ #include <linux/slab.h>
+ #include <linux/vmalloc.h>
++#include <linux/log2.h>
+ 
+ #include "dm-snap.h"
+ #include "dm-bio-list.h"
+@@ -415,7 +416,7 @@ static int set_chunk_size(struct dm_snapshot *s, const char *chunk_size_arg,
+ 	chunk_size = round_up(chunk_size, PAGE_SIZE >> 9);
+ 
+ 	/* Check chunk_size is a power of 2 */
+-	if (chunk_size & (chunk_size - 1)) {
++	if (!is_power_of_2(chunk_size)) {
+ 		*error = "Chunk size is not a power of 2";
+ 		return -EINVAL;
+ 	}
+diff --git a/drivers/md/dm-stripe.c b/drivers/md/dm-stripe.c
+index 51f5e07..969944a 100644
+--- a/drivers/md/dm-stripe.c
++++ b/drivers/md/dm-stripe.c
+@@ -11,6 +11,7 @@
+ #include <linux/blkdev.h>
+ #include <linux/bio.h>
+ #include <linux/slab.h>
++#include <linux/log2.h>
+ 
+ #define DM_MSG_PREFIX "striped"
+ 
+@@ -99,7 +100,7 @@ static int stripe_ctr(struct dm_target *ti, unsigned int argc, char **argv)
+ 	/*
+ 	 * chunk_size is a power of two
+ 	 */
+-	if (!chunk_size || (chunk_size & (chunk_size - 1)) ||
++	if (!is_power_of_2(chunk_size) ||
+ 	    (chunk_size < (PAGE_SIZE >> SECTOR_SHIFT))) {
+ 		ti->error = "Invalid chunk size";
+ 		return -EINVAL;
 
-> ) the error rate of a 
-> network is gong to be significantly higher then for USB or SATA drives 
-> (although I suppose iscsi would be limilar)
+-- 
+Vignesh Babu BM 
+_____________________________________________________________ 
+"Why is it that every time I'm with you, makes me believe in magic?"
 
-I do agree - I was looking for value-add for the existing subsystem. If this 
-benefits existing RAID users then it's more likely to be attractive.
-
-David
