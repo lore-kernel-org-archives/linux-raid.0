@@ -1,35 +1,46 @@
-From: Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE>
-Subject: Re: Mustn't be RAID 1 and 0 read-performance be similar?
-Date: Mon, 13 Aug 2007 16:49:52 +0200
-Message-ID: <f9pr2g$pgj$1@sea.gmane.org>
-References: <735D322AED9CD711BE53000476917CD00281A96B@NT-SERVER-5>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: Convert RAID1 to standard ext2
+Date: Mon, 13 Aug 2007 17:52:45 -0400
+Message-ID: <46C0D2AD.8040308@tmr.com>
+References: <a85387af0708130114xab0edbfs9b521da6a19fd96a@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <a85387af0708130114xab0edbfs9b521da6a19fd96a@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Timothy Weaver <timothyweaver@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Rustedt, Florian <florian.rustedt@smartnet.de> wrote:
-> If the speed on RAID 0 is based on reading out in parallel, then it must be
-> the same on RAID 1, mustn't it?
-> On RAID 1, it is possible, to read two blocks in parallel to speed up, too.
+Timothy Weaver wrote:
+> Hi,
+>
+> I had 2x750GB drives in a RAID1 configuration in a D-Link NAS
+> (DNS-323) device with embedded Linux as an ext2 volume. The
+> configuration was corrupted and the NAS no longer saw the RAID.
+>
+> I put the drives in another Linux box and was able to use mdadm to
+> scan the drives. It recognized the RAID1 configuration and created the
+> RAID device at /dev/md0. Unfortunately, it says it is corrupt and
+> cannot be mounted. I tried using e2fsck / fsck but it says the
+> superblock is corrupt. Trying to use copies of the superblock were
+> unsuccessful.
+>
+> I am confident the data is still there and want to get to it. Is there
+> a way to take one of the drives and convert it from being in the RAID1
+> set to just a standard ext2 partition in a non-destructive way? I
+> figured this should be possible with the second drive just to be sure
+> not to destroy both copies of the data.
 
-It's not that simple.
-On RAID0 you can read one single stream of data from all of the disks in
-parallel: you read one stream from each disk with each stream containing
-completely different data and merge them together to get the original
-stream. On RAID1 you can only read exactly the same stream from all of
-the disks. Thus, RAID1 cannot provide RAID0's speed-up for a single
-stream.
-However, if you read multiple streams parallel, RAID1 can do better than
-RAID0 because you can read stream1 from disk1, stream2 from disk2 etc.
-Using RAID0, this speed-up can only be achieved for streams <= chunk
-size.
+Try a read-only loopback mount of the partition (either). However, I 
+think you're missing something else, although I don't have a clue what. 
+Unless the O/S started writing bad data or the hardware got sick, you 
+should be able to recover. In any case this allows you to do something 
+non-destructive and use offset= depending on the superblock location.
 
-
-regards
-   Mario
 -- 
-Tower: "Say fuelstate." Pilot: "Fuelstate."
-Tower: "Say again." Pilot: "Again."
-Tower: "Arghl, give me your fuel!" Pilot: "Sorry, need it by myself..."
+bill davidsen <davidsen@tmr.com>
+  CTO TMR Associates, Inc
+  Doing interesting things with small computers since 1979
 
