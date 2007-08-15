@@ -1,37 +1,33 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: SWAP file on a RAID-10 array possible?
-Date: Wed, 15 Aug 2007 18:02:52 -0400
-Message-ID: <46C3780C.2090007@tmr.com>
-References: <c70ff3ad0708070116k20605787pf897f9eccc93cd65@mail.gmail.com><5b170a7d0708070126t52cb4be5x4549b22bac643450@mail.gmail.com><c70ff3ad0708070302g1d23f4c8qd53c230d4118fd51@mail.gmail.com><18104.18410.623573.929770@notabene.brown><c70ff3ad0708070332n33296a9cp719a6e1b8860ec4b@mail.gmail.com><c70ff3ad0708070346u4b538be9j6d1b5cf83f535de6@mail.gmail.com><18104.21737.341407.654022@notabene.brown><c70ff3ad0708070431v3ba47ab0j533197d92aea884c@mail.gmail.com> <18104.23111.369229.891505@notabene.brown> <02a201c7df1b$07dec720$332317ac@Cortex>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Mike Accetta <maccetta@laurelnetworks.com>
+Subject: detecting read errors after RAID1 check operation
+Date: Wed, 15 Aug 2007 18:03:03 -0400
+Message-ID: <11774.1187215383@mdt.ecitele.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <02a201c7df1b$07dec720$332317ac@Cortex>
 Sender: linux-raid-owner@vger.kernel.org
-To: Tomas France <tomfra@centrum.cz>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Tomas France wrote:
-> Hi everyone,
->
-> I apologize for asking such a fundamental question on the Linux-RAID 
-> list but the answers I found elsewhere have been contradicting one 
-> another.
->
-> So, is it possible to have a swap file on a RAID-10 array?
 
-Yes, and very fast as well. Do note that if you (a) need to boot from a 
-recovery CD and (b) have a low memory machine which really needs swap 
-early, most of the ones I've tried don't use such a swap, you have to 
-start it by hand. Also, I have not tried suspend to disk and restore 
-using RAID-10, it's on my to-do list, but *way* down.
+We run a "check" operation periodically to try and turn up problems with
+drives about to go bad before they become too severe.  In particularly,
+if there were any drive read errors during the check operation I would
+like to be able to notice and raise an alarm for human attention so that
+the failing drive can be replaced sooner than later.  I'm looking for a
+programatic way to detect this reliably without having to grovel through
+the log files looking for kernel hard drive error messages that may have
+occurred during the check operation.
 
-But in general you will find it very fast and reliable.
+There are already files like /sys/block/md_d0/md/dev-sdb/errors in /sys
+which would be very convenient to consult but according to the kernel
+driver implementation the error counts reported there are apparently
+for corrected errors and not relevant for read errors during a "check"
+operation.
 
--- 
-bill davidsen <davidsen@tmr.com>
-  CTO TMR Associates, Inc
-  Doing interesting things with small computers since 1979
+I am contemplating adding a parallel /sys file that would report
+all errors, not just the corrected ones.  Does this seem reasonable?
+Are there other alternatives that might make sense here?
+--
+Mike Accetta
 
+ECI Telecom Ltd.
+Transport Networking Division, US (previously Laurel Networks)
