@@ -1,57 +1,61 @@
-From: NeilBrown <neilb@suse.de>
-Subject: [PATCH 002 of 2] md: Correctly update sysfs when a raid1 is reshaped.
-Date: Thu, 16 Aug 2007 10:38:45 +1000
-Message-ID: <1070816003845.32736@suse.de>
-References: <20070816103626.32539.patches@notabene>
+From: Mike Accetta <maccetta@laurelnetworks.com>
+Subject: Re: detecting read errors after RAID1 check operation
+Date: Wed, 15 Aug 2007 23:27:21 -0400
+Message-ID: <15506.1187234841@mdt.ecitele.com>
+References: <18115.33874.732489.977468@notabene.brown>
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-reply-to: Your message of "Thu, 16 Aug 2007 08:55:14 +1000."
+             <18115.33874.732489.977468@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Neil Brown writes:
+> On Wednesday August 15, maccetta@laurelnetworks.com wrote:
+> > 
+> > There are already files like /sys/block/md_d0/md/dev-sdb/errors in /sys
+> > which would be very convenient to consult but according to the kernel
+> > driver implementation the error counts reported there are apparently
+> > for corrected errors and not relevant for read errors during a "check"
+> > operation.
+> > 
+> 
+> When 'check' hits a read error, an attempt is made to 'correct' it by
+> over-writing with correct data.  This will either increase the
+> 'errors' count or fail the drive completely.
+> 
+> What 'check' doesn't do (and 'repair' does) it react when it find that
+> successful reads of all drives (in a raid1) do not match.
+> 
+> So just use the 'errors' number - it is exactly what you want.
 
-When a raid1 array is reshaped (number of drives changed),
-the list of devices is compacted, so that slots for missing
-devices are filled with working devices from later slots.
-This requires the "rd%d" symlinks in sysfs to be updated.
+This happens in our old friend sync_request_write()?  I'm dealing with
+simulated errors and will dig further to make sure that is not perturbing
+the results but I don't see any 'errors' effect.  This is with our
+patched 2.6.20 raid1.c.  The logic doesn't seem to be any different in
+2.6.22 from what I can tell, though.
 
+This fragment
 
-Signed-off-by: Neil Brown <neilb@suse.de>
+	if (j < 0 || test_bit(MD_RECOVERY_CHECK, &mddev->recovery)) {
+		sbio->bi_end_io = NULL;
+		rdev_dec_pending(conf->mirrors[i].rdev, mddev);
+	} else {
+		/* fixup the bio for reuse */
+		...
+	}
 
-### Diffstat output
- ./drivers/md/raid1.c |   22 ++++++++++++++++++----
- 1 file changed, 18 insertions(+), 4 deletions(-)
+looks suspicously like any correction attempt for 'check' is being
+short-circuited to me, regardless of whether or not there was a read
+error.  Actually, even if the rewrite was not being short-circuited,
+I still don't see the path that would update 'corrected_errors' in this
+case.  There are only two raid1.c sites that touch 'corrected_errors', one
+is in fix_read_errors() and the other is later in sync_request_write().
+With my limited understanding of how this all works, neither of these
+paths would seem to apply here.
+--
+Mike Accetta
 
-diff .prev/drivers/md/raid1.c ./drivers/md/raid1.c
---- .prev/drivers/md/raid1.c	2007-08-16 10:27:57.000000000 +1000
-+++ ./drivers/md/raid1.c	2007-08-16 10:29:58.000000000 +1000
-@@ -2154,11 +2154,25 @@ static int raid1_reshape(mddev_t *mddev)
- 	oldpool = conf->r1bio_pool;
- 	conf->r1bio_pool = newpool;
- 
--	for (d=d2=0; d < conf->raid_disks; d++)
--		if (conf->mirrors[d].rdev) {
--			conf->mirrors[d].rdev->raid_disk = d2;
--			newmirrors[d2++].rdev = conf->mirrors[d].rdev;
-+	for (d = d2 = 0; d < conf->raid_disks; d++) {
-+		mdk_rdev_t *rdev = conf->mirrors[d].rdev;
-+		if (rdev && rdev->raid_disk != d2) {
-+			char nm[20];
-+			sprintf(nm, "rd%d", rdev->raid_disk);
-+			sysfs_remove_link(&mddev->kobj, nm);
-+			rdev->raid_disk = d2;
-+			sprintf(nm, "rd%d", rdev->raid_disk);
-+			sysfs_remove_link(&mddev->kobj, nm);
-+			if (sysfs_create_link(&mddev->kobj,
-+					      &rdev->kobj, nm))
-+				printk(KERN_WARNING
-+				       "md/raid1: cannot register "
-+				       "%s for %s\n",
-+				       nm, mdname(mddev));
- 		}
-+		if (rdev)
-+			newmirrors[d2++].rdev = rdev;
-+	}
- 	kfree(conf->mirrors);
- 	conf->mirrors = newmirrors;
- 	kfree(conf->poolinfo);
+ECI Telecom Ltd.
+Transport Networking Division, US (previously Laurel Networks)
