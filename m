@@ -1,34 +1,21 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: detecting read errors after RAID1 check operation
-Date: Thu, 16 Aug 2007 08:55:14 +1000
-Message-ID: <18115.33874.732489.977468@notabene.brown>
-References: <11774.1187215383@mdt.ecitele.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+From: NeilBrown <neilb@suse.de>
+Subject: [PATCH 000 of 2] md: bug fixes for 2.6.23-rc
+Date: Thu, 16 Aug 2007 10:38:32 +1000
+Message-ID: <20070816103626.32539.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Mike Accetta on Wednesday August 15
 Sender: linux-raid-owner@vger.kernel.org
-To: Mike Accetta <maccetta@laurelnetworks.com>
-Cc: linux-raid@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wednesday August 15, maccetta@laurelnetworks.com wrote:
-> 
-> There are already files like /sys/block/md_d0/md/dev-sdb/errors in /sys
-> which would be very convenient to consult but according to the kernel
-> driver implementation the error counts reported there are apparently
-> for corrected errors and not relevant for read errors during a "check"
-> operation.
-> 
+Following 2 patches contain bugfixes for md.  Both apply to earlier
+kernels, but probably aren't significant enough for -stable (no oops,
+no data corruption, no security hole).
+They should go in 2.6.23 though.
 
-When 'check' hits a read error, an attempt is made to 'correct' it by
-over-writing with correct data.  This will either increase the
-'errors' count or fail the drive completely.
-
-What 'check' doesn't do (and 'repair' does) it react when it find that
-successful reads of all drives (in a raid1) do not match.
-
-So just use the 'errors' number - it is exactly what you want.
-
+Thanks,
 NeilBrown
+
+
+ [PATCH 001 of 2] md: Make sure a re-add after a restart honours bitmap when resyncing.
+ [PATCH 002 of 2] md: Correctly update sysfs when a raid1 is reshaped.
