@@ -1,69 +1,69 @@
-From: "Guy Watkins" <linux-raid@watkins-home.com>
-Subject: RE: RAID6 clean?
-Date: Sat, 18 Aug 2007 01:40:38 -0400
-Message-ID: <200708180540.l7I5eh007322@www.watkins-home.com>
-References: <18019.47167.814394.650255@notabene.brown>
+From: "Tomas France" <tomfra@centrum.cz>
+Subject: Re: SWAP file on a RAID-10 array possible?
+Date: Sat, 18 Aug 2007 10:52:56 +0200
+Message-ID: <00a001c7e175$315c3c20$332317ac@Cortex>
+References: <c70ff3ad0708070116k20605787pf897f9eccc93cd65@mail.gmail.com><5b170a7d0708070126t52cb4be5x4549b22bac643450@mail.gmail.com><c70ff3ad0708070302g1d23f4c8qd53c230d4118fd51@mail.gmail.com><18104.18410.623573.929770@notabene.brown><c70ff3ad0708070332n33296a9cp719a6e1b8860ec4b@mail.gmail.com><c70ff3ad0708070346u4b538be9j6d1b5cf83f535de6@mail.gmail.com><18104.21737.341407.654022@notabene.brown><c70ff3ad0708070431v3ba47ab0j533197d92aea884c@mail.gmail.com> <18104.23111.369229.891505@notabene.brown> <02a201c7df1b$07dec720$332317ac@Cortex> <46C2D101.8050205@dgreaves.com> <02db01c7df27$04321c60$332317ac@Cortex> <46C37342.9080509@msgid.tls.msk.ru>
 Mime-Version: 1.0
 Content-Type: text/plain;
-	charset="us-ascii"
+	format=flowed;
+	charset="iso-8859-1";
+	reply-type=original
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18019.47167.814394.650255@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Neil Brown' <neilb@suse.de>
-Cc: 'linux-raid' <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-} -----Original Message-----
-} From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
-} owner@vger.kernel.org] On Behalf Of Neil Brown
-} Sent: Monday, June 04, 2007 2:59 AM
-} To: Guy Watkins
-} Cc: 'linux-raid'
-} Subject: Re: RAID6 clean?
-} 
-} On Monday June 4, linux-raid@watkins-home.com wrote:
-} > I have a RAID6 array.  1 drive is bad and now un-plugged because the
-} system
-} > hangs waiting on the disk.
-} >
-} > The system won't boot because / is "not clean".  I booted a rescue CD
-} and
-} > managed to start my arrays using --force.  I tried to stop and start the
-} > arrays but they still required --force.  I then used "echo repair >
-} > sync_action" to make the arrays "clean".  I can now stop and start the
-} RAID6
-} > array without --force.  I can now boot normally with 1 missing disk.
-} >
-} > Is there an easier method?  Some sort of boot option?  This was a real
-} pain
-} > in the @$$.
-} >
-} > It would be nice if there was an array option to allow an "un-clean"
-} array
-} > to be started.  An option that would be set in the md superblock.
-} 
-} Documentation/md.txt
-} 
-} search for 'clean' - no luck.
-} search for 'dirty'
-} 
-} |
-} |So, to boot with a root filesystem of a dirty degraded raid[56], use
-} |
-} |   md-mod.start_dirty_degraded=1
-} |
-} 
-} NeilBrown
-} 
+This wouldn't be probably the best solution in my situation. The computer we
+are talking about will be quad-core web server with 8GB RAM and initially
+2x500GB SATA HDDs setup in a RAID-1 array. When it begins running low on
+space or more HDDs performance is needed, I plan to convert the RAID-1 to
+RAID-10 by adding 2-4 more hard disks (I've found some info on how to do
+this so hopefully it will work).
 
-Neil,
-	I had this happen again.  The above worked, thanks.
+If I should follow the commonly accepted strategy saying that the swap space
+should be 2X+ the amount of RAM, that means 16GB. If I add 4 more HDDs in
+RAID-1 pairs later, then I would end up with 3 swap partitions on RAID-1
+taking 96GB (6*16GB) of space on the harddrives which would be a
+considerable waste of space.
 
-	Feature request...  Allow us to set a start_dirty_degraded bit in
-the superblock so we can set it and forget it.  This way it can be automatic
-and per array.  What do you think?
+Sure, when adding the more hard disks I could probably create a smaller swap
+partition on each of them but that would be yet another complication. Using
+a swap file initally on the RAID-1 array and then on the RAID-10 array
+sounds like a much simpler solution to me as it  will allow me to change the
+size of the swap space more flexibly.
 
-Thanks,
-Guy
+Tomas
+
+
+
+----- Original Message ----- 
+From: "Michael Tokarev" <mjt@tls.msk.ru>
+To: "Tomas France" <tomfra@centrum.cz>
+Cc: <linux-raid@vger.kernel.org>
+Sent: Wednesday, August 15, 2007 11:42 PM
+Subject: Re: SWAP file on a RAID-10 array possible?
+
+
+> Tomas France wrote:
+>> Thanks for the answer, David!
+>>
+>> I kind of think RAID-10 is a very good choice for a swap file. For now I
+>> will need to setup the swap file on a simple RAID-1 array anyway, I just
+>> need to be prepared when it's time to add more disks and transform the
+>> whole thing into RAID-10... which will be big fun anyway, for sure ;)
+>
+> By the way, you don't really need raid10 for swap.  Built-in linux
+> swap code can utilize multiple swap areas just fine - mkswap + swapon
+> on multiple devices/files.  This is essentially a raid0.  For raid10,
+> one thing needed is the mirroring, with is provided by raid1.  So
+> when you've two drives, use single partition on both to form a raid1
+> array for swap space.  If you've 4 drives, create 2 raid1 arrays and
+> specify them both as swap space, giving them appropriate priority
+> (prio=xxx in swap line in fstab).  With 6 drives, have 3 raid1 arrays
+> and so on...  This way, the whole thing is much simpler and more
+> manageable.
+>
+> /mjt
+>
 
