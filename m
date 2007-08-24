@@ -1,71 +1,57 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
+From: Tomasz Chmielewski <mangoo@wpkg.org>
 Subject: Re: recovery starts from 0 after reboot - normal?
-Date: Fri, 24 Aug 2007 07:48:25 -0400 (EDT)
-Message-ID: <Pine.LNX.4.64.0708240748140.18608@p34.internal.lan>
-References: <46CEBEED.1060209@wpkg.org> <Pine.LNX.4.64.0708240721280.18608@p34.internal.lan>
- <46CEC231.1070407@wpkg.org> <46CEC51B.10105@wpkg.org>
+Date: Fri, 24 Aug 2007 13:59:01 +0200
+Message-ID: <46CEC805.6010009@wpkg.org>
+References: <46CEBEED.1060209@wpkg.org> <Pine.LNX.4.64.0708240721280.18608@p34.internal.lan> <46CEC231.1070407@wpkg.org> <46CEC51B.10105@wpkg.org> <Pine.LNX.4.64.0708240748140.18608@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <46CEC51B.10105@wpkg.org>
+In-Reply-To: <Pine.LNX.4.64.0708240748140.18608@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: Tomasz Chmielewski <mangoo@wpkg.org>
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
 Cc: Linux-Raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+Justin Piszcz schrieb:
 
-
-On Fri, 24 Aug 2007, Tomasz Chmielewski wrote:
-
-> Tomasz Chmielewski schrieb:
->
-> (...)
->
->> Perhaps, the bitmap is needed then? I guess by default, no internal bitmap 
->> is added?
->> 
->> # mdadm -X /dev/md0
->>         Filename : /dev/md0
->>            Magic : 00000000
->> mdadm: invalid bitmap magic 0x0, the bitmap file appears to be corrupted
->>          Version : 0
->> mdadm: unknown bitmap version 0, either the bitmap file is corrupted or you 
->> need to upgrade your tools
->> 
->> 
->> The fine manual says:
+>> According to the fine manual, BITMAP CHANGES belong to the grow mode.
+>> So, let's try to do what the manual says - try to add a bitmap to the 
+>> active array:
 >>
->>   BITMAP CHANGES
->>   A write-intent bitmap can be added to, or removed from, an active
->>   array. Either internal bitmaps, or bitmaps stored in a separate file
->>   can be added.
->> 
->> 
->> However, I'm not sure how to achieve it? How to add an internal bitmap to 
->> an array without a bitmap?
->
-> According to the fine manual, BITMAP CHANGES belong to the grow mode.
-> So, let's try to do what the manual says - try to add a bitmap to the active 
-> array:
->
->
-> # mdadm --grow /dev/md0 --bitmap=internal
-> mdadm: failed to set internal bitmap.
->
-> # dmesg
-> md: couldn't update array info. -16
->
->
-> So, either I don't understand the manual, or there are more caveats in it.
->
->
-> -- 
-> Tomasz Chmielewski
-> http://wpkg.org
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+>>
+>> # mdadm --grow /dev/md0 --bitmap=internal
+>> mdadm: failed to set internal bitmap.
+>>
+>> # dmesg
+>> md: couldn't update array info. -16
+>>
+>>
+>> So, either I don't understand the manual, or there are more caveats in 
+>> it.
 
-Check: http://lkml.org/lkml/2007/6/17/235
+(...)
+
+> Check: http://lkml.org/lkml/2007/6/17/235
+
+It's an external bitmap; I'd prefer an internal one, as my root 
+filesystem is on a flash-IDE disk.
+
+However, let's try the external bitmap:
+
+# mdadm --grow /dev/md0 --bitmap=/bitmapfile
+mdadm: Cannot set bitmap file for /dev/md0: Device or resource busy
+
+
+So, it also fails. Perhaps because the array still rebuilds?
+
+A 95644 byte /bitmapfile was created.
+
+
+I'll try again when the array is done with rebuilding. According to 
+/proc/mdstat, it would be 6 more hours.
+
+
+-- 
+Tomasz Chmielewski
+http://wpkg.org
