@@ -1,93 +1,158 @@
-From: "Greg Nicholson" <d0gz.net@gmail.com>
-Subject: Re: Raid5 Reshape gone wrong, please help
-Date: Thu, 23 Aug 2007 10:06:50 -0500
-Message-ID: <c92bcddf0708230806m4da9466dod5f38409b2d13dfc@mail.gmail.com>
-References: <c92bcddf0708171826n5991b3ffw1094e0e8c44c97e8@mail.gmail.com>
-	 <18118.46141.966406.577626@notabene.brown>
-	 <c92bcddf0708180837y4d92d2b4x3a4308e77b515ab3@mail.gmail.com>
-	 <18120.9950.578786.624453@notabene.brown>
-	 <c92bcddf0708190845k485a8460q609b16a8795bc288@mail.gmail.com>
-	 <c92bcddf0708191944x4aab7770ga6815210109dca6f@mail.gmail.com>
-	 <c92bcddf0708201909w2534c25du6282fd661ed838f5@mail.gmail.com>
-	 <c92bcddf0708230804g2e3fb7ev4e5d1a13814d4d0f@mail.gmail.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: [patch 1/1] md: Software Raid autodetect dev list not array
+Date: Fri, 24 Aug 2007 13:37:29 +1000
+Message-ID: <18126.21113.981032.286298@notabene.brown>
+References: <200708222058.45480.mjevans1983@comcast.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <c92bcddf0708230804g2e3fb7ev4e5d1a13814d4d0f@mail.gmail.com>
-Content-Disposition: inline
+In-Reply-To: message from Michael J. Evans on Wednesday August 22
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: "Michael J. Evans" <mjevans1983@comcast.net>
+Cc: Ingo Molnar <mingo@redhat.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, "Michael J . Evans" <mjevans1983@gmail.com>
 List-Id: linux-raid.ids
 
-On 8/23/07, Greg Nicholson <d0gz.net@gmail.com> wrote:
-> <Trimming tons of detail, but keeping the thread>
->
-> OK.... I've reproduced the original issue on a seperate box.
-> 2.6.23-rc3 does not like to grow Raid 5 arrays.  MDadm 2.6.3
->
-> mdadm --add /dev/md0 /dev/sda1
-> mdadm -G --backup-file=/root/backup.raid.file /dev/md0
->
-> (Yes, I added the backup-file this time... just to be sure.)
->
-> Mdadm began the grow, and stopped in the critical section, or right
-> after creating the backup... Not sure which.  Reboot.
->
-> Refused to start the array.  So...
->
->  mdadm -A /dev/md0 /dev/sd[abdefg]1
->
-> and we have in /proc/mdstat:
->
-> Personalities : [raid6] [raid5] [raid4]
-> md0 : active raid5 sdg1[0] sda1[5] sdf1[4] sdd1[3] sdb1[2] sde1[1]
->       1953535488 blocks super 0.91 level 5, 128k chunk, algorithm 2
-> [6/6] [UUUUUU]
->       [>....................]  reshape =  0.0% (512/488383872)
-> finish=378469.4min speed=0K/sec
->
-> unused devices: <none>
->
-> And it's sat there without change for the past 2 hours.  Now, I have a
-> backup, so frankly, I'm about to blow away the array and just recreate
-> it, but I thought you should know.
->
-> I've got the stripe_cache_size at 8192... 256 and 1024 don't change anything.
->
+On Wednesday August 22, mjevans1983@comcast.net wrote:
+> From: Michael J. Evans <mjevans1983@gmail.com>
+> 
+> In current release kernels the md module (Software RAID) uses a static array
+>  (dev_t[128]) to store partition/device info temporarily for autostart.
+> 
+> This patch replaces that static array with a list.
 
-Forgot the DMESG output:
+I must admit that I'm not very keen on this.
+I would much rather that in-kernel autodetect were deprecated rather
+than enhanced.
 
-md: bind<sde1>
-md: bind<sdb1>
-md: bind<sdd1>
-md: bind<sdf1>
-md: bind<sda1>
-md: bind<sdg1>
-md: md0: raid array is not clean -- starting background reconstruction
-raid5: reshape will continue
-raid5: device sdg1 operational as raid disk 0
-raid5: device sda1 operational as raid disk 5
-raid5: device sdf1 operational as raid disk 4
-raid5: device sdd1 operational as raid disk 3
-raid5: device sdb1 operational as raid disk 2
-raid5: device sde1 operational as raid disk 1
-raid5: allocated 6293kB for md0
-raid5: raid level 5 set md0 active with 6 out of 6 devices, algorithm 2
-RAID5 conf printout:
- --- rd:6 wd:6
- disk 0, o:1, dev:sdg1
- disk 1, o:1, dev:sde1
- disk 2, o:1, dev:sdb1
- disk 3, o:1, dev:sdd1
- disk 4, o:1, dev:sdf1
- disk 5, o:1, dev:sda1
-...ok start reshape thread
-md: reshape of RAID array md0
-md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
-md: using maximum available idle IO bandwidth (but not more than
-200000 KB/sec) for reshape.
-md: using 128k window, over a total of 488383872 blocks.
+Just use 'mdadm' in an initrd, or during normal boot, to assemble all
+your arrays.
 
-Looks good, but it doesn't actually do anything.
+However.....
+
+> =============================================================
+> --- linux/drivers/md/md.c.orig	2007-08-21 03:19:42.511576248 -0700
+> +++ linux/drivers/md/md.c	2007-08-21 04:30:09.775525710 -0700
+> @@ -24,4 +24,6 @@
+> 
+> +   - autodetect dev list not array: Michael J. Evans <mjevans1983@gmail.com>
+> +
+>     This program is free software; you can redistribute it and/or modify
+>     it under the terms of the GNU General Public License as published by
+>     the Free Software Foundation; either version 2, or (at your option)
+> @@ -5752,13 +5754,25 @@ void md_autodetect_dev(dev_t dev)
+>   * Searches all registered partitions for autorun RAID arrays
+>   * at boot time.
+>   */
+> -static dev_t detected_devices[128];
+> -static int dev_cnt;
+> +
+> +static LIST_HEAD(all_detected_devices);
+> +/* FIXME : Should these 4 lines instead go in to include/linux/raid/md_k.h ? 
+
+No.  No-one outside this file uses them, so they are fine where they
+are.
+
+> */
+> +struct detected_devices_node {
+> +	struct list_head list;
+> +	dev_t dev;
+> +};
+>  
+>  void md_autodetect_dev(dev_t dev)
+>  {
+> -	if (dev_cnt >= 0 && dev_cnt < 127)
+> -		detected_devices[dev_cnt++] = dev;
+> +	struct detected_devices_node *node_detected_dev;
+> +	node_detected_dev = kzalloc(sizeof(*node_detected_dev), GFP_KERNEL);\
+> +	if (node_detected_dev) {
+> +		node_detected_dev->dev = dev;
+> +		list_add(&node_detected_dev->list, &all_detected_devices);
+
+Probably list_add_tail would be better so the ordering is the same as
+it was before?
+
+
+> +	} else {
+> +		printk(KERN_CRIT "md: kzAlloc node failed, skipping device."
+> +				 " : 0x%p.\n", node_detected_dev);
+> +	}
+
+
+
+>  }
+>  
+>  
+> @@ -5765,7 +5779,13 @@ static void autostart_arrays(int part)
+>  static void autostart_arrays(int part)
+>  {
+>  	mdk_rdev_t *rdev;
+> -	int i;
+> +	struct detected_devices_node *node_detected_dev;
+> +	dev_t dev;
+> +	int i_scanned, i_passed, i_loops;
+> +	signed int i_found;
+> +	i_scanned = 0;
+> +	i_passed = 0;
+> +	i_loops = 0;
+
+i_passed is never used.
+
+And what is the point of i_loops (and i_scanned)?  The comments
+at the top of the patch should explain this if there is a good reason.
+
+>  
+>  	printk(KERN_INFO "md: Autodetecting RAID arrays.\n");
+>  
+> @@ -5772,3 +5792,11 @@ static void autostart_arrays(int part)
+> -	for (i = 0; i < dev_cnt; i++) {
+> -		dev_t dev = detected_devices[i];
+> -
+> +		/* FIXME: max 'int' #DEFINEd somewhere?  not   0x7FFFFFFF ? */
+> +	while (!list_empty(&all_detected_devices) && i_loops < 0x7FFFFFFF) {
+> +		i_scanned++;
+> +		node_detected_dev = NULL;
+> +		node_detected_dev = list_entry(all_detected_devices.next,
+> +					struct detected_devices_node, list);
+> +		if (node_detected_dev) {
+
+list_entry will *never* return NULL.   It simply doesn't pointer
+arithmetic.  (Well, I guess it could return NULL if it was passed
+NULL, and the struct-offset were 0, but that isn't the case here).
+
+So you don't need this 'if' at all.
+
+> +			list_del(&node_detected_dev->list);
+> +			dev = node_detected_dev->dev;
+> +			kfree(node_detected_dev);
+> +		/* Indent is now off by one, but the old code is after this. */
+
+so you don't need to worrying about indents.
+
+
+> @@ -5781,8 +5809,16 @@ static void autostart_arrays(int part)
+>  			continue;
+>  		}
+>  		list_add(&rdev->same_set, &pending_raid_disks);
+> +		/* Indent is now off by one, but the old code is above this. */
+> +
+> +		} else {
+> +			printk(KERN_CRIT "md: Invalid list node, skipping.\n");
+> +		}
+> +		i_loops++;
+>  	}
+> -	dev_cnt = 0;
+> +
+> +	printk(KERN_INFO "md: Passes %d : Scanned %d and added %d devices.\n",
+> +						i_loops, i_scanned, i_passed);
+>  
+>  	autorun_devices(part);
+>  }
+
+
+I'm not dead-set against the change, and if you tidy it up I'll
+probably accept it, but I really think you would be better off skipping
+the in-kernel autodetect stuff altogether and use mdadm to assemble
+your arrays.
+
+NeilBrown
