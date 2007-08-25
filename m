@@ -1,57 +1,97 @@
-From: Tomasz Chmielewski <mangoo@wpkg.org>
-Subject: Re: recovery starts from 0 after reboot - normal?
-Date: Fri, 24 Aug 2007 13:59:01 +0200
-Message-ID: <46CEC805.6010009@wpkg.org>
-References: <46CEBEED.1060209@wpkg.org> <Pine.LNX.4.64.0708240721280.18608@p34.internal.lan> <46CEC231.1070407@wpkg.org> <46CEC51B.10105@wpkg.org> <Pine.LNX.4.64.0708240748140.18608@p34.internal.lan>
+From: "Mike Snitzer" <snitzer@gmail.com>
+Subject: Re: detecting read errors after RAID1 check operation
+Date: Sat, 25 Aug 2007 10:27:46 -0400
+Message-ID: <170fa0d20708250727j21b6e65ds8c7fc5fe9f20bcde@mail.gmail.com>
+References: <18117.838.460416.573228@notabene.brown>
+	 <28851.1187386297@mdt.ecitele.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0708240748140.18608@p34.internal.lan>
+In-Reply-To: <28851.1187386297@mdt.ecitele.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: Linux-Raid <linux-raid@vger.kernel.org>
+To: Neil Brown <neilb@suse.de>
+Cc: Mike Accetta <maccetta@laurelnetworks.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Justin Piszcz schrieb:
+On 8/17/07, Mike Accetta <maccetta@laurelnetworks.com> wrote:
+>
+> Neil Brown writes:
+> > On Wednesday August 15, maccetta@laurelnetworks.com wrote:
+> > > Neil Brown writes:
+> > > > On Wednesday August 15, maccetta@laurelnetworks.com wrote:
+> > > > >
+> > > ...
+> > > This happens in our old friend sync_request_write()?  I'm dealing with
+> >
+> > Yes, that would be the place.
+> >
+> > > ...
+> > > This fragment
+> > >
+> > >     if (j < 0 || test_bit(MD_RECOVERY_CHECK, &mddev->recovery)) {
+> > >             sbio->bi_end_io = NULL;
+> > >             rdev_dec_pending(conf->mirrors[i].rdev, mddev);
+> > >     } else {
+> > >             /* fixup the bio for reuse */
+> > >             ...
+> > >     }
+> > >
+> > > looks suspicously like any correction attempt for 'check' is being
+> > > short-circuited to me, regardless of whether or not there was a read
+> > > error.  Actually, even if the rewrite was not being short-circuited,
+> > > I still don't see the path that would update 'corrected_errors' in this
+> > > case.  There are only two raid1.c sites that touch 'corrected_errors', one
+> > > is in fix_read_errors() and the other is later in sync_request_write().
+> > > With my limited understanding of how this all works, neither of these
+> > > paths would seem to apply here.
+> >
+> > hmmm.... yes....
+> > I guess I was thinking of the RAID5 code rather than the RAID1 code.
+> > It doesn't do the right thing does it?
+> > Maybe this patch is what we need.  I think it is right.
+> >
+> > Thanks,
+> > NeilBrown
+> >
+> >
+> > Signed-off-by: Neil Brown <neilb@suse.de>
+> >
+> > ### Diffstat output
+> >  ./drivers/md/raid1.c |    3 ++-
+> >  1 file changed, 2 insertions(+), 1 deletion(-)
+> >
+> > diff .prev/drivers/md/raid1.c ./drivers/md/raid1.c
+> > --- .prev/drivers/md/raid1.c  2007-08-16 10:29:58.000000000 +1000
+> > +++ ./drivers/md/raid1.c      2007-08-17 12:07:35.000000000 +1000
+> > @@ -1260,7 +1260,8 @@ static void sync_request_write(mddev_t *
+> >                                       j = 0;
+> >                               if (j >= 0)
+> >                                       mddev->resync_mismatches += r1_bio->sec
+> > tors;
+> > -                             if (j < 0 || test_bit(MD_RECOVERY_CHECK, &mddev
+> > ->recovery)) {
+> > +                             if (j < 0 || (test_bit(MD_RECOVERY_CHECK, &mdde
+> > v->recovery)
+> > +                                           && text_bit(BIO_UPTODATE, &sbio->
+> > bi_flags))) {
+> >                                       sbio->bi_end_io = NULL;
+> >                                       rdev_dec_pending(conf->mirrors[i].rdev,
+> >  mddev);
+> >                               } else {
+>
+> I tried this (with the typo fixed) and it indeed issues a re-write.
+> However, it doesn't seem to do anything with the corrected errors
+> count if the rewrite succeeds.  Since end_sync_write() is only used one
+> other place when !In_sync, I tried the following and it seems to work
+> to get the error count updated.  I don't know whether this belongs in
+> end_sync_write() but I'd think it needs to come after the write actually
+> succeeds so that seems like the earliest it could be done.
 
->> According to the fine manual, BITMAP CHANGES belong to the grow mode.
->> So, let's try to do what the manual says - try to add a bitmap to the 
->> active array:
->>
->>
->> # mdadm --grow /dev/md0 --bitmap=internal
->> mdadm: failed to set internal bitmap.
->>
->> # dmesg
->> md: couldn't update array info. -16
->>
->>
->> So, either I don't understand the manual, or there are more caveats in 
->> it.
+Neil,
 
-(...)
+Any feedback on Mike's patch?
 
-> Check: http://lkml.org/lkml/2007/6/17/235
-
-It's an external bitmap; I'd prefer an internal one, as my root 
-filesystem is on a flash-IDE disk.
-
-However, let's try the external bitmap:
-
-# mdadm --grow /dev/md0 --bitmap=/bitmapfile
-mdadm: Cannot set bitmap file for /dev/md0: Device or resource busy
-
-
-So, it also fails. Perhaps because the array still rebuilds?
-
-A 95644 byte /bitmapfile was created.
-
-
-I'll try again when the array is done with rebuilding. According to 
-/proc/mdstat, it would be 6 more hours.
-
-
--- 
-Tomasz Chmielewski
-http://wpkg.org
+thanks,
+Mike
