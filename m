@@ -1,46 +1,206 @@
-From: Jan Engelhardt <jengelh@computergmbh.de>
-Subject: Re: [patch v2 1/1] md: Software Raid autodetect dev list not array
-Date: Sun, 26 Aug 2007 14:56:23 +0200 (CEST)
-Message-ID: <Pine.LNX.4.64.0708261453450.15614@fbirervta.pbzchgretzou.qr>
-References: <200708222058.45480.mjevans1983@comcast.net>
- <18126.21113.981032.286298@notabene.brown> <200708260451.24868.mjevans1983@comcast.net>
+From: Abe Skolnik <abe_skolnik@yahoo.com>
+Subject: Patch for boot-time assembly of v1.x-metadata-based soft (MD) arrays
+Date: Sun, 26 Aug 2007 06:37:47 -0700 (PDT)
+Message-ID: <619968.4419.qm@web33607.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753182AbXHZM4i@vger.kernel.org>
-In-Reply-To: <200708260451.24868.mjevans1983@comcast.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Michael J. Evans" <mjevans1983@comcast.net>
-Cc: Neil Brown <neilb@suse.de>, Ingo Molnar <mingo@redhat.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, "Michael J . Evans" <mjevans1983@gmail.com>
+Content-Type: multipart/mixed; boundary="0-1690809641-1188135467=:4419"
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: neilb@suse.de
 List-Id: linux-raid.ids
 
+--0-1690809641-1188135467=:4419
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
+Content-Id: 
+Content-Disposition: inline
 
-On Aug 26 2007 04:51, Michael J. Evans wrote:
-> {
->-	if (dev_cnt >= 0 && dev_cnt < 127)
->-		detected_devices[dev_cnt++] = dev;
->+	struct detected_devices_node *node_detected_dev;
->+	node_detected_dev = kzalloc(sizeof(*node_detected_dev), GFP_KERNEL);\
+Dear Mr./Dr./Prof. Brown et al,
 
-What's the \ good for, besides escaping the newline
-that is ignored as whitespace anyway? :-)
+I recently had the unpleasant experience of creating an MD array for
+the purpose of booting off it and then not being able to do so.  Since
+I had already made changes to the array's contents relative to that
+which I cloned it from, I did not want to reformat the array and
+re-clone it just to bring it down to the old 0.90 metadata format so
+that I would be able to boot off it, so I searched for a solution, and
+I found it.
 
->@@ -5772,3 +5790,8 @@ static void autostart_arrays(int part)
->-	for (i = 0; i < dev_cnt; i++) {
->-		dev_t dev = detected_devices[i];
->-
->+		/* FIXME: max 'int' #DEFINEd somewhere?  not   0x7FFFFFFF ? */
->+	while (!list_empty(&all_detected_devices) && i_scanned < 0x7FFFFFFF) {
+First I tried the patch (written by Neil Brown) which can be seen at...
+  <http://www.issociate.de/board/post/277868/>
 
-I doubt someone really has _that_ many devices. Of course, to be on the
-safer side, make it an unsigned int. That way, people could put in about
-0xFFFFFFFE devs (which is even less likely than 0x7FFFFFFF)
+That patch did not work as-is, but with some more hacking, I got it
+working.  I then cleaned up my work and added relevant comments.
 
->+		i_scanned++;
->+		node_detected_dev = list_entry(all_detected_devices.next,
->+					struct detected_devices_node, list);
->+		list_del(&node_detected_dev->list);
->+		dev = node_detected_dev->dev;
->+		kfree(node_detected_dev);
+I know that Mr./Dr./Prof. Brown is against in-kernel boot-time MD
+assembly and prefers init[rd/ramfs], but I prefer in-kernel assembly,
+and I think several other people do too.  Since this patch does not
+(AFAIK) disable the init[rd/ramfs] way of bringing up MDs in boot-time,
+I hope that this patch will be accepted and submitted up-stream for
+future inclusion in the mainline kernel.org kernel distribution.
+This way kernel users can choose their MD assembly strategy at will
+without having to restrict themselves to the old metadata format.
 
-	Jan
--- 
+I hope that this message finds all those who read it doing well and
+feeling fine.
+
+Sincerely,
+
+Abe Skolnik
+
+P.S.  Mr./Dr./Prof. Brown, in case you read this:  thanks!
+      And if you want your name removed from the code, just say so.
+
+--0-1690809641-1188135467=:4419
+Content-Type: application/octet-stream; name="add-ability-to-start-MDs-with-persistent-superblock-v1.x---update-against-2.6.22.4_.patch"
+Content-Transfer-Encoding: base64
+Content-Description: 3723671779-add-ability-to-start-MDs-with-persistent-superblock-v1.x---update-against-2.6.22.4_.patch
+Content-Disposition: attachment; filename="add-ability-to-start-MDs-with-persistent-superblock-v1.x---update-against-2.6.22.4_.patch"
+
+LS0tIGluaXQvZG9fbW91bnRzX21kLmNfX19wbGFpbi12YW5pbGxhX2tlcm5l
+bC5vcmdfMi42LjIyLjQJU3VuIEF1ZyAyNiAwMTowMzowNCAyMDA3CisrKyBp
+bml0L2RvX21vdW50c19tZC5jCVN1biBBdWcgMjYgMDk6MDI6MjEgMjAwNwpA
+QCAtNywyNiArNyw2MSBAQAogICogV2hlbiBtZCAoYW5kIGFueSByZXF1aXJl
+IHBlcnNvbmFsaXRpZXMpIGFyZSBjb21waWxlZCBpbnRvIHRoZSBrZXJuZWwK
+ICAqIChub3QgYSBtb2R1bGUpLCBhcnJheXMgY2FuIGJlIGFzc2VtYmxlcyBh
+cmUgYm9vdCB0aW1lIHVzaW5nIHdpdGggQVVUT0RFVEVDVAogICogd2hlcmUg
+c3BlY2lhbGx5IG1hcmtlZCBwYXJ0aXRpb25zIGFyZSByZWdpc3RlcmVkIHdp
+dGggbWRfYXV0b2RldGVjdF9kZXYoKSwKICAqIGFuZCB3aXRoIE1EX0JPT1Qg
+d2hlcmUgZGV2aWNlcyB0byBiZSBjb2xsZWN0ZWQgYXJlIGdpdmVuIG9uIHRo
+ZSBib290IGxpbmUKICAqIHdpdGggbWQ9Li4uLi4KKyAqCiAgKiBUaGUgY29k
+ZSBmb3IgdGhhdCBpcyBoZXJlLgogICovCiAKKworLyoKKyAqIEJvb3QgcGFy
+YW1ldGVycworICogLS0tLS0tLS0tLS0tLS0tCisgKiBleGFtcGxlICMxOiBt
+ZD0wLDEsL2Rldi9hLC9kZXYvYiAtPiBtZDAsIGxldmVsIDEKKyAqICAgICAg
+bWVhbnM6IHJlcXVlc3QgYm9vdC10aW1lIGFzc2VtYmx5IG9mIG1kMCB0aGF0
+IHdhcyBjcmVhdGVkIGluIHRoZSBhbmNpZW50CisgKiAgICAgICAgICAgICBu
+b24tcGVyc2lzdGVudC1zdXBlcmJsb2NrIGZhc2hpb24gdXNpbmcgUkFJRCBs
+ZXZlbCAxLAorICogICAgICAgICAgICAgdXNlIC9kZXYvYSBhbmQgL2Rldi9i
+IGFzIGNvbXBvbmVudHMKKyAqCisgKiBleGFtcGxlICMyOiBtZD0wLHY/LC9k
+ZXYvYSwvZGV2L2IvLC9kZXYvLi4uCisgKiAgICAgIG1lYW5zOiByZXF1ZXN0
+IGJvb3QtdGltZSBhc3NlbWJseSBvZiBtZDAsIHBlcnNpc3RlbnQgc3VwZXJi
+bG9jayBmb3JtYXQKKyAqICAgICAgICAgICAgIHZlcnNpb24gPyBpbnN0ZWFk
+IG9mIHRoZSBkZWZhdWx0IG9mIHJlcXVpcmluZyBfc3BlY2lmaWNhbGx5Xwor
+ICogICAgICAgICAgICAgdmVyc2lvbiAwLjkwIChubyBhdXRvLWRldGVjdCBv
+ZiB2ZXJzaW9uIHlldCksIFJBSUQgbGV2ZWwgaXMKKyAqICAgICAgICAgICAg
+IGF1dG8tZGV0ZWN0ZWQgZnJvbSB0aGUgc3VwZXJibG9jayhzKSwgdXNlIC9k
+ZXYvYSBhbmQgL2Rldi9iIGFuZAorICogICAgICAgICAgICAgL2Rldi8uLi4g
+YXMgY29tcG9uZW50czsgPyBtYXkgYmUgIjEiIChzeW5vbnltIGZvciAiMS4w
+IiksICIxLjAiLAorICogICAgICAgICAgICAgIjEuMSIsIG9yICIxLjIiLgor
+ICovCisgCisgLyoKKyAgKiBVc2VyIG5vdGVzCisgICogLS0tLS0tLS0tLQor
+ICAqICMxOiBmb3Igbm93LCB0aGUga2VybmVsIHRyaWVzIHYwLjkwIGZpcnN0
+IHJlZ2FyZGxlc3MsIHNvLCBmb3IgdjEueCBtZXRhZGF0YSwKKyAgKiAgICAg
+ZXhwZWN0IHNwdXJpb3VzICJpbnZhbGlkIHJhaWQgc3VwZXJibG9jayIgZXJy
+b3JzLCBldmVuIHdoZW4gaXQgd29ya3MuCisgICoKKyAgKiAjMjogdGhlIG9y
+ZGVyIG9mIGNvbXBvbmVudCBzcGVjaWZpY2F0aW9uIHNlZW1zIHRvIG1hdHRl
+ciBmb3Igc29tZSByZWFzb24uCisgICogICAgIElmIGF0IGZpcnN0IHlvdSBk
+b24ndCBzdWNjZWVkLCByZS1vcmRlciB5b3VyIHBhcmFtZXRlcnMgYW5kIHRy
+eSBhZ2Fpbi4KKyAgKiAgICAgSSAoQWJlKSBzdWdnZXN0IHRyeWluZyBfYWxs
+XyB0aGUgcG9zc2libGUgb3JkZXJpbmdzIG9mIHlvdXIgUkFJRCdzCisgICog
+ICAgIGNvbXBvbmVudHMgYmVmb3JlIGdpdmluZyB1cCBvbiBiZWluZyBhYmxl
+IHRvIGFzc2VtYmxlIGF0IGJvb3QtdGltZQorICAqICAgICB3aXRob3V0IGFu
+IGluaXRyZC9pbml0cmFtZnMuCisgICoKKyAgKi8KKyAgCiBzdGF0aWMgaW50
+IF9faW5pdGRhdGEgcmFpZF9ub2F1dG9kZXRlY3QsIHJhaWRfYXV0b3BhcnQ7
+CiAKIHN0YXRpYyBzdHJ1Y3QgewogCWludCBtaW5vcjsKIAlpbnQgcGFydGl0
+aW9uZWQ7CiAJaW50IGxldmVsOwogCWludCBjaHVuazsKKwlpbnQgdmVyc19t
+YWpvciwgdmVyc19taW5vcjsKIAljaGFyICpkZXZpY2VfbmFtZXM7CiB9IG1k
+X3NldHVwX2FyZ3NbMjU2XSBfX2luaXRkYXRhOwogCiBzdGF0aWMgaW50IG1k
+X3NldHVwX2VudHMgX19pbml0ZGF0YTsKIAogZXh0ZXJuIGludCBtZHBfbWFq
+b3I7CisKIC8qCiAgKiBQYXJzZSB0aGUgY29tbWFuZC1saW5lIHBhcmFtZXRl
+cnMgZ2l2ZW4gb3VyIGtlcm5lbCwgYnV0IGRvIG5vdAogICogYWN0dWFsbHkg
+dHJ5IHRvIGludm9rZSB0aGUgTUQgZGV2aWNlIG5vdzsgdGhhdCBpcyBoYW5k
+bGVkIGJ5CiAgKiBtZF9zZXR1cF9kcml2ZSBhZnRlciB0aGUgbG93LWxldmVs
+IGRpc2sgZHJpdmVycyBoYXZlIGluaXRpYWxpc2VkLgogICoKQEAgLTQyLDEx
+ICs3NywxNSBAQAogICogICAgICAgICAgICAgZWxlbWVudHMgaW4gZGV2aWNl
+LWxpc3QgYXJlIHJlYWQgYnkgbmFtZV90b19rZGV2X3Qgc28gY2FuIGJlCiAg
+KiAgICAgICAgICAgICBhIGhleCBudW1iZXIgb3Igc29tZXRoaW5nIGxpa2Ug
+L2Rldi9oZGExIC9kZXYvc2RiCiAgKiAyMDAxLTA2LTAzOiBEYXZlIENpbmVn
+ZSA8ZGNpbmVnZUBwc3ljaG9zaXMuY29tPgogICoJCVNoaWZ0ZWQgbmFtZV90
+b19rZGV2X3QoKSBhbmQgcmVsYXRlZCBvcGVyYXRpb25zIHRvIG1kX3NldF9k
+cml2ZSgpCiAgKgkJZm9yIGxhdGVyIGV4ZWN1dGlvbi4gUmV3cm90ZSBzZWN0
+aW9uIHRvIG1ha2UgZGV2ZnMgY29tcGF0aWJsZS4KKyAqCisgKiAyMDA3LTgt
+MjY6IHBhdGNoZWQgYnkgQWJlIFNrb2xuaWsgYmFzZWQgb24gaW5pdGlhbCBj
+b2RlIGJ5IE5laWwgQnJvd24KKyAqICAgICAgICAgICAgdG8gYWxsb3cgYm9v
+dC10aW1lIGFzc2VtYmxpbmcgb2YgTURzIGJhc2VkIG9uIHYxLnggc3VwZXJi
+bG9ja3MKICAqLworCiBzdGF0aWMgaW50IF9faW5pdCBtZF9zZXR1cChjaGFy
+ICpzdHIpCiB7CiAJaW50IG1pbm9yLCBsZXZlbCwgZmFjdG9yLCBmYXVsdCwg
+cGFydGl0aW9uZWQgPSAwOwogCWNoYXIgKnBlcm5hbWUgPSAiIjsKIAljaGFy
+ICpzdHIxOwpAQCAtNzIsMTIgKzExMSwxNyBAQAogCQlwcmludGsoS0VSTl9X
+QVJOSU5HICJtZDogbWQ9JXMlZCAtIHRvbyBtYW55IG1kIGluaXRpYWxpc2F0
+aW9uc1xuIiwgcGFydGl0aW9uZWQ/ImQiOiIiLCBtaW5vcik7CiAJCXJldHVy
+biAwOwogCX0KIAlpZiAoZW50ID49IG1kX3NldHVwX2VudHMpCiAJCW1kX3Nl
+dHVwX2VudHMrKzsKKwkJCisJbWRfc2V0dXBfYXJnc1tlbnRdLnZlcnNfbWFq
+b3IgPSAwOworCW1kX3NldHVwX2FyZ3NbZW50XS52ZXJzX21pbm9yID0gOTA7
+CisKIAlzd2l0Y2ggKGdldF9vcHRpb24oJnN0ciwgJmxldmVsKSkgewkvKiBS
+QUlEIGxldmVsICovCi0JY2FzZSAyOiAvKiBjb3VsZCBiZSAwIG9yIC0xLi4g
+Ki8KKwljYXNlIDI6CisJY2FzZSAxOgogCQlpZiAobGV2ZWwgPT0gMCB8fCBs
+ZXZlbCA9PSBMRVZFTF9MSU5FQVIpIHsKIAkJCWlmIChnZXRfb3B0aW9uKCZz
+dHIsICZmYWN0b3IpICE9IDIgfHwJLyogQ2h1bmsgU2l6ZSAqLwogCQkJCQln
+ZXRfb3B0aW9uKCZzdHIsICZmYXVsdCkgIT0gMikgewogCQkJCXByaW50ayhL
+RVJOX1dBUk5JTkcgIm1kOiBUb28gZmV3IGFyZ3VtZW50cyBzdXBwbGllZCB0
+byBtZD0uXG4iKTsKIAkJCQlyZXR1cm4gMDsKQEAgLTg4LDE5ICsxMzIsNDcg
+QEAKIAkJCQlwZXJuYW1lID0gImxpbmVhciI7CiAJCQllbHNlCiAJCQkJcGVy
+bmFtZSA9ICJyYWlkMCI7CiAJCQlicmVhazsKIAkJfQotCQkvKiBGQUxMIFRI
+Uk9VR0ggKi8KLQljYXNlIDE6IC8qIHRoZSBmaXJzdCBkZXZpY2UgaXMgbnVt
+ZXJpYyAqLwotCQlzdHIgPSBzdHIxOwotCQkvKiBGQUxMIFRIUk9VR0ggKi8K
+LQljYXNlIDA6CisJICBicmVhazsKKworCWNhc2UgMDogLy8gYSBudW1iZXIg
+d2FzIG5vdCBmb3VuZCBhdCB0aGUgY3VycmVudCBwb3NpdGlvbiwgaS5lLiBu
+byBSQUlEIGxldmVsIHdhcyBzcGVjaWZpZWQgYWZ0ZXIgdGhlIGRldmljZSBt
+aW5vciBudW1iZXIKKyAgCiAJCW1kX3NldHVwX2FyZ3NbZW50XS5sZXZlbCA9
+IExFVkVMX05PTkU7CiAJCXBlcm5hbWU9InN1cGVyLWJsb2NrIjsKIAl9CiAK
+KyAgIGlmIChzdHJbMF09PSd2JyAmJiBzdHJbMV0gPT0gJzEnKSB7CisKKyAg
+ICAgbWRfc2V0dXBfYXJnc1tlbnRdLnZlcnNfbWFqb3IgPSAxOworICAgICBt
+ZF9zZXR1cF9hcmdzW2VudF0udmVyc19taW5vciA9IDA7IC8vIHRoZSBkZWZh
+dWx0IHN1Yi12ZXJzaW9uIGlzIHplcm8KKworICAgICBpZiAoc3RyWzJdPT0n
+LicpIHsKKyAgICAgICBzd2l0Y2ggKHN0clszXSkgeworICAgICAgICAgY2Fz
+ZSAnMCc6CisgICAgICAgICAgIG1kX3NldHVwX2FyZ3NbZW50XS52ZXJzX21p
+bm9yID0gMDsKKyAgICAgICAgICAgYnJlYWs7CisgICAgICAgICBjYXNlICcx
+JzoKKyAgICAgICAgICAgbWRfc2V0dXBfYXJnc1tlbnRdLnZlcnNfbWlub3Ig
+PSAxOworICAgICAgICAgICBicmVhazsKKyAgICAgICAgIGNhc2UgJzInOiAK
+KyAgICAgICAgICAgbWRfc2V0dXBfYXJnc1tlbnRdLnZlcnNfbWlub3IgPSAy
+OworICAgICAgICAgICBicmVhazsKKyAgICAgICAgIGRlZmF1bHQ6CisgICAg
+ICAgICAgIC8vIG1heWJlIHByaW50ayBhbiBlcnJvciBtc2cuPworICAgICAg
+IH0gLy8gZW5kIG9mIHN3aXRjaCAoc3RyWzNdKQorICAgICB9IC8vIGVuZCBv
+ZiBpZiAoc3RyWzJdPT0nLicpCisKKyAgICAgLy8gd2luZCB0aGUgc3RyaW5n
+IHBvaW50ZXIgcGFzdCB0aGUgY29tbWEgYWZ0ZXIgdGhlIHZlcnNpb24gcGFy
+YW0uCisgICAgIHdoaWxlIChzdHJbMF0hPScsJyAmJiBzdHJbMF0gLyogY2hl
+Y2sgZm9yIG51bGwgdG9vICovICkgKytzdHI7CisgICAgIGlmIChzdHJbMF0p
+ICsrc3RyOyAvLyBwdXNoIHBhc3QgdGhlIGNvbW1hIGlmIHdlIGFyZSBub3Qg
+YXQgbnVsbAorICAgICAKKyAgIH0gLy8gZW5kIG9mIGlmIChzdHJbMF09PSd2
+JyAmJiBzdHJbMV0gPT0gJzEnKQorCisJIHByaW50ayhLRVJOX0lORk8gIm1k
+OiBzdXBlcmJsb2NrIHZlcnNpb24gaXMgYXNzdW1lZCB0byBiZSAlZC4lZCA9
+PT1cbiIsbWRfc2V0dXBfYXJnc1tlbnRdLnZlcnNfbWFqb3IsbWRfc2V0dXBf
+YXJnc1tlbnRdLnZlcnNfbWlub3IpOworCiAJcHJpbnRrKEtFUk5fSU5GTyAi
+bWQ6IFdpbGwgY29uZmlndXJlIG1kJWQgKCVzKSBmcm9tICVzLCBiZWxvdy5c
+biIsCiAJCW1pbm9yLCBwZXJuYW1lLCBzdHIpOwogCW1kX3NldHVwX2FyZ3Nb
+ZW50XS5kZXZpY2VfbmFtZXMgPSBzdHI7CiAJbWRfc2V0dXBfYXJnc1tlbnRd
+LnBhcnRpdGlvbmVkID0gcGFydGl0aW9uZWQ7CiAJbWRfc2V0dXBfYXJnc1tl
+bnRdLm1pbm9yID0gbWlub3I7CkBAIC0xMjAsMTAgKzE5MiwxMSBAQAogCQlp
+bnQgZmQ7CiAJCWludCBlcnIgPSAwOwogCQljaGFyICpkZXZuYW1lOwogCQlt
+ZHVfZGlza19pbmZvX3QgZGluZm87CiAJCWNoYXIgbmFtZVsxNl07CisJCW1k
+dV9hcnJheV9pbmZvX3QgYWluZm87CiAKIAkJbWlub3IgPSBtZF9zZXR1cF9h
+cmdzW2VudF0ubWlub3I7CiAJCXBhcnRpdGlvbmVkID0gbWRfc2V0dXBfYXJn
+c1tlbnRdLnBhcnRpdGlvbmVkOwogCQlkZXZuYW1lID0gbWRfc2V0dXBfYXJn
+c1tlbnRdLmRldmljZV9uYW1lczsKIApAQCAtMTcxLDIxICsyNDQsMjUgQEAK
+IAkJaWYgKGZkIDwgMCkgewogCQkJcHJpbnRrKEtFUk5fRVJSICJtZDogb3Bl
+biBmYWlsZWQgLSBjYW5ub3Qgc3RhcnQgIgogCQkJCQkiYXJyYXkgJXNcbiIs
+IG5hbWUpOwogCQkJY29udGludWU7CiAJCX0KLQkJaWYgKHN5c19pb2N0bChm
+ZCwgU0VUX0FSUkFZX0lORk8sIDApID09IC1FQlVTWSkgeworCisJCWFpbmZv
+LnJhaWRfZGlza3MgPSAwOyAvKiBmbGFnIGp1c3Qgc2V0dGluZyB2ZXJzaW9u
+ICovCisJCWFpbmZvLm1ham9yX3ZlcnNpb24gPSBtZF9zZXR1cF9hcmdzW2Vu
+dF0udmVyc19tYWpvcjsKKwkJYWluZm8ubWlub3JfdmVyc2lvbiA9IG1kX3Nl
+dHVwX2FyZ3NbZW50XS52ZXJzX21pbm9yOworCisJCWlmIChzeXNfaW9jdGwo
+ZmQsIFNFVF9BUlJBWV9JTkZPLCAobG9uZykmYWluZm8pID09IC1FQlVTWSkg
+ewogCQkJcHJpbnRrKEtFUk5fV0FSTklORwogCQkJICAgICAgICJtZDogSWdu
+b3JpbmcgbWQ9JWQsIGFscmVhZHkgYXV0b2RldGVjdGVkLiAoVXNlIHJhaWQ9
+bm9hdXRvZGV0ZWN0KVxuIiwKIAkJCSAgICAgICBtaW5vcik7CiAJCQlzeXNf
+Y2xvc2UoZmQpOwogCQkJY29udGludWU7CiAJCX0KIAogCQlpZiAobWRfc2V0
+dXBfYXJnc1tlbnRdLmxldmVsICE9IExFVkVMX05PTkUpIHsKIAkJCS8qIG5v
+bi1wZXJzaXN0ZW50ICovCi0JCQltZHVfYXJyYXlfaW5mb190IGFpbmZvOwog
+CQkJYWluZm8ubGV2ZWwgPSBtZF9zZXR1cF9hcmdzW2VudF0ubGV2ZWw7CiAJ
+CQlhaW5mby5zaXplID0gMDsKIAkJCWFpbmZvLm5yX2Rpc2tzID0wOwogCQkJ
+YWluZm8ucmFpZF9kaXNrcyA9MDsKIAkJCXdoaWxlIChkZXZpY2VzW2FpbmZv
+LnJhaWRfZGlza3NdKQpAQCAtMjc3LDUgKzM1NCw2IEBACiAJCQlzeXNfY2xv
+c2UoZmQpOwogCQl9CiAJfQogCW1kX3NldHVwX2RyaXZlKCk7CiB9CisK
+
+--0-1690809641-1188135467=:4419--
