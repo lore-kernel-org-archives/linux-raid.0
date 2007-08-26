@@ -1,153 +1,71 @@
-From: Randy Dunlap <randy.dunlap@oracle.com>
-Subject: Re: [patch v2 1/1] md: Software Raid autodetect dev list not array
-Date: Sun, 26 Aug 2007 09:56:51 -0700
-Message-ID: <20070826095651.75e92556.randy.dunlap@oracle.com>
-References: <200708222058.45480.mjevans1983@comcast.net>
-	<18126.21113.981032.286298@notabene.brown>
-	<200708260451.24868.mjevans1983@comcast.net>
+From: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
+Subject: Re: Patch for boot-time assembly of v1.x-metadata-based soft (MD)
+ arrays
+Date: Sun, 26 Aug 2007 11:57:41 -0700 (PDT)
+Message-ID: <Pine.LNX.4.64.0708261156040.30402@filesrv1.baby-dragons.com>
+References: <619968.4419.qm@web33607.mail.mud.yahoo.com>
+ <Pine.LNX.4.64.0708260946040.26771@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200708260451.24868.mjevans1983@comcast.net>
+In-Reply-To: <Pine.LNX.4.64.0708260946040.26771@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Michael J. Evans" <mjevans1983@comcast.net>
-Cc: Neil Brown <neilb@suse.de>, Ingo Molnar <mingo@redhat.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, "Michael J . Evans" <mjevans1983@gmail.com>
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: Abe Skolnik <abe_skolnik@yahoo.com>, linux-raid@vger.kernel.org, neilb@suse.de
 List-Id: linux-raid.ids
 
-On Sun, 26 Aug 2007 04:51:24 -0700 Michael J. Evans wrote:
+On Sun, 26 Aug 2007, Justin Piszcz wrote:
+> On Sun, 26 Aug 2007, Abe Skolnik wrote:
+>> Dear Mr./Dr./Prof. Brown et al,
+>> 
+>> I recently had the unpleasant experience of creating an MD array for
+>> the purpose of booting off it and then not being able to do so.  Since
+>> I had already made changes to the array's contents relative to that
+>> which I cloned it from, I did not want to reformat the array and
+>> re-clone it just to bring it down to the old 0.90 metadata format so
+>> that I would be able to boot off it, so I searched for a solution, and
+>> I found it.
+>> 
+>> First I tried the patch (written by Neil Brown) which can be seen at...
+>>  <http://www.issociate.de/board/post/277868/>
+>> 
+>> That patch did not work as-is, but with some more hacking, I got it
+>> working.  I then cleaned up my work and added relevant comments.
+>> 
+>> I know that Mr./Dr./Prof. Brown is against in-kernel boot-time MD
+>> assembly and prefers init[rd/ramfs], but I prefer in-kernel assembly,
+>> and I think several other people do too.  Since this patch does not
+>> (AFAIK) disable the init[rd/ramfs] way of bringing up MDs in boot-time,
+>> I hope that this patch will be accepted and submitted up-stream for
+>> future inclusion in the mainline kernel.org kernel distribution.
+>> This way kernel users can choose their MD assembly strategy at will
+>> without having to restrict themselves to the old metadata format.
+>> 
+>> I hope that this message finds all those who read it doing well and
+>> feeling fine.
+>> 
+>> Sincerely,
+>> 
+>> Abe Skolnik
+>> 
+>> P.S.  Mr./Dr./Prof. Brown, in case you read this:  thanks!
+>>      And if you want your name removed from the code, just say so.
+>> 
+>
+>> but I prefer in-kernel assembly,
+>> and I think several other people do too.
+> I concur with this statement, why go through the hassle of init[rd/ramfs] if 
+> we can just have it done in the kernel?
+>
+> Justin.
 
-> From: Michael J. Evans <mjevans1983@gmail.com>
-> 
-> In current release kernels the md module (Software RAID) uses a static array
->  (dev_t[128]) to store partition/device info temporarily for autostart.
-> 
-> This patch replaces that static array with a list.
-> 
-> Signed-off-by: Michael J. Evans <mjevans1983@gmail.com>
-> --- 
-> Version 2: Following Neil Brown's requests...
-> using list_add_tail, and corrected missing i_passed++;.
-> removed sections of code that would never be reached.
-> - -
-> The data/structures are only used within md.c, and very close together.
-> However I wonder if the structural information shouldn't go in to...
-> ../../include/linux/raid/md_k.h instead.
-> 
-> 
-> I discovered this (and that the devices are added as disks/partitions are
-> discovered at boot) while I was debugging why only one of my MD arrays would
-> come up whole, while all the others were short a disk.
-> 
-> I eventually discovered that it was enumerating through all of 9 of my 11 hds
-> (2 had only 4 partitions apiece) while the other 9 have 15 partitions
-> (I wanted 64 per drive...). The last partition of the 8th drive in my 9 drive
-> raid 5 sets wasn't added, thus making the final md array short both a parity
-> and data disk, and it was started later, elsewhere.
-> 
-> Subject: [patch 1/1] md: Software Raid autodetect dev list not array
-> 
-> SOFTWARE RAID (Multiple Disks) SUPPORT
-> P:	Ingo Molnar
-> M:	mingo@redhat.com
-> P:	Neil Brown
-> M:	neilb@suse.de
-> L:	linux-raid@vger.kernel.org
-> S:	Supported
-> Unless you have a reason NOT to do so, CC linux-kernel@vger.kernel.org.
-> 
-> 12: Has been tested with CONFIG_PREEMPT, CONFIG_DEBUG_PREEMPT,
->     CONFIG_DEBUG_SLAB, CONFIG_DEBUG_PAGEALLOC, CONFIG_DEBUG_MUTEXES,
->     CONFIG_DEBUG_SPINLOCK, CONFIG_DEBUG_SPINLOCK_SLEEP all simultaneously
->     enabled.
-> 
-> It has been tested with CONFIG_SMP set and unset (Different x86_64 systems).
-> It has been tested with CONFIG_PREEMPT set and unset (same system).
-> CONFIG_LBD isn't even an option in my .config file.
+ 	Motion seconded !-) .  I too agree with Abe & Justin .
+ 	I am not in favor with the init[rd/ramfs] layer of abstractions .
 
-It's not an option 64_BIT builds.
-
-> Note: between 2.6.22 and 2.6.23-rc3-git5
->                 rdev = md_import_device(dev,0, 0);
-> became
->                 rdev = md_import_device(dev,0, 90);
-> So the patch has been edited to patch around that line. (might be fuzzy)
-> 
-> Signed-off-by: Michael J. Evans <mjevans1983@gmail.com>
-> =============================================================
-> --- linux/drivers/md/md.c.orig	2007-08-21 03:19:42.511576248 -0700
-> +++ linux/drivers/md/md.c	2007-08-21 04:30:09.775525710 -0700
-> @@ -5752,13 +5754,24 @@ void md_autodetect_dev(dev_t dev)
->   * Searches all registered partitions for autorun RAID arrays
->   * at boot time.
->   */
-> -static dev_t detected_devices[128];
-> -static int dev_cnt;
-> +
-> +static LIST_HEAD(all_detected_devices);
-> +struct detected_devices_node {
-> +	struct list_head list;
-> +	dev_t dev;
-> +};
->  
->  void md_autodetect_dev(dev_t dev)
->  {
-> -	if (dev_cnt >= 0 && dev_cnt < 127)
-> -		detected_devices[dev_cnt++] = dev;
-> +	struct detected_devices_node *node_detected_dev;
-> +	node_detected_dev = kzalloc(sizeof(*node_detected_dev), GFP_KERNEL);\
-> +	if (node_detected_dev) {
-> +		node_detected_dev->dev = dev;
-> +		list_add_tail(&node_detected_dev->list, &all_detected_devices);
-> +	} else {
-> +		printk(KERN_CRIT "md: kzAlloc node failed, skipping device."
-> +				 " : 0x%p.\n", node_detected_dev);
-
-Is there any way to tell the user what device (or partition?) is
-bein skipped?  This printk should just print (confirm) that
-node_detected_dev is NULL.  Shouldn't it just print <dev> in
-major:minor format?
-
-> +	}
->  }
->  
->  
-> @@ -5765,7 +5778,12 @@ static void autostart_arrays(int part)
->  static void autostart_arrays(int part)
->  {
->  	mdk_rdev_t *rdev;
-> -	int i;
-> +	struct detected_devices_node *node_detected_dev;
-> +	dev_t dev;
-> +	int i_scanned, i_passed;
-> +	signed int i_found;
-
-Drop "signed", like the surrounding code.
-Leave a blank line between data declarations and beginning of code.
-
-> +	i_scanned = 0;
-> +	i_passed = 0;
->  
->  	printk(KERN_INFO "md: Autodetecting RAID arrays.\n");
->  
-> @@ -5772,3 +5790,8 @@ static void autostart_arrays(int part)
-> -	for (i = 0; i < dev_cnt; i++) {
-> -		dev_t dev = detected_devices[i];
-> -
-> +		/* FIXME: max 'int' #DEFINEd somewhere?  not   0x7FFFFFFF ? */
-
-include/linux/kernel.h has INT_MAX, UINT_MAX, LONG_MAX, ULONG_MAX,
-LLONG_MAX, ULLONG_MAX.
-
-> +	while (!list_empty(&all_detected_devices) && i_scanned < 0x7FFFFFFF) {
-> +		i_scanned++;
-> +		node_detected_dev = list_entry(all_detected_devices.next,
-> +					struct detected_devices_node, list);
-> +		list_del(&node_detected_dev->list);
-> +		dev = node_detected_dev->dev;
-> +		kfree(node_detected_dev);
-
-
----
-~Randy
-*** Remember to use Documentation/SubmitChecklist when testing your code ***
+ 		Twyl ,  JimL
+-- 
++-----------------------------------------------------------------+
+| James   W.   Laferriere | System   Techniques | Give me VMS     |
+| Network        Engineer | 663  Beaumont  Blvd |  Give me Linux  |
+| babydr@baby-dragons.com | Pacifica, CA. 94044 |   only  on  AXP |
++-----------------------------------------------------------------+
