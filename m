@@ -1,57 +1,78 @@
-From: "Williams, Dan J" <dan.j.williams@intel.com>
-Subject: RE: [md-accel PATCH 16/19] dmaengine: driver for the iop32x, iop33x, and iop13xx raid engines
-Date: Mon, 27 Aug 2007 12:31:10 -0700
-Message-ID: <0C7297FA1D2D244A9C7F6959C0BF1E52025B10E4@azsmsx413.amr.corp.intel.com>
-References: <20070627014823.18962.96398.stgit@dwillia2-linux.ch.intel.com> <20070627015155.18962.88413.stgit@dwillia2-linux.ch.intel.com> <c70ff3ad0708270611x5598fa9dlc3afa5f6fabd6563@mail.gmail.com> <c70ff3ad0708270614t6f17b38nfbdf84ace69b8d78@mail.gmail.com>
+From: "Dan Williams" <dan.j.williams@intel.com>
+Subject: Re: raid5:md3: kernel BUG , followed by , Silent halt .
+Date: Mon, 27 Aug 2007 15:11:00 -0700
+Message-ID: <e9c3a7c20708271511w239fa643q1d1745ed0d552eb@mail.gmail.com>
+References: <Pine.LNX.4.64.0707141658210.16611@filesrv1.baby-dragons.com>
+	 <Pine.LNX.4.64.0708181328510.14169@filesrv1.baby-dragons.com>
+	 <e9c3a7c20708201029l15e37d8eh9db6714be6a8e7b8@mail.gmail.com>
+	 <Pine.LNX.4.64.0708251903200.6971@filesrv1.baby-dragons.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
-In-Reply-To: <c70ff3ad0708270614t6f17b38nfbdf84ace69b8d78@mail.gmail.com>
+In-Reply-To: <Pine.LNX.4.64.0708251903200.6971@filesrv1.baby-dragons.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: saeed bishara <saeed.bishara@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, neilb@suse.de, "Nelson, Shannon" <shannon.nelson@intel.com>
+To: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
+Cc: linux-raid maillist <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-> From: saeed bishara [mailto:saeed.bishara@gmail.com]
-> Hi Dan,
-> I think you have a bug in this function, the list_splice_init adds the
-> new slots in the head of the chain_node, but you get the
-> old_chain_tail (latest descriptor) from the tail of the chain!!
-> 
->  > +static dma_cookie_t
->  > +iop_adma_tx_submit(struct dma_async_tx_descriptor *tx)
->  > +{
->  > +
->  > +       old_chain_tail = list_entry(iop_chan->chain.prev,
->  > +               struct iop_adma_desc_slot, chain_node);
->  > +       list_splice_init(&sw_desc->group_list, &old_chain_tail-
-> >chain_node);
->  > +
->  > +       /* fix up the hardware chain */
->  > +       iop_desc_set_next_desc(old_chain_tail, grp_start->phys);
->  > +
-[ dropped akpm, davem, jeff, and chris from the cc ]
+On 8/25/07, Mr. James W. Laferriere <babydr@baby-dragons.com> wrote:
+>         Hello Dan ,
+>
+> On Mon, 20 Aug 2007, Dan Williams wrote:
+> > On 8/18/07, Mr. James W. Laferriere <babydr@baby-dragons.com> wrote:
+> >>         Hello All ,  Here we go again .  Again attempting to do bonnie++ testing
+> >> on a small array .
+> >>         Kernel 2.6.22.1
+> >>         Patches involved ,
+> >>         IOP1 ,  2.6.22.1-iop1 for improved sequential write performance
+> >> (stripe-queue) ,  Dan Williams <dan.j.williams@intel.com>
+> >
+> > Hello James,
+> >
+> > Thanks for the report.
+> >
+> > I tried to reproduce this on my system, no luck.
+>         Possibly because there is significant hardware differances ?
+>         See 'lspci -v' below .sig .
+>
+> > However it looks
+> > like their is a potential race between 'handle_queue' and
+> > 'add_queue_bio'.  The attached patch moves these critical sections
+> > under spin_lock(&sq->lock), and adds some debugging output if this BUG
+> > triggers.  It also includes a fix for retry_aligned_read which is
+> > unrelated to this debug.
+> > --
+> > Dan
+>         Applied your patch .  The same 'kernel BUG at drivers/md/raid5.c:3689!'
+> messages appear (see attached) .  The system is still responsive with your
+> patch ,  the kernel crashed last time .  Tho the bonnie++ run is stuck in 'D' .
+> And doing a '> /md3/asdf'  stays hung even after passing the parent process a
+> 'kill -9' .
+>         Any further info You can think of I can/should ,  I will try to acquire
+> .  But I'll have to repeat these steps to attempt to get the same results .
+> I'll be shutting the system down after sending this off .
+>         Fyi ,  the previous 'BUG" without your patch was quite repeatable .
+>         I might have time over the next couple of weeks to be able to see if it
+> is as repatable as the last one .
+>
+>         Contents of /proc/mdstat for md3 .
+>
+> md3 : active raid6 sdx1[3] sdw1[2] sdv1[1] sdu1[0] sdt1[7](S) sds1[6] sdr1[5] sdq1[4]
+>        717378560 blocks level 6, 1024k chunk, algorithm 2 [7/7] [UUUUUUU]
+>        bitmap: 2/137 pages [8KB], 512KB chunk
+>
+>         Commands I ran that lead to the 'BUG' .
+>
+> bonniemd3() { /root/bonnie++-1.03a/bonnie++  -u0:0  -d /md3  -s 131072  -f; }
+> bonniemd3 > 131072MB-bonnie++-run-md3-xfs.log-20070825 2>&1 &
+>
+Ok, the 'bitmap' and 'raid6' details were the missing pieces of my
+testing.  I can now reproduce this bug in handle_queue.  I'll keep you
+posted on what I find.
 
-This looks ok to me.  &sw_desc->group_list is the head of a new list of
-descriptors to be added to the chain.  old_chain_tail is youngest
-descriptor at the end of the current channel chain.
+Thank you for tracking this.
 
-Before list_splice_init:
-old_chain_tail->next = channel_chain_head
-channel_chain_head->prev = old_chain_tail
-new_chain_start->prev = sw_desc->group_list;
-new_chain_end->next = sw_desc->group_list;
-
-After list_splice_init:
-new_chain_start->prev = old_chain_tail
-old_chain_tail->next = new_chain_start
-new_chain_end->next = channel_chain_head
-channel_chain_head->prev = new_chain_end
-
-sw_desc->group_list is empty
-
---
+Regards,
 Dan
