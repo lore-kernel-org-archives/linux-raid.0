@@ -1,71 +1,45 @@
-From: "Michael Evans" <mjevans1983@gmail.com>
-Subject: Re: [patch v2 1/1] md: Software Raid autodetect dev list not array
-Date: Mon, 27 Aug 2007 00:56:30 -0700
-Message-ID: <4877c76c0708270056g40b75dc8qb63f6a32d04ebc34@mail.gmail.com>
-References: <200708222058.45480.mjevans1983@comcast.net>
-	 <18126.21113.981032.286298@notabene.brown>
-	 <200708260451.24868.mjevans1983@comcast.net>
-	 <4877c76c0708260520v33bc36bfu24e688a5902912e5@mail.gmail.com>
-	 <ADB93FAB-45EF-439A-816C-8E27D8D3F5BB@mac.com>
+From: David Greaves <david@dgreaves.com>
+Subject: Re: Patch for boot-time assembly of v1.x-metadata-based soft (MD)
+ arrays: reasoning and future plans
+Date: Mon, 27 Aug 2007 09:48:27 +0100
+Message-ID: <46D28FDB.3060308@dgreaves.com>
+References: <778663.11466.qm@web33606.mail.mud.yahoo.com> <e9c3a7c20708261732o2b962531obbf9ab370f195be8@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <ADB93FAB-45EF-439A-816C-8E27D8D3F5BB@mac.com>
-Content-Disposition: inline
+In-Reply-To: <e9c3a7c20708261732o2b962531obbf9ab370f195be8@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Kyle Moffett <mrmacman_g4@mac.com>
-Cc: "Michael J. Evans" <mjevans1983@comcast.net>, Neil Brown <neilb@suse.de>, Ingo Molnar <mingo@redhat.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Abe Skolnik <abe_skolnik@yahoo.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 8/26/07, Kyle Moffett <mrmacman_g4@mac.com> wrote:
-> On Aug 26, 2007, at 08:20:45, Michael Evans wrote:
-> > Also, I forgot to mention, the reason I added the counters was
-> > mostly for debugging.  However they're also as useful in the same
-> > way that listing the partitions when a new disk is added can be (in
-> > fact this augments that and the existing messages the autodetect
-> > routines provide).
-> >
-> > As for using autodetect or not... the only way to skip it seems to
-> > be compiling md's raid support as a module.  I checked 2.6.22's
-> > menuconfig and there's no way for me to explicitly turn it on or
-> > off at compile time.  I also feel that forcing the addition of a
-> > boot parameter to de-activate a broken and deprecated system you
-> > aren't even aware you are getting is somehow wrong.  So if you have
-> > over 128 devices for it to scan, as I do on one of my PCs, then it
-> > can bring up
-> > an array in degraded mode.  ... crud.
->
-> Well, you could just change the MSDOS disk label to use a different
-> "Partition Type" for your raid partitions.  Just pick the standard
-> "Linux" type and you will get exactly the same behavior that
-> everybody who doesn't use MSDOS partition tables gets.
->
-> Cheers,
-> Kyle Moffett
->
->
+Dan Williams wrote:
+> On 8/26/07, Abe Skolnik <abe_skolnik@yahoo.com> wrote:
+>>> Because you can rely on the configuration file to be certain about
+>>> which disks to pull in and which to ignore.  Without the config file
+>>> the auto-detect routine may not always do the right thing because it
+>>> will need to make assumptions.
+>> But kernel parameters can provide the same data, no?  After all, it is
 
-I recall most of the guides I referenced during setup having me change
-the partition type, additionally parted only calls the flag 'raid' not
-'raid autodetect'.  However it would still be confusing to anyone not
-intimately familiar with the subsystem.
+> Yes, you can get a similar effect of the config file by adding
+> parameters to the kernel command line.  My only point is that if the
+> initramfs update tools were as simple as:
+> mkinitrd "root=/dev/md0 md=0,v1,/dev/sda1,/dev/sdb1,/dev/sdc1"
+> ...then using an initramfs becomes the same amount of work as editing
+> /etc/grub.conf.
+> 
 
-Also, even though the system has a standard PC BIOS, I liked some of
-the specifications of the GUID partition table (GPT) provided.  Namely
-a checksum and backup copy, and up to 128 partitions per disk.  Parted
-is the only real tool I could find for editing such a disk label.
 
-A problem I experienced that is almost completely unrelated to this
-patch are other 'magic number' assumptions.  It is rather unfortunate
-that linux allocates a fixed (and very small) number of partitions per
-scsi disk.  A better method might be a complete dis-association of
-major:minor pair to device name, and instead simply enumerating
-partitions as they are detected.  That way if I choose to have 128
-drives but each having at most 2 partitions I still easily fit within
-one major, or if I choose the opposite (for whatever reason) I still
-come to the same conclusion.  Before anyone mentions using LVM
-instead, sharing operating systems, and using different partitions for
-different raid stripe sizes/rebuilding flexibility/restriping
-flexibility are just two good reasons I can think of for supporting
-more then 15 partitions per device.
+I'm not sure if you're aware of this so in the spirit of being helpful I thought 
+I'd point out that this has been discussed quite extensively in the past. You 
+may want to take a look at the list archives.
+
+It's quite complex and whilst I too would like autodetect to continue to work 
+(I've been 'bitten' by the new superblocks not autodetecting) I accept the 
+arguments of those wiser than me.
+
+I agree that the problem is one of old dogs and the new (!) initram trick.
+Look at it as an opportunity to learn more about a cool capability.
+
+David
