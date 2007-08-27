@@ -1,78 +1,44 @@
-From: "Dan Williams" <dan.j.williams@intel.com>
-Subject: Re: raid5:md3: kernel BUG , followed by , Silent halt .
-Date: Mon, 27 Aug 2007 15:11:00 -0700
-Message-ID: <e9c3a7c20708271511w239fa643q1d1745ed0d552eb@mail.gmail.com>
-References: <Pine.LNX.4.64.0707141658210.16611@filesrv1.baby-dragons.com>
-	 <Pine.LNX.4.64.0708181328510.14169@filesrv1.baby-dragons.com>
-	 <e9c3a7c20708201029l15e37d8eh9db6714be6a8e7b8@mail.gmail.com>
-	 <Pine.LNX.4.64.0708251903200.6971@filesrv1.baby-dragons.com>
+From: Adrian Bunk <bunk@kernel.org>
+Subject: [2.6 patch] bitmap.h: remove dead artefacts
+Date: Mon, 27 Aug 2007 23:28:48 +0200
+Message-ID: <20070827212848.GA26410@stusta.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0708251903200.6971@filesrv1.baby-dragons.com>
 Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
-Cc: linux-raid maillist <linux-raid@vger.kernel.org>
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 8/25/07, Mr. James W. Laferriere <babydr@baby-dragons.com> wrote:
->         Hello Dan ,
->
-> On Mon, 20 Aug 2007, Dan Williams wrote:
-> > On 8/18/07, Mr. James W. Laferriere <babydr@baby-dragons.com> wrote:
-> >>         Hello All ,  Here we go again .  Again attempting to do bonnie++ testing
-> >> on a small array .
-> >>         Kernel 2.6.22.1
-> >>         Patches involved ,
-> >>         IOP1 ,  2.6.22.1-iop1 for improved sequential write performance
-> >> (stripe-queue) ,  Dan Williams <dan.j.williams@intel.com>
-> >
-> > Hello James,
-> >
-> > Thanks for the report.
-> >
-> > I tried to reproduce this on my system, no luck.
->         Possibly because there is significant hardware differances ?
->         See 'lspci -v' below .sig .
->
-> > However it looks
-> > like their is a potential race between 'handle_queue' and
-> > 'add_queue_bio'.  The attached patch moves these critical sections
-> > under spin_lock(&sq->lock), and adds some debugging output if this BUG
-> > triggers.  It also includes a fix for retry_aligned_read which is
-> > unrelated to this debug.
-> > --
-> > Dan
->         Applied your patch .  The same 'kernel BUG at drivers/md/raid5.c:3689!'
-> messages appear (see attached) .  The system is still responsive with your
-> patch ,  the kernel crashed last time .  Tho the bonnie++ run is stuck in 'D' .
-> And doing a '> /md3/asdf'  stays hung even after passing the parent process a
-> 'kill -9' .
->         Any further info You can think of I can/should ,  I will try to acquire
-> .  But I'll have to repeat these steps to attempt to get the same results .
-> I'll be shutting the system down after sending this off .
->         Fyi ,  the previous 'BUG" without your patch was quite repeatable .
->         I might have time over the next couple of weeks to be able to see if it
-> is as repatable as the last one .
->
->         Contents of /proc/mdstat for md3 .
->
-> md3 : active raid6 sdx1[3] sdw1[2] sdv1[1] sdu1[0] sdt1[7](S) sds1[6] sdr1[5] sdq1[4]
->        717378560 blocks level 6, 1024k chunk, algorithm 2 [7/7] [UUUUUUU]
->        bitmap: 2/137 pages [8KB], 512KB chunk
->
->         Commands I ran that lead to the 'BUG' .
->
-> bonniemd3() { /root/bonnie++-1.03a/bonnie++  -u0:0  -d /md3  -s 131072  -f; }
-> bonniemd3 > 131072MB-bonnie++-run-md3-xfs.log-20070825 2>&1 &
->
-Ok, the 'bitmap' and 'raid6' details were the missing pieces of my
-testing.  I can now reproduce this bug in handle_queue.  I'll keep you
-posted on what I find.
+bitmap_active() no longer exists and BITMAP_ACTIVE is no longer used.
 
-Thank you for tracking this.
+Signed-off-by: Adrian Bunk <bunk@kernel.org>
 
-Regards,
-Dan
+---
+
+ include/linux/raid/bitmap.h |    2 --
+ 1 file changed, 2 deletions(-)
+
+f2c10857c60e13e63c67c656713b50b18f2bc1e4 
+diff --git a/include/linux/raid/bitmap.h b/include/linux/raid/bitmap.h
+index 75e17a0..306a1d1 100644
+--- a/include/linux/raid/bitmap.h
++++ b/include/linux/raid/bitmap.h
+@@ -138,7 +138,6 @@ typedef __u16 bitmap_counter_t;
+ 
+ /* use these for bitmap->flags and bitmap->sb->state bit-fields */
+ enum bitmap_state {
+-	BITMAP_ACTIVE = 0x001, /* the bitmap is in use */
+ 	BITMAP_STALE  = 0x002,  /* the bitmap file is out of date or had -EIO */
+ 	BITMAP_WRITE_ERROR = 0x004, /* A write error has occurred */
+ 	BITMAP_HOSTENDIAN = 0x8000,
+@@ -258,7 +257,6 @@ struct bitmap {
+ int  bitmap_create(mddev_t *mddev);
+ void bitmap_flush(mddev_t *mddev);
+ void bitmap_destroy(mddev_t *mddev);
+-int  bitmap_active(struct bitmap *bitmap);
+ 
+ char *file_path(struct file *file, char *buf, int count);
+ void bitmap_print_sb(struct bitmap *bitmap);
+
