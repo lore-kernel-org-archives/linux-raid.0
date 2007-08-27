@@ -1,81 +1,67 @@
-From: Tomasz Chmielewski <mangoo@wpkg.org>
-Subject: Re: recovery starts from 0 after reboot - normal?
-Date: Mon, 27 Aug 2007 15:39:42 +0200
-Message-ID: <46D2D41E.4060506@wpkg.org>
-References: <46CEBEED.1060209@wpkg.org> <Pine.LNX.4.64.0708240721280.18608@p34.internal.lan> <46CEC231.1070407@wpkg.org> <46CEC51B.10105@wpkg.org> <Pine.LNX.4.64.0708240748140.18608@p34.internal.lan> <46CEC805.6010009@wpkg.org>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: raid10 or raid1+0 ?
+Date: Mon, 27 Aug 2007 10:27:31 -0400 (EDT)
+Message-ID: <Pine.LNX.4.64.0708271025190.23403@p34.internal.lan>
+References: <46D21D73.9060100@digithi.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: MULTIPART/MIXED; BOUNDARY="-1463747160-1615902645-1188224851=:23403"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <46CEC805.6010009@wpkg.org>
+In-Reply-To: <46D21D73.9060100@digithi.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: Linux-Raid <linux-raid@vger.kernel.org>
+To: =?ISO-8859-15?Q?=22T=2E_Eichst=E4dt=22?= <abc@digithi.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Tomasz Chmielewski schrieb:
-> Justin Piszcz schrieb:
-> 
->>> According to the fine manual, BITMAP CHANGES belong to the grow mode.
->>> So, let's try to do what the manual says - try to add a bitmap to the 
->>> active array:
->>>
->>>
->>> # mdadm --grow /dev/md0 --bitmap=internal
->>> mdadm: failed to set internal bitmap.
->>>
->>> # dmesg
->>> md: couldn't update array info. -16
->>>
->>>
->>> So, either I don't understand the manual, or there are more caveats 
->>> in it.
-> 
-> (...)
-> 
->> Check: http://lkml.org/lkml/2007/6/17/235
-> 
-> It's an external bitmap; I'd prefer an internal one, as my root 
-> filesystem is on a flash-IDE disk.
-> 
-> However, let's try the external bitmap:
-> 
-> # mdadm --grow /dev/md0 --bitmap=/bitmapfile
-> mdadm: Cannot set bitmap file for /dev/md0: Device or resource busy
-> 
-> 
-> So, it also fails. Perhaps because the array still rebuilds?
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-It looks it only works when the array is in a clean state (or, not 
-rebuilding anymore).
-
-Just for reference:
-
-# mdadm --grow --bitmap=/bitmapfile /dev/md0
-# dmesg -c
-md0: bitmap file is out of date (0 < 43130) -- forcing full recovery
-md0: bitmap file is out of date, doing full recovery
-md0: bitmap initialized from disk: read 24/24 pages, set 763103 bits, 
-status: 0
-created bitmap (373 pages) for device md0
-
-# mdadm --grow /dev/md0 --bitmap=internal
-mdadm: /dev/md0 already has a bitmap (/bitmapfile)
-
-# mdadm --grow /dev/md0 --bitmap=none
-
-# mdadm --grow /dev/md0 --bitmap=internal
-# dmesg -c
-md0: bitmap file is out of date (0 < 43130) -- forcing full recovery
-md0: bitmap file is out of date, doing full recovery
-md0: bitmap initialized from disk: read 12/12 pages, set 381552 bits, 
-status: 0
-created bitmap (187 pages) for device md0
+---1463747160-1615902645-1188224851=:23403
+Content-Type: TEXT/PLAIN; charset=iso-8859-1; format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 
 
-What are pages/bits in bitmap? It seems to differ, whether internal or 
-external is used.
 
--- 
-Tomasz Chmielewski
-http://wpkg.org
+On Mon, 27 Aug 2007, "T. Eichst=E4dt" wrote:
+
+> Hallo all,
+>
+> I have 4 HDDs and I want to use mirroring and striping.
+> I am wondering what difference between the following two solutions is:
+>
+> - raid0 on top of 2 raid1 devices (raid1+0)
+> - directly using the raid10 module
+>
+> Perhaps someone can give me a hint what the raid10 linux module does in=
+=20
+> difference to the combination of raid1 and raid0.
+>
+> Another question:
+> How stable is the raid10 module in the linux kernel. I am currently using=
+ the=20
+> debian kernel 2.6.18 but I saw some patches from Neil and others for 2.6.=
+21,=20
+> 2.6.22 regarding the raid10 module. And their descriptions sound as if it=
+=20
+> could be useful to integrate them. when using raid10.
+> Okay, backporting isn't complicated, but nevertheless the number of patch=
+es=20
+> makes me feel that raid10 is perhaps not that stable like raid0 and raid1=
+ ???
+>
+> Perhaps someone can blow away my fear :)
+>
+> Best regards
+> Thimo Eichst=E4dt
+>
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+
+I have a few people who asked me this as well, RAID10 or similiar (SW).  I=
+=20
+am not so sure, with RAID1 you can have your root disks on it and boot=20
+from it using LILO/GRUB and it is proven pretty stable; can the same be=20
+said about RAID10?
+---1463747160-1615902645-1188224851=:23403--
