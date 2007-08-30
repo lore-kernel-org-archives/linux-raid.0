@@ -1,56 +1,49 @@
-From: Iustin Pop <iusty@k1024.org>
-Subject: Re: Using my Mirror disk to boot up.
-Date: Thu, 30 Aug 2007 07:14:24 +0200
-Message-ID: <20070830051424.GA9525@teal.hq.k1024.org>
-References: <12399907.post@talk.nabble.com>
+From: Neil Brown <neilb@suse.de>
+Subject: RE: Raid5 Reshape gone wrong, please help
+Date: Thu, 30 Aug 2007 15:47:42 +1000
+Message-ID: <18134.23038.904387.906122@notabene.brown>
+References: <c92bcddf0708171826n5991b3ffw1094e0e8c44c97e8@mail.gmail.com>
+	<18118.46141.966406.577626@notabene.brown>
+	<c92bcddf0708180837y4d92d2b4x3a4308e77b515ab3@mail.gmail.com>
+	<18120.9950.578786.624453@notabene.brown>
+	<c92bcddf0708190845k485a8460q609b16a8795bc288@mail.gmail.com>
+	<c92bcddf0708191944x4aab7770ga6815210109dca6f@mail.gmail.com>
+	<c92bcddf0708201909w2534c25du6282fd661ed838f5@mail.gmail.com>
+	<c92bcddf0708230804g2e3fb7ev4e5d1a13814d4d0f@mail.gmail.com>
+	<18130.44566.69917.341927@notabene.brown>
+	<0C7297FA1D2D244A9C7F6959C0BF1E52025B0F20@azsmsx413.amr.corp.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <12399907.post@talk.nabble.com>
+In-Reply-To: message from Williams, Dan J on Monday August 27
 Sender: linux-raid-owner@vger.kernel.org
-To: chee <cheeming81@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: "Williams, Dan J" <dan.j.williams@intel.com>
+Cc: Greg Nicholson <d0gz.net@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Aug 29, 2007 at 08:25:59PM -0700, chee wrote:
+On Monday August 27, dan.j.williams@intel.com wrote:
+> > -		s.locked += handle_write_operations5(sh, 0, 1);
+> > +		s.locked += handle_write_operations5(sh, 1, 1);
+> How about for clarity:
+> 	s.locked += handle_write_operations5(sh, RECONSTRUCT_WRITE, 1);
 > 
-> i,
-> 
-> This is my Filesystem:
-> 
-> Filesystem Size Used Avail Use% Mounted on
-> /dev/md0 9.7G 6.6G 2.7G 72% /
-> none 189M 0 189M 0% /dev/shm
-> /dev/md2 103G 98G 289M 100% /home
-> 
-> and this is mirror settings:
-> 
-> Personalities : [raid1]
-> md1 : active raid1 hda2[0] hdd2[1]
-> 512000 blocks [2/2] [UU]
-> 
-> md2 : active raid1 hdd3[1] hda3[0]
-> 109298112 blocks [2/2] [UU]
-> 
-> md0 : active raid1 hdd1[1] hda1[0]
-> 10240128 blocks [2/2] [UU]
-> 
-> The problem i am facing is my mirror disk does not seem to boot up when i
-> swap hard disk to test where my mirroring disk is working. The only thing i
-> see was this 'LI' in the monitor and hangs there.
-> 
-The problem is (most likely) that your mirrors only cover the
-hd[ad][123] partitions, and not the whole disk. Thus, the MBR of hda is
-not synchronized to hdd.
 
-You can do two things here:
-  - fix your lilo.conf to correctly write to both hda and hdd (IIRC, you
-    need the directive raid-extra-boot=mbr or raid-extra-boot=mbr-only,
-    depending on how exactly you install lilo)
-  - change to a partitionable raid array instead of three arrays (one
-    for each partition); that will cover also the mbr of the drive
+Nope.  That second argument is a boolean, not an enum.
+If it was changed to 'writemode' (or similar) and the code in
+handle_write_operations5 were changed to
 
+  switch(writemode) {
+  case RECONSTRUCT_WRITE:
+         ....
+  case READ_MODIFY_WRITE:
+         ....
+  }
 
-regards,
-iustin
+Then it would make sense to use RECONSTRUCT_WRITE in the call - and
+the code would probably be more readable on the whole.
+But as it is, either 'true' or '1' should go there.
+
+NeilBrown
+
+  
