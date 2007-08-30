@@ -1,49 +1,79 @@
-From: Neil Brown <neilb@suse.de>
-Subject: RE: Raid5 Reshape gone wrong, please help
-Date: Thu, 30 Aug 2007 15:47:42 +1000
-Message-ID: <18134.23038.904387.906122@notabene.brown>
-References: <c92bcddf0708171826n5991b3ffw1094e0e8c44c97e8@mail.gmail.com>
-	<18118.46141.966406.577626@notabene.brown>
-	<c92bcddf0708180837y4d92d2b4x3a4308e77b515ab3@mail.gmail.com>
-	<18120.9950.578786.624453@notabene.brown>
-	<c92bcddf0708190845k485a8460q609b16a8795bc288@mail.gmail.com>
-	<c92bcddf0708191944x4aab7770ga6815210109dca6f@mail.gmail.com>
-	<c92bcddf0708201909w2534c25du6282fd661ed838f5@mail.gmail.com>
-	<c92bcddf0708230804g2e3fb7ev4e5d1a13814d4d0f@mail.gmail.com>
-	<18130.44566.69917.341927@notabene.brown>
-	<0C7297FA1D2D244A9C7F6959C0BF1E52025B0F20@azsmsx413.amr.corp.intel.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Williams, Dan J on Monday August 27
-Sender: linux-raid-owner@vger.kernel.org
-To: "Williams, Dan J" <dan.j.williams@intel.com>
-Cc: Greg Nicholson <d0gz.net@gmail.com>, linux-raid@vger.kernel.org
+From: NeilBrown <neilb@suse.de>
+Subject: [PATCH] md: Fix some bugs with growing raid5/raid6 arrays.
+Date: Thu, 30 Aug 2007 16:05:08 +1000
+Message-ID: <1070830060508.5223@suse.de>
+References: <20070830155923.553.patches@notabene>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755547AbXH3GFb@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>
 List-Id: linux-raid.ids
 
-On Monday August 27, dan.j.williams@intel.com wrote:
-> > -		s.locked += handle_write_operations5(sh, 0, 1);
-> > +		s.locked += handle_write_operations5(sh, 1, 1);
-> How about for clarity:
-> 	s.locked += handle_write_operations5(sh, RECONSTRUCT_WRITE, 1);
-> 
+The recent changed to raid5 to allow offload of parity calculation etc
+introduced some bugs in the code for growing (i.e. adding a disk to)
+raid5 and raid6.  This fixes them
 
-Nope.  That second argument is a boolean, not an enum.
-If it was changed to 'writemode' (or similar) and the code in
-handle_write_operations5 were changed to
+Acked-by: Dan Williams <dan.j.williams@intel.com>
+Signed-off-by: Neil Brown <neilb@suse.de>
 
-  switch(writemode) {
-  case RECONSTRUCT_WRITE:
-         ....
-  case READ_MODIFY_WRITE:
-         ....
-  }
+---
 
-Then it would make sense to use RECONSTRUCT_WRITE in the call - and
-the code would probably be more readable on the whole.
-But as it is, either 'true' or '1' should go there.
+This is against 2.6.23-rc4.   It applies to current -mm with quite a bit of fuzz...
 
+Thanks,
 NeilBrown
 
-  
+
+### Diffstat output
+ ./drivers/md/raid5.c |   17 +++++++++--------
+ 1 file changed, 9 insertions(+), 8 deletions(-)
+
+diff .prev/drivers/md/raid5.c ./drivers/md/raid5.c
+--- .prev/drivers/md/raid5.c	2007-08-30 15:58:55.000000000 +1000
++++ ./drivers/md/raid5.c	2007-08-30 15:58:55.000000000 +1000
+@@ -2541,7 +2541,7 @@ static void handle_stripe_expansion(raid
+ 	struct dma_async_tx_descriptor *tx = NULL;
+ 	clear_bit(STRIPE_EXPAND_SOURCE, &sh->state);
+ 	for (i = 0; i < sh->disks; i++)
+-		if (i != sh->pd_idx && (r6s && i != r6s->qd_idx)) {
++		if (i != sh->pd_idx && (!r6s || i != r6s->qd_idx)) {
+ 			int dd_idx, pd_idx, j;
+ 			struct stripe_head *sh2;
+ 
+@@ -2574,7 +2574,8 @@ static void handle_stripe_expansion(raid
+ 			set_bit(R5_UPTODATE, &sh2->dev[dd_idx].flags);
+ 			for (j = 0; j < conf->raid_disks; j++)
+ 				if (j != sh2->pd_idx &&
+-				    (r6s && j != r6s->qd_idx) &&
++				    (!r6s || j != raid6_next_disk(sh2->pd_idx,
++								 sh2->disks)) &&
+ 				    !test_bit(R5_Expanded, &sh2->dev[j].flags))
+ 					break;
+ 			if (j == conf->raid_disks) {
+@@ -2583,12 +2584,12 @@ static void handle_stripe_expansion(raid
+ 			}
+ 			release_stripe(sh2);
+ 
+-			/* done submitting copies, wait for them to complete */
+-			if (i + 1 >= sh->disks) {
+-				async_tx_ack(tx);
+-				dma_wait_for_async_tx(tx);
+-			}
+ 		}
++	/* done submitting copies, wait for them to complete */
++	if (tx) {
++		async_tx_ack(tx);
++		dma_wait_for_async_tx(tx);
++	}
+ }
+ 
+ /*
+@@ -2855,7 +2856,7 @@ static void handle_stripe5(struct stripe
+ 		sh->disks = conf->raid_disks;
+ 		sh->pd_idx = stripe_to_pdidx(sh->sector, conf,
+ 			conf->raid_disks);
+-		s.locked += handle_write_operations5(sh, 0, 1);
++		s.locked += handle_write_operations5(sh, 1, 1);
+ 	} else if (s.expanded &&
+ 		!test_bit(STRIPE_OP_POSTXOR, &sh->ops.pending)) {
+ 		clear_bit(STRIPE_EXPAND_READY, &sh->state);
