@@ -1,83 +1,66 @@
-From: "Dan Williams" <dan.j.williams@intel.com>
-Subject: Re: [md-accel PATCH 16/19] dmaengine: driver for the iop32x, iop33x, and iop13xx raid engines
-Date: Thu, 30 Aug 2007 13:41:18 -0700
-Message-ID: <e9c3a7c20708301341r197fb401j17c07c733609c61a@mail.gmail.com>
-References: <20070627014823.18962.96398.stgit@dwillia2-linux.ch.intel.com>
-	 <20070627015155.18962.88413.stgit@dwillia2-linux.ch.intel.com>
-	 <c70ff3ad0708270611x5598fa9dlc3afa5f6fabd6563@mail.gmail.com>
-	 <c70ff3ad0708270614t6f17b38nfbdf84ace69b8d78@mail.gmail.com>
-	 <0C7297FA1D2D244A9C7F6959C0BF1E52025B10E4@azsmsx413.amr.corp.intel.com>
-	 <c70ff3ad0708301143w55bf296p37b0991d7f099fd6@mail.gmail.com>
+From: Yuri Tikhonov <yur@emcraft.com>
+Subject: Fwd: Re: md raid acceleration and the async_tx api
+Date: Fri, 31 Aug 2007 14:15:23 +0400
+Message-ID: <200708311415.23623.yur@emcraft.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <c70ff3ad0708301143w55bf296p37b0991d7f099fd6@mail.gmail.com>
 Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: saeed bishara <saeed.bishara@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, neilb@suse.de, "Nelson, Shannon" <shannon.nelson@intel.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 8/30/07, saeed bishara <saeed.bishara@gmail.com> wrote:
-> you are right, I've another question regarding the function
-> dma_wait_for_async_tx from async_tx.c, here is the body of the code:
->        /* poll through the dependency chain, return when tx is complete */
-> 1.        do {
-> 2.                 iter = tx;
-> 3.                 while (iter->cookie == -EBUSY)
-> 4.                         iter = iter->parent;
-> 5.
-> 6.                 status = dma_sync_wait(iter->chan, iter->cookie);
-> 7.         } while (status == DMA_IN_PROGRESS || (iter != tx));
+ Hi Dan,
+
+On Thursday 30 August 2007 23:34, you wrote:
+...
+
+> Looking at it again I see that what I added would not affect the
+> failure you are seeing.  However I noticed that you are using a broken
+> version of the stripe-queue and cache_arbiter patches.  In the current
+> revisions the dev_q->flags field has been moved back to dev->flags
+> which fixes a data corruption issue and could potentially address the
+> hang you are seeing.
+
+ Thank you for pointing this.
+
+ Though I do not think that this addresses the hang-up I see since I did run
+the similar tests using your even older "h/w accelerated RAID-5" patch-set
+(with no queues) and observed the same hang-up too.
+
+> The latest revisions are:
+> raid5: add the stripe_queue object for tracking raid io requests (rev2)
+> raid5: use stripe_queues to prioritize the "most deserving" requests (rev6)
 >
-> assume that:
-> - The interrupt capability is not provided.
-> - Request A was sent to chan 0
-> - Request B that depends on A is sent to chan 1
-> - Request C that depends on B is send to chan 2.
-> - Also, assume that when C is handled by async_tx_submit(), B is still
-> not queued to the dmaengine (cookie equals to -EBUSY).
+> >  Note that before applying your patch I rolled my fix in the
+> > ops_complete_biofill() function back. Do I understand it right that your
+> > patch should be used *instead* of my one rather than *with* it ?
 >
-> In this case, dma_wait_for_async_tx will be called for C, now, it
-> looks for me that the do while will loop forever, even when A gets
-> completed. this is because the iter will point to B after line 4, thus
-> the iter != tx (C) will always become true.
->
-You are right.  There are no drivers in the tree that can hit this,
-but it needs to be fixed up.
+> You understood correctly.  The attached patch integrates your change
+> to keep R5_Wantfill set while also protecting the 'more_to_read' case.
+>  Please try it on top of the latest stripe-queue changes [1] (instead
+> of the other proposed patches) .
 
-I'll submit the following change:
+ I've successfully run the patched RAID-5 driver on my h/w setup: no hang-ups
+were observed.
 
-diff --git a/crypto/async_tx/async_tx.c b/crypto/async_tx/async_tx.c
-index 0350071..bc18cbb 100644
---- a/crypto/async_tx/async_tx.c
-+++ b/crypto/async_tx/async_tx.c
-@@ -80,6 +80,7 @@ dma_wait_for_async_tx(struct dma_async_tx_descriptor *tx)
- {
-        enum dma_status status;
-        struct dma_async_tx_descriptor *iter;
-+       struct dma_async_tx_descriptor *parent;
+ Note that I still used the broken version of the stripe-queue (so I'd
+ adapted your patch a little). As soon as I upgrade my stripe-queue and
+ cache_arbiter patches up to your latest version I'll retest the bonnie++
+ hang-up and report about the results.
 
-        if (!tx)
-                return DMA_SUCCESS;
-@@ -87,8 +88,15 @@ dma_wait_for_async_tx(struct dma_async_tx_descriptor *tx)
-        /* poll through the dependency chain, return when tx is complete */
-        do {
-                iter = tx;
--               while (iter->cookie == -EBUSY)
--                       iter = iter->parent;
-+
-+               /* find the root of the unsubmitted dependency chain */
-+               while (iter->cookie == -EBUSY) {
-+                       parent = iter->parent;
-+                       if (parent && parent->cookie == -EBUSY)
-+                               iter = iter->parent;
-+                       else
-+                               break;
-+               }
+ One question, I cannot find the corresponding patches in your
+git://lost.foo-projects.org/~dwillia2/git/iop tree, so, is it right that the
+latest revision of the the stripe-queue and cache_arbiter patches you posted
+here were on 22/07/07:
+[GIT PATCH 0/2] stripe-queue for 2.6.23 consideration
+[GIT PATCH 1/2] raid5: add the stripe_queue object for tracking raid io
+requests (take2)
+[GIT PATCH 2/2] raid5: use stripe_queues to prioritize the "most deserving"
+requests (take4)
+ ?
 
-> saeed
+ Regards, Yuri
 
-Regards,
-Dan
