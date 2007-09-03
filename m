@@ -1,17 +1,29 @@
-From: Mitchell Laks <mlaks@post.harvard.edu>
-Subject: Re: raid1 with sata; md stopping all md devices; Synchronizing SCSI cache from disk sda ; ata8 command timeout?
-Date: Mon, 3 Sep 2007 15:03:19 -0400
-Message-ID: <20070903190319.GA17076@earthlink.net>
-References: <20070902221930.GA10738@earthlink.net> <c03b90ed0709030028k4ae7d3b8n6b1fe388c6c4e926@mail.gmail.com>
+From: "George  Iosif" <giosif@ase.ro>
+Subject: Re: raid1 with sata; md stopping all md devices; Synchronizing
+	SCSI cache from disk sda ; ata8 command timeout?
+Date: Mon, 03 Sep 2007 22:34:13 +0300
+Message-ID: <46DC8BE6020000B5000077E4@s-mail-1.ase.ro>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <c03b90ed0709030028k4ae7d3b8n6b1fe388c6c4e926@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: mlaks@post.harvard.edu, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hi Mitchell,
+
+My guess is that it's a SATA controller driver problem.
+I remember that, after a transition from kernel version 2.6.x to 2.6.x+1 (I don't remember the x), I began seeing some strange errors related to my SATA disk/controller while the kernel was initializing the devices (during the boot process).
+
+Can you try using the old version of the kernel (2.6.12) and see if you get rid of the errors ? 
+
+Hope it helps !
+
+George Iosif
+
+>>> Mitchell Laks <mlaks@post.harvard.edu> 09/03/07 10:03 PM >>>
 On 15:28 Mon 03 Sep     , Michael Yao wrote:
 > Hi
 > 
@@ -69,3 +81,8 @@ Any other ideas??
 > >        Additional sense no additional sense information
 
 Mitchell Laks
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
