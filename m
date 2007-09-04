@@ -1,7 +1,7 @@
 From: Richard Scobie <richard@sauce.co.nz>
 Subject: Re: MDADM restart at system boot time
-Date: Wed, 05 Sep 2007 10:42:41 +1200
-Message-ID: <46DDDF61.9080307@sauce.co.nz>
+Date: Wed, 05 Sep 2007 10:52:27 +1200
+Message-ID: <46DDE1AB.6010507@sauce.co.nz>
 References: <8f2c1194b4839dee2ea49eedfeaf783a@7digital.co.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
@@ -9,7 +9,7 @@ Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <8f2c1194b4839dee2ea49eedfeaf783a@7digital.co.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
 Paul wrote:
@@ -29,6 +29,8 @@ Paul wrote:
 > ARRAY /dev/md0 level=raid1 num-devices=2 UUID=0f0e3d1f:52580ad4:2ef6a2e7:f760e130
 >         devices=/dev/hdb1,/dev/hdc1
 
+Apologies, I was slightly incorrect on the last part.
+
 Replace the "DEVICE" entry with:
 
 DEVICE partitions
@@ -37,8 +39,12 @@ and add
 
 auto=part
 
-to the end of your ARRAY entry.
+in place of the "devices=/dev/hdb1,/dev/hdc1" section at
+the end of your ARRAY entry.
+
 
 Regards,
 
 Richard
+
+
