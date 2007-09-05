@@ -1,37 +1,37 @@
-From: Neil Brown <neilb@suse.de>
+From: Anton Voloshin <ashutosh@harekrishna.ru>
 Subject: Re: RAID 6 reshape failed (false message about critical section)
-Date: Wed, 5 Sep 2007 13:36:17 +0100
-Message-ID: <18142.41665.719883.549678@notabene.brown>
-References: <515CA0AD-2BAF-437A-8A41-260F7A27BADB@harekrishna.ru>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Date: Wed, 5 Sep 2007 22:13:37 +0400
+Message-ID: <62E93D27-4D05-45F7-BB60-144BA46DC913@harekrishna.ru>
+References: <515CA0AD-2BAF-437A-8A41-260F7A27BADB@harekrishna.ru> <18142.41665.719883.549678@notabene.brown>
+Mime-Version: 1.0 (Apple Message framework v752.3)
+Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Anton Voloshin on Wednesday September 5
+In-Reply-To: <18142.41665.719883.549678@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Anton Voloshin <ashutosh@harekrishna.ru>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: Neil Brown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-On Wednesday September 5, ashutosh@harekrishna.ru wrote:
-> 
-> Please advise me how should I proceed to resolve this situation and  
-> save my data if possible (yes, unfortunately I was going to make  
-> backups in a week but did not had them yet - too bad for me :-( ).
+Dear Neil,
 
-Hi.
- thanks for the detailed report.
+> I can see what the problem is.  It will take a little while to figure
+> out what the "correct" fix it, but a quick fix to get you out of
+> trouble would be to remove the lines:
+>
+> 		if (info->array.utime > __le64_to_cpu(bsb.mtime) + 3600 ||
+> 		    info->array.utime < __le64_to_cpu(bsb.mtime))
+> 			continue; /* time stamp is too bad */
 
-I can see what the problem is.  It will take a little while to figure
-out what the "correct" fix it, but a quick fix to get you out of
-trouble would be to remove the lines:
+I've applied the patch that you suggested but I'm getting exactly the  
+same result:
 
-		if (info->array.utime > __le64_to_cpu(bsb.mtime) + 3600 ||
-		    info->array.utime < __le64_to_cpu(bsb.mtime))
-			continue; /* time stamp is too bad */
+> root@videoserver:~/mdadm-2.6.3# ./mdadm --assemble /dev/md1
+> mdadm: Failed to restore critical section for reshape, sorry.
 
-from Grow.c in mdadm (around line 925).  This change is definitely
-safe for your case, and should get the array assembled and the reshape
-restarted.  Please let me know how it goes.
+Please advise me on any more information that I should provide or  
+make any other suggestions/advices.
 
-NeilBrown
+Best regards,
+Anton Voloshin
+Saint Petersburg, Russia
