@@ -1,20 +1,33 @@
-From: Andrew Burgess <aab@cichlid.com>
-Subject: Grow a degraded raid6?
-Date: Thu, 6 Sep 2007 08:23:59 -0700
-Message-ID: <200709061523.l86FNxoT010292@cichlid.com>
+From: "Williams, Dan J" <dan.j.williams@intel.com>
+Subject: RE: raid5:md3: kernel BUG , followed by , Silent halt .
+Date: Thu, 6 Sep 2007 10:20:33 -0700
+Message-ID: <0C7297FA1D2D244A9C7F6959C0BF1E5202686D7B@azsmsx413.amr.corp.intel.com>
+References: <Pine.LNX.4.64.0707141658210.16611@filesrv1.baby-dragons.com>  <Pine.LNX.4.64.0708181328510.14169@filesrv1.baby-dragons.com>  <e9c3a7c20708201029l15e37d8eh9db6714be6a8e7b8@mail.gmail.com>  <Pine.LNX.4.64.0708251903200.6971@filesrv1.baby-dragons.com> <e9c3a7c20708271511w239fa643q1d1745ed0d552eb@mail.gmail.com> <Pine.LNX.4.64.0709052144120.28118@filesrv1.baby-dragons.com>
+Mime-Version: 1.0
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-class: urn:content-classes:message
+In-Reply-To: <Pine.LNX.4.64.0709052144120.28118@filesrv1.baby-dragons.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
+Cc: linux-raid maillist <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Any chance of being able to grow a degraded raid6 array?
-(missing one drive) I tried to add a spare without
-it immediately grabbing it and resyncing but couldn't.
+> From: Mr. James W. Laferriere [mailto:babydr@baby-dragons.com]
+>  	You said to watch here & I have .
+>  	Is there any hope of digging this out ?
+>  	Anything further I can provide ?  Please just say so .
+>  		Tia ,  JimL
 
-Why? I made the array raid6 because eventually it'll have
-8-10 drives. Currently you can't change from raid5 to 6 and
-preserve your data. Now it has 4 drives and I'm happy with one 
-redundant for that small number of drives and the performance 
-isn't a problem.
+Apologies, I expect to have time for a deeper dive on this issue next
+week.  Since I can reproduce it here I should have all I need to be able
+to track it down.  I will update you when I have something for you to
+test.
 
-Thanks!
+The testing you have done is very valuable and appreciated, thank you
+for being patient.
+
+Regards,
+Dan
