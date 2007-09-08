@@ -1,66 +1,60 @@
-From: Mike Accetta <maccetta@laurelnetworks.com>
-Subject: Re: raid1 error handling and faulty drives
-Date: Fri, 07 Sep 2007 18:03:43 -0400
-Message-ID: <22375.1189202623@mdt.ecitele.com>
-References: <18143.36574.398690.36732@notabene.brown>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: RAID 6 reshape failed (false message about critical section)
+ -      success report
+Date: Sat, 08 Sep 2007 12:19:43 -0400
+Message-ID: <46E2CB9F.40706@tmr.com>
+References: <515CA0AD-2BAF-437A-8A41-260F7A27BADB@harekrishna.ru>    <18142.41665.719883.549678@notabene.brown>    <62E93D27-4D05-45F7-BB60-144BA46DC913@harekrishna.ru>    <18143.35894.229908.536924@notabene.brown> <15415.91.122.2.245.1189112237.squirrel@ssl.harekrishna.ru>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-reply-to: Your message of "Thu, 06 Sep 2007 06:23:42 BST."
-             <18143.36574.398690.36732@notabene.brown>
+In-Reply-To: <15415.91.122.2.245.1189112237.squirrel@ssl.harekrishna.ru>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: Anton Voloshin <ashutosh@harekrishna.ru>
+Cc: linux-raid@vger.kernel.org, Neil Brown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-Neil Brown writes:
+Anton Voloshin wrote:
+> Dear Neil,
+>
+>   
+>> At the top of Grow_restart (in Grow.c), just put
+>> 	return 0;
+>>
+>> That will definitely get you your array back.
+>>     
+>
+> Thank you for your help, I've got my array assembled, running, and all my
+> data back up!
+>
+> But everything was not so smooth as I was (secretly) hoping originally.
+> Details follow.
+>
+> After I first run ./mdadm --assemble /dev/md1
+> array actually assembled but with 6 drives out of 8. I don't know exact
+> reason why two partitions are missing, but attempts to add missing
+> partitions with
+>   
+>> mdadm --add /dev/md1 /dev/sda2
+>>     
+> resulted in message that "/dev/sdc1 is locked" or something like that.
+> Partitions are there (fdisk -l /dev/sda supports that) and they are
+> present in /dev. I suspect that maybe udev was doing something wrong but I
+> don't know for sure. Missing partitions were ones from drives which are
+> used to run my root partition /dev/md0 - raid1 made of /dev/sda1 and
+> /dev/sdc1.
+>   
+I thought I had replied to this, but I don't see the message, so I'll 
+say it again in case it is helpful to others.
 
-> On Wednesday September 5, maccetta@laurelnetworks.com wrote:
-> > ...
-> > 
-> > 2) It adds a threshold on the level of recent error acivity which is
-> >    acceptable in a given interval, all configured through /sys.  If a
-> >    mirror has generated more errors in this interval than the threshold,
-> >    it is kicked out of the array.
-> 
-> This is probably a good idea.  It bothers me a little to require 2
-> separate numbers in sysfs...
-> 
-> When we get a read error, we quiesce the device, the try to sort out
-> the read errors, so we effectively handle them in batches.  Maybe we
-> should just set a number of seconds, and if there are a 3 or more
-> batches in that number of seconds, we kick the drive... just a thought.
-> 
+If you have a condition like this where a partition doesn't want to add, 
+use "lsof" to look for things using it, and check the values in 
+/proc/diskstats over a few minutes to see if something actually *is* 
+using the partition. Attempting to force an add when some process or 
+kernel thread is using a partition is a bad idea.
 
-I think I was just trying to be as flexible as possible.  If we were to
-use one number, I'd do the opposite and fix the interval but allow the
-threshold to be configured just because I would tend to think about a
-disk being bad in terms of it having a "more than" an expected number of
-errors in some fixed interval rather than because it had a fixed number
-of errors in "less than" some expected interval.  Mathematically the
-approaches ought to be equivalent.
+-- 
+bill davidsen <davidsen@tmr.com>
+  CTO TMR Associates, Inc
+  Doing interesting things with small computers since 1979
 
-> > One would think that #2 should not be necessary as the raid1 retry
-> > logic already attempts to rewrite and then reread bad sectors and fails
-> > the drive if it cannot do both.  However, what we observe is that the
-> > re-write step succeeds as does the re-read but the drive is really no
-> > more healthy.  Maybe the re-read is not actually going out to the media
-> > in this case due to some caching effect?
-> 
-> I have occasionally wondered if a cache would defeat this test.  I
-> wonder if we can push a "FORCE MEDIA ACCESS" flag down with that
-> read.  I'll ask.
-
-I looked around for something like this but it doesn't appear to
-be implemented that I could see.  I couldn't even find an explicit
-mention of read caching in any drive specs to begin with.  Read-ahead
-seems to be the closest concept.
-
-> Thanks.  I agree that we do need something along these lines.  It
-> might be a while before I can give the patch the brainspace it
-> deserves as I am travelling this fortnight.
-
-Looking forward to further discussion.  Thank you!
---
-Mike Accetta
-
-ECI Telecom Ltd.
-Transport Networking Division, US (previously Laurel Networks)
