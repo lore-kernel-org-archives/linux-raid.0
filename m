@@ -1,30 +1,66 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: AoE/2.6 Question (CORAID brand)
-Date: Sat, 8 Sep 2007 12:48:36 -0400 (EDT)
-Message-ID: <Pine.LNX.4.64.0709081246310.22467@p34.internal.lan>
+From: "Daniel L. Miller" <dmiller@amfes.com>
+Subject: Re: Raid-10 mount at startup always has problem
+Date: Sun, 09 Sep 2007 18:53:32 -0700
+Message-ID: <46E4A39C.8040509@amfes.com>
+References: <46D3147D.2040201@amfes.com> <46D49F1A.7030409@tmr.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <46D49F1A.7030409@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-net@vger.kernel.org, linux-raid@vger.kernel.org, apiszcz@solarrain.com
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-The reason for the 10Gbps question was in most of the benchmarks I see 
-10Gbps achieves roughly 250 MiB/s as others have reported on other mailing 
-lists.
+Bill Davidsen wrote:
+> Daniel L. Miller wrote:
+>> Hi!
+>>
+>> I have a four-disk Raid-10 array that I created and mount with 
+>> mdadm.  It seems like every re-boot, either the array is not 
+>> recognized altogether, or one of the disks is not added.  Manually 
+>> adding using mdadm works.
+>
+> What superblock version and partition type did you use? mdadm -D please.
+Thanks for the reply.  I've been wondering why no one answered me - then 
+discovered your answer in my mailbox!  Must have been hiding somewhere . 
+. . .
 
-This company makes AoE / RAIDs (24 disks) quite cheap and they offer 
-10Gbps on their units, has anyone done any independent benchmarking of 
-their units?
+Anyway -
+ mdadm -D /dev/md0
+/dev/md0:
+        Version : 00.90.03
+  Creation Time : Tue Oct  3 19:11:53 2006
+     Raid Level : raid10
+     Array Size : 312581632 (298.10 GiB 320.08 GB)
+  Used Dev Size : 156290816 (149.05 GiB 160.04 GB)
+   Raid Devices : 4
+  Total Devices : 4
+Preferred Minor : 0
+    Persistence : Superblock is persistent
 
-They claim 550 MiB/s on them.
+    Update Time : Sun Sep  9 18:51:17 2007
+          State : clean
+ Active Devices : 4
+Working Devices : 4
+ Failed Devices : 0
+  Spare Devices : 0
 
-What type of RAID do they use for AoE?  Is it Linux SW Raid embedded in 
-the unit?
+         Layout : near=2, far=1
+     Chunk Size : 32K
 
-http://www.coraid.com/
+           UUID : 9d94b17b:f5fac31a:577c252b:0d4c4b2a
+         Events : 0.10811466
 
-What type of speeds are typical on 1Gbps vs. 10Gbps AoE connections?
+    Number   Major   Minor   RaidDevice State
+       0       8        0        0      active sync   /dev/sda
+       1       8       16        1      active sync   /dev/sdb
+       2       8       32        2      active sync   /dev/sdc
+       3       8       48        3      active sync   /dev/sdd
 
-Justin.
+And you didn't ask, but my mdadm.conf:
+DEVICE partitions
+ARRAY /dev/.static/dev/md0 level=raid10 num-devices=4 
+UUID=9d94b17b:f5fac31a:577c252b:0d4c4b2a
+
+Daniel
