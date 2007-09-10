@@ -1,30 +1,34 @@
-From: "Daniel L. Miller" <dmiller@amfes.com>
-Subject: Re: Raid-10 mount at startup always has problem
-Date: Sun, 09 Sep 2007 19:11:15 -0700
-Message-ID: <46E4A7C3.1040902@amfes.com>
-References: <46D3147D.2040201@amfes.com> <46D49F1A.7030409@tmr.com> <46E4A39C.8040509@amfes.com> <46E4A5F0.9090407@sauce.co.nz>
+From: "J. David Beutel" <jdb@getsu.com>
+Subject: reducing the number of disks a RAID1 expects
+Date: Sun, 09 Sep 2007 15:10:41 -1000
+Message-ID: <46E49991.9000000@getsu.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <46E4A5F0.9090407@sauce.co.nz>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Richard Scobie wrote:
-> Daniel L. Miller wrote:
->
->> And you didn't ask, but my mdadm.conf:
->> DEVICE partitions
->> ARRAY /dev/.static/dev/md0 level=raid10 num-devices=4 
->> UUID=9d94b17b:f5fac31a:577c252b:0d4c4b2a
->
-> Try adding
->
-> auto=part
->
-> at the end of you mdadm.conf ARRAY line.
-Thanks - will see what happens on my next reboot.
+My /dev/hdd started failing its SMART check, so I removed it from a RAID1:
 
-Daniel
+# mdadm /dev/md5 -f /dev/hdd2 -r /dev/hdd2
+
+Now when I boot it looks like this in /proc/mdstat:
+
+md5 : active raid1 hdc8[2] hdg8[1]
+      58604992 blocks [3/2] [_UU]
+
+and I get a "DegradedArray event on /dev/md5" email on every boot from 
+mdadm monitoring.  I only need 2 disks in md5 now.  How can I stop it 
+from being considered "degraded"?  I added a 3rd disk a while ago just 
+because I got a new disk with plenty of space, and little /dev/hdd was 
+getting old.
+
+mdadm - v1.6.0 - 4 June 2004
+Linux 2.6.12-1.1381_FC3 #1 Fri Oct 21 03:46:55 EDT 2005 i686 athlon i386 
+GNU/Linux
+
+Cheers,
+11011011
+
