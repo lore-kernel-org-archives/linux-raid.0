@@ -1,40 +1,59 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: RAID1 and load-balancing during read
-Date: Tue, 11 Sep 2007 16:11:40 +0200
-Message-ID: <18150.41500.375266.283053@notabene.brown>
-References: <200709102229.30655.jimis@gmx.net>
-	<20070910193530.GB2597@teal.hq.k1024.org>
-	<200709102251.37976.jimis@gmx.net>
-	<20070911034417.GA20596@teal.hq.k1024.org>
-	<877imxibj2.fsf@informatik.uni-tuebingen.de>
+Subject: Re: [PATCH] Explain the read-balancing algorithm for RAID1 better in md.4
+Date: Tue, 11 Sep 2007 16:25:29 +0200
+Message-ID: <18150.42329.705444.365651@notabene.brown>
+References: <20070911035157.GB20596@teal.hq.k1024.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Goswin von Brederlow on Tuesday September 11
+In-Reply-To: message from Iustin Pop on Tuesday September 11
 Sender: linux-raid-owner@vger.kernel.org
-To: Goswin von Brederlow <brederlo@informatik.uni-tuebingen.de>
-Cc: Dimitrios Apostolou <jimis@gmx.net>, linux-raid@vger.kernel.org
+To: Iustin Pop <iusty@k1024.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday September 11, brederlo@informatik.uni-tuebingen.de wrote:
+On Tuesday September 11, iusty@k1024.org wrote:
+> There are many questions on the mailing list about the RAID1 read
+> performance profile. This patch adds a new paragraph to the RAID1
+> section in md.4 that details what kind of speed-up one should expect
+> from RAID1.
 > 
-> I found that near copies behave like raid1, offset copies are slower
-> in both reading and writing (beats me why) and far copies are slightly
-> faster than near copies in write and twice as fast in read. All for
-> sequential read/write. For random writes far copies should be slower
-> to write.
+> Signed-off-by: Iustin Pop <iusty@k1024.org>
+> ---
+> this patch is against the git tree of mdadm.
 
-I would expect read performance on an 'offset' layout to be
-significantly affected by the chunk size.
-
-You probably want the chunk size to be about 4 times the cylinder
-size.
-The ideal would be exactly the cylinder size, and exactly aligned to
-cylinders.  But as cylinder sizes change across the device, this is
-not possible.
-
-Unfortunately I don't know how big cylinders are.  I suspect if you
-hunt through the docs for the device you might find out.
+Thanks.  This patch is now *in* the git tree of mdadm.
 
 NeilBrown
+
+
+> 
+>  md.4 |    7 +++++++
+>  1 files changed, 7 insertions(+), 0 deletions(-)
+> 
+> diff --git a/md.4 b/md.4
+> index cf423cb..db39aba 100644
+> --- a/md.4
+> +++ b/md.4
+> @@ -168,6 +168,13 @@ All devices in a RAID1 array should be the same size.  If they are
+>  not, then only the amount of space available on the smallest device is
+>  used (any extra space on other devices is wasted).
+>  
+> +Note that the read balancing done by the driver does not make the RAID1
+> +performance profile be the same as for RAID0; a single stream of
+> +sequential input will not be accelerated (e.g. a single dd), but
+> +multiple sequential streams or a random workload will use more than one
+> +spindle. In theory, having an N-disk RAID1 will allow N sequential
+> +threads to read from all disks.
+> +
+>  .SS RAID4
+>  
+>  A RAID4 array is like a RAID0 array with an extra device for storing
+> -- 
+> 1.5.3.1
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
