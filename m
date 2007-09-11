@@ -1,59 +1,78 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH] Explain the read-balancing algorithm for RAID1 better in md.4
-Date: Tue, 11 Sep 2007 16:25:29 +0200
-Message-ID: <18150.42329.705444.365651@notabene.brown>
-References: <20070911035157.GB20596@teal.hq.k1024.org>
+From: Dimitrios Apostolou <jimis@gmx.net>
+Subject: Re: RAID1 and load-balancing during read
+Date: Tue, 11 Sep 2007 17:33:07 +0200
+Message-ID: <46E6B533.2070006@gmx.net>
+References: <200709102229.30655.jimis@gmx.net>	<20070910193530.GB2597@teal.hq.k1024.org>	<200709102251.37976.jimis@gmx.net>	<20070911034417.GA20596@teal.hq.k1024.org> <877imxibj2.fsf@informatik.uni-tuebingen.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Iustin Pop on Tuesday September 11
+In-Reply-To: <877imxibj2.fsf@informatik.uni-tuebingen.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Iustin Pop <iusty@k1024.org>
+To: Goswin von Brederlow <brederlo@informatik.uni-tuebingen.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday September 11, iusty@k1024.org wrote:
-> There are many questions on the mailing list about the RAID1 read
-> performance profile. This patch adds a new paragraph to the RAID1
-> section in md.4 that details what kind of speed-up one should expect
-> from RAID1.
+Goswin von Brederlow wrote:
+> As I understand it the problem is the hardware. Reading a chunk of
+> data from a disk means that the head has to seek to the right track
+> and the disk has to spin to the right position. After that you can
+> read a full revolution of the disk worth of data sequentially.
 > 
-> Signed-off-by: Iustin Pop <iusty@k1024.org>
-> ---
-> this patch is against the git tree of mdadm.
+> Now consider what happens if you read 4K per disk in stripes. The disk
+> seeks to the right track, spins to the right position and reads
+> 4k. Then it waits for 4k to rotate below the head, read 4k, waits 4k,
+> read 4k, waits 4k, .... That way both disks are busy without any gain.
 
-Thanks.  This patch is now *in* the git tree of mdadm.
+I'm not sure about that. All disks have some sort of read-ahead option. 
+Usually this read-ahead option is configurable too. What if the 
+read-ahead was set to 2*chunk size (for RAID1 with 2 disks). The 
+algorithm for reading in parallel from both disks would then be:
 
-NeilBrown
+1st disk:
+current_pos1= read(chunk_size)
+seek(current_pos1 + chunk_size)
 
+2nd disk:
+seek(current_pos2+chunk_size)
+current_pos2= read(chunk_size)
+
+
+Of course if drive read-ahead works properly (which should be for small 
+values) the seek() functions would not really cause the drive to seek.
+
+As for the example you mentioned I'm quite sure that reading 4K from a 
+drive and then seeking 4K forward and reading again would not result in 
+any slowdown, since most of today's IDE drives have a default read-ahead 
+of 128KB.
 
 > 
->  md.4 |    7 +++++++
->  1 files changed, 7 insertions(+), 0 deletions(-)
+> What you would need to do is read one track from one disk, the next
+> track from the other and so on. But how should the kernel know where
+> tracks start and end. That is highly device dependent and differs
+> between the outside and inside of the platter. The geometry values
+> reported by the disk is purely fictional so the CHS values are no
+> help.
 > 
-> diff --git a/md.4 b/md.4
-> index cf423cb..db39aba 100644
-> --- a/md.4
-> +++ b/md.4
-> @@ -168,6 +168,13 @@ All devices in a RAID1 array should be the same size.  If they are
->  not, then only the amount of space available on the smallest device is
->  used (any extra space on other devices is wasted).
->  
-> +Note that the read balancing done by the driver does not make the RAID1
-> +performance profile be the same as for RAID0; a single stream of
-> +sequential input will not be accelerated (e.g. a single dd), but
-> +multiple sequential streams or a random workload will use more than one
-> +spindle. In theory, having an N-disk RAID1 will allow N sequential
-> +threads to read from all disks.
-> +
->  .SS RAID4
->  
->  A RAID4 array is like a RAID0 array with an extra device for storing
-> -- 
-> 1.5.3.1
+>> OTOH, random I/O or multiple threads are being sped up by raid1. And
+>> people have said on the list that using the raid10 module with only two
+>> disks and (IIRC) in offset or far mode will give better read
+>> performance, albeit it reduces write performance.
 > 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> I found that near copies behave like raid1, offset copies are slower
+> in both reading and writing (beats me why) and far copies are slightly
+> faster than near copies in write and twice as fast in read. All for
+> sequential read/write. For random writes far copies should be slower
+> to write.
+> 
+>> Hmmm, I think a patch is needed to md.4 in order to explain this right
+>> at the source of the confusion.
+>>
+>> thanks,
+>> iustin
+> 
+> MfG
+>         Goswin
+
+Thanks,
+Dimitris
