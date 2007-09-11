@@ -1,46 +1,72 @@
-From: Iustin Pop <iusty@k1024.org>
-Subject: [PATCH] Explain the read-balancing algorithm for RAID1 better in
-	md.4
-Date: Tue, 11 Sep 2007 05:51:57 +0200
-Message-ID: <20070911035157.GB20596@teal.hq.k1024.org>
+From: "Jeffrey W. Baker" <jwbaker@acm.org>
+Subject: unreasonable latentcies under heavy write load
+Date: Mon, 10 Sep 2007 20:38:23 -0700
+Message-ID: <1189481903.16669.13.camel@hannibal>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-There are many questions on the mailing list about the RAID1 read
-performance profile. This patch adds a new paragraph to the RAID1
-section in md.4 that details what kind of speed-up one should expect
-from RAID1.
+I'm having some troubles with the system below:
 
-Signed-off-by: Iustin Pop <iusty@k1024.org>
----
-this patch is against the git tree of mdadm.
+Linux inhale 2.6.18-4-amd64 #1 SMP Thu May 10 01:01:58 UTC 2007 x86_64 GNU/Linux
 
- md.4 |    7 +++++++
- 1 files changed, 7 insertions(+), 0 deletions(-)
+md2 is a 
 
-diff --git a/md.4 b/md.4
-index cf423cb..db39aba 100644
---- a/md.4
-+++ b/md.4
-@@ -168,6 +168,13 @@ All devices in a RAID1 array should be the same size.  If they are
- not, then only the amount of space available on the smallest device is
- used (any extra space on other devices is wasted).
- 
-+Note that the read balancing done by the driver does not make the RAID1
-+performance profile be the same as for RAID0; a single stream of
-+sequential input will not be accelerated (e.g. a single dd), but
-+multiple sequential streams or a random workload will use more than one
-+spindle. In theory, having an N-disk RAID1 will allow N sequential
-+threads to read from all disks.
-+
- .SS RAID4
- 
- A RAID4 array is like a RAID0 array with an extra device for storing
--- 
-1.5.3.1
+md2 : active raid1 sda3[0] sdb3[1]
+      484359680 blocks [2/2] [UU]
+
+sda and sdb are both
+
+  Vendor: ATA       Model: ST3500630AS       Rev: 3.AA
+  Type:   Direct-Access                      ANSI SCSI revision: 05
+
+The problem is _extreme_ latencies under a write load, and also weird
+accounting as seen in iostat.  I know I've complained about this over on
+linux-mm, but with the raid1 it seems even worse than usual.  Nothing
+happens on the system for literally minutes at a stretch.  It takes half
+an hour to unpack a 1GB .zip archive (into a 7.4GB directory).  During
+the lengthy pauses, md2_raid1 is the only process that gets any time
+(normally < 1% CPU).  iostat reads weirdly (iostat -kx 10):
+
+avg-cpu:  %user   %nice %system %iowait  %steal   %idle
+           2.05    0.00    3.55   51.07    0.00   43.33
+
+Device:         rrqm/s   wrqm/s   r/s   w/s    rkB/s    wkB/s avgrq-sz avgqu-sz   await  svctm  %util
+sda              12.30  3495.00  5.80 89.80   916.80 14119.20   314.56   143.68 1522.19  10.46 100.04
+sdb               0.00  3494.20  0.10 87.50     0.40 13920.40   317.83    25.08  274.39  10.89  95.44
+md0               0.00     0.00  0.00  0.00     0.00     0.00     0.00     0.00    0.00   0.00   0.00
+md1               0.00     0.00  0.00  0.00     0.00     0.00     0.00     0.00    0.00   0.00   0.00
+md2               0.00     0.00 18.10 2425.10   904.40  9700.40     8.68     0.00    0.00   0.00   0.00
+
+avg-cpu:  %user   %nice %system %iowait  %steal   %idle
+           0.00    0.00    5.10   49.38    0.00   45.53
+
+Device:         rrqm/s   wrqm/s   r/s   w/s    rkB/s    wkB/s avgrq-sz avgqu-sz   await  svctm  %util
+sda               0.00  2954.60  0.20 99.10     0.80 12481.20   251.40   143.49 1449.52  10.07 100.04
+sdb               0.00  2954.60  0.10 99.00     0.40 12240.40   247.04    39.32  398.24  10.09 100.04
+md0               0.00     0.00  0.00  0.00     0.00     0.00     0.00     0.00    0.00   0.00   0.00
+md1               0.00     0.00  0.00  0.00     0.00     0.00     0.00     0.00    0.00   0.00   0.00
+md2               0.00     0.00  0.30 16917.30     1.20 67669.20     8.00     0.00    0.00   0.00   0.00
+
+That seems a little weird to me.  Why is sda + sdb != md2?  Is md2
+really issuing 17000 writes per second over a period of ten seconds?  If
+so, why?  Also:
+
+avg-cpu:  %user   %nice %system %iowait  %steal   %idle
+           0.00    0.00    1.25   48.75    0.00   50.00
+
+Device:         rrqm/s   wrqm/s   r/s   w/s    rkB/s    wkB/s avgrq-sz avgqu-sz   await  svctm  %util
+sda               0.00  2805.69  0.00 104.69     0.00 11638.72   222.35    87.11  848.35   9.54  99.84
+sdb               0.00  2806.29  0.00 102.50     0.00 11471.06   223.84   143.09 1400.85   9.74  99.84
+md0               0.00     0.00  0.00  0.00     0.00     0.00     0.00     0.00    0.00   0.00   0.00
+md1               0.00     0.00  0.00  0.00     0.00     0.00     0.00     0.00    0.00   0.00   0.00
+md2               0.00     0.00  0.00  0.00     0.00     0.00     0.00     0.00    0.00   0.00   0.00
+
+Is that normal?
+
+-jwb
 
