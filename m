@@ -1,46 +1,46 @@
-From: Dimitrios Apostolou <jimis@gmx.net>
-Subject: Re: RAID1 and load-balancing during read
-Date: Mon, 10 Sep 2007 22:51:37 +0300
-Message-ID: <200709102251.37976.jimis@gmx.net>
-References: <200709102229.30655.jimis@gmx.net> <20070910193530.GB2597@teal.hq.k1024.org>
+From: Iustin Pop <iusty@k1024.org>
+Subject: [PATCH] Explain the read-balancing algorithm for RAID1 better in
+	md.4
+Date: Tue, 11 Sep 2007 05:51:57 +0200
+Message-ID: <20070911035157.GB20596@teal.hq.k1024.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20070910193530.GB2597@teal.hq.k1024.org>
 Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Iustin Pop <iusty@k1024.org>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Monday 10 September 2007 22:35:30 Iustin Pop wrote:
-> On Mon, Sep 10, 2007 at 10:29:30PM +0300, Dimitrios Apostolou wrote:
-> > Hello list,
-> >
-> > I just created a RAID1 array consisting of two disks. After experiments
-> > with processes *reading* from the device (badblocks, dd) and the iostat
-> > program, I can see that only one disk is being utilised for reading. To
-> > be exact, every time I execute the command one of the two disks is being
-> > randomly used, but the other one has absolutely no activity.
-> >
-> > My question is: why isn't load balancing happening? Is there an option
-> > I'm missing? Until now I though it was the default for all RAID1
-> > implementations.
->
-> Did you read the archives of this list? This question has been answered,
-> like, 4 times already in the last months.
->
-> And yes, the driver does do load balancing. Just not as RAID0 does,
-> since it's not RAID0.
+There are many questions on the mailing list about the RAID1 read
+performance profile. This patch adds a new paragraph to the RAID1
+section in md.4 that details what kind of speed-up one should expect
+from RAID1.
 
-Of course I did a quick search in the archives but couldn't find anything. 
-I'll search better, thanks anyway. Moreover, I think I found the answer in 
-the code after posting. There is a comment somewhere in read_balance() 
-saying "Don't change to another disk for sequential reads". I have to study 
-it a bit to figure out *why* you chose that way. 
+Signed-off-by: Iustin Pop <iusty@k1024.org>
+---
+this patch is against the git tree of mdadm.
 
+ md.4 |    7 +++++++
+ 1 files changed, 7 insertions(+), 0 deletions(-)
 
-Thanks, 
-Dimitris
+diff --git a/md.4 b/md.4
+index cf423cb..db39aba 100644
+--- a/md.4
++++ b/md.4
+@@ -168,6 +168,13 @@ All devices in a RAID1 array should be the same size.  If they are
+ not, then only the amount of space available on the smallest device is
+ used (any extra space on other devices is wasted).
+ 
++Note that the read balancing done by the driver does not make the RAID1
++performance profile be the same as for RAID0; a single stream of
++sequential input will not be accelerated (e.g. a single dd), but
++multiple sequential streams or a random workload will use more than one
++spindle. In theory, having an N-disk RAID1 will allow N sequential
++threads to read from all disks.
++
+ .SS RAID4
+ 
+ A RAID4 array is like a RAID0 array with an extra device for storing
+-- 
+1.5.3.1
+
