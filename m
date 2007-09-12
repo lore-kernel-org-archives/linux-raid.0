@@ -1,70 +1,75 @@
-From: "Hiren Joshi" <josh@moonfruit.com>
-Subject: RE: Q: Online resizing ext3 FS
-Date: Wed, 12 Sep 2007 15:40:11 +0100
-Message-ID: <37238624DE95654997C360CA6CD36F8403B5BA13@mimas.greekattic.local>
-Reply-To: LVM general discussion and development <linux-lvm@redhat.com>
+From: Tomasz Chmielewski <mangoo@wpkg.org>
+Subject: Re: [linux-lvm] Q: Online resizing ext3 FS
+Date: Wed, 12 Sep 2007 16:56:50 +0200
+Message-ID: <46E7FE32.7010404@wpkg.org>
+References: <20070912163621.1f951876@slopi>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-lvm-bounces@redhat.com>
-Content-class: urn:content-classes:message
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/linux-lvm>,
-	<mailto:linux-lvm-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/linux-lvm>
-List-Post: <mailto:linux-lvm@redhat.com>
-List-Help: <mailto:linux-lvm-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/linux-lvm>,
-	<mailto:linux-lvm-request@redhat.com?subject=subscribe>
-Sender: linux-lvm-bounces@redhat.com
-Errors-To: linux-lvm-bounces@redhat.com
-To: LVM general discussion and development <linux-lvm@redhat.com>, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20070912163621.1f951876@slopi>
+Sender: linux-raid-owner@vger.kernel.org
+To: LVM general discussion and development <linux-lvm@redhat.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I've been fine with it, so long as you have done the ext2prepare before
-hand. Otherwise you will only be able to go up to the next 16G boundary.
+Chris Osicki schrieb:
+> Hi
+> 
+> I apologize in advance for asking a question not really appropriate
+> for this mailing list, but I couldn't find a better place with lots of
+> people managing lots of disk space. 
+> 
+> The question:
+> Has anyone of you been using ext2online to resize (large) ext3 filesystems?
+> I have to do it going from 500GB to 1TB on a productive system I was
+> wondering if you have some horror/success stories.
+> I'm using RHEL4/U4 (kernel 2.6.9) on this system.
 
-I asked it to skip the fsck check but I've been told this is not a good
-idea....=20
+Yes, I tried to online resize a similar filesystem (600 MB to 1.2 TB) 
+and it didn't work.
 
------Original Message-----
-From: linux-lvm-bounces@redhat.com [mailto:linux-lvm-bounces@redhat.com]
-On Behalf Of Chris Osicki
-Sent: 12 September 2007 15:36
-To: linux-raid@vger.kernel.org; linux-lvm@redhat.com
-Subject: [linux-lvm] Q: Online resizing ext3 FS
+At some point, resize2fs would just exit with errors.
+I tried to do it several times before I figured out what's missing; 
+sometimes, I interrupted the process with ctrl+c. No data loss occurred.
+
+To do an online ext3 resize, the filesystem needs a "resize_inode" 
+feature. You can check the features with dumpe2fs:
+
+# dumpe2fs -h /dev/sda1
+(...)
+Filesystem features:      has_journal resize_inode dir_index filetype 
+needs_recovery sparse_super large_file
+(...)
+
+This flag is added by default only in the recent versions of e2progs 
+(1.39 and later AFAIR); before, it had to be specified manually. So with 
+RHEL4, you may be out of luck.
 
 
-Hi
+In the end, I had to to an offline resize.
 
-I apologize in advance for asking a question not really appropriate for
-this mailing list, but I couldn't find a better place with lots of
-people managing lots of disk space.=20
 
-The question:
-Has anyone of you been using ext2online to resize (large) ext3
-filesystems?
-I have to do it going from 500GB to 1TB on a productive system I was
-wondering if you have some horror/success stories.
-I'm using RHEL4/U4 (kernel 2.6.9) on this system.
+I had this volume mirrored on another machine, so I didn't worry that 
+much though.
 
-Thanks for your time.
 
-Regards,
-Chris
+Also, to resize a filesystem of that size you would need plenty of RAM 
+(if you have about 1 GB RAM free, it should be just enough; otherwise, 
+your machine will be swapping, and the process will take longer).
+Before, I tried to resize it on a machine with 256 MB and several 
+snapshots; resize2fs was killed because of OOM, and still, no data loss.
 
-UNIX System Engineer
-Swisscom Mobile Ltd.
-Switzerland
 
-_______________________________________________
-linux-lvm mailing list
-linux-lvm@redhat.com
-https://www.redhat.com/mailman/listinfo/linux-lvm
-read the LVM HOW-TO at http://tldp.org/HOWTO/LVM-HOWTO/
+If you have that an old kernel, take care if you're using snapshots; I 
+believe they are stable only as of 2.6.22 (before 2.6.22 snapshots 
+needed a lot of RAM; before 2.6.18 there were problems with snapshots 
+removing etc.).
 
-_______________________________________________
-linux-lvm mailing list
-linux-lvm@redhat.com
-https://www.redhat.com/mailman/listinfo/linux-lvm
-read the LVM HOW-TO at http://tldp.org/HOWTO/LVM-HOWTO/
+
+Would be good to add some of that info to LVM HOWTO.
+
+
+-- 
+Tomasz Chmielewski
+http://wpkg.org
