@@ -1,63 +1,40 @@
-From: "Hiren Joshi" <josh@moonfruit.com>
-Subject: RE: [linux-lvm] Q: Online resizing ext3 FS
-Date: Thu, 13 Sep 2007 09:09:10 +0100
-Message-ID: <37238624DE95654997C360CA6CD36F8403B5BA2C@mimas.greekattic.local>
+From: Yuri Tikhonov <yur@emcraft.com>
+Subject: Re: md raid acceleration and the async_tx api
+Date: Thu, 13 Sep 2007 13:38:17 +0400
+Message-ID: <200709131338.17972.yur@emcraft.com>
+References: <200709071444.34911.yur@emcraft.com> <0C7297FA1D2D244A9C7F6959C0BF1E520268732A@azsmsx413.amr.corp.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+  charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
+In-Reply-To: <0C7297FA1D2D244A9C7F6959C0BF1E520268732A@azsmsx413.amr.corp.intel.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: LVM general discussion and development <linux-lvm@redhat.com>
-Cc: linux-raid@vger.kernel.org
+To: "Williams, Dan J" <dan.j.williams@intel.com>
+Cc: Wolfgang Denk <wd@denx.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Sorry for the top quoting, I'm new to outlook =)
 
-We did something similar, as the lv grows (with ext2online) the snapshot
-will start filling up. If the resize fails, you will not be able to
-(easily) revert directly back to the logical volume. This is because as
-you start copying stuff back, the snapshot will be filling up. If you
-want to be 100% safe, I would say go for some near line device that can
-store 500G and backup to that!
-HTH
+ Hi Dan,
 
------Original Message-----
-From: linux-lvm-bounces@redhat.com [mailto:linux-lvm-bounces@redhat.com]
-On Behalf Of Stuart D. Gathman
-Sent: 12 September 2007 21:04
-To: LVM general discussion and development
-Cc: linux-raid@vger.kernel.org
-Subject: RE: [linux-lvm] Q: Online resizing ext3 FS
+On Friday 07 September 2007 20:02, you wrote:
+> You need to fetch from the 'md-for-linus' tree.  But I have attached
+> them as well.
+>
+> git fetch git://lost.foo-projects.org/~dwillia2/git/iop
+> md-for-linus:md-for-linus
 
-On Wed, 12 Sep 2007, Hiren Joshi wrote:
+ Thanks.
 
-> Has anyone of you been using ext2online to resize (large) ext3 
-> filesystems?
-> I have to do it going from 500GB to 1TB on a productive system I was 
-> wondering if you have some horror/success stories.
-> I'm using RHEL4/U4 (kernel 2.6.9) on this system.
+ Unrelated question. Comparing the drivers/md/raid5.c file in the Linus's 
+2.6.23-rc6 tree and in your md-for-linus one I'd found the following 
+difference in the expand-related part of the handle_stripe5() function:
 
-This brings up an LVM related question I've had.  Can I do this:
+-		s.locked += handle_write_operations5(sh, 1, 1);
++		s.locked += handle_write_operations5(sh, 0, 1);
 
-  1) take snapshot of 500GB LV
-  2) resize source LV to 1TB
-  3) run ext2online
-  4a) resize succeeds - remove shapshot
-  4b) resize fails horribly - copy shapshot to LV and restart
-    4b.1) is there a way to "revert" the source LV to the snapshot?
-    	(without allocating snapshot as big as source LV)
+ That is, in your case we are passing rcw=0, whereas in the Linus's case the 
+handle_write_operation5() is called with rcw=1. What code is correct ?
 
--- 
-	      Stuart D. Gathman <stuart@bmsi.com>
-    Business Management Systems Inc.  Phone: 703 591-0911 Fax: 703
-591-6154 "Confutatis maledictis, flammis acribus addictis" - background
-song for a Microsoft sponsored "Where do you want to go from here?"
-commercial.
-
-_______________________________________________
-linux-lvm mailing list
-linux-lvm@redhat.com
-https://www.redhat.com/mailman/listinfo/linux-lvm
-read the LVM HOW-TO at http://tldp.org/HOWTO/LVM-HOWTO/
+ Regards, Yuri
