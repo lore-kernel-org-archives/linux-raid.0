@@ -1,52 +1,86 @@
-From: "Stuart D. Gathman" <stuart@bmsi.com>
-Subject: RE: Q: Online resizing ext3 FS
-Date: Wed, 12 Sep 2007 16:04:21 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44.0709121600080.1583-100000@bmsred.bmsi.com>
-References: <37238624DE95654997C360CA6CD36F8403B5BA13@mimas.greekattic.local>
-Reply-To: LVM general discussion and development <linux-lvm@redhat.com>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-lvm-bounces@redhat.com>
-In-Reply-To: <37238624DE95654997C360CA6CD36F8403B5BA13@mimas.greekattic.local>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/linux-lvm>,
-	<mailto:linux-lvm-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/linux-lvm>
-List-Post: <mailto:linux-lvm@redhat.com>
-List-Help: <mailto:linux-lvm-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/linux-lvm>,
-	<mailto:linux-lvm-request@redhat.com?subject=subscribe>
-Sender: linux-lvm-bounces@redhat.com
-Errors-To: linux-lvm-bounces@redhat.com
-To: LVM general discussion and development <linux-lvm@redhat.com>
-Cc: linux-raid@vger.kernel.org
+From: David Miller <millerdc@fusion.gat.com>
+Subject: RAID6 mdadm --grow bug?
+Date: Wed, 12 Sep 2007 17:39:08 -0700
+Message-ID: <42161BFD-EAE6-4485-8DE6-05D0EBE51A06@fusion.gat.com>
+Mime-Version: 1.0 (Apple Message framework v752.3)
+Content-Type: text/plain; charset=ISO-8859-1;
+	delsp=yes	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 12 Sep 2007, Hiren Joshi wrote:
 
-> Has anyone of you been using ext2online to resize (large) ext3
-> filesystems?
-> I have to do it going from 500GB to 1TB on a productive system I was
-> wondering if you have some horror/success stories.
-> I'm using RHEL4/U4 (kernel 2.6.9) on this system.
 
-This brings up an LVM related question I've had.  Can I do this:
+Problem:
 
-  1) take snapshot of 500GB LV
-  2) resize source LV to 1TB
-  3) run ext2online
-  4a) resize succeeds - remove shapshot
-  4b) resize fails horribly - copy shapshot to LV and restart
-    4b.1) is there a way to "revert" the source LV to the snapshot?
-    	(without allocating snapshot as big as source LV)
+The mdadm --grow command fails when trying to add disk to a RAID6.
 
--- 
-	      Stuart D. Gathman <stuart@bmsi.com>
-    Business Management Systems Inc.  Phone: 703 591-0911 Fax: 703 591-6154
-"Confutatis maledictis, flammis acribus addictis" - background song for
-a Microsoft sponsored "Where do you want to go from here?" commercial.
+The man page says it can do this.
 
-_______________________________________________
-linux-lvm mailing list
-linux-lvm@redhat.com
-https://www.redhat.com/mailman/listinfo/linux-lvm
-read the LVM HOW-TO at http://tldp.org/HOWTO/LVM-HOWTO/
+"GROW MODE
+        The GROW mode is used for changing the size or shape of an =20
+active array.  For this to  work,
+        the  kernel must support the necessary change.  Various types =20
+of growth are being added dur-
+        ing 2.6 development, including restructuring a raid5 array to =20
+have more active devices.
+
+        Currently the only support available is to
+
+        =B7   change the "size" attribute for RAID1, RAID5 and RAID6.
+
+        =B7   increase the "raid-disks" attribute of RAID1, RAID5, and =
+=20
+RAID6.
+
+        =B7   add a write-intent bitmap to any array which supports =20
+these bitmaps, or remove a  write-
+            intent bitmap from such an array.
+"
+
+So far I have replicated this problem on RHEL5 and Ubuntu 7.04 =20
+running the latest official updates and patches. I have even tried it =20
+with the most latest version of mdadm 2.6.3 under RHEL5. RHEL5 uses =20
+version 2.5.4.
+
+How to replicate the problem:
+
+You can either use real physical disks or use the loopback device to =20
+create fake disks.
+
+Here are the steps using the loopback method as root.
+
+cd /tmp
+dd if=3D/dev/zero of=3Drd1 bs=3D10240 count=3D10240
+cp rd1 rd2;cp rd1 rd3;cp rd1 rd4;cp rd1 rd5
+losetup /dev/loop1 rd1;losetup /dev/loop2 rd2;losetup /dev/loop3 =20
+rd3;losetup /dev/loop4 rd4;losetup /dev/loop5 rd5
+mdadm --create --verbose /dev/md0 --level=3D6 --raid-devices=3D4 /dev/=20
+loop1 /dev/loop2 /dev/loop3 /dev/loop4
+
+At this point wait a minute while the raid is being built.
+
+mdadm --add /dev/md0 /dev/loop5
+mdadm --grow /dev/md0 --raid-devices=3D5
+
+You should get the following error
+
+mdadm: Need to backup 384K of critical section..
+mdadm: Cannot set device size/shape for /dev/md0: Invalid argument
+
+How to clean up
+
+mdadm --stop /dev/md0
+mdadm --remove /dev/md0
+losetup -d /dev/loop1;losetup -d /dev/loop2;losetup -d /dev/=20
+loop3;losetup -d /dev/loop4;losetup -d /dev/loop5
+rm rd1 rd2 rd3 rd4 rd5
+
+David.
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
