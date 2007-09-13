@@ -1,44 +1,45 @@
-From: Goswin von Brederlow <brederlo@informatik.uni-tuebingen.de>
+From: Tomasz Chmielewski <mangoo@wpkg.org>
 Subject: Re: [linux-lvm] Q: Online resizing ext3 FS
-Date: Thu, 13 Sep 2007 15:02:43 +0200
-Message-ID: <87abrqn2fg.fsf@informatik.uni-tuebingen.de>
-References: <Pine.LNX.4.44.0709121600080.1583-100000@bmsred.bmsi.com>
+Date: Thu, 13 Sep 2007 15:07:52 +0200
+Message-ID: <46E93628.3060902@wpkg.org>
+References: <20070912163621.1f951876@slopi> <46E7FE32.7010404@wpkg.org> <87ejh2n2kk.fsf@informatik.uni-tuebingen.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44.0709121600080.1583-100000@bmsred.bmsi.com> (Stuart
-	D. Gathman's message of "Wed, 12 Sep 2007 16:04:21 -0400 (EDT)")
+In-Reply-To: <87ejh2n2kk.fsf@informatik.uni-tuebingen.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Stuart D. Gathman" <stuart@bmsi.com>
+To: Goswin von Brederlow <brederlo@informatik.uni-tuebingen.de>
 Cc: LVM general discussion and development <linux-lvm@redhat.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-"Stuart D. Gathman" <stuart@bmsi.com> writes:
+Goswin von Brederlow schrieb:
+> Tomasz Chmielewski <mangoo@wpkg.org> writes:
 
-> On Wed, 12 Sep 2007, Hiren Joshi wrote:
->
->> Has anyone of you been using ext2online to resize (large) ext3
->> filesystems?
->> I have to do it going from 500GB to 1TB on a productive system I was
->> wondering if you have some horror/success stories.
->> I'm using RHEL4/U4 (kernel 2.6.9) on this system.
->
-> This brings up an LVM related question I've had.  Can I do this:
->
->   1) take snapshot of 500GB LV
->   2) resize source LV to 1TB
->   3) run ext2online
->   4a) resize succeeds - remove shapshot
->   4b) resize fails horribly - copy shapshot to LV and restart
->     4b.1) is there a way to "revert" the source LV to the snapshot?
->     	(without allocating snapshot as big as source LV)
+(...)
 
-Why do you resize the LV if you want to test it first? Give the
-snapshot the extra 500G and resize that. If it fails you just remove
-the snapshot and try again.
+>> Yes, I tried to online resize a similar filesystem (600 MB to 1.2 TB)
+>> and it didn't work.
+>>
+>> At some point, resize2fs would just exit with errors.
+>> I tried to do it several times before I figured out what's missing;
+>> sometimes, I interrupted the process with ctrl+c. No data loss
+>> occurred.
+>>
+>> To do an online ext3 resize, the filesystem needs a "resize_inode"
+>> feature. You can check the features with dumpe2fs:
+> 
+> So was that what you were missing or did some other error occur?
+> 
+> I tried to resize an fs without resize_inode and it just plain told me
+> and abrted.
 
-If it succeeds then you can do it the other way around and resize for
-real.
+It was working for some time (15 or 30 minutes?), the fs grew a couple 
+of gigabytes, and then it exited with an error. At first I thought it's 
+because the fs might need fsck, but after I did fsck, it didn't help - 
+next online tries didn't increase the fs anymore.
 
-MfG
-        Goswin
+
+-- 
+Tomasz Chmielewski
+http://wpkg.org
