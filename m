@@ -1,69 +1,68 @@
-From: Goswin von Brederlow <brederlo@informatik.uni-tuebingen.de>
-Subject: Re: MD devices renaming or re-ordering question
-Date: Thu, 13 Sep 2007 22:25:16 +0200
-Message-ID: <87odg61ff7.fsf@informatik.uni-tuebingen.de>
-References: <46E984E7.1080903@harddata.com>
+From: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
+Subject: Re: md raid acceleration and the async_tx api
+Date: Thu, 13 Sep 2007 14:14:19 -0700 (PDT)
+Message-ID: <Pine.LNX.4.64.0709131412240.10858@filesrv1.baby-dragons.com>
+References: <200709071444.34911.yur@emcraft.com>
+ <0C7297FA1D2D244A9C7F6959C0BF1E520268732A@azsmsx413.amr.corp.intel.com>
+ <200709131338.17972.yur@emcraft.com> <e9c3a7c20709130952w7c6fed5fo76c78bef299bdb9e@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <46E984E7.1080903@harddata.com> (Maurice Hilarius's message of
-	"Thu, 13 Sep 2007 12:43:51 -0600")
+In-Reply-To: <e9c3a7c20709130952w7c6fed5fo76c78bef299bdb9e@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Maurice Hilarius <maurice@harddata.com>
-Cc: linux-raid@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: linux-raid maillist <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Maurice Hilarius <maurice@harddata.com> writes:
+ 	Hello Dan ,
 
-> Hi to all.
+On Thu, 13 Sep 2007, Dan Williams wrote:
+> On 9/13/07, Yuri Tikhonov <yur@emcraft.com> wrote:
+>>  Hi Dan,
+>> On Friday 07 September 2007 20:02, you wrote:
+>>> You need to fetch from the 'md-for-linus' tree.  But I have attached
+>>> them as well.
+>>>
+>>> git fetch git://lost.foo-projects.org/~dwillia2/git/iop
+>>> md-for-linus:md-for-linus
+>>
+>>  Thanks.
+>>
+>>  Unrelated question. Comparing the drivers/md/raid5.c file in the Linus's
+>> 2.6.23-rc6 tree and in your md-for-linus one I'd found the following
+>> difference in the expand-related part of the handle_stripe5() function:
+>>
+>> -               s.locked += handle_write_operations5(sh, 1, 1);
+>> +               s.locked += handle_write_operations5(sh, 0, 1);
+>>
+>>  That is, in your case we are passing rcw=0, whereas in the Linus's case the
+>> handle_write_operation5() is called with rcw=1. What code is correct ?
+>>
+> There was a recent bug discovered in my changes to the expansion code.
+> The fix has now gone into Linus's tree through Andrew's tree.  I kept
+> the fix out of my 'md-for-linus' tree to prevent it getting dropped
+> from -mm due to automatic git-tree merge-detection.  I have now
+> rebased my git tree so everything is in sync.
 >
-> I wonder if somebody would care to help me to solve a problem?
+> However, after talking with Neil at LCE we came to the conclusion that
+> it would be best if I just sent patches since git tree updates tend to
+> not get enough review, and because the patch sets will be more
+> manageable now that the big pieces of the acceleration infrastructure
+> have been merged.
 >
-> I have some servers.
-> They are running CentOS5
-> This OS has a limitation where the maximum filesystem size is 8TB.
+>>  Regards, Yuri
 >
-> Each server curr3ently has a  AMCC/3WARE 16 port SATA controllers. Total
-> of 16 ports / drives
-> I am using 750GB drives.
->
-> I am exporting the drives as single, NOT as hardware RAID
-> That is due to the filesystem and controller limitations, among other
-> reasons.
->
-> Each server currently has 16 disks attached to the one controller
->
-> I want to add a 2nd controller, and, for now, 4 more disks on it.
->
-> I want to have the boot disk as a plain disk, as presently configured as
-> sda1,2,3
->
-> The remaining 15 disks are configured as :
-> sdb1 through sde1 as md0 ( 4 devices/partitions)
-> sdf1 through sdp1 as md1 (10 devices/partitions)
-> I want to add a 2nd controller, and 4 more drives, to the md0 device.
->
-> But, I do not want md0 to be "split" across the 2 controllers this way.
-> I prefer to do the split on md1
->
-> Other than starting from scratch, the best solution would be to add the
-> disks to md0, then to "magically" turn md0 into md1, and md1 into md0
->
-> So, the question:
-> How does one make md1 into md0, and vice versa?
-> Without losing the data on these md's ?
->
-> Thanks in advance for any suggestions.
+> Thanks,
+> Dan
+ 	Does this discussion of patches include any changes to cure the 'BUG' 
+instance I reported ?
 
-The simplest is to pull the disks from md1 from the first controler
-and put them into the 2nd controler and then add the new disks to the
-first controler.
+ 	ie: raid5:md3: kernel BUG , followed by , Silent halt .
 
-Actually I would pull the 4 disks from md0 and put them on the second
-controler. Have no split at all.
-
-Or alternatively split both raids evenly to balance loads between the
-controlers. Might be faster.
-
-MfG
-        Goswin
+ 		Tia ,  JimL
+-- 
++-----------------------------------------------------------------+
+| James   W.   Laferriere | System   Techniques | Give me VMS     |
+| Network        Engineer | 663  Beaumont  Blvd |  Give me Linux  |
+| babydr@baby-dragons.com | Pacifica, CA. 94044 |   only  on  AXP |
++-----------------------------------------------------------------+
