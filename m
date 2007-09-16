@@ -1,56 +1,35 @@
-From: "J. David Beutel" <jdb@getsu.com>
-Subject: Re: reducing the number of disks a RAID1 expects
-Date: Sat, 15 Sep 2007 11:13:46 -1000
-Message-ID: <46EC4B0A.9040906@getsu.com>
-References: <46E49991.9000000@getsu.com>	<46E4AC1A.3010509@sauce.co.nz>	<46E4F2EA.3020901@getsu.com>	<20070910095557.GA22549@teal.hq.k1024.org> <18150.41048.240735.467994@notabene.brown>
+From: Goswin von Brederlow <brederlo@informatik.uni-tuebingen.de>
+Subject: Re: MD RAID1 performance very different from non-RAID partition
+Date: Mon, 17 Sep 2007 00:08:05 +0200
+Message-ID: <878x765kmy.fsf@informatik.uni-tuebingen.de>
+References: <46EB6D67.1000802@quo.to>
+	<20070915070914.GA21515@teal.hq.k1024.org> <46EC2043.5010006@quo.to>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18150.41048.240735.467994@notabene.brown>
+In-Reply-To: <46EC2043.5010006@quo.to> (Jordan Russell's message of "Sat, 15
+	Sep 2007 13:11:15 -0500")
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Iustin Pop <iusty@k1024.org>, Richard Scobie <richard@sauce.co.nz>, Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: Jordan Russell <jr-list-2007@quo.to>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil Brown wrote:
-> 2.6.12 does support reducing the number of drives in a raid1, but it
->     will only remove drives from the end of the list. e.g. if the
->     state was
+Jordan Russell <jr-list-2007@quo.to> writes:
+
+> Iustin Pop wrote:
+>> Maybe it's because md doesn't support barriers whereas the disks
+>> supports them? In this case some filesystems, for example XFS, will work
+>> faster on raid1 because they can't force the flush to disk using
+>> barriers.
 >
->       58604992 blocks [3/2] [UU_]
+> It's an ext3 partition, so I guess that doesn't apply?
 >
-> then it would work.  But as it is
->
->       58604992 blocks [3/2] [_UU]
->
-> it won't.  You could fail the last drive (hdc8) and then add it back
-> in again.  This would move it to the first slot, but it would cause a
-> full resync which is a bit of a waste.
->   
+> I tried remounting /dev/sda2 with the "barrier=0" option (which I assume
+> disables barriers, looking at the source), though, just to see if it
+> would make any difference, but it didn't; the database build still took
+> 31 minutes.
 
-Thanks for your help!  That's the route I took.  It worked ([2/2] 
-[UU]).  The only hiccup was that when I rebooted, hdd2 was back in the 
-first slot by itself ([3/1] [U__]).  I guess there was some contention 
-in discovery.  But all I had to do was physically remove hdd and the 
-remaining two were back to [2/2] [UU].
+Compare the read ahead settings.
 
-> Since commit 6ea9c07c6c6d1c14d9757dd8470dc4c85bbe9f28 (about
-> 2.6.13-rc4) raid1 will repack the devices to the start of the
-> list when trying to change the number of devices.
->   
-
-I couldn't find a newer kernel RPM for FC3, and I was nervous about 
-building a new kernel myself and screwing up my system, so I went the 
-slot rotate route instead.  It only took about 20 minutes to resync (a 
-lot faster than trying to build a new kernel).
-
-My main concern was that it would discover an unreadable sector while 
-resyncing from the last remaining drive and I would lose the whole 
-array.  (That didn't happen, though.)  I looked for some mdadm command 
-to check the remaining drive before I failed the last one, to help avoid 
-that worst case scenario, but couldn't find any.  Is there some way to 
-do that, for future reference?
-
-Cheers,
-11011011
+MfG
+        Goswin
