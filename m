@@ -1,36 +1,32 @@
-From: Jordan Russell <jr-list-2007@quo.to>
-Subject: Re: MD RAID1 performance very different from non-RAID partition
-Date: Wed, 19 Sep 2007 00:28:47 -0500
-Message-ID: <46F0B38F.8070901@quo.to>
-References: <46EB6D67.1000802@quo.to> <20070915070914.GA21515@teal.hq.k1024.org> <46EC2043.5010006@quo.to> <878x765kmy.fsf@informatik.uni-tuebingen.de> <46EEA413.8090706@quo.to> <20070918134438.GA1522@percy.comedia.it>
+From: "Wiesner Thomas" <thomas@bau-konform.at>
+Subject: Re: mke2fs stuck in D state while creating filesystem on md*
+Date: Wed, 19 Sep 2007 10:20:22 +0200
+Message-ID: <op.tyv6r8sb88izfi@barton2>
+References: <op.txtvfnrh88izfi@barton2> <46F010EE.3000202@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; format=flowed; delsp=yes; charset=iso-8859-15
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20070918134438.GA1522@percy.comedia.it>
+In-Reply-To: <46F010EE.3000202@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Luca Berra wrote:
-> On Mon, Sep 17, 2007 at 10:58:11AM -0500, Jordan Russell wrote:
->> Goswin von Brederlow wrote:
->>> Compare the read ahead settings.
->> I'm not sure what you mean. There's a per-mount read ahead setting?
->>
-> 
-> per device
-> 
-> compare
-> blockdev --getra /dev/sda2
-> and 
-> blockdev --getra /dev/md0
+> Has there been any progress on this? I think I saw it, or something  
+> similar, during some testing of recent 2.6.23-rc kernels, on mke2fs took  
+> about 11 min longer than all the others (~2 min) and it was not  
+> repeatable. I worry that process of more interest will have the same  
+> hang.
 
-Ah.
+Well, I must say: no. I haven't tried anything further. I've set up the  
+production system a week or so ago
+which runs Debian Etch with no modifications (kernel 2.6.18 I think, the  
+debian one and a mdadm 2.5.6-9).
+I didn't notice the problem while creating the raid but that doesn't mean  
+anything as I didn't pay attention
+and as I wrote earlier it isn't reliably reproducable.
+(Watching it on a large storage gets boring very fast.)
 
-256 on /dev/sda2 with md0 stopped
-256 on /dev/sda2 with md0 active
-256 on /dev/md0 with md0 active
-
--- 
-Jordan Russell
+I'm not a kernel programmer but I can test another kernel or mdadm version  
+if it helps, but let me know
+if you want me to do that.
