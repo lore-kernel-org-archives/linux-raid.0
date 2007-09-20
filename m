@@ -1,71 +1,41 @@
-From: "Dean S. Messing" <deanm@sharplabs.com>
-Subject: Re: Help: very slow software RAID 5.
-Date: Wed, 19 Sep 2007 16:31:37 -0700 (PDT)
-Message-ID: <20070919233137.7D5B2102365@medulla.enet.sharplabs.com>
-References: <20070918230914.9FF5910215F@medulla.enet.sharplabs.com>
- <Pine.LNX.4.64.0709182004210.13217@p34.internal.lan>
- <20070919014919.DF19D10215F@medulla.enet.sharplabs.com>
- <Pine.LNX.4.64.0709190437050.4411@p34.internal.lan>
- <20070919174956.9497310209D@medulla.enet.sharplabs.com> <Pine.LNX.4.64.0709191425440.27758@p34.internal.lan>
+From: "Mike Snitzer" <snitzer@gmail.com>
+Subject: Re: mke2fs stuck in D state while creating filesystem on md*
+Date: Wed, 19 Sep 2007 21:19:02 -0400
+Message-ID: <170fa0d20709191819w694cb7ddo37a19817ae4dfcad@mail.gmail.com>
+References: <op.txtvfnrh88izfi@barton2> <46F010EE.3000202@tmr.com>
+	 <op.tyv6r8sb88izfi@barton2>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-reply-to: <Pine.LNX.4.64.0709191425440.27758@p34.internal.lan> (message
-	from Justin Piszcz on Wed, 19 Sep 2007 14:25:59 -0400 (EDT))
+In-Reply-To: <op.tyv6r8sb88izfi@barton2>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: jpiszcz@lucidpixels.com
+To: Wiesner Thomas <thomas@bau-konform.at>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On 9/19/07, Wiesner Thomas <thomas@bau-konform.at> wrote:
+> > Has there been any progress on this? I think I saw it, or something
+> > similar, during some testing of recent 2.6.23-rc kernels, on mke2fs took
+> > about 11 min longer than all the others (~2 min) and it was not
+> > repeatable. I worry that process of more interest will have the same
+> > hang.
+>
+> Well, I must say: no. I haven't tried anything further. I've set up the
+> production system a week or so ago
+> which runs Debian Etch with no modifications (kernel 2.6.18 I think, the
+> debian one and a mdadm 2.5.6-9).
+> I didn't notice the problem while creating the raid but that doesn't mean
+> anything as I didn't pay attention
+> and as I wrote earlier it isn't reliably reproducable.
+> (Watching it on a large storage gets boring very fast.)
+>
+> I'm not a kernel programmer but I can test another kernel or mdadm version
+> if it helps, but let me know
+> if you want me to do that.
 
-Justin Piszcz wrote:
-: Dean Messing wrote:
-: > Jusin Piszcz wrote:
-: > :
-<snip>
+If/when you experience the hang again please get a trace of all processes with:
+echo t > /proc/sysrq-trigger
 
-: > I discovered your January correspondence to the list about this.  Yes,
-: > the read-ahead length makes a dramtic difference---for sequential data
-: > reading.  However, ...
-
-<snip>
-
-: > : Then re-benchmark.
-: > 
-: > Large Read-ahead nearly double the speed of 'hdparm -t'.  (So does
-: > simply using the "--direct" flag.  Can you explain this?)  Also, in
-: > your opinion, is it wise to use such large read-aheads for a RAID 5
-: > intended for the use to which I plan to put it?
-: 
-
-: > Did you try increasing the readahead and benchmarking?  You can set it 
-: > back to what it was when you are done.
-
-Sorry if my earlier reply was not clear.
-
-Yes, I did increase r.a. (to 16384 and 32768) and re-ran hdparm each time.
-Result: 
-
-r.a. =   512:  hdparm -t                -->  ~67 MB/s
- "   "    "    hdparm -t --direct       --> ~121 MB/s
-
-r.a. =  4096:  hdparm -t                --> ~106 MB/s
-
-r.a. =  8192:  hdparm -t                --> ~113 MB/s
-
-r.a. = 16384:  hdparm -t                --> ~120 MB/s
-
-r.a. = 32768:  hdparm -t                --> ~121 MB/s
-
-
-As I said:  it nearly doubled the speed give by 'hdparm -t'
-
-But (as I said) so did using the "--direct" flag, which inhibits
-"page cache" whatever that is.
-
-Also (as I asked) what is the downside?  From what I have read,
-random access reads will take a hit.  Is this correct?
-
-Thanks very much for your help!
-
-Dean
-
-
+Of particular interest is the mke2fs trace; as well as any md threads.
