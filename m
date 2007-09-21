@@ -1,53 +1,35 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: [PATCH 2.6.23-rc7 1/3] async_tx: usage documentation and developer
- notes
-Date: Fri, 21 Sep 2007 09:05:56 -0400
-Message-ID: <46F3C1B4.6040804@tmr.com>
-References: <20070921012141.17157.65717.stgit@dwillia2-linux.ch.intel.com> <20070921012740.17157.49639.stgit@dwillia2-linux.ch.intel.com>
+From: "Chris Fanning" <christopher.fanning@gmail.com>
+Subject: syncing remote homes.
+Date: Fri, 21 Sep 2007 15:26:12 +0200
+Message-ID: <215ff4410709210626j604d2b9cm57d6c30987f767d0@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20070921012740.17157.49639.stgit@dwillia2-linux.ch.intel.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, neilb@suse.de, akpm@linux-foundation.org, yur@emcraft.com, saeed.bishara@gmail.com, shannon.nelson@intel.com
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Dan Williams wrote:
-> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
-> ---
->
->  Documentation/crypto/async-tx-api.txt |  217 +++++++++++++++++++++++++++++++++
->  1 files changed, 217 insertions(+), 0 deletions(-)
->
-> diff --git a/Documentation/crypto/async-tx-api.txt b/Documentation/crypto/async-tx-api.txt
-> new file mode 100644
-> index 0000000..48d685a
-> --- /dev/null
-> +++ b/Documentation/crypto/async-tx-api.txt
-> @@ -0,0 +1,217 @@
-> +		 Asynchronous Transfers/Transforms API
-> +
-> +1 INTRODUCTION
-> +
-> +2 GENEALOGY
-> +
-> +3 USAGE
-> +3.1 General format of the API
-> +3.2 Supported operations
-> +3.2 Descriptor management
-> +3.3 When does the operation execute?
-> +3.4 When does the operation complete?
-> +3.5 Constraints
-> +3.6 Example
-> +
+Hello all,
 
-This is very readable, and appears extensible to any new forthcoming 
-technology I'm aware of. Great job!
+I hope this isn't a complete off-topic question (or a stupid one either).
 
--- 
-bill davidsen <davidsen@tmr.com>
-  CTO TMR Associates, Inc
-  Doing interesting things with small computers since 1979
+We want to setup two desktop servers at two different office branches.
+users will open sessions via nx.
+We dont' have are problem keeping the server instalations in sync and,
+in case of disaster at one office, we can route sessions to the
+remaining server at the other office with DNS (that's the plan
+anayway).
 
+But we're not sure about how to keep the homes in sync between the two
+servers. We've thought about nightly rsync but what else could be
+done?
+One suggestion was to use md with one local disc and another remote
+disc via iSCSI. But I don't think that would work because our network
+connection is not fast. Is that correct?
+
+Any advise please?
+
+Thanks.
+Chris.
