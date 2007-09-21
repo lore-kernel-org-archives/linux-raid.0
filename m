@@ -1,35 +1,65 @@
-From: "Chris Fanning" <christopher.fanning@gmail.com>
-Subject: syncing remote homes.
-Date: Fri, 21 Sep 2007 15:26:12 +0200
-Message-ID: <215ff4410709210626j604d2b9cm57d6c30987f767d0@mail.gmail.com>
+From: "Nelson, Shannon" <shannon.nelson@intel.com>
+Subject: RE: [PATCH 2.6.23-rc7 1/3] async_tx: usage documentation and developernotes
+Date: Fri, 21 Sep 2007 08:25:12 -0700
+Message-ID: <BAE9DCEF64577A439B3A37F36F9B691C03157788@orsmsx418.amr.corp.intel.com>
+References: <20070921012141.17157.65717.stgit@dwillia2-linux.ch.intel.com> <20070921012740.17157.49639.stgit@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+Content-class: urn:content-classes:message
+In-Reply-To: <20070921012740.17157.49639.stgit@dwillia2-linux.ch.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: "Williams, Dan J" <dan.j.williams@intel.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, neilb@suse.de
+Cc: akpm@linux-foundation.org, yur@emcraft.com, saeed.bishara@gmail.com
 List-Id: linux-raid.ids
 
-Hello all,
+>From: Williams, Dan J 
+>Sent: Thursday, September 20, 2007 6:28 PM
+>To: linux-kernel@vger.kernel.org; linux-raid@vger.kernel.org; 
+>neilb@suse.de
+>Cc: akpm@linux-foundation.org; yur@emcraft.com; 
+>saeed.bishara@gmail.com; Nelson, Shannon
+>Subject: [PATCH 2.6.23-rc7 1/3] async_tx: usage documentation 
+>and developernotes
+>
+>Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+>---
+>
+> Documentation/crypto/async-tx-api.txt |  217 
+>+++++++++++++++++++++++++++++++++
+> 1 files changed, 217 insertions(+), 0 deletions(-)
 
-I hope this isn't a complete off-topic question (or a stupid one either).
+Thanks, Dan.  In addition to Randy's most excellent nit-picking, here
+are a couple more minor nits.
 
-We want to setup two desktop servers at two different office branches.
-users will open sessions via nx.
-We dont' have are problem keeping the server instalations in sync and,
-in case of disaster at one office, we can route sessions to the
-remaining server at the other office with DNS (that's the plan
-anayway).
+[...]
+>+4.2 "My application needs finer control of hardware channels"
+>+This requirement seems to arise from cases where a DMA engine 
+>driver is
+[...]
+>+dma_async_client_chan_request triggers dmaeninge to notify 
+>the client of
 
-But we're not sure about how to keep the homes in sync between the two
-servers. We've thought about nightly rsync but what else could be
-done?
-One suggestion was to use md with one local disc and another remote
-disc via iSCSI. But I don't think that would work because our network
-connection is not fast. Is that correct?
+s/dmaeninge/dmaengine/
 
-Any advise please?
+[...]
+>+5 SOURCE
+>+drivers/dma/dmaengine.c: offload engine channel management routines
+>+drivers/dma/: location for offload engine drivers
+>+crypto/async_tx/async_tx.c: async_tx interface to dmaengine 
+>and common code
+>+crypto/async_tx/async_memcpy.c: copy offload
+>+crypto/async_tx/async_memset.c: memory fill offload
+>+crypto/async_tx/async_xor.c: xor offload
 
-Thanks.
-Chris.
+Also include/linux/dmaengine.h
+
+
+sln
+--
+======================================================================
+Mr. Shannon Nelson                 LAN Access Division, Intel Corp.
+Shannon.Nelson@intel.com                I don't speak for Intel
+(503) 712-7659                    Parents can't afford to be squeamish.
