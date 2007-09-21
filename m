@@ -1,70 +1,31 @@
-From: "Dean S. Messing" <deanm@sharplabs.com>
-Subject: Re: Help: very slow software RAID 5.
-Date: Thu, 20 Sep 2007 17:58:51 -0700 (PDT)
-Message-ID: <20070921005851.44E8910236D@medulla.enet.sharplabs.com>
-References: <20070918230914.9FF5910215F@medulla.enet.sharplabs.com> <Pine.LNX.4.64.0709182004210.13217@p34.internal.lan> <20070919014919.DF19D10215F@medulla.enet.sharplabs.com> <Pine.LNX.4.64.0709190437050.4411@p34.internal.lan> <20070919174956.9497310209D@medulla.enet.sharplabs.com> <46F292E2.1090700@tmr.com> <20070920184738.441FD10208C@medulla.enet.sharplabs.com> <46F2E159.9030806@msgid.tls.msk.ru>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: [PATCH 2.6.23-rc7 0/3] async_tx and md-accel fixes for 2.6.23
+Date: Thu, 20 Sep 2007 18:27:35 -0700
+Message-ID: <20070921012141.17157.65717.stgit@dwillia2-linux.ch.intel.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-reply-to: <46F2E159.9030806@msgid.tls.msk.ru> (message from Michael Tokarev
-	on Fri, 21 Sep 2007 01:08:41 +0400)
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, neilb@suse.de
+Cc: akpm@linux-foundation.org, yur@emcraft.com, saeed.bishara@gmail.com, shannon.nelson@intel.com
 List-Id: linux-raid.ids
 
+Fix a couple bugs and provide documentation for the async_tx api.
 
-Michael Tokarev writes:
-: Dean S. Messing wrote:
-: []
-: > []  That's what
-: > attracted me to RAID 0 --- which seems to have no downside EXCEPT
-: > safety :-).
-: > 
-: > So I'm not sure I'll ever figure out "the right" tuning.  I'm at the
-: > point of abandoning RAID entirely and just putting the three disks
-: > together as a big LV and being done with it.  (I don't have quite the
-: > moxy to define a RAID 0 array underneath it. :-)
-: 
-: "Putting three disks together as a big LV" - that's exactly what
-: "linear" md module.  
-: It's almost as unsafe as raid0, but with
-: linear read/write speed equal to speed of single drive...
+Neil, please 'ack' patch #3.
 
-I understand I only get the speed of a single drive was I was not
-aware of the safety factor.  I had intended to use snapshotting off
-to a cheap USB drive each evening.  Will that not keep me safe within a
-day's worth of data change?  I only learned about "snapshots" yesterday.
-I'm utterly new to the disk array/LVM game.
+git://lost.foo-projects.org/~dwillia2/git/iop async-tx-fixes-for-linus
 
-For that matter why not run a RAID-0 + LVM  across two of the three drives
-and snapshot to the third?
+Dan Williams (3):
+      async_tx: usage documentation and developer notes
+      async_tx: fix dma_wait_for_async_tx
+      raid5: fix ops_complete_biofill
 
-: Note also that the more drives you add to raid0-like config,
-: the more chances of failure you'll have - because raid0 fails
-: when ANY drive fails.  Ditto - for certain extent - for linear
-: md module and for "one big LV" which is basically the same thing.
+Documentation/crypto/async-tx-api.txt |  217 +++++++++++++++++++++++++++++++++
+crypto/async_tx/async_tx.c            |   12 ++-
+drivers/md/raid5.c                    |   90 +++++++-------
+3 files changed, 273 insertions(+), 46 deletions(-)
 
-I understand the probability increases for additional drives.
-
-: By the way, before abandoming "R" in "RAID", I'd check whenever
-: the resulting speed with raid5 (after at least read-ahead tuning)
-: is acceptable, and use that if yes.
-
-My problem is not quite knowing what "acceptable" is.  I bought a Dell
-Precision 490 with two relatively fast SATA II drives. With RAID 0 I
-attain speeds of nearly 140 MB/s (using 2 drives) for reads and writes
-and the system is very snappy for everything, from processing 4Kx2K
-video to building a 'locate' datebase, to searching my very large mail
-archives for technical info.
-
-When I see the speed loss of software RAID 5 (writes are at 55MB/s and
-random reads are at 54 MB/s) for everything but seq. reads (and that
-only if I increase read-ahead from 512 to 16384 to get read speeds of
-about 110 MB/s I lose heart, esp. since I don't know the other
-consequences of increasing read-ahead by so much.
-
-: If no, maybe raid10 over
-: the same 3 drives will give better results.
-
-Does RAID10 work on three drives?  I though one needed 4 drives,
-with striping across a pair of mirrored pairs.
-
-Dean
+--
+Dan
