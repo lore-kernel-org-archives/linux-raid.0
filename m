@@ -1,65 +1,31 @@
-From: "Nelson, Shannon" <shannon.nelson@intel.com>
-Subject: RE: [PATCH 2.6.23-rc7 1/3] async_tx: usage documentation and developernotes
-Date: Fri, 21 Sep 2007 08:25:12 -0700
-Message-ID: <BAE9DCEF64577A439B3A37F36F9B691C03157788@orsmsx418.amr.corp.intel.com>
-References: <20070921012141.17157.65717.stgit@dwillia2-linux.ch.intel.com> <20070921012740.17157.49639.stgit@dwillia2-linux.ch.intel.com>
+From: Daniel Santos <daniel.dlds@gmail.com>
+Subject: raid5 post mortem analisys
+Date: Fri, 21 Sep 2007 17:25:19 +0100
+Message-ID: <46F3F06F.1060008@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
-In-Reply-To: <20070921012740.17157.49639.stgit@dwillia2-linux.ch.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Williams, Dan J" <dan.j.williams@intel.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, neilb@suse.de
-Cc: akpm@linux-foundation.org, yur@emcraft.com, saeed.bishara@gmail.com
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
->From: Williams, Dan J 
->Sent: Thursday, September 20, 2007 6:28 PM
->To: linux-kernel@vger.kernel.org; linux-raid@vger.kernel.org; 
->neilb@suse.de
->Cc: akpm@linux-foundation.org; yur@emcraft.com; 
->saeed.bishara@gmail.com; Nelson, Shannon
->Subject: [PATCH 2.6.23-rc7 1/3] async_tx: usage documentation 
->and developernotes
->
->Signed-off-by: Dan Williams <dan.j.williams@intel.com>
->---
->
-> Documentation/crypto/async-tx-api.txt |  217 
->+++++++++++++++++++++++++++++++++
-> 1 files changed, 217 insertions(+), 0 deletions(-)
+Hello,
 
-Thanks, Dan.  In addition to Randy's most excellent nit-picking, here
-are a couple more minor nits.
+I had a raid 5 array with 3 drives. (on a USB 2.0 bus :)). After some 
+time, on drive failed. After some more time another drive failed and the 
+array stopped running.
+I know that the usage pattern from the first failure to the second was 
+read-only, i.e as a user only reads were performed.
+I also know that the cause of the drive's failures was that they just 
+dissapeared from the USB bus (probably from a bug in the hard drive's 
+enclosure's USB to IDE bridge)
 
-[...]
->+4.2 "My application needs finer control of hardware channels"
->+This requirement seems to arise from cases where a DMA engine 
->driver is
-[...]
->+dma_async_client_chan_request triggers dmaeninge to notify 
->the client of
+I trashed the array anyway, but since I am new to linux md devices, I 
+was wishing that you could help me understand if there was any 
+possibility of getting it back up assuming that there was no data 
+corruption.
+I run kernel 2.6.17 on a debian system and use mdadm for controlling the 
+array from user space.
 
-s/dmaeninge/dmaengine/
-
-[...]
->+5 SOURCE
->+drivers/dma/dmaengine.c: offload engine channel management routines
->+drivers/dma/: location for offload engine drivers
->+crypto/async_tx/async_tx.c: async_tx interface to dmaengine 
->and common code
->+crypto/async_tx/async_memcpy.c: copy offload
->+crypto/async_tx/async_memset.c: memory fill offload
->+crypto/async_tx/async_xor.c: xor offload
-
-Also include/linux/dmaengine.h
-
-
-sln
---
-======================================================================
-Mr. Shannon Nelson                 LAN Access Division, Intel Corp.
-Shannon.Nelson@intel.com                I don't speak for Intel
-(503) 712-7659                    Parents can't afford to be squeamish.
+Daniel Santos
