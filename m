@@ -1,38 +1,34 @@
-From: maximilian attems <max@stro.at>
-Subject: [PATCH] [mdadm] config.c include dirent.h instead sys/dir.h
-Date: Fri, 21 Sep 2007 19:32:18 +0200
-Message-ID: <11903959393989-git-send-email-max@stro.at>
-References: <11903959391007-git-send-email-max@stro.at>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH 2.6.23-rc7 0/3] async_tx and md-accel fixes for 2.6.23
+Date: Fri, 21 Sep 2007 11:48:23 -0700
+Message-ID: <20070921114823.49d00263.akpm@linux-foundation.org>
+References: <20070921012141.17157.65717.stgit@dwillia2-linux.ch.intel.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <11903959391007-git-send-email-max@stro.at>
+In-Reply-To: <20070921012141.17157.65717.stgit@dwillia2-linux.ch.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: Neil Brown <neilb@suse.de>, maximilian attems <max@stro.at>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, neilb@suse.de, yur@emcraft.com, saeed.bishara@gmail.com, shannon.nelson@intel.com
 List-Id: linux-raid.ids
 
-sys/dir.h is an old BSD'ism, include dirent directly.
-small step for better klibc support.
+On Thu, 20 Sep 2007 18:27:35 -0700
+Dan Williams <dan.j.williams@intel.com> wrote:
 
-compile tested against glibc.
+> Fix a couple bugs and provide documentation for the async_tx api.
+> 
+> Neil, please 'ack' patch #3.
+> 
+> git://lost.foo-projects.org/~dwillia2/git/iop async-tx-fixes-for-linus
 
-Signed-off-by: maximilian attems <max@stro.at>
----
- config.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Well it looks like Neil is on vacation or is hiding from us or something.
 
-diff --git a/config.c b/config.c
-index 73031b7..68c1507 100644
---- a/config.c
-+++ b/config.c
-@@ -29,7 +29,7 @@
- 
- #include	"mdadm.h"
- #include	"dlink.h"
--#include	<sys/dir.h>
-+#include	<dirent.h>
- #include	<glob.h>
- #include	<fnmatch.h>
- #include	<ctype.h>
--- 
-1.5.2.4
+In which case our options would be to go ahead and merge your #3 with
+our fingers crossed, or wait and do it in 2.6.23.1 or .2.
 
+How serious is this bug which you're fixing?  Will it affect users
+of "legacy" MD setups, or only those who have enabled fancy dma-engine
+features?
+
+Either way, we need to get #2 (at least) in to Linus.
