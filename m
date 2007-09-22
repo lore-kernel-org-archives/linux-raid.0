@@ -1,54 +1,52 @@
 From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: syncing remote homes.
-Date: Sat, 22 Sep 2007 09:41:40 -0400
-Message-ID: <46F51B94.7020009@tmr.com>
-References: <215ff4410709210626j604d2b9cm57d6c30987f767d0@mail.gmail.com>
+Subject: Re: raid5 post mortem analisys
+Date: Sat, 22 Sep 2007 09:52:11 -0400
+Message-ID: <46F51E0B.4000402@tmr.com>
+References: <46F3F06F.1060008@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <215ff4410709210626j604d2b9cm57d6c30987f767d0@mail.gmail.com>
+In-Reply-To: <46F3F06F.1060008@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Chris Fanning <christopher.fanning@gmail.com>
+To: Daniel Santos <daniel.dlds@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Chris Fanning wrote:
-> Hello all,
+Daniel Santos wrote:
+> Hello,
 >
-> I hope this isn't a complete off-topic question (or a stupid one either).
->
-> We want to setup two desktop servers at two different office branches.
-> users will open sessions via nx.
-> We dont' have are problem keeping the server instalations in sync and,
-> in case of disaster at one office, we can route sessions to the
-> remaining server at the other office with DNS (that's the plan
-> anayway).
->
-> But we're not sure about how to keep the homes in sync between the two
-> servers. We've thought about nightly rsync but what else could be
-> done?
-> One suggestion was to use md with one local disc and another remote
-> disc via iSCSI. But I don't think that would work because our network
-> connection is not fast. Is that correct?
->
-> Any advise please?
->   
+> I had a raid 5 array with 3 drives. (on a USB 2.0 bus :)). After some 
+> time, on drive failed. After some more time another drive failed and 
+> the array stopped running.
+> I know that the usage pattern from the first failure to the second was 
+> read-only, i.e as a user only reads were performed.
 
-You could use the "write-mostly" option for mirroring, along with intent 
-bitmaps and some tuning of the parameter "write-behind" to allow gradual 
-catchup. If the change rate is less than the bandwidth overall you will 
-keep up. And you should look at nbd, which would allow use of dedicated 
-files/partitions rather than whole drives. This reduces the hardware 
-requirements.
+Unless you were mounting the filesystem with the "noatime" parameter, 
+each read resulted in a write to update the inode, and possibly a 
+journal file depending on the filesystem type.
+> I also know that the cause of the drive's failures was that they just 
+> dissapeared from the USB bus (probably from a bug in the hard drive's 
+> enclosure's USB to IDE bridge)
+>
+> I trashed the array anyway, but since I am new to linux md devices, I 
+> was wishing that you could help me understand if there was any 
+> possibility of getting it back up assuming that there was no data 
+> corruption.
 
-In general, though, unless instant backup is required, I would think 
-that manual end-of-session or checkpoint rsync would be more practical. 
-And rsync can be run through a compressed ssh tunnel as an option, which 
-may reduce the bandwidth needs depending on the data.
+You might have been able to save the data, had you grabbed it quickly, 
+but without reasonably stable hardware you can't have stable RAID (or 
+anything else). If you had stopped the array and done a power cycles, 
+assuming that your analysis of the failure is correct, the third drive 
+might have come back to life and a resync could have been done. There 
+might also be some hardware option which would have helped, in the mount 
+or at kernel boot, although nothing comes to mind.
+> I run kernel 2.6.17 on a debian system and use mdadm for controlling 
+> the array from user space.
 
-My only "advice" is to try and quantify the data volume and look at nbd 
-vs. iSCSI to provide the mirror if you go that way.
+There have been some fixes in more recent kernels, but I don't know that 
+they would help if the hardware just goes walkabout. Someone else may 
+have thoughts on that, but having drives just go away is hard to recover.
 
 -- 
 bill davidsen <davidsen@tmr.com>
