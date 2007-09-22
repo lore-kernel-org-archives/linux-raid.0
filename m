@@ -1,34 +1,37 @@
-From: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
-Subject: Speaking of network disks (was: Re: syncing remote homes.)
-Date: Sat, 22 Sep 2007 10:28:44 -0700 (PDT)
-Message-ID: <Pine.LNX.4.64.0709221022440.7723@filesrv1.baby-dragons.com>
+From: Iustin Pop <iusty@k1024.org>
+Subject: Re: Speaking of network disks (was: Re: syncing remote homes.)
+Date: Sat, 22 Sep 2007 19:41:08 +0200
+Message-ID: <20070922174108.GA28106@teal.hq.k1024.org>
+References: <Pine.LNX.4.64.0709221022440.7723@filesrv1.baby-dragons.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.64.0709221022440.7723@filesrv1.baby-dragons.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid maillist <linux-raid@vger.kernel.org>
+To: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
+Cc: linux-raid maillist <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
- 	Hello Bill & all ,
+On Sat, Sep 22, 2007 at 10:28:44AM -0700, Mr. James W. Laferriere wrote:
+> 	Hello Bill & all ,
+>
+> Bill Davidsen <davidsen@tmr.com> Sat, 22 Sep 2007 09:41:40 -0400 ,  wrote:
+>> My only "advice" is to try and quantify the data volume and look at nbd 
+>> vs. iSCSI to provide the mirror if you go that way.
+>
+> 	You mentioned nbd as a transport for disk to remote disk .
+>
+> 	My Question is have you OR anyone else tried using drbd(*) as a
+> 	method to replicate disk data across networks ?
 
-Bill Davidsen <davidsen@tmr.com> Sat, 22 Sep 2007 09:41:40 -0400 ,  wrote:
-> My only "advice" is to try and quantify the data volume and look at nbd vs. 
-> iSCSI to provide the mirror if you go that way.
+I have used it only in local networks, but it works very well. It's
+much, much better than md + nbd, for example, because it was designed
+with the network in mind - so it deals gracefully with transient network
+errors and such.
 
- 	You mentioned nbd as a transport for disk to remote disk .
+And the current version (8.x) is also more flexible than the previous
+versions. I'd recommed you give it a try.
 
- 	My Question is have you OR anyone else tried using drbd(*) as a
- 	method to replicate disk data across networks ?
-
- 	I've looked at the projects documents & software .  They're
- 	mentioned at linux-ha .  But I personally have not heard of anyone
- 	using it in production .  So I asked my question here .
- 		Tia ,  JimL
-
-(*) http://www.drbd.org/
--- 
-+-----------------------------------------------------------------+
-| James   W.   Laferriere | System   Techniques | Give me VMS     |
-| Network        Engineer | 663  Beaumont  Blvd |  Give me Linux  |
-| babydr@baby-dragons.com | Pacifica, CA. 94044 |   only  on  AXP |
-+-----------------------------------------------------------------+
+regards,
+iustin
