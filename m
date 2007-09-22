@@ -1,73 +1,57 @@
-From: "Williams, Dan J" <dan.j.williams@intel.com>
-Subject: RE: [PATCH 2.6.23-rc7 0/3] async_tx and md-accel fixes for 2.6.23
-Date: Fri, 21 Sep 2007 17:45:39 -0700
-Message-ID: <0C7297FA1D2D244A9C7F6959C0BF1E52027D927D@azsmsx413.amr.corp.intel.com>
-References: <20070921012141.17157.65717.stgit@dwillia2-linux.ch.intel.com><20070921114823.49d00263.akpm@linux-foundation.org> <18164.23902.732535.384492@notabene.brown>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: syncing remote homes.
+Date: Sat, 22 Sep 2007 09:41:40 -0400
+Message-ID: <46F51B94.7020009@tmr.com>
+References: <215ff4410709210626j604d2b9cm57d6c30987f767d0@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
-In-Reply-To: <18164.23902.732535.384492@notabene.brown>
+In-Reply-To: <215ff4410709210626j604d2b9cm57d6c30987f767d0@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>, Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, yur@emcraft.com, saeed.bishara@gmail.com, "Nelson, Shannon" <shannon.nelson@intel.com>
+To: Chris Fanning <christopher.fanning@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> From: Neil Brown [mailto:neilb@suse.de]
-> On Friday September 21, akpm@linux-foundation.org wrote:
-> > On Thu, 20 Sep 2007 18:27:35 -0700
-> > Dan Williams <dan.j.williams@intel.com> wrote:
-> >
-> > > Fix a couple bugs and provide documentation for the async_tx api.
-> > >
-> > > Neil, please 'ack' patch #3.
-> > >
-> > > git://lost.foo-projects.org/~dwillia2/git/iop
-async-tx-fixes-for-linus
-> >
-> > Well it looks like Neil is on vacation or is hiding from us or
-something.
-> 
-> Neil is just not coping well with jet-lag....
-> 
-> Patch #3 looks good and necessary
->   Acked-By: NeilBrown <neilb@suse.de>
-> 
-> I know that should probably be a "reviewed-by"....  I was a bit
-I went ahead and added reviewed-by.
-
-> surprised that the "handle_completed_read_requests" call was so early
-> in handle_stripe5 - I don't think the code was originally that early.
-It is slightly earlier than 2.6.22 (outside the '/* now count some
-things */' loop) to make sure the R5_Wantfill flags from the last
-request have been cleared before starting a new one:
-
-		/* maybe we can request a biofill operation
-		 *
-		 * new wantfill requests are only permitted while
-		 * STRIPE_OP_BIOFILL is clear
-		 */
-		if (test_bit(R5_UPTODATE, &dev->flags) && dev->toread &&
-			!test_bit(STRIPE_OP_BIOFILL, &sh->ops.pending))
-			set_bit(R5_Wantfill, &dev->flags);
-
-> But it is probably right.   Hopefully my brain will have cleared by
-> Monday and I'll review it again then.
+Chris Fanning wrote:
+> Hello all,
 >
+> I hope this isn't a complete off-topic question (or a stupid one either).
+>
+> We want to setup two desktop servers at two different office branches.
+> users will open sessions via nx.
+> We dont' have are problem keeping the server instalations in sync and,
+> in case of disaster at one office, we can route sessions to the
+> remaining server at the other office with DNS (that's the plan
+> anayway).
+>
+> But we're not sure about how to keep the homes in sync between the two
+> servers. We've thought about nightly rsync but what else could be
+> done?
+> One suggestion was to use md with one local disc and another remote
+> disc via iSCSI. But I don't think that would work because our network
+> connection is not fast. Is that correct?
+>
+> Any advise please?
+>   
 
-Ok, the tree is updated with 'Reviewed-by' tags and the proposed
-documentation updates from Randy and Shannon.
+You could use the "write-mostly" option for mirroring, along with intent 
+bitmaps and some tuning of the parameter "write-behind" to allow gradual 
+catchup. If the change rate is less than the bandwidth overall you will 
+keep up. And you should look at nbd, which would allow use of dedicated 
+files/partitions rather than whole drives. This reduces the hardware 
+requirements.
 
-git://lost.foo-projects.org/~dwillia2/git/iop async-tx-fixes-for-linus
+In general, though, unless instant backup is required, I would think 
+that manual end-of-session or checkpoint rsync would be more practical. 
+And rsync can be run through a compressed ssh tunnel as an option, which 
+may reduce the bandwidth needs depending on the data.
 
-Dan Williams (3):
-      async_tx: usage documentation and developer notes (v2)
-      async_tx: fix dma_wait_for_async_tx
-      raid5: fix ops_complete_biofill
+My only "advice" is to try and quantify the data volume and look at nbd 
+vs. iSCSI to provide the mirror if you go that way.
 
-> NeilBrown
+-- 
+bill davidsen <davidsen@tmr.com>
+  CTO TMR Associates, Inc
+  Doing interesting things with small computers since 1979
 
---
-Dan
