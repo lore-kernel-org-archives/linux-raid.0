@@ -1,32 +1,49 @@
-From: Nix <nix@esperi.org.uk>
-Subject: Re: md device naming question
-Date: Mon, 24 Sep 2007 08:12:07 +0100
-Message-ID: <87lkawzge0.fsf@hades.wkstn.nix>
-References: <20070919081022.GA26155@stro.at>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: Speaking of network disks (was: Re: syncing remote homes.)
+Date: Mon, 24 Sep 2007 14:12:45 -0400
+Message-ID: <46F7FE1D.6040705@tmr.com>
+References: <Pine.LNX.4.64.0709221022440.7723@filesrv1.baby-dragons.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20070919081022.GA26155@stro.at> (maximilian attems's message of "19 Sep 2007 14:14:54 +0100")
+In-Reply-To: <Pine.LNX.4.64.0709221022440.7723@filesrv1.baby-dragons.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: maximilian attems <max@stro.at>
-Cc: linux-raid@vger.kernel.org
+To: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
+Cc: linux-raid maillist <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 19 Sep 2007, maximilian attems said:
-
-> hello,
+Mr. James W. Laferriere wrote:
+>     Hello Bill & all ,
 >
-> working on initramfs i'd be curious to know what the /sys/block
-> entry of a /dev/md/NN device is. have a user request to support
-> it and no handy box using it.
+> Bill Davidsen <davidsen@tmr.com> Sat, 22 Sep 2007 09:41:40 -0400 ,  
+> wrote:
+>> My only "advice" is to try and quantify the data volume and look at 
+>> nbd vs. iSCSI to provide the mirror if you go that way.
 >
-> i presume it may also be /sys/block/mdNN ?
+>     You mentioned nbd as a transport for disk to remote disk .
+>
+>     My Question is have you OR anyone else tried using drbd(*) as a
+>     method to replicate disk data across networks ?
 
-That's it, e.g. /sys/block/md0. Notable subdirectories include holders/
-(block devices within the array, more than one if e.g. LVM is in use),
-slaves/ (block devices making up the array) and md/ (RAID-specific
-state).
+Have not. And looking at the homepage, I think it's aimed at anothjer 
+problem. If the local drive fails, I really don't want anything starting 
+applications on another machine, running fsck, etc, etc. I just want my 
+disk reads to go to a working device or pseudo-device.
+
+HA and mirroring are related, but HA is more aimed at whole machine 
+failures.
+>
+>     I've looked at the projects documents & software .  They're
+>     mentioned at linux-ha .  But I personally have not heard of anyone
+>     using it in production .  So I asked my question here .
+>         Tia ,  JimL
+>
+> (*) http://www.drbd.org/
+
 
 -- 
-`Some people don't think performance issues are "real bugs", and I think 
-such people shouldn't be allowed to program.' --- Linus Torvalds
+bill davidsen <davidsen@tmr.com>
+  CTO TMR Associates, Inc
+  Doing interesting things with small computers since 1979
+
