@@ -1,53 +1,33 @@
-From: Rainer Fuegenstein <rfu@kaneda.iguw.tuwien.ac.at>
-Subject: Re[2]: raid5 - which disk failed ?
-Date: Tue, 25 Sep 2007 01:05:01 +0200
-Message-ID: <743669701.20070925010501@kaneda.iguw.tuwien.ac.at>
-References: <1314153413.20070924011710@kaneda.iguw.tuwien.ac.at>
- <18167.9351.878707.227090@notabene.brown>
-Reply-To: Rainer Fuegenstein <rfu@kaneda.iguw.tuwien.ac.at>
+From: Michal Soltys <nozo@ziu.info>
+Subject: Re: md device naming question
+Date: Tue, 25 Sep 2007 06:49:25 +0200
+Message-ID: <46F89355.9040201@ziu.info>
+References: <20070919081022.GA26155@stro.at> <87lkawzge0.fsf@hades.wkstn.nix>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18167.9351.878707.227090@notabene.brown>
+In-Reply-To: <87lkawzge0.fsf@hades.wkstn.nix>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid maillist <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Nix wrote:
+> On 19 Sep 2007, maximilian attems said:
+> 
+>>
+>> i presume it may also be /sys/block/mdNN ?
+> 
+> That's it, e.g. /sys/block/md0. Notable subdirectories include holders/
+> (block devices within the array, more than one if e.g. LVM is in use),
+> 
 
+Also, if you mount the raid as a partitionable one, /sys/block/md_dNN ;
 
-NB> Or maybe the drive is failing, but that is badly confusing the
-NB> controller, with the same result.
-NB> Is it always hde that is reporting errors?
+mdadm has pretty decent handling of all the names (check out auto options, 
+both usable in mdadm.conf and from command line). Also from my experience, 
+if you try to use udev on partitionable arrays, partition related uevents 
+will be delayed until next mdadm invocation, or some partition related 
+command (like fdisk).
 
-for now - yes; but a few months ago for a short period of time hdg and
-hdh also have been reported with errors, but this went away quickly
-and never occured again.
-
-NB> With PATA, it is fairly easy to make sure you have removed the correct
-NB> drive, and names don't change.  hde is the 'master' on the 3rd
-NB> channel.  Presumably the first channel of your controller card.
-
-I know; what I meant was: I'd like to make sure that I remove the one
-drive that md thinks is faulty - I want to avoid removing a healthy
-drive, leaving md with one broken drive and two healthy ones which
-isn't good for a raid5. but in this case, hde rather certainly is the
-troublemaker.
-
-NB> No, a faulty drive in a raid5 should not crash the whole server.  But
-NB> a bad controller card or buggy driver for the controller could.
-
-this seems to be the case here. guess its time to shop for a new
-server.
-
-tnx.
-
-------------------------------------------------------------------------------
- Rainer Fuegenstein                              rfu@kaneda.iguw.tuwien.ac.at
-------------------------------------------------------------------------------
-"Why are you looking into the darkness and not into the fire as we do ?", Nell
-asked. "Because the darkness is where danger comes from," Peter said, "and
-from the fire comes only illusion".                   (from "The Diamond Age")
-------------------------------------------------------------------------------
 
