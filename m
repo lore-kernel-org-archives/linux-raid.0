@@ -1,20 +1,39 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
+From: "=?utf-8?B?QnJ5YW4gSiBTbWl0aA==?=" <b.j.smith@ieee.org>
 Subject: Re: mkfs options for a 16x hw raid5 and xfs (mostly large files)
-Date: Wed, 26 Sep 2007 05:52:39 -0400 (EDT)
-Message-ID: <Pine.LNX.4.64.0709260549250.4769@p34.internal.lan>
-References: <498689.78850.qm@web32907.mail.mud.yahoo.com>
- <Pine.LNX.4.64.0709251938400.7763@p34.internal.lan>
- <20070926082322.GA30287@p15145560.pureserver.info>
- <Pine.LNX.4.64.0709260442070.31289@p34.internal.lan>
- <20070926084924.GB30287@p15145560.pureserver.info>
+Date: Wed, 26 Sep 2007 15:03:29 +0000
+Message-ID: <1254510454-1190819012-cardhu_decombobulator_blackberry.rim.net-1744849406-@bxe108.bisx.prod.on.blackberry>
+References: <498689.78850.qm@web32907.mail.mud.yahoo.com><Pine.LNX.4.64.0709251938400.7763@p34.internal.lan><20070926082322.GA30287@p15145560.pureserver.info><Pine.LNX.4.64.0709260442070.31289@p34.internal.lan><20070926084924.GB30287@p15145560.pureserver.info><Pine.LNX.4.64.0709260549250.4769@p34.internal.lan>
+Reply-To: b.j.smith@ieee.org
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20070926084924.GB30287@p15145560.pureserver.info>
-Sender: linux-raid-owner@vger.kernel.org
-To: Ralf Gross <Ralf-Lists@ralfgross.de>
+Content-Type: text/plain
+Content-Transfer-Encoding: 8bit
+Return-path: <xfs-bounce@oss.sgi.com>
+In-Reply-To: <Pine.LNX.4.64.0709260549250.4769@p34.internal.lan>
+Sender: xfs-bounce@oss.sgi.com
+Errors-to: xfs-bounce@oss.sgi.com
+To: Justin Piszcz <jpiszcz@lucidpixels.com>, xfs-bounce@oss.sgi.com, Ralf Gross <Ralf-Lists@ralfgross.de>
 Cc: linux-xfs@oss.sgi.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+Everyone can play local benchmarking games all they want,
+and software RAID will almost always be faster, significantly at times.
+
+What matters is actual, multiple client performance under full load.
+Anything less is a completely irrelevant.
+--  
+Bryan J Smith - mailto:b.j.smith@ieee.org  
+http://thebs413.blogspot.com  
+Sent via BlackBerry from T-Mobile  
+    
+
+-----Original Message-----
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+
+Date: Wed, 26 Sep 2007 05:52:39 
+To:Ralf Gross <Ralf-Lists@ralfgross.de>
+Cc:linux-xfs@oss.sgi.com, linux-raid@vger.kernel.org
+Subject: Re: mkfs options for a 16x hw raid5 and xfs (mostly large files)
+
 
 
 
@@ -75,6 +94,3 @@ Identifier                    Size  Size  Thr   Rate  (CPU%)  Latency    Latency
 ---------------------------- ------ ----- ---  ------ ------ --------- -----------  -------- -------- -----
 2.6.22.6                     20000  4096    1    3.16 1.752%     0.011        1.02   0.00000  0.00000   180
 2.6.22.6                     20000  4096    2    3.07 3.769%     0.013        0.10   0.00000  0.00000    82
-
-
-
