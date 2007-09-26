@@ -1,26 +1,42 @@
-From: Richard Scobie <richard@sauce.co.nz>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
 Subject: Re: Without tweaking ,
-Date: Thu, 27 Sep 2007 07:52:57 +1200
-Message-ID: <46FAB899.6050201@sauce.co.nz>
-References: <Pine.LNX.4.64.0709260953580.12074@filesrv1.baby-dragons.com> <Pine.LNX.4.64.0709261406010.24646@p34.internal.lan>
+Date: Wed, 26 Sep 2007 16:46:25 -0400 (EDT)
+Message-ID: <Pine.LNX.4.64.0709261645460.4199@p34.internal.lan>
+References: <Pine.LNX.4.64.0709260953580.12074@filesrv1.baby-dragons.com>
+ <Pine.LNX.4.64.0709261406010.24646@p34.internal.lan> <46FAB899.6050201@sauce.co.nz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0709261406010.24646@p34.internal.lan>
+In-Reply-To: <46FAB899.6050201@sauce.co.nz>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid maillist <linux-raid@vger.kernel.org>
+To: Richard Scobie <richard@sauce.co.nz>
+Cc: linux-raid maillist <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Justin Piszcz wrote:
 
-> For raptors, they are inheriently known for their poor speed when NCQ is
-> enabled, I see 20-30MiB/s better performance with NCQ off.
 
-Hi Justin,
+On Thu, 27 Sep 2007, Richard Scobie wrote:
 
-Have you tested this for multiple reader/writers?
+> Justin Piszcz wrote:
+>
+>> For raptors, they are inheriently known for their poor speed when NCQ is
+>> enabled, I see 20-30MiB/s better performance with NCQ off.
+>
+> Hi Justin,
+>
+> Have you tested this for multiple reader/writers?
+>
+> Regards,
+>
+> Richard
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-Regards,
+If you have a good repeatable benchmark you want me to run with it on/off 
+let me know, no I only used bonnie++/iozone/tiobench/dd but not any 
+parallelism with those utilities.
 
-Richard
+Justin.
