@@ -1,215 +1,108 @@
-From: maximilian attems <max@stro.at>
-Subject: [PATCH] [mdadm] mdopen.c don't shadow major() and minor()
-Date: Wed, 26 Sep 2007 18:12:47 +0200
-Message-ID: <11908231682482-git-send-email-max@stro.at>
-References: <11908231671738-git-send-email-max@stro.at>
- <1190823168772-git-send-email-max@stro.at>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: mkfs options for a 16x hw raid5 and xfs (mostly large files)
+Date: Wed, 26 Sep 2007 12:24:20 -0400 (EDT)
+Message-ID: <Pine.LNX.4.64.0709261223290.15219@p34.internal.lan>
+References: <498689.78850.qm@web32907.mail.mud.yahoo.com><Pine.LNX.4.64.0709251938400.7763@p34.internal.lan><20070926082322.GA30287@p15145560.pureserver.info><Pine.LNX.4.64.0709260442070.31289@p34.internal.lan><20070926084924.GB30287@p15145560.pureserver.info><Pine.LNX.4.64.0709260549250.4769@p34.internal.lan>
+ <1254510454-1190819012-cardhu_decombobulator_blackberry.rim.net-1744849406-@bxe108.bisx.prod.on.blackberry>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1190823168772-git-send-email-max@stro.at>
+In-Reply-To: <1254510454-1190819012-cardhu_decombobulator_blackberry.rim.net-1744849406-@bxe108.bisx.prod.on.blackberry>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: Neil Brown <neilb@suse.de>, maximilian attems <max@stro.at>
+To: =?utf-8?B?QnJ5YW4gSiBTbWl0aA==?= <b.j.smith@ieee.org>
+Cc: xfs-bounce@oss.sgi.com, Ralf Gross <Ralf-Lists@ralfgross.de>, linux-xfs@oss.sgi.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-s/(major|minor)/\1_num/
+I have a question, when I use multiple writer threads (2 or 3) I see 
+550-600 MiB/s write speed (vmstat) but when using only 1 thread, ~420-430 
+MiB/s... Also without tweaking, SW RAID is very slow (180-200 MiB/s) using 
+the same disks.
 
-Signed-off-by: maximilian attems <max@stro.at>
----
- mdopen.c |   64 +++++++++++++++++++++++++++++++-------------------------------
- 1 files changed, 32 insertions(+), 32 deletions(-)
+Justin.
 
-diff --git a/mdopen.c b/mdopen.c
-index 0b6951d..362d4d8 100644
---- a/mdopen.c
-+++ b/mdopen.c
-@@ -58,7 +58,7 @@ void make_parts(char *dev, int cnt, int symlinks)
- 	 * else that of dev
- 	 */
- 	struct stat stb;
--	int major, minor;
-+	int major_num, minor_num;
- 	int i;
- 	int nlen = strlen(dev) + 20;
- 	char *name = malloc(nlen);
-@@ -69,21 +69,21 @@ void make_parts(char *dev, int cnt, int symlinks)
- 		return;
- 	if (!S_ISBLK(stb.st_mode))
- 		return;
--	major = major(stb.st_rdev);
--	minor = minor(stb.st_rdev);
-+	major_num = major(stb.st_rdev);
-+	minor_num = minor(stb.st_rdev);
- 	for (i=1; i <= cnt ; i++) {
- 		struct stat stb2;
- 		snprintf(name, nlen, "%s%s%d", dev, dig?"p":"", i);
- 		if (stat(name, &stb2)==0) {
- 			if (!S_ISBLK(stb2.st_mode))
- 				continue;
--			if (stb2.st_rdev == makedev(major, minor+i))
-+			if (stb2.st_rdev == makedev(major_num, minor_num+i))
- 				continue;
- 			unlink(name);
- 		} else {
- 			stb2 = stb;
- 		}
--		if (mknod(name, S_IFBLK | 0600, makedev(major, minor+i)))
-+		if (mknod(name, S_IFBLK | 0600, makedev(major_num, minor_num+i)))
- 			perror("mknod");
- 		if (chown(name, stb2.st_uid, stb2.st_gid))
- 			perror("chown");
-@@ -110,8 +110,8 @@ int open_mddev(char *dev, int autof)
- {
- 	int mdfd;
- 	struct stat stb;
--	int major = MD_MAJOR;
--	int minor = 0;
-+	int major_num = MD_MAJOR;
-+	int minor_num = 0;
- 	int must_remove = 0;
- 	struct mdstat_ent *mdlist;
- 	int num;
-@@ -138,7 +138,7 @@ int open_mddev(char *dev, int autof)
- 		/* check major number is correct */
- 		num = -1;
- 		std = is_standard(dev, &num);
--		if (std>0) major = get_mdp_major();
-+		if (std>0) major_num = get_mdp_major();
- 		switch(autof) {
- 		case 2: /* only create is_standard names */
- 			if (!std && !stb.st_mode) {
-@@ -165,11 +165,11 @@ int open_mddev(char *dev, int autof)
- 		case 5: /* default to md if not standard */
- 			break;
- 		case 6: /* default to mdp if not standard */
--			if (std == 0) major = get_mdp_major();
-+			if (std == 0) major_num = get_mdp_major();
- 			break;
- 		}
- 		/* major is final. num is -1 if not standard */
--		if (stb.st_mode && major(stb.st_rdev) != major)
-+		if (stb.st_mode && major(stb.st_rdev) != major_num)
- 			must_remove = 1;
- 		if (stb.st_mode && !must_remove) {
- 			/* looks ok, see if it is available */
-@@ -184,7 +184,7 @@ int open_mddev(char *dev, int autof)
- 				close(mdfd);
- 				return -1;
- 			}
--			if (major != MD_MAJOR && parts > 0)
-+			if (major_num != MD_MAJOR && parts > 0)
- 				make_parts(dev, parts, ci->symlinks);
- 			return mdfd;
- 		}
-@@ -203,7 +203,7 @@ int open_mddev(char *dev, int autof)
- 			for (num = 127 ; num != 128 ; num = num ? num-1 : (1<<22)-1) {
- 				struct mdstat_ent *me;
- 				int devnum = num;
--				if (major != MD_MAJOR)
-+				if (major_num != MD_MAJOR)
- 					devnum = -1-num;
- 
- 				for (me=mdlist; me; me=me->next)
-@@ -214,11 +214,11 @@ int open_mddev(char *dev, int autof)
- 					 * make sure it is new to /dev too
- 					 */
- 					char *dn;
--					if (major != MD_MAJOR)
--						minor = num << MdpMinorShift;
-+					if (major_num != MD_MAJOR)
-+						minor_num = num << MdpMinorShift;
- 					else
--						minor = num;
--					dn = map_dev(major,minor, 0);
-+						minor_num = num;
-+					dn = map_dev(major_num,minor_num, 0);
- 					if (dn==NULL || is_standard(dn, NULL)) {
- 						/* this number only used by a 'standard' name,
- 						 * so it is safe to use
-@@ -227,21 +227,21 @@ int open_mddev(char *dev, int autof)
- 					}
- 				}
- 			}
--		} else if (major == MD_MAJOR)
--			minor = num;
-+		} else if (major_num == MD_MAJOR)
-+			minor_num = num;
- 		else
--			minor = num << MdpMinorShift;
-+			minor_num = num << MdpMinorShift;
- 		/* major and minor have been chosen */
- 
- 		/* If it was a 'standard' name and it is in-use, then
- 		 * the device could already be correct
- 		 */
--		if (stb.st_mode && major(stb.st_rdev) == major &&
--		    minor(stb.st_rdev) == minor)
-+		if (stb.st_mode && major(stb.st_rdev) == major_num &&
-+		    minor(stb.st_rdev) == minor_num)
- 			;
- 		else {
--			if (major(makedev(major,minor)) != major ||
--			    minor(makedev(major,minor)) != minor) {
-+			if (major(makedev(major_num,minor_num)) != major_num ||
-+			    minor(makedev(major_num,minor_num)) != minor_num) {
- 				fprintf(stderr, Name ": Need newer C library to use more than 4 partitionable md devices, sorry\n");
- 				return -1;
- 			}
-@@ -256,7 +256,7 @@ int open_mddev(char *dev, int autof)
- 						perror("chmod /dev/md");
- 				}
- 			}
--			if (mknod(dev, S_IFBLK|0600, makedev(major, minor))!= 0) {
-+			if (mknod(dev, S_IFBLK|0600, makedev(major_num, minor_num))!= 0) {
- 				fprintf(stderr, Name ": failed to create %s\n", dev);
- 				return -1;
- 			}
-@@ -275,7 +275,7 @@ int open_mddev(char *dev, int autof)
- 			add_dev(dev, &stb, 0, NULL);
- 			if (ci->symlinks && strncmp(dev, "/dev/md/", 8) == 0)
- 				make_dev_symlink(dev);
--			if (major != MD_MAJOR)
-+			if (major_num != MD_MAJOR)
- 				make_parts(dev,parts, ci->symlinks);
- 		}
- 	}
-@@ -299,7 +299,7 @@ int open_mddev_devnum(char *devname, int devnum, char *name, char *chosen_name)
- 	 * possibly constructing a name with 'name', but in any case, copying
- 	 * the name into 'chosen_name'
- 	 */
--	int major, minor;
-+	int major_num, minor_num;
- 	struct stat stb;
- 
- 	if (devname)
-@@ -318,22 +318,22 @@ int open_mddev_devnum(char *devname, int devnum, char *name, char *chosen_name)
- 			sprintf(chosen_name, "/dev/md/d%d", -1-devnum);
- 	}
- 	if (devnum >= 0) {
--		major = MD_MAJOR;
--		minor = devnum;
-+		major_num = MD_MAJOR;
-+		minor_num = devnum;
- 	} else {
--		major = get_mdp_major();
--		minor = (-1-devnum) << 6;
-+		major_num = get_mdp_major();
-+		minor_num = (-1-devnum) << 6;
- 	}
- 	if (stat(chosen_name, &stb) == 0) {
- 		/* It already exists.  Check it is right. */
- 		if ( ! S_ISBLK(stb.st_mode) ||
--		     stb.st_rdev != makedev(major, minor)) {
-+		     stb.st_rdev != makedev(major_num, minor_num)) {
- 			errno = EEXIST;
- 			return -1;
- 		}
- 	} else {
- 		if (mknod(chosen_name, S_IFBLK | 0600,
--			  makedev(major, minor)) != 0) {
-+			  makedev(major_num, minor_num)) != 0) {
- 			return -1;
- 		}
- 		/* FIXME chown/chmod ?? */
--- 
-1.5.3.1
+On Wed, 26 Sep 2007, Bryan J Smith wrote:
 
+> Everyone can play local benchmarking games all they want,
+> and software RAID will almost always be faster, significantly at times.
+>
+> What matters is actual, multiple client performance under full load.
+> Anything less is a completely irrelevant.
+> --
+> Bryan J Smith - mailto:b.j.smith@ieee.org
+> http://thebs413.blogspot.com
+> Sent via BlackBerry from T-Mobile
+>
+>
+> -----Original Message-----
+> From: Justin Piszcz <jpiszcz@lucidpixels.com>
+>
+> Date: Wed, 26 Sep 2007 05:52:39
+> To:Ralf Gross <Ralf-Lists@ralfgross.de>
+> Cc:linux-xfs@oss.sgi.com, linux-raid@vger.kernel.org
+> Subject: Re: mkfs options for a 16x hw raid5 and xfs (mostly large files)
+>
+>
+>
+>
+> On Wed, 26 Sep 2007, Ralf Gross wrote:
+>
+>> Justin Piszcz schrieb:
+>>> What was the command line you used for that output?
+>>> tiobench.. ?
+>>
+>> tiobench --numruns 3 --threads 1 --threads 2 --block 4096 --size 20000
+>>
+>> --size 20000 because the server has 16 GB RAM.
+>>
+>> Ralf
+>>
+>>
+>
+> Here is my output on my SW RAID5 keep in mind it is currently being used so the numbers are a little slower than they probably should be:
+>
+> My machine only has 8 GiB of memory but I used the same command you did:
+>
+> This is with the 2.6.22.6 kernel, the 2.6.23-rcX/final when released is supposed to have the SW RAID5 accelerator code, correct?
+>
+> Unit information
+> ================
+> File size = megabytes
+> Blk Size  = bytes
+> Rate      = megabytes per second
+> CPU%      = percentage of CPU used during the test
+> Latency   = milliseconds
+> Lat%      = percent of requests that took longer than X seconds
+> CPU Eff   = Rate divided by CPU% - throughput per cpu load
+>
+> Sequential Reads
+>                               File  Blk   Num                   Avg      Maximum      Lat%     Lat%    CPU
+> Identifier                    Size  Size  Thr   Rate  (CPU%)  Latency    Latency      >2s      >10s    Eff
+> ---------------------------- ------ ----- ---  ------ ------ --------- -----------  -------- -------- -----
+> 2.6.22.6                     20000  4096    1  523.01 45.79%     0.022      510.77   0.00000  0.00000  1142
+> 2.6.22.6                     20000  4096    2  501.29 85.84%     0.046      855.59   0.00000  0.00000   584
+>
+> Random Reads
+>                               File  Blk   Num                   Avg      Maximum      Lat%     Lat%    CPU
+> Identifier                    Size  Size  Thr   Rate  (CPU%)  Latency    Latency      >2s      >10s    Eff
+> ---------------------------- ------ ----- ---  ------ ------ --------- -----------  -------- -------- -----
+> 2.6.22.6                     20000  4096    1    0.90 0.276%    13.003       74.41   0.00000  0.00000   326
+> 2.6.22.6                     20000  4096    2    1.61 1.167%    14.443      126.43   0.00000  0.00000   137
+>
+> Sequential Writes
+>                               File  Blk   Num                   Avg      Maximum      Lat%     Lat%    CPU
+> Identifier                    Size  Size  Thr   Rate  (CPU%)  Latency    Latency      >2s      >10s    Eff
+> ---------------------------- ------ ----- ---  ------ ------ --------- -----------  -------- -------- -----
+> 2.6.22.6                     20000  4096    1  363.46 75.72%     0.030     2757.45   0.00000  0.00000   480
+> 2.6.22.6                     20000  4096    2  394.45 287.9%     0.056     2798.92   0.00000  0.00000   137
+>
+> Random Writes
+>                               File  Blk   Num                   Avg      Maximum      Lat%     Lat%    CPU
+> Identifier                    Size  Size  Thr   Rate  (CPU%)  Latency    Latency      >2s      >10s    Eff
+> ---------------------------- ------ ----- ---  ------ ------ --------- -----------  -------- -------- -----
+> 2.6.22.6                     20000  4096    1    3.16 1.752%     0.011        1.02   0.00000  0.00000   180
+> 2.6.22.6                     20000  4096    2    3.07 3.769%     0.013        0.10   0.00000  0.00000    82
+>
+>
+>
+>
+>
