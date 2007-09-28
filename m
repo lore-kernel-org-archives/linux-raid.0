@@ -1,74 +1,66 @@
-From: Bill Davidsen <davidsen@tmr.com>
+From: "Jon Nelson" <jnelson-linux-raid@jamponi.net>
 Subject: Re: Backups w/ rsync
-Date: Fri, 28 Sep 2007 12:50:43 -0400
-Message-ID: <46FD30E3.7090809@tmr.com>
-References: <20070928145718.7320C24769@gemini.denx.de>
+Date: Fri, 28 Sep 2007 11:52:31 -0500
+Message-ID: <cccedfc60709280952k125f9356oa7f476a490a9ff@mail.gmail.com>
+References: <20070918230914.9FF5910215F@medulla.enet.sharplabs.com>
+	 <87sl521kqh.fsf@informatik.uni-tuebingen.de>
+	 <20070925235016.02F6E1023B9@medulla.enet.sharplabs.com>
+	 <87k5qe19p0.fsf@informatik.uni-tuebingen.de>
+	 <20070927062317.3CCAB1023E0@medulla.enet.sharplabs.com>
+	 <46FB7D2A.1050608@ziu.info>
+	 <20070927221049.19BE21023EB@medulla.enet.sharplabs.com>
+	 <46FD1442.70707@tmr.com>
+	 <cccedfc60709280811j44d6b1c8w60e209d7c6defca9@mail.gmail.com>
+	 <46FD2AF3.4040501@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20070928145718.7320C24769@gemini.denx.de>
+In-Reply-To: <46FD2AF3.4040501@tmr.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Wolfgang Denk <wd@denx.de>
-Cc: "Dean S. Messing" <deanm@sharplabs.com>, linux-raid@vger.kernel.org
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Wolfgang Denk wrote:
-> Dear Bill,
->
-> in message <46FD1442.70707@tmr.com> you wrote:
->   
->> Be aware that rsync is useful for making a *copy* of your files, which 
->> isn't always the best backup. If the goal is to preserve data and be 
->> able to recover in time of disaster, it's probably not optimal, while if 
->> you need frequent access to old or deleted files it's fine.
->>     
->
-> If you want to do real backups you should use real tools, like bacula
-> etc.
->
->   
->> Now you can do an incremental (since last full or incremental) or 
->> partial (since last full):
->>
->>     touch bkup_incr_new
->>     timestamp=$(date +%Y%m%d-%T)
->>     find /home -cnewer bkup_incr | cpio -o -Hcrc |
->>        gzip -3 >/mnt/USBbkup/incr-$timestamp &&
->>        mv -f bkup_incr_new bkup_incr
->>
->>     timestamp=$(date +%Y%m%d-%T)
->>     find /home -cnewer bkup_full  | cpio -o -Hcrc |
->>        gzip -3 >/mnt/USBbkup/part-$timestamp
->>     
->
-> Now have Johnny Loser downloading some stuff, say:
->
-> 	$ wget -N ftp://ftp.kernel.org/pub/linux/kernel/v2.6/linux-2.6.12.tar.gz
->
-> Are you aware that this file will never be backed up by your script?
->
-> Also, what about permission / owner changes etc.?
->   
+On 9/28/07, Bill Davidsen <davidsen@tmr.com> wrote:
+> What I don't understand is how you use hard links... because a hard link
+> needs to be in the same filesystem, and because a hard link is just
+> another pointer to the inode and doesn't make a physical copy of the
+> data to another device or to anywhere, really.
 
-Do note the use of -cnewer, which is *not* the same as the modified 
-time, and which exactly addresses your points. Ownership changes, etc, 
-will causes a backup of the contents as well, but they will be preserved.
-> A backup tool should never work based on timestamps alone.
->   
+Yes, I know how hard links work. There is (one) physical copy of the
+data when it goes from the filesystem on the raid to the filesystem on
+the drbd. Subsequent "copies" of the same file, assuming the file has
+not changed, are all hard links on the drbd-backed filesystem. Thus, I
+have one *physical* copy of the data and a whole bunch of hard links.
+Now, since I'm using drbd I actually have *two* physical copies (for a
+total of three if you include the original) because the *other*
+machine has a block-for-block copy of the drbd device (or it did, as
+of a few days ago).
 
-Feel free to use a tool which does a checksum of every file if you feel 
-it's needed on your system. I'm not trying to defend against people 
-playing with ctime or system time of day, just protect normal day-to-day 
-data.
-> Best regards,
->
-> Wolfgang Denk
->
->   
+link-dest basically works like this:
+
+Assuming we are going to "copy" (using that word loosely here) file
+"A" from "/source" to "/dest/backup.tmp/", and we've told rsync that
+"/dest/backup.1/A" might exist:
+
+
+If "/dest/backup.1/A" does not exist: make a physical copy from
+"/source/A" to "/dest/backup.tmp/A".
+If it does exist, and the two files are considered identical, simply
+hardlink "/dest/backup.tmp/A" to "/dest/backup.1/A".
+When all files are copied, move every "/dest/backup.N" (N is a number)
+to "/dest/backup.N+1"
+If /dest/backup.31 exists, delete it.
+Move /dest/backup.tmp to /dest/backup.1 (which was just renamed /dest/backup.2)
+
+I can do all of this, for 175K files (40G), in under 2 minutes on
+modest hardware.
+I end up with:
+1+1 physical copies of the data (local drbd copy and remote drbd copy)
+
+There is more but if I may suggest: if you want more details contact
+me off-line, I'm pretty sure the linux-raid folks couldn't care less
+about rsync and drbd.
 -- 
-
-bill davidsen <davidsen@tmr.com>
-  CTO TMR Associates, Inc
-  Doing interesting things with small computers since 1979
-
+Jon
