@@ -1,39 +1,165 @@
-From: Michael Tokarev <mjt@tls.msk.ru>
-Subject: Re: problem killing raid 5
-Date: Tue, 02 Oct 2007 00:35:32 +0400
-Message-ID: <47015A14.9020400@msgid.tls.msk.ru>
-References: <4700D454.7020607@gmail.com> <47013A6B.30302@gmail.com> <470140B5.3020203@msgid.tls.msk.ru> <47014368.4040204@ucolick.org>
+From: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
+Subject: Re: Optimization report for Justin .
+Date: Mon, 1 Oct 2007 13:37:01 -0700 (PDT)
+Message-ID: <Pine.LNX.4.64.0710011332320.28195@filesrv1.baby-dragons.com>
+References: <Pine.LNX.4.64.0710011234510.28195@filesrv1.baby-dragons.com>
+ <Pine.LNX.4.64.0710011621260.10990@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <47014368.4040204@ucolick.org>
+In-Reply-To: <Pine.LNX.4.64.0710011621260.10990@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: Patrik Jonsson <patrik@ucolick.org>
-Cc: Daniel Santos <daniel.dlds@gmail.com>, linux-raid@vger.kernel.org
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: linux-raid maillist <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Patrik Jonsson wrote:
-> Michael Tokarev wrote:
-[]
->> But in any case, md should not stall - be it during reconstruction
->> or not.  For this, I can't comment - to me it smells like a bug
->> somewhere (md layer? error handling in driver? something else?)
->> which should be found and fixed.  And for this, some more details
->> are needed I guess -- kernel version is a start.
-> 
-> Really? It's my understanding that if md finds an unreadable block
-> during raid5 reconstruction, it has no option but to fail since the
-> information can't be reconstructed. When this happened to me, I had to
+ 	Hello Justin ,
 
-Yes indeed, it should fail, but not stuck as Daniel reported.
-Ie, it should either complete the work or fail, but not sleep
-somewhere in between.
+On Mon, 1 Oct 2007, Justin Piszcz wrote:
+> So you got 2x with those optimizations I mentioned?  Nice, did you previously 
+> get that speed, or?
+ 	Yes ,  the opt.s did get me a ~ 2.5x speed up .  This array (afaicr)
+ 	has never had that high a thruput .  But I am hoping that
+ 	Mr. Dan Williams(et al?) patches will bring this up even more .
+ 	Thank you for posting the optimizations .
+ 		Twyl ,  JimL
 
-[]
-> This is why it's important to run a weekly check so md can repair blocks
-> *before* a drive fails.
-
-*nod*.
-
-/mjt
+> On Mon, 1 Oct 2007, Mr. James W. Laferriere wrote:
+>> 	Hello Justin ,  Three seperate single runs of bonnie(*) .
+>> 	Please note ,  the linux-2.6.23-rc6 ,  Concerns your email of
+>> 	this weekend about "Subject: Bonnie++ with 1024k stripe SW/RAID5
+>> 	causes kernel to goto D-state" .
+>> 	No lockups or hangs were noticed .
+>> 		Hth ,  JimL
+>> 
+>> -	No optimizations at all or mount options . ~ 33MB/s
+>> 	mount -t xfs /dev/md3 /md3
+>> -	Just the suggested hardware optimizations . ~ 66MB/s
+>> 	(minus: disable Raptor NCQ  & sync_speed_max left at system default 
+>> (200000))
+>> -	With the additional optimization for XFS mount time . ~ 72MB/s
+>> 	mount -t xfs -onoatime,nodiratime,logbufs=8,logbsize=262144 /dev/md3 
+>> /md3
+>>
+>> 	Specifics:
+>>
+>> 	Kernel: linux-2.6.23-rc6+(these 2 patches...
+>> [SCSI] Addition to pci_ids.h for ATTO Technology, 
+>> Inc.linux/kernel/git/jejb/scsi-misc-2.6.git , commit: 
+>> d43639784817e4c9acaffd0952a1dc8ab6ecc076
+>> [SCSI] mpt fusion: Add support for ATTO 4LD: Rebranded LSI 53C1030 
+>> linux/kernel/git/jejb/scsi-misc-2.6.git , commit: 
+>> 5e394a08b72f40b059d05c44268769ce87ded11a
+>> )
+>> 
+>> (*)	/root/bonnie++-1.03a/bonnie++ -u0:0 -d /md3 -s 131072 -f
+>>
+>> 	bonnie++ output:
+>> 
+>> -	No optimizations at all or mount options .
+>> 	mount -t xfs /dev/md3 /md3
+>> 
+>> Using uid:0, gid:0.
+>> Writing intelligently...done
+>> Rewriting...done
+>> Reading intelligently...done
+>> start 'em...done...done...done...
+>> Create files in sequential order...done.
+>> Stat files in sequential order...done.
+>> Delete files in sequential order...done.
+>> Create files in random order...done.
+>> Stat files in random order...done.
+>> Delete files in random order...done.
+>> Version  1.03       ------Sequential Output------ --Sequential Input- 
+>> --Random-
+>>                    -Per Chr- --Block-- -Rewrite- -Per Chr- --Block-- 
+>> --Seeks--
+>> Machine        Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP  /sec 
+>> %CP
+>> filesrv2       128G           33575  17 27009  15           350317  44 
+>> 468.0 1
+>>                    ------Sequential Create------ --------Random 
+>> Create--------
+>>                    -Create-- --Read--- -Delete-- -Create-- --Read--- 
+>> -Delete--
+>>              files  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec 
+>> %CP
+>>                 16  1506   4 +++++ +++  1267   3  1620   6 +++++ +++  1121 
+>> 5
+>> filesrv2,128G,,,33575,17,27009,15,,,350317,44,468.0,1,16,1506,4,+++++,+++,1267,3,1620,6,+++++,+++,1121,5
+>> 
+>> 
+>> 
+>> -	Just the suggested hardware optimizations .
+>> 	(minus: disable Raptor NCQ  & sync_speed_max left at system default 
+>> (200000))
+>> 
+>> Using uid:0, gid:0.
+>> Writing intelligently...done
+>> Rewriting...done
+>> Reading intelligently...done
+>> start 'em...done...done...done...
+>> Create files in sequential order...done.
+>> Stat files in sequential order...done.
+>> Delete files in sequential order...done.
+>> Create files in random order...done.
+>> Stat files in random order...done.
+>> Delete files in random order...done.
+>> Version  1.03       ------Sequential Output------ --Sequential Input- 
+>> --Random-
+>>                    -Per Chr- --Block-- -Rewrite- -Per Chr- --Block-- 
+>> --Seeks--
+>> Machine        Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP  /sec 
+>> %CP
+>> filesrv2       128G           66976  55 51460  45           377672  78 
+>> 470.3 3
+>>                    ------Sequential Create------ --------Random 
+>> Create--------
+>>                    -Create-- --Read--- -Delete-- -Create-- --Read--- 
+>> -Delete--
+>>              files  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec 
+>> %CP
+>>                 16  1707   8 +++++ +++  1585   8  2039   8 +++++ +++   953 
+>> 8
+>> filesrv2,128G,,,66976,55,51460,45,,,377672,78,470.3,3,16,1707,8,+++++,+++,1585,8,2039,8,+++++,+++,953,8
+>> 
+>> 
+>> 
+>> -	With the additional optimizations at XFS mount time .
+>> 	mount -t xfs -onoatime,nodiratime,logbufs=8,logbsize=262144 /dev/md3 
+>> /md3
+>> 
+>> Using uid:0, gid:0.
+>> Writing intelligently...done
+>> Rewriting...done
+>> Reading intelligently...done
+>> start 'em...done...done...done...
+>> Create files in sequential order...done.
+>> Stat files in sequential order...done.
+>> Delete files in sequential order...done.
+>> Create files in random order...done.
+>> Stat files in random order...done.
+>> Delete files in random order...done.
+>> Version  1.03       ------Sequential Output------ --Sequential Input- 
+>> --Random-
+>>                    -Per Chr- --Block-- -Rewrite- -Per Chr- --Block-- 
+>> --Seeks--
+>> Machine        Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP  /sec 
+>> %CP
+>> filesrv2       128G           72819  35 52979  28           384975  52 
+>> 479.8 1
+>>                    ------Sequential Create------ --------Random 
+>> Create--------
+>>                    -Create-- --Read--- -Delete-- -Create-- --Read--- 
+>> -Delete--
+>>              files  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec 
+>> %CP
+>>                 16  2359  21 +++++ +++  2339  20  2880  24 +++++ +++  2060 
+>> 20
+>> filesrv2,128G,,,72819,35,52979,28,,,384975,52,479.8,1,16,2359,21,+++++,+++,2339,20,2880,24,+++++,+++,2060,20
+-- 
++-----------------------------------------------------------------+
+| James   W.   Laferriere | System   Techniques | Give me VMS     |
+| Network        Engineer | 663  Beaumont  Blvd |  Give me Linux  |
+| babydr@baby-dragons.com | Pacifica, CA. 94044 |   only  on  AXP |
++-----------------------------------------------------------------+
