@@ -1,35 +1,37 @@
-From: Michal Soltys <nozo@ziu.info>
-Subject: Re: Backups w/ rsync
-Date: Mon, 01 Oct 2007 06:45:09 +0200
-Message-ID: <47007B55.1060404@ziu.info>
-References: <20070928145718.7320C24769@gemini.denx.de>
+From: "Dale Dunlea" <ddunlea@gmail.com>
+Subject: RAID5 lockup with AMCC440 and async-tx
+Date: Mon, 1 Oct 2007 10:16:00 +0100
+Message-ID: <8a24fb800710010216m21cd7734p4c19df1aa7dd5564@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20070928145718.7320C24769@gemini.denx.de>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Wolfgang Denk wrote:
-> Dear Bill,
-> 
-> in message <46FD1442.70707@tmr.com> you wrote:
->>
->> Be aware that rsync is useful for making a *copy* of your files, which 
->> isn't always the best backup. If the goal is to preserve data and be 
->> able to recover in time of disaster, it's probably not optimal, while if 
->> you need frequent access to old or deleted files it's fine.
-> 
-> If you want to do real backups you should use real tools, like bacula
-> etc.
-> 
+Hi,
 
-I wouldn't agree here. All depends on how you organize yuor things, write
-scripts, and so on. It isn't any less "real" solution than amanda or bacula.
-It's much more DIY solution though, so not everyone will be inclined to use it.
+I have a board with an AMCC440 processor, running RAID5 using the
+async-tx interface. In general, it works well, but I have found a test
+case that consistently causes a hard lockup of the entire system.
 
-ps.
-Sorry for offtopic. Last in this subject from me.
+What makes this case odd is that I have only been able to generate it
+when accessing disks that are on two separate HBAs - in my case
+mpt-fusion based SAS HBAs. Once two HBAs are in use, the bug is
+trivial to repeat. I simply create a RAID5 using disks from each HBA,
+wait for it to resync, and then run
 
+"dd if=/dev/zero of=/dev/md0 bs=512 count=100000".
+
+By disabling CONFIG_DMA_ENGINE in my kernel config, the hang goes
+away, but then so does my performance.
+
+Any pointers on how to debug this? It feels like a race condition of
+some description, but any serial port printing I enable causes the
+problem to go away, and I can't print silently to /var/log/messages as
+the system hangs before it can flush.
+
+Regards,
+Dale
