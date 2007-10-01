@@ -1,51 +1,55 @@
-From: Wolfgang Denk <wd@denx.de>
-Subject: Re: RAID5 lockup with AMCC440 and async-tx
-Date: Mon, 01 Oct 2007 19:39:01 +0200
-Message-ID: <20071001173901.59F712408A@gemini.denx.de>
-References: <8a24fb800710010402u5aa0187bq4f850b8cb71483c9@mail.gmail.com>
+From: Daniel Santos <daniel.dlds@gmail.com>
+Subject: Re: problem killing raid 5
+Date: Mon, 01 Oct 2007 19:20:27 +0100
+Message-ID: <47013A6B.30302@gmail.com>
+References: <4700D454.7020607@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-reply-to: Your message of "Mon, 01 Oct 2007 12:02:54 BST."
-             <8a24fb800710010402u5aa0187bq4f850b8cb71483c9@mail.gmail.com>
+In-Reply-To: <4700D454.7020607@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dale Dunlea <ddunlea@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Dear Dale,
+I retried rebuilding the array once again from scratch, and this time 
+checked the syslog messages. The reconstructions process is getting 
+stuck at a disk block that it can't read. I double checked the block 
+number by repeating the array creation, and did a bad block scan. No bad 
+blocks were found. How could the md driver be stuck if the block is fine ?
 
-in message <8a24fb800710010402u5aa0187bq4f850b8cb71483c9@mail.gmail.com> you wrote:
+Supposing that the disk has bad blocks, can I have a raid device on 
+disks that have badblocks ? Each one of the disks is 400 GB.
+
+Probably not a good idea because if a drive has bad blocks it probably 
+will have more in the future. But anyway, can I ?
+The bad blocks would have to be known to the md driver.
+
+
+Daniel Santos wrote:
+> Hello,
 >
-> Latest code from Dan or latest code from denx.de? I grabbed the latest
+> I had a raid 5 array on three disks. Because of a hardware problem two 
+> disks dissapeared one after the other. I have since been trying to 
+> create a new array with them.
+>
+> Between the degradation of the two disks I tryied removing one of the 
+> failed disks and re-adding it to the array. When the second disk 
+> failed I noticed the drive numbers on the broken array, and 
+> misteriously a fourth drive appeared on it. Now I have numbers 0,1 and 
+> 3, but no number 2.
+> mdadm tells me that number 3 is a spare.
+>
+> Now I want to start all over again, but even after zeroing the 
+> superblocks on all three disks, and creation of a new array, 
+> /proc/mdstat shows the same drive numbers, while reconstructing the 
+> third drive.
+> What should I do ?
+>
+> Daniel Santos
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-From linux-2.6-denx
-
-> code from Dan, but I'm having trouble cloning denx.de:
-> 
-> "remote: error: object directory /home/git/linux-2.6/.git/objects does
-> not exist; check .git/objects/info/alternates."
-
-Argh.. Stupid me.
-
-Please try again - this one is fixed now.
-
-> > We saw similar problems, in our case they showed up only with a large
-> > number of disks in combination with big kernel pages sizes (64 kB).
-> >
-> The problem occurs for me with both 4k and 64k pages.
-
-Probably using more than one controller adds to the likelyhood of
-being hit by this race condition.
-
-Best regards,
-
-Wolfgang Denk
-
--- 
-DENX Software Engineering GmbH,     MD: Wolfgang Denk & Detlev Zundel
-HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
-Phone: (+49)-8142-66989-10 Fax: (+49)-8142-66989-80 Email: wd@denx.de
-Immortality consists largely of boredom.
-	-- Zefrem Cochrane, "Metamorphosis", stardate 3219.8
