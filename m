@@ -1,43 +1,48 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
+From: Andrew Clayton <andrew@digital-domain.net>
 Subject: Re: RAID 5 performance issue.
-Date: Wed, 3 Oct 2007 16:16:49 -0400 (EDT)
-Message-ID: <Pine.LNX.4.64.0710031616340.4315@p34.internal.lan>
+Date: Wed, 3 Oct 2007 21:19:10 +0100
+Message-ID: <20071003211910.439ded54@alpha.digital-domain.net>
 References: <20071003105321.06943824@zeus.pccl.info>
- <Pine.LNX.4.64.0710031243080.8612@p34.internal.lan>
- <Pine.LNX.4.64.0710031248020.8612@p34.internal.lan>
- <20071003211003.37130cc8@alpha.digital-domain.net>
+	<Pine.LNX.4.64.0710031243080.8612@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20071003211003.37130cc8@alpha.digital-domain.net>
+In-Reply-To: <Pine.LNX.4.64.0710031243080.8612@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andrew Clayton <andrew@digital-domain.net>
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
 Cc: Andrew Clayton <andrew@pccl.info>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Wed, 3 Oct 2007 12:43:24 -0400 (EDT), Justin Piszcz wrote:
+
+> Have you checked fragmentation?
+
+You know, that never even occurred to me. I've gotten into the mind set
+that it's generally not a problem under Linux.
+
+> xfs_db -c frag -f /dev/md3
+> 
+> What does this report?
+
+# xfs_db -c frag -f /dev/md0
+actual 1828276, ideal 1708782, fragmentation factor 6.54%
+
+Good or bad? 
+
+Seeing as this filesystem will be three years old in December, that
+doesn't seem overly bad.
 
 
-On Wed, 3 Oct 2007, Andrew Clayton wrote:
+I'm currently looking to things like
 
-> On Wed, 3 Oct 2007 12:48:27 -0400 (EDT), Justin Piszcz wrote:
->
->> Also if it is software raid, when you make the XFS filesyste, on it,
->> it sets up a proper (and tuned) sunit/swidth, so why would you want
->> to change that?
->
-> Oh I didn't, the sunit and swidth were set automatically. Do they look
-> sane?. From reading the XFS section of the mount man page, I'm not
-> entirely sure what they specify and certainly wouldn't have any idea
-> what to set them to.
->
->> Justin.
->
-> Cheers,
->
-> Andrew
->
+http://lwn.net/Articles/249450/ and 
+http://lwn.net/Articles/242559/
 
-You should not need to set them as mount options unless you are overriding 
-the defaults.
+for potential help, fortunately it seems I won't have too long to wait.
 
-Justin.
+> Justin.
+
+Cheers,
+
+Andrew
