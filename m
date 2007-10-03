@@ -1,41 +1,35 @@
-From: "H. Peter Anvin" <hpa@zytor.com>
-Subject: Re: [PATCH] [mdadm] Add klibc support to mdadm.h
-Date: Tue, 02 Oct 2007 18:50:07 -0700
-Message-ID: <4702F54F.1070504@zytor.com>
-References: <11903959391007-git-send-email-max@stro.at>
+From: Michael Tokarev <mjt@tls.msk.ru>
+Subject: Re: Journalling filesystem corruption fixed in between?
+Date: Wed, 03 Oct 2007 11:19:50 +0400
+Message-ID: <47034296.6070301@msgid.tls.msk.ru>
+References: <735D322AED9CD711BE53000476917CD0029728C3@NT-SERVER-5>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=KOI8-R
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <11903959391007-git-send-email-max@stro.at>
+In-Reply-To: <735D322AED9CD711BE53000476917CD0029728C3@NT-SERVER-5>
 Sender: linux-raid-owner@vger.kernel.org
-To: maximilian attems <max@stro.at>
-Cc: linux-raid@vger.kernel.org, Neil Brown <neilb@suse.de>
+To: "Rustedt, Florian" <florian.rustedt@smartnet.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-maximilian attems wrote:
-> klibc still misses a lot functionality to let mdadm link against,
-> this small step helps to get to the real trouble.. :)
+Rustedt, Florian wrote:
+> Hello list,
 > 
-> Signed-off-by: maximilian attems <max@stro.at>
-> ---
->  mdadm.h |    9 ++++++++-
->  1 files changed, 8 insertions(+), 1 deletions(-)
-> 
-> diff --git a/mdadm.h b/mdadm.h
-> index ac7d4b4..dba09f0 100644
-> --- a/mdadm.h
-> +++ b/mdadm.h
-> @@ -29,7 +29,7 @@
->  
->  #define	_GNU_SOURCE
->  #include	<unistd.h>
-> -#ifndef __dietlibc__
-> +#if !defined(__dietlibc__) && !defined(__KLIBC__)
->  extern __off64_t lseek64 __P ((int __fd, __off64_t __offset, int __whence));
->  #else
+> some folks reported severe filesystem-crashes with ext3 and reiserfs on
+> mdraid level 1 and 5.
 
-Wouldn't it be better to just compile with -D_FILE_OFFSET_BITS=64 on all 
-libraries instead of using the LFS cruft?
+I guess much more strong evidience and details are needed.
+Without any additional information I for one can only make
+a (not-so-pleasant) guess about those "some folks", nothing
+more.  We're running several dozens of systems on raid1s and
+raid5s since 2.4 kernel (and some since 2.2 if memory serves,
+with an additional patch for raid functionality), -- nothing
+except of usual mostly hardware problems since that.  And
+many other people use linux raid and especially ext3 file-
+system in production on large boxes with good load -- such
+a corruption, be it not a particular system specific (due
+to, for example, a bad ram or faulty controller or whatever),
+should cause alot of messages here @linux-raid and elsewhere.
 
-	-hpa
+/mjt
