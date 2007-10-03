@@ -1,47 +1,57 @@
-From: Andrew Clayton <andrew@digital-domain.net>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
 Subject: Re: RAID 5 performance issue.
-Date: Wed, 3 Oct 2007 21:20:37 +0100
-Message-ID: <20071003212037.1c983765@alpha.digital-domain.net>
+Date: Wed, 3 Oct 2007 16:35:21 -0400 (EDT)
+Message-ID: <Pine.LNX.4.64.0710031634100.4897@p34.internal.lan>
 References: <20071003105321.06943824@zeus.pccl.info>
-	<87r6kcccfv.fsf@informatik.uni-tuebingen.de>
+ <Pine.LNX.4.64.0710031243080.8612@p34.internal.lan>
+ <20071003211910.439ded54@alpha.digital-domain.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87r6kcccfv.fsf@informatik.uni-tuebingen.de>
+In-Reply-To: <20071003211910.439ded54@alpha.digital-domain.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Goswin von Brederlow <brederlo@informatik.uni-tuebingen.de>
+To: Andrew Clayton <andrew@digital-domain.net>
 Cc: Andrew Clayton <andrew@pccl.info>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 03 Oct 2007 19:53:08 +0200, Goswin von Brederlow wrote:
+What does cat /sys/block/md0/md/mismatch_cnt say?
 
-> Andrew Clayton <andrew@pccl.info> writes:
-> 
-> > Hi,
-> >
-> > Hardware:
-> >
-> > Dual Opteron 2GHz cpus. 2GB RAM. 4 x 250GB SATA hard drives. 1
-> > (root file system) is connected to the onboard Silicon Image 3114
-> > controller. The other 3 (/home) are in a software RAID 5 connected
-> > to a PCI Silicon Image 3124 card. I moved the 3 raid disks off the
-> > on board controller onto the card the other day to see if that
-> > would help, it didn't.
-> 
-> I would think the onboard controller is connected to the north or
-> south bridge and possibly hooked directly into the hyper
-> transport. The extra controler is PCI so you are limited to
-> theoretical 128MiB/s. For me the onboard chips do much better (though
-> at higher cpu cost) than pci cards.
+That fragmentation looks normal/fine.
 
-Yeah, I was wondering about that. It certainly hasn't improved things,
-it's unclear if it's made things any worse..
+Justin.
 
-> MfG
->         Goswin
+On Wed, 3 Oct 2007, Andrew Clayton wrote:
 
-
-Cheers,
-
-Andrew
+> On Wed, 3 Oct 2007 12:43:24 -0400 (EDT), Justin Piszcz wrote:
+>
+>> Have you checked fragmentation?
+>
+> You know, that never even occurred to me. I've gotten into the mind set
+> that it's generally not a problem under Linux.
+>
+>> xfs_db -c frag -f /dev/md3
+>>
+>> What does this report?
+>
+> # xfs_db -c frag -f /dev/md0
+> actual 1828276, ideal 1708782, fragmentation factor 6.54%
+>
+> Good or bad?
+>
+> Seeing as this filesystem will be three years old in December, that
+> doesn't seem overly bad.
+>
+>
+> I'm currently looking to things like
+>
+> http://lwn.net/Articles/249450/ and
+> http://lwn.net/Articles/242559/
+>
+> for potential help, fortunately it seems I won't have too long to wait.
+>
+>> Justin.
+>
+> Cheers,
+>
+> Andrew
+>
