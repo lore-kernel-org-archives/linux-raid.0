@@ -1,74 +1,41 @@
-From: Goswin von Brederlow <brederlo@informatik.uni-tuebingen.de>
-Subject: Re: Raid performance problems (pdflush / raid5 eats 100%)
-Date: Tue, 02 Oct 2007 19:11:15 +0200
-Message-ID: <87odfhl9vw.fsf@informatik.uni-tuebingen.de>
-References: <87sl4tlefa.fsf@informatik.uni-tuebingen.de>
-	<Pine.LNX.4.64.0710021218490.10536@p34.internal.lan>
+From: "H. Peter Anvin" <hpa@zytor.com>
+Subject: Re: [PATCH] [mdadm] Add klibc support to mdadm.h
+Date: Tue, 02 Oct 2007 18:50:07 -0700
+Message-ID: <4702F54F.1070504@zytor.com>
+References: <11903959391007-git-send-email-max@stro.at>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0710021218490.10536@p34.internal.lan> (Justin
-	Piszcz's message of "Tue, 2 Oct 2007 12:19:20 -0400 (EDT)")
+In-Reply-To: <11903959391007-git-send-email-max@stro.at>
 Sender: linux-raid-owner@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: Goswin von Brederlow <brederlo@informatik.uni-tuebingen.de>, linux-raid@vger.kernel.org
+To: maximilian attems <max@stro.at>
+Cc: linux-raid@vger.kernel.org, Neil Brown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-Justin Piszcz <jpiszcz@lucidpixels.com> writes:
+maximilian attems wrote:
+> klibc still misses a lot functionality to let mdadm link against,
+> this small step helps to get to the real trouble.. :)
+> 
+> Signed-off-by: maximilian attems <max@stro.at>
+> ---
+>  mdadm.h |    9 ++++++++-
+>  1 files changed, 8 insertions(+), 1 deletions(-)
+> 
+> diff --git a/mdadm.h b/mdadm.h
+> index ac7d4b4..dba09f0 100644
+> --- a/mdadm.h
+> +++ b/mdadm.h
+> @@ -29,7 +29,7 @@
+>  
+>  #define	_GNU_SOURCE
+>  #include	<unistd.h>
+> -#ifndef __dietlibc__
+> +#if !defined(__dietlibc__) && !defined(__KLIBC__)
+>  extern __off64_t lseek64 __P ((int __fd, __off64_t __offset, int __whence));
+>  #else
 
-> Have you tried a 1024k stripe and 16384k stripe_cache_size?
->
-> I'd be curious what kind of performance/write speed you get with that
-> configuration.
->
-> Justin.
+Wouldn't it be better to just compile with -D_FILE_OFFSET_BITS=64 on all 
+libraries instead of using the LFS cruft?
 
-stripe_cache_size is not in KiB of memory but in multiples of some
-internal structures. So 16384 * 4 raids is ~1.6GB ram. We only have
-2GB ram in the system so this is very near an OOM just for the stripe
-cache:
-
-Mem:   2062468k total,  1735048k used,   327420k free,     4096k buffer
-Swap:        0k total,        0k used,        0k free,     9924k cached
-
-1 Thread:
- 9442 root      16   0     0    0    0 R   73  0.0   3:33.89 pdflush
- 9590 root      10  -5     0    0    0 S   57  0.0   1:29.73 md0_raid5
- 9747 root      25   0 28364 1392  184 R   85  0.1   1:06.09 iozone
-  257 root      10  -5     0    0    0 D   23  0.0   4:47.50 kswapd1
-  256 root      10  -5     0    0    0 S   12  0.0   4:11.17 kswapd0
-
-2 Threads:
-  257 root      11  -5     0    0    0 D   27  0.0   4:55.46 kswapd1
- 9442 root      16   0     0    0    0 S   23  0.0   4:49.65 pdflush
-  256 root      10  -5     0    0    0 S    9  0.0   4:26.57 kswapd0
- 9590 root      10  -5     0    0    0 R   40  0.0   2:36.91 md0_raid5
- 9596 root      10  -5     0    0    0 S   35  0.0   0:50.62 md1_raid5
- 9487 root      15   0     0    0    0 S   35  0.0   0:37.14 pdflush
- 9759 root      18   0 28360 1420  216 R   59  0.1   0:11.61 iozone
- 9758 root      18   0 28360 1420  216 R   70  0.1   0:10.17 iozone
-
-With 4 raid5s:
-           write  rewrite read   reread
-1 Thread : 193887 196092  365965 401978  <-- use 1 raid5
-2 Threads: 221221 255069  430061 365904  <-- use 2 raid5
-4 Threads: 238220 257221  395603 409954  <-- use 4 raid5
-
-
-With just 1 raid5 (and more free mem):
-
-2 Threads:
- 9590 root      10  -5     0    0    0 R   93  0.0   7:45.04 md0_raid5
- 9487 root      16   0     0    0    0 S   27  0.0   5:13.43 pdflush
-  257 root      10  -5     0    0    0 S    5  0.0   6:28.48 kswapd1
-  256 root      10  -5     0    0    0 S    5  0.0   5:33.40 kswapd0
- 9818 root      18   0 28364 1416  208 R   56  0.1   0:47.70 iozone
- 9819 root      18   0 28364 1416  208 D   62  0.1   0:46.58 iozone
-         
-           write  rewrite read   reread
-1 Thread : 206299 201120  400244 390185
-2 Threads: 210888 202785  411502 400532
-4 Threads: 200829 145307  400252 395568
-
-MfG
-        Goswin
+	-hpa
