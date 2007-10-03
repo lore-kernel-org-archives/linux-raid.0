@@ -1,32 +1,27 @@
-From: Andrew Clayton <andrew@digital-domain.net>
+From: Richard Scobie <richard@sauce.co.nz>
 Subject: Re: RAID 5 performance issue.
-Date: Wed, 3 Oct 2007 21:46:28 +0100
-Message-ID: <20071003214628.0d28af5a@alpha.digital-domain.net>
-References: <20071003105321.06943824@zeus.pccl.info>
-	<Pine.LNX.4.64.0710031243080.8612@p34.internal.lan>
-	<20071003211910.439ded54@alpha.digital-domain.net>
-	<Pine.LNX.4.64.0710031634100.4897@p34.internal.lan>
+Date: Thu, 04 Oct 2007 09:48:45 +1300
+Message-ID: <4704002D.9080100@sauce.co.nz>
+References: <20071003105321.06943824@zeus.pccl.info>	<87r6kcccfv.fsf@informatik.uni-tuebingen.de> <20071003212037.1c983765@alpha.digital-domain.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0710031634100.4897@p34.internal.lan>
+In-Reply-To: <20071003212037.1c983765@alpha.digital-domain.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: Andrew Clayton <andrew@pccl.info>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 3 Oct 2007 16:35:21 -0400 (EDT), Justin Piszcz wrote:
+Andrew Clayton wrote:
 
-> What does cat /sys/block/md0/md/mismatch_cnt say?
+> Yeah, I was wondering about that. It certainly hasn't improved things,
+> it's unclear if it's made things any worse..
+> 
 
-$ cat /sys/block/md0/md/mismatch_cnt
-0
+Many 3124 cards are PCI-X, so if you have one of these (and you seem to 
+be using a server board which may well have PCI-X), bus performance is 
+not going to be an issue.
 
-> That fragmentation looks normal/fine.
+Regards,
 
-Cool.
-
-> Justin.
-
-Andrew
+Richard
