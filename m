@@ -1,45 +1,54 @@
 From: Andrew Clayton <andrew@digital-domain.net>
 Subject: Re: RAID 5 performance issue.
-Date: Thu, 4 Oct 2007 15:44:41 +0100
-Message-ID: <20071004154441.31addcfe@zeus.pccl.info>
+Date: Thu, 4 Oct 2007 16:03:16 +0100
+Message-ID: <20071004160316.5332a370@zeus.pccl.info>
 References: <20071003105321.06943824@zeus.pccl.info>
 	<Pine.LNX.4.64.0710031243080.8612@p34.internal.lan>
 	<20071003211910.439ded54@alpha.digital-domain.net>
 	<72dbd3150710031336s331782c3yd0ac7ceda4e81774@mail.gmail.com>
 	<20071004150831.6edbf926@zeus.pccl.info>
 	<Pine.LNX.4.64.0710041009150.8275@p34.internal.lan>
-	<Pine.LNX.4.64.0710041009530.8275@p34.internal.lan>
+	<20071004153656.16e10f9e@zeus.pccl.info>
+	<Pine.LNX.4.64.0710041038400.8275@p34.internal.lan>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0710041009530.8275@p34.internal.lan>
+In-Reply-To: <Pine.LNX.4.64.0710041038400.8275@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
 To: Justin Piszcz <jpiszcz@lucidpixels.com>
 Cc: David Rees <drees76@gmail.com>, Andrew Clayton <andrew@pccl.info>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, 4 Oct 2007 10:10:02 -0400 (EDT), Justin Piszcz wrote:
+On Thu, 4 Oct 2007 10:39:09 -0400 (EDT), Justin Piszcz wrote:
 
 
-> Also, did performance just go to crap one day or was it gradual?
+> What type (make/model) of the drives?
 
-IIRC I just noticed one day that firefox and vim was stalling. That was
-back in February/March I think. At the time the server was running a
-2.6.18 kernel, since then I've tried a few kernels in between that and
-currently 2.6.23-rc9
+The drives are 250GB  Hitachi Deskstar 7K250 series ATA-6 UDMA/100
 
-Something seems to be periodically causing a lot of activity that
-max's out the stripe_cache for a few seconds (when I was trying
-to look with blktrace, it seemed pdflush was doing a lot of activity
-during this time). 
- 
-What I had noticed just recently was when I was the only one doing IO
-on the server (no NFS running and I was logged in at the console) even
-just patching the kernel was crawling to a halt.
+> True, the controller may not be able to do it either.
+> 
+> What types of disks/controllers again?
+
+The RAID disks are currently connected to a Silicon Image PCI card are
+configured as a software RAID 5
+
+03:04.0 RAID bus controller: Silicon Image, Inc. SiI 3124 PCI-X Serial ATA Controller (rev 02)
+        Subsystem: Silicon Image, Inc. Unknown device 7124
+        Flags: bus master, stepping, 66MHz, medium devsel, latency 64, IRQ 16
+        Memory at feafec00 (64-bit, non-prefetchable) [size=128]
+        Memory at feaf0000 (64-bit, non-prefetchable) [size=32K]
+        I/O ports at bc00 [size=16]
+        Expansion ROM at fea00000 [disabled] [size=512K]
+        Capabilities: [64] Power Management version 2
+        Capabilities: [40] PCI-X non-bridge device
+        Capabilities: [54] Message Signalled Interrupts: 64bit+ Queue=0/0 Enable-
+
+
+The problem originated  when the disks where connected to the on board
+Silicon Image 3114 controller.
 
 > Justin.
-
-Cheers,
 
 Andrew
