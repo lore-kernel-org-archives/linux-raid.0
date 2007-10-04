@@ -1,49 +1,32 @@
-From: "Dean S. Messing" <deanm@sharplabs.com>
-Subject: Re: How to create initrd.img to boot LVM-on-RAID0?
-Date: Wed,  3 Oct 2007 15:53:16 -0700 (PDT)
-Message-ID: <20071003225316.CAEB81023DC@medulla.enet.sharplabs.com>
-References: <20071003171837.9A0481023D4@medulla.enet.sharplabs.com> <871464B0-38A6-440A-87CF-66B4EDA433F3@rescomp.stanford.edu>
+From: Andrew Clayton <andrew@digital-domain.net>
+Subject: Re: RAID 5 performance issue.
+Date: Thu, 4 Oct 2007 15:08:31 +0100
+Message-ID: <20071004150831.6edbf926@zeus.pccl.info>
+References: <20071003105321.06943824@zeus.pccl.info>
+	<Pine.LNX.4.64.0710031243080.8612@p34.internal.lan>
+	<20071003211910.439ded54@alpha.digital-domain.net>
+	<72dbd3150710031336s331782c3yd0ac7ceda4e81774@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-reply-to: <871464B0-38A6-440A-87CF-66B4EDA433F3@rescomp.stanford.edu>
-	(message from Ian Ward Comfort on Wed, 3 Oct 2007 10:45:23 -0700)
+In-Reply-To: <72dbd3150710031336s331782c3yd0ac7ceda4e81774@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: David Rees <drees76@gmail.com>
+Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, Andrew Clayton <andrew@pccl.info>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Wed, 3 Oct 2007 13:36:39 -0700, David Rees wrote:
 
-Ian Ward Comfort wrote:
-: On Oct 3, 2007, at 10:18 AM, Dean S. Messing wrote:
-: > I've created a software RAID-0, defined a Volume Group on in with  
-: > (currently) a single logical volume, and copied my entire  
-: > installation onto it, modifying the copied fstab to reflect where  
-: > the new "/" is.
-: 
-: > mkinitrd --preload raid0  --with=raid0 initrd_raid.img 2.6.22.5-76-fc7
-: 
-: > But the thing won't complete the boot process. From the boot  
-: > messages it appears to not be starting the array, so when it goes  
-: > to scan for LVs it doesn't find the one that's sitting on top of  
-: > the array where root lives.
-: >
-: > Are there instructions for how to make this work?  I've googled for  
-: > a couple of hours, tried a bunch of stuff, but can't get it to  
-: > work.  From what I've read I suspect I must hand-tweek the "init"  
-: > file in the initrd.
-: 
-: You're probably correct in that your initrd's nash script currently  
-: lacks any "raidautorun" directives, since mkinitrd is looking at your  
-: old fstab and finding that your old root device is not on RAID.
-: 
-: Instead of specifying modules yourself and hand-tweaking the nash  
-: script, just ask mkinitrd to figure out the correct modules to load  
-: and RAID devices to start on its own, given your chosen boot device,  
-: with the --fstab option.
-: 
-: 	mkinitrd --fstab=/newroot/etc/fstab initrd_raid.img 2.6.22.5-76-fc7
+> Not bad, but not that good, either. Try running xfs_fsr into a nightly
+> cronjob. By default, it will defrag mounted xfs filesystems for up to
+> 2 hours. Typically this is enough to keep fragmentation well below 1%.
 
+I ran it last night on the raid array, it got the fragmentation down
+to 1.07%. Unfortunately that doesn't seemed to have helped.
+ 
+> -Dave
 
-That did the trick!
-Thanks a lot, Ian.
+Cheers,
 
-
-Dean
+Andrew
