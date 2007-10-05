@@ -1,7 +1,7 @@
 From: Andrew Clayton <andrew@digital-domain.net>
 Subject: Re: RAID 5 performance issue.
-Date: Fri, 5 Oct 2007 20:33:31 +0100
-Message-ID: <20071005203331.68580b8e@alpha.digital-domain.net>
+Date: Fri, 5 Oct 2007 20:42:07 +0100
+Message-ID: <20071005204207.2d338375@alpha.digital-domain.net>
 References: <20071003105321.06943824@zeus.pccl.info>
 	<Pine.LNX.4.64.0710031243080.8612@p34.internal.lan>
 	<20071003211910.439ded54@alpha.digital-domain.net>
@@ -10,42 +10,58 @@ References: <20071003105321.06943824@zeus.pccl.info>
 	<Pine.LNX.4.64.0710041009150.8275@p34.internal.lan>
 	<Pine.LNX.4.64.0710041009530.8275@p34.internal.lan>
 	<20071004154441.31addcfe@zeus.pccl.info>
-	<Pine.LNX.4.64.0710041219240.25506@p34.internal.lan>
-	<20071004192653.25eb333b@alpha.digital-domain.net>
-	<Pine.LNX.4.64.0710050621350.8433@p34.internal.lan>
-	<20071005115719.4a71ab89@zeus.pccl.info>
-	<Pine.LNX.4.64.0710050707490.8433@p34.internal.lan>
-	<20071005135312.04856211@zeus.pccl.info>
-	<20071005143023.2bce96e9@zeus.pccl.info>
-	<Pine.LNX.4.64.0710051006370.21185@p34.internal.lan>
-	<20071005171008.3e8a664d@zeus.pccl.info>
-	<Pine.LNX.4.64.0710051215220.26741@p34.internal.lan>
+	<18182.35390.419883.646409@stoffel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0710051215220.26741@p34.internal.lan>
+In-Reply-To: <18182.35390.419883.646409@stoffel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: Andrew Clayton <andrew@pccl.info>, David Rees <drees76@gmail.com>, linux-raid@vger.kernel.org
+To: John Stoffel <john@stoffel.org>
+Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, David Rees <drees76@gmail.com>, Andrew Clayton <andrew@pccl.info>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, 5 Oct 2007 12:16:07 -0400 (EDT), Justin Piszcz wrote:
+On Fri, 5 Oct 2007 15:02:22 -0400, John Stoffel wrote:
 
 > 
-> Hm, unfortunately at this point I think I am out of ideas you may
-> need to ask the XFS/linux-raid developers how to run blktrace during
-> those operations to figure out what is going on.
+> How much memory does this system have?  Have you checked the output of
 
-No problem, cheers.
+2GB
+
+> /proc/mtrr at all?  There' have been reports of systems with a bad
+
+$ cat /proc/mtrr 
+reg00: base=0x00000000 (   0MB), size=2048MB: write-back, count=1
+
+> BIOS that gets the memory map wrong, causing access to memory to slow
+> down drastically.
+
+BIOS-provided physical RAM map:
+ BIOS-e820: 0000000000000000 - 000000000009fc00 (usable)
+ BIOS-e820: 000000000009fc00 - 00000000000a0000 (reserved)
+ BIOS-e820: 00000000000e0000 - 0000000000100000 (reserved)
+ BIOS-e820: 0000000000100000 - 000000007fff0000 (usable)
+ BIOS-e820: 000000007fff0000 - 000000007ffff000 (ACPI data)
+ BIOS-e820: 000000007ffff000 - 0000000080000000 (ACPI NVS)
+ BIOS-e820: 00000000ff780000 - 0000000100000000 (reserved)
+
+
+full dmesg (from 2.6.21-rc8-git2) at
+http://digital-domain.net/kernel/sw-raid5-issue/dmesg
+
+> So if you have 2gb of RAM, try booting with mem=1900m or something
+
+Worth a shot.
+
+> like that and seeing if things are better for you.
+> 
+> Make sure your BIOS is upto the latest level as well.
+
+Hmm, I'll see whats involved in that.
  
-> BTW: Last thing I can think of, did you make any changes to
-> PREEMPTION in the kernel, or do you disable it (SERVER)?
+> John
 
-I normally have it disabled, but did try with voluntary preemption, but
-with no effect.
 
-> Justin.
-
+Cheers,
 
 Andrew
