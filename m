@@ -1,48 +1,55 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
+From: "John Stoffel" <john@stoffel.org>
 Subject: Re: RAID 5 performance issue.
-Date: Fri, 5 Oct 2007 15:02:15 -0400 (EDT)
-Message-ID: <Pine.LNX.4.64.0710051502060.32758@p34.internal.lan>
+Date: Fri, 5 Oct 2007 15:02:22 -0400
+Message-ID: <18182.35390.419883.646409@stoffel.org>
 References: <20071003105321.06943824@zeus.pccl.info>
- <Pine.LNX.4.64.0710031243080.8612@p34.internal.lan>
- <20071003211910.439ded54@alpha.digital-domain.net>
- <72dbd3150710031336s331782c3yd0ac7ceda4e81774@mail.gmail.com>
- <20071004150831.6edbf926@zeus.pccl.info> <Pine.LNX.4.64.0710041009150.8275@p34.internal.lan>
- <Pine.LNX.4.64.0710041009530.8275@p34.internal.lan> <20071004154441.31addcfe@zeus.pccl.info>
- <Pine.LNX.4.64.0710041219240.25506@p34.internal.lan>
- <20071004192653.25eb333b@alpha.digital-domain.net>
- <Pine.LNX.4.64.0710050621350.8433@p34.internal.lan> <20071005115719.4a71ab89@zeus.pccl.info>
- <Pine.LNX.4.64.0710050707490.8433@p34.internal.lan> <20071005135312.04856211@zeus.pccl.info>
- <20071005143023.2bce96e9@zeus.pccl.info> <Pine.LNX.4.64.0710051006370.21185@p34.internal.lan>
- <20071005171008.3e8a664d@zeus.pccl.info> <4706896F.2060503@sauce.co.nz>
+	<Pine.LNX.4.64.0710031243080.8612@p34.internal.lan>
+	<20071003211910.439ded54@alpha.digital-domain.net>
+	<72dbd3150710031336s331782c3yd0ac7ceda4e81774@mail.gmail.com>
+	<20071004150831.6edbf926@zeus.pccl.info>
+	<Pine.LNX.4.64.0710041009150.8275@p34.internal.lan>
+	<Pine.LNX.4.64.0710041009530.8275@p34.internal.lan>
+	<20071004154441.31addcfe@zeus.pccl.info>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4706896F.2060503@sauce.co.nz>
+In-Reply-To: <20071004154441.31addcfe@zeus.pccl.info>
 Sender: linux-raid-owner@vger.kernel.org
-To: Richard Scobie <richard@sauce.co.nz>
-Cc: linux-raid@vger.kernel.org
+To: Andrew Clayton <andrew@digital-domain.net>
+Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, David Rees <drees76@gmail.com>, Andrew Clayton <andrew@pccl.info>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+>>>>> "Andrew" == Andrew Clayton <andrew@digital-domain.net> writes:
+
+Andrew> On Thu, 4 Oct 2007 10:10:02 -0400 (EDT), Justin Piszcz wrote:
 
 
-On Sat, 6 Oct 2007, Richard Scobie wrote:
+>> Also, did performance just go to crap one day or was it gradual?
 
-> Have you had a look at the smartctl -a outputs of all the drives?
->
-> Possibly one drive is being slow to respond due to seek errors etc. but I 
-> would perhaps expect to be seeing this in the log.
->
-> If you have a full backup and a spare drive, I would probably rotate it 
-> through the array.
->
-> Regards,
->
-> Richard
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+Andrew> IIRC I just noticed one day that firefox and vim was
+Andrew> stalling. That was back in February/March I think. At the time
+Andrew> the server was running a 2.6.18 kernel, since then I've tried
+Andrew> a few kernels in between that and currently 2.6.23-rc9
 
-Forgot about that, yeah post the smartctl -a output for each drive please.
+Andrew> Something seems to be periodically causing a lot of activity
+Andrew> that max's out the stripe_cache for a few seconds (when I was
+Andrew> trying to look with blktrace, it seemed pdflush was doing a
+Andrew> lot of activity during this time).
+ 
+Andrew> What I had noticed just recently was when I was the only one
+Andrew> doing IO on the server (no NFS running and I was logged in at
+Andrew> the console) even just patching the kernel was crawling to a
+Andrew> halt.
 
+How much memory does this system have?  Have you checked the output of
+/proc/mtrr at all?  There' have been reports of systems with a bad
+BIOS that gets the memory map wrong, causing access to memory to slow
+down drastically.
+
+So if you have 2gb of RAM, try booting with mem=1900m or something
+like that and seeing if things are better for you.
+
+Make sure your BIOS is upto the latest level as well.
+
+John
