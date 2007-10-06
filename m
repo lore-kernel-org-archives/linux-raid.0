@@ -1,58 +1,45 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: RAID 5 performance issue.
-Date: Sat, 6 Oct 2007 12:05:11 -0400 (EDT)
-Message-ID: <Pine.LNX.4.64.0710061204520.28479@p34.internal.lan>
-References: <20071003105321.06943824@zeus.pccl.info>
- <Pine.LNX.4.64.0710031243080.8612@p34.internal.lan>
- <Pine.LNX.4.64.0710031248020.8612@p34.internal.lan>
- <20071003211003.37130cc8@alpha.digital-domain.net>
- <Pine.LNX.4.64.0710060830250.28479@p34.internal.lan>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: [PATCH -mm 0/4] raid5: stripe_queue (+20% to +90% write performance)
+Date: Sat, 06 Oct 2007 10:06:39 -0700
+Message-ID: <20071006170538.23741.75193.stgit@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0710060830250.28479@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andrew Clayton <andrew@digital-domain.net>
-Cc: Andrew Clayton <andrew@pccl.info>, linux-raid@vger.kernel.org
+To: neilb@suse.de, akpm@linux-foundation.org
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Neil,
 
+Here is the latest spin of the 'stripe_queue' implementation.  Thanks to
+raid6+bitmap testing done by Mr. James W. Laferriere there have been
+several cleanups and fixes since the last release.  Also, the changes
+are now spread over 4 patches to isolate one conceptual change per
+patch.  The most significant cleanup is removing the stripe_head back
+pointer from stripe_queue.  This effectively makes the queuing layer
+independent from the caching layer.
 
-On Sat, 6 Oct 2007, Justin Piszcz wrote:
+Expansion support needs more testing.
 
->
->
-> On Wed, 3 Oct 2007, Andrew Clayton wrote:
->
->> On Wed, 3 Oct 2007 12:48:27 -0400 (EDT), Justin Piszcz wrote:
->> 
->>> Also if it is software raid, when you make the XFS filesyste, on it,
->>> it sets up a proper (and tuned) sunit/swidth, so why would you want
->>> to change that?
->> 
->> Oh I didn't, the sunit and swidth were set automatically. Do they look
->> sane?. From reading the XFS section of the mount man page, I'm not
->> entirely sure what they specify and certainly wouldn't have any idea
->> what to set them to.
->> 
->>> Justin.
->> 
->> Cheers,
->> 
->> Andrew
->> -
->> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->> 
->
-> As long as you ran mkfs.xfs /dev/md0 it should have optimized the filesystem 
-> according to the disks beneath it.
->
-> Justin.
->
+See the individual patch changelogs for details.  Patch 1 contains
+updated performance numbers.
 
-Also can you provide the smartctl -a /dev/sda
-/dev/sdb
+Andrew,
 
-etc for each disk?
+These are updated in the git-md-accel tree, but I will work the
+finalized versions through Neil's 'Signed-off-by' path.
+
+Dan Williams (4):
+      raid5: add the stripe_queue object for tracking raid io requests (rev3)
+      raid5: split allocation of stripe_heads and stripe_queues
+      raid5: convert add_stripe_bio to add_queue_bio
+      raid5: use stripe_queues to prioritize the "most deserving" requests (rev7)
+
+ drivers/md/raid5.c         | 1560 ++++++++++++++++++++++++++++++++------------
+ include/linux/raid/raid5.h |   88 ++-
+ 2 files changed, 1200 insertions(+), 448 deletions(-)
+
+--
+Dan
