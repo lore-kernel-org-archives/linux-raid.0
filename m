@@ -1,66 +1,68 @@
-From: Eyal Lebedinsky <eyal@eyal.emu.id.au>
-Subject: Re: raid5 growing question
-Date: Sat, 06 Oct 2007 12:46:17 +1000
-Message-ID: <4706F6F9.6080601@eyal.emu.id.au>
-References: <20071005193159.GA8707@csy.ca>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: RAID 5 performance issue.
+Date: Sat, 6 Oct 2007 04:18:02 -0400 (EDT)
+Message-ID: <Pine.LNX.4.64.0710060417240.28479@p34.internal.lan>
+References: <20071003105321.06943824@zeus.pccl.info> <47069DB9.2050608@redhat.com>
+ <20071006003845.0001310238F@medulla.enet.sharplabs.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20071005193159.GA8707@csy.ca>
+In-Reply-To: <20071006003845.0001310238F@medulla.enet.sharplabs.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shane <shane@cm.nu>
-Cc: linux-raid@vger.kernel.org
+To: "Dean S. Messing" <deanm@sharplabs.com>
+Cc: linux-raid@vger.kernel.org, blc@redhat.com
 List-Id: linux-raid.ids
 
-Shane,
 
-Please take the following with some suspicion.
 
-I used raidreconf to add drives to an array, so I assume
-the grow functionality can at least do the same.
+On Fri, 5 Oct 2007, Dean S. Messing wrote:
 
-I wonder: if you have less than 1TB of data then you can:
-1 fail one 320GB disk (array now degraded!)
-2 use the port to install 1x1TB as a degraded 2-disk RAID5
-3 copy all the data across
-4 remove the 5x320GB
-5 install the other 2x1TB
-	may need to resync the 2x before growing to 3x?
-6 grow to 3x1TB RAID5
+>
+> Brendan Conoboy wrote:
+> <snip>
+>> Is the onboard SATA controller real SATA or just an ATA-SATA
+>> converter?  If the latter, you're going to have trouble getting faster
+>> performance than any one disk can give you at a time.  The output of
+>> 'lspci' should tell you if the onboard SATA controller is on its own
+>> bus or sharing space with some other device.  Pasting the output here
+>> would be useful.
+> <snip>
+>
+> N00bee question:
+>
+> How does one tell if a machine's disk controller is an ATA-SATA
+> converter?
+>
+> The output of `lspci|fgrep -i sata' is:
+>
+> 00:1f.2 SATA controller: Intel Corporation 631xESB/632xESB SATA AHCI Controller\
+> (rev 09)
+>
+> suggests a real SATA. These references to ATA in "dmesg", however,
+> make me wonder.
+>
+> ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> ata1.00: ATA-7: WDC WD1600JS-75NCB3, 10.02E04, max UDMA/133
+> ata1.00: 312500000 sectors, multi 0: LBA48 NCQ (depth 31/32)
+> ata1.00: configured for UDMA/133
+> ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> ata2.00: ATA-7: ST3160812AS, 3.ADJ, max UDMA/133
+> ata2.00: 312500000 sectors, multi 0: LBA48 NCQ (depth 31/32)
+> ata2.00: configured for UDMA/133
+> ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> ata3.00: ATA-7: ST3500630NS, 3.AEK, max UDMA/133
+> ata3.00: 976773168 sectors, multi 0: LBA48 NCQ (depth 31/32)
+> ata3.00: configured for UDMA/133
+>
+>
+> Dean
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-If you *do* have a spare port then in step 2 you can create
-a degraded 3x1TB and step 6 is a simple resync when you add
-the missing third disk. You can copy the full 1.6TB across
-in this case.
+His drives are either really old and do not support NCQ or he is not using 
+AHCI in the BIOS.
 
-Naturally, all this "degraded" means there is a real risk to
-your data for a few hours, but you knew that.
-
-However, when I do not have ports to play with I take the
-slow solution and create the new RAID externally (using USB
-or another computer over a net - there is always another
-computer around for this job).
-
-Good luck.
-
-Eyal
-
-Shane wrote:
-> Hello all,
-> 
-> I have a raid5 softraid array using 6x320GB SATA drives.  I
-> would like to reconfigure it to be 3x1tb SATA.  Is there a
-> way to do this using the grow feature of mdadm.  IE by
-> swapping 3 of the 320GB drives out for the 3 1TB drives
-> allowing the resyncs to occur between swapping and then
-> somehow tell mdadm to take the remaining three 320GB drives
-> out of the array or would I need to just create a new array
-> somehow, copy the data over and just shut the first array
-> right down?
-> 
-> Thanks,
-> Shane
-
--- 
-Eyal Lebedinsky	(eyal@eyal.emu.id.au)
+Justin.
