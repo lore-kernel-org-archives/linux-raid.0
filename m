@@ -1,84 +1,64 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH -mm 0/4] raid5: stripe_queue (+20% to +90% write performance)
-Date: Tue, 9 Oct 2007 16:21:11 +1000
-Message-ID: <18187.7639.638245.949157@notabene.brown>
-References: <20071006170538.23741.75193.stgit@dwillia2-linux.ch.intel.com>
+From: Michael Tokarev <mjt@tls.msk.ru>
+Subject: Re: very degraded RAID5, or increasing capacity by adding discs
+Date: Tue, 09 Oct 2007 13:48:50 +0400
+Message-ID: <470B4E82.6010102@msgid.tls.msk.ru>
+References: <20071008211313.6cd8bbb5@absurd>	<470AB496.5010406@msgid.tls.msk.ru> <18186.62585.7261.178442@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Dan Williams on Saturday October 6
+In-Reply-To: <18186.62585.7261.178442@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: Janek Kozicki <janek_listy@wp.pl>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Saturday October 6, dan.j.williams@intel.com wrote:
-> Neil,
+Neil Brown wrote:
+> On Tuesday October 9, mjt@tls.msk.ru wrote:
+[]
+>> o During this reshape time, errors may be fatal to the whole array -
+>>   while mdadm do have a sense of "critical section", but the
+>>   whole procedure isn't as much tested as the rest of raid code,
+>>   I for one will not rely on it, at least for now.  For example,
+>>   a power failure at an "unexpected" moment, or some plain-stupid
+>>   error in reshape code so that the whole array goes "boom" etc...
 > 
-> Here is the latest spin of the 'stripe_queue' implementation.  Thanks to
-> raid6+bitmap testing done by Mr. James W. Laferriere there have been
-> several cleanups and fixes since the last release.  Also, the changes
-> are now spread over 4 patches to isolate one conceptual change per
-> patch.  The most significant cleanup is removing the stripe_head back
-> pointer from stripe_queue.  This effectively makes the queuing layer
-> independent from the caching layer.
+> While it is true that the resize code is less tested than other code,
+> it is designed to handle a single failure at any time (so a power
+> failure is OK as long as the array is not running degraded), and I
+> have said that if anyone does suffer problems while performing a
+> reshape, I will do my absolute best to get the array functioning and
+> the data safe again.
 
-Thanks Dan, and sorry that it has taken such a time for me to take a
-serious look at this.
-The results seem impressive.  I'll try to do some testing myself, but
-firstly: some questions.
+Well... Neil, it's your code, so you trust it - that's ok, I also
+(tries to) trust my code until someone finds a bug in it.. ;)
+And I'm a sysadmin (among other things), who's professional
+property must be a bit of paranoia..  You got the idea ;)
 
+>> o A filesystem on the array has to be resized separately after
+>>   re{siz,shap}ing the array.  And filesystems are different at
+>>   this point, too - there are various limitations.  For example,
+>>   it's problematic to grow ext[23]fs by large amounts, because
+>>   when it gets initially created, mke2fs calculates sizes of
+>>   certain internal data structures based on the device size,
+>>   and those structures can't be grown significantly, only
+>>   recreating the filesystem will do the trick.
+> 
+> This isn't entirely true.
+> For online resizing (while the filesystem is mounted) there are some
+> limitations as you suggest.  For offline resizing (while filesystem is
+> not mounted) there are no such limitations.
 
-1/ Can you explain why this improves the performance more than simply
-  doubling the size of the stripe cache?
+There still is - at least for ext[23].  Even offline resizers
+can't do resizes from any to any size, extfs developers recommend
+to recreate filesystem anyway if size changes significantly.
+I'm too lazy to find a reference now, it has been mentioned here
+on linux-raid at least this year.  It's sorta like fat (yea, that
+ms-dog filesystem) - when you resize it from, say, 501Mb to 999Mb,
+everything is ok, but if you want to go from 501Mb to 1Gb+1, you
+have to recreate almost all data structures because sizes of
+all internal fields changes - and here it's much safer to just
+re-create it from scratch than trying to modify it in place.
+Sure it's much better for extfs, but the point is still the same.
 
-  The core of what it is doing seems to be to give priority to writing
-  full stripes.  We already do that by delaying incomplete stripes.
-  Maybe we just need to tune that mechanism a bit?  Maybe release
-  fewer partial stripes at a time?
-
-  It seems that the whole point of the stripe_queue structure is to
-  allow requests to gather before they are processed so the more
-  "deserving" can be processed first, but I cannot see why you need a
-  data structure separate from the list_head.
-
-  You could argue that simply doubling the size of the stripe cache
-  would be a waste of memory as we only want to use half of it to
-  handle active requests - the other half is for requests being built
-  up.
-  In that case, I don't see a problem with having a pool of pages
-  which is smaller that would be needed for the full stripe cache, and
-  allocating them to stripe_heads as they become free.
-
-2/ I thought I understood from your descriptions that
-   raid456_cache_arbiter would normally be waiting for a free stripe,
-   that during this time full stripes could get promoted to io_hi, and
-   so when raid456_cache_arbiter finally got a free stripe, it would
-   attach it to the most deserving stripe_queue.  However it doesn't
-   quite do that.  It chooses the deserving stripe_queue *before*
-   waiting for a free stripe_head.  This seems slightly less than
-   optimal?
-
-3/ Why create a new workqueue for raid456_cache_arbiter rather than
-   use raid5d.  It should be possible to do a non-blocking wait for a
-   free stripe_head, in which cache the "find a stripe head and attach
-   the most deserving stripe_queue" would fit well into raid5d.
-
-4/ Why do you use an rbtree rather than a hash table to index the
-  'stripe_queue' objects?  I seem to recall a discussion about this
-  where it was useful to find adjacent requests or something like
-  that, but I cannot see that in the current code.
-  But maybe rbtrees are a better fit, in which case, should we use
-  them for stripe_heads as well???
-
-5/ Then again... It seems to me that a stripe_head will always have a
-   stripe_queue pointing to it.  In that case we don't need to index
-   the stripe_heads at all any more.  Would that be correct?
-
-6/ What is the point of the do/while loop in
-   wait_for_cache_attached_queue?  It seems totally superfluous.
-
-That'll do for now.
-
-NeilBrown
+/mjt
