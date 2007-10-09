@@ -1,79 +1,61 @@
-From: "Guy Watkins" <linux-raid@watkins-home.com>
-Subject: RE: very degraded RAID5, or increasing capacity by adding discs
-Date: Mon, 8 Oct 2007 21:53:24 -0400
-Message-ID: <200710090153.l991rTV15210@www.watkins-home.com>
-References: <20071009004636.112c886e@absurd>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: very degraded RAID5, or increasing capacity by adding discs
+Date: Tue, 9 Oct 2007 13:24:41 +1000
+Message-ID: <18186.62585.7261.178442@notabene.brown>
+References: <20071008211313.6cd8bbb5@absurd>
+	<470AB496.5010406@msgid.tls.msk.ru>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20071009004636.112c886e@absurd>
+In-Reply-To: message from Michael Tokarev on Tuesday October 9
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Janek Kozicki' <janek_listy@wp.pl>, linux-raid@vger.kernel.org
+To: Michael Tokarev <mjt@tls.msk.ru>
+Cc: Janek Kozicki <janek_listy@wp.pl>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Tuesday October 9, mjt@tls.msk.ru wrote:
+> 
+> o degraded raid5 isn't really Raid - i.e, it's not any better than
+>   a raid0 array, that is, any disk fails => the whole array fails.
+>   So instead of creating a degraded raid5 array initially, create
+>   smaller one instead, but not degraded, and reshape it when
+>   necessary.
+
+Fully agree.
+
+> 
+> o reshaping takes time, and for this volume, reshape will take
+>   many hours, maybe days, to complete.
+> 
+> o During this reshape time, errors may be fatal to the whole array -
+>   while mdadm do have a sense of "critical section", but the
+>   whole procedure isn't as much tested as the rest of raid code,
+>   I for one will not rely on it, at least for now.  For example,
+>   a power failure at an "unexpected" moment, or some plain-stupid
+>   error in reshape code so that the whole array goes "boom" etc...
+
+While it is true that the resize code is less tested than other code,
+it is designed to handle a single failure at any time (so a power
+failure is OK as long as the array is not running degraded), and I
+have said that if anyone does suffer problems while performing a
+reshape, I will do my absolute best to get the array functioning and
+the data safe again.
+
+> 
+> o A filesystem on the array has to be resized separately after
+>   re{siz,shap}ing the array.  And filesystems are different at
+>   this point, too - there are various limitations.  For example,
+>   it's problematic to grow ext[23]fs by large amounts, because
+>   when it gets initially created, mke2fs calculates sizes of
+>   certain internal data structures based on the device size,
+>   and those structures can't be grown significantly, only
+>   recreating the filesystem will do the trick.
+
+This isn't entirely true.
+For online resizing (while the filesystem is mounted) there are some
+limitations as you suggest.  For offline resizing (while filesystem is
+not mounted) there are no such limitations.
 
 
-} -----Original Message-----
-} From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
-} owner@vger.kernel.org] On Behalf Of Janek Kozicki
-} Sent: Monday, October 08, 2007 6:47 PM
-} To: linux-raid@vger.kernel.org
-} Subject: Re: very degraded RAID5, or increasing capacity by adding discs
-} 
-} Janek Kozicki said:     (by the date of Tue, 9 Oct 2007 00:25:50 +0200)
-} 
-} > Richard Scobie said:     (by the date of Tue, 09 Oct 2007 08:26:35
-} +1300)
-} >
-} > > No, but you can make a degraded 3 drive array, containing 2 drives and
-} > > then add the next drive to complete it.
-} > >
-} > > The array can then be grown (man mdadm, GROW section), to add the
-} fourth.
-} >
-} > Oh, good. Thanks, I must've been blind that I missed this.
-} > This completely solves my problem.
-} 
-} Uh, actually not :)
-} 
-} My 1st 500 GB drive is full now. When I buy a 2nd one I want to
-} create a 3-disc degraded array using just 2 discs, one of which
-} contains unbackupable data.
-} 
-} steps:
-} 1. create degraded two-disc RAID5 on 1 new disc
-} 2. copy data from old disc to new one
-} 3. rebuild the array with old and new discs (now I have 500 GB on 2 discs)
-3. Add old disk to new array.  Once done RAID5 is redundant.
-
-} 4. GROW this array to a degraded 3 discs RAID5 (so I have 1000 GB on 2
-} discs)
-4. Buy 3rd disk.
-5. Add new 3rd disk to array and grow to 3 disk RAID5 array.  Once done,
-array is redundant.
-
-Repeat 4 and 5 each time you buy a new disk.
-
-I don't think you can grow to a degraded array.  I think you must add a new
-disk first.  But I am not sure.
-
-} ...
-} 5. when I buy 3rd drive I either grow the array, or just rebuild and
-} wait with growing until I buy a 4th drive.
-} 
-} Problems at step 4.: 'man mdadm' doesn't tell if it's possible to
-} grow an array to a degraded array (non existant disc). Is it possible?
-} 
-} 
-} PS: the fact, that degraded array will be unsafe for the data is an
-} intented motivating factor for buying next drive ;)
-} 
-} --
-} Janek Kozicki                                                         |
-} -
-} To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-} the body of a message to majordomo@vger.kernel.org
-} More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+NeilBrown
