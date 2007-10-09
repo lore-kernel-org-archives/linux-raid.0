@@ -1,56 +1,43 @@
-From: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
-Subject: Re: very degraded RAID5, or increasing capacity by adding discs
-Date: Tue, 9 Oct 2007 07:56:24 -0700 (PDT)
-Message-ID: <Pine.LNX.4.64.0710090752570.11772@filesrv1.baby-dragons.com>
-References: <20071008211313.6cd8bbb5@absurd> <470A846B.9090805@sauce.co.nz>
- <20071009002550.12b9b26d@absurd> <20071009004636.112c886e@absurd>
- <18186.63033.185101.385806@notabene.brown>
+From: "Leon Woestenberg" <leon.woestenberg@gmail.com>
+Subject: How can I see if a (disk) block device is in use?
+Date: Tue, 9 Oct 2007 17:07:20 +0200
+Message-ID: <c384c5ea0710090807g222bddedhbd3aaf11874de0fe@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18186.63033.185101.385806@notabene.brown>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid maillist <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
- 	Hello Neil ,
+Hello,
 
-On Tue, 9 Oct 2007, Neil Brown wrote:
-> On Tuesday October 9, janek_listy@wp.pl wrote:
->>
->> Problems at step 4.: 'man mdadm' doesn't tell if it's possible to
->> grow an array to a degraded array (non existant disc). Is it possible?
->
-> Why not experiment with loop devices on files and find out?
->
-> But yes:  you can grow to a degraded array providing you specify a
-> --backup-file.
- 	Is there an estimate of how large this file can get ?
- 	It's probably a calculation based on disk & array parameters .
- 	But I was unable to find a reference on it from the manpage .
+from userspace, how can I reliably see if a (hard disk) block device
+(say /dev/sda) is in use (either by the kernel, say through md or by
+any userspace application such as dd)?
 
- 		Tia ,  JimL
+I would like to perform this check in a generic way, i.e. not per-se md related.
 
-> However I don't recommend it.  I would never recommend having a
-> degraded array by design.  It should only ever happen due to a
-> failure, and should last only until you can get a replacement
-> rebuilt.
->
-> Remember that a degraded raid5 has a greater risk of data loss than a
-> single drive.
->
->>
->>
->> PS: the fact, that degraded array will be unsafe for the data is an
->> intented motivating factor for buying next drive ;)
->
-> :-)
->
-> NeilBrown
+
+Although the question is non-md specific, it is slightly related to
+this behaviour:
+
+$sfdisk -R /dev/sdb
+<race condition>
+$mdadm --assemble /dev/md0 --run /dev/sda /dev/sdb /dev/sdc
+
+mdadm: cannot open device /dev/sdc1: No such file or directory
+mdadm: /dev/sdc1 has no superblock - assembly aborted
+
+$sfdisk -R /dev/sdb
+<race condition>
+$sleep 1
+$mdadm --assemble /dev/md0 --run /dev/sda /dev/sdb /dev/sdc
+
+this works
+
+
+Regards,
 -- 
-+-----------------------------------------------------------------+
-| James   W.   Laferriere | System   Techniques | Give me VMS     |
-| Network        Engineer | 663  Beaumont  Blvd |  Give me Linux  |
-| babydr@baby-dragons.com | Pacifica, CA. 94044 |   only  on  AXP |
-+-----------------------------------------------------------------+
+Leon
