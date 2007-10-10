@@ -1,31 +1,24 @@
-From: Tomasz Chmielewski <mangoo@wpkg.org>
+From: Richard Scobie <richard@sauce.co.nz>
 Subject: Re: How do i limit the bandwidth-usage while resyncing on RAID 1?
-Date: Wed, 10 Oct 2007 17:15:36 +0200
-Message-ID: <470CEC98.3050209@wpkg.org>
+Date: Thu, 11 Oct 2007 08:45:51 +1300
+Message-ID: <470D2BEF.3040305@sauce.co.nz>
 References: <735D322AED9CD711BE53000476917CD002972B92@NT-SERVER-5>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-2; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <735D322AED9CD711BE53000476917CD002972B92@NT-SERVER-5>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Rustedt, Florian" <florian.rustedt@smartnet.de>
-Cc: linux-raid@vger.kernel.org
+To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Rustedt, Florian schrieb:
-> Hello List,
-> 
-> while resyncing, the process takes the whole bandwidth from disk to disk.
-> 
-> This leads in a VERY unhappy situation, because the system on this raid is
-> unpractical slow now, because it has to wait for disk-io.
-> 
+Rustedt, Florian wrote:
+
 > How can i tune this? I want somthing like "nice -n 19 dm-mirror" ;)
 
-Look into sync_speed_min and sync_speed_max in /sys/block/mdX/md.
+Have a look at man rsync - the --bwlimit=KBPS option.
 
+Regards,
 
--- 
-Tomasz Chmielewski
-http://blog.wpkg.org
+Richard
+
