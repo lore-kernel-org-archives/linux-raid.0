@@ -1,172 +1,45 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: RAID 5 performance issue.
-Date: Thu, 11 Oct 2007 19:43:03 -0400 (EDT)
-Message-ID: <Pine.LNX.4.64.0710111942450.2712@p34.internal.lan>
-References: <20071003105321.06943824@zeus.pccl.info>
- <Pine.LNX.4.64.0710031243080.8612@p34.internal.lan>
- <20071003211910.439ded54@alpha.digital-domain.net>
- <72dbd3150710031336s331782c3yd0ac7ceda4e81774@mail.gmail.com>
- <20071004150831.6edbf926@zeus.pccl.info> <Pine.LNX.4.64.0710041009150.8275@p34.internal.lan>
- <Pine.LNX.4.64.0710041009530.8275@p34.internal.lan> <20071004154441.31addcfe@zeus.pccl.info>
- <18182.35390.419883.646409@stoffel.org> <20071005204207.2d338375@alpha.digital-domain.net>
- <18182.42211.405326.261727@stoffel.org> <20071007182208.2278e742@alpha.digital-domain.net>
- <470E581F.4060300@tmr.com> <20071011190748.178c405c@alpha.digital-domain.net>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: Help RAID5 reshape Oops / backup-file
+Date: Fri, 12 Oct 2007 09:51:08 +1000
+Message-ID: <18190.46828.156191.300754@notabene.brown>
+References: <20071011142518.igm1jud7ms408ggg@cakebox.homeunix.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20071011190748.178c405c@alpha.digital-domain.net>
+In-Reply-To: message from Nagilum on Thursday October 11
 Sender: linux-raid-owner@vger.kernel.org
-To: Andrew Clayton <andrew@digital-domain.net>
-Cc: Bill Davidsen <davidsen@tmr.com>, John Stoffel <john@stoffel.org>, David Rees <drees76@gmail.com>, Andrew Clayton <andrew@pccl.info>, linux-raid@vger.kernel.org
+To: Nagilum <nagilum@nagilum.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Thursday October 11, nagilum@nagilum.org wrote:
+> Ok, after looking in "Grow.c" I can see that the backup file is  
+> removed once the critial section has passed:
+> 
+> 		if (backup_file)
+> 			unlink(backup_file);
+> 
+> 		printf(Name ": ... critical section passed.\n");
+> 
+> Since I had passed that point I'll try to find out where  
+> Grow_restart() stumbles. By looking at it I'm not even sure it's able  
+> to "resume" and not just restart. :-/
+> 
 
+It isn't a problem that you didn't specify a backup-file.
+If you don't, mdadm uses some spare space on one of the new drives.
+After the critical section has passed, the backup file isn't needed
+any longer.
+The problem is that mdadm still wants to find and recover from it.
 
-On Thu, 11 Oct 2007, Andrew Clayton wrote:
+I throughly tested mdadm restarting from a crash during the critical
+section, but it looks like I didn't properly test restarting from a
+later crash.
 
-> On Thu, 11 Oct 2007 13:06:39 -0400, Bill Davidsen wrote:
->
->> Andrew Clayton wrote:
->>> On Fri, 5 Oct 2007 16:56:03 -0400, John Stoffel wrote:
->>>
->>>  >> Can you start a 'vmstat 1' in one window, then start whatever
->>>  >> you do
->>>> to get crappy performance.  That would be interesting to see.
->>>>    >
->>> In trying to find something simple that can show the problem I'm
->>> seeing. I think I may have found the culprit.
->>>
->>> Just testing on my machine at home, I made this simple program.
->>>
->>> /* fslattest.c */
->>>
->>> #define _GNU_SOURCE
->>>
->>> #include <stdio.h>
->>> #include <stdlib.h>
->>> #include <unistd.h>
->>> #include <sys/stat.h>
->>> #include <sys/types.h>
->>> #include <fcntl.h>
->>> #include <string.h>
->>>
->>>
->>> int main(int argc, char *argv[])
->>> {
->>>         char file[255];
->>>
->>>         if (argc < 2) {
->>>                 printf("Usage: fslattest file\n");
->>>                 exit(1);
->>>         }
->>>
->>>         strncpy(file, argv[1], 254);
->>>         printf("Opening %s\n", file);
->>>
->>>         while (1) {
->>>                 int testfd = open(file, >
->>> O_WRONLY|O_CREAT|O_EXCL|O_TRUNC|O_LARGEFILE, 0600); close(testfd);
->>>                 unlink(file);
->>>                 sleep(1);
->>>         }
->>>
->>>         exit(0);
->>> }
->>>
->>>
->>> If I run this program under strace in my home directory (XFS file
->>> system on a (new) disk (no raid involved) all to its own.like
->>>
->>> $ strace -T -e open ./fslattest test
->>>
->>> It doesn't looks too bad.
->>>
->>> open("test", O_WRONLY|O_CREAT|O_EXCL|O_TRUNC|O_LARGEFILE, 0600) = 3
->>> <0.005043> open("test",
->>> O_WRONLY|O_CREAT|O_EXCL|O_TRUNC|O_LARGEFILE, 0600) = 3 <0.000212>
->>> open("test", O_WRONLY|O_CREAT|O_EXCL|O_TRUNC|O_LARGEFILE, 0600) = 3
->>> <0.016844>
->>>
->>> If I then start up a dd in the same place.
->>>
->>> $ dd if=/dev/zero of=bigfile bs=1M count=500
->>>
->>> Then I see the problem I'm seeing at work.
->>>
->>> open("test", O_WRONLY|O_CREAT|O_EXCL|O_TRUNC|O_LARGEFILE, 0600) = 3
->>> <2.000348> open("test",
->>> O_WRONLY|O_CREAT|O_EXCL|O_TRUNC|O_LARGEFILE, 0600) = 3 <1.594441>
->>> open("test", O_WRONLY|O_CREAT|O_EXCL|O_TRUNC|O_LARGEFILE, 0600) = 3
->>> <2.224636> open("test",
->>> O_WRONLY|O_CREAT|O_EXCL|O_TRUNC|O_LARGEFILE, 0600) = 3 <1.074615>
->>>
->>> Doing the same on my other disk which is Ext3 and contains the root
->>> fs, it doesn't ever stutter
->>>
->>> open("test", O_WRONLY|O_CREAT|O_EXCL|O_TRUNC|O_LARGEFILE, 0600) = 3
->>> <0.015423> open("test",
->>> O_WRONLY|O_CREAT|O_EXCL|O_TRUNC|O_LARGEFILE, 0600) = 3 <0.000092>
->>> open("test", O_WRONLY|O_CREAT|O_EXCL|O_TRUNC|O_LARGEFILE, 0600) = 3
->>> <0.000093> open("test",
->>> O_WRONLY|O_CREAT|O_EXCL|O_TRUNC|O_LARGEFILE, 0600) = 3 <0.000088>
->>> open("test", O_WRONLY|O_CREAT|O_EXCL|O_TRUNC|O_LARGEFILE, 0600) = 3
->>> <0.000103> open("test",
->>> O_WRONLY|O_CREAT|O_EXCL|O_TRUNC|O_LARGEFILE, 0600) = 3 <0.000096>
->>> open("test", O_WRONLY|O_CREAT|O_EXCL|O_TRUNC|O_LARGEFILE, 0600) = 3
->>> <0.000094> open("test",
->>> O_WRONLY|O_CREAT|O_EXCL|O_TRUNC|O_LARGEFILE, 0600) = 3 <0.000114>
->>> open("test", O_WRONLY|O_CREAT|O_EXCL|O_TRUNC|O_LARGEFILE, 0600) = 3
->>> <0.000091> open("test",
->>> O_WRONLY|O_CREAT|O_EXCL|O_TRUNC|O_LARGEFILE, 0600) = 3 <0.000274>
->>> open("test", O_WRONLY|O_CREAT|O_EXCL|O_TRUNC|O_LARGEFILE, 0600) = 3
->>> <0.000107>
->>>
->>>
->>> Somewhere in there was the dd, but you can't tell.
->>>
->>> I've found if I mount the XFS filesystem with nobarrier, the
->>> latency is reduced to about 0.5 seconds with occasional spikes > 1
->>> second.
->>>
->>> When doing this on the raid array.
->>>
->>> open("test", O_WRONLY|O_CREAT|O_EXCL|O_TRUNC, 0600) = 3 <0.009164>
->>> open("test", O_WRONLY|O_CREAT|O_EXCL|O_TRUNC, 0600) = 3 <0.000071>
->>> open("test", O_WRONLY|O_CREAT|O_EXCL|O_TRUNC, 0600) = 3 <0.002667>
->>>
->>> dd kicks in
->>>
->>> open("test", O_WRONLY|O_CREAT|O_EXCL|O_TRUNC, 0600) = 3 <11.580238>
->>> open("test", O_WRONLY|O_CREAT|O_EXCL|O_TRUNC, 0600) = 3 <3.222294>
->>> open("test", O_WRONLY|O_CREAT|O_EXCL|O_TRUNC, 0600) = 3 <0.888863>
->>> open("test", O_WRONLY|O_CREAT|O_EXCL|O_TRUNC, 0600) = 3 <4.297978>
->>>
->>> dd finishes >
->>> open("test", O_WRONLY|O_CREAT|O_EXCL|O_TRUNC, 0600) = 3 <0.000199>
->>> open("test", O_WRONLY|O_CREAT|O_EXCL|O_TRUNC, 0600) = 3 <0.013413>
->>> open("test", O_WRONLY|O_CREAT|O_EXCL|O_TRUNC, 0600) = 3 <0.025134>
->>>
->>>
->>> I guess I should take this to the XFS folks.
->>
->> Try mounting the filesystem "noatime" and see if that's part of the
->> problem.
->
-> Yeah, it's mounted noatime. Looks like I tracked this down to an XFS
-> regression.
->
-> http://marc.info/?l=linux-fsdevel&m=119211228609886&w=2
->
-> Cheers,
->
-> Andrew
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+I think if you just change the 'return 1' at the end of Grow_restart
+to 'return 0' it should work for you.
 
-Nice!  Thanks for reporting the final result, 1-2 weeks of 
-debugging/discussion, nice you found it.
+I'll try to get this fixed properly (and tested) and release a 2.6.4.
 
-Justin.
+NeilBrown
