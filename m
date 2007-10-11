@@ -1,80 +1,135 @@
 From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: Different sized disks for RAID1+0 or RAID10.
-Date: Thu, 11 Oct 2007 13:00:11 -0400
-Message-ID: <470E569B.8060108@tmr.com>
-References: <470E435C.2090703@tmr.com> <a7536e3a85cf047191dc21e5a11f00f4@memcpy.com>
+Subject: Re: RAID 5 performance issue.
+Date: Thu, 11 Oct 2007 13:06:39 -0400
+Message-ID: <470E581F.4060300@tmr.com>
+References: <20071003105321.06943824@zeus.pccl.info>	<Pine.LNX.4.64.0710031243080.8612@p34.internal.lan>	<20071003211910.439ded54@alpha.digital-domain.net>	<72dbd3150710031336s331782c3yd0ac7ceda4e81774@mail.gmail.com>	<20071004150831.6edbf926@zeus.pccl.info>	<Pine.LNX.4.64.0710041009150.8275@p34.internal.lan>	<Pine.LNX.4.64.0710041009530.8275@p34.internal.lan>	<20071004154441.31addcfe@zeus.pccl.info>	<18182.35390.419883.646409@stoffel.org>	<20071005204207.2d338375@alpha.digital-domain.net>	<18182.42211.405326.261727@stoffel.org> <20071007182208.2278e742@alpha.digital-domain.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <a7536e3a85cf047191dc21e5a11f00f4@memcpy.com>
+In-Reply-To: <20071007182208.2278e742@alpha.digital-domain.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: kbyrd-linuxraid@memcpy.com
-Cc: linux-raid@vger.kernel.org
+To: Andrew Clayton <andrew@digital-domain.net>
+Cc: John Stoffel <john@stoffel.org>, Justin Piszcz <jpiszcz@lucidpixels.com>, David Rees <drees76@gmail.com>, Andrew Clayton <andrew@pccl.info>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Kelly Byrd wrote:
->
-> On Thu, 11 Oct 2007 11:38:04 -0400, Bill Davidsen <davidsen@tmr.com> wrote:
->   
->> Kelly Byrd wrote:
->>     
->>> I've currently got a pair of identical drives in a RAID1 set for
->>> my data partition. I'll be getting a pair of bigger drives in a
->>> bit, and I was wondering if I could RAID1 those (of course) and
->>> then RAID0 the two differently sized mds. Even better, will RAID10
->>> let me do this?
->>>
->>>       
->> RAID-10 will let you do this, read past threads of this list for
->> discussion of using the "far" option to gain performance.
->>     
->>> I don't need to grow the current RAID1 into this new beast, I've
->>> got a place I can copy the existing data so I can start from
->>> scratch.
->>>
->>>       
->
-> Doesn't the 'far' option trade write performance to gain read
-> performance? This is a desktop, not at all a "mostly read" type
-> workload. 
+Andrew Clayton wrote:
+> On Fri, 5 Oct 2007 16:56:03 -0400, John Stoffel wrote:
 >
 >   
-Is your load not read-mostly? The things I want to have happen quickly 
-are things like boot, start application, load a document, saved page, or 
-man page, compile a kernel (that may not be typical), play an mp3 or 
-video, load image(s) in gimp or similar, read mail... all things which 
-feel faster if you favor read performance.
-
-I think of it this way: most of the stuff I write is buffered by the 
-system and I don't have to wait for it (unless it's huge). Most of the 
-large stuff I read, as noted above, is stuff I wait for.
-
-If you look at the times you have to wait for i/o, I bet you will decide 
-a desktop is read-mostly after all.
->   
->>> I imagine the answer is: "sure RAID10 / RAID0 let's you do this,
->>> but you don't get the striping performance benefit" for some of
->>> the data", which would be ok with me until the smaller drives go
->>> bad and I replace them.
->>>
->>>       
->> Replacing the smaller drives could be an adventure if you plan to go to
->> larger replacement drives. I don't recall the issues involved with using
->> larger partitions and RAID-10, there's another issue for you to research.
->>
+>> Can you start a 'vmstat 1' in one window, then start whatever you do
+>> to get crappy performance.  That would be interesting to see.
 >>     
 >
-> Will do.
+> In trying to find something simple that can show the problem I'm
+> seeing. I think I may have found the culprit.
+>
+> Just testing on my machine at home, I made this simple program.
+>
+> /* fslattest.c */
+>
+> #define _GNU_SOURCE
+>
+> #include <stdio.h>
+> #include <stdlib.h>
+> #include <unistd.h>
+> #include <sys/stat.h>
+> #include <sys/types.h>
+> #include <fcntl.h>
+> #include <string.h>
 >
 >
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> int main(int argc, char *argv[])
+> {
+>         char file[255];
 >
->   
+>         if (argc < 2) {
+>                 printf("Usage: fslattest file\n");
+>                 exit(1);
+>         }
+>
+>         strncpy(file, argv[1], 254);
+>         printf("Opening %s\n", file);
+>
+>         while (1) {
+>                 int testfd = open(file, 
+>                         O_WRONLY|O_CREAT|O_EXCL|O_TRUNC|O_LARGEFILE, 0600);
+>                 close(testfd);
+>                 unlink(file);
+>                 sleep(1);
+>         }
+>
+>         exit(0);
+> }
+>
+>
+> If I run this program under strace in my home directory (XFS file system
+> on a (new) disk (no raid involved) all to its own.like
+>
+> $ strace -T -e open ./fslattest test
+>
+> It doesn't looks too bad.
+>
+> open("test", O_WRONLY|O_CREAT|O_EXCL|O_TRUNC|O_LARGEFILE, 0600) = 3 <0.005043>
+> open("test", O_WRONLY|O_CREAT|O_EXCL|O_TRUNC|O_LARGEFILE, 0600) = 3 <0.000212>
+> open("test", O_WRONLY|O_CREAT|O_EXCL|O_TRUNC|O_LARGEFILE, 0600) = 3 <0.016844>
+>
+> If I then start up a dd in the same place.
+>
+> $ dd if=/dev/zero of=bigfile bs=1M count=500
+>
+> Then I see the problem I'm seeing at work.
+>
+> open("test", O_WRONLY|O_CREAT|O_EXCL|O_TRUNC|O_LARGEFILE, 0600) = 3 <2.000348>
+> open("test", O_WRONLY|O_CREAT|O_EXCL|O_TRUNC|O_LARGEFILE, 0600) = 3 <1.594441>
+> open("test", O_WRONLY|O_CREAT|O_EXCL|O_TRUNC|O_LARGEFILE, 0600) = 3 <2.224636>
+> open("test", O_WRONLY|O_CREAT|O_EXCL|O_TRUNC|O_LARGEFILE, 0600) = 3 <1.074615>
+>
+> Doing the same on my other disk which is Ext3 and contains the root fs,
+> it doesn't ever stutter
+>
+> open("test", O_WRONLY|O_CREAT|O_EXCL|O_TRUNC|O_LARGEFILE, 0600) = 3 <0.015423>
+> open("test", O_WRONLY|O_CREAT|O_EXCL|O_TRUNC|O_LARGEFILE, 0600) = 3 <0.000092>
+> open("test", O_WRONLY|O_CREAT|O_EXCL|O_TRUNC|O_LARGEFILE, 0600) = 3 <0.000093>
+> open("test", O_WRONLY|O_CREAT|O_EXCL|O_TRUNC|O_LARGEFILE, 0600) = 3 <0.000088>
+> open("test", O_WRONLY|O_CREAT|O_EXCL|O_TRUNC|O_LARGEFILE, 0600) = 3 <0.000103>
+> open("test", O_WRONLY|O_CREAT|O_EXCL|O_TRUNC|O_LARGEFILE, 0600) = 3 <0.000096>
+> open("test", O_WRONLY|O_CREAT|O_EXCL|O_TRUNC|O_LARGEFILE, 0600) = 3 <0.000094>
+> open("test", O_WRONLY|O_CREAT|O_EXCL|O_TRUNC|O_LARGEFILE, 0600) = 3 <0.000114>
+> open("test", O_WRONLY|O_CREAT|O_EXCL|O_TRUNC|O_LARGEFILE, 0600) = 3 <0.000091>
+> open("test", O_WRONLY|O_CREAT|O_EXCL|O_TRUNC|O_LARGEFILE, 0600) = 3 <0.000274>
+> open("test", O_WRONLY|O_CREAT|O_EXCL|O_TRUNC|O_LARGEFILE, 0600) = 3 <0.000107>
+>
+>
+> Somewhere in there was the dd, but you can't tell.
+>
+> I've found if I mount the XFS filesystem with nobarrier, the
+> latency is reduced to about 0.5 seconds with occasional spikes > 1
+> second.
+>
+> When doing this on the raid array.
+>
+> open("test", O_WRONLY|O_CREAT|O_EXCL|O_TRUNC, 0600) = 3 <0.009164>
+> open("test", O_WRONLY|O_CREAT|O_EXCL|O_TRUNC, 0600) = 3 <0.000071>
+> open("test", O_WRONLY|O_CREAT|O_EXCL|O_TRUNC, 0600) = 3 <0.002667>
+>
+> dd kicks in
+>
+> open("test", O_WRONLY|O_CREAT|O_EXCL|O_TRUNC, 0600) = 3 <11.580238>
+> open("test", O_WRONLY|O_CREAT|O_EXCL|O_TRUNC, 0600) = 3 <3.222294>
+> open("test", O_WRONLY|O_CREAT|O_EXCL|O_TRUNC, 0600) = 3 <0.888863>
+> open("test", O_WRONLY|O_CREAT|O_EXCL|O_TRUNC, 0600) = 3 <4.297978>
+>
+> dd finishes 
+>
+> open("test", O_WRONLY|O_CREAT|O_EXCL|O_TRUNC, 0600) = 3 <0.000199>
+> open("test", O_WRONLY|O_CREAT|O_EXCL|O_TRUNC, 0600) = 3 <0.013413>
+> open("test", O_WRONLY|O_CREAT|O_EXCL|O_TRUNC, 0600) = 3 <0.025134>
+>
+>
+> I guess I should take this to the XFS folks.
 
+Try mounting the filesystem "noatime" and see if that's part of the problem.
 
 -- 
 bill davidsen <davidsen@tmr.com>
