@@ -1,7 +1,7 @@
 From: "Rustedt, Florian" <florian.rustedt@smartnet.de>
 Subject: AW: How do i limit the bandwidth-usage while resyncing on RAID 1?
-Date: Thu, 11 Oct 2007 09:49:54 +0200
-Message-ID: <735D322AED9CD711BE53000476917CD002972BB6@NT-SERVER-5>
+Date: Thu, 11 Oct 2007 09:54:24 +0200
+Message-ID: <735D322AED9CD711BE53000476917CD002972BB9@NT-SERVER-5>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
@@ -10,30 +10,37 @@ Sender: linux-raid-owner@vger.kernel.org
 To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
- Hi Richard,
+Thank you ;)
 
-Seems to me, that you mussunderstood? There's no rsync in RAID afaik?
-This is an internal driver...?
+Hoping, that did it!
 
 Kind regards, Florian
 
 > -----Urspr=FCngliche Nachricht-----
-> Von: Richard Scobie [mailto:richard@sauce.co.nz]=20
-> Gesendet: Mittwoch, 10. Oktober 2007 21:46
-> An: Linux RAID Mailing List
+> Von: Tomasz Chmielewski [mailto:mangoo@wpkg.org]=20
+> Gesendet: Mittwoch, 10. Oktober 2007 17:16
+> An: Rustedt, Florian
+> Cc: linux-raid@vger.kernel.org
 > Betreff: Re: How do i limit the bandwidth-usage while=20
 > resyncing on RAID 1?
 >=20
-> Rustedt, Florian wrote:
->=20
+> Rustedt, Florian schrieb:
+> > Hello List,
+> >=20
+> > while resyncing, the process takes the whole bandwidth from=20
+> disk to disk.
+> >=20
+> > This leads in a VERY unhappy situation, because the system on this=20
+> > raid is unpractical slow now, because it has to wait for disk-io.
+> >=20
 > > How can i tune this? I want somthing like "nice -n 19 dm-mirror" ;)
 >=20
-> Have a look at man rsync - the --bwlimit=3DKBPS option.
+> Look into sync_speed_min and sync_speed_max in /sys/block/mdX/md.
 >=20
-> Regards,
 >=20
-> Richard
->=20
+> --
+> Tomasz Chmielewski
+> http://blog.wpkg.org
 > -
 > To unsubscribe from this list: send the line "unsubscribe=20
 > linux-raid" in the body of a message to=20
