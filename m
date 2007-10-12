@@ -1,39 +1,55 @@
-From: =?ISO-8859-1?Q?Ralf_M=FCller?= <ralf@bj-ig.de>
-Subject: Re: RAID6 recover problem
-Date: Fri, 12 Oct 2007 18:28:03 +0200
-Message-ID: <33C87F4D-68E1-4F05-98AB-FBA0A9746757@bj-ig.de>
-References: <8F1D6256-0F63-4B79-8D66-87EFB96DFD6A@bj-ig.de> <20071012175139.o7gz7ka934s0s0gw@cakebox.homeunix.net>
-Mime-Version: 1.0 (Apple Message framework v752.3)
-Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
+From: "Jon Nelson" <jnelson-linux-raid@jamponi.net>
+Subject: Re: raid5: degraded after reboot
+Date: Fri, 12 Oct 2007 12:05:25 -0500
+Message-ID: <cccedfc60710121005n5290822g3bf463e653405b99@mail.gmail.com>
+References: <cccedfc60710120838nd2bb38pf57f03faa803b6c6@mail.gmail.com>
+	 <20071012154755.GE21133@skl-net.de>
+	 <cccedfc60710120908m24724867had038d9729d16efe@mail.gmail.com>
+	 <20071012161809.GF21133@skl-net.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20071012175139.o7gz7ka934s0s0gw@cakebox.homeunix.net>
+In-Reply-To: <20071012161809.GF21133@skl-net.de>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: Nagilum <nagilum@nagilum.org>
+To: Andre Noll <maan@systemlinux.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+> You said you had to reboot your box using sysrq. There are chances you
+> caused the reboot while all pending data was written to sdb4 and sdc4,
+> but not to sda4. So sda4 appears to be non-fresh after the reboot and,
+> since mdadm refuses to use non-fresh devices, it kicks sda4.
 
-Am 12.10.2007 um 17:51 schrieb Nagilum:
+Can mdadm be told to use non-fresh devices?
+What about sdb4: I can understand rewinding an event count (sorta),
+but what does this mean:
 
-> Then you can mark them as bad and linux will sync to a spare.
+mdadm: forcing event count in /dev/sdb4(1) from 327615 upto 327626
 
-Because it is already running without redundancy - two disks marked  
-as failed - it will simply go offline.
+Since the array is degraded, there are 11 "events" missing from sdb4
+(presumably sdc4 had them). Since sda4 is not part of the array, the
+events can't be complete, can they?  Why jump *ahead* on events
+instead of rewinding?
 
-> As for your sdc, I'd test it outside of the raid (dd if=/dev/sdc  
-> of=/dev/null) to see if this is a real defect or 'just' a checksum  
-> error.
-> Then you might also try the fridge (if it's a real defect) or just  
-> ignore the error.
 
-I assume it simply is a checksum error.
+> Sure. I should have said: It's normal if one disk in a raid5 array is
+> missing (or non-fresh).
 
-> I think there is a special "dd" version which will not abort on a  
-> read error. With that you could also clone that drive (except the  
-> failing sectors ofcourse).
+I do not have a spare for this raid - I am aware of the risks and
+mitigate them in other ways.
 
-I will try to clone this disk and see what happens.
+> To be precise, it means that the event counter for sda4 is less than
+> the event counter on the other devices in the array. So mdadm must
+> assume the data on sda4 is out of sync and hence the device can't be
+> used. If you are not using bitmaps, there is no other way out than
+> syncing the whole device, i.e. writing good data (computed from sdb4
+> and sdc4) to sda4.
+>
+> Hope that helps.
 
-Thanks for the hint
-Ralf
+Yes, that helps.
+
+-- 
+Jon
