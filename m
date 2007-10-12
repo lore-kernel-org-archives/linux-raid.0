@@ -1,113 +1,89 @@
-From: Nagilum <nagilum@nagilum.org>
-Subject: Re: RAID6 recover problem
-Date: Fri, 12 Oct 2007 17:51:39 +0200
-Message-ID: <20071012175139.o7gz7ka934s0s0gw@cakebox.homeunix.net>
-References: <8F1D6256-0F63-4B79-8D66-87EFB96DFD6A@bj-ig.de>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: Different sized disks for RAID1+0 or RAID10.
+Date: Fri, 12 Oct 2007 12:08:08 -0400
+Message-ID: <470F9BE8.1060008@tmr.com>
+References: <470E435C.2090703@tmr.com>	<a7536e3a85cf047191dc21e5a11f00f4@memcpy.com> <87ejg11rvw.fsf@informatik.uni-tuebingen.de>
 Mime-Version: 1.0
-Content-Type: multipart/signed;
-	boundary="=_3bk48goyy08w";
-	protocol="application/pgp-signature";
-	micalg="pgp-sha1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <8F1D6256-0F63-4B79-8D66-87EFB96DFD6A@bj-ig.de>
+In-Reply-To: <87ejg11rvw.fsf@informatik.uni-tuebingen.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Ralf =?utf-8?b?TcO8bGxlcg==?= <ralf@bj-ig.de>
-Cc: linux-raid@vger.kernel.org
+To: Goswin von Brederlow <brederlo@informatik.uni-tuebingen.de>
+Cc: kbyrd-linuxraid@memcpy.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This message is in MIME format and has been PGP signed.
-
---=_3bk48goyy08w
-Content-Type: text/plain;
-	charset=UTF-8;
-	DelSp="Yes";
-	format="flowed"
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-You may be able to temporary revive one of your dead disks by putting =20
-them in a fridge (properly wrapped and protected against condensation =20
-water!!, search the net on how to do that).
-Then you can mark them as bad and linux will sync to a spare.
-As for your sdc, I'd test it outside of the raid (dd if=3D/dev/sdc =20
-of=3D/dev/null) to see if this is a real defect or 'just' a checksum =20
-error.
-Then you might also try the fridge (if it's a real defect) or just =20
-ignore the error.
-I think there is a special "dd" version which will not abort on a read =20
-error. With that you could also clone that drive (except the failing =20
-sectors ofcourse).
-I hope that helps.
-
------ Message from ralf@bj-ig.de ---------
-     Date: Fri, 12 Oct 2007 16:42:07 +0200
-     From: Ralf M=C3=BCller <ralf@bj-ig.de>
-Reply-To: Ralf M=C3=BCller <ralf@bj-ig.de>
-  Subject: RAID6 recover problem
-       To: linux-raid@vger.kernel.org
-
-
-> I have a 10 disk raid6 with internal write intent bitmap here
-> (softraid, build and managed via mdadm). For whatever reason one of the
-> 3 promise SATA 300 TX controllers went offline and took 4 of these 10
-> disks with it. After reboot the array was assembled with 8 out of 10
-> disks - sda2 and sdb2 missing. When I tried to re-add sda2 sdc - which
-> is one of the "active" disks - reported a read error on sector 54631.
-> Ok - seems I have a problem.
+Goswin von Brederlow wrote:
+> Kelly Byrd <kbyrd-linuxraid@memcpy.com> writes:
 >
-> I stopped all activities at this point to ask here what I can do to
-> reassemble the array with a minimum loss of data.
+>   
+>> On Thu, 11 Oct 2007 11:38:04 -0400, Bill Davidsen <davidsen@tmr.com> wrote:
+>>     
+>>> Kelly Byrd wrote:
+>>>       
+>>>> I've currently got a pair of identical drives in a RAID1 set for
+>>>> my data partition. I'll be getting a pair of bigger drives in a
+>>>> bit, and I was wondering if I could RAID1 those (of course) and
+>>>> then RAID0 the two differently sized mds. Even better, will RAID10
+>>>> let me do this?
+>>>>
+>>>>         
+>>> RAID-10 will let you do this, read past threads of this list for
+>>> discussion of using the "far" option to gain performance.
+>>>       
 >
-> Except the offline disks sda2 and sdb2 all other disks report 19 dirty
-> chunks (mdadm -X). The offline disks report 7 dirty chunks.
+> It will? I don't mean that it will do a raid10 the size of the smaller
+> disk.
+>   
+
+Unfortunately I did, you have to do some multi-level approach to use all 
+the space, the raid-10 is smart enough to handle an odd number of drives 
+without hints, but not different size drives or partitions. The obvious 
+solution is to make two raid-1 arrays and do raid-0 over them.
+
+If you want to be a bit esoteric in search for a bit of extra read 
+performance, consider this:
+ hda1 - all of small drive 1
+ hdb1 - all of small drive 2
+ hdc1 - first part of large drive, same size as hda1
+ hdd1 - as hdc1
+ hdc2 - rest of 1st large drive
+ hdd2 - rest of 2nd large drive
+
+Now, raid-10 hd[abcd]1 and raid-10 hd[cd]2 (both with far), then use 
+linear with the four drive array first. My thinking is this, unless the 
+filesystem is full, most of the data and head motion will be on the four 
+way raid-10, which should be somewhat faster than just raid-1+0. It will 
+also put the journal and inodes on the four drives which should help.
+
+The growth path is a tad complex when the small drives are upgraded to 
+large, but the new drive can be partitioned like hdc, the first raid-10 
+can be recovered, and then the 2nd grown.
+> Does raid10 do a 4 disk raid the size of the smaller disks followed by
+> 2 disk raid for the remaining space?
+>   
+
+Unfortunately not. :-(
+>   
+>>>> I don't need to grow the current RAID1 into this new beast, I've
+>>>> got a place I can copy the existing data so I can start from
+>>>> scratch.
+>>>>
+>>>>         
+>> Doesn't the 'far' option trade write performance to gain read
+>> performance? This is a desktop, not at all a "mostly read" type
+>> workload. 
+>>     
 >
-> If one needs any further data - just ask.
->
-> Hoping for assistance
-> Ralf M=C3=BCller
->
->
->
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> My tests with large files show no degradation in write and nearly
+> double speed on read. But that might differ for you.
+>   
 
+Sounds right, unless you write a ton caching covers any slight slowing, 
+which I can measure as ~5% with benchmarks but never see in real life.
 
------ End message from ralf@bj-ig.de -----
+-- 
+bill davidsen <davidsen@tmr.com>
+  CTO TMR Associates, Inc
+  Doing interesting things with small computers since 1979
 
-
-
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-#    _  __          _ __     http://www.nagilum.org/ \n icq://69646724 #
-#   / |/ /__ ____ _(_) /_ ____ _  nagilum@nagilum.org \n +491776461165 #
-#  /    / _ `/ _ `/ / / // /  ' \  Amiga (68k/PPC): AOS/NetBSD/Linux   #
-# /_/|_/\_,_/\_, /_/_/\_,_/_/_/_/   Mac (PPC): MacOS-X / NetBSD /Linux #
-#           /___/     x86: FreeBSD/Linux/Solaris/Win2k  ARM9: EPOC EV6 #
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-
-
-----------------------------------------------------------------
-cakebox.homeunix.net - all the machine one needs..
-
-
---=_3bk48goyy08w
-Content-Type: application/pgp-signature
-Content-Description: PGP Digital Signature
-Content-Disposition: inline
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.7 (FreeBSD)
-
-iD8DBQBHD5gKAKWN2UY+sLwRAgHNAJ9HfTbKmmCQXDJId73lEaQ/aJfHegCfVtwk
-ZGEsKkhpN83xl7m7Iyp09ME=
-=5u6e
------END PGP SIGNATURE-----
-
---=_3bk48goyy08w--
