@@ -1,45 +1,55 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: Help RAID5 reshape Oops / backup-file
-Date: Fri, 12 Oct 2007 09:51:08 +1000
-Message-ID: <18190.46828.156191.300754@notabene.brown>
-References: <20071011142518.igm1jud7ms408ggg@cakebox.homeunix.net>
+Subject: Re: [PATCH] Expose the degraded status of an assembled array
+	through sysfs
+Date: Fri, 12 Oct 2007 12:20:44 +1000
+Message-ID: <18190.55804.547483.730045@notabene.brown>
+References: <20070910165114.GA2597@teal.hq.k1024.org>
+	<20071010063111.GA32313@teal.hq.k1024.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Nagilum on Thursday October 11
+In-Reply-To: message from Iustin Pop on Wednesday October 10
 Sender: linux-raid-owner@vger.kernel.org
-To: Nagilum <nagilum@nagilum.org>
+To: Iustin Pop <iusty@k1024.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thursday October 11, nagilum@nagilum.org wrote:
-> Ok, after looking in "Grow.c" I can see that the backup file is  
-> removed once the critial section has passed:
+On Wednesday October 10, iusty@k1024.org wrote:
+> On Mon, Sep 10, 2007 at 06:51:14PM +0200, Iustin Pop wrote:
+> > The 'degraded' attribute is useful to quickly determine if the array is
+> > degraded, instead of parsing 'mdadm -D' output or relying on the other
+> > techniques (number of working devices against number of defined devices, etc.).
+> > The md code already keeps track of this attribute, so it's useful to export it.
+> > 
+> > Signed-off-by: Iustin Pop <iusty@k1024.org>
+> > ---
+> > Note: I sent this back in January and it people agreed it was a good
+> > idea.  However, it has not been picked up. So here I resend it again.
 > 
-> 		if (backup_file)
-> 			unlink(backup_file);
-> 
-> 		printf(Name ": ... critical section passed.\n");
-> 
-> Since I had passed that point I'll try to find out where  
-> Grow_restart() stumbles. By looking at it I'm not even sure it's able  
-> to "resume" and not just restart. :-/
-> 
+> Ping? Neil, could you spare a few moments to look at this? (and sorry for
+> bothering you)
 
-It isn't a problem that you didn't specify a backup-file.
-If you don't, mdadm uses some spare space on one of the new drives.
-After the critical section has passed, the backup file isn't needed
-any longer.
-The problem is that mdadm still wants to find and recover from it.
+Yeh.... thanks for your patience.  September was not a good time for
+getting my attention.
 
-I throughly tested mdadm restarting from a crash during the critical
-section, but it looks like I didn't properly test restarting from a
-later crash.
+Yes, I think this is both sensible and useful.
 
-I think if you just change the 'return 1' at the end of Grow_restart
-to 'return 0' it should work for you.
+I might just change......
 
-I'll try to get this fixed properly (and tested) and release a 2.6.4.
+> > @@ -2842,6 +2842,12 @@ sync_max_store(mddev_t *mddev, const char *buf, size_t len)
+> >  static struct md_sysfs_entry md_sync_max =
+> >  __ATTR(sync_speed_max, S_IRUGO|S_IWUSR, sync_max_show, sync_max_store);
+> >  
+> > +static ssize_t
+> > +degraded_show(mddev_t *mddev, char *page)
+> > +{
+> > +	return sprintf(page, "%i\n", mddev->degraded);
+> > +}
 
+... the %i to a %d though.   At first I thought it was a typo, but
+then checked the man page and discovered that %d and %i both mean the
+same thing (so why support them both I wonder).
+
+Thanks,
 NeilBrown
