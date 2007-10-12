@@ -1,75 +1,39 @@
-From: Andre Noll <maan@systemlinux.org>
-Subject: Re: raid5: degraded after reboot
-Date: Fri, 12 Oct 2007 17:47:55 +0200
-Message-ID: <20071012154755.GE21133@skl-net.de>
-References: <cccedfc60710120838nd2bb38pf57f03faa803b6c6@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="19uQFt6ulqmgNgg1"
+From: =?ISO-8859-1?Q?Ralf_M=FCller?= <ralf@bj-ig.de>
+Subject: Re: RAID6 recover problem
+Date: Fri, 12 Oct 2007 18:28:03 +0200
+Message-ID: <33C87F4D-68E1-4F05-98AB-FBA0A9746757@bj-ig.de>
+References: <8F1D6256-0F63-4B79-8D66-87EFB96DFD6A@bj-ig.de> <20071012175139.o7gz7ka934s0s0gw@cakebox.homeunix.net>
+Mime-Version: 1.0 (Apple Message framework v752.3)
+Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <cccedfc60710120838nd2bb38pf57f03faa803b6c6@mail.gmail.com>
+In-Reply-To: <20071012175139.o7gz7ka934s0s0gw@cakebox.homeunix.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jon Nelson <jnelson-linux-raid@jamponi.net>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: Nagilum <nagilum@nagilum.org>
 List-Id: linux-raid.ids
 
 
---19uQFt6ulqmgNgg1
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Am 12.10.2007 um 17:51 schrieb Nagilum:
 
-On 10:38, Jon Nelson wrote:
-> <4>md: kicking non-fresh sda4 from array!
->=20
-> what does that mean?
+> Then you can mark them as bad and linux will sync to a spare.
 
-sda4 was not included because the array has been assembled previously
-using only sdb4 and sdc4. So the data on sda4 is out of date.
+Because it is already running without redundancy - two disks marked  
+as failed - it will simply go offline.
 
-> I also have this:
->=20
-> raid5: raid level 5 set md0 active with 2 out of 3 devices, algorithm 2
-> RAID5 conf printout:
->  --- rd:3 wd:2 fd:1
->  disk 1, o:1, dev:sdb4
->  disk 2, o:1, dev:sdc4
+> As for your sdc, I'd test it outside of the raid (dd if=/dev/sdc  
+> of=/dev/null) to see if this is a real defect or 'just' a checksum  
+> error.
+> Then you might also try the fridge (if it's a real defect) or just  
+> ignore the error.
 
-This looks normal. The array is up with two working disks.
+I assume it simply is a checksum error.
 
-> Why was /dev/sda4 kicked?
+> I think there is a special "dd" version which will not abort on a  
+> read error. With that you could also clone that drive (except the  
+> failing sectors ofcourse).
 
-Because it was non-fresh ;)
+I will try to clone this disk and see what happens.
 
-> md0 : active raid5 sda4[3] sdb4[1] sdc4[2]
->       613409664 blocks level 5, 64k chunk, algorithm 2 [3/2] [_UU]
->       [=3D=3D>..................]  recovery =3D 13.1% (40423368/306704832)
-> finish=3D68.8min speed=3D64463K/sec
-
-Seems like your init scripts re-added sda4.
-
-> 65-70KB/s is about what these drives can do so the rebuild speed is just =
-peachy.
-
-If the rebuild completes successfully, you're ok again.  There's
-nothing you have to do.
-
-Andre
---=20
-The only person who always got his work done by Friday was Robinson Crusoe
-
---19uQFt6ulqmgNgg1
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
-
-iD8DBQFHD5crWto1QDEAkw8RAv7MAKCSD3t2e4aswok8N3xFChJJMOx75gCeMSzX
-Qe8GGMBOMKFv60sn28OZS/E=
-=LFXm
------END PGP SIGNATURE-----
-
---19uQFt6ulqmgNgg1--
+Thanks for the hint
+Ralf
