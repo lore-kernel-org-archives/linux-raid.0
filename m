@@ -1,39 +1,55 @@
-From: =?ISO-8859-1?Q?Ralf_M=FCller?= <ralf@bj-ig.de>
-Subject: RAID6 recover problem
-Date: Fri, 12 Oct 2007 16:42:07 +0200
-Message-ID: <8F1D6256-0F63-4B79-8D66-87EFB96DFD6A@bj-ig.de>
-Mime-Version: 1.0 (Apple Message framework v752.3)
-Content-Type: text/plain; charset=ISO-8859-1;
-	delsp=yes	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: "Jon Nelson" <jnelson-linux-raid@jamponi.net>
+Subject: raid5: degraded after reboot
+Date: Fri, 12 Oct 2007 10:38:55 -0500
+Message-ID: <cccedfc60710120838nd2bb38pf57f03faa803b6c6@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I have a 10 disk raid6 with internal write intent bitmap here =20
-(softraid, build and managed via mdadm). For whatever reason one of =20
-the 3 promise SATA 300 TX controllers went offline and took 4 of =20
-these 10 disks with it. After reboot the array was assembled with 8 =20
-out of 10 disks - sda2 and sdb2 missing. When I tried to re-add sda2 =20
-sdc - which is one of the "active" disks - reported a read error on =20
-sector 54631. Ok - seems I have a problem.
+I have a software raid5 using /dev/sd{a,b,c}4.
+It's been up for months, through many reboots.
 
-I stopped all activities at this point to ask here what I can do to =20
-reassemble the array with a minimum loss of data.
+I had to do a reboot using sysrq
 
-Except the offline disks sda2 and sdb2 all other disks report 19 =20
-dirty chunks (mdadm -X). The offline disks report 7 dirty chunks.
+When the box came back up, the raid did not re-assemble.
+I am not using bitmaps.
 
-If one needs any further data - just ask.
+I believe it comes down to this:
 
-Hoping for assistance
-Ralf M=FCller
+<4>md: kicking non-fresh sda4 from array!
 
+what does that mean?
 
+I also have this:
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+raid5: raid level 5 set md0 active with 2 out of 3 devices, algorithm 2
+RAID5 conf printout:
+ --- rd:3 wd:2 fd:1
+ disk 1, o:1, dev:sdb4
+ disk 2, o:1, dev:sdc4
+mdadm: forcing event count in /dev/sdb4(1) from 327615 upto 327626
+
+Why was /dev/sda4 kicked?
+
+Contents of /etc/mdadm.conf:
+
+DEVICE /dev/hd*[a-h][0-9] /dev/sd*[a-h][0-9]
+ARRAY /dev/md0 level=raid5 num-devices=3
+UUID=b4597c3f:ab953cb9:32634717:ca110bfc
+
+Current /proc/mdstat:
+
+md0 : active raid5 sda4[3] sdb4[1] sdc4[2]
+      613409664 blocks level 5, 64k chunk, algorithm 2 [3/2] [_UU]
+      [==>..................]  recovery = 13.1% (40423368/306704832)
+finish=68.8min speed=64463K/sec
+
+65-70KB/s is about what these drives can do so the rebuild speed is just peachy.
+
+-- 
+Jon
