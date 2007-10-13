@@ -1,45 +1,45 @@
-From: Alberto Alonso <alberto@ggsys.net>
-Subject: Kicking the right drive out
-Date: Sat, 13 Oct 2007 13:00:16 -0500
-Message-ID: <1192298416.16416.246.camel@w100>
+From: Marko Berg <marko.berg@iki.fi>
+Subject: Re: RAID 5: weird size results after Grow
+Date: Sat, 13 Oct 2007 20:32:51 +0300
+Message-ID: <47110143.4060807@iki.fi>
+References: <47107DB5.10103@iki.fi> <4710C337.40708@tmr.com> <4710F021.30508@iki.fi> <4710FDAA.3050408@fatooh.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4710FDAA.3050408@fatooh.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Corey Hickey <bugfood-ml@fatooh.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I have a need to kick a disk out of a RAID 5 array.
+Corey Hickey wrote:
+> Marko Berg wrote:
+>> Bill Davidsen wrote:
+>>> Marko Berg wrote:
+>>>> Any suggestions on how to fix this, or what to investigate next, 
+>>>> would be appreciated!
+>>>>
+>>> I'm not sure what you're trying to "fix" here, everything you posted 
+>>> looks sane.
+>>
+>> I'm trying to find the missing 300 GB that, as df reports, are not 
+>> available. I ought to have a 900 GB array, consisting of four 300 GB 
+>> devices, while only 600 GB are available. Adding the fourth device 
+>> didn't increase the capacity of the array (visible, at least). E.g. 
+>> fdisk reports the array size to be 900 G, but df still claims 600 
+>> capacity. Any clues why?
+>
+> df reports the size of the filesystem, which is still about 600GB--the 
+> filesystem doesn't resize automatically when the size of the 
+> underlying device changes.
+>
+> You'll need to use resize2fs, resize_reiserfs, or whatever other tool 
+> is appropriate for your type of filesystem.
+>
+> -Corey 
 
-I can do a fdisk on 2 out of the 3 devices that form part
-of the array, so I suspect I know which one is bad.
+Right, so this isn't one of my sharpest days... Thanks a bunch, Corey!
 
-The problem is that mdstat shows the array as follows:
-
-md3 : active raid5 sda6[0] sdc6[2] sdb6[1]
-      960863488 blocks level 5, 64k chunk, algorithm 2 [3/3] [UUU]
-      [>....................]  resync =  0.7% (3444348/480431744)
-finish=582280.4min speed=1K/sec
-
-
-Doesn't this mean that all three disks are active and in use?
-
-mdadm -D /dev/md3 shows:
-
-    Number   Major   Minor   RaidDevice State
-       0       8        6        0      active sync   /dev/sda6
-       1       8       22        1      active sync   /dev/sdb6
-       2       8       38        2      active sync   /dev/sdc6
-
-So, my question is as follows: can I remove sdc6 and be sure the
-array will not stop?
-
-To make things worse, I see no disk failures in any log file. So
-I am not sure how sdc is actually failing.
-
-Thanks,
-
-Alberto
-
-
+-- 
+Marko
