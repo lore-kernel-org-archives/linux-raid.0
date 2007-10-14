@@ -1,133 +1,125 @@
-From: Alberto Alonso <alberto@ggsys.net>
-Subject: Re: Software RAID when it works and when it doesn't
-Date: Sun, 14 Oct 2007 00:57:58 -0500
-Message-ID: <1192341478.16416.298.camel@w100>
-References: <1192300851.16416.265.camel@w100>
-	 <18193.19362.170894.944922@notabene.brown>
+From: Nagilum <nagilum@nagilum.org>
+Subject: Re: Kicking the right drive out
+Date: Sun, 14 Oct 2007 10:49:07 +0200
+Message-ID: <20071014104907.3wduv63bpc00ggs4@cakebox.homeunix.net>
+References: <1192298416.16416.246.camel@w100>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: multipart/signed;
+	boundary="=_3j3273zb59s0";
+	protocol="application/pgp-signature";
+	micalg="pgp-sha1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18193.19362.170894.944922@notabene.brown>
+In-Reply-To: <1192298416.16416.246.camel@w100>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
+To: Alberto Alonso <alberto@ggsys.net>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, 2007-10-14 at 08:50 +1000, Neil Brown wrote:
-> On Saturday October 13, alberto@ggsys.net wrote:
-> > Over the past several months I have encountered 3
-> > cases where the software RAID didn't work in keeping
-> > the servers up and running.
-> > 
-> > In all cases, the failure has been on a single drive,
-> > yet the whole md device and server become unresponsive.
-> > 
-> > (usb-storage)
-> > In one situation a RAID 0 across 2 USB drives failed
-> > when one of the drives accidentally got turned off.
-> 
-> RAID0 is not true RAID - there is no redundancy.  If one device in a
-> RAID0 fails, the whole array will fail.  This is expected.
+This message is in MIME format and has been PGP signed.
 
-Sorry, I meant RAID 1. Currently, we only use RAID 1 and RAID 5 on all
-our systems.
+--=_3j3273zb59s0
+Content-Type: text/plain;
+	charset=UTF-8;
+	DelSp="Yes";
+	format="flowed"
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-> 
-> > 
-> > (sata)
-> > A second case a disk started generating reports like:
-> > end_request: I/O error, dev sdb, sector 42644555
-> 
-> So the drive had errors - not uncommon.  What happened to the array?
+Have a look at
+  mdadm -Q --detail /dev/md0
+But I'd suspect the problematic disk is causing that slow resync.
+I would add a new disk and then declare the one you suspect as bad.
+If the other two are are ok it should resync to the new one and you're fine.
+Otherwise you can re-add the declared failed disk and try again with =20
+another one.
+I would use dd to verify which disk is giving trouble (e.g. "dd =20
+if=3D/dev/sda of=3D/dev/null" , use "iostat -d5 -k" to watch the read =20
+speed).
+I hope this helps..
+Alex.
 
-The array never became degraded, it just made the system
-hang. I reported it back in May, but couldn't get it
-resolved. I replaced the system and unfortunately went
-to a non-RAID solution for that server.
+----- Message from alberto@ggsys.net ---------
+     Date: Sat, 13 Oct 2007 13:00:16 -0500
+     From: Alberto Alonso <alberto@ggsys.net>
+Reply-To: Alberto Alonso <alberto@ggsys.net>
+  Subject: Kicking the right drive out
+       To: linux-raid@vger.kernel.org
 
-> > 
-> > (sata)
-> > The third case (which I'm living right now) is a disk
-> > that I can see during the boot process but that I can't
-> > get operations on it to come back (ie. fdisk -l /dev/sdc). 
-> 
-> You mean "fdisk -l /dev/sdc" just hangs?  That sounds like a SATA
-> driver error.  You should report it to the SATA developers
->    linux-ide@vger.kernel.org
-> 
-> md/RAID cannot compensate for problems in the driver code.  It expects
-> every request that it sends down to either succeed or fail in a
-> reasonable amount of time.
 
-Yes, that's exactly what happens. fdisk, dd or any other disk
-operation just hanged.
-
-I will report it there, thanks for the pointer.
-
-> 
-> > 
-> > (pata)
-> > I have had at least 4 situations on old servers based
-> > on pata disks where disk failures where successful in
-> > being flagged and arrays where degraded automatically.
-> 
-> Good!
-
-Yep, after these results I stopped using hardware RAID. I
-went 100% software RAID on all systems other than a few
-SCSI hardware RAID systems that we bought as a set. Until this
-year that is, when I switched back to hardware RAID for our new
-critical systems due to the problems I saw back in May.
-> 
-> > 
-> > So, this is all making me wonder under what circumstances
-> > software RAID may have problems detecting disk failures.
-> 
-> RAID1, RAID10, RAID4, RAID5, RAID6 will handle errors that are
-> correctly reported by the underlying device.
-
-Yep, that's what I always thought, I'm just surprised
-I had so many problems this year. It makes me wonder the
-reliability of the whole thing though.
-
-Even if it is an underlying layer, can the md code implement
-its own timeouts?
-> 
-> > 
-> > I need to come up with a best practices solution and also
-> > need to understand more as I move into raid over local
-> > network (ie. iscsi, AoE or NBD). Could a disk failure in
-> > one of the servers or a server going offline bring the
-> > whole array down?
-> 
-> It shouldn't, providing the low level driver is functioning correctly,
-> and providing you are using true RAID (not RAID0 or LINEAR).
-> NeilBrown
+> I have a need to kick a disk out of a RAID 5 array.
+>
+> I can do a fdisk on 2 out of the 3 devices that form part
+> of the array, so I suspect I know which one is bad.
+>
+> The problem is that mdstat shows the array as follows:
+>
+> md3 : active raid5 sda6[0] sdc6[2] sdb6[1]
+>       960863488 blocks level 5, 64k chunk, algorithm 2 [3/3] [UUU]
+>       [>....................]  resync =3D  0.7% (3444348/480431744)
+> finish=3D582280.4min speed=3D1K/sec
+>
+>
+> Doesn't this mean that all three disks are active and in use?
+>
+> mdadm -D /dev/md3 shows:
+>
+>     Number   Major   Minor   RaidDevice State
+>        0       8        6        0      active sync   /dev/sda6
+>        1       8       22        1      active sync   /dev/sdb6
+>        2       8       38        2      active sync   /dev/sdc6
+>
+> So, my question is as follows: can I remove sdc6 and be sure the
+> array will not stop?
+>
+> To make things worse, I see no disk failures in any log file. So
+> I am not sure how sdc is actually failing.
+>
+> Thanks,
+>
+> Alberto
+>
+>
 > -
-
-Sorry again for the RAID 0 mistake, I really did mean RAID 1.
-
-I guess that since I had 3 distinct servers crash this year on me 
-I am getting paranoid. Is there a test suite or procedure that I can 
-do to test for everything that can go wrong?
-
-You mentioned that the md code can not compensate for problems in
-the driver code. Couldn't some internal timeout mechanisms help?
-I can't no longer use software RAID on SATA for new production 
-systems. I've switched to 3ware cards, but they are pricey and we
-really don't need them for most of our systems.
-
-I really would like to move to server clusters and RAID on the
-network devices for our larger arrays, but I need a way to properly
-test every scenario, as those are our critical servers and can not
-go down. I would like to figure out a "best practices procedure" that
-will ensure the correct degrading of the array upon a single failure,
-regardless of the underlying driver (ie. SATA, iSCSI, NBD, etc.) Am
-I thinking too much?
-
-Thanks,
-
-Alberto
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
 
+----- End message from alberto@ggsys.net -----
+
+
+
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+#    _  __          _ __     http://www.nagilum.org/ \n icq://69646724 #
+#   / |/ /__ ____ _(_) /_ ____ _  nagilum@nagilum.org \n +491776461165 #
+#  /    / _ `/ _ `/ / / // /  ' \  Amiga (68k/PPC): AOS/NetBSD/Linux   #
+# /_/|_/\_,_/\_, /_/_/\_,_/_/_/_/   Mac (PPC): MacOS-X / NetBSD /Linux #
+#           /___/     x86: FreeBSD/Linux/Solaris/Win2k  ARM9: EPOC EV6 #
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+
+
+----------------------------------------------------------------
+cakebox.homeunix.net - all the machine one needs..
+
+
+--=_3j3273zb59s0
+Content-Type: application/pgp-signature
+Content-Description: PGP Digital Signature
+Content-Disposition: inline
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.7 (FreeBSD)
+
+iD8DBQBHEdgDAKWN2UY+sLwRAuz9AKCSzmMo/jSBzn/3vAznmb4PIxFMcACfYElR
+CvrsOsOwK5cB6ubum6vSnaw=
+=MZwp
+-----END PGP SIGNATURE-----
+
+--=_3j3273zb59s0--
