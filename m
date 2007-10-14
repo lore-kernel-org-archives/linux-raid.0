@@ -1,51 +1,47 @@
-From: Alberto Alonso <alberto@ggsys.net>
-Subject: Re: Software RAID when it works and when it doesn't
-Date: Sun, 14 Oct 2007 13:22:17 -0500
-Message-ID: <1192386137.16416.313.camel@w100>
-References: <1192300851.16416.265.camel@w100>  <471241F8.50205@harddata.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: Help RAID5 reshape Oops / backup-file
+Date: Mon, 15 Oct 2007 09:31:23 +1000
+Message-ID: <18194.42699.193194.986448@notabene.brown>
+References: <20071011142518.igm1jud7ms408ggg@cakebox.homeunix.net>
+	<18190.46828.156191.300754@notabene.brown>
+	<20071012084328.2f6vk4cdw80kscw0@cakebox.homeunix.net>
+	<20071014185550.d6hbv2bk00kkwkgc@cakebox.homeunix.net>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <471241F8.50205@harddata.com>
+In-Reply-To: message from Nagilum on Sunday October 14
 Sender: linux-raid-owner@vger.kernel.org
-To: Maurice Hilarius <maurice@harddata.com>
-Cc: vger majordomo for lists <linux-raid@vger.kernel.org>
+To: Nagilum <nagilum@nagilum.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, 2007-10-14 at 10:21 -0600, Maurice Hilarius wrote:
-> Alberto Alonso wrote: 
-> >   
-> PATA (IDE) with 
-> Master and Slave drives is a "bad idea" as, when one drive fails, the
-> other of the Master & Slave pair often is no longer usable.
-> On discrete interfaces, with all drives configured as Master (single)
->  it is more tolerant.
+On Sunday October 14, nagilum@nagilum.org wrote:
+> Can someone tell me if I'm on the right track?
+> I've now noticed the following:
+> # ~/mdadm-2.6.3/mdadm -v -A /dev/md0 /dev/sd[d-e]
+> mdadm: looking for devices for /dev/md0
+> mdadm: /dev/sdd is identified as a member of /dev/md0, slot -1.
+> mdadm: /dev/sde is identified as a member of /dev/md0, slot -1.
+> mdadm: No suitable drives found for /dev/md0
 
-Before SATA became the de-facto we used promise PCI boards on top
-of the built in channels. As you mentioned, a single drive per
-channel is a must. We only had small servers with up to 6 PATA
-drives.
+Hmm... that might be useful..
 
-This was proved to be really reliable and handled all disk failures
-without bringing the servers down.
+I just found your earlier email where you said:
 
-What I am trying to determine in these posts is a combination of
-hardware and software that will make software RAID a reliable solution
-when disks fail.
+> After the machine came back up (on a rescue disk) I thought I'd
+> simply have to go through the process again. So I use add add the
+> new disk again. 
+> Although that worked, I am now unable to resume the growing
+> process. 
 
-> -- 
-> With our best regards,
-> 
-> Maurice W. Hilarius         Telephone: 01-780-456-9771
-> Hard Data Ltd.                FAX:          01-780-456-9772
-> 11060 - 166 Avenue         email:maurice@harddata.com
-> Edmonton, AB, Canada         http://www.harddata.com/
->      T5X 1Y3
-> 
+Using "add add" again was not correct, and should not have been
+possible.
+You should have simply assembled the array with the full new set of
+devices.  Then reshape would have automatically restarted properly.
 
+Can you remember *exactly* what you did?  If I can reproduce the
+situation, I can find the best way to fix it and send you something to
+try.
 
-Thanks,
-
-Alberto
-
+NeilBrown
