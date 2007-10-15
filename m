@@ -1,85 +1,64 @@
-From: Nagilum <nagilum@nagilum.org>
-Subject: Re: Help RAID5 reshape Oops / backup-file
-Date: Mon, 15 Oct 2007 14:08:25 +0200
-Message-ID: <20071015140825.cl4tawp1ogoggg44@cakebox.homeunix.net>
-References: <20071011142518.igm1jud7ms408ggg@cakebox.homeunix.net>
-	<18190.46828.156191.300754@notabene.brown>
-	<20071012084328.2f6vk4cdw80kscw0@cakebox.homeunix.net>
-	<20071014185550.d6hbv2bk00kkwkgc@cakebox.homeunix.net>
-	<18194.42699.193194.986448@notabene.brown>
-	<20071015135522.xjds82zo08cgc08c@cakebox.homeunix.net>
+From: Bernd Schubert <bs@q-leap.de>
+Subject: experiences with raid5: stripe_queue patches
+Date: Mon, 15 Oct 2007 17:03:10 +0200
+Message-ID: <200710151703.10404.bs@q-leap.de>
 Mime-Version: 1.0
-Content-Type: multipart/signed;
-	boundary="=_6af2eparaww0";
-	protocol="application/pgp-signature";
-	micalg="pgp-sha1"
+Content-Type: text/plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20071015135522.xjds82zo08cgc08c@cakebox.homeunix.net>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: Neil Brown <neilb@suse.de>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: linux-raid@vger.kernel.org, neilb@suse.de
 List-Id: linux-raid.ids
 
-This message is in MIME format and has been PGP signed.
+Hi,
 
---=_6af2eparaww0
-Content-Type: text/plain;
-	charset=UTF-8;
-	DelSp="Yes";
-	format="flowed"
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+in order to tune raid performance I did some benchmarks with and without the 
+stripe queue patches. 2.6.22 is only for comparison to rule out other 
+effects, e.g. the new scheduler, etc.
+It seems there is a regression with these patch regarding the re-write 
+performance, as you can see its almost 50% of what it should be.
 
------ Message from nagilum@nagilum.org ---------
-     Date: Mon, 15 Oct 2007 13:55:22 +0200
-     From: Nagilum <nagilum@nagilum.org>
-Reply-To: Nagilum <nagilum@nagilum.org>
-  Subject: Re: Help RAID5 reshape Oops / backup-file
-       To: Neil Brown <neilb@suse.de>
-       Cc: linux-raid@vger.kernel.org
+write      re-write   read       re-read
+480844.26  448723.48  707927.55  706075.02 (2.6.22 w/o SQ patches)
+487069.47  232574.30  709038.28  707595.09 (2.6.23 with SQ patches)
+469865.75  438649.88  711211.92  703229.00 (2.6.23 without SQ patches)
 
->  -  mdadm_2.5.6-9_i386.deb the i385 version of the package, however I
+Benchmark details:
 
-  i386 of course
+3xraid5 over 4 partitions of the very same hardware raid (in the end thats 
+raid65, raid6 in hardware and raid5 in software, we need to do that).
 
-> add of the two new disks, assuming that mdadm will touch these in a
+chunk size: 8192
+stripe_cache_size: 8192 each
+readahead of the md*: 65535 (well actually it limits itself to 65528
+readahead of the underlying partitions: 16384
 
-  will _not_ touch these in a harmful way
+filesystem: xfs
 
------ End message from nagilum@nagilum.org -----
+Testsystem: 2 x Quadcore Xeon 1.86 GHz (E5320)
 
-..stupid typos ;)
+An interesting effect to notice: Without these patches the pdflush daemons 
+will take a lot of CPU time, with these patches, pdflush almost doesn't 
+appear in the 'top' list.
 
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-#    _  __          _ __     http://www.nagilum.org/ \n icq://69646724 #
-#   / |/ /__ ____ _(_) /_ ____ _  nagilum@nagilum.org \n +491776461165 #
-#  /    / _ `/ _ `/ / / // /  ' \  Amiga (68k/PPC): AOS/NetBSD/Linux   #
-# /_/|_/\_,_/\_, /_/_/\_,_/_/_/_/   Mac (PPC): MacOS-X / NetBSD /Linux #
-#           /___/     x86: FreeBSD/Linux/Solaris/Win2k  ARM9: EPOC EV6 #
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+Actually we would prefer one single raid5 array, but then one single raid5 
+thread will run with 100% CPU time leaving 7 CPUs idle state, the status of 
+the hardware raid says its utilization is only at about 50% and we only see 
+writes at about 200 MB/s.
+On the contrary, with 3 different software raid5 sets the i/o to the harware 
+raid systems is the bottleneck.
 
-
-----------------------------------------------------------------
-cakebox.homeunix.net - all the machine one needs..
+Is there any chance to parallize the raid5 code? I think almost everything is 
+done in raid5.c make_request(), but the main loop there is spin_locked by 
+prepare_to_wait(). Would it be possible not to lock this entire loop?
 
 
---=_6af2eparaww0
-Content-Type: application/pgp-signature
-Content-Description: PGP Digital Signature
-Content-Disposition: inline
-Content-Transfer-Encoding: 7bit
+Thanks,
+Bernd
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.7 (FreeBSD)
-
-iD8DBQBHE1g5AKWN2UY+sLwRAo6ZAKCoGPx4YnTZ3mi8nP3YqB6uuavycQCguPNq
-47e7eip6dRfqYUfMPHPin14=
-=I/Lo
------END PGP SIGNATURE-----
-
---=_6af2eparaww0--
+-- 
+Bernd Schubert
+Q-Leap Networks GmbH
