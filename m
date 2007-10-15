@@ -1,47 +1,26 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: Help RAID5 reshape Oops / backup-file
-Date: Mon, 15 Oct 2007 09:31:23 +1000
-Message-ID: <18194.42699.193194.986448@notabene.brown>
-References: <20071011142518.igm1jud7ms408ggg@cakebox.homeunix.net>
-	<18190.46828.156191.300754@notabene.brown>
-	<20071012084328.2f6vk4cdw80kscw0@cakebox.homeunix.net>
-	<20071014185550.d6hbv2bk00kkwkgc@cakebox.homeunix.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+From: NeilBrown <neilb@suse.de>
+Subject: [PATCH 000 of 5] md: Five minor md patch, some for 2.6.24.
+Date: Mon, 15 Oct 2007 14:34:18 +1000
+Message-ID: <20071015143136.5200.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Nagilum on Sunday October 14
 Sender: linux-raid-owner@vger.kernel.org
-To: Nagilum <nagilum@nagilum.org>
-Cc: linux-raid@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, Iustin Pop <iusty@k1024.org>
 List-Id: linux-raid.ids
 
-On Sunday October 14, nagilum@nagilum.org wrote:
-> Can someone tell me if I'm on the right track?
-> I've now noticed the following:
-> # ~/mdadm-2.6.3/mdadm -v -A /dev/md0 /dev/sd[d-e]
-> mdadm: looking for devices for /dev/md0
-> mdadm: /dev/sdd is identified as a member of /dev/md0, slot -1.
-> mdadm: /dev/sde is identified as a member of /dev/md0, slot -1.
-> mdadm: No suitable drives found for /dev/md0
+Following are 5 minor patches for md in current -mm.
 
-Hmm... that might be useful..
+The first 4 are suitable to flow into 2.6.24.
 
-I just found your earlier email where you said:
+The last fixes a small bug in Dan Williams' patches currently in -mm,
+which are not scheduled for 2.6.24.
 
-> After the machine came back up (on a rescue disk) I thought I'd
-> simply have to go through the process again. So I use add add the
-> new disk again. 
-> Although that worked, I am now unable to resume the growing
-> process. 
-
-Using "add add" again was not correct, and should not have been
-possible.
-You should have simply assembled the array with the full new set of
-devices.  Then reshape would have automatically restarted properly.
-
-Can you remember *exactly* what you did?  If I can reproduce the
-situation, I can find the best way to fix it and send you something to
-try.
-
+Thanks,
 NeilBrown
+
+
+ [PATCH 001 of 5] md: Fix a bug in some never-used code.
+ [PATCH 002 of 5] md: 'sync_action' in sysfs returns wrong value for readonly arrays
+ [PATCH 003 of 5] md: Expose the degraded status of an assembled array through sysfs
+ [PATCH 004 of 5] md: Make sure read errors are auto-corrected during a 'check' resync in raid1
+ [PATCH 005 of 5] md: Fix type that is stopping raid5 grow from working.
