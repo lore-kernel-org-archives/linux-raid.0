@@ -1,26 +1,60 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [PATCH 000 of 5] md: Five minor md patch, some for 2.6.24.
-Date: Mon, 15 Oct 2007 14:34:18 +1000
-Message-ID: <20071015143136.5200.patches@notabene>
+Subject: [PATCH 001 of 5] md: Fix a bug in some never-used code.
+Date: Mon, 15 Oct 2007 14:34:25 +1000
+Message-ID: <1071015043425.5436@suse.de>
+References: <20071015143136.5200.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, Iustin Pop <iusty@k1024.org>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-Following are 5 minor patches for md in current -mm.
 
-The first 4 are suitable to flow into 2.6.24.
+http://bugzilla.kernel.org/show_bug.cgi?id=3277
 
-The last fixes a small bug in Dan Williams' patches currently in -mm,
-which are not scheduled for 2.6.24.
+There is a seq_printf here that isn't being passed a 'seq'.
+Howeve as the code is inside #ifdef MD_DEBUG, nobody noticed.
 
-Thanks,
-NeilBrown
+Also remove some extra spaces.
 
+Signed-off-by: Neil Brown <neilb@suse.de>
 
- [PATCH 001 of 5] md: Fix a bug in some never-used code.
- [PATCH 002 of 5] md: 'sync_action' in sysfs returns wrong value for readonly arrays
- [PATCH 003 of 5] md: Expose the degraded status of an assembled array through sysfs
- [PATCH 004 of 5] md: Make sure read errors are auto-corrected during a 'check' resync in raid1
- [PATCH 005 of 5] md: Fix type that is stopping raid5 grow from working.
+### Diffstat output
+ ./drivers/md/raid0.c |   10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
+
+diff .prev/drivers/md/raid0.c ./drivers/md/raid0.c
+--- .prev/drivers/md/raid0.c	2007-10-15 14:05:58.000000000 +1000
++++ ./drivers/md/raid0.c	2007-10-15 14:06:05.000000000 +1000
+@@ -472,7 +472,7 @@ bad_map:
+ 	bio_io_error(bio);
+ 	return 0;
+ }
+-			   
++
+ static void raid0_status (struct seq_file *seq, mddev_t *mddev)
+ {
+ #undef MD_DEBUG
+@@ -480,18 +480,18 @@ static void raid0_status (struct seq_fil
+ 	int j, k, h;
+ 	char b[BDEVNAME_SIZE];
+ 	raid0_conf_t *conf = mddev_to_conf(mddev);
+-  
++
+ 	h = 0;
+ 	for (j = 0; j < conf->nr_strip_zones; j++) {
+ 		seq_printf(seq, "      z%d", j);
+ 		if (conf->hash_table[h] == conf->strip_zone+j)
+-			seq_printf("(h%d)", h++);
++			seq_printf(seq, "(h%d)", h++);
+ 		seq_printf(seq, "=[");
+ 		for (k = 0; k < conf->strip_zone[j].nb_dev; k++)
+-			seq_printf (seq, "%s/", bdevname(
++			seq_printf(seq, "%s/", bdevname(
+ 				conf->strip_zone[j].dev[k]->bdev,b));
+ 
+-		seq_printf (seq, "] zo=%d do=%d s=%d\n",
++		seq_printf(seq, "] zo=%d do=%d s=%d\n",
+ 				conf->strip_zone[j].zone_offset,
+ 				conf->strip_zone[j].dev_offset,
+ 				conf->strip_zone[j].size);
