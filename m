@@ -1,200 +1,129 @@
-From: Nagilum <nagilum@nagilum.org>
-Subject: Re: Help RAID5 reshape Oops / backup-file
-Date: Tue, 16 Oct 2007 14:50:09 +0200
-Message-ID: <20071016145009.qu5kpigu1c8owkc4@cakebox.homeunix.net>
-References: <20071011142518.igm1jud7ms408ggg@cakebox.homeunix.net>
-	<18190.46828.156191.300754@notabene.brown>
-	<20071012084328.2f6vk4cdw80kscw0@cakebox.homeunix.net>
-	<20071014185550.d6hbv2bk00kkwkgc@cakebox.homeunix.net>
-	<18194.42699.193194.986448@notabene.brown>
-	<20071015135522.xjds82zo08cgc08c@cakebox.homeunix.net>
-	<18196.4323.854776.966812@notabene.brown>
+From: =?ISO-8859-1?Q?BERTRAND_Jo=EBl?= <joel.bertrand@systella.fr>
+Subject: [BUG] Raid5 trouble
+Date: Tue, 16 Oct 2007 15:24:34 +0200
+Message-ID: <4714BB92.7040701@systella.fr>
 Mime-Version: 1.0
-Content-Type: multipart/signed;
-	boundary="=_5xnu9gheng4c";
-	protocol="application/pgp-signature";
-	micalg="pgp-sha1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18196.4323.854776.966812@notabene.brown>
-Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+Return-path: <sparclinux-owner@vger.kernel.org>
+Sender: sparclinux-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org, sparclinux@vger.kernel.org
 List-Id: linux-raid.ids
 
-This message is in MIME format and has been PGP signed.
+	Hello,
 
---=_5xnu9gheng4c
-Content-Type: text/plain;
-	charset=UTF-8;
-	DelSp="Yes";
-	format="flowed"
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+	I run 2.6.23 linux kernel on two T1000 (sparc64) servers. Each server 
+has a partitionable raid5 array (/dev/md/d0) and I have to synchronize 
+both raid5 volumes by raid1. Thus, I have tried to build a raid1 volume 
+between /dev/md/d0p1 and /dev/sdi1 (exported by iscsi from the second 
+server) and I obtain a BUG :
 
------ Message from neilb@suse.de ---------
-     Date: Tue, 16 Oct 2007 11:16:19 +1000
-     From: Neil Brown <neilb@suse.de>
-Reply-To: Neil Brown <neilb@suse.de>
-  Subject: Re: Help RAID5 reshape Oops / backup-file
-       To: Nagilum <nagilum@nagilum.org>
-       Cc: linux-raid@vger.kernel.org
+Root gershwin:[/usr/scripts] > mdadm -C /dev/md7 -l1 -n2 /dev/md/d0p1 
+/dev/sdi1
+...
+kernel BUG at drivers/md/raid5.c:380!
+               \|/ ____ \|/
+               "@'/ .. \`@"
+               /_| \__/ |_\
+                  \__U_/
+md7_resync(4476): Kernel bad sw trap 5 [#1]
+TSTATE: 0000000080001606 TPC: 00000000005ed50c TNPC: 00000000005ed510 Y: 
+00000000    Not tainted
+TPC: <get_stripe_work+0x1f4/0x200>
+g0: 0000000000000005 g1: 00000000007c0400 g2: 0000000000000001 g3: 
+0000000000748400
+g4: fffff800ebdb2400 g5: fffff80002080000 g6: fffff800e82fc000 g7: 
+0000000000748528
+o0: 0000000000000029 o1: 0000000000715798 o2: 000000000000017c o3: 
+0000000000000005
+o4: 0000000000000006 o5: fffff800e9bb6e28 sp: fffff800e82fed81 ret_pc: 
+00000000005ed504
+RPC: <get_stripe_work+0x1ec/0x200>
+l0: 0000000000000002 l1: ffffffffffffffff l2: fffff800e9bb6e68 l3: 
+fffff800e9bb6db0
+l4: fffff800e9bb6e50 l5: fffffffffffffff8 l6: 0000000000000005 l7: 
+fffff800fcbd6000
+i0: fffff800e9bb6df0 i1: 0000000000000000 i2: 0000000000000004 i3: 
+fffff800e82ff720
+i4: 0000000000000080 i5: 0000000000000080 i6: fffff800e82fee51 i7: 
+00000000005f0274
+I7: <handle_stripe5+0x4fc/0x1340>
+Caller[00000000005f0274]: handle_stripe5+0x4fc/0x1340
+Caller[00000000005f211c]: handle_stripe+0x24/0x13e0
+Caller[00000000005f4450]: make_request+0x358/0x600
+Caller[0000000000542890]: generic_make_request+0x198/0x220
+Caller[00000000005eb240]: sync_request+0x608/0x640
+Caller[00000000005fef7c]: md_do_sync+0x384/0x920
+Caller[00000000005ff8f0]: md_thread+0x38/0x140
+Caller[0000000000478b40]: kthread+0x48/0x80
+Caller[00000000004273d0]: kernel_thread+0x38/0x60
+Caller[0000000000478de0]: kthreadd+0x148/0x1c0
+Instruction DUMP: 9210217c  7ff8f57f  90122398 <91d02005> 30680004 
+01000000  01000000  01000000  9de3bf00
 
+Root gershwin:[/usr/scripts] > cat /proc/mdstat
+Personalities : [raid1] [raid6] [raid5] [raid4]
+md7 : active raid1 sdi1[1] md_d0p1[0]
+       1464725632 blocks [2/2] [UU]
+       [>....................]  resync =  0.0% (132600/1464725632) 
+finish=141823.7min speed=171K/sec
 
->
-> Thanks for the extra details.
-> I still cannot manage to reproduce it which is frustrating, but I
-> think I can fix your array for you.
->
-> Get the source for mdadm 2.6.3, apply the following patch, then use
->
->    mdadm -A /dev/md0 --update=3Dthis /dev/sd[abcde]
->
-> that should re-write the part of the superblocks that is wrong, then
-> assemble the array.
->
-> Please let me know how it goes.
->
-> Also, if you could show me "mdadm.conf" and "mdrun.conf" from the
-> initrd, that might help.
->
-> Thanks,
-> NeilBrown
->
+md_d0 : active raid5 sdc1[0] sdh1[5] sdg1[4] sdf1[3] sde1[2] sdd1[1]
+       1464725760 blocks level 5, 64k chunk, algorithm 2 [6/6] [UUUUUU]
+...
+Root gershwin:[/usr/scripts] > fdisk -l /dev/md/d0
 
+Disk /dev/md/d0: 1499.8 GB, 1499879178240 bytes
+2 heads, 4 sectors/track, 366181440 cylinders
+Units = cylinders of 8 * 512 = 4096 bytes
+Disk identifier: 0xa4a52979
 
------ End message from neilb@suse.de -----
+       Device Boot      Start         End      Blocks   Id  System
+/dev/md/d0p1               1   366181440  1464725758   fd  Linux raid 
+autodetect
+Root gershwin:[/usr/scripts] > fdisk -l /dev/sdi
 
-Thanks a bunch mate!
+Disk /dev/sdi: 1499.8 GB, 1499879178240 bytes
+2 heads, 4 sectors/track, 366181440 cylinders
+Units = cylinders of 8 * 512 = 4096 bytes
+Disk identifier: 0xf6cdb2a3
 
-So far it looks very well:
+    Device Boot      Start         End      Blocks   Id  System
+/dev/sdi1               1   366181440  1464725758   fd  Linux raid 
+autodetect
+Root gershwin:[/usr/scripts] > cat /proc/scsi/scsi
+Attached devices:
+Host: scsi0 Channel: 00 Id: 00 Lun: 00
+   Vendor: FUJITSU  Model: MAY2073RCSUN72G  Rev: 0501
+   Type:   Direct-Access                    ANSI  SCSI revision: 04
+Host: scsi0 Channel: 00 Id: 01 Lun: 00
+   Vendor: FUJITSU  Model: MAY2073RCSUN72G  Rev: 0501
+   Type:   Direct-Access                    ANSI  SCSI revision: 04
+Host: scsi2 Channel: 00 Id: 08 Lun: 00
+   Vendor: FUJITSU  Model: MAW3300NC        Rev: 0104
+   Type:   Direct-Access                    ANSI  SCSI revision: 03
+Host: scsi2 Channel: 00 Id: 09 Lun: 00
+   Vendor: FUJITSU  Model: MAW3300NC        Rev: 0104
+   Type:   Direct-Access                    ANSI  SCSI revision: 03
+Host: scsi2 Channel: 00 Id: 10 Lun: 00
+   Vendor: FUJITSU  Model: MAW3300NC        Rev: 0104
+   Type:   Direct-Access                    ANSI  SCSI revision: 03
+Host: scsi2 Channel: 00 Id: 11 Lun: 00
+   Vendor: FUJITSU  Model: MAW3300NC        Rev: 0104
+   Type:   Direct-Access                    ANSI  SCSI revision: 03
+Host: scsi2 Channel: 00 Id: 12 Lun: 00
+   Vendor: FUJITSU  Model: MAW3300NC        Rev: 0104
+   Type:   Direct-Access                    ANSI  SCSI revision: 03
+Host: scsi2 Channel: 00 Id: 13 Lun: 00
+   Vendor: FUJITSU  Model: MAW3300NC        Rev: 0104
+   Type:   Direct-Access                    ANSI  SCSI revision: 03
+Host: scsi3 Channel: 00 Id: 00 Lun: 00
+   Vendor: IET      Model: VIRTUAL-DISK     Rev: 0
+   Type:   Direct-Access                    ANSI  SCSI revision: 04
+Root gershwin:[/usr/scripts] >
 
-nas:~/mdadm-2.6.3# ./mdadm -Q --detail /dev/md0
-/dev/md0:
-         Version : 00.91.03
-   Creation Time : Sat Sep 15 21:11:41 2007
-      Raid Level : raid5
-   Used Dev Size : 488308672 (465.69 GiB 500.03 GB)
-    Raid Devices : 5
-   Total Devices : 5
-Preferred Minor : 0
-     Persistence : Superblock is persistent
+	I don't think if this bug is arch specific, but I never see it on amd64...
 
-     Update Time : Mon Oct  8 23:59:27 2007
-           State : active, degraded, Not Started
-  Active Devices : 3
-Working Devices : 5
-  Failed Devices : 0
-   Spare Devices : 2
+	Regards,
 
-          Layout : left-symmetric
-      Chunk Size : 16K
-
-   Delta Devices : 2, (3->5)
-
-            UUID : 25da80a6:d56eb9d6:0d7656f3:2f233380
-          Events : 0.470134
-
-     Number   Major   Minor   RaidDevice State
-        0       8        0        0      active sync   /dev/sda
-        1       8       16        1      active sync   /dev/sdb
-        2       8       32        2      active sync   /dev/sdc
-        3       0        0        3      removed
-        4       0        0        4      removed
-
-        5       8       48        -      spare   /dev/sdd
-        6       8       64        -      spare   /dev/sde
-nas:~/mdadm-2.6.3# mdadm -S /dev/md0
-mdadm: stopped /dev/md0
-nas:~/mdadm-2.6.3# ./mdadm -A /dev/md0 --update=3Dthis /dev/sd[abcde]
-mdadm: Setting this disk from 5 to 4
-mdadm: Setting this disk from 6 to 3
-mdadm: /dev/md0 assembled from 3 drives and 2 spares - not enough to =20
-start the array.
-nas:~/mdadm-2.6.3# mdadm -S /dev/md0
-mdadm: stopped /dev/md0
-nas:~/mdadm-2.6.3# ./mdadm -A /dev/md0 /dev/sd[abcde]
-mdadm: /dev/md0 has been started with 5 drives.
-nas:~/mdadm-2.6.3# ./mdadm -Q --detail /dev/md0
-/dev/md0:
-         Version : 00.91.03
-   Creation Time : Sat Sep 15 21:11:41 2007
-      Raid Level : raid5
-      Array Size : 976617344 (931.37 GiB 1000.06 GB)
-   Used Dev Size : 488308672 (465.69 GiB 500.03 GB)
-    Raid Devices : 5
-   Total Devices : 5
-Preferred Minor : 0
-     Persistence : Superblock is persistent
-
-     Update Time : Tue Oct 16 13:42:03 2007
-           State : clean, recovering
-  Active Devices : 5
-Working Devices : 5
-  Failed Devices : 0
-   Spare Devices : 0
-
-          Layout : left-symmetric
-      Chunk Size : 16K
-
-  Reshape Status : 44% complete
-   Delta Devices : 2, (3->5)
-
-            UUID : 25da80a6:d56eb9d6:0d7656f3:2f233380
-          Events : 0.470212
-
-     Number   Major   Minor   RaidDevice State
-        0       8        0        0      active sync   /dev/sda
-        1       8       16        1      active sync   /dev/sdb
-        2       8       32        2      active sync   /dev/sdc
-        3       8       64        3      active sync   /dev/sde
-        4       8       48        4      active sync   /dev/sdd
-
-nas:~# cat /proc/mdstat
-md0 : active raid5 sda[0] sdd[4] sde[3] sdc[2] sdb[1]
-       976617344 blocks super 0.91 level 5, 16k chunk, algorithm 2 =20
-[5/5] [UUUUU]
-       [=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D>.......]  reshape =3D 67.5% =
-(329927392/488308672) =20
-finish=3D48.6min speed=3D54235K/sec
-
-unused devices: <none>
-
-I'll send an update (including the configs) when its done and I've =20
-verified everything is healthy. (and my heart has stopped racing ;)
-At first I was bit scared because of the order (sde before sdd) but =20
-that's consistent with the mdadm -E output from the devices earlier, =20
-so it looks like I'll soon have my data back. *yay* :)
-
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-#    _  __          _ __     http://www.nagilum.org/ \n icq://69646724 #
-#   / |/ /__ ____ _(_) /_ ____ _  nagilum@nagilum.org \n +491776461165 #
-#  /    / _ `/ _ `/ / / // /  ' \  Amiga (68k/PPC): AOS/NetBSD/Linux   #
-# /_/|_/\_,_/\_, /_/_/\_,_/_/_/_/   Mac (PPC): MacOS-X / NetBSD /Linux #
-#           /___/     x86: FreeBSD/Linux/Solaris/Win2k  ARM9: EPOC EV6 #
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-
-
-----------------------------------------------------------------
-cakebox.homeunix.net - all the machine one needs..
-
-
---=_5xnu9gheng4c
-Content-Type: application/pgp-signature
-Content-Description: PGP Digital Signature
-Content-Disposition: inline
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.7 (FreeBSD)
-
-iD8DBQBHFLOAAKWN2UY+sLwRAum7AJ950U/XZpnKsTkaQHqIa7IW9jOcoQCgoVQV
-eb9vT45kKriVo9nTI5T1/To=
-=s27P
------END PGP SIGNATURE-----
-
---=_5xnu9gheng4c--
+	JKB
