@@ -1,42 +1,47 @@
-From: Neil Brown <neilb@suse.de>
+From: Michal Soltys <nozo@ziu.info>
 Subject: Re: Partitionable raid array... How to create devices ?
-Date: Tue, 16 Oct 2007 19:49:09 +1000
-Message-ID: <18196.35093.226685.234130@notabene.brown>
+Date: Tue, 16 Oct 2007 11:57:01 +0200
+Message-ID: <47148AED.7010104@ziu.info>
 References: <471474D6.5090704@systella.fr>
-	<18196.34718.434070.857620@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Neil Brown on Tuesday October 16
+In-Reply-To: <471474D6.5090704@systella.fr>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?ISO-8859-1?Q?BERTRAND_Jo=EBl?= <joel.bertrand@systella.fr>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday October 16, neilb@suse.de wrote:
-> However what you used should work.  I'll get that fixed for the next
-> release.
+BERTRAND Jo=EBl wrote:
+>=20
+>     Well, /dev/mdp0 is created. But what's about /dev/mdp0p1 ? I beli=
+eve=20
+> that mdadm has to create required devices. I don't understand where i=
+s=20
+> my mistake. Any idea ?
+>=20
 
-This is the patch that will fix it.  I plan to release 2.6.4 late this
-week or early next.
+Two things come to my mind:
 
-NeilBrown
+- udev messing up with what mdadm is doing (but this isn't the moment=20
+where the problems should show up). Either way, check them out to avoid=
+=20
+subtle-looking problems.
 
+- long time ago I noticed, that mdp parameter has problems with creatin=
+g=20
+nodes for raid partitions on arrays with non-standard names. In my case=
+=20
+it did work when explicit number of partitions was specified, but maybe=
+=20
+your case is different. Try --auto=3Dpart4 or --auto=3Dp4 - see if they=
+=20
+work. For the reference :
+http://marc.info/?l=3Dlinux-raid&m=3D118720367217616&w=3D2
 
-
-### Diffstat output
- ./mdopen.c |    1 +
- 1 file changed, 1 insertion(+)
-
-diff .prev/mdopen.c ./mdopen.c
---- .prev/mdopen.c	2007-10-16 19:47:14.000000000 +1000
-+++ ./mdopen.c	2007-10-16 19:47:25.000000000 +1000
-@@ -161,6 +161,7 @@ int open_mddev(char *dev, int autof)
- 				"not compatable with device named %s\n", dev);
- 				return -1;
- 			}
-+			major_num = get_mdp_major();
- 			break;
- 		case 5: /* default to md if not standard */
- 			break;
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
