@@ -1,47 +1,34 @@
-From: Michal Soltys <nozo@ziu.info>
-Subject: Re: Partitionable raid array... How to create devices ?
-Date: Tue, 16 Oct 2007 11:57:01 +0200
-Message-ID: <47148AED.7010104@ziu.info>
-References: <471474D6.5090704@systella.fr>
+From: Christina Braun <braun@mail.informatik.uni-essen.de>
+Subject: direction criterium for synchronisation raid1
+Date: Tue, 16 Oct 2007 11:28:25 +0200
+Message-ID: <47148439.2020706@mail.informatik.uni-essen.de>
+Reply-To: braun@dc.uni-due.de
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <471474D6.5090704@systella.fr>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-BERTRAND Jo=EBl wrote:
->=20
->     Well, /dev/mdp0 is created. But what's about /dev/mdp0p1 ? I beli=
-eve=20
-> that mdadm has to create required devices. I don't understand where i=
-s=20
-> my mistake. Any idea ?
->=20
+Hello,
+which is in raid1 the criterion for the direction of synchronisation? In 
+case of  disk-replacing
+or removing one mirror-leg (working actual on the other leg ) and add 
+the same removed leg later, which has the old data now, again to the mirror?
 
-Two things come to my mind:
+How can I tell the system which mirrored partition is  now the 
+data-source without
+making the raid1 new or zero the superblock?  Is the  destination in 
+every case the device
+in mdadm manage after the add ? Can I see the source or destination by a 
+info like mdstat or superblock?
+ 
+I cannot find the  answers of this simple questions. It works by 
+testing, but I feel better about my production-system and a later 
+replace  if I know it. The found examples describes only the replace of  
+ascending order second drives.
 
-- udev messing up with what mdadm is doing (but this isn't the moment=20
-where the problems should show up). Either way, check them out to avoid=
-=20
-subtle-looking problems.
+Thank You,
+Christina
 
-- long time ago I noticed, that mdp parameter has problems with creatin=
-g=20
-nodes for raid partitions on arrays with non-standard names. In my case=
-=20
-it did work when explicit number of partitions was specified, but maybe=
-=20
-your case is different. Try --auto=3Dpart4 or --auto=3Dp4 - see if they=
-=20
-work. For the reference :
-http://marc.info/?l=3Dlinux-raid&m=3D118720367217616&w=3D2
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
