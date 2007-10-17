@@ -1,56 +1,57 @@
 From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: Unsure of changes to array
-Date: Wed, 17 Oct 2007 16:50:03 -0400
-Message-ID: <4716757B.9030609@tmr.com>
-References: <47161684.7010604@bristol.ac.uk>
+Subject: Re: mdadm 2.6.x regression, fails creation of raid1 w/ v1.0 sb and
+ internal bitmap
+Date: Wed, 17 Oct 2007 16:54:54 -0400
+Message-ID: <4716769E.5030508@tmr.com>
+References: <170fa0d20710170837g1b0cd549w3b7fe8e663a01b7e@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <47161684.7010604@bristol.ac.uk>
+In-Reply-To: <170fa0d20710170837g1b0cd549w3b7fe8e663a01b7e@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jonathan Gazeley <jonathan.gazeley@bristol.ac.uk>
-Cc: linux-raid@vger.kernel.org
+To: Mike Snitzer <snitzer@gmail.com>
+Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Jonathan Gazeley wrote:
-> Dear all,
+Mike Snitzer wrote:
+> mdadm 2.4.1 through 2.5.6 works. mdadm-2.6's "Improve allocation and
+> use of space for bitmaps in version1 metadata"
+> (199171a297a87d7696b6b8c07ee520363f4603c1) would seem like the
+> offending change.  Using 1.2 metdata works.
 >
-> This is hopefully a simple question for you to answer, but I am fairly 
-> new to RAID and don't want to risk losing my data!
+> I get the following using the tip of the mdadm git repo or any other
+> version of mdadm 2.6.x:
 >
-> My setup is as follows:
-> - I have four 500GB disks. Each disk is split into a 5GB partition, 
-> and a 495GB partition.
-> - The four 5GB partitions are in a RAID-5 array, md0. CentOS is 
-> installed on this 15GB partition.
-> - The four 495GB partiions are in a RAID-5 array, md1. This partition 
-> holds my user data.
+> # mdadm --create /dev/md2 --run -l 1 --metadata=1.0 --bitmap=internal
+> -n 2 /dev/sdf --write-mostly /dev/nbd2
+> mdadm: /dev/sdf appears to be part of a raid array:
+>     level=raid1 devices=2 ctime=Wed Oct 17 10:17:31 2007
+> mdadm: /dev/nbd2 appears to be part of a raid array:
+>     level=raid1 devices=2 ctime=Wed Oct 17 10:17:31 2007
+> mdadm: RUN_ARRAY failed: Input/output error
+> mdadm: stopped /dev/md2
 >
-> However, I have decided I no longer wish to two arrays across the 
-> disks. I've added a fifth disk on which I have installed the OS 
-> without RAID, meaning the old md0 is currently unused. Can I simply 
-> remove the four 5GB partitions, and resize the four 495GB partitions 
-> to fill the entire disk? Will this break anything?
+> kernel log shows:
+> md2: bitmap initialized from disk: read 22/22 pages, set 715290 bits, status: 0
+> created bitmap (350 pages) for device md2
+> md2: failed to create bitmap (-5)
+> md: pers->run() failed ...
+> md: md2 stopped.
+> md: unbind<nbd2>
+> md: export_rdev(nbd2)
+> md: unbind<sdf>
+> md: export_rdev(sdf)
+> md: md2 stopped.
+>   
 
-Not unless you make a mistake in typing, or your hardware or power fails 
-during the process. Of course in that case you will possibly lose 
-everything.
->
-> Before anybody tells me off for having the OS on a non-RAID disk, this 
-> is a home server and therefore high availability is not an issue. But 
-> keeping my data safe against disk failures is important to me.
-
-Having your o/s and swap on RAID reduces your chances of losing your 
-data. If it were me and reliability were the goal, I would have the o/s 
-mirrored on the first two drives (as seen by the BIOS) so you boot if 
-one fails hard, then put swap RAID-10 in the little 5GB partition on the 
-other three drives, then convert the raid-5 to raid-6 using the rest of 
-the added fifth drive.
-
-Anything which reduces the chances of an unclean shutdown improves the 
-chances of keeping your data. A decent UPS is a big help in that regard. 
-Disk failures on the data drives are not the only threat to your data!
+I would start by retrying with an external bitmap, to see if for some 
+reason there isn't room for the bitmap. If that fails, perhaps no bitmap 
+at all would be a useful data point. Was the original metadata the same 
+version? Things moved depending on the exact version, and some 
+--zero-superblock magic might be needed. Hopefully Neil can clarify, I'm 
+just telling you what I suspect is the problem, and maybe a 
+non-destructive solution.
 
 -- 
 bill davidsen <davidsen@tmr.com>
