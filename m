@@ -1,56 +1,42 @@
-From: "Dan Williams" <dan.j.williams@intel.com>
-Subject: Re: [BUG] Raid5 trouble
-Date: Wed, 17 Oct 2007 07:58:28 -0700
-Message-ID: <e9c3a7c20710170758p4046ca44labe370e94bca6e93@mail.gmail.com>
-References: <4714BB92.7040701@systella.fr> <47161CE3.80909@systella.fr>
+From: "Mike Snitzer" <snitzer@gmail.com>
+Subject: mdadm 2.6.x regression, fails creation of raid1 w/ v1.0 sb and internal bitmap
+Date: Wed, 17 Oct 2007 11:37:58 -0400
+Message-ID: <170fa0d20710170837g1b0cd549w3b7fe8e663a01b7e@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <47161CE3.80909@systella.fr>
 Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: =?ISO-8859-1?Q?BERTRAND_Jo=EBl?= <joel.bertrand@systella.fr>
-Cc: linux-raid@vger.kernel.org, sparclinux@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 10/17/07, BERTRAND Jo=EBl <joel.bertrand@systella.fr> wrote:
-> BERTRAND Jo=EBl wrote:
-> >     Hello,
-> >
-> >     I run 2.6.23 linux kernel on two T1000 (sparc64) servers. Each
-> > server has a partitionable raid5 array (/dev/md/d0) and I have to
-> > synchronize both raid5 volumes by raid1. Thus, I have tried to buil=
-d a
-> > raid1 volume between /dev/md/d0p1 and /dev/sdi1 (exported by iscsi =
-from
-> > the second server) and I obtain a BUG :
-> >
-> > Root gershwin:[/usr/scripts] > mdadm -C /dev/md7 -l1 -n2 /dev/md/d0=
-p1
-> > /dev/sdi1
-> > ...
->
->         Hello,
->
->         I have fixed iscsi-target, and I have tested it. It works now=
- without
-> any trouble. Patches were posted on iscsi-target mailing list. When I
-> use iSCSI to access to foreign raid5 volume, it works fine. I can for=
-mat
-> foreign volume, copy large files on it... But when I tried to create =
-a
-> new raid1 volume with a local raid5 volume and a foreign raid5 volume=
-, I
-> receive my well known Oops. You can find my dmesg after Oops :
->
+mdadm 2.4.1 through 2.5.6 works. mdadm-2.6's "Improve allocation and
+use of space for bitmaps in version1 metadata"
+(199171a297a87d7696b6b8c07ee520363f4603c1) would seem like the
+offending change.  Using 1.2 metdata works.
 
-Can you send your .config and your bootup dmesg?
+I get the following using the tip of the mdadm git repo or any other
+version of mdadm 2.6.x:
 
-Thanks,
-Dan
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+# mdadm --create /dev/md2 --run -l 1 --metadata=1.0 --bitmap=internal
+-n 2 /dev/sdf --write-mostly /dev/nbd2
+mdadm: /dev/sdf appears to be part of a raid array:
+    level=raid1 devices=2 ctime=Wed Oct 17 10:17:31 2007
+mdadm: /dev/nbd2 appears to be part of a raid array:
+    level=raid1 devices=2 ctime=Wed Oct 17 10:17:31 2007
+mdadm: RUN_ARRAY failed: Input/output error
+mdadm: stopped /dev/md2
+
+kernel log shows:
+md2: bitmap initialized from disk: read 22/22 pages, set 715290 bits, status: 0
+created bitmap (350 pages) for device md2
+md2: failed to create bitmap (-5)
+md: pers->run() failed ...
+md: md2 stopped.
+md: unbind<nbd2>
+md: export_rdev(nbd2)
+md: unbind<sdf>
+md: export_rdev(sdf)
+md: md2 stopped.
