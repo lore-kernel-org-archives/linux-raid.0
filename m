@@ -1,71 +1,26 @@
-From: =?UTF-8?B?QkVSVFJBTkQgSm/Dq2w=?= <joel.bertrand@systella.fr>
-Subject: Re: Abort Task ?
-Date: Thu, 18 Oct 2007 18:33:03 +0200
-Message-ID: <47178ABF.1040500@systella.fr>
-References: <471720F1.40409@systella.fr> <471727F3.2080500@systella.fr>	
-	<471734C5.8090405@systella.fr>	
-	<E2BB8074E5500C42984D980D4BD78EF9017A2958@MFG-NYC-EXCH2.mfg.prv>
-	<1192721909.3596.15.camel@dhcp-117.ibrix.com>
+From: Harry Mangalam <harry.mangalam@uci.edu>
+Subject: Hardware raid; Areca & 3ware hardware RAID cards under Linux
+Date: Thu, 18 Oct 2007 09:38:11 -0700
+Message-ID: <200710180938.11834.harry.mangalam@uci.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <iscsitarget-devel-bounces@lists.sourceforge.net>
-In-Reply-To: <1192721909.3596.15.camel@dhcp-117.ibrix.com>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/iscsitarget-devel>,
-	<mailto:iscsitarget-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=iscsitarget-devel>
-List-Post: <mailto:iscsitarget-devel@lists.sourceforge.net>
-List-Help: <mailto:iscsitarget-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/iscsitarget-devel>,
-	<mailto:iscsitarget-devel-request@lists.sourceforge.net?subject=subscribe>
-Sender: iscsitarget-devel-bounces@lists.sourceforge.net
-Errors-To: iscsitarget-devel-bounces@lists.sourceforge.net
-To: blackmagic02881@gmail.com
-Cc: iscsitarget-devel@lists.sourceforge.net, linux-raid@vger.kernel.org
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-TWluZyBaaGFuZyB3cm90ZToKPiBPbiBUaHUsIDIwMDctMTAtMTggYXQgMTE6MzMgLTA0MDAsIFJv
-c3MgUy4gVy4gV2Fsa2VyIHdyb3RlOgo+PiBCRVJUUkFORCBKb8OrbCB3cm90ZToKPj4+IEJFUlRS
-QU5EIEpvw6tsIHdyb3RlOgo+Pj4+IEJFUlRSQU5EIEpvw6tsIHdyb3RlOgo+Pj4+PiAJSGVsbG8s
-Cj4+Pj4+Cj4+Pj4+IAlXaGVuIEkgdHJ5IHRvIGNyZWF0ZSBhIHJhaWQxIHZvbHVtZSBvdmVyIGlz
-Y3NpLCBwcm9jZXNzIAo+Pj4gYWJvcnRzIHdpdGggOgo+Pj4+PiAtIG9uIHRhcmdldCBzaWRlOgo+
-Pj4+Pgo+Pj4+PiBpc2NzaV90cmd0OiBjbW5kX2Fib3J0KDExNTYpIDI5IDEgMCA0MiA1NzM0NCAw
-IDAKPj4+Pj4gaXNjc2lfdHJndDogQWJvcnQgVGFzayAoMDEpIGlzc3VlZCBvbiB0aWQ6MSBsdW46
-MCBieSAKPj4+IHNpZDo2MzAwMjQ0NTc2ODI5NDggCj4+Pj4+IChVbmtub3duIFRhc2spCj4+Pj4g
-CU5leHQgcnVuOgo+Pj4+IGlzY3NpX3RyZ3Q6IGNtbmRfYWJvcnQoMTE1NikgMTMgMSAwIDQyIDU3
-MzQ0IDAgMAo+Pj4+IGlzY3NpX3RyZ3Q6IEFib3J0IFRhc2sgKDAxKSBpc3N1ZWQgb24gdGlkOjEg
-bHVuOjAgYnkgCj4+PiBzaWQ6NjMwMDU4ODE3NDIxMzE1IAo+Pj4+IChVbmtub3duIFRhc2spCj4+
-Pj4KPj4+PiAJWW91IGNhbiBzZWUgdGhhdCBib3RoIGxpbmVzIGFyZSB2ZXJ5IHNpbWlsYXIuIEkg
-c2hhbGwgCj4+PiB0cnkgdG8gdXNlIAo+Pj4+IGJsb2NraW8gaW5zdGVhZCBmaWxlaW8uCj4+PiAJ
-V2l0aCBibG9ja2lvLCBJIGdvdCB0aGUgZm9sbG93aW5nIG1lc3NhZ2UuLi4KPj4+Cj4+PiBpc2Nz
-aV90cmd0OiBjbW5kX2Fib3J0KDExNTYpIGMgMSAwIDQyIDgxOTIgMCAwCj4+PiBpc2NzaV90cmd0
-OiBBYm9ydCBUYXNrICgwMSkgaXNzdWVkIG9uIHRpZDoxIGx1bjowIGJ5IAo+Pj4gc2lkOjYzMDAy
-NDQ1NzY4Mjk0NiAKPj4+IChVbmtub3duIFRhc2spCj4+Pgo+Pj4gQ29tbWFuZCBpcyB0aGUgc2Ft
-ZS4gV2hhdCBpcyB0aGUgc2lnbmlmaWNhdGlvbiBvZiAxMTU2ID8KPj4gQm90aCBvdXRwdXRzIGFy
-ZSBmcm9tIHRoZSBzYW1lIEFib3J0IFRhc2sgbWFuYWdlbWVudCBmdW5jdGlvbgo+PiB0aGUgMTE1
-NiByZWZlcnMgdG8gdGhlIGxpbmUgaW4gaXNjc2kuYyB3aGVyZSB0aGUgZGVidWcgcHJpbnRmCj4+
-IHdhcyBpc3N1ZWQuCj4+Cj4+IFRoZSBvdGhlciBpcyB0aGUgbW9yZSB2ZXJib3NlIGluZm9ybWF0
-aXZlIG1lc3NhZ2UgdGhhdCBzYXlzCj4+IGFuIEFib3J0IFRhc2sgY29tbWFuZCB3YXMgaXNzdWVk
-LCBidXQgdGhlIHRhc2sgd2FzIG5vdCBmb3VuZC4KPiAKPiBwdXJlIGd1ZXNzLCB0aGlzIG1pZ2h0
-IGJlY2F1c2UgdGhlIHNwYXJjNjQgeW91IGFyZSB1c2luZy4KPiAKPiBjb3VsZCB5b3UgZXhwb3J0
-IGEgTlVMTElPIHRhcmdldCBhbmQgZG8gc29tZSBpbnRlbnNpdmUgaW8gdGVzdHM/IHNvcnQKPiBv
-dXQgdGhlc2UgcGxhdGZvcm0gaXNzdWVzIGZpcnN0Li4uCgoJSSBjYW4gZm9ybWF0IHNlcnZlcmFs
-IHRpbWVzIChta2ZzLmV4dDMpIGEgMS41IFRCIHZvbHVtZSBvdmVyIGlTQ1NJIAp3aXRob3V0IGFu
-eSB0cm91YmxlLiBJIGNhbiByZWFkIGFuZCB3cml0ZSBvbiB0aGlzIHZpcnR1YWwgZGlzayB3aXRo
-b3V0IAphbnkgdHJvdWJsZS4KCglOb3csIEkgaGF2ZSBjb25maWd1cmVkIGlldGQgd2l0aCA6CgpM
-dW4gMCBTZWN0b3JzPTE0NjQ3MjU3NTgsVHlwZT1udWxsaW8KCmFuZCBJIHJ1biBvbiBpbml0aWF0
-b3Igc2lkZSA6CgpSb290IGdlcnNod2luOlsvZGV2XSA+IGRkIGlmPS9kZXYvemVybyBvZj0vZGV2
-L3NkaiBicz04MTkyCjQ3OTQ4MiswIHJlY29yZHMgaW4KNDc5NDgyKzAgcmVjb3JkcyBvdXQKMzky
-NzkxNjU0NCBieXRlcyAoMy45IEdCKSBjb3BpZWQsIDE1My4yMjIgc2Vjb25kcywgMjUuNiBNQi9z
-CgpSb290IGdlcnNod2luOlsvZGV2XSA+IGRkIGlmPS9kZXYvemVybyBvZj0vZGV2L3NkaiBicz04
-MTkyCgoJSSdtIHdhaXRpbmZvciBhIGNyYXNoLiBObyBvbmUgd2hlbiBJIHdyaXRlIHRoZXNlIGxp
-bmVzLglJIHN1c3BlY3QgYW4gCmludGVyYWN0aW9uIGJldHdlZW4gcmFpZCBhbmQgaXNjc2kuCgoJ
-UmVnYXJkcywKCglKS0IKCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KVGhpcyBTRi5uZXQgZW1haWwgaXMgc3Bv
-bnNvcmVkIGJ5OiBTcGx1bmsgSW5jLgpTdGlsbCBncmVwcGluZyB0aHJvdWdoIGxvZyBmaWxlcyB0
-byBmaW5kIHByb2JsZW1zPyAgU3RvcC4KTm93IFNlYXJjaCBsb2cgZXZlbnRzIGFuZCBjb25maWd1
-cmF0aW9uIGZpbGVzIHVzaW5nIEFKQVggYW5kIGEgYnJvd3Nlci4KRG93bmxvYWQgeW91ciBGUkVF
-IGNvcHkgb2YgU3BsdW5rIG5vdyA+PiBodHRwOi8vZ2V0LnNwbHVuay5jb20vCl9fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCklzY3NpdGFyZ2V0LWRldmVsIG1h
-aWxpbmcgbGlzdApJc2NzaXRhcmdldC1kZXZlbEBsaXN0cy5zb3VyY2Vmb3JnZS5uZXQKaHR0cHM6
-Ly9saXN0cy5zb3VyY2Vmb3JnZS5uZXQvbGlzdHMvbGlzdGluZm8vaXNjc2l0YXJnZXQtZGV2ZWwK
+This list is usually about software raid, but this analysis of 
+hardware RAID cards under Linux may be of interest as well.
+
+Comments/suggestions are very welcome.
+
+The Storage Brick - Fast, Cheap, Reliable Terabytes:
+http://moo.nac.uci.edu/~hjm/sb
+
+-- 
+Harry Mangalam - Research Computing, NACS, E2148, Engineering Gateway, 
+UC Irvine 92697  949 824 0084(o), 949 285 4487(c) 
+harry.mangalam@uci.edu
