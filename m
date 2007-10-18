@@ -1,26 +1,55 @@
-From: Harry Mangalam <harry.mangalam@uci.edu>
-Subject: Hardware raid; Areca & 3ware hardware RAID cards under Linux
-Date: Thu, 18 Oct 2007 09:38:11 -0700
-Message-ID: <200710180938.11834.harry.mangalam@uci.edu>
+From: =?UTF-8?B?QkVSVFJBTkQgSm/Dq2w=?= <joel.bertrand@systella.fr>
+Subject: Re: Abort Task ?
+Date: Thu, 18 Oct 2007 19:14:58 +0200
+Message-ID: <47179492.4000109@systella.fr>
+References: <471720F1.40409@systella.fr> <471727F3.2080500@systella.fr>	
+	<471734C5.8090405@systella.fr>	
+	<E2BB8074E5500C42984D980D4BD78EF9017A2958@MFG-NYC-EXCH2.mfg.prv>
+	<1192721909.3596.15.camel@dhcp-117.ibrix.com>
+	<47178ABF.1040500@systella.fr>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <iscsitarget-devel-bounces@lists.sourceforge.net>
+In-Reply-To: <47178ABF.1040500@systella.fr>
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/iscsitarget-devel>,
+	<mailto:iscsitarget-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=iscsitarget-devel>
+List-Post: <mailto:iscsitarget-devel@lists.sourceforge.net>
+List-Help: <mailto:iscsitarget-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/iscsitarget-devel>,
+	<mailto:iscsitarget-devel-request@lists.sourceforge.net?subject=subscribe>
+Sender: iscsitarget-devel-bounces@lists.sourceforge.net
+Errors-To: iscsitarget-devel-bounces@lists.sourceforge.net
+To: blackmagic02881@gmail.com
+Cc: iscsitarget-devel@lists.sourceforge.net, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This list is usually about software raid, but this analysis of 
-hardware RAID cards under Linux may be of interest as well.
-
-Comments/suggestions are very welcome.
-
-The Storage Brick - Fast, Cheap, Reliable Terabytes:
-http://moo.nac.uci.edu/~hjm/sb
-
--- 
-Harry Mangalam - Research Computing, NACS, E2148, Engineering Gateway, 
-UC Irvine 92697  949 824 0084(o), 949 285 4487(c) 
-harry.mangalam@uci.edu
+QkVSVFJBTkQgSm/Dq2wgd3JvdGU6Cj4gICAgIEkgY2FuIGZvcm1hdCBzZXJ2ZXJhbCB0aW1lcyAo
+bWtmcy5leHQzKSBhIDEuNSBUQiB2b2x1bWUgb3ZlciBpU0NTSSAKPiB3aXRob3V0IGFueSB0cm91
+YmxlLiBJIGNhbiByZWFkIGFuZCB3cml0ZSBvbiB0aGlzIHZpcnR1YWwgZGlzayB3aXRob3V0IAo+
+IGFueSB0cm91YmxlLgo+IAo+ICAgICBOb3csIEkgaGF2ZSBjb25maWd1cmVkIGlldGQgd2l0aCA6
+Cj4gCj4gTHVuIDAgU2VjdG9ycz0xNDY0NzI1NzU4LFR5cGU9bnVsbGlvCj4gCj4gYW5kIEkgcnVu
+IG9uIGluaXRpYXRvciBzaWRlIDoKPiAKPiBSb290IGdlcnNod2luOlsvZGV2XSA+IGRkIGlmPS9k
+ZXYvemVybyBvZj0vZGV2L3NkaiBicz04MTkyCj4gNDc5NDgyKzAgcmVjb3JkcyBpbgo+IDQ3OTQ4
+MiswIHJlY29yZHMgb3V0Cj4gMzkyNzkxNjU0NCBieXRlcyAoMy45IEdCKSBjb3BpZWQsIDE1My4y
+MjIgc2Vjb25kcywgMjUuNiBNQi9zCj4gCj4gUm9vdCBnZXJzaHdpbjpbL2Rldl0gPiBkZCBpZj0v
+ZGV2L3plcm8gb2Y9L2Rldi9zZGogYnM9ODE5Mgo+IAo+ICAgICBJJ20gd2FpdGluZm9yIGEgY3Jh
+c2guIE5vIG9uZSB3aGVuIEkgd3JpdGUgdGhlc2UgbGluZXMuICAgIEkgc3VzcGVjdCAKPiBhbiBp
+bnRlcmFjdGlvbiBiZXR3ZWVuIHJhaWQgYW5kIGlzY3NpLgoKCUkgc2ltdWx0YW5lbHkgcnVuIDoK
+ClJvb3QgZ2Vyc2h3aW46Wy9kZXZdID4gZGQgaWY9L2Rldi96ZXJvIG9mPS9kZXYvc2RqIGJzPTgx
+OTIKODM5NzIxMCswIHJlY29yZHMgaW4KODM5NzIxMCswIHJlY29yZHMgb3V0CjY4Nzg5OTQ0MzIw
+IGJ5dGVzICg2OSBHQikgY29waWVkLCAyNzMyLjU1IHNlY29uZHMsIDI1LjIgTUIvcwoKYW5kCgpS
+b290IGdlcnNod2luOlt+XSA+IGRkIGlmPS9kZXYvc2RqIG9mPS9kZXYvbnVsbCBicz04MTkyCjcz
+OTIwMCswIHJlY29yZHMgaW4KNzM5MTk5KzAgcmVjb3JkcyBvdXQKNjA1NTUxODIwOCBieXRlcyAo
+Ni4xIEdCKSBjb3BpZWQsIDQ0Ny4xNzggc2Vjb25kcywgMTMuNSBNQi9zCgoJd2l0aG91dCBhbnkg
+dHJvdWJsZS4KCglSZWdhcmRzLAoKCUpLQgoKLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQpUaGlzIFNGLm5ldCBl
+bWFpbCBpcyBzcG9uc29yZWQgYnk6IFNwbHVuayBJbmMuClN0aWxsIGdyZXBwaW5nIHRocm91Z2gg
+bG9nIGZpbGVzIHRvIGZpbmQgcHJvYmxlbXM/ICBTdG9wLgpOb3cgU2VhcmNoIGxvZyBldmVudHMg
+YW5kIGNvbmZpZ3VyYXRpb24gZmlsZXMgdXNpbmcgQUpBWCBhbmQgYSBicm93c2VyLgpEb3dubG9h
+ZCB5b3VyIEZSRUUgY29weSBvZiBTcGx1bmsgbm93ID4+IGh0dHA6Ly9nZXQuc3BsdW5rLmNvbS8K
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KSXNjc2l0YXJn
+ZXQtZGV2ZWwgbWFpbGluZyBsaXN0CklzY3NpdGFyZ2V0LWRldmVsQGxpc3RzLnNvdXJjZWZvcmdl
+Lm5ldApodHRwczovL2xpc3RzLnNvdXJjZWZvcmdlLm5ldC9saXN0cy9saXN0aW5mby9pc2NzaXRh
+cmdldC1kZXZlbAo=
