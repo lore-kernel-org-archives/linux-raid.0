@@ -1,109 +1,78 @@
-From: Ming Zhang <blackmagic02881@gmail.com>
-Subject: Re: [Iscsitarget-devel] Abort Task ?
-Date: Thu, 18 Oct 2007 13:30:38 -0400
-Message-ID: <1192728638.3596.28.camel@dhcp-117.ibrix.com>
-References: <471720F1.40409@systella.fr> <471727F3.2080500@systella.fr>
-	 <471734C5.8090405@systella.fr>
-	 <E2BB8074E5500C42984D980D4BD78EF9017A2958@MFG-NYC-EXCH2.mfg.prv>
-	 <1192721909.3596.15.camel@dhcp-117.ibrix.com>
-	 <47178ABF.1040500@systella.fr>
-Reply-To: blackmagic02881@gmail.com
+From: "Mike Snitzer" <snitzer@gmail.com>
+Subject: Re: kicking non-fresh member from array?
+Date: Thu, 18 Oct 2007 15:04:27 -0400
+Message-ID: <170fa0d20710181204j1dc8904ax93770a0c99819417@mail.gmail.com>
+References: <170fa0d20710161120u65d5fd1bifea2aef4176c93f9@mail.gmail.com>
+	 <87fy085u1c.fsf@informatik.uni-tuebingen.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <47178ABF.1040500@systella.fr>
+In-Reply-To: <87fy085u1c.fsf@informatik.uni-tuebingen.de>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: BERTRAND =?ISO-8859-1?Q?Jo=EBl?= <joel.bertrand@systella.fr>
-Cc: "Ross S. W. Walker" <rwalker@medallion.com>, iscsitarget-devel@lists.sourceforge.net, linux-raid@vger.kernel.org
+To: Goswin von Brederlow <brederlo@informatik.uni-tuebingen.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, 2007-10-18 at 18:33 +0200, BERTRAND Jo=C3=ABl wrote:
-> Ming Zhang wrote:
-> > On Thu, 2007-10-18 at 11:33 -0400, Ross S. W. Walker wrote:
-> >> BERTRAND Jo=C3=ABl wrote:
-> >>> BERTRAND Jo=C3=ABl wrote:
-> >>>> BERTRAND Jo=C3=ABl wrote:
-> >>>>> 	Hello,
-> >>>>>
-> >>>>> 	When I try to create a raid1 volume over iscsi, process=20
-> >>> aborts with :
-> >>>>> - on target side:
-> >>>>>
-> >>>>> iscsi_trgt: cmnd_abort(1156) 29 1 0 42 57344 0 0
-> >>>>> iscsi_trgt: Abort Task (01) issued on tid:1 lun:0 by=20
-> >>> sid:630024457682948=20
-> >>>>> (Unknown Task)
-> >>>> 	Next run:
-> >>>> iscsi_trgt: cmnd_abort(1156) 13 1 0 42 57344 0 0
-> >>>> iscsi_trgt: Abort Task (01) issued on tid:1 lun:0 by=20
-> >>> sid:630058817421315=20
-> >>>> (Unknown Task)
-> >>>>
-> >>>> 	You can see that both lines are very similar. I shall=20
-> >>> try to use=20
-> >>>> blockio instead fileio.
-> >>> 	With blockio, I got the following message...
-> >>>
-> >>> iscsi_trgt: cmnd_abort(1156) c 1 0 42 8192 0 0
-> >>> iscsi_trgt: Abort Task (01) issued on tid:1 lun:0 by=20
-> >>> sid:630024457682946=20
-> >>> (Unknown Task)
-> >>>
-> >>> Command is the same. What is the signification of 1156 ?
-> >> Both outputs are from the same Abort Task management function
-> >> the 1156 refers to the line in iscsi.c where the debug printf
-> >> was issued.
-> >>
-> >> The other is the more verbose informative message that says
-> >> an Abort Task command was issued, but the task was not found.
-> >=20
-> > pure guess, this might because the sparc64 you are using.
-> >=20
-> > could you export a NULLIO target and do some intensive io tests? so=
-rt
-> > out these platform issues first...
->=20
-> 	I can format serveral times (mkfs.ext3) a 1.5 TB volume over iSCSI=20
-> without any trouble. I can read and write on this virtual disk withou=
-t=20
-> any trouble.
->=20
-> 	Now, I have configured ietd with :
->=20
-> Lun 0 Sectors=3D1464725758,Type=3Dnullio
->=20
-> and I run on initiator side :
->=20
-> Root gershwin:[/dev] > dd if=3D/dev/zero of=3D/dev/sdj bs=3D8192
-> 479482+0 records in
-> 479482+0 records out
-> 3927916544 bytes (3.9 GB) copied, 153.222 seconds, 25.6 MB/s
+On 10/18/07, Goswin von Brederlow <brederlo@informatik.uni-tuebingen.de> wrote:
+> "Mike Snitzer" <snitzer@gmail.com> writes:
+>
+> > All,
+> >
+> > I have repeatedly seen that when a 2 member raid1 becomes degraded,
+> > and IO continues to the lone good member, that if the array is then
+> > stopped and reassembled you get:
+> >
+> > md: bind<nbd0>
+> > md: bind<sdc>
+> > md: kicking non-fresh nbd0 from array!
+> > md: unbind<nbd0>
+> > md: export_rdev(nbd0)
+> > raid1: raid set md0 active with 1 out of 2 mirrors
+> >
+> > I'm not seeing how one can avoid assembling such an array in 2 passes:
+> > 1) assemble array with both members
+> > 2) if a member was deemed "non-fresh" re-add that member; whereby
+> > triggering recovery.
+> >
+> > So why does MD kick non-fresh members out on assemble when its
+> > perfectly capable of recovering the "non-fresh" member?  Looking at
+> > md.c it is fairly clear there isn't a way to avoid this 2-step
+> > procedure.
+> >
+> > Why/how does MD benefit from this "kicking non-fresh" semantic?
+> > Should MD/mdadm be made optionally tolerant of such non-fresh members
+> > during assembly?
+> >
+> > Mike
+>
+> What if the disk has lots of bad blocks, just not where the meta data
+> is? On every restart you would resync and fail.
+>
+> Or what if you removed a mirror to keep a snapshot of a previous
+> state? If it auto resyncs you loose that snapshot.
 
-25MB/s over a NULLIO is a very slow result...
+Both of your examples are fairly tenuous given that such members
+shouldn't have been provided on the --asemble commandline.  I'm not
+talking about auto assemble via udev or something.  But auto assemble
+via udev brings up an annoying corner-case when you consider the 2
+cases you pointed out.
 
+So you have valid points.  This leads to my last question; having the
+ability to _optionally_ tolerate (repair) such stale members would
+allow for greater flexibility.  The current behavior isn't conducive
+to repairing unprotected raids (that mdadm/md were told to assemble
+with specific members) without taking steps to say "no I really
+_really_ mean it; now re-add this disk!".
 
->=20
-> Root gershwin:[/dev] > dd if=3D/dev/zero of=3D/dev/sdj bs=3D8192
->=20
-> 	I'm waitinfor a crash. No one when I write these lines.	I suspect an=
-=20
-> interaction between raid and iscsi.
->=20
-> 	Regards,
->=20
-> 	JKB
---=20
-Ming Zhang
+Any pointers from Neil (or others) on how such a 'repair "non-fresh"
+member(s) on assemble' override _should_ be implemented would be
+helpful.  My first thought is to add a new superblock
+--update=repair-non-fresh option to mdadm that would tie into a new
+flag in the MD superblock.  But then it begs the question: why not
+first add support to set such a superblock option at MD create-time?
+The validate_super methods would also need to be trained accordingly.
 
-
-@#$%^ purging memory... (*!%
-http://blackmagic02881.wordpress.com/
-http://www.linkedin.com/in/blackmagic02881
---------------------------------------------
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+regards,
+Mike
