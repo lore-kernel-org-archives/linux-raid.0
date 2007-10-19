@@ -1,135 +1,62 @@
 From: =?ISO-8859-1?Q?BERTRAND_Jo=EBl?= <joel.bertrand@systella.fr>
-Subject: Re: Abort Task ?
-Date: Fri, 19 Oct 2007 09:48:07 +0200
-Message-ID: <47186137.2030906@systella.fr>
-References: <471720F1.40409@systella.fr> <471727F3.2080500@systella.fr>	
-	<471734C5.8090405@systella.fr>	
-	<E2BB8074E5500C42984D980D4BD78EF9017A2958@MFG-NYC-EXCH2.mfg.prv>
-	<1192721909.3596.15.camel@dhcp-117.ibrix.com>
-	<47178ABF.1040500@systella.fr> <47179492.4000109@systella.fr>
-	<E2BB8074E5500C42984D980D4BD78EF9017A295C@MFG-NYC-EXCH2.mfg.prv>
+Subject: Re: [BUG] Raid5 trouble
+Date: Fri, 19 Oct 2007 10:04:08 +0200
+Message-ID: <471864F8.9010209@systella.fr>
+References: <4714BB92.7040701@systella.fr> <47161CE3.80909@systella.fr>	 <e9c3a7c20710170758p4046ca44labe370e94bca6e93@mail.gmail.com> <e9c3a7c20710170840u2ed8d6a9x26523eec6700ad11@mail.gmail.com> <47181CB2.1060602@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <iscsitarget-devel-bounces@lists.sourceforge.net>
-In-Reply-To: <E2BB8074E5500C42984D980D4BD78EF9017A295C@MFG-NYC-EXCH2.mfg.prv>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/iscsitarget-devel>,
-	<mailto:iscsitarget-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=iscsitarget-devel>
-List-Post: <mailto:iscsitarget-devel@lists.sourceforge.net>
-List-Help: <mailto:iscsitarget-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/iscsitarget-devel>,
-	<mailto:iscsitarget-devel-request@lists.sourceforge.net?subject=subscribe>
-Sender: iscsitarget-devel-bounces@lists.sourceforge.net
-Errors-To: iscsitarget-devel-bounces@lists.sourceforge.net
-To: "Ross S. W. Walker" <rwalker@medallion.com>
-Cc: iscsitarget-devel@lists.sourceforge.net, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <47181CB2.1060602@tmr.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: Dan Williams <dan.j.williams@intel.com>, linux-raid@vger.kernel.org, sparclinux@vger.kernel.org
 List-Id: linux-raid.ids
 
-Ross S. W. Walker wrote:
-> BERTRAND Jo=EBl wrote:
->> BERTRAND Jo=EBl wrote:
->>>     I can format serveral times (mkfs.ext3) a 1.5 TB volume =
-
->> over iSCSI =
-
->>> without any trouble. I can read and write on this virtual =
-
->> disk without =
-
->>> any trouble.
->>>
->>>     Now, I have configured ietd with :
->>>
->>> Lun 0 Sectors=3D1464725758,Type=3Dnullio
->>>
->>> and I run on initiator side :
->>>
->>> Root gershwin:[/dev] > dd if=3D/dev/zero of=3D/dev/sdj bs=3D8192
->>> 479482+0 records in
->>> 479482+0 records out
->>> 3927916544 bytes (3.9 GB) copied, 153.222 seconds, 25.6 MB/s
->>>
->>> Root gershwin:[/dev] > dd if=3D/dev/zero of=3D/dev/sdj bs=3D8192
->>>
->>>     I'm waitinfor a crash. No one when I write these lines. =
-
->>    I suspect =
-
->>> an interaction between raid and iscsi.
->> 	I simultanely run :
+Bill Davidsen wrote:
+> Dan Williams wrote:
+>> I found a problem which may lead to the operations count dropping
+>> below zero.  If ops_complete_biofill() gets preempted in between the
+>> following calls:
 >>
->> Root gershwin:[/dev] > dd if=3D/dev/zero of=3D/dev/sdj bs=3D8192
->> 8397210+0 records in
->> 8397210+0 records out
->> 68789944320 bytes (69 GB) copied, 2732.55 seconds, 25.2 MB/s
+>> raid5.c:554> clear_bit(STRIPE_OP_BIOFILL, &sh->ops.ack);
+>> raid5.c:555> clear_bit(STRIPE_OP_BIOFILL, &sh->ops.pending);
 >>
->> and
->>
->> Root gershwin:[~] > dd if=3D/dev/sdj of=3D/dev/null bs=3D8192
->> 739200+0 records in
->> 739199+0 records out
->> 6055518208 bytes (6.1 GB) copied, 447.178 seconds, 13.5 MB/s
->>
->> 	without any trouble.
-> =
+>> ...then get_stripe_work() can recount/re-acknowledge STRIPE_OP_BIOFILL
+>> causing the assertion.  In fact, the 'pending' bit should always be
+>> cleared first, but the other cases are protected by
+>> spin_lock(&sh->lock).  Patch attached.
+>>   
+> 
+> Once this patch has been vetted, can it be offered to -stable for 
+> 2.6.23? Or to be pedantic, it *can*, will you make that happen?
 
-> The speed can definitely be improved. Look at your network setup
-> and use ping to try and get the network latency to a minimum.
-> =
+	I never see any oops with this patch. But I cannot create a RAID1 array 
+with a local RAID5 volume and a foreign RAID5 array exported by iSCSI. 
+iSCSI seems to works fine, but RAID1 creation randomly aborts due to a 
+unknown SCSI task on target side.
 
-> # ping -A -s 8192 172.16.24.140
-> ....
-> --- 172.16.24.140 ping statistics ---
-> 14058 packets transmitted, 14057 received, 0% packet loss, time 9988ms
-> rtt min/avg/max/mdev =3D 0.234/0.268/2.084/0.041 ms, ipg/ewma 0.710/0.260=
- ms
+	I have stressed iSCSI target with some simultaneous I/O without any 
+trouble (nullio, fileio and blockio), thus I suspect another bug in raid 
+code (or an arch specific bug). The last two days, I have made some 
+tests to isolate and reproduce this bug:
 
-gershwin:[~] > ping -A -s 8192 192.168.0.2
-PING 192.168.0.2 (192.168.0.2) 8192(8220) bytes of data.
-8200 bytes from 192.168.0.2: icmp_seq=3D1 ttl=3D64 time=3D0.693 ms
-8200 bytes from 192.168.0.2: icmp_seq=3D2 ttl=3D64 time=3D0.595 ms
-8200 bytes from 192.168.0.2: icmp_seq=3D3 ttl=3D64 time=3D0.583 ms
-8200 bytes from 192.168.0.2: icmp_seq=3D4 ttl=3D64 time=3D0.589 ms
-8200 bytes from 192.168.0.2: icmp_seq=3D5 ttl=3D64 time=3D0.580 ms
-8200 bytes from 192.168.0.2: icmp_seq=3D6 ttl=3D64 time=3D0.594 ms
-8200 bytes from 192.168.0.2: icmp_seq=3D7 ttl=3D64 time=3D0.580 ms
-8200 bytes from 192.168.0.2: icmp_seq=3D8 ttl=3D64 time=3D0.592 ms
-8200 bytes from 192.168.0.2: icmp_seq=3D9 ttl=3D64 time=3D0.589 ms
-8200 bytes from 192.168.0.2: icmp_seq=3D10 ttl=3D64 time=3D0.571 ms
-8200 bytes from 192.168.0.2: icmp_seq=3D11 ttl=3D64 time=3D0.588 ms
-8200 bytes from 192.168.0.2: icmp_seq=3D12 ttl=3D64 time=3D0.580 ms
-8200 bytes from 192.168.0.2: icmp_seq=3D13 ttl=3D64 time=3D0.587 ms
+1/ iSCSI target and initiator seem work when I export with iSCSI a raid5 
+array;
+2/ raid1 and raid5 seem work with local disks;
+3/ iSCSI target is disconnected only when I create a raid1 volume over 
+iSCSI (blockio _and_ fileio) with following message:
 
---- 192.168.0.2 ping statistics ---
-13 packets transmitted, 13 received, 0% packet loss, time 2400ms
-rtt min/avg/max/mdev =3D 0.571/0.593/0.693/0.044 ms, ipg/ewma 200.022/0.607=
- ms
-gershwin:[~] >
+Oct 18 10:43:52 poulenc kernel: iscsi_trgt: cmnd_abort(1156) 29 1 0 42 
+57344 0 0
+Oct 18 10:43:52 poulenc kernel: iscsi_trgt: Abort Task (01) issued on 
+tid:1 lun:0 by sid:630024457682948 (Unknown Task)
 
-	Both initiator and target are alone on a gigabit NIC (Tigon3). On =
-
-target server, istd1 takes 100% of a CPU (and only one CPU, even my =
-
-T1000 can simultaneous run 32 threads). I think the limitation comes =
-
-from istd1.
-
-> You want your avg ping time for 8192 byte payloads to be 300us or less.
-> =
-
-> 1000/.268 =3D 3731 IOPS @ 8k =3D 30 MB/s
-> =
-
-> If you use apps that do overlapping asynchronous IO you can see better
-> numbers.
+	I run for 12 hours some dd's (read and write in nullio) between 
+initiator and target without any disconnection. Thus iSCSI code seems to 
+be robust. Both initiator and target are alone on a single gigabit 
+ethernet link (without any switch). I'm investigating...
 
 	Regards,
 
 	JKB
-
--------------------------------------------------------------------------
-This SF.net email is sponsored by: Splunk Inc.
-Still grepping through log files to find problems?  Stop.
-Now Search log events and configuration files using AJAX and a browser.
-Download your FREE copy of Splunk now >> http://get.splunk.com/
