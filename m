@@ -1,55 +1,55 @@
-From: "Mike Snitzer" <snitzer@gmail.com>
-Subject: Re: mdadm 2.6.x regression, fails creation of raid1 w/ v1.0 sb and internal bitmap
-Date: Fri, 19 Oct 2007 19:18:41 -0400
-Message-ID: <170fa0d20710191618s3e284d07q738662987acfe452@mail.gmail.com>
-References: <170fa0d20710170837g1b0cd549w3b7fe8e663a01b7e@mail.gmail.com>
-	 <18198.62670.605246.270516@notabene.brown>
-	 <170fa0d20710180510o1edff608p22953fa712e217f6@mail.gmail.com>
-	 <18200.6319.487833.714355@notabene.brown>
-	 <170fa0d20710182152i4763c347r704c9d939e0a4638@mail.gmail.com>
-	 <170fa0d20710182215v19756cabp30ddddeb7a7668a2@mail.gmail.com>
-	 <18200.17870.419986.530609@notabene.brown>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: [BUG] Raid1/5 over iSCSI trouble
+Date: Fri, 19 Oct 2007 19:50:42 -0400
+Message-ID: <471942D2.3070609@tmr.com>
+References: <4714BB92.7040701@systella.fr> <47161CE3.80909@systella.fr>	 <e9c3a7c20710170758p4046ca44labe370e94bca6e93@mail.gmail.com>	 <e9c3a7c20710170840u2ed8d6a9x26523eec6700ad11@mail.gmail.com>	 <47181CB2.1060602@tmr.com>  <471864F8.9010209@systella.fr> <1192809103.30976.11.camel@dwillia2-linux.ch.intel.com> <4718DE66.8000905@tmr.com> <471916B5.6080709@systella.fr> <47191855.4020402@systella.fr> <47191BCF.2000908@systella.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18200.17870.419986.530609@notabene.brown>
-Content-Disposition: inline
-Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <sparclinux-owner@vger.kernel.org>
+In-Reply-To: <47191BCF.2000908@systella.fr>
+Sender: sparclinux-owner@vger.kernel.org
+To: =?UTF-8?B?QkVSVFJBTkQgSm/Dq2w=?= <joel.bertrand@systella.fr>
+Cc: Dan Williams <dan.j.williams@intel.com>, linux-raid@vger.kernel.org, sparclinux@vger.kernel.org, iscsitarget-devel@lists.sourceforge.net
 List-Id: linux-raid.ids
 
-On 10/19/07, Neil Brown <neilb@suse.de> wrote:
-> On Friday October 19, snitzer@gmail.com wrote:
-
-> > I'm using a stock 2.6.19.7 that I then backported various MD fixes to
-> > from 2.6.20 -> 2.6.23...  this kernel has worked great until I
-> > attempted v1.0 sb w/ bitmap=internal using mdadm 2.6.x.
-> >
-> > But would you like me to try a stock 2.6.22 or 2.6.23 kernel?
+BERTRAND Jo=C3=ABl wrote:
 >
-> Yes please.
-> I'm suspecting the code in write_sb_page where it tests if the bitmap
-> overlaps the data or metadata.  The only way I can see you getting the
-> exact error that you do get it for that to fail.
-> That test was introduced in 2.6.22.  Did you backport that?  Any
-> chance it got mucked up a bit?
+>     Sorry for this last mail. I have found another mistake, but I=20
+> don't know if this bug comes from iscsi-target or raid5 itself. iSCSI=
+=20
+> target is disconnected because istd1 and md_d0_raid5 kernel threads=20
+> use 100% of CPU each !
+>
+> Tasks: 235 total,   6 running, 227 sleeping,   0 stopped,   2 zombie
+> Cpu(s):  0.1%us, 12.5%sy,  0.0%ni, 87.4%id,  0.0%wa,  0.0%hi,  0.0%si=
+,=20
+> 0.0%st
+> Mem:   4139032k total,   218424k used,  3920608k free,    10136k buff=
+ers
+> Swap:  7815536k total,        0k used,  7815536k free,    64808k cach=
+ed
+>
+>   PID USER      PR  NI  VIRT  RES  SHR S %CPU %MEM    TIME+  COMMAND
+>  5824 root      15  -5     0    0    0 R  100  0.0  10:34.25 istd1
+>  5599 root      15  -5     0    0    0 R  100  0.0   7:25.43 md_d0_ra=
+id5
 
-I believe you're referring to commit
-f0d76d70bc77b9b11256a3a23e98e80878be1578.  That change actually made
-it into 2.6.23 AFAIK; but yes I actually did backport that fix (which
-depended on ab6085c795a71b6a21afe7469d30a365338add7a).
+Given that the summary shows 87.4% idle, something is not right. You=20
+might try another tool, like vmstat, to at least verify the way the CPU=
+=20
+is being used. When you can't trust what your tools tell you it gets=20
+really hard to make decisions based on the data.
 
-If I back-out f0d76d70bc77b9b11256a3a23e98e80878be1578 I can create a
-raid1 w/ v1.0 sb and an internal bitmap.  But clearly that is just
-because I removed the negative checks that you introduced ;)
+--=20
+bill davidsen <davidsen@tmr.com>
+  CTO TMR Associates, Inc
+  Doing interesting things with small computers since 1979
 
-For me this begs the question: what else would
-f0d76d70bc77b9b11256a3a23e98e80878be1578 depend on that I missed?  I
-included 505fa2c4a2f125a70951926dfb22b9cf273994f1 and
-	ab6085c795a71b6a21afe7469d30a365338add7a too.
 
-*shrug*...
-
-Mike
+-
+To unsubscribe from this list: send the line "unsubscribe sparclinux" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
