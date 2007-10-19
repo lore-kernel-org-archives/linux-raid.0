@@ -1,58 +1,104 @@
-From: Dan Williams <dan.j.williams@intel.com>
+From: Ming Zhang <blackmagic02881@gmail.com>
 Subject: Re: [BUG] Raid1/5 over iSCSI trouble
-Date: Fri, 19 Oct 2007 14:12:11 -0700
-Message-ID: <1192828331.30976.26.camel@dwillia2-linux.ch.intel.com>
+Date: Fri, 19 Oct 2007 17:19:06 -0400
+Message-ID: <1192828746.3593.12.camel@dhcp-117.ibrix.com>
 References: <4714BB92.7040701@systella.fr> <47161CE3.80909@systella.fr>
-	 <e9c3a7c20710170758p4046ca44labe370e94bca6e93@mail.gmail.com>
-	 <e9c3a7c20710170840u2ed8d6a9x26523eec6700ad11@mail.gmail.com>
-	 <47181CB2.1060602@tmr.com>  <471864F8.9010209@systella.fr>
-	 <1192809103.30976.11.camel@dwillia2-linux.ch.intel.com>
-	 <4718DE66.8000905@tmr.com> <471916B5.6080709@systella.fr>
-	 <47191855.4020402@systella.fr>  <47191BCF.2000908@systella.fr>
+	<e9c3a7c20710170758p4046ca44labe370e94bca6e93@mail.gmail.com>
+	<e9c3a7c20710170840u2ed8d6a9x26523eec6700ad11@mail.gmail.com>
+	<47181CB2.1060602@tmr.com> <471864F8.9010209@systella.fr>
+	<1192809103.30976.11.camel@dwillia2-linux.ch.intel.com>
+	<4718DE66.8000905@tmr.com> <471916B5.6080709@systella.fr>
+	<47191855.4020402@systella.fr>  <47191BCF.2000908@systella.fr>
+Reply-To: blackmagic02881@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <sparclinux-owner@vger.kernel.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <iscsitarget-devel-bounces@lists.sourceforge.net>
 In-Reply-To: <47191BCF.2000908@systella.fr>
-Sender: sparclinux-owner@vger.kernel.org
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/iscsitarget-devel>,
+	<mailto:iscsitarget-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=iscsitarget-devel>
+List-Post: <mailto:iscsitarget-devel@lists.sourceforge.net>
+List-Help: <mailto:iscsitarget-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/iscsitarget-devel>,
+	<mailto:iscsitarget-devel-request@lists.sourceforge.net?subject=subscribe>
+Sender: iscsitarget-devel-bounces@lists.sourceforge.net
+Errors-To: iscsitarget-devel-bounces@lists.sourceforge.net
 To: BERTRAND =?ISO-8859-1?Q?Jo=EBl?= <joel.bertrand@systella.fr>
-Cc: Bill Davidsen <davidsen@tmr.com>, linux-raid@vger.kernel.org, sparclinux@vger.kernel.org, iscsitarget-devel@lists.sourceforge.net
+Cc: linux-raid@vger.kernel.org, sparclinux@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, iscsitarget-devel@lists.sourceforge.net, Bill Davidsen <davidsen@tmr.com>
 List-Id: linux-raid.ids
 
-On Fri, 2007-10-19 at 14:04 -0700, BERTRAND Jo=C3=ABl wrote:
->=20
->         Sorry for this last mail. I have found another mistake, but I
-> don't
-> know if this bug comes from iscsi-target or raid5 itself. iSCSI targe=
-t
-> is disconnected because istd1 and md_d0_raid5 kernel threads use 100%
-> of
-> CPU each !
->=20
-> Tasks: 235 total,   6 running, 227 sleeping,   0 stopped,   2 zombie
-> Cpu(s):  0.1%us, 12.5%sy,  0.0%ni, 87.4%id,  0.0%wa,  0.0%hi,  0.0%si=
-,
-> 0.0%st
-> Mem:   4139032k total,   218424k used,  3920608k free,    10136k
-> buffers
-> Swap:  7815536k total,        0k used,  7815536k free,    64808k
-> cached
->=20
->    PID USER      PR  NI  VIRT  RES  SHR S %CPU %MEM    TIME+  COMMAND
->=20
->   5824 root      15  -5     0    0    0 R  100  0.0  10:34.25 istd1
->=20
->   5599 root      15  -5     0    0    0 R  100  0.0   7:25.43
-> md_d0_raid5
-
-What is the output of:
-cat /proc/5824/wchan
-cat /proc/5599/wchan
-
-Thanks,
-Dan
--
-To unsubscribe from this list: send the line "unsubscribe sparclinux" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+T24gRnJpLCAyMDA3LTEwLTE5IGF0IDIzOjA0ICswMjAwLCBCRVJUUkFORCBKb8OrbCB3cm90ZToK
+PiBCRVJUUkFORCBKb8OrbCB3cm90ZToKPiA+IEJFUlRSQU5EIEpvw6tsIHdyb3RlOgo+ID4+IEJp
+bGwgRGF2aWRzZW4gd3JvdGU6Cj4gPj4+IERhbiBXaWxsaWFtcyB3cm90ZToKPiA+Pj4+IE9uIEZy
+aSwgMjAwNy0xMC0xOSBhdCAwMTowNCAtMDcwMCwgQkVSVFJBTkQgSm/Dq2wgd3JvdGU6Cj4gPj4+
+PiAgCj4gPj4+Pj4gICAgICAgICBJIHJ1biBmb3IgMTIgaG91cnMgc29tZSBkZCdzIChyZWFkIGFu
+ZCB3cml0ZSBpbiBudWxsaW8pCj4gPj4+Pj4gYmV0d2Vlbgo+ID4+Pj4+IGluaXRpYXRvciBhbmQg
+dGFyZ2V0IHdpdGhvdXQgYW55IGRpc2Nvbm5lY3Rpb24uIFRodXMgaVNDU0kgY29kZSBzZWVtcwo+
+ID4+Pj4+IHRvCj4gPj4+Pj4gYmUgcm9idXN0LiBCb3RoIGluaXRpYXRvciBhbmQgdGFyZ2V0IGFy
+ZSBhbG9uZSBvbiBhIHNpbmdsZSBnaWdhYml0Cj4gPj4+Pj4gZXRoZXJuZXQgbGluayAod2l0aG91
+dCBhbnkgc3dpdGNoKS4gSSdtIGludmVzdGlnYXRpbmcuLi4KPiA+Pj4+PiAgICAgCj4gPj4+Pgo+
+ID4+Pj4gQ2FuIHlvdSByZXByb2R1Y2Ugb24gMi42LjIyPwo+ID4+Pj4KPiA+Pj4+IEFsc28sIEkg
+ZG8gbm90IHRoaW5rIHRoaXMgaXMgdGhlIGNhdXNlIG9mIHlvdXIgZmFpbHVyZSwgYnV0IHlvdSBo
+YXZlCj4gPj4+PiBDT05GSUdfRE1BX0VOR0lORT15IGluIHlvdXIgY29uZmlnLiAgU2V0dGluZyB0
+aGlzIHRvICduJyB3aWxsIGNvbXBpbGUKPiA+Pj4+IG91dCB0aGUgdW5uZWVkZWQgY2hlY2tzIGZv
+ciBvZmZsb2FkIGVuZ2luZXMgaW4gYXN5bmNfbWVtY3B5IGFuZAo+ID4+Pj4gYXN5bmNfeG9yLgo+
+ID4+Pgo+ID4+PiBHaXZlbiB0aGF0IG9mZmxvYWQgZW5naW5lcyBhcmUgZmFyIGxlc3MgdGVzdGVk
+IGNvZGUsIEkgdGhpbmsgdGhpcyBpcyAKPiA+Pj4gYSB2ZXJ5IGdvb2QgdGhpbmcgdG8gdHJ5IQo+
+ID4+Cj4gPj4gICAgIEknbSB0cnlpbmcgd2lodG91dCBDT05GSUdfRE1BX0VOR0lORT15LiBpc3Rk
+MSBvbmx5IHVzZXMgNDAlIG9mIG9uZSAKPiA+PiBDUFUgd2hlbiBJIHJlYnVpbGQgbXkgcmFpZDEg
+YXJyYXkuIDElIG9mIHRoaXMgYXJyYXkgd2FzIG5vdyAKPiA+PiByZXN5bmNocm9uaXplZCB3aXRo
+b3V0IGFueSBoYW5nLgo+ID4+Cj4gPj4gUm9vdCBnZXJzaHdpbjpbL3Vzci9zY3JpcHRzXSA+IGNh
+dCAvcHJvYy9tZHN0YXQKPiA+PiBQZXJzb25hbGl0aWVzIDogW3JhaWQxXSBbcmFpZDZdIFtyYWlk
+NV0gW3JhaWQ0XQo+ID4+IG1kNyA6IGFjdGl2ZSByYWlkMSBzZGkxWzJdIG1kX2QwcDFbMF0KPiA+
+PiAgICAgICAxNDY0NzI1NjMyIGJsb2NrcyBbMi8xXSBbVV9dCj4gPj4gICAgICAgWz4uLi4uLi4u
+Li4uLi4uLi4uLi4uLl0gIHJlY292ZXJ5ID0gIDEuMCUgKDE1NzA1NTM2LzE0NjQ3MjU2MzIpIAo+
+ID4+IGZpbmlzaD0xMTAzLjltaW4gc3BlZWQ9MjE4NzVLL3NlYwo+ID4gCj4gPiAgICAgU2FtZSBy
+ZXN1bHQuLi4KPiA+IAo+ID4gY29ubmVjdGlvbjI6MDogaXNjc2k6IGRldGVjdGVkIGNvbm4gZXJy
+b3IgKDEwMTEpCj4gPiAKPiA+ICAgICAgICAgIHNlc3Npb24yOiBpc2NzaTogc2Vzc2lvbiByZWNv
+dmVyeSB0aW1lZCBvdXQgYWZ0ZXIgMTIwIHNlY3MKPiA+IHNkIDQ6MDowOjA6IHNjc2k6IERldmlj
+ZSBvZmZsaW5lZCAtIG5vdCByZWFkeSBhZnRlciBlcnJvciByZWNvdmVyeQo+ID4gc2QgNDowOjA6
+MDogc2NzaTogRGV2aWNlIG9mZmxpbmVkIC0gbm90IHJlYWR5IGFmdGVyIGVycm9yIHJlY292ZXJ5
+Cj4gPiBzZCA0OjA6MDowOiBzY3NpOiBEZXZpY2Ugb2ZmbGluZWQgLSBub3QgcmVhZHkgYWZ0ZXIg
+ZXJyb3IgcmVjb3ZlcnkKPiA+IHNkIDQ6MDowOjA6IHNjc2k6IERldmljZSBvZmZsaW5lZCAtIG5v
+dCByZWFkeSBhZnRlciBlcnJvciByZWNvdmVyeQo+ID4gc2QgNDowOjA6MDogc2NzaTogRGV2aWNl
+IG9mZmxpbmVkIC0gbm90IHJlYWR5IGFmdGVyIGVycm9yIHJlY292ZXJ5Cj4gPiBzZCA0OjA6MDow
+OiBzY3NpOiBEZXZpY2Ugb2ZmbGluZWQgLSBub3QgcmVhZHkgYWZ0ZXIgZXJyb3IgcmVjb3ZlcnkK
+PiA+IHNkIDQ6MDowOjA6IHNjc2k6IERldmljZSBvZmZsaW5lZCAtIG5vdCByZWFkeSBhZnRlciBl
+cnJvciByZWNvdmVyeQo+IAo+IAlTb3JyeSBmb3IgdGhpcyBsYXN0IG1haWwuIEkgaGF2ZSBmb3Vu
+ZCBhbm90aGVyIG1pc3Rha2UsIGJ1dCBJIGRvbid0IAo+IGtub3cgaWYgdGhpcyBidWcgY29tZXMg
+ZnJvbSBpc2NzaS10YXJnZXQgb3IgcmFpZDUgaXRzZWxmLiBpU0NTSSB0YXJnZXQgCj4gaXMgZGlz
+Y29ubmVjdGVkIGJlY2F1c2UgaXN0ZDEgYW5kIG1kX2QwX3JhaWQ1IGtlcm5lbCB0aHJlYWRzIHVz
+ZSAxMDAlIG9mIAo+IENQVSBlYWNoICEKPiAKPiBUYXNrczogMjM1IHRvdGFsLCAgIDYgcnVubmlu
+ZywgMjI3IHNsZWVwaW5nLCAgIDAgc3RvcHBlZCwgICAyIHpvbWJpZQo+IENwdShzKTogIDAuMSV1
+cywgMTIuNSVzeSwgIDAuMCVuaSwgODcuNCVpZCwgIDAuMCV3YSwgIDAuMCVoaSwgIDAuMCVzaSwg
+Cj4gMC4wJXN0Cj4gTWVtOiAgIDQxMzkwMzJrIHRvdGFsLCAgIDIxODQyNGsgdXNlZCwgIDM5MjA2
+MDhrIGZyZWUsICAgIDEwMTM2ayBidWZmZXJzCj4gU3dhcDogIDc4MTU1MzZrIHRvdGFsLCAgICAg
+ICAgMGsgdXNlZCwgIDc4MTU1MzZrIGZyZWUsICAgIDY0ODA4ayBjYWNoZWQKPiAKPiAgICBQSUQg
+VVNFUiAgICAgIFBSICBOSSAgVklSVCAgUkVTICBTSFIgUyAlQ1BVICVNRU0gICAgVElNRSsgIENP
+TU1BTkQgCj4gCj4gICA1ODI0IHJvb3QgICAgICAxNSAgLTUgICAgIDAgICAgMCAgICAwIFIgIDEw
+MCAgMC4wICAxMDozNC4yNSBpc3RkMSAKPiAKPiAgIDU1OTkgcm9vdCAgICAgIDE1ICAtNSAgICAg
+MCAgICAwICAgIDAgUiAgMTAwICAwLjAgICA3OjI1LjQzIAo+IG1kX2QwX3JhaWQ1Cj4gCgppIHdv
+dWxkIHJhdGhlciB1c2Ugb3Byb2ZpbGUgdG8gY2hlY2sgd2hlcmUgY3B1IGN5Y2xlcyB3ZW50IHRv
+LgoKCj4gCVJlZ2FyZHMsCj4gCj4gCUpLQgo+IAo+IC0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KPiBUaGlzIFNG
+Lm5ldCBlbWFpbCBpcyBzcG9uc29yZWQgYnk6IFNwbHVuayBJbmMuCj4gU3RpbGwgZ3JlcHBpbmcg
+dGhyb3VnaCBsb2cgZmlsZXMgdG8gZmluZCBwcm9ibGVtcz8gIFN0b3AuCj4gTm93IFNlYXJjaCBs
+b2cgZXZlbnRzIGFuZCBjb25maWd1cmF0aW9uIGZpbGVzIHVzaW5nIEFKQVggYW5kIGEgYnJvd3Nl
+ci4KPiBEb3dubG9hZCB5b3VyIEZSRUUgY29weSBvZiBTcGx1bmsgbm93ID4+IGh0dHA6Ly9nZXQu
+c3BsdW5rLmNvbS8KPiBfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fXwo+IElzY3NpdGFyZ2V0LWRldmVsIG1haWxpbmcgbGlzdAo+IElzY3NpdGFyZ2V0LWRldmVs
+QGxpc3RzLnNvdXJjZWZvcmdlLm5ldAo+IGh0dHBzOi8vbGlzdHMuc291cmNlZm9yZ2UubmV0L2xp
+c3RzL2xpc3RpbmZvL2lzY3NpdGFyZ2V0LWRldmVsCi0tIApNaW5nIFpoYW5nCgoKQCMkJV4gcHVy
+Z2luZyBtZW1vcnkuLi4gKCohJQpodHRwOi8vYmxhY2ttYWdpYzAyODgxLndvcmRwcmVzcy5jb20v
+Cmh0dHA6Ly93d3cubGlua2VkaW4uY29tL2luL2JsYWNrbWFnaWMwMjg4MQotLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQoKCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KVGhpcyBT
+Ri5uZXQgZW1haWwgaXMgc3BvbnNvcmVkIGJ5OiBTcGx1bmsgSW5jLgpTdGlsbCBncmVwcGluZyB0
+aHJvdWdoIGxvZyBmaWxlcyB0byBmaW5kIHByb2JsZW1zPyAgU3RvcC4KTm93IFNlYXJjaCBsb2cg
+ZXZlbnRzIGFuZCBjb25maWd1cmF0aW9uIGZpbGVzIHVzaW5nIEFKQVggYW5kIGEgYnJvd3Nlci4K
+RG93bmxvYWQgeW91ciBGUkVFIGNvcHkgb2YgU3BsdW5rIG5vdyA+PiBodHRwOi8vZ2V0LnNwbHVu
+ay5jb20vCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCklz
+Y3NpdGFyZ2V0LWRldmVsIG1haWxpbmcgbGlzdApJc2NzaXRhcmdldC1kZXZlbEBsaXN0cy5zb3Vy
+Y2Vmb3JnZS5uZXQKaHR0cHM6Ly9saXN0cy5zb3VyY2Vmb3JnZS5uZXQvbGlzdHMvbGlzdGluZm8v
+aXNjc2l0YXJnZXQtZGV2ZWwK
