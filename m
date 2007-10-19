@@ -1,75 +1,73 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
+From: Doug Ledford <dledford@redhat.com>
 Subject: Re: Time to  deprecate old RAID formats?
-Date: Fri, 19 Oct 2007 13:05:54 -0400 (EDT)
-Message-ID: <Pine.LNX.4.64.0710191305130.9497@p34.internal.lan>
+Date: Fri, 19 Oct 2007 13:11:17 -0400
+Message-ID: <1192813877.1666.79.camel@firewall.xsintricity.com>
 References: <18200.49267.763509.924873@stoffel.org>
- <Pine.LNX.4.64.0710191109000.27246@p34.internal.lan>  <18200.53593.687483.120827@stoffel.org>
-  <1192810534.1666.68.camel@firewall.xsintricity.com>  <18200.56684.14194.630264@stoffel.org>
-  <Pine.LNX.4.64.0710191239250.27246@p34.internal.lan>
- <18200.57042.989520.666476@stoffel.org>  <Pine.LNX.4.64.0710191245230.7849@p34.internal.lan>
- <1192813477.1666.74.camel@firewall.xsintricity.com>
+	 <Pine.LNX.4.64.0710191109000.27246@p34.internal.lan>
+	 <18200.53593.687483.120827@stoffel.org>
+	 <1192810534.1666.68.camel@firewall.xsintricity.com>
+	 <18200.56684.14194.630264@stoffel.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-YV1w6lzYGb6HAPrR9TAj"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1192813477.1666.74.camel@firewall.xsintricity.com>
+In-Reply-To: <18200.56684.14194.630264@stoffel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Doug Ledford <dledford@redhat.com>
-Cc: John Stoffel <john@stoffel.org>, linux-raid@vger.kernel.org
+To: John Stoffel <john@stoffel.org>
+Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
+--=-YV1w6lzYGb6HAPrR9TAj
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-On Fri, 19 Oct 2007, Doug Ledford wrote:
+On Fri, 2007-10-19 at 12:38 -0400, John Stoffel wrote:
 
-> On Fri, 2007-10-19 at 12:45 -0400, Justin Piszcz wrote:
->>
->> On Fri, 19 Oct 2007, John Stoffel wrote:
->>
->>>>>>>> "Justin" == Justin Piszcz <jpiszcz@lucidpixels.com> writes:
->>>
->>> Justin> Is a bitmap created by default with 1.x?  I remember seeing
->>> Justin> reports of 15-30% performance degradation using a bitmap on a
->>> Justin> RAID5 with 1.x.
->>>
->>> Not according to the mdadm man page.  I'd probably give up that
->>> performance if it meant that re-syncing an array went much faster
->>> after a crash.
->>>
->>> I certainly use it on my RAID1 setup on my home machine.
->>>
->>> John
->>>
->>
->> The performance AFTER a crash yes, but in general usage I remember seeing
->> someone here doing benchmarks it had a negative affect on performance.
->
-> I'm sure an internal bitmap would.  On RAID1 arrays, reads/writes are
-> never split up by a chunk size for stripes.  A 2mb read is a single
-> read, where as on a raid4/5/6 array, a 2mb read will end up hitting a
-> series of stripes across all disks.  That means that on raid1 arrays,
-> total disk seeks < total reads/writes, where as on a raid4/5/6, total
-> disk seeks is usually > total reads/writes.  That in turn implies that
-> in a raid1 setup, disk seek time is important to performance, but not
-> necessarily paramount.  For raid456, disk seek time is paramount because
-> of how many more seeks that format uses.  When you then use an internal
-> bitmap, you are adding writes to every member of the raid456 array,
-> which adds more seeks.  The same is true for raid1, but since raid1
-> doesn't have the same level of dependency on seek rates that raid456
-> has, it doesn't show the same performance hit that raid456 does.
->
->>
->> Justin.
-> -- 
-> Doug Ledford <dledford@redhat.com>
->              GPG KeyID: CFBFF194
->              http://people.redhat.com/dledford
->
-> Infiniband specific RPMs available at
->              http://people.redhat.com/dledford/Infiniband
->
 
-Got it, so for RAID1 it would make sense if LILO supported it (the 
-later versions of the md superblock) (for those who use LILO) but for
-RAID4/5/6, keep the bitmaps away :)
+>     1, 1.0, 1.1, 1.2
+>=20
+>       Use the new version-1 format superblock.  This has few restrictions=
+.
+>       The different sub-versions store the superblock at different locati=
+ons
+>       on the device, either at the end (for 1.0), at the start (for 1.1) =
+or
+>       4K from the start (for 1.2).
+>=20
+>=20
+> It looks to me that the 1.1, combined with the 1.0 should be what we
+> use, with the 1.2 format nuked.  Maybe call it 1.3?  *grin*
 
-Justin.
+You're somewhat misreading the man page.  You *can't* combine 1.0 with
+1.1.  All of the above options: 1, 1.0, 1.1, 1.2; specifically mean to
+use a version 1 superblock.  1.0 means use a version 1 superblock at the
+end of the disk.  1.1 means version 1 superblock at beginning of disk.
+`1.2 means version 1 at 4k offset from beginning of the disk.  There
+really is no actual version 1.1, or 1.2, the .0, .1, and .2 part of the
+version *only* means where to put the version 1 superblock on the disk.
+If you just say version 1, then it goes to the default location for
+version 1 superblocks, and last I checked that was the end of disk (aka,
+1.0).
+
+--=20
+Doug Ledford <dledford@redhat.com>
+              GPG KeyID: CFBFF194
+              http://people.redhat.com/dledford
+
+Infiniband specific RPMs available at
+              http://people.redhat.com/dledford/Infiniband
+
+--=-YV1w6lzYGb6HAPrR9TAj
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.7 (GNU/Linux)
+
+iD8DBQBHGOU1TzP9PM7pjw8RAponAJ0b3bLg89bJOfdXJWkkEe2oL+5o3ACfc+xm
+A99AcUV79uBav4Xru8W1ib8=
+=QeOu
+-----END PGP SIGNATURE-----
+
+--=-YV1w6lzYGb6HAPrR9TAj--
+
