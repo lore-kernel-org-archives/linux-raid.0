@@ -1,53 +1,76 @@
 From: Doug Ledford <dledford@redhat.com>
 Subject: Re: Time to  deprecate old RAID formats?
-Date: Fri, 19 Oct 2007 13:11:17 -0400
-Message-ID: <1192813877.1666.79.camel@firewall.xsintricity.com>
+Date: Fri, 19 Oct 2007 13:23:01 -0400
+Message-ID: <1192814581.1666.87.camel@firewall.xsintricity.com>
 References: <18200.49267.763509.924873@stoffel.org>
 	 <Pine.LNX.4.64.0710191109000.27246@p34.internal.lan>
 	 <18200.53593.687483.120827@stoffel.org>
 	 <1192810534.1666.68.camel@firewall.xsintricity.com>
 	 <18200.56684.14194.630264@stoffel.org>
+	 <Pine.LNX.4.64.0710191239250.27246@p34.internal.lan>
+	 <18200.57042.989520.666476@stoffel.org>
+	 <Pine.LNX.4.64.0710191245230.7849@p34.internal.lan>
+	 <1192813477.1666.74.camel@firewall.xsintricity.com>
+	 <Pine.LNX.4.64.0710191305130.9497@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-YV1w6lzYGb6HAPrR9TAj"
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-P0zmd3K+YuN3+FkTJzSt"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18200.56684.14194.630264@stoffel.org>
+In-Reply-To: <Pine.LNX.4.64.0710191305130.9497@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: John Stoffel <john@stoffel.org>
-Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, linux-raid@vger.kernel.org
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: John Stoffel <john@stoffel.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
---=-YV1w6lzYGb6HAPrR9TAj
+--=-P0zmd3K+YuN3+FkTJzSt
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, 2007-10-19 at 12:38 -0400, John Stoffel wrote:
+On Fri, 2007-10-19 at 13:05 -0400, Justin Piszcz wrote:
 
+> > I'm sure an internal bitmap would.  On RAID1 arrays, reads/writes are
+> > never split up by a chunk size for stripes.  A 2mb read is a single
+> > read, where as on a raid4/5/6 array, a 2mb read will end up hitting a
+> > series of stripes across all disks.  That means that on raid1 arrays,
+> > total disk seeks < total reads/writes, where as on a raid4/5/6, total
+> > disk seeks is usually > total reads/writes.  That in turn implies that
+> > in a raid1 setup, disk seek time is important to performance, but not
+> > necessarily paramount.  For raid456, disk seek time is paramount becaus=
+e
+> > of how many more seeks that format uses.  When you then use an internal
+> > bitmap, you are adding writes to every member of the raid456 array,
+> > which adds more seeks.  The same is true for raid1, but since raid1
+> > doesn't have the same level of dependency on seek rates that raid456
+> > has, it doesn't show the same performance hit that raid456 does.
 
->     1, 1.0, 1.1, 1.2
->=20
->       Use the new version-1 format superblock.  This has few restrictions=
-.
->       The different sub-versions store the superblock at different locati=
-ons
->       on the device, either at the end (for 1.0), at the start (for 1.1) =
-or
->       4K from the start (for 1.2).
->=20
->=20
-> It looks to me that the 1.1, combined with the 1.0 should be what we
-> use, with the 1.2 format nuked.  Maybe call it 1.3?  *grin*
+> Got it, so for RAID1 it would make sense if LILO supported it (the=20
+> later versions of the md superblock)
 
-You're somewhat misreading the man page.  You *can't* combine 1.0 with
-1.1.  All of the above options: 1, 1.0, 1.1, 1.2; specifically mean to
-use a version 1 superblock.  1.0 means use a version 1 superblock at the
-end of the disk.  1.1 means version 1 superblock at beginning of disk.
-`1.2 means version 1 at 4k offset from beginning of the disk.  There
-really is no actual version 1.1, or 1.2, the .0, .1, and .2 part of the
-version *only* means where to put the version 1 superblock on the disk.
-If you just say version 1, then it goes to the default location for
-version 1 superblocks, and last I checked that was the end of disk (aka,
-1.0).
+Lilo doesn't know anything about the superblock format, however, lilo
+expects the raid1 device to start at the beginning of the physical
+partition.  In otherwords, format 1.0 would work with lilo.
+
+>  (for those who use LILO) but for
+> RAID4/5/6, keep the bitmaps away :)
+
+I still use an internal bitmap regardless ;-)  To help mitigate the cost
+of seeks on raid456, you can specify a huge chunk size (like 256k to 2MB
+or somewhere in that range).  As long as you can get 90%+ of your
+reads/writes to fall into the space of a single chunk, then you start
+performing more like a raid1 device without the extra seek overhead.  Of
+course, this comes at the expense of peak throughput on the device.
+Let's say you were building a mondo movie server, where you were
+streaming out digital movie files.  In that case, you very well may care
+more about throughput than seek performance since I suspect you wouldn't
+have many small, random reads.  Then I would use a small chunk size,
+sacrifice the seek performance, and get the throughput bonus of parallel
+reads from the same stripe on multiple disks.  On the other hand, if I
+was setting up a mail server then I would go with a large chunk size
+because the filesystem activities themselves are going to produce lots
+of random seeks, and you don't want your raid setup to make that problem
+worse.  Plus, most mail doesn't come in or go out at any sort of massive
+streaming speed, so you don't need the paralllel reads from multiple
+disks to perform well.  It all depends on your particular use scenario.
 
 --=20
 Doug Ledford <dledford@redhat.com>
@@ -57,17 +80,17 @@ Doug Ledford <dledford@redhat.com>
 Infiniband specific RPMs available at
               http://people.redhat.com/dledford/Infiniband
 
---=-YV1w6lzYGb6HAPrR9TAj
+--=-P0zmd3K+YuN3+FkTJzSt
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.7 (GNU/Linux)
 
-iD8DBQBHGOU1TzP9PM7pjw8RAponAJ0b3bLg89bJOfdXJWkkEe2oL+5o3ACfc+xm
-A99AcUV79uBav4Xru8W1ib8=
-=QeOu
+iD8DBQBHGOf0TzP9PM7pjw8RAuNVAJ4pU5Tq9wa+vn4Q1bTV3n5NUxpqcgCfYtXm
+PiQHpOhuXutIXM/XefnBO+o=
+=O2zM
 -----END PGP SIGNATURE-----
 
---=-YV1w6lzYGb6HAPrR9TAj--
+--=-P0zmd3K+YuN3+FkTJzSt--
 
