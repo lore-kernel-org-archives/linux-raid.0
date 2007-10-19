@@ -1,57 +1,64 @@
-From: Ming Zhang <blackmagic02881@gmail.com>
-Subject: Re: Abort Task ?
-Date: Fri, 19 Oct 2007 10:53:29 -0400
-Message-ID: <1192805609.3593.10.camel@dhcp-117.ibrix.com>
-References: <471720F1.40409@systella.fr> <471727F3.2080500@systella.fr>
-	<471734C5.8090405@systella.fr>
-	<E2BB8074E5500C42984D980D4BD78EF9017A2958@MFG-NYC-EXCH2.mfg.prv>
-	<1192721909.3596.15.camel@dhcp-117.ibrix.com>
-	<47178ABF.1040500@systella.fr> <47179492.4000109@systella.fr>
-	<E2BB8074E5500C42984D980D4BD78EF9017A295C@MFG-NYC-EXCH2.mfg.prv>
-	<47186137.2030906@systella.fr>
-	<1192802144.3593.2.camel@dhcp-117.ibrix.com>
-	<4718BF6A.6080905@systella.fr>
-	<1192804659.3593.7.camel@dhcp-117.ibrix.com>
-	<4718C37F.3050406@systella.fr>
-Reply-To: blackmagic02881@gmail.com
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: Software RAID when it works and when it doesn't
+Date: Fri, 19 Oct 2007 11:02:38 -0400 (EDT)
+Message-ID: <Pine.LNX.4.64.0710191102110.27246@p34.internal.lan>
+References: <14526.1192571833@mdt.ecitele.com>  <87bqaw5tqb.fsf@informatik.uni-tuebingen.de>
+ <1192777672.16416.495.camel@w100>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <iscsitarget-devel-bounces@lists.sourceforge.net>
-In-Reply-To: <4718C37F.3050406@systella.fr>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/iscsitarget-devel>,
-	<mailto:iscsitarget-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=iscsitarget-devel>
-List-Post: <mailto:iscsitarget-devel@lists.sourceforge.net>
-List-Help: <mailto:iscsitarget-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/iscsitarget-devel>,
-	<mailto:iscsitarget-devel-request@lists.sourceforge.net?subject=subscribe>
-Sender: iscsitarget-devel-bounces@lists.sourceforge.net
-Errors-To: iscsitarget-devel-bounces@lists.sourceforge.net
-To: BERTRAND =?ISO-8859-1?Q?Jo=EBl?= <joel.bertrand@systella.fr>
-Cc: iscsitarget-devel@lists.sourceforge.net, linux-raid@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1192777672.16416.495.camel@w100>
+Sender: linux-raid-owner@vger.kernel.org
+To: Alberto Alonso <alberto@ggsys.net>
+Cc: Goswin von Brederlow <brederlo@informatik.uni-tuebingen.de>, Mike Accetta <maccetta@laurelnetworks.com>, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-T24gRnJpLCAyMDA3LTEwLTE5IGF0IDE2OjQ3ICswMjAwLCBCRVJUUkFORCBKb8OrbCB3cm90ZToK
-PiBNaW5nIFpoYW5nIHdyb3RlOgo+ID4gCj4gPiBhcyBSb3NzIHBvaW50ZWQgb3V0LCBtYW55IGlv
-IHBhdHRlcm4gb25seSBoYXZlIDEgb3V0c3RhbmRpbmcgaW8gYXQgYW55Cj4gPiB0aW1lLCBzbyB0
-aGVyZSBpcyBvbmx5IG9uZSB3b3JrIHRocmVhZCBhY3RpdmVseSB0byBzZXJ2ZSBpdC4gc28gaXQg
-Y2FuCj4gPiBub3QgZXhwbG9pdCB0aGUgbXVsdGlwbGUgY29yZSBoZXJlLgo+ID4gCj4gPiAKPiA+
-IHlvdSBzZWUgMTAwJSBhdCBudWxsaW8gb3IgZmlsZWlvPyB3aXRoIGRpc2ssIG1vc3QgdGltZSBz
-aG91bGQgc3BlbmQgb24KPiA+IGlvd2FpdCBhbmQgY3B1IHV0aWxpemF0aW9uIHNob3VsZCBub3Qg
-aGlnaCBhdCBhbGwuCj4gCj4gCVdpdGggYm90aCBudWxsaW8gYW5kIGZpbGVpby4uLgoKaXQgaXMg
-d2VpcmVkLiB3aXRoIGZpbGUgaW8sIHJ1biBzb21lIGlvIGxvYWQsIHRoZW4gcnVuICJ2bXN0YXQg
-MSIgYW5kCnBvc3QgaGVyZS4gc3VwcG9zZWQgdG8gc2VlIHNvbWUgaW93YWl0IGluc3RlYWQgb2Yg
-aGlnaCBzeXMgY3B1IHVzYWdlLi4uCgoKCgotLSAKTWluZyBaaGFuZwoKCkAjJCVeIHB1cmdpbmcg
-bWVtb3J5Li4uICgqISUKaHR0cDovL2JsYWNrbWFnaWMwMjg4MS53b3JkcHJlc3MuY29tLwpodHRw
-Oi8vd3d3LmxpbmtlZGluLmNvbS9pbi9ibGFja21hZ2ljMDI4ODEKLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KCgotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tClRoaXMgU0YubmV0
-IGVtYWlsIGlzIHNwb25zb3JlZCBieTogU3BsdW5rIEluYy4KU3RpbGwgZ3JlcHBpbmcgdGhyb3Vn
-aCBsb2cgZmlsZXMgdG8gZmluZCBwcm9ibGVtcz8gIFN0b3AuCk5vdyBTZWFyY2ggbG9nIGV2ZW50
-cyBhbmQgY29uZmlndXJhdGlvbiBmaWxlcyB1c2luZyBBSkFYIGFuZCBhIGJyb3dzZXIuCkRvd25s
-b2FkIHlvdXIgRlJFRSBjb3B5IG9mIFNwbHVuayBub3cgPj4gaHR0cDovL2dldC5zcGx1bmsuY29t
-LwpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpJc2NzaXRh
-cmdldC1kZXZlbCBtYWlsaW5nIGxpc3QKSXNjc2l0YXJnZXQtZGV2ZWxAbGlzdHMuc291cmNlZm9y
-Z2UubmV0Cmh0dHBzOi8vbGlzdHMuc291cmNlZm9yZ2UubmV0L2xpc3RzL2xpc3RpbmZvL2lzY3Np
-dGFyZ2V0LWRldmVsCg==
+
+
+On Fri, 19 Oct 2007, Alberto Alonso wrote:
+
+> On Thu, 2007-10-18 at 17:26 +0200, Goswin von Brederlow wrote:
+>> Mike Accetta <maccetta@laurelnetworks.com> writes:
+>
+>> What I would like to see is a timeout driven fallback mechanism. If
+>> one mirror does not return the requested data within a certain time
+>> (say 1 second) then the request should be duplicated on the other
+>> mirror. If the first mirror later unchokes then it remains in the
+>> raid, if it fails it gets removed. But (at least reads) should not
+>> have to wait for that process.
+>>
+>> Even better would be if some write delay could also be used. The still
+>> working mirror would get an increase in its serial (so on reboot you
+>> know one disk is newer). If the choking mirror unchokes then it can
+>> write back all the delayed data and also increase its serial to
+>> match. Otherwise it gets really failed. But you might have to use
+>> bitmaps for this or the cache size would limit its usefullnes.
+>>
+>> MfG
+>>         Goswin
+>
+> I think a timeout on both: reads and writes is a must. Basically I
+> believe that all problems that I've encountered issues using software
+> raid would have been resolved by using a timeout within the md code.
+>
+> This will keep a server from crashing/hanging when the underlying
+> driver doesn't properly handle hard drive problems. MD can be
+> smarter than the "dumb" drivers.
+>
+> Just my thoughts though, as I've never got an answer as to whether or
+> not md can implement its own timeouts.
+>
+> Alberto
+>
+>
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+
+I have a question with re-mapping sectors, can software raid be as 
+efficient or good at remapping bad sectors as an external raid controller 
+for, e.g., raid 10 or raid5?
+
+Justin.
