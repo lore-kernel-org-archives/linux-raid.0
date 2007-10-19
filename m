@@ -1,62 +1,71 @@
 From: =?UTF-8?B?QkVSVFJBTkQgSm/Dq2w=?= <joel.bertrand@systella.fr>
-Subject: Re: [BUG] Raid5 trouble
-Date: Fri, 19 Oct 2007 22:42:29 +0200
-Message-ID: <471916B5.6080709@systella.fr>
-References: <4714BB92.7040701@systella.fr> <47161CE3.80909@systella.fr>	 <e9c3a7c20710170758p4046ca44labe370e94bca6e93@mail.gmail.com>	 <e9c3a7c20710170840u2ed8d6a9x26523eec6700ad11@mail.gmail.com>	 <47181CB2.1060602@tmr.com>  <471864F8.9010209@systella.fr> <1192809103.30976.11.camel@dwillia2-linux.ch.intel.com> <4718DE66.8000905@tmr.com>
+Subject: Re: [BUG] Raid1/5 over iSCSI trouble
+Date: Fri, 19 Oct 2007 22:49:25 +0200
+Message-ID: <47191855.4020402@systella.fr>
+References: <4714BB92.7040701@systella.fr> <47161CE3.80909@systella.fr>	
+	<e9c3a7c20710170758p4046ca44labe370e94bca6e93@mail.gmail.com>	
+	<e9c3a7c20710170840u2ed8d6a9x26523eec6700ad11@mail.gmail.com>	
+	<47181CB2.1060602@tmr.com> <471864F8.9010209@systella.fr>
+	<1192809103.30976.11.camel@dwillia2-linux.ch.intel.com>
+	<4718DE66.8000905@tmr.com> <471916B5.6080709@systella.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4718DE66.8000905@tmr.com>
-Sender: linux-raid-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <iscsitarget-devel-bounces@lists.sourceforge.net>
+In-Reply-To: <471916B5.6080709@systella.fr>
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/iscsitarget-devel>,
+	<mailto:iscsitarget-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=iscsitarget-devel>
+List-Post: <mailto:iscsitarget-devel@lists.sourceforge.net>
+List-Help: <mailto:iscsitarget-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/iscsitarget-devel>,
+	<mailto:iscsitarget-devel-request@lists.sourceforge.net?subject=subscribe>
+Sender: iscsitarget-devel-bounces@lists.sourceforge.net
+Errors-To: iscsitarget-devel-bounces@lists.sourceforge.net
 To: Bill Davidsen <davidsen@tmr.com>
-Cc: Dan Williams <dan.j.williams@intel.com>, linux-raid@vger.kernel.org, sparclinux@vger.kernel.org
+Cc: linux-raid@vger.kernel.org, sparclinux@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, iscsitarget-devel@lists.sourceforge.net
 List-Id: linux-raid.ids
 
-Bill Davidsen wrote:
-> Dan Williams wrote:
->> On Fri, 2007-10-19 at 01:04 -0700, BERTRAND Jo=C3=ABl wrote:
->>  =20
->>>         I run for 12 hours some dd's (read and write in nullio)
->>> between
->>> initiator and target without any disconnection. Thus iSCSI code see=
-ms
->>> to
->>> be robust. Both initiator and target are alone on a single gigabit
->>> ethernet link (without any switch). I'm investigating...
->>>    =20
->>
->> Can you reproduce on 2.6.22?
->>
->> Also, I do not think this is the cause of your failure, but you have
->> CONFIG_DMA_ENGINE=3Dy in your config.  Setting this to 'n' will comp=
-ile
->> out the unneeded checks for offload engines in async_memcpy and
->> async_xor.
->=20
-> Given that offload engines are far less tested code, I think this is =
-a=20
-> very good thing to try!
-
-	I'm trying wihtout CONFIG_DMA_ENGINE=3Dy. istd1 only uses 40% of one C=
-PU=20
-when I rebuild my raid1 array. 1% of this array was now resynchronized=20
-without any hang.
-
-Root gershwin:[/usr/scripts] > cat /proc/mdstat
-Personalities : [raid1] [raid6] [raid5] [raid4]
-md7 : active raid1 sdi1[2] md_d0p1[0]
-       1464725632 blocks [2/1] [U_]
-       [>....................]  recovery =3D  1.0% (15705536/1464725632=
-)=20
-finish=3D1103.9min speed=3D21875K/sec
-
-	Regards,
-
-	JKB
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+QkVSVFJBTkQgSm/Dq2wgd3JvdGU6Cj4gQmlsbCBEYXZpZHNlbiB3cm90ZToKPj4gRGFuIFdpbGxp
+YW1zIHdyb3RlOgo+Pj4gT24gRnJpLCAyMDA3LTEwLTE5IGF0IDAxOjA0IC0wNzAwLCBCRVJUUkFO
+RCBKb8OrbCB3cm90ZToKPj4+ICAKPj4+PiAgICAgICAgIEkgcnVuIGZvciAxMiBob3VycyBzb21l
+IGRkJ3MgKHJlYWQgYW5kIHdyaXRlIGluIG51bGxpbykKPj4+PiBiZXR3ZWVuCj4+Pj4gaW5pdGlh
+dG9yIGFuZCB0YXJnZXQgd2l0aG91dCBhbnkgZGlzY29ubmVjdGlvbi4gVGh1cyBpU0NTSSBjb2Rl
+IHNlZW1zCj4+Pj4gdG8KPj4+PiBiZSByb2J1c3QuIEJvdGggaW5pdGlhdG9yIGFuZCB0YXJnZXQg
+YXJlIGFsb25lIG9uIGEgc2luZ2xlIGdpZ2FiaXQKPj4+PiBldGhlcm5ldCBsaW5rICh3aXRob3V0
+IGFueSBzd2l0Y2gpLiBJJ20gaW52ZXN0aWdhdGluZy4uLgo+Pj4+ICAgICAKPj4+Cj4+PiBDYW4g
+eW91IHJlcHJvZHVjZSBvbiAyLjYuMjI/Cj4+Pgo+Pj4gQWxzbywgSSBkbyBub3QgdGhpbmsgdGhp
+cyBpcyB0aGUgY2F1c2Ugb2YgeW91ciBmYWlsdXJlLCBidXQgeW91IGhhdmUKPj4+IENPTkZJR19E
+TUFfRU5HSU5FPXkgaW4geW91ciBjb25maWcuICBTZXR0aW5nIHRoaXMgdG8gJ24nIHdpbGwgY29t
+cGlsZQo+Pj4gb3V0IHRoZSB1bm5lZWRlZCBjaGVja3MgZm9yIG9mZmxvYWQgZW5naW5lcyBpbiBh
+c3luY19tZW1jcHkgYW5kCj4+PiBhc3luY194b3IuCj4+Cj4+IEdpdmVuIHRoYXQgb2ZmbG9hZCBl
+bmdpbmVzIGFyZSBmYXIgbGVzcyB0ZXN0ZWQgY29kZSwgSSB0aGluayB0aGlzIGlzIGEgCj4+IHZl
+cnkgZ29vZCB0aGluZyB0byB0cnkhCj4gCj4gICAgIEknbSB0cnlpbmcgd2lodG91dCBDT05GSUdf
+RE1BX0VOR0lORT15LiBpc3RkMSBvbmx5IHVzZXMgNDAlIG9mIG9uZSAKPiBDUFUgd2hlbiBJIHJl
+YnVpbGQgbXkgcmFpZDEgYXJyYXkuIDElIG9mIHRoaXMgYXJyYXkgd2FzIG5vdyAKPiByZXN5bmNo
+cm9uaXplZCB3aXRob3V0IGFueSBoYW5nLgo+IAo+IFJvb3QgZ2Vyc2h3aW46Wy91c3Ivc2NyaXB0
+c10gPiBjYXQgL3Byb2MvbWRzdGF0Cj4gUGVyc29uYWxpdGllcyA6IFtyYWlkMV0gW3JhaWQ2XSBb
+cmFpZDVdIFtyYWlkNF0KPiBtZDcgOiBhY3RpdmUgcmFpZDEgc2RpMVsyXSBtZF9kMHAxWzBdCj4g
+ICAgICAgMTQ2NDcyNTYzMiBibG9ja3MgWzIvMV0gW1VfXQo+ICAgICAgIFs+Li4uLi4uLi4uLi4u
+Li4uLi4uLi5dICByZWNvdmVyeSA9ICAxLjAlICgxNTcwNTUzNi8xNDY0NzI1NjMyKSAKPiBmaW5p
+c2g9MTEwMy45bWluIHNwZWVkPTIxODc1Sy9zZWMKCglTYW1lIHJlc3VsdC4uLgoKY29ubmVjdGlv
+bjI6MDogaXNjc2k6IGRldGVjdGVkIGNvbm4gZXJyb3IgKDEwMTEpCiAKICAgICAgICAgIHNlc3Np
+b24yOiBpc2NzaTogc2Vzc2lvbiByZWNvdmVyeSB0aW1lZCBvdXQgYWZ0ZXIgMTIwIHNlY3MKc2Qg
+NDowOjA6MDogc2NzaTogRGV2aWNlIG9mZmxpbmVkIC0gbm90IHJlYWR5IGFmdGVyIGVycm9yIHJl
+Y292ZXJ5CnNkIDQ6MDowOjA6IHNjc2k6IERldmljZSBvZmZsaW5lZCAtIG5vdCByZWFkeSBhZnRl
+ciBlcnJvciByZWNvdmVyeQpzZCA0OjA6MDowOiBzY3NpOiBEZXZpY2Ugb2ZmbGluZWQgLSBub3Qg
+cmVhZHkgYWZ0ZXIgZXJyb3IgcmVjb3ZlcnkKc2QgNDowOjA6MDogc2NzaTogRGV2aWNlIG9mZmxp
+bmVkIC0gbm90IHJlYWR5IGFmdGVyIGVycm9yIHJlY292ZXJ5CnNkIDQ6MDowOjA6IHNjc2k6IERl
+dmljZSBvZmZsaW5lZCAtIG5vdCByZWFkeSBhZnRlciBlcnJvciByZWNvdmVyeQpzZCA0OjA6MDow
+OiBzY3NpOiBEZXZpY2Ugb2ZmbGluZWQgLSBub3QgcmVhZHkgYWZ0ZXIgZXJyb3IgcmVjb3ZlcnkK
+c2QgNDowOjA6MDogc2NzaTogRGV2aWNlIG9mZmxpbmVkIC0gbm90IHJlYWR5IGFmdGVyIGVycm9y
+IHJlY292ZXJ5CgoJUmVnYXJkcywKCglKS0IKCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KVGhpcyBTRi5uZXQg
+ZW1haWwgaXMgc3BvbnNvcmVkIGJ5OiBTcGx1bmsgSW5jLgpTdGlsbCBncmVwcGluZyB0aHJvdWdo
+IGxvZyBmaWxlcyB0byBmaW5kIHByb2JsZW1zPyAgU3RvcC4KTm93IFNlYXJjaCBsb2cgZXZlbnRz
+IGFuZCBjb25maWd1cmF0aW9uIGZpbGVzIHVzaW5nIEFKQVggYW5kIGEgYnJvd3Nlci4KRG93bmxv
+YWQgeW91ciBGUkVFIGNvcHkgb2YgU3BsdW5rIG5vdyA+PiBodHRwOi8vZ2V0LnNwbHVuay5jb20v
+Cl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCklzY3NpdGFy
+Z2V0LWRldmVsIG1haWxpbmcgbGlzdApJc2NzaXRhcmdldC1kZXZlbEBsaXN0cy5zb3VyY2Vmb3Jn
+ZS5uZXQKaHR0cHM6Ly9saXN0cy5zb3VyY2Vmb3JnZS5uZXQvbGlzdHMvbGlzdGluZm8vaXNjc2l0
+YXJnZXQtZGV2ZWwK
