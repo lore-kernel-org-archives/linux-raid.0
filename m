@@ -1,55 +1,104 @@
-From: Yuri Tikhonov <yur@emcraft.com>
-Subject: async_tx: get best channel
-Date: Fri, 19 Oct 2007 16:23:34 +0400
-Message-ID: <200710191623.34381.yur@emcraft.com>
+From: Ming Zhang <blackmagic02881@gmail.com>
+Subject: Re: Abort Task ?
+Date: Fri, 19 Oct 2007 09:55:44 -0400
+Message-ID: <1192802144.3593.2.camel@dhcp-117.ibrix.com>
+References: <471720F1.40409@systella.fr> <471727F3.2080500@systella.fr>
+	<471734C5.8090405@systella.fr>
+	<E2BB8074E5500C42984D980D4BD78EF9017A2958@MFG-NYC-EXCH2.mfg.prv>
+	<1192721909.3596.15.camel@dhcp-117.ibrix.com>
+	<47178ABF.1040500@systella.fr> <47179492.4000109@systella.fr>
+	<E2BB8074E5500C42984D980D4BD78EF9017A295C@MFG-NYC-EXCH2.mfg.prv>
+	<47186137.2030906@systella.fr>
+Reply-To: blackmagic02881@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-raid-owner@vger.kernel.org
-To: "Williams, Dan J" <dan.j.williams@intel.com>
-Cc: Dan Williams <dan.j.williams@gmail.com>, Neil Brown <neilb@suse.de>, Wolfgang Denk <wd@denx.de>, Detlev Zundel <dzu@denx.de>, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <iscsitarget-devel-bounces@lists.sourceforge.net>
+In-Reply-To: <47186137.2030906@systella.fr>
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/iscsitarget-devel>,
+	<mailto:iscsitarget-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=iscsitarget-devel>
+List-Post: <mailto:iscsitarget-devel@lists.sourceforge.net>
+List-Help: <mailto:iscsitarget-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/iscsitarget-devel>,
+	<mailto:iscsitarget-devel-request@lists.sourceforge.net?subject=subscribe>
+Sender: iscsitarget-devel-bounces@lists.sourceforge.net
+Errors-To: iscsitarget-devel-bounces@lists.sourceforge.net
+To: BERTRAND =?ISO-8859-1?Q?Jo=EBl?= <joel.bertrand@systella.fr>
+Cc: iscsitarget-devel@lists.sourceforge.net, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-
- Hello Dan,
-
- I have a suggestion regarding the async_tx_find_channel() procedure.
-
- First, a little introduction. Some processors (e.g. ppc440spe) have several DMA
-engines (say DMA1 and DMA2) which are capable of performing the same type of 
-operation, say XOR. The DMA2 engine may process the XOR operation faster than
-the DMA1 engine, but DMA2 (which is faster) has some restrictions for the source
-operand addresses, whereas there are no such restrictions for DMA1 (which is slower).
-So the question is, how may ASYNC_TX select the DMA engine which will be the
-most effective for the given tx operation ?
-
- In the example just described this means: if the faster engine, DMA2, may process
-the tx operation with the given source operand addresses, then we select DMA2;
-if the given source operand addresses cannot be processed with DMA2, then we
-select the slower engine, DMA1.
-
- I see the following way for introducing such functionality.
-
- We may introduce an additional method in struct dma_device (let's call it device_estimate())
-which would take the following as the arguments:
---- the list of sources to be processed during the given tx,
---- the type of operation (XOR, COPY, ...), 
---- perhaps something else, 
- and then estimate the effectiveness of processing this tx on the given channel.
- The async_tx_find_channel() function should call the device_estimate() method for each
-registered dma channel and then select the most effective one.
- The architecture specific ADMA driver will be responsible for returning the greatest
-value from the device_estimate() method for the channel which will be the most effective
-for this given tx.
-
- What are your thoughts regarding this? Do you see any other effective ways for
-enhancing ASYNC_TX with such functionality?
-
- Regards, Yuri
-
--- 
-Yuri Tikhonov, Senior Software Engineer
-Emcraft Systems, www.emcraft.com
+T24gRnJpLCAyMDA3LTEwLTE5IGF0IDA5OjQ4ICswMjAwLCBCRVJUUkFORCBKb8OrbCB3cm90ZToK
+PiBSb3NzIFMuIFcuIFdhbGtlciB3cm90ZToKPiA+IEJFUlRSQU5EIEpvw6tsIHdyb3RlOgo+ID4+
+IEJFUlRSQU5EIEpvw6tsIHdyb3RlOgo+ID4+PiAgICAgSSBjYW4gZm9ybWF0IHNlcnZlcmFsIHRp
+bWVzIChta2ZzLmV4dDMpIGEgMS41IFRCIHZvbHVtZSAKPiA+PiBvdmVyIGlTQ1NJIAo+ID4+PiB3
+aXRob3V0IGFueSB0cm91YmxlLiBJIGNhbiByZWFkIGFuZCB3cml0ZSBvbiB0aGlzIHZpcnR1YWwg
+Cj4gPj4gZGlzayB3aXRob3V0IAo+ID4+PiBhbnkgdHJvdWJsZS4KPiA+Pj4KPiA+Pj4gICAgIE5v
+dywgSSBoYXZlIGNvbmZpZ3VyZWQgaWV0ZCB3aXRoIDoKPiA+Pj4KPiA+Pj4gTHVuIDAgU2VjdG9y
+cz0xNDY0NzI1NzU4LFR5cGU9bnVsbGlvCj4gPj4+Cj4gPj4+IGFuZCBJIHJ1biBvbiBpbml0aWF0
+b3Igc2lkZSA6Cj4gPj4+Cj4gPj4+IFJvb3QgZ2Vyc2h3aW46Wy9kZXZdID4gZGQgaWY9L2Rldi96
+ZXJvIG9mPS9kZXYvc2RqIGJzPTgxOTIKPiA+Pj4gNDc5NDgyKzAgcmVjb3JkcyBpbgo+ID4+PiA0
+Nzk0ODIrMCByZWNvcmRzIG91dAo+ID4+PiAzOTI3OTE2NTQ0IGJ5dGVzICgzLjkgR0IpIGNvcGll
+ZCwgMTUzLjIyMiBzZWNvbmRzLCAyNS42IE1CL3MKPiA+Pj4KPiA+Pj4gUm9vdCBnZXJzaHdpbjpb
+L2Rldl0gPiBkZCBpZj0vZGV2L3plcm8gb2Y9L2Rldi9zZGogYnM9ODE5Mgo+ID4+Pgo+ID4+PiAg
+ICAgSSdtIHdhaXRpbmZvciBhIGNyYXNoLiBObyBvbmUgd2hlbiBJIHdyaXRlIHRoZXNlIGxpbmVz
+LiAKPiA+PiAgICBJIHN1c3BlY3QgCj4gPj4+IGFuIGludGVyYWN0aW9uIGJldHdlZW4gcmFpZCBh
+bmQgaXNjc2kuCj4gPj4gCUkgc2ltdWx0YW5lbHkgcnVuIDoKPiA+Pgo+ID4+IFJvb3QgZ2Vyc2h3
+aW46Wy9kZXZdID4gZGQgaWY9L2Rldi96ZXJvIG9mPS9kZXYvc2RqIGJzPTgxOTIKPiA+PiA4Mzk3
+MjEwKzAgcmVjb3JkcyBpbgo+ID4+IDgzOTcyMTArMCByZWNvcmRzIG91dAo+ID4+IDY4Nzg5OTQ0
+MzIwIGJ5dGVzICg2OSBHQikgY29waWVkLCAyNzMyLjU1IHNlY29uZHMsIDI1LjIgTUIvcwo+ID4+
+Cj4gPj4gYW5kCj4gPj4KPiA+PiBSb290IGdlcnNod2luOlt+XSA+IGRkIGlmPS9kZXYvc2RqIG9m
+PS9kZXYvbnVsbCBicz04MTkyCj4gPj4gNzM5MjAwKzAgcmVjb3JkcyBpbgo+ID4+IDczOTE5OSsw
+IHJlY29yZHMgb3V0Cj4gPj4gNjA1NTUxODIwOCBieXRlcyAoNi4xIEdCKSBjb3BpZWQsIDQ0Ny4x
+Nzggc2Vjb25kcywgMTMuNSBNQi9zCj4gPj4KPiA+PiAJd2l0aG91dCBhbnkgdHJvdWJsZS4KPiA+
+IAo+ID4gVGhlIHNwZWVkIGNhbiBkZWZpbml0ZWx5IGJlIGltcHJvdmVkLiBMb29rIGF0IHlvdXIg
+bmV0d29yayBzZXR1cAo+ID4gYW5kIHVzZSBwaW5nIHRvIHRyeSBhbmQgZ2V0IHRoZSBuZXR3b3Jr
+IGxhdGVuY3kgdG8gYSBtaW5pbXVtLgo+ID4gCj4gPiAjIHBpbmcgLUEgLXMgODE5MiAxNzIuMTYu
+MjQuMTQwCj4gPiAuLi4uCj4gPiAtLS0gMTcyLjE2LjI0LjE0MCBwaW5nIHN0YXRpc3RpY3MgLS0t
+Cj4gPiAxNDA1OCBwYWNrZXRzIHRyYW5zbWl0dGVkLCAxNDA1NyByZWNlaXZlZCwgMCUgcGFja2V0
+IGxvc3MsIHRpbWUgOTk4OG1zCj4gPiBydHQgbWluL2F2Zy9tYXgvbWRldiA9IDAuMjM0LzAuMjY4
+LzIuMDg0LzAuMDQxIG1zLCBpcGcvZXdtYSAwLjcxMC8wLjI2MCBtcwo+IAo+IGdlcnNod2luOlt+
+XSA+IHBpbmcgLUEgLXMgODE5MiAxOTIuMTY4LjAuMgo+IFBJTkcgMTkyLjE2OC4wLjIgKDE5Mi4x
+NjguMC4yKSA4MTkyKDgyMjApIGJ5dGVzIG9mIGRhdGEuCj4gODIwMCBieXRlcyBmcm9tIDE5Mi4x
+NjguMC4yOiBpY21wX3NlcT0xIHR0bD02NCB0aW1lPTAuNjkzIG1zCj4gODIwMCBieXRlcyBmcm9t
+IDE5Mi4xNjguMC4yOiBpY21wX3NlcT0yIHR0bD02NCB0aW1lPTAuNTk1IG1zCj4gODIwMCBieXRl
+cyBmcm9tIDE5Mi4xNjguMC4yOiBpY21wX3NlcT0zIHR0bD02NCB0aW1lPTAuNTgzIG1zCj4gODIw
+MCBieXRlcyBmcm9tIDE5Mi4xNjguMC4yOiBpY21wX3NlcT00IHR0bD02NCB0aW1lPTAuNTg5IG1z
+Cj4gODIwMCBieXRlcyBmcm9tIDE5Mi4xNjguMC4yOiBpY21wX3NlcT01IHR0bD02NCB0aW1lPTAu
+NTgwIG1zCj4gODIwMCBieXRlcyBmcm9tIDE5Mi4xNjguMC4yOiBpY21wX3NlcT02IHR0bD02NCB0
+aW1lPTAuNTk0IG1zCj4gODIwMCBieXRlcyBmcm9tIDE5Mi4xNjguMC4yOiBpY21wX3NlcT03IHR0
+bD02NCB0aW1lPTAuNTgwIG1zCj4gODIwMCBieXRlcyBmcm9tIDE5Mi4xNjguMC4yOiBpY21wX3Nl
+cT04IHR0bD02NCB0aW1lPTAuNTkyIG1zCj4gODIwMCBieXRlcyBmcm9tIDE5Mi4xNjguMC4yOiBp
+Y21wX3NlcT05IHR0bD02NCB0aW1lPTAuNTg5IG1zCj4gODIwMCBieXRlcyBmcm9tIDE5Mi4xNjgu
+MC4yOiBpY21wX3NlcT0xMCB0dGw9NjQgdGltZT0wLjU3MSBtcwo+IDgyMDAgYnl0ZXMgZnJvbSAx
+OTIuMTY4LjAuMjogaWNtcF9zZXE9MTEgdHRsPTY0IHRpbWU9MC41ODggbXMKPiA4MjAwIGJ5dGVz
+IGZyb20gMTkyLjE2OC4wLjI6IGljbXBfc2VxPTEyIHR0bD02NCB0aW1lPTAuNTgwIG1zCj4gODIw
+MCBieXRlcyBmcm9tIDE5Mi4xNjguMC4yOiBpY21wX3NlcT0xMyB0dGw9NjQgdGltZT0wLjU4NyBt
+cwo+IAo+IC0tLSAxOTIuMTY4LjAuMiBwaW5nIHN0YXRpc3RpY3MgLS0tCj4gMTMgcGFja2V0cyB0
+cmFuc21pdHRlZCwgMTMgcmVjZWl2ZWQsIDAlIHBhY2tldCBsb3NzLCB0aW1lIDI0MDBtcwo+IHJ0
+dCBtaW4vYXZnL21heC9tZGV2ID0gMC41NzEvMC41OTMvMC42OTMvMC4wNDQgbXMsIGlwZy9ld21h
+IDIwMC4wMjIvMC42MDcgbXMKPiBnZXJzaHdpbjpbfl0gPgo+IAo+IAlCb3RoIGluaXRpYXRvciBh
+bmQgdGFyZ2V0IGFyZSBhbG9uZSBvbiBhIGdpZ2FiaXQgTklDIChUaWdvbjMpLiBPbiAKPiB0YXJn
+ZXQgc2VydmVyLCBpc3RkMSB0YWtlcyAxMDAlIG9mIGEgQ1BVIChhbmQgb25seSBvbmUgQ1BVLCBl
+dmVuIG15IAo+IFQxMDAwIGNhbiBzaW11bHRhbmVvdXMgcnVuIDMyIHRocmVhZHMpLiBJIHRoaW5r
+IHRoZSBsaW1pdGF0aW9uIGNvbWVzIAo+IGZyb20gaXN0ZDEuCgp1c3VhbGx5IGlzdGR4IHdpbGwg
+bm90IHRha2UgMTAwJSBjcHUgd2l0aCAxRyBuZXR3b3JrLCBlc3BlY2lhbGx5IHdoZW4KdXNpbmcg
+ZGlzayBhcyBiYWNrIHN0b3JhZ2UsIHNvbWUga2luZCBvZiBwcm9maWxpbmcgd29yayBtaWdodCBi
+ZSBoZWxwZnVsCnRvIHRlbGwgd2hhdCBoYXBwZW5lZC4uLgoKZm9yZ290IHRvIGFzaywgeW91ciBz
+cGFyYzY0IHBsYXRmb3JtIGNwdSBzcGVjLgoKCj4gCj4gPiBZb3Ugd2FudCB5b3VyIGF2ZyBwaW5n
+IHRpbWUgZm9yIDgxOTIgYnl0ZSBwYXlsb2FkcyB0byBiZSAzMDB1cyBvciBsZXNzLgo+ID4gCj4g
+PiAxMDAwLy4yNjggPSAzNzMxIElPUFMgQCA4ayA9IDMwIE1CL3MKPiA+IAo+ID4gSWYgeW91IHVz
+ZSBhcHBzIHRoYXQgZG8gb3ZlcmxhcHBpbmcgYXN5bmNocm9ub3VzIElPIHlvdSBjYW4gc2VlIGJl
+dHRlcgo+ID4gbnVtYmVycy4KPiAKPiAJUmVnYXJkcywKPiAKPiAJSktCCi0tIApNaW5nIFpoYW5n
+CgoKQCMkJV4gcHVyZ2luZyBtZW1vcnkuLi4gKCohJQpodHRwOi8vYmxhY2ttYWdpYzAyODgxLndv
+cmRwcmVzcy5jb20vCmh0dHA6Ly93d3cubGlua2VkaW4uY29tL2luL2JsYWNrbWFnaWMwMjg4MQot
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQoKCi0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0KVGhpcyBTRi5uZXQgZW1haWwgaXMgc3BvbnNvcmVkIGJ5OiBTcGx1bmsgSW5jLgpTdGls
+bCBncmVwcGluZyB0aHJvdWdoIGxvZyBmaWxlcyB0byBmaW5kIHByb2JsZW1zPyAgU3RvcC4KTm93
+IFNlYXJjaCBsb2cgZXZlbnRzIGFuZCBjb25maWd1cmF0aW9uIGZpbGVzIHVzaW5nIEFKQVggYW5k
+IGEgYnJvd3Nlci4KRG93bmxvYWQgeW91ciBGUkVFIGNvcHkgb2YgU3BsdW5rIG5vdyA+PiBodHRw
+Oi8vZ2V0LnNwbHVuay5jb20vCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fCklzY3NpdGFyZ2V0LWRldmVsIG1haWxpbmcgbGlzdApJc2NzaXRhcmdldC1kZXZl
+bEBsaXN0cy5zb3VyY2Vmb3JnZS5uZXQKaHR0cHM6Ly9saXN0cy5zb3VyY2Vmb3JnZS5uZXQvbGlz
+dHMvbGlzdGluZm8vaXNjc2l0YXJnZXQtZGV2ZWwK
