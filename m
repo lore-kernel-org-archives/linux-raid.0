@@ -1,95 +1,86 @@
-From: "Ross S. W. Walker" <rwalker@medallion.com>
-Subject: RE: [Iscsitarget-devel] [BUG] Raid1/5 over iSCSI trouble
-Date: Fri, 19 Oct 2007 17:02:45 -0400
-Message-ID: <E2BB8074E5500C42984D980D4BD78EF9017A296F@MFG-NYC-EXCH2.mfg.prv>
-References: <4714BB92.7040701@systella.fr> <47161CE3.80909@systella.fr>	<e9c3a7c20710170758p4046ca44labe370e94bca6e93@mail.gmail.com>	<e9c3a7c20710170840u2ed8d6a9x26523eec6700ad11@mail.gmail.com>	<47181CB2.1060602@tmr.com> <471864F8.9010209@systella.fr><1192809103.30976.11.camel@dwillia2-linux.ch.intel.com><4718DE66.8000905@tmr.com> <471916B5.6080709@systella.fr> <47191855.4020402@systella.fr>
+From: =?UTF-8?B?QkVSVFJBTkQgSm/Dq2w=?= <joel.bertrand@systella.fr>
+Subject: Re: [BUG] Raid1/5 over iSCSI trouble
+Date: Fri, 19 Oct 2007 23:04:15 +0200
+Message-ID: <47191BCF.2000908@systella.fr>
+References: <4714BB92.7040701@systella.fr> <47161CE3.80909@systella.fr>	
+	<e9c3a7c20710170758p4046ca44labe370e94bca6e93@mail.gmail.com>	
+	<e9c3a7c20710170840u2ed8d6a9x26523eec6700ad11@mail.gmail.com>	
+	<47181CB2.1060602@tmr.com> <471864F8.9010209@systella.fr>
+	<1192809103.30976.11.camel@dwillia2-linux.ch.intel.com>
+	<4718DE66.8000905@tmr.com> <471916B5.6080709@systella.fr>
+	<47191855.4020402@systella.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <iscsitarget-devel-bounces@lists.sourceforge.net>
 In-Reply-To: <47191855.4020402@systella.fr>
-Sender: linux-raid-owner@vger.kernel.org
-To: =?iso-8859-1?Q?BERTRAND_Jo=EBl?= <joel.bertrand@systella.fr>, Bill Davidsen <davidsen@tmr.com>
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/iscsitarget-devel>,
+	<mailto:iscsitarget-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=iscsitarget-devel>
+List-Post: <mailto:iscsitarget-devel@lists.sourceforge.net>
+List-Help: <mailto:iscsitarget-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/iscsitarget-devel>,
+	<mailto:iscsitarget-devel-request@lists.sourceforge.net?subject=subscribe>
+Sender: iscsitarget-devel-bounces@lists.sourceforge.net
+Errors-To: iscsitarget-devel-bounces@lists.sourceforge.net
+To: Bill Davidsen <davidsen@tmr.com>
 Cc: linux-raid@vger.kernel.org, sparclinux@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, iscsitarget-devel@lists.sourceforge.net
 List-Id: linux-raid.ids
 
-BERTRAND Jo=EBl wrote:
->=20
-> BERTRAND Jo=EBl wrote:
-> > Bill Davidsen wrote:
-> >> Dan Williams wrote:
-> >>> On Fri, 2007-10-19 at 01:04 -0700, BERTRAND Jo=EBl wrote:
-> >>> =20
-> >>>>         I run for 12 hours some dd's (read and write in nullio)
-> >>>> between
-> >>>> initiator and target without any disconnection. Thus=20
-> iSCSI code seems
-> >>>> to
-> >>>> be robust. Both initiator and target are alone on a=20
-> single gigabit
-> >>>> ethernet link (without any switch). I'm investigating...
-> >>>>    =20
-> >>>
-> >>> Can you reproduce on 2.6.22?
-> >>>
-> >>> Also, I do not think this is the cause of your failure,=20
-> but you have
-> >>> CONFIG_DMA_ENGINE=3Dy in your config.  Setting this to 'n'=20
-> will compile
-> >>> out the unneeded checks for offload engines in async_memcpy and
-> >>> async_xor.
-> >>
-> >> Given that offload engines are far less tested code, I=20
-> think this is a=20
-> >> very good thing to try!
-> >=20
-> >     I'm trying wihtout CONFIG_DMA_ENGINE=3Dy. istd1 only uses=20
-> 40% of one=20
-> > CPU when I rebuild my raid1 array. 1% of this array was now=20
-> > resynchronized without any hang.
-> >=20
-> > Root gershwin:[/usr/scripts] > cat /proc/mdstat
-> > Personalities : [raid1] [raid6] [raid5] [raid4]
-> > md7 : active raid1 sdi1[2] md_d0p1[0]
-> >       1464725632 blocks [2/1] [U_]
-> >       [>....................]  recovery =3D  1.0%=20
-> (15705536/1464725632)=20
-> > finish=3D1103.9min speed=3D21875K/sec
->=20
-> 	Same result...
->=20
-> connection2:0: iscsi: detected conn error (1011)
-> =20
->           session2: iscsi: session recovery timed out after 120 secs
-> sd 4:0:0:0: scsi: Device offlined - not ready after error recovery
-> sd 4:0:0:0: scsi: Device offlined - not ready after error recovery
-> sd 4:0:0:0: scsi: Device offlined - not ready after error recovery
-> sd 4:0:0:0: scsi: Device offlined - not ready after error recovery
-> sd 4:0:0:0: scsi: Device offlined - not ready after error recovery
-> sd 4:0:0:0: scsi: Device offlined - not ready after error recovery
-> sd 4:0:0:0: scsi: Device offlined - not ready after error recovery
-
-I am unsure why you would want to setup an iSCSI RAID1, but before
-doing so I would try to verify that each independant iSCSI session
-is bullet proof.
-
-Try testing and benchmarking each session independantly.
-
--Ross
-
-______________________________________________________________________
-This e-mail, and any attachments thereto, is intended only for use by
-the addressee(s) named herein and may contain legally privileged
-and/or confidential information. If you are not the intended recipient
-of this e-mail, you are hereby notified that any dissemination,
-distribution or copying of this e-mail, and any attachments thereto,
-is strictly prohibited. If you have received this e-mail in error,
-please immediately notify the sender and permanently delete the
-original and any copy or printout thereof.
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+QkVSVFJBTkQgSm/Dq2wgd3JvdGU6Cj4gQkVSVFJBTkQgSm/Dq2wgd3JvdGU6Cj4+IEJpbGwgRGF2
+aWRzZW4gd3JvdGU6Cj4+PiBEYW4gV2lsbGlhbXMgd3JvdGU6Cj4+Pj4gT24gRnJpLCAyMDA3LTEw
+LTE5IGF0IDAxOjA0IC0wNzAwLCBCRVJUUkFORCBKb8OrbCB3cm90ZToKPj4+PiAgCj4+Pj4+ICAg
+ICAgICAgSSBydW4gZm9yIDEyIGhvdXJzIHNvbWUgZGQncyAocmVhZCBhbmQgd3JpdGUgaW4gbnVs
+bGlvKQo+Pj4+PiBiZXR3ZWVuCj4+Pj4+IGluaXRpYXRvciBhbmQgdGFyZ2V0IHdpdGhvdXQgYW55
+IGRpc2Nvbm5lY3Rpb24uIFRodXMgaVNDU0kgY29kZSBzZWVtcwo+Pj4+PiB0bwo+Pj4+PiBiZSBy
+b2J1c3QuIEJvdGggaW5pdGlhdG9yIGFuZCB0YXJnZXQgYXJlIGFsb25lIG9uIGEgc2luZ2xlIGdp
+Z2FiaXQKPj4+Pj4gZXRoZXJuZXQgbGluayAod2l0aG91dCBhbnkgc3dpdGNoKS4gSSdtIGludmVz
+dGlnYXRpbmcuLi4KPj4+Pj4gICAgIAo+Pj4+Cj4+Pj4gQ2FuIHlvdSByZXByb2R1Y2Ugb24gMi42
+LjIyPwo+Pj4+Cj4+Pj4gQWxzbywgSSBkbyBub3QgdGhpbmsgdGhpcyBpcyB0aGUgY2F1c2Ugb2Yg
+eW91ciBmYWlsdXJlLCBidXQgeW91IGhhdmUKPj4+PiBDT05GSUdfRE1BX0VOR0lORT15IGluIHlv
+dXIgY29uZmlnLiAgU2V0dGluZyB0aGlzIHRvICduJyB3aWxsIGNvbXBpbGUKPj4+PiBvdXQgdGhl
+IHVubmVlZGVkIGNoZWNrcyBmb3Igb2ZmbG9hZCBlbmdpbmVzIGluIGFzeW5jX21lbWNweSBhbmQK
+Pj4+PiBhc3luY194b3IuCj4+Pgo+Pj4gR2l2ZW4gdGhhdCBvZmZsb2FkIGVuZ2luZXMgYXJlIGZh
+ciBsZXNzIHRlc3RlZCBjb2RlLCBJIHRoaW5rIHRoaXMgaXMgCj4+PiBhIHZlcnkgZ29vZCB0aGlu
+ZyB0byB0cnkhCj4+Cj4+ICAgICBJJ20gdHJ5aW5nIHdpaHRvdXQgQ09ORklHX0RNQV9FTkdJTkU9
+eS4gaXN0ZDEgb25seSB1c2VzIDQwJSBvZiBvbmUgCj4+IENQVSB3aGVuIEkgcmVidWlsZCBteSBy
+YWlkMSBhcnJheS4gMSUgb2YgdGhpcyBhcnJheSB3YXMgbm93IAo+PiByZXN5bmNocm9uaXplZCB3
+aXRob3V0IGFueSBoYW5nLgo+Pgo+PiBSb290IGdlcnNod2luOlsvdXNyL3NjcmlwdHNdID4gY2F0
+IC9wcm9jL21kc3RhdAo+PiBQZXJzb25hbGl0aWVzIDogW3JhaWQxXSBbcmFpZDZdIFtyYWlkNV0g
+W3JhaWQ0XQo+PiBtZDcgOiBhY3RpdmUgcmFpZDEgc2RpMVsyXSBtZF9kMHAxWzBdCj4+ICAgICAg
+IDE0NjQ3MjU2MzIgYmxvY2tzIFsyLzFdIFtVX10KPj4gICAgICAgWz4uLi4uLi4uLi4uLi4uLi4u
+Li4uLl0gIHJlY292ZXJ5ID0gIDEuMCUgKDE1NzA1NTM2LzE0NjQ3MjU2MzIpIAo+PiBmaW5pc2g9
+MTEwMy45bWluIHNwZWVkPTIxODc1Sy9zZWMKPiAKPiAgICAgU2FtZSByZXN1bHQuLi4KPiAKPiBj
+b25uZWN0aW9uMjowOiBpc2NzaTogZGV0ZWN0ZWQgY29ubiBlcnJvciAoMTAxMSkKPiAKPiAgICAg
+ICAgICBzZXNzaW9uMjogaXNjc2k6IHNlc3Npb24gcmVjb3ZlcnkgdGltZWQgb3V0IGFmdGVyIDEy
+MCBzZWNzCj4gc2QgNDowOjA6MDogc2NzaTogRGV2aWNlIG9mZmxpbmVkIC0gbm90IHJlYWR5IGFm
+dGVyIGVycm9yIHJlY292ZXJ5Cj4gc2QgNDowOjA6MDogc2NzaTogRGV2aWNlIG9mZmxpbmVkIC0g
+bm90IHJlYWR5IGFmdGVyIGVycm9yIHJlY292ZXJ5Cj4gc2QgNDowOjA6MDogc2NzaTogRGV2aWNl
+IG9mZmxpbmVkIC0gbm90IHJlYWR5IGFmdGVyIGVycm9yIHJlY292ZXJ5Cj4gc2QgNDowOjA6MDog
+c2NzaTogRGV2aWNlIG9mZmxpbmVkIC0gbm90IHJlYWR5IGFmdGVyIGVycm9yIHJlY292ZXJ5Cj4g
+c2QgNDowOjA6MDogc2NzaTogRGV2aWNlIG9mZmxpbmVkIC0gbm90IHJlYWR5IGFmdGVyIGVycm9y
+IHJlY292ZXJ5Cj4gc2QgNDowOjA6MDogc2NzaTogRGV2aWNlIG9mZmxpbmVkIC0gbm90IHJlYWR5
+IGFmdGVyIGVycm9yIHJlY292ZXJ5Cj4gc2QgNDowOjA6MDogc2NzaTogRGV2aWNlIG9mZmxpbmVk
+IC0gbm90IHJlYWR5IGFmdGVyIGVycm9yIHJlY292ZXJ5CgoJU29ycnkgZm9yIHRoaXMgbGFzdCBt
+YWlsLiBJIGhhdmUgZm91bmQgYW5vdGhlciBtaXN0YWtlLCBidXQgSSBkb24ndCAKa25vdyBpZiB0
+aGlzIGJ1ZyBjb21lcyBmcm9tIGlzY3NpLXRhcmdldCBvciByYWlkNSBpdHNlbGYuIGlTQ1NJIHRh
+cmdldCAKaXMgZGlzY29ubmVjdGVkIGJlY2F1c2UgaXN0ZDEgYW5kIG1kX2QwX3JhaWQ1IGtlcm5l
+bCB0aHJlYWRzIHVzZSAxMDAlIG9mIApDUFUgZWFjaCAhCgpUYXNrczogMjM1IHRvdGFsLCAgIDYg
+cnVubmluZywgMjI3IHNsZWVwaW5nLCAgIDAgc3RvcHBlZCwgICAyIHpvbWJpZQpDcHUocyk6ICAw
+LjEldXMsIDEyLjUlc3ksICAwLjAlbmksIDg3LjQlaWQsICAwLjAld2EsICAwLjAlaGksICAwLjAl
+c2ksIAowLjAlc3QKTWVtOiAgIDQxMzkwMzJrIHRvdGFsLCAgIDIxODQyNGsgdXNlZCwgIDM5MjA2
+MDhrIGZyZWUsICAgIDEwMTM2ayBidWZmZXJzClN3YXA6ICA3ODE1NTM2ayB0b3RhbCwgICAgICAg
+IDBrIHVzZWQsICA3ODE1NTM2ayBmcmVlLCAgICA2NDgwOGsgY2FjaGVkCgogICBQSUQgVVNFUiAg
+ICAgIFBSICBOSSAgVklSVCAgUkVTICBTSFIgUyAlQ1BVICVNRU0gICAgVElNRSsgIENPTU1BTkQg
+CgogIDU4MjQgcm9vdCAgICAgIDE1ICAtNSAgICAgMCAgICAwICAgIDAgUiAgMTAwICAwLjAgIDEw
+OjM0LjI1IGlzdGQxIAoKICA1NTk5IHJvb3QgICAgICAxNSAgLTUgICAgIDAgICAgMCAgICAwIFIg
+IDEwMCAgMC4wICAgNzoyNS40MyAKbWRfZDBfcmFpZDUKCglSZWdhcmRzLAoKCUpLQgoKLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLQpUaGlzIFNGLm5ldCBlbWFpbCBpcyBzcG9uc29yZWQgYnk6IFNwbHVuayBJbmMu
+ClN0aWxsIGdyZXBwaW5nIHRocm91Z2ggbG9nIGZpbGVzIHRvIGZpbmQgcHJvYmxlbXM/ICBTdG9w
+LgpOb3cgU2VhcmNoIGxvZyBldmVudHMgYW5kIGNvbmZpZ3VyYXRpb24gZmlsZXMgdXNpbmcgQUpB
+WCBhbmQgYSBicm93c2VyLgpEb3dubG9hZCB5b3VyIEZSRUUgY29weSBvZiBTcGx1bmsgbm93ID4+
+IGh0dHA6Ly9nZXQuc3BsdW5rLmNvbS8KX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX18KSXNjc2l0YXJnZXQtZGV2ZWwgbWFpbGluZyBsaXN0CklzY3NpdGFyZ2V0
+LWRldmVsQGxpc3RzLnNvdXJjZWZvcmdlLm5ldApodHRwczovL2xpc3RzLnNvdXJjZWZvcmdlLm5l
+dC9saXN0cy9saXN0aW5mby9pc2NzaXRhcmdldC1kZXZlbAo=
