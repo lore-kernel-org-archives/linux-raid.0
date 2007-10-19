@@ -1,33 +1,55 @@
-From: Michal Soltys <nozo@ziu.info>
-Subject: chunk size (was Re: Time to deprecate old RAID formats?)
-Date: Sat, 20 Oct 2007 00:43:32 +0200
-Message-ID: <47193314.5010606@ziu.info>
-References: <18200.49267.763509.924873@stoffel.org>	 <Pine.LNX.4.64.0710191109000.27246@p34.internal.lan>	 <18200.53593.687483.120827@stoffel.org>	 <1192810534.1666.68.camel@firewall.xsintricity.com>	 <18200.56684.14194.630264@stoffel.org>	 <Pine.LNX.4.64.0710191239250.27246@p34.internal.lan>	 <18200.57042.989520.666476@stoffel.org>	 <Pine.LNX.4.64.0710191245230.7849@p34.internal.lan>	 <1192813477.1666.74.camel@firewall.xsintricity.com>	 <Pine.LNX.4.64.0710191305130.9497@p34.internal.lan> <1192814581.1666.87.camel@firewall.xsintricity.com>
+From: "Mike Snitzer" <snitzer@gmail.com>
+Subject: Re: mdadm 2.6.x regression, fails creation of raid1 w/ v1.0 sb and internal bitmap
+Date: Fri, 19 Oct 2007 19:18:41 -0400
+Message-ID: <170fa0d20710191618s3e284d07q738662987acfe452@mail.gmail.com>
+References: <170fa0d20710170837g1b0cd549w3b7fe8e663a01b7e@mail.gmail.com>
+	 <18198.62670.605246.270516@notabene.brown>
+	 <170fa0d20710180510o1edff608p22953fa712e217f6@mail.gmail.com>
+	 <18200.6319.487833.714355@notabene.brown>
+	 <170fa0d20710182152i4763c347r704c9d939e0a4638@mail.gmail.com>
+	 <170fa0d20710182215v19756cabp30ddddeb7a7668a2@mail.gmail.com>
+	 <18200.17870.419986.530609@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-2; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1192814581.1666.87.camel@firewall.xsintricity.com>
+In-Reply-To: <18200.17870.419986.530609@notabene.brown>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Doug Ledford wrote:
-> course, this comes at the expense of peak throughput on the device.
-> Let's say you were building a mondo movie server, where you were
-> streaming out digital movie files.  In that case, you very well may care
-> more about throughput than seek performance since I suspect you wouldn't
-> have many small, random reads.  Then I would use a small chunk size,
-> sacrifice the seek performance, and get the throughput bonus of parallel
-> reads from the same stripe on multiple disks.  On the other hand, if I
-> 
+On 10/19/07, Neil Brown <neilb@suse.de> wrote:
+> On Friday October 19, snitzer@gmail.com wrote:
 
-Out of curiosity though - why wouldn't large chunk work well here ? If you 
-stream video (I assume large files, so like a good few MBs at least), the 
-reads are parallel either way.
+> > I'm using a stock 2.6.19.7 that I then backported various MD fixes to
+> > from 2.6.20 -> 2.6.23...  this kernel has worked great until I
+> > attempted v1.0 sb w/ bitmap=internal using mdadm 2.6.x.
+> >
+> > But would you like me to try a stock 2.6.22 or 2.6.23 kernel?
+>
+> Yes please.
+> I'm suspecting the code in write_sb_page where it tests if the bitmap
+> overlaps the data or metadata.  The only way I can see you getting the
+> exact error that you do get it for that to fail.
+> That test was introduced in 2.6.22.  Did you backport that?  Any
+> chance it got mucked up a bit?
 
-Yes, the amount of data read from each of the disks will be in less perfect 
-proportion than in small chunk size scenario, but it's pretty neglible. 
-Benchamrks I've seen (like Justin's one) seem not to care much about chunk 
-size in sequential read/write scenarios (and often favors larger chunks). 
-Some of my own tests I did few months ago confirmed that as well.
+I believe you're referring to commit
+f0d76d70bc77b9b11256a3a23e98e80878be1578.  That change actually made
+it into 2.6.23 AFAIK; but yes I actually did backport that fix (which
+depended on ab6085c795a71b6a21afe7469d30a365338add7a).
+
+If I back-out f0d76d70bc77b9b11256a3a23e98e80878be1578 I can create a
+raid1 w/ v1.0 sb and an internal bitmap.  But clearly that is just
+because I removed the negative checks that you introduced ;)
+
+For me this begs the question: what else would
+f0d76d70bc77b9b11256a3a23e98e80878be1578 depend on that I missed?  I
+included 505fa2c4a2f125a70951926dfb22b9cf273994f1 and
+	ab6085c795a71b6a21afe7469d30a365338add7a too.
+
+*shrug*...
+
+Mike
