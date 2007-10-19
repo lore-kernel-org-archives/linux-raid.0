@@ -1,56 +1,58 @@
-From: "Scott Kaelin" <skaelin@gmail.com>
-Subject: Re: [Iscsitarget-devel] [BUG] Raid1/5 over iSCSI trouble
-Date: Fri, 19 Oct 2007 17:11:10 -0400
-Message-ID: <278954460710191411q289c5fa0n6568dcae8aad8780@mail.gmail.com>
-References: <4714BB92.7040701@systella.fr>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [BUG] Raid1/5 over iSCSI trouble
+Date: Fri, 19 Oct 2007 14:12:11 -0700
+Message-ID: <1192828331.30976.26.camel@dwillia2-linux.ch.intel.com>
+References: <4714BB92.7040701@systella.fr> <47161CE3.80909@systella.fr>
+	 <e9c3a7c20710170758p4046ca44labe370e94bca6e93@mail.gmail.com>
 	 <e9c3a7c20710170840u2ed8d6a9x26523eec6700ad11@mail.gmail.com>
-	 <47181CB2.1060602@tmr.com> <471864F8.9010209@systella.fr>
+	 <47181CB2.1060602@tmr.com>  <471864F8.9010209@systella.fr>
 	 <1192809103.30976.11.camel@dwillia2-linux.ch.intel.com>
 	 <4718DE66.8000905@tmr.com> <471916B5.6080709@systella.fr>
-	 <47191855.4020402@systella.fr>
-	 <E2BB8074E5500C42984D980D4BD78EF9017A296F@MFG-NYC-EXCH2.mfg.prv>
-	 <47191C66.309@systella.fr>
+	 <47191855.4020402@systella.fr>  <47191BCF.2000908@systella.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <sparclinux-owner@vger.kernel.org>
-In-Reply-To: <47191C66.309@systella.fr>
-Content-Disposition: inline
+In-Reply-To: <47191BCF.2000908@systella.fr>
 Sender: sparclinux-owner@vger.kernel.org
-To: =?ISO-8859-1?Q?BERTRAND_Jo=EBl?= <joel.bertrand@systella.fr>
-Cc: "Ross S. W. Walker" <rwalker@medallion.com>, linux-raid@vger.kernel.org, sparclinux@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, iscsitarget-devel@lists.sourceforge.net, Bill Davidsen <davidsen@tmr.com>
+To: BERTRAND =?ISO-8859-1?Q?Jo=EBl?= <joel.bertrand@systella.fr>
+Cc: Bill Davidsen <davidsen@tmr.com>, linux-raid@vger.kernel.org, sparclinux@vger.kernel.org, iscsitarget-devel@lists.sourceforge.net
 List-Id: linux-raid.ids
 
-[snip]
-> >
-> > I am unsure why you would want to setup an iSCSI RAID1, but before
-> > doing so I would try to verify that each independant iSCSI session
-> > is bullet proof.
->
->         I use one and only one iSCSI session. Raid1 array is built between a
-> local and iSCSI volume.
+On Fri, 2007-10-19 at 14:04 -0700, BERTRAND Jo=C3=ABl wrote:
+>=20
+>         Sorry for this last mail. I have found another mistake, but I
+> don't
+> know if this bug comes from iscsi-target or raid5 itself. iSCSI targe=
+t
+> is disconnected because istd1 and md_d0_raid5 kernel threads use 100%
+> of
+> CPU each !
+>=20
+> Tasks: 235 total,   6 running, 227 sleeping,   0 stopped,   2 zombie
+> Cpu(s):  0.1%us, 12.5%sy,  0.0%ni, 87.4%id,  0.0%wa,  0.0%hi,  0.0%si=
+,
+> 0.0%st
+> Mem:   4139032k total,   218424k used,  3920608k free,    10136k
+> buffers
+> Swap:  7815536k total,        0k used,  7815536k free,    64808k
+> cached
+>=20
+>    PID USER      PR  NI  VIRT  RES  SHR S %CPU %MEM    TIME+  COMMAND
+>=20
+>   5824 root      15  -5     0    0    0 R  100  0.0  10:34.25 istd1
+>=20
+>   5599 root      15  -5     0    0    0 R  100  0.0   7:25.43
+> md_d0_raid5
 
-So you only get this problem doesn't happen when doing I/O with only
-the iSCSI session?
+What is the output of:
+cat /proc/5824/wchan
+cat /proc/5599/wchan
 
-Wouldn't it be better to do the RAID1 on the target machine? Then you
-don't need to mess around with weird timing behavior of remote/local
-writing.
-
-If you want to have the disks on 2 different machines and have them
-mirrored DRDB is the way to go.
-
-@Ross: He is trying mirroring his local drive with a iSCSI lun.
-
->
->         JKB
->
->
->
-
-
-
--- 
-Scott Kaelin
-Sitrof Technologies
-skaelin@sitrof.com
+Thanks,
+Dan
+-
+To unsubscribe from this list: send the line "unsubscribe sparclinux" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
