@@ -1,102 +1,94 @@
-From: Doug Ledford <dledford@redhat.com>
-Subject: Re: Time to  deprecate old RAID formats?
-Date: Fri, 19 Oct 2007 12:15:34 -0400
-Message-ID: <1192810534.1666.68.camel@firewall.xsintricity.com>
-References: <18200.49267.763509.924873@stoffel.org>
-	 <Pine.LNX.4.64.0710191109000.27246@p34.internal.lan>
-	 <18200.53593.687483.120827@stoffel.org>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: [PATCH -stable, 2.6.24-rc] raid5: fix clearing of biofill
+	operations (try2)
+Date: Fri, 19 Oct 2007 09:23:27 -0700
+Message-ID: <1192811007.30976.22.camel@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-780V31ybN5axYdVIm3N3"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18200.53593.687483.120827@stoffel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: John Stoffel <john@stoffel.org>
-Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: BERTRAND =?ISO-8859-1?Q?Jo=EBl?= <joel.bertrand@systella.fr>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+Neil,
 
---=-780V31ybN5axYdVIm3N3
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+The following patch fixes a case where STRIPE_OP_BIOFILL can be counted
+twice causing sh->ops.count to get out of sync thus triggering a BUG()
+statement.  The patch applies cleanly on top of 2.6.23 and 2.6.24-rc.
 
-On Fri, 2007-10-19 at 11:46 -0400, John Stoffel wrote:
-> >>>>> "Justin" =3D=3D Justin Piszcz <jpiszcz@lucidpixels.com> writes:
->=20
-> Justin> On Fri, 19 Oct 2007, John Stoffel wrote:
->=20
-> >>=20
-> >> So,
-> >>=20
-> >> Is it time to start thinking about deprecating the old 0.9, 1.0 and
-> >> 1.1 formats to just standardize on the 1.2 format?  What are the
-> >> issues surrounding this?
+--
+Dan
 
-1.0, 1.1, and 1.2 are the same format, just in different positions on
-the disk.  Of the three, the 1.1 format is the safest to use since it
-won't allow you to accidentally have some sort of metadata between the
-beginning of the disk and the raid superblock (such as an lvm2
-superblock), and hence whenever the raid array isn't up, you won't be
-able to accidentally mount the lvm2 volumes, filesystem, etc.  (In worse
-case situations, I've seen lvm2 find a superblock on one RAID1 array
-member when the RAID1 array was down, the system came up, you used the
-system, the two copies of the raid array were made drastically
-inconsistent, then at the next reboot, the situation that prevented the
-RAID1 from starting was resolved, and it never know it failed to start
-last time, and the two inconsistent members we put back into a clean
-array).  So, deprecating any of these is not really helpful.  And you
-need to keep the old 0.90 format around for back compatibility with
-thousands of existing raid arrays.
+---snip---
 
-> >> It's certainly easy enough to change mdadm to default to the 1.2
-> >> format and to require a --force switch to  allow use of the older
-> >> formats.
-> >>=20
-> >> I keep seeing that we support these old formats, and it's never been
-> >> clear to me why we have four different ones available?  Why can't we
-> >> start defining the canonical format for Linux RAID metadata?
-> >>=20
-> >> Thanks,
-> >> John
-> >> john@stoffel.org
-> >> -
-> >> To unsubscribe from this list: send the line "unsubscribe linux-raid" =
-in
-> >> the body of a message to majordomo@vger.kernel.org
-> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >>=20
->=20
-> Justin> I hope 00.90.03 is not deprecated, LILO cannot boot off of
-> Justin> anything else!
->=20
-> Are you sure?  I find that GRUB is much easier to use and setup than
-> LILO these days.  But hey, just dropping down to support 00.09.03 and
-> 1.2 formats would be fine too.  Let's just lessen the confusion if at
-> all possible.
->=20
-> John
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
---=20
-Doug Ledford <dledford@redhat.com>
-              GPG KeyID: CFBFF194
-              http://people.redhat.com/dledford
+raid5: fix clearing of biofill operations (try2)
 
-Infiniband specific RPMs available at
-              http://people.redhat.com/dledford/Infiniband
+=46rom: Dan Williams <dan.j.williams@intel.com>
 
---=-780V31ybN5axYdVIm3N3
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+ops_complete_biofill() runs outside of spin_lock(&sh->lock) and clears =
+the
+'pending' and 'ack' bits.  Since the test_and_ack_op() macro only check=
+s
+against 'complete' it can get an inconsistent snapshot of pending work.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.7 (GNU/Linux)
+Move the clearing of these bits to handle_stripe5(), under the lock.
 
-iD8DBQBHGNgmTzP9PM7pjw8RAm9LAJ4z8GPDk9H9CO1XIGBK94tT87MPUQCcCEmG
-CTqmRC3lKF/2/VdwQXS5RpE=
-=Gg3r
------END PGP SIGNATURE-----
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+Tested-by: Jo=C3=ABl Bertrand <joel.bertrand@systella.fr>
+---
 
---=-780V31ybN5axYdVIm3N3--
+ drivers/md/raid5.c |   17 ++++++++++++++---
+ 1 files changed, 14 insertions(+), 3 deletions(-)
 
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index f96dea9..3808f52 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -377,7 +377,12 @@ static unsigned long get_stripe_work(struct stripe=
+_head *sh)
+ 		ack++;
+=20
+ 	sh->ops.count -=3D ack;
+-	BUG_ON(sh->ops.count < 0);
++	if (unlikely(sh->ops.count < 0)) {
++		printk(KERN_ERR "pending: %#lx ops.pending: %#lx ops.ack: %#lx "
++			"ops.complete: %#lx\n", pending, sh->ops.pending,
++			sh->ops.ack, sh->ops.complete);
++		BUG();
++	}
+=20
+ 	return pending;
+ }
+@@ -551,8 +556,7 @@ static void ops_complete_biofill(void *stripe_head_=
+ref)
+ 			}
+ 		}
+ 	}
+-	clear_bit(STRIPE_OP_BIOFILL, &sh->ops.ack);
+-	clear_bit(STRIPE_OP_BIOFILL, &sh->ops.pending);
++	set_bit(STRIPE_OP_BIOFILL, &sh->ops.complete);
+=20
+ 	return_io(return_bi);
+=20
+@@ -2630,6 +2634,13 @@ static void handle_stripe5(struct stripe_head *s=
+h)
+ 	s.expanded =3D test_bit(STRIPE_EXPAND_READY, &sh->state);
+ 	/* Now to look around and see what can be done */
+=20
++	/* clean-up completed biofill operations */
++	if (test_bit(STRIPE_OP_BIOFILL, &sh->ops.complete)) {
++		clear_bit(STRIPE_OP_BIOFILL, &sh->ops.pending);
++		clear_bit(STRIPE_OP_BIOFILL, &sh->ops.ack);
++		clear_bit(STRIPE_OP_BIOFILL, &sh->ops.complete);
++	}
++
+ 	rcu_read_lock();
+ 	for (i=3Ddisks; i--; ) {
+ 		mdk_rdev_t *rdev;
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
