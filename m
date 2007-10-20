@@ -1,53 +1,68 @@
-From: =?UTF-8?B?QkVSVFJBTkQgSm/Dq2w=?= <joel.bertrand@systella.fr>
-Subject: Re: [BUG] Raid1/5 over iSCSI trouble
-Date: Sat, 20 Oct 2007 09:52:17 +0200
-Message-ID: <4719B3B1.90509@systella.fr>
-References: <4714BB92.7040701@systella.fr> <47161CE3.80909@systella.fr>	 <e9c3a7c20710170758p4046ca44labe370e94bca6e93@mail.gmail.com>	 <e9c3a7c20710170840u2ed8d6a9x26523eec6700ad11@mail.gmail.com>	 <47181CB2.1060602@tmr.com>  <471864F8.9010209@systella.fr> <1192809103.30976.11.camel@dwillia2-linux.ch.intel.com> <4718DE66.8000905@tmr.com> <471916B5.6080709@systella.fr> <47191855.4020402@systella.fr> <47191BCF.2000908@systella.fr> <471942D2.3070609@tmr.com>
+From: Iustin Pop <iusty@k1024.org>
+Subject: Re: Time to  deprecate old RAID formats?
+Date: Sat, 20 Oct 2007 09:53:49 +0200
+Message-ID: <20071020075349.GA17431@teal.hq.k1024.org>
+References: <18200.49267.763509.924873@stoffel.org> <Pine.LNX.4.64.0710191109000.27246@p34.internal.lan> <18200.53593.687483.120827@stoffel.org> <1192810534.1666.68.camel@firewall.xsintricity.com> <18200.56684.14194.630264@stoffel.org> <1192813877.1666.79.camel@firewall.xsintricity.com> <18200.63987.514073.184865@stoffel.org> <20071019212303.GB2013@teal.hq.k1024.org> <1192830129.1666.103.camel@firewall.xsintricity.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <sparclinux-owner@vger.kernel.org>
-In-Reply-To: <471942D2.3070609@tmr.com>
-Sender: sparclinux-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: Dan Williams <dan.j.williams@intel.com>, linux-raid@vger.kernel.org, sparclinux@vger.kernel.org, iscsitarget-devel@lists.sourceforge.net
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1192830129.1666.103.camel@firewall.xsintricity.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Doug Ledford <dledford@redhat.com>
+Cc: John Stoffel <john@stoffel.org>, Justin Piszcz <jpiszcz@lucidpixels.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Bill Davidsen wrote:
-> BERTRAND Jo=C3=ABl wrote:
->>
->>     Sorry for this last mail. I have found another mistake, but I=20
->> don't know if this bug comes from iscsi-target or raid5 itself. iSCS=
-I=20
->> target is disconnected because istd1 and md_d0_raid5 kernel threads=20
->> use 100% of CPU each !
->>
->> Tasks: 235 total,   6 running, 227 sleeping,   0 stopped,   2 zombie
->> Cpu(s):  0.1%us, 12.5%sy,  0.0%ni, 87.4%id,  0.0%wa,  0.0%hi,  0.0%s=
-i,=20
->> 0.0%st
->> Mem:   4139032k total,   218424k used,  3920608k free,    10136k buf=
-fers
->> Swap:  7815536k total,        0k used,  7815536k free,    64808k cac=
-hed
->>
->>   PID USER      PR  NI  VIRT  RES  SHR S %CPU %MEM    TIME+  COMMAND
->>  5824 root      15  -5     0    0    0 R  100  0.0  10:34.25 istd1
->>  5599 root      15  -5     0    0    0 R  100  0.0   7:25.43 md_d0_r=
-aid5
->=20
-> Given that the summary shows 87.4% idle, something is not right. You=20
-> might try another tool, like vmstat, to at least verify the way the C=
-PU=20
-> is being used. When you can't trust what your tools tell you it gets=20
-> really hard to make decisions based on the data.
+On Fri, Oct 19, 2007 at 05:42:09PM -0400, Doug Ledford wrote:
+> The simple fact of the matter is there are only two type of raid devices
+> for the purpose of this issue: those that fragment data (raid0/4/5/6/10)
+> and those that don't (raid1, linear).
+> 
+> For the purposes of this issue, there are only two states we care about:
+> the raid array works or doesn't work.
+Yes, but "doesn't work" doesn't mean only that the array fails to start.
 
-	Don't forget this box is a 32-CPU server.
+> If the raid array works, then you *only* want the system to access the
+> data via the raid array.  If the raid array doesn't work, then for the
+> fragmented case you *never* want the system to see any of the data from
+> the raid array (such as an ext3 superblock) or a subsequent fsck could
+> see a valid superblock and actually start a filesystem scan on the raw
+> device, and end up hosing the filesystem beyond all repair after it hits
+> the first chunk size break (although in practice this is usually a
+> situation where fsck declares the filesystem so corrupt that it refuses
+> to touch it, that's leaving an awful lot to chance, you really don't
+> want fsck to *ever* see that superblock).
+Honestly, I don't see how a properly configured system would start
+looking at the physical device by mistake. I suppose it's possible, but
+I didn't have this issue.
 
-	JKB
--
-To unsubscribe from this list: send the line "unsubscribe sparclinux" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> If the raid array is raid1, then the raid array should *never* fail to
+> start unless all disks are missing (in which case there is no raw device
+> to access anyway).  The very few failure types that will cause the raid
+> array to not start automatically *and* still have an intact copy of the
+> data usually happen when the raid array is perfectly healthy, in which
+> case automatically finding a constituent device when the raid array
+> failed to start is exactly the *wrong* thing to do (for instance, you
+> enable SELinux on a machine and it hasn't been relabeled and the raid
+> array fails to start because /dev/md<blah> can't be created because of
+> an SELinux denial...all the raid1 members are still there, but if you
+> touch a single one of them, then you run the risk of creating silent
+> data corruption).
+
+It's not only about the activation of the array. I'm mostly talking
+about RAID1, but the fact that migrating between RAID1 and plain disk is
+just a few hundred K at the end increases the flexibility very much.
+With superblock at the start, you can't decide to convert a plain disk
+to RAID1 without shifting all data, with the superblock at the end it's
+perfectly possible.
+
+Also, sometime you want to recover as much as possible from a not intact
+copy of the data...
+
+Of course, different people have different priorities, but as I said, I
+like that this conversion is possible, and I never had the case of a
+tool saying "hmm, /dev/md<something> is not there, let's look at
+/dev/sdc instead".
+
+thanks,
+iustin
