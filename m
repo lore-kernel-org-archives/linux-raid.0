@@ -1,90 +1,89 @@
-From: Doug Ledford <dledford@redhat.com>
-Subject: Re: Time to  deprecate old RAID formats?
-Date: Sat, 20 Oct 2007 16:02:58 -0400
-Message-ID: <1192910578.1666.138.camel@firewall.xsintricity.com>
-References: <18200.49267.763509.924873@stoffel.org>
-	 <Pine.LNX.4.64.0710191109000.27246@p34.internal.lan>
-	 <18200.53593.687483.120827@stoffel.org>
-	 <1192810534.1666.68.camel@firewall.xsintricity.com>
-	 <18200.56684.14194.630264@stoffel.org>
-	 <Pine.LNX.4.64.0710191239250.27246@p34.internal.lan>
-	 <18200.57042.989520.666476@stoffel.org>
-	 <Pine.LNX.4.64.0710191245230.7849@p34.internal.lan>
-	 <1192813477.1666.74.camel@firewall.xsintricity.com>
-	 <Pine.LNX.4.64.0710191305130.9497@p34.internal.lan>
-	 <1192814581.1666.87.camel@firewall.xsintricity.com>
-	 <Pine.LNX.4.64.0710191347080.10857@p34.internal.lan>
-	 <471A4B3F.907@msgid.tls.msk.ru>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: mdadm 2.6.x regression, fails creation of raid1 w/ v1.0 sb and internal bitmap
+Date: Mon, 22 Oct 2007 16:55:00 +1000
+Message-ID: <18204.18756.505903.297754@notabene.brown>
+References: <170fa0d20710170837g1b0cd549w3b7fe8e663a01b7e@mail.gmail.com>
+	<18198.62670.605246.270516@notabene.brown>
+	<170fa0d20710180510o1edff608p22953fa712e217f6@mail.gmail.com>
+	<18200.6319.487833.714355@notabene.brown>
+	<170fa0d20710182152i4763c347r704c9d939e0a4638@mail.gmail.com>
+	<170fa0d20710182215v19756cabp30ddddeb7a7668a2@mail.gmail.com>
+	<18200.17870.419986.530609@notabene.brown>
+	<170fa0d20710191618s3e284d07q738662987acfe452@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-l+a8mvo8oIJoSINnH3gG"
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <471A4B3F.907@msgid.tls.msk.ru>
+In-Reply-To: message from Mike Snitzer on Friday October 19
 Sender: linux-raid-owner@vger.kernel.org
-To: Michael Tokarev <mjt@tls.msk.ru>
-Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, John Stoffel <john@stoffel.org>, linux-raid@vger.kernel.org
+To: Mike Snitzer <snitzer@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Friday October 19, snitzer@gmail.com wrote:
+> On 10/19/07, Neil Brown <neilb@suse.de> wrote:
+> > On Friday October 19, snitzer@gmail.com wrote:
+> 
+> > > I'm using a stock 2.6.19.7 that I then backported various MD fixes to
+> > > from 2.6.20 -> 2.6.23...  this kernel has worked great until I
+> > > attempted v1.0 sb w/ bitmap=internal using mdadm 2.6.x.
+> > >
+> > > But would you like me to try a stock 2.6.22 or 2.6.23 kernel?
+> >
+> > Yes please.
+> > I'm suspecting the code in write_sb_page where it tests if the bitmap
+> > overlaps the data or metadata.  The only way I can see you getting the
+> > exact error that you do get it for that to fail.
+> > That test was introduced in 2.6.22.  Did you backport that?  Any
+> > chance it got mucked up a bit?
+> 
+> I believe you're referring to commit
+> f0d76d70bc77b9b11256a3a23e98e80878be1578.  That change actually made
+> it into 2.6.23 AFAIK; but yes I actually did backport that fix (which
+> depended on ab6085c795a71b6a21afe7469d30a365338add7a).
+> 
+> If I back-out f0d76d70bc77b9b11256a3a23e98e80878be1578 I can create a
+> raid1 w/ v1.0 sb and an internal bitmap.  But clearly that is just
+> because I removed the negative checks that you introduced ;)
+> 
+> For me this begs the question: what else would
+> f0d76d70bc77b9b11256a3a23e98e80878be1578 depend on that I missed?  I
+> included 505fa2c4a2f125a70951926dfb22b9cf273994f1 and
+> 	ab6085c795a71b6a21afe7469d30a365338add7a too.
+> 
+> *shrug*...
+> 
 
---=-l+a8mvo8oIJoSINnH3gG
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+This is all very odd...
+I definitely tested this last week and couldn't reproduce the
+problem.  This week I can reproduce it easily.  And given the nature
+of the bug, I cannot see how it ever worked.
 
-On Sat, 2007-10-20 at 22:38 +0400, Michael Tokarev wrote:
-> Justin Piszcz wrote:
-> >=20
-> > On Fri, 19 Oct 2007, Doug Ledford wrote:
-> >=20
-> >> On Fri, 2007-10-19 at 13:05 -0400, Justin Piszcz wrote:
-> []
-> >>> Got it, so for RAID1 it would make sense if LILO supported it (the
-> >>> later versions of the md superblock)
-> >>
-> >> Lilo doesn't know anything about the superblock format, however, lilo
-> >> expects the raid1 device to start at the beginning of the physical
-> >> partition.  In otherwords, format 1.0 would work with lilo.
-> > Did not work when I tried 1.x with LILO, switched back to 00.90.03 and
-> > it worked fine.
->=20
-> There are different 1.x - and the difference is exactly this -- location
-> of the superblock.  In 1.0, superblock is located at the end, just like
-> with 0.90, and lilo works just fine with it.  It gets confused somehow
-> (however I don't see how really, because it uses bmap() to get a list
-> of physical blocks for the files it wants to access - those should be
-> in absolute numbers, regardless of the superblock locaction) when the
-> superblock is at the beginning (v 1.1 or 1.2).
->=20
-> /mjt
+Anyway, here is a fix that works for me.
 
-It's been a *long* time since I looked at the lilo raid1 support (I
-wrote the original patch that Red Hat used, I have no idea if that's
-what the lilo maintainer integrated though).  However, IIRC, it uses
-bmap on the file, which implies it's via the filesystem mounted on the
-raid device.  And the numbers are not absolute I don't think except with
-respect to the file system.  So, I think the situation could be made to
-work if you just taught lilo that on version 1.1 or version 1.2
-superblock raids that it should add the data offset of the raid to the
-bmap numbers (which I think are already added to the partition offset
-numbers).
+NeilBrown
 
---=20
-Doug Ledford <dledford@redhat.com>
-              GPG KeyID: CFBFF194
-              http://people.redhat.com/dledford
+--------
+Fix an unsigned compare to allow creation of bitmaps with v1.0 metadata.
 
-Infiniband specific RPMs available at
-              http://people.redhat.com/dledford/Infiniband
+As page->index is unsigned, this all becomes an unsigned comparison, which
+ almost always returns an error.
 
---=-l+a8mvo8oIJoSINnH3gG
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+Signed-off-by: Neil Brown <neilb@suse.de>
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.7 (GNU/Linux)
+### Diffstat output
+ ./drivers/md/bitmap.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-iD8DBQBHGl7yTzP9PM7pjw8RAtXrAJ4sn1E90DRjMmRq4U6dQ3j0SgXEpQCfa2wK
-JJYxG4dLI3kS+gJyumvuM0M=
-=xE1Z
------END PGP SIGNATURE-----
-
---=-l+a8mvo8oIJoSINnH3gG--
-
+diff .prev/drivers/md/bitmap.c ./drivers/md/bitmap.c
+--- .prev/drivers/md/bitmap.c	2007-10-22 16:47:52.000000000 +1000
++++ ./drivers/md/bitmap.c	2007-10-22 16:50:10.000000000 +1000
+@@ -274,7 +274,7 @@ static int write_sb_page(struct bitmap *
+ 			if (bitmap->offset < 0) {
+ 				/* DATA  BITMAP METADATA  */
+ 				if (bitmap->offset
+-				    + page->index * (PAGE_SIZE/512)
++				    + (long)(page->index * (PAGE_SIZE/512))
+ 				    + size/512 > 0)
+ 					/* bitmap runs in to metadata */
+ 					return -EINVAL;
