@@ -1,59 +1,106 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: flaky controller or disk error?
-Date: Mon, 22 Oct 2007 10:09:38 -0400 (EDT)
-Message-ID: <Pine.LNX.4.64.0710221009220.7523@p34.internal.lan>
-References: <20071022135421.GA31257@apartia.fr>
+From: Peter <thenephilim13@yahoo.com>
+Subject: Re: slow raid5 performance
+Date: Mon, 22 Oct 2007 09:15:44 -0700 (PDT)
+Message-ID: <734883.10495.qm@web52812.mail.re2.yahoo.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20071022135421.GA31257@apartia.fr>
 Sender: linux-raid-owner@vger.kernel.org
-To: Louis-David Mitterrand <vindex+lists-linux-raid@apartia.org>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Does anyone have any insights here? How do I interpret the seemingly competing system & iowait numbers... is my system both CPU and PCI bus bound? 
+
+----- Original Message ----
+From: nefilim
+To: linux-raid@vger.kernel.org
+Sent: Thursday, October 18, 2007 4:45:20 PM
+Subject: slow raid5 performance
 
 
-On Mon, 22 Oct 2007, Louis-David Mitterrand wrote:
 
-> Hi,
->
-> [using kernel 2.6.23 and mdadm 2.6.3+20070929]
->
-> I have a rather flaky sata controller with which I am trying to resync a raid5
-> array. It usually starts failing after 40% of the resync is done. Short of
-> changing the controller (which I will do later this week), is there a way to
-> have mdmadm resume the resync where it left at reboot time?
->
-> Here is the error I am seeing in the syslog. Can this actually be a disk
-> error?
->
-> 	Oct 18 11:54:34 sylla kernel: ata1.00: exception Emask 0x10 SAct 0x0 SErr 0x10000 action 0x2 frozen
-> 	Oct 18 11:54:34 sylla kernel: ata1.00: irq_stat 0x00400000, PHY RDY changed
-> 	Oct 18 11:54:34 sylla kernel: ata1.00: cmd ea/00:00:00:00:00/00:00:00:00:00/a0 tag 0 cdb 0x0 data 0
-> 	Oct 18 11:54:34 sylla kernel: res 40/00:00:19:26:33/00:00:3a:00:00/40 Emask 0x10 (ATA bus error)
-> 	Oct 18 11:54:35 sylla kernel: ata1: soft resetting port
-> 	Oct 18 11:54:40 sylla kernel: ata1: failed to reset engine (errno=-95)<4>ata1: port is slow to respond, please be patient (Status 0xd0)
-> 	Oct 18 11:54:45 sylla kernel: ata1: softreset failed (device not ready)
-> 	Oct 18 11:54:45 sylla kernel: ata1: hard resetting port
-> 	Oct 18 11:54:46 sylla kernel: ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-> 	Oct 18 11:54:46 sylla kernel: ata1.00: configured for UDMA/133
-> 	Oct 18 11:54:46 sylla kernel: ata1: EH complete
-> 	Oct 18 11:54:46 sylla kernel: sd 0:0:0:0: [sda] 976773168 512-byte hardware sectors (500108 MB)
-> 	Oct 18 11:54:46 sylla kernel: sd 0:0:0:0: [sda] Write Protect is off
-> 	Oct 18 11:54:46 sylla kernel: sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
-> 	Oct 18 11:54:46 sylla kernel: sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
->
->
-> Thanks,
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+Hi
 
-I've seen something similiar, it turned out to be a bad disk.
+Pretty new to software raid, I have the following setup in a file
+ server:
 
-I've also seen it when the cable was loose.
+/dev/md0:
+        Version : 00.90.03
+  Creation Time : Wed Oct 10 11:05:46 2007
+     Raid Level : raid5
+     Array Size : 976767872 (931.52 GiB 1000.21 GB)
+  Used Dev Size : 488383936 (465.76 GiB 500.11 GB)
+   Raid Devices : 3
+  Total Devices : 3
+Preferred Minor : 0
+    Persistence : Superblock is persistent
 
-Justin.
+    Update Time : Thu Oct 18 15:02:16 2007
+          State : active
+ Active Devices : 3
+Working Devices : 3
+ Failed Devices : 0
+  Spare Devices : 0
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+           UUID : 9dcbd480:c5ca0550:ca45cdab:f7c9f29d
+         Events : 0.9
+
+    Number   Major   Minor   RaidDevice State
+       0       8       33        0      active sync   /dev/sdc1
+       1       8       49        1      active sync   /dev/sdd1
+       2       8       65        2      active sync   /dev/sde1
+
+3 x 500GB WD RE2 hard drives
+AMD Athlon XP 2400 (2.0Ghz), 1GB RAM
+/dev/sd[ab] are connected to Sil 3112 controller on PCI bus
+/dev/sd[cde] are connected to Sil 3114 controller on PCI bus
+
+Transferring large media files from /dev/sdb to /dev/md0 I see the
+ following
+with iostat:
+
+avg-cpu:  %user   %nice %system %iowait  %steal   %idle
+           1.01    0.00   55.56   40.40    0.00    3.03
+
+Device:            tps    MB_read/s    MB_wrtn/s    MB_read    MB_wrtn
+sda               0.00         0.00         0.00          0          0
+sdb             261.62        31.09         0.00         30          0
+sdc             148.48         0.15        16.40          0         16
+sdd             102.02         0.41        16.14          0         15
+sde             113.13         0.29        16.18          0         16
+md0            8263.64         0.00        32.28          0         31
+ 
+which is pretty much what I see with hdparm etc. 32MB/s seems pretty
+ slow
+for drives that can easily do 50MB/s each. Read performance is better
+ around
+85MB/s (although I expected somewhat higher). So it doesn't seem that
+ PCI
+bus is limiting factor here (127MB/s theoretical throughput.. 100MB/s
+ real
+world?) quite yet... I see a lot of time being spent in the kernel..
+ and a
+significant iowait time. The CPU is pretty old but where exactly is the
+bottleneck? 
+
+Any thoughts, insights or recommendations welcome!
+
+Cheers
+Peter
+-- 
+View this message in context:
+ http://www.nabble.com/slow-raid5-performance-tf4650085.html#a13284909
+Sent from the linux-raid mailing list archive at Nabble.com.
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid"
+ in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+
