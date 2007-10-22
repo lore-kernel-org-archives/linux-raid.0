@@ -1,34 +1,31 @@
-From: NeilBrown <neilb@suse.de>
-Subject: [PATCH 001 of 2] md: Fix an unsigned compare to allow creation of bitmaps with v1.0 metadata.
-Date: Mon, 22 Oct 2007 17:15:43 +1000
-Message-ID: <1071022071543.31256@suse.de>
-References: <20071022171426.31103.patches@notabene>
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754840AbXJVHQV@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Stable <stable@kernel.org>
+From: Louis-David Mitterrand <vindex+lists-linux-raid@apartia.org>
+Subject: Re: very degraded RAID5, or increasing capacity by adding discs
+Date: Mon, 22 Oct 2007 11:03:01 +0200
+Message-ID: <20071022090300.GA22588@apartia.fr>
+References: <20071008211313.6cd8bbb5@absurd> <470AB496.5010406@msgid.tls.msk.ru> <18186.62585.7261.178442@notabene.brown> <470B4E82.6010102@msgid.tls.msk.ru>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <470B4E82.6010102@msgid.tls.msk.ru>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Tue, Oct 09, 2007 at 01:48:50PM +0400, Michael Tokarev wrote:
+> 
+> There still is - at least for ext[23].  Even offline resizers
+> can't do resizes from any to any size, extfs developers recommend
+> to recreate filesystem anyway if size changes significantly.
+> I'm too lazy to find a reference now, it has been mentioned here
+> on linux-raid at least this year.  It's sorta like fat (yea, that
+> ms-dog filesystem) - when you resize it from, say, 501Mb to 999Mb,
+> everything is ok, but if you want to go from 501Mb to 1Gb+1, you
+> have to recreate almost all data structures because sizes of
+> all internal fields changes - and here it's much safer to just
+> re-create it from scratch than trying to modify it in place.
+> Sure it's much better for extfs, but the point is still the same.
 
-As page->index is unsigned, this all becomes an unsigned comparison, which
- almost always returns an error.
-
-Signed-off-by: Neil Brown <neilb@suse.de>
-Cc: Stable <stable@kernel.org>
-
-### Diffstat output
- ./drivers/md/bitmap.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff .prev/drivers/md/bitmap.c ./drivers/md/bitmap.c
---- .prev/drivers/md/bitmap.c	2007-10-22 16:55:48.000000000 +1000
-+++ ./drivers/md/bitmap.c	2007-10-22 16:55:52.000000000 +1000
-@@ -274,7 +274,7 @@ static int write_sb_page(struct bitmap *
- 			if (bitmap->offset < 0) {
- 				/* DATA  BITMAP METADATA  */
- 				if (bitmap->offset
--				    + page->index * (PAGE_SIZE/512)
-+				    + (long)(page->index * (PAGE_SIZE/512))
- 				    + size/512 > 0)
- 					/* bitmap runs in to metadata */
- 					return -EINVAL;
+I'll just mention that I once resized a multi-Tera ext3 filesystem and 
+it took 8hours +, a comparable XFS online resize lasted all of 10 
+seconds! 
