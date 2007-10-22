@@ -1,42 +1,87 @@
-From: Louis-David Mitterrand <vindex+lists-linux-raid@apartia.org>
-Subject: flaky controller or disk error?
-Date: Mon, 22 Oct 2007 15:54:21 +0200
-Message-ID: <20071022135421.GA31257@apartia.fr>
+From: "Mike Snitzer" <snitzer@gmail.com>
+Subject: Re: mdadm 2.6.x regression, fails creation of raid1 w/ v1.0 sb and internal bitmap
+Date: Mon, 22 Oct 2007 10:05:55 -0400
+Message-ID: <170fa0d20710220705m158b897sb74d7050ccd38b47@mail.gmail.com>
+References: <170fa0d20710170837g1b0cd549w3b7fe8e663a01b7e@mail.gmail.com>
+	 <18198.62670.605246.270516@notabene.brown>
+	 <170fa0d20710180510o1edff608p22953fa712e217f6@mail.gmail.com>
+	 <18200.6319.487833.714355@notabene.brown>
+	 <170fa0d20710182152i4763c347r704c9d939e0a4638@mail.gmail.com>
+	 <170fa0d20710182215v19756cabp30ddddeb7a7668a2@mail.gmail.com>
+	 <18200.17870.419986.530609@notabene.brown>
+	 <170fa0d20710191618s3e284d07q738662987acfe452@mail.gmail.com>
+	 <18204.18756.505903.297754@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <18204.18756.505903.297754@notabene.brown>
 Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+On 10/22/07, Neil Brown <neilb@suse.de> wrote:
+> On Friday October 19, snitzer@gmail.com wrote:
+> > On 10/19/07, Neil Brown <neilb@suse.de> wrote:
+> > > On Friday October 19, snitzer@gmail.com wrote:
+> >
+> > > > I'm using a stock 2.6.19.7 that I then backported various MD fixes to
+> > > > from 2.6.20 -> 2.6.23...  this kernel has worked great until I
+> > > > attempted v1.0 sb w/ bitmap=internal using mdadm 2.6.x.
+> > > >
+> > > > But would you like me to try a stock 2.6.22 or 2.6.23 kernel?
+> > >
+> > > Yes please.
+> > > I'm suspecting the code in write_sb_page where it tests if the bitmap
+> > > overlaps the data or metadata.  The only way I can see you getting the
+> > > exact error that you do get it for that to fail.
+> > > That test was introduced in 2.6.22.  Did you backport that?  Any
+> > > chance it got mucked up a bit?
+> >
+> > I believe you're referring to commit
+> > f0d76d70bc77b9b11256a3a23e98e80878be1578.  That change actually made
+> > it into 2.6.23 AFAIK; but yes I actually did backport that fix (which
+> > depended on ab6085c795a71b6a21afe7469d30a365338add7a).
+> >
+> > If I back-out f0d76d70bc77b9b11256a3a23e98e80878be1578 I can create a
+> > raid1 w/ v1.0 sb and an internal bitmap.  But clearly that is just
+> > because I removed the negative checks that you introduced ;)
+> >
+> > For me this begs the question: what else would
+> > f0d76d70bc77b9b11256a3a23e98e80878be1578 depend on that I missed?  I
+> > included 505fa2c4a2f125a70951926dfb22b9cf273994f1 and
+> >       ab6085c795a71b6a21afe7469d30a365338add7a too.
+> >
+> > *shrug*...
+> >
+>
+> This is all very odd...
+> I definitely tested this last week and couldn't reproduce the
+> problem.  This week I can reproduce it easily.  And given the nature
+> of the bug, I cannot see how it ever worked.
+>
+> Anyway, here is a fix that works for me.
 
-[using kernel 2.6.23 and mdadm 2.6.3+20070929]
+Hey Neil,
 
-I have a rather flaky sata controller with which I am trying to resync a raid5
-array. It usually starts failing after 40% of the resync is done. Short of
-changing the controller (which I will do later this week), is there a way to
-have mdmadm resume the resync where it left at reboot time?
+Your fix works for me too.  However, I'm wondering why you held back
+on fixing the same issue in the "bitmap runs into data" comparison
+that follows:
 
-Here is the error I am seeing in the syslog. Can this actually be a disk 
-error?
-
-	Oct 18 11:54:34 sylla kernel: ata1.00: exception Emask 0x10 SAct 0x0 SErr 0x10000 action 0x2 frozen
-	Oct 18 11:54:34 sylla kernel: ata1.00: irq_stat 0x00400000, PHY RDY changed
-	Oct 18 11:54:34 sylla kernel: ata1.00: cmd ea/00:00:00:00:00/00:00:00:00:00/a0 tag 0 cdb 0x0 data 0 
-	Oct 18 11:54:34 sylla kernel: res 40/00:00:19:26:33/00:00:3a:00:00/40 Emask 0x10 (ATA bus error)
-	Oct 18 11:54:35 sylla kernel: ata1: soft resetting port
-	Oct 18 11:54:40 sylla kernel: ata1: failed to reset engine (errno=-95)<4>ata1: port is slow to respond, please be patient (Status 0xd0)
-	Oct 18 11:54:45 sylla kernel: ata1: softreset failed (device not ready)
-	Oct 18 11:54:45 sylla kernel: ata1: hard resetting port
-	Oct 18 11:54:46 sylla kernel: ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-	Oct 18 11:54:46 sylla kernel: ata1.00: configured for UDMA/133
-	Oct 18 11:54:46 sylla kernel: ata1: EH complete
-	Oct 18 11:54:46 sylla kernel: sd 0:0:0:0: [sda] 976773168 512-byte hardware sectors (500108 MB)
-	Oct 18 11:54:46 sylla kernel: sd 0:0:0:0: [sda] Write Protect is off
-	Oct 18 11:54:46 sylla kernel: sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
-	Oct 18 11:54:46 sylla kernel: sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
-
+--- ./drivers/md/bitmap.c 2007-10-19 19:11:58.000000000 -0400
++++ ./drivers/md/bitmap.c 2007-10-22 09:53:41.000000000 -0400
+@@ -286,7 +286,7 @@
+                                /* METADATA BITMAP DATA */
+                                if (rdev->sb_offset*2
+                                    + bitmap->offset
+-                                   + page->index*(PAGE_SIZE/512) + size/512
++                                   +
+(long)(page->index*(PAGE_SIZE/512)) + size/512
+                                    > rdev->data_offset)
+                                        /* bitmap runs in to data */
+                                        return -EINVAL;
 
 Thanks,
+Mike
