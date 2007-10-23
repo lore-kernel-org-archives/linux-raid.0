@@ -1,71 +1,78 @@
-From: "Mike Snitzer" <snitzer@gmail.com>
-Subject: [PATCH] lvm2 support for detecting v1.x MD superblocks
-Date: Tue, 23 Oct 2007 11:32:56 -0400
-Message-ID: <170fa0d20710230832v3313d38fmc646d89c1b990252@mail.gmail.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: async_tx: get best channel
+Date: Tue, 23 Oct 2007 11:16:38 -0700
+Message-ID: <1193163398.14140.24.camel@dwillia2-linux.ch.intel.com>
+References: <200710191623.34381.yur@emcraft.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_Part_1102_15597605.1193153576291"
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <200710191623.34381.yur@emcraft.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: lvm-devel@redhat.com
-Cc: linux-raid@vger.kernel.org
+To: Yuri Tikhonov <yur@emcraft.com>
+Cc: Dan Williams <dan.j.williams@gmail.com>, Neil Brown <neilb@suse.de>, Wolfgang Denk <wd@denx.de>, Detlev Zundel <dzu@denx.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-------=_Part_1102_15597605.1193153576291
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+On Fri, 2007-10-19 at 05:23 -0700, Yuri Tikhonov wrote:
+> 
+>  Hello Dan,
 
-lvm2's MD v1.0 superblock detection doesn't work at all (because it
-doesn't use v1 sb offsets).
+Hi Yuri, sorry it has taken me so long to get back to you...
+> 
+>  I have a suggestion regarding the async_tx_find_channel() procedure.
+> 
+>  First, a little introduction. Some processors (e.g. ppc440spe) have several DMA
+> engines (say DMA1 and DMA2) which are capable of performing the same type of
+> operation, say XOR. The DMA2 engine may process the XOR operation faster than
+> the DMA1 engine, but DMA2 (which is faster) has some restrictions for the source
+> operand addresses, whereas there are no such restrictions for DMA1 (which is slower).
+> So the question is, how may ASYNC_TX select the DMA engine which will be the
+> most effective for the given tx operation ?
 
-I've tested the attached patch to work on MDs with v0.90.0, v1.0,
-v1.1, and v1.2 superblocks.
+>  In the example just described this means: if the faster engine, DMA2, may process
+> the tx operation with the given source operand addresses, then we select DMA2;
+> if the given source operand addresses cannot be processed with DMA2, then we
+> select the slower engine, DMA1.
+> 
+>  I see the following way for introducing such functionality.
+> 
+>  We may introduce an additional method in struct dma_device (let's call it device_estimate())
+> which would take the following as the arguments:
+> --- the list of sources to be processed during the given tx,
+> --- the type of operation (XOR, COPY, ...),
+> --- perhaps something else,
+>  and then estimate the effectiveness of processing this tx on the given channel.
+>  The async_tx_find_channel() function should call the device_estimate() method for each
+> registered dma channel and then select the most effective one.
+>  The architecture specific ADMA driver will be responsible for returning the greatest
+> value from the device_estimate() method for the channel which will be the most effective
+> for this given tx.
+> 
+>  What are your thoughts regarding this? Do you see any other effective ways for
+> enhancing ASYNC_TX with such functionality?
 
-please advise, thanks.
-Mike
+The problem with moving this test to async_tx_find_channel() is that it
+imposes extra overhead in the fast path.  It would be best if we could
+keep all these decisions in the slow path, or at least hide it from
+architectures that do not need to implement it.  The thing that makes
+this tricky is the fact that the speed is based on the source address...
 
-------=_Part_1102_15597605.1193153576291
-Content-Type: text/x-patch; name=lvm2_md_v1_sb_fix.patch
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_f84kiv7d
-Content-Disposition: attachment; filename=lvm2_md_v1_sb_fix.patch
+One question what are the source address restrictions, is it around
+high-memory?  My thought is MD usually only operates on GFP_KERNEL
+memory but sometimes sees high-memory when copying data into and out of
+the cache.  You might be able to achieve your use case by disabling
+(hiding) the XOR capability on the channels used for copying.  This will
+cause async_tx to switch the operation from the high memory capable copy
+channel to the fast low memory XOR channel.
 
-SW5kZXg6IGxpYi9kZXZpY2UvZGV2LW1kLmMKPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQpSQ1MgZmlsZTogL2N2cy9sdm0y
-L0xWTTIvbGliL2RldmljZS9kZXYtbWQuYyx2CnJldHJpZXZpbmcgcmV2aXNpb24gMS41CmRpZmYg
-LXUgLXIxLjUgZGV2LW1kLmMKLS0tIGxpYi9kZXZpY2UvZGV2LW1kLmMJMjAgQXVnIDIwMDcgMjA6
-NTU6MjUgLTAwMDAJMS41CisrKyBsaWIvZGV2aWNlL2Rldi1tZC5jCTIzIE9jdCAyMDA3IDE1OjE3
-OjU3IC0wMDAwCkBAIC0yNSw2ICsyNSw0MCBAQAogI2RlZmluZSBNRF9ORVdfU0laRV9TRUNUT1JT
-KHgpICgoeCAmIH4oTURfUkVTRVJWRURfU0VDVE9SUyAtIDEpKSBcCiAJCQkJLSBNRF9SRVNFUlZF
-RF9TRUNUT1JTKQogCitpbnQgZGV2X2hhc19tZF9zYihzdHJ1Y3QgZGV2aWNlICpkZXYsIHVpbnQ2
-NF90IHNiX29mZnNldCwgdWludDY0X3QgKnNiKQoreworCWludCByZXQgPSAwOwkKKwl1aW50MzJf
-dCBtZF9tYWdpYzsKKwkvKiBWZXJzaW9uIDEgaXMgbGl0dGxlIGVuZGlhbjsgdmVyc2lvbiAwLjkw
-LjAgaXMgbWFjaGluZSBlbmRpYW4gKi8KKwlpZiAoZGV2X3JlYWQoZGV2LCBzYl9vZmZzZXQsIHNp
-emVvZih1aW50MzJfdCksICZtZF9tYWdpYykgJiYKKwkgICAgKChtZF9tYWdpYyA9PSB4bGF0ZTMy
-KE1EX1NCX01BR0lDKSkgfHwKKwkgICAgIChtZF9tYWdpYyA9PSBNRF9TQl9NQUdJQykpKSB7CisJ
-CWlmIChzYikKKwkJCSpzYiA9IHNiX29mZnNldDsKKwkJcmV0ID0gMTsKKwl9CisJcmV0dXJuIHJl
-dDsKK30KKwordWludDY0X3QgdjFfc2Jfb2Zmc2V0KHVpbnQ2NF90IHNpemUsIGludCBtaW5vcl92
-ZXJzaW9uKSB7CisJdWludDY0X3Qgc2Jfb2Zmc2V0OworCXN3aXRjaChtaW5vcl92ZXJzaW9uKSB7
-CisJY2FzZSAwOgorCQlzYl9vZmZzZXQgPSBzaXplOworCQlzYl9vZmZzZXQgLT0gOCoyOworCQlz
-Yl9vZmZzZXQgJj0gfig0KjItMSk7CisJCWJyZWFrOworCWNhc2UgMToKKwkJc2Jfb2Zmc2V0ID0g
-MDsKKwkJYnJlYWs7CisJY2FzZSAyOgorCQlzYl9vZmZzZXQgPSA0KjI7CisJCWJyZWFrOworCX0K
-KwlzYl9vZmZzZXQgPDw9IFNFQ1RPUl9TSElGVDsKKwlyZXR1cm4gc2Jfb2Zmc2V0OworfQorCiAv
-KgogICogUmV0dXJucyAtMSBvbiBlcnJvcgogICovCkBAIC0zNSw3ICs2OSw2IEBACiAjaWZkZWYg
-bGludXgKIAogCXVpbnQ2NF90IHNpemUsIHNiX29mZnNldDsKLQl1aW50MzJfdCBtZF9tYWdpYzsK
-IAogCWlmICghZGV2X2dldF9zaXplKGRldiwgJnNpemUpKSB7CiAJCXN0YWNrOwpAQCAtNTAsMTYg
-KzgzLDIwIEBACiAJCXJldHVybiAtMTsKIAl9CiAKLQlzYl9vZmZzZXQgPSBNRF9ORVdfU0laRV9T
-RUNUT1JTKHNpemUpIDw8IFNFQ1RPUl9TSElGVDsKLQogCS8qIENoZWNrIGlmIGl0IGlzIGFuIG1k
-IGNvbXBvbmVudCBkZXZpY2UuICovCi0JLyogVmVyc2lvbiAxIGlzIGxpdHRsZSBlbmRpYW47IHZl
-cnNpb24gMC45MC4wIGlzIG1hY2hpbmUgZW5kaWFuICovCi0JaWYgKGRldl9yZWFkKGRldiwgc2Jf
-b2Zmc2V0LCBzaXplb2YodWludDMyX3QpLCAmbWRfbWFnaWMpICYmCi0JICAgICgobWRfbWFnaWMg
-PT0geGxhdGUzMihNRF9TQl9NQUdJQykpIHx8Ci0JICAgICAobWRfbWFnaWMgPT0gTURfU0JfTUFH
-SUMpKSkgewotCQlpZiAoc2IpCi0JCQkqc2IgPSBzYl9vZmZzZXQ7CisJLyogVmVyc2lvbiAwLjkw
-LjAgKi8KKwlzYl9vZmZzZXQgPSBNRF9ORVdfU0laRV9TRUNUT1JTKHNpemUpIDw8IFNFQ1RPUl9T
-SElGVDsKKwlpZiAoZGV2X2hhc19tZF9zYihkZXYsIHNiX29mZnNldCwgc2IpKSB7CiAJCXJldCA9
-IDE7CisJfSBlbHNlIHsKKwkJLyogVmVyc2lvbiAxLCB0cnkgdjEuMCAtPiB2MS4yICovCisJCWlu
-dCBtaW5vcjsKKwkJZm9yIChtaW5vciA9IDA7IG1pbm9yIDw9IDI7IG1pbm9yKyspIHsKKwkJCWlm
-IChkZXZfaGFzX21kX3NiKGRldiwgdjFfc2Jfb2Zmc2V0KHNpemUsIG1pbm9yKSwgc2IpKSB7CisJ
-CQkJcmV0ID0gMTsKKwkJCQlicmVhazsKKwkJCX0KKwkJfQogCX0KIAogCWlmICghZGV2X2Nsb3Nl
-KGRldikpCg==
-------=_Part_1102_15597605.1193153576291--
+Another way to approach this would be to implement architecture specific
+definitions of dma_channel_add_remove() and async_tx_rebalance().  This
+will bypass the default allocation scheme and allow you to assign the
+fastest channel to an operation, but it still does not allow for dynamic
+selection based on source/destination address...
+
+> 
+>  Regards, Yuri
+> 
+Regards,
+Dan
