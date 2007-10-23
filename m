@@ -1,57 +1,71 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: mdadm 2.6.x regression, fails creation of raid1 w/ v1.0 sb and internal bitmap
-Date: Tue, 23 Oct 2007 15:11:19 +1000
-Message-ID: <18205.33399.277434.48658@notabene.brown>
-References: <170fa0d20710170837g1b0cd549w3b7fe8e663a01b7e@mail.gmail.com>
-	<18198.62670.605246.270516@notabene.brown>
-	<170fa0d20710180510o1edff608p22953fa712e217f6@mail.gmail.com>
-	<18200.6319.487833.714355@notabene.brown>
-	<170fa0d20710182152i4763c347r704c9d939e0a4638@mail.gmail.com>
-	<170fa0d20710182215v19756cabp30ddddeb7a7668a2@mail.gmail.com>
-	<18200.17870.419986.530609@notabene.brown>
-	<170fa0d20710191618s3e284d07q738662987acfe452@mail.gmail.com>
-	<18204.18756.505903.297754@notabene.brown>
-	<170fa0d20710220705m158b897sb74d7050ccd38b47@mail.gmail.com>
+From: "Mike Snitzer" <snitzer@gmail.com>
+Subject: [PATCH] lvm2 support for detecting v1.x MD superblocks
+Date: Tue, 23 Oct 2007 11:32:56 -0400
+Message-ID: <170fa0d20710230832v3313d38fmc646d89c1b990252@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+	boundary="----=_Part_1102_15597605.1193153576291"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Mike Snitzer on Monday October 22
 Sender: linux-raid-owner@vger.kernel.org
-To: Mike Snitzer <snitzer@gmail.com>
+To: lvm-devel@redhat.com
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Monday October 22, snitzer@gmail.com wrote:
-> 
-> Hey Neil,
-> 
-> Your fix works for me too.  However, I'm wondering why you held back
-> on fixing the same issue in the "bitmap runs into data" comparison
-> that follows:
+------=_Part_1102_15597605.1193153576291
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-It isn't really needed here.  In this case bitmap->offset is positive,
-so all the numbers are positive, so it doesn't matter if the
-comparison is signed or not.
+lvm2's MD v1.0 superblock detection doesn't work at all (because it
+doesn't use v1 sb offsets).
 
-Thanks for mentioning it though.
+I've tested the attached patch to work on MDs with v0.90.0, v1.0,
+v1.1, and v1.2 superblocks.
 
-NeilBrown
+please advise, thanks.
+Mike
 
+------=_Part_1102_15597605.1193153576291
+Content-Type: text/x-patch; name=lvm2_md_v1_sb_fix.patch
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_f84kiv7d
+Content-Disposition: attachment; filename=lvm2_md_v1_sb_fix.patch
 
-> 
-> --- ./drivers/md/bitmap.c 2007-10-19 19:11:58.000000000 -0400
-> +++ ./drivers/md/bitmap.c 2007-10-22 09:53:41.000000000 -0400
-> @@ -286,7 +286,7 @@
->                                 /* METADATA BITMAP DATA */
->                                 if (rdev->sb_offset*2
->                                     + bitmap->offset
-> -                                   + page->index*(PAGE_SIZE/512) + size/512
-> +                                   +
-> (long)(page->index*(PAGE_SIZE/512)) + size/512
->                                     > rdev->data_offset)
->                                         /* bitmap runs in to data */
->                                         return -EINVAL;
-> 
-> Thanks,
-> Mike
+SW5kZXg6IGxpYi9kZXZpY2UvZGV2LW1kLmMKPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQpSQ1MgZmlsZTogL2N2cy9sdm0y
+L0xWTTIvbGliL2RldmljZS9kZXYtbWQuYyx2CnJldHJpZXZpbmcgcmV2aXNpb24gMS41CmRpZmYg
+LXUgLXIxLjUgZGV2LW1kLmMKLS0tIGxpYi9kZXZpY2UvZGV2LW1kLmMJMjAgQXVnIDIwMDcgMjA6
+NTU6MjUgLTAwMDAJMS41CisrKyBsaWIvZGV2aWNlL2Rldi1tZC5jCTIzIE9jdCAyMDA3IDE1OjE3
+OjU3IC0wMDAwCkBAIC0yNSw2ICsyNSw0MCBAQAogI2RlZmluZSBNRF9ORVdfU0laRV9TRUNUT1JT
+KHgpICgoeCAmIH4oTURfUkVTRVJWRURfU0VDVE9SUyAtIDEpKSBcCiAJCQkJLSBNRF9SRVNFUlZF
+RF9TRUNUT1JTKQogCitpbnQgZGV2X2hhc19tZF9zYihzdHJ1Y3QgZGV2aWNlICpkZXYsIHVpbnQ2
+NF90IHNiX29mZnNldCwgdWludDY0X3QgKnNiKQoreworCWludCByZXQgPSAwOwkKKwl1aW50MzJf
+dCBtZF9tYWdpYzsKKwkvKiBWZXJzaW9uIDEgaXMgbGl0dGxlIGVuZGlhbjsgdmVyc2lvbiAwLjkw
+LjAgaXMgbWFjaGluZSBlbmRpYW4gKi8KKwlpZiAoZGV2X3JlYWQoZGV2LCBzYl9vZmZzZXQsIHNp
+emVvZih1aW50MzJfdCksICZtZF9tYWdpYykgJiYKKwkgICAgKChtZF9tYWdpYyA9PSB4bGF0ZTMy
+KE1EX1NCX01BR0lDKSkgfHwKKwkgICAgIChtZF9tYWdpYyA9PSBNRF9TQl9NQUdJQykpKSB7CisJ
+CWlmIChzYikKKwkJCSpzYiA9IHNiX29mZnNldDsKKwkJcmV0ID0gMTsKKwl9CisJcmV0dXJuIHJl
+dDsKK30KKwordWludDY0X3QgdjFfc2Jfb2Zmc2V0KHVpbnQ2NF90IHNpemUsIGludCBtaW5vcl92
+ZXJzaW9uKSB7CisJdWludDY0X3Qgc2Jfb2Zmc2V0OworCXN3aXRjaChtaW5vcl92ZXJzaW9uKSB7
+CisJY2FzZSAwOgorCQlzYl9vZmZzZXQgPSBzaXplOworCQlzYl9vZmZzZXQgLT0gOCoyOworCQlz
+Yl9vZmZzZXQgJj0gfig0KjItMSk7CisJCWJyZWFrOworCWNhc2UgMToKKwkJc2Jfb2Zmc2V0ID0g
+MDsKKwkJYnJlYWs7CisJY2FzZSAyOgorCQlzYl9vZmZzZXQgPSA0KjI7CisJCWJyZWFrOworCX0K
+KwlzYl9vZmZzZXQgPDw9IFNFQ1RPUl9TSElGVDsKKwlyZXR1cm4gc2Jfb2Zmc2V0OworfQorCiAv
+KgogICogUmV0dXJucyAtMSBvbiBlcnJvcgogICovCkBAIC0zNSw3ICs2OSw2IEBACiAjaWZkZWYg
+bGludXgKIAogCXVpbnQ2NF90IHNpemUsIHNiX29mZnNldDsKLQl1aW50MzJfdCBtZF9tYWdpYzsK
+IAogCWlmICghZGV2X2dldF9zaXplKGRldiwgJnNpemUpKSB7CiAJCXN0YWNrOwpAQCAtNTAsMTYg
+KzgzLDIwIEBACiAJCXJldHVybiAtMTsKIAl9CiAKLQlzYl9vZmZzZXQgPSBNRF9ORVdfU0laRV9T
+RUNUT1JTKHNpemUpIDw8IFNFQ1RPUl9TSElGVDsKLQogCS8qIENoZWNrIGlmIGl0IGlzIGFuIG1k
+IGNvbXBvbmVudCBkZXZpY2UuICovCi0JLyogVmVyc2lvbiAxIGlzIGxpdHRsZSBlbmRpYW47IHZl
+cnNpb24gMC45MC4wIGlzIG1hY2hpbmUgZW5kaWFuICovCi0JaWYgKGRldl9yZWFkKGRldiwgc2Jf
+b2Zmc2V0LCBzaXplb2YodWludDMyX3QpLCAmbWRfbWFnaWMpICYmCi0JICAgICgobWRfbWFnaWMg
+PT0geGxhdGUzMihNRF9TQl9NQUdJQykpIHx8Ci0JICAgICAobWRfbWFnaWMgPT0gTURfU0JfTUFH
+SUMpKSkgewotCQlpZiAoc2IpCi0JCQkqc2IgPSBzYl9vZmZzZXQ7CisJLyogVmVyc2lvbiAwLjkw
+LjAgKi8KKwlzYl9vZmZzZXQgPSBNRF9ORVdfU0laRV9TRUNUT1JTKHNpemUpIDw8IFNFQ1RPUl9T
+SElGVDsKKwlpZiAoZGV2X2hhc19tZF9zYihkZXYsIHNiX29mZnNldCwgc2IpKSB7CiAJCXJldCA9
+IDE7CisJfSBlbHNlIHsKKwkJLyogVmVyc2lvbiAxLCB0cnkgdjEuMCAtPiB2MS4yICovCisJCWlu
+dCBtaW5vcjsKKwkJZm9yIChtaW5vciA9IDA7IG1pbm9yIDw9IDI7IG1pbm9yKyspIHsKKwkJCWlm
+IChkZXZfaGFzX21kX3NiKGRldiwgdjFfc2Jfb2Zmc2V0KHNpemUsIG1pbm9yKSwgc2IpKSB7CisJ
+CQkJcmV0ID0gMTsKKwkJCQlicmVhazsKKwkJCX0KKwkJfQogCX0KIAogCWlmICghZGV2X2Nsb3Nl
+KGRldikpCg==
+------=_Part_1102_15597605.1193153576291--
