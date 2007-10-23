@@ -1,50 +1,57 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: mdadm devices building in the wrong order
-Date: Tue, 23 Oct 2007 12:28:36 +1000
-Message-ID: <18205.23636.513400.895816@notabene.brown>
-References: <47710.64.230.0.49.1193100277.squirrel@fox2k.net>
+Subject: Re: mdadm 2.6.x regression, fails creation of raid1 w/ v1.0 sb and internal bitmap
+Date: Tue, 23 Oct 2007 15:11:19 +1000
+Message-ID: <18205.33399.277434.48658@notabene.brown>
+References: <170fa0d20710170837g1b0cd549w3b7fe8e663a01b7e@mail.gmail.com>
+	<18198.62670.605246.270516@notabene.brown>
+	<170fa0d20710180510o1edff608p22953fa712e217f6@mail.gmail.com>
+	<18200.6319.487833.714355@notabene.brown>
+	<170fa0d20710182152i4763c347r704c9d939e0a4638@mail.gmail.com>
+	<170fa0d20710182215v19756cabp30ddddeb7a7668a2@mail.gmail.com>
+	<18200.17870.419986.530609@notabene.brown>
+	<170fa0d20710191618s3e284d07q738662987acfe452@mail.gmail.com>
+	<18204.18756.505903.297754@notabene.brown>
+	<170fa0d20710220705m158b897sb74d7050ccd38b47@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from marc@fox2k.net on Monday October 22
+In-Reply-To: message from Mike Snitzer on Monday October 22
 Sender: linux-raid-owner@vger.kernel.org
-To: marc@fox2k.net
+To: Mike Snitzer <snitzer@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Monday October 22, marc@fox2k.net wrote:
-> Hello,
+On Monday October 22, snitzer@gmail.com wrote:
 > 
-> I am having a rather urgent and annoying problem and I would appreciate
-> some input from anyone who has come across this.  I have not been able to
-> find a solution as of yet.  My issue deals with nested raid using mdadm,
-> and it seems that upon a reboot mdadm is attempting to assemble the larger
-> array before the smaller component array is created, and thus it is
-> failing.
+> Hey Neil,
 > 
-> I have a degraded raid 5 array md1 whch is composed of hda1 and md0.  Upon
-> a reboot, mdadm attempts to build md1 before md0 is built. It fails, so
-> md1 is not build and I need to assemble it manually.
-> 
-> Is there a solution for this?
+> Your fix works for me too.  However, I'm wondering why you held back
+> on fixing the same issue in the "bitmap runs into data" comparison
+> that follows:
 
-What order are the arrays listed in in mdadm.conf?
-If md1 comes first, put it last.
+It isn't really needed here.  In this case bitmap->offset is positive,
+so all the numbers are positive, so it doesn't matter if the
+comparison is signed or not.
 
-Otherwise, I cannot think what might be happening.  Maybe if you
-include some kernel logs that might help.
-
-
-> 
-> Thanks you for your time,
-> 
-> Marc
-> 
-> p.s. I would like to also take a second to express my gratitude to Neil
-> Brown  for the mdadm utility.  I have found it very useful and it has made
-> working with raid in linux very enjoyable and straight-forward!
-
-Thanks :-)
+Thanks for mentioning it though.
 
 NeilBrown
+
+
+> 
+> --- ./drivers/md/bitmap.c 2007-10-19 19:11:58.000000000 -0400
+> +++ ./drivers/md/bitmap.c 2007-10-22 09:53:41.000000000 -0400
+> @@ -286,7 +286,7 @@
+>                                 /* METADATA BITMAP DATA */
+>                                 if (rdev->sb_offset*2
+>                                     + bitmap->offset
+> -                                   + page->index*(PAGE_SIZE/512) + size/512
+> +                                   +
+> (long)(page->index*(PAGE_SIZE/512)) + size/512
+>                                     > rdev->data_offset)
+>                                         /* bitmap runs in to data */
+>                                         return -EINVAL;
+> 
+> Thanks,
+> Mike
