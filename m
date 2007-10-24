@@ -1,73 +1,112 @@
 From: Doug Ledford <dledford@redhat.com>
-Subject: Re: chunk size (was Re: Time to deprecate old RAID formats?)
-Date: Tue, 23 Oct 2007 20:14:11 -0400
-Message-ID: <1193184851.10336.8.camel@firewall.xsintricity.com>
+Subject: Re: Time to  deprecate old RAID formats?
+Date: Tue, 23 Oct 2007 20:36:51 -0400
+Message-ID: <1193186211.10336.24.camel@firewall.xsintricity.com>
 References: <18200.49267.763509.924873@stoffel.org>
 	 <Pine.LNX.4.64.0710191109000.27246@p34.internal.lan>
 	 <18200.53593.687483.120827@stoffel.org>
 	 <1192810534.1666.68.camel@firewall.xsintricity.com>
-	 <18200.56684.14194.630264@stoffel.org>
-	 <Pine.LNX.4.64.0710191239250.27246@p34.internal.lan>
-	 <18200.57042.989520.666476@stoffel.org>
-	 <Pine.LNX.4.64.0710191245230.7849@p34.internal.lan>
-	 <1192813477.1666.74.camel@firewall.xsintricity.com>
-	 <Pine.LNX.4.64.0710191305130.9497@p34.internal.lan>
-	 <1192814581.1666.87.camel@firewall.xsintricity.com>
-	 <47193314.5010606@ziu.info>
-	 <1192886944.1666.124.camel@firewall.xsintricity.com>
-	 <471E49D2.9070608@ziu.info>
+	 <471A0C02.4030407@msgid.tls.msk.ru> <18202.5687.672431.295590@stoffel.org>
+	 <471A47CC.1070508@msgid.tls.msk.ru>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Lj5K2XXCE1rqIxscL4ZA"
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-RmFS2WyOKGKbhO4LLmMP"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <471E49D2.9070608@ziu.info>
+In-Reply-To: <471A47CC.1070508@msgid.tls.msk.ru>
 Sender: linux-raid-owner@vger.kernel.org
-To: Michal Soltys <nozo@ziu.info>
-Cc: linux-raid@vger.kernel.org
+To: Michael Tokarev <mjt@tls.msk.ru>
+Cc: John Stoffel <john@stoffel.org>, Justin Piszcz <jpiszcz@lucidpixels.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
---=-Lj5K2XXCE1rqIxscL4ZA
+--=-RmFS2WyOKGKbhO4LLmMP
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 2007-10-23 at 21:21 +0200, Michal Soltys wrote:
-> Doug Ledford wrote:
-> >=20
-> > Well, first I was thinking of files in the few hundreds of megabytes
-> > each to gigabytes each, and when they are streamed, they are streamed a=
-t
-> > a rate much lower than the full speed of the array, but still at a fast
-> > rate.  How parallel the reads are then would tend to be a function of
-> > chunk size versus streaming rate.=20
->=20
-> Ahh, I see now. Thanks for explanation.
->=20
-> I wonder though, if setting large readahead would help, if you used large=
-r=20
-> chunk size. Assuming other options are not possible - i.e. streaming from=
-=20
-> larger buffer, while reading to it in a full stripe width at least.
+On Sat, 2007-10-20 at 22:24 +0400, Michael Tokarev wrote:
+> John Stoffel wrote:
+> >>>>>> "Michael" =3D=3D Michael Tokarev <mjt@tls.msk.ru> writes:
 
-Probably not.  All my trial and error in the past with raid5 arrays and
-various situations that would cause pathological worst case behavior
-showed that once reads themselves reach 16k in size, and are sequential
-in nature, then the disk firmware's read ahead kicks in and your
-performance stays about the same regardless of increasing your OS read
-ahead.  In a nutshell, once you've convinced the disk firmware that you
-are going to be reading some data sequentially, it does the rest.  With
-a large stripe size (say 256k+), you'll trigger this firmware read ahead
-fairly early on in reading any given stripe, so you really don't buy
-much by reading the next stripe before you need it, and in fact can end
-up wasting a lot of RAM trying to do so, hurting overall performance.
+> > As Doug says, and I agree strongly, you DO NOT want to have the
+> > possibility of confusion and data loss, especially on bootup.  And
+>=20
+> There are different point of views, and different settings etc.
 
-> >=20
-> > I'm not familiar with the benchmark you are referring to.
-> >=20
->=20
-> I was thinking about=20
-> http://www.mail-archive.com/linux-raid@vger.kernel.org/msg08461.html
->=20
-> with small discussion that happend after that.
+Indeed, there are different points of view.  And with that in mind, I'll
+just point out that my point of view is that of an engineer who is
+responsible for all the legitimate md bugs in our products once tech
+support has weeded out the "you tried to do what?" cases.  From that
+point of view, I deal with *every* user's preferred use case, not any
+single use case.
+
+> For example, I once dealt with a linux user who was unable to
+> use his disk partition, because his system (it was RedHat if I
+> remember correctly) recognized some LVM volume on his disk (it
+> was previously used with Windows) and tried to automatically
+> activate it, thus making it "busy".
+
+Yep, that can still happen today under certain circumstances.
+
+>   What I'm talking about here
+> is that any automatic activation of anything should be done with
+> extreme care, using smart logic in the startup scripts if at
+> all.
+
+We do.  Unfortunately, there is no logic smart enough to recognize all
+the possible user use cases that we've seen given the way things are
+created now.
+
+> The Doug's example - in my opinion anyway - shows wrong tools
+> or bad logic in the startup sequence, not a general flaw in
+> superblock location.
+
+Well, one of the problems is that you can both use an md device as an
+LVM physical volume and use an LVM logical volume as an md constituent
+device.  Users have done both.
+
+> For example, when one drive was almost dead, and mdadm tried
+> to bring the array up, machine just hanged for unknown amount
+> of time.  An unexpirienced operator was there.  Instead of
+> trying to teach him how to pass parameter to the initramfs
+> to stop trying to assemble root array and next assembling
+> it manually, I told him to pass "root=3D/dev/sda1" to the
+> kernel.  Root mounts read-only, so it should be a safe thing
+> to do - I only needed root fs and minimal set of services
+> (which are even in initramfs) just for it to boot up to SOME
+> state where I can log in remotely and fix things later.
+
+Umm, no.  Generally speaking (I can't speak for other distros) but both
+Fedora and RHEL remount root rw even when coming up in single user mode.
+The only time the fs is left in ro mode is when it drops to a shell
+during rc.sysinit as a result of a failed fs check.  And if you are
+using an ext3 filesystem and things didn't go down clean, then you also
+get a journal replay.  So, then what happens when you think you've fixed
+things, and you reboot, and then due to random chance, the ext3 fs check
+gets the journal off the drive that wasn't mounted and replays things
+again?  Will this overwrite your fixes possibly?  Yep.  Could do all
+sorts of bad things.  In fact, unless you do a full binary compare of
+your constituent devices, you could have silent data corruption and just
+never know about it.  You may get off lucky and never *see* the
+corruption, but it could well be there.  The only safe way to
+reintegrate your raid after doing what you suggest is to kick the
+unmounted drive out of the array before rebooting by using mdadm to zero
+its superblock, boot up with a degraded raid1 array, and readd the
+kicked device back in.
+
+So, while you list several more examples of times when it was convenient
+to do as you suggest, these times can be handled in other ways (although
+it may mean keeping a rescue CD handy at each location just for
+situations like this) that are far safer IMO.
+
+Now, putting all this back into the point of view I have to take, which
+is what's the best default action to take for my customers, I'm sure you
+can understand how a default setup and recommendation of use that leaves
+silent data corruption is simply a non-starter for me.  If someone wants
+to do this manually, then go right ahead.  But as for what we do by
+default when the user asks us to create a raid array, we really need to
+be on superblock 1.1 or 1.2 (although we aren't yet, we've waited for
+the version 1 superblock issues to iron out and will do so in a future
+release).
+
 --=20
 Doug Ledford <dledford@redhat.com>
               GPG KeyID: CFBFF194
@@ -76,17 +115,17 @@ Doug Ledford <dledford@redhat.com>
 Infiniband specific RPMs available at
               http://people.redhat.com/dledford/Infiniband
 
---=-Lj5K2XXCE1rqIxscL4ZA
+--=-RmFS2WyOKGKbhO4LLmMP
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.7 (GNU/Linux)
 
-iD8DBQBHHo5TTzP9PM7pjw8RAqoMAJ4lUKPNBX9+NqSRBA4J6hm5yfitxACfXwSI
-hnGSBaPMRI6pt6UqFxmOEqU=
-=HhUo
+iD8DBQBHHpOjTzP9PM7pjw8RAupLAJ0R0VaBmcD7mktgD/p8aYScyTpD1wCcDgVs
+4o3SEqwdQPh9eNQObKrqmlo=
+=PkLs
 -----END PGP SIGNATURE-----
 
---=-Lj5K2XXCE1rqIxscL4ZA--
+--=-RmFS2WyOKGKbhO4LLmMP--
 
