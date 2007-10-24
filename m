@@ -1,166 +1,70 @@
-From: "Daniel L. Miller" <dmiller@amfes.com>
-Subject: Re: Raid-10 mount at startup always has problem
-Date: Wed, 24 Oct 2007 07:22:58 -0700
-Message-ID: <471F5542.3020504@amfes.com>
-References: <46D3147D.2040201@amfes.com> <46D49F1A.7030409@tmr.com> <46E4A39C.8040509@amfes.com> <46E4A5F0.9090407@sauce.co.nz> <46E4A7C3.1040902@amfes.com>
+From: "Mike Snitzer" <snitzer@gmail.com>
+Subject: Re: Time to deprecate old RAID formats?
+Date: Wed, 24 Oct 2007 11:18:29 -0400
+Message-ID: <170fa0d20710240818x42a4c611of5780d30ccb07b39@mail.gmail.com>
+References: <18200.49267.763509.924873@stoffel.org>
+	 <Pine.LNX.4.64.0710191109000.27246@p34.internal.lan>
+	 <18200.53593.687483.120827@stoffel.org>
+	 <1192810534.1666.68.camel@firewall.xsintricity.com>
+	 <18200.56684.14194.630264@stoffel.org>
+	 <1192813877.1666.79.camel@firewall.xsintricity.com>
+	 <18200.63987.514073.184865@stoffel.org> <471E7DC6.7050206@tmr.com>
+	 <18207.20482.272516.461264@stoffel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <46E4A7C3.1040902@amfes.com>
+In-Reply-To: <18207.20482.272516.461264@stoffel.org>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: John Stoffel <john@stoffel.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Daniel L. Miller wrote:
-> Richard Scobie wrote:
->> Daniel L. Miller wrote:
->>
->>> And you didn't ask, but my mdadm.conf:
->>> DEVICE partitions
->>> ARRAY /dev/.static/dev/md0 level=raid10 num-devices=4 
->>> UUID=9d94b17b:f5fac31a:577c252b:0d4c4b2a
->>
->> Try adding
->>
->> auto=part
->>
->> at the end of you mdadm.conf ARRAY line.
-> Thanks - will see what happens on my next reboot.
+On 10/24/07, John Stoffel <john@stoffel.org> wrote:
+> >>>>> "Bill" == Bill Davidsen <davidsen@tmr.com> writes:
 >
-Current mdadm.conf:
-DEVICE partitions
-ARRAY /dev/.static/dev/md0 level=raid10 num-devices=4 
-UUID=9d94b17b:f5fac31a:577c252b:0d4c4b2a auto=part
+> Bill> John Stoffel wrote:
+> >> Why do we have three different positions for storing the superblock?
+>
+> Bill> Why do you suggest changing anything until you get the answer to
+> Bill> this question? If you don't understand why there are three
+> Bill> locations, perhaps that would be a good initial investigation.
+>
+> Because I've asked this question before and not gotten an answer, nor
+> is it answered in the man page for mdadm on why we have this setup.
+>
+> Bill> Clearly the short answer is that they reflect three stages of
+> Bill> Neil's thinking on the topic, and I would bet that he had a good
+> Bill> reason for moving the superblock when he did it.
+>
+> So let's hear Neil's thinking about all this?  Or should I just work
+> up a patch to do what I suggest and see how that flies?
+>
+> Bill> Since you have to support all of them or break existing arrays,
+> Bill> and they all use the same format so there's no saving of code
+> Bill> size to mention, why even bring this up?
+>
+> Because of the confusion factor.  Again, since noone has been able to
+> articulate a reason why we have three different versions of the 1.x
+> superblock, nor have I seen any good reasons for why we should have
+> them, I'm going by the KISS principle to reduce the options to the
+> best one.
+>
+> And no, I'm not advocating getting rid of legacy support, but I AM
+> advocating that we settle on ONE standard format going forward as the
+> default for all new RAID superblocks.
 
-still have the problem where on boot one drive is not part of the 
-array.  Is there a log file I can check to find out WHY a drive is not 
-being added?  It's been a while since the reboot, but I did find some 
-entries in dmesg - I'm appending both the md lines and the physical disk 
-related lines.  The bottom shows one disk not being added (this time is 
-was sda) - and the disk that gets skipped on each boot seems to be 
-random - there's no consistent failure:
+Why exactly are you on this crusade to find the one "best" v1
+superblock location?  Giving people the freedom to place the
+superblock where they choose isn't a bad thing.  Would adding
+something like "If in doubt, 1.1 is the safest choice." to the mdadm
+man page give you the KISS warm-fuzzies you're pining for?
 
-[...]
-md: raid10 personality registered for level 10
-[...]
-md: Autodetecting RAID arrays.
-md: autorun ...
-md: ... autorun DONE.
-[...]
-scsi0 : sata_nv
-scsi1 : sata_nv
-ata1: SATA max UDMA/133 cmd 0xffffc20001428480 ctl 0xffffc200014284a0 
-bmdma 0x0000000000011410 irq 23
-ata2: SATA max UDMA/133 cmd 0xffffc20001428580 ctl 0xffffc200014285a0 
-bmdma 0x0000000000011418 irq 23
-ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-ata1.00: ATA-7: ST3160811AS, 3.AAE, max UDMA/133
-ata1.00: 312581808 sectors, multi 16: LBA48 NCQ (depth 31/32)
-ata1.00: configured for UDMA/133
-ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-ata2.00: ATA-7: ST3160811AS, 3.AAE, max UDMA/133
-ata2.00: 312581808 sectors, multi 16: LBA48 NCQ (depth 31/32)
-ata2.00: configured for UDMA/133
-scsi 0:0:0:0: Direct-Access     ATA      ST3160811AS      3.AA PQ: 0 ANSI: 5
-ata1: bounce limit 0xFFFFFFFFFFFFFFFF, segment boundary 0xFFFFFFFF, hw 
-segs 61
-scsi 1:0:0:0: Direct-Access     ATA      ST3160811AS      3.AA PQ: 0 ANSI: 5
-ata2: bounce limit 0xFFFFFFFFFFFFFFFF, segment boundary 0xFFFFFFFF, hw 
-segs 61
-ACPI: PCI Interrupt Link [LSI1] enabled at IRQ 22
-ACPI: PCI Interrupt 0000:00:08.0[A] -> Link [LSI1] -> GSI 22 (level, 
-high) -> IRQ 22
-sata_nv 0000:00:08.0: Using ADMA mode
-PCI: Setting latency timer of device 0000:00:08.0 to 64
-scsi2 : sata_nv
-scsi3 : sata_nv
-ata3: SATA max UDMA/133 cmd 0xffffc2000142a480 ctl 0xffffc2000142a4a0 
-bmdma 0x0000000000011420 irq 22
-ata4: SATA max UDMA/133 cmd 0xffffc2000142a580 ctl 0xffffc2000142a5a0 
-bmdma 0x0000000000011428 irq 22
-ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-ata3.00: ATA-7: ST3160811AS, 3.AAE, max UDMA/133
-ata3.00: 312581808 sectors, multi 16: LBA48 NCQ (depth 31/32)
-ata3.00: configured for UDMA/133
-ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-ata4.00: ATA-7: ST3160811AS, 3.AAE, max UDMA/133
-ata4.00: 312581808 sectors, multi 16: LBA48 NCQ (depth 31/32)
-ata4.00: configured for UDMA/133
-scsi 2:0:0:0: Direct-Access     ATA      ST3160811AS      3.AA PQ: 0 ANSI: 5
-ata3: bounce limit 0xFFFFFFFFFFFFFFFF, segment boundary 0xFFFFFFFF, hw 
-segs 61
-scsi 3:0:0:0: Direct-Access     ATA      ST3160811AS      3.AA PQ: 0 ANSI: 5
-ata4: bounce limit 0xFFFFFFFFFFFFFFFF, segment boundary 0xFFFFFFFF, hw 
-segs 61
-sd 0:0:0:0: [sda] 312581808 512-byte hardware sectors (160042 MB)
-sd 0:0:0:0: [sda] Write Protect is off
-sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
-sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't 
-support DPO or FUA
-sd 0:0:0:0: [sda] 312581808 512-byte hardware sectors (160042 MB)
-sd 0:0:0:0: [sda] Write Protect is off
-sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
-sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't 
-support DPO or FUA
- sda: unknown partition table
-sd 0:0:0:0: [sda] Attached SCSI disk
-sd 1:0:0:0: [sdb] 312581808 512-byte hardware sectors (160042 MB)
-sd 1:0:0:0: [sdb] Write Protect is off
-sd 1:0:0:0: [sdb] Mode Sense: 00 3a 00 00
-sd 1:0:0:0: [sdb] Write cache: enabled, read cache: enabled, doesn't 
-support DPO or FUA
-sd 1:0:0:0: [sdb] 312581808 512-byte hardware sectors (160042 MB)
-sd 1:0:0:0: [sdb] Write Protect is off
-sd 1:0:0:0: [sdb] Mode Sense: 00 3a 00 00
-sd 1:0:0:0: [sdb] Write cache: enabled, read cache: enabled, doesn't 
-support DPO or FUA
- sdb: unknown partition table
-sd 1:0:0:0: [sdb] Attached SCSI disk
-sd 2:0:0:0: [sdc] 312581808 512-byte hardware sectors (160042 MB)
-sd 2:0:0:0: [sdc] Write Protect is off
-sd 2:0:0:0: [sdc] Mode Sense: 00 3a 00 00
-sd 2:0:0:0: [sdc] Write cache: enabled, read cache: enabled, doesn't 
-support DPO or FUA
-sd 2:0:0:0: [sdc] 312581808 512-byte hardware sectors (160042 MB)
-sd 2:0:0:0: [sdc] Write Protect is off
-sd 2:0:0:0: [sdc] Mode Sense: 00 3a 00 00
-sd 2:0:0:0: [sdc] Write cache: enabled, read cache: enabled, doesn't 
-support DPO or FUA
- sdc: unknown partition table
-sd 2:0:0:0: [sdc] Attached SCSI disk
-sd 3:0:0:0: [sdd] 312581808 512-byte hardware sectors (160042 MB)
-sd 3:0:0:0: [sdd] Write Protect is off
-sd 3:0:0:0: [sdd] Mode Sense: 00 3a 00 00
-sd 3:0:0:0: [sdd] Write cache: enabled, read cache: enabled, doesn't 
-support DPO or FUA
-sd 3:0:0:0: [sdd] 312581808 512-byte hardware sectors (160042 MB)
-sd 3:0:0:0: [sdd] Write Protect is off
-sd 3:0:0:0: [sdd] Mode Sense: 00 3a 00 00
-sd 3:0:0:0: [sdd] Write cache: enabled, read cache: enabled, doesn't 
-support DPO or FUA
- sdd: unknown partition table
-sd 3:0:0:0: [sdd] Attached SCSI disk
-[...]
-md: md0 stopped.
-md: md0 stopped.
-md: bind<sdc>
-md: bind<sdd>
-md: bind<sdb>
-md: md0: raid array is not clean -- starting background reconstruction
-raid10: raid set md0 active with 3 out of 4 devices
-md: couldn't update array info. -22
-md: resync of RAID array md0
-md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
-md: using maximum available idle IO bandwidth (but not more than 200000 
-KB/sec) for resync.
-md: using 128k window, over a total of 312581632 blocks.
-Filesystem "md0": Disabling barriers, not supported by the underlying device
-XFS mounting filesystem md0
-Starting XFS recovery on filesystem: md0 (logdev: internal)
-Ending XFS recovery on filesystem: md0 (logdev: internal)
+The fact that, after you read the manpage, you didn't even know that
+the only difference between the v1.x variants is the location that the
+superblock is placed indicates that you're not in a position to be so
+tremendously evangelical about affecting code changes that limit
+existing options.
 
-
-
--- 
-Daniel
+Mike
