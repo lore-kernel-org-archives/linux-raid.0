@@ -1,56 +1,73 @@
 From: Doug Ledford <dledford@redhat.com>
-Subject: Re: Time to  deprecate old RAID formats?
-Date: Tue, 23 Oct 2007 20:09:15 -0400
-Message-ID: <1193184555.10336.3.camel@firewall.xsintricity.com>
+Subject: Re: chunk size (was Re: Time to deprecate old RAID formats?)
+Date: Tue, 23 Oct 2007 20:14:11 -0400
+Message-ID: <1193184851.10336.8.camel@firewall.xsintricity.com>
 References: <18200.49267.763509.924873@stoffel.org>
 	 <Pine.LNX.4.64.0710191109000.27246@p34.internal.lan>
 	 <18200.53593.687483.120827@stoffel.org>
 	 <1192810534.1666.68.camel@firewall.xsintricity.com>
 	 <18200.56684.14194.630264@stoffel.org>
-	 <1192813877.1666.79.camel@firewall.xsintricity.com>
-	 <18200.63987.514073.184865@stoffel.org>  <471E7DC6.7050206@tmr.com>
+	 <Pine.LNX.4.64.0710191239250.27246@p34.internal.lan>
+	 <18200.57042.989520.666476@stoffel.org>
+	 <Pine.LNX.4.64.0710191245230.7849@p34.internal.lan>
+	 <1192813477.1666.74.camel@firewall.xsintricity.com>
+	 <Pine.LNX.4.64.0710191305130.9497@p34.internal.lan>
+	 <1192814581.1666.87.camel@firewall.xsintricity.com>
+	 <47193314.5010606@ziu.info>
+	 <1192886944.1666.124.camel@firewall.xsintricity.com>
+	 <471E49D2.9070608@ziu.info>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-aKqY8qUVQMJPqDjlj8XA"
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Lj5K2XXCE1rqIxscL4ZA"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <471E7DC6.7050206@tmr.com>
+In-Reply-To: <471E49D2.9070608@ziu.info>
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: John Stoffel <john@stoffel.org>, Justin Piszcz <jpiszcz@lucidpixels.com>, linux-raid@vger.kernel.org
+To: Michal Soltys <nozo@ziu.info>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
---=-aKqY8qUVQMJPqDjlj8XA
+--=-Lj5K2XXCE1rqIxscL4ZA
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 2007-10-23 at 19:03 -0400, Bill Davidsen wrote:
-> John Stoffel wrote:
-> > Why do we have three different positions for storing the superblock? =20
-> >  =20
-> Why do you suggest changing anything until you get the answer to this=20
-> question? If you don't understand why there are three locations, perhaps=20
-> that would be a good initial investigation.
+On Tue, 2007-10-23 at 21:21 +0200, Michal Soltys wrote:
+> Doug Ledford wrote:
+> >=20
+> > Well, first I was thinking of files in the few hundreds of megabytes
+> > each to gigabytes each, and when they are streamed, they are streamed a=
+t
+> > a rate much lower than the full speed of the array, but still at a fast
+> > rate.  How parallel the reads are then would tend to be a function of
+> > chunk size versus streaming rate.=20
 >=20
-> Clearly the short answer is that they reflect three stages of Neil's=20
-> thinking on the topic, and I would bet that he had a good reason for=20
-> moving the superblock when he did it.
-
-I believe, and Neil can correct me if I'm wrong, that 1.0 (at the end of
-the device) is to satisfy people that want to get at their raid1 data
-without bringing up the device or using a loop mount with an offset.
-Version 1.1, at the beginning of the device, is to prevent accidental
-access to a device when the raid array doesn't come up.  And version 1.2
-(4k from the beginning of the device) would be suitable for those times
-when you want to embed a boot sector at the very beginning of the device
-(which really only needs 512 bytes, but a 4k offset is as easy to deal
-with as anything else).  From the standpoint of wanting to make sure an
-array is suitable for embedding a boot sector, the 1.2 superblock may be
-the best default.
-
-> Since you have to support all of them or break existing arrays, and they=20
-> all use the same format so there's no saving of code size to mention,=20
-> why even bring this up?
+> Ahh, I see now. Thanks for explanation.
 >=20
+> I wonder though, if setting large readahead would help, if you used large=
+r=20
+> chunk size. Assuming other options are not possible - i.e. streaming from=
+=20
+> larger buffer, while reading to it in a full stripe width at least.
+
+Probably not.  All my trial and error in the past with raid5 arrays and
+various situations that would cause pathological worst case behavior
+showed that once reads themselves reach 16k in size, and are sequential
+in nature, then the disk firmware's read ahead kicks in and your
+performance stays about the same regardless of increasing your OS read
+ahead.  In a nutshell, once you've convinced the disk firmware that you
+are going to be reading some data sequentially, it does the rest.  With
+a large stripe size (say 256k+), you'll trigger this firmware read ahead
+fairly early on in reading any given stripe, so you really don't buy
+much by reading the next stripe before you need it, and in fact can end
+up wasting a lot of RAM trying to do so, hurting overall performance.
+
+> >=20
+> > I'm not familiar with the benchmark you are referring to.
+> >=20
+>=20
+> I was thinking about=20
+> http://www.mail-archive.com/linux-raid@vger.kernel.org/msg08461.html
+>=20
+> with small discussion that happend after that.
 --=20
 Doug Ledford <dledford@redhat.com>
               GPG KeyID: CFBFF194
@@ -59,17 +76,17 @@ Doug Ledford <dledford@redhat.com>
 Infiniband specific RPMs available at
               http://people.redhat.com/dledford/Infiniband
 
---=-aKqY8qUVQMJPqDjlj8XA
+--=-Lj5K2XXCE1rqIxscL4ZA
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.7 (GNU/Linux)
 
-iD8DBQBHHo0kTzP9PM7pjw8RAjuQAJ4iDa3Awhqr1ajG+BSuVBsypCbV2QCaA1HZ
-nk+f+ziN+jhpL3hPiYj98P8=
-=fZzh
+iD8DBQBHHo5TTzP9PM7pjw8RAqoMAJ4lUKPNBX9+NqSRBA4J6hm5yfitxACfXwSI
+hnGSBaPMRI6pt6UqFxmOEqU=
+=HhUo
 -----END PGP SIGNATURE-----
 
---=-aKqY8qUVQMJPqDjlj8XA--
+--=-Lj5K2XXCE1rqIxscL4ZA--
 
