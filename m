@@ -1,40 +1,31 @@
-From: David Greaves <david@dgreaves.com>
-Subject: Re: Time to  deprecate old RAID formats?
-Date: Thu, 25 Oct 2007 16:00:31 +0100
-Message-ID: <4720AF8F.4050906@dgreaves.com>
-References: <18200.49267.763509.924873@stoffel.org>	<Pine.LNX.4.64.0710191109000.27246@p34.internal.lan>	<18200.53593.687483.120827@stoffel.org>	<1192810534.1666.68.camel@firewall.xsintricity.com>	<18200.56684.14194.630264@stoffel.org>	<1192813877.1666.79.camel@firewall.xsintricity.com>	<18200.63987.514073.184865@stoffel.org>	<471E7DC6.7050206@tmr.com>	<1193184555.10336.3.camel@firewall.xsintricity.com> <18207.56169.769976.512617@notabene.brown> <4720AD15.7040600@tmr.com>
+From: "Daniel L. Miller" <dmiller@amfes.com>
+Subject: Re: Raid-10 mount at startup always has problem
+Date: Thu, 25 Oct 2007 09:13:10 -0700
+Message-ID: <4720C096.9010301@amfes.com>
+References: <46D3147D.2040201@amfes.com>	<46D49F1A.7030409@tmr.com>	<46E4A39C.8040509@amfes.com>	<46E4A5F0.9090407@sauce.co.nz>	<46E4A7C3.1040902@amfes.com>	<471F5542.3020504@amfes.com> <18208.13247.106651.142652@notabene.brown> <4720AC60.2040506@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4720AD15.7040600@tmr.com>
+In-Reply-To: <4720AC60.2040506@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: Neil Brown <neilb@suse.de>, Doug Ledford <dledford@redhat.com>, John Stoffel <john@stoffel.org>, Justin Piszcz <jpiszcz@lucidpixels.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 Bill Davidsen wrote:
-> Neil Brown wrote:
->> I certainly accept that the documentation is probably less that
->> perfect (by a large margin).  I am more than happy to accept patches
->> or concrete suggestions on how to improve that.  I always think it is
->> best if a non-developer writes documentation (and a developer reviews
->> it) as then it is more likely to address the issues that a
->> non-developer will want to read about, and in a way that will make
->> sense to a non-developer. (i.e. I'm to close to the subject to write
->> good doco).
-> 
-> Patches against what's in 2.6.4 I assume? I can't promise to write
-> anything which pleases even me, but I will take a look at it.
-> 
+> You don't think the "unknown partition table" on sdd is related? 
+> Because I read that as a sure indication that the system isn't 
+> considering the drive as one without a partition table, and therefore 
+> isn't looking for the superblock on the whole device. And as Doug 
+> pointed out, once you decide that there is a partition table lots of 
+> things might try to use it.  
+Now, would the drive "letters" (sd[a-d]) change from reboot-to-reboot?  
+Because it's not consistent - so far I've seen each of the four drives 
+at one time or another fail during the boot.
 
-The man page is a great place for describing, eg, the superblock location; but
-don't forget we have
-  http://linux-raid.osdl.org/index.php/Main_Page
-which is probably a better place for *discussions* (or essays) about the
-superblock location (eg the LVM / v1.1 comment Janek picked up on)
+I've added the verbose logging to the udev mdadm rule, and I've also 
+manually specified the drives in mdadm.conf instead of leaving it on 
+auto.  Curious what the next boot will bring.
 
-In fact I was going to take some of the writings from this thread and put them
-up there.
-
-David
+-- 
+Daniel
