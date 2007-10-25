@@ -1,71 +1,56 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: Time to  deprecate old RAID formats?
-Date: Wed, 24 Oct 2007 20:09:21 -0400
-Message-ID: <471FDEB1.8040401@garzik.org>
-References: <18200.49267.763509.924873@stoffel.org>	<Pine.LNX.4.64.0710191109000.27246@p34.internal.lan>	<18200.53593.687483.120827@stoffel.org>	<1192810534.1666.68.camel@firewall.xsintricity.com>	<18200.56684.14194.630264@stoffel.org>	<1192813877.1666.79.camel@firewall.xsintricity.com>	<18200.63987.514073.184865@stoffel.org>	<471E7DC6.7050206@tmr.com>	<1193184555.10336.3.camel@firewall.xsintricity.com> <18207.56169.769976.512617@notabene.brown>
+From: "Daniel L. Miller" <dmiller@amfes.com>
+Subject: Re: Raid-10 mount at startup always has problem
+Date: Wed, 24 Oct 2007 22:43:51 -0700
+Message-ID: <47202D17.3040000@amfes.com>
+References: <46D3147D.2040201@amfes.com> <46D49F1A.7030409@tmr.com> <46E4A39C.8040509@amfes.com> <46E4A5F0.9090407@sauce.co.nz> <46E4A7C3.1040902@amfes.com> <471F5542.3020504@amfes.com> <471FA485.6010705@tmr.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18207.56169.769976.512617@notabene.brown>
+In-Reply-To: <471FA485.6010705@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Doug Ledford <dledford@redhat.com>, Bill Davidsen <davidsen@tmr.com>, John Stoffel <john@stoffel.org>, Justin Piszcz <jpiszcz@lucidpixels.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil Brown wrote:
-> On Tuesday October 23, dledford@redhat.com wrote:
-> As for where the metadata "should" be placed, it is interesting to
-> observe that the SNIA's "DDFv1.2" puts it at the end of the device.
-> And as DDF is an industry standard sponsored by multiple companies it
-> must be ......
-> Sorry.  I had intended to say "correct", but when it came to it, my
-> fingers refused to type that word in that context.
-> 
-> DDF is in a somewhat different situation though.  It assumes that the
-> components are whole devices, and that the controller has exclusive
-> access - there is no way another controller could interpret the
-> devices differently before the DDF controller has a chance.
+Bill Davidsen wrote:
+>>>> Daniel L. Miller wrote:
+>> Current mdadm.conf:
+>> DEVICE partitions
+>> ARRAY /dev/.static/dev/md0 level=raid10 num-devices=4 
+>> UUID=9d94b17b:f5fac31a:577c252b:0d4c4b2a auto=part
+>>
+>> still have the problem where on boot one drive is not part of the 
+>> array.  Is there a log file I can check to find out WHY a drive is 
+>> not being added?  It's been a while since the reboot, but I did find 
+>> some entries in dmesg - I'm appending both the md lines and the 
+>> physical disk related lines.  The bottom shows one disk not being 
+>> added (this time is was sda) - and the disk that gets skipped on each 
+>> boot seems to be random - there's no consistent failure:
+>
+> I suspect the base problem is that you are using whole disks instead 
+> of partitions, and the problem with the partition table below is 
+> probably an indication that you have something on that drive which 
+> looks like a partition table but isn't. That prevents the drive from 
+> being recognized as a whole drive. You're lucky, if the data looked 
+> enough like a partition table to be valid the o/s probably would have 
+> tried to do something with it.
+> [...]
+> This may be the rare case where you really do need to specify the 
+> actual devices to get reliable operation.
+OK - I'm officially confused now (I was just unofficially before).  WHY 
+is it a problem using whole drives as RAID components?  I would have 
+thought that building a RAID storage unit with identically sized drives 
+- and using each drive's full capacity - is exactly the way you're 
+supposed to!  I should mention that the boot/system drive is IDE, and 
+NOT part of the RAID.  So I'm not worried about losing the system - but 
+I AM concerned about the data.  I'm using four drives in a RAID-10 
+configuration - I thought this would provide a good blend of safety and 
+performance for a small fileserver.
 
-<grin> agreed.
+Because it's RAID-10 - I would ASSuME that I can drop one drive (after 
+all, I keep booting one drive short), partition if necessary, and add it 
+back in.  But how would splitting these disks into partitions improve 
+either stability or performance?
 
-
-> DDF is also interesting in that it uses 512 byte alignment for
-> metadata.  The 'anchor' block is in the last sector of the device.
-> This contrasts with current md metadata which is all 4K aligned.
-> Given that the drive manufacturers seem to be telling us that "4096 is
-> the new 512", I think 4K alignment was a good idea.
-> It could be that DDF actually specifies the anchor to reside in the
-> last "block" rather than the last "sector", and it could be that the
-> spec allows for block size to be device specific - I'd have to hunt
-> through the spec again to be sure.
-
-Its a bit of a mess.
-
-Yes, with 1K and 4K sector devices starting to appear, as long as the 
-underlying partitioning gets the initial partition alignment correct, 
-this /should/ continue functioning as normal.
-
-If for whatever reason you wind up with an odd-aligned 1K sector device 
-and your data winds up aligned to even numbered [hard] sectors, 
-performance will definitely suffer.
-
-Mostly this is out of MD's hands, and up to the sysadmin and 
-partitioning tools to get hard-sector alignment right.
-
-
-> For the record, I have no intention of deprecating any of the metadata
-> formats, not even 0.90.
-
-strongly agreed
-
-
-> It is conceivable that I could change the default, though that would
-> require a decision as to what the new default would be.  I think it
-> would have to be 1.0 or it would cause too much confusion.
-
-A newer default would be nice.
-
-	Jeff
-
-
+-- 
+Daniel
