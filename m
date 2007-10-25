@@ -1,56 +1,57 @@
 From: Doug Ledford <dledford@redhat.com>
-Subject: Re: Raid-10 mount at startup always has problem
-Date: Thu, 25 Oct 2007 02:51:51 -0400
-Message-ID: <1193295111.10336.85.camel@firewall.xsintricity.com>
-References: <46D3147D.2040201@amfes.com> <46D49F1A.7030409@tmr.com>
-	 <46E4A39C.8040509@amfes.com> <46E4A5F0.9090407@sauce.co.nz>
-	 <46E4A7C3.1040902@amfes.com> <471F5542.3020504@amfes.com>
-	 <18208.13247.106651.142652@notabene.brown>
+Subject: Re: Time to  deprecate old RAID formats?
+Date: Thu, 25 Oct 2007 03:01:52 -0400
+Message-ID: <1193295712.10336.94.camel@firewall.xsintricity.com>
+References: <18200.49267.763509.924873@stoffel.org>
+	 <Pine.LNX.4.64.0710191109000.27246@p34.internal.lan>
+	 <18200.53593.687483.120827@stoffel.org>
+	 <1192810534.1666.68.camel@firewall.xsintricity.com>
+	 <18200.56684.14194.630264@stoffel.org>
+	 <1192813877.1666.79.camel@firewall.xsintricity.com>
+	 <18200.63987.514073.184865@stoffel.org> <471E7DC6.7050206@tmr.com>
+	 <1193184555.10336.3.camel@firewall.xsintricity.com>
+	 <18207.56169.769976.512617@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-v1YrKkmhK99Fs8qccbiB"
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-sT8L/ons6JPyWmqR/djK"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18208.13247.106651.142652@notabene.brown>
+In-Reply-To: <18207.56169.769976.512617@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: Neil Brown <neilb@suse.de>
-Cc: "Daniel L. Miller" <dmiller@amfes.com>, linux-raid@vger.kernel.org
+Cc: Bill Davidsen <davidsen@tmr.com>, John Stoffel <john@stoffel.org>, Justin Piszcz <jpiszcz@lucidpixels.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
---=-v1YrKkmhK99Fs8qccbiB
+--=-sT8L/ons6JPyWmqR/djK
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, 2007-10-25 at 16:12 +1000, Neil Brown wrote:
+On Thu, 2007-10-25 at 09:55 +1000, Neil Brown wrote:
 
-> > md: md0 stopped.
-> > md: md0 stopped.
-> > md: bind<sdc>
-> > md: bind<sdd>
-> > md: bind<sdb>
-> > md: md0: raid array is not clean -- starting background reconstruction
-> > raid10: raid set md0 active with 3 out of 4 devices
-> > md: couldn't update array info. -22
->   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> As for where the metadata "should" be placed, it is interesting to
+> observe that the SNIA's "DDFv1.2" puts it at the end of the device.
+> And as DDF is an industry standard sponsored by multiple companies it
+> must be ......
+> Sorry.  I had intended to say "correct", but when it came to it, my
+> fingers refused to type that word in that context.
 >=20
-> This is the most surprising line, and hence the one most likely to
-> convey helpful information.
->=20
-> This message is generated when a process calls "SET_ARRAY_INFO" on an
-> array that is already running, and the changes implied by the new
-> "array_info" are not supportable.
->=20
-> The only way I can see this happening is if two copies of "mdadm" are
-> running at exactly the same time and are both are trying to assemble
-> the same array.  The first calls SET_ARRAY_INFO and assembles the
-> (partial) array.  The second calls SET_ARRAY_INFO and gets this error.
-> Not all devices are included because while when one mdadm when to
-> look, at a device, the other has it locked and so the first just
-> ignored it.
+> DDF is in a somewhat different situation though.  It assumes that the
+> components are whole devices, and that the controller has exclusive
+> access - there is no way another controller could interpret the
+> devices differently before the DDF controller has a chance.
 
-If mdadm copy A gets three of the devices, I wouldn't think mdadm copy B
-would have been able to get enough devices to decide to even try and
-assemble the array (assuming that once copy A locked the devices during
-open, that it then held the devices until time to assemble the array).
+Putting a superblock at the end of a device works around OS
+compatibility issues and other things related to transitioning the
+device from part of an array to not, etc.  But, it works if and only if
+you have the guarantee you mention.  Long, long ago I tinkered with the
+idea of md multipath devices using an end of device superblock on the
+whole device to allow reliable multipath detection and autostart,
+failover of all partitions on a device when a command to any partition
+failed, ability to use standard partition tables, etc. while being 100%
+transparent to the rest of the OS.  The second you considered FC
+connected devices and multi-OS access, that fell apart in a big way.
+Very analogous.
+
+So, I wouldn't necessarily call it wrong, but it's fragile.
 
 --=20
 Doug Ledford <dledford@redhat.com>
@@ -60,17 +61,17 @@ Doug Ledford <dledford@redhat.com>
 Infiniband specific RPMs available at
               http://people.redhat.com/dledford/Infiniband
 
---=-v1YrKkmhK99Fs8qccbiB
+--=-sT8L/ons6JPyWmqR/djK
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.7 (GNU/Linux)
 
-iD8DBQBHID0HTzP9PM7pjw8RAu+7AJ9JIR/h5l52Yw5xGCuWA0U7D0MfTwCfR7tX
-NkqSduAtBeJ49CsesZW1+EM=
-=Bm/6
+iD8DBQBHID9gTzP9PM7pjw8RAiw+AJ4k3nLpXQ+Nl/5GX3sNplmEyDEUBQCcD3R/
+FvdIF67ijnowQQEyFWpiVTM=
+=RW4+
 -----END PGP SIGNATURE-----
 
---=-v1YrKkmhK99Fs8qccbiB--
+--=-sT8L/ons6JPyWmqR/djK--
 
