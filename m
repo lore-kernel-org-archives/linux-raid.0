@@ -1,31 +1,41 @@
-From: Gabor Gombas <gombasg@sztaki.hu>
-Subject: Re: Time to  deprecate old RAID formats?
-Date: Fri, 26 Oct 2007 19:06:46 +0200
-Message-ID: <20071026170646.GB30268@boogie.lpds.sztaki.hu>
-References: <1192810534.1666.68.camel@firewall.xsintricity.com> <18200.56684.14194.630264@stoffel.org> <1192813877.1666.79.camel@firewall.xsintricity.com> <18200.63987.514073.184865@stoffel.org> <20071019212303.GB2013@teal.hq.k1024.org> <1192830129.1666.103.camel@firewall.xsintricity.com> <20071020075349.GA17431@teal.hq.k1024.org> <1192885917.1666.112.camel@firewall.xsintricity.com> <20071026095417.GC32550@percy.comedia.it> <20071026162226.GB28982@boogie.lpds.sztaki.hu>
+From: Alberto Alonso <alberto@ggsys.net>
+Subject: Re: Software RAID when it works and when it doesn't
+Date: Fri, 26 Oct 2007 12:09:13 -0500
+Message-ID: <1193418553.4771.13.camel@w100>
+References: <14526.1192571833@mdt.ecitele.com>
+	 <87bqaw5tqb.fsf@informatik.uni-tuebingen.de>
+	 <1192777672.16416.495.camel@w100> <471E79A5.5020607@tmr.com>
+	 <1193205003.23414.72.camel@w100> <471FA543.9090502@tmr.com>
+	 <87fxzxzwga.fsf@informatik.uni-tuebingen.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20071026162226.GB28982@boogie.lpds.sztaki.hu>
+In-Reply-To: <87fxzxzwga.fsf@informatik.uni-tuebingen.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Goswin von Brederlow <brederlo@informatik.uni-tuebingen.de>
+Cc: Bill Davidsen <davidsen@tmr.com>, Mike Accetta <maccetta@laurelnetworks.com>, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, Oct 26, 2007 at 06:22:27PM +0200, Gabor Gombas wrote:
+On Fri, 2007-10-26 at 18:12 +0200, Goswin von Brederlow wrote:
 
-> You got the ordering wrong. You should get userspace support ready and
-> accepted _first_, and then you can start the
-> flamew^H^H^H^H^H^Hdiscussion to make the in-kernel partitioning code
-> configurable.
+> Depending on the hardware you can still access a different disk while
+> another one is reseting. But since there is no timeout in md it won't
+> try to use any other disk while one is stuck.
+> 
+> That is exactly what I miss.
+> 
+> MfG
+>         Goswin
+> -
 
-Oh wait that is possible even today. So you can build your own kernel
-without any partition table format support - problem solved.
+That is exactly what I've been talking about. Can md implement
+timeouts and not just leave it to the drivers?
 
-Gabor
+I can't believe it but last night another array hit the dust when
+1 of the 12 drives went bad. This year is just a nightmare for
+me. It brought all the network down until I was able to mark it
+failed and reboot to remove it from the array.
 
--- 
-     ---------------------------------------------------------
-     MTA SZTAKI Computer and Automation Research Institute
-                Hungarian Academy of Sciences
-     ---------------------------------------------------------
+Alberto
+
