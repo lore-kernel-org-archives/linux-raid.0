@@ -1,42 +1,41 @@
 From: Doug Ledford <dledford@redhat.com>
-Subject: Re: Time to  deprecate old RAID formats?
-Date: Fri, 26 Oct 2007 14:52:59 -0400
-Message-ID: <1193424779.10336.287.camel@firewall.xsintricity.com>
-References: <Pine.LNX.4.64.0710191109000.27246@p34.internal.lan>
-	 <18200.53593.687483.120827@stoffel.org>
-	 <1192810534.1666.68.camel@firewall.xsintricity.com>
-	 <18200.56684.14194.630264@stoffel.org>
-	 <1192813877.1666.79.camel@firewall.xsintricity.com>
-	 <18200.63987.514073.184865@stoffel.org>
-	 <20071019212303.GB2013@teal.hq.k1024.org>
-	 <1192830129.1666.103.camel@firewall.xsintricity.com>
-	 <20071020075349.GA17431@teal.hq.k1024.org>
-	 <1192885917.1666.112.camel@firewall.xsintricity.com>
-	 <20071026095417.GC32550@percy.comedia.it>
+Subject: Re: Implementing low level timeouts within MD
+Date: Fri, 26 Oct 2007 15:00:54 -0400
+Message-ID: <1193425254.10336.290.camel@firewall.xsintricity.com>
+References: <1193418753.4771.17.camel@w100>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-OujkJfqo+oLqHpemN2wc"
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-yLxKUQgfvIP3H0ZnPu81"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20071026095417.GC32550@percy.comedia.it>
+In-Reply-To: <1193418753.4771.17.camel@w100>
 Sender: linux-raid-owner@vger.kernel.org
-To: Luca Berra <bluca@comedia.it>
+To: Alberto Alonso <alberto@ggsys.net>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
---=-OujkJfqo+oLqHpemN2wc
+--=-yLxKUQgfvIP3H0ZnPu81
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, 2007-10-26 at 11:54 +0200, Luca Berra wrote:
-> On Sat, Oct 20, 2007 at 09:11:57AM -0400, Doug Ledford wrote:
-> just apply some rules, so if you find a partition table _AND_ an md
-> superblock at the end, read both and you can tell if it is an md on a
-> partition or a partitioned md raid1 device.
+On Fri, 2007-10-26 at 12:12 -0500, Alberto Alonso wrote:
+> I've been asking on my other posts but haven't seen
+> a direct reply to this question:
+>=20
+> Can MD implement timeouts so that it detects problems when
+> drivers don't come back?
+>=20
+> For me this year shall be known as "the year the array
+> stood still" (bad scifi reference :-)
+>=20
+> After 4 different array failures all due to a single drive
+> failure I think it would really be helpful if the md code
+> timed out the driver.
 
-In fact, no you can't.  I know, because I've created a device that had
-both but wasn't a raid device.  And it's matching partner still existed
-too.  What you are talking about would have misrecognized this
-situation, guaranteed.
+This isn't an md problem, this is a low level disk driver problem.  Yell
+at the author of the disk driver in question.  If that driver doesn't
+time things out and return errors up the stack in a reasonable time,
+then it's broken.  Md should not, and realistically can not, take the
+place of a properly written low level driver.
 
 --=20
 Doug Ledford <dledford@redhat.com>
@@ -46,17 +45,17 @@ Doug Ledford <dledford@redhat.com>
 Infiniband specific RPMs available at
               http://people.redhat.com/dledford/Infiniband
 
---=-OujkJfqo+oLqHpemN2wc
+--=-yLxKUQgfvIP3H0ZnPu81
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.7 (GNU/Linux)
 
-iD8DBQBHIjeLTzP9PM7pjw8RAumfAJwPd1KEY2T1i/ElVIpZ2LihTeOcgwCfRV0i
-Qx4IXj7uRsfQmviU6PdfX6E=
-=8wtA
+iD8DBQBHIjlmTzP9PM7pjw8RAqDKAJ0WAwn4IXiQetMwfrpU6Cq8mZCwSgCeI+EG
+7WL3OhCgj7UOYg55C4NoGBI=
+=mkcN
 -----END PGP SIGNATURE-----
 
---=-OujkJfqo+oLqHpemN2wc--
+--=-yLxKUQgfvIP3H0ZnPu81--
 
