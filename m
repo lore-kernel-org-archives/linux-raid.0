@@ -1,80 +1,50 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
+From: Goswin von Brederlow <brederlo@informatik.uni-tuebingen.de>
 Subject: Re: Software RAID when it works and when it doesn't
-Date: Fri, 26 Oct 2007 12:11:47 -0400 (EDT)
-Message-ID: <Pine.LNX.4.64.0710261211420.711@p34.internal.lan>
-References: <14526.1192571833@mdt.ecitele.com> <87bqaw5tqb.fsf@informatik.uni-tuebingen.de>
- <1192777672.16416.495.camel@w100> <Pine.LNX.4.64.0710191102110.27246@p34.internal.lan>
- <87k5p9zwip.fsf@informatik.uni-tuebingen.de>
+Date: Fri, 26 Oct 2007 18:12:37 +0200
+Message-ID: <87fxzxzwga.fsf@informatik.uni-tuebingen.de>
+References: <14526.1192571833@mdt.ecitele.com>
+	<87bqaw5tqb.fsf@informatik.uni-tuebingen.de>
+	<1192777672.16416.495.camel@w100> <471E79A5.5020607@tmr.com>
+	<1193205003.23414.72.camel@w100> <471FA543.9090502@tmr.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87k5p9zwip.fsf@informatik.uni-tuebingen.de>
+In-Reply-To: <471FA543.9090502@tmr.com> (Bill Davidsen's message of "Wed, 24
+	Oct 2007 16:04:19 -0400")
 Sender: linux-raid-owner@vger.kernel.org
-To: Goswin von Brederlow <brederlo@informatik.uni-tuebingen.de>
-Cc: Alberto Alonso <alberto@ggsys.net>, Mike Accetta <maccetta@laurelnetworks.com>, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: Alberto Alonso <alberto@ggsys.net>, Goswin von Brederlow <brederlo@informatik.uni-tuebingen.de>, Mike Accetta <maccetta@laurelnetworks.com>, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Bill Davidsen <davidsen@tmr.com> writes:
 
-
-On Fri, 26 Oct 2007, Goswin von Brederlow wrote:
-
-> Justin Piszcz <jpiszcz@lucidpixels.com> writes:
->
->> On Fri, 19 Oct 2007, Alberto Alonso wrote:
+> Alberto Alonso wrote:
+>> On Tue, 2007-10-23 at 18:45 -0400, Bill Davidsen wrote:
 >>
->>> On Thu, 2007-10-18 at 17:26 +0200, Goswin von Brederlow wrote:
->>>> Mike Accetta <maccetta@laurelnetworks.com> writes:
+>>
+>>> I'm not sure the timeouts are the problem, even if md did its own
+>>> timeout, it then needs a way to tell the driver (or device) to stop
+>>> retrying. I don't believe that's available, certainly not
+>>> everywhere, and anything other than everywhere would turn the md
+>>> code into a nest of exceptions.
 >>>
->>>> What I would like to see is a timeout driven fallback mechanism. If
->>>> one mirror does not return the requested data within a certain time
->>>> (say 1 second) then the request should be duplicated on the other
->>>> mirror. If the first mirror later unchokes then it remains in the
->>>> raid, if it fails it gets removed. But (at least reads) should not
->>>> have to wait for that process.
->>>>
->>>> Even better would be if some write delay could also be used. The still
->>>> working mirror would get an increase in its serial (so on reboot you
->>>> know one disk is newer). If the choking mirror unchokes then it can
->>>> write back all the delayed data and also increase its serial to
->>>> match. Otherwise it gets really failed. But you might have to use
->>>> bitmaps for this or the cache size would limit its usefullnes.
->>>>
->>>> MfG
->>>>         Goswin
->>>
->>> I think a timeout on both: reads and writes is a must. Basically I
->>> believe that all problems that I've encountered issues using software
->>> raid would have been resolved by using a timeout within the md code.
->>>
->>> This will keep a server from crashing/hanging when the underlying
->>> driver doesn't properly handle hard drive problems. MD can be
->>> smarter than the "dumb" drivers.
->>>
->>> Just my thoughts though, as I've never got an answer as to whether or
->>> not md can implement its own timeouts.
->>>
->>> Alberto
->>>
->>>
->>> -
->>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 >>>
 >>
->> I have a question with re-mapping sectors, can software raid be as
->> efficient or good at remapping bad sectors as an external raid
->> controller for, e.g., raid 10 or raid5?
->>
->> Justin.
+>> If we loose the ability to communication to that drive I don't see it
+>> as a problem (that's the whole point, we kick it out of the array). So,
+>> if we can't tell the driver about the failure we are still OK, md could
+>> successfully deal with misbehaved drivers.
 >
-> Software raid makes no remapping of bad sectors at all. It assumes the
-> disks will do sufficient remapping.
->
-> MfG
->        Goswin
->
+> I think what you really want is to notice how long the drive and
+> driver took to recover or fail, and take action based on that. In
+> general "kick the drive" is not optimal for a few bad spots, even if
+> the drive recovery sucks.
 
-Thanks, this is what I was looking for.
+Depending on the hardware you can still access a different disk while
+another one is reseting. But since there is no timeout in md it won't
+try to use any other disk while one is stuck.
 
-Justin.
+That is exactly what I miss.
+
+MfG
+        Goswin
