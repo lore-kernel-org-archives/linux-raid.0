@@ -1,50 +1,44 @@
-From: Goswin von Brederlow <brederlo@informatik.uni-tuebingen.de>
-Subject: Re: Software RAID when it works and when it doesn't
-Date: Fri, 26 Oct 2007 18:12:37 +0200
-Message-ID: <87fxzxzwga.fsf@informatik.uni-tuebingen.de>
-References: <14526.1192571833@mdt.ecitele.com>
-	<87bqaw5tqb.fsf@informatik.uni-tuebingen.de>
-	<1192777672.16416.495.camel@w100> <471E79A5.5020607@tmr.com>
-	<1193205003.23414.72.camel@w100> <471FA543.9090502@tmr.com>
+From: Gabor Gombas <gombasg@sztaki.hu>
+Subject: Re: Time to  deprecate old RAID formats?
+Date: Fri, 26 Oct 2007 18:22:27 +0200
+Message-ID: <20071026162226.GB28982@boogie.lpds.sztaki.hu>
+References: <18200.53593.687483.120827@stoffel.org> <1192810534.1666.68.camel@firewall.xsintricity.com> <18200.56684.14194.630264@stoffel.org> <1192813877.1666.79.camel@firewall.xsintricity.com> <18200.63987.514073.184865@stoffel.org> <20071019212303.GB2013@teal.hq.k1024.org> <1192830129.1666.103.camel@firewall.xsintricity.com> <20071020075349.GA17431@teal.hq.k1024.org> <1192885917.1666.112.camel@firewall.xsintricity.com> <20071026095417.GC32550@percy.comedia.it>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <471FA543.9090502@tmr.com> (Bill Davidsen's message of "Wed, 24
-	Oct 2007 16:04:19 -0400")
+Content-Disposition: inline
+In-Reply-To: <20071026095417.GC32550@percy.comedia.it>
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: Alberto Alonso <alberto@ggsys.net>, Goswin von Brederlow <brederlo@informatik.uni-tuebingen.de>, Mike Accetta <maccetta@laurelnetworks.com>, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Bill Davidsen <davidsen@tmr.com> writes:
+On Fri, Oct 26, 2007 at 11:54:18AM +0200, Luca Berra wrote:
 
-> Alberto Alonso wrote:
->> On Tue, 2007-10-23 at 18:45 -0400, Bill Davidsen wrote:
->>
->>
->>> I'm not sure the timeouts are the problem, even if md did its own
->>> timeout, it then needs a way to tell the driver (or device) to stop
->>> retrying. I don't believe that's available, certainly not
->>> everywhere, and anything other than everywhere would turn the md
->>> code into a nest of exceptions.
->>>
->>>
->>
->> If we loose the ability to communication to that drive I don't see it
->> as a problem (that's the whole point, we kick it out of the array). So,
->> if we can't tell the driver about the failure we are still OK, md could
->> successfully deal with misbehaved drivers.
->
-> I think what you really want is to notice how long the drive and
-> driver took to recover or fail, and take action based on that. In
-> general "kick the drive" is not optimal for a few bad spots, even if
-> the drive recovery sucks.
+> but the fix is easy.
+> remove the partition detection code from the kernel and start working on
+> a smart userspace replacement for device detection. we already have
+> vol_id from udev and blkid from ext3 which support detection of many
+> device formats.
 
-Depending on the hardware you can still access a different disk while
-another one is reseting. But since there is no timeout in md it won't
-try to use any other disk while one is stuck.
+You got the ordering wrong. You should get userspace support ready and
+accepted _first_, and then you can start the
+flamew^H^H^H^H^H^Hdiscussion to make the in-kernel partitioning code
+configurable. But even if you have the perfect userspace solution ready
+today, removing partitioning support from the kernel is a pretty
+invasive ABI change so it will take many years if it ever happens at
+all.
 
-That is exactly what I miss.
+I saw the "let's move partition detection to user space" argument
+several times on l-k in the past years but it never gained support...
+So if you want to make it happen, stop talking and start coding, and
+persuade all major distros to accept your changes. _Then_ you can start
+arguing to remove partition detection from the kernel, and even then it
+won't be easy.
 
-MfG
-        Goswin
+Gabor
+
+-- 
+     ---------------------------------------------------------
+     MTA SZTAKI Computer and Automation Research Institute
+                Hungarian Academy of Sciences
+     ---------------------------------------------------------
