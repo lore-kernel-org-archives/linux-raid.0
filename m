@@ -1,112 +1,73 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: Time to  deprecate old RAID formats?
-Date: Fri, 26 Oct 2007 10:18:42 -0400
-Message-ID: <4721F742.1090301@tmr.com>
-References: <18200.49267.763509.924873@stoffel.org>	<Pine.LNX.4.64.0710191109000.27246@p34.internal.lan>	<18200.53593.687483.120827@stoffel.org>	<1192810534.1666.68.camel@firewall.xsintricity.com>	<18200.56684.14194.630264@stoffel.org>	<1192813877.1666.79.camel@firewall.xsintricity.com>	<18200.63987.514073.184865@stoffel.org>	<471E7DC6.7050206@tmr.com>	<1193184555.10336.3.camel@firewall.xsintricity.com>	<18207.56169.769976.512617@notabene.brown>	<471FDEB1.8040401@garzik.org>	<47204F45.4010205@dgreaves.com> <18209.34365.375059.602828@notabene.brown>
+From: Goswin von Brederlow <brederlo@informatik.uni-tuebingen.de>
+Subject: Re: Software RAID when it works and when it doesn't
+Date: Fri, 26 Oct 2007 18:11:10 +0200
+Message-ID: <87k5p9zwip.fsf@informatik.uni-tuebingen.de>
+References: <14526.1192571833@mdt.ecitele.com>
+	<87bqaw5tqb.fsf@informatik.uni-tuebingen.de>
+	<1192777672.16416.495.camel@w100>
+	<Pine.LNX.4.64.0710191102110.27246@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18209.34365.375059.602828@notabene.brown>
+In-Reply-To: <Pine.LNX.4.64.0710191102110.27246@p34.internal.lan> (Justin
+	Piszcz's message of "Fri, 19 Oct 2007 11:02:38 -0400 (EDT)")
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: David Greaves <david@dgreaves.com>, Jeff Garzik <jeff@garzik.org>, Doug Ledford <dledford@redhat.com>, John Stoffel <john@stoffel.org>, Justin Piszcz <jpiszcz@lucidpixels.com>, linux-raid@vger.kernel.org
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: Alberto Alonso <alberto@ggsys.net>, Goswin von Brederlow <brederlo@informatik.uni-tuebingen.de>, Mike Accetta <maccetta@laurelnetworks.com>, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil Brown wrote:
-> On Thursday October 25, david@dgreaves.com wrote:
->   
->> I didn't get a reply to my suggestion of separating the data and location...
->>     
->
-> No. Sorry.
->
->   
->> ie not talking about superblock versions 0.9, 1.0, 1.1, 1.2 etc but a data
->> format (0.9 vs 1.0) and a location (end,start,offset4k)?
->>
->> This would certainly make things a lot clearer to new (and old!) users:
->>
->> mdadm --create /dev/md0 --metadata 1.0 --meta-location offset4k
->> or
->> mdadm --create /dev/md0 --metadata 1.0 --meta-location start
->> or
->> mdadm --create /dev/md0 --metadata 1.0 --meta-location end
->>     
->
-> I'm happy to support synonyms.  How about
->
->    --metadata 1-end
->    --metadata 1-start
->
-> ??
->   
-Offset? Do you like "1-offset4k" or maybe "1-start4k" or even 
-"1-start+4k" for that? The last is most intuitive but I don't know how 
-you feel about the + in there.
->   
->> resulting in:
->> mdadm --detail /dev/md0
->>
->> /dev/md0:
->>         Version : 01.0
->>   Metadata-locn : End-of-device
->>     
->
-> It already lists the superblock location as a sector offset, but I
-> don't have a problem with reporting:
->
->           Version : 1.0 (metadata at end of device)
-> 	  Version : 1.1 (metadata at start of device)
->
-> Would that help?
->
->   
-Same comments on the reporting, "metadata at block 4k" or something.
->   
->>   Creation Time : Fri Aug  4 23:05:02 2006
->>      Raid Level : raid0
->>
->> You provide rational defaults for mortals and this approach allows people like
->> Doug to do wacky HA things explicitly.
->>
->> I'm not sure you need any changes to the kernel code - probably just the docs
->> and mdadm.
->>     
->
-> True.
->
->   
->>>> It is conceivable that I could change the default, though that would
->>>> require a decision as to what the new default would be.  I think it
->>>> would have to be 1.0 or it would cause too much confusion.
->>>>         
->>> A newer default would be nice.
->>>       
->> I also suspect that a *lot* of people will assume that the highest superblock
->> version is the best and should be used for new installs etc.
->>     
->
-> Grumble... why can't people expect what I want them to expect?
->
->   
-I confess that I thought 1.x was a series of solutions reflecting your 
-evolving opinion on what was best, so maybe in retrospect you made a 
-non-intuitive choice of nomenclature. Or bluntly, you picked confusing 
-names for this and confused people. If 1.0 meant start, 1.1 meant 4k, 
-and 1.2 meant end, at least it would be easy to remember for people who 
-only create a new array a few times a year, or once in the lifetime of a 
-new computer.
->> So if you make 1.0 the default then how many users will try 'the bleeding edge'
->> and use 1.2? So then you have 1.3 which is the same as 1.0? Hmmmm? So to quote
->> from an old Soap: "Confused, you  will be..."
->>     
+Justin Piszcz <jpiszcz@lucidpixels.com> writes:
 
-Perhaps you could have called them 1.start, 1.end, and 1.4k in the 
-beginning? Isn't hindsight wonderful?
+> On Fri, 19 Oct 2007, Alberto Alonso wrote:
+>
+>> On Thu, 2007-10-18 at 17:26 +0200, Goswin von Brederlow wrote:
+>>> Mike Accetta <maccetta@laurelnetworks.com> writes:
+>>
+>>> What I would like to see is a timeout driven fallback mechanism. If
+>>> one mirror does not return the requested data within a certain time
+>>> (say 1 second) then the request should be duplicated on the other
+>>> mirror. If the first mirror later unchokes then it remains in the
+>>> raid, if it fails it gets removed. But (at least reads) should not
+>>> have to wait for that process.
+>>>
+>>> Even better would be if some write delay could also be used. The still
+>>> working mirror would get an increase in its serial (so on reboot you
+>>> know one disk is newer). If the choking mirror unchokes then it can
+>>> write back all the delayed data and also increase its serial to
+>>> match. Otherwise it gets really failed. But you might have to use
+>>> bitmaps for this or the cache size would limit its usefullnes.
+>>>
+>>> MfG
+>>>         Goswin
+>>
+>> I think a timeout on both: reads and writes is a must. Basically I
+>> believe that all problems that I've encountered issues using software
+>> raid would have been resolved by using a timeout within the md code.
+>>
+>> This will keep a server from crashing/hanging when the underlying
+>> driver doesn't properly handle hard drive problems. MD can be
+>> smarter than the "dumb" drivers.
+>>
+>> Just my thoughts though, as I've never got an answer as to whether or
+>> not md can implement its own timeouts.
+>>
+>> Alberto
+>>
+>>
+>> -
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+>
+> I have a question with re-mapping sectors, can software raid be as
+> efficient or good at remapping bad sectors as an external raid
+> controller for, e.g., raid 10 or raid5?
+>
+> Justin.
 
--- 
-bill davidsen <davidsen@tmr.com>
-  CTO TMR Associates, Inc
-  Doing interesting things with small computers since 1979
+Software raid makes no remapping of bad sectors at all. It assumes the
+disks will do sufficient remapping.
 
+MfG
+        Goswin
