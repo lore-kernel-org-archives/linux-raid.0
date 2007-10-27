@@ -1,37 +1,30 @@
-From: Luca Berra <bluca@comedia.it>
-Subject: Re: Time to  deprecate old RAID formats?
-Date: Sat, 27 Oct 2007 12:34:58 +0200
-Message-ID: <20071027103458.GD12053@percy.comedia.it>
-References: <18200.56684.14194.630264@stoffel.org> <1192813877.1666.79.camel@firewall.xsintricity.com> <18200.63987.514073.184865@stoffel.org> <20071019212303.GB2013@teal.hq.k1024.org> <1192830129.1666.103.camel@firewall.xsintricity.com> <20071020075349.GA17431@teal.hq.k1024.org> <1192885917.1666.112.camel@firewall.xsintricity.com> <20071026095417.GC32550@percy.comedia.it> <20071026162226.GB28982@boogie.lpds.sztaki.hu> <20071026170646.GB30268@boogie.lpds.sztaki.hu>
+From: Samuel Tardieu <sam@rfc1149.net>
+Subject: Re: Implementing low level timeouts within MD
+Date: Sat, 27 Oct 2007 12:33:57 +0200
+Message-ID: <87tzoc7soa.fsf@willow.rfc1149.net>
+References: <1193418753.4771.17.camel@w100> <1193425254.10336.290.camel@firewall.xsintricity.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20071026170646.GB30268@boogie.lpds.sztaki.hu>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, Oct 26, 2007 at 07:06:46PM +0200, Gabor Gombas wrote:
->On Fri, Oct 26, 2007 at 06:22:27PM +0200, Gabor Gombas wrote:
->
->> You got the ordering wrong. You should get userspace support ready and
->> accepted _first_, and then you can start the
->> flamew^H^H^H^H^H^Hdiscussion to make the in-kernel partitioning code
->> configurable.
-sorry, i did not intend to start a flamewar.
+>>>>> "Doug" == Doug Ledford <dledford@redhat.com> writes:
 
->Oh wait that is possible even today. So you can build your own kernel
->without any partition table format support - problem solved.
-yes, i can build my own, i just tought it could be useful for someone
-but myself. maybe even Doug's enterprise customers....
+Doug> This isn't an md problem, this is a low level disk driver
+Doug> problem.  Yell at the author of the disk driver in question.  If
+Doug> that driver doesn't time things out and return errors up the
+Doug> stack in a reasonable time, then it's broken.  Md should not,
+Doug> and realistically can not, take the place of a properly written
+Doug> low level driver.
 
-L.
+I agree with Doug: nothing prevents you from using md above very slow
+drivers (such as remote disks or even a filesystem implemented over a
+tape device to make it extreme). Only the low-level drivers know when
+it is appropriate to timeout or fail.
 
+  Sam
 -- 
-Luca Berra -- bluca@comedia.it
-        Communication Media & Services S.r.l.
- /"\
- \ /     ASCII RIBBON CAMPAIGN
-  X        AGAINST HTML MAIL
- / \
+Samuel Tardieu -- sam@rfc1149.net -- http://www.rfc1149.net/
+
