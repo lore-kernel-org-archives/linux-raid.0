@@ -1,146 +1,76 @@
 From: Doug Ledford <dledford@redhat.com>
-Subject: Re: Raid-10 mount at startup always has problem
-Date: Sat, 27 Oct 2007 16:47:30 -0400
-Message-ID: <1193518050.10336.343.camel@firewall.xsintricity.com>
-References: <46D49F1A.7030409@tmr.com> <46E4A39C.8040509@amfes.com>
-	 <46E4A5F0.9090407@sauce.co.nz> <46E4A7C3.1040902@amfes.com>
-	 <471F5542.3020504@amfes.com> <471FA485.6010705@tmr.com>
-	 <47202D17.3040000@amfes.com>
-	 <1193294406.10336.76.camel@firewall.xsintricity.com>
-	 <20071026091513.GB32550@percy.comedia.it>
-	 <1193426793.10336.302.camel@firewall.xsintricity.com>
-	 <20071027075054.GA12053@percy.comedia.it>
+Subject: Re: Time to  deprecate old RAID formats?
+Date: Sat, 27 Oct 2007 17:11:11 -0400
+Message-ID: <1193519471.10336.359.camel@firewall.xsintricity.com>
+References: <18200.49267.763509.924873@stoffel.org>
+	 <Pine.LNX.4.64.0710191109000.27246@p34.internal.lan>
+	 <18200.53593.687483.120827@stoffel.org>
+	 <1192810534.1666.68.camel@firewall.xsintricity.com>
+	 <18200.56684.14194.630264@stoffel.org>
+	 <1192813877.1666.79.camel@firewall.xsintricity.com>
+	 <18200.63987.514073.184865@stoffel.org>	<471E7DC6.7050206@tmr.com>
+	 <1193184555.10336.3.camel@firewall.xsintricity.com>
+	 <18207.56169.769976.512617@notabene.brown>	<471FDEB1.8040401@garzik.org>
+	 <47204F45.4010205@dgreaves.com> <18209.34365.375059.602828@notabene.brown>
+	 <4721F742.1090301@tmr.com>
+	 <1193424116.10336.281.camel@firewall.xsintricity.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-iTJ8ZlzPTZg0LxTbaJbq"
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-rNdm1DnxWPg/PdCqTKtV"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20071027075054.GA12053@percy.comedia.it>
+In-Reply-To: <1193424116.10336.281.camel@firewall.xsintricity.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Luca Berra <bluca@comedia.it>
-Cc: linux-raid@vger.kernel.org
+To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
 
---=-iTJ8ZlzPTZg0LxTbaJbq
+--=-rNdm1DnxWPg/PdCqTKtV
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Sat, 2007-10-27 at 09:50 +0200, Luca Berra wrote:
-> On Fri, Oct 26, 2007 at 03:26:33PM -0400, Doug Ledford wrote:
-> >On Fri, 2007-10-26 at 11:15 +0200, Luca Berra wrote:
-> >> On Thu, Oct 25, 2007 at 02:40:06AM -0400, Doug Ledford wrote:
-> >> >The partition table is the single, (mostly) universally recognized
-> >> >arbiter of what possible data might be on the disk.  Having a partiti=
-on
-> >> >table may not make mdadm recognize the md superblock any better, but =
-it
-> >> >keeps all that other stuff from even trying to access data that it
-> >> >doesn't have a need to access and prevents random luck from turning y=
-our
-> >> >day bad.
-> >> on a pc maybe, but that is 20 years old design.
-> >
-> >So?  Unix is 35+ year old design, I suppose you want to switch to Vista
-> >then?
-> unix is a 35+ year old design that evolved in time, some ideas were
-> kept, some ditched.
+On Fri, 2007-10-26 at 14:41 -0400, Doug Ledford wrote:
+> Actually, after doing some research, here's what I've found:
 
-BSD disk labels are still in use, SunOS disk labels are still in use,
-partition tables are somewhat on the way out, but only because they are
-being replaced by the new EFI disk partitioning method.  The only place
-where partitionless devices is common is in dedicated raid boxes where
-the raid controller is the only thing that will *ever* see that disk.
-Sometimes they do it on big SAN/NAS stuff because they don't want to
-align the partition table to the underlying device's stripe layout, but
-even then they do so in a tightly controlled environment where they know
-exactly which machines will be allowed to even try and access the
-device.
+> * When using grub2, there is supposedly already support for raid/lvm
+> devices.  However, I do not know if this includes version 1.0, 1.1, or
+> 1.2 superblocks.  I intend to find that out today.
 
-> >> partition table design is limited because it is still based on C/H/S,
-> >> which do not exist anymore.
-> >> Put a partition table on a big storage, say a DMX, and enjoy a 20%
-> >> performance decrease.
-> >
-> >Because you didn't stripe align the partition, your bad.
-> :)
-> by default fdisk misalignes partition tables
-> and aligning them is more complex than just doing without.
+It does not include support for any version 1 superblocks.  It's noted
+in the code that it should, but doesn't yet.  However, the interesting
+bit is that they rearchitected grub so that any reads from a device
+during boot are filtered through the stack that provides the device.
+So, when you tell grub2 to set root=3Dmd0, then all reads from md0 are
+filtered through the raid module, and the raid module then calls the
+reads from the IO module, which then does the actual int 13 call.  This
+allows the raid module to read superblocks, detect the raid level and
+layout, and actually attempt to work on raid0/1/5 devices (at the
+moment).  It also means that all the calls from the ext2 module when it
+attempts to read from the md device are filtered through the md module
+and therefore it would be simple for it to implement an offset into the
+real device to get past the version 1.1/1.2 superblocks.
 
-So.  You really need to take the time and to understand the alignment of
-the device because then and only then can you pass options to mke2fs to
-align the fs metadata with the stripes as well thereby buying you ever
-more performance than just leaving off the partition table (assuming
-that's what you use, I don't know if other mkfs programs have the same
-options for aligning metadata with stripes).  And if you take the time
-to understand the underlying stripe layout for the mkfs stuff, then you
-can use the same information to align the partition table.
+In terms of resilience, the raid module actually tries to utilize the
+raid itself during any failure.  On raid1 devices, if it gets a read
+failure on any block it attempts to read, then it goes to the next
+device in the raid1 array and attempts to read from it.  So, in the
+event that your normal boot disk suffers a sector failure in your actual
+kernel image, but the raid disk is otherwise fine, grub2 should be able
+to boot from the kernel image on the next raid device.  Similarly, on
+raid5 it will attempt to recover from a block read failure by using the
+parity to generate the missing data unless the array is already in
+degraded mode at which point it will bail on any read failure.
 
-> >> >Oh, and let's not go into what can happen if you're talking about a d=
-ual
-> >> >boot machine and what Windows might do to the disk if it doesn't thin=
-k
-> >> >the disk space is already spoken for by a linux partition.
-> >> Why the hell should the existance of windows limit the possibility of
-> >> linux working properly.
-> >
-> >Linux works properly with a partition table, so this is a specious
-> >statement.
-> It should also work properly without one.
+The lvm module attempts to properly map extents to physical volumes and
+allows you to have your bootable files in lvm logical volume.  In that
+case you set root=3Dlogical-volume-name-as-it-appears-in-/dev/mapper and
+the lvm module then figures out what physical volumes contain that
+logical volume and where the extents are mapped and goes from there.
 
-Most of the time it does.  But those times where it can fail, the
-failure is due to not taking the precautions necessary to prevent it:
-aka labeling disk usage via some sort of partition table/disklabel/etc.
-
-> >> If i have a pc that dualboots windows i will take care of using the
-> >> common denominator of a partition table, if it is my big server i will
-> >> probably not. since it won't boot anything else than Linux.
-> >
-> >Doesn't really gain you anything, but your choice.  Besides, the
-> >question wasn't "why shouldn't Luca Berra use whole disk devices", it
-> >was why I don't recommend using whole disk devices, and my
-> >recommendation wasn't based in the least bit upon a single person's use
-> >scenario.
-> If i am the only person in the world that believes partition tables
-> should not be required then i'll shut up.
->=20
-> >> On the opposite, i once inserted an mmc memory card, which had been
-> >> initialized on my mobile phone, into the mmc slot of my laptop, and wa=
-s
-> >> faced with a load of error about mmcblk0 having an invalid partition
-> >> table.
-> >
-> >So?  The messages are just informative, feel free to ignore them.
-> but did not anaconda propose to wipe unpartitioned disks?
-
-Did you stick your mmc card in there during the install of the OS?
-That's the only time anaconda ever runs, and therefore the only time it
-ever checks your devices.  It makes sense that during the initial
-install, when the OS is only configured to see locally connected
-devices, or possibly iSCSI devices that you have specifically told it to
-probe, that it would then ask you the question about those devices.
-Other network attached or shared devices are generally added after the
-initial install.
-
-> >The phone dictates the format, only a moron would say otherwise.  But,
-> >then again, the phone doesn't care about interoperability and many other
-> >issues on memory cards that it thinks it owns, so only a moron would
-> >argue that because a phone doesn't use a partition table that nothing
-> >else in the computer realm needs to either.
-> i don't count myself as a moron, what i am trying to say is that
-> partition tables are one way of organizing disk space, not the only one.
-
-Using whole disk devices isn't a means of organizing space.  It's a way
-to get a rather miniscule amount of space back by *not* organizing the
-space.
-
-This whole argument seems to boil down to you wanting to perfectly
-optimize your system for your use case which includes controlling the
-environment enough that you know it's safe to not partition your disks,
-where as I argue that although this works in controlled environments, it
-is known to have failure modes in other environments, and I would be
-totally remiss if I recommended to my customers that they should take
-the risk that you can ignore because of your controlled environment
-since I know a lot of my customers *don't* have a controlled environment
-such as you do.
+I should note that both the lvm code and raid code are simplistic at the
+moment.  For example, the raid5 mapping only supports the default raid5
+layout.  If you use any other layout, game over.  Getting it to work
+with version 1.1 or 1.2 superblocks probably wouldn't be that hard, but
+getting it to the point where it handles all the relevant setups
+properly would require a reasonable amount of coding.
 
 --=20
 Doug Ledford <dledford@redhat.com>
@@ -150,17 +80,17 @@ Doug Ledford <dledford@redhat.com>
 Infiniband specific RPMs available at
               http://people.redhat.com/dledford/Infiniband
 
---=-iTJ8ZlzPTZg0LxTbaJbq
+--=-rNdm1DnxWPg/PdCqTKtV
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.7 (GNU/Linux)
 
-iD8DBQBHI6PiTzP9PM7pjw8RArL8AJ4wUuZbLEPcCGvR1LMfT1TOMDqlUgCbBd5c
-1mWUBWUPJJv8xn5NBv7rQ2Q=
-=b2tO
+iD8DBQBHI6lvTzP9PM7pjw8RAu4pAJ9yNrwZ9JgX7YL45UsbIV/tDnWhLgCcDbjh
+s0+amvmT2q+e3mKEmTKjjm4=
+=GXcD
 -----END PGP SIGNATURE-----
 
---=-iTJ8ZlzPTZg0LxTbaJbq--
+--=-rNdm1DnxWPg/PdCqTKtV--
 
