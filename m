@@ -1,69 +1,70 @@
-From: =?ISO-8859-1?Q?BERTRAND_Jo=EBl?= <joel.bertrand@systella.fr>
-Subject: Re: [BUG] Raid1/5 over iSCSI trouble
-Date: Sat, 27 Oct 2007 21:35:44 +0200
-Message-ID: <47239310.6060801@systella.fr>
-References: <4714BB92.7040701@systella.fr> <4718DE66.8000905@tmr.com>	
-	<471916B5.6080709@systella.fr> <47191855.4020402@systella.fr>	
-	<47191BCF.2000908@systella.fr>	
-	<1192828331.30976.26.camel@dwillia2-linux.ch.intel.com>	
-	<4719B6DE.9040403@systella.fr> <471EF07A.5040007@systella.fr>	
-	<e9c3a7c20710241649qb26c36by5733a93cff394c40@mail.gmail.com>	
-	<47233D37.6070409@systella.fr>
-	<e9c3a7c20710271127p24635207p4b5cc03047118f36@mail.gmail.com>
+From: Doug Ledford <dledford@redhat.com>
+Subject: Re: Time to  deprecate old RAID formats?
+Date: Sat, 27 Oct 2007 16:09:03 -0400
+Message-ID: <1193515743.10336.324.camel@firewall.xsintricity.com>
+References: <1192810534.1666.68.camel@firewall.xsintricity.com>
+	 <18200.56684.14194.630264@stoffel.org>
+	 <1192813877.1666.79.camel@firewall.xsintricity.com>
+	 <18200.63987.514073.184865@stoffel.org>
+	 <20071019212303.GB2013@teal.hq.k1024.org>
+	 <1192830129.1666.103.camel@firewall.xsintricity.com>
+	 <20071020075349.GA17431@teal.hq.k1024.org>
+	 <1192885917.1666.112.camel@firewall.xsintricity.com>
+	 <20071026095417.GC32550@percy.comedia.it>
+	 <1193424779.10336.287.camel@firewall.xsintricity.com>
+	 <20071027080035.GC12053@percy.comedia.it>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <iscsitarget-devel-bounces@lists.sourceforge.net>
-In-Reply-To: <e9c3a7c20710271127p24635207p4b5cc03047118f36@mail.gmail.com>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/iscsitarget-devel>,
-	<mailto:iscsitarget-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=iscsitarget-devel>
-List-Post: <mailto:iscsitarget-devel@lists.sourceforge.net>
-List-Help: <mailto:iscsitarget-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/iscsitarget-devel>,
-	<mailto:iscsitarget-devel-request@lists.sourceforge.net?subject=subscribe>
-Sender: iscsitarget-devel-bounces@lists.sourceforge.net
-Errors-To: iscsitarget-devel-bounces@lists.sourceforge.net
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-raid@vger.kernel.org, sparclinux@vger.kernel.org, iscsitarget-devel@lists.sourceforge.net, Bill Davidsen <davidsen@tmr.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-X/PjkgxRrt9HluuiHeMC"
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20071027080035.GC12053@percy.comedia.it>
+Sender: linux-raid-owner@vger.kernel.org
+To: Luca Berra <bluca@comedia.it>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Dan Williams wrote:
-> On 10/27/07, BERTRAND Jo=EBl <joel.bertrand@systella.fr> wrote:
->> Dan Williams wrote:
->>> Can you collect some oprofile data, as Ming suggested, so we can maybe
->>> see what md_d0_raid5 and istd1 are fighting about?  Hopefully it is as
->>> painless to run on sparc as it is on IA:
->>>
->>> opcontrol --start --vmlinux=3D/path/to/vmlinux
->>> <wait>
->>> opcontrol --stop
->>> opreport --image-path=3D/lib/modules/`uname -r` -l
->>         Done.
->>
-> =
 
-> [..]
-> =
+--=-X/PjkgxRrt9HluuiHeMC
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
->>         Is it enough ?
-> =
+On Sat, 2007-10-27 at 10:00 +0200, Luca Berra wrote:
+> On Fri, Oct 26, 2007 at 02:52:59PM -0400, Doug Ledford wrote:
+> >On Fri, 2007-10-26 at 11:54 +0200, Luca Berra wrote:
+> >> On Sat, Oct 20, 2007 at 09:11:57AM -0400, Doug Ledford wrote:
+> >> just apply some rules, so if you find a partition table _AND_ an md
+> >> superblock at the end, read both and you can tell if it is an md on a
+> >> partition or a partitioned md raid1 device.
+> >
+> >In fact, no you can't.  I know, because I've created a device that had
+> >both but wasn't a raid device.  And it's matching partner still existed
+> >too.  What you are talking about would have misrecognized this
+> >situation, guaranteed.
+> then just ignore the device and log a warning, instead of doing a random
+> choice.
+> L.
 
-> I would expect md_d0_raid5 and istd1 to show up pretty high in the
-> list if they are constantly pegged at a 100% CPU utilization like you
-> showed in the failure case.  Maybe this was captured after the target
-> has disconnected?
+It also happened to be my OS drive pair.  Ignoring it would have
+rendered the machine unusable.
 
-	No, I have launched opcontrol before starting raid1 creation, and =
+--=20
+Doug Ledford <dledford@redhat.com>
+              GPG KeyID: CFBFF194
+              http://people.redhat.com/dledford
 
-stopped after disconnection. Don't forget that this server has 32 CPU's.
+Infiniband specific RPMs available at
+              http://people.redhat.com/dledford/Infiniband
 
-	Regards,
+--=-X/PjkgxRrt9HluuiHeMC
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-	JKB
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.7 (GNU/Linux)
 
--------------------------------------------------------------------------
-This SF.net email is sponsored by: Splunk Inc.
-Still grepping through log files to find problems?  Stop.
-Now Search log events and configuration files using AJAX and a browser.
-Download your FREE copy of Splunk now >> http://get.splunk.com/
+iD8DBQBHI5rfTzP9PM7pjw8RAgzlAJ0QCGSRkHkKZFRKfNPZnqbzjdhLMwCeL3RQ
+XXFATDO0zpjsX9mzGKke3XU=
+=s2zS
+-----END PGP SIGNATURE-----
+
+--=-X/PjkgxRrt9HluuiHeMC--
+
