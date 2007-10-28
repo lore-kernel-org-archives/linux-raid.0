@@ -1,102 +1,101 @@
-From: Alberto Alonso <alberto@ggsys.net>
-Subject: Re: Implementing low level timeouts within MD
-Date: Sun, 28 Oct 2007 01:27:02 -0500
-Message-ID: <1193552822.6541.8.camel@w100>
-References: <1193418753.4771.17.camel@w100>
-	 <1193425254.10336.290.camel@firewall.xsintricity.com>
-	 <1193521561.7690.14.camel@w100>
-	 <1193529329.10336.366.camel@firewall.xsintricity.com>
+From: Luca Berra <bluca@comedia.it>
+Subject: Re: Raid-10 mount at startup always has problem
+Date: Sun, 28 Oct 2007 14:37:44 +0100
+Message-ID: <20071028133736.GA22861@percy.comedia.it>
+References: <46E4A5F0.9090407@sauce.co.nz> <46E4A7C3.1040902@amfes.com> <471F5542.3020504@amfes.com> <471FA485.6010705@tmr.com> <47202D17.3040000@amfes.com> <1193294406.10336.76.camel@firewall.xsintricity.com> <20071026091513.GB32550@percy.comedia.it> <1193426793.10336.302.camel@firewall.xsintricity.com> <20071027075054.GA12053@percy.comedia.it> <1193518050.10336.343.camel@firewall.xsintricity.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1193529329.10336.366.camel@firewall.xsintricity.com>
+Content-Disposition: inline
+In-Reply-To: <1193518050.10336.343.camel@firewall.xsintricity.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Doug Ledford <dledford@redhat.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, 2007-10-27 at 19:55 -0400, Doug Ledford wrote:
-> On Sat, 2007-10-27 at 16:46 -0500, Alberto Alonso wrote:
-> > Regardless of the fact that it is not MD's fault, it does make
-> > software raid an invalid choice when combined with those drivers. A
-> > single disk failure within a RAID5 array bringing a file server down
-> > is not a valid option under most situations.
-> 
-> Without knowing the exact controller you have and driver you use, I
-> certainly can't tell the situation.  However, I will note that there are
-> times when no matter how well the driver is written, the wrong type of
-> drive failure *will* take down the entire machine.  For example, on an
-> SPI SCSI bus, a single drive failure that involves a blown terminator
-> will cause the electrical signaling on the bus to go dead no matter what
-> the driver does to try and work around it.
+On Sat, Oct 27, 2007 at 04:47:30PM -0400, Doug Ledford wrote:
+>On Sat, 2007-10-27 at 09:50 +0200, Luca Berra wrote:
+>> On Fri, Oct 26, 2007 at 03:26:33PM -0400, Doug Ledford wrote:
+>> >On Fri, 2007-10-26 at 11:15 +0200, Luca Berra wrote:
+>> >> On Thu, Oct 25, 2007 at 02:40:06AM -0400, Doug Ledford wrote:
+>> >> >The partition table is the single, (mostly) universally recognized
+>> >> >arbiter of what possible data might be on the disk.  Having a partition
+>> >> >table may not make mdadm recognize the md superblock any better, but it
+>> >> >keeps all that other stuff from even trying to access data that it
+>> >> >doesn't have a need to access and prevents random luck from turning your
+>> >> >day bad.
+>> >> on a pc maybe, but that is 20 years old design.
+>> >
+>> >So?  Unix is 35+ year old design, I suppose you want to switch to Vista
+>> >then?
+>> unix is a 35+ year old design that evolved in time, some ideas were
+>> kept, some ditched.
+>
+>BSD disk labels are still in use, SunOS disk labels are still in use,
+i am not a solaris expert, do they still use disk labels under vxvm?
+oh, by the way, disklabels do not support the partition type attribute.
 
-Sorry I thought I copied the list with the info that I sent to Richard.
-Here is the main hardware combinations.
+>partition tables are somewhat on the way out, but only because they are
+>being replaced by the new EFI disk partitioning method.  The only place
+>where partitionless devices is common is in dedicated raid boxes where
+>the raid controller is the only thing that will *ever* see that disk.
+well i am more used to other os (HP, AIX) where lvm is the common mean of
+accessing disk devices
 
---- Excerpt Start ----
-Certainly. The times when I had good results (ie. failed drives
-with properly degraded arrays have been with old PATA based IDE 
-controllers built in the motherboard and the Highpoint PATA
-cards). The failures (ie. single disk failure bringing the whole
-server down) have been with the following:
+....
 
-* External disks on USB enclosures, both RAID1 and RAID5 (two different
-  systems) Don't know the actual controller for these. I assume it is
-  related to usb-storage, but can probably research the actual chipset,
-  if it is needed.
+>> by default fdisk misalignes partition tables
+>> and aligning them is more complex than just doing without.
+>
+>So.  You really need to take the time and to understand the alignment of
+>the device because then and only then can you pass options to mke2fs to
+yes and i am not the only person in the world doing that.
 
-* Internal serverworks PATA controller on a netengine server. The
-  server if off waiting to get picked up, so I can't get the important
-  details.
+>> >Linux works properly with a partition table, so this is a specious
+>> >statement.
+>> It should also work properly without one.
+>
+>Most of the time it does.  But those times where it can fail, the
+>failure is due to not taking the precautions necessary to prevent it:
+>aka labeling disk usage via some sort of partition table/disklabel/etc.
+I strongly disagree.
+the failure is badly designed software.
 
-* Supermicro MB with ICH5/ICH5R controller and 2 RAID5 arrays of 3 
-  disks each. (only one drive on one array went bad)
+>Did you stick your mmc card in there during the install of the OS?
+My laptop has a built-in mmc slot, so i sometimes leave a card plugged
+in. But the mmc thing was just an example, it is not that critical.
+>> i don't count myself as a moron, what i am trying to say is that
+>> partition tables are one way of organizing disk space, not the only one.
+>
+>Using whole disk devices isn't a means of organizing space.  It's a way
+>to get a rather miniscule amount of space back by *not* organizing the
+>space.
+if i am using, say lvm to organize disk space, a partition table is
+unnecessary to the organization, and it is natural not using them.
 
-* VIA VT6420 built into the MB with RAID1 across 2 SATA drives.
+>This whole argument seems to boil down to you wanting to perfectly
+>optimize your system for your use case which includes controlling the
+>environment enough that you know it's safe to not partition your disks,
+>where as I argue that although this works in controlled environments, it
+>is known to have failure modes in other environments, and I would be
+>totally remiss if I recommended to my customers that they should take
+>the risk that you can ignore because of your controlled environment
+>since I know a lot of my customers *don't* have a controlled environment
+>such as you do.
 
-* And the most complex is this week's server with 4 PCI/PCI-X cards.
-  But the one that hanged the server was a 4 disk RAID5 array on a
-  RocketRAID1540 card.
+The whole argument to me boils down to the fact that not having a partition
+table on a device is possible, and software that do not consider this
+eventuality is flawed, and recommnding to work-around flawed software is
+just digging your head in the sand.
+But i believe i did not convince you one ounce more than you convinced
+me, so i'll quit this thread which is getting too far.
 
---- Excerpt End ----
+Regards,
+L.
 
-> 
-> > I wasn't even asking as to whether or not it should, I was asking if
-> > it could.
-> 
-> It could, but without careful control of timeouts for differing types of
-> devices, you could end up making the software raid less reliable instead
-> of more reliable overall.
-
-Even if the default timeout was really long (ie. 1 minute) and then
-configurable on a per device (or class) via /proc it would really help.
-
-> Generally speaking, most modern drivers will work well.  It's easier to
-> maintain a list of known bad drivers than known good drivers.
-
-That's what has been so frustrating. The old PATA IDE hardware always
-worked and the new stuff is what has crashed.
-
-> Be careful which hardware raid you choose, as in the past several brands
-> have been known to have the exact same problem you are having with
-> software raid, so you may not end up buying yourself anything.  (I'm not
-> naming names because it's been long enough since I paid attention to
-> hardware raid driver issues that the issues I knew of could have been
-> solved by now and I don't want to improperly accuse a currently well
-> working driver of being broken)
-
-I have settled for 3ware. All my tests showed that it performed quite
-well and kicked drives out when needed. Of course, I haven't had a
-bad drive on a 3ware production server yet, so.... I may end up
-pulling the little bit of hair I have left.
-
-I am now rushing the RocketRAID 2220 into production without testing
-due to it being the only thing I could get my hands on. I'll report
-any experiences as they happen.
-
-Thanks for all the info,
-
-Alberto
-
-
+-- 
+Luca Berra -- bluca@comedia.it
+        Communication Media & Services S.r.l.
+ /"\
+ \ /     ASCII RIBBON CAMPAIGN
+  X        AGAINST HTML MAIL
+ / \
