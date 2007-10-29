@@ -1,118 +1,77 @@
-From: =?UTF-8?B?QkVSVFJBTkQgSm/Dq2w=?= <joel.bertrand@systella.fr>
-Subject: Re: [BUG] Raid1/5 over iSCSI trouble
-Date: Mon, 29 Oct 2007 11:40:05 +0100
-Message-ID: <4725B885.8070705@systella.fr>
-References: <4714BB92.7040701@systella.fr> <471864F8.9010209@systella.fr>	
-	<1192809103.30976.11.camel@dwillia2-linux.ch.intel.com>	
-	<4718DE66.8000905@tmr.com> <471916B5.6080709@systella.fr>	
-	<47191855.4020402@systella.fr> <47191BCF.2000908@systella.fr>	
-	<1192828331.30976.26.camel@dwillia2-linux.ch.intel.com>	
-	<4719B6DE.9040403@systella.fr> <471EF07A.5040007@systella.fr>	
-	<e9c3a7c20710241649qb26c36by5733a93cff394c40@mail.gmail.com>	
-	<47233D37.6070409@systella.fr>
-	<1193519604.4060.10.camel@localhost.localdomain>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: Raid-10 mount at startup always has problem
+Date: Mon, 29 Oct 2007 09:22:51 -0400
+Message-ID: <4725DEAB.4050507@tmr.com>
+References: <46E4A39C.8040509@amfes.com> <46E4A5F0.9090407@sauce.co.nz> <46E4A7C3.1040902@amfes.com> <471F5542.3020504@amfes.com> <471FA485.6010705@tmr.com> <47202D17.3040000@amfes.com> <1193294406.10336.76.camel@firewall.xsintricity.com> <20071026091513.GB32550@percy.comedia.it> <1193426793.10336.302.camel@firewall.xsintricity.com> <4725278E.1050306@tmr.com> <20071029074139.GA15475@percy.comedia.it>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <iscsitarget-devel-bounces@lists.sourceforge.net>
-In-Reply-To: <1193519604.4060.10.camel@localhost.localdomain>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/iscsitarget-devel>,
-	<mailto:iscsitarget-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=iscsitarget-devel>
-List-Post: <mailto:iscsitarget-devel@lists.sourceforge.net>
-List-Help: <mailto:iscsitarget-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/iscsitarget-devel>,
-	<mailto:iscsitarget-devel-request@lists.sourceforge.net?subject=subscribe>
-Sender: iscsitarget-devel-bounces@lists.sourceforge.net
-Errors-To: iscsitarget-devel-bounces@lists.sourceforge.net
-To: blackmagic02881@gmail.com
-Cc: linux-raid@vger.kernel.org, sparclinux@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, iscsitarget-devel@lists.sourceforge.net, Bill Davidsen <davidsen@tmr.com>
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20071029074139.GA15475@percy.comedia.it>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Ming Zhang wrote:
-> off topic, could you resubmit the alignment issue patch to list and see
-> if tomof accept. he needs a patch inlined in email. it is found and
-> fixed by you, so had better you post it (instead of me). thx.
+Luca Berra wrote:
+> On Sun, Oct 28, 2007 at 08:21:34PM -0400, Bill Davidsen wrote:
+>>> Because you didn't stripe align the partition, your bad.
+>>>   
+>> Align to /what/ stripe? Hardware (CHS is fiction), software (of the RAID 
+> the real stripe (track) size of the storage, you must read the manual
+> and/or bug technical support for that info.
 
-diff -u kernel.old/iscsi.c kernel/iscsi.c
---- kernel.old/iscsi.c  2007-10-29 09:49:16.000000000 +0100
-+++ kernel/iscsi.c      2007-10-17 11:19:14.000000000 +0200
-@@ -726,13 +726,26 @@
-         case READ_10:
-         case WRITE_10:
-         case WRITE_VERIFY:
--               *off = be32_to_cpu(*(u32 *)&cmd[2]);
-+               *off = be32_to_cpu((((u32) cmd[2]) << 24) |
-+                       (((u32) cmd[3]) << 16) |
-+                       (((u32) cmd[4]) << 8) |
-+                       cmd[5]);
-                 *len = (cmd[7] << 8) + cmd[8];
-                 break;
-         case READ_16:
-         case WRITE_16:
--               *off = be64_to_cpu(*(u64 *)&cmd[2]);
--               *len = be32_to_cpu(*(u32 *)&cmd[10]);
-+               *off = be32_to_cpu((((u64) cmd[2]) << 56) |
-+                       (((u64) cmd[3]) << 48) |
-+                       (((u64) cmd[4]) << 40) |
-+                       (((u64) cmd[5]) << 32) |
-+                       (((u64) cmd[6]) << 24) |
-+                       (((u64) cmd[7]) << 16) |
-+                       (((u64) cmd[8]) << 8) |
-+                       cmd[9]);
-+               *len = be32_to_cpu((((u32) cmd[10]) << 24) |
-+                       (((u32) cmd[11]) << 16) |
-+                       (((u32) cmd[12]) << 8) |
-+                       cmd[13]);
-                 break;
-         default:
-                 BUG();
-diff -u kernel.old/target_disk.c kernel/target_disk.c
---- kernel.old/target_disk.c    2007-10-29 09:49:16.000000000 +0100
-+++ kernel/target_disk.c        2007-10-17 16:04:06.000000000 +0200
-@@ -66,13 +66,15 @@
-         unsigned char geo_m_pg[] = {0x04, 0x16, 0x00, 0x00, 0x00, 0x40, 
-0x00, 0x
-00,
-                                     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-0x00, 0x
-00,
-                                     0x00, 0x00, 0x00, 0x00, 0x3a, 0x98, 
-0x00, 0x
-00};
--       u32 ncyl, *p;
-+       u32 ncyl;
-+       u32 n;
+That's my point, there *is* no "real stripe (track) size of the storage" 
+because modern drives use zone bit recording, and sectors per track 
+depends on track, and changes within a partition. See
+  http://www.dewassoc.com/kbase/hard_drives/hard_disk_sector_structures.htm
+  http://www.storagereview.com/guide2000/ref/hdd/op/mediaTracks.html
+>> you're about to create), or ??? I don't notice my FC6 or FC7 install 
+>> programs using any special partition location to start, I have only 
+>> run (tried to run) FC8-test3 for the live CD, so I can't say what it 
+>> might do. CentOS4 didn't do anything obvious, either, so unless I 
+>> really misunderstand your position at redhat, that would be your 
+>> bad.  ;-)
+>>
+>> If you mean start a partition on a pseudo-CHS boundary, fdisk seems 
+>> to use what it thinks are cylinders for that.
+> Yes, fdisk will create partition at sector 63 (due to CHS being 
+> braindead,
+> other than fictional: 63 sectors-per-track)
+> most arrays use 64 or 128 spt, and array cache are aligned accordingly.
+> So 63 is almost always the wrong choice.
 
-         /* assume 0xff heads, 15krpm. */
-         memcpy(ptr, geo_m_pg, sizeof(geo_m_pg));
-         ncyl = sec >> 14; /* 256 * 64 */
--       p = (u32 *)(ptr + 1);
--       *p = *p | cpu_to_be32(ncyl);
-+       memcpy(&n,ptr+1,sizeof(u32));
-+       n = n | cpu_to_be32(ncyl);
-+       memcpy(ptr+1, &n, sizeof(u32));
-         return sizeof(geo_m_pg);
-  }
+As the above links show, there's no right choice.
+>
+> for the default choice you must consider what spt your array uses, iirc
+> (this is from memory, so double check these figures)
+> IBM 64 spt (i think)
+> EMC DMX 64
+> EMC CX 128???
+> HDS (and HP XP) except OPEN-V 96
+> HDS (and HP XP) OPEN-V 128
+> HP EVA 4/6/8 with XCS 5.x state that no alignment is needed even if i
+> never found a technical explanation about that.
+> previous HP EVA versions did (maybe 64).
+> you might then want to consider how data is laid out on the storage, but
+> i believe the storage cache is enough to deal with that issue.
+>
+> Please note that "0" is always well aligned.
+>
+> Note to people who is now wondering WTH i am talking about.
+>
+> consider a storage with 64 spt, an io size of 4k and partition starting
+> at sector 63.
+> first io request will require two ios from the storage (1 for sector 63,
+> and one for sectors 64 to 70)
+> the next 7 io (71-78,79-86,97-94,95-102,103-110,111-118,119-126) will be
+> on the same track
+> the 8th will again require to be split, and so on.
+> this causes the storage to do 1 unnecessary io every 8. YMMV.
+No one makes drives with fixed spt any more. Your assumptions are a 
+decade out of date.
 
-@@ -249,7 +251,10 @@
-         struct iet_volume *lun;
-         int rest, idx = 0;
+-- 
+bill davidsen <davidsen@tmr.com>
+  CTO TMR Associates, Inc
+  Doing interesting things with small computers since 1979
 
--       size = be32_to_cpu(*(u32 *)&req->scb[6]);
-+       size = be32_to_cpu((((u32) req->scb[6]) << 24) |
-+                       (((u32) req->scb[7]) << 16) |
-+                       (((u32) req->scb[8]) << 8) |
-+                       req->scb[9]);
-         if (size < 16)
-                 return -1;
-
-	Regards,
-
-	JKB
-
--------------------------------------------------------------------------
-This SF.net email is sponsored by: Splunk Inc.
-Still grepping through log files to find problems?  Stop.
-Now Search log events and configuration files using AJAX and a browser.
-Download your FREE copy of Splunk now >> http://get.splunk.com/
