@@ -1,192 +1,68 @@
-From: Kyle Stuart <kstuart@sisna.com>
-Subject: Bad drive discovered during raid5 reshape
-Date: Mon, 29 Oct 2007 01:10:46 -0600
-Message-ID: <47258776.9020601@sisna.com>
+From: Luca Berra <bluca@comedia.it>
+Subject: Re: Raid-10 mount at startup always has problem
+Date: Mon, 29 Oct 2007 08:41:39 +0100
+Message-ID: <20071029074139.GA15475@percy.comedia.it>
+References: <46E4A39C.8040509@amfes.com> <46E4A5F0.9090407@sauce.co.nz> <46E4A7C3.1040902@amfes.com> <471F5542.3020504@amfes.com> <471FA485.6010705@tmr.com> <47202D17.3040000@amfes.com> <1193294406.10336.76.camel@firewall.xsintricity.com> <20071026091513.GB32550@percy.comedia.it> <1193426793.10336.302.camel@firewall.xsintricity.com> <4725278E.1050306@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <4725278E.1050306@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
-I bought two new hard drives to expand my raid array today and
-unfortunately one of them appears to be bad. The problem didn't arise
-until after I attempted to grow the raid array. I was trying to expand
-the array from 6 to 8 drives. I added both drives using mdadm --add
-/dev/md1 /dev/sdb1 which completed, then mdadm --add /dev/md1 /dev/sdc1
-which also completed. I then ran mdadm --grow /dev/md1 --raid-devices=8.
-It passed the critical section, then began the grow process.
+On Sun, Oct 28, 2007 at 08:21:34PM -0400, Bill Davidsen wrote:
+>>Because you didn't stripe align the partition, your bad.
+>>   
+>Align to /what/ stripe? Hardware (CHS is fiction), software (of the RAID 
+the real stripe (track) size of the storage, you must read the manual
+and/or bug technical support for that info.
+>you're about to create), or ??? I don't notice my FC6 or FC7 install 
+>programs using any special partition location to start, I have only run 
+>(tried to run) FC8-test3 for the live CD, so I can't say what it might 
+>do. CentOS4 didn't do anything obvious, either, so unless I really 
+>misunderstand your position at redhat, that would be your bad.  ;-)
+>
+>If you mean start a partition on a pseudo-CHS boundary, fdisk seems to 
+>use what it thinks are cylinders for that.
+Yes, fdisk will create partition at sector 63 (due to CHS being braindead,
+other than fictional: 63 sectors-per-track)
+most arrays use 64 or 128 spt, and array cache are aligned accordingly.
+So 63 is almost always the wrong choice.
 
-After a few minutes I started to hear unusual sounds from within the
-case. Fearing the worst I tried to cat /proc/mdstat which resulted in no
-output so I checked dmesg which showed that /dev/sdb1 was not working
-correctly. After several minutes dmesg indicated that mdadm gave up and
-the grow process stopped. After googling around I tried the solutions
-that seemed most likely to work, including removing the new drives with
-mdadm --remove --force /dev/md1 /dev/sd[bc]1 and rebooting after which I
-ran mdadm -Af /dev/md1. The grow process restarted then failed almost
-immediately. Trying to mount the drive gives me a reiserfs replay
-failure and suggests running fsck. I don't dare fsck the array since
-I've already messed it up so badly. Is there any way to go back to the
-original working 6 disc configuration with minimal data loss? Here's
-where I'm at right now, please let me know if I need to include any
-additional information.
+for the default choice you must consider what spt your array uses, iirc
+(this is from memory, so double check these figures)
+IBM 64 spt (i think)
+EMC DMX 64
+EMC CX 128???
+HDS (and HP XP) except OPEN-V 96
+HDS (and HP XP) OPEN-V 128
+HP EVA 4/6/8 with XCS 5.x state that no alignment is needed even if i
+never found a technical explanation about that.
+previous HP EVA versions did (maybe 64).
+you might then want to consider how data is laid out on the storage, but
+i believe the storage cache is enough to deal with that issue.
 
-# uname -a
-Linux nas 2.6.22-gentoo-r5 #1 SMP Thu Aug 23 16:59:47 MDT 2007 x86_64
-AMD Athlon(tm) 64 Processor 3500+ AuthenticAMD GNU/Linux
+Please note that "0" is always well aligned.
 
-# mdadm --version
-mdadm - v2.6.2 - 21st May 2007
+Note to people who is now wondering WTH i am talking about.
 
-# cat /proc/mdstat
-Personalities : [raid6] [raid5] [raid4]
-md1 : active raid5 hdb1[0] sdb1[8](F) sda1[5] sdf1[4] sde1[3] sdg1[2]
-sdd1[1]
-      1220979520 blocks super 0.91 level 5, 64k chunk, algorithm 2 [8/6]
-[UUUUUU__]
+consider a storage with 64 spt, an io size of 4k and partition starting
+at sector 63.
+first io request will require two ios from the storage (1 for sector 63,
+and one for sectors 64 to 70)
+the next 7 io (71-78,79-86,97-94,95-102,103-110,111-118,119-126) will be
+on the same track
+the 8th will again require to be split, and so on.
+this causes the storage to do 1 unnecessary io every 8. YMMV.
 
-unused devices: <none>
+L.
 
-# mdadm --detail --verbose /dev/md1
-/dev/md1:
-        Version : 00.91.03
-  Creation Time : Sun Apr  8 19:48:01 2007
-     Raid Level : raid5
-     Array Size : 1220979520 (1164.42 GiB 1250.28 GB)
-  Used Dev Size : 244195904 (232.88 GiB 250.06 GB)
-   Raid Devices : 8
-  Total Devices : 7
-Preferred Minor : 1
-    Persistence : Superblock is persistent
-
-    Update Time : Mon Oct 29 00:53:21 2007
-          State : clean, degraded
- Active Devices : 6
-Working Devices : 6
- Failed Devices : 1
-  Spare Devices : 0
-
-         Layout : left-symmetric
-     Chunk Size : 64K
-
-  Delta Devices : 2, (6->8)
-
-           UUID : 56e7724e:9a5d0949:ff52889f:ac229049
-         Events : 0.487460
-
-    Number   Major   Minor   RaidDevice State
-       0       3       65        0      active sync   /dev/hdb1
-       1       8       49        1      active sync   /dev/sdd1
-       2       8       97        2      active sync   /dev/sdg1
-       3       8       65        3      active sync   /dev/sde1
-       4       8       81        4      active sync   /dev/sdf1
-       5       8        1        5      active sync   /dev/sda1
-       6       0        0        6      removed
-       8       8       17        7      faulty spare rebuilding   /dev/sdb1
-
-#dmesg
-<snip>
-md: md1 stopped.
-md: unbind<hdb1>
-md: export_rdev(hdb1)
-md: unbind<sdc1>
-md: export_rdev(sdc1)
-md: unbind<sdb1>
-md: export_rdev(sdb1)
-md: unbind<sda1>
-md: export_rdev(sda1)
-md: unbind<sdf1>
-md: export_rdev(sdf1)
-md: unbind<sde1>
-md: export_rdev(sde1)
-md: unbind<sdg1>
-md: export_rdev(sdg1)
-md: unbind<sdd1>
-md: export_rdev(sdd1)
-md: bind<sdd1>
-md: bind<sdg1>
-md: bind<sde1>
-md: bind<sdf1>
-md: bind<sda1>
-md: bind<sdb1>
-md: bind<sdc1>
-md: bind<hdb1>
-md: md1 stopped.
-md: unbind<hdb1>
-md: export_rdev(hdb1)
-md: unbind<sdc1>
-md: export_rdev(sdc1)
-md: unbind<sdb1>
-md: export_rdev(sdb1)
-md: unbind<sda1>
-md: export_rdev(sda1)
-md: unbind<sdf1>
-md: export_rdev(sdf1)
-md: unbind<sde1>
-md: export_rdev(sde1)
-md: unbind<sdg1>
-md: export_rdev(sdg1)
-md: unbind<sdd1>
-md: export_rdev(sdd1)
-md: bind<sdd1>
-md: bind<sdg1>
-md: bind<sde1>
-md: bind<sdf1>
-md: bind<sda1>
-md: bind<sdb1>
-md: bind<sdc1>
-md: bind<hdb1>
-md: kicking non-fresh sdc1 from array!
-md: unbind<sdc1>
-md: export_rdev(sdc1)
-raid5: reshape will continue
-raid5: device hdb1 operational as raid disk 0
-raid5: device sdb1 operational as raid disk 7
-raid5: device sda1 operational as raid disk 5
-raid5: device sdf1 operational as raid disk 4
-raid5: device sde1 operational as raid disk 3
-raid5: device sdg1 operational as raid disk 2
-raid5: device sdd1 operational as raid disk 1
-raid5: allocated 8462kB for md1
-raid5: raid level 5 set md1 active with 7 out of 8 devices, algorithm 2
-RAID5 conf printout:
- --- rd:8 wd:7
- disk 0, o:1, dev:hdb1
- disk 1, o:1, dev:sdd1
- disk 2, o:1, dev:sdg1
- disk 3, o:1, dev:sde1
- disk 4, o:1, dev:sdf1
- disk 5, o:1, dev:sda1
- disk 7, o:1, dev:sdb1
-...ok start reshape thread
-md: reshape of RAID array md1
-md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
-md: using maximum available idle IO bandwidth (but not more than 200000
-KB/sec) for reshape.
-md: using 128k window, over a total of 244195904 blocks.
-ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-ata2.00: cmd 35/00:00:3f:42:02/00:04:00:00:00/e0 tag 0 cdb 0x0 data
-524288 out
-         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
-ata2: port is slow to respond, please be patient (Status 0xd8)
-ata2: device not ready (errno=-16), forcing hardreset
-ata2: hard resetting port
-<repeats 4 more times>
-ata2: reset failed, giving up
-ata2.00: disabled
-ata2: EH complete
-sd 1:0:0:0: [sdb] Result: hostbyte=DID_BAD_TARGET
-driverbyte=DRIVER_OK,SUGGEST_OK
-end_request: I/O error, dev sdb, sector 148031
-raid5: Disk failure on sdb1, disabling device. Operation continuing on 6
-devices
-sd 1:0:0:0: [sdb] Result: hostbyte=DID_BAD_TARGET
-driverbyte=DRIVER_OK,SUGGEST_OK
-end_request: I/O error, dev sdb, sector 149055
-sd 1:0:0:0: [sdb] Result: hostbyte=DID_BAD_TARGET
-driverbyte=DRIVER_OK,SUGGEST_OK
-end_request: I/O error, dev sdb, sector 149439
-md: md1: reshape done.
+-- 
+Luca Berra -- bluca@comedia.it
+        Communication Media & Services S.r.l.
+ /"\
+ \ /     ASCII RIBBON CAMPAIGN
+  X        AGAINST HTML MAIL
+ / \
