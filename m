@@ -1,134 +1,142 @@
 From: Doug Ledford <dledford@redhat.com>
-Subject: Re: Raid-10 mount at startup always has problem
-Date: Mon, 29 Oct 2007 13:08:12 -0400
-Message-ID: <1193677692.10336.475.camel@firewall.xsintricity.com>
-References: <46D3147D.2040201@amfes.com> <46D49F1A.7030409@tmr.com>
-	 <46E4A39C.8040509@amfes.com> <46E4A5F0.9090407@sauce.co.nz>
-	 <46E4A7C3.1040902@amfes.com> <471F5542.3020504@amfes.com>
-	 <471FA485.6010705@tmr.com>  <47202D17.3040000@amfes.com>
-	 <1193294406.10336.76.camel@firewall.xsintricity.com>
-	 <472576A5.3030603@amfes.com>
+Subject: Re: Implementing low level timeouts within MD
+Date: Mon, 29 Oct 2007 13:22:01 -0400
+Message-ID: <1193678521.10336.486.camel@firewall.xsintricity.com>
+References: <1193418753.4771.17.camel@w100>
+	 <1193425254.10336.290.camel@firewall.xsintricity.com>
+	 <1193521561.7690.14.camel@w100>
+	 <1193529329.10336.366.camel@firewall.xsintricity.com>
+	 <1193552822.6541.8.camel@w100>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-PxLA9TVOMBG1qpCLG5DP"
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-RBULkk6y3FWiUKxzZzIj"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <472576A5.3030603@amfes.com>
+In-Reply-To: <1193552822.6541.8.camel@w100>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Daniel L. Miller" <dmiller@amfes.com>
+To: Alberto Alonso <alberto@ggsys.net>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
---=-PxLA9TVOMBG1qpCLG5DP
+--=-RBULkk6y3FWiUKxzZzIj
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Sun, 2007-10-28 at 22:59 -0700, Daniel L. Miller wrote:
-> Doug Ledford wrote:
-> > Anyway, I happen to *like* the idea of using full disk devices, but the
-> > reality is that the md subsystem doesn't have exclusive ownership of th=
+On Sun, 2007-10-28 at 01:27 -0500, Alberto Alonso wrote:
+> On Sat, 2007-10-27 at 19:55 -0400, Doug Ledford wrote:
+> > On Sat, 2007-10-27 at 16:46 -0500, Alberto Alonso wrote:
+> > > Regardless of the fact that it is not MD's fault, it does make
+> > > software raid an invalid choice when combined with those drivers. A
+> > > single disk failure within a RAID5 array bringing a file server down
+> > > is not a valid option under most situations.
+> >=20
+> > Without knowing the exact controller you have and driver you use, I
+> > certainly can't tell the situation.  However, I will note that there ar=
 e
-> > disks at all times, and without that it really needs to stake a claim o=
-n
-> > the space instead of leaving things to chance IMO.
-> >  =20
-> I've been re-reading this post numerous times - trying to ignore the=20
-> burgeoning flame war :) - and this last sentence finally clicked with me.
+> > times when no matter how well the driver is written, the wrong type of
+> > drive failure *will* take down the entire machine.  For example, on an
+> > SPI SCSI bus, a single drive failure that involves a blown terminator
+> > will cause the electrical signaling on the bus to go dead no matter wha=
+t
+> > the driver does to try and work around it.
 >=20
-> As I'm a novice Linux user - and not involved in development at all -=20
-> bear with me if I'm stating something obvious.  And if I'm wrong -=20
-> please be gentle!
+> Sorry I thought I copied the list with the info that I sent to Richard.
+> Here is the main hardware combinations.
 >=20
-> 1.  md devices are not "native" to the kernel - they are=20
-> created/assembled/activated/whatever by a userspace program.
-
-My real point was that md doesn't own the disks, meaning that during
-startup, and at other points in time, software other than the md stack
-can attempt to use the disk directly.  That software may be the linux
-file system code, linux lvm code, or in some case entirely different OS
-software.  Given that these situations can arise, using a partition
-table to mark the space as in use by linux is what I meant by staking a
-claim.  It doesn't keep the linux kernel from using it because it thinks
-it owns it, but it does stop other software from attempting to use it.
-
-> 2.  Because md devices are "non-native" devices, and are composed of=20
-> "native" devices, the kernel may try to use those components directly=20
-> without going through md.
-
-In the case of superblocks at the end, yes.  The kernel may see the
-underlying file system or lvm disk label even if the md device is not
-started.
-
-> 3.  Creating a partition table somehow (I'm still not clear how/why)=20
-> reduces the chance the kernel will access the drive directly without md.
-
-The partition table is more to tell other software that linux owns the
-space and to avoid mistakes where someone runs fdisk on a disk
-accidentally and wipes out your array because they added a partition
-table on what they thought was a new disk (more likely when you have
-large arrays of disks attached via fiber channel or such than in a
-single system).  Putting the superblock at the beginning of the md
-device is the main thing that guarantees the kernel will never try to
-use what's inside the md device without the md device running.
-
-> These concepts suddenly have me terrified over my data integrity.  Is=20
-> the md system so delicate that BOOT sequence can corrupt it?
-
-If you have your superblocks at the end of the devices, then there are
-certain failure modes that can cause data inconsistencies.  Generally
-speaking they won't harm the array itself, it's just that the different
-disks in a raid1 array might contain different data.  If you don't use
-partitions, then the majority of failure scenarios involve things like
-accidental use of fdisk on the unpartitioned device, access of the
-device by other OSes, that sort of thing.
-
->   How is it=20
-> more reliable AFTER the completed boot sequence?
-
-Once the array is up and running, the constituent disks are marked as
-busy in the operating system, which prevents other portions of the linux
-kernel and other software in general from getting at the md owned disks.
-
-> Nothing in the documentation (that I read - granted I don't always read=20
-> everything) stated that partitioning prior to md creation was necessary=20
-> - in fact references were provided on how to use complete disks.  Is=20
-> there an "official" position on, "To Partition, or Not To Partition"? =20
-> Particularly for my application - dedicated Linux server, RAID-10=20
-> configuration, identical drives.
+> --- Excerpt Start ----
+> Certainly. The times when I had good results (ie. failed drives
+> with properly degraded arrays have been with old PATA based IDE=20
+> controllers built in the motherboard and the Highpoint PATA
+> cards). The failures (ie. single disk failure bringing the whole
+> server down) have been with the following:
 >=20
-> And if partitioning is the answer - what do I need to do with my live=20
-> dataset?  Drop one drive, partition, then add the partition as a new=20
-> drive to the set - and repeat for each drive after the rebuild finishes?
+> * External disks on USB enclosures, both RAID1 and RAID5 (two different
+>   systems) Don't know the actual controller for these. I assume it is
+>   related to usb-storage, but can probably research the actual chipset,
+>   if it is needed.
 
-You *probably*, and I emphasize probably, don't need to do anything.  I
-emphasize it because I don't know enough about your situation to say so
-with 100% certainty.  If I'm wrong, it's not my fault.
+OK, these you don't get to count.  If you run raid over USB...well...you
+get what you get.  IDE never really was a proper server interface, and
+SATA is much better, but USB was never anything other than a means to
+connect simple devices without having to put a card in your PC, it was
+never intended to be a raid transport.
 
-Now, that said, here's the gist of the situation.  There are specific
-failure cases that can corrupt data in an md raid1 array mainly related
-to superblocks at the end of devices.  There are specific failure cases
-where an unpartitioned device can be accidentally partitioned or where a
-partitioned md array in combination with superblocks at the end and
-using a whole disk device can be misrecognized as a partitioned normal
-drive.  There are, on the other hand, cases where it's perfectly safe to
-use unpartitioned devices, or superblocks at the end of devices.  My
-recommendation when someone asks what to do is to use partitions, and to
-use superblocks at the beginning of the devices (except for /boot since
-that isn't supported at the moment).  The reason I give that advice is
-that I assume if a person knows enough to know when it's safe to use
-unpartitioned devices, like Luca, then they wouldn't be asking me for
-advice.  So since they *are* asking my advice, and since a lot of the
-failure cases have as much to do with human error as they do with
-software error, and since human error always seems to find new ways to
-err, it's therefore impossible to list all the error cases, and so it's
-best just to give the known safe advice.
+> * Internal serverworks PATA controller on a netengine server. The
+>   server if off waiting to get picked up, so I can't get the important
+>   details.
 
-Just because you heard the advice after creating your arrays is no
-reason to panic though.  Since the disks are local to your linux server
-and not attached via a fiber channel network or something similar, about
-2/3rds of the failure cases drop away immediately.  And given that you
-are using raid10 instead of raid1, the possible silent inconsistency
-issue drops away.  All in all, your pretty safe.
+1 PATA failure.
 
+> * Supermicro MB with ICH5/ICH5R controller and 2 RAID5 arrays of 3=20
+>   disks each. (only one drive on one array went bad)
+>=20
+> * VIA VT6420 built into the MB with RAID1 across 2 SATA drives.
+>=20
+> * And the most complex is this week's server with 4 PCI/PCI-X cards.
+>   But the one that hanged the server was a 4 disk RAID5 array on a
+>   RocketRAID1540 card.
+
+And 3 SATA failures, right?  I'm assuming the Supermicro is SATA or else
+it has more PATA ports than I've ever seen.
+
+Was the RocketRAID card in hardware or software raid mode?  It sounds
+like it could be a combination of both, something like hardware on the
+card, and software across the different cards or something like that.
+
+What kernels were these under?
+
+> --- Excerpt End ----
+>=20
+> >=20
+> > > I wasn't even asking as to whether or not it should, I was asking if
+> > > it could.
+> >=20
+> > It could, but without careful control of timeouts for differing types o=
+f
+> > devices, you could end up making the software raid less reliable instea=
+d
+> > of more reliable overall.
+>=20
+> Even if the default timeout was really long (ie. 1 minute) and then
+> configurable on a per device (or class) via /proc it would really help.
+
+It's a band-aid.  It's working around other bugs in the kernel instead
+of fixing the real problem.
+
+> > Generally speaking, most modern drivers will work well.  It's easier to
+> > maintain a list of known bad drivers than known good drivers.
+>=20
+> That's what has been so frustrating. The old PATA IDE hardware always
+> worked and the new stuff is what has crashed.
+
+In all fairness, the SATA core is still relatively young.  IDE was
+around for eons, where as Jeff started the SATA code just a few years
+back.  In that time I know he's had to deal with both software bugs and
+hardware bugs that would lock a SATA port up solid with no return.  What
+it sounds like to me is you found some of those.
+
+> > Be careful which hardware raid you choose, as in the past several brand=
+s
+> > have been known to have the exact same problem you are having with
+> > software raid, so you may not end up buying yourself anything.  (I'm no=
+t
+> > naming names because it's been long enough since I paid attention to
+> > hardware raid driver issues that the issues I knew of could have been
+> > solved by now and I don't want to improperly accuse a currently well
+> > working driver of being broken)
+>=20
+> I have settled for 3ware. All my tests showed that it performed quite
+> well and kicked drives out when needed. Of course, I haven't had a
+> bad drive on a 3ware production server yet, so.... I may end up
+> pulling the little bit of hair I have left.
+>=20
+> I am now rushing the RocketRAID 2220 into production without testing
+> due to it being the only thing I could get my hands on. I'll report
+> any experiences as they happen.
+>=20
+> Thanks for all the info,
+>=20
+> Alberto
+>=20
 --=20
 Doug Ledford <dledford@redhat.com>
               GPG KeyID: CFBFF194
@@ -137,17 +145,17 @@ Doug Ledford <dledford@redhat.com>
 Infiniband specific RPMs available at
               http://people.redhat.com/dledford/Infiniband
 
---=-PxLA9TVOMBG1qpCLG5DP
+--=-RBULkk6y3FWiUKxzZzIj
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.7 (GNU/Linux)
 
-iD8DBQBHJhN8TzP9PM7pjw8RAnXnAJ0YIYVklqyOIfSeXHuRMDMV60T/5ACfQMD4
-Ccs/wM8XEkW23Kp+6jbZW0U=
-=GAGy
+iD8DBQBHJha5TzP9PM7pjw8RAgStAJ9GMh3pj+tI5H0HA5YuahRzyMWsIgCfaJBD
+gf+cx9/DxCWTDdTKdIrdAQM=
+=STor
 -----END PGP SIGNATURE-----
 
---=-PxLA9TVOMBG1qpCLG5DP--
+--=-RBULkk6y3FWiUKxzZzIj--
 
