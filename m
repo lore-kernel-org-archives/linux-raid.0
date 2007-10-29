@@ -1,85 +1,44 @@
 From: Doug Ledford <dledford@redhat.com>
-Subject: Re: Time to  deprecate old RAID formats?
-Date: Mon, 29 Oct 2007 19:05:42 -0400
-Message-ID: <1193699142.10336.503.camel@firewall.xsintricity.com>
-References: <20071020075349.GA17431@teal.hq.k1024.org>
-	 <1192885917.1666.112.camel@firewall.xsintricity.com>
-	 <20071026095417.GC32550@percy.comedia.it>
-	 <1193424779.10336.287.camel@firewall.xsintricity.com>
-	 <20071026223046.GB8210@boogie.lpds.sztaki.hu>
-	 <1193531160.10336.397.camel@firewall.xsintricity.com>
-	 <20071028141336.GC22861@percy.comedia.it>
-	 <1193593675.10336.404.camel@firewall.xsintricity.com>
-	 <20071029084118.GC15475@percy.comedia.it>
-	 <1193671853.10336.428.camel@firewall.xsintricity.com>
-	 <20071029214416.GB24635@percy.comedia.it>
+Subject: Re: Raid-10 mount at startup always has problem
+Date: Mon, 29 Oct 2007 19:15:01 -0400
+Message-ID: <1193699701.10336.508.camel@firewall.xsintricity.com>
+References: <46E4A39C.8040509@amfes.com> <46E4A5F0.9090407@sauce.co.nz>
+	 <46E4A7C3.1040902@amfes.com> <471F5542.3020504@amfes.com>
+	 <471FA485.6010705@tmr.com> <47202D17.3040000@amfes.com>
+	 <1193294406.10336.76.camel@firewall.xsintricity.com>
+	 <472576A5.3030603@amfes.com> <20071029081802.GB15475@percy.comedia.it>
+	 <1193672839.10336.443.camel@firewall.xsintricity.com>
+	 <20071029212927.GA24635@percy.comedia.it>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-cBMxFhO8UHo3sfDjIkwO"
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Js8dleZy8cT03LnV6KSK"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20071029214416.GB24635@percy.comedia.it>
+In-Reply-To: <20071029212927.GA24635@percy.comedia.it>
 Sender: linux-raid-owner@vger.kernel.org
 To: Luca Berra <bluca@comedia.it>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
---=-cBMxFhO8UHo3sfDjIkwO
+--=-Js8dleZy8cT03LnV6KSK
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 2007-10-29 at 22:44 +0100, Luca Berra wrote:
-> On Mon, Oct 29, 2007 at 11:30:53AM -0400, Doug Ledford wrote:
-> >On Mon, 2007-10-29 at 09:41 +0100, Luca Berra wrote:
-> >
-> >> >Remaking the initrd installs the new mdadm.conf file, which would hav=
-e
-> >> >then contained the whole disk devices and it's UUID.  There in would
-> >> >have been the problem.
-> >> yes, i read the patch, i don't like that code, as i don't like most of
-> >> what has been put in mkinitrd from 5.0 onward.
-> in case you wonder i am referring to things like
->=20
-> emit dm create "$1" $UUID $(/sbin/dmsetup table "$1")
+On Mon, 2007-10-29 at 22:29 +0100, Luca Berra wrote:
+> At which point he found that
+> >the udev scripts in ubuntu are being stupid, and from the looks of it
+> >are the cause of the problem.  So, I've considered the initial issue
+> >root caused for a bit now.
+> It seems i made an idiot of myself by missing half of the thread, and i
+> even knew ubuntu was braindead in their use of udev at startup, since a
+> similar discussion came up on the lvm or the dm-devel mailing list (that
+> time iirc it was about lvm over multipath)
 
-I make no judgments on the dm setup stuff, I know too little about the
-dm stack to be qualified.
-
-> >> Imho the correct thing here would not have been copying the existing
-> >> mdadm.conf but generating a safe one from output of mdadm -D (note -D,
-> >> not -E)
-> >
-> >I'm not sure I'd want that.  Besides, what makes you say -D is safer
-> >than -E?
->=20
-> "mdadm -D  /dev/mdX" works on an active md device, so i strongly doubt th=
-e information
-> gathered from there would be stale
-> while "mdadm -Es" will scan disk devices for md superblock, thus
-> possibly even finding stale superblocks or leftovers.
-> I would strongly recommend against blindly doing "mdadm -Es >>
-> /etc/mdadm.conf" and not supervising the result.
-
-Well, I agree that blindly doing mdadm -Esb >> mdadm.conf would be bad,
-but that's not what mkinitrd is doing, it's using the mdadm.conf that's
-in place so you can update the mdadm.conf whenever you find it
-appropriate.
-
-And I agree -D has less chance of finding a stale superblock, but it's
-also true that it has no chance of finding non-stale superblocks on
-devices that aren't even started.  So, as a method of getting all the
-right information in the event of system failure and rescuecd boot, it
-leaves something to be desired ;-)  In other words, I'd rather use a
-mode that finds everything and lets me remove the stale than a mode that
-might miss something.  But, that's a matter of personal choice.
-Considering that we only ever update mdadm.conf automatically during
-installs, after that the user makes manual mdadm.conf changes
-themselves, they are free to use whichever they prefer.
-
-The one thing I *do* like about mdadm -E above -D is it includes the
-superblock format in its output.  The one thing I don't like, is it
-almost universally gets the name wrong.  What I really want is a brief
-query format that both gives me the right name (-D) and the superblock
-format (-E).
+Nah.  Even if we had concluded that udev was to blame here, I'm not
+entirely certain that we hadn't left Daniel with the impression that we
+suspected it versus blamed it, so reiterating it doesn't hurt.  And I'm
+sure no one has given him a fix for the problem (although Neil did
+request a change that will give debug output, but not solve the
+problem), so not dropping it entirely would seem appropriate as well.
 
 --=20
 Doug Ledford <dledford@redhat.com>
@@ -89,17 +48,17 @@ Doug Ledford <dledford@redhat.com>
 Infiniband specific RPMs available at
               http://people.redhat.com/dledford/Infiniband
 
---=-cBMxFhO8UHo3sfDjIkwO
+--=-Js8dleZy8cT03LnV6KSK
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.7 (GNU/Linux)
 
-iD8DBQBHJmdGTzP9PM7pjw8RAv+TAJ4pn7T9ApuQdVsdcGT97405r1XNcACcCnf2
-DoozTbm8rPLk2B5dyVCUHO0=
-=2awV
+iD8DBQBHJml1TzP9PM7pjw8RAgNnAJ43C1vhmw5uGXjaeSFV4p2sglmUewCdFQu8
+XuxzXncBc0W1khZ5lyakg6Y=
+=Eor4
 -----END PGP SIGNATURE-----
 
---=-cBMxFhO8UHo3sfDjIkwO--
+--=-Js8dleZy8cT03LnV6KSK--
 
