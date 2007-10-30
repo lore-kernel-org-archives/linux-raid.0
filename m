@@ -1,64 +1,90 @@
-From: Doug Ledford <dledford@redhat.com>
-Subject: Re: Time to  deprecate old RAID formats?
-Date: Tue, 30 Oct 2007 12:48:40 -0400
-Message-ID: <1193762920.10336.511.camel@firewall.xsintricity.com>
-References: <20071026095417.GC32550@percy.comedia.it>
-	 <1193424779.10336.287.camel@firewall.xsintricity.com>
-	 <20071026223046.GB8210@boogie.lpds.sztaki.hu>
-	 <1193531160.10336.397.camel@firewall.xsintricity.com>
-	 <20071028141336.GC22861@percy.comedia.it>
-	 <1193593675.10336.404.camel@firewall.xsintricity.com>
-	 <20071029084118.GC15475@percy.comedia.it>
-	 <1193671853.10336.428.camel@firewall.xsintricity.com>
-	 <20071029214416.GB24635@percy.comedia.it>
-	 <1193699142.10336.503.camel@firewall.xsintricity.com>
-	 <20071030065549.GA13545@percy.comedia.it>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: Bad drive discovered during raid5 reshape
+Date: Tue, 30 Oct 2007 17:29:15 +1100
+Message-ID: <18214.53051.652280.492087@notabene.brown>
+References: <47258776.9020601@sisna.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-eUcFk1HbzD8y8jZsGKgK"
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20071030065549.GA13545@percy.comedia.it>
+In-Reply-To: message from Kyle Stuart on Monday October 29
 Sender: linux-raid-owner@vger.kernel.org
-To: Luca Berra <bluca@comedia.it>
+To: Kyle Stuart <kstuart@sisna.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Monday October 29, kstuart@sisna.com wrote:
+> Hi,
+> I bought two new hard drives to expand my raid array today and
+> unfortunately one of them appears to be bad. The problem didn't arise
+> until after I attempted to grow the raid array. I was trying to expand
+> the array from 6 to 8 drives. I added both drives using mdadm --add
+> /dev/md1 /dev/sdb1 which completed, then mdadm --add /dev/md1 /dev/sdc1
+> which also completed. I then ran mdadm --grow /dev/md1 --raid-devices=8.
+> It passed the critical section, then began the grow process.
+> 
+> After a few minutes I started to hear unusual sounds from within the
+> case. Fearing the worst I tried to cat /proc/mdstat which resulted in no
+> output so I checked dmesg which showed that /dev/sdb1 was not working
+> correctly. After several minutes dmesg indicated that mdadm gave up and
+> the grow process stopped. After googling around I tried the solutions
+> that seemed most likely to work, including removing the new drives with
+> mdadm --remove --force /dev/md1 /dev/sd[bc]1 and rebooting after which I
+> ran mdadm -Af /dev/md1. The grow process restarted then failed almost
+> immediately. Trying to mount the drive gives me a reiserfs replay
+> failure and suggests running fsck. I don't dare fsck the array since
+> I've already messed it up so badly. Is there any way to go back to the
+> original working 6 disc configuration with minimal data loss? Here's
+> where I'm at right now, please let me know if I need to include any
+> additional information.
 
---=-eUcFk1HbzD8y8jZsGKgK
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Looks like you are in real trouble.  Both the drives seem bad in some
+way.  If it was just sdc that was failing it would have picked up
+after the "-Af", but when it tried, sdb gave errors.
 
-On Tue, 2007-10-30 at 07:55 +0100, Luca Berra wrote:
+Have two failed devices in a RAID5 is not good!
 
-> Well it might be a matter of personal preference, but i would prefer
-> an initrd doing just the minumum necessary to mount the root filesystem
-> (and/or activating resume from a swap device), and leaving all the rest
-> to initscripts, then an initrd that tries to do everything.
+Your best bet goes like this:
 
-The initrd does exactly that.  The rescan for superblocks does not
-happen in initrd or mkinitrd, it must be done manually.  The code in
-mkinitrd uses the mdadm.conf file as it stands, but in the initrd image
-it doesn't start all the arrays, just the needed arrays to get booted
-into your / partition.
+  The reshape has started and got up to some point.  The data
+  before that point is spread over 8 drives.  The data after is over
+  6.
+  We need to restripe the 8drive data back to 6 drives.  This can be
+  done with the test_stripe tool that can be built from the mdadm
+  source. 
 
---=20
-Doug Ledford <dledford@redhat.com>
-              GPG KeyID: CFBFF194
-              http://people.redhat.com/dledford
+  1/ Find out how far the reshape progressed, by using "mdadm -E" on
+     one of the devices.
+  2/ use something like
+        test_stripe save /some/file 8 $chunksize 5 2 0 $length  /dev/......
 
-Infiniband specific RPMs available at
-              http://people.redhat.com/dledford/Infiniband
+     If you get all the args right, this should copy the data from
+     the array into /some/file.
+     You could possibly do the same thing by assembling the array 
+     read-only (set /sys/modules/md_mod/parameters/start_ro to 1)
+     and 'dd' from the array.  It might be worth doing both and
+     checking you get the same result.
 
---=-eUcFk1HbzD8y8jZsGKgK
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+  3/ use something like
+        test_stripe restore /some/file 6 ..........
+     to restore the data to just 6 devices.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.7 (GNU/Linux)
+  4/ use "mdadm -C" to create the array a-new on the 6 devices.  Make
+     sure the order and the chunksize etc is preserved.
 
-iD8DBQBHJ2BoTzP9PM7pjw8RAiCUAJ4h5phxuh30h4ZnVuhSdyfnmPf9+wCfX1BI
-RI6LEOuoNn5u6dZUt+18YIU=
-=Kr3e
------END PGP SIGNATURE-----
+     Once you have done this, the start of the array should (again)
+     look like the content of /some/file.  It wouldn't hurt to check.
 
---=-eUcFk1HbzD8y8jZsGKgK--
+   Then your data would be as much back together as possible.
+   You will probably still need to do an fsck, but I think you did the
+   right thing in holding off.  Don't do an fsck until you are sure
+   the array is writable.
 
+You can probably do the above without using test_stripe by using dd to
+copy of the array before you recreate it, then using dd to put the
+same data back.  Using test_stripe as well might give you extra
+confidence. 
+
+Feel free to ask questions
+
+NeilBrown
