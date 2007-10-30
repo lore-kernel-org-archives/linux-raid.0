@@ -1,59 +1,47 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: Bad drive discovered during raid5 reshape
-Date: Tue, 30 Oct 2007 22:43:38 +1100
-Message-ID: <18215.6378.912706.274201@notabene.brown>
-References: <47258776.9020601@sisna.com>
-	<18214.53051.652280.492087@notabene.brown>
-	<472712E5.10806@dgreaves.com>
+From: Gabor Gombas <gombasg@sztaki.hu>
+Subject: Re: Implementing low level timeouts within MD
+Date: Tue, 30 Oct 2007 13:12:17 +0100
+Message-ID: <20071030121217.GC14342@boogie.lpds.sztaki.hu>
+References: <1193418753.4771.17.camel@w100> <1193425254.10336.290.camel@firewall.xsintricity.com> <1193521561.7690.14.camel@w100> <1193529329.10336.366.camel@firewall.xsintricity.com> <1193552822.6541.8.camel@w100> <1193678521.10336.486.camel@firewall.xsintricity.com> <1193720887.3876.8.camel@w100>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from David Greaves on Tuesday October 30
+Content-Disposition: inline
+In-Reply-To: <1193720887.3876.8.camel@w100>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Greaves <david@dgreaves.com>
-Cc: Kyle Stuart <kstuart@sisna.com>, linux-raid@vger.kernel.org
+To: Alberto Alonso <alberto@ggsys.net>
+Cc: Doug Ledford <dledford@redhat.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday October 30, david@dgreaves.com wrote:
-> Neil Brown wrote:
-> > On Monday October 29, kstuart@sisna.com wrote:
-> >> Hi,
-> >> I bought two new hard drives to expand my raid array today and
-> >> unfortunately one of them appears to be bad. The problem didn't arise
-> 
-> > Looks like you are in real trouble.  Both the drives seem bad in some
-> > way.  If it was just sdc that was failing it would have picked up
-> > after the "-Af", but when it tried, sdb gave errors.
-> 
-> Humble enquiry.... :)
-> 
-> I'm not sure that's right?
-> He *removed* sdb and sdc when the failure occurred so sdc would indeed be non-fresh.
+On Tue, Oct 30, 2007 at 12:08:07AM -0500, Alberto Alonso wrote:
 
-I'm not sure what point you are making here.
-In any case, remove two drives from a raid5 is always a bad thing.
-Part of the array was striped over 8 drives by this time.  With only
-six still in the array, some data will be missing.
-
+> > > * Internal serverworks PATA controller on a netengine server. The
+> > >   server if off waiting to get picked up, so I can't get the important
+> > >   details.
+> > 
+> > 1 PATA failure.
 > 
-> The key question I think is: will md continue to grow an array even if it enters
-> degraded mode during the grow?
-> ie grow from a 6 drive array to a 7-of-8 degraded array?
-> 
-> Technically I guess it should be able to.
+> I was surprised on this one, I did have good luck with with PATA in
+> the past. The kernel is whatever came standard in Fedora Core 2
 
-Yes, md can grow to a degraded array.  If you get a single failure I
-would expect it to abort the growth process, then restart where it
-left off (after checking that that made sense).
+The keyword here is probably not "PATA" but "Serverworks"... AFAIR that
+chipset was always considered somewhat problematic. You may want to try
+with the libata driver, it has a nice comment:
 
-> 
-> In which case should he be able to re-add /dev/sdc and allow md to retry the
-> grow? (possibly losing some data due to the sdc staleness)
+ *      Note that we don't copy the old serverworks code because the old
+ *      code contains obvious mistakes
 
-He only needs one of the two drives in there.  I got the impression
-that both sdc and sdb had reported errors.  If not, and sdc really
-seems OK, then "--assemble --force" listing all drives except sdb
-should make it all work again.
+But even the new driver retained this coment from the old driver:
 
-NeilBrown
+ * Documentation:
+ *      Available under NDA only. Errata info very hard to get.
+
+It isn't exactly giving me warm feelings to trust data to this chipset...
+
+Gabor
+
+-- 
+     ---------------------------------------------------------
+     MTA SZTAKI Computer and Automation Research Institute
+                Hungarian Academy of Sciences
+     ---------------------------------------------------------
