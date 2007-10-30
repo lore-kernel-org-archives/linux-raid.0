@@ -1,82 +1,42 @@
-From: Doug Ledford <dledford@redhat.com>
-Subject: Re: Implementing low level timeouts within MD
-Date: Tue, 30 Oct 2007 13:39:44 -0400
-Message-ID: <1193765984.10336.519.camel@firewall.xsintricity.com>
-References: <1193418753.4771.17.camel@w100>
-	 <1193425254.10336.290.camel@firewall.xsintricity.com>
-	 <87tzoc7soa.fsf@willow.rfc1149.net>  <1193721577.3876.12.camel@w100>
+From: David Greaves <david@dgreaves.com>
+Subject: Re: Bad drive discovered during raid5 reshape
+Date: Tue, 30 Oct 2007 11:17:57 +0000
+Message-ID: <472712E5.10806@dgreaves.com>
+References: <47258776.9020601@sisna.com> <18214.53051.652280.492087@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-v4NJhXEi3+jvy19ysLw6"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1193721577.3876.12.camel@w100>
+In-Reply-To: <18214.53051.652280.492087@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Alberto Alonso <alberto@ggsys.net>
-Cc: Samuel Tardieu <sam@rfc1149.net>, linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: Kyle Stuart <kstuart@sisna.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Neil Brown wrote:
+> On Monday October 29, kstuart@sisna.com wrote:
+>> Hi,
+>> I bought two new hard drives to expand my raid array today and
+>> unfortunately one of them appears to be bad. The problem didn't arise
 
---=-v4NJhXEi3+jvy19ysLw6
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> Looks like you are in real trouble.  Both the drives seem bad in some
+> way.  If it was just sdc that was failing it would have picked up
+> after the "-Af", but when it tried, sdb gave errors.
 
-On Tue, 2007-10-30 at 00:19 -0500, Alberto Alonso wrote:
-> On Sat, 2007-10-27 at 12:33 +0200, Samuel Tardieu wrote:
-> > I agree with Doug: nothing prevents you from using md above very slow
-> > drivers (such as remote disks or even a filesystem implemented over a
-> > tape device to make it extreme). Only the low-level drivers know when
-> > it is appropriate to timeout or fail.
-> >=20
-> >   Sam
->=20
-> The problem is when some of these drivers are just not smart
-> enough to keep themselves out of trouble. Unfortunately I've
-> been bitten by apparently too many of them.
+Humble enquiry.... :)
 
-Really, you've only been bitten by three so far.  Serverworks PATA
-(which I tend to agree with the other person, I would probably chock
-this up to Serverworks, not PATA), USB storage, and SATA (the SATA stack
-is arranged similar to the SCSI stack with a core library that all the
-drivers use, and then hardware dependent driver modules...I suspect that
-since you got bit on three different hardware versions that you were in
-fact hitting a core library bug, but that's just a suspicion and I could
-well be wrong).  What you haven't tried is any of the SCSI/SAS/FC stuff,
-and generally that's what I've always used and had good things to say
-about.  I've only used SATA for my home systems or workstations, not any
-production servers.
+I'm not sure that's right?
+He *removed* sdb and sdc when the failure occurred so sdc would indeed be non-fresh.
 
-> I'll repeat my plea one more time. Is there a published list
-> of tested combinations that respond well to hardware failures
-> and fully signals the md code so that nothing hangs?
+The key question I think is: will md continue to grow an array even if it enters
+degraded mode during the grow?
+ie grow from a 6 drive array to a 7-of-8 degraded array?
 
-I don't know of one, but like I said, I've not used a lot of the SATA
-stuff for production.  I would make this one suggestion though, SATA is
-still an evolving driver stack to a certain extent, and as such, keeping
-with more current kernels than you have been using is likely to be a big
-factor in whether or not these sorts of things happen.
+Technically I guess it should be able to.
 
-> If not, I would like to see what people that have experienced
-> hardware failures and survived them are using so that such
-> a list can be compiled.
+In which case should he be able to re-add /dev/sdc and allow md to retry the
+grow? (possibly losing some data due to the sdc staleness)
 
---=20
-Doug Ledford <dledford@redhat.com>
-              GPG KeyID: CFBFF194
-              http://people.redhat.com/dledford
+David
 
-Infiniband specific RPMs available at
-              http://people.redhat.com/dledford/Infiniband
-
---=-v4NJhXEi3+jvy19ysLw6
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.7 (GNU/Linux)
-
-iD8DBQBHJ2xfTzP9PM7pjw8RAnlkAJ9HPUAQdl6pc6QdG5N/kYcGQsncIgCcDy2C
-hDktsPzp/q+49cfs+GsVfSY=
-=zwL6
------END PGP SIGNATURE-----
-
---=-v4NJhXEi3+jvy19ysLw6--
 
