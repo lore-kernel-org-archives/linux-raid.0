@@ -1,50 +1,31 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: Superblocks
-Date: Tue, 30 Oct 2007 15:27:42 +1100
-Message-ID: <18214.45758.794247.651163@notabene.brown>
-References: <29a863790710260943o7623212esce30325be4610dea@mail.gmail.com>
+Subject: Re: Implementing low level timeouts within MD
+Date: Tue, 30 Oct 2007 15:47:43 +1100
+Message-ID: <18214.46959.424946.683169@notabene.brown>
+References: <1193418753.4771.17.camel@w100>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Greg Cormier on Friday October 26
+In-Reply-To: message from Alberto Alonso on Friday October 26
 Sender: linux-raid-owner@vger.kernel.org
-To: Greg Cormier <gcormier@gmail.com>
+To: Alberto Alonso <alberto@ggsys.net>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Friday October 26, gcormier@gmail.com wrote:
-> Can someone help me understand superblocks and MD a little bit?
+On Friday October 26, alberto@ggsys.net wrote:
+> I've been asking on my other posts but haven't seen
+> a direct reply to this question:
 > 
-> I've got a raid5 array with 3 disks - sdb1, sdc1, sdd1.
-> 
-> --examine on these 3 drives shows correct information.
-> 
-> 
-> However, if I also examine the raw disk devices, sdb and sdd, they
-> also appear to have superblocks with some semi valid looking
-> information. sdc has no superblock.
+> Can MD implement timeouts so that it detects problems when
+> drivers don't come back?
 
-If a partition starts a multiple of 64K from the start of the device,
-and ends with about 64K of the end of the device, then a superblock on
-the partition will also look like a superblock on the whole device.
-This is one of the shortcomings of v0.90 superblocks.  v1.0 doesn't
-have this problem.
-
-> 
-> How can I clear these? If I unmount my raid, stop md0, it won't clear it.
-
-mdadm --zero-superblock device name
-
-is the best way to remove an unwanted superblock.  Ofcourse in the
-above described case, removing the unwanted superblock will remove the
-wanted one aswell.
-
-
-> 
-> [root@zeus ~]# mdadm --zero-superblock /dev/hdd
-> mdadm: Couldn't open /dev/hdd for write - not zeroing
-
-As I think someone else pointed out "/dev/hdd" is not "/dev/sdd".
+No.
+However it is possible that we will start sending the BIO_RW_FAILFAST
+flag down on some or all requests.  That might make drivers fail more
+promptly, which might be  good thing.  However it won't fix bugs in
+drivers and - as has been said elsewhere on this thread - that is the
+real problem.
 
 NeilBrown
+
