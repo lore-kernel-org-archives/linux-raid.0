@@ -1,47 +1,52 @@
-From: Gabor Gombas <gombasg@sztaki.hu>
-Subject: Re: Implementing low level timeouts within MD
-Date: Tue, 30 Oct 2007 13:12:17 +0100
-Message-ID: <20071030121217.GC14342@boogie.lpds.sztaki.hu>
-References: <1193418753.4771.17.camel@w100> <1193425254.10336.290.camel@firewall.xsintricity.com> <1193521561.7690.14.camel@w100> <1193529329.10336.366.camel@firewall.xsintricity.com> <1193552822.6541.8.camel@w100> <1193678521.10336.486.camel@firewall.xsintricity.com> <1193720887.3876.8.camel@w100>
+From: David Greaves <david@dgreaves.com>
+Subject: Re: Bad drive discovered during raid5 reshape
+Date: Tue, 30 Oct 2007 12:35:42 +0000
+Message-ID: <4727251E.5030705@dgreaves.com>
+References: <47258776.9020601@sisna.com>	<18214.53051.652280.492087@notabene.brown>	<472712E5.10806@dgreaves.com> <18215.6378.912706.274201@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1193720887.3876.8.camel@w100>
+In-Reply-To: <18215.6378.912706.274201@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Alberto Alonso <alberto@ggsys.net>
-Cc: Doug Ledford <dledford@redhat.com>, linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>, Kyle Stuart <kstuart@sisna.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Oct 30, 2007 at 12:08:07AM -0500, Alberto Alonso wrote:
-
-> > > * Internal serverworks PATA controller on a netengine server. The
-> > >   server if off waiting to get picked up, so I can't get the important
-> > >   details.
-> > 
-> > 1 PATA failure.
+Neil Brown wrote:
+> On Tuesday October 30, david@dgreaves.com wrote:
+>> The key question I think is: will md continue to grow an array even if it enters
+>> degraded mode during the grow?
+>> ie grow from a 6 drive array to a 7-of-8 degraded array?
 > 
-> I was surprised on this one, I did have good luck with with PATA in
-> the past. The kernel is whatever came standard in Fedora Core 2
+> Yes, md can grow to a degraded array.  If you get a single failure I
+> would expect it to abort the growth process, then restart where it
+> left off (after checking that that made sense).
 
-The keyword here is probably not "PATA" but "Serverworks"... AFAIR that
-chipset was always considered somewhat problematic. You may want to try
-with the libata driver, it has a nice comment:
+I read that he aborted it, then removed both drives before giving md a chance to
+restart.
 
- *      Note that we don't copy the old serverworks code because the old
- *      code contains obvious mistakes
+He said:
+After several minutes dmesg indicated that mdadm gave up and
+the grow process stopped. After googling around I tried the solutions
+that seemed most likely to work, including removing the new drives with
+mdadm --remove --force /dev/md1 /dev/sd[bc]1 and rebooting
 
-But even the new driver retained this coment from the old driver:
+and *then* he: "ran mdadm -Af /dev/md1."
 
- * Documentation:
- *      Available under NDA only. Errata info very hard to get.
+>> In which case should he be able to re-add /dev/sdc and allow md to retry the
+>> grow? (possibly losing some data due to the sdc staleness)
+> 
+> He only needs one of the two drives in there.  I got the impression
+> that both sdc and sdb had reported errors.  If not, and sdc really
+> seems OK, then "--assemble --force" listing all drives except sdb
+> should make it all work again.
 
-It isn't exactly giving me warm feelings to trust data to this chipset...
+Kyle - I think you need to clarify this as it may not be too bad. Apologies if I
+misread something and sdc is bad too :)
 
-Gabor
+It may be an idea to let us (Neil) know what you've done and if you've done any
+writes to any devices before trying this assemble.
 
--- 
-     ---------------------------------------------------------
-     MTA SZTAKI Computer and Automation Research Institute
-                Hungarian Academy of Sciences
-     ---------------------------------------------------------
+David
+
