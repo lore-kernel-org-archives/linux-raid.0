@@ -1,61 +1,74 @@
-From: Yuri Tikhonov <yur@emcraft.com>
-Subject: Bug in processing dependencies by async_tx_submit() ?
-Date: Wed, 31 Oct 2007 20:21:46 +0400
-Message-ID: <200710311921.46609.yur@emcraft.com>
+From: Doug Ledford <dledford@redhat.com>
+Subject: Re: switching root fs '/' to boot from RAID1 with grub
+Date: Wed, 31 Oct 2007 13:38:08 -0400
+Message-ID: <1193852288.10336.590.camel@firewall.xsintricity.com>
+References: <20071030210721.386ca2fa@absurd>
+	 <1193781699.10336.585.camel@firewall.xsintricity.com>
+	 <20071031160152.764e2a45@absurd>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-HlI2PPfigk2rrdcsLO84"
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <20071031160152.764e2a45@absurd>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Williams, Dan J" <dan.j.williams@intel.com>
-Cc: Dan Williams <dan.j.williams@gmail.com>, Neil Brown <neilb@suse.de>, Wolfgang Denk <wd@denx.de>, Detlev Zundel <dzu@denx.de>, linux-raid@vger.kernel.org
+To: Janek Kozicki <janek_listy@wp.pl>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
- Hello Dan,
+--=-HlI2PPfigk2rrdcsLO84
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
- I've run into a problem with the h/w accelerated RAID-5 driver (on the 
-ppc440spe-based board). After some investigations I've come to conclusion 
-that the issue is with the async_tx_submit() implementation in ASYNC_TX.
+On Wed, 2007-10-31 at 16:01 +0100, Janek Kozicki wrote:
+> And now I have a full RAID1 array. Now just two questions:
+>=20
+> 1. when I `shutdown -r now` I see a worrying message at the end:
+>=20
+>     Stopping array md2 .... done (stopped)
+>     Stopping array md1 .... done (stopped)
+>     Stopping array md0 .... failed (busy)
+>     Will now reboot
+>     md: Stopping all md devices
+>     md: md0 still in use
+>  =20
+>     <reboots>
+>=20
+>    Is that ok ?
 
- Let's we have the following 3 dependent operations: OP1, OP2, OP3. The OP1 
-operation has to be run on one, DMA0, channel, OP2 and OP3 operations have to 
-be run on another, DMA1, channel. OP2 has to be run after completion of OP1, 
-OP3 - after completion of OP2. I. e. :
+Yes.  That's typical for the root device because root is never unmounted
+prior to shutdown.  The messages are probably more worrying than they
+need to be.  The system should have successfully switched the array to
+read only mode at the first attempt to stop the array.  Neil, any chance
+on getting the messages for the / device to be less worrisome?
 
- OP1 (DMA0) <--- OP2 (DMA1) <--- OP3 (DMA1).
+> 2. Will grub update all drives automatically, for instance when I will
+>    upgrade kernel by 'aptitude upgrade'? Or do I need to repeat your
+>    grub instructions each time a new kernel is installed?
 
- With the current implementation of async_tx_submit() we have the following 
-picture when we sequentially call async_tx_submit() to submit these 3 
-operations:
+Now that grub's installed, you won't have to do anything manual again.
+The only time you might have to repeat that grub install procedure is if
+you loose a drive and need to add a new one back in, then the new one
+will need it.
 
-- the OP2 operation will *not be* submitted to the h/w channel, but, because 
-of the (OP1->chan != OP2->chan) condition, will be put to depend_list of OP1; 
-and it's RIGHT;
+--=20
+Doug Ledford <dledford@redhat.com>
+              GPG KeyID: CFBFF194
+              http://people.redhat.com/dledford
 
-- the OP3 operation will *be* submitted to the h/w channel, because OP2 & OP3 
-do not conform the (OP2->chan != OP3->chan) condition. Thus OP3 will be put 
-to the h/w channel *before* its parent, OP2; and it's WRONG.
+Infiniband specific RPMs available at
+              http://people.redhat.com/dledford/Infiniband
 
- It looks more logical for me to check in async_tx_submit() - does the dep_tx 
-operation (on which the current tx operation is dependent on) depend on some 
-other operation itself. If dep_tx depends on some other operation then, 
-regardless of the channel on which tx has to be run, we should not put tx to 
-the h/w but bind it to depend_list of dep_tx instead. Why there are no such 
-algorithms in async_tx_submit() ?
+--=-HlI2PPfigk2rrdcsLO84
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
- As far as the RAID-5 h/w accelerated driver is concerned this means that with 
-the current implementation of async_tx_submit(), for example, the (PREXOR + 
-BIODRAIN) combination works incorrectly for the cases when BIODRAIN is split 
-into a sequence of MEMCPY operations and there are two different channels for 
-XOR and COPY operations: only one, the first, MEMCPY will wait until 
-completion of PREXOR, but all the others MEMCPYs of this BIODRAIN will be put 
-into the h/w channel right away. Is it correct ? I think - not.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.7 (GNU/Linux)
 
- Regards, Yuri
+iD8DBQBHKL2ATzP9PM7pjw8RAoMdAJoDI7/Tp4ZMr9sYQftCR5btm3TWTACdEdJG
+XwK+YpAh56XDGIL7dtbwQek=
+=DmaF
+-----END PGP SIGNATURE-----
 
--- 
-Yuri Tikhonov, Senior Software Engineer
-Emcraft Systems, www.emcraft.com
+--=-HlI2PPfigk2rrdcsLO84--
+
