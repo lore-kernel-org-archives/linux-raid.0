@@ -1,57 +1,61 @@
-From: Janek Kozicki <janek_listy@wp.pl>
-Subject: Re: switching root fs '/' to boot from RAID1 with grub
-Date: Wed, 31 Oct 2007 16:01:52 +0100
-Message-ID: <20071031160152.764e2a45@absurd>
-References: <20071030210721.386ca2fa@absurd>
-	<1193781699.10336.585.camel@firewall.xsintricity.com>
+From: Yuri Tikhonov <yur@emcraft.com>
+Subject: Bug in processing dependencies by async_tx_submit() ?
+Date: Wed, 31 Oct 2007 20:21:46 +0400
+Message-ID: <200710311921.46609.yur@emcraft.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1193781699.10336.585.camel@firewall.xsintricity.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-Cc: linux-raid@vger.kernel.org
+To: "Williams, Dan J" <dan.j.williams@intel.com>
+Cc: Dan Williams <dan.j.williams@gmail.com>, Neil Brown <neilb@suse.de>, Wolfgang Denk <wd@denx.de>, Detlev Zundel <dzu@denx.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Thanks!
 
-It all worked really great, I had to correct only one typo:
+ Hello Dan,
 
-> device /dev/sda (hd0)
+ I've run into a problem with the h/w accelerated RAID-5 driver (on the 
+ppc440spe-based board). After some investigations I've come to conclusion 
+that the issue is with the async_tx_submit() implementation in ASYNC_TX.
 
-into this:
+ Let's we have the following 3 dependent operations: OP1, OP2, OP3. The OP1 
+operation has to be run on one, DMA0, channel, OP2 and OP3 operations have to 
+be run on another, DMA1, channel. OP2 has to be run after completion of OP1, 
+OP3 - after completion of OP2. I. e. :
 
-  device (hd0) /dev/sda
+ OP1 (DMA0) <--- OP2 (DMA1) <--- OP3 (DMA1).
 
-I have debian etch here, and I didn't have to rebuild initrd kernel.
-Also I didn't have to disconnect hda drive, I just selected a
-different boot device during boot (without even going into bios, or
-opening the case).
+ With the current implementation of async_tx_submit() we have the following 
+picture when we sequentially call async_tx_submit() to submit these 3 
+operations:
 
-In fact.. the only "trouble" I had here is that I needed to connect a
-PS2 keyboard to this box ;-) (it's a just a backup machine)
+- the OP2 operation will *not be* submitted to the h/w channel, but, because 
+of the (OP1->chan != OP2->chan) condition, will be put to depend_list of OP1; 
+and it's RIGHT;
 
+- the OP3 operation will *be* submitted to the h/w channel, because OP2 & OP3 
+do not conform the (OP2->chan != OP3->chan) condition. Thus OP3 will be put 
+to the h/w channel *before* its parent, OP2; and it's WRONG.
 
-And now I have a full RAID1 array. Now just two questions:
+ It looks more logical for me to check in async_tx_submit() - does the dep_tx 
+operation (on which the current tx operation is dependent on) depend on some 
+other operation itself. If dep_tx depends on some other operation then, 
+regardless of the channel on which tx has to be run, we should not put tx to 
+the h/w but bind it to depend_list of dep_tx instead. Why there are no such 
+algorithms in async_tx_submit() ?
 
-1. when I `shutdown -r now` I see a worrying message at the end:
+ As far as the RAID-5 h/w accelerated driver is concerned this means that with 
+the current implementation of async_tx_submit(), for example, the (PREXOR + 
+BIODRAIN) combination works incorrectly for the cases when BIODRAIN is split 
+into a sequence of MEMCPY operations and there are two different channels for 
+XOR and COPY operations: only one, the first, MEMCPY will wait until 
+completion of PREXOR, but all the others MEMCPYs of this BIODRAIN will be put 
+into the h/w channel right away. Is it correct ? I think - not.
 
-    Stopping array md2 .... done (stopped)
-    Stopping array md1 .... done (stopped)
-    Stopping array md0 .... failed (busy)
-    Will now reboot
-    md: Stopping all md devices
-    md: md0 still in use
-  
-    <reboots>
+ Regards, Yuri
 
-   Is that ok ?
-
-2. Will grub update all drives automatically, for instance when I will
-   upgrade kernel by 'aptitude upgrade'? Or do I need to repeat your
-   grub instructions each time a new kernel is installed?
-
-
-thanks again!
 -- 
-Janek Kozicki                                                         |
+Yuri Tikhonov, Senior Software Engineer
+Emcraft Systems, www.emcraft.com
