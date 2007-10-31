@@ -1,74 +1,78 @@
-From: Doug Ledford <dledford@redhat.com>
-Subject: Re: switching root fs '/' to boot from RAID1 with grub
-Date: Wed, 31 Oct 2007 13:38:08 -0400
-Message-ID: <1193852288.10336.590.camel@firewall.xsintricity.com>
-References: <20071030210721.386ca2fa@absurd>
-	 <1193781699.10336.585.camel@firewall.xsintricity.com>
-	 <20071031160152.764e2a45@absurd>
+From: Yuri Tikhonov <yur@emcraft.com>
+Subject: Re: async_tx: get best channel
+Date: Wed, 31 Oct 2007 21:58:54 +0400
+Message-ID: <200710312058.54892.yur@emcraft.com>
+References: <200710191623.34381.yur@emcraft.com> <1193163398.14140.24.camel@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-HlI2PPfigk2rrdcsLO84"
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20071031160152.764e2a45@absurd>
+In-Reply-To: <1193163398.14140.24.camel@dwillia2-linux.ch.intel.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Janek Kozicki <janek_listy@wp.pl>
-Cc: linux-raid@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Dan Williams <dan.j.williams@gmail.com>, Neil Brown <neilb@suse.de>, Wolfgang Denk <wd@denx.de>, Detlev Zundel <dzu@denx.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
---=-HlI2PPfigk2rrdcsLO84
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+ Hi Dan,
 
-On Wed, 2007-10-31 at 16:01 +0100, Janek Kozicki wrote:
-> And now I have a full RAID1 array. Now just two questions:
->=20
-> 1. when I `shutdown -r now` I see a worrying message at the end:
->=20
->     Stopping array md2 .... done (stopped)
->     Stopping array md1 .... done (stopped)
->     Stopping array md0 .... failed (busy)
->     Will now reboot
->     md: Stopping all md devices
->     md: md0 still in use
->  =20
->     <reboots>
->=20
->    Is that ok ?
+On Tuesday 23 October 2007 22:16, Dan Williams wrote:
+...
+> The problem with moving this test to async_tx_find_channel() is that it
+> imposes extra overhead in the fast path.  It would be best if we could
+> keep all these decisions in the slow path, or at least hide it from
+> architectures that do not need to implement it.  The thing that makes
+> this tricky is the fact that the speed is based on the source address...
 
-Yes.  That's typical for the root device because root is never unmounted
-prior to shutdown.  The messages are probably more worrying than they
-need to be.  The system should have successfully switched the array to
-read only mode at the first attempt to stop the array.  Neil, any chance
-on getting the messages for the / device to be less worrisome?
+ I agree with you that extra checking will impose extra overhead, but in my 
+case this overhead is expected to be less than the improvement achieved due 
+to using the more effective channel.
 
-> 2. Will grub update all drives automatically, for instance when I will
->    upgrade kernel by 'aptitude upgrade'? Or do I need to repeat your
->    grub instructions each time a new kernel is installed?
+ In the worst case, the architectures which do not need to implement the 
+device_estimate() method will have the overhead because of the following:
+- passing two additional parameters to function async_tx_find_channel() (these 
+are the source list and the number of sources),
+- and checking one condition for (depend_tx->chan->device->device_estimate != 
+0).
 
-Now that grub's installed, you won't have to do anything manual again.
-The only time you might have to repeat that grub install procedure is if
-you loose a drive and need to add a new one back in, then the new one
-will need it.
+ I guess this is not such a big overhead. Right ?
 
---=20
-Doug Ledford <dledford@redhat.com>
-              GPG KeyID: CFBFF194
-              http://people.redhat.com/dledford
+> One question what are the source address restrictions, is it around
+> high-memory?  
 
-Infiniband specific RPMs available at
-              http://people.redhat.com/dledford/Infiniband
+ No, it isn't. The condition which has to be met to run the most effective DMA 
+is that the source addresses might be arranged in the following way:
 
---=-HlI2PPfigk2rrdcsLO84
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+ src0 = addr0,
+ src1 = addr0 + 1*BLOCK_SIZE,
+ src2 = addr0 + 2*BLOCK_SIZE,
+ src3 = addr0 + 3*BLOCK_SIZE,
+ src4 = addr0 + 4*BLOCK_SIZE,
+ ...
+ srcN = addr0 + N*BLOCK_SIZE.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.7 (GNU/Linux)
+> My thought is MD usually only operates on GFP_KERNEL 
+> memory but sometimes sees high-memory when copying data into and out of
+> the cache.  You might be able to achieve your use case by disabling
+> (hiding) the XOR capability on the channels used for copying.  This will
+> cause async_tx to switch the operation from the high memory capable copy
+> channel to the fast low memory XOR channel.
+> 
+> Another way to approach this would be to implement architecture specific
+> definitions of dma_channel_add_remove() and async_tx_rebalance().  This
+> will bypass the default allocation scheme and allow you to assign the
+> fastest channel to an operation, but it still does not allow for dynamic
+> selection based on source/destination address...
 
-iD8DBQBHKL2ATzP9PM7pjw8RAoMdAJoDI7/Tp4ZMr9sYQftCR5btm3TWTACdEdJG
-XwK+YpAh56XDGIL7dtbwQek=
-=DmaF
------END PGP SIGNATURE-----
+ Understood. Thanks. Unfortunately, this is not the case, because the channels 
+which may do the fast XOR operations support asynchronous COPY in my ADMA 
+driver, so I guess even very very fast XOR will not help too much if I'll 
+have no asynchronous COPY : )
 
---=-HlI2PPfigk2rrdcsLO84--
+ Regards, Yuri
 
+-- 
+Yuri Tikhonov, Senior Software Engineer
+Emcraft Systems, www.emcraft.com
