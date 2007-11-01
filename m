@@ -1,42 +1,68 @@
 From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: Raid-10 mount at startup always has problem
-Date: Thu, 01 Nov 2007 09:56:13 -0400
-Message-ID: <4729DAFD.1040906@tmr.com>
-References: <46E4A39C.8040509@amfes.com> <46E4A5F0.9090407@sauce.co.nz>	 <46E4A7C3.1040902@amfes.com> <471F5542.3020504@amfes.com>	 <471FA485.6010705@tmr.com> <47202D17.3040000@amfes.com>	 <1193294406.10336.76.camel@firewall.xsintricity.com>	 <472576A5.3030603@amfes.com> <20071029081802.GB15475@percy.comedia.it>	 <1193672839.10336.443.camel@firewall.xsintricity.com>	 <20071029212927.GA24635@percy.comedia.it> <1193699701.10336.508.camel@firewall.xsintricity.com> <472674D6.5030703@amfes.com>
+Subject: Re: Implementing low level timeouts within MD
+Date: Thu, 01 Nov 2007 10:14:04 -0400
+Message-ID: <4729DF2C.4020309@tmr.com>
+References: <1193418753.4771.17.camel@w100>	 <1193425254.10336.290.camel@firewall.xsintricity.com>	 <87tzoc7soa.fsf@willow.rfc1149.net>  <1193721577.3876.12.camel@w100>	 <1193765984.10336.519.camel@firewall.xsintricity.com> <1193893689.3649.19.camel@w100>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <472674D6.5030703@amfes.com>
+In-Reply-To: <1193893689.3649.19.camel@w100>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Daniel L. Miller" <dmiller@amfes.com>
-Cc: linux-raid@vger.kernel.org
+To: Alberto Alonso <alberto@ggsys.net>
+Cc: Doug Ledford <dledford@redhat.com>, Samuel Tardieu <sam@rfc1149.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Daniel L. Miller wrote:
-> Doug Ledford wrote:
->> Nah.  Even if we had concluded that udev was to blame here, I'm not
->> entirely certain that we hadn't left Daniel with the impression that we
->> suspected it versus blamed it, so reiterating it doesn't hurt.  And I'm
->> sure no one has given him a fix for the problem (although Neil did
->> request a change that will give debug output, but not solve the
->> problem), so not dropping it entirely would seem appropriate as well.
->>   
-> I've opened a bug report on Ubuntu's Launchpad.net.  Scott James 
-> Remnant asked me to cc him on Neil's incremental reference - we'll see 
-> what happens from here.
+Alberto Alonso wrote:
+> On Tue, 2007-10-30 at 13:39 -0400, Doug Ledford wrote:
+>   
+>> Really, you've only been bitten by three so far.  Serverworks PATA
+>> (which I tend to agree with the other person, I would probably chock
+>>     
 >
-> Thanks for the help guys.  At the moment, I've changed my mdadm.conf 
-> to explicitly list the drives, instead of the auto=partition 
-> parameter.  We'll see what happens on the next reboot.
+> 3 types of bugs is too many, it basically affected all my customers
+> with  multi-terabyte arrays. Heck, we can also oversimplify things and 
+> say that it is really just one type and define everything as kernel type
+> problems (or as some other kernel used to say... general protection
+> error).
 >
-> I don't know if it means anything, but I'm using a self-compiled 
-> 2.6.22 kernel - with initrd.  At least I THINK I'm using initrd - I 
-> have an image, but I don't see an initrd line in my grub config.  
-> Hmm....I'm going to add a stanza that includes the initrd and see what 
-> happens also.
+> I am sorry for not having hundreds of RAID servers from which to draw
+> statistical analysis. As I have clearly stated in the past I am trying
+> to come up with a list of known combinations that work. I think my
+> data points are worth something to some people, specially those 
+> considering SATA drives and software RAID for their file servers. If
+> you don't consider them important for you that's fine, but please don't
+> belittle them just because they don't match your needs.
 >
-What did that do?
+>   
+>> this up to Serverworks, not PATA), USB storage, and SATA (the SATA stack
+>> is arranged similar to the SCSI stack with a core library that all the
+>> drivers use, and then hardware dependent driver modules...I suspect that
+>> since you got bit on three different hardware versions that you were in
+>> fact hitting a core library bug, but that's just a suspicion and I could
+>> well be wrong).  What you haven't tried is any of the SCSI/SAS/FC stuff,
+>> and generally that's what I've always used and had good things to say
+>> about.  I've only used SATA for my home systems or workstations, not any
+>> production servers.
+>>     
+>
+> The USB array was never meant to be a full production system, just to 
+> buy some time until the budget was allocated to buy a real array. Having
+> said that, the raid code is written to withstand the USB disks getting
+> disconnected as far as the driver reports it properly. Since it doesn't,
+> I consider it another case that shows when not to use software RAID
+> thinking that it will work.
+>
+> As for SCSI I think it is a greatly proved and reliable technology, I've
+> dealt with it extensively and have always had great results. I know deal
+> with it mostly on non Linux based systems. But I don't think it is
+> affordable to most SMBs that need multi-terabyte arrays.
+>   
+Actually, SCSI can fail as well. Until recently I was running servers 
+with multi-TB arrays, and regularly, several times a year, a drive would 
+fail and glitch the SCSI bus such that the next i/o to another drive 
+would fail. And I've had SATA drives fail cleanly on small machines, so 
+neither is an "always" config.
 
 -- 
 bill davidsen <davidsen@tmr.com>
