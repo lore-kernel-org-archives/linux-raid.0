@@ -1,34 +1,53 @@
-From: "H. Peter Anvin" <hpa@zytor.com>
-Subject: Re: Time to  deprecate old RAID formats?
-Date: Thu, 01 Nov 2007 14:02:24 -0700
-Message-ID: <472A3EE0.3090503@zytor.com>
-References: <18200.49267.763509.924873@stoffel.org>	 <Pine.LNX.4.64.0710191109000.27246@p34.internal.lan>	 <18200.53593.687483.120827@stoffel.org>	 <1192810534.1666.68.camel@firewall.xsintricity.com>	 <471A0C02.4030407@msgid.tls.msk.ru> <18202.5687.672431.295590@stoffel.org>	 <471A47CC.1070508@msgid.tls.msk.ru>  <18205.2688.952701.567195@stoffel.org> <1193186569.10336.30.camel@firewall.xsintricity.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: stride / stripe alignment on LVM ?
+Date: Fri, 2 Nov 2007 10:27:47 +1100
+Message-ID: <18218.24819.569744.141171@notabene.brown>
+References: <20071101101037.63b523f8@absurd>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1193186569.10336.30.camel@firewall.xsintricity.com>
+In-Reply-To: message from Janek Kozicki on Thursday November 1
 Sender: linux-raid-owner@vger.kernel.org
-To: Doug Ledford <dledford@redhat.com>
-Cc: John Stoffel <john@stoffel.org>, Michael Tokarev <mjt@tls.msk.ru>, linux-raid@vger.kernel.org
+To: Janek Kozicki <janek_listy@wp.pl>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Doug Ledford wrote:
->>
->> I would argue that ext[234] should be clearing those 512 bytes.  Why
->> aren't they cleared  
+On Thursday November 1, janek_listy@wp.pl wrote:
+> Hello,
 > 
-> Actually, I didn't think msdos used the first 512 bytes for the same
-> reason ext3 doesn't: space for a boot sector.
+> I have raid5 /dev/md1, --chunk=128 --metadata=1.1. On it I have
+> created LVM volume called 'raid5', and finally a logical volume
+> 'backup'.
 > 
+> Then I formatted it with command:
+> 
+>    mkfs.ext3 -b 4096 -E stride=32 -E resize=550292480 /dev/raid5/backup
+> 
+> And because LVM is putting its own metadata on /dev/md1, the ext3
+> partition is shifted by some (unknown for me) amount of bytes from
+> the beginning of /dev/md1.
+> 
+> I was wondering, how big is the shift, and would it hurt the
+> performance/safety if the `ext3 stride=32` didn't align perfectly
+> with the physical stripes on HDD?
 
-The creators of MS-DOS put the superblock in the bootsector, so that the 
-BIOS loads them both.  It made sense in some diseased Microsoft 
-programmer's mind.
+It is probably better to ask this question on an ext3 list as people
+there might know exactly what 'stride' does.
 
-Either way, for RAID-1 booting, the boot sector really should be part of 
-the protected area (and go through the MD stack.)  The bootloader should 
-deal with the offset problem by storing partition/filesystem-relative 
-pointers, not absolute ones.
+I *think* it causes the inode tables to be offset in different
+block-groups so that they are not all on the same drive.  If that is
+the case, then an offset causes by LVM isn't going to make any
+difference at all.
 
-	-hpa
+NeilBrown
+
+
+> 
+> PS: the resize option is to make sure that I can grow this fs
+> in the future.
+> 
+> PSS: I looked in the archive but didn't find this question asked
+> before. I'm sorry if it really was asked.
+
+Thanks for trying!
