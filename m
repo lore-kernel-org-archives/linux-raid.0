@@ -1,35 +1,28 @@
-From: "H. Peter Anvin" <hpa@zytor.com>
+From: Janek Kozicki <janek_listy@wp.pl>
 Subject: Re: switching root fs '/' to boot from RAID1 with grub
-Date: Thu, 01 Nov 2007 11:57:24 -0700
-Message-ID: <472A2194.9070408@zytor.com>
-References: <20071030210721.386ca2fa@absurd>	 <1193781699.10336.585.camel@firewall.xsintricity.com>	 <472A0D7A.4040807@zytor.com> <1193941858.10336.659.camel@firewall.xsintricity.com>
+Date: Thu, 1 Nov 2007 20:04:19 +0100
+Message-ID: <20071101200419.0cdbb396@absurd>
+References: <20071030210721.386ca2fa@absurd>
+	<1193781699.10336.585.camel@firewall.xsintricity.com>
+	<472A0D7A.4040807@zytor.com>
+	<1193941858.10336.659.camel@firewall.xsintricity.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1193941858.10336.659.camel@firewall.xsintricity.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Doug Ledford <dledford@redhat.com>
-Cc: Janek Kozicki <janek_listy@wp.pl>, linux-raid@vger.kernel.org
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Doug Ledford wrote:
-> 
-> Correct, and that's what you want.  The alternative is that if the BIOS
-> can see the first disk but it's broken and can't be used, and if you
-> have the boot sector on the second disk set to read from BIOS disk 0x81
-> because you ASSuMEd the first disk would be broken but still present in
-> the BIOS tables, then your machine won't boot unless that first dead but
-> preset disk is present.  If you remove the disk entirely, thereby
-> bumping disk 0x81 to 0x80, then you are screwed.  If you have any drive
-> failure that prevents the first disk from being recognized (blown fuse,
-> blown electronics, etc), you are screwed until you get a new disk to
-> replace it.
-> 
+Doug Ledford said:     (by the date of Thu, 01 Nov 2007 14:30:58 -0400)
 
-What you want is for it to use the drive number that BIOS passes into it 
-(register DL), not a hard-coded number.  That was my (only) point -- 
-you're obviously right that hard-coding a number to 0x81 would be worse 
-than useless.
+> So, what I said is true, the MBR will search on the disk it is being run
+> from for the files it needs: 0x80.
 
-	-hpa
+my motherboard allows to pick a boot device if I press F11 during
+boot. Do you mean, that no matter which HDD I will choose it will
+have 0x80 number?
+
+-- 
+Janek Kozicki                                                         |
