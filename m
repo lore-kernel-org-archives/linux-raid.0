@@ -1,81 +1,78 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: Bug in processing dependencies by async_tx_submit() ?
-Date: Wed, 31 Oct 2007 20:01:52 -0700
-Message-ID: <1193886112.24616.18.camel@dwillia2-linux.ch.intel.com>
-References: <200710311921.46609.yur@emcraft.com>
+From: Alberto Alonso <alberto@ggsys.net>
+Subject: Re: Implementing low level timeouts within MD
+Date: Thu, 01 Nov 2007 00:08:09 -0500
+Message-ID: <1193893689.3649.19.camel@w100>
+References: <1193418753.4771.17.camel@w100>
+	 <1193425254.10336.290.camel@firewall.xsintricity.com>
+	 <87tzoc7soa.fsf@willow.rfc1149.net>  <1193721577.3876.12.camel@w100>
+	 <1193765984.10336.519.camel@firewall.xsintricity.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200710311921.46609.yur@emcraft.com>
+In-Reply-To: <1193765984.10336.519.camel@firewall.xsintricity.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Yuri Tikhonov <yur@emcraft.com>
-Cc: Dan Williams <dan.j.williams@gmail.com>, Neil Brown <neilb@suse.de>, Wolfgang Denk <wd@denx.de>, Detlev Zundel <dzu@denx.de>, linux-raid@vger.kernel.org
+To: Doug Ledford <dledford@redhat.com>
+Cc: Samuel Tardieu <sam@rfc1149.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 2007-10-31 at 09:21 -0700, Yuri Tikhonov wrote:
+On Tue, 2007-10-30 at 13:39 -0400, Doug Ledford wrote:
 > 
->  Hello Dan,
+> Really, you've only been bitten by three so far.  Serverworks PATA
+> (which I tend to agree with the other person, I would probably chock
+
+3 types of bugs is too many, it basically affected all my customers
+with  multi-terabyte arrays. Heck, we can also oversimplify things and 
+say that it is really just one type and define everything as kernel type
+problems (or as some other kernel used to say... general protection
+error).
+
+I am sorry for not having hundreds of RAID servers from which to draw
+statistical analysis. As I have clearly stated in the past I am trying
+to come up with a list of known combinations that work. I think my
+data points are worth something to some people, specially those 
+considering SATA drives and software RAID for their file servers. If
+you don't consider them important for you that's fine, but please don't
+belittle them just because they don't match your needs.
+
+> this up to Serverworks, not PATA), USB storage, and SATA (the SATA stack
+> is arranged similar to the SCSI stack with a core library that all the
+> drivers use, and then hardware dependent driver modules...I suspect that
+> since you got bit on three different hardware versions that you were in
+> fact hitting a core library bug, but that's just a suspicion and I could
+> well be wrong).  What you haven't tried is any of the SCSI/SAS/FC stuff,
+> and generally that's what I've always used and had good things to say
+> about.  I've only used SATA for my home systems or workstations, not any
+> production servers.
+
+The USB array was never meant to be a full production system, just to 
+buy some time until the budget was allocated to buy a real array. Having
+said that, the raid code is written to withstand the USB disks getting
+disconnected as far as the driver reports it properly. Since it doesn't,
+I consider it another case that shows when not to use software RAID
+thinking that it will work.
+
+As for SCSI I think it is a greatly proved and reliable technology, I've
+dealt with it extensively and have always had great results. I know deal
+with it mostly on non Linux based systems. But I don't think it is
+affordable to most SMBs that need multi-terabyte arrays.
+
 > 
->  I've run into a problem with the h/w accelerated RAID-5 driver (on the
-> ppc440spe-based board). After some investigations I've come to conclusion
-> that the issue is with the async_tx_submit() implementation in ASYNC_TX.
+> > I'll repeat my plea one more time. Is there a published list
+> > of tested combinations that respond well to hardware failures
+> > and fully signals the md code so that nothing hangs?
 > 
-Unfortunately this is correct, async_tx_submit() will let the third
-operation pass the second in the scenario you describe.  I propose the
-fix (untested) below.  I'll test this out tomorrow when I am back in the
-office.
+> I don't know of one, but like I said, I've not used a lot of the SATA
+> stuff for production.  I would make this one suggestion though, SATA is
+> still an evolving driver stack to a certain extent, and as such, keeping
+> with more current kernels than you have been using is likely to be a big
+> factor in whether or not these sorts of things happen.
 
----
-async_tx: fix successive dependent operation submission
+OK, so based on this it seems that you would not recommend the use
+of SATA for production systems due to its immaturity, correct? Keep in
+mind that production systems are not able to be brought down just to
+keep up with kernel changes. We have some tru64 production servers with
+1500 to 2500 days uptime, that's not uncommon in industry.
 
-From: Dan Williams <dan.j.williams@intel.com>
-
-async_tx_submit() tried to use the hardware descriptor chain to maintain
-transaction ordering.  However before falling back to hardware-channel
-dependency ordering async_tx_submit() must first check if the entire chain
-is waiting on another channel.
-
-OP1 (DMA0) <--- OP2 (DMA1) <--- OP3 (DMA1)
-
-OP3 must be submitted as an OP2 dependency if it is submitted before OP1
-completes.  Otherwise if OP1 is complete, OP3 can use the natural sequence
-of DMA1's hardware chain to satisfy that it runs after OP2.
-
-The fix is to check if the ->parent field of the dependency is non-NULL.
-This also requires that the parent field be cleared at dependency
-submission time.
-
-Found-by: Yuri Tikhonov <yur@emcraft.com>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
-
- crypto/async_tx/async_tx.c |    6 +++++-
- 1 files changed, 5 insertions(+), 1 deletions(-)
-
-diff --git a/crypto/async_tx/async_tx.c b/crypto/async_tx/async_tx.c
-index bc18cbb..eb1afb9 100644
---- a/crypto/async_tx/async_tx.c
-+++ b/crypto/async_tx/async_tx.c
-@@ -125,6 +125,9 @@ async_tx_run_dependencies(struct dma_async_tx_descriptor *tx)
- 		list_del(&dep_tx->depend_node);
- 		tx->tx_submit(dep_tx);
- 
-+		/* we no longer have a parent */
-+		tx->parent = NULL;
-+
- 		/* we need to poke the engine as client code does not
- 		 * know about dependency submission events
- 		 */
-@@ -409,8 +412,9 @@ async_tx_submit(struct dma_chan *chan, struct dma_async_tx_descriptor *tx,
- 	/* set this new tx to run after depend_tx if:
- 	 * 1/ a dependency exists (depend_tx is !NULL)
- 	 * 2/ the tx can not be submitted to the current channel
-+	 * 3/ the depend_tx has a parent
- 	 */
--	if (depend_tx && depend_tx->chan != chan) {
-+	if (depend_tx && (depend_tx->chan != chan || depend_tx->parent)) {
- 		/* if ack is already set then we cannot be sure
- 		 * we are referring to the correct operation
- 		 */
+Alberto
 
