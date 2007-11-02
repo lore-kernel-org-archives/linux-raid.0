@@ -1,57 +1,35 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: doesm mdadm try to use fastest HDD ?
-Date: Fri, 02 Nov 2007 09:10:23 -0400
-Message-ID: <472B21BF.4060201@tmr.com>
-References: <20071102125205.52c2d115@absurd>
+From: "Greg Cormier" <gcormier@gmail.com>
+Subject: Re: Superblocks
+Date: Fri, 2 Nov 2007 10:15:53 -0400
+Message-ID: <29a863790711020715h726353bcq99a270494a9f471e@mail.gmail.com>
+References: <29a863790710260943o7623212esce30325be4610dea@mail.gmail.com>
+	 <18214.45758.794247.651163@notabene.brown>
+	 <29a863790710300906w497c0f35yb90c36dadbd2c5e7@mail.gmail.com>
+	 <18218.24911.715891.758629@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20071102125205.52c2d115@absurd>
+In-Reply-To: <18218.24911.715891.758629@notabene.brown>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Janek Kozicki <janek_listy@wp.pl>
+To: Neil Brown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Janek Kozicki wrote:
-> Hello,
->
-> My three HHDs have following speeds:
->
->   hda - speed 70 MB/sec
->   hdc - speed 27 MB/sec
->   sda - speed 60 MB/sec
->
-> They create a raid1 /dev/md0 and raid5 /dev/md1 arrays. I wanted to
-> ask if mdadm is trying to pick the fastest HDD during operation?
->
-> Maybe I can "tell" which HDD is preferred?
->   
+Any reason 0.9 is the default? Should I be worried about using 1.0
+superblocks? And can I "upgrade" my array from 0.9 to 1.0 superblocks?
 
-If you are doing raid-1 between hdc and some faster drive, you could try 
-using write-mostly and see go that works for you. For raid-5, it's 
-faster to read the data off the slow drive than reconstruct it with 
-multiple reads to multiple othjer faster drives.
-> This came to my mind when I saw this:
->
->   # mdadm --query --detail /dev/md1 | grep Prefer
->  
->   Preferred Minor : 1
->
-> And also in the manual:
->
->   -W, --write-mostly [...] "can be useful if mirroring over a slow link."
->
->
-> many thanks for all your help!
->   
-I have two thoughts on this:
-1 - if performance is critical, replace the slow drive
-2 - for most things you do, I would expect seek to be more important 
-than transfer rate
+Thanks,
+Greg
 
--- 
-bill davidsen <davidsen@tmr.com>
-  CTO TMR Associates, Inc
-  Doing interesting things with small computers since 1979
-
+On 11/1/07, Neil Brown <neilb@suse.de> wrote:
+> On Tuesday October 30, gcormier@gmail.com wrote:
+> > Which is the default type of superblock? 0.90 or 1.0?
+>
+> The default default is 0.90.
+> However a local device can be set in mdadm.conf with e.g.
+>    CREATE metdata=1.0
+>
+> NeilBrown
+>
