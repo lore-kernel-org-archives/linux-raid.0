@@ -1,55 +1,51 @@
-From: Alberto Alonso <alberto@ggsys.net>
-Subject: Re: Software RAID when it works and when it doesn't
-Date: Fri, 02 Nov 2007 03:47:58 -0500
-Message-ID: <1193993279.3649.77.camel@w100>
-References: <14526.1192571833@mdt.ecitele.com>
-	 <87bqaw5tqb.fsf@informatik.uni-tuebingen.de>
-	 <1192777672.16416.495.camel@w100> <471E79A5.5020607@tmr.com>
-	 <1193205003.23414.72.camel@w100> <471FA543.9090502@tmr.com>
-	 <87fxzxzwga.fsf@informatik.uni-tuebingen.de>
-	 <1193418553.4771.13.camel@w100>  <47235889.4030406@tmr.com>
-Mime-Version: 1.0
-Content-Type: text/plain
+From: =?ISO-8859-1?Q?Ralf_M=FCller?= <ralf@bj-ig.de>
+Subject: Very small internal bitmap after recreate
+Date: Fri, 2 Nov 2007 10:01:47 +0100
+Message-ID: <58CC73B2-35E8-412A-A7ED-8CACE786CE00@bj-ig.de>
+Mime-Version: 1.0 (Apple Message framework v752.3)
+Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <47235889.4030406@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: Goswin von Brederlow <brederlo@informatik.uni-tuebingen.de>, Mike Accetta <maccetta@laurelnetworks.com>, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, 2007-10-27 at 11:26 -0400, Bill Davidsen wrote:
-> Alberto Alonso wrote:
-> > On Fri, 2007-10-26 at 18:12 +0200, Goswin von Brederlow wrote:
-> >
-> >   
-> >> Depending on the hardware you can still access a different disk while
-> >> another one is reseting. But since there is no timeout in md it won't
-> >> try to use any other disk while one is stuck.
-> >>
-> >> That is exactly what I miss.
-> >>
-> >> MfG
-> >>         Goswin
-> >> -
-> >>     
-> >
-> > That is exactly what I've been talking about. Can md implement
-> > timeouts and not just leave it to the drivers?
-> >
-> > I can't believe it but last night another array hit the dust when
-> > 1 of the 12 drives went bad. This year is just a nightmare for
-> > me. It brought all the network down until I was able to mark it
-> > failed and reboot to remove it from the array.
-> >   
-> 
-> I'm not sure what kind of drives and drivers you use, but I certainly 
-> have drives go bad and they get marked as failed. Both on old PATA 
-> drives and newer SATA. All the SCSI I currently use is on IBM hardware 
-> RAID (ServeRAID), so I can only assume that failure would be noted.
-> 
--- 
-Alberto Alonso                        Global Gate Systems LLC.
-(512) 351-7233                        http://www.ggsys.net
-Hardware, consulting, sysadmin, monitoring and remote backups
+I have a 5 disk version 1.0 superblock RAID5 which had an internal  
+bitmap that has been reported to have a size of 299 pages in /proc/ 
+mdstat. For whatever reason I removed this bitmap (mdadm --grow -- 
+bitmap=none) and recreated it afterwards (mdadm --grow -- 
+bitmap=internal). Now it has a reported size of 10 pages.
+
+Do I have a problem?
+
+# cat /proc/mdstat
+Personalities : [raid1] [raid6] [raid5] [raid4]
+md1 : active raid5 sdd1[0] sdh1[5] sdf1[4] sdg1[3] sde1[1]
+       1250273792 blocks super 1.0 level 5, 128k chunk, algorithm 2  
+[5/5] [UUUUU]
+       bitmap: 0/10 pages [0KB], 16384KB chunk
+
+# mdadm -X /dev/sdg1
+         Filename : /dev/sdg1
+            Magic : 6d746962
+          Version : 4
+             UUID : e1a335a8:fc0f0626:d70687a6:5d9a9c19
+           Events : 408088
+   Events Cleared : 408088
+            State : OK
+        Chunksize : 16 MB
+           Daemon : 5s flush period
+       Write Mode : Normal
+        Sync Size : 312568448 (298.09 GiB 320.07 GB)
+           Bitmap : 19078 bits (chunks), 0 dirty (0.0%)
+
+# mdadm --version
+mdadm - v2.6.2 - 21st May 2007
+
+# uname -a
+Linux DatenGrab 2.6.22.9-0.4-default #1 SMP 2007/10/05 21:32:04 UTC  
+i686 i686 i386 GNU/Linux
+
+
+Regards Ralf
 
