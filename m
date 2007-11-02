@@ -1,130 +1,80 @@
-From: NeilBrown <neilb@suse.de>
-Subject: [PATCH] md: Fix misapplied patch in raid5.c
-Date: Fri, 2 Nov 2007 12:43:26 +1100
-Message-ID: <1071102014326.26923@suse.de>
-References: <20071102123814.26603.patches@notabene>
+From: Yuri Tikhonov <yur@emcraft.com>
+Subject: Re: Bug in processing dependencies by async_tx_submit() ?
+Date: Fri, 2 Nov 2007 11:13:57 +0300
+Message-ID: <200711021113.57471.yur@emcraft.com>
+References: <200710311921.46609.yur@emcraft.com> <200711011300.04546.yur@emcraft.com> <e9c3a7c20711011736idef37b4qf5e86b40930a2eb1@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <e9c3a7c20711011736idef37b4qf5e86b40930a2eb1@mail.gmail.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, stable@kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Neil Brown <neilb@suse.de>, Wolfgang Denk <wd@denx.de>, Detlev Zundel <dzu@denx.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-commit 4ae3f847e49e3787eca91bced31f8fd328d50496 did not get applied
-correctly, presumably due to substantial similarities between
-handle_stripe5 and handle_stripe6.
 
-This patch (with lots of context) moves the chunk of new code from
-handle_stripe6 (where it isn't needed (yet)) to handle_stripe5.
+ Hi Dan,
 
+On Friday 02 November 2007 03:36, Dan Williams wrote:
+> >   This is happened because of the specific implementation of
+> >  dma_wait_for_async_tx().
+> 
+> So I take it you are not implementing interrupt based callbacks in your 
+driver?
 
-Signed-off-by: Neil Brown <neilb@suse.de>
-cc: "Dan Williams" <dan.j.williams@intel.com>
+ Why not ? I have interrupt based callbacks in my driver. An INTERRUPT 
+descriptor, implemented for both (COPY and XOR) channels, does the callback 
+upon its completion.
 
----
- The patch is correctly applied in -mm.
- The same patch was sent to stable@ but doesn't seem to have made it yet.
- When it does get applied, we should make sure it gets applied properly...
+ Here is an example where your implementation of dma_wait_for_async_tx() will 
+not work as expected. Let's we have OP1 <--depends on-- OP2 <--depends on-- 
+OP3, where
 
-### Diffstat output
- ./drivers/md/raid5.c |   14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
+ OP1: cookie = -EBUSY, channel = DMA0; <- not submitted
+ OP2: cookie = -EBUSY, channel = DMA0; <- not submitted
+ OP3: cookie = 101, channel = DMA1; <- submitted, but not linked to h/w
 
-diff .prev/drivers/md/raid5.c ./drivers/md/raid5.c
---- .prev/drivers/md/raid5.c	2007-11-02 12:10:49.000000000 +1100
-+++ ./drivers/md/raid5.c	2007-11-02 12:25:31.000000000 +1100
-@@ -2607,40 +2607,47 @@ static void handle_stripe5(struct stripe
- 	struct bio *return_bi = NULL;
- 	struct stripe_head_state s;
- 	struct r5dev *dev;
- 	unsigned long pending = 0;
+ where cookie == 101 is some valid, positive cookie; and this fact means that 
+OP3 *was submitted* to the DMA1 channel but *perhaps was not linked* to the 
+h/w chain, for example, because the threshold for DMA1 was not achieved yet.
  
- 	memset(&s, 0, sizeof(s));
- 	pr_debug("handling stripe %llu, state=%#lx cnt=%d, pd_idx=%d "
- 		"ops=%lx:%lx:%lx\n", (unsigned long long)sh->sector, sh->state,
- 		atomic_read(&sh->count), sh->pd_idx,
- 		sh->ops.pending, sh->ops.ack, sh->ops.complete);
- 
- 	spin_lock(&sh->lock);
- 	clear_bit(STRIPE_HANDLE, &sh->state);
- 	clear_bit(STRIPE_DELAYED, &sh->state);
- 
- 	s.syncing = test_bit(STRIPE_SYNCING, &sh->state);
- 	s.expanding = test_bit(STRIPE_EXPAND_SOURCE, &sh->state);
- 	s.expanded = test_bit(STRIPE_EXPAND_READY, &sh->state);
- 	/* Now to look around and see what can be done */
- 
-+	/* clean-up completed biofill operations */
-+	if (test_bit(STRIPE_OP_BIOFILL, &sh->ops.complete)) {
-+		clear_bit(STRIPE_OP_BIOFILL, &sh->ops.pending);
-+		clear_bit(STRIPE_OP_BIOFILL, &sh->ops.ack);
-+		clear_bit(STRIPE_OP_BIOFILL, &sh->ops.complete);
-+	}
-+
- 	rcu_read_lock();
- 	for (i=disks; i--; ) {
- 		mdk_rdev_t *rdev;
- 		struct r5dev *dev = &sh->dev[i];
- 		clear_bit(R5_Insync, &dev->flags);
- 
- 		pr_debug("check %d: state 0x%lx toread %p read %p write %p "
- 			"written %p\n",	i, dev->flags, dev->toread, dev->read,
- 			dev->towrite, dev->written);
- 
- 		/* maybe we can request a biofill operation
- 		 *
- 		 * new wantfill requests are only permitted while
- 		 * STRIPE_OP_BIOFILL is clear
- 		 */
- 		if (test_bit(R5_UPTODATE, &dev->flags) && dev->toread &&
- 			!test_bit(STRIPE_OP_BIOFILL, &sh->ops.pending))
- 			set_bit(R5_Wantfill, &dev->flags);
- 
- 		/* now count some things */
-@@ -2880,47 +2887,40 @@ static void handle_stripe6(struct stripe
- 	struct stripe_head_state s;
- 	struct r6_state r6s;
- 	struct r5dev *dev, *pdev, *qdev;
- 
- 	r6s.qd_idx = raid6_next_disk(pd_idx, disks);
- 	pr_debug("handling stripe %llu, state=%#lx cnt=%d, "
- 		"pd_idx=%d, qd_idx=%d\n",
- 	       (unsigned long long)sh->sector, sh->state,
- 	       atomic_read(&sh->count), pd_idx, r6s.qd_idx);
- 	memset(&s, 0, sizeof(s));
- 
- 	spin_lock(&sh->lock);
- 	clear_bit(STRIPE_HANDLE, &sh->state);
- 	clear_bit(STRIPE_DELAYED, &sh->state);
- 
- 	s.syncing = test_bit(STRIPE_SYNCING, &sh->state);
- 	s.expanding = test_bit(STRIPE_EXPAND_SOURCE, &sh->state);
- 	s.expanded = test_bit(STRIPE_EXPAND_READY, &sh->state);
- 	/* Now to look around and see what can be done */
- 
--	/* clean-up completed biofill operations */
--	if (test_bit(STRIPE_OP_BIOFILL, &sh->ops.complete)) {
--		clear_bit(STRIPE_OP_BIOFILL, &sh->ops.pending);
--		clear_bit(STRIPE_OP_BIOFILL, &sh->ops.ack);
--		clear_bit(STRIPE_OP_BIOFILL, &sh->ops.complete);
--	}
--
- 	rcu_read_lock();
- 	for (i=disks; i--; ) {
- 		mdk_rdev_t *rdev;
- 		dev = &sh->dev[i];
- 		clear_bit(R5_Insync, &dev->flags);
- 
- 		pr_debug("check %d: state 0x%lx read %p write %p written %p\n",
- 			i, dev->flags, dev->toread, dev->towrite, dev->written);
- 		/* maybe we can reply to a read */
- 		if (test_bit(R5_UPTODATE, &dev->flags) && dev->toread) {
- 			struct bio *rbi, *rbi2;
- 			pr_debug("Return read for disc %d\n", i);
- 			spin_lock_irq(&conf->device_lock);
- 			rbi = dev->toread;
- 			dev->toread = NULL;
- 			if (test_and_clear_bit(R5_Overlap, &dev->flags))
- 				wake_up(&conf->wait_for_overlap);
- 			spin_unlock_irq(&conf->device_lock);
- 			while (rbi && rbi->bi_sector < dev->sector + STRIPE_SECTORS) {
- 				copy_data(0, rbi, dev->page, dev->sector);
+ With your implementation of dma_wait_for_async_tx() we do dma_sync_wait(OP2). 
+And I propose to do dma_sync_wait(OP3), because in your case we may never 
+wait for OP2 completion since dma_sync_wait() flushes to h/w the chains of 
+DMA0, but OP3 in DMA1 remains unlinked to h/w and it blocks all the chain of 
+dependencies.
+
+> >   The "iter", we finally waiting for there, corresponds to the last 
+allocated
+> >  but not-yet-submitted descriptor. But if the "iter" we are waiting for is
+> >  dependent from another descriptor which has cookie > 0, but is not yet
+> >  submitted to the h/w channel because of the fact that threshold is not
+> >  achieved to this moment, then we may wait in dma_wait_for_async_tx()
+> >  infinitely. I think that it makes more sense to get the first descriptor
+> >  which was submitted to the channel but probably is not put into the h/w
+> >  chain, i.e. with cookie > 0 and do dma_sync_wait() of this descriptor.
+> >
+> >   When I modified the dma_wait_for_async_tx() in such way, then the kernel
+> >  locking had disappeared. But nevertheless the mkfs processes hangs-up 
+after
+> >  some time. So, it looks like something is still missing in support of the
+> >  chaining dependencies feature...
+> >
+> 
+> I am preparing a new patch that replaces ASYNC_TX_DEP_ACK with
+> ASYNC_TX_CHAIN_ACK.  The plan is to make the entire chain of
+> dependencies available up until the last transaction is submitted.
+> This allows the entire dependency chain to be walked at
+> async_tx_submit time so that we can properly handle these multiple
+> dependency cases.  I'll send it out when it passes my internal
+> tests...
+
+ Fine. I guess this replacement assumes some modifications to the RAID-5 
+driver as well. Right?
+
+-- 
+Yuri Tikhonov, Senior Software Engineer
+Emcraft Systems, www.emcraft.com
