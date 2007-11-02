@@ -1,41 +1,60 @@
-From: =?ISO-8859-1?Q?Ralf_M=FCller?= <ralf@bj-ig.de>
-Subject: Re: Very small internal bitmap after recreate
-Date: Fri, 2 Nov 2007 13:46:16 +0100
-Message-ID: <1DB65CCE-F7AF-42B8-B121-B98C4D430AE0@bj-ig.de>
-References: <58CC73B2-35E8-412A-A7ED-8CACE786CE00@bj-ig.de> <18218.60496.499724.710572@notabene.brown> <70E97204-84DA-404E-9426-BDED1D4A1FE4@bj-ig.de> <18219.3453.415512.450789@notabene.brown>
-Mime-Version: 1.0 (Apple Message framework v752.3)
-Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: stride / stripe alignment on LVM ?
+Date: Fri, 02 Nov 2007 09:01:05 -0400
+Message-ID: <472B1F91.8000208@tmr.com>
+References: <20071101101037.63b523f8@absurd> <18218.24819.569744.141171@notabene.brown>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18219.3453.415512.450789@notabene.brown>
+In-Reply-To: <18218.24819.569744.141171@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+Cc: Janek Kozicki <janek_listy@wp.pl>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-
-Am 02.11.2007 um 12:43 schrieb Neil Brown:
->
-> For now, you will have to live with a smallish bitmap, which probably
-> isn't a real problem.
-
-Ok then.
-
->>      Array Slot : 3 (0, 1, failed, 2, 3, 4)
->>     Array State : uuUuu 1 failed
+Neil Brown wrote:
+> On Thursday November 1, janek_listy@wp.pl wrote:
+>   
+>> Hello,
 >>
->> This time I'm getting nervous - Array State failed doesn't sound  
->> good!
+>> I have raid5 /dev/md1, --chunk=128 --metadata=1.1. On it I have
+>> created LVM volume called 'raid5', and finally a logical volume
+>> 'backup'.
+>>
+>> Then I formatted it with command:
+>>
+>>    mkfs.ext3 -b 4096 -E stride=32 -E resize=550292480 /dev/raid5/backup
+>>
+>> And because LVM is putting its own metadata on /dev/md1, the ext3
+>> partition is shifted by some (unknown for me) amount of bytes from
+>> the beginning of /dev/md1.
+>>
+>> I was wondering, how big is the shift, and would it hurt the
+>> performance/safety if the `ext3 stride=32` didn't align perfectly
+>> with the physical stripes on HDD?
+>>     
 >
-> This is nothing to worry about - just a bad message from mdadm.
+> It is probably better to ask this question on an ext3 list as people
+> there might know exactly what 'stride' does.
 >
-> The superblock has recorded that there was once a device in position 2
-> which is now failed (See the list in "Array Slot").
-> This summaries as "1 failed" in "Array State".
->
-> But the array is definitely working OK now.
+> I *think* it causes the inode tables to be offset in different
+> block-groups so that they are not all on the same drive.  If that is
+> the case, then an offset causes by LVM isn't going to make any
+> difference at all.
+>   
 
-Good to know.
+Actually, I think that all of the performance evil Doug was mentioning 
+will apply to LVM as well. So if things are poorly aligned, they will be 
+poorly handled, a stripe-sized write will not go in a stripe, but will 
+overlap chunks and cause all the data from all chunks to be read back 
+for a new raid-5 calculation.
 
-Thanks a lot
-Ralf
+So I would expect this to make a very large performance difference, so 
+even if it work it would do so slowly.
+
+-- 
+bill davidsen <davidsen@tmr.com>
+  CTO TMR Associates, Inc
+  Doing interesting things with small computers since 1979
+
