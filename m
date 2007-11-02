@@ -1,80 +1,80 @@
-From: Yuri Tikhonov <yur@emcraft.com>
-Subject: Re: Bug in processing dependencies by async_tx_submit() ?
-Date: Fri, 2 Nov 2007 11:13:57 +0300
-Message-ID: <200711021113.57471.yur@emcraft.com>
-References: <200710311921.46609.yur@emcraft.com> <200711011300.04546.yur@emcraft.com> <e9c3a7c20711011736idef37b4qf5e86b40930a2eb1@mail.gmail.com>
+From: Alberto Alonso <alberto@ggsys.net>
+Subject: Re: Implementing low level timeouts within MD
+Date: Fri, 02 Nov 2007 03:41:49 -0500
+Message-ID: <1193992909.3649.75.camel@w100>
+References: <1193418753.4771.17.camel@w100>
+	 <1193425254.10336.290.camel@firewall.xsintricity.com>
+	 <87tzoc7soa.fsf@willow.rfc1149.net>  <1193721577.3876.12.camel@w100>
+	 <1193765984.10336.519.camel@firewall.xsintricity.com>
+	 <1193893689.3649.19.camel@w100>
+	 <1193944573.10336.684.camel@firewall.xsintricity.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <e9c3a7c20711011736idef37b4qf5e86b40930a2eb1@mail.gmail.com>
-Content-Disposition: inline
+In-Reply-To: <1193944573.10336.684.camel@firewall.xsintricity.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Neil Brown <neilb@suse.de>, Wolfgang Denk <wd@denx.de>, Detlev Zundel <dzu@denx.de>, linux-raid@vger.kernel.org
+To: Doug Ledford <dledford@redhat.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Thu, 2007-11-01 at 15:16 -0400, Doug Ledford wrote:
+> I wasn't belittling them.  I was trying to isolate the likely culprit in
+> the situations.  You seem to want the md stack to time things out.  As
+> has already been commented by several people, myself included, that's a
+> band-aid and not a fix in the right place.  The linux kernel community
+> in general is pretty hard lined when it comes to fixing the bug in the
+> wrong way.
 
- Hi Dan,
+It did sound as if I was complaining about nothing and that I shouldn't
+bother the linux-raid people and instead just continuously update the
+kernel and stop raising issues. If I misunderstood you I'm sorry, but
+somehow I still think that belittling my problems was implied in your
+responses.
 
-On Friday 02 November 2007 03:36, Dan Williams wrote:
-> >   This is happened because of the specific implementation of
-> >  dma_wait_for_async_tx().
-> 
-> So I take it you are not implementing interrupt based callbacks in your 
-driver?
+> Not in the older kernel versions you were running, no.
 
- Why not ? I have interrupt based callbacks in my driver. An INTERRUPT 
-descriptor, implemented for both (COPY and XOR) channels, does the callback 
-upon its completion.
+These "old versions" (specially the RHEL) are supposed to be
+the official versions supported by Redhat and the hardware 
+vendors, as they were very specific as to what versions of 
+Linux were supported. Of all people, I would think you would
+appreciate that. Sorry if I sound frustrated and upset, but 
+it is clearly a result of what "supported and tested" really 
+means in this case. I don't want to go into a discussion of
+commercial distros, which are "supported" as this is nor the
+time nor the place but I don't want to open the door to the
+excuse of "its an old kernel", it wasn't when it got installed.
 
- Here is an example where your implementation of dma_wait_for_async_tx() will 
-not work as expected. Let's we have OP1 <--depends on-- OP2 <--depends on-- 
-OP3, where
+> And I guarantee not a single one of those systems even knows what SATA
+> is.  They all use tried and true SCSI/FC technology.
 
- OP1: cookie = -EBUSY, channel = DMA0; <- not submitted
- OP2: cookie = -EBUSY, channel = DMA0; <- not submitted
- OP3: cookie = 101, channel = DMA1; <- submitted, but not linked to h/w
+Sure, the tru64 units I talked about don't use SATA (although 
+some did use PATA) I'll concede to that point.
 
- where cookie == 101 is some valid, positive cookie; and this fact means that 
-OP3 *was submitted* to the DMA1 channel but *perhaps was not linked* to the 
-h/w chain, for example, because the threshold for DMA1 was not achieved yet.
- 
- With your implementation of dma_wait_for_async_tx() we do dma_sync_wait(OP2). 
-And I propose to do dma_sync_wait(OP3), because in your case we may never 
-wait for OP2 completion since dma_sync_wait() flushes to h/w the chains of 
-DMA0, but OP3 in DMA1 remains unlinked to h/w and it blocks all the chain of 
-dependencies.
+> In any case, if Neil is so inclined to do so, he can add timeout code
+> into the md stack, it's not my decision to make.
 
-> >   The "iter", we finally waiting for there, corresponds to the last 
-allocated
-> >  but not-yet-submitted descriptor. But if the "iter" we are waiting for is
-> >  dependent from another descriptor which has cookie > 0, but is not yet
-> >  submitted to the h/w channel because of the fact that threshold is not
-> >  achieved to this moment, then we may wait in dma_wait_for_async_tx()
-> >  infinitely. I think that it makes more sense to get the first descriptor
-> >  which was submitted to the channel but probably is not put into the h/w
-> >  chain, i.e. with cookie > 0 and do dma_sync_wait() of this descriptor.
-> >
-> >   When I modified the dma_wait_for_async_tx() in such way, then the kernel
-> >  locking had disappeared. But nevertheless the mkfs processes hangs-up 
-after
-> >  some time. So, it looks like something is still missing in support of the
-> >  chaining dependencies feature...
-> >
-> 
-> I am preparing a new patch that replaces ASYNC_TX_DEP_ACK with
-> ASYNC_TX_CHAIN_ACK.  The plan is to make the entire chain of
-> dependencies available up until the last transaction is submitted.
-> This allows the entire dependency chain to be walked at
-> async_tx_submit time so that we can properly handle these multiple
-> dependency cases.  I'll send it out when it passes my internal
-> tests...
+The timeout was nothing more than a suggestion based on what
+I consider a reasonable expectation of usability. Neil said no
+and I respect that. If I didn'tm I could always write my own as
+per the open source model :-) But I am not inclined to do so.
 
- Fine. I guess this replacement assumes some modifications to the RAID-5 
-driver as well. Right?
+Outside of the rejected suggestion, I just want to figure out 
+when software raid works and when it doesn't. With SATA, my 
+experience is that it doesn't. So far I've only received one 
+response stating success (they were using the 3ware and Areca 
+product lines).
 
--- 
-Yuri Tikhonov, Senior Software Engineer
-Emcraft Systems, www.emcraft.com
+Anyway, this thread just posed the question, and as Neil pointed
+out, it isn't feasible/worth to implement timeouts within the md
+code. I think most of the points/discussions raised beyond that
+original question really belong to the thread "Software RAID when 
+it works and when it doesn't" 
+
+I do appreciate all comments and suggestions and I hope to keep
+them coming. I would hope however to hear more about success
+stories with specific hardware details. It would be helpfull
+to have a list of tested configurations that are known to work.
+
+Alberto
+
