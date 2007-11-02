@@ -1,77 +1,49 @@
-From: Doug Ledford <dledford@redhat.com>
+From: berk walker <berk@panix.com>
 Subject: Re: switching root fs '/' to boot from RAID1 with grub
-Date: Fri, 02 Nov 2007 11:55:47 -0400
-Message-ID: <1194018947.25553.39.camel@firewall.xsintricity.com>
-References: <20071030210721.386ca2fa@absurd>
-	 <1193781699.10336.585.camel@firewall.xsintricity.com>
-	 <472A0D7A.4040807@zytor.com>
-	 <1193941858.10336.659.camel@firewall.xsintricity.com>
-	 <472A2194.9070408@zytor.com>
+Date: Fri, 02 Nov 2007 11:36:00 -0500
+Message-ID: <472B51F0.3080605@panix.com>
+References: <20071030210721.386ca2fa@absurd> <1193781699.10336.585.camel@firewall.xsintricity.com> <472A0D7A.4040807@zytor.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-cxV1PItBJE4CM92vwBXg"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <472A2194.9070408@zytor.com>
+In-Reply-To: <472A0D7A.4040807@zytor.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: "H. Peter Anvin" <hpa@zytor.com>
-Cc: Janek Kozicki <janek_listy@wp.pl>, linux-raid@vger.kernel.org
+Cc: Doug Ledford <dledford@redhat.com>, Janek Kozicki <janek_listy@wp.pl>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-
---=-cxV1PItBJE4CM92vwBXg
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Thu, 2007-11-01 at 11:57 -0700, H. Peter Anvin wrote:
+H. Peter Anvin wrote:
 > Doug Ledford wrote:
-> >=20
-> > Correct, and that's what you want.  The alternative is that if the BIOS
-> > can see the first disk but it's broken and can't be used, and if you
-> > have the boot sector on the second disk set to read from BIOS disk 0x81
-> > because you ASSuMEd the first disk would be broken but still present in
-> > the BIOS tables, then your machine won't boot unless that first dead bu=
-t
-> > preset disk is present.  If you remove the disk entirely, thereby
-> > bumping disk 0x81 to 0x80, then you are screwed.  If you have any drive
-> > failure that prevents the first disk from being recognized (blown fuse,
-> > blown electronics, etc), you are screwed until you get a new disk to
-> > replace it.
-> >=20
->=20
-> What you want is for it to use the drive number that BIOS passes into it=20
-> (register DL), not a hard-coded number.  That was my (only) point --=20
-> you're obviously right that hard-coding a number to 0x81 would be worse=20
-> than useless.
+>>
+>> device /dev/sda (hd0)
+>> root (hd0,0)
+>> install --stage2=/boot/grub/stage2 /boot/grub/stage1 (hd0) 
+>> /boot/grub/e2fs_stage1_5 p /boot/grub/stage2 /boot/grub/menu.lst
+>> device /dev/hdc (hd0)
+>> root (hd0,0)
+>> install --stage2=/boot/grub/stage2 /boot/grub/stage1 (hd0) 
+>> /boot/grub/e2fs_stage1_5 p /boot/grub/stage2 /boot/grub/menu.lst
+>>
+>> That will install grub on the master boot record of hdc and sda, and in
+>> both cases grub will look to whatever drive it is running on for the
+>> files to boot instead of going to a specific drive.
+>>
+>
+> No, it won't... it'll look for the first drive in the system (BIOS 
+> drive 80h).  This means that if the BIOS can see the bad drive, but it 
+> doesn't work, you're still screwed.
+>
+>     -hpa
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+Depends how "bad" the drive is.  Just to align the thread on this -  If 
+the boot sector is bad - the bios on newer boxes will skip to the next 
+one.  But if it is "good", and you boot into garbage - - could be 
+Windows.. does it crash?
 
-Oh, and I forgot to mention that in grub2, the DL register is ignored
-for RAID1 devices.  Well, maybe not ignored, but once grub2 has
-determined that the intended boot partition is a raid partition, the
-raid code takes over and the raid code doesn't care about the DL
-register.  Instead, it scans for all the other members of the raid array
-and utilizes whichever drives it needs to in order to complete the boot
-process.  And since it does reads a sector (or a small group of sectors)
-at a time, it doesn't need any member of a raid1 array to be perfect, it
-will attempt a round robin read on all the sectors and only fail if all
-drives return an error for a given read.
-
---=20
-Doug Ledford <dledford@redhat.com>
-              GPG KeyID: CFBFF194
-              http://people.redhat.com/dledford
-
-Infiniband specific RPMs available at
-              http://people.redhat.com/dledford/Infiniband
-
---=-cxV1PItBJE4CM92vwBXg
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.7 (GNU/Linux)
-
-iD8DBQBHK0iDTzP9PM7pjw8RAngRAJ0aILL3p3nFcZYMzNNA45PkBfFgPACfZb/p
-F+fSEEGlo/eJGFbP5wEFZjQ=
-=UYGz
------END PGP SIGNATURE-----
-
---=-cxV1PItBJE4CM92vwBXg--
+b
 
