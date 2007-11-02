@@ -1,57 +1,57 @@
 From: Doug Ledford <dledford@redhat.com>
-Subject: Re: Time to  deprecate old RAID formats?
-Date: Fri, 02 Nov 2007 11:50:01 -0400
-Message-ID: <1194018601.25553.32.camel@firewall.xsintricity.com>
-References: <18200.49267.763509.924873@stoffel.org>
-	 <Pine.LNX.4.64.0710191109000.27246@p34.internal.lan>
-	 <18200.53593.687483.120827@stoffel.org>
-	 <1192810534.1666.68.camel@firewall.xsintricity.com>
-	 <471A0C02.4030407@msgid.tls.msk.ru> <18202.5687.672431.295590@stoffel.org>
-	 <471A47CC.1070508@msgid.tls.msk.ru> <18205.2688.952701.567195@stoffel.org>
-	 <1193186569.10336.30.camel@firewall.xsintricity.com>
-	 <472A3EE0.3090503@zytor.com>
+Subject: Re: switching root fs '/' to boot from RAID1 with grub
+Date: Fri, 02 Nov 2007 11:55:47 -0400
+Message-ID: <1194018947.25553.39.camel@firewall.xsintricity.com>
+References: <20071030210721.386ca2fa@absurd>
+	 <1193781699.10336.585.camel@firewall.xsintricity.com>
+	 <472A0D7A.4040807@zytor.com>
+	 <1193941858.10336.659.camel@firewall.xsintricity.com>
+	 <472A2194.9070408@zytor.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Lc8qOLAlocm0QCprl+bS"
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-cxV1PItBJE4CM92vwBXg"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <472A3EE0.3090503@zytor.com>
+In-Reply-To: <472A2194.9070408@zytor.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: "H. Peter Anvin" <hpa@zytor.com>
-Cc: John Stoffel <john@stoffel.org>, Michael Tokarev <mjt@tls.msk.ru>, linux-raid@vger.kernel.org
+Cc: Janek Kozicki <janek_listy@wp.pl>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
---=-Lc8qOLAlocm0QCprl+bS
+--=-cxV1PItBJE4CM92vwBXg
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, 2007-11-01 at 14:02 -0700, H. Peter Anvin wrote:
+On Thu, 2007-11-01 at 11:57 -0700, H. Peter Anvin wrote:
 > Doug Ledford wrote:
-> >>
-> >> I would argue that ext[234] should be clearing those 512 bytes.  Why
-> >> aren't they cleared =20
 > >=20
-> > Actually, I didn't think msdos used the first 512 bytes for the same
-> > reason ext3 doesn't: space for a boot sector.
+> > Correct, and that's what you want.  The alternative is that if the BIOS
+> > can see the first disk but it's broken and can't be used, and if you
+> > have the boot sector on the second disk set to read from BIOS disk 0x81
+> > because you ASSuMEd the first disk would be broken but still present in
+> > the BIOS tables, then your machine won't boot unless that first dead bu=
+t
+> > preset disk is present.  If you remove the disk entirely, thereby
+> > bumping disk 0x81 to 0x80, then you are screwed.  If you have any drive
+> > failure that prevents the first disk from being recognized (blown fuse,
+> > blown electronics, etc), you are screwed until you get a new disk to
+> > replace it.
 > >=20
 >=20
-> The creators of MS-DOS put the superblock in the bootsector, so that the=20
-> BIOS loads them both.  It made sense in some diseased Microsoft=20
-> programmer's mind.
->=20
-> Either way, for RAID-1 booting, the boot sector really should be part of=20
-> the protected area (and go through the MD stack.)
+> What you want is for it to use the drive number that BIOS passes into it=20
+> (register DL), not a hard-coded number.  That was my (only) point --=20
+> you're obviously right that hard-coding a number to 0x81 would be worse=20
+> than useless.
 
-It depends on what you are calling the protected area.  If by that you
-mean outside the filesystem itself, and in a non-replicated area like
-where the superblock and internal bitmaps go, then yes, that would be
-ideal.  If you mean in the file system proper, then that depends on the
-boot loader.
-
->   The bootloader should=20
-> deal with the offset problem by storing partition/filesystem-relative=20
-> pointers, not absolute ones.
-
-Grub2 is on the way to this, but it isn't there yet.
+Oh, and I forgot to mention that in grub2, the DL register is ignored
+for RAID1 devices.  Well, maybe not ignored, but once grub2 has
+determined that the intended boot partition is a raid partition, the
+raid code takes over and the raid code doesn't care about the DL
+register.  Instead, it scans for all the other members of the raid array
+and utilizes whichever drives it needs to in order to complete the boot
+process.  And since it does reads a sector (or a small group of sectors)
+at a time, it doesn't need any member of a raid1 array to be perfect, it
+will attempt a round robin read on all the sectors and only fail if all
+drives return an error for a given read.
 
 --=20
 Doug Ledford <dledford@redhat.com>
@@ -61,17 +61,17 @@ Doug Ledford <dledford@redhat.com>
 Infiniband specific RPMs available at
               http://people.redhat.com/dledford/Infiniband
 
---=-Lc8qOLAlocm0QCprl+bS
+--=-cxV1PItBJE4CM92vwBXg
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.7 (GNU/Linux)
 
-iD8DBQBHK0cpTzP9PM7pjw8RAjHLAJ4qNh0anBfIPhtS4QJv+OljtcQjiwCfbe9o
-tevELbtKIkC0GqSelP+ahvc=
-=v+Kt
+iD8DBQBHK0iDTzP9PM7pjw8RAngRAJ0aILL3p3nFcZYMzNNA45PkBfFgPACfZb/p
+F+fSEEGlo/eJGFbP5wEFZjQ=
+=UYGz
 -----END PGP SIGNATURE-----
 
---=-Lc8qOLAlocm0QCprl+bS--
+--=-cxV1PItBJE4CM92vwBXg--
 
