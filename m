@@ -1,66 +1,49 @@
-From: =?ISO-8859-1?Q?Ralf_M=FCller?= <ralf@bj-ig.de>
-Subject: Re: Very small internal bitmap after recreate
-Date: Fri, 2 Nov 2007 11:29:59 +0100
-Message-ID: <D3CFB98D-A540-4A8A-863B-C83A631537B9@bj-ig.de>
-References: <58CC73B2-35E8-412A-A7ED-8CACE786CE00@bj-ig.de> <18218.60496.499724.710572@notabene.brown> <70E97204-84DA-404E-9426-BDED1D4A1FE4@bj-ig.de>
-Mime-Version: 1.0 (Apple Message framework v752.3)
-Content-Type: text/plain; charset=ISO-8859-1;
-	delsp=yes	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: David Greaves <david@dgreaves.com>
+Subject: Re: Implementing low level timeouts within MD
+Date: Fri, 02 Nov 2007 11:09:06 +0000
+Message-ID: <472B0552.2010608@dgreaves.com>
+References: <1193418753.4771.17.camel@w100>	 <1193425254.10336.290.camel@firewall.xsintricity.com>	 <87tzoc7soa.fsf@willow.rfc1149.net>  <1193721577.3876.12.camel@w100>	 <1193765984.10336.519.camel@firewall.xsintricity.com>	 <1193893689.3649.19.camel@w100>	 <1193944573.10336.684.camel@firewall.xsintricity.com> <1193992909.3649.75.camel@w100>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <70E97204-84DA-404E-9426-BDED1D4A1FE4@bj-ig.de>
+In-Reply-To: <1193992909.3649.75.camel@w100>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: Alberto Alonso <alberto@ggsys.net>
+Cc: Doug Ledford <dledford@redhat.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Alberto Alonso wrote:
+> On Thu, 2007-11-01 at 15:16 -0400, Doug Ledford wrote:
+>> Not in the older kernel versions you were running, no.
+> 
+> These "old versions" (specially the RHEL) are supposed to be
+> the official versions supported by Redhat and the hardware 
+> vendors, as they were very specific as to what versions of 
+> Linux were supported. Of all people, I would think you would
+> appreciate that. Sorry if I sound frustrated and upset, but 
+> it is clearly a result of what "supported and tested" really 
+> means in this case. I don't want to go into a discussion of
+> commercial distros, which are "supported" as this is nor the
+> time nor the place but I don't want to open the door to the
+> excuse of "its an old kernel", it wasn't when it got installed.
 
-Am 02.11.2007 um 11:22 schrieb Ralf M=FCller:
+It may be worth noting that the context of this email is the upstream linux-raid
+ list. In my time watching the list it is mainly focused on 'current' code and
+development (but hugely supportive of older environments).
+In general discussions in this context will have a certain mindset - and it's
+not going to be the same as that which you'd find in an enterprise product
+support list.
 
->
-> # mdadm -E /dev/sdg1
-> /dev/sdg1:
->           Magic : a92b4efc
->         Version : 01
->     Feature Map : 0x1
->      Array UUID : e1a335a8:fc0f0626:d70687a6:5d9a9c19
->            Name : 1
->   Creation Time : Wed Oct 31 14:30:55 2007
->      Raid Level : raid5
->    Raid Devices : 5
->
->   Used Dev Size : 625137008 (298.09 GiB 320.07 GB)
->      Array Size : 2500547584 (1192.35 GiB 1280.28 GB)
->       Used Size : 625136896 (298.09 GiB 320.07 GB)
->    Super Offset : 625137264 sectors
->           State : clean
->     Device UUID : 95afade2:f2ab8e83:b0c764a0:4732827d
->
-> Internal Bitmap : 2 sectors from superblock
->     Update Time : Fri Nov  2 07:46:38 2007
->        Checksum : 4ee307b3 - correct
->          Events : 408088
->
->          Layout : left-symmetric
->      Chunk Size : 128K
->
->     Array Slot : 3 (0, 1, failed, 2, 3, 4)
->    Array State : uuUuu 1 failed
->
-> This time I'm getting nervous - Array State failed doesn't sound good=
-!
+> Outside of the rejected suggestion, I just want to figure out 
+> when software raid works and when it doesn't. With SATA, my 
+> experience is that it doesn't.
 
-Just to make it clear - the array is still reported active by in /=20
-proc/mdstat and behaves well - no failed devices:
-md1 : active raid5 sdd1[0] sdh1[5] sdf1[4] sdg1[3] sde1[1]
-       1250273792 blocks super 1.0 level 5, 128k chunk, algorithm 2 =20
-[5/5] [UUUUU]
-       bitmap: 0/10 pages [0KB], 16384KB chunk
+SATA, or more precisely, error handling in SATA has recently been significantly
+overhauled by Tejun Heo (IIRC). We're talking post 2.6.18 though (again IIRC) -
+so as far as SATA EH goes, older kernels bear no relation to the new ones.
 
-Regards
-Ralf
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+And the initial SATA EH code was, of course, beta :)
+
+David
+PS I can't really contribute to your list - I'm only using cheap desktop hardware.
