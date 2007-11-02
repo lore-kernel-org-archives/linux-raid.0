@@ -1,49 +1,35 @@
-From: berk walker <berk@panix.com>
-Subject: Re: switching root fs '/' to boot from RAID1 with grub
-Date: Fri, 02 Nov 2007 11:36:00 -0500
-Message-ID: <472B51F0.3080605@panix.com>
-References: <20071030210721.386ca2fa@absurd> <1193781699.10336.585.camel@firewall.xsintricity.com> <472A0D7A.4040807@zytor.com>
+From: Alberto Alonso <alberto@ggsys.net>
+Subject: Re: Implementing low level timeouts within MD
+Date: Fri, 02 Nov 2007 12:47:01 -0500
+Message-ID: <1194025621.11827.3.camel@w100>
+References: <1193418753.4771.17.camel@w100>
+	 <1193425254.10336.290.camel@firewall.xsintricity.com>
+	 <87tzoc7soa.fsf@willow.rfc1149.net>  <1193721577.3876.12.camel@w100>
+	 <1193765984.10336.519.camel@firewall.xsintricity.com>
+	 <1193893689.3649.19.camel@w100>
+	 <1193944573.10336.684.camel@firewall.xsintricity.com>
+	 <1193992909.3649.75.camel@w100>  <472B0552.2010608@dgreaves.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <472A0D7A.4040807@zytor.com>
+In-Reply-To: <472B0552.2010608@dgreaves.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "H. Peter Anvin" <hpa@zytor.com>
-Cc: Doug Ledford <dledford@redhat.com>, Janek Kozicki <janek_listy@wp.pl>, linux-raid@vger.kernel.org
+To: David Greaves <david@dgreaves.com>
+Cc: Doug Ledford <dledford@redhat.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-H. Peter Anvin wrote:
-> Doug Ledford wrote:
->>
->> device /dev/sda (hd0)
->> root (hd0,0)
->> install --stage2=/boot/grub/stage2 /boot/grub/stage1 (hd0) 
->> /boot/grub/e2fs_stage1_5 p /boot/grub/stage2 /boot/grub/menu.lst
->> device /dev/hdc (hd0)
->> root (hd0,0)
->> install --stage2=/boot/grub/stage2 /boot/grub/stage1 (hd0) 
->> /boot/grub/e2fs_stage1_5 p /boot/grub/stage2 /boot/grub/menu.lst
->>
->> That will install grub on the master boot record of hdc and sda, and in
->> both cases grub will look to whatever drive it is running on for the
->> files to boot instead of going to a specific drive.
->>
->
-> No, it won't... it'll look for the first drive in the system (BIOS 
-> drive 80h).  This means that if the BIOS can see the bad drive, but it 
-> doesn't work, you're still screwed.
->
->     -hpa
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-Depends how "bad" the drive is.  Just to align the thread on this -  If 
-the boot sector is bad - the bios on newer boxes will skip to the next 
-one.  But if it is "good", and you boot into garbage - - could be 
-Windows.. does it crash?
+On Fri, 2007-11-02 at 11:09 +0000, David Greaves wrote:
 
-b
+> David
+> PS I can't really contribute to your list - I'm only using cheap desktop hardware.
+> -
+
+If you had failures and it properly handled them, then you can 
+contribute to the good combinations, so far that's the list
+that is kind of empty :-(
+
+Thanks,
+
+Alberto
 
