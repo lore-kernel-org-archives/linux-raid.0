@@ -1,57 +1,54 @@
 From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: stride / stripe alignment on LVM ?
-Date: Fri, 02 Nov 2007 09:01:05 -0400
-Message-ID: <472B1F91.8000208@tmr.com>
-References: <20071101101037.63b523f8@absurd> <18218.24819.569744.141171@notabene.brown>
+Subject: Re: doesm mdadm try to use fastest HDD ?
+Date: Fri, 02 Nov 2007 09:10:23 -0400
+Message-ID: <472B21BF.4060201@tmr.com>
+References: <20071102125205.52c2d115@absurd>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18218.24819.569744.141171@notabene.brown>
+In-Reply-To: <20071102125205.52c2d115@absurd>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Janek Kozicki <janek_listy@wp.pl>, linux-raid@vger.kernel.org
+To: Janek Kozicki <janek_listy@wp.pl>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil Brown wrote:
-> On Thursday November 1, janek_listy@wp.pl wrote:
->   
->> Hello,
->>
->> I have raid5 /dev/md1, --chunk=128 --metadata=1.1. On it I have
->> created LVM volume called 'raid5', and finally a logical volume
->> 'backup'.
->>
->> Then I formatted it with command:
->>
->>    mkfs.ext3 -b 4096 -E stride=32 -E resize=550292480 /dev/raid5/backup
->>
->> And because LVM is putting its own metadata on /dev/md1, the ext3
->> partition is shifted by some (unknown for me) amount of bytes from
->> the beginning of /dev/md1.
->>
->> I was wondering, how big is the shift, and would it hurt the
->> performance/safety if the `ext3 stride=32` didn't align perfectly
->> with the physical stripes on HDD?
->>     
+Janek Kozicki wrote:
+> Hello,
 >
-> It is probably better to ask this question on an ext3 list as people
-> there might know exactly what 'stride' does.
+> My three HHDs have following speeds:
 >
-> I *think* it causes the inode tables to be offset in different
-> block-groups so that they are not all on the same drive.  If that is
-> the case, then an offset causes by LVM isn't going to make any
-> difference at all.
+>   hda - speed 70 MB/sec
+>   hdc - speed 27 MB/sec
+>   sda - speed 60 MB/sec
+>
+> They create a raid1 /dev/md0 and raid5 /dev/md1 arrays. I wanted to
+> ask if mdadm is trying to pick the fastest HDD during operation?
+>
+> Maybe I can "tell" which HDD is preferred?
 >   
 
-Actually, I think that all of the performance evil Doug was mentioning 
-will apply to LVM as well. So if things are poorly aligned, they will be 
-poorly handled, a stripe-sized write will not go in a stripe, but will 
-overlap chunks and cause all the data from all chunks to be read back 
-for a new raid-5 calculation.
-
-So I would expect this to make a very large performance difference, so 
-even if it work it would do so slowly.
+If you are doing raid-1 between hdc and some faster drive, you could try 
+using write-mostly and see go that works for you. For raid-5, it's 
+faster to read the data off the slow drive than reconstruct it with 
+multiple reads to multiple othjer faster drives.
+> This came to my mind when I saw this:
+>
+>   # mdadm --query --detail /dev/md1 | grep Prefer
+>  
+>   Preferred Minor : 1
+>
+> And also in the manual:
+>
+>   -W, --write-mostly [...] "can be useful if mirroring over a slow link."
+>
+>
+> many thanks for all your help!
+>   
+I have two thoughts on this:
+1 - if performance is critical, replace the slow drive
+2 - for most things you do, I would expect seek to be more important 
+than transfer rate
 
 -- 
 bill davidsen <davidsen@tmr.com>
