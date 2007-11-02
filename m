@@ -1,49 +1,34 @@
-From: David Greaves <david@dgreaves.com>
-Subject: Re: Implementing low level timeouts within MD
-Date: Fri, 02 Nov 2007 11:09:06 +0000
-Message-ID: <472B0552.2010608@dgreaves.com>
-References: <1193418753.4771.17.camel@w100>	 <1193425254.10336.290.camel@firewall.xsintricity.com>	 <87tzoc7soa.fsf@willow.rfc1149.net>  <1193721577.3876.12.camel@w100>	 <1193765984.10336.519.camel@firewall.xsintricity.com>	 <1193893689.3649.19.camel@w100>	 <1193944573.10336.684.camel@firewall.xsintricity.com> <1193992909.3649.75.camel@w100>
+From: Michal Soltys <nozo@ziu.info>
+Subject: Re: stride / stripe alignment on LVM ?
+Date: Fri, 02 Nov 2007 13:10:07 +0100
+Message-ID: <472B139F.9060903@ziu.info>
+References: <20071101101037.63b523f8@absurd>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1193992909.3649.75.camel@w100>
+In-Reply-To: <20071101101037.63b523f8@absurd>
 Sender: linux-raid-owner@vger.kernel.org
-To: Alberto Alonso <alberto@ggsys.net>
-Cc: Doug Ledford <dledford@redhat.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: Janek Kozicki <janek_listy@wp.pl>
 List-Id: linux-raid.ids
 
-Alberto Alonso wrote:
-> On Thu, 2007-11-01 at 15:16 -0400, Doug Ledford wrote:
->> Not in the older kernel versions you were running, no.
+Janek Kozicki wrote:
 > 
-> These "old versions" (specially the RHEL) are supposed to be
-> the official versions supported by Redhat and the hardware 
-> vendors, as they were very specific as to what versions of 
-> Linux were supported. Of all people, I would think you would
-> appreciate that. Sorry if I sound frustrated and upset, but 
-> it is clearly a result of what "supported and tested" really 
-> means in this case. I don't want to go into a discussion of
-> commercial distros, which are "supported" as this is nor the
-> time nor the place but I don't want to open the door to the
-> excuse of "its an old kernel", it wasn't when it got installed.
+> And because LVM is putting its own metadata on /dev/md1, the ext3
+> partition is shifted by some (unknown for me) amount of bytes from
+> the beginning of /dev/md1.
+> 
 
-It may be worth noting that the context of this email is the upstream linux-raid
- list. In my time watching the list it is mainly focused on 'current' code and
-development (but hugely supportive of older environments).
-In general discussions in this context will have a certain mindset - and it's
-not going to be the same as that which you'd find in an enterprise product
-support list.
+It seems to be multiply of 64KiB. You can specify it during pvcreate, with 
+--metadatasize option. It will be rounded to multiply of 64 KiB, and will 
+add another 64 KiB on its own. Extents will follow directly after that. 4 
+sectors mentioned in pcvreate's man page are covered by that option as well.
 
-> Outside of the rejected suggestion, I just want to figure out 
-> when software raid works and when it doesn't. With SATA, my 
-> experience is that it doesn't.
+So i.e. if you have chunk 1MiB, then pvcreate ... --metadatasize 960K ...
+should give you chunk-aligned logical volumes, assuming you have actual 
+extent size set appropriately as well. If you use default chunk size, you 
+shouldn't need any extra options.
 
-SATA, or more precisely, error handling in SATA has recently been significantly
-overhauled by Tejun Heo (IIRC). We're talking post 2.6.18 though (again IIRC) -
-so as far as SATA EH goes, older kernels bear no relation to the new ones.
-
-And the initial SATA EH code was, of course, beta :)
-
-David
-PS I can't really contribute to your list - I'm only using cheap desktop hardware.
+Make sure if it really is this way, after pv/vg/first lv creation. I found 
+it experimentally, so ymmv.
