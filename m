@@ -1,138 +1,47 @@
-From: Konstantin Sharlaimov <konstantin.sharlaimov@gmail.com>
-Subject: [RFC PATCH 2.6.23.1] md: add dm-raid1 read balancing
-Date: Sat, 03 Nov 2007 20:08:42 +1000
-Message-ID: <1194084522.1353.10.camel@localhost>
-Reply-To: konstantin.sharlaimov@gmail.com
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: Superblocks
+Date: Sat, 03 Nov 2007 09:49:35 -0400
+Message-ID: <472C7C6F.2090205@tmr.com>
+References: <29a863790710260943o7623212esce30325be4610dea@mail.gmail.com>	 <18214.45758.794247.651163@notabene.brown>	 <29a863790710300906w497c0f35yb90c36dadbd2c5e7@mail.gmail.com>	 <18218.24911.715891.758629@notabene.brown> <29a863790711020715h726353bcq99a270494a9f471e@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <29a863790711020715h726353bcq99a270494a9f471e@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
-Cc: Rik van Riel <riel@redhat.com>, "; Ingo Molnar" <mingo@redhat.com>, "; Neil Brown" <neilb@suse.de>
+To: Greg Cormier <gcormier@gmail.com>
+Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This patch adds RAID1 read balancing to device mapper. A read operation
-that is close (in terms of sectors) to a previous read or write goes to 
-the same mirror.
+Greg Cormier wrote:
+> Any reason 0.9 is the default? Should I be worried about using 1.0
+> superblocks? And can I "upgrade" my array from 0.9 to 1.0 superblocks?
+>   
 
-Signed-off-by: Konstantin Sharlaimov <konstantin.sharlaimov@gmail.com>
----
-Please give it a try, it works for me, yet my results might be system-specific.
-Any feedback (bug-reports, suggestions) will be greatly appreciated.
+Do understand that Neil may have other reasons... but mainly the 0.9 
+format is the default because it is most widely supported and allows you 
+to use new mdadm versions on old distributions (I still have one FC1 
+machine!). As for changing metadata on an existing array, I really can't 
+offer any help.
+> Thanks,
+> Greg
+>
+> On 11/1/07, Neil Brown <neilb@suse.de> wrote:
+>   
+>> On Tuesday October 30, gcormier@gmail.com wrote:
+>>     
+>>> Which is the default type of superblock? 0.90 or 1.0?
+>>>       
+>> The default default is 0.90.
+>> However a local device can be set in mdadm.conf with e.g.
+>>    CREATE metdata=1.0
+>>
+>> NeilBrown
+>>     
 
---- linux-2.6.23.1/drivers/md/dm-raid1.c.old	2007-11-03 18:47:10.000000000 +1000
-+++ linux-2.6.23.1/drivers/md/dm-raid1.c	2007-11-03 19:54:35.000000000 +1000
-@@ -19,6 +19,7 @@
- #include <linux/time.h>
- #include <linux/vmalloc.h>
- #include <linux/workqueue.h>
-+#include <linux/random.h>
- 
- #define DM_MSG_PREFIX "raid1"
- #define DM_IO_PAGES 64
-@@ -26,6 +27,9 @@
- #define DM_RAID1_HANDLE_ERRORS 0x01
- #define errors_handled(p)	((p)->features & DM_RAID1_HANDLE_ERRORS)
- 
-+/* Read balancing max hdd head distance */
-+#define DM_RAID1_BALANCE_MAX_IO_DISTANCE	(256)
-+
- static DECLARE_WAIT_QUEUE_HEAD(_kmirrord_recovery_stopped);
- 
- /*-----------------------------------------------------------------
-@@ -116,6 +120,7 @@ struct mirror {
- 	atomic_t error_count;
- 	struct dm_dev *dev;
- 	sector_t offset;
-+	sector_t last_io_sector;
- };
- 
- struct mirror_set {
-@@ -741,13 +746,51 @@ static void do_recovery(struct mirror_se
- 	}
- }
- 
-+static void set_mirror_last_io_sector(struct mirror *m, sector_t sector)
-+{
-+	/* FIXME: Probably some more work is needed here, however this is unlikely */
-+	m->last_io_sector = sector;
-+}
-+
- /*-----------------------------------------------------------------
-  * Reads
-  *---------------------------------------------------------------*/
-+/*
-+ * There is a per-array 'last IO operation' sector number maintained by
-+ * read and write handlers for the region. When balancing reads we pick 
-+ * the disk whose IO operation (HDD head position) is closest.
-+ */
- static struct mirror *choose_mirror(struct mirror_set *ms, sector_t sector)
- {
--	/* FIXME: add read balancing */
--	return ms->default_mirror;
-+	/* If we got here, then the array is in sync and we can pick any mirror */
-+	
-+	unsigned int i;
-+	struct mirror *use_mirror;
-+	sector_t use_distance, new_distance;
-+	
-+	use_mirror = &ms->mirror[0];
-+	use_distance = abs(sector - ms->mirror[0].last_io_sector);
-+		
-+	for (i = 1; i < ms->nr_mirrors; i++) {
-+		new_distance = abs(sector - ms->mirror[i].last_io_sector);
-+		if (new_distance < use_distance) {
-+			use_distance = new_distance;
-+			use_mirror = &ms->mirror[i];
-+		}
-+	}
-+	
-+	/* 
-+	 * If the HDD head is too far from the needed sector then we do stochastic 
-+	 * balancing - chose the mirror randomly. This appers to have a better 
-+	 * chance of chosing an idle disk in case of two or more regions residing 
-+	 * on the same physical disk.
-+	 *
-+	 * TODO: Gather more statistical data and verify that the above is correct
-+	 */
-+	if (use_distance > DM_RAID1_BALANCE_MAX_IO_DISTANCE)
-+		return &ms->mirror[random32() % ms->nr_mirrors];
-+	else
-+		return use_mirror;
- }
- 
- /*
-@@ -776,6 +819,9 @@ static void do_reads(struct mirror_set *
- 		else
- 			m = ms->default_mirror;
- 
-+		/* Set last IO position for chosen mirror */
-+		set_mirror_last_io_sector(m, bio->bi_sector);
-+			
- 		map_bio(ms, m, bio);
- 		generic_make_request(bio);
- 	}
-@@ -800,6 +846,21 @@ static void write_callback(unsigned long
- 
- 	ms = bio_get_ms(bio);
- 	bio_set_ms(bio, NULL);
-+	
-+	/*
-+	 * Things might be different for various region states:
-+	 * SYNC:	writing is done to all mirrors, reading is balanced
-+	 * RECOVERING:	writing is delayed, reading is done from the default
-+	 * NOSYNC:	writing to default only, reading from the default
-+	 *
-+	 * In any case, if we update last IO sector at all mirrors, we will use 
-+	 * the up-to-date data when doing read balancing
-+	 *
-+	 * FIXME: update write position only on the region being written
-+	 */
-+
-+	for (i = 0; i < ms->nr_mirrors; i++)
-+		set_mirror_last_io_sector(&ms->mirror[i], bio->bi_sector);
- 
- 	/*
- 	 * NOTE: We don't decrement the pending count here,
+
+-- 
+bill davidsen <davidsen@tmr.com>
+  CTO TMR Associates, Inc
+  Doing interesting things with small computers since 1979
 
