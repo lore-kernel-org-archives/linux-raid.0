@@ -1,45 +1,61 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: 2.6.23.1: mdadm/raid5 hung/d-state
-Date: Sun, 4 Nov 2007 09:59:32 -0500 (EST)
-Message-ID: <Pine.LNX.4.64.0711040959120.6933@p34.internal.lan>
-References: <Pine.LNX.4.64.0711040658180.30831@p34.internal.lan>
- <472DBF8C.2060508@msgid.tls.msk.ru> <Pine.LNX.4.64.0711040750020.3956@p34.internal.lan>
- <472DDD78.7040002@msgid.tls.msk.ru>
+From: Janek Kozicki <janek_listy@wp.pl>
+Subject: telling mdadm to use spare drive.
+Date: Sun, 4 Nov 2007 17:05:02 +0100
+Message-ID: <20071104170502.6db7fcb1@absurd>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <472DDD78.7040002@msgid.tls.msk.ru>
 Sender: linux-raid-owner@vger.kernel.org
-To: Michael Tokarev <mjt@tls.msk.ru>
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, xfs@oss.sgi.com
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hi,
+
+I finished copying all data from old disc hdc to my shiny new
+RAID5 array (/dev/hda3 /dev/sda3 missing). Next step is to create a
+partition on hdc and add it to the array. And so I did this:
+
+# mdadm --add /dev/md1 /dev/hdc3
+
+But then I had a problem - the /dev/hdc3 was a spare, it didn't
+resync automatically:
+
+# mdadm -D /dev/md1
+[....]
+    Number   Major   Minor   RaidDevice State
+       0       3        3        0      active sync   /dev/hda3
+       1       8        3        1      active sync   /dev/sda3
+       2       0        0        2      removed
+
+       3      22        3        -      spare   /dev/hdc3
 
 
-On Sun, 4 Nov 2007, Michael Tokarev wrote:
+I wanted to tell mdadm to use the spare device, and I wasn't sure how
+to do this, so I tried following:
 
-> Justin Piszcz wrote:
->> On Sun, 4 Nov 2007, Michael Tokarev wrote:
-> []
->>> The next time you come across something like that, do a SysRq-T dump and
->>> post that.  It shows a stack trace of all processes - and in particular,
->>> where exactly each task is stuck.
->
->> Yes I got it before I rebooted, ran that and then dmesg > file.
->>
->> Here it is:
->>
->> [1172609.665902]  ffffffff80747dc0 ffffffff80747dc0 ffffffff80747dc0 ffffffff80744d80
->> [1172609.668768]  ffffffff80747dc0 ffff81015c3aa918 ffff810091c899b4 ffff810091c899a8
->
-> That's only partial list.  All the kernel threads - which are most important
-> in this context - aren't shown.  You ran out of dmesg buffer, and the most
-> interesting entries was at the beginning.  If your /var/log partition is
-> working, the stuff should be in /var/log/kern.log or equivalent.  If it's
-> not working, there is a way to capture the info still, by stopping syslogd,
-> cat'ing /proc/kmsg to some tmpfs file and scp'ing it elsewhere.
->
-> /mjt
->
+# mdadm --stop /dev/md1
+# mdadm --assemble --update=resync /dev/md1 /dev/hda3 /dev/sda3 /dev/hdc3
 
-Will do that the next time it happens, thanks.
+Now, 'mdadm -D /dev/md1' says:
+[...]
+    Number   Major   Minor   RaidDevice State
+       0       3        3        0      active sync   /dev/hda3
+       1       8        3        1      active sync   /dev/sda3
+       3      22        3        2      spare rebuilding   /dev/hdc3
+
+
+I'm writing here just because I want to be sure that I added this new
+device correctly, I don't want to make any stupid mistake here...
+
+# cat /proc/mdstat
+
+md1 : active raid5 hda3[0] hdc3[3] sda3[1]
+      966807296 blocks super 1.1 level 5, 128k chunk, algorithm 2 [3/2] [UU_]
+      [=>...................]  recovery =  6.2% (30068096/483403648) finish=254.9min speed=29639K/sec
+      bitmap: 8/8 pages [32KB], 32768KB chunk
+
+Was there a better way to do this, is it OK?
+
+-- 
+Janek Kozicki                                                         |
