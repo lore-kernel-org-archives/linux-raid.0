@@ -1,59 +1,37 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
+From: Michael Tokarev <mjt@tls.msk.ru>
 Subject: Re: 2.6.23.1: mdadm/raid5 hung/d-state
-Date: Sun, 4 Nov 2007 08:42:04 -0500 (EST)
-Message-ID: <Pine.LNX.4.64.0711040841160.2225@p34.internal.lan>
-References: <Pine.LNX.4.64.0711040658180.30831@p34.internal.lan>
- <472DCBBB.1040806@systella.fr>
+Date: Sun, 04 Nov 2007 17:55:52 +0300
+Message-ID: <472DDD78.7040002@msgid.tls.msk.ru>
+References: <Pine.LNX.4.64.0711040658180.30831@p34.internal.lan> <472DBF8C.2060508@msgid.tls.msk.ru> <Pine.LNX.4.64.0711040750020.3956@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="-1463747160-851533030-1194183724=:2225"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <472DCBBB.1040806@systella.fr>
+In-Reply-To: <Pine.LNX.4.64.0711040750020.3956@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?ISO-8859-1?Q?BERTRAND_Jo=EBl?= <joel.bertrand@systella.fr>
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, xfs@oss.sgi.com
 List-Id: linux-raid.ids
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+Justin Piszcz wrote:
+> On Sun, 4 Nov 2007, Michael Tokarev wrote:
+[]
+>> The next time you come across something like that, do a SysRq-T dump and
+>> post that.  It shows a stack trace of all processes - and in particular,
+>> where exactly each task is stuck.
 
----1463747160-851533030-1194183724=:2225
-Content-Type: TEXT/PLAIN; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+> Yes I got it before I rebooted, ran that and then dmesg > file.
+> 
+> Here it is:
+> 
+> [1172609.665902]  ffffffff80747dc0 ffffffff80747dc0 ffffffff80747dc0 ffffffff80744d80
+> [1172609.668768]  ffffffff80747dc0 ffff81015c3aa918 ffff810091c899b4 ffff810091c899a8
 
+That's only partial list.  All the kernel threads - which are most important
+in this context - aren't shown.  You ran out of dmesg buffer, and the most
+interesting entries was at the beginning.  If your /var/log partition is
+working, the stuff should be in /var/log/kern.log or equivalent.  If it's
+not working, there is a way to capture the info still, by stopping syslogd,
+cat'ing /proc/kmsg to some tmpfs file and scp'ing it elsewhere.
 
-
-On Sun, 4 Nov 2007, BERTRAND Jo=EBl wrote:
-
-> Justin Piszcz wrote:
->> # ps auxww | grep D
->> USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
->> root       273  0.0  0.0      0     0 ?        D    Oct21  14:40 [pdflus=
-h]
->> root       274  0.0  0.0      0     0 ?        D    Oct21  13:00 [pdflus=
-h]
->>=20
->> After several days/weeks, this is the second time this has happened, whi=
-le=20
->> doing regular file I/O (decompressing a file), everything on the device=
-=20
->> went into D-state.
->
-> =09Same observation here (kernel 2.6.23). I can see this bug when I try=
-=20
-> to synchronize a raid1 volume over iSCSI (each element is a raid5 volume)=
-, or=20
-> sometimes only with a 1,5 TB raid5 volume. When this bug occurs, md subsy=
-stem=20
-> eats 100% of one CPU and pdflush remains in D state too. What is your=20
-> architecture ? I use two 32-threads T1000 (sparc64), and I'm trying to=20
-> determine if this bug is arch specific.
->
-> =09Regards,
->
-> =09JKB
->
-
-Using x86_64 here (Q6600/Intel DG965WH).
-
-Justin.
----1463747160-851533030-1194183724=:2225--
+/mjt
