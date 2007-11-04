@@ -1,51 +1,106 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: switching root fs '/' to boot from RAID1 with grub
-Date: Sun, 04 Nov 2007 00:28:54 -0400
-Message-ID: <472D4A86.3090700@tmr.com>
-References: <20071030210721.386ca2fa@absurd> <1193781699.10336.585.camel@firewall.xsintricity.com> <472A0D7A.4040807@zytor.com> <472B51F0.3080605@panix.com> <472D3A1C.800@tmr.com> <472D402D.6040900@zytor.com>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: 2.6.23.1: mdadm/raid5 hung/d-state
+Date: Sun, 4 Nov 2007 07:03:30 -0500 (EST)
+Message-ID: <Pine.LNX.4.64.0711040658180.30831@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <472D402D.6040900@zytor.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "H. Peter Anvin" <hpa@zytor.com>
-Cc: berk walker <berk@panix.com>, Doug Ledford <dledford@redhat.com>, Janek Kozicki <janek_listy@wp.pl>, linux-raid@vger.kernel.org
+To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-H. Peter Anvin wrote:
-> Bill Davidsen wrote:
->>>>
->>> Depends how "bad" the drive is.  Just to align the thread on this -  
->>> If the boot sector is bad - the bios on newer boxes will skip to the 
->>> next one.  But if it is "good", and you boot into garbage - - could 
->>> be Windows.. does it crash?
->>
->> Right, if the drive is dead almost every BIOS will fail over, if the 
->> read gets a CRC or similar most recent BIOS will fail over, but if an 
->> error-free read returns bad data, how can the BIOS know.
->>
->
-> Unfortunately the Linux boot format doesn't contain any sort of 
-> integrity check.  Otherwise the bootloader could catch this kind of 
-> error and throw a failure, letting the next disk boot (or another 
-> kernel.)
+# ps auxww | grep D
+USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+root       273  0.0  0.0      0     0 ?        D    Oct21  14:40 [pdflush]
+root       274  0.0  0.0      0     0 ?        D    Oct21  13:00 [pdflush]
 
-I don't understand your point, unless there's a Linux bootloader in the 
-BIOS it will boot whatever 512 bytes are in sector 0. So if that's crap 
-it doesn't matter what it would do if it was valid, some other bytes 
-came off the drive instead. Maybe Windows, since there seems to be an 
-option in Windows to check the boot sector on boot and rewrite it if it 
-isn't the WinXP one.  One of my offspring has that problem, dual boot 
-system, every time he boots Windows he has to boot from rescue and 
-reinstall grub.
+After several days/weeks, this is the second time this has happened, while 
+doing regular file I/O (decompressing a file), everything on the device 
+went into D-state.
 
-I think he could install grub in the partition, make that the active 
-partition, and the boot would work, but he tried and only type FAT or 
-VFAT seem to boot, active or not.
+# mdadm -D /dev/md3
+/dev/md3:
+         Version : 00.90.03
+   Creation Time : Wed Aug 22 10:38:53 2007
+      Raid Level : raid5
+      Array Size : 1318680576 (1257.59 GiB 1350.33 GB)
+   Used Dev Size : 146520064 (139.73 GiB 150.04 GB)
+    Raid Devices : 10
+   Total Devices : 10
+Preferred Minor : 3
+     Persistence : Superblock is persistent
 
--- 
-bill davidsen <davidsen@tmr.com>
-  CTO TMR Associates, Inc
-  Doing interesting things with small computers since 1979
+     Update Time : Sun Nov  4 06:38:29 2007
+           State : active
+  Active Devices : 10
+Working Devices : 10
+  Failed Devices : 0
+   Spare Devices : 0
 
+          Layout : left-symmetric
+      Chunk Size : 1024K
+
+            UUID : e37a12d1:1b0b989a:083fb634:68e9eb49
+          Events : 0.4309
+
+     Number   Major   Minor   RaidDevice State
+        0       8       33        0      active sync   /dev/sdc1
+        1       8       49        1      active sync   /dev/sdd1
+        2       8       65        2      active sync   /dev/sde1
+        3       8       81        3      active sync   /dev/sdf1
+        4       8       97        4      active sync   /dev/sdg1
+        5       8      113        5      active sync   /dev/sdh1
+        6       8      129        6      active sync   /dev/sdi1
+        7       8      145        7      active sync   /dev/sdj1
+        8       8      161        8      active sync   /dev/sdk1
+        9       8      177        9      active sync   /dev/sdl1
+
+If I wanted to find out what is causing this, what type of debugging would 
+I have to enable to track it down?  Any attempt to read/write files on the 
+devices fails (also going into d-state).  Is there any useful information 
+I can get currently before rebooting the machine?
+
+# pwd
+/sys/block/md3/md
+# ls
+array_state      dev-sdj1/         rd2@              stripe_cache_active
+bitmap_set_bits  dev-sdk1/         rd3@              stripe_cache_size
+chunk_size       dev-sdl1/         rd4@              suspend_hi
+component_size   layout            rd5@              suspend_lo
+dev-sdc1/        level             rd6@              sync_action
+dev-sdd1/        metadata_version  rd7@              sync_completed
+dev-sde1/        mismatch_cnt      rd8@              sync_speed
+dev-sdf1/        new_dev           rd9@              sync_speed_max
+dev-sdg1/        raid_disks        reshape_position  sync_speed_min
+dev-sdh1/        rd0@              resync_start
+dev-sdi1/        rd1@              safe_mode_delay
+# cat array_state
+active-idle
+# cat mismatch_cnt
+0
+# cat stripe_cache_active
+1
+# cat stripe_cache_size
+16384
+# cat sync_action
+idle
+# cat /proc/mdstat
+Personalities : [raid1] [raid6] [raid5] [raid4]
+md1 : active raid1 sdb2[1] sda2[0]
+       136448 blocks [2/2] [UU]
+
+md2 : active raid1 sdb3[1] sda3[0]
+       129596288 blocks [2/2] [UU]
+
+md3 : active raid5 sdl1[9] sdk1[8] sdj1[7] sdi1[6] sdh1[5] sdg1[4] sdf1[3] 
+sde1[2] sdd1[1] sdc1[0]
+       1318680576 blocks level 5, 1024k chunk, algorithm 2 [10/10] 
+[UUUUUUUUUU]
+
+md0 : active raid1 sdb1[1] sda1[0]
+       16787776 blocks [2/2] [UU]
+
+unused devices: <none>
+#
+
+Justin.
