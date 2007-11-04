@@ -1,56 +1,42 @@
-From: Robin Lee Powell <rlpowell@digitalkingdom.org>
-Subject: Double mdadm --monitor == hang
-Date: Sun, 4 Nov 2007 13:10:37 -0800
-Message-ID: <20071104211037.GA7410@digitalkingdom.org>
+From: David Greaves <david@dgreaves.com>
+Subject: Re: 2.6.23.1: mdadm/raid5 hung/d-state
+Date: Sun, 04 Nov 2007 21:40:27 +0000
+Message-ID: <472E3C4B.5010904@dgreaves.com>
+References: <Pine.LNX.4.64.0711040658180.30831@p34.internal.lan> <472DBF8C.2060508@msgid.tls.msk.ru> <Pine.LNX.4.64.0711040750020.3956@p34.internal.lan> <472DDD78.7040002@msgid.tls.msk.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <472DDD78.7040002@msgid.tls.msk.ru>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Michael Tokarev <mjt@tls.msk.ru>
+Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, xfs@oss.sgi.com
 List-Id: linux-raid.ids
 
+Michael Tokarev wrote:
+> Justin Piszcz wrote:
+>> On Sun, 4 Nov 2007, Michael Tokarev wrote:
+> []
+>>> The next time you come across something like that, do a SysRq-T dump and
+>>> post that.  It shows a stack trace of all processes - and in particular,
+>>> where exactly each task is stuck.
+> 
+>> Yes I got it before I rebooted, ran that and then dmesg > file.
+>>
+>> Here it is:
+>>
+>> [1172609.665902]  ffffffff80747dc0 ffffffff80747dc0 ffffffff80747dc0 ffffffff80744d80
+>> [1172609.668768]  ffffffff80747dc0 ffff81015c3aa918 ffff810091c899b4 ffff810091c899a8
+> 
+> That's only partial list.  All the kernel threads - which are most important
+> in this context - aren't shown.  You ran out of dmesg buffer, and the most
+> interesting entries was at the beginning.  If your /var/log partition is
+> working, the stuff should be in /var/log/kern.log or equivalent.  If it's
+> not working, there is a way to capture the info still, by stopping syslogd,
+> cat'ing /proc/kmsg to some tmpfs file and scp'ing it elsewhere.
 
-Please cc me on replies; I'm not on the list.
+or netconsole is actually pretty easy and incredibly useful in this kind of
+situation even if there's no disk at all :)
 
-I don't know if this is fixable, or even if it *should* be fixed,
-but: summary: shortly after the state of the machine is "2
-independent mdadm --monitor instances, resyncing", the
-machine totally locks up.  Details follow.
+David
 
-I boot my machine from a USB stick, because the hard drive is
-encrypted.  The start up goes something like this:
-
-    mdadm --assemble /dev/md_d0 /dev/sda /dev/sdb /dev/sdc /dev/sdd
-
-    losetup ... /dev/loop0 /dev/md_d0p2
-
-    /bin/mount -o rw -n /dev/loop0 /mnt
-
-    cd /mnt
-
-    /sbin/pivot_root . usb_boot
-
-    exec chroot . /sbin/init $* </dev/console >/dev/console 2>&1
-
-Before it does all that, though, it starts up mdadm --monitor,
-because it's got the Debian mdadm package installed, and that's how
-that works.
-
-Then in re-runs init after the pivot_root.  The OS on /dev/md_d0p2
-also has the Debian mdadm package install, so it also starts mdadm
---monitor.  The two instances have no real way to see each other.
-
-This works fine until a resync is needed; shortly after the state of
-the machine is "2 mdadm --monitor instances, resyncing", the machine
-totally locks up.
-
-Solved by not starting mdadm --monitor on the USB stick, obviously,
-but it took quite a while to figure out.  :(
-
--Robin
-
--- 
-Lojban Reason #17: http://en.wikipedia.org/wiki/Buffalo_buffalo
-Proud Supporter of the Singularity Institute - http://singinst.org/
-http://www.digitalkingdom.org/~rlpowell/ *** http://www.lojban.org/
