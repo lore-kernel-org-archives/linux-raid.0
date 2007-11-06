@@ -1,40 +1,88 @@
-From: Wolfgang Denk <wd@denx.de>
+From: Alberto Alonso <alberto@ggsys.net>
 Subject: Re: Software raid - controller options
-Date: Tue, 06 Nov 2007 07:27:01 +0100
-Message-ID: <20071106062701.A4543249E7@gemini.denx.de>
-References: <472FD6A4.5030907@sauce.co.nz>
+Date: Tue, 06 Nov 2007 00:41:37 -0600
+Message-ID: <1194331297.31760.15.camel@w100>
+References: <1194315635.17361.20.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-reply-to: Your message of "Tue, 06 Nov 2007 15:51:16 +1300."
-             <472FD6A4.5030907@sauce.co.nz>
+In-Reply-To: <1194315635.17361.20.camel@localhost.localdomain>
 Sender: linux-raid-owner@vger.kernel.org
-To: Richard Scobie <richard@sauce.co.nz>
+To: Lyle Schlueter <lyle@xkubed.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-In message <472FD6A4.5030907@sauce.co.nz> you wrote:
+
+You've probably missed a discussion on issues I've been having with
+SATA, software RAID and bad drivers. A clear thing from the responses 
+I got is that you really need to use a recent kernel, as they may have
+fixed those problems.
+
+I didn't get clear responses indicating specific cards that are 
+known to work well when hardrives fail. But if you can deal with
+a server crashing and then rebooting manually then software RAID
+is the way to go. I've always been able to get the servers back
+online even with the problematic drivers.
+
+I am happy with the 3ware cards and do use their hardware RAID to
+avoid the problems that I've had. With those I've fully tested
+16 drive systems with 2 arrays using 2 8-port cards. Others have
+recommended the Areca line.
+
+As for cheap "dumb" interfaces I am now using the RocketRAID 2220,
+which gives you 8 ports on a PCI-X. I believe the "built" in RAID
+on those is just firmware based so you may as well use them to
+show the drives in normal/legacy mode and use software RAID on
+top. Keep in mind I haven't fully tested this solution nor have
+tested for proper functioning when a drive fails.
+
+Another inexpensive card I've used with good results is the Q-stor
+PCI-X card, but I think this is now obsolete.
+
+Hope this helps,
+
+Alberto
+
+
+On Tue, 2007-11-06 at 05:20 +0300, Lyle Schlueter wrote:
+> Hello,
 > 
-> The other possibility is the Marvell based 8 port "dumb" SATA controller 
-> from Supermicro.
+> I just started looking into software raid with linux a few weeks ago. I
+> am outgrowing the commercial NAS product that I bought a while back.
+> I've been learning as much as I can, suscribing to this mailing list,
+> reading man pages, experimenting with loopback devices setting up and
+> expanding test arrays. 
 > 
-> http://www.supermicro.com/products/accessories/addon/AoC-SAT2-MV8.cfm
-...
-> Enquiries here previously have not found anyone using this card.
-
-I dropped it into a Fedora 7 system and ran a couple of tests with it
-(mostly bonnie++ and iozone). It worked out of the box (no manual
-configuration or drivers needed); I didn't observer any problems yet,
-and performance is OK, too.
-
-Best regards,
-
-Wolfgang Denk
-
+> I have a few questions now that I'm sure someone here will be able to
+> enlighten me about.
+> First, I want to run a 12 drive raid 6, honestly, would I be better of
+> going with true hardware raid like the areca ARC-1231ML vs software
+> raid? I would prefer software raid just for the sheer cost savings. But
+> what kind of processing power would it take to match or exceed a mid to
+> high-level hardware controller?
+> 
+> I haven't seen much, if any, discussion of this, but how many drives are
+> people putting into software arrays? And how are you going about it?
+> Motherboards seem to max out around 6-8 SATA ports. Do you just add SATA
+> controllers? Looking around on newegg (and some googling) 2-port SATA
+> controllers are pretty easy to find, but once you get to 4 ports the
+> cards all seem to include some sort of built in *raid* functionality.
+> Are there any 4+ port PCI-e SATA controllers cards? 
+> 
+> Are there any specific chipsets/brands of motherboards or controller
+> cards that you software raid veterans prefer?
+> 
+> Thank you for your time and any info you are able to give me!
+> 
+> Lyle
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 -- 
-DENX Software Engineering GmbH,     MD: Wolfgang Denk & Detlev Zundel
-HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
-Phone: (+49)-8142-66989-10 Fax: (+49)-8142-66989-80 Email: wd@denx.de
-Always try to do things in chronological order; it's  less  confusing
-that way.
+Alberto Alonso                        Global Gate Systems LLC.
+(512) 351-7233                        http://www.ggsys.net
+Hardware, consulting, sysadmin, monitoring and remote backups
+
