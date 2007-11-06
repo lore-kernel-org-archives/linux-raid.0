@@ -1,91 +1,103 @@
-From: "Dan Williams" <dan.j.williams@intel.com>
-Subject: Re: 2.6.23.1: mdadm/raid5 hung/d-state
-Date: Mon, 5 Nov 2007 17:19:49 -0700
-Message-ID: <e9c3a7c20711051619u7054aab9l208b604b9e58fb61@mail.gmail.com>
-References: <Pine.LNX.4.64.0711040658180.30831@p34.internal.lan>
-	 <18222.16003.92062.970530@notabene.brown>
-	 <Pine.LNX.4.64.0711041651250.23496@p34.internal.lan>
-	 <e9c3a7c20711051035m78ba90ck68f4fbc10480462a@mail.gmail.com>
-	 <Pine.LNX.4.64.0711051335450.11422@p34.internal.lan>
+From: Steve Lane <drsteve@rna.berkeley.edu>
+Subject: question about mdadm + grub interaction
+Date: Mon, 5 Nov 2007 16:39:25 -0800
+Message-ID: <20071106003925.GW5467@turing.berkeley.edu>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_Part_29572_25767903.1194308389630"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0711051335450.11422@p34.internal.lan>
-Sender: linux-raid-owner@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>, =?ISO-8859-1?Q?BERTRAND_Jo=EBl?= <joel.bertrand@systella.fr>
-Cc: Neil Brown <neilb@suse.de>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <bounce-debian-user=gldu-debian-user-2=m.gmane.org@lists.debian.org>
+Content-Disposition: inline
+Resent-Message-ID: <gHP2Y.A.yVC.Tt7LHB@murphy>
+List-Post: <mailto:debian-user@lists.debian.org>
+List-Help: <mailto:debian-user-request@lists.debian.org?subject=help>
+List-Subscribe: <mailto:debian-user-request@lists.debian.org?subject=subscribe>
+List-Unsubscribe: <mailto:debian-user-request@lists.debian.org?subject=unsubscribe>
+To: debian-user@lists.debian.org, linux-raid@vger.kernel.org
+Cc: Steve Lane <drsteve@rna.berkeley.edu>
 List-Id: linux-raid.ids
 
-------=_Part_29572_25767903.1194308389630
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+Greetings.  In order to insure that a Debian stock kernel (i.e. the
+kernel installed from the linux-image-2.6.22-2-686-bigmem package) boots
+correctly off of a mdadm RAID 1 set of two disks if one of the disks is
+dead, do we:
 
-On 11/5/07, Justin Piszcz <jpiszcz@lucidpixels.com> wrote:
-[..]
-> > Are you seeing the same "md thread takes 100% of the CPU" that Jo=EBl i=
-s
-> > reporting?
-> >
->
-> Yes, in another e-mail I posted the top output with md3_raid5 at 100%.
->
+1) Have to manually install grub on the MBR on *both* drives, or is this
+   done automagically by the grub package installer if the RAID 1 set
+   is in place at the time of the grub install?
 
-This seems too similar to Jo=EBl's situation for them not to be
-correlated, and it shows that iscsi is not a necessary component of
-the failure.
+2) Need to have something that looks like this in /boot/grub/menu.lst:
 
-The attached patch allows the debug statements in MD to be enabled via
-sysfs.  Jo=EBl, since it is easier for you to reproduce can you capture
-the kernel log output after the raid thread goes into the spin?  It
-will help if you have CONFIG_PRINTK_TIME=3Dy set in your kernel
-configuration.
+   A)
+      title           Debian GNU/Linux, kernel 2.6.21-2-686-bigmem, RAID1
+      root            (hd0,0)
+      kernel          /vmlinuz-2.6.21-2-686-bigmem root=/dev/md2 md=0,/dev/sda1,/dev/sdb1 ro
+      initrd          /initrd.img-2.6.21-2-686-bigmem
+      savedefault
 
-After the failure run:
+      title           Debian GNU/Linux, kernel 2.6.21-2-686-bigmem, BROKEN RAID1
+      root            (hd0,0)
+      kernel          /vmlinuz-2.6.21-2-686-bigmem root=/dev/md2 md=0,/dev/sdb1 ro
+      initrd          /initrd.img-2.6.21-2-686-bigmem
+      savedefault
 
-echo 1 > /sys/block/md_d0/md/debug_print_enable; sleep 5; echo 0 >
-/sys/block/md_d0/md/debug_print_enable
+   i.e. with the 'md=...' configuration options?  Or do we just need this:
 
-...to enable the print messages for a few seconds.  Please send the
-output in a private message if it proves too big for the mailing list.
+   B)
+      title           Debian GNU/Linux, kernel 2.6.21-2-686-bigmem
+      root            (hd0,0)
+      kernel          /vmlinuz-2.6.21-2-686-bigmem root=/dev/md2 ro
+      initrd          /initrd.img-2.6.21-2-686-bigmem
+      savedefault
 
-------=_Part_29572_25767903.1194308389630
-Content-Type: application/octet-stream; name=raid5-debug-print-enable.patch
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_f8no5bvd
-Content-Disposition: attachment; filename=raid5-debug-print-enable.patch
+   which is the sort of thing that is installed automagically by the
+   kernel package installer?
 
-cmFpZDU6IGRlYnVnIHByaW50IGVuYWJsZQoKRnJvbTogRGFuIFdpbGxpYW1zIDxkYW4uai53aWxs
-aWFtc0BpbnRlbC5jb20+CgoKLS0tCgogZHJpdmVycy9tZC9yYWlkNS5jIHwgICAzNiArKysrKysr
-KysrKysrKysrKysrKysrKysrKysrKysrKysrKysKIDEgZmlsZXMgY2hhbmdlZCwgMzYgaW5zZXJ0
-aW9ucygrKSwgMCBkZWxldGlvbnMoLSkKCmRpZmYgLS1naXQgYS9kcml2ZXJzL21kL3JhaWQ1LmMg
-Yi9kcml2ZXJzL21kL3JhaWQ1LmMKaW5kZXggMzgwOGY1Mi4uNDk2YjlhMyAxMDA2NDQKLS0tIGEv
-ZHJpdmVycy9tZC9yYWlkNS5jCisrKyBiL2RyaXZlcnMvbWQvcmFpZDUuYwpAQCAtNTQsNiArNTQs
-MTAgQEAKICNpbmNsdWRlIDxsaW51eC9yYWlkL2JpdG1hcC5oPgogI2luY2x1ZGUgPGxpbnV4L2Fz
-eW5jX3R4Lmg+CiAKK3N0YXRpYyBpbnQgZGVidWdfcHJpbnRfZW5hYmxlOworI3VuZGVmIHByX2Rl
-YnVnCisjZGVmaW5lIHByX2RlYnVnKHguLi4pICgodm9pZCkoZGVidWdfcHJpbnRfZW5hYmxlICYm
-IHByaW50ayh4KSkpIAorCiAvKgogICogU3RyaXBlIGNhY2hlCiAgKi8KQEAgLTQwMjMsNiArNDAy
-NywzNyBAQCByYWlkNV9zdHJpcGVjYWNoZV9zaXplID0gX19BVFRSKHN0cmlwZV9jYWNoZV9zaXpl
-LCBTX0lSVUdPIHwgU19JV1VTUiwKIAkJCQlyYWlkNV9zdG9yZV9zdHJpcGVfY2FjaGVfc2l6ZSk7
-CiAKIHN0YXRpYyBzc2l6ZV90CityYWlkNV9zaG93X2RlYnVnX3ByaW50X2VuYWJsZShtZGRldl90
-ICptZGRldiwgY2hhciAqcGFnZSkKK3sKKwlyZXR1cm4gc3ByaW50ZihwYWdlLCAiJWRcbiIsIGRl
-YnVnX3ByaW50X2VuYWJsZSk7Cit9CisKK3N0YXRpYyBzc2l6ZV90CityYWlkNV9zdG9yZV9kZWJ1
-Z19wcmludF9lbmFibGUobWRkZXZfdCAqbWRkZXYsIGNvbnN0IGNoYXIgKnBhZ2UsIHNpemVfdCBs
-ZW4pCit7CisJcmFpZDVfY29uZl90ICpjb25mID0gbWRkZXZfdG9fY29uZihtZGRldik7CisJY2hh
-ciAqZW5kOworCWludCBuZXc7CisJaWYgKGxlbiA+PSBQQUdFX1NJWkUpCisJCXJldHVybiAtRUlO
-VkFMOworCisJbmV3ID0gc2ltcGxlX3N0cnRvdWwocGFnZSwgJmVuZCwgMTApOworCWlmICghKnBh
-Z2UgfHwgKCplbmQgJiYgKmVuZCAhPSAnXG4nKSApCisJCXJldHVybiAtRUlOVkFMOworCWlmIChu
-ZXcgPCAwIHx8IG5ldyA+IDEpCisJCXJldHVybiAtRUlOVkFMOworCisJZGVidWdfcHJpbnRfZW5h
-YmxlID0gbmV3OworCQorCXJldHVybiBsZW47Cit9CisKK3N0YXRpYyBzdHJ1Y3QgbWRfc3lzZnNf
-ZW50cnkKK3JhaWQ1X2RlYnVnX3ByaW50ID0gX19BVFRSKGRlYnVnX3ByaW50X2VuYWJsZSwgU19J
-UlVHTyB8IFNfSVdVU1IsCisJCQkJcmFpZDVfc2hvd19kZWJ1Z19wcmludF9lbmFibGUsCisJCQkJ
-cmFpZDVfc3RvcmVfZGVidWdfcHJpbnRfZW5hYmxlKTsKKworc3RhdGljIHNzaXplX3QKIHN0cmlw
-ZV9jYWNoZV9hY3RpdmVfc2hvdyhtZGRldl90ICptZGRldiwgY2hhciAqcGFnZSkKIHsKIAlyYWlk
-NV9jb25mX3QgKmNvbmYgPSBtZGRldl90b19jb25mKG1kZGV2KTsKQEAgLTQwMzgsNiArNDA3Myw3
-IEBAIHJhaWQ1X3N0cmlwZWNhY2hlX2FjdGl2ZSA9IF9fQVRUUl9STyhzdHJpcGVfY2FjaGVfYWN0
-aXZlKTsKIHN0YXRpYyBzdHJ1Y3QgYXR0cmlidXRlICpyYWlkNV9hdHRyc1tdID0gIHsKIAkmcmFp
-ZDVfc3RyaXBlY2FjaGVfc2l6ZS5hdHRyLAogCSZyYWlkNV9zdHJpcGVjYWNoZV9hY3RpdmUuYXR0
-ciwKKwkmcmFpZDVfZGVidWdfcHJpbnQuYXR0ciwKIAlOVUxMLAogfTsKIHN0YXRpYyBzdHJ1Y3Qg
-YXR0cmlidXRlX2dyb3VwIHJhaWQ1X2F0dHJzX2dyb3VwID0gewo=
-------=_Part_29572_25767903.1194308389630--
+3) Need to have the 'md=...' configuration option point at the *boot*
+   partition, or the *root* partition, so that if we have:
+
+      md0 : active raid1 sda1[0] sdb1[1]
+      md2 : active raid1 sda3[0] sdb3[1]
+
+   and
+
+      /dev/md0   /boot
+      /dev/md2   /
+
+   do we then need:
+
+      md=0,/dev/sda1,/dev/sdb1
+      md=0,/dev/sdb1
+
+   or:
+
+      md=2,/dev/sda3,/dev/sdb3
+      md=2,/dev/sdb3
+
+Any pointers to *detailed* documentation about how the 'md=...' option
+works would be much appreciated; I've already seen:
+
+  http://www.debian-administration.org/articles/238
+
+(which has a question at the very bottom of the page, a bit over two
+months old, asking very similar sorts of questions -- no answer on the
+page so far...); and
+
+  http://alephnull.net/software/linux-raid/4%20-%20Setup.html
+
+(which is lilo-specific, but also informative); and
+
+  http://www.epimetrics.com/topics/one-page?page_id=449&topic=Bit-head%20Stuff&page_topic_id=120
+
+AND:
+
+  http://www.opensubscriber.com/message/linux-raid@vger.kernel.org/7889881.html
+
+(which is informative, but doesn't get at precise answers to my questions).
+
+Thanks much,
+
+--
+Steve Lane
+System, Network and Security Administrator
+Doudna Lab
+Biomolecular Structure and Mechanism Group
+UC Berkeley
