@@ -1,28 +1,53 @@
-From: Janek Kozicki <janek_listy@wp.pl>
-Subject: Re: question about mdadm + grub interaction
-Date: Tue, 6 Nov 2007 08:30:51 +0100
-Message-ID: <20071106083051.11383ead@absurd>
-References: <20071106003925.GW5467@turing.berkeley.edu>
+From: Wolfgang Denk <wd@denx.de>
+Subject: Re: Software raid - controller options
+Date: Tue, 06 Nov 2007 09:16:14 +0100
+Message-ID: <20071106081614.B5294249E7@gemini.denx.de>
+References: <1194319214.17361.36.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20071106003925.GW5467@turing.berkeley.edu>
+In-reply-to: Your message of "Tue, 06 Nov 2007 06:20:14 +0300."
+             <1194319214.17361.36.camel@localhost.localdomain>
 Sender: linux-raid-owner@vger.kernel.org
-To: Steve Lane <drsteve@rna.berkeley.edu>
-Cc: linux-raid@vger.kernel.org
+To: Lyle Schlueter <lyle@xkubed.com>
+Cc: Richard Scobie <richard@sauce.co.nz>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Steve Lane said:     (by the date of Mon, 5 Nov 2007 16:39:25 -0800)
+In message <1194319214.17361.36.camel@localhost.localdomain> you wrote:
+> 
+> I had been looking at the Adaptec 2240900-R PCI Express and HighPoint
+> RocketRAID 2300 PCI Express. These are both *raid* cards. But if they
+> can be used as a regular controller card, they both provide 4 SATA ports
+> and are PCI-e. But sounds like the RocketRAID doesn't work with the
+> 2.6.22+ kernel (according to newegg reviewers). It sounds like the
+> Adaptec works quite nicely though. 
 
-> Greetings.  In order to insure that a Debian stock kernel (i.e. the
-> kernel installed from the linux-image-2.6.22-2-686-bigmem package) boots
-> correctly off of a mdadm RAID 1 set of two disks if one of the disks is
-> dead, do we:
+Be careful. Ideally, the controller should be  supported  by  drivers
+that  are included withthe standard kernel.org Linux tree. If this is
+not the case,  try  to  find  out  if  you  get  Linux  drivers  with
+*complete*  source  code. Both Highpoint (RocketRAID) and Adaptec are
+known to include binary-only modules in their drivers, even  if  they
+seem  to provide source code. This is always a PITA and may seriously
+mimit your on specific *usually very old) kernel versions.
 
-maybe this will help you? It helped me a lot.
+> Sounds pretty iffy there. That Adaptec card I mentioned is going for
+> about 100 USD. Seems like a lot for 4 ports. But sounds like it works
 
-http://www.spinics.net/lists/raid/msg17653.html
+I returned such a card because I could not get it working with the
+kernel versions I wanted to run.
+
+On the other hand, the Supermicro card worked fine for me out of the
+box.
+
+Best regards,
+
+Wolfgang Denk
 
 -- 
-Janek Kozicki                                                         |
+DENX Software Engineering GmbH,     MD: Wolfgang Denk & Detlev Zundel
+HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
+Phone: (+49)-8142-66989-10 Fax: (+49)-8142-66989-80 Email: wd@denx.de
+When a woman marries again it is because she detested her first  hus-
+band.  When  a  man  marries again, it is because he adored his first
+wife.                                                  -- Oscar Wilde
