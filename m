@@ -1,32 +1,40 @@
-From: Richard Scobie <richard@sauce.co.nz>
+From: Wolfgang Denk <wd@denx.de>
 Subject: Re: Software raid - controller options
-Date: Tue, 06 Nov 2007 17:08:39 +1300
-Message-ID: <472FE8C7.10100@sauce.co.nz>
-References: <1194315635.17361.20.camel@localhost.localdomain>	 <472FD6A4.5030907@sauce.co.nz> <1194319214.17361.36.camel@localhost.localdomain>
+Date: Tue, 06 Nov 2007 07:27:01 +0100
+Message-ID: <20071106062701.A4543249E7@gemini.denx.de>
+References: <472FD6A4.5030907@sauce.co.nz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1194319214.17361.36.camel@localhost.localdomain>
+In-reply-to: Your message of "Tue, 06 Nov 2007 15:51:16 +1300."
+             <472FD6A4.5030907@sauce.co.nz>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Richard Scobie <richard@sauce.co.nz>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Lyle Schlueter wrote:
+In message <472FD6A4.5030907@sauce.co.nz> you wrote:
+> 
+> The other possibility is the Marvell based 8 port "dumb" SATA controller 
+> from Supermicro.
+> 
+> http://www.supermicro.com/products/accessories/addon/AoC-SAT2-MV8.cfm
+...
+> Enquiries here previously have not found anyone using this card.
 
-> Do you know of any concerns of using all the ports on a motherboard?
-> Slowdowns or anything like that?
+I dropped it into a Fedora 7 system and ran a couple of tests with it
+(mostly bonnie++ and iozone). It worked out of the box (no manual
+configuration or drivers needed); I didn't observer any problems yet,
+and performance is OK, too.
 
-I've one box here that's using all six onboard ports on an Nvidia MCP55 
-controller.
+Best regards,
 
-Two ports are a RAID 1 for the OS and the other 4 have 4 x 500GB drives 
-as a RAID 5.
+Wolfgang Denk
 
-It flies along at the speed I would expect - the array started out as a 
-3 drive RAID5 and after I'd grown it to 4, I tested it with the 
-filesystem 60% full and got 160MB/s writes and 178MB/s reads.
-
-Regards,
-
-Richard
+-- 
+DENX Software Engineering GmbH,     MD: Wolfgang Denk & Detlev Zundel
+HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
+Phone: (+49)-8142-66989-10 Fax: (+49)-8142-66989-80 Email: wd@denx.de
+Always try to do things in chronological order; it's  less  confusing
+that way.
