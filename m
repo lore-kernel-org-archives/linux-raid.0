@@ -1,88 +1,28 @@
-From: Alberto Alonso <alberto@ggsys.net>
-Subject: Re: Software raid - controller options
-Date: Tue, 06 Nov 2007 00:41:37 -0600
-Message-ID: <1194331297.31760.15.camel@w100>
-References: <1194315635.17361.20.camel@localhost.localdomain>
+From: Janek Kozicki <janek_listy@wp.pl>
+Subject: Re: question about mdadm + grub interaction
+Date: Tue, 6 Nov 2007 08:30:51 +0100
+Message-ID: <20071106083051.11383ead@absurd>
+References: <20071106003925.GW5467@turing.berkeley.edu>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1194315635.17361.20.camel@localhost.localdomain>
+In-Reply-To: <20071106003925.GW5467@turing.berkeley.edu>
 Sender: linux-raid-owner@vger.kernel.org
-To: Lyle Schlueter <lyle@xkubed.com>
+To: Steve Lane <drsteve@rna.berkeley.edu>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Steve Lane said:     (by the date of Mon, 5 Nov 2007 16:39:25 -0800)
 
-You've probably missed a discussion on issues I've been having with
-SATA, software RAID and bad drivers. A clear thing from the responses 
-I got is that you really need to use a recent kernel, as they may have
-fixed those problems.
+> Greetings.  In order to insure that a Debian stock kernel (i.e. the
+> kernel installed from the linux-image-2.6.22-2-686-bigmem package) boots
+> correctly off of a mdadm RAID 1 set of two disks if one of the disks is
+> dead, do we:
 
-I didn't get clear responses indicating specific cards that are 
-known to work well when hardrives fail. But if you can deal with
-a server crashing and then rebooting manually then software RAID
-is the way to go. I've always been able to get the servers back
-online even with the problematic drivers.
+maybe this will help you? It helped me a lot.
 
-I am happy with the 3ware cards and do use their hardware RAID to
-avoid the problems that I've had. With those I've fully tested
-16 drive systems with 2 arrays using 2 8-port cards. Others have
-recommended the Areca line.
+http://www.spinics.net/lists/raid/msg17653.html
 
-As for cheap "dumb" interfaces I am now using the RocketRAID 2220,
-which gives you 8 ports on a PCI-X. I believe the "built" in RAID
-on those is just firmware based so you may as well use them to
-show the drives in normal/legacy mode and use software RAID on
-top. Keep in mind I haven't fully tested this solution nor have
-tested for proper functioning when a drive fails.
-
-Another inexpensive card I've used with good results is the Q-stor
-PCI-X card, but I think this is now obsolete.
-
-Hope this helps,
-
-Alberto
-
-
-On Tue, 2007-11-06 at 05:20 +0300, Lyle Schlueter wrote:
-> Hello,
-> 
-> I just started looking into software raid with linux a few weeks ago. I
-> am outgrowing the commercial NAS product that I bought a while back.
-> I've been learning as much as I can, suscribing to this mailing list,
-> reading man pages, experimenting with loopback devices setting up and
-> expanding test arrays. 
-> 
-> I have a few questions now that I'm sure someone here will be able to
-> enlighten me about.
-> First, I want to run a 12 drive raid 6, honestly, would I be better of
-> going with true hardware raid like the areca ARC-1231ML vs software
-> raid? I would prefer software raid just for the sheer cost savings. But
-> what kind of processing power would it take to match or exceed a mid to
-> high-level hardware controller?
-> 
-> I haven't seen much, if any, discussion of this, but how many drives are
-> people putting into software arrays? And how are you going about it?
-> Motherboards seem to max out around 6-8 SATA ports. Do you just add SATA
-> controllers? Looking around on newegg (and some googling) 2-port SATA
-> controllers are pretty easy to find, but once you get to 4 ports the
-> cards all seem to include some sort of built in *raid* functionality.
-> Are there any 4+ port PCI-e SATA controllers cards? 
-> 
-> Are there any specific chipsets/brands of motherboards or controller
-> cards that you software raid veterans prefer?
-> 
-> Thank you for your time and any info you are able to give me!
-> 
-> Lyle
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 -- 
-Alberto Alonso                        Global Gate Systems LLC.
-(512) 351-7233                        http://www.ggsys.net
-Hardware, consulting, sysadmin, monitoring and remote backups
-
+Janek Kozicki                                                         |
