@@ -1,43 +1,44 @@
-From: Lyle Schlueter <lyle@xkubed.com>
-Subject: Software raid - controller options
-Date: Tue, 06 Nov 2007 05:20:35 +0300
-Message-ID: <1194315635.17361.20.camel@localhost.localdomain>
+From: Richard Scobie <richard@sauce.co.nz>
+Subject: Re: Software raid - controller options
+Date: Tue, 06 Nov 2007 15:51:16 +1300
+Message-ID: <472FD6A4.5030907@sauce.co.nz>
+References: <1194315635.17361.20.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1194315635.17361.20.camel@localhost.localdomain>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello,
+Lyle Schlueter wrote:
 
-I just started looking into software raid with linux a few weeks ago. I
-am outgrowing the commercial NAS product that I bought a while back.
-I've been learning as much as I can, suscribing to this mailing list,
-reading man pages, experimenting with loopback devices setting up and
-expanding test arrays. 
 
-I have a few questions now that I'm sure someone here will be able to
-enlighten me about.
-First, I want to run a 12 drive raid 6, honestly, would I be better of
-going with true hardware raid like the areca ARC-1231ML vs software
-raid? I would prefer software raid just for the sheer cost savings. But
-what kind of processing power would it take to match or exceed a mid to
-high-level hardware controller?
+> Are there any 4+ port PCI-e SATA controllers cards? 
 
-I haven't seen much, if any, discussion of this, but how many drives are
-people putting into software arrays? And how are you going about it?
-Motherboards seem to max out around 6-8 SATA ports. Do you just add SATA
-controllers? Looking around on newegg (and some googling) 2-port SATA
-controllers are pretty easy to find, but once you get to 4 ports the
-cards all seem to include some sort of built in *raid* functionality.
-Are there any 4+ port PCI-e SATA controllers cards? 
+Hi Lyle,
 
-Are there any specific chipsets/brands of motherboards or controller
-cards that you software raid veterans prefer?
+I've been doing a similar exercise here and have been looking at 
+portmultiplier options using the Silicon Image 3124.
 
-Thank you for your time and any info you are able to give me!
+The other possibility is the Marvell based 8 port "dumb" SATA controller 
+from Supermicro.
 
-Lyle
+http://www.supermicro.com/products/accessories/addon/AoC-SAT2-MV8.cfm
 
+It is PCI-X though, but there are plenty of boards around still with 
+these slots.
+
+My only concern here is the opening comment in the driver:
+
+" 1) Needs a full errata audit for all chipsets.  I implemented most
+   of the errata workarounds found in the Marvell vendor driver, but
+   I distinctly remember a couple workarounds (one related to PCI-X)
+   are still needed."
+
+Enquiries here previously have not found anyone using this card.
+
+Regards,
+
+Richard
