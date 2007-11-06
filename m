@@ -1,114 +1,106 @@
-From: =?ISO-8859-1?Q?BERTRAND_Jo=EBl?= <joel.bertrand@systella.fr>
-Subject: Re: 2.6.23.1: mdadm/raid5 hung/d-state
-Date: Tue, 06 Nov 2007 13:20:45 +0100
-Message-ID: <47305C1D.5070500@systella.fr>
-References: <Pine.LNX.4.64.0711040658180.30831@p34.internal.lan>  <18222.16003.92062.970530@notabene.brown>  <Pine.LNX.4.64.0711041651250.23496@p34.internal.lan>  <e9c3a7c20711051035m78ba90ck68f4fbc10480462a@mail.gmail.com>  <Pine.LNX.4.64.0711051335450.11422@p34.internal.lan> <e9c3a7c20711051619u7054aab9l208b604b9e58fb61@mail.gmail.com> <47303FB8.7000801@systella.fr> <Pine.LNX.4.64.0711060628450.3010@p34.internal.lan> <47305288.8020307@systella.fr> <Pine.LNX.4.64.0711060641210.3010@p34.internal.lan>
+From: Lyle Schlueter <lyle@xkubed.com>
+Subject: Re: Software raid - controller options
+Date: Tue, 06 Nov 2007 22:27:19 +0300
+Message-ID: <1194377239.17361.53.camel@localhost.localdomain>
+References: <1194315635.17361.20.camel@localhost.localdomain>
+	 <1194331297.31760.15.camel@w100>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0711060641210.3010@p34.internal.lan>
+In-Reply-To: <1194331297.31760.15.camel@w100>
 Sender: linux-raid-owner@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: Dan Williams <dan.j.williams@intel.com>, Neil Brown <neilb@suse.de>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+To: Alberto Alonso <alberto@ggsys.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Justin Piszcz wrote:
->=20
->=20
-> On Tue, 6 Nov 2007, BERTRAND Jo=EBl wrote:
->=20
->> Justin Piszcz wrote:
->>>
->>>
->>> On Tue, 6 Nov 2007, BERTRAND Jo=EBl wrote:
->>>
->>>>     Done. Here is obtained ouput :
->>>>
->>>> [ 1265.899068] check 4: state 0x6 toread 0000000000000000 read=20
->>>> 0000000000000000 write fffff800fdd4e360 written 0000000000000000
->>>> [ 1265.941328] check 3: state 0x1 toread 0000000000000000 read=20
->>>> 0000000000000000 write 0000000000000000 written 0000000000000000
->>>> [ 1265.972129] check 2: state 0x1 toread 0000000000000000 read=20
->>>> 0000000000000000 write 0000000000000000 written 0000000000000000
->>>>
->>>>
->>>>     For information, after crash, I have :
->>>>
->>>> Root poulenc:[/sys/block] > cat /proc/mdstat
->>>> Personalities : [raid1] [raid6] [raid5] [raid4]
->>>> md_d0 : active raid5 sdc1[0] sdh1[5] sdg1[4] sdf1[3] sde1[2] sdd1[=
-1]
->>>>      1464725760 blocks level 5, 64k chunk, algorithm 2 [6/6] [UUUU=
-UU]
->>>>
->>>>     Regards,
->>>>
->>>>     JKB
->>>
->>> After the crash it is not 'resyncing' ?
->>
->>     No, it isn't...
->>
->>     JKB
->>
->=20
-> After any crash/unclean shutdown the RAID should resync, if it doesn'=
-t,=20
-> that's not good, I'd suggest running a raid check.
->=20
-> The 'repair' is supposed to clean it, in some cases (md0=3Dswap) it g=
-ets=20
-> dirty again.
->=20
-> Tue May  8 09:19:54 EDT 2007: Executing RAID health check for /dev/md=
-0...
-> Tue May  8 09:19:55 EDT 2007: Executing RAID health check for /dev/md=
-1...
-> Tue May  8 09:19:56 EDT 2007: Executing RAID health check for /dev/md=
-2...
-> Tue May  8 09:19:57 EDT 2007: Executing RAID health check for /dev/md=
-3...
-> Tue May  8 10:09:58 EDT 2007: cat /sys/block/md0/md/mismatch_cnt
-> Tue May  8 10:09:58 EDT 2007: 2176
-> Tue May  8 10:09:58 EDT 2007: cat /sys/block/md1/md/mismatch_cnt
-> Tue May  8 10:09:58 EDT 2007: 0
-> Tue May  8 10:09:58 EDT 2007: cat /sys/block/md2/md/mismatch_cnt
-> Tue May  8 10:09:58 EDT 2007: 0
-> Tue May  8 10:09:58 EDT 2007: cat /sys/block/md3/md/mismatch_cnt
-> Tue May  8 10:09:58 EDT 2007: 0
-> Tue May  8 10:09:58 EDT 2007: The meta-device /dev/md0 has 2176=20
-> mismatched sectors.
-> Tue May  8 10:09:58 EDT 2007: Executing repair on /dev/md0
-> Tue May  8 10:09:59 EDT 2007: The meta-device /dev/md1 has no mismatc=
-hed=20
-> sectors.
-> Tue May  8 10:10:00 EDT 2007: The meta-device /dev/md2 has no mismatc=
-hed=20
-> sectors.
-> Tue May  8 10:10:01 EDT 2007: The meta-device /dev/md3 has no mismatc=
-hed=20
-> sectors.
-> Tue May  8 10:20:02 EDT 2007: All devices are clean...
-> Tue May  8 10:20:02 EDT 2007: cat /sys/block/md0/md/mismatch_cnt
-> Tue May  8 10:20:02 EDT 2007: 2176
-> Tue May  8 10:20:02 EDT 2007: cat /sys/block/md1/md/mismatch_cnt
-> Tue May  8 10:20:02 EDT 2007: 0
-> Tue May  8 10:20:02 EDT 2007: cat /sys/block/md2/md/mismatch_cnt
-> Tue May  8 10:20:02 EDT 2007: 0
-> Tue May  8 10:20:02 EDT 2007: cat /sys/block/md3/md/mismatch_cnt
-> Tue May  8 10:20:02 EDT 2007: 0
+Yes, I must have missed that. I've only been on the mailing list for a
+week or so. I did go through some of the archives though. I keep my
+kernel up to date, usually within a few days of a release. 
 
-	I cannot repair this raid volume. I cannot reboot server without=20
-sending stop+A. init 6 stops at "INIT:". After reboot, md0 is=20
-resynchronized.
+The 3ware and Areca cards sound nice, but I could buy quite a few drives
+for the price of those cards (for a 12 port card). Which is what made me
+start seriously considering software raid. Plus, from what I understand,
+with software raid it is easier to change out server parts than it is
+with hardware raid, i.e. swapping controllers or motherboard, etc.
 
-	Regards,
+After reading a few responses that I have gotten, it sounds like a
+budget based *raid* card from a good vender with good linux support
+might be the best option to get a good number of ports on a PCIe
+interface, and have it work well with linux, all well being cheaper than
+a full blown hardware raid solution.
 
-	JKB
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks for the info and I will have a look at the cards you mentioned.
+
+Lyle
+
+
+On Tue, 2007-11-06 at 00:41 -0600, Alberto Alonso wrote:
+> You've probably missed a discussion on issues I've been having with
+> SATA, software RAID and bad drivers. A clear thing from the responses 
+> I got is that you really need to use a recent kernel, as they may have
+> fixed those problems.
+> 
+> I didn't get clear responses indicating specific cards that are 
+> known to work well when hardrives fail. But if you can deal with
+> a server crashing and then rebooting manually then software RAID
+> is the way to go. I've always been able to get the servers back
+> online even with the problematic drivers.
+> 
+> I am happy with the 3ware cards and do use their hardware RAID to
+> avoid the problems that I've had. With those I've fully tested
+> 16 drive systems with 2 arrays using 2 8-port cards. Others have
+> recommended the Areca line.
+> 
+> As for cheap "dumb" interfaces I am now using the RocketRAID 2220,
+> which gives you 8 ports on a PCI-X. I believe the "built" in RAID
+> on those is just firmware based so you may as well use them to
+> show the drives in normal/legacy mode and use software RAID on
+> top. Keep in mind I haven't fully tested this solution nor have
+> tested for proper functioning when a drive fails.
+> 
+> Another inexpensive card I've used with good results is the Q-stor
+> PCI-X card, but I think this is now obsolete.
+> 
+> Hope this helps,
+> 
+> Alberto
+> 
+> 
+> On Tue, 2007-11-06 at 05:20 +0300, Lyle Schlueter wrote:
+> > Hello,
+> > 
+> > I just started looking into software raid with linux a few weeks ago. I
+> > am outgrowing the commercial NAS product that I bought a while back.
+> > I've been learning as much as I can, suscribing to this mailing list,
+> > reading man pages, experimenting with loopback devices setting up and
+> > expanding test arrays. 
+> > 
+> > I have a few questions now that I'm sure someone here will be able to
+> > enlighten me about.
+> > First, I want to run a 12 drive raid 6, honestly, would I be better of
+> > going with true hardware raid like the areca ARC-1231ML vs software
+> > raid? I would prefer software raid just for the sheer cost savings. But
+> > what kind of processing power would it take to match or exceed a mid to
+> > high-level hardware controller?
+> > 
+> > I haven't seen much, if any, discussion of this, but how many drives are
+> > people putting into software arrays? And how are you going about it?
+> > Motherboards seem to max out around 6-8 SATA ports. Do you just add SATA
+> > controllers? Looking around on newegg (and some googling) 2-port SATA
+> > controllers are pretty easy to find, but once you get to 4 ports the
+> > cards all seem to include some sort of built in *raid* functionality.
+> > Are there any 4+ port PCI-e SATA controllers cards? 
+> > 
+> > Are there any specific chipsets/brands of motherboards or controller
+> > cards that you software raid veterans prefer?
+> > 
+> > Thank you for your time and any info you are able to give me!
+> > 
+> > Lyle
+> > 
+> > -
+> > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
