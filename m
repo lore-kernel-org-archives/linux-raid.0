@@ -1,45 +1,33 @@
 From: Goswin von Brederlow <brederlo@informatik.uni-tuebingen.de>
-Subject: Re: doesm mdadm try to use fastest HDD ?
-Date: Wed, 07 Nov 2007 10:10:36 +0100
-Message-ID: <87k5ouju9f.fsf@informatik.uni-tuebingen.de>
-References: <20071102125205.52c2d115@absurd> <472B21BF.4060201@tmr.com>
+Subject: Was: [RFC PATCH 2.6.23.1] md: add dm-raid1 read balancing
+Date: Wed, 07 Nov 2007 10:15:40 +0100
+Message-ID: <87fxziju0z.fsf@informatik.uni-tuebingen.de>
+References: <1194084522.1353.10.camel@localhost>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <472B21BF.4060201@tmr.com> (Bill Davidsen's message of "Fri, 02
-	Nov 2007 09:10:23 -0400")
+In-Reply-To: <1194084522.1353.10.camel@localhost> (Konstantin Sharlaimov's
+	message of "Sat, 03 Nov 2007 20:08:42 +1000")
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: Janek Kozicki <janek_listy@wp.pl>, linux-raid@vger.kernel.org
+To: konstantin.sharlaimov@gmail.com
+Cc: linux-raid <linux-raid@vger.kernel.org>, Rik van Riel <riel@redhat.com>, "; Ingo Molnar" <mingo@redhat.com>, "; Neil Brown" <neilb@suse.de>
 List-Id: linux-raid.ids
 
-Bill Davidsen <davidsen@tmr.com> writes:
+Konstantin Sharlaimov <konstantin.sharlaimov@gmail.com> writes:
 
-> Janek Kozicki wrote:
->> Hello,
->>
->> My three HHDs have following speeds:
->>
->>   hda - speed 70 MB/sec
->>   hdc - speed 27 MB/sec
->>   sda - speed 60 MB/sec
->>
->> They create a raid1 /dev/md0 and raid5 /dev/md1 arrays. I wanted to
->> ask if mdadm is trying to pick the fastest HDD during operation?
->>
->> Maybe I can "tell" which HDD is preferred?
->>
->
-> If you are doing raid-1 between hdc and some faster drive, you could
-> try using write-mostly and see go that works for you. For raid-5, it's
-> faster to read the data off the slow drive than reconstruct it with
-> multiple reads to multiple othjer faster drives.
+> This patch adds RAID1 read balancing to device mapper. A read operation
+> that is close (in terms of sectors) to a previous read or write goes to 
+> the same mirror.
 
-Won't it naturally balance reads according to the disk speeds if there
-are enough streams reading? I know raid1 prefers a disk that is
-already near the location it wants. But won't it pick the first idle
-one if there is no disk near the location? And the faster disk will be
-idle more often.
+I wonder if there shouldn't be a way to turn this off (or if there
+already is one).
+
+Or more generaly an option to say what is "near". Specifically I would
+like to teach the raid1 layer that I have 2 external raid boxes with a
+16k chunk size. So read/write within a 16k chunk will be the same disk
+but the next 16k are a different disk and "near" doesn't apply
+anymore.
 
 MfG
         Goswin
+
