@@ -1,140 +1,60 @@
 From: Goswin von Brederlow <brederlo@informatik.uni-tuebingen.de>
-Subject: Re: Requesting migrate device options for raid5/6
-Date: Wed, 07 Nov 2007 09:37:54 +0100
-Message-ID: <877ikulacd.fsf@informatik.uni-tuebingen.de>
-References: <87hck9c2qg.fsf@informatik.uni-tuebingen.de>
-	<4729E80B.5010707@tmr.com>
+Subject: Re: Implementing low level timeouts within MD
+Date: Wed, 07 Nov 2007 09:47:27 +0100
+Message-ID: <873avil9wg.fsf@informatik.uni-tuebingen.de>
+References: <1193418753.4771.17.camel@w100>
+	<1193425254.10336.290.camel@firewall.xsintricity.com>
+	<1193521561.7690.14.camel@w100>
+	<1193529329.10336.366.camel@firewall.xsintricity.com>
+	<1193552822.6541.8.camel@w100>
+	<1193678521.10336.486.camel@firewall.xsintricity.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4729E80B.5010707@tmr.com> (Bill Davidsen's message of "Thu, 01
-	Nov 2007 10:51:55 -0400")
+In-Reply-To: <1193678521.10336.486.camel@firewall.xsintricity.com> (Doug
+	Ledford's message of "Mon, 29 Oct 2007 13:22:01 -0400")
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: Goswin von Brederlow <brederlo@informatik.uni-tuebingen.de>, linux-raid@vger.kernel.org
+To: Doug Ledford <dledford@redhat.com>
+Cc: Alberto Alonso <alberto@ggsys.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Bill Davidsen <davidsen@tmr.com> writes:
+Doug Ledford <dledford@redhat.com> writes:
 
-> Goswin von Brederlow wrote:
->> Hi,
->>
->> I would welcome if someone could work on a new feature for raid5/6
->> that would allow replacing a disk in a raid5/6 with a new one without
->> having to degrade the array.
->>
->> Consider the following situation:
->>
->> raid5 md0 : sda sdb sdc
->>
->> Now sda gives a "SMART - failure iminent" warning and you want to
->> repalce it with sdd.
->>
->> % mdadm --fail /dev/md0 /dev/sda
->> % mdadm --remove /dev/md0 /dev/sda
->> % mdadm --add /dev/md0 /dev/sdd
->>
->> Further consider that drive sdb will give an I/O error during resync
->> of the array or fail completly. The array is in degraded mode so you
->> experience data loss.
->>
->>
-> That's a two drive failure, so you will lose data.
->> But that is completly avoidable and some hardware raids support disk
->> migration too. Loosly speaking the kernel should do the following:
->>
->>
-> No, it's not "completly avoidable" because have described sda is ready
-> to fail and sdb as "will give an I/O error" so if both happen at once
-> you will lose data because you have no valid copy. That said, some of
-
-But sda has not failed _yet_. I just suspect it will. As long as it
-doesn't actualy fail it can compensate for sdb failing. The problem is
-that you had to remove sda to replace it despite it still working.
-
-> what you describe below is possible to *reduce* the probability of
-> failure. But if sdb is going to have i/o errors, you really need to
-> replace two drive :-(
-> See below for some thoughts.
->> raid5 md0 : sda sdb sdc
->> -> create internal raid1 or dm-mirror
->> raid1 mdT : sda
->> raid5 md0 : mdT sdb sdc
->> -> hot add sdd to mdT
->> raid1 mdT : sda sdd
->> raid5 md0 : mdT sdb sdc
->> -> resync and then drop sda
->> raid1 mdT : sdd
->> raid5 md0 : mdT sdb sdc
->> -> remove internal mirror
->> raid5 md0 : sdd sdb sdc
->>
->>
->> Thoughts?
->>
+> On Sun, 2007-10-28 at 01:27 -0500, Alberto Alonso wrote:
+>> Even if the default timeout was really long (ie. 1 minute) and then
+>> configurable on a per device (or class) via /proc it would really help.
 >
-> If there were a "migrate" option, it might work something like this:
-> Given a migrate from sda to sdd, as you noted and raid1 between sda
-> and sdd needs to be created, and obviously all chunks of sdd need to
-> be marked as needing rebuild, but in addition sda needs to be made
-> read-only, to minimize the i/o and to prevent any errors which might
-> come from a failed write, like failed sector relocates, etc. Also, if
-> valid data for a chunk is on sdd, no read would be done to sda. I
-> think there's relevant code in the "write-mostly" bits to implement
-> keep i/o to sda to a minimum, no writes and only mandatory reads when
-> no valid chunk is on sdd yet. This is similar to recovery to a spare,
-> save that most data will be valid on the failing drive and doesn't
-> need to be recreated, only unreadable data must be done the slow way.
+> It's a band-aid.  It's working around other bugs in the kernel instead
+> of fixing the real problem.
 
-It would be nice to reduce the load on sda as much as possible if it
-is suspect of failing soon. But that is rather an optimization for the
-case I described. To keep things simple lets assume sda will be just
-fine. So we just setup a raid1 over sda/sdd and do a rebuild. All
-reads can go to sda, all writes go to both disks. If sda gives an
-error then the raid1 can fail completly, if sdd gives an error kick it
-from the raid1. Just like with a normal raid1.
+Checks and balances.
 
-Consider the case of wanting to regulary migrate data from one disk to
-the spare disk so all disks age the same. Say every 3 month you
-migrate a disk to make a different disk the hot-spare. You wouldn't
-want extra considerations for the "to be spare" disk. It is not
-suspected to fail soon.
+Don't trust anyone.
 
-> Care is needed for sda as well, so that if sdd fails during migrate, a
-> last chance attempt to bring sda back to useful content can be made,
-> I'm paranoid that way.
+Also some things are broken in hardware. I have external raid boxes
+connected via scsi but when I just power-down one of the boxes it
+never gives an I/O error or timeout. It seems to just hang. Should I
+start fixing the scsi controler firmware to give errors?
+
+A general timeout in the md layer would fix the problems independent
+of what controler card I use. A real nifty band-aid. Call it a saftey
+blanket.
+
+>> > Generally speaking, most modern drivers will work well.  It's easier to
+>> > maintain a list of known bad drivers than known good drivers.
+>> 
+>> That's what has been so frustrating. The old PATA IDE hardware always
+>> worked and the new stuff is what has crashed.
 >
-> Assuming the migrate works correctly, sda is removed from the array,
-> and the superblock should be marked to reflect that. Now sdd is a part
-> of the array, and assemble, at least using UUID, should work.
->
-> I personally think that a migrate capability would be vastly useful,
-> both for handling failing drives and just moving data to a better
+> In all fairness, the SATA core is still relatively young.  IDE was
+> around for eons, where as Jeff started the SATA code just a few years
+> back.  In that time I know he's had to deal with both software bugs and
+> hardware bugs that would lock a SATA port up solid with no return.  What
+> it sounds like to me is you found some of those.
 
-For actually failing drives (say it developes bad blocks but is mostly
-still intact) it would be usefull if special care is taken. A read
-error on sda should recompute the parity for the block and write it to
-sdd. But I would be fine with kicking out sda if it actually fails. We
-don't have a raid mode in the kernel to cope with a raid1 where one
-mirror is flaky. It would need some new coding in the bitmap for that.
-
-> place. As you point out, the user commands are not *quite* as robust
-> as an internal implementation could be, and are complex enough to
-> invite user error. I certainly always write down steps before doing
-> migrate, and if possible do it with the system booted from a rescue
-> media.
-
-The problem with the userspace commands is that you can't do that
-live. You have to stop the raid to set up the mirroring. Unless you
-always run your raid with device mapper mapped drives just in case you
-want to migrate in the future.
-
-I want this in the kernel so that you can take just any running
-raid5/6 and migrate. No downtime, no device mapper preparations
-beforehand.
+There will always be bugs. I've seen scsi crash on error often enough
+due to totaly broken drivers. You always run into that one odd race
+condition the author never thought about when it really counts [MURPHY].
 
 MfG
         Goswin
-
-PS: Some customers swap out drives in a raid when their waranty
-expires even if they work perfectly. That is another use case.
