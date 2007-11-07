@@ -1,111 +1,140 @@
-From: Jeff Lessem <Jeff@Lessem.org>
-Subject: Re: 2.6.23.1: mdadm/raid5 hung/d-state
-Date: Tue, 06 Nov 2007 22:00:03 -0700
-Message-ID: <47314653.80905@Lessem.org>
-References: <Pine.LNX.4.64.0711040658180.30831@p34.internal.lan>	 <18222.16003.92062.970530@notabene.brown>	 <Pine.LNX.4.64.0711041651250.23496@p34.internal.lan>	 <e9c3a7c20711051035m78ba90ck68f4fbc10480462a@mail.gmail.com>	 <Pine.LNX.4.64.0711051335450.11422@p34.internal.lan>	 <e9c3a7c20711051619u7054aab9l208b604b9e58fb61@mail.gmail.com>	 <47303FB8.7000801@systella.fr> <1194398700.2970.18.camel@dwillia2-linux.ch.intel.com>
+From: Goswin von Brederlow <brederlo@informatik.uni-tuebingen.de>
+Subject: Re: Requesting migrate device options for raid5/6
+Date: Wed, 07 Nov 2007 09:37:54 +0100
+Message-ID: <877ikulacd.fsf@informatik.uni-tuebingen.de>
+References: <87hck9c2qg.fsf@informatik.uni-tuebingen.de>
+	<4729E80B.5010707@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1194398700.2970.18.camel@dwillia2-linux.ch.intel.com>
+In-Reply-To: <4729E80B.5010707@tmr.com> (Bill Davidsen's message of "Thu, 01
+	Nov 2007 10:51:55 -0400")
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: =?UTF-8?B?QkVSVFJBTkQgSm/Dq2w=?= <joel.bertrand@systella.fr>, Justin Piszcz <jpiszcz@lucidpixels.com>, Neil Brown <neilb@suse.de>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: Goswin von Brederlow <brederlo@informatik.uni-tuebingen.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Dan Williams wrote:
- > The following patch, also attached, cleans up cases where the code looks
- > at sh->ops.pending when it should be looking at the consistent
- > stack-based snapshot of the operations flags.
+Bill Davidsen <davidsen@tmr.com> writes:
 
-I tried this patch (against a stock 2.6.23), and it did not work for
-me.  Not only did I/O to the effected RAID5 & XFS partition stop, but
-also I/O to all other disks.  I was not able to capture any debugging
-information, but I should be able to do that tomorrow when I can hook
-a serial console to the machine.
+> Goswin von Brederlow wrote:
+>> Hi,
+>>
+>> I would welcome if someone could work on a new feature for raid5/6
+>> that would allow replacing a disk in a raid5/6 with a new one without
+>> having to degrade the array.
+>>
+>> Consider the following situation:
+>>
+>> raid5 md0 : sda sdb sdc
+>>
+>> Now sda gives a "SMART - failure iminent" warning and you want to
+>> repalce it with sdd.
+>>
+>> % mdadm --fail /dev/md0 /dev/sda
+>> % mdadm --remove /dev/md0 /dev/sda
+>> % mdadm --add /dev/md0 /dev/sdd
+>>
+>> Further consider that drive sdb will give an I/O error during resync
+>> of the array or fail completly. The array is in degraded mode so you
+>> experience data loss.
+>>
+>>
+> That's a two drive failure, so you will lose data.
+>> But that is completly avoidable and some hardware raids support disk
+>> migration too. Loosly speaking the kernel should do the following:
+>>
+>>
+> No, it's not "completly avoidable" because have described sda is ready
+> to fail and sdb as "will give an I/O error" so if both happen at once
+> you will lose data because you have no valid copy. That said, some of
 
-I'm not sure if my problem is identical to these others, as mine only
-seems to manifest with RAID5+XFS.  The RAID rebuilds with no problem,
-and I've not had any problems with RAID5+ext3.
+But sda has not failed _yet_. I just suspect it will. As long as it
+doesn't actualy fail it can compensate for sdb failing. The problem is
+that you had to remove sda to replace it despite it still working.
 
- >
- >
- > ---
- >
- >  drivers/md/raid5.c |   16 +++++++++-------
- >  1 files changed, 9 insertions(+), 7 deletions(-)
- >
- > diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
- > index 496b9a3..e1a3942 100644
- > --- a/drivers/md/raid5.c
- > +++ b/drivers/md/raid5.c
- > @@ -693,7 +693,8 @@ ops_run_prexor(struct stripe_head *sh, struct 
-dma_async_tx_descriptor *tx)
- >  }
- >
- >  static struct dma_async_tx_descriptor *
- > -ops_run_biodrain(struct stripe_head *sh, struct dma_async_tx_descriptor *tx)
- > +ops_run_biodrain(struct stripe_head *sh, struct dma_async_tx_descriptor *tx,
- > +		 unsigned long pending)
- >  {
- >  	int disks = sh->disks;
- >  	int pd_idx = sh->pd_idx, i;
- > @@ -701,7 +702,7 @@ ops_run_biodrain(struct stripe_head *sh, struct 
-dma_async_tx_descriptor *tx)
- >  	/* check if prexor is active which means only process blocks
- >  	 * that are part of a read-modify-write (Wantprexor)
- >  	 */
- > -	int prexor = test_bit(STRIPE_OP_PREXOR, &sh->ops.pending);
- > +	int prexor = test_bit(STRIPE_OP_PREXOR, &pending);
- >
- >  	pr_debug("%s: stripe %llu\n", __FUNCTION__,
- >  		(unsigned long long)sh->sector);
- > @@ -778,7 +779,8 @@ static void ops_complete_write(void *stripe_head_ref)
- >  }
- >
- >  static void
- > -ops_run_postxor(struct stripe_head *sh, struct dma_async_tx_descriptor *tx)
- > +ops_run_postxor(struct stripe_head *sh, struct dma_async_tx_descriptor *tx,
- > +		unsigned long pending)
- >  {
- >  	/* kernel stack size limits the total number of disks */
- >  	int disks = sh->disks;
- > @@ -786,7 +788,7 @@ ops_run_postxor(struct stripe_head *sh, struct 
-dma_async_tx_descriptor *tx)
- >
- >  	int count = 0, pd_idx = sh->pd_idx, i;
- >  	struct page *xor_dest;
- > -	int prexor = test_bit(STRIPE_OP_PREXOR, &sh->ops.pending);
- > +	int prexor = test_bit(STRIPE_OP_PREXOR, &pending);
- >  	unsigned long flags;
- >  	dma_async_tx_callback callback;
- >
- > @@ -813,7 +815,7 @@ ops_run_postxor(struct stripe_head *sh, struct 
-dma_async_tx_descriptor *tx)
- >  	}
- >
- >  	/* check whether this postxor is part of a write */
- > -	callback = test_bit(STRIPE_OP_BIODRAIN, &sh->ops.pending) ?
- > +	callback = test_bit(STRIPE_OP_BIODRAIN, &pending) ?
- >  		ops_complete_write : ops_complete_postxor;
- >
- >  	/* 1/ if we prexor'd then the dest is reused as a source
- > @@ -901,12 +903,12 @@ static void raid5_run_ops(struct stripe_head *sh, 
-unsigned long pending)
- >  		tx = ops_run_prexor(sh, tx);
- >
- >  	if (test_bit(STRIPE_OP_BIODRAIN, &pending)) {
- > -		tx = ops_run_biodrain(sh, tx);
- > +		tx = ops_run_biodrain(sh, tx, pending);
- >  		overlap_clear++;
- >  	}
- >
- >  	if (test_bit(STRIPE_OP_POSTXOR, &pending))
- > -		ops_run_postxor(sh, tx);
- > +		ops_run_postxor(sh, tx, pending);
- >
- >  	if (test_bit(STRIPE_OP_CHECK, &pending))
- >  		ops_run_check(sh);
- >
- >
+> what you describe below is possible to *reduce* the probability of
+> failure. But if sdb is going to have i/o errors, you really need to
+> replace two drive :-(
+> See below for some thoughts.
+>> raid5 md0 : sda sdb sdc
+>> -> create internal raid1 or dm-mirror
+>> raid1 mdT : sda
+>> raid5 md0 : mdT sdb sdc
+>> -> hot add sdd to mdT
+>> raid1 mdT : sda sdd
+>> raid5 md0 : mdT sdb sdc
+>> -> resync and then drop sda
+>> raid1 mdT : sdd
+>> raid5 md0 : mdT sdb sdc
+>> -> remove internal mirror
+>> raid5 md0 : sdd sdb sdc
+>>
+>>
+>> Thoughts?
+>>
+>
+> If there were a "migrate" option, it might work something like this:
+> Given a migrate from sda to sdd, as you noted and raid1 between sda
+> and sdd needs to be created, and obviously all chunks of sdd need to
+> be marked as needing rebuild, but in addition sda needs to be made
+> read-only, to minimize the i/o and to prevent any errors which might
+> come from a failed write, like failed sector relocates, etc. Also, if
+> valid data for a chunk is on sdd, no read would be done to sda. I
+> think there's relevant code in the "write-mostly" bits to implement
+> keep i/o to sda to a minimum, no writes and only mandatory reads when
+> no valid chunk is on sdd yet. This is similar to recovery to a spare,
+> save that most data will be valid on the failing drive and doesn't
+> need to be recreated, only unreadable data must be done the slow way.
 
+It would be nice to reduce the load on sda as much as possible if it
+is suspect of failing soon. But that is rather an optimization for the
+case I described. To keep things simple lets assume sda will be just
+fine. So we just setup a raid1 over sda/sdd and do a rebuild. All
+reads can go to sda, all writes go to both disks. If sda gives an
+error then the raid1 can fail completly, if sdd gives an error kick it
+from the raid1. Just like with a normal raid1.
+
+Consider the case of wanting to regulary migrate data from one disk to
+the spare disk so all disks age the same. Say every 3 month you
+migrate a disk to make a different disk the hot-spare. You wouldn't
+want extra considerations for the "to be spare" disk. It is not
+suspected to fail soon.
+
+> Care is needed for sda as well, so that if sdd fails during migrate, a
+> last chance attempt to bring sda back to useful content can be made,
+> I'm paranoid that way.
+>
+> Assuming the migrate works correctly, sda is removed from the array,
+> and the superblock should be marked to reflect that. Now sdd is a part
+> of the array, and assemble, at least using UUID, should work.
+>
+> I personally think that a migrate capability would be vastly useful,
+> both for handling failing drives and just moving data to a better
+
+For actually failing drives (say it developes bad blocks but is mostly
+still intact) it would be usefull if special care is taken. A read
+error on sda should recompute the parity for the block and write it to
+sdd. But I would be fine with kicking out sda if it actually fails. We
+don't have a raid mode in the kernel to cope with a raid1 where one
+mirror is flaky. It would need some new coding in the bitmap for that.
+
+> place. As you point out, the user commands are not *quite* as robust
+> as an internal implementation could be, and are complex enough to
+> invite user error. I certainly always write down steps before doing
+> migrate, and if possible do it with the system booted from a rescue
+> media.
+
+The problem with the userspace commands is that you can't do that
+live. You have to stop the raid to set up the mirroring. Unless you
+always run your raid with device mapper mapped drives just in case you
+want to migrate in the future.
+
+I want this in the kernel so that you can take just any running
+raid5/6 and migrate. No downtime, no device mapper preparations
+beforehand.
+
+MfG
+        Goswin
+
+PS: Some customers swap out drives in a raid when their waranty
+expires even if they work perfectly. That is another use case.
