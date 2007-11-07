@@ -1,30 +1,24 @@
-From: Chris Eddington <chrise@synplicity.com>
+From: chrise@synplicity.com
 Subject: Raid5 assemble after dual sata port failure
-Date: Wed, 07 Nov 2007 12:28:15 -0800
-Message-ID: <47321FDF.8060207@synplicity.com>
+Date: Wed, 7 Nov 2007 15:23:48 -0500
+Message-ID: <30145090.1194467028512.JavaMail.root@wombat.diezmil.com>
+Reply-To: chrise@synplicity.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-
 Hi,
 
-While on vacation I had one SATA port/cable fail, and then four hours 
-later a second one fail.  After fixing/moving the SATA ports, I can 
-reboot and all drives seem to be OK now, but when assembled it won't 
-recognize the filesystem.  After futzing around with assemble options 
-like --force and disk order I couldn't get it to work.
+While on vacation I had one SATA port/cable fail, and then four hours later a second one fail.  After fixing/moving the SATA ports, I can reboot and all drives seem to be OK now, but when assembled it won't recognize the filesystem.  After futzing around with assemble options like --force and disk order I couldn't get it to work.
 
-Appreciate if someone can provide pointers on how to proceed.  Here's 
-the latest state of the array.  My log shows that /dev/sdc1 failed first 
-and I'm using mdadm v2.5.6 on Ubuntu Linux.
+Appreciate if someone can provide pointers on how to proceed.  Here's the latest state of the array.  My log shows that /dev/sdc1 failed first and I'm using mdadm v2.5.6 on Ubuntu Linux.
 
 Thanks much,
-Chris
+Chris 
 
 mdadm -Av /dev/md0
 mdadm: looking for devices for /dev/md0
@@ -165,3 +159,8 @@ this     2     254        2        2      active sync   /dev/mapper/sdd1
    3     3       0        0        3      faulty removed
 
 
+
+
+--
+This message was sent on behalf of chrise@synplicity.com at openSubscriber.com
+http://www.opensubscriber.com/messages/linux-raid@vger.kernel.org/topic.html
