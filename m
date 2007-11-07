@@ -1,73 +1,86 @@
-From: =?UTF-8?B?QkVSVFJBTkQgSm/Dq2w=?= <joel.bertrand@systella.fr>
+From: Chuck Ebbert <cebbert@redhat.com>
 Subject: Re: 2.6.23.1: mdadm/raid5 hung/d-state
-Date: Wed, 07 Nov 2007 12:20:25 +0100
-Message-ID: <47319F79.8060002@systella.fr>
-References: <Pine.LNX.4.64.0711040658180.30831@p34.internal.lan>	 <18222.16003.92062.970530@notabene.brown>	 <Pine.LNX.4.64.0711041651250.23496@p34.internal.lan>	 <e9c3a7c20711051035m78ba90ck68f4fbc10480462a@mail.gmail.com>	 <Pine.LNX.4.64.0711051335450.11422@p34.internal.lan>	 <e9c3a7c20711051619u7054aab9l208b604b9e58fb61@mail.gmail.com>	 <47303FB8.7000801@systella.fr> <1194398700.2970.18.camel@dwillia2-linux.ch.intel.com>
+Date: Wed, 07 Nov 2007 11:39:07 -0500
+Message-ID: <4731EA2B.5000806@redhat.com>
+References: <Pine.LNX.4.64.0711040658180.30831@p34.internal.lan> <18222.16003.92062.970530@notabene.brown> <472ED613.8050101@systella.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1194398700.2970.18.camel@dwillia2-linux.ch.intel.com>
+In-Reply-To: <472ED613.8050101@systella.fr>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, Neil Brown <neilb@suse.de>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, Jeff@lessem.org
+To: =?ISO-8859-1?Q?BERTRAND_Jo=EBl?= <joel.bertrand@systella.fr>
+Cc: Neil Brown <neilb@suse.de>, Justin Piszcz <jpiszcz@lucidpixels.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Dan Williams wrote:
-> On Tue, 2007-11-06 at 03:19 -0700, BERTRAND Jo=C3=ABl wrote:
->>         Done. Here is obtained ouput :
+On 11/05/2007 03:36 AM, BERTRAND Jo=EBl wrote:
+> Neil Brown wrote:
+>> On Sunday November 4, jpiszcz@lucidpixels.com wrote:
+>>> # ps auxww | grep D
+>>> USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME CO=
+MMAND
+>>> root       273  0.0  0.0      0     0 ?        D    Oct21  14:40
+>>> [pdflush]
+>>> root       274  0.0  0.0      0     0 ?        D    Oct21  13:00
+>>> [pdflush]
+>>>
+>>> After several days/weeks, this is the second time this has happened=
+,
+>>> while doing regular file I/O (decompressing a file), everything on
+>>> the device went into D-state.
+>>
+>> At a guess (I haven't looked closely) I'd say it is the bug that was
+>> meant to be fixed by
+>>
+>> commit 4ae3f847e49e3787eca91bced31f8fd328d50496
+>>
+>> except that patch applied badly and needed to be fixed with
+>> the following patch (not in git yet).
+>> These have been sent to stable@ and should be in the queue for 2.6.2=
+3.2
 >=20
-> Much appreciated.
->> [ 1260.969314] handling stripe 7629696, state=3D0x14 cnt=3D1, pd_idx=
-=3D2 ops=3D0:0:0
->> [ 1260.980606] check 5: state 0x6 toread 0000000000000000 read 00000=
-00000000000 write fffff800ffcffcc0 written 0000000000000000
->> [ 1260.994808] check 4: state 0x6 toread 0000000000000000 read 00000=
-00000000000 write fffff800fdd4e360 written 0000000000000000
->> [ 1261.009325] check 3: state 0x1 toread 0000000000000000 read 00000=
-00000000000 write 0000000000000000 written 0000000000000000
->> [ 1261.244478] check 2: state 0x1 toread 0000000000000000 read 00000=
-00000000000 write 0000000000000000 written 0000000000000000
->> [ 1261.270821] check 1: state 0x6 toread 0000000000000000 read 00000=
-00000000000 write fffff800ff517e40 written 0000000000000000
->> [ 1261.312320] check 0: state 0x6 toread 0000000000000000 read 00000=
-00000000000 write fffff800fd4cae60 written 0000000000000000
->> [ 1261.361030] locked=3D4 uptodate=3D2 to_read=3D0 to_write=3D4 fail=
-ed=3D0 failed_num=3D0
->> [ 1261.443120] for sector 7629696, rmw=3D0 rcw=3D0
-> [..]
+>     My linux-2.6.23/drivers/md/raid5.c contains your patch for a long
+> time :
 >=20
-> This looks as if the blocks were prepared to be written out, but were
-> never handled in ops_run_biodrain(), so they remain locked forever.  =
-The
-> operations flags are all clear which means handle_stripe thinks nothi=
-ng
-> else needs to be done.
+> ...
+>         spin_lock(&sh->lock);
+>         clear_bit(STRIPE_HANDLE, &sh->state);
+>         clear_bit(STRIPE_DELAYED, &sh->state);
 >=20
-> The following patch, also attached, cleans up cases where the code lo=
-oks
-> at sh->ops.pending when it should be looking at the consistent
-> stack-based snapshot of the operations flags.
+>         s.syncing =3D test_bit(STRIPE_SYNCING, &sh->state);
+>         s.expanding =3D test_bit(STRIPE_EXPAND_SOURCE, &sh->state);
+>         s.expanded =3D test_bit(STRIPE_EXPAND_READY, &sh->state);
+>         /* Now to look around and see what can be done */
+>=20
+>         /* clean-up completed biofill operations */
+>         if (test_bit(STRIPE_OP_BIOFILL, &sh->ops.complete)) {
+>                 clear_bit(STRIPE_OP_BIOFILL, &sh->ops.pending);
+>                 clear_bit(STRIPE_OP_BIOFILL, &sh->ops.ack);
+>                 clear_bit(STRIPE_OP_BIOFILL, &sh->ops.complete);
+>         }
+>=20
+>         rcu_read_lock();
+>         for (i=3Ddisks; i--; ) {
+>                 mdk_rdev_t *rdev;
+>                 struct r5dev *dev =3D &sh->dev[i];
+> ...
+>=20
+> but it doesn't fix this bug.
+>=20
 
-	Thanks for this patch. I'm testing it for three hours. I'm rebuilding =
-a=20
-1.5 TB raid1 array over iSCSI without any trouble.
+Did that chunk starting with "clean-up completed biofill operations" en=
+d
+up where it belongs? The patch with the big context moves it to a diffe=
+rent
+place from where the original one puts it when applied to 2.6.23...
 
-gershwin:[/usr/scripts] > cat /proc/mdstat
-Personalities : [raid1] [raid6] [raid5] [raid4]
-md7 : active raid1 sdi1[2] md_d0p1[0]
-       1464725632 blocks [2/1] [U_]
-       [=3D>...................]  recovery =3D  6.7% (99484736/14647256=
-32)=20
-finish=3D1450.9min speed=3D15679K/sec
+Lately I've seen several problems where the context isn't enough to mak=
+e
+a patch apply properly when some offsets have changed. In some cases a
+patch won't apply at all because two nearly-identical areas are being
+changed and the first chunk gets applied where the second one should,
+leaving nowhere for the second chunk to apply.
 
-Without your patch, I never reached 1%... I hope it fix this bug and I=20
-shall come back when my raid1 volume shall be resynchronized.
-
-	Regards,
-
-	JKB
 -
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
