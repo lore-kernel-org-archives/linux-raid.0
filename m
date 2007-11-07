@@ -1,38 +1,167 @@
-From: Richard Scobie <richard@sauce.co.nz>
-Subject: Re: telling mdadm to use spare drive.
-Date: Thu, 08 Nov 2007 08:13:19 +1300
-Message-ID: <47320E4F.3070308@sauce.co.nz>
-References: <20071104170502.6db7fcb1@absurd>	<87bqa6jtxc.fsf@informatik.uni-tuebingen.de> <20071107182602.61162e00@absurd>
+From: Chris Eddington <chrise@synplicity.com>
+Subject: Raid5 assemble after dual sata port failure
+Date: Wed, 07 Nov 2007 12:28:15 -0800
+Message-ID: <47321FDF.8060207@synplicity.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20071107182602.61162e00@absurd>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Janek Kozicki wrote:
-> Goswin von Brederlow said:     (by the date of Wed, 07 Nov 2007 10:17:51 +0100)
-> 
-> 
->>Strange. That is exactly how I always do it and it always just worked.
->>mdadm should start syncing on any spare as soon as a disk fails or you
->>add the spare to a degraded array afaik. No special "start now"
->>interaction needed.
-> 
-> 
-> Thanks for your confirmation. I cannot explain this behaviour - I
-> just started using mdadm. If anybody here wants, I can remove the
-> drive and add this again, to see if I can duplicate this "bug" (?).
-> If so - then tell me what debug information you do need and I will
-> give it to you.
 
-What kernel and RAID level is this?
+Hi,
 
-If it's RAID 1, I seem to recall there was a relatively recently fixed 
-bug for this.
+While on vacation I had one SATA port/cable fail, and then four hours 
+later a second one fail.  After fixing/moving the SATA ports, I can 
+reboot and all drives seem to be OK now, but when assembled it won't 
+recognize the filesystem.  After futzing around with assemble options 
+like --force and disk order I couldn't get it to work.
 
-Regards,
+Appreciate if someone can provide pointers on how to proceed.  Here's 
+the latest state of the array.  My log shows that /dev/sdc1 failed first 
+and I'm using mdadm v2.5.6 on Ubuntu Linux.
 
-Richard
+Thanks much,
+Chris
+
+mdadm -Av /dev/md0
+mdadm: looking for devices for /dev/md0
+mdadm: /dev/sda1 is identified as a member of /dev/md0, slot 0.
+mdadm: /dev/sdb1 is identified as a member of /dev/md0, slot 1.
+mdadm: /dev/sdc1 is identified as a member of /dev/md0, slot 3.
+mdadm: /dev/sdd1 is identified as a member of /dev/md0, slot 2.
+mdadm: added /dev/sdb1 to /dev/md0 as 1
+mdadm: added /dev/sdd1 to /dev/md0 as 2
+mdadm: added /dev/sdc1 to /dev/md0 as 3
+mdadm: added /dev/sda1 to /dev/md0 as 0
+mdadm: /dev/md0 has been started with 3 drives (out of 4).
+
+  mdadm -E /dev/sd[a-d]1
+/dev/sda1:
+          Magic : a92b4efc
+        Version : 00.90.03
+           UUID : bc74c21c:9655c1c6:ba6cc37a:df870496
+  Creation Time : Sun Nov  5 14:25:01 2006
+     Raid Level : raid5
+    Device Size : 488383936 (465.76 GiB 500.11 GB)
+     Array Size : 1465151808 (1397.28 GiB 1500.32 GB)
+   Raid Devices : 4
+  Total Devices : 3
+Preferred Minor : 0
+
+    Update Time : Wed Nov  7 12:02:50 2007
+          State : clean
+ Active Devices : 3
+Working Devices : 3
+ Failed Devices : 1
+  Spare Devices : 0
+       Checksum : 401c33e0 - correct
+         Events : 0.4880374
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+      Number   Major   Minor   RaidDevice State
+this     0     254        0        0      active sync   /dev/mapper/sda1
+
+   0     0     254        0        0      active sync   /dev/mapper/sda1
+   1     1     254        1        1      active sync   /dev/mapper/sdb1
+   2     2     254        2        2      active sync   /dev/mapper/sdd1
+   3     3       0        0        3      faulty removed
+/dev/sdb1:
+          Magic : a92b4efc
+        Version : 00.90.03
+           UUID : bc74c21c:9655c1c6:ba6cc37a:df870496
+  Creation Time : Sun Nov  5 14:25:01 2006
+     Raid Level : raid5
+    Device Size : 488383936 (465.76 GiB 500.11 GB)
+     Array Size : 1465151808 (1397.28 GiB 1500.32 GB)
+   Raid Devices : 4
+  Total Devices : 3
+Preferred Minor : 0
+
+    Update Time : Wed Nov  7 12:02:50 2007
+          State : clean
+ Active Devices : 3
+Working Devices : 3
+ Failed Devices : 1
+  Spare Devices : 0
+       Checksum : 401c33e3 - correct
+         Events : 0.4880374
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+      Number   Major   Minor   RaidDevice State
+this     1     254        1        1      active sync   /dev/mapper/sdb1
+
+   0     0     254        0        0      active sync   /dev/mapper/sda1
+   1     1     254        1        1      active sync   /dev/mapper/sdb1
+   2     2     254        2        2      active sync   /dev/mapper/sdd1
+   3     3       0        0        3      faulty removed
+/dev/sdc1:
+          Magic : a92b4efc
+        Version : 00.90.03
+           UUID : bc74c21c:9655c1c6:ba6cc37a:df870496
+  Creation Time : Sun Nov  5 14:25:01 2006
+     Raid Level : raid5
+    Device Size : 488383936 (465.76 GiB 500.11 GB)
+     Array Size : 1465151808 (1397.28 GiB 1500.32 GB)
+   Raid Devices : 4
+  Total Devices : 4
+Preferred Minor : 0
+
+    Update Time : Mon Nov  5 13:31:00 2007
+          State : active
+ Active Devices : 4
+Working Devices : 4
+ Failed Devices : 0
+  Spare Devices : 0
+       Checksum : 3fced5a3 - correct
+         Events : 0.4857597
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+      Number   Major   Minor   RaidDevice State
+this     3     254        3        3      active sync   /dev/mapper/sdc1
+
+   0     0     254        0        0      active sync   /dev/mapper/sda1
+   1     1     254        1        1      active sync   /dev/mapper/sdb1
+   2     2     254        2        2      active sync   /dev/mapper/sdd1
+   3     3     254        3        3      active sync   /dev/mapper/sdc1
+/dev/sdd1:
+          Magic : a92b4efc
+        Version : 00.90.03
+           UUID : bc74c21c:9655c1c6:ba6cc37a:df870496
+  Creation Time : Sun Nov  5 14:25:01 2006
+     Raid Level : raid5
+    Device Size : 488383936 (465.76 GiB 500.11 GB)
+     Array Size : 1465151808 (1397.28 GiB 1500.32 GB)
+   Raid Devices : 4
+  Total Devices : 3
+Preferred Minor : 0
+
+    Update Time : Wed Nov  7 12:02:50 2007
+          State : clean
+ Active Devices : 3
+Working Devices : 3
+ Failed Devices : 1
+  Spare Devices : 0
+       Checksum : 401c33e6 - correct
+         Events : 0.4880374
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+      Number   Major   Minor   RaidDevice State
+this     2     254        2        2      active sync   /dev/mapper/sdd1
+
+   0     0     254        0        0      active sync   /dev/mapper/sda1
+   1     1     254        1        1      active sync   /dev/mapper/sdb1
+   2     2     254        2        2      active sync   /dev/mapper/sdd1
+   3     3       0        0        3      faulty removed
+
+
