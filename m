@@ -1,69 +1,42 @@
 From: Goswin von Brederlow <brederlo@informatik.uni-tuebingen.de>
-Subject: Re: Strange CPU occupation...
-Date: Wed, 07 Nov 2007 09:55:36 +0100
-Message-ID: <87wssujuyf.fsf@informatik.uni-tuebingen.de>
-References: <4728773C.7010802@systella.fr>
+Subject: Re: stride / stripe alignment on LVM ?
+Date: Wed, 07 Nov 2007 10:00:39 +0100
+Message-ID: <87sl3ijuq0.fsf@informatik.uni-tuebingen.de>
+References: <20071101101037.63b523f8@absurd>
+	<18218.24819.569744.141171@notabene.brown> <472B1F91.8000208@tmr.com>
+	<20071102231605.7add5154@absurd>
+	<1194115248.25553.59.camel@firewall.xsintricity.com>
+	<20071103212118.5fd4c770@absurd>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4728773C.7010802@systella.fr> (BERTRAND Joel's message of "Wed,
-	31 Oct 2007 13:38:20 +0100")
+In-Reply-To: <20071103212118.5fd4c770@absurd> (Janek Kozicki's message of
+	"Sat, 3 Nov 2007 21:21:18 +0100")
 Sender: linux-raid-owner@vger.kernel.org
-To: BERTRAND Joel <joel.bertrand@systella.fr>
-Cc: sparclinux@vger.kernel.org, linux-raid@vger.kernel.org, iscsitarget-devel@lists.sourceforge.net
+To: Janek Kozicki <janek_listy@wp.pl>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-BERTRAND Jo=EBl <joel.bertrand@systella.fr> writes:
+Janek Kozicki <janek_listy@wp.pl> writes:
 
->   PID USER      PR  NI  VIRT  RES  SHR S %CPU %MEM    TIME+  COMMAND
+> Doug Ledford said:     (by the date of Sat, 03 Nov 2007 14:40:48 -0400)
 >
->  5426 root      15  -5     0    0    0 R  100  0.0  46:32.54
-> md_d0_raid5
-
-=46irst: You can tune the stripe cache.
-
-Secondly: You might want the raid speedup patches that implement
-prioritized queueing. That reduces the number of incomplete stripes
-written to disk and thus speeds up things a lot.
-
-Thirdly: If you have multiple cores then you probably want patches to
-multithread the raid5 code. With just one thread it is ultimately cpu
-bound and just won't get faster. XORing and maintainance overhead
-seems to be awfully cpu intensive.
-
-=46ourth: Learn to live with it. Software Raid5/6 is expensive.
-
-> and some process are in D state :
-> Root gershwin:[/etc] > ps auwx | grep D
-> USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMM=
-AND
-> root       270  0.0  0.0      0     0 ?        D    Oct27   1:17 [pdf=
-lush]
-> root      3676  0.9  0.0      0     0 ?        D    Oct27  56:03 [nfs=
-d]
-> root      5435  0.0  0.0      0     0 ?        D<   Oct27   3:16 [md7=
-_raid1]
-> root      5438  0.0  0.0      0     0 ?        D<   Oct27   1:01 [kjo=
-urnald]
-> root      5440  0.0  0.0      0     0 ?        D<   Oct27   0:33 [loo=
-p0]
-> root      5441  0.0  0.0      0     0 ?        D<   Oct27   0:05 [kjo=
-urnald]
-> root     16442  0.0  0.0  20032  1208 pts/2    D+   13:23   0:00 ifto=
-p
-> -i eth2
+>> so you really only need to align the
+>> lvm superblock so that data starts at 128K offset into the raid array.
 >
-> 	Why md7_raid is in D state ? Same question about iftop ?
+> Sorry, I thought that it will be easier to figure this out
+> experimentally - put LVM here or there, write 128k of data to the
+> disc (inside LVM partition), then see (with hexedit) if this data is
+> really split across several discs or not.
+>
+> In fact I even managed to find where LVM superblock starts inside
+> RAID, the problem for me was that I wasn't sure where it ends, and
+> where the actual data, starts, and *THAT* data has to be aligned on
+> 128K offset. Now I know that I should simply look more carefully at
+> LVM manuals, to see exactly what is the size of LVM superblock.
 
-I would say it is just waiting for the underlying devices to finish
-some I/O request. And iftop will be in some kernel call waiting for
-something or other.
+I would just check with "dmsetup table dev" to which byte offsets the
+logical volume gets mapped to.
 
 MfG
         Goswin
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
