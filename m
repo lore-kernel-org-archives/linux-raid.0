@@ -1,51 +1,46 @@
-From: "Dan Williams" <dan.j.williams@intel.com>
-Subject: Re: 2.6.23.1: mdadm/raid5 hung/d-state
-Date: Thu, 8 Nov 2007 11:02:36 -0700
-Message-ID: <e9c3a7c20711081002k5c3be41doa700afce7c1a7a6e@mail.gmail.com>
-References: <Pine.LNX.4.64.0711040658180.30831@p34.internal.lan>
-	 <18222.16003.92062.970530@notabene.brown>
-	 <Pine.LNX.4.64.0711041651250.23496@p34.internal.lan>
-	 <e9c3a7c20711051035m78ba90ck68f4fbc10480462a@mail.gmail.com>
-	 <Pine.LNX.4.64.0711051335450.11422@p34.internal.lan>
-	 <e9c3a7c20711051619u7054aab9l208b604b9e58fb61@mail.gmail.com>
-	 <47303FB8.7000801@systella.fr>
-	 <1194398700.2970.18.camel@dwillia2-linux.ch.intel.com>
-	 <47314653.80905@Lessem.org> <47334B46.7000809@tmr.com>
+From: Goswin von Brederlow <brederlo@informatik.uni-tuebingen.de>
+Subject: Re: Was: [RFC PATCH 2.6.23.1] md: add dm-raid1 read balancing
+Date: Thu, 08 Nov 2007 20:43:35 +0100
+Message-ID: <87mytoseu0.fsf@informatik.uni-tuebingen.de>
+References: <1194084522.1353.10.camel@localhost>
+	<87fxziju0z.fsf@informatik.uni-tuebingen.de>
+	<1194520008.17369.19.camel@localhost>
+	<87prykaeh6.fsf@informatik.uni-tuebingen.de>
+	<20071108120625.7e0572b1@bree.surriel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <47334B46.7000809@tmr.com>
-Content-Disposition: inline
+In-Reply-To: <20071108120625.7e0572b1@bree.surriel.com> (Rik van Riel's
+	message of "Thu, 8 Nov 2007 12:06:25 -0500")
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: Jeff Lessem <Jeff@lessem.org>, =?ISO-8859-1?Q?BERTRAND_Jo=EBl?= <joel.bertrand@systella.fr>, Justin Piszcz <jpiszcz@lucidpixels.com>, Neil Brown <neilb@suse.de>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+To: Rik van Riel <riel@redhat.com>
+Cc: Goswin von Brederlow <brederlo@informatik.uni-tuebingen.de>, konstantin.sharlaimov@gmail.com, linux-raid <linux-raid@vger.kernel.org>, "; Ingo Molnar" <mingo@redhat.com>, "; Neil Brown" <neilb@suse.de>
 List-Id: linux-raid.ids
 
-On 11/8/07, Bill Davidsen <davidsen@tmr.com> wrote:
-> Jeff Lessem wrote:
-> > Dan Williams wrote:
-> > > The following patch, also attached, cleans up cases where the code
-> > looks
-> > > at sh->ops.pending when it should be looking at the consistent
-> > > stack-based snapshot of the operations flags.
-> >
-> > I tried this patch (against a stock 2.6.23), and it did not work for
-> > me.  Not only did I/O to the effected RAID5 & XFS partition stop, but
-> > also I/O to all other disks.  I was not able to capture any debugging
-> > information, but I should be able to do that tomorrow when I can hook
-> > a serial console to the machine.
+Rik van Riel <riel@redhat.com> writes:
+
+> On Thu, 08 Nov 2007 17:28:37 +0100
+> Goswin von Brederlow <brederlo@informatik.uni-tuebingen.de> wrote:
 >
-> That can't be good! This is worrisome because Joel is giddy with joy
-> because it fixes his iSCSI problems. I was going to try it with nbd, but
-> perhaps I'll wait a week or so and see if others have more information.
-> Applying patches before a holiday weekend is a good way to avoid time
-> off. :-(
+>> Maybe you need more parameter:
+>
+> Generally a bad idea, unless you can come up with sane defaults (which
+> do not need tuning 99% of the time) or you can derive these parameters
+> automatically from the RAID configuration (unlikely with RAID 1?).
+>
+> Before turning Konstantin's nice and simple code into something complex,
+> it would be good to see benchmark results show that the complexity is
+> actually needed.
 
-We need to see more information on the failure that Jeff is seeing,
-and whether it goes away with the two known patches applied.  He
-applied this most recent patch against stock 2.6.23 which means that
-the platform was still open to the first biofill flags issue.
+A default of chunk=1, stripe=1, rotate=0 is what you have now. SO
+there is no regression. It is also the right choice for any device
+that isn't a (hardware) raid. I don't think 99% of all users have
+hardware raid.
 
---
-Dan
+For stacked software raids the raid1 modul should detect the
+underlying raid and default to values reflecting the raid disk below
+(assuming the mirrors have reasonable equal layouts). That would
+truely only leave hardware raids to be manually tuned.
+
+MfG
+        Goswin
