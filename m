@@ -1,121 +1,140 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: 2.6.23.1: mdadm/raid5 hung/d-state
-Date: Thu, 8 Nov 2007 07:44:36 -0500 (EST)
-Message-ID: <Pine.LNX.4.64.0711080744070.575@p34.internal.lan>
-References: <Pine.LNX.4.64.0711040658180.30831@p34.internal.lan>
- <18222.16003.92062.970530@notabene.brown> <472ED613.8050101@systella.fr>
- <4731EA2B.5000806@redhat.com> <4731EC64.3050903@systella.fr>
- <4732F643.9030507@systella.fr>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: [PATCH] raid5: fix unending write sequence
+Date: Thu, 08 Nov 2007 09:27:39 -0700
+Message-ID: <1194539259.15713.30.camel@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="-1463747160-699739752-1194525876=:575"
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1760337AbXKHMou@vger.kernel.org>
-In-Reply-To: <4732F643.9030507@systella.fr>
-Sender: linux-kernel-owner@vger.kernel.org
-To: =?ISO-8859-1?Q?BERTRAND_Jo=EBl?= <joel.bertrand@systella.fr>
-Cc: Chuck Ebbert <cebbert@redhat.com>, Neil Brown <neilb@suse.de>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid <linux-raid@vger.kernel.org>, stable@kernel.org, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-raid.ids
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+=46rom: Dan Williams <dan.j.williams@intel.com>
 
----1463747160-699739752-1194525876=:575
-Content-Type: TEXT/PLAIN; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+<debug output from Jo=C3=ABl's system>
+handling stripe 7629696, state=3D0x14 cnt=3D1, pd_idx=3D2 ops=3D0:0:0
+check 5: state 0x6 toread 0000000000000000 read 0000000000000000 write =
+fffff800ffcffcc0 written 0000000000000000
+check 4: state 0x6 toread 0000000000000000 read 0000000000000000 write =
+fffff800fdd4e360 written 0000000000000000
+check 3: state 0x1 toread 0000000000000000 read 0000000000000000 write =
+0000000000000000 written 0000000000000000
+check 2: state 0x1 toread 0000000000000000 read 0000000000000000 write =
+0000000000000000 written 0000000000000000
+check 1: state 0x6 toread 0000000000000000 read 0000000000000000 write =
+fffff800ff517e40 written 0000000000000000
+check 0: state 0x6 toread 0000000000000000 read 0000000000000000 write =
+fffff800fd4cae60 written 0000000000000000
+locked=3D4 uptodate=3D2 to_read=3D0 to_write=3D4 failed=3D0 failed_num=3D=
+0
+for sector 7629696, rmw=3D0 rcw=3D0
+</debug>
 
+These blocks were prepared to be written out, but were never handled in
+ops_run_biodrain(), so they remain locked forever.  The operations flag=
+s
+are all clear which means handle_stripe() thinks nothing else needs to =
+be
+done.
 
+This state suggests that the STRIPE_OP_PREXOR bit was sampled 'set' whe=
+n it
+should not have been.  This patch cleans up cases where the code looks =
+at
+sh->ops.pending when it should be looking at the consistent stack-based
+snapshot of the operations flags.
 
-On Thu, 8 Nov 2007, BERTRAND Jo=EBl wrote:
+Report from Jo=C3=ABl:
+	Resync done. Patch fix this bug.
 
-> BERTRAND Jo=EBl wrote:
->> Chuck Ebbert wrote:
->>> On 11/05/2007 03:36 AM, BERTRAND Jo=EBl wrote:
->>>> Neil Brown wrote:
->>>>> On Sunday November 4, jpiszcz@lucidpixels.com wrote:
->>>>>> # ps auxww | grep D
->>>>>> USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME=20
->>>>>> COMMAND
->>>>>> root       273  0.0  0.0      0     0 ?        D    Oct21  14:40
->>>>>> [pdflush]
->>>>>> root       274  0.0  0.0      0     0 ?        D    Oct21  13:00
->>>>>> [pdflush]
->>>>>>=20
->>>>>> After several days/weeks, this is the second time this has happened,
->>>>>> while doing regular file I/O (decompressing a file), everything on
->>>>>> the device went into D-state.
->>>>> At a guess (I haven't looked closely) I'd say it is the bug that was
->>>>> meant to be fixed by
->>>>>=20
->>>>> commit 4ae3f847e49e3787eca91bced31f8fd328d50496
->>>>>=20
->>>>> except that patch applied badly and needed to be fixed with
->>>>> the following patch (not in git yet).
->>>>> These have been sent to stable@ and should be in the queue for 2.6.23=
-=2E2
->>>>     My linux-2.6.23/drivers/md/raid5.c contains your patch for a long
->>>> time :
->>>>=20
->>>> ...
->>>>         spin_lock(&sh->lock);
->>>>         clear_bit(STRIPE_HANDLE, &sh->state);
->>>>         clear_bit(STRIPE_DELAYED, &sh->state);
->>>>
->>>>         s.syncing =3D test_bit(STRIPE_SYNCING, &sh->state);
->>>>         s.expanding =3D test_bit(STRIPE_EXPAND_SOURCE, &sh->state);
->>>>         s.expanded =3D test_bit(STRIPE_EXPAND_READY, &sh->state);
->>>>         /* Now to look around and see what can be done */
->>>>
->>>>         /* clean-up completed biofill operations */
->>>>         if (test_bit(STRIPE_OP_BIOFILL, &sh->ops.complete)) {
->>>>                 clear_bit(STRIPE_OP_BIOFILL, &sh->ops.pending);
->>>>                 clear_bit(STRIPE_OP_BIOFILL, &sh->ops.ack);
->>>>                 clear_bit(STRIPE_OP_BIOFILL, &sh->ops.complete);
->>>>         }
->>>>
->>>>         rcu_read_lock();
->>>>         for (i=3Ddisks; i--; ) {
->>>>                 mdk_rdev_t *rdev;
->>>>                 struct r5dev *dev =3D &sh->dev[i];
->>>> ...
->>>>=20
->>>> but it doesn't fix this bug.
->>>>=20
->>>=20
->>> Did that chunk starting with "clean-up completed biofill operations" en=
-d
->>> up where it belongs? The patch with the big context moves it to a=20
->>> different
->>> place from where the original one puts it when applied to 2.6.23...
->>>=20
->>> Lately I've seen several problems where the context isn't enough to mak=
-e
->>> a patch apply properly when some offsets have changed. In some cases a
->>> patch won't apply at all because two nearly-identical areas are being
->>> changed and the first chunk gets applied where the second one should,
->>> leaving nowhere for the second chunk to apply.
->>
->>     I always apply this kind of patches by hands, and no by patch comman=
-d.=20
->> Last patch sent here seems to fix this bug :
->>=20
->> gershwin:[/usr/scripts] > cat /proc/mdstat
->> Personalities : [raid1] [raid6] [raid5] [raid4]
->> md7 : active raid1 sdi1[2] md_d0p1[0]
->>       1464725632 blocks [2/1] [U_]
->>       [=3D=3D=3D=3D=3D>...............]  recovery =3D 27.1% (396992504/1=
-464725632)=20
->> finish=3D1040.3min speed=3D17104K/sec
->
-> =09Resync done. Patch fix this bug.
->
-> =09Regards,
->
-> =09JKB
->
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+Tested-by: Jo=C3=ABl Bertrand <joel.bertrand@systella.fr>
+Cc: stable@kernel.org
+---
 
-Excellent!
+ drivers/md/raid5.c |   16 +++++++++-------
+ 1 files changed, 9 insertions(+), 7 deletions(-)
 
-I cannot easily re-produce the bug on my system so I will wait for the=20
-next stable patch set to include it and let everyone know if it happens=20
-again, thanks.
-
----1463747160-699739752-1194525876=:575--
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 3808f52..e86cacb 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -689,7 +689,8 @@ ops_run_prexor(struct stripe_head *sh, struct dma_a=
+sync_tx_descriptor *tx)
+ }
+=20
+ static struct dma_async_tx_descriptor *
+-ops_run_biodrain(struct stripe_head *sh, struct dma_async_tx_descripto=
+r *tx)
++ops_run_biodrain(struct stripe_head *sh, struct dma_async_tx_descripto=
+r *tx,
++		 unsigned long pending)
+ {
+ 	int disks =3D sh->disks;
+ 	int pd_idx =3D sh->pd_idx, i;
+@@ -697,7 +698,7 @@ ops_run_biodrain(struct stripe_head *sh, struct dma=
+_async_tx_descriptor *tx)
+ 	/* check if prexor is active which means only process blocks
+ 	 * that are part of a read-modify-write (Wantprexor)
+ 	 */
+-	int prexor =3D test_bit(STRIPE_OP_PREXOR, &sh->ops.pending);
++	int prexor =3D test_bit(STRIPE_OP_PREXOR, &pending);
+=20
+ 	pr_debug("%s: stripe %llu\n", __FUNCTION__,
+ 		(unsigned long long)sh->sector);
+@@ -774,7 +775,8 @@ static void ops_complete_write(void *stripe_head_re=
+f)
+ }
+=20
+ static void
+-ops_run_postxor(struct stripe_head *sh, struct dma_async_tx_descriptor=
+ *tx)
++ops_run_postxor(struct stripe_head *sh, struct dma_async_tx_descriptor=
+ *tx,
++		unsigned long pending)
+ {
+ 	/* kernel stack size limits the total number of disks */
+ 	int disks =3D sh->disks;
+@@ -782,7 +784,7 @@ ops_run_postxor(struct stripe_head *sh, struct dma_=
+async_tx_descriptor *tx)
+=20
+ 	int count =3D 0, pd_idx =3D sh->pd_idx, i;
+ 	struct page *xor_dest;
+-	int prexor =3D test_bit(STRIPE_OP_PREXOR, &sh->ops.pending);
++	int prexor =3D test_bit(STRIPE_OP_PREXOR, &pending);
+ 	unsigned long flags;
+ 	dma_async_tx_callback callback;
+=20
+@@ -809,7 +811,7 @@ ops_run_postxor(struct stripe_head *sh, struct dma_=
+async_tx_descriptor *tx)
+ 	}
+=20
+ 	/* check whether this postxor is part of a write */
+-	callback =3D test_bit(STRIPE_OP_BIODRAIN, &sh->ops.pending) ?
++	callback =3D test_bit(STRIPE_OP_BIODRAIN, &pending) ?
+ 		ops_complete_write : ops_complete_postxor;
+=20
+ 	/* 1/ if we prexor'd then the dest is reused as a source
+@@ -897,12 +899,12 @@ static void raid5_run_ops(struct stripe_head *sh,=
+ unsigned long pending)
+ 		tx =3D ops_run_prexor(sh, tx);
+=20
+ 	if (test_bit(STRIPE_OP_BIODRAIN, &pending)) {
+-		tx =3D ops_run_biodrain(sh, tx);
++		tx =3D ops_run_biodrain(sh, tx, pending);
+ 		overlap_clear++;
+ 	}
+=20
+ 	if (test_bit(STRIPE_OP_POSTXOR, &pending))
+-		ops_run_postxor(sh, tx);
++		ops_run_postxor(sh, tx, pending);
+=20
+ 	if (test_bit(STRIPE_OP_CHECK, &pending))
+ 		ops_run_check(sh);
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
