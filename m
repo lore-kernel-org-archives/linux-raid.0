@@ -1,42 +1,111 @@
-From: Konstantin Sharlaimov <konstantin.sharlaimov@gmail.com>
-Subject: Re: Was: [RFC PATCH 2.6.23.1] md: add dm-raid1 read balancing
-Date: Thu, 08 Nov 2007 21:06:48 +1000
-Message-ID: <1194520008.17369.19.camel@localhost>
-References: <1194084522.1353.10.camel@localhost>
-	 <87fxziju0z.fsf@informatik.uni-tuebingen.de>
-Reply-To: konstantin.sharlaimov@gmail.com
+From: =?ISO-8859-1?Q?BERTRAND_Jo=EBl?= <joel.bertrand@systella.fr>
+Subject: Re: 2.6.23.1: mdadm/raid5 hung/d-state
+Date: Thu, 08 Nov 2007 12:42:59 +0100
+Message-ID: <4732F643.9030507@systella.fr>
+References: <Pine.LNX.4.64.0711040658180.30831@p34.internal.lan> <18222.16003.92062.970530@notabene.brown> <472ED613.8050101@systella.fr> <4731EA2B.5000806@redhat.com> <4731EC64.3050903@systella.fr>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87fxziju0z.fsf@informatik.uni-tuebingen.de>
+In-Reply-To: <4731EC64.3050903@systella.fr>
 Sender: linux-raid-owner@vger.kernel.org
-To: Goswin von Brederlow <brederlo@informatik.uni-tuebingen.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>, Rik van Riel <riel@redhat.com>, "; Ingo Molnar" <mingo@redhat.com>, "; Neil Brown" <neilb@suse.de>
+To: =?ISO-8859-1?Q?BERTRAND_Jo=EBl?= <joel.bertrand@systella.fr>
+Cc: Chuck Ebbert <cebbert@redhat.com>, Neil Brown <neilb@suse.de>, Justin Piszcz <jpiszcz@lucidpixels.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 2007-11-07 at 10:15 +0100, Goswin von Brederlow wrote:
-> I wonder if there shouldn't be a way to turn this off (or if there
-> already is one).
-> 
-> Or more generaly an option to say what is "near". Specifically I would
-> like to teach the raid1 layer that I have 2 external raid boxes with a
-> 16k chunk size. So read/write within a 16k chunk will be the same disk
-> but the next 16k are a different disk and "near" doesn't apply
-> anymore.
+BERTRAND Jo=EBl wrote:
+> Chuck Ebbert wrote:
+>> On 11/05/2007 03:36 AM, BERTRAND Jo=EBl wrote:
+>>> Neil Brown wrote:
+>>>> On Sunday November 4, jpiszcz@lucidpixels.com wrote:
+>>>>> # ps auxww | grep D
+>>>>> USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME=20
+>>>>> COMMAND
+>>>>> root       273  0.0  0.0      0     0 ?        D    Oct21  14:40
+>>>>> [pdflush]
+>>>>> root       274  0.0  0.0      0     0 ?        D    Oct21  13:00
+>>>>> [pdflush]
+>>>>>
+>>>>> After several days/weeks, this is the second time this has happen=
+ed,
+>>>>> while doing regular file I/O (decompressing a file), everything o=
+n
+>>>>> the device went into D-state.
+>>>> At a guess (I haven't looked closely) I'd say it is the bug that w=
+as
+>>>> meant to be fixed by
+>>>>
+>>>> commit 4ae3f847e49e3787eca91bced31f8fd328d50496
+>>>>
+>>>> except that patch applied badly and needed to be fixed with
+>>>> the following patch (not in git yet).
+>>>> These have been sent to stable@ and should be in the queue for 2.6=
+=2E23.2
+>>>     My linux-2.6.23/drivers/md/raid5.c contains your patch for a lo=
+ng
+>>> time :
+>>>
+>>> ...
+>>>         spin_lock(&sh->lock);
+>>>         clear_bit(STRIPE_HANDLE, &sh->state);
+>>>         clear_bit(STRIPE_DELAYED, &sh->state);
+>>>
+>>>         s.syncing =3D test_bit(STRIPE_SYNCING, &sh->state);
+>>>         s.expanding =3D test_bit(STRIPE_EXPAND_SOURCE, &sh->state);
+>>>         s.expanded =3D test_bit(STRIPE_EXPAND_READY, &sh->state);
+>>>         /* Now to look around and see what can be done */
+>>>
+>>>         /* clean-up completed biofill operations */
+>>>         if (test_bit(STRIPE_OP_BIOFILL, &sh->ops.complete)) {
+>>>                 clear_bit(STRIPE_OP_BIOFILL, &sh->ops.pending);
+>>>                 clear_bit(STRIPE_OP_BIOFILL, &sh->ops.ack);
+>>>                 clear_bit(STRIPE_OP_BIOFILL, &sh->ops.complete);
+>>>         }
+>>>
+>>>         rcu_read_lock();
+>>>         for (i=3Ddisks; i--; ) {
+>>>                 mdk_rdev_t *rdev;
+>>>                 struct r5dev *dev =3D &sh->dev[i];
+>>> ...
+>>>
+>>> but it doesn't fix this bug.
+>>>
+>>
+>> Did that chunk starting with "clean-up completed biofill operations"=
+ end
+>> up where it belongs? The patch with the big context moves it to a=20
+>> different
+>> place from where the original one puts it when applied to 2.6.23...
+>>
+>> Lately I've seen several problems where the context isn't enough to =
+make
+>> a patch apply properly when some offsets have changed. In some cases=
+ a
+>> patch won't apply at all because two nearly-identical areas are bein=
+g
+>> changed and the first chunk gets applied where the second one should=
+,
+>> leaving nowhere for the second chunk to apply.
+>=20
+>     I always apply this kind of patches by hands, and no by patch=20
+> command. Last patch sent here seems to fix this bug :
+>=20
+> gershwin:[/usr/scripts] > cat /proc/mdstat
+> Personalities : [raid1] [raid6] [raid5] [raid4]
+> md7 : active raid1 sdi1[2] md_d0p1[0]
+>       1464725632 blocks [2/1] [U_]
+>       [=3D=3D=3D=3D=3D>...............]  recovery =3D 27.1% (39699250=
+4/1464725632)=20
+> finish=3D1040.3min speed=3D17104K/sec
 
-Currently there is no way to turn this feature off (this is only a
-"request for comments" patch), but I'm planning to make it configurable
-via sysfs and module parameters.
+	Resync done. Patch fix this bug.
 
-Thanks for suggestion for the "near" definition. What do you think about
-adding the "chunk_size" parameter (with the default value of 1 chunk = 1
-sector). Setting it to 32 will make all reads within 16k chunk to be
-considered "near" (with zero distance) so they will go to the same disk.
+	Regards,
 
-Max distance will also be configurable (after this distance the "read"
-operation is considered "far" and will go to randomly chosen disk)
-
-Regards,
-Konstantin
-
+	JKB
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
