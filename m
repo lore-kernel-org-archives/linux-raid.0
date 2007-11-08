@@ -1,42 +1,65 @@
 From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: 2.6.23.1: mdadm/raid5 hung/d-state
-Date: Thu, 08 Nov 2007 12:45:42 -0500
-Message-ID: <47334B46.7000809@tmr.com>
-References: <Pine.LNX.4.64.0711040658180.30831@p34.internal.lan>	 <18222.16003.92062.970530@notabene.brown>	 <Pine.LNX.4.64.0711041651250.23496@p34.internal.lan>	 <e9c3a7c20711051035m78ba90ck68f4fbc10480462a@mail.gmail.com>	 <Pine.LNX.4.64.0711051335450.11422@p34.internal.lan>	 <e9c3a7c20711051619u7054aab9l208b604b9e58fb61@mail.gmail.com>	 <47303FB8.7000801@systella.fr> <1194398700.2970.18.camel@dwillia2-linux.ch.intel.com> <47314653.80905@Lessem.org>
+Subject: Re: Software raid - controller options
+Date: Thu, 08 Nov 2007 13:10:32 -0500
+Message-ID: <47335118.9070407@tmr.com>
+References: <1194315635.17361.20.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <47314653.80905@Lessem.org>
+In-Reply-To: <1194315635.17361.20.camel@localhost.localdomain>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jeff Lessem <Jeff@Lessem.org>
-Cc: Dan Williams <dan.j.williams@intel.com>, =?UTF-8?B?QkVSVFJBTkQgSm/Dq2w=?= <joel.bertrand@systella.fr>, Justin Piszcz <jpiszcz@lucidpixels.com>, Neil Brown <neilb@suse.de>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+To: Lyle Schlueter <lyle@xkubed.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Jeff Lessem wrote:
-> Dan Williams wrote:
-> > The following patch, also attached, cleans up cases where the code 
-> looks
-> > at sh->ops.pending when it should be looking at the consistent
-> > stack-based snapshot of the operations flags.
+Lyle Schlueter wrote:
+> Hello,
 >
-> I tried this patch (against a stock 2.6.23), and it did not work for
-> me.  Not only did I/O to the effected RAID5 & XFS partition stop, but
-> also I/O to all other disks.  I was not able to capture any debugging
-> information, but I should be able to do that tomorrow when I can hook
-> a serial console to the machine.
-
-That can't be good! This is worrisome because Joel is giddy with joy 
-because it fixes his iSCSI problems. I was going to try it with nbd, but 
-perhaps I'll wait a week or so and see if others have more information. 
-Applying patches before a holiday weekend is a good way to avoid time 
-off. :-(
+> I just started looking into software raid with linux a few weeks ago. I
+> am outgrowing the commercial NAS product that I bought a while back.
+> I've been learning as much as I can, suscribing to this mailing list,
+> reading man pages, experimenting with loopback devices setting up and
+> expanding test arrays. 
 >
-> I'm not sure if my problem is identical to these others, as mine only
-> seems to manifest with RAID5+XFS.  The RAID rebuilds with no problem,
-> and I've not had any problems with RAID5+ext3.
+> I have a few questions now that I'm sure someone here will be able to
+> enlighten me about.
+> First, I want to run a 12 drive raid 6, honestly, would I be better of
+> going with true hardware raid like the areca ARC-1231ML vs software
+> raid? I would prefer software raid just for the sheer cost savings. But
+> what kind of processing power would it take to match or exceed a mid to
+> high-level hardware controller?
+>
+> I haven't seen much, if any, discussion of this, but how many drives are
+> people putting into software arrays? And how are you going about it?
+> Motherboards seem to max out around 6-8 SATA ports. Do you just add SATA
+> controllers? Looking around on newegg (and some googling) 2-port SATA
+> controllers are pretty easy to find, but once you get to 4 ports the
+> cards all seem to include some sort of built in *raid* functionality.
+> Are there any 4+ port PCI-e SATA controllers cards? 
+>   
 
-Hopefully it's not the raid which is the issue.
+Depending on your needs for transfer rate vs. capacity, newegg has at 
+least one external enclosure which holds (from memory) 8 drives, and 
+brings the data down on a single SATA connector. If you need lots of 
+data online but not a high transfer rate, this might be useful. I was 
+offered the enclosure as a "deal" with a DVD burner, don't know what 
+they were thinking there. Ordered the DVD Tues, arrived Wed, but I don't 
+need the hot swap case.
+> Are there any specific chipsets/brands of motherboards or controller
+> cards that you software raid veterans prefer?
+>
+> Thank you for your time and any info you are able to give me!
+>
+> Lyle
+>
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>   
+
 
 -- 
 bill davidsen <davidsen@tmr.com>
