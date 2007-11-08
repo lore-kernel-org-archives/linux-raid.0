@@ -1,74 +1,42 @@
-From: David Greaves <david@dgreaves.com>
-Subject: Re: Raid5 assemble after dual sata port failure
-Date: Thu, 08 Nov 2007 10:33:20 +0000
-Message-ID: <4732E5F0.7080805@dgreaves.com>
-References: <47321FDF.8060207@synplicity.com>
+From: Konstantin Sharlaimov <konstantin.sharlaimov@gmail.com>
+Subject: Re: Was: [RFC PATCH 2.6.23.1] md: add dm-raid1 read balancing
+Date: Thu, 08 Nov 2007 21:06:48 +1000
+Message-ID: <1194520008.17369.19.camel@localhost>
+References: <1194084522.1353.10.camel@localhost>
+	 <87fxziju0z.fsf@informatik.uni-tuebingen.de>
+Reply-To: konstantin.sharlaimov@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <47321FDF.8060207@synplicity.com>
+In-Reply-To: <87fxziju0z.fsf@informatik.uni-tuebingen.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Chris Eddington <chrise@synplicity.com>
-Cc: linux-raid@vger.kernel.org
+To: Goswin von Brederlow <brederlo@informatik.uni-tuebingen.de>
+Cc: linux-raid <linux-raid@vger.kernel.org>, Rik van Riel <riel@redhat.com>, "; Ingo Molnar" <mingo@redhat.com>, "; Neil Brown" <neilb@suse.de>
 List-Id: linux-raid.ids
 
-Chris Eddington wrote:
+On Wed, 2007-11-07 at 10:15 +0100, Goswin von Brederlow wrote:
+> I wonder if there shouldn't be a way to turn this off (or if there
+> already is one).
 > 
-> Hi,
-Hi
-> 
-> While on vacation I had one SATA port/cable fail, and then four hours
-> later a second one fail.  After fixing/moving the SATA ports, I can
-> reboot and all drives seem to be OK now, but when assembled it won't
-> recognize the filesystem.
+> Or more generaly an option to say what is "near". Specifically I would
+> like to teach the raid1 layer that I have 2 external raid boxes with a
+> 16k chunk size. So read/write within a 16k chunk will be the same disk
+> but the next 16k are a different disk and "near" doesn't apply
+> anymore.
 
-That's unusual - if the array comes back then you should be OK.
-In general if two devices fail then there is a real data loss risk.
-However if the drives are good and there was just a cable glitch, then unless
-you're unlucky it's usually fsck fixable.
+Currently there is no way to turn this feature off (this is only a
+"request for comments" patch), but I'm planning to make it configurable
+via sysfs and module parameters.
 
-I see
-mdadm: /dev/md0 has been started with 3 drives (out of 4).
+Thanks for suggestion for the "near" definition. What do you think about
+adding the "chunk_size" parameter (with the default value of 1 chunk = 1
+sector). Setting it to 32 will make all reads within 16k chunk to be
+considered "near" (with zero distance) so they will go to the same disk.
 
-which means it's now up and running.
+Max distance will also be configurable (after this distance the "read"
+operation is considered "far" and will go to randomly chosen disk)
 
-And:
-sda1        Events : 0.4880374
-sdb1        Events : 0.4880374
-sdc1        Events : 0.4857597
-sdd1        Events : 0.4880374
+Regards,
+Konstantin
 
-so sdc1 is way out of date... we'll add/resync that when everything else is working.
-
-but:
->  After futzing around with assemble options
-> like --force and disk order I couldn't get it to work.
-
-Let me check... what commands did you use? Just 'assemble' - which doesn't care
-about disk order - or did you try to re-'create' the array - which does care
-about disk order and leads us down a different path...
-err, scratch that:
->  Creation Time : Sun Nov  5 14:25:01 2006
-OK, it was created a year ago... so you did use assemble.
-
-
-It is slightly odd to see that the drive order is:
-/dev/mapper/sda1
-/dev/mapper/sdb1
-/dev/mapper/sdd1
-/dev/mapper/sdc1
-Usually people just create them in order.
-
-
-Have you done any fsck's that involve a write?
-
-What filesystem are you running? What does your 'fsck -n' (readonly) report?
-
-Also, please report the results of:
- cat /proc/mdadm
- mdadm -D /dev/md0
- cat /etc/mdadm.conf
-
-
-David
