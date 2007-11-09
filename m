@@ -1,57 +1,40 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: 2.6.23.1: mdadm/raid5 hung/d-state
-Date: Fri, 9 Nov 2007 04:14:27 -0500 (EST)
-Message-ID: <Pine.LNX.4.64.0711090414090.26103@p34.internal.lan>
-References: <Pine.LNX.4.64.0711040658180.30831@p34.internal.lan>
- <18222.16003.92062.970530@notabene.brown> <Pine.LNX.4.64.0711041651250.23496@p34.internal.lan>
- <e9c3a7c20711051035m78ba90ck68f4fbc10480462a@mail.gmail.com>
- <Pine.LNX.4.64.0711051335450.11422@p34.internal.lan>
- <e9c3a7c20711051619u7054aab9l208b604b9e58fb61@mail.gmail.com>
- <47303FB8.7000801@systella.fr> <1194398700.2970.18.camel@dwillia2-linux.ch.intel.com>
- <47314653.80905@Lessem.org> <18227.33346.994456.270194@fisica.ufpr.br>
+From: Janek Kozicki <janek_listy@wp.pl>
+Subject: Re: telling mdadm to use spare drive.
+Date: Fri, 9 Nov 2007 10:50:49 +0100
+Message-ID: <20071109105049.6e5d9e6a@absurd>
+References: <20071104170502.6db7fcb1@absurd>
+	<87bqa6jtxc.fsf@informatik.uni-tuebingen.de>
+	<20071107182602.61162e00@absurd>
+	<47320E4F.3070308@sauce.co.nz>
+	<20071108212804.771c39ac@absurd>
+	<47338058.4080908@sauce.co.nz>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18227.33346.994456.270194@fisica.ufpr.br>
+In-Reply-To: <47338058.4080908@sauce.co.nz>
 Sender: linux-raid-owner@vger.kernel.org
-To: Carlos Carvalho <carlos@fisica.ufpr.br>
-Cc: Jeff Lessem <Jeff@Lessem.org>, root@c3sl.ufpr.br, Dan Williams <dan.j.williams@intel.com>, =?iso-8859-1?Q?BERTRAND_Jo=EBl?= <joel.bertrand@systella.fr>, Neil Brown <neilb@suse.de>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, xfs@oss.sgi.com
+To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+Richard Scobie said:     (by the date of Fri, 09 Nov 2007 10:32:08 +1300)
 
+> This was the bug I was thinking of:
+> 
+> http://marc.info/?l=linux-raid&m=116003247912732&w=2
 
-On Thu, 8 Nov 2007, Carlos Carvalho wrote:
+This bug says that it only with mdadm 1.x:
 
-> Jeff Lessem (Jeff@Lessem.org) wrote on 6 November 2007 22:00:
-> >Dan Williams wrote:
-> > > The following patch, also attached, cleans up cases where the code looks
-> > > at sh->ops.pending when it should be looking at the consistent
-> > > stack-based snapshot of the operations flags.
-> >
-> >I tried this patch (against a stock 2.6.23), and it did not work for
-> >me.  Not only did I/O to the effected RAID5 & XFS partition stop, but
-> >also I/O to all other disks.  I was not able to capture any debugging
-> >information, but I should be able to do that tomorrow when I can hook
-> >a serial console to the machine.
-> >
-> >I'm not sure if my problem is identical to these others, as mine only
-> >seems to manifest with RAID5+XFS.  The RAID rebuilds with no problem,
-> >and I've not had any problems with RAID5+ext3.
->
-> Us too! We're stuck trying to build a disk server with several disks
-> in a raid5 array, and the rsync from the old machine stops writing to
-> the new filesystem. It only happens under heavy IO. We can make it
-> lock without rsync, using 8 simultaneous dd's to the array. All IO
-> stops, including the resync after a newly created raid or after an
-> unclean reboot.
->
-> We could not trigger the problem with ext3 or reiser3; it only happens
-> with xfs.
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+   "If a drive is added to a raid1 using older tools
+    (mdadm-1.x or raidtools) then it will be included
+    in the array without any resync happening."
 
-Including XFS mailing list as well can you provide more information to 
-them?
+But I have here:
+
+# mdadm --version
+mdadm - v2.5.6 - 9 November 2006
+
+maybe I stumbled on another bug?
+
+-- 
+Janek Kozicki                                                         |
