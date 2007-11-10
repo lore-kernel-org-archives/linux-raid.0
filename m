@@ -1,131 +1,250 @@
-From: David Greaves <david@dgreaves.com>
+From: Chris Eddington <chrise@synplicity.com>
 Subject: Re: Raid5 assemble after dual sata port failure
-Date: Sat, 10 Nov 2007 09:16:41 +0000
-Message-ID: <473576F9.6040602@dgreaves.com>
-References: <47321FDF.8060207@synplicity.com> <4732E5F0.7080805@dgreaves.com> <4734CFE5.8070305@synplicity.com> <4734FB4A.4070401@synplicity.com>
+Date: Sat, 10 Nov 2007 10:46:22 -0800
+Message-ID: <4735FC7E.7030601@synplicity.com>
+References: <47321FDF.8060207@synplicity.com> <4732E5F0.7080805@dgreaves.com> <4734CFE5.8070305@synplicity.com> <4734FB4A.4070401@synplicity.com> <473576F9.6040602@dgreaves.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4734FB4A.4070401@synplicity.com>
+In-Reply-To: <473576F9.6040602@dgreaves.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Chris Eddington <chrise@synplicity.com>
+To: David Greaves <david@dgreaves.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Ok - it looks like the raid array is up. There will have been an event count
-mismatch which is why you needed --force. This may well have caused some
-(hopefully minor) corruption.
+Hi,
 
-FWIW, xfs_check is almost never worth running :) (It runs out of memory easily).
-xfs_repair -n is much better.
+Thanks for the pointer on xfs_repair -n , it actually tells me something 
+(some listed below) but I'm not sure what it means but there seems to be 
+a lot of data loss.  One complication is I see an error message in ata6, 
+so I moved the disks around thinking it was a flaky sata port, but I see 
+the error again on ata4 so it seems to follow the disk.  But it happens 
+exactly at the same time during xfs_repair sequence, so I don't think it 
+is a flaky disk.  I'll go to the xfs mailing list on this. 
 
-What does the end of dmesg say after trying to mount the fs?
+Is there a way to be sure the disk order is right?  What I mean is when 
+using --force does is try to figure out the right order based on best 
+possible recognition of something there, or does it just take the 
+existing disk order and assemble them?  I want to be sure that this is 
+not way out of wack since I'm seeing so much from xfs_repair.  Also 
+since I've been moving the disks around, I want to be sure I have the 
+right order.
 
-Also try:
-xfs_repair -n -L
+Is there a way to try restoring using the other disk?
 
-I think you then have 2 options:
-* xfs_repair -L
-This may well lose data that was being written as the drives crashed.
-* contact the xfs mailing list
+Thks,
+Chris
 
-David
 
-Chris Eddington wrote:
-> Hi David,
-> 
-> I ran xfs_check and get this:
-> ERROR: The filesystem has valuable metadata changes in a log which needs to
-> be replayed.  Mount the filesystem to replay the log, and unmount it before
-> re-running xfs_check.  If you are unable to mount the filesystem, then use
-> the xfs_repair -L option to destroy the log and attempt a repair.
-> Note that destroying the log may cause corruption -- please attempt a mount
-> of the filesystem before doing this.
-> 
-> After mounting (which fails) and re-running xfs_check it gives the same
-> message.
-> 
-> The array info details are below and seems it is running correctly ??  I
-> interpret the message above as actually a good sign - seems that
-> xfs_check sees the filesystem but the log file and maybe the most
-> currently written data is corrupted or will be lost.  But I'd like to
-> hear some advice/guidance before doing anything permanent with
-> xfs_repair.  I also would like to confirm somehow that the array is in
-> the right order, etc.  Appreciate your feedback.
-> 
-> Thks,
-> Chris
-> 
-> 
-> 
-> --------------------
-> cat /etc/mdadm/mdadm.conf
-> DEVICE /dev/sda1 /dev/sdb1 /dev/sdc1 /dev/sdd1
-> ARRAY /dev/md0 level=raid5 num-devices=4
-> UUID=bc74c21c:9655c1c6:ba6cc37a:df870496
-> MAILADDR root
-> 
-> cat /proc/mdstat
-> Personalities : [raid6] [raid5] [raid4]
-> md0 : active raid5 sda1[0] sdd1[2] sdb1[1]
->      1465151808 blocks level 5, 64k chunk, algorithm 2 [4/3] [UUU_]
->     unused devices: <none>
-> 
-> mdadm -D /dev/md0
-> /dev/md0:
->        Version : 00.90.03
->  Creation Time : Sun Nov  5 14:25:01 2006
->     Raid Level : raid5
->     Array Size : 1465151808 (1397.28 GiB 1500.32 GB)
->    Device Size : 488383936 (465.76 GiB 500.11 GB)
->   Raid Devices : 4
->  Total Devices : 3
-> Preferred Minor : 0
->    Persistence : Superblock is persistent
-> 
->    Update Time : Fri Nov  9 16:26:31 2007
->          State : clean, degraded
-> Active Devices : 3
-> Working Devices : 3
-> Failed Devices : 0
->  Spare Devices : 0
-> 
->         Layout : left-symmetric
->     Chunk Size : 64K
-> 
->           UUID : bc74c21c:9655c1c6:ba6cc37a:df870496
->         Events : 0.4880384
-> 
->    Number   Major   Minor   RaidDevice State
->       0       8        1        0      active sync   /dev/sda1
->       1       8       17        1      active sync   /dev/sdb1
->       2       8       49        2      active sync   /dev/sdd1
->       3       0        0        3      removed
-> 
-> 
-> 
+
+        - creating 4 worker thread(s)
+Phase 1 - find and verify superblock...
+        - reporting progress in intervals of 15 minutes
+Phase 2 - using internal log
+        - scan filesystem freespace and inode maps...
+bad on-disk superblock 2 - inconsistent filesystem geometry in realtime 
+filesystem component
+primary/secondary superblock 2 conflict - AG superblock geometry info 
+conflicts with filesystem geometry
+would reset bad sb for ag 2
+bad uncorrected agheader 2, skipping ag...
+bad on-disk superblock 24 - bad magic number
+primary/secondary superblock 24 conflict - AG superblock geometry info 
+conflicts with filesystem geometry
+bad flags field in superblock 24
+bad shared version number in superblock 24
+bad inode alignment field in superblock 24
+bad stripe unit/width fields in superblock 24
+bad log/data device sector size fields in superblock 24
+bad magic # 0xc486a1e7 for agi 24
+bad version # 127171049 for agi 24
+bad sequence # 606867126 for agi 24
+bad length # -48052605 for agi 24, should be 11446496
+would reset bad sb for ag 24
+would reset bad agi for ag 24
+bad uncorrected agheader 24, skipping ag...
+        - 10:49:34: scanning filesystem freespace - 30 of 32 allocation 
+groups done
+        - found root inode chunk
+Phase 3 - for each AG...
+        - scan (but don't clear) agi unlinked lists...
+error following ag 24 unlinked list
+        - 10:49:34: scanning agi unlinked lists - 32 of 32 allocation 
+groups done
+        - process known inodes and perform inode discovery...
+        - agno = 0
+        - agno = 1
+        - agno = 2
+        - agno = 3
+        - agno = 4
+imap claims a free inode 268435719 is in use, would correct imap and 
+clear inode
+bad nblocks 23 for inode 268435723, would reset to 13
+corrupt block 0 in directory inode 259
+    would junk block
+no . entry for directory 259
+no .. entry for directory 259
+        - agno = 5
+        - agno = 6
+        - agno = 7
+        - agno = 8
+attribute entry 0 in attr block 0, inode 2147610149 has bad name 
+(namelen = 0)
+problem with attribute contents in inode 2147610149
+would clear attr fork
+bad nblocks 11 for inode 2147610149, would reset to 10
+bad anextents 1 for inode 2147610149, would reset to 0
+attribute entry 0 in attr block 0, inode 2147610376 has bad name 
+(namelen = 0)
+problem with attribute contents in inode 2147610376
+would clear attr fork
+bad nblocks 13 for inode 2147610376, would reset to 12
+bad anextents 1 for inode 2147610376, would reset to 0
+        - agno = 9
+        - agno = 10
+        - agno = 11
+imap claims in-use inode 2173744652 is free, would correct imap
+data fork in ino 2423071372 claims free block 201330859
+data fork in ino 2423071372 claims free block 201330860
+ .....
+would have reset inode 4090071559 nlinks from 5 to 3
+would have reset inode 4130446080 nlinks from 6 to 4
+would have reset inode 4130446132 nlinks from 5 to 4
+would have reset inode 4130509338 nlinks from 21 to 19
+would have reset inode 4136546816 nlinks from 5 to 4
+would have reset inode 4136546819 nlinks from 5 to 4
+would have reset inode 4136546822 nlinks from 5 to 4
+would have reset inode 4136546825 nlinks from 5 to 4
+would have reset inode 4168420144 nlinks from 7 to 4
+        - 10:54:24: verify link counts - 191040 of 202304 inodes done
+No modify flag set, skipping filesystem flush and exiting.
+
+
+
+
+
+
+David Greaves wrote:
+> Ok - it looks like the raid array is up. There will have been an event count
+> mismatch which is why you needed --force. This may well have caused some
+> (hopefully minor) corruption.
+>
+> FWIW, xfs_check is almost never worth running :) (It runs out of memory easily).
+> xfs_repair -n is much better.
+>
+> What does the end of dmesg say after trying to mount the fs?
+>
+> Also try:
+> xfs_repair -n -L
+>
+> I think you then have 2 options:
+> * xfs_repair -L
+> This may well lose data that was being written as the drives crashed.
+> * contact the xfs mailing list
+>
+> David
+>
 > Chris Eddington wrote:
->> Thanks David.
+>   
+>> Hi David,
 >>
->> I've had cable/port failures in the past and after re-adding the
->> drive, the order changed - I'm not sure why, but I noticed it sometime
->> ago but don't remember the exact order.
+>> I ran xfs_check and get this:
+>> ERROR: The filesystem has valuable metadata changes in a log which needs to
+>> be replayed.  Mount the filesystem to replay the log, and unmount it before
+>> re-running xfs_check.  If you are unable to mount the filesystem, then use
+>> the xfs_repair -L option to destroy the log and attempt a repair.
+>> Note that destroying the log may cause corruption -- please attempt a mount
+>> of the filesystem before doing this.
 >>
->> My initial attempt to assemble, it came up with only two drives in the
->> array.  Then I tried assembling with --force and that brought up 3 of
->> the drives.  At that point I thought I was good, so I tried mount
->> /dev/md0 and it failed.  Would that have written to the disk?  I'm
->> using XFS.
+>> After mounting (which fails) and re-running xfs_check it gives the same
+>> message.
 >>
->> After that, I tried assembling with different drive orders on the
->> command line, i.e. mdadm -Av --force /dev/md0 /dev/sda1, ... thinking
->> that the order might not be right.
+>> The array info details are below and seems it is running correctly ??  I
+>> interpret the message above as actually a good sign - seems that
+>> xfs_check sees the filesystem but the log file and maybe the most
+>> currently written data is corrupted or will be lost.  But I'd like to
+>> hear some advice/guidance before doing anything permanent with
+>> xfs_repair.  I also would like to confirm somehow that the array is in
+>> the right order, etc.  Appreciate your feedback.
 >>
->> At the moment I can't access the machine, but I'll try fsck -n and
->> send you the other info later this evening.
->>
->> Many thanks,
+>> Thks,
 >> Chris
 >>
+>>
+>>
+>> --------------------
+>> cat /etc/mdadm/mdadm.conf
+>> DEVICE /dev/sda1 /dev/sdb1 /dev/sdc1 /dev/sdd1
+>> ARRAY /dev/md0 level=raid5 num-devices=4
+>> UUID=bc74c21c:9655c1c6:ba6cc37a:df870496
+>> MAILADDR root
+>>
+>> cat /proc/mdstat
+>> Personalities : [raid6] [raid5] [raid4]
+>> md0 : active raid5 sda1[0] sdd1[2] sdb1[1]
+>>      1465151808 blocks level 5, 64k chunk, algorithm 2 [4/3] [UUU_]
+>>     unused devices: <none>
+>>
+>> mdadm -D /dev/md0
+>> /dev/md0:
+>>        Version : 00.90.03
+>>  Creation Time : Sun Nov  5 14:25:01 2006
+>>     Raid Level : raid5
+>>     Array Size : 1465151808 (1397.28 GiB 1500.32 GB)
+>>    Device Size : 488383936 (465.76 GiB 500.11 GB)
+>>   Raid Devices : 4
+>>  Total Devices : 3
+>> Preferred Minor : 0
+>>    Persistence : Superblock is persistent
+>>
+>>    Update Time : Fri Nov  9 16:26:31 2007
+>>          State : clean, degraded
+>> Active Devices : 3
+>> Working Devices : 3
+>> Failed Devices : 0
+>>  Spare Devices : 0
+>>
+>>         Layout : left-symmetric
+>>     Chunk Size : 64K
+>>
+>>           UUID : bc74c21c:9655c1c6:ba6cc37a:df870496
+>>         Events : 0.4880384
+>>
+>>    Number   Major   Minor   RaidDevice State
+>>       0       8        1        0      active sync   /dev/sda1
+>>       1       8       17        1      active sync   /dev/sdb1
+>>       2       8       49        2      active sync   /dev/sdd1
+>>       3       0        0        3      removed
+>>
+>>
+>>
+>> Chris Eddington wrote:
+>>     
+>>> Thanks David.
+>>>
+>>> I've had cable/port failures in the past and after re-adding the
+>>> drive, the order changed - I'm not sure why, but I noticed it sometime
+>>> ago but don't remember the exact order.
+>>>
+>>> My initial attempt to assemble, it came up with only two drives in the
+>>> array.  Then I tried assembling with --force and that brought up 3 of
+>>> the drives.  At that point I thought I was good, so I tried mount
+>>> /dev/md0 and it failed.  Would that have written to the disk?  I'm
+>>> using XFS.
+>>>
+>>> After that, I tried assembling with different drive orders on the
+>>> command line, i.e. mdadm -Av --force /dev/md0 /dev/sda1, ... thinking
+>>> that the order might not be right.
+>>>
+>>> At the moment I can't access the machine, but I'll try fsck -n and
+>>> send you the other info later this evening.
+>>>
+>>> Many thanks,
+>>> Chris
+>>>
+>>>       
+>
+>
+>   
 
