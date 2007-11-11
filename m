@@ -1,26 +1,25 @@
-From: Samuel Tardieu <sam@rfc1149.net>
-Subject: Re: [RFC PATCH 2.6.23.1] md: add dm-raid1 read balancing
-Date: Mon, 12 Nov 2007 00:36:46 +0100
-Message-ID: <87wsso4anl.fsf@willow.rfc1149.net>
-References: <1194084522.1353.10.camel@localhost>
+From: Alasdair G Kergon <agk@redhat.com>
+Subject: Re: stride / stripe alignment on LVM ?
+Date: Sun, 11 Nov 2007 23:53:41 +0000
+Message-ID: <20071111235341.GA22855@agk.fab.redhat.com>
+References: <20071101101037.63b523f8@absurd> <18218.24819.569744.141171@notabene.brown> <472B1F91.8000208@tmr.com> <20071102231605.7add5154@absurd> <1194115248.25553.59.camel@firewall.xsintricity.com> <20071103212118.5fd4c770@absurd> <87sl3ijuq0.fsf@informatik.uni-tuebingen.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <87sl3ijuq0.fsf@informatik.uni-tuebingen.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Goswin von Brederlow <brederlo@informatik.uni-tuebingen.de>, Janek Kozicki <janek_listy@wp.pl>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
->>>>> "Konstantin" == Konstantin Sharlaimov
->>>>> <konstantin.sharlaimov@gmail.com> writes:
+On Wed, Nov 07, 2007 at 10:00:39AM +0100, Goswin von Brederlow wrote:
+> I would just check with "dmsetup table dev" to which byte offsets the
+> logical volume gets mapped to.
+ 
+Or use:
+  pvs -o+pe_start
+(optionally with --units)
 
-Konstantin> This patch adds RAID1 read balancing to device mapper. A
-Konstantin> read operation that is close (in terms of sectors) to a
-Konstantin> previous read or write goes to the same mirror.
-
-I am currently running it on top of a 2.6.24-rc2 kernel and it works
-fine so far.
-
-  Sam
+Alasdair
 -- 
-Samuel Tardieu -- sam@rfc1149.net -- http://www.rfc1149.net/
-
+agk@redhat.com
