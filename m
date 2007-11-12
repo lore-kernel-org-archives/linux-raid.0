@@ -1,189 +1,129 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: Building a new raid6 with bitmap does not clear bits during resync
-Date: Mon, 12 Nov 2007 17:30:02 +1100
-Message-ID: <18231.62186.908021.981786@notabene.brown>
-References: <87lk98ad7e.fsf@informatik.uni-tuebingen.de>
+From: Yuri Tikhonov <yur@emcraft.com>
+Subject: Re[2]: Bug in processing dependencies by async_tx_submit() ?
+Date: Mon, 12 Nov 2007 11:46:05 +0300
+Message-ID: <927792640.20071112114605@emcraft.com>
+References: <200710311921.46609.yur@emcraft.com>
+ <1193886112.24616.18.camel@dwillia2-linux.ch.intel.com>
+ <200711011300.04546.yur@emcraft.com>
+ <e9c3a7c20711011736idef37b4qf5e86b40930a2eb1@mail.gmail.com>
+Reply-To: Yuri Tikhonov <yur@emcraft.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Goswin von Brederlow on Thursday November 8
+In-Reply-To: <e9c3a7c20711011736idef37b4qf5e86b40930a2eb1@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Goswin von Brederlow <brederlo@informatik.uni-tuebingen.de>
-Cc: linux-raid@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Neil Brown <neilb@suse.de>, Wolfgang Denk <wd@denx.de>, Detlev Zundel <dzu@denx.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thursday November 8, brederlo@informatik.uni-tuebingen.de wrote:
-> Hi,
-> 
-> I have created a new raid6:
-> 
-> md0 : active raid6 sdb1[0] sdl1[5] sdj1[4] sdh1[3] sdf1[2] sdd1[1]
->       6834868224 blocks level 6, 512k chunk, algorithm 2 [6/6] [UUUUUU]
->       [====>................]  resync = 21.5% (368216964/1708717056) finish=448.5min speed=49808K/sec
->       bitmap: 204/204 pages [816KB], 4096KB chunk
-> 
-> The raid is totally idle, not mounted and nothing.
-> 
-> So why does the "bitmap: 204/204" not sink? I would expect it to clear
-> bits as it resyncs so it should count slowly down to 0. As a side
-> effect of the bitmap being all dirty the resync will restart from the
-> beginning when the system is hard reset. As you can imagine that is
-> pretty anoying.
-> 
-> On the other hand on a clean shutdown it seems the bitmap gets updated
-> before stopping the array:
-> 
-> md3 : active raid6 sdc1[0] sdm1[5] sdk1[4] sdi1[3] sdg1[2] sde1[1]
->       6834868224 blocks level 6, 512k chunk, algorithm 2 [6/6] [UUUUUU]
->       [=======>.............]  resync = 38.4% (656155264/1708717056) finish=17846.4min speed=982K/sec
->       bitmap: 187/204 pages [748KB], 4096KB chunk
-> 
-> Consequently the rebuild did restart and is already further along.
-> 
 
-Thanks for the report.
+ Hi Dan,
 
-> 
-> Any ideas why that is so?
+On 02.11.2007, 3:36:50 you wrote:
 
-Yes.  The following patch should explain (a bit tersely) why this was
-so, and should also fix it so it will no longer be so.  Test reports
-always welcome.
+> I am preparing a new patch that replaces ASYNC_TX_DEP_ACK with
+> ASYNC_TX_CHAIN_ACK.  The plan is to make the entire chain of
+> dependencies available up until the last transaction is submitted.
+> This allows the entire dependency chain to be walked at
+> async_tx_submit time so that we can properly handle these multiple
+> dependency cases.  I'll send it out when it passes my internal
+> tests...
 
-NeilBrown
+ Meanwhile I've implemented my fix to this issue. With this the tests, which
+previously failed (mkfs got stuck), now pass successfully for me. Would you 
+please take a look? Thanks in advance.
 
-Status: ok
-
-Update md bitmap during resync.
-
-Currently and md array with a write-intent bitmap does not updated
-that bitmap to reflect successful partial resync.  Rather the entire
-bitmap is updated when the resync completes.
-
-This is because there is no guarentee that resync requests will
-complete in order, and tracking each request individually is
-unnecessarily burdensome.
-
-However there is value in regularly updating the bitmap, so add code
-to periodically pause while all pending sync requests complete, then
-update the bitmap.  Doing this only every few seconds (the same as the
-bitmap update time) does not notciable affect resync performance.
-
-Signed-off-by: Neil Brown <neilb@suse.de>
-
-### Diffstat output
- ./drivers/md/bitmap.c         |   34 +++++++++++++++++++++++++++++-----
- ./drivers/md/raid1.c          |    1 +
- ./drivers/md/raid10.c         |    2 ++
- ./drivers/md/raid5.c          |    3 +++
- ./include/linux/raid/bitmap.h |    3 +++
- 5 files changed, 38 insertions(+), 5 deletions(-)
-
-diff .prev/drivers/md/bitmap.c ./drivers/md/bitmap.c
---- .prev/drivers/md/bitmap.c	2007-10-22 16:55:52.000000000 +1000
-+++ ./drivers/md/bitmap.c	2007-11-12 16:36:30.000000000 +1100
-@@ -1349,14 +1349,38 @@ void bitmap_close_sync(struct bitmap *bi
- 	 */
- 	sector_t sector = 0;
- 	int blocks;
--	if (!bitmap) return;
-+	if (!bitmap)
-+		return;
- 	while (sector < bitmap->mddev->resync_max_sectors) {
- 		bitmap_end_sync(bitmap, sector, &blocks, 0);
--/*
--		if (sector < 500) printk("bitmap_close_sync: sec %llu blks %d\n",
--					 (unsigned long long)sector, blocks);
--*/		sector += blocks;
-+		sector += blocks;
-+	}
-+}
+diff --git a/crypto/async_tx/async_tx.c b/crypto/async_tx/async_tx.c
+index bc18cbb..6d77ae6 100644
+--- a/crypto/async_tx/async_tx.c
++++ b/crypto/async_tx/async_tx.c
+@@ -92,7 +92,7 @@ dma_wait_for_async_tx(struct dma_async_tx_descriptor *tx)
+                /* find the root of the unsubmitted dependency chain */
+                while (iter->cookie == -EBUSY) {
+                        parent = iter->parent;
+-                       if (parent && parent->cookie == -EBUSY)
++                       if (parent)
+                                iter = iter->parent;
+                        else
+                                break;
+@@ -120,10 +120,11 @@ async_tx_run_dependencies(struct dma_async_tx_descriptor *tx)
+                depend_node) {
+                chan = dep_tx->chan;
+                dev = chan->device;
+-               /* we can't depend on ourselves */
+-               BUG_ON(chan == tx->chan);
+                list_del(&dep_tx->depend_node);
+-               tx->tx_submit(dep_tx);
++               dep_tx->tx_submit(dep_tx);
 +
-+void bitmap_cond_end_sync(struct bitmap *bitmap, sector_t sector)
-+{
-+	sector_t s = 0;
-+	int blocks;
-+
-+	if (!bitmap)
-+		return;
-+	if (sector == 0) {
-+		bitmap->last_end_sync = jiffies;
-+		return;
-+	}
-+	if (time_before(jiffies, (bitmap->last_end_sync
-+				  + bitmap->daemon_sleep * HZ)))
-+		return;
-+	wait_event(bitmap->mddev->recovery_wait,
-+		   atomic_read(&bitmap->mddev->recovery_active) == 0);
-+
-+	sector &= ~((1ULL << CHUNK_BLOCK_SHIFT(bitmap)) - 1);
-+	s = 0;
-+	while (s < sector && s < bitmap->mddev->resync_max_sectors) {
-+		bitmap_end_sync(bitmap, s, &blocks, 0);
-+		s += blocks;
- 	}
-+	bitmap->last_end_sync = jiffies;
- }
- 
- static void bitmap_set_memory_bits(struct bitmap *bitmap, sector_t offset, int needed)
++               /* we no longer have a parent */
++               dep_tx->parent = NULL;
 
-diff .prev/drivers/md/raid10.c ./drivers/md/raid10.c
---- .prev/drivers/md/raid10.c	2007-10-30 13:50:45.000000000 +1100
-+++ ./drivers/md/raid10.c	2007-11-12 16:06:39.000000000 +1100
-@@ -1671,6 +1671,8 @@ static sector_t sync_request(mddev_t *md
- 	if (!go_faster && conf->nr_waiting)
- 		msleep_interruptible(1000);
- 
-+	bitmap_cond_end_sync(mddev->bitmap, sector_nr);
-+
- 	/* Again, very different code for resync and recovery.
- 	 * Both must result in an r10bio with a list of bios that
- 	 * have bi_end_io, bi_sector, bi_bdev set,
+                /* we need to poke the engine as client code does not
+                 * know about dependency submission events
+@@ -409,25 +410,41 @@ async_tx_submit(struct dma_chan *chan, struct dma_async_tx_descriptor *tx,
+        /* set this new tx to run after depend_tx if:
+         * 1/ a dependency exists (depend_tx is !NULL)
+         * 2/ the tx can not be submitted to the current channel
++        * 3/ the depend_tx has a parent
+         */
+-       if (depend_tx && depend_tx->chan != chan) {
++       if (depend_tx && (depend_tx->chan != chan || depend_tx->parent)) {
+                /* if ack is already set then we cannot be sure
+                 * we are referring to the correct operation
+                 */
+                BUG_ON(depend_tx->ack);
 
-diff .prev/drivers/md/raid1.c ./drivers/md/raid1.c
---- .prev/drivers/md/raid1.c	2007-10-30 13:50:45.000000000 +1100
-+++ ./drivers/md/raid1.c	2007-11-12 16:06:12.000000000 +1100
-@@ -1685,6 +1685,7 @@ static sector_t sync_request(mddev_t *md
- 	if (!go_faster && conf->nr_waiting)
- 		msleep_interruptible(1000);
- 
-+	bitmap_cond_end_sync(mddev->bitmap, sector_nr);
- 	raise_barrier(conf);
- 
- 	conf->next_resync = sector_nr;
+-               tx->parent = depend_tx;
+                spin_lock_bh(&depend_tx->lock);
++               tx->parent = depend_tx;
+                list_add_tail(&tx->depend_node, &depend_tx->depend_list);
+                if (depend_tx->cookie == 0) {
+-                       struct dma_chan *dep_chan = depend_tx->chan;
+-                       struct dma_device *dep_dev = dep_chan->device;
+-                       dep_dev->device_dependency_added(dep_chan);
+-               }
+-               spin_unlock_bh(&depend_tx->lock);
++                       /* depend_tx has been completed, run our dep
++                        * manually
++                        */
++                       async_tx_run_dependencies(depend_tx);
++                       spin_unlock_bh(&depend_tx->lock);
++               } else {
++                       /* depend_tx still in fly */
++                       spin_unlock_bh(&depend_tx->lock);
 
-diff .prev/drivers/md/raid5.c ./drivers/md/raid5.c
---- .prev/drivers/md/raid5.c	2007-10-30 13:50:45.000000000 +1100
-+++ ./drivers/md/raid5.c	2007-11-12 16:07:05.000000000 +1100
-@@ -4331,6 +4331,9 @@ static inline sector_t sync_request(mdde
- 		return sync_blocks * STRIPE_SECTORS; /* keep things rounded to whole stripes */
- 	}
- 
-+
-+	bitmap_cond_end_sync(mddev->bitmap, sector_nr);
-+
- 	pd_idx = stripe_to_pdidx(sector_nr, conf, raid_disks);
- 
- 	sh = wait_for_inactive_cache(conf, sector_nr, raid_disks, pd_idx);
 
-diff .prev/include/linux/raid/bitmap.h ./include/linux/raid/bitmap.h
---- .prev/include/linux/raid/bitmap.h	2007-11-12 14:55:51.000000000 +1100
-+++ ./include/linux/raid/bitmap.h	2007-11-12 16:08:41.000000000 +1100
-@@ -244,6 +244,8 @@ struct bitmap {
- 	 */
- 	unsigned long daemon_lastrun; /* jiffies of last run */
- 	unsigned long daemon_sleep; /* how many seconds between updates? */
-+	unsigned long last_end_sync; /* when we lasted called end_sync to
-+				      * update bitmap with resync progress */
- 
- 	atomic_t pending_writes; /* pending writes to the bitmap file */
- 	wait_queue_head_t write_wait;
-@@ -275,6 +277,7 @@ void bitmap_endwrite(struct bitmap *bitm
- int bitmap_start_sync(struct bitmap *bitmap, sector_t offset, int *blocks, int degraded);
- void bitmap_end_sync(struct bitmap *bitmap, sector_t offset, int *blocks, int aborted);
- void bitmap_close_sync(struct bitmap *bitmap);
-+void bitmap_cond_end_sync(struct bitmap *bitmap, sector_t sector);
- 
- void bitmap_unplug(struct bitmap *bitmap);
- void bitmap_daemon_work(struct bitmap *bitmap);
+-               /* schedule an interrupt to trigger the channel switch */
+-               async_trigger_callback(ASYNC_TX_ACK, depend_tx, NULL, NULL);
++                       /* schedule an interrupt to trigger the channel
++                        * switch or dependencies submittion
++                        */
++                       if (!(flags & ASYNC_TX_INT) && (depend_tx->chan != chan ||
++                           !depend_tx->callback))
++                               async_trigger_callback(ASYNC_TX_ACK | ASYNC_TX_INT,
++                                               depend_tx, NULL, NULL);
++
++                       /* flush the parent if it's not submitted yet */
++                       spin_lock_bh(&depend_tx->lock);
++                       depend_tx->chan->device->device_issue_pending(
++                               depend_tx->chan);
++                       spin_unlock_bh(&depend_tx->lock);
++               }
+        } else {
+                tx->parent = NULL;
+                tx->tx_submit(tx);
+diff --git a/include/linux/async_tx.h b/include/linux/async_tx.h
+index aea0402..ee09315 100644
+--- a/include/linux/async_tx.h
++++ b/include/linux/async_tx.h
+@@ -67,6 +67,7 @@ enum async_tx_flags {
+        ASYNC_TX_KMAP_SRC        = (1 << 5),
+        ASYNC_TX_KMAP_DST        = (1 << 6),
+        ASYNC_TX_ASYNC_ONLY      = (1 << 7),
++       ASYNC_TX_INT             = (1 << 8),
+ };
+
+ #ifdef CONFIG_DMA_ENGINE
+
