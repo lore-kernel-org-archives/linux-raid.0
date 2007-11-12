@@ -1,68 +1,122 @@
 From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: Raid5 assemble after dual sata port failure
-Date: Sun, 11 Nov 2007 20:01:00 -0500
-Message-ID: <4737A5CC.8040105@tmr.com>
-References: <47321FDF.8060207@synplicity.com> <4732E5F0.7080805@dgreaves.com> <4734CFE5.8070305@synplicity.com> <4734FB4A.4070401@synplicity.com> <473576F9.6040602@dgreaves.com> <4735FC7E.7030601@synplicity.com> <47373746.9090701@dgreaves.com> <47373EB9.9050408@synplicity.com> <4737870D.5000906@dgreaves.com>
+Subject: Re: Proposal: non-striping RAID4
+Date: Sun, 11 Nov 2007 20:29:06 -0500
+Message-ID: <4737AC62.8000308@tmr.com>
+References: <ef2613f30711091657q48e57b63if47a3653a92b28a6@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4737870D.5000906@dgreaves.com>
+In-Reply-To: <ef2613f30711091657q48e57b63if47a3653a92b28a6@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Greaves <david@dgreaves.com>
-Cc: Chris Eddington <chrise@synplicity.com>, linux-raid@vger.kernel.org
+To: James Lee <james.lee@cantab.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-David Greaves wrote:
-> Chris Eddington wrote:
->   
->> Yes, there is some kind of media error message in dmesg, below.  It is
->> not random, it happens at exactly the same moments in each xfs_repair -n
->> run.
->> Nov 11 09:48:25 altair kernel: [37043.300691]          res
->> 51/40:00:01:00:00/00:00:00:00:00/e1 Emask 0x9 (media error)
->> Nov 11 09:48:25 altair kernel: [37043.304326] ata4.00: ata_hpa_resize 1:
->> sectors = 976773168, hpa_sectors = 976773168
->> Nov 11 09:48:25 altair kernel: [37043.307672] ata4.00: ata_hpa_resize 1:
->> sectors = 976773168, hpa_sectors = 976773168
->>     
+James Lee wrote:
+> I have come across an unusual RAID configuration type which differs
+> from any of the standard RAID 0/1/4/5 levels currently available in
+> the md driver, and has a couple of very useful properties (see below).
+>  I think it would be useful to have this code included in the main
+> kernel, as it allows for some use cases that aren't well catered for
+> with the standard RAID levels.  I was wondering what people's thoughts
+> on this might be?
 >
-> I'm not sure what an ata_hpa_resize error is...
->   
-
-HPA = Hardware Protected Area.
-
-By any chance is this disk partitioned such that the partition size 
-includes the HPA? If it does, this sounds at least familiar, this 
-mailing list post may get you started: 
-http://osdir.com/ml/linux.ataraid/2005-09/msg00002.html
-
-In any case, run "fdisk -l" and look at the claimed total disk size and 
-the end point of the last partition. The HPA is not included in the 
-"disk size" so nothing should be trying to do so.
-> It probably explains the problems you've been having with the raid not 'just
-> recovering' though.
+> The RAID type has been named "unRAID" by it's author, and is basically
+> similar to RAID 4 but without data being striped across the drives in
+> the array.  In an n-drive array (where the drives need not have the
+> same capacity), n-1 of the drives appear as independent drives with
+> data written to them as with a single standalone drive, and the 1
+> remaining drive is a parity drive (this must be the largest capacity
+> drive), which stores the bitwise XOR of the data on the other n-1
+> drives (where the data being XORed is taken to be 0 if we're past the
+> end of that particular drive).  Data recovery then works as per normal
+> RAID 4/5 in the case of the failure of any one of the drives in the
+> array.
 >
-> I saw this:
-> http://www.linuxquestions.org/questions/linux-kernel-70/sata-issues-568894/
->   
-
-May be the same thing. Let us know what fdisk reports.
+> The advantages of this are:
+> - Drives need not be of the same size as each other; the only
+> requirement is that the parity drive must be the largest drive in the
+> array.  The available space of the array is the sum of the space of
+> all drives in the array, minus the size of the largest drive.
+> - Data protection is slightly better than with RAID 4/5 in that in the
+> event of multiple drive failures, only some data is lost (since the
+> data on any non-failed, non-parity drives is usable).
 >
-> What does smartctl say about your drive?
->
-> IMO the spare drive is no longer useful for data recovery - you may want to use
-> ddrescue to try and copy this drive to the spare drive.
->
-> David
-> PS Don't get the ddrescue parameters the wrong way round if you go that route...
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+> The disadvantages are:
+> - Performance:
+>     - As there is no striping, on a non-degraded array the read
+> performance will be identical to that of a single drive setup, and the
+> write performance will be comparable or somewhat worse than that of a
+> single-drive setup.
+>     - On a degraded arrays with many drives the read and write
+> performance could take further hits due to the PCI / PCI-E bus getting
+> saturated.
 >   
 
+I personally feel that "this still looks like a bunch of little drives" 
+should be listed first...
+> The company which has implemented this is "Lime technology" (website
+> here: http://www.lime-technology.com/); an overview of the technical
+> detail is given on their website here:
+> http://www.lime-technology.com/wordpress/?page_id=13.  The changes
+> made to the Linux md driver to support this have been released under
+> the GPL by the author - I've attached these to this email.
+>
+> Now I'm guessing that the reason this hasn't been implemented before
+> is that in most cases the points above mean that this is a worse
+> option than RAID 5, however there is a strong use case for this
+> system.  For many home users who want data redundancy, the current
+> RAID levels are impractical because the user has many hard drives of
+> different sizes accumulated over the years.  Even for new setups, it
+>   
+
+And over the years is just the problem. You have a bunch of tiny drives 
+unsuited, or marginally suited, for the size of modern distributions, 
+and using assorted old technology. There's a reason these are thrown out 
+and available, they're pretty much useless. Also they're power-hungry, 
+slow, and you would probably need more of these than would fit in a 
+standard case to provide even minimal useful size. They're also probably 
+PATA, meaning that many modern motherboards don't support them well (if 
+at all).
+> is generally not cost-effective to buy multiple identical sized hard
+> drives, compared with incrementally adding storage of the capacity
+> which is at the best price per GB at the time.  The fact that there is
+> a need for this type of flexibility is evidenced, for example, by
+> various forum threads such as for example this thread containing over
+> 1500 posts in a specialized audio / video forum:
+> http://www.avsforum.com/avs-vb/showthread.php?t=573986, as well as the
+> active community in the forums on the Lime technology website.
+>   
+
+I can buy 500GB USB drives for $98+tax if I wait until Stapels or Office 
+Max have a sale, $120 anytime, anywhere. I see 250GB PATA drives being 
+flogged for $50-70 for lack of demand. I simply can't imagine any case 
+where this would be useful other than as a proof of concept.
+
+Note: you can do this with existing code by setting up a partitions of 
+various sizes on multiple drives, first partitions size of smallest 
+drive, next the remaining space on the next drive, etc. On every set of 
+ >2 drives make a raid-5, on every set of two drives make raid-10, and 
+have a bunch of smaller redundant drives which are faster. You can then 
+combine them all into one linear array if it pleases you. I have a crate 
+if drives from 360MB (six) to about 4GB, and they are going to be sold 
+by the pound because they are garbage.
+> Would there be interest in making this kind of addition to the md code?
+>   
+
+I can't see that the cost of maintaining it is justified by the benefit, 
+but not my decision. If you were to set up such a thing using FUSE, 
+keeping it out of the kernel but still providing the functionality, it 
+might be worth doing. On the other hand, setting up the partitions and 
+creating the arrays could probably be done by a perl script which would 
+take only a few hours to write.
+> PS: In case it wasn't clear, the attached code is simply the code the
+> author has released under GPL - it's intended just for reference, not
+> as proposed code for review.
+>   
+Much as I generally like adding functionality, I *really* can't see much 
+in this idea. It seems to me to be in the "clever but not useful" category.
 
 -- 
 bill davidsen <davidsen@tmr.com>
