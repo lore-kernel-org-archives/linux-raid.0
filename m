@@ -1,125 +1,189 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: Proposal: non-striping RAID4
-Date: Sun, 11 Nov 2007 20:29:06 -0500
-Message-ID: <4737AC62.8000308@tmr.com>
-References: <ef2613f30711091657q48e57b63if47a3653a92b28a6@mail.gmail.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: Building a new raid6 with bitmap does not clear bits during resync
+Date: Mon, 12 Nov 2007 17:30:02 +1100
+Message-ID: <18231.62186.908021.981786@notabene.brown>
+References: <87lk98ad7e.fsf@informatik.uni-tuebingen.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <ef2613f30711091657q48e57b63if47a3653a92b28a6@mail.gmail.com>
+In-Reply-To: message from Goswin von Brederlow on Thursday November 8
 Sender: linux-raid-owner@vger.kernel.org
-To: James Lee <james.lee@cantab.net>
+To: Goswin von Brederlow <brederlo@informatik.uni-tuebingen.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-James Lee wrote:
-> I have come across an unusual RAID configuration type which differs
-> from any of the standard RAID 0/1/4/5 levels currently available in
-> the md driver, and has a couple of very useful properties (see below).
->  I think it would be useful to have this code included in the main
-> kernel, as it allows for some use cases that aren't well catered for
-> with the standard RAID levels.  I was wondering what people's thoughts
-> on this might be?
->
-> The RAID type has been named "unRAID" by it's author, and is basically
-> similar to RAID 4 but without data being striped across the drives in
-> the array.  In an n-drive array (where the drives need not have the
-> same capacity), n-1 of the drives appear as independent drives with
-> data written to them as with a single standalone drive, and the 1
-> remaining drive is a parity drive (this must be the largest capacity
-> drive), which stores the bitwise XOR of the data on the other n-1
-> drives (where the data being XORed is taken to be 0 if we're past the
-> end of that particular drive).  Data recovery then works as per normal
-> RAID 4/5 in the case of the failure of any one of the drives in the
-> array.
->
-> The advantages of this are:
-> - Drives need not be of the same size as each other; the only
-> requirement is that the parity drive must be the largest drive in the
-> array.  The available space of the array is the sum of the space of
-> all drives in the array, minus the size of the largest drive.
-> - Data protection is slightly better than with RAID 4/5 in that in the
-> event of multiple drive failures, only some data is lost (since the
-> data on any non-failed, non-parity drives is usable).
->
-> The disadvantages are:
-> - Performance:
->     - As there is no striping, on a non-degraded array the read
-> performance will be identical to that of a single drive setup, and the
-> write performance will be comparable or somewhat worse than that of a
-> single-drive setup.
->     - On a degraded arrays with many drives the read and write
-> performance could take further hits due to the PCI / PCI-E bus getting
-> saturated.
->   
+On Thursday November 8, brederlo@informatik.uni-tuebingen.de wrote:
+> Hi,
+> 
+> I have created a new raid6:
+> 
+> md0 : active raid6 sdb1[0] sdl1[5] sdj1[4] sdh1[3] sdf1[2] sdd1[1]
+>       6834868224 blocks level 6, 512k chunk, algorithm 2 [6/6] [UUUUUU]
+>       [====>................]  resync = 21.5% (368216964/1708717056) finish=448.5min speed=49808K/sec
+>       bitmap: 204/204 pages [816KB], 4096KB chunk
+> 
+> The raid is totally idle, not mounted and nothing.
+> 
+> So why does the "bitmap: 204/204" not sink? I would expect it to clear
+> bits as it resyncs so it should count slowly down to 0. As a side
+> effect of the bitmap being all dirty the resync will restart from the
+> beginning when the system is hard reset. As you can imagine that is
+> pretty anoying.
+> 
+> On the other hand on a clean shutdown it seems the bitmap gets updated
+> before stopping the array:
+> 
+> md3 : active raid6 sdc1[0] sdm1[5] sdk1[4] sdi1[3] sdg1[2] sde1[1]
+>       6834868224 blocks level 6, 512k chunk, algorithm 2 [6/6] [UUUUUU]
+>       [=======>.............]  resync = 38.4% (656155264/1708717056) finish=17846.4min speed=982K/sec
+>       bitmap: 187/204 pages [748KB], 4096KB chunk
+> 
+> Consequently the rebuild did restart and is already further along.
+> 
 
-I personally feel that "this still looks like a bunch of little drives" 
-should be listed first...
-> The company which has implemented this is "Lime technology" (website
-> here: http://www.lime-technology.com/); an overview of the technical
-> detail is given on their website here:
-> http://www.lime-technology.com/wordpress/?page_id=13.  The changes
-> made to the Linux md driver to support this have been released under
-> the GPL by the author - I've attached these to this email.
->
-> Now I'm guessing that the reason this hasn't been implemented before
-> is that in most cases the points above mean that this is a worse
-> option than RAID 5, however there is a strong use case for this
-> system.  For many home users who want data redundancy, the current
-> RAID levels are impractical because the user has many hard drives of
-> different sizes accumulated over the years.  Even for new setups, it
->   
+Thanks for the report.
 
-And over the years is just the problem. You have a bunch of tiny drives 
-unsuited, or marginally suited, for the size of modern distributions, 
-and using assorted old technology. There's a reason these are thrown out 
-and available, they're pretty much useless. Also they're power-hungry, 
-slow, and you would probably need more of these than would fit in a 
-standard case to provide even minimal useful size. They're also probably 
-PATA, meaning that many modern motherboards don't support them well (if 
-at all).
-> is generally not cost-effective to buy multiple identical sized hard
-> drives, compared with incrementally adding storage of the capacity
-> which is at the best price per GB at the time.  The fact that there is
-> a need for this type of flexibility is evidenced, for example, by
-> various forum threads such as for example this thread containing over
-> 1500 posts in a specialized audio / video forum:
-> http://www.avsforum.com/avs-vb/showthread.php?t=573986, as well as the
-> active community in the forums on the Lime technology website.
->   
+> 
+> Any ideas why that is so?
 
-I can buy 500GB USB drives for $98+tax if I wait until Stapels or Office 
-Max have a sale, $120 anytime, anywhere. I see 250GB PATA drives being 
-flogged for $50-70 for lack of demand. I simply can't imagine any case 
-where this would be useful other than as a proof of concept.
+Yes.  The following patch should explain (a bit tersely) why this was
+so, and should also fix it so it will no longer be so.  Test reports
+always welcome.
 
-Note: you can do this with existing code by setting up a partitions of 
-various sizes on multiple drives, first partitions size of smallest 
-drive, next the remaining space on the next drive, etc. On every set of 
- >2 drives make a raid-5, on every set of two drives make raid-10, and 
-have a bunch of smaller redundant drives which are faster. You can then 
-combine them all into one linear array if it pleases you. I have a crate 
-if drives from 360MB (six) to about 4GB, and they are going to be sold 
-by the pound because they are garbage.
-> Would there be interest in making this kind of addition to the md code?
->   
+NeilBrown
 
-I can't see that the cost of maintaining it is justified by the benefit, 
-but not my decision. If you were to set up such a thing using FUSE, 
-keeping it out of the kernel but still providing the functionality, it 
-might be worth doing. On the other hand, setting up the partitions and 
-creating the arrays could probably be done by a perl script which would 
-take only a few hours to write.
-> PS: In case it wasn't clear, the attached code is simply the code the
-> author has released under GPL - it's intended just for reference, not
-> as proposed code for review.
->   
-Much as I generally like adding functionality, I *really* can't see much 
-in this idea. It seems to me to be in the "clever but not useful" category.
+Status: ok
 
--- 
-bill davidsen <davidsen@tmr.com>
-  CTO TMR Associates, Inc
-  Doing interesting things with small computers since 1979
+Update md bitmap during resync.
 
+Currently and md array with a write-intent bitmap does not updated
+that bitmap to reflect successful partial resync.  Rather the entire
+bitmap is updated when the resync completes.
+
+This is because there is no guarentee that resync requests will
+complete in order, and tracking each request individually is
+unnecessarily burdensome.
+
+However there is value in regularly updating the bitmap, so add code
+to periodically pause while all pending sync requests complete, then
+update the bitmap.  Doing this only every few seconds (the same as the
+bitmap update time) does not notciable affect resync performance.
+
+Signed-off-by: Neil Brown <neilb@suse.de>
+
+### Diffstat output
+ ./drivers/md/bitmap.c         |   34 +++++++++++++++++++++++++++++-----
+ ./drivers/md/raid1.c          |    1 +
+ ./drivers/md/raid10.c         |    2 ++
+ ./drivers/md/raid5.c          |    3 +++
+ ./include/linux/raid/bitmap.h |    3 +++
+ 5 files changed, 38 insertions(+), 5 deletions(-)
+
+diff .prev/drivers/md/bitmap.c ./drivers/md/bitmap.c
+--- .prev/drivers/md/bitmap.c	2007-10-22 16:55:52.000000000 +1000
++++ ./drivers/md/bitmap.c	2007-11-12 16:36:30.000000000 +1100
+@@ -1349,14 +1349,38 @@ void bitmap_close_sync(struct bitmap *bi
+ 	 */
+ 	sector_t sector = 0;
+ 	int blocks;
+-	if (!bitmap) return;
++	if (!bitmap)
++		return;
+ 	while (sector < bitmap->mddev->resync_max_sectors) {
+ 		bitmap_end_sync(bitmap, sector, &blocks, 0);
+-/*
+-		if (sector < 500) printk("bitmap_close_sync: sec %llu blks %d\n",
+-					 (unsigned long long)sector, blocks);
+-*/		sector += blocks;
++		sector += blocks;
++	}
++}
++
++void bitmap_cond_end_sync(struct bitmap *bitmap, sector_t sector)
++{
++	sector_t s = 0;
++	int blocks;
++
++	if (!bitmap)
++		return;
++	if (sector == 0) {
++		bitmap->last_end_sync = jiffies;
++		return;
++	}
++	if (time_before(jiffies, (bitmap->last_end_sync
++				  + bitmap->daemon_sleep * HZ)))
++		return;
++	wait_event(bitmap->mddev->recovery_wait,
++		   atomic_read(&bitmap->mddev->recovery_active) == 0);
++
++	sector &= ~((1ULL << CHUNK_BLOCK_SHIFT(bitmap)) - 1);
++	s = 0;
++	while (s < sector && s < bitmap->mddev->resync_max_sectors) {
++		bitmap_end_sync(bitmap, s, &blocks, 0);
++		s += blocks;
+ 	}
++	bitmap->last_end_sync = jiffies;
+ }
+ 
+ static void bitmap_set_memory_bits(struct bitmap *bitmap, sector_t offset, int needed)
+
+diff .prev/drivers/md/raid10.c ./drivers/md/raid10.c
+--- .prev/drivers/md/raid10.c	2007-10-30 13:50:45.000000000 +1100
++++ ./drivers/md/raid10.c	2007-11-12 16:06:39.000000000 +1100
+@@ -1671,6 +1671,8 @@ static sector_t sync_request(mddev_t *md
+ 	if (!go_faster && conf->nr_waiting)
+ 		msleep_interruptible(1000);
+ 
++	bitmap_cond_end_sync(mddev->bitmap, sector_nr);
++
+ 	/* Again, very different code for resync and recovery.
+ 	 * Both must result in an r10bio with a list of bios that
+ 	 * have bi_end_io, bi_sector, bi_bdev set,
+
+diff .prev/drivers/md/raid1.c ./drivers/md/raid1.c
+--- .prev/drivers/md/raid1.c	2007-10-30 13:50:45.000000000 +1100
++++ ./drivers/md/raid1.c	2007-11-12 16:06:12.000000000 +1100
+@@ -1685,6 +1685,7 @@ static sector_t sync_request(mddev_t *md
+ 	if (!go_faster && conf->nr_waiting)
+ 		msleep_interruptible(1000);
+ 
++	bitmap_cond_end_sync(mddev->bitmap, sector_nr);
+ 	raise_barrier(conf);
+ 
+ 	conf->next_resync = sector_nr;
+
+diff .prev/drivers/md/raid5.c ./drivers/md/raid5.c
+--- .prev/drivers/md/raid5.c	2007-10-30 13:50:45.000000000 +1100
++++ ./drivers/md/raid5.c	2007-11-12 16:07:05.000000000 +1100
+@@ -4331,6 +4331,9 @@ static inline sector_t sync_request(mdde
+ 		return sync_blocks * STRIPE_SECTORS; /* keep things rounded to whole stripes */
+ 	}
+ 
++
++	bitmap_cond_end_sync(mddev->bitmap, sector_nr);
++
+ 	pd_idx = stripe_to_pdidx(sector_nr, conf, raid_disks);
+ 
+ 	sh = wait_for_inactive_cache(conf, sector_nr, raid_disks, pd_idx);
+
+diff .prev/include/linux/raid/bitmap.h ./include/linux/raid/bitmap.h
+--- .prev/include/linux/raid/bitmap.h	2007-11-12 14:55:51.000000000 +1100
++++ ./include/linux/raid/bitmap.h	2007-11-12 16:08:41.000000000 +1100
+@@ -244,6 +244,8 @@ struct bitmap {
+ 	 */
+ 	unsigned long daemon_lastrun; /* jiffies of last run */
+ 	unsigned long daemon_sleep; /* how many seconds between updates? */
++	unsigned long last_end_sync; /* when we lasted called end_sync to
++				      * update bitmap with resync progress */
+ 
+ 	atomic_t pending_writes; /* pending writes to the bitmap file */
+ 	wait_queue_head_t write_wait;
+@@ -275,6 +277,7 @@ void bitmap_endwrite(struct bitmap *bitm
+ int bitmap_start_sync(struct bitmap *bitmap, sector_t offset, int *blocks, int degraded);
+ void bitmap_end_sync(struct bitmap *bitmap, sector_t offset, int *blocks, int aborted);
+ void bitmap_close_sync(struct bitmap *bitmap);
++void bitmap_cond_end_sync(struct bitmap *bitmap, sector_t sector);
+ 
+ void bitmap_unplug(struct bitmap *bitmap);
+ void bitmap_daemon_work(struct bitmap *bitmap);
