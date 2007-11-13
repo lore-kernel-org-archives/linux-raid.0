@@ -1,54 +1,26 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: Building a new raid6 with bitmap does not clear bits during resync
-Date: Tue, 13 Nov 2007 09:22:02 +1100
-Message-ID: <18232.53770.923521.968923@notabene.brown>
-References: <87lk98ad7e.fsf@informatik.uni-tuebingen.de>
-	<18231.62186.908021.981786@notabene.brown>
-	<47387137.7000401@tmr.com>
+From: Peter <thenephilim13@yahoo.com>
+Subject: kernel panic (2.6.23.1-fc7) in drivers/md/raid5.c:144
+Date: Tue, 13 Nov 2007 10:20:02 -0800 (PST)
+Message-ID: <880130.25278.qm@web52803.mail.re2.yahoo.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Bill Davidsen on Monday November 12
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: Goswin von Brederlow <brederlo@informatik.uni-tuebingen.de>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Monday November 12, davidsen@tmr.com wrote:
-> Neil Brown wrote:
-> >
-> > However there is value in regularly updating the bitmap, so add code
-> > to periodically pause while all pending sync requests complete, then
-> > update the bitmap.  Doing this only every few seconds (the same as the
-> > bitmap update time) does not notciable affect resync performance.
-> >   
-> 
-> I wonder if a minimum time and minimum number of stripes would be 
-> better. If a resync is going slowly because it's going over a slow link 
-> to iSCSI, nbd, or a box of cheap drives fed off a single USB port, just 
-> writing the updated bitmap may represent as much data as has been 
-> resynced in the time slice.
-> 
-> Not a suggestion, but a request for your thoughts on that.
+Hi
 
-Thanks for your thoughts.
-Choosing how often to update the bitmap during a sync is certainly not
-trivial.   In different situations, different requirements might rule.
+I had a 3 disc raid5 array running fine with Fedora 7 (32bit) kernel 2.6.23.1-fc7 on an old Athlon XP using a two sata_sil cards. 
 
-I chose to base it on time, and particularly on the time we already
-have for "how soon to write back clean bits to the bitmap" because it
-is fairly easy to users to understand the implications (if I set the
-time to 30 seconds, then I might have to repeat 30second of resync)
-and it is already configurable (via the "--delay" option to --create
---bitmap).
+I replaced the hardware with an Athlon64 X2 and using the onboard sata_nv, after I modified the initrd I was able to boot up from my old system drive. However when it brought up the raid array it died with a kernel panic. I used a rescue CD, commented out the array in mdadm.conf and booted up. I could assemble the array manually (it kicked out one of the three drives for some reason?) but when I used mdadm --examine /dev/md0 I got the kernel panic again. I don't have remote debugging but I managed to take some pictures:
 
-Presumably if someone has a very slow system and wanted to use
-bitmaps, they would set --delay relatively large to reduce the cost
-and still provide significant benefits.  This would effect both normal
-clean-bit writeback and during-resync clean-bit-writeback.
+http://img132.imageshack.us/img132/1697/kernel1sh3.jpg
+http://img132.imageshack.us/img132/3538/kernel2eu2.jpg
 
-Hope that clarifies my approach.
+From what I understand it should be possible to do this hardware upgrade with using software raid? Any ideas?
 
-Thanks,
-NeilBrown
+Thanks
+Peter
+
+
