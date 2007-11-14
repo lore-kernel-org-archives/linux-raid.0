@@ -1,64 +1,56 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: Building a new raid6 with bitmap does not clear bits during resync
-Date: Wed, 14 Nov 2007 10:33:40 -0500
-Message-ID: <473B1554.2050608@tmr.com>
-References: <87lk98ad7e.fsf@informatik.uni-tuebingen.de>	<18231.62186.908021.981786@notabene.brown>	<47387137.7000401@tmr.com> <18232.53770.923521.968923@notabene.brown>
+From: Greg KH <greg@kroah.com>
+Subject: Re: [stable] [PATCH 000 of 2] md: Fixes for md in 2.6.23
+Date: Wed, 14 Nov 2007 14:34:15 -0800
+Message-ID: <20071114223415.GA771@kroah.com>
+References: <20071022171426.31103.patches@notabene> <20071114002214.GA31928@kroah.com> <20071114002308.GB31928@kroah.com> <e9c3a7c20711131936t3c5f858cm8937b24d97fe998c@mail.gmail.com> <20071114034325.GA25558@kroah.com> <e9c3a7c20711132136t6cc9a91avb1d1ddf257701331@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18232.53770.923521.968923@notabene.brown>
+Content-Disposition: inline
+In-Reply-To: <e9c3a7c20711132136t6cc9a91avb1d1ddf257701331@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Goswin von Brederlow <brederlo@informatik.uni-tuebingen.de>, linux-raid@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: NeilBrown <neilb@suse.de>, Andrew Morton <akpm@linux-foundation.org>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Stable <stable@kernel.org>
 List-Id: linux-raid.ids
 
-Neil Brown wrote:
-> On Monday November 12, davidsen@tmr.com wrote:
->   
->> Neil Brown wrote:
->>     
->>> However there is value in regularly updating the bitmap, so add code
->>> to periodically pause while all pending sync requests complete, then
->>> update the bitmap.  Doing this only every few seconds (the same as the
->>> bitmap update time) does not notciable affect resync performance.
->>>   
->>>       
->> I wonder if a minimum time and minimum number of stripes would be 
->> better. If a resync is going slowly because it's going over a slow link 
->> to iSCSI, nbd, or a box of cheap drives fed off a single USB port, just 
->> writing the updated bitmap may represent as much data as has been 
->> resynced in the time slice.
->>
->> Not a suggestion, but a request for your thoughts on that.
->>     
->
-> Thanks for your thoughts.
-> Choosing how often to update the bitmap during a sync is certainly not
-> trivial.   In different situations, different requirements might rule.
->
-> I chose to base it on time, and particularly on the time we already
-> have for "how soon to write back clean bits to the bitmap" because it
-> is fairly easy to users to understand the implications (if I set the
-> time to 30 seconds, then I might have to repeat 30second of resync)
-> and it is already configurable (via the "--delay" option to --create
-> --bitmap).
->   
+On Tue, Nov 13, 2007 at 10:36:30PM -0700, Dan Williams wrote:
+> On Nov 13, 2007 8:43 PM, Greg KH <greg@kroah.com> wrote:
+> > >
+> > > Careful, it looks like you cherry picked commit 4ae3f847 "md: raid5:
+> > > fix clearing of biofill operations" which ended up misapplied in
+> > > Linus' tree,  You should either also pick up def6ae26 "md: fix
+> > > misapplied patch in raid5.c" or I can resend the original "raid5: fix
+> > > clearing of biofill operations."
+> > >
+> > > The other patch for -stable "raid5: fix unending write sequence" is
+> > > currently in -mm.
+> >
+> > Hm, I've attached the two patches that I have right now in the -stable
+> > tree so far (still have over 100 patches to go, so I might not have
+> > gotten to them yet if you have sent them).  These were sent to me by
+> > Andrew on their way to Linus.  if I should drop either one, or add
+> > another one, please let me know.
+> >
+> 
+> Drop md-raid5-fix-clearing-of-biofill-operations.patch and replace it
+> with the attached
+> md-raid5-not-raid6-fix-clearing-of-biofill-operations.patch (the
+> original sent to Neil).
+> 
+> The critical difference is that the replacement patch touches
+> handle_stripe5, not handle_stripe6.  Diffing the patches shows the
+> changes for hunk #3:
+> 
+> -@@ -2903,6 +2907,13 @@ static void handle_stripe6(struct stripe
+> +@@ -2630,6 +2634,13 @@ static void handle_stripe5(struct stripe_head *sh)
 
-Sounds right, that part of it is pretty user friendly.
-> Presumably if someone has a very slow system and wanted to use
-> bitmaps, they would set --delay relatively large to reduce the cost
-> and still provide significant benefits.  This would effect both normal
-> clean-bit writeback and during-resync clean-bit-writeback.
->
-> Hope that clarifies my approach.
->   
+Ah, ok, thanks, will do that.
 
-Easy to implement and understand is always a strong point, and a user 
-can make an informed decision. Thanks for the discussion.
+> raid5-fix-unending-write-sequence.patch is in -mm and I believe is
+> waiting on an Acked-by from Neil?
 
--- 
-bill davidsen <davidsen@tmr.com>
-  CTO TMR Associates, Inc
-  Doing interesting things with small computers since 1979
+I don't see it in Linus's tree yet, so I can't apply it to -stable...
 
+thanks,
+
+greg k-h
