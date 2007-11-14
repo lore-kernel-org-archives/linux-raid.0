@@ -1,48 +1,72 @@
 From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: Proposal: non-striping RAID4
-Date: Wed, 14 Nov 2007 18:16:14 -0500
-Message-ID: <473B81BE.8070309@tmr.com>
-References: <ef2613f30711091657q48e57b63if47a3653a92b28a6@mail.gmail.com>	 <4737AC62.8000308@tmr.com>	 <ef2613f30711131548l2ecacd3p9994fdc6ebb6042a@mail.gmail.com> <ef2613f30711131706g31b7b7adm61add82fef3ff94a@mail.gmail.com>
+Subject: Re: PROBLEM: raid5 hangs
+Date: Wed, 14 Nov 2007 18:59:02 -0500
+Message-ID: <473B8BC6.4070109@tmr.com>
+References: <Pine.LNX.4.64.0711140607160.16327@sysbabe.flashdance.cx> <Pine.LNX.4.64.0711140407190.22735@p34.internal.lan>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <ef2613f30711131706g31b7b7adm61add82fef3ff94a@mail.gmail.com>
+In-Reply-To: <Pine.LNX.4.64.0711140407190.22735@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: James Lee <james.lee@cantab.net>
-Cc: linux-raid@vger.kernel.org
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: Peter Magnusson <iocc@linux-raid.lists.flashdance.cx>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-James Lee wrote:
-> >From a quick search through this mailing list, it looks like I can
-> answer my own question regarding RAID1 --> RAID5 conversion.  Instead
-> of creating a RAID1 array for the partitions on the two biggest
-> drives, it should just create a 2-drive RAID5 (which is identical, but
-> can be expanded as with any other RAID5 array).
+Justin Piszcz wrote:
+> This is a known bug in 2.6.23 and should be fixed in 2.6.23.2 if the 
+> RAID5 bio* patches are applied.
+
+Note below he's running 2.6.22.3 which doesn't have the bug unless 
+-STABLE added it. So should not really be in 2.6.22.anything. I assume 
+you're talking the endless write or bio issue?
 >
-> So it looks like this should work I guess.
-
-I believe what you want to create might be a three drive raid-5 with one 
-failed drive. That way you can just add a drive when you want.
-
-  mdadm -C -c32 -l5 -n3 -amd /dev/md7 /dev/loop[12] missing
-
-Then you can add another drive:
-
-  mdadm --add /dev/md7 /dev/loop3
-
-The output are at the end of this message.
-
-But in general think it would be really great to be able to have a 
-format which would do raid-5 or raid-6 over all the available parts of 
-multiple drives, and since there's some similar logic for raid-10 over a 
-selection of drives it is clearly possible. But in terms of the benefit 
-to be gained, unless it fails out of the code and someone feels the 
-desire to do it, I can't see much joy to ever having such a thing.
-
-The feature I would really like to have is raid5e, distributed spare so 
-head motion is spread over all drives. Don't have time to look at that 
-one, either, but it really helps performance under load with small arrays.
+> Justin.
+>
+> On Wed, 14 Nov 2007, Peter Magnusson wrote:
+>
+>> Hey.
+>>
+>> [1.] One line summary of the problem:
+>>
+>> raid5 hangs and use 100% cpu
+>>
+>> [2.] Full description of the problem/report:
+>>
+>> I have used 2.6.18 for 284 days or something until my powersupply 
+>> died, no problem what so ever duing that time. After that forced 
+>> reboot I did these changes; Put in 2 GB more memory so I have 3 GB 
+>> instead of 1 GB, two disks in the raid5 got badblocks so I didnt 
+>> trust them anymore so I bought new disks (I managed to save the 
+>> raid5). I have 6x300 GB in a raid5. Two of them are now 320 GB so 
+>> created a small raid1 also. That raid5 is encrypted with 
+>> aes-cbc-plain. The raid1 is encrypted with aes-cbc-essiv:sha256.
+>>
+>> I compiled linux-2.6.22.3 and started to use that. I used the same 
+>> .config
+>> as in default FC5, I think i just selected P4 cpu and preemptive 
+>> kernel type.
+>>
+>> After 11 or 12 days the computer froze, I wasnt home when it happend and
+>> couldnt fix it for like 3 days. It was just to reboot it as it wasnt 
+>> possible to login remotely or on console. It did respond to ping 
+>> however.
+>> After reboot it rebuilded the raid5.
+>>
+>> Then it happend again after approx the same time, 11 or 12 days. I 
+>> noticed
+>> that the process md1_raid5 used 100% cpu all the time. After reboot it
+>> rebuilded the raid5.
+>>
+>> I compiled linux-2.6.23.
+>>
+>> And then... it happend again... After about the same time as before.
+>> md1_raid5 used 100% cpu. I also noticed that I wasnt able to save
+>> anything in my homedir, it froze during save. I could read from it 
+>> however. My homedir isnt on raid5 but its encrypted. Its not on any 
+>> disk that has to do with raid. This problem didnt happend when I used 
+>> 2.6.18. Currently I use 2.6.18 as I kinda need the computer stable.
+>> After reboot it rebuilded the raid5.
 
 -- 
 bill davidsen <davidsen@tmr.com>
