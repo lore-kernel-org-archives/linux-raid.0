@@ -1,226 +1,190 @@
-From: "Neil Cavan" <neilcavan@gmail.com>
-Subject: RAID5 Recovery
-Date: Tue, 13 Nov 2007 20:05:55 -0500
-Message-ID: <f0d815c0711131705s17f365b4kc122db98e8e27895@mail.gmail.com>
+From: "James Lee" <james.lee@cantab.net>
+Subject: Re: Proposal: non-striping RAID4
+Date: Wed, 14 Nov 2007 01:06:46 +0000
+Message-ID: <ef2613f30711131706g31b7b7adm61add82fef3ff94a@mail.gmail.com>
+References: <ef2613f30711091657q48e57b63if47a3653a92b28a6@mail.gmail.com>
+	 <4737AC62.8000308@tmr.com>
+	 <ef2613f30711131548l2ecacd3p9994fdc6ebb6042a@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <ef2613f30711131548l2ecacd3p9994fdc6ebb6042a@mail.gmail.com>
 Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello,
+From a quick search through this mailing list, it looks like I can
+answer my own question regarding RAID1 --> RAID5 conversion.  Instead
+of creating a RAID1 array for the partitions on the two biggest
+drives, it should just create a 2-drive RAID5 (which is identical, but
+can be expanded as with any other RAID5 array).
 
-I have a 5-disk RAID5 array that has gone belly-up. It consists of 2x
-2 disks on Promise PCI controllers, and one on the mobo controller.
+So it looks like this should work I guess.
 
-This array has been running for a couple years, and every so often
-(randomly, sometimes every couple weeks sometimes no problem for
-months) it will drop a drive. It's not a drive failure per se, it's
-something controller-related since the failures tend to happen in
-pairs and SMART gives the drives a clean bill of health. If it's only
-one drive, I can hot-add with no problem. If it's 2 drives my heart
-leaps into my mouth but I reboot, only one of the drives comes up as
-failed, and I can hot-add with no problem. The 2-drive case has
-happened a dozen times and my array is never any worse for the wear.
-
-This morning, I woke up to find the array had kicked two disks. This
-time, though, /proc/mdstat showed one of the failed disks (U_U_U, one
-of the "_"s) had been marked as a spare - weird, since there are no
-spare drives in this array. I rebooted, and the array came back in the
-same state: one failed, one spare. I hot-removed and hot-added the
-spare drive, which put the array back to where I thought it should be
-( still U_U_U, but with both "_"s marked as failed). Then I rebooted,
-and the array began rebuilding on its own. Usually I have to hot-add
-manually, so that struck me as a little odd, but I gave it no mind and
-went to work. Without checking the contents of the filesystem. Which
-turned out not to have been mounted on reboot. Because apparently
-things went horribly wrong.
-
-The rebuild process ran its course. I now have an array that mdadm
-insists is peachy:
--------------------------------------------------------------------------------------------------------
-md0 : active raid5 hda1[0] hdc1[1] hdi1[4] hdg1[3] hde1[2]
-      468872704 blocks level 5, 64k chunk, algorithm 2 [5/5] [UUUUU]
-
-unused devices: <none>
--------------------------------------------------------------------------------------------------------
-
-But there is no filesystem on /dev/md0:
-
--------------------------------------------------------------------------------------------------------
-sudo mount -t reiserfs /dev/md0 /storage/
-mount: wrong fs type, bad option, bad superblock on /dev/md0,
-       missing codepage or other error
--------------------------------------------------------------------------------------------------------
-
-Do I have any hope of recovering this data? Could rebuilding the
-reiserfs superblock help if the rebuild managed to corrupt the
-superblock but not the data?
-
-Any help is appreciated, below is the failure event in
-/var/log/messages, followed by the output of cat /var/log/messages |
-grep md.
-
-Thanks,
-Neil Cavan
-
-Nov 13 02:01:03 localhost kernel: [17805772.424000] hdc: dma_intr:
-status=0x51 { DriveReady SeekComplete Error }
-Nov 13 02:01:03 localhost kernel: [17805772.424000] hdc: dma_intr:
-error=0x40 { UncorrectableError }, LBAsect=11736, sector=1
-1719
-Nov 13 02:01:03 localhost kernel: [17805772.424000] ide: failed opcode
-was: unknown
-Nov 13 02:01:03 localhost kernel: [17805772.424000] end_request: I/O
-error, dev hdc, sector 11719
-Nov 13 02:01:03 localhost kernel: [17805772.424000] R5: read error not
-correctable.
-Nov 13 02:01:03 localhost kernel: [17805772.464000] lost page write
-due to I/O error on md0
-Nov 13 02:01:05 localhost kernel: [17805773.776000] hdc: dma_intr:
-status=0x51 { DriveReady SeekComplete Error }
-Nov 13 02:01:05 localhost kernel: [17805773.776000] hdc: dma_intr:
-error=0x40 { UncorrectableError }, LBAsect=11736, sector=1
-1727
-Nov 13 02:01:05 localhost kernel: [17805773.776000] ide: failed opcode
-was: unknown
-Nov 13 02:01:05 localhost kernel: [17805773.776000] end_request: I/O
-error, dev hdc, sector 11727
-Nov 13 02:01:05 localhost kernel: [17805773.776000] R5: read error not
-correctable.
-Nov 13 02:01:05 localhost kernel: [17805773.776000] lost page write
-due to I/O error on md0
-Nov 13 02:01:06 localhost kernel: [17805775.156000] hdc: dma_intr:
-status=0x51 { DriveReady SeekComplete Error }
-Nov 13 02:01:06 localhost kernel: [17805775.156000] hdc: dma_intr:
-error=0x40 { UncorrectableError }, LBAsect=11736, sector=1
-1735
-Nov 13 02:01:06 localhost kernel: [17805775.156000] ide: failed opcode
-was: unknown
-Nov 13 02:01:06 localhost kernel: [17805775.156000] end_request: I/O
-error, dev hdc, sector 11735
-Nov 13 02:01:06 localhost kernel: [17805775.156000] R5: read error not
-correctable.
-Nov 13 02:01:06 localhost kernel: [17805775.156000] lost page write
-due to I/O error on md0
-Nov 13 02:01:06 localhost kernel: [17805775.196000] RAID5 conf printout:
-Nov 13 02:01:06 localhost kernel: [17805775.196000]  --- rd:5 wd:3 fd:2
-Nov 13 02:01:06 localhost kernel: [17805775.196000]  disk 0, o:1, dev:hda1
-Nov 13 02:01:06 localhost kernel: [17805775.196000]  disk 1, o:0, dev:hdc1
-Nov 13 02:01:06 localhost kernel: [17805775.196000]  disk 2, o:1, dev:hde1
-Nov 13 02:01:06 localhost kernel: [17805775.196000]  disk 4, o:1, dev:hdi1
-Nov 13 02:01:06 localhost kernel: [17805775.212000] RAID5 conf printout:
-Nov 13 02:01:06 localhost kernel: [17805775.212000]  --- rd:5 wd:3 fd:2
-Nov 13 02:01:06 localhost kernel: [17805775.212000]  disk 0, o:1, dev:hda1
-Nov 13 02:01:06 localhost kernel: [17805775.212000]  disk 2, o:1, dev:hde1
-Nov 13 02:01:06 localhost kernel: [17805775.212000]  disk 4, o:1, dev:hdi1
-Nov 13 02:01:06 localhost kernel: [17805775.212000] lost page write
-due to I/O error on md0
-Nov 13 02:01:06 localhost last message repeated 4 times
-
-at /var/log/messages | grep md:
--------------------------------------------------------------------------------------------------------
-Nov 13 02:01:03 localhost kernel: [17805772.464000] lost page write
-due to I/O error on md0
-Nov 13 02:01:05 localhost kernel: [17805773.776000] lost page write
-due to I/O error on md0
-Nov 13 02:01:06 localhost kernel: [17805775.156000] lost page write
-due to I/O error on md0
-Nov 13 02:01:06 localhost kernel: [17805775.212000] lost page write
-due to I/O error on md0
-Nov 13 07:21:07 localhost kernel: [17179583.968000] md: md driver
-0.90.3 MAX_MD_DEVS=256, MD_SB_DISKS=27
-Nov 13 07:21:07 localhost kernel: [17179583.968000] md: bitmap version 4.39
-Nov 13 07:21:07 localhost kernel: [17179583.972000] md: raid5
-personality registered as nr 4
-Nov 13 07:21:07 localhost kernel: [17179584.712000] md: md0 stopped.
-Nov 13 07:21:07 localhost kernel: [17179584.876000] md: bind<hdc1>
-Nov 13 07:21:07 localhost kernel: [17179584.884000] md: bind<hde1>
-Nov 13 07:21:07 localhost kernel: [17179584.884000] md: bind<hdg1>
-Nov 13 07:21:07 localhost kernel: [17179584.884000] md: bind<hdi1>
-Nov 13 07:21:07 localhost kernel: [17179584.892000] md: bind<hda1>
-Nov 13 07:21:07 localhost kernel: [17179584.892000] md: kicking
-non-fresh hdg1 from array!
-Nov 13 07:21:07 localhost kernel: [17179584.892000] md: unbind<hdg1>
-Nov 13 07:21:07 localhost kernel: [17179584.892000] md: export_rdev(hdg1)
-Nov 13 07:21:07 localhost kernel: [17179584.896000] raid5: allocated
-5245kB for md0
-Nov 13 07:21:07 localhost kernel: [17179665.524000] ReiserFS: md0:
-found reiserfs format "3.6" with standard journal
-Nov 13 07:21:07 localhost kernel: [17179676.136000] ReiserFS: md0:
-using ordered data mode
-Nov 13 07:21:07 localhost kernel: [17179676.164000] ReiserFS: md0:
-journal params: device md0, size 8192, journal first block 18, max
-trans len 1024, max batch 900, max commit age 30, max trans age 30
-Nov 13 07:21:07 localhost kernel: [17179676.164000] ReiserFS: md0:
-checking transaction log (md0)
-Nov 13 07:21:07 localhost kernel: [17179676.828000] ReiserFS: md0:
-replayed 7 transactions in 1 seconds
-Nov 13 07:21:07 localhost kernel: [17179677.012000] ReiserFS: md0:
-Using r5 hash to sort names
-Nov 13 07:21:09 localhost kernel: [17179682.064000] lost page write
-due to I/O error on md0
-Nov 13 07:25:39 localhost kernel: [17179584.824000] md: md driver
-0.90.3 MAX_MD_DEVS=256, MD_SB_DISKS=27
-Nov 13 07:25:39 localhost kernel: [17179584.824000] md: bitmap version 4.39
-Nov 13 07:25:39 localhost kernel: [17179584.828000] md: raid5
-personality registered as nr 4
-Nov 13 07:25:39 localhost kernel: [17179585.532000] md: md0 stopped.
-Nov 13 07:25:39 localhost kernel: [17179585.696000] md: bind<hdc1>
-Nov 13 07:25:39 localhost kernel: [17179585.696000] md: bind<hde1>
-Nov 13 07:25:39 localhost kernel: [17179585.700000] md: bind<hdg1>
-Nov 13 07:25:39 localhost kernel: [17179585.700000] md: bind<hdi1>
-Nov 13 07:25:39 localhost kernel: [17179585.708000] md: bind<hda1>
-Nov 13 07:25:39 localhost kernel: [17179585.708000] md: kicking
-non-fresh hdg1 from array!
-Nov 13 07:25:39 localhost kernel: [17179585.708000] md: unbind<hdg1>
-Nov 13 07:25:39 localhost kernel: [17179585.708000] md: export_rdev(hdg1)
-Nov 13 07:25:39 localhost kernel: [17179585.712000] raid5: allocated
-5245kB for md0
-Nov 13 07:25:40 localhost kernel: [17179666.064000] ReiserFS: md0:
-found reiserfs format "3.6" with standard journal
-Nov 13 07:25:40 localhost kernel: [17179676.904000] ReiserFS: md0:
-using ordered data mode
-Nov 13 07:25:40 localhost kernel: [17179676.928000] ReiserFS: md0:
-journal params: device md0, size 8192, journal first block 18, max
-trans len 1024, max batch 900, max commit age 30, max trans age 30
-Nov 13 07:25:40 localhost kernel: [17179676.932000] ReiserFS: md0:
-checking transaction log (md0)
-Nov 13 07:25:40 localhost kernel: [17179677.080000] ReiserFS: md0:
-Using r5 hash to sort names
-Nov 13 07:25:42 localhost kernel: [17179683.128000] lost page write
-due to I/O error on md0
-Nov 13 07:26:57 localhost kernel: [17179757.524000] md: unbind<hdc1>
-Nov 13 07:26:57 localhost kernel: [17179757.524000] md: export_rdev(hdc1)
-Nov 13 07:27:03 localhost kernel: [17179763.700000] md: bind<hdc1>
-Nov 13 07:30:24 localhost kernel: [17179584.180000] md: md driver
-0.90.3 MAX_MD_DEVS=256, MD_SB_DISKS=27
-Nov 13 07:30:24 localhost kernel: [17179584.180000] md: bitmap version 4.39
-Nov 13 07:30:24 localhost kernel: [17179584.184000] md: raid5
-personality registered as nr 4
-Nov 13 07:30:24 localhost kernel: [17179584.912000] md: md0 stopped.
-Nov 13 07:30:24 localhost kernel: [17179585.060000] md: bind<hde1>
-Nov 13 07:30:24 localhost kernel: [17179585.064000] md: bind<hdg1>
-Nov 13 07:30:24 localhost kernel: [17179585.064000] md: bind<hdi1>
-Nov 13 07:30:24 localhost kernel: [17179585.064000] md: bind<hdc1>
-Nov 13 07:30:24 localhost kernel: [17179585.068000] md: bind<hda1>
-Nov 13 07:30:24 localhost kernel: [17179585.068000] raid5: allocated
-5245kB for md0
-Nov 13 07:30:24 localhost kernel: [17179585.068000] md: syncing RAID array md0
-Nov 13 07:30:24 localhost kernel: [17179585.068000] md: minimum
-_guaranteed_ reconstruction speed: 1000 KB/sec/disc.
-Nov 13 07:30:24 localhost kernel: [17179585.068000] md: using maximum
-available idle IO bandwidth (but not more than 200000 KB/sec) for
-reconstruction.
-Nov 13 07:30:24 localhost kernel: [17179585.068000] md: using 128k
-window, over a total of 117218176 blocks.
-Nov 13 07:30:24 localhost kernel: [17179684.160000] ReiserFS: md0:
-warning: sh-2021: reiserfs_fill_super: can not find reiserfs on md0
-Nov 13 08:57:11 localhost kernel: [17184895.816000] md: md0: sync done.
-Nov 13 18:17:10 localhost kernel: [17218493.012000] ReiserFS: md0:
-warning: sh-2021: reiserfs_fill_super: can not find reiserfs on md0
-Nov 13 18:36:03 localhost kernel: [17219625.456000] ReiserFS: md0:
-warning: sh-2021: reiserfs_fill_super: can not find reiserfs on md0
+On 13/11/2007, James Lee <james.lee@cantab.net> wrote:
+> Thanks for the reply Bill, and on reflection I agree with a lot of it.
+>
+> I do feel that the use case is a sensible valid one - though maybe I
+> didn't illustrate it well.  As an example suppose I want to, starting
+> from scratch, build up a cost-effective large redundant array to hold
+> data.
+>
+> With standard RAID5 I might do as follows:
+> - Buy 3x 500GB SATA drives, setup as a single RAID5 array.
+> - Once I have run out of space on this array (say in 12 months, for
+> example), add another 1x500GB drive and expand the array.
+> - Another 6 months or so later, buy another 1x 500GB drive and expand
+> the array, etc.
+> This isn't that cost-efficient, as by the second or third iteration,
+> 500GB drives are not good value per-GB (as the sweet-spot has moved
+> onto 1TB drives say).
+>
+> With a scheme which gives a redundant array with the capacity being
+> the sum of the size of all drives minus the size of the largest drive,
+> the sequence can be something like:
+> - Buy 3x500GB drives.
+> - Once out of space, add a drive with size determined by current best
+> price/GB (eg. 1x750GB drive).
+> - Repeat as above (giving, say, 1TB, 1.5TB,  drives).
+> (- When adding larger drives, potentially also start removing the
+> smallest drives from the array and selling them - to avoid having too
+> many drives.)
+>
+> However what I do agree with is that this is entirely achievable using
+> current RAID5 and RAID1, and as you described (and ideally then having
+> creating a linear array out of the resulting arrays).  All it would
+> require, as you say, is either a simple wrapper script issuing mdadm
+> commands, or ideally for this ability to be added to mdadm itself.  So
+> that the create command for this new "raid type" would just create all
+> the RAID5 and RAID1 arrays, and use them to make a linear array.  The
+> grow command (when adding a new drive to the array) would partition it
+> up, expand each of the RAID5 arrays onto it, convert the existing
+> RAID1 array to a RAID5 array using the new drive, create a new RAID1
+> array, and expand the linear array containing them all.  The only
+> thing I'm not entirely sure about is whether mdadm currently supports
+> online conversion of 2-drive RAID1 array --> 3-drive RAID5 array?
+>
+> So thanks for the input, and I'll now ask a slightly different
+> question to my original one - would there be any interest in enhancing
+> mdadm to do the above?  By which I mean would patches which did this
+> be considered, or would this be deemed not to be useful / desirable?
+>
+> Thanks,
+> James
+>
+> On 12/11/2007, Bill Davidsen <davidsen@tmr.com> wrote:
+> > James Lee wrote:
+> > > I have come across an unusual RAID configuration type which differs
+> > > from any of the standard RAID 0/1/4/5 levels currently available in
+> > > the md driver, and has a couple of very useful properties (see below).
+> > >  I think it would be useful to have this code included in the main
+> > > kernel, as it allows for some use cases that aren't well catered for
+> > > with the standard RAID levels.  I was wondering what people's thoughts
+> > > on this might be?
+> > >
+> > > The RAID type has been named "unRAID" by it's author, and is basically
+> > > similar to RAID 4 but without data being striped across the drives in
+> > > the array.  In an n-drive array (where the drives need not have the
+> > > same capacity), n-1 of the drives appear as independent drives with
+> > > data written to them as with a single standalone drive, and the 1
+> > > remaining drive is a parity drive (this must be the largest capacity
+> > > drive), which stores the bitwise XOR of the data on the other n-1
+> > > drives (where the data being XORed is taken to be 0 if we're past the
+> > > end of that particular drive).  Data recovery then works as per normal
+> > > RAID 4/5 in the case of the failure of any one of the drives in the
+> > > array.
+> > >
+> > > The advantages of this are:
+> > > - Drives need not be of the same size as each other; the only
+> > > requirement is that the parity drive must be the largest drive in the
+> > > array.  The available space of the array is the sum of the space of
+> > > all drives in the array, minus the size of the largest drive.
+> > > - Data protection is slightly better than with RAID 4/5 in that in the
+> > > event of multiple drive failures, only some data is lost (since the
+> > > data on any non-failed, non-parity drives is usable).
+> > >
+> > > The disadvantages are:
+> > > - Performance:
+> > >     - As there is no striping, on a non-degraded array the read
+> > > performance will be identical to that of a single drive setup, and the
+> > > write performance will be comparable or somewhat worse than that of a
+> > > single-drive setup.
+> > >     - On a degraded arrays with many drives the read and write
+> > > performance could take further hits due to the PCI / PCI-E bus getting
+> > > saturated.
+> > >
+> >
+> > I personally feel that "this still looks like a bunch of little drives"
+> > should be listed first...
+> > > The company which has implemented this is "Lime technology" (website
+> > > here: http://www.lime-technology.com/); an overview of the technical
+> > > detail is given on their website here:
+> > > http://www.lime-technology.com/wordpress/?page_id=13.  The changes
+> > > made to the Linux md driver to support this have been released under
+> > > the GPL by the author - I've attached these to this email.
+> > >
+> > > Now I'm guessing that the reason this hasn't been implemented before
+> > > is that in most cases the points above mean that this is a worse
+> > > option than RAID 5, however there is a strong use case for this
+> > > system.  For many home users who want data redundancy, the current
+> > > RAID levels are impractical because the user has many hard drives of
+> > > different sizes accumulated over the years.  Even for new setups, it
+> > >
+> >
+> > And over the years is just the problem. You have a bunch of tiny drives
+> > unsuited, or marginally suited, for the size of modern distributions,
+> > and using assorted old technology. There's a reason these are thrown out
+> > and available, they're pretty much useless. Also they're power-hungry,
+> > slow, and you would probably need more of these than would fit in a
+> > standard case to provide even minimal useful size. They're also probably
+> > PATA, meaning that many modern motherboards don't support them well (if
+> > at all).
+> > > is generally not cost-effective to buy multiple identical sized hard
+> > > drives, compared with incrementally adding storage of the capacity
+> > > which is at the best price per GB at the time.  The fact that there is
+> > > a need for this type of flexibility is evidenced, for example, by
+> > > various forum threads such as for example this thread containing over
+> > > 1500 posts in a specialized audio / video forum:
+> > > http://www.avsforum.com/avs-vb/showthread.php?t=573986, as well as the
+> > > active community in the forums on the Lime technology website.
+> > >
+> >
+> > I can buy 500GB USB drives for $98+tax if I wait until Stapels or Office
+> > Max have a sale, $120 anytime, anywhere. I see 250GB PATA drives being
+> > flogged for $50-70 for lack of demand. I simply can't imagine any case
+> > where this would be useful other than as a proof of concept.
+> >
+> > Note: you can do this with existing code by setting up a partitions of
+> > various sizes on multiple drives, first partitions size of smallest
+> > drive, next the remaining space on the next drive, etc. On every set of
+> >  >2 drives make a raid-5, on every set of two drives make raid-10, and
+> > have a bunch of smaller redundant drives which are faster. You can then
+> > combine them all into one linear array if it pleases you. I have a crate
+> > if drives from 360MB (six) to about 4GB, and they are going to be sold
+> > by the pound because they are garbage.
+> > > Would there be interest in making this kind of addition to the md code?
+> > >
+> >
+> > I can't see that the cost of maintaining it is justified by the benefit,
+> > but not my decision. If you were to set up such a thing using FUSE,
+> > keeping it out of the kernel but still providing the functionality, it
+> > might be worth doing. On the other hand, setting up the partitions and
+> > creating the arrays could probably be done by a perl script which would
+> > take only a few hours to write.
+> > > PS: In case it wasn't clear, the attached code is simply the code the
+> > > author has released under GPL - it's intended just for reference, not
+> > > as proposed code for review.
+> > >
+> > Much as I generally like adding functionality, I *really* can't see much
+> > in this idea. It seems to me to be in the "clever but not useful" category.
+> >
+> > --
+> > bill davidsen <davidsen@tmr.com>
+> >   CTO TMR Associates, Inc
+> >   Doing interesting things with small computers since 1979
+> >
+> >
+>
