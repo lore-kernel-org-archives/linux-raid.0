@@ -1,176 +1,187 @@
-From: Greg KH <greg@kroah.com>
+From: "Dan Williams" <dan.j.williams@intel.com>
 Subject: Re: [stable] [PATCH 000 of 2] md: Fixes for md in 2.6.23
-Date: Tue, 13 Nov 2007 19:43:25 -0800
-Message-ID: <20071114034325.GA25558@kroah.com>
-References: <20071022171426.31103.patches@notabene> <20071114002214.GA31928@kroah.com> <20071114002308.GB31928@kroah.com> <e9c3a7c20711131936t3c5f858cm8937b24d97fe998c@mail.gmail.com>
+Date: Tue, 13 Nov 2007 22:36:30 -0700
+Message-ID: <e9c3a7c20711132136t6cc9a91avb1d1ddf257701331@mail.gmail.com>
+References: <20071022171426.31103.patches@notabene>
+	 <20071114002214.GA31928@kroah.com> <20071114002308.GB31928@kroah.com>
+	 <e9c3a7c20711131936t3c5f858cm8937b24d97fe998c@mail.gmail.com>
+	 <20071114034325.GA25558@kroah.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="h31gzZEtNLTqOjlF"
+Content-Type: multipart/mixed;
+	boundary="----=_Part_243_15664557.1195018590979"
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <e9c3a7c20711131936t3c5f858cm8937b24d97fe998c@mail.gmail.com>
+In-Reply-To: <20071114034325.GA25558@kroah.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: NeilBrown <neilb@suse.de>, Andrew Morton <akpm@linux-foundation.org>, linux-raid@vger.kernel.org, M@suse.de, linux-kernel@vger.kernel.org, Stable <stable@kernel.org>
+To: Greg KH <greg@kroah.com>
+Cc: NeilBrown <neilb@suse.de>, Andrew Morton <akpm@linux-foundation.org>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Stable <stable@kernel.org>
 List-Id: linux-raid.ids
 
-
---h31gzZEtNLTqOjlF
-Content-Type: text/plain; charset=us-ascii
+------=_Part_243_15664557.1195018590979
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Content-Disposition: inline
 
-On Tue, Nov 13, 2007 at 08:36:05PM -0700, Dan Williams wrote:
-> On Nov 13, 2007 5:23 PM, Greg KH <greg@kroah.com> wrote:
-> > On Tue, Nov 13, 2007 at 04:22:14PM -0800, Greg KH wrote:
-> > > On Mon, Oct 22, 2007 at 05:15:27PM +1000, NeilBrown wrote:
-> > > >
-> > > > It appears that a couple of bugs slipped in to md for 2.6.23.
-> > > > These two patches fix them and are appropriate for 2.6.23.y as well
-> > > > as 2.6.24-rcX
-> > > >
-> > > > Thanks,
-> > > > NeilBrown
-> > > >
-> > > >  [PATCH 001 of 2] md: Fix an unsigned compare to allow creation of bitmaps with v1.0 metadata.
-> > > >  [PATCH 002 of 2] md: raid5: fix clearing of biofill operations
-> > >
-> > > I don't see these patches in 2.6.24-rcX, are they there under some other
-> > > subject?
+On Nov 13, 2007 8:43 PM, Greg KH <greg@kroah.com> wrote:
 > >
-> > Oh nevermind, I found them, sorry for the noise...
+> > Careful, it looks like you cherry picked commit 4ae3f847 "md: raid5:
+> > fix clearing of biofill operations" which ended up misapplied in
+> > Linus' tree,  You should either also pick up def6ae26 "md: fix
+> > misapplied patch in raid5.c" or I can resend the original "raid5: fix
+> > clearing of biofill operations."
 > >
-> 
-> Careful, it looks like you cherry picked commit 4ae3f847 "md: raid5:
-> fix clearing of biofill operations" which ended up misapplied in
-> Linus' tree,  You should either also pick up def6ae26 "md: fix
-> misapplied patch in raid5.c" or I can resend the original "raid5: fix
-> clearing of biofill operations."
-> 
-> The other patch for -stable "raid5: fix unending write sequence" is
-> currently in -mm.
+> > The other patch for -stable "raid5: fix unending write sequence" is
+> > currently in -mm.
+>
+> Hm, I've attached the two patches that I have right now in the -stable
+> tree so far (still have over 100 patches to go, so I might not have
+> gotten to them yet if you have sent them).  These were sent to me by
+> Andrew on their way to Linus.  if I should drop either one, or add
+> another one, please let me know.
+>
 
-Hm, I've attached the two patches that I have right now in the -stable
-tree so far (still have over 100 patches to go, so I might not have
-gotten to them yet if you have sent them).  These were sent to me by
-Andrew on their way to Linus.  if I should drop either one, or add
-another one, please let me know.
+Drop md-raid5-fix-clearing-of-biofill-operations.patch and replace it
+with the attached
+md-raid5-not-raid6-fix-clearing-of-biofill-operations.patch (the
+original sent to Neil).
 
-thanks,
+The critical difference is that the replacement patch touches
+handle_stripe5, not handle_stripe6.  Diffing the patches shows the
+changes for hunk #3:
 
-greg k-h
+-@@ -2903,6 +2907,13 @@ static void handle_stripe6(struct stripe
++@@ -2630,6 +2634,13 @@ static void handle_stripe5(struct stripe_head *sh)
 
---h31gzZEtNLTqOjlF
-Content-Type: text/x-patch; charset=us-ascii
-Content-Disposition: attachment; filename="md-fix-an-unsigned-compare-to-allow-creation-of-bitmaps-with-v1.0-metadata.patch"
+raid5-fix-unending-write-sequence.patch is in -mm and I believe is
+waiting on an Acked-by from Neil?
 
-From stable-bounces@linux.kernel.org Mon Oct 22 20:45:35 2007
-From: akpm@linux-foundation.org
-Date: Mon, 22 Oct 2007 20:45:11 -0700
-Subject: md: fix an unsigned compare to allow creation of bitmaps with v1.0 metadata
-To: torvalds@linux-foundation.org
-Cc: neilb@suse.de, akpm@linux-foundation.org, stable@kernel.org
-Message-ID: <200710230345.l9N3jB65030288@imap1.linux-foundation.org>
+> thanks,
+>
+> greg k-h
 
+Thanks,
+Dan
 
-From: NeilBrown <neilb@suse.de>
+------=_Part_243_15664557.1195018590979
+Content-Type: text/x-patch;
+ name=md-raid5-not-raid6-fix-clearing-of-biofill-operations.patch
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_f8zed2xg0
+Content-Disposition: attachment;
+ filename=md-raid5-not-raid6-fix-clearing-of-biofill-operations.patch
 
-patch 85bfb4da8cad483a4e550ec89060d05a4daf895b in mainline.
+cmFpZDU6IGZpeCBjbGVhcmluZyBvZiBiaW9maWxsIG9wZXJhdGlvbnMKCkZyb206IERhbiBXaWxs
+aWFtcyA8ZGFuLmoud2lsbGlhbXNAaW50ZWwuY29tPgoKb3BzX2NvbXBsZXRlX2Jpb2ZpbGwoKSBy
+dW5zIG91dHNpZGUgb2Ygc3Bpbl9sb2NrKCZzaC0+bG9jaykgYW5kIGNsZWFycyB0aGUKJ3BlbmRp
+bmcnIGFuZCAnYWNrJyBiaXRzLiAgU2luY2UgdGhlIHRlc3RfYW5kX2Fja19vcCgpIG1hY3JvIG9u
+bHkgY2hlY2tzCmFnYWluc3QgJ2NvbXBsZXRlJyBpdCBjYW4gZ2V0IGFuIGluY29uc2lzdGVudCBz
+bmFwc2hvdCBvZiBwZW5kaW5nIHdvcmsuCgpNb3ZlIHRoZSBjbGVhcmluZyBvZiB0aGVzZSBiaXRz
+IHRvIGhhbmRsZV9zdHJpcGU1KCksIHVuZGVyIHRoZSBsb2NrLgoKU2lnbmVkLW9mZi1ieTogRGFu
+IFdpbGxpYW1zIDxkYW4uai53aWxsaWFtc0BpbnRlbC5jb20+ClRlc3RlZC1ieTogSm9lbCBCZXJ0
+cmFuZCA8am9lbC5iZXJ0cmFuZEBzeXN0ZWxsYS5mcj4KU2lnbmVkLW9mZi1ieTogTmVpbCBCcm93
+biA8bmVpbGJAc3VzZS5kZT4KLS0tCgogZHJpdmVycy9tZC9yYWlkNS5jIHwgICAxNyArKysrKysr
+KysrKysrKy0tLQogMSBmaWxlcyBjaGFuZ2VkLCAxNCBpbnNlcnRpb25zKCspLCAzIGRlbGV0aW9u
+cygtKQoKZGlmZiAtLWdpdCBhL2RyaXZlcnMvbWQvcmFpZDUuYyBiL2RyaXZlcnMvbWQvcmFpZDUu
+YwppbmRleCBmOTZkZWE5Li4zODA4ZjUyIDEwMDY0NAotLS0gYS9kcml2ZXJzL21kL3JhaWQ1LmMK
+KysrIGIvZHJpdmVycy9tZC9yYWlkNS5jCkBAIC0zNzcsNyArMzc3LDEyIEBAIHN0YXRpYyB1bnNp
+Z25lZCBsb25nIGdldF9zdHJpcGVfd29yayhzdHJ1Y3Qgc3RyaXBlX2hlYWQgKnNoKQogCQlhY2sr
+KzsKIAogCXNoLT5vcHMuY291bnQgLT0gYWNrOwotCUJVR19PTihzaC0+b3BzLmNvdW50IDwgMCk7
+CisJaWYgKHVubGlrZWx5KHNoLT5vcHMuY291bnQgPCAwKSkgeworCQlwcmludGsoS0VSTl9FUlIg
+InBlbmRpbmc6ICUjbHggb3BzLnBlbmRpbmc6ICUjbHggb3BzLmFjazogJSNseCAiCisJCQkib3Bz
+LmNvbXBsZXRlOiAlI2x4XG4iLCBwZW5kaW5nLCBzaC0+b3BzLnBlbmRpbmcsCisJCQlzaC0+b3Bz
+LmFjaywgc2gtPm9wcy5jb21wbGV0ZSk7CisJCUJVRygpOworCX0KIAogCXJldHVybiBwZW5kaW5n
+OwogfQpAQCAtNTUxLDggKzU1Niw3IEBAIHN0YXRpYyB2b2lkIG9wc19jb21wbGV0ZV9iaW9maWxs
+KHZvaWQgKnN0cmlwZV9oZWFkX3JlZikKIAkJCX0KIAkJfQogCX0KLQljbGVhcl9iaXQoU1RSSVBF
+X09QX0JJT0ZJTEwsICZzaC0+b3BzLmFjayk7Ci0JY2xlYXJfYml0KFNUUklQRV9PUF9CSU9GSUxM
+LCAmc2gtPm9wcy5wZW5kaW5nKTsKKwlzZXRfYml0KFNUUklQRV9PUF9CSU9GSUxMLCAmc2gtPm9w
+cy5jb21wbGV0ZSk7CiAKIAlyZXR1cm5faW8ocmV0dXJuX2JpKTsKIApAQCAtMjYzMCw2ICsyNjM0
+LDEzIEBAIHN0YXRpYyB2b2lkIGhhbmRsZV9zdHJpcGU1KHN0cnVjdCBzdHJpcGVfaGVhZCAqc2gp
+CiAJcy5leHBhbmRlZCA9IHRlc3RfYml0KFNUUklQRV9FWFBBTkRfUkVBRFksICZzaC0+c3RhdGUp
+OwogCS8qIE5vdyB0byBsb29rIGFyb3VuZCBhbmQgc2VlIHdoYXQgY2FuIGJlIGRvbmUgKi8KIAor
+CS8qIGNsZWFuLXVwIGNvbXBsZXRlZCBiaW9maWxsIG9wZXJhdGlvbnMgKi8KKwlpZiAodGVzdF9i
+aXQoU1RSSVBFX09QX0JJT0ZJTEwsICZzaC0+b3BzLmNvbXBsZXRlKSkgeworCQljbGVhcl9iaXQo
+U1RSSVBFX09QX0JJT0ZJTEwsICZzaC0+b3BzLnBlbmRpbmcpOworCQljbGVhcl9iaXQoU1RSSVBF
+X09QX0JJT0ZJTEwsICZzaC0+b3BzLmFjayk7CisJCWNsZWFyX2JpdChTVFJJUEVfT1BfQklPRklM
+TCwgJnNoLT5vcHMuY29tcGxldGUpOworCX0KKwogCXJjdV9yZWFkX2xvY2soKTsKIAlmb3IgKGk9
+ZGlza3M7IGktLTsgKSB7CiAJCW1ka19yZGV2X3QgKnJkZXY7Cg==
+------=_Part_243_15664557.1195018590979
+Content-Type: text/x-patch; name=raid5-fix-unending-write-sequence.patch
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_f8zf3ihn1
+Content-Disposition: attachment;
+ filename=raid5-fix-unending-write-sequence.patch
 
-As page->index is unsigned, this all becomes an unsigned comparison, which
- almost always returns an error.
-
-Signed-off-by: Neil Brown <neilb@suse.de>
-Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
-Signed-off-by: Linus Torvalds <torvalds@linux-foundation.org>
-Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
-
----
- drivers/md/bitmap.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
---- a/drivers/md/bitmap.c
-+++ b/drivers/md/bitmap.c
-@@ -274,7 +274,7 @@ static int write_sb_page(struct bitmap *
- 			if (bitmap->offset < 0) {
- 				/* DATA  BITMAP METADATA  */
- 				if (bitmap->offset
--				    + page->index * (PAGE_SIZE/512)
-+				    + (long)(page->index * (PAGE_SIZE/512))
- 				    + size/512 > 0)
- 					/* bitmap runs in to metadata */
- 					return -EINVAL;
-
---h31gzZEtNLTqOjlF
-Content-Type: text/x-patch; charset=us-ascii
-Content-Disposition: attachment; filename="md-raid5-fix-clearing-of-biofill-operations.patch"
-
-From stable-bounces@linux.kernel.org Mon Oct 22 20:45:44 2007
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Mon, 22 Oct 2007 20:45:11 -0700
-Subject: md: raid5: fix clearing of biofill operations
-To: torvalds@linux-foundation.org
-Cc: joel.bertrand@systella.fr, neilb@suse.de, akpm@linux-foundation.org, dan.j.williams@intel.com, stable@kernel.org
-Message-ID: <200710230345.l9N3jC2M030292@imap1.linux-foundation.org>
-
-From: Dan Williams <dan.j.williams@intel.com>
-
-patch 4ae3f847e49e3787eca91bced31f8fd328d50496 in mainline.
-
-ops_complete_biofill() runs outside of spin_lock(&sh->lock) and clears the
-'pending' and 'ack' bits.  Since the test_and_ack_op() macro only checks
-against 'complete' it can get an inconsistent snapshot of pending work.
-
-Move the clearing of these bits to handle_stripe5(), under the lock.
-
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
-Tested-by: Joel Bertrand <joel.bertrand@systella.fr>
-Signed-off-by: Neil Brown <neilb@suse.de>
-Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
-Signed-off-by: Linus Torvalds <torvalds@linux-foundation.org>
-Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
-
----
- drivers/md/raid5.c |   17 ++++++++++++++---
- 1 file changed, 14 insertions(+), 3 deletions(-)
-
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -377,7 +377,12 @@ static unsigned long get_stripe_work(str
- 		ack++;
- 
- 	sh->ops.count -= ack;
--	BUG_ON(sh->ops.count < 0);
-+	if (unlikely(sh->ops.count < 0)) {
-+		printk(KERN_ERR "pending: %#lx ops.pending: %#lx ops.ack: %#lx "
-+			"ops.complete: %#lx\n", pending, sh->ops.pending,
-+			sh->ops.ack, sh->ops.complete);
-+		BUG();
-+	}
- 
- 	return pending;
- }
-@@ -551,8 +556,7 @@ static void ops_complete_biofill(void *s
- 			}
- 		}
- 	}
--	clear_bit(STRIPE_OP_BIOFILL, &sh->ops.ack);
--	clear_bit(STRIPE_OP_BIOFILL, &sh->ops.pending);
-+	set_bit(STRIPE_OP_BIOFILL, &sh->ops.complete);
- 
- 	return_io(return_bi);
- 
-@@ -2903,6 +2907,13 @@ static void handle_stripe6(struct stripe
- 	s.expanded = test_bit(STRIPE_EXPAND_READY, &sh->state);
- 	/* Now to look around and see what can be done */
- 
-+	/* clean-up completed biofill operations */
-+	if (test_bit(STRIPE_OP_BIOFILL, &sh->ops.complete)) {
-+		clear_bit(STRIPE_OP_BIOFILL, &sh->ops.pending);
-+		clear_bit(STRIPE_OP_BIOFILL, &sh->ops.ack);
-+		clear_bit(STRIPE_OP_BIOFILL, &sh->ops.complete);
-+	}
-+
- 	rcu_read_lock();
- 	for (i=disks; i--; ) {
- 		mdk_rdev_t *rdev;
-
---h31gzZEtNLTqOjlF--
+cmFpZDU6IGZpeCB1bmVuZGluZyB3cml0ZSBzZXF1ZW5jZQoKRnJvbTogRGFuIFdpbGxpYW1zIDxk
+YW4uai53aWxsaWFtc0BpbnRlbC5jb20+Cgo8ZGVidWcgb3V0cHV0IGZyb20gSm9lbCdzIHN5c3Rl
+bT4KaGFuZGxpbmcgc3RyaXBlIDc2Mjk2OTYsIHN0YXRlPTB4MTQgY250PTEsIHBkX2lkeD0yIG9w
+cz0wOjA6MApjaGVjayA1OiBzdGF0ZSAweDYgdG9yZWFkIDAwMDAwMDAwMDAwMDAwMDAgcmVhZCAw
+MDAwMDAwMDAwMDAwMDAwIHdyaXRlIGZmZmZmODAwZmZjZmZjYzAgd3JpdHRlbiAwMDAwMDAwMDAw
+MDAwMDAwCmNoZWNrIDQ6IHN0YXRlIDB4NiB0b3JlYWQgMDAwMDAwMDAwMDAwMDAwMCByZWFkIDAw
+MDAwMDAwMDAwMDAwMDAgd3JpdGUgZmZmZmY4MDBmZGQ0ZTM2MCB3cml0dGVuIDAwMDAwMDAwMDAw
+MDAwMDAKY2hlY2sgMzogc3RhdGUgMHgxIHRvcmVhZCAwMDAwMDAwMDAwMDAwMDAwIHJlYWQgMDAw
+MDAwMDAwMDAwMDAwMCB3cml0ZSAwMDAwMDAwMDAwMDAwMDAwIHdyaXR0ZW4gMDAwMDAwMDAwMDAw
+MDAwMApjaGVjayAyOiBzdGF0ZSAweDEgdG9yZWFkIDAwMDAwMDAwMDAwMDAwMDAgcmVhZCAwMDAw
+MDAwMDAwMDAwMDAwIHdyaXRlIDAwMDAwMDAwMDAwMDAwMDAgd3JpdHRlbiAwMDAwMDAwMDAwMDAw
+MDAwCmNoZWNrIDE6IHN0YXRlIDB4NiB0b3JlYWQgMDAwMDAwMDAwMDAwMDAwMCByZWFkIDAwMDAw
+MDAwMDAwMDAwMDAgd3JpdGUgZmZmZmY4MDBmZjUxN2U0MCB3cml0dGVuIDAwMDAwMDAwMDAwMDAw
+MDAKY2hlY2sgMDogc3RhdGUgMHg2IHRvcmVhZCAwMDAwMDAwMDAwMDAwMDAwIHJlYWQgMDAwMDAw
+MDAwMDAwMDAwMCB3cml0ZSBmZmZmZjgwMGZkNGNhZTYwIHdyaXR0ZW4gMDAwMDAwMDAwMDAwMDAw
+MApsb2NrZWQ9NCB1cHRvZGF0ZT0yIHRvX3JlYWQ9MCB0b193cml0ZT00IGZhaWxlZD0wIGZhaWxl
+ZF9udW09MApmb3Igc2VjdG9yIDc2Mjk2OTYsIHJtdz0wIHJjdz0wCjwvZGVidWc+CgpUaGVzZSBi
+bG9ja3Mgd2VyZSBwcmVwYXJlZCB0byBiZSB3cml0dGVuIG91dCwgYnV0IHdlcmUgbmV2ZXIgaGFu
+ZGxlZCBpbgpvcHNfcnVuX2Jpb2RyYWluKCksIHNvIHRoZXkgcmVtYWluIGxvY2tlZCBmb3JldmVy
+LiAgVGhlIG9wZXJhdGlvbnMgZmxhZ3MKYXJlIGFsbCBjbGVhciB3aGljaCBtZWFucyBoYW5kbGVf
+c3RyaXBlKCkgdGhpbmtzIG5vdGhpbmcgZWxzZSBuZWVkcyB0byBiZQpkb25lLgoKVGhpcyBzdGF0
+ZSBzdWdnZXN0cyB0aGF0IHRoZSBTVFJJUEVfT1BfUFJFWE9SIGJpdCB3YXMgc2FtcGxlZCAnc2V0
+JyB3aGVuIGl0CnNob3VsZCBub3QgaGF2ZSBiZWVuLiAgVGhpcyBwYXRjaCBjbGVhbnMgdXAgY2Fz
+ZXMgd2hlcmUgdGhlIGNvZGUgbG9va3MgYXQKc2gtPm9wcy5wZW5kaW5nIHdoZW4gaXQgc2hvdWxk
+IGJlIGxvb2tpbmcgYXQgdGhlIGNvbnNpc3RlbnQgc3RhY2stYmFzZWQKc25hcHNob3Qgb2YgdGhl
+IG9wZXJhdGlvbnMgZmxhZ3MuCgpSZXBvcnQgZnJvbSBKb2VsOgoJUmVzeW5jIGRvbmUuIFBhdGNo
+IGZpeCB0aGlzIGJ1Zy4KClNpZ25lZC1vZmYtYnk6IERhbiBXaWxsaWFtcyA8ZGFuLmoud2lsbGlh
+bXNAaW50ZWwuY29tPgpUZXN0ZWQtYnk6IEpvZWwgQmVydHJhbmQgPGpvZWwuYmVydHJhbmRAc3lz
+dGVsbGEuZnI+CkNjOiBzdGFibGVAa2VybmVsLm9yZwotLS0KCiBkcml2ZXJzL21kL3JhaWQ1LmMg
+fCAgIDE2ICsrKysrKysrKy0tLS0tLS0KIDEgZmlsZXMgY2hhbmdlZCwgOSBpbnNlcnRpb25zKCsp
+LCA3IGRlbGV0aW9ucygtKQoKZGlmZiAtLWdpdCBhL2RyaXZlcnMvbWQvcmFpZDUuYyBiL2RyaXZl
+cnMvbWQvcmFpZDUuYwppbmRleCAzODA4ZjUyLi5lODZjYWNiIDEwMDY0NAotLS0gYS9kcml2ZXJz
+L21kL3JhaWQ1LmMKKysrIGIvZHJpdmVycy9tZC9yYWlkNS5jCkBAIC02ODksNyArNjg5LDggQEAg
+b3BzX3J1bl9wcmV4b3Ioc3RydWN0IHN0cmlwZV9oZWFkICpzaCwgc3RydWN0IGRtYV9hc3luY190
+eF9kZXNjcmlwdG9yICp0eCkKIH0KIAogc3RhdGljIHN0cnVjdCBkbWFfYXN5bmNfdHhfZGVzY3Jp
+cHRvciAqCi1vcHNfcnVuX2Jpb2RyYWluKHN0cnVjdCBzdHJpcGVfaGVhZCAqc2gsIHN0cnVjdCBk
+bWFfYXN5bmNfdHhfZGVzY3JpcHRvciAqdHgpCitvcHNfcnVuX2Jpb2RyYWluKHN0cnVjdCBzdHJp
+cGVfaGVhZCAqc2gsIHN0cnVjdCBkbWFfYXN5bmNfdHhfZGVzY3JpcHRvciAqdHgsCisJCSB1bnNp
+Z25lZCBsb25nIHBlbmRpbmcpCiB7CiAJaW50IGRpc2tzID0gc2gtPmRpc2tzOwogCWludCBwZF9p
+ZHggPSBzaC0+cGRfaWR4LCBpOwpAQCAtNjk3LDcgKzY5OCw3IEBAIG9wc19ydW5fYmlvZHJhaW4o
+c3RydWN0IHN0cmlwZV9oZWFkICpzaCwgc3RydWN0IGRtYV9hc3luY190eF9kZXNjcmlwdG9yICp0
+eCkKIAkvKiBjaGVjayBpZiBwcmV4b3IgaXMgYWN0aXZlIHdoaWNoIG1lYW5zIG9ubHkgcHJvY2Vz
+cyBibG9ja3MKIAkgKiB0aGF0IGFyZSBwYXJ0IG9mIGEgcmVhZC1tb2RpZnktd3JpdGUgKFdhbnRw
+cmV4b3IpCiAJICovCi0JaW50IHByZXhvciA9IHRlc3RfYml0KFNUUklQRV9PUF9QUkVYT1IsICZz
+aC0+b3BzLnBlbmRpbmcpOworCWludCBwcmV4b3IgPSB0ZXN0X2JpdChTVFJJUEVfT1BfUFJFWE9S
+LCAmcGVuZGluZyk7CiAKIAlwcl9kZWJ1ZygiJXM6IHN0cmlwZSAlbGx1XG4iLCBfX0ZVTkNUSU9O
+X18sCiAJCSh1bnNpZ25lZCBsb25nIGxvbmcpc2gtPnNlY3Rvcik7CkBAIC03NzQsNyArNzc1LDgg
+QEAgc3RhdGljIHZvaWQgb3BzX2NvbXBsZXRlX3dyaXRlKHZvaWQgKnN0cmlwZV9oZWFkX3JlZikK
+IH0KIAogc3RhdGljIHZvaWQKLW9wc19ydW5fcG9zdHhvcihzdHJ1Y3Qgc3RyaXBlX2hlYWQgKnNo
+LCBzdHJ1Y3QgZG1hX2FzeW5jX3R4X2Rlc2NyaXB0b3IgKnR4KQorb3BzX3J1bl9wb3N0eG9yKHN0
+cnVjdCBzdHJpcGVfaGVhZCAqc2gsIHN0cnVjdCBkbWFfYXN5bmNfdHhfZGVzY3JpcHRvciAqdHgs
+CisJCXVuc2lnbmVkIGxvbmcgcGVuZGluZykKIHsKIAkvKiBrZXJuZWwgc3RhY2sgc2l6ZSBsaW1p
+dHMgdGhlIHRvdGFsIG51bWJlciBvZiBkaXNrcyAqLwogCWludCBkaXNrcyA9IHNoLT5kaXNrczsK
+QEAgLTc4Miw3ICs3ODQsNyBAQCBvcHNfcnVuX3Bvc3R4b3Ioc3RydWN0IHN0cmlwZV9oZWFkICpz
+aCwgc3RydWN0IGRtYV9hc3luY190eF9kZXNjcmlwdG9yICp0eCkKIAogCWludCBjb3VudCA9IDAs
+IHBkX2lkeCA9IHNoLT5wZF9pZHgsIGk7CiAJc3RydWN0IHBhZ2UgKnhvcl9kZXN0OwotCWludCBw
+cmV4b3IgPSB0ZXN0X2JpdChTVFJJUEVfT1BfUFJFWE9SLCAmc2gtPm9wcy5wZW5kaW5nKTsKKwlp
+bnQgcHJleG9yID0gdGVzdF9iaXQoU1RSSVBFX09QX1BSRVhPUiwgJnBlbmRpbmcpOwogCXVuc2ln
+bmVkIGxvbmcgZmxhZ3M7CiAJZG1hX2FzeW5jX3R4X2NhbGxiYWNrIGNhbGxiYWNrOwogCkBAIC04
+MDksNyArODExLDcgQEAgb3BzX3J1bl9wb3N0eG9yKHN0cnVjdCBzdHJpcGVfaGVhZCAqc2gsIHN0
+cnVjdCBkbWFfYXN5bmNfdHhfZGVzY3JpcHRvciAqdHgpCiAJfQogCiAJLyogY2hlY2sgd2hldGhl
+ciB0aGlzIHBvc3R4b3IgaXMgcGFydCBvZiBhIHdyaXRlICovCi0JY2FsbGJhY2sgPSB0ZXN0X2Jp
+dChTVFJJUEVfT1BfQklPRFJBSU4sICZzaC0+b3BzLnBlbmRpbmcpID8KKwljYWxsYmFjayA9IHRl
+c3RfYml0KFNUUklQRV9PUF9CSU9EUkFJTiwgJnBlbmRpbmcpID8KIAkJb3BzX2NvbXBsZXRlX3dy
+aXRlIDogb3BzX2NvbXBsZXRlX3Bvc3R4b3I7CiAKIAkvKiAxLyBpZiB3ZSBwcmV4b3InZCB0aGVu
+IHRoZSBkZXN0IGlzIHJldXNlZCBhcyBhIHNvdXJjZQpAQCAtODk3LDEyICs4OTksMTIgQEAgc3Rh
+dGljIHZvaWQgcmFpZDVfcnVuX29wcyhzdHJ1Y3Qgc3RyaXBlX2hlYWQgKnNoLCB1bnNpZ25lZCBs
+b25nIHBlbmRpbmcpCiAJCXR4ID0gb3BzX3J1bl9wcmV4b3Ioc2gsIHR4KTsKIAogCWlmICh0ZXN0
+X2JpdChTVFJJUEVfT1BfQklPRFJBSU4sICZwZW5kaW5nKSkgewotCQl0eCA9IG9wc19ydW5fYmlv
+ZHJhaW4oc2gsIHR4KTsKKwkJdHggPSBvcHNfcnVuX2Jpb2RyYWluKHNoLCB0eCwgcGVuZGluZyk7
+CiAJCW92ZXJsYXBfY2xlYXIrKzsKIAl9CiAKIAlpZiAodGVzdF9iaXQoU1RSSVBFX09QX1BPU1RY
+T1IsICZwZW5kaW5nKSkKLQkJb3BzX3J1bl9wb3N0eG9yKHNoLCB0eCk7CisJCW9wc19ydW5fcG9z
+dHhvcihzaCwgdHgsIHBlbmRpbmcpOwogCiAJaWYgKHRlc3RfYml0KFNUUklQRV9PUF9DSEVDSywg
+JnBlbmRpbmcpKQogCQlvcHNfcnVuX2NoZWNrKHNoKTsK
+------=_Part_243_15664557.1195018590979--
