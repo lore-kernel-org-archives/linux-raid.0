@@ -1,66 +1,88 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: Chnaging partition types of RAID array members
-Date: Fri, 16 Nov 2007 15:28:07 +1100
-Message-ID: <18237.7255.655518.23158@notabene.brown>
-References: <433451.11399.qm@web30809.mail.mud.yahoo.com>
+From: "Vincze, Tamas" <vincze@neb.com>
+Subject: raid5 failure + libata irq: nobody cared
+Date: Fri, 16 Nov 2007 12:05:39 -0500
+Message-ID: <473DCDE3.5060904@neb.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset=ISO-8859-1;
+	format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Mike Myers on Thursday November 15
 Sender: linux-raid-owner@vger.kernel.org
-To: Mike Myers <mikesm559@yahoo.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thursday November 15, mikesm559@yahoo.com wrote:
-> 
-> Hi.  I have two RAID5 arrays on an opensuse 10.3 system.  They are used
->  together in a large LVM volume that contains a lot of data I'd rather
->  not have to try and backup/recreate.
-> 
-> md1 comes up fine and is detected by the OS on boot and assembled
->  automatically.  md0 however, doesn't, and needs to be brought up manually,
->  followed by a manual start of lvm.  This is a real pain of course.  The
->  issue I think is that md0 was created through EVMS, which I have
->  stopped using some time ago since it's support seems to have been deprecated.
->   EVMS created the array fine, but using partitions that were not 0xFD
->  (Linux RAID), but rather 0x83 (linux native).  Since stopping the use
->  of EVMS on boot, the array has not come up automatically.
-> 
-> I have tried failing one of the array members, recreating the partition
->  as linux RAID though the yast partition manager, and then trying to
->  add it, but I get a "mdadm: Cannot open /dev/sdb1: Device or resource
->  busy" error.  If the partition is type 0x83 (linux native) and formatted
->  with a filesystem first, then re-adding it is no problem at all, and the array rebuilds
->  fine.
+Hi,
 
-You don't need to fail a device just to change the partition type.
-Just use "cfdisk" to change all the partition types to 'fd', then
-reboot and see what happens.
+Last night a drive failed in my RAID5 array and it was kicked
+out of the array, continuing with 3 drives as expected.
 
-NeilBrown
+However a few minutes later this was logged:
 
-> 
-> In googling the topic I can't seem to find out why I get the error
->  message, and how to fix this.  I'd really like to get this problem
->  resolved.  Does anyone out there know how to fix this, so I can get partitions
->  correctly flagged as Linux RAID and the array autodetected at start?
-> 
-> Sorry if I missed something obvious.
-> 
-> Thanks,
-> Mike
-> 
-> 
-> 
-> 
-> 
-> 
->       ____________________________________________________________________________________
-> Never miss a thing.  Make Yahoo your home page. 
-> http://www.yahoo.com/r/hs
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+irq 18: nobody cared (try booting with the "irqpoll" option)
+Call Trace: <IRQ> <ffffffff8015b930>{__report_bad_irq+48}
+    <ffffffff8015bb2e>{note_interrupt+433} <ffffffff8015b444>{__do_IRQ+191}
+
+IRQ 18 belongs to the SATA controller where all 4 drives are connected.
+
+Nothing more was logged, probably because the interrupt got disabled,
+making it impossible to talk to the drives anymore. It's bad because
+I ended up with a dirty degraded array the second time this year.
+
+How would a RAID-6 handle a crash when a drive is missing?
+Would that also lead to possible silent corruptions?
+Or is the only option to avoid silent corruptions is a battery
+backed hardware controller?
+
+
+Kernel is 2.6.16-1.2133_FC5
+
+Here's the full log:
+
+Nov 16 00:43:10 p4 kernel: ata1: command 0xea timeout, stat 0xd0 host_stat 0x0
+Nov 16 00:43:10 p4 kernel: ata1: status=0xd0 { Busy }
+Nov 16 00:43:10 p4 kernel: ATA: abnormal status 0xD0 on port 0xE407
+Nov 16 00:43:10 p4 last message repeated 2 times
+Nov 16 01:30:06 p4 kernel: ata1: command 0xea timeout, stat 0xd0 host_stat 0x0
+Nov 16 01:30:06 p4 kernel: ata1: status=0xd0 { Busy }
+Nov 16 01:30:06 p4 kernel: ATA: abnormal status 0xD0 on port 0xE407
+Nov 16 01:30:06 p4 last message repeated 2 times
+Nov 16 01:34:13 p4 kernel: ata1: command 0xea timeout, stat 0xd0 host_stat 0x0
+Nov 16 01:34:13 p4 kernel: ata1: status=0xd0 { Busy }
+Nov 16 01:34:13 p4 kernel: ATA: abnormal status 0xD0 on port 0xE407
+Nov 16 01:34:13 p4 last message repeated 2 times
+Nov 16 01:35:13 p4 kernel: ata1: command 0x35 timeout, stat 0xd0 host_stat 0x61
+Nov 16 01:35:13 p4 kernel: ata1: status=0xd0 { Busy }
+Nov 16 01:35:13 p4 kernel: sd 0:0:0:0: SCSI error: return code = 0x8000002
+Nov 16 01:35:13 p4 kernel: sda: Current: sense key: Aborted Command
+Nov 16 01:35:13 p4 kernel:     Additional sense: Scsi parity error
+Nov 16 01:35:13 p4 kernel: end_request: I/O error, dev sda, sector 781015848
+Nov 16 01:35:43 p4 kernel: ATA: abnormal status 0xD0 on port 0xE407
+Nov 16 01:35:44 p4 last message repeated 2 times
+Nov 16 01:35:44 p4 kernel: ata1: command 0xea timeout, stat 0xd0 host_stat 0x0
+Nov 16 01:35:44 p4 kernel: ata1: status=0xd0 { Busy }
+Nov 16 01:35:44 p4 kernel: raid5: Disk failure on sda3, disabling device. 
+Operation continuing on 3 devices
+Nov 16 01:35:44 p4 kernel: ATA: abnormal status 0xD0 on port 0xE407
+Nov 16 01:35:44 p4 kernel: RAID5 conf printout:
+Nov 16 01:35:44 p4 kernel:  --- rd:4 wd:3 fd:1
+Nov 16 01:35:44 p4 kernel:  disk 0, o:0, dev:sda3
+Nov 16 01:35:44 p4 kernel:  disk 1, o:1, dev:sdc3
+Nov 16 01:35:44 p4 kernel:  disk 2, o:1, dev:sdb3
+Nov 16 01:35:44 p4 kernel:  disk 3, o:1, dev:sdd3
+Nov 16 01:35:44 p4 kernel: RAID5 conf printout:
+Nov 16 01:35:44 p4 kernel:  --- rd:4 wd:3 fd:1
+Nov 16 01:35:44 p4 kernel:  disk 1, o:1, dev:sdc3
+Nov 16 01:35:44 p4 kernel:  disk 2, o:1, dev:sdb3
+Nov 16 01:35:44 p4 kernel:  disk 3, o:1, dev:sdd3
+Nov 16 01:37:36 p4 kernel: irq 18: nobody cared (try booting with the 
+"irqpoll" option)
+Nov 16 01:37:36 p4 kernel:
+Nov 16 01:37:36 p4 kernel: Call Trace: <IRQ> 
+<ffffffff8015b930>{__report_bad_irq+48}
+
+Nov 16 01:37:36 p4 kernel:        <ffffffff8015bb2e>{note_interrupt+433} 
+<ffffffff8015b444>{__do_IRQ+191}
+
+
+-Tamas
