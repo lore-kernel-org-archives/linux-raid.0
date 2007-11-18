@@ -1,46 +1,62 @@
-From: David Greaves <david@dgreaves.com>
-Subject: Re: Raid5 assemble after dual sata port failure
-Date: Sun, 18 Nov 2007 12:25:25 +0000
-Message-ID: <47402F35.9020401@dgreaves.com>
-References: <47321FDF.8060207@synplicity.com> <4732E5F0.7080805@dgreaves.com> <4734CFE5.8070305@synplicity.com> <4734FB4A.4070401@synplicity.com> <473576F9.6040602@dgreaves.com> <4735FC7E.7030601@synplicity.com> <47373746.9090701@dgreaves.com> <47373EB9.9050408@synplicity.com> <4737870D.5000906@dgreaves.com> <4737A5CC.8040105@tmr.com> <473E8AC2.9020701@synplicity.com>
+From: Goswin von Brederlow <brederlo@informatik.uni-tuebingen.de>
+Subject: Re: Building a new raid6 with bitmap does not clear bits during resync
+Date: Sun, 18 Nov 2007 17:52:14 +0100
+Message-ID: <87k5of1oox.fsf@informatik.uni-tuebingen.de>
+References: <87lk98ad7e.fsf@informatik.uni-tuebingen.de>
+	<18231.62186.908021.981786@notabene.brown> <47387137.7000401@tmr.com>
+	<18232.53770.923521.968923@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <473E8AC2.9020701@synplicity.com>
+In-Reply-To: <18232.53770.923521.968923@notabene.brown> (Neil Brown's message
+	of "Tue, 13 Nov 2007 09:22:02 +1100")
 Sender: linux-raid-owner@vger.kernel.org
-To: Chris Eddington <chrise@synplicity.com>
-Cc: Bill Davidsen <davidsen@tmr.com>, linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: Bill Davidsen <davidsen@tmr.com>, Goswin von Brederlow <brederlo@informatik.uni-tuebingen.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Chris Eddington wrote:
-> Key questions:
-> - I assume ddrescue will do a much better job of correcting errors when
-> imaging a disk?  My colleague used ghost which is just a copy tool.  I
-> don't understand the capabilities of ddrescue on raid partitions that well.
-ddrescue should do a *much* better job.
-It knows nothing about raid and operates on the underlying device. It retries
-bad sectors in a clever manner.
+Neil Brown <neilb@suse.de> writes:
 
+> On Monday November 12, davidsen@tmr.com wrote:
+>> Neil Brown wrote:
+>> >
+>> > However there is value in regularly updating the bitmap, so add code
+>> > to periodically pause while all pending sync requests complete, then
+>> > update the bitmap.  Doing this only every few seconds (the same as the
+>> > bitmap update time) does not notciable affect resync performance.
+>> >   
+>> 
+>> I wonder if a minimum time and minimum number of stripes would be 
+>> better. If a resync is going slowly because it's going over a slow link 
+>> to iSCSI, nbd, or a box of cheap drives fed off a single USB port, just 
+>> writing the updated bitmap may represent as much data as has been 
+>> resynced in the time slice.
+>> 
+>> Not a suggestion, but a request for your thoughts on that.
+>
+> Thanks for your thoughts.
+> Choosing how often to update the bitmap during a sync is certainly not
+> trivial.   In different situations, different requirements might rule.
+>
+> I chose to base it on time, and particularly on the time we already
+> have for "how soon to write back clean bits to the bitmap" because it
+> is fairly easy to users to understand the implications (if I set the
+> time to 30 seconds, then I might have to repeat 30second of resync)
+> and it is already configurable (via the "--delay" option to --create
+> --bitmap).
+>
+> Presumably if someone has a very slow system and wanted to use
+> bitmaps, they would set --delay relatively large to reduce the cost
+> and still provide significant benefits.  This would effect both normal
+> clean-bit writeback and during-resync clean-bit-writeback.
+>
+> Hope that clarifies my approach.
+>
+> Thanks,
+> NeilBrown
 
-> - fdisk -l reports that all the drives are exactly the same size with
-> exactly the same # sectors shown below.  I don't quite follow the
-> hpa_resize issue, but it appears the drives don't have hidden HPA
-> sectors - I guess?  Note that sdc is the original drive, where sda, sdb,
-> and sdd are the imaged drives.
-> 
-> So what do you recommend to do first?  Should I try xfs_repair on the
-> ghost copy,
-No
- or just re-copy myself using ddrescue?
-Yes.
-  Are there special
-> settings to ddrescue I should consider to verify/correct potential HPA
-> changes?
-Ideally just ddrescue the entire device to a file and use loopback.
+We are talking about 12-24h resync times here under idle
+conditions. Syncing only once per minute is perfectly acceptable.
 
-For the faulty disk then if you have space, make a second copy and xfs_repair
-using that. If it fails then you can easily re-image the good disks but it may
-not be so easy to re-image the bad one.
-
-David
+MfG
+        Goswin
