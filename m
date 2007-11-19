@@ -1,60 +1,117 @@
-From: Bernd Schubert <bs@q-leap.de>
-Subject: Re: raid6 resync blocks the entire system
-Date: Sun, 18 Nov 2007 23:18:19 +0100
-Message-ID: <20071118221819.GA26053@lanczos.q-leap.de>
-References: <fhq60j$an9$1@ger.gmane.org> <18240.42344.102986.988879@base.ty.sabi.co.UK>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: raid5 failure + libata irq: nobody cared
+Date: Mon, 19 Nov 2007 09:16:41 -0500
+Message-ID: <47419AC9.8080105@tmr.com>
+References: <473DCDE3.5060904@neb.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <18240.42344.102986.988879@base.ty.sabi.co.UK>
+In-Reply-To: <473DCDE3.5060904@neb.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: pg_mh@mh.to.sabi.co.UK, Peter Grandi <pg_lxra@lxra.for.sabi.co.UK>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: "Vincze, Tamas" <vincze@neb.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, Nov 18, 2007 at 08:49:44PM +0000, pg_mh@mh.to.sabi.co.UK wrote:
-> >>> On Sun, 18 Nov 2007 21:06:42 +0100, Bernd Schubert
-> >>> <bernd-schubert@gmx.de> said:
-> 
-> bernd-schubert> Hi, on raid-initialization or later on a re-sync
-> bernd-schubert> our systems become unresponsive. [ ... ] Also,
-> bernd-schubert> the higher the stripe cache size, the higher the
-> bernd-schubert> probability the system will go into this state.
-> 
-> Is either point surprising?
+Vincze, Tamas wrote:
+> Hi,
+>
+> Last night a drive failed in my RAID5 array and it was kicked
+> out of the array, continuing with 3 drives as expected.
+>
+> However a few minutes later this was logged:
+>
+> irq 18: nobody cared (try booting with the "irqpoll" option)
+> Call Trace: <IRQ> <ffffffff8015b930>{__report_bad_irq+48}
+>    <ffffffff8015bb2e>{note_interrupt+433} 
+> <ffffffff8015b444>{__do_IRQ+191}
+>
+> IRQ 18 belongs to the SATA controller where all 4 drives are connected.
 
-On a system booted over network, so without anything accessing the raid 
-devices IHMO yes.
+The troubling thing is that the controller was still in use, and there 
+should have been handling for the "nobody cared" interrupt. It sounds as 
+if the failed drive didn't get marked to be ignored, or logged then 
+ignored. I'd love to know what generated the IRQ in the first place.
+>
+> Nothing more was logged, probably because the interrupt got disabled,
+> making it impossible to talk to the drives anymore. It's bad because
+> I ended up with a dirty degraded array the second time this year.
+>
+> How would a RAID-6 handle a crash when a drive is missing?
+> Would that also lead to possible silent corruptions?
+> Or is the only option to avoid silent corruptions is a battery
+> backed hardware controller?
+>
+>
+> Kernel is 2.6.16-1.2133_FC5
 
-> 
-> [ ... ]
-> 
-> bernd-schubert> Any ideas?
-> 
-> Well, the default Linux storage subsystem parameters are set
-> usually for high throughput, not low latency. Anyhow, there is
+There have been a lot of improvements in raid since then.
+>
+> Here's the full log:
+>
+> Nov 16 00:43:10 p4 kernel: ata1: command 0xea timeout, stat 0xd0 
+> host_stat 0x0
+> Nov 16 00:43:10 p4 kernel: ata1: status=0xd0 { Busy }
+> Nov 16 00:43:10 p4 kernel: ATA: abnormal status 0xD0 on port 0xE407
+> Nov 16 00:43:10 p4 last message repeated 2 times
+> Nov 16 01:30:06 p4 kernel: ata1: command 0xea timeout, stat 0xd0 
+> host_stat 0x0
+> Nov 16 01:30:06 p4 kernel: ata1: status=0xd0 { Busy }
+> Nov 16 01:30:06 p4 kernel: ATA: abnormal status 0xD0 on port 0xE407
+> Nov 16 01:30:06 p4 last message repeated 2 times
+> Nov 16 01:34:13 p4 kernel: ata1: command 0xea timeout, stat 0xd0 
+> host_stat 0x0
+> Nov 16 01:34:13 p4 kernel: ata1: status=0xd0 { Busy }
+> Nov 16 01:34:13 p4 kernel: ATA: abnormal status 0xD0 on port 0xE407
+> Nov 16 01:34:13 p4 last message repeated 2 times
+> Nov 16 01:35:13 p4 kernel: ata1: command 0x35 timeout, stat 0xd0 
+> host_stat 0x61
+> Nov 16 01:35:13 p4 kernel: ata1: status=0xd0 { Busy }
+> Nov 16 01:35:13 p4 kernel: sd 0:0:0:0: SCSI error: return code = 
+> 0x8000002
+> Nov 16 01:35:13 p4 kernel: sda: Current: sense key: Aborted Command
+> Nov 16 01:35:13 p4 kernel:     Additional sense: Scsi parity error
+> Nov 16 01:35:13 p4 kernel: end_request: I/O error, dev sda, sector 
+> 781015848
+> Nov 16 01:35:43 p4 kernel: ATA: abnormal status 0xD0 on port 0xE407
+> Nov 16 01:35:44 p4 last message repeated 2 times
+> Nov 16 01:35:44 p4 kernel: ata1: command 0xea timeout, stat 0xd0 
+> host_stat 0x0
+> Nov 16 01:35:44 p4 kernel: ata1: status=0xd0 { Busy }
+> Nov 16 01:35:44 p4 kernel: raid5: Disk failure on sda3, disabling 
+> device. Operation continuing on 3 devices
+> Nov 16 01:35:44 p4 kernel: ATA: abnormal status 0xD0 on port 0xE407
+> Nov 16 01:35:44 p4 kernel: RAID5 conf printout:
+> Nov 16 01:35:44 p4 kernel:  --- rd:4 wd:3 fd:1
+> Nov 16 01:35:44 p4 kernel:  disk 0, o:0, dev:sda3
+> Nov 16 01:35:44 p4 kernel:  disk 1, o:1, dev:sdc3
+> Nov 16 01:35:44 p4 kernel:  disk 2, o:1, dev:sdb3
+> Nov 16 01:35:44 p4 kernel:  disk 3, o:1, dev:sdd3
+> Nov 16 01:35:44 p4 kernel: RAID5 conf printout:
+> Nov 16 01:35:44 p4 kernel:  --- rd:4 wd:3 fd:1
+> Nov 16 01:35:44 p4 kernel:  disk 1, o:1, dev:sdc3
+> Nov 16 01:35:44 p4 kernel:  disk 2, o:1, dev:sdb3
+> Nov 16 01:35:44 p4 kernel:  disk 3, o:1, dev:sdd3
+> Nov 16 01:37:36 p4 kernel: irq 18: nobody cared (try booting with the 
+> "irqpoll" option)
+> Nov 16 01:37:36 p4 kernel:
+> Nov 16 01:37:36 p4 kernel: Call Trace: <IRQ> 
+> <ffffffff8015b930>{__report_bad_irq+48}
+>
+> Nov 16 01:37:36 p4 kernel:        
+> <ffffffff8015bb2e>{note_interrupt+433} <ffffffff8015b444>{__do_IRQ+191}
+>
+>
+> -Tamas
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-I don't speak about low latency, but latency of at least 24h is a bit high,
-isn't it? Linux is a multi-tasking system, even with high load it has to 
-respond to keyboard input, especially when there are 8 CPUs with 4 of them
-in idle state (almost 4 used for sync processes).
 
-> another interesting point, which is how many disks in that RAID6
-> array? What is the system bus and host adapter to the disk bus?
-
-6 x Infortrend A16U-G2430 (hardware raid 6) on 3 dual-channel LSI22320 HBAs 
-in U320 mode, so eventually we have raid66. Since linux-raid is presently
-not multi-threaded the the CPU would limit raid6 write performance to 
-200MB/s. Since we do have 8 CPUs, we have made 3 partions of each A16U-G2430,
-so in the end we have 3 x software-raid6.
-
-I know this is a high end configuration, but no latency critical component
-is at any limit, 4 CPUs are idling, PCI-X busses are 
-far away from being saturated. 
-
-
-Cheers,
-Bernd
-
+-- 
+bill davidsen <davidsen@tmr.com>
+  CTO TMR Associates, Inc
+  Doing interesting things with small computers since 1979
 
