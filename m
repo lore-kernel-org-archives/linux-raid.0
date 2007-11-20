@@ -1,44 +1,54 @@
-From: Richard Michael <rmichael-raid@edgeofthenet.org>
-Subject: Offtopic: hardware advice for SAS RAID6
-Date: Tue, 20 Nov 2007 11:08:06 -0500
-Message-ID: <20071120160806.GD24510@server>
+From: Mark Hahn <hahn@mcmaster.ca>
+Subject: Re: BUG: soft lockup detected on CPU#1! (was Re: raid6 resync blocks
+ the entire system)
+Date: Tue, 20 Nov 2007 12:16:43 -0500 (EST)
+Message-ID: <Pine.LNX.4.64.0711201125440.23485@coffee.psychology.mcmaster.ca>
+References: <fhq60j$an9$1@ger.gmane.org> <20071118221819.GA26053@lanczos.q-leap.de>
+ <Pine.LNX.4.64.0711200045130.4836@coffee.psychology.mcmaster.ca>
+ <200711201633.39142.bs@q-leap.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <200711201633.39142.bs@q-leap.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Bernd Schubert <bs@q-leap.de>
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On the heels of last week's post asking about hardware recommendations,
-I'd like to ask a few questions too. :)
+>> yes, but what about memory?  I speculate that this is an Intel-based
+>> system that is relatively memory-starved.
+>
+> Yes, its an intel system, since still has problems to deliver AMD quadcores.
+> Anyway, I don't believe the systems memory bandwidth is only
+> 6 x 280 MB/s = 1680 MB/s (280 MB/s is the maximum I measured per scsi
+> channel). Actually, the measured bandwith of this system is 4 GB/s.
 
-I'm considering my first SAS purchase.  I'm planning to build a software
-RAID6 array using a SAS JBOD attached to a linux box.  I haven't decided
-on any of the hardware specifics.
+4 GB/s is terrible, especially for 8 cores, but perhaps you know this.
 
-I'm leaning toward this PCI express LSI 3801e controller:
-http://www.lsi.com/storage_home/products_home/host_bus_adapters/sas_hbas/lsisas3801e/index.html
+> With 2.6.23 and enabled debugging we now nicely get softlockups.
+>
+> [  187.913000] Call Trace:
+> [  187.917128]  [<ffffffff8020d3c1>] show_trace+0x41/0x70
+> [  187.922401]  [<ffffffff8020d400>] dump_stack+0x10/0x20
+> [  187.927667]  [<ffffffff80269949>] softlockup_tick+0x129/0x180
+> [  187.933529]  [<ffffffff80240c9d>] update_process_times+0x7d/0xa0
+> [  187.939676]  [<ffffffff8021c634>] smp_local_timer_interrupt+0x34/0x60
+> [  187.946275]  [<ffffffff8021c71a>] smp_apic_timer_interrupt+0x4a/0x70
+> [  187.952731]  [<ffffffff8020c7db>] apic_timer_interrupt+0x6b/0x70
+> [  187.958848]  [<ffffffff881ca5e3>] :raid456:handle_stripe+0xe23/0xf50
 
-Although, Adaptec has a similar PCI-X model.
+so handle_stripe is taking too long; is this not consistent with the memory theory?
 
-I'd probably purchase a cheap Dell rackmount 1U server (e.g. PowerEdge
-860) for the controller.  It has dual Gb ethernet, which I'd channel
-bond for decent network I/O performance.
+> (gdb) l *(handle_stripe+0xe23)
+> 0x5613 is in handle_stripe (drivers/md/raid5.c:1853).
+> 1848
+> 1849    static void end_reshape(raid5_conf_t *conf);
+> 1850
+> 1851    static int page_is_zero(struct page *p)
+> 1852    {
+> 1853            char *a = page_address(p);
+> 1854            return ((*(u32*)a) == 0 &&
+> 1855                    memcmp(a, a+4, STRIPE_SIZE-4)==0);
+> 1856    }
 
-The JBOD would ideally be 1U or 2U holding 8 or 10 disks.  If I
-understand SAS correctly, I'd probably have a unit with 2 SFF-8088
-miniSAS connectors (although, I believe these connectors only support 4
-devices, so if the JBOD is >8 disks, I don't know what would happen).
-
-I'm completely undecided on the JBOD itself; recommendations here would
-be greatly appreciated.  It's a bit of a shot in the dark.
-
-I'd appreciate feedback and suggestions on the hardware above, or a
-discussion of the performance.  (E.g. a discussion of SAS
-ports/bandwith, PCI express lanes/bandwidth, disks and network to
-determine the through put of this setup.)
-
-Cheers,
-Richard
+that's a weird piece of code.
