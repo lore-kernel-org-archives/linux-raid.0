@@ -1,117 +1,74 @@
-From: Mike Myers <mikesm559@yahoo.com>
-Subject: Re: Chnaging partition types of RAID array members
-Date: Tue, 20 Nov 2007 19:09:19 -0800 (PST)
-Message-ID: <534503.19493.qm@web30805.mail.mud.yahoo.com>
+From: Thiemo Nagel <thiemo.nagel@ph.tum.de>
+Subject: Re: raid6 check/repair
+Date: Wed, 21 Nov 2007 14:45:59 +0100
+Message-ID: <47443697.7060108@ph.tum.de>
+Reply-To: thiemo.nagel@ph.tum.de
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: neilb@suse.de, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Thanks.  The issue turned out to be that the device mapper was running and immediately grabbed the disk device when I changed it's partition type.  For others out there that may run into the same problem, I did a dmsetup -C remove <device>.  Then I could add it to the array just fine.
+Dear Neal,
 
-The reshaping of the array worked fine, thought it took about 15 hrs to add 1.5TB of new disk to an existing 2.5 TB array.  Everything was done with the filesystem live though, and worked great.  Neil, your work with mdadm and the associated kernel work is very much appreciated.
+ >> I have been looking a bit at the check/repair functionality in the
+ >> raid6 personality.
+ >>
+ >> It seems that if an inconsistent stripe is found during repair, md
+ >> does not try to determine which block is corrupt (using e.g. the
+ >> method in section 4 of HPA's raid6 paper), but just recomputes the
+ >> parity blocks - i.e. the same way as inconsistent raid5 stripes are
+ >> handled.
+ >>
+ >> Correct?
+ >
+ > Correct!
+ >
+ > The mostly likely cause of parity being incorrect is if a write to
+ > data + P + Q was interrupted when one or two of those had been
+ > written, but the other had not.
+ >
+ > No matter which was or was not written, correctly P and Q will produce
+ > a 'correct' result, and it is simple.  I really don't see any
+ > justification for being more clever.
 
-I am moving the data from another 1.2 TB array (to the array that I just added 1.5TB to) to make room in the SATA hotswap chasis for 4 1TB drives that will form a new 3 TB RAID5 array.  Before I can take the old array out of service though, I have to move the data in that pv to the other pv I just grew.  
+My opinion about that is quite different.  Speaking just for myself:
 
-So I am doing a pvmove that is taking forever!  It's been running for about 12 hours now, and only 30% done, and this is just for 1.2TB's of data.  Why is it taking so long?  
+a) When I put my data on a RAID running on Linux, I'd expect the 
+software to do everything which is possible to protect and when 
+necessary to restore data integrity.  (This expectation was one of the 
+reasons why I chose software RAID with Linux.)
 
-Is there anything I can do to speed things up?  Right now, the disks are set for a lot of readahead (16384) because this server primary stores media.  Is pvmove doing very small random reads?  If so, maybe I should drop the readahead down to defaults and change the stripe cache size down?  The tuning of the disks really improved performance in normal operation, but it just seems like the pvmove should be going faster than this.
+b) As a consequence of a):  When I'm using a RAID level that has extra 
+redundancy, I'd expect Linux to make use of that extra redundancy during 
+a 'repair'.  (Otherwise I'd consider repair a misnomer and rather call 
+it 'recalc parity'.)
 
-Any ideas?  
+c) Why should 'repair' be implemented in a way that only works in most 
+cases when there exists a solution that works in all cases?  (After all, 
+possibilities for corruption are many, e.g. bad RAM, bad cables, chipset 
+bugs, driver bugs, last but not least human mistake.  From all these 
+errors I'd like to be able to recover gracefully without putting the 
+array at risk by removing and readding a component device.)
 
-PS This is all under opensuse 10.3.
+Bottom line:  So far I was talking about *my* expectations, is it 
+reasonable to assume that it is shared by others?  Are there any 
+arguments that I'm not aware of speaking against an improved 
+implementation of 'repair'?
 
-Thanks,
-Mike
+BTW:  I just checked, it's the same for RAID 1:  When I intentionally 
+corrupt a sector in the first device of a set of 16, 'repair' copies the 
+corrupted data to the 15 remaining devices instead of restoring the 
+correct sector from one of the other fifteen devices to the first.
 
+Thank you for your time.
 
------ Original Message ----
-From: Neil Brown <neilb@suse.de>
-To: Mike Myers <mikesm559@yahoo.com>
-Cc: linux-raid@vger.kernel.org
-Sent: Thursday, November 15, 2007 8:28:07 PM
-Subject: Re: Chnaging partition types of RAID array members
+Kind regards,
 
+Thiemo Nagel
 
-On Thursday November 15, mikesm559@yahoo.com wrote:
-> 
-> Hi.  I have two RAID5 arrays on an opensuse 10.3 system.  They are
- used
->  together in a large LVM volume that contains a lot of data I'd
- rather
->  not have to try and backup/recreate.
-> 
-> md1 comes up fine and is detected by the OS on boot and assembled
->  automatically.  md0 however, doesn't, and needs to be brought up
- manually,
->  followed by a manual start of lvm.  This is a real pain of course.
-  The
->  issue I think is that md0 was created through EVMS, which I have
->  stopped using some time ago since it's support seems to have been
- deprecated.
->   EVMS created the array fine, but using partitions that were not
- 0xFD
->  (Linux RAID), but rather 0x83 (linux native).  Since stopping the
- use
->  of EVMS on boot, the array has not come up automatically.
-> 
-> I have tried failing one of the array members, recreating the
- partition
->  as linux RAID though the yast partition manager, and then trying to
->  add it, but I get a "mdadm: Cannot open /dev/sdb1: Device or
- resource
->  busy" error.  If the partition is type 0x83 (linux native) and
- formatted
->  with a filesystem first, then re-adding it is no problem at all, and
- the array rebuilds
->  fine.
-
-You don't need to fail a device just to change the partition type.
-Just use "cfdisk" to change all the partition types to 'fd', then
-reboot and see what happens.
-
-NeilBrown
-
-> 
-> In googling the topic I can't seem to find out why I get the error
->  message, and how to fix this.  I'd really like to get this problem
->  resolved.  Does anyone out there know how to fix this, so I can get
- partitions
->  correctly flagged as Linux RAID and the array autodetected at start?
-> 
-> Sorry if I missed something obvious.
-> 
-> Thanks,
-> Mike
-> 
-> 
-> 
-> 
-> 
-> 
->      
- ____________________________________________________________________________________
-> Never miss a thing.  Make Yahoo your home page. 
-> http://www.yahoo.com/r/hs
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid"
- in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
-
-
-
-      ____________________________________________________________________________________
-Get easy, one-click access to your favorites. 
-Make Yahoo! your homepage.
-http://www.yahoo.com/r/hs 
+P.S.:  I've re-sent this mail as the first one didn't get through 
+majordomo.  (Yes, it had a vcard attached.  Yes, I have been told.  Yes, 
+I am sorry.)
