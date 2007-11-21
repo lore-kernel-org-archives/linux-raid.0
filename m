@@ -1,99 +1,67 @@
-From: Thiemo Nagel <thiemo.nagel@ph.tum.de>
-Subject: Re: raid6 check/repair
-Date: Wed, 21 Nov 2007 14:25:19 +0100
-Message-ID: <474431BF.30103@ph.tum.de>
-Reply-To: thiemo.nagel@ph.tum.de
+From: Daniel Korstad <dan@korstad.net>
+Subject: RE: Offtopic: hardware advice for SAS RAID6
+Date: Wed, 21 Nov 2007 08:24:37 -0600
+Message-ID: <1021217410.521195655077757.JavaMail.root@gateway.korstad.net>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------070702040107010304080800"
+Content-Type: text/plain;
+	charset="us-ascii"
 Return-path: <linux-raid-owner@vger.kernel.org>
-References: 18237.7146.783687.826984@notabene.brown
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org
+To: Richard Michael <rmichael-raid@edgeofthenet.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This is a multi-part message in MIME format.
---------------070702040107010304080800
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+I would be very interested to hear how that card works or other suggestions discussions too.
+ 
+I have a 10 disk RAID 6 all inside a large case, using on board MB SATA and a couple 4 port PCI SATA cards.  For one, my PCI bus is saturated and a bottle neck and it is a bit of a pain to replace drives by having to open the case each time.
+ 
+I have been running this for years without issues, but would like to upgrade the system at some point and would like to use mdadm software raid, with an external enclosure allowing easy drive swapping.
+ 
+The most I can contribute to this thread are SATA Multilane Enclosures I have been eyeing.
+http://www.pc-pitstop.com/sata_enclosures/
+ 
+But like you, I need a card that is Linux friendly and provides hard drive raid control to mdadm.
+ 
+I'll follow this one and would like to hear about your experiences with the SAS card you choose.
 
-Dear Neal,
+----- Original Message -----
+From: Richard Michael <rmichael-raid@edgeofthenet.org>
+Sent: Tue, 11/20/2007 10:08am
+To: linux-raid@vger.kernel.org
+Subject: Offtopic: hardware advice for SAS RAID6
 
->> I have been looking a bit at the check/repair functionality in the
->> raid6 personality.
->> 
->> It seems that if an inconsistent stripe is found during repair, md
->> does not try to determine which block is corrupt (using e.g. the
->> method in section 4 of HPA's raid6 paper), but just recomputes the
->> parity blocks - i.e. the same way as inconsistent raid5 stripes are
->> handled.
->> 
->> Correct?
-> 
-> Correct!
-> 
-> The mostly likely cause of parity being incorrect is if a write to
-> data + P + Q was interrupted when one or two of those had been
-> written, but the other had not.
-> 
-> No matter which was or was not written, correctly P and Q will produce
-> a 'correct' result, and it is simple.  I really don't see any
-> justification for being more clever.
+On the heels of last week's post asking about hardware recommendations,
+I'd like to ask a few questions too. :)
 
-My opinion about that is quite different.  Speaking just for myself:
+I'm considering my first SAS purchase.  I'm planning to build a software
+RAID6 array using a SAS JBOD attached to a linux box.  I haven't decided
+on any of the hardware specifics.
 
-a) When I put my data on a RAID running on Linux, I'd expect the 
-software to do everything which is possible to protect and when 
-necessary to restore data integrity.  (This expectation was one of the 
-reasons why I chose software RAID with Linux.)
+I'm leaning toward this PCI express LSI 3801e controller:
+http://www.lsi.com/storage_home/products_home/host_bus_adapters/sas_hbas/lsisas3801e/index.html
 
-b) As a consequence of a):  When I'm using a RAID level that has extra 
-redundancy, I'd expect Linux to make use of that extra redundancy during 
-a 'repair'.  (Otherwise I'd consider repair a misnomer and rather call 
-it 'recalc parity'.)
+Although, Adaptec has a similar PCI-X model.
 
-c) Why should 'repair' be implemented in a way that only works in most 
-cases when there exists a solution that works in all cases?  (After all, 
-possibilities for corruption are many, e.g. bad RAM, bad cables, chipset 
-bugs, driver bugs, last but not least human mistake.  From all these 
-errors I'd like to be able to recover gracefully without putting the 
-array at risk by removing and readding a component device.)
+I'd probably purchase a cheap Dell rackmount 1U server (e.g. PowerEdge
+860) for the controller.  It has dual Gb ethernet, which I'd channel
+bond for decent network I/O performance.
 
-Bottom line:  So far I was talking about *my* expectations, is it 
-reasonable to assume that it is shared by others?  Are there any 
-arguments that I'm not aware of speaking against an improved 
-implementation of 'repair'?
+The JBOD would ideally be 1U or 2U holding 8 or 10 disks.  If I
+understand SAS correctly, I'd probably have a unit with 2 SFF-8088
+miniSAS connectors (although, I believe these connectors only support 4
+devices, so if the JBOD is >8 disks, I don't know what would happen).
 
-BTW:  I just checked, it's the same for RAID 1:  When I intentionally 
-corrupt a sector in the first device of a set of 16, 'repair' copies the 
-corrupted data to the 15 remaining devices instead of restoring the 
-correct sector from one of the other fifteen devices to the first.
+I'm completely undecided on the JBOD itself; recommendations here would
+be greatly appreciated.  It's a bit of a shot in the dark.
 
-Thank you for your time.
+I'd appreciate feedback and suggestions on the hardware above, or a
+discussion of the performance.  (E.g. a discussion of SAS
+ports/bandwith, PCI express lanes/bandwidth, disks and network to
+determine the through put of this setup.)
 
-Kind regards,
-
-Thiemo Nagel
-
---------------070702040107010304080800
-Content-Type: text/x-vcard; charset=utf-8;
- name="thiemo_nagel.vcf"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename="thiemo_nagel.vcf"
-
-begin:vcard
-fn:Thiemo Nagel
-n:Nagel;Thiemo
-org;quoted-printable:Technische Universit=C3=A4t M=C3=BCnchen;Physik Department E18
-adr;quoted-printable:;;James-Franck-Stra=C3=9Fe;Garching;;85748;Germany
-email;internet:thiemo.nagel@ph.tum.de
-title:Dipl. Phys.
-tel;work:+49 (0)89 289-12592
-x-mozilla-html:FALSE
-version:2.1
-end:vcard
-
-
---------------070702040107010304080800--
+Cheers,
+Richard
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
