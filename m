@@ -1,82 +1,117 @@
-From: Bernd Schubert <bs@q-leap.de>
-Subject: Re: BUG: soft lockup detected on CPU#1! (was Re: raid6 resync blocks the entire system)
-Date: Tue, 20 Nov 2007 19:32:24 +0100
-Message-ID: <200711201932.25258.bs@q-leap.de>
-References: <fhq60j$an9$1@ger.gmane.org> <200711201633.39142.bs@q-leap.de> <Pine.LNX.4.64.0711201125440.23485@coffee.psychology.mcmaster.ca>
+From: Mike Myers <mikesm559@yahoo.com>
+Subject: Re: Chnaging partition types of RAID array members
+Date: Tue, 20 Nov 2007 19:09:19 -0800 (PST)
+Message-ID: <534503.19493.qm@web30805.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0711201125440.23485@coffee.psychology.mcmaster.ca>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Mark Hahn <hahn@mcmaster.ca>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday 20 November 2007 18:16:43 Mark Hahn wrote:
-> >> yes, but what about memory?  I speculate that this is an Intel-based
-> >> system that is relatively memory-starved.
-> >
-> > Yes, its an intel system, since still has problems to deliver AMD
-> > quadcores. Anyway, I don't believe the systems memory bandwidth is only
-> > 6 x 280 MB/s = 1680 MB/s (280 MB/s is the maximum I measured per scsi
-> > channel). Actually, the measured bandwith of this system is 4 GB/s.
->
-> 4 GB/s is terrible, especially for 8 cores, but perhaps you know this.
+Thanks.  The issue turned out to be that the device mapper was running and immediately grabbed the disk device when I changed it's partition type.  For others out there that may run into the same problem, I did a dmsetup -C remove <device>.  Then I could add it to the array just fine.
 
-Yes, but these are lustre storage nodes and the bottleneck is I/O and not 
-memory. We get 420 MB/s writes and 900 MB/s reads per OSS (one storage node). 
-For that we need between 3 and 4 CPUs, the lustre threads can take the other 
-ones. We also only have problems on raid-resync, during normal I/O operation 
-the system is perfectly responsive.
+The reshaping of the array worked fine, thought it took about 15 hrs to add 1.5TB of new disk to an existing 2.5 TB array.  Everything was done with the filesystem live though, and worked great.  Neil, your work with mdadm and the associated kernel work is very much appreciated.
 
->
-> > With 2.6.23 and enabled debugging we now nicely get softlockups.
-> >
-> > [  187.913000] Call Trace:
-> > [  187.917128]  [<ffffffff8020d3c1>] show_trace+0x41/0x70
-> > [  187.922401]  [<ffffffff8020d400>] dump_stack+0x10/0x20
-> > [  187.927667]  [<ffffffff80269949>] softlockup_tick+0x129/0x180
-> > [  187.933529]  [<ffffffff80240c9d>] update_process_times+0x7d/0xa0
-> > [  187.939676]  [<ffffffff8021c634>] smp_local_timer_interrupt+0x34/0x60
-> > [  187.946275]  [<ffffffff8021c71a>] smp_apic_timer_interrupt+0x4a/0x70
-> > [  187.952731]  [<ffffffff8020c7db>] apic_timer_interrupt+0x6b/0x70
-> > [  187.958848]  [<ffffffff881ca5e3>] :raid456:handle_stripe+0xe23/0xf50
->
-> so handle_stripe is taking too long; is this not consistent with the memory
-> theory?
+I am moving the data from another 1.2 TB array (to the array that I just added 1.5TB to) to make room in the SATA hotswap chasis for 4 1TB drives that will form a new 3 TB RAID5 array.  Before I can take the old array out of service though, I have to move the data in that pv to the other pv I just grew.  
 
-Here an argument against memory theory. Per hardware raid we have 3 partitions 
-to introduce some kind of 'manual' cpu-threading. Usually the md-driver 
-detects it is doing raid over the same partitions and I guess in order to 
-prevent disk thrashing it delays the re-sync of the other two md-devices. The 
-resync is then limited due to CPU to about 80MB/s (the md process takes 100% 
-cpu-time of one single cpu).
-Since we simply do not do any disk thrashing at 80MB/s, I simply disabled this 
-detection code and also limited the maximum sync-speed to 40MB/s. Now there 
-are *three* resyncs running, each with 40MB/s, so altogether 120 MB/s. At 
-this speed the system *sometimes* reacts slow, but at least I can login and 
-also still can do something on the system. 
-I think you will agree more memory bandwidth is used for 3x40MB/s than for 
-1x80MB/s resync.
+So I am doing a pvmove that is taking forever!  It's been running for about 12 hours now, and only 30% done, and this is just for 1.2TB's of data.  Why is it taking so long?  
 
-My personal (wild) guess for this problem is, that there is somewhere a global 
-lock, preventing all other CPUs to do something. At 100%s (at 80 MB/s) 
-there's probably not left any time frame to wake up the other CPUs or its 
-sufficiently small to only allow high priority kernel threads to do 
-something.
-When I limit the sync to 40MB/s each resync-CPU has to wait sufficiently long 
-to allow the other CPUs to wake up.
+Is there anything I can do to speed things up?  Right now, the disks are set for a lot of readahead (16384) because this server primary stores media.  Is pvmove doing very small random reads?  If so, maybe I should drop the readahead down to defaults and change the stripe cache size down?  The tuning of the disks really improved performance in normal operation, but it just seems like the pvmove should be going faster than this.
+
+Any ideas?  
+
+PS This is all under opensuse 10.3.
+
+Thanks,
+Mike
 
 
-Cheers,
-Bernd
+----- Original Message ----
+From: Neil Brown <neilb@suse.de>
+To: Mike Myers <mikesm559@yahoo.com>
+Cc: linux-raid@vger.kernel.org
+Sent: Thursday, November 15, 2007 8:28:07 PM
+Subject: Re: Chnaging partition types of RAID array members
+
+
+On Thursday November 15, mikesm559@yahoo.com wrote:
+> 
+> Hi.  I have two RAID5 arrays on an opensuse 10.3 system.  They are
+ used
+>  together in a large LVM volume that contains a lot of data I'd
+ rather
+>  not have to try and backup/recreate.
+> 
+> md1 comes up fine and is detected by the OS on boot and assembled
+>  automatically.  md0 however, doesn't, and needs to be brought up
+ manually,
+>  followed by a manual start of lvm.  This is a real pain of course.
+  The
+>  issue I think is that md0 was created through EVMS, which I have
+>  stopped using some time ago since it's support seems to have been
+ deprecated.
+>   EVMS created the array fine, but using partitions that were not
+ 0xFD
+>  (Linux RAID), but rather 0x83 (linux native).  Since stopping the
+ use
+>  of EVMS on boot, the array has not come up automatically.
+> 
+> I have tried failing one of the array members, recreating the
+ partition
+>  as linux RAID though the yast partition manager, and then trying to
+>  add it, but I get a "mdadm: Cannot open /dev/sdb1: Device or
+ resource
+>  busy" error.  If the partition is type 0x83 (linux native) and
+ formatted
+>  with a filesystem first, then re-adding it is no problem at all, and
+ the array rebuilds
+>  fine.
+
+You don't need to fail a device just to change the partition type.
+Just use "cfdisk" to change all the partition types to 'fd', then
+reboot and see what happens.
+
+NeilBrown
+
+> 
+> In googling the topic I can't seem to find out why I get the error
+>  message, and how to fix this.  I'd really like to get this problem
+>  resolved.  Does anyone out there know how to fix this, so I can get
+ partitions
+>  correctly flagged as Linux RAID and the array autodetected at start?
+> 
+> Sorry if I missed something obvious.
+> 
+> Thanks,
+> Mike
+> 
+> 
+> 
+> 
+> 
+> 
+>      
+ ____________________________________________________________________________________
+> Never miss a thing.  Make Yahoo your home page. 
+> http://www.yahoo.com/r/hs
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid"
+ in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 
 
 
--- 
-Bernd Schubert
-Q-Leap Networks GmbH
+
+      ____________________________________________________________________________________
+Get easy, one-click access to your favorites. 
+Make Yahoo! your homepage.
+http://www.yahoo.com/r/hs 
