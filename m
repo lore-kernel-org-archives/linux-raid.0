@@ -1,38 +1,45 @@
 From: Thiemo Nagel <thiemo.nagel@ph.tum.de>
 Subject: Re: raid6 check/repair
-Date: Wed, 21 Nov 2007 14:45:59 +0100
-Message-ID: <47443697.7060108@ph.tum.de>
+Date: Wed, 21 Nov 2007 14:25:19 +0100
+Message-ID: <474431BF.30103@ph.tum.de>
 Reply-To: thiemo.nagel@ph.tum.de
 Mime-Version: 1.0
+Content-Type: multipart/mixed;
+ boundary="------------070702040107010304080800"
+Return-path: <linux-raid-owner@vger.kernel.org>
+References: 18237.7146.783687.826984@notabene.brown
+Sender: linux-raid-owner@vger.kernel.org
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org
+List-Id: linux-raid.ids
+
+This is a multi-part message in MIME format.
+--------------070702040107010304080800
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de, linux-raid@vger.kernel.org
-List-Id: linux-raid.ids
 
 Dear Neal,
 
- >> I have been looking a bit at the check/repair functionality in the
- >> raid6 personality.
- >>
- >> It seems that if an inconsistent stripe is found during repair, md
- >> does not try to determine which block is corrupt (using e.g. the
- >> method in section 4 of HPA's raid6 paper), but just recomputes the
- >> parity blocks - i.e. the same way as inconsistent raid5 stripes are
- >> handled.
- >>
- >> Correct?
- >
- > Correct!
- >
- > The mostly likely cause of parity being incorrect is if a write to
- > data + P + Q was interrupted when one or two of those had been
- > written, but the other had not.
- >
- > No matter which was or was not written, correctly P and Q will produce
- > a 'correct' result, and it is simple.  I really don't see any
- > justification for being more clever.
+>> I have been looking a bit at the check/repair functionality in the
+>> raid6 personality.
+>> 
+>> It seems that if an inconsistent stripe is found during repair, md
+>> does not try to determine which block is corrupt (using e.g. the
+>> method in section 4 of HPA's raid6 paper), but just recomputes the
+>> parity blocks - i.e. the same way as inconsistent raid5 stripes are
+>> handled.
+>> 
+>> Correct?
+> 
+> Correct!
+> 
+> The mostly likely cause of parity being incorrect is if a write to
+> data + P + Q was interrupted when one or two of those had been
+> written, but the other had not.
+> 
+> No matter which was or was not written, correctly P and Q will produce
+> a 'correct' result, and it is simple.  I really don't see any
+> justification for being more clever.
 
 My opinion about that is quite different.  Speaking just for myself:
 
@@ -69,6 +76,24 @@ Kind regards,
 
 Thiemo Nagel
 
-P.S.:  I've re-sent this mail as the first one didn't get through 
-majordomo.  (Yes, it had a vcard attached.  Yes, I have been told.  Yes, 
-I am sorry.)
+--------------070702040107010304080800
+Content-Type: text/x-vcard; charset=utf-8;
+ name="thiemo_nagel.vcf"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="thiemo_nagel.vcf"
+
+begin:vcard
+fn:Thiemo Nagel
+n:Nagel;Thiemo
+org;quoted-printable:Technische Universit=C3=A4t M=C3=BCnchen;Physik Department E18
+adr;quoted-printable:;;James-Franck-Stra=C3=9Fe;Garching;;85748;Germany
+email;internet:thiemo.nagel@ph.tum.de
+title:Dipl. Phys.
+tel;work:+49 (0)89 289-12592
+x-mozilla-html:FALSE
+version:2.1
+end:vcard
+
+
+--------------070702040107010304080800--
