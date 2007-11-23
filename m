@@ -1,33 +1,59 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: md RAID 10 on Linux 2.6.20?
-Date: Fri, 23 Nov 2007 14:27:37 +1100
-Message-ID: <18246.18601.167303.785264@notabene.brown>
-References: <8C9FB9564550DC0-464-E73@FWM-D05.sysops.aol.com>
+From: Sven Rudolph <Sven_Rudolph@drewag.de>
+Subject: Re: Offtopic: hardware advice for SAS RAID6
+Date: Fri, 23 Nov 2007 12:22:57 +0100
+Message-ID: <xfk4pfdqk8e.fsf@uxzb53.drewag.de>
+References: <20071120160806.GD24510@server>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from thomas62186218@aol.com on Thursday November 22
+In-Reply-To: <20071120160806.GD24510@server> (Richard Michael's message of
+ "Tue, 20 Nov 2007 11:08:06 -0500")
 Sender: linux-raid-owner@vger.kernel.org
-To: thomas62186218@aol.com
+To: Richard Michael <rmichael-raid@edgeofthenet.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thursday November 22, thomas62186218@aol.com wrote:
-> Hi all,
-> 
-> I am running a home-grown Linux 2.6.20.11 SMP 64-bit build, and I am 
-> wondering if there is indeed a RAID 10 "personality" defined in md that 
-> can be implemented using mdadm. If so, is it available in 2.6.20.11, or 
-> is it in a later kernel version? In the past, to create RAID 10, I 
-> created RAID 1's and a RAID 0, so an 8 drive RAID 10 would actually 
-> consist of 5 md devices (four RAID 1's and one RAID 0). But if I could 
-> just use RAID 10 natively, and simply create one RAID 10, that would of 
-> course be better both in terms of management and probably performance I 
-> would guess. Is this possible?
+Richard Michael <rmichael-raid@edgeofthenet.org> writes:
 
-Why don't you try it and see, or check the documentation?
+> I'm considering my first SAS purchase.  I'm planning to build a software
+> RAID6 array using a SAS JBOD attached to a linux box.  I haven't decided
+> on any of the hardware specifics.
+>
+> I'm leaning toward this PCI express LSI 3801e controller:
+> http://www.lsi.com/storage_home/products_home/host_bus_adapters/sas_hbas/lsisas3801e/index.html
 
-But yes, there is native RAID10 in 2.6.20.
+I use a very similiar controllers, the LSI 3442X-R and 3442E-R. They
+have only one external connector, and this is a different connector
+type. It looks a bit more stable (mechanically), but this might be a
+matter of taste and I have never used the other connector type.  (I
+had to update the controllers using the latest firmware available on
+the LSI web site.)
 
-NeilBrown
+> The JBOD would ideally be 1U or 2U holding 8 or 10 disks.  If I
+> understand SAS correctly, I'd probably have a unit with 2 SFF-8088
+> miniSAS connectors (although, I believe these connectors only support 4
+> devices, so if the JBOD is >8 disks, I don't know what would happen).
+
+The JBODs that I am aware of use internal SAS port expanders (see
+<http://en.wikipedia.org/wiki/Serial_Attached_SCSI#SAS_Expanders>). The
+connection to the host has four SAS lanes (the concept is similiar to
+the up to 16 lanes on a PCI-Express card). Each disk is connected via
+one SAS lane, and all these lanes are switched by the port
+expander. So you do not need 8 lanes on the host computer in order to
+connect 8 disks. 
+
+I use DELLs MD1000 JBOD (some with SATA, some with SAS), and it works
+fine. I have up to three JBODs connected to one SAS host port.
+
+> I'd appreciate feedback and suggestions on the hardware above, or a
+> discussion of the performance.  (E.g. a discussion of SAS
+> ports/bandwith, PCI express lanes/bandwidth, disks and network to
+> determine the through put of this setup.)
+
+Currently I don't see limits that must be considered. Simple math with
+bandwidths. Nowadays I prefer PCI-Express over PCI-X. AFAIR the LSI
+cards have 8 PCI-Express lanes, so you need a matching port on the
+mainboard.
+
+	Sven
+
