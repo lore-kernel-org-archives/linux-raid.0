@@ -1,49 +1,50 @@
-From: "Joshua Johnson" <enigma2175@gmail.com>
-Subject: Re: HELP! New disks being dropped from RAID 6 array on every reboot
-Date: Sun, 25 Nov 2007 13:03:25 -0700
-Message-ID: <e59c37290711251203q104dbd0cnccff8c594877deb5@mail.gmail.com>
-References: <e59c37290711231019v3c20ea71od906bca6e5cab724@mail.gmail.com>
-	 <47487976.7060201@tmr.com>
-	 <e59c37290711241653n69664fd2kf39279fa9acdb086@mail.gmail.com>
-	 <4748F99D.4050100@tmr.com>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: raid6 check/repair
+Date: Tue, 27 Nov 2007 00:08:20 -0500
+Message-ID: <474BA644.60101@tmr.com>
+References: <474431BF.30103@ph.tum.de> <18244.64972.172685.796502@notabene.brown> <4745B375.4030500@ph.tum.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4748F99D.4050100@tmr.com>
-Content-Disposition: inline
+In-Reply-To: <4745B375.4030500@ph.tum.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: linux-raid@vger.kernel.org
+To: thiemo.nagel@ph.tum.de
+Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Nov 24, 2007 9:27 PM, Bill Davidsen <davidsen@tmr.com> wrote:
-
->  No, I think you read that backward. using PARTITIONS is the right way to do
-> it, but I was suggesting that the boot mdadm.conf in initrd was still using
-> the old deleted partition names. And I assume that the old drives were
-> either physically removed or you used the zero-superblock option to prevent
-> the old partitions from being found and confusing the issue.
-
-I doubt a second mdadm.conf is the problem (unless I misunderstand
-something about the boot process), as I am not using a initrd on this
-kernel.  One PATA drive was physically removed and one was moved to
-the new controller.  The new SATA drive took the place of the removed
-PATA drive in the array.
-
->  I assume you made the old partitions go away in one of these ways, so
-> PARTITIONS should work, and from what you said I had the impression it did
-> work after boot, which would fit having a non-functional mdadm config in
-> initrd.
+Thiemo Nagel wrote:
+> Dear Neil,
 >
->  Any of that match what you're doing? I've never had to use the explicit
-> partitions except when I forgot to zap the old superblocks.
+> thank you very much for your detailed answer.
 >
->  --
-> Bill Davidsen <davidsen@tmr.com>
+> Neil Brown wrote:
+>> While it is possible to use the RAID6 P+Q information to deduce which
+>> data block is wrong if it is known that either 0 or 1 datablocks is 
+>> wrong, it is *not* possible to deduce which block or blocks are wrong
+>> if it is possible that more than 1 data block is wrong.
+>
+> If I'm not mistaken, this is only partly correct.  Using P+Q redundancy,
+> it *is* possible, to distinguish three cases:
+> a) exactly zero bad blocks
+> b) exactly one bad block
+> c) more than one bad block
+>
+> Of course, it is only possible to recover from b), but one *can* tell,
+> whether the situation is a) or b) or c) and act accordingly.
+I was waiting for a response before saying "me too," but that's exactly 
+the case, there is a class of failures other than power failure or total 
+device failure which result in just the "one identifiable bad sector" 
+result. Given that the data needs to be read to realize that it is bad, 
+why not go the extra inch and fix it properly instead of redoing the p+q 
+which just makes the problem invisible rather than fixing it.
 
-I'm not sure exactly why the array wasn't being assembled with the sd*
-disks but I suspect that the md driver was being loaded before the
-scsi disk driver was done with the partition scan.  At any rate, using
-the wildcarded device names resolved the issue and the server is
-humming along happily.  Thanks for the help!
+Obviously this is a subset of all the things which can go wrong, but I 
+suspect it's a sizable subset.
+
+-- 
+Bill Davidsen <davidsen@tmr.com>
+  "Woe unto the statesman who makes war without a reason that will still
+  be valid when the war is over..." Otto von Bismark 
+
+
