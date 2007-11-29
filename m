@@ -1,114 +1,138 @@
 From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: raid6 check/repair
-Date: Thu, 29 Nov 2007 14:30:36 -0500
-Message-ID: <474F135C.2000703@tmr.com>
-References: <474431BF.30103@ph.tum.de>	<18244.64972.172685.796502@notabene.brown>	<4745B375.4030500@ph.tum.de> <18254.21949.441607.134763@notabene.brown>
+Subject: Re: Abysmal write performance on HW RAID5
+Date: Thu, 29 Nov 2007 14:54:28 -0500
+Message-ID: <474F18F4.703@tmr.com>
+References: <13980960.post@talk.nabble.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18254.21949.441607.134763@notabene.brown>
+In-Reply-To: <13980960.post@talk.nabble.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: thiemo.nagel@ph.tum.de, linux-raid@vger.kernel.org
+To: ChristopherD <christopherthe1@yahoo.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil Brown wrote:
-> On Thursday November 22, thiemo.nagel@ph.tum.de wrote:
->   
->> Dear Neil,
->>
->> thank you very much for your detailed answer.
->>
->> Neil Brown wrote:
->>     
->>> While it is possible to use the RAID6 P+Q information to deduce which
->>> data block is wrong if it is known that either 0 or 1 datablocks is 
->>> wrong, it is *not* possible to deduce which block or blocks are wrong
->>> if it is possible that more than 1 data block is wrong.
->>>       
->> If I'm not mistaken, this is only partly correct.  Using P+Q redundancy,
->> it *is* possible, to distinguish three cases:
->> a) exactly zero bad blocks
->> b) exactly one bad block
->> c) more than one bad block
->>
->> Of course, it is only possible to recover from b), but one *can* tell,
->> whether the situation is a) or b) or c) and act accordingly.
->>     
+ChristopherD wrote:
+> In the process of upgrading my RAID5 array, I've run into a brick wall (<
+> 4MB/sec avg write perf!) that I could use some help figuring out.  I'll
+> start with the quick backstory and setup.
 >
-> It would seem that either you or Peter Anvin is mistaken.
+> Common Setup:
 >
-> On page 9 of 
->   http://www.kernel.org/pub/linux/kernel/people/hpa/raid6.pdf
-> at the end of section 4 it says:
+> Dell Dimension XPS T800, salvaged from Mom. (i440BX chipset, Pentium3 @
+> 800MHZ)
+> 768MB DDR SDRAM @ 100MHZ FSB  (3x256MB DIMM)
+> PCI vid card (ATI Rage 128)
+> PCI 10/100 NIC (3Com 905)
+> PCI RAID controller (LSI MegaRAID i4 - 4 channel PATA)
+> 4 x 250GB (WD2500) UltraATA drives, each connected to separate channels on
+> the controller
+> Ubuntu Feisty Fawn
 >
->       Finally, as a word of caution it should be noted that RAID-6 by
->       itself cannot even detect, never mind recover from, dual-disk
->       corruption. If two disks are corrupt in the same byte positions,
->       the above algorithm will in general introduce additional data
->       corruption by corrupting a third drive.
+> In the LSI BIOS config, I setup the full capacity of all four drives as a
+> single logical disk using RAID5 @ 64K strips size.  I installed the OS from
+> the CD, allowing it to create a 4GB swap partition (sda2) and use the rest
+> as a single ext3 partition (sda1) with roughly 700GB space.
 >
->   
->> The point that I'm trying to make is, that there does exist a specific
->> case, in which recovery is possible, and that implementing recovery for
->> that case will not hurt in any way.
->>     
+> This setup ran fine for months as my home fileserver.  Being new to RAID at
+> the time, I didn't know or think about tuning or benchmarking, etc, etc.  I
+> do know that I often moved ISO images to this machine from my gaming rig
+> using both SAMBA and FTP, with xfer limited by the 100MBit LAN (~11MB/sec).
 >
-> Assuming that it true (maybe hpa got it wrong) what specific
-> conditions would lead to one drive having corrupt data, and would
-> correcting it on an occasional 'repair' pass be an appropriate
-> response?
+> About a month or so ago, I hit capacity on the partition.  I dumped some
+> movies off to a USB drive (500GB PATA) and started watching the drive aisle
+> at Fry's.  Last week, I saw what I'd been waiting for: Maxtor 500GB drives @
+> $99 each.  So, I bought three of them and started this adventure.
 >
-> Does the value justify the cost of extra code complexity?
 >
->   
->>> RAID is not designed to protect again bad RAM, bad cables, chipset 
->>> bugs drivers bugs etc.  It is only designed to protect against drive 
->>> failure, where the drive failure is apparent.  i.e. a read must 
->>> return either the same data that was last written, or a failure 
->>> indication. Anything else is beyond the design parameters for RAID.
->>>       
->> I'm taking a more pragmatic approach here.  In my opinion, RAID should
->> "just protect my data", against drive failure, yes, of course, but if it
->> can help me in case of occasional data corruption, I'd happily take
->> that, too, especially if it doesn't cost extra... ;-)
->>     
+> I'll skip the details on the pain in the butt of moving 700GB of data onto
+> various drives of various sizes...the end result was the following change to
+> my setup:
 >
-> Everything costs extra.  Code uses bytes of memory, requires
-> maintenance, and possibly introduced new bugs.  I'm not convinced the
-> failure mode that you are considering actually happens with a
-> meaningful frequency.
+> 3 x Maxtor 500GB PATA drives (7200rpm, 16MB cache)
+> 1 x IBM/Hitachi Deskstar 500GB PATA (7200rpm, 8MB cache)
+>
+> Each drive still on a separate controller channel, this time configured into
+> two logical drives:
+> Logical Disk 1:  RAID0, 16GB, 64K stripe size (sda)
+> Logical Disk 2:  RAID5, 1.5TB, 128K stripe size (sdb)
+>
+>
+> I also took this opportunity to upgrade to the newest Ubuntu 7.10 (Gutsy),
+> and having done some reading, planned to make some tweaks to the partition
+> formats.  After fighting with the standard CD, which refused to install the
+> OS without also formatting the root partition (but not offering any control
+> of the formatting), i downloaded the "alternate CD" and used the textmode
+> installer.
+>
+> I set up the partitions like this:
+> sda1: 14.5GB ext3, 256MB journal (mounted data_ordered), 4K block size,
+> stride=16, sparse superblocks, no resize_inode, 1GB reserved for root
+> sda2: 1.5GB linux swap
+> sdb1: 1.5TB ext2, largefile4 (4MB per inode), stride=32, sparse superblocks,
+> no resize_inode, 0 reserved for root
+>
+> The format command was my first hint of a problem.  The block group creation
+> counter spun very rapidly up to 9800/11600 and then paused and I heard the
+> drives thrash.  The block groups completed at a slower pace, and then the
+> final creation process took several minutes.
+>
+> But the real shocker was transferring my data onto this new partition.  FOUR
+> MEGABYTES PER SECOND?!?!
+>
+> My initial plan was to plug a single old data drive into the motherboard's
+> ATA port, thinking the transfer speed within a single machine would be the
+> fastest possible mechanism.  Wrong.  I ended up mounting the drives using
+> USB enclosures to my laptop (RedHat EL 5.1) and sharing them via NFS.
 >   
 
-People accept the hardware and performance costs of raid-6 in return for 
-the better security of their data. If I run a check and find that I have 
-an error, right now I have to treat that the same way as an 
-unrecoverable failure, because the "repair" function doesn't fix the 
-data, it just makes the symptom go away by redoing the p and q values.
+I'm not sure you were wrong about internal being faster, but you clearly 
+have tuning issues. The two obvious things which should be done are to 
+(a) use blockdev to set the read ahead for the source drives to 
+something large based on your memory size, 16384 is probably a 
+reasonable starting value. Then set the stripe_cache_size in /sys, files 
+like
+  /sys/block/md1/md/stripe_cache_size
+should get a fairly large value, see man pages and discussion for ideas 
+on "fairly large" or start with 8192 just to see if it make a visible 
+improvement. Finally, there are tunables in /proc/sys/vm which can help, 
+but other things can be tried first.
+> So, deciding the partition was disposable (still unused), I fired up dd to
+> run some block device tests:
+> dd if=/dev/zero of=/dev/sdb bs=1M count=25
+>
+> This ran silently and showed 108MB/sec??  OK, that beats 4...let's try
+> again!  Now I hear drive activity, and the result says 26MB/sec.  Running it
+> a third time immediately brought the rate down to 4MB/sec.  Apparently, the
+> first 64MB or so runs nice and fast (cache? the i4 only has 16MB onboard).
+>
+> I also ran iostat -dx in the background during a 26GB directory copy
+> operation, reporting on 60-sec intervals.  This is a typical output:
+>
+> Device:    rrqm/s  wrqm/s    r/s    w/s    rMB/s  wMB/s  avgrq-sz  avgqu-sz 
+> await    svctm  %util
+> sda          0.00     0.18      0.00  0.48   0.00   0.00        11.03   
+> 0.01         21.66    16.73   0.61
+> sdb          0.00     0.72      0.03  64.28  0.00   3.95       125.43  
+> 137.57    2180.23  15.85   100.02
+>   
 
-This makes the naive user thinks the problem is solved, when in fact 
-it's now worse, he has corrupt data with no indication of a problem. The 
-fact that (most) people who read this list are advanced enough to 
-understand the issue does not protect the majority of users from their 
-ignorance. If that sounds elitist, many of the people on this list are 
-the elite, and even knowing that you need to learn and understand more 
-is a big plus in my book. It's the people who run repair and assume the 
-problem is fixed who get hurt by the current behavior.
-
-If you won't fix the recoverable case by recovering, then maybe for 
-raid-6 you could print an error message like
-  can't recover data, fix parity and hide the problem (y/N)?
-or require a --force flag, and at least give a heads up to the people 
-who just picked the "most reliable raid level" because they're trying to 
-do it right, but need a clue that they have a real and serious problem, 
-and just a "repair" can't fix it.
-
-Recovering a filesystem full of "just files" is pretty easy, that's what 
-backups with CRC are for, but a large database recovery often takes 
-hours to restore and run journal files. I personally consider it the job 
-of the kernel to do recovery when it is possible, absent that I would 
-like the tools to tell me clearly that I have a problem and what it is.
+This would have been nicer unwrapped, but shows the problem. Make 
+changes and rerun?
+>
+> So, the RAID5 device has a huge queue of write requests with an average wait
+> time of more than 2 seconds @ 100% utilization?  Or is this a bug in iostat?
+>
+> At this point, I'm all ears...I don't even know where to start.  Is ext2 not
+> a good format for volumes of this size?  Then how to explain the block
+> device xfer rate being so bad, too?  Is it that I have one drive in the
+> array that's a different brand?  Or that it has a different cache size?
+>
+> Anyone have any ideas?
+>   
+You will get more and maybe better, but this is a start just to see if 
+the problem responds to obvious changes.
 
 -- 
 Bill Davidsen <davidsen@tmr.com>
