@@ -1,80 +1,127 @@
-From: Mikhail Yakshin <greycat@altlinux.org>
-Subject: [ANNOUNCE] Einarc - universal RAID management/monitoring tool
-Date: Thu, 29 Nov 2007 02:17:41 +0300
-Message-ID: <474DF715.8030708@altlinux.org>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: raid5 reshape/resync
+Date: Thu, 29 Nov 2007 16:48:47 +1100
+Message-ID: <18254.21183.807123.642613@notabene.brown>
+References: <20071124120209.0t70rfkfswkcww0g@cakebox.homeunix.net>
+	<20071125200431.2wbk051yoso4owsk@cakebox.homeunix.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: message from Nagilum on Sunday November 25
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Nagilum <nagilum@nagilum.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello!
+On Sunday November 25, nagilum@nagilum.org wrote:
+> ----- Message from nagilum@nagilum.org ---------
+>      Date: Sat, 24 Nov 2007 12:02:09 +0100
+>      From: Nagilum <nagilum@nagilum.org>
+> Reply-To: Nagilum <nagilum@nagilum.org>
+>   Subject: raid5 reshape/resync
+>        To: linux-raid@vger.kernel.org
+> 
+> > Hi,
+> > I'm running 2.6.23.8 x86_64 using mdadm v2.6.4.
+> > I was adding a disk (/dev/sdf) to an existing raid5 (/dev/sd[a-e] -> md0)
+> > During that reshape (at around 4%) /dev/sdd reported read errors and
+> > went offline.
 
-I'd like to introduce release of Einarc project - an universal RAID=20
-management/monitoring tool.
+Sad.
 
-Some time ago, I've started working with various hardware RAID=20
-controllers and quickly was disappointed by the fact that almost all of=
-=20
-them require proprietary utilities to manage. For example, it's=20
-virtually impossible to monitor RAID status from running Linux without=20
-installing one on Areca, Adaptec, LSI, 3ware, CCISS, etc controllers.
+> > I replaced /dev/sdd with a new drive and tried to reassemble the array
+> > (/dev/sdd was shown as removed and now as spare).
 
-Moreover, all these proprietary utilities were sometimes hard to find=20
-and every one of the have a different interface, command line options,=20
-etc. There seemed to be even no standard for entities hierarchy: Areca=20
-uses 3-tier hierarchy (physical discs - raidsets - volumesets), LSI use=
-s=20
-2-tier one (physical - logical discs).
+There must be a step missing here.
+Just because one drive goes offline, that  doesn't mean that you need
+to reassemble the array.  It should just continue with the reshape
+until that is finished.  Did you shut the machine down or did it crash
+or what
 
-So, after giving it some thought and searching for a solution to unite=20
-them all, I've found out that there almost no such thing. ManageEngine=20
-OpStor is a proprietary and pretty expensive product that can do it and=
-=20
-only other attempts in this area seemed to be OpenBSD's bioctl=20
-initiative that faded out in 2005-2006.
+> > Assembly worked but it would not run unless I use --force.
 
-Generally, the idea is simple: Einarc works as a translator that makes=20
-it possible for a user to control all these devices using simple terms=20
-like =E2=80=9Cphysical disc=E2=80=9D, =E2=80=9Clogical disc=E2=80=9D, =E2=
-=80=9Cadapter=E2=80=9D, etc, while=20
-transparently converting these requests to proprietary RAID paradigms.=20
-In fact, the system still uses underlying proprietary CLIs, but the use=
-r=20
-doesn=E2=80=99t interact with them directly, staying in a single,=20
-well-documented interface.
+That suggests an unclean shutdown.  Maybe it did crash?
 
-During its installation, it automatically downloads these proprietary=20
-utils (after reading & agreeing to their licenses), unpacks and install=
-s=20
-them, and then, for example, command like
 
-einarc -t areca physical list
+> > Since I'm always reluctant to use force I put the bad disk back in,
+> > this time as /dev/sdg . I re-added the drive and could run the array.
+> > The array started to resync (since the disk can be read until 4%) and
+> > then I marked the disk as failed. Now the array is "active, degraded,
+> > recovering":
 
-would be translated into
+It should have restarted the reshape from whereever it was up to, so
+it should have hit the read error almost immediately.  Do you remember
+where it started the reshape from?  If it restarted from the beginning
+that would be bad.
 
-/usr/local/lib/einarc/areca/cli disk info
+Did you just "--assemble" all the drives or did you do something else?
 
-then it's result parsed and returned in the same well-documented form a=
-s=20
-for any other Einarc-supported adapter.
+> >
+> > What I find somewhat confusing/disturbing is that does not appear to
+> > utilize /dev/sdd. What I see here could be explained by md doing a
+> > RAID5 resync from the 4 drives sd[a-c,e] to sd[a-c,e,f] but I would
+> > have expected it to use the new spare sdd for that. Also the speed is
 
-I'd be really happy to hear any opinions / thoughts / feature requests=20
-on this project and I hope it would come useful to someone :) Einarc ca=
-n=20
-be reached at
+md cannot recover to a spare while a reshape is happening.  It
+completes the reshape, then does the recovery (as you discovered).
 
-http://www.inquisitor.ru/doc/einarc/
+> > unusually low which seems to indicate a lot of seeking as if two
+> > operations are happening at the same time.
 
-for downloading and documentation.
+Well reshape is always slow as it has to read from one part of the
+drive and write to another part of the drive.
 
---=20
-WBR, Mikhail Yakshin AKA GreyCat
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > Also when I look at the data rates it looks more like the reshape is
+> > continuing even though one drive is missing (possible but risky).
+
+Yes, that is happening.
+
+> > Can someone relief my doubts as to whether md does the right thing here?
+> > Thanks,
+
+I believe it is do "the right thing".
+
+> >
+> ----- End message from nagilum@nagilum.org -----
+> 
+> Ok, so the reshape tried to continue without the failed drive and  
+> after that resynced to the new spare.
+
+As I would expect.
+
+> Unfortunately the result is a mess. On top of the Raid5 I have  
+
+Hmm.  This I would not expect.
+
+> dm-crypt and LVM.
+> Although dmcrypt and LVM dont appear to have a problem the filesystems  
+> on top are a mess now.
+
+Can you be more specific about what sort of "mess" they are in?
+
+NeilBrown
+
+
+> I still have the failed drive, I can read the superblock from that  
+> drive and up to 4% from the beginning and probably backwards from the  
+> end towards that point.
+> So in theory it could be possible to reorder the stripe blocks which  
+> appears to have been messed up.(?)
+> Unfortunately I'm not sure what exactly went wrong or what I did  
+> wrong. Can someone please give me hint?
+> Thanks,
+> Alex.
+> 
+> ========================================================================
+> #    _  __          _ __     http://www.nagilum.org/ \n icq://69646724 #
+> #   / |/ /__ ____ _(_) /_ ____ _  nagilum@nagilum.org \n +491776461165 #
+> #  /    / _ `/ _ `/ / / // /  ' \  Amiga (68k/PPC): AOS/NetBSD/Linux   #
+> # /_/|_/\_,_/\_, /_/_/\_,_/_/_/_/   Mac (PPC): MacOS-X / NetBSD /Linux #
+> #           /___/     x86: FreeBSD/Linux/Solaris/Win2k  ARM9: EPOC EV6 #
+> ========================================================================
+> 
+> 
+> ----------------------------------------------------------------
+> cakebox.homeunix.net - all the machine one needs..
+> 
