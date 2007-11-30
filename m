@@ -1,54 +1,121 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: assemble vs create an array.......
-Date: Fri, 30 Nov 2007 16:32:04 +1100
-Message-ID: <18255.41044.614676.410107@notabene.brown>
-References: <474F869D.5040503@mpigani.org>
+From: thomas62186218@aol.com
+Subject: RAID6 issue: md_do_sync() got signal ... exiting
+Date: Fri, 30 Nov 2007 04:47:57 -0500
+Message-ID: <8CA014D38F0B1EC-68C-93FE@WEBMAIL-MC03.sysops.aol.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Dragos on Thursday November 29
 Sender: linux-raid-owner@vger.kernel.org
-To: Dragos <dragos@mpigani.org>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thursday November 29, dragos@mpigani.org wrote:
-> Hello,
-> I had created a raid 5 array on 3 232GB SATA drives. I had created one 
-> partition (for /home) formatted with either xfs or reiserfs (I do not 
-> recall).
-> Last week I reinstalled my box from scratch with Ubuntu 7.10, with mdadm 
-> v. 2.6.2-1ubuntu2.
-> Then I made a rookie mistake: I --create instead of --assemble. The 
-> recovery completed. I then stopped the array, realizing the mistake.
-> 
-> 1. Please make the warning more descriptive: ALL DATA WILL BE LOST, when 
-> attempting to created an array over an existing one.
+Hi all,
 
-No matter how loud the warning is, people will get it wrong... unless
-I make it actually impossible to corrupt data (which may not be
-possible) in which case it will inconvenience many more people.
+I am having trouble with creating a RAID 6 md device on a home-grown 
+Linux 2.6.20.11 SMP 64-bit build.
 
-> 2. Do you know of any way to recover from this mistake? Or at least what 
-> filesystem it was formated with.
+I first create the RAID6 without problems, and see the following 
+successful dump in /var/log/messages. If I check /proc/mdstat, the 
+RAID6 is doing the initial syncing as expected.
 
-If you created the same array with the same devices and layout etc,
-the data will still be there, untouched.
-Try to assemble the array and use "fsck" on it.
+Nov 30 01:26:39 testsystem kernel: md: bind<dm-3>
+Nov 30 01:26:39 testsystem kernel: md: bind<dm-2>
+Nov 30 01:26:39 testsystem kernel: md: bind<dm-1>
+Nov 30 01:26:39 testsystem kernel: md: bind<dm-0>
+Nov 30 01:26:39 testsystem kernel: md: md0: raid array is not clean -- 
+starting background reconstruction
+Nov 30 01:26:39 testsystem kernel: raid5: device dm-0 operational as 
+raid disk 3
+Nov 30 01:26:39 testsystem kernel: raid5: device dm-1 operational as 
+raid disk 2
+Nov 30 01:26:39 testsystem kernel: raid5: device dm-2 operational as 
+raid disk 1
+Nov 30 01:26:39 testsystem kernel: raid5: device dm-3 operational as 
+raid disk 0
+Nov 30 01:26:39 testsystem kernel: raid5: allocated 4268kB for md0
+Nov 30 01:26:39 testsystem kernel: raid5: raid level 6 set md0 active 
+with 4 out of 4 devices, algorithm 0
+Nov 30 01:26:39 testsystem kernel: RAID5 conf printout:
+Nov 30 01:26:39 testsystem kernel:  --- rd:4 wd:4
+Nov 30 01:26:42 testsystem kernel:  disk 0, o:1, dev:dm-3
+Nov 30 01:26:42 testsystem kernel:  disk 1, o:1, dev:dm-2
+Nov 30 01:26:42 testsystem kernel:  disk 2, o:1, dev:dm-1
+Nov 30 01:26:42 testsystem kernel:  disk 3, o:1, dev:dm-0
+Nov 30 01:26:42 testsystem kernel: md: resync of RAID array md0
+Nov 30 01:26:42 testsystem kernel: md: minimum _guaranteed_  speed: 0 
+KB/sec/disk.
+Nov 30 01:26:42 testsystem kernel: md: using maximum available idle IO 
+bandwidth (but not more than 0 KB/sec) for resync.
+Nov 30 01:26:42 testsystem kernel: md: using 128k window, over a total 
+of 143371968 blocks.
 
-When you create a RAID5 array, all that is changed is the metadata (at
-the end of the device) and one drive is changed to be the xor of all
-the others.
 
-> 
-> Any help would be greatly appreciated. I have hundreds of family digital 
-> pictures and videos that are irreplaceable.
+If I then delete the RAID6 and try to create the exact same RAID6 
+again, it sometimes fails, with the following appearing in 
+/var/log/messages. Note the md_do_sync() got signal ... exiting line:
 
-You have probably heard it before, but RAID is no replacement for
-backups. 
-My photos are one two separate computers, one with RAID.  And I will
-be backing them up to DVD any day now ..... really!!   or maybe next
-year, if I remember :-)
+Nov 30 01:28:03 testsystem kernel: md: bind<dm-3>
+Nov 30 01:28:03 testsystem kernel: md: bind<dm-2>
+Nov 30 01:28:03 testsystem kernel: md: bind<dm-1>
+Nov 30 01:28:03 testsystem kernel: md: bind<dm-0>
+Nov 30 01:28:03 testsystem kernel: md: md0: raid array is not clean -- 
+starting background reconstruction
+Nov 30 01:28:03 testsystem kernel: raid5: device dm-0 operational as 
+raid disk 3
+Nov 30 01:28:03 testsystem kernel: raid5: device dm-1 operational as 
+raid disk 2
+Nov 30 01:28:03 testsystem kernel: raid5: device dm-2 operational as 
+raid disk 1
+Nov 30 01:28:03 testsystem kernel: raid5: device dm-3 operational as 
+raid disk 0
+Nov 30 01:28:03 testsystem kernel: raid5: allocated 4268kB for md0
+Nov 30 01:28:03 testsystem kernel: raid5: raid level 6 set md0 active 
+with 4 out of 4 devices, algorithm 0
+Nov 30 01:28:03 testsystem kernel: RAID5 conf printout:
+Nov 30 01:28:03 testsystem kernel:  --- rd:4 wd:4
+Nov 30 01:28:04 testsystem kernel:  disk 0, o:1, dev:dm-3
+Nov 30 01:28:05 testsystem kernel:  disk 1, o:1, dev:dm-2
+Nov 30 01:28:05 testsystem kernel:  disk 2, o:1, dev:dm-1
+Nov 30 01:28:05 testsystem kernel:  disk 3, o:1, dev:dm-0
+Nov 30 01:28:05 testsystem kernel: md: resync of RAID array md0
+Nov 30 01:28:05 testsystem kernel: md: minimum _guaranteed_  speed: 0 
+KB/sec/disk.
+Nov 30 01:28:05 testsystem kernel: md: using maximum available idle IO 
+bandwidth (but not more than 0 KB/sec) for resync.
+Nov 30 01:28:05 testsystem kernel: md: using 128k window, over a total 
+of 143368192 blocks.
+Nov 30 01:28:05 testsystem kernel: md: md_do_sync() got signal ... 
+exiting
+Nov 30 01:28:05 testsystem kernel: md: checkpointing resync of md0.
+Nov 30 01:28:05 testsystem kernel: md: md0 stopped.
+Nov 30 01:28:05 testsystem kernel: md: unbind<dm-0>
+Nov 30 01:28:05 testsystem kernel: md: export_rdev(dm-0)
+Nov 30 01:28:05 testsystem kernel: md: unbind<dm-1>
+Nov 30 01:28:05 testsystem kernel: md: export_rdev(dm-1)
+Nov 30 01:28:05 testsystem kernel: md: unbind<dm-2>
+Nov 30 01:28:05 testsystem kernel: md: export_rdev(dm-2)
+Nov 30 01:28:05 testsystem kernel: md: unbind<dm-3>
+Nov 30 01:28:05 testsystem kernel: md: export_rdev(dm-3)
 
-NeilBrown
+
+The failure is VERY intermittent. Sometimes it fails, sometimes it 
+succeeds...with the exact same creation procedure. Any ideas on what 
+may be causing this issue? Thank you very much in advance for your 
+assistance!
+
+
+Best regards,
+Thomas
+
+
+
+
+
+
+
+
+
+________________________________________________________________________
+More new features than ever.  Check out the new AOL Mail ! - 
+http://o.aolcdn.com/cdn.webmail.aol.com/mailtour/aol/en-us/text.htm?ncid=aolcmp00050000000003
