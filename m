@@ -1,21 +1,52 @@
-From: Dragos <dragos@mpigani.org>
-Subject: Re: assemble vs create an array.......
-Date: Sat, 01 Dec 2007 02:23:24 -0500
-Message-ID: <47510BEC.6040602@mpigani.org>
-References: <474F869D.5040503@mpigani.org> <18255.41044.614676.410107@notabene.brown> <47501D7E.7000804@dgreaves.com> <475103A7.3070109@mpigani.org>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Kernel 2.6.23.9 + mdadm 2.6.2-2 + Auto rebuild RAID1?
+Date: Sat, 1 Dec 2007 06:19:14 -0500 (EST)
+Message-ID: <Pine.LNX.4.64.0712010614070.25643@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <475103A7.3070109@mpigani.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+Cc: apiszcz@solarrain.com
 List-Id: linux-raid.ids
 
-I forgot one thing.
-After re-creating the array which deleted my data in the first place, 
-'mount' was giving me this answer:
-   mount: Structure needs cleaning
+Quick question,
 
-Thank you for your time,
-Dragos
+Setup a new machine last night with two raptor 150 disks.  Setup RAID1 as 
+I do everywhere else, 0.90.03 superblocks (in order to be compatible with 
+LILO, if you use 1.x superblocks with LILO you can't boot), and then:
+
+/dev/sda1+sdb1 <-> /dev/md0 <-> swap
+/dev/sda2+sdb2 <-> /dev/md1 <-> /boot (ext3)
+/dev/sda3+sdb3 <-> /dev/md2 <-> / (xfs)
+
+All works fine, no issues...
+
+Quick question though, I turned off the machine, disconnected /dev/sda 
+from the machine, boot from /dev/sdb, no problems, shows as degraded 
+RAID1.  Turn the machine off.  Re-attach the first drive.  When I boot my 
+first partition either re-synced by itself or it was not degraded, was is 
+this?
+
+So two questions:
+
+1) If it rebuilt by itself, how come it only rebuilt /dev/md0?
+2) If it did not rebuild, is it because the kernel knows it does not need 
+to re-calculate parity etc for swap?
+
+I had to:
+
+mdadm /dev/md1 -a /dev/sda2
+and
+mdadm /dev/md2 -a /dev/sda3
+
+To rebuild the /boot and /, which worked fine, I am just curious though 
+why it works like this, I figured it would be all or nothing.
+
+More info:
+
+Not using ANY initramfs/initrd images, everything is compiled into 1 
+kernel image (makes things MUCH simpler and the expected device layout etc 
+is always the same, unlike initrd/etc).
+
+Justin.
