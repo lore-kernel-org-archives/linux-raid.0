@@ -1,61 +1,127 @@
-From: Thiemo Nagel <thiemo.nagel@ph.tum.de>
-Subject: Re: raid6 check/repair
-Date: Fri, 30 Nov 2007 19:34:33 +0100
-Message-ID: <475057B9.30701@ph.tum.de>
-References: <474431BF.30103@ph.tum.de>	<18244.64972.172685.796502@notabene.brown>	<4745B375.4030500@ph.tum.de> <18254.21949.441607.134763@notabene.brown>
+From: Dragos <dragos@mpigani.org>
+Subject: Re: assemble vs create an array.......
+Date: Sat, 01 Dec 2007 01:48:07 -0500
+Message-ID: <475103A7.3070109@mpigani.org>
+References: <474F869D.5040503@mpigani.org> <18255.41044.614676.410107@notabene.brown> <47501D7E.7000804@dgreaves.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18254.21949.441607.134763@notabene.brown>
+In-Reply-To: <47501D7E.7000804@dgreaves.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Dear Neil,
+Thank you for your very fast answers.
 
->> The point that I'm trying to make is, that there does exist a specific
->> case, in which recovery is possible, and that implementing recovery for
->> that case will not hurt in any way.
-> 
-> Assuming that it true (maybe hpa got it wrong) what specific
-> conditions would lead to one drive having corrupt data, and would
-> correcting it on an occasional 'repair' pass be an appropriate
-> response?
+First I tried 'fsck -n' on the existing array. The answer was that If I 
+wanted to check a XFS partition I should use 'xfs_check'. That seems to 
+say that my array was partitioned with xfs, not reiserfs. Am I correct?
 
-The use case for the proposed 'repair' would be occasional,
-low-frequency corruption, for which many sources can be imagined:
+Then I tried the different permutations:
+mdadm --create /dev/md0 --raid-devices=3 --level=5 missing /dev/sda1 
+/dev/sdb1
+mount /dev/md0 temp
+mdadm --stop --scan
 
-Any piece of hardware has a certain failure rate, which may depend on
-things like age, temperature, stability of operating voltage, cosmic
-rays, etc. but also on variations in the production process.  Therefore,
-hardware may suffer from infrequent glitches, which are seldom enough,
-to be impossible to trace back to a particular piece of equipment.  It
-would be nice to recover gracefully from that.
+mdadm --create /dev/md0 --raid-devices=3 --level=5 /dev/sda1 missing 
+/dev/sdb1
+mount /dev/md0 temp
+mdadm --stop --scan
 
-Kernel bugs or just plain administrator mistakes are another thing.
+mdadm --create /dev/md0 --raid-devices=3 --level=5 /dev/sda1 /dev/sdb1 
+missing
+mount /dev/md0 temp
+mdadm --stop --scan
 
-But also the case of power-loss during writing that you have mentioned
-could profit from that 'repair':  With heterogeneous hardware, blocks
-may be written in unpredictable order, so that in more cases graceful
-recovery would be possible with 'repair' compared to just recalculating
-parity.
+mdadm --create /dev/md0 --raid-devices=3 --level=5 missing /dev/sda1 
+/dev/sdc1
+mount /dev/md0 temp
+mdadm --stop --scan
 
-> Does the value justify the cost of extra code complexity?
+mdadm --create /dev/md0 --raid-devices=3 --level=5 /dev/sda1 missing 
+/dev/sdc1
+mount /dev/md0 temp
+mdadm --stop --scan
 
-In the case of protecting data integrity, I'd say 'yes'.
+mdadm --create /dev/md0 --raid-devices=3 --level=5 /dev/sda1 /dev/sdc1 
+missing
+mount /dev/md0 temp
+mdadm --stop --scan
 
-> Everything costs extra.  Code uses bytes of memory, requires
-> maintenance, and possibly introduced new bugs.
+mdadm --create /dev/md0 --raid-devices=3 --level=5 missing /dev/sdb1 
+/dev/sdc1
+mount /dev/md0 temp
+mdadm --stop --scan
 
-Of course, you are right.  However, in my other email, I tried to sketch
-a piece of code which is very lean as it makes use of functions which I
-assume to exist.  (Sorry, I didn't look at the md code, yet, so please
-correct me if I'm wrong.)  Therefore I assume the costs in memory,
-maintenance and bugs to be rather low.
+mdadm --create /dev/md0 --raid-devices=3 --level=5 /dev/sdb1 missing 
+/dev/sdc1
+mount /dev/md0 temp
+mdadm --stop --scan
 
-Kind regards,
+mdadm --create /dev/md0 --raid-devices=3 --level=5 /dev/sdb1 /dev/sdc1 
+missing
+mount /dev/md0 temp
+mdadm --stop --scan
 
-Thiemo
+With some arrays mount reported:
+    mount: you must specify the filesystem type
+and with others:
+    mount: Structure needs cleaning
 
+No choice seems to have been successful.
+Please let me know of other ideas.
+
+Thank you again,
+Dragos
+
+David Greaves wrote:
+> Neil Brown wrote:
+>   
+>> On Thursday November 29, dragos@mpigani.org wrote:
+>>     
+>>> 2. Do you know of any way to recover from this mistake? Or at least what 
+>>> filesystem it was formated with.
+>>>       
+> It may not have been lost - yet.
+>
+>
+>   
+>> If you created the same array with the same devices and layout etc,
+>> the data will still be there, untouched.
+>> Try to assemble the array and use "fsck" on it.
+>>     
+> To be safe I'd use fsck -n (check the man page as this is odd for reiserfs)
+>
+>
+>   
+>> When you create a RAID5 array, all that is changed is the metadata (at
+>> the end of the device) and one drive is changed to be the xor of all
+>> the others.
+>>     
+> In other words, one of your 3 drives has just been erased.
+> Unless you know the *exact* command you used and have the dmesg output to hand
+> then we won't know which one.
+>
+> Now what you need to do is to try all the permutations of creating a degraded
+> array using 2 of the drives and specify the 3rd as 'missing':
+>
+> So something like:
+> mdadm --create /dev/md0 --raid-devices=3 --level=5 missing /dev/sdb1 /dev/sdc1
+> mdadm --create /dev/md0 --raid-devices=3 --level=5 /dev/sdb1 missing /dev/sdc1
+> mdadm --create /dev/md0 --raid-devices=3 --level=5 /dev/sdb1 /dev/sdc1 missing
+> mdadm --create /dev/md0 --raid-devices=3 --level=5 missing /dev/sdb1 /dev/sdd1
+> mdadm --create /dev/md0 --raid-devices=3 --level=5 /dev/sdb1 missing /dev/sdd1
+> mdadm --create /dev/md0 --raid-devices=3 --level=5 /dev/sdb1 /dev/sdd1 missing
+> etc etc
+>
+> It is important to create the array using a 'missing' device so the xor data
+> isn't written.
+>
+> There is a program here: http://linux-raid.osdl.org/index.php/Permute_array.pl
+> that may help...
+>
+> David
+>
+>
+>   
