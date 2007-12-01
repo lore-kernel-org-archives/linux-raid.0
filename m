@@ -1,83 +1,72 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Kernel 2.6.23.9 / P35 Chipset + WD 750GB Drives (reset port)
-Date: Sat, 1 Dec 2007 06:26:08 -0500 (EST)
-Message-ID: <Pine.LNX.4.64.0712010619150.25643@p34.internal.lan>
+From: Jan Engelhardt <jengelh@computergmbh.de>
+Subject: Re: Kernel 2.6.23.9 + mdadm 2.6.2-2 + Auto rebuild RAID1?
+Date: Sat, 1 Dec 2007 13:10:14 +0100 (CET)
+Message-ID: <Pine.LNX.4.64.0712011305250.30316@fbirervta.pbzchgretzou.qr>
+References: <Pine.LNX.4.64.0712010614070.25643@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.64.0712010614070.25643@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
-Cc: apiszcz@solarrain.com
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, apiszcz@solarrain.com
 List-Id: linux-raid.ids
 
-I am putting a new machine together and I have dual raptor raid 1 for the 
-root, which works just fine under all stress tests.
 
-Then I have the WD 750 GiB drive (not RE2, desktop ones for ~150-160 on 
-sale now adays):
+On Dec 1 2007 06:19, Justin Piszcz wrote:
 
-I ran the following:
+> RAID1, 0.90.03 superblocks (in order to be compatible with LILO, if
+> you use 1.x superblocks with LILO you can't boot)
 
-dd if=/dev/zero of=/dev/sdc
-dd if=/dev/zero of=/dev/sdd
-dd if=/dev/zero of=/dev/sde
+Says who? (Don't use LILO ;-)
 
-(as it is always a very good idea to do this with any new disk)
+>, and then:
+>
+> /dev/sda1+sdb1 <-> /dev/md0 <-> swap
+> /dev/sda2+sdb2 <-> /dev/md1 <-> /boot (ext3)
+> /dev/sda3+sdb3 <-> /dev/md2 <-> / (xfs)
+>
+> All works fine, no issues...
+>
+> Quick question though, I turned off the machine, disconnected /dev/sda 
+> from the machine, boot from /dev/sdb, no problems, shows as degraded 
+> RAID1.  Turn the machine off.  Re-attach the first drive.  When I boot 
+> my first partition either re-synced by itself or it was not degraded, 
+> was is this?
 
-And sometime along the way(?) (i had gone to sleep and let it run), this 
-occurred:
+If md0 was not touched (written to) after you disconnected sda, it also 
+should not be in a degraded state.
 
-[42880.680144] ata3.00: exception Emask 0x10 SAct 0x0 SErr 0x4010000 
-action 0x2 frozen
-[42880.680231] ata3.00: irq_stat 0x00400040, connection status changed
-[42880.680290] ata3.00: cmd ec/00:00:00:00:00/00:00:00:00:00/00 tag 0 cdb 
-0x0 data 512 in
-[42880.680292]          res 40/00:ac:d8:64:54/00:00:57:00:00/40 Emask 0x10 
-(ATA bus error)
-[42881.841899] ata3: soft resetting port
-[42885.966320] ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-[42915.919042] ata3.00: qc timeout (cmd 0xec)
-[42915.919094] ata3.00: failed to IDENTIFY (I/O error, err_mask=0x5)
-[42915.919149] ata3.00: revalidation failed (errno=-5)
-[42915.919206] ata3: failed to recover some devices, retrying in 5 secs
-[42920.912458] ata3: hard resetting port
-[42926.411363] ata3: port is slow to respond, please be patient (Status 
-0x80)
-[42930.943080] ata3: COMRESET failed (errno=-16)
-[42930.943130] ata3: hard resetting port
-[42931.399628] ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-[42931.413523] ata3.00: configured for UDMA/133
-[42931.413586] ata3: EH pending after completion, repeating EH (cnt=4)
-[42931.413655] ata3: EH complete
-[42931.413719] sd 2:0:0:0: [sdc] 1465149168 512-byte hardware sectors 
-(750156 MB)
-[42931.413809] sd 2:0:0:0: [sdc] Write Protect is off
-[42931.413856] sd 2:0:0:0: [sdc] Mode Sense: 00 3a 00 00
-[42931.413867] sd 2:0:0:0: [sdc] Write cache: enabled, read cache: 
-enabled, doesn't support DPO or FUA
+> So two questions:
+>
+> 1) If it rebuilt by itself, how come it only rebuilt /dev/md0?
 
-Usually when I see this sort of thing with another box I have full of 
-raptors, it was due to a bad raptor and I never saw it again after I 
-replaced the disk that it happened on, but that was using the Intel P965 
-chipset.
+So md1/md2 was NOT rebuilt?
 
-For this board, it is a Gigabyte GSP-P35-DS4 (Rev 2.0) and I have all of 
-the drives (2 raptors, 3 750s connected to the Intel ICH9 Southbridge).
+> 2) If it did not rebuild, is it because the kernel knows it does not 
+>    need to re-calculate parity etc for swap?
 
-I am going to do some further testing but does this indicate a bad drive? 
-Bad cable?  Bad connector?
+Kernel does not know what's inside an md usually. And it should not 
+try to be smart.
 
-As you can see above, /dev/sdc stopped responding for a little bit and 
-then the kernel reset the port.
+> I had to:
+>
+> mdadm /dev/md1 -a /dev/sda2
+> and
+> mdadm /dev/md2 -a /dev/sda3
+>
+> To rebuild the /boot and /, which worked fine, I am just curious 
+> though why it works like this, I figured it would be all or nothing.
 
-Why is this though?  What is the likely root cause?  Should I replace the 
-drive?  Obviously this is not normal and cannot be good at all, the idea 
-is to put these drives in a RAID5 and if one is going to timeout that is 
-going to cause the array to go degraded and thus be worthless in a raid5 
-configuration.
+Devices are not automatically readded. Who knows, maybe you inserted a 
+different disk into sda which you don't want to be overwritten.
 
-Can anyone offer any insight here?
-
-Thank you,
-
-Justin.
+> More info:
+>
+> Not using ANY initramfs/initrd images, everything is compiled into 1 
+> kernel image (makes things MUCH simpler and the expected device layout 
+> etc is always the same, unlike initrd/etc).
+>
+My expected device layout is also always the same, _with_ initrd. Why? 
+Simply because mdadm.conf is copied to the initrd, and mdadm will 
+use your defined order.
