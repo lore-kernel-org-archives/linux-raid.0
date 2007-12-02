@@ -1,51 +1,76 @@
 From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: Kernel 2.6.23.9 / P35 Chipset + WD 750GB Drives (reset port)
-Date: Sun, 2 Dec 2007 16:32:26 -0500 (EST)
-Message-ID: <Pine.LNX.4.64.0712021630070.5379@p34.internal.lan>
-References: <Pine.LNX.4.64.0712010619150.25643@p34.internal.lan>
- <Pine.LNX.4.64.0712011310410.30316@fbirervta.pbzchgretzou.qr>
- <Pine.LNX.4.64.0712010722590.28887@p34.internal.lan> <20071201174733.646a5c35@absurd>
- <Pine.LNX.4.64.0712011155110.6257@p34.internal.lan>
- <Pine.LNX.4.64.0712020409280.30169@p34.internal.lan> <20071202221418.6f269022@absurd>
- <475322B5.9020504@msgid.tls.msk.ru>
+Subject: Reading takes 100% precedence over writes for mdadm+raid5?
+Date: Sun, 2 Dec 2007 18:09:19 -0500 (EST)
+Message-ID: <Pine.LNX.4.64.0712021807260.10289@p34.internal.lan>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <475322B5.9020504@msgid.tls.msk.ru>
 Sender: linux-raid-owner@vger.kernel.org
-To: Michael Tokarev <mjt@tls.msk.ru>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+root      2206     1  4 Dec02 ?        00:10:37 dd if /dev/zero of 1.out 
+bs 1M
+root      2207     1  4 Dec02 ?        00:10:38 dd if /dev/zero of 2.out 
+bs 1M
+root      2208     1  4 Dec02 ?        00:10:35 dd if /dev/zero of 3.out 
+bs 1M
+root      2209     1  4 Dec02 ?        00:10:45 dd if /dev/zero of 4.out 
+bs 1M
+root      2210     1  4 Dec02 ?        00:10:35 dd if /dev/zero of 5.out 
+bs 1M
+root      2211     1  4 Dec02 ?        00:10:35 dd if /dev/zero of 6.out 
+bs 1M
+root      2212     1  4 Dec02 ?        00:10:30 dd if /dev/zero of 7.out 
+bs 1M
+root      2213     1  4 Dec02 ?        00:10:42 dd if /dev/zero of 8.out 
+bs 1M
+root      2214     1  4 Dec02 ?        00:10:35 dd if /dev/zero of 9.out 
+bs 1M
+root      2215     1  4 Dec02 ?        00:10:37 dd if /dev/zero of 10.out 
+bs 1M
+root      3080 24.6  0.0  10356  1672 ?        D    01:22   5:51 dd if 
+/dev/md3 of /dev/null bs 1M
 
+Was curious if when running 10 DD's (which are writing to the RAID 5) 
+fine, no issues, suddenly all go into D-state and let the read/give it 
+100% priority?
 
-On Mon, 3 Dec 2007, Michael Tokarev wrote:
+Is this normal?
 
->> Justin Piszcz said:     (by the date of Sun, 2 Dec 2007 04:11:59 -0500 (EST))
->>
->>> The badblocks did not do anything; however, when I built a software raid 5
->>> and the performed a dd:
->>>
->>> /usr/bin/time dd if=/dev/zero of=fill_disk bs=1M
->>>
->>> I saw this somewhere along the way:
->>>
->>> [42332.936706] ata5.00: spurious completions during NCQ issue=0x0
->>> SAct=0x7000 FIS=004040a1:00000800
->>> [42333.240054] ata5: soft resetting port
->
-> There's some (probably timing-related) bug with spurious completions
-> during NCQ.  Alot of people are seeing this same effect with different
-> drives and controllers.  Tejun is working on it.  It's different to
-> reproduce.
->
-> Search for "spurious completion" - there are many hits...
->
-> /mjt
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+# du -sb . ; sleep 300; du -sb .
+1115590287487   .
+1115590287487   .
 
-Thanks will check it out.
+Here my my raid5 config:
+
+# mdadm -D /dev/md3
+/dev/md3:
+         Version : 00.90.03
+   Creation Time : Sun Dec  2 12:15:20 2007
+      Raid Level : raid5
+      Array Size : 1465143296 (1397.27 GiB 1500.31 GB)
+   Used Dev Size : 732571648 (698.63 GiB 750.15 GB)
+    Raid Devices : 3
+   Total Devices : 3
+Preferred Minor : 3
+     Persistence : Superblock is persistent
+
+     Update Time : Sun Dec  2 22:00:54 2007
+           State : active
+  Active Devices : 3
+Working Devices : 3
+  Failed Devices : 0
+   Spare Devices : 0
+
+          Layout : left-symmetric
+      Chunk Size : 1024K
+
+            UUID : fea48e85:ddd2c33f:d19da839:74e9c858 (local to host box1)
+          Events : 0.15
+
+     Number   Major   Minor   RaidDevice State
+        0       8       33        0      active sync   /dev/sdc1
+        1       8       49        1      active sync   /dev/sdd1
+        2       8       65        2      active sync   /dev/sde1
+
