@@ -1,81 +1,96 @@
-From: Oliver Martin <oliver.martin@student.tuwien.ac.at>
-Subject: Spontaneous rebuild
-Date: Sun, 02 Dec 2007 05:12:31 +0100
-Message-ID: <475230AF.3010100@student.tuwien.ac.at>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: Kernel 2.6.23.9 / P35 Chipset + WD 750GB Drives (reset port)
+Date: Sun, 2 Dec 2007 04:11:59 -0500 (EST)
+Message-ID: <Pine.LNX.4.64.0712020409280.30169@p34.internal.lan>
+References: <Pine.LNX.4.64.0712010619150.25643@p34.internal.lan>
+ <Pine.LNX.4.64.0712011310410.30316@fbirervta.pbzchgretzou.qr>
+ <Pine.LNX.4.64.0712010722590.28887@p34.internal.lan> <20071201174733.646a5c35@absurd>
+ <Pine.LNX.4.64.0712011155110.6257@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.64.0712011155110.6257@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: Oliver Martin <oliver.martin@student.tuwien.ac.at>
+To: linux-kernel@vger.kernel.org
+Cc: linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, apiszcz@solarrain.com
 List-Id: linux-raid.ids
 
-[Please CC me on replies as I'm not subscribed]
 
-Hello!
 
-I've been experimenting with software RAID a bit lately, using two
-external 500GB drives. One is connected via USB, one via Firewire. It is
-set up as a RAID5 with LVM on top so that I can easily add more drives
-when I run out of space.
-About a day after the initial setup, things went belly up. First, EXT3
-reported strange errors:
-EXT3-fs error (device dm-0): ext3_new_block: Allocating block in system
-zone - blocks from 106561536, length 1
-EXT3-fs error (device dm-0): ext3_new_block: Allocating block in system
-zone - blocks from 106561537, length 1
-...
+On Sat, 1 Dec 2007, Justin Piszcz wrote:
 
-There were literally hundreds of these, and they came back immediately
-when I reformatted the array. So I tried ReiserFS, which worked fine for
-about a day. Then I got errors like these:
-ReiserFS: warning: is_tree_node: node level 0 does not match to the
-expected one 2
-ReiserFS: dm-0: warning: vs-5150: search_by_key: invalid format found in
-block 69839092. Fsck?
-ReiserFS: dm-0: warning: vs-13070: reiserfs_read_locked_inode: i/o
-failure occurred trying to find stat data of [6 10 0x0 SD]
+>
+>
+> On Sat, 1 Dec 2007, Janek Kozicki wrote:
+>
+>> Justin Piszcz said:     (by the date of Sat, 1 Dec 2007 07:23:41 -0500 
+>> (EST))
+>> 
+>>>>> dd if=/dev/zero of=/dev/sdc
+>>> 
+>>> The purpose is with any new disk its good to write to all the blocks and
+>>> let the drive to all of the re-mapping before you put 'real' data on it.
+>>> Let it crap out or fail before I put my data on it.
+>> 
+>> better use badblocks. It writes data, then reads it afterwards:
+>> In this example the data is semi random (quicker than /dev/urandom ;)
+>> 
+>> badblocks -c 10240 -s -w -t random -v /dev/sdc
+>> 
+>> -- 
+>> Janek Kozicki                                                         |
+>> -
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> 
+>
+> Will give this a shot and see if I can reproduce the error, thanks.
+>
 
-Again, hundreds. So I ran badblocks on the LVM volume, and it reported
-some bad blocks near the end. Running badblocks on the md array worked,
-so I recreated the LVM stuff and attributed the failures to undervolting
-experiments I had been doing (this is my old laptop running as a server).
+The badblocks did not do anything; however, when I built a software raid 5 
+and the performed a dd:
 
-Anyway, the problems are back: To test my theory that everything is
-alright with the CPU running within its specs, I removed one of the
-drives while copying some large files yesterday. Initially, everything
-seemed to work out nicely, and by the morning, the rebuild had finished.
-Again, I unmounted the filesystem and ran badblocks -svn on the LVM. It
-ran without gripes for some hours, but just now I saw md had started to
-rebuild the array again out of the blue:
+/usr/bin/time dd if=/dev/zero of=fill_disk bs=1M
 
-Dec  1 20:04:49 quassel kernel: usb 4-5.2: reset high speed USB device
-using ehci_hcd and address 4
-Dec  2 01:06:02 quassel kernel: md: data-check of RAID array md0
-Dec  2 01:06:02 quassel kernel: md: minimum _guaranteed_  speed: 1000
-KB/sec/disk.
-Dec  2 01:06:02 quassel kernel: md: using maximum available idle IO
-bandwidth (but not more than 200000 KB/sec) for data-check.
-Dec  2 01:06:02 quassel kernel: md: using 128k window, over a total of
-488383936 blocks.
-Dec  2 03:57:24 quassel kernel: usb 4-5.2: reset high speed USB device
-using ehci_hcd and address 4
+I saw this somewhere along the way:
 
-I'm not sure the USB resets are related to the problem - device 4-5.2 is
-part of the array, but I get these sometimes at random intervals and
-they don't seem to hurt normally. Besides, the first one was long before
-the rebuild started, and the second one long afterwards.
+[30189.967531] RAID5 conf printout:
+[30189.967576]  --- rd:3 wd:3
+[30189.967617]  disk 0, o:1, dev:sdc1
+[30189.967660]  disk 1, o:1, dev:sdd1
+[30189.967716]  disk 2, o:1, dev:sde1
+[42332.936615] ata5.00: exception Emask 0x2 SAct 0x7000 SErr 0x0 action 
+0x2 frozen
+[42332.936706] ata5.00: spurious completions during NCQ issue=0x0 
+SAct=0x7000 FIS=004040a1:00000800
+[42332.936804] ata5.00: cmd 61/08:60:6f:4d:2a/00:00:27:00:00/40 tag 12 cdb 
+0x0 data 4096 out
+[42332.936805]          res 40/00:74:0f:49:2a/00:00:27:00:00/40 Emask 0x2 
+(HSM violation)
+[42332.936977] ata5.00: cmd 61/08:68:77:4d:2a/00:00:27:00:00/40 tag 13 cdb 
+0x0 data 4096 out
+[42332.936981]          res 40/00:74:0f:49:2a/00:00:27:00:00/40 Emask 0x2 
+(HSM violation)
+[42332.937162] ata5.00: cmd 61/00:70:0f:49:2a/04:00:27:00:00/40 tag 14 cdb 
+0x0 data 524288 out
+[42332.937163]          res 40/00:74:0f:49:2a/00:00:27:00:00/40 Emask 0x2 
+(HSM violation)
+[42333.240054] ata5: soft resetting port
+[42333.494462] ata5: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+[42333.506592] ata5.00: configured for UDMA/133
+[42333.506652] ata5: EH complete
+[42333.506741] sd 4:0:0:0: [sde] 1465149168 512-byte hardware sectors 
+(750156 MB)
+[42333.506834] sd 4:0:0:0: [sde] Write Protect is off
+[42333.506887] sd 4:0:0:0: [sde] Mode Sense: 00 3a 00 00
+[42333.506905] sd 4:0:0:0: [sde] Write cache: enabled, read cache: 
+enabled, doesn't support DPO or FUA
 
-Any ideas why md is rebuilding the array? And could this be related to
-the bad blocks problem I had first? badblocks is still running, I'll
-post an update when it is finished.
-In the meantime, mdadm --detail /dev/md0 and mdadm --examine
-/dev/sd[bc]1 don't give me any clues as to what went wrong, both disks
-are marked as "active sync", and the whole array is "active, recovering".
+Next test, I will turn off NCQ and try to make the problem re-occur.
+If anyone else has any thoughts here..?
+I ran long smart tests on all 3 disks, they all ran successfully.
 
-Before I forget, I'm running 2.6.23.1 with this config:
-http://stud4.tuwien.ac.at/~e0626486/config-2.6.23.1-hrt3-fw
+Perhaps these drives need to be NCQ BLACKLISTED with the P35 chipset?
 
-Thanks,
-Oliver
+Justin.
