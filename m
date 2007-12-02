@@ -1,101 +1,81 @@
-From: Robert Hancock <hancockr@shaw.ca>
-Subject: Re: Kernel 2.6.23.9 / P35 Chipset + WD 750GB Drives (reset port)
-Date: Sat, 01 Dec 2007 14:08:38 -0600
-Message-ID: <4751BF46.8040904@shaw.ca>
-References: <fa.hhS4g1h0uppt8Xx/ZZfNNQfAv1Q@ifi.uio.no>
+From: Oliver Martin <oliver.martin@student.tuwien.ac.at>
+Subject: Spontaneous rebuild
+Date: Sun, 02 Dec 2007 05:12:31 +0100
+Message-ID: <475230AF.3010100@student.tuwien.ac.at>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-15
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-reply-to: <fa.hhS4g1h0uppt8Xx/ZZfNNQfAv1Q@ifi.uio.no>
 Sender: linux-raid-owner@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, apiszcz@solarrain.com
+To: linux-raid@vger.kernel.org
+Cc: Oliver Martin <oliver.martin@student.tuwien.ac.at>
 List-Id: linux-raid.ids
 
-Justin Piszcz wrote:
-> I am putting a new machine together and I have dual raptor raid 1 for 
-> the root, which works just fine under all stress tests.
-> 
-> Then I have the WD 750 GiB drive (not RE2, desktop ones for ~150-160 on 
-> sale now adays):
-> 
-> I ran the following:
-> 
-> dd if=/dev/zero of=/dev/sdc
-> dd if=/dev/zero of=/dev/sdd
-> dd if=/dev/zero of=/dev/sde
-> 
-> (as it is always a very good idea to do this with any new disk)
-> 
-> And sometime along the way(?) (i had gone to sleep and let it run), this 
-> occurred:
-> 
-> [42880.680144] ata3.00: exception Emask 0x10 SAct 0x0 SErr 0x4010000 
-> action 0x2 frozen
-> [42880.680231] ata3.00: irq_stat 0x00400040, connection status changed
-> [42880.680290] ata3.00: cmd ec/00:00:00:00:00/00:00:00:00:00/00 tag 0 
-> cdb 0x0 data 512 in
-> [42880.680292]          res 40/00:ac:d8:64:54/00:00:57:00:00/40 Emask 
-> 0x10 (ATA bus error)
-> [42881.841899] ata3: soft resetting port
-> [42885.966320] ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> [42915.919042] ata3.00: qc timeout (cmd 0xec)
-> [42915.919094] ata3.00: failed to IDENTIFY (I/O error, err_mask=0x5)
-> [42915.919149] ata3.00: revalidation failed (errno=-5)
-> [42915.919206] ata3: failed to recover some devices, retrying in 5 secs
-> [42920.912458] ata3: hard resetting port
-> [42926.411363] ata3: port is slow to respond, please be patient (Status 
-> 0x80)
-> [42930.943080] ata3: COMRESET failed (errno=-16)
-> [42930.943130] ata3: hard resetting port
-> [42931.399628] ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> [42931.413523] ata3.00: configured for UDMA/133
-> [42931.413586] ata3: EH pending after completion, repeating EH (cnt=4)
-> [42931.413655] ata3: EH complete
-> [42931.413719] sd 2:0:0:0: [sdc] 1465149168 512-byte hardware sectors 
-> (750156 MB)
-> [42931.413809] sd 2:0:0:0: [sdc] Write Protect is off
-> [42931.413856] sd 2:0:0:0: [sdc] Mode Sense: 00 3a 00 00
-> [42931.413867] sd 2:0:0:0: [sdc] Write cache: enabled, read cache: 
-> enabled, doesn't support DPO or FUA
-> 
-> Usually when I see this sort of thing with another box I have full of 
-> raptors, it was due to a bad raptor and I never saw it again after I 
-> replaced the disk that it happened on, but that was using the Intel P965 
-> chipset.
-> 
-> For this board, it is a Gigabyte GSP-P35-DS4 (Rev 2.0) and I have all of 
-> the drives (2 raptors, 3 750s connected to the Intel ICH9 Southbridge).
-> 
-> I am going to do some further testing but does this indicate a bad 
-> drive? Bad cable?  Bad connector?
+[Please CC me on replies as I'm not subscribed]
 
-Could be any of the above.
+Hello!
 
-> 
-> As you can see above, /dev/sdc stopped responding for a little bit and 
-> then the kernel reset the port.
+I've been experimenting with software RAID a bit lately, using two
+external 500GB drives. One is connected via USB, one via Firewire. It is
+set up as a RAID5 with LVM on top so that I can easily add more drives
+when I run out of space.
+About a day after the initial setup, things went belly up. First, EXT3
+reported strange errors:
+EXT3-fs error (device dm-0): ext3_new_block: Allocating block in system
+zone - blocks from 106561536, length 1
+EXT3-fs error (device dm-0): ext3_new_block: Allocating block in system
+zone - blocks from 106561537, length 1
+...
 
-It looks like the first thing that happened is that the controller 
-reported it lost the SATA link, and then the drive didn't respond until 
-it was bashed with a few hard resets..
+There were literally hundreds of these, and they came back immediately
+when I reformatted the array. So I tried ReiserFS, which worked fine for
+about a day. Then I got errors like these:
+ReiserFS: warning: is_tree_node: node level 0 does not match to the
+expected one 2
+ReiserFS: dm-0: warning: vs-5150: search_by_key: invalid format found in
+block 69839092. Fsck?
+ReiserFS: dm-0: warning: vs-13070: reiserfs_read_locked_inode: i/o
+failure occurred trying to find stat data of [6 10 0x0 SD]
 
-> 
-> Why is this though?  What is the likely root cause?  Should I replace 
-> the drive?  Obviously this is not normal and cannot be good at all, the 
-> idea is to put these drives in a RAID5 and if one is going to timeout 
-> that is going to cause the array to go degraded and thus be worthless in 
-> a raid5 configuration.
-> 
-> Can anyone offer any insight here?
-> 
-> Thank you,
-> 
-> Justin.
+Again, hundreds. So I ran badblocks on the LVM volume, and it reported
+some bad blocks near the end. Running badblocks on the md array worked,
+so I recreated the LVM stuff and attributed the failures to undervolting
+experiments I had been doing (this is my old laptop running as a server).
 
--- 
-Robert Hancock      Saskatoon, SK, Canada
-To email, remove "nospam" from hancockr@nospamshaw.ca
-Home Page: http://www.roberthancock.com/
+Anyway, the problems are back: To test my theory that everything is
+alright with the CPU running within its specs, I removed one of the
+drives while copying some large files yesterday. Initially, everything
+seemed to work out nicely, and by the morning, the rebuild had finished.
+Again, I unmounted the filesystem and ran badblocks -svn on the LVM. It
+ran without gripes for some hours, but just now I saw md had started to
+rebuild the array again out of the blue:
 
+Dec  1 20:04:49 quassel kernel: usb 4-5.2: reset high speed USB device
+using ehci_hcd and address 4
+Dec  2 01:06:02 quassel kernel: md: data-check of RAID array md0
+Dec  2 01:06:02 quassel kernel: md: minimum _guaranteed_  speed: 1000
+KB/sec/disk.
+Dec  2 01:06:02 quassel kernel: md: using maximum available idle IO
+bandwidth (but not more than 200000 KB/sec) for data-check.
+Dec  2 01:06:02 quassel kernel: md: using 128k window, over a total of
+488383936 blocks.
+Dec  2 03:57:24 quassel kernel: usb 4-5.2: reset high speed USB device
+using ehci_hcd and address 4
+
+I'm not sure the USB resets are related to the problem - device 4-5.2 is
+part of the array, but I get these sometimes at random intervals and
+they don't seem to hurt normally. Besides, the first one was long before
+the rebuild started, and the second one long afterwards.
+
+Any ideas why md is rebuilding the array? And could this be related to
+the bad blocks problem I had first? badblocks is still running, I'll
+post an update when it is finished.
+In the meantime, mdadm --detail /dev/md0 and mdadm --examine
+/dev/sd[bc]1 don't give me any clues as to what went wrong, both disks
+are marked as "active sync", and the whole array is "active, recovering".
+
+Before I forget, I'm running 2.6.23.1 with this config:
+http://stud4.tuwien.ac.at/~e0626486/config-2.6.23.1-hrt3-fw
+
+Thanks,
+Oliver
