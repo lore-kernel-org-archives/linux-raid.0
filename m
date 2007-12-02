@@ -1,76 +1,49 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Reading takes 100% precedence over writes for mdadm+raid5?
-Date: Sun, 2 Dec 2007 18:09:19 -0500 (EST)
-Message-ID: <Pine.LNX.4.64.0712021807260.10289@p34.internal.lan>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: Spontaneous rebuild
+Date: Mon, 3 Dec 2007 10:14:37 +1100
+Message-ID: <18259.15453.811495.461016@notabene.brown>
+References: <475230AF.3010100@student.tuwien.ac.at>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: message from Oliver Martin on Sunday December 2
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Oliver Martin <oliver.martin@student.tuwien.ac.at>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-root      2206     1  4 Dec02 ?        00:10:37 dd if /dev/zero of 1.out 
-bs 1M
-root      2207     1  4 Dec02 ?        00:10:38 dd if /dev/zero of 2.out 
-bs 1M
-root      2208     1  4 Dec02 ?        00:10:35 dd if /dev/zero of 3.out 
-bs 1M
-root      2209     1  4 Dec02 ?        00:10:45 dd if /dev/zero of 4.out 
-bs 1M
-root      2210     1  4 Dec02 ?        00:10:35 dd if /dev/zero of 5.out 
-bs 1M
-root      2211     1  4 Dec02 ?        00:10:35 dd if /dev/zero of 6.out 
-bs 1M
-root      2212     1  4 Dec02 ?        00:10:30 dd if /dev/zero of 7.out 
-bs 1M
-root      2213     1  4 Dec02 ?        00:10:42 dd if /dev/zero of 8.out 
-bs 1M
-root      2214     1  4 Dec02 ?        00:10:35 dd if /dev/zero of 9.out 
-bs 1M
-root      2215     1  4 Dec02 ?        00:10:37 dd if /dev/zero of 10.out 
-bs 1M
-root      3080 24.6  0.0  10356  1672 ?        D    01:22   5:51 dd if 
-/dev/md3 of /dev/null bs 1M
+On Sunday December 2, oliver.martin@student.tuwien.ac.at wrote:
+> 
+> Anyway, the problems are back: To test my theory that everything is
+> alright with the CPU running within its specs, I removed one of the
+> drives while copying some large files yesterday. Initially, everything
+> seemed to work out nicely, and by the morning, the rebuild had finished.
+> Again, I unmounted the filesystem and ran badblocks -svn on the LVM. It
+> ran without gripes for some hours, but just now I saw md had started to
+> rebuild the array again out of the blue:
+> 
+> Dec  1 20:04:49 quassel kernel: usb 4-5.2: reset high speed USB device
+> using ehci_hcd and address 4
+> Dec  2 01:06:02 quassel kernel: md: data-check of RAID array md0
+                                      ^^^^^^^^^^
+> Dec  2 01:06:02 quassel kernel: md: minimum _guaranteed_  speed: 1000
+> KB/sec/disk.
+> Dec  2 01:06:02 quassel kernel: md: using maximum available idle IO
+> bandwidth (but not more than 200000 KB/sec) for data-check.
+                                                  ^^^^^^^^^^
+> Dec  2 01:06:02 quassel kernel: md: using 128k window, over a total of
+> 488383936 blocks.
+> Dec  2 03:57:24 quassel kernel: usb 4-5.2: reset high speed USB device
+> using ehci_hcd and address 4
+> 
 
-Was curious if when running 10 DD's (which are writing to the RAID 5) 
-fine, no issues, suddenly all go into D-state and let the read/give it 
-100% priority?
+This isn't a resync, it is a data check.  "Dec  2" is the first Sunday
+of the month.  You probably have a crontab entries that does
+   echo check > /sys/block/mdX/md/sync_action
 
-Is this normal?
+early on the first Sunday of the month.  I know that Debian does this.
 
-# du -sb . ; sleep 300; du -sb .
-1115590287487   .
-1115590287487   .
+It is good to do this occasionally to catch sleeping bad blocks.
 
-Here my my raid5 config:
-
-# mdadm -D /dev/md3
-/dev/md3:
-         Version : 00.90.03
-   Creation Time : Sun Dec  2 12:15:20 2007
-      Raid Level : raid5
-      Array Size : 1465143296 (1397.27 GiB 1500.31 GB)
-   Used Dev Size : 732571648 (698.63 GiB 750.15 GB)
-    Raid Devices : 3
-   Total Devices : 3
-Preferred Minor : 3
-     Persistence : Superblock is persistent
-
-     Update Time : Sun Dec  2 22:00:54 2007
-           State : active
-  Active Devices : 3
-Working Devices : 3
-  Failed Devices : 0
-   Spare Devices : 0
-
-          Layout : left-symmetric
-      Chunk Size : 1024K
-
-            UUID : fea48e85:ddd2c33f:d19da839:74e9c858 (local to host box1)
-          Events : 0.15
-
-     Number   Major   Minor   RaidDevice State
-        0       8       33        0      active sync   /dev/sdc1
-        1       8       49        1      active sync   /dev/sdd1
-        2       8       65        2      active sync   /dev/sde1
-
+NeilBrown
