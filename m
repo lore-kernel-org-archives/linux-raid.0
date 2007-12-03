@@ -1,44 +1,34 @@
-From: Wolfgang Walter <wolfgang.walter@studentenwerk.mhn.de>
-Subject: problem with software raid1 on 2.6.22.10: check/rebuild hangs
-Date: Mon, 3 Dec 2007 03:05:50 +0100
-Message-ID: <200712030305.50109.wolfgang.walter@studentenwerk.mhn.de>
+From: Oliver Martin <oliver.martin@student.tuwien.ac.at>
+Subject: Re: Spontaneous rebuild
+Date: Mon, 03 Dec 2007 03:35:51 +0100
+Message-ID: <47536B87.2040708@student.tuwien.ac.at>
+References: <475230AF.3010100@student.tuwien.ac.at> <18259.15453.811495.461016@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <18259.15453.811495.461016@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>, mingo@redhat.com
+To: Neil Brown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello,
+Neil Brown schrieb:
+> 
+> This isn't a resync, it is a data check.  "Dec  2" is the first Sunday
+> of the month.  You probably have a crontab entries that does
+>    echo check > /sys/block/mdX/md/sync_action
+> 
+> early on the first Sunday of the month.  I know that Debian does this.
+> 
+> It is good to do this occasionally to catch sleeping bad blocks.
+> 
+Duh, thanks for clearing this up. I guess what set the alarm off was
+getting what looked like a rebuild to me while stress testing. Yes, I'm
+running Debian and I have exactly this entry in my crontab... Perhaps
+they should add a short log entry like "starting periodic RAID check" so
+that people know there is nothing to worry about.
 
-with kernel 2.6.22.10 checking a raid1 or rebuilding ist does not work =
-on one=20
-of our machines. After a short time the rebuild/check does not make pro=
-gress=20
-any more . Processes which then access the filesystems on those raids a=
-re=20
-blocked.
+Or maybe I should just RTFC (read the fine crontab) ;-)
 
-Nothing gets logged. Access to other filesystems works fine.
-
-If we boot 2.6.17.10 (the kernel we used befor upgrading to 2.6.22) the=
- raids=20
-the check/rebuild is done without any problems.
-
-The filesystems on the raid are exported via nfs.
-
-The machine has 2 xeons with hyperthreading.
-
-Regards,
---=20
-Wolfgang Walter
-Studentenwerk M=FCnchen
-Anstalt des =F6ffentlichen Rechts
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Oliver
