@@ -1,110 +1,80 @@
-From: pg_lxra@lxra.for.sabi.co.UK (Peter Grandi)
-Subject: Re: raid6 check/repair
-Date: Tue, 4 Dec 2007 21:07:23 +0000
-Message-ID: <18261.49547.588360.436369@base.ty.sabi.co.UK>
-References: <474431BF.30103@ph.tum.de>
-	<18244.64972.172685.796502@notabene.brown>
-	<4745B375.4030500@ph.tum.de>
-	<18254.21949.441607.134763@notabene.brown>
-	<474F4880.8080300@eyal.emu.id.au>
-	<47502140.1080601@ph.tum.de>
-	<1196650421.14411.10.camel@elara.tcw.local>
-	<47546019.5030300@ph.tum.de>
+From: Robert Hancock <hancockr@shaw.ca>
+Subject: Re: Kernel 2.6.23.9 / P35 Chipset + WD 750GB Drives (reset port)
+Date: Tue, 04 Dec 2007 19:26:41 -0600
+Message-ID: <4755FE51.5090603@shaw.ca>
+References: <fa.hhS4g1h0uppt8Xx/ZZfNNQfAv1Q@ifi.uio.no>
+ <fa.YIWyRfjQw18aIH2fKaze37Gwuzo@ifi.uio.no>
+ <fa.ib4H8TQ3raADIWdsEBy+eSL/1RU@ifi.uio.no>
+ <fa.S4u1AwoYnqrSuegcUaP78D3SFXQ@ifi.uio.no>
+ <fa.H1nTe/xQV/oyEMTHAkOjqgqu7jY@ifi.uio.no>
+ <fa.YpQ6xCPOijQOCKsLJr1SDINFURI@ifi.uio.no>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <47546019.5030300@ph.tum.de>
-Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-reply-to: <fa.YpQ6xCPOijQOCKsLJr1SDINFURI@ifi.uio.no>
+Sender: linux-ide-owner@vger.kernel.org
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, apiszcz@solarrain.com
 List-Id: linux-raid.ids
 
-[ ... on RAID1, ... RAID6 error recovery ... ]
+Justin Piszcz wrote:
+> The badblocks did not do anything; however, when I built a software raid 
+> 5 and the performed a dd:
+> 
+> /usr/bin/time dd if=/dev/zero of=fill_disk bs=1M
+> 
+> I saw this somewhere along the way:
+> 
+> [30189.967531] RAID5 conf printout:
+> [30189.967576]  --- rd:3 wd:3
+> [30189.967617]  disk 0, o:1, dev:sdc1
+> [30189.967660]  disk 1, o:1, dev:sdd1
+> [30189.967716]  disk 2, o:1, dev:sde1
+> [42332.936615] ata5.00: exception Emask 0x2 SAct 0x7000 SErr 0x0 action 
+> 0x2 frozen
+> [42332.936706] ata5.00: spurious completions during NCQ issue=0x0 
+> SAct=0x7000 FIS=004040a1:00000800
+> [42332.936804] ata5.00: cmd 61/08:60:6f:4d:2a/00:00:27:00:00/40 tag 12 
+> cdb 0x0 data 4096 out
+> [42332.936805]          res 40/00:74:0f:49:2a/00:00:27:00:00/40 Emask 
+> 0x2 (HSM violation)
+> [42332.936977] ata5.00: cmd 61/08:68:77:4d:2a/00:00:27:00:00/40 tag 13 
+> cdb 0x0 data 4096 out
+> [42332.936981]          res 40/00:74:0f:49:2a/00:00:27:00:00/40 Emask 
+> 0x2 (HSM violation)
+> [42332.937162] ata5.00: cmd 61/00:70:0f:49:2a/04:00:27:00:00/40 tag 14 
+> cdb 0x0 data 524288 out
+> [42332.937163]          res 40/00:74:0f:49:2a/00:00:27:00:00/40 Emask 
+> 0x2 (HSM violation)
+> [42333.240054] ata5: soft resetting port
+> [42333.494462] ata5: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> [42333.506592] ata5.00: configured for UDMA/133
+> [42333.506652] ata5: EH complete
+> [42333.506741] sd 4:0:0:0: [sde] 1465149168 512-byte hardware sectors 
+> (750156 MB)
+> [42333.506834] sd 4:0:0:0: [sde] Write Protect is off
+> [42333.506887] sd 4:0:0:0: [sde] Mode Sense: 00 3a 00 00
+> [42333.506905] sd 4:0:0:0: [sde] Write cache: enabled, read cache: 
+> enabled, doesn't support DPO or FUA
+> 
+> Next test, I will turn off NCQ and try to make the problem re-occur.
+> If anyone else has any thoughts here..?
+> I ran long smart tests on all 3 disks, they all ran successfully.
+> 
+> Perhaps these drives need to be NCQ BLACKLISTED with the P35 chipset?
 
-tn> The use case for the proposed 'repair' would be occasional,
-tn> low-frequency corruption, for which many sources can be
-tn> imagined:
+The problem won't recur with NCQ off, because spurious completions are 
+impossible in that case.
 
-tn> Any piece of hardware has a certain failure rate, which may
-tn> depend on things like age, temperature, stability of
-tn> operating voltage, cosmic rays, etc. but also on variations
-tn> in the production process.  Therefore, hardware may suffer
-tn> from infrequent glitches, which are seldom enough, to be
-tn> impossible to trace back to a particular piece of equipment.
-tn> It would be nice to recover gracefully from that.
+It was originally thought that these AHCI spurious NCQ completions were 
+busted NCQ implementations on the drives, but I think there theory is 
+that it's some other timing problem or some such, given the number of 
+drives across all makers which are reported to do this. I believe Tejun 
+is investigating?
 
-What has this got to do with RAID6 or RAID in general? I have
-been following this discussion with a sense of bewilderment as I
-have started to suspect that parts of it are based on a very
-large misunderstanding.
+-- 
+Robert Hancock      Saskatoon, SK, Canada
+To email, remove "nospam" from hancockr@nospamshaw.ca
+Home Page: http://www.roberthancock.com/
 
-tn> Kernel bugs or just plain administrator mistakes are another
-tn> thing.
-
-The biggest administrator mistakes are lack of end-to-end checking
-and backups. Those that don't have them wish their storage systems
-could detect and recover from arbitrary and otherwise undetected
-errors (but see below for bad news on silent corruptions).
-
-tn> But also the case of power-loss during writing that you have
-tn> mentioned could profit from that 'repair': With heterogeneous
-tn> hardware, blocks may be written in unpredictable order, so
-tn> that in more cases graceful recovery would be possible with
-tn> 'repair' compared to just recalculating parity.
-
-Redundant RAID levels are designed to recover only from _reported_
-errors that identify precisely where the error is. Recovering from
-random block writing is something that seems to me to be quite
-outside the scope of a low level virtual storage device layer.
-
-ms> I just want to give another suggestion. It may or may not be
-ms> possible to repair inconsistent arrays but in either way some
-ms> code there MUST at least warn the administrator that
-ms> something (may) went wrong.
-
-tn> Agreed.
-
-That sounds instead quite extraordinary to me because it is not
-clear how to define ''inconsistency'' in the general case never
-mind detect it reliably, and never mind knowing when it is found
-how to determine which are the good data bits and which are the
-bad.
-
-Now I am starting to think that this discussion is based on the
-curious assumption that storage subsystems should solve the so
-called ''byzantine generals'' problem, that is to operate reliably
-in the presence of unreliable communications and storage.
-
-ms> I had an issue once where the chipset / mainboard was broken
-ms> so on one raid1 array I have diferent data was written to the
-ms> disks occasionally [ ... ]
-
-Indeed. Some links from a web search:
-
-  http://en.Wikipedia.org/wiki/Byzantine_Fault_Tolerance
-  http://pages.CS.Wisc.edu/~sschang/OS-Qual/reliability/byzantine.htm
-  http://research.Microsoft.com/users/lamport/pubs/byz.pdf
-
-ms> and linux-raid / mdadm did not complain or do anything.
-
-The mystic version of Linux-RAID is in psi-test right now :-).
-
-
-To me RAID does not seem the right abstraction level to deal with
-this problem; and perhaps the file system level is not either,
-even if ZFS tries to address some of the problem.
-
-However there are ominous signs that the storage version of the
-Byzantine generals problem is happening in particularly nasty
-forms. For example as reported in this very very scary paper:
-
-  https://InDiCo.DESY.DE/contributionDisplay.py?contribId=65&sessionId=42&confId=257
-
-where some of the causes have been apparently identified recently,
-see slides 11, 12 and 13:
-
-  http://InDiCo.FNAL.gov/contributionDisplay.py?contribId=44&amp;sessionId=15&amp;confId=805
-
-So I guess that end-to-end verification will have to become more
-common, but which form it will take is not clear (I always use a
-checksummed container format for important long term data).
