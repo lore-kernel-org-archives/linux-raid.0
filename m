@@ -1,53 +1,56 @@
-From: Leif Nixon <nixon@nsc.liu.se>
-Subject: Re: raid6 check/repair
-Date: Wed, 05 Dec 2007 10:00:33 +0100
-Message-ID: <m3tzmx1pou.fsf@unna.nsc.liu.se>
-References: <474431BF.30103@ph.tum.de>
-	<18244.64972.172685.796502@notabene.brown>
-	<4745B375.4030500@ph.tum.de>
-	<18254.21949.441607.134763@notabene.brown>
-	<474F4880.8080300@eyal.emu.id.au> <47502140.1080601@ph.tum.de>
-	<1196650421.14411.10.camel@elara.tcw.local>
-	<47546019.5030300@ph.tum.de>
-	<18261.49547.588360.436369@base.ty.sabi.co.UK>
+From: David Greaves <david@dgreaves.com>
+Subject: Re: assemble vs create an array.......
+Date: Wed, 05 Dec 2007 11:39:13 +0000
+Message-ID: <47568DE1.1050108@dgreaves.com>
+References: <474F869D.5040503@mpigani.org> <18255.41044.614676.410107@notabene.brown> <47501D7E.7000804@dgreaves.com> <475552D2.4000802@mpigani.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18261.49547.588360.436369@base.ty.sabi.co.UK> (Peter Grandi's message of "Tue\, 4 Dec 2007 21\:07\:23 +0000")
+In-Reply-To: <475552D2.4000802@mpigani.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>
+To: Dragos <dragos@mpigani.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-pg_lxra@lxra.for.sabi.co.UK (Peter Grandi) writes:
+Dragos wrote:
+> Thank you for your very fast answers.
+> 
+> First I tried 'fsck -n' on the existing array. The answer was that If I
+> wanted to check a XFS partition I should use 'xfs_check'. That seems to
+> say that my array was partitioned with xfs, not reiserfs. Am I correct?
+> 
+> Then I tried the different permutations:
+> mdadm --create /dev/md0 --raid-devices=3 --level=5 missing /dev/sda1
+> /dev/sdb1
+> mount /dev/md0 temp
+> mdadm --stop --scan
+> 
+> mdadm --create /dev/md0 --raid-devices=3 --level=5 /dev/sda1 missing
+> /dev/sdb1
+> mount /dev/md0 temp
+> mdadm --stop --scan
+> 
+[etc]
 
-> ms> I just want to give another suggestion. It may or may not be
-> ms> possible to repair inconsistent arrays but in either way some
-> ms> code there MUST at least warn the administrator that
-> ms> something (may) went wrong.
->
-> tn> Agreed.
->
-> That sounds instead quite extraordinary to me because it is not
-> clear how to define ''inconsistency'' in the general case never
-> mind detect it reliably, and never mind knowing when it is found
-> how to determine which are the good data bits and which are the
-> bad.
+> 
+> With some arrays mount reported:
+>   mount: you must specify the filesystem type
+> and with others:
+>   mount: Structure needs cleaning
+> 
+> No choice seems to have been successful.
 
-I don't quite follow you. Having a basic consistency check utility for
-a raid array is to me as obvious as having an fsck utility for a file
-system.
+OK, not as good as you could have hoped for.
 
-> Now I am starting to think that this discussion is based on the
-> curious assumption that storage subsystems should solve the so
-> called ''byzantine generals'' problem, that is to operate reliably
-> in the presence of unreliable communications and storage.
+Make sure you have the latest xfs tools.
 
-I don't think anyone is proposing to solve that problem. However, an
-occasional slight nod in acknowledgment of the fact that real world
-communications and storage *are* unreliable wouldn't be out of place.
+you may want to try xfs_repair and you can use the -n (I think - check man page)
+option.
 
--- 
-Leif Nixon                       -            Systems expert
-------------------------------------------------------------
-National Supercomputer Centre    -      Linkoping University
-------------------------------------------------------------
+You may need to force it to ignore the log
+
+David
+
+
+
