@@ -1,93 +1,103 @@
 From: Michael Tokarev <mjt@tls.msk.ru>
-Subject: external bitmaps.. and more
-Date: Thu, 06 Dec 2007 19:08:42 +0300
-Message-ID: <47581E8A.2010203@msgid.tls.msk.ru>
+Subject: Re: assemble vs create an array.......
+Date: Thu, 06 Dec 2007 19:39:28 +0300
+Message-ID: <475825C0.4070605@msgid.tls.msk.ru>
+References: <474F869D.5040503@mpigani.org> <18255.41044.614676.410107@notabene.brown> <47501D7E.7000804@dgreaves.com> <475552D2.4000802@mpigani.org> <47568DE1.1050108@dgreaves.com> <4758129D.40600@mpigani.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=KOI8-R
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4758129D.40600@mpigani.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Dragos <dragos@mpigani.org>
+Cc: David Greaves <david@dgreaves.com>, linux-raid@vger.kernel.org, xfs@oss.sgi.com
 List-Id: linux-raid.ids
 
-I come across a situation where external MD bitmaps
-aren't usable on any "standard" linux distribution
-unless special (non-trivial) actions are taken.
+[Cc'd to xfs list as it contains something related]
 
-First is a small buglet in mdadm, or two.
+Dragos wrote:
+> Thank you.
+> I want to make sure I understand.
 
-It's not possible to specify --bitmap= in assemble
-command line - the option seems to be ignored.  But
-it's honored when specified in config file.
+[Some background for XFS list.  The talk is about a broken linux software
+raid (the reason for breakage isn't relevant anymore).  The OP seems to
+lost the order of drives in his array, and now tries to create new array
+ontop, trying different combinations of drives.  The filesystem there
+WAS XFS.  One point is that linux refuses to mount it, saying
+"structure needs cleaning".  This all is mostly md-related, but there
+are several XFS-related questions and concerns too.]
 
-Also, mdadm should probably warn or even refuse to
-do things (unless --force is given) when an array being
-assembled is using external bitmap, but the bitmap file
-isn't specified.
+> 
+> 1- Does it matter which permutation of drives I use for xfs_repair (as
+> long as it tells me that the Structure needs cleaning)? When it comes to
+> linux I consider myself at intermediate level, but I am a beginner when
+> it comes to raid and filesystem issues.
 
-Now for something more.. interesting.
+The permutation DOES MATTER - for all the devices.
+Linux, when mounting an fs, only looks at the superblock of the filesystem,
+which is usually located at the beginning of the device.
 
-The thing is that when a external bitmap is being used
-for an array, and that bitmap resides on another filesystem,
-all common distributions fails to start/mount and to
-shutdown/umount arrays/filesystems properly, because
-all starts/stops is done in one script, and all mounts/umounts
-in another, but for bitmaps to work the two should be intermixed
-with each other.
+So in each case linux actually recognizes the filesystem (instead of
+seeing complete garbage), the same device is the first one - I.e, this
+way you found your first device.  The rest may be still out of order.
 
-Here's why.
+Raid5 data is laid like this (with 3 drives for simplicity, it's similar
+with more drives):
 
-Suppose I've an array mdX which used bitmap /stuff/bitmap,
-where /stuff is another separate filesystem.  In this case,
-during startup, /stuff should be mounted before bringing up
-mdX, and during shutdown, mdX should be stopped before
-trying to umount /stuff.  Or else during startup mdX will
-not find /stuff/bitmap, and during shutdown /stuff filesystem
-is busy since mdX is holding a reference to it.
+       DiskA       DiskB       DiskC
+Blk0   Data0       Data1       P0
+Blk1   P1          Data2       Data3
+Blk2   Data4       P2          Data5
+Blk3   Data6       Data7       P3
+... and so on .......................
 
-Doing things in "simple" way doesn't work: if I specify to
-mount mdX as /data in /etc/fstab, -- since mdX hasn't been
-assembled by mdadm (due to missing bitmap), the system will
-not start, asking for emergency root password...
+where your actual data blocks are Data0, Data1, ... DataN,
+and PX are parity blocks.
 
-Oh well.
+As long as DiskA remains in this position, the beginning of
+the array is Data0 block, -- hence linux sees the beginning
+of the filesystem and recognizes it.  But you can switch
+DiskB and DiskC still, and the rest of the data will be
+complete garbage, only data blocks on DiskA will be in
+place.
 
-So the only solution for this so far is to convert md array
-assemble/stop operation into... MOUNTS/UMOUNTS!  And specify
-all necessary information in /etc/fstab - for both arrays and
-filesystems, with proper ordering in "order" column.
-Ghrm.
+So you still need to find order of the other drives
+(you found your first drive, DriveA, already).
 
-Technically speaking it's not difficult - mount.md and fsck.md
-wrappers for mdadm are trivially to write (I even tried that
-myself - a quick-n-dirty 5-minutes hack works).  But it's...
-ugly.
+Note also that if Data1 block is all-zeros (a situation
+which is unlikely for a non-empty filesystem), P0 (first
+parity block) will be exactly the same as Data0, because
+XORing anything with zeros gives the same "anything" again
+(XOR is the operation used to calculate parity blocks in
+RAID5).  So there's still a remote chance you've TWO
+"first" disks...
 
-But I don't see any other reasonable solutions.  Alternatives
-are additional scripts to start/stop/mount/umount filesystems
-residing on or related to "advanced" arrays (with external
-bitmaps in this case) - but looking at how much code is in
-current startup scripts around mounting/fscking, and having
-in mind that mount/umount does not support alternative
-/etc/fstab, this is umm.. even more ugly...
+What to do is to give repairfs a try for each permutation,
+but again without letting it to actually fix anything.
+Just run it in read-only mode and see which combination
+of drives gives less errors, or no fatal errors (there
+may be several similar combinations, with the same order
+of drives but with different drive "missing").
 
-Comments anyone?
+It's sad that xfs refuses mount when "structure needs
+cleaning" - the best way here is to actually mount it
+and see how it looks like, instead of trying repair
+tools.  Is there some option to force-mount it still
+(in readonly mode, knowing it may OOPs kernel etc)?
 
-Thanks.
+I'm not very familiar with xfs yet - it seems to be
+much faster than ext3 for our workload (mostly databases),
+and I'm experimenting with it slowly.  But this very
+thread prompted me to think.  If I can't force-mount it
+(or browse it using other ways) as I can almost always
+do with (somewhat?) broken ext[23] just to examine things,
+maybe I'm trying it before it's mature enough? ;)  Note
+the smile, but note there's a bit of joke in every joke... :)
+
+> 2- After I do it, assuming that it worked, how do I reintegrate the
+> 'missing' drive while keeping my data?
+
+Just add it back -- mdadm --add /dev/mdX /dev/sdYZ.
+But don't do that till you actually see your data.
 
 /mjt
-
-P.S.  Why external bitmaps in the first place?  Well, that's
-a good question, and here's a (hopefully good too) answer:
-When there are sufficient disk drives available to dedicate
-some of them for bitmap(s), and there's a large array(s)
-with dynamic content (many writes), and the content is
-important enough to care about data safety wrt possible
-power losses and kernel OOPSes and whatnot, placing bitmap
-into another disk(s) helps alot with resyncs (it's not
-about resync speed, it's about resync general UNRELIABILITY,
-which is another topic - hopefully a long-term linux
-raid gurus will understand me here), but does not slow
-down writes hugely due to constant disk seeks when updating
-bitmaps.  Those seeks tends to have huge impact on random
-write performance.
