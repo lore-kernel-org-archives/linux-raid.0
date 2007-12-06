@@ -1,86 +1,59 @@
-From: Ian P <ian@underpressuredivers.com>
-Subject: RAID mapper device size wrong after replacing drives
-Date: Thu, 6 Dec 2007 12:24:59 -0800 (PST)
-Message-ID: <14200241.post@talk.nabble.com>
+From: David Chinner <dgc@sgi.com>
+Subject: Re: assemble vs create an array.......
+Date: Fri, 7 Dec 2007 08:22:25 +1100
+Message-ID: <20071206212225.GN115527101@sgi.com>
+References: <474F869D.5040503@mpigani.org> <18255.41044.614676.410107@notabene.brown> <47501D7E.7000804@dgreaves.com> <475552D2.4000802@mpigani.org> <47568DE1.1050108@dgreaves.com> <4758129D.40600@mpigani.org> <475825C0.4070605@msgid.tls.msk.ru>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <475825C0.4070605@msgid.tls.msk.ru>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Michael Tokarev <mjt@tls.msk.ru>
+Cc: Dragos <dragos@mpigani.org>, David Greaves <david@dgreaves.com>, linux-raid@vger.kernel.org, xfs@oss.sgi.com
 List-Id: linux-raid.ids
 
+On Thu, Dec 06, 2007 at 07:39:28PM +0300, Michael Tokarev wrote:
+> What to do is to give repairfs a try for each permutation,
+> but again without letting it to actually fix anything.
+> Just run it in read-only mode and see which combination
+> of drives gives less errors, or no fatal errors (there
+> may be several similar combinations, with the same order
+> of drives but with different drive "missing").
 
-Hi,
+Ugggh. 
 
-I have a problem with my RAID array under Linux after upgrading to larger
-drives. I have a machine with Windows and Linux dual-boot which had a pair
-of 160GB drives in a RAID-1 mirror with 3 partitions: partiton 1 = Windows
-boot partition (FAT32), partiton 2 = Linux /boot (ext3), partiton 3 =
-Windows system (NTFS). The Linux /root is on a separate physical drive. The
-dual boot is via Grub installed on the /boot partiton, and this was all
-working fine.
+> It's sad that xfs refuses mount when "structure needs
+> cleaning" - the best way here is to actually mount it
+> and see how it looks like, instead of trying repair
+> tools. 
 
-But I just upgraded the drives in the RAID pair, replacing them with 500GB
-drives. I did this by replacing one of the 160s with a new 500 and letting
-the RAID copy the drive, splitting the drives out of the RAID array and
-increasing the size of the last partition of the 500 (which I did under
-Windows since its the Windows partiton) then replacing the last 160 with the
-other 500 and having the RAID controller create a new array with the two
-500s, copying the drive that I'd copied from the 160. This worked great for
-Windows, and that now boots and sees a 500GB RAID drive with all the data
-intact.
+It self protection - if you try to write to a corrupted filesystem,
+you'll only make the corruption worse. Mounting involves log
+recovery, which writes to the filesystem....
 
-However, Linux has a problem and will not now boot all the way. It reports
-that the RAID /dev/mapper volume failed - the partition is beyond the
-boundaries of the disk. Running fdisk shows that it is seeing the larger
-partiton, but still sees the size of the RAID /dev/mapper drive as 160GB.
-Here is the fdisk output for one of the physical drives and for the RAID
-mapper drive:
+> Is there some option to force-mount it still
+> (in readonly mode, knowing it may OOPs kernel etc)?
 
-Disk /dev/sda: 500.1 GB, 500107862016 bytes
-255 heads, 63 sectors/track, 60801 cylinders
-Units = cylinders of 16065 * 512 = 8225280 bytes
+Sure you can: mount -o ro,norecovery <dev> <mtpt>
 
-   Device Boot      Start         End      Blocks   Id  System
-/dev/sda1               1         625     5018624    b  W95 FAT32
-Partition 1 does not end on cylinder boundary.
-/dev/sda2             626         637       96390   83  Linux
-/dev/sda3   *         638       60802   483264512    7  HPFS/NTFS
+But it you hit corruption it will still shut down on you. If
+the machine oopses then that is a bug.
 
+> thread prompted me to think.  If I can't force-mount it
+> (or browse it using other ways) as I can almost always
+> do with (somewhat?) broken ext[23] just to examine things,
+> maybe I'm trying it before it's mature enough? ;)
 
-Disk /dev/mapper/isw_bcifcijdi_Raid-0: 163.9 GB, 163925983232 bytes
-255 heads, 63 sectors/track, 19929 cylinders
-Units = cylinders of 16065 * 512 = 8225280 bytes
+Hehe ;)
 
-                            Device Boot      Start         End      Blocks  
-Id  System
-/dev/mapper/isw_bcifcijdi_Raid-0p1               1         625     5018624   
-b  W95 FAT32
-Partition 1 does not end on cylinder boundary.
-/dev/mapper/isw_bcifcijdi_Raid-0p2             626         637       96390  
-83  Linux
-/dev/mapper/isw_bcifcijdi_Raid-0p3   *         638       60802   483264512   
-7  HPFS/NTFS
+For maximum uber-XFS-guru points, learn to browse your filesystem
+with xfs_db. :P
 
+Cheers,
 
-They differ only in the drive capacity and number of cylinders.
-
-I started to try to run a Linux reinstall, but it reports that the partiion
-table on the mapper drive is invalid, giving an option to re-initialize it
-but saying that doing so will lose all the data on the drive.
-
-So questions:
-
-1. Where is the drive size information for the RAID mapper drive kept, and
-is there some way to patch it?
-
-2. Is there some way to re-initialize the RAID mapper drive without
-destroying the data on the drive?
-
-Thanks,
-Ian
+Dave.
 -- 
-View this message in context: http://www.nabble.com/RAID-mapper-device-size-wrong-after-replacing-drives-tf4958354.html#a14200241
-Sent from the linux-raid mailing list archive at Nabble.com.
-
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
