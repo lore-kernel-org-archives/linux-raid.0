@@ -1,64 +1,93 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: Reading takes 100% precedence over writes for mdadm+raid5?
-Date: Thu, 06 Dec 2007 11:11:26 -0500
-Message-ID: <47581F2E.7020400@tmr.com>
-References: <Pine.LNX.4.64.0712021807260.10289@p34.internal.lan>
+From: Michael Tokarev <mjt@tls.msk.ru>
+Subject: external bitmaps.. and more
+Date: Thu, 06 Dec 2007 19:08:42 +0300
+Message-ID: <47581E8A.2010203@msgid.tls.msk.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=KOI8-R
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0712021807260.10289@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Justin Piszcz wrote:
-> root      2206     1  4 Dec02 ?        00:10:37 dd if /dev/zero of 
-> 1.out bs 1M
-> root      2207     1  4 Dec02 ?        00:10:38 dd if /dev/zero of 
-> 2.out bs 1M
-> root      2208     1  4 Dec02 ?        00:10:35 dd if /dev/zero of 
-> 3.out bs 1M
-> root      2209     1  4 Dec02 ?        00:10:45 dd if /dev/zero of 
-> 4.out bs 1M
-> root      2210     1  4 Dec02 ?        00:10:35 dd if /dev/zero of 
-> 5.out bs 1M
-> root      2211     1  4 Dec02 ?        00:10:35 dd if /dev/zero of 
-> 6.out bs 1M
-> root      2212     1  4 Dec02 ?        00:10:30 dd if /dev/zero of 
-> 7.out bs 1M
-> root      2213     1  4 Dec02 ?        00:10:42 dd if /dev/zero of 
-> 8.out bs 1M
-> root      2214     1  4 Dec02 ?        00:10:35 dd if /dev/zero of 
-> 9.out bs 1M
-> root      2215     1  4 Dec02 ?        00:10:37 dd if /dev/zero of 
-> 10.out bs 1M
-> root      3080 24.6  0.0  10356  1672 ?        D    01:22   5:51 dd if 
-> /dev/md3 of /dev/null bs 1M
->
-> Was curious if when running 10 DD's (which are writing to the RAID 5) 
-> fine, no issues, suddenly all go into D-state and let the read/give it 
-> 100% priority?
->
-> Is this normal?
+I come across a situation where external MD bitmaps
+aren't usable on any "standard" linux distribution
+unless special (non-trivial) actions are taken.
 
-I'm jumping back to the start of this thread, because after reading all 
-the discussion I noticed that you are mixing apples and oranges here. 
-Your write programs are going to files in the filesystem, and your read 
-is going against the raw device. That may explain why you see something 
-I haven't noticed doing all filesystem i/o.
+First is a small buglet in mdadm, or two.
 
-I am going to do a large rsync to another filesystem in the next two 
-days, I will turn on some measurements when I do. But if you are just 
-investigating this behavior, perhaps you could retry with a single read 
-from a file rather than the device.
+It's not possible to specify --bitmap= in assemble
+command line - the option seems to be ignored.  But
+it's honored when specified in config file.
 
-    [...snip...]
+Also, mdadm should probably warn or even refuse to
+do things (unless --force is given) when an array being
+assembled is using external bitmap, but the bitmap file
+isn't specified.
 
--- 
-Bill Davidsen <davidsen@tmr.com>
-  "Woe unto the statesman who makes war without a reason that will still
-  be valid when the war is over..." Otto von Bismark 
+Now for something more.. interesting.
 
+The thing is that when a external bitmap is being used
+for an array, and that bitmap resides on another filesystem,
+all common distributions fails to start/mount and to
+shutdown/umount arrays/filesystems properly, because
+all starts/stops is done in one script, and all mounts/umounts
+in another, but for bitmaps to work the two should be intermixed
+with each other.
 
+Here's why.
+
+Suppose I've an array mdX which used bitmap /stuff/bitmap,
+where /stuff is another separate filesystem.  In this case,
+during startup, /stuff should be mounted before bringing up
+mdX, and during shutdown, mdX should be stopped before
+trying to umount /stuff.  Or else during startup mdX will
+not find /stuff/bitmap, and during shutdown /stuff filesystem
+is busy since mdX is holding a reference to it.
+
+Doing things in "simple" way doesn't work: if I specify to
+mount mdX as /data in /etc/fstab, -- since mdX hasn't been
+assembled by mdadm (due to missing bitmap), the system will
+not start, asking for emergency root password...
+
+Oh well.
+
+So the only solution for this so far is to convert md array
+assemble/stop operation into... MOUNTS/UMOUNTS!  And specify
+all necessary information in /etc/fstab - for both arrays and
+filesystems, with proper ordering in "order" column.
+Ghrm.
+
+Technically speaking it's not difficult - mount.md and fsck.md
+wrappers for mdadm are trivially to write (I even tried that
+myself - a quick-n-dirty 5-minutes hack works).  But it's...
+ugly.
+
+But I don't see any other reasonable solutions.  Alternatives
+are additional scripts to start/stop/mount/umount filesystems
+residing on or related to "advanced" arrays (with external
+bitmaps in this case) - but looking at how much code is in
+current startup scripts around mounting/fscking, and having
+in mind that mount/umount does not support alternative
+/etc/fstab, this is umm.. even more ugly...
+
+Comments anyone?
+
+Thanks.
+
+/mjt
+
+P.S.  Why external bitmaps in the first place?  Well, that's
+a good question, and here's a (hopefully good too) answer:
+When there are sufficient disk drives available to dedicate
+some of them for bitmap(s), and there's a large array(s)
+with dynamic content (many writes), and the content is
+important enough to care about data safety wrt possible
+power losses and kernel OOPSes and whatnot, placing bitmap
+into another disk(s) helps alot with resyncs (it's not
+about resync speed, it's about resync general UNRELIABILITY,
+which is another topic - hopefully a long-term linux
+raid gurus will understand me here), but does not slow
+down writes hugely due to constant disk seeks when updating
+bitmaps.  Those seeks tends to have huge impact on random
+write performance.
