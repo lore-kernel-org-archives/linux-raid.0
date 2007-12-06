@@ -1,76 +1,64 @@
-From: Dragos <dragos@mpigani.org>
-Subject: Re: assemble vs create an array.......
-Date: Thu, 06 Dec 2007 10:17:49 -0500
-Message-ID: <4758129D.40600@mpigani.org>
-References: <474F869D.5040503@mpigani.org> <18255.41044.614676.410107@notabene.brown> <47501D7E.7000804@dgreaves.com> <475552D2.4000802@mpigani.org> <47568DE1.1050108@dgreaves.com>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: Reading takes 100% precedence over writes for mdadm+raid5?
+Date: Thu, 06 Dec 2007 11:11:26 -0500
+Message-ID: <47581F2E.7020400@tmr.com>
+References: <Pine.LNX.4.64.0712021807260.10289@p34.internal.lan>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <47568DE1.1050108@dgreaves.com>
+In-Reply-To: <Pine.LNX.4.64.0712021807260.10289@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Greaves <david@dgreaves.com>
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Thank you.
-I want to make sure I understand.
+Justin Piszcz wrote:
+> root      2206     1  4 Dec02 ?        00:10:37 dd if /dev/zero of 
+> 1.out bs 1M
+> root      2207     1  4 Dec02 ?        00:10:38 dd if /dev/zero of 
+> 2.out bs 1M
+> root      2208     1  4 Dec02 ?        00:10:35 dd if /dev/zero of 
+> 3.out bs 1M
+> root      2209     1  4 Dec02 ?        00:10:45 dd if /dev/zero of 
+> 4.out bs 1M
+> root      2210     1  4 Dec02 ?        00:10:35 dd if /dev/zero of 
+> 5.out bs 1M
+> root      2211     1  4 Dec02 ?        00:10:35 dd if /dev/zero of 
+> 6.out bs 1M
+> root      2212     1  4 Dec02 ?        00:10:30 dd if /dev/zero of 
+> 7.out bs 1M
+> root      2213     1  4 Dec02 ?        00:10:42 dd if /dev/zero of 
+> 8.out bs 1M
+> root      2214     1  4 Dec02 ?        00:10:35 dd if /dev/zero of 
+> 9.out bs 1M
+> root      2215     1  4 Dec02 ?        00:10:37 dd if /dev/zero of 
+> 10.out bs 1M
+> root      3080 24.6  0.0  10356  1672 ?        D    01:22   5:51 dd if 
+> /dev/md3 of /dev/null bs 1M
+>
+> Was curious if when running 10 DD's (which are writing to the RAID 5) 
+> fine, no issues, suddenly all go into D-state and let the read/give it 
+> 100% priority?
+>
+> Is this normal?
 
-1- Does it matter which permutation of drives I use for xfs_repair (as 
-long as it tells me that the Structure needs cleaning)? When it comes to 
-linux I consider myself at intermediate level, but I am a beginner when 
-it comes to raid and filesystem issues.
+I'm jumping back to the start of this thread, because after reading all 
+the discussion I noticed that you are mixing apples and oranges here. 
+Your write programs are going to files in the filesystem, and your read 
+is going against the raw device. That may explain why you see something 
+I haven't noticed doing all filesystem i/o.
 
-2- After I do it, assuming that it worked, how do I reintegrate the 
-'missing' drive while keeping my data?
+I am going to do a large rsync to another filesystem in the next two 
+days, I will turn on some measurements when I do. But if you are just 
+investigating this behavior, perhaps you could retry with a single read 
+from a file rather than the device.
 
-Thank you for you time.
-Dragos
+    [...snip...]
+
+-- 
+Bill Davidsen <davidsen@tmr.com>
+  "Woe unto the statesman who makes war without a reason that will still
+  be valid when the war is over..." Otto von Bismark 
 
 
-David Greaves wrote:
-> Dragos wrote:
->   
->> Thank you for your very fast answers.
->>
->> First I tried 'fsck -n' on the existing array. The answer was that If I
->> wanted to check a XFS partition I should use 'xfs_check'. That seems to
->> say that my array was partitioned with xfs, not reiserfs. Am I correct?
->>
->> Then I tried the different permutations:
->> mdadm --create /dev/md0 --raid-devices=3 --level=5 missing /dev/sda1
->> /dev/sdb1
->> mount /dev/md0 temp
->> mdadm --stop --scan
->>
->> mdadm --create /dev/md0 --raid-devices=3 --level=5 /dev/sda1 missing
->> /dev/sdb1
->> mount /dev/md0 temp
->> mdadm --stop --scan
->>
->>     
-> [etc]
->
->   
->> With some arrays mount reported:
->>   mount: you must specify the filesystem type
->> and with others:
->>   mount: Structure needs cleaning
->>
->> No choice seems to have been successful.
->>     
->
-> OK, not as good as you could have hoped for.
->
-> Make sure you have the latest xfs tools.
->
-> you may want to try xfs_repair and you can use the -n (I think - check man page)
-> option.
->
-> You may need to force it to ignore the log
->
-> David
->
->
->
->   
