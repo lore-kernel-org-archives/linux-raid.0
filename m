@@ -1,41 +1,50 @@
-From: Eric Sandeen <sandeen@sandeen.net>
-Subject: Re: assemble vs create an array.......
-Date: Thu, 06 Dec 2007 11:12:05 -0600
-Message-ID: <47582D65.4000808@sandeen.net>
-References: <474F869D.5040503@mpigani.org> <18255.41044.614676.410107@notabene.brown> <47501D7E.7000804@dgreaves.com> <475552D2.4000802@mpigani.org> <47568DE1.1050108@dgreaves.com> <4758129D.40600@mpigani.org> <475825C0.4070605@msgid.tls.msk.ru>
+From: Andre Noll <maan@systemlinux.org>
+Subject: Re: raid6 check/repair
+Date: Thu, 6 Dec 2007 19:27:11 +0100
+Message-ID: <20071206182711.GN32704@skl-net.de>
+References: <474431BF.30103@ph.tum.de> <18244.64972.172685.796502@notabene.brown> <4745B375.4030500@ph.tum.de> <18254.21949.441607.134763@notabene.brown> <474F4880.8080300@eyal.emu.id.au> <47502140.1080601@ph.tum.de> <1196650421.14411.10.camel@elara.tcw.local> <47546019.5030300@ph.tum.de> <18261.49547.588360.436369@base.ty.sabi.co.UK> <47570A92.1090307@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <xfs-bounce@oss.sgi.com>
-In-Reply-To: <475825C0.4070605@msgid.tls.msk.ru>
-Sender: xfs-bounce@oss.sgi.com
-Errors-to: xfs-bounce@oss.sgi.com
-To: Michael Tokarev <mjt@tls.msk.ru>
-Cc: Dragos <dragos@mpigani.org>, David Greaves <david@dgreaves.com>, linux-raid@vger.kernel.org, xfs@oss.sgi.com
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="t5C3/nrmPumNj5sH"
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <47570A92.1090307@tmr.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: Peter Grandi <pg_lxra@lxra.for.sabi.co.UK>, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Michael Tokarev wrote:
 
-> It's sad that xfs refuses mount when "structure needs
-> cleaning" - the best way here is to actually mount it
-> and see how it looks like, instead of trying repair
-> tools.  Is there some option to force-mount it still
-> (in readonly mode, knowing it may OOPs kernel etc)?
+--t5C3/nrmPumNj5sH
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-depends what went wrong, but in general that error means that metadata
-corruption was encountered which was sufficient for xfs to abort
-whatever it was doing.  It's not done lightly; it's likely bailing out
-because it had no other choice.
+On 15:31, Bill Davidsen wrote:
 
-You can't "force mount" something which is sufficiently corrupted that
-xfs can't understand it anymore...  IOW you can't traverse and read
-corrupted/scrambled metadata, no mount option can help you.  :)
+> Thiemo posted metacode which I find appears correct,
 
-If the shutdown were encountered during use, you could maybe avoid the
-bad metadata.  If it's during mount that's probably a more fundamental
-problem.
+It assumes that _exactly_ one disk has bad data which is hard to verify
+in practice. But yes, it's probably the best one can do if both P and
+Q happen to be incorrect. IMHO mdadm shouldn't do this automatically
+though and should always keep backup copies of the data it overwrites
+with "good" data.
 
-kernel messages when you get the "structure needs cleaning" error would
-be a clue as to what it actually hit.
+Andre
+--=20
+The only person who always got his work done by Friday was Robinson Crusoe
 
--Eric
+--t5C3/nrmPumNj5sH
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.1 (GNU/Linux)
+
+iD8DBQFHWD7/Wto1QDEAkw8RAv37AJ0S7l1g2BnfaIwSHkbHeWPCvM6SiACgi4Pb
+FUgGcO09icQLxwZcW7ZXPDc=
+=dIEP
+-----END PGP SIGNATURE-----
+
+--t5C3/nrmPumNj5sH--
