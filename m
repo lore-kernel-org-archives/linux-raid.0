@@ -1,50 +1,110 @@
-From: Andre Noll <maan@systemlinux.org>
-Subject: Re: raid6 check/repair
-Date: Thu, 6 Dec 2007 19:27:11 +0100
-Message-ID: <20071206182711.GN32704@skl-net.de>
-References: <474431BF.30103@ph.tum.de> <18244.64972.172685.796502@notabene.brown> <4745B375.4030500@ph.tum.de> <18254.21949.441607.134763@notabene.brown> <474F4880.8080300@eyal.emu.id.au> <47502140.1080601@ph.tum.de> <1196650421.14411.10.camel@elara.tcw.local> <47546019.5030300@ph.tum.de> <18261.49547.588360.436369@base.ty.sabi.co.UK> <47570A92.1090307@tmr.com>
+From: Bernd Schubert <bs@q-leap.de>
+Subject: [PATCH] (2nd try) force parallel resync
+Date: Thu, 6 Dec 2007 20:06:15 +0100
+Message-ID: <200712062006.15406.bs@q-leap.de>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="t5C3/nrmPumNj5sH"
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <47570A92.1090307@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: Peter Grandi <pg_lxra@lxra.for.sabi.co.UK>, Linux RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org, Neil Brown <neilb@suse.de>
 List-Id: linux-raid.ids
 
+Hello,
 
---t5C3/nrmPumNj5sH
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+here is the second version of the patch. With this version also on  
+setting /sys/block/*/md/sync_force_parallel the sync_thread is woken up. 
+Though, I still don't understand why md_wakeup_thread() is not working.
 
-On 15:31, Bill Davidsen wrote:
 
-> Thiemo posted metacode which I find appears correct,
+Signed-off-by: Bernd Schubert <bs@q-leap.de>
 
-It assumes that _exactly_ one disk has bad data which is hard to verify
-in practice. But yes, it's probably the best one can do if both P and
-Q happen to be incorrect. IMHO mdadm shouldn't do this automatically
-though and should always keep backup copies of the data it overwrites
-with "good" data.
 
-Andre
---=20
-The only person who always got his work done by Friday was Robinson Crusoe
+Index: linux-2.6.22/drivers/md/md.c
+===================================================================
+--- linux-2.6.22.orig/drivers/md/md.c	2007-12-06 19:51:55.000000000 +0100
++++ linux-2.6.22/drivers/md/md.c	2007-12-06 19:52:33.000000000 +0100
+@@ -2843,6 +2843,41 @@ __ATTR(sync_speed_max, S_IRUGO|S_IWUSR, 
+ 
+ 
+ static ssize_t
++sync_force_parallel_show(mddev_t *mddev, char *page)
++{
++        return sprintf(page, "%d\n", mddev->parallel_resync);
++}
++
++static ssize_t
++sync_force_parallel_store(mddev_t *mddev, const char *buf, size_t len)
++{
++	char *e;
++	unsigned long n = simple_strtoul(buf, &e, 10);
++
++	if (!*buf || (*e && *e != '\n') || (n != 0 && n != 1))
++		return -EINVAL;
++
++	mddev->parallel_resync = n;
++
++	if (mddev->sync_thread) {
++		dprintk("md: waking up MD thread %s.\n",
++		       mddev->sync_thread->tsk->comm);
++		set_bit(THREAD_WAKEUP, &mddev->sync_thread->flags);
++		wake_up_process(mddev->sync_thread->tsk);
++
++/*		FIXME: why does md_wakeup_thread() not work?,
++		somehow related to:  wake_up(&thread->wqueue);
++		md_wakeup_thread(mddev->sync_thread); */
++	}
++	return len;
++}
++
++/* force parallel resync, even with shared block devices */
++static struct md_sysfs_entry md_sync_force_parallel =
++__ATTR(sync_force_parallel, S_IRUGO|S_IWUSR,
++       sync_force_parallel_show, sync_force_parallel_store);
++
++static ssize_t
+ sync_speed_show(mddev_t *mddev, char *page)
+ {
+ 	unsigned long resync, dt, db;
+@@ -2980,6 +3015,7 @@ static struct attribute *md_redundancy_a
+ 	&md_sync_min.attr,
+ 	&md_sync_max.attr,
+ 	&md_sync_speed.attr,
++	&md_sync_force_parallel.attr,
+ 	&md_sync_completed.attr,
+ 	&md_suspend_lo.attr,
+ 	&md_suspend_hi.attr,
+@@ -5264,8 +5300,9 @@ void md_do_sync(mddev_t *mddev)
+ 		ITERATE_MDDEV(mddev2,tmp) {
+ 			if (mddev2 == mddev)
+ 				continue;
+-			if (mddev2->curr_resync && 
+-			    match_mddev_units(mddev,mddev2)) {
++			if (!mddev->parallel_resync
++			&&  mddev2->curr_resync
++			&&  match_mddev_units(mddev,mddev2)) {
+ 				DEFINE_WAIT(wq);
+ 				if (mddev < mddev2 && mddev->curr_resync == 2) {
+ 					/* arbitrarily yield */
+Index: linux-2.6.22/include/linux/raid/md_k.h
+===================================================================
+--- linux-2.6.22.orig/include/linux/raid/md_k.h	2007-12-06 19:51:55.000000000 
++0100
++++ linux-2.6.22/include/linux/raid/md_k.h	2007-12-06 19:52:33.000000000 +0100
+@@ -170,6 +170,9 @@ struct mddev_s
+ 	int				sync_speed_min;
+ 	int				sync_speed_max;
+ 
++	/* resync even though the same disks are shared among md-devices */
++	int				parallel_resync;
++
+ 	int				ok_start_degraded;
+ 	/* recovery/resync flags 
+ 	 * NEEDED:   we might need to start a resync/recover
 
---t5C3/nrmPumNj5sH
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
-
-iD8DBQFHWD7/Wto1QDEAkw8RAv37AJ0S7l1g2BnfaIwSHkbHeWPCvM6SiACgi4Pb
-FUgGcO09icQLxwZcW7ZXPDc=
-=dIEP
------END PGP SIGNATURE-----
-
---t5C3/nrmPumNj5sH--
+-- 
+Bernd Schubert
+Q-Leap Networks GmbH
