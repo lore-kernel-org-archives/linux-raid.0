@@ -1,40 +1,23 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH] (2nd try) force parallel resync
-Date: Fri, 7 Dec 2007 13:10:37 +1100
-Message-ID: <18264.43933.856112.52203@notabene.brown>
-References: <200712062006.15406.bs@q-leap.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+From: NeilBrown <neilb@suse.de>
+Subject: [PATCH 000 of 3] md: a few little patches
+Date: Fri, 7 Dec 2007 16:41:36 +1100
+Message-ID: <20071207163806.7539.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Bernd Schubert on Thursday December 6
 Sender: linux-raid-owner@vger.kernel.org
-To: Bernd Schubert <bs@q-leap.de>
-Cc: linux-raid@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, "H. Peter Anvin" <hpa@zytor.com>
 List-Id: linux-raid.ids
 
-On Thursday December 6, bs@q-leap.de wrote:
-> Hello,
-> 
-> here is the second version of the patch. With this version also on  
-> setting /sys/block/*/md/sync_force_parallel the sync_thread is woken up. 
-> Though, I still don't understand why md_wakeup_thread() is not working.
+Following 3 patches for md provide some code tidyup and a small
+functionality improvement.
+They do not need to go into 2.6.24 but are definitely appropriate 25-rc1.
 
-Could give a little more detail on why you want this?  When do you
-want multiple arrays on the same device to sync at the same time?
-What exactly is the hardware like?
+(Patches made against 2.6.24-rc3-mm2)
 
-md threads generally run for a little while to perform some task, then
-stop and wait to be needed again.  md_wakeup_thread says "you are
-needed again".
-
-The resync/recovery thread is a bit different.  It just run md_do_sync
-once.  md_wakeup_thread is not really meaningful in that context.
-
-What you want is:
-		wake_up(&resync_wait);
-
-that will get any thread that is waiting for some other array to
-resync to wake up and see if something needs to be done.
-
+Thanks,
 NeilBrown
+
+
+ [PATCH 001 of 3] md: raid6: Fix mktable.c
+ [PATCH 002 of 3] md: raid6: clean up the style of raid6test/test.c
+ [PATCH 003 of 3] md: Update md bitmap during resync.
