@@ -1,7 +1,7 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [PATCH 001 of 3] md: raid6: Fix mktable.c
-Date: Fri, 7 Dec 2007 16:41:45 +1100
-Message-ID: <1071207054145.7870@suse.de>
+Subject: [PATCH 002 of 3] md: raid6: clean up the style of raid6test/test.c
+Date: Fri, 7 Dec 2007 16:41:53 +1100
+Message-ID: <1071207054153.7890@suse.de>
 References: <20071207163806.7539.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
@@ -11,24 +11,23 @@ List-Id: linux-raid.ids
 
 
 From: "H. Peter Anvin" <hpa@zytor.com>
+Date: Fri, 26 Oct 2007 11:22:42 -0700
 
-Make both mktables.c and its output CodingStyle compliant.  Update the
-copyright notice.
+Clean up the coding style in raid6test/test.c.  Break it apart into
+subfunctions to make the code more readable.
 
 Signed-off-by: H. Peter Anvin <hpa@zytor.com>
 Signed-off-by: Neil Brown <neilb@suse.de>
 
 ### Diffstat output
- ./drivers/md/mktables.c |   43 +++++++++++++++++--------------------------
- 1 file changed, 17 insertions(+), 26 deletions(-)
+ ./drivers/md/raid6test/test.c |  115 ++++++++++++++++++++++++------------------
+ 1 file changed, 68 insertions(+), 47 deletions(-)
 
-diff .prev/drivers/md/mktables.c ./drivers/md/mktables.c
---- .prev/drivers/md/mktables.c	2007-12-03 14:47:09.000000000 +1100
-+++ ./drivers/md/mktables.c	2007-12-03 14:56:06.000000000 +1100
-@@ -1,13 +1,10 @@
--#ident "$Id: mktables.c,v 1.2 2002/12/12 22:41:27 hpa Exp $"
--/* ----------------------------------------------------------------------- *
-+/* -*- linux-c -*- ------------------------------------------------------- *
+diff .prev/drivers/md/raid6test/test.c ./drivers/md/raid6test/test.c
+--- .prev/drivers/md/raid6test/test.c	2007-12-03 14:57:55.000000000 +1100
++++ ./drivers/md/raid6test/test.c	2007-12-03 14:57:55.000000000 +1100
+@@ -1,12 +1,10 @@
+ /* -*- linux-c -*- ------------------------------------------------------- *
   *
 - *   Copyright 2002 H. Peter Anvin - All Rights Reserved
 + *   Copyright 2002-2007 H. Peter Anvin - All Rights Reserved
@@ -44,72 +43,141 @@ diff .prev/drivers/md/mktables.c ./drivers/md/mktables.c
   *
   * ----------------------------------------------------------------------- */
  
-@@ -73,8 +70,8 @@ int main(int argc, char *argv[])
- 		for (j = 0; j < 256; j += 8) {
- 			printf("\t\t");
- 			for (k = 0; k < 8; k++)
--				printf("0x%02x, ", gfmul(i, j+k));
--			printf("\n");
-+				printf("0x%02x,%c", gfmul(i, j + k),
-+				       (k == 7) ? '\n' : ' ');
- 		}
- 		printf("\t},\n");
- 	}
-@@ -83,47 +80,41 @@ int main(int argc, char *argv[])
- 	/* Compute power-of-2 table (exponent) */
- 	v = 1;
- 	printf("\nconst u8 __attribute__((aligned(256)))\n"
--		"raid6_gfexp[256] =\n"
--		"{\n");
-+	       "raid6_gfexp[256] =\n" "{\n");
- 	for (i = 0; i < 256; i += 8) {
- 		printf("\t");
- 		for (j = 0; j < 8; j++) {
--			exptbl[i+j] = v;
--			printf("0x%02x, ", v);
-+			exptbl[i + j] = v;
-+			printf("0x%02x,%c", v, (j == 7) ? '\n' : ' ');
- 			v = gfmul(v, 2);
- 			if (v == 1)
- 				v = 0;	/* For entry 255, not a real entry */
- 		}
--		printf("\n");
- 	}
- 	printf("};\n");
+@@ -30,67 +28,87 @@ char *dataptrs[NDISKS];
+ char data[NDISKS][PAGE_SIZE];
+ char recovi[PAGE_SIZE], recovj[PAGE_SIZE];
  
- 	/* Compute inverse table x^-1 == x^254 */
- 	printf("\nconst u8 __attribute__((aligned(256)))\n"
--		"raid6_gfinv[256] =\n"
--		"{\n");
-+	       "raid6_gfinv[256] =\n" "{\n");
- 	for (i = 0; i < 256; i += 8) {
- 		printf("\t");
- 		for (j = 0; j < 8; j++) {
--			v = gfpow(i+j, 254);
--			invtbl[i+j] = v;
--			printf("0x%02x, ", v);
-+			invtbl[i + j] = v = gfpow(i + j, 254);
-+			printf("0x%02x,%c", v, (j == 7) ? '\n' : ' ');
+-void makedata(void)
++static void makedata(void)
+ {
+ 	int i, j;
+ 
+-	for (  i = 0 ; i < NDISKS ; i++ ) {
+-		for ( j = 0 ; j < PAGE_SIZE ; j++ ) {
++	for (i = 0; i < NDISKS; i++) {
++		for (j = 0; j < PAGE_SIZE; j++)
+ 			data[i][j] = rand();
+-		}
++
+ 		dataptrs[i] = data[i];
+ 	}
+ }
+ 
++static char disk_type(int d)
++{
++	switch (d) {
++	case NDISKS-2:
++		return 'P';
++	case NDISKS-1:
++		return 'Q';
++	default:
++		return 'D';
++	}
++}
++
++static int test_disks(int i, int j)
++{
++	int erra, errb;
++
++	memset(recovi, 0xf0, PAGE_SIZE);
++	memset(recovj, 0xba, PAGE_SIZE);
++
++	dataptrs[i] = recovi;
++	dataptrs[j] = recovj;
++
++	raid6_dual_recov(NDISKS, PAGE_SIZE, i, j, (void **)&dataptrs);
++
++	erra = memcmp(data[i], recovi, PAGE_SIZE);
++	errb = memcmp(data[j], recovj, PAGE_SIZE);
++
++	if (i < NDISKS-2 && j == NDISKS-1) {
++		/* We don't implement the DQ failure scenario, since it's
++		   equivalent to a RAID-5 failure (XOR, then recompute Q) */
++		erra = errb = 0;
++	} else {
++		printf("algo=%-8s  faila=%3d(%c)  failb=%3d(%c)  %s\n",
++		       raid6_call.name,
++		       i, disk_type(i),
++		       j, disk_type(j),
++		       (!erra && !errb) ? "OK" :
++		       !erra ? "ERRB" :
++		       !errb ? "ERRA" : "ERRAB");
++	}
++
++	dataptrs[i] = data[i];
++	dataptrs[j] = data[j];
++
++	return erra || errb;
++}
++
+ int main(int argc, char *argv[])
+ {
+-	const struct raid6_calls * const * algo;
++	const struct raid6_calls *const *algo;
+ 	int i, j;
+-	int erra, errb;
++	int err = 0;
+ 
+ 	makedata();
+ 
+-	for ( algo = raid6_algos ; *algo ; algo++ ) {
+-		if ( !(*algo)->valid || (*algo)->valid() ) {
++	for (algo = raid6_algos; *algo; algo++) {
++		if (!(*algo)->valid || (*algo)->valid()) {
+ 			raid6_call = **algo;
+ 
+ 			/* Nuke syndromes */
+ 			memset(data[NDISKS-2], 0xee, 2*PAGE_SIZE);
+ 
+ 			/* Generate assumed good syndrome */
+-			raid6_call.gen_syndrome(NDISKS, PAGE_SIZE, (void **)&dataptrs);
++			raid6_call.gen_syndrome(NDISKS, PAGE_SIZE,
++						(void **)&dataptrs);
+ 
+-			for ( i = 0 ; i < NDISKS-1 ; i++ ) {
+-				for ( j = i+1 ; j < NDISKS ; j++ ) {
+-					memset(recovi, 0xf0, PAGE_SIZE);
+-					memset(recovj, 0xba, PAGE_SIZE);
+-
+-					dataptrs[i] = recovi;
+-					dataptrs[j] = recovj;
+-
+-					raid6_dual_recov(NDISKS, PAGE_SIZE, i, j, (void **)&dataptrs);
+-
+-					erra = memcmp(data[i], recovi, PAGE_SIZE);
+-					errb = memcmp(data[j], recovj, PAGE_SIZE);
+-
+-					if ( i < NDISKS-2 && j == NDISKS-1 ) {
+-						/* We don't implement the DQ failure scenario, since it's
+-						   equivalent to a RAID-5 failure (XOR, then recompute Q) */
+-					} else {
+-						printf("algo=%-8s  faila=%3d(%c)  failb=%3d(%c)  %s\n",
+-						       raid6_call.name,
+-						       i, (i==NDISKS-2)?'P':'D',
+-						       j, (j==NDISKS-1)?'Q':(j==NDISKS-2)?'P':'D',
+-						       (!erra && !errb) ? "OK" :
+-						       !erra ? "ERRB" :
+-						       !errb ? "ERRA" :
+-						       "ERRAB");
+-					}
+-
+-					dataptrs[i] = data[i];
+-					dataptrs[j] = data[j];
+-				}
+-			}
++			for (i = 0; i < NDISKS-1; i++)
++				for (j = i+1; j < NDISKS; j++)
++					err += test_disks(i, j);
  		}
--		printf("\n");
+ 		printf("\n");
  	}
- 	printf("};\n");
+@@ -99,5 +117,8 @@ int main(int argc, char *argv[])
+ 	/* Pick the best algorithm test */
+ 	raid6_select_algo();
  
- 	/* Compute inv(2^x + 1) (exponent-xor-inverse) table */
- 	printf("\nconst u8 __attribute__((aligned(256)))\n"
--		"raid6_gfexi[256] =\n"
--		"{\n");
-+	       "raid6_gfexi[256] =\n" "{\n");
- 	for (i = 0; i < 256; i += 8) {
- 		printf("\t");
- 		for (j = 0; j < 8; j++)
--			printf("0x%02x, ", invtbl[exptbl[i+j]^1]);
--		printf("\n");
-+			printf("0x%02x,%c", invtbl[exptbl[i + j] ^ 1],
-+			       (j == 7) ? '\n' : ' ');
- 	}
--	printf("};\n\n");
-+	printf("};\n");
- 
- 	return 0;
+-	return 0;
++	if (err)
++		printf("\n*** ERRORS FOUND ***\n");
++
++	return err;
  }
