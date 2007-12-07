@@ -1,183 +1,142 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [PATCH 002 of 3] md: raid6: clean up the style of raid6test/test.c
-Date: Fri, 7 Dec 2007 16:41:53 +1100
-Message-ID: <1071207054153.7890@suse.de>
+Subject: [PATCH 003 of 3] md: Update md bitmap during resync.
+Date: Fri, 7 Dec 2007 16:42:00 +1100
+Message-ID: <1071207054200.7907@suse.de>
 References: <20071207163806.7539.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, "H. Peter Anvin" <hpa@zytor.com>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-From: "H. Peter Anvin" <hpa@zytor.com>
-Date: Fri, 26 Oct 2007 11:22:42 -0700
+Currently and md array with a write-intent bitmap does not updated
+that bitmap to reflect successful partial resync.  Rather the entire
+bitmap is updated when the resync completes.
 
-Clean up the coding style in raid6test/test.c.  Break it apart into
-subfunctions to make the code more readable.
+This is because there is no guarentee that resync requests will
+complete in order, and tracking each request individually is
+unnecessarily burdensome.
 
-Signed-off-by: H. Peter Anvin <hpa@zytor.com>
+However there is value in regularly updating the bitmap, so add code
+to periodically pause while all pending sync requests complete, then
+update the bitmap.  Doing this only every few seconds (the same as the
+bitmap update time) does not notciably affect resync performance.
+
 Signed-off-by: Neil Brown <neilb@suse.de>
 
 ### Diffstat output
- ./drivers/md/raid6test/test.c |  115 ++++++++++++++++++++++++------------------
- 1 file changed, 68 insertions(+), 47 deletions(-)
+ ./drivers/md/bitmap.c         |   34 +++++++++++++++++++++++++++++-----
+ ./drivers/md/raid1.c          |    1 +
+ ./drivers/md/raid10.c         |    2 ++
+ ./drivers/md/raid5.c          |    3 +++
+ ./include/linux/raid/bitmap.h |    3 +++
+ 5 files changed, 38 insertions(+), 5 deletions(-)
 
-diff .prev/drivers/md/raid6test/test.c ./drivers/md/raid6test/test.c
---- .prev/drivers/md/raid6test/test.c	2007-12-03 14:57:55.000000000 +1100
-+++ ./drivers/md/raid6test/test.c	2007-12-03 14:57:55.000000000 +1100
-@@ -1,12 +1,10 @@
- /* -*- linux-c -*- ------------------------------------------------------- *
-  *
-- *   Copyright 2002 H. Peter Anvin - All Rights Reserved
-+ *   Copyright 2002-2007 H. Peter Anvin - All Rights Reserved
-  *
-- *   This program is free software; you can redistribute it and/or modify
-- *   it under the terms of the GNU General Public License as published by
-- *   the Free Software Foundation, Inc., 53 Temple Place Ste 330,
-- *   Bostom MA 02111-1307, USA; either version 2 of the License, or
-- *   (at your option) any later version; incorporated herein by reference.
-+ *   This file is part of the Linux kernel, and is made available under
-+ *   the terms of the GNU General Public License version 2 or (at your
-+ *   option) any later version; incorporated herein by reference.
-  *
-  * ----------------------------------------------------------------------- */
- 
-@@ -30,67 +28,87 @@ char *dataptrs[NDISKS];
- char data[NDISKS][PAGE_SIZE];
- char recovi[PAGE_SIZE], recovj[PAGE_SIZE];
- 
--void makedata(void)
-+static void makedata(void)
- {
- 	int i, j;
- 
--	for (  i = 0 ; i < NDISKS ; i++ ) {
--		for ( j = 0 ; j < PAGE_SIZE ; j++ ) {
-+	for (i = 0; i < NDISKS; i++) {
-+		for (j = 0; j < PAGE_SIZE; j++)
- 			data[i][j] = rand();
--		}
-+
- 		dataptrs[i] = data[i];
- 	}
- }
- 
-+static char disk_type(int d)
-+{
-+	switch (d) {
-+	case NDISKS-2:
-+		return 'P';
-+	case NDISKS-1:
-+		return 'Q';
-+	default:
-+		return 'D';
+diff .prev/drivers/md/bitmap.c ./drivers/md/bitmap.c
+--- .prev/drivers/md/bitmap.c	2007-12-03 14:58:48.000000000 +1100
++++ ./drivers/md/bitmap.c	2007-12-03 14:59:00.000000000 +1100
+@@ -1342,14 +1342,38 @@ void bitmap_close_sync(struct bitmap *bi
+ 	 */
+ 	sector_t sector = 0;
+ 	int blocks;
+-	if (!bitmap) return;
++	if (!bitmap)
++		return;
+ 	while (sector < bitmap->mddev->resync_max_sectors) {
+ 		bitmap_end_sync(bitmap, sector, &blocks, 0);
+-/*
+-		if (sector < 500) printk("bitmap_close_sync: sec %llu blks %d\n",
+-					 (unsigned long long)sector, blocks);
+-*/		sector += blocks;
++		sector += blocks;
 +	}
 +}
 +
-+static int test_disks(int i, int j)
++void bitmap_cond_end_sync(struct bitmap *bitmap, sector_t sector)
 +{
-+	int erra, errb;
++	sector_t s = 0;
++	int blocks;
 +
-+	memset(recovi, 0xf0, PAGE_SIZE);
-+	memset(recovj, 0xba, PAGE_SIZE);
-+
-+	dataptrs[i] = recovi;
-+	dataptrs[j] = recovj;
-+
-+	raid6_dual_recov(NDISKS, PAGE_SIZE, i, j, (void **)&dataptrs);
-+
-+	erra = memcmp(data[i], recovi, PAGE_SIZE);
-+	errb = memcmp(data[j], recovj, PAGE_SIZE);
-+
-+	if (i < NDISKS-2 && j == NDISKS-1) {
-+		/* We don't implement the DQ failure scenario, since it's
-+		   equivalent to a RAID-5 failure (XOR, then recompute Q) */
-+		erra = errb = 0;
-+	} else {
-+		printf("algo=%-8s  faila=%3d(%c)  failb=%3d(%c)  %s\n",
-+		       raid6_call.name,
-+		       i, disk_type(i),
-+		       j, disk_type(j),
-+		       (!erra && !errb) ? "OK" :
-+		       !erra ? "ERRB" :
-+		       !errb ? "ERRA" : "ERRAB");
++	if (!bitmap)
++		return;
++	if (sector == 0) {
++		bitmap->last_end_sync = jiffies;
++		return;
 +	}
++	if (time_before(jiffies, (bitmap->last_end_sync
++				  + bitmap->daemon_sleep * HZ)))
++		return;
++	wait_event(bitmap->mddev->recovery_wait,
++		   atomic_read(&bitmap->mddev->recovery_active) == 0);
 +
-+	dataptrs[i] = data[i];
-+	dataptrs[j] = data[j];
-+
-+	return erra || errb;
-+}
-+
- int main(int argc, char *argv[])
- {
--	const struct raid6_calls * const * algo;
-+	const struct raid6_calls *const *algo;
- 	int i, j;
--	int erra, errb;
-+	int err = 0;
- 
- 	makedata();
- 
--	for ( algo = raid6_algos ; *algo ; algo++ ) {
--		if ( !(*algo)->valid || (*algo)->valid() ) {
-+	for (algo = raid6_algos; *algo; algo++) {
-+		if (!(*algo)->valid || (*algo)->valid()) {
- 			raid6_call = **algo;
- 
- 			/* Nuke syndromes */
- 			memset(data[NDISKS-2], 0xee, 2*PAGE_SIZE);
- 
- 			/* Generate assumed good syndrome */
--			raid6_call.gen_syndrome(NDISKS, PAGE_SIZE, (void **)&dataptrs);
-+			raid6_call.gen_syndrome(NDISKS, PAGE_SIZE,
-+						(void **)&dataptrs);
- 
--			for ( i = 0 ; i < NDISKS-1 ; i++ ) {
--				for ( j = i+1 ; j < NDISKS ; j++ ) {
--					memset(recovi, 0xf0, PAGE_SIZE);
--					memset(recovj, 0xba, PAGE_SIZE);
--
--					dataptrs[i] = recovi;
--					dataptrs[j] = recovj;
--
--					raid6_dual_recov(NDISKS, PAGE_SIZE, i, j, (void **)&dataptrs);
--
--					erra = memcmp(data[i], recovi, PAGE_SIZE);
--					errb = memcmp(data[j], recovj, PAGE_SIZE);
--
--					if ( i < NDISKS-2 && j == NDISKS-1 ) {
--						/* We don't implement the DQ failure scenario, since it's
--						   equivalent to a RAID-5 failure (XOR, then recompute Q) */
--					} else {
--						printf("algo=%-8s  faila=%3d(%c)  failb=%3d(%c)  %s\n",
--						       raid6_call.name,
--						       i, (i==NDISKS-2)?'P':'D',
--						       j, (j==NDISKS-1)?'Q':(j==NDISKS-2)?'P':'D',
--						       (!erra && !errb) ? "OK" :
--						       !erra ? "ERRB" :
--						       !errb ? "ERRA" :
--						       "ERRAB");
--					}
--
--					dataptrs[i] = data[i];
--					dataptrs[j] = data[j];
--				}
--			}
-+			for (i = 0; i < NDISKS-1; i++)
-+				for (j = i+1; j < NDISKS; j++)
-+					err += test_disks(i, j);
- 		}
- 		printf("\n");
++	sector &= ~((1ULL << CHUNK_BLOCK_SHIFT(bitmap)) - 1);
++	s = 0;
++	while (s < sector && s < bitmap->mddev->resync_max_sectors) {
++		bitmap_end_sync(bitmap, s, &blocks, 0);
++		s += blocks;
  	}
-@@ -99,5 +117,8 @@ int main(int argc, char *argv[])
- 	/* Pick the best algorithm test */
- 	raid6_select_algo();
- 
--	return 0;
-+	if (err)
-+		printf("\n*** ERRORS FOUND ***\n");
-+
-+	return err;
++	bitmap->last_end_sync = jiffies;
  }
+ 
+ static void bitmap_set_memory_bits(struct bitmap *bitmap, sector_t offset, int needed)
+
+diff .prev/drivers/md/raid10.c ./drivers/md/raid10.c
+--- .prev/drivers/md/raid10.c	2007-12-03 14:58:48.000000000 +1100
++++ ./drivers/md/raid10.c	2007-12-03 14:58:10.000000000 +1100
+@@ -1670,6 +1670,8 @@ static sector_t sync_request(mddev_t *md
+ 	if (!go_faster && conf->nr_waiting)
+ 		msleep_interruptible(1000);
+ 
++	bitmap_cond_end_sync(mddev->bitmap, sector_nr);
++
+ 	/* Again, very different code for resync and recovery.
+ 	 * Both must result in an r10bio with a list of bios that
+ 	 * have bi_end_io, bi_sector, bi_bdev set,
+
+diff .prev/drivers/md/raid1.c ./drivers/md/raid1.c
+--- .prev/drivers/md/raid1.c	2007-12-03 14:58:48.000000000 +1100
++++ ./drivers/md/raid1.c	2007-12-03 14:58:10.000000000 +1100
+@@ -1684,6 +1684,7 @@ static sector_t sync_request(mddev_t *md
+ 	if (!go_faster && conf->nr_waiting)
+ 		msleep_interruptible(1000);
+ 
++	bitmap_cond_end_sync(mddev->bitmap, sector_nr);
+ 	raise_barrier(conf);
+ 
+ 	conf->next_resync = sector_nr;
+
+diff .prev/drivers/md/raid5.c ./drivers/md/raid5.c
+--- .prev/drivers/md/raid5.c	2007-12-03 14:58:48.000000000 +1100
++++ ./drivers/md/raid5.c	2007-12-03 14:58:10.000000000 +1100
+@@ -4333,6 +4333,9 @@ static inline sector_t sync_request(mdde
+ 		return sync_blocks * STRIPE_SECTORS; /* keep things rounded to whole stripes */
+ 	}
+ 
++
++	bitmap_cond_end_sync(mddev->bitmap, sector_nr);
++
+ 	pd_idx = stripe_to_pdidx(sector_nr, conf, raid_disks);
+ 
+ 	sh = wait_for_inactive_cache(conf, sector_nr, raid_disks, pd_idx);
+
+diff .prev/include/linux/raid/bitmap.h ./include/linux/raid/bitmap.h
+--- .prev/include/linux/raid/bitmap.h	2007-12-03 14:58:48.000000000 +1100
++++ ./include/linux/raid/bitmap.h	2007-12-03 14:58:10.000000000 +1100
+@@ -244,6 +244,8 @@ struct bitmap {
+ 	 */
+ 	unsigned long daemon_lastrun; /* jiffies of last run */
+ 	unsigned long daemon_sleep; /* how many seconds between updates? */
++	unsigned long last_end_sync; /* when we lasted called end_sync to
++				      * update bitmap with resync progress */
+ 
+ 	atomic_t pending_writes; /* pending writes to the bitmap file */
+ 	wait_queue_head_t write_wait;
+@@ -275,6 +277,7 @@ void bitmap_endwrite(struct bitmap *bitm
+ int bitmap_start_sync(struct bitmap *bitmap, sector_t offset, int *blocks, int degraded);
+ void bitmap_end_sync(struct bitmap *bitmap, sector_t offset, int *blocks, int aborted);
+ void bitmap_close_sync(struct bitmap *bitmap);
++void bitmap_cond_end_sync(struct bitmap *bitmap, sector_t sector);
+ 
+ void bitmap_unplug(struct bitmap *bitmap);
+ void bitmap_daemon_work(struct bitmap *bitmap);
