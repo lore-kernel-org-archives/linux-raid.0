@@ -1,46 +1,96 @@
-From: Michael Makuch <linuxraid@makuch.org>
-Subject: Few questions
-Date: Fri, 07 Dec 2007 18:11:43 -0600
-Message-ID: <4759E13F.7000308@makuch.org>
+From: "Jeff Breidenbach" <jeff@jab.org>
+Subject: unable to remove failed drive
+Date: Fri, 7 Dec 2007 17:55:19 -0800
+Message-ID: <e03b90ae0712071755l1defdcaft511b2c41a10fe838@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: linux-raid list <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-I realize this is the developers list and though I am a developer I'm 
-not a developer
-of linux raid, but I can find no other source of answers to these questions:
+... and all access to array hangs indefinitely, resulting in unkillable zombie
+processes. Have to hard reboot the machine. Any thoughts on the matter?
 
-I've been using linux software raid (5) for a couple of years, having 
-recently uped
-to the 2.6.23 kernel (FC7, was previously on FC5). I just noticed that
-my /proc/mdstat shows
+===
 
-$ cat /proc/mdstat
-Personalities : [raid6] [raid5] [raid4]
-md0 : active raid5 etherd/e0.0[0] etherd/e0.2[9](S) etherd/e0.9[8] 
-etherd/e0.8[7] etherd/e0.7[6] etherd/e0.6[5] etherd/e0.5[4] 
-etherd/e0.4[3] etherd/e0.3[2] etherd/e0.1[1]
-      3907091968 blocks level 5, 64k chunk, algorithm 2 [9/9] [UUUUUUUUU]
-      [============>........]  resync = 64.5% (315458352/488386496) 
-finish=2228.0min speed=1292K/sec
+# cat /proc/mdstat
+Personalities : [raid1]
+md1 : active raid1 sde1[6](F) sdg1[1] sdb1[4] sdd1[3] sdc1[2]
+      488383936 blocks [6/4] [_UUUU_]
+
 unused devices: <none>
 
-and I have no idea where the raid6 came from. The only thing I've found 
-on raid6
-is a wikipedia.org page, nothing on 
-http://tldp.org/HOWTO/Software-RAID-HOWTO.html
+# mdadm --fail /dev/md1 /dev/sde1
+mdadm: set /dev/sde1 faulty in /dev/md1
 
-So my questions are:
+# mdadm --remove /dev/md1 /dev/sde1
+mdadm: hot remove failed for /dev/sde1: Device or resource busy
 
-- Is raid6 documented anywhere? If so, where? I'd like to take advantage 
-of it if
-it's really there.
-- Why does my array (which I configured as raid5) have personalities of
-raid6 (I can understand why raid4 would be there)?
-- Is this a.o.k for a raid5 array?
+# mdadm -D /dev/md1
+/dev/md1:
+        Version : 00.90.03
+  Creation Time : Sun Dec 25 16:12:34 2005
+     Raid Level : raid1
+     Array Size : 488383936 (465.76 GiB 500.11 GB)
+    Device Size : 488383936 (465.76 GiB 500.11 GB)
+   Raid Devices : 6
+  Total Devices : 5
+Preferred Minor : 1
+    Persistence : Superblock is persistent
 
-Thanks
+    Update Time : Fri Dec  7 11:37:46 2007
+          State : active, degraded
+ Active Devices : 4
+Working Devices : 4
+ Failed Devices : 1
+  Spare Devices : 0
+
+           UUID : f3ee6aa3:2f1d5767:f443dfc0:c23e80af
+         Events : 0.22331500
+
+    Number   Major   Minor   RaidDevice State
+       0       0        0        -      removed
+       1       8       97        1      active sync   /dev/sdg1
+       2       8       33        2      active sync   /dev/sdc1
+       3       8       49        3      active sync   /dev/sdd1
+       4       8       17        4      active sync   /dev/sdb1
+       5       0        0        -      removed
+
+       6       8       65        0      faulty   /dev/sde1
+
+
+# dmesg
+sd 4:0:0:0: SCSI error: return code = 0x8000002
+sde: Current: sense key: Aborted Command
+    Additional sense: Scsi parity error
+end_request: I/O error, dev sde, sector 594882271
+raid1: sde1: rescheduling sector 594882208
+ata5: command timeout
+ata5: translated ATA stat/err 0xff/00 to SCSI SK/ASC/ASCQ 0xb/47/00
+ata5: status=0xff { Busy }
+sd 4:0:0:0: SCSI error: return code = 0x8000002
+sde: Current: sense key: Aborted Command
+    Additional sense: Scsi parity error
+end_request: I/O error, dev sde, sector 528737607
+raid1: sde1: rescheduling sector 528737544
+ata5: command timeout
+ata5: translated ATA stat/err 0xff/00 to SCSI SK/ASC/ASCQ 0xb/47/00
+ata5: status=0xff { Busy }
+sd 4:0:0:0: SCSI error: return code = 0x8000002
+sde: Current: sense key: Aborted Command
+    Additional sense: Scsi parity error
+end_request: I/O error, dev sde, sector 814377071
+
+[...]
+
+md: cannot remove active disk sde1 from md1 ...
+md: could not bd_claim sde1.
+md: error, md_import_device() returned -16
+
+# cat /proc/version
+Linux version 2.6.17-2-amd64 (Debian 2.6.17-7) (waldi@debian.org) (gcc
+version 4.1.2 20060814 (prerelease) (Debian 4.1.1-11)) #1 SMP Thu Aug
+24 16:13:57 UTC 2006
