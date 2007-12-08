@@ -1,43 +1,46 @@
-From: Gabor Gombas <gombasg@sztaki.hu>
-Subject: Re: raid6 check/repair
-Date: Fri, 7 Dec 2007 18:34:34 +0100
-Message-ID: <20071207173434.GB5689@boogie.lpds.sztaki.hu>
-References: <474431BF.30103@ph.tum.de> <18244.64972.172685.796502@notabene.brown> <4745B375.4030500@ph.tum.de> <18254.21949.441607.134763@notabene.brown> <474F4880.8080300@eyal.emu.id.au> <47502140.1080601@ph.tum.de> <1196650421.14411.10.camel@elara.tcw.local> <47546019.5030300@ph.tum.de> <18261.49547.588360.436369@base.ty.sabi.co.UK> <47570A92.1090307@tmr.com>
+From: Michael Makuch <linuxraid@makuch.org>
+Subject: Few questions
+Date: Fri, 07 Dec 2007 18:11:43 -0600
+Message-ID: <4759E13F.7000308@makuch.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <47570A92.1090307@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: Peter Grandi <pg_lxra@lxra.for.sabi.co.UK>, Linux RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Dec 05, 2007 at 03:31:14PM -0500, Bill Davidsen wrote:
+I realize this is the developers list and though I am a developer I'm 
+not a developer
+of linux raid, but I can find no other source of answers to these questions:
 
-> BTW: if this can be done in a user program, mdadm, rather than by code in 
-> the kernel, that might well make everyone happy. Okay, realistically "less 
-> unhappy."
+I've been using linux software raid (5) for a couple of years, having 
+recently uped
+to the 2.6.23 kernel (FC7, was previously on FC5). I just noticed that
+my /proc/mdstat shows
 
-I start to like the idea. Of course you can't repair a running array
-from user space (just think about something re-writing the full stripe
-while mdadm is trying to fix the old data - you can get the data disks
-containing the new data but the "fixed" disks rewritten with the old
-data).
+$ cat /proc/mdstat
+Personalities : [raid6] [raid5] [raid4]
+md0 : active raid5 etherd/e0.0[0] etherd/e0.2[9](S) etherd/e0.9[8] 
+etherd/e0.8[7] etherd/e0.7[6] etherd/e0.6[5] etherd/e0.5[4] 
+etherd/e0.4[3] etherd/e0.3[2] etherd/e0.1[1]
+      3907091968 blocks level 5, 64k chunk, algorithm 2 [9/9] [UUUUUUUUU]
+      [============>........]  resync = 64.5% (315458352/488386496) 
+finish=2228.0min speed=1292K/sec
+unused devices: <none>
 
-We just need to make the kernel not to try to fix anything but merely
-report that something is wrong - but wait, using "check" instead of
-"repair" does that already.
+and I have no idea where the raid6 came from. The only thing I've found 
+on raid6
+is a wikipedia.org page, nothing on 
+http://tldp.org/HOWTO/Software-RAID-HOWTO.html
 
-So the kernel is fine as it is, we just need a simple user-space utility
-that can take the components of a non-running array and repair a given
-stripe using whatever method is appropriate. Shouldn't be too hard to
-write for anyone interested...
+So my questions are:
 
-Gabor
+- Is raid6 documented anywhere? If so, where? I'd like to take advantage 
+of it if
+it's really there.
+- Why does my array (which I configured as raid5) have personalities of
+raid6 (I can understand why raid4 would be there)?
+- Is this a.o.k for a raid5 array?
 
--- 
-     ---------------------------------------------------------
-     MTA SZTAKI Computer and Automation Research Institute
-                Hungarian Academy of Sciences
-     ---------------------------------------------------------
+Thanks
