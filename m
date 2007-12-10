@@ -1,57 +1,24 @@
-From: "Mike Snitzer" <snitzer@gmail.com>
-Subject: Re: [PATCH 003 of 3] md: Update md bitmap during resync.
-Date: Mon, 10 Dec 2007 15:04:14 -0500
-Message-ID: <170fa0d20712101204u7add338ah5d05d4d2501432d6@mail.gmail.com>
-References: <20071207163806.7539.patches@notabene> <1071207054200.7907@suse.de>
+From: "Jeff Breidenbach" <jeff@jab.org>
+Subject: Re: unable to remove failed drive
+Date: Mon, 10 Dec 2007 13:46:23 -0800
+Message-ID: <e03b90ae0712101346g7cd6d7a1l33304d2b4ca02f41@mail.gmail.com>
+References: <e03b90ae0712071755l1defdcaft511b2c41a10fe838@mail.gmail.com>
+	 <475D8FB8.90408@tmr.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_Part_18091_21201694.1197317054351"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1071207054200.7907@suse.de>
-Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
-List-Id: linux-raid.ids
-
-------=_Part_18091_21201694.1197317054351
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <475D8FB8.90408@tmr.com>
 Content-Disposition: inline
+Sender: linux-raid-owner@vger.kernel.org
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: linux-raid list <linux-raid@vger.kernel.org>
+List-Id: linux-raid.ids
 
-On Dec 7, 2007 12:42 AM, NeilBrown <neilb@suse.de> wrote:
->
-> Currently and md array with a write-intent bitmap does not updated
-> that bitmap to reflect successful partial resync.  Rather the entire
-> bitmap is updated when the resync completes.
->
-> This is because there is no guarentee that resync requests will
-> complete in order, and tracking each request individually is
-> unnecessarily burdensome.
->
-> However there is value in regularly updating the bitmap, so add code
-> to periodically pause while all pending sync requests complete, then
-> update the bitmap.  Doing this only every few seconds (the same as the
-> bitmap update time) does not notciably affect resync performance.
->
-> Signed-off-by: Neil Brown <neilb@suse.de>
+> This is without doubt really messed up!
 
-Hi Neil,
-
-You forgot to export bitmap_cond_end_sync.  Please see the attached patch.
-
-regards,
-Mike
-
-------=_Part_18091_21201694.1197317054351
-Content-Type: text/x-patch; name=export_bitmap_cond_end_sync.patch
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_fa1fkr4p0
-Content-Disposition: attachment; filename=export_bitmap_cond_end_sync.patch
-
-ZGlmZiAtLWdpdCBhL2RyaXZlcnMvbWQvYml0bWFwLmMgYi9kcml2ZXJzL21kL2JpdG1hcC5jCmlu
-ZGV4IGYzMWVhNGYuLmI1OTY1MzggMTAwNjQ0Ci0tLSBhL2RyaXZlcnMvbWQvYml0bWFwLmMKKysr
-IGIvZHJpdmVycy9tZC9iaXRtYXAuYwpAQCAtMTU2NiwzICsxNTY2LDQgQEAgRVhQT1JUX1NZTUJP
-TChiaXRtYXBfc3RhcnRfc3luYyk7CiBFWFBPUlRfU1lNQk9MKGJpdG1hcF9lbmRfc3luYyk7CiBF
-WFBPUlRfU1lNQk9MKGJpdG1hcF91bnBsdWcpOwogRVhQT1JUX1NZTUJPTChiaXRtYXBfY2xvc2Vf
-c3luYyk7CitFWFBPUlRfU1lNQk9MKGJpdG1hcF9jb25kX2VuZF9zeW5jKTsK
-------=_Part_18091_21201694.1197317054351--
+Thanks for the comments. Fortunately, a reboot cleared the problem (the
+array did resync afterwards). It might help that I've decided sde is too
+dangerous to have in the array, so I took it completely out of action.  In
+any case this wasn't so much a cry for help as providing a report for bug
+hunters. I'm happy to provide any follow up information if that is helpful.
