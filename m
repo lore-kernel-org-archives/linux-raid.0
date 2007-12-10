@@ -1,39 +1,90 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Kernel 2.6.23.9 / P35 Chipset + WD 750GB Drives (reset port)
-Date: Mon, 10 Dec 2007 17:23:39 +0900
-Message-ID: <475CF78B.3040404@gmail.com>
-References: <Pine.LNX.4.64.0712010619150.25643@p34.internal.lan> <Pine.LNX.4.64.0712011310410.30316@fbirervta.pbzchgretzou.qr> <Pine.LNX.4.64.0712010722590.28887@p34.internal.lan> <20071201174733.646a5c35@absurd> <Pine.LNX.4.64.0712011155110.6257@p34.internal.lan> <Pine.LNX.4.64.0712020409280.30169@p34.internal.lan>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: unable to remove failed drive
+Date: Mon, 10 Dec 2007 14:12:56 -0500
+Message-ID: <475D8FB8.90408@tmr.com>
+References: <e03b90ae0712071755l1defdcaft511b2c41a10fe838@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0712020409280.30169@p34.internal.lan>
+In-Reply-To: <e03b90ae0712071755l1defdcaft511b2c41a10fe838@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, apiszcz@solarrain.com
+To: Jeff Breidenbach <jeff@jab.org>
+Cc: linux-raid list <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Justin Piszcz wrote:
-> The badblocks did not do anything; however, when I built a software raid
-> 5 and the performed a dd:
-> 
-> /usr/bin/time dd if=/dev/zero of=fill_disk bs=1M
-> 
-> [42332.936615] ata5.00: exception Emask 0x2 SAct 0x7000 SErr 0x0 action
-> 0x2 frozen
-> [42332.936706] ata5.00: spurious completions during NCQ issue=0x0
-> SAct=0x7000 FIS=004040a1:00000800
-> 
-> Next test, I will turn off NCQ and try to make the problem re-occur.
-> If anyone else has any thoughts here..?
-> I ran long smart tests on all 3 disks, they all ran successfully.
-> 
-> Perhaps these drives need to be NCQ BLACKLISTED with the P35 chipset?
+Jeff Breidenbach wrote:
+> ... and all access to array hangs indefinitely, resulting in unkillable zombie
+> processes. Have to hard reboot the machine. Any thoughts on the matter?
+>
+> ===
+>
+> # cat /proc/mdstat
+> Personalities : [raid1]
+> md1 : active raid1 sde1[6](F) sdg1[1] sdb1[4] sdd1[3] sdc1[2]
+>       488383936 blocks [6/4] [_UUUU_]
+>
+> unused devices: <none>
+>
+> # mdadm --fail /dev/md1 /dev/sde1
+> mdadm: set /dev/sde1 faulty in /dev/md1
+>
+> # mdadm --remove /dev/md1 /dev/sde1
+> mdadm: hot remove failed for /dev/sde1: Device or resource busy
+>
+> # mdadm -D /dev/md1
+> /dev/md1:
+>         Version : 00.90.03
+>   Creation Time : Sun Dec 25 16:12:34 2005
+>      Raid Level : raid1
+>      Array Size : 488383936 (465.76 GiB 500.11 GB)
+>     Device Size : 488383936 (465.76 GiB 500.11 GB)
+>    Raid Devices : 6
+>   Total Devices : 5
+> Preferred Minor : 1
+>     Persistence : Superblock is persistent
+>
+>     Update Time : Fri Dec  7 11:37:46 2007
+>           State : active, degraded
+>  Active Devices : 4
+> Working Devices : 4
+>  Failed Devices : 1
+>   Spare Devices : 0
+>
+>            UUID : f3ee6aa3:2f1d5767:f443dfc0:c23e80af
+>          Events : 0.22331500
+>
+>     Number   Major   Minor   RaidDevice State
+>        0       0        0        -      removed
+>        1       8       97        1      active sync   /dev/sdg1
+>        2       8       33        2      active sync   /dev/sdc1
+>        3       8       49        3      active sync   /dev/sdd1
+>        4       8       17        4      active sync   /dev/sdb1
+>        5       0        0        -      removed
+>
+>        6       8       65        0      faulty   /dev/sde1
+>
+>   
+This is without doubt really messed up! You have four active devices, 
+four working devices, five total devices, and six(!) raid devices. And 
+at the end of the output seven(!!) devices, four active, two removed, 
+and one faulty. I wouldn't even be able to make a guess how you go to 
+this point, but I would guess that some system administration was involved.
 
-That was me being stupid.  Patches for both upstream and -stable
-branches are posted.  These will go away.
+If this is an array you can live without and still have a working system 
+I do have a thought, however. If you can unmount everything on this 
+device and then stop it, you may be able to assemble (-A) it with just 
+the four working drives. If that succeeds you may be able to remove 
+sde1, although I suspect that the two removed drives shown are really 
+caused by partially removal of sde1 in the past. Either that or you have 
+a serious problem with reliability...
 
-Thanks.
+I'm sure others will have some ideas on this, if it were mine a backup 
+would be my first order of business.
 
 -- 
-tejun
+Bill Davidsen <davidsen@tmr.com>
+  "Woe unto the statesman who makes war without a reason that will still
+  be valid when the war is over..." Otto von Bismark 
+
+
