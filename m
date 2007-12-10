@@ -1,90 +1,57 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: unable to remove failed drive
-Date: Mon, 10 Dec 2007 14:12:56 -0500
-Message-ID: <475D8FB8.90408@tmr.com>
-References: <e03b90ae0712071755l1defdcaft511b2c41a10fe838@mail.gmail.com>
+From: "Mike Snitzer" <snitzer@gmail.com>
+Subject: Re: [PATCH 003 of 3] md: Update md bitmap during resync.
+Date: Mon, 10 Dec 2007 15:04:14 -0500
+Message-ID: <170fa0d20712101204u7add338ah5d05d4d2501432d6@mail.gmail.com>
+References: <20071207163806.7539.patches@notabene> <1071207054200.7907@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+	boundary="----=_Part_18091_21201694.1197317054351"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <e03b90ae0712071755l1defdcaft511b2c41a10fe838@mail.gmail.com>
+In-Reply-To: <1071207054200.7907@suse.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jeff Breidenbach <jeff@jab.org>
-Cc: linux-raid list <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.de>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-Jeff Breidenbach wrote:
-> ... and all access to array hangs indefinitely, resulting in unkillable zombie
-> processes. Have to hard reboot the machine. Any thoughts on the matter?
->
-> ===
->
-> # cat /proc/mdstat
-> Personalities : [raid1]
-> md1 : active raid1 sde1[6](F) sdg1[1] sdb1[4] sdd1[3] sdc1[2]
->       488383936 blocks [6/4] [_UUUU_]
->
-> unused devices: <none>
->
-> # mdadm --fail /dev/md1 /dev/sde1
-> mdadm: set /dev/sde1 faulty in /dev/md1
->
-> # mdadm --remove /dev/md1 /dev/sde1
-> mdadm: hot remove failed for /dev/sde1: Device or resource busy
->
-> # mdadm -D /dev/md1
-> /dev/md1:
->         Version : 00.90.03
->   Creation Time : Sun Dec 25 16:12:34 2005
->      Raid Level : raid1
->      Array Size : 488383936 (465.76 GiB 500.11 GB)
->     Device Size : 488383936 (465.76 GiB 500.11 GB)
->    Raid Devices : 6
->   Total Devices : 5
-> Preferred Minor : 1
->     Persistence : Superblock is persistent
->
->     Update Time : Fri Dec  7 11:37:46 2007
->           State : active, degraded
->  Active Devices : 4
-> Working Devices : 4
->  Failed Devices : 1
->   Spare Devices : 0
->
->            UUID : f3ee6aa3:2f1d5767:f443dfc0:c23e80af
->          Events : 0.22331500
->
->     Number   Major   Minor   RaidDevice State
->        0       0        0        -      removed
->        1       8       97        1      active sync   /dev/sdg1
->        2       8       33        2      active sync   /dev/sdc1
->        3       8       49        3      active sync   /dev/sdd1
->        4       8       17        4      active sync   /dev/sdb1
->        5       0        0        -      removed
->
->        6       8       65        0      faulty   /dev/sde1
->
->   
-This is without doubt really messed up! You have four active devices, 
-four working devices, five total devices, and six(!) raid devices. And 
-at the end of the output seven(!!) devices, four active, two removed, 
-and one faulty. I wouldn't even be able to make a guess how you go to 
-this point, but I would guess that some system administration was involved.
+------=_Part_18091_21201694.1197317054351
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-If this is an array you can live without and still have a working system 
-I do have a thought, however. If you can unmount everything on this 
-device and then stop it, you may be able to assemble (-A) it with just 
-the four working drives. If that succeeds you may be able to remove 
-sde1, although I suspect that the two removed drives shown are really 
-caused by partially removal of sde1 in the past. Either that or you have 
-a serious problem with reliability...
+On Dec 7, 2007 12:42 AM, NeilBrown <neilb@suse.de> wrote:
+>
+> Currently and md array with a write-intent bitmap does not updated
+> that bitmap to reflect successful partial resync.  Rather the entire
+> bitmap is updated when the resync completes.
+>
+> This is because there is no guarentee that resync requests will
+> complete in order, and tracking each request individually is
+> unnecessarily burdensome.
+>
+> However there is value in regularly updating the bitmap, so add code
+> to periodically pause while all pending sync requests complete, then
+> update the bitmap.  Doing this only every few seconds (the same as the
+> bitmap update time) does not notciably affect resync performance.
+>
+> Signed-off-by: Neil Brown <neilb@suse.de>
 
-I'm sure others will have some ideas on this, if it were mine a backup 
-would be my first order of business.
+Hi Neil,
 
--- 
-Bill Davidsen <davidsen@tmr.com>
-  "Woe unto the statesman who makes war without a reason that will still
-  be valid when the war is over..." Otto von Bismark 
+You forgot to export bitmap_cond_end_sync.  Please see the attached patch.
 
+regards,
+Mike
 
+------=_Part_18091_21201694.1197317054351
+Content-Type: text/x-patch; name=export_bitmap_cond_end_sync.patch
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_fa1fkr4p0
+Content-Disposition: attachment; filename=export_bitmap_cond_end_sync.patch
+
+ZGlmZiAtLWdpdCBhL2RyaXZlcnMvbWQvYml0bWFwLmMgYi9kcml2ZXJzL21kL2JpdG1hcC5jCmlu
+ZGV4IGYzMWVhNGYuLmI1OTY1MzggMTAwNjQ0Ci0tLSBhL2RyaXZlcnMvbWQvYml0bWFwLmMKKysr
+IGIvZHJpdmVycy9tZC9iaXRtYXAuYwpAQCAtMTU2NiwzICsxNTY2LDQgQEAgRVhQT1JUX1NZTUJP
+TChiaXRtYXBfc3RhcnRfc3luYyk7CiBFWFBPUlRfU1lNQk9MKGJpdG1hcF9lbmRfc3luYyk7CiBF
+WFBPUlRfU1lNQk9MKGJpdG1hcF91bnBsdWcpOwogRVhQT1JUX1NZTUJPTChiaXRtYXBfY2xvc2Vf
+c3luYyk7CitFWFBPUlRfU1lNQk9MKGJpdG1hcF9jb25kX2VuZF9zeW5jKTsK
+------=_Part_18091_21201694.1197317054351--
