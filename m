@@ -1,18 +1,19 @@
-From: Richard Scobie <richard@sauce.co.nz>
+From: Neil Brown <neilb@suse.de>
 Subject: Re: mdadm break / restore soft mirror
-Date: Thu, 13 Dec 2007 11:27:06 +1300
-Message-ID: <4760603A.7030902@sauce.co.nz>
+Date: Thu, 13 Dec 2007 12:19:17 +1100
+Message-ID: <18272.34965.638276.892803@notabene.brown>
 References: <05ED21952E28E94E8352836547A6BA37042318B3@achmsx001.hsa.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <05ED21952E28E94E8352836547A6BA37042318B3@achmsx001.hsa.co.uk>
+In-Reply-To: message from Brett Maton on Wednesday December 12
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Brett Maton <Brett.Maton@simplyhealth.co.uk>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Brett Maton wrote:
+On Wednesday December 12, Brett.Maton@simplyhealth.co.uk wrote:
 > Hi, 
 > 
 >   Question for you guys. 
@@ -29,11 +30,14 @@ Brett Maton wrote:
 >   restore soft mirror and let it resync / rebuild itself. 
 > 
 >   Would the above intentional break/fix of the mirror cause any problems? 
-> 
 
-Is there a reason you can't use rsync to just update changes from the 
-previous backup, once you have your initial one?
+No, it should work fine.
 
-Regards,
+If you can be certain that the device that you break out of the mirror
+is never altered, then you could add an internal bitmap while the
+array is split and the rebuild will go much faster.
+However even mounting a device readonly will sometimes alter the
+content (e.g. if ext3 needs to replay the journal) so you need to be
+very careful.
 
-Richard
+NeilBrown
