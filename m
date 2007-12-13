@@ -1,43 +1,35 @@
-From: Neil Brown <neilb@suse.de>
+From: "Jeff Breidenbach" <jeff@jab.org>
 Subject: Re: mdadm break / restore soft mirror
-Date: Thu, 13 Dec 2007 12:19:17 +1100
-Message-ID: <18272.34965.638276.892803@notabene.brown>
+Date: Wed, 12 Dec 2007 20:00:39 -0800
+Message-ID: <e03b90ae0712122000m439069y8ccad65c59cf4de9@mail.gmail.com>
 References: <05ED21952E28E94E8352836547A6BA37042318B3@achmsx001.hsa.co.uk>
+	 <18272.34965.638276.892803@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Brett Maton on Wednesday December 12
+In-Reply-To: <18272.34965.638276.892803@notabene.brown>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Brett Maton <Brett.Maton@simplyhealth.co.uk>
-Cc: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: Brett Maton <Brett.Maton@simplyhealth.co.uk>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wednesday December 12, Brett.Maton@simplyhealth.co.uk wrote:
-> Hi, 
-> 
->   Question for you guys. 
-> 
->   A brief history: 
->   RHEL 4 AS 
->   I have a partition with way to many small files on (Usually around a couple of million) that needs to be backed up, standard
-> 
->   methods mean that a restore is impossibly slow due to the sheer volume of files. 
->   Solution, raw backup /restore of the device.  However the partition is permanently being accessed. 
-> 
->   Proposed solution is to use software raid mirror.  Before backup starts, break the soft mirror unmount and backup partition
-> 
->   restore soft mirror and let it resync / rebuild itself. 
-> 
->   Would the above intentional break/fix of the mirror cause any problems? 
+>Proposed solution is to use software raid mirror.  Before backup starts,
+>break the soft mirror unmount and backup partition
 
-No, it should work fine.
+I use this method for backup once a week.
 
-If you can be certain that the device that you break out of the mirror
-is never altered, then you could add an internal bitmap while the
-array is split and the rebuild will go much faster.
-However even mounting a device readonly will sometimes alter the
-content (e.g. if ext3 needs to replay the journal) so you need to be
-very careful.
+One challenge is drives aren't great at steaming data quickly (for the resync)
+while also doing a lot of random access. Having a little extra redundancy (think
+3 or more drives in the RAID-1) can really help.
 
-NeilBrown
+>If you can be certain that the device that you break out of the mirror
+>is never altered, then you could add an internal bitmap while the
+>array is split and the rebuild will go much faster.
+
+Is this also a viable speedup for the "kep rotating backup drives through
+the array" strategy? If so, how much speedup are we talking about? Assume
+the array changes by 1% before a backup drive gets rotated in again.
+
+Jeff
