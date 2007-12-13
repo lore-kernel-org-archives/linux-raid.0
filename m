@@ -1,145 +1,90 @@
-From: greg@enjellic.com
-Subject: Auto assembly errors with mdadm and 64K aligned partitions.
-Date: Thu, 13 Dec 2007 11:15:44 -0600
-Message-ID: <200712131715.lBDHFitB005137@wind.enjellic.com>
-Reply-To: greg@enjellic.com
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: Kernel 2.6.23.9 / P35 Chipset + WD 750GB Drives (reset port)
+Date: Thu, 13 Dec 2007 17:27:39 -0500
+Message-ID: <4761B1DB.20600@tmr.com>
+References: <Pine.LNX.4.64.0712010619150.25643@p34.internal.lan> <Pine.LNX.4.64.0712011310410.30316@fbirervta.pbzchgretzou.qr> <4751AB91.2000207@tmr.com> <475CF57E.7060406@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <475CF57E.7060406@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jan Engelhardt <jengelh@computergmbh.de>, Justin Piszcz <jpiszcz@lucidpixels.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, apiszcz@solarrain.com
 List-Id: linux-raid.ids
 
-Good morning to Neil and everyone on the list, hope your respective
-days are going well.
+Tejun Heo wrote:
+> Bill Davidsen wrote:
+>   
+>> Jan Engelhardt wrote:
+>>     
+>>> On Dec 1 2007 06:26, Justin Piszcz wrote:
+>>>       
+>>>> I ran the following:
+>>>>
+>>>> dd if=/dev/zero of=/dev/sdc
+>>>> dd if=/dev/zero of=/dev/sdd
+>>>> dd if=/dev/zero of=/dev/sde
+>>>>
+>>>> (as it is always a very good idea to do this with any new disk)
+>>>>         
+>>> Why would you care about what's on the disk? fdisk, mkfs and
+>>> the day-to-day operation will overwrite it _anyway_.
+>>>
+>>> (If you think the disk is not empty, you should look at it
+>>> and copy off all usable warez beforehand :-)
+>>>
+>>>       
+>> Do you not test your drive for minimum functionality before using them?
+>>     
+>
+> I personally don't.
+>
+>   
+>> Also, if you have the tools to check for relocated sectors before and
+>> after doing this, that's a good idea as well. S.M.A.R.T is your friend.
+>> And when writing /dev/zero to a drive, if it craps out you have less
+>> emotional attachment to the data.
+>>     
+>
+> Writing all zero isn't too useful tho.  Drive failing reallocation on
+> write is catastrophic failure.  It means that the drive wanna relocate
+> but can't because it used up all its extra space which usually indicates
+> something else is seriously wrong with the drive.  The drive will have
+> to go to the trash can.  This is all serious and bad but the catch is
+> that in such cases the problem usually stands like a sore thumb so
+> either vendor doesn't ship such drive or you'll find the failure very
+> early.  I personally haven't seen any such failure yet.  Maybe I'm lucky.
+>   
 
-Quick overview.  We've isolated what appears to be a failure mode with
-mdadm assembling RAID1 (and presumably other level) volumes which
-kernel based RAID autostart is able to do correctly.
-
-We picked up on the problem with OES based systems with SAN attached
-volumes.  I am able to reproduce the problem under 2.6.23.9 UML with
-version 2.6.4 of mdadm.
-
-The problem occurs when partitions are aligned on a 64K boundary.  Any
-64K boundary seems to work, ie 128, 256 and 512 sector offsets.
-
-Block devices look like the following:
-
----------------------------------------------------------------------------
-cat /proc/partions:
-
-major minor  #blocks  name
-
-  98     0     262144 ubda
-  98    16      10240 ubdb
-  98    17      10176 ubdb1
-  98    32      10240 ubdc
-  98    33      10176 ubdc1
----------------------------------------------------------------------------
-
-
-A RAID1 device was created and started consisting of the /dev/ubdb1
-and /dev/ubdc1 partitions.  An /etc/mdadm.conf file was generated
-which contains the following:
-
----------------------------------------------------------------------------
-DEVICE partitions
-ARRAY /dev/md0 level=raid1 num-devices=2 UUID=e604c49e:d3a948fd:13d9bc11:dbc82862
----------------------------------------------------------------------------
-
-
-The RAID1 device was shutdown.  The following assembly command yielded:
-
----------------------------------------------------------------------------
-mdadm -As
-
-mdadm: WARNING /dev/ubdc1 and /dev/ubdc appear to have very similar superblocks.      If they are really different, please --zero the superblock on one
-      If they are the same or overlap, please remove one from the
-      DEVICE list in mdadm.conf.
----------------------------------------------------------------------------
-
-
-Interestingly after each failed assembly one of the partitions is
-de-registered from the kernel.  This results in the third assembly
-attempt succeeding.  Things seem a bit confused at this point however.
-
-The kernel considers the following block devices available:
-
----------------------------------------------------------------------------
-cat /proc/partitions:
-
-major minor  #blocks  name
-
-  98     0     262144 ubda
-  98    16      10240 ubdb
-  98    32      10240 ubdc
-   9     0      10112 md0
----------------------------------------------------------------------------
-
-While the active RAID1 volume looks like the following:
-
----------------------------------------------------------------------------
-cat /proc/mdstat:
-
-Personalities : [raid1]
-md0 : active raid1 ubdb[0] ubdc[1]
-      10112 blocks [2/2] [UU]
-
-unused devices: <none>
----------------------------------------------------------------------------
+The problem is usually not with what the vendor ships, but what the 
+carrier delivers. Bad handling does happen, "drop ship" can have several 
+meanings, and I have received shipments with the "G sensor" in the case 
+triggered. Zero is a handy source of data, but the important thing is to 
+look at the relocated sector count before and after the write. If there 
+are a lot of bad sectors initially, the drive is probably a poor choice 
+for anything critical.
+> Most data loss occurs when the drive fails to read what it thought it
+> wrote successfully and the opposite - reading and dumping the whole disk
+> to /dev/null periodically is probably much better than writing zeros as
+> it allows the drive to find out deteriorating sector early while it's
+> still readable and relocate.  But then again I think it's an overkill.
+>
+> Writing zeros to sectors is more useful as cure rather than prevention.
+>  If your drive fails to read a sector, write whatever value to the
+> sector.  The drive will forget about the data on the damaged sector and
+> reallocate and write new data to it.  Of course, you lose data which was
+> originally on the sector.
+>
+> I personally think it's enough to just throw in an extra disk and make
+> it RAID0 or 5 and rebuild the array if read fails on one of the disks.
+> If write fails or read fail continues, replace the disk.  Of course, if
+> you wanna be extra cautious, good for you.  :-)
+>
+>   
+-- 
+Bill Davidsen <davidsen@tmr.com>
+  "Woe unto the statesman who makes war without a reason that will still
+  be valid when the war is over..." Otto von Bismark 
 
 
-The RAID1 device was then shutdown.  The /dev/ubdb1 and /dev/ubdc1
-partitions were set to 'Linux raid autodetect'.
-
-The UML session was shutdown and a new UML kernel with RAID1 compiled
-in with autodetect enabled was started.  The kernel discovered and
-activated the RAID1 device:
-
----------------------------------------------------------------------------
-cat /proc/mdstat:
-
-Personalities : [raid1]
-md0 : active raid1 ubdc1[1] ubdb1[0]
-      10112 blocks [2/2] [UU]
-
-unused devices: <none>
----------------------------------------------------------------------------
-
-Block devices as follows:
-
----------------------------------------------------------------------------
-cat /proc/partitions:
-
-major minor  #blocks  name
-
-  98     0     262144 ubda
-  98    16      10240 ubdb
-  98    17      10176 ubdb1
-  98    32      10240 ubdc
-  98    33      10176 ubdc1
-   9     0      10112 md0
----------------------------------------------------------------------------
-
-
-The problem occurs with the default 0.9 superblocks.  Volumes created
-with 1.0 based superblocks start properly.
-
-I can provide more information and testing if needed.  The problem
-appears to be trivially reproducible however.
-
-I will look forward to any thoughts or suggestions from the
-collective.
-
-Best wishes for a productive remainder of the week.
-
-As always,
-Dr. G.W. Wettstein, Ph.D.   Enjellic Systems Development, LLC.
-4206 N. 19th Ave.           Specializing in information infra-structure
-Fargo, ND  58102            development.
-PH: 701-281-1686
-FAX: 701-281-3949           EMAIL: greg@enjellic.com
-------------------------------------------------------------------------------
-"The couple is registered at Herbergers, Target and Fleet Farm."
-                                -- Wedding invitation
-                                   West Central Minnesota
