@@ -1,68 +1,42 @@
-From: NeilBrown <neilb@suse.de>
-Subject: [PATCH 007 of 7] md: Get name for block device in sysfs
-Date: Fri, 14 Dec 2007 17:26:47 +1100
-Message-ID: <1071214062647.1928@suse.de>
-References: <20071214171950.1308.patches@notabene>
+From: "Jeff Breidenbach" <jeff@jab.org>
+Subject: Re: mdadm break / restore soft mirror
+Date: Thu, 13 Dec 2007 23:40:02 -0800
+Message-ID: <e03b90ae0712132340t61e3bef6x8159e6d24da9c254@mail.gmail.com>
+References: <05ED21952E28E94E8352836547A6BA37042318B3@achmsx001.hsa.co.uk>
+	 <18272.34965.638276.892803@notabene.brown>
+	 <e03b90ae0712122000m439069y8ccad65c59cf4de9@mail.gmail.com>
+	 <18272.45576.359862.395170@notabene.brown>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <18272.45576.359862.395170@notabene.brown>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>
+To: Neil Brown <neilb@suse.de>
+Cc: Brett Maton <Brett.Maton@simplyhealth.co.uk>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+> What you could do is set the number of devices in the array to 3 so
+> they it always appears to be degraded, then rotate your backup drives
+> through the array.  The number of dirty bits in the bitmap will
+> steadily grow and so resyncs will take longer.  Once it crosses some
+> threshold you set the array back to having 2 devices to that it looks
+> non-degraded and clean the bitmap.  Then each device will need a full
+> resync after which you will get away with partial resyncs for a while.
 
-Given an fd on a block device, returns a string like
+I don't undertand why clearing the bitmap causes a rebuild of
+all devices. I think I have a conceptual misunderstanding.  Consider
+a RAID-1 and three physical disks involved, A,B,C
 
-	/block/sda/sda1
+1) A and B are in the RAID, everything is synced
+2) Create a bitmap on the array
+3) Fail + remove B
+4) Hot add C, wait for C to sync
+5) Fail + remove C
+6) Hot add B, wait for B to resync
+7) Goto step 3
 
-which can be used to find related information in /sys.
-
-Ideally we should have an ioctl that works on char devices as well,
-but that seems far from trivial, so it seems reasonable to have
-this until the later can be implemented.
-
-Cc: Jens Axboe <jens.axboe@oracle.com>
-Signed-off-by: Neil Brown <neilb@suse.de>
-
-### Diffstat output
- ./block/ioctl.c      |   13 +++++++++++++
- ./include/linux/fs.h |    2 ++
- 2 files changed, 15 insertions(+)
-
-diff .prev/block/ioctl.c ./block/ioctl.c
---- .prev/block/ioctl.c	2007-12-14 17:18:50.000000000 +1100
-+++ ./block/ioctl.c	2007-12-14 16:15:41.000000000 +1100
-@@ -227,8 +227,21 @@ int blkdev_ioctl(struct inode *inode, st
- 	struct block_device *bdev = inode->i_bdev;
- 	struct gendisk *disk = bdev->bd_disk;
- 	int ret, n;
-+	char b[BDEVNAME_SIZE*2  + 10];
- 
- 	switch(cmd) {
-+	case BLKGETNAME:
-+		strcpy(b, "/block/");
-+		bdevname(bdev->bd_contains, b+7);
-+		if (bdev->bd_contains != bdev) {
-+			char *e = b + strlen(b);
-+			*e++ = '/';
-+			bdevname(bdev, e);
-+		}
-+		if (copy_to_user((char __user *)arg, b, strlen(b)+1))
-+			return -EFAULT;
-+		return 0;
-+
- 	case BLKFLSBUF:
- 		if (!capable(CAP_SYS_ADMIN))
- 			return -EACCES;
-
-diff .prev/include/linux/fs.h ./include/linux/fs.h
---- .prev/include/linux/fs.h	2007-12-14 17:18:50.000000000 +1100
-+++ ./include/linux/fs.h	2007-12-14 16:13:03.000000000 +1100
-@@ -218,6 +218,8 @@ extern int dir_notify_enable;
- #define BLKTRACESTOP _IO(0x12,117)
- #define BLKTRACETEARDOWN _IO(0x12,118)
- 
-+#define BLKGETNAME _IOR(0x12, 119, char [1024])
-+
- #define BMAP_IOCTL 1		/* obsolete - kept for compatibility */
- #define FIBMAP	   _IO(0x00,1)	/* bmap access */
- #define FIGETBSZ   _IO(0x00,2)	/* get the block size used for bmap */
+I understand that after a while we might want to clean the bitmap
+and that would trigger a full resync for drives B and C. I don't
+understand why it would ever cause a resync for drive A.
