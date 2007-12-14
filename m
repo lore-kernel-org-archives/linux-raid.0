@@ -1,31 +1,29 @@
-From: Neil Brown <neilb@suse.de>
-Subject: RE: mdadm break / restore soft mirror
-Date: Fri, 14 Dec 2007 11:04:30 +1100
-Message-ID: <18273.51342.76883.231758@notabene.brown>
-References: <05ED21952E28E94E8352836547A6BA37042318B4@achmsx001.hsa.co.uk>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+From: NeilBrown <neilb@suse.de>
+Subject: [PATCH 000 of 7] md: Introduction EXPLAIN PATCH SET HERE
+Date: Fri, 14 Dec 2007 17:26:02 +1100
+Message-ID: <20071214171950.1308.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Brett Maton on Thursday December 13
 Sender: linux-raid-owner@vger.kernel.org
-To: Brett Maton <Brett.Maton@simplyhealth.co.uk>
-Cc: Jeff Breidenbach <jeff@jab.org>, linux-raid@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>
 List-Id: linux-raid.ids
 
-On Thursday December 13, Brett.Maton@simplyhealth.co.uk wrote:
+Following are 7 md related patches are suitable for the next -mm
+and maybe for 2.6.25.
 
-> How do I create the internal bitmap?  man mdadm didn't shed any
-> light and my brief excursion into google wasn't much more helpful. 
+They move towards giving user-space programs more fine control of an
+array so that we can add support for more complex metadata formats
+(e.g. DDF) without bothering the kernel with such things.
 
-  mdadm --grow --bitmap=internal /dev/mdX
+The last patch isn't strictly md related.  It adds an ioctl which
+allows mapping from an open file descriptor on a block device to
+a name in /sys.  This makes finding name of things in /sys more practical.
+As I put this in block-layer code, I have Cc:ed Jens Axboe.
 
-> 
-> The version I have installed is mdadm-1.12.0-5.i386 from RedHat
-> which would appear to be way out of date! 
-
-WAY!  mdadm 2.0 would be an absolute minimum, and linux 2.6.13 as an
-absolute minimum, probably something closer to 2.6.20 would be a good
-idea.
-
-NeilBRown
+ [PATCH 001 of 7] md: Support 'external' metadata for md arrays.
+ [PATCH 002 of 7] md: Give userspace control over removing failed devices when external metdata in use
+ [PATCH 003 of 7] md: Allow a maximum extent to be set for resyncing.
+ [PATCH 004 of 7] md: Allow devices to be shared between md arrays.
+ [PATCH 005 of 7] md: Lock address when changing attributes of component devices.
+ [PATCH 006 of 7] md: Allow an md array to appear with 0 drives if it has external metadata.
+ [PATCH 007 of 7] md: Get name for block device in sysfs
