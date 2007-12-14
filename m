@@ -1,34 +1,29 @@
-From: Thiemo Nagel <thiemo.nagel@ph.tum.de>
-Subject: Re: raid6 check/repair
-Date: Fri, 14 Dec 2007 16:25:43 +0100
-Message-ID: <4762A077.90600@ph.tum.de>
-References: <47443697.7060108@ph.tum.de>
-Reply-To: thiemo.nagel@ph.tum.de
+From: "Jeff Breidenbach" <jeff@jab.org>
+Subject: Re: mdadm break / restore soft mirror
+Date: Fri, 14 Dec 2007 11:13:49 -0800
+Message-ID: <e03b90ae0712141113r37ab0955w644a3422f8c382a3@mail.gmail.com>
+References: <05ED21952E28E94E8352836547A6BA37042318B3@achmsx001.hsa.co.uk>
+	 <18272.34965.638276.892803@notabene.brown>
+	 <e03b90ae0712122000m439069y8ccad65c59cf4de9@mail.gmail.com>
+	 <18272.45576.359862.395170@notabene.brown>
+	 <e03b90ae0712132340t61e3bef6x8159e6d24da9c254@mail.gmail.com>
+	 <18274.18454.258328.131866@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <47443697.7060108@ph.tum.de>
+In-Reply-To: <18274.18454.258328.131866@notabene.brown>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: Brett Maton <Brett.Maton@simplyhealth.co.uk>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Dear Neil,
+So the obvious follow up question is: for this scenario does it make sense to
+only resync the difference between the two bitmaps? E.g. Drive A will have
+a current bitmap, B will have a stale bitmap. Presumably one could get away
+with just resyncing the difference.
 
-this thread has died out, but I'd prefer not to let it end without any 
-kind of result being reached.  Therefore, I'm kindly asking you to draw 
-a conclusion from the arguments being exchanged:
+Or is this too much of special case to consider?
 
-Concerning the implementation of a 'repair' that can actually recover 
-data in some cases instead of just recalculating parity:
-
-Do you
-
-a) oppose the case (patches not accepted)
-b) don't care (but potentially accept patches)
-c) support it
-
-Thank you very much and kind regards,
-
-Thiemo Nagel
+Jeff
