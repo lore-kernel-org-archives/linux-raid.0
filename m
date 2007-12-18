@@ -1,74 +1,67 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
+From: Neil Brown <neilb@suse.de>
 Subject: Re: Raid over 48 disks
-Date: Tue, 18 Dec 2007 15:25:53 -0500 (EST)
-Message-ID: <Pine.LNX.4.64.0712181523250.7823@p34.internal.lan>
+Date: Wed, 19 Dec 2007 07:28:20 +1100
+Message-ID: <18280.11620.381726.737353@notabene.brown>
 References: <00EF99B2-3BCC-4D75-BC75-8F256B0A2476@gmail.com>
- <Pine.LNX.4.64.0712181325480.13538@p34.internal.lan> <476820B0.9010200@ph.tum.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <476820B0.9010200@ph.tum.de>
+In-Reply-To: message from Norman Elton on Tuesday December 18
 Sender: linux-raid-owner@vger.kernel.org
-To: Thiemo Nagel <thiemo.nagel@ph.tum.de>
-Cc: Norman Elton <normelton@gmail.com>, linux-raid@vger.kernel.org
+To: Norman Elton <normelton@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Tuesday December 18, normelton@gmail.com wrote:
+> We're investigating the possibility of running Linux (RHEL) on top of  
+> Sun's X4500 Thumper box:
+> 
+> http://www.sun.com/servers/x64/x4500/
+> 
+> Basically, it's a server with 48 SATA hard drives. No hardware RAID.  
+> It's designed for Sun's ZFS filesystem.
+> 
+> So... we're curious how Linux will handle such a beast. Has anyone run  
+> MD software RAID over so many disks? Then piled LVM/ext3 on top of  
+> that? Any suggestions?
+> 
+> Are we crazy to think this is even possible?
 
+Certainly possible.
+The default metadata is limited to 28 devices, but with
+    --metadata=1
 
-On Tue, 18 Dec 2007, Thiemo Nagel wrote:
+you can easily use all 48 drives or more in the one array.  I'm not
+sure if you would want to though.
 
-> Dear Norman,
->
->>> So... we're curious how Linux will handle such a beast. Has anyone run MD 
->>> software RAID over so many disks? Then piled LVM/ext3 on top of that? Any 
->>> suggestions?
->>> 
->>> Are we crazy to think this is even possible?
->
-> I'm running 22x 500GB disks attached to RocketRaid2340 and NFORCE-MCP55
-> onboard controllers on an Athlon DC 5000+ with 1GB RAM:
->
-> 9746150400 blocks super 1.2 level 6, 256k chunk, algorithm 2 [22/22]
->
-> Performance of the raw device is fair:
-> # dd if=/dev/md2 of=/dev/zero bs=128k count=64k
-> 65536+0 records in
-> 65536+0 records out
-> 8589934592 bytes (8.6 GB) copied, 15.6071 seconds, 550 MB/s
->
-> Somewhat less through ext3 (created with -E stride=64):
-> # dd if=largetestfile of=/dev/zero bs=128k count=64k
-> 65536+0 records in
-> 65536+0 records out
-> 8589934592 bytes (8.6 GB) copied, 26.4103 seconds, 325 MB/s
->
-> There were no problems up to now.  (mkfs.ext3 wants -F to create a filesystem 
-> larger than 8TB.  The hard maximum is 16TB, so you will need to create 
-> partitions, if your drives are larger than 350GB...)
->
-> Kind regards,
->
-> Thiemo Nagel
->
->
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+If you just wanted an enormous scratch space and were happy to lose
+all your data on a drive failure, then you could make a raid0 across
+all the drives which should work perfectly and give you lots of
+space.  But that probably isn't what you want.
 
-Quite slow?
+I wouldn't create a raid5 or raid6 on all 48 devices.
+RAID5 only survives a single device failure and with that many
+devices, the chance of a second failure before you recover becomes
+appreciable.
 
-10 disks (raptors) raid 5 on regular sata controllers:
+RAID6 would be much more reliable, but probably much slower.  RAID6
+always needs to read or write every block in a stripe (i.e. it always
+uses reconstruct-write to generate the P and Q blocks,  It never does
+a read-modify-write like raid5 does).  This means that every write
+touches every device so you have less possibility for parallelism
+among your many drives.
+It might be instructive to try it out though.
 
-# dd if=/dev/md3 of=/dev/zero bs=128k count=64k
-65536+0 records in
-65536+0 records out
-8589934592 bytes (8.6 GB) copied, 10.718 seconds, 801 MB/s
+RAID10 would be a good option if you are happy wit 24 drives worth of
+space.  I would probably choose a largish chunk size (256K) and use
+the 'offset' layout.
 
-# dd if=bigfile of=/dev/zero bs=128k count=64k
-27773+1 records in
-27773+1 records out
-3640379392 bytes (3.6 GB) copied, 6.58454 seconds, 553 MB/s
+Alternately, 8 6drive RAID5s or 6 8raid RAID6s, and use RAID0 to
+combine them together.  This would give you adequate reliability and
+performance and still a large amount of storage space.
 
+Have fun!!!
+
+NeilBrown
 
