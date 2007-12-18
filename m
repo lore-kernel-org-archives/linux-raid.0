@@ -1,29 +1,42 @@
-From: Norman Elton <normelton@gmail.com>
-Subject: Raid over 48 disks
-Date: Tue, 18 Dec 2007 12:29:27 -0500
-Message-ID: <00EF99B2-3BCC-4D75-BC75-8F256B0A2476@gmail.com>
-Mime-Version: 1.0 (Apple Message framework v915)
-Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
-Content-Transfer-Encoding: 7bit
+From: "Glatzel Tino" <tino.glatzel@badenIT.de>
+Subject: Raid does not start automatically
+Date: Tue, 18 Dec 2007 18:19:06 +0100
+Message-ID: <763363C6C69C5A4B9735E3907164812A01148F3B@bit123.badenit.intern>
+Mime-Version: 1.0
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-class: urn:content-classes:message
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-We're investigating the possibility of running Linux (RHEL) on top of  
-Sun's X4500 Thumper box:
 
-http://www.sun.com/servers/x64/x4500/
 
-Basically, it's a server with 48 SATA hard drives. No hardware RAID.  
-It's designed for Sun's ZFS filesystem.
+Hello,
 
-So... we're curious how Linux will handle such a beast. Has anyone run  
-MD software RAID over so many disks? Then piled LVM/ext3 on top of  
-that? Any suggestions?
 
-Are we crazy to think this is even possible?
+my debian 4.0 box works fine with linux software-raid. today, I have
+tested the possibilities of the mdadm tool.
+I have removed a disc, I have added a disc and finaly I have stoped a
+RAID-device.
 
-Thanks!
+After the reboot, I have created a RAID-device with the previously used
+partion.
 
-Norman Elton
+mdadm --create /dev/md8 --raid-devices=2 --level=1 /dev/sda10 missing
+
+mdadm: /dev/sda10 appears to be part of a raid array:
+    level=raid1 devices=2 ctime=Tue Dec 18 17:42:58 2007
+Continue creating array? y
+mdadm: array /dev/md8 started.
+
+
+
+After the next reboot, the  device does not start. why ?
+
+can anyone help me ?
+
+
+Tino
