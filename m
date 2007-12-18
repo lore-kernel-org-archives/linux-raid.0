@@ -1,49 +1,68 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
+From: Robin Hill <robin@robinhill.me.uk>
 Subject: Re: Raid over 48 disks
-Date: Tue, 18 Dec 2007 13:27:14 -0500 (EST)
-Message-ID: <Pine.LNX.4.64.0712181325480.13538@p34.internal.lan>
+Date: Tue, 18 Dec 2007 18:45:08 +0000
+Message-ID: <20071218184508.GA8744@cthulhu.home.robinhill.me.uk>
 References: <00EF99B2-3BCC-4D75-BC75-8F256B0A2476@gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="TB36FDmn/VVEgNH/"
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 In-Reply-To: <00EF99B2-3BCC-4D75-BC75-8F256B0A2476@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Norman Elton <normelton@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
+--TB36FDmn/VVEgNH/
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-On Tue, 18 Dec 2007, Norman Elton wrote:
+On Tue Dec 18, 2007 at 12:29:27PM -0500, Norman Elton wrote:
 
-> We're investigating the possibility of running Linux (RHEL) on top of Sun's 
+> We're investigating the possibility of running Linux (RHEL) on top of Sun=
+'s=20
 > X4500 Thumper box:
 >
 > http://www.sun.com/servers/x64/x4500/
 >
-> Basically, it's a server with 48 SATA hard drives. No hardware RAID. It's 
+> Basically, it's a server with 48 SATA hard drives. No hardware RAID. It's=
+=20
 > designed for Sun's ZFS filesystem.
 >
-> So... we're curious how Linux will handle such a beast. Has anyone run MD 
-> software RAID over so many disks? Then piled LVM/ext3 on top of that? Any 
+> So... we're curious how Linux will handle such a beast. Has anyone run MD=
+=20
+> software RAID over so many disks? Then piled LVM/ext3 on top of that? Any=
+=20
 > suggestions?
 >
 > Are we crazy to think this is even possible?
 >
-> Thanks!
->
-> Norman Elton
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The most I've done is 28 drives in RAID-10 (SCSI drives, with the array
+formatted as XFS).  That keeps failing one drive, but I've not had time
+to give the drive a full test yet to confirm it's a drive issue.  It's
+been running quite happily (under pretty heavy database load) on 27
+disks for a couple of months now though.
 
-It sounds VERY fun and exciting if you ask me!  The most disks I've used 
-when testing SW RAID was 10 with various raid settings.  With that many 
-drives you'd want RAID6 or RAID10 for sure incase more than one failed at 
-the same time and definitely XFS/JFS/EXT4(?) as EXT3 is capped to 8TB.
+Cheers,
+        Robin
+--=20
+     ___       =20
+    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
+   / / )      | Little Jim says ....                            |
+  // !!       |      "He fallen in de water !!"                 |
 
-I'd be curious what kind of aggregate bandwidth you can get off of it with 
-that many drives.
+--TB36FDmn/VVEgNH/
+Content-Type: application/pgp-signature
+Content-Disposition: inline
 
-Justin.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.7 (GNU/Linux)
+
+iD8DBQFHaBUzShxCyD40xBIRAjnuAJ9BiJ3Xw79vTJXbl5VM71GEjC5OOwCfVADi
+lxJaBfFPaG/RcWzI4WtcB5M=
+=U12m
+-----END PGP SIGNATURE-----
+
+--TB36FDmn/VVEgNH/--
