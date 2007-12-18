@@ -1,81 +1,52 @@
-From: "Jon Nelson" <jnelson-linux-raid@jamponi.net>
-Subject: mdadm --stop goes off and never comes back?
-Date: Tue, 18 Dec 2007 15:11:05 -0600
-Message-ID: <cccedfc60712181311i6bfd755v659ad5b81bc81dc5@mail.gmail.com>
+From: Thiemo Nagel <thiemo.nagel@ph.tum.de>
+Subject: Re: Raid over 48 disks
+Date: Tue, 18 Dec 2007 22:13:26 +0100
+Message-ID: <476837F6.7050404@ph.tum.de>
+References: <00EF99B2-3BCC-4D75-BC75-8F256B0A2476@gmail.com> <Pine.LNX.4.64.0712181325480.13538@p34.internal.lan> <476820B0.9010200@ph.tum.de> <Pine.LNX.4.64.0712181523250.7823@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.64.0712181523250.7823@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: Norman Elton <normelton@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This just happened to me.
-Create raid with:
+>> Performance of the raw device is fair:
+>> # dd if=/dev/md2 of=/dev/zero bs=128k count=64k
+>> 8589934592 bytes (8.6 GB) copied, 15.6071 seconds, 550 MB/s
+>>
+>> Somewhat less through ext3 (created with -E stride=64):
+>> # dd if=largetestfile of=/dev/zero bs=128k count=64k
+>> 8589934592 bytes (8.6 GB) copied, 26.4103 seconds, 325 MB/s
+> 
+> Quite slow?
+> 
+> 10 disks (raptors) raid 5 on regular sata controllers:
+> 
+> # dd if=/dev/md3 of=/dev/zero bs=128k count=64k
+> 8589934592 bytes (8.6 GB) copied, 10.718 seconds, 801 MB/s
+> 
+> # dd if=bigfile of=/dev/zero bs=128k count=64k
+> 3640379392 bytes (3.6 GB) copied, 6.58454 seconds, 553 MB/s
 
-mdadm --create /dev/md2 --level=raid10 --raid-devices=3
---spare-devices=0 --layout=o2 /dev/sdb3 /dev/sdc3 /dev/sdd3
+Interesting.  Any ideas what could be the reason?  How much do you get 
+from a single drive?  -- The Samsung HD501LJ that I'm using gives 
+~84MB/s when reading from the beginning of the disk.
 
-cat /proc/mdstat
+With RAID 5 I'm getting slightly better results (though I really wonder 
+why, since naively I would expect identical read performance) but that 
+does only account for a small part of the difference:
 
-md2 : active raid10 sdd3[2] sdc3[1] sdb3[0]
-      5855424 blocks 64K chunks 2 offset-copies [3/3] [UUU]
-      [==>..................]  resync = 14.6% (859968/5855424)
-finish=1.3min speed=61426K/sec
+	16k read	64k write
+chunk
+size	RAID 5	RAID 6	RAID 5	RAID 6
+128k	492	497	268	270
+256k	615	530	288	270
+512k	625	607	230	174
+1024k	650	620	170	75
 
-Some log messages:
+Kind regards,
 
-Dec 18 15:02:28 turnip kernel: md: md2: raid array is not clean --
-starting background reconstruction
-Dec 18 15:02:28 turnip kernel: raid10: raid set md2 active with 3 out
-of 3 devices
-Dec 18 15:02:28 turnip kernel: md: resync of RAID array md2
-Dec 18 15:02:28 turnip kernel: md: minimum _guaranteed_  speed: 1000
-KB/sec/disk.
-Dec 18 15:02:28 turnip kernel: md: using maximum available idle IO
-bandwidth (but not more than 200000 KB/sec) for resync.
-Dec 18 15:02:28 turnip kernel: md: using 128k window, over a total of
-5855424 blocks.
-Dec 18 15:03:36 turnip kernel: md: md2: resync done.
-Dec 18 15:03:36 turnip kernel: md: checkpointing resync of md2.
-
-I tried to stop the array:
-
-mdadm --stop /dev/md2
-
-and mdadm never came back. It's off in the kernel somewhere. :-(
-
-kill, of course, has no effect.
-The machine still runs fine, the rest of the raids (md0 and md1) work
-fine (same disks).
-
-The output (snipped, only mdadm) of 'echo t > /proc/sysrq-trigger'
-
-Dec 18 15:09:13 turnip kernel: mdadm         S 0001e5359fa38fb0     0
-3943      1 (NOTLB)
-Dec 18 15:09:13 turnip kernel:  ffff810033e7ddc8 0000000000000086
-0000000000000000 0000000000000092
-Dec 18 15:09:13 turnip kernel:  0000000000000fc7 ffff810033e7dd78
-ffffffff80617800 ffffffff80617800
-Dec 18 15:09:13 turnip kernel:  ffffffff8061d210 ffffffff80617800
-ffffffff80617800 0000000000000000
-Dec 18 15:09:13 turnip kernel: Call Trace:
-Dec 18 15:09:13 turnip kernel:  [<ffffffff803fac96>]
-__mutex_lock_interruptible_slowpath+0x8b/0xca
-Dec 18 15:09:13 turnip kernel:  [<ffffffff802acccb>] do_open+0x222/0x2a5
-Dec 18 15:09:13 turnip kernel:  [<ffffffff8038705d>] md_seq_show+0x127/0x6c1
-Dec 18 15:09:13 turnip kernel:  [<ffffffff80275597>] vma_merge+0x141/0x1ee
-Dec 18 15:09:13 turnip kernel:  [<ffffffff802a2aa0>] seq_read+0x1bf/0x28b
-Dec 18 15:09:13 turnip kernel:  [<ffffffff8028a42d>] vfs_read+0xcb/0x153
-Dec 18 15:09:13 turnip kernel:  [<ffffffff8028a7c1>] sys_read+0x45/0x6e
-Dec 18 15:09:13 turnip kernel:  [<ffffffff80209c2e>] system_call+0x7e/0x83
-
-
-
-What happened? Is there any debug info I can provide before I reboot?
-
-
-
--- 
-Jon
+Thiemo
