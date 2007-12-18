@@ -1,67 +1,52 @@
-From: Neil Brown <neilb@suse.de>
+From: Brendan Conoboy <blc@redhat.com>
 Subject: Re: Raid over 48 disks
-Date: Wed, 19 Dec 2007 07:28:20 +1100
-Message-ID: <18280.11620.381726.737353@notabene.brown>
+Date: Tue, 18 Dec 2007 13:36:03 -0700
+Message-ID: <47682F33.7040701@redhat.com>
 References: <00EF99B2-3BCC-4D75-BC75-8F256B0A2476@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Norman Elton on Tuesday December 18
+In-Reply-To: <00EF99B2-3BCC-4D75-BC75-8F256B0A2476@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Norman Elton <normelton@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday December 18, normelton@gmail.com wrote:
-> We're investigating the possibility of running Linux (RHEL) on top of  
+Norman Elton wrote:
+> We're investigating the possibility of running Linux (RHEL) on top of 
 > Sun's X4500 Thumper box:
 > 
 > http://www.sun.com/servers/x64/x4500/
-> 
-> Basically, it's a server with 48 SATA hard drives. No hardware RAID.  
-> It's designed for Sun's ZFS filesystem.
-> 
-> So... we're curious how Linux will handle such a beast. Has anyone run  
-> MD software RAID over so many disks? Then piled LVM/ext3 on top of  
-> that? Any suggestions?
-> 
+
+Neat- 6 8 port SATA controllers!  It'll be worth checking to be sure 
+each controller has equal bandwidth.  If some controllers are on slower 
+buses than others you may want to consider that and balance the md 
+device layout.
+
+> So... we're curious how Linux will handle such a beast. Has anyone run 
+> MD software RAID over so many disks? Then piled LVM/ext3 on top of that? 
+> Any suggestions?
+
+There used to be a maximum number of devices allowed in a single md 
+device.  Not sure if that is still the case.
+
+With this many drives you would be well advised to make smaller raid 
+devices then combine them into a larger md device (or via lvm, etc). 
+Consider a write with a 48 device raid5- the system may need to read 
+blocks from all those drives before a single write!
+
+If it were my system, all ports were equally well connected, I'd create 
+3 16 drive RAID5's with 1 hot spare, then combine them via raid 0 or 
+lvm.  That's just my usage scenario, though (modest reliability, 
+excellent read speed, modest write speed).
+
+If you put ext3 on time, remember to use the stride option when making 
+the filesystem.
+
 > Are we crazy to think this is even possible?
 
-Certainly possible.
-The default metadata is limited to 28 devices, but with
-    --metadata=1
+Crazy, possible, and fun!
 
-you can easily use all 48 drives or more in the one array.  I'm not
-sure if you would want to though.
-
-If you just wanted an enormous scratch space and were happy to lose
-all your data on a drive failure, then you could make a raid0 across
-all the drives which should work perfectly and give you lots of
-space.  But that probably isn't what you want.
-
-I wouldn't create a raid5 or raid6 on all 48 devices.
-RAID5 only survives a single device failure and with that many
-devices, the chance of a second failure before you recover becomes
-appreciable.
-
-RAID6 would be much more reliable, but probably much slower.  RAID6
-always needs to read or write every block in a stripe (i.e. it always
-uses reconstruct-write to generate the P and Q blocks,  It never does
-a read-modify-write like raid5 does).  This means that every write
-touches every device so you have less possibility for parallelism
-among your many drives.
-It might be instructive to try it out though.
-
-RAID10 would be a good option if you are happy wit 24 drives worth of
-space.  I would probably choose a largish chunk size (256K) and use
-the 'offset' layout.
-
-Alternately, 8 6drive RAID5s or 6 8raid RAID6s, and use RAID0 to
-combine them together.  This would give you adequate reliability and
-performance and still a large amount of storage space.
-
-Have fun!!!
-
-NeilBrown
-
+-- 
+Brendan Conoboy / Red Hat, Inc. / blc@redhat.com
