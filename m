@@ -1,124 +1,108 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: Linux RAID Partition Offset 63 cylinders / 30% performance hit?
-Date: Wed, 19 Dec 2007 14:44:03 -0500 (EST)
-Message-ID: <Pine.LNX.4.64.0712191443380.2468@p34.internal.lan>
-References: <Pine.LNX.4.64.0712190926150.2468@p34.internal.lan>
- <Pine.GSO.4.64.0712191558290.1549@montezuma.acc.umu.se>
- <Pine.LNX.4.64.0712191002580.2468@p34.internal.lan> <476957A7.5010805@tmr.com>
- <Pine.LNX.4.64.0712191253180.2468@p34.internal.lan> <47696E98.8080103@tmr.com>
+From: Nagilum <nagilum@nagilum.org>
+Subject: Re: raid5 reshape/resync - BUGREPORT/PROBLEM
+Date: Wed, 19 Dec 2007 22:04:54 +0100
+Message-ID: <20071219220454.olitu28ce848cgkw@cakebox.homeunix.net>
+References: <20071124120209.0t70rfkfswkcww0g@cakebox.homeunix.net>
+	<20071125200431.2wbk051yoso4owsk@cakebox.homeunix.net>
+	<18254.21183.807123.642613@notabene.brown>
+	<20071201154817.5uwtck6ask0ksw8s@cakebox.homeunix.net>
+	<20071211225613.5tybri2ickcgk0s4@cakebox.homeunix.net>
+	<20071216141645.6a766a85@absurd>
+	<20071218110938.0gh9rkr2xc84cscs@cakebox.homeunix.net>
+	<20071219055027.2407442f@absurd>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: multipart/signed;
+	boundary="=_sux8jl4dye8";
+	protocol="application/pgp-signature";
+	micalg="pgp-sha1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <47696E98.8080103@tmr.com>
+In-Reply-To: <20071219055027.2407442f@absurd>
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: Mattias Wadenstein <maswan@acc.umu.se>, linux-raid@vger.kernel.org, apiszcz@solarrain.com
+To: Janek Kozicki <janek_listy@wp.pl>
+Cc: linux-raid@vger.kernel.org, Neil Brown <neilb@suse.de>, hpa@zytor.com
 List-Id: linux-raid.ids
 
+This message is in MIME format and has been PGP signed.
 
+--=_sux8jl4dye8
+Content-Type: text/plain;
+	charset=UTF-8;
+	DelSp="Yes";
+	format="flowed"
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-On Wed, 19 Dec 2007, Bill Davidsen wrote:
-
-> Justin Piszcz wrote:
->> 
->> 
->> On Wed, 19 Dec 2007, Bill Davidsen wrote:
->> 
->>> Justin Piszcz wrote:
->>>> 
->>>> 
->>>> On Wed, 19 Dec 2007, Mattias Wadenstein wrote:
->>>> 
->>>>> On Wed, 19 Dec 2007, Justin Piszcz wrote:
->>>>> 
->>>>>> ------
->>>>>> 
->>>>>> Now to my setup / question:
->>>>>> 
->>>>>> # fdisk -l /dev/sdc
->>>>>> 
->>>>>> Disk /dev/sdc: 150.0 GB, 150039945216 bytes
->>>>>> 255 heads, 63 sectors/track, 18241 cylinders
->>>>>> Units = cylinders of 16065 * 512 = 8225280 bytes
->>>>>> Disk identifier: 0x5667c24a
->>>>>>
->>>>>>   Device Boot      Start         End      Blocks   Id  System
->>>>>> /dev/sdc1               1       18241   146520801   fd  Linux raid 
->>>>>> autodetect
->>>>>> 
->>>>>> ---
->>>>>> 
->>>>>> If I use 10-disk RAID5 with 1024 KiB stripe, what would be the correct 
->>>>>> start and end size if I wanted to make sure the RAID5 was stripe 
->>>>>> aligned?
->>>>>> 
->>>>>> Or is there a better way to do this, does parted handle this situation 
->>>>>> better?
->>>>> 
->>>>>> From that setup it seems simple, scrap the partition table and use the 
->>>>> disk device for raid. This is what we do for all data storage disks (hw 
->>>>> raid) and sw raid members.
->>>>> 
->>>>> /Mattias Wadenstein
->>>>> 
->>>> 
->>>> Is there any downside to doing that?  I remember when I had to take my 
->>>> machine apart for a BIOS downgrade when I plugged in the sata devices 
->>>> again I did not plug them back in the same order, everything worked of 
->>>> course but when I ran LILO it said it was not part of the RAID set, 
->>>> because /dev/sda had become /dev/sdg and overwrote the MBR on the disk, 
->>>> if I had not used partitions here, I'd have lost (or more of the drives) 
->>>> due to a bad LILO run?
->>> 
->>> As other posts have detailed, putting the partition on a 64k aligned 
->>> boundary can address the performance problems. However, a poor choice of 
->>> chunk size, cache_buffer size, or just random i/o in small sizes can eat 
->>> up a lot of the benefit.
->>> 
->>> I don't think you need to give up your partitions to get the benefit of 
->>> alignment.
->>> 
->>> -- 
->>> Bill Davidsen <davidsen@tmr.com>
->>> "Woe unto the statesman who makes war without a reason that will still
->>> be valid when the war is over..." Otto von Bismark
->> 
->> Hrmm..
->> 
->> I am doing a benchmark now with:
->> 
->> 6 x 400GB (SATA) / 256 KiB stripe with unaligned vs. aligned raid setup.
->> 
->> unligned, just fdisk /dev/sdc, mkpartition, fd raid.
->>  aligned, fdisk, expert, start at 512 as the off-set
->> 
->> Per a Microsoft KB:
->> 
->> Example of alignment calculations in kilobytes for a 256-KB stripe unit 
->> size:
->> (63 * .5) / 256 = 0.123046875
->> (64 * .5) / 256 = 0.125
->> (128 * .5) / 256 = 0.25
->> (256 * .5) / 256 = 0.5
->> (512 * .5) / 256 = 1
->> These examples shows that the partition is not aligned correctly for a 
->> 256-KB stripe unit size until the partition is created by using an offset 
->> of 512 sectors (512 bytes per sector).
->> 
->> So I should start at 512 for a 256k chunk size.
->> 
->> I ran bonnie++ three consecutive times and took the average for the 
->> unaligned, rebuilding the RAID5 now and then I will re-execute the test 3 
->> additional times and take the average of that.
+----- Message from janek_listy@wp.pl ---------
+>> ----- Message from janek_listy@wp.pl ---------
+> Nagilum said:     (by the date of Tue, 18 Dec 2007 11:09:38 +0100)
 >
-> I'm going to try another approach, I'll describe it when I get results (or 
-> not).
+>> >> Ok, I've recreated the problem in form of a semiautomatic testcase.
+>> >> All necessary files (plus the old xfs_repair output) are at:
+>> >>
+>> >>   http://www.nagilum.de/md/
+>> >
+>> >> After running the test.sh the created xfs filesystem on the raid
+>> >> device is broken and (at last in my case) cannot be mounted anymore.
+>> >
+>> > I think that you should file a bugreport
+>
+>> ----- End message from janek_listy@wp.pl -----
+>>
+>> Where would I file this bug report? I thought this is the place?
+>> I could also really use a way to fix that corruption. :(
+>
+> ouch. To be honest I subscribed here just a month ago, so I'm not
+> sure. But I haven't seen other bugreports here so far.
+>
+> I was expecting that there is some bugzilla?
 
-Waiting for the raid to rebuild then I will re-run thereafter.
+Not really I'm afraid. At least not aware of anything like that for vanilla.
 
-       [=================>...]  recovery = 86.7% (339104640/390708480) 
-finish=30.8min speed=27835K/sec
+Anyway I just verified the bug on 2.6.23.11 and 2.6.24-rc5-git4.
+Also I came across the bug on amd64 while I'm now using a PPC750 =20
+machine to verify the bug. So it's an architecture undependant bug. =20
+(but that was to be expected)
+I also prepared a different version of the testcase "v2_start.sh" and =20
+"v2_test.sh". This will print out all the wrong bytes (longs to be =20
+exact) + location.
+It shows the data is there, but scattered. :(
+Kind regards,
+Alex.
 
-...
+----- End message from janek_listy@wp.pl -----
 
 
+
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+#    _  __          _ __     http://www.nagilum.org/ \n icq://69646724 #
+#   / |/ /__ ____ _(_) /_ ____ _  nagilum@nagilum.org \n +491776461165 #
+#  /    / _ `/ _ `/ / / // /  ' \  Amiga (68k/PPC): AOS/NetBSD/Linux   #
+# /_/|_/\_,_/\_, /_/_/\_,_/_/_/_/   Mac (PPC): MacOS-X / NetBSD /Linux #
+#           /___/     x86: FreeBSD/Linux/Solaris/Win2k  ARM9: EPOC EV6 #
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+
+
+----------------------------------------------------------------
+cakebox.homeunix.net - all the machine one needs..
+
+
+--=_sux8jl4dye8
+Content-Type: application/pgp-signature
+Content-Description: PGP Digital Signature
+Content-Disposition: inline
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.7 (FreeBSD)
+
+iD8DBQBHaYd1AKWN2UY+sLwRAn6wAJ9dZ9W7zyD6mTvo1jaM9LFUmc1HQwCgowiM
+xgi/tDrKj4DyhuOonzKt1bg=
+=4xWj
+-----END PGP SIGNATURE-----
+
+--=_sux8jl4dye8--
