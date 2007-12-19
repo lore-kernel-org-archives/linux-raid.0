@@ -1,108 +1,89 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: Linux RAID Partition Offset 63 cylinders / 30% performance hit?
-Date: Wed, 19 Dec 2007 12:55:16 -0500 (EST)
-Message-ID: <Pine.LNX.4.64.0712191253180.2468@p34.internal.lan>
-References: <Pine.LNX.4.64.0712190926150.2468@p34.internal.lan>
- <Pine.GSO.4.64.0712191558290.1549@montezuma.acc.umu.se>
- <Pine.LNX.4.64.0712191002580.2468@p34.internal.lan> <476957A7.5010805@tmr.com>
+From: "Jon Sabo" <jonathan.sabo@gmail.com>
+Subject: help diagnosing bad disk
+Date: Wed, 19 Dec 2007 13:18:21 -0500
+Message-ID: <fa2952810712191018l76085e90l4eb2c6a81115fa1f@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <476957A7.5010805@tmr.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: Mattias Wadenstein <maswan@acc.umu.se>, linux-raid@vger.kernel.org, apiszcz@solarrain.com
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+So I was trying to copy over some Indiana Jones wav files and it
+wasn't going my way.  I noticed that my software raid device showed:
+
+/dev/md1 on / type ext3 (rw,errors=remount-ro)
+
+Is this saying that it was remounted, read only because it found a
+problem with the md1 meta device?  That's what it looks like it's
+saying but I can still write to /.
+
+mdadm --detail showed:
+
+root@recoil:/home/illsci# mdadm --detail /dev/md0
+/dev/md0:
+        Version : 00.90.03
+  Creation Time : Mon Jul 30 21:47:14 2007
+     Raid Level : raid1
+     Array Size : 1951744 ( 1906.32 MiB 1998.59 MB)
+    Device Size : 1951744 (1906.32 MiB 1998.59 MB)
+   Raid Devices : 2
+  Total Devices : 1
+Preferred Minor : 0
+    Persistence : Superblock is persistent
+
+    Update Time : Wed Dec 19 12:59:56 2007
+          State : clean, degraded
+ Active Devices : 1
+Working Devices : 1
+ Failed Devices : 0
+  Spare Devices : 0
+
+           UUID : 157f716c:0e7aebca:c20741f6
+:bb6099c9
+         Events : 0.28
+
+     Number   Major   Minor   RaidDevice State
+       0       8        1        0      active sync   /dev/sda1
+       1       0        0        1      removed
+
+root@recoil:/home/illsci# mdadm --detail /dev/md1
+ /dev/md1:
+        Version : 00.90.03
+  Creation Time : Mon Jul 30 21:47:47 2007
+     Raid Level : raid1
+     Array Size : 974808064 (929.65 GiB 998.20 GB)
+    Device Size : 974808064 (929.65 GiB 998.20 GB)
+    Raid Devices : 2
+  Total Devices : 1
+Preferred Minor : 1
+    Persistence : Superblock is persistent
+
+    Update Time : Wed Dec 19 13:14:53 2007
+          State : clean, degraded
+ Active Devices : 1
+Working Devices : 1
+ Failed Devices : 0
+  Spare Devices : 0
+
+           UUID : 156a030e:9a6f8eb3:9b0c439e:d718e744
+         Events : 0.1990
+
+    Number   Major   Minor   RaidDevice State
+       0       8        2        0      active sync   /dev/sda2
+       1       0        0        1      removed
 
 
-On Wed, 19 Dec 2007, Bill Davidsen wrote:
+I have two 1 terabyte sata drives in this box.  From what I was
+reading wouldn't it show an F for the failed drive?  I thought I would
+see that /dev/sdb1 and /dev/sdb2 were failed and it would show an F.
+What is this saying and how do you know that its /dev/sdb and not some
+other drive?  It shows removed and that the state is clean, degraded.
+Is that something you can recover from with out returning this disk
+and putting in a new one to add to the raid1 array?
 
-> Justin Piszcz wrote:
->> 
->> 
->> On Wed, 19 Dec 2007, Mattias Wadenstein wrote:
->> 
->>> On Wed, 19 Dec 2007, Justin Piszcz wrote:
->>> 
->>>> ------
->>>> 
->>>> Now to my setup / question:
->>>> 
->>>> # fdisk -l /dev/sdc
->>>> 
->>>> Disk /dev/sdc: 150.0 GB, 150039945216 bytes
->>>> 255 heads, 63 sectors/track, 18241 cylinders
->>>> Units = cylinders of 16065 * 512 = 8225280 bytes
->>>> Disk identifier: 0x5667c24a
->>>>
->>>>   Device Boot      Start         End      Blocks   Id  System
->>>> /dev/sdc1               1       18241   146520801   fd  Linux raid 
->>>> autodetect
->>>> 
->>>> ---
->>>> 
->>>> If I use 10-disk RAID5 with 1024 KiB stripe, what would be the correct 
->>>> start and end size if I wanted to make sure the RAID5 was stripe aligned?
->>>> 
->>>> Or is there a better way to do this, does parted handle this situation 
->>>> better?
->>> 
->>>> From that setup it seems simple, scrap the partition table and use the 
->>> disk device for raid. This is what we do for all data storage disks (hw 
->>> raid) and sw raid members.
->>> 
->>> /Mattias Wadenstein
->>> 
->> 
->> Is there any downside to doing that?  I remember when I had to take my 
->> machine apart for a BIOS downgrade when I plugged in the sata devices again 
->> I did not plug them back in the same order, everything worked of course but 
->> when I ran LILO it said it was not part of the RAID set, because /dev/sda 
->> had become /dev/sdg and overwrote the MBR on the disk, if I had not used 
->> partitions here, I'd have lost (or more of the drives) due to a bad LILO 
->> run?
->
-> As other posts have detailed, putting the partition on a 64k aligned boundary 
-> can address the performance problems. However, a poor choice of chunk size, 
-> cache_buffer size, or just random i/o in small sizes can eat up a lot of the 
-> benefit.
->
-> I don't think you need to give up your partitions to get the benefit of 
-> alignment.
->
-> -- 
-> Bill Davidsen <davidsen@tmr.com>
-> "Woe unto the statesman who makes war without a reason that will still
-> be valid when the war is over..." Otto von Bismark 
->
+Thanks,
 
-Hrmm..
-
-I am doing a benchmark now with:
-
-6 x 400GB (SATA) / 256 KiB stripe with unaligned vs. aligned raid setup.
-
-unligned, just fdisk /dev/sdc, mkpartition, fd raid.
-  aligned, fdisk, expert, start at 512 as the off-set
-
-Per a Microsoft KB:
-
-Example of alignment calculations in kilobytes for a 256-KB stripe unit 
-size:
-(63 * .5) / 256 = 0.123046875
-(64 * .5) / 256 = 0.125
-(128 * .5) / 256 = 0.25
-(256 * .5) / 256 = 0.5
-(512 * .5) / 256 = 1
-These examples shows that the partition is not aligned correctly for a 
-256-KB stripe unit size until the partition is created by using an offset 
-of 512 sectors (512 bytes per sector).
-
-So I should start at 512 for a 256k chunk size.
-
-I ran bonnie++ three consecutive times and took the average for the 
-unaligned, rebuilding the RAID5 now and then I will re-execute the test 3 
-additional times and take the average of that.
-
-Justin.
+Jonathan
