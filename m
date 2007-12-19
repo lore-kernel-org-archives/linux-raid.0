@@ -1,62 +1,50 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
+From: Michal Soltys <soltys@ziu.info>
 Subject: Re: Linux RAID Partition Offset 63 cylinders / 30% performance hit?
-Date: Wed, 19 Dec 2007 17:03:45 -0500 (EST)
-Message-ID: <Pine.LNX.4.64.0712191703280.23302@p34.internal.lan>
+Date: Wed, 19 Dec 2007 22:44:20 +0100
+Message-ID: <476990B4.5050803@ziu.info>
 References: <Pine.LNX.4.64.0712190926150.2468@p34.internal.lan>
- <20071219215948.GA7129@cthulhu.home.robinhill.me.uk>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20071219215948.GA7129@cthulhu.home.robinhill.me.uk>
+In-Reply-To: <Pine.LNX.4.64.0712190926150.2468@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: Robin Hill <robin@robinhill.me.uk>
-Cc: linux-raid@vger.kernel.org, apiszcz@solarrain.com
+To: linux-raid@vger.kernel.org
+Cc: Justin Piszcz <jpiszcz@lucidpixels.com>
 List-Id: linux-raid.ids
 
+Justin Piszcz wrote:
+> 
+> Or is there a better way to do this, does parted handle this situation 
+> better?
+> 
+> What is the best (and correct) way to calculate stripe-alignment on the 
+> RAID5 device itself?
+> 
+> 
+> Does this also apply to Linux/SW RAID5?  Or are there any caveats that 
+> are not taken into account since it is based in SW vs. HW?
+> 
+> ---
+
+In case of SW or HW raid, when you place raid aware filesystem directly on 
+it, I don't see any potential poblems
+
+Also, if md's superblock version/placement actually mattered, it'd be pretty 
+strange. The space available for actual use - be it partitions or filesystem 
+directly - should be always nicely aligned. I don't know that for sure though.
+
+If you use SW partitionable raid, or HW raid with partitions, then you would
+have to align it on a chunk boundary manually. Any selfrespecting os 
+shouldn't complain a partition doesn't start on cylinder boundary these 
+days. LVM can complicate life a bit too - if you want it's volumes to be 
+chunk-aligned.
+
+With NTFS the problem is, that it's not aware of underlaying raid in any 
+way. It starts with 16 sectors long boot sector, somewhat compatible with 
+ancient FAT. My blind guess would be to try to align the very first sector 
+of $Mft with your chunk. Also, mentioned bootsector is also referenced as 
+$Boot, thus I don't know if large cluster won't automatically extend it to 
+full cluster size. Experiment, YMMV :)
 
 
-On Wed, 19 Dec 2007, Robin Hill wrote:
-
-> On Wed Dec 19, 2007 at 09:50:16AM -0500, Justin Piszcz wrote:
->
->> The (up to) 30% percent figure is mentioned here:
->> http://insights.oetiker.ch/linux/raidoptimization.html
->>
-> That looks to be referring to partitioning a RAID device - this'll only
-> apply to hardware RAID or partitionable software RAID, not to the normal
-> use case.  When you're creating an array out of standard partitions then
-> you know the array stripe size will align with the disks (there's no way
-> it cannot), and you can set the filesystem stripe size to align as well
-> (XFS will do this automatically).
->
-> I've actually done tests on this with hardware RAID to try to find the
-> correct partition offset, but wasn't able to see any difference (using
-> bonnie++ and moving the partition start by one sector at a time).
->
->> # fdisk -l /dev/sdc
->>
->> Disk /dev/sdc: 150.0 GB, 150039945216 bytes
->> 255 heads, 63 sectors/track, 18241 cylinders
->> Units = cylinders of 16065 * 512 = 8225280 bytes
->> Disk identifier: 0x5667c24a
->>
->>    Device Boot      Start         End      Blocks   Id  System
->> /dev/sdc1               1       18241   146520801   fd  Linux raid
->> autodetect
->>
-> This looks to be a normal disk - the partition offsets shouldn't be
-> relevant here (barring any knowledge of the actual physical disk layout
-> anyway, and block remapping may well make that rather irrelevant).
->
-> That's my take on this one anyway.
->
-> Cheers,
->        Robin
-> --
->     ___
->    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
->   / / )      | Little Jim says ....                            |
->  // !!       |      "He fallen in de water !!"                 |
->
-
-Interesting, yes, I am using XFS as well, thanks for the response.
