@@ -1,7 +1,7 @@
-From: "Jon Nelson" <jnelson@jamponi.net>
+From: "Jon Nelson" <jnelson-linux-raid@jamponi.net>
 Subject: Re: Linux RAID Partition Offset 63 cylinders / 30% performance hit?
-Date: Wed, 19 Dec 2007 11:37:24 -0600
-Message-ID: <cccedfc60712190937j29518c62y14905de7df14f9ee@mail.gmail.com>
+Date: Wed, 19 Dec 2007 11:37:49 -0600
+Message-ID: <cccedfc60712190937i4d562349s88980de1d154b2fd@mail.gmail.com>
 References: <Pine.LNX.4.64.0712190926150.2468@p34.internal.lan>
 	 <Pine.GSO.4.64.0712191558290.1549@montezuma.acc.umu.se>
 	 <Pine.LNX.4.64.0712191002580.2468@p34.internal.lan>
@@ -32,7 +32,6 @@ Assume I have 3 disks, /dev/sd{b,c,d} all partitioned identically with
 What sequence of steps can I take to ensure that my raid is aligned on
 a 64K boundary?
 What effect do the different superblock formats have, if any, in this situation?
-
 
 -- 
 Jon
