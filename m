@@ -1,108 +1,41 @@
-From: Nagilum <nagilum@nagilum.org>
-Subject: Re: raid5 reshape/resync - BUGREPORT/PROBLEM
-Date: Wed, 19 Dec 2007 22:04:54 +0100
-Message-ID: <20071219220454.olitu28ce848cgkw@cakebox.homeunix.net>
-References: <20071124120209.0t70rfkfswkcww0g@cakebox.homeunix.net>
-	<20071125200431.2wbk051yoso4owsk@cakebox.homeunix.net>
-	<18254.21183.807123.642613@notabene.brown>
-	<20071201154817.5uwtck6ask0ksw8s@cakebox.homeunix.net>
-	<20071211225613.5tybri2ickcgk0s4@cakebox.homeunix.net>
-	<20071216141645.6a766a85@absurd>
-	<20071218110938.0gh9rkr2xc84cscs@cakebox.homeunix.net>
-	<20071219055027.2407442f@absurd>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: Linux RAID Partition Offset 63 cylinders / 30% performance hit?
+Date: Wed, 19 Dec 2007 16:31:00 -0500 (EST)
+Message-ID: <Pine.LNX.4.64.0712191629190.21347@p34.internal.lan>
+References: <Pine.LNX.4.64.0712190926150.2468@p34.internal.lan>
+ <Pine.GSO.4.64.0712191558290.1549@montezuma.acc.umu.se>
+ <Pine.LNX.4.64.0712191002580.2468@p34.internal.lan> <476957A7.5010805@tmr.com>
+ <Pine.LNX.4.64.0712191253180.2468@p34.internal.lan> <47696E98.8080103@tmr.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed;
-	boundary="=_sux8jl4dye8";
-	protocol="application/pgp-signature";
-	micalg="pgp-sha1"
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20071219055027.2407442f@absurd>
+In-Reply-To: <47696E98.8080103@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Janek Kozicki <janek_listy@wp.pl>
-Cc: linux-raid@vger.kernel.org, Neil Brown <neilb@suse.de>, hpa@zytor.com
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: Mattias Wadenstein <maswan@acc.umu.se>, linux-raid@vger.kernel.org, apiszcz@solarrain.com
 List-Id: linux-raid.ids
 
-This message is in MIME format and has been PGP signed.
-
---=_sux8jl4dye8
-Content-Type: text/plain;
-	charset=UTF-8;
-	DelSp="Yes";
-	format="flowed"
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
------ Message from janek_listy@wp.pl ---------
->> ----- Message from janek_listy@wp.pl ---------
-> Nagilum said:     (by the date of Tue, 18 Dec 2007 11:09:38 +0100)
->
->> >> Ok, I've recreated the problem in form of a semiautomatic testcase.
->> >> All necessary files (plus the old xfs_repair output) are at:
->> >>
->> >>   http://www.nagilum.de/md/
->> >
->> >> After running the test.sh the created xfs filesystem on the raid
->> >> device is broken and (at last in my case) cannot be mounted anymore.
->> >
->> > I think that you should file a bugreport
->
->> ----- End message from janek_listy@wp.pl -----
->>
->> Where would I file this bug report? I thought this is the place?
->> I could also really use a way to fix that corruption. :(
->
-> ouch. To be honest I subscribed here just a month ago, so I'm not
-> sure. But I haven't seen other bugreports here so far.
->
-> I was expecting that there is some bugzilla?
-
-Not really I'm afraid. At least not aware of anything like that for vanilla.
-
-Anyway I just verified the bug on 2.6.23.11 and 2.6.24-rc5-git4.
-Also I came across the bug on amd64 while I'm now using a PPC750 =20
-machine to verify the bug. So it's an architecture undependant bug. =20
-(but that was to be expected)
-I also prepared a different version of the testcase "v2_start.sh" and =20
-"v2_test.sh". This will print out all the wrong bytes (longs to be =20
-exact) + location.
-It shows the data is there, but scattered. :(
-Kind regards,
-Alex.
-
------ End message from janek_listy@wp.pl -----
 
 
+On Wed, 19 Dec 2007, Bill Davidsen wrote:
 
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-#    _  __          _ __     http://www.nagilum.org/ \n icq://69646724 #
-#   / |/ /__ ____ _(_) /_ ____ _  nagilum@nagilum.org \n +491776461165 #
-#  /    / _ `/ _ `/ / / // /  ' \  Amiga (68k/PPC): AOS/NetBSD/Linux   #
-# /_/|_/\_,_/\_, /_/_/\_,_/_/_/_/   Mac (PPC): MacOS-X / NetBSD /Linux #
-#           /___/     x86: FreeBSD/Linux/Solaris/Win2k  ARM9: EPOC EV6 #
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> I'm going to try another approach, I'll describe it when I get results (or 
+> not).
 
+http://home.comcast.net/~jpiszcz/align_vs_noalign/
 
-----------------------------------------------------------------
-cakebox.homeunix.net - all the machine one needs..
+Hardly any difference at whatsoever, only on the per char for read/write 
+is it any faster..?
 
+Average of 3 runs taken:
 
---=_sux8jl4dye8
-Content-Type: application/pgp-signature
-Content-Description: PGP Digital Signature
-Content-Disposition: inline
-Content-Transfer-Encoding: 7bit
+$ cat align/*log|grep ,
+p63,8G,57683,94,86479,13,55242,8,63495,98,147647,11,434.8,0,16:100000:16/64,1334210,10,330,2,120,1,3978,10,312,2
+p63,8G,57973,95,76702,11,50830,7,62291,99,136477,10,388.3,0,16:100000:16/64,1252548,6,296,1,115,1,7927,20,373,2
+p63,8G,57758,95,80847,12,52144,8,63874,98,144747,11,443.4,0,16:100000:16/64,1242445,6,303,1,117,1,6767,17,359,2
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.7 (FreeBSD)
+$ cat noalign/*log|grep ,
+p63,8G,57641,94,85494,12,55669,8,63802,98,146925,11,434.8,0,16:100000:16/64,1353180,8,314,1,117,1,8684,22,283,2
+p63,8G,57705,94,85929,12,56708,8,63855,99,143437,11,436.2,0,16:100000:16/64,12211519,29,297,1,113,1,3218,8,325,2
+p63,8G,57783,94,78226,11,48580,7,63487,98,137721,10,438.7,0,16:100000:16/64,1243229,8,307,1,120,1,4247,11,313,2
 
-iD8DBQBHaYd1AKWN2UY+sLwRAn6wAJ9dZ9W7zyD6mTvo1jaM9LFUmc1HQwCgowiM
-xgi/tDrKj4DyhuOonzKt1bg=
-=4xWj
------END PGP SIGNATURE-----
-
---=_sux8jl4dye8--
