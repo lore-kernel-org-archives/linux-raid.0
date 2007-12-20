@@ -1,120 +1,72 @@
-From: "Jon Nelson" <jnelson-linux-raid@jamponi.net>
-Subject: Re: mdadm --stop goes off and never comes back?
-Date: Wed, 19 Dec 2007 20:07:21 -0600
-Message-ID: <cccedfc60712191807l1bb09ab3p1168570a5429865b@mail.gmail.com>
-References: <cccedfc60712181311i6bfd755v659ad5b81bc81dc5@mail.gmail.com>
-	 <18281.51489.845404.884191@notabene.brown>
-	 <cccedfc60712191805i5828ff32gb1f04247dc9dedc2@mail.gmail.com>
+From: "Glatzel Tino" <tino.glatzel@badenIT.de>
+Subject: Linux-System installed from tar.gz with a Live-CD
+Date: Thu, 20 Dec 2007 09:12:47 +0100
+Message-ID: <763363C6C69C5A4B9735E3907164812A01148FEC@bit123.badenit.intern>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <cccedfc60712191805i5828ff32gb1f04247dc9dedc2@mail.gmail.com>
-Content-Disposition: inline
+Content-class: urn:content-classes:message
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 12/19/07, Jon Nelson <jnelson-linux-raid@jamponi.net> wrote:
-> On 12/19/07, Neil Brown <neilb@suse.de> wrote:
-> > On Tuesday December 18, jnelson-linux-raid@jamponi.net wrote:
-> > > This just happened to me.
-> > > Create raid with:
-> > >
-> > > mdadm --create /dev/md2 --level=raid10 --raid-devices=3
-> > > --spare-devices=0 --layout=o2 /dev/sdb3 /dev/sdc3 /dev/sdd3
-> > >
-> > > cat /proc/mdstat
-> > >
-> > > md2 : active raid10 sdd3[2] sdc3[1] sdb3[0]
-> > >       5855424 blocks 64K chunks 2 offset-copies [3/3] [UUU]
-> > >       [==>..................]  resync = 14.6% (859968/5855424)
-> > > finish=1.3min speed=61426K/sec
-> > >
-> > > Some log messages:
-> > >
-> > > Dec 18 15:02:28 turnip kernel: md: md2: raid array is not clean --
-> > > starting background reconstruction
-> > > Dec 18 15:02:28 turnip kernel: raid10: raid set md2 active with 3 out
-> > > of 3 devices
-> > > Dec 18 15:02:28 turnip kernel: md: resync of RAID array md2
-> > > Dec 18 15:02:28 turnip kernel: md: minimum _guaranteed_  speed: 1000
-> > > KB/sec/disk.
-> > > Dec 18 15:02:28 turnip kernel: md: using maximum available idle IO
-> > > bandwidth (but not more than 200000 KB/sec) for resync.
-> > > Dec 18 15:02:28 turnip kernel: md: using 128k window, over a total of
-> > > 5855424 blocks.
-> > > Dec 18 15:03:36 turnip kernel: md: md2: resync done.
-> > > Dec 18 15:03:36 turnip kernel: md: checkpointing resync of md2.
-> > >
-> > > I tried to stop the array:
-> > >
-> > > mdadm --stop /dev/md2
-> > >
-> > > and mdadm never came back. It's off in the kernel somewhere. :-(
-> > >
-> > > kill, of course, has no effect.
-> > > The machine still runs fine, the rest of the raids (md0 and md1) work
-> > > fine (same disks).
-> > >
-> > > The output (snipped, only mdadm) of 'echo t > /proc/sysrq-trigger'
-> > >
-> > > Dec 18 15:09:13 turnip kernel: mdadm         S 0001e5359fa38fb0     0
-> > > 3943      1 (NOTLB)
-> > > Dec 18 15:09:13 turnip kernel:  ffff810033e7ddc8 0000000000000086
-> > > 0000000000000000 0000000000000092
-> > > Dec 18 15:09:13 turnip kernel:  0000000000000fc7 ffff810033e7dd78
-> > > ffffffff80617800 ffffffff80617800
-> > > Dec 18 15:09:13 turnip kernel:  ffffffff8061d210 ffffffff80617800
-> > > ffffffff80617800 0000000000000000
-> > > Dec 18 15:09:13 turnip kernel: Call Trace:
-> > > Dec 18 15:09:13 turnip kernel:  [<ffffffff803fac96>]
-> > > __mutex_lock_interruptible_slowpath+0x8b/0xca
-> > > Dec 18 15:09:13 turnip kernel:  [<ffffffff802acccb>] do_open+0x222/0x2a5
-> > > Dec 18 15:09:13 turnip kernel:  [<ffffffff8038705d>] md_seq_show+0x127/0x6c1
-> > > Dec 18 15:09:13 turnip kernel:  [<ffffffff80275597>] vma_merge+0x141/0x1ee
-> > > Dec 18 15:09:13 turnip kernel:  [<ffffffff802a2aa0>] seq_read+0x1bf/0x28b
-> > > Dec 18 15:09:13 turnip kernel:  [<ffffffff8028a42d>] vfs_read+0xcb/0x153
-> > > Dec 18 15:09:13 turnip kernel:  [<ffffffff8028a7c1>] sys_read+0x45/0x6e
-> > > Dec 18 15:09:13 turnip kernel:  [<ffffffff80209c2e>] system_call+0x7e/0x83
-> > >
-> > >
-> > >
-> > > What happened? Is there any debug info I can provide before I reboot?
-> >
-> > Don't know.... very odd.
-> >
-> > The rest of the 'sysrq' output would possibly help.
->
-> Does this help? It's the same syscall and args, I think, as above.
->
-> Dec 18 15:09:13 turnip kernel: hald          S 0001e52f4793e397     0
-> 3040      1 (NOTLB)
-> Dec 18 15:09:13 turnip kernel:  ffff81003aa51e38 0000000000000086
-> 0000000000000000 ffffffff802
-> 68ee6
-> Dec 18 15:09:13 turnip kernel:  ffff81002a97e5c0 ffff81003aa51de8
-> ffffffff80617800 ffffffff806
-> 17800
-> Dec 18 15:09:13 turnip kernel:  ffffffff8061d210 ffffffff80617800
-> ffffffff80617800 ffff8100000
-> 0bb48
-> Dec 18 15:09:13 turnip kernel: Call Trace:
-> Dec 18 15:09:13 turnip kernel:  [<ffffffff80268ee6>]
-> get_page_from_freelist+0x3c4/0x545
-> Dec 18 15:09:13 turnip kernel:  [<ffffffff803fac96>]
-> __mutex_lock_interruptible_slowpath+0x8b/
-> 0xca
-> Dec 18 15:09:13 turnip kernel:  [<ffffffff80387adf>] md_attr_show+0x2f/0x64
-> Dec 18 15:09:13 turnip kernel:  [<ffffffff802cd142>] sysfs_read_file+0xb3/0x111
-> Dec 18 15:09:13 turnip kernel:  [<ffffffff8028a42d>] vfs_read+0xcb/0x153
-> Dec 18 15:09:13 turnip kernel:  [<ffffffff8028a7c1>] sys_read+0x45/0x6e
-> Dec 18 15:09:13 turnip kernel:  [<ffffffff80209c2e>] system_call+0x7e/0x83
-> Dec 18 15:09:13 turnip kernel:
+Hello,
+I have installed my Linux-System, Debian Etch, whith a Live-CD from a t=
+ar.gz-file.
+I have created the partitions of the disc with the type "fd" and made t=
+he MD-devices=20
+with the Live-CD. After mounting the required md-devices, I have extrac=
+t the System from the tar.gz-Archiv.
+The System works fine. After some tests with madam, I stopped a MD-Devi=
+ce.
+After this, the stopped MD-devices was not in the /proc/mdstat. --> Tha=
+ts OK
+After this, I have created the Raid new:
+mdadm --create /dev/md8 --raid-devices=3D2 --level=3D1 /dev/sda10 missi=
+ng
+mdadm: /dev/sda10 appears to be part of a raid array:
+    level=3Draid1 devices=3D2 ctime=3DTue Dec 18 17:42:58 2007
+Continue creating array? y
+mdadm: array /dev/md8 started.
+=20
+After the next reboot, the System can't mount the md8 !
+If the md8 is in the /etc/mdadm/mdadm.conf, mdadm is starting the devic=
+e,
+but previus the stopping and the (re)creating of the md8-device, the de=
+vice comes
+up without the entry in the /etc/mdadm/mdadm.conf.
+Why ????
+What can I do to start the md8 without the entry in the file ??
+Can anyone help me ????
 
-NOTE: kernel is stock openSUSE 10.3 kernel, x86_64, 2.6.22.13-0.3-default.
+Tino
 
+Mit freundlichen Gr=FC=DFen
 
--- 
-Jon
+badenIT GmbH
+Innovationstechnologie
+
+Tino Glatzel
+Tullastra=DFe 70
+
+D-79108 Freiburg
+
+Tel.: 0761 279-2804
+=46ax: 0761 279-572804
+
+e-Mail: tino.glatzel@badenit.de
+URL: www.badenIT.de
+-----------------------------------------
+ =BB Zertifiziert nach ISO 20000
+----------------------------------------
+badenIT GmbH
+Sitz der Gesellschaft: Freiburg im Breisgau
+Registergericht: Amtsgericht Freiburg
+Registernummer: HRB 5535
+Gesch=E4ftsf=FChrer: Peter Lais
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
