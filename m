@@ -1,70 +1,40 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: Linux RAID Partition Offset 63 cylinders / 30% performance hit?
-Date: Thu, 20 Dec 2007 10:00:36 -0500 (EST)
-Message-ID: <Pine.LNX.4.64.0712200959460.2056@p34.internal.lan>
-References: <Pine.LNX.4.64.0712190926150.2468@p34.internal.lan>
- <Pine.GSO.4.64.0712191558290.1549@montezuma.acc.umu.se>
- <Pine.LNX.4.64.0712191002580.2468@p34.internal.lan> <476957A7.5010805@tmr.com>
- <Pine.LNX.4.64.0712191253180.2468@p34.internal.lan> <47696E98.8080103@tmr.com>
- <Pine.LNX.4.64.0712191629190.21347@p34.internal.lan> <476A87B1.10403@tmr.com>
+From: Thiemo Nagel <thiemo.nagel@ph.tum.de>
+Subject: Re: Raid over 48 disks
+Date: Thu, 20 Dec 2007 17:48:36 +0100
+Message-ID: <476A9CE4.4010107@ph.tum.de>
+References: <00EF99B2-3BCC-4D75-BC75-8F256B0A2476@gmail.com> <Pine.LNX.4.64.0712181325480.13538@p34.internal.lan> <476820B0.9010200@ph.tum.de> <Pine.LNX.4.64.0712181523250.7823@p34.internal.lan> <476837F6.7050404@ph.tum.de> <476936DD.40301@tmr.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <476A87B1.10403@tmr.com>
+In-Reply-To: <476936DD.40301@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Bill Davidsen <davidsen@tmr.com>
-Cc: Mattias Wadenstein <maswan@acc.umu.se>, linux-raid@vger.kernel.org, apiszcz@solarrain.com
+Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, Norman Elton <normelton@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Bill Davidsen wrote:
+>>     16k read    64k write
+>>   chunk
+>>   size    RAID 5    RAID 6    RAID 5    RAID 6
+>>   128k    492    497    268    270
+>>   256k    615    530    288    270
+>>   512k    625    607    230    174
+>>   1024k   650    620    170    75
+>>   
+> 
+> What is your stripe cache size?
 
+I didn't fiddle with the default when I did these tests.
 
-On Thu, 20 Dec 2007, Bill Davidsen wrote:
+Now (with 256k chunk size) I had
 
-> Justin Piszcz wrote:
->> 
->> 
->> On Wed, 19 Dec 2007, Bill Davidsen wrote:
->> 
->>> I'm going to try another approach, I'll describe it when I get results (or 
->>> not).
->> 
->> http://home.comcast.net/~jpiszcz/align_vs_noalign/
->> 
->> Hardly any difference at whatsoever, only on the per char for read/write is 
->> it any faster..?
->
-> Am I misreading what you are doing here... you have the underlying data on 
-> the actual hardware devices 64k aligned by using either the whole device or 
-> starting a partition on a 64k boundary? I'm dubious that you will see a 
-> difference any other way, after all the translations take place.
->
-> I'm trying creating a raid array using loop devices created with the "offset" 
-> parameter, but I suspect that I will wind up doing a test after just 
-> repartitioning the drives, painful as that will be.
->> 
->> Average of 3 runs taken:
->> 
->> $ cat align/*log|grep ,
->> p63,8G,57683,94,86479,13,55242,8,63495,98,147647,11,434.8,0,16:100000:16/64,1334210,10,330,2,120,1,3978,10,312,2 
->> p63,8G,57973,95,76702,11,50830,7,62291,99,136477,10,388.3,0,16:100000:16/64,1252548,6,296,1,115,1,7927,20,373,2 
->> p63,8G,57758,95,80847,12,52144,8,63874,98,144747,11,443.4,0,16:100000:16/64,1242445,6,303,1,117,1,6767,17,359,2 
->> 
->> $ cat noalign/*log|grep ,
->> p63,8G,57641,94,85494,12,55669,8,63802,98,146925,11,434.8,0,16:100000:16/64,1353180,8,314,1,117,1,8684,22,283,2 
->> p63,8G,57705,94,85929,12,56708,8,63855,99,143437,11,436.2,0,16:100000:16/64,12211519,29,297,1,113,1,3218,8,325,2 
->> p63,8G,57783,94,78226,11,48580,7,63487,98,137721,10,438.7,0,16:100000:16/64,1243229,8,307,1,120,1,4247,11,313,2 
->> 
->
->
-> -- 
-> Bill Davidsen <davidsen@tmr.com>
-> "Woe unto the statesman who makes war without a reason that will still
-> be valid when the war is over..." Otto von Bismark 
->
+# cat stripe_cache_size
+256
 
-1. The first I made partitions on each drive like I normally do.
-2. The second test was I followed the EMC document on how to properly 
-align the partitions and I followed Microsoft's document on how to 
-calculate the correct offset, I used 512 for 256k stripe.
+but increasing that to 1024 didn't show a noticeable improvement for 
+reading.  Still around 550MB/s.
 
-Justin.
+Kind regards,
+
+Thiemo
