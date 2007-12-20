@@ -1,53 +1,85 @@
-From: "Jon Nelson" <jnelson@jamponi.net>
-Subject: Re: Linux RAID Partition Offset 63 cylinders / 30% performance hit?
-Date: Wed, 19 Dec 2007 16:12:40 -0600
-Message-ID: <cccedfc60712191412j27256304p185d6d06e27d9ebe@mail.gmail.com>
-References: <Pine.LNX.4.64.0712190926150.2468@p34.internal.lan>
-	 <476990B4.5050803@ziu.info>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: mdadm --stop goes off and never comes back?
+Date: Thu, 20 Dec 2007 12:45:05 +1100
+Message-ID: <18281.51489.845404.884191@notabene.brown>
+References: <cccedfc60712181311i6bfd755v659ad5b81bc81dc5@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <476990B4.5050803@ziu.info>
-Content-Disposition: inline
+In-Reply-To: message from Jon Nelson on Tuesday December 18
 Sender: linux-raid-owner@vger.kernel.org
+To: Jon Nelson <jnelson-linux-raid@jamponi.net>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 12/19/07, Michal Soltys <soltys@ziu.info> wrote:
-> Justin Piszcz wrote:
-> >
-> > Or is there a better way to do this, does parted handle this situation
-> > better?
-> >
-> > What is the best (and correct) way to calculate stripe-alignment on the
-> > RAID5 device itself?
-> >
-> >
-> > Does this also apply to Linux/SW RAID5?  Or are there any caveats that
-> > are not taken into account since it is based in SW vs. HW?
-> >
-> > ---
->
-> In case of SW or HW raid, when you place raid aware filesystem directly on
-> it, I don't see any potential poblems
->
-> Also, if md's superblock version/placement actually mattered, it'd be pretty
-> strange. The space available for actual use - be it partitions or filesystem
-> directly - should be always nicely aligned. I don't know that for sure though.
->
-> If you use SW partitionable raid, or HW raid with partitions, then you would
-> have to align it on a chunk boundary manually. Any selfrespecting os
-> shouldn't complain a partition doesn't start on cylinder boundary these
-> days. LVM can complicate life a bit too - if you want it's volumes to be
-> chunk-aligned.
+On Tuesday December 18, jnelson-linux-raid@jamponi.net wrote:
+> This just happened to me.
+> Create raid with:
+> 
+> mdadm --create /dev/md2 --level=raid10 --raid-devices=3
+> --spare-devices=0 --layout=o2 /dev/sdb3 /dev/sdc3 /dev/sdd3
+> 
+> cat /proc/mdstat
+> 
+> md2 : active raid10 sdd3[2] sdc3[1] sdb3[0]
+>       5855424 blocks 64K chunks 2 offset-copies [3/3] [UUU]
+>       [==>..................]  resync = 14.6% (859968/5855424)
+> finish=1.3min speed=61426K/sec
+> 
+> Some log messages:
+> 
+> Dec 18 15:02:28 turnip kernel: md: md2: raid array is not clean --
+> starting background reconstruction
+> Dec 18 15:02:28 turnip kernel: raid10: raid set md2 active with 3 out
+> of 3 devices
+> Dec 18 15:02:28 turnip kernel: md: resync of RAID array md2
+> Dec 18 15:02:28 turnip kernel: md: minimum _guaranteed_  speed: 1000
+> KB/sec/disk.
+> Dec 18 15:02:28 turnip kernel: md: using maximum available idle IO
+> bandwidth (but not more than 200000 KB/sec) for resync.
+> Dec 18 15:02:28 turnip kernel: md: using 128k window, over a total of
+> 5855424 blocks.
+> Dec 18 15:03:36 turnip kernel: md: md2: resync done.
+> Dec 18 15:03:36 turnip kernel: md: checkpointing resync of md2.
+> 
+> I tried to stop the array:
+> 
+> mdadm --stop /dev/md2
+> 
+> and mdadm never came back. It's off in the kernel somewhere. :-(
+> 
+> kill, of course, has no effect.
+> The machine still runs fine, the rest of the raids (md0 and md1) work
+> fine (same disks).
+> 
+> The output (snipped, only mdadm) of 'echo t > /proc/sysrq-trigger'
+> 
+> Dec 18 15:09:13 turnip kernel: mdadm         S 0001e5359fa38fb0     0
+> 3943      1 (NOTLB)
+> Dec 18 15:09:13 turnip kernel:  ffff810033e7ddc8 0000000000000086
+> 0000000000000000 0000000000000092
+> Dec 18 15:09:13 turnip kernel:  0000000000000fc7 ffff810033e7dd78
+> ffffffff80617800 ffffffff80617800
+> Dec 18 15:09:13 turnip kernel:  ffffffff8061d210 ffffffff80617800
+> ffffffff80617800 0000000000000000
+> Dec 18 15:09:13 turnip kernel: Call Trace:
+> Dec 18 15:09:13 turnip kernel:  [<ffffffff803fac96>]
+> __mutex_lock_interruptible_slowpath+0x8b/0xca
+> Dec 18 15:09:13 turnip kernel:  [<ffffffff802acccb>] do_open+0x222/0x2a5
+> Dec 18 15:09:13 turnip kernel:  [<ffffffff8038705d>] md_seq_show+0x127/0x6c1
+> Dec 18 15:09:13 turnip kernel:  [<ffffffff80275597>] vma_merge+0x141/0x1ee
+> Dec 18 15:09:13 turnip kernel:  [<ffffffff802a2aa0>] seq_read+0x1bf/0x28b
+> Dec 18 15:09:13 turnip kernel:  [<ffffffff8028a42d>] vfs_read+0xcb/0x153
+> Dec 18 15:09:13 turnip kernel:  [<ffffffff8028a7c1>] sys_read+0x45/0x6e
+> Dec 18 15:09:13 turnip kernel:  [<ffffffff80209c2e>] system_call+0x7e/0x83
+> 
+> 
+> 
+> What happened? Is there any debug info I can provide before I reboot?
 
-That, for me, is the next question - how can one educate LVM about the
-underlying block device such that logical volumes carved out of that
-space align properly - many of us have experienced 30% (or so)
-performance losses for the convenience of LVM (and mighty convenient
-it is).
+Don't know.... very odd.
 
+The rest of the 'sysrq' output would possibly help.
 
--- 
-Jon
+NeilBrown
