@@ -1,27 +1,26 @@
 From: Leif Nixon <nixon@nsc.liu.se>
 Subject: Re: Raid over 48 disks
-Date: Fri, 21 Dec 2007 11:57:42 +0100
-Message-ID: <m3ve6s8gd5.fsf@unna.nsc.liu.se>
+Date: Fri, 21 Dec 2007 12:03:01 +0100
+Message-ID: <m3r6hg8g4a.fsf@unna.nsc.liu.se>
 References: <00EF99B2-3BCC-4D75-BC75-8F256B0A2476@gmail.com>
+	<18280.11620.381726.737353@notabene.brown>
+	<Pine.GSO.4.64.0712190918430.1549@montezuma.acc.umu.se>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <00EF99B2-3BCC-4D75-BC75-8F256B0A2476@gmail.com> (Norman Elton's message of "Tue\, 18 Dec 2007 12\:29\:27 -0500")
+In-Reply-To: <Pine.GSO.4.64.0712190918430.1549@montezuma.acc.umu.se> (Mattias Wadenstein's message of "Wed\, 19 Dec 2007 09\:27\:22 +0100 \(MET\)")
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Norman Elton <normelton@gmail.com> writes:
+Mattias Wadenstein <maswan@acc.umu.se> writes:
 
-> We're investigating the possibility of running Linux (RHEL) on top of
-> Sun's X4500 Thumper box:
->
-> http://www.sun.com/servers/x64/x4500/
+> There are those that have run Linux MD RAID on thumpers before. I
+> vaguely recall some driver issues (unrelated to MD) that made it less
+> suitable than solaris, but that might be fixed in recent kernels.
 
-I think BNL's evalation of Solaris/ZFS vs. Linux/MD on a thumper
-might be of interest:
-
-  http://hepix.caspur.it/storage/hep_pdf/2007/Spring/Petkus_HEPiX_Spring06.storageeval.pdf
+I think that was mainly an issue for people trying to squeeze
+Scientific Linux 3 onto their thumpers.
 
 -- 
 Leif Nixon                       -            Systems expert
