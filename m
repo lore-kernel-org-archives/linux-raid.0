@@ -1,81 +1,93 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: Linux RAID Partition Offset 63 cylinders / 30% performance hit?
-Date: Tue, 25 Dec 2007 14:06:41 -0500
-Message-ID: <477154C1.6000503@tmr.com>
-References: <Pine.LNX.4.64.0712190926150.2468@p34.internal.lan> <20071219215948.GA7129@cthulhu.home.robinhill.me.uk>
+From: pg_lxra@lxra.for.sabi.co.UK (Peter Grandi)
+Subject: Re: raid10 performance question
+Date: Tue, 25 Dec 2007 19:08:15 +0000
+Message-ID: <18289.21791.151719.625145@base.ty.sabi.co.UK>
+References: <cccedfc60712230626t2db70cfcl5b0b49390cd6e609@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20071219215948.GA7129@cthulhu.home.robinhill.me.uk>
+In-Reply-To: <cccedfc60712230626t2db70cfcl5b0b49390cd6e609@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Robin Hill wrote:
-> On Wed Dec 19, 2007 at 09:50:16AM -0500, Justin Piszcz wrote:
->
->   
->> The (up to) 30% percent figure is mentioned here:
->> http://insights.oetiker.ch/linux/raidoptimization.html
->>
->>     
-> That looks to be referring to partitioning a RAID device - this'll only
-> apply to hardware RAID or partitionable software RAID, not to the normal
-> use case.  When you're creating an array out of standard partitions then
-> you know the array stripe size will align with the disks (there's no way
-> it cannot), and you can set the filesystem stripe size to align as well
-> (XFS will do this automatically).
->
-> I've actually done tests on this with hardware RAID to try to find the
-> correct partition offset, but wasn't able to see any difference (using
-> bonnie++ and moving the partition start by one sector at a time).
->
->   
->> # fdisk -l /dev/sdc
->>
->> Disk /dev/sdc: 150.0 GB, 150039945216 bytes
->> 255 heads, 63 sectors/track, 18241 cylinders
->> Units = cylinders of 16065 * 512 = 8225280 bytes
->> Disk identifier: 0x5667c24a
->>
->>    Device Boot      Start         End      Blocks   Id  System
->> /dev/sdc1               1       18241   146520801   fd  Linux raid 
->> autodetect
->>
->>     
-> This looks to be a normal disk - the partition offsets shouldn't be
-> relevant here (barring any knowledge of the actual physical disk layout
-> anyway, and block remapping may well make that rather irrelevant).
->   
-The issue I'm thinking about is hardware sector size, which on modern 
-drives may be larger than 512b and therefore entail a read-alter-rewrite 
-(RAR) cycle when writing a 512b block. With larger writes, if the 
-alignment is poor and the write size is some multiple of 512, it's 
-possible to have an RAR at each end of the write. The only way to have a 
-hope of controlling the alignment is to write a raw device or use a 
-filesystem which can be configured to have blocks which are a multiple 
-of the sector size and to do all i/o in block size starting each file on 
-a block boundary. That may be possible with ext[234] set up properly.
+>>> On Sun, 23 Dec 2007 08:26:55 -0600, "Jon Nelson"
+>>> <jnelson-linux-raid@jamponi.net> said:
 
-Why this is important: the physical layout of the drive is useful, but 
-for a large write the drive will have to make some number of steps from 
-on cylinder to another. By carefully choosing the starting point, the 
-best improvement will be to eliminate 2 track-to-track seek times, one 
-at the start and one at the end. If the writes are small only one t2t 
-saving is possible.
+> I've found in some tests that raid10,f2 gives me the best I/O
+> of any raid5 or raid10 format.
 
-Now consider a RAR process. The drive is spinning typically at 7200 rpm, 
-or 8.333 ms/rev. A read might take .5 rev on average, and a RAR will 
-take 1.5 rev, because it takes a full revolution after the original data 
-is read before the altered data can be rewritten. Larger sectors give 
-more capacity, but reduced performance for write. And doing small writes 
-can result in paying the RAR penalty on every write. So there may be a 
-measurable benefit to getting that alignment right at the drive level.
+Mostly, depending on type of workload. Anyhow in general most
+forms of RAID10 are cool, and handle disk losses better and so
+on.
 
--- 
-Bill Davidsen <davidsen@tmr.com>
-  "Woe unto the statesman who makes war without a reason that will still
-  be valid when the war is over..." Otto von Bismark 
+> However, the performance of raid10,o2 and raid10,n2 in
+> degraded mode is nearly identical to the non-degraded mode
+> performance (for me, this hovers around 100MB/s).
+
+You don't say how many drives you got, but may suggest that your
+array transfers are limited by the PCI host bus speed.
+
+> raid10,f2 has degraded mode performance, writing, that is
+> indistinguishable from it's non-degraded mode performance
+
+> It's the raid10,f2 *read* performance in degraded mode that is
+> strange - I get almost exactly 50% of the non-degraded mode
+> read performance. Why is that?
+
+Well, the best description I found of the odd Linux RAID10 modes
+is here:
+
+  http://en.Wikipedia.org/wiki/Non-standard_RAID_levels#Linux_MD_RAID_10
+
+The key here is:
+
+   "The driver also supports a "far" layout where all the drives
+    are divided into f sections."
+
+Now when there are two sections as in 'f2', each block will be
+written to a block in the first half of the first disk and to
+the second half of the "next" disk.
+
+Consider this layout for the first 4 blocks on 2x2 layout
+compared to the standard layout:
+
+   DISK		 DISK
+  A B C D       A B C D
+
+  1 2 3 4	1 1 2 2
+  . . . .	3 3 4 4
+  . . . .
+  . . . .
+  -------
+  4 1 2 3       
+  . . . .
+  . . . .
+  . . . .
 
 
+This means that with the far layout one can read blocks 1,2,3,4
+at the same speed as a RAID0 on the outer cylinders of each
+disk; but if one of the disks fails, the mirror blocks have to
+be read from the inner cylinders of the next disk, which are
+usually a lot slower than the outer ones.
+
+Now, there is a very interesting detail here: one idea about
+getting a fast array is to take make it out of large high
+density drives and just use the outer cylinders of each drive,
+thus at the same time having a much smaller range of arm travel
+and higher transfer rates.
+
+The 'f2' layout means that (until a drive fails) for all reads
+and for "short" writes MD is effectively using just the outer
+half of each drive, *as well as* what is effectively a RAID0
+layout.
+
+  Note that the sustained writing speed of 'f2' is going to be
+  same *across the whole capacity* of the RAID. While the
+  sustained write speed of a 'n2' layout will be higher at the
+  beginning and slower at the end just like for a single disk.
+
+Interesting, I hadn't realized that, even if I am keenly aware
+of the non uniform speeds of disks across cylinders.
