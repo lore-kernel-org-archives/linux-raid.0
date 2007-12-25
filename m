@@ -1,49 +1,30 @@
-From: pg_lxra@lxra.for.sabi.co.UK (Peter Grandi)
-Subject: Re: raid10 performance question
-Date: Tue, 25 Dec 2007 21:34:52 +0000
-Message-ID: <18289.30588.549513.84222@base.ty.sabi.co.UK>
-References: <cccedfc60712230626t2db70cfcl5b0b49390cd6e609@mail.gmail.com>
-	<18289.21791.151719.625145@base.ty.sabi.co.UK>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH 001 of 7] md: Support 'external' metadata for md arrays.
+Date: Tue, 25 Dec 2007 14:03:42 -0800
+Message-ID: <20071225140342.9d0ff789.akpm@linux-foundation.org>
+References: <20071214171950.1308.patches@notabene>
+	<1071214062608.1815@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18289.21791.151719.625145@base.ty.sabi.co.UK>
-Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751844AbXLYWEi@vger.kernel.org>
+In-Reply-To: <1071214062608.1815@suse.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
->>> On Tue, 25 Dec 2007 19:08:15 +0000,
->>> pg_lxra@lxra.for.sabi.co.UK (Peter Grandi) said:
+On Fri, 14 Dec 2007 17:26:08 +1100 NeilBrown <neilb@suse.de> wrote:
 
-[ ... ]
+> +	if (strncmp(buf, "external:", 9) == 0) {
+> +		int namelen = len-9;
+> +		if (namelen >= sizeof(mddev->metadata_type))
+> +			namelen = sizeof(mddev->metadata_type)-1;
+> +		strncpy(mddev->metadata_type, buf+9, namelen);
+> +		mddev->metadata_type[namelen] = 0;
+> +		if (namelen && mddev->metadata_type[namelen-1] == '\n')
+> +			mddev->metadata_type[--namelen] = 0;
+> +		mddev->persistent = 0;
+> +		mddev->external = 1;
 
->> It's the raid10,f2 *read* performance in degraded mode that is
->> strange - I get almost exactly 50% of the non-degraded mode
->> read performance. Why is that?
-
-> [ ... ] the mirror blocks have to be read from the inner
-> cylinders of the next disk, which are usually a lot slower
-> than the outer ones. [ ... ]
-
-Just to be complete there is of course the other issue that
-affect sustained writes too, which is extra seeks. If disk B
-fails the situation becomes:
-
-    DISK
-   A X C D
-
-   1 X 3 4
-   . . . .
-   . . . .
-   . . . .
-   -------
-   4 X 2 3       
-   . . . .
-   . . . .
-   . . . .
-
-Not only must block 2 be read from an inner cylinder, but to
-read block 3 there must be a seek to an outer cylinder on the
-same disk. Which is the same well known issue when doing
-sustained writes with RAID10 'f2'.
+size_t would be a more appropriate type for `namelen'.
