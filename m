@@ -1,51 +1,83 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: 2.6.24-rc6 reproducible raid5 hang
-Date: Thu, 27 Dec 2007 14:52:07 -0500 (EST)
-Message-ID: <Pine.LNX.4.64.0712271451480.4247@p34.internal.lan>
-References: <alpine.DEB.0.999999.0712270845150.5207@twinlark.arctic.org>
+From: Nagilum <nagilum@nagilum.org>
+Subject: Re: raid5 grow reshaping speed is unchangeable
+Date: Thu, 27 Dec 2007 23:10:18 +0100
+Message-ID: <20071227231018.vu20e31q80c80sw8@cakebox.homeunix.net>
+References: <380-220071242752242883@mochamail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: multipart/signed;
+	boundary="=_38liqkydwk6c";
+	protocol="application/pgp-signature";
+	micalg="pgp-sha1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.0.999999.0712270845150.5207@twinlark.arctic.org>
+In-Reply-To: <380-220071242752242883@mochamail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: dean gaudet <dean@arctic.org>
+To: Cody Yellan <cody@mochamail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+This message is in MIME format and has been PGP signed.
+
+--=_38liqkydwk6c
+Content-Type: text/plain;
+	charset=UTF-8;
+	DelSp="Yes";
+	format="flowed"
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+----- Message from cody@mochamail.com ---------
+     Date: Wed, 26 Dec 2007 21:22:42 -0800
+     From: Cody Yellan <cody@mochamail.com>
+
+> I had a 4x500GB SATA2 array, md0.  I added one 500GB drive and
+> reshaping began at ~2500K/sec.  Changing
+> /proc/sys/dev/raid/speed_limit_m{in,ax} or
+> /sys/block/md0/md/sync_speed_m{in,ax} had no effect.  I shut down all
+> unnecessary services and the array is offline (not mounted).  I have
+> read that the throttling code is "fragile" (esp. with regard to
+> raid5) but does this make sense?  I will wait (in)patiently for it to
+> finish, but I do wonder why the configuration parameters have no
+> effect.  This is a dual quad 2GHz Xeon machine with 8GB of memory
+> running RHEL5.  Is this the maximum speed?
+----- End message from cody@mochamail.com -----
+
+Certainly not. I've personally used a similar setup with >80MB/s =20
+reshape speeds.
+There must be some other limiting factor.
+Try simultanous dd's from the drives, if that doesn't work as fast as =20
+it should there might be some bus contention?
 
 
-On Thu, 27 Dec 2007, dean gaudet wrote:
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+#    _  __          _ __     http://www.nagilum.org/ \n icq://69646724 #
+#   / |/ /__ ____ _(_) /_ ____ _  nagilum@nagilum.org \n +491776461165 #
+#  /    / _ `/ _ `/ / / // /  ' \  Amiga (68k/PPC): AOS/NetBSD/Linux   #
+# /_/|_/\_,_/\_, /_/_/\_,_/_/_/_/   Mac (PPC): MacOS-X / NetBSD /Linux #
+#           /___/     x86: FreeBSD/Linux/Solaris/Win2k  ARM9: EPOC EV6 #
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
 
-> hey neil -- remember that raid5 hang which me and only one or two others
-> ever experienced and which was hard to reproduce?  we were debugging it
-> well over a year ago (that box has 400+ day uptime now so at least that
-> long ago :)  the workaround was to increase stripe_cache_size... i seem to
-> have a way to reproduce something which looks much the same.
->
-> setup:
->
-> - 2.6.24-rc6
-> - system has 8GiB RAM but no swap
-> - 8x750GB in a raid5 with one spare, chunksize 1024KiB.
-> - mkfs.xfs default options
-> - mount -o noatime
-> - dd if=/dev/zero of=/mnt/foo bs=4k count=2621440
->
-> that sequence hangs for me within 10 seconds... and i can unhang / rehang
-> it by toggling between stripe_cache_size 256 and 1024.  i detect the hang
-> by watching "iostat -kx /dev/sd? 5".
->
-> i've attached the kernel log where i dumped task and timer state while it
-> was hung... note that you'll see at some point i did an xfs mount with
-> external journal but it happens with internal journal as well.
->
-> looks like it's using the raid456 module and async api.
->
-> anyhow let me know if you need more info / have any suggestions.
->
-> -dean
 
-With that high of a stripe size the stripe_cache_size needs to be greater 
-than the default to handle it.
+----------------------------------------------------------------
+cakebox.homeunix.net - all the machine one needs..
 
-Justin.
+
+--=_38liqkydwk6c
+Content-Type: application/pgp-signature
+Content-Description: PGP Digital Signature
+Content-Disposition: inline
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.7 (FreeBSD)
+
+iD8DBQBHdCLJAKWN2UY+sLwRAo29AJ0U0rJUsLJBKbsDDO0k3bT3ZrZPlACfYiMA
+Q3UXaEtShM3I8EPLz5u8o8w=
+=XzvV
+-----END PGP SIGNATURE-----
+
+--=_38liqkydwk6c--
