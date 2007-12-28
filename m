@@ -1,39 +1,38 @@
-From: Richard Scobie <richard@sauce.co.nz>
-Subject: Re: raid5 grow reshaping speed is unchangeable
-Date: Fri, 28 Dec 2007 16:13:23 +1300
-Message-ID: <477469D3.2030202@sauce.co.nz>
-References: <380-220071242752242883@mochamail.com> <47744926.6010808@tmr.com>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: On the subject of RAID-6 corruption recovery
+Date: Fri, 28 Dec 2007 09:38:16 -0500
+Message-ID: <47750A58.1010702@tmr.com>
+References: <4774663C.5090609@zytor.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <47744926.6010808@tmr.com>
+In-Reply-To: <4774663C.5090609@zytor.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: "H. Peter Anvin" <hpa@zytor.com>
+Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+H. Peter Anvin wrote:
+> I got a private email a while ago from Thiemo Nagel claiming that some 
+> of the conclusions in my RAID-6 paper was incorrect.  This was 
+> combined with a "proof" which was plain wrong, and could easily be 
+> disproven using basic enthropy accounting (i.e. how much information 
+> is around to play with.)
+>
+> However, it did cause me to clarify the text portion a little bit.  In 
+> particular, *in practice* in may be possible to *probabilistically* 
+> detect multidisk corruption.  Probabilistic detection means that the 
+> detection is not guaranteed, but it can be taken advantage of 
+> opportunistically.
 
-> Cody Yellan wrote:
->> I had a 4x500GB SATA2 array, md0.  I added one 500GB drive and
->> reshaping began at ~2500K/sec.  Changing
->> /proc/sys/dev/raid/speed_limit_m{in,ax} or
->> /sys/block/md0/md/sync_speed_m{in,ax} had no effect.  I shut down all
->> unnecessary services and the array is offline (not mounted).  I have
->> read that the throttling code is "fragile" (esp. with regard to
->> raid5) but does this make sense?  I will wait (in)patiently for it to
->> finish, but I do wonder why the configuration parameters have no
->> effect.  This is a dual quad 2GHz Xeon machine with 8GB of memory
->> running RHEL5.  Is this the maximum speed?
+If this means that there can be no false positives for multidisk 
+corruption but may be false negatives, fine. If it means something else, 
+please restate one more time.
 
-Are you running a non-standard /sys/block/md5/md/stripe_cache_size?
+-- 
+Bill Davidsen <davidsen@tmr.com>
+  "Woe unto the statesman who makes war without a reason that will still
+  be valid when the war is over..." Otto von Bismark 
 
-I found when running a kernel of about that vintage on FC6 (which I 
-guess became RHEL5), that with a stripe_cache_size of 16384, resyncs 
-dropped down to about the speed you are seeing.
 
-This changed back to more normal speeds with a later kernel, but I do 
-not recall which.
-
-Regards,
-
-Richard
