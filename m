@@ -1,131 +1,39 @@
-From: dean gaudet <dean@arctic.org>
-Subject: Re: 2.6.24-rc6 reproducible raid5 hang
-Date: Thu, 27 Dec 2007 16:08:04 -0800 (PST)
-Message-ID: <alpine.DEB.0.999999.0712271602440.5207@twinlark.arctic.org>
-References: <alpine.DEB.0.999999.0712270845150.5207@twinlark.arctic.org> <Pine.LNX.4.64.0712271451480.4247@p34.internal.lan>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: raid5 grow reshaping speed is unchangeable
+Date: Thu, 27 Dec 2007 19:53:58 -0500
+Message-ID: <47744926.6010808@tmr.com>
+References: <380-220071242752242883@mochamail.com>
 Mime-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="1171294248-1768729811-1198800484=:5207"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0712271451480.4247@p34.internal.lan>
+In-Reply-To: <380-220071242752242883@mochamail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
+To: Cody Yellan <cody@mochamail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+Cody Yellan wrote:
+> I had a 4x500GB SATA2 array, md0.  I added one 500GB drive and
+> reshaping began at ~2500K/sec.  Changing
+> /proc/sys/dev/raid/speed_limit_m{in,ax} or
+> /sys/block/md0/md/sync_speed_m{in,ax} had no effect.  I shut down all
+> unnecessary services and the array is offline (not mounted).  I have
+> read that the throttling code is "fragile" (esp. with regard to
+> raid5) but does this make sense?  I will wait (in)patiently for it to
+> finish, but I do wonder why the configuration parameters have no
+> effect.  This is a dual quad 2GHz Xeon machine with 8GB of memory
+> running RHEL5.  Is this the maximum speed?
+>   
 
---1171294248-1768729811-1198800484=:5207
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Something else going on, I do better than that adding drives on USB!
 
-On Thu, 27 Dec 2007, Justin Piszcz wrote:
+I don't have a clue what the issue is, and I don't see anything in your 
+information which looks unusual.
 
-> With that high of a stripe size the stripe_cache_size needs to be greater than
-> the default to handle it.
+-- 
+Bill Davidsen <davidsen@tmr.com>
+  "Woe unto the statesman who makes war without a reason that will still
+  be valid when the war is over..." Otto von Bismark 
 
-i'd argue that any deadlock is a bug...
 
-regardless i'm still seeing deadlocks with the default chunk_size of 64k 
-and stripe_cache_size of 256... in this case it's with a workload which is 
-untarring 34 copies of the linux kernel at the same time.  it's a variant 
-of doug ledford's memtest, and i've attached it.
-
--dean
---1171294248-1768729811-1198800484=:5207
-Content-Type: TEXT/PLAIN; charset=US-ASCII; name=dma_thrasher
-Content-Transfer-Encoding: BASE64
-Content-Description: 
-Content-Disposition: attachment; filename=dma_thrasher
-
-IyEvdXNyL2Jpbi9wZXJsDQoNCiMgQ29weXJpZ2h0IChjKSAyMDA3IGRlYW4g
-Z2F1ZGV0IDxkZWFuQGFyY3RpYy5vcmc+DQojDQojIFBlcm1pc3Npb24gaXMg
-aGVyZWJ5IGdyYW50ZWQsIGZyZWUgb2YgY2hhcmdlLCB0byBhbnkgcGVyc29u
-IG9idGFpbmluZyBhDQojIGNvcHkgb2YgdGhpcyBzb2Z0d2FyZSBhbmQgYXNz
-b2NpYXRlZCBkb2N1bWVudGF0aW9uIGZpbGVzICh0aGUgIlNvZnR3YXJlIiks
-DQojIHRvIGRlYWwgaW4gdGhlIFNvZnR3YXJlIHdpdGhvdXQgcmVzdHJpY3Rp
-b24sIGluY2x1ZGluZyB3aXRob3V0IGxpbWl0YXRpb24NCiMgdGhlIHJpZ2h0
-cyB0byB1c2UsIGNvcHksIG1vZGlmeSwgbWVyZ2UsIHB1Ymxpc2gsIGRpc3Ry
-aWJ1dGUsIHN1YmxpY2Vuc2UsDQojIGFuZC9vciBzZWxsIGNvcGllcyBvZiB0
-aGUgU29mdHdhcmUsIGFuZCB0byBwZXJtaXQgcGVyc29ucyB0byB3aG9tIHRo
-ZQ0KIyBTb2Z0d2FyZSBpcyBmdXJuaXNoZWQgdG8gZG8gc28sIHN1YmplY3Qg
-dG8gdGhlIGZvbGxvd2luZyBjb25kaXRpb25zOg0KIw0KIyBUaGUgYWJvdmUg
-Y29weXJpZ2h0IG5vdGljZSBhbmQgdGhpcyBwZXJtaXNzaW9uIG5vdGljZSBz
-aGFsbCBiZSBpbmNsdWRlZA0KIyBpbiBhbGwgY29waWVzIG9yIHN1YnN0YW50
-aWFsIHBvcnRpb25zIG9mIHRoZSBTb2Z0d2FyZS4NCiMNCiMgVEhFIFNPRlRX
-QVJFIElTIFBST1ZJREVEICJBUyBJUyIsIFdJVEhPVVQgV0FSUkFOVFkgT0Yg
-QU5ZIEtJTkQsIEVYUFJFU1MgT1INCiMgSU1QTElFRCwgSU5DTFVESU5HIEJV
-VCBOT1QgTElNSVRFRCBUTyBUSEUgV0FSUkFOVElFUyBPRiBNRVJDSEFOVEFC
-SUxJVFksDQojIEZJVE5FU1MgRk9SIEEgUEFSVElDVUxBUiBQVVJQT1NFIEFO
-RCBOT05JTkZSSU5HRU1FTlQuIElOIE5PIEVWRU5UIFNIQUxMDQojIFRIRSBB
-VVRIT1JTIE9SIENPUFlSSUdIVCBIT0xERVJTIEJFIExJQUJMRSBGT1IgQU5Z
-IENMQUlNLCBEQU1BR0VTIE9SDQojIE9USEVSIExJQUJJTElUWSwgV0hFVEhF
-UiBJTiBBTiBBQ1RJT04gT0YgQ09OVFJBQ1QsIFRPUlQgT1IgT1RIRVJXSVNF
-LA0KIyBBUklTSU5HIEZST00sIE9VVCBPRiBPUiBJTiBDT05ORUNUSU9OIFdJ
-VEggVEhFIFNPRlRXQVJFIE9SIFRIRSBVU0UgT1INCiMgT1RIRVIgREVBTElO
-R1MgSU4gVEhFIFNPRlRXQVJFLg0KDQojIHRoaXMgaWRlYSBzaGFtZWxlc3Ns
-eSBzdG9sZW4gZnJvbSBkb3VnIGxlZGZvcmQNCg0KdXNlIHdhcm5pbmdzOw0K
-dXNlIHN0cmljdDsNCg0KIyBlbnN1cmUgc3Rkb3V0IGlzIG5vdCBidWZmZXJl
-ZA0Kc2VsZWN0KFNURE9VVCk7ICR8ID0gMTsNCg0KbXkgJHVzYWdlID0gInVz
-YWdlOiAkMCBsaW51eC50YXIuZ3ogL3BhdGgxIFsvcGF0aDIgLi4uXVxuIjsN
-CmRlZmluZWQobXkgJHRhcmJhbGwgPSBzaGlmdCkgb3IgZGllICR1c2FnZTsN
-Ci1mICR0YXJiYWxsIG9yIGRpZSAiJHRhcmJhbGwgZG9lcyBub3QgZXhpc3Qg
-b3IgaXMgbm90IGEgZmlsZVxuIjsNCg0KbXkgQHBhdGhzID0gQEFSR1Y7DQok
-I3BhdGhzID49IDAgb3IgZGllICIkdXNhZ2UiOw0KDQojIGRldGVybWluZSBz
-aXplIG9mIHVuY29tcHJlc3NlZCB0YXJiYWxsDQpvcGVuKEdaSVAsICItfCIp
-IHx8IGV4ZWMgImd6aXAiLCAiLS1xdWlldCIsICItLWxpc3QiLCAkdGFyYmFs
-bDsNCm15ICRsaW5lID0gPEdaSVA+Ow0KbXkgKCR0YXJiYWxsX3NpemUpID0g
-JGxpbmUgPX4gbSNeXHMqXGQrXHMqKFxkKykjOw0KZGVmaW5lZCgkdGFyYmFs
-bF9zaXplKSBvciBkaWUgInVuZXhwZWN0ZWQgcmVzdWx0IGZyb20gZ3ppcCAt
-LXF1aWV0IC0tbGlzdCAkdGFyYmFsbFxuIjsNCmNsb3NlKEdaSVApOw0KDQoj
-IGRldGVybWluZSBhbW91bnQgb2YgbWVtb3J5DQpvcGVuKE1FTUlORk8sICI8
-L3Byb2MvbWVtaW5mbyIpDQogICAgICAgIG9yIGRpZSAidW5hYmxlIHRvIG9w
-ZW4gL3Byb2MvbWVtaW5mbyBmb3IgcmVhZDogJCFcbiI7DQpteSAkdG90YWxf
-bWVtOw0Kd2hpbGUgKDxNRU1JTkZPPikgew0KICBpZiAoL15NZW1Ub3RhbDpc
-cyooXGQrKVxzKmtCLykgew0KICAgICR0b3RhbF9tZW0gPSAkMTsNCiAgICBs
-YXN0Ow0KICB9DQp9DQpkZWZpbmVkKCR0b3RhbF9tZW0pIG9yIGRpZSAiZGlk
-IG5vdCBmaW5kIE1lbVRvdGFsIGxpbmUgaW4gL3Byb2MvbWVtaW5mb1xuIjsN
-CmNsb3NlKE1FTUlORk8pOw0KJHRvdGFsX21lbSAqPSAxMDI0Ow0KDQpwcmlu
-dCAidG90YWwgbWVtb3J5OiAkdG90YWxfbWVtXG4iOw0KcHJpbnQgInVuY29t
-cHJlc3NlZCB0YXJiYWxsOiAkdGFyYmFsbF9zaXplXG4iOw0KbXkgJG5yX3Np
-bXVsdGFuZW91cyA9IGludCgxLjIgKiAkdG90YWxfbWVtIC8gJHRhcmJhbGxf
-c2l6ZSk7DQpwcmludCAibnIgc2ltdWx0YW5lb3VzIHByb2Nlc3NlczogJG5y
-X3NpbXVsdGFuZW91c1xuIjsNCg0Kc3ViIHN5c3RlbV9vcl9kaWUgew0KICBt
-eSBAYXJncyA9IEBfOw0KICBzeXN0ZW0oQGFyZ3MpOw0KICBpZiAoJD8gPT0g
-MSkgew0KICAgIG15ICRtc2cgPSBzcHJpbnRmKCIlcyBmYWlsZWQgdG8gZXhl
-YyAlczogJCFcbiIsIHNjYWxhcihsb2NhbHRpbWUpLCAkYXJnc1swXSk7DQog
-IH0NCiAgZWxzaWYgKCQ/ICYgMTI3KSB7DQogICAgbXkgJG1zZyA9IHNwcmlu
-dGYoIiVzICVzIGRpZWQgd2l0aCBzaWduYWwgJWQsICVzIGNvcmVkdW1wXG4i
-LA0KICAgICAgICBzY2FsYXIobG9jYWx0aW1lKSwgJGFyZ3NbMF0sICgkPyAm
-IDEyNyksICgkPyAmIDEyOCkgPyAid2l0aCIgOiAid2l0aG91dCIpOw0KICAg
-IGRpZSAkbXNnOw0KICB9DQogIGVsc2lmICgoJD8gPj4gOCkgIT0gMCkgew0K
-ICAgIG15ICRtc2cgPSBzcHJpbnRmKCIlcyAlcyBleGl0ZWQgd2l0aCBub24t
-emVybyBleGl0IGNvZGUgJWRcbiIsDQogICAgICAgIHNjYWxhcihsb2NhbHRp
-bWUpLCAkYXJnc1swXSwgJD8gPj4gOCk7DQogICAgZGllICRtc2c7DQogIH0N
-Cn0NCg0Kc3ViIHVudGFyKCQpIHsNCiAgbWtkaXIoJF9bMF0pIG9yIGRpZSBs
-b2NhbHRpbWUoKS4iIHVuYWJsZSB0byBta2RpcigkX1swXSk6ICQhXG4iOw0K
-ICBzeXN0ZW1fb3JfZGllKCJ0YXIiLCAiLXh6ZiIsICR0YXJiYWxsLCAiLUMi
-LCAkX1swXSk7DQp9DQoNCnByaW50IGxvY2FsdGltZSgpLiIgdW50YXJyaW5n
-IGdvbGRlbiBjb3B5XG4iOw0KbXkgJGdvbGRlbiA9ICRwYXRoc1swXS4iL2Rt
-YV90bXAuJCQuZ29sZCI7DQp1bnRhcigkZ29sZGVuKTsNCg0KbXkgJHBhc3Nf
-bm8gPSAwOw0Kd2hpbGUgKDEpIHsNCiAgcHJpbnQgbG9jYWx0aW1lKCkuIiBw
-YXNzICRwYXNzX25vOiBleHRyYWN0aW5nXG4iOw0KICBteSBAb3V0cHV0czsN
-CiAgZm9yZWFjaCBteSAkbiAoMS4uJG5yX3NpbXVsdGFuZW91cykgew0KICAg
-ICMgdHJlYXQgcGF0aHMgaW4gYSByb3VuZC1yb2JpbiBtYW5uZXINCiAgICBt
-eSAkZGlyID0gc2hpZnQoQHBhdGhzKTsNCiAgICBwdXNoKEBwYXRocywgJGRp
-cik7DQoNCiAgICAkZGlyIC49ICIvZG1hX3RtcC4kJC4kbiI7DQogICAgcHVz
-aChAb3V0cHV0cywgJGRpcik7DQoNCiAgICBteSAkcGlkID0gZm9yazsNCiAg
-ICBkZWZpbmVkKCRwaWQpIG9yIGRpZSBsb2NhbHRpbWUoKS4iIHVuYWJsZSB0
-byBmb3JrOiAkIVxuIjsNCiAgICBpZiAoJHBpZCA9PSAwKSB7DQogICAgICB1
-bnRhcigkZGlyKTsNCiAgICAgIGV4aXQoMCk7DQogICAgfQ0KICB9DQoNCiAg
-IyB3YWl0IGZvciB0aGUgY2hpbGRyZW4NCiAgd2hpbGUgKHdhaXQgIT0gLTEp
-IHt9DQoNCiAgcHJpbnQgbG9jYWx0aW1lKCkuIiBwYXNzICRwYXNzX25vOiBk
-aWZmaW5nXG4iOw0KICBmb3JlYWNoIG15ICRkaXIgKEBvdXRwdXRzKSB7DQog
-ICAgbXkgJHBpZCA9IGZvcms7DQogICAgZGVmaW5lZCgkcGlkKSBvciBkaWUg
-bG9jYWx0aW1lKCkuIiB1bmFibGUgdG8gZm9yazogJCFcbiI7DQogICAgaWYg
-KCRwaWQgPT0gMCkgew0KICAgICAgc3lzdGVtX29yX2RpZSgiZGlmZiIsICIt
-VSIsICIzIiwgIi1yTiIsICRnb2xkZW4sICRkaXIpOw0KICAgICAgc3lzdGVt
-X29yX2RpZSgicm0iLCAiLWZyIiwgJGRpcik7DQogICAgICBleGl0KDApOw0K
-ICAgIH0NCiAgfQ0KDQogICMgd2FpdCBmb3IgdGhlIGNoaWxkcmVuDQogIHdo
-aWxlICh3YWl0ICE9IC0xKSB7fQ0KDQogICsrJHBhc3Nfbm87DQp9DQo=
-
---1171294248-1768729811-1198800484=:5207--
