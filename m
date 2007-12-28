@@ -1,68 +1,39 @@
-From: "H. Peter Anvin" <hpa@zytor.com>
-Subject: On the subject of RAID-6 corruption recovery
-Date: Thu, 27 Dec 2007 18:58:04 -0800
-Message-ID: <4774663C.5090609@zytor.com>
+From: Richard Scobie <richard@sauce.co.nz>
+Subject: Re: raid5 grow reshaping speed is unchangeable
+Date: Fri, 28 Dec 2007 16:13:23 +1300
+Message-ID: <477469D3.2030202@sauce.co.nz>
+References: <380-220071242752242883@mochamail.com> <47744926.6010808@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <47744926.6010808@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I got a private email a while ago from Thiemo Nagel claiming that some 
-of the conclusions in my RAID-6 paper was incorrect.  This was combined 
-with a "proof" which was plain wrong, and could easily be disproven 
-using basic enthropy accounting (i.e. how much information is around to 
-play with.)
 
-However, it did cause me to clarify the text portion a little bit.  In 
-particular, *in practice* in may be possible to *probabilistically* 
-detect multidisk corruption.  Probabilistic detection means that the 
-detection is not guaranteed, but it can be taken advantage of 
-opportunistically.
+> Cody Yellan wrote:
+>> I had a 4x500GB SATA2 array, md0.  I added one 500GB drive and
+>> reshaping began at ~2500K/sec.  Changing
+>> /proc/sys/dev/raid/speed_limit_m{in,ax} or
+>> /sys/block/md0/md/sync_speed_m{in,ax} had no effect.  I shut down all
+>> unnecessary services and the array is offline (not mounted).  I have
+>> read that the throttling code is "fragile" (esp. with regard to
+>> raid5) but does this make sense?  I will wait (in)patiently for it to
+>> finish, but I do wonder why the configuration parameters have no
+>> effect.  This is a dual quad 2GHz Xeon machine with 8GB of memory
+>> running RHEL5.  Is this the maximum speed?
 
-In particular, if you follow the algorithm of section 4 of my paper, you 
-end up with a corrupt disk number, but the result is a vector, not a 
-scalar.  This is because the algorithm is executed on the P* and Q* 
-error vectors on a byte by byte basis.
+Are you running a non-standard /sys/block/md5/md/stripe_cache_size?
 
-In the common case of a single disk corruption, what you will typically 
-see is an error pattern that has a consistent value interrupted by 
-correct bytes (P* = Q* = {00}); this is due to bytes which still had the 
-random value by chance.  For the z values which can be computed (recall, 
-z is only well-defined if P* and Q* are != {00}), they should match.
+I found when running a kernel of about that vintage on FC6 (which I 
+guess became RHEL5), that with a stripe_cache_size of 16384, resyncs 
+dropped down to about the speed you are seeing.
 
-There are two patterns which are likely to indicate multi-disk 
-corruption and where recovery software should trip out and raise hell:
+This changed back to more normal speeds with a later kernel, but I do 
+not recall which.
 
-* z >= n: the computed error disk doesn't exist.
+Regards,
 
-	Obviously, if "the corrupt disk" is a disk that can't exist, we
-	have a bigger problem.
-
-	This is probabilistic, since as n approaches 255, the
-	probability of detection goes to zero.
-
-* Inconsistent z numbers (or spurious P and Q references)
-
-	If the calculation for which disk is corrupt jumps around
-	within a single sector, there is likely a problem.
-
-It's worth noting in all of this that there is 258 possible outcomes of 
-the complete error analysis algorithm - 255 possible D errors (z 
-values), P error, Q error, and no error.  If these are to be analyzed as 
-an array, it can't be solely a byte array.
-
-That this set is complete is shown by the fact that out of 65536 
-possible (P, Q) states, this corresponds to:
-
-1 state no error
-255 states P error (the 256th state is a no-error state!)
-255 states Q error
-255*255 states D error (n = 255 is maximum for byte-oriented RAID-6)
-
-... for a total of 65536 states.
-
-	-hpa
-
+Richard
