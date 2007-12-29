@@ -1,40 +1,73 @@
-From: "Dan Williams" <dan.j.williams@intel.com>
-Subject: mdadm: unable to add a disk to degraded raid1 array
-Date: Sat, 29 Dec 2007 02:35:58 -0700
-Message-ID: <e9c3a7c20712290135m165be59fo55cf1b728ad1657d@mail.gmail.com>
+From: dean gaudet <dean@arctic.org>
+Subject: Re: 2.6.24-rc6 reproducible raid5 hang
+Date: Sat, 29 Dec 2007 08:48:29 -0800 (PST)
+Message-ID: <Pine.LNX.4.64.0712290842530.21114@twinlark.arctic.org>
+References: <alpine.DEB.0.999999.0712270845150.5207@twinlark.arctic.org>
+ <alpine.DEB.0.999999.0712270938160.5207@twinlark.arctic.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <alpine.DEB.0.999999.0712270938160.5207@twinlark.arctic.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-In case someone else happens upon this I have found that mdadm >=
-v2.6.2 cannot add a disk to a degraded raid1 array created with mdadm
-< 2.6.2.
+hmm bummer, i'm doing another test (rsync 3.5M inodes from another box) on 
+the same 64k chunk array and had raised the stripe_cache_size to 1024... 
+and got a hang.  this time i grabbed stripe_cache_active before bumping 
+the size again -- it was only 905 active.  as i recall the bug we were 
+debugging a year+ ago the active was at the size when it would hang.  so 
+this is probably something new.
 
-I bisected the problem down to mdadm git commit
-2fb749d1b7588985b1834e43de4ec5685d0b8d26 which appears to make an
-incompatible change to the super block's 'data_size' field.
+anyhow raising it to 2048 got it unstuck, but i'm guessing i'll be able to 
+hit that limit too if i try harder :)
 
---- sdb1-sb-good.hex    2007-12-12 14:31:42.000000000 +0000
-+++ sdb1-sb-bad.hex     2007-12-12 14:31:36.000000000 +0000
-@@ -6,12 +6,12 @@
- 0000050 60d8 0077 0000 0000 0000 0000 0004 0000
- 0000060 0000 0000 0000 0000 0000 0000 0000 0000
- *
--0000080 0000 0000 0000 0000 60d8 0077 0000 0000
-+0000080 0000 0000 0000 0000 60d0 0077 0000 0000
+btw what units are stripe_cache_size/active in?  is the memory consumed 
+equal to (chunk_size * raid_disks * stripe_cache_size) or (chunk_size * 
+raid_disks * stripe_cache_active)?
 
-Which trips up the "if (rdev->size < le64_to_cpu(sb->data_size)/2)"
-check in super_1_load [1], resulting in:
+-dean
 
-        mdadm: add new device failed for /dev/sdb1 as 4: Invalid argument
+On Thu, 27 Dec 2007, dean gaudet wrote:
 
---
-Dan
-
-[1] http://lxr.linux.no/linux/drivers/md/md.c#L1148
+> hmm this seems more serious... i just ran into it with chunksize 64KiB and 
+> while just untarring a bunch of linux kernels in parallel... increasing 
+> stripe_cache_size did the trick again.
+> 
+> -dean
+> 
+> On Thu, 27 Dec 2007, dean gaudet wrote:
+> 
+> > hey neil -- remember that raid5 hang which me and only one or two others 
+> > ever experienced and which was hard to reproduce?  we were debugging it 
+> > well over a year ago (that box has 400+ day uptime now so at least that 
+> > long ago :)  the workaround was to increase stripe_cache_size... i seem to 
+> > have a way to reproduce something which looks much the same.
+> > 
+> > setup:
+> > 
+> > - 2.6.24-rc6
+> > - system has 8GiB RAM but no swap
+> > - 8x750GB in a raid5 with one spare, chunksize 1024KiB.
+> > - mkfs.xfs default options
+> > - mount -o noatime
+> > - dd if=/dev/zero of=/mnt/foo bs=4k count=2621440
+> > 
+> > that sequence hangs for me within 10 seconds... and i can unhang / rehang 
+> > it by toggling between stripe_cache_size 256 and 1024.  i detect the hang 
+> > by watching "iostat -kx /dev/sd? 5".
+> > 
+> > i've attached the kernel log where i dumped task and timer state while it 
+> > was hung... note that you'll see at some point i did an xfs mount with 
+> > external journal but it happens with internal journal as well.
+> > 
+> > looks like it's using the raid456 module and async api.
+> > 
+> > anyhow let me know if you need more info / have any suggestions.
+> > 
+> > -dean
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
