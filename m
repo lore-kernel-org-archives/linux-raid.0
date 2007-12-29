@@ -1,40 +1,40 @@
-From: Richard Scobie <richard@sauce.co.nz>
-Subject: Re: raid5 grow reshaping speed is unchangeable
-Date: Sat, 29 Dec 2007 17:38:12 +1300
-Message-ID: <4775CF34.7030400@sauce.co.nz>
-References: <380-2200712528192139967@mochamail.com>
+From: "Dan Williams" <dan.j.williams@intel.com>
+Subject: mdadm: unable to add a disk to degraded raid1 array
+Date: Sat, 29 Dec 2007 02:35:58 -0700
+Message-ID: <e9c3a7c20712290135m165be59fo55cf1b728ad1657d@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <380-2200712528192139967@mochamail.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Cody Yellan wrote:
+In case someone else happens upon this I have found that mdadm >=
+v2.6.2 cannot add a disk to a degraded raid1 array created with mdadm
+< 2.6.2.
 
-> You are right, Richard.  RHEL5 had a stripe_cache_size of 256 when
-> the reshape began.  I increased it to 1024 and the reshape speed
-> doubled to 4500K/s.  I did not see any increase in memory usage.  I
-> tried 2048 and then 4096 but saw no difference in speed.
+I bisected the problem down to mdadm git commit
+2fb749d1b7588985b1834e43de4ec5685d0b8d26 which appears to make an
+incompatible change to the super block's 'data_size' field.
 
-Sorry, I did not make myself clear.
+--- sdb1-sb-good.hex    2007-12-12 14:31:42.000000000 +0000
++++ sdb1-sb-bad.hex     2007-12-12 14:31:36.000000000 +0000
+@@ -6,12 +6,12 @@
+ 0000050 60d8 0077 0000 0000 0000 0000 0004 0000
+ 0000060 0000 0000 0000 0000 0000 0000 0000 0000
+ *
+-0000080 0000 0000 0000 0000 60d8 0077 0000 0000
++0000080 0000 0000 0000 0000 60d0 0077 0000 0000
 
-Back when I was seeing the slow resync speeds, it was due to larger than 
-default stripe_cache_size - I had increased to 16384.
+Which trips up the "if (rdev->size < le64_to_cpu(sb->data_size)/2)"
+check in super_1_load [1], resulting in:
 
-When this was reduced back to the default, which I suspect is 256, 
-speeds were back up to more normal levels - much faster than the 4.5MB/s 
-you are seeing.
+        mdadm: add new device failed for /dev/sdb1 as 4: Invalid argument
 
-At some point, this issue was fixed and currently on 2.6.22, with a 
-stripe_cache_size of 16384 and a 4 x 500GB SATA II md RAID 5, resync 
-speed is 162MB/s.
+--
+Dan
 
-Perhaps somthing different occurs on a reshape, (which I have only now 
-realised you were doing).
-
-Regards,
-
-Richard
+[1] http://lxr.linux.no/linux/drivers/md/md.c#L1148
