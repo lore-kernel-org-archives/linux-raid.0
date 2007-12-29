@@ -1,42 +1,40 @@
-From: "Cody Yellan" <cody@mochamail.com>
+From: Richard Scobie <richard@sauce.co.nz>
 Subject: Re: raid5 grow reshaping speed is unchangeable
-Date: Fri, 28 Dec 2007 16:52:44 -0800
-Message-ID: <380-220071262905244879@mochamail.com>
+Date: Sat, 29 Dec 2007 17:38:12 +1300
+Message-ID: <4775CF34.7030400@sauce.co.nz>
+References: <380-2200712528192139967@mochamail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <380-2200712528192139967@mochamail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Cody Yellan wrote:
 
->>2007/12/27, Cody Yellan <cody@mochamail.com>:
->>> I had a 4x500GB SATA2 array, md0.  I added one 500GB drive and
->>> reshaping began at ~2500K/sec.  Changing
->>> /proc/sys/dev/raid/speed_limit_m{in,ax} or
->>> /sys/block/md0/md/sync_speed_m{in,ax} had no effect.  I shut down
->all
->>> unnecessary services and the array is offline (not mounted).  I
->have
->>> read that the throttling code is "fragile" (esp. with regard to
->>> raid5) but does this make sense?  I will wait (in)patiently for it
->to
->>> finish, but I do wonder why the configuration parameters have no
->>> effect.  This is a dual quad 2GHz Xeon machine with 8GB of memory
->>> running RHEL5.  Is this the maximum speed?
->>>
->>I think you may check each SATA2 disk to make sure they are working
->fine.
->>I had a similar situation and it turned out to be caused by one of
->>disks in array. It is  a failed disk indicated by its S.M.A.R.T
->>information.
+> You are right, Richard.  RHEL5 had a stripe_cache_size of 256 when
+> the reshape began.  I increased it to 1024 and the reshape speed
+> doubled to 4500K/s.  I did not see any increase in memory usage.  I
+> tried 2048 and then 4096 but saw no difference in speed.
 
-No problems indicated by SMART but I did have some concerns about the
-drive I added.  It contained some data so I tried to delete the
-partition and create a new filesystem-free partition.  Both parted
-and fdisk simply restored the already existing partition, complete
-with the data.  So I just added that drive, figuring mdadm would
-overwrite the partition.    It worked but from now on I will try to
-use only blank disks.
+Sorry, I did not make myself clear.
 
+Back when I was seeing the slow resync speeds, it was due to larger than 
+default stripe_cache_size - I had increased to 16384.
+
+When this was reduced back to the default, which I suspect is 256, 
+speeds were back up to more normal levels - much faster than the 4.5MB/s 
+you are seeing.
+
+At some point, this issue was fixed and currently on 2.6.22, with a 
+stripe_cache_size of 16384 and a 4 x 500GB SATA II md RAID 5, resync 
+speed is 162MB/s.
+
+Perhaps somthing different occurs on a reshape, (which I have only now 
+realised you were doing).
+
+Regards,
+
+Richard
