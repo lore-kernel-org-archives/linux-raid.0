@@ -1,48 +1,38 @@
-From: dean gaudet <dean@arctic.org>
-Subject: Re: 2.6.24-rc6 reproducible raid5 hang
-Date: Sat, 29 Dec 2007 14:21:03 -0800 (PST)
-Message-ID: <alpine.DEB.0.999999.0712291415190.5207@twinlark.arctic.org>
-References: <alpine.DEB.0.999999.0712270845150.5207@twinlark.arctic.org>  <alpine.DEB.0.999999.0712270938160.5207@twinlark.arctic.org>  <Pine.LNX.4.64.0712290842530.21114@twinlark.arctic.org> <e9c3a7c20712291247u7d5f6b76gf44a1770f5cdc2cf@mail.gmail.com>
- <alpine.DEB.0.999999.0712291248490.5207@twinlark.arctic.org> <Pine.LNX.4.64.0712291649250.13461@p34.internal.lan> <alpine.DEB.0.999999.0712291409400.5207@twinlark.arctic.org>
+From: Michael Tokarev <mjt@tls.msk.ru>
+Subject: Re: Linux RAID Partition Offset 63 cylinders / 30% performance hit?
+Date: Sun, 30 Dec 2007 04:33:09 +0300
+Message-ID: <4776F555.7040607@msgid.tls.msk.ru>
+References: <Pine.LNX.4.64.0712190926150.2468@p34.internal.lan> <20071219215948.GA7129@cthulhu.home.robinhill.me.uk> <477154C1.6000503@tmr.com> <alpine.DEB.0.999999.0712290852140.5207@twinlark.arctic.org> <Pine.LNX.4.64.0712291234230.31479@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.0.999999.0712291409400.5207@twinlark.arctic.org>
+In-Reply-To: <Pine.LNX.4.64.0712291234230.31479@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
 To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: Dan Williams <dan.j.williams@intel.com>, linux-raid@vger.kernel.org
+Cc: dean gaudet <dean@arctic.org>, Bill Davidsen <davidsen@tmr.com>, linux-raid@vger.kernel.org, Alan Piszcz <ap@solarrain.com>
 List-Id: linux-raid.ids
 
+Justin Piszcz wrote:
+[]
+> Good to know/have it confirmed by someone else, the alignment does not
+> matter with Linux/SW RAID.
 
-On Sat, 29 Dec 2007, dean gaudet wrote:
+Alignment matters when one partitions Linux/SW raid array.
+If the inside partitions will not be aligned on a stripe
+boundary, esp. in the worst case when the filesystem blocks
+cross the stripe boundary (wonder if it's ever possible...
+and I think it is, if a partition starts at some odd 512
+bytes boundary, and filesystem block size is 4Kb, there's
+just no chance for an inside filesystem to do full-stripe
+writes, ever, so (modulo stripe cache size) all writes will
+go read-modify-write or similar way.
 
-> On Sat, 29 Dec 2007, Justin Piszcz wrote:
-> 
-> > Curious btw what kind of filesystem size/raid type (5, but defaults I assume,
-> > nothing special right? (right-symmetric vs. left-symmetric, etc?)/cache
-> > size/chunk size(s) are you using/testing with?
-> 
-> mdadm --create --level=5 --chunk=64 -n7 -x1 /dev/md2 /dev/sd[a-h]1
-> mkfs.xfs -f /dev/md2
-> 
-> otherwise defaults
+And that's what the original article is about, by the way.
+It just happens that hardware raid array is more often split
+into partitions (using native tools) than linux software raid
+arrays.
 
-hmm i missed a few things, here's exactly how i created the array:
+And that's what has been pointed out in this thread, as well... ;)
 
-mdadm --create --level=5 --chunk=64 -n7 -x1 --assume-clean /dev/md2 /dev/sd[a-h]1
-
-it's reassembled automagically each reboot, but i do this each reboot:
-
-mkfs.xfs -f /dev/md2
-mount -o noatime /dev/md2 /mnt/new
-./dma_thrasher linux.tar.gz /mnt/new
-
-the --assume-clean and noatime probably make no difference though...
-
-on the bisection front it looks like it's new behaviour between 2.6.21.7 
-and 2.6.22.15 (stock kernels now, not debian).
-
-i've got to step out for a while, but i'll go at it again later, probably 
-with git bisect unless someone has some cherry picked changes to suggest.
-
--dean
+/mjt
