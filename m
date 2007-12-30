@@ -1,23 +1,17 @@
-From: "Thiemo Nagel" <thiemo.nagel@ph.tum.de>
-Subject: Re: [patch] improve stripe_cache_size documentation
-Date: Sun, 30 Dec 2007 12:01:08 +0100 (CET)
-Message-ID: <52471.88.217.76.64.1199012468.squirrel@www.e18.physik.tu-muenchen.de>
-References: <alpine.DEB.0.999999.0712291305270.5207@twinlark.arctic.org>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: AS/CFQ/DEADLINE/NOOP on Linux SW RAID?
+Date: Sun, 30 Dec 2007 11:43:16 -0500 (EST)
+Message-ID: <Pine.LNX.4.64.0712301142090.9845@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.0.999999.0712291305270.5207@twinlark.arctic.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: dean gaudet <dean@arctic.org>
-Cc: linux-raid@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
->    stripe_cache_size  (currently raid5 only)
+When setting the scheduler, is it possible to set it on /dev/mdX or is it 
+only possible to set it on the underlying devices which compose the sw 
+raid device? /dev/sda /dev/sdb and does that really affect how the data is 
+accessed by specifying the underlying device and not mdX?
 
-As far as I have understood, it applies to raid6, too.
-
-Kind regards,
-
-Thiemo Nagel
-
+Justin.
