@@ -1,26 +1,30 @@
 From: dean gaudet <dean@arctic.org>
 Subject: Re: [patch] improve stripe_cache_size documentation
-Date: Sun, 30 Dec 2007 10:18:29 -0800 (PST)
-Message-ID: <alpine.DEB.0.999999.0712301016290.5207@twinlark.arctic.org>
-References: <alpine.DEB.0.999999.0712291305270.5207@twinlark.arctic.org> <52471.88.217.76.64.1199012468.squirrel@www.e18.physik.tu-muenchen.de>
+Date: Sun, 30 Dec 2007 14:32:05 -0800 (PST)
+Message-ID: <alpine.DEB.0.999999.0712301431270.21851@twinlark.arctic.org>
+References: <alpine.DEB.0.999999.0712291305270.5207@twinlark.arctic.org> <52471.88.217.76.64.1199012468.squirrel@www.e18.physik.tu-muenchen.de> <alpine.DEB.0.999999.0712301016290.5207@twinlark.arctic.org>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <52471.88.217.76.64.1199012468.squirrel@www.e18.physik.tu-muenchen.de>
+In-Reply-To: <alpine.DEB.0.999999.0712301016290.5207@twinlark.arctic.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: Thiemo Nagel <thiemo.nagel@ph.tum.de>
 Cc: linux-raid@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>
 List-Id: linux-raid.ids
 
-On Sun, 30 Dec 2007, Thiemo Nagel wrote:
+On Sun, 30 Dec 2007, dean gaudet wrote:
 
-> >    stripe_cache_size  (currently raid5 only)
+> On Sun, 30 Dec 2007, Thiemo Nagel wrote:
 > 
-> As far as I have understood, it applies to raid6, too.
+> > >    stripe_cache_size  (currently raid5 only)
+> > 
+> > As far as I have understood, it applies to raid6, too.
+> 
+> good point... and raid4.
+> 
+> here's an updated patch.
 
-good point... and raid4.
-
-here's an updated patch.
+and once again with a typo fix.  oops.
 
 -dean
 
@@ -29,7 +33,7 @@ Signed-off-by: dean gaudet <dean@arctic.org>
 Index: linux/Documentation/md.txt
 ===================================================================
 --- linux.orig/Documentation/md.txt	2007-12-29 13:01:25.000000000 -0800
-+++ linux/Documentation/md.txt	2007-12-30 10:16:58.000000000 -0800
++++ linux/Documentation/md.txt	2007-12-30 14:30:40.000000000 -0800
 @@ -435,8 +435,14 @@
  
  These currently include
@@ -45,5 +49,6 @@ Index: linux/Documentation/md.txt
 +
 +        PAGE_SIZE * raid_disks * stripe_cache_size
 +
-+  strip_cache_active (raid4, raid5 and raid6)
++  stripe_cache_active (raid4, raid5 and raid6)
        number of active entries in the stripe cache
+
