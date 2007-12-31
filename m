@@ -1,100 +1,56 @@
-From: pg_lxra@lxra.for.sabi.co.UK (Peter Grandi)
-Subject: Re: New XFS benchmarks using David Chinner's recommendations for  XFS-based  optimizations.
-Date: Mon, 31 Dec 2007 15:05:33 +0000
-Message-ID: <18297.1341.691034.679513@base.ty.sabi.co.UK>
-References: <Pine.LNX.4.64.0712301752550.29138@p34.internal.lan>
-	<4778425A.4050805@sauce.co.nz>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: Last ditch plea on remote double raid5 disk failure
+Date: Mon, 31 Dec 2007 10:38:48 -0500
+Message-ID: <47790D08.7000605@tmr.com>
+References: <8e0f3ba80712310239w3263b2b8hb62c0a6c79a84b77@mail.gmail.com> <18296.56100.769123.555100@notabene.brown> <4778FA73.7010208@msgid.tls.msk.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4778425A.4050805@sauce.co.nz>
+In-Reply-To: <4778FA73.7010208@msgid.tls.msk.ru>
 Sender: linux-raid-owner@vger.kernel.org
-To: Richard Scobie <richard@sauce.co.nz>
-Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: Michael Tokarev <mjt@tls.msk.ru>
+Cc: Neil Brown <neilb@suse.de>, Marc MERLIN <merlin@gmail.com>, "H. Peter Anvin" <hpa@zytor.com>, mingo@elte.hu, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
->> Why does mdadm still use 64k for the default chunk size?
+Michael Tokarev wrote:
+> Neil Brown wrote:
+>   
+>> On Monday December 31, merlin@gmail.com wrote:
+>>     
+>>> I'm hoping that if I can get raid5 to continue despite the errors, I
+>>> can bring back up enough of the server to continue, a bit like the
+>>> remount-ro option in ext2/ext3.
+>>>
+>>> If not, oh well...
+>>>       
+>> Sorry, but it is "oh well".
+>>     
 
-> Probably because this is the best balance for average file
-> sizes, which are smaller than you seem to be testing with?
+> And another thought around all this.  Linux sw raid definitely need
+> a way to proactively replace a (probably failing) drive, without removing
+> it from the array first.  Something like,
+>   mdadm --add /dev/md0 /dev/sdNEW --inplace /dev/sdFAILING
+> so that sdNEW will be a mirror of sdFAILING, and once the "recovery"
+> procedure finishes (which may use data from other drives in case of
+> I/O error reading sdFAILING - unlike described scenario of making a
+> superblock-less mirror of sdNEW and sdFAILING),
+>   mdadm --remove /dev/md0 /dev/sdFAILING,
+> which does not involve any further reconstructions anymore.
+>   
 
-Well "average file sizes" relate less to chunk sizes than access
-patterns do. Single threaded sequential reads with smaller block
-sizes tend to perform better with smaller chunk sizes, for example.
-File sizes do influence a bit the access patterns seen by disks.
+I really like that idea, it addresses the same problem as the various 
+posts regarding creating little raid1 arrays of the old and new drive, etc.
 
-The goals of a chunk size choice are to spread a single
-''logical'' (application or filesystem level) operation over as
-many arms as possible while keeping rotational latency low, to
-minimize arm movement, and to minimize arm contention among
-different threads.
+I would like an option to keep a drive with bad sectors in an array if 
+removing the drive would prevent the array from running (or starting). I 
+don't think that should be default, but there are times when some data 
+is way better than none. I would think the options are fail the drive, 
+set the array r/o, and return an error and keep going.
 
-Thus the tradeoffs influencing chunk size are about the
-sequential vs. random nature of reads or writes, how many blocks
-are involved in a single ''logical'' operation, and how many
-threads are accessing the array.
+-- 
+Bill Davidsen <davidsen@tmr.com>
+  "Woe unto the statesman who makes war without a reason that will still
+  be valid when the war is over..." Otto von Bismark 
 
-The goal here is not to optimize the speed of the array, but the
-throughput and/or latency of the applications using it.
-
-A good idea is to consider the two extremes: a chunk size of 1
-sector and a chunk size of the whole disk (or perhaps more
-interestingly 1/2 disk).
-
-For example, consider a RAID0 of 4 disks ('a', 'b', 'c', 'd')
-with each chunk size of 8 sectors.
-
-To read the first 16 chunks or 128 sectors of the array these
-sector read operations ['get(device,first,last)'] have to be
-issued:
-
-  00-31: get(a,0,7) get(b,0,7) get(c,0,7) get(d,0,7)
-  32-63:   get(a,8,15) get(b,8,15) get(c,8,15) get(d,8,15)
-  64-95:     get(a,16,23) get(b,16,23) get(c,16,23) get(d,16,23)
-  96-127:      get(a,24,31) get(b,24,31) get(c,24,31) get(d,24,31)
-
-I have indented the lists to show the increasing offset into
-each block device.
-
-Now, the big question here are all about the interval between
-these operations, that is how large are logical operations and
-how much they cluster in time and space.
-
-For example in the above sequence it matters whether clusters of
-operations involve less then 32 sectors or not, and the likely
-interval between clusters generated by different concurrent
-applications (consider rotational latency and likelyhood of arm
-being moved between successive clusters).
-
-So that space/time clustering depends more on how applications
-process their data and how many applications concurrently access
-the array, and whether they are reading or writing.
-
-The latter point involves an exceedingly important asymmetry
-that is often forgotten: an application read can only complete
-when the last block is read, while a write can complete as soon
-as it issued. So the time clustering of sector reads depends on
-how long ''logical'' reads are as well as how long is the
-interval between them.
-
-So an application that issues frequent small reads rather than
-infrequent large ones may work best with a small chunk size.
-
-Not much related to distribution of file sizes, unless this
-influences the space/time clustering of application issued
-operations...
-
-In general I like smaller chunk sizes than larger chunk sizes,
-because the latter work well only in somewhat artificial cases
-like simple-minded benchmarks.
-
-In particular if one uses parity-based (not a good idea in
-general...) arrays, as small chunk sizes (as well as stripe
-sizes) give a better chance of reducing the frequency of RMW.
-
-Counter to this that the Linux IO queueing subsystem (elevators
-etc.) perhaps does not always take advantage of parallelizable
-operations across disks as much as it could, and bandwidth
-bottlenecks (e.g. PCI bus).
 
