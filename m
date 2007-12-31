@@ -1,83 +1,100 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: New XFS benchmarks using David Chinner's recommendations for
- XFS-based optimizations.
-Date: Mon, 31 Dec 2007 10:22:53 -0500
-Message-ID: <4779094D.8050002@tmr.com>
+From: pg_lxra@lxra.for.sabi.co.UK (Peter Grandi)
+Subject: Re: New XFS benchmarks using David Chinner's recommendations for  XFS-based  optimizations.
+Date: Mon, 31 Dec 2007 15:05:33 +0000
+Message-ID: <18297.1341.691034.679513@base.ty.sabi.co.UK>
 References: <Pine.LNX.4.64.0712301752550.29138@p34.internal.lan>
+	<4778425A.4050805@sauce.co.nz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0712301752550.29138@p34.internal.lan>
+In-Reply-To: <4778425A.4050805@sauce.co.nz>
 Sender: linux-raid-owner@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: xfs@oss.sgi.com, linux-raid@vger.kernel.org, Alan Piszcz <ap@solarrain.com>
+To: Richard Scobie <richard@sauce.co.nz>
+Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Justin Piszcz wrote:
-> Dave's original e-mail:
->
->> # mkfs.xfs -f -l lazy-count=1,version=2,size=128m -i attr=2 -d 
->> agcount=4 <dev>
->> # mount -o logbsize=256k <dev> <mtpt>
->
->> And if you don't care about filsystem corruption on power loss:
->
->> # mount -o logbsize=256k,nobarrier <dev> <mtpt>
->
->> Those mkfs values (except for log size) will be hte defaults in the next
->> release of xfsprogs.
->
->> Cheers,
->
->> Dave.
->> -- 
->> Dave Chinner
->> Principal Engineer
->> SGI Australian Software Group
->
-> ---------
->
-> I used his mkfs.xfs options verbatim but I use my own mount options:
-> noatime,nodiratime,logbufs=8,logbsize=26214
->
-> Here are the results, the results of 3 bonnie++ averaged together for 
-> each test:
-> http://home.comcast.net/~jpiszcz/xfs1/result.html
->
-> Thanks Dave, this looks nice--the more optimizations the better!
->
-> -----------
->
-> I also find it rather pecuilar that in some of my (other) benchmarks 
-> my RAID 5 is just as fast as RAID 0 for extracting large files 
-> (uncompressed) files:
->
-> RAID 5 (1024k CHUNK)
-> 26.95user 6.72system 0:37.89elapsed 88%CPU (0avgtext+0avgdata 
-> 0maxresident)k0inputs+0outputs (6major+526minor)pagefaults 0swaps
->
-> Compare with RAID 0 for the same operation:
->
-> (as with RAID5, it appears 256k-1024k..2048k possibly) is the sweet spot.
->
-> Why does mdadm still use 64k for the default chunk size?
+>> Why does mdadm still use 64k for the default chunk size?
 
-Write performance with small files, I would think. There is some 
-information in old posts, but I don't seem to find them as quickly as I 
-would like.
->
-> And another quick question, would there be any benefit to use (if it 
-> were possible) a block size of > 4096 bytes with XFS (I assume only 
-> IA64/similar arch can support it), e.g. x86_64 cannot because the 
-> page_size is 4096.
->
-> [ 8265.407137] XFS: only pagesize (4096) or less will currently work.
+> Probably because this is the best balance for average file
+> sizes, which are smaller than you seem to be testing with?
 
+Well "average file sizes" relate less to chunk sizes than access
+patterns do. Single threaded sequential reads with smaller block
+sizes tend to perform better with smaller chunk sizes, for example.
+File sizes do influence a bit the access patterns seen by disks.
 
--- 
-Bill Davidsen <davidsen@tmr.com>
-  "Woe unto the statesman who makes war without a reason that will still
-  be valid when the war is over..." Otto von Bismark 
+The goals of a chunk size choice are to spread a single
+''logical'' (application or filesystem level) operation over as
+many arms as possible while keeping rotational latency low, to
+minimize arm movement, and to minimize arm contention among
+different threads.
 
+Thus the tradeoffs influencing chunk size are about the
+sequential vs. random nature of reads or writes, how many blocks
+are involved in a single ''logical'' operation, and how many
+threads are accessing the array.
+
+The goal here is not to optimize the speed of the array, but the
+throughput and/or latency of the applications using it.
+
+A good idea is to consider the two extremes: a chunk size of 1
+sector and a chunk size of the whole disk (or perhaps more
+interestingly 1/2 disk).
+
+For example, consider a RAID0 of 4 disks ('a', 'b', 'c', 'd')
+with each chunk size of 8 sectors.
+
+To read the first 16 chunks or 128 sectors of the array these
+sector read operations ['get(device,first,last)'] have to be
+issued:
+
+  00-31: get(a,0,7) get(b,0,7) get(c,0,7) get(d,0,7)
+  32-63:   get(a,8,15) get(b,8,15) get(c,8,15) get(d,8,15)
+  64-95:     get(a,16,23) get(b,16,23) get(c,16,23) get(d,16,23)
+  96-127:      get(a,24,31) get(b,24,31) get(c,24,31) get(d,24,31)
+
+I have indented the lists to show the increasing offset into
+each block device.
+
+Now, the big question here are all about the interval between
+these operations, that is how large are logical operations and
+how much they cluster in time and space.
+
+For example in the above sequence it matters whether clusters of
+operations involve less then 32 sectors or not, and the likely
+interval between clusters generated by different concurrent
+applications (consider rotational latency and likelyhood of arm
+being moved between successive clusters).
+
+So that space/time clustering depends more on how applications
+process their data and how many applications concurrently access
+the array, and whether they are reading or writing.
+
+The latter point involves an exceedingly important asymmetry
+that is often forgotten: an application read can only complete
+when the last block is read, while a write can complete as soon
+as it issued. So the time clustering of sector reads depends on
+how long ''logical'' reads are as well as how long is the
+interval between them.
+
+So an application that issues frequent small reads rather than
+infrequent large ones may work best with a small chunk size.
+
+Not much related to distribution of file sizes, unless this
+influences the space/time clustering of application issued
+operations...
+
+In general I like smaller chunk sizes than larger chunk sizes,
+because the latter work well only in somewhat artificial cases
+like simple-minded benchmarks.
+
+In particular if one uses parity-based (not a good idea in
+general...) arrays, as small chunk sizes (as well as stripe
+sizes) give a better chance of reducing the frequency of RMW.
+
+Counter to this that the Linux IO queueing subsystem (elevators
+etc.) perhaps does not always take advantage of parallelizable
+operations across disks as much as it could, and bandwidth
+bottlenecks (e.g. PCI bus).
 
