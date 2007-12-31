@@ -1,93 +1,54 @@
-From: Nagilum <nagilum@nagilum.org>
-Subject: PROBLEM: RAID5 reshape data corruption
-Date: Mon, 31 Dec 2007 13:04:20 +0100
-Message-ID: <20071231130420.kivbehcc0o0wk008@cakebox.homeunix.net>
+From: "Marc MERLIN" <marc@merlins.org>
+Subject: Re: Last ditch plea on remote double raid5 disk failure
+Date: Mon, 31 Dec 2007 13:40:08 +0100
+Message-ID: <8e0f3ba80712310440k56981fcfyf28e01870d33be3@mail.gmail.com>
+References: <8e0f3ba80712310239w3263b2b8hb62c0a6c79a84b77@mail.gmail.com>
+	 <18296.56100.769123.555100@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed;
-	boundary="=_4qe2wzfgfj40";
-	protocol="application/pgp-signature";
-	micalg="pgp-sha1"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <18296.56100.769123.555100@notabene.brown>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: Neil Brown <neilb@suse.de>, "H. Peter Anvin" <hpa@zytor.com>
+To: Neil Brown <neilb@suse.de>
+Cc: "H. Peter Anvin" <hpa@zytor.com>, mingo@elte.hu, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This message is in MIME format and has been PGP signed.
+On Dec 31, 2007 1:05 PM, Neil Brown <neilb@suse.de> wrote:
+> On Monday December 31, merlin@gmail.com wrote:
+> >
+> > I'm hoping that if I can get raid5 to continue despite the errors, I
+> > can bring back up enough of the server to continue, a bit like the
+> > remount-ro option in ext2/ext3.
+> >
+> > If not, oh well...
+>
+> Sorry, but it is "oh well".
+>
+> I could probably make it behave a bit better in this situation, but
+> not in time for you.
 
---=_4qe2wzfgfj40
-Content-Type: text/plain;
-	charset=ISO-8859-2;
-	DelSp="Yes";
-	format="flowed"
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Understood, thanks much for the answer, I'll work on moving services
+to another server now.
 
-Ok, since my previous thread didn't seem to attract much attention,
-let me try again.
-An interrupted RAID5 reshape will cause the md device in question to
-contain one corrupt chunk per stripe if resumed in the wrong manner.
-A testcase can be found at http://www.nagilum.de/md/ .
-The first testcase can be initialized with "start.sh" the real test
-can then be run with "test.sh". The first testcase also uses dm-crypt
-and xfs to show the corruption.
-The second testcase uses nothing but mdadm and "testpat" - a small
-program to write and verify a simple testpattern designed to find
-block data corruptions. Use "v2_start.sh && v2_test.sh" to run.
-At the end it will point out all the wrong bytes on the md device.
-I'm not just interested in a simple behaviour fix I'm also interested
-in what actually happens and if possible a repair program for that
-kind of data corruption.
-The bug is architectural agnostic. I first came across it using =20
-2.6.23.8 on amd64 but I verified it on 2.6.23.[8-12] and =20
-2.6.24-rc[5,6] on ppc. Always using mdadm 2.6.4.
-The situation the bug first showed up was as follows:
-1. A RAID5 reshape from 5->6 device was started.
-2. After about 4% one disk failed, the machine appeared unresponsive =20
-and was rebooted.
-3. A spare disk was added to the array.
-4. The bad drive was re-added to the array in a different bay and the =20
-reshape resumed.
-5. The drive failed again but the reshape continued.
-6. The reshaped finished and after that the resync. The data after at =20
-about 4% on the md device is broken as described above.
+If that's a reasonable RFE for the people concerned, it'd be nice to
+have a non default md raidtab option, or an assemble option that says
+"continue as long as you can if kicking another drive will disable the
+array", I'd still be ok with the array staying read-write if block
+errors are passed through since the underlying filesystem would
+remount read only by itself. I think it my case, it would have allowed
+me to reboot my system with md5 damaged, limping on one drive fewer,
+having the lvm be read-write, and the /usr partition within it be
+read-only while /var within the same raid5 md, same LVM VG but
+different LV, could stay read-write.
 
-Kind regards,
-Alex.
+That might be a bit too much of wishful thinking though. Even having
+everything still run as read-only (again, as a non default option),
+would be nice. No idea how hard or unrealistic that is, but just
+throwing the idea out :)
 
+Either way, have a great new year.
 
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-#    _  __          _ __     http://www.nagilum.org/ \n icq://69646724 #
-#   / |/ /__ ____ _(_) /_ ____ _  nagilum@nagilum.org \n +491776461165 #
-#  /    / _ `/ _ `/ / / // /  ' \  Amiga (68k/PPC): AOS/NetBSD/Linux   #
-# /_/|_/\_,_/\_, /_/_/\_,_/_/_/_/   Mac (PPC): MacOS-X / NetBSD /Linux #
-#           /___/     x86: FreeBSD/Linux/Solaris/Win2k  ARM9: EPOC EV6 #
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-
-
-
-
-----------------------------------------------------------------
-cakebox.homeunix.net - all the machine one needs..
-
-
---=_4qe2wzfgfj40
-Content-Type: application/pgp-signature
-Content-Description: PGP Digital Signature
-Content-Disposition: inline
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.7 (FreeBSD)
-
-iD8DBQBHeNrDAKWN2UY+sLwRAhDwAJ0aKgBss1xLHBvDOXYEoMqv8zpmKACbBmvk
-h0d8bwc5y9vQinWdF8Aqklk=
-=RmXO
------END PGP SIGNATURE-----
-
---=_4qe2wzfgfj40--
+Best,
+Marc
