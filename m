@@ -1,28 +1,33 @@
 From: Neil Brown <neilb@suse.de>
 Subject: Re: stopped array, but /sys/block/mdN still exists.
-Date: Thu, 3 Jan 2008 15:44:17 +1100
-Message-ID: <18300.26657.7543.315722@notabene.brown>
+Date: Fri, 4 Jan 2008 08:32:50 +1100
+Message-ID: <18301.21634.336162.394199@notabene.brown>
 References: <cccedfc60801021315l63b2123du3b1267ebd51cc633@mail.gmail.com>
+	<18300.26657.7543.315722@notabene.brown>
+	<477D3D76.3000803@tmr.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Jon Nelson on Wednesday January 2
+In-Reply-To: message from Bill Davidsen on Thursday January 3
 Sender: linux-raid-owner@vger.kernel.org
-To: Jon Nelson <jnelson-linux-raid@jamponi.net>
-Cc: linux-raid@vger.kernel.org
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: Jon Nelson <jnelson-linux-raid@jamponi.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wednesday January 2, jnelson-linux-raid@jamponi.net wrote:
-> This isn't a high priority issue or anything, but I'm curious:
+On Thursday January 3, davidsen@tmr.com wrote:
 > 
-> I --stop(ped) an array but /sys/block/md2 remained largely populated.
-> Is that intentional?
+> So what happens if I try to _use_ that /sys entry? For instance run a 
+> script which reads data, or sets the stripe_cache_size higher, or 
+> whatever? Do I get back status, ignored, or system issues?
 
-It is expected.
-Because of the way that md devices are created (just open the
-device-special file), it is very hard to make them disappear in a
-race-free manner.  I tried once and failed.  It is probably getting
-close to trying again, but as you say: it isn't a high priority issue.
+Try it:-)
+
+The stripe_cache_size attributes will disappear (it is easy to remove
+attributes, and stripe_cache_size is only meaningful for certain raid
+levels).
+Other attributes will return 0 or some equivalent, though I think
+chunk_size will have the old value.
 
 NeilBrown
+
