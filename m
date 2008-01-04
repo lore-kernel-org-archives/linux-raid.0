@@ -1,101 +1,45 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH] md: Fix data corruption when a degraded raid5 array is
-	reshaped.
-Date: Thu, 03 Jan 2008 16:40:52 -0700
-Message-ID: <1199403652.9102.30.camel@dwillia2-linux.ch.intel.com>
-References: <20080104094516.19216.patches@notabene>
-	 A<1080103224636.19290@suse.de>
-	 <1199401234.9102.3.camel@dwillia2-linux.ch.intel.com>
+From: "Clayton Bell" <Clayton.Bell@coles.com.au>
+Subject: md raid1 in active-active arrangement
+Date: Fri, 4 Jan 2008 11:20:55 +1100
+Message-ID: <49DFE57FB126044B8A8B934E7AEA09ED0A456A94@WPEXCH05.colesmyer.ad.cmltd.net.au>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1199401234.9102.3.camel@dwillia2-linux.ch.intel.com>
+content-class: urn:content-classes:message
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, stable@kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, 2008-01-03 at 16:00 -0700, Williams, Dan J wrote:
-> On Thu, 2008-01-03 at 15:46 -0700, NeilBrown wrote:
-> > This patch fixes a fairly serious bug in md/raid5 in 2.6.23 and
-> 24-rc.
-> > It would be great if it cold get into 23.13 and 24.final.
-> > Thanks.
-> > NeilBrown
-> >
-> > ### Comments for Changeset
-> >
-> > We currently do not wait for the block from the missing device
-> > to be computed from parity before copying data to the new stripe
-> > layout.
-> >
-> > The change in the raid6 code is not techincally needed as we
-> > don't delay data block recovery in the same way for raid6 yet.
-> > But making the change now is safer long-term.
-> >
-> > This bug exists in 2.6.23 and 2.6.24-rc
-> >
-> > Cc: stable@kernel.org
-> > Cc: Dan Williams <dan.j.williams@intel.com>
-> > Signed-off-by: Neil Brown <neilb@suse.de>
-> >
-> Acked-by: Dan Williams <dan.j.williams@intel.com>
-> 
 
-On closer look the safer test is:
+Is it reasonable for a raid1 mirror to be momentarily active on two servers at the same time?
 
-	!test_bit(STRIPE_OP_COMPUTE_BLK, &sh->ops.pending).
+This question has come about from Xen virtual host live migrations.
 
-The 'req_compute' field only indicates that a 'compute_block' operation
-was requested during this pass through handle_stripe so that we can
-issue a linked chain of asynchronous operations.
 
----
+Consider the case with shared storage between two servers:
 
-From: Neil Brown <neilb@suse.de>
+Server A: /dev/md0 is raid1 to devices /dev/mapper/wwidX and /dev/mapper/wwidY
+Server B: /dev/md0 is raid1 to devices /dev/mapper/wwidX and /dev/mapper/wwidY
 
-md: Fix data corruption when a degraded raid5 array is reshaped.
+/dev/md0 is assigned to the Xen virtual host (ie it becomes /dev/sda within the virtual host)
 
-We currently do not wait for the block from the missing device
-to be computed from parity before copying data to the new stripe
-layout.
 
-The change in the raid6 code is not techincally needed as we
-don't delay data block recovery in the same way for raid6 yet.
-But making the change now is safer long-term.
+When live migrating the virtual host from Server A to Server B, /dev/md0 must be active on both server A and B at the same time, at least momentarily.
 
-This bug exists in 2.6.23 and 2.6.24-rc
+Is md going to cope with this kind of setup?  Under what conditions will it fail dismally?
 
-Cc: stable@kernel.org
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
+To me it would seem as though the migration can only occur when:
+1. the mirrors are in sync
+2. Server A and B use their own/separate external bitmap file for /dev/md0
 
- drivers/md/raid5.c |    6 ++++--
- 1 files changed, 4 insertions(+), 2 deletions(-)
+Even if the time duration that both /dev/md0's are active is minimized to less than a second, what possible data corruption could occur?
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index a5aad8c..e8c8157 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -2865,7 +2865,8 @@ static void handle_stripe5(struct stripe_head *sh)
- 		md_done_sync(conf->mddev, STRIPE_SECTORS, 1);
- 	}
- 
--	if (s.expanding && s.locked == 0)
-+	if (s.expanding && s.locked == 0 &&
-+	    !test_bit(STRIPE_OP_COMPUTE_BLK, &sh->ops.pending))
- 		handle_stripe_expansion(conf, sh, NULL);
- 
- 	if (sh->ops.count)
-@@ -3067,7 +3068,8 @@ static void handle_stripe6(struct stripe_head *sh, struct page *tmp_page)
- 		md_done_sync(conf->mddev, STRIPE_SECTORS, 1);
- 	}
- 
--	if (s.expanding && s.locked == 0)
-+	if (s.expanding && s.locked == 0 &&
-+	    !test_bit(STRIPE_OP_COMPUTE_BLK, &sh->ops.pending))
- 		handle_stripe_expansion(conf, sh, &r6s);
- 
- 	spin_unlock(&sh->lock);
 
+Feedback much appreciated.  I hope the linux-raid group finds this situation least a little interesting.
+
+Thank you
+
+Clayton
+
+This email and any attachments may contain privileged and confidential information and are intended for the named addressee only. If you have received this e-mail in error, please notify the sender and delete this e-mail immediately. Any confidentiality, privilege or copyright is not waived or lost because this e-mail has been sent to you in error. It is your responsibility to check this e-mail and any attachments for viruses.  No warranty is made that this material is free from computer virus or any other defect or error.  Any loss/damage incurred by using this material is not the sender's responsibility.  The sender's entire liability will be limited to resupplying the material.
