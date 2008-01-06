@@ -1,29 +1,35 @@
 From: Neil Brown <neilb@suse.de>
 Subject: Re: Raid 1, can't get the second disk added back in.
-Date: Mon, 7 Jan 2008 09:28:58 +1100
-Message-ID: <18305.22058.609143.869202@notabene.brown>
+Date: Mon, 7 Jan 2008 09:34:01 +1100
+Message-ID: <18305.22361.482483.331552@notabene.brown>
 References: <477FAAAC.2090107@fayettedigital.com>
-	<20080105210002.t5syxhjahwocks4g@cakebox.homeunix.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Nagilum on Saturday January 5
+In-Reply-To: message from Jim on Saturday January 5
 Sender: linux-raid-owner@vger.kernel.org
-To: Nagilum <nagilum@nagilum.org>
-Cc: jim@fayettedigital.com, linux-raid@vger.kernel.org
+To: jim@fayettedigital.com
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Saturday January 5, nagilum@nagilum.org wrote:
+On Saturday January 5, jim@fayettedigital.com wrote:
+> root@chinaberry:~# mdadm /dev/md0 --add /dev/hdb5
+> mdadm: Cannot open /dev/hdb5: Device or resource busy
 > 
-> Since /dev/hdb5 has been part of this array before you should use  
-> --re-add instead of --add.
-> Kind regards,
-> Alex.
+> All the solutions I've been able to google fail with the busy.  There is 
+> nothing that I can find that might be  using /dev/hdb5 except the raid 
+> device and it appears it's not either.
 
-That is not correct.
+Very odd. But something must be using it.
 
---re-add is only needed for arrays without metadata, for which you use
-"--build" to start them.
-
+What does
+   ls -l /sys/block/hdb/hdb5/holders
+show?
+What about
+   cat /proc/mounts
+   cat /proc/swaps
+   lsof /dev/hdb5
+  
+??
 NeilBrown
