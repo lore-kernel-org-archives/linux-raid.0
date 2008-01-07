@@ -1,35 +1,28 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: Raid 1, can't get the second disk added back in.
-Date: Mon, 7 Jan 2008 09:34:01 +1100
-Message-ID: <18305.22361.482483.331552@notabene.brown>
-References: <477FAAAC.2090107@fayettedigital.com>
+From: Thiemo Nagel <thiemo.nagel@ph.tum.de>
+Subject: Re: On the subject of RAID-6 corruption recovery
+Date: Mon, 07 Jan 2008 10:28:14 +0100
+Message-ID: <4781F0AE.7030304@ph.tum.de>
+References: <4774663C.5090609@zytor.com>    <59840.88.217.65.202.1199491167.squirrel@www.e18.physik.tu-muenchen.de>    <477EC96D.80505@zytor.com> <51481.88.217.65.202.1199493668.squirrel@www.e18.physik.tu-muenchen.de> <477ED321.6000708@zytor.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Jim on Saturday January 5
+In-Reply-To: <477ED321.6000708@zytor.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: jim@fayettedigital.com
-Cc: linux-raid@vger.kernel.org
+To: "H. Peter Anvin" <hpa@zytor.com>
+Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Saturday January 5, jim@fayettedigital.com wrote:
-> root@chinaberry:~# mdadm /dev/md0 --add /dev/hdb5
-> mdadm: Cannot open /dev/hdb5: Device or resource busy
-> 
-> All the solutions I've been able to google fail with the busy.  There is 
-> nothing that I can find that might be  using /dev/hdb5 except the raid 
-> device and it appears it's not either.
+> What you call "pathologic" cases when it comes to real-world data are 
+> very common.  It is not at all unusual to find sectors filled with only 
+> a constant (usually zero, but not always), in which case your **512 
+> becomes **1.
 
-Very odd. But something must be using it.
+Of course it would be easy to check how many of the 512 Bytes are really 
+different on a case-by-case basis and correct the exponent accordingly, 
+and only perform the recovery when the corrected probability of 
+introducing an error is sufficiently low.
 
-What does
-   ls -l /sys/block/hdb/hdb5/holders
-show?
-What about
-   cat /proc/mounts
-   cat /proc/swaps
-   lsof /dev/hdb5
-  
-??
-NeilBrown
+Kind regards,
+
+Thiemo Nagel
