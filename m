@@ -1,38 +1,35 @@
-From: Hxsrmeng <hxsrmeng@gmail.com>
-Subject: Is that normal a removed part in RAID0 still showed as "active
- sync"
-Date: Mon, 7 Jan 2008 08:49:21 -0800 (PST)
-Message-ID: <14670113.post@talk.nabble.com>
+From: "H. Peter Anvin" <hpa@zytor.com>
+Subject: Re: On the subject of RAID-6 corruption recovery
+Date: Mon, 07 Jan 2008 09:20:23 -0800
+Message-ID: <47825F57.8000400@zytor.com>
+References: <4774663C.5090609@zytor.com>    <59840.88.217.65.202.1199491167.squirrel@www.e18.physik.tu-muenchen.de>    <477EC96D.80505@zytor.com> <51481.88.217.65.202.1199493668.squirrel@www.e18.physik.tu-muenchen.de> <477ED321.6000708@zytor.com> <4781F0AE.7030304@ph.tum.de> <Pine.GSO.4.64.0801071055200.20667@montezuma.acc.umu.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <Pine.GSO.4.64.0801071055200.20667@montezuma.acc.umu.se>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Mattias Wadenstein <maswan@acc.umu.se>
+Cc: Thiemo Nagel <thiemo.nagel@ph.tum.de>, Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+Mattias Wadenstein wrote:
+> On Mon, 7 Jan 2008, Thiemo Nagel wrote:
+> 
+>>> What you call "pathologic" cases when it comes to real-world data are 
+>>> very common.  It is not at all unusual to find sectors filled with 
+>>> only a constant (usually zero, but not always), in which case your 
+>>> **512 becomes **1.
+>>
+>> Of course it would be easy to check how many of the 512 Bytes are 
+>> really different on a case-by-case basis and correct the exponent 
+>> accordingly, and only perform the recovery when the corrected 
+>> probability of introducing an error is sufficiently low.
+> 
+> What is the alternative to recovery, really? Just erroring out and 
+> letting the admin deal with it, or blindly assume that the parity is wrong?
+> 
 
-The /dev/md0 is set as RAID0
-"cat /proc/mdstat" shows
-md0 : active raid0 sda1[0] sdd1[3] sdc1[2] sdb1[1]
-157307904 blocks 64k chunks
+Erroring out.  Only thing to do at that point.
 
-Then sdd is removed.
-
-But  "cat /proc/mdsta" still shows the same information as above, while two
-RAID5 devices show their sdd parts as (F)
-md0 : active raid0 sda1[0] sdd1[3] sdc1[2] sdb1[1]
-157307904 blocks 64k chunks
-
-Is this normal?
-
-Also, when using "mdadm --detail"
-sdd1( part of RAID0) is showed as "active sync", but sdd2(which is part of
-RAID5) is showed as "removed"
-
-Thank you.
-
--- 
-View this message in context: http://www.nabble.com/Is-that-normal-a-removed-part-in-RAID0-still-showed-as-%22active-sync%22-tp14670113p14670113.html
-Sent from the linux-raid mailing list archive at Nabble.com.
-
+	-hpa
