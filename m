@@ -1,35 +1,30 @@
-From: "H. Peter Anvin" <hpa@zytor.com>
-Subject: Re: On the subject of RAID-6 corruption recovery
-Date: Mon, 07 Jan 2008 09:20:23 -0800
-Message-ID: <47825F57.8000400@zytor.com>
-References: <4774663C.5090609@zytor.com>    <59840.88.217.65.202.1199491167.squirrel@www.e18.physik.tu-muenchen.de>    <477EC96D.80505@zytor.com> <51481.88.217.65.202.1199493668.squirrel@www.e18.physik.tu-muenchen.de> <477ED321.6000708@zytor.com> <4781F0AE.7030304@ph.tum.de> <Pine.GSO.4.64.0801071055200.20667@montezuma.acc.umu.se>
+From: "Dan Williams" <dan.j.williams@intel.com>
+Subject: Re: Raid 1, new disk can't be added after replacing faulty disk
+Date: Mon, 7 Jan 2008 12:11:58 -0700
+Message-ID: <e9c3a7c20801071111t11bdd5fx1b8d59bd0a763c4c@mail.gmail.com>
+References: <1199713488.3202.19.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.GSO.4.64.0801071055200.20667@montezuma.acc.umu.se>
+In-Reply-To: <1199713488.3202.19.camel@localhost.localdomain>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Mattias Wadenstein <maswan@acc.umu.se>
-Cc: Thiemo Nagel <thiemo.nagel@ph.tum.de>, Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: Radu Rendec <radu.rendec@ines.ro>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Mattias Wadenstein wrote:
-> On Mon, 7 Jan 2008, Thiemo Nagel wrote:
-> 
->>> What you call "pathologic" cases when it comes to real-world data are 
->>> very common.  It is not at all unusual to find sectors filled with 
->>> only a constant (usually zero, but not always), in which case your 
->>> **512 becomes **1.
->>
->> Of course it would be easy to check how many of the 512 Bytes are 
->> really different on a case-by-case basis and correct the exponent 
->> accordingly, and only perform the recovery when the corrected 
->> probability of introducing an error is sufficiently low.
-> 
-> What is the alternative to recovery, really? Just erroring out and 
-> letting the admin deal with it, or blindly assume that the parity is wrong?
-> 
+On Jan 7, 2008 6:44 AM, Radu Rendec <radu.rendec@ines.ro> wrote:
+> I'm experiencing trouble when trying to add a new disk to a raid 1 array
+> after having replaced a faulty disk.
+>
+[..]
+> # mdadm --version
+> mdadm - v2.6.2 - 21st May 2007
+>
+[..]
+> However, this happens with both mdadm 2.6.2 and 2.6.4. I downgraded to
+> 2.5.4 and it works like a charm.
 
-Erroring out.  Only thing to do at that point.
-
-	-hpa
+Looks like you are running into the issue described here:
+http://marc.info/?l=linux-raid&m=119892098129022&w=2
