@@ -1,61 +1,38 @@
-From: Radu Rendec <radu.rendec@ines.ro>
-Subject: Raid 1, new disk can't be added after replacing faulty disk
-Date: Mon, 07 Jan 2008 15:44:48 +0200
-Message-ID: <1199713488.3202.19.camel@localhost.localdomain>
+From: Hxsrmeng <hxsrmeng@gmail.com>
+Subject: Is that normal a removed part in RAID0 still showed as "active
+ sync"
+Date: Mon, 7 Jan 2008 08:49:21 -0800 (PST)
+Message-ID: <14670113.post@talk.nabble.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I'm experiencing trouble when trying to add a new disk to a raid 1 array
-after having replaced a faulty disk.
 
-A few details about my configuration:
+The /dev/md0 is set as RAID0
+"cat /proc/mdstat" shows
+md0 : active raid0 sda1[0] sdd1[3] sdc1[2] sdb1[1]
+157307904 blocks 64k chunks
 
-# cat /proc/mdstat 
-Personalities : [raid1] [raid6] [raid5] [raid4] 
-md1 : active raid1 sdb3[1]
-      151388452 blocks super 1.0 [2/1] [_U]
-      
-md0 : active raid1 sdb2[1]
-      3911816 blocks super 1.0 [2/1] [_U]
-      
-unused devices: <none>
+Then sdd is removed.
 
-# uname -a
-Linux i.ines.ro 2.6.23.8-63.fc8 #1 SMP Wed Nov 21 18:51:08 EST 2007 i686
-i686 i386 GNU/Linux
+But  "cat /proc/mdsta" still shows the same information as above, while two
+RAID5 devices show their sdd parts as (F)
+md0 : active raid0 sda1[0] sdd1[3] sdc1[2] sdb1[1]
+157307904 blocks 64k chunks
 
-# mdadm --version
-mdadm - v2.6.2 - 21st May 2007
+Is this normal?
 
-So the story is this: disk sda failed and was physically replaced with a
-new one. The new disk is identical and was partitioned exactly the same
-way (as the old one and sdb). Getting sda2 (from the fresh empty disk)
-to the array does not work. This is what happens:
+Also, when using "mdadm --detail"
+sdd1( part of RAID0) is showed as "active sync", but sdd2(which is part of
+RAID5) is showed as "removed"
 
-# mdadm /dev/md0 -a /dev/sda2
-mdadm: add new device failed for /dev/sda2 as 2: Invalid argument
+Thank you.
 
-Kernel messages follow:
-md: sda2 does not have a valid v1.0 superblock, not importing!
-md: md_import_device returned -22
-
-It's obvious that sda2 does not have a superblock (at all) since it's a
-fresh empty disk. But I expected mdadm to create the superblock and
-start rebuilding the array immediately.
-
-However, this happens with both mdadm 2.6.2 and 2.6.4. I downgraded to
-2.5.4 and it works like a charm.
-
-If you reply, please add me to cc - I am not subscribed to the list.
-Should I provide you further details or any kind of assistance for
-testing, please let me know.
-
-Thanks,
-
-Radu Rendec
+-- 
+View this message in context: http://www.nabble.com/Is-that-normal-a-removed-part-in-RAID0-still-showed-as-%22active-sync%22-tp14670113p14670113.html
+Sent from the linux-raid mailing list archive at Nabble.com.
 
