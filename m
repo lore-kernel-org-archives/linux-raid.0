@@ -1,7 +1,7 @@
 From: Jim <jim@fayettedigital.com>
 Subject: Re: Raid 1, can't get the second disk added back in.
-Date: Mon, 07 Jan 2008 09:26:12 -0500
-Message-ID: <47823684.80501@fayettedigital.com>
+Date: Mon, 07 Jan 2008 09:46:30 -0500
+Message-ID: <47823B46.6010105@fayettedigital.com>
 References: <477FAAAC.2090107@fayettedigital.com> <18305.22361.482483.331552@notabene.brown>
 Reply-To: jim@fayettedigital.com
 Mime-Version: 1.0
@@ -42,41 +42,24 @@ Neil Brown wrote:
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 >
 >   
-I agree but for the life of me I can't figure out what, other than some 
-raid daemon.
+Problem is not raid, or at least not obviously raid related.  The 
+problem is that the whole disk, /dev/hdb is unavailable. 
 
-root@chinaberry:~# ls -l /sys/block/hdb/hdb5/holders
-total 0
-root@chinaberry:~# cat /proc/mounts
-none /sys sysfs rw,nosuid,nodev,noexec 0 0
-none /proc proc rw,nosuid,nodev,noexec 0 0
-udev /dev tmpfs rw 0 0
-/dev/disk/by-uuid/4f67dae8-cdcb-460e-86cd-a5f0e4009422 / ext3 
-rw,data=ordered 0 0
-/dev/disk/by-uuid/4f67dae8-cdcb-460e-86cd-a5f0e4009422 /dev/.static/dev 
-ext3 rw,data=ordered 0 0
-tmpfs /var/run tmpfs rw,nosuid,nodev,noexec 0 0
-tmpfs /var/lock tmpfs rw,nosuid,nodev,noexec 0 0
-tmpfs /dev/shm tmpfs rw 0 0
-devpts /dev/pts devpts rw 0 0
-usbfs /dev/bus/usb/.usbfs usbfs rw 0 0
-udev /proc/bus/usb tmpfs rw 0 0
-usbfs /proc/bus/usb/.usbfs usbfs rw 0 0
-tmpfs /var/run tmpfs rw,nosuid,nodev,noexec 0 0
-tmpfs /var/lock tmpfs rw,nosuid,nodev,noexec 0 0
-/dev/sda5 /home ext3 rw,data=ordered 0 0
-/dev/md0 /backupmirror ext3 rw,data=ordered 0 0
-/dev/hda1 /vz ext3 rw,data=ordered 0 0
-/vz/private/225 /vz/root/225 simfs rw 0 0
-/vz/private/300 /vz/root/300 simfs rw 0 0
-/proc /vz/root/225/proc proc rw 0 0
-/sys /vz/root/225/sys sysfs rw 0 0
-none /vz/root/225/dev/pts devpts rw 0 0
-/proc /vz/root/300/proc proc rw 0 0
-/sys /vz/root/300/sys sysfs rw 0 0
-none /vz/root/300/dev/pts devpts rw 0 0
-binfmt_misc /proc/sys/fs/binfmt_misc binfmt_misc rw 0 0
-root@chinaberry:~# cat /proc/mounts | grep hdb
-root@chinaberry:~# cat /proc/swaps
-root@chinaberry:~# lsof /dev/hdb5
+root@chinaberry:~# for i in /dev/hdb?
+ > do
+ > mount $i /mnt
+ > done
+mount: /dev/hdb1 already mounted or /mnt busy
+mount: /dev/hdb2 already mounted or /mnt busy
+mount: /dev/hdb3 already mounted or /mnt busy
+mount: /dev/hdb4 already mounted or /mnt busy
+mount: /dev/hdb5 already mounted or /mnt busy
+mount: /dev/hdb6 already mounted or /mnt busy
+root@chinaberry:~# mount /dev/hda1 /mnt
 
+I can fdisk it but none of the partitons are available. Knoppix can 
+access it normally so it's not a hardware issue.  No funny messages in 
+the syslog. So I'll go off and stop harassing this list.  ;)
+
+Thanks,
+Jim.
