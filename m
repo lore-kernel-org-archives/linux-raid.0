@@ -1,59 +1,45 @@
-From: Daniel Browning <db@endpoint.com>
-Subject: Raid level 5 not permitted with --build
-Date: Tue, 8 Jan 2008 00:02:46 -0800
-Message-ID: <200801080002.46242.db@endpoint.com>
+From: Radu Rendec <radu.rendec@ines.ro>
+Subject: Re: Raid 1, new disk can't be added after replacing faulty disk
+Date: Tue, 08 Jan 2008 12:24:22 +0200
+Message-ID: <1199787862.3202.35.camel@localhost.localdomain>
+References: <1199713488.3202.19.camel@localhost.localdomain>
+	 <e9c3a7c20801071111t11bdd5fx1b8d59bd0a763c4c@mail.gmail.com>
+	 <18306.64884.866266.620787@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <18306.64884.866266.620787@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+Cc: Dan Williams <dan.j.williams@intel.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Why do I get the following error when I attempt to 'mdadm --build' a 
-software RAID 5 array that was created in Windows 2003 using Dynamic Disks 
-(LDM)?
+On Tue, 2008-01-08 at 15:35 +1100, Neil Brown wrote:
+> On Monday January 7, dan.j.williams@intel.com wrote:
+> > Looks like you are running into the issue described here:
+> > http://marc.info/?l=linux-raid&m=119892098129022&w=2
 
-Raid level 5 not permitted with --build
+Dan, thanks for your quick reply. It's exactly the same issue: the array
+was created with mdadm 2.5.6.
 
-RAID-0 arrays work great, and some of the kernel documentation implies that 
-RAID-5 should work too:
+> I cannot easily reproduce this.  I suspect it is sensitive to the
+> exact size of the devices involved.
 
-Documentation/ldm.txt:
-> Once the LDM driver has divided up the disk, you can use the MD driver to
-> assemble any multi-partition volumes, e.g.  Stripes, RAID5.
+I reproduced this with 3 different device sizes: 518160384 bytes,
+4005711360 bytes and 155021851648 bytes. Is it possible that I hit the
+"wrong" size every time? Maybe it's related to the disk geometry
+(because all partitions lay on exact cylinder boundaries, and thus all
+partitions sizes are multiples of the same cylinder size).
 
-Documentation/filesystems/ntfs.txt:
-> Using NTFS volume and stripe sets
-> =================================
-> 
-> For support of volume and stripe sets, you can either use the kernel's
-> Device-Mapper driver or the kernel's Software RAID / MD driver.  The 
-> former is the recommended one to use for linear raid.  But the latter is
-> required for raid level 5.  For striping and mirroring, either driver
-> should work fine.  
+> Please test this patch and see if it fixes the problem.
+> If not, please tell me the exact sizes of the partition being used
+> (e.g. cat /proc/partitions) and I will try harder to reproduce it.
 
-I'm using 2.6.23.12 vanilla, CONFIG_LDM_PARTITION=y, mdadm v2.6.2, 
-ntfs-3g-1.1120, Fedora Core 8.
+I'll test the patch and get back to you soon.
 
-My goal is to access the same 6-disk 5TB RAID-5 array when booting Windows 
-or Linux. I need Windows for professional video editing software like Avid 
-and PPro that will not appear on Linux any time soon.
+Thanks,
 
-Hardware raid is not needed for the performance or lower CPU utilization; 
-I'm already getting 400 MB/s at 25% of one core. 8-port cards are $$$$.
+Radu Rendec
 
-Fakeraid does not seem to be a good solution either; I could not find any 
-high-quality implementations supported equally well by dmraid and Windows.
 
-A virtual machine in Windows with Linux, mdadm, and Samba would work, but 
-would be too slow.
-
-Sincerely,
---
-Daniel Browning
-End Point Corporation
-http://www.endpoint.com/
