@@ -1,68 +1,59 @@
-From: hxsrmeng <hxsrmeng@gmail.com>
-Subject: Re: Is that normal a removed part in RAID0 still showed as "active
-	sync"
-Date: Tue, 08 Jan 2008 00:13:32 -0500
-Message-ID: <1199769212.8587.22.camel@OpenSUSE-desktop.Home>
-References: <14670113.post@talk.nabble.com>
-	 <18306.62418.854287.117775@notabene.brown>
-Reply-To: hxsrmeng@gmail.com
+From: Daniel Browning <db@endpoint.com>
+Subject: Raid level 5 not permitted with --build
+Date: Tue, 8 Jan 2008 00:02:46 -0800
+Message-ID: <200801080002.46242.db@endpoint.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18306.62418.854287.117775@notabene.brown>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: Neil Brown <neilb@suse.de>
-Cc: RAID <linux-raid@vger.kernel.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Thanks. That's really helpful.
+Why do I get the following error when I attempt to 'mdadm --build' a 
+software RAID 5 array that was created in Windows 2003 using Dynamic Disks 
+(LDM)?
 
-When doing this, I used "tail -f /var/log/messages" to monitor my
-program, which does I/O to md0.
+Raid level 5 not permitted with --build
 
-After sdd was removed physically, it seemed the I/O operations to the
-md0 continued: 
-"tail -f /var/log/messages" occasionally shows:
-     SCSI error: return code = 0x00040000
-     kernel: end_request: I/O error, dev sdd, sector 15357599
-but showed all the other messages just as sdd was still there.
+RAID-0 arrays work great, and some of the kernel documentation implies that 
+RAID-5 should work too:
 
-Is this normal? 
+Documentation/ldm.txt:
+> Once the LDM driver has divided up the disk, you can use the MD driver to
+> assemble any multi-partition volumes, e.g.  Stripes, RAID5.
 
-I am really not sure whether the result of my program is still
-trustable.
-
-Also, if sdd1 is the only device which fails, is there any way to know
-it? Just as what "mdadm --monitor" does?
-
-Thank you.
-
-
-On Tue, 2008-01-08 at 14:53 +1100, Neil Brown wrote:
-> On Monday January 7, hxsrmeng@gmail.com wrote:
-> > 
-> > The /dev/md0 is set as RAID0
-> > "cat /proc/mdstat" shows
-> > md0 : active raid0 sda1[0] sdd1[3] sdc1[2] sdb1[1]
-> > 157307904 blocks 64k chunks
-> > 
-> > Then sdd is removed.
-> > 
-> > But  "cat /proc/mdsta" still shows the same information as above, while two
-> > RAID5 devices show their sdd parts as (F)
-> > md0 : active raid0 sda1[0] sdd1[3] sdc1[2] sdb1[1]
-> > 157307904 blocks 64k chunks
-> > 
-> > Is this normal?
+Documentation/filesystems/ntfs.txt:
+> Using NTFS volume and stripe sets
+> =================================
 > 
-> Yes.
-> 
-> raid0 is not real raid.  It is not able to cope with disk failures, so
-> it doesn't even try.  Devices in a raid0 are never marked failed as
-> doing so would be of no benefit.
-> 
-> NeilBrown
-> 
-> 
+> For support of volume and stripe sets, you can either use the kernel's
+> Device-Mapper driver or the kernel's Software RAID / MD driver.  The 
+> former is the recommended one to use for linear raid.  But the latter is
+> required for raid level 5.  For striping and mirroring, either driver
+> should work fine.  
 
+I'm using 2.6.23.12 vanilla, CONFIG_LDM_PARTITION=y, mdadm v2.6.2, 
+ntfs-3g-1.1120, Fedora Core 8.
+
+My goal is to access the same 6-disk 5TB RAID-5 array when booting Windows 
+or Linux. I need Windows for professional video editing software like Avid 
+and PPro that will not appear on Linux any time soon.
+
+Hardware raid is not needed for the performance or lower CPU utilization; 
+I'm already getting 400 MB/s at 25% of one core. 8-port cards are $$$$.
+
+Fakeraid does not seem to be a good solution either; I could not find any 
+high-quality implementations supported equally well by dmraid and Windows.
+
+A virtual machine in Windows with Linux, mdadm, and Samba would work, but 
+would be too slow.
+
+Sincerely,
+--
+Daniel Browning
+End Point Corporation
+http://www.endpoint.com/
