@@ -1,36 +1,35 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: 2.6.24-rc6 reproducible raid5 hang
-Date: Wed, 09 Jan 2008 21:56:38 -0700
-Message-ID: <1199940998.13169.5.camel@dwillia2-linux.ch.intel.com>
-References: <alpine.DEB.0.999999.0712270845150.5207@twinlark.arctic.org>
-	 <alpine.DEB.0.999999.0712270938160.5207@twinlark.arctic.org>
-	 <Pine.LNX.4.64.0712290842530.21114@twinlark.arctic.org>
-	 <e9c3a7c20712291247u7d5f6b76gf44a1770f5cdc2cf@mail.gmail.com>
-	 <alpine.DEB.0.999999.0712291248490.5207@twinlark.arctic.org>
-	 <e9c3a7c20712291406ve91e0d5h72979a8dbc4c6844@mail.gmail.com>
-	 <alpine.DEB.0.999999.0712300922520.20553@twinlark.arctic.org>
-	 <1199903330.18882.7.camel@dwillia2-linux.ch.intel.com>
-	 <18309.25170.258730.225322@notabene.brown>
-	 <e9c3a7c20801091907k732b0fcfw8b74502cca76f972@mail.gmail.com>
-	 <18309.38832.518580.235804@notabene.brown>
+From: dean gaudet <dean@arctic.org>
+Subject: Re: Raid 1, can't get the second disk added back in.
+Date: Wed, 9 Jan 2008 22:25:47 -0800 (PST)
+Message-ID: <alpine.DEB.0.999999.0801092223510.27277@twinlark.arctic.org>
+References: <477FAAAC.2090107@fayettedigital.com> <18305.22361.482483.331552@notabene.brown> <47823B46.6010105@fayettedigital.com> <18306.44011.512618.609434@notabene.brown> <4783E4D7.50602@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18309.38832.518580.235804@notabene.brown>
+In-Reply-To: <4783E4D7.50602@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: dean gaudet <dean@arctic.org>, linux-raid@vger.kernel.org
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: Neil Brown <neilb@suse.de>, jim@fayettedigital.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 2008-01-09 at 20:57 -0700, Neil Brown wrote:
-> So I'm incline to leave it as "do as much work as is available to be
-> done" as that is simplest.  But I can probably be talked out of it
-> with a convincing argument....
+On Tue, 8 Jan 2008, Bill Davidsen wrote:
 
-Well, in an age of CFS and CFQ it smacks of 'unfairness'.  But does that
-trump KISS...? Probably not.
+> Neil Brown wrote:
+> > On Monday January 7, jim@fayettedigital.com wrote:
+> >   
+> > > Problem is not raid, or at least not obviously raid related.  The problem
+> > > is that the whole disk, /dev/hdb is unavailable.     
+> > 
+> > Maybe check /sys/block/hdb/holders ?  lsof /dev/hdb ?
+> > 
+> > good luck :-)
+> > 
+> >   
+> losetup -a may help, lsof doesn't seem to show files used in loop mounts. Yes,
+> long shot...
 
---
-Dan
+and don't forget "dmsetup ls"... (followed immediately by "apt-get remove 
+evms" if you're on an unfortunate version of ubuntu which helpfully 
+installed that partition-stealing service for you.)
 
+-dean
