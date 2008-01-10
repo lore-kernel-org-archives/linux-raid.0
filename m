@@ -1,47 +1,50 @@
-From: "Eric S. Johansson" <esj@harvee.org>
-Subject: this goes go my megaraid probs too  was: Re: md rotates RAID5 spare
- at boot
-Date: Thu, 10 Jan 2008 16:23:39 -0500
-Message-ID: <47868CDB.3020708@harvee.org>
-References: <47852984.5040707@ultralame.com> <47865E02.1070108@ultralame.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: raid5 stuck in degraded, inactive and dirty mode
+Date: Fri, 11 Jan 2008 07:21:42 +1100
+Message-ID: <18310.32342.80387.311569@notabene.brown>
+References: <20080109055544.GR3940@zip.com.au>
+	<18308.28489.479077.86397@notabene.brown>
+	<20080109081634.GS3940@zip.com.au>
+	<20080110102919.GZ3940@zip.com.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <47865E02.1070108@ultralame.com>
+In-Reply-To: message from CaT on Thursday January 10
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: CaT <cat@zip.com.au>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Jed Davidow wrote:
-> I'm sorry- is this an inappropriate list to ask for help?  There seemed 
-> to be a fair amount of that when I searched the archives, but I don't 
-> want to bug developers with my problems!
+On Thursday January 10, cat@zip.com.au wrote:
+> On Wed, Jan 09, 2008 at 07:16:34PM +1100, CaT wrote:
+> > > But I suspect that "--assemble --force" would do the right thing.
+> > > Without more details, it is hard to say for sure.
+> > 
+> > I suspect so aswell but throwing caution into the wind erks me wrt this
+> > raid array. :)
 > 
-> Please let me know if I should find another place to ask for help (and 
-> please let me know where that might be!).
+> Sorry. Not to be a pain but considering the previous email with all the
+> examine dumps, etc would the above be the way to go? I just don't want
+> to have missed something and bugger the array up totally.
 
-I could also use help with my mega-raid 150 question.  Don't know if I asked it 
-wrong or it was the color shirt I was wearing.  I am unfortunately running with 
-such a dearth of knowledge on the topic that I don't really know the right 
-questions to ask when diagnosing a performance problem.  All I know is that 
-there's very little documentation on this card, is even less documentation on 
-the commandline tool to access/control the card and if it makes the most sense, 
-I am perfectly willing to deep six the card on eBay and pick up a couple of 
-reasonable speed serial ATA controller cards in its stead.
+Yes, definitely.
 
-the only reason I want to try and learn more about the hardware raid is because 
-the problems I'm experiencing with my virtual machines on this platform mimic 
-problems a customer of mine is experiencing and if I can fix them just by 
-changing how the raid controller uses the discs, then that is a huge win. 
-Personally, I think it's something a little deeper because VMware server seems 
-to go out to lunch whenever there is a backup in the disk I/O queue.  I'm 
-seriously thinking about picking up esx as soon as the budget allows.
+The superblocks look perfectly normal for a single drive failure
+followed by a crash.  So "--assemble --force" is the way to go.
 
-I just need some good solid advice on what path I should take.
+Technically you could have some data corruption if a write was under
+way at the time of the crash.  In that case the parity block of that
+stripe could be wrong, so the recovered data for the missing device
+could be wrong.
+This is why you are required to use "--force" - to confirm that you
+are aware that there could be a problem.
 
----eric
+It would be worth running "fsck" just to be sure that nothing critical
+has been corrupted.  Also if you have a recent backup, I wouldn't
+recycle it until I was fairly sure that all your data was really safe.
 
+But in my experience the chance of actual data corruption in this
+situation is fairly low.
 
--- 
-Speech-recognition in use.  It makes mistakes, I correct some.
+NeilBrown
