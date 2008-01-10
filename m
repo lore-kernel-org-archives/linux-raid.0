@@ -1,7 +1,7 @@
 From: Jed Davidow <jed@ultralame.com>
 Subject: Re: md rotates RAID5 spare at boot
-Date: Thu, 10 Jan 2008 15:41:09 -0800
-Message-ID: <4786AD15.7080506@ultralame.com>
+Date: Thu, 10 Jan 2008 15:43:27 -0800
+Message-ID: <4786AD9F.5050400@ultralame.com>
 References: <47852984.5040707@ultralame.com>	<4786844D.4010104@tmr.com>	<478685DA.8070701@ultralame.com> <18310.38343.339990.718263@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
@@ -10,8 +10,14 @@ Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <18310.38343.339990.718263@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
-Cc: Neil Brown <neilb@suse.de>, Bill Davidsen <davidsen@tmr.com>
 List-Id: linux-raid.ids
+
+One quick question about those rules.  The 65-mdadm rule looks like it 
+checks ACTIVE arrays for filesystems, and the 85 rule assembles arrays.  
+Shouldn't they run in the other order?
+
+
+
 
 distro: Ubuntu 7.10
 
@@ -58,6 +64,7 @@ the devices.  So is it possible that the spare is not the last drive to
 be detected and mdadm assembles too soon?
 
 
+
 Neil Brown wrote:
 > On Thursday January 10, jed@ultralame.com wrote:
 >   
@@ -86,9 +93,5 @@ Neil Brown wrote:
 > show?
 >
 > NeilBrown
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 >
 >   
