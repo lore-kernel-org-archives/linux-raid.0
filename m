@@ -1,46 +1,62 @@
-From: "Dan Williams" <dan.j.williams@gmail.com>
+From: Bill Davidsen <davidsen@tmr.com>
 Subject: Re: 2.6.24-rc6 reproducible raid5 hang
-Date: Thu, 10 Jan 2008 11:49:02 -0700
-Message-ID: <e9c3a7c20801101049r435548e9t5fb552750ca20310@mail.gmail.com>
-References: <alpine.DEB.0.999999.0712270845150.5207@twinlark.arctic.org>
-	 <alpine.DEB.0.999999.0712270938160.5207@twinlark.arctic.org>
-	 <Pine.LNX.4.64.0712290842530.21114@twinlark.arctic.org>
-	 <e9c3a7c20712291247u7d5f6b76gf44a1770f5cdc2cf@mail.gmail.com>
-	 <alpine.DEB.0.999999.0712291248490.5207@twinlark.arctic.org>
-	 <e9c3a7c20712291406ve91e0d5h72979a8dbc4c6844@mail.gmail.com>
-	 <alpine.DEB.0.999999.0712300922520.20553@twinlark.arctic.org>
-	 <1199903330.18882.7.camel@dwillia2-linux.ch.intel.com>
-	 <18309.25170.258730.225322@notabene.brown>
-	 <alpine.DEB.0.999999.0801092309150.27277@twinlark.arctic.org>
+Date: Thu, 10 Jan 2008 15:28:30 -0500
+Message-ID: <47867FEE.8070704@tmr.com>
+References: <alpine.DEB.0.999999.0712270845150.5207@twinlark.arctic.org>	<alpine.DEB.0.999999.0712270938160.5207@twinlark.arctic.org>	<Pine.LNX.4.64.0712290842530.21114@twinlark.arctic.org>	<e9c3a7c20712291247u7d5f6b76gf44a1770f5cdc2cf@mail.gmail.com>	<alpine.DEB.0.999999.0712291248490.5207@twinlark.arctic.org>	<e9c3a7c20712291406ve91e0d5h72979a8dbc4c6844@mail.gmail.com>	<alpine.DEB.0.999999.0712300922520.20553@twinlark.arctic.org>	<1199903330.18882.7.camel@dwillia2-linux.ch.intel.com>	<18309.25170.258730.225322@notabene.brown>	<e9c3a7c20801091907k732b0fcfw8b74502cca76f972@mail.gmail.com> <18309.38832.518580.235804@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.0.999999.0801092309150.27277@twinlark.arctic.org>
-Content-Disposition: inline
+In-Reply-To: <18309.38832.518580.235804@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: dean gaudet <dean@arctic.org>
-Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: Dan Williams <dan.j.williams@intel.com>, dean gaudet <dean@arctic.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Jan 10, 2008 12:13 AM, dean gaudet <dean@arctic.org> wrote:
-> w.r.t. dan's cfq comments -- i really don't know the details, but does
-> this mean cfq will misattribute the IO to the wrong user/process?  or is
-> it just a concern that CPU time will be spent on someone's IO?  the latter
-> is fine to me... the former seems sucky because with today's multicore
-> systems CPU time seems cheap compared to IO.
+Neil Brown wrote:
+> On Wednesday January 9, dan.j.williams@intel.com wrote:
+>   
+>> On Jan 9, 2008 5:09 PM, Neil Brown <neilb@suse.de> wrote:
+>>     
+>>> On Wednesday January 9, dan.j.williams@intel.com wrote:
+>>>
+>>> Can you test it please?
+>>>       
+>> This passes my failure case.
+>>     
 >
+> Thanks!
+>
+>   
+>>> Does it seem reasonable?
+>>>       
+>> What do you think about limiting the number of stripes the submitting
+>> thread handles to be equal to what it submitted?  If I'm a stripe that
+>> only submits 1 stripe worth of work should I get stuck handling the
+>> rest of the cache?
+>>     
+>
+> Dunno....
+> Someone has to do the work, and leaving it all to raid5d means that it
+> all gets done on one CPU.
+> I expect that most of the time the queue of ready stripes is empty so
+> make_request will mostly only handle it's own stripes anyway.
+> The times that it handles other thread's stripes will probably balance
+> out with the times that other threads handle this threads stripes.
+>
+> So I'm incline to leave it as "do as much work as is available to be
+> done" as that is simplest.  But I can probably be talked out of it
+> with a convincing argument....
+>   
 
-I do not see this affecting the time slicing feature of cfq, because
-as Neil says the work has to get done at some point.   If I give up
-some of my slice working on someone else's I/O chances are the favor
-will be returned in kind since the code does not discriminate.  The
-io-priority capability of cfq currently does not work as advertised
-with current MD since the priority is tied to the current thread and
-the thread that actually submits the i/o on a stripe is
-non-deterministic.  So I do not see this change making the situation
-any worse.  In fact, it may make it a bit better since there is a
-higher chance for the thread submitting i/o to MD to do its own i/o to
-the backing disks.
+How about "it will perform better (defined as faster) during conditions 
+of unusual i/o activity?" Is that a convincing argument to use your 
+solution as offered? How about "complexity and maintainability are a 
+zero-sum problem?"
 
-Reviewed-by: Dan Williams <dan.j.williams@intel.com>
+-- 
+Bill Davidsen <davidsen@tmr.com>
+  "Woe unto the statesman who makes war without a reason that will still
+  be valid when the war is over..." Otto von Bismark 
+
+
