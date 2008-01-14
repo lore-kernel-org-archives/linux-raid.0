@@ -1,83 +1,65 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [PATCH 001 of 6] md: Fix an occasional deadlock in raid5
-Date: Mon, 14 Jan 2008 12:45:25 +1100
-Message-ID: <1080114014525.20337@suse.de>
+Subject: [PATCH 002 of 6] md: Fix use-after-free bug when dropping an rdev from an md array.
+Date: Mon, 14 Jan 2008 12:45:31 +1100
+Message-ID: <1080114014531.20354@suse.de>
 References: <20080114123726.19968.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Dan Williams <dan.j.williams@gmail.com>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Al Viro <viro@ZenIV.linux.org.uk>
 List-Id: linux-raid.ids
 
 
-raid5's 'make_request' function calls generic_make_request on
-underlying devices and if we run out of stripe heads, it could end up
-waiting for one of those requests to complete.
-This is bad as recursive calls to generic_make_request go on a queue
-and are not even attempted until make_request completes.
+Due to possible deadlock issues we need to use a schedule work to
+kobject_del an 'rdev' object from a different thread.
 
-So: don't make any generic_make_request calls in raid5 make_request
-until all waiting has been done.  We do this by simply setting
-STRIPE_HANDLE instead of calling handle_stripe().
+A recent change means that kobject_add no longer gets a refernce, and
+kobject_del doesn't put a reference.  Consequently, we need to
+explicitly hold a reference to ensure that the last reference isn't
+dropped before the scheduled work get a chance to call kobject_del.
 
-If we need more stripe_heads, raid5d will get called to process the
-pending stripe_heads which will call generic_make_request from a
-different thread where no deadlock will happen.
+Also, rename delayed_delete to md_delayed_delete to that it is more
+obvious in a stack trace which code is to blame.
 
-
-This change by itself causes a performance hit.  So add a change so
-that raid5_activate_delayed is only called at unplug time, never in
-raid5.  This seems to bring back the performance numbers.  Calling it
-in raid5d was sometimes too soon...
-
-Cc: "Dan Williams" <dan.j.williams@gmail.com>
+Cc: Al Viro <viro@ZenIV.linux.org.uk>
 Signed-off-by: Neil Brown <neilb@suse.de>
 
 ### Diffstat output
- ./drivers/md/raid5.c |   13 ++++---------
- 1 file changed, 4 insertions(+), 9 deletions(-)
+ ./drivers/md/md.c |    8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
 
-diff .prev/drivers/md/raid5.c ./drivers/md/raid5.c
---- .prev/drivers/md/raid5.c	2008-01-11 15:01:14.000000000 +1100
-+++ ./drivers/md/raid5.c	2008-01-14 12:24:07.000000000 +1100
-@@ -3157,7 +3157,8 @@ static void raid5_activate_delayed(raid5
- 				atomic_inc(&conf->preread_active_stripes);
- 			list_add_tail(&sh->lru, &conf->handle_list);
- 		}
--	}
-+	} else
-+		blk_plug_device(conf->mddev->queue);
+diff .prev/drivers/md/md.c ./drivers/md/md.c
+--- .prev/drivers/md/md.c	2008-01-14 12:23:53.000000000 +1100
++++ ./drivers/md/md.c	2008-01-14 12:24:17.000000000 +1100
+@@ -1421,10 +1421,11 @@ static int bind_rdev_to_array(mdk_rdev_t
+ 	return err;
  }
  
- static void activate_bit_delay(raid5_conf_t *conf)
-@@ -3547,7 +3548,7 @@ static int make_request(struct request_q
- 				goto retry;
- 			}
- 			finish_wait(&conf->wait_for_overlap, &w);
--			handle_stripe(sh, NULL);
-+			set_bit(STRIPE_HANDLE, &sh->state);
- 			release_stripe(sh);
- 		} else {
- 			/* cannot get stripe for read-ahead, just give-up */
-@@ -3890,7 +3891,7 @@ static int  retry_aligned_read(raid5_con
-  * During the scan, completed stripes are saved for us by the interrupt
-  * handler, so that they will not have to wait for our next wakeup.
-  */
--static void raid5d (mddev_t *mddev)
-+static void raid5d(mddev_t *mddev)
+-static void delayed_delete(struct work_struct *ws)
++static void md_delayed_delete(struct work_struct *ws)
  {
- 	struct stripe_head *sh;
- 	raid5_conf_t *conf = mddev_to_conf(mddev);
-@@ -3915,12 +3916,6 @@ static void raid5d (mddev_t *mddev)
- 			activate_bit_delay(conf);
- 		}
+ 	mdk_rdev_t *rdev = container_of(ws, mdk_rdev_t, del_work);
+ 	kobject_del(&rdev->kobj);
++	kobject_put(&rdev->kobj);
+ }
  
--		if (list_empty(&conf->handle_list) &&
--		    atomic_read(&conf->preread_active_stripes) < IO_THRESHOLD &&
--		    !blk_queue_plugged(mddev->queue) &&
--		    !list_empty(&conf->delayed_list))
--			raid5_activate_delayed(conf);
--
- 		while ((bio = remove_bio_from_retry(conf))) {
- 			int ok;
- 			spin_unlock_irq(&conf->device_lock);
+ static void unbind_rdev_from_array(mdk_rdev_t * rdev)
+@@ -1443,7 +1444,8 @@ static void unbind_rdev_from_array(mdk_r
+ 	/* We need to delay this, otherwise we can deadlock when
+ 	 * writing to 'remove' to "dev/state"
+ 	 */
+-	INIT_WORK(&rdev->del_work, delayed_delete);
++	INIT_WORK(&rdev->del_work, md_delayed_delete);
++	kobject_get(&rdev->kobj);
+ 	schedule_work(&rdev->del_work);
+ }
+ 
+@@ -3688,7 +3690,7 @@ static int do_md_stop(mddev_t * mddev, i
+ 				sysfs_remove_link(&mddev->kobj, nm);
+ 			}
+ 
+-		/* make sure all delayed_delete calls have finished */
++		/* make sure all md_delayed_delete calls have finished */
+ 		flush_scheduled_work();
+ 
+ 		export_array(mddev);
