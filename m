@@ -1,92 +1,33 @@
-From: NeilBrown <neilb@suse.de>
-Subject: [PATCH 006 of 6] md: Change ITERATE_RDEV_GENERIC to rdev_for_each_list, and remove ITERATE_RDEV_PENDING.
-Date: Mon, 14 Jan 2008 12:45:56 +1100
-Message-ID: <1080114014556.20415@suse.de>
-References: <20080114123726.19968.patches@notabene>
+From: Al Viro <viro@ZenIV.linux.org.uk>
+Subject: Re: [PATCH 002 of 6] md: Fix use-after-free bug when dropping an rdev from an md array.
+Date: Mon, 14 Jan 2008 02:04:59 +0000
+Message-ID: <20080114020459.GN27894@ZenIV.linux.org.uk>
+References: <20080114123726.19968.patches@notabene> <1080114014531.20354@suse.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1080114014531.20354@suse.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Mon, Jan 14, 2008 at 12:45:31PM +1100, NeilBrown wrote:
+> 
+> Due to possible deadlock issues we need to use a schedule work to
+> kobject_del an 'rdev' object from a different thread.
+> 
+> A recent change means that kobject_add no longer gets a refernce, and
+> kobject_del doesn't put a reference.  Consequently, we need to
+> explicitly hold a reference to ensure that the last reference isn't
+> dropped before the scheduled work get a chance to call kobject_del.
+> 
+> Also, rename delayed_delete to md_delayed_delete to that it is more
+> obvious in a stack trace which code is to blame.
 
-Finish ITERATE_ to for_each conversion.
+I don't know...  You still get kobject_del() and export_rdev()
+in unpredictable order; sure, it won't be freed under you, but...
 
-Signed-off-by: Neil Brown <neilb@suse.de>
-
-### Diffstat output
- ./drivers/md/md.c           |    8 ++++----
- ./include/linux/raid/md_k.h |   14 ++++----------
- 2 files changed, 8 insertions(+), 14 deletions(-)
-
-diff .prev/drivers/md/md.c ./drivers/md/md.c
---- .prev/drivers/md/md.c	2008-01-14 12:26:10.000000000 +1100
-+++ ./drivers/md/md.c	2008-01-14 12:26:15.000000000 +1100
-@@ -3767,7 +3767,7 @@ static void autorun_devices(int part)
- 		printk(KERN_INFO "md: considering %s ...\n",
- 			bdevname(rdev0->bdev,b));
- 		INIT_LIST_HEAD(&candidates);
--		ITERATE_RDEV_PENDING(rdev,tmp)
-+		rdev_for_each_list(rdev, tmp, pending_raid_disks)
- 			if (super_90_load(rdev, rdev0, 0) >= 0) {
- 				printk(KERN_INFO "md:  adding %s ...\n",
- 					bdevname(rdev->bdev,b));
-@@ -3810,7 +3810,7 @@ static void autorun_devices(int part)
- 			mddev_unlock(mddev);
- 		} else {
- 			printk(KERN_INFO "md: created %s\n", mdname(mddev));
--			ITERATE_RDEV_GENERIC(candidates,rdev,tmp) {
-+			rdev_for_each_list(rdev, tmp, candidates) {
- 				list_del_init(&rdev->same_set);
- 				if (bind_rdev_to_array(rdev, mddev))
- 					export_rdev(rdev);
-@@ -3821,7 +3821,7 @@ static void autorun_devices(int part)
- 		/* on success, candidates will be empty, on error
- 		 * it won't...
- 		 */
--		ITERATE_RDEV_GENERIC(candidates,rdev,tmp)
-+		rdev_for_each_list(rdev, tmp, candidates)
- 			export_rdev(rdev);
- 		mddev_put(mddev);
- 	}
-@@ -4936,7 +4936,7 @@ static void status_unused(struct seq_fil
- 
- 	seq_printf(seq, "unused devices: ");
- 
--	ITERATE_RDEV_PENDING(rdev,tmp) {
-+	rdev_for_each_list(rdev, tmp, pending_raid_disks) {
- 		char b[BDEVNAME_SIZE];
- 		i++;
- 		seq_printf(seq, "%s ",
-
-diff .prev/include/linux/raid/md_k.h ./include/linux/raid/md_k.h
---- .prev/include/linux/raid/md_k.h	2008-01-14 12:26:10.000000000 +1100
-+++ ./include/linux/raid/md_k.h	2008-01-14 12:26:15.000000000 +1100
-@@ -313,23 +313,17 @@ static inline char * mdname (mddev_t * m
-  * iterates through some rdev ringlist. It's safe to remove the
-  * current 'rdev'. Dont touch 'tmp' though.
-  */
--#define ITERATE_RDEV_GENERIC(head,rdev,tmp)				\
-+#define rdev_for_each_list(rdev, tmp, list)				\
- 									\
--	for ((tmp) = (head).next;					\
-+	for ((tmp) = (list).next;					\
- 		(rdev) = (list_entry((tmp), mdk_rdev_t, same_set)),	\
--			(tmp) = (tmp)->next, (tmp)->prev != &(head)	\
-+			(tmp) = (tmp)->next, (tmp)->prev != &(list)	\
- 		; )
- /*
-  * iterates through the 'same array disks' ringlist
-  */
- #define rdev_for_each(rdev, tmp, mddev)				\
--	ITERATE_RDEV_GENERIC((mddev)->disks,rdev,tmp)
--
--/*
-- * Iterates through 'pending RAID disks'
-- */
--#define ITERATE_RDEV_PENDING(rdev,tmp)					\
--	ITERATE_RDEV_GENERIC(pending_raid_disks,rdev,tmp)
-+	rdev_for_each_list(rdev, tmp, (mddev)->disks)
- 
- typedef struct mdk_thread_s {
- 	void			(*run) (mddev_t *mddev);
+What is that deadlock problem, anyway?  I don't see anything that
+would look like an obvious candidate in the stuff you are delaying...
