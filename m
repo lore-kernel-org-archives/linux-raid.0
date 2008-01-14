@@ -1,7 +1,7 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [PATCH 003 of 6] md: Change a few 'int' to 'size_t' in md
-Date: Mon, 14 Jan 2008 12:45:37 +1100
-Message-ID: <1080114014537.20371@suse.de>
+Subject: [PATCH 004 of 6] md: Change INTERATE_MDDEV to for_each_mddev
+Date: Mon, 14 Jan 2008 12:45:43 +1100
+Message-ID: <1080114014543.20385@suse.de>
 References: <20080114123726.19968.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
@@ -10,41 +10,68 @@ Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-As suggested by Andrew Morton.
+As this is more consistent with kernel style.
 
 Signed-off-by: Neil Brown <neilb@suse.de>
 
 ### Diffstat output
- ./drivers/md/md.c |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ ./drivers/md/md.c |   12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
 diff .prev/drivers/md/md.c ./drivers/md/md.c
---- .prev/drivers/md/md.c	2008-01-14 12:24:17.000000000 +1100
-+++ ./drivers/md/md.c	2008-01-14 12:24:31.000000000 +1100
-@@ -1802,7 +1802,7 @@ static ssize_t
- state_show(mdk_rdev_t *rdev, char *page)
- {
- 	char *sep = "";
--	int len=0;
-+	size_t len = 0;
+--- .prev/drivers/md/md.c	2008-01-14 12:24:54.000000000 +1100
++++ ./drivers/md/md.c	2008-01-14 12:26:04.000000000 +1100
+@@ -195,7 +195,7 @@ static DEFINE_SPINLOCK(all_mddevs_lock);
+  * Any code which breaks out of this loop while own
+  * a reference to the current mddev and must mddev_put it.
+  */
+-#define ITERATE_MDDEV(mddev,tmp)					\
++#define for_each_mddev(mddev,tmp)					\
+ 									\
+ 	for (({ spin_lock(&all_mddevs_lock); 				\
+ 		tmp = all_mddevs.next;					\
+@@ -1596,7 +1596,7 @@ static void md_print_devices(void)
+ 	printk("md:	**********************************\n");
+ 	printk("md:	* <COMPLETE RAID STATE PRINTOUT> *\n");
+ 	printk("md:	**********************************\n");
+-	ITERATE_MDDEV(mddev,tmp) {
++	for_each_mddev(mddev, tmp) {
  
- 	if (test_bit(Faulty, &rdev->flags)) {
- 		len+= sprintf(page+len, "%sfaulty",sep);
-@@ -2320,7 +2320,7 @@ level_show(mddev_t *mddev, char *page)
- static ssize_t
- level_store(mddev_t *mddev, const char *buf, size_t len)
- {
--	int rv = len;
-+	ssize_t rv = len;
- 	if (mddev->pers)
- 		return -EBUSY;
- 	if (len == 0)
-@@ -2807,7 +2807,7 @@ metadata_store(mddev_t *mddev, const cha
- 		return len;
- 	}
- 	if (strncmp(buf, "external:", 9) == 0) {
--		int namelen = len-9;
-+		size_t namelen = len-9;
- 		if (namelen >= sizeof(mddev->metadata_type))
- 			namelen = sizeof(mddev->metadata_type)-1;
- 		strncpy(mddev->metadata_type, buf+9, namelen);
+ 		if (mddev->bitmap)
+ 			bitmap_print_sb(mddev->bitmap);
+@@ -2014,7 +2014,7 @@ rdev_size_store(mdk_rdev_t *rdev, const 
+ 		struct list_head *tmp, *tmp2;
+ 
+ 		mddev_unlock(rdev->mddev);
+-		ITERATE_MDDEV(mddev, tmp) {
++		for_each_mddev(mddev, tmp) {
+ 			mdk_rdev_t *rdev2;
+ 
+ 			mddev_lock(mddev);
+@@ -5464,7 +5464,7 @@ void md_do_sync(mddev_t *mddev)
+ 			set_bit(MD_RECOVERY_INTR, &mddev->recovery);
+ 			goto skip;
+ 		}
+-		ITERATE_MDDEV(mddev2,tmp) {
++		for_each_mddev(mddev2, tmp) {
+ 			if (mddev2 == mddev)
+ 				continue;
+ 			if (mddev2->curr_resync && 
+@@ -5912,7 +5912,7 @@ static int md_notify_reboot(struct notif
+ 
+ 		printk(KERN_INFO "md: stopping all md devices.\n");
+ 
+-		ITERATE_MDDEV(mddev,tmp)
++		for_each_mddev(mddev, tmp)
+ 			if (mddev_trylock(mddev)) {
+ 				do_md_stop (mddev, 1);
+ 				mddev_unlock(mddev);
+@@ -6046,7 +6046,7 @@ static __exit void md_exit(void)
+ 	unregister_reboot_notifier(&md_notifier);
+ 	unregister_sysctl_table(raid_table_header);
+ 	remove_proc_entry("mdstat", NULL);
+-	ITERATE_MDDEV(mddev,tmp) {
++	for_each_mddev(mddev, tmp) {
+ 		struct gendisk *disk = mddev->gendisk;
+ 		if (!disk)
+ 			continue;
