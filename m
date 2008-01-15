@@ -1,61 +1,64 @@
-From: "Greg Cormier" <gcormier@gmail.com>
-Subject: Replacing an active drive.
-Date: Mon, 14 Jan 2008 10:26:02 -0500
-Message-ID: <29a863790801140726j5c99a82bo494730e91a0ed871@mail.gmail.com>
+From: "K.Tanaka" <k-tanaka@ce.jp.nec.com>
+Subject: [RFC] A SCSI fault injection framework using SystemTap.
+Date: Tue, 15 Jan 2008 12:04:09 +0900
+Message-ID: <478C22A9.5000009@ce.jp.nec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-2022-JP
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, dm-devel@redhat.com
 List-Id: linux-raid.ids
 
-Hey guys.
 
-I've got a 1TB RAID5 array with 3x500gb drives. I just RMA'd a drive.
-Can someone help me properly swap out /dev/sdd for the new drive?
+I would like to introduce a SCSI fault injection framework using SystemTap.
 
-I've done this before but I've had issues that bugged me. Everything
-worked fine, but if I would examine details on drives, I'd have FOUR
-drives listed with the old drive always missing. So I guess I wasn't
-properly removing the current drive? Or maybe I marked it as failed
-but didn't remove it?
+Currently, kernel has Fault-injection framework and Faulty mode for md,
+which can also be used for testing the error handling. But, they could
+only produce fixed type of errors stochastically. In order to simulate
+more realistic scsi disk faults, I have created a  new flexible fault injection
+framework using SystemTap.
 
-In any case it drove me nuts having that array working but having that
-phantom old drive haunting me in the details of the array.
+The new fault injection framework has the following features:
+
+ 1) The new framework is flexible, easy to change the condition without changing
+    the kernel because actually they are SystemTap scripts.
+    For example, device faults resulting in scsi command timeout, and media
+    faults which could be corrected by writing data to the failed sector
+    could be simulated using this framework.
+
+ 2) The new framework generates "pseudo" faults in the SCSI mid-layer.
+    Any upper layer app/driver using the SCSI mid-layer can apply this framework.
+
+ 3) The new framework rewrite the status code and sense data for SCSI command and
+    pass it to the upper layer. So the real error handling routine of the upper
+    layer for I/O request can be tested.
+
+I have tested the software RAID (md/dm-mirror) using this framework
+and found some bugs.
+ e.g.
+  -The kernel thread for md RAID1 could cause a deadlock when the error handler for
+    md RAID1 contends with the write access to the md RAID1 array.
+
+  -dm-mirror's redundancy doesn't work. A read error from the disk consisting
+   the array will be directory passed to the userspace, without reading from
+   the other mirror.
+   (It turns out that this issue is a known issue, but the patch is not merged.
+    http://www.kernel.org/pub/linux/kernel/people/agk/patches/2.6/editing/dm-raid1-handle-read-failures.patch)
+
+There are also some other bugs for error handling routine in the multiple
+fault situation. I will report the details about these bugs later.
+
+The new framework is tested on Fedora8(i386) running with kernel 2.6.23.12.
+So far, I'm cleaning up the tool set for release, and plan to post it in the near future.
+If you are interested, take a look at it.
+If you have any comments, please let me know.
+
+-- 
+------------------------------------------------------------------------
+Kenichi TANAKA    | Open Source Software Platform Development Division
+                  | Computers Software Operations Unit, NEC Corporation
+                  | k-tanaka@ce.jp.nec.com
 
 
-Thanks,
-Greg
-
-
-[root@zeus ~]# mdadm --detail /dev/md0
-/dev/md0:
-        Version : 00.90.03
-  Creation Time : Sun Oct 28 20:26:45 2007
-     Raid Level : raid5
-     Array Size : 976767872 (931.52 GiB 1000.21 GB)
-  Used Dev Size : 488383936 (465.76 GiB 500.11 GB)
-   Raid Devices : 3
-  Total Devices : 3
-Preferred Minor : 0
-    Persistence : Superblock is persistent
-
-    Update Time : Mon Jan 14 00:28:13 2008
-          State : clean
- Active Devices : 3
-Working Devices : 3
- Failed Devices : 0
-  Spare Devices : 0
-
-         Layout : left-symmetric
-     Chunk Size : 64K
-
-           UUID : 3b024473:fc22d99a:c7b2647e:3a22292c
-         Events : 0.16
-
-    Number   Major   Minor   RaidDevice State
-       0       8       17        0      active sync   /dev/sdb1
-       1       8       33        1      active sync   /dev/sdc1
-       2       8       49        2      active sync   /dev/sdd1
