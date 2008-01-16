@@ -1,36 +1,52 @@
-From: Alasdair G Kergon <agk@redhat.com>
-Subject: Re: [RFC] A SCSI fault injection framework using SystemTap.
-Date: Tue, 15 Jan 2008 11:17:04 +0000
-Message-ID: <20080115111704.GJ8075@agk.fab.redhat.com>
-References: <478C22A9.5000009@ce.jp.nec.com>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: dean gaudet <dean@arctic.org>
+Subject: Re: [PATCH 001 of 6] md: Fix an occasional deadlock in raid5
+Date: Tue, 15 Jan 2008 21:01:17 -0800 (PST)
+Message-ID: <alpine.DEB.0.999999.0801152059170.9578@twinlark.arctic.org>
+References: <20080114123726.19968.patches@notabene> <1080114014525.20337@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <dm-devel-bounces@redhat.com>
-Content-Disposition: inline
-In-Reply-To: <478C22A9.5000009@ce.jp.nec.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: device-mapper development <dm-devel@redhat.com>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1080114014525.20337@suse.de>
+Sender: linux-raid-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Dan Williams <dan.j.williams@gmail.com>
 List-Id: linux-raid.ids
 
-On Tue, Jan 15, 2008 at 12:04:09PM +0900, K.Tanaka wrote:
->   -dm-mirror's redundancy doesn't work. A read error from the disk consisting
->    the array will be directory passed to the userspace, without reading from
->    the other mirror.
->    (It turns out that this issue is a known issue, but the patch is not merged.
->     http://www.kernel.org/pub/linux/kernel/people/agk/patches/2.6/editing/dm-raid1-handle-read-failures.patch)
- 
-It's in the queue for 2.6.25.
+On Mon, 14 Jan 2008, NeilBrown wrote:
 
-Alasdair
--- 
-agk@redhat.com
+> 
+> raid5's 'make_request' function calls generic_make_request on
+> underlying devices and if we run out of stripe heads, it could end up
+> waiting for one of those requests to complete.
+> This is bad as recursive calls to generic_make_request go on a queue
+> and are not even attempted until make_request completes.
+> 
+> So: don't make any generic_make_request calls in raid5 make_request
+> until all waiting has been done.  We do this by simply setting
+> STRIPE_HANDLE instead of calling handle_stripe().
+> 
+> If we need more stripe_heads, raid5d will get called to process the
+> pending stripe_heads which will call generic_make_request from a
+> different thread where no deadlock will happen.
+> 
+> 
+> This change by itself causes a performance hit.  So add a change so
+> that raid5_activate_delayed is only called at unplug time, never in
+> raid5.  This seems to bring back the performance numbers.  Calling it
+> in raid5d was sometimes too soon...
+> 
+> Cc: "Dan Williams" <dan.j.williams@gmail.com>
+> Signed-off-by: Neil Brown <neilb@suse.de>
+
+probably doesn't matter, but for the record:
+
+Tested-by: dean gaudet <dean@arctic.org>
+
+this time i tested with internal and external bitmaps and it survived 8h 
+and 14h resp. under the parallel tar workload i used to reproduce the 
+hang.
+
+btw this should probably be a candidate for 2.6.22 and .23 stable.
+
+thanks
+-dean
