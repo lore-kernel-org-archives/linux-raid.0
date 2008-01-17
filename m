@@ -1,53 +1,48 @@
-From: Leopoldo Ghielmetti <leopoldo.ghielmetti@a3.epfl.ch>
-Subject: Incompatibility between Linux and Windows
-Date: Thu, 17 Jan 2008 12:46:52 +0100
-Message-ID: <1200570412.19278.26.camel@synda.ghielmetti.net>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: do_md_run returned -22 [Was: 2.6.24-rc8-mm1]
+Date: Thu, 17 Jan 2008 11:01:53 -0800
+Message-ID: <20080117110153.f224f24e.akpm@linux-foundation.org>
+References: <20080117023514.9df393cf.akpm@linux-foundation.org>
+	<478F72F2.6000707@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <478F72F2.6000707@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Jiri Slaby <jirislaby@gmail.com>
+Cc: linux-kernel@vger.kernel.org, Torsten Kaiser <just.for.lkml@googlemail.com>, NeilBrown <neilb@suse.de>, mingo@redhat.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+On Thu, 17 Jan 2008 16:23:30 +0100 Jiri Slaby <jirislaby@gmail.com> wrote:
 
-I've some questions on the Linux software raid. I have assembled a raid1
-array with 2 external disks and what we want is to mount those disks in
-Linux (using raid), in Windows (using a read-only mount of only one
-disk) and in a Linux without the raid support (also with a read-only
-mount).
+> On 01/17/2008 11:35 AM, Andrew Morton wrote:
+> > ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.24-rc8/2.6.24-rc8-mm1/
+> 
+> still the same md issue (do_md_run returns -22=EINVAL) as in -rc6-mm1 reported 
+> by Thorsten here:
+> http://lkml.org/lkml/2007/12/27/45
 
-I remember that it was possible when I've used the raid tools but today
-it seems to be impossible, the Windows don't recognize the partition and
-Linux answer that he can't mount a linux_raid_member partition when I
-choose to mount only one of the devices (in read-only mode).
+hm, I must have been asleep when that was reported.  Neil, did you see it?
 
-Before it was possible to mount the discs independently or using the
-raidtools.
+> Is there around any fix for this?
 
-How can I make this operations?
+Well, we could bitbucket md-allow-devices-to-be-shared-between-md-arrays.patch
 
-It's a problem in the superblock? I remember that normally the
-superblock is at the end of the partition so he don't interfere with the
-using of the filesystem by an OS that don't known Linux Raid Arrays but
-the error of the Linux itself and the non recognition by Windows let me
-suppose that now the mdadm create the superblock at the beginning of the
-filesystem. There is a method to move the superblock at the end and
-leave the system compatible with both OS?
-
-There is a method to access only one disk from a Linux that don't known
-raid arrays?
-
-Why the implementation (that worked very well) has been changed to block
-the easy use of the Linux Raid partitions (that was the real improvement
-over all other raid solutions)?
-
-We seriously think to remove the mdadm tool and recompile the old
-version of the raidtool that worked better than mdadm but I don't known
-if the new kernels supports it.
-
-Thank-you.
-
-Leopoldo Ghielmetti
-
+> Having 0.90 raid 0 and 1, commenting this out helps:
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index 8633bd4..9b8ecc8 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -3292,8 +3292,8 @@ static int do_md_run(mddev_t * mddev)
+>           * Analyze all RAID superblock(s)
+>           */
+>          if (!mddev->raid_disks) {
+> -               if (!mddev->persistent)
+> -                       return -EINVAL;
+> +/*             if (!mddev->persistent)
+> +                       return -EINVAL;*/
+>                  analyze_sbs(mddev);
+>          }
+> 
+> The persistency is marked even in analyze_sbs->validate_super, I guess?
