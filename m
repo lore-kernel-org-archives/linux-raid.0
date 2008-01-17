@@ -1,42 +1,35 @@
 From: "Norman Elton" <normelton@gmail.com>
-Subject: Raid over 48 disks ... for real now
-Date: Thu, 17 Jan 2008 11:19:35 -0500
-Message-ID: <6b3a7f010801170819o59533c39qf4dada60a6f8701@mail.gmail.com>
+Subject: Re: Raid over 48 disks ... for real now
+Date: Thu, 17 Jan 2008 11:32:21 -0500
+Message-ID: <6b3a7f010801170832y15237aa4n83c4817c1ee2acad@mail.gmail.com>
+References: <6b3a7f010801170819o59533c39qf4dada60a6f8701@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <6b3a7f010801170819o59533c39qf4dada60a6f8701@mail.gmail.com>
 Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I posed the question a few weeks ago about how to best accommodate
-software RAID over an array of 48 disks (a Sun X4500 server, a.k.a.
-Thumper). I appreciate all the suggestions.
+>> Hi, sounds like a monster server. I am interested in how you will make
+>> the space useful to remote machines- iscsi? this is what I am
+>> researching currently.
 
-Well, the hardware is here. It is indeed six Marvell 88SX6081 SATA
-controllers, each with eight 1TB drives, for a total raw storage of
-48TB. I must admit, it's quite impressive. And loud. More information
-about the hardware is available online...
+Yes, it's a honker of a box. It will be collecting data from various
+"collector" servers. The plan right now is to collect the file to
+binary files using a daemon (already running on a smaller box), then
+make the last 30/60/90/?? days available in a database that is
+populated from these files. If we need to gather older data, then the
+individual files must be consulted locally.
 
-http://www.sun.com/servers/x64/x4500/arch-wp.pdf
+So, in production, I would probably setup the database partition on
+it's own set of 6 disks, then dedicate the rest to handling/archiving
+the raw binary files. These files are small (a few MB each), as they
+get rotated every five minutes.
 
-It came loaded with Solaris, configured with ZFS. Things seemed to
-work fine. I did not do any benchmarks, but I can revert to that
-configuration if necessary.
+Hope this makes sense, and provides a little background info on what
+we're trying to do.
 
-Now I've loaded RHEL onto the box. For a first-shot, I've created one
-RAID-5 array (+ 1 spare) on each of the controllers, then used LVM to
-create a VolGroup across the arrays.
-
-So now I'm trying to figure out what to do with this space. So far,
-I've tested mke2fs on a 1TB and a 5TB LogVol.
-
-I wish RHEL would support XFS/ZFS, but for now, I'm stuck with ext3.
-Am I better off sticking with relatively small partitions (2-5 TB), or
-should I crank up the block size and go for one big partition?
-
-Thoughts?
-
-Norman Elton
+Norman
