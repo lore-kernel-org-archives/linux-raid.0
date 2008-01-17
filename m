@@ -1,41 +1,42 @@
-From: Jiri Slaby <jirislaby@gmail.com>
-Subject: do_md_run returned -22 [Was: 2.6.24-rc8-mm1]
-Date: Thu, 17 Jan 2008 16:23:30 +0100
-Message-ID: <478F72F2.6000707@gmail.com>
-References: <20080117023514.9df393cf.akpm@linux-foundation.org>
+From: James Andrewartha <jamesa@daa.com.au>
+Subject: SX8 docs (was: The SX4 challenge)
+Date: Fri, 18 Jan 2008 00:42:06 +0900
+Message-ID: <1200584526.7112.19.camel@zarvora>
+References: <478EA794.8080608@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20080117023514.9df393cf.akpm@linux-foundation.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-kernel@vger.kernel.org, Torsten Kaiser <just.for.lkml@googlemail.com>, NeilBrown <neilb@suse.de>, mingo@redhat.com, linux-raid@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <478EA794.8080608@garzik.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Linux IDE mailing list <linux-ide@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Linux RAID list <linux-raid@vger.kernel.org>, Dan Williams <dan.j.williams@intel.com>
 List-Id: linux-raid.ids
 
-On 01/17/2008 11:35 AM, Andrew Morton wrote:
-> ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.24-rc8/2.6.24-rc8-mm1/
+On Wed, 2008-01-16 at 19:55 -0500, Jeff Garzik wrote:
+> Promise just gave permission to post the docs for their PDC20621 (i.e. 
+> SX4) hardware:
+> http://gkernel.sourceforge.net/specs/promise/pdc20621-pguide-1.2.pdf.bz2
+> 
+> joining the existing PDC20621 DIMM and PLL docs:
+> http://gkernel.sourceforge.net/specs/promise/pdc20621-pguide-dimm-1.6.pdf.bz2
+> http://gkernel.sourceforge.net/specs/promise/pdc20621-pguide-pll-ata-timing-1.2.pdf.bz2
+> 
+> 
+> So, the SX4 is now open.  Yay :)  I am hoping to talk Mikael into 
+> becoming the sata_sx4 maintainer, and finally integrating my 'new-eh' 
+> conversion in libata-dev.git.
+> 
+> But now is a good time to remind people how lame the sata_sx4 driver 
+> software really is -- and I should know, I wrote it.
 
-still the same md issue (do_md_run returns -22=EINVAL) as in -rc6-mm1 reported 
-by Thorsten here:
-http://lkml.org/lkml/2007/12/27/45
+Hi Jeff,
 
-Is there around any fix for this?
+What are the chances of the SX8 docs being opened? The vendor GPL driver
+has bitrotted and the kernel driver offers poor performance or data
+corruption. IIRC it's not part of libata but its own block device,
+although you were considering porting it to get ATAPI support?
 
-Having 0.90 raid 0 and 1, commenting this out helps:
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 8633bd4..9b8ecc8 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -3292,8 +3292,8 @@ static int do_md_run(mddev_t * mddev)
-          * Analyze all RAID superblock(s)
-          */
-         if (!mddev->raid_disks) {
--               if (!mddev->persistent)
--                       return -EINVAL;
-+/*             if (!mddev->persistent)
-+                       return -EINVAL;*/
-                 analyze_sbs(mddev);
-         }
+Thanks,
 
-The persistency is marked even in analyze_sbs->validate_super, I guess?
+James Andrewartha
