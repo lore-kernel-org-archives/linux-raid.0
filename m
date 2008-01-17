@@ -1,42 +1,42 @@
-From: James Andrewartha <jamesa@daa.com.au>
-Subject: SX8 docs (was: The SX4 challenge)
-Date: Fri, 18 Jan 2008 00:42:06 +0900
-Message-ID: <1200584526.7112.19.camel@zarvora>
-References: <478EA794.8080608@garzik.org>
+From: "Norman Elton" <normelton@gmail.com>
+Subject: Raid over 48 disks ... for real now
+Date: Thu, 17 Jan 2008 11:19:35 -0500
+Message-ID: <6b3a7f010801170819o59533c39qf4dada60a6f8701@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <478EA794.8080608@garzik.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Linux IDE mailing list <linux-ide@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Linux RAID list <linux-raid@vger.kernel.org>, Dan Williams <dan.j.williams@intel.com>
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 2008-01-16 at 19:55 -0500, Jeff Garzik wrote:
-> Promise just gave permission to post the docs for their PDC20621 (i.e. 
-> SX4) hardware:
-> http://gkernel.sourceforge.net/specs/promise/pdc20621-pguide-1.2.pdf.bz2
-> 
-> joining the existing PDC20621 DIMM and PLL docs:
-> http://gkernel.sourceforge.net/specs/promise/pdc20621-pguide-dimm-1.6.pdf.bz2
-> http://gkernel.sourceforge.net/specs/promise/pdc20621-pguide-pll-ata-timing-1.2.pdf.bz2
-> 
-> 
-> So, the SX4 is now open.  Yay :)  I am hoping to talk Mikael into 
-> becoming the sata_sx4 maintainer, and finally integrating my 'new-eh' 
-> conversion in libata-dev.git.
-> 
-> But now is a good time to remind people how lame the sata_sx4 driver 
-> software really is -- and I should know, I wrote it.
+I posed the question a few weeks ago about how to best accommodate
+software RAID over an array of 48 disks (a Sun X4500 server, a.k.a.
+Thumper). I appreciate all the suggestions.
 
-Hi Jeff,
+Well, the hardware is here. It is indeed six Marvell 88SX6081 SATA
+controllers, each with eight 1TB drives, for a total raw storage of
+48TB. I must admit, it's quite impressive. And loud. More information
+about the hardware is available online...
 
-What are the chances of the SX8 docs being opened? The vendor GPL driver
-has bitrotted and the kernel driver offers poor performance or data
-corruption. IIRC it's not part of libata but its own block device,
-although you were considering porting it to get ATAPI support?
+http://www.sun.com/servers/x64/x4500/arch-wp.pdf
 
-Thanks,
+It came loaded with Solaris, configured with ZFS. Things seemed to
+work fine. I did not do any benchmarks, but I can revert to that
+configuration if necessary.
 
-James Andrewartha
+Now I've loaded RHEL onto the box. For a first-shot, I've created one
+RAID-5 array (+ 1 spare) on each of the controllers, then used LVM to
+create a VolGroup across the arrays.
+
+So now I'm trying to figure out what to do with this space. So far,
+I've tested mke2fs on a 1TB and a 5TB LogVol.
+
+I wish RHEL would support XFS/ZFS, but for now, I'm stuck with ext3.
+Am I better off sticking with relatively small partitions (2-5 TB), or
+should I crank up the block size and go for one big partition?
+
+Thoughts?
+
+Norman Elton
