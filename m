@@ -1,40 +1,52 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: Linux Software RAID 5 + XFS Multi-Benchmarks / 10 Raptors
- Again
-Date: Fri, 18 Jan 2008 10:58:40 -0500 (EST)
-Message-ID: <alpine.DEB.0.999999.0801181057260.23565@p34.internal.lan>
-References: <alpine.DEB.0.999999.0801161105510.16168@p34.internal.lan>  <29a863790801180735n379a27f1t4987686b2ec1aa50@mail.gmail.com>  <alpine.DEB.0.999999.0801181036260.23565@p34.internal.lan> <29a863790801180743y2e90e37aj70c556dc9192a15d@mail.gmail.com>
+From: michael@estone.ca
+Subject: Re: Raid over 48 disks ... for real now
+Date: Fri, 18 Jan 2008 08:08:49 -0800
+Message-ID: <20080118080849.9cidbh0so4wkkc44@estone.ca>
+References: <6b3a7f010801170819o59533c39qf4dada60a6f8701@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=US-ASCII;
+	DelSp=Yes	format=flowed
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <29a863790801180743y2e90e37aj70c556dc9192a15d@mail.gmail.com>
+In-Reply-To: <6b3a7f010801170819o59533c39qf4dada60a6f8701@mail.gmail.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Greg Cormier <gcormier@gmail.com>
-Cc: linux-raid@vger.kernel.org, xfs@oss.sgi.com, Alan Piszcz <ap@solarrain.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Quoting Norman Elton <normelton@gmail.com>:
 
-
-On Fri, 18 Jan 2008, Greg Cormier wrote:
-
->> Also, don't use ext*, XFS can be up to 2-3x faster (in many of the
->> benchmarks).
+> I posed the question a few weeks ago about how to best accommodate
+> software RAID over an array of 48 disks (a Sun X4500 server, a.k.a.
+> Thumper). I appreciate all the suggestions.
 >
-> I'm going to swap file systems and give it a shot right now! :)
+> Well, the hardware is here. It is indeed six Marvell 88SX6081 SATA
+> controllers, each with eight 1TB drives, for a total raw storage of
+> 48TB. I must admit, it's quite impressive. And loud. More information
+> about the hardware is available online...
 >
-> How is stability of XFS? I heard recovery is easier with ext2/3 due to
-> more people using it, more tools available, etc?
+> http://www.sun.com/servers/x64/x4500/arch-wp.pdf
 >
-> Greg
+> It came loaded with Solaris, configured with ZFS. Things seemed to
+> work fine. I did not do any benchmarks, but I can revert to that
+> configuration if necessary.
 >
+> Now I've loaded RHEL onto the box. For a first-shot, I've created one
+> RAID-5 array (+ 1 spare) on each of the controllers, then used LVM to
+> create a VolGroup across the arrays.
+>
+> So now I'm trying to figure out what to do with this space. So far,
+> I've tested mke2fs on a 1TB and a 5TB LogVol.
+>
+> I wish RHEL would support XFS/ZFS, but for now, I'm stuck with ext3.
+> Am I better off sticking with relatively small partitions (2-5 TB), or
+> should I crank up the block size and go for one big partition?
 
-Recovery is actually easier with XFS because the repair filesystem code is 
-built-into the kernel (you dont need a utility to fix it)-- however, there 
-is xfs_repair (if) the in-kernel-tree part could not fix it.
+Impressive system. I'm curious to what the storage drives look like  
+and how they attach to the server with that many disks?
+Sounds like you have some time to play around before shoving it into  
+production.
+I wonder how long it would take to run an fsck on one large filesystem?
 
-I have been using it for > 4-5 years? now.
-
-Also, with CoRaids (ATA over Ethernet) many of them are above 8TB and ext3 
-only works up to 8TB, so its not even an option any longer.
-
-Justin.
+Cheers,
+Mike
