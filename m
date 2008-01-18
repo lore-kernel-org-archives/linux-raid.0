@@ -1,92 +1,66 @@
-From: NeilBrown <neilb@suse.de>
-Subject: [PATCH 003 of 4] md: Change ITERATE_RDEV_GENERIC to rdev_for_each_list, and remove ITERATE_RDEV_PENDING.
-Date: Fri, 18 Jan 2008 22:02:42 +1100
-Message-ID: <1080118110242.30498@suse.de>
-References: <20080118215531.30136.patches@notabene>
+From: =?ISO-8859-1?Q?Ask_Bj=F8rn_Hansen?= <ask@develooper.com>
+Subject: Re: 3ware and erroneous multipathing - duplicate serial numbers (was: 3ware and dmraid)
+Date: Fri, 18 Jan 2008 03:23:24 -0800
+Message-ID: <34DD6926-09BB-40FE-995E-C0C6796FE89C@develooper.com>
+References: <A2C96114-A87C-493B-A94D-4DCC80A17F95@develooper.com>
+Mime-Version: 1.0 (Apple Message framework v915)
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed	delsp=yes
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <A2C96114-A87C-493B-A94D-4DCC80A17F95@develooper.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-Finish ITERATE_ to for_each conversion.
+On Jan 18, 2008, at 3:17 AM, Ask Bj=F8rn Hansen wrote:
 
-Signed-off-by: Neil Brown <neilb@suse.de>
+[ Uh, I just realized that I forgot to update the subject line as I =20
+figured out what was going on; it's obviously not a software raid =20
+problem but a multipath problem ]
 
-### Diffstat output
- ./drivers/md/md.c           |    8 ++++----
- ./include/linux/raid/md_k.h |   14 ++++----------
- 2 files changed, 8 insertions(+), 14 deletions(-)
+One of my boxes crashed (with a hardware error, I think - CPU and =20
+motherboard replacements are on their way).  I booted it up on a =20
+rescue disk (Fedora 8) to let the software raid sync up.
 
-diff .prev/drivers/md/md.c ./drivers/md/md.c
---- .prev/drivers/md/md.c	2008-01-18 11:19:09.000000000 +1100
-+++ ./drivers/md/md.c	2008-01-18 11:19:24.000000000 +1100
-@@ -3766,7 +3766,7 @@ static void autorun_devices(int part)
- 		printk(KERN_INFO "md: considering %s ...\n",
- 			bdevname(rdev0->bdev,b));
- 		INIT_LIST_HEAD(&candidates);
--		ITERATE_RDEV_PENDING(rdev,tmp)
-+		rdev_for_each_list(rdev, tmp, pending_raid_disks)
- 			if (super_90_load(rdev, rdev0, 0) >= 0) {
- 				printk(KERN_INFO "md:  adding %s ...\n",
- 					bdevname(rdev->bdev,b));
-@@ -3810,7 +3810,7 @@ static void autorun_devices(int part)
- 		} else {
- 			printk(KERN_INFO "md: created %s\n", mdname(mddev));
- 			mddev->persistent = 1;
--			ITERATE_RDEV_GENERIC(candidates,rdev,tmp) {
-+			rdev_for_each_list(rdev, tmp, candidates) {
- 				list_del_init(&rdev->same_set);
- 				if (bind_rdev_to_array(rdev, mddev))
- 					export_rdev(rdev);
-@@ -3821,7 +3821,7 @@ static void autorun_devices(int part)
- 		/* on success, candidates will be empty, on error
- 		 * it won't...
- 		 */
--		ITERATE_RDEV_GENERIC(candidates,rdev,tmp)
-+		rdev_for_each_list(rdev, tmp, candidates)
- 			export_rdev(rdev);
- 		mddev_put(mddev);
- 	}
-@@ -4936,7 +4936,7 @@ static void status_unused(struct seq_fil
- 
- 	seq_printf(seq, "unused devices: ");
- 
--	ITERATE_RDEV_PENDING(rdev,tmp) {
-+	rdev_for_each_list(rdev, tmp, pending_raid_disks) {
- 		char b[BDEVNAME_SIZE];
- 		i++;
- 		seq_printf(seq, "%s ",
+When it was running I noticed that one of the disks were listed as =20
+"dm-5" and ... uh-oh ... there was a disk missing.   I figured out =20
+that the multipath stuff for some reason had setup two of the disks =20
+as /dev/mapper/mpath0 and now md was syncing to this device.
 
-diff .prev/include/linux/raid/md_k.h ./include/linux/raid/md_k.h
---- .prev/include/linux/raid/md_k.h	2008-01-18 11:19:09.000000000 +1100
-+++ ./include/linux/raid/md_k.h	2008-01-18 11:19:24.000000000 +1100
-@@ -313,23 +313,17 @@ static inline char * mdname (mddev_t * m
-  * iterates through some rdev ringlist. It's safe to remove the
-  * current 'rdev'. Dont touch 'tmp' though.
-  */
--#define ITERATE_RDEV_GENERIC(head,rdev,tmp)				\
-+#define rdev_for_each_list(rdev, tmp, list)				\
- 									\
--	for ((tmp) = (head).next;					\
-+	for ((tmp) = (list).next;					\
- 		(rdev) = (list_entry((tmp), mdk_rdev_t, same_set)),	\
--			(tmp) = (tmp)->next, (tmp)->prev != &(head)	\
-+			(tmp) = (tmp)->next, (tmp)->prev != &(list)	\
- 		; )
- /*
-  * iterates through the 'same array disks' ringlist
-  */
- #define rdev_for_each(rdev, tmp, mddev)				\
--	ITERATE_RDEV_GENERIC((mddev)->disks,rdev,tmp)
+Much later I figured out that "dmraid -b" reported two of the disks as =
+=20
+being the same:
+
+/dev/sda:    976541696 total, "W553841781E0A2001842"
+/dev/sdb:    976773168 total, "V600VXZG000000000000"
+/dev/sdc:    586114704 total, "U1757241000000000000"
+/dev/sdd:    976773168 total, "U1907712000000000000"
+/dev/sde:    976773168 total, "U2133609000000000000"
+/dev/sdf:    976773168 total, "D2994402000000000000"
+/dev/sdg:    625140335 total, "U2130349000000000000"
+/dev/sdh:    976773168 total, "U1541228000000000000"
+/dev/sdi:    976771055 total, "W5267124000000000000"
+/dev/sdj:    976773168 total, "U1409513000000000000"
+/dev/sdk:    976773168 total, "U1409513000000000000"
+
+Any idea how this could happen?   All 11 disks are on a 3ware 9650 =20
+controller (the first one is a "single" 3ware device, the rest are =20
+JBOD).  I tried rebooting and booting on a Fedora 7 DVD with the same =20
+result.
+
+[ all this of course seems to have messed up my raid10 badly -- more =20
+on that tomorrow ]
+
+
+- ask
+
+--=20
+http://develooper.com/ - http://askask.com/
+
 -
--/*
-- * Iterates through 'pending RAID disks'
-- */
--#define ITERATE_RDEV_PENDING(rdev,tmp)					\
--	ITERATE_RDEV_GENERIC(pending_raid_disks,rdev,tmp)
-+	rdev_for_each_list(rdev, tmp, (mddev)->disks)
- 
- typedef struct mdk_thread_s {
- 	void			(*run) (mddev_t *mddev);
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
