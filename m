@@ -1,41 +1,35 @@
-From: =?ISO-8859-1?Q?Ask_Bj=F8rn_Hansen?= <ask@develooper.com>
-Subject: Re: 3ware and erroneous multipathing - duplicate serial numbers (was: 3ware and dmraid)
-Date: Fri, 18 Jan 2008 11:54:29 -0800
-Message-ID: <EAA76A37-245F-4C22-9AB3-3CFC6F32061F@develooper.com>
-References: <A2C96114-A87C-493B-A94D-4DCC80A17F95@develooper.com> <34DD6926-09BB-40FE-995E-C0C6796FE89C@develooper.com> <20080118123358.GA6311@redhat.com>
-Mime-Version: 1.0 (Apple Message framework v915)
-Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
-Content-Transfer-Encoding: 7bit
+From: Jon Lewis <jlewis@lewis.org>
+Subject: Re: Raid over 48 disks ... for real now
+Date: Sat, 19 Jan 2008 00:16:15 -0500 (EST)
+Message-ID: <Pine.LNX.4.61.0801190013461.3306@soloth.lewis.org>
+References: <6b3a7f010801170819o59533c39qf4dada60a6f8701@mail.gmail.com>
+ <20080117205049.32cf07e9@szpak>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20080118123358.GA6311@redhat.com>
+In-Reply-To: <20080117205049.32cf07e9@szpak>
 Sender: linux-raid-owner@vger.kernel.org
-To: mauelshagen@RedHat.com
+To: Janek Kozicki <janek_listy@wp.pl>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Thu, 17 Jan 2008, Janek Kozicki wrote:
 
-On Jan 18, 2008, at 4:33 AM, Heinz Mauelshagen wrote:
-
->> Much later I figured out that "dmraid -b" reported two of the disks  
->> as
->> being the same:
+>> I wish RHEL would support XFS/ZFS, but for now, I'm stuck with ext3.
 >
-> Looks like the md sync duplicated the metadata and dmraid just spots
-> that duplication. You gotta remove one of the duplicates to clean  
-> this up
-> but check first which to pick in case the sync was partial only.
+> there is ext4 (or ext4dev) - it's an ext3 modified to support 1024 PB size
+> (1048576 TB). You could check if it's feasible. Personally I'd always
+> stick with ext2/ext3/ext4 since it is most widely used and thus has
+> the best recovery tools.
 
+Something else to keep in mind...XFS fs repair tools require large amounts 
+of memory.  If you were to create one or a few really huge fs's on this 
+array, you might end up with fs's which can't be repaired because you 
+don't have or even can't get a machine with enough RAM for the job...not 
+to mention the amount of time it would take.
 
-The "event" counter is the same on both; is that what I should look for?
-
-Is there a way to reset the dmraid metadata?   I'm not actually using  
-dmraid, I use "regular software raid" so I think I just need to reset  
-the dmraid data...
-
-
-  - ask
-
--- 
-http://develooper.com/ - http://askask.com/
-
-
+----------------------------------------------------------------------
+  Jon Lewis                   |  I route
+  Senior Network Engineer     |  therefore you are
+  Atlantic Net                |
+_________ http://www.lewis.org/~jlewis/pgp for PGP public key_________
