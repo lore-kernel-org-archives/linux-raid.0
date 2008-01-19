@@ -1,74 +1,52 @@
-From: Berny <webmaster@designoart.de>
-Subject: Raid 5 Wiederherstellung
-Date: Sat, 19 Jan 2008 12:23:26 +0100
-Message-ID: <op.t46clcs5cejtzs@bueropc>
-Reply-To: webmaster@designoart.de
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15;
-	format=flowed	delsp=yes
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: =?ISO-8859-1?Q?Ask_Bj=F8rn_Hansen?= <ask@develooper.com>
+Subject: raid10 messed up filesystem, lvm lv ok
+Date: Sat, 19 Jan 2008 03:44:52 -0800
+Message-ID: <CA0AD0CD-9AB2-4468-BE7E-807650317101@develooper.com>
+Mime-Version: 1.0 (Apple Message framework v915)
+Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
-Cc: pkg-mdadm-devel@lists.alioth.debian.org
 List-Id: linux-raid.ids
 
-Hallo,
+Hi everyone,
 
-wende mich mal an Euch mit meinem Problem. Komme aus der Windows Ecke u=
-nd =20
-bin daher nicht ganz so fit in Linux:
+I mentioned[1] my trouble with the multipath detection code on the  
+Fedora rescue mode messing up my raid yesterday.
 
-Habe auf meinem Thecus NAS N5200 folgendes gemacht: Zuerst =20
-funktionierendes Raid 5 mit 3x300GB Disks=3D Kapazit=E4t von ca. 580GB.
-Belegt ca. 450 GB. Dann vierte Platte eingebaut. Wurde automatisch als =
-=20
-Spare eingebunden, was mir aber zur Kapazit=E4tserweiterung nix gen=FCt=
-zt hat. =20
-Also im Webadministrations-Tool der Thecus Box den Men=FCpunkt "Migrate=
-" =20
-Raid 5 nach Raid 5 mit 4 Platten gestartet. Hat dann auch mehrere Stund=
-en =20
-"migriert" und ich hatte danach ein Raid 5 mit 4 Platten und ca. 880 GB=
- - =20
-toll - das hatte aber leider keine Daten mehr. Im Hexeditor Winhex sehe=
- =20
-ich auf den einzelnen Platten eine Menge Daten (habe jetzt - leider zu =
-=20
-sp=E4t - ein RAW Image aller Platten nach der Migration des jetzt leere=
-n =20
-Raids gemacht). Gibt es eine M=F6glichkeit die Datenstruktur des alten =
-Raid =20
-5 Verbundes mit den 3 Platten wiederherzustellen oder wenigstens ein =20
-Linux-Tool um die Dateien - auch ohne Dateinamen- wiederherzustellen?
+My raid6 partitions recovered fine, but the raid10 device (/ 
+sd[abc...k]5) somehow got messed up.
 
-Auf der Thecus N5200 Box l=E4uft Linux version 2.6.13N5200 (root@WIG_de=
-vel) =20
-(gcc version 3.3.6) #135 Wed Dec 5 16:15:26 CST 2007
+When I assemble the drive it says all 9 drives and 2 spares are ok/ 
+clean and the event counter is the same for each drive.  The volume  
+group on the device is detected/started ok - but maybe that's just  
+from the /etc/lvm/backup file?
 
-H=E4tte die M=F6glichkeit die RAW Images in VMWare einzubinden und dort=
- das =20
-Raid evtl. virtuell wieder zusammenzubauen.
+However, fsck.ext3 (with or without specifying the alternate  
+superblock) can't see the file systems in the logical volumes.
 
-Habe bis jetzt vom Thecus Support folgendes erhalten:
+I suspect that maybe the layout of the md device got messed up?  How  
+can I find out if that's the case?  Would it be possible to recover  
+from (assuming all the data still is on some of the disks).
 
-If you want to recover it in a Linux(Kernel version 2.6.15 or later, =20
-suggest Fedora core 7 or 8)  PC, you will need to assemble the Linux =20
-software RAID across /dev/sda2, /dev/sdb2, /dev/sdc2, /dev/sdd2, /dev/s=
-de2.
-Then the LVM2 logical volume layer need to be actived on  /dev/vg0/lv0 =
-by =20
-using the commands "vgscan" then "lvscan" then "lvchange".
-The Linux PC will be able to mount the activated logical volume =20
-/dev/vg0/lv0 as EXT3 for further data recovery.
+Secondary question: I'm doing a "dd if=/dev/sdX5 bs=256k > /backup/ 
+sdX5" for each disk -- is there a way to run mdadm on the copies and  
+experiment on those?    (It took ~forever to copy a terabyte of the  
+raw partitions).
+
+Any help is greatly appreciated.
+
+As a sidenote: I guess I learned my lesson about having an odd number  
+of drives in a raid10 too (if I understand it correctly then it  
+roughly doubles the chance that a secondary problem ruins the day).
 
 
-Vielen Dank
+  - ask
 
---=20
-Berny Wei=DF
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+[1] http://marc.info/?l=linux-raid&m=120065542429935&w=2
+
+-- 
+http://develooper.com/ - http://askask.com/
+
+
