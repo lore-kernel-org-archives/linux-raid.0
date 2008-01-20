@@ -1,74 +1,64 @@
-From: Robin Hill <robin@robinhill.me.uk>
-Subject: Re: mdadm error when trying to replace a failed drive in RAID5
-	array
-Date: Sun, 20 Jan 2008 21:10:13 +0000
-Message-ID: <20080120211013.GA16130@cthulhu.home.robinhill.me.uk>
-References: <182d01c85af0$3c6d3520$0603a8c0@meanmachine>
+From: "Steve Fairbairn" <steve@fairbairn-family.com>
+Subject: RE: mdadm error when trying to replace a failed drive in RAID5 array
+Date: Sun, 20 Jan 2008 21:21:25 -0000
+Message-ID: <017101c85baa$6a9c3850$0603a8c0@meanmachine>
+References: <18323.45288.778496.719826@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="MGYHOYXEY6WxJCY8"
+Content-Type: text/plain;
+	charset="windows-1250"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <182d01c85af0$3c6d3520$0603a8c0@meanmachine>
+In-Reply-To: <18323.45288.778496.719826@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: 'Neil Brown' <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+> -----Original Message-----
+> From: Neil Brown [mailto:neilb@suse.de] 
+> Sent: 20 January 2008 20:37
+> 
+> > md: hdd1 has invalid sb, not importing!
+> > md: md_import_device returned -22
+> 
+> In 2.6.18, the only thing that can return this message 
+> without other more explanatory messages are:
+> 
+>   2/ If the device appears to be too small.
+> 
+> Maybe it is the later, though that seems unlikely.
+> 
 
---MGYHOYXEY6WxJCY8
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+[root@space ~]# mdadm /dev/md0 --verbose --add /dev/hdd1
+mdadm: added /dev/hdd1
 
-On Sat Jan 19, 2008 at 11:08:43PM -0000, Steve Fairbairn wrote:
+HUGE thanks to Neil, and one white gold plated donkey award to me.
 
->=20
-> Hi All,
->=20
-> I have a Software RAID 5 device configured, but one of the drives
-> failed. I removed the drive with the following command...
->=20
-> mdadm /dev/md0 --remove /dev/hdc1
->=20
-> Now, when I try to insert the replacement drive back in, I get the
-> following...
->=20
-> [root@space ~]# mdadm /dev/md0 --add /dev/hdc1
-> mdadm: add new device failed for /dev/hdc1 as 5: Invalid argument
->=20
-> [root@space mdadm-2.6.4]# dmesg | tail
-> ...
-> md: hdc1 has invalid sb, not importing!
-> md: md_import_device returned -22
-> md: hdc1 has invalid sb, not importing!
-> md: md_import_device returned -22
->=20
-I've had the same error message trying to add a drive into an array
-myself - in my case I'm almost certain it's because the drive is
-slightly smaller than the others in the array (the array's currently
-growing so I haven't delved any further yet).  Have you checked the
-actual partition sizes?  Particularly if it's a different type of drive
-as drives from different manufacturers can vary by quite a large
-amount.
+OK.  When I created /dev/md1 after creating /dev/md0, I was using a
+mishmash of disks I had lying around.  As this selection of disks used
+differing block sizes, I chose to create the raid partitions from the
+first block, to a set size (+250G).  When I reinstalled the disk for
+going into /dev/md0, I partitioned the disk the same way (+500G), which
+it turns out isn't how I created the partitions when I created that
+array.
 
-Cheers,
-        Robin
---=20
-     ___       =20
-    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
-   / / )      | Little Jim says ....                            |
-  // !!       |      "He fallen in de water !!"                 |
+So the device I was trying to add was about 22 blocks too small.  Taking
+Neils suggestion and looking at /proc/partitions showed this up
+incredibly quickly.
 
---MGYHOYXEY6WxJCY8
-Content-Type: application/pgp-signature
-Content-Disposition: inline
+My sincere apologies for wasting all your time on a stupid error, and
+again many many thanks for the solution...
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.7 (GNU/Linux)
+md0 : active raid5 hdd1[5] sdd1[4] sdc1[2] sdb1[1] sda1[0]
+      1953535744 blocks level 5, 64k chunk, algorithm 2 [5/4] [UUU_U]
+      [>....................]  recovery =  0.9% (4430220/488383936)
+finish=1110.8min speed=7259K/sec
 
-iD8DBQFHk7i0ShxCyD40xBIRAiceAKDDqIjxkdfTkJvRu6v6qjFiKDz0rwCeJ2LF
-jvF0J+3UEnd57K5zbWDcxsg=
-=HhKA
------END PGP SIGNATURE-----
+Steve.
 
---MGYHOYXEY6WxJCY8--
+No virus found in this outgoing message.
+Checked by AVG Free Edition. 
+Version: 7.5.516 / Virus Database: 269.19.7/1233 - Release Date:
+19/01/2008 18:37
+ 
+
