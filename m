@@ -1,41 +1,36 @@
-From: michael@estone.ca
-Subject: Re: how to create a degraded raid1 with only 1 of 2 drives ??
-Date: Sun, 20 Jan 2008 11:34:40 -0800
-Message-ID: <20080120113440.vhryijr7tcck4wws@estone.ca>
-References: <20080120192801.GA11149@earthlink.net>
+From: Moshe Yudkowsky <moshe@pobox.com>
+Subject: Performance of RAID 10 vs. using LVM?
+Date: Sun, 20 Jan 2008 14:34:35 -0600
+Message-ID: <4793B05B.5060008@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset=ISO-8859-1;
-	DelSp="Yes";
-	format="flowed"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20080120192801.GA11149@earthlink.net>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Quoting Mitchell Laks <mlaks@post.harvard.edu>:
+Let's assume that I have 4 drives; they are set up in mirrored pairs as 
+RAID 1, and then aggregated together to create a RAID 10 system (RAID 1 
+followed by RAID 0). That is, 4 x N disks become a 2N size filesystem.
 
-> Hi mdadm raid gurus,
->
-> I wanted to make a raid1 array, but at the moment I have only 1   
-> drive available. The other disk is
-> in the mail. I wanted to make a raid1 that i will use as a backup.
->
-> But I need to do the backup now, before the second drive comes.
->
-> So I did this.
->
-> formated /dev/sda creating /dev/sda1 with type fd.
->
-> then I tried to run
-> mdadm -C /dev/md0 --level=1 --raid-devices=1 /dev/sda1
+Question: Is this higher or lower performance than using LVM to 
+aggregate the disks?
 
-Perhaps give this a try:
+LVM allows the creation of unitary file system from disparate physical 
+drives, and has the advantage that filesystems can be expanded or shrunk 
+with ease. I'll be using LVM on top of the RAID 1 or RAID 10 regardless.
 
-# mdadm -C /dev/md0 --level=1 --raid-devices=2 /dev/sda1 missing
+Therefore, I can use LVM to create a "1L" system, to coin an acronym. 
+This would have the same 2N size, but would be created by LVM instead of 
+RAID 0. Is there a performance advantage to using RAID 10 instead of 
+RAID 1L? (The other question is whether the hypothetical performance 
+advantage of 10 outweighs the flexibility advantage 1L, a question that 
+only an individual user can answer... perhaps.)
 
-Cheers,
-Mike
+Comments extremely welcome.
+
+-- 
+Moshe Yudkowsky * moshe@pobox.com * www.pobox.com/~moshe
+  "The sharpest knives are also the quietest."
+    			 -- John M. Ford, _The Final Reflection_
