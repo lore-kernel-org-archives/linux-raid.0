@@ -1,7 +1,7 @@
 From: carlos@fisica.ufpr.br (Carlos Carvalho)
-Subject: idle array consuming cpu ??!!
-Date: Sun, 20 Jan 2008 21:00:32 -0200
-Message-ID: <18323.53904.556620.19761@fisica.ufpr.br>
+Subject: array doesn't run even with --force
+Date: Sun, 20 Jan 2008 20:52:24 -0200
+Message-ID: <18323.53416.900135.357320@fisica.ufpr.br>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
@@ -10,12 +10,15 @@ Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-A raid6 array with a spare and bitmap is idle: not mounted and with no
-IO to it or any of its disks (obviously), as shown by iostat. However
-it's consuming cpu: since reboot it used about 11min in 24h, which is quite
-a lot even for a busy array (the cpus are fast). The array was cleanly
-shutdown so there's been no reconstruction/check or anything else.
+I've got a raid5 array with 5 disks where 2 failed. The failures are
+occasional and only on a few sectors so I tried to assemble it with 4
+disks anyway:
 
-How can this be? Kernel is 2.6.22.16 with the two patches for the
-deadlock ("[PATCH 004 of 4] md: Fix an occasional deadlock in raid5 -
-FIX") and the previous one.
+# mdadm -A -f -R /dev/md<number> /dev/disk1 /dev/disk2 /dev/disk3 /dev/disk4
+
+However mdadm complains that one of the disks has an out-of-date
+superblock and kicks it out, and then it cannot run the array with
+only 3 disks.
+
+Shouldn't it adjust the superblock and assemble-run it anyway? That's
+what -f is for, no? This is with kernel 2.6.22.16 and mdadm 2.6.4.
