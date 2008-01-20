@@ -1,95 +1,54 @@
-From: Mikael Pettersson <mikpe@it.uu.se>
-Subject: Re: The SX4 challenge
-Date: Sun, 20 Jan 2008 16:23:10 +0100
-Message-ID: <18323.26462.56221.912431@harpo.it.uu.se>
-References: <478EA794.8080608@garzik.org>
+From: Mitchell Laks <mlaks@post.harvard.edu>
+Subject: how to create a degraded raid1 with only 1 of 2 drives ??
+Date: Sun, 20 Jan 2008 14:28:01 -0500
+Message-ID: <20080120192801.GA11149@earthlink.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <478EA794.8080608@garzik.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Linux IDE mailing list <linux-ide@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Linux RAID list <linux-raid@vger.kernel.org>, Dan Williams <dan.j.williams@intel.com>
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Jeff Garzik writes:
- > 
- > Promise just gave permission to post the docs for their PDC20621 (i.e. 
- > SX4) hardware:
- > http://gkernel.sourceforge.net/specs/promise/pdc20621-pguide-1.2.pdf.bz2
- > 
- > joining the existing PDC20621 DIMM and PLL docs:
- > http://gkernel.sourceforge.net/specs/promise/pdc20621-pguide-dimm-1.6.pdf.bz2
- > http://gkernel.sourceforge.net/specs/promise/pdc20621-pguide-pll-ata-timing-1.2.pdf.bz2
- > 
- > 
- > So, the SX4 is now open.  Yay :)  I am hoping to talk Mikael into 
- > becoming the sata_sx4 maintainer, and finally integrating my 'new-eh' 
- > conversion in libata-dev.git.
+Hi mdadm raid gurus,
 
-The best solution would be if some storage driver person would
-take on the SX4 challenge and work towards integrating the SX4
-into Linux' RAID framework.
+I wanted to make a raid1 array, but at the moment I have only 1 drive available. The other disk is
+in the mail. I wanted to make a raid1 that i will use as a backup.
 
-If no-one steps forward I'll take over Jeff's SX4 card and just
-maintain sata_sx4 as a plain non-RAID driver. Unfortunately I
-don't have the time needed to turn it into a decent RAID or
-RAID-offload driver myself.
+But I need to do the backup now, before the second drive comes.
 
-/Mikael
+So I did this.
 
- > 
- > But now is a good time to remind people how lame the sata_sx4 driver 
- > software really is -- and I should know, I wrote it.
- > 
- > The SX4 hardware, simplified, is three pieces:  XOR engine (for raid5), 
- > host<->board memcpy engine, and several ATA engines (and some helpful 
- > transaction sequencing features).  Data for each WRITE command is first 
- > copied to the board RAM, then the ATA engines DMA to/from the board RAM. 
- >   Data for each READ command is copied to board RAM via the ATA engines, 
- > then DMA'd across PCI to your host memory.
- > 
- > Therefore, while it is not hardware RAID, the SX4 provides all the 
- > pieces necessary to offload RAID1 and RAID5, and handle other RAID 
- > levels optimally.  RAID1 and 5 copies can be offloaded (provided all 
- > copies go to SX4-attached devices of course).  RAID5 XOR gen and 
- > checking can be offloaded, allowing the OS to see a single request, 
- > while the hardware processes a sequence of low-level requests sent in a 
- > batch.
- > 
- > This hardware presents an interesting challenge:  it does not really fit 
- > into software RAID (i.e. no RAID) /or/ hardware RAID categories.  The 
- > sata_sx4 driver presents the no-RAID configuration, while is terribly 
- > inefficient:
- > 
- > 	WRITE:
- > 		submit host DMA (copy to board)
- > 		host DMA completion via interrupt
- > 		submit ATA command
- > 		ATA command completion via interrupt
- > 	READ:
- > 		submit ATA command
- > 		ATA command completion via interrupt
- > 		submit host DMA (copy from board)
- > 		host DMA completion via interrupt
- > 
- > Thus, the "SX4 challenge" is a challenge to developers to figure out the 
- > most optimal configuration for this hardware, given the existing MD and 
- > DM work going on.
- > 
- > Now, it must be noted that the SX4 is not current-gen technology.  Most 
- > vendors have moved towards an "IOP" model, where the hw vendor puts most 
- > of their hard work into an ARM/MIPS firmware, running on an embedded 
- > chip specially tuned for storage purposes.  (ref "hptiop" and "stex" 
- > drivers, very very small SCSI drivers)
- > 
- > I know Dan Williams @ Intel is working on very similar issues on the IOP 
- > -- async memcpy, XOR offload, etc. -- and I am hoping that, due to that 
- > current work, some of the good ideas can be reused with the SX4.
- > 
- > Anyway...  it's open, it's interesting, even if it's not current-gen 
- > tech anymore.  You can probably find them on Ebay or in an 
- > out-of-the-way computer shop somewhere.
- > 
- > 	Jeff
+formated /dev/sda creating /dev/sda1 with type fd.
+
+then I tried to run
+mdadm -C /dev/md0 --level=1 --raid-devices=1 /dev/sda1
+
+but I got an error message
+mdadm: 1 is an unusual numner of drives for an array so it is probably a mistake. If you really
+mean it you will need to specify --force before setting the number of drives
+
+so then i tried
+
+mdadm -C /dev/md0 --level=1 --force --raid-devices=1 /dev/sda1
+mdadm: /dev/sda1 is too small:0K
+mdadm: create aborted
+
+now what does that mean?
+
+fdisk -l /dev/sda  shows
+
+device boot	start	end	blocks 	Id	System
+/dev/sda1 	1	60801	488384001 fd	linux raid autodetect
+
+so what do I do?
+
+
+I need to back up my data.
+If I simply format /dev/sda1 as an ext3 file system then I can't "add" the second drive later on.
+
+How can I  set it up as a `degraded` raid1 array so I can later on add in the second drive and sync?
+
+Thanks for your help!
+
+Mitchell	
