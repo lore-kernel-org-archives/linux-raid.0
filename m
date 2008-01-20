@@ -1,59 +1,59 @@
 From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: how to create a degraded raid1 with only 1 of 2 drives ??
-Date: Sun, 20 Jan 2008 17:12:22 -0500
-Message-ID: <4793C746.5040707@tmr.com>
-References: <20080120192801.GA11149@earthlink.net>
+Subject: Re: One Large md or Many Smaller md for Better Peformance?
+Date: Sun, 20 Jan 2008 17:18:40 -0500
+Message-ID: <4793C8C0.3010301@tmr.com>
+References: <4793AE0E.609@pobox.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20080120192801.GA11149@earthlink.net>
+In-Reply-To: <4793AE0E.609@pobox.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Moshe Yudkowsky <moshe@pobox.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Mitchell Laks wrote:
-> Hi mdadm raid gurus,
+Moshe Yudkowsky wrote:
+> Question: with the same number of physical drives,  do I get better 
+> performance with one large md-based drive, or do I get better 
+> performance if I have several smaller md-based drives?
 >
-> I wanted to make a raid1 array, but at the moment I have only 1 drive available. The other disk is
-> in the mail. I wanted to make a raid1 that i will use as a backup.
+> Situation: dual CPU, 4 drives (which I will set up as RAID-1 after 
+> being terrorized by the anti-RAID-5 polemics included in the Debian 
+> distro of mdadm).
 >
-> But I need to do the backup now, before the second drive comes.
+> I've two choices:
 >
-> So I did this.
+> 1. Allocate all the drive space into a single large partition, place 
+> into a single RAID array (either 10 or 1 + LVM, a separate question).
 >
-> formated /dev/sda creating /dev/sda1 with type fd.
+One partitionable RAID-10, perhaps, then partition as needed. Read the 
+discussion here about performance of LVM and RAID. I personally don't do 
+LVM unless I know I will have to have great flexibility of configuration 
+and can give up performance to get it. Other report different results, 
+so make up your own mind.
+> 2. Allocate each drive into several smaller partitions. Make each set 
+> of smaller partitions into a separate RAID 1 array and use separate 
+> RAID md drives for the various file systems.
 >
-> then I tried to run
-> mdadm -C /dev/md0 --level=1 --raid-devices=1 /dev/sda1
+> Example use case:
 >
-> but I got an error message
-> mdadm: 1 is an unusual numner of drives for an array so it is probably a mistake. If you really
-> mean it you will need to specify --force before setting the number of drives
+> While working other problems, I download a large torrent in the 
+> background. The torrent writes to its own, separate file system called 
+> /foo. If /foo is mounted on its own RAID 10 or 1-LVM array, will that 
+> help or hinder overall system responsiveness?
 >
-> so then i tried
+> It would seem a "no brainer" that giving each major filesystem its own 
+> array would allow for better threading and responsiveness, but I'm 
+> picking up hints in various piece of documentation that the 
+> performance can be counter-intuitive. I've even considered the 
+> possibility of giving /var and /usr separate RAID arrays (data vs. 
+> executables).
 >
-> mdadm -C /dev/md0 --level=1 --force --raid-devices=1 /dev/sda1
-> mdadm: /dev/sda1 is too small:0K
-> mdadm: create aborted
->
-> now what does that mean?
->
-> fdisk -l /dev/sda  shows
->
-> device boot	start	end	blocks 	Id	System
-> /dev/sda1 	1	60801	488384001 fd	linux raid autodetect
->
-> so what do I do?
+> If an expert could chime in, I'd appreciate it a great deal.
 >
 >
-> I need to back up my data.
-> If I simply format /dev/sda1 as an ext3 file system then I can't "add" the second drive later on.
->
-> How can I  set it up as a `degraded` raid1 array so I can later on add in the second drive and sync?
->   
 
-Specify two drives and one as missing.
 
 -- 
 Bill Davidsen <davidsen@tmr.com>
