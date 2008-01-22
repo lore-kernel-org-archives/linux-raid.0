@@ -1,242 +1,58 @@
-From: =?ISO-8859-1?Q?BERTRAND_Jo=EBl?= <joel.bertrand@systella.fr>
-Subject: Raid1, mdadm and nfs that remains in D state
-Date: Tue, 22 Jan 2008 12:38:52 +0100
-Message-ID: <4795D5CC.6080208@systella.fr>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: One Large md or Many Smaller md for Better Peformance?
+Date: Tue, 22 Jan 2008 10:30:54 -0500
+Message-ID: <47960C2E.8090706@tmr.com>
+References: <4793AE0E.609@pobox.com> <20080120215734.GD17584@teal.hq.k1024.org> <47940F31.7020907@pobox.com> <18325.21933.337369.104689@fisica.ufpr.br> <4795D4B6.4070908@pobox.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4795D4B6.4070908@pobox.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: sparclinux@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Moshe Yudkowsky <moshe@pobox.com>
+Cc: Carlos Carvalho <carlos@fisica.ufpr.br>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-	Hello,
+Moshe Yudkowsky wrote:
+> Carlos Carvalho wrote:
+>
+>> I use reiser3 and xfs. reiser3 is very good with many small files. A
+>> simple test shows interactively perceptible results: removing large
+>> files is faster with xfs, removing large directories (ex. the kernel
+>> tree) is faster with reiser3.
+>
+> My current main concern about XFS and reiser3 is writebacks. The 
+> default mode for ext3 is "journal," which in case of power failure is 
+> more robust than the writeback modes of XFS, reiser3, or JFS -- or so 
+> I'm given to understand.
+>
+> On the other hand, I have a UPS and it should shut down gracefully 
+> regardless if there's a power failure. I wonder if I'm being too 
+> cautious?
+>
+No.
 
-	I have installed a lot of T1000 with debian/testing and official 
-2.6.23.9 linux kernel. All but iscsi packages come from debian 
-repositories. iscsi was built from SVN tree. md7 is a raid1 volume over 
-iscsi and I can access to this device. This morning, one of my T1000 has 
-crashed. NFS daemon stays in D state:
+If you haven't actually *tested* the UPS failover code to be sure your 
+system is talking to the UPS properly, and that the UPS is able to hold 
+up power long enough for a shutdown after the system detects the 
+problem, then you don't know if you actually have protection.  Even 
+then, if you don't proactively replace batteries on schedule, etc, then 
+you aren't as protected as you might wish to be.
 
-Root gershwin:[~] > ps auwx | grep NFS
-root     17041  0.0  0.0   2064   744 ttyS0    S+   12:33   0:00 grep NFS
-Root gershwin:[~] > ps auwx | grep nfs
-root     17043  0.0  0.0   2064   744 ttyS0    S+   12:33   0:00 grep nfs
-root     18276  0.0  0.0      0     0 ?        D     2007  16:59 [nfsd]
-root     18277  0.0  0.0      0     0 ?        D     2007  16:56 [nfsd]
-root     18278  0.0  0.0      0     0 ?        D     2007  16:57 [nfsd]
-root     18279  0.0  0.0      0     0 ?        D     2007  16:41 [nfsd]
-root     18280  0.0  0.0      0     0 ?        D     2007  16:44 [nfsd]
-root     18281  0.0  0.0      0     0 ?        D     2007  16:49 [nfsd]
-root     18282  0.0  0.0      0     0 ?        D     2007  16:37 [nfsd]
-root     18283  0.0  0.0      0     0 ?        D     2007  16:54 [nfsd]
-Root gershwin:[~] > dmesg
-sp: fffff800f2bcf3b1 ret_pc: 00000000005e6d54
-RPC: <raid1d+0x35c/0x1020>
-l0: fffff80060b8fa40 l1: 0000000000000050 l2: 0000000000000006 l3: 
-0000000000000001
-l4: fffff800fde2c8a0 l5: fffff800fc74dc20 l6: 0000000000000007 l7: 
-0000000000000000
-i0: fffff800fb70c400 i1: fffff800fde2c8c8 i2: fffff8006297ee40 i3: 
-fffff80000000000
-i4: 0000000000000010 i5: 00000000007a2f00 i6: fffff800f2bcf4f1 i7: 
-00000000005f2f50
-I7: <md_thread+0x38/0x140>
-BUG: soft lockup - CPU#6 stuck for 11s! [md7_raid1:5818]
-TSTATE: 0000000080001600 TPC: 000000000055bff0 TNPC: 000000000055bff4 Y: 
-00000000    Not tainted
-TPC: <loop+0x14/0x28>
-g0: 0000000000000020 g1: dffd574080000000 g2: 0002a8ba2e810000 g3: 
-0000000000000000
-g4: fffff800fd52d960 g5: fffff800020bc000 g6: fffff800f2bcc000 g7: 
-0000000000000000
-o0: fffff8009d13d254 o1: fffff80071755254 o2: 0000000000000dac o3: 
-0000000000000000
-o4: 000000000018d1a6 o5: 0000000000225c52 sp: fffff800f2bcf3b1 ret_pc: 
-00000000005e6d54
-RPC: <raid1d+0x35c/0x1020>
-l0: fffff80077d36ce0 l1: 0000000000000050 l2: 0000000000000006 l3: 
-0000000000000001
-l4: fffff800fde2c8a0 l5: fffff800f4372ea0 l6: 0000000000000007 l7: 
-0000000000000000
-i0: fffff800fb70c400 i1: fffff800fde2c8c8 i2: fffff80091038660 i3: 
-fffff80000000000
-i4: 0000000000000010 i5: 00000000007a2f00 i6: fffff800f2bcf4f1 i7: 
-00000000005f2f50
-I7: <md_thread+0x38/0x140>
-BUG: soft lockup - CPU#6 stuck for 11s! [md7_raid1:5818]
-TSTATE: 0000004480001607 TPC: 00000000006803a0 TNPC: 00000000006803a4 Y: 
-00000000    Not tainted
-TPC: <_spin_unlock_irqrestore+0x28/0x40>
-g0: fffff800fed95000 g1: 0000000000000000 g2: c000000000002000 g3: 
-d000000000002000
-g4: fffff800fd52d960 g5: fffff800020bc000 g6: fffff800f2bcc000 g7: 
-fffff800ffcb0000
-o0: fffff800fee16000 o1: 0000000000000000 o2: 0000000000000000 o3: 
-fffff800fee16000
-o4: 0000000000000000 o5: 0000000000784000 sp: fffff800f2bceda1 ret_pc: 
-00000000005a4fb8
-RPC: <tg3_poll+0x820/0xc40>
-l0: 000000000000042a l1: 0000000000010000 l2: fffff800f79aba00 l3: 
-00000000000001d0
-l4: fffff800fed95700 l5: fffff800f1091ec0 l6: 00000000000001d0 l7: 
-0000000000010000
-i0: 0000000001df0000 i1: 0000000000000029 i2: 00000000000001df i3: 
-0000000000000029
-i4: fffff800fed95794 i5: 0000000094479812 i6: fffff800f2bcee81 i7: 
-0000000000609780
-I7: <net_rx_action+0x88/0x160>
-BUG: soft lockup - CPU#6 stuck for 11s! [md7_raid1:5818]
-TSTATE: 0000009980001602 TPC: 0000000010170100 TNPC: 0000000010170104 Y: 
-00000000    Not tainted
-TPC: <ipv4_get_l4proto+0x8/0xa0 [nf_conntrack_ipv4]>
-g0: 000000001002bb58 g1: 000000000000006c g2: fffff800eba32b0c g3: 
-0000000010170100
-g4: fffff800fd52d960 g5: fffff800020bc000 g6: fffff800f2bcc000 g7: 
-0000000000000003
-o0: fffff800d69aae00 o1: 0000000000000000 o2: fffff800f2bced24 o3: 
-fffff800f2bced2f
-o4: fffff800fed95000 o5: fffff800f2bceec8 sp: fffff800f2bce411 ret_pc: 
-0000000010019d7c
-RPC: <nf_conntrack_in+0xa4/0x580 [nf_conntrack]>
-l0: 0000000000000002 l1: 0000000010175590 l2: ffffffff80000000 l3: 
-0000000000000002
-l4: 000000000000ffff l5: 000000000cbcc8bb l6: 0000000000000002 l7: 
-fffff80062b8f820
-i0: 0000000000000002 i1: 0000000000000003 i2: fffff800f2bcf080 i3: 
-fffff800fed95000
-i4: 0000000000630260 i5: 0000000000630260 i6: fffff800f2bce541 i7: 
-000000000062517c
-I7: <nf_iterate+0x84/0xe0>
-BUG: soft lockup - CPU#6 stuck for 11s! [md7_raid1:5818]
-TSTATE: 0000004480001605 TPC: 0000000010161030 TNPC: 0000000010161034 Y: 
-00000000    Not tainted
-TPC: <ipt_do_table+0xd8/0x5a0 [ip_tables]>
-g0: 0000000000010000 g1: 0000000000000000 g2: 00000000c0a80001 g3: 
-0000000000000000
-g4: fffff800fd52d960 g5: fffff800020bc000 g6: fffff800f2bcc000 g7: 
-0000000000000be0
-o0: 0000000010180b74 o1: fffff800f2bcf480 o2: 0000000000000000 o3: 
-fffff800fed95000
-o4: 0000000000000000 o5: fffff8005ef72be0 sp: fffff800f2bce821 ret_pc: 
-0000000010160fac
-RPC: <ipt_do_table+0x54/0x5a0 [ip_tables]>
-l0: fffff8005ef72be0 l1: 000000000062c460 l2: ffffffff80000000 l3: 
-fffff800688d7820
-l4: fffff8005ef72000 l5: fffff800fda0c280 l6: fffff800fed95000 l7: 
-0000000010164800
-i0: fffff800f2bcf480 i1: 0000000000000001 i2: fffff800fed95000 i3: 
-0000000000000000
-i4: 0000000010180b74 i5: 0000000000000000 i6: fffff800f2bce991 i7: 
-000000000062517c
-I7: <nf_iterate+0x84/0xe0>
-BUG: soft lockup - CPU#6 stuck for 11s! [md7_raid1:5818]
-TSTATE: 0000004480001607 TPC: 00000000006803a0 TNPC: 00000000006803a4 Y: 
-00000000    Not tainted
-TPC: <_spin_unlock_irqrestore+0x28/0x40>
-g0: 0000000000002000 g1: 0000000000000000 g2: 0000000000200db0 g3: 
-0000000000201db0
-g4: fffff800fd52d960 g5: fffff800020bc000 g6: fffff800f2bcc000 g7: 
-fffff800ffcb0000
-o0: fffff800fee16000 o1: 0000000000000000 o2: 0000000000000000 o3: 
-fffff800fee16000
-o4: 0000000000000010 o5: 0000000000784000 sp: fffff800f2bceda1 ret_pc: 
-00000000005a4844
-RPC: <tg3_poll+0xac/0xc40>
-l0: 00000000000000f2 l1: fffff800fe923a60 l2: 0000000000000f20 l3: 
-fffff800f447b000
-l4: fffff800fed95700 l5: 00000000000000f3 l6: 0000000000726c00 l7: 
-0000000000000000
-i0: fffff800fed95000 i1: fffff800f2bcf73c i2: 0000000000001976 i3: 
-000000000074cc00
-i4: 0000000000784000 i5: 0000000000784000 i6: fffff800f2bcee81 i7: 
-0000000000609780
-I7: <net_rx_action+0x88/0x160>
-BUG: soft lockup - CPU#6 stuck for 11s! [md7_raid1:5818]
-TSTATE: 0000000080001600 TPC: 000000000055bfe8 TNPC: 000000000055bfec Y: 
-00000000    Not tainted
-TPC: <loop+0xc/0x28>
-g0: 0000000000000020 g1: 5ffb6cea80000000 g2: 0004930c59d50000 g3: 
-0000000000000000
-g4: fffff800fd52d960 g5: fffff800020bc000 g6: fffff800f2bcc000 g7: 
-0000000000000000
-o0: fffff800cad755e3 o1: fffff800c32e55e3 o2: 0000000000000a1d o3: 
-0000000000000000
-o4: 00000000002ab21e o5: 00000000002c5f16 sp: fffff800f2bcf3b1 ret_pc: 
-00000000005e6d54
-RPC: <raid1d+0x35c/0x1020>
-l0: fffff800e30a6460 l1: 0000000000000030 l2: 0000000000000004 l3: 
-0000000000000001
-l4: fffff800fde2c8a0 l5: fffff800dfefbbc0 l6: 0000000000000007 l7: 
-0000000000000000
-i0: fffff800fb70c400 i1: fffff800fde2c8c8 i2: fffff800624536c0 i3: 
-fffff80000000000
-i4: 0000000000000010 i5: 00000000007a2f00 i6: fffff800f2bcf4f1 i7: 
-00000000005f2f50
-I7: <md_thread+0x38/0x140>
-BUG: soft lockup - CPU#6 stuck for 11s! [md7_raid1:5818]
-TSTATE: 0000000080001600 TPC: 000000001014e0ac TNPC: 000000001014dea8 Y: 
-00000000    Not tainted
-TPC: <iscsi_tcp_data_recv+0x514/0x1400 [iscsi_tcp]>
-g0: 0000000000002000 g1: 0000000000000b20 g2: 00000000000014e0 g3: 
-0000000000000b20
-g4: fffff800fd52d960 g5: fffff800020bc000 g6: fffff800f2bcc000 g7: 
-00000000000005a8
-o0: 0000000000000000 o1: 0000000000000000 o2: fffff8006563e578 o3: 
-0000000000000000
-o4: 0000000000000578 o5: 0000000000000b20 sp: fffff800f2bce611 ret_pc: 
-000000001014e030
-RPC: <iscsi_tcp_data_recv+0x498/0x1400 [iscsi_tcp]>
-l0: 00000000000005a8 l1: fffff800f6770b38 l2: fffff800ebfaca88 l3: 
-fffff800f6770ae0
-l4: 0000000000002000 l5: 0000000000000000 l6: 0000000000000006 l7: 
-0000000000000000
-i0: fffff800f50e2cc0 i1: fffff800952c1990 i2: fffff800f50e2cc0 i3: 
-00000000000005a8
-i4: fffff800f6770b38 i5: fffff80065f22260 i6: fffff800f2bce741 i7: 
-000000000063ab58
-I7: <tcp_read_sock+0x140/0x1c0>
-BUG: soft lockup - CPU#6 stuck for 11s! [md7_raid1:5818]
-TSTATE: 0000009980001602 TPC: 0000000000625400 TNPC: 0000000000625404 Y: 
-00000000    Not tainted
-TPC: <nf_hook_slow+0x48/0x100>
-g0: fffff800fe550098 g1: 000000000000fc00 g2: 0000000000000100 g3: 
-000007ff002ecc1f
-g4: fffff800fd52d960 g5: fffff800020bc000 g6: fffff800f2bcc000 g7: 
-0000000000000000
-o0: fffff80063934800 o1: fffff800fed95000 o2: 0000000000000000 o3: 
-fffff800fed95000
-o4: 0000000000000000 o5: 0000000098e3a812 sp: fffff800f2bceb21 ret_pc: 
-0000000000606da4
-RPC: <netif_receive_skb+0x1ec/0x480>
-l0: 0000000000759830 l1: 0000000000000000 l2: ffffffff80000000 l3: 
-fffff800f2bcf3e8
-l4: 000000000000ffff l5: fffff8006ebff940 l6: 00000000000000a5 l7: 
-0000000000010000
-i0: 0000000000000002 i1: 0000000000000000 i2: fffff800f2bcf560 i3: 
-fffff800fed95000
-i4: 0000000000000000 i5: 000000000062c060 i6: fffff800f2bcec01 i7: 
-000000000062cca4
-I7: <ip_rcv+0x3ac/0x6e0>
-BUG: soft lockup - CPU#6 stuck for 11s! [md7_raid1:5818]
-TSTATE: 0000000080001600 TPC: 000000000055bff0 TNPC: 000000000055bff4 Y: 
-00000000    Not tainted
-TPC: <loop+0x14/0x28>
-g0: 0000000000000020 g1: ffff6f2800000000 g2: 000090d6de500000 g3: 
-0000000000000000
-g4: fffff800fd52d960 g5: fffff800020bc000 g6: fffff800f2bcc000 g7: 
-0000000000000000
-o0: fffff800dc397a50 o1: fffff80018241a50 o2: 00000000000005b0 o3: 
-0000000000000000
-o4: 00000000000547e0 o5: 0000000000302c8d sp: fffff800f2bcf3b1 ret_pc: 
-00000000005e6d54
-RPC: <raid1d+0x35c/0x1020>
+And CPU fans fail, capacitors pop, power supplies fail, etc. These are 
+things which have happened here in the last ten years. I also had a 
+charging circuit in a UPS half-fail (from full wave rectifier to half). 
+So the UPS would discharge until it ran out of power, then the system 
+would fail hard. By the time I got on site and rebooted the UPS had 
+trickle charged and would run the system. After replacing two 
+"intermittent power supplies" in the system, the UPS was swapped on 
+general principles and the real problem was isolated.
 
-	I will tre to build a 2.6.23.14 kernel but I don't see any patch that 
-could fix this bug. This bug always occurs when mdadm rescan this 
-device, but I don't understand why nfs remains in D state. Any idea ?
+Shit happens, don't rely on graceful shutdowns (or recovery, have backups).
 
-	Regards,
+-- 
+Bill Davidsen <davidsen@tmr.com>
+  "Woe unto the statesman who makes war without a reason that will still
+  be valid when the war is over..." Otto von Bismark 
 
-	JKB
+
