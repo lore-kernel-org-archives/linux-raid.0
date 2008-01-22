@@ -1,36 +1,35 @@
 From: carlos@fisica.ufpr.br (Carlos Carvalho)
-Subject: Re: idle array consuming cpu ??!!
-Date: Tue, 22 Jan 2008 00:25:01 -0200
-Message-ID: <18325.21501.507878.267465@fisica.ufpr.br>
-References: <18323.53904.556620.19761@fisica.ufpr.br>
-	<18323.61999.693738.678224@notabene.brown>
+Subject: Re: One Large md or Many Smaller md for Better Peformance?
+Date: Tue, 22 Jan 2008 00:32:13 -0200
+Message-ID: <18325.21933.337369.104689@fisica.ufpr.br>
+References: <4793AE0E.609@pobox.com>
+	<20080120215734.GD17584@teal.hq.k1024.org>
+	<47940F31.7020907@pobox.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18323.61999.693738.678224@notabene.brown>
+In-Reply-To: <47940F31.7020907@pobox.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
+To: Moshe Yudkowsky <moshe@pobox.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil Brown (neilb@suse.de) wrote on 21 January 2008 12:15:
- >On Sunday January 20, carlos@fisica.ufpr.br wrote:
- >> A raid6 array with a spare and bitmap is idle: not mounted and with no
- >> IO to it or any of its disks (obviously), as shown by iostat. However
- >> it's consuming cpu: since reboot it used about 11min in 24h, which is quite
- >> a lot even for a busy array (the cpus are fast). The array was cleanly
- >> shutdown so there's been no reconstruction/check or anything else.
- >> 
- >> How can this be? Kernel is 2.6.22.16 with the two patches for the
- >> deadlock ("[PATCH 004 of 4] md: Fix an occasional deadlock in raid5 -
- >> FIX") and the previous one.
+Moshe Yudkowsky (moshe@pobox.com) wrote on 20 January 2008 21:19:
+ >Thanks for the tips, and in particular:
  >
- >Maybe the bitmap code is waking up regularly to do nothing.
+ >Iustin Pop wrote:
  >
- >Would you be happy to experiment?  Remove the bitmap with
- >   mdadm --grow /dev/mdX --bitmap=none
+ >>   - if you download torrents, fragmentation is a real problem, so use a
+ >>     filesystem that knows how to preallocate space (XFS and maybe ext4;
+ >>     for XFS use xfs_io to set a bigger extend size for where you
+ >>     download)
  >
- >and see how that affects cpu usage?
+ >That's a very interesting idea; it also gives me an opportunity to 
+ >experiment with XFS. I had been avoiding it because of possible 
+ >power-failure issues on writes.
 
-Confirmed, removing the bitmap stopped cpu consumption.
+I use reiser3 and xfs. reiser3 is very good with many small files. A
+simple test shows interactively perceptible results: removing large
+files is faster with xfs, removing large directories (ex. the kernel
+tree) is faster with reiser3.
