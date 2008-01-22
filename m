@@ -1,35 +1,45 @@
-From: Jan Engelhardt <jengelh@computergmbh.de>
-Subject: [PATCH] md: constify function pointer tables
-Date: Tue, 22 Jan 2008 20:50:39 +0100 (CET)
-Message-ID: <Pine.LNX.4.64.0801222049570.5722@fbirervta.pbzchgretzou.qr>
-References: <54038cd4f87a03884e4f59f8f3697889dfb63c54.1201030614.git.jengelh@computergmbh.de>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: idle array consuming cpu ??!!
+Date: Tue, 22 Jan 2008 17:53:29 -0500
+Message-ID: <479673E9.8030301@tmr.com>
+References: <18323.53904.556620.19761@fisica.ufpr.br>	<18323.61999.693738.678224@notabene.brown> <18325.21501.507878.267465@fisica.ufpr.br>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <54038cd4f87a03884e4f59f8f3697889dfb63c54.1201030614.git.jengelh@computergmbh.de>
+In-Reply-To: <18325.21501.507878.267465@fisica.ufpr.br>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: Carlos Carvalho <carlos@fisica.ufpr.br>
+Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Signed-off-by: Jan Engelhardt <jengelh@computergmbh.de>
----
- drivers/md/md.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Carlos Carvalho wrote:
+> Neil Brown (neilb@suse.de) wrote on 21 January 2008 12:15:
+>  >On Sunday January 20, carlos@fisica.ufpr.br wrote:
+>  >> A raid6 array with a spare and bitmap is idle: not mounted and with no
+>  >> IO to it or any of its disks (obviously), as shown by iostat. However
+>  >> it's consuming cpu: since reboot it used about 11min in 24h, which is quite
+>  >> a lot even for a busy array (the cpus are fast). The array was cleanly
+>  >> shutdown so there's been no reconstruction/check or anything else.
+>  >> 
+>  >> How can this be? Kernel is 2.6.22.16 with the two patches for the
+>  >> deadlock ("[PATCH 004 of 4] md: Fix an occasional deadlock in raid5 -
+>  >> FIX") and the previous one.
+>  >
+>  >Maybe the bitmap code is waking up regularly to do nothing.
+>  >
+>  >Would you be happy to experiment?  Remove the bitmap with
+>  >   mdadm --grow /dev/mdX --bitmap=none
+>  >
+>  >and see how that affects cpu usage?
+>
+> Confirmed, removing the bitmap stopped cpu consumption.
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index cef9ebd..6295b90 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -5033,7 +5033,7 @@ static int md_seq_show(struct seq_file *seq, void *v)
- 	return 0;
- }
- 
--static struct seq_operations md_seq_ops = {
-+static const struct seq_operations md_seq_ops = {
- 	.start  = md_seq_start,
- 	.next   = md_seq_next,
- 	.stop   = md_seq_stop,
+Looks like quite a bit of CPU going into idle arrays here, too.
+
 -- 
-1.5.3.4
+Bill Davidsen <davidsen@tmr.com>
+  "Woe unto the statesman who makes war without a reason that will still
+  be valid when the war is over..." Otto von Bismark 
+
 
