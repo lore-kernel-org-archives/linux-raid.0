@@ -1,30 +1,87 @@
-From: Martin Seebach <mail@martinseebach.dk>
-Subject: Fwd: Error on /dev/sda, but takes down RAID-1
-Date: Wed, 23 Jan 2008 10:05:42 -0500 (EST)
-Message-ID: <15672009.1331201100742126.JavaMail.root@zimbra>
-References: <27710945.1301201097639436.JavaMail.root@zimbra>
+From: Nagilum <nagilum@nagilum.org>
+Subject: Re: identifying failed disk/s in an array.
+Date: Wed, 23 Jan 2008 16:22:33 +0100
+Message-ID: <20080123162233.psl1qwejsos4wwo0@cakebox.homeunix.net>
+References: <479765CF.A931.0080.0@ems.rmit.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII;
+	DelSp=Yes	format=flowed
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <27710945.1301201097639436.JavaMail.root@zimbra>
+In-Reply-To: <479765CF.A931.0080.0@ems.rmit.edu.au>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Michael Harris <michael.harris@rmit.edu.au>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi, 
-
-I'm not sure this is completely linux-raid related, but I can't figure out where to start: 
-
-A few days ago, my server died. I was able to log in and salvage this content of dmesg: 
-http://pastebin.com/m4af616df 
-
-I talked to my hosting-people and they said it was an io-error on /dev/sda, and replaced that drive. 
-After this, I was able to boot into a PXE-image and re-build the two RAID-1 devices with no problems - indicating that sdb was fine. 
-
-I expected RAID-1 to be able to stomach exactly this kind of error - one drive dying. What did I do wrong? 
-
-Regards, 
-Martin Seebach 
+----- Message from michael.harris@rmit.edu.au ---------
+     Date: Wed, 23 Jan 2008 16:05:40 +1100
+     From: Michael Harris <michael.harris@rmit.edu.au>
+Reply-To: Michael Harris <michael.harris@rmit.edu.au>
+  Subject: identifying failed disk/s in an array.
+       To: linux-raid@vger.kernel.org
 
 
+> Hi,
+>
+> I have just built a Raid 5 array  using mdadm and while it is   
+> running fine I have a question, about identifying the order of disks  
+>  in the array.
+>
+> In the pre sata days you would connect your drives as follows:
+>
+> Primary Master - HDA
+> Primary Slave - HDB
+> Secondary - Master - HDC
+> Secondary - Slave -HDD
+>
+> So if disk HDC failed i would know it was the primary disk on the   
+> secondary controller and would replace that drive.
+>
+> My current setup is as follows
+>
+> MB Primary Master (PATA) Primary Master - Operating System
+>
+> The array disks are attached to:
+>
+> MB Sata port 1
+> MB Sata port 2
+> PCI card Sata port 1
+>
+> When i setup the array the OS drive was SDA and the other SDB,SDC,SDD.
+>
+> Now the problem is everytime i reboot, the drives are sometimes   
+> detected in a different order, now because i mount root via the UUID  
+>  of the OS disk and the kernel looks at the superblocks of the  
+> raided  drives everything comes up fine, but I'm worried that if i  
+> move the  array to another machine and need to do a mdadm --assemble  
+> that i  won't know the correct order of the disks and what is more  
+> worrying  if i have a disk fail say HDC for example, i wont know  
+> which disk  HDC is as it could be any of the 5 disks in the PC. Is  
+> there anyway  to make it easier to identify which disk is which?.
+
+----- End message from michael.harris@rmit.edu.au -----
+
+Try this:
+mdadm -Q --detail /dev/md0
+to see which disk is which disk in the raid.
+To identify a disk you can examine it using:
+mdadm -E /dev/sd[b-d]
+and read your dmesg.
+And finally you can use "blkid" to associate UUIDs with devices.
+I hope this helps.
+Kind regards,
+Alex.
+
+========================================================================
+#    _  __          _ __     http://www.nagilum.org/ \n icq://69646724 #
+#   / |/ /__ ____ _(_) /_ ____ _  nagilum@nagilum.org \n +491776461165 #
+#  /    / _ `/ _ `/ / / // /  ' \  Amiga (68k/PPC): AOS/NetBSD/Linux   #
+# /_/|_/\_,_/\_, /_/_/\_,_/_/_/_/   Mac (PPC): MacOS-X / NetBSD /Linux #
+#           /___/     x86: FreeBSD/Linux/Solaris/Win2k  ARM9: EPOC EV6 #
+========================================================================
+
+
+----------------------------------------------------------------
+cakebox.homeunix.net - all the machine one needs..
