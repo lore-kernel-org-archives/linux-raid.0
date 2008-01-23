@@ -1,32 +1,52 @@
-From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
-Subject: performance of raid10,f2 on 4 disks
-Date: Wed, 23 Jan 2008 19:21:20 +0100
-Message-ID: <20080123182120.GA26044@rap.rap.dk>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: Fwd: Error on /dev/sda, but takes down RAID-1
+Date: Thu, 24 Jan 2008 07:55:55 +1100
+Message-ID: <18327.43483.57839.624505@notabene.brown>
+References: <27710945.1301201097639436.JavaMail.root@zimbra>
+	<15672009.1331201100742126.JavaMail.root@zimbra>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: message from Martin Seebach on Wednesday January 23
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Martin Seebach <mail@martinseebach.dk>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi!
+On Wednesday January 23, mail@martinseebach.dk wrote:
+> Hi, 
+> 
+> I'm not sure this is completely linux-raid related, but I can't figure out where to start: 
+> 
+> A few days ago, my server died. I was able to log in and salvage this content of dmesg: 
+> http://pastebin.com/m4af616df 
 
-I have played around with raid10,f2 on a 2 disk array set,
-and I really liked the performance on the sequential reads.
-It looked like double up on the speed, about 173 MB/s
-for two SATA-2 disks. 
+At line 194:
 
-I then went on to look at my 4 new SATS-2 disks, to have
-the same kind of performance I made the array by:
+   end_request: I/O error, dev sdb, sector 80324865
 
-mdadm --create /dev/md3 --chunk=256 -R -l 10 -n 4 -p f2 /dev/sd[abcd]1
+then at line 384
 
-And my first tests showed a sequential read rate of 320 MB/s.
-Impressive! I then tried it a few more times, but then I could not
-get more than around 160 MB/s, which is less than what I got on 2 disks.
+   end_request: I/O error, dev sda, sector 80324865
 
-Any ideas of what is going on?
+> 
+> I talked to my hosting-people and they said it was an io-error on /dev/sda, and replaced that drive. 
+> After this, I was able to boot into a PXE-image and re-build the two RAID-1 devices with no problems - indicating that sdb was fine. 
+> 
+> I expected RAID-1 to be able to stomach exactly this kind of error - one drive dying. What did I do wrong? 
 
-Best regards
-keld
+Trouble is it wasn't "one drive dying".  You got errors from two
+drives, at almost exactly the same time.  So maybe the controller
+died.  Or maybe when one drive died, the controller or the driver got
+confused and couldn't work with the other drive any more.
+
+Certainly the "blk: request botched" message (line 233 onwards)
+suggest some confusion in the driver.
+
+Maybe post to linux-ide@vger.kernel.org - that is where issues with
+SATA drivers and controllers can be discussed.
+
+NeilBrown
+
+
