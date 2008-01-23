@@ -1,71 +1,127 @@
-From: "Mike Snitzer" <snitzer@gmail.com>
-Subject: AACRAID driver broken in 2.6.22.x (and beyond?) [WAS: Re: 2.6.22.16 MD raid1 doesn't mark removed disk faulty, MD thread goes UN]
-Date: Tue, 22 Jan 2008 19:09:42 -0500
-Message-ID: <170fa0d20801221609r2cb7b518r1d8dc24b7d655d17@mail.gmail.com>
+From: Peter Rabbitson <rabbit+list@rabbit.us>
+Subject: Problem with raid5 grow/resize (not restripe)
+Date: Wed, 23 Jan 2008 02:25:39 +0100
+Message-ID: <47969793.9040105@rabbit.us>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org, NeilBrown <neilb@suse.de>
-Cc: linux-kernel@vger.kernel.org, "K. Tanaka" <k-tanaka@ce.jp.nec.com>, aacraid@adaptec.com, linux-scsi@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Jan 22, 2008 12:29 AM, Mike Snitzer <snitzer@gmail.com> wrote:
-> cc'ing Tanaka-san given his recent raid1 BUG report:
-> http://lkml.org/lkml/2008/1/14/515
->
->
-> On Jan 21, 2008 6:04 PM, Mike Snitzer <snitzer@gmail.com> wrote:
-> > Under 2.6.22.16, I physically pulled a SATA disk (/dev/sdac, connected to
-> > an aacraid controller) that was acting as the local raid1 member of
-> > /dev/md30.
-> >
-> > Linux MD didn't see an /dev/sdac1 error until I tried forcing the issue by
-> > doing a read (with dd) from /dev/md30:
-....
-> The raid1d thread is locked at line 720 in raid1.c (raid1d+2437); aka
-> freeze_array:
->
-> (gdb) l *0x0000000000002539
-> 0x2539 is in raid1d (drivers/md/raid1.c:720).
-> 715              * wait until barrier+nr_pending match nr_queued+2
-> 716              */
-> 717             spin_lock_irq(&conf->resync_lock);
-> 718             conf->barrier++;
-> 719             conf->nr_waiting++;
-> 720             wait_event_lock_irq(conf->wait_barrier,
-> 721                                 conf->barrier+conf->nr_pending ==
-> conf->nr_queued+2,
-> 722                                 conf->resync_lock,
-> 723                                 raid1_unplug(conf->mddev->queue));
-> 724             spin_unlock_irq(&conf->resync_lock);
->
-> Given Tanaka-san's report against 2.6.23 and me hitting what seems to
-> be the same deadlock in 2.6.22.16; it stands to reason this affects
-> raid1 in 2.6.24-rcX too.
+Hello,
 
-Turns out that the aacraid driver in 2.6.22.x is HORRIBLY BROKEN (when
-you pull a drive); it responds to MD's write requests with uptodate=1
-(in raid1_end_write_request) for the drive that was pulled!  I've not
-looked to see if aacraid has been fixed in newer kernels... are others
-aware of any crucial aacraid fixes in 2.6.23.x or 2.6.24?
+I can not seem to be able to extend slightly a raid volume of mine. I issue 
+the command:
 
-After the drive was physically pulled, and small periodic writes
-continued to the associated MD device, the raid1 MD driver did _NOT_
-detect the pulled drive's writes as having failed (verified this with
-systemtap).  MD happily thought the write completed to both members
-(so MD had no reason to mark the pulled drive "faulty"; or mark the
-raid "degraded").
+mdadm --grow --size=max /dev/md5
 
-Installing an Adaptec-provided 1.1-5[2451] driver enabled raid1 to
-work as expected.
+it completes and nothing happens. The kernel log is empty, however the even 
+counter on the drive is incremented by +3.
 
-That said, I now have a recipe for hitting the raid1 deadlock that
-Tanaka first reported over a week ago.  I'm still surprised that all
-of this chatter about that BUG hasn't drawn interest/scrutiny from
-others!?
+Here is what I have (yes I know that I am resizing only by about 200MB). Why 
+am I not able to reach 824.8GiB?
 
-regards,
-Mike
+Thank you for your help.
+
+
+
+root@Thesaurus:~# cat /proc/mdstat
+Personalities : [raid0] [raid1] [raid10] [raid6] [raid5] [raid4]
+md5 : active raid5 sda3[4] sdd3[3] sdc3[2] sdb3[1]
+       864276480 blocks super 1.1 level 5, 2048k chunk, algorithm 2 [4/4] [UUUU]
+
+md10 : active raid10 sdd2[3] sdc2[2] sdb2[1] sda2[0]
+       5353472 blocks 1024K chunks 3 far-copies [4/4] [UUUU]
+
+md1 : active raid1 sdd1[1] sdc1[0] sdb1[3] sda1[2]
+       56128 blocks [4/4] [UUUU]
+
+unused devices: <none>
+root@Thesaurus:~#
+
+
+
+root@Thesaurus:~# mdadm -D /dev/md5
+/dev/md5:
+         Version : 01.01.03
+   Creation Time : Tue Jan 22 03:52:42 2008
+      Raid Level : raid5
+      Array Size : 864276480 (824.24 GiB 885.02 GB)
+   Used Dev Size : 576184320 (274.75 GiB 295.01 GB)
+    Raid Devices : 4
+   Total Devices : 4
+Preferred Minor : 5
+     Persistence : Superblock is persistent
+
+     Update Time : Wed Jan 23 02:21:47 2008
+           State : clean
+  Active Devices : 4
+Working Devices : 4
+  Failed Devices : 0
+   Spare Devices : 0
+
+          Layout : left-symmetric
+      Chunk Size : 2048K
+
+            Name : Thesaurus:Crypta  (local to host Thesaurus)
+            UUID : 1decb2d1:ebf16128:a240938a:669b0999
+          Events : 5632
+
+     Number   Major   Minor   RaidDevice State
+        4       8        3        0      active sync   /dev/sda3
+        1       8       19        1      active sync   /dev/sdb3
+        2       8       35        2      active sync   /dev/sdc3
+        3       8       51        3      active sync   /dev/sdd3
+root@Thesaurus:~#
+
+
+
+root@Thesaurus:~# fdisk -l /dev/sd[abcd]
+
+Disk /dev/sda: 400.0 GB, 400088457216 bytes
+255 heads, 63 sectors/track, 48641 cylinders
+Units = cylinders of 16065 * 512 = 8225280 bytes
+Disk identifier: 0x00000000
+
+    Device Boot      Start         End      Blocks   Id  System
+/dev/sda1               1           7       56196   fd  Linux raid autodetect
+/dev/sda2               8         507     4016250   fd  Linux raid autodetect
+/dev/sda3             508       36385   288190035   83  Linux
+/dev/sda4           36386       48641    98446320   83  Linux
+
+Disk /dev/sdb: 320.0 GB, 320072933376 bytes
+255 heads, 63 sectors/track, 38913 cylinders
+Units = cylinders of 16065 * 512 = 8225280 bytes
+Disk identifier: 0x00000000
+
+    Device Boot      Start         End      Blocks   Id  System
+/dev/sdb1               1           7       56196   fd  Linux raid autodetect
+/dev/sdb2               8         507     4016250   fd  Linux raid autodetect
+/dev/sdb3             508       36385   288190035   83  Linux
+/dev/sdb4           36386       38913    20306160   83  Linux
+
+Disk /dev/sdc: 300.0 GB, 300090728448 bytes
+255 heads, 63 sectors/track, 36483 cylinders
+Units = cylinders of 16065 * 512 = 8225280 bytes
+Disk identifier: 0x00000000
+
+    Device Boot      Start         End      Blocks   Id  System
+/dev/sdc1               1           7       56196   fd  Linux raid autodetect
+/dev/sdc2               8         507     4016250   fd  Linux raid autodetect
+/dev/sdc3             508       36385   288190035   83  Linux
+/dev/sdc4           36386       36483      787185   83  Linux
+
+Disk /dev/sdd: 300.0 GB, 300090728448 bytes
+255 heads, 63 sectors/track, 36483 cylinders
+Units = cylinders of 16065 * 512 = 8225280 bytes
+Disk identifier: 0x00000000
+
+    Device Boot      Start         End      Blocks   Id  System
+/dev/sdd1               1           7       56196   fd  Linux raid autodetect
+/dev/sdd2               8         507     4016250   fd  Linux raid autodetect
+/dev/sdd3             508       36385   288190035   83  Linux
+/dev/sdd4           36386       36483      787185   83  Linux
+root@Thesaurus:~#
+
