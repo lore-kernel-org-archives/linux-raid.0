@@ -1,127 +1,46 @@
-From: Peter Rabbitson <rabbit+list@rabbit.us>
-Subject: Problem with raid5 grow/resize (not restripe)
-Date: Wed, 23 Jan 2008 02:25:39 +0100
-Message-ID: <47969793.9040105@rabbit.us>
+From: "Michael Harris" <michael.harris@rmit.edu.au>
+Subject: identifying failed disk/s in an array.
+Date: Wed, 23 Jan 2008 16:05:40 +1100
+Message-ID: <479765CF.A931.0080.0@ems.rmit.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello,
+Hi,
 
-I can not seem to be able to extend slightly a raid volume of mine. I issue 
-the command:
+I have just built a Raid 5 array  using mdadm and while it is running fine I have a question, about identifying the order of disks in the array.
 
-mdadm --grow --size=max /dev/md5
+In the pre sata days you would connect your drives as follows:
 
-it completes and nothing happens. The kernel log is empty, however the even 
-counter on the drive is incremented by +3.
+Primary Master - HDA
+Primary Slave - HDB
+Secondary - Master - HDC
+Secondary - Slave -HDD
 
-Here is what I have (yes I know that I am resizing only by about 200MB). Why 
-am I not able to reach 824.8GiB?
+So if disk HDC failed i would know it was the primary disk on the secondary controller and would replace that drive.
 
-Thank you for your help.
+My current setup is as follows
 
+MB Primary Master (PATA) Primary Master - Operating System
 
+The array disks are attached to:
 
-root@Thesaurus:~# cat /proc/mdstat
-Personalities : [raid0] [raid1] [raid10] [raid6] [raid5] [raid4]
-md5 : active raid5 sda3[4] sdd3[3] sdc3[2] sdb3[1]
-       864276480 blocks super 1.1 level 5, 2048k chunk, algorithm 2 [4/4] [UUUU]
+MB Sata port 1 
+MB Sata port 2
+PCI card Sata port 1
 
-md10 : active raid10 sdd2[3] sdc2[2] sdb2[1] sda2[0]
-       5353472 blocks 1024K chunks 3 far-copies [4/4] [UUUU]
+When i setup the array the OS drive was SDA and the other SDB,SDC,SDD.
 
-md1 : active raid1 sdd1[1] sdc1[0] sdb1[3] sda1[2]
-       56128 blocks [4/4] [UUUU]
+Now the problem is everytime i reboot, the drives are sometimes detected in a different order, now because i mount root via the UUID of the OS disk and the kernel looks at the superblocks of the raided drives everything comes up fine, but I'm worried that if i move the array to another machine and need to do a mdadm --assemble that i won't know the correct order of the disks and what is more worrying if i have a disk fail say HDC for example, i wont know which disk HDC is as it could be any of the 5 disks in the PC. Is there anyway to make it easier to identify which disk is which?.
 
-unused devices: <none>
-root@Thesaurus:~#
+thanks
 
-
-
-root@Thesaurus:~# mdadm -D /dev/md5
-/dev/md5:
-         Version : 01.01.03
-   Creation Time : Tue Jan 22 03:52:42 2008
-      Raid Level : raid5
-      Array Size : 864276480 (824.24 GiB 885.02 GB)
-   Used Dev Size : 576184320 (274.75 GiB 295.01 GB)
-    Raid Devices : 4
-   Total Devices : 4
-Preferred Minor : 5
-     Persistence : Superblock is persistent
-
-     Update Time : Wed Jan 23 02:21:47 2008
-           State : clean
-  Active Devices : 4
-Working Devices : 4
-  Failed Devices : 0
-   Spare Devices : 0
-
-          Layout : left-symmetric
-      Chunk Size : 2048K
-
-            Name : Thesaurus:Crypta  (local to host Thesaurus)
-            UUID : 1decb2d1:ebf16128:a240938a:669b0999
-          Events : 5632
-
-     Number   Major   Minor   RaidDevice State
-        4       8        3        0      active sync   /dev/sda3
-        1       8       19        1      active sync   /dev/sdb3
-        2       8       35        2      active sync   /dev/sdc3
-        3       8       51        3      active sync   /dev/sdd3
-root@Thesaurus:~#
+Mike
 
 
-
-root@Thesaurus:~# fdisk -l /dev/sd[abcd]
-
-Disk /dev/sda: 400.0 GB, 400088457216 bytes
-255 heads, 63 sectors/track, 48641 cylinders
-Units = cylinders of 16065 * 512 = 8225280 bytes
-Disk identifier: 0x00000000
-
-    Device Boot      Start         End      Blocks   Id  System
-/dev/sda1               1           7       56196   fd  Linux raid autodetect
-/dev/sda2               8         507     4016250   fd  Linux raid autodetect
-/dev/sda3             508       36385   288190035   83  Linux
-/dev/sda4           36386       48641    98446320   83  Linux
-
-Disk /dev/sdb: 320.0 GB, 320072933376 bytes
-255 heads, 63 sectors/track, 38913 cylinders
-Units = cylinders of 16065 * 512 = 8225280 bytes
-Disk identifier: 0x00000000
-
-    Device Boot      Start         End      Blocks   Id  System
-/dev/sdb1               1           7       56196   fd  Linux raid autodetect
-/dev/sdb2               8         507     4016250   fd  Linux raid autodetect
-/dev/sdb3             508       36385   288190035   83  Linux
-/dev/sdb4           36386       38913    20306160   83  Linux
-
-Disk /dev/sdc: 300.0 GB, 300090728448 bytes
-255 heads, 63 sectors/track, 36483 cylinders
-Units = cylinders of 16065 * 512 = 8225280 bytes
-Disk identifier: 0x00000000
-
-    Device Boot      Start         End      Blocks   Id  System
-/dev/sdc1               1           7       56196   fd  Linux raid autodetect
-/dev/sdc2               8         507     4016250   fd  Linux raid autodetect
-/dev/sdc3             508       36385   288190035   83  Linux
-/dev/sdc4           36386       36483      787185   83  Linux
-
-Disk /dev/sdd: 300.0 GB, 300090728448 bytes
-255 heads, 63 sectors/track, 36483 cylinders
-Units = cylinders of 16065 * 512 = 8225280 bytes
-Disk identifier: 0x00000000
-
-    Device Boot      Start         End      Blocks   Id  System
-/dev/sdd1               1           7       56196   fd  Linux raid autodetect
-/dev/sdd2               8         507     4016250   fd  Linux raid autodetect
-/dev/sdd3             508       36385   288190035   83  Linux
-/dev/sdd4           36386       36483      787185   83  Linux
-root@Thesaurus:~#
 
