@@ -1,80 +1,51 @@
-From: "K.Tanaka" <k-tanaka@ce.jp.nec.com>
-Subject: Re: [BUG] The kernel thread for md RAID1 could cause a md RAID1 array
- deadlock
-Date: Thu, 24 Jan 2008 18:32:39 +0900
-Message-ID: <47985B37.9000503@ce.jp.nec.com>
-References: <478C240F.8070004@ce.jp.nec.com> <18328.1473.26122.647283@notabene.brown>
+From: Tim Southerwood <ts@dionic.net>
+Subject: Re: 2.6.24-rc6 reproducible raid5 hang
+Date: Thu, 24 Jan 2008 20:30:47 +0000
+Message-ID: <4798F577.20007@dionic.net>
+References: <4797430E.2020603@dionic.net> <18327.31959.286239.480961@fisica.ufpr.br>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-2022-JP
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <18328.1473.26122.647283@notabene.brown>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, dm-devel@redhat.com
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <18327.31959.286239.480961@fisica.ufpr.br>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+Carlos Carvalho wrote:
+> Tim Southerwood (ts@dionic.net) wrote on 23 January 2008 13:37:
+>  >Sorry if this breaks threaded mail readers, I only just subscribed to 
+>  >the list so don;t have the original post to reply to.
+>  >
+>  >I believe I'm having the same problem.
+>  >
+>  >Regarding XFS on a raid5 md array:
+>  >
+>  >Kernels 2.6.22-14 (Ubuntu Gutsy generic and server builds) *and* 
+>  >2.6.24-rc8 (pure build from virgin sources) compiled for amd64 arch.
+> 
+> This has been corrected already, install Neil's patches. It worked for
+> several people under high stress, including us.
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Thank you for the patch.
-I have applied the patch to 2.6.23.14 and it works well.
+Hi
 
-- In case of 2.6.23.14, the problem is reproduced.
-- In case of 2.6.23.14 with this patch, raid1 works well so far.
-  The fault injection script continues to run, and it doesn't deadlock.
-  I will keep it running for a while.
+I just coerced the patch into 2.6.23.14, reset 
+/sys/block/md1/md/stripe_cache_size to default (256) and rebooted.
 
-Also, md raid10 seems to have the same problem.
-I will test raid10 applying this patch as well.
+I can confirm that after 2 hours of heavy bashing[1] the system has not 
+hung. Looks good - many thanks. But I will run with a stripe_cache_size 
+of 4096 in practise as it improves write speen on my configuration about 
+2.5 times.
+
+Cheers
+
+Tim
 
 
-Neil Brown wrote:
-> On Tuesday January 15, k-tanaka@ce.jp.nec.com wrote:
->> This message describes the details about md-RAID1 issue found by
->> testing the md RAID1 using the SCSI fault injection framework.
->>
->> Abstract:
->> Both the error handler for md RAID1 and write access request to the md RAID1
->> use raid1d kernel thread. The nr_pending flag could cause a race condition
->> in raid1d, results in a raid1d deadlock.
-> 
-> Thanks for finding and reporting this.
-> 
-> I believe the following patch should fix the deadlock.
-> 
-> If you are able to repeat your test and confirm this I would
-> appreciate it.
-> 
-> Thanks,
-> NeilBrown
-> 
-> 
-> 
-> Fix deadlock in md/raid1 when handling a read error.
-> 
-> When handling a read error, we freeze the array to stop any other
-> IO while attempting to over-write with correct data.
-> 
-> This is done in the raid1d thread and must wait for all submitted IO
-> to complete (except for requests that failed and are sitting in the
-> retry queue - these are counted in ->nr_queue and will stay there during
-> a freeze).
-> 
-> However write requests need attention from raid1d as bitmap updates
-> might be required.  This can cause a deadlock as raid1 is waiting for
-> requests to finish that themselves need attention from raid1d.
-> 
-> So we create a new function 'flush_pending_writes' to give that attention,
-> and call it in freeze_array to be sure that we aren't waiting on raid1d.
-> 
-> Thanks to "K.Tanaka" <k-tanaka@ce.jp.nec.com> for finding and reporting
-> this problem.
-> 
-> Cc: "K.Tanaka" <k-tanaka@ce.jp.nec.com>
-> Signed-off-by: Neil Brown <neilb@suse.de>
-> 
--- 
----------------------------------------------------------
-Kenichi TANAKA    | Open Source Software Platform Development Division
-                  | Computers Software Operations Unit, NEC Corporation
-                  | k-tanaka@ce.jp.nec.com
+
+[1] Rsync > 50GB to raid pluf xfs_fsr + dd 11GB of /dev/zero to same 
+filesystem.
