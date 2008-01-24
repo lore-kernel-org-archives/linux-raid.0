@@ -1,174 +1,156 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: [BUG] The kernel thread for md RAID1 could cause a md RAID1 array deadlock
-Date: Thu, 24 Jan 2008 14:28:01 +1100
-Message-ID: <18328.1473.26122.647283@notabene.brown>
-References: <478C240F.8070004@ce.jp.nec.com>
+Subject: Re: idle array consuming cpu ??!!
+Date: Thu, 24 Jan 2008 15:55:50 +1100
+Message-ID: <18328.6742.625490.166920@notabene.brown>
+References: <18323.53904.556620.19761@fisica.ufpr.br>
+	<18323.61999.693738.678224@notabene.brown>
+	<18325.21501.507878.267465@fisica.ufpr.br>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: message from K.Tanaka on Tuesday January 15
-Sender: linux-scsi-owner@vger.kernel.org
-To: "K.Tanaka" <k-tanaka@ce.jp.nec.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, dm-devel@redhat.com
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: message from Carlos Carvalho on Tuesday January 22
+Sender: linux-raid-owner@vger.kernel.org
+To: Carlos Carvalho <carlos@fisica.ufpr.br>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday January 15, k-tanaka@ce.jp.nec.com wrote:
+On Tuesday January 22, carlos@fisica.ufpr.br wrote:
+> Neil Brown (neilb@suse.de) wrote on 21 January 2008 12:15:
+>  >On Sunday January 20, carlos@fisica.ufpr.br wrote:
+>  >> A raid6 array with a spare and bitmap is idle: not mounted and with no
+>  >> IO to it or any of its disks (obviously), as shown by iostat. However
+>  >> it's consuming cpu: since reboot it used about 11min in 24h, which is quite
+>  >> a lot even for a busy array (the cpus are fast). The array was cleanly
+>  >> shutdown so there's been no reconstruction/check or anything else.
+>  >> 
+>  >> How can this be? Kernel is 2.6.22.16 with the two patches for the
+>  >> deadlock ("[PATCH 004 of 4] md: Fix an occasional deadlock in raid5 -
+>  >> FIX") and the previous one.
+>  >
+>  >Maybe the bitmap code is waking up regularly to do nothing.
+>  >
+>  >Would you be happy to experiment?  Remove the bitmap with
+>  >   mdadm --grow /dev/mdX --bitmap=none
+>  >
+>  >and see how that affects cpu usage?
 > 
-> This message describes the details about md-RAID1 issue found by
-> testing the md RAID1 using the SCSI fault injection framework.
-> 
-> Abstract:
-> Both the error handler for md RAID1 and write access request to the md RAID1
-> use raid1d kernel thread. The nr_pending flag could cause a race condition
-> in raid1d, results in a raid1d deadlock.
+> Confirmed, removing the bitmap stopped cpu consumption.
 
-Thanks for finding and reporting this.
+Thanks.
 
-I believe the following patch should fix the deadlock.
+This patch should substantiallly reduce cpu consumption on an idle
+bitmap.
 
-If you are able to repeat your test and confirm this I would
-appreciate it.
-
-Thanks,
 NeilBrown
 
+----------------------
+Reduce CPU wastage on idle md array with a write-intent bitmap.
 
+On an md array with a write-intent bitmap, a thread wakes up every few
+seconds to and scans the bitmap looking for work to do.  If there
+array is idle, there will be no work to do, but a lot of scanning is
+done to discover this.
 
-Fix deadlock in md/raid1 when handling a read error.
+So cache the fact that the bitmap is completely clean, and avoid
+scanning the whole bitmap when the cache is known to be clean.
 
-When handling a read error, we freeze the array to stop any other
-IO while attempting to over-write with correct data.
-
-This is done in the raid1d thread and must wait for all submitted IO
-to complete (except for requests that failed and are sitting in the
-retry queue - these are counted in ->nr_queue and will stay there during
-a freeze).
-
-However write requests need attention from raid1d as bitmap updates
-might be required.  This can cause a deadlock as raid1 is waiting for
-requests to finish that themselves need attention from raid1d.
-
-So we create a new function 'flush_pending_writes' to give that attention,
-and call it in freeze_array to be sure that we aren't waiting on raid1d.
-
-Thanks to "K.Tanaka" <k-tanaka@ce.jp.nec.com> for finding and reporting
-this problem.
-
-Cc: "K.Tanaka" <k-tanaka@ce.jp.nec.com>
 Signed-off-by: Neil Brown <neilb@suse.de>
 
 ### Diffstat output
- ./drivers/md/raid1.c |   66 ++++++++++++++++++++++++++++++++++-----------------
- 1 file changed, 45 insertions(+), 21 deletions(-)
+ ./drivers/md/bitmap.c         |   19 +++++++++++++++++--
+ ./include/linux/raid/bitmap.h |    2 ++
+ 2 files changed, 19 insertions(+), 2 deletions(-)
 
-diff .prev/drivers/md/raid1.c ./drivers/md/raid1.c
---- .prev/drivers/md/raid1.c	2008-01-18 11:19:09.000000000 +1100
-+++ ./drivers/md/raid1.c	2008-01-24 14:21:55.000000000 +1100
-@@ -592,6 +592,37 @@ static int raid1_congested(void *data, i
- }
+diff .prev/drivers/md/bitmap.c ./drivers/md/bitmap.c
+--- .prev/drivers/md/bitmap.c	2008-01-24 15:53:45.000000000 +1100
++++ ./drivers/md/bitmap.c	2008-01-24 15:54:29.000000000 +1100
+@@ -1047,6 +1047,11 @@ void bitmap_daemon_work(struct bitmap *b
+ 	if (time_before(jiffies, bitmap->daemon_lastrun + bitmap->daemon_sleep*HZ))
+ 		return;
+ 	bitmap->daemon_lastrun = jiffies;
++	if (bitmap->allclean) {
++		bitmap->mddev->thread->timeout = MAX_SCHEDULE_TIMEOUT;
++		return;
++	}
++	bitmap->allclean = 1;
  
+ 	for (j = 0; j < bitmap->chunks; j++) {
+ 		bitmap_counter_t *bmc;
+@@ -1068,8 +1073,10 @@ void bitmap_daemon_work(struct bitmap *b
+ 					clear_page_attr(bitmap, page, BITMAP_PAGE_NEEDWRITE);
  
-+static int flush_pending_writes(conf_t *conf)
-+{
-+	/* Any writes that have been queue but are awaiting
-+	 * bitmap updates get flushed here.
-+	 * We return 1 if any requests were actually submitted.
-+	 */
-+	int rv = 0;
-+
-+	spin_lock_irq(&conf->device_lock);
-+
-+	if (conf->pending_bio_list.head) {
-+		struct bio *bio;
-+		bio = bio_list_get(&conf->pending_bio_list);
-+		blk_remove_plug(conf->mddev->queue);
-+		spin_unlock_irq(&conf->device_lock);
-+		/* flush any pending bitmap writes to
-+		 * disk before proceeding w/ I/O */
-+		bitmap_unplug(conf->mddev->bitmap);
-+
-+		while (bio) { /* submit pending writes */
-+			struct bio *next = bio->bi_next;
-+			bio->bi_next = NULL;
-+			generic_make_request(bio);
-+			bio = next;
-+		}
-+		rv = 1;
-+	} else
-+		spin_unlock_irq(&conf->device_lock);
-+	return rv;
-+}
-+
- /* Barriers....
-  * Sometimes we need to suspend IO while we do something else,
-  * either some resync/recovery, or reconfigure the array.
-@@ -678,10 +709,14 @@ static void freeze_array(conf_t *conf)
- 	spin_lock_irq(&conf->resync_lock);
- 	conf->barrier++;
- 	conf->nr_waiting++;
-+	spin_unlock_irq(&conf->resync_lock);
-+
-+	spin_lock_irq(&conf->resync_lock);
- 	wait_event_lock_irq(conf->wait_barrier,
- 			    conf->barrier+conf->nr_pending == conf->nr_queued+2,
- 			    conf->resync_lock,
--			    raid1_unplug(conf->mddev->queue));
-+			    ({ flush_pending_writes(conf);
-+			       raid1_unplug(conf->mddev->queue); }));
- 	spin_unlock_irq(&conf->resync_lock);
- }
- static void unfreeze_array(conf_t *conf)
-@@ -907,6 +942,9 @@ static int make_request(struct request_q
- 	blk_plug_device(mddev->queue);
- 	spin_unlock_irqrestore(&conf->device_lock, flags);
- 
-+	/* In case raid1d snuck into freeze_array */
-+	wake_up(&conf->wait_barrier);
-+
- 	if (do_sync)
- 		md_wakeup_thread(mddev->thread);
- #if 0
-@@ -1473,28 +1511,14 @@ static void raid1d(mddev_t *mddev)
- 	
- 	for (;;) {
- 		char b[BDEVNAME_SIZE];
--		spin_lock_irqsave(&conf->device_lock, flags);
--
--		if (conf->pending_bio_list.head) {
--			bio = bio_list_get(&conf->pending_bio_list);
--			blk_remove_plug(mddev->queue);
--			spin_unlock_irqrestore(&conf->device_lock, flags);
--			/* flush any pending bitmap writes to disk before proceeding w/ I/O */
--			bitmap_unplug(mddev->bitmap);
--
--			while (bio) { /* submit pending writes */
--				struct bio *next = bio->bi_next;
--				bio->bi_next = NULL;
--				generic_make_request(bio);
--				bio = next;
--			}
--			unplug = 1;
- 
--			continue;
--		}
-+		unplug += flush_pending_writes(conf);
- 
--		if (list_empty(head))
-+		spin_lock_irqsave(&conf->device_lock, flags);
-+		if (list_empty(head)) {
-+			spin_unlock_irqrestore(&conf->device_lock, flags);
- 			break;
-+		}
- 		r1_bio = list_entry(head->prev, r1bio_t, retry_list);
- 		list_del(head->prev);
- 		conf->nr_queued--;
-@@ -1590,7 +1614,7 @@ static void raid1d(mddev_t *mddev)
+ 				spin_unlock_irqrestore(&bitmap->lock, flags);
+-				if (need_write)
++				if (need_write) {
+ 					write_page(bitmap, page, 0);
++					bitmap->allclean = 0;
++				}
+ 				continue;
  			}
+ 
+@@ -1098,6 +1105,9 @@ void bitmap_daemon_work(struct bitmap *b
+ /*
+   if (j < 100) printk("bitmap: j=%lu, *bmc = 0x%x\n", j, *bmc);
+ */
++			if (*bmc)
++				bitmap->allclean = 0;
++
+ 			if (*bmc == 2) {
+ 				*bmc=1; /* maybe clear the bit next time */
+ 				set_page_attr(bitmap, page, BITMAP_PAGE_CLEAN);
+@@ -1132,6 +1142,8 @@ void bitmap_daemon_work(struct bitmap *b
  		}
  	}
--	spin_unlock_irqrestore(&conf->device_lock, flags);
-+
- 	if (unplug)
- 		unplug_slaves(mddev);
+ 
++	if (bitmap->allclean == 0)
++		bitmap->mddev->thread->timeout = bitmap->daemon_sleep * HZ;
  }
+ 
+ static bitmap_counter_t *bitmap_get_counter(struct bitmap *bitmap,
+@@ -1226,6 +1238,7 @@ int bitmap_startwrite(struct bitmap *bit
+ 			sectors -= blocks;
+ 		else sectors = 0;
+ 	}
++	bitmap->allclean = 0;
+ 	return 0;
+ }
+ 
+@@ -1296,6 +1309,7 @@ int bitmap_start_sync(struct bitmap *bit
+ 		}
+ 	}
+ 	spin_unlock_irq(&bitmap->lock);
++	bitmap->allclean = 0;
+ 	return rv;
+ }
+ 
+@@ -1332,6 +1346,7 @@ void bitmap_end_sync(struct bitmap *bitm
+ 	}
+  unlock:
+ 	spin_unlock_irqrestore(&bitmap->lock, flags);
++	bitmap->allclean = 0;
+ }
+ 
+ void bitmap_close_sync(struct bitmap *bitmap)
+@@ -1399,7 +1414,7 @@ static void bitmap_set_memory_bits(struc
+ 		set_page_attr(bitmap, page, BITMAP_PAGE_CLEAN);
+ 	}
+ 	spin_unlock_irq(&bitmap->lock);
+-
++	bitmap->allclean = 0;
+ }
+ 
+ /* dirty the memory and file bits for bitmap chunks "s" to "e" */
+
+diff .prev/include/linux/raid/bitmap.h ./include/linux/raid/bitmap.h
+--- .prev/include/linux/raid/bitmap.h	2008-01-24 15:53:45.000000000 +1100
++++ ./include/linux/raid/bitmap.h	2008-01-24 15:54:29.000000000 +1100
+@@ -235,6 +235,8 @@ struct bitmap {
+ 
+ 	unsigned long flags;
+ 
++	int allclean;
++
+ 	unsigned long max_write_behind; /* write-behind mode */
+ 	atomic_t behind_writes;
+ 
