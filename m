@@ -1,17 +1,21 @@
-From: =?UTF-8?B?SmFybW8gSsOkcnZlbnDDpMOk?= <jarmo.jarvenpaa@softers.net>
-Subject: Re: The SX4 challenge
-Date: Fri, 25 Jan 2008 14:13:05 +0200
-Message-ID: <4799D251.2070005@softers.net>
-References: <478EA794.8080608@garzik.org> <478EA8BA.7080700@rtr.ca>
+From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
+Subject: hdparm patch with min/max transfer rate, and min/avg/max access times
+Date: Fri, 25 Jan 2008 15:17:53 +0100
+Message-ID: <20080125141753.GA10876@rap.rap.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <478EA8BA.7080700@rtr.ca>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Majordomo@vger.kernel.org
-Cc: Linux RAID list <linux-raid@vger.kernel.org>, Dan Williams <dan.j.williams@intel.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-unsubscribe linux-raid
+Hi
 
+I have made some patches to hdparm to report min/max transfer rates,
+and min/avg/max access times. Enjoy!
+
+http://std.dkuug.dk/keld/hdparm-7.7-ks.tar.gz
+
+Best regards
+keld
