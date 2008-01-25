@@ -1,148 +1,136 @@
-From: Samuel Tardieu <sam@rfc1149.net>
-Subject: [PATCH reposted] raid1 load balancing
-Date: Thu, 24 Jan 2008 22:57:20 +0100
-Message-ID: <87sl0mrinz.fsf@willow.rfc1149.net>
+From: Clemens Koller <clemens.koller@anagramm.de>
+Subject: Error mounting a reiserfs on renamed raid1
+Date: Fri, 25 Jan 2008 01:48:32 +0100
+Message-ID: <479931E0.3020909@anagramm.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I have been running Konstantin's patch to add raid1 load balancing
-since last November. I follow Linus' git version of the kernel + this
-patch and haven't noticed any drawback.
+Hi there.
 
-Maybe it would be a good idea to apply it, maybe with a FIXME which
-reminds people that a more elaborate solution could be used. Here is
-patch updated to apply against Linus' HEAD.
+I am new to this list, however didn't find this effect nor a
+solution to my problem in the archives or with google:
 
-Author: Konstantin Sharlaimov <konstantin.sharlaimov@gmail.com>
-Date:   Sat Nov 3 20:08:42 2007 +1000
+short story:
+------------
+A single raid1 as /dev/md0 containing a reiserfs (with important data)
+assembled during boot works just fine:
+$ cat /proc/mdstat
+Personalities : [linear] [raid0] [raid1]
+md0 : active raid1 hdg1[1] hde1[0]
+       293049600 blocks [2/2] [UU]
 
-md: add dm-raid1 read balancing
+The same raid1 moved to another machine as a fourth raid can be
+assembled manually as /dev/md3 (to work around naming conflicts),
+but it cannot be mounted anymore:
+$ mdadm --assemble /dev/md3 --update=super-minor -m0 /dev/hde /dev/hdg
+does not complain. /dev/md3 is created. But
+$ mount /dev/md3 /raidmd3 gives:
 
-This patch adds RAID1 read balancing to device mapper. A read operation
-that is close (in terms of sectors) to a previous read or write goes to
-the same mirror.
-    
-Signed-off-by: Konstantin Sharlaimov <konstantin.sharlaimov@gmail.com>
-Tested-by: Samuel Tardieu <sam@rfc1149.net>
+Jan 24 20:24:10 rio kernel: md: md3 stopped.
+Jan 24 20:24:10 rio kernel: md: bind<hdg>
+Jan 24 20:24:10 rio kernel: md: bind<hde>
+Jan 24 20:24:10 rio kernel: raid1: raid set md3 active with 2 out of 2 mirrors
+Jan 24 20:24:12 rio kernel: ReiserFS: md3: warning: sh-2021: reiserfs_fill_super: can not find reiserfs on md3
 
-diff --git a/drivers/md/dm-raid1.c b/drivers/md/dm-raid1.c
-index 31123d4..a103340 100644
---- a/drivers/md/dm-raid1.c
-+++ b/drivers/md/dm-raid1.c
-@@ -19,6 +19,7 @@
- #include <linux/time.h>
- #include <linux/vmalloc.h>
- #include <linux/workqueue.h>
-+#include <linux/random.h>
- #include <linux/log2.h>
- 
- #define DM_MSG_PREFIX "raid1"
-@@ -27,6 +28,9 @@
- #define DM_RAID1_HANDLE_ERRORS 0x01
- #define errors_handled(p)	((p)->features & DM_RAID1_HANDLE_ERRORS)
- 
-+/* Read balancing max hdd head distance */
-+#define DM_RAID1_BALANCE_MAX_IO_DISTANCE	(256)
-+
- static DECLARE_WAIT_QUEUE_HEAD(_kmirrord_recovery_stopped);
- 
- /*-----------------------------------------------------------------
-@@ -118,6 +122,7 @@ struct mirror {
- 	atomic_t error_count;
- 	struct dm_dev *dev;
- 	sector_t offset;
-+	sector_t last_io_sector;
- };
- 
- struct mirror_set {
-@@ -743,13 +748,51 @@ static void do_recovery(struct mirror_set *ms)
- 	}
- }
- 
-+static void set_mirror_last_io_sector(struct mirror *m, sector_t sector)
-+{
-+	/* FIXME: Probably some more work is needed here, however this is unlikely */
-+	m->last_io_sector = sector;
-+}
-+
- /*-----------------------------------------------------------------
-  * Reads
-  *---------------------------------------------------------------*/
-+/*
-+ * There is a per-array 'last IO operation' sector number maintained by
-+ * read and write handlers for the region. When balancing reads we pick
-+ * the disk whose IO operation (HDD head position) is closest.
-+ */
- static struct mirror *choose_mirror(struct mirror_set *ms, sector_t sector)
- {
--	/* FIXME: add read balancing */
--	return ms->default_mirror;
-+	/* If we got here, then the array is in sync and we can pick any mirror */
-+
-+	unsigned int i;
-+	struct mirror *use_mirror;
-+	sector_t use_distance, new_distance;
-+
-+	use_mirror = &ms->mirror[0];
-+	use_distance = abs(sector - ms->mirror[0].last_io_sector);
-+
-+	for (i = 1; i < ms->nr_mirrors; i++) {
-+		new_distance = abs(sector - ms->mirror[i].last_io_sector);
-+		if (new_distance < use_distance) {
-+			use_distance = new_distance;
-+			use_mirror = &ms->mirror[i];
-+		}
-+	}
-+
-+	/*
-+	 * If the HDD head is too far from the needed sector then we do stochastic
-+	 * balancing - chose the mirror randomly. This appers to have a better
-+	 * chance of chosing an idle disk in case of two or more regions residing
-+	 * on the same physical disk.
-+	 *
-+	 * TODO: Gather more statistical data and verify that the above is correct
-+	 */
-+	if (use_distance > DM_RAID1_BALANCE_MAX_IO_DISTANCE)
-+		return &ms->mirror[random32() % ms->nr_mirrors];
-+	else
-+		return use_mirror;
- }
- 
- /*
-@@ -778,6 +821,9 @@ static void do_reads(struct mirror_set *ms, struct bio_list *reads)
- 		else
- 			m = ms->default_mirror;
- 
-+		/* Set last IO position for chosen mirror */
-+		set_mirror_last_io_sector(m, bio->bi_sector);
-+
- 		map_bio(ms, m, bio);
- 		generic_make_request(bio);
- 	}
-@@ -804,6 +850,21 @@ static void write_callback(unsigned long error, void *context)
- 	bio_set_ms(bio, NULL);
- 
- 	/*
-+	 * Things might be different for various region states:
-+	 * SYNC:	writing is done to all mirrors, reading is balanced
-+	 * RECOVERING:	writing is delayed, reading is done from the default
-+	 * NOSYNC:	writing to default only, reading from the default
-+	 *
-+	 * In any case, if we update last IO sector at all mirrors, we will use
-+	 * the up-to-date data when doing read balancing
-+	 *
-+	 * FIXME: update write position only on the region being written
-+	 */
-+
-+	for (i = 0; i < ms->nr_mirrors; i++)
-+		set_mirror_last_io_sector(&ms->mirror[i], bio->bi_sector);
-+
-+	/*
- 	 * NOTE: We don't decrement the pending count here,
- 	 * instead it is done by the targets endio function.
- 	 * This way we handle both writes to SYNC and NOSYNC
+Adding  -t reiserfs doesn't work either.
+So, the renaming or reassembling doesn't work, even if /dev/md3 is present
+and mdadm --detail /dev/md3 tells that everything is fine?!
 
+
+long story:
+-----------
+There are two machines: an old server and a new server.
+Servers are in production environment, so there are no risky things to do.
+It's all kernel 2.6.23.12 (will try 2.6.23.14 tomorrow) and
+mdadm - v2.6.4 - 19th October 2007
+Distribution is CRUX (everything vanilla, similar to LFS)
+
+Old server was has it's root on /dev/hda and data on /dev/md0 which is
+an Promise PDC20269 dual ATA raid1 configuration consisting of /dev/hde and /dev/hdg.
+Everything is reiserfs and working fine.
+
+This machine should be migrated over to a new server with:
+With VIA dual SATA raid1 configuration, three partitions for the system, swap and data.
+/dev/sd[ab][123] became: /dev/md[012]
+md0 is /
+md1 is swap
+md2 is data.
+everything is ext3!
+
+So I plugged the old PDC20269 with the harddisks to the new machine. During boot,
+md complains about a duplicate md0:
+
+Jan 24 20:21:44 rio kernel: md: Autodetecting RAID arrays.
+Jan 24 20:21:44 rio kernel: md: autorun ...
+Jan 24 20:21:44 rio kernel: md: considering sdb3 ...
+Jan 24 20:21:44 rio kernel: md:  adding sdb3 ...
+Jan 24 20:21:44 rio kernel: md: sdb2 has different UUID to sdb3
+Jan 24 20:21:44 rio kernel: md: sdb1 has different UUID to sdb3
+Jan 24 20:21:45 rio kernel: md:  adding sda3 ...
+Jan 24 20:21:45 rio kernel: md: sda2 has different UUID to sdb3
+Jan 24 20:21:45 rio kernel: md: sda1 has different UUID to sdb3
+Jan 24 20:21:45 rio kernel: md: hdg1 has different UUID to sdb3
+Jan 24 20:21:45 rio kernel: md: hde1 has different UUID to sdb3
+Jan 24 20:21:45 rio kernel: md: created md2
+Jan 24 20:21:45 rio kernel: md: bind<sda3>
+Jan 24 20:21:45 rio kernel: md: bind<sdb3>
+Jan 24 20:21:45 rio kernel: md: running: <sdb3><sda3>
+Jan 24 20:21:46 rio kernel: raid1: raid set md2 active with 2 out of 2 mirrors
+Jan 24 20:21:46 rio kernel: md: considering sdb2 ...
+Jan 24 20:21:46 rio kernel: md:  adding sdb2 ...
+Jan 24 20:21:46 rio kernel: md: sdb1 has different UUID to sdb2
+Jan 24 20:21:46 rio kernel: md:  adding sda2 ...
+Jan 24 20:21:46 rio kernel: md: sda1 has different UUID to sdb2
+Jan 24 20:21:46 rio kernel: md: hdg1 has different UUID to sdb2
+Jan 24 20:21:46 rio kernel: md: hde1 has different UUID to sdb2
+Jan 24 20:21:46 rio kernel: md: created md1
+Jan 24 20:21:46 rio kernel: md: bind<sda2>
+Jan 24 20:21:47 rio kernel: md: bind<sdb2>
+Jan 24 20:21:47 rio kernel: md: running: <sdb2><sda2>
+Jan 24 20:21:47 rio kernel: raid1: raid set md1 active with 2 out of 2 mirrors
+Jan 24 20:21:47 rio kernel: md: considering sdb1 ...
+Jan 24 20:21:47 rio kernel: md:  adding sdb1 ...
+Jan 24 20:21:47 rio kernel: md:  adding sda1 ...
+Jan 24 20:21:47 rio kernel: md: hdg1 has different UUID to sdb1
+Jan 24 20:21:47 rio kernel: md: hde1 has different UUID to sdb1
+Jan 24 20:21:47 rio kernel: md: created md0
+Jan 24 20:21:48 rio kernel: md: bind<sda1>
+Jan 24 20:21:48 rio kernel: md: bind<sdb1>
+Jan 24 20:21:48 rio kernel: md: running: <sdb1><sda1>
+Jan 24 20:21:48 rio kernel: raid1: raid set md0 active with 2 out of 2 mirrors
+Jan 24 20:21:48 rio kernel: md: considering hdg1 ...
+Jan 24 20:21:48 rio kernel: md:  adding hdg1 ...
+Jan 24 20:21:48 rio kernel: md:  adding hde1 ...
+Jan 24 20:21:48 rio kernel: md: md0 already running, cannot run hdg1
+Jan 24 20:21:48 rio kernel: md: export_rdev(hde1)
+Jan 24 20:21:49 rio kernel: md: export_rdev(hdg1)
+Jan 24 20:21:49 rio kernel: md: ... autorun DONE.
+
+short story continues here...
+I use the full hd[eg] disks for the raid1 with only a single
+partition. The partitions are
+$ fdisk -l /dev/hde
+
+Disk /dev/hde: 300.0 GB, 300090728448 bytes
+255 heads, 63 sectors/track, 36483 cylinders
+Units = cylinders of 16065 * 512 = 8225280 bytes
+Disk identifier: 0x1bd3d309
+
+    Device Boot      Start         End      Blocks   Id  System
+/dev/hde1               1       36483   293049666   fd  Linux raid autodetect
+
+When I plug the old hd[eg] raid back to be a single raid1 in the system,
+everything works fine. So nothing was actually broken.
+
+What did I do wrong?
+
+How can I just change md0 to md3 keeping everything else as is?
+
+Thank you,
+
+Clemens
