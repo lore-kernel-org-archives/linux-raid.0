@@ -1,60 +1,67 @@
-From: pg_lxra@lxra.for.sabi.co.UK (Peter Grandi)
+From: Neil Brown <neilb@suse.de>
 Subject: Re: striping of a 4 drive raid10
-Date: Sun, 27 Jan 2008 20:11:35 +0000
-Message-ID: <18332.58743.852744.907807@tree.ty.sabi.co.UK>
+Date: Mon, 28 Jan 2008 07:20:27 +1100
+Message-ID: <18332.59275.701583.679244@notabene.brown>
 References: <20080127193345.GA5426@rap.rap.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20080127193345.GA5426@rap.rap.dk>
+In-Reply-To: message from Keld Jorn Simonsen on Sunday January 27
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>
+To: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
->>> On Sun, 27 Jan 2008 20:33:45 +0100, Keld J=F8rn Simonsen
->>> <keld@dkuug.dk> said:
+On Sunday January 27, keld@dkuug.dk wrote:
+> Hi
+> 
+> I have tried to make a striping raid out of my new 4 x 1 TB
+> SATA-2 disks. I tried raid10,f2 in several ways:
+> 
+> 1: md0 = raid10,f2 of sda1+sdb1, md1= raid10,f2 of sdc1+sdd1, md2 = raid0
+> of md0+md1
+> 
+> 2: md0 = raid0 of sda1+sdb1, md1= raid0 of sdc1+sdd1, md2 = raid01,f2
+> of md0+md1
+> 
+> 3: md0 = raid10,f2 of sda1+sdb1, md1= raid10,f2 of sdc1+sdd1, chunksize of 
+> md0 =md1 =128 KB,  md2 = raid0 of md0+md1 chunksize = 256 KB
+> 
+> 4: md0 = raid0 of sda1+sdb1, md1= raid0 of sdc1+sdd1, chunksize
+> of md0 = md1 = 128 KB, md2 = raid01,f2 of md0+md1 chunksize = 256 KB
+> 
+> 5: md0= raid10,f4 of sda1+sdb1+sdc1+sdd1
 
-keld> Hi I have tried to make a striping raid out of my new 4 x
-keld> 1 TB SATA-2 disks. I tried raid10,f2 in several ways:
+Try
+  6: md0 = raid10,f2 of sda1+sdb1+sdc1+sdd1
 
-keld> 1: md0 =3D raid10,f2 of sda1+sdb1, md1=3D raid10,f2 of sdc1+sdd1,=
- md2 =3D raid0
-keld>    of md0+md1
-keld> 2: md0 =3D raid0 of sda1+sdb1, md1=3D raid0 of sdc1+sdd1, md2 =3D=
- raid01,f2
-keld>    of md0+md1
-keld> 3: md0 =3D raid10,f2 of sda1+sdb1, md1=3D raid10,f2 of sdc1+sdd1,=
- chunksize of=20
-keld>    md0 =3Dmd1 =3D128 KB,  md2 =3D raid0 of md0+md1 chunksize =3D =
-256 KB
-keld> 4: md0 =3D raid0 of sda1+sdb1, md1=3D raid0 of sdc1+sdd1, chunksi=
-ze
-keld>    of md0 =3D md1 =3D 128 KB, md2 =3D raid01,f2 of md0+md1 chunks=
-ize =3D 256 KB
+Also try raid10,o2 with a largeish chunksize (256KB is probably big
+enough).
 
-These stacked RAID levels don't make a lot of sense.
+NeilBrown
 
-keld> 5: md0=3D raid10,f4 of sda1+sdb1+sdc1+sdd1
 
-This also does not make a lot of sense. Why have four mirrors
-instead of two?
-
-Instead, try 'md0 =3D raid10,f2' for example. The first mirror of
-will be striped across the outer half of all four drives, and
-the second mirrors will be rotated in the inner half of each
-drive.
-
-Which of course means that reads will be quite quick, but writes
-and degraded operation will be slower.
-
-Consider this post for more details:
-
-  http://www.spinics.net/lists/raid/msg18130.html
-
-[ ... ]
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> My new disks give a transfer rate of about 80 MB/s, so I expected
+> to have something like 320 MB/s for the whole raid, but I did not get
+> more than about 180 MB/s.
+> 
+> I think it may be something with the layout, that in effect 
+> the drives should be something like:
+> 
+>           sda1             sdb1    sdc1      sdd1
+>            0                1       2         3
+>            4                5       6         7
+> 
+> And this was not really doable for the combination of raids,
+> because thet combinations give different block layouts.
+> 
+> How can it be done? Do we need a new raid type?
+> 
+> Best regards
+> keld
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
