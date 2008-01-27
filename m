@@ -1,50 +1,49 @@
-From: Russell Coker <russell@coker.com.au>
-Subject: Re: write-intent bitmaps
-Date: Mon, 28 Jan 2008 02:12:20 +1100
-Message-ID: <200801280212.25381.russell@coker.com.au>
-References: <200801272134.57690.russell@coker.com.au> <18332.26941.370395.885100@notabene.brown>
-Reply-To: russell@coker.com.au
+From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
+Subject: striping of a 4 drive raid10
+Date: Sun, 27 Jan 2008 20:33:45 +0100
+Message-ID: <20080127193345.GA5426@rap.rap.dk>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="ansi_x3.4-1968"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18332.26941.370395.885100@notabene.brown>
 Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org, pkg-mdadm-devel@lists.alioth.debian.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sunday 27 January 2008 22:21, Neil Brown <neilb@suse.de> wrote:
-> On Sunday January 27, russell@coker.com.au wrote:
-> > http://lists.debian.org/debian-devel/2008/01/msg00921.html
-> >
-> > Are they regarded as a stable feature?  If so I'd like to see
-> > distributions supporting them by default.  I've started a discussion in
-> > Debian on this topic, see the above URL for details.
->
-> Yes, it is regarded as stable.
+Hi
 
-Thanks for that information.
+I have tried to make a striping raid out of my new 4 x 1 TB
+SATA-2 disks. I tried raid10,f2 in several ways:
 
-> However it can be expected to reduce write throughput.  A reduction of
-> several percent would not be surprising, and depending in workload it
-> could probably be much higher.
+1: md0 = raid10,f2 of sda1+sdb1, md1= raid10,f2 of sdc1+sdd1, md2 = raid0
+of md0+md1
 
-It seems to me that losing a few percent of performance all the time is better 
-than a dramatic performance loss for an hour or two when things go wrong.
+2: md0 = raid0 of sda1+sdb1, md1= raid0 of sdc1+sdd1, md2 = raid01,f2
+of md0+md1
 
-> It is quite easy to add or remove a bitmap on an active array, so
-> making it a default would probably be fine providing it was easy for
-> an admin to find out about it and remove the bitmap is they wanted the
-> extra performance.
+3: md0 = raid10,f2 of sda1+sdb1, md1= raid10,f2 of sdc1+sdd1, chunksize of 
+md0 =md1 =128 KB,  md2 = raid0 of md0+md1 chunksize = 256 KB
 
-I hadn't realised that.  So having this in the installer is not as important 
-as I previously thought.
+4: md0 = raid0 of sda1+sdb1, md1= raid0 of sdc1+sdd1, chunksize
+of md0 = md1 = 128 KB, md2 = raid01,f2 of md0+md1 chunksize = 256 KB
 
--- 
-russell@coker.com.au
-http://etbe.coker.com.au/          My Blog
+5: md0= raid10,f4 of sda1+sdb1+sdc1+sdd1
 
-http://www.coker.com.au/sponsorship.html Sponsoring Free Software development
+My new disks give a transfer rate of about 80 MB/s, so I expected
+to have something like 320 MB/s for the whole raid, but I did not get
+more than about 180 MB/s.
+
+I think it may be something with the layout, that in effect 
+the drives should be something like:
+
+          sda1             sdb1    sdc1      sdd1
+           0                1       2         3
+           4                5       6         7
+
+And this was not really doable for the combination of raids,
+because thet combinations give different block layouts.
+
+How can it be done? Do we need a new raid type?
+
+Best regards
+keld
