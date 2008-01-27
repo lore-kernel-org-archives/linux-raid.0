@@ -1,59 +1,76 @@
-From: Andre Noll <maan@systemlinux.org>
-Subject: Re: question about mdadm
-Date: Sat, 26 Jan 2008 18:10:25 +0100
-Message-ID: <20080126171025.GG29126@skl-net.de>
-References: <4cfdde050801252038o3cd7ffddkd425dac6cf82099d@mail.gmail.com> <4cfdde050801252046j57617db3s1619a6f4d3d9e8f0@mail.gmail.com>
+From: Nagilum <nagilum@nagilum.org>
+Subject: safe mode for grow?
+Date: Sun, 27 Jan 2008 11:02:11 +0100
+Message-ID: <20080127110211.yu9dgmhe08kc8ksc@cakebox.homeunix.net>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="L1c6L/cjZjI9d0Eq"
+Content-Type: multipart/signed;
+	boundary="=_4ka5ti2ufd6o";
+	protocol="application/pgp-signature";
+	micalg="pgp-sha1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4cfdde050801252046j57617db3s1619a6f4d3d9e8f0@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Edward Hourigan <ehourigan@gmail.com>
+To: Neil Brown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+This message is in MIME format and has been PGP signed.
 
---L1c6L/cjZjI9d0Eq
-Content-Type: text/plain; charset=us-ascii
+--=_4ka5ti2ufd6o
+Content-Type: text/plain;
+	charset=ISO-8859-2;
+	DelSp="Yes";
+	format="flowed"
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-On 23:46, Edward Hourigan wrote:
+Hi,
 
-> mdadm --add /dev/md0 /dev/sdd
-> mdadm --add /dev/md0 /dev/sde
-> mdadm --grow --raid-devices=3D5
->=20
-> I forgot about the partitions, sdd1 and sde1, I'm wondering if this is
-> going to be a problem, or if sdd and sde will work?
-> It is currently reshaping the array.  Please advise if possible.
-> A response would be much appreciated!
+After having been through a few ups and downs with md and mdadm I =20
+think it would be a good idea if mdadm had a safe mode for growing =20
+raid5.
+Safe mode would entail several things:
+1. It would kick off a resync.
+2. It would write to the spare drive to ensure it is ok. (we have to =20
+wait for the resync anyway)
+3. It would make a backup file mandatory.
+4. It would only allow to grow the raid by one device. (because if =20
+more than one of the new drives go bad, we have a big problem)
 
-mdadm and the linux raid code don't care whether a component device
-of a raid array is a full disk or a partition of a disk. So your
-setup won't cause any problems.
+I know it would probably result in a bit of a deviation of the usual =20
+mdadm behaviour but I think its worth it.
+Kind regards,
+Alex.
 
-However, tools like fdisk which expect a partition table might get
-confused. You also might get some error messages at boot time about
-invalid partition tables. These are usually harmless though.
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+#    _  __          _ __     http://www.nagilum.org/ \n icq://69646724 #
+#   / |/ /__ ____ _(_) /_ ____ _  nagilum@nagilum.org \n +491776461165 #
+#  /    / _ `/ _ `/ / / // /  ' \  Amiga (68k/PPC): AOS/NetBSD/Linux   #
+# /_/|_/\_,_/\_, /_/_/\_,_/_/_/_/   Mac (PPC): MacOS-X / NetBSD /Linux #
+#           /___/     x86: FreeBSD/Linux/Solaris/Win2k  ARM9: EPOC EV6 #
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
 
-Andre
---=20
-The only person who always got his work done by Friday was Robinson Crusoe
 
---L1c6L/cjZjI9d0Eq
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
+----------------------------------------------------------------
+cakebox.homeunix.net - all the machine one needs..
+
+
+--=_4ka5ti2ufd6o
+Content-Type: application/pgp-signature
+Content-Description: PGP Digital Signature
 Content-Disposition: inline
+Content-Transfer-Encoding: 7bit
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
+Version: GnuPG v1.4.8 (FreeBSD)
 
-iD8DBQFHm2mBWto1QDEAkw8RArIWAJ9ZvYS/+ywd3YANY2askTgluRiV0QCggZCb
-ObXcc4+5VllBpPD3bMf0RlY=
-=2DAq
+iEYEABECAAYFAkecVqEACgkQAKWN2UY+sLyTkwCgppGkBK7z55i3HBvHPQcRdY9h
+7CcAn2NqZOQfZ4fjnFRCfs0kGGYAf4Xh
+=KTix
 -----END PGP SIGNATURE-----
 
---L1c6L/cjZjI9d0Eq--
+--=_4ka5ti2ufd6o--
