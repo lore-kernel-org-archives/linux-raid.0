@@ -1,89 +1,69 @@
-From: Moshe Yudkowsky <moshe@pobox.com>
-Subject: Unable to eradicate previous version of device information, even
- with zero-superblock and dd
-Date: Mon, 28 Jan 2008 09:05:24 -0600
-Message-ID: <479DEF34.70306@pobox.com>
+From: Jan Engelhardt <jengelh@computergmbh.de>
+Subject: [PATCH] Use new sb type
+Date: Mon, 28 Jan 2008 18:22:59 +0100 (CET)
+Message-ID: <Pine.LNX.4.64.0801281818430.1185@fbirervta.pbzchgretzou.qr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I've been trying to bring up a RAID10 device, and I'm having some 
-difficulty with automatically-created device names.
 
-mdadm version 2.5.6, Debian Etch.
+This makes 1.0 the default sb type for new arrays.
 
-With metadata=1.2 in my config file,
+Signed-off-by: Jan Engelhardt <jengelh@computergmbh.de>
 
-mdadm --create /dev/md/all --auto=p7 -n 4 --level=10 /dev/sd*2
+---
+ Create.c |    6 ------
+ super0.c |    4 +---
+ super1.c |    2 +-
+ 3 files changed, 2 insertions(+), 10 deletions(-)
 
-This does seem to create a RAID array. I see that my /dev/md/ directory 
-is populated with all1 through all7.
+Index: mdadm-2.6.4/Create.c
+===================================================================
+--- mdadm-2.6.4.orig/Create.c
++++ mdadm-2.6.4/Create.c
+@@ -241,12 +241,6 @@ int Create(struct supertype *st, char *m
+ 				fprintf(stderr, Name ": internal error - no default metadata style\n");
+ 				exit(2);
+ 			}
+-			if (st->ss->major != 0 ||
+-			    st->minor_version != 90)
+-				fprintf(stderr, Name ": Defaulting to version"
+-					" %d.%d metadata\n",
+-					st->ss->major,
+-					st->minor_version);
+ 		}
+ 		freesize = st->ss->avail_size(st, ldsize >> 9);
+ 		if (freesize == 0) {
+Index: mdadm-2.6.4/super0.c
+===================================================================
+--- mdadm-2.6.4.orig/super0.c
++++ mdadm-2.6.4/super0.c
+@@ -820,9 +820,7 @@ static struct supertype *match_metadata_
+ 	st->minor_version = 90;
+ 	st->max_devs = MD_SB_DISKS;
+ 	if (strcmp(arg, "0") == 0 ||
+-	    strcmp(arg, "0.90") == 0 ||
+-	    strcmp(arg, "default") == 0
+-		)
++	    strcmp(arg, "0.90") == 0)
+ 		return st;
+ 
+ 	st->minor_version = 9; /* flag for 'byte-swapped' */
+Index: mdadm-2.6.4/super1.c
+===================================================================
+--- mdadm-2.6.4.orig/super1.c
++++ mdadm-2.6.4/super1.c
+@@ -1143,7 +1143,7 @@ static struct supertype *match_metadata_
+ 
+ 	st->ss = &super1;
+ 	st->max_devs = 384;
+-	if (strcmp(arg, "1.0") == 0) {
++	if (strcmp(arg, "1.0") == 0 || strcmp(arg, "default") == 0) {
+ 		st->minor_version = 0;
+ 		return st;
+ 	}
 
-On reboot, however, I notice that there's a suddenly a /dev/md127 
-device. Confused, I attempted to start over many times, but I can't seem 
-to create a non-"all" array and I can't seem to create a simple 
-/dev/md/0 array.
-
-Steps:
-
-To eradicate all prior traces of md configuration, I issue these commands:
-
-mdadm --stop /dev/md/all
-
-which stops.
-
-mdadm --zero-superblock  /dev/sd[each drive]2
-
-
-I went further (after some trouble) and issued
-
-dd if=/dev/zero of=/dev/sd[each drive]2 count=2M
-
-I then issue:
-
-rm /dev/md* /dev/md/*
-
-The ARRAY information is commented out of the config file (mdadm.conf).
-
-On reboot, I see that the devices /dev/md/all, /dev/md/all1, etc. have 
-reappeared, along /dev/md127, /dev/md_127, and /dev/md_d127.
-
-This is very, very puzzling.
-
-Well, I thought I could work around this. I issued
-
-mdadm --create /dev/md/all
-
-with the same paramters as above. I can use cfdisk and fdisk (either 
-one) to create two partitions, /dev/md/all1 and /dev/md/all2.
-
-However,
-
-mkfs.reiserfs /dev/md/all1
-
-claims that the /dev/md/all1 has "no such device or address."
-
-ls -l /dev/md/all gives
-
-brw-rw---- 1 root disk 254, 8129 (date) /dev/md/all1
-
-QUESTIONS:
-
-1. If I create a device called /dev/md/all, should I expect that mdadm 
-will create a device called /dev/md/127, and that mdadm --detail --scan 
-will report it as /dev/md127 or something similar?
-
-2. How can I completely eradicate all traces of previous work, given 
-that zero-superblock and dd on the drives that make up the array doesn't 
-seem to erase previous information?
-
-
-
--- 
-Moshe Yudkowsky * moshe@pobox.com * www.pobox.com/~moshe
-  "If you're going to shoot, shoot! Don't talk!"
-    		   -- Eli Wallach,"The Good, the Bad, and the Ugly"
