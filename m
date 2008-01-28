@@ -1,33 +1,89 @@
-From: Peter Rabbitson <rabbit+list@rabbit.us>
-Subject: Re: BUG: possible array corruption when adding a component to a degraded
- raid5 (possibly other levels too)
-Date: Mon, 28 Jan 2008 12:54:23 +0100
-Message-ID: <479DC26F.1030008@rabbit.us>
-References: <479DA8E6.6040209@rabbit.us> <18333.48601.218262.452373@notabene.brown>
+From: Moshe Yudkowsky <moshe@pobox.com>
+Subject: Unable to eradicate previous version of device information, even
+ with zero-superblock and dd
+Date: Mon, 28 Jan 2008 09:05:24 -0600
+Message-ID: <479DEF34.70306@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18333.48601.218262.452373@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil Brown wrote:
-> On Monday January 28, rabbit+list@rabbit.us wrote:
->> Hello,
->>
->> It seems that mdadm/md do not perform proper sanity checks before adding a 
->> component to a degraded array. If the size of the new component is just right, 
->> the superblock information will overlap with the data area. This will happen 
->> without any error indications in the syslog or otherwise.
-> 
-> I thought I fixed that.... What versions of Linux kernel and mdadm are
-> you using for your tests?
-> 
+I've been trying to bring up a RAID10 device, and I'm having some 
+difficulty with automatically-created device names.
 
-Linux is 2.6.23.14 with everything md related compiled in (no modules)
-mdadm - v2.6.4 - 19th October 2007 (latest in debian/sid)
+mdadm version 2.5.6, Debian Etch.
 
-Peter
+With metadata=1.2 in my config file,
+
+mdadm --create /dev/md/all --auto=p7 -n 4 --level=10 /dev/sd*2
+
+This does seem to create a RAID array. I see that my /dev/md/ directory 
+is populated with all1 through all7.
+
+On reboot, however, I notice that there's a suddenly a /dev/md127 
+device. Confused, I attempted to start over many times, but I can't seem 
+to create a non-"all" array and I can't seem to create a simple 
+/dev/md/0 array.
+
+Steps:
+
+To eradicate all prior traces of md configuration, I issue these commands:
+
+mdadm --stop /dev/md/all
+
+which stops.
+
+mdadm --zero-superblock  /dev/sd[each drive]2
+
+
+I went further (after some trouble) and issued
+
+dd if=/dev/zero of=/dev/sd[each drive]2 count=2M
+
+I then issue:
+
+rm /dev/md* /dev/md/*
+
+The ARRAY information is commented out of the config file (mdadm.conf).
+
+On reboot, I see that the devices /dev/md/all, /dev/md/all1, etc. have 
+reappeared, along /dev/md127, /dev/md_127, and /dev/md_d127.
+
+This is very, very puzzling.
+
+Well, I thought I could work around this. I issued
+
+mdadm --create /dev/md/all
+
+with the same paramters as above. I can use cfdisk and fdisk (either 
+one) to create two partitions, /dev/md/all1 and /dev/md/all2.
+
+However,
+
+mkfs.reiserfs /dev/md/all1
+
+claims that the /dev/md/all1 has "no such device or address."
+
+ls -l /dev/md/all gives
+
+brw-rw---- 1 root disk 254, 8129 (date) /dev/md/all1
+
+QUESTIONS:
+
+1. If I create a device called /dev/md/all, should I expect that mdadm 
+will create a device called /dev/md/127, and that mdadm --detail --scan 
+will report it as /dev/md127 or something similar?
+
+2. How can I completely eradicate all traces of previous work, given 
+that zero-superblock and dd on the drives that make up the array doesn't 
+seem to erase previous information?
+
+
+
+-- 
+Moshe Yudkowsky * moshe@pobox.com * www.pobox.com/~moshe
+  "If you're going to shoot, shoot! Don't talk!"
+    		   -- Eli Wallach,"The Good, the Bad, and the Ugly"
