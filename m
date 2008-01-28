@@ -1,69 +1,73 @@
-From: Jan Engelhardt <jengelh@computergmbh.de>
-Subject: [PATCH] Use new sb type
-Date: Mon, 28 Jan 2008 18:22:59 +0100 (CET)
-Message-ID: <Pine.LNX.4.64.0801281818430.1185@fbirervta.pbzchgretzou.qr>
+From: Tim Southerwood <ts@dionic.net>
+Subject: Re: 2.6.24-rc6 reproducible raid5 hang
+Date: Mon, 28 Jan 2008 17:29:42 +0000
+Message-ID: <479E1106.5000106@dionic.net>
+References: <4797430E.2020603@dionic.net> <18327.31959.286239.480961@fisica.ufpr.br> <4798F577.20007@dionic.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4798F577.20007@dionic.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Subtitle: Patch to mainline yet?
 
-This makes 1.0 the default sb type for new arrays.
+Hi
 
-Signed-off-by: Jan Engelhardt <jengelh@computergmbh.de>
+I don't see evidence of Neil's patch in 2.6.24, so I applied it by hand
+on my server.
 
----
- Create.c |    6 ------
- super0.c |    4 +---
- super1.c |    2 +-
- 3 files changed, 2 insertions(+), 10 deletions(-)
+Was that the correct thing to do, or did this issue get fixed in a 
+different way that I wouldn't have spotted? I had a look at the git logs 
+but it was not obvious - please pardon my ignorance, I'm not familiar 
+enough with the code.
 
-Index: mdadm-2.6.4/Create.c
-===================================================================
---- mdadm-2.6.4.orig/Create.c
-+++ mdadm-2.6.4/Create.c
-@@ -241,12 +241,6 @@ int Create(struct supertype *st, char *m
- 				fprintf(stderr, Name ": internal error - no default metadata style\n");
- 				exit(2);
- 			}
--			if (st->ss->major != 0 ||
--			    st->minor_version != 90)
--				fprintf(stderr, Name ": Defaulting to version"
--					" %d.%d metadata\n",
--					st->ss->major,
--					st->minor_version);
- 		}
- 		freesize = st->ss->avail_size(st, ldsize >> 9);
- 		if (freesize == 0) {
-Index: mdadm-2.6.4/super0.c
-===================================================================
---- mdadm-2.6.4.orig/super0.c
-+++ mdadm-2.6.4/super0.c
-@@ -820,9 +820,7 @@ static struct supertype *match_metadata_
- 	st->minor_version = 90;
- 	st->max_devs = MD_SB_DISKS;
- 	if (strcmp(arg, "0") == 0 ||
--	    strcmp(arg, "0.90") == 0 ||
--	    strcmp(arg, "default") == 0
--		)
-+	    strcmp(arg, "0.90") == 0)
- 		return st;
- 
- 	st->minor_version = 9; /* flag for 'byte-swapped' */
-Index: mdadm-2.6.4/super1.c
-===================================================================
---- mdadm-2.6.4.orig/super1.c
-+++ mdadm-2.6.4/super1.c
-@@ -1143,7 +1143,7 @@ static struct supertype *match_metadata_
- 
- 	st->ss = &super1;
- 	st->max_devs = 384;
--	if (strcmp(arg, "1.0") == 0) {
-+	if (strcmp(arg, "1.0") == 0 || strcmp(arg, "default") == 0) {
- 		st->minor_version = 0;
- 		return st;
- 	}
+Many thanks,
+
+Tim
+
+Tim Southerwood wrote:
+> Carlos Carvalho wrote:
+>> Tim Southerwood (ts@dionic.net) wrote on 23 January 2008 13:37:
+>>  >Sorry if this breaks threaded mail readers, I only just subscribed 
+>> to  >the list so don;t have the original post to reply to.
+>>  >
+>>  >I believe I'm having the same problem.
+>>  >
+>>  >Regarding XFS on a raid5 md array:
+>>  >
+>>  >Kernels 2.6.22-14 (Ubuntu Gutsy generic and server builds) *and* 
+>>  >2.6.24-rc8 (pure build from virgin sources) compiled for amd64 arch.
+>>
+>> This has been corrected already, install Neil's patches. It worked for
+>> several people under high stress, including us.
+>> -
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> Hi
+> 
+> I just coerced the patch into 2.6.23.14, reset 
+> /sys/block/md1/md/stripe_cache_size to default (256) and rebooted.
+> 
+> I can confirm that after 2 hours of heavy bashing[1] the system has not 
+> hung. Looks good - many thanks. But I will run with a stripe_cache_size 
+> of 4096 in practise as it improves write speen on my configuration about 
+> 2.5 times.
+> 
+> Cheers
+> 
+> Tim
+> 
+> 
+> 
+> [1] Rsync > 50GB to raid pluf xfs_fsr + dd 11GB of /dev/zero to same 
+> filesystem.
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
