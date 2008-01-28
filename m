@@ -1,25 +1,19 @@
 From: Dragos <dragos@mpigani.org>
 Subject: Re: assemble vs create an array.......
-Date: Mon, 28 Jan 2008 02:21:03 -0500
-Message-ID: <479D825F.5060305@mpigani.org>
+Date: Mon, 28 Jan 2008 02:25:42 -0500
+Message-ID: <479D8376.5010805@mpigani.org>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
- boundary="------------050705000404000303010802"
-Return-path: <xfs-bounce@oss.sgi.com>
-Sender: xfs-bounce@oss.sgi.com
-Errors-to: xfs-bounce@oss.sgi.com
-To: linux-raid@vger.kernel.org, xfs@oss.sgi.com
-Cc: David Greaves <david@dgreaves.com>, mjt@tls.msk.ru, sandeen@sandeen.net, dgc@sgi.com
+ boundary="------------080207000406030001020103"
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 This is a multi-part message in MIME format.
---------------050705000404000303010802
-Content-Type: multipart/alternative;
- boundary="------------040600020304090402010209"
-
---------------040600020304090402010209
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+--------------080207000406030001020103
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 8bit
 
 Hello,
 Have a Happy New and Prosperous Year.
@@ -28,7 +22,7 @@ First of all, thank you again for all your previous answers.
 
 The last message I received regarding my issue was on 12.06 so I should 
 refresh your memories. I passed a --create option instead of --assemble 
-on top of an existing  raid 5 array formatted with xfs.
+on top of an existing raid 5 array formatted with xfs.
 
 I followed your advice and here is a table of my results so far. I also 
 attached the results of the first combination (w/ -c128 option). A quick 
@@ -48,13 +42,13 @@ Dragos
 mdadm --create /dev/md0 --raid-devices=3 --level=5 /dev/sda1 /dev/sdb1 
 missing
 
---------- without and with --chunk=128
+--------- without and with –chunk=128
 
 mount /dev/md0 t
 
 xfs_repair -n /dev/md0 2> xfs_repair-abm.txt
 
-mdadm --stop /dev/md0
+mdadm –stop /dev/md0
 
 *combination*
 
@@ -271,362 +265,7 @@ No modify flag set, skipping phase 5
 No modify flag set, skipping phase 5
 
 
---------------040600020304090402010209
-Content-Type: text/html; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<html>
-<head>
-</head>
-<body bgcolor="#ffffff" text="#000000">
-Hello,<br>
-Have a Happy New and Prosperous Year.<br>
-<br>
-First of all, thank you again for all your previous answers.<br>
-<br>
-The last message I received regarding my issue was on 12.06 so I should
-refresh your memories. I passed a --create option instead of --assemble
-on top of an existing&nbsp; raid 5 array formatted with xfs.<br>
-<br>
-I followed your advice and here is a table of my results so far. I also
-attached the results of the first combination (w/ -c128 option). A
-quick diff on the 3 combinations with the least number of errors (abm,
-amc, mbc) showed few differences. Do you need to see the other reports?<br>
-<br>
-At this point it seems that doing a xfs_repair on the first combination
-would be ok. What do you think? Are there any options I should pass to
-xfs_repair to increase my chances?<br>
-<br>
-I hope you can continue to enlighten me with your knowledge and
-experience.<br>
-<br>
-Thank you in advance for your time and help,<br>
-Dragos<br>
-<br>
-<br>
-<table border="1" bordercolor="#000000" cellpadding="5" cellspacing="0"
- width="100%">
-  <col width="40*"> <col width="90*"> <col width="126*"> <tbody>
-    <tr>
-      <td colspan="3" valign="top" width="100%">
-      <p>mdadm --create /dev/md0 --raid-devices=3 --level=5 /dev/sda1
-/dev/sdb1 missing</p>
-      <p>--------- without and with &#8211;chunk=128</p>
-      <p>mount /dev/md0 t</p>
-      <p>xfs_repair -n /dev/md0 2&gt; xfs_repair-abm.txt </p>
-      <p>mdadm &#8211;stop /dev/md0</p>
-      </td>
-    </tr>
-    <tr valign="top">
-      <td width="16%">
-      <p><b>combination</b></p>
-      </td>
-      <td width="35%">
-      <p><b>mount response</b></p>
-      </td>
-      <td width="49%">
-      <p><b>xfs_repair: </b><b>size of report file &amp; tty output
-w/o &amp; w/ -c128</b></p>
-      </td>
-    </tr>
-    <tr valign="top">
-      <td width="16%">
-      <p><span
- style="background: rgb(255, 255, 0) none repeat scroll 0%; -moz-background-clip: -moz-initial; -moz-background-origin: -moz-initial; -moz-background-inline-policy: -moz-initial;">a
-b m</span></p>
-      </td>
-      <td width="35%">
-      <p><span
- style="background: rgb(255, 255, 0) none repeat scroll 0%; -moz-background-clip: -moz-initial; -moz-background-origin: -moz-initial; -moz-background-inline-policy: -moz-initial;">structure
-needs cleaning</span></p>
-      </td>
-      <td width="49%">
-      <p><span
- style="background: rgb(255, 255, 0) none repeat scroll 0%; -moz-background-clip: -moz-initial; -moz-background-origin: -moz-initial; -moz-background-inline-policy: -moz-initial;">7.9Mb<br>
-      </span></p>
-      <p><span
- style="background: rgb(255, 255, 0) none repeat scroll 0%; -moz-background-clip: -moz-initial; -moz-background-origin: -moz-initial; -moz-background-inline-policy: -moz-initial;">No
-modify flag set, skipping phase 5 </span> </p>
-      <p><span
- style="background: rgb(255, 255, 0) none repeat scroll 0%; -moz-background-clip: -moz-initial; -moz-background-origin: -moz-initial; -moz-background-inline-policy: -moz-initial;">56.2kb</span></p>
-      <p><span
- style="background: rgb(255, 255, 0) none repeat scroll 0%; -moz-background-clip: -moz-initial; -moz-background-origin: -moz-initial; -moz-background-inline-policy: -moz-initial;">No
-modify flag set, skipping phase 5</span></p>
-      </td>
-    </tr>
-    <tr valign="top">
-      <td width="16%">
-      <p><span
- style="background: rgb(255, 255, 0) none repeat scroll 0%; -moz-background-clip: -moz-initial; -moz-background-origin: -moz-initial; -moz-background-inline-policy: -moz-initial;">a
-m b</span></p>
-      </td>
-      <td width="35%">
-      <p><span
- style="background: rgb(255, 255, 0) none repeat scroll 0%; -moz-background-clip: -moz-initial; -moz-background-origin: -moz-initial; -moz-background-inline-policy: -moz-initial;">structure
-needs cleaning</span></p>
-      </td>
-      <td width="49%">
-      <p><span
- style="background: rgb(255, 255, 0) none repeat scroll 0%; -moz-background-clip: -moz-initial; -moz-background-origin: -moz-initial; -moz-background-inline-policy: -moz-initial;">4.9Mb<br>
-      </span></p>
-      <p><span
- style="background: rgb(255, 255, 0) none repeat scroll 0%; -moz-background-clip: -moz-initial; -moz-background-origin: -moz-initial; -moz-background-inline-policy: -moz-initial;">No
-modify flag set, skipping phase 5 </span> </p>
-      <p><span
- style="background: rgb(255, 255, 0) none repeat scroll 0%; -moz-background-clip: -moz-initial; -moz-background-origin: -moz-initial; -moz-background-inline-policy: -moz-initial;">1.9Gb</span></p>
-      <p><span
- style="background: rgb(255, 255, 0) none repeat scroll 0%; -moz-background-clip: -moz-initial; -moz-background-origin: -moz-initial; -moz-background-inline-policy: -moz-initial;">No
-modify flag set, skipping phase 5</span></p>
-      </td>
-    </tr>
-    <tr valign="top">
-      <td width="16%">
-      <p>m a b</p>
-      </td>
-      <td width="35%">
-      <p>you must specify the filesystem type</p>
-      </td>
-      <td width="49%">
-      <p><br>
-      </p>
-      </td>
-    </tr>
-    <tr valign="top">
-      <td width="16%">
-      <p><span
- style="background: rgb(255, 255, 0) none repeat scroll 0%; -moz-background-clip: -moz-initial; -moz-background-origin: -moz-initial; -moz-background-inline-policy: -moz-initial;">a
-c m</span></p>
-      </td>
-      <td width="35%">
-      <p><span
- style="background: rgb(255, 255, 0) none repeat scroll 0%; -moz-background-clip: -moz-initial; -moz-background-origin: -moz-initial; -moz-background-inline-policy: -moz-initial;">structure
-needs cleaning</span></p>
-      </td>
-      <td width="49%">
-      <p><span
- style="background: rgb(255, 255, 0) none repeat scroll 0%; -moz-background-clip: -moz-initial; -moz-background-origin: -moz-initial; -moz-background-inline-policy: -moz-initial;">4.9Mb</span></p>
-      <p><span
- style="background: rgb(255, 255, 0) none repeat scroll 0%; -moz-background-clip: -moz-initial; -moz-background-origin: -moz-initial; -moz-background-inline-policy: -moz-initial;">nothing</span></p>
-      <p><span
- style="background: rgb(255, 255, 0) none repeat scroll 0%; -moz-background-clip: -moz-initial; -moz-background-origin: -moz-initial; -moz-background-inline-policy: -moz-initial;">1.9Gb</span></p>
-      <p><span
- style="background: rgb(255, 255, 0) none repeat scroll 0%; -moz-background-clip: -moz-initial; -moz-background-origin: -moz-initial; -moz-background-inline-policy: -moz-initial;">No
-modify flag set, skipping phase 5</span></p>
-      </td>
-    </tr>
-    <tr valign="top">
-      <td width="16%">
-      <p><span
- style="background: rgb(255, 255, 0) none repeat scroll 0%; -moz-background-clip: -moz-initial; -moz-background-origin: -moz-initial; -moz-background-inline-policy: -moz-initial;">a
-m c</span></p>
-      </td>
-      <td width="35%">
-      <p><span
- style="background: rgb(255, 255, 0) none repeat scroll 0%; -moz-background-clip: -moz-initial; -moz-background-origin: -moz-initial; -moz-background-inline-policy: -moz-initial;">structure
-needs cleaning</span></p>
-      </td>
-      <td width="49%">
-      <p><span
- style="background: rgb(255, 255, 0) none repeat scroll 0%; -moz-background-clip: -moz-initial; -moz-background-origin: -moz-initial; -moz-background-inline-policy: -moz-initial;">7.9Mb</span></p>
-      <p><span
- style="background: rgb(255, 255, 0) none repeat scroll 0%; -moz-background-clip: -moz-initial; -moz-background-origin: -moz-initial; -moz-background-inline-policy: -moz-initial;">No
-modify flag set, skipping phase 5 </span> </p>
-      <p><span
- style="background: rgb(255, 255, 0) none repeat scroll 0%; -moz-background-clip: -moz-initial; -moz-background-origin: -moz-initial; -moz-background-inline-policy: -moz-initial;">56.2kb</span></p>
-      <p><span
- style="background: rgb(255, 255, 0) none repeat scroll 0%; -moz-background-clip: -moz-initial; -moz-background-origin: -moz-initial; -moz-background-inline-policy: -moz-initial;">No
-modify flag set, skipping phase 5</span></p>
-      </td>
-    </tr>
-    <tr valign="top">
-      <td width="16%">
-      <p>m a c</p>
-      </td>
-      <td width="35%">
-      <p>you must specify the filesystem type</p>
-      </td>
-      <td width="49%">
-      <p><br>
-      </p>
-      </td>
-    </tr>
-    <tr valign="top">
-      <td width="16%">
-      <p>b c m</p>
-      </td>
-      <td width="35%">
-      <p>you must specify the filesystem type</p>
-      </td>
-      <td width="49%">
-      <p><br>
-      </p>
-      </td>
-    </tr>
-    <tr valign="top">
-      <td width="16%">
-      <p>b m c</p>
-      </td>
-      <td width="35%">
-      <p>you must specify the filesystem type</p>
-      </td>
-      <td width="49%">
-      <p><br>
-      </p>
-      </td>
-    </tr>
-    <tr valign="top">
-      <td width="16%">
-      <p><span
- style="background: rgb(255, 255, 0) none repeat scroll 0%; -moz-background-clip: -moz-initial; -moz-background-origin: -moz-initial; -moz-background-inline-policy: -moz-initial;">m
-b c</span></p>
-      </td>
-      <td width="35%">
-      <p><span
- style="background: rgb(255, 255, 0) none repeat scroll 0%; -moz-background-clip: -moz-initial; -moz-background-origin: -moz-initial; -moz-background-inline-policy: -moz-initial;">structure
-needs cleaning</span></p>
-      </td>
-      <td width="49%">
-      <p><span
- style="background: rgb(255, 255, 0) none repeat scroll 0%; -moz-background-clip: -moz-initial; -moz-background-origin: -moz-initial; -moz-background-inline-policy: -moz-initial;">7.9Mb</span></p>
-      <p><span
- style="background: rgb(255, 255, 0) none repeat scroll 0%; -moz-background-clip: -moz-initial; -moz-background-origin: -moz-initial; -moz-background-inline-policy: -moz-initial;">No
-modify flag set, skipping phase 5</span></p>
-      <p><span
- style="background: rgb(255, 255, 0) none repeat scroll 0%; -moz-background-clip: -moz-initial; -moz-background-origin: -moz-initial; -moz-background-inline-policy: -moz-initial;">56.2kb</span></p>
-      <p><span
- style="background: rgb(255, 255, 0) none repeat scroll 0%; -moz-background-clip: -moz-initial; -moz-background-origin: -moz-initial; -moz-background-inline-policy: -moz-initial;">No
-modify flag set, skipping phase 5</span></p>
-      </td>
-    </tr>
-    <tr valign="top">
-      <td width="16%">
-      <p>b a m</p>
-      </td>
-      <td width="35%">
-      <p>you must specify the filesystem type</p>
-      </td>
-      <td width="49%">
-      <p><br>
-      </p>
-      </td>
-    </tr>
-    <tr valign="top">
-      <td width="16%">
-      <p>b m a</p>
-      </td>
-      <td width="35%">
-      <p>you must specify the filesystem type</p>
-      </td>
-      <td width="49%">
-      <p><br>
-      </p>
-      </td>
-    </tr>
-    <tr valign="top">
-      <td width="16%">
-      <p>m b a</p>
-      </td>
-      <td width="35%">
-      <p>you must specify the filesystem type</p>
-      </td>
-      <td width="49%">
-      <p><br>
-      </p>
-      </td>
-    </tr>
-    <tr valign="top">
-      <td width="16%">
-      <p>c a m</p>
-      </td>
-      <td width="35%">
-      <p>you must specify the filesystem type</p>
-      </td>
-      <td width="49%">
-      <p><br>
-      </p>
-      </td>
-    </tr>
-    <tr valign="top">
-      <td width="16%">
-      <p>c m a</p>
-      </td>
-      <td width="35%">
-      <p>you must specify the filesystem type</p>
-      </td>
-      <td width="49%">
-      <p><br>
-      </p>
-      </td>
-    </tr>
-    <tr valign="top">
-      <td width="16%">
-      <p>m c a</p>
-      </td>
-      <td width="35%">
-      <p>you must specify the filesystem type</p>
-      </td>
-      <td width="49%">
-      <p><br>
-      </p>
-      </td>
-    </tr>
-    <tr valign="top">
-      <td width="16%">
-      <p>c b m</p>
-      </td>
-      <td width="35%">
-      <p>you must specify the filesystem type</p>
-      </td>
-      <td width="49%">
-      <p><br>
-      </p>
-      </td>
-    </tr>
-    <tr valign="top">
-      <td width="16%">
-      <p>c m b</p>
-      </td>
-      <td width="35%">
-      <p>you must specify the filesystem type</p>
-      </td>
-      <td width="49%">
-      <p><br>
-      </p>
-      </td>
-    </tr>
-    <tr valign="top">
-      <td width="16%">
-      <p><span
- style="background: rgb(255, 255, 0) none repeat scroll 0%; -moz-background-clip: -moz-initial; -moz-background-origin: -moz-initial; -moz-background-inline-policy: -moz-initial;">m
-c b</span></p>
-      </td>
-      <td width="35%">
-      <p><span
- style="background: rgb(255, 255, 0) none repeat scroll 0%; -moz-background-clip: -moz-initial; -moz-background-origin: -moz-initial; -moz-background-inline-policy: -moz-initial;">structure
-needs cleaning</span></p>
-      </td>
-      <td width="49%">
-      <p><span
- style="background: rgb(255, 255, 0) none repeat scroll 0%; -moz-background-clip: -moz-initial; -moz-background-origin: -moz-initial; -moz-background-inline-policy: -moz-initial;">4.9Mb</span></p>
-      <p><span
- style="background: rgb(255, 255, 0) none repeat scroll 0%; -moz-background-clip: -moz-initial; -moz-background-origin: -moz-initial; -moz-background-inline-policy: -moz-initial;">No
-modify flag set, skipping phase 5</span></p>
-      <p><span
- style="background: rgb(255, 255, 0) none repeat scroll 0%; -moz-background-clip: -moz-initial; -moz-background-origin: -moz-initial; -moz-background-inline-policy: -moz-initial;">1.9Gb</span></p>
-      <p><span
- style="background: rgb(255, 255, 0) none repeat scroll 0%; -moz-background-clip: -moz-initial; -moz-background-origin: -moz-initial; -moz-background-inline-policy: -moz-initial;">No
-modify flag set, skipping phase 5</span></p>
-      </td>
-    </tr>
-  </tbody>
-</table>
-</body>
-</html>
-
---------------040600020304090402010209--
-
---------------050705000404000303010802
+--------------080207000406030001020103
 Content-Type: text/plain;
  name="xfs_repair-abm-128.txt"
 Content-Transfer-Encoding: 7bit
@@ -1716,4 +1355,5 @@ would have reset inode 939525160 nlinks from 3 to 2
         - 16:12:25: verify link counts - 88768 of 88832 inodes done
 No modify flag set, skipping filesystem flush and exiting.
 
---------------050705000404000303010802--
+
+--------------080207000406030001020103--
