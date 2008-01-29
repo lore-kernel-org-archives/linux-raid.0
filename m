@@ -1,55 +1,66 @@
-From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
+From: Michael Tokarev <mjt@tls.msk.ru>
 Subject: Re: In this partition scheme, grub does not find md information?
-Date: Tue, 29 Jan 2008 15:48:40 +0100
-Message-ID: <20080129144840.GA4621@rap.rap.dk>
-References: <479EAF42.6010604@pobox.com> <18334.46306.611615.493031@notabene.brown> <479F07E1.7060408@pobox.com> <479F0AAB.3090702@rabbit.us> <479F331F.7080902@msgid.tls.msk.ru>
+Date: Tue, 29 Jan 2008 18:13:41 +0300
+Message-ID: <479F42A5.8040007@msgid.tls.msk.ru>
+References: <479EAF42.6010604@pobox.com> <18334.46306.611615.493031@notabene.brown> <479F07E1.7060408@pobox.com> <479F0AAB.3090702@rabbit.us> <479F331F.7080902@msgid.tls.msk.ru> <479F3C74.1050605@rabbit.us>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <479F331F.7080902@msgid.tls.msk.ru>
+In-Reply-To: <479F3C74.1050605@rabbit.us>
 Sender: linux-raid-owner@vger.kernel.org
-To: Michael Tokarev <mjt@tls.msk.ru>
-Cc: Peter Rabbitson <rabbit+list@rabbit.us>, Moshe Yudkowsky <moshe@pobox.com>, linux-raid@vger.kernel.org
+To: Peter Rabbitson <rabbit+list@rabbit.us>
+Cc: Moshe Yudkowsky <moshe@pobox.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Jan 29, 2008 at 05:07:27PM +0300, Michael Tokarev wrote:
-> Peter Rabbitson wrote:
-> > Moshe Yudkowsky wrote:
-> >>
+Peter Rabbitson wrote:
+> Michael Tokarev wrote:
+>  > Raid10 IS RAID1+0 ;)
+>> It's just that linux raid10 driver can utilize more.. interesting ways
+>> to lay out the data.
 > 
-> > It is exactly what the names implies - a new kind of RAID :) The setup
-> > you describe is not RAID10 it is RAID1+0.
+> This is misleading, and adds to the confusion existing even before linux
+> raid10. When you say raid10 in the hardware raid world, what do you
+> mean? Stripes of mirrors? Mirrors of stripes? Some proprietary extension?
+
+Mirrors of stripes makes no sense.
+
+> What Neil did was generalize the concept of N drives - M copies, and
+> called it 10 because it could exactly mimic the layout of conventional
+> 1+0 [*]. However thinking about md level 10 in the terms of RAID 1+0 is
+> wrong. Two examples (there are many more):
 > 
-> Raid10 IS RAID1+0 ;)
-> It's just that linux raid10 driver can utilize more.. interesting ways
-> to lay out the data.
+>     * mdadm -C -l 10 -n 3 -o f2 /dev/md10 /dev/sda1 /dev/sdb1 /dev/sdc1
+                       ^^^^ ^^^^^
 
-My understandining is that raid10 is different from RAID1+0
+Those are "interesting ways"
 
-Traditional  RAID1+0 is composed of two RAID1's combined into one RAID0.
-It takes 4 drives to make it work. Linux raid10 only takes 2 drives to
-work.
+> Odd number of drives, no parity calculation overhead, yet the setup can
+> still suffer a loss of a single drive
+> 
+>     * mdadm -C -l 10 -n 2 -o f2 /dev/md10 /dev/sda1 /dev/sdb1
+                            ^^^^^
 
-Traditional RAID1+0 only have one way of laying out the blocks. 
+And this one too.
 
-raid10 have a number of ways to do layout, namely the near, far and
-offset ways, layout=n2, f2, o2 respectively.
+There are more-or-less standard raid LEVELS, including
+raid10 (which is the same as raid1+0, or a stripe on top
+of mirrors - note it does not mean 4 drives, you can
+use 6 - stripe over 3 mirrors each of 2 components; or
+the reverse - stripe over 2 mirrors of 3 components each
+etc).
 
-Traditional RAID1+0 can only do striping of half of the disks involved,
-while raid10 can do striping on all disks in the far and offset layouts.
+Vendors often adds their own extensions, sometimes calling
+them as the original level, and sometimes giving them new
+names, especially in the marketing speak.
 
+Linux raid10 MODULE (which implements that standard raid10
+LEVEL in full) adds some quite.. unusual extensions to that
+standard raid10 LEVEL.  The resulting layout is also called
+raid10 in linux (ie, not giving new names), but it's not that
+raid10 (which is again the same as raid1+0) as commonly known
+in various literature and on the internet.  Yet raid10 module
+fully implements STANDARD raid10 LEVEL.
 
+/mjt
 
-I looked around on the net for documentation of this. The first hits (on
-Google) for mkadm did not have descriptions of raid10. Wikipedia
-describes raid 10 as a synonym for raid1+0. I think there is too much
-confusion on the raid10 term, and that also the marveleous linux raid10
-layouts is a little known secret beyound maybe the circles of this
-linux-raid list. We should tell others more about the wondersi of raid10.
-
-And then I would like a good reference for describing how raid10,o2
-works and why bigger chunks work. 
-
-Best regards
-keld
