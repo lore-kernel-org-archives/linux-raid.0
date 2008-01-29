@@ -1,58 +1,57 @@
 From: Michael Tokarev <mjt@tls.msk.ru>
 Subject: Re: In this partition scheme, grub does not find md information?
-Date: Tue, 29 Jan 2008 19:42:04 +0300
-Message-ID: <479F575C.5020009@msgid.tls.msk.ru>
-References: <479EAF42.6010604@pobox.com> <18334.46306.611615.493031@notabene.brown> <479F07E1.7060408@pobox.com> <479F0AAB.3090702@rabbit.us> <479F331F.7080902@msgid.tls.msk.ru> <479F3C74.1050605@rabbit.us> <479F42A5.8040007@msgid.tls.msk.ru> <479F5177.6060206@pobox.com>
+Date: Tue, 29 Jan 2008 19:46:58 +0300
+Message-ID: <479F5882.8050400@msgid.tls.msk.ru>
+References: <479EAF42.6010604@pobox.com> <18334.46306.611615.493031@notabene.brown> <479F07E1.7060408@pobox.com> <479F0AAB.3090702@rabbit.us> <479F331F.7080902@msgid.tls.msk.ru> <479F3C74.1050605@rabbit.us> <479F42A5.8040007@msgid.tls.msk.ru> <20080129162640.GA16250@rap.rap.dk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <479F5177.6060206@pobox.com>
+In-Reply-To: <20080129162640.GA16250@rap.rap.dk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Moshe Yudkowsky <moshe@pobox.com>
-Cc: Peter Rabbitson <rabbit+list@rabbit.us>, linux-raid@vger.kernel.org
+To: =?ISO-8859-1?Q?Keld_J=F8rn_Simonsen?= <keld@dkuug.dk>
+Cc: Peter Rabbitson <rabbit+list@rabbit.us>, Moshe Yudkowsky <moshe@pobox.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Moshe Yudkowsky wrote:
-> Michael Tokarev wrote:
-> 
->> There are more-or-less standard raid LEVELS, including
->> raid10 (which is the same as raid1+0, or a stripe on top
->> of mirrors - note it does not mean 4 drives, you can
->> use 6 - stripe over 3 mirrors each of 2 components; or
->> the reverse - stripe over 2 mirrors of 3 components each
->> etc).
-> 
-> Here's a baseline question: if I create a RAID10 array using default
-> settings, what do I get? I thought I was getting RAID1+0; am I really?
+Keld J=F8rn Simonsen wrote:
+> On Tue, Jan 29, 2008 at 06:13:41PM +0300, Michael Tokarev wrote:
+>> Linux raid10 MODULE (which implements that standard raid10
+>> LEVEL in full) adds some quite.. unusual extensions to that
+>> standard raid10 LEVEL.  The resulting layout is also called
+>> raid10 in linux (ie, not giving new names), but it's not that
+>> raid10 (which is again the same as raid1+0) as commonly known
+>> in various literature and on the internet.  Yet raid10 module
+>> fully implements STANDARD raid10 LEVEL.
+>=20
+> My understanding is that you can have a linux raid10 of only 2
+> drives, while the standard RAID 1+0 requires 4 drives, so this is a h=
+uge
+> difference.
 
-..default settings AND even (4, 6, 8, 10, ...) number of drives.  It
-will be "standard" raid10 or raid1+0 which is the same, as many stripes
-of mirrored (2 copies) data as fits with the number of disks.  With odd
-number of disks it obviously will be soemthing else, not a "standard"
-raid10.
+Ugh.  2-drive raid10 is effectively just a raid1.  I.e, mirroring
+without any striping. (Or, backwards, striping without mirroring).
 
-> My superblocks, by the way, are marked version 01; my metadata in
-> mdadm.conf asked for 1.2. I wonder what I really got. The real question
+So to say, raid1 is just one particular configuration of raid10 -
+with only one mirror.
 
-Ugh.  Another source of confusion.  In --superblock=1.2, "1" stands
-for the format, and "2" stands for the placement.  So it's really
-format version 1.  From mdadm(8):
+Pretty much like with raid5 of 2 disks - it's the same as raid1.
 
-              1, 1.0, 1.1, 1.2
-                     Use  the  new  version-1 format superblock.  This has few
-                     restrictions.   The  different  sub-versions  store   the
-                     superblock  at  different locations on the device, either
-                     at the end (for 1.0), at the start (for 1.1) or  4K  from
-                     the start (for 1.2).
+> I am not sure what vanilla linux raid10 (near=3D2, far=3D1)
+> has of properties. I think it can run with only 1 disk, but I think i=
+t
 
+number of copies should be <=3D number of disks, so no.
 
-> in my mind now is why grub can't find the info, and either it's because
-> of 1.2 superblocks or because of sub-partitioning of components.
+> does not have striping capabilities. It would be nice to have more=20
+> info on this, eg in the man page.=20
 
-As has been said numerous times in this thread, grub can't be used with
-anything but raid1 to start with (the same is true for lilo).  Raid10
-(or raid1+0, which is the same) - be it standard or linux extension format -
-is NOT raid1.
+It's all in there really.  See md(4).  Maybe it's not that
+verbose, but it's not a user's guide (as in: a large book),
+after all.
 
 /mjt
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
