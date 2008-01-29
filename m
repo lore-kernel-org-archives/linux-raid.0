@@ -1,55 +1,64 @@
-From: Tim Southerwood <ts@dionic.net>
-Subject: Re: [PATCH] Use new sb type
-Date: Tue, 29 Jan 2008 04:09:02 +0000
-Message-ID: <479EA6DE.9070503@dionic.net>
-References: <Pine.LNX.4.64.0801281818430.1185@fbirervta.pbzchgretzou.qr> <479E1C95.1040008@dgreaves.com> <479E232E.1030801@rabbit.us> <479E2DDA.5040102@dgreaves.com>
+From: Moshe Yudkowsky <moshe@pobox.com>
+Subject: In this partition scheme, grub does not find md information?
+Date: Mon, 28 Jan 2008 22:44:50 -0600
+Message-ID: <479EAF42.6010604@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <479E2DDA.5040102@dgreaves.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-David Greaves wrote:
-> Peter Rabbitson wrote:
->> David Greaves wrote:
->>> Jan Engelhardt wrote:
->>>> This makes 1.0 the default sb type for new arrays.
->>>>
->>> IIRC there was a discussion a while back on renaming mdadm options
->>> (google "Time
->>> to  deprecate old RAID formats?") and the superblocks to emphasise the
->>> location
->>> and data structure. Would it be good to introduce the new names at the
->>> same time
->>> as changing the default format/on-disk-location?
->>>
->>> David
->> Also wasn't the concession to make 1.1 default instead of 1.0 ?
->>
-> IIRC Doug Leford did some digging wrt lilo + grub and found that 1.1 and 1.2
-> wouldn't work with them. I'd have to review the thread though...
-> 
-> David
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I'm finding a problem that isn't covered by the usual FAQs and online 
+recipes.
 
-For what it's worth, that was my finding too. -e 0.9+1.0 are fine with
-GRUB, but  1.1 an 1.2 won't work under the filesystem that contains
-/boot, at least with GRUB 1.x (I haven't used LILO for some time nor
-have I tried the development GRUB 2).
+Attempted setup: RAID 10 array with 4 disks.
 
-The reason IIRC boils down to the fact that GRUB 1 isn't MD aware, and
-the only reason one can "get away" with using it on a RAID 1 setup at
-all is that the constituent devices present the same data as the
-composite MD device, from the start.
+Because Debian doesn't include RAID10 in its installation disks, I 
+created a Debian installation on the first partition of sda, in 
+/dev/sda1. Eventually I'll probably convert it to swap, but in the 
+meantime that 4G has  a complete 2.6.18 install (Debian stable).
 
-Putting an MD SB at/near the beginning of the device breaks this case
-and GRUB 1 doesn't know how to deal with it.
+I created a RAID 10 array of four partitions, /dev/md/all, out of 
+/dev/sd[abcd]2.
 
-Cheers
-Tim
+Using fdisk/cfdisk, I created the partition/dev/md/all1 (500 MB) for 
+/boot, and the parition /dev/md/all2  with all remaining space into one 
+large partition (about 850 GB). That larger partition contains /, /usr, 
+/home, etc. each as a separate LVM volume. I copied usr, var, etc. (but 
+not proc or sys, of course) files over to the raid array, mounted that 
+array, did a chroot to its root, and started grub.
+
+I admit that I'm no grub expert, but it's clear that grub cannot "find" 
+any of the information in /dev/md/all1. For example,
+
+grub> find /boot/grub/this_is_raid
+
+can't find a file that exists only on the raid array. Grub only searches 
+/dev/sda1, not /dev/md/all1.
+
+Perhaps I'm mistaken but I though it was possible to do boot from 
+/dev/md/all1.
+
+I've tried other attacks but without success. For example, also while in 
+chroot,
+
+grub-install /dev/md/all2 does not work. (Nor does it work with the 
+--root=/boot option.)
+
+I also tried modifications to menu.lst, adding root=/dev/md/all1 to the 
+kernel command, but RAID array's version of menu.lst is never detected.
+
+What I do see is
+
+grub> find /boot/grub/stage1
+  (hd0,0)
+
+which indicates (as far as I can tell) that it's found the information 
+written on /dev/sda1 and nothing in /dev/md/all1.
+
+Am I trying to do something that's basically impossible?
+
+-- 
+Moshe Yudkowsky * moshe@pobox.com * www.pobox.com/~moshe
