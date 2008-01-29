@@ -1,109 +1,60 @@
-From: Andreas-Sokov <andre.s@j8.com.ru>
-Subject: problem with spare, acive device, clean degrated, reshaip RADI5, anybody can help
-Date: Tue, 29 Jan 2008 02:16:12 +0300
-Message-ID: <45999022.20080129021612@j8.com.ru>
-Reply-To: Andreas-Sokov <andre.s@j8.com.ru>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: BUG: possible array corruption when adding a component to a degraded
+ raid5 (possibly other levels too)
+Date: Tue, 29 Jan 2008 11:38:00 +1100
+Message-ID: <18334.30056.611260.951887@notabene.brown>
+References: <479DA8E6.6040209@rabbit.us>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: message from Peter Rabbitson on Monday January 28
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Peter Rabbitson <rabbit+list@rabbit.us>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello linux-raid.
+On Monday January 28, rabbit+list@rabbit.us wrote:
+> Hello,
+> 
+> It seems that mdadm/md do not perform proper sanity checks before adding a 
+> component to a degraded array. If the size of the new component is just right, 
+> the superblock information will overlap with the data area. This will happen 
+> without any error indications in the syslog or otherwise.
+> 
+> I came up with a reproducible scenario which I am attaching to this email 
+> alongside with the entire test script. I have not tested it for other raid 
+> levels, or other types of superblocks, but I suspect the same problem will 
+> occur for many other configurations.
+> 
+> I am willing to test patches, however the attached script is non-intrusive 
+> enough to be executed anywhere.
 
-i have DEBIAN.
+Thanks for the report and the test script.
 
-raid01:/# mdadm -V
-mdadm - v2.6.4 - 19th October 2007
+This patch for mdadm should fix this problem.... I hate the fact that
+we sometimes use K and sometimes use sectors for
+sizes/offsets... groan.
 
-raid01:/# mdadm -D /dev/md1
-/dev/md1:
-        Version : 00.91.03
-  Creation Time : Tue Nov 13 18:42:36 2007
-     Raid Level : raid5
-     Array Size : 1465159488 (1397.29 GiB 1500.32 GB)
-  Used Dev Size : 488386496 (465.76 GiB 500.11 GB)
-   Raid Devices : 5
-  Total Devices : 5
-Preferred Minor : 1
-    Persistence : Superblock is persistent
+I'll probably get a test in the kernel as well to guard against this.
 
-    Update Time : Sun Jan 27 00:24:44 2008
-          State : clean, degraded
- Active Devices : 4
-Working Devices : 5
- Failed Devices : 0
-  Spare Devices : 1
-
-         Layout : left-symmetric
-     Chunk Size : 64K
-
-  Delta Devices : 1, (4->5)
-
-           UUID : 4fbdc8df:07b952cf:7cc6faa0:04676ba5
-         Events : 0.683478
-
-    Number   Major   Minor   RaidDevice State
-       0       8       32        0      active sync   /dev/sdc
-       1       8       48        1      active sync   /dev/sdd
-       2       8       64        2      active sync   /dev/sde
-       3       8       80        3      active sync   /dev/sdf
-       4       0        0        4      removed
-
-       5       8       16        -      spare   /dev/sdb
-
-************************************************************************************
-Anybody know what i need to do for /dev/sdb became ACTIVE DEVICE ?
-************************************************************************************
+Thanks,
+NeilBrown
 
 
+### Diffstat output
+ ./Manage.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-**
-@raid01:/# mdadm -E /dev/sdb
-/dev/sdb:
-          Magic : a92b4efc
-        Version : 00.91.00
-           UUID : 4fbdc8df:07b952cf:7cc6faa0:04676ba5
-  Creation Time : Tue Nov 13 18:42:36 2007
-     Raid Level : raid5
-  Used Dev Size : 488386496 (465.76 GiB 500.11 GB)
-     Array Size : 1953545984 (1863.05 GiB 2000.43 GB)
-   Raid Devices : 5
-  Total Devices : 5
-Preferred Minor : 1
-
-  Reshape pos'n : 194537472 (185.53 GiB 199.21 GB)
-  Delta Devices : 1 (4->5)
-
-    Update Time : Tue Jan 29 02:05:52 2008
-          State : clean
- Active Devices : 4
-Working Devices : 5
- Failed Devices : 1
-  Spare Devices : 1
-       Checksum : 450cd41b - correct
-         Events : 0.683482
-
-         Layout : left-symmetric
-     Chunk Size : 64K
-
-      Number   Major   Minor   RaidDevice State
-this     5       8       16        5      spare   /dev/sdb
-
-   0     0       8       32        0      active sync   /dev/sdc
-   1     1       8       48        1      active sync   /dev/sdd
-   2     2       8       64        2      active sync   /dev/sde
-   3     3       8       80        3      active sync   /dev/sdf
-   4     4       0        0        4      faulty removed
-   5     5       8       16        5      spare   /dev/sdb
-
-
-   
-
--- 
-Best regards
- Andreas
- mailto:andre.s@j8.com.ru
-
+diff .prev/Manage.c ./Manage.c
+--- .prev/Manage.c	2008-01-29 11:15:54.000000000 +1100
++++ ./Manage.c	2008-01-29 11:16:15.000000000 +1100
+@@ -337,7 +337,7 @@ int Manage_subdevs(char *devname, int fd
+ 
+ 				/* Make sure device is large enough */
+ 				if (tst->ss->avail_size(tst, ldsize/512) <
+-				    array.size) {
++				    array.size*2) {
+ 					fprintf(stderr, Name ": %s not large enough to join array\n",
+ 						dv->devname);
+ 					return 1;
