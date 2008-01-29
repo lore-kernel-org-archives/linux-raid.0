@@ -1,31 +1,34 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: How many disks per SATA-II bus?
-Date: Tue, 29 Jan 2008 14:15:24 -0500
-Message-ID: <479F7B4C.7000602@garzik.org>
-References: <214675.77163.qm@web88308.mail.re4.yahoo.com>
+From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
+Subject: linux raid faq
+Date: Tue, 29 Jan 2008 20:17:55 +0100
+Message-ID: <20080129191755.GA27121@rap.rap.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <214675.77163.qm@web88308.mail.re4.yahoo.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: subscribe@brmiller.ca
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Bruce Miller wrote:
-> The beginning of Section 4 of the Linux Sotfware-RAID-HOWTO
-> states emphatically that "you should only have one device per
-> IDE bus. Running disks as master/slave is horrible for
-> performance. IDE is really bad at accessing more that one drive
-> per bus".
-> 
-> Do the same cautions apply to building a RAID array using
-> SATA-II disks?
+Hmm, I read the Linux raid faq on
+http://www.faqs.org/contrib/linux-raid/x37.html
 
-SATA is a point-to-point serial connection, totally different technology.
+It looks pretty outdated, referring to how to patch 2.2 kernels and
+not mentioning new mdadm, nor raid10. It was not dated. 
+It seemed to be related to the linux-raid list, telling where to find
+archives of the list.
 
-	Jeff
+Maybe time for an update? or is this not the right place to write stuff?
 
+If I searched on google for "raid faq", the first say 5-7 items did not
+mention raid10. 
 
+Maybe wikipedia is the way to go? I did contribute myself a little
+there.
 
+The software raid howto is dated v. 1.1 3rd of June 2004,
+http://unthought.net/Software-RAID.HOWTO/Software-RAID.HOWTO.html
+also pretty old.
+
+best regards
+keld
