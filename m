@@ -1,42 +1,35 @@
-From: Moshe Yudkowsky <moshe@pobox.com>
-Subject: Re: In this partition scheme, grub does not find md information?
-Date: Tue, 29 Jan 2008 16:14:24 -0600
-Message-ID: <479FA540.70707@pobox.com>
-References: <479EAF42.6010604@pobox.com> <18334.46306.611615.493031@notabene.brown> <479F07E1.7060408@pobox.com> <479F0AAB.3090702@rabbit.us> <479F331F.7080902@msgid.tls.msk.ru> <479F3C74.1050605@rabbit.us> <479F42A5.8040007@msgid.tls.msk.ru> <479F5177.6060206@pobox.com> <479F557D.20502@rabbit.us> <479F7FCD.7030106@pobox.com> <20080129202156.GA32434@rap.rap.dk>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: 2.6.24-rc6 reproducible raid5 hang
+Date: Tue, 29 Jan 2008 17:58:27 -0500
+Message-ID: <479FAF93.5030408@tmr.com>
+References: <4797430E.2020603@dionic.net>	<18327.31959.286239.480961@fisica.ufpr.br>	<4798F577.20007@dionic.net>	<479E1106.5000106@dionic.net> <18335.13615.134324.887637@fisica.ufpr.br>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20080129202156.GA32434@rap.rap.dk>
+In-Reply-To: <18335.13615.134324.887637@fisica.ufpr.br>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?ISO-8859-1?Q?Keld_J=F8rn_Simonsen?= <keld@dkuug.dk>
-Cc: linux-raid@vger.kernel.org
+To: Carlos Carvalho <carlos@fisica.ufpr.br>
+Cc: linux-raid@vger.kernel.org, Neil Brown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-Keld J=F8rn Simonsen wrote:
+Carlos Carvalho wrote:
+> Tim Southerwood (ts@dionic.net) wrote on 28 January 2008 17:29:
+>  >Subtitle: Patch to mainline yet?
+>  >
+>  >Hi
+>  >
+>  >I don't see evidence of Neil's patch in 2.6.24, so I applied it by hand
+>  >on my server.
+>
+> I applied all 4 pending patches to .24. It's been better than .22 and
+> .23... Unfortunately the bitmap and rai1 patch don't go in .22.16.
 
-Based on your reports of better performance on RAID10 -- which are more=
-=20
-significant that I'd expected -- I'll just go with RAID10. The only=20
-question now is if LVM is worth the performance hit or not.
+Neil, have these been sent up against 24-stable and 23-stable?
 
-> I would be interested if you would experiment with this wrt boot time=
-,
-> for example the difference between /root on a raid5, raid10,f2 and ra=
-id10,o2.
-
-According to man md(4), the o2 is likely to offer the best combination=20
-of read and write performance. Why would you consider f2 instead?
-
-I'm unlike to do any testing beyond running bonnie++ or something=20
-similar once it's installed.
+-- 
+Bill Davidsen <davidsen@tmr.com>
+  "Woe unto the statesman who makes war without a reason that will still
+  be valid when the war is over..." Otto von Bismark 
 
 
---=20
-Moshe Yudkowsky * moshe@pobox.com * www.pobox.com/~moshe
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
