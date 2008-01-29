@@ -1,32 +1,45 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: In this partition scheme, grub does not find md information?
-Date: Tue, 29 Jan 2008 16:08:50 +1100
-Message-ID: <18334.46306.611615.493031@notabene.brown>
-References: <479EAF42.6010604@pobox.com>
+From: Russell Coker <russell@coker.com.au>
+Subject: Re: write-intent bitmaps
+Date: Tue, 29 Jan 2008 18:32:14 +1100
+Message-ID: <200801291832.18375.russell@coker.com.au>
+References: <200801272134.57690.russell@coker.com.au> <200801280212.25381.russell@coker.com.au> <479E1BB3.2080702@tmr.com>
+Reply-To: russell@coker.com.au
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Moshe Yudkowsky on Monday January 28
+In-Reply-To: <479E1BB3.2080702@tmr.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Moshe Yudkowsky <moshe@pobox.com>
-Cc: linux-raid@vger.kernel.org
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org, pkg-mdadm-devel@lists.alioth.debian.org
 List-Id: linux-raid.ids
 
-On Monday January 28, moshe@pobox.com wrote:
-> 
-> Perhaps I'm mistaken but I though it was possible to do boot from 
-> /dev/md/all1.
+On Tuesday 29 January 2008 05:15, Bill Davidsen <davidsen@tmr.com> wrote:
+> You may have missed the "much higher" part of the previous paragraph.
+> And given the reliability of modern drives, unless you have a LOT of
+> them you may be looking at years of degraded performance to save a few
+> hours of slow performance after a power fail or similar. In other words,
+> it's not as black and white as it seems.
 
-It is my understanding that grub cannot boot from RAID.
-You can boot from raid1 by the expedient of booting from one of the
-halves.
-A common approach is to make a small raid1 which contains /boot and
-boot from that.  Then use the rest of your devices for raid10 or raid5
-or whatever.
-> 
-> Am I trying to do something that's basically impossible?
+What is the pathological case?  1/2 or 1/3 write performance?
 
-I believe so.
+For serious write performance of a RAID you want a NVRAM write-back cache for 
+RAID-5 stripes, and the NVRAM cache removes the need for write-intent 
+bitmaps.  AFAIK Linux software RAID doesn't support such things and that 
+putting filesystem journals and the write-intent bitmap blocks on NVRAM 
+devices is the best that you could achieve.
 
-NeilBrown
+It seems that if you want the best performance for small synchronous writes 
+(EG a mail server - which may be the most pessimal application for 
+write-intent bitmaps) then hardware RAID is the only option.
+
+Are there plans for supporting a NVRAM write-back cache with Linux software 
+RAID?
+
+-- 
+russell@coker.com.au
+http://etbe.coker.com.au/          My Blog
+
+http://www.coker.com.au/sponsorship.html Sponsoring Free Software development
