@@ -1,28 +1,31 @@
-From: Bruce Miller <subscribe@brmiller.ca>
-Subject: How many disks per SATA-II bus?
-Date: Tue, 29 Jan 2008 13:25:35 -0500 (EST)
-Message-ID: <214675.77163.qm@web88308.mail.re4.yahoo.com>
-Reply-To: subscribe@brmiller.ca
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: How many disks per SATA-II bus?
+Date: Tue, 29 Jan 2008 14:15:24 -0500
+Message-ID: <479F7B4C.7000602@garzik.org>
+References: <214675.77163.qm@web88308.mail.re4.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <214675.77163.qm@web88308.mail.re4.yahoo.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: subscribe@brmiller.ca
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-The beginning of Section 4 of the Linux Sotfware-RAID-HOWTO
-states emphatically that "you should only have one device per
-IDE bus. Running disks as master/slave is horrible for
-performance. IDE is really bad at accessing more that one drive
-per bus".
+Bruce Miller wrote:
+> The beginning of Section 4 of the Linux Sotfware-RAID-HOWTO
+> states emphatically that "you should only have one device per
+> IDE bus. Running disks as master/slave is horrible for
+> performance. IDE is really bad at accessing more that one drive
+> per bus".
+> 
+> Do the same cautions apply to building a RAID array using
+> SATA-II disks?
 
-Do the same cautions apply to building a RAID array using
-SATA-II disks?
+SATA is a point-to-point serial connection, totally different technology.
 
---
-Bruce Miller
-Ottawa ON, Canada
-bruce@brmiller.ca
-(613) 745-1151
-This message is from a webmail login and not from my regular mail system. It does not have my customary digital signature.
+	Jeff
+
+
+
