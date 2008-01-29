@@ -1,109 +1,55 @@
-From: Andreas-Sokov <andre.s@j8.com.ru>
-Subject: problem with spare, acive device, clean degrated, reshaip RADI5, anybody can help
-Date: Tue, 29 Jan 2008 04:14:10 +0300
-Message-ID: <15014542.20080129041410@j8.com.ru>
-Reply-To: Andreas-Sokov <andre.s@j8.com.ru>
+From: Tim Southerwood <ts@dionic.net>
+Subject: Re: [PATCH] Use new sb type
+Date: Tue, 29 Jan 2008 04:09:02 +0000
+Message-ID: <479EA6DE.9070503@dionic.net>
+References: <Pine.LNX.4.64.0801281818430.1185@fbirervta.pbzchgretzou.qr> <479E1C95.1040008@dgreaves.com> <479E232E.1030801@rabbit.us> <479E2DDA.5040102@dgreaves.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <479E2DDA.5040102@dgreaves.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello linux-raid.
+David Greaves wrote:
+> Peter Rabbitson wrote:
+>> David Greaves wrote:
+>>> Jan Engelhardt wrote:
+>>>> This makes 1.0 the default sb type for new arrays.
+>>>>
+>>> IIRC there was a discussion a while back on renaming mdadm options
+>>> (google "Time
+>>> to  deprecate old RAID formats?") and the superblocks to emphasise the
+>>> location
+>>> and data structure. Would it be good to introduce the new names at the
+>>> same time
+>>> as changing the default format/on-disk-location?
+>>>
+>>> David
+>> Also wasn't the concession to make 1.1 default instead of 1.0 ?
+>>
+> IIRC Doug Leford did some digging wrt lilo + grub and found that 1.1 and 1.2
+> wouldn't work with them. I'd have to review the thread though...
+> 
+> David
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-i have DEBIAN.
+For what it's worth, that was my finding too. -e 0.9+1.0 are fine with
+GRUB, but  1.1 an 1.2 won't work under the filesystem that contains
+/boot, at least with GRUB 1.x (I haven't used LILO for some time nor
+have I tried the development GRUB 2).
 
-raid01:/# mdadm -V
-mdadm - v2.6.4 - 19th October 2007
+The reason IIRC boils down to the fact that GRUB 1 isn't MD aware, and
+the only reason one can "get away" with using it on a RAID 1 setup at
+all is that the constituent devices present the same data as the
+composite MD device, from the start.
 
-raid01:/# mdadm -D /dev/md1
-/dev/md1:
-        Version : 00.91.03
-  Creation Time : Tue Nov 13 18:42:36 2007
-     Raid Level : raid5
-     Array Size : 1465159488 (1397.29 GiB 1500.32 GB)
-  Used Dev Size : 488386496 (465.76 GiB 500.11 GB)
-   Raid Devices : 5
-  Total Devices : 5
-Preferred Minor : 1
-    Persistence : Superblock is persistent
+Putting an MD SB at/near the beginning of the device breaks this case
+and GRUB 1 doesn't know how to deal with it.
 
-    Update Time : Sun Jan 27 00:24:44 2008
-          State : clean, degraded
- Active Devices : 4
-Working Devices : 5
- Failed Devices : 0
-  Spare Devices : 1
-
-         Layout : left-symmetric
-     Chunk Size : 64K
-
-  Delta Devices : 1, (4->5)
-
-           UUID : 4fbdc8df:07b952cf:7cc6faa0:04676ba5
-         Events : 0.683478
-
-    Number   Major   Minor   RaidDevice State
-       0       8       32        0      active sync   /dev/sdc
-       1       8       48        1      active sync   /dev/sdd
-       2       8       64        2      active sync   /dev/sde
-       3       8       80        3      active sync   /dev/sdf
-       4       0        0        4      removed
-
-       5       8       16        -      spare   /dev/sdb
-
-************************************************************************************
-Anybody know what i need to do for /dev/sdb became ACTIVE DEVICE ?
-************************************************************************************
-
-
-
-**
-@raid01:/# mdadm -E /dev/sdb
-/dev/sdb:
-          Magic : a92b4efc
-        Version : 00.91.00
-           UUID : 4fbdc8df:07b952cf:7cc6faa0:04676ba5
-  Creation Time : Tue Nov 13 18:42:36 2007
-     Raid Level : raid5
-  Used Dev Size : 488386496 (465.76 GiB 500.11 GB)
-     Array Size : 1953545984 (1863.05 GiB 2000.43 GB)
-   Raid Devices : 5
-  Total Devices : 5
-Preferred Minor : 1
-
-  Reshape pos'n : 194537472 (185.53 GiB 199.21 GB)
-  Delta Devices : 1 (4->5)
-
-    Update Time : Tue Jan 29 02:05:52 2008
-          State : clean
- Active Devices : 4
-Working Devices : 5
- Failed Devices : 1
-  Spare Devices : 1
-       Checksum : 450cd41b - correct
-         Events : 0.683482
-
-         Layout : left-symmetric
-     Chunk Size : 64K
-
-      Number   Major   Minor   RaidDevice State
-this     5       8       16        5      spare   /dev/sdb
-
-   0     0       8       32        0      active sync   /dev/sdc
-   1     1       8       48        1      active sync   /dev/sdd
-   2     2       8       64        2      active sync   /dev/sde
-   3     3       8       80        3      active sync   /dev/sdf
-   4     4       0        0        4      faulty removed
-   5     5       8       16        5      spare   /dev/sdb
-
-
-   
-
--- 
-Best regards
- Andreas
- mailto:andre.s@j8.com.ru
-
+Cheers
+Tim
