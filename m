@@ -1,39 +1,37 @@
-From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
+From: Peter Rabbitson <rabbit+list@rabbit.us>
 Subject: Re: In this partition scheme, grub does not find md information?
-Date: Tue, 29 Jan 2008 17:26:40 +0100
-Message-ID: <20080129162640.GA16250@rap.rap.dk>
-References: <479EAF42.6010604@pobox.com> <18334.46306.611615.493031@notabene.brown> <479F07E1.7060408@pobox.com> <479F0AAB.3090702@rabbit.us> <479F331F.7080902@msgid.tls.msk.ru> <479F3C74.1050605@rabbit.us> <479F42A5.8040007@msgid.tls.msk.ru>
+Date: Tue, 29 Jan 2008 17:34:05 +0100
+Message-ID: <479F557D.20502@rabbit.us>
+References: <479EAF42.6010604@pobox.com> <18334.46306.611615.493031@notabene.brown> <479F07E1.7060408@pobox.com> <479F0AAB.3090702@rabbit.us> <479F331F.7080902@msgid.tls.msk.ru> <479F3C74.1050605@rabbit.us> <479F42A5.8040007@msgid.tls.msk.ru> <479F5177.6060206@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <479F42A5.8040007@msgid.tls.msk.ru>
+In-Reply-To: <479F5177.6060206@pobox.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Michael Tokarev <mjt@tls.msk.ru>
-Cc: Peter Rabbitson <rabbit+list@rabbit.us>, Moshe Yudkowsky <moshe@pobox.com>, linux-raid@vger.kernel.org
+To: Moshe Yudkowsky <moshe@pobox.com>
+Cc: Michael Tokarev <mjt@tls.msk.ru>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Jan 29, 2008 at 06:13:41PM +0300, Michael Tokarev wrote:
-> 
-> Linux raid10 MODULE (which implements that standard raid10
-> LEVEL in full) adds some quite.. unusual extensions to that
-> standard raid10 LEVEL.  The resulting layout is also called
-> raid10 in linux (ie, not giving new names), but it's not that
-> raid10 (which is again the same as raid1+0) as commonly known
-> in various literature and on the internet.  Yet raid10 module
-> fully implements STANDARD raid10 LEVEL.
+Moshe Yudkowsky wrote:
+> Here's a baseline question: if I create a RAID10 array using default 
+> settings, what do I get? I thought I was getting RAID1+0; am I really?
 
-My understanding is that you can have a linux raid10 of only 2
-drives, while the standard RAID 1+0 requires 4 drives, so this is a huge
-difference.
+Maybe you are, depending on your settings, but this is beyond the point. No 
+matter what 1+0 you have (linux, classic, or otherwise) you can not boot from 
+it, as there is no way to see the underlying filesystem without the RAID layer.
 
-I am not sure what vanilla linux raid10 (near=2, far=1)
-has of properties. I think it can run with only 1 disk, but I think it
-does not have striping capabilities. It would be nice to have more 
-info on this, eg in the man page. 
+With the current state of affairs (available mainstream bootloaders) the rule is:
+Block devices containing the kernel/initrd image _must_ be either:
+	* a regular block device (/sda1, /hda, /fd0, etc.)
+	* or a linux RAID 1 with the superblock at the end of the device (0.9 or 1.2)
 
-Is there an official web page for mdadm?
-And maybe the raid faq could be updated?
 
-best regards
-keld 
+> My superblocks, by the way, are marked version 01; my metadata in 
+> mdadm.conf asked for 1.2. I wonder what I really got.
+
+This is how you find the actual raid version:
+
+mdadm -D /dev/md[X] | grep Version
+
+This will return a string of the form XX.YY.ZZ. Your superblock version is XX.YY.
