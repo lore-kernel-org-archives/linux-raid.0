@@ -1,37 +1,35 @@
-From: Peter Rabbitson <rabbit+list@rabbit.us>
+From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
 Subject: Re: In this partition scheme, grub does not find md information?
-Date: Tue, 29 Jan 2008 17:34:05 +0100
-Message-ID: <479F557D.20502@rabbit.us>
-References: <479EAF42.6010604@pobox.com> <18334.46306.611615.493031@notabene.brown> <479F07E1.7060408@pobox.com> <479F0AAB.3090702@rabbit.us> <479F331F.7080902@msgid.tls.msk.ru> <479F3C74.1050605@rabbit.us> <479F42A5.8040007@msgid.tls.msk.ru> <479F5177.6060206@pobox.com>
+Date: Tue, 29 Jan 2008 17:37:28 +0100
+Message-ID: <20080129163728.GB16250@rap.rap.dk>
+References: <479EAF42.6010604@pobox.com> <18334.46306.611615.493031@notabene.brown> <479F07E1.7060408@pobox.com> <479F0AAB.3090702@rabbit.us> <479F331F.7080902@msgid.tls.msk.ru> <479F3C74.1050605@rabbit.us> <479F4CFC.5060305@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <479F5177.6060206@pobox.com>
+Content-Disposition: inline
+In-Reply-To: <479F4CFC.5060305@pobox.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Moshe Yudkowsky <moshe@pobox.com>
-Cc: Michael Tokarev <mjt@tls.msk.ru>, linux-raid@vger.kernel.org
+Cc: Peter Rabbitson <rabbit+list@rabbit.us>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Moshe Yudkowsky wrote:
-> Here's a baseline question: if I create a RAID10 array using default 
-> settings, what do I get? I thought I was getting RAID1+0; am I really?
+On Tue, Jan 29, 2008 at 09:57:48AM -0600, Moshe Yudkowsky wrote:
+> 
+> In my 4 drive system, I'm clearly not getting 1+0's ability to use grub 
+> out of the RAID10.  I expect it's because I used 1.2 superblocks (why 
+> not use the latest, I said, foolishly...) and therefore the RAID10 -- 
+> with even number of drives -- can't be read by grub. If you'd patch that 
+> information into the man pages that'd be very useful indeed.
 
-Maybe you are, depending on your settings, but this is beyond the point. No 
-matter what 1+0 you have (linux, classic, or otherwise) you can not boot from 
-it, as there is no way to see the underlying filesystem without the RAID layer.
-
-With the current state of affairs (available mainstream bootloaders) the rule is:
-Block devices containing the kernel/initrd image _must_ be either:
-	* a regular block device (/sda1, /hda, /fd0, etc.)
-	* or a linux RAID 1 with the superblock at the end of the device (0.9 or 1.2)
+If you have 4 drives, I think the right thing is to use a raid1 with 4
+drives, for your /boot partition. Then yo can survive that 3 disks
+crash!
 
 
-> My superblocks, by the way, are marked version 01; my metadata in 
-> mdadm.conf asked for 1.2. I wonder what I really got.
+If you want the extra performance, then I think you should not bother
+too much for the kernel and initrd load time - which of cause is not
+striping on the disks, but some performance improvement can be expected.
+Then you can have the rest of /root on a raid10,f2 with 4 disks.
 
-This is how you find the actual raid version:
-
-mdadm -D /dev/md[X] | grep Version
-
-This will return a string of the form XX.YY.ZZ. Your superblock version is XX.YY.
+best regards
+keld
