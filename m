@@ -1,54 +1,87 @@
-From: Moshe Yudkowsky <moshe@pobox.com>
-Subject: Re: In this partition scheme, grub does not find md information?
-Date: Tue, 29 Jan 2008 19:00:53 -0600
-Message-ID: <479FCC45.7050207@pobox.com>
-References: <479F0AAB.3090702@rabbit.us> <479F331F.7080902@msgid.tls.msk.ru> <479F3C74.1050605@rabbit.us> <479F42A5.8040007@msgid.tls.msk.ru> <479F5177.6060206@pobox.com> <479F557D.20502@rabbit.us> <479F7FCD.7030106@pobox.com> <479FBA54.6010009@tmr.com> <20080130002237.GC7975@rap.rap.dk> <479FC5B6.10308@pobox.com> <20080130005311.GA12717@rap.rap.dk>
+From: "K.Tanaka" <k-tanaka@ce.jp.nec.com>
+Subject: Re: [BUG] The kernel thread for md RAID1 could cause a
+ md RAID1 array deadlock
+Date: Wed, 30 Jan 2008 11:02:16 +0900
+Message-ID: <479FDAA8.3030409@ce.jp.nec.com>
+References: <478C240F.8070004@ce.jp.nec.com>
+	<18328.1473.26122.647283@notabene.brown>
+	<47985B37.9000503@ce.jp.nec.com>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20080130005311.GA12717@rap.rap.dk>
-Sender: linux-raid-owner@vger.kernel.org
-To: =?ISO-8859-1?Q?Keld_J=F8rn_Simonsen?= <keld@dkuug.dk>
-Cc: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=ISO-2022-JP
+Content-Transfer-Encoding: 7bit
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <47985B37.9000503@ce.jp.nec.com>
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-scsi@vger.kernel.org
 List-Id: linux-raid.ids
 
-Keld J=F8rn Simonsen wrote:
-> On Tue, Jan 29, 2008 at 06:32:54PM -0600, Moshe Yudkowsky wrote:
->>> Hmm, why would you put swap on a raid10? I would in a production
->>> environment always put it on separate swap partitions, possibly a n=
-umber,
->>> given that a number of drives are available.
->> In a production server, however, I'd use swap on RAID in order to=20
->> prevent server downtime if a disk fails -- a suddenly bad swap can=20
->> easily (will absolutely?) cause the server to crash (even though you=
- can=20
->> boot the server up again afterwards on the surviving swap partitions=
-).
->=20
-> I see. Which file system type would be good for this?
-> I normally use XFS but maybe other FS is better, given that swap is u=
-sed
-> very randomly 8read/write).
->=20
-> Will a bad swap crash the system?
+Hi,
 
-Well, Peter says it will, and that's good enough for me. :-)
+>Also, md raid10 seems to have the same problem.
+>I will test raid10 applying this patch as well.
 
-As for which file system: I would use fdisk to partition the md disk an=
-d=20
-then use mkswap on the partition to make it into a swap partition. It's=
-=20
-a naive approach but I suspect it's almost certainly the correct one.
+Sorry for the late response. I had a trouble with reproducing the problem,
+but it turns out that the 2.6.24 kernel needs the latest (possibly testing)
+version of systemtap-0.6.1-1 to run systemtap for the fault injection tool.
 
---=20
-Moshe Yudkowsky * moshe@pobox.com * www.pobox.com/~moshe
-  "There are more ways to skin a cat than nuking it from orbit
-     -- but it's the only way to be sure."
-     				-- Eliezer Yudkowsky
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I've reproduced the stall on both raid1 and raid10 using 2.6.24.
+Also I've tested the patch applied to 2.6.24 and confirmed that
+it will fix the stall problem for both cases.
+
+K.Tanaka wrote:
+> Hi,
+> 
+> Thank you for the patch.
+> I have applied the patch to 2.6.23.14 and it works well.
+> 
+> - In case of 2.6.23.14, the problem is reproduced.
+> - In case of 2.6.23.14 with this patch, raid1 works well so far.
+>   The fault injection script continues to run, and it doesn't deadlock.
+>   I will keep it running for a while.
+> 
+> Also, md raid10 seems to have the same problem.
+> I will test raid10 applying this patch as well.
+> 
+> 
+> Neil Brown wrote:
+>> On Tuesday January 15, k-tanaka@ce.jp.nec.com wrote:
+>>> This message describes the details about md-RAID1 issue found by
+>>> testing the md RAID1 using the SCSI fault injection framework.
+>>>
+>>> Abstract:
+>>> Both the error handler for md RAID1 and write access request to the md RAID1
+>>> use raid1d kernel thread. The nr_pending flag could cause a race condition
+>>> in raid1d, results in a raid1d deadlock.
+>> Thanks for finding and reporting this.
+>>
+>> I believe the following patch should fix the deadlock.
+>>
+>> If you are able to repeat your test and confirm this I would
+>> appreciate it.
+>>
+>> Thanks,
+>> NeilBrown
+>>
+>>
+>>
+>> Fix deadlock in md/raid1 when handling a read error.
+>>
+>> When handling a read error, we freeze the array to stop any other
+>> IO while attempting to over-write with correct data.
+>>
+
+-- 
+---------------------------------------------------------
+Kenichi TANAKA    | Open Source Software Platform Development Division
+                  | Computers Software Operations Unit, NEC Corporation
+                  | k-tanaka@ce.jp.nec.com
