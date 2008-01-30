@@ -1,30 +1,56 @@
 From: David Greaves <david@dgreaves.com>
-Subject: Re: WRONG INFO (was Re: In this partition scheme, grub does not find
- md information?)
-Date: Wed, 30 Jan 2008 12:41:46 +0000
-Message-ID: <47A0708A.1030409@dgreaves.com>
-References: <479EAF42.6010604@pobox.com> <18334.46306.611615.493031@notabene.brown> <479F07E1.7060408@pobox.com> <479F0AAB.3090702@rabbit.us> <479F331F.7080902@msgid.tls.msk.ru> <479F3C74.1050605@rabbit.us> <479F4CFC.5060305@pobox.com> <47A05971.1020507@dgreaves.com> <47A06331.5050709@pobox.com> <47A066C0.7040602@rabbit.us>
+Subject: Re: linux raid faq
+Date: Wed, 30 Jan 2008 12:46:52 +0000
+Message-ID: <47A071BC.70605@dgreaves.com>
+References: <20080129191755.GA27121@rap.rap.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <47A066C0.7040602@rabbit.us>
+In-Reply-To: <20080129191755.GA27121@rap.rap.dk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Peter Rabbitson <rabbit+list@rabbit.us>
-Cc: Moshe Yudkowsky <moshe@pobox.com>, linux-raid@vger.kernel.org
+To: =?ISO-8859-1?Q?Keld_J=F8rn_Simonsen?= <keld@dkuug.dk>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Peter Rabbitson wrote:
-> Moshe Yudkowsky wrote:
->> over the other. For example, I've now learned that if I want to set up
->> a RAID1 /boot, it must actually be 1.2 or grub won't be able to read
->> it. (I would therefore argue that if the new version ever becomes
->> default, then the default sub-version ought to be 1.2.)
-> 
-> In the discussion yesterday I myself made a serious typo, that should
-> not spread. The only superblock version that will work with current GRUB
-> is 1.0 _not_ 1.2.
+Keld J=F8rn Simonsen wrote:
+> Hmm, I read the Linux raid faq on
+> http://www.faqs.org/contrib/linux-raid/x37.html
+>=20
+> It looks pretty outdated, referring to how to patch 2.2 kernels and
+> not mentioning new mdadm, nor raid10. It was not dated.=20
+> It seemed to be related to the linux-raid list, telling where to find
+> archives of the list.
+>=20
+> Maybe time for an update? or is this not the right place to write stu=
+ff?
 
-Ah, the joys of consolidated and yet editable documentation - like a wiki....
+http://linux-raid.osdl.org/index.php/Main_Page
+
+I have written to faqs.org but got no reply. I'll try again...
+
+>=20
+> If I searched on google for "raid faq", the first say 5-7 items did n=
+ot
+> mention raid10.
+
+Until people link to and use the new wiki, Google won't find it.
+
+
+> Maybe wikipedia is the way to go? I did contribute myself a little
+> there.
+>=20
+> The software raid howto is dated v. 1.1 3rd of June 2004,
+> http://unthought.net/Software-RAID.HOWTO/Software-RAID.HOWTO.html
+> also pretty old.
+
+=46YI
+http://linux-raid.osdl.org/index.php/Credits
 
 David
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
