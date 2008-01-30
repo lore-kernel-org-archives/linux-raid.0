@@ -1,25 +1,30 @@
-From: Peter Rabbitson <rabbit+list@rabbit.us>
-Subject: Re: Help, big error, dd first GB of a raid:-/
-Date: Wed, 30 Jan 2008 13:40:24 +0100
-Message-ID: <47A07038.9040001@rabbit.us>
-References: <47A054D4.9030308@cgv.tugraz.at> <47A0696B.4030301@rabbit.us> <47A06F40.9010705@cgv.tugraz.at>
+From: David Greaves <david@dgreaves.com>
+Subject: Re: WRONG INFO (was Re: In this partition scheme, grub does not find
+ md information?)
+Date: Wed, 30 Jan 2008 12:41:46 +0000
+Message-ID: <47A0708A.1030409@dgreaves.com>
+References: <479EAF42.6010604@pobox.com> <18334.46306.611615.493031@notabene.brown> <479F07E1.7060408@pobox.com> <479F0AAB.3090702@rabbit.us> <479F331F.7080902@msgid.tls.msk.ru> <479F3C74.1050605@rabbit.us> <479F4CFC.5060305@pobox.com> <47A05971.1020507@dgreaves.com> <47A06331.5050709@pobox.com> <47A066C0.7040602@rabbit.us>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <47A06F40.9010705@cgv.tugraz.at>
+In-Reply-To: <47A066C0.7040602@rabbit.us>
 Sender: linux-raid-owner@vger.kernel.org
-To: Lars Schimmer <l.schimmer@cgv.tugraz.at>
-Cc: linux-raid@vger.kernel.org
+To: Peter Rabbitson <rabbit+list@rabbit.us>
+Cc: Moshe Yudkowsky <moshe@pobox.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Lars Schimmer wrote:
+Peter Rabbitson wrote:
+> Moshe Yudkowsky wrote:
+>> over the other. For example, I've now learned that if I want to set up
+>> a RAID1 /boot, it must actually be 1.2 or grub won't be able to read
+>> it. (I would therefore argue that if the new version ever becomes
+>> default, then the default sub-version ought to be 1.2.)
+> 
+> In the discussion yesterday I myself made a serious typo, that should
+> not spread. The only superblock version that will work with current GRUB
+> is 1.0 _not_ 1.2.
 
-> I activate the backup right now - was OpenAFS with some RW volumes -
-> fairly easy to backup, but...
-> If it's hard to recover raid data, I recreate the raid and forget the
-> old data on it.
+Ah, the joys of consolidated and yet editable documentation - like a wiki....
 
-It is not that hard to recover the raid itself, however the ext3 on top is 
-most likely FUBAR (especially after 1GB was overwritten). Since like it seems 
-the data is not that important to you, just roll back to a backup and move on.
+David
