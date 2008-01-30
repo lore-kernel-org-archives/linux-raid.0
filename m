@@ -1,30 +1,38 @@
-From: Michael Tokarev <mjt@tls.msk.ru>
-Subject: Re: WRONG INFO (was Re: In this partition scheme, grub does not find
- md information?)
-Date: Wed, 30 Jan 2008 16:39:10 +0300
-Message-ID: <47A07DFE.6090606@msgid.tls.msk.ru>
-References: <479EAF42.6010604@pobox.com> <18334.46306.611615.493031@notabene.brown> <479F07E1.7060408@pobox.com> <479F0AAB.3090702@rabbit.us> <479F331F.7080902@msgid.tls.msk.ru> <479F3C74.1050605@rabbit.us> <479F4CFC.5060305@pobox.com> <47A05971.1020507@dgreaves.com> <47A06331.5050709@pobox.com> <47A066C0.7040602@rabbit.us>
+From: Janek Kozicki <janek_listy@wp.pl>
+Subject: Re: linux raid faq
+Date: Wed, 30 Jan 2008 15:03:51 +0100
+Message-ID: <20080130150351.4a2692dc@szpak>
+References: <20080129191755.GA27121@rap.rap.dk>
+	<47A071BC.70605@dgreaves.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <47A066C0.7040602@rabbit.us>
+In-Reply-To: <47A071BC.70605@dgreaves.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Peter Rabbitson <rabbit+list@rabbit.us>
-Cc: Moshe Yudkowsky <moshe@pobox.com>, David Greaves <david@dgreaves.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Peter Rabbitson wrote:
-> Moshe Yudkowsky wrote:
->> over the other. For example, I've now learned that if I want to set up
->> a RAID1 /boot, it must actually be 1.2 or grub won't be able to read
->> it. (I would therefore argue that if the new version ever becomes
->> default, then the default sub-version ought to be 1.2.)
+David Greaves said:     (by the date of Wed, 30 Jan 2008 12:46:52 +0000)
+ 
+> http://linux-raid.osdl.org/index.php/Main_Page
+
+great idea! I belive that wikis are the best way to go.
+ 
+> I have written to faqs.org but got no reply. I'll try again...
+> > If I searched on google for "raid faq", the first say 5-7 items did not
+> > mention raid10.
 > 
-> In the discussion yesterday I myself made a serious typo, that should
-> not spread. The only superblock version that will work with current GRUB
-> is 1.0 _not_ 1.2.
+> Until people link to and use the new wiki, Google won't find it.
 
-Ghrrm.  1.0, or 0.9.  0.9 is still the default with mdadm.
 
-/mjt
+Everyone that has a website - link to that wiki RIGHT NOW! And we
+will have a central place for all linux-raid documentation. Findable
+with google.
+
+There should be a link to it from vger.kernel.org. Or even the
+kernel.org itself. Mailing list admins - can you do it?
+
+best regards.
+-- 
+Janek Kozicki                                                         |
