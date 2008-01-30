@@ -1,85 +1,37 @@
-From: Rui Santos <rsantos@grupopie.com>
-Subject: Re: Check mdadm-Raid 5
-Date: Wed, 30 Jan 2008 10:11:53 +0000
-Message-ID: <47A04D69.1060903@grupopie.com>
-References: <20080130090744.249790@gmx.net>
+From: David Greaves <david@dgreaves.com>
+Subject: Re: In this partition scheme, grub does not find md information?
+Date: Wed, 30 Jan 2008 11:03:13 +0000
+Message-ID: <47A05971.1020507@dgreaves.com>
+References: <479EAF42.6010604@pobox.com> <18334.46306.611615.493031@notabene.brown> <479F07E1.7060408@pobox.com> <479F0AAB.3090702@rabbit.us> <479F331F.7080902@msgid.tls.msk.ru> <479F3C74.1050605@rabbit.us> <479F4CFC.5060305@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20080130090744.249790@gmx.net>
+In-Reply-To: <479F4CFC.5060305@pobox.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Moshe Yudkowsky <moshe@pobox.com>, Neil Brown <neilb@suse.de>
+Cc: Peter Rabbitson <rabbit+list@rabbit.us>, linux-raid@vger.kernel.org, Michael Tokarev <mjt@tls.msk.ru>
 List-Id: linux-raid.ids
 
-Michael Mott wrote:
-> Hi there,
->   
-Hi,
-> you're just my last hope - I think.
+On 26 Oct 2007, Neil Brown wrote:
+>On Thursday October 25, david@dgreaves.com wrote:
+>> I also suspect that a *lot* of people will assume that the highest superblock
+>> version is the best and should be used for new installs etc.
 >
-> I've posted this question at many Web-Sites in the last week, but nobody can help me.
->
-> For a view days I've created a Software Raid 5 (mdadm) under Ubuntu 7.10 32Bit Alternate with 4 x 233 GiB SATA II Hdds @ USB 2.0.
->
-> After that I want to create a Truecrypt-Volume on this md-Device what not should be a problem.
->
-> But the Process hangs after a view Minutes running and then whole System hangs. So I've pushed the Power-Button and the System writes something to the System-Hdd - but then nothing happens further. Then I have resetted the System.
->
-> After next boot I've assembled the Raid 5 again what function without any problem. The System even wont to resync anything.
->
-> After that I've build the Truecrypt-Volume on the whole md-Device without any Problem. 
->
-> Now my question: Is there any Methode to Test the integrity of die md-Device at low-level? Can I trust the Device?
->   
-
-I use this script on a regular basis to check for RAID integrity. I hope 
-this is what you mean.
-
-#!/bin/bash
-
-# Check all RAIDs
-RAIDS_TO_CHECK="md0 md1 md2"
-
-# Check all md's
-for i in $RAIDS_TO_CHECK; do
-        echo check >> /sys/block/$i/md/sync_action
-        sleep 5
-        while ( test `mdadm --misc --detail /dev/$i | grep -c "Rebuild 
-Status"` -gt 0 ); do
-                sleep 10
-        done
-        if ( test $(( `cat /sys/block/$i/md/mismatch_cnt` )) -gt 0 ); then
-                echo repair >> /sys/block/$i/md/sync_action
-                sleep 2
-                while ( test `mdadm --misc --detail /dev/$i | grep -c 
-"Rebuild Status"` -gt 0 ); do
-                        sleep 10
-                done
-                echo "Warning: A Repair to RAID $i was needed..."
-        fi
-done
-
-> Best regards,
->
-> Michael
->   
-Rui
+> Grumble... why can't people expect what I want them to expect?
 
 
--- 
+Moshe Yudkowsky wrote:
+> I expect it's because I used 1.2 superblocks (why
+> not use the latest, I said, foolishly...) and therefore the RAID10 --
 
-Cumprimentos
+Aha - an 'in the wild' example of why we should deprecate '0.9 1.0 1.1, 1.2' and
+rename the superblocks to data-version + on-disk-location :)
 
-*Rui Santos*
-Dep. Testes
 
-*GrupoPIE Portugal, S.A.*
-Tel:   +351 252 290 600
-Fax:  +351 252 290 601
+David
 
-Email: rsantos@grupopie.com <mailto:rsantos@grupopie.com>
-Web: www.grupopie.com <http://www.grupopie.com/>
 
-/WinREST /EVERYWHERE
+
+
 
