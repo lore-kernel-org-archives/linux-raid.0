@@ -1,59 +1,46 @@
-From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
-Subject: Re: which raid level gives maximum overall speed? (raid-10,f2 vs. raid-0)
-Date: Wed, 30 Jan 2008 23:00:07 +0100
-Message-ID: <20080130220007.GG20173@rap.rap.dk>
-References: <20080130192133.17b254bf@szpak>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: In this partition scheme, grub does not find md information?
+Date: Wed, 30 Jan 2008 17:36:49 -0500
+Message-ID: <47A0FC01.1090908@tmr.com>
+References: <479EAF42.6010604@pobox.com> <18334.46306.611615.493031@notabene.brown> <479F07E1.7060408@pobox.com> <479F0AAB.3090702@rabbit.us> <479F331F.7080902@msgid.tls.msk.ru> <479F3C74.1050605@rabbit.us> <479F42A5.8040007@msgid.tls.msk.ru> <479F5177.6060206@pobox.com> <479F557D.20502@rabbit.us> <479F7FCD.7030106@pobox.com> <20080129202156.GA32434@rap.rap.dk> <479FA540.70707@pobox.com> <479FBA98.10202@tmr.com> <479FC12C.9050602@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20080130192133.17b254bf@szpak>
+In-Reply-To: <479FC12C.9050602@pobox.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Janek Kozicki <janek_listy@wp.pl>
-Cc: linux-raid@vger.kernel.org
+To: Moshe Yudkowsky <moshe@pobox.com>
+Cc: =?ISO-8859-1?Q?Keld_J=F8rn_Simonsen?= <keld@dkuug.dk>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Jan 30, 2008 at 07:21:33PM +0100, Janek Kozicki wrote:
-> Hello,
-> 
-> Yes, I know that some levels give faster reading and slower writing, etc.
-> 
-> I want to talk here about a typical workstation usage: compiling
-> stuff (like kernel), editing openoffice docs, browsing web, reading
-> email (email: I have a webdir format, and in boost mailing list
-> directory I have 14000 files (posts), opening this directory takes
-> circa 10 seconds in sylpheed). Moreover, opening .pdf files, more
-> compiling of C++ stuff, etc...
-> 
-> I have a remote backup system configured (with rsnapshot), which does
-> backups two times a day. So I'm not afraid to lose all my data due to
-> disc failure. I want absolute speed.
-> 
-> Currently I have Raid-0, because I was thinking that this one is
-> fastest. But I also don't need twice the capacity. I could use Raid-1
-> as well, if it was faster.
-> 
-> Due to recent discussion about Raid-10,f2 I'm getting worried that
-> Raid-0 is not the fastest solution, but instead a Raid-10,f2 is
-> faster.
-> 
-> So how really is it, which level gives maximum overall speed?
-> 
-> 
-> I would like to make a benchmark, but currently, technically, I'm not
-> able to. I'll be able to do it next month, and then - as a result of
-> this discussion - I will switch to other level and post here
-> benchmark results.
-> 
-> How does overall performance change with the number of available drives?
-> 
-> Perhaps Raid-0 is best for 2 drives, while Raid-10 is best for 3, 4
-> and more drives?
+Moshe Yudkowsky wrote:
+> Bill Davidsen wrote:
+>
+>>> According to man md(4), the o2 is likely to offer the best 
+>>> combination of read and write performance. Why would you consider f2 
+>>> instead?
+>>>
+>> f2 is faster for read, most systems spend more time reading than 
+>> writing.
+>
+> According to md(4), offset "should give similar read characteristics 
+> to 'far' if a suitably large chunk size is used, but without as much 
+> seeking for writes."
+>
+> Is the man page not correct, conditionally true, or simply not 
+> understood by me (most likely case)?
+>
+> I wonder what "suitably large" is...
+>
+My personal experience is that as chunk gets larger random write gets 
+slower, sequential gets faster. I don't have numbers any more, but 
+20-30% is sort of the limit of what I saw for any chunk size I consider 
+reasonable. f2 is faster for sequential reading, tune your system to 
+annoy you least. ;-)
 
-Teoretically, raid0 and raid10,f2 should be the same for reading, given the
-same size of the md partition, etc. For writing, raid10,f2 should be half the speed of
-raid0. This should go both for sequential and random read/writes.
-But I would like to have real test numbers. 
+-- 
+Bill Davidsen <davidsen@tmr.com>
+  "Woe unto the statesman who makes war without a reason that will still
+  be valid when the war is over..." Otto von Bismark 
 
-best regards
-keld
+
