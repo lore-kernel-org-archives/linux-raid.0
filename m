@@ -1,36 +1,25 @@
-From: Janek Kozicki <janek_listy@wp.pl>
-Subject: Re: which raid level gives maximum overall speed? (raid-10,f2 vs.
- raid-0)
-Date: Wed, 30 Jan 2008 23:36:39 +0100
-Message-ID: <20080130233639.5d46b044@szpak>
-References: <20080130192133.17b254bf@szpak>
-	<20080130220007.GG20173@rap.rap.dk>
+From: maximilian attems <max@stro.at>
+Subject: Re: Documentation? failure to update-initramfs causes Infinite md loop on boot
+Date: Wed, 30 Jan 2008 23:42:00 +0100
+Message-ID: <20080130224200.GF1446@baikonur.stro.at>
+References: <47A0FB0E.5020202@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20080130220007.GG20173@rap.rap.dk>
+Content-Disposition: inline
+In-Reply-To: <47A0FB0E.5020202@pobox.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Moshe Yudkowsky <moshe@pobox.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Keld J=C3=B8rn Simonsen said:     (by the date of Wed, 30 Jan 2008 23:0=
-0:07 +0100)
+On Wed, Jan 30, 2008 at 04:32:46PM -0600, Moshe Yudkowsky wrote:
+> I reformatted the disks in preparation to my move to a RAID1/RAID5 
+> combination. I couldn't --stop the array (that should have told me 
+> something), so I removed ARRAY from mdadm.conf and restarted. I ran 
+> fdisk to create the proper partitions, and then I removed the /dev/md* 
+> and /dev/md/* entries in anticipation of creating the new ones. I then 
+> rebooted to pick up the new partitions I'd created.
 
-> Teoretically, raid0 and raid10,f2 should be the same for reading, giv=
-en the
-> same size of the md partition, etc. For writing, raid10,f2 should be =
-half the speed of
-> raid0. This should go both for sequential and random read/writes.
-> But I would like to have real test numbers.=20
-
-Me too. Thanks. Are there any other raid levels that may count here?
-Raid-10 with some other options?
-
---=20
-Janek Kozicki                                                         |
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+pretty simple, you change mdadm.conf put it also on initramfs:
+update-initramfs -u -k all
