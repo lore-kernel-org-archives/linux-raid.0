@@ -1,76 +1,148 @@
 From: Michael Tokarev <mjt@tls.msk.ru>
 Subject: Re: In this partition scheme, grub does not find md information?
-Date: Wed, 30 Jan 2008 16:11:50 +0300
-Message-ID: <47A07796.2010805@msgid.tls.msk.ru>
-References: <479EAF42.6010604@pobox.com> <18334.46306.611615.493031@notabene.brown> <479F07E1.7060408@pobox.com> <479F0AAB.3090702@rabbit.us> <479F331F.7080902@msgid.tls.msk.ru> <479F3C74.1050605@rabbit.us> <479F42A5.8040007@msgid.tls.msk.ru> <479F5177.6060206@pobox.com> <479F557D.20502@rabbit.us> <479F7FCD.7030106@pobox.com>
+Date: Wed, 30 Jan 2008 16:37:25 +0300
+Message-ID: <47A07D95.2030902@msgid.tls.msk.ru>
+References: <479EAF42.6010604@pobox.com> <18334.46306.611615.493031@notabene.brown> <479F07E1.7060408@pobox.com> <479F0AAB.3090702@rabbit.us> <479F331F.7080902@msgid.tls.msk.ru> <479F3C74.1050605@rabbit.us> <479F42A5.8040007@msgid.tls.msk.ru> <20080129162640.GA16250@rap.rap.dk> <479F5882.8050400@msgid.tls.msk.ru> <20080129180101.GB19527@rap.rap.dk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <479F7FCD.7030106@pobox.com>
+In-Reply-To: <20080129180101.GB19527@rap.rap.dk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Moshe Yudkowsky <moshe@pobox.com>
-Cc: Peter Rabbitson <rabbit+list@rabbit.us>, linux-raid@vger.kernel.org
+To: =?ISO-8859-1?Q?Keld_J=F8rn_Simonsen?= <keld@dkuug.dk>
+Cc: Peter Rabbitson <rabbit+list@rabbit.us>, Moshe Yudkowsky <moshe@pobox.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Moshe Yudkowsky wrote:
+Keld J=F8rn Simonsen wrote:
 []
-> Mr. Tokarev wrote:
-> 
->> By the way, on all our systems I use small (256Mb for small-software systems,
->> sometimes 512M, but 1G should be sufficient) partition for a root filesystem
->> (/etc, /bin, /sbin, /lib, and /boot), and put it on a raid1 on all...
->> ... doing [it]
->> this way, you always have all the tools necessary to repair a damaged system
->> even in case your raid didn't start, or you forgot where your root disk is
->> etc etc.
-> 
-> An excellent idea. I was going to put just /boot on the RAID 1, but
-> there's no reason why I can't add a bit more room and put them all
-> there. (Because I was having so much fun on the install, I'm using 4GB
-> that I was going to use for swap space to mount base install and I'm
-> working from their to build the RAID. Same idea.)
-> 
-> Hmmm... I wonder if this more expansive /bin, /sbin, and /lib causes
-> hits on the RAID1 drive which ultimately degrade overall performance?
-> /lib is hit only at boot time to load the kernel, I'll guess, but /bin
-> includes such common tools as bash and grep.
+>> Ugh.  2-drive raid10 is effectively just a raid1.  I.e, mirroring
+>> without any striping. (Or, backwards, striping without mirroring).
+>=20
+> uhm, well, I did not understand: "(Or, backwards, striping without
+> mirroring)."  I don't think a 2 drive vanilla raid10 will do striping=
+=2E
+ Please explain.
 
-You don't care of the speed of your root filesystem.  Note there are
-two speeds - write and read.
+I was referring to raid0+1 here - mirror of stripes.  Which makes
+no sense by its own, but when we create such thing on only 2 drives,
+it becomes just raid0...  "Backwards" as raid1+0 vs raid0+1.
 
-You only write to root (including /bin and /lib and so on) during
-software (re)install and during some configuration work (writing
-/etc/password and the like).  First is very infrequent, and both
-needs only a few writes, -- so write speed isn't important.
+This is just to show that various raid levels, in corner cases,
+tends to "transform" from one to another.
 
-Read speed also not that important, because most commonly used
-stuff from there will be cached anyway (like libc.so, bash and
-grep), and again, reading such tiny stuff - it doesn't matter
-if it's "fast" raid or a slow one.
+>> Pretty much like with raid5 of 2 disks - it's the same as raid1.
+>=20
+> I think in raid5 of 2 disks, half of the chunks are parity chynks whi=
+ch
+> are evenly distributed over the two disks, and the parity chunk is th=
+e
+> XOR of the data chunk. But maybe I am wrong. Also the behaviour of su=
+ce
+> a raid5 is different from a raid1 as the parity chunk is not used as
+> data.
 
-What you do care about the speed of devices where your large,
-commonly accessed/modified files - such as video files esp.
-when you want streaming video - are resides.  And even here,
-unless you've special requirement for speed, you will not
-notice any difference between "slow" and "fast" raid levels.
+With N-disk raid5, parity in a row is calculated by XORing together
+data from all the rest of the disks (N-1), ie, P =3D D1 ^ ... ^D(N-1).
 
-For typical filesystem usage, raid5 works good for both reads
-and (cached, delayed) writes.  It's workloads like databases
-where raid5 performs badly.
+In case of 2-disk raid5 (it's also a corner case), the above formula
+becomes just P =3D D1.  So, parity block in each row contains exactly
+the same data as data block, effectively turning the whole thing into
+a raid1 of two disks.  Sure in raid5 parity blocks called just that -
+parity, but in reality that parity is THE SAME as data (again, in
+case of only 2-disk raid5).
 
-What you do care about is your data integrity.  It's not really
-interesting to reinstall a system or lose your data in case if
-something goes wrong, and it's best to have recovery tools as
-easily available as possible.  Plus, amount of space you need.
+>>> I am not sure what vanilla linux raid10 (near=3D2, far=3D1)
+>>> has of properties. I think it can run with only 1 disk, but I think=
+ it
+>> number of copies should be <=3D number of disks, so no.
+>=20
+> I have a clear understanding that in a vanilla linux raid10 (near=3D2=
+, far=3D1)
+> you can run with one failing disk, that is with only one working disk=
+=2E
+> Am I wrong?
 
->> Also, placing /dev on a tmpfs helps alot to minimize number of writes
->> necessary for root fs.
-> 
-> Another interesting idea. I'm not familiar with using tmpfs (no need,
-> until now); but I wonder how you create the devices you need when you're
-> doing a rescue.
+In fact, with (all softs) or raid10, it's not only the number of drives
+that can fail that matters, but also WHICH drives can fail.  In classic
+raid10:
 
-When you start udev, your /dev will be on tmpfs.
+    DiskA   DiskB  DiskC  DiskD
+      0       0      1      1
+      2       2      3      3
+      4       4      5      5
+      ....
+
+(where numbers are the data blocks), you can have only 2 working
+disks (ie, 2 failed), but only from different pairs.  You can't
+have A and B failed and C and D working for example - you'll lose
+half the data and thus the filesystem.  You can have A and C failed
+however, or A and D, or B&C, or B&D.
+
+You see - in the above example, all numbers (data blocks) should be
+present at least once (after you pull a drive or two or more).  If
+at least some numbers don't appear at all, your raid array's dead.
+
+Now write out the layout you want to use like the above, and try
+"removing" some drives, and see if you still have all numbers.
+
+=46or example, with 3-disk linux raid10:
+
+  A  B  C
+  0  0  1
+  1  2  2
+  3  3  4
+  4  5  5
+  ....
+
+We can't pull 2 drives anymore here.  Eg, pulling A&B removes
+0 and 3. Pulling B&C removes 2 and 5.  A&C =3D 1 and 4.
+
+With 5-drive linux raid10:
+
+   A  B  C  D  E
+   0  0  1  1  2
+   2  3  3  4  4
+   5  5  6  6  7
+   7  8  8  9  9
+  10 10 11 11 12
+   ...
+
+A&B can't be removed - 0, 5.  A&C CAN be removed, as
+are A&D.  But not A&E - losing 2 and 7.  And so on.
+
+6-disk raid10 with 3 copies of each (near=3D3 with linux):
+
+   A B C D E F
+   0 0 0 1 1 1
+   2 2 2 3 3 3
+
+It can run as long as from each triple (ABC and DEF), at
+least one disk is here.  Ie, you can lose up to 4 drives,
+as far as the condition is true.  But if you lose only
+3 - A&B&C or D&E&F - it can't work anymore.
+
+The same goes for raid5 and raid6, but they're symmetric --
+any single (raid5) or double (raid6) disk failure is Ok.
+The principle is this:
+
+  raid5: P =3D D1^D2^D3^...^D(N-1)
+so, you either have all Di (nothing to reconstruct), or
+you have all but one Di AND P - in this case, missing Dm
+can be recalculated as
+  Dm =3D P^D1^...^D(m-1)^D(m+1)^...^D(N-1)
+(ie, a XOR of all the remaining blocks including parity).
+(exactly the same applies to raid4, because each row in
+raid4 is identical to that of raid5, the difference is
+that parity disk is different in each row in raid5, while
+in raid4 it stays the same).
+
+I wont write the formula for raid6 as it's somewhat more
+complicated, but the effect is the same - any data block
+can be reconstructed from any N-2 drives.
 
 /mjt
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
