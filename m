@@ -1,32 +1,34 @@
-From: Moshe Yudkowsky <moshe@pobox.com>
+From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
 Subject: Re: In this partition scheme, grub does not find md information?
-Date: Tue, 29 Jan 2008 18:32:54 -0600
-Message-ID: <479FC5B6.10308@pobox.com>
-References: <18334.46306.611615.493031@notabene.brown> <479F07E1.7060408@pobox.com> <479F0AAB.3090702@rabbit.us> <479F331F.7080902@msgid.tls.msk.ru> <479F3C74.1050605@rabbit.us> <479F42A5.8040007@msgid.tls.msk.ru> <479F5177.6060206@pobox.com> <479F557D.20502@rabbit.us> <479F7FCD.7030106@pobox.com> <479FBA54.6010009@tmr.com> <20080130002237.GC7975@rap.rap.dk>
+Date: Wed, 30 Jan 2008 01:53:11 +0100
+Message-ID: <20080130005311.GA12717@rap.rap.dk>
+References: <479F0AAB.3090702@rabbit.us> <479F331F.7080902@msgid.tls.msk.ru> <479F3C74.1050605@rabbit.us> <479F42A5.8040007@msgid.tls.msk.ru> <479F5177.6060206@pobox.com> <479F557D.20502@rabbit.us> <479F7FCD.7030106@pobox.com> <479FBA54.6010009@tmr.com> <20080130002237.GC7975@rap.rap.dk> <479FC5B6.10308@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20080130002237.GC7975@rap.rap.dk>
+Content-Disposition: inline
+In-Reply-To: <479FC5B6.10308@pobox.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?ISO-8859-1?Q?Keld_J=F8rn_Simonsen?= <keld@dkuug.dk>
+To: Moshe Yudkowsky <moshe@pobox.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Tue, Jan 29, 2008 at 06:32:54PM -0600, Moshe Yudkowsky wrote:
+> 
+> >Hmm, why would you put swap on a raid10? I would in a production
+> >environment always put it on separate swap partitions, possibly a number,
+> >given that a number of drives are available.
+> 
+> In a production server, however, I'd use swap on RAID in order to 
+> prevent server downtime if a disk fails -- a suddenly bad swap can 
+> easily (will absolutely?) cause the server to crash (even though you can 
+> boot the server up again afterwards on the surviving swap partitions).
 
-> Hmm, why would you put swap on a raid10? I would in a production
-> environment always put it on separate swap partitions, possibly a number,
-> given that a number of drives are available.
+I see. Which file system type would be good for this?
+I normally use XFS but maybe other FS is better, given that swap is used
+very randomly 8read/write).
 
-I put swap onto non-RAID, separate partitions on all 4 disks.
+Will a bad swap crash the system?
 
-In a production server, however, I'd use swap on RAID in order to 
-prevent server downtime if a disk fails -- a suddenly bad swap can 
-easily (will absolutely?) cause the server to crash (even though you can 
-boot the server up again afterwards on the surviving swap partitions).
-
--- 
-Moshe Yudkowsky * moshe@pobox.com * www.pobox.com/~moshe
-  "She will have fun who knows when to work
-   and when not to work."
-    			-- Segami
+best regards
+keld
