@@ -1,35 +1,51 @@
-From: Moshe Yudkowsky <moshe@pobox.com>
-Subject: Re: Documentation? failure to update-initramfs causes Infinite md
- loop on boot
-Date: Wed, 30 Jan 2008 18:44:31 -0600
-Message-ID: <47A119EF.70509@pobox.com>
-References: <47A0FB0E.5020202@pobox.com> <20080130224200.GF1446@baikonur.stro.at>
+From: Richard Scobie <richard@sauce.co.nz>
+Subject: Re: RAID 1 and grub
+Date: Thu, 31 Jan 2008 14:37:40 +1300
+Message-ID: <47A12664.8030601@sauce.co.nz>
+References: <47A0F4DC.9030005@sauce.co.nz> <72dbd3150801301641n2801846cgc2f3bc04aa842baf@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20080130224200.GF1446@baikonur.stro.at>
+In-Reply-To: <72dbd3150801301641n2801846cgc2f3bc04aa842baf@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: maximilian attems <max@stro.at>
-Cc: linux-raid@vger.kernel.org
+To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-maximilian attems wrote:
+David Rees wrote:
 
-> pretty simple, you change mdadm.conf put it also on initramfs:
-> update-initramfs -u -k all
+> Have you tried re-running grub-install after booting from a rescue disk?
+> 
+> -Dave
 
-Sure, that's what I did after boot on rescue, chroot, etc. However, I 
-wonder if the *documentation* -- Wiki, or even the man page discussion 
-on boot -- should mention that changes in the mdadm.conf have to be 
-propogated to /boot?
+Hi David,
 
-In fact, that's an interesting question: which changes have to propagate 
-to /boot? I'd think any change that affects md devices with /etc/fstab 
-entries set to "auto" would have to be followed by update-initramfs. 
-That's quite some bit of hidden knowledge if true.
+I have but although I can advance further it seems that the BIOS is 
+doing some strange things as well, switching drive ordering around.
 
--- 
-Moshe Yudkowsky * moshe@pobox.com * www.pobox.com/~moshe
-   "All friends have real and imaginary components."
-                      -- Moshe Yudkowsky
+With a new hda installed and partitioned, ready to be rebuilt, the good 
+drive, hdc installed, the grub.conf modified to address (hd2,0) - I have 
+  an hdb installed also, and grub installed on hdc, booting with the 
+BIOS set to start on hdc hangs with the message "grub stage2" then drops 
+to a grub prompt.
+
+I then enter "kernel (hd0,0)/vmlinuz" and it finds the kernel. I would 
+have expected this to be on (hd2,0).
+
+Next, "boot root=/dev/md2", "boot root=/dev/hdc3" or "boot 
+root=/dev/hda3" all result in the kernel booting then panicing with a 
+"cannot open root device".
+
+I suspect you are correct that the Fedora installer, having built and 
+installed to RAID1, does not finish the job by installing grub on the 
+second drive.
+
+While it is not a problem with this particular box to do a reinstall, it 
+does not inspire confidence for a number of others that I have.
+
+This is the first time I have lost the primary member of a RAID1, having 
+replaced secondary members a number of times without issue.
+
+Regards,
+
+Richard
