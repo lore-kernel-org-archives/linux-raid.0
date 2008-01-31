@@ -1,72 +1,30 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: which raid level gives maximum overall speed? (raid-10,f2 vs.
- raid-0)
-Date: Thu, 31 Jan 2008 10:30:25 -0500
-Message-ID: <47A1E991.80604@tmr.com>
-References: <20080130192133.17b254bf@szpak>
+From: David Greaves <david@dgreaves.com>
+Subject: Re: RAID 1 and grub
+Date: Thu, 31 Jan 2008 17:51:08 +0000
+Message-ID: <47A20A8C.5080007@dgreaves.com>
+References: <47A0F4DC.9030005@sauce.co.nz>	 <72dbd3150801301641n2801846cgc2f3bc04aa842baf@mail.gmail.com>	 <47A13379.50703@sauce.co.nz> <72dbd3150801301847s6bbfa958h1213e782627e64a1@mail.gmail.com> <47A13B41.50406@sauce.co.nz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20080130192133.17b254bf@szpak>
+In-Reply-To: <47A13B41.50406@sauce.co.nz>
 Sender: linux-raid-owner@vger.kernel.org
-To: Janek Kozicki <janek_listy@wp.pl>
-Cc: linux-raid@vger.kernel.org
+To: Richard Scobie <richard@sauce.co.nz>
+Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>, drees76@gmail.com
 List-Id: linux-raid.ids
 
-Janek Kozicki wrote:
-> Hello,
->
-> Yes, I know that some levels give faster reading and slower writing, etc.
->
-> I want to talk here about a typical workstation usage: compiling
-> stuff (like kernel), editing openoffice docs, browsing web, reading
-> email (email: I have a webdir format, and in boost mailing list
-> directory I have 14000 files (posts), opening this directory takes
-> circa 10 seconds in sylpheed). Moreover, opening .pdf files, more
-> compiling of C++ stuff, etc...
->
->   
-In other words, like most systems, more reads than writes. And while 
-write can be (and usually are) cached and buffered, when you need the 
-next bit of data the program waits for it, far more user visible. If 
-this suggests tuning for acceptable write and max read speed, and 
-setting the readahead higher than default, then you have reached the 
-same conclusion as I did.
+Richard Scobie wrote:
+> David Rees wrote:
+> 
+>> FWIW, this step is clearly marked in the Software-RAID HOWTO under
+>> "Booting on RAID":
+>> http://tldp.org/HOWTO/Software-RAID-HOWTO-7.html#ss7.3
+> 
+> The one place I didn't look...
 
-> I have a remote backup system configured (with rsnapshot), which does
-> backups two times a day. So I'm not afraid to lose all my data due to
-> disc failure. I want absolute speed.
->
-> Currently I have Raid-0, because I was thinking that this one is
-> fastest. But I also don't need twice the capacity. I could use Raid-1
-> as well, if it was faster.
->
-> Due to recent discussion about Raid-10,f2 I'm getting worried that
-> Raid-0 is not the fastest solution, but instead a Raid-10,f2 is
-> faster.
->
-> So how really is it, which level gives maximum overall speed?
->
->
-> I would like to make a benchmark, but currently, technically, I'm not
-> able to. I'll be able to do it next month, and then - as a result of
-> this discussion - I will switch to other level and post here
-> benchmark results.
->
-> How does overall performance change with the number of available drives?
->
-> Perhaps Raid-0 is best for 2 drives, while Raid-10 is best for 3, 4
-> and more drives?
->
->
-> best regards
->   
+Good - I hope you'll both look here instead:
 
+http://linux-raid.osdl.org/index.php/Tweaking%2C_tuning_and_troubleshooting#Booting_on_RAID
 
--- 
-Bill Davidsen <davidsen@tmr.com>
-  "Woe unto the statesman who makes war without a reason that will still
-  be valid when the war is over..." Otto von Bismark 
-
+David
 
