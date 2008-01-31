@@ -1,51 +1,72 @@
-From: Richard Scobie <richard@sauce.co.nz>
-Subject: Re: RAID 1 and grub
-Date: Thu, 31 Jan 2008 14:37:40 +1300
-Message-ID: <47A12664.8030601@sauce.co.nz>
-References: <47A0F4DC.9030005@sauce.co.nz> <72dbd3150801301641n2801846cgc2f3bc04aa842baf@mail.gmail.com>
+From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
+Subject: Re: which raid level gives maximum overall speed? (raid-10,f2 vs. raid-0)
+Date: Thu, 31 Jan 2008 02:55:07 +0100
+Message-ID: <20080131015506.GB6617@rap.rap.dk>
+References: <20080130192133.17b254bf@szpak> <20080130220007.GG20173@rap.rap.dk> <20080130233639.5d46b044@szpak>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <72dbd3150801301641n2801846cgc2f3bc04aa842baf@mail.gmail.com>
+Content-Disposition: inline
+In-Reply-To: <20080130233639.5d46b044@szpak>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: Janek Kozicki <janek_listy@wp.pl>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-David Rees wrote:
+On Wed, Jan 30, 2008 at 11:36:39PM +0100, Janek Kozicki wrote:
+> Keld J=F8rn Simonsen said:     (by the date of Wed, 30 Jan 2008 23:00=
+:07 +0100)
+>=20
+> > Teoretically, raid0 and raid10,f2 should be the same for reading, g=
+iven the
+> > same size of the md partition, etc. For writing, raid10,f2 should b=
+e half the speed of
+> > raid0. This should go both for sequential and random read/writes.
+> > But I would like to have real test numbers.=20
+>=20
+> Me too. Thanks. Are there any other raid levels that may count here?
+> Raid-10 with some other options?
 
-> Have you tried re-running grub-install after booting from a rescue disk?
-> 
-> -Dave
+Given that you want maximum thruput for both reading and writing, I
+think there is only one way to go, that is raid0.
 
-Hi David,
+All the raid10's will have double time for writing, and raid5 and raid6
+will also have double or triple writing times, given that you can do
+striped writes on the raid0.=20
 
-I have but although I can advance further it seems that the BIOS is 
-doing some strange things as well, switching drive ordering around.
+=46or random and sequential writing in the normal case (no faulty disks=
+) I would
+guess that all of the raid10's, the raid1 and raid5 are about equally f=
+ast, given the
+same amount of hardware.  (raid5, raid6 a little slower given the
+unactive parity chunks).
 
-With a new hda installed and partitioned, ready to be rebuilt, the good 
-drive, hdc installed, the grub.conf modified to address (hd2,0) - I have 
-  an hdb installed also, and grub installed on hdc, booting with the 
-BIOS set to start on hdc hangs with the message "grub stage2" then drops 
-to a grub prompt.
+=46or random reading, raid0, raid1, raid10 should be equally fast, with
+raid5 a little slower, due to one of the disks virtually out of
+operation, as it is used for the XOR parity chunks. raid6 should be=20
+somewhat slower due to 2 non-operationable disks. raid10,f2 may have a
+slight edge due to virtually only using half the disk giving better
+average seek time, and using the faster outer disk halves.
 
-I then enter "kernel (hd0,0)/vmlinuz" and it finds the kernel. I would 
-have expected this to be on (hd2,0).
+=46or sequential reading, raid0 and raid10,f2 should be equally fast.
+Possibly raid10,o2 comes quite close. My guess is that raid5 then is
+next, achieving striping rates, but with the loss of one parity drive,
+and then raid1 and raid10,n2 with equal performance.
 
-Next, "boot root=/dev/md2", "boot root=/dev/hdc3" or "boot 
-root=/dev/hda3" all result in the kernel booting then panicing with a 
-"cannot open root device".
+In degraded mode, I guess for random read/writes the difference is not
+big between any of the raid1, raid5 and raid10 layouts, while sequentia=
+l
+reads will be especially bad for raid10,f2 approaching the random read
+rate, and others will enjoy the normal speed of the above filesystem
+(ext3, reiserfs, xfs etc).
 
-I suspect you are correct that the Fedora installer, having built and 
-installed to RAID1, does not finish the job by installing grub on the 
-second drive.
+Theory, theory theory. Show me some real figures.
 
-While it is not a problem with this particular box to do a reinstall, it 
-does not inspire confidence for a number of others that I have.
-
-This is the first time I have lost the primary member of a RAID1, having 
-replaced secondary members a number of times without issue.
-
-Regards,
-
-Richard
+Best regards
+Keld
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
