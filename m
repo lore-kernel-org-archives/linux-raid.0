@@ -1,79 +1,37 @@
-From: AndrewL733 <AndrewL733@aol.com>
-Subject: Assemble Same RAID0 More than Once?
-Date: Sat, 02 Feb 2008 18:23:48 -0500
-Message-ID: <47A4FB84.4070901@aol.com>
+From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
+Subject: Re: RAID 1 and grub
+Date: Sun, 3 Feb 2008 00:51:28 +0100
+Message-ID: <20080202235128.GB24990@rap.rap.dk>
+References: <47A0F4DC.9030005@sauce.co.nz> <72dbd3150801301641n2801846cgc2f3bc04aa842baf@mail.gmail.com> <47A13379.50703@sauce.co.nz> <72dbd3150801301847s6bbfa958h1213e782627e64a1@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <72dbd3150801301847s6bbfa958h1213e782627e64a1@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: David Rees <drees76@gmail.com>
+Cc: Richard Scobie <richard@sauce.co.nz>, Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Is it possible to assemble the same Linux Software RAID0 array two or 
-more times simultaneously? The idea would be to let one machine assemble 
-the block devices with Read/Write Access and to let additional machines 
-assemble the block devices with Read Only Access.
+On Wed, Jan 30, 2008 at 06:47:19PM -0800, David Rees wrote:
+> On Jan 30, 2008 6:33 PM, Richard Scobie <richard@sauce.co.nz> wrote:
+> 
+> FWIW, this step is clearly marked in the Software-RAID HOWTO under
+> "Booting on RAID":
+> http://tldp.org/HOWTO/Software-RAID-HOWTO-7.html#ss7.3
 
-You might think this is a ridiculous question but I have discovered the 
-following. If I:
+A good an extesive reference, but somewhat outdated.
 
-    -- take a Server with two sets of 12 drives, each set connected to a
-    Hardware RAID controller and configured as a RAID-5 Array
-    -- export each 12-drive array as an individual iSCSI Target with IET
-    or SCST
-    -- connect the Targets to a Client machine and stripe them together
-    as a Software RAID0 ON THE CLIENT MACHINE
+> BTW, I suspect you are missing the command "setup" from your 3rd
+> command above, it should be:
+> 
+> # grub
+> grub> device (hd0) /dev/hdc
+> grub> root (hd0,0)
+> grub> setup (hd0)
 
+I do not grasp this. How and where is it said that two disks are
+involved? hda and hdc should both be involved.
 
-I can get about 700 MB/sec writing to the Server and over 600 MB/sec 
-reading -- with blockdev and other settings optimized. I'm talking about 
-writing one stream of data and reading one stream back.
-
-On the other hand, if I stripe the two Hardware RAID devices together ON 
-THE SERVER and export them as a single Target, I only get about half the 
-read and write performance on the Client.
-
-Ideally, I would like to get to "Two Target Performance" with just "One 
-Target" and I'm attacking this problem at the level of the iSCSI Target 
-and Initiator software, as well as at the Network level. BUT if I can't 
-solve it in any of these places, I'm wondering if there might be a way 
-to Assemble the same Software RAID two or more times simultaneously.
-
-Currently with the iSCSI Enterprise Target (and a couple of other Linux 
-Targets), it is possible to allow one Client to connect to a target with 
-Read/Write access and to give all other Clients Read Only Access. SO, if 
-I create a Software RAID on the Server and export that as a Single 
-Target, it is possible to give multiple users simultaneous access to the 
-Target. However, as I said above, the performance is not optimal. '
-'
-If I create a Software RAID on the Client out of TWO targets, the 
-performance is great. But now it seems much more complicated for two or 
-more clients to access the data, because each client has to Assemble the 
-Software RAID out of the same two Targets. And only one can have Write 
-Access.
-
-My question is, is it possible to Assemble a RAID if you can't write 
-anything to the block device or touch its metadata (i.e., to mark that 
-it is clean or dirty whatever gets written when the RAID is Assembled). 
-In my first attempt to test this I tried making the Targets RO, but 
-mdadm gave me a segmentation fault when I tried to Assemble the RAID0. 
-And then when I made the Targets R/W again, one of them was missing its 
-raid superblock and mdadm couldn't assemble it.
-
-Alternately, is there a safe way to Assemble the same RAID 0 two or more 
-times but only mount it R/W ONCE, and in all other instances mount it 
-RO. What happens to the RAID metadata if you do that?
-
-
-Andrew
-
--- 
-
-EditShare -- The Smart Way to Edit Together
-119 Braintree Street
-Suite 402
-Boston, MA 02134 
-Tel:  +1 617.782.0479
-Fax:  +1 617.782.1071
-
+Best regards
+keld
