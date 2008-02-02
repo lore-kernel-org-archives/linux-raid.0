@@ -1,41 +1,46 @@
-From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
-Subject: Re: draft howto on making raids for surviving a disk crash
-Date: Sat, 2 Feb 2008 21:52:34 +0100
-Message-ID: <20080202205234.GA12872@rap.rap.dk>
-References: <20080202194131.GA7875@rap.rap.dk> <20080202213254.36c11d6c@szpak>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: Linux md and iscsi problems
+Date: Sun, 3 Feb 2008 08:44:31 +1100
+Message-ID: <18340.58431.163856.338970@notabene.brown>
+References: <20080201115919.5qx4ih3zeogswc4w@webmail.ualberta.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20080202213254.36c11d6c@szpak>
+In-Reply-To: message from aristizb@ualberta.ca on Friday February 1
 Sender: linux-raid-owner@vger.kernel.org
-To: Janek Kozicki <janek_listy@wp.pl>
+To: aristizb@ualberta.ca
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, Feb 02, 2008 at 09:32:54PM +0100, Janek Kozicki wrote:
-> Keld J=F8rn Simonsen said:     (by the date of Sat, 2 Feb 2008 20:41:=
-31 +0100)
->=20
-> > This is intended for the linux raid howto. Please give comments.
-> > It is not fully ready /keld
->=20
-> very nice. do you intend to put it on http://linux-raid.osdl.org/=20
+On Friday February 1, aristizb@ualberta.ca wrote:
+> 
+> 
+> Summarizing, I have two questions about the behavior of Linux md with  
+> slow devices:
+> 
+> 1. Is it possible to modify some kind of time-out parameter on the  
+> mdadm tool so the slow device wouldn't be marked as faulty because of  
+> its slow performance.
 
-Yes, that is the intention.
+No.  md doesn't do timeouts at all.  The underlying device does.
+So if you are getting time out errors from the iscsi initiator, then
+you need to change the timeout value used by the iscsi initiator.  md
+has no part to play in this.  It just sends a request and eventually
+gets either 'success' or 'fail'.
 
-> As wiki, it will be much easier for our community to fix errors and
-> add updates.
+> 
+> 2. Is it possible to control the "buffer" size of the RAID?, in other  
+> words, can I control the amount of data I can write to the local disc  
+> before I receive an acknowledgment from the slow device when I am  
+> using the write-behind option.
 
-Agreed. But I will not put it up before I am sure it is reasonably
-flawless, ie. it will at least work. I found myself a few errors alread=
-y.
+No.  md/raid1 simply calls 'kmalloc' to get space to buffer each write
+as the write arrives.  If the allocation succeeds, it is used to
+perform the write lazily.  If the allocation fails, the write is
+performs synchronously.
 
-best regards
-keld
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+What did you hope to achieve by such tuning?  It can probably be
+added if it is generally useful.
+
+NeilBrown
