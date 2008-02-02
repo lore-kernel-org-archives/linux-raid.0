@@ -1,29 +1,70 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: raid problem: after every reboot /dev/sdb1 is removed?
-Date: Sat, 2 Feb 2008 13:32:28 +1100
-Message-ID: <18339.54844.457508.84759@notabene.brown>
-References: <20080201135220.617194ff@berni>
+From: Andreas-Sokov <andre.s@j8.com.ru>
+Subject: mdadm: /dev/md1: Cannot reshape array without increasing size (yet).
+Date: Sat, 2 Feb 2008 05:59:58 +0300
+Message-ID: <1656519910.20080202055958@j8.com.ru>
+Reply-To: Andreas-Sokov <andre.s@j8.com.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=Windows-1251
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Berni on Friday February 1
 Sender: linux-raid-owner@vger.kernel.org
-To: Berni <wstripes@gmx.at>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Friday February 1, wstripes@gmx.at wrote:
-> Hi!
-> 
-> I have the following problem with my softraid (raid 1). I'm running
-> Ubuntu 7.10 64bit with kernel 2.6.22-14-generic.
-> 
-> After every reboot my first boot partition in md0 is not synchron. One
-> of the disks (the sdb1) is removed. 
-> After a resynch every partition is synching. But after a reboot the
-> state is "removed". 
+Hi linux-raid.
 
-Please send boot logs (e.g. dmesg > afile).
+What is problem with raid ?
+why "mdadm: /dev/md1: Cannot reshape array without increasing size (yet=
+)."
 
-NeilBrown
+i have
+
+root@raid01:~# mdadm -D /dev/md1
+/dev/md1:
+        Version : 00.91.03
+  Creation Time : Tue Nov 13 18:42:36 2007
+     Raid Level : raid5
+     Array Size : 1465159488 (1397.29 GiB 1500.32 GB)
+  Used Dev Size : 488386496 (465.76 GiB 500.11 GB)
+   Raid Devices : 5
+  Total Devices : 5
+Preferred Minor : 1
+    Persistence : Superblock is persistent
+
+    Update Time : Sat Feb  2 05:45:11 2008
+          State : clean, degraded
+ Active Devices : 4
+Working Devices : 5
+ Failed Devices : 0
+  Spare Devices : 1
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+  Delta Devices : 1, (4->5)
+
+           UUID : 4fbdc8df:07b952cf:7cc6faa0:04676ba5
+         Events : 0.683510
+
+    Number   Major   Minor   RaidDevice State
+       0       8       32        0      active sync   /dev/sdc
+       1       8       48        1      active sync   /dev/sdd
+       2       8       64        2      active sync   /dev/sde
+       3       8       80        3      active sync   /dev/sdf
+       4       0        0        4      removed
+
+       5       8       16        -      spare   /dev/sdb
+root@raid01:~#
+
+
+
+
+--=20
+=D1 =F3=E2=E0=E6=E5=ED=E8=E5=EC,
+ Andreas-Sokov                          mailto:andre.s@j8.com.ru
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
