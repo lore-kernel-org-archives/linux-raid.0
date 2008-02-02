@@ -1,31 +1,107 @@
-From: Andreas-Sokov <andre.s@j8.com.ru>
-Subject: /dev/sdb has different metadata to chosen array /dev/md1 0.91 0.90.
-Date: Sat, 2 Feb 2008 06:12:54 +0300
-Message-ID: <79135625.20080202061254@j8.com.ru>
-Reply-To: Andreas-Sokov <andre.s@j8.com.ru>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: raid problem: after every reboot /dev/sdb1 is removed?
+Date: Sat, 02 Feb 2008 14:47:50 -0500
+Message-ID: <47A4C8E6.4070402@tmr.com>
+References: <20080201135220.617194ff@berni>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=Windows-1251
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20080201135220.617194ff@berni>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Berni <wstripes@gmx.at>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-=C7=E4=F0=E0=E2=F1=F2=E2=F3=E9=F2=E5, linux-raid.
+Berni wrote:
+> Hi!
+>
+> I have the following problem with my softraid (raid 1). I'm running
+> Ubuntu 7.10 64bit with kernel 2.6.22-14-generic.
+>
+> After every reboot my first boot partition in md0 is not synchron. One
+> of the disks (the sdb1) is removed. 
+> After a resynch every partition is synching. But after a reboot the
+> state is "removed". 
+>
+> The disks are new and both seagate 250gb with exactly the same partition table. 
+>
+>   
+Did you create the raid arrays and then install on them? Or add them 
+after the fact? I have seen this type of problem when the initrd doesn't 
+start the array before pivotroot, usually because the raid capabilities 
+aren't in the boot image. In that case rerunning grub and mkinitrd may help.
 
-Help please, How i can to fight THIS :
+I run raid on Redhat distributions, and some Slackware, so I can't speak 
+for Ubuntu from great experience, but that's what it sounds like. When 
+you boot, is the /boot mounted on a degraded array or on the raw partition?
+> Here some config files: 
+>
+> #cat /proc/mdstat 
+> Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5]
+> [raid4] [raid10] 
+> md2 : active raid1 sda6[0] sdb6[1]
+>       117185984 blocks [2/2] [UU]
+>       
+> md1 : active raid1 sda5[0] sdb5[1]
+>       1951744 blocks [2/2] [UU]
+>       
+> md0 : active raid1 sda1[0]
+>       19534912 blocks [2/1] [U_]	<<<<<<<< this is the problem: looks like U_ after reboot
+>       
+> unused devices: <none>
+>
+> #fdisk /dev/sda
+>   Device Boot      Start         End      Blocks   Id  System
+> /dev/sda1               1        2432    19535008+  fd  Linux raid
+> autodetect
+> /dev/sda2            2433       17264   119138040    5  Extended
+> /dev/sda3   *       17265       20451    25599577+   7  HPFS/NTFS
+> /dev/sda4           20452       30400    79915342+   7  HPFS/NTFS
+> /dev/sda5            2433        2675     1951866   fd  Linux raid
+> autodetect
+> /dev/sda6            2676       17264   117186111   fd  Linux raid
+> autodetect
+>
+> #fdisk /dev/sdb
+>  Device Boot      Start         End      Blocks   Id  System
+> /dev/sdb1               1        2432    19535008+  fd  Linux raid
+> autodetect
+> /dev/sdb2            2433       17264   119138040    5  Extended
+> /dev/sdb3           17265       30400   105514920    7  HPFS/NTFS
+> /dev/sdb5            2433        2675     1951866   fd  Linux raid
+> autodetect
+> /dev/sdb6            2676       17264   117186111   fd  Linux raid
+> autodetect
+>
+> # mount
+> /dev/md0 on / type reiserfs (rw,notail)
+> proc on /proc type proc (rw,noexec,nosuid,nodev)
+> /sys on /sys type sysfs (rw,noexec,nosuid,nodev)
+> varrun on /var/run type tmpfs (rw,noexec,nosuid,nodev,mode=0755)
+> varlock on /var/lock type tmpfs (rw,noexec,nosuid,nodev,mode=1777)
+> udev on /dev type tmpfs (rw,mode=0755)
+> devshm on /dev/shm type tmpfs (rw)
+> devpts on /dev/pts type devpts (rw,gid=5,mode=620)
+> lrm on /lib/modules/2.6.22-14-generic/volatile type tmpfs (rw)
+> /dev/md2 on /home type reiserfs (rw)
+> securityfs on /sys/kernel/security type securityfs (rw)
+>
+> Could anyone help me to solve this problem? 
+> thanks
+> greets
+> Berni
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>   
 
-root@raid01:~# mdadm -I /dev/sdb
-mdadm: /dev/sdb has different metadata to chosen array /dev/md1 0.91 0.=
-90.
+
+-- 
+Bill Davidsen <davidsen@tmr.com>
+  "Woe unto the statesman who makes war without a reason that will still
+  be valid when the war is over..." Otto von Bismark 
 
 
---=20
-=D1 =F3=E2=E0=E6=E5=ED=E8=E5=EC,
- Andreas-Sokov                          mailto:andre.s@j8.com.ru
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
