@@ -1,87 +1,73 @@
-From: Dragos <dragos@mpigani.org>
-Subject: Re: assemble vs create an array.......
-Date: Sun, 03 Feb 2008 02:42:14 -0500
-Message-ID: <47A57056.5070904@mpigani.org>
-References: <474F869D.5040503@mpigani.org> <18255.41044.614676.410107@notabene.brown> <47501D7E.7000804@dgreaves.com> <475552D2.4000802@mpigani.org> <47568DE1.1050108@dgreaves.com> <4758129D.40600@mpigani.org> <475825C0.4070605@msgid.tls.msk.ru> <20071206212225.GN115527101@sgi.com>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: raid problem: after every reboot /dev/sdb1 is removed?
+Date: Sun, 03 Feb 2008 10:34:13 -0500
+Message-ID: <47A5DEF5.5040202@tmr.com>
+References: <20080201135220.617194ff@berni> <47A4C8E6.4070402@tmr.com> <20080203023001.066852a6@berni>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20071206212225.GN115527101@sgi.com>
+In-Reply-To: <20080203023001.066852a6@berni>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Chinner <dgc@sgi.com>
-Cc: Michael Tokarev <mjt@tls.msk.ru>, David Greaves <david@dgreaves.com>, linux-raid@vger.kernel.org, xfs@oss.sgi.com
+To: Berni <wstripes@gmx.at>, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hello,
-I am not sure if you have received my email from last week with the 
-results of the different combinations prescribed (it contained html code).
-Anyway, I did a ro mount to check the partition and was happy to see a 
-lot of files intact. A few seemed destroyed, but I am not sure. I tried 
-a xfs_check on the partition and it told me:
-
-ERROR: The filesystem have valuable metadata changes in a log which 
-needs to be replayed. Mount the filesystem to replay the log, and 
-unmount it before re-running xfs_check. If you are unable to mount the 
-filesystem, then use the xfs_repair -L option to destroy the log and 
-attempt a repair.
-
-Since I am unable to mount the partition, shoud I use the -L option with 
-xfs_repair, or let it run without it?
-Again, please let me know if I should resend my previous email with the 
-log file of "xfs_repair -n".
-
-Thank you for your time,
-Dragos
-
-
-David Chinner wrote:
-> On Thu, Dec 06, 2007 at 07:39:28PM +0300, Michael Tokarev wrote:
+Berni wrote:
+> Hi
+>
+> I created the raid arrays during install with the text-installer-cd. 
+> So first the raid array was created and then the system was installed on it. 
+>
+>
+> I don't have a extra /boot partition its on the root (/) partition and the root is the md0 in the raid. Every partition for ubuntu (also swap) is in the raid.
+>
+> What exactly means rerunning grub? (to put both hdd into the mbr)? 
+> I can't find the "mkinitrd" into ubuntu. I made a update-initramfs but it didn't help.
+>
 >   
->> What to do is to give repairfs a try for each permutation,
->> but again without letting it to actually fix anything.
->> Just run it in read-only mode and see which combination
->> of drives gives less errors, or no fatal errors (there
->> may be several similar combinations, with the same order
->> of drives but with different drive "missing").
+I think you need some ubuntu guru to help, I always create a small raid1 
+for /boot and then use other arrays for whatever the system is doing. I 
+don't know if ubuntu uses mkinitrd or what, but it clearly didn't get it 
+right without a little help from you.
+> thanks 
+>   
+
+How about some input, ubuntu users (or Debian, isn't ubuntu really Debian?).
+>
+> On Sat, 02 Feb 2008 14:47:50 -0500
+> Bill Davidsen <davidsen@tmr.com> wrote:
+>
+>   
+>> Berni wrote:
 >>     
->
-> Ugggh. 
->
->   
->> It's sad that xfs refuses mount when "structure needs
->> cleaning" - the best way here is to actually mount it
->> and see how it looks like, instead of trying repair
->> tools. 
+>>> Hi!
+>>>
+>>> I have the following problem with my softraid (raid 1). I'm running
+>>> Ubuntu 7.10 64bit with kernel 2.6.22-14-generic.
+>>>
+>>> After every reboot my first boot partition in md0 is not synchron. One
+>>> of the disks (the sdb1) is removed. 
+>>> After a resynch every partition is synching. But after a reboot the
+>>> state is "removed". 
+>>>
+>>> The disks are new and both seagate 250gb with exactly the same partition table. 
+>>>
+>>>   
+>>>       
+>> Did you create the raid arrays and then install on them? Or add them 
+>> after the fact? I have seen this type of problem when the initrd doesn't 
+>> start the array before pivotroot, usually because the raid capabilities 
+>> aren't in the boot image. In that case rerunning grub and mkinitrd may help.
+>>
+>> I run raid on Redhat distributions, and some Slackware, so I can't speak 
+>> for Ubuntu from great experience, but that's what it sounds like. When 
+>> you boot, is the /boot mounted on a degraded array or on the raw partition?
 >>     
->
-> It self protection - if you try to write to a corrupted filesystem,
-> you'll only make the corruption worse. Mounting involves log
-> recovery, which writes to the filesystem....
->
->   
->> Is there some option to force-mount it still
->> (in readonly mode, knowing it may OOPs kernel etc)?
->>     
->
-> Sure you can: mount -o ro,norecovery <dev> <mtpt>
->
-> But it you hit corruption it will still shut down on you. If
-> the machine oopses then that is a bug.
->
->   
->> thread prompted me to think.  If I can't force-mount it
->> (or browse it using other ways) as I can almost always
->> do with (somewhat?) broken ext[23] just to examine things,
->> maybe I'm trying it before it's mature enough? ;)
->>     
->
-> Hehe ;)
->
-> For maximum uber-XFS-guru points, learn to browse your filesystem
-> with xfs_db. :P
->
-> Cheers,
->
-> Dave.
->   
+
+
+-- 
+Bill Davidsen <davidsen@tmr.com>
+  "Woe unto the statesman who makes war without a reason that will still
+  be valid when the war is over..." Otto von Bismark 
+
+
