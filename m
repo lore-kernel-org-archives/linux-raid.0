@@ -1,54 +1,44 @@
-From: Peter Rabbitson <rabbit+list@rabbit.us>
-Subject: Re: RAID 1 and grub
-Date: Sun, 03 Feb 2008 16:26:23 +0100
-Message-ID: <47A5DD1F.4010306@rabbit.us>
-References: <47A0F4DC.9030005@sauce.co.nz> <72dbd3150801301641n2801846cgc2f3bc04aa842baf@mail.gmail.com> <47A13379.50703@sauce.co.nz> <47A5E04E.4050403@tmr.com>
+From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
+Subject: Re: draft howto on making raids for surviving a disk crash
+Date: Sun, 3 Feb 2008 18:03:03 +0100
+Message-ID: <20080203170303.GB22179@rap.rap.dk>
+References: <20080202194131.GA7875@rap.rap.dk> <47A5E38F.6050603@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <47A5E04E.4050403@tmr.com>
+Content-Disposition: inline
+In-Reply-To: <47A5E38F.6050603@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Bill Davidsen <davidsen@tmr.com>
-Cc: Richard Scobie <richard@sauce.co.nz>, Linux RAID Mailing List <linux-raid@vger.kernel.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Bill Davidsen wrote:
-> Richard Scobie wrote:
->> A followup for the archives:
->>
->> I found this document very useful:
->>
->> http://lists.us.dell.com/pipermail/linux-poweredge/2003-July/008898.html
->>
->> After modifying my grub.conf to refer to (hd0,0), reinstalling grub on 
->> hdc with:
->>
->> grub> device (hd0) /dev/hdc
->>
->> grub> root (hd0,0)
->>
->> grub> (hd0)
->>
->> and rebooting with the bios set to boot off hdc, everything burst back 
->> into life.
->>
->> I shall now be checking all my Fedora/Centos RAID1 installs for grub 
->> installed on both drives.
-> 
-> Have you actually tested this by removing the first hd and booting? 
-> Depending on the BIOS I believe that the fallback drive will be called 
-> hdc by the BIOS but will be hdd in the system. That was with RHEL3, but 
-> worth testing.
-> 
+On Sun, Feb 03, 2008 at 10:53:51AM -0500, Bill Davidsen wrote:
+> Keld J=F8rn Simonsen wrote:
+> >This is intended for the linux raid howto. Please give comments.
+> >It is not fully ready /keld
+> >
+> >Howto prepare for a failing disk
+> >
+> >6. /etc/mdadm.conf
+> >
+> >Something here on /etc/mdadm.conf. What would be safe, allowing
+> >a system to boot even if a disk has crashed?
+> > =20
+>=20
+> Recommend PARTITIONS by used
 
-The line:
+Thanks Bill for your suggestions, which I have incorporated in the text=
+=2E
 
-grub> device (hd0) /dev/hdc
+However, I do not understand what to do with the remark above.
+Please explain.
 
-simply means "treat /dev/hdc as the first _bios_ hard disk in the system". 
-This way when grub writes to the MBR of hd0, it will be in fact writing to 
-/dev/hdc. The reason the drive must be referenced as hd0 (and not hd2) is 
-because grub enuerates drives according to the bios, and therefore the drive 
-from which the bios is currently booting is _always_ hd0.
-
+Best regards
+keld
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
