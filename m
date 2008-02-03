@@ -1,57 +1,29 @@
-From: Neil Brown <neilb@suse.de>
+From: Janek Kozicki <janek_listy@wp.pl>
 Subject: Re: raid10 on three discs - few questions.
-Date: Mon, 4 Feb 2008 10:11:27 +1100
-Message-ID: <18342.18975.229866.860765@notabene.brown>
+Date: Mon, 4 Feb 2008 00:29:52 +0100
+Message-ID: <20080204002952.1241f801@szpak>
 References: <20080203235043.3dbb6433@szpak>
+	<18342.18975.229866.860765@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Janek Kozicki on Sunday February 3
+In-Reply-To: <18342.18975.229866.860765@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Janek Kozicki <janek_listy@wp.pl>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sunday February 3, janek_listy@wp.pl wrote:
-> Hi,
-> 
-> Maybe I'll buy three HDDs to put a raid10 on them. And get the total
-> capacity of 1.5 of a disc. 'man 4 md' indicates that this is possible
-> and should work.
-> 
-> I'm wondering - how a single disc failure is handled in such configuration?
-> 
-> 1. does the array continue to work in a degraded state?
+Neil Brown said:     (by the date of Mon, 4 Feb 2008 10:11:27 +1100)
 
-Yes.
+wow, thanks for quick reply :)
 
+> > 3. Another thing - would raid10,far=2 work when three drives are used?
+> >    Would it increase the read performance?
 > 
-> 2. after the failure I can disconnect faulty drive, connect a new one,
->    start the computer, add disc to array and it will sync automatically?
-> 
+> Yes.
 
-Yes.
+is far=2 the most I could do to squeeze every possible MB/sec
+performance in raid10 on three discs ?
 
-> 
-> Question seems a bit obvious, but the configuration is, at least for
-> me, a bit unusual. This is why I'm asking. Anybody here tested such
-> configuration, has some experience?
-> 
-> 
-> 3. Another thing - would raid10,far=2 work when three drives are used?
->    Would it increase the read performance?
-
-Yes.
-
-> 
-> 4. Would it be possible to later '--grow' the array to use 4 discs in
->    raid10 ? Even with far=2 ?
-> 
-
-No.
-
-Well.... if by "later" you mean "in five years", then maybe.  But the
-code doesn't currently exist.
-
-NeilBrown
+-- 
+Janek Kozicki                                                         |
