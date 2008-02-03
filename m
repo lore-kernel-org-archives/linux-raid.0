@@ -1,25 +1,36 @@
-From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
-Subject: raid1 and raid 10 always writes all data to all disks?
-Date: Sun, 3 Feb 2008 00:53:35 +0100
-Message-ID: <20080202235335.GA29029@rap.rap.dk>
+From: Dexter Filmore <Dexter.Filmore@gmx.de>
+Subject: non-fresh: what?
+Date: Sun, 3 Feb 2008 03:54:33 +0100
+Message-ID: <200802030354.33435.Dexter.Filmore@gmx.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
- I found a sentence in the HOWTO:
+[   40.671910] md: md0 stopped.
+[   40.676923] md: bind<sdd1>
+[   40.677136] md: bind<sda1>
+[   40.677370] md: bind<sdb1>
+[   40.677572] md: bind<sdc1>
+[   40.677618] md: kicking non-fresh sdd1 from array!
 
-"raid1 and raid 10 always writes all data to all disks"
+When is a disk "non-fresh" and what might lead to this? 
+Happened about 15 times now since I built the array.
 
-I think this is wrong for raid10.
+Dex
 
-eg
 
-a raid10,f2 of 4 disks only writes to two of the disks -
-not all 4 disks. Is that true?
+-- 
+-----BEGIN GEEK CODE BLOCK-----
+Version: 3.12
+GCS d--(+)@ s-:+ a- C++++ UL++ P+>++ L+++>++++ E-- W++ N o? K-
+w--(---) !O M+ V- PS+ PE Y++ PGP t++(---)@ 5 X+(++) R+(++) tv--(+)@ 
+b++(+++) DI+++ D- G++ e* h>++ r* y?
+------END GEEK CODE BLOCK------
 
-best regards
-keld
+http://www.vorratsdatenspeicherung.de
