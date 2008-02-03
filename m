@@ -1,50 +1,41 @@
-From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
-Subject: Re: raid1 and raid 10 always writes all data to all disks?
-Date: Sun, 3 Feb 2008 18:13:17 +0100
-Message-ID: <20080203171317.GA24820@rap.rap.dk>
-References: <20080202235335.GA29029@rap.rap.dk> <47A5E411.10208@tmr.com>
+From: Richard Scobie <richard@sauce.co.nz>
+Subject: Re: RAID 1 and grub
+Date: Mon, 04 Feb 2008 07:31:49 +1300
+Message-ID: <47A60895.2080905@sauce.co.nz>
+References: <47A0F4DC.9030005@sauce.co.nz> <72dbd3150801301641n2801846cgc2f3bc04aa842baf@mail.gmail.com> <47A13379.50703@sauce.co.nz> <47A5E04E.4050403@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <47A5E411.10208@tmr.com>
+In-Reply-To: <47A5E04E.4050403@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: linux-raid@vger.kernel.org
+To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Sun, Feb 03, 2008 at 10:56:01AM -0500, Bill Davidsen wrote:
-> Keld J=F8rn Simonsen wrote:
-> > I found a sentence in the HOWTO:
-> >
-> >"raid1 and raid 10 always writes all data to all disks"
-> >
-> >I think this is wrong for raid10.
-> >
-> >eg
-> >
-> >a raid10,f2 of 4 disks only writes to two of the disks -
-> >not all 4 disks. Is that true?
-> > =20
->=20
-> I suspect that really should have read "all mirror copies," in the=20
-> raid10 case.
+Bill Davidsen wrote:
 
-OK, I changed the text to:
+> Have you actually tested this by removing the first hd and booting? 
+> Depending on the BIOS I believe that the fallback drive will be called 
+> hdc by the BIOS but will be hdd in the system. That was with RHEL3, but 
+> worth testing.
+> 
 
-raid1 always writes all data to all disks.
+Hi Bill,
 
-raid10 always writes all data to the number of copies that the raid hol=
-ds.
-=46or example on a raid10,f2 or raid10,o2 of 6 disks, the data will onl=
-y
-be written 2 times.
+I did not try this particular combination. I shut the box down, removed 
+the failed drive (hda) and installed it's replacement and proceeded from 
+there.
 
-Best regards
-Keld
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Once I had discovered that hdc had no grub installed, after running:
+
+grub> device (hd0) /dev/hdc
+
+grub> root (hd0,0)
+
+grub> setup (hd0)
+
+I set the BIOS to boot from hdc and it all worked.
+
+Regards,
+
+Richard
