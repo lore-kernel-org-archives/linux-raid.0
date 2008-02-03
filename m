@@ -1,36 +1,57 @@
-From: Dexter Filmore <Dexter.Filmore@gmx.de>
-Subject: non-fresh: what?
-Date: Sun, 3 Feb 2008 03:54:33 +0100
-Message-ID: <200802030354.33435.Dexter.Filmore@gmx.de>
+From: Richard Scobie <richard@sauce.co.nz>
+Subject: Re: RAID 1 and grub
+Date: Sun, 03 Feb 2008 16:50:25 +1300
+Message-ID: <47A53A01.9030809@sauce.co.nz>
+References: <47A0F4DC.9030005@sauce.co.nz> <72dbd3150801301641n2801846cgc2f3bc04aa842baf@mail.gmail.com> <47A13379.50703@sauce.co.nz> <72dbd3150801301847s6bbfa958h1213e782627e64a1@mail.gmail.com> <20080202235128.GB24990@rap.rap.dk>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <20080202235128.GB24990@rap.rap.dk>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-[   40.671910] md: md0 stopped.
-[   40.676923] md: bind<sdd1>
-[   40.677136] md: bind<sda1>
-[   40.677370] md: bind<sdb1>
-[   40.677572] md: bind<sdc1>
-[   40.677618] md: kicking non-fresh sdd1 from array!
+Keld J=F8rn Simonsen wrote:
 
-When is a disk "non-fresh" and what might lead to this? 
-Happened about 15 times now since I built the array.
+>> # grub
+>> grub> device (hd0) /dev/hdc
+>> grub> root (hd0,0)
+>> grub> setup (hd0)
+>=20
+> I do not grasp this. How and where is it said that two disks are
+> involved? hda and hdc should both be involved.
 
-Dex
+There are not two disks involved in this instance.
 
+This is used in the scenario where the primary disk in the RAID1=20
+(/dev/hda), already has grub installed in the MBR and you wish to=20
+install it on the secondary drive (/dev/hdc).
 
--- 
------BEGIN GEEK CODE BLOCK-----
-Version: 3.12
-GCS d--(+)@ s-:+ a- C++++ UL++ P+>++ L+++>++++ E-- W++ N o? K-
-w--(---) !O M+ V- PS+ PE Y++ PGP t++(---)@ 5 X+(++) R+(++) tv--(+)@ 
-b++(+++) DI+++ D- G++ e* h>++ r* y?
-------END GEEK CODE BLOCK------
+This then allows for a failed primary drive to be removed and the=20
+machine to boot from the secondary - (may need BIOS to be set to boot=20
+from secondary drive).
 
-http://www.vorratsdatenspeicherung.de
+As an aside, after last weeks discovery that the Fedora 8 install had=20
+not installed grub on the secondary drive, as part of a RAID 1 install,=
+=20
+some cursory Googling and searching Redhat's Knowledge base leads me to=
+=20
+believe that this may well be normal for all Redhat (RHEL/Fedora) RAID1=
+=20
+installs.
+
+One has nothing to lose by installing grub on the second drive in this=20
+case and it may save some delay in recovery on losing the primary,=20
+although as has been pointed out, it is best practice to test missing=20
+drives as part of initial install testing.
+
+Regards,
+
+Richard
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
