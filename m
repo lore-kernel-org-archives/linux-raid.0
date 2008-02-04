@@ -1,36 +1,50 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: /dev/sdb has different metadata to chosen array /dev/md1 0.91 0.90.
-Date: Mon, 4 Feb 2008 11:41:45 +1100
-Message-ID: <18342.24393.543507.149481@notabene.brown>
-References: <79135625.20080202061254@j8.com.ru>
+Subject: Re: problem with spare, acive device, clean degrated, reshaip RADI5, anybody can help ?
+Date: Mon, 4 Feb 2008 11:44:21 +1100
+Message-ID: <18342.24549.433129.798288@notabene.brown>
+References: <1153106913.20080131033456@j8.com.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Andreas-Sokov on Saturday February 2
+In-Reply-To: message from Andreas-Sokov on Thursday January 31
 Sender: linux-raid-owner@vger.kernel.org
 To: Andreas-Sokov <andre.s@j8.com.ru>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Saturday February 2, andre.s@j8.com.ru wrote:
-> =C7=E4=F0=E0=E2=F1=F2=E2=F3=E9=F2=E5, linux-raid.
->=20
-> Help please, How i can to fight THIS :
->=20
-> root@raid01:~# mdadm -I /dev/sdb
-> mdadm: /dev/sdb has different metadata to chosen array /dev/md1 0.91 =
-0.90.
->=20
+On Thursday January 31, andre.s@j8.com.ru wrote:
+> Hello linux-raid.
+> 
+> i have DEBIAN.
+> 
+> raid01:/# mdadm -V
+> mdadm - v2.6.4 - 19th October 2007
+> 
+> raid01:/# mdadm -D /dev/md1
+> /dev/md1:
+>         Version : 00.91.03
+>   Creation Time : Tue Nov 13 18:42:36 2007
+>      Raid Level : raid5
+....
+>   Delta Devices : 1, (4->5)
 
-Apparently "mdadm -I" doesn't work with arrays that are in the middle
-of a reshape.  I'll try to fix that for the next release.
+So the array is in the middle of a "reshape".
 
-Thanks for the report.
+It should automatically complete...  Presumably it isn't doing that?
+
+What does
+   cat /proc/mdstat
+say?
+
+Where kernel log messages do you get when you assemble the array?
+
+
+The spare device will not be added to the array until the reshape has
+finished.
+
+Hopefully you aren't using a 2.6.23 kernel?
+That kernel had a bug which corrupted data when reshaping a degraded
+raid5 array.
 
 NeilBrown
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
