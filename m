@@ -1,38 +1,36 @@
-From: "Jon Nelson" <jnelson-linux-raid@jamponi.net>
-Subject: Re: raid10 on three discs - few questions.
-Date: Sun, 3 Feb 2008 17:48:42 -0600
-Message-ID: <cccedfc60802031548y775f71c9gbcf08224c6747d22@mail.gmail.com>
-References: <20080203235043.3dbb6433@szpak>
-	 <18342.18975.229866.860765@notabene.brown>
-	 <20080204002952.1241f801@szpak>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: /dev/sdb has different metadata to chosen array /dev/md1 0.91 0.90.
+Date: Mon, 4 Feb 2008 11:41:45 +1100
+Message-ID: <18342.24393.543507.149481@notabene.brown>
+References: <79135625.20080202061254@j8.com.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20080204002952.1241f801@szpak>
-Content-Disposition: inline
+In-Reply-To: message from Andreas-Sokov on Saturday February 2
 Sender: linux-raid-owner@vger.kernel.org
+To: Andreas-Sokov <andre.s@j8.com.ru>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Feb 3, 2008 5:29 PM, Janek Kozicki <janek_listy@wp.pl> wrote:
-> Neil Brown said:     (by the date of Mon, 4 Feb 2008 10:11:27 +1100)
->
-> wow, thanks for quick reply :)
->
-> > > 3. Another thing - would raid10,far=2 work when three drives are used?
-> > >    Would it increase the read performance?
-> >
-> > Yes.
->
-> is far=2 the most I could do to squeeze every possible MB/sec
-> performance in raid10 on three discs ?
+On Saturday February 2, andre.s@j8.com.ru wrote:
+> =C7=E4=F0=E0=E2=F1=F2=E2=F3=E9=F2=E5, linux-raid.
+>=20
+> Help please, How i can to fight THIS :
+>=20
+> root@raid01:~# mdadm -I /dev/sdb
+> mdadm: /dev/sdb has different metadata to chosen array /dev/md1 0.91 =
+0.90.
+>=20
 
-In my opinion, yes. It has sequential read characteristics that place
-at /or better than/ raid0. Writing is slower, about the speed of a
-single disk, give or take.  The other two raid10 layouts (near and
-offset) are very close in performance to each other - nearly identical
-for reading/writing.
+Apparently "mdadm -I" doesn't work with arrays that are in the middle
+of a reshape.  I'll try to fix that for the next release.
 
--- 
-Jon
+Thanks for the report.
+
+NeilBrown
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
