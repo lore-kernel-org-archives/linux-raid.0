@@ -1,57 +1,33 @@
-From: Robin Hill <robin@robinhill.me.uk>
-Subject: Re: raid1 or raid10 for /boot
-Date: Mon, 4 Feb 2008 09:17:35 +0000
-Message-ID: <20080204091735.GA30156@cthulhu.home.robinhill.me.uk>
-References: <20080204063454.GA31046@rap.rap.dk>
+From: Michael Tokarev <mjt@tls.msk.ru>
+Subject: Re: RAID needs more to survive a power hit, different /boot layout
+ for example (was Re: draft howto on making raids for surviving a disk crash)
+Date: Mon, 04 Feb 2008 12:27:29 +0300
+Message-ID: <47A6DA81.3030008@msgid.tls.msk.ru>
+References: <47A612BE.5050707@pobox.com> <47A623EE.4050305@msgid.tls.msk.ru> <47A62A17.70101@pobox.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="9jxsPFA5p3P2qPhR"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20080204063454.GA31046@rap.rap.dk>
+In-Reply-To: <47A62A17.70101@pobox.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Moshe Yudkowsky <moshe@pobox.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Moshe Yudkowsky wrote:
+[]
+> But that's *exactly* what I have -- well, 5GB -- and which failed. I've
+> modified /etc/fstab system to use data=journal (even on root, which I
+> thought wasn't supposed to work without a grub option!) and I can
+> power-cycle the system and bring it up reliably afterwards.
 
---9jxsPFA5p3P2qPhR
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Note also that data=journal effectively doubles the write time.
+It's a bit faster for small writes (because all writes are first
+done into the journal, i.e. into the same place, so no seeking
+is needed), but for larger writes, the journal will become full
+and data found in it needs to be written to proper place, to free
+space for new data.  Here, if you'll continue writing, you will
+have more than 2x speed degradation, because of a) double writes,
+and b) more seeking.
 
-On Mon Feb 04, 2008 at 07:34:54AM +0100, Keld J=F8rn Simonsen wrote:
-
-> I understand that lilo and grub only can boot partitions that look like
-> a normal single-drive partition. And then I understand that a plain
-> raid10 has a layout which is equivalent to raid1. Can such a raid10
-> partition be used with grub or lilo for booting?
-> And would there be any advantages in this, for example better disk
-> utilization in the raid10 driver compared with raid?
->=20
-A plain RAID-10 does _not_ have a layout equivalent to RAID-1 and
-_cannot_ be used for booting (well, possibly a 2-disk RAID-10 could -
-I'm not sure how that'd be layed out).  RAID-10 uses striping as well as
-mirroring, and the striping breaks both grub and lilo (and, AFAIK, every
-other boot manager currently out there).
-
-Cheers,
-        Robin
---=20
-     ___       =20
-    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
-   / / )      | Little Jim says ....                            |
-  // !!       |      "He fallen in de water !!"                 |
-
---9jxsPFA5p3P2qPhR
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.7 (GNU/Linux)
-
-iD8DBQFHptguShxCyD40xBIRAtoSAJ4hl0kmmq/C6GWYKmthKlA6p/DhvACdEsdB
-ANDBlznN/WY3Nv9AxESw9qs=
-=LV6N
------END PGP SIGNATURE-----
-
---9jxsPFA5p3P2qPhR--
+/mjt
