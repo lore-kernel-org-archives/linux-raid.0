@@ -1,89 +1,57 @@
-From: Robin Hill <robin@robinhill.me.uk>
-Subject: Re: using update-initramfs: how to get new mdadm.conf into the
-	/boot? Or is it XFS?
-Date: Mon, 4 Feb 2008 22:25:21 +0000
-Message-ID: <20080204222521.GB7162@cthulhu.home.robinhill.me.uk>
-References: <47A77CC0.10807@pobox.com>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: RAID needs more to survive a power hit, different /boot layout
+ for example (was Re: draft howto on making raids for surviving a disk
+ crash)
+Date: Mon, 4 Feb 2008 17:27:50 -0500 (EST)
+Message-ID: <alpine.DEB.1.00.0802041727330.11257@p34.internal.lan>
+References: <47A612BE.5050707@pobox.com> <47A623EE.4050305@msgid.tls.msk.ru> <47A62A17.70101@pobox.com> <47A6DA81.3030008@msgid.tls.msk.ru> <47A6EFCF.9080906@pobox.com> <47A7188A.4070005@msgid.tls.msk.ru> <alpine.DEB.1.00.0802040909010.2415@p34.internal.lan>
+ <47A72061.3010800@sandeen.net> <47A73F90.3020307@msgid.tls.msk.ru>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="qlTNgmc+xy1dBmNv"
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <47A77CC0.10807@pobox.com>
+In-Reply-To: <47A73F90.3020307@msgid.tls.msk.ru>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux raid <linux-raid@vger.kernel.org>
+To: Michael Tokarev <mjt@tls.msk.ru>
+Cc: Eric Sandeen <sandeen@sandeen.net>, Moshe Yudkowsky <moshe@pobox.com>, linux-raid@vger.kernel.org, xfs@oss.sgi.com
 List-Id: linux-raid.ids
 
 
---qlTNgmc+xy1dBmNv
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
 
-On Mon Feb 04, 2008 at 02:59:44PM -0600, Moshe Yudkowsky wrote:
+On Mon, 4 Feb 2008, Michael Tokarev wrote:
 
-> I've managed to get myself into a little problem.
+> Eric Sandeen wrote:
+> []
+>> http://oss.sgi.com/projects/xfs/faq.html#nulls
+>>
+>> and note that recent fixes have been made in this area (also noted in
+>> the faq)
+>>
+>> Also - the above all assumes that when a drive says it's written/flushed
+>> data, that it truly has.  Modern write-caching drives can wreak havoc
+>> with any journaling filesystem, so that's one good reason for a UPS.  If
 >
-> Since power hits were taking out the /boot partition, I decided to split=
-=20
-> /boot out of root. Working from my emergency partition,  I copied all fil=
-es=20
-> from /root, re-partitioned what had been /root into room for /boot and=20
-> /root, and then created the drives. This left me with /dev/md/boot,=20
-> /dev/md/root, and /dev/md/base (everything else).
->
-> I modified mdadm.conf on the emergency partition, used update-initramfs t=
-o=20
-> make certain that the new md drives would be recognized, and rebooted. Th=
-is=20
-> worked as expected.
->
-> I then mounted all the entire new file system on a mount point, copied th=
-e=20
-> mdadm.conf to that point, did a chroot to that point, and did an=20
-> update-initramfs so that the non-emergency partition would have the updat=
-ed=20
-> mdadm.conf. This worked -- but with complaints about missing the file=20
-> /proc/modules (which is not present under chroot). If I use the -v option=
- I=20
-> can see the raid456, raid1, etc. modules loading.
->
-> I modified menu.lst to make certain that boot=3D/dev/md/boot, ran grub=20
-> (thanks, Robin!) successfully.
->
-> Problem: on reboot, the I get an error message:
->
-> root (hd0,1)  (Moshe comment: as expected)
-> Filesystem type is xfs, partition type 0xfd (Moshe comment: as expected)
-> kernel /boot/vmliuz-etc.-amd64 root=3D/dev/md/boot ro
->
-> Error 15: File not found
->
-"File not found" at that point would suggest it can't find the kernel
-file.  The path here should be relative to the root of the partition
-/boot is on, so if your /boot is its own partition then you should
-either use "kernel /vmlinuz...." or (the more usual solution from what
-I've seen) make sure there's a symlink:
-        ln -s . /boot/boot
+> Unfortunately an UPS does not *really* help here.  Because unless
+> it has control program which properly shuts system down on the loss
+> of input power, and the battery really has the capacity to power the
+> system while it's shutting down (anyone tested this?  With new UPS?
+> and after an year of use, when the battery is not new?), -- unless
+> the UPS actually has the capacity to shutdown system, it will cut
+> the power at an unexpected time, while the disk(s) still has dirty
+> caches...
+You use nut and a large enough UPS to handle the load of the system, it 
+shuts the machine down just fine.
 
-HTH,
-        Robin
---=20
-     ___       =20
-    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
-   / / )      | Little Jim says ....                            |
-  // !!       |      "He fallen in de water !!"                 |
-
---qlTNgmc+xy1dBmNv
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.7 (GNU/Linux)
-
-iD8DBQFHp5DQShxCyD40xBIRAihCAKDNCZEPlFgNYCmkzjtgFTXB7njVsQCgtynS
-VHbylFwy4cCjXpQTgPBIDQo=
-=buOG
------END PGP SIGNATURE-----
-
---qlTNgmc+xy1dBmNv--
+>
+>> the drive claims to have metadata safe on disk but actually does not,
+>> and you lose power, the data claimed safe will evaporate, there's not
+>> much the fs can do.  IO write barriers address this by forcing the drive
+>> to flush order-critical data before continuing; xfs has them on by
+>> default, although they are tested at mount time and if you have
+>> something in between xfs and the disks which does not support barriers
+>> (i.e. lvm...) then they are disabled again, with a notice in the logs.
+>
+> Note also that with linux software raid barriers are NOT supported.
+>
+> /mjt
+>
+>
