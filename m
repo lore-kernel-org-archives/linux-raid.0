@@ -1,75 +1,38 @@
-From: Robin Hill <robin@robinhill.me.uk>
-Subject: Re:  raid1 or raid10 for /boot
-Date: Mon, 4 Feb 2008 11:48:39 +0000
-Message-ID: <20080204114839.GD30156@cthulhu.home.robinhill.me.uk>
-References: <20080204063454.GA31046@rap.rap.dk> <20080204091735.GA30156@cthulhu.home.robinhill.me.uk> <20080204112140.GB20876@rap.rap.dk>
+From: Michael Tokarev <mjt@tls.msk.ru>
+Subject: Re: RAID needs more to survive a power hit, different /boot layout
+ for example (was Re: draft howto on making raids for surviving a disk crash)
+Date: Mon, 04 Feb 2008 16:52:10 +0300
+Message-ID: <47A7188A.4070005@msgid.tls.msk.ru>
+References: <47A612BE.5050707@pobox.com> <47A623EE.4050305@msgid.tls.msk.ru> <47A62A17.70101@pobox.com> <47A6DA81.3030008@msgid.tls.msk.ru> <47A6EFCF.9080906@pobox.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="qGV0fN9tzfkG3CxV"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20080204112140.GB20876@rap.rap.dk>
+In-Reply-To: <47A6EFCF.9080906@pobox.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Moshe Yudkowsky <moshe@pobox.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Moshe Yudkowsky wrote:
+[]
+> If I'm reading the man pages, Wikis, READMEs and mailing lists correctly
+> --  not necessarily the case -- the ext3 file system uses the equivalent
+> of data=journal as a default.
 
---qGV0fN9tzfkG3CxV
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+ext3 defaults to data=ordered, not data=journal.  ext2 doesn't have
+journal at all.
 
-On Mon Feb 04, 2008 at 12:21:40PM +0100, Keld J=F8rn Simonsen wrote:
+> The question then becomes what data scheme to use with reiserfs on the
 
-> On Mon, Feb 04, 2008 at 09:17:35AM +0000, Robin Hill wrote:
-> > On Mon Feb 04, 2008 at 07:34:54AM +0100, Keld J=F8rn Simonsen wrote:
-> >=20
-> > > I understand that lilo and grub only can boot partitions that look li=
-ke
-> > > a normal single-drive partition. And then I understand that a plain
-> > > raid10 has a layout which is equivalent to raid1. Can such a raid10
-> > > partition be used with grub or lilo for booting?
-> > > And would there be any advantages in this, for example better disk
-> > > utilization in the raid10 driver compared with raid?
-> > >=20
-> > A plain RAID-10 does _not_ have a layout equivalent to RAID-1 and
-> > _cannot_ be used for booting (well, possibly a 2-disk RAID-10 could -
-> > I'm not sure how that'd be layed out).  RAID-10 uses striping as well as
-> > mirroring, and the striping breaks both grub and lilo (and, AFAIK, every
-> > other boot manager currently out there).
->=20
-> Yes, it is understood that raid10,f2 uses striping, but a raid10,near=3D2,
-> far=3D1 does not use striping, anfd this is what you get if you just make
-> a    mdadm --create /dev/md0 -l 10 -n 2 /dev/sda1 /dev/sdb1
->=20
-Well yes, if you do a two-disk RAID-10 then (as I said above) you
-probably end up with a RAID-1 (as you do with a two-disk RAID-5).  I
-don't see how this would work any differently (or better) than a RAID-1
-though (and only serves to confuse things).
+I'd say don't use reiserfs in the first place ;)
 
-If you have more than two disks then RAID-10 will _always_ stripe (no
-matter whether you use near, far or offset layout - these affect only
-where the mirrored chunks are put) and grub/lilo will fail to work.
+> Another way to phrase this: unless you're running data-center grade
+> hardware and have absolute confidence in your UPS, you should use
+> data=journal for reiserfs and perhaps avoid XFS entirely.
 
-Cheers,
-        Robin
+By the way, even if you do have a good UPS, there should be some
+control program for it, to properly shut down your system when
+UPS loses the AC power.  So far, I've seen no such programs...
 
---=20
-     ___       =20
-    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
-   / / )      | Little Jim says ....                            |
-  // !!       |      "He fallen in de water !!"                 |
-
---qGV0fN9tzfkG3CxV
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.7 (GNU/Linux)
-
-iD8DBQFHpvuWShxCyD40xBIRAgUxAKDWSYi/3hXYcGka6C/BEQF/fqnWIwCfaWih
-4DIfDWawmDyE+Tkj9GIadd0=
-=7f7w
------END PGP SIGNATURE-----
-
---qGV0fN9tzfkG3CxV--
+/mjt
