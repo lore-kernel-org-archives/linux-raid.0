@@ -1,48 +1,52 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
+From: Eric Sandeen <sandeen@sandeen.net>
 Subject: Re: RAID needs more to survive a power hit, different /boot layout
- for example (was Re: draft howto on making raids for surviving a disk
- crash)
-Date: Mon, 4 Feb 2008 09:09:53 -0500 (EST)
-Message-ID: <alpine.DEB.1.00.0802040909010.2415@p34.internal.lan>
-References: <47A612BE.5050707@pobox.com> <47A623EE.4050305@msgid.tls.msk.ru> <47A62A17.70101@pobox.com> <47A6DA81.3030008@msgid.tls.msk.ru> <47A6EFCF.9080906@pobox.com> <47A7188A.4070005@msgid.tls.msk.ru>
+ for example (was Re: draft howto on making raids for surviving a disk crash)
+Date: Mon, 04 Feb 2008 08:25:37 -0600
+Message-ID: <47A72061.3010800@sandeen.net>
+References: <47A612BE.5050707@pobox.com> <47A623EE.4050305@msgid.tls.msk.ru> <47A62A17.70101@pobox.com> <47A6DA81.3030008@msgid.tls.msk.ru> <47A6EFCF.9080906@pobox.com> <47A7188A.4070005@msgid.tls.msk.ru> <alpine.DEB.1.00.0802040909010.2415@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <47A7188A.4070005@msgid.tls.msk.ru>
-Sender: linux-raid-owner@vger.kernel.org
-To: Michael Tokarev <mjt@tls.msk.ru>
-Cc: Moshe Yudkowsky <moshe@pobox.com>, linux-raid@vger.kernel.org, xfs@oss.sgi.com, sandeen@sandeen.net
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <xfs-bounce@oss.sgi.com>
+In-Reply-To: <alpine.DEB.1.00.0802040909010.2415@p34.internal.lan>
+Sender: xfs-bounce@oss.sgi.com
+Errors-to: xfs-bounce@oss.sgi.com
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: Michael Tokarev <mjt@tls.msk.ru>, Moshe Yudkowsky <moshe@pobox.com>, linux-raid@vger.kernel.org, xfs@oss.sgi.com
 List-Id: linux-raid.ids
 
+Justin Piszcz wrote:
 
+> Why avoid XFS entirely?
+> 
+> esandeen, any comments here?
 
-On Mon, 4 Feb 2008, Michael Tokarev wrote:
+Heh; well, it's the meme.
 
-> Moshe Yudkowsky wrote:
-> []
->> If I'm reading the man pages, Wikis, READMEs and mailing lists correctly
->> --  not necessarily the case -- the ext3 file system uses the equivalent
->> of data=journal as a default.
->
-> ext3 defaults to data=ordered, not data=journal.  ext2 doesn't have
-> journal at all.
->
->> The question then becomes what data scheme to use with reiserfs on the
->
-> I'd say don't use reiserfs in the first place ;)
->
->> Another way to phrase this: unless you're running data-center grade
->> hardware and have absolute confidence in your UPS, you should use
->> data=journal for reiserfs and perhaps avoid XFS entirely.
->
-> By the way, even if you do have a good UPS, there should be some
-> control program for it, to properly shut down your system when
-> UPS loses the AC power.  So far, I've seen no such programs...
->
-> /mjt
+see:
 
-Why avoid XFS entirely?
+http://oss.sgi.com/projects/xfs/faq.html#nulls
 
-esandeen, any comments here?
+and note that recent fixes have been made in this area (also noted in
+the faq)
 
-Justin.
+Also - the above all assumes that when a drive says it's written/flushed
+data, that it truly has.  Modern write-caching drives can wreak havoc
+with any journaling filesystem, so that's one good reason for a UPS.  If
+the drive claims to have metadata safe on disk but actually does not,
+and you lose power, the data claimed safe will evaporate, there's not
+much the fs can do.  IO write barriers address this by forcing the drive
+to flush order-critical data before continuing; xfs has them on by
+default, although they are tested at mount time and if you have
+something in between xfs and the disks which does not support barriers
+(i.e. lvm...) then they are disabled again, with a notice in the logs.
+
+Note also that ext3 has the barrier option as well, but it is not
+enabled by default due to performance concerns.  Barriers also affect
+xfs performance, but enabling them in the non-battery-backed-write-cache
+scenario is the right thing to do for filesystem integrity.
+
+-Eric
+
+> Justin.
+> 
