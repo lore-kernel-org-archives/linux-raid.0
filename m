@@ -1,39 +1,56 @@
-From: Moshe Yudkowsky <moshe@pobox.com>
-Subject: Re: using update-initramfs: how to get new mdadm.conf into the /boot?
- Or is it XFS?
-Date: Mon, 04 Feb 2008 19:23:41 -0600
-Message-ID: <47A7BA9D.3070501@pobox.com>
-References: <47A77CC0.10807@pobox.com> <20080204222521.GB7162@cthulhu.home.robinhill.me.uk> <47A798EA.40002@pobox.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: when is a disk "non-fresh"?
+Date: Tue, 5 Feb 2008 13:02:00 +1100
+Message-ID: <18343.50072.164266.861934@notabene.brown>
+References: <200802030354.33435.Dexter.Filmore@gmx.de>
+	<200802042305.11860.Dexter.Filmore@gmx.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <47A798EA.40002@pobox.com>
+In-Reply-To: message from Dexter Filmore on Monday February 4
 Sender: linux-raid-owner@vger.kernel.org
-To: linux raid <linux-raid@vger.kernel.org>
+To: Dexter Filmore <Dexter.Filmore@gmx.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I wrote:
+On Monday February 4, Dexter.Filmore@gmx.de wrote:
+> Seems the other topic wasn't quite clear...
 
-> Now it's failed in a different section and complains that it can't find 
-> /sbin/init. I'm at the (initramfs) prompt, which I don't ever recall 
-> seeing before. I can't  mount /dev/md/root on any mount points ("invalid 
-> arguments" even though I'm not supplying any). I've checked /dev/md/root 
-> and it does work as expected when I try mounting it while in my 
-> emergency partition, and it does contain /sbin/init and the other files 
-> and mount points for /var, /boot, /tmp, etc.
+not necessarily.  sometimes it helps to repeat your question.  there
+is a lot of noise on the internet and somethings important things get
+missed... :-)
+
+> Occasionally a disk is kicked for being "non-fresh" - what does this mean and 
+> what causes it?
+
+The 'event' count is too small.  
+Every event that happens on an array causes the event count to be
+incremented.
+If the event counts on different devices differ by more than 1, then
+the smaller number is 'non-fresh'.
+
+You need to look to the kernel logs of when the array was previously
+shut down to figure out why it is now non-fresh.
+
+NeilBrown
+
+
 > 
-> So this leads me to the question of why /sbin isn't being seen. /sbin is 
-> on the device /dev/md/root, and /etc/fstab specifically mounts it at /. 
->  I would think /boot would look at an internal copy of /etc/fstab. Is 
-> this another side effect of using /boot on its own partition?
-
-The answer: I managed to make a mistake in the configuration of grub, in 
-  /boot/grub/menu.lst. I'd changed root= from /dev/md/root to 
-/dev/md/boot -- but I really need to include the *root* location, which 
-does not change, vs. the boot location, which is not relevant.
-
--- 
-Moshe Yudkowsky * moshe@pobox.com * www.pobox.com/~moshe
-"The central tenet of Buddhism is not 'Every man for himself.'"
-                                         -- Wanda
+> Dex
+> 
+> 
+> 
+> -- 
+> -----BEGIN GEEK CODE BLOCK-----
+> Version: 3.12
+> GCS d--(+)@ s-:+ a- C++++ UL++ P+>++ L+++>++++ E-- W++ N o? K-
+> w--(---) !O M+ V- PS+ PE Y++ PGP t++(---)@ 5 X+(++) R+(++) tv--(+)@ 
+> b++(+++) DI+++ D- G++ e* h>++ r* y?
+> ------END GEEK CODE BLOCK------
+> 
+> http://www.vorratsdatenspeicherung.de
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
