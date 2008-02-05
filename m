@@ -1,35 +1,91 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: Deleting mdadm RAID arrays
-Date: Wed, 6 Feb 2008 07:12:32 +1100
-Message-ID: <18344.49968.584648.904844@notabene.brown>
-References: <200802051142.19625.admin@domeny.pl>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: which raid level gives maximum overall speed? (raid-10,f2 vs.
+ raid-0)
+Date: Tue, 5 Feb 2008 17:28:27 -0500 (EST)
+Message-ID: <alpine.DEB.1.00.0802051726510.10352@p34.internal.lan>
+References: <20080130192133.17b254bf@szpak> <20080130220007.GG20173@rap.rap.dk> <20080130233639.5d46b044@szpak> <20080131015506.GB6617@rap.rap.dk> <20080205161036.GA30326@rap.rap.dk> <alpine.DEB.1.00.0802051152500.9790@p34.internal.lan>
+ <20080205200423.GB17621@rap.rap.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: MULTIPART/MIXED; BOUNDARY="-1463747160-1114481314-1202250507=:10352"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Marcin Krol on Tuesday February 5
+In-Reply-To: <20080205200423.GB17621@rap.rap.dk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Marcin Krol <admin@domeny.pl>
-Cc: linux-raid@vger.kernel.org
+To: =?ISO-8859-15?Q?Keld_J=F8rn_Simonsen?= <keld@dkuug.dk>
+Cc: Janek Kozicki <janek_listy@wp.pl>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday February 5, admin@domeny.pl wrote:
-> 
-> % mdadm --zero-superblock /dev/sdb1
-> mdadm: Couldn't open /dev/sdb1 for write - not zeroing
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-That's weird.
-Why can't it open it?
+---1463747160-1114481314-1202250507=:10352
+Content-Type: TEXT/PLAIN; charset=iso-8859-1; format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 
-Maybe you aren't running as root (The '%' prompt is suspicious).
-Maybe the kernel has  been told to forget about the partitions of
-/dev/sdb.
-mdadm will sometimes tell it to do that, but only if you try to
-assemble arrays out of whole components.
 
-If that is the problem, then
-   blockdev --rereadpt /dev/sdb
 
-will fix it.
+On Tue, 5 Feb 2008, Keld J=F8rn Simonsen wrote:
 
-NeilBrown
+> On Tue, Feb 05, 2008 at 11:54:27AM -0500, Justin Piszcz wrote:
+>>
+>>
+>> On Tue, 5 Feb 2008, Keld J=F8rn Simonsen wrote:
+>>
+>>> On Thu, Jan 31, 2008 at 02:55:07AM +0100, Keld J=F8rn Simonsen wrote:
+>>>> On Wed, Jan 30, 2008 at 11:36:39PM +0100, Janek Kozicki wrote:
+>>>>> Keld J=F8rn Simonsen said:     (by the date of Wed, 30 Jan 2008 23:00=
+:07
+>>>>> +0100)
+>>>>>
+>>>>
+>>>> All the raid10's will have double time for writing, and raid5 and raid=
+6
+>>>> will also have double or triple writing times, given that you can do
+>>>> striped writes on the raid0.
+>>>
+>>> For raid5 and raid6 I think this is even worse. My take is that for
+>>> raid5 when you write something, you first read the chunk data involved,
+>>> then you read the parity data, then you xor-subtract the data to be
+>>> changed, and you xor-add the new data, and then write the new data chun=
+k
+>>> and the new parity chunk. In total 2 reads and 2 writes. The read/write=
+s
+>>> happen on the same chunks, so latency is minimized. But in essence it i=
+s
+>>> still 4 IO operations, where it is only 2 writes on raid1/raid10,
+>>> that is only half the speed for writing on raid5 compared to raid1/10.
+>>>
+>>> On raid6 this amounts to 6 IO operations, resulting in 1/3 of the
+>>> writing speed of raid1/10.
+>>>
+>>> I note in passing that there is no difference between xor-subtract and
+>>> xor-add.
+>>>
+>>> Also I assume that you can calculate the parities of both raid5 and
+>>> raid6 given the old parities chunks and the old and new data chunk.
+>>> If you have to calculate the new parities by reading all the component
+>>> data chunks this is going to be really expensive, both in IO and CPU.
+>>> For a 10 drive raid5 this would involve reading 9 data chunks, and
+>>> making writes 5 times as expensive as raid1/10.
+>>>
+>>> best regards
+>>> keld
+>>> -
+>>> To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>
+>>
+>> On my benchmarks RAID5 gave the best overall speed with 10 raptors,
+>> although I did not play with the various offsets/etc as much as I have
+>> tweaked the RAID5.
+>
+> Could you give some figures?
+
+I remember testing with bonnie++ and raid10 was about half the speed=20
+(200-265 MiB/s) as RAID5 (400-420 MiB/s) for sequential output, but input=
+=20
+was closer to RAID5 speeds/did not seem affected (~550MiB/s).
+
+Justin.
+---1463747160-1114481314-1202250507=:10352--
