@@ -1,38 +1,52 @@
-From: Moshe Yudkowsky <moshe@pobox.com>
-Subject: Re: Deleting mdadm RAID arrays
-Date: Tue, 05 Feb 2008 08:33:57 -0600
-Message-ID: <47A873D5.3000201@pobox.com>
-References: <200802051142.19625.admin@domeny.pl> <20080205132717.238c4312@szpak> <47A86A12.2090405@msgid.tls.msk.ru>
+From: Janek Kozicki <janek_listy@wp.pl>
+Subject: Re: Auto generation of mdadm.conf  (was: Deleting mdadm RAID
+ arrays)
+Date: Tue, 5 Feb 2008 15:47:13 +0100
+Message-ID: <20080205154713.0ccae001@szpak>
+References: <200802051142.19625.admin@domeny.pl>
+	<20080205132717.238c4312@szpak>
+	<47A86A12.2090405@msgid.tls.msk.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <47A86A12.2090405@msgid.tls.msk.ru>
 Sender: linux-raid-owner@vger.kernel.org
-To: Michael Tokarev <mjt@tls.msk.ru>
-Cc: Janek Kozicki <janek_listy@wp.pl>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Michael Tokarev wrote:
+Michael Tokarev said:     (by the date of Tue, 05 Feb 2008 16:52:18 +0300)
+
 > Janek Kozicki wrote:
->> Marcin Krol said:     (by the date of Tue, 5 Feb 2008 11:42:19 +0100)
->>
->>> 2. How can I delete that damn array so it doesn't hang my server up in a loop?
->> dd if=/dev/zero of=/dev/sdb1 bs=1M count=10
+> > I'm not using mdadm.conf at all. 
 > 
-> This works provided the superblocks are at the beginning of the
-> component devices.  Which is not the case by default (0.90
-> superblocks, at the end of components), or with 1.0 superblocks.
-> 
->   mdadm --zero-superblock /dev/sdb1
+> That's wrong, as you need at least something to identify the array
+> components. 
 
-Would that work if even if he doesn't update his mdadm.conf inside the 
-/boot image? Or would mdadm attempt to build the array according to the 
-instructions in mdadm.conf? I expect that it might depend on whether the 
-instructions are given in terms of UUID or in terms of devices.
+I was afraid of that ;-) So, is that a correct way to automatically
+generate a correct mdadm.conf ? I did it after some digging in man pages:
 
+  echo 'DEVICE partitions' > mdadm.conf
+  mdadm  --examine  --scan --config=mdadm.conf >> ./mdadm.conf 
+
+Now, when I do 'cat mdadm.conf' i get:
+
+ DEVICE partitions
+ ARRAY /dev/md/0 level=raid1 metadata=1 num-devices=3 UUID=75b0f87879:539d6cee:f22092f4:7a6e6f name='backup':0
+ ARRAY /dev/md/2 level=raid1 metadata=1 num-devices=3 UUID=4fd340a6c4:db01d6f7:1e03da2d:bdd574 name=backup:2
+ ARRAY /dev/md/1 level=raid5 metadata=1 num-devices=3 UUID=22f22c3599:613d5231:d407a655:bdeb84 name=backup:1
+
+Looks quite reasonable. Should I append it to /etc/mdadm/mdadm.conf ?
+This file currently contains: (commented lines are left out)
+
+  DEVICE partitions
+  CREATE owner=root group=disk mode=0660 auto=yes
+  HOMEHOST <system>
+  MAILADDR root
+
+This is the default content of /etc/mdadm/mdadm.conf on fresh debian
+etch install.
+
+best regards
 -- 
-Moshe Yudkowsky * moshe@pobox.com * www.pobox.com/~moshe
-  "I think it a greater honour to have my head standing on the ports
-   of this town for this quarrel, than to have my portrait in the
-   King's bedchamber." -- Montrose, 20 May 1650
+Janek Kozicki
