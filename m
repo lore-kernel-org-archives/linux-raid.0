@@ -1,42 +1,47 @@
-From: Janek Kozicki <janek_listy@wp.pl>
-Subject: Re: mdadm 2.6.4 : How i can check out current status of reshaping ?
-Date: Wed, 6 Feb 2008 23:26:58 +0100
-Message-ID: <20080206232658.5cb39af9@szpak>
-References: <79188012.20080204070802@j8.com.ru>
-	<18343.38465.112723.66522@notabene.brown>
-	<58351009.20080205121332@j8.com.ru>
-	<18344.13816.921912.885730@notabene.brown>
-	<119270390.20080206221505@j8.com.ru>
+From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
+Subject: Re: raid1 or raid10 for /boot
+Date: Wed, 6 Feb 2008 23:43:03 +0100
+Message-ID: <20080206224303.GG15772@rap.rap.dk>
+References: <20080204063454.GA31046@rap.rap.dk> <47AA01DB.8080706@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <119270390.20080206221505@j8.com.ru>
+Content-Disposition: inline
+In-Reply-To: <47AA01DB.8080706@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
+To: Bill Davidsen <davidsen@tmr.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Andreas-Sokov said:     (by the date of Wed, 6 Feb 2008 22:15:05 +0300)
+On Wed, Feb 06, 2008 at 01:52:11PM -0500, Bill Davidsen wrote:
+> Keld J=F8rn Simonsen wrote:
+> >I understand that lilo and grub only can boot partitions that look l=
+ike
+> >a normal single-drive partition. And then I understand that a plain
+> >raid10 has a layout which is equivalent to raid1. Can such a raid10
+> >partition be used with grub or lilo for booting?
+> >And would there be any advantages in this, for example better disk
+> >utilization in the raid10 driver compared with raid?
+> > =20
+>=20
+> I don't know about you, but my /boot goes with zero use between boots=
+,=20
+> efficiency and performance improvements strike as a distinction witho=
+ut=20
+> a difference, while adding complexity without benefit is always a bad=
+ idea.
+>=20
+> I suggest that you avoid having a "learning experience" and stick wit=
+h=20
+> raid1.
 
-> Hello, Neil.
-> 
-> .....
-> > Possible you have bad memory, or a bad CPU, or you are overclocking
-> > the CPU, or it is getting hot, or something.
-> 
-> As seems to me all my problems has been started after i have started update MDADM.
+I agree with you, it was only a theoretical question.
 
-what is the update?
-
-- you installed a new version of mdadm?
-- you installed new kernel?
-- something else?
-
-- what was the version before, and what version is now?
-
-- can you downgrade to previous version?
-
-
-best regards
--- 
-Janek Kozicki                                                         |
+Best regards
+keld
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
