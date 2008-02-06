@@ -1,47 +1,46 @@
-From: Andreas-Sokov <andre.s@j8.com.ru>
-Subject: Re[4]: mdadm 2.6.4 : How i can check out current status of reshaping ?
-Date: Wed, 6 Feb 2008 22:15:05 +0300
-Message-ID: <119270390.20080206221505@j8.com.ru>
-References: <79188012.20080204070802@j8.com.ru>
- <18343.38465.112723.66522@notabene.brown> <58351009.20080205121332@j8.com.ru>
- <18344.13816.921912.885730@notabene.brown>
-Reply-To: Andreas-Sokov <andre.s@j8.com.ru>
+From: Wolfgang Denk <wd@denx.de>
+Subject: Re: recommendations for stripe/chunk size
+Date: Wed, 06 Feb 2008 21:25:36 +0100
+Message-ID: <20080206202536.3316124D1D@gemini.denx.de>
+References: <47AA08E7.5000801@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18344.13816.921912.885730@notabene.brown>
+In-reply-to: Your message of "Wed, 06 Feb 2008 14:22:15 EST."
+             <47AA08E7.5000801@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: =?ISO-8859-1?Q?Keld_J=F8rn_Simonsen?= <keld@dkuug.dk>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello, Neil.
+In message <47AA08E7.5000801@tmr.com> you wrote:
+>
+> > I actually  think the kernel should operate with block sizes
+> > like this and not wth 4 kiB blocks. It is the readahead and the elevator
+> > algorithms that save us from randomly reading 4 kb a time.
+> >
+> >   
+> Exactly, and nothing save a R-A-RW cycle if the write is a partial chunk.
 
-.....
-> Possible you have bad memory, or a bad CPU, or you are overclocking
-> the CPU, or it is getting hot, or something.
+Indeed kernel page size is an important factor in such optimizations.
+But you have to keep in mind that this is mostly efficient for (very)
+large strictly sequential I/O operations only -  actual  file  system
+traffic may be *very* different.
 
-As seems to me all my problems has been started after i have started update MDADM.
-This is server worked normaly (but only not like soft-raid) more 2-3 years.
-Last 6 months it worked as soft-raid. All was normaly, Even I have added successfully
-4th hdd into raid5 )when it stared was 3 hdd). And then Reshaping have been passed fine.
+We implemented the option to select kernel page sizes of  4,  16,  64
+and  256  kB for some PowerPC systems (440SPe, to be precise). A nice
+graphics of the effect can be found here:
 
-Yesterday i have did memtest86 onto it server and 10 passes was WITH OUT any errors.
-Temperature of server is about 25 grad celsius.
-No overlocking, all set to default.
+https://www.amcc.com/MyAMCC/retrieveDocument/PowerPC/440SPe/RAIDinLinux_PB_0529a.pdf
 
-Realy i do not know what to do because off wee nedd grow our storage, and we can not.
-unfortunately, At this moment - Mdadm do not help us in this decision, but very want
-it get.
+Best regards,
 
-> But you clearly have a hardware error.
-
-> NeilBrown
-
-
+Wolfgang Denk
 
 -- 
-Best regards,
-Andreas-Sokov
-
+DENX Software Engineering GmbH,     MD: Wolfgang Denk & Detlev Zundel
+HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
+Phone: (+49)-8142-66989-10 Fax: (+49)-8142-66989-80 Email: wd@denx.de
+You got to learn three things. What's  real,  what's  not  real,  and
+what's the difference."           - Terry Pratchett, _Witches Abroad_
