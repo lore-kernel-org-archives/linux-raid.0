@@ -1,101 +1,88 @@
-From: Nagilum <nagilum@nagilum.org>
-Subject: Re: Disk failure during grow, what is the current state.
-Date: Wed, 06 Feb 2008 15:34:27 +0100
-Message-ID: <20080206153427.8od37w9d0kwokcos@cakebox.homeunix.net>
-References: <038301c868c0$07afcb30$0603a8c0@meanmachine>
+From: "Steve Fairbairn" <steve@fairbairn-family.com>
+Subject: FW: Disk failure during grow, what is the current state.
+Date: Wed, 6 Feb 2008 15:04:01 -0000
+Message-ID: <047a01c868d1$821f92e0$0603a8c0@meanmachine>
 Mime-Version: 1.0
-Content-Type: multipart/signed;
-	boundary="=_dtes5z1j9tc";
-	protocol="application/pgp-signature";
-	micalg="pgp-sha1"
+Content-Type: text/plain;
+	charset="windows-1250"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <038301c868c0$07afcb30$0603a8c0@meanmachine>
 Sender: linux-raid-owner@vger.kernel.org
-To: Steve Fairbairn <steve@fairbairn-family.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This message is in MIME format and has been PGP signed.
 
---=_dtes5z1j9tc
-Content-Type: text/plain;
-	charset=UTF-8;
-	DelSp="Yes";
-	format="flowed"
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+I'm having a nightmare with emails today.  I can't get a single one
+right first time.  Apologies to Alex for sending it directly to him and
+not to the list on first attempt.
 
------ Message from steve@fairbairn-family.com ---------
-     Date: Wed, 6 Feb 2008 12:58:55 -0000
-     From: Steve Fairbairn <steve@fairbairn-family.com>
-Reply-To: Steve Fairbairn <steve@fairbairn-family.com>
-  Subject: Disk failure during grow, what is the current state.
-       To: linux-raid@vger.kernel.org
+Steve
 
+> -----Original Message-----
+> From: Steve Fairbairn [mailto:steve@fairbairn-family.com] 
+> Sent: 06 February 2008 15:02
+> To: 'Nagilum'
+> Subject: RE: Disk failure during grow, what is the current state.
+> 
+> 
+> 
+> 
+> > -----Original Message-----
+> > From: linux-raid-owner@vger.kernel.org
+> > [mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Nagilum
+> > Sent: 06 February 2008 14:34
+> > To: Steve Fairbairn
+> > Cc: linux-raid@vger.kernel.org
+> > Subject: Re: Disk failure during grow, what is the current state.
+> > 
+> > 
+> > 
+> > If a drive failes during reshape the reshape will just
+> > continue. The blocks which were on the failed drive are 
+> > calculated from the the  
+> > other disks and writes to the failed disk are simply omitted. 
+> > The result is a raid5 with a failed drive. You should get a 
+> > new drive asap to restore the redundancy. Also it's kinda 
+> > important that you don't run 2.6.23 because it has a  
+> > nasty bug which would be triggered in this scenario.
+> > The reshape probably increased in speed after the system was 
+> > no longer  
+> > actively used and io bandwidth freed up.
+> > Kind regards,
+> > Alex.
+> > 
+> 
+> Thanks for the response Alex, but....
+> 
+>      Array Size : 1953535744 (1863.04 GiB 2000.42 GB)
+>   Used Dev Size : 488383936 (465.76 GiB 500.11 GB)
+> 
+> Surely the added disk should now been added to the Array 
+> Size?  5 * 500GB is 2500GB, not 2000GB.  This is why I don't 
+> think the reshape has continued.  As for speeding up because 
+> of no IO badwidth, this also doesn't actually hold very true, 
+> because the system was at a point of not being used anyway 
+> before I added the disk, and I didn't unmount the drive until 
+> this morning after it claimed it had finished doing anything.
+> 
+> It's because the size doesn't match up to all 5 disks being 
+> used that I still wonder at the state of the array.
+> 
+> Steve.
+> 
+> 
+> 
+> 
+> No virus found in this outgoing message.
+> Checked by AVG Free Edition. 
+> Version: 7.5.516 / Virus Database: 269.19.20/1261 - Release 
+> Date: 05/02/2008 20:57
+>  
+> 
 
-> As you can see, one of the original 5 devices has failed (sdd1) and
-> automatically removed.  The reshape has stopped, but the new disk seems
-> to be in and clean which is the bit I don't understand.  The new disk
-> hasn't been added to the size, so it would seem that md has switched it
-> to being used as a spare instead (possibly as the grow hadn't
-> completed?).
->
-> How come it seems to have recovered so nicely?
-> Is there something I can do to check it's integrity?
-> Was it just so much quicker than 2 days because it switched to only
-> having to sort out the 1 disk? Would it be safe to run an fsck to check
-> the integrity of the fs?  I don't want to inadvertently blat the raid
-> array by 'using' it when it's in a dodgy state.
->
-> I have unmounted the drive for the time being, so that it doesn't get
-> any writes until I know what state it is really in.
+No virus found in this outgoing message.
+Checked by AVG Free Edition. 
+Version: 7.5.516 / Virus Database: 269.19.20/1261 - Release Date:
+05/02/2008 20:57
+ 
 
-
------ End message from steve@fairbairn-family.com -----
-
-If a drive failes during reshape the reshape will just continue.
-The blocks which were on the failed drive are calculated from the the =20
-other disks and writes to the failed disk are simply omitted.
-The result is a raid5 with a failed drive.
-You should get a new drive asap to restore the redundancy.
-Also it's kinda important that you don't run 2.6.23 because it has a =20
-nasty bug which would be triggered in this scenario.
-The reshape probably increased in speed after the system was no longer =20
-actively used and io bandwidth freed up.
-Kind regards,
-Alex.
-
-
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-#    _  __          _ __     http://www.nagilum.org/ \n icq://69646724 #
-#   / |/ /__ ____ _(_) /_ ____ _  nagilum@nagilum.org \n +491776461165 #
-#  /    / _ `/ _ `/ / / // /  ' \  Amiga (68k/PPC): AOS/NetBSD/Linux   #
-# /_/|_/\_,_/\_, /_/_/\_,_/_/_/_/   Mac (PPC): MacOS-X / NetBSD /Linux #
-#           /___/     x86: FreeBSD/Linux/Solaris/Win2k  ARM9: EPOC EV6 #
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-
-
-----------------------------------------------------------------
-cakebox.homeunix.net - all the machine one needs..
-
-
---=_dtes5z1j9tc
-Content-Type: application/pgp-signature
-Content-Description: PGP Digital Signature
-Content-Disposition: inline
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.8 (FreeBSD)
-
-iEYEABECAAYFAkepxWwACgkQAKWN2UY+sLynogCdGVK3BYfP2kEKRcGOkHwKrA/J
-RI4AnRfv6KVbkAnXcm3+YCqQBcRm7Ue/
-=RVtu
------END PGP SIGNATURE-----
-
---=_dtes5z1j9tc--
