@@ -1,48 +1,33 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: raid1 or raid10 for /boot
-Date: Wed, 06 Feb 2008 13:52:11 -0500
-Message-ID: <47AA01DB.8080706@tmr.com>
-References: <20080204063454.GA31046@rap.rap.dk>
+From: "Jon Nelson" <jnelson-linux-raid@jamponi.net>
+Subject: Re: raid10 on three discs - few questions.
+Date: Wed, 6 Feb 2008 12:28:57 -0600
+Message-ID: <cccedfc60802061028x4c87d52bn88ff305e3bbe5e36@mail.gmail.com>
+References: <20080203235043.3dbb6433@szpak>
+	 <18342.18975.229866.860765@notabene.brown> <47A9FFE1.5070001@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20080204063454.GA31046@rap.rap.dk>
+In-Reply-To: <47A9FFE1.5070001@tmr.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: =?ISO-8859-1?Q?Keld_J=F8rn_Simonsen?= <keld@dkuug.dk>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Keld J=F8rn Simonsen wrote:
-> I understand that lilo and grub only can boot partitions that look li=
-ke
-> a normal single-drive partition. And then I understand that a plain
-> raid10 has a layout which is equivalent to raid1. Can such a raid10
-> partition be used with grub or lilo for booting?
-> And would there be any advantages in this, for example better disk
-> utilization in the raid10 driver compared with raid?
->  =20
+On Feb 6, 2008 12:43 PM, Bill Davidsen <davidsen@tmr.com> wrote:
 
-I don't know about you, but my /boot goes with zero use between boots,=20
-efficiency and performance improvements strike as a distinction without=
-=20
-a difference, while adding complexity without benefit is always a bad i=
-dea.
+> Can you create a raid10 with one drive "missing" and add it later? I
+> know, I should try it when I get a machine free... but I'm being lazy today.
 
-I suggest that you avoid having a "learning experience" and stick with=20
-raid1.
+Yes you can. With 3 drives, however, performance will be awful (at
+least with layout far, 2 copies).
 
---=20
-Bill Davidsen <davidsen@tmr.com>
-  "Woe unto the statesman who makes war without a reason that will stil=
-l
-  be valid when the war is over..." Otto von Bismark=20
+IMO raid10,f2 is a great balance of speed and redundancy.
+it''s faster than raid5 for reading, about the same for writing. it's
+even potentially faster than raid0 for reading, actually.
+With 3 disks one should be able to get 3.0 times the speed of one
+disk, or slightly more, and each stripe involves only *one* disk
+instead of 2 as it does with raid5.
 
-
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Jon
