@@ -1,75 +1,48 @@
 From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: raid10 on three discs - few questions.
-Date: Wed, 06 Feb 2008 13:43:45 -0500
-Message-ID: <47A9FFE1.5070001@tmr.com>
-References: <20080203235043.3dbb6433@szpak> <18342.18975.229866.860765@notabene.brown>
+Subject: Re: raid1 or raid10 for /boot
+Date: Wed, 06 Feb 2008 13:52:11 -0500
+Message-ID: <47AA01DB.8080706@tmr.com>
+References: <20080204063454.GA31046@rap.rap.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18342.18975.229866.860765@notabene.brown>
+In-Reply-To: <20080204063454.GA31046@rap.rap.dk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Janek Kozicki <janek_listy@wp.pl>, linux-raid@vger.kernel.org
+To: =?ISO-8859-1?Q?Keld_J=F8rn_Simonsen?= <keld@dkuug.dk>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil Brown wrote:
-> On Sunday February 3, janek_listy@wp.pl wrote:
->   
->> Hi,
->>
->> Maybe I'll buy three HDDs to put a raid10 on them. And get the total
->> capacity of 1.5 of a disc. 'man 4 md' indicates that this is possible
->> and should work.
->>
->> I'm wondering - how a single disc failure is handled in such configuration?
->>
->> 1. does the array continue to work in a degraded state?
->>     
->
-> Yes.
->
->   
->> 2. after the failure I can disconnect faulty drive, connect a new one,
->>    start the computer, add disc to array and it will sync automatically?
->>
->>     
->
-> Yes.
->
->   
->> Question seems a bit obvious, but the configuration is, at least for
->> me, a bit unusual. This is why I'm asking. Anybody here tested such
->> configuration, has some experience?
->>
->>
->> 3. Another thing - would raid10,far=2 work when three drives are used?
->>    Would it increase the read performance?
->>     
->
-> Yes.
->
->   
->> 4. Would it be possible to later '--grow' the array to use 4 discs in
->>    raid10 ? Even with far=2 ?
->>
->>     
->
-> No.
->
-> Well.... if by "later" you mean "in five years", then maybe.  But the
-> code doesn't currently exist.
->   
+Keld J=F8rn Simonsen wrote:
+> I understand that lilo and grub only can boot partitions that look li=
+ke
+> a normal single-drive partition. And then I understand that a plain
+> raid10 has a layout which is equivalent to raid1. Can such a raid10
+> partition be used with grub or lilo for booting?
+> And would there be any advantages in this, for example better disk
+> utilization in the raid10 driver compared with raid?
+>  =20
 
-That's a reason to avoid raid10 for certain applications, then, and go 
-with a more manual 1+0 or similar.
+I don't know about you, but my /boot goes with zero use between boots,=20
+efficiency and performance improvements strike as a distinction without=
+=20
+a difference, while adding complexity without benefit is always a bad i=
+dea.
 
-Can you create a raid10 with one drive "missing" and add it later? I 
-know, I should try it when I get a machine free... but I'm being lazy today.
+I suggest that you avoid having a "learning experience" and stick with=20
+raid1.
 
--- 
+--=20
 Bill Davidsen <davidsen@tmr.com>
-  "Woe unto the statesman who makes war without a reason that will still
-  be valid when the war is over..." Otto von Bismark 
+  "Woe unto the statesman who makes war without a reason that will stil=
+l
+  be valid when the war is over..." Otto von Bismark=20
 
 
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
