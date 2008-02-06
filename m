@@ -1,58 +1,54 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: recommendations for stripe/chunk size
-Date: Wed, 06 Feb 2008 17:37:18 -0500
-Message-ID: <47AA369E.2090501@tmr.com>
-References: <20080206202536.3316124D1D@gemini.denx.de>
+From: Janek Kozicki <janek_listy@wp.pl>
+Subject: Re: which raid level gives maximum overall speed? (raid-10,f2 vs.
+ raid-0)
+Date: Wed, 6 Feb 2008 23:15:14 +0100
+Message-ID: <20080206231514.4b2e001c@szpak>
+References: <20080130192133.17b254bf@szpak>
+	<20080130220007.GG20173@rap.rap.dk>
+	<20080130233639.5d46b044@szpak>
+	<20080131015506.GB6617@rap.rap.dk>
+	<20080205161036.GA30326@rap.rap.dk>
+	<alpine.DEB.1.00.0802051152500.9790@p34.internal.lan>
+	<20080205200423.GB17621@rap.rap.dk>
+	<alpine.DEB.1.00.0802051726510.10352@p34.internal.lan>
+	<20080205235215.750ea879@szpak>
+	<47A9F96E.7050307@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20080206202536.3316124D1D@gemini.denx.de>
+In-Reply-To: <47A9F96E.7050307@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Wolfgang Denk <wd@denx.de>
-Cc: =?ISO-8859-1?Q?Keld_J=F8rn_Simonsen?= <keld@dkuug.dk>, linux-raid@vger.kernel.org
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Wolfgang Denk wrote:
-> In message <47AA08E7.5000801@tmr.com> you wrote:
->   
->>> I actually  think the kernel should operate with block sizes
->>> like this and not wth 4 kiB blocks. It is the readahead and the elevator
->>> algorithms that save us from randomly reading 4 kb a time.
->>>
->>>   
->>>       
->> Exactly, and nothing save a R-A-RW cycle if the write is a partial chunk.
->>     
->
-> Indeed kernel page size is an important factor in such optimizations.
-> But you have to keep in mind that this is mostly efficient for (very)
-> large strictly sequential I/O operations only -  actual  file  system
-> traffic may be *very* different.
->
->   
-That was actually what I meant by page size, that of the file system 
-rather than the memory, ie. the "block size" typically used for writes. 
-Or multiples thereof, obviously.
-> We implemented the option to select kernel page sizes of  4,  16,  64
-> and  256  kB for some PowerPC systems (440SPe, to be precise). A nice
-> graphics of the effect can be found here:
->
-> https://www.amcc.com/MyAMCC/retrieveDocument/PowerPC/440SPe/RAIDinLinux_PB_0529a.pdf
->
->   
-I started that online and pulled a download to print, very neat stuff. 
-Thanks for the link.
-> Best regards,
->
-> Wolfgang Denk
->
->   
+Bill Davidsen said:     (by the date of Wed, 06 Feb 2008 13:16:14 -0500)
 
+> Janek Kozicki wrote:
+> > Justin Piszcz said:     (by the date of Tue, 5 Feb 2008 17:28:27 -0500 (EST))
+> > writing on raid10 is supposed to be half the speed of reading. That's
+> > because it must write to both mirrors.
+> >
+
+> ??? Are you assuming that write to mirrored copies are done sequentially 
+> rather than in parallel? Unless you have enough writes to saturate 
+> something the effective speed approaches the speed of a single drive. I 
+> just checked raid1 and raid5, writing 100MB with an fsync at the end. 
+> raid1 leveled off at 85% of a single drive after ~30MB.
+
+Hi,
+
+In above context I'm talking about raid10 (not about raid1, raid0,
+raid0+1, raid1+0, raid5 or raid6).
+
+Of course writes are done in parallel. When each chunk has two
+copies raid10 reads twice as fast as it writes. 
+
+If each chunk has three copies, then writes are 1/3 speed of reading.
+If each chunk has number of copies equal to number of drives, then
+write speed drops down to that of a single drive - a 1/Nth of read speed.
+
+But it's all just a theory. I'd like to see more benchmarks :-)
 
 -- 
-Bill Davidsen <davidsen@tmr.com>
-  "Woe unto the statesman who makes war without a reason that will still
-  be valid when the war is over..." Otto von Bismark 
-
-
+Janek Kozicki                                                         |
