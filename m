@@ -1,66 +1,70 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: raid5: two writing algorithms
-Date: Fri, 8 Feb 2008 07:25:31 +1100
-Message-ID: <18347.26939.358283.172299@notabene.brown>
-References: <20080207161337.GA6044@rap.rap.dk>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: mdadm 2.6.4 : How i can check out current status of reshaping
+ ?
+Date: Thu, 07 Feb 2008 16:15:58 -0500
+Message-ID: <47AB750E.2060202@tmr.com>
+References: <79188012.20080204070802@j8.com.ru> <18343.38465.112723.66522@notabene.brown> <58351009.20080205121332@j8.com.ru> <18344.13816.921912.885730@notabene.brown> <119270390.20080206221505@j8.com.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <119270390.20080206221505@j8.com.ru>
 Sender: linux-raid-owner@vger.kernel.org
-To: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
-Cc: linux-raid@vger.kernel.org
+To: Andreas-Sokov <andre.s@j8.com.ru>
+Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thursday February 7, keld@dkuug.dk wrote:
-> As I understand it, there are 2 valid algoritms for writing in raid5.
-> 
-> 1. calculate the parity data by XOR'ing all data of the relevant data
-> chunks.
-> 
-> 2. calculate the parity data by kind of XOR-subtracting the old data to
-> be changed, and then XOR-adding the new data. (XOR-subtract and XOR-add
-> is actually the same).
-> 
-> There are situations where method 1 is the fastest, and situations where
-> method 2 is the fastest.
-> 
-> My idea is then that the raid5 code in the kernel can calculate which
-> method is the faster. 
-> 
-> method 1 is faster, if all data is already available. I understand that
-> this method is employed in the current kernel. This would eg be the case
-> with sequential writes.
-> 
-> Method 2 is faster, if no data is available in core. It would require
-> 2 reads and two writes, which always will be faster than n reads and 1
-> write, possibly except for n=2. method 2 is thus faster normally for
-> random writes.
-> 
-> I think that method 2 is not used in the kernel today. Mayby I am wrong,
-> but I did have a look in the kernel code.
+Andreas-Sokov wrote:
+> Hello, Neil.
+>
+> .....
+>   
+>> Possible you have bad memory, or a bad CPU, or you are overclocking
+>> the CPU, or it is getting hot, or something.
+>>     
+>
+> As seems to me all my problems has been started after i have started update MDADM.
+> This is server worked normaly (but only not like soft-raid) more 2-3 years.
+> Last 6 months it worked as soft-raid. All was normaly, Even I have added successfully
+> 4th hdd into raid5 )when it stared was 3 hdd). And then Reshaping have been passed fine.
+>
+> Yesterday i have did memtest86 onto it server and 10 passes was WITH OUT any errors.
+> Temperature of server is about 25 grad celsius.
+> No overlocking, all set to default.
+>
+>   
+What did you find when you loaded the module with gdb as Neil suggested? 
+If the code in the module doesn't match the code in memory you have a 
+hardware error. memtest86 is a useful tool, but it is not a definitive 
+test because it doesn't use all CPUs and do i/o at the same time to load 
+the memory bus.
 
-It is very odd that you would think something about the behaviour of
-the kernel with actually having looked.
+> Realy i do not know what to do because off wee nedd grow our storage, and we can not.
+> unfortunately, At this moment - Mdadm do not help us in this decision, but very want
+> it get.
+>   
 
-It also seems a little arrogant to have a clever idea and assume that
-no one else has thought of it before.
+I would pull out half my memory and retest. If it still fails I would 
+swap to the other half of memory. If that didn't show a change I would 
+check that the code in the module is what Neil showed in his last 
+message (I assume you already have), and then reseat all of the cables, etc.
 
-> 
-> So I hereby give the idea for inspiration to kernel hackers.
+I agree with Neil:
+>> But you clearly have a hardware error.
+>>     
+>
+>   
+>> NeilBrown
+>>     
+>
+>
+>
+>   
 
-and I hereby invite you to read the code ;-)
 
-Code reading is a good first step to being a
-> 
-> Yoyr kernel hacker wannabe
-       ^^^^^^^^^^^^^
-
-NeilBrown
+-- 
+Bill Davidsen <davidsen@tmr.com>
+  "Woe unto the statesman who makes war without a reason that will still
+  be valid when the war is over..." Otto von Bismark 
 
 
-> keld
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
