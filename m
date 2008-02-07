@@ -1,60 +1,44 @@
-From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
-Subject: Re: recommendations for stripe/chunk size
-Date: Thu, 7 Feb 2008 01:31:16 +0100
-Message-ID: <20080207003116.GA23341@rap.rap.dk>
-References: <47AA08E7.5000801@tmr.com> <20080206202536.3316124D1D@gemini.denx.de>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: raid10 on three discs - few questions.
+Date: Thu, 7 Feb 2008 13:21:24 +1100
+Message-ID: <18346.27428.521186.423248@notabene.brown>
+References: <20080203235043.3dbb6433@szpak>
+	<18342.18975.229866.860765@notabene.brown>
+	<47A9FFE1.5070001@tmr.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20080206202536.3316124D1D@gemini.denx.de>
+In-Reply-To: message from Bill Davidsen on Wednesday February 6
 Sender: linux-raid-owner@vger.kernel.org
-To: Wolfgang Denk <wd@denx.de>
-Cc: Bill Davidsen <davidsen@tmr.com>, linux-raid@vger.kernel.org
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: Janek Kozicki <janek_listy@wp.pl>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Feb 06, 2008 at 09:25:36PM +0100, Wolfgang Denk wrote:
-> In message <47AA08E7.5000801@tmr.com> you wrote:
+On Wednesday February 6, davidsen@tmr.com wrote:
 > >
-> > > I actually  think the kernel should operate with block sizes
-> > > like this and not wth 4 kiB blocks. It is the readahead and the elevator
-> > > algorithms that save us from randomly reading 4 kb a time.
-> > >
-> > >   
-> > Exactly, and nothing save a R-A-RW cycle if the write is a partial chunk.
+> >   
+> >> 4. Would it be possible to later '--grow' the array to use 4 discs in
+> >>    raid10 ? Even with far=2 ?
+> >>
+> >>     
+> >
+> > No.
+> >
+> > Well.... if by "later" you mean "in five years", then maybe.  But the
+> > code doesn't currently exist.
+> >   
 > 
-> Indeed kernel page size is an important factor in such optimizations.
-> But you have to keep in mind that this is mostly efficient for (very)
-> large strictly sequential I/O operations only -  actual  file  system
-> traffic may be *very* different.
+> That's a reason to avoid raid10 for certain applications, then, and go 
+> with a more manual 1+0 or similar.
+
+Not really.  You cannot reshape a raid0 either.
+
 > 
-> We implemented the option to select kernel page sizes of  4,  16,  64
-> and  256  kB for some PowerPC systems (440SPe, to be precise). A nice
-> graphics of the effect can be found here:
-> 
-> https://www.amcc.com/MyAMCC/retrieveDocument/PowerPC/440SPe/RAIDinLinux_PB_0529a.pdf
+> Can you create a raid10 with one drive "missing" and add it later? I 
+> know, I should try it when I get a machine free... but I'm being lazy today.
 
-Yes, that is also what I would expect, for sequential reads.
-Random writes of small data blocks, kind of what is done in bug data
-bases, should show another picture as others also have described.
+Yes, but then the array would be degraded and a single failure could
+destroy your data.
 
-If you look at a single disk, would you get improved performance with
-the asyncroneous IO?
-
-I am a bit puzzled about my SATA-II performance: nominally I could get
-300 MB/s on SATA-II, but I only get about 80 MB/s. Why is that?
-I thought it was because of latency with syncroneous reads.
-Ie, when a chunk is read, yo need to complete the IO operation, and then
-issue an new one. In the meantime while the CPU is doing these
-calculations, te disk has spun a little, and to get the next data chunk,
-we need to wait for the disk to spin around to have the head positioned 
-over the right data pace on the disk surface. Is that so? Or does the
-controller take care of this, reading the rest of the not-yet-requested
-track into a buffer, which then can be delivered next time. Modern disks
-often have buffers of about 8 or 16 MB. I wonder why they don't have
-bigger buffers.
-
-Anyway, why does a SATA-II drive not deliver something like 300 MB/s?
-
-best regards
-keld
+NeilBrown
