@@ -1,83 +1,59 @@
-From: Wolfgang Denk <wd@denx.de>
-Subject: Re: recommendations for stripe/chunk size
-Date: Thu, 07 Feb 2008 09:49:32 +0100
-Message-ID: <20080207084932.1AE1A246C5@gemini.denx.de>
-References: <18346.39756.292908.58065@notabene.brown>
+From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
+Subject: Re: draft howto on making raids for surviving a disk crash
+Date: Thu, 7 Feb 2008 10:12:19 +0100
+Message-ID: <20080207091219.GA7674@rap.rap.dk>
+References: <20080202194131.GA7875@rap.rap.dk> <20080206090557.GA19764@percy.comedia.it> <20080206154538.GC16090@rap.rap.dk> <20080207080503.GA7665@percy.comedia.it>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-reply-to: Your message of "Thu, 07 Feb 2008 16:46:52 +1100."
-             <18346.39756.292908.58065@notabene.brown>
+Content-Disposition: inline
+In-Reply-To: <20080207080503.GA7665@percy.comedia.it>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Bill Davidsen <davidsen@tmr.com>, =?ISO-8859-1?Q?Keld_J=F8rn_Simonsen?= <keld@dkuug.dk>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Dear Nail,
+On Thu, Feb 07, 2008 at 09:05:04AM +0100, Luca Berra wrote:
+> On Wed, Feb 06, 2008 at 04:45:39PM +0100, Keld J=F8rn Simonsen wrote:
+> >On Wed, Feb 06, 2008 at 10:05:58AM +0100, Luca Berra wrote:
+> >>On Sat, Feb 02, 2008 at 08:41:31PM +0100, Keld J=F8rn Simonsen wrot=
+e:
+> >>>Make each of the disks bootable by lilo:
+> >>>
+> >>>  lilo -b /dev/sda /etc/lilo.conf1
+> >>>  lilo -b /dev/sdb /etc/lilo.conf2
+> >>There should be no need for that.
+> >>to achieve the above effect with lilo you use
+> >>raid-extra-boot=3Dmbr-only
+> >>in lilo.conf
+> >>
+> >>>Make each of the disks bootable by grub
+> >>install grub with the command
+> >>grub-install /dev/md0
+> >
+> >I have already changed the text on the wiki. Still I am not convince=
+d it=20
+> >is the best advice that is described.
+> >
+> lilo -b /dev/md0 (without a raid-extra-boot line in lilo.conf) will
+> install lilo on the boot sector of the partitions containing /dev/md0
+> (and it will break with 1.1 sb)
 
-in message <18346.39756.292908.58065@notabene.brown> you wrote:
-> 
-> <quote>
-> The second improvement is to remove a memory copy that is internal to the MD driver. The MD
-> driver stages strip data ready to be written next to the I/O controller in a page size pre-
-> allocated buffer. It is possible to bypass this memory copy for sequential writes thereby saving
-> SDRAM access cycles.
-> </quote>
-> 
-> I sure hope you've checked that the filesystem never (ever) changes a
-> buffer while it is being written out.  Otherwise the data written to
-> disk might be different from the data used in the parity calculation
-> :-)
+I think 1.1 Superblocks will break all boots with lilo and grub,
+but 1.1 superblocks are not standard in current distributions.
 
-Sure. Note that usage szenarios of this implementation are  not  only
-(actually  not  even  primarily)  focussed  on  using such a setup as
-normal RAID server - instead processors like the 440SPe  will  likely
-be  used  on  RAID  controller  cards itself - and data may come from
-iSCSI or over one of the PCIe busses, but  not  from  a  normal  file
-system.
+When would 1.1 superblocks be a problem, for new users of raid?
 
-> And what are the "Second memcpy" and "First memcpy" in the graph?
-> I assume one is the memcpy mentioned above, but what is the other?
+> for grub, do you have any doubt about the grub-install script not
+> working correctly?
 
-Avoiding the 1st memcpy means to skip the system block level caching,
-i. e. try to use DIRECT_IO capability  ("-dio"  option  to  xdd  tool
-which was used for these benchmarks).
+No, I think the grub description is OK. I only meant the lilo
+description.
 
-The 2nd memcpy is the optimization for large  sequential  writes  you
-quoted above.
-
-Please keep  in  mind  that  these  optimizations  are  probably  not
-directly  useful  for  general purpose use of a normal file system on
-top of the RAID array; they have other goals: provide benchmarks  for
-the  special  case  of  large synchrounous I/O operations (as used by
-RAID controller manufacturers to show off their competitors), and  to
-provide a base for the firmware of such controllers.
-
-Nevertheless, they clearly show  where  optimizations  are  possible,
-assuming you understand exactly your usuage szenario.
-
-In real life, your  optimization  may  require  completely  different
-strategies  -  for  example,  on  our  main file server we see such a
-distribution of file sizes:
-
-Out of a sample of 14.2e6 files,
-
-	 65%    are smaller than  4 kB
-	 80% 	are smaller than  8 kB
-	 90% 	are smaller than 16 kB
-	 96% 	are smaller than 32 kB
-	 98.4% 	are smaller than 64 kB
-	
-You don't want - for example - huge stripe sizes in such a system.
-
-Best regards,
-
-Wolfgang Denk
-
--- 
-DENX Software Engineering GmbH,     MD: Wolfgang Denk & Detlev Zundel
-HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
-Phone: (+49)-8142-66989-10 Fax: (+49)-8142-66989-80 Email: wd@denx.de
-Egotist: A person of low taste, more interested in  himself  than  in
-me.                                                  - Ambrose Bierce
+Best regards
+keld
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
