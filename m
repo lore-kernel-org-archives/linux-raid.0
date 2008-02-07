@@ -1,41 +1,42 @@
-From: Iustin Pop <iusty@k1024.org>
+From: Neil Brown <neilb@suse.de>
 Subject: Re: recommendations for stripe/chunk size
-Date: Thu, 7 Feb 2008 06:40:12 +0100
-Message-ID: <20080207054012.GA17705@teal.hq.k1024.org>
-References: <47AA08E7.5000801@tmr.com> <20080206202536.3316124D1D@gemini.denx.de> <20080207003116.GA23341@rap.rap.dk>
+Date: Thu, 7 Feb 2008 16:46:52 +1100
+Message-ID: <18346.39756.292908.58065@notabene.brown>
+References: <47AA08E7.5000801@tmr.com>
+	<20080206202536.3316124D1D@gemini.denx.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20080207003116.GA23341@rap.rap.dk>
+In-Reply-To: message from Wolfgang Denk on Wednesday February 6
 Sender: linux-raid-owner@vger.kernel.org
-To: Keld =?utf-8?B?SsO4cm4=?= Simonsen <keld@dkuug.dk>
-Cc: Wolfgang Denk <wd@denx.de>, Bill Davidsen <davidsen@tmr.com>, linux-raid@vger.kernel.org
+To: Wolfgang Denk <wd@denx.de>
+Cc: Bill Davidsen <davidsen@tmr.com>, =?ISO-8859-1?Q?Keld_J=F8rn_Simonsen?= <keld@dkuug.dk>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Feb 07, 2008 at 01:31:16AM +0100, Keld J=C3=B8rn Simonsen wrote=
-:
-> Anyway, why does a SATA-II drive not deliver something like 300 MB/s?
+On Wednesday February 6, wd@denx.de wrote:
+> 
+> We implemented the option to select kernel page sizes of  4,  16,  64
+> and  256  kB for some PowerPC systems (440SPe, to be precise). A nice
+> graphics of the effect can be found here:
+> 
+> https://www.amcc.com/MyAMCC/retrieveDocument/PowerPC/440SPe/RAIDinLinux_PB_0529a.pdf
 
-Wait, are you talking about a *single* drive?
+Thanks for the link!
 
-In that case, it seems you are confusing the interface speed (300MB/s)
-with the mechanical read speed (80MB/s). If you are asking why is a
-single drive limited to 80 MB/s, I guess it's a problem of mechanics.
-Even with NCQ or big readahead settings, ~80-~100 MB/s is the highest
-I've seen on 7200 RPM drives. And yes, there is no wait until the CPU
-processes the current data until the drive reads the next data; drives
-have a builtin read-ahead mechanism.
+<quote>
+The second improvement is to remove a memory copy that is internal to the MD driver. The MD
+driver stages strip data ready to be written next to the I/O controller in a page size pre-
+allocated buffer. It is possible to bypass this memory copy for sequential writes thereby saving
+SDRAM access cycles.
+</quote>
 
-Honestly, I have 10x as many problems with the low random I/O throughpu=
-t
-rather than with the (high, IMHO) sequential I/O speed.
+I sure hope you've checked that the filesystem never (ever) changes a
+buffer while it is being written out.  Otherwise the data written to
+disk might be different from the data used in the parity calculation
+:-)
 
-regards,
-iustin
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+And what are the "Second memcpy" and "First memcpy" in the graph?
+I assume one is the memcpy mentioned above, but what is the other?
+
+NeilBrown
