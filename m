@@ -1,51 +1,35 @@
 From: Neil Brown <neilb@suse.de>
 Subject: Re: recommendations for stripe/chunk size
-Date: Thu, 7 Feb 2008 16:31:11 +1100
-Message-ID: <18346.38815.503023.991827@notabene.brown>
-References: <20080205182421.GA32250@rap.rap.dk>
-	<47AA08E7.5000801@tmr.com>
+Date: Thu, 7 Feb 2008 16:51:22 +1100
+Message-ID: <18346.40026.149635.800694@notabene.brown>
+References: <47AA08E7.5000801@tmr.com>
+	<20080206202536.3316124D1D@gemini.denx.de>
+	<20080207003116.GA23341@rap.rap.dk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Bill Davidsen on Wednesday February 6
+In-Reply-To: message from Keld Jorn Simonsen on Thursday February 7
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: Keld Jorn Simonsen <keld@dkuug.dk>, linux-raid@vger.kernel.org
+To: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
+Cc: Wolfgang Denk <wd@denx.de>, Bill Davidsen <davidsen@tmr.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wednesday February 6, davidsen@tmr.com wrote:
-> Keld J=F8rn Simonsen wrote:
-> > Hi
-> >
-> > I am looking at revising our howto. I see a number of places where =
-a
-> > chunk size of 32 kiB is recommended, and even recommendations on
-> > maybe using sizes of 4 kiB.=20
-> >
-> >  =20
-> Depending on the raid level, a write smaller than the chunk size caus=
-es=20
-> the chunk to be read, altered, and rewritten, vs. just written if the=
-=20
-> write is a multiple of chunk size. Many filesystems by default use a =
-4k=20
-> page size and writes. I believe this is the reasoning behind the=20
-> suggestion of small chunk sizes. Sequential vs. random and raid level=
-=20
-> are important here, there's no one size to work best in all cases.
+On Thursday February 7, keld@dkuug.dk wrote:
+>=20
+> Anyway, why does a SATA-II drive not deliver something like 300 MB/s?
 
-Not in md/raid.
 
-RAID4/5/6 will do a read-modify-write if you are writing less than one
-*page*, but then they often to read-modify-write anyway for parity
-updates.
+Are you serious?
 
-No level will every read a whole chunk just because it is a chunk.
+I high end 15000RPM enterprise grade drive such as the Seagate
+Cheetah=AE 15K.6 Hard Drives only deliver 164MB/sec.
 
-To answer the original question:  The only way to be sure is to test
-your hardware with your workload with different chunk sizes.
-But I suspect that around 256K is good on current hardware.
+The SATA Bus might be able to deliver 300MB/s, but an individual drive
+would be around 80MB/s unless it is really expensive.
+
+(or was that yesterday?  I'm having trouble keeping up with the pace
+ of improvement :-)
 
 NeilBrown
 -
