@@ -1,51 +1,66 @@
-From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
-Subject: howto and faq
-Date: Thu, 7 Feb 2008 17:42:49 +0100
-Message-ID: <20080207164249.GA7116@rap.rap.dk>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: raid5: two writing algorithms
+Date: Fri, 8 Feb 2008 07:25:31 +1100
+Message-ID: <18347.26939.358283.172299@notabene.brown>
+References: <20080207161337.GA6044@rap.rap.dk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi 
+On Thursday February 7, keld@dkuug.dk wrote:
+> As I understand it, there are 2 valid algoritms for writing in raid5.
+> 
+> 1. calculate the parity data by XOR'ing all data of the relevant data
+> chunks.
+> 
+> 2. calculate the parity data by kind of XOR-subtracting the old data to
+> be changed, and then XOR-adding the new data. (XOR-subtract and XOR-add
+> is actually the same).
+> 
+> There are situations where method 1 is the fastest, and situations where
+> method 2 is the fastest.
+> 
+> My idea is then that the raid5 code in the kernel can calculate which
+> method is the faster. 
+> 
+> method 1 is faster, if all data is already available. I understand that
+> this method is employed in the current kernel. This would eg be the case
+> with sequential writes.
+> 
+> Method 2 is faster, if no data is available in core. It would require
+> 2 reads and two writes, which always will be faster than n reads and 1
+> write, possibly except for n=2. method 2 is thus faster normally for
+> random writes.
+> 
+> I think that method 2 is not used in the kernel today. Mayby I am wrong,
+> but I did have a look in the kernel code.
 
-I am trying to get some order to linux raid info.
+It is very odd that you would think something about the behaviour of
+the kernel with actually having looked.
 
-I think we should have a faq and a howto for the linux-raid list.
+It also seems a little arrogant to have a clever idea and assume that
+no one else has thought of it before.
 
-The list description at
-http://vger.kernel.org/vger-lists.html#linux-raid
-does list af FAQ, http://www.linuxdoc.org/FAQ/
-I cannot read it just now - the server 
-www.linuxdoc.org does not respond.
-I then tried the google archive - which had no info, and then the 
-internet archive, which for the latest entry on this had some notes on
-Debian and GFDL - quite irrelevant.
+> 
+> So I hereby give the idea for inspiration to kernel hackers.
 
-there are other FAQs that claim to be the FAQ for 
-linux-raid. One is http://www.faqs.org/contrib/linux-raid/
-which is quite extensive, but from 2003 (about 5 years old).
+and I hereby invite you to read the code ;-)
 
-So our FAQ info is pretty out of date. I think it would be nice to have
-a wiki like we have for the Howto. This would mean that we have much
-better means to let new people make their mark, and avoid the problem
-that we have today with really outdated info.
+Code reading is a good first step to being a
+> 
+> Yoyr kernel hacker wannabe
+       ^^^^^^^^^^^^^
 
-So can we put up a wiki somewhere for this, or should we just extend the
-wiki howto pages to also include a faq section?
+NeilBrown
 
-For the howto, I have asked the VGER people to add info to our list
-description, that we have a wiki howto at http://linux-raid.osdl.org/
 
-I believe that this is the fact, that this howto is our official howto.
-I have added a remark in the top of the text hinting that this wiki
-howto is the official howto of the linux-raid list, tho I did not  state
-it as such. 
-
-Hope this gives some clarity of the situation.
-
-best regards
-keld
+> keld
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
