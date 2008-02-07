@@ -1,68 +1,69 @@
-From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
-Subject: Re: recommendations for stripe/chunk size
-Date: Thu, 7 Feb 2008 10:58:25 +0100
-Message-ID: <20080207095825.GB7674@rap.rap.dk>
-References: <47AA08E7.5000801@tmr.com> <20080206202536.3316124D1D@gemini.denx.de> <20080207003116.GA23341@rap.rap.dk> <20080207054012.GA17705@teal.hq.k1024.org>
+From: Yuri Tikhonov <yur@emcraft.com>
+Subject: [PATCH] Dynamic RAID Stripe Cache Size
+Date: Thu, 7 Feb 2008 15:41:01 +0300
+Message-ID: <200802071541.01494.yur@emcraft.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20080207054012.GA17705@teal.hq.k1024.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Wolfgang Denk <wd@denx.de>, Bill Davidsen <davidsen@tmr.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Feb 07, 2008 at 06:40:12AM +0100, Iustin Pop wrote:
-> On Thu, Feb 07, 2008 at 01:31:16AM +0100, Keld J=F8rn Simonsen wrote:
-> > Anyway, why does a SATA-II drive not deliver something like 300 MB/=
-s?
->=20
-> Wait, are you talking about a *single* drive?
 
-Yes, I was talking about a single drive.
+ Hello,
 
-> In that case, it seems you are confusing the interface speed (300MB/s=
-)
-> with the mechanical read speed (80MB/s).
+ On platforms with PAGE_SIZE set to rather big values (e.g. 256KB) the
+amount of memory necessary for for the stripe cache may be significant,
+so we can't rely on the hard-coded value of initial max_nr_stripes
+(this may cause invoking OOM-killer for terminating RAID creation process).
 
-I thought the 300 MB/S was the transfer rate between the disk and the
-controllers memory in its buffers, but you indicate that this is the
-speed between the controller's buffers and main RAM.=20
+ What this patch does is just checks the size of available memory,
+and assigns the appropriate, safe, value to initial max_nr_stripes:
+ either the hard-coded NR_STRIPES value if it's safe in the sense that
+we'll have some free memory available using stripe cache with such size,
+ or the calculated, lesser, value.
 
-I am, as Neil, amazed by the speeds that we get on current hardware, bu=
-t
-still I would like to see if we could use the hardware better.
-Asyncroneous IO could be a way forward. I have written some mainframe
-utilities where asyncroneous IO was the key to the performance,
-so I thought that it could also become handy in the Linux kernel.=20
+Signed-off-by: Yuri Tikhonov <yur@emcraft.com>
+--
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index d59e1bc..1d2b064 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -4934,10 +4934,11 @@ static struct attribute_group raid5_attrs_group = {
+ static int run(mddev_t *mddev)
+ {
+ 	raid5_conf_t *conf;
+-	int raid_disk, memory;
++	int raid_disk, memory, avail_stripes;
+ 	mdk_rdev_t *rdev;
+ 	struct disk_info *disk;
+ 	struct list_head *tmp;
++	struct sysinfo val;
+ 	int working_disks = 0;
+ 
+ 	if (mddev->level != 5 && mddev->level != 4 && mddev->level != 6) {
+@@ -5074,7 +5075,14 @@ static int run(mddev_t *mddev)
+ 	else
+ 		conf->max_degraded = 1;
+ 	conf->algorithm = mddev->layout;
+-	conf->max_nr_stripes = NR_STRIPES;
++
++	/* Set the safe stripe cache size */
++	si_meminfo(&val);
++	avail_stripes = (val.freeram + val.freehigh) * val.mem_unit /
++			(sizeof(struct stripe_head) + conf->raid_disks *
++			((sizeof(struct bio) + PAGE_SIZE))) - 1;
++	conf->max_nr_stripes = (avail_stripes < NR_STRIPES) ? avail_stripes :
++			       NR_STRIPES;
+ 	conf->expand_progress = mddev->reshape_position;
+ 
+ 	/* device size must be a multiple of chunk size */
 
-If about 80 MB/s is the maximum we can get out of a current SATA-II
-7200 rpm drive, then I think there is not much to be gained from
-asyncroneous IO.=20
 
-> If you are asking why is a
-> single drive limited to 80 MB/s, I guess it's a problem of mechanics.
-> Even with NCQ or big readahead settings, ~80-~100 MB/s is the highest
-> I've seen on 7200 RPM drives. And yes, there is no wait until the CPU
-> processes the current data until the drive reads the next data; drive=
-s
-> have a builtin read-ahead mechanism.
->=20
-> Honestly, I have 10x as many problems with the low random I/O through=
-put
-> rather than with the (high, IMHO) sequential I/O speed.
 
-I agree that random IO is the main factor on most server installations.
-But on workstations the sequentioal IO is also important, as the only
-user is sometimes waiting for the computer to respond.
-And then I think that booting can benefit from faster sequential IO.
-And not to forget, I think it is fun to make my hardware run faster!
-
-best regards
-Keld
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Yuri Tikhonov, Senior Software Engineer
+Emcraft Systems, www.emcraft.com
