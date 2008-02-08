@@ -1,36 +1,53 @@
-From: Marcin Krol <admin@domeny.pl>
-Subject: Re: Deleting mdadm RAID arrays
-Date: Fri, 8 Feb 2008 13:52:33 +0100
-Message-ID: <200802081352.33944.admin@domeny.pl>
-References: <200802051142.19625.admin@domeny.pl> <200802081035.25722.admin@domeny.pl> <47AC4EA2.4010805@tmr.com>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: Any inexpensive hardware recommendations for PCI interface cards?
+Date: Fri, 08 Feb 2008 07:56:02 -0500
+Message-ID: <47AC5162.4080700@tmr.com>
+References: <11ae01c86a44$aff357a0$0603a8c0@meanmachine>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=windows-1250; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <47AC4EA2.4010805@tmr.com>
-Content-Disposition: inline
+In-Reply-To: <11ae01c86a44$aff357a0$0603a8c0@meanmachine>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Steve Fairbairn <steve@fairbairn-family.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-=46riday 08 February 2008 13:44:18 Bill Davidsen napisa=C5=82(a):
+Steve Fairbairn wrote:
+> Can anyone see any issues with what I'm trying to do?
+>   
 
-> > This is exactly what is not clear for me: what is it that identifie=
-s drive/partition as part of=20
-> > the array? /dev/sd name? UUID as part of superblock? /dev/d_n?
-> >
-> > If it's UUID I should be safe regardless of /dev/sd* designation? Y=
-es or no?
+No.
 
-> Yes, absolutely.
+> Are there any known issues with IT8212 cards (They worked as straight
+> disks on linux fine)?
+>   
 
-OK, that's what I needed to know.=20
+No idea, don't have that card.
+
+> Is anyone using an array with disks on PCI interface cards?
+>   
+
+Works. I've mixed PATA, SATA, onboard, PCI, and firewire (lack of 
+controllers is the mother of invention). As long as the device under the 
+raid works, the raid should work.
+
+> Is there an issue with mixing motherboard interfaces and PCI card based
+> ones?
+>   
+
+Not that I've found.
+
+> Does anyone recommend any inexpensive (probably SATA-II) PCI interface
+> cards?
+>   
+
+Not I. Large drives have have cured me of FrankenRAID setups recently, 
+other than to build little arrays out of USB devices for backup.
+
+-- 
+Bill Davidsen <davidsen@tmr.com>
+  "Woe unto the statesman who makes war without a reason that will still
+  be valid when the war is over..." Otto von Bismark 
 
 
-Regards,
-Marcin Krol
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
