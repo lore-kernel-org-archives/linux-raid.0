@@ -1,76 +1,98 @@
-From: Marcin Krol <admin@domeny.pl>
-Subject: Re: Deleting mdadm RAID arrays
-Date: Fri, 8 Feb 2008 10:35:25 +0100
-Message-ID: <200802081035.25722.admin@domeny.pl>
-References: <200802051142.19625.admin@domeny.pl> <200802071056.33221.admin@domeny.pl> <47AB79B1.6000503@tmr.com>
+From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
+Subject: Re: raid5: two writing algorithms
+Date: Fri, 8 Feb 2008 11:25:43 +0100
+Message-ID: <20080208102543.GB26040@rap.rap.dk>
+References: <20080207161337.GA6044@rap.rap.dk> <18347.26939.358283.172299@notabene.brown> <20080208011041.GD12985@rap.rap.dk> <18347.46507.422011.243347@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <47AB79B1.6000503@tmr.com>
 Content-Disposition: inline
+In-Reply-To: <18347.46507.422011.243347@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Thursday 07 February 2008 22:35:45 Bill Davidsen napisa=C5=82(a):
-> > As you may remember, I have configured udev to associate /dev/d_* d=
-evices with
-> > serial numbers (to keep them from changing depending on boot module=
- loading=20
-> > sequence).=20
+On Fri, Feb 08, 2008 at 12:51:39PM +1100, Neil Brown wrote:
+> On Friday February 8, keld@dkuug.dk wrote:
+> > On Fri, Feb 08, 2008 at 07:25:31AM +1100, Neil Brown wrote:
+> > > On Thursday February 7, keld@dkuug.dk wrote:
+> > 
+> > > > So I hereby give the idea for inspiration to kernel hackers.
+> > > 
+> > > and I hereby invite you to read the code ;-)
+> > 
+> > I did some reading.  Is there somewhere a description of it, especially
+> > the raid code, or are the comments and the code the best documentation?
+> 
+> No.  If a description was written (and various people have tried to
+> describe various parts) it would be out of date within a few months :-(
 
-> Why do you care?=20
+OK, I was under the impression that some of the code did not change
+much. Eg. you said that there had not been any work on optimizing
+raid10 for performance since the 2.6.12 kernel I was using. And then at
+least the raid5 code, the last copyright notice right in the top is 
+Copyright (C) 2002, 2003 H. Peter Anvin. That is 5 years ago. 
+And your name is not on it. So I did not look that much into that code,
+thinking nothing had been done there for ages. Maybe you could add your
+name on it, that would only be fair. The same comment goes for other
+modules (for which it is relevant).
 
-Because /dev/sd* devices get swapped randomly depending on boot module =
-insertion
-sequence, as I explained earlier.
+> Look for "READ_MODIFY_WRITE" and "RECONSTRUCT_WRITE" .... no.  That
+> only applied to raid6 code now..
+> Look instead for the 'rcw' and 'rmw' counters, and then at
+> 'handle_write_operations5'  which does different things based on the
+> 'rcw' variable.
+> 
+> It used to be a lot clearer before we implemented xor-offload.  The
+> xor-offload stuff is good, but it does make the code more complex.
 
-> If you are using UUID for all the arrays and mounts =20
-> does this buy you anything?=20
+OK, I think it is fairly well documented here, I can at least follow the
+logic, and then I think it is a good approach to have the flow
+description/strategy included directly in the code. Given there are many
+changes to the code, different files for code and description could
+easily mix up the alignment of code and documentation badly.
 
-This is exactly what is not clear for me: what is it that identifies dr=
-ive/partition as part of=20
-the array? /dev/sd name? UUID as part of superblock? /dev/d_n?
+> 
+> 
+> > 
+> > Do you say that this is already implemented?
+> 
+> Yes.
 
-If it's UUID I should be safe regardless of /dev/sd* designation? Yes o=
-r no?
-
-> And more to the point, the first time a =20
-> drive fails and you replace it, will it cause you a problem? Require=20
-> maintaining the serial to name data manually?
-
-That's not the problem. I just want my array to be intact.
-
-> I miss the benefit of forcing this instead of just building the=20
-> information at boot time and dropping it in a file.
-
-I would prefer that, too - if it worked. I was getting both arrays mess=
-ed=20
-up randomly on boot. "messed up" in the sense of arrays being composed
-of different /dev/sd devices.
+That is very good!
 
 
-> > And I made *damn* sure I zeroed all the superblocks before reassemb=
-ling=20
-> > the arrays. Yet it still shows the old partitions on those arrays!
-> >  =20
-> As I noted before, you said you had these on whole devices before, di=
-d=20
-> you zero the superblocks on the whole devices or the partitions? From=
-=20
-> what I read, it was the partitions.
+Do you konw if other implementations of this, eg. commercial controller
+code, have this facility? If not, we could list this as an advantage of 
+linux raid. Anyway it would be implicit in performance documentation.
+I do plan to write up something on performance, soonish. The howto
+is hopelessly outdated.
 
-I tried it both ways actually (rebuilt arrays a few times, just udev di=
-dn't want
-to associate WD-serialnumber-part1 as /dev/d_1p1 as it was told, it sti=
-ll claimed
-it was /dev/d_1).=20
+IMHO such code should make the performance of raid5 random writes not
+that bad. Better than the reputation that raid5 is hopelessly slow for
+database writing. I think raid5 would be less than double as slow as
+raid1 for random writing.
 
-Regards,
-Marcin Krol
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > Well, I do have a hack in mind, on the raid10,f2.
+> > I need to investigate some more, and possibly test out
+> > what really happens. But maybe the code already does what I want it to.
+> > You are possibly the one that knows the code best, so maybe you can tell
+> > me if raid10,f2 always does its reading in the first part of the disks?
+> 
+> Yes, I know the code best.
+> 
+> No, raid10,f2 doesn't always use the first part of the disk.  Getting
+> it to do that would be a fairly small change in 'read_balance' in
+> md/raid10.c.
+> 
+> I'm not at all convinced that the read balancing code in raid10 (or
+> raid1) really does the best thing.  So any improvements - backed up
+> with broad testing - would be most welcome.
+
+I think I know where to do my proposed changes, and how it could be done.
+So maybe in a not too distant future I will have done my first kernel
+hack!
+
+Best regards
+keld
