@@ -1,83 +1,112 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: raid5: two writing algorithms
-Date: Fri, 8 Feb 2008 12:51:39 +1100
-Message-ID: <18347.46507.422011.243347@notabene.brown>
-References: <20080207161337.GA6044@rap.rap.dk>
-	<18347.26939.358283.172299@notabene.brown>
-	<20080208011041.GD12985@rap.rap.dk>
+From: Dexter Filmore <Dexter.Filmore@gmx.de>
+Subject: Re: when is a disk "non-fresh"?
+Date: Fri, 8 Feb 2008 10:32:25 +0100
+Message-ID: <200802081032.26044.Dexter.Filmore@gmx.de>
+References: <200802030354.33435.Dexter.Filmore@gmx.de> <200802072316.20907.Dexter.Filmore@gmx.de> <18347.37564.207728.571946@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <18347.37564.207728.571946@notabene.brown>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
+To: Neil Brown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Friday February 8, keld@dkuug.dk wrote:
-> On Fri, Feb 08, 2008 at 07:25:31AM +1100, Neil Brown wrote:
-> > On Thursday February 7, keld@dkuug.dk wrote:
-> 
-> > > So I hereby give the idea for inspiration to kernel hackers.
-> > 
-> > and I hereby invite you to read the code ;-)
-> 
-> I did some reading.  Is there somewhere a description of it, especially
-> the raid code, or are the comments and the code the best documentation?
+On Friday 08 February 2008 00:22:36 Neil Brown wrote:
+> On Thursday February 7, Dexter.Filmore@gmx.de wrote:
+> > On Tuesday 05 February 2008 03:02:00 Neil Brown wrote:
+> > > On Monday February 4, Dexter.Filmore@gmx.de wrote:
+> > > > Seems the other topic wasn't quite clear...
+> > >
+> > > not necessarily.  sometimes it helps to repeat your question.  there
+> > > is a lot of noise on the internet and somethings important things get
+> > > missed... :-)
+> > >
+> > > > Occasionally a disk is kicked for being "non-fresh" - what does this
+> > > > mean and what causes it?
+> > >
+> > > The 'event' count is too small.
+> > > Every event that happens on an array causes the event count to be
+> > > incremented.
+> >
+> > An 'event' here is any atomic action? Like "write byte there" or "calc
+> > XOR"?
+>
+> An 'event' is
+>    - switch from clean to dirty
+>    - switch from dirty to clean
+>    - a device fails
+>    - a spare finishes recovery
+> things like that.
 
-No.  If a description was written (and various people have tried to
-describe various parts) it would be out of date within a few months :-(
+Is there a glossary that explains "dirty" and such in detail?
 
-Look for "READ_MODIFY_WRITE" and "RECONSTRUCT_WRITE" .... no.  That
-only applied to raid6 code now..
-Look instead for the 'rcw' and 'rmw' counters, and then at
-'handle_write_operations5'  which does different things based on the
-'rcw' variable.
+>
+> > > If the event counts on different devices differ by more than 1, then
+> > > the smaller number is 'non-fresh'.
+> > >
+> > > You need to look to the kernel logs of when the array was previously
+> > > shut down to figure out why it is now non-fresh.
+> >
+> > The kernel logs show absolutely nothing. Log's fine, next time I boot up,
+> > one disk is kicked, I got no clue why, badblocks is fine, smartctl is
+> > fine, selft test fine, dmesg and /var/log/messages show nothing apart
+> > from that news that the disk was kicked and mdadm -E doesn't say anything
+> > suspicious either.
+>
+> Can you get "mdadm -E" on all devices *before* attempting to assemble
+> the array?
+>
 
-It used to be a lot clearer before we implemented xor-offload.  The
-xor-offload stuff is good, but it does make the code more complex.
+Yes, can do. But now the array is in sync again, guess you want an -E scan 
+when it's degraded?
 
 
-> 
-> Do you say that this is already implemented?
+> > Question: what events occured on the 3 other disks that didn't occur on
+> > the last? It only happens after reboots, not while the machine is up so
+> > the closest assumption is that the array is not properly shut down
+> > somehow during system shutdown - only I wouldn't know why.
+>
+> Yes, most likely is that the array didn't shut down properly.
 
-Yes.
+I noticed that *after* stoppping the array I get some message on the console 
+about SCSI caches, but it disappeares too quickly to read and doesn't turn up 
+in logs. Will try and video shoot it tho I issue "sync" anyway before 
+stopping the array.
 
-> 
-> I am sorry if you think I am mailing too much on the list.
+>
+> > Box is Slackware 11.0, 11 doesn't come with raid script of its own so I
+> > hacked them into the boot scripts myself and carefully watched that
+> > everything accessing the array is down before mdadm --stop --scan is
+> > issued. No NFS, no Samba, no other funny daemons, disks are synced and so
+> > on.
+> >
+> > I could write some failsafe inot it by checking if the event count is the
+> > same on all disks before --stop, but even if it wasn't, I really wouldn't
+> > know what to do about it.
+> >
+> > (btw mdadm -E gives me:     Events : 0.1149316 - what's with the 0. ?)
+>
+> The events count is a 64bit number and for historical reasons it is
+> printed as 2 32bit numbers.  I agree this is ugly.
+>
+> NeilBrown
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-You aren't.
 
-> But I happen to think it is fun.
 
-Good.
+-- 
+-----BEGIN GEEK CODE BLOCK-----
+Version: 3.12
+GCS d--(+)@ s-:+ a- C++++ UL++ P+>++ L+++>++++ E-- W++ N o? K-
+w--(---) !O M+ V- PS+ PE Y++ PGP t++(---)@ 5 X+(++) R+(++) tv--(+)@ 
+b++(+++) DI+++ D- G++ e* h>++ r* y?
+------END GEEK CODE BLOCK------
 
-> And I do try to give something back.
-
-We'll look forward to that.
-
-> 
-> > Code reading is a good first step to being a
-> > > 
-> > > Yoyr kernel hacker wannabe
-> >        ^^^^^^^^^^^^^
-> > 
-> > NeilBrown
-> 
-> Well, I do have a hack in mind, on the raid10,f2.
-> I need to investigate some more, and possibly test out
-> what really happens. But maybe the code already does what I want it to.
-> You are possibly the one that knows the code best, so maybe you can tell
-> me if raid10,f2 always does its reading in the first part of the disks?
-
-Yes, I know the code best.
-
-No, raid10,f2 doesn't always use the first part of the disk.  Getting
-it to do that would be a fairly small change in 'read_balance' in
-md/raid10.c.
-
-I'm not at all convinced that the read balancing code in raid10 (or
-raid1) really does the best thing.  So any improvements - backed up
-with broad testing - would be most welcome.
-
-NeilBrown
+http://www.vorratsdatenspeicherung.de
