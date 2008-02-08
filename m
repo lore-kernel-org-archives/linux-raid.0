@@ -1,82 +1,83 @@
-From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
+From: Neil Brown <neilb@suse.de>
 Subject: Re: raid5: two writing algorithms
-Date: Fri, 8 Feb 2008 02:10:41 +0100
-Message-ID: <20080208011041.GD12985@rap.rap.dk>
-References: <20080207161337.GA6044@rap.rap.dk> <18347.26939.358283.172299@notabene.brown>
+Date: Fri, 8 Feb 2008 12:51:39 +1100
+Message-ID: <18347.46507.422011.243347@notabene.brown>
+References: <20080207161337.GA6044@rap.rap.dk>
+	<18347.26939.358283.172299@notabene.brown>
+	<20080208011041.GD12985@rap.rap.dk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <18347.26939.358283.172299@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
+To: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, Feb 08, 2008 at 07:25:31AM +1100, Neil Brown wrote:
-> On Thursday February 7, keld@dkuug.dk wrote:
-> > As I understand it, there are 2 valid algoritms for writing in raid5.
-> > 
-> > 1. calculate the parity data by XOR'ing all data of the relevant data
-> > chunks.
-> > 
-> > 2. calculate the parity data by kind of XOR-subtracting the old data to
-> > be changed, and then XOR-adding the new data. (XOR-subtract and XOR-add
-> > is actually the same).
-> > 
-> > There are situations where method 1 is the fastest, and situations where
-> > method 2 is the fastest.
-> > 
-> > My idea is then that the raid5 code in the kernel can calculate which
-> > method is the faster. 
-> > 
-> > method 1 is faster, if all data is already available. I understand that
-> > this method is employed in the current kernel. This would eg be the case
-> > with sequential writes.
-> > 
-> > Method 2 is faster, if no data is available in core. It would require
-> > 2 reads and two writes, which always will be faster than n reads and 1
-> > write, possibly except for n=2. method 2 is thus faster normally for
-> > random writes.
-> > 
-> > I think that method 2 is not used in the kernel today. Mayby I am wrong,
-> > but I did have a look in the kernel code.
+On Friday February 8, keld@dkuug.dk wrote:
+> On Fri, Feb 08, 2008 at 07:25:31AM +1100, Neil Brown wrote:
+> > On Thursday February 7, keld@dkuug.dk wrote:
 > 
-> It is very odd that you would think something about the behaviour of
-> the kernel with actually having looked.
-> 
-> It also seems a little arrogant to have a clever idea and assume that
-> no one else has thought of it before.
-
-Oh well, I have to admit that I do not understand the code fully.
-I am not a seasoned kernel hacker, as I also indicated in my ad hoc
-signature.
-
-> > So I hereby give the idea for inspiration to kernel hackers.
-> 
-> and I hereby invite you to read the code ;-)
-
-I did some reading.  Is there somewhere a description of it, especially
-the raid code, or are the comments and the code the best documentation?
-
-Do you say that this is already implemented?
-
-I am sorry if you think I am mailing too much on the list.
-But I happen to think it is fun.
-And I do try to give something back.
-
-> Code reading is a good first step to being a
+> > > So I hereby give the idea for inspiration to kernel hackers.
 > > 
-> > Yoyr kernel hacker wannabe
->        ^^^^^^^^^^^^^
+> > and I hereby invite you to read the code ;-)
 > 
-> NeilBrown
+> I did some reading.  Is there somewhere a description of it, especially
+> the raid code, or are the comments and the code the best documentation?
 
-Well, I do have a hack in mind, on the raid10,f2.
-I need to investigate some more, and possibly test out
-what really happens. But maybe the code already does what I want it to.
-You are possibly the one that knows the code best, so maybe you can tell
-me if raid10,f2 always does its reading in the first part of the disks?
+No.  If a description was written (and various people have tried to
+describe various parts) it would be out of date within a few months :-(
 
-best regards
-keld
+Look for "READ_MODIFY_WRITE" and "RECONSTRUCT_WRITE" .... no.  That
+only applied to raid6 code now..
+Look instead for the 'rcw' and 'rmw' counters, and then at
+'handle_write_operations5'  which does different things based on the
+'rcw' variable.
+
+It used to be a lot clearer before we implemented xor-offload.  The
+xor-offload stuff is good, but it does make the code more complex.
+
+
+> 
+> Do you say that this is already implemented?
+
+Yes.
+
+> 
+> I am sorry if you think I am mailing too much on the list.
+
+You aren't.
+
+> But I happen to think it is fun.
+
+Good.
+
+> And I do try to give something back.
+
+We'll look forward to that.
+
+> 
+> > Code reading is a good first step to being a
+> > > 
+> > > Yoyr kernel hacker wannabe
+> >        ^^^^^^^^^^^^^
+> > 
+> > NeilBrown
+> 
+> Well, I do have a hack in mind, on the raid10,f2.
+> I need to investigate some more, and possibly test out
+> what really happens. But maybe the code already does what I want it to.
+> You are possibly the one that knows the code best, so maybe you can tell
+> me if raid10,f2 always does its reading in the first part of the disks?
+
+Yes, I know the code best.
+
+No, raid10,f2 doesn't always use the first part of the disk.  Getting
+it to do that would be a fairly small change in 'read_balance' in
+md/raid10.c.
+
+I'm not at all convinced that the read balancing code in raid10 (or
+raid1) really does the best thing.  So any improvements - backed up
+with broad testing - would be most welcome.
+
+NeilBrown
