@@ -1,61 +1,59 @@
-From: "Steve Fairbairn" <steve@fairbairn-family.com>
-Subject: Any inexpensive hardware recommendations for PCI interface cards?
-Date: Fri, 8 Feb 2008 11:21:01 -0000
-Message-ID: <11ae01c86a44$aff357a0$0603a8c0@meanmachine>
+From: Tim Southerwood <ts@dionic.net>
+Subject: Re: Any inexpensive hardware recommendations for PCI interface cards?
+Date: Fri, 08 Feb 2008 11:47:36 +0000
+Message-ID: <47AC4158.4050106@dionic.net>
+References: <11ae01c86a44$aff357a0$0603a8c0@meanmachine>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="windows-1250"
+Content-Type: text/plain; charset=windows-1250
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <11ae01c86a44$aff357a0$0603a8c0@meanmachine>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Steve Fairbairn <steve@fairbairn-family.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hi Steve,
 
-Hi All,
+Steve Fairbairn wrote:
 
-I currently have a couple of IT8212 PCI ATA RAID (1, 0 ot 1+0) cards
-which Linux RAID doesn't seem to like too well.  Initially I tried
-creating an array out of 4 disks on the 4 primaries over the 2 cards.
-Although this seemed to work, the access performance was impossibly low
-and I never actually got to the point of leaving it for a week to build
-the array.
+<snip>
 
-Since then, I have striped 2 of the drives (just primaries again and
-known to be good drives) on a single card using the cards own striping
-capability.  This striped drive, I've that added to my RAID 5 array as a
-500GB single disk.
+> Is anyone using an array with disks on PCI interface cards?
 
-The grow into this disk worked fine as did the resize2fs.  As soon as I
-tried to copy data onto the array, the system marked the  disk as
-faulty.  Now currently I'm running a degraded array anyway as I'm
-waiting for the replacement of the drive that failed with bad sectors
-when I initially started the grow. So I had to use assemble --force to
-get the md device back online.  I've not mounted it since. (I know it's
-wise not to use the drive while it's degraded, but if I can get the data
-off of a 320GB HD, then I can stripe that with another disk on the other
-ITE card, and add in a spare to the array).
+Almost, I have a Sil3132 PCI-E card (2 port SATA-300) mixed with 6 on
+board ports (on Asus M2N-E mobo). No problems there, I quite pleased
+with it.
 
-Can anyone see any issues with what I'm trying to do?
-Are there any known issues with IT8212 cards (They worked as straight
-disks on linux fine)?
-Is anyone using an array with disks on PCI interface cards?
-Is there an issue with mixing motherboard interfaces and PCI card based
-ones?
-Does anyone recommend any inexpensive (probably SATA-II) PCI interface
-cards?
+> Is there an issue with mixing motherboard interfaces and PCI card based
+> ones?
 
-The motherboard has run out of sensible interfaces (I'm not using both
-primary and secondary in an array on IDE), but I'd still like the
-capacity to grow my array further.
+Not fundamentally. Speed issues may depend on whether the PCI bus to the
+sockets is shared with the on board SATA chip, or if they are off
+different busses.
 
-Thanks again for the help.
+> Does anyone recommend any inexpensive (probably SATA-II) PCI interface
+> cards?
 
-Steve.
+Unfortunately, the SiL3132 doesn't have an obvious PCI sibling.
 
-No virus found in this outgoing message.
-Checked by AVG Free Edition. 
-Version: 7.5.516 / Virus Database: 269.19.21/1265 - Release Date:
-07/02/2008 11:17
- 
+You might consider a SiL3124 based card:
 
+http://www.siliconimage.com/products/product.aspx?id=27
+
+example card here:
+
+http://www.satacard.com/
+
+Price isn't so cheap though. If you can drop to SATA-150 (SATA I) then
+you get the SiL3114 chips which are much more common (=cheap).
+
+I can't vouch personally for those other chips, but I remember seeing
+favourable reviews when I was searching for for SATA controllers.
+
+
+Sorry I can't be of more help - just chucking some ideas back...
+
+Cheers
+
+Tim
