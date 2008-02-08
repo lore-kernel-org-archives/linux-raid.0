@@ -1,112 +1,76 @@
-From: Dexter Filmore <Dexter.Filmore@gmx.de>
-Subject: Re: when is a disk "non-fresh"?
-Date: Fri, 8 Feb 2008 10:32:25 +0100
-Message-ID: <200802081032.26044.Dexter.Filmore@gmx.de>
-References: <200802030354.33435.Dexter.Filmore@gmx.de> <200802072316.20907.Dexter.Filmore@gmx.de> <18347.37564.207728.571946@notabene.brown>
+From: Marcin Krol <admin@domeny.pl>
+Subject: Re: Deleting mdadm RAID arrays
+Date: Fri, 8 Feb 2008 10:35:25 +0100
+Message-ID: <200802081035.25722.admin@domeny.pl>
+References: <200802051142.19625.admin@domeny.pl> <200802071056.33221.admin@domeny.pl> <47AB79B1.6000503@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18347.37564.207728.571946@notabene.brown>
+In-Reply-To: <47AB79B1.6000503@tmr.com>
 Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Friday 08 February 2008 00:22:36 Neil Brown wrote:
-> On Thursday February 7, Dexter.Filmore@gmx.de wrote:
-> > On Tuesday 05 February 2008 03:02:00 Neil Brown wrote:
-> > > On Monday February 4, Dexter.Filmore@gmx.de wrote:
-> > > > Seems the other topic wasn't quite clear...
-> > >
-> > > not necessarily.  sometimes it helps to repeat your question.  there
-> > > is a lot of noise on the internet and somethings important things get
-> > > missed... :-)
-> > >
-> > > > Occasionally a disk is kicked for being "non-fresh" - what does this
-> > > > mean and what causes it?
-> > >
-> > > The 'event' count is too small.
-> > > Every event that happens on an array causes the event count to be
-> > > incremented.
-> >
-> > An 'event' here is any atomic action? Like "write byte there" or "calc
-> > XOR"?
->
-> An 'event' is
->    - switch from clean to dirty
->    - switch from dirty to clean
->    - a device fails
->    - a spare finishes recovery
-> things like that.
+Thursday 07 February 2008 22:35:45 Bill Davidsen napisa=C5=82(a):
+> > As you may remember, I have configured udev to associate /dev/d_* d=
+evices with
+> > serial numbers (to keep them from changing depending on boot module=
+ loading=20
+> > sequence).=20
 
-Is there a glossary that explains "dirty" and such in detail?
+> Why do you care?=20
 
->
-> > > If the event counts on different devices differ by more than 1, then
-> > > the smaller number is 'non-fresh'.
-> > >
-> > > You need to look to the kernel logs of when the array was previously
-> > > shut down to figure out why it is now non-fresh.
-> >
-> > The kernel logs show absolutely nothing. Log's fine, next time I boot up,
-> > one disk is kicked, I got no clue why, badblocks is fine, smartctl is
-> > fine, selft test fine, dmesg and /var/log/messages show nothing apart
-> > from that news that the disk was kicked and mdadm -E doesn't say anything
-> > suspicious either.
->
-> Can you get "mdadm -E" on all devices *before* attempting to assemble
-> the array?
->
+Because /dev/sd* devices get swapped randomly depending on boot module =
+insertion
+sequence, as I explained earlier.
 
-Yes, can do. But now the array is in sync again, guess you want an -E scan 
-when it's degraded?
+> If you are using UUID for all the arrays and mounts =20
+> does this buy you anything?=20
+
+This is exactly what is not clear for me: what is it that identifies dr=
+ive/partition as part of=20
+the array? /dev/sd name? UUID as part of superblock? /dev/d_n?
+
+If it's UUID I should be safe regardless of /dev/sd* designation? Yes o=
+r no?
+
+> And more to the point, the first time a =20
+> drive fails and you replace it, will it cause you a problem? Require=20
+> maintaining the serial to name data manually?
+
+That's not the problem. I just want my array to be intact.
+
+> I miss the benefit of forcing this instead of just building the=20
+> information at boot time and dropping it in a file.
+
+I would prefer that, too - if it worked. I was getting both arrays mess=
+ed=20
+up randomly on boot. "messed up" in the sense of arrays being composed
+of different /dev/sd devices.
 
 
-> > Question: what events occured on the 3 other disks that didn't occur on
-> > the last? It only happens after reboots, not while the machine is up so
-> > the closest assumption is that the array is not properly shut down
-> > somehow during system shutdown - only I wouldn't know why.
->
-> Yes, most likely is that the array didn't shut down properly.
+> > And I made *damn* sure I zeroed all the superblocks before reassemb=
+ling=20
+> > the arrays. Yet it still shows the old partitions on those arrays!
+> >  =20
+> As I noted before, you said you had these on whole devices before, di=
+d=20
+> you zero the superblocks on the whole devices or the partitions? From=
+=20
+> what I read, it was the partitions.
 
-I noticed that *after* stoppping the array I get some message on the console 
-about SCSI caches, but it disappeares too quickly to read and doesn't turn up 
-in logs. Will try and video shoot it tho I issue "sync" anyway before 
-stopping the array.
+I tried it both ways actually (rebuilt arrays a few times, just udev di=
+dn't want
+to associate WD-serialnumber-part1 as /dev/d_1p1 as it was told, it sti=
+ll claimed
+it was /dev/d_1).=20
 
->
-> > Box is Slackware 11.0, 11 doesn't come with raid script of its own so I
-> > hacked them into the boot scripts myself and carefully watched that
-> > everything accessing the array is down before mdadm --stop --scan is
-> > issued. No NFS, no Samba, no other funny daemons, disks are synced and so
-> > on.
-> >
-> > I could write some failsafe inot it by checking if the event count is the
-> > same on all disks before --stop, but even if it wasn't, I really wouldn't
-> > know what to do about it.
-> >
-> > (btw mdadm -E gives me:     Events : 0.1149316 - what's with the 0. ?)
->
-> The events count is a 64bit number and for historical reasons it is
-> printed as 2 32bit numbers.  I agree this is ugly.
->
-> NeilBrown
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
-
--- 
------BEGIN GEEK CODE BLOCK-----
-Version: 3.12
-GCS d--(+)@ s-:+ a- C++++ UL++ P+>++ L+++>++++ E-- W++ N o? K-
-w--(---) !O M+ V- PS+ PE Y++ PGP t++(---)@ 5 X+(++) R+(++) tv--(+)@ 
-b++(+++) DI+++ D- G++ e* h>++ r* y?
-------END GEEK CODE BLOCK------
-
-http://www.vorratsdatenspeicherung.de
+Regards,
+Marcin Krol
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
