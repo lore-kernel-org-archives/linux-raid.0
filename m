@@ -1,44 +1,25 @@
-From: michael@estone.ca
-Subject: Re: mdadm 2.6 creates slow RAID 5 while mdadm 2.5.6 rocks
-Date: Fri, 08 Feb 2008 08:16:49 -0800
-Message-ID: <20080208081649.rfx07p98ckcgc0sg@estone.ca>
-References: <47AC7463.7000502@free.fr>
+From: Iustin Pop <iusty@k1024.org>
+Subject: Re: Any inexpensive hardware recommendations for PCI interface
+	cards?
+Date: Fri, 8 Feb 2008 20:01:47 +0100
+Message-ID: <20080208190147.GA24083@teal.hq.k1024.org>
+References: <11ae01c86a44$aff357a0$0603a8c0@meanmachine> <47AC5162.4080700@tmr.com> <alpine.DEB.1.00.0802080854390.11577@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset=ISO-8859-1;
-	DelSp="Yes";
-	format="flowed"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <47AC7463.7000502@free.fr>
 Content-Disposition: inline
+In-Reply-To: <alpine.DEB.1.00.0802080854390.11577@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: Bill Davidsen <davidsen@tmr.com>, Steve Fairbairn <steve@fairbairn-family.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Quoting Hubert Verstraete <hubskml@free.fr>:
+On Fri, Feb 08, 2008 at 08:54:55AM -0500, Justin Piszcz wrote:
+> The promise tx4 pci works great and supports sata/300+ncq/etc $60-$70.
 
-> Hi All,
->
-> My RAID 5 array is running slow.
-> I've made a lot of test to find out where this issue is laying.
-> I've come to the conclusion that once the array is created with mdadm
-> 2.6.x (up to 2.6.4), whatever the kernel you run, whatever the mdadm
-> you use to re-assemble the array, the array's performance is very
-> degraded.
->
-> Would this be a bug in mdadm 2.6 ?
-> Are you seeing this issue too ?
+Wait, I have used tx4 pci up until ~2.6.22 and it didn't support AFAIK
+ncq. Are you sure that current driver supports NCQ? I might then revive
+that card :)
 
-I may have seen this before too.
-What happens if you don't make an array that is partitionable?
-Just create an /dev/mdx device, or, if you must use a partitionable array,
-what happens to your benchmarks on your 2nd partition of your array?
-Say, /dev/md_d0p2 ?
-
-My symptons were similar that any partitionable Raid 5 array would be  
-slower, but ony on the first partition.
-mdadm version 2.5.6
-kernel 2.6.18
-
-Mike
+thanks,
+iustin
