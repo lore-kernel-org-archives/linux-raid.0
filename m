@@ -1,84 +1,43 @@
-From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
-Subject: Re: howto and faq
-Date: Sun, 10 Feb 2008 12:14:04 +0100
-Message-ID: <20080210111404.GA4823@rap.rap.dk>
-References: <20080207164249.GA7116@rap.rap.dk> <47AECC59.1020808@dgreaves.com>
+From: Jan Engelhardt <jengelh@computergmbh.de>
+Subject: Re: [PATCH] Use new sb type
+Date: Sun, 10 Feb 2008 13:12:13 +0100 (CET)
+Message-ID: <Pine.LNX.4.64.0802101311320.7176@fbirervta.pbzchgretzou.qr>
+References: <Pine.LNX.4.64.0801281818430.1185@fbirervta.pbzchgretzou.qr>
+ <479E1C95.1040008@dgreaves.com> <479FB1FB.6040500@tmr.com>
+ <Pine.LNX.4.64.0801292347430.14907@fbirervta.pbzchgretzou.qr>
+ <47AED31A.3070704@dgreaves.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <47AECC59.1020808@dgreaves.com>
+In-Reply-To: <47AED31A.3070704@dgreaves.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: David Greaves <david@dgreaves.com>
-Cc: linux-raid@vger.kernel.org
+Cc: Bill Davidsen <davidsen@tmr.com>, neilb@suse.de, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, Feb 10, 2008 at 10:05:13AM +0000, David Greaves wrote:
-> Keld J=F8rn Simonsen wrote:
->=20
-> > The list description at
-> > http://vger.kernel.org/vger-lists.html#linux-raid
-> > does list af FAQ, http://www.linuxdoc.org/FAQ/
-> Yes, that should be amended. Drop them a line about the FAQ too
 
-I will.
+On Feb 10 2008 10:34, David Greaves wrote:
+>Jan Engelhardt wrote:
+>> On Jan 29 2008 18:08, Bill Davidsen wrote:
+>> 
+>>>> IIRC there was a discussion a while back on renaming mdadm options
+>>>> (google "Time to deprecate old RAID formats?") and the superblocks
+>>>> to emphasise the location and data structure. Would it be good to
+>>>> introduce the new names at the same time as changing the default
+>>>> format/on-disk-location?
+>>> Yes, I suggested some layout names, as did a few other people, and
+>>> a few changes to separate metadata type and position were
+>>> discussed. BUT, changing the default layout, no matter how "better"
+>>> it seems, is trumped by "breaks existing setups and user practice."
+>> 
+>> Layout names are a different matter from what the default sb type should 
+>> be.
+>Indeed they are. Or rather should be.
+>
+>However the current default sb includes a layout element. If the default sb is
+>changed then it seems like an opportunity to detach the data format from the
+>on-disk location.
 
-> > So our FAQ info is pretty out of date. I think it would be nice to =
-have
-> > a wiki like we have for the Howto. This would mean that we have muc=
-h
-> > better means to let new people make their mark, and avoid the probl=
-em
-> > that we have today with really outdated info.
->=20
-> There seems to be no point in having separate wikis for the FAQ and H=
-OWTO
-> elements of documentation. Especially since a lot of FAQs are "How do=
- I"... by
-> definition the answer is a HOWTO.
->=20
-> > So can we put up a wiki somewhere for this, or should we just exten=
-d the
-> > wiki howto pages to also include a faq section?
-> So just extend the existing wiki.
-
-OK, so let's have a combined howto and faq.
-
-I would then like that to be reflected in the main page.
-I would rather that this be called "Howto and FAQ - Linux raid"
-than "Main Page - Linux Raid". Is that possible?
-
-And then, how do we structure the pages? I think we need a new section
-for the FAQ.=20
-
-And then I would like a clearer statement on the relation between the
-linux-raid mailing list and the pages, right in the top of the main pag=
-e.
-
-> I set the wiki up at osdl to ensure that if a bus hit me then Neil or=
- others
-> would have a rational and responsive organisation to go to to change =
-ownership.
->=20
-> I've been writing to some of the other FAQ/Doc organisations sporadic=
-ally for
-> over a year now and had no response from any of them. It's a very poo=
-r aspect of
-> OSS...
-
-Looks like a good move.
-
-I have had a look at other search engines, yahoo and msn.
-Our pages do show up within the 10 first hits for "linux raid".
-So that is not that bad. Still, Google has the
-http://linux-raid.osdl.org/ page as number 127. That is very bad.
-Maybe something about it being referenced from wikipedia?
-
-Best regards
-Keld
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I do not see anything wrong by specifying the SB location as a metadata
+version. Why should not location be an element of the raid type?
+It's fine the way it is IMHO. (Just the default is not :)
