@@ -1,54 +1,66 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: RAID5 how chage chunck size from 64 to 128, 256 ? is it possible
- ?
-Date: Sun, 10 Feb 2008 04:03:53 -0500 (EST)
-Message-ID: <alpine.DEB.1.00.0802100403100.13056@p34.internal.lan>
-References: <1498963728.20080209074300@j8.com.ru> <alpine.DEB.1.00.0802090414310.27612@p34.internal.lan> <20080209233159.659ce16d@szpak>
+From: David Greaves <david@dgreaves.com>
+Subject: Re: howto and faq
+Date: Sun, 10 Feb 2008 10:05:13 +0000
+Message-ID: <47AECC59.1020808@dgreaves.com>
+References: <20080207164249.GA7116@rap.rap.dk>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20080209233159.659ce16d@szpak>
+In-Reply-To: <20080207164249.GA7116@rap.rap.dk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Janek Kozicki <janek_listy@wp.pl>
+To: =?ISO-8859-1?Q?Keld_J=F8rn_Simonsen?= <keld@dkuug.dk>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Keld J=F8rn Simonsen wrote:
+> I am trying to get some order to linux raid info.
+Help appreciated :)
+
+> The list description at
+> http://vger.kernel.org/vger-lists.html#linux-raid
+> does list af FAQ, http://www.linuxdoc.org/FAQ/
+Yes, that should be amended. Drop them a line about the FAQ too
+
+> So our FAQ info is pretty out of date. I think it would be nice to ha=
+ve
+> a wiki like we have for the Howto. This would mean that we have much
+> better means to let new people make their mark, and avoid the problem
+> that we have today with really outdated info.
+
+There seems to be no point in having separate wikis for the FAQ and HOW=
+TO
+elements of documentation. Especially since a lot of FAQs are "How do I=
+"... by
+definition the answer is a HOWTO.
 
 
-On Sat, 9 Feb 2008, Janek Kozicki wrote:
+> So can we put up a wiki somewhere for this, or should we just extend =
+the
+> wiki howto pages to also include a faq section?
+So just extend the existing wiki.
 
-> Justin Piszcz said:     (by the date of Sat, 9 Feb 2008 04:14:51 -0500 (EST))
->
->> When you reate the array its --chunk or -c -- I found 256 KiB to 1024 KiB
->> to be optimal.
->
-> Hello Justin,
->
-> what is your typical bonnie++ invocation, to test your configuration?
-> Which fields are meaningful for you from this benchmark?
->
-> Do you use anything else for benchmarks?
-> eg: 'zcav /dev/sda > result' ?
->
->
-> I'm asking becuase I want to make some local benchmarks to determine
-> best chunk size in my HDD setup.
->
-> thanks in advance
-> --
-> Janek Kozicki                                                         |
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+> For the howto, I have asked the VGER people to add info to our list
+> description, that we have a wiki howto at http://linux-raid.osdl.org/
+ta.
 
-I use the following (3-iterations & average them):
 
-   /usr/bin/time /usr/sbin/bonnie++ -d /x/test -s 16384 -m p34 -n 
-16:100000:16:64 > $HOME/test"$i".txt 2>&1
+I set the wiki up at osdl to ensure that if a bus hit me then Neil or o=
+thers
+would have a rational and responsive organisation to go to to change ow=
+nership.
 
-I also use realistic testing as well such as untarring large files (> 
-1GiB) etc..
+I've been writing to some of the other FAQ/Doc organisations sporadical=
+ly for
+over a year now and had no response from any of them. It's a very poor =
+aspect of
+OSS...
 
-Justin.
+David
+
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
