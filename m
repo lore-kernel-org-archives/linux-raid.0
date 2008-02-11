@@ -1,7 +1,7 @@
 From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
-Subject: howto on performance
-Date: Mon, 11 Feb 2008 18:22:35 +0100
-Message-ID: <20080211172235.GA25678@rap.rap.dk>
+Subject: my io testing scripts
+Date: Mon, 11 Feb 2008 18:25:36 +0100
+Message-ID: <20080211172536.GA26017@rap.rap.dk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
@@ -10,56 +10,63 @@ Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I have put up a new howto text on performance:
-http://linux-raid.osdl.org/index.php/Performance#Performance_of_raids_with_2_disks
+Here are my testing scripts used in the performance howto:
+http://linux-raid.osdl.org/index.php/Home_grown_testing_methods
 
-Enjoy!
-Keld
+=Hard disk performance scripts=
+Here are the scripts that I used for my performance measuring. Use at your own risk.
+They destroy the contents of the partitions involved. The /dev/md raid needs to
+be stopped before initiating the test.
 
-=Performance of raids with 2 disks=
+Copyright Keld Simonsen, keld@dkuug.dk 2008. Licensed under the GPL.
 
-I have made some testing of performance of different types of RAIDs,
-with 2 disks involved. I have used my own home grown testing methods,
-which are quite simple, to test sequential and random reading and writing of 
-200 files of 40 MB. The tests were meant to see what performance I could 
-get out of a system mostly oriented towards file serving, such as a mirror site.
-
-My configuration was
-
-    1800 MHz AMD Sempron(tm) Processor 3100+
-    1500 MB RAM
-    2 x  Hitachi Ultrastar SCSI-II 1 TB.
-    Linux version 2.6.12-26mdk
-
-Figures are in MB/s, and the file system was ext3. Times were measured with iostat,
-and an estimate for steady performance was taken. The times varied quite 
-a lot over the different 10 second intervals, for example the estimate 155 MB/s
-ranged from 135 MB/s to 163 MB/s. I then looked at the avearge over the period when
-a test was running in full scale (all processes started, and none stopped).
-
-    RAID type      sequential read     random read    sequential write   random write
-    Ordinary disk       82                 34                 67                56
-    RAID0              155                 80                 97                80
-    RAID1               80                 35                 72                55
-    RAID10              79                 56                 69                48
-    RAID10,f2          150                 79                 70                55
-
-Random read for RAID1 and RAID10 were quite unbalanced, almost only coming out of one of the disks.
-
-The results are quite as expected:
-
-RAID0 and RAID10,f2 reads are double speed compared to ordinary file system for sequential reads
-(155 vs 82) and more than double for random reads (80 vs 35).
-
-Writes (both sequential and random) are roughly the same for ordinary disk, RAID1, RAID10 and
-RAID10,f2, around 70 MB/s for sequential, and 55 MB/s for random.
-
-Sequential reads are about the same (80 MB/s) for ordinary partition, RAID1 and RAID10.
-
-Rndom reads for ordinary partition and RAID1 is about the same (35 MB/s) and about 50 % higher for
-RAID10. I am puzzled why RAID10 is faster than RAID1 here.
-
-All in all RAID10,f2 is the fastest mirrored RAID for both sequential and random reading for this test,
-while it is about equal with the other mirrored RAIDs when writing.
-
-My kernel did not allow me to test RAID10,o2 as this is only supported from kernel 2.6.18.
+iotest:
+   
+   #!/bin/sh
+   # invoked by
+   # iotest "mdadm -R -C /dev/md1 --chunk=256 -l 10 -n 2 -p f2 "  /dev/md1 /mnt/md1 ext3 " /dev/hdb5 /dev/hdd5 "
+   echo "\n" $1 $5 "\n" >> /tmp/results
+   echo $1 $5
+   $1 $5
+   mkfs -t $4 $2
+   mkdir $3
+   mount $2 $3
+   cd $3
+   echo "\nmakefiles\n" >> /tmp/results
+   mkfiles 200
+   echo "\n remakefiles \n" >>/tmp/results
+   mkfiles 200
+   echo "\n catall \n" >>/tmp/results
+   cat * >/dev/null
+   echo "\n catnull \n" >>/tmp/results
+   catnull
+   cd
+   umount $2
+   mdadm -S $2
+   echo "\n finish " $1 " " $5 "\n"  >> /tmp/results
+   
+Be careful with this script, and remember to change the ordinary test to only one partition
+   
+iorun:   
+   #!/bin/sh
+   # set up ram disk
+   DISKS="/dev/sda2 /dev/sdb2"
+   iostat -k 10 > /tmp/results &
+   iotest " "                                                   /dev/sda2 /mnt/sda2 ext3 " "
+   iotest "mdadm -C /dev/md1 --chunk=256 -R -l  0 -n 2      " /dev/md1 /mnt/md1 ext3 "$DISKS"
+   iotest "mdadm -C /dev/md1 --chunk=256 -R -l  1 -n 2      " /dev/md1 /mnt/md1 ext3 "$DISKS"
+   iotest "mdadm -C /dev/md1 --chunk=256 -R -l 10 -n 2      " /dev/md1 /mnt/md1 ext3 "$DISKS"
+   iotest "mdadm -C /dev/md1 --chunk=256 -R -l 10 -n 2 -p f2 " /dev/md1 /mnt/md1 ext3 "$DISKS"
+   # iotest     "mdadm -C /dev/md1 --chunk=256 -R -l 10 -n 2 -p o2 " /dev/md1 /mnt/md1 ext3 "$DISKS"
+   
+mkfiles:   
+   #!/bin/sh
+   for (( i = 1; i < $1 ; i++ )) ; do dd if=/dev/hda1 of=$i bs=1MB count=40 ; done
+   for (( i = 1; i < $1 ; i++ )) ; do dd if=/dev/hda1 of=$i bs=1MB count=40 & ; done
+   
+catnull:   
+   #!/bin/tcsh
+   foreach i ( * ) 
+        cat $i >/dev/null &
+   end
+   wait
