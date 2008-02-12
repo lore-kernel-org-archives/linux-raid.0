@@ -1,61 +1,39 @@
-From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
-Subject: patch for raid10,f>1 to operate like raid0
-Date: Tue, 12 Feb 2008 15:16:40 +0100
-Message-ID: <20080212141640.GA4921@rap.rap.dk>
+From: "George Spelvin" <linux@horizon.com>
+Subject: Got raid10 assembled wrong - how to fix?
+Date: Tue, 12 Feb 2008 11:59:00 -0500
+Message-ID: <20080212165900.15511.qmail@science.horizon.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
+Cc: linux@horizon.com
 List-Id: linux-raid.ids
 
-This patch changes the disk to be read for layout far > 1 to always be
-the disk with the lowest block address.
+I just discovered (the hard way, sigh, but not too much data loss) that a
+4-drive RAID 10 array had the mirroring set up incorrectly.
 
-Thus the chunks to be read will always be (for a fully functioning array)
-from the first band of stripes, and the raid will then work as a raid0
-consisting of the first band of stripes.
+Given 4 drvies A, B, C and D, I had intended to mirror A<->C and B<->D,
+so that I could split the mirror and run on either (A,B) or (C,D).
 
-Some advantages:
+However, it turns out that the mirror pairs are A<->B and C<->D.  So
+pulling both A and B off-line results in a non-functional array.
 
-The fastest part which is the outer sectors of the disks involved will be used.
-The outer blocks of a disk may be as much as 100 % faster than the inner blocks.
+So basically what I need to do is to decommission B and C, and rebuild
+the array with them swapped: A, C, B, D.
 
-Average seek time will be smaller, as seeks will always be confined to the
-first part of the disks.
+Can someone tell me if the following incantation is correct?
 
-Mixed disks with different performance characteristics will work better,
-as they will work as raid0, the sequential read rate will be number of
-disks involved times the IO rate of the slowest disk.
+mdadm /dev/mdX -f /dev/B -r /dev/B
+mdadm /dev/mdX -f /dev/C -r /dev/C
+mdadm --zero-superblock /dev/B
+mdadm --zero-superblock /dev/C
+mdadm /dev/mdX -a /dev/C
+mdadm /dev/mdX -a /dev/B
 
-If a disk is malfunctioning, the first disk which is working, and has the lowest
-block address for the logical block will be used.
+I'm assuming that fresh spares will be assigned to the lowest available
+slot.  I just get nervous about commands with names like --zero-superblock
+when I have data I'd rather not lose.
 
-Signed-off-by: Keld Simonsen <keld@dkuug.dk>
-
---- raid10.c	2008-02-12 00:50:59.000000000 +0100
-+++ raid10-ks.c	2008-02-12 00:51:09.000000000 +0100
-@@ -537,7 +537,7 @@
- 	current_distance = abs(r10_bio->devs[slot].addr -
- 			       conf->mirrors[disk].head_position);
- 
--	/* Find the disk whose head is closest */
-+	/* Find the disk whose head is closest, 
-+          or for far > 1 the closest to partition beginning */
- 
- 	for (nslot = slot; nslot < conf->copies; nslot++) {
- 		int ndisk = r10_bio->devs[nslot].devnum;
-@@ -557,7 +557,11 @@
- 			slot = nslot;
- 			break;
- 		}
--		new_distance = abs(r10_bio->devs[nslot].addr -
-+
-+                /* for far > 1 always use the lowest address */
-+		if (conf->far_copies > 1) 
-+			new_distance = r10_bio->devs[nslot].addr;
-+		else new_distance = abs(r10_bio->devs[nslot].addr -
- 				   conf->mirrors[ndisk].head_position);
- 		if (new_distance < current_distance) {
- 			current_distance = new_distance;
+Thanks!
