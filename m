@@ -1,44 +1,55 @@
 From: Michael Tokarev <mjt@tls.msk.ru>
-Subject: Re: Got raid10 assembled wrong - how to fix?
-Date: Wed, 13 Feb 2008 12:16:47 +0300
-Message-ID: <47B2B57F.6000800@msgid.tls.msk.ru>
-References: <20080212165900.15511.qmail@science.horizon.com>
+Subject: Re: transferring RAID-1 drives via sneakernet
+Date: Wed, 13 Feb 2008 12:25:14 +0300
+Message-ID: <47B2B77A.5070702@msgid.tls.msk.ru>
+References: <e03b90ae0802111659v2889dc52kc6eed9dfc9478f9e@mail.gmail.com>	 <47B1633F.5030403@dgreaves.com>	 <e03b90ae0802121050t192fba6ai5c10338844a60a05@mail.gmail.com>	 <47B1ECD2.8070406@redhat.com> <e03b90ae0802121914q595a492ft844bde202bd09a0d@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20080212165900.15511.qmail@science.horizon.com>
+In-Reply-To: <e03b90ae0802121914q595a492ft844bde202bd09a0d@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: George Spelvin <linux@horizon.com>
+To: Jeff Breidenbach <jeff@jab.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-George Spelvin wrote:
-> I just discovered (the hard way, sigh, but not too much data loss) that a
-> 4-drive RAID 10 array had the mirroring set up incorrectly.
+Jeff Breidenbach wrote:
+>> It's not a RAID issue, but make sure you don't have any duplicate volume
+>> names.  According to Murphy's Law, if there are two / volumes, the wrong
+>> one will be chosen upon your next reboot.
 > 
-> Given 4 drvies A, B, C and D, I had intended to mirror A<->C and B<->D,
-> so that I could split the mirror and run on either (A,B) or (C,D).
-> 
-> However, it turns out that the mirror pairs are A<->B and C<->D.  So
-> pulling both A and B off-line results in a non-functional array.
-> 
-> So basically what I need to do is to decommission B and C, and rebuild
-> the array with them swapped: A, C, B, D.
-> 
-> Can someone tell me if the following incantation is correct?
-> 
-> mdadm /dev/mdX -f /dev/B -r /dev/B
-> mdadm /dev/mdX -f /dev/C -r /dev/C
-> mdadm --zero-superblock /dev/B
-> mdadm --zero-superblock /dev/C
-> mdadm /dev/mdX -a /dev/C
-> mdadm /dev/mdX -a /dev/B
+> Thanks for the tip. Since I'm not using volumes or LVM at all, I should be
+> safe from this particular problem.
 
-That should work.
+If you don't use names, you use numbers - like md0, md10 etc.
+The numbers, as they now ARE names, should be different too.
 
-But I think you'd better just physically swap the drives instead -
-this way, no rebuilding the array will be necessary, and your data
-will be safe all the time.
+There's more to this topic, much more.
+
+There are different ways to start (assemble) the arrays.  I know at
+least 4 - kernel autodetection, mdadm with mdadm.conf listed some
+devices, mdadm with "empty" mdadm.conf and with using of 'homehost'
+parameter (assemble all "our" arrays), and mdrun utility.  Also,
+some arrays may be assembled during initrd/initramfs stage, and some
+after...
+
+The best is either mdadm with something in mdadm.conf, or mdadm with
+homehost.  Note that neither of these ways, your "foreign" array(s)
+will be assembled, and you will have to do it manually - wich is much
+better than to screw things up trying to mix-n-match pieces of the
+two systems.  You'll just have to figure the device numbers of your
+"foreign" disks and issue an appropriate command, like this:
+
+  mdadm --assemble /dev/md10 /dev/sdc1 /dev/sdd1 ...
+
+using not yet taken mdN number and the right device nodes for your
+disks/partitions.
+
+If you want to keep the disks here, you can add the array info into
+mdadm.conf or refresh superblock to have new homehost.
+
+But if you're using kernel autodetection or mdrun... well, I for
+one can't help here, -- your arrays will be numbered/renumbered
+by a chance...
 
 /mjt
