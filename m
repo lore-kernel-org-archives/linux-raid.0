@@ -1,57 +1,40 @@
-From: "Dan Williams" <dan.j.williams@intel.com>
+From: "Shannon Nelson" <shannon.lee.nelson@gmail.com>
 Subject: Re: [BUG] OOPS 2.6.24.2 raid5 write with ioatdma
-Date: Fri, 15 Feb 2008 12:17:43 -0700
-Message-ID: <e9c3a7c20802151117i4e8a3f1bq7be1e94433702fbf@mail.gmail.com>
+Date: Fri, 15 Feb 2008 11:43:09 -0800
+Message-ID: <3cce60f30802151143gc98e3a2l29aa49f8f829e2f6@mail.gmail.com>
 References: <20080215171905.2e5c6bee@smartjog.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_Part_4752_2546834.1203103063267"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20080215171905.2e5c6bee@smartjog.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Laurent CORBES <laurent.corbes@smartjog.com>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Shannon Nelson <shannon.nelson@intel.com>, maciej.sosnowski@intel.com
-List-Id: linux-raid.ids
-
-------=_Part_4752_2546834.1203103063267
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20080215171905.2e5c6bee@smartjog.com>
 Content-Disposition: inline
+Sender: linux-raid-owner@vger.kernel.org
+To: Laurent CORBES <laurent.corbes@smartjog.com>
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, "Nelson, Shannon" <shannon.nelson@intel.com>
+List-Id: linux-raid.ids
 
-On Fri, Feb 15, 2008 at 9:19 AM, Laurent CORBES
+On Fri, Feb 15, 2008 at 8:19 AM, Laurent CORBES
 <laurent.corbes@smartjog.com> wrote:
 > Hi all,
 >
 >  I got a raid5 oops when trying to write on a raid 5 array, with ioatdma loaded
 >  and without DCA activated in bios:
 >
+[...]
 
-At first glance I believe the attached patch may fix the issue, I'll
-try to reproduce this locally.
+Dan's quick patch is likely the right answer.
 
-Regards,
-Dan
+>
+>  When I enable DCA in system bios I cannot boot, the ioatdma subsystem failed to
+>  initialize, it stalled at:
+>  ioatdma: ioat_dma_test_callback(00008086)
 
-------=_Part_4752_2546834.1203103063267
-Content-Type: text/x-patch; name=ioat-init-ack.patch
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_fcp4ebul0
-Content-Disposition: attachment; filename=ioat-init-ack.patch
+I don't see this example in the dmesg, but I'm not sure why you think
+this is the case.  If DCA is enabled, you should not see any further
+messages from ioatdma after the ioat_self_test_callback().
 
-aW9hdDogZml4ICdhY2snIGhhbmRsaW5nLCBkcml2ZXIgbXVzdCBlbnN1cmUgdGhhdCAnYWNrJyBp
-cyB6ZXJvCgpGcm9tOiBEYW4gV2lsbGlhbXMgPGRhbi5qLndpbGxpYW1zQGludGVsLmNvbT4KCklu
-aXRpYWxpemUgJ2FjaycgdG8gemVybyBpbiBjYXNlIHRoZSBkZXNjcmlwdG9yIGhhcyBiZWVuIHJl
-Y3ljbGVkLgoKU2lnbmVkLW9mZi1ieTogRGFuIFdpbGxpYW1zIDxkYW4uai53aWxsaWFtc0BpbnRl
-bC5jb20+Ci0tLQoKIGRyaXZlcnMvZG1hL2lvYXRfZG1hLmMgfCAgICAyICsrCiAxIGZpbGVzIGNo
-YW5nZWQsIDIgaW5zZXJ0aW9ucygrKSwgMCBkZWxldGlvbnMoLSkKCgpkaWZmIC0tZ2l0IGEvZHJp
-dmVycy9kbWEvaW9hdF9kbWEuYyBiL2RyaXZlcnMvZG1hL2lvYXRfZG1hLmMKaW5kZXggNDVlN2I0
-Ni4uOGNmNTQyYiAxMDA2NDQKLS0tIGEvZHJpdmVycy9kbWEvaW9hdF9kbWEuYworKysgYi9kcml2
-ZXJzL2RtYS9pb2F0X2RtYS5jCkBAIC03MjYsNiArNzI2LDcgQEAgc3RhdGljIHN0cnVjdCBkbWFf
-YXN5bmNfdHhfZGVzY3JpcHRvciAqaW9hdDFfZG1hX3ByZXBfbWVtY3B5KAogCiAJaWYgKG5ldykg
-ewogCQluZXctPmxlbiA9IGxlbjsKKwkJbmV3LT5hc3luY190eC5hY2sgPSAwOwogCQlyZXR1cm4g
-Jm5ldy0+YXN5bmNfdHg7CiAJfSBlbHNlCiAJCXJldHVybiBOVUxMOwpAQCAtNzQ5LDYgKzc1MCw3
-IEBAIHN0YXRpYyBzdHJ1Y3QgZG1hX2FzeW5jX3R4X2Rlc2NyaXB0b3IgKmlvYXQyX2RtYV9wcmVw
-X21lbWNweSgKIAogCWlmIChuZXcpIHsKIAkJbmV3LT5sZW4gPSBsZW47CisJCW5ldy0+YXN5bmNf
-dHguYWNrID0gMDsKIAkJcmV0dXJuICZuZXctPmFzeW5jX3R4OwogCX0gZWxzZQogCQlyZXR1cm4g
-TlVMTDsK
-------=_Part_4752_2546834.1203103063267--
+sln
+-- 
+==============================================
+Mr. Shannon Nelson Parents can't afford to be squeamish.
