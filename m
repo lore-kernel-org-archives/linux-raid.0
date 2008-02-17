@@ -1,51 +1,50 @@
-From: pg_lxra@lxra.to.sabi.co.UK (Peter Grandi)
+From: Janek Kozicki <janek_listy@wp.pl>
 Subject: Re: RAID5 to RAID6 reshape?
-Date: Sun, 17 Feb 2008 11:50:25 +0000
-Message-ID: <18360.8065.335494.142060@tree.ty.sabi.co.UK>
+Date: Sun, 17 Feb 2008 14:31:22 +0100
+Message-ID: <20080217143122.36413814@szpak>
 References: <aebf5d970802161958x17a9da92r25663703dc0df05f@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <aebf5d970802161958x17a9da92r25663703dc0df05f@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
->>> On Sat, 16 Feb 2008 20:58:07 -0700, Beolach
->>> <beolach@gmail.com> said:
+Beolach said:     (by the date of Sat, 16 Feb 2008 20:58:07 -0700)
 
-beolach> [ ... ] start w/ 3 drives in RAID5, and add drives as I
-beolach> run low on free space, eventually to a total of 14
-beolach> drives (the max the case can fit).
+> I'm also interested in hearing people's opinions about LVM / EVMS.
 
-Like for for so many other posts to this list, all that is
-"syntactically" valid is not necessarily the same thing as that
-which is wise. 
+With LVM it will be possible for you to have several raid5 and raid6:
+eg: 5 HHDs (raid6), 5HDDs (raid6) and 4 HDDs (raid5). Here you would
+have 14 HDDs and five of them being extra - for safety/redundancy
+purposes.
 
-beolach> But when I add the 5th or 6th drive, I'd like to switch
-beolach> from RAID5 to RAID6 for the extra redundancy.
+LVM allows you to "join" several blockdevices and create one huge
+partition on top of them. Without LVM you will end up with raid6 on
+14 HDDs thus having only 2 drives used for redundancy. Quite risky
+IMHO.
 
-Again, what may be possible is not necessarily what may be wise.
+It is quite often that a *whole* IO controller dies and takes all 4
+drives with it. So when you connect your drives, always make sure
+that you are totally safe if any of your IO conrollers dies (taking
+down 4 HDDs with it). With 5 redundant discs this may be possible to
+solve. Of course when you replace the controller the discs are up
+again, and only need to resync (which is done automatically).
 
-In particular it seems difficult to discern which usage such
-arrays would be put to. There might be a bit of difference
-between a giant FAT32 volume containing song lyrics files or an
-XFS filesystem with a collection of 500GB tomography scans in
-them cached from a large tape backup system.
+LVM can be grown on-line (without rebooting the computer) to "join"
+new block devices. And after that you only `resize2fs /dev/...` and
+your partition is bigger. Also in such configuration I suggest you to
+use ext3 fs, because no other fs (XFS, JFS, whatever) had that much
+testing than ext* filesystems had.
 
-beolach> I'm also interested in hearing people's opinions about
-beolach> LVM / EVMS.
 
-They are yellow, and taste of vanilla :-). To say something more
-specific is difficult without knowing what kind of requirement
-they may be expected to satisfy.
+Question to other people here - what is the maximum partition size
+that ext3 can handle, am I correct it 4 TB ?
 
-beolach> I'm currently planning on just using RAID w/out the
-beolach> higher level volume management, as from my reading I
-beolach> don't think they're worth the performance penalty, [
-beolach> ... ]
+And to go above 4 TB we need to use ext4dev, right?
 
-Very amusing that someone who is planning to grow a 3 drive
-RAID5 into a 14 drive RAID6 worries about the DM "performance
-penalty".
+best regards
+-- 
+Janek Kozicki                                                         |
