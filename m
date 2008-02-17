@@ -1,40 +1,41 @@
-From: "Shannon Nelson" <shannon.lee.nelson@gmail.com>
-Subject: Re: [BUG] OOPS 2.6.24.2 raid5 write with ioatdma
-Date: Fri, 15 Feb 2008 11:43:09 -0800
-Message-ID: <3cce60f30802151143gc98e3a2l29aa49f8f829e2f6@mail.gmail.com>
-References: <20080215171905.2e5c6bee@smartjog.com>
+From: Beolach <beolach@gmail.com>
+Subject: RAID5 to RAID6 reshape?
+Date: Sat, 16 Feb 2008 20:58:07 -0700
+Message-ID: <aebf5d970802161958x17a9da92r25663703dc0df05f@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20080215171905.2e5c6bee@smartjog.com>
 Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Laurent CORBES <laurent.corbes@smartjog.com>
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, "Nelson, Shannon" <shannon.nelson@intel.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, Feb 15, 2008 at 8:19 AM, Laurent CORBES
-<laurent.corbes@smartjog.com> wrote:
-> Hi all,
->
->  I got a raid5 oops when trying to write on a raid 5 array, with ioatdma loaded
->  and without DCA activated in bios:
->
-[...]
+Hi list,
 
-Dan's quick patch is likely the right answer.
+I'm a newbie to RAID, planning a home fileserver that will be pretty
+much my first real time using RAID.  What I think I'd like to do is
+start w/ 3 drives in RAID5, and add drives as I run low on free space,
+eventually to a total of 14 drives (the max the case can fit).  But
+when I add the 5th or 6th drive, I'd like to switch from RAID5 to
+RAID6 for the extra redundancy.  As I've been researching RAID
+options, I've seen that RAID5 to RAID6 migration is a planned feature,
+but AFAIK it isn't implemented yet, and the most recent mention I
+found was a few months old.  Is it likely that RAID5 to RAID6
+reshaping will be implemented in the next 12 to 18 months (my rough
+guesstimate as to when I might want to migrate from RAID5 to RAID6)?
+Or would I be better off starting w/ 4 drives in RAID6?
 
->
->  When I enable DCA in system bios I cannot boot, the ioatdma subsystem failed to
->  initialize, it stalled at:
->  ioatdma: ioat_dma_test_callback(00008086)
+I'm also interested in hearing people's opinions about LVM / EVMS.
+I'm currently planning on just using RAID w/out the higher level
+volume management, as from my reading I don't think they're worth the
+performance penalty, but if anyone thinks that's a horrible mistake
+I'd like to know sooner rather than later.
 
-I don't see this example in the dmesg, but I'm not sure why you think
-this is the case.  If DCA is enabled, you should not see any further
-messages from ioatdma after the ioat_self_test_callback().
+And if anyone has comments on good hardware to consider or bad
+hardware to avoid, here's what I'm currently planning on getting:
+<http://secure.newegg.com/NewVersion/wishlist/PublicWishDetail.asp?WishListNumber=6134331>
 
-sln
--- 
-==============================================
-Mr. Shannon Nelson Parents can't afford to be squeamish.
+
+TIA,
+Conway S. Smith
