@@ -1,50 +1,60 @@
-From: Janek Kozicki <janek_listy@wp.pl>
-Subject: Re: RAID5 to RAID6 reshape?
-Date: Sun, 17 Feb 2008 14:31:22 +0100
-Message-ID: <20080217143122.36413814@szpak>
-References: <aebf5d970802161958x17a9da92r25663703dc0df05f@mail.gmail.com>
+From: Sevrin Robstad <quackyo@start.no>
+Subject: Create Raid6 with 1 missing member fails
+Date: Sun, 17 Feb 2008 13:37:56 +0100
+Message-ID: <47B82AA4.10402@start.no>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <aebf5d970802161958x17a9da92r25663703dc0df05f@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Beolach said:     (by the date of Sat, 16 Feb 2008 20:58:07 -0700)
+I tried to create a raid6 with one missing member, but it fails.
+It works fine to create a raid6 with two missing members. Is it supposed 
+to be like that ?
 
-> I'm also interested in hearing people's opinions about LVM / EVMS.
+mdadm -C /dev/md0 -n5 -l6 -c256 /dev/sd[bcde]1 missing
+raid5: failed to run raid set md0
+mdadm: RUN_ARRAY failed: Input/output error
+mdadm: stopped /dev/md0
 
-With LVM it will be possible for you to have several raid5 and raid6:
-eg: 5 HHDs (raid6), 5HDDs (raid6) and 4 HDDs (raid5). Here you would
-have 14 HDDs and five of them being extra - for safety/redundancy
-purposes.
+mdadm --version
+mdadm - v2.6.4 - 19th October 2007
+uname -a
+Linux compaq2.lan 2.6.23.15-137.fc8 #1 SMP Sun Feb 10 17:03:13 EST 2008 
+x86_64 x86_64 x86_64 GNU/Linux
 
-LVM allows you to "join" several blockdevices and create one huge
-partition on top of them. Without LVM you will end up with raid6 on
-14 HDDs thus having only 2 drives used for redundancy. Quite risky
-IMHO.
+mdadm --examine /dev/sdb1
+/dev/sdb1:
+          Magic : a92b4efc
+        Version : 00.90.00
+           UUID : e4147673:e22e02ac:09e8c875:b3e364c1
+  Creation Time : Sun Feb 17 14:31:55 2008
+     Raid Level : raid6
+  Used Dev Size : 488295424 (465.67 GiB 500.01 GB)
+     Array Size : 1464886272 (1397.02 GiB 1500.04 GB)
+   Raid Devices : 5
+  Total Devices : 5
+Preferred Minor : 0
 
-It is quite often that a *whole* IO controller dies and takes all 4
-drives with it. So when you connect your drives, always make sure
-that you are totally safe if any of your IO conrollers dies (taking
-down 4 HDDs with it). With 5 redundant discs this may be possible to
-solve. Of course when you replace the controller the discs are up
-again, and only need to resync (which is done automatically).
+    Update Time : Sun Feb 17 14:31:55 2008
+          State : active
+ Active Devices : 4
+Working Devices : 4
+ Failed Devices : 1
+  Spare Devices : 0
+       Checksum : d9c93170 - correct
+         Events : 0.1
 
-LVM can be grown on-line (without rebooting the computer) to "join"
-new block devices. And after that you only `resize2fs /dev/...` and
-your partition is bigger. Also in such configuration I suggest you to
-use ext3 fs, because no other fs (XFS, JFS, whatever) had that much
-testing than ext* filesystems had.
+     Chunk Size : 256K
 
+      Number   Major   Minor   RaidDevice State
+this     0       8       17        0      active sync   /dev/sdb1
 
-Question to other people here - what is the maximum partition size
-that ext3 can handle, am I correct it 4 TB ?
+   0     0       8       17        0      active sync   /dev/sdb1
+   1     1       8       33        1      active sync   /dev/sdc1
+   2     2       8       49        2      active sync   /dev/sdd1
+   3     3       8       65        3      active sync   /dev/sde1
+   4     4       0        0        4      faulty
 
-And to go above 4 TB we need to use ext4dev, right?
-
-best regards
--- 
-Janek Kozicki                                                         |
