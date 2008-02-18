@@ -1,66 +1,62 @@
-From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
+From: Neil Brown <neilb@suse.de>
 Subject: Re: suns raid-z / zfs
-Date: Mon, 18 Feb 2008 06:33:19 +0100
-Message-ID: <20080218053319.GA18863@rap.rap.dk>
-References: <20080217160403.GA15710@rap.rap.dk> <18361.1168.473685.214133@notabene.brown>
+Date: Mon, 18 Feb 2008 21:51:15 +1100
+Message-ID: <18361.25379.998485.63488@notabene.brown>
+References: <20080217160403.GA15710@rap.rap.dk>
+	<18361.1168.473685.214133@notabene.brown>
+	<20080218053319.GA18863@rap.rap.dk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <18361.1168.473685.214133@notabene.brown>
+In-Reply-To: message from Keld Jorn Simonsen on Monday February 18
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
+Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Feb 18, 2008 at 03:07:44PM +1100, Neil Brown wrote:
-> On Sunday February 17, keld@dkuug.dk wrote:
-> > Hi
+On Monday February 18, keld@dkuug.dk wrote:
+> On Mon, Feb 18, 2008 at 03:07:44PM +1100, Neil Brown wrote:
+> > On Sunday February 17, keld@dkuug.dk wrote:
+> > > Hi
+> > > 
 > > 
-> 
-> > It seems like a good way to avoid the performance problems of raid-5
-> > /raid-6
-> 
-> I think there are better ways.
-
-Interesting! What do you have in mind?
-
-and what are the problems with zfs?
-
+> > > It seems like a good way to avoid the performance problems of raid-5
+> > > /raid-6
 > > 
-> > But does it stripe? One could think that rewriting stripes
-> > other places would damage the striping effects.
+> > I think there are better ways.
 > 
-> I'm not sure what you mean exactly.  But I suspect your concerns here
-> are unjustified.
+> Interesting! What do you have in mind?
 
-More precisely. I understand that zfs always write the data anew.
-That would mean at other blocks on the partitions, for the logical blocks
-of the file in question. So the blocks on the partitions will not be
-adjacant. And striping will not be possible, generally.
+A "Log Structured Filesystem" always does large contiguous writes.
+Aligning these to the raid5 stripes wouldn't be too hard and then you
+would never have to do any pre-reading.
+
 > 
+> and what are the problems with zfs?
+
+Recovery after a failed drive would not be an easy operation, and I
+cannot imagine it being even close to the raw speed of the device.
+
+> 
+> > > 
+> > > But does it stripe? One could think that rewriting stripes
+> > > other places would damage the striping effects.
 > > 
-> > Can the code be lifted to Linux? I understand that it is already in
-> > freebsd. Does Suns licence prevent this?
+> > I'm not sure what you mean exactly.  But I suspect your concerns here
+> > are unjustified.
 > 
-> My understanding is that the sun license prevents it.
-> 
-> However raid-z only makes sense in the context of a specific
-> filesystem such as ZFS.  It isn't something that you could just layer
-> any filesystem on top of.
+> More precisely. I understand that zfs always write the data anew.
+> That would mean at other blocks on the partitions, for the logical blocks
+> of the file in question. So the blocks on the partitions will not be
+> adjacant. And striping will not be possible, generally.
 
-That is understood.
-> 
-> > 
-> > And could something like this be built into existing file systems like
-> > ext3 and xfs? They could have a multipartition layer in their code, and
-> > then the heuristics to optimize block access could also apply to stripe
-> > access.
-> 
-> I doubt it, but I haven't thought deeply enough about it to see if
-> there might be some relatively non-intrusive way.
+The important part of striping is that a write is spread out over
+multiple devices, isn't it.
 
-Hmm, I think this is not for the raid layer to do, as I understand it.
+If ZFS can choose where to put each block that it writes, it can
+easily choose to write a series of blocks to a collection of different
+devices, thus getting the major benefit of striping.
 
-Best regards
-keld
+
+NeilBrown
