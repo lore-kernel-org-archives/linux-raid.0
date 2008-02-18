@@ -1,68 +1,32 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: suns raid-z / zfs
-Date: Mon, 18 Feb 2008 15:07:44 +1100
-Message-ID: <18361.1168.473685.214133@notabene.brown>
-References: <20080217160403.GA15710@rap.rap.dk>
+Subject: Re: Create Raid6 with 1 missing member fails
+Date: Mon, 18 Feb 2008 15:29:53 +1100
+Message-ID: <18361.2497.115320.689843@notabene.brown>
+References: <47B82AA4.10402@start.no>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Keld Jorn Simonsen on Sunday February 17
+In-Reply-To: message from Sevrin Robstad on Sunday February 17
 Sender: linux-raid-owner@vger.kernel.org
-To: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
-Cc: linux-raid@vger.kernel.org
+To: Sevrin Robstad <quackyo@start.no>
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Sunday February 17, keld@dkuug.dk wrote:
-> Hi
-> 
-> any opinions on suns zfs/raid-z?
+On Sunday February 17, quackyo@start.no wrote:
+> I tried to create a raid6 with one missing member, but it fails.
+> It works fine to create a raid6 with two missing members. Is it supposed 
+> to be like that ?
 
-It's vaguely interesting.  I'm not sold on the idea though.
+No, it isn't supposed to be like that, but currently it is.
 
-> It seems like a good way to avoid the performance problems of raid-5
-> /raid-6
+The easiest approach if to create it with 2 drives missing, and the
+extra drive immediately.
+This is essentially what mdadm will do when I fix it.
 
-I think there are better ways.
-
-> 
-> But does it stripe? One could think that rewriting stripes
-> other places would damage the striping effects.
-
-I'm not sure what you mean exactly.  But I suspect your concerns here
-are unjustified.
-
-> 
-> Or is the performance only meant to be good for random read/write?
-
-I suspect it is mean to be good for everything.  But you would have to
-ask SUN that.
-
-> 
-> Can the code be lifted to Linux? I understand that it is already in
-> freebsd. Does Suns licence prevent this?
-
-My understanding is that the sun license prevents it.
-
-However raid-z only makes sense in the context of a specific
-filesystem such as ZFS.  It isn't something that you could just layer
-any filesystem on top of.
-
-> 
-> And could something like this be built into existing file systems like
-> ext3 and xfs? They could have a multipartition layer in their code, and
-> then the heuristics to optimize block access could also apply to stripe
-> access.
-
-I doubt it, but I haven't thought deeply enough about it to see if
-there might be some relatively non-intrusive way.
+Alternately you can use --assume-clean to tell it that the array is
+clean.  It is actually a lie, but it is a harmless lie. Whenever any
+data is written to the array, that little part of the array will get
+"cleaned". (Note that this isn't true of raid5, only of raid6).
 
 NeilBrown
-
-> 
-> best regards
-> keld
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
