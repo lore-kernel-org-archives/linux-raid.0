@@ -1,51 +1,68 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: RAID5 to RAID6 reshape?
-Date: Mon, 18 Feb 2008 14:48:01 +1100
-Message-ID: <18360.65521.598385.182668@notabene.brown>
-References: <aebf5d970802161958x17a9da92r25663703dc0df05f@mail.gmail.com>
-	<20080217143122.36413814@szpak>
-	<20080217091815.0464044d@hardcode42.net>
+Subject: Re: suns raid-z / zfs
+Date: Mon, 18 Feb 2008 15:07:44 +1100
+Message-ID: <18361.1168.473685.214133@notabene.brown>
+References: <20080217160403.GA15710@rap.rap.dk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Conway S. Smith on Sunday February 17
+In-Reply-To: message from Keld Jorn Simonsen on Sunday February 17
 Sender: linux-raid-owner@vger.kernel.org
-To: "Conway S. Smith" <beolach@gmail.com>
+To: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sunday February 17, beolach@gmail.com wrote:
-> On Sun, 17 Feb 2008 14:31:22 +0100
-> Janek Kozicki <janek_listy@wp.pl> wrote:
+On Sunday February 17, keld@dkuug.dk wrote:
+> Hi
 > 
-> > oh, right - Sevrin Robstad has a good idea to solve your problem -
-> > create raid6 with one missing member. And add this member, when you
-> > have it, next year or such.
-> > 
+> any opinions on suns zfs/raid-z?
+
+It's vaguely interesting.  I'm not sold on the idea though.
+
+> It seems like a good way to avoid the performance problems of raid-5
+> /raid-6
+
+I think there are better ways.
+
 > 
-> I thought I read that would involve a huge performance hit, since
-> then everything would require parity calculations.  Or would that
-> just be w/ 2 missing drives?
+> But does it stripe? One could think that rewriting stripes
+> other places would damage the striping effects.
 
-A raid6 with one missing drive would have a little bit of a
-performance hit over raid5.
+I'm not sure what you mean exactly.  But I suspect your concerns here
+are unjustified.
 
-Partly there is a CPU hit to calculate the Q block which is slower
-than calculating normal parity.
+> 
+> Or is the performance only meant to be good for random read/write?
 
-Partly there is the fact that raid6 never does "read-modify-write"
-cycles, so to update one block in a stripe, it has to read all the
-other data blocks.
+I suspect it is mean to be good for everything.  But you would have to
+ask SUN that.
 
-But the worst aspect of doing this that if you have a system crash,
-you could get hidden data corruption.
-After a system crash you cannot trust parity data (as it may have been
-in the process of being updated) so you have to regenerate it from
-known good data.  But if your array is degraded, you don't have all
-the known good data, so you loose.
+> 
+> Can the code be lifted to Linux? I understand that it is already in
+> freebsd. Does Suns licence prevent this?
 
-It is really best to avoid degraded raid4/5/6 arrays when at all
-possible.
+My understanding is that the sun license prevents it.
+
+However raid-z only makes sense in the context of a specific
+filesystem such as ZFS.  It isn't something that you could just layer
+any filesystem on top of.
+
+> 
+> And could something like this be built into existing file systems like
+> ext3 and xfs? They could have a multipartition layer in their code, and
+> then the heuristics to optimize block access could also apply to stripe
+> access.
+
+I doubt it, but I haven't thought deeply enough about it to see if
+there might be some relatively non-intrusive way.
 
 NeilBrown
+
+> 
+> best regards
+> keld
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
