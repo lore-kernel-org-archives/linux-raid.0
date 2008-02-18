@@ -1,55 +1,32 @@
-From: Andre Noll <maan@systemlinux.org>
+From: Janek Kozicki <janek_listy@wp.pl>
 Subject: Re: RAID5 to RAID6 reshape?
-Date: Mon, 18 Feb 2008 13:46:48 +0100
-Message-ID: <20080218124648.GA29895@skl-net.de>
-References: <aebf5d970802161958x17a9da92r25663703dc0df05f@mail.gmail.com> <20080217143122.36413814@szpak> <Pine.LNX.4.64.0802171727250.27728@coffee.psychology.mcmaster.ca>
+Date: Mon, 18 Feb 2008 15:42:03 +0100
+Message-ID: <20080218154203.6e2d1483@szpak>
+References: <aebf5d970802161958x17a9da92r25663703dc0df05f@mail.gmail.com>
+	<18360.8065.335494.142060@tree.ty.sabi.co.UK>
+	<20080217074526.29d3c5c5@hardcode42.net>
+	<20080218062604.05ae4821@szpak>
+	<aebf5d970802180438w7a4d40ban3f66ee1dbc38d259@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="G4iJoqBmSsgzjUCe"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.64.0802171727250.27728@coffee.psychology.mcmaster.ca>
+In-Reply-To: <aebf5d970802180438w7a4d40ban3f66ee1dbc38d259@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mark Hahn <hahn@mcmaster.ca>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Beolach said:     (by the date of Mon, 18 Feb 2008 05:38:15 -0700)
 
---G4iJoqBmSsgzjUCe
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+> On Feb 17, 2008 10:26 PM, Janek Kozicki <janek_listy@wp.pl> wrote:
+> > Conway S. Smith said:     (by the date of Sun, 17 Feb 2008 07:45:26 -0700)
+> >
+> > > Well, I was reading that LVM2 had a 20%-50% performance penalty,
+> <http://gentoo-wiki.com/HOWTO_Gentoo_Install_on_Software_RAID_mirror_and_LVM2_on_top_of_RAID>.
 
-On 17:40, Mark Hahn wrote:
-> >Question to other people here - what is the maximum partition size
-> >that ext3 can handle, am I correct it 4 TB ?
->=20
-> 8 TB.  people who want to push this are probably using ext4 already.
+hold on. This might be related to raid chunk positioning with respect
+to LVM chunk positioning. If they interfere there indeed may be some
+performance drop. Best to make sure that those chunks are aligned together.
 
-ext3 supports up to 16T for quite some time. It works fine for me:
-
-root@ume:~ # mount |grep sda; df /dev/sda; uname -a; uptime
-/dev/sda on /media/bia type ext3 (rw)
-Filesystem            Size  Used Avail Use% Mounted on
-/dev/sda               15T  7.8T  7.0T  53% /media/bia
-Linux ume 2.6.20.12 #3 SMP Tue Jun 5 14:33:44 CEST 2007 x86_64 GNU/Linux
- 13:44:29 up 236 days, 15:12,  9 users,  load average: 10.47, 10.28, 10.17
-
-Andre
---=20
-The only person who always got his work done by Friday was Robinson Crusoe
-
---G4iJoqBmSsgzjUCe
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
-
-iD8DBQFHuX44Wto1QDEAkw8RAg8qAJ9zd79vnFfiv+f+BV0EUzh2niI53gCeJJ1g
-UHbcUg6LxLrcyohGv1jv6VI=
-=VlxP
------END PGP SIGNATURE-----
-
---G4iJoqBmSsgzjUCe--
+-- 
+Janek Kozicki                                                         |
