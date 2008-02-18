@@ -1,101 +1,92 @@
-From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
-Subject: Re: suns raid-z / zfs
-Date: Mon, 18 Feb 2008 21:45:29 +0100
-Message-ID: <20080218204529.GA17984@rap.rap.dk>
-References: <20080217160403.GA15710@rap.rap.dk> <18361.1168.473685.214133@notabene.brown> <20080218053319.GA18863@rap.rap.dk> <18361.25379.998485.63488@notabene.brown>
+From: pg_lxra@lxra.to.sabi.co.UK (Peter Grandi)
+Subject: Re: RAID5 to RAID6 reshape?
+Date: Mon, 18 Feb 2008 19:05:02 +0000
+Message-ID: <18361.55006.23018.546040@tree.ty.sabi.co.UK>
+References: <aebf5d970802161958x17a9da92r25663703dc0df05f@mail.gmail.com>
+	<18360.8065.335494.142060@tree.ty.sabi.co.UK>
+	<20080217074526.29d3c5c5@hardcode42.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <18361.25379.998485.63488@notabene.brown>
+In-Reply-To: <20080217074526.29d3c5c5@hardcode42.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Mon, Feb 18, 2008 at 09:51:15PM +1100, Neil Brown wrote:
-> On Monday February 18, keld@dkuug.dk wrote:
-> > On Mon, Feb 18, 2008 at 03:07:44PM +1100, Neil Brown wrote:
-> > > On Sunday February 17, keld@dkuug.dk wrote:
-> > > > Hi
-> > > > 
-> > > 
-> > > > It seems like a good way to avoid the performance problems of raid-5
-> > > > /raid-6
-> > > 
-> > > I think there are better ways.
-> > 
-> > Interesting! What do you have in mind?
-> 
-> A "Log Structured Filesystem" always does large contiguous writes.
-> Aligning these to the raid5 stripes wouldn't be too hard and then you
-> would never have to do any pre-reading.
-> 
-> > 
-> > and what are the problems with zfs?
-> 
-> Recovery after a failed drive would not be an easy operation, and I
-> cannot imagine it being even close to the raw speed of the device.
+>>> On Sun, 17 Feb 2008 07:45:26 -0700, "Conway S. Smith"
+>>> <beolach@gmail.com> said:
 
-I thought this was a problem with most raid types, while
-reconstructioning, performance is quite slow. And as there has been some
-damage, this is expected. And there probebly is no much ado about it.
+[ ... ]
 
-Or is there? Are there any RAID types that performs reasonably well
-given that one disk is under repair? The performance could be cruical
-for some applications. 
+beolach> Which part isn't wise? Starting w/ a few drives w/ the
+beolach> intention of growing; or ending w/ a large array (IOW,
+beolach> are 14 drives more than I should put in 1 array & expect
+beolach> to be "safe" from data loss)?
 
-One could think of clever arrangements so that say two disks could go
-down and the rest of the array with 10-20 drives could still function
-reasonably well, even under the reconstruction. As far as I can tell
-from the code, the reconstruction itself is not impeding normal
-performance much, as normal operation bars reconstuction operations.
+Well, that rather depends on what is your intended data setup and
+access patterns, but the above are all things that may be unwise
+in many cases. The intended use mentioned below does not require
+a single array for example.
 
-Hmm, my understanding would then be, for both random reads and writes
-that performance in typical raids would only be reduced by the IO bandwidth
-of the failing disks.
+However while doing the above may make sense in *some* situation,
+I reckon that the number of those situations is rather small.
 
-For sequential R/W performance for raid10,f would
-be hurt, downgrading its performance to random IO for the drives involved.
+Consider for example the answers to these questions:
 
-Raid5/6 would be hurt much for reading, as all drives need to be read for giving
-correct information during reconstruction.
+* Suppose you have a 2+1 array which is full. Now you add a disk
+  and that means that almost all free space is on a single disk.
+  The MD subsystem has two options as to where to add that lump
+  of space, consider why neither is very pleasant.
 
+* How fast is doing unaligned writes with a 13+1 or a 12+2
+  stripe? How often is that going to happen, especially on an
+  array that started as a 2+1?
 
-So it looks like, if your performance is important under a
-reconstruction, then you should avoid raid5/6 and use the mirrored raid
-types. Given you have a big operation, with a load balance of a lot of
-random reading and writing, it does not matter much which mirrored
-raid type you would choose, as they all perform about equal for random
-IO, even when reconstructing. Is that correct advice?
+* How long does it take to rebuild parity with a 13+1 array or a
+  12+2 array in case of s single disk failure? What happens if a
+  disk fails during rebuild?
 
-> > 
-> > > > 
-> > > > But does it stripe? One could think that rewriting stripes
-> > > > other places would damage the striping effects.
-> > > 
-> > > I'm not sure what you mean exactly.  But I suspect your concerns here
-> > > are unjustified.
-> > 
-> > More precisely. I understand that zfs always write the data anew.
-> > That would mean at other blocks on the partitions, for the logical blocks
-> > of the file in question. So the blocks on the partitions will not be
-> > adjacant. And striping will not be possible, generally.
-> 
-> The important part of striping is that a write is spread out over
-> multiple devices, isn't it.
-> 
-> If ZFS can choose where to put each block that it writes, it can
-> easily choose to write a series of blocks to a collection of different
-> devices, thus getting the major benefit of striping.
+* When you have 13 drives and you add the 14th, how long does
+  that take? What happens if a disk fails during rebuild??
 
-I see 2 major benefits of striping: one is that many drives are involved 
-and the other is that the stripes are  allocated adjacant, so that io
-on one drive can just proceed to the next physical blocks when one
-stripe has been processed. Dependent on the size of the IO operations
-involved, first one or more disks in a stripe is processed, and then the
-following stripes are processed. ZFS misses the second part of the
-optimization, In think.
+The points made by http://WWW.BAARF.com/ apply too.
 
-Best regards
-Keld
+beolach> [ ... ] media files that would typically be accessed
+beolach> over the network by MythTV boxes.  I'll also be using
+beolach> it as a sandbox database/web/mail server. [ ... ] most
+beolach> important stuff backed up, [ ... ] some gaming, which
+beolach> is where I expect performance to be most noticeable.
+
+To me that sounds like something that could well be split across
+multiple arrays, rather than risking repeatedly extending a
+single array, and then risking a single large array.
+
+beolach> Well, I was reading that LVM2 had a 20%-50% performance
+beolach> penalty, which in my mind is a really big penalty. But I
+beolach> think those numbers where from some time ago, has the
+beolach> situation improved?
+
+LVM2 relies on DM, which is not much slower than say 'loop', so
+it is almost insignificant for most people.
+
+But even if the overhead may be very very low, DM/LVM2/EVMS seem
+to me to have very limited usefulness (e.g. Oracle tablespaces,
+and there are contrary opinions as to that too). In your stated
+applications it is hard to see why you'd want to split your
+arrays into very many block devices or why you'd want to resize
+them.
+
+beolach> And is a 14 drive RAID6 going to already have enough
+beolach> overhead that the additional overhead isn't very
+beolach> significant? I'm not sure why you say it's amusing.
+
+Consider the questions above. Parity RAID has issues, extending
+an array has issues, the idea of extending both massively and
+in several steps a parity RAID looks very amusing to me.
+
+beolach> [ ... ] The other reason I wasn't planning on using LVM
+beolach> was because I was planning on keeping all the drives in
+beolach> the one RAID. [... ]
+
+Good luck :-).
