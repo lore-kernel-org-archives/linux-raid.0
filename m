@@ -1,135 +1,84 @@
-From: Alexander =?utf-8?b?S8O8aG4=?= <alexander.kuehn@nagilum.de>
-Subject: Re: RAID5 to RAID6 reshape?
-Date: Wed, 20 Feb 2008 07:39:15 +0100
-Message-ID: <20080220073915.a1f3s54ua8ckk8gk@cakebox.homeunix.net>
-References: <aebf5d970802161958x17a9da92r25663703dc0df05f@mail.gmail.com>
-	<18360.8065.335494.142060@tree.ty.sabi.co.UK>
-	<20080217074526.29d3c5c5@hardcode42.net>
-	<18361.55006.23018.546040@tree.ty.sabi.co.UK>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: How many drives are bad?
+Date: Thu, 21 Feb 2008 15:28:13 +1100
+Message-ID: <18364.64989.891076.596011@notabene.brown>
+References: <6b3a7f010802190923v6b600fedy2a68ad6797449c6e@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed;
-	boundary="=_6wrzaunwvrwg";
-	protocol="application/pgp-signature";
-	micalg="pgp-sha1"
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18361.55006.23018.546040@tree.ty.sabi.co.UK>
+In-Reply-To: message from Norman Elton on Tuesday February 19
 Sender: linux-raid-owner@vger.kernel.org
-To: Peter Grandi <pg_lxra@lxra.to.sabi.co.UK>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: Norman Elton <normelton@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This message is in MIME format and has been PGP signed.
+On Tuesday February 19, normelton@gmail.com wrote:
+> So I had my first "failure" today, when I got a report that one drive
+> (/dev/sdam) failed. I've attached the output of "mdadm --detail". It
+> appears that two drives are listed as "removed", but the array is
+> still functioning. What does this mean? How many drives actually
+> failed?
 
---=_6wrzaunwvrwg
-Content-Type: text/plain;
-	charset=UTF-8;
-	DelSp="Yes";
-	format="flowed"
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+The array is configured for 8 devices, but on 6 are active.  So you
+have lost data.
+Of the two missing devices, one is still in the array and is marked as
+fault.  One is simply not present at all.
+Hence "Failed Devices: 1".  i.e. there is one failed device in the
+array.
 
------ Message from pg_lxra@lxra.to.sabi.co.UK ---------
-     Date: Mon, 18 Feb 2008 19:05:02 +0000
-     From: Peter Grandi <pg_lxra@lxra.to.sabi.co.UK>
-Reply-To: Peter Grandi <pg_lxra@lxra.to.sabi.co.UK>
-  Subject: Re: RAID5 to RAID6 reshape?
-       To: Linux RAID <linux-raid@vger.kernel.org>
+It looks like you have been running a degraded array for a while
+(maybe not a long while) and the device has then failed.
 
+"mdadm --monitor"
 
->>>> On Sun, 17 Feb 2008 07:45:26 -0700, "Conway S. Smith"
->>>> <beolach@gmail.com> said:
+will send you mail if you have a degraded array.
 
-> Consider for example the answers to these questions:
->
-> * Suppose you have a 2+1 array which is full. Now you add a disk
->   and that means that almost all free space is on a single disk.
->   The MD subsystem has two options as to where to add that lump
->   of space, consider why neither is very pleasant.
+NeilBrown
 
-No, only one, at the end of the md device and the "free space" will be =20
-evenly distributed among the drives.
-
-> * How fast is doing unaligned writes with a 13+1 or a 12+2
->   stripe? How often is that going to happen, especially on an
->   array that started as a 2+1?
-
-They are all the same speed with raid5 no matter what you started =20
-with. You read two blocks and you write two blocks. (not even chunks =20
-mind you)
-
-> * How long does it take to rebuild parity with a 13+1 array or a
->   12+2 array in case of s single disk failure? What happens if a
->   disk fails during rebuild?
-
-Depends on how much data the controllers can push. But at least with =20
-my hpt2320 the limiting factor is the disk speed and that doesn't =20
-change whether I have 2 disks or 12.
-
-> * When you have 13 drives and you add the 14th, how long does
->   that take? What happens if a disk fails during rebuild??
-
-..again pretty much the same as adding a fourth drive to a three-drives raid=
-5.
-It will continue to be degraded..nothing special.
-
-> beolach> Well, I was reading that LVM2 had a 20%-50% performance
-> beolach> penalty, which in my mind is a really big penalty. But I
-> beolach> think those numbers where from some time ago, has the
-> beolach> situation improved?
->
-> LVM2 relies on DM, which is not much slower than say 'loop', so
-> it is almost insignificant for most people.
-
-I agree.
-
-> But even if the overhead may be very very low, DM/LVM2/EVMS seem
-> to me to have very limited usefulness (e.g. Oracle tablespaces,
-> and there are contrary opinions as to that too). In your stated
-> applications it is hard to see why you'd want to split your
-> arrays into very many block devices or why you'd want to resize
-> them.
-
-I think the idea is to be able to have more than just one device to =20
-put a filesystem on. For example a / filesystem, swap and maybe =20
-something like /storage comes to mind. Yes, one could to that with =20
-partitioning but lvm was made for this so why not use it.
-
-The situation looks different with Raid6, there the write penalty =20
-becomes higher with more disks but not with raid5.
-Regards,
-Alex.
-
------ End message from pg_lxra@lxra.to.sabi.co.UK -----
-
-
-
-
-- --
-Alexander Kuehn
-
-Cell phone: +49 (0)177 6461165
-Cell fax:   +49 (0)177 6468001
-Tel @Home:  +49 (0)711 6336140
-Mail mailto:Alexander.Kuehn@nagilum.de
-
-
-----------------------------------------------------------------
-cakebox.homeunix.net - all the machine one needs..
-
-
---=_6wrzaunwvrwg
-Content-Type: application/pgp-signature
-Content-Description: PGP Digital Signature
-Content-Disposition: inline
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.8 (FreeBSD)
-
-iEYEABECAAYFAke7yxIACgkQAKWN2UY+sLzmHQCgmVYG4I0Wt0ziQbOxgnHdUFL0
-FmgAoJiCOsQgH3SVo9TnT6R830fhAeqN
-=kO2v
------END PGP SIGNATURE-----
-
---=_6wrzaunwvrwg--
+> 
+> This is all a test system, so I can dink around as much as necessary.
+> Thanks for any advice!
+> 
+> Norman Elton
+> 
+> ====== OUTPUT OF MDADM =====
+> 
+>         Version : 00.90.03
+>   Creation Time : Fri Jan 18 13:17:33 2008
+>      Raid Level : raid5
+>      Array Size : 6837319552 (6520.58 GiB 7001.42 GB)
+>     Device Size : 976759936 (931.51 GiB 1000.20 GB)
+>    Raid Devices : 8
+>   Total Devices : 7
+> Preferred Minor : 4
+>     Persistence : Superblock is persistent
+> 
+>     Update Time : Mon Feb 18 11:49:13 2008
+>           State : clean, degraded
+>  Active Devices : 6
+> Working Devices : 6
+>  Failed Devices : 1
+>   Spare Devices : 0
+> 
+>          Layout : left-symmetric
+>      Chunk Size : 64K
+> 
+>            UUID : b16bdcaf:a20192fb:39c74cb8:e5e60b20
+>          Events : 0.110
+> 
+>     Number   Major   Minor   RaidDevice State
+>        0      66        1        0      active sync   /dev/sdag1
+>        1      66       17        1      active sync   /dev/sdah1
+>        2      66       33        2      active sync   /dev/sdai1
+>        3      66       49        3      active sync   /dev/sdaj1
+>        4      66       65        4      active sync   /dev/sdak1
+>        5       0        0        5      removed
+>        6       0        0        6      removed
+>        7      66      113        7      active sync   /dev/sdan1
+> 
+>        8      66       97        -      faulty spare   /dev/sdam1
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
