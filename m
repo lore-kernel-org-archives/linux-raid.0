@@ -1,57 +1,60 @@
-From: "Harrell, Thomas" <tharrell@health.usf.edu>
-Subject: Further clarification of the sync_action check behavior.
-Date: Fri, 22 Feb 2008 12:46:15 -0500
-Message-ID: <1AA1CDAD1BE022458D32739BDBB2F1AE0492633C@COMEXCHANGE.hscnet.hsc.usf.edu>
+From: Pete/Piet Delaney <pete@bluelane.com>
+Subject: Increased Reliability by using Raid
+Date: Fri, 22 Feb 2008 13:49:40 -0800
+Message-ID: <47BF4374.3060008@bluelane.com>
+Reply-To: pete@bluelane.com
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: "Harrell, Thomas" <tharrell@health.usf.edu>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: linux-raid@vger.kernel.org, Piet Delaney <piet.delaney@gmail.com>
 List-Id: linux-raid.ids
 
-Hi!
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-	I have been reading the "Clarifications about check/repair, i.e.
-RAID SCRUBBING" thread, and there were some answers which were still
-slightly unclear to me, and I'd like to get a bit more clarification.
-This is all in reference to the /sys/block/md0/md/sync_action setting.
+Hi Andrew:
 
+~  I have a quick question. Is software raid using mirror on two SATA
+drives more reliable that just using a single SATA drive if
+properly supported in the rc scripts?
 
-Neil Brown wrote:
-> 'check' just reads everything and doesn't trigger any writes unless a
-> read error is detected, in which case the normally read-error handing
-> kicks in.  So it can be useful on a read-only array.
->
-> 'repair' does that same but when it finds an inconsistency is corrects
-> it by writing something.
-> If any raid personality had not be taught to specifically understand
-> 'check', then a 'check' run would effect a 'repair'.  I think 2.6.17
-> will have all personalities doing the right thing.
->
-> check doesn't keep a record of problems, just a count.  'repair' will
-> reprocess the whole array.
+~  My impression is that it's definitely better. The push back I'm
+getting here is that our box after power outages is hanging during boot
+and making the systems more unreliable. My feeling is that we just
+need to modify the rc files to correctly handle the situation and
+that the Linux From Scratch base may not have handled it and we
+might be better off taking a recent Linux system like Fedora 8
+and check out it's config files in a mirror raid configuration.
+I suspect it's a easy fixed.
 
-What exactly is the normal read-error handling behavior that is invoked
-when 'check' detects a read error, especially in regards to raid level
-5?
+Our new box will have dual power supplies, ECC memory, and either
+one or two hot pluggable SATA drives. My feeling is that this is
+an fantastic opportunity to use raid. One of our other products
+already uses raid with SCSI drives. I've see one problem where
+the raid got out of sync during a power outage but it was trivial
+to get the raid back in sync and think rc scripts could be easily
+set up to do this.
 
-Also, why exactly is 'check' useful on a read-only array? Does this mean
-on an array which has 'array_state' set to 'readonly'? In this case, I'm
-guessing this is designed to be useful in repairing a dirty and degraded
-array, correct?
+Looks like a slam dunk to me to spend an extra $100 for a second drive
+and save our having to RMA the box in the event of a drive starting
+to fail. This afternoon I offered to make a $10k bet that it is as
+well as doing a lab test with a pair of systems being powered up
+and down every few minutes to verify my intuition. I got the ok
+to get your opinion on the efficacy of mirror raid for a network
+appliance running 2.6.16.
 
-Lastly, under which mounted conditions are 'check' and 'repair'
-safe/useful? Can I run both on a read-write mounted partition? Should
-they be read-only, or totally unmounted? I'm assuming since resyncs can
-occur while the overlying fs is mounted read-write, that it is both safe
-and useful to both 'check' and 'repair' while the fs is mounted
-read-write as well, but I don't see this mentioned explicitly anywhere.
+Looks like kgdb is still on track for 2.6.25, hope Jason gets in
+back into your next mm patch and it goes mainstream.
 
-Please CC: me, as I'm not on the list.
+- -piet
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.7 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
 
-Thank you very much!
-TJ Harrell
+iD8DBQFHv0N0JICwm/rv3hoRAukIAKCIvhgsJp1KAWGNRFkHczNsk9ibUQCfd0Ku
+kL9dqBpm6vUb1A1WZIW2544=
+=bbNu
+-----END PGP SIGNATURE-----
