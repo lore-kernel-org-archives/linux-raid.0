@@ -1,60 +1,42 @@
-From: Pete/Piet Delaney <pete@bluelane.com>
-Subject: Increased Reliability by using Raid
-Date: Fri, 22 Feb 2008 13:49:40 -0800
-Message-ID: <47BF4374.3060008@bluelane.com>
-Reply-To: pete@bluelane.com
+From: "Joe Landman" <joe.landman@gmail.com>
+Subject: Odd performance observation for RAID0
+Date: Sat, 23 Feb 2008 00:21:18 -0500
+Message-ID: <9f5edc120802222121p771db02exff4e3751b088fcad@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-raid@vger.kernel.org, Piet Delaney <piet.delaney@gmail.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+Hi folks:
 
-Hi Andrew:
+  I built a RAID0 stripe across two large hardware RAID cards
+(identical cards/driver).  What I am finding is that direct IO is
+about the performance I expect (2x the single RAID card) while
+buffered IO is about the same as the performance of a single RAID
+card.  This is true across chunk sizes of 64 through 4096k, with an
+xfs file system.
 
-~  I have a quick question. Is software raid using mirror on two SATA
-drives more reliable that just using a single SATA drive if
-properly supported in the rc scripts?
+ This is a 2.6.23.14 kernel.  I tried 2.6.24.2, and there the direct
+IO was the same speed as the buffered IO on one RAID card, even though
+the RAID0 striped across 2 RAID cards.
 
-~  My impression is that it's definitely better. The push back I'm
-getting here is that our box after power outages is hanging during boot
-and making the systems more unreliable. My feeling is that we just
-need to modify the rc files to correctly handle the situation and
-that the Linux From Scratch base may not have handled it and we
-might be better off taking a recent Linux system like Fedora 8
-and check out it's config files in a mirror raid configuration.
-I suspect it's a easy fixed.
+  There appears to be some issue with this combination of RAID0,
+buffer cache, and the driver. Breaking the raid in 2, and performing
+the same tests on each RAID card results in the expected performance
+during buffered io and direct IO.
 
-Our new box will have dual power supplies, ECC memory, and either
-one or two hot pluggable SATA drives. My feeling is that this is
-an fantastic opportunity to use raid. One of our other products
-already uses raid with SCSI drives. I've see one problem where
-the raid got out of sync during a power outage but it was trivial
-to get the raid back in sync and think rc scripts could be easily
-set up to do this.
+  Is there something I can do to tune how the raid0 driver deals with
+buffer cache?  Standard vm-tweaking yields modest changes, but I am
+not convinced the issue is there.  It looks like the raid0 driver is
+serializing something in buffer cache access.  Does this make sense?
+For small drives and SATA drivers, I see the "expected" RAID0
+behavior.  Is it possible that with very large or very fast devices
+that there is some sort of buffer serialization?
 
-Looks like a slam dunk to me to spend an extra $100 for a second drive
-and save our having to RMA the box in the event of a drive starting
-to fail. This afternoon I offered to make a $10k bet that it is as
-well as doing a lab test with a pair of systems being powered up
-and down every few minutes to verify my intuition. I got the ok
-to get your opinion on the efficacy of mirror raid for a network
-appliance running 2.6.16.
+  Clues and guidance are requested.  Thanks!
 
-Looks like kgdb is still on track for 2.6.25, hope Jason gets in
-back into your next mm patch and it goes mainstream.
-
-- -piet
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.7 (GNU/Linux)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
-
-iD8DBQFHv0N0JICwm/rv3hoRAukIAKCIvhgsJp1KAWGNRFkHczNsk9ibUQCfd0Ku
-kL9dqBpm6vUb1A1WZIW2544=
-=bbNu
------END PGP SIGNATURE-----
+Joe
