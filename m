@@ -1,28 +1,67 @@
-From: Nat Makarevitch <nat@makarevitch.org>
-Subject: Re: RAID10 far (f2) read throughput on random and sequential / read-ahead
-Date: Sun, 24 Feb 2008 00:09:59 +0000 (UTC)
-Message-ID: <loom.20080224T000728-690@post.gmane.org>
-References: <loom.20080222T035556-308@post.gmane.org>
+From: carlos@fisica.ufpr.br (Carlos Carvalho)
+Subject: Re: mismatch_cnt != 0
+Date: Sat, 23 Feb 2008 22:33:08 -0300
+Message-ID: <18368.51540.448400.111882@fisica.ufpr.br>
+References: <alpine.DEB.1.00.0802230434100.3809@p34.internal.lan>
+	<47C01D79.4010708@msgid.tls.msk.ru>
+	<alpine.DEB.1.00.0802230904130.15989@p34.internal.lan>
+	<alpine.DEB.1.00.0802231044050.30201@p34.internal.lan>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <alpine.DEB.1.00.0802231044050.30201@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Nat Makarevitch <nat <at> makarevitch.org> writes:
+Justin Piszcz (jpiszcz@lucidpixels.com) wrote on 23 February 2008 10:44:
+ >
+ >
+ >On Sat, 23 Feb 2008, Justin Piszcz wrote:
+ >
+ >>
+ >>
+ >> On Sat, 23 Feb 2008, Michael Tokarev wrote:
+ >>
+ >>> Justin Piszcz wrote:
+ >>>> Should I be worried?
+ >>>> 
+ >>>> Fri Feb 22 20:00:05 EST 2008: Executing RAID health check for /dev/md3...
+ >>>> Fri Feb 22 21:00:06 EST 2008: cat /sys/block/md3/md/mismatch_cnt
+ >>>> Fri Feb 22 21:00:06 EST 2008: 936
+ >>>> Fri Feb 22 21:00:09 EST 2008: Executing repair on /dev/md3
+ >>>> Fri Feb 22 22:00:10 EST 2008: cat /sys/block/md3/md/mismatch_cnt
+ >>>> Fri Feb 22 22:00:10 EST 2008: 936
+ >>> 
+ >>> Your /dev/md3 is a swap, right?
+ >>> If it's swap, it's quite common to see mismatches here.  I don't know
+ >>> why, and I don't think it's correct (there should be a bug somewhere).
+ >>> If it's not swap, there should be no mismatches, UNLESS you initially
+ >>> built your array with --assume-clean.
+ >>> In any case it's good to understand where those mismatches comes from
+ >>> in the first place.
+ >>> 
+ >>> As of the difference (or, rather, lack thereof) of the mismatched
+ >>> blocks after check and repair - that's exactly what expected.  Check
+ >>> found 936 mismatches, and repair corrected exactly the same amount
+ >>> of them.  I.e., if you run check again after repair, you should see
+ >>> 0 mismatches.
+ >>> 
+ >>> /mjt
+ >>> 
+ >>
+ >> My /dev/md3 is my main RAID 5 partition.  Even after repair, it showed 936, I 
+ >> will re-run repair.  Also, I did not build my array with --assume-clean and I 
+ >> run my check > array once a week.
+ >>
 
-> 'md' performs wonderfully
+The only situation where there could be mismatches on a clean array is
+if you created it with --assume-clean. After a repair, a check should
+give zero mismatches, without reboot.
 
-> random access performance remains stable and high (450
-> IOPS with 48 threads, 20% writes - 10% fsync'ed), even with a fairly high
-> read-ahead (16k).
+Of course I'm supposing your hardware is working without glitches...
 
-Mystery solved, sorry for the noise
+ >After a reboot & check, it is back to 0-- interesting..
 
-Explanation: I use the 'randomio' tool and searched in its sourcecode for the
-various 'advise' calls (posix_fadvise(2), madvise(2)...) and forgot to check the
-open call (it uses O_DIRECT!)
-
-
+Looks like a bug... Which kernel version?
