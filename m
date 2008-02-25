@@ -1,41 +1,35 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: mismatch_cnt != 0
-Date: Mon, 25 Feb 2008 07:05:56 -0500 (EST)
-Message-ID: <alpine.DEB.1.00.0802250705370.17154@p34.internal.lan>
-References: <alpine.DEB.1.00.0802230434100.3809@p34.internal.lan> <47C01D79.4010708@msgid.tls.msk.ru> <alpine.DEB.1.00.0802230904130.15989@p34.internal.lan> <alpine.DEB.1.00.0802231044050.30201@p34.internal.lan> <18368.51540.448400.111882@fisica.ufpr.br>
- <alpine.DEB.1.00.0802240424050.14270@p34.internal.lan> <20080224173828.23e0a7e7@absurd>
+From: Dexter Filmore <Dexter.Filmore@gmx.de>
+Subject: board/controller recommendations?
+Date: Mon, 25 Feb 2008 14:24:56 +0100
+Message-ID: <200802251424.57325.Dexter.Filmore@gmx.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20080224173828.23e0a7e7@absurd>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Janek Kozicki <janek_listy@wp.pl>
-Cc: linux-raid@vger.kernel.org
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+Currently my array consists of four Samsung Spinpoint sATA drives, I'm about 
+to enlarge to 6 drive.
+As of now they sit on an Sil3114 controller via PCI, hence there's a 
+bottleneck, can't squeeze more than 15-30 megs write speed (rather 15 today 
+as the xfs partitions on it are brim full and started fragmenting).
 
+Now, I'd like to go for a AMD board with 6 sATA channels connected via PCIe - 
+can someone recomend a board here? Preferrably AMD 690 based so I won't need 
+a video card or similar.
 
-On Sun, 24 Feb 2008, Janek Kozicki wrote:
+Dex
 
-> Justin Piszcz said:     (by the date of Sun, 24 Feb 2008 04:26:39 -0500 (EST))
->
->> Kernel 2.6.24.2 I've seen it on different occasions, for this last time
->> though it may have been due to a power outage that lasted > 2hours and
->> obviously the UPS did not hold up that long.
->
-> you should connect UPS through RS-232 or USB, and if a power-down
-> event is detected - issue hibernate or shutdown. Currently I am
-> issuing hibernate in this case, works pretty well for 2.6.22 and up.
->
-> --
-> Janek Kozicki                                                         |
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+-- 
+-----BEGIN GEEK CODE BLOCK-----
+Version: 3.12
+GCS d--(+)@ s-:+ a- C++++ UL++ P+>++ L+++>++++ E-- W++ N o? K-
+w--(---) !O M+ V- PS+ PE Y++ PGP t++(---)@ 5 X+(++) R+(++) tv--(+)@ 
+b++(+++) DI+++ D- G++ e* h>++ r* y?
+------END GEEK CODE BLOCK------
 
-I have it hooked up but it was a weird day for the power going on and off 
-many times for upwards of 2-3 hours and then it died for 2+ hours.
-
-Justin.
+http://www.vorratsdatenspeicherung.de
