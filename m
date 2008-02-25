@@ -1,32 +1,41 @@
-From: Richard Scobie <richard@sauce.co.nz>
-Subject: Re: Further clarification of the sync_action check behavior.
-Date: Mon, 25 Feb 2008 17:05:06 +1300
-Message-ID: <47C23E72.8060602@sauce.co.nz>
-References: <1AA1CDAD1BE022458D32739BDBB2F1AE0492633C@COMEXCHANGE.hscnet.hsc.usf.edu>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: mismatch_cnt != 0
+Date: Mon, 25 Feb 2008 07:05:56 -0500 (EST)
+Message-ID: <alpine.DEB.1.00.0802250705370.17154@p34.internal.lan>
+References: <alpine.DEB.1.00.0802230434100.3809@p34.internal.lan> <47C01D79.4010708@msgid.tls.msk.ru> <alpine.DEB.1.00.0802230904130.15989@p34.internal.lan> <alpine.DEB.1.00.0802231044050.30201@p34.internal.lan> <18368.51540.448400.111882@fisica.ufpr.br>
+ <alpine.DEB.1.00.0802240424050.14270@p34.internal.lan> <20080224173828.23e0a7e7@absurd>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1AA1CDAD1BE022458D32739BDBB2F1AE0492633C@COMEXCHANGE.hscnet.hsc.usf.edu>
+In-Reply-To: <20080224173828.23e0a7e7@absurd>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Harrell, Thomas" <tharrell@health.usf.edu>
+To: Janek Kozicki <janek_listy@wp.pl>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Harrell, Thomas wrote:
 
-> Lastly, under which mounted conditions are 'check' and 'repair'
-> safe/useful? Can I run both on a read-write mounted partition? Should
-> they be read-only, or totally unmounted? I'm assuming since resyncs can
-> occur while the overlying fs is mounted read-write, that it is both safe
-> and useful to both 'check' and 'repair' while the fs is mounted
-> read-write as well, but I don't see this mentioned explicitly anywhere.
 
-Yes, running repair on a mounted R/W partition is fine, indeed should be 
-done regularly, in order to "scrub" the entire array and help reduce the 
-chance of a second drive failing on a bad sector, while rebuilding an 
-array where a drive has already failed.
+On Sun, 24 Feb 2008, Janek Kozicki wrote:
 
-Regards,
+> Justin Piszcz said:     (by the date of Sun, 24 Feb 2008 04:26:39 -0500 (EST))
+>
+>> Kernel 2.6.24.2 I've seen it on different occasions, for this last time
+>> though it may have been due to a power outage that lasted > 2hours and
+>> obviously the UPS did not hold up that long.
+>
+> you should connect UPS through RS-232 or USB, and if a power-down
+> event is detected - issue hibernate or shutdown. Currently I am
+> issuing hibernate in this case, works pretty well for 2.6.22 and up.
+>
+> --
+> Janek Kozicki                                                         |
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-Richard
+I have it hooked up but it was a weird day for the power going on and off 
+many times for upwards of 2-3 hours and then it died for 2+ hours.
+
+Justin.
