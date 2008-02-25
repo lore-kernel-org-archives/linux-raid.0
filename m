@@ -1,80 +1,42 @@
-From: Dexter Filmore <Dexter.Filmore@gmx.de>
-Subject: Re: board/controller recommendations?
-Date: Mon, 25 Feb 2008 16:10:43 +0100
-Message-ID: <200802251610.43215.Dexter.Filmore@gmx.de>
-References: <200802251424.57325.Dexter.Filmore@gmx.de> <alpine.DEB.1.00.0802250900080.17154@p34.internal.lan>
+From: Richard Ray <rray@mstc.state.ms.us>
+Subject: Kernel panic on RAID1 root after upgrade
+Date: Mon, 25 Feb 2008 08:53:57 -0600 (CST)
+Message-ID: <Pine.LNX.4.64.0802250840060.27674@rray.drdc.mstc.ms.gov>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.1.00.0802250900080.17154@p34.internal.lan>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Monday 25 February 2008 15:02:31 Justin Piszcz wrote:
-> On Mon, 25 Feb 2008, Dexter Filmore wrote:
-> > Currently my array consists of four Samsung Spinpoint sATA drives, I'm
-> > about to enlarge to 6 drive.
-> > As of now they sit on an Sil3114 controller via PCI, hence there's a
-> > bottleneck, can't squeeze more than 15-30 megs write speed (rather 15
-> > today as the xfs partitions on it are brim full and started fragmenting).
-> >
-> > Now, I'd like to go for a AMD board with 6 sATA channels connected via
-> > PCIe - can someone recomend a board here? Preferrably AMD 690 based so I
-> > won't need a video card or similar.
-> >
-> > Dex
-> >
-> > --
-> > -----BEGIN GEEK CODE BLOCK-----
-> > Version: 3.12
-> > GCS d--(+)@ s-:+ a- C++++ UL++ P+>++ L+++>++++ E-- W++ N o? K-
-> > w--(---) !O M+ V- PS+ PE Y++ PGP t++(---)@ 5 X+(++) R+(++) tv--(+)@
-> > b++(+++) DI+++ D- G++ e* h>++ r* y?
-> > ------END GEEK CODE BLOCK------
-> >
-> > http://www.vorratsdatenspeicherung.de
-> > -
-> > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-> That's always the question, which mobo?  I went Intel as many of their
-> chipsets (965, p35, x38) have 6 SATA, I am sure AMD have some as well
-> though, what I bought awhile back was a 6 port sata w/ 3 pci-e x1 and 1
-> pci-e x16.  Then you buy the 2 port sata cards (x1) and plugin your
-> drives.
-
-Intel means big bucks since I'd need an intel cpu, too. Cheapest lga775 would 
-be around 90 euros where I get a midrange amd x2 at 50-60.
-
->
-> Promise also came out with a 4 port PCI-e x1 card but I have not tried it,
-> seen any reviews for it and do not know if it is even supported in linux.
-
-Now *that's* Promis-ing (huh huh) - happen to know the model name?
-
->
-> Also, I'd recommend you run a check/resync on your array before removing
-> it from your current box, and then make sure the two new drives do not
-> have any problems, and (to be safe?) expand by adding 1 drive at a time?
-
-Neil Brown told me to expand 2 drives at once, but I'll back up the array 
-anyway to be safe and simply recreate. I guess selling the 750gig drive at 
-ebay with 5 bucks off should do :)
+I've run Fedora Core 6 for some time with root RAID1.
+I upgraded to Fedora 7 and I get a kernel panic when it's time to assemble 
+the RAID.
 
 
 
--- 
------BEGIN GEEK CODE BLOCK-----
-Version: 3.12
-GCS d--(+)@ s-:+ a- C++++ UL++ P+>++ L+++>++++ E-- W++ N o? K-
-w--(---) !O M+ V- PS+ PE Y++ PGP t++(---)@ 5 X+(++) R+(++) tv--(+)@ 
-b++(+++) DI+++ D- G++ e* h>++ r* y?
-------END GEEK CODE BLOCK------
+# cat /etc/mdadm.conf
+ARRAY /dev/md0 level=raid1 uuid=1fa1fdf3:bb7ae68c:e164df71:0c6526f9 
+auto=part
+ARRAY /dev/md1 level=raid1 uuid=6f20b496:270786f5:4ca77094:9a84ab44 
+auto=part
+ARRAY /dev/md2 level=raid1 uuid=346dca9c:a2255bf8:72c4ec00:ed6a3e10 
+auto=part
 
-http://www.vorratsdatenspeicherung.de
+# cat /etc/fstab
+/dev/md0                /                       ext3    defaults        1 1
+none                    /dev/pts                devpts  gid=5,mode=620  0 0
+none                    /proc                   proc    defaults        0 0
+none                    /dev/shm                tmpfs   defaults        0 0
+/dev/md1                /var                    ext3    defaults        1 2
+/dev/md2                swap                    swap    defaults        0 0
+
+
+
+If I try to boot with kernel-2.6.23.15-80.fc7 I get a panic.
+If I boot with kernel-2.6.20-1.2962.fc6 the system works.
+It's a production machine so I can only work at night.
+Any suggestions?
+
+Thanks
+Richard Ray
