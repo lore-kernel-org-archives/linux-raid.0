@@ -1,34 +1,56 @@
-From: Bernd Schubert <bs@q-leap.de>
-Subject: Re: md3: unsupported reshape (reduce disks) required - aborting
-Date: Wed, 27 Feb 2008 15:19:05 +0100
-Message-ID: <200802271519.05259.bs@q-leap.de>
-References: <200802262020.12458.bs@q-leap.de>
+From: Robin Hill <robin@robinhill.me.uk>
+Subject: Re: Is 'fd' partition type of any use ?
+Date: Wed, 27 Feb 2008 14:54:00 +0000
+Message-ID: <20080227145400.GA10625@cthulhu.home.robinhill.me.uk>
+References: <1204121589.11126.14.camel@franck-gusty>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="OgqxwSJOaUobr8KG"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200802262020.12458.bs@q-leap.de>
 Content-Disposition: inline
+In-Reply-To: <1204121589.11126.14.camel@franck-gusty>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday 26 February 2008 20:20:12 Bernd Schubert wrote:
-> Hello,
->
-> while doing a md-check, there was a problem with Lustre and I had to
-> hard-reboot. Please note, the raid was perfectly fine, I only did a
-> manual "echo check >/sys/block/md3/md/sync_action" to increase the load.
 
-Aarg, I didn't do "echo check >...", but "echo reshape >...". This explains 
-why it has a reshape position and why the superblock is at 0.91.
+--OgqxwSJOaUobr8KG
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
+On Wed Feb 27, 2008 at 03:13:09PM +0100, Franck Routier wrote:
 
-In the mean time I got the raid up by temporarily modifying the raid code and 
-setting "mddev->reshape_position = MaxSector". 
+> it is not clear to me if 'fd' partition type is of any use for building
+> a md raid array. I am under the impression that this is only a legacy
+> trick that is not necessary anymore.
+> But most information regarding md raid on the net seems to take for
+> granted that 'fd' partition type is mandatory.
+>=20
+The 'fd' partition type is required (along with version 0.9 superblocks)
+for in-kernel autoassembly of arrays.  They are not required for
+assembling arrays using mdadm (via initrd or after boot) though they are
+useful in that they clearly indicate, to either the user or
+applications, that the partitions are part of a RAID array.
 
+HTH,
+        Robin
+--=20
+     ___       =20
+    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
+   / / )      | Little Jim says ....                            |
+  // !!       |      "He fallen in de water !!"                 |
 
--- 
-Bernd Schubert
-Q-Leap Networks GmbH
+--OgqxwSJOaUobr8KG
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.7 (GNU/Linux)
+
+iD8DBQFHxXmHShxCyD40xBIRAox8AKCT9X+MABtoY1Eh/uuG9Vcq+YmpFQCeKLOI
+/0sUg5dq21BWeJgawVO0zP4=
+=EhV0
+-----END PGP SIGNATURE-----
+
+--OgqxwSJOaUobr8KG--
