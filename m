@@ -1,30 +1,24 @@
-From: Janek Kozicki <janek_listy@wp.pl>
-Subject: Re: 2x6 or 3x4 raid10 arrays ?
-Date: Thu, 28 Feb 2008 19:25:00 +0100
-Message-ID: <20080228192500.4d9110d9@absurd>
-References: <1204195554.16924.16.camel@franck-gusty>
+From: nmella@kepler.cl
+Subject: Corrupted RAID 50 (aparently?) array. Help needed.
+Date: Thu, 28 Feb 2008 10:35:18 -0600
+Message-ID: <20080228103518.gq8vvw128kw40cc8@www.kepler.cl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+	charset=ISO-8859-1;
+	DelSp="Yes";
+	format="flowed"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1204195554.16924.16.camel@franck-gusty>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Franck Routier said:     (by the date of Thu, 28 Feb 2008 11:45:54 +0100)
+Hi list,
 
-> Hi,
-> 
-> I am installing a database (postgresql) server.
-> I am considering two options:
-> - either setup two 6 disks raid10 arrays
-> - or setup three 4 disks raid10 arrays
-> 
-> You guessed I have 12 disks :)
+I just could not pass my email through "mayordomo" so here is my post:
 
-wouldn't be a single raid10 far=2, the fastest solution? But you get
-only half of the capacity.
+http://www.mella.cl/a.txt
 
--- 
-Janek Kozicki                                                         |
+Nicolas
+
