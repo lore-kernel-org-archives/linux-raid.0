@@ -1,7 +1,7 @@
 From: "Nicolas Mella" <nmella@kepler.cl>
-Subject: Corrupted RAID 50 (aparently?) array. Help needed.
-Date: Thu, 28 Feb 2008 13:04:59 -0300
-Message-ID: <f4d3d9a30802280804u70893ba2qde69fcd359a6a8b3@mail.gmail.com>
+Subject: Corrupted RAID 50 (aparently) array. Help needed.
+Date: Thu, 28 Feb 2008 13:15:57 -0300
+Message-ID: <f4d3d9a30802280815w5a62eed7t6742853712f43840@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
