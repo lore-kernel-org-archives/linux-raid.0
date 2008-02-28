@@ -1,27 +1,27 @@
 From: Janek Kozicki <janek_listy@wp.pl>
-Subject: Re: Corrupted RAID 50 (aparently?) array. Help needed.
-Date: Thu, 28 Feb 2008 21:50:57 +0100
-Message-ID: <20080228215057.2d89804f@absurd>
-References: <20080228103518.gq8vvw128kw40cc8@www.kepler.cl>
+Subject: Re: 2x6 or 3x4 raid10 arrays ?
+Date: Thu, 28 Feb 2008 21:53:39 +0100
+Message-ID: <20080228215339.6674f29d@absurd>
+References: <1204195554.16924.16.camel@franck-gusty>
+	<20080228192500.4d9110d9@absurd>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20080228103518.gq8vvw128kw40cc8@www.kepler.cl>
+In-Reply-To: <20080228192500.4d9110d9@absurd>
 Sender: linux-raid-owner@vger.kernel.org
-To: nmella@kepler.cl
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-nmella@kepler.cl said:     (by the date of Thu, 28 Feb 2008 10:35:18 -0600)
+Janek Kozicki said:     (by the date of Thu, 28 Feb 2008 19:25:00 +0100)
 
-> Hi list,
-> 
-> I just could not pass my email through "mayordomo" so here is my post:
-> 
-> http://www.mella.cl/a.txt
+sorry about replying to myself.
 
-well, I received this post, like, four times already.
+* two 6 disks raid10 arrays : theoretical max speed 6 times single disc
+* three 4 disks raid10 arrays : theoretical max speed 4 times single disc
+* single raid10 far=2  : theoretical max speed 12 times single disc (!)
+
+isn't that true?
 
 -- 
 Janek Kozicki                                                         |
