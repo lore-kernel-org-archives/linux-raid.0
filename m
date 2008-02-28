@@ -1,27 +1,30 @@
-From: Brendan Conoboy <blc@redhat.com>
+From: Janek Kozicki <janek_listy@wp.pl>
 Subject: Re: 2x6 or 3x4 raid10 arrays ?
-Date: Thu, 28 Feb 2008 09:54:03 -0700
-Message-ID: <47C6E72B.6060402@redhat.com>
+Date: Thu, 28 Feb 2008 19:25:00 +0100
+Message-ID: <20080228192500.4d9110d9@absurd>
 References: <1204195554.16924.16.camel@franck-gusty>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1204195554.16924.16.camel@franck-gusty>
 Sender: linux-raid-owner@vger.kernel.org
-To: Franck Routier <franck.routier@axege.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Franck Routier wrote:
-> I am under the impression that I will get better results with requests
-> spread over 3 less effective arrays rather than two slightly more effive
-> one.
+Franck Routier said:     (by the date of Thu, 28 Feb 2008 11:45:54 +0100)
 
-Depends on your workload.  If you use a larger chunk size, regardless of 
-raid layout, you can try to get each db transaction to only hit one 
-spindle.  Seek time being a limiting factor, this may scale better when 
-you have dozens of simultaneous requests.
+> Hi,
+> 
+> I am installing a database (postgresql) server.
+> I am considering two options:
+> - either setup two 6 disks raid10 arrays
+> - or setup three 4 disks raid10 arrays
+> 
+> You guessed I have 12 disks :)
+
+wouldn't be a single raid10 far=2, the fastest solution? But you get
+only half of the capacity.
 
 -- 
-Brendan Conoboy / Red Hat, Inc. / blc@redhat.com
+Janek Kozicki                                                         |
