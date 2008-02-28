@@ -1,7 +1,7 @@
 From: Franck Routier <franck.routier@axege.com>
-Subject: Understanding bonnie++ results
-Date: Thu, 28 Feb 2008 10:46:29 +0100
-Message-ID: <1204191989.16924.10.camel@franck-gusty>
+Subject: 2x6 or 3x4 raid10 arrays ?
+Date: Thu, 28 Feb 2008 11:45:54 +0100
+Message-ID: <1204195554.16924.16.camel@franck-gusty>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
@@ -12,27 +12,23 @@ List-Id: linux-raid.ids
 
 Hi,
 
-I am experimenting with Adaptec 31205 hardware raid versus md raid on
-raid level 10 with 3 arrays of 4 disks each.
-md array was created with f2 option.
-I get some results with bonnie++ tests I would like to understand:
+I am installing a database (postgresql) server.
+I am considering two options:
+- either setup two 6 disks raid10 arrays
+- or setup three 4 disks raid10 arrays
 
-- per char sequential output is consistantly around 70k/sec for both
-setup
-- but block sequential output shows a huge difference between hw and sw
-raid: about 160k/sec for hw versus 60k/sec for md. Where can this come
-from ??
+You guessed I have 12 disks :)
 
-On the contrary, md beat hw on inputs:
-- sequential input show 360k/sec versus 220k/sec for hw
-- random seek 1350/sec for md versus 1150/sec for hw
+Raw performance is better on 6 disks arrays, but having 3 arrays allows
+me to setup 3 tablespaces and maybe to achieve better parallelism.
 
-So, these bonnie++ tests show quite huge differences for the same
-hardware between adaptec's hardware setup and md driver.
+I am under the impression that I will get better results with requests
+spread over 3 less effective arrays rather than two slightly more effive
+one.
 
-Does anyone has any explanation on this ? (btw, the fs on top of this is
-xfs).
+Does it make any sense, or am I totally missing the point ?
 
+Thanks,
 Franck
 
 
