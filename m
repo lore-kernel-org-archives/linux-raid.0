@@ -1,47 +1,145 @@
-From: "Jon Nelson" <jnelson-linux-raid@jamponi.net>
-Subject: Re: how to use mkfs.ext3 "stride=" on LVM on RAID correctly?
-Date: Thu, 28 Feb 2008 07:48:04 -0600
-Message-ID: <cccedfc60802280548m1ecb41d0w111618d7ff1e3d98@mail.gmail.com>
-References: <47C68101.4020406@wpkg.org>
+From: "Nicolas Mella" <nmella@kepler.cl>
+Subject: Corrupted RAID 50 (aparently?) array. Help needed.
+Date: Thu, 28 Feb 2008 13:04:59 -0300
+Message-ID: <f4d3d9a30802280804u70893ba2qde69fcd359a6a8b3@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <47C68101.4020406@wpkg.org>
 Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Tomasz Chmielewski <mangoo@wpkg.org>
-Cc: Linux-Raid <linux-raid@vger.kernel.org>, LVM general discussion and development <linux-lvm@redhat.com>, LKML <linux-fsdevel@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Feb 28, 2008 at 3:38 AM, Tomasz Chmielewski <mangoo@wpkg.org> wrote:
-> Lately, I had a serious performance problem on a 1.2 TB ext3 filesystem
->  placed on LVM, which was placed on Linux RAID-5.
->
->  Luckily, it was possible to alleviate much of this problem by removing
->  internal bitmap from RAID-5 and by using anticipatory IO scheduler.
->
->
->  As suggested earlier by Theodore Tso in "very poor ext3 write
->  performance on big filesystems" thread on linux-fsdevel list, I should
->  have used "mke2fs -E stride option to make sure all of the bitmaps
->  don't get concentrated on one hard drive spindle".
->
->
->  Although the fine mkfs.ext3 manual gives some basic information on how
->  to do it if you place the whole filesystem on a RAID array, it is not
->  clear to me how it should be done correctly if I want to create a ext3
->  filesystem on LVM on RAID-5.
->
->  Any helpful hints?
+Hi list,
 
-I can't help with the stride stuff, as I use LVM and that makes the
-stride stuff utterly useless anyway. However, a suggestion I have for
-you which I found helped a great deal was to place the bitmap on some
-/other/ device's filesystem (I used a /etc/bitmaps/). Obviously, don't
-put it on a FS which is part of the raid, I typically divide each
-device into 2 or more raids, but only if I don't have enough devices
-for /system/ and /data/ -style pools.
+Hope someone can give me the right direction on how to resolve this.
 
--- 
-Jon
+I have 12 hard drives with RAID software. (250 GB each disk) I just
+know it was a 2 TB array. The old operating system which supported the
+array is no longer online. (just in case someone asks me to check the
+mdadm.conf file)
+
+From what I can see with mdadm,is that there are 2 x RAID5 arrays of
+990.72 GB each. (2 TB the whole array). So I believed that there is a
+RAID0 between both RAID5 arrays. Right? (RAID50) The first RAID5 group
+is composed by 5 discs, all of them active. Here is the post: (all
+/dev/sdb4 /dev/sdc4 /dev/sdd4 /dev/sde4 /dev/sdf4 are similar and have
+the same UUID)
+
+# mdadm --examine /dev/sdb4
+
+----------------------------
+/dev/sdb4:
+          Magic : a92b4efc
+        Version : 00.91.00
+           UUID : 48b86fc7:adbd7bbe:df7c7359:36df38af
+  Creation Time : Tue Apr 24 18:14:28 2007
+     Raid Level : raid5
+  Used Dev Size : 241873792 (230.67 GiB 247.68 GB)
+     Array Size : 967495168 (922.68 GiB 990.72 GB)
+   Raid Devices : 5
+  Total Devices : 5
+Preferred Minor : 0
+
+  Reshape pos'n : 0
+      New Level : raid0
+     New Layout : left-asymmetric
+  New Chunksize : 0
+
+    Update Time : Mon Nov 29 21:01:33 1999
+          State : clean
+ Active Devices : 5
+Working Devices : 5
+ Failed Devices : 0
+  Spare Devices : 0
+       Checksum : 42da3120 - correct
+         Events : 0.61
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+      Number   Major   Minor   RaidDevice State
+this     0       3        4        0      active sync
+
+   0     0       3        4        0      active sync
+   1     1      22        4        1      active sync
+   2     2      33        4        2      active sync
+   3     3      34        4        3      active sync
+   4     4      56        4        4      active sync
+---------------------
+
+But If I try to assemble this 1st RAID5 array:
+
+# mdadm --assemble /dev/md0 /dev/sdb4 /dev/sdc4 /dev/sdd4 /dev/sde4 /dev/sdf4
+mdadm: Failed to restore critical section for reshape, sorry.
+
+Is not possible. I also try the build option:
+
+# mdadm --build /dev/md0 -l5 -n5 --assume-clean /dev/sdb4 /dev/sdc4
+/dev/sdd4 /dev/sde4 /dev/sdf4
+mdadm: Raid level 5 not permitted with --build.
+
+On the other hand there is the second RAID5 group which outputs the following:
+
+------------------
+# mdadm --examine /dev/sdg4
+/dev/sdg4:
+          Magic : a92b4efc
+        Version : 00.91.00
+           UUID : 384bd728:158c759c:e9be7911:01187b1f
+  Creation Time : Tue Apr 24 18:14:48 2007
+     Raid Level : raid5
+  Used Dev Size : 241873792 (230.67 GiB 247.68 GB)
+     Array Size : 967495168 (922.68 GiB 990.72 GB)
+   Raid Devices : 5
+  Total Devices : 6
+Preferred Minor : 1
+
+  Reshape pos'n : 0
+      New Level : raid0
+     New Layout : left-asymmetric
+  New Chunksize : 0
+
+    Update Time : Mon Nov 29 21:01:36 1999
+          State : active
+ Active Devices : 4
+Working Devices : 6
+ Failed Devices : 0
+  Spare Devices : 2
+       Checksum : 6eb7dc84 - correct
+         Events : 0.65
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+      Number   Major   Minor   RaidDevice State
+this     1      89        4        1      active sync
+
+   0     0       0        0        0      faulty removed
+   1     1      89        4        1      active sync
+   2     2      90        4        2      active sync
+   3     3      91        4        3      active sync
+   4     4     120        4        4      active sync
+   5     5     121        4        5      spare
+   6     6      88        4        6      spare
+------------------------------------
+The 2nd RAID5 group was composed by 7 disks (I believed, as shown
+above). 1 disks is faulty and 2 disks are spare. But even though with
+the remaining 4 disks I could try to assemble the RAID5, but I have
+the same result as with the 1st RAID5. (mdadm: Failed to restore
+critical section for reshape, sorry.)
+
+Do you have any idea on how to re-assemble this RAID 50 array ?
+
+Thanks for any advice & help.
+
+Nicolas
+
+PS:
+
+# mdadm -V
+mdadm - v2.6 - 21 December 2006
+
+Linux lab-suse 2.6.16.46-0.12-smp #1 SMP Thu May 17 14:00:09 UTC 2007
+x86_64 x86_64 x86_64 GNU/Linux
