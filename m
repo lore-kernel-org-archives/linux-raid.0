@@ -1,70 +1,43 @@
-From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
-Subject: Re: Understanding bonnie++ results
-Date: Thu, 28 Feb 2008 20:06:09 +0100
-Message-ID: <20080228190609.GA29262@rap.rap.dk>
-References: <1204191989.16924.10.camel@franck-gusty>
+From: Michal Soltys <soltys@ziu.info>
+Subject: Re: how to use mkfs.ext3 "stride=" on LVM on RAID correctly?
+Date: Thu, 28 Feb 2008 20:23:51 +0100
+Message-ID: <47C70A47.3090907@ziu.info>
+References: <47C68101.4020406@wpkg.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1204191989.16924.10.camel@franck-gusty>
+In-Reply-To: <47C68101.4020406@wpkg.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Franck Routier <franck.routier@axege.com>
-Cc: linux-raid@vger.kernel.org
+To: Tomasz Chmielewski <mangoo@wpkg.org>
+Cc: Linux-Raid <linux-raid@vger.kernel.org>, LVM general discussion and development <linux-lvm@redhat.com>
 List-Id: linux-raid.ids
 
-On Thu, Feb 28, 2008 at 10:46:29AM +0100, Franck Routier wrote:
-> Hi,
+Tomasz Chmielewski wrote:
+
+> Although the fine mkfs.ext3 manual gives some basic information on how 
+> to do it if you place the whole filesystem on a RAID array, it is not 
+> clear to me how it should be done correctly if I want to create a ext3 
+> filesystem on LVM on RAID-5.
 > 
-> I am experimenting with Adaptec 31205 hardware raid versus md raid on
-> raid level 10 with 3 arrays of 4 disks each.
-> md array was created with f2 option.
+> Any helpful hints?
 
-what are the characteristics of your disks? Are they all the same size
-and same speed etc?
+You should be careful with all the alignemnts. Extents should be properly 
+aligned with - at the very least - stripes, and preferably with whole stripe 
+width (not always possible though). To check where lvm extents, you can use 
+i.e.:
 
-What kind of raid are you creating with the Adaptec HW? I assume you
-make a RAID1 with this.
+dmsetup table
+pvs -o+pe_start --units s
+losetup and hexedit experiments (silly, but I used to do it like that in the 
+past, before I realised about other options :o )
 
-What is the chunk size?
+If you don't need default 4M granularity, it's nice to increase it (vgcreate 
+-s option ; I use 256M and 512M sized extents). You can alter the beginning 
+of the extents with --metadatasize option of pvcreate (overally it always 
+rounds up to the next 64K multiple). Be sure to verify with one of the 
+commands above.
 
-Are your figures for one of the arrays, that is for an array of 4
-drives?
-
-> I get some results with bonnie++ tests I would like to understand:
-> 
-> - per char sequential output is consistantly around 70k/sec for both
-> setup
-
-I think the common opinion on this list is to ignore this figure.
-However, if you are using this for postgresql databases, this may be relevant.
-
-> - but block sequential output shows a huge difference between hw and sw
-> raid: about 160k/sec for hw versus 60k/sec for md. Where can this come
-> from ??
-
-Strange. Maybe see if the md array has been fully synced before testing.
-For sequential writes on a 4 drive raid10,f2 with disks of 90 MB/s
-I would expect a writing rate of about 160 MB/s - which is the same as 
-your HW rate. (I assume you mean MB/s instead of k/sec)
-
-> On the contrary, md beat hw on inputs:
-> - sequential input show 360k/sec versus 220k/sec for hw
-
-raid10,f2 stripes, while normal raid1 does not. Also raid10,f2
-tends to only use the outer and faster sectors of disks.
-
-> - random seek 1350/sec for md versus 1150/sec for hw
-
-Random seeks in raid10,f2 tends to be restricted to a smaller range of
-sectors, thus making average seek times smaller.
- 
-> So, these bonnie++ tests show quite huge differences for the same
-> hardware between adaptec's hardware setup and md driver.
-
-I like to get such results of comparison between HW and SW raid.
-How advanced are Adaptec controllers considered these  days? 
-My thoughts are that SW raid is faster than HW raid, because Neil and the
-other people here together can develop more sophisticated algorithms,
-but I would like some hard figures to back up that thought.
+Moreover - if you use partitionable raid and create lvm in one of the 
+partitions, make sure partition is properly aligned as well.
 
