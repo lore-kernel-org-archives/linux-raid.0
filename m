@@ -1,21 +1,36 @@
-From: Franck Routier <franck.routier@axege.com>
-Subject: Re: Understanding bonnie++ results
-Date: Fri, 29 Feb 2008 10:32:59 +0100
-Message-ID: <1204277579.11773.19.camel@franck-gusty>
-References: <1204191989.16924.10.camel@franck-gusty>
-	 <20080228190609.GA29262@rap.rap.dk> <1204273192.9381.63.camel@franck-gusty>
-	 <20080229090238.GA3717@rap.rap.dk> <1204277169.11773.17.camel@franck-gusty>
+From: Peter Rabbitson <rabbit+list@rabbit.us>
+Subject: Re: Severe slowdown with LVM on RAID, alignment problem?
+Date: Fri, 29 Feb 2008 11:37:58 +0100
+Message-ID: <47C7E086.5080203@rabbit.us>
+References: <872d9b69db95a1b08319e935595743cc@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1204277169.11773.17.camel@franck-gusty>
+In-Reply-To: <872d9b69db95a1b08319e935595743cc@localhost>
 Sender: linux-raid-owner@vger.kernel.org
-To: Keld =?ISO-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Michael Guntsche <mike@it-loops.com>
+Cc: Maurice Hilarius <maurice@harddata.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Sorry, on the last mail I gave figures in the wrong order for random
-seek: md is 15% _faster_ than hw, not the other way.
+Michael Guntsche wrote:
+> 
+> Is it possible that my computer is just too slow to get good read results?
+unlikely
 
+> While reading is a little bit faster it's nowhere near the speed I get on
+> md0 itself.
+> 
 
+I would guess that you did not set the correct read-ahead values for the LV. 
+If you do not specify anything it will default to 128k (256 sectors), which is 
+terribly small for sequential reads. On the contrary the MD device will do 
+some clever calculations and set its read-ahead correctly depending on the 
+raid level and the number of disks. Do:
+
+blockdev --setra 65536 <your lv device>
+
+and run the tests again. You are almost certainly going to get the results you 
+are after.
+
+Peter
