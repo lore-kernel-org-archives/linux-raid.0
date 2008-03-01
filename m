@@ -1,61 +1,42 @@
-From: Michael Guntsche <mike@it-loops.com>
-Subject: Re: Severe slowdown with LVM on RAID, alignment =?UTF-8?Q?problem=3F?=
-Date: Fri, 29 Feb 2008 11:45:51 +0100
-Message-ID: <00d256ba72c4475569e7b68d7f1db6dd@localhost>
-References: <47C7E086.5080203@rabbit.us>
+From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
+Subject: Re: Understanding bonnie++ results
+Date: Sat, 1 Mar 2008 03:05:12 +0100
+Message-ID: <20080301020512.GA6657@rap.rap.dk>
+References: <1204191989.16924.10.camel@franck-gusty> <20080228190609.GA29262@rap.rap.dk> <1204273482.9381.66.camel@franck-gusty>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <47C7E086.5080203@rabbit.us>
+Content-Disposition: inline
+In-Reply-To: <1204273482.9381.66.camel@franck-gusty>
 Sender: linux-raid-owner@vger.kernel.org
-To: Peter Rabbitson <rabbit+list@rabbit.us>
-Cc: Maurice Hilarius <maurice@harddata.com>, linux-raid@vger.kernel.org
+To: Franck Routier <franck.routier@axege.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hello Peter
+On Fri, Feb 29, 2008 at 09:24:42AM +0100, Franck Routier wrote:
+> By the way, my server in not really in a production state, and the
+> hardware is running, so I might take some time to do sensible tests if
+> anyone has ideas of what a good test would be...
 
-On Fri, 29 Feb 2008 11:37:58 +0100, Peter Rabbitson <rabbit+list@rabbit.us>
-wrote:
-> Michael Guntsche wrote:
-> I would guess that you did not set the correct read-ahead values for the
-> LV.
-> If you do not specify anything it will default to 128k (256 sectors),
-> which is
-> terribly small for sequential reads. On the contrary the MD device will
-do
-> some clever calculations and set its read-ahead correctly depending on
-the
-> raid level and the number of disks. Do:
+I would like you to investigate why random writes are so relatively
+slow with raid10,f2. You could run the bonnie+ tests, and then watch
+via an iostat how each of the disks are performing, compared to a 
+HW RAID10. 
+
+And also see if it matters if the resync has completed or not.
+
+Best regards
+keld
+
 > 
-> blockdev --setra 65536 <your lv device>
+> > I like to get such results of comparison between HW and SW raid.
+> > How advanced are Adaptec controllers considered these  days? 
+> > My thoughts are that SW raid is faster than HW raid, because Neil and the
+> > other people here together can develop more sophisticated algorithms,
+> > but I would like some hard figures to back up that thought.
 > 
-> and run the tests again. You are almost certainly going to get the
-results
-> you
-> are after.
-
-I checked the read-ahead value on md0 (3072) and set this on the LV as
-well.
-
-Here is the result:
-
-Version 1.03c       ------Sequential Output------ --Sequential Input-
---Random-
-                    -Per Chr- --Block-- -Rewrite- -Per Chr- --Block--
---Seeks--
-Machine        Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP  /sec
-%CP
-lvm              8G           37251  25 27620  25           103996  49
-160.0   2
-
-I did not test it with the proper sunit,swdith values yet but the result is
-now looking much better.
-I'll play around with it some more this afternoon and post my result of
-what is working best for me.
-In the mean time, thank you all for your quick and helpful responses.
-
-
-Kind regards,
-Michael
-
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
