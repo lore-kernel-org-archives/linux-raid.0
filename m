@@ -1,53 +1,35 @@
 From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: Understanding bonnie++ results
-Date: Sat, 01 Mar 2008 15:04:19 -0500
-Message-ID: <47C9B6C3.40505@tmr.com>
-References: <1204191989.16924.10.camel@franck-gusty>
+Subject: Re: very poor ext3 write performance on big filesystems?
+Date: Sat, 01 Mar 2008 15:04:29 -0500
+Message-ID: <47C9B6CD.3040709@tmr.com>
+References: <47B980AC.2080806@wpkg.org> <p7363wmxsxr.fsf@bingen.suse.de> <20080218141640.GC12568@mit.edu> <47C54773.4040402@wpkg.org> <20080227200335.GB9331@webber.adilger.int>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1204191989.16924.10.camel@franck-gusty>
-Sender: linux-raid-owner@vger.kernel.org
-To: Franck Routier <franck.routier@axege.com>
-Cc: linux-raid@vger.kernel.org
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <20080227200335.GB9331@webber.adilger.int>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Andreas Dilger <adilger@Sun.COM>
+Cc: Tomasz Chmielewski <mangoo@wpkg.org>, Theodore Tso <tytso@mit.edu>, Andi Kleen <andi@firstfloor.org>, LKML <linux-fsdevel@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Franck Routier wrote:
-> Hi,
+Andreas Dilger wrote:
+> I'm CCing the linux-raid mailing list, since I suspect they will be
+> interested in this result.
 >
-> I am experimenting with Adaptec 31205 hardware raid versus md raid on
-> raid level 10 with 3 arrays of 4 disks each.
-> md array was created with f2 option.
-> I get some results with bonnie++ tests I would like to understand:
->
-> - per char sequential output is consistantly around 70k/sec for both
-> setup
-> - but block sequential output shows a huge difference between hw and sw
-> raid: about 160k/sec for hw versus 60k/sec for md. Where can this come
-> from ??
->
+> I would suspect that the "journal guided RAID recovery" mechanism
+> developed by U.Wisconsin may significantly benefit this workload
+> because the filesystem journal is already recording all of these
+> block numbers and the MD bitmap mechanism is pure overhead.
 >   
-Do you have a base raw read speed for a single drive? That helps 
-visualize things as percentages of single drive speed. Also, is the 
-Adaptec hw raid10 really raid1+0 or the distributed raid10 done by Linux 
-sw raid?
-> On the contrary, md beat hw on inputs:
-> - sequential input show 360k/sec versus 220k/sec for hw
-> - random seek 1350/sec for md versus 1150/sec for hw
->
-> So, these bonnie++ tests show quite huge differences for the same
-> hardware between adaptec's hardware setup and md driver.
->
-> Does anyone has any explanation on this ? (btw, the fs on top of this is
-> xfs).
->
->   
-I'm sure that's a factor, but I usually run my tests on the raw array 
-first to see how the array performs, then test on various filesystem 
-types to see how they use the array. Alignment of the f/s on the array 
-becomes important, as well as f/s-specific tuning parameters. Someone 
-adept at xfs optimal layout will have to help you there, I can't.
+
+Thanks for sharing these numbers. I think use of a bitmap is one of 
+those things which people have to configure to match their use, 
+certainly using a larger bitmap seems to reduce the delays, using an 
+external bitmap certainly help, especially on an SSD. But on a large 
+array, without a bitmap, performance can be compromised for hours during 
+recovery, so the administrator must decide if normal case performance is 
+more important than worst case performance.
 
 -- 
 Bill Davidsen <davidsen@tmr.com>
