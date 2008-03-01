@@ -1,34 +1,37 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: 2x6 or 3x4 raid10 arrays ?
-Date: Sat, 01 Mar 2008 15:18:29 -0500
-Message-ID: <47C9BA15.20104@tmr.com>
-References: <1204195554.16924.16.camel@franck-gusty>
+From: Franck Routier <franck.routier@axege.com>
+Subject: Re: Understanding bonnie++ results
+Date: Sat, 01 Mar 2008 21:25:45 +0100
+Message-ID: <1204403145.13527.8.camel@franck-gusty>
+References: <1204191989.16924.10.camel@franck-gusty>
+	 <47C9B6C3.40505@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1204195554.16924.16.camel@franck-gusty>
+In-Reply-To: <47C9B6C3.40505@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Franck Routier <franck.routier@axege.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Franck Routier wrote:
-> Hi,
->
-> I am installing a database (postgresql) server.
-> I am considering two options:
-> - either setup two 6 disks raid10 arrays
-> - or setup three 4 disks raid10 arrays
->   
 
-One more thought on this, if you use is such that you have one table 
-which is really getting heavy read use, have more than two copies. Bad 
-for disk utilization, good for having the data on an idle spindle.
+Le samedi 01 mars 2008 =C3=A0 15:04 -0500, Bill Davidsen a =C3=A9crit :
+> Do you have a base raw read speed for a single drive? That helps=20
 
--- 
-Bill Davidsen <davidsen@tmr.com>
-  "Woe unto the statesman who makes war without a reason that will still
-  be valid when the war is over..." Otto von Bismark 
+Disk speed measured by hdparm -t shows :
+Timing buffered disk reads:  270 MB in  3.02 seconds =3D  89.52 MB/sec
+
+> Adaptec hw raid10 really raid1+0 or the distributed raid10 done by Li=
+nux=20
+> sw raid?
+
+I don't know, but RAID10 is an option on it's own in the bios (I don't
+have to build raid 1 then raid 0)
+
+=46ranck
 
 
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
