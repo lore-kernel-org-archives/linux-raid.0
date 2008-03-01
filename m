@@ -1,19 +1,18 @@
 From: Michael Guntsche <mike@it-loops.com>
-Subject: Re: Severe slowdown with LVM on RAID, alignment problem?
-Date: Sat, 1 Mar 2008 22:26:14 +0100
-Message-ID: <84E2E8E9-9E43-497E-9680-CC0377A8BEDF@it-loops.com>
-References: <872d9b69db95a1b08319e935595743cc@localhost> <47C7E086.5080203@rabbit.us> <47C9C086.4020805@tmr.com>
+Subject: Re: Strange RAID-5 rebuild problem
+Date: Sat, 1 Mar 2008 23:02:01 +0100
+Message-ID: <3816592D-B75C-4B00-B3B7-65AE3B403DB0@it-loops.com>
+References: <656D8E57-804D-4A63-B9CA-D3C899616F61@it-loops.com>
 Mime-Version: 1.0 (Apple Message framework v753)
-Content-Type: multipart/signed; micalg=sha1; boundary=Apple-Mail-3-613791725; protocol="application/pkcs7-signature"
+Content-Type: multipart/signed; micalg=sha1; boundary=Apple-Mail-1-615939123; protocol="application/pkcs7-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <47C9C086.4020805@tmr.com>
+In-Reply-To: <656D8E57-804D-4A63-B9CA-D3C899616F61@it-loops.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
---Apple-Mail-3-613791725
+--Apple-Mail-1-615939123
 Content-Transfer-Encoding: 7bit
 Content-Type: text/plain;
 	charset=US-ASCII;
@@ -21,54 +20,52 @@ Content-Type: text/plain;
 	format=flowed
 
 
-On Mar 1, 2008, at 21:45, Bill Davidsen wrote:
+On Mar 1, 2008, at 22:09, Michael Guntsche wrote:
 
->> blockdev --setra 65536 <your lv device>
->>
->> and run the tests again. You are almost certainly going to get the  
->> results you are after.
->
-> I will just comment that really large readahead values may cause  
-> significant memory usage and transfer of unused data. My  
-> observations and some posts indicate that very large readahead and/ 
-> or chunk size may reduce random access performance. I believe you  
-> said you had 512MB RAM, that may be a factor as well.
->
+> Just for kicks I created the RAID with a 0.90 superblock and tried  
+> the same thing. Lo and behold after stopping the array and starting  
+> it again the progress bar showed up and everything started  
+> rebuilding where it stopped earlier.
 
-I did not set such a large read-ahead. I had a look at the md0 device  
-which had a value of 3072 and set this on the LV device as well.  
-Performance really improved after this.
+I am sorry, should have looked at it a little bit closer.
 
->
-> Unless you are planning to use this machine mainly for running  
-> benchmarks, I would tune it for your actual load and a bit of worst  
-> case avoidance.
->
+Always stopped with: mdadm --stop /dev/...
+Always started with: mdadm --assemble --scan --auto=yes --symlink=no  
+<-- taken from debian's /etc/init.d/mdadm-raid
 
-The last part is exactly what I am aiming at right now.
-I tried to keep my changes to a bare minimum.
+0.90 superblock:
+The device gets assembled with [3/4] devices. The not synced one is  
+seen as spare. As soon as there is activity on the RAID the rebuild  
+start from the BEGINNING. Not from where it left off.
 
-* Change chunk size to 256K
-* Align the physical extent of the LVM to it
-* Use the same parameters for mkfs.xfs that are choosen autmatically  
-by mkfs.xfs if called on the md0 device itself.
+1.00 superblock:
+The devices gets assembled with "mdadm: /dev/md/1 has been started  
+with 4 drives".
 
-* Set the read-ahead of the LVM block device to the same value as the  
-md0 device
-* Change the stripe_cache_size to 2048
+md1 : active(auto-read-only) raid5 sda2[0] sdd2[4] sdc2[2] sdb2[1]
+       1464982272 blocks super 1.0 level 5, 256k chunk, algorithm 2  
+[4/3] [UUU_]
 
+But nothing is happening. you cannot hot-remove the one in spare- 
+rebuilding state, since using -f yields a
 
-With these settings applied to my setup here, RAID+XFS and RAID+LVM 
-+XFS perform nearly identical and that was my goal from the beginning.
+  4       8       50        3      faulty spare rebuilding   /dev/sdd2
 
-Now I am off to figure out what's happening during the initial  
-rebuild of the RAID-5 but see my other mail for this.
+status.
 
-Once again, thank you all for your valuable input and support.
+One more test with an 1.0.
+During rebuild I mark sdd2 as faulty, the status changes to faulty  
+spare. After stopping and starting the raid, it gets created with 3/4  
+disks and the fourth one (sdd2) is removed.
+
+Calling mdadm --assemble --scan again yields.
+
+mdadm: /dev/md/1 already active, cannot restart it!
+mdadm:   /dev/md/1 needed for /dev/sdd2...
 
 Kind regards,
 Michael
---Apple-Mail-3-613791725
+--Apple-Mail-1-615939123
 Content-Transfer-Encoding: base64
 Content-Type: application/pkcs7-signature;
 	name=smime.p7s
@@ -106,17 +103,17 @@ cDz9reFhYsPZOhl+hLGZGwDFGguCdJ4lUJRix9sncVcljd2pnDmOjCBPZV+V2vf3h9bGCE6u9uo0
 5RAaWzVNd+NWIXiC3CEZNd4ksdMdRv9dX2VPMYIDEDCCAwwCAQEwdjBiMQswCQYDVQQGEwJaQTEl
 MCMGA1UEChMcVGhhd3RlIENvbnN1bHRpbmcgKFB0eSkgTHRkLjEsMCoGA1UEAxMjVGhhd3RlIFBl
 cnNvbmFsIEZyZWVtYWlsIElzc3VpbmcgQ0ECEBd4Zp9b22liUjK/V/e8ZTUwCQYFKw4DAhoFAKCC
-AW8wGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG9w0BCQUxDxcNMDgwMzAxMjEyNjE1
-WjAjBgkqhkiG9w0BCQQxFgQUsiKjFljtB3WdOY5UVocvGd2yUXwwgYUGCSsGAQQBgjcQBDF4MHYw
+AW8wGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG9w0BCQUxDxcNMDgwMzAxMjIwMjAy
+WjAjBgkqhkiG9w0BCQQxFgQU2z6ccZKMrINsSw3L42D0py91eJkwgYUGCSsGAQQBgjcQBDF4MHYw
 YjELMAkGA1UEBhMCWkExJTAjBgNVBAoTHFRoYXd0ZSBDb25zdWx0aW5nIChQdHkpIEx0ZC4xLDAq
 BgNVBAMTI1RoYXd0ZSBQZXJzb25hbCBGcmVlbWFpbCBJc3N1aW5nIENBAhAXeGafW9tpYlIyv1f3
 vGU1MIGHBgsqhkiG9w0BCRACCzF4oHYwYjELMAkGA1UEBhMCWkExJTAjBgNVBAoTHFRoYXd0ZSBD
 b25zdWx0aW5nIChQdHkpIEx0ZC4xLDAqBgNVBAMTI1RoYXd0ZSBQZXJzb25hbCBGcmVlbWFpbCBJ
-c3N1aW5nIENBAhAXeGafW9tpYlIyv1f3vGU1MA0GCSqGSIb3DQEBAQUABIIBALlVGyYxmwx/L8eH
-FSBxBKLiISc/6Zn3xQQ+BmdCP5x2PMvsOru+hrrkRrR75UAh7JqlaVnAFEh7cerfVsm/ruXiWJ83
-4oCEoIzEyGHy8gogFCEIEtIQ8+51hsgk6tcPUiEtJHsIkSsJrvI8am3TwXpJuOvU8Eti8FVkHQPs
-NEkC2z+vJ4u6M5HVkBKtqojKHzBh7zkz14h/xfVQ3rwzUA23vqn6A+yIUBPl3djEYs86vBGt6bNG
-a9e/zsGs8K/CYGMBt4vC0rdQtFDsxZ9TLZyqP5T7wGpxz40xMH5zBeRi/apiBtfhJvZxSVyrZEZa
-whAV8qmhJi38/i7Qtb9yQqkAAAAAAAA=
+c3N1aW5nIENBAhAXeGafW9tpYlIyv1f3vGU1MA0GCSqGSIb3DQEBAQUABIIBADXWAh9bxff+1dLp
+7y+K3ppxqgqMJtJgYkewoaC/ZaJzkorzdtX58EPTqksxlGNpVe9jJx/Y0Kj1S24RE6yHoOqMgcGt
+VZ5VkNeOcZaQoxiL6QTbPjpk2oBFKmmEWf+9wi9Em0vuzr2zf0Qy/J9hE1fjouctW/ajz4UHBjlO
+f877tgqbanRoRO+2NFzF1fZOLLMN2d59apzrfrNWrnFv0USX4QhJLPoyoDPwrz1HsVh3p3a/6Apv
+UGhER8gfvGByYa8FC0/Bf0ZLORTHeK4+QaCmvjav3v7TzsR6N0gf6RoseVtADK+Y+7tVphuxF5Qg
+miGAbImDGMX1bd17fuOlvwEAAAAAAAA=
 
---Apple-Mail-3-613791725--
+--Apple-Mail-1-615939123--
