@@ -1,121 +1,92 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: [Fwd: Strange RAID-5 rebuild problem]
-Date: Sat, 01 Mar 2008 17:08:47 -0500
-Message-ID: <47C9D3EF.10001@tmr.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Michael Guntsche <mike@it-loops.com>
+Subject: Re: Strange RAID-5 rebuild problem
+Date: Sat, 1 Mar 2008 23:41:02 +0100
+Message-ID: <2BABB51E-7701-44D4-AD07-6394CCF77941@it-loops.com>
+References: <656D8E57-804D-4A63-B9CA-D3C899616F61@it-loops.com> <3816592D-B75C-4B00-B3B7-65AE3B403DB0@it-loops.com> <20080301222326.GA20435@cthulhu.home.robinhill.me.uk>
+Mime-Version: 1.0 (Apple Message framework v753)
+Content-Type: multipart/signed; micalg=sha1; boundary=Apple-Mail-1-618279212; protocol="application/pkcs7-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20080301222326.GA20435@cthulhu.home.robinhill.me.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>
-Cc: Michael Guntsche <mike@it-loops.com>
+To: Robin Hill <robin@robinhill.me.uk>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I am forwarding this from LKML, seems more appropriate here
 
--------- Original Message --------
-Subject: Strange RAID-5 rebuild problem
-Date: Sat, 1 Mar 2008 21:57:55 +0100
-From: Michael Guntsche <mike@it-loops.com>
-To: linux-kernel@vger.kernel.org
-Newsgroups: gmane.linux.kernel
+--Apple-Mail-1-618279212
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset=US-ASCII;
+	delsp=yes;
+	format=flowed
 
-Ok, after going through benchmarking for the last few days, I now
-started acutally deploying the system.
+	
+On Mar 1, 2008, at 23:23, Robin Hill wrote:
 
-I created a RAID-5 with a 1.0 superblock and let the RAID resync.
-I had to reboot the computer for another update and did not think
-about thw rebuilding process since it should continue just fine after
-a restart. After a reboot I noticed that the RAID was in the
-following state.
+> It's started up in read-only mode (which is the safe option - it
+> prevents any accidental damage).  It should switch to write mode (and
+> start syncing) when it's mounted.  You can also force the mode change
+> using 'mdadm -w /dev/md1'.
+>
 
-/dev/md1:
-          Version : 01.00.03
-    Creation Time : Sat Mar  1 21:42:18 2008
-       Raid Level : raid5
-       Array Size : 1464982272 (1397.12 GiB 1500.14 GB)
-    Used Dev Size : 976654848 (465.71 GiB 500.05 GB)
-     Raid Devices : 4
-    Total Devices : 4
-Preferred Minor : 1
-      Persistence : Superblock is persistent
+mdadm -w /dev/md1 works if I call it after assembling.
+If do not call it, mount the array and start writing to it, it  
+changes to "active"
+but the rebuild process does not kick in.
 
-      Update Time : Sat Mar  1 21:50:19 2008
-            State : clean, degraded
-   Active Devices : 3
-Working Devices : 4
-   Failed Devices : 0
-    Spare Devices : 1
+The only way it works for me now is.
+* Stop the array
+* assemble it again with mdadm --assemble --scan
+* Call mdadm -w /dev/md1
+--Apple-Mail-1-618279212
+Content-Transfer-Encoding: base64
+Content-Type: application/pkcs7-signature;
+	name=smime.p7s
+Content-Disposition: attachment;
+	filename=smime.p7s
 
-           Layout : left-symmetric
-       Chunk Size : 256K
+MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIIGIzCCAtww
+ggJFoAMCAQICEBd4Zp9b22liUjK/V/e8ZTUwDQYJKoZIhvcNAQEFBQAwYjELMAkGA1UEBhMCWkEx
+JTAjBgNVBAoTHFRoYXd0ZSBDb25zdWx0aW5nIChQdHkpIEx0ZC4xLDAqBgNVBAMTI1RoYXd0ZSBQ
+ZXJzb25hbCBGcmVlbWFpbCBJc3N1aW5nIENBMB4XDTA3MTAzMTE2MDMwMVoXDTA4MTAzMDE2MDMw
+MVowQzEfMB0GA1UEAxMWVGhhd3RlIEZyZWVtYWlsIE1lbWJlcjEgMB4GCSqGSIb3DQEJARYRbWlr
+ZUBpdC1sb29wcy5jb20wggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQC/D9ePLG2ZNk/Z
+NXTRfUq7Rs+3k5M/nqmZ8riQYRnt8sCTj6o/fPS4qjaDf9jRfgbxViROiShFWMoBNJkKg91doJFk
+FYdive8ujFfKpPR6FVGu8rN/sHUZM/gowZUcqDyIMAJVr7iiWhQYxP3U4hmprJsmUaGkjBU37Bcw
+vJnEZ4gDCgYiZLiHUACDDfsl2xl5r6XvtXV9TsjWA3eQSeju68nQFP0PjFU+UtYfr3z1nFMJpuzE
+xStjCEZ+EkYBOHK+RmBaOLEfF2Rq8175oaX5ScotY61s7wjADYesS//bvdcZ11jf/R+UCE90p8iC
+Y1TjqqRv+zMc+VpyfG1dt9ELAgMBAAGjLjAsMBwGA1UdEQQVMBOBEW1pa2VAaXQtbG9vcHMuY29t
+MAwGA1UdEwEB/wQCMAAwDQYJKoZIhvcNAQEFBQADgYEAgVh3S3v4j1ydxqgc/DWXcO5RRnyfLTjU
+bJwYwTdaQVuykeXrT+2ITDIpOpVEqZ7xV/N9aKMM/izyQ8oMvw/J13TUm1N77kNCp5jYy1S+Ntuz
+bCdOdFVA5tFVn/nMfmK1Is6NjK+0GmryYPEpn8vaP9ZGy57wCpKZrwmytgm3oPQwggM/MIICqKAD
+AgECAgENMA0GCSqGSIb3DQEBBQUAMIHRMQswCQYDVQQGEwJaQTEVMBMGA1UECBMMV2VzdGVybiBD
+YXBlMRIwEAYDVQQHEwlDYXBlIFRvd24xGjAYBgNVBAoTEVRoYXd0ZSBDb25zdWx0aW5nMSgwJgYD
+VQQLEx9DZXJ0aWZpY2F0aW9uIFNlcnZpY2VzIERpdmlzaW9uMSQwIgYDVQQDExtUaGF3dGUgUGVy
+c29uYWwgRnJlZW1haWwgQ0ExKzApBgkqhkiG9w0BCQEWHHBlcnNvbmFsLWZyZWVtYWlsQHRoYXd0
+ZS5jb20wHhcNMDMwNzE3MDAwMDAwWhcNMTMwNzE2MjM1OTU5WjBiMQswCQYDVQQGEwJaQTElMCMG
+A1UEChMcVGhhd3RlIENvbnN1bHRpbmcgKFB0eSkgTHRkLjEsMCoGA1UEAxMjVGhhd3RlIFBlcnNv
+bmFsIEZyZWVtYWlsIElzc3VpbmcgQ0EwgZ8wDQYJKoZIhvcNAQEBBQADgY0AMIGJAoGBAMSmPFVz
+VftOucqZWh5owHUEcJ3f6f+jHuy9zfVb8hp2vX8MOmHyv1HOAdTlUAow1wJjWiyJFXCO3cnwK4Va
+qj9xVsuvPAsH5/EfkTYkKhPPK9Xzgnc9A74r/rsYPge/QIACZNenprufZdHFKlSFD0gEf6e20Txh
+BEAeZBlyYLf7AgMBAAGjgZQwgZEwEgYDVR0TAQH/BAgwBgEB/wIBADBDBgNVHR8EPDA6MDigNqA0
+hjJodHRwOi8vY3JsLnRoYXd0ZS5jb20vVGhhd3RlUGVyc29uYWxGcmVlbWFpbENBLmNybDALBgNV
+HQ8EBAMCAQYwKQYDVR0RBCIwIKQeMBwxGjAYBgNVBAMTEVByaXZhdGVMYWJlbDItMTM4MA0GCSqG
+SIb3DQEBBQUAA4GBAEiM0VCD6gsuzA2jZqxnD3+vrL7CF6FDlpSdf0whuPg2H6otnzYvwPQcUCCT
+cDz9reFhYsPZOhl+hLGZGwDFGguCdJ4lUJRix9sncVcljd2pnDmOjCBPZV+V2vf3h9bGCE6u9uo0
+5RAaWzVNd+NWIXiC3CEZNd4ksdMdRv9dX2VPMYIDEDCCAwwCAQEwdjBiMQswCQYDVQQGEwJaQTEl
+MCMGA1UEChMcVGhhd3RlIENvbnN1bHRpbmcgKFB0eSkgTHRkLjEsMCoGA1UEAxMjVGhhd3RlIFBl
+cnNvbmFsIEZyZWVtYWlsIElzc3VpbmcgQ0ECEBd4Zp9b22liUjK/V/e8ZTUwCQYFKw4DAhoFAKCC
+AW8wGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG9w0BCQUxDxcNMDgwMzAxMjI0MTAy
+WjAjBgkqhkiG9w0BCQQxFgQUK4wheOpGds2V3sqHdAV87JlN8uYwgYUGCSsGAQQBgjcQBDF4MHYw
+YjELMAkGA1UEBhMCWkExJTAjBgNVBAoTHFRoYXd0ZSBDb25zdWx0aW5nIChQdHkpIEx0ZC4xLDAq
+BgNVBAMTI1RoYXd0ZSBQZXJzb25hbCBGcmVlbWFpbCBJc3N1aW5nIENBAhAXeGafW9tpYlIyv1f3
+vGU1MIGHBgsqhkiG9w0BCRACCzF4oHYwYjELMAkGA1UEBhMCWkExJTAjBgNVBAoTHFRoYXd0ZSBD
+b25zdWx0aW5nIChQdHkpIEx0ZC4xLDAqBgNVBAMTI1RoYXd0ZSBQZXJzb25hbCBGcmVlbWFpbCBJ
+c3N1aW5nIENBAhAXeGafW9tpYlIyv1f3vGU1MA0GCSqGSIb3DQEBAQUABIIBALXOFHBru8Fznm7a
+VsdNUt7ckMTi5LYVS08jlw41DbdaeuD/UsHVk6Kf+XUuDX3pdppf/nVWXIPMh//u60zjddbyf76o
+Kx6o1OBXWBKHgN90ueaxIXLK7Bho3hsSCqM7DvMGARz7kZQpv3/nLsucecM/NW/O9ADm0lr3coog
+NQn/uFNplHJ31QO5OzoM7vlo+3HH1zaz5JQiYyuy8fBssfWbVSv+FlwusvSf/C7x1YJUXN2jfY5g
+kQboSSj2VMy6l3e4xG/MpPLR58HWpF4UjyVIP7fhpn5nXIXYu6YMa25K+FxCh0FObouNbbcfTwLn
+42OTUPNjmhkAuo0AG8WaBbAAAAAAAAA=
 
-             Name : gibson:1  (local to host gibson)
-             UUID : 80b0698e:d7c76d22:e231f03e:d25feba2
-           Events : 32
-
-      Number   Major   Minor   RaidDevice State
-         0       8        2        0      active sync   /dev/sda2
-         1       8       18        1      active sync   /dev/sdb2
-         2       8       34        2      active sync   /dev/sdc2
-         4       8       50        3      spare rebuilding   /dev/sdd2
-
-mdadm -E /dev/sdd2:
-
-/dev/sdd2:
-            Magic : a92b4efc
-          Version : 1.0
-      Feature Map : 0x2
-       Array UUID : 80b0698e:d7c76d22:e231f03e:d25feba2
-             Name : gibson:1  (local to host gibson)
-    Creation Time : Sat Mar  1 21:42:18 2008
-       Raid Level : raid5
-     Raid Devices : 4
-
-   Avail Dev Size : 976655336 (465.71 GiB 500.05 GB)
-       Array Size : 2929964544 (1397.12 GiB 1500.14 GB)
-    Used Dev Size : 976654848 (465.71 GiB 500.05 GB)
-     Super Offset : 976655592 sectors
-Recovery Offset : 973312 sectors
-            State : clean
-      Device UUID : 5d6d28dd:c1d4d59d:3617c511:267c47f6
-
-      Update Time : Sat Mar  1 21:55:44 2008
-         Checksum : a1ca2174 - correct
-           Events : 52
-
-           Layout : left-symmetric
-       Chunk Size : 256K
-
-      Array Slot : 4 (0, 1, 2, failed, 3)
-     Array State : uuuU 1 failed
-
-
-
-
-/proc/mdstat showed now progress bar though. Ok, since he seems stuck
-I thought, why not just mark sdd2 as failed.
-I was able to mark it as failed but looking at the detail again I saw
-"spare rebuilding" and I could not remove it.
-Next I tried a fail/remove which also did not work. I stopped the
-array started it again, and THEN it removed the disk.
-I tried this several times, the same result every time.
-
-Just for kicks I created the RAID with a 0.90 superblock and tried
-the same thing. Lo and behold after stopping the array and starting
-it again the progress bar showed up and everything started rebuilding
-where it stopped earlier.
-
-Is this "normal" or is this a superblock 1.0 related problem?
-
-Current kernel is 2.6.24.2, mdadm is v2.6.4 from debian unstable.
-
-I do not need the RAID right now so I could run some tests on it if
-someone wants me too.
-
-Kind regards,
-Michael
--- 
-Bill Davidsen <davidsen@tmr.com>
-   "We have more to fear from the bungling of the incompetent than from
-the machinations of the wicked."  - from Slashdot
+--Apple-Mail-1-618279212--
