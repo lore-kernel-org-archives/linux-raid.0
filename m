@@ -1,37 +1,32 @@
-From: Franck Routier <franck.routier@axege.com>
-Subject: Re: Understanding bonnie++ results
-Date: Sat, 01 Mar 2008 21:25:45 +0100
-Message-ID: <1204403145.13527.8.camel@franck-gusty>
-References: <1204191989.16924.10.camel@franck-gusty>
-	 <47C9B6C3.40505@tmr.com>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: Corrupted RAID 50 (aparently?) array. Help needed.
+Date: Sat, 01 Mar 2008 15:31:11 -0500
+Message-ID: <47C9BD0F.7020808@tmr.com>
+References: <20080228102209.2hgng57tyck44k8o@www.kepler.cl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <47C9B6C3.40505@tmr.com>
+In-Reply-To: <20080228102209.2hgng57tyck44k8o@www.kepler.cl>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
+To: nmella@kepler.cl
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+nmella@kepler.cl wrote:
+> Hi list,
+>
+> Hope someone can give me the right direction on how to resolve this.
 
-Le samedi 01 mars 2008 =C3=A0 15:04 -0500, Bill Davidsen a =C3=A9crit :
-> Do you have a base raw read speed for a single drive? That helps=20
+Were you under the impression that this list is a professional service 
+where people are paid to give you good response? You sent the first copy 
+of your question at 10:42, got impatient and resent at 11:04, then 11:15 
+and 11:22. Sorry we don't respond fast enough for you, perhaps you 
+should take your business elsewhere.
 
-Disk speed measured by hdparm -t shows :
-Timing buffered disk reads:  270 MB in  3.02 seconds =3D  89.52 MB/sec
-
-> Adaptec hw raid10 really raid1+0 or the distributed raid10 done by Li=
-nux=20
-> sw raid?
-
-I don't know, but RAID10 is an option on it's own in the bios (I don't
-have to build raid 1 then raid 0)
-
-=46ranck
+-- 
+Bill Davidsen <davidsen@tmr.com>
+  "Woe unto the statesman who makes war without a reason that will still
+  be valid when the war is over..." Otto von Bismark 
 
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
