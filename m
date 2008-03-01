@@ -1,172 +1,113 @@
-From: Michael Guntsche <mike@it-loops.com>
-Subject: Strange RAID-5 rebuild problem
-Date: Sat, 1 Mar 2008 22:09:46 +0100
-Message-ID: <656D8E57-804D-4A63-B9CA-D3C899616F61@it-loops.com>
-Mime-Version: 1.0 (Apple Message framework v753)
-Content-Type: multipart/signed; micalg=sha1; boundary=Apple-Mail-2-612803222; protocol="application/pkcs7-signature"
+From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
+Subject: Re: 2x6 or 3x4 raid10 arrays ?
+Date: Sat, 1 Mar 2008 22:10:30 +0100
+Message-ID: <20080301211030.GB17192@rap.rap.dk>
+References: <1204195554.16924.16.camel@franck-gusty> <loom.20080228T223023-79@post.gmane.org> <20080301204020.GC10278@rap.rap.dk>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20080301204020.GC10278@rap.rap.dk>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Nat Makarevitch <nat@makarevitch.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Sat, Mar 01, 2008 at 09:40:20PM +0100, Keld J=F8rn Simonsen wrote:
+> On Thu, Feb 28, 2008 at 10:36:22PM +0000, Nat Makarevitch wrote:
+> > Franck Routier <franck.routier <at> axege.com> writes:
+> >=20
+> > > database (postgresql) server.
+> >=20
+> > AFAIK if the average size of an I/O operation as long as the corres=
+ponding
+> > variance are low... go for a single RAID10,f2 with a stripe size sl=
+ightly
+> > superior to this average. This way you will have most requests mobi=
+lizing only a
+> > single spindle and all your spindles acting in parallel. If this av=
+erage size
+> > varies upon tables one may create a RAID (with the adequate stripe =
+size) per
+> > database partition.
+>=20
+> I believe that a full chunk is read for each read access.
+> Or, at least, if one operation can be done within one chunk,
+> not more than that chunk is operated upon.
+>=20
+> And chunks are recommended to be between 256 kiB and 1 MiB.
+> Most random database reads are much smaller than 256 kiB.
+> So the probability that one random read can be done with just one=20
+> seek + read operation is very high, as far as I understand it.
+>=20
+> This would lead to that it is not important whether to use=20
+> two arrays of 6 disks each, or 3 arrays of 4 disks each.=20
+> Or for that sake 1 array of 12 disks.
+>=20
+> Some other factors may be more important: such as the ability to surv=
+ive
+> disk crashes. raid10,f2 is good for surviving 1 disk crash. If you ha=
+ve
+> 3 raids of 4 disks, it can survive a disk crash in each of these raid=
+s.
+> Furthermore some combinations of crashes of 2 disks within a raid can
+> also be survived. There are 16 combinations of failing disksi, with 0=
+ to
+> 4 disks failing:
+>=20
+>    0000 Y  0001 Y 0010 Y  0011 N 0100 Y 0101 N 0110 Y 0111 N
+>    1000 Y  1001 Y 1010 N  1011 N 1100 N 1101 N 1110 N 1111 N
+>=20
+> So if 2 disks fails, then in 2 out of 6 cases this would be ok,
+> given a succes rates of 1.33 for surviving one or two disk crashes.
+> For 3 raid sets of 4 drives each, this should be able to survive 4
+> (3 * 1.33) disks malfunctioning on average, while it is only guarante=
+ed
+> to survive 1 bad disk.
+>=20
+> With more disks in the array, more combinations would be possible to
+> survive. I do not have a formula for it, but surely it should exist.
+> Maybe arrays with an odd number of drives would have better chances o=
+f
+> surviving, given that in the 4-drive example a number of combinations
+> of failing drives were fatal because all even chunks were distributed=
+ on
+> disks 1 and 3, while odd chunks were on disks 2 and 4).=20
+> I would like to know if somebody could come up with a
+> formula, and what results one would get for  a 2 x 6 disk array, and =
+1 x
+> 12 disks array.=20
 
---Apple-Mail-2-612803222
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain;
-	charset=US-ASCII;
-	delsp=yes;
-	format=flowed
+I would actually think that for a 12 disk raid, it would be hard to
+survive more than 2 disk in average. For 2 times 6 disks the probabilit=
+y
+of surviving about 3 bad disks is possible. But I would like a formula.
 
-Hello list,
+So smaller raid sizes are good here. For example with 6 sets of
+raid10,f2 raids, you can loose 1 disk in each array, thus surviving
+about 6 bad disks on average. Again, if just 2 disks fail, in the same=20
+raid, you are lost. So no guarantees on surviving 6 bad disks.
 
-The first version of this mail got send to linux-kernel by mistake,  
-now sending it to the correct list.
---------------------------------------------------------------------
+> Another more important item could be speed: especially for average se=
+ek
+> times. More disks in an array would for raid10,f2 reduce the max and
+> average seek times as searching on each disks would be reduced in tim=
+e,
+> for n disks in a raid only 1/n of each disk will be used for reading.=
+=20
 
-Ok, after going through benchmarking for the last few days, I now  
-started acutally deploying the system.
+Speed would also improve with bigger arrays, as IO bandwidth per
+operation would become bigger. Eg. if you traverse all entries in a
+table, you can have IO to all 12 disks at the same time. Having it all
+in one big array make the system automatically distribute the database
+accesses to all 12 disks, while you need to do the distribution by hand
+between the arrays if you make 3 sets of 4 disks.
 
-I created a RAID-5 with a 1.0 superblock and let the RAID resync.
-I had to reboot the computer for another update and did not think  
-about thw rebuilding process since it should continue just fine after  
-a restart. After a reboot I noticed that the RAID was in the  
-following state.
-
-/dev/md1:
-         Version : 01.00.03
-   Creation Time : Sat Mar  1 21:42:18 2008
-      Raid Level : raid5
-      Array Size : 1464982272 (1397.12 GiB 1500.14 GB)
-   Used Dev Size : 976654848 (465.71 GiB 500.05 GB)
-    Raid Devices : 4
-   Total Devices : 4
-Preferred Minor : 1
-     Persistence : Superblock is persistent
-
-     Update Time : Sat Mar  1 21:50:19 2008
-           State : clean, degraded
-  Active Devices : 3
-Working Devices : 4
-  Failed Devices : 0
-   Spare Devices : 1
-
-          Layout : left-symmetric
-      Chunk Size : 256K
-
-            Name : gibson:1  (local to host gibson)
-            UUID : 80b0698e:d7c76d22:e231f03e:d25feba2
-          Events : 32
-
-     Number   Major   Minor   RaidDevice State
-        0       8        2        0      active sync   /dev/sda2
-        1       8       18        1      active sync   /dev/sdb2
-        2       8       34        2      active sync   /dev/sdc2
-        4       8       50        3      spare rebuilding   /dev/sdd2
-
-mdadm -E /dev/sdd2:
-
-/dev/sdd2:
-           Magic : a92b4efc
-         Version : 1.0
-     Feature Map : 0x2
-      Array UUID : 80b0698e:d7c76d22:e231f03e:d25feba2
-            Name : gibson:1  (local to host gibson)
-   Creation Time : Sat Mar  1 21:42:18 2008
-      Raid Level : raid5
-    Raid Devices : 4
-
-  Avail Dev Size : 976655336 (465.71 GiB 500.05 GB)
-      Array Size : 2929964544 (1397.12 GiB 1500.14 GB)
-   Used Dev Size : 976654848 (465.71 GiB 500.05 GB)
-    Super Offset : 976655592 sectors
-Recovery Offset : 973312 sectors
-           State : clean
-     Device UUID : 5d6d28dd:c1d4d59d:3617c511:267c47f6
-
-     Update Time : Sat Mar  1 21:55:44 2008
-        Checksum : a1ca2174 - correct
-          Events : 52
-
-          Layout : left-symmetric
-      Chunk Size : 256K
-
-     Array Slot : 4 (0, 1, 2, failed, 3)
-    Array State : uuuU 1 failed
-
-
-
-
-/proc/mdstat showed now progress bar though. Ok, since he seems stuck  
-I thought, why not just mark sdd2 as failed.
-I was able to mark it as failed but looking at the detail again I saw  
-"spare rebuilding" and I could not remove it.
-Next I tried a fail/remove which also did not work. I stopped the  
-array started it again, and THEN it removed the disk.
-I tried this several times, the same result every time.
-
-Just for kicks I created the RAID with a 0.90 superblock and tried  
-the same thing. Lo and behold after stopping the array and starting  
-it again the progress bar showed up and everything started rebuilding  
-where it stopped earlier.
-
-Is this "normal" or is this a superblock 1.0 related problem?
-
-Current kernel is 2.6.24.2, mdadm is v2.6.4 from debian unstable.
-
-I do not need the RAID right now so I could run some tests on it if  
-someone wants me too.
-
-Kind regards,
-Michael
---Apple-Mail-2-612803222
-Content-Transfer-Encoding: base64
-Content-Type: application/pkcs7-signature;
-	name=smime.p7s
-Content-Disposition: attachment;
-	filename=smime.p7s
-
-MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIIGIzCCAtww
-ggJFoAMCAQICEBd4Zp9b22liUjK/V/e8ZTUwDQYJKoZIhvcNAQEFBQAwYjELMAkGA1UEBhMCWkEx
-JTAjBgNVBAoTHFRoYXd0ZSBDb25zdWx0aW5nIChQdHkpIEx0ZC4xLDAqBgNVBAMTI1RoYXd0ZSBQ
-ZXJzb25hbCBGcmVlbWFpbCBJc3N1aW5nIENBMB4XDTA3MTAzMTE2MDMwMVoXDTA4MTAzMDE2MDMw
-MVowQzEfMB0GA1UEAxMWVGhhd3RlIEZyZWVtYWlsIE1lbWJlcjEgMB4GCSqGSIb3DQEJARYRbWlr
-ZUBpdC1sb29wcy5jb20wggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQC/D9ePLG2ZNk/Z
-NXTRfUq7Rs+3k5M/nqmZ8riQYRnt8sCTj6o/fPS4qjaDf9jRfgbxViROiShFWMoBNJkKg91doJFk
-FYdive8ujFfKpPR6FVGu8rN/sHUZM/gowZUcqDyIMAJVr7iiWhQYxP3U4hmprJsmUaGkjBU37Bcw
-vJnEZ4gDCgYiZLiHUACDDfsl2xl5r6XvtXV9TsjWA3eQSeju68nQFP0PjFU+UtYfr3z1nFMJpuzE
-xStjCEZ+EkYBOHK+RmBaOLEfF2Rq8175oaX5ScotY61s7wjADYesS//bvdcZ11jf/R+UCE90p8iC
-Y1TjqqRv+zMc+VpyfG1dt9ELAgMBAAGjLjAsMBwGA1UdEQQVMBOBEW1pa2VAaXQtbG9vcHMuY29t
-MAwGA1UdEwEB/wQCMAAwDQYJKoZIhvcNAQEFBQADgYEAgVh3S3v4j1ydxqgc/DWXcO5RRnyfLTjU
-bJwYwTdaQVuykeXrT+2ITDIpOpVEqZ7xV/N9aKMM/izyQ8oMvw/J13TUm1N77kNCp5jYy1S+Ntuz
-bCdOdFVA5tFVn/nMfmK1Is6NjK+0GmryYPEpn8vaP9ZGy57wCpKZrwmytgm3oPQwggM/MIICqKAD
-AgECAgENMA0GCSqGSIb3DQEBBQUAMIHRMQswCQYDVQQGEwJaQTEVMBMGA1UECBMMV2VzdGVybiBD
-YXBlMRIwEAYDVQQHEwlDYXBlIFRvd24xGjAYBgNVBAoTEVRoYXd0ZSBDb25zdWx0aW5nMSgwJgYD
-VQQLEx9DZXJ0aWZpY2F0aW9uIFNlcnZpY2VzIERpdmlzaW9uMSQwIgYDVQQDExtUaGF3dGUgUGVy
-c29uYWwgRnJlZW1haWwgQ0ExKzApBgkqhkiG9w0BCQEWHHBlcnNvbmFsLWZyZWVtYWlsQHRoYXd0
-ZS5jb20wHhcNMDMwNzE3MDAwMDAwWhcNMTMwNzE2MjM1OTU5WjBiMQswCQYDVQQGEwJaQTElMCMG
-A1UEChMcVGhhd3RlIENvbnN1bHRpbmcgKFB0eSkgTHRkLjEsMCoGA1UEAxMjVGhhd3RlIFBlcnNv
-bmFsIEZyZWVtYWlsIElzc3VpbmcgQ0EwgZ8wDQYJKoZIhvcNAQEBBQADgY0AMIGJAoGBAMSmPFVz
-VftOucqZWh5owHUEcJ3f6f+jHuy9zfVb8hp2vX8MOmHyv1HOAdTlUAow1wJjWiyJFXCO3cnwK4Va
-qj9xVsuvPAsH5/EfkTYkKhPPK9Xzgnc9A74r/rsYPge/QIACZNenprufZdHFKlSFD0gEf6e20Txh
-BEAeZBlyYLf7AgMBAAGjgZQwgZEwEgYDVR0TAQH/BAgwBgEB/wIBADBDBgNVHR8EPDA6MDigNqA0
-hjJodHRwOi8vY3JsLnRoYXd0ZS5jb20vVGhhd3RlUGVyc29uYWxGcmVlbWFpbENBLmNybDALBgNV
-HQ8EBAMCAQYwKQYDVR0RBCIwIKQeMBwxGjAYBgNVBAMTEVByaXZhdGVMYWJlbDItMTM4MA0GCSqG
-SIb3DQEBBQUAA4GBAEiM0VCD6gsuzA2jZqxnD3+vrL7CF6FDlpSdf0whuPg2H6otnzYvwPQcUCCT
-cDz9reFhYsPZOhl+hLGZGwDFGguCdJ4lUJRix9sncVcljd2pnDmOjCBPZV+V2vf3h9bGCE6u9uo0
-5RAaWzVNd+NWIXiC3CEZNd4ksdMdRv9dX2VPMYIDEDCCAwwCAQEwdjBiMQswCQYDVQQGEwJaQTEl
-MCMGA1UEChMcVGhhd3RlIENvbnN1bHRpbmcgKFB0eSkgTHRkLjEsMCoGA1UEAxMjVGhhd3RlIFBl
-cnNvbmFsIEZyZWVtYWlsIElzc3VpbmcgQ0ECEBd4Zp9b22liUjK/V/e8ZTUwCQYFKw4DAhoFAKCC
-AW8wGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG9w0BCQUxDxcNMDgwMzAxMjEwOTQ2
-WjAjBgkqhkiG9w0BCQQxFgQUGXqTF2DZXOeDATXAUnSLxn3iEKMwgYUGCSsGAQQBgjcQBDF4MHYw
-YjELMAkGA1UEBhMCWkExJTAjBgNVBAoTHFRoYXd0ZSBDb25zdWx0aW5nIChQdHkpIEx0ZC4xLDAq
-BgNVBAMTI1RoYXd0ZSBQZXJzb25hbCBGcmVlbWFpbCBJc3N1aW5nIENBAhAXeGafW9tpYlIyv1f3
-vGU1MIGHBgsqhkiG9w0BCRACCzF4oHYwYjELMAkGA1UEBhMCWkExJTAjBgNVBAoTHFRoYXd0ZSBD
-b25zdWx0aW5nIChQdHkpIEx0ZC4xLDAqBgNVBAMTI1RoYXd0ZSBQZXJzb25hbCBGcmVlbWFpbCBJ
-c3N1aW5nIENBAhAXeGafW9tpYlIyv1f3vGU1MA0GCSqGSIb3DQEBAQUABIIBAFs72EZJw2tZj23O
-POwZw2o+xlB/Khf5s3Xdb+zL67hI9JmsBrTkbTbhYRPQd/F/u3kXPtu44spMV31mlaQouzN3XBXb
-BrhpuRwG+R8SnvpKwSWtWn8ny9GkYsaAZmqj9ZE04w0K6Pxhvd+rhgh3WWKz0l7Qh0IlD6Zk543Y
-bYVPQG17RcMsEQpFXWCMhufCeYpR6ntU9c4ZA71JQjizBiF6acEnDMw3QKrbgWWOvgukAcAvR9WE
-zkdsHdWgEYJE5oMarJjBjBmjz0+IlOkV7xTRtCG1J1pEhjRuD4ClHuYSjv91xsT4gnMdnWxkCtut
-H9cDFIQScf9SMSjVuTDNVLwAAAAAAAA=
-
---Apple-Mail-2-612803222--
+Best regards
+keld
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
