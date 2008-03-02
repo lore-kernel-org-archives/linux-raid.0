@@ -1,70 +1,48 @@
-From: Robin Hill <robin@robinhill.me.uk>
+From: "Christian Pernegger" <pernegger@gmail.com>
 Subject: Re: Setting up md-raid5: observations, errors, questions
-Date: Sun, 2 Mar 2008 13:48:36 +0000
-Message-ID: <20080302134836.GB20333@cthulhu.home.robinhill.me.uk>
+Date: Sun, 2 Mar 2008 15:17:12 +0100
+Message-ID: <bb145bd20803020617i77113488h53ead5af3b10e48@mail.gmail.com>
 References: <bb145bd20803020423m14efea1by6e3e38bb8d0decb8@mail.gmail.com>
+	 <20080302134836.GB20333@cthulhu.home.robinhill.me.uk>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="kXdP64Ggrk/fb43R"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20080302134836.GB20333@cthulhu.home.robinhill.me.uk>
 Content-Disposition: inline
-In-Reply-To: <bb145bd20803020423m14efea1by6e3e38bb8d0decb8@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+>  Have you tried rebooting?  I have (sporadically) the same issue - I/O
+>  just slows to a crawl and it's impossible to get anything done.
 
---kXdP64Ggrk/fb43R
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Nice idea, but ...
 
-On Sun Mar 02, 2008 at 01:23:32PM +0100, Christian Pernegger wrote:
+- on the first reboot, the disk order was reversed, resulting in the
+kernel not being able to find the rootfs. The second attempt was fine.
+Which means there is another issue to debug once this one is cleared
+up, just great. Never mind that I DID reboot a few times just to test
+disk ordering ...
 
-> Tried creating a filesystem:
->=20
-> mke2fs -E stride=3D256 -j -L tb-storage -m1 -T largfile4 /dev/md0
->=20
-> That was glacially slow, "writing inode tables" went up about 3-4/sec
-> (22357 total). Since I had forgotten the crypto layer anyway I
-> CTRL-Ced that attempt and added it:
->=20
-> [exact command unavailable, see below. Used 2048 (512byte sectors) for
-> LUKS payload alignment, which should land on it chunk boundaries]
->=20
-> OK. Back to the fs again, same command, different device. Still
-> glacially slow (and still running), only now the whole box is at a
-> standstill, too. cat /proc/cpuinfo takes about 3 minutes (!) to
-> complete, I'm still waiting for top to launch (15min and counting).
-> I'll leave mke2fs running for now ...
->=20
-Have you tried rebooting?  I have (sporadically) the same issue - I/O
-just slows to a crawl and it's impossible to get anything done.  After
-rebooting I receive an email notification of a SMART error (so it looks
-like there's some ridiculous timeout period somewhere) and everything
-works fine again.  Anyway, I've now disabled the background SMART
-offline testing (they always seemed to coincide with the problem) and
-haven't had a problem since - it's only been a month though so rather
-early to be certain.
+- the array does not continue to sync to the "spare" created during
+array creation automagically, it just sits there:
 
-Cheers,
-        Robin
---=20
-     ___       =20
-    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
-   / / )      | Little Jim says ....                            |
-  // !!       |      "He fallen in de water !!"                 |
+Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5]
+[raid4] [raid10]
+md0 : active raid5 sdb[0] sde[4] sdd[2] sdc[1]
+      2930285568 blocks super 1.0 level 5, 1024k chunk, algorithm 2 [4/3] [UUU_]
+      bitmap: 3/466 pages [12KB], 1024KB chunk
 
---kXdP64Ggrk/fb43R
-Content-Type: application/pgp-signature
-Content-Disposition: inline
+I have no idea how to restart the sync properly but even without the
+array syncing the responsiveness problem is unchanged. FWIW the sync
+speed by itself was ok (~45MB/s @ 30%, which is about what a single
+disk would do).
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.7 (GNU/Linux)
+I think I'll be going from annoyed to desperate now ...
 
-iD8DBQFHyrA0ShxCyD40xBIRAjKvAKDM+Qw43coOxebDIhs2Fe40g16UpACfa8c3
-lO8arlqFd3jRM1EqQ/LPxog=
-=p4ku
------END PGP SIGNATURE-----
+C.
 
---kXdP64Ggrk/fb43R--
+P. S: BTW, mdadm segfaults at the end of --assemble, too
+mdadm[3635]: segfault at 0000000000000000 rip 0000000000412d2c rsp
+00007fffd6f371f0 error 4
