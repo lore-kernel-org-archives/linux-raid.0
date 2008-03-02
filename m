@@ -1,100 +1,115 @@
-From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
-Subject: Re: 2x6 or 3x4 raid10 arrays ?
-Date: Sun, 2 Mar 2008 01:30:57 +0100
-Message-ID: <20080302003057.GA6958@rap.rap.dk>
-References: <1204195554.16924.16.camel@franck-gusty> <loom.20080228T223023-79@post.gmane.org> <20080301204020.GC10278@rap.rap.dk> <loom.20080301T213935-669@post.gmane.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Michael Guntsche <mike@it-loops.com>
+Subject: Re: Strange RAID-5 rebuild problem
+Date: Sun, 2 Mar 2008 08:38:17 +0100
+Message-ID: <A5F6B52A-00BB-4096-9A8D-367F61989186@it-loops.com>
+References: <656D8E57-804D-4A63-B9CA-D3C899616F61@it-loops.com> <3816592D-B75C-4B00-B3B7-65AE3B403DB0@it-loops.com> <20080301222326.GA20435@cthulhu.home.robinhill.me.uk> <2BABB51E-7701-44D4-AD07-6394CCF77941@it-loops.com>
+Mime-Version: 1.0 (Apple Message framework v753)
+Content-Type: multipart/signed; micalg=sha1; boundary=Apple-Mail-1-650514977; protocol="application/pkcs7-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <loom.20080301T213935-669@post.gmane.org>
+In-Reply-To: <2BABB51E-7701-44D4-AD07-6394CCF77941@it-loops.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Nat Makarevitch <nat@makarevitch.org>
+To: Robin Hill <robin@robinhill.me.uk>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, Mar 01, 2008 at 10:05:06PM +0000, Nat Makarevitch wrote:
-> Keld J=F8rn Simonsen <keld <at> dkuug.dk> writes:
->=20
-> > I believe that a full chunk is read for each read access.
->=20
-> I've read various definitions for "chunk". Is a "stripe" a 'cluster' =
-(in the
-> "group of disk sectors" meaning) on a single physical drive (device, =
-let's say
-> "spindle"), and a 'chunk' a set of stripes made with a single stripe =
-of each
-> spindle? For what I understand this is the definition used in the 'md=
-' world
-> (see 'man mdadm'), therefore I will use it thereafter.
 
-I have understood chunk to be a set of sectors on a single device.
-If it was to be understood as a set of space on multiple devices, then
-the chunk size would normaly be relative to the number of devices
-involved. And that is not what we talk about in eg mdadm chunk=3D256
+--Apple-Mail-1-650514977
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset=US-ASCII;
+	delsp=yes;
+	format=flowed
 
-> Yes, AFAIK a full chunk is concerned by each access.
 
-Given your definition of chunk, I do not beleve so. A read of a chunk o=
-n
-eg a 12 device raid, would not involve 12 reads, one on each device.
+On Mar 1, 2008, at 23:41, Michael Guntsche wrote:
+>
+> mdadm -w /dev/md1 works if I call it after assembling.
+> If do not call it, mount the array and start writing to it, it  
+> changes to "active"
+> but the rebuild process does not kick in.
+>
+> The only way it works for me now is.
+> * Stop the array
+> * assemble it again with mdadm --assemble --scan
+> * Call mdadm -w /dev/md1
 
-> > This would lead to that it is not important whether to use=20
-> > two arrays of 6 disks each, or 3 arrays of 4 disks each.=20
-> > Or for that sake 1 array of 12 disks.
->=20
-> I beg to disagree. Creating more than one array may be OK when you ve=
-ry
-> precisely know your load profile per table, but in most cases this is=
- not true,
-> or this profile will vary, therefore your best bet is "to maintain, f=
-or each
-> request, as much disk heads available as possible", carpet-bomb the a=
-rray with
-> all requests and let the elevator(s) optimize. Another way to see it,=
- in some
-> reciprocal way, is to say that you don't want to have any head sleepi=
-ng when
-> there is a request to serve.=20
+Good morning,
 
-This is for bigger operations. I believe that for smaller operations,
-such as a random read in a database, you would only like to have one IO
-operation on one device. Seek times are important here. You can in one
-average seek time of say 10 milliseconds on SATA-II transfer 800 kB
-data, which is much more than normal size of a record in a table.
-Having 12 operations for a record of say 1 kB would be very expensive.
-The elevator is better of serving a number of concurrent requests.
+I found out why I am seeing this behaviour but I still do not know if  
+it is a bug or not.
 
-> > Some other factors may be more important: such as the ability to su=
-rvive
-> > disk crashes
->=20
-> That's very true, however one may not neglect logistics. If I'm prett=
-y sure that
-> I can change a spindle in less than 2 hours after a failure I will pr=
-efer using
-> all disks less one on a single array and letting the last one as a co=
-nnected
-> (but powered off) spare. The alarm trips, some automatic or manual pr=
-ocedure
-> powers the spare and mounts it in the array, while the procedure aimi=
-ng at
-> physically extracting the failed device and replacing it (it will bec=
-ome the new
-> spare) rolls. With more latency-prone logistics one may reserve more =
-disks as
-> spares.
+The arrays are assembled in an initramfs. Debian's mdadm tool has a  
+script that assembles the arrays.
 
-Yes, rebuild time would also be a factor. Smaller raids are quicker to
-rebuild, I think. Or maybe this is irrelevant, at least for raid10,f2 -
-as rebuilding is done concurrently from all devices involved, and
-probebly limited by the write speed of the replacing device.
+Now this script has the following entry.
 
-Best regards
-keld
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+# prevent writes/syncs so that resuming works (#415441). See http:/ 
+bugs.debian.org/415441 for more information.
+echo 1 > /sys/module/md_mod/parameters/start_ro
+
+Changing this sysfs entry to 0, gives me the expected result if I do  
+a stop -> assemble with my 1.0 array.
+It starts reysncing and everything is ok. According to the replies in  
+this bug, setting start_ro to 1 should NOT stop the automatic resync  
+after a write to it, but this seems to have changed now.
+So, is this a change in behaviour or is it a bug. If it is the  
+former, I probably need to talk with the debian guys about it, if it  
+is a bug I wait for a fix and comment the entry in the mean time.
+
+
+Kind regards,
+Michael
+
+
+--Apple-Mail-1-650514977
+Content-Transfer-Encoding: base64
+Content-Type: application/pkcs7-signature;
+	name=smime.p7s
+Content-Disposition: attachment;
+	filename=smime.p7s
+
+MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIIGIzCCAtww
+ggJFoAMCAQICEBd4Zp9b22liUjK/V/e8ZTUwDQYJKoZIhvcNAQEFBQAwYjELMAkGA1UEBhMCWkEx
+JTAjBgNVBAoTHFRoYXd0ZSBDb25zdWx0aW5nIChQdHkpIEx0ZC4xLDAqBgNVBAMTI1RoYXd0ZSBQ
+ZXJzb25hbCBGcmVlbWFpbCBJc3N1aW5nIENBMB4XDTA3MTAzMTE2MDMwMVoXDTA4MTAzMDE2MDMw
+MVowQzEfMB0GA1UEAxMWVGhhd3RlIEZyZWVtYWlsIE1lbWJlcjEgMB4GCSqGSIb3DQEJARYRbWlr
+ZUBpdC1sb29wcy5jb20wggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQC/D9ePLG2ZNk/Z
+NXTRfUq7Rs+3k5M/nqmZ8riQYRnt8sCTj6o/fPS4qjaDf9jRfgbxViROiShFWMoBNJkKg91doJFk
+FYdive8ujFfKpPR6FVGu8rN/sHUZM/gowZUcqDyIMAJVr7iiWhQYxP3U4hmprJsmUaGkjBU37Bcw
+vJnEZ4gDCgYiZLiHUACDDfsl2xl5r6XvtXV9TsjWA3eQSeju68nQFP0PjFU+UtYfr3z1nFMJpuzE
+xStjCEZ+EkYBOHK+RmBaOLEfF2Rq8175oaX5ScotY61s7wjADYesS//bvdcZ11jf/R+UCE90p8iC
+Y1TjqqRv+zMc+VpyfG1dt9ELAgMBAAGjLjAsMBwGA1UdEQQVMBOBEW1pa2VAaXQtbG9vcHMuY29t
+MAwGA1UdEwEB/wQCMAAwDQYJKoZIhvcNAQEFBQADgYEAgVh3S3v4j1ydxqgc/DWXcO5RRnyfLTjU
+bJwYwTdaQVuykeXrT+2ITDIpOpVEqZ7xV/N9aKMM/izyQ8oMvw/J13TUm1N77kNCp5jYy1S+Ntuz
+bCdOdFVA5tFVn/nMfmK1Is6NjK+0GmryYPEpn8vaP9ZGy57wCpKZrwmytgm3oPQwggM/MIICqKAD
+AgECAgENMA0GCSqGSIb3DQEBBQUAMIHRMQswCQYDVQQGEwJaQTEVMBMGA1UECBMMV2VzdGVybiBD
+YXBlMRIwEAYDVQQHEwlDYXBlIFRvd24xGjAYBgNVBAoTEVRoYXd0ZSBDb25zdWx0aW5nMSgwJgYD
+VQQLEx9DZXJ0aWZpY2F0aW9uIFNlcnZpY2VzIERpdmlzaW9uMSQwIgYDVQQDExtUaGF3dGUgUGVy
+c29uYWwgRnJlZW1haWwgQ0ExKzApBgkqhkiG9w0BCQEWHHBlcnNvbmFsLWZyZWVtYWlsQHRoYXd0
+ZS5jb20wHhcNMDMwNzE3MDAwMDAwWhcNMTMwNzE2MjM1OTU5WjBiMQswCQYDVQQGEwJaQTElMCMG
+A1UEChMcVGhhd3RlIENvbnN1bHRpbmcgKFB0eSkgTHRkLjEsMCoGA1UEAxMjVGhhd3RlIFBlcnNv
+bmFsIEZyZWVtYWlsIElzc3VpbmcgQ0EwgZ8wDQYJKoZIhvcNAQEBBQADgY0AMIGJAoGBAMSmPFVz
+VftOucqZWh5owHUEcJ3f6f+jHuy9zfVb8hp2vX8MOmHyv1HOAdTlUAow1wJjWiyJFXCO3cnwK4Va
+qj9xVsuvPAsH5/EfkTYkKhPPK9Xzgnc9A74r/rsYPge/QIACZNenprufZdHFKlSFD0gEf6e20Txh
+BEAeZBlyYLf7AgMBAAGjgZQwgZEwEgYDVR0TAQH/BAgwBgEB/wIBADBDBgNVHR8EPDA6MDigNqA0
+hjJodHRwOi8vY3JsLnRoYXd0ZS5jb20vVGhhd3RlUGVyc29uYWxGcmVlbWFpbENBLmNybDALBgNV
+HQ8EBAMCAQYwKQYDVR0RBCIwIKQeMBwxGjAYBgNVBAMTEVByaXZhdGVMYWJlbDItMTM4MA0GCSqG
+SIb3DQEBBQUAA4GBAEiM0VCD6gsuzA2jZqxnD3+vrL7CF6FDlpSdf0whuPg2H6otnzYvwPQcUCCT
+cDz9reFhYsPZOhl+hLGZGwDFGguCdJ4lUJRix9sncVcljd2pnDmOjCBPZV+V2vf3h9bGCE6u9uo0
+5RAaWzVNd+NWIXiC3CEZNd4ksdMdRv9dX2VPMYIDEDCCAwwCAQEwdjBiMQswCQYDVQQGEwJaQTEl
+MCMGA1UEChMcVGhhd3RlIENvbnN1bHRpbmcgKFB0eSkgTHRkLjEsMCoGA1UEAxMjVGhhd3RlIFBl
+cnNvbmFsIEZyZWVtYWlsIElzc3VpbmcgQ0ECEBd4Zp9b22liUjK/V/e8ZTUwCQYFKw4DAhoFAKCC
+AW8wGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG9w0BCQUxDxcNMDgwMzAyMDczODE4
+WjAjBgkqhkiG9w0BCQQxFgQUub7c1rfn/kdDQ2+BhMpcAWPJxF0wgYUGCSsGAQQBgjcQBDF4MHYw
+YjELMAkGA1UEBhMCWkExJTAjBgNVBAoTHFRoYXd0ZSBDb25zdWx0aW5nIChQdHkpIEx0ZC4xLDAq
+BgNVBAMTI1RoYXd0ZSBQZXJzb25hbCBGcmVlbWFpbCBJc3N1aW5nIENBAhAXeGafW9tpYlIyv1f3
+vGU1MIGHBgsqhkiG9w0BCRACCzF4oHYwYjELMAkGA1UEBhMCWkExJTAjBgNVBAoTHFRoYXd0ZSBD
+b25zdWx0aW5nIChQdHkpIEx0ZC4xLDAqBgNVBAMTI1RoYXd0ZSBQZXJzb25hbCBGcmVlbWFpbCBJ
+c3N1aW5nIENBAhAXeGafW9tpYlIyv1f3vGU1MA0GCSqGSIb3DQEBAQUABIIBAGLkOTAh3AceZARS
+gHdkLIySRP3jtqAZy0cIc00DPCN5NF90Bqxmz4yLlch6YKKx62wPahs3WNHCgSPGM6j4d6vc9MVe
++JuNOIehhvYGlZIGvjfO4ap2FcWWcqogZ9o0QnAbYgLaBl4EO2czqaYhLCDjtuUCcAOBB+cnYnTK
+wo9bZ1DbdeCwzJdZKxaQZYNNepZi5xEG2wZgSvmaBSjnzNHpHzE0lYmK72fXjqXR6xFZLbTcuXJX
+pIDzh38/oH22qdddpprVMjY9M10NSuWIV5bFn7JHihHX/8Zl7lPq5OeaYnQLdG1r6lfyZAHFcsZ7
+o7c+YDOm7pO60qczCDI0Sk0AAAAAAAA=
+
+--Apple-Mail-1-650514977--
