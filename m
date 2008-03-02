@@ -1,94 +1,62 @@
-From: Robin Hill <robin@robinhill.me.uk>
-Subject: Re:  Strange RAID-5 rebuild problem
-Date: Sun, 2 Mar 2008 12:29:00 +0000
-Message-ID: <20080302122900.GA20333@cthulhu.home.robinhill.me.uk>
-References: <656D8E57-804D-4A63-B9CA-D3C899616F61@it-loops.com> <3816592D-B75C-4B00-B3B7-65AE3B403DB0@it-loops.com> <20080301222326.GA20435@cthulhu.home.robinhill.me.uk> <2BABB51E-7701-44D4-AD07-6394CCF77941@it-loops.com> <A5F6B52A-00BB-4096-9A8D-367F61989186@it-loops.com> <244F7F54-081B-462E-A0AD-8E5E1056B90B@it-loops.com>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: Setting up md-raid5: observations, errors, questions
+Date: Sun, 2 Mar 2008 07:41:50 -0500 (EST)
+Message-ID: <alpine.DEB.1.00.0803020741150.13994@p34.internal.lan>
+References: <bb145bd20803020423m14efea1by6e3e38bb8d0decb8@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="u3/rZRmxL6MmkK24"
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <244F7F54-081B-462E-A0AD-8E5E1056B90B@it-loops.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <bb145bd20803020423m14efea1by6e3e38bb8d0decb8@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Christian Pernegger <pernegger@gmail.com>
+Cc: linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-raid.ids
 
 
---u3/rZRmxL6MmkK24
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
 
-On Sun Mar 02, 2008 at 09:14:29AM +0100, Michael Guntsche wrote:
+On Sun, 2 Mar 2008, Christian Pernegger wrote:
 
+> Hi all!
 >
-> On Mar 2, 2008, at 8:38, Michael Guntsche wrote:
+> I'm not doing this for the first time but there were a few interesting
+> / worrying points during the setup process and I'd rather clear those
+> up now.
 >
+> Hardware:
+> Tyan Thunder K8W (S2885)
+> Dual Opteron 254, 2GB (2x2x512MB) RAM, 2x Promise SATA II TX4, Adaptec 29160
+> 4x WD RE2-GP 1TB on the Promise (for raid5)
+> 1x Maxtor Atlas 15K II on the Adaptec (system disk)
 >
->> Changing this sysfs entry to 0, gives me the expected result if I do a=
-=20
->> stop -> assemble with my 1.0 array.
->> It starts reysncing and everything is ok. According to the replies in th=
-is=20
->> bug, setting start_ro to 1 should NOT stop the automatic resync after a=
-=20
->> write to it, but this seems to have changed now.
->> So, is this a change in behaviour or is it a bug. If it is the former, I=
-=20
->> probably need to talk with the debian guys about it, if it is a bug I wa=
-it=20
->> for a fix and comment the entry in the mean time.
->>
+> OS:
+> Debian testing-amd64
+> linux-2.6.22-3
+> mke2fs 1.40.6
+> mdadm
 >
-> Answering myself here after reading through the manapges, this seems to b=
-e=20
-> a regression. Furthermore this may yield to some nasty data corruption,=
-=20
-> well at least I think it will.
+> I did a badblocks -v -s -t random -w on all future RAID disks in
+> parallel to test / burn-in.
+> Result: no bad blocks, decent speed (vmstat: 148MB/s total read,
+> 220MB/s total write), BUT the following error (once):
 >
-> * --stop the array while resyncing.
-> * set start_ro to 1
-> * Start the array, automatic reconstruction does not start even after the=
-=20
-> data is been written to the ARRAY
-> * stop the array again
-> * set start_ro to 0
-> * Start the array again
-> The array picks up the resync process where it stopped the first time eve=
-n=20
-> if there has already been data written to it, while it was started with=
-=20
-> start_ro =3D 1.
-> Won't this yield corrupted data, since data BEFORE that offset might=20
-> actually have changed in the mean time?
->
-That depends on the behaviour of the RAID system (and I've not dug
-through the code to check on this).  Realistically this situation is no
-different to writing to the array while it's rebuilding - in either case
-the safe thing to do is read from the (n-1) known good disks, and write
-to all the (n) disks in the array (i.e. never just do any fast XORing
-with the parity block).  Any data written before the offset will still
-be okay, and any data written after the offset will get recalculated
-(which wastes a bit of time), but will still be valid.
+> ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2
+> ata2.00: (port_status 0x20080000)
+> ata2.00: cmd 25/00:80:80:a1:55/00:00:3a:00:00/e0 tag 0 cdb 0x0 data 65536 in
+>         res 50/00:00:ff:a1:55/00:00:3a:00:00/e0 Emask 0x2 (HSM violation)
+> ata2: soft resetting port
+> ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> ata2.00: configured for UDMA/133
+> ata2: EH complete
+> sd 2:0:0:0: [sdc] 1953525168 512-byte hardware sectors (1000205 MB)
+> sd 2:0:0:0: [sdc] Write Protect is off
+> sd 2:0:0:0: [sdc] Mode Sense: 00 3a 00 00
+> sd 2:0:0:0: [sdc] Write cache: enabled, read cache: enabled, doesn't
+> support DPO or FUA
 
-Cheers,
-        Robin
---=20
-     ___       =20
-    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
-   / / )      | Little Jim says ....                            |
-  // !!       |      "He fallen in de water !!"                 |
+Disable NCQ and your problem will go away.
 
---u3/rZRmxL6MmkK24
-Content-Type: application/pgp-signature
-Content-Disposition: inline
+echo 1 > /sys/block/$i/device/queue_depth
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.7 (GNU/Linux)
+Justin.
 
-iD8DBQFHyp2LShxCyD40xBIRAuYVAKDD3Jbev1T1K4IPs4lkU5+8jwWI0wCeL0TS
-n504/drmqkOsVGWjNpMtOZo=
-=uji8
------END PGP SIGNATURE-----
 
---u3/rZRmxL6MmkK24--
