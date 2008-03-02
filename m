@@ -1,43 +1,70 @@
-From: "Christian Pernegger" <pernegger@gmail.com>
+From: Michael Tokarev <mjt@tls.msk.ru>
 Subject: Re: Setting up md-raid5: observations, errors, questions
-Date: Sun, 2 Mar 2008 15:46:54 +0100
-Message-ID: <bb145bd20803020646u6db82c3em375ae477e0f1bbb3@mail.gmail.com>
+Date: Sun, 02 Mar 2008 18:20:31 +0300
+Message-ID: <47CAC5BF.6060600@msgid.tls.msk.ru>
 References: <bb145bd20803020423m14efea1by6e3e38bb8d0decb8@mail.gmail.com>
-	 <20080302134836.GB20333@cthulhu.home.robinhill.me.uk>
-	 <bb145bd20803020617i77113488h53ead5af3b10e48@mail.gmail.com>
-	 <20080302153236.36981345@absurd>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20080302153236.36981345@absurd>
-Content-Disposition: inline
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <bb145bd20803020423m14efea1by6e3e38bb8d0decb8@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Christian Pernegger <pernegger@gmail.com>
+Cc: linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-raid.ids
 
->  > OS:
->  > Debian testing-amd64
->
->  If you are desperate then try debian stable. Or amd32, or both.
+Christian Pernegger wrote:
+> Hi all!
 
-stable might work, but only with a custom kernel - the stock one
-didn't like the Promise's much. Which would mean losing Debian's
-kernel updates and on headless machines I don't like hand-compiling
-kernels as those tend to refuse to boot without intervention. With
-stock kernels there is much less margin for user error.
-I have had no problems in the past setting up "new" boxes with testing
-and letting them "become stable" but maybe you're right and it's just
-broken right now.
+Hello.
 
-Still, the people with the most md-raid experience are here and I'd
-rather iron out all the issues before putting data anywhere. If
-there's no progress for a week I can still try stable.
+> Hardware:
+> Tyan Thunder K8W (S2885)
+> Dual Opteron 254, 2GB (2x2x512MB) RAM, 2x Promise SATA II TX4, Adaptec 29160
+> 4x WD RE2-GP 1TB on the Promise (for raid5)
 
-Just to avoid spamming the list by replying to each suggestion ... as
-long as I don't post "yay, it works now!" you can assume the problem's
-still there.
+[]
+> [exact command unavailable, see below. RAID5, 4 disks, 1024K chunk
+> size, internal bitmap, V1 superblock]
 
-Thanks,
+ok.
 
-C.
+> Tried creating a filesystem:
+> 
+> mke2fs -E stride=256 -j -L tb-storage -m1 -T largfile4 /dev/md0
+> 
+> That was glacially slow, "writing inode tables" went up about 3-4/sec
+> (22357 total). Since I had forgotten the crypto layer anyway I
+> CTRL-Ced that attempt and added it:
+> 
+> [exact command unavailable, see below. Used 2048 (512byte sectors) for
+> LUKS payload alignment, which should land on it chunk boundaries]
+> 
+> OK. Back to the fs again, same command, different device. Still
+> glacially slow (and still running), only now the whole box is at a
+> standstill, too. cat /proc/cpuinfo takes about 3 minutes (!) to
+> complete, I'm still waiting for top to launch (15min and counting).
+> I'll leave mke2fs running for now ...
+
+What's the state of your array at this point - is it resyncing?
+
+> So, is all this normal? What did I do wrong, what can I do better?
+
+In order to debug, try the following:
+
+  o how about making filesystem(s) on individual disks first, to see
+    how that will work out?  Maybe on each of them in parallel? :)
+
+  o try --assume-clean when creating the array - this will omit resync
+    and the array will be "clean" from the beginning (which is not bad
+    when you will run mkfs on it anyway).  And try creating the filesystem
+    on a clean (non-resyncing) array.
+
+  o don't use crypto layer yet, - it seems does not hurt, just additional
+    complexity
+
+  o look at your interrupts (/proc/interrupts, or just run vmstat with
+    some interval while the system working hard) - I bet your promises
+    are taking all system time in irq context....
+
+/mjt
