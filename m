@@ -1,131 +1,122 @@
-From: "Christian Pernegger" <pernegger@gmail.com>
+From: Michael Tokarev <mjt@tls.msk.ru>
 Subject: Re: Setting up md-raid5: observations, errors, questions
-Date: Sun, 2 Mar 2008 17:32:45 +0100
-Message-ID: <bb145bd20803020832x744c2674nd0a6a30e445b5453@mail.gmail.com>
-References: <bb145bd20803020423m14efea1by6e3e38bb8d0decb8@mail.gmail.com>
-	 <47CAC5BF.6060600@msgid.tls.msk.ru>
+Date: Sun, 02 Mar 2008 21:33:51 +0300
+Message-ID: <47CAF30F.7040502@msgid.tls.msk.ru>
+References: <bb145bd20803020423m14efea1by6e3e38bb8d0decb8@mail.gmail.com>	 <47CAC5BF.6060600@msgid.tls.msk.ru> <bb145bd20803020832x744c2674nd0a6a30e445b5453@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <47CAC5BF.6060600@msgid.tls.msk.ru>
-Content-Disposition: inline
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: linux-ide@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <bb145bd20803020832x744c2674nd0a6a30e445b5453@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Christian Pernegger <pernegger@gmail.com>
+Cc: linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-raid.ids
 
->  > OK. Back to the fs again, same command, different device. Still
->  > glacially slow (and still running), only now the whole box is at a
->  > standstill, too. cat /proc/cpuinfo takes about 3 minutes (!) to
->  > complete, I'm still waiting for top to launch (15min and counting).
->  > I'll leave mke2fs running for now ...
->
->  What's the state of your array at this point - is it resyncing?
+Christian Pernegger wrote:
+>>  > OK. Back to the fs again, same command, different device. Still
+>>  > glacially slow (and still running), only now the whole box is at a
+>>  > standstill, too. cat /proc/cpuinfo takes about 3 minutes (!) to
+>>  > complete, I'm still waiting for top to launch (15min and counting).
+>>  > I'll leave mke2fs running for now ...
+>>
+>>  What's the state of your array at this point - is it resyncing?
+> 
+> Yes. Didn't think it would matter (much). Never did before.
 
-Yes. Didn't think it would matter (much). Never did before.
+It does.  If everything works ok, it should not, but it's not your
+case ;)
 
->   o how about making filesystem(s) on individual disks first, to see
->     how that will work out?  Maybe on each of them in parallel? :)
+>>   o how about making filesystem(s) on individual disks first, to see
+>>     how that will work out?  Maybe on each of them in parallel? :)
+> 
+> Running. System is perfectly responsive during 4x mke2fs -j -q on raw devices.
+> Done. Upper bound for duration is 8 minutes (probaby much lower,
+> forgot to let it beep on completion), which is much better than the 2
+> hours with the syncing RAID.
 
-Running. System is perfectly responsive during 4x mke2fs -j -q on raw devices.
-Done. Upper bound for duration is 8 minutes (probaby much lower,
-forgot to let it beep on completion), which is much better than the 2
-hours with the syncing RAID.
+Aha.  Excellent.
 
+>  26:    1041479        267   IO-APIC-fasteoi   sata_promise
+>  27:          0          0   IO-APIC-fasteoi   sata_promise
 
-chris@jesus:~$ cat /proc/interrupts
-           CPU0       CPU1
-  0:       4939    1920632   IO-APIC-edge      timer
-  1:        113        133   IO-APIC-edge      i8042
-  6:          0          3   IO-APIC-edge      floppy
-  7:          0          0   IO-APIC-edge      parport0
-  8:          0          1   IO-APIC-edge      rtc
-  9:          0          0   IO-APIC-fasteoi   acpi
- 12:          0          4   IO-APIC-edge      i8042
- 14:          0        182   IO-APIC-edge      ide0
- 19:         87         34   IO-APIC-fasteoi   ohci_hcd:usb1,
-ohci_hcd:usb2, firewire_ohci
- 24:      10142         57   IO-APIC-fasteoi   eth0
- 26:    1041479        267   IO-APIC-fasteoi   sata_promise
- 27:          0          0   IO-APIC-fasteoi   sata_promise
- 28:       7141       2789   IO-APIC-fasteoi   aic7xxx
-NMI:          0          0
-LOC:    1925715    1925691
-ERR:          0
+> procs -----------memory---------- ---swap-- -----io---- -system-- ----cpu----
+>  r  b   swpd   free   buff  cache   si   so    bi    bo   in   cs us sy id wa
+>  0  4      0  12864 1769688  10000    0    0     0 146822  539  809  0 26 23 51
 
+Ok.  146Mb/sec.
 
-chris@jesus:~$ vmstat 2
-procs -----------memory---------- ---swap-- -----io---- -system-- ----cpu----
- r  b   swpd   free   buff  cache   si   so    bi    bo   in   cs us sy id wa
- 3  4      0  12716 1770264   9972    0    0  1034  4902  196  883  0  9 78 13
- 0  4      0  11404 1771260   9972    0    0     0 150156  544  874  0 26 28 46
- 0  4      0  11836 1771016  10024    0    0     0 147500  544  682  0 26 26 48
- 0  4      0  12572 1770036  10108    0    0     0 131022  515  506  0 25 13 62
- 0  4      0  12864 1769688  10000    0    0     0 146822  539  809  0 26 23 51
- 0  4      0  12132 1769988   9956    0    0     0 145942  536  900  0 26 15 59
- 0  4      0  12520 1770324   9976    0    0     0 144638  536  820  0 26 32 42
+> Cpu(s):  1.3%us,  8.1%sy,  0.0%ni, 41.6%id, 46.0%wa,  0.7%hi,  2.3%si,  0.0%st
 
+46.0% waiting
 
-top - 17:08:55 up  2:12,  2 users,  load average: 4.37, 3.13, 1.49
-Tasks:  78 total,   1 running,  77 sleeping,   0 stopped,   0 zombie
-Cpu(s):  1.3%us,  8.1%sy,  0.0%ni, 41.6%id, 46.0%wa,  0.7%hi,  2.3%si,  0.0%st
-Mem:   2063940k total,  2051316k used,    12624k free,  1746616k buffers
+> I hope you can interpret that :)
 
+Some ;)
 
-I hope you can interpret that :)
+>>   o try --assume-clean when creating the array
+> 
+> mke2fs (same command as in first post) now running on fresh
+> --assumed-clean array w/o crypto. System is only marginally less
+> responsive than under idle load, if at all.
 
->   o try --assume-clean when creating the array
+So the responsibility problem is solved here, right?  I mean, if
+there's no resync going on (the case with --assume-clean), the rest
+of the system works as expected, right?
 
-mke2fs (same command as in first post) now running on fresh
---assumed-clean array w/o crypto. System is only marginally less
-responsive than under idle load, if at all.
-But inode table writing speed is only about 8-10/second. For the
-single disk case I couldn't read the numbers fast enough.
+> But inode table writing speed is only about 8-10/second. For the
+> single disk case I couldn't read the numbers fast enough.
 
-chris@jesus:~$ cat /proc/interrupts
-           CPU0       CPU1
-  0:       7485    2227196   IO-APIC-edge      timer
-  1:        113        133   IO-APIC-edge      i8042
-  6:          0          3   IO-APIC-edge      floppy
-  7:          0          0   IO-APIC-edge      parport0
-  8:          0          1   IO-APIC-edge      rtc
-  9:          0          0   IO-APIC-fasteoi   acpi
- 12:          0          4   IO-APIC-edge      i8042
- 14:          0        182   IO-APIC-edge      ide0
- 19:        101         39   IO-APIC-fasteoi   ohci_hcd:usb1,
-ohci_hcd:usb2, firewire_ohci
- 24:      15656         57   IO-APIC-fasteoi   eth0
- 26:    1211165        267   IO-APIC-fasteoi   sata_promise
- 27:          0          0   IO-APIC-fasteoi   sata_promise
- 28:       7892       2938   IO-APIC-fasteoi   aic7xxx
-NMI:          0          0
-LOC:    2234843    2234819
-ERR:          0
+Note that mkfs now has to do 3x more work, too - since the device
+is 3x (for 4-drive raid5) larger.
 
+> chris@jesus:~$ cat /proc/interrupts
+>  26:    1211165        267   IO-APIC-fasteoi   sata_promise
+>  27:          0          0   IO-APIC-fasteoi   sata_promise
+> 
+> procs -----------memory---------- ---swap-- -----io---- -system-- ----cpu----
+>  r  b   swpd   free   buff  cache   si   so    bi    bo   in   cs us sy id wa
+>  0  1      0  11092 1813376  10804    0    0     0 13316  535 5201  0  9 51 40
 
-chris@jesus:~$ vmstat 2
-procs -----------memory---------- ---swap-- -----io---- -system-- ----cpu----
- r  b   swpd   free   buff  cache   si   so    bi    bo   in   cs us sy id wa
- 0  1      0  12996 1811456  10860    0    0   912  4824  194  867  0  9 78 13
- 0  0      0  11532 1812992  10832    0    0     0 12924  532 4992  0 11 61 28
- 0  1      0  11092 1813376  10804    0    0     0 13316  535 5201  0  9 51 40
- 0  0      0  12968 1811584  10832    0    0     0 12570  518 4890  0  9 58 32
- 0  1      0  11724 1812736  10816    0    0     0 12818  508 5337  0 10 52 38
- 0  0      0  12780 1811712  10804    0    0     0 13994  546 5055  0  9 52 40
+That's 10 times slower than in the case of 4 individual disks.
 
+> Cpu(s):  0.0%us, 10.1%sy,  0.0%ni, 55.6%id, 33.7%wa,  0.2%hi,  0.3%si,  0.0%st
 
-top - 17:26:37 up  2:29,  2 users,  load average: 2.89, 2.12, 1.42
-Tasks:  75 total,   2 running,  73 sleeping,   0 stopped,   0 zombie
-Cpu(s):  0.0%us, 10.1%sy,  0.0%ni, 55.6%id, 33.7%wa,  0.2%hi,  0.3%si,  0.0%st
-Mem:   2063940k total,  2052148k used,    11792k free,  1812288k buffers
+and only 33.7% waiting, which is probably due to the lack of
+parallelism.
 
-From vmstat I gather that total write throughput is an order of
-magnitude slower than on the 4 raw disks in parallel. Naturally the
-mke2fs on the raid isn't parallelized but it should still be
-sequential enough to get the max for a single disk (~60-40MB/s),
-right?
+> From vmstat I gather that total write throughput is an order of
+> magnitude slower than on the 4 raw disks in parallel. Naturally the
+> mke2fs on the raid isn't parallelized but it should still be
+> sequential enough to get the max for a single disk (~60-40MB/s),
+> right?
 
-Thanks for helping.
+Well, not really.  Mkfs is doing many small writes all over the
+place, so each is seek+write.  And it's syncronous - no next write
+gets submitted till the current one completes.
 
-C.
+Ok.  For now I don't see a problem (over than that there IS a problem
+somewhere - obviously).  Interrupts are ok.  System time (10.1%) in
+second case doesn't look right, but it was 8.1% before...
+
+Only 2 guesses left.  And I really mean "guesses", because I can't
+say definitely what's going on anyway.
+
+First, try to disable bitmaps on the raid array, and see if it makes
+any difference.  For some reason I think it will... ;)
+
+And second, the whole thing looks pretty much like a more general
+problem discussed here and elsewhere last few days.  I mean handling
+of parallel reads and writes - when single write may stall reads
+for quite some time and vise versa.  I see it every day on disks
+without NCQ/TCQ - system is mostly single-tasking, sorta like
+ol'good MS-DOG :)  Good TCQ-enabled drives survives very high load
+while the system is still more-or-less responsible (and I forgot when
+I last saw "bad" TCQ-enabled drive - even 10 y/o 4Gb seagate has
+excellent TCQ support ;).  And all modern SATA stuff works pretty
+much like old IDE drives, which were designed "for personal use",
+or "single-task only" -- even ones that CLAMS to support NCQ in
+reality does not....  But that's a long story, and your disks
+and/or controllers (or the combination) don't even support NCQ...
+
+/mjt
