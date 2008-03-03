@@ -1,30 +1,244 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [PATCH 000 of 9] md: Introduction EXPLAIN PATCH SET HERE
-Date: Mon, 3 Mar 2008 11:16:58 +1100
-Message-ID: <20080303111240.23302.patches@notabene>
+Subject: [PATCH 001 of 9] md: Fix deadlock in md/raid1 and md/raid10 when handling a read error.
+Date: Mon, 3 Mar 2008 11:17:05 +1100
+Message-ID: <1080303001705.23577@suse.de>
+References: <20080303111240.23302.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Keld Simonsen <keld@dkuug.dk>, "K.Tanaka" <k-tanaka@ce.jp.nec.com>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, "K.Tanaka" <k-tanaka@ce.jp.nec.com>
 List-Id: linux-raid.ids
 
-Following are 9 patches for md in 2.6.25-rc2-mm1.  All are fairly
-simply bugfixes and are suitable for 2.6.25 (though I confess I
-should have sent some of them eariler :-( ).
 
-They include fixes for three bugs found but the scsi fault injection framework
-(thanks!), and small raid10 read optimisation, and various other bits
-and pieces.
+When handling a read error, we freeze the array to stop any other
+IO while attempting to over-write with correct data.
 
-NeilBrown
+This is done in the raid1d(raid10d) thread and must wait for all
+submitted IO to complete (except for requests that failed and are
+sitting in the retry queue - these are counted in ->nr_queue and will
+stay there during a freeze).
 
+However write requests need attention from raid1d as bitmap updates
+might be required.  This can cause a deadlock as raid1 is waiting for
+requests to finish that themselves need attention from raid1d.
 
- [PATCH 001 of 9] md: Fix deadlock in md/raid1 and md/raid10 when handling a read error.
- [PATCH 002 of 9] md: Reduce CPU wastage on idle md array with a write-intent bitmap.
- [PATCH 003 of 9] md: Guard against possible bad array geometry in v1 metadata.
- [PATCH 004 of 9] md: Clean up irregularity with raid autodetect.
- [PATCH 005 of 9] md: Make sure a reshape is started when device switches to read-write.
- [PATCH 006 of 9] md: Lock access to rdev attributes properly
- [PATCH 007 of 9] md: Don't attempt read-balancing for raid10 'far' layouts.
- [PATCH 008 of 9] md: Fix possible raid1/raid10 deadlock on read error during resync.
- [PATCH 009 of 9] md: The md RAID10 resync thread could cause a md RAID10 array deadlock
+So we create a new function 'flush_pending_writes' to give that attention,
+and call it in freeze_array to be sure that we aren't waiting on raid1d.
+
+Thanks to "K.Tanaka" <k-tanaka@ce.jp.nec.com> for finding and reporting
+this problem.
+
+Cc: "K.Tanaka" <k-tanaka@ce.jp.nec.com>
+Signed-off-by: Neil Brown <neilb@suse.de>
+
+### Diffstat output
+ ./drivers/md/raid1.c  |   62 +++++++++++++++++++++++++++++++++-----------------
+ ./drivers/md/raid10.c |   60 +++++++++++++++++++++++++++++++-----------------
+ 2 files changed, 80 insertions(+), 42 deletions(-)
+
+diff .prev/drivers/md/raid10.c ./drivers/md/raid10.c
+--- .prev/drivers/md/raid10.c	2008-02-22 15:45:35.000000000 +1100
++++ ./drivers/md/raid10.c	2008-02-22 15:45:35.000000000 +1100
+@@ -629,7 +629,36 @@ static int raid10_congested(void *data, 
+ 	return ret;
+ }
+ 
++static int flush_pending_writes(conf_t *conf)
++{
++	/* Any writes that have been queued but are awaiting
++	 * bitmap updates get flushed here.
++	 * We return 1 if any requests were actually submitted.
++	 */
++	int rv = 0;
++
++	spin_lock_irq(&conf->device_lock);
+ 
++	if (conf->pending_bio_list.head) {
++		struct bio *bio;
++		bio = bio_list_get(&conf->pending_bio_list);
++		blk_remove_plug(conf->mddev->queue);
++		spin_unlock_irq(&conf->device_lock);
++		/* flush any pending bitmap writes to disk
++		 * before proceeding w/ I/O */
++		bitmap_unplug(conf->mddev->bitmap);
++
++		while (bio) { /* submit pending writes */
++			struct bio *next = bio->bi_next;
++			bio->bi_next = NULL;
++			generic_make_request(bio);
++			bio = next;
++		}
++		rv = 1;
++	} else
++		spin_unlock_irq(&conf->device_lock);
++	return rv;
++}
+ /* Barriers....
+  * Sometimes we need to suspend IO while we do something else,
+  * either some resync/recovery, or reconfigure the array.
+@@ -720,7 +749,8 @@ static void freeze_array(conf_t *conf)
+ 	wait_event_lock_irq(conf->wait_barrier,
+ 			    conf->barrier+conf->nr_pending == conf->nr_queued+2,
+ 			    conf->resync_lock,
+-			    raid10_unplug(conf->mddev->queue));
++			    ({ flush_pending_writes(conf);
++			       raid10_unplug(conf->mddev->queue); }));
+ 	spin_unlock_irq(&conf->resync_lock);
+ }
+ 
+@@ -892,6 +922,9 @@ static int make_request(struct request_q
+ 	blk_plug_device(mddev->queue);
+ 	spin_unlock_irqrestore(&conf->device_lock, flags);
+ 
++	/* In case raid10d snuck in to freeze_array */
++	wake_up(&conf->wait_barrier);
++
+ 	if (do_sync)
+ 		md_wakeup_thread(mddev->thread);
+ 
+@@ -1464,28 +1497,14 @@ static void raid10d(mddev_t *mddev)
+ 
+ 	for (;;) {
+ 		char b[BDEVNAME_SIZE];
+-		spin_lock_irqsave(&conf->device_lock, flags);
+-
+-		if (conf->pending_bio_list.head) {
+-			bio = bio_list_get(&conf->pending_bio_list);
+-			blk_remove_plug(mddev->queue);
+-			spin_unlock_irqrestore(&conf->device_lock, flags);
+-			/* flush any pending bitmap writes to disk before proceeding w/ I/O */
+-			bitmap_unplug(mddev->bitmap);
+ 
+-			while (bio) { /* submit pending writes */
+-				struct bio *next = bio->bi_next;
+-				bio->bi_next = NULL;
+-				generic_make_request(bio);
+-				bio = next;
+-			}
+-			unplug = 1;
++		unplug += flush_pending_writes(conf);
+ 
+-			continue;
+-		}
+-
+-		if (list_empty(head))
++		spin_lock_irqsave(&conf->device_lock, flags);
++		if (list_empty(head)) {
++			spin_unlock_irqrestore(&conf->device_lock, flags);
+ 			break;
++		}
+ 		r10_bio = list_entry(head->prev, r10bio_t, retry_list);
+ 		list_del(head->prev);
+ 		conf->nr_queued--;
+@@ -1548,7 +1567,6 @@ static void raid10d(mddev_t *mddev)
+ 			}
+ 		}
+ 	}
+-	spin_unlock_irqrestore(&conf->device_lock, flags);
+ 	if (unplug)
+ 		unplug_slaves(mddev);
+ }
+
+diff .prev/drivers/md/raid1.c ./drivers/md/raid1.c
+--- .prev/drivers/md/raid1.c	2008-02-22 15:45:35.000000000 +1100
++++ ./drivers/md/raid1.c	2008-02-22 15:45:35.000000000 +1100
+@@ -592,6 +592,37 @@ static int raid1_congested(void *data, i
+ }
+ 
+ 
++static int flush_pending_writes(conf_t *conf)
++{
++	/* Any writes that have been queued but are awaiting
++	 * bitmap updates get flushed here.
++	 * We return 1 if any requests were actually submitted.
++	 */
++	int rv = 0;
++
++	spin_lock_irq(&conf->device_lock);
++
++	if (conf->pending_bio_list.head) {
++		struct bio *bio;
++		bio = bio_list_get(&conf->pending_bio_list);
++		blk_remove_plug(conf->mddev->queue);
++		spin_unlock_irq(&conf->device_lock);
++		/* flush any pending bitmap writes to
++		 * disk before proceeding w/ I/O */
++		bitmap_unplug(conf->mddev->bitmap);
++
++		while (bio) { /* submit pending writes */
++			struct bio *next = bio->bi_next;
++			bio->bi_next = NULL;
++			generic_make_request(bio);
++			bio = next;
++		}
++		rv = 1;
++	} else
++		spin_unlock_irq(&conf->device_lock);
++	return rv;
++}
++
+ /* Barriers....
+  * Sometimes we need to suspend IO while we do something else,
+  * either some resync/recovery, or reconfigure the array.
+@@ -681,7 +712,8 @@ static void freeze_array(conf_t *conf)
+ 	wait_event_lock_irq(conf->wait_barrier,
+ 			    conf->barrier+conf->nr_pending == conf->nr_queued+2,
+ 			    conf->resync_lock,
+-			    raid1_unplug(conf->mddev->queue));
++			    ({ flush_pending_writes(conf);
++			       raid1_unplug(conf->mddev->queue); }));
+ 	spin_unlock_irq(&conf->resync_lock);
+ }
+ static void unfreeze_array(conf_t *conf)
+@@ -907,6 +939,9 @@ static int make_request(struct request_q
+ 	blk_plug_device(mddev->queue);
+ 	spin_unlock_irqrestore(&conf->device_lock, flags);
+ 
++	/* In case raid1d snuck into freeze_array */
++	wake_up(&conf->wait_barrier);
++
+ 	if (do_sync)
+ 		md_wakeup_thread(mddev->thread);
+ #if 0
+@@ -1473,28 +1508,14 @@ static void raid1d(mddev_t *mddev)
+ 	
+ 	for (;;) {
+ 		char b[BDEVNAME_SIZE];
+-		spin_lock_irqsave(&conf->device_lock, flags);
+ 
+-		if (conf->pending_bio_list.head) {
+-			bio = bio_list_get(&conf->pending_bio_list);
+-			blk_remove_plug(mddev->queue);
+-			spin_unlock_irqrestore(&conf->device_lock, flags);
+-			/* flush any pending bitmap writes to disk before proceeding w/ I/O */
+-			bitmap_unplug(mddev->bitmap);
+-
+-			while (bio) { /* submit pending writes */
+-				struct bio *next = bio->bi_next;
+-				bio->bi_next = NULL;
+-				generic_make_request(bio);
+-				bio = next;
+-			}
+-			unplug = 1;
+-
+-			continue;
+-		}
++		unplug += flush_pending_writes(conf);
+ 
+-		if (list_empty(head))
++		spin_lock_irqsave(&conf->device_lock, flags);
++		if (list_empty(head)) {
++			spin_unlock_irqrestore(&conf->device_lock, flags);
+ 			break;
++		}
+ 		r1_bio = list_entry(head->prev, r1bio_t, retry_list);
+ 		list_del(head->prev);
+ 		conf->nr_queued--;
+@@ -1590,7 +1611,6 @@ static void raid1d(mddev_t *mddev)
+ 			}
+ 		}
+ 	}
+-	spin_unlock_irqrestore(&conf->device_lock, flags);
+ 	if (unplug)
+ 		unplug_slaves(mddev);
+ }
