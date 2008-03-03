@@ -1,74 +1,50 @@
 From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: Setting up md-raid5: observations, errors, questions
-Date: Mon, 03 Mar 2008 12:59:21 -0500
-Message-ID: <47CC3C79.6060707@tmr.com>
-References: <bb145bd20803020423m14efea1by6e3e38bb8d0decb8@mail.gmail.com>	 <alpine.DEB.1.00.0803020741150.13994@p34.internal.lan>	 <bb145bd20803020456g54be4bcbg1cf7aed132ac7944@mail.gmail.com>	 <alpine.DEB.1.00.0803020802370.18550@p34.internal.lan> <bb145bd20803020524y7b7cca01ma0b638a430c2f2f2@mail.gmail.com>
+Subject: Re: RAID5 in sync does not populate slots sequentially, shows array
+ as (somewhat) faulty
+Date: Mon, 03 Mar 2008 13:34:47 -0500
+Message-ID: <47CC44C7.1040304@tmr.com>
+References: <47CBD62E.7040608@rabbit.us>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <bb145bd20803020524y7b7cca01ma0b638a430c2f2f2@mail.gmail.com>
+In-Reply-To: <47CBD62E.7040608@rabbit.us>
 Sender: linux-raid-owner@vger.kernel.org
-To: Christian Pernegger <pernegger@gmail.com>
-Cc: linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
+To: Peter Rabbitson <rabbit+list@rabbit.us>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Christian Pernegger wrote:
->>  You could try to change cables and such but you've already cc'd linux-ide,
->>  AFAIK it can/could be a chipset/related issue and the guys who work on NCQ
->>  etc are working on the problem is the last I heard..
->>
->>  You should try and narrow down the problem, is it always the same drive
->>  that has that problem every time?  Does it occur if you do a check on the
->>  RAID 5 array or only when building?  etc..
->>     
+Peter Rabbitson wrote:
+> Hello,
 >
-> Assuming you're talking about the HSM violation error ... I got that
-> exactly once (yet) in the situation described (sometime after the
-> writing phase of badblocks). Nothing since and certainly not the spew
-> others are reporting.
->
->   
-Are you by any chance running quota?
+> Noticing the problems Tor Vestb=C3=B8 is having, I remembered that I =
+have=20
+> an array in a similar state, which I never figured out. The array has=
+=20
+> been working flawlessly for 3 months, the monthly 'check' runs come=20
+> back with everything being clean. However this is how the array looks=
+=20
+> through mdadm's eyes:
 
-> My primary concern now is the second problem - seems like any access
-> to the raid array makes the machine unusable. I can type/edit a
-> command at the bash prompt normally but as soon as I hit enter it just
-> hangs there. If the command is trivial, say cat, I might get a result
-> a few minutes later.
->
-> bonnie++ results are in:
->
-> Version 1.03c       ------Sequential Output------ --Sequential Input- --Random-
->                     -Per Chr- --Block-- -Rewrite- -Per Chr- --Block-- --Seeks--
-> Machine        Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP  /sec %CP
-> 1024k            4G           16282   5 13359   3           57373   7 149.0   0
->                     ------Sequential Create------ --------Random Create--------
->                     -Create-- --Read--- -Delete-- -Create-- --Read--- -Delete--
->               files  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP
->                  16 +++++ +++ +++++ +++ +++++ +++ +++++ +++ +++++ +++ +++++ +++
->
-> Something is definitely not right ... :-(
->
-> As in, an old array of 300GB IDE Maxtors has 4x the seq writes, bus
-> capped (105MB/s, plain PCI) reads and 3x the IOs. And it doesn't block
-> the machine. Granted, there's the crypto but on my other (non-raid)
-> boxes the performance impact just isn't there.
->
-> Any help appreciated, as it is the box has expensive-paperweight status.
->
-> C.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->   
+I'm in agreement that something is odd about the disk numbers here, and=
+=20
+I'm suspicious because I have never seen this with 0.90 superblocks.=20
+That doesn't mean it couldn't happen and I never noticed, it's certainl=
+y=20
+odd that four drives wouldn't be numbered 0..3, in raid5 they are all=20
+equally out of sync.
 
-
--- 
+--=20
 Bill Davidsen <davidsen@tmr.com>
-  "Woe unto the statesman who makes war without a reason that will still
-  be valid when the war is over..." Otto von Bismark 
+  "Woe unto the statesman who makes war without a reason that will stil=
+l
+  be valid when the war is over..." Otto von Bismark=20
 
 
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
