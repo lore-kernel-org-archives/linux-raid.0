@@ -1,108 +1,170 @@
-From: Andre Noll <maan@systemlinux.org>
-Subject: Re: [PATCH 001 of 9] md: Fix deadlock in md/raid1 and md/raid10 when handling a read error.
-Date: Mon, 3 Mar 2008 16:54:49 +0100
-Message-ID: <20080303155449.GA32242@skl-net.de>
-References: <20080303111240.23302.patches@notabene> <1080303001705.23577@suse.de>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: Linux and SSD and how to decrease io delay : question, please
+Date: Mon, 03 Mar 2008 12:31:14 -0500
+Message-ID: <47CC35E2.5000205@tmr.com>
+References: <794655.87405.qm@web35701.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="UugvWAfsgieZRqgk"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1080303001705.23577@suse.de>
+In-Reply-To: <794655.87405.qm@web35701.mail.mud.yahoo.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, "K.Tanaka" <k-tanaka@ce.jp.nec.com>
+To: Mariella Petrini <mariellapetrini@yahoo.com>, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+Mariella Petrini wrote:
+> Hi,
+>  
+>  
+> I did run some benchmarks with different values of dirty_expire_centisecs.
+>  
+> Lowering the value to 1500, 1000, 500  bring the worst values a little 
+> lower
+> (from 35sec to 31sec and less in number) but it increases the 
+> percentage of response queries that are over 1secs. I guess this is 
+> because pdflush has to write to IO more often.
+>  
+> Increasing the value of dirty_expire_centisecs to 6000
+> actually it looks better, because it still keeps the same percentage 
+> of queries whose response time is over  1 sec
+> and lowers the number of queries that have a value over 30 secs.
+>  
+> Looking at what is happening and the fact that the database server 
+> freezes almost any time I/O wait goes over 40%, pdflush starts flushing,
+> I think the queries that have a response time over 20 secs (30 
+> secs) are really generated
+> when pdflush starts commiting and it is possible that if pdflush 
+> hasn't  enough threads or the IO system/driver are not fast enough.
+>  
+I will go back and look at the iostats again, but you simply may be 
+maxing out the hardware. That said, the io scheduler can still do a 
+reasonable job of allowing reads to run when writes are backlogged, and 
+you *might* benefit from more memory to allow better grouping of writes. 
+You may find running vmstat at one sec intervals on a freshly booted 
+system, then applying load will confirm how memory is being used, and if 
+more is likely to help.
 
---UugvWAfsgieZRqgk
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+If you are maxing out your disks then software isn't going to help much, 
+but reads should still get through.
+> I have tried to increase the number of threads that pdflush could use 
+> (through /etc/sysctl.conf), but I got permission denied.
+> Do you know whether there is any way to increase the number of threads 
+> that
+> pdflush could use ?
+>  
+I don't know why you can't increase that, but I honestly don't expect it 
+to help.
+> I will try to compile also the latest kernel and see whether there is 
+> any difference.
+>  
+> Thanks for your help,
+>  
+>  
+> Mariella
+>  
+>  
+>
+>
+> */Bill Davidsen <davidsen@tmr.com>/* wrote:
+>
+>     Mariella Petrini wrote:
+>>     Hi,
+>>      
+>>     I did play a little bit with /proc/sys/vm/dirty_* , but that did
+>>     not help much.
+>>     It did help the use of the noop and deadline io schedulers.
+>>      
+>     Try lowering dirty_expire_centisecs to 1500, 1000, 500 and test at
+>     each point. This will tend to start pushing stuff out sooner.
+>     However, you may just be trying to write faster than your disk
+>     system can push data to disk, in which case you have some hard
+>     choices to make, faster hardware or poor performance.
+>>     >Of course you didn't measure the
+>>     >disk i/o rates along with this, so it's hard to see what's
+>>     happening.
+>>      
+>>     I did run iostat reports while doing all the queries.
+>>     I that you meant or did you mean somthing else ?
+>>
+>     Did the i/o rates show that you are maxing out your hardware? You
+>     might do that again as you drop the expire time,  it may tell you
+>     something interesting.
+>
+>     Keep me posted.
+>>     Thanks,
+>>      
+>>     Mariella
+>>
+>>     */Bill Davidsen <davidsen@tmr.com>/* wrote:
+>>
+>>         Mariella Petrini wrote:
+>>         > Hi All,
+>>         >
+>>         > I have been running Linux kernel 2.6.23 with Debian on
+>>         >
+>>         > a 2 CPUs Dual-Core AMD Opteron(tm) Processor 2218.
+>>         > I have been using an SSD drive (MTRON) connected to a
+>>         > raid controller (LSI MegaRAID 8704ELP) to contain
+>>         > data stored on several databases.
+>>         > Each database contains 20,000 files and there are 50
+>>         > databases total (1,000,000 files distributed across 50
+>>         > directories on the filesystem on the ssd).
+>>         >
+>>         > The database server uses the databases very "write"
+>>         > intensively.
+>>         > An approximate percentage could be 20% reads versus
+>>         > 80% random writes.
+>>         >
+>>         > No matter which filesystem type is used (I have tried
+>>         > ext3, xfs, jfs, reiserfs) I see every few seconds
+>>         > snapshots (the could last in the worst case up to 200
+>>         > seconds, depending on the filesystem type)
+>>         > where the iowait on the ssd device goes approximately
+>>         > over 50% (up to 100%) and
+>>         > the database server threads go to wait (get
+>>         > suspended).
+>>         >
+>>         > Is there any Linux kernel parameter or any Linux
+>>         > parameter that could be varied that could help to
+>>         > decrease the time spent to sync all the data to the
+>>         > SSD device ?
+>>         >
+>>         I may misunderstand the problem, but have you tried tuning the
+>>         parameters /proc/sys/vm/dirty_* to help this? It sounds as if
+>>         you may be
+>>         filling write cache and then flushing. Of course you didn't
+>>         measure the
+>>         disk i/o rates along with this, so it's hard to see what's
+>>         happening.
+>>
+>>         -- 
+>>         Bill Davidsen
+>>         "We have more to fear from the bungling of the incompetent
+>>         than from
+>>         the machinations of the wicked." - from Slashdot
+>>
+>>
+>>     ------------------------------------------------------------------------
+>>     Looking for last minute shopping deals? Find them fast with
+>>     Yahoo! Search.
+>>     <http://us.rd.yahoo.com/evt=51734/*http://tools.search.yahoo.com/newsearch/category.php?category=shopping>
+>
+>
+>
+>     --   Bill Davidsen <davidsen@tmr.com>    "Woe unto the statesman who makes war without a reason that will still    be valid when the war is over..." Otto von Bismark    
+>      
+>
+>
+> ------------------------------------------------------------------------
+> Be a better friend, newshound, and know-it-all with Yahoo! Mobile. Try 
+> it now. 
+> <http://us.rd.yahoo.com/evt=51733/*http://mobile.yahoo.com/;_ylt=Ahu06i62sR8HDtDypao8Wcj9tAcJ%20> 
 
-On 11:17, NeilBrown wrote:
-
-> So we create a new function 'flush_pending_writes' to give that attention,
-> and call it in freeze_array to be sure that we aren't waiting on raid1d.
-
-Two minor remarks:
-
-> +static int flush_pending_writes(conf_t *conf)
-> +{
-> +	/* Any writes that have been queued but are awaiting
-> +	 * bitmap updates get flushed here.
-> +	 * We return 1 if any requests were actually submitted.
-> +	 */
-> +	int rv =3D 0;
-> +
-> +	spin_lock_irq(&conf->device_lock);
-> =20
-> +	if (conf->pending_bio_list.head) {
-> +		struct bio *bio;
-> +		bio =3D bio_list_get(&conf->pending_bio_list);
-> +		blk_remove_plug(conf->mddev->queue);
-> +		spin_unlock_irq(&conf->device_lock);
-> +		/* flush any pending bitmap writes to disk
-> +		 * before proceeding w/ I/O */
-> +		bitmap_unplug(conf->mddev->bitmap);
-> +
-> +		while (bio) { /* submit pending writes */
-> +			struct bio *next =3D bio->bi_next;
-> +			bio->bi_next =3D NULL;
-> +			generic_make_request(bio);
-> +			bio =3D next;
-> +		}
-> +		rv =3D 1;
-> +	} else
-> +		spin_unlock_irq(&conf->device_lock);
-> +	return rv;
-> +}
-
-Do we really need to take the spin lock in the common case where
-conf->pending_bio_list.head is NULL? If not, the above could be
-optimized to the slightly faster and better readable
-
-	struct bio *bio;
-
-	if (!conf->pending_bio_list.head)
-		return 0;
-	spin_lock_irq(&conf->device_lock);
-	bio =3D bio_list_get(&conf->pending_bio_list);
-	...
-	spin_unlock_irq(&conf->device_lock);
-	return 1;
 
 
-> diff .prev/drivers/md/raid1.c ./drivers/md/raid1.c
-> --- .prev/drivers/md/raid1.c	2008-02-22 15:45:35.000000000 +1100
-> +++ ./drivers/md/raid1.c	2008-02-22 15:45:35.000000000 +1100
-> @@ -592,6 +592,37 @@ static int raid1_congested(void *data, i
->  }
-> =20
-> =20
-> +static int flush_pending_writes(conf_t *conf)
-> +{
+-- 
+Bill Davidsen <davidsen@tmr.com>
+  "Woe unto the statesman who makes war without a reason that will still
+  be valid when the war is over..." Otto von Bismark 
 
-[snip]
 
-Any chance to avoid this code duplication?
-
-Regards
-Andre
---=20
-The only person who always got his work done by Friday was Robinson Crusoe
-
---UugvWAfsgieZRqgk
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
-
-iD8DBQFHzB9JWto1QDEAkw8RAuE4AKCh82vDzhPVas/TlS7ZMoxnbDfYDQCgiVxu
-yPwIJRLu/wHL+VYrUED08cg=
-=G+gj
------END PGP SIGNATURE-----
-
---UugvWAfsgieZRqgk--
