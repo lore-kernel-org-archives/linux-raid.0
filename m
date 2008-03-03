@@ -1,84 +1,60 @@
 From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: Corrupted RAID 50 (aparently?) array. Help needed.
-Date: Mon, 03 Mar 2008 12:42:12 -0500
-Message-ID: <47CC3874.8060403@tmr.com>
-References: <20080228102209.2hgng57tyck44k8o@www.kepler.cl>	 <47C9BD0F.7020808@tmr.com> <f4d3d9a30803021628yd98a89fgcd116091031d4476@mail.gmail.com>
+Subject: Re: Strange RAID-5 rebuild problem
+Date: Mon, 03 Mar 2008 12:53:10 -0500
+Message-ID: <47CC3B06.7050708@tmr.com>
+References: <656D8E57-804D-4A63-B9CA-D3C899616F61@it-loops.com> <3816592D-B75C-4B00-B3B7-65AE3B403DB0@it-loops.com> <20080301222326.GA20435@cthulhu.home.robinhill.me.uk> <2BABB51E-7701-44D4-AD07-6394CCF77941@it-loops.com> <A5F6B52A-00BB-4096-9A8D-367F61989186@it-loops.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <f4d3d9a30803021628yd98a89fgcd116091031d4476@mail.gmail.com>
+In-Reply-To: <A5F6B52A-00BB-4096-9A8D-367F61989186@it-loops.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Nicolas Mella <nmella@kepler.cl>
-Cc: linux-raid@vger.kernel.org
+To: Michael Guntsche <mike@it-loops.com>
+Cc: Robin Hill <robin@robinhill.me.uk>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Nicolas Mella wrote:
-> On Sat, Mar 1, 2008 at 5:31 PM, Bill Davidsen <davidsen@tmr.com> wrote:
->   
->> nmella@kepler.cl wrote:
->>  > Hi list,
->>  >
->>  > Hope someone can give me the right direction on how to resolve this.
+Michael Guntsche wrote:
+>
+> On Mar 1, 2008, at 23:41, Michael Guntsche wrote:
 >>
->>  Were you under the impression that this list is a professional service
->>  where people are paid to give you good response? You sent the first copy
->>  of your question at 10:42, got impatient and resent at 11:04, then 11:15
->>  and 11:22. Sorry we don't respond fast enough for you, perhaps you
->>  should take your business elsewhere.
+>> mdadm -w /dev/md1 works if I call it after assembling.
+>> If do not call it, mount the array and start writing to it, it 
+>> changes to "active"
+>> but the rebuild process does not kick in.
 >>
->>  --
->>  Bill Davidsen <davidsen@tmr.com>
->>   "Woe unto the statesman who makes war without a reason that will still
->>   be valid when the war is over..." Otto von Bismark
->>     
+>> The only way it works for me now is.
+>> * Stop the array
+>> * assemble it again with mdadm --assemble --scan
+>> * Call mdadm -w /dev/md1
 >
+> Good morning,
 >
-> Sorry list. I know my mistake  and I am totally embarrassed.....
+> I found out why I am seeing this behaviour but I still do not know if 
+> it is a bug or not.
 >
-> I just read everywhere that majordomo filter almost everything....so I
-> thought my emails where been filtered.... (list emails are dispatch
-> with a very long delay).
+> The arrays are assembled in an initramfs. Debian's mdadm tool has a 
+> script that assembles the arrays.
 >
-> Sorry.
+> Now this script has the following entry.
 >
-> For sure I don't think this is a professional service. I just wanted
-> help on my problem which this list seem to be the right solution.
+> # prevent writes/syncs so that resuming works (#415441). See 
+> http:/bugs.debian.org/415441 for more information.
+> echo 1 > /sys/module/md_mod/parameters/start_ro
 >
-> Well, anyway I could re-assemble the RAID myself.
->
->   
-Did you try just specifying "partitions" to mdadm and letting the 
-software determine the members and assembly order? While this is not as 
-exciting a challenge as assembling with data from examined partitions, 
-it is a lot more convenient. ;-)
+> Changing this sysfs entry to 0, gives me the expected result if I do a 
+> stop -> assemble with my 1.0 array.
+> It starts reysncing and everything is ok. According to the replies in 
+> this bug, setting start_ro to 1 should NOT stop the automatic resync 
+> after a write to it, but this seems to have changed now.
+> So, is this a change in behaviour or is it a bug. If it is the former, 
+> I probably need to talk with the debian guys about it, if it is a bug 
+> I wait for a fix and comment the entry in the mean time.
 
-> If is it useful for someone here goes the solution:
->
-> Using Winhex software, I assemble  both RAID5 groups considering the
-> sequence that was detail by the "mdadm --examine option". (RAID5 type
-> AMI backward dynamic)
->
-> Having both 1,0 TB disks the Testdisk program said they had LVM partion.
->
-> So I activated them using "vgscan" and "vgchange -a y" and then I just
-> mount the partion. ufffff
->
->   
-Good job, glad you got it going again.
-
-> Sorry for all the trouble.
->
-> Have a nice day.
->
-> Nicolas
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->   
-
+Note that if you don't start_ro I don't believe you will be able to use 
+the resume feature. The use of -w option would seem safer. I haven't 
+looked at the patch Neil submitted to start rebuild/reshape at the first 
+write, the logic seems correct to work with resume, nothing should start 
+until a user write.
 
 -- 
 Bill Davidsen <davidsen@tmr.com>
