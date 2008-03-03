@@ -1,83 +1,72 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [PATCH 008 of 9] md: Fix possible raid1/raid10 deadlock on read error during resync.
-Date: Mon, 3 Mar 2008 11:17:53 +1100
-Message-ID: <1080303001753.23683@suse.de>
+Subject: [PATCH 007 of 9] md: Don't attempt read-balancing for raid10 'far' layouts.
+Date: Mon, 3 Mar 2008 11:17:47 +1100
+Message-ID: <1080303001747.23669@suse.de>
 References: <20080303111240.23302.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, "K.Tanaka" <k-tanaka@ce.jp.nec.com>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Keld Simonsen <keld@dkuug.dk>
 List-Id: linux-raid.ids
 
 
-Thanks to K.Tanaka and the scsi fault injection framework, here is
-a fix for another possible deadlock in raid1/raid10 error handing.
+From: Keld Simonsen <keld@dkuug.dk>
 
-If a read request returns an error while a resync is happening and
-a resync request is pending, the attempt to fix the error will block
-until the resync progresses, and the resync will block until the
-read request completes.  Thus a deadlock.
+This patch changes the disk to be read for layout "far > 1" to always be
+the disk with the lowest block address.
 
-This patch fixes the problem.
+Thus the chunks to be read will always be (for a fully functioning array)
+from the first band of stripes, and the raid will then work as a raid0
+consisting of the first band of stripes.
 
-Cc: "K.Tanaka" <k-tanaka@ce.jp.nec.com>
+Some advantages:
+
+The fastest part which is the outer sectors of the disks involved will be used.
+The outer blocks of a disk may be as much as 100 % faster than the inner blocks.
+
+Average seek time will be smaller, as seeks will always be confined to the
+first part of the disks.
+
+Mixed disks with different performance characteristics will work better,
+as they will work as raid0, the sequential read rate will be number of
+disks involved times the IO rate of the slowest disk.
+
+If a disk is malfunctioning, the first disk which is working, and has the lowest
+block address for the logical block will be used.
+
+Signed-off-by: Keld Simonsen <keld@dkuug.dk>
 Signed-off-by: Neil Brown <neilb@suse.de>
 
 ### Diffstat output
- ./drivers/md/raid1.c  |   11 +++++++++--
- ./drivers/md/raid10.c |   11 +++++++++--
- 2 files changed, 18 insertions(+), 4 deletions(-)
+ ./drivers/md/raid10.c |   12 +++++++++---
+ 1 file changed, 9 insertions(+), 3 deletions(-)
 
 diff .prev/drivers/md/raid10.c ./drivers/md/raid10.c
---- .prev/drivers/md/raid10.c	2008-03-03 11:03:39.000000000 +1100
-+++ ./drivers/md/raid10.c	2008-03-03 09:56:53.000000000 +1100
-@@ -747,13 +747,20 @@ static void freeze_array(conf_t *conf)
- 	/* stop syncio and normal IO and wait for everything to
- 	 * go quiet.
- 	 * We increment barrier and nr_waiting, and then
--	 * wait until barrier+nr_pending match nr_queued+2
-+	 * wait until nr_pending match nr_queued+1
-+	 * This is called in the context of one normal IO request
-+	 * that has failed. Thus any sync request that might be pending
-+	 * will be blocked by nr_pending, and we need to wait for
-+	 * pending IO requests to complete or be queued for re-try.
-+	 * Thus the number queued (nr_queued) plus this request (1)
-+	 * must match the number of pending IOs (nr_pending) before
-+	 * we continue.
- 	 */
- 	spin_lock_irq(&conf->resync_lock);
- 	conf->barrier++;
- 	conf->nr_waiting++;
- 	wait_event_lock_irq(conf->wait_barrier,
--			    conf->barrier+conf->nr_pending == conf->nr_queued+2,
-+			    conf->nr_pending == conf->nr_queued+1,
- 			    conf->resync_lock,
- 			    ({ flush_pending_writes(conf);
- 			       raid10_unplug(conf->mddev->queue); }));
-
-diff .prev/drivers/md/raid1.c ./drivers/md/raid1.c
---- .prev/drivers/md/raid1.c	2008-03-03 11:03:39.000000000 +1100
-+++ ./drivers/md/raid1.c	2008-03-03 09:56:52.000000000 +1100
-@@ -704,13 +704,20 @@ static void freeze_array(conf_t *conf)
- 	/* stop syncio and normal IO and wait for everything to
- 	 * go quite.
- 	 * We increment barrier and nr_waiting, and then
--	 * wait until barrier+nr_pending match nr_queued+2
-+	 * wait until nr_pending match nr_queued+1
-+	 * This is called in the context of one normal IO request
-+	 * that has failed. Thus any sync request that might be pending
-+	 * will be blocked by nr_pending, and we need to wait for
-+	 * pending IO requests to complete or be queued for re-try.
-+	 * Thus the number queued (nr_queued) plus this request (1)
-+	 * must match the number of pending IOs (nr_pending) before
-+	 * we continue.
- 	 */
- 	spin_lock_irq(&conf->resync_lock);
- 	conf->barrier++;
- 	conf->nr_waiting++;
- 	wait_event_lock_irq(conf->wait_barrier,
--			    conf->barrier+conf->nr_pending == conf->nr_queued+2,
-+			    conf->nr_pending == conf->nr_queued+1,
- 			    conf->resync_lock,
- 			    ({ flush_pending_writes(conf);
- 			       raid1_unplug(conf->mddev->queue); }));
+--- .prev/drivers/md/raid10.c	2008-03-03 09:35:29.000000000 +1100
++++ ./drivers/md/raid10.c	2008-03-03 09:35:52.000000000 +1100
+@@ -537,7 +537,8 @@ static int read_balance(conf_t *conf, r1
+ 	current_distance = abs(r10_bio->devs[slot].addr -
+ 			       conf->mirrors[disk].head_position);
+ 
+-	/* Find the disk whose head is closest */
++	/* Find the disk whose head is closest,
++	 * or - for far > 1 - find the closest to partition beginning */
+ 
+ 	for (nslot = slot; nslot < conf->copies; nslot++) {
+ 		int ndisk = r10_bio->devs[nslot].devnum;
+@@ -557,8 +558,13 @@ static int read_balance(conf_t *conf, r1
+ 			slot = nslot;
+ 			break;
+ 		}
+-		new_distance = abs(r10_bio->devs[nslot].addr -
+-				   conf->mirrors[ndisk].head_position);
++
++		/* for far > 1 always use the lowest address */
++		if (conf->far_copies > 1)
++			new_distance = r10_bio->devs[nslot].addr;
++		else
++			new_distance = abs(r10_bio->devs[nslot].addr -
++					   conf->mirrors[ndisk].head_position);
+ 		if (new_distance < current_distance) {
+ 			current_distance = new_distance;
+ 			disk = ndisk;
