@@ -1,60 +1,70 @@
 From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: Strange RAID-5 rebuild problem
-Date: Mon, 03 Mar 2008 12:53:10 -0500
-Message-ID: <47CC3B06.7050708@tmr.com>
-References: <656D8E57-804D-4A63-B9CA-D3C899616F61@it-loops.com> <3816592D-B75C-4B00-B3B7-65AE3B403DB0@it-loops.com> <20080301222326.GA20435@cthulhu.home.robinhill.me.uk> <2BABB51E-7701-44D4-AD07-6394CCF77941@it-loops.com> <A5F6B52A-00BB-4096-9A8D-367F61989186@it-loops.com>
+Subject: Re: Setting up md-raid5: observations, errors, questions
+Date: Mon, 03 Mar 2008 12:59:21 -0500
+Message-ID: <47CC3C79.6060707@tmr.com>
+References: <bb145bd20803020423m14efea1by6e3e38bb8d0decb8@mail.gmail.com>	 <alpine.DEB.1.00.0803020741150.13994@p34.internal.lan>	 <bb145bd20803020456g54be4bcbg1cf7aed132ac7944@mail.gmail.com>	 <alpine.DEB.1.00.0803020802370.18550@p34.internal.lan> <bb145bd20803020524y7b7cca01ma0b638a430c2f2f2@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <A5F6B52A-00BB-4096-9A8D-367F61989186@it-loops.com>
+In-Reply-To: <bb145bd20803020524y7b7cca01ma0b638a430c2f2f2@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Michael Guntsche <mike@it-loops.com>
-Cc: Robin Hill <robin@robinhill.me.uk>, linux-raid@vger.kernel.org
+To: Christian Pernegger <pernegger@gmail.com>
+Cc: linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-raid.ids
 
-Michael Guntsche wrote:
->
-> On Mar 1, 2008, at 23:41, Michael Guntsche wrote:
+Christian Pernegger wrote:
+>>  You could try to change cables and such but you've already cc'd linux-ide,
+>>  AFAIK it can/could be a chipset/related issue and the guys who work on NCQ
+>>  etc are working on the problem is the last I heard..
 >>
->> mdadm -w /dev/md1 works if I call it after assembling.
->> If do not call it, mount the array and start writing to it, it 
->> changes to "active"
->> but the rebuild process does not kick in.
->>
->> The only way it works for me now is.
->> * Stop the array
->> * assemble it again with mdadm --assemble --scan
->> * Call mdadm -w /dev/md1
+>>  You should try and narrow down the problem, is it always the same drive
+>>  that has that problem every time?  Does it occur if you do a check on the
+>>  RAID 5 array or only when building?  etc..
+>>     
 >
-> Good morning,
+> Assuming you're talking about the HSM violation error ... I got that
+> exactly once (yet) in the situation described (sometime after the
+> writing phase of badblocks). Nothing since and certainly not the spew
+> others are reporting.
 >
-> I found out why I am seeing this behaviour but I still do not know if 
-> it is a bug or not.
->
-> The arrays are assembled in an initramfs. Debian's mdadm tool has a 
-> script that assembles the arrays.
->
-> Now this script has the following entry.
->
-> # prevent writes/syncs so that resuming works (#415441). See 
-> http:/bugs.debian.org/415441 for more information.
-> echo 1 > /sys/module/md_mod/parameters/start_ro
->
-> Changing this sysfs entry to 0, gives me the expected result if I do a 
-> stop -> assemble with my 1.0 array.
-> It starts reysncing and everything is ok. According to the replies in 
-> this bug, setting start_ro to 1 should NOT stop the automatic resync 
-> after a write to it, but this seems to have changed now.
-> So, is this a change in behaviour or is it a bug. If it is the former, 
-> I probably need to talk with the debian guys about it, if it is a bug 
-> I wait for a fix and comment the entry in the mean time.
+>   
+Are you by any chance running quota?
 
-Note that if you don't start_ro I don't believe you will be able to use 
-the resume feature. The use of -w option would seem safer. I haven't 
-looked at the patch Neil submitted to start rebuild/reshape at the first 
-write, the logic seems correct to work with resume, nothing should start 
-until a user write.
+> My primary concern now is the second problem - seems like any access
+> to the raid array makes the machine unusable. I can type/edit a
+> command at the bash prompt normally but as soon as I hit enter it just
+> hangs there. If the command is trivial, say cat, I might get a result
+> a few minutes later.
+>
+> bonnie++ results are in:
+>
+> Version 1.03c       ------Sequential Output------ --Sequential Input- --Random-
+>                     -Per Chr- --Block-- -Rewrite- -Per Chr- --Block-- --Seeks--
+> Machine        Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP  /sec %CP
+> 1024k            4G           16282   5 13359   3           57373   7 149.0   0
+>                     ------Sequential Create------ --------Random Create--------
+>                     -Create-- --Read--- -Delete-- -Create-- --Read--- -Delete--
+>               files  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP
+>                  16 +++++ +++ +++++ +++ +++++ +++ +++++ +++ +++++ +++ +++++ +++
+>
+> Something is definitely not right ... :-(
+>
+> As in, an old array of 300GB IDE Maxtors has 4x the seq writes, bus
+> capped (105MB/s, plain PCI) reads and 3x the IOs. And it doesn't block
+> the machine. Granted, there's the crypto but on my other (non-raid)
+> boxes the performance impact just isn't there.
+>
+> Any help appreciated, as it is the box has expensive-paperweight status.
+>
+> C.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>   
+
 
 -- 
 Bill Davidsen <davidsen@tmr.com>
