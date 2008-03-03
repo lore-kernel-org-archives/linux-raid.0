@@ -1,7 +1,7 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [PATCH 003 of 9] md: Guard against possible bad array geometry in v1 metadata.
-Date: Mon, 3 Mar 2008 11:17:18 +1100
-Message-ID: <1080303001718.23607@suse.de>
+Subject: [PATCH 004 of 9] md: Clean up irregularity with raid autodetect.
+Date: Mon, 3 Mar 2008 11:17:24 +1100
+Message-ID: <1080303001724.23623@suse.de>
 References: <20080303111240.23302.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
@@ -10,37 +10,49 @@ Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-Make sure the data doesn't start before the end of the superblock
-when the superblock is at the start of the device.
+When a raid1 array is stopped, all components currently get added
+to the list for auto-detection.  However we should really only add
+components that were found by autodetection in the first place.
+So add a flag to record that information, and use it.
+
 
 Signed-off-by: Neil Brown <neilb@suse.de>
 
 ### Diffstat output
- ./drivers/md/md.c |    8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+ ./drivers/md/md.c           |    4 +++-
+ ./include/linux/raid/md_k.h |    1 +
+ 2 files changed, 4 insertions(+), 1 deletion(-)
 
 diff .prev/drivers/md/md.c ./drivers/md/md.c
 --- .prev/drivers/md/md.c	2008-02-22 15:46:10.000000000 +1100
-+++ ./drivers/md/md.c	2008-02-22 15:46:10.000000000 +1100
-@@ -1105,7 +1105,11 @@ static int super_1_load(mdk_rdev_t *rdev
- 	rdev->sb_size = le32_to_cpu(sb->max_dev) * 2 + 256;
- 	bmask = queue_hardsect_size(rdev->bdev->bd_disk->queue)-1;
- 	if (rdev->sb_size & bmask)
--		rdev-> sb_size = (rdev->sb_size | bmask)+1;
-+		rdev->sb_size = (rdev->sb_size | bmask) + 1;
-+
-+	if (minor_version
-+	    && rdev->data_offset < sb_offset + (rdev->sb_size/512))
-+		return -EINVAL;
- 
- 	if (sb->level == cpu_to_le32(LEVEL_MULTIPATH))
- 		rdev->desc_nr = -1;
-@@ -1137,7 +1141,7 @@ static int super_1_load(mdk_rdev_t *rdev
- 		else
- 			ret = 0;
++++ ./drivers/md/md.c	2008-02-22 15:46:25.000000000 +1100
+@@ -1503,7 +1503,8 @@ static void export_rdev(mdk_rdev_t * rde
+ 	free_disk_sb(rdev);
+ 	list_del_init(&rdev->same_set);
+ #ifndef MODULE
+-	md_autodetect_dev(rdev->bdev->bd_dev);
++	if (test_bit(AutoDetected, &rdev->flags))
++		md_autodetect_dev(rdev->bdev->bd_dev);
+ #endif
+ 	unlock_rdev(rdev);
+ 	kobject_put(&rdev->kobj);
+@@ -6025,6 +6026,7 @@ static void autostart_arrays(int part)
+ 			MD_BUG();
+ 			continue;
+ 		}
++		set_bit(AutoDetected, &rdev->flags);
+ 		list_add(&rdev->same_set, &pending_raid_disks);
+ 		i_passed++;
  	}
--	if (minor_version) 
-+	if (minor_version)
- 		rdev->size = ((rdev->bdev->bd_inode->i_size>>9) - le64_to_cpu(sb->data_offset)) / 2;
- 	else
- 		rdev->size = rdev->sb_offset;
+
+diff .prev/include/linux/raid/md_k.h ./include/linux/raid/md_k.h
+--- .prev/include/linux/raid/md_k.h	2008-02-22 15:46:25.000000000 +1100
++++ ./include/linux/raid/md_k.h	2008-02-22 15:46:25.000000000 +1100
+@@ -83,6 +83,7 @@ struct mdk_rdev_s
+ #define	BarriersNotsupp	5		/* BIO_RW_BARRIER is not supported */
+ #define	AllReserved	6		/* If whole device is reserved for
+ 					 * one array */
++#define	AutoDetected	7		/* added by auto-detect */
+ 
+ 	int desc_nr;			/* descriptor index in the superblock */
+ 	int raid_disk;			/* role of device in array */
