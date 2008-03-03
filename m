@@ -1,71 +1,128 @@
-From: "Christian Pernegger" <pernegger@gmail.com>
-Subject: Re: Setting up md-raid5: observations, errors, questions
-Date: Mon, 3 Mar 2008 09:38:35 +0100
-Message-ID: <bb145bd20803030038o905e1feib1c1ad42c1b4b042@mail.gmail.com>
-References: <bb145bd20803020423m14efea1by6e3e38bb8d0decb8@mail.gmail.com>
-	 <47CAC5BF.6060600@msgid.tls.msk.ru>
-	 <bb145bd20803020832x744c2674nd0a6a30e445b5453@mail.gmail.com>
-	 <47CAF30F.7040502@msgid.tls.msk.ru>
-	 <bb145bd20803021319o28df011sab954aa58a1c01be@mail.gmail.com>
-	 <47CB228D.5020709@msgid.tls.msk.ru>
-	 <bb145bd20803021617j1b15c667j96d3ee12829ee75a@mail.gmail.com>
-	 <47CB694B.9000807@msgid.tls.msk.ru>
+From: =?ISO-8859-1?Q?Tor_Arne_Vestb=F8?= <torarnv@gmail.com>
+Subject: Creating RAID5 with four devices and end up with 5 (one removed and one spare). Why?
+Date: Mon, 3 Mar 2008 09:55:45 +0100
+Message-ID: <47CBBD11.4020501@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <47CB694B.9000807@msgid.tls.msk.ru>
+Content-Type: text/plain;
+	charset="US-ASCII";
+	format="flowed"
+Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
-Cc: linux-ide@vger.kernel.org
 List-Id: linux-raid.ids
 
->  You know how raid5 process writes, right?
+Hi!
 
-Yes. What I'd forgotten, though, is that even with --assume-clean it's
-still basically in degraded mode so testing writes at most serves as a
-comparison between the different setups. This seems to be a common
-late night error :)
+I'm trying to build a Linux RAID5 with four (4) 750GB disks, but not 
+matter what I do I end up with mdadm listing five (5) devices and 
+telling me that one of them is a spare, and another one is 
+failed/removed. I've been googling and reading HOWTOs for a week now, 
+but can't figure it out. Here's what I do:
 
->  So the bigger your chunk size is, the less chances you have to perform
->  full-stripe write, just because "large, properly aligned" writes are
->  much less frequent than "smaller, unaligned" ones
+monstre:~/buildroot # mdadm --create /dev/md0 --level=5 --raid-devices=4 
+/dev/sd[cdef]1
 
-I had expected that the sequential dd-writes would be automatically
-combined to write full stripes, yet they also go down massively with
-increased chunk size.
+mdadm: /dev/sdc1 appears to contain an ext2fs file system
+     size=-2097251968K  mtime=Wed Feb 27 00:26:57 2008
+mdadm: /dev/sdc1 appears to be part of a raid array:
+     level=raid5 devices=4 ctime=Tue Feb 26 20:47:24 2008
+mdadm: /dev/sdd1 appears to be part of a raid array:
+     level=raid5 devices=4 ctime=Tue Feb 26 20:47:24 2008
+mdadm: /dev/sde1 appears to be part of a raid array:
+     level=raid5 devices=4 ctime=Tue Feb 26 20:47:24 2008
+mdadm: /dev/sdf1 appears to contain an ext2fs file system
+     size=-1560381056K  mtime=Wed Feb 27 00:26:57 2008
+mdadm: /dev/sdf1 appears to be part of a raid array:
+     level=raid5 devices=4 ctime=Tue Feb 26 20:47:24 2008
+Continue creating array? y
+mdadm: array /dev/md0 started.
 
->  You can get best results when writing WITHOUT a filesystem
->  (directly to /dev/mdFOO) with dd and blocksize equal to the
->  total strip size (chunk size * number of data disks, or
->  16k * 3 ..... 1M * 3, since in your raid 3 disks are data
->  in each strip)
+monstre:~/buildroot # cat /proc/mdstat
+Personalities : [raid6] [raid5] [raid4]
+md0 : active(auto-read-only) raid5 sdf1[4](S) sde1[2] sdd1[1] sdc1[0]
+       2197715712 blocks level 5, 64k chunk, algorithm 2 [4/3] [UUU_]
 
-I didn't use an fs for the dd tests, but 4*chunk size, which was
-stupid. Still, I would have expected some combining to be going on
-even at that level.
+unused devices: <none>
 
->  md stripe-cache makes huge difference, for obvious reasons.
 
-Will experiment with that as well, thanks. Any other caches?
+monstre:~/buildroot # mdadm --detail /dev/md0
+/dev/md0:
+         Version : 00.90.03
+   Creation Time : Tue Feb 26 20:57:46 2008
+      Raid Level : raid5
+      Array Size : 2197715712 (2095.91 GiB 2250.46 GB)
+   Used Dev Size : 732571904 (698.64 GiB 750.15 GB)
+    Raid Devices : 4
+   Total Devices : 4
+Preferred Minor : 0
+     Persistence : Superblock is persistent
 
->  unless your usage pattern will be special and optimized for such a
->  setup, don't try to choose large chunk size for raid456.
+     Update Time : Tue Feb 26 20:57:46 2008
+           State : clean, degraded
+  Active Devices : 3
+Working Devices : 4
+  Failed Devices : 0
+   Spare Devices : 1
 
-I think I will be revising my test script to actually create a small
-fs at the start of the device and run some tests in that. Note to
-self: need a good load simulator ... ...
+          Layout : left-symmetric
+      Chunk Size : 64K
 
->  I had no time to investigate, and now I don't have a hardware to test
->  again.  In theory it should work, but I guess only a few people are
->  using [external bitmaps] if at all - most are using internal bitmaps.
+            UUID : 8b498455:0ab45ac1:ebf26e3f:56a9fc2f
+          Events : 0.1
 
-I'd rather not use a feature where the probability that a bug will
-bite me first is that high. :)
+     Number   Major   Minor   RaidDevice State
+        0       8       33        0      active sync   /dev/sdc1
+        1       8       49        1      active sync   /dev/sdd1
+        2       8       65        2      active sync   /dev/sde1
+        3       0        0        3      removed
 
-FWIW, using smaller bitmaps REALLY helps. Tests forthcoming.
+        4       8       81        -      spare   /dev/sdf1
 
-Thanks,
 
-C.
+monstre: # mdadm --examine /dev/sdd1
+/dev/sdd1:
+           Magic : a92b4efc
+         Version : 00.90.00
+            UUID : a0186556:4ffb5a2a:822f8875:94ae7d2c
+   Creation Time : Sun Mar  2 22:52:53 2008
+      Raid Level : raid5
+   Used Dev Size : 732571904 (698.64 GiB 750.15 GB)
+      Array Size : 2197715712 (2095.91 GiB 2250.46 GB)
+    Raid Devices : 4
+   Total Devices : 4
+Preferred Minor : 0
+
+     Update Time : Sun Mar  2 22:59:54 2008
+           State : clean
+  Active Devices : 3
+Working Devices : 4
+  Failed Devices : 1
+   Spare Devices : 1
+        Checksum : 6b5e8442 - correct
+          Events : 0.22
+
+          Layout : left-symmetric
+      Chunk Size : 64K
+
+       Number   Major   Minor   RaidDevice State
+this     1       8       49        1      active sync   /dev/sdd1
+
+    0     0       8       33        0      active sync   /dev/sdc1
+    1     1       8       49        1      active sync   /dev/sdd1
+    2     2       8       65        2      active sync   /dev/sde1
+    3     3       0        0        3      faulty removed
+    4     4       8       81        4      spare   /dev/sdf1
+
+-------------------
+
+So what i don't get is:
+
+1. Why is mdadm --examine listing "3     3       0        0        3 
+   faulty removed" and telling me I have a failed device?
+2. Why is one of the actual disks (sdf) used as a spare, even though I 
+didn't ask for it?
+
+Thanks for any tips or insights which may put me on the right track :)
+
+Tor Arne
