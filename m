@@ -1,78 +1,63 @@
-From: NeilBrown <neilb@suse.de>
-Subject: [PATCH 009 of 9] md: The md RAID10 resync thread could cause a md RAID10 array deadlock
-Date: Mon, 3 Mar 2008 11:18:00 +1100
-Message-ID: <1080303001800.23698@suse.de>
-References: <20080303111240.23302.patches@notabene>
+From: "Nicolas Mella" <nmella@kepler.cl>
+Subject: Re: Corrupted RAID 50 (aparently?) array. Help needed.
+Date: Sun, 2 Mar 2008 21:28:00 -0300
+Message-ID: <f4d3d9a30803021628yd98a89fgcd116091031d4476@mail.gmail.com>
+References: <20080228102209.2hgng57tyck44k8o@www.kepler.cl>
+	 <47C9BD0F.7020808@tmr.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <47C9BD0F.7020808@tmr.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, "K.Tanaka" <k-tanaka@ce.jp.nec.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Sat, Mar 1, 2008 at 5:31 PM, Bill Davidsen <davidsen@tmr.com> wrote:
+> nmella@kepler.cl wrote:
+>  > Hi list,
+>  >
+>  > Hope someone can give me the right direction on how to resolve this.
+>
+>  Were you under the impression that this list is a professional service
+>  where people are paid to give you good response? You sent the first copy
+>  of your question at 10:42, got impatient and resent at 11:04, then 11:15
+>  and 11:22. Sorry we don't respond fast enough for you, perhaps you
+>  should take your business elsewhere.
+>
+>  --
+>  Bill Davidsen <davidsen@tmr.com>
+>   "Woe unto the statesman who makes war without a reason that will still
+>   be valid when the war is over..." Otto von Bismark
 
-From: "K.Tanaka" <k-tanaka@ce.jp.nec.com>
 
-This message describes another issue about md RAID10 found by
-testing the 2.6.24 md RAID10 using new scsi fault injection framework.
+Sorry list. I know my mistake  and I am totally embarrassed.....
 
-Abstract:
-When a scsi error results in disabling a disk during RAID10 recovery,
-the resync threads of md RAID10 could stall.
-This case, the raid array has already been broken and it may not matter.
-But I think stall is not preferable. If it occurs, even shutdown or reboot
-will fail because of resource busy.
+I just read everywhere that majordomo filter almost everything....so I
+thought my emails where been filtered.... (list emails are dispatch
+with a very long delay).
 
-The deadlock mechanism:
-The r10bio_s structure has a "remaining" member to keep track of BIOs yet to be
-handled when recovering. The "remaining" counter is incremented when building a BIO
-in sync_request() and is decremented when finish a BIO in end_sync_write().
+Sorry.
 
-If building a BIO fails for some reasons in sync_request(), the "remaining" should be
-decremented if it has already been incremented. I found a case where this decrement
-is forgotten. This causes a md_do_sync() deadlock because md_do_sync() waits for
-md_done_sync() called by end_sync_write(), but end_sync_write() never calls
-md_done_sync() because of the "remaining" counter mismatch.
+For sure I don't think this is a professional service. I just wanted
+help on my problem which this list seem to be the right solution.
 
-For example, this problem would be reproduced in the following case:
+Well, anyway I could re-assemble the RAID myself.
 
-Personalities : [raid10]
-md0 : active raid10 sdf1[4] sde1[5](F) sdd1[2] sdc1[1] sdb1[6](F)
-      3919616 blocks 64K chunks 2 near-copies [4/2] [_UU_]
-      [>....................]  recovery =  2.2% (45376/1959808) finish=0.7min speed=45376K/sec
+If is it useful for someone here goes the solution:
 
-This case, sdf1 is recovering, sdb1 and sde1 are disabled.
-An additional error with detaching sdd will cause a deadlock.
+Using Winhex software, I assemble  both RAID5 groups considering the
+sequence that was detail by the "mdadm --examine option". (RAID5 type
+AMI backward dynamic)
 
-md0 : active raid10 sdf1[4] sde1[5](F) sdd1[6](F) sdc1[1] sdb1[7](F)
-      3919616 blocks 64K chunks 2 near-copies [4/1] [_U__]
-      [=>...................]  recovery =  5.0% (99520/1959808) finish=5.9min speed=5237K/sec
+Having both 1,0 TB disks the Testdisk program said they had LVM partion.
 
- 2739 ?        S<     0:17 [md0_raid10]
-28608 ?        D<     0:00 [md0_resync]
-28629 pts/1    Ss     0:00 bash
-28830 pts/1    R+     0:00 ps ax
-31819 ?        D<     0:00 [kjournald]
+So I activated them using "vgscan" and "vgchange -a y" and then I just
+mount the partion. ufffff
 
-The resync thread keeps working, but actually it is deadlocked.
+Sorry for all the trouble.
 
-Patch:
-By this patch, the remaining counter will be decremented if needed.
+Have a nice day.
 
-Signed-off-by: Neil Brown <neilb@suse.de>
-
-### Diffstat output
- ./drivers/md/raid10.c |    2 ++
- 1 file changed, 2 insertions(+)
-
-diff .prev/drivers/md/raid10.c ./drivers/md/raid10.c
---- .prev/drivers/md/raid10.c	2008-03-03 09:56:53.000000000 +1100
-+++ ./drivers/md/raid10.c	2008-03-03 11:08:28.000000000 +1100
-@@ -1818,6 +1818,8 @@ static sector_t sync_request(mddev_t *md
- 				if (j == conf->copies) {
- 					/* Cannot recover, so abort the recovery */
- 					put_buf(r10_bio);
-+					if (rb2)
-+						atomic_dec(&rb2->remaining);
- 					r10_bio = rb2;
- 					if (!test_and_set_bit(MD_RECOVERY_ERR, &mddev->recovery))
- 						printk(KERN_INFO "raid10: %s: insufficient working devices for recovery.\n",
+Nicolas
