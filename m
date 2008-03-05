@@ -1,38 +1,40 @@
-From: Janek Kozicki <janek_listy@wp.pl>
-Subject: Re: Severe slowdown with LVM on RAID, alignment problem? -
- Autodetect?
-Date: Tue, 4 Mar 2008 20:52:48 +0100
-Message-ID: <20080304205248.08b92217@szpak>
-References: <872d9b69db95a1b08319e935595743cc@localhost>
-	<47C7E086.5080203@rabbit.us>
-	<47C9C086.4020805@tmr.com>
-	<84E2E8E9-9E43-497E-9680-CC0377A8BEDF@it-loops.com>
-	<47CB0A9C.7030902@tmr.com>
+From: "Christian Pernegger" <pernegger@gmail.com>
+Subject: Re: Setting up md-raid5: observations, errors, questions
+Date: Wed, 5 Mar 2008 07:38:35 +0100
+Message-ID: <bb145bd20803042238y5c2d1164o8cac7be9880b550b@mail.gmail.com>
+References: <bb145bd20803020423m14efea1by6e3e38bb8d0decb8@mail.gmail.com>
+	 <47CAC5BF.6060600@msgid.tls.msk.ru>
+	 <bb145bd20803020832x744c2674nd0a6a30e445b5453@mail.gmail.com>
+	 <47CAF30F.7040502@msgid.tls.msk.ru>
+	 <bb145bd20803021319o28df011sab954aa58a1c01be@mail.gmail.com>
+	 <47CB228D.5020709@msgid.tls.msk.ru>
+	 <bb145bd20803021617j1b15c667j96d3ee12829ee75a@mail.gmail.com>
+	 <47CB694B.9000807@msgid.tls.msk.ru>
+	 <bb145bd20803030038o905e1feib1c1ad42c1b4b042@mail.gmail.com>
+	 <bb145bd20803040854i33796bb7n8de956b0d90b76d9@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <47CB0A9C.7030902@tmr.com>
-Sender: linux-raid-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <bb145bd20803040854i33796bb7n8de956b0d90b76d9@mail.gmail.com>
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
+Cc: linux-ide@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello
+Added the dm-crypt layer back again, just to see what it would do:
+- responsiveness problem is back
+- performance is around the level of a single disk, if that
 
-I was wondering, that maybe someone from our community, skilled
-enough, could submit a patch to LVM which will enable autodetection
-of RAID stripes in the underlying device?
+Played around some more and it seems that the system just reacts very
+badly to some I/O loads. fs creation / bonnie on a resyncing RAID
+apparently can trigger the same symptoms (even without dm-crypt),
+though not all configurations.
 
-We would no longer suffer any slowdowns, then ;-)
+Just for kicks I tried raid on dm-crypt, which doesn't have the
+problem but is even slower.
 
-If LVM cannot communicate with RAID layer (eg. because it's too
-difficult, since /dev/md0 is *only* a block device) - then LVM could
-do empirical autodetection by writing data to /dev/md0 (*) and
-reading data from /dev/sda3 (*), /dev/sdb3 (*) and comparing it.
+Back to square one.
 
-(*) those are just an example values, of course. They would be a
-command line parameters for that ;-)
-
-best regards
--- 
-Janek Kozicki                                                         |
+C.
