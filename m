@@ -1,19 +1,56 @@
-From: Bruce Miller <subscribe@brmiller.ca>
-Subject: Revisiting performance of RAID 10,f2
-Date: Wed, 5 Mar 2008 12:55:41 -0800 (PST)
-Message-ID: <858872.32185.qm@web88307.mail.re4.yahoo.com>
+From: Oliver Martin <oliver.martin@student.tuwien.ac.at>
+Subject: RAID-5 data corruption
+Date: Thu, 06 Mar 2008 00:23:14 +0100
+Message-ID: <47CF2B62.7070806@student.tuwien.ac.at>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-In some direct correspondence with Carla Schroder, she mentioned that you referred to a posting which you had written to this list on the performance of RAID10 "far 2". I have located several posts on this point, but none with your name. Please forgive me if I have been blind, but would you mind reposting it (or forwarding it off-list, if you prefer).
+Hello,
 
-I am a hobbyist user, rather than an IT professional and have been lurking on the list for just over a month trying to learn about RAID before experimenting myself. Many "introductory HOWTOs" on RAID appear to recommend dividing the physical devices which will form the array into a small swap partition which remains as "plain ordinary swap" outside the array(s) and a larger data partition used to build the array. Do you recommend this? or a swap partition as a logical volume within the array? Or is this an inconsequential consideration, given that the machine where I will be building the array already has 4 GB RAM? 
+it seems my RAID-5 exploded last Sunday. :-(
+Ext3 errors started appearing during the monthly data-check, and when I 
+noticed later that day, mismatch_cnt was huge, about 200.000.000. After 
+a reboot (or did I just restart the array? can't remember) and another 
+check, it was down to 176, but the file system remained badly broken.
 
-I ask in advance for your patience with beginners' questions. But I work on the basis that the most stupid question is the one never asked. Thanks in advance.
+I suspected one of the disks was dying and reading/writing bad data, but 
+it seems that's not the case: I took them out of their enclosures (I'm 
+using external drives) and plugged them into my desktop to read the 
+SMART values, and they look okay. Reallocated sector count was 0 on all 
+three, there were no errors logged, and all passed both a SMART long 
+selftest and badblocks -n. So I guess the disks are fine.
+
+I also ran the latter (badblocks -n) with the disks back in the 
+enclosures and using the same USB/Firewire ports, cables and hubs, and 
+they passed again, so I guess that part is okay too.
+
+The configuration is an LVM volume on an md array with two USB drives 
+and one Firewire drive. I'm not sure what caused the problem, it could 
+be an ext3 bug, an LVM bug, an md bug, or something in the USB or 
+Firewire drivers, but the huge mismatch_cnt makes me suspect it's a 
+rather low-level issue (md or lower). BTW, I'm using 2.6.24.3 with this 
+config: http://murli.34sp.com/o/raid/config-2.6.24.3
+
+Anyway, running "e2fsck -n" with all drives in the array aborts with 
+"Error while iterating over blocks in inode 28327968: Illegal triply 
+indirect block found". When I remove one drive at a time, it's the same 
+for two 2/3 configurations, but different for the third: this time, 
+e2fsck at least completes, but still finds lots of errors.
+
+I've uploaded e2fsck and kernel logs to http://murli.34sp.com/o/raid/
+
+My current plan is to buy some drives tomorrow to mirror the current 
+state, and then see what e2fsck can recover; I also found e2salvage and 
+e2extract. Are there any other tools I should look into?
+
+I'll see if I can recover my data, but do you have any ideas what caused 
+the problem in the first place?
 
 
+-- 
+Oliver
