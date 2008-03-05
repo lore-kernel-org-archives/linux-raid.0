@@ -1,120 +1,109 @@
-From: Michael Guntsche <mike@it-loops.com>
-Subject: Re: LVM performance
-Date: Sun, 9 Mar 2008 22:13:51 +0100
-Message-ID: <8D0FC34E-F0B0-4BAF-A466-2C8BC439E7FF@it-loops.com>
-References: <aebf5d970802161958x17a9da92r25663703dc0df05f@mail.gmail.com>	<18360.8065.335494.142060@tree.ty.sabi.co.UK>	<20080217074526.29d3c5c5@hardcode42.net>	<20080218062604.05ae4821@szpak>	<aebf5d970802180438w7a4d40ban3f66ee1dbc38d259@mail.gmail.com>	<20080218154203.6e2d1483@szpak>	<47BB30DF.1080006@student.tuwien.ac.at>	<18364.6868.854623.613958@tree.ty.sabi.co.UK>	<47BED119.4070000@student.tuwien.ac.at> <18384.63840.605334.155518@tree.ty.sabi.co.UK> <47D440D6.90509@student.tuwien.ac.at>
-Mime-Version: 1.0 (Apple Message framework v915)
-Content-Type: multipart/signed; boundary=Apple-Mail-1--843234739; micalg=sha1; protocol="application/pkcs7-signature"
+From: <pg_mh@mh.to.sabi.co.UK>
+Subject: the '--setra 65536' mistery, analysis and WTF?
+Date: Wed, 5 Mar 2008 17:21:17 +0000
+Message-ID: <18382.54925.354731.996508@tree.ty.sabi.co.UK>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <47D440D6.90509@student.tuwien.ac.at>
+From: pg_lxra@lxra.for.sabi.co.UK (Peter Grandi)
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+I was recently testing a nice Dell 2900 with 2 MD1000 array
+enclosure with 4-5 drives each (a mixture of SAS and SATA...)
+attached to an LSI MegaRAID, but in a sw RAID10 4x(1+1) (with
+'-p f2' to get extra read bandwidth at the expense of write
+performance). Running RHEL4 (patched 2.6.9 kernel).
 
---Apple-Mail-1--843234739
-Content-Type: text/plain;
-	charset=US-ASCII;
-	format=flowed;
-	delsp=yes
-Content-Transfer-Encoding: 7bit
+It was greatly perplexed to find that I could get 250MB/s clean
+when writing, but usually only 50-70MB/s when reading, but then
+sometimes 350-400MB/s. So I tested each disk individually and I
+could get the expected 85MB/s (SATA) to 103MB/s (SAS).
 
+Note: this doing very crude bulk sequential transfer tests with
+  'dd bs=4k' (and the use of 'sysctl vm/drop_caches=3') or with
+  Bonnie 1.4 (either with very large files or with '-o_direct').
 
-On Mar 9, 2008, at 20:56, Oliver Martin wrote:
+Highly perplexing, and then I remembered some people reporting
+that they had to do 'blockdev --setra 65536' to get good
+streaming performance in similar circumstances, and indeed this
+applied to my case too (when set on the '/dev/md0' device).
 
-> * LVM/md first extent stripe alignment: when creating the PV,  
-> specify a --metadatasize that is divisible by all anticipated stripe  
-> sizes, i.e., the least common multiple. For example, to accommodate  
-> for 3, 4 or 5 drive configurations with 64KB chunk size, that would  
-> be 768KB.
->
+So I tried several combinations of 'dd' block size, 'blockdev'
+read ahead, and disk and RAID device targets, and I noticed
+these rather worrying combination of details:
 
-Aligning it on chunk-size should be enough so in your case 64KB.  
-Personally I did a lot of tests during  the last few weeks and this  
-seemed to make not that big of a difference.
+* The 'dd' block size had really little influence on the
+  outcome.
 
+* A read-ahead up to 64 (32Kib) on the disk block device reading
+  the individual disk resulted in an increasing transfer rate,
+  and then the transfer rate reached the nominal top one for the
+  disk with 64.
 
-> * Alignment of other extents: for the initial array creation with 3  
-> drives the default 4MB extent size is fine. When I add a fourth  
-> drive, I can resize the extents with vgchange - though I'm a bit  
-> hesitant as the manpage doesn't explicitly say that this doesn't  
-> destroy any data. The bigger problem is that the extent size must be  
-> a power of two, so the maximum I can use with 192KB stripe size is  
-> 64KB. I'll see if that hurts performance. The vgchange manpage says  
-> it doesn't...
->
+* A read head unless 65536 on '/dev/md0' resulted in increasing
+  but erratic performance (the read-ahead on the individual
+  disks seemed not to matter when reading from '/dev/md0').
 
-Why make the extents so small? You do not normally increase your LVs  
-by 4MB. I use 256MB or 512MB extends.
+* In both disk and '/dev/md0' cases I watched instantaneous
+  transfer rates woith 'vmstat 1' and 'watch iostat 1 2'.
 
-> * Telling the file system that the underlying device is striped.  
-> ext3 has the stride parameter, and changing it doesn't seem to be  
-> possible. XFS might be better, as the swidth/sunit options can be  
-> set at mount-time. This would speed up writes, while reads of  
-> existing data wouldn't be affected too much by the misalignment  
-> anyway. Right?
->
+  I noticed that interrupts/s seemed exactly inversely
+  proportional to read ahead, with lots of interrupts/s for
+  small read-head, and few with large read-ahead.
 
-You can change the stride parameter of ext3 with tune2fs take a look  
-at the -E switch, even after you created the filesystem.
-That said bonnie++ results showed that while setting a correct stride  
-for EXT3 increased the creation and deletion of files, the big  
-sequential read and write tests suffered. But this is bonnie++......
+  When reading from the '/dev/md0' the load was usually spread
+  equally between the 8 array disks with 65536, but rather
+  unevenly with the smaller values.
 
-Hope that helps,
-Michael
+* Most revealingly, when I used values of read ahead which were
+  powers of 10, the numbers of block/s reported by 'vmstat 1'
+  was also a multiple of that power of 10.
 
+All these (which happen also under 2.6.23 on my laptop's disk
+and other workstations) seem to point to the following
+conclusions:
 
+* Quite astonishingly, the Linux block device subsystem does not
+  do mailboxing/queueing of IO requests, but turns the
+  read-ahead for the device into a blocking factor, and always
+  issues read requests to the device driver for a strip of N
+  blocks, where N is the read-ahead, then waits for completion
+  of each strip before issuing the next request.
 
---Apple-Mail-1--843234739
-Content-Disposition: attachment;
-	filename=smime.p7s
-Content-Type: application/pkcs7-signature;
-	name=smime.p7s
-Content-Transfer-Encoding: base64
+* This half-duplex logic with dire implications for performance
+  is used even if the host adapter is capable of mailboxing and
+  tagged queueing (verified also on a 3ware host adapter).
 
-MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIIGIzCCAtww
-ggJFoAMCAQICEBd4Zp9b22liUjK/V/e8ZTUwDQYJKoZIhvcNAQEFBQAwYjELMAkGA1UEBhMCWkEx
-JTAjBgNVBAoTHFRoYXd0ZSBDb25zdWx0aW5nIChQdHkpIEx0ZC4xLDAqBgNVBAMTI1RoYXd0ZSBQ
-ZXJzb25hbCBGcmVlbWFpbCBJc3N1aW5nIENBMB4XDTA3MTAzMTE2MDMwMVoXDTA4MTAzMDE2MDMw
-MVowQzEfMB0GA1UEAxMWVGhhd3RlIEZyZWVtYWlsIE1lbWJlcjEgMB4GCSqGSIb3DQEJARYRbWlr
-ZUBpdC1sb29wcy5jb20wggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQC/D9ePLG2ZNk/Z
-NXTRfUq7Rs+3k5M/nqmZ8riQYRnt8sCTj6o/fPS4qjaDf9jRfgbxViROiShFWMoBNJkKg91doJFk
-FYdive8ujFfKpPR6FVGu8rN/sHUZM/gowZUcqDyIMAJVr7iiWhQYxP3U4hmprJsmUaGkjBU37Bcw
-vJnEZ4gDCgYiZLiHUACDDfsl2xl5r6XvtXV9TsjWA3eQSeju68nQFP0PjFU+UtYfr3z1nFMJpuzE
-xStjCEZ+EkYBOHK+RmBaOLEfF2Rq8175oaX5ScotY61s7wjADYesS//bvdcZ11jf/R+UCE90p8iC
-Y1TjqqRv+zMc+VpyfG1dt9ELAgMBAAGjLjAsMBwGA1UdEQQVMBOBEW1pa2VAaXQtbG9vcHMuY29t
-MAwGA1UdEwEB/wQCMAAwDQYJKoZIhvcNAQEFBQADgYEAgVh3S3v4j1ydxqgc/DWXcO5RRnyfLTjU
-bJwYwTdaQVuykeXrT+2ITDIpOpVEqZ7xV/N9aKMM/izyQ8oMvw/J13TUm1N77kNCp5jYy1S+Ntuz
-bCdOdFVA5tFVn/nMfmK1Is6NjK+0GmryYPEpn8vaP9ZGy57wCpKZrwmytgm3oPQwggM/MIICqKAD
-AgECAgENMA0GCSqGSIb3DQEBBQUAMIHRMQswCQYDVQQGEwJaQTEVMBMGA1UECBMMV2VzdGVybiBD
-YXBlMRIwEAYDVQQHEwlDYXBlIFRvd24xGjAYBgNVBAoTEVRoYXd0ZSBDb25zdWx0aW5nMSgwJgYD
-VQQLEx9DZXJ0aWZpY2F0aW9uIFNlcnZpY2VzIERpdmlzaW9uMSQwIgYDVQQDExtUaGF3dGUgUGVy
-c29uYWwgRnJlZW1haWwgQ0ExKzApBgkqhkiG9w0BCQEWHHBlcnNvbmFsLWZyZWVtYWlsQHRoYXd0
-ZS5jb20wHhcNMDMwNzE3MDAwMDAwWhcNMTMwNzE2MjM1OTU5WjBiMQswCQYDVQQGEwJaQTElMCMG
-A1UEChMcVGhhd3RlIENvbnN1bHRpbmcgKFB0eSkgTHRkLjEsMCoGA1UEAxMjVGhhd3RlIFBlcnNv
-bmFsIEZyZWVtYWlsIElzc3VpbmcgQ0EwgZ8wDQYJKoZIhvcNAQEBBQADgY0AMIGJAoGBAMSmPFVz
-VftOucqZWh5owHUEcJ3f6f+jHuy9zfVb8hp2vX8MOmHyv1HOAdTlUAow1wJjWiyJFXCO3cnwK4Va
-qj9xVsuvPAsH5/EfkTYkKhPPK9Xzgnc9A74r/rsYPge/QIACZNenprufZdHFKlSFD0gEf6e20Txh
-BEAeZBlyYLf7AgMBAAGjgZQwgZEwEgYDVR0TAQH/BAgwBgEB/wIBADBDBgNVHR8EPDA6MDigNqA0
-hjJodHRwOi8vY3JsLnRoYXd0ZS5jb20vVGhhd3RlUGVyc29uYWxGcmVlbWFpbENBLmNybDALBgNV
-HQ8EBAMCAQYwKQYDVR0RBCIwIKQeMBwxGjAYBgNVBAMTEVByaXZhdGVMYWJlbDItMTM4MA0GCSqG
-SIb3DQEBBQUAA4GBAEiM0VCD6gsuzA2jZqxnD3+vrL7CF6FDlpSdf0whuPg2H6otnzYvwPQcUCCT
-cDz9reFhYsPZOhl+hLGZGwDFGguCdJ4lUJRix9sncVcljd2pnDmOjCBPZV+V2vf3h9bGCE6u9uo0
-5RAaWzVNd+NWIXiC3CEZNd4ksdMdRv9dX2VPMYIDEDCCAwwCAQEwdjBiMQswCQYDVQQGEwJaQTEl
-MCMGA1UEChMcVGhhd3RlIENvbnN1bHRpbmcgKFB0eSkgTHRkLjEsMCoGA1UEAxMjVGhhd3RlIFBl
-cnNvbmFsIEZyZWVtYWlsIElzc3VpbmcgQ0ECEBd4Zp9b22liUjK/V/e8ZTUwCQYFKw4DAhoFAKCC
-AW8wGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG9w0BCQUxDxcNMDgwMzA5MjExMzUy
-WjAjBgkqhkiG9w0BCQQxFgQU238ct1chqQDfWDap4WA7QqCO8J8wgYUGCSsGAQQBgjcQBDF4MHYw
-YjELMAkGA1UEBhMCWkExJTAjBgNVBAoTHFRoYXd0ZSBDb25zdWx0aW5nIChQdHkpIEx0ZC4xLDAq
-BgNVBAMTI1RoYXd0ZSBQZXJzb25hbCBGcmVlbWFpbCBJc3N1aW5nIENBAhAXeGafW9tpYlIyv1f3
-vGU1MIGHBgsqhkiG9w0BCRACCzF4oHYwYjELMAkGA1UEBhMCWkExJTAjBgNVBAoTHFRoYXd0ZSBD
-b25zdWx0aW5nIChQdHkpIEx0ZC4xLDAqBgNVBAMTI1RoYXd0ZSBQZXJzb25hbCBGcmVlbWFpbCBJ
-c3N1aW5nIENBAhAXeGafW9tpYlIyv1f3vGU1MA0GCSqGSIb3DQEBAQUABIIBAFxLhbvpsLA8TrFO
-bi/n/pgxtecbx6AB/NnAEt6luUK3t29H+oPihrWHByXkdncDSfnNGOlJeq8Kzmj3gi2XSsyJH3nq
-fUEK2XQC9/kEYopNij69x72Rlds2lwybBWdzGcMetOnRF8iDbsaRhgzEfiBF6p/kVf8/QZ3K4wv7
-UdS/CIh22UPzO0mwGbBMNVCKRlP6fBvAg8QNby3NvrbURRWshIPuNAuMLxQmUrBLQ07WEd1VoeWL
-Zgz2EB5f4UG+UDIoTPmo2lYfFL5IMOuuE2LTg0L461X6hMMY/5+ySthvCDU0+G1MVcOLeYnyMBhj
-LUO4+6fhUHTnt6zIivbQIg8AAAAAAAA=
+All this seems awful enough, because it results in streaming
+pauses unless the read-ahead (thus the number of blocks read at
+once from devices) is large, but it is more worrying that while
+a read-ahead of 64 already results in infrequent enough pauses
+for single disk drives, it does not for RAID block devices.
 
---Apple-Mail-1--843234739--
+  For writes queueing and streaming seem to be happening
+  naturally as written pages accumulate in the page cache.
+
+The read-ahead on the RAID10 has to be a lot larger (apparently
+32MiB) to deliver the expected level of streaming read speed.
+This is very bad except for bulk streaming. It is hard to
+imagine why that is needed, unless the calculation is wrong.
+Also, with smaller values the read rates are erratic: sometimes
+and for a while high, then slower.
+
+I had a look at the code and in the block subsystem the code
+dealing with 'ra_pages' is opaque but there is nothing that
+screams that it is doing blocked reads instead of streaming
+reads.
+
+In 'drivers/md/raid10.c' there is one of the usual awful
+practices of overriding the user's chosen value (to at least two
+stripes) without actually telling the user ('--getra' does not
+return the actual value used), but nothing overtly suspicious.
+
+Before I do some debugging and tracing of where things go wrong,
+it would be nice if someone more familiar with the vagaries of
+the block subsystem and of the MD RAID code had a look to guess
+at where the problem for the above arise...
