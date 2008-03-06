@@ -1,72 +1,59 @@
 From: Andre Noll <maan@systemlinux.org>
-Subject: Re: 16 HDDs too much for RAID6?
-Date: Thu, 6 Mar 2008 10:45:59 +0100
-Message-ID: <20080306094559.GA29734@skl-net.de>
-References: <20080306100128.8daad6bd.taeuber@bbaw.de>
+Subject: Re: [PATCH 001 of 9] md: Fix deadlock in md/raid1 and md/raid10 when handling a read error.
+Date: Thu, 6 Mar 2008 11:51:34 +0100
+Message-ID: <20080306105134.GC32242@skl-net.de>
+References: <20080303111240.23302.patches@notabene> <1080303001705.23577@suse.de> <20080303155449.GA32242@skl-net.de> <18380.59250.90214.461186@notabene.brown> <20080304112945.GB32242@skl-net.de> <18383.25889.876350.431676@notabene.brown>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="EeQfGwPcQSOJBaQU"
+	protocol="application/pgp-signature"; boundary="hOcCNbCCxyk/YU74"
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20080306100128.8daad6bd.taeuber@bbaw.de>
+In-Reply-To: <18383.25889.876350.431676@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Lars =?iso-8859-1?Q?T=E4uber?= <taeuber@bbaw.de>
-Cc: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, "K.Tanaka" <k-tanaka@ce.jp.nec.com>
 List-Id: linux-raid.ids
 
 
---EeQfGwPcQSOJBaQU
-Content-Type: text/plain; charset=iso-8859-1
+--hOcCNbCCxyk/YU74
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-On 10:01, Lars T=E4uber wrote:
-> Here we have another problem with our RAID6 and 16 HDDs:
+On 14:29, Neil Brown wrote:
+> > Are you worried about another CPU setting conf->pending_bio_list.head
+> > to !=3D NULL after the if statement? If that's an issue I think also
+> > the original patch is problematic because the same might happen after
+> > the final spin_unlock_irq() but but before flush_pending_writes()
+> > returns zero.
 >=20
-> monosan:~ # mdadm -V
-> mdadm - v2.6.2 - 21st May 2007
-> monosan:~ # mdadm -C /dev/md4 -l6 -n 16 -x 0 /dev/dm-*
-> mdadm: /dev/dm-0 appears to be part of a raid array:
+> No.  I'm worried that another CPU might set
+> conf->pending_bio_list.head *before* the if statement, but it isn't
+> seen by this CPU because of the lack of memory barriers.  The spinlock
+> ensures that the memory state is consistent.
 
-Run
-	mdadm --zero-superblock /dev/dm-0
+But is that enough to avoid the deadlock? I think the following
+scenario would be possible with the code in the original patch:
 
-before creating the array to get rid of these.
+	// suppose conf->pending_bio_list.head=3D=3DNULL ATM
 
-> monosan:~ # mdadm --detail --scan| fgrep md4 >> /etc/mdadm.conf=20
+	CPU0:
+	int rv =3D 0;
+	spin_lock_irq(&conf->device_lock);
+	if (conf->pending_bio_list.head) // false
+	spin_unlock_irq(&conf->device_lock);
 
-Please post your /etc/mdadm.conf
+	CPU1:
+	conf->pending_bio_list.head =3D something;
 
-> monosan:~ # mdadm -A /dev/md4
-> mdadm: WARNING /dev/dm-9 and /dev/dm-8 appear to have very similar superb=
-locks.
->       If they are really different, please --zero the superblock on one
->       If they are the same or overlap, please remove one from the
->       DEVICE list in mdadm.conf.
-
-Are you sure dm-8 and dm-9 are different devices?
-
-	pvdisplay /dev/dm-9; pvdisplay /dev/dm-8
-
-should tell you.
-
-> This happens _always_ when the arreay is reassembled. The actual
-> devices with the duplicated superblocks differ sometimes.
-
-If I read the code correctly it means that the two devices have
-identical superblocks, the same event count and the same minor number,
-so mdadm thinks dm-8 and dm-9 are overlapping partitions.
-
-> Are 16 drivesmda too much for RAID6?
-
-No, raid6 supports up to 254 devices (there are other reasons for
-not using too many devices for raid6 though).
+	CPU0:
+	return rv; // zero
 
 Andre
 --=20
 The only person who always got his work done by Friday was Robinson Crusoe
 
---EeQfGwPcQSOJBaQU
+--hOcCNbCCxyk/YU74
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: Digital signature
 Content-Disposition: inline
@@ -74,9 +61,9 @@ Content-Disposition: inline
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.1 (GNU/Linux)
 
-iD8DBQFHz71XWto1QDEAkw8RAh39AJwKErj+JjcSsFS6UeWK8PhSCj0KzgCdG4y7
-+rF82AKSXfEQ0bxzvvH6jxQ=
-=wRZv
+iD8DBQFHz8y2Wto1QDEAkw8RAhtFAKCKbgF6u7Gils1P2dV9dheHWq/rxgCfZTDf
+44gaYd5FYtLiD55JWkdICA0=
+=4FeF
 -----END PGP SIGNATURE-----
 
---EeQfGwPcQSOJBaQU--
+--hOcCNbCCxyk/YU74--
