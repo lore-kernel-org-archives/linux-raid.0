@@ -1,74 +1,41 @@
-From: Janek Kozicki <janek_listy@wp.pl>
-Subject: Re: [PATCH 001 of 9] md: Fix deadlock in md/raid1 and md/raid10
- when handling a read error.
-Date: Thu, 6 Mar 2008 17:34:42 +0100
-Message-ID: <20080306173442.4516645f@szpak>
-References: <20080303111240.23302.patches@notabene>
-	<1080303001705.23577@suse.de>
-	<20080303155449.GA32242@skl-net.de>
-	<18380.59250.90214.461186@notabene.brown>
-	<20080304112945.GB32242@skl-net.de>
-	<18383.25889.876350.431676@notabene.brown>
-	<20080306105134.GC32242@skl-net.de>
+From: Marc Bejarano <beej@alum.mit.edu>
+Subject: data corruption: ext3/lvm2/md/mptsas/vitesse/seagate
+Date: Thu, 06 Mar 2008 16:08:39 -0500
+Message-ID: <200803062108.m26L8e4i020882@colby.verdasys.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20080306105134.GC32242@skl-net.de>
-Sender: linux-raid-owner@vger.kernel.org
-Cc: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"; format=flowed
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Andre Noll said:     (by the date of Thu, 6 Mar 2008 11:51:34 +0100)
+i've been doing burn-in on a new server i had hoped to deploy months 
+ago and can't seem to figure out the cause of data corruption i've 
+been seeing.  the SAS controller is an LSI SAS3801E connected to an 
+xTore XJ-SA12-316 SAS enclosures (vitesses expanders) full of seagate 
+7200.10 750-GB SATA drives.
 
-> But is that enough to avoid the deadlock? I think the following
-> scenario would be possible with the code in the original patch:
-> 
-> 	// suppose conf->pending_bio_list.head==NULL ATM
-> 
-> 	CPU0:
-> 	int rv = 0;
-> 	spin_lock_irq(&conf->device_lock);
-> 	if (conf->pending_bio_list.head) // false
-> 	spin_unlock_irq(&conf->device_lock);
-> 
-> 	CPU1:
-> 	conf->pending_bio_list.head = something;
-> 
-> 	CPU0:
-> 	return rv; // zero
+the corruption is occurring in ext3 filesystems that live on top of 
+an lvm2 RAID 0 stripe composed of 16 2-drive md RAID 1 sets.  the 
+corruption has been detected both by MySQL noticing bad checksums and 
+also by using md's "check" (sync_action) for RAID 1 consistency.
 
-Remember that it's impossible to predict when is executed what. This
-scenario can be true also, will it work?
+most recently we got two cases of the storage stack apparently 
+writing a mysql 16K page starting at the wrong 512-byte (sector) 
+boundary.  in both cases it was at too low a sector.  one page was 13 
+sectors too early, the other 34 too early.  in both cases, one disk 
+in each mirror set had the correct data and the other incorrect 
+(apparently ruling out everything above md). unfortunately, the 
+problem is not easily repeatable.  the system can run for days with 
+terabytes of writes before we notice any corruption.
 
- 	CPU0:
- 	int rv = 0;
+we're running RHEL 5.1's kernel and drivers and i understand that 
+these lists are for vanilla kernel support.  i've already engaged 
+redhat support, but i just wanted to see if anybody else has seen 
+something similar or anybody has any brilliant troubleshooting 
+ideas.  swapping drives, enclosures, HBA's, cables, and sacrifices of 
+animals to gods have so far not been able to make the world right.
 
-CPU1:
-conf->
+tia,
+marc
 
-	CPU0:
-	spin_lock_irq(&conf->device_lock);
-
-CPU1:
-->pending_bio_list.
-
-	CPU0:
- 	if (conf->pending_bio_list.head) // false
-
-CPU1:
-.head = 
-
-	CPU0:
- 	spin_unlock_irq(&conf->device_lock);
- 	return rv; // zero
-
-CPU1:
-= something;
-
-
-This is exaggerated of course. But if you want to think "concurrent
-execution" you must think that way.
-
--- 
-Janek Kozicki                                                         |
