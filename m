@@ -1,55 +1,80 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH 001 of 9] md: Fix deadlock in md/raid1 and md/raid10 when handling a read error.
-Date: Thu, 6 Mar 2008 14:29:37 +1100
-Message-ID: <18383.25889.876350.431676@notabene.brown>
-References: <20080303111240.23302.patches@notabene>
-	<1080303001705.23577@suse.de>
-	<20080303155449.GA32242@skl-net.de>
-	<18380.59250.90214.461186@notabene.brown>
-	<20080304112945.GB32242@skl-net.de>
+From: Lars =?UTF-8?B?VMOkdWJlcg==?= <taeuber@bbaw.de>
+Subject: 16 HDDs too much for RAID6?
+Date: Thu, 6 Mar 2008 10:01:28 +0100
+Message-ID: <20080306100128.8daad6bd.taeuber@bbaw.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Andre Noll on Tuesday March 4
 Sender: linux-raid-owner@vger.kernel.org
-To: Andre Noll <maan@systemlinux.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, "K.Tanaka" <k-tanaka@ce.jp.nec.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday March 4, maan@systemlinux.org wrote:
-> On 17:08, Neil Brown wrote:
-> > > Do we really need to take the spin lock in the common case where
-> > > conf->pending_bio_list.head is NULL? If not, the above could be
-> > > optimized to the slightly faster and better readable
-> > > 
-> > > 	struct bio *bio;
-> > > 
-> > > 	if (!conf->pending_bio_list.head)
-> > > 		return 0;
-> > > 	spin_lock_irq(&conf->device_lock);
-> > > 	bio = bio_list_get(&conf->pending_bio_list);
-> > > 	...
-> > > 	spin_unlock_irq(&conf->device_lock);
-> > > 	return 1;
-> > 
-> > Maybe... If I write a memory location inside a spinlock, then after
-> > the spinlock is dropped, I read that location on a different CPU,
-> > am I always guaranteed to see the new value? or do I need some sort of
-> > memory barrier?
-> 
-> Are you worried about another CPU setting conf->pending_bio_list.head
-> to != NULL after the if statement? If that's an issue I think also
-> the original patch is problematic because the same might happen after
-> the final spin_unlock_irq() but but before flush_pending_writes()
-> returns zero.
+Hallo!
 
-No.  I'm worried that another CPU might set
-conf->pending_bio_list.head *before* the if statement, but it isn't
-seen by this CPU because of the lack of memory barriers.  The spinlock
-ensures that the memory state is consistent.
-It is possible that I am being overcautious.  But I think that is
-better than the alternative.
+Here we have another problem with our RAID6 and 16 HDDs:
 
-Thanks,
-NeilBrown
+monosan:~ # mdadm -V
+mdadm - v2.6.2 - 21st May 2007
+monosan:~ # mdadm -C /dev/md4 -l6 -n 16 -x 0 /dev/dm-*
+mdadm: /dev/dm-0 appears to be part of a raid array:
+    level=3Draid6 devices=3D15 ctime=3DWed Feb 13 10:38:52 2008
+mdadm: /dev/dm-1 appears to be part of a raid array:
+    level=3Draid6 devices=3D15 ctime=3DWed Feb 13 10:38:52 2008
+mdadm: /dev/dm-10 appears to be part of a raid array:
+    level=3Draid6 devices=3D15 ctime=3DWed Feb 13 10:38:52 2008
+mdadm: /dev/dm-11 appears to contain an ext2fs file system
+    size=3D-2147483648K  mtime=3DThu Jan  1 01:00:00 1970
+mdadm: /dev/dm-11 appears to be part of a raid array:
+    level=3Draid6 devices=3D15 ctime=3DWed Feb 13 10:38:52 2008
+mdadm: /dev/dm-12 appears to be part of a raid array:
+    level=3Draid6 devices=3D15 ctime=3DWed Feb 13 10:38:52 2008
+mdadm: /dev/dm-13 appears to be part of a raid array:
+    level=3Draid6 devices=3D15 ctime=3DWed Feb 13 10:38:52 2008
+mdadm: /dev/dm-14 appears to be part of a raid array:
+    level=3Draid6 devices=3D15 ctime=3DWed Feb 13 10:38:52 2008
+mdadm: /dev/dm-2 appears to be part of a raid array:
+    level=3Draid6 devices=3D15 ctime=3DWed Feb 13 10:38:52 2008
+mdadm: /dev/dm-3 appears to be part of a raid array:
+    level=3Draid6 devices=3D15 ctime=3DWed Feb 13 10:38:52 2008
+mdadm: /dev/dm-4 appears to be part of a raid array:
+    level=3Draid6 devices=3D15 ctime=3DWed Feb 13 10:38:52 2008
+mdadm: /dev/dm-5 appears to be part of a raid array:
+    level=3Draid6 devices=3D15 ctime=3DWed Feb 13 10:38:52 2008
+mdadm: /dev/dm-6 appears to be part of a raid array:
+    level=3Draid6 devices=3D15 ctime=3DWed Feb 13 10:38:52 2008
+mdadm: /dev/dm-7 appears to be part of a raid array:
+    level=3Draid6 devices=3D15 ctime=3DWed Feb 13 10:38:52 2008
+Continue creating array? y
+mdadm: array /dev/md4 started.
+
+monosan:~ # mdadm --detail --scan| fgrep md4 >> /etc/mdadm.conf=20
+
+monosan:~ # mdadm -S /dev/md4
+mdadm: stopped /dev/md4
+
+monosan:~ # mdadm -A /dev/md4
+mdadm: WARNING /dev/dm-9 and /dev/dm-8 appear to have very similar supe=
+rblocks.
+      If they are really different, please --zero the superblock on one
+      If they are the same or overlap, please remove one from the
+      DEVICE list in mdadm.conf.
+
+This happens _always_ when the arreay is reassembled. The actual device=
+s with the duplicated superblocks differ sometimes.
+
+Are 16 drives too much for RAID6?
+
+Thanks
+Lars
+
+--=20
+                            Informationstechnologie
+Berlin-Brandenburgische Akademie der Wissenschaften
+J=C3=A4gerstrasse 22-23                     10117 Berlin
+Tel.: +49 30 20370-352           http://www.bbaw.de
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
