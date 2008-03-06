@@ -1,43 +1,55 @@
-From: "Dan Williams" <dan.j.williams@gmail.com>
-Subject: Re: RAID-5 data corruption
-Date: Wed, 5 Mar 2008 18:11:17 -0700
-Message-ID: <e9c3a7c20803051711y56500b89n3c3c9984d4607b9b@mail.gmail.com>
-References: <47CF2B62.7070806@student.tuwien.ac.at>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: [PATCH 001 of 9] md: Fix deadlock in md/raid1 and md/raid10 when handling a read error.
+Date: Thu, 6 Mar 2008 14:29:37 +1100
+Message-ID: <18383.25889.876350.431676@notabene.brown>
+References: <20080303111240.23302.patches@notabene>
+	<1080303001705.23577@suse.de>
+	<20080303155449.GA32242@skl-net.de>
+	<18380.59250.90214.461186@notabene.brown>
+	<20080304112945.GB32242@skl-net.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <47CF2B62.7070806@student.tuwien.ac.at>
-Content-Disposition: inline
+In-Reply-To: message from Andre Noll on Tuesday March 4
 Sender: linux-raid-owner@vger.kernel.org
-To: Oliver Martin <oliver.martin@student.tuwien.ac.at>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: Andre Noll <maan@systemlinux.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, "K.Tanaka" <k-tanaka@ce.jp.nec.com>
 List-Id: linux-raid.ids
 
-On Wed, Mar 5, 2008 at 4:23 PM, Oliver Martin
-<oliver.martin@student.tuwien.ac.at> wrote:
->  I'll see if I can recover my data, but do you have any ideas what caused
->  the problem in the first place?
->
+On Tuesday March 4, maan@systemlinux.org wrote:
+> On 17:08, Neil Brown wrote:
+> > > Do we really need to take the spin lock in the common case where
+> > > conf->pending_bio_list.head is NULL? If not, the above could be
+> > > optimized to the slightly faster and better readable
+> > > 
+> > > 	struct bio *bio;
+> > > 
+> > > 	if (!conf->pending_bio_list.head)
+> > > 		return 0;
+> > > 	spin_lock_irq(&conf->device_lock);
+> > > 	bio = bio_list_get(&conf->pending_bio_list);
+> > > 	...
+> > > 	spin_unlock_irq(&conf->device_lock);
+> > > 	return 1;
+> > 
+> > Maybe... If I write a memory location inside a spinlock, then after
+> > the spinlock is dropped, I read that location on a different CPU,
+> > am I always guaranteed to see the new value? or do I need some sort of
+> > memory barrier?
+> 
+> Are you worried about another CPU setting conf->pending_bio_list.head
+> to != NULL after the if statement? If that's an issue I think also
+> the original patch is problematic because the same might happen after
+> the final spin_unlock_irq() but but before flush_pending_writes()
+> returns zero.
 
-Did one of the disks cause the USB reset message?  It appears to
-coincide with the start of the trouble, but it may be just that,
-coincidence.
+No.  I'm worried that another CPU might set
+conf->pending_bio_list.head *before* the if statement, but it isn't
+seen by this CPU because of the lack of memory barriers.  The spinlock
+ensures that the memory state is consistent.
+It is possible that I am being overcautious.  But I think that is
+better than the alternative.
 
-Mar  2 01:06:02 quassel kernel: md: using 128k window, over a total of
-488383936 blocks.
-Mar  2 09:03:43 quassel kernel: usb 4-5.3.2: reset high speed USB
-device using ehci_hcd and address 8
-Mar  2 09:25:15 quassel kernel: EXT3-fs error (device dm-0):
-htree_dirblock_to_tree: bad entry in directory #57262081: directory
-entry across blocks - offset=0, inode=2917738116, rec_len=11736,
-name_len=107
-Mar  2 10:30:46 quassel kernel: md: md0: data-check done.
-
-The output of something like 'ls -l /sys/block/sdb/device' should tell.
-
-Have you run this operation on a kernel version prior to 2.6.24.3? If
-so, which version?
-
---
-Dan
+Thanks,
+NeilBrown
