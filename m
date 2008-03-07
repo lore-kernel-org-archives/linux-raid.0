@@ -1,76 +1,107 @@
-From: Andre Noll <maan@systemlinux.org>
-Subject: Re: auto-assembling arrays without a configuration file
-Date: Mon, 10 Mar 2008 16:08:45 +0100
-Message-ID: <20080310150845.GF32242@skl-net.de>
-References: <20080308004009.GA32251@rap.rap.dk> <18388.27742.907731.241140@notabene.brown> <20080310134828.GF9348@rap.rap.dk>
+From: Marc Bejarano <beej@alum.mit.edu>
+Subject: Re: data corruption: ext3/lvm2/md/mptsas/vitesse/seagate
+Date: Fri, 07 Mar 2008 17:40:40 -0500
+Message-ID: <200803101519.m2AFJCJS032509@colby.verdasys.com>
+References: <200803062108.m26L8e4i020882@colby.verdasys.com>
+ <1204848652.3062.100.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="z0eOaCaDLjvTGF2l"
+Content-Type: text/plain; charset="us-ascii"; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20080310134828.GF9348@rap.rap.dk>
+In-Reply-To: <1204848652.3062.100.camel@localhost.localdomain>
+References: <200803062108.m26L8e4i020882@colby.verdasys.com>
+ <1204848652.3062.100.camel@localhost.localdomain>
 Sender: linux-raid-owner@vger.kernel.org
-To: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
-Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+hi, james.  thanks so much for taking the time to dig into this! :)
 
---z0eOaCaDLjvTGF2l
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+At 19:10 3/6/2008, James Bottomley wrote:
+ >On Thu, 2008-03-06 at 16:08 -0500, Marc Bejarano wrote:
+ >> i've been doing burn-in on a new server i had hoped to deploy months
+ >> ago and can't seem to figure out the cause of data corruption i've
+ >> been seeing.  the SAS controller is an LSI SAS3801E connected to an
+ >> xTore XJ-SA12-316 SAS enclosures (vitesses expanders) full of seagate
+ >> 7200.10 750-GB SATA drives.
+ >>
+ >> the corruption is occurring in ext3 filesystems that live on top of
+ >> an lvm2 RAID 0 stripe composed of 16 2-drive md RAID 1 sets.  the
+ >> corruption has been detected both by MySQL noticing bad checksums and
+ >> also by using md's "check" (sync_action) for RAID 1 consistency.
+ >
+ >Actually, the RAID-1 might be the most useful.  Is there anything
+ >significant about the differing data?
 
-On 14:48, Keld J=F8rn Simonsen wrote:
+it looks like contiguous sectors of misplaced data.
 
-> Hmm, I am still looking for a way to boot a lin=FAx raid as root.
+ >Do od dumps of the corrupt
+ >sectors in both halves of the mirror and see what actually appears in
+ >the data ... it might turn out to be useful.
 
-Here's an init script that works for me on a server that has its root
-partition on a software raid5 on /dev/md1. It uses busybox for all
-commands except mdadm.
+my colleague (who has been batting his head against this for far 
+longer than he'd like to have been) has been getting at the data via 
+a pread64() of the actual mysql data file.  multiple pread64()'s end 
+up giving him both halves of the mirror.
 
-	#! /bin/sh
-	export PATH=3D/bin:/sbin
-	echo initramfs startup
+ >Things like how long the
+ >data corruption is (are the two sectors different, or is it just a run
+ >of a few bytes within them) can be useful in tracking the source of the
+ >corruption.
 
-	cat > /etc/fstab << EOF
-	proc /proc proc defaults 0 0
-	sysfs /sys sysfs rw 0 0
-	EOF
+here is a cut of an email he wrote me:
+===
+In one instance of mirroring out-of-sync-ness, the disk with the bad
+data looked as follows:
 
-	cat > /etc/mdev.conf << EOF
-	null 0:0 666
-	ptmx 0:0 666
-	EOF
+"a" is a currently undetermined offset into the block device divisible by 16K.
 
-	mount /proc
-	mount /sys
-	mdev -s
-	mknod /dev/md1 b 9 1
-	echo 'DEVICE partitions' > /etc/mdadm/mdadm.conf
-	mdadm -E --scan >> /etc/mdadm/mdadm.conf
-	mdadm -A --scan || sh
-	mount -oro /dev/md1 /mnt || sh
-	mount --move /proc /mnt/proc
-	mount --move /sys /mnt/sys
-	cd /mnt
-	mount --move . /
-	exec chroot . /sbin/init 2 > /dev/console 2>/dev/console < /dev/console
+a + 0x00000: "header of 16K mysql/innodb page # 178812066 followed by 
+good data"
 
-Andre
---=20
-The only person who always got his work done by Friday was Robinson Crusoe
+a + 0x02600: **BAD DATA**: "header of 16K mysql/innodb page # 178812067",
+should be at a+0x04000, followed by old version of first 6656 bytes 
+of page 178812067
 
---z0eOaCaDLjvTGF2l
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
+a + 0x04000: "header of 16K mysql/innodb page # 178812067 followed by 
+correct current copy of page"
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
+It looks to me like mysql/innodb "page" 178812067 at some point was 
+written to the wrong spot, and subsequently a newer version of page 
+178812067 got written out again, but to the proper spot.
 
-iD8DBQFH1U79Wto1QDEAkw8RAtc8AJ9g0Cw9lhPeju6Fw1F84TiOjlhJ6wCfcrNt
-1C64hr7kMgCrCrSufhSvZBI=
-=6VbT
------END PGP SIGNATURE-----
+In another instance of out-of-sync-ness, the bad disk looked as 
+follows.  The bad disk was in a completely different md raid1 
+"device", and if it needs to be said explicitly, was a totally 
+different physical drive.
 
---z0eOaCaDLjvTGF2l--
+b + 0x00000: "header of 16K mysql/innodb page 309713974 followed by good data"
+
+b + 0x03600: **BAD DATA**: "header of 16K mysql/innodb page 
+309713975", should be at b+0x04000, followed by first 10752 == 21*512 
+bytes of current correct value of page per disk with good copy
+
+b + 0x06000: correct current last part of page 309713975 in proper place.
+
+This is hard to explain.  It looks like page 309713975 got written 
+out to the proper spot, but then the first 10752 bytes got written 
+out again to the wrong spot?!?
+===
+
+ >Do you happen to have the absolute block number (and relative block
+ >number---relative to the partition start) of the corruption?
+
+no.  can you suggest an easy way to get that?
+
+ >Of course, confirming
+ >that git head has this problem too, so we could rule out patches added
+ >to the RHEL kernel would be useful ...
+
+we're not currently git-enabled, but i suppose it wouldn't take too 
+long to become so.  would testing with the latest kernel.org snapshot 
+(currently 2.6.25-rc4-git2 from this mornging) be good enough?  or 
+were you hoping for a test with stuff from scsi-misc?
+
+cheers,
+marc
+
