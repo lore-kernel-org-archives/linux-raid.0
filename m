@@ -1,59 +1,50 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: equal size not large enough for RAID1?
-Date: Fri, 7 Mar 2008 14:43:51 +1100
-Message-ID: <18384.47607.709703.403641@notabene.brown>
-References: <20080305100547.2634bd04.taeuber@bbaw.de>
-	<18383.24086.165437.659336@notabene.brown>
-	<20080306101157.52d482b3.taeuber@bbaw.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+From: NeilBrown <neilb@suse.de>
+Subject: [PATCH 002 of 2] md: Reduce CPU wastage on idle md array with a write-intent bitmap. fix
+Date: Fri, 7 Mar 2008 16:00:53 +1100
+Message-ID: <1080307050053.26127@suse.de>
+References: <20080307155754.25976.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Lars Tauber on Thursday March 6
 Sender: linux-raid-owner@vger.kernel.org
-To: Lars =?UTF-8?B?VMOkdWJlcg==?= <taeuber@bbaw.de>
-Cc: linux-raid@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thursday March 6, taeuber@bbaw.de wrote:
-> 
-> What is this internal bitmap good for? Is there a documentation
-> somewhere on the net about this? 
 
-  man md
-and search for BITMAP.  There is a section of BITMAP WRITE-INTENT
-LOGGING.
+Recent patch titled
+  Reduce CPU wastage on idle md array with a write-intent bitmap.
 
-> 
-> I just repeated the following:
-> 
-> monosan:~ # mdadm -C /dev/md9 -l1 -n2 -x0 /dev/md4 /dev/etherd/e22.0 
-> mdadm: Defaulting to verion 1.0 metadata
-> mdadm: /dev/md4 appears to be part of a raid array:
->     level=raid1 devices=2 ctime=Thu Mar  6 09:39:37 2008
-> mdadm: /dev/etherd/e22.0 appears to be part of a raid array:
->     level=raid1 devices=2 ctime=Thu Mar  6 09:39:37 2008
-> Continue creating array? y
-> mdadm: array /dev/md9 started.
-> 
-> monosan:~ # mdadm -V
-> mdadm - v2.6.2 - 21st May 2007
-> 
-> monosan:~ # mdadm /dev/md9 -f /dev/etherd/e22.0 
-> mdadm: set /dev/etherd/e22.0 faulty in /dev/md9
-> 
-> monosan:~ # mdadm /dev/md9 -r /dev/etherd/e22.0 
-> mdadm: hot removed /dev/etherd/e22.0
-> 
-> monosan:~ # mdadm /dev/md9 -a /dev/etherd/e22.0 
-> mdadm: /dev/etherd/e22.0 not large enough to join array
+would sometimes leave the array with dirty bitmap bits that stay
+dirty.  A subsequent write would sort things out so it isn't a big
+problem, but should be fixed nonetheless.
 
-Hmm..  I just read through the change logs and I see there was a bug
-here that was fixed in 2.6.3.
-If you want an update from SuSE you would need to log a bug report in
-the Novell bugzilla.
+We need to make sure that when the bitmap becomes not "allclean", the
+daemon_sleep really does get set to a sensible value.
 
-Alternately request v0.90 metadata (--metadata=0.90)  That will avoid
-the bug.
 
-NeilBrown
+Signed-off-by: Neil Brown <neilb@suse.de>
+
+### Diffstat output
+ ./drivers/md/bitmap.c |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff .prev/drivers/md/bitmap.c ./drivers/md/bitmap.c
+--- .prev/drivers/md/bitmap.c	2008-03-07 15:51:23.000000000 +1100
++++ ./drivers/md/bitmap.c	2008-03-07 15:56:57.000000000 +1100
+@@ -1045,7 +1045,8 @@ void bitmap_daemon_work(struct bitmap *b
+ 	if (bitmap == NULL)
+ 		return;
+ 	if (time_before(jiffies, bitmap->daemon_lastrun + bitmap->daemon_sleep*HZ))
+-		return;
++		goto done;
++
+ 	bitmap->daemon_lastrun = jiffies;
+ 	if (bitmap->allclean) {
+ 		bitmap->mddev->thread->timeout = MAX_SCHEDULE_TIMEOUT;
+@@ -1142,6 +1143,7 @@ void bitmap_daemon_work(struct bitmap *b
+ 		}
+ 	}
+ 
++ done:
+ 	if (bitmap->allclean == 0)
+ 		bitmap->mddev->thread->timeout = bitmap->daemon_sleep * HZ;
+ }
