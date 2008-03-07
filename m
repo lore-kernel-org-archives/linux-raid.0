@@ -1,75 +1,85 @@
-From: Andre Noll <maan@systemlinux.org>
+From: Lars =?UTF-8?B?VMOkdWJlcg==?= <taeuber@bbaw.de>
 Subject: Re: 16 HDDs too much for RAID6?
-Date: Fri, 7 Mar 2008 11:33:27 +0100
-Message-ID: <20080307103327.GB29734@skl-net.de>
-References: <20080306100128.8daad6bd.taeuber@bbaw.de> <20080306094559.GA29734@skl-net.de> <20080306115559.63ac361d.taeuber@bbaw.de> <20080306161621.GD32242@skl-net.de> <20080307084146.GA9653@percy.comedia.it>
+Date: Fri, 7 Mar 2008 11:45:55 +0100
+Message-ID: <20080307114555.6ce17158.taeuber@bbaw.de>
+References: <20080306100128.8daad6bd.taeuber@bbaw.de>
+	<20080306094559.GA29734@skl-net.de>
+	<20080306115559.63ac361d.taeuber@bbaw.de>
+	<20080306161621.GD32242@skl-net.de>
+	<20080307084146.GA9653@percy.comedia.it>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="ZfOjI3PrQbgiZnxM"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
 In-Reply-To: <20080307084146.GA9653@percy.comedia.it>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hi guys,
 
---ZfOjI3PrQbgiZnxM
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Luca Berra <bluca@comedia.it> schrieb:
+> On Thu, Mar 06, 2008 at 05:16:21PM +0100, Andre Noll wrote:
+> >On 11:55, Lars T=C3=A4uber wrote:
+> >> monosan:~ # cat /etc/mdadm.conf=20
+> >> DEVICE partitions
+> >> ARRAY /dev/md2 level=3Draid1 UUID=3Dd9d31de2:e6dbd3c3:37c7ea09:882=
+a64e5
+> >> ARRAY /dev/md3 level=3Draid1 UUID=3Da8687183:a79e514c:ca492c4b:ffd=
+4384f
+> >> ARRAY /dev/md4 level=3Draid6 num-devices=3D16 UUID=3D8d596319:4d21=
+dba3:3871bccf:5b90a66d
+> >
+> >Does it help to list only the 16 devices that are used for the array=
+,
+> >i.e. something like
+> >
+> >	DEVICE /dev/sd[a-p]
 
-On 09:41, Luca Berra wrote:
+because the devices sd[c-z] and sda[a-h] are used by multipathd they ar=
+e accessible in read only mode only. For writing /dev/dm-* devices are =
+available.
+
+> i hope kernel will pevent you from doing something this stupid, but i=
+ am
+> not that sure.
+> if you wanna check if the problem is device selection a more appropri=
+ate
+> line would be
+> DEVICE /dev/mapper/mpath*
+> or
+> DEVICE /dev/dm-[0-9] /dev/dm-1[0-5]
+
+Correct.
+My mdadm.conf has now this line for safety:
+DEVICE /dev/sd[ab][0-9] /dev/dm-*
+
+But this doesn't really changed anything.
+
 > >I think this is what is confusing mdadm. Your "DEVICE partitions"
 > >line instructs mdadm to consider all devices in /proc/partitions,
 > >so it finds both sdy and sdi.
 > in this case i believe the error message would be different
+>=20
+> >> Is there a way to get more verbose infos or debug this anyhow?
+>=20
+> you could try with the --verbose option and post the results here.
+>=20
+> also could you check if the minor number of /dev/dm-* are really uniq=
+ue?
+>=20
+> in case this yelds no result we will have to add some more printf in
+> Assemble.c.
 
-Well, the code that causes the warning Lars is seeing is
+I zeroed out all physical devices completely:
+# for DEV in /dev/sd[c-r]; do dd if=3D/dev/zero of=3D$DEV; done
 
-	if (best[i] >=3D0 &&
-	    devices[best[i]].i.events
-	    =3D=3D devices[devcnt].i.events
-	    && (devices[best[i]].i.disk.minor
-		!=3D devices[devcnt].i.disk.minor)
-	    && st->ss->major =3D=3D 0
-	    && info.array.level !=3D -4) {
-		/* two different devices with identical superblock.
-		 * Could be a mis-detection caused by overlapping
-		 * partitions.  fail-safe.
-		 */
-		fprintf(stderr, Name ": WARNING %s and %s appear"
-			" to have very similar superblocks.\n"
-			"      If they are really different, "
-			"please --zero the superblock on one\n"
-			"      If they are the same or overlap,"
-			" please remove one from %s.\n",
-			devices[best[i]].devname, devname,
-			inargv ? "the list" :
-			   "the\n      DEVICE list in mdadm.conf"
-			);
-		if (must_close) close(mdfd);
-		return 1;
-	}
+Now the problem is gone. I don't know what really caused the problem.
+Many thanks for your suggestions.
 
-IMHO this can be triggered by having two devices nodes (sdy and sdi,
-whatever) that correspond to the same physical device, no?
-
-Andre
---=20
-The only person who always got his work done by Friday was Robinson Crusoe
-
---ZfOjI3PrQbgiZnxM
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
-
-iD8DBQFH0Rn3Wto1QDEAkw8RAqXkAJ44pyc4o5lxjoXtNM+R3NAKcxTZowCglDGk
-M9vYK+l7DHnH7zIGoU+yU5o=
-=cxxW
------END PGP SIGNATURE-----
-
---ZfOjI3PrQbgiZnxM--
+Lars
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
