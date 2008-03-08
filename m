@@ -1,41 +1,40 @@
-From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
-Subject: Re: auto-assembling arrays without a configuration file
-Date: Sat, 8 Mar 2008 11:49:07 +0100
-Message-ID: <20080308104907.GA16373@rap.rap.dk>
-References: <20080308004009.GA32251@rap.rap.dk>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: data corruption: ext3/lvm2/md/mptsas/vitesse/seagate
+Date: Sat, 08 Mar 2008 12:18:03 -0500
+Message-ID: <47D2CA4B.5010804@tmr.com>
+References: <200803062108.m26L8e4i020882@colby.verdasys.com> <1204843956.2673.8.camel@vema.umeoce.maine.edu> <200803072239.m27MdGVv028621@colby.verdasys.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20080308004009.GA32251@rap.rap.dk>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <200803072239.m27MdGVv028621@colby.verdasys.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Marc Bejarano <beej@alum.mit.edu>
+Cc: Steve Cousins <steve.cousins@maine.edu>, linux-scsi@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, Mar 08, 2008 at 01:40:09AM +0100, Keld J=F8rn Simonsen wrote:
-> I want to assemble the root partition automatically, without having=20
-> a configuration file. Is that possible?=20
->=20
-> mdadm -A --scan=20
->=20
-> does seem to require a configuration file.
->=20
-> On the other hand, I think all info needed is available in the super
-> blocks, and a traversal of the partitions present on the system (ala
-> fdisk -l) could give consistent naming - there seems to be no /dev/md
-> association available in the superblock.
+Marc Bejarano wrote:
+> At 17:52 3/6/2008, Steve Cousins wrote:
+> >Have you run any memory tests on the machine?
+>
+> no, but my suspicions lay elsewhere.  could bad memory explain the 
+> right bits ending up in the wrong place on only one half of a mirror?
 
-I tried=20
+Yes. Memory problems can do almost anything, including making writes of 
+some values to a disk controller behave differently than others.
 
-mdadm -A --scan  --config partitions
+While we don't have a good memory test for the "under load" case, 
+memtest86 will at least identify some of the more common (read that as 
+"most likely") failure types. Seeing no problems doesn't mean you don't 
+have some, but not running the test means you haven't picked the 
+low-hanging fruit.
 
-But it did not work, error message something like raid array not found.
+I'm with Steve, bizarre problems deserve a memory test absent any clear 
+pointers elsewhere.
 
-Best regards
-keld
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Bill Davidsen <davidsen@tmr.com>
+  "Woe unto the statesman who makes war without a reason that will still
+  be valid when the war is over..." Otto von Bismark 
+
+
