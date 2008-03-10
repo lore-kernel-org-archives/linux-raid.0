@@ -1,85 +1,43 @@
-From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
-Subject: Re: auto-assembling arrays without a configuration file
-Date: Mon, 10 Mar 2008 14:48:28 +0100
-Message-ID: <20080310134828.GF9348@rap.rap.dk>
-References: <20080308004009.GA32251@rap.rap.dk> <18388.27742.907731.241140@notabene.brown>
+From: "Christian Pernegger" <pernegger@gmail.com>
+Subject: Re: Setting up md-raid5: observations, errors, questions
+Date: Mon, 10 Mar 2008 15:03:41 +0100
+Message-ID: <bb145bd20803100703m68ebd193xce959f2e1b6566cd@mail.gmail.com>
+References: <bb145bd20803020423m14efea1by6e3e38bb8d0decb8@mail.gmail.com>
+	 <bb145bd20803020832x744c2674nd0a6a30e445b5453@mail.gmail.com>
+	 <47CAF30F.7040502@msgid.tls.msk.ru>
+	 <bb145bd20803021319o28df011sab954aa58a1c01be@mail.gmail.com>
+	 <47CB228D.5020709@msgid.tls.msk.ru>
+	 <bb145bd20803021617j1b15c667j96d3ee12829ee75a@mail.gmail.com>
+	 <47CB694B.9000807@msgid.tls.msk.ru>
+	 <bb145bd20803030038o905e1feib1c1ad42c1b4b042@mail.gmail.com>
+	 <bb145bd20803040854i33796bb7n8de956b0d90b76d9@mail.gmail.com>
+	 <bb145bd20803042238y5c2d1164o8cac7be9880b550b@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <bb145bd20803042238y5c2d1164o8cac7be9880b550b@mail.gmail.com>
 Content-Disposition: inline
-In-Reply-To: <18388.27742.907731.241140@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: linux-ide@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Mar 10, 2008 at 10:01:50AM +1100, Neil Brown wrote:
-> On Saturday March 8, keld@dkuug.dk wrote:
-> > I want to assemble the root partition automatically, without having=
-=20
-> > a configuration file. Is that possible?=20
-> >=20
-> > mdadm -A --scan=20
-> >=20
-> > does seem to require a configuration file.
-> >=20
-> > On the other hand, I think all info needed is available in the supe=
-r
-> > blocks, and a traversal of the partitions present on the system (al=
-a
-> > fdisk -l) could give consistent naming - there seems to be no /dev/=
-md
-> > association available in the superblock.
->=20
-> The information that is not present in the super blocks is which
-> array you want to assemble.
+Dropping linux-ide as the HSM violation error was not reproducible
+even a second time and I have since switched controllers from Promise
+SATA300 TX4s (sata_promise) to Dawicontrol 4320 RAIDs (sil_3124 /
+sata_sil24).
 
-Yse, that is evident.
+BTW the latter can have it's fakeraid firmware disabled via jumper,
+which also skips any long option ROM / init sequences during boot.
+When doing streaming seqential reads | writes on all four disk block
+devices in parallel I get close to 300MB/s in both cases, which is the
+limit for both the disk and controller hardware. Great driver!
 
-> This becomes particularly important if you move some drives from one
-> machine to another.
+Before it starts sounding too much like spam - I've only been pounding
+the setup for a week, so no idea if it's really stable. Also I haven't
+tested for data corruption yet :)
 
-Moving a disk from one machine to another is not the common thing with
-raids. This is only done in special cases, and not prat of ordinary=20
-operations.
+Cheers,
 
-> If the target machine and a "/dev/md0" and the drives that are moved
-> are from a "/dev/md0" on the source machine, then any auto-assembly o=
-n
-> the target machine has not obvious way to know which set of "/dev/md0=
-"
-> devices to assemble.
-
-Moving a disk from one machine to another should be a special case,=20
-and done by hand.
-
-> For that reason mdadm knows about a "homehost".  You can tag each
-> array with a hint about what host it expects to be assembled on.
-> If you run
->=20
->   mdadm -As --homehost=3D`hostname`
->=20
-> then it will auto-assemble any arrays for the current host.
-> If you arrays haven't been tagged for at particular host, then
->=20
->   mdadm -As --homehost=3D`hostname` --auto-update-homehost
->=20
-> will automatically tag everything that is found for the current host.
-> This is not something that should be done automatically, but it OK to
-> do one when you know you haven't done anything interesting with
-> devices.
-
-Hmm, I am still looking for a way to boot a lin=FAx raid as root.
-
-mkinitrd does not seem to handle linux raids at all. Only hardware raid=
-s
-(doen by a controller).
-
-best regards
-keld
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+C.
