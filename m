@@ -1,47 +1,85 @@
-From: Oliver Martin <oliver.martin@student.tuwien.ac.at>
-Subject: Re: LVM performance
-Date: Mon, 10 Mar 2008 09:54:07 +0100
-Message-ID: <47D4F72F.40203@student.tuwien.ac.at>
-References: <aebf5d970802161958x17a9da92r25663703dc0df05f@mail.gmail.com>	<18360.8065.335494.142060@tree.ty.sabi.co.UK>	<20080217074526.29d3c5c5@hardcode42.net>	<20080218062604.05ae4821@szpak>	<aebf5d970802180438w7a4d40ban3f66ee1dbc38d259@mail.gmail.com>	<20080218154203.6e2d1483@szpak>	<47BB30DF.1080006@student.tuwien.ac.at>	<18364.6868.854623.613958@tree.ty.sabi.co.UK>	<47BED119.4070000@student.tuwien.ac.at> <18384.63840.605334.155518@tree.ty.sabi.co.UK> <47D440D6.90509@student.tuwien.ac.at> <8D0FC34E-F0B0-4BAF-A466-2C8BC439E7FF@it-loops.com> <47D47264.4070404@student.tuwien.ac.at> <3AF45EEC-EC43-4AD4-ACD1-4EEDDE798346@it-loops.com>
+From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
+Subject: Re: auto-assembling arrays without a configuration file
+Date: Mon, 10 Mar 2008 14:48:28 +0100
+Message-ID: <20080310134828.GF9348@rap.rap.dk>
+References: <20080308004009.GA32251@rap.rap.dk> <18388.27742.907731.241140@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <3AF45EEC-EC43-4AD4-ACD1-4EEDDE798346@it-loops.com>
+Content-Disposition: inline
+In-Reply-To: <18388.27742.907731.241140@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Michael Guntsche <mike@it-loops.com>
+To: Neil Brown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Michael Guntsche schrieb:
-> That's exactly what I ment sorry for not being clear enough.
-> If you have a chunk size of 128KB it makes sense to align the beginning 
-> of the PV to this as well.
+On Mon, Mar 10, 2008 at 10:01:50AM +1100, Neil Brown wrote:
+> On Saturday March 8, keld@dkuug.dk wrote:
+> > I want to assemble the root partition automatically, without having=
+=20
+> > a configuration file. Is that possible?=20
+> >=20
+> > mdadm -A --scan=20
+> >=20
+> > does seem to require a configuration file.
+> >=20
+> > On the other hand, I think all info needed is available in the supe=
+r
+> > blocks, and a traversal of the partitions present on the system (al=
+a
+> > fdisk -l) could give consistent naming - there seems to be no /dev/=
+md
+> > association available in the superblock.
+>=20
+> The information that is not present in the super blocks is which
+> array you want to assemble.
 
-I was talking about stripe size, not chunk size. That 128KB stripe size 
-is made up of n-1 chunks of an n-disk raid-5. In this case, 3 disks and 
-64KB chunk size result in 128KB stripe size.
+Yse, that is evident.
 
-I assume if you tell the file system about this stripe size (or it 
-figures it out itself, as xfs does), it tries to align its structures 
-such that whole-stripe writes are more likely than partial writes. This 
-means that md only has to write 3*64KB (2x data + parity).
+> This becomes particularly important if you move some drives from one
+> machine to another.
 
-If a write touches both (data_chunk_1 + offset) and (data_chunk_2 + 
-offset), you can calculate (parity_chunk + offset) without reading 
-anything. If it doesn't change all data chunks, you have to read either
-* the current parity
-* the data chunk(s) to be changed
-* all other data chunks
-to calculate parity.
+Moving a disk from one machine to another is not the common thing with
+raids. This is only done in special cases, and not prat of ordinary=20
+operations.
 
-So, if this 128KB write is offset by half a stripe, md has to read one 
-of the chunks from each stripe prior to writing so it can update parity. 
-Also, there are two parity chunks to write. So that's 2*64KB read + 
-4*64KB write.
+> If the target machine and a "/dev/md0" and the drives that are moved
+> are from a "/dev/md0" on the source machine, then any auto-assembly o=
+n
+> the target machine has not obvious way to know which set of "/dev/md0=
+"
+> devices to assemble.
 
-That's what I meant with stripe-aligning the PV (and thus the LV and 
-thus the file system).
+Moving a disk from one machine to another should be a special case,=20
+and done by hand.
 
--- 
-Oliver
+> For that reason mdadm knows about a "homehost".  You can tag each
+> array with a hint about what host it expects to be assembled on.
+> If you run
+>=20
+>   mdadm -As --homehost=3D`hostname`
+>=20
+> then it will auto-assemble any arrays for the current host.
+> If you arrays haven't been tagged for at particular host, then
+>=20
+>   mdadm -As --homehost=3D`hostname` --auto-update-homehost
+>=20
+> will automatically tag everything that is found for the current host.
+> This is not something that should be done automatically, but it OK to
+> do one when you know you haven't done anything interesting with
+> devices.
+
+Hmm, I am still looking for a way to boot a lin=FAx raid as root.
+
+mkinitrd does not seem to handle linux raids at all. Only hardware raid=
+s
+(doen by a controller).
+
+best regards
+keld
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
