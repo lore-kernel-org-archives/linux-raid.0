@@ -1,107 +1,82 @@
-From: Marc Bejarano <beej@alum.mit.edu>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
 Subject: Re: data corruption: ext3/lvm2/md/mptsas/vitesse/seagate
-Date: Fri, 07 Mar 2008 17:40:40 -0500
-Message-ID: <200803101519.m2AFJCJS032509@colby.verdasys.com>
+Date: Mon, 10 Mar 2008 10:36:26 -0500
+Message-ID: <1205163386.2941.14.camel@localhost.localdomain>
 References: <200803062108.m26L8e4i020882@colby.verdasys.com>
- <1204848652.3062.100.camel@localhost.localdomain>
+	 <1204848652.3062.100.camel@localhost.localdomain>
+	 <200803101519.m2AFJCJS032509@colby.verdasys.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"; format=flowed
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1204848652.3062.100.camel@localhost.localdomain>
-References: <200803062108.m26L8e4i020882@colby.verdasys.com>
- <1204848652.3062.100.camel@localhost.localdomain>
-Sender: linux-raid-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, linux-raid@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <200803101519.m2AFJCJS032509@colby.verdasys.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Marc Bejarano <beej@alum.mit.edu>
+Cc: linux-scsi@vger.kernel.org, linux-raid@vger.kernel.org, Grant Grundler <grundler@google.com>
 List-Id: linux-raid.ids
 
-hi, james.  thanks so much for taking the time to dig into this! :)
+On Fri, 2008-03-07 at 17:40 -0500, Marc Bejarano wrote:
+> In another instance of out-of-sync-ness, the bad disk looked as 
+> follows.  The bad disk was in a completely different md raid1 
+> "device", and if it needs to be said explicitly, was a totally 
+> different physical drive.
+> 
+> b + 0x00000: "header of 16K mysql/innodb page 309713974 followed by
+> good data"
+> 
+> b + 0x03600: **BAD DATA**: "header of 16K mysql/innodb page 
+> 309713975", should be at b+0x04000, followed by first 10752 == 21*512 
+> bytes of current correct value of page per disk with good copy
+> 
+> b + 0x06000: correct current last part of page 309713975 in proper
+> place.
+> 
+> This is hard to explain.  It looks like page 309713975 got written 
+> out to the proper spot, but then the first 10752 bytes got written 
+> out again to the wrong spot?!?
 
-At 19:10 3/6/2008, James Bottomley wrote:
- >On Thu, 2008-03-06 at 16:08 -0500, Marc Bejarano wrote:
- >> i've been doing burn-in on a new server i had hoped to deploy months
- >> ago and can't seem to figure out the cause of data corruption i've
- >> been seeing.  the SAS controller is an LSI SAS3801E connected to an
- >> xTore XJ-SA12-316 SAS enclosures (vitesses expanders) full of seagate
- >> 7200.10 750-GB SATA drives.
- >>
- >> the corruption is occurring in ext3 filesystems that live on top of
- >> an lvm2 RAID 0 stripe composed of 16 2-drive md RAID 1 sets.  the
- >> corruption has been detected both by MySQL noticing bad checksums and
- >> also by using md's "check" (sync_action) for RAID 1 consistency.
- >
- >Actually, the RAID-1 might be the most useful.  Is there anything
- >significant about the differing data?
+I'm afraid your not going to like this, but this pattern of corruption
+is almost completely definitive of a disk problem with head positioning.
 
-it looks like contiguous sectors of misplaced data.
+The reason is that the block and all lower layers do write out in terms
+of what they see as a logical block size (usually 4k, but definitely
+whatever the block size of the underlying filesystem you have mysql on).
 
- >Do od dumps of the corrupt
- >sectors in both halves of the mirror and see what actually appears in
- >the data ... it might turn out to be useful.
+Seeing an odd number of 512 byte sectors out of position like that (21
+in your case) when that number isn't a power of two (which is a linux
+logical block size requirement) can't really have come from the kernel,
+since we always deal in power of two units of the underlying 512 byte
+sectors all the way from block, through md to the low level SCSI driver.
 
-my colleague (who has been batting his head against this for far 
-longer than he'd like to have been) has been getting at the data via 
-a pread64() of the actual mysql data file.  multiple pread64()'s end 
-up giving him both halves of the mirror.
+It's still theoretically possible that something went wrong in the
+actual HBA, but I'd place most of my money on a disk fault.  The drives
+you have, the Seagate 7200.10 were the first to use perpendicular
+recording, so it could be they have head positioning errors with the new
+technology.  There's also a lot of talk on the internet about
+performance issues with the various revisions of their firmware:
 
- >Things like how long the
- >data corruption is (are the two sectors different, or is it just a run
- >of a few bytes within them) can be useful in tracking the source of the
- >corruption.
+http://www.fluffles.net/articles/seagate-AAK-firmware
 
-here is a cut of an email he wrote me:
-===
-In one instance of mirroring out-of-sync-ness, the disk with the bad
-data looked as follows:
+Just as a matter of interest, what version of firmware do you have?  You
+can get this with
 
-"a" is a currently undetermined offset into the block device divisible by 16K.
+hdparm -I /dev/sd<whatever>
 
-a + 0x00000: "header of 16K mysql/innodb page # 178812066 followed by 
-good data"
+I'm afraid the only way to confirm this theory definitively will be with
+the destructive disktest from autotest (it was actually constructed to
+check for drive head positioning errors), as Grant explained:
 
-a + 0x02600: **BAD DATA**: "header of 16K mysql/innodb page # 178812067",
-should be at a+0x04000, followed by old version of first 6656 bytes 
-of page 178812067
+> If you can destroy (and later restore) the data on one or more
+> of the disks, you might consider running disktest from:
+>    http://test.kernel.org/autotest/
+> 
+> I've parked an SVN snapshot on:
+>    http://iou.parisc-linux.org/~grundler/autotest-20080307.tgz
+> 
+> See autotest/tests/disktest/ . IIRC this test will tag each 512 byte
+> "sector" it writes to a file and will read back those tags later to
+> verify the sectors made it to media.
 
-a + 0x04000: "header of 16K mysql/innodb page # 178812067 followed by 
-correct current copy of page"
+James
 
-It looks to me like mysql/innodb "page" 178812067 at some point was 
-written to the wrong spot, and subsequently a newer version of page 
-178812067 got written out again, but to the proper spot.
-
-In another instance of out-of-sync-ness, the bad disk looked as 
-follows.  The bad disk was in a completely different md raid1 
-"device", and if it needs to be said explicitly, was a totally 
-different physical drive.
-
-b + 0x00000: "header of 16K mysql/innodb page 309713974 followed by good data"
-
-b + 0x03600: **BAD DATA**: "header of 16K mysql/innodb page 
-309713975", should be at b+0x04000, followed by first 10752 == 21*512 
-bytes of current correct value of page per disk with good copy
-
-b + 0x06000: correct current last part of page 309713975 in proper place.
-
-This is hard to explain.  It looks like page 309713975 got written 
-out to the proper spot, but then the first 10752 bytes got written 
-out again to the wrong spot?!?
-===
-
- >Do you happen to have the absolute block number (and relative block
- >number---relative to the partition start) of the corruption?
-
-no.  can you suggest an easy way to get that?
-
- >Of course, confirming
- >that git head has this problem too, so we could rule out patches added
- >to the RHEL kernel would be useful ...
-
-we're not currently git-enabled, but i suppose it wouldn't take too 
-long to become so.  would testing with the latest kernel.org snapshot 
-(currently 2.6.25-rc4-git2 from this mornging) be good enough?  or 
-were you hoping for a test with stuff from scsi-misc?
-
-cheers,
-marc
 
