@@ -1,58 +1,54 @@
-From: Marc Bejarano <beej@alum.mit.edu>
-Subject: Re: data corruption: ext3/lvm2/md/mptsas/vitesse/seagate
-Date: Tue, 11 Mar 2008 18:14:34 -0400
-Message-ID: <200803112215.m2BMF1LU029876@colby.verdasys.com>
-References: <200803062108.m26L8e4i020882@colby.verdasys.com>
- <1204848652.3062.100.camel@localhost.localdomain>
- <200803101519.m2AFJCJS032509@colby.verdasys.com>
- <1205163386.2941.14.camel@localhost.localdomain>
+From: "Christian Pernegger" <pernegger@gmail.com>
+Subject: Re: md-raid5, dm-crypt, alignment and readahead
+Date: Wed, 12 Mar 2008 00:47:02 +0100
+Message-ID: <bb145bd20803111647h13685bd8w4088138316667524@mail.gmail.com>
+References: <bb145bd20803100910l6cfe250bs631184b493a23e04@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"; format=flowed
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1205163386.2941.14.camel@localhost.localdomain>
-References: <200803062108.m26L8e4i020882@colby.verdasys.com>
- <1204848652.3062.100.camel@localhost.localdomain>
- <200803101519.m2AFJCJS032509@colby.verdasys.com>
- <1205163386.2941.14.camel@localhost.localdomain>
+In-Reply-To: <bb145bd20803100910l6cfe250bs631184b493a23e04@mail.gmail.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, Grant Grundler <grundler@google.com>
-Cc: linux-scsi@vger.kernel.org, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org, dm-crypt@saout.de
 List-Id: linux-raid.ids
 
-At 11:36 3/10/2008, James Bottomley wrote:
- >On Fri, 2008-03-07 at 17:40 -0500, Marc Bejarano wrote:
- >> This is hard to explain.  It looks like page 309713975 got written
- >> out to the proper spot, but then the first 10752 bytes got written
- >> out again to the wrong spot?!?
- >
- >I'm afraid your not going to like this, but this pattern of corruption
- >is almost completely definitive of a disk problem with head positioning.
+>  Is there a difference between running blockdev --setra and echo-int to
+>  /sys/block/.../read_ahead_kb for devices that have the entry in /sys?
 
-are you kidding?  i LOVE this :)  just to have a working theory is a 
-huge relief.
+To answer myself, blockdev --setra seems to change
+/sys/block/.../read_ahead_kb, so I'll just always use that.
 
- >It's still theoretically possible that something went wrong in the
- >actual HBA, but I'd place most of my money on a disk fault.
+>  How is readahead handled when "stacked" virtual block devices are
+>  involved?
 
-at this point, i'd do likewise.
+Ran quite a few tests and readahead at any layer but the top layer did
+not have any effect. This means that read ahead blocks will always be
+decrypted. Oh well ...
 
- >Just as a matter of interest, what version of firmware do you have?
+Comments on the other issues still welcome :-)
 
-one of our early suspects was drive firmware.  we'd already been 
-bitten once by a 7200.10 firmware "upgrade" messing us up.  this box 
-was originally using a mix of 3.AAJ's and 3.AAK's, but since these 
-were our first K's, we took them out of the picture.  since we have 
-lots of J's in active use and had never seen any problems, i assumed 
-they were fine and looked elsewhere.  going back over some other 
-productions machines, it looks like all the important stuff is on 
-pre-J's.  we don't seem to have J's in high-stress environments.
 
- >I'm afraid the only way to confirm this theory definitively will be with
- >the destructive disktest from autotest (it was actually constructed to
- >check for drive head positioning errors)
+Also, I've been having responsiveness problems with 2.6.22 - accessing
+an md-raid5 and/or md-raid5+dm-crypt device in certain ways (surefire
+test case = mke2fs) would block ANY disk I/O on the system, including
+to/from the SCSI system disk (also encrypted) for minutes at a time.
+Already running apps would run fine as long as they did no disk
+accesses, but running a simple 'cat' would be too much.
 
-thanks to you (and grant) for the pointer!  will try that next.
+It seems that something related to dm-crypt has some serious
+congestion issues and after finally digging up a few threads about
+loosely related problems I tried 2.6.24, which allegedly had improved
+in related areas. Result:
 
-cheers,
-marc
++ (other) system I/O does not just stop during mke2fs anymore
+- running apps are sluggish, ssh input is laggy (wasn't before)
+- bonnie++ (sequential) write performance has dropped by more than 20%
+- getting "slab: cache kmem_cache error: free_objects accounting
+error" messages, which may be totally unrelated but is worrying
+nonetheless.
 
+Can't say I'm happy with either kernel's behaviour - any ideas?
+
+
+C.
