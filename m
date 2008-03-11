@@ -1,73 +1,42 @@
-From: Robin Hill <robin@robinhill.me.uk>
+From: Wayne Gemmell <wayne@flashmedia.co.za>
 Subject: Re: Online resize
-Date: Tue, 11 Mar 2008 11:12:19 +0000
-Message-ID: <20080311111219.GA2086@cthulhu.home.robinhill.me.uk>
-References: <200803111119.56015.wayne@flashmedia.co.za>
+Date: Tue, 11 Mar 2008 14:44:17 +0200
+Message-ID: <200803111444.17502.wayne@flashmedia.co.za>
+References: <200803111119.56015.wayne@flashmedia.co.za> <20080311111219.GA2086@cthulhu.home.robinhill.me.uk>
+Reply-To: wayne@flashmedia.co.za
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="C7zPtVaVf+AK4Oqc"
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20080311111219.GA2086@cthulhu.home.robinhill.me.uk>
 Content-Disposition: inline
-In-Reply-To: <200803111119.56015.wayne@flashmedia.co.za>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Well that didn't go so well
 
---C7zPtVaVf+AK4Oqc
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+On Tuesday 11 March 2008 13:12:19 Robin Hill wrote:
+> =A02) Force the OS to be aware of the new partition sizes - either a
+> =A0 =A0 reboot or using partprobe.
+> =A03) Grow the array (mdadm --grow) - check the manual page for detai=
+ls.
+I ran partprobe and then mdadm --grow --size=3Dmax /dev/md4 and nothing=
+=20
+happened. Then I decided to reboot thinking that partprobe hadn't picke=
+d up=20
+that change and now it says that sda6 doesn't have a superblock. Any id=
+eas=20
+what went wrong?
 
-On Tue Mar 11, 2008 at 11:19:55AM +0200, Wayne Gemmell wrote:
+> =A04) Resize the filesystem (resize2fs).
 
-> Hi all
->=20
-> I'd like to do an online resize for my RAID5 drives now that I've upgrade=
-d=20
-> them to 500GB drives. Now I'm a bit stuck. I assume the steps would be th=
-e=20
-> following.
->=20
-> 1) Resize partitions
-> 2) Drop EXT3 journal
-> 3) run e2resize
-> 4) Recreate journal.
->=20
-> Are there any raid specific things I have to do to get this to work. Am I=
- on=20
-> the right track?
->=20
-Sort of.  The steps you'll need are:
 
- 1) Resize partitions (usually a drop & recreate step - this doesn't
-    affect the data though).
- 2) Force the OS to be aware of the new partition sizes - either a
-    reboot or using partprobe.
- 3) Grow the array (mdadm --grow) - check the manual page for details.
- 4) Resize the filesystem (resize2fs).
-
-There shouldn't be any need to drop & recreate the journal (I've never
-done anyway - I guess it may be needed if you want to resize it).
-
-HTH,
-        Robin
 --=20
-     ___       =20
-    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
-   / / )      | Little Jim says ....                            |
-  // !!       |      "He fallen in de water !!"                 |
-
---C7zPtVaVf+AK4Oqc
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.7 (GNU/Linux)
-
-iD8DBQFH1mkTShxCyD40xBIRAgK4AKCCzVOAl0qg+/homMVDdsufB2wdSACgoskg
-DDJ7dMN/KzhU0CIrnlF6LOA=
-=KQeo
------END PGP SIGNATURE-----
-
---C7zPtVaVf+AK4Oqc--
+Regards
+Wayne
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
