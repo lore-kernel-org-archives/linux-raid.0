@@ -1,92 +1,72 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: sysfs Kernel BUG when RAID bitmap file has IO errors
-Date: Wed, 12 Mar 2008 15:43:58 -0700
-Message-ID: <20080312154358.e9d16668.akpm@linux-foundation.org>
-References: <47D7A502.6020701@wpkg.org>
-	<47D7A7AA.8000302@wpkg.org>
-	<20080312153618.b3e0612a.akpm@linux-foundation.org>
+From: Bryan Mark Mesich <bmesich@atlantis.cc.ndsu.nodak.edu>
+Subject: Useful benchmarking tools for RAID
+Date: Wed, 12 Mar 2008 17:27:58 -0500
+Message-ID: <1205360878.30451.134.camel@atlantis.cc.ndsu.nodak.edu>
+Reply-To: bryan.mesich@ndsu.edu
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20080312153618.b3e0612a.akpm@linux-foundation.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: mangoo@wpkg.org, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, balajirrao@gmail.com, Neil Brown <neilb@suse.de>
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wed, 12 Mar 2008 15:36:18 -0700
-Andrew Morton <akpm@linux-foundation.org> wrote:
+Good afternoon,
 
-> I assume this is the BUG_ON(count >= (ssize_t)PAGE_SIZE) in
-> fill_read_buffer().
-> 
-> This was reported recently and we prepared a debug patch but the
-> reporter was unable to trigger the bug again.
-> 
-> Please add the below and retest?
+I've been sitting back quietly reading posts over the past few months
+regarding RAID performance.  My ultimate goal is to increase the
+performance of our IMAP mail servers that have storage on-top RAID 5.
+During peek times of the day, a single IMAP box might have 500+ imapd
+processes running simultaneously.  As a result, the load increases as
+does the users blood pressure.
 
-err, don't bother.
+I'm currently testing with the following:
 
-	rdev->sb_size = MD_SB_BYTES;
+Intel SE7520BD2 motherboard
+(2) 3Ware PCI-E 9550SX 8 port SATA card
+1 GB of memory
+(2) Core2Duo 3.0GHz
+(16) Segate 750GB Barracuda ES drives
+RHEL 5.1 server (stock 2.6.18)
 
-...
+I've setup 3 RAID5 arrays arranged in a 3+1 layout.  I created them with
+different chunk sizes (64k, 128k, and 256k) for testing purposes.
+Write-caching has been disabled (no battery) on the 3Ware cards and I'm
+using ext3 as my filesystem.  When creating the filesystems, I used
+sensible stride sizes and disabled directory indexing.
 
-#define MD_SB_BYTES			4096
+I ran bonnie 1.4 on 2 of the filesystems with the following results:
 
-...
+### Chunk size = 64k
+./Bonnie -d /mnt/64/ -s 1024 -y -u -o_direct
 
-and
+MB K/sec %CPU K/sec %CPU K/sec %CPU K/sec %CPU K/sec %CPU   /sec %CPU
+1*1024 59185 50.9 21849  7.5 14490  5.0 16377 24.1212812 25.3 267.8  1.5
 
-	rdev->sb_size = le32_to_cpu(sb->max_dev) * 2 + 256;
-	bmask = queue_hardsect_size(rdev->bdev->bd_disk->queue)-1;
-	if (rdev->sb_size & bmask)
-		rdev->sb_size = (rdev->sb_size | bmask) + 1;
+### Chunk size = 256k
+./Bonnie -d /mnt/256/ -s 1024 -y -u -o_direct
 
-I'm assuming that either the above sequence of code never ran at all, or it
-produced sb_size >= PAGE_SIZE.
+MB K/sec %CPU K/sec %CPU K/sec %CPU K/sec %CPU K/sec %CPU   /sec %CPU
+1*1024 47650 40.6 22561  6.8 19019  6.9 16872 22.2209770 23.7 267.2  1.5
 
-then this:
 
-static ssize_t
-super_show(mdk_rdev_t *rdev, char *page)
-{
-	if (rdev->sb_loaded && rdev->sb_size) {
-		memcpy(page, page_address(rdev->sb_page), rdev->sb_size);
-		return rdev->sb_size;
-	} else
-		return 0;
-}
+OK...so now I have some benchmarks, but I'm not sure if it remotely
+relates to normal IO on a busy IMAP server.  I would expect an IMAP
+server to have many relatively small random reads and writes.  Looking
+at the output of 'iostat' on one of the mail servers, I can see that the
+average IO request size (avgrq-sz) is 77 and 87 (sectors?) on disks that
+are members of a RAID1 array.  If I understand this correctly, the
+average I/O request to the block device is around 40k.  Can a larger
+chunk size help out when random I/O is prevalent?
 
-returns something >= PAGE_SIZE then this:
+With this said, has anyone ever tried tuning a RAID5 array to a busy
+mail server (or similar application)?  An ever better question would be
+how a person can go about benchmarking different storage configurations
+that can be applied to a specific application.  At this point, I'm not
+sure which benchmarking tool(s) would serve useful in this situation and
+how that testing should be conducted.  Should I measure throughput or
+smiling email users :)
 
-static int fill_read_buffer(struct dentry * dentry, struct sysfs_buffer * buffer)
-{
-	struct sysfs_dirent *attr_sd = dentry->d_fsdata;
-	struct kobject *kobj = attr_sd->s_parent->s_dir.kobj;
-	struct sysfs_ops * ops = buffer->ops;
-	int ret = 0;
-	ssize_t count;
+Thanks in advance,
 
-	if (!buffer->page)
-		buffer->page = (char *) get_zeroed_page(GFP_KERNEL);
-	if (!buffer->page)
-		return -ENOMEM;
-
-	/* need attr_sd for attr and ops, its parent for kobj */
-	if (!sysfs_get_active_two(attr_sd))
-		return -ENODEV;
-
-	buffer->event = atomic_read(&attr_sd->s_attr.open->event);
-	count = ops->show(kobj, attr_sd->s_attr.attr, buffer->page);
-
-	sysfs_put_active_two(attr_sd);
-
-	/*
-	 * The code works fine with PAGE_SIZE return but it's likely to
-	 * indicate truncated result or overflow in normal use cases.
-	 */
-	BUG_ON(count >= (ssize_t)PAGE_SIZE);
-
-declares game over.
-
-Neil, pls fix?
+~Bryan
