@@ -1,193 +1,44 @@
-From: "Christian Pernegger" <pernegger@gmail.com>
-Subject: Help! 3ware 7508-8: i/o errors, now arry not recognized anymore ...
-Date: Wed, 12 Mar 2008 17:12:24 +0100
-Message-ID: <bb145bd20803120912h3dd1227fk3a88dfc98e1900be@mail.gmail.com>
+From: pg_lxra@lxra.for.to.sabi.co.UK (Peter Grandi)
+Subject: Re: LVM performance
+Date: Wed, 12 Mar 2008 19:54:07 +0000
+Message-ID: <18392.13535.918902.104947@tree.ty.sabi.co.uk>
+References: <18389.41592.494811.875055@tree.ty.sabi.co.uk>
+	<5e44228294f0aabe036fd15b051d2e57@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <5e44228294f0aabe036fd15b051d2e57@localhost>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-First off sorry for the OT post, I figured maybe some of the lurkers
-know about hardware RAID, too ...
+[ ... poor dead horse of alignment  :-) ... ]
 
-I was migrating data to the new (md-based) file server when suddenly
-some read errors popped up during the copy jobs on the source:
+mike> Right now I have my trusty 4 DISK RAID-5 with a CHUNKSIZE
+mike> of 256KB, thus having a stripe-size of 1MB.
 
-tar: ***: File shrank by 233882532 bytes; padding with zeros
-tar: ***: Cannot stat: Input/output error
-tar: ***: Cannot stat: Input/output error
-...
-tar: ***: Cannot stat: No such file or directory
-tar: ***: Cannot stat: No such file or directory
-...
+A largish chunk size with a largish stripe size may not be a
+particularly good idea for sequential IO, more for multithreaded
+access or for random access perhaps.
 
-and in dmesg:
+mike> Version  1.03c      ------Sequential Output------ [ ... ]
+mike>                     -Per Chr- --Block-- -Rewrite- [ ... ]
+mike> Machine        Size K/sec %CP K/sec %CP K/sec %CP [ ... ]
+mike> xfs              8G           49398  43 26252  21 [ ... ]
+mike> lvm-chunkaligned 8G           45937  42 23711  24 [ ... ]
+mike> lvm-stripealigne 8G           49271  43 24401  25 [ ... ]
 
-3w-xxxx: scsi4: AEN: WARNING: Sector repair occurred: Port #3.
-sd 4:0:0:0: WARNING: Command (0x28) timed out, resetting card.
-3w-xxxx: scsi4: AEN drain failed, retrying.
-sd 4:0:0:0: scsi: Device offlined - not ready after error recovery
-sd 4:0:0:0: scsi: Device offlined - not ready after error recovery
-sd 4:0:0:0: scsi: Device offlined - not ready after error recovery
-sd 4:0:0:0: scsi: Device offlined - not ready after error recovery
-sd 4:0:0:0: rejecting I/O to offline device
-sd 4:0:0:0: rejecting I/O to offline device
-Buffer I/O error on device sde1, logical block 76218370
-lost page write due to I/O error on sde1
-sd 4:0:0:0: rejecting I/O to offline device
-Buffer I/O error on device sde1, logical block 372670466
-lost page write due to I/O error on sde1
-sd 4:0:0:0: rejecting I/O to offline device
-Buffer I/O error on device sde1, logical block 502595586
-lost page write due to I/O error on sde1
-sd 4:0:0:0: rejecting I/O to offline device
-sd 4:0:0:0: rejecting I/O to offline device
-EXT3-fs error (device sde1): ext3_get_inode_loc: unable to read inode
-block - inode=490818, block=502595586
-Aborting journal on device sde1.
-sd 4:0:0:0: rejecting I/O to offline device
-Buffer I/O error on device sde1, logical block 132
-lost page write due to I/O error on sde1
-sd 4:0:0:0: rejecting I/O to offline device
-Buffer I/O error on device sde1, logical block 0
-lost page write due to I/O error on sde1
-EXT3-fs error (device sde1) in ext3_reserve_inode_write: IO failure
-sd 4:0:0:0: rejecting I/O to offline device
-Buffer I/O error on device sde1, logical block 0
-lost page write due to I/O error on sde1
-EXT3-fs error (device sde1) in ext3_dirty_inode: IO failure
-sd 4:0:0:0: rejecting I/O to offline device
-Buffer I/O error on device sde1, logical block 0
-lost page write due to I/O error on sde1
-sd 4:0:0:0: rejecting I/O to offline device
-EXT3-fs error (device sde1): ext3_get_inode_loc: unable to read inode
-block - inode=490826, block=502595586
-sd 4:0:0:0: rejecting I/O to offline device
-Buffer I/O error on device sde1, logical block 0
-lost page write due to I/O error on sde1
-sd 4:0:0:0: rejecting I/O to offline device
-EXT3-fs error (device sde1): ext3_get_inode_loc: unable to read inode
-block - inode=490823, block=502595586
-sd 4:0:0:0: rejecting I/O to offline device
-Buffer I/O error on device sde1, logical block 0
-lost page write due to I/O error on sde1
-sd 4:0:0:0: rejecting I/O to offline device
-EXT3-fs error (device sde1): ext3_get_inode_loc: unable to read inode
-block - inode=490819, block=502595586
-sd 4:0:0:0: rejecting I/O to offline device
-Buffer I/O error on device sde1, logical block 0
-lost page write due to I/O error on sde1
-sd 4:0:0:0: rejecting I/O to offline device
-EXT3-fs error (device sde1): ext3_get_inode_loc: unable to read inode
-block - inode=490825, block=502595586
-sd 4:0:0:0: rejecting I/O to offline device
-sd 4:0:0:0: rejecting I/O to offline device
-EXT3-fs error (device sde1): ext3_get_inode_loc: unable to read inode
-block - inode=490820, block=502595586
-sd 4:0:0:0: rejecting I/O to offline device
-sd 4:0:0:0: rejecting I/O to offline device
-EXT3-fs error (device sde1): ext3_get_inode_loc: unable to read inode
-block - inode=490824, block=502595586
-sd 4:0:0:0: rejecting I/O to offline device
-sd 4:0:0:0: rejecting I/O to offline device
-EXT3-fs error (device sde1): ext3_get_inode_loc: unable to read inode
-block - inode=490821, block=502595586
-sd 4:0:0:0: rejecting I/O to offline device
-sd 4:0:0:0: rejecting I/O to offline device
-EXT3-fs error (device sde1): ext3_find_entry: reading directory #72737 offset 0
-sd 4:0:0:0: rejecting I/O to offline device
-sd 4:0:0:0: rejecting I/O to offline device
-EXT3-fs error (device sde1): ext3_find_entry: reading directory #72737 offset 0
-sd 4:0:0:0: rejecting I/O to offline device
-sd 4:0:0:0: rejecting I/O to offline device
-EXT3-fs error (device sde1): ext3_find_entry: reading directory #72737 offset 0
-sd 4:0:0:0: rejecting I/O to offline device
-sd 4:0:0:0: rejecting I/O to offline device
-EXT3-fs error (device sde1): ext3_find_entry: reading directory #72737 offset 0
-sd 4:0:0:0: rejecting I/O to offline device
-sd 4:0:0:0: rejecting I/O to offline device
-EXT3-fs error (device sde1): ext3_find_entry: reading directory #72737 offset 0
-sd 4:0:0:0: rejecting I/O to offline device
-sd 4:0:0:0: rejecting I/O to offline device
-EXT3-fs error (device sde1): ext3_find_entry: reading directory #72737 offset 0
-sd 4:0:0:0: rejecting I/O to offline device
-sd 4:0:0:0: rejecting I/O to offline device
-EXT3-fs error (device sde1): ext3_find_entry: reading directory #72737 offset 0
-sd 4:0:0:0: rejecting I/O to offline device
-sd 4:0:0:0: rejecting I/O to offline device
-EXT3-fs error (device sde1): ext3_find_entry: reading directory #72737 offset 0
-sd 4:0:0:0: rejecting I/O to offline device
-sd 4:0:0:0: rejecting I/O to offline device
-EXT3-fs error (device sde1): ext3_find_entry: reading directory #72737 offset 0
-sd 4:0:0:0: rejecting I/O to offline device
-sd 4:0:0:0: rejecting I/O to offline device
-EXT3-fs error (device sde1): ext3_find_entry: reading directory #72737 offset 0
-sd 4:0:0:0: rejecting I/O to offline device
-sd 4:0:0:0: rejecting I/O to offline device
-EXT3-fs error (device sde1): ext3_find_entry: reading directory #72737 offset 0
-sd 4:0:0:0: rejecting I/O to offline device
-sd 4:0:0:0: rejecting I/O to offline device
-EXT3-fs error (device sde1): ext3_find_entry: reading directory #72737 offset 0
-sd 4:0:0:0: rejecting I/O to offline device
-sd 4:0:0:0: rejecting I/O to offline device
-EXT3-fs error (device sde1): ext3_find_entry: reading directory #72737 offset 0
-sd 4:0:0:0: rejecting I/O to offline device
-sd 4:0:0:0: rejecting I/O to offline device
-EXT3-fs error (device sde1): ext3_find_entry: reading directory #72737 offset 0
-sd 4:0:0:0: rejecting I/O to offline device
-sd 4:0:0:0: rejecting I/O to offline device
-EXT3-fs error (device sde1): ext3_find_entry: reading directory #72737 offset 0
-sd 4:0:0:0: rejecting I/O to offline device
-sd 4:0:0:0: rejecting I/O to offline device
-EXT3-fs error (device sde1): ext3_find_entry: reading directory #72737 offset 0
-sd 4:0:0:0: rejecting I/O to offline device
-sd 4:0:0:0: rejecting I/O to offline device
-EXT3-fs error (device sde1): ext3_find_entry: reading directory #72737 offset 0
-sd 4:0:0:0: rejecting I/O to offline device
-sd 4:0:0:0: rejecting I/O to offline device
-EXT3-fs error (device sde1): ext3_find_entry: reading directory #72737 offset 0
-sd 4:0:0:0: rejecting I/O to offline device
-sd 4:0:0:0: rejecting I/O to offline device
-EXT3-fs error (device sde1): ext3_find_entry: reading directory #72737 offset 0
-sd 4:0:0:0: rejecting I/O to offline device
-sd 4:0:0:0: rejecting I/O to offline device
-EXT3-fs error (device sde1): ext3_find_entry: reading directory #72737 offset 0
-sd 4:0:0:0: rejecting I/O to offline device
-sd 4:0:0:0: rejecting I/O to offline device
-EXT3-fs error (device sde1): ext3_find_entry: reading directory #69857 offset 0
-sd 4:0:0:0: rejecting I/O to offline device
-sd 4:0:0:0: rejecting I/O to offline device
-EXT3-fs error (device sde1): ext3_find_entry: reading directory #69857 offset 0
-sd 4:0:0:0: rejecting I/O to offline device
-sd 4:0:0:0: rejecting I/O to offline device
-ext3_abort called.
-EXT3-fs error (device sde1): ext3_journal_start_sb: Detected aborted journal
-Remounting filesystem read-only
-sd 4:0:0:0: rejecting I/O to offline device
-EXT3-fs error (device sde1): ext3_find_entry: reading directory #69857 offset 0
-sd 4:0:0:0: rejecting I/O to offline device
-printk: 26 messages suppressed.
-Buffer I/O error on device sde1, logical block 132
-lost page write due to I/O error on sde1
+mike> As you can see it apparently does make a difference if you
+mike> stripe align or not, [ ... ]
 
-Problem is, it's not just a dead disk. The controller now denies that
-there ever was a RAID5 connected to it. tw_cli shows
+But it should make a *much* bigger difference, and a 3+1 RAID5
+should perform *a lot* better. As in 100-150MB/s (factor of 2-3
+over a single disk) reading and (if aligned) writing.
 
-ports 0,1,2: unused disks
-ports 3, 4: JBOD (i.e. two disks passed through to the OS)
-ports 5, 6, 7:  unused disks
+Perhaps there is some problem with your IO subsystem (USB drives?
+4 ATA drives attached to only 2 channels?  5-10 year old disks?).
 
-The copy job was the only access at the time of the crash and that
-should have been only reading so maybe some data is still there. If
-only I could get the controller to recognize the array ... can't have
-zapped the superblocks on all 8 disks, can it?
-
-Thanks,
-
-C.
-
-P.S. The 3ware is an 7506-8 using Debian stable in-kernel driver (2.6.18 IIRC)
+BTW, Bonnie 1.03 or Bonnie++ or Iozone are not necessarily the
+best way to check things, I recommend Bonnie 1.14 with the
+options '-u -y -o_direct'.
