@@ -1,63 +1,69 @@
-From: Robin Hill <robin@robinhill.me.uk>
-Subject: Re:  Online resize
-Date: Wed, 12 Mar 2008 09:31:25 +0000
-Message-ID: <20080312093125.GA12548@cthulhu.home.robinhill.me.uk>
-References: <200803111119.56015.wayne@flashmedia.co.za> <20080311111219.GA2086@cthulhu.home.robinhill.me.uk> <200803111444.17502.wayne@flashmedia.co.za> <20080311145832.GC2086@cthulhu.home.robinhill.me.uk> <47D78EA8.7050604@msgid.tls.msk.ru>
+From: Michael Tokarev <mjt@tls.msk.ru>
+Subject: Re: Online resize
+Date: Wed, 12 Mar 2008 12:38:25 +0300
+Message-ID: <47D7A491.9020205@msgid.tls.msk.ru>
+References: <200803111119.56015.wayne@flashmedia.co.za> <20080311145832.GC2086@cthulhu.home.robinhill.me.uk> <47D78EA8.7050604@msgid.tls.msk.ru> <200803121114.27080.wayne@flashmedia.co.za>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="7AUc2qLy4jB3hD7Z"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <47D78EA8.7050604@msgid.tls.msk.ru>
+In-Reply-To: <200803121114.27080.wayne@flashmedia.co.za>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: wayne@flashmedia.co.za
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Wayne Gemmell wrote:
+> On Wednesday 12 March 2008 10:04:56 you wrote:
+>> a) re-create the array with new partitions, with THE SAME DISK ORDER,
+>>    METADATA VERSION AND CHUNK SIZE as it was before.
+> Is this possible without loosing data?
 
---7AUc2qLy4jB3hD7Z
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Yes.  But it's unreliable, sorta.  Too easy to screw things up, that is.
 
-On Wed Mar 12, 2008 at 11:04:56AM +0300, Michael Tokarev wrote:
+>> b) restore partitions to the EXACT size as they were before, and
+>>    start from scratch
+> Thats easy enough. I'll do that now.
 
-> Robin Hill wrote:
->> What version metadata are you using?  I'm not sure how 1.0 will handle
->> partition resizes but any other should certainly be okay.  Have you
->> tried running mdadm -E on each of the component partitions?  I assume
->> the new partitions are starting from the same position as the old ones?
->
-> Robin, you're completely wrong here.
->
-> Only metadata at the START of the partition will work here.  Which is
-> either 1.1 or 1.2, but NOT 1.0 or 0.90, - which is at the END of the
-> partition.  When the end of the partition goes away, the superblock
-> becomes "orphan" somewhere inside the partition, and can't be found
-> anymore.
->
-That's why I said I wasn't sure about 1.0 metadata.  I've grown 0.90
-arrays in exactly this way (though I may not actually have rebooted) so
-I assumed they'd work okay (and the manual doesn't specify where the
-metadata is for these).
+And now, the original question comes up again: what to do, how to
+perform the actual resize of the raid array...
 
-Cheers,
-        Robin
---=20
-     ___       =20
-    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
-   / / )      | Little Jim says ....                            |
-  // !!       |      "He fallen in de water !!"                 |
+To be fair, I don't really know.  I always used my own tiny program
+to assist me in a situation like this - to back up and restore
+v0.90 linux raid superblocks.  It's available at
+http://www.corpit.ru/mjt/mdsuper.c .  Here's how I use it:
 
---7AUc2qLy4jB3hD7Z
-Content-Type: application/pgp-signature
-Content-Disposition: inline
+First, save the original superblocks in files:
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.7 (GNU/Linux)
+  for f in sd{a,b,c,d,e}1; do
+    ./mdsuper read /dev/$f > $f
+  done
 
-iD8DBQFH16LtShxCyD40xBIRAipLAJ4/zTbdJlZ7Aibs8GkAAZQ2tc3Y9gCeMsdJ
-wMpru9AslZsXasFhZGA+LWY=
-=SLom
------END PGP SIGNATURE-----
+this instructs mdsuper to read the superblock (v0.90 only!) and
+write it to standard out.  This has to be done while the array
+(on original partitions) is STOPPED.
 
---7AUc2qLy4jB3hD7Z--
+Now, resize the partitions, reboot if necessary (for the kernel
+to recognize the new sizes).  You can save a dump of your current
+partitions using `sfdisk -d' (redirect its output to a file as
+with mdsuper) - just in case if something goes wrong.
+
+At this point, your array is unaccessible - mdadm will tell you
+that it can't find the superblocks.  But we have the superblocks
+saved - so we only need to restore them back:
+
+  for f in sd{a,b,c,d,e}1; do
+    ./mdsuper write /dev/$f < $f
+  done
+
+(note the redirection is opposite!, and read was changed to write!).
+
+Now, try to assemble the array - it should be here.  We just moved
+(actually copied) the superblock from the now-middle-of-partitions
+to the end, where it should be, and mdadm is now able to find it.
+The array is still of the old size - but now mdadm --grow will
+work.
+
+That's basically it.  Just watch the mdsuper invocation.
+
+/mjt
