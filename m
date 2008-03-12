@@ -1,107 +1,140 @@
-From: Guntsche Michael <mike@it-loops.com>
-Subject: Re: LVM performance
-Date: Wed, 12 Mar 2008 21:11:19 +0100
-Message-ID: <E1216B9A-07A5-46FE-A75C-A7E147DE54B7@it-loops.com>
-References: <18389.41592.494811.875055@tree.ty.sabi.co.uk> <5e44228294f0aabe036fd15b051d2e57@localhost> <18392.13535.918902.104947@tree.ty.sabi.co.uk>
-Mime-Version: 1.0 (Apple Message framework v919.2)
-Content-Type: multipart/signed; boundary=Apple-Mail-1--587787106; micalg=sha1; protocol="application/pkcs7-signature"
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: sysfs Kernel BUG when RAID bitmap file has IO errors
+Date: Wed, 12 Mar 2008 15:36:18 -0700
+Message-ID: <20080312153618.b3e0612a.akpm@linux-foundation.org>
+References: <47D7A502.6020701@wpkg.org>
+	<47D7A7AA.8000302@wpkg.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18392.13535.918902.104947@tree.ty.sabi.co.uk>
+In-Reply-To: <47D7A7AA.8000302@wpkg.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Tomasz Chmielewski <mangoo@wpkg.org>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, balajirrao@gmail.com
 List-Id: linux-raid.ids
 
+On Wed, 12 Mar 2008 10:51:38 +0100
+Tomasz Chmielewski <mangoo@wpkg.org> wrote:
 
---Apple-Mail-1--587787106
-Content-Type: text/plain;
-	charset=US-ASCII;
-	format=flowed;
-	delsp=yes
-Content-Transfer-Encoding: 7bit
+> Tomasz Chmielewski schrieb:
+> 
+> (...)
+> 
+> > Let's access "/sys/block/md0/md/dev-sdd1/super":
+> > 
+> > # cat /sys/block/md0/md/dev-sdd1/super
+> > 
+> > # dmesg -c
+> > ------------[ cut here ]------------
+> > Kernel BUG at 78178626 [verbose debug info unavailable]
+> 
+> It turns out a broken RAID bitmap file has nothing to do with it - the 
+> same happens on a different machine without a bitmap file:
+> 
+> ------------[ cut here ]------------
+> Kernel BUG at 7817736a [verbose debug info unavailable]
+
+argh.  Please do enable CONFIG_DEBUG_BUGVERBOSE.
+
+> invalid opcode: 0000 [#1]
+> Modules linked in: as_iosched nfs lockd nfs_acl sunrpc bonding dm_mirror 
+> dm_snapshot e1000 sata_mv
+> 
+> Pid: 2494, comm: cat Not tainted (2.6.24.3-1 #1)
+> EIP: 0060:[<7817736a>] EFLAGS: 00010212 CPU: 0
+> EIP is at sysfs_read_file+0x88/0xd4
+> EAX: 00000001 EBX: 961b5880 ECX: 00000000 EDX: 964ef360
+> ESI: 00001000 EDI: 964ef3c0 EBP: 9705bd04 ESP: 971f1f54
+>   DS: 007b ES: 007b FS: 0000 GS: 0033 SS: 0068
+> Process cat (pid: 2494, ti=971f0000 task=970ad9a0 task.ti=971f0000)
+> Stack: 96443080 0804b4d8 00001000 0804e000 961b5894 7835f6f0 96193400 
+> 0804e000
+>         781772e2 00001000 78149bd5 971f1fa0 00001000 96193400 fffffff7 
+> 0804e000
+>         971f0000 78149f03 971f1fa0 00000000 00000000 00000000 00000003 
+> 0804e000
+> Call Trace:
+>   [<781772e2>] sysfs_read_file+0x0/0xd4
+>   [<78149bd5>] vfs_read+0x88/0x10a
+>   [<78149f03>] sys_read+0x41/0x67
+>   [<78103bba>] syscall_call+0x7/0xb
+>   =======================
+> Code: c0 74 61 8b 47 18 8b 4b 0c 8b 40 04 89 43 24 89 e8 8b 74 24 14 8b 
+> 57 14 ff 16 89 c6 89 f8 e8 18 0b 00 00 81 fe ff 0f 00 00 7e 04 <0f> 0b 
+> eb fe 85 f6 78 31 c7 43 20 00 00 00 00 89 33 eb 07 be f4
+> EIP: [<7817736a>] sysfs_read_file+0x88/0xd4 SS:ESP 0068:971f1f54
+
+I assume this is the BUG_ON(count >= (ssize_t)PAGE_SIZE) in
+fill_read_buffer().
+
+This was reported recently and we prepared a debug patch but the
+reporter was unable to trigger the bug again.
+
+Please add the below and retest?
 
 
-On Mar 12, 2008, at 20:54, Peter Grandi wrote:
+From: Andrew Morton <akpm@linux-foundation.org>
 
-> A largish chunk size with a largish stripe size may not be a
-> particularly good idea for sequential IO, more for multithreaded
-> access or for random access perhaps.
->
-> mike> Version  1.03c      ------Sequential Output------ [ ... ]
-> mike>                     -Per Chr- --Block-- -Rewrite- [ ... ]
-> mike> Machine        Size K/sec %CP K/sec %CP K/sec %CP [ ... ]
-> mike> xfs              8G           49398  43 26252  21 [ ... ]
-> mike> lvm-chunkaligned 8G           45937  42 23711  24 [ ... ]
-> mike> lvm-stripealigne 8G           49271  43 24401  25 [ ... ]
->
->
-> But it should make a *much* bigger difference, and a 3+1 RAID5
-> should perform *a lot* better. As in 100-150MB/s (factor of 2-3
-> over a single disk) reading and (if aligned) writing.
+Try to find the culprit who caused
+http://bugzilla.kernel.org/show_bug.cgi?id=10150
 
-I think for my setup here the numbers are okay.
-All four disk are a attached to a 4port SATA PCI card. Yes no typo,  
-there is no "e" at the end. :)
+Cc: <balajirrao@gmail.com>
+Cc: Greg KH <greg@kroah.com>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+---
 
-Thus ~100MB looks like the optimum I will get out of this setup for  
-reading, regardless of the number of disks.
-If I had the money, I would definitly go with something faster,  
-attached to PCIe and a RAID-10.
-But for now this rig has to do the job.
+ drivers/base/core.c |    5 +++++
+ fs/sysfs/file.c     |    8 +++++++-
+ 2 files changed, 12 insertions(+), 1 deletion(-)
 
-All I am trying to do right now is keeping the difference between MD 
-+XFS and MD+LVM+XFS as small as possible.
+diff -puN fs/Kconfig~driver-core-debug-for-bad-dev_attr_show-return-value fs/Kconfig
+diff -puN fs/sysfs/file.c~driver-core-debug-for-bad-dev_attr_show-return-value fs/sysfs/file.c
+--- a/fs/sysfs/file.c~driver-core-debug-for-bad-dev_attr_show-return-value
++++ a/fs/sysfs/file.c
+@@ -12,6 +12,7 @@
+ 
+ #include <linux/module.h>
+ #include <linux/kobject.h>
++#include <linux/kallsyms.h>
+ #include <linux/namei.h>
+ #include <linux/poll.h>
+ #include <linux/list.h>
+@@ -94,7 +95,12 @@ static int fill_read_buffer(struct dentr
+ 	 * The code works fine with PAGE_SIZE return but it's likely to
+ 	 * indicate truncated result or overflow in normal use cases.
+ 	 */
+-	BUG_ON(count >= (ssize_t)PAGE_SIZE);
++	if (count >= (ssize_t)PAGE_SIZE) {
++		print_symbol("fill_read_buffer: %s returned bad count\n",
++			(unsigned long)ops->show);
++		/* Try to struggle along */
++		count = PAGE_SIZE - 1;
++	}
+ 	if (count >= 0) {
+ 		buffer->needs_read_fill = 0;
+ 		buffer->count = count;
+diff -puN drivers/base/core.c~driver-core-debug-for-bad-dev_attr_show-return-value drivers/base/core.c
+--- a/drivers/base/core.c~driver-core-debug-for-bad-dev_attr_show-return-value
++++ a/drivers/base/core.c
+@@ -19,6 +19,7 @@
+ #include <linux/kdev_t.h>
+ #include <linux/notifier.h>
+ #include <linux/genhd.h>
++#include <linux/kallsyms.h>
+ #include <asm/semaphore.h>
+ 
+ #include "base.h"
+@@ -68,6 +69,10 @@ static ssize_t dev_attr_show(struct kobj
+ 
+ 	if (dev_attr->show)
+ 		ret = dev_attr->show(dev, dev_attr, buf);
++	if (ret >= (ssize_t)PAGE_SIZE) {
++		print_symbol("dev_attr_show: %s returned bad count\n",
++				(unsigned long)dev_attr->show);
++	}
+ 	return ret;
+ }
+ 
+_
 
-Kind regards,
-Michael 
---Apple-Mail-1--587787106
-Content-Disposition: attachment;
-	filename=smime.p7s
-Content-Type: application/pkcs7-signature;
-	name=smime.p7s
-Content-Transfer-Encoding: base64
-
-MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIIGIzCCAtww
-ggJFoAMCAQICEBd4Zp9b22liUjK/V/e8ZTUwDQYJKoZIhvcNAQEFBQAwYjELMAkGA1UEBhMCWkEx
-JTAjBgNVBAoTHFRoYXd0ZSBDb25zdWx0aW5nIChQdHkpIEx0ZC4xLDAqBgNVBAMTI1RoYXd0ZSBQ
-ZXJzb25hbCBGcmVlbWFpbCBJc3N1aW5nIENBMB4XDTA3MTAzMTE2MDMwMVoXDTA4MTAzMDE2MDMw
-MVowQzEfMB0GA1UEAxMWVGhhd3RlIEZyZWVtYWlsIE1lbWJlcjEgMB4GCSqGSIb3DQEJARYRbWlr
-ZUBpdC1sb29wcy5jb20wggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQC/D9ePLG2ZNk/Z
-NXTRfUq7Rs+3k5M/nqmZ8riQYRnt8sCTj6o/fPS4qjaDf9jRfgbxViROiShFWMoBNJkKg91doJFk
-FYdive8ujFfKpPR6FVGu8rN/sHUZM/gowZUcqDyIMAJVr7iiWhQYxP3U4hmprJsmUaGkjBU37Bcw
-vJnEZ4gDCgYiZLiHUACDDfsl2xl5r6XvtXV9TsjWA3eQSeju68nQFP0PjFU+UtYfr3z1nFMJpuzE
-xStjCEZ+EkYBOHK+RmBaOLEfF2Rq8175oaX5ScotY61s7wjADYesS//bvdcZ11jf/R+UCE90p8iC
-Y1TjqqRv+zMc+VpyfG1dt9ELAgMBAAGjLjAsMBwGA1UdEQQVMBOBEW1pa2VAaXQtbG9vcHMuY29t
-MAwGA1UdEwEB/wQCMAAwDQYJKoZIhvcNAQEFBQADgYEAgVh3S3v4j1ydxqgc/DWXcO5RRnyfLTjU
-bJwYwTdaQVuykeXrT+2ITDIpOpVEqZ7xV/N9aKMM/izyQ8oMvw/J13TUm1N77kNCp5jYy1S+Ntuz
-bCdOdFVA5tFVn/nMfmK1Is6NjK+0GmryYPEpn8vaP9ZGy57wCpKZrwmytgm3oPQwggM/MIICqKAD
-AgECAgENMA0GCSqGSIb3DQEBBQUAMIHRMQswCQYDVQQGEwJaQTEVMBMGA1UECBMMV2VzdGVybiBD
-YXBlMRIwEAYDVQQHEwlDYXBlIFRvd24xGjAYBgNVBAoTEVRoYXd0ZSBDb25zdWx0aW5nMSgwJgYD
-VQQLEx9DZXJ0aWZpY2F0aW9uIFNlcnZpY2VzIERpdmlzaW9uMSQwIgYDVQQDExtUaGF3dGUgUGVy
-c29uYWwgRnJlZW1haWwgQ0ExKzApBgkqhkiG9w0BCQEWHHBlcnNvbmFsLWZyZWVtYWlsQHRoYXd0
-ZS5jb20wHhcNMDMwNzE3MDAwMDAwWhcNMTMwNzE2MjM1OTU5WjBiMQswCQYDVQQGEwJaQTElMCMG
-A1UEChMcVGhhd3RlIENvbnN1bHRpbmcgKFB0eSkgTHRkLjEsMCoGA1UEAxMjVGhhd3RlIFBlcnNv
-bmFsIEZyZWVtYWlsIElzc3VpbmcgQ0EwgZ8wDQYJKoZIhvcNAQEBBQADgY0AMIGJAoGBAMSmPFVz
-VftOucqZWh5owHUEcJ3f6f+jHuy9zfVb8hp2vX8MOmHyv1HOAdTlUAow1wJjWiyJFXCO3cnwK4Va
-qj9xVsuvPAsH5/EfkTYkKhPPK9Xzgnc9A74r/rsYPge/QIACZNenprufZdHFKlSFD0gEf6e20Txh
-BEAeZBlyYLf7AgMBAAGjgZQwgZEwEgYDVR0TAQH/BAgwBgEB/wIBADBDBgNVHR8EPDA6MDigNqA0
-hjJodHRwOi8vY3JsLnRoYXd0ZS5jb20vVGhhd3RlUGVyc29uYWxGcmVlbWFpbENBLmNybDALBgNV
-HQ8EBAMCAQYwKQYDVR0RBCIwIKQeMBwxGjAYBgNVBAMTEVByaXZhdGVMYWJlbDItMTM4MA0GCSqG
-SIb3DQEBBQUAA4GBAEiM0VCD6gsuzA2jZqxnD3+vrL7CF6FDlpSdf0whuPg2H6otnzYvwPQcUCCT
-cDz9reFhYsPZOhl+hLGZGwDFGguCdJ4lUJRix9sncVcljd2pnDmOjCBPZV+V2vf3h9bGCE6u9uo0
-5RAaWzVNd+NWIXiC3CEZNd4ksdMdRv9dX2VPMYIDEDCCAwwCAQEwdjBiMQswCQYDVQQGEwJaQTEl
-MCMGA1UEChMcVGhhd3RlIENvbnN1bHRpbmcgKFB0eSkgTHRkLjEsMCoGA1UEAxMjVGhhd3RlIFBl
-cnNvbmFsIEZyZWVtYWlsIElzc3VpbmcgQ0ECEBd4Zp9b22liUjK/V/e8ZTUwCQYFKw4DAhoFAKCC
-AW8wGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG9w0BCQUxDxcNMDgwMzEyMjAxMTE5
-WjAjBgkqhkiG9w0BCQQxFgQUC0EoxFw9ldTUOChjo+JBy2bMy/gwgYUGCSsGAQQBgjcQBDF4MHYw
-YjELMAkGA1UEBhMCWkExJTAjBgNVBAoTHFRoYXd0ZSBDb25zdWx0aW5nIChQdHkpIEx0ZC4xLDAq
-BgNVBAMTI1RoYXd0ZSBQZXJzb25hbCBGcmVlbWFpbCBJc3N1aW5nIENBAhAXeGafW9tpYlIyv1f3
-vGU1MIGHBgsqhkiG9w0BCRACCzF4oHYwYjELMAkGA1UEBhMCWkExJTAjBgNVBAoTHFRoYXd0ZSBD
-b25zdWx0aW5nIChQdHkpIEx0ZC4xLDAqBgNVBAMTI1RoYXd0ZSBQZXJzb25hbCBGcmVlbWFpbCBJ
-c3N1aW5nIENBAhAXeGafW9tpYlIyv1f3vGU1MA0GCSqGSIb3DQEBAQUABIIBADbnlXfrtwtT0DHI
-9mZIYbF8r/7rIr79bK/rWHunF0fmm6ui+olAOagcsvstAYOkW4S5U6hwhCpBnubcERJTAPjVSv2O
-iktIWMmUduJVpxBdimqPlBnE/x09ZGPeGSHRrq0+UwwmAkBetK1rVKFah4T+dNz75dZ7X8cR8oL3
-caIpqPGsSoTQgIYD4muO8DoyBK0KcyVZvckvk0Hd6wXnsyG1shgCW2dSGs+Tjjkbfm+rxonZA0HX
-oTCZgHaF/DVw5u2Y2bteS/lEgce81zfhEFW08dXyUJTgXubyYW5/ZbKHD35fumO88stlBSA67XuD
-yShwz9M9aUX821jwqQYbY/wAAAAAAAA=
-
---Apple-Mail-1--587787106--
