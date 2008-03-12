@@ -1,69 +1,72 @@
-From: Michael Tokarev <mjt@tls.msk.ru>
-Subject: Re: Online resize
-Date: Wed, 12 Mar 2008 12:38:25 +0300
-Message-ID: <47D7A491.9020205@msgid.tls.msk.ru>
-References: <200803111119.56015.wayne@flashmedia.co.za> <20080311145832.GC2086@cthulhu.home.robinhill.me.uk> <47D78EA8.7050604@msgid.tls.msk.ru> <200803121114.27080.wayne@flashmedia.co.za>
+From: Tomasz Chmielewski <mangoo@wpkg.org>
+Subject: sysfs Kernel BUG when RAID bitmap file has IO errors
+Date: Wed, 12 Mar 2008 10:40:18 +0100
+Message-ID: <47D7A502.6020701@wpkg.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200803121114.27080.wayne@flashmedia.co.za>
 Sender: linux-raid-owner@vger.kernel.org
-To: wayne@flashmedia.co.za
-Cc: linux-raid@vger.kernel.org
+To: Linux-Raid <linux-raid@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Wayne Gemmell wrote:
-> On Wednesday 12 March 2008 10:04:56 you wrote:
->> a) re-create the array with new partitions, with THE SAME DISK ORDER,
->>    METADATA VERSION AND CHUNK SIZE as it was before.
-> Is this possible without loosing data?
+I have a RAID-5 bitmap file on external media:
 
-Yes.  But it's unreliable, sorta.  Too easy to screw things up, that is.
+# cat /proc/mdstat
+Personalities : [raid6] [raid5] [raid4]
+md0 : active raid5 sdb1[0] sdf1[4] sde1[3] sdd1[2] sdc1[1]
+       1562834944 blocks level 5, 64k chunk, algorithm 2 [5/5] [UUUUU]
+       bitmap: 0/373 pages [0KB], 512KB chunk, file: /root/raid/bitmap
 
->> b) restore partitions to the EXACT size as they were before, and
->>    start from scratch
-> Thats easy enough. I'll do that now.
+unused devices: <none>
 
-And now, the original question comes up again: what to do, how to
-perform the actual resize of the raid array...
 
-To be fair, I don't really know.  I always used my own tiny program
-to assist me in a situation like this - to back up and restore
-v0.90 linux raid superblocks.  It's available at
-http://www.corpit.ru/mjt/mdsuper.c .  Here's how I use it:
+Unfortunately, that external media is flash which slowly dies:
 
-First, save the original superblocks in files:
+# md5sum /root/raid/bitmap
+md5sum: /root/raid/bitmap: Input/output error
 
-  for f in sd{a,b,c,d,e}1; do
-    ./mdsuper read /dev/$f > $f
-  done
 
-this instructs mdsuper to read the superblock (v0.90 only!) and
-write it to standard out.  This has to be done while the array
-(on original partitions) is STOPPED.
+Let's access "/sys/block/md0/md/dev-sdd1/super":
 
-Now, resize the partitions, reboot if necessary (for the kernel
-to recognize the new sizes).  You can save a dump of your current
-partitions using `sfdisk -d' (redirect its output to a file as
-with mdsuper) - just in case if something goes wrong.
+# cat /sys/block/md0/md/dev-sdd1/super
 
-At this point, your array is unaccessible - mdadm will tell you
-that it can't find the superblocks.  But we have the superblocks
-saved - so we only need to restore them back:
+# dmesg -c
+------------[ cut here ]------------
+Kernel BUG at 78178626 [verbose debug info unavailable]
+invalid opcode: 0000 [#8]
+Modules linked in: iscsi_scst crc32c libcrc32c scst_vdisk scst 
+iptable_filter ip_tables x_tables as_iosched deadline_iosched nfs nfsd 
+lockd nfs_acl auth_rpcgss sunrpc exportfs dm_snapshot dm_mirror bonding 
+e1000 sata_mv
 
-  for f in sd{a,b,c,d,e}1; do
-    ./mdsuper write /dev/$f < $f
-  done
+Pid: 4901, comm: cat Tainted: G      D (2.6.24.2-1 #1)
+EIP: 0060:[<78178626>] EFLAGS: 00010212 CPU: 0
+EIP is at sysfs_read_file+0x88/0xd4
+EAX: 00000001 EBX: 91611780 ECX: 00000000 EDX: 976fecc0
+ESI: 00001000 EDI: 976fed20 EBP: 9745b344 ESP: 8353df54
+  DS: 007b ES: 007b FS: 0000 GS: 0033 SS: 0068
+Process cat (pid: 4901, ti=8353c000 task=7d4caa40 task.ti=8353c000)
+Stack: 93511080 0804b4d8 00001000 0804e000 91611794 783515f0 847e3380 
+0804e000
+        7817859e 00001000 7814ad7c 8353dfa0 00001000 847e3380 fffffff7 
+0804e000
+        8353c000 7814b0aa 8353dfa0 00000000 00000000 00000000 00000003 
+0804e000
+Call Trace:
+  [<7817859e>] sysfs_read_file+0x0/0xd4
+  [<7814ad7c>] vfs_read+0x88/0x10a
+  [<7814b0aa>] sys_read+0x41/0x67
+  [<78103bca>] syscall_call+0x7/0xb
+  =======================
+Code: c0 74 61 8b 47 18 8b 4b 0c 8b 40 04 89 43 24 89 e8 8b 74 24 14 8b 
+57 14 ff 16 89 c6 89 f8 e8 18 0b 00 00 81 fe ff 0f 00 00 7e 04 <0f> 0b 
+eb fe 85 f6 78 31 c7 43 20 00 00 00 00 89 33 eb 07 be f4
+EIP: [<78178626>] sysfs_read_file+0x88/0xd4 SS:ESP 0068:8353df54
+---[ end trace 7e6d8636f39e737a ]---
 
-(note the redirection is opposite!, and read was changed to write!).
 
-Now, try to assemble the array - it should be here.  We just moved
-(actually copied) the superblock from the now-middle-of-partitions
-to the end, where it should be, and mdadm is now able to find it.
-The array is still of the old size - but now mdadm --grow will
-work.
 
-That's basically it.  Just watch the mdsuper invocation.
-
-/mjt
+-- 
+Tomasz Chmielewski
+http://wpkg.org
