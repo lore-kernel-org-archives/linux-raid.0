@@ -1,49 +1,45 @@
-From: Pallai Roland <dap@mail.index.hu>
-Subject: media error but no I/O error
-Date: Wed, 12 Mar 2008 02:19:24 +0100
-Message-ID: <200803120219.25391.dap@mail.index.hu>
+From: Wayne Gemmell <wayne@flashmedia.co.za>
+Subject: Re: Online resize
+Date: Wed, 12 Mar 2008 09:27:31 +0200
+Message-ID: <200803120927.31646.wayne@flashmedia.co.za>
+References: <200803111119.56015.wayne@flashmedia.co.za> <200803111444.17502.wayne@flashmedia.co.za> <20080311145832.GC2086@cthulhu.home.robinhill.me.uk>
+Reply-To: wayne@flashmedia.co.za
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20080311145832.GC2086@cthulhu.home.robinhill.me.uk>
 Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Tuesday 11 March 2008 16:58:32 Robin Hill wrote:
+> What version metadata are you using? =A0I'm not sure how 1.0 will han=
+dle
+> partition resizes but any other should certainly be okay. =A0
+I'm not sure, the version in mdadm -E is 00.90.00. Is that what your ta=
+lking=20
+about? They were done at the same time.
 
-Hi,
+> Have you tried running mdadm -E on each of the component partitions?
+Yes, It just says "no md superblock detected on /dev/sda6". Same with t=
+he=20
+rest.
 
-I've some unreadable sector on a Samsung SATA disk. The output 
-of "smartctl -a -d ata /dev/sdc" shows 2 pending sectors:
+> I assume the new partitions are starting from the same position as th=
+e old=20
+ones?
 
-197 Current_Pending_Sector  0x0012   100   100   000    Old_age   
-Always       -       2
-
-the offline smart test also logged the error:
-
-Num  Test_Description    Status                  Remaining  LifeTime(hours)  
-LBA_of_first_error
-# 1  Short offline       Completed: read failure       90%      2835         
-54754753
-
-and I got the following kernel message if I try to read the sector with "dd 
-if=/dev/sdc skip=27377376 bs=1024 count=1":
-kernel: res 51/40:00:c1:7d:43/23:00:03:00:00/40 Emask 0x409 (media error) <F>
-
-But there's no buffer error, I always get the content of the sector after 
-6 "media error"! The disk is member of a raid5 array, but I cannot force the 
-re-write of this sector, cause there's no read error. The array is slow when 
-the read runs into this sector and I'm not sure that the content what I get 
-is correct. What should I do? Should I fail and re-add the disk?
-
-kernel 2.6.24
-intel AHCI sata ctrl.
-SAMSUNG HD501LJ disk
+Yes, I just dropped the partition and made a new one in place.
 
 
-thanks,
+
+--=20
+Regards
+Wayne=20
 --
- d
-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
