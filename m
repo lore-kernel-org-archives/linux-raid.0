@@ -1,33 +1,21 @@
-From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
-Subject: software for making initrd's with raid support
-Date: Thu, 13 Mar 2008 00:56:41 +0100
-Message-ID: <20080312235641.GA7109@rap.rap.dk>
+From: Hubert Verstraete <hubskml@free.fr>
+Subject: MDP major registration
+Date: Thu, 13 Mar 2008 11:46:44 +0100
+Message-ID: <47D90614.9040206@free.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi
+Neil,
 
-I have been looking at making my system working with raid, and booting
-from raid. I succeded, but I had to hack a number of things, including
-making a new initrd by hand.
+What is the status of the major for the partitionable arrays ?
+I see that it is 254, which is in the experimental section, according to 
+the official Linux device list (http://www.lanana.org/docs/device-list/).
+Will there be an official registration ?
 
-I used mkinitrd, but it did not treat sw raid, only in the md sense.
-this is a redhat/mandriva/pclinuxos(keldix thing, I wonder if it also
-used in the dbian/ubuntu world.
-
-So what do you use for generating initrd? And does it work out of the
-box?
-
-Are there any installers that have support for raid1/raid10?
-
-BTW, I updated the howto on preventing against failure caused
-by a single bad disk, and I think it now kind of reflects
-something that works.
-
-best regards
-Keld
+Regards,
+Hubert
