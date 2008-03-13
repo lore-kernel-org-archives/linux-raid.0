@@ -1,87 +1,56 @@
-From: Anton Altaparmakov <aia21@cam.ac.uk>
-Subject: How to grow RAID1 mirror on top of LVM?
-Date: Thu, 13 Mar 2008 11:21:22 +0000
-Message-ID: <25F8EF57-9606-4217-B2D4-2DD3D8E064C4@cam.ac.uk>
-Mime-Version: 1.0 (Apple Message framework v919.2)
-Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
-Content-Transfer-Encoding: 7bit
+From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
+Subject: Re: software for making initrd's with raid support
+Date: Thu, 13 Mar 2008 14:00:42 +0100
+Message-ID: <20080313130042.GA11858@rap.rap.dk>
+References: <20080312235641.GA7109@rap.rap.dk> <20080313111538.GB4229@percy.comedia.it>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20080313111538.GB4229@percy.comedia.it>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+On Thu, Mar 13, 2008 at 12:15:39PM +0100, Luca Berra wrote:
+> On Thu, Mar 13, 2008 at 12:56:41AM +0100, Keld J=F8rn Simonsen wrote:
+> >Hi
+> >
+> >I have been looking at making my system working with raid, and booti=
+ng
+> >from raid. I succeded, but I had to hack a number of things, includi=
+ng
+> >making a new initrd by hand.
+> >
+> >I used mkinitrd, but it did not treat sw raid, only in the md sense.
+> >this is a redhat/mandriva/pclinuxos(keldix thing, I wonder if it als=
+o
+> >used in the dbian/ubuntu world.
+>=20
+> could you please explain what you mean in the above sentence,
+> i have being maintaining mandriva mkinitrd packages for some years, a=
+nd
+> would really love to know.
 
-We have Software RAID1 (MD) mirrors on top of LVM volumes so that we  
-can grow the LVM volumes if we need one of the mirrors to grow and  
-then use mdadm --grow to grow the mirror followed by using xfs_growfs  
-to grow the xfs file system mounted on the mirror.  Thus we can extend  
-the size of the mirrored file system without having to unmount it  
-which is great.  This is what should happen in an ideal world anyway.
+Good!  I was working on a mandriva professional 2006 system 2.6.12
+kernel, and I hacked the mkinitrd to have it generate mdadm.conf etc
+- it did not at all look at this. I can send you my patches, but they
+  are in no way clean.
 
-In reality it does not work.  )-:  This is perhaps because mdadm does  
-not realize the underlying devices have grown (using lvextend) and  
-therefore running:
+There was no mention of raid10 in the code either.
 
-mdadm --grow /dev/md3 --size max
+I thied to contact Erik Troan - the main author of mkinitrd (and lots o=
+f
+other stuff:-) - but got a bouncing message for his redhat address.
 
-Does not do anything.
+And I was about to report this om qa.mandriva.com - but it seems that I
+already made contact!
 
-And if I do:
-
-mdadm /dev/md3 --fail /dev/vg/volume2
-mdadm /dev/md3 --remove /dev/vg/volume2
-mdadm /dev/md3 --add --write-mostly /dev/vg/volume2
-
-This fails because MD complains that no superblocks are found on the  
-array or something like that.  )-:  Perhaps it has noticed that the  
-devices are bigger and now cannot find the MD super block as it is no  
-longer at the end of the device or something like that, not sure.
-
-The only working way I have found to do what we want is to --fail & -- 
-remove one device, then grow it with lvextend, then add it back to the  
-mirror.  BUT this causes a full resync because it does not detect that  
-the device was part of the mirror before and no resync is thus  
-needed.  Again, I assume because the MD superblock is now in the  
-middle of the volume instead of at the end.
-
-I then have to wait for the resync to finish and then I have to remove  
-the other mirrored device with --fail & --remove, then lvextend that,  
-and then I can add it back to the mirror which AGAIN triggers a full  
-resync as before.
-
-I then have to wait for the resync to finish and then I finally can  
-grow the mirror using:
-
-mdadm --grow /dev/md3 --size max
-
-And it works this time.
-
-As a small shortcut, I can do the mdadm --grow after the first resync  
-is complete (see above), after breaking the mirror for the second  
-time, then the md3 device is grown with just one member device.  Then  
-I add the extended other mirror target to the array with --add and  
-that then does a full resync on the already grown mirror.
-
-So to grow a raid mirror takes ages because of the resync times when  
-you have large arrays!
-
-Is there a better way to do this?  I am hoping someone will tell me to  
-use option blah to utility foo that will do this for me without having  
-to break the mirror twice and resync each time.  (-;
-
-If not, please consider this a feature request for mdadm.  (-:  It  
-should have an option to detect that the underlying device has grown  
-and thus write a new superblock  (or move the old one or whatever) at  
-the end of the newly grown device instead of complaining that it does  
-not exist.  Or something!  As it is, it is incredibly time consuming  
-and inefficient.  )-:
-
-Best regards,
-
-	Anton
--- 
-Anton Altaparmakov <aia21 at cam.ac.uk> (replace at with @)
-Unix Support, Computing Service, University of Cambridge, CB2 3QH, UK
-Linux NTFS maintainer, http://www.linux-ntfs.org/
-
+best regards
+keld
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
