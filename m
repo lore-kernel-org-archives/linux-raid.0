@@ -1,54 +1,63 @@
-From: Richard Scobie <richard@sauce.co.nz>
-Subject: Re: Multiple partitions on the same disk
-Date: Mon, 17 Mar 2008 08:16:27 +1300
-Message-ID: <47DD720B.2050109@sauce.co.nz>
-References: <380-22008351422419859@mochamail.com>
+From: Luca Berra <bluca@comedia.it>
+Subject: Re: software for making initrd's with raid support
+Date: Mon, 17 Mar 2008 09:36:43 +0100
+Message-ID: <20080317083643.GB13128@percy.comedia.it>
+References: <20080312235641.GA7109@rap.rap.dk> <20080313111538.GB4229@percy.comedia.it> <20080313130042.GA11858@rap.rap.dk> <20080314081516.GB12274@percy.comedia.it> <20080314133045.GB13616@rap.rap.dk> <20080315114912.GA11426@percy.comedia.it> <20080315123806.GA20418@rap.rap.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <380-22008351422419859@mochamail.com>
+Content-Disposition: inline
+In-Reply-To: <20080315123806.GA20418@rap.rap.dk>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Cody wrote:
-> Hi Everyone,
-> 
-> I have an 8-disk raid5 array (each is 500GB SATA).  The first disk
-> sda1 shows bad sectors (from smartd).  mdadm reports that the array
-> is fine, but I want to replace or re-add the drive.  Should I replace
-> it?  It's the oldest drive in the array (the disk is ~3 years old).
+On Sat, Mar 15, 2008 at 01:38:06PM +0100, Keld J=F8rn Simonsen wrote:
+>> really?
+>> if this is the case you should have submitted a bug report.
+>
+>It is possible that I do. I would like to find out what to do first,
+>however.
 
-If you have full backups of the array and can tolerate the unplanned 
-complete failure of the drive, then you could leave it in service.
+in any case if i am to provide any support, i need more information on
+the issue you experienced.
 
-With an array of this size and age, you should be running:
+>Thanks for your answers.=20
+>
+>I filed a feature request for cooker on harddrake2 and drakx.
+good,
+could you send me (privately) the bugzilla number?
+>I think mkinitrd is actually used by the kernel, with a make install.
+this is because kernel "make install" command looks for a site specific
+script called /sbin/installkernel.
 
-echo repair > /sys/block/mdX/md/sync_action
+>Is that true? Then mkinitrd is a general script that is used on almost
+>all linux systems. So I can assume that this is available when I write=
+ a
+>howto.
+afaik redhat, mandriva and turbolinux use a mkinitrd derived from
+redhat
 
-on a regular basis to ensure the whole array is being written to and 
-helping to minimise the chance of you hitting a bad sector on another 
-drive during the resync after having replaced the faulty drive.
+suse uses its own mkinitrd command
 
-> Also, can I replace it with a 1TB disk and add it as two partitions
-> (assuming that 2 partitions of the correct size can be created)?  I
-> have read of RAID schemes that involves partitioning each disk into
-> smaller increments, but this seems inherently unsafe to me unless
-> mdadm understands that two partitions are on the same device and
-> organizes parity accordingly.
+debian and derivatives use initramfs-tools, or yaird
 
-If by this you mean that you wish to replace your faulty drive with one 
-500GB partition and grow the array to be able to add the second 500GB 
-partition, then no, this is a bad idea on two counts:
+other distributions i have no knowledge.
 
-When this drive fails in the future, you lose two components and the 
-array is unrecoverable (RAID 5 only allowing single component redundency).
+L.
 
-Having two components on the same physical device would impact 
-performance due to the head having to constantly re-seek between the two 
-partitions.
 
-Regards,
-
-Richard
+--=20
+Luca Berra -- bluca@comedia.it
+        Communication Media & Services S.r.l.
+ /"\
+ \ /     ASCII RIBBON CAMPAIGN
+  X        AGAINST HTML MAIL
+ / \
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
