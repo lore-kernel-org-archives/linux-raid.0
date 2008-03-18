@@ -1,35 +1,34 @@
-From: Bernd Schubert <bs@q-leap.de>
-Subject: ioatdma
-Date: Tue, 18 Mar 2008 22:30:42 +0100
-Message-ID: <200803182230.42812.bs@q-leap.de>
+From: pg_lxra@lxra.for.sabi.co.UK (Peter Grandi)
+Subject: Re: the '--setra 65536' mistery, analysis and WTF?
+Date: Tue, 18 Mar 2008 21:31:28 +0000
+Message-ID: <18400.13488.178782.156775@tree.ty.sabi.co.uk>
+References: <18382.54925.354731.996508@tree.ty.sabi.co.UK>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <18382.54925.354731.996508@tree.ty.sabi.co.UK>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hello,
+[ ... ]
 
-from my understanding of ioatdma it just should be loaded before raid456 to 
-make use it, shouldn't it?
+> * Most revealingly, when I used values of read ahead which
+>   were powers of 10, the numbers of block/s reported by
+>   'vmstat 1' was also a multiple of that power of 10.
 
-I just wonder why memcpy_count and bytes_transferred in /sys/class/dma/* is 
-always zero.
+Most disturbingly, this seems to indicate that not only the
+Linux block IO subsystems issues IO operations in multiples of
+the read-ahead size, but does so at a fixed number of times per
+second that is a multiple of 10.
 
-I guess the kernel version is relevant, but this a bit difficult to answer, 
-since we have backported a huge chunk of raid, ioatdma and dca to 2.6.22...
+Which leads me to suspect that the queueing of IO requests on
+the driver's queue, or even the issuing of requests from the
+driver to the device, may end up being driven by the clock tick
+interrupt frequency, not the device interrupt frequency.
 
+Eventually in my copious free time :-) I shall put in a few
+traces to see what is the timewise flow of read requests...
 
-Do I miss something?
-
-
-Thanks,
-Bernd
-
--- 
-Bernd Schubert
-Q-Leap Networks GmbH
+[ ... ]
