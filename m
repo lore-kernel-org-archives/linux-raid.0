@@ -1,45 +1,53 @@
-From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
-Subject: Re: performance problems with raid10,f2
-Date: Thu, 20 Mar 2008 18:28:17 +0100
-Message-ID: <20080320172817.GA27070@rap.rap.dk>
-References: <20080314231151.GA14568@rap.rap.dk>
+From: Andre Noll <maan@systemlinux.org>
+Subject: Re: Redundancy check using "echo check > sync_action": error reporting?
+Date: Thu, 20 Mar 2008 18:39:06 +0100
+Message-ID: <20080320173906.GN32242@skl-net.de>
+References: <47DD2CD7.2090802@tuxes.nl> <20080316161451.0d17fd22@szpak> <47E26775.3000500@tuxes.nl> <20080320134747.GA28114@cthulhu.home.robinhill.me.uk> <47E2725C.1020206@tuxes.nl> <20080320163551.GG13719@mit.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="dPW7zu3hTOhZvCDO"
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20080314231151.GA14568@rap.rap.dk>
+In-Reply-To: <20080320163551.GG13719@mit.edu>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Theodore Tso <tytso@MIT.EDU>
+Cc: Bas van Schaik <bas@tuxes.nl>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, Mar 15, 2008 at 12:11:51AM +0100, Keld J=F8rn Simonsen wrote:
-> Hi
->=20
-> I have a 4 drive array with 1 TB Hitachi disks, formatted as raid10,f=
-2
->=20
-> I had some strange observations:
->=20
-> 1. while resyncing I could get the raid to give me about 320 MB/s in
-> sequential read, which was good. After resync had been done, and with
-> all 4 drives active, I only get 115 MB/s.
 
-This was reproducable. I dont know what could be wrong.
-I tried to enlarge my readahed, but the system did not allow me to have=
-=20
-more than a 2 MiB readahed, - well that should be ok for a 4 disk array
-with 256 kiB chunks?
+--dPW7zu3hTOhZvCDO
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-I did try to have chunks of 64 kiB - but no luck.
+On 12:35, Theodore Tso wrote:
 
-It seemed like it is something that the resync process builds up.
-What could it be?
+> If a mismatch is detected in a RAID-6 configuration, it should be
+> possible to figure out what should be fixed
 
-Best regards
-keld
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+It can be figured out under the assumption that exactly one drive has
+bad data and all other ones have good data. But that seems to be an
+assumption that is hard to verify in reality.
+
+> Out of curiosity, does md do this automatically, either
+> when reading from a stripe, or during a resync operation?
+
+Nope, md does no such thing.
+Andre
+--=20
+The only person who always got his work done by Friday was Robinson Crusoe
+
+--dPW7zu3hTOhZvCDO
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.1 (GNU/Linux)
+
+iD8DBQFH4qE6Wto1QDEAkw8RAlBmAJ9drNoO61HvOgPY0UY84GhmhQXeAgCfScP8
+c6n4NwijN+jRekoJAd5cANk=
+=M9sG
+-----END PGP SIGNATURE-----
+
+--dPW7zu3hTOhZvCDO--
