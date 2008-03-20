@@ -1,42 +1,39 @@
-From: "Dan Williams" <dan.j.williams@intel.com>
-Subject: Re: ioatdma
-Date: Wed, 19 Mar 2008 16:42:18 -0700
-Message-ID: <e9c3a7c20803191642t48de79acv7c299198a19a75f9@mail.gmail.com>
-References: <frqo2s$tl2$1@ger.gmane.org>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: Change Chunk Size on Array?
+Date: Thu, 20 Mar 2008 04:16:02 -0400 (EDT)
+Message-ID: <alpine.DEB.1.00.0803200415560.16116@p34.internal.lan>
+References: <16137381.post@talk.nabble.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <frqo2s$tl2$1@ger.gmane.org>
-Content-Disposition: inline
+In-Reply-To: <16137381.post@talk.nabble.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Bernd Schubert <bs@q-leap.de>
+To: crshman <crshman@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Mar 19, 2008 at 2:57 AM, Bernd Schubert <bs@q-leap.de> wrote:
-> Hello,
+
+
+On Wed, 19 Mar 2008, crshman wrote:
+
 >
->  from my understanding of ioatdma it just should be loaded before raid456 to
->  make use it, shouldn't it?
+> Hello All,
 >
->  I just wonder why memcpy_count and bytes_transferred in /sys/class/dma/* is
->  always zero.
+> I wanted to know if it were possible to change the chunk size on an array
+> after it has been created. I have a software raid 5 comprised of 7 drives
+> with a chunk size of 64k. I wanted to up that to 1024k, would this be
+> possible without losing any data? This isn't mission critical so it is ok if
+> i need to stop the array first, however I'd rather not lose any data.
+> --
+> View this message in context: http://www.nabble.com/Change-Chunk-Size-on-Array--tp16137381p16137381.html
+> Sent from the linux-raid mailing list archive at Nabble.com.
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 >
 
-Currently only network traffic will update these counts.  They are not
-currently hooked up for the raid/async_tx case.  NET_DMA uses
-dma_async_memcpy_*() whereas MD uses async_memcpy().
+You need to re-create the array.
 
-In my tests with the iop-adma driver on an iop342.  I look at
-/proc/interrupts to check that things are alive and kicking.
-
-You could add the following to async_memcpy():
-        cpu = get_cpu();
-        per_cpu_ptr(chan->local, cpu)->bytes_transferred += len;
-        per_cpu_ptr(chan->local, cpu)->memcpy_count++;
-        put_cpu();
-
-
---
-Dan
+Justin.
