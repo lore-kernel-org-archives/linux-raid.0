@@ -1,111 +1,78 @@
-From: Pradeep <pradeepjp@yahoo.com>
-Subject: mdadm -A erased the superblock ?
-Date: Thu, 20 Mar 2008 13:26:07 -0700 (PDT)
-Message-ID: <671934.68934.qm@web32802.mail.mud.yahoo.com>
+From: Peter Rabbitson <rabbit+list@rabbit.us>
+Subject: Re: Redundancy check using "echo check > sync_action": error	reporting?
+Date: Fri, 21 Mar 2008 00:08:20 +0100
+Message-ID: <47E2EE64.5080101@rabbit.us>
+References: <47DD2CD7.2090802@tuxes.nl> <20080316161451.0d17fd22@szpak> <47E26775.3000500@tuxes.nl> <20080320134747.GA28114@cthulhu.home.robinhill.me.uk> <47E2725C.1020206@tuxes.nl> <20080320163551.GG13719@mit.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20080320163551.GG13719@mit.edu>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Theodore Tso <tytso@MIT.EDU>
+Cc: Bas van Schaik <bas@tuxes.nl>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
-    It appears that a 'mdadm -A' command erased the superblocks on my disks.
-Could you please take a look and let me know if I did something wrong ?
+Theodore Tso wrote:
+> On Thu, Mar 20, 2008 at 03:19:08PM +0100, Bas van Schaik wrote:
+>>> There's no explicit message produced by the md module, no.  You need to
+>>> check the /sys/block/md{X}/md/mismatch_cnt entry to find out how many
+>>> mismatches there are.  Similarly, following a repair this will indicate
+>>> how many mismatches it thinks have been fixed (by updating the parity
+>>> block to match the data blocks).
+>>>   
+>> Marvellous! I naively assumed that the module would warn me, but that's
+>> not true. Wouldn't it be appropriate to print a message to dmesg if such
+>> a mismatch occurs during a check? Such a mismatch clearly means that
+>> there is something wrong with your hardware lying beneath md, doesn't it?
+> 
+> If a mismatch is detected in a RAID-6 configuration, it should be
+> possible to figure out what should be fixed (since with two hot spares
+> there should be enough redundancy not only to detect an error, but to
+> correct it.)  Out of curiosity, does md do this automatically, either
+> when reading from a stripe, or during a resync operation?
+> 
 
-(I was adding 2 disks that were in a raid 1 set to a new machine running fedora 8.)
-Briefly, I issued an 'mdadm --examine /dev/sdd1' command to check the disks in my raid 1
-array.
-(repeat similar command for /dev/sde1)
+In my modest experience with root/high performance spool on various raid 
+levels I can pretty much conclude that the current check mechanism doesn't do 
+enough to give power to the user. We can debate all we want about what the MD 
+driver should do when it finds a mismatch, yet there is no way for the user to 
+figure out what the mismatch is and take appropriate action. This does not 
+apply only to RIAD5/6 - what about RAID1/10 with >2 chunk copies? What if the 
+only wrong value is taken and written all over the other good blocks?
 
-Then I issued 'mdadm -A -v -u '400f8c5f:045827ea:f72fe561:698ccea2' /dev/md0'
-which errored out because it was looking at /dev/sdd instead of /dev/sdd1
+I think that the solution is rather simple, and I would contribute a patch if 
+I had any C experience. The current check mechanism remains the same - 
+mismatch_cnt is incremented/reset just the same as before. However on every 
+mismatching chunk the system printks the following:
 
-Subsequent mdadm --examine commands show no superblock.
+1) the start offset of the chunk(md1/10) or stripe(md5/6) within the MD device
+2) one line for every active disk containing:
+	a) the offset of the chunk within the MD componnent
+	b) a {md5|sha1}sum of the chunk
 
-In detail below:
+In a common case array this will take no more than 8 lines in dmesg. However 
+it will allow:
 
-[root@brahma ~]# mdadm --examine /dev/sdd1
-/dev/sdd1:
-          Magic : a92b4efc
-        Version : 00.90.00
-           UUID : 400f8c5f:045827ea:f72fe561:698ccea2
-  Creation Time : Wed Sep 26 06:15:31 2007
-     Raid Level : raid1
-  Used Dev Size : 117242240 (111.81 GiB 120.06 GB)
-     Array Size : 117242240 (111.81 GiB 120.06 GB)
-   Raid Devices : 2
-  Total Devices : 2
-Preferred Minor : 0
-
-    Update Time : Fri Feb 29 21:38:49 2008
-          State : clean
- Active Devices : 2
-Working Devices : 2
- Failed Devices : 0
-  Spare Devices : 0
-       Checksum : e40e8b91 - correct
-         Events : 0.4
-
-
-      Number   Major   Minor   RaidDevice State
-this     0       8       33        0      active sync   /dev/sdc1
-
-   0     0       8       33        0      active sync   /dev/sdc1
-   1     1       8       49        1      active sync   /dev/sdd1
-
-
-
-[root@brahma ~]# mdadm -A -v -u '400f8c5f:045827ea:f72fe561:698ccea2' /dev/md0
-mdadm: looking for devices for /dev/md0
-mdadm: cannot open device /dev/dm-2: Device or resource busy
-mdadm: /dev/dm-2 has wrong uuid.
-mdadm: no recogniseable superblock on /dev/dm-1
-mdadm: /dev/dm-1 has wrong uuid.
-mdadm: cannot open device /dev/dm-0: Device or resource busy
-mdadm: /dev/dm-0 has wrong uuid.
-mdadm: no RAID superblock on /dev/sde
-mdadm: /dev/sde has wrong uuid.
-mdadm: no RAID superblock on /dev/sdd
-mdadm: /dev/sdd has wrong uuid.
-mdadm: cannot open device /dev/sdc1: Device or resource busy
-mdadm: /dev/sdc1 has wrong uuid.
-mdadm: cannot open device /dev/sdc: Device or resource busy
-mdadm: /dev/sdc has wrong uuid.
-mdadm: cannot open device /dev/sdb1: Device or resource busy
-mdadm: /dev/sdb1 has wrong uuid.
-mdadm: cannot open device /dev/sdb: Device or resource busy
-mdadm: /dev/sdb has wrong uuid.
-mdadm: cannot open device /dev/sda3: Device or resource busy
-mdadm: /dev/sda3 has wrong uuid.
-mdadm: cannot open device /dev/sda2: Device or resource busy
-mdadm: /dev/sda2 has wrong uuid.
-mdadm: cannot open device /dev/sda1: Device or resource busy
-mdadm: /dev/sda1 has wrong uuid.
-mdadm: cannot open device /dev/sda: Device or resource busy
-mdadm: /dev/sda has wrong uuid.
-mdadm: 8:65 is identified as a member of /dev/md0, slot 1.
-mdadm: 8:49 is identified as a member of /dev/md0, slot 0.
-mdadm: failed to add 8:65 to /dev/md0: Invalid argument
-mdadm: failed to add 8:49 to /dev/md0: Invalid argument
-mdadm: /dev/md0 assembled from 0 drives - not enough to start the array.
+1) For a human to determine at a glance which disk holds a mismatching chunk 
+in raid 1/10
+2) Determine the same for raid 6 using a userspace tool which will calculate 
+the parity for every possible permutation of chunks
+3) using some external tools to determine which file might have been affected 
+on the layered file system
 
 
+Now of course the problem remains how to repair the array using the 
+information obtained above. I think the best way would be to extend the syntax 
+of repair itself, so that:
 
-[root@brahma ~]#  mdadm --examine /dev/sdd1
-mdadm: No md superblock detected on /dev/sdd1.
+echo repair > .../sync_action would use the old heuristics
 
+echo repair <mdoffset> <component N> > .../sync_action will update the chunk 
+on drive N which corresponds to the chunk/stripe at mdoffset within the MD 
+device, using the information from the other drives, and not the other way 
+around as might happen with just a repair.
 
+Just my 2c
 
-This is with version mdadm - v2.6.2 - 21st May 2007 on fedora 8.
-Please let me know if the information provided is not sufficient.
-regards,
--pradeep.
-
-
-
-
-      ____________________________________________________________________________________
-Never miss a thing.  Make Yahoo your home page. 
-http://www.yahoo.com/r/hs
+Peter
