@@ -1,74 +1,111 @@
-From: Andre Noll <maan@systemlinux.org>
-Subject: Re: Redundancy check using "echo check > sync_action": error reporting?
-Date: Thu, 20 Mar 2008 19:57:05 +0100
-Message-ID: <20080320185705.GH29734@skl-net.de>
-References: <47DD2CD7.2090802@tuxes.nl> <20080316161451.0d17fd22@szpak> <47E26775.3000500@tuxes.nl> <20080320134747.GA28114@cthulhu.home.robinhill.me.uk> <47E2725C.1020206@tuxes.nl> <20080320163551.GG13719@mit.edu> <20080320173906.GN32242@skl-net.de> <20080320180241.GJ13719@mit.edu>
+From: Pradeep <pradeepjp@yahoo.com>
+Subject: mdadm -A erased the superblock ?
+Date: Thu, 20 Mar 2008 13:26:07 -0700 (PDT)
+Message-ID: <671934.68934.qm@web32802.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="lrvsYIebpInmECXG"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20080320180241.GJ13719@mit.edu>
 Sender: linux-raid-owner@vger.kernel.org
-To: Theodore Tso <tytso@MIT.EDU>
-Cc: Bas van Schaik <bas@tuxes.nl>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hi,
+    It appears that a 'mdadm -A' command erased the superblocks on my disks.
+Could you please take a look and let me know if I did something wrong ?
 
---lrvsYIebpInmECXG
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+(I was adding 2 disks that were in a raid 1 set to a new machine running fedora 8.)
+Briefly, I issued an 'mdadm --examine /dev/sdd1' command to check the disks in my raid 1
+array.
+(repeat similar command for /dev/sde1)
 
-On 14:02, Theodore Tso wrote:
-> On Thu, Mar 20, 2008 at 06:39:06PM +0100, Andre Noll wrote:
-> > On 12:35, Theodore Tso wrote:
-> >=20
-> > > If a mismatch is detected in a RAID-6 configuration, it should be
-> > > possible to figure out what should be fixed
-> >=20
-> > It can be figured out under the assumption that exactly one drive has
-> > bad data and all other ones have good data. But that seems to be an
-> > assumption that is hard to verify in reality.
->=20
-> True, but it's what ECC memory does.  :-)   And most people agree that
-> it's a useful thing to do with memory. =20
->=20
-> If you do ECC syndrome checking on every read, and follow that up with
-> periodic scrubbing so that you catch (and correct) errors quickly, it
-> is a reasonable assumption to make.
->=20
-> Obviously a warning should be given when you do this kind of ECC
-> fixups, and if there is an increasing number of ECC fixups that are
-> being done, that should set off alarms that maybe there is a hardware
-> problem that needs to be addressed.
+Then I issued 'mdadm -A -v -u '400f8c5f:045827ea:f72fe561:698ccea2' /dev/md0'
+which errored out because it was looking at /dev/sdd instead of /dev/sdd1
 
-I agree, but not everybody likes the idea to do this kind of error
-correction also for hard disks in raid6 [1]. In case of a hard power
-failure it may well happen that any given subset of the disks in
-the array is up to date and all others are not. So in practice the
-situation for hard disks is different from memory modules.
+Subsequent mdadm --examine commands show no superblock.
 
-OTOH, it's probably the best thing one can do, so I'd vote for
-implementing this feature.
+In detail below:
 
-Andre
+[root@brahma ~]# mdadm --examine /dev/sdd1
+/dev/sdd1:
+          Magic : a92b4efc
+        Version : 00.90.00
+           UUID : 400f8c5f:045827ea:f72fe561:698ccea2
+  Creation Time : Wed Sep 26 06:15:31 2007
+     Raid Level : raid1
+  Used Dev Size : 117242240 (111.81 GiB 120.06 GB)
+     Array Size : 117242240 (111.81 GiB 120.06 GB)
+   Raid Devices : 2
+  Total Devices : 2
+Preferred Minor : 0
 
-[1] http://www.mail-archive.com/linux-raid@vger.kernel.org/msg09863.html
---=20
-The only person who always got his work done by Friday was Robinson Crusoe
+    Update Time : Fri Feb 29 21:38:49 2008
+          State : clean
+ Active Devices : 2
+Working Devices : 2
+ Failed Devices : 0
+  Spare Devices : 0
+       Checksum : e40e8b91 - correct
+         Events : 0.4
 
---lrvsYIebpInmECXG
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
+      Number   Major   Minor   RaidDevice State
+this     0       8       33        0      active sync   /dev/sdc1
 
-iD8DBQFH4rOBWto1QDEAkw8RAgDGAJ4lfQhHsNa+daDIzfrzJmm1ArUTTwCfXJOw
-8b5KJ738G53IgPCXMife+6M=
-=3yOe
------END PGP SIGNATURE-----
+   0     0       8       33        0      active sync   /dev/sdc1
+   1     1       8       49        1      active sync   /dev/sdd1
 
---lrvsYIebpInmECXG--
+
+
+[root@brahma ~]# mdadm -A -v -u '400f8c5f:045827ea:f72fe561:698ccea2' /dev/md0
+mdadm: looking for devices for /dev/md0
+mdadm: cannot open device /dev/dm-2: Device or resource busy
+mdadm: /dev/dm-2 has wrong uuid.
+mdadm: no recogniseable superblock on /dev/dm-1
+mdadm: /dev/dm-1 has wrong uuid.
+mdadm: cannot open device /dev/dm-0: Device or resource busy
+mdadm: /dev/dm-0 has wrong uuid.
+mdadm: no RAID superblock on /dev/sde
+mdadm: /dev/sde has wrong uuid.
+mdadm: no RAID superblock on /dev/sdd
+mdadm: /dev/sdd has wrong uuid.
+mdadm: cannot open device /dev/sdc1: Device or resource busy
+mdadm: /dev/sdc1 has wrong uuid.
+mdadm: cannot open device /dev/sdc: Device or resource busy
+mdadm: /dev/sdc has wrong uuid.
+mdadm: cannot open device /dev/sdb1: Device or resource busy
+mdadm: /dev/sdb1 has wrong uuid.
+mdadm: cannot open device /dev/sdb: Device or resource busy
+mdadm: /dev/sdb has wrong uuid.
+mdadm: cannot open device /dev/sda3: Device or resource busy
+mdadm: /dev/sda3 has wrong uuid.
+mdadm: cannot open device /dev/sda2: Device or resource busy
+mdadm: /dev/sda2 has wrong uuid.
+mdadm: cannot open device /dev/sda1: Device or resource busy
+mdadm: /dev/sda1 has wrong uuid.
+mdadm: cannot open device /dev/sda: Device or resource busy
+mdadm: /dev/sda has wrong uuid.
+mdadm: 8:65 is identified as a member of /dev/md0, slot 1.
+mdadm: 8:49 is identified as a member of /dev/md0, slot 0.
+mdadm: failed to add 8:65 to /dev/md0: Invalid argument
+mdadm: failed to add 8:49 to /dev/md0: Invalid argument
+mdadm: /dev/md0 assembled from 0 drives - not enough to start the array.
+
+
+
+[root@brahma ~]#  mdadm --examine /dev/sdd1
+mdadm: No md superblock detected on /dev/sdd1.
+
+
+
+This is with version mdadm - v2.6.2 - 21st May 2007 on fedora 8.
+Please let me know if the information provided is not sufficient.
+regards,
+-pradeep.
+
+
+
+
+      ____________________________________________________________________________________
+Never miss a thing.  Make Yahoo your home page. 
+http://www.yahoo.com/r/hs
