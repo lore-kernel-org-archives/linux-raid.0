@@ -1,61 +1,123 @@
-From: Ric Wheeler <ric@emc.com>
+From: Bill Davidsen <davidsen@tmr.com>
 Subject: Re: Redundancy check using "echo check > sync_action": error	reporting?
-Date: Fri, 21 Mar 2008 10:02:12 -0400
-Message-ID: <47E3BFE4.6030609@emc.com>
-References: <47DD2CD7.2090802@tuxes.nl> <20080316161451.0d17fd22@szpak> <47E26775.3000500@tuxes.nl> <20080320134747.GA28114@cthulhu.home.robinhill.me.uk> <47E2725C.1020206@tuxes.nl> <20080320163551.GG13719@mit.edu> <20080320173906.GN32242@skl-net.de> <20080320180241.GJ13719@mit.edu>
-Reply-To: ric@emc.com
+Date: Fri, 21 Mar 2008 10:24:04 -0400
+Message-ID: <47E3C504.3010700@tmr.com>
+References: <47DD2CD7.2090802@tuxes.nl> <20080316161451.0d17fd22@szpak> <47E26775.3000500@tuxes.nl> <20080320134747.GA28114@cthulhu.home.robinhill.me.uk> <47E2725C.1020206@tuxes.nl> <20080320163551.GG13719@mit.edu> <47E2EE64.5080101@rabbit.us>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20080320180241.GJ13719@mit.edu>
+In-Reply-To: <47E2EE64.5080101@rabbit.us>
 Sender: linux-raid-owner@vger.kernel.org
-To: Theodore Tso <tytso@MIT.EDU>
-Cc: Andre Noll <maan@systemlinux.org>, Bas van Schaik <bas@tuxes.nl>, linux-raid@vger.kernel.org, "Martin K. Petersen" <mkp@mkp.net>
+To: Peter Rabbitson <rabbit+list@rabbit.us>
+Cc: Theodore Tso <tytso@MIT.EDU>, Bas van Schaik <bas@tuxes.nl>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Theodore Tso wrote:
-> On Thu, Mar 20, 2008 at 06:39:06PM +0100, Andre Noll wrote:
->> On 12:35, Theodore Tso wrote:
+Peter Rabbitson wrote:
+> Theodore Tso wrote:
+>> On Thu, Mar 20, 2008 at 03:19:08PM +0100, Bas van Schaik wrote:
+>>>> There's no explicit message produced by the md module, no.  You 
+>>>> need to
+>>>> check the /sys/block/md{X}/md/mismatch_cnt entry to find out how many
+>>>> mismatches there are.  Similarly, following a repair this will 
+>>>> indicate
+>>>> how many mismatches it thinks have been fixed (by updating the parity
+>>>> block to match the data blocks).
+>>>>   
+>>> Marvellous! I naively assumed that the module would warn me, but that's
+>>> not true. Wouldn't it be appropriate to print a message to dmesg if 
+>>> such
+>>> a mismatch occurs during a check? Such a mismatch clearly means that
+>>> there is something wrong with your hardware lying beneath md, 
+>>> doesn't it?
 >>
->>> If a mismatch is detected in a RAID-6 configuration, it should be
->>> possible to figure out what should be fixed
->> It can be figured out under the assumption that exactly one drive has
->> bad data and all other ones have good data. But that seems to be an
->> assumption that is hard to verify in reality.
-> 
-> True, but it's what ECC memory does.  :-)   And most people agree that
-> it's a useful thing to do with memory.  
-> 
-> If you do ECC syndrome checking on every read, and follow that up with
-> periodic scrubbing so that you catch (and correct) errors quickly, it
-> is a reasonable assumption to make.
-> 
-> Obviously a warning should be given when you do this kind of ECC
-> fixups, and if there is an increasing number of ECC fixups that are
-> being done, that should set off alarms that maybe there is a hardware
-> problem that needs to be addressed.
-> 
-> Regards,
-> 
-> 						- Ted
+>> If a mismatch is detected in a RAID-6 configuration, it should be
+>> possible to figure out what should be fixed (since with two hot spares
+>> there should be enough redundancy not only to detect an error, but to
+>> correct it.)  Out of curiosity, does md do this automatically, either
+>> when reading from a stripe, or during a resync operation?
+>>
+>
+> In my modest experience with root/high performance spool on various 
+> raid levels I can pretty much conclude that the current check 
+> mechanism doesn't do enough to give power to the user. We can debate 
+> all we want about what the MD driver should do when it finds a 
+> mismatch, yet there is no way for the user to figure out what the 
+> mismatch is and take appropriate action. This does not apply only to 
+> RIAD5/6 - what about RAID1/10 with >2 chunk copies? What if the only 
+> wrong value is taken and written all over the other good blocks?
+>
+> I think that the solution is rather simple, and I would contribute a 
+> patch if I had any C experience. The current check mechanism remains 
+> the same - mismatch_cnt is incremented/reset just the same as before. 
+> However on every mismatching chunk the system printks the following:
+>
+> 1) the start offset of the chunk(md1/10) or stripe(md5/6) within the 
+> MD device
+> 2) one line for every active disk containing:
+>     a) the offset of the chunk within the MD componnent
+>     b) a {md5|sha1}sum of the chunk
+>
+> In a common case array this will take no more than 8 lines in dmesg. 
+> However it will allow:
+>
+> 1) For a human to determine at a glance which disk holds a mismatching 
+> chunk in raid 1/10
+> 2) Determine the same for raid 6 using a userspace tool which will 
+> calculate the parity for every possible permutation of chunks
+> 3) using some external tools to determine which file might have been 
+> affected on the layered file system
+>
+>
+> Now of course the problem remains how to repair the array using the 
+> information obtained above. I think the best way would be to extend 
+> the syntax of repair itself, so that:
+>
+> echo repair > .../sync_action would use the old heuristics
+>
+> echo repair <mdoffset> <component N> > .../sync_action will update the 
+> chunk on drive N which corresponds to the chunk/stripe at mdoffset 
+> within the MD device, using the information from the other drives, and 
+> not the other way around as might happen with just a repair.
 
-This might have been stated before in the thread, but most of the raid 
-rebuilds are triggered by easily identified drive failures (i.e., a 
-completely dead drive or a sequence of bad sectors that generate an IO 
-error as we read from the platter). Fortunately, these are also the most 
-common failures in RAID boxes ;-)
+I totally agree, not doing the most likely to be correct thing seems to 
+be the one argument for hardware raid. There are two case in which 
+software can determine (a) if it is likely that there is a single bad 
+block, and (b) what the correct value for that block is.
 
-The way you deal with class of errors that don't trigger obvious 
-failures is to do some kind of background scrubbing or add extra 
-protection data to the disk.
+raid1 - more than one copy
 
-Martin Petersen presented the new "DIF" work at the FS/IO workshop. This 
-might be an interesting feature to build into MD raid devices:
+  If there are multiple copies of the data, and N-1 agree, then it is 
+more likely that the mismatched copy is the bad one, and should be 
+rewritten with the data in the other copies. This is never less likely 
+to be correct than selecting one copy at random and writing it over all 
+others, so it can only be a help.
 
-http://oss.oracle.com/projects/data-integrity/documentation/
+raid6 - assume and check
 
-You would need to reformat your drives, so this is not a generic 
-solution for all users, but it really does address the core of the issue.
+  Given an error in raid6, if the parity A appears correct and the 
+parity B does not, assume that the non-matching parity is bad and 
+regenerate.
 
-ric
+  If neither parity appears correct, for each data block assume it is 
+bad and recalculate a recovery value using A nd B parities. If the data 
+pattern generated is the same for recovery using either parity, assume 
+that the data is bad and rewrite.
+
+  Again, this is more likely to be correct than assuming that both 
+parities are wrong. Obviously if no "most likely" bad data or parity 
+information can be identified then recalculating both parity blocks is 
+the only way to "fix" the array, but it leaves undetectable bad data. I 
+would like an option to do repairs using these two methods, which would 
+give a high probability that whatever "fixes" were applied were actually 
+recovering the correct data.
+
+Yes, I know that errors like this are less common than pure hardware 
+errors, does that justify something less than best practice during recovery?
+
+-- 
+Bill Davidsen <davidsen@tmr.com>
+  "Woe unto the statesman who makes war without a reason that will still
+  be valid when the war is over..." Otto von Bismark 
+
+
