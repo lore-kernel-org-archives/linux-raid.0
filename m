@@ -1,36 +1,40 @@
-From: carlos@fisica.ufpr.br (Carlos Carvalho)
-Subject: Re: Verifying spare drive, best practices
-Date: Fri, 21 Mar 2008 12:13:57 -0300
-Message-ID: <18403.53429.355889.906445@fisica.ufpr.br>
-References: <47E33AF8.6020106@harddata.com>
+From: Theodore Tso <tytso@MIT.EDU>
+Subject: Re: Redundancy check using "echo check > sync_action": error
+	reporting?
+Date: Fri, 21 Mar 2008 13:13:48 -0400
+Message-ID: <20080321171348.GK7991@mit.edu>
+References: <47DD2CD7.2090802@tuxes.nl> <20080316161451.0d17fd22@szpak> <47E26775.3000500@tuxes.nl> <20080320134747.GA28114@cthulhu.home.robinhill.me.uk> <47E2725C.1020206@tuxes.nl> <20080320163551.GG13719@mit.edu> <47E2EE64.5080101@rabbit.us> <47E3C504.3010700@tmr.com> <47E3CBAF.4090808@rabbit.us>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <47E33AF8.6020106@harddata.com>
+Content-Disposition: inline
+In-Reply-To: <47E3CBAF.4090808@rabbit.us>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Peter Rabbitson <rabbit+list@rabbit.us>
+Cc: Bill Davidsen <davidsen@tmr.com>, Bas van Schaik <bas@tuxes.nl>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Maurice Hilarius (maurice@harddata.com) wrote on 20 March 2008 22:35:
- >Given this situation:
- >7 disks in total
- >RAID5 of 6 disks, and a hot spare.
- >
- >mdadm show the 6 disks, but not the spare.
- >
- >As a maintenance question, where one wants to periodically ensure that 
- >the hot spare is both available and good.
- >How should one best :
- >1) Verify the hot spare is still available.
- >2) Verify that the hot spare is healthy?
+On Fri, Mar 21, 2008 at 03:52:31PM +0100, Peter Rabbitson wrote:
+> I was actually specifically advocating that md must _not_ do anything on 
+> its own. Just provide the hooks to get information (what is the current 
+> stripe state) and update information (the described repair extension). The 
+> logic that you are describing can live only in an external app, it has no 
+> place in-kernel.
 
-I usually do a dd if=/dev/zero of=/dev/spare to write to all sectors
-and give the drive a chance to remap bad blocks. Then run smartctl
-with a long test, and smartctl -a to see the results.
+Why not?  If md doesn't do anything on its own, then when it detects a
+disagreement between the data and the two parity blocks, it has two
+choices (a) return possibly incorrect data to the application, or (b)
+return an I/O error and cause the application to blow up.
 
-If there are partitions I use sfdisk -d /dev/disk-in-array |sfdisk -f
-/dev/spare to copy the partition table from one of the other disks to
-the spare, or any other (non-manual...) method to restore the partitioning.
+Sure, it could then give the information so that the external repair
+tool can fix it up after the fact, but that seems like a really lousy
+thing to do as far as the original application is concerned.  (Or I
+suppose you could try to block the userspace application until the
+repair tool has a chance to do automatically what md could have done
+automatically in the kernel anyway, but that has other problems.)
 
-This can be easily included in the routine array checks.
+So what's the harm in having an option where md does exactly what ECC
+memory does, which is when it can fix things up, to do so?  I bet most
+system administrators would turn it on in a heartbeat.
+
+       	     	      	      	      	     - Ted
