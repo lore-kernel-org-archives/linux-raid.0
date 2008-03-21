@@ -1,43 +1,36 @@
-From: Nat Makarevitch <nat@makarevitch.org>
-Subject: Re: the '--setra 65536' mistery, analysis and WTF?
-Date: Fri, 21 Mar 2008 15:12:13 +0000 (UTC)
-Message-ID: <loom.20080321T150605-207@post.gmane.org>
-References: <18382.54925.354731.996508@tree.ty.sabi.co.UK> <18400.13488.178782.156775@tree.ty.sabi.co.uk> <18402.7274.174605.611654@tree.ty.sabi.co.uk>
+From: carlos@fisica.ufpr.br (Carlos Carvalho)
+Subject: Re: Verifying spare drive, best practices
+Date: Fri, 21 Mar 2008 12:13:57 -0300
+Message-ID: <18403.53429.355889.906445@fisica.ufpr.br>
+References: <47E33AF8.6020106@harddata.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <47E33AF8.6020106@harddata.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Peter Grandi <pg_lxra <at> lxra.for.sabi.co.UK> writes:
+Maurice Hilarius (maurice@harddata.com) wrote on 20 March 2008 22:35:
+ >Given this situation:
+ >7 disks in total
+ >RAID5 of 6 disks, and a hot spare.
+ >
+ >mdadm show the 6 disks, but not the spare.
+ >
+ >As a maintenance question, where one wants to periodically ensure that 
+ >the hot spare is both available and good.
+ >How should one best :
+ >1) Verify the hot spare is still available.
+ >2) Verify that the hot spare is healthy?
 
-> this seems to indicate that not only the Linux block IO subsystems issues
-> IO operations in multiples of the read-ahead size, but does so at a fixed
-> number of times per second that is a multiple of 10.
+I usually do a dd if=/dev/zero of=/dev/spare to write to all sectors
+and give the drive a chance to remap bad blocks. Then run smartctl
+with a long test, and smartctl -a to see the results.
 
-Is it the case with a classic controller (not a 3ware?)
+If there are partitions I use sfdisk -d /dev/disk-in-array |sfdisk -f
+/dev/spare to copy the partition table from one of the other disks to
+the spare, or any other (non-manual...) method to restore the partitioning.
 
-http://forums.storagereview.net/index.php?showtopic=25923 may be of
-interest.
-
-> Which lead me to think about elevators, which was also mentioned
-> in some recent (and otherwise less interesting :->)
-
-Sorry, I don't understand this.
-
-> It still seems the case to me that the block IO subsystem
-> structures IO in lots of read-ahead sectors
-
-Isn't it specific to the 3ware driver and/or hardware, even in
-SINGLE (JBOD) mode?
-
-> Finally, I am getting a bit skeptical about elevators in general;
-
-> several tests show no-elevator as not being significantly worse
-> and sometimes better than any elevator
-
-Isn't it specific to intelligent controllers?
-
-
+This can be easily included in the routine array checks.
