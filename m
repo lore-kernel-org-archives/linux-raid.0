@@ -1,264 +1,96 @@
-From: Arthur Britto <ahbritto@iat.com>
-Subject: Help: Re-assemble raid-5 with inconsistent events.
-Date: Fri, 21 Mar 2008 19:40:39 -0700
-Message-ID: <1206153639.16304.30.camel@loss.redstem.com>
+From: Peter Rabbitson <rabbit+list@rabbit.us>
+Subject: Re: Redundancy check using "echo check > sync_action": error	reporting?
+Date: Sat, 22 Mar 2008 11:03:06 +0100
+Message-ID: <47E4D95A.9000505@rabbit.us>
+References: <47DD2CD7.2090802@tuxes.nl> <20080316161451.0d17fd22@szpak> <47E26775.3000500@tuxes.nl> <20080320134747.GA28114@cthulhu.home.robinhill.me.uk> <47E2725C.1020206@tuxes.nl> <20080320163551.GG13719@mit.edu> <47E2EE64.5080101@rabbit.us> <47E3C504.3010700@tmr.com> <47E3CBAF.4090808@rabbit.us> <47E43E57.5010409@tmr.com> <20080321235557.GA11801@cthulhu.home.robinhill.me.uk>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20080321235557.GA11801@cthulhu.home.robinhill.me.uk>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+Robin Hill wrote:
+> On Fri Mar 21, 2008 at 07:01:43PM -0400, Bill Davidsen wrote:
+> 
+>> Peter Rabbitson wrote:
+>>> I was actually specifically advocating that md must _not_ do anything on 
+>>> its own. Just provide the hooks to get information (what is the current 
+>>> stripe state) and update information (the described repair extension). The 
+>>> logic that you are describing can live only in an external app, it has no 
+>>> place in-kernel.
+>> So you advocate the current code being in the kernel, which absent a 
+>> hardware error makes blind assumptions about which data is valid and which 
+>> is not and in all cases hides the problem, instead of the code I proposed, 
+>> which in some cases will be able to avoid action which is provably wrong 
+>> and never be less likely to do the wrong thing than the current code?
+>>
+> I would certainly advocate that the current (entirely automatic) code
+> belongs in the kernel whereas any code requiring user
+> intervention/decision making belongs in a user process, yes.  That's not
+> to say that the former should be preferred over the latter though, but
+> there's really no reason to remove the in-kernel automated process until
+> (or even after) a user-side repair process has been coded.
 
-I have a RAID 5 with 6 components.  The 4-port SATA controller died and
-left the RAID in an inconsistent state.  2 of the 6 components have a
-more recent event stamp than the others. 
+I am asserting that automatic repair is infeasible in most highly-redundant 
+cases. Lets take the root raid1 of one of my busiest servers:
 
-What command should I issue to re-assemble the RAID?
+/dev/md0:
+         Version : 00.90.03
+   Creation Time : Tue Mar 20 21:58:54 2007
+      Raid Level : raid1
+      Array Size : 6000128 (5.72 GiB 6.14 GB)
+   Used Dev Size : 6000128 (5.72 GiB 6.14 GB)
+    Raid Devices : 4
+   Total Devices : 4
+Preferred Minor : 0
+     Persistence : Superblock is persistent
 
-In particular, I don't want to force the RAID to be assembled with the
-components in the wrong order.  Especially as the order given
-by /dev/sd?? does not match the component order.
+     Update Time : Sat Mar 22 05:55:08 2008
+           State : clean
+  Active Devices : 4
+Working Devices : 4
+  Failed Devices : 0
+   Spare Devices : 0
 
-Thanks in advance,
+            UUID : b6a11a74:8b069a29:6e26228f:2ab99bd0 (local to host Arzamas)
+          Events : 0.183270
 
--Arthur
+As you can see it is pretty old, and does not have many events to speak of. 
+Yet every month when the automatic check is issued I get between 512 and 2048 
+in mismatch_cnt. I maintain md5sums of all files on this filesystem, and there 
+were no deviations for the lifetime of the array (of course there are 
+mismatches after upgrades, after log appends etc, but they are all expected). 
+So all I can do with this array is issue a blind repair, without even having 
+the chance to find what exactly is causing this. Yes, it is raid1 and I could 
+do 1:1 comparison to find which is the offending block. How about raid10 -n 
+f3? There is no way I can figure out _what_ is giving me a problem. I do not 
+know if it is a hardware error (the md5 sums speak against it), some process 
+with weird write patterns resulting in heavy DMA, or a bug in md itself.
 
-# mdadm -A /dev/md5
-mdadm: /dev/md5 assembled from 2 drives - not enough to start the array.
+By the way there is no swap file on this array. Just / and /var, with a 
+moderately busy mail spool on top.
 
-# cat /proc/mdstat
-...
-md5 : inactive sdg2[0](S) sdj2[5](S) sdk2[4](S) sdl2[3](S) sdh2[2](S) sdi2[1](S)
-      2343866880 blocks
-...
+>> Currently the "repair" action (which *is* in the kernel now) takes no 
+>> advantage of the additional information available in these cases I noted. 
+>> By what logic do you conclude that the user meant "hide the error" when 
+>> using the "repair" action? What I propose is never less likely to be 
+>> correct than what the current code does, why would you not want to improve 
+>> the chances of getting the repair correct?
+>>
+> That is, of course, a separate issue to whether it should be in-kernel.
+> I would entirely agree that user-level processes should be able to
+> access and manipulate the low-level RAID data/metadata (via the md
+> layer) in order to facilitate more advanced repair functions, but this
+> should be separate from, and in addition to, the "ignorant"
+> parity-updating repair process currently in place.
+> 
 
-# mdadm -E /dev/sd[gjklhi]2 | egrep Events 
-         Events : 0.9088480
-         Events : 0.9088480
-         Events : 0.9088476
-         Events : 0.9088476
-         Events : 0.9088476
-         Events : 0.9088476
+I am trying to convey the idea that a first step to a userland process would 
+be full disclosure of what is going on. A non-zero mismatch_cnt on a 
+multigigabyte array makes an admin very uneasy, without giving him a chance to 
+assess the situation.
 
-# mdadm -E /dev/sd[gjklhi]2 | egrep this
-this     0       8       98        0      active sync   /dev/sdg2
-this     2       8      114        2      active sync   /dev/sdh2
-this     1       8      130        1      active sync   /dev/sdi2
-this     5       8      146        5      active sync   /dev/sdj2
-this     4       8      162        4      active sync   /dev/sdk2
-this     3       8      178        3      active sync   /dev/sdl2
-
-# egrep '^DEVICE|md5' /etc/mdadm.conf
-DEVICE /dev/sd??
-ARRAY /dev/md5 level=raid5 num-devices=6 UUID=e49080f3:c60755cc:bef07a34:d5ceac64
-
-# mdadm -E /dev/sd[gjklhi]2
-
-/dev/sdg2:
-          Magic : a92b4efc
-        Version : 00.90.03
-           UUID : e49080f3:c60755cc:bef07a34:d5ceac64
-  Creation Time : Wed Feb 15 02:18:54 2006
-     Raid Level : raid5
-  Used Dev Size : 390644480 (372.55 GiB 400.02 GB)
-     Array Size : 1953222400 (1862.74 GiB 2000.10 GB)
-   Raid Devices : 6
-  Total Devices : 6
-Preferred Minor : 5
-
-    Update Time : Wed Mar 19 07:43:46 2008
-          State : clean
-Internal Bitmap : present
- Active Devices : 2
-Working Devices : 2
- Failed Devices : 4
-  Spare Devices : 0
-       Checksum : 8cb597af - correct
-         Events : 0.9088480
-
-         Layout : left-symmetric
-     Chunk Size : 64K
-
-      Number   Major   Minor   RaidDevice State
-this     0       8       98        0      active sync   /dev/sdg2
-
-   0     0       8       98        0      active sync   /dev/sdg2
-   1     1       0        0        1      faulty removed
-   2     2       8      114        2      active sync   /dev/sdh2
-   3     3       0        0        3      faulty removed
-   4     4       0        0        4      faulty removed
-   5     5       0        0        5      faulty removed
-/dev/sdh2:
-          Magic : a92b4efc
-        Version : 00.90.03
-           UUID : e49080f3:c60755cc:bef07a34:d5ceac64
-  Creation Time : Wed Feb 15 02:18:54 2006
-     Raid Level : raid5
-  Used Dev Size : 390644480 (372.55 GiB 400.02 GB)
-     Array Size : 1953222400 (1862.74 GiB 2000.10 GB)
-   Raid Devices : 6
-  Total Devices : 6
-Preferred Minor : 5
-
-    Update Time : Wed Mar 19 07:43:46 2008
-          State : clean
-Internal Bitmap : present
- Active Devices : 2
-Working Devices : 2
- Failed Devices : 4
-  Spare Devices : 0
-       Checksum : 8cb597c3 - correct
-         Events : 0.9088480
-
-         Layout : left-symmetric
-     Chunk Size : 64K
-
-      Number   Major   Minor   RaidDevice State
-this     2       8      114        2      active sync   /dev/sdh2
-
-   0     0       8       98        0      active sync   /dev/sdg2
-   1     1       0        0        1      faulty removed
-   2     2       8      114        2      active sync   /dev/sdh2
-   3     3       0        0        3      faulty removed
-   4     4       0        0        4      faulty removed
-   5     5       0        0        5      faulty removed
-/dev/sdi2:
-          Magic : a92b4efc
-        Version : 00.90.03
-           UUID : e49080f3:c60755cc:bef07a34:d5ceac64
-  Creation Time : Wed Feb 15 02:18:54 2006
-     Raid Level : raid5
-  Used Dev Size : 390644480 (372.55 GiB 400.02 GB)
-     Array Size : 1953222400 (1862.74 GiB 2000.10 GB)
-   Raid Devices : 6
-  Total Devices : 6
-Preferred Minor : 5
-
-    Update Time : Wed Mar 19 00:56:18 2008
-          State : clean
-Internal Bitmap : present
- Active Devices : 6
-Working Devices : 6
- Failed Devices : 0
-  Spare Devices : 0
-       Checksum : 8cb53801 - correct
-         Events : 0.9088476
-
-         Layout : left-symmetric
-     Chunk Size : 64K
-
-      Number   Major   Minor   RaidDevice State
-this     1       8      130        1      active sync   /dev/sdi2
-
-   0     0       8       98        0      active sync   /dev/sdg2
-   1     1       8      130        1      active sync   /dev/sdi2
-   2     2       8      114        2      active sync   /dev/sdh2
-   3     3       8      178        3      active sync   /dev/sdl2
-   4     4       8      162        4      active sync   /dev/sdk2
-   5     5       8      146        5      active sync   /dev/sdj2
-/dev/sdj2:
-          Magic : a92b4efc
-        Version : 00.90.03
-           UUID : e49080f3:c60755cc:bef07a34:d5ceac64
-  Creation Time : Wed Feb 15 02:18:54 2006
-     Raid Level : raid5
-  Used Dev Size : 390644480 (372.55 GiB 400.02 GB)
-     Array Size : 1953222400 (1862.74 GiB 2000.10 GB)
-   Raid Devices : 6
-  Total Devices : 6
-Preferred Minor : 5
-
-    Update Time : Wed Mar 19 00:56:18 2008
-          State : clean
-Internal Bitmap : present
- Active Devices : 6
-Working Devices : 6
- Failed Devices : 0
-  Spare Devices : 0
-       Checksum : 8cb53819 - correct
-         Events : 0.9088476
-
-         Layout : left-symmetric
-     Chunk Size : 64K
-
-      Number   Major   Minor   RaidDevice State
-this     5       8      146        5      active sync   /dev/sdj2
-
-   0     0       8       98        0      active sync   /dev/sdg2
-   1     1       8      130        1      active sync   /dev/sdi2
-   2     2       8      114        2      active sync   /dev/sdh2
-   3     3       8      178        3      active sync   /dev/sdl2
-   4     4       8      162        4      active sync   /dev/sdk2
-   5     5       8      146        5      active sync   /dev/sdj2
-/dev/sdk2:
-          Magic : a92b4efc
-        Version : 00.90.03
-           UUID : e49080f3:c60755cc:bef07a34:d5ceac64
-  Creation Time : Wed Feb 15 02:18:54 2006
-     Raid Level : raid5
-  Used Dev Size : 390644480 (372.55 GiB 400.02 GB)
-     Array Size : 1953222400 (1862.74 GiB 2000.10 GB)
-   Raid Devices : 6
-  Total Devices : 6
-Preferred Minor : 5
-
-    Update Time : Wed Mar 19 00:56:18 2008
-          State : clean
-Internal Bitmap : present
- Active Devices : 6
-Working Devices : 6
- Failed Devices : 0
-  Spare Devices : 0
-       Checksum : 8cb53827 - correct
-         Events : 0.9088476
-
-         Layout : left-symmetric
-     Chunk Size : 64K
-
-      Number   Major   Minor   RaidDevice State
-this     4       8      162        4      active sync   /dev/sdk2
-
-   0     0       8       98        0      active sync   /dev/sdg2
-   1     1       8      130        1      active sync   /dev/sdi2
-   2     2       8      114        2      active sync   /dev/sdh2
-   3     3       8      178        3      active sync   /dev/sdl2
-   4     4       8      162        4      active sync   /dev/sdk2
-   5     5       8      146        5      active sync   /dev/sdj2
-/dev/sdl2:
-          Magic : a92b4efc
-        Version : 00.90.03
-           UUID : e49080f3:c60755cc:bef07a34:d5ceac64
-  Creation Time : Wed Feb 15 02:18:54 2006
-     Raid Level : raid5
-  Used Dev Size : 390644480 (372.55 GiB 400.02 GB)
-     Array Size : 1953222400 (1862.74 GiB 2000.10 GB)
-   Raid Devices : 6
-  Total Devices : 6
-Preferred Minor : 5
-
-    Update Time : Wed Mar 19 00:56:18 2008
-          State : clean
-Internal Bitmap : present
- Active Devices : 6
-Working Devices : 6
- Failed Devices : 0
-  Spare Devices : 0
-       Checksum : 8cb53835 - correct
-         Events : 0.9088476
-
-         Layout : left-symmetric
-     Chunk Size : 64K
-
-      Number   Major   Minor   RaidDevice State
-this     3       8      178        3      active sync   /dev/sdl2
-
-   0     0       8       98        0      active sync   /dev/sdg2
-   1     1       8      130        1      active sync   /dev/sdi2
-   2     2       8      114        2      active sync   /dev/sdh2
-   3     3       8      178        3      active sync   /dev/sdl2
-   4     4       8      162        4      active sync   /dev/sdk2
-   5     5       8      146        5      active sync   /dev/sdj2
-
+Peter
