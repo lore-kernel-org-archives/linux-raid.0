@@ -1,87 +1,99 @@
-From: Pradeep <pradeepjp@yahoo.com>
-Subject: Re: mdadm -A erased the superblock ?
-Date: Sat, 22 Mar 2008 09:53:38 -0700 (PDT)
-Message-ID: <4510.66972.qm@web32801.mail.mud.yahoo.com>
-References: <40829.192.168.1.70.1206129490.squirrel@neil.brown.name>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: Redundancy check using "echo check > sync_action": error    
+  reporting?
+Date: Sat, 22 Mar 2008 13:13:23 -0400
+Message-ID: <47E53E33.70800@tmr.com>
+References: <47DD2CD7.2090802@tuxes.nl> <20080316161451.0d17fd22@szpak>    <47E26775.3000500@tuxes.nl>    <20080320134747.GA28114@cthulhu.home.robinhill.me.uk>    <47E2725C.1020206@tuxes.nl> <20080320163551.GG13719@mit.edu>    <20080320173906.GN32242@skl-net.de> <20080320180241.GJ13719@mit.edu> <42039.192.168.1.70.1206130781.squirrel@neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <40829.192.168.1.70.1206129490.squirrel@neil.brown.name>
+In-Reply-To: <42039.192.168.1.70.1206130781.squirrel@neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+Cc: Theodore Tso <tytso@MIT.EDU>, Andre Noll <maan@systemlinux.org>, Bas van Schaik <bas@tuxes.nl>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+NeilBrown wrote:
+> My problem with this is that I don't have a good model for what might
+> cause the error, so I cannot reason about what responses are justifiable.
+>
+> The analogy with ECC memory is, I think, poor.  With ECC memory there are
+> electro/physical processes which can cause a bit to change independently
+> of any other bit with very low probability, so treating an ECC error as
+> a single bit error is reasonable.
+>
+> The analogy with a disk drive would be a media error.  However disk drives
+> record CRC (or similar) checks so that media errors get reported as errors,
+> not as incorrect data.  So the analogy doesn't hold.
+>
+> Where else could the error come from?  Presumably a bit-flip on some
+> transfer bus between main memory and the media.  There are several
+> of these busses (mem to controller, controller to device, internal to
+> device).  The corruption could happen on the write or on the read.
+> When you write to a RAID6 you often write several blocks to different
+> devices at the same time.  Are these really likely to be independent
+> events wrt whatever is causing the corruption?
+>   
 
-> Where there any kernel message (view with 'dmesg') at this time?
+Based on what I have read and seen, some of these errors come in pairs 
+and are caused by a drive just writing to the wrong sector. This can 
+come from errors in the O/S (unlikely), disk hardware (unlikely), or 
+disk firmware (least unlikely). So you get the data written to the wrong 
+place (makes that stripe invalid) and parity change or mirror copies 
+written to the right place(s). Thus, two bad stripes to be detected on 
+"check," neither of which will return a hardware error on a read.
+> I don't know.  But without a clear model, it isn't clear to me that
+> any particular action will be certain to improve the situation in
+> all cases.
+>
+>   
+Agreed, the only cases I've identified where improvement is possible is 
+in the case of raid1 with multiple copies, and raid6. Doing the recovery 
+I outlines the other day will not make things better in all cases, but 
+will never make things worse (statistically) and should recover both 
+failures if the cause is "single misplaced write."
 
-Mar 21 00:27:45 brahma kernel: md: invalid raid superblock magic on sdd
-Mar 21 00:27:45 brahma kernel: md: sdd does not have a valid v0.90 superblock, not
-importing!
-Mar 21 00:27:45 brahma kernel: md: md_import_device returned -22
+> And how often does silent corruption happen on modern hard drives?
+> How often do you write something and later successfully read something
+> else when it isn't due to a major hardware problem that is causing
+> much more that just occasional errors?
+>
+>   
+Very seldom, all my critical data is checked by software CRC, and these 
+failures just don't happen. But I have owned drives in the past which 
+had software revisions which had error rates as high as 2/10TB, which 
+went away on the same drives after firmware updates. So while it is 
+rare, it can and does happen occasionally.
 
+> So yes: there are lots of things that *could* be done.  But without
+> a model for the "threat", an analysis of how the remedy would actually
+> affect every different possible scenario, and some idea of the
+> probability of the remedy being needed, it is very hard to
+> justify a change of this sort.
+>   
 
+I hope I have provided a plausible model for one error source. If I have 
+identified the model correctly, errors will always happen in pairs, in 
+normal operation rather than during some unclean system shutdown due to 
+O/S crash or power failure.
 
-    What is much more interesting, is that I rebooted the machine, and 'mdadm --examine'
-started working again (producing output).
-I then retried the 'mdadm -A' command and that went through as well.
+> And there are plenty of other things to be coded that are genuinely
+> useful - like converting a RAID5 to a RAID6 while online...
+>   
 
-I did not run any other command that could have written anything to the hard disk.
+I would suggest that upgrading an array to larger drives is more common, 
+having a fully automated upgrade path would be useful to far more users. 
+So if I have (example) four 320GB drives, I want to upgrade to 500GB 
+drives, I attacha 500GB drive and say something like "on /dev/md2 
+migrate /dev/sda1 to /dev/sde1" and have it done in such a way that it 
+will fail safe and at the end sda1 will be out of the array and sde1 
+will be in, without having to enter multiple commands per drive to get 
+this done.
 
-This is an x86_64 machine - Linux brahma.skynet.xc 2.6.23.15-137.fc8 #1 SMP Sun Feb 10
-17:03:13 EST 2008 x86_64 x86_64 x86_64 GNU/Linux
-I cannot recall if the raid set was originally created on a 32 or a 64 bit O.S.
-
-Is there any other diagnostic I can try ?
-regards,
--pradeep.
-
-
---- NeilBrown <neilb@suse.de> wrote:
-
-> On Fri, March 21, 2008 7:26 am, Pradeep wrote:
-> > Hi,
-> >     It appears that a 'mdadm -A' command erased the superblocks on my
-> > disks.
-> > Could you please take a look and let me know if I did something wrong ?
-> >
-> > (I was adding 2 disks that were in a raid 1 set to a new machine running
-> > fedora 8.)
-> > Briefly, I issued an 'mdadm --examine /dev/sdd1' command to check the
-> > disks in my raid 1
-> > array.
-> > (repeat similar command for /dev/sde1)
-> >
-> > Then I issued 'mdadm -A -v -u '400f8c5f:045827ea:f72fe561:698ccea2'
-> > /dev/md0'
-> > which errored out because it was looking at /dev/sdd instead of /dev/sdd1
-> >
-> 
-> This isn't why it errored out.  It looked at sdd and found nothing there.
-> It also looked at various other devices and found nothing usable there.
-> That is perfectly normal.
-> 
-> What is strange is that it found sdd1 and sde1 in /proc/partitions,
-> but couldn't find names for them in /dev, so it reports them as
-> 8:65 and 8:49
-> 
-> However when you ran the "--examine", it did find /dev/sdd1 in
-> /dev with the correct major/minor numbers.  So something must
-> have happened between those two commands.
-> 
-> Also, I cannot think why it is reporting "Invalid argument" and
-> failing to add the devices to the array.
-> Where there any kernel message (view with 'dmesg') at this time?
-> 
-> NeilBrown
-> 
-> 
-> 
-> 
+-- 
+Bill Davidsen <davidsen@tmr.com>
+  "Woe unto the statesman who makes war without a reason that will still
+  be valid when the war is over..." Otto von Bismark 
 
 
-
-      ____________________________________________________________________________________
-Be a better friend, newshound, and 
-know-it-all with Yahoo! Mobile.  Try it now.  http://mobile.yahoo.com/;_ylt=Ahu06i62sR8HDtDypao8Wcj9tAcJ
