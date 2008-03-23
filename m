@@ -1,49 +1,192 @@
-From: Arthur Britto <ahbritto@iat.com>
-Subject: Re: Help: Re-assemble raid-5 with inconsistent events.
-Date: Sat, 22 Mar 2008 13:14:20 -0700
-Message-ID: <1206216860.10786.12.camel@loss.redstem.com>
-References: <1206153639.16304.30.camel@loss.redstem.com>
-	 <47E54234.3040407@tmr.com>
+From: Nagy Zoltan <kirk@bteam.hu>
+Subject: component growing in raid5
+Date: Sun, 23 Mar 2008 07:59:04 +0100
+Message-ID: <47E5FFB8.5030903@bteam.hu>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------050309050106050303090404"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <47E54234.3040407@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, 2008-03-22 at 13:30 -0400, Bill Davidsen wrote: 
-> Might I suggest that you
-> - back up your mdadm.conf file
-> - replace the list of components in the ARRAY description with the UUID 
-> of the array
-> - change configure to use PARTITIONS and try them all
-> - try the assemble with mdadm figuring out what goes where
-> 
-> Your chances of getting something drastically wrong are lower. You may 
-> have to use --force to get the assembly, and should run fsck *with the 
-> -n option* first to see what you have.
+This is a multi-part message in MIME format.
+--------------050309050106050303090404
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-I was using UUID :)
+hi all,
 
-As you suggested, I changed DEVICES to 'partitions' as that was my
-original intent.
+i've set up a two dimensional array:
+    * leaf nodes composes raid5 arrays from their disks, and export it 
+as a iSCSI target
+    * the root node creates a raid5 on top of the exported targets
 
-Rather than just hope, I looked at the source for mdadm.  A thousand
-cheers for open source! =D
+in this setup i will have to face that an array component can(and would) 
+grow, so i
+created a test case for this to see what comes out ;)
+    * after growing the components mdadm won't recognized them anymore 
+as an array member
+        (because there are no superblock at the end of the device - last 
+64k?)
+       i've tried to inform mdadm about the size of the components, but 
+it sad no ;)
+    * i've added an arbitary superblock copy operation after the 
+expansion, to make possible for
+   mdadm to recognize and assemble the array - it's working, and passes 
+my test.
 
-And discovered:
--v Would show how partitions were assigned.
-    mdadm -v -A /dev/md5 showed all was good.
---force updates the events first thing when assembling.
-   Solving my exact issue.
+is there a less 'funky' solution for this ;)
+can i run into any trouble when doing this on the real system?
 
-My array is now operational.  And the rest is up to reiserfsck. :/
+one more thing: when i first assembled the array with 4096KB chunks, 
+i've run into the
+'2.6.24-rc6 reproducible raid5 hang' bug, but it won't resume after 
+changing
+'stripe_cache_size' even after i applied the patch manually to (2.6.24.2)
+i've upgraded to 2.6.25-rc6 since then it runs smootly.
+- thank you all for hunting that bug down.
 
-Thank you so much,
-
--Arthur
+kirk
 
 
+--------------050309050106050303090404
+Content-Type: text/plain;
+ name="raid-test.bash"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="raid-test.bash"
+
+#!/bin/bash
+
+t=32768	# size in blocks
+
+xall()
+{
+	for i in `seq 0 7`;do
+		$*
+	done
+}
+
+mkdir -p part data orig
+
+echo "*** $1"
+case "$1" in
+	test)
+			export		FS_DEV=/dev/md0
+			$0 create					&&
+			$0 createfs				&&
+			$0 stop					&&
+			$0 expand					&&
+			$0 copy-sb				&&
+			$0 lo_up					&&
+			$0 assemble				&&
+			$0 raid-expand				&&
+			$0 fs-expand				&&
+			$0 fs-check
+			echo "---closing---"
+			$0 stop
+		;;
+	test2)
+			export		FS_DEV=/dev/mapper/rt
+			$0 create					&&
+			$0 crypt /dev/md0			&&
+			$0 crypt-open				&&
+			$0 createfs				&&
+			$0 crypt-close				&&
+			$0 stop					&&
+			$0 expand					&&
+			$0 copy-sb				&&
+			$0 lo_up					&&
+			$0 assemble				&&
+			$0 raid-expand				&&
+			$0 crypt-open				&&
+			$0 fs-expand				&&
+			$0 fs-check
+			echo "---closing---"
+			$0 stop
+		;;
+	zero)
+			q(){	
+				rm -f part/$i;	touch part/$i;	}
+			xall q
+		;;
+	expand)
+			cp part/{0..7} orig/
+			q(){	
+				dd if=/dev/zero count=$t >> part/$i;		}
+			xall q
+		;;
+	raid-expand)
+			i=0
+			s=`stat --printf '%s' part/$i`;
+			x=$[ ($s / 1024)-64 ]
+			mdadm --grow -z $x /dev/md0
+			
+		;;
+	create)
+			$0 zero
+			$0 expand
+			$0 lo_up
+			mdadm -Cv -n8 -l5 /dev/md0 /dev/loop{0..7}
+		;;
+	crypt)
+			dd if=/dev/urandom count=1 of=key
+			cryptsetup luksFormat /dev/md0 key				||	exit 1
+		;;
+	crypt-open)
+			cryptsetup luksOpen /dev/md0 rt --key-file key	||	exit1
+		;;
+	crypt-close)
+			cryptsetup luksClose rt						||	exit 1
+		;;
+	fs-expand)
+			[ "$FS_DEV" == "" ] && echo "!!! FS_DEV not set" && exit 1
+			mount $FS_DEV data
+			xfs_growfs data
+			umount data
+		;;
+	fs-check)
+			[ "$FS_DEV" == "" ] && echo "!!! FS_DEV not set" && exit 1
+			mount $FS_DEV data
+			md5sum -c hash && echo ok || echo error
+			umount data
+		;;
+	createfs)
+			[ "$FS_DEV" == "" ] && echo "!!! FS_DEV not set" && exit 1
+			mkfs.xfs $FS_DEV
+			mount $FS_DEV data
+			dd if=/dev/urandom of=data/junk
+			md5sum data/junk | tee hash
+			umount data
+		;;
+	lo_up)
+			q(){
+				losetup /dev/loop$i part/$i;	}
+			xall q
+		;;
+	lo_down)
+			q(){
+				losetup -d /dev/loop$i;	}
+			xall q
+		;;
+	assemble)
+			mdadm -Av /dev/md0 /dev/loop{0..7}
+		;;
+	stop)
+			umount data
+			$0 crypt-close
+			mdadm -S /dev/md0
+			$0 lo_down
+		;;
+	copy-sb)
+			q(){
+				s=`stat --printf '%s' part/$i`;
+				tail -c 65536 orig/$i | dd bs=1 seek=$[ $s - 65536 ] of=part/$i;	}
+			xall q
+		;;
+	*)	echo "asd"
+		;;
+esac
+
+--------------050309050106050303090404--
