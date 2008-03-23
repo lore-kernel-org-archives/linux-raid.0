@@ -1,7 +1,7 @@
 From: Andre Noll <maan@systemlinux.org>
-Subject: [PATCH 6/8] Fix a typo in the comment to cmd_match().
-Date: Sun, 23 Mar 2008 19:34:54 +0100
-Message-ID: <S1750934AbYGGIdv/20080707083351Z+1939@vger.kernel.org>
+Subject: [PATCH 7/8] sb_equal(): Fix misleading printk.
+Date: Sun, 23 Mar 2008 16:10:33 +0100
+Message-ID: <S1752249AbYGGIdt/20080707083350Z+1937@vger.kernel.org>
 References: <20080707075532.GA32617@skl-net.de>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20080707075532.GA32617@skl-net.de>
@@ -15,18 +15,18 @@ Signed-off-by: Andre Noll <maan@systemlinux.org>
  1 files changed, 1 insertions(+), 1 deletions(-)
 
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index cdc381f..fe4d9af 100644
+index fe4d9af..0d8f5a3 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -1787,7 +1787,7 @@ repeat:
+@@ -564,7 +564,7 @@ static int sb_equal(mdp_super_t *sb1, mdp_super_t *sb2)
  
- }
+ 	if (!tmp1 || !tmp2) {
+ 		ret = 0;
+-		printk(KERN_INFO "md.c: sb1 is not equal to sb2!\n");
++		printk(KERN_INFO "md.c sb_equal(): failed to allocate memory!\n");
+ 		goto abort;
+ 	}
  
--/* words written to sysfs files may, or my not, be \n terminated.
-+/* words written to sysfs files may, or may not, be \n terminated.
-  * We want to accept with case. For this we use cmd_match.
-  */
- static int cmd_match(const char *cmd, const char *str)
 -- 
 1.5.3.8
 
