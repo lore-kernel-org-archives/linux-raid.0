@@ -1,39 +1,45 @@
 From: Andre Noll <maan@systemlinux.org>
-Subject: [PATCH 4/8] md: analyze_sbs(): Fix potential NULL-pointer dereference.
-Date: Tue, 25 Mar 2008 21:38:30 +0100
-Message-ID: <S1754836AbYGHQde/20080708163334Z+60@vger.kernel.org>
+Subject: [PATCH 1/8] md: Simplify uuid_equal().
+Date: Sun, 23 Mar 2008 16:09:42 +0100
+Message-ID: <S1754097AbYGHQdj/20080708163339Z+61@vger.kernel.org>
 References: <20080708155541.GS23944@skl-net.de>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20080708155541.GS23944@skl-net.de>
 Sender: linux-raid-owner@vger.kernel.org
 List-Id: linux-raid.ids
 
-If no device in the array contains a valid super block, "freshest"
-will be NULL, but we happily dereference that pointer in the subsequent
-call to validate_super().
-
-Fix it by returning early in this case.
 
 Signed-off-by: Andre Noll <maan@systemlinux.org>
 ---
- drivers/md/md.c |    4 ++++
- 1 files changed, 4 insertions(+), 0 deletions(-)
+ drivers/md/md.c |   13 ++++---------
+ 1 files changed, 4 insertions(+), 9 deletions(-)
 
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 7943df1..bf1499c 100644
+index 2580ac1..c559b9e 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -2249,6 +2249,10 @@ static void analyze_sbs(mddev_t * mddev)
- 			kick_rdev_from_array(rdev);
- 		}
+@@ -543,17 +543,12 @@ fail:
  
-+	if (!freshest) {
-+		printk(KERN_ERR "md: no valid devices found\n");
-+		return;
-+	}
+ static int uuid_equal(mdp_super_t *sb1, mdp_super_t *sb2)
+ {
+-	if (	(sb1->set_uuid0 == sb2->set_uuid0) &&
+-		(sb1->set_uuid1 == sb2->set_uuid1) &&
+-		(sb1->set_uuid2 == sb2->set_uuid2) &&
+-		(sb1->set_uuid3 == sb2->set_uuid3))
+-
+-		return 1;
+-
+-	return 0;
++	return 	sb1->set_uuid0 == sb2->set_uuid0 &&
++		sb1->set_uuid1 == sb2->set_uuid1 &&
++		sb1->set_uuid2 == sb2->set_uuid2 &&
++		sb1->set_uuid3 == sb2->set_uuid3;
+ }
  
- 	super_types[mddev->major_version].
- 		validate_super(mddev, freshest);
+-
+ static int sb_equal(mdp_super_t *sb1, mdp_super_t *sb2)
+ {
+ 	int ret;
 -- 
 1.5.3.8
 
