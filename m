@@ -1,7 +1,7 @@
 From: Andre Noll <maan@systemlinux.org>
-Subject: [PATCH 5/8] Fix typo in array_state comment.
-Date: Tue, 25 Mar 2008 22:00:53 +0100
-Message-ID: <S1752358AbYGGIdw/20080707083352Z+1940@vger.kernel.org>
+Subject: [PATCH 6/8] Fix a typo in the comment to cmd_match().
+Date: Sun, 23 Mar 2008 19:34:54 +0100
+Message-ID: <S1750934AbYGGIdv/20080707083351Z+1939@vger.kernel.org>
 References: <20080707075532.GA32617@skl-net.de>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20080707075532.GA32617@skl-net.de>
@@ -15,18 +15,18 @@ Signed-off-by: Andre Noll <maan@systemlinux.org>
  1 files changed, 1 insertions(+), 1 deletions(-)
 
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 857af03..cdc381f 100644
+index cdc381f..fe4d9af 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -2512,7 +2512,7 @@ __ATTR(resync_start, S_IRUGO|S_IWUSR, resync_start_show, resync_start_store);
-  *     When written, doesn't tear down array, but just stops it
-  * suspended (not supported yet)
-  *     All IO requests will block. The array can be reconfigured.
-- *     Writing this, if accepted, will block until array is quiessent
-+ *     Writing this, if accepted, will block until array is quiescent
-  * readonly
-  *     no resync can happen.  no superblocks get written.
-  *     write requests fail
+@@ -1787,7 +1787,7 @@ repeat:
+ 
+ }
+ 
+-/* words written to sysfs files may, or my not, be \n terminated.
++/* words written to sysfs files may, or may not, be \n terminated.
+  * We want to accept with case. For this we use cmd_match.
+  */
+ static int cmd_match(const char *cmd, const char *str)
 -- 
 1.5.3.8
 
