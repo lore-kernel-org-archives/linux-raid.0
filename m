@@ -1,52 +1,57 @@
-From: Peter Rabbitson <rabbit+list@rabbit.us>
-Subject: Re: component growing in raid5
-Date: Mon, 24 Mar 2008 08:09:56 +0100
-Message-ID: <47E753C4.7030903@rabbit.us>
-References: <47E5FFB8.5030903@bteam.hu>
+From: Janek Kozicki <janek_listy@wp.pl>
+Subject: mismatch_cnt of 128 and 1408.
+Date: Mon, 24 Mar 2008 08:36:51 +0100
+Message-ID: <20080324083651.444cbab3@absurd>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <47E5FFB8.5030903@bteam.hu>
 Sender: linux-raid-owner@vger.kernel.org
-To: Nagy Zoltan <kirk@bteam.hu>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Nagy Zoltan wrote:
-> hi all,
-> 
-> i've set up a two dimensional array:
->    * leaf nodes composes raid5 arrays from their disks, and export it as 
-> a iSCSI target
->    * the root node creates a raid5 on top of the exported targets
-> 
-> in this setup i will have to face that an array component can(and would) 
-> grow, so i
-> created a test case for this to see what comes out ;)
->    * after growing the components mdadm won't recognized them anymore as 
-> an array member
->        (because there are no superblock at the end of the device - last 
-> 64k?)
->       i've tried to inform mdadm about the size of the components, but 
-> it sad no ;)
->    * i've added an arbitary superblock copy operation after the 
-> expansion, to make possible for
->   mdadm to recognize and assemble the array - it's working, and passes 
-> my test.
-> 
-> is there a less 'funky' solution for this ;)
-> can i run into any trouble when doing this on the real system?
-> 
+Hello,
 
-I would simply use a v1.1 superblock which will be situated at the start of
-the array. Then you will face another problem - once you grow a leaf device,
-mdadm will not see the new size as it will find the superblock at sect 0 and
-will be done there. You will need to issue mdadm -A ... --update devicesize.
-The rest of the operations are identical.
+My backup box with raid5 recently suffered a series of power
+failures. Now I'm doing some recovery hoping that power surges did
+not damage HDDs.
 
-As a side note I am also curious why do you go the raid55 path (I am not very
-impressed however :)
+I have here
+- md0 a raid1 of 3*1GB=1GB (root partition) and
+- md1 a raid5 of 3*500GB=1000GB (backup partition) and
+- md2 a raid1 of 3*4GB=4GB (swap).
 
-Peter
+I did following things:
 
+1. power on the server, and incidentally mount count for md1 enforced
+   an fsck which found two errors.
+
+2. /usr/share/mdadm/checkarray -a
+   which does a resync of all raid partitions. It takes 5 hours for
+   the 1TB backup partition.
+
+3. afterwards the command: cat /sys/block/md?/md/mismatch_cnt gave answer:
+   md0: 128
+   md1: 0
+   md2: 1408
+
+4. touch /forcefsck ; shutdown -r now
+
+5. then after reboot: /usr/share/mdadm/checkarray -a ; cat /sys/block/md?/md/mismatch_cnt
+   md0: 128
+   md1: 0
+   md2: 1408
+
+Now I am alarmed that something might be wrong with the root
+partition. From other posts I remember that mismatch count for swap
+partitions is allowed to be nonzero.
+
+I checked smart health status of HDDs with smartctl -H and the drives
+are healthy.
+
+
+Is mismatch count = 128 an indication of bad HDD? How to discover
+which one is bad?
+
+-- 
+Janek Kozicki                                                         |
