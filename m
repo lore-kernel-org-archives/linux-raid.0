@@ -1,53 +1,65 @@
-From: Nagy Zoltan <kirk@bteam.hu>
-Subject: Re: component growing in raid5
-Date: Mon, 24 Mar 2008 17:52:00 +0100
-Message-ID: <47E7DC30.3040804@bteam.hu>
-References: <47E5FFB8.5030903@bteam.hu> <47E753C4.7030903@rabbit.us> <47E7C609.9000501@bteam.hu> <47E7CBD9.4020900@rabbit.us>
+From: "John Z." <md2sf@mail.com>
+Subject: Re: FW: [PATCH 008 of 9] md: Fix possible raid1/raid10 deadlock on
+ read error during resync.
+Date: Mon, 24 Mar 2008 13:49:03 -0500
+Message-ID: <20080324184903.D9213103C6@ws1-3.us4.outblaze.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <47E7CBD9.4020900@rabbit.us>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Peter Rabbitson <rabbit+list@rabbit.us>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-hi
 
-> The validity of the snipped arguments depends on how many devices you 
-> have at every level:
->
-> *) how many nodes there are?
-8 nodes
-> *) how many disks per node? do all nodes have an equal amount of disks?
-currently there are 5 disks at every node, and yes: all nodes have equal 
-amount,
-but the only thing that matters is that the exported size should be the same
->
-> Without additional info I would say this: The problem with using raid5 
-> on the top node is that you are stressing your network additionally 
-> for every r-m-w-cycle. Also rebuild of this array, especially if you 
-> add more leaves will be more and more resource intensive.
-after the new nics installed, i except that the rebuild would take about 
-8 hours to complete
-yes, the r-m-w-cycle would be a pain - but i expect to have much more 
-reads than writes
-this is truly resource intensive - but the bottleneck would be not at 
-the network level, i think it will be
-at the root node's south-west connection
-i must note that this is my first raid setup ;) and i've not faced with 
-rmw-cycle problems before,
-and because the use conditions doesn't imply continous random writes - 
-we will be happy with this,
-next week we will try it out in target conditions - and if something is 
-not going as expect, i will
-reconsider applying raid10 to it
+> 
+> -----Original Message-----
+> From: linux-kernel-owner@vger.kernel.org
+> [mailto:linux-kernel-owner@vger.kernel.org] On Behalf Of NeilBrown
+> Sent: Sunday, March 02, 2008 5:18 PM
+> To: Andrew Morton
+> Cc: linux-raid@vger.kernel.org; linux-kernel@vger.kernel.org; K.Tanaka
+> Subject: [PATCH 008 of 9] md: Fix possible raid1/raid10 deadlock on read
+> error during resync.
+> 
 
-> In contrast if the top array is RAID10 with 2 chunk copies, you will 
-> sacrifice half the space, however your rebuild will utilize only 2 
-> drives (one reader one writer).
-yes, that clearly could reach better performance, with .5 usable space-ratio
-i'm working with relatively low-budget
-current ratio is: 4*7/(5*8) = .7
+> diff .prev/drivers/md/raid1.c ./drivers/md/raid1.c
+> --- .prev/drivers/md/raid1.c	2008-03-03 11:03:39.000000000 +1100
+> +++ ./drivers/md/raid1.c	2008-03-03 09:56:52.000000000 +1100
+> @@ -704,13 +704,20 @@ static void freeze_array(conf_t *conf)
+>   	/* stop syncio and normal IO and wait for everything to
+>   	 * go quite.
+>   	 * We increment barrier and nr_waiting, and then
+> -	 * wait until barrier+nr_pending match nr_queued+2
+> +	 * wait until nr_pending match nr_queued+1
+> +	 * This is called in the context of one normal IO request
+> +	 * that has failed. Thus any sync request that might be pending
+> +	 * will be blocked by nr_pending, and we need to wait for
+> +	 * pending IO requests to complete or be queued for re-try.
+> +	 * Thus the number queued (nr_queued) plus this request (1)
+> +	 * must match the number of pending IOs (nr_pending) before
+> +	 * we continue.
+>   	 */
+>   	spin_lock_irq(&conf->resync_lock);
+>   	conf->barrier++;
+>   	conf->nr_waiting++;
+>   	wait_event_lock_irq(conf->wait_barrier,
+> -			    conf->barrier+conf->nr_pending ==
+> conf->nr_queued+2,
+> +			    conf->nr_pending == conf->nr_queued+1,
+>   			    conf->resync_lock,
+>   			    ({ flush_pending_writes(conf);
+>   			       raid1_unplug(conf->mddev->queue); }));
+> --
 
-kirk
+When we call freeze_array, it is after reschedule_retry, during which conf->nr_queued is already incremented.
+Should we use conf->nr_pending == conf->nr_pending here?
+
+
+
+
+-- 
+Want an e-mail address like mine?
+Get a free e-mail account today at www.mail.com!
+
