@@ -1,65 +1,41 @@
-From: "John Z." <md2sf@mail.com>
-Subject: Re: FW: [PATCH 008 of 9] md: Fix possible raid1/raid10 deadlock on
- read error during resync.
-Date: Mon, 24 Mar 2008 13:49:03 -0500
-Message-ID: <20080324184903.D9213103C6@ws1-3.us4.outblaze.com>
+From: Oliver Martin <oliver.martin@student.tuwien.ac.at>
+Subject: Re: mismatch_cnt of 128 and 1408.
+Date: Mon, 24 Mar 2008 21:23:47 +0100
+Message-ID: <20080324212347.32d47553@ors>
+References: <20080324083651.444cbab3@absurd>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <20080324083651.444cbab3@absurd>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Janek Kozicki <janek_listy@wp.pl>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Am Mon, 24 Mar 2008 08:36:51 +0100 schrieb Janek Kozicki:
+> 
+> Now I am alarmed that something might be wrong with the root
+> partition. From other posts I remember that mismatch count for swap
+> partitions is allowed to be nonzero.
+
+Apparently it can also happen when a file is truncated between the
+writes to the individual disks:
+http://www.mail-archive.com/linux-raid@vger.kernel.org/msg07546.html
+
+Or could it just be that it was writing when the power failed?
 
 > 
-> -----Original Message-----
-> From: linux-kernel-owner@vger.kernel.org
-> [mailto:linux-kernel-owner@vger.kernel.org] On Behalf Of NeilBrown
-> Sent: Sunday, March 02, 2008 5:18 PM
-> To: Andrew Morton
-> Cc: linux-raid@vger.kernel.org; linux-kernel@vger.kernel.org; K.Tanaka
-> Subject: [PATCH 008 of 9] md: Fix possible raid1/raid10 deadlock on read
-> error during resync.
+> I checked smart health status of HDDs with smartctl -H and the drives
+> are healthy.
+> 
+> 
+> Is mismatch count = 128 an indication of bad HDD? How to discover
+> which one is bad?
 > 
 
-> diff .prev/drivers/md/raid1.c ./drivers/md/raid1.c
-> --- .prev/drivers/md/raid1.c	2008-03-03 11:03:39.000000000 +1100
-> +++ ./drivers/md/raid1.c	2008-03-03 09:56:52.000000000 +1100
-> @@ -704,13 +704,20 @@ static void freeze_array(conf_t *conf)
->   	/* stop syncio and normal IO and wait for everything to
->   	 * go quite.
->   	 * We increment barrier and nr_waiting, and then
-> -	 * wait until barrier+nr_pending match nr_queued+2
-> +	 * wait until nr_pending match nr_queued+1
-> +	 * This is called in the context of one normal IO request
-> +	 * that has failed. Thus any sync request that might be pending
-> +	 * will be blocked by nr_pending, and we need to wait for
-> +	 * pending IO requests to complete or be queued for re-try.
-> +	 * Thus the number queued (nr_queued) plus this request (1)
-> +	 * must match the number of pending IOs (nr_pending) before
-> +	 * we continue.
->   	 */
->   	spin_lock_irq(&conf->resync_lock);
->   	conf->barrier++;
->   	conf->nr_waiting++;
->   	wait_event_lock_irq(conf->wait_barrier,
-> -			    conf->barrier+conf->nr_pending ==
-> conf->nr_queued+2,
-> +			    conf->nr_pending == conf->nr_queued+1,
->   			    conf->resync_lock,
->   			    ({ flush_pending_writes(conf);
->   			       raid1_unplug(conf->mddev->queue); }));
-> --
-
-When we call freeze_array, it is after reschedule_retry, during which conf->nr_queued is already incremented.
-Should we use conf->nr_pending == conf->nr_pending here?
-
-
-
+You could run a long SMART selftest. If the downtime doesn't matter,
+you could also boot from a live cd and run badblocks -n.
 
 -- 
-Want an e-mail address like mine?
-Get a free e-mail account today at www.mail.com!
-
+Oliver
