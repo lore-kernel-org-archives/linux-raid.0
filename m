@@ -1,57 +1,81 @@
-From: Janek Kozicki <janek_listy@wp.pl>
-Subject: mismatch_cnt of 128 and 1408.
-Date: Mon, 24 Mar 2008 08:36:51 +0100
-Message-ID: <20080324083651.444cbab3@absurd>
+From: Samuel Tardieu <sam@rfc1149.net>
+Subject: Task blocked for more than 120 seconds
+Date: Mon, 24 Mar 2008 11:21:52 +0100
+Message-ID: <87eja0o20v.fsf@willow.rfc1149.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello,
+On my laptop, doing heavy C++ compilations in parallel with -j3 (this
+is a dual core) often generates the following trace:
 
-My backup box with raid5 recently suffered a series of power
-failures. Now I'm doing some recovery hoping that power surges did
-not damage HDDs.
+INFO: task g++:25119 blocked for more than 120 seconds.
+"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this
+message.
+g++           D c03916c0     0 25119  25118
+       ecfef200 00200086 c038ef18 c03916c0 c03916c0 f77b2230 f77b2378 c17fa6c0 
+       00000000 f89817bc f7486280 000000ff f7a1eb20 00000000 00000000 00000000 
+       c17fa6c0 00000000 d1401e9c c17f0408 c02a2aa1 d1401e94 c0147100 c02a2c93 
+Call Trace:
+ [<f89817bc>] dm_table_unplug_all+0x1e/0x2e [dm_mod]
+ [<c02a2aa1>] io_schedule+0x1b/0x24
+ [<c0147100>] sync_page+0x33/0x36
+ [<c02a2c93>] __wait_on_bit+0x33/0x58
+ [<c01470cd>] sync_page+0x0/0x36
+ [<c01472fd>] wait_on_page_bit+0x59/0x60
+ [<c012cf7b>] wake_bit_function+0x0/0x3c
+ [<c014e20d>] truncate_inode_pages_range+0x238/0x29f
+ [<c014e27d>] truncate_inode_pages+0x9/0xc
+ [<f8c67187>] ext2_delete_inode+0x12/0x6e [ext2]
+ [<f8c67175>] ext2_delete_inode+0x0/0x6e [ext2]
+ [<c0170ea5>] generic_delete_inode+0x8f/0xf3
+ [<c0170819>] iput+0x60/0x62
+ [<c0169aa5>] do_unlinkat+0xb7/0xf9
+ [<c0113a3e>] do_page_fault+0x1fa/0x4dc
+ [<c0104822>] sysenter_past_esp+0x5f/0x85
+ =======================
 
-I have here
-- md0 a raid1 of 3*1GB=1GB (root partition) and
-- md1 a raid5 of 3*500GB=1000GB (backup partition) and
-- md2 a raid1 of 3*4GB=4GB (swap).
+This is with 2.6.25-rc6 (SMP) and has been present, as far as I can
+remember, since the beginning of the 2.6.25-rc series. It is not
+always reproducible, but the trace is always the same.
 
-I did following things:
+My filesystem is stored on a ext3 (rw,noatime) dm_crypt'd partition
+leaving in a LVM volume.
 
-1. power on the server, and incidentally mount count for md1 enforced
-   an fsck which found two errors.
+% lsmod | grep dm | grep -v ' 0 *$'
+dm_crypt               14340  1 
+crypto_blkcipher       18308  6 ecb,cbc,dm_crypt
+dm_mod                 53008  26 dm_crypt,dm_mirror,dm_snapshot
 
-2. /usr/share/mdadm/checkarray -a
-   which does a resync of all raid partitions. It takes 5 hours for
-   the 1TB backup partition.
+Here is the code I have in dm-table.o:
 
-3. afterwards the command: cat /sys/block/md?/md/mismatch_cnt gave answer:
-   md0: 128
-   md1: 0
-   md2: 1408
+00001042 <dm_table_unplug_all>:
+    1042:       56                      push   %esi
+    1043:       53                      push   %ebx
+    1044:       8b 98 a0 00 00 00       mov    0xa0(%eax),%ebx
+    104a:       8d b0 a0 00 00 00       lea    0xa0(%eax),%esi
+    1050:       eb 10                   jmp    1062 <dm_table_unplug_all+0x20>
+    1052:       8b 43 10                mov    0x10(%ebx),%eax
+    1055:       8b 40 5c                mov    0x5c(%eax),%eax
+    1058:       8b 40 34                mov    0x34(%eax),%eax
+    105b:       e8 fc ff ff ff          call   105c <dm_table_unplug_all+0x1a>
+    1060:       8b 1b                   mov    (%ebx),%ebx
+    1062:       8b 03                   mov    (%ebx),%eax
+    1064:       0f 1f 40 00             nopl   0x0(%eax)
+    1068:       39 f3                   cmp    %esi,%ebx
+    106a:       75 e6                   jne    1052 <dm_table_unplug_all+0x10>
+    106c:       5b                      pop    %ebx
+    106d:       5e                      pop    %esi
+    106e:       c3                      ret    
 
-4. touch /forcefsck ; shutdown -r now
+The symbol in 105b call is, after relocation, blk_unplug.
 
-5. then after reboot: /usr/share/mdadm/checkarray -a ; cat /sys/block/md?/md/mismatch_cnt
-   md0: 128
-   md1: 0
-   md2: 1408
+It there anything else I can do to help debugging this?
 
-Now I am alarmed that something might be wrong with the root
-partition. From other posts I remember that mismatch count for swap
-partitions is allowed to be nonzero.
-
-I checked smart health status of HDDs with smartctl -H and the drives
-are healthy.
-
-
-Is mismatch count = 128 an indication of bad HDD? How to discover
-which one is bad?
-
+ Sam
 -- 
-Janek Kozicki                                                         |
+Samuel Tardieu -- sam@rfc1149.net -- http://www.rfc1149.net/
+
