@@ -1,81 +1,105 @@
-From: Samuel Tardieu <sam@rfc1149.net>
-Subject: Task blocked for more than 120 seconds
-Date: Mon, 24 Mar 2008 11:21:52 +0100
-Message-ID: <87eja0o20v.fsf@willow.rfc1149.net>
+From: Nagy Zoltan <kirk@bteam.hu>
+Subject: Re: component growing in raid5
+Date: Mon, 24 Mar 2008 16:17:29 +0100
+Message-ID: <47E7C609.9000501@bteam.hu>
+References: <47E5FFB8.5030903@bteam.hu> <47E753C4.7030903@rabbit.us>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <47E753C4.7030903@rabbit.us>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Peter Rabbitson <rabbit+list@rabbit.us>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On my laptop, doing heavy C++ compilations in parallel with -j3 (this
-is a dual core) often generates the following trace:
+hi
 
-INFO: task g++:25119 blocked for more than 120 seconds.
-"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this
-message.
-g++           D c03916c0     0 25119  25118
-       ecfef200 00200086 c038ef18 c03916c0 c03916c0 f77b2230 f77b2378 c17fa6c0 
-       00000000 f89817bc f7486280 000000ff f7a1eb20 00000000 00000000 00000000 
-       c17fa6c0 00000000 d1401e9c c17f0408 c02a2aa1 d1401e94 c0147100 c02a2c93 
-Call Trace:
- [<f89817bc>] dm_table_unplug_all+0x1e/0x2e [dm_mod]
- [<c02a2aa1>] io_schedule+0x1b/0x24
- [<c0147100>] sync_page+0x33/0x36
- [<c02a2c93>] __wait_on_bit+0x33/0x58
- [<c01470cd>] sync_page+0x0/0x36
- [<c01472fd>] wait_on_page_bit+0x59/0x60
- [<c012cf7b>] wake_bit_function+0x0/0x3c
- [<c014e20d>] truncate_inode_pages_range+0x238/0x29f
- [<c014e27d>] truncate_inode_pages+0x9/0xc
- [<f8c67187>] ext2_delete_inode+0x12/0x6e [ext2]
- [<f8c67175>] ext2_delete_inode+0x0/0x6e [ext2]
- [<c0170ea5>] generic_delete_inode+0x8f/0xf3
- [<c0170819>] iput+0x60/0x62
- [<c0169aa5>] do_unlinkat+0xb7/0xf9
- [<c0113a3e>] do_page_fault+0x1fa/0x4dc
- [<c0104822>] sysenter_past_esp+0x5f/0x85
- =======================
+> I would simply use a v1.1 superblock which will be situated at the 
+> start of
+> the array. Then you will face another problem - once you grow a leaf 
+> device,
+> mdadm will not see the new size as it will find the superblock at sect 
+> 0 and
+> will be done there. You will need to issue mdadm -A ... --update 
+> devicesize.
+> The rest of the operations are identical.
+i feeled that there is another solution that i missed  - thank you, next 
+time
+i will do it this way -- because the system is already up and running, i 
+don't wan't
+to recreate the array (about the chunksize: i've got back to 64Kb chunks 
+because
+of that bug - i was happy to see it running ;)
+>
+> As a side note I am also curious why do you go the raid55 path (I am 
+> not very
+> impressed however :)
+okay - i've run thru the whole scenario a few times - and always come 
+get back
+to raid55, what would you do in myplace? :)
 
-This is with 2.6.25-rc6 (SMP) and has been present, as far as I can
-remember, since the beginning of the 2.6.25-rc series. It is not
-always reproducible, but the trace is always the same.
+i choosed this way because:
+    * hardware raid controllers are expensive - because of this i prefer 
+rather
+        having a cluster of machines (average cost per MB shows that 
+this is the
+        'cheapest' solution)  this solution's impact on avg cost is 
+about 20-25%
+        compared to a single stand-alone disk - 40-50% if i count only 
+usable
+       storage
+    * as far as i know other raid configurations take a bigger piece 
+from the cake
+        - raid10, raid01 both halves the usable space, simply creating a
+        - raid0 array at the top level could suffer complete destruction 
+if a node
+            fails (in some rare cases the power-supply can take 
+everything along
+            with it)
+        - raid05 could be reasonable choice providing n*(m-1) space: but 
+in case of
+            failure a single disk would trigger a full scale rebuild
+    * raid55 - considering an array of n*m disks, gives (n-1)*(m-1) 
+usable space
+        with the ability to detect failing disks and repair them, while 
+the cluster
+        is still online - i can even grow it without taking it offline! ;)
+       and at the leafs the processing power required for the raid is 
+already there...
+       why not use it? ;)
+    * this is because with iscsi i can detach the node, and when i 
+reattach the
+       node it's size is redetected
+    * after replacing a leaf's failing drive, the node itself could 
+rebuild it's local
+        array, and prevent the triggering of a whole system-scale rebuild
+    * an alternate solution could be: drop the top level raid5 away, and 
+replace it
+       with unionfs - by creating individual filesystems, there is an 
+intresting thing
+       about raiding filesystems(raif)
+    * the leaf nodes are running with network boot, exporting their 
+local array
+       run thru a dm_crypt on iscsi - this is something i would do 
+differently next
+       time.. i don't know how much parralelism dm_crypt could achive,
+       but doing it on a per device basis - would provide 'enough' 
+parralelism for
+       the kernel to better utilize processing power
+    * the root's role is to manage the filesystem, monitor the leafs - 
+and provide
+       network boot for them
+    * effectively the root node is nothing more than a HBA ;)
+    * the construction of the system is not complete - i'm waiting for 
+some gbit
+       interfaces, after they arrive the root will have 4Gbit link to 
+the leafs, and
+       by customizing the routing table a bit, it will see only a 
+portion of the leaf
+       thru each of them - i can possibly trunk the interfaces, but i 
+think it's not
+       neccessary
+    * this cluster could scale up at any time by assimilating new nodes ;)
 
-My filesystem is stored on a ext3 (rw,noatime) dm_crypt'd partition
-leaving in a LVM volume.
-
-% lsmod | grep dm | grep -v ' 0 *$'
-dm_crypt               14340  1 
-crypto_blkcipher       18308  6 ecb,cbc,dm_crypt
-dm_mod                 53008  26 dm_crypt,dm_mirror,dm_snapshot
-
-Here is the code I have in dm-table.o:
-
-00001042 <dm_table_unplug_all>:
-    1042:       56                      push   %esi
-    1043:       53                      push   %ebx
-    1044:       8b 98 a0 00 00 00       mov    0xa0(%eax),%ebx
-    104a:       8d b0 a0 00 00 00       lea    0xa0(%eax),%esi
-    1050:       eb 10                   jmp    1062 <dm_table_unplug_all+0x20>
-    1052:       8b 43 10                mov    0x10(%ebx),%eax
-    1055:       8b 40 5c                mov    0x5c(%eax),%eax
-    1058:       8b 40 34                mov    0x34(%eax),%eax
-    105b:       e8 fc ff ff ff          call   105c <dm_table_unplug_all+0x1a>
-    1060:       8b 1b                   mov    (%ebx),%ebx
-    1062:       8b 03                   mov    (%ebx),%eax
-    1064:       0f 1f 40 00             nopl   0x0(%eax)
-    1068:       39 f3                   cmp    %esi,%ebx
-    106a:       75 e6                   jne    1052 <dm_table_unplug_all+0x10>
-    106c:       5b                      pop    %ebx
-    106d:       5e                      pop    %esi
-    106e:       c3                      ret    
-
-The symbol in 105b call is, after relocation, blk_unplug.
-
-It there anything else I can do to help debugging this?
-
- Sam
--- 
-Samuel Tardieu -- sam@rfc1149.net -- http://www.rfc1149.net/
+kirk
 
