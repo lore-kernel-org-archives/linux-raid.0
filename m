@@ -1,60 +1,51 @@
-From: pg_lxra@lxra.for.sabi.co.UK (Peter Grandi)
+From: Peter Rabbitson <rabbit@rabbit.us>
 Subject: Re: component growing in raid5
-Date: Sun, 23 Mar 2008 11:24:04 +0000
-Message-ID: <18406.15828.841849.122546@tree.ty.sabi.co.uk>
+Date: Mon, 24 Mar 2008 08:09:35 +0100
+Message-ID: <47E753AF.5050507@rabbit.us>
 References: <47E5FFB8.5030903@bteam.hu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <47E5FFB8.5030903@bteam.hu>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>
+To: Nagy Zoltan <kirk@bteam.hu>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-[ ... ]
+Nagy Zoltan wrote:
+> hi all,
+> 
+> i've set up a two dimensional array:
+>    * leaf nodes composes raid5 arrays from their disks, and export it as 
+> a iSCSI target
+>    * the root node creates a raid5 on top of the exported targets
+> 
+> in this setup i will have to face that an array component can(and would) 
+> grow, so i
+> created a test case for this to see what comes out ;)
+>    * after growing the components mdadm won't recognized them anymore as 
+> an array member
+>        (because there are no superblock at the end of the device - last 
+> 64k?)
+>       i've tried to inform mdadm about the size of the components, but 
+> it sad no ;)
+>    * i've added an arbitary superblock copy operation after the 
+> expansion, to make possible for
+>   mdadm to recognize and assemble the array - it's working, and passes 
+> my test.
+> 
+> is there a less 'funky' solution for this ;)
+> can i run into any trouble when doing this on the real system?
+> 
 
->     * leaf nodes composes raid5 arrays from their disks, and
->       export it as a iSCSI target
->     * the root node creates a raid5 on top of the exported
->       targets
+I would simply use a v1.1 superblock which will be situated at the start of 
+the array. Then you will face another problem - once you grow a leaf device, 
+mdadm will not see the new size as it will find the superblock at sect 0 and 
+will be done there. You will need to issue mdadm -A ... --update devicesize. 
+The rest of the operations are identical.
 
-That's "amazing" to say the least. A way to prove that
-syntactically valid setups can and do work. I am particularly
-"amazed" by the idea of using a whole RAID5 subarray just for
-parity on the top level RAID5.
+As a side note I am also curious why do you go the raid55 path (I am not very 
+impressed however :)
 
-> in this setup i will have to face that an array component
-> can(and would) grow, [ ... ]
-
-This idea seems to me beyond "amazing", and I think that even
-"stunning" is an understatement.
-
-kirk> one more thing: when i first assembled the array with
-kirk> 4096KB chunks,
-
-Indeed, 4MiB chunk sizes are syntactically possible, and it is a
-rather "exciting" choice, especially for a RAID55.
-
-[ ... ]
->			cryptsetup luksFormat /dev/md0 key				||	exit 1
-
-Even more "amazing", using 'dm-crypt' over an already "stunning"
-setup.
-
-[ ... ]
->			mkfs.xfs $FS_DEV
-
-Entirely consistently, the syntactically valid setup above is
-used for a single (presumably very large) filesystem. Very
-"courageous".
-
-Surely there must be extraordinarily good reasons for building a
-RAID55 with 4MiB chunk (with "amazing" performance for writes,
-and "stunning" resilience) and with the expectation that one
-will extend it by growing each subarray, triggering a full
-two-level reshape every time, and putting 'dm-crypt' and a
-single filesystem on top of it all.
-
-It would be interesting to learn those reasons for people like
-me whose imagination is limited by stolid pragmatics.
+Peter
