@@ -1,7 +1,7 @@
-From: Peter Rabbitson <rabbit@rabbit.us>
+From: Peter Rabbitson <rabbit+list@rabbit.us>
 Subject: Re: component growing in raid5
-Date: Mon, 24 Mar 2008 08:09:35 +0100
-Message-ID: <47E753AF.5050507@rabbit.us>
+Date: Mon, 24 Mar 2008 08:09:56 +0100
+Message-ID: <47E753C4.7030903@rabbit.us>
 References: <47E5FFB8.5030903@bteam.hu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
@@ -39,13 +39,14 @@ Nagy Zoltan wrote:
 > can i run into any trouble when doing this on the real system?
 > 
 
-I would simply use a v1.1 superblock which will be situated at the start of 
-the array. Then you will face another problem - once you grow a leaf device, 
-mdadm will not see the new size as it will find the superblock at sect 0 and 
-will be done there. You will need to issue mdadm -A ... --update devicesize. 
+I would simply use a v1.1 superblock which will be situated at the start of
+the array. Then you will face another problem - once you grow a leaf device,
+mdadm will not see the new size as it will find the superblock at sect 0 and
+will be done there. You will need to issue mdadm -A ... --update devicesize.
 The rest of the operations are identical.
 
-As a side note I am also curious why do you go the raid55 path (I am not very 
+As a side note I am also curious why do you go the raid55 path (I am not very
 impressed however :)
 
 Peter
+
