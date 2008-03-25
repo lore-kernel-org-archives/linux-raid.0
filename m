@@ -1,32 +1,41 @@
 From: Andre Noll <maan@systemlinux.org>
-Subject: [PATCH 7/8] sb_equal(): Fix misleading printk.
-Date: Sun, 23 Mar 2008 16:10:33 +0100
-Message-ID: <S1752249AbYGGIdt/20080707083350Z+1937@vger.kernel.org>
+Subject: [PATCH 4/8] sync_speed_show(): Trivial cleanups.
+Date: Tue, 25 Mar 2008 23:24:09 +0100
+Message-ID: <S1752430AbYGGIdx/20080707083353Z+311@vger.kernel.org>
 References: <20080707075532.GA32617@skl-net.de>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20080707075532.GA32617@skl-net.de>
 Sender: linux-raid-owner@vger.kernel.org
 List-Id: linux-raid.ids
 
+- Remove superfluous parentheses.
+- Make format string match the type of the variable that is printed.
 
 Signed-off-by: Andre Noll <maan@systemlinux.org>
 ---
- drivers/md/md.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/md/md.c |    8 ++++----
+ 1 files changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index fe4d9af..0d8f5a3 100644
+index 2384266..857af03 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -564,7 +564,7 @@ static int sb_equal(mdp_super_t *sb1, mdp_super_t *sb2)
+@@ -3049,11 +3049,11 @@ static ssize_t
+ sync_speed_show(mddev_t *mddev, char *page)
+ {
+ 	unsigned long resync, dt, db;
+-	resync = (mddev->curr_mark_cnt - atomic_read(&mddev->recovery_active));
+-	dt = ((jiffies - mddev->resync_mark) / HZ);
++	resync = mddev->curr_mark_cnt - atomic_read(&mddev->recovery_active);
++	dt = (jiffies - mddev->resync_mark) / HZ;
+ 	if (!dt) dt++;
+-	db = resync - (mddev->resync_mark_cnt);
+-	return sprintf(page, "%ld\n", db/dt/2); /* K/sec */
++	db = resync - mddev->resync_mark_cnt;
++	return sprintf(page, "%lu\n", db/dt/2); /* K/sec */
+ }
  
- 	if (!tmp1 || !tmp2) {
- 		ret = 0;
--		printk(KERN_INFO "md.c: sb1 is not equal to sb2!\n");
-+		printk(KERN_INFO "md.c sb_equal(): failed to allocate memory!\n");
- 		goto abort;
- 	}
- 
+ static struct md_sysfs_entry md_sync_speed = __ATTR_RO(sync_speed);
 -- 
 1.5.3.8
 
