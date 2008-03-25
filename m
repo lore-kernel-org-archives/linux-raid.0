@@ -1,62 +1,52 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: performance problems with raid10,f2
-Date: Tue, 25 Mar 2008 16:13:28 +1100
-Message-ID: <18408.35320.92714.891870@notabene.brown>
-References: <20080314231151.GA14568@rap.rap.dk>
-	<20080320172817.GA27070@rap.rap.dk>
+Subject: Re: RAID5 initial resync: faster vs more secure
+Date: Tue, 25 Mar 2008 16:15:43 +1100
+Message-ID: <18408.35455.355616.973487@notabene.brown>
+References: <47E297AB.8020001@free.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: message from Hubert Verstraete on Thursday March 20
 Sender: linux-raid-owner@vger.kernel.org
-To: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
+To: Hubert Verstraete <hubskml@free.fr>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thursday March 20, keld@dkuug.dk wrote:
-> On Sat, Mar 15, 2008 at 12:11:51AM +0100, Keld J=F8rn Simonsen wrote:
-> > Hi
-> >=20
-> > I have a 4 drive array with 1 TB Hitachi disks, formatted as raid10=
-,f2
-> >=20
-> > I had some strange observations:
-> >=20
-> > 1. while resyncing I could get the raid to give me about 320 MB/s i=
-n
-> > sequential read, which was good. After resync had been done, and wi=
-th
-> > all 4 drives active, I only get 115 MB/s.
->=20
-> This was reproducable. I dont know what could be wrong.
+On Thursday March 20, hubskml@free.fr wrote:
+> Hi list
+> 
+> Each time I create a RAID5 array, by default, as a degraded array with a 
+> spare, I cannot stop and restart the array unless the initial resync has 
+> completed. If I do so, the resync is not resumed when the array is 
+> re-assembled.
+> Is this due to the fact that one disk is a spare, but md actually 
+> doesn't know which of the disks is the spare one ?
 
-Is this with, or without, your patch to avoid "read-balancing" for
-raid10/far layouts?
-It sounds like it is without that patch ????
+No.  It is due to that fact that the v0.90 metadata has no convenient
+place to record how far the recovery has progressed.
+
+If you use --metadata=1 when creating the array, it will be able to
+record the status of incomplete recovery and restart is properly.
 
 NeilBrown
 
 
-> I tried to enlarge my readahed, but the system did not allow me to ha=
-ve=20
-> more than a 2 MiB readahed, - well that should be ok for a 4 disk arr=
-ay
-> with 256 kiB chunks?
->=20
-> I did try to have chunks of 64 kiB - but no luck.
->=20
-> It seemed like it is something that the resync process builds up.
-> What could it be?
->=20
-> Best regards
-> keld
+> 
+> Assuming that there is no bug and no workaround about this issue, I 
+> think the following: when one cannot guarantee the array won't be 
+> stopped until the resync completes, one should better create the RAID5 
+> array with the -f option. Indeed, when I use -f, I can stop the array 
+> and restart it, the resync will be resumed where it had stopped.
+> The cost of this is that the initial resync runs slower.
+> 
+> Comments are welcome.
+> 
+> Thanks,
+> Hubert
+> 
+> PS: the reshape patch from Neil on 03/03/08 does not fix the issue.
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
