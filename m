@@ -1,70 +1,60 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: What do Events actually mean?
-Date: Tue, 25 Mar 2008 14:58:06 +1100
-Message-ID: <18408.30798.940744.724391@notabene.brown>
-References: <47DD2CD7.2090802@tuxes.nl>
-	<20080316161451.0d17fd22@szpak>
-	<47E26775.3000500@tuxes.nl>
-	<20080320134747.GA28114@cthulhu.home.robinhill.me.uk>
-	<47E2725C.1020206@tuxes.nl>
-	<20080320163551.GG13719@mit.edu>
-	<47E2EE64.5080101@rabbit.us>
-	<47E3C504.3010700@tmr.com>
-	<47E3CBAF.4090808@rabbit.us>
-	<47E43E57.5010409@tmr.com>
-	<20080321235557.GA11801@cthulhu.home.robinhill.me.uk>
-	<47E4D95A.9000505@rabbit.us>
-	<alpine.DEB.1.00.0803220640550.24697@p34.internal.lan>
+From: Nagy Zoltan <kirk@bteam.hu>
+Subject: Re: xfs+md(raid5) xfssyncd & kswapd & pdflush hung in d-state
+Date: Tue, 25 Mar 2008 05:00:34 +0100
+Message-ID: <20080325050034.8df80de0.kirk@bteam.hu>
+References: <20080319150508.GA3087@localhost.localdomain>
+	<20080325032906.GC108924158@sgi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Justin Piszcz on Saturday March 22
+In-Reply-To: <20080325032906.GC108924158@sgi.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: linux-raid@vger.kernel.org, Peter Rabbitson <rabbit+list@rabbit.us>
+To: David Chinner <dgc@sgi.com>
+Cc: David Flynn <davidf@rd.bbc.co.uk>, daivdf@rd.bbc.co.uk, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Saturday March 22, jpiszcz@lucidpixels.com wrote:
+hi,
+
+i've not run thru the whole report - but i think i've experienced the
+same problem, the thread is: '2.6.24-rc6 reproducible raid5 hang'
+and the solution was for my setup was to upgrade to 2.6.25-rc6
+it doesn't occur using other fs - as a quick test you could try out
+ext3/jfs
+
+cheers,
+kirk
+
+> Added linux-raid to cc - this is not an XFS problem
 > 
+> Cheers,
 > 
-> On Sat, 22 Mar 2008, Peter Rabbitson wrote:
+> Dave.
 > 
-> > Robin Hill wrote:
-> >> On Fri Mar 21, 2008 at 07:01:43PM -0400, Bill Davidsen wrote:
-> >> 
-> >>> Peter Rabbitson wrote:
-> 
-> >           UUID : b6a11a74:8b069a29:6e26228f:2ab99bd0 (local to host Arzamas)
-> >         Events : 0.183270
-> >
-> > As you can see it is pretty old, and does not have many events to speak of.
-> 
-> What do the 'Events' actually represent and what do they mean for RAID0,
-> RAID1, RAID5 etc?
-
-An 'event' is one of:
-   switch from 'active' to 'clean'
-   switch from 'clean' to 'active'
-   device fails
-   device is added
-   spare replaces a failed device after a rebuild
-
-I think that it all.
-
-None of these are meaningful for RAID0, so the 'events' counter on
-RAID0 should be stable.
-
-Unfortunately, the number looks like a decimal but isn't.
-It is a 64bit number.  We print out the top 32 bits, then the bottom
-32 bits.  I don't remember why.  Maybe I'll 'fix' it.
-
-> 
-> How are they calculated?
-
-   events = events + 1;
-
-
-Feel free to merge this text into the wiki.
-
-NeilBrown
+> On Wed, Mar 19, 2008 at 03:05:10PM +0000, David Flynn wrote:
+> > We are currently experiencing a problem with writing to xfs on a 20disk
+> > raid5 array.  It seems very similar to a post in 2007nov09:
+> > 
+> >   Re: 2.6.23.1: mdadm/raid5 hung/d-state
+> > 
+> > Using kernel 2.6.24.  Unlike the previous post the array was in a clean
+> > state so no resync was occuring.  We are able to read from the array,
+> > but any process that writes joins the list of blocked tasks
+> > 
+> > The machine is:
+> >   2 of dual core opteron 280
+> >   16GiB RAM
+> >   4 lots of 5 sata disks connected to sil3124 sata hba.
+> >   Running 2.6.24
+> > 
+> > There was a single rsync process accessing the array at the time
+> > (~40MB/sec).
+> > 
+> > Random other bits[1]:
+> > # cat /sys/block/md1/md/stripe_cache_active
+> > 256
+> > # cat /sys/block/md1/md/stripe_cache_size  
+> > 256
+> > 
+> > Example of sysrq-w:
+> > 
