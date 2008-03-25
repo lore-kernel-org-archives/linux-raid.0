@@ -1,38 +1,39 @@
 From: Andre Noll <maan@systemlinux.org>
-Subject: [PATCH 2/8] md: Simplify sb_equal().
-Date: Sun, 23 Mar 2008 16:21:39 +0100
-Message-ID: <S1754151AbYGHQdg/20080708163337Z+60@vger.kernel.org>
+Subject: [PATCH 4/8] md: analyze_sbs(): Fix potential NULL-pointer dereference.
+Date: Tue, 25 Mar 2008 21:38:30 +0100
+Message-ID: <S1754836AbYGHQde/20080708163334Z+60@vger.kernel.org>
 References: <20080708155541.GS23944@skl-net.de>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20080708155541.GS23944@skl-net.de>
 Sender: linux-raid-owner@vger.kernel.org
 List-Id: linux-raid.ids
 
-The only caller of sb_equal() tests the return value against
-zero, so it's OK to return the negated return value of memcmp().
+If no device in the array contains a valid super block, "freshest"
+will be NULL, but we happily dereference that pointer in the subsequent
+call to validate_super().
+
+Fix it by returning early in this case.
 
 Signed-off-by: Andre Noll <maan@systemlinux.org>
 ---
- drivers/md/md.c |    6 +-----
- 1 files changed, 1 insertions(+), 5 deletions(-)
+ drivers/md/md.c |    4 ++++
+ 1 files changed, 4 insertions(+), 0 deletions(-)
 
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index c559b9e..58762dd 100644
+index 7943df1..bf1499c 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -572,11 +572,7 @@ static int sb_equal(mdp_super_t *sb1, mdp_super_t *sb2)
- 	tmp1->nr_disks = 0;
- 	tmp2->nr_disks = 0;
+@@ -2249,6 +2249,10 @@ static void analyze_sbs(mddev_t * mddev)
+ 			kick_rdev_from_array(rdev);
+ 		}
  
--	if (memcmp(tmp1, tmp2, MD_SB_GENERIC_CONSTANT_WORDS * 4))
--		ret = 0;
--	else
--		ret = 1;
--
-+	ret = !memcmp(tmp1, tmp2, MD_SB_GENERIC_CONSTANT_WORDS * 4);
- abort:
- 	kfree(tmp1);
- 	kfree(tmp2);
++	if (!freshest) {
++		printk(KERN_ERR "md: no valid devices found\n");
++		return;
++	}
+ 
+ 	super_types[mddev->major_version].
+ 		validate_super(mddev, freshest);
 -- 
 1.5.3.8
 
