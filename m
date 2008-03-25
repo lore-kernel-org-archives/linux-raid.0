@@ -1,44 +1,76 @@
-From: pg_lxra@lxra.for.sabi.co.UK (Peter Grandi)
-Subject: Re: performance problems with raid10,f2
-Date: Tue, 25 Mar 2008 13:22:03 +0000
-Message-ID: <18408.64635.201923.65782@tree.ty.sabi.co.uk>
-References: <20080314231151.GA14568@rap.rap.dk>
-	<20080320172817.GA27070@rap.rap.dk>
-	<18408.35320.92714.891870@notabene.brown>
-	<20080325103656.GA4911@rap.rap.dk>
+From: Mattias Wadenstein <maswan@acc.umu.se>
+Subject: Re: component growing in raid5
+Date: Tue, 25 Mar 2008 14:38:47 +0100 (MET)
+Message-ID: <Pine.GSO.4.64.0803251412000.15900@montezuma.acc.umu.se>
+References: <47E5FFB8.5030903@bteam.hu> <47E753C4.7030903@rabbit.us>
+ <47E7C609.9000501@bteam.hu> <18408.63715.481333.26215@tree.ty.sabi.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20080325103656.GA4911@rap.rap.dk>
+In-Reply-To: <18408.63715.481333.26215@tree.ty.sabi.co.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>
+To: Peter Grandi <pg_lxra@lxra.for.sabi.co.UK>
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
->>>> I have a 4 drive array with 1 TB Hitachi disks, formatted
->>>> as raid10,f2 I had some strange observations: 1. while
->>>> resyncing I could get the raid to give me about 320 MB/s in
->>>> sequential read, which was good. After resync had been
->>>> done, and with all 4 drives active, I only get 115 MB/s.
+On Tue, 25 Mar 2008, Peter Grandi wrote:
 
-[ ... ]
+>  * Single volume filesystems larger than 1-2TB require something
+>    like JFS or XFS (or Reiser4 or 'ext4' for the brave). Larger
+>    than 5-10TB is not entirely feasible with any filesystem
+>    currently known (just think 'fsck' times) even if the ZFS
+>    people glibly say otherwise (no 'fsck' ever!).
 
->> Is this with, or without, your patch to avoid "read-balancing"
->> for raid10/far layouts?  It sounds like it is without that
->> patch ????
+The ZFS people provide an fsck, it's called "resilver", which checks 
+parity and checksums and update accordingly.
 
-> I tried both without the patch and with the patch, with almost
-> same resulte.
+>  * Single RAID volumes up to say 10-20TB are currently feasible,
+>    say as 24x(1+1)x1TB (for example with Thumpers). Beyond that
+>    I would not even try, and even that is a bit crazy. I don't
+>    think that one should put more than 10-15 drives at most in
+>    a single RAID volume, even a RAID10 ones.
 
-That could be the usual issue with apparent pauses in the stream
-of IO requests to the array component devices, with the usual
-workaround of trying 'blockdev --setra 65536 /dev/mdN' and see if
-sequential reads improve.
+I'd agree, a 12-14 disk raid6 is as high that I'd like to go. This is 
+mostly limited by rebuild-times though, you'd preferably stay within a day 
+or two of single-parity "risk".
 
-> Is resync building some table, and could that be it?  Or could
-> it be some time of inode traffic?
+>  * Large storage pools can only be reasonably built by using
+>    multiple volumes across networks and on top of those some
+>    network/cluster file system, and it matters a bit whether
+>    single filesystem image is essential or not.
 
-One good way to see what is actually happening is to use either
-'watch iostat -k 1 2' and look at the load on the individual MD
-array component devices, or use 'sysctl vm/block_dump=1' and look
-at the addresses being read or written.
+Or for that matter an application that can handle multiple storage pools, 
+many of the software that needs really large-scale storage can itself 
+split data store between multiple locations. That way you can have 
+resonably small filesystems and stay sane.
+
+>  * RAID5 (but not RAID6 or other mad arrangements) may be used if
+>    almost all accesses are reads, the data carries end-to-end
+>    checksums, and there are backups-of-record for restoring the
+>    data quickly, and then each array is not larger than say 4+1.
+>    In other words if RAID5 is used as a mostly RO frontend, for
+>    example to a large slow tape archive (thanks to R. Petkus for
+>    persuading me that there is this exception).
+
+Funny, my suggestion would definately be raid6 for anything except 
+database(-like) load, that is anything that doesn't ends up as lots of 
+small updates. My normal usecase is to store large files and having 60% 
+more disks really costs alot in both purchase and power for the same 
+usable space.
+
+Of course, we'd be more likely to go for a good hardware raid6 controller 
+that utilises the extra parity to make a good guess on what data is wrong 
+in the case of silent data corruption on a single disk (unlike Linux 
+software raid). Unless, of course, you can run ZFS which has proper 
+checksumming so you can know which (if any) data is still good.
+
+> A couple of relevant papers for inspiration on best practices by
+> those that have to deal with this stuff:
+>
+>  https://indico.desy.de/contributionDisplay.py?contribId=26&sessionId=40&confId=257
+>  http://indico.fnal.gov/contributionDisplay.py?contribId=43&amp;sessionId=30&amp;confId=805
+
+And this is my usecase. It might be quite different from, say, database 
+storage or home directories.
+
+/Mattias Wadenstein
