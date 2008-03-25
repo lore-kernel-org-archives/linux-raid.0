@@ -1,37 +1,46 @@
 From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: irc channel for linux-raid
-Date: Tue, 25 Mar 2008 12:08:05 -0400
-Message-ID: <47E92365.4000102@tmr.com>
-References: <20080316082121.GA23886@rap.rap.dk>
+Subject: Re: Verifying spare drive, best practices
+Date: Tue, 25 Mar 2008 12:19:34 -0400
+Message-ID: <47E92616.1030007@tmr.com>
+References: <47E33AF8.6020106@harddata.com> <18408.33825.920147.425644@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20080316082121.GA23886@rap.rap.dk>
+In-Reply-To: <18408.33825.920147.425644@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?ISO-8859-1?Q?Keld_J=F8rn_Simonsen?= <keld@dkuug.dk>
-Cc: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: Maurice Hilarius <maurice@harddata.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Keld J=F8rn Simonsen wrote:
-> Hi
+Neil Brown wrote:
+> On Thursday March 20, maurice@harddata.com wrote:
+>   
+>> Given this situation:
+>> 7 disks in total
+>> RAID5 of 6 disks, and a hot spare.
+>>
+>> mdadm show the 6 disks, but not the spare.
+>>
+>> As a maintenance question, where one wants to periodically ensure that 
+>> the hot spare is both available and good.
+>> How should one best :
+>> 1) Verify the hot spare is still available.
+>>     
 >
-> is there an irc channel where people from linux-raid hang out?
->  =20
+>  - On the relevant line in mdadm.conf, put "spares=1"
+>  - have a daily cron job that runs
+>      mdadm --montor --scan --oneshot
+>
+> It will report every day with a "SparesMissing" event if the right
+> number of spares is not present.
+>   
 
-Sounds not, should there be?  People want to comment?
+Another case for raid4e ;-)
 
---=20
+-- 
 Bill Davidsen <davidsen@tmr.com>
-  "Woe unto the statesman who makes war without a reason that will stil=
-l
-  be valid when the war is over..." Otto von Bismark=20
+  "Woe unto the statesman who makes war without a reason that will still
+  be valid when the war is over..." Otto von Bismark 
 
 
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
