@@ -1,39 +1,53 @@
-From: Mattias Wadenstein <maswan@acc.umu.se>
-Subject: Re: Redundancy check using "echo check > sync_action": error reporting?
-Date: Tue, 25 Mar 2008 10:19:56 +0100 (MET)
-Message-ID: <Pine.GSO.4.64.0803251011480.15900@montezuma.acc.umu.se>
-References: <20080316161451.0d17fd22@szpak> <47E26775.3000500@tuxes.nl>
- <20080320134747.GA28114@cthulhu.home.robinhill.me.uk> <47E2725C.1020206@tuxes.nl>
- <20080320163551.GG13719@mit.edu> <47E2EE64.5080101@rabbit.us>
- <47E3C504.3010700@tmr.com> <47E3CBAF.4090808@rabbit.us> <20080321171348.GK7991@mit.edu>
- <47E3F1EF.3030705@rabbit.us> <20080322132733.GR7991@mit.edu>
+From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
+Subject: Re: performance problems with raid10,f2
+Date: Tue, 25 Mar 2008 11:36:56 +0100
+Message-ID: <20080325103656.GA4911@rap.rap.dk>
+References: <20080314231151.GA14568@rap.rap.dk> <20080320172817.GA27070@rap.rap.dk> <18408.35320.92714.891870@notabene.brown>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20080322132733.GR7991@mit.edu>
+Content-Disposition: inline
+In-Reply-To: <18408.35320.92714.891870@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Theodore Tso <tytso@MIT.EDU>
-Cc: Peter Rabbitson <rabbit+list@rabbit.us>, Bill Davidsen <davidsen@tmr.com>, Bas van Schaik <bas@tuxes.nl>, linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, 22 Mar 2008, Theodore Tso wrote:
+On Tue, Mar 25, 2008 at 04:13:28PM +1100, Neil Brown wrote:
+> On Thursday March 20, keld@dkuug.dk wrote:
+> > On Sat, Mar 15, 2008 at 12:11:51AM +0100, Keld J=F8rn Simonsen wrot=
+e:
+> > > Hi
+> > >=20
+> > > I have a 4 drive array with 1 TB Hitachi disks, formatted as raid=
+10,f2
+> > >=20
+> > > I had some strange observations:
+> > >=20
+> > > 1. while resyncing I could get the raid to give me about 320 MB/s=
+ in
+> > > sequential read, which was good. After resync had been done, and =
+with
+> > > all 4 drives active, I only get 115 MB/s.
+> >=20
+> > This was reproducable. I dont know what could be wrong.
+>=20
+> Is this with, or without, your patch to avoid "read-balancing" for
+> raid10/far layouts?
+> It sounds like it is without that patch ????
+>=20
+> NeilBrown
 
-> On Fri, Mar 21, 2008 at 06:35:43PM +0100, Peter Rabbitson wrote:
->>
->> Of course it would be possible to instruct md to always read all
->> data+parity chunks and make a comparison on every read. The performance
->> would not be much to write home about though.
->
-> Yeah, and that's probably the real problem with this scheme.  You
-> basically reduce the read bandwidth of your array down to a single
-> (slowest) disk --- basically the same reason why RAID-2 is a
-> commercial failure.
+I tried both without the patch and with the patch, with almost same res=
+ulte.
+Is resync building some table, and could that be it?
+Or could it be some time of inode traffic?
 
-I don't really see this as a problem. Most of my filesystems are not 
-anywhere near their performance limit and reading a strip from the parity 
-disks as well as all the strips from the data disks in a raid6 setup 
-probably would be less than a 50% performance hit, so I would very much 
-appriciate a "paranoid parity check on every read" flag to set on _some_ 
-of my raids.
-
-/Mattias Wadenstein
+best regards
+keld
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
