@@ -1,75 +1,101 @@
-From: Anton Altaparmakov <aia21@cam.ac.uk>
-Subject: Re: How to grow RAID1 mirror on top of LVM?
-Date: Tue, 25 Mar 2008 08:00:10 +0000
-Message-ID: <8C237F49-138E-43CA-A63C-6025E9E0EAE2@cam.ac.uk>
-References: <25F8EF57-9606-4217-B2D4-2DD3D8E064C4@cam.ac.uk> <18408.36712.100712.499844@notabene.brown>
-Mime-Version: 1.0 (Apple Message framework v919.2)
-Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
+From: Peter Rabbitson <rabbit+list@rabbit.us>
+Subject: Re: Redundancy check using "echo check > sync_action": error	reporting?
+Date: Tue, 25 Mar 2008 10:00:13 +0100
+Message-ID: <47E8BF1D.6040308@rabbit.us>
+References: <47DD2CD7.2090802@tuxes.nl>	<20080316161451.0d17fd22@szpak>	<47E26775.3000500@tuxes.nl>	<20080320134747.GA28114@cthulhu.home.robinhill.me.uk>	<47E2725C.1020206@tuxes.nl>	<20080320163551.GG13719@mit.edu>	<47E2EE64.5080101@rabbit.us> <18408.32411.524644.940275@notabene.brown>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18408.36712.100712.499844@notabene.brown>
+In-Reply-To: <18408.32411.524644.940275@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+Cc: Theodore Tso <tytso@MIT.EDU>, Bas van Schaik <bas@tuxes.nl>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Neil,
-
-Thanks for your reply!
-
-On 25 Mar 2008, at 05:36, Neil Brown wrote:
-> On Thursday March 13, aia21@cam.ac.uk wrote:
+Neil Brown wrote:
+> On Friday March 21, rabbit+list@rabbit.us wrote:
+>> Theodore Tso wrote:
+>>> On Thu, Mar 20, 2008 at 03:19:08PM +0100, Bas van Schaik wrote:
+>>>>> There's no explicit message produced by the md module, no.  You need to
+>>>>> check the /sys/block/md{X}/md/mismatch_cnt entry to find out how many
+>>>>> mismatches there are.  Similarly, following a repair this will indicate
+>>>>> how many mismatches it thinks have been fixed (by updating the parity
+>>>>> block to match the data blocks).
+>>>>>   
+>>>> Marvellous! I naively assumed that the module would warn me, but that's
+>>>> not true. Wouldn't it be appropriate to print a message to dmesg if such
+>>>> a mismatch occurs during a check? Such a mismatch clearly means that
+>>>> there is something wrong with your hardware lying beneath md, doesn't it?
+>>> If a mismatch is detected in a RAID-6 configuration, it should be
+>>> possible to figure out what should be fixed (since with two hot spares
+>>> there should be enough redundancy not only to detect an error, but to
+>>> correct it.)  Out of curiosity, does md do this automatically, either
+>>> when reading from a stripe, or during a resync operation?
+>>>
+>> In my modest experience with root/high performance spool on various raid 
+>> levels I can pretty much conclude that the current check mechanism doesn't do 
+>> enough to give power to the user. We can debate all we want about what the MD 
+>> driver should do when it finds a mismatch, yet there is no way for the user to 
+>> figure out what the mismatch is and take appropriate action. This does not 
+>> apply only to RIAD5/6 - what about RAID1/10 with >2 chunk copies? What if the 
+>> only wrong value is taken and written all over the other good blocks?
 >>
->> Is there a better way to do this?  I am hoping someone will tell me  
->> to
->> use option blah to utility foo that will do this for me without  
->> having
->> to break the mirror twice and resync each time.  (-;
->
-> Sorry, but no.  This mode of operation was never envisaged for md.
-> I would always put the md/raid1 devices below the LVM.
+>> I think that the solution is rather simple, and I would contribute a patch if 
+>> I had any C experience. The current check mechanism remains the same - 
+>> mismatch_cnt is incremented/reset just the same as before. However on every 
+>> mismatching chunk the system printks the following:
+>>
+>> 1) the start offset of the chunk(md1/10) or stripe(md5/6) within the MD device
+>> 2) one line for every active disk containing:
+>> 	a) the offset of the chunk within the MD componnent
+>> 	b) a {md5|sha1}sum of the chunk
+> 
+> More logging probably would be appropriate.
+> I wouldn't emit too much detail from the kernel though.  Just enough
+> to identify the location.  Have the userspace tool do all the more
+> interesting stuff.
 
-We do that already.  (-:  And then we put MD on top again.  What we  
-have is two computers, each with six 500GB disks, set up as MD RAID-10  
-+ 1 hot spare on the six disks.  Then run LVM on the MD RAID-10 and  
-create two virtual drives on the LVM on each box.  Then on each box we  
-have one of the LVM drives feed into an MD RAID-1 mirror and the other  
-LVM drive is exported via iSCSI (iscsitarget) to the other box.  The  
-iSCSI drive is then imported by the other box using open-iscsi and the  
-resulting device is fed into the other half of the MD RAID-1 mirror on  
-that box.
+True. The only reason I suggested checkusm information was because the blocks 
+are already in memory, and checksum routines are readily available.
 
-So yes, I am sure you never envisaged this mode of operation!  But it  
-is a way to give us synchronous data replication across two sites  
-(there are about 3 miles between the two boxes) with free software  
-which in combination with my custom scripting and heartbeat2 allows us  
-to fail the storage (the MD RAID-1 are xfs formatted and the NFS  
-exported) over from one site to the other at the flip of a switch and  
-in case of one machine blowing up, etc.
+> You would want to rate limit the message though, to that you don't get
+> piles of messages when initialising the array...
 
-> Every time you buy two drives, combine them into a RAID1, and add the
-> /dev/mdX as a PV for LVM.  Then grow you LVM devices whenever you
-> like.
->
->> If not, please consider this a feature request for mdadm.  (-:  It
->> should have an option to detect that the underlying device has grown
->> and thus write a new superblock  (or move the old one or whatever) at
->> the end of the newly grown device instead of complaining that it does
->> not exist.  Or something!  As it is, it is incredibly time consuming
->> and inefficient.  )-:
->
-> I'll keep it in mind (Which it to say:  I will save this in my 'mdadm'
-> mailbox, and have a look through that mailbox next time I'm working on
-> improvements to mdadm).
+More realistically one would want to be able to flip a switch in 
+/sys/block/mdX/md/ to see any advanced logging at all. So basically you run 
+your monthly checks, one of them comes back with non-zero mismatch_cnt, you 
+echo 1 > /sys/block/mdX/md/sync_action_debug and look at your logs.
 
+>> In a common case array this will take no more than 8 lines in dmesg. However 
+>> it will allow:
+>>
+>> 1) For a human to determine at a glance which disk holds a mismatching chunk 
+>> in raid 1/10
+>> 2) Determine the same for raid 6 using a userspace tool which will calculate 
+>> the parity for every possible permutation of chunks
+>> 3) using some external tools to determine which file might have been affected 
+>> on the layered file system
+>>
+>>
+>> Now of course the problem remains how to repair the array using the 
+>> information obtained above. I think the best way would be to extend the syntax 
+>> of repair itself, so that:
+>>
+>> echo repair > .../sync_action would use the old heuristics
+>>
+>> echo repair <mdoffset> <component N> > .../sync_action will update the chunk 
+>> on drive N which corresponds to the chunk/stripe at mdoffset within the MD 
+>> device, using the information from the other drives, and not the other way 
+>> around as might happen with just a repair.
+> 
+> Suspend the array, update the raw devices, then re-enable the array.
+> All from user-space.
+> No magic parsing of 'sync_action' input.
+> 
 
-Great, thanks!
-
-Best regards,
-
-	Anton
--- 
-Anton Altaparmakov <aia21 at cam.ac.uk> (replace at with @)
-Unix Support, Computing Service, University of Cambridge, CB2 3QH, UK
-Linux NTFS maintainer, http://www.linux-ntfs.org/
+The sole advantage of 'repair' is that you do nto take the array offline. It 
+doesn't even have to be 'repair', it can be something like 'refresh' or 
+'relocate'. The point is that such simple interface would be a clean way to 
+fix any inconsistencies in any RAID level without taking it offline.
 
