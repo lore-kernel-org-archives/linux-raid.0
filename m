@@ -1,62 +1,35 @@
-From: "Grant Grundler" <grundler@google.com>
-Subject: Re: data corruption: ext3/lvm2/md/mptsas/vitesse/seagate
-Date: Wed, 26 Mar 2008 10:03:08 -0700
-Message-ID: <da824cf30803261003i690f108dh86ff846e4f5fd2fa@mail.gmail.com>
-References: <200803062108.m26L8e4i020882@colby.verdasys.com>
-	 <1204848652.3062.100.camel@localhost.localdomain>
-	 <200803101519.m2AFJCJS032509@colby.verdasys.com>
-	 <1205163386.2941.14.camel@localhost.localdomain>
-	 <7.1.0.9.2.20080311174743.1376cc30@alum.mit.edu>
-	 <200803252343.m2PNh8kl020506@colby.verdasys.com>
-	 <da824cf30803251712t801fdaexc19ba4fe8130ee2e@mail.gmail.com>
-	 <200803260217.m2Q2HsiU023202@colby.verdasys.com>
+From: "Christian Pernegger" <pernegger@gmail.com>
+Subject: Re: raid10 vs raid5 - strange performance
+Date: Wed, 26 Mar 2008 18:10:17 +0100
+Message-ID: <bb145bd20803261010mfe43d25tf381e4d4392f4ed8@mail.gmail.com>
+References: <bb145bd20803251433q1018703cva56ea20e9bedf3c6@mail.gmail.com>
+	 <72dbd3150803251513v28ea142ct2de229c26e888c56@mail.gmail.com>
+	 <bb145bd20803251556pa416a0cs8350058a4216f6f9@mail.gmail.com>
+	 <47EA79D1.1090607@tmr.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <200803260217.m2Q2HsiU023202@colby.verdasys.com>
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <47EA79D1.1090607@tmr.com>
 Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
-To: Marc Bejarano <beej@alum.mit.edu>
-Cc: linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Mar 25, 2008 at 7:17 PM, Marc Bejarano <beej@alum.mit.edu> wrote:
-> At 20:12 3/25/2008, Grant Grundler wrote:
->   >On Tue, Mar 25, 2008 at 4:43 PM, Marc Bejarano <beej@alum.mit.edu> wrote:
->
->  >>  having never played with blocktrace, i have no idea what it's
->   >>  capabilities are.  can it be used to record not just the IOs, but
->   >>  also their timings?  any other ideas?  i'm at a loss for how to turn
->   >>  my reproducible test case into something i can send to seagate for
->   >>  investigation.
->   >
->   >Yes and yes (I think). But by itself, it won't help since block
->   >trace tools don't generally do any data validation.
->
->  we've been successfully using md's mirror consistency-checking
->  capabilities to spot the corruption.
+>  I think that you should treat 10,n2 and 10,f2 as separate
+>  configurations,
 
-Oh? Have you been running disktest on the mirrors or the individual disks?
-I was expecting the latter but wonder now.
+Certainly, but f2 write performance is supposed to be even worse than
+n2 even in theory. Maybe I'll try it anyway.
 
->  if we can get an IO pattern
->  that reproduces the issue, we're golden.  if only we didn't other
->  things to do with our time that were actually productive for us
->  ;)  hopefully we'll be able to report back soon-ish with more.
+>  The ability to transfer a single copy of the data and no parity
+>  information is an advantage of hardware controllers.
 
-*sigh* this can take a long time to track down. And you right that
-getting the "magic" workload to reproduce is key.
+The 3ware 7506-8 *is* a hardware controller and it quite obviously
+does *not* have this ability, at least not for raid10. One can just as
+well use the 3ware as a plain 8port controller and md over that,
+doesn't make much of a difference. I find that interesting.
 
->
->  if anybody else has helpful ideas, we're all ears.
->
->  thanks, grant!
+Cheers,
 
-welcome,
-grant
-
->
->  marc
->
->
+C.
