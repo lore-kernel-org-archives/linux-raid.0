@@ -1,51 +1,60 @@
 From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: MDP major registration
-Date: Wed, 26 Mar 2008 11:54:39 -0400
-Message-ID: <47EA71BF.8050800@tmr.com>
-References: <47D90614.9040206@free.fr> <18408.36753.223347.129420@notabene.brown> <47E92EE2.1080108@free.fr> <20080326065232.GA21970@percy.comedia.it>
+Subject: Re: raid10 vs raid5 - strange performance
+Date: Wed, 26 Mar 2008 12:29:05 -0400
+Message-ID: <47EA79D1.1090607@tmr.com>
+References: <bb145bd20803251433q1018703cva56ea20e9bedf3c6@mail.gmail.com>	 <72dbd3150803251513v28ea142ct2de229c26e888c56@mail.gmail.com> <bb145bd20803251556pa416a0cs8350058a4216f6f9@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20080326065232.GA21970@percy.comedia.it>
+In-Reply-To: <bb145bd20803251556pa416a0cs8350058a4216f6f9@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Christian Pernegger <pernegger@gmail.com>
+Cc: David Rees <drees76@gmail.com>, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Luca Berra wrote:
-> On Tue, Mar 25, 2008 at 05:57:06PM +0100, Hubert Verstraete wrote:
->> Neil Brown wrote:
->>> On Thursday March 13, hubskml@free.fr wrote:
->>>> Neil,
->>>>
->>>> What is the status of the major for the partitionable arrays ?
->>>
->>> automatically determined at runtime.
->>>
->>>> I see that it is 254, which is in the experimental section, 
->>>> according to the official Linux device list 
->>>> (http://www.lanana.org/docs/device-list/).
->>>> Will there be an official registration ?
->>>
->>> No. Is there any need?
->>
->> I got this question in mind when I saw that mkfs.xfs source code was 
->> referring to the MD major to tune its parameters on an MD device, 
->> while it ignores MDP devices.
->> If there were reasons to register MD, wouldn't they apply to MDP too ?
+Christian Pernegger wrote:
+>>  Not surprising at all. Read performance is similar between the two
+>>  setups as expected (appears to be limited by the PCI bus).
+>>     
 >
-> i don't think so:
-> bluca@percy ~ $ grep mdp /proc/devices
-> 253 mdp
+> Yes, reads are fine.
+>
+>   
+>>  Streaming write performance is better because you are writing less
+>>  redundant data to disks, you can now stripe writes over 5 disks
+>>  instead of 3.
+>>     
+>
+> Sounds reasonable. Write performance SHOULD be ~5x single disk for
+> raid5 and ~3x single disk for raid10 in a theoretical best-case
+> scenario, either should hit the PCI bus cap. In reality the ratios are
+> more like 1x for raid5 and 0.6 -1.1x for raid10. It's just that I'd
+> expected ~ identical and significantly better streaming write
+> performance from both array configurations ... then again, if you
+> think it over,
+>
+> raid5 will transfer 1 parity block per 5 data blocks (so 5/6 of the
+> PCI bw are usable = 92MB)
+> raid10 will transfer 3 copy blocks per 3 data blocks (so 1/2 of the
+> PCI bw are usable = 55MB)
+>
+> Factoring in some contention / overhead my values might well be
+> normal. It just means that the fabled raid10 only performs if you have
+> high-bw buses, which this box sadly doesn't, or a hw controller where
+> redundant blocks don't go over the bus, which the 3ware 7506
+> apparently isn't.
+>
+> I'll still go with raid10 for the 50% better random I/O, only less
+> enthusiastically.
+>   
 
-Why is it important to have XFS tune its parameters for md and not for 
-mdp? I don't understand your conclusion here, is tuning not needed for 
-mdp, or so meaningless that it doesn't matter, or that XFS code reads 
-/proc/devices, or ??? I note that device-mapper also has a dynamic 
-major, what does XFS make of that?
+I think that you should treat 10,n2 and 10,f2 as separate 
+configurations, and test them as such. behavior is quite different, and 
+one or the other might be a better fit to your usage.
 
-I don't know how much difference tuning makes, but if it's worth doing 
-at all, it should be done for mdp as well, I would think.
+The ability to transfer a single copy of the data and no parity 
+information is an advantage of hardware controllers.
 
 -- 
 Bill Davidsen <davidsen@tmr.com>
