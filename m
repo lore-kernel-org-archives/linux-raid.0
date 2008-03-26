@@ -1,65 +1,49 @@
-From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
-Subject: Re: raid10 vs raid5 - strange performance
-Date: Wed, 26 Mar 2008 20:29:35 +0100
-Message-ID: <20080326192935.GB18621@rap.rap.dk>
-References: <bb145bd20803251433q1018703cva56ea20e9bedf3c6@mail.gmail.com> <20080325233649.GA632@rap.rap.dk> <bb145bd20803251837x7ef1fa9dk6191fcaea7b02144@mail.gmail.com> <20080326072416.GA8674@rap.rap.dk> <bb145bd20803261016t351e4b98rb8989cc6c849108f@mail.gmail.com>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: how to disable partition search?
+Date: Wed, 26 Mar 2008 16:20:59 -0400
+Message-ID: <47EAB02B.3080104@tmr.com>
+References: <87ve39lngy.fsf@tac.ki.iif.hu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <bb145bd20803261016t351e4b98rb8989cc6c849108f@mail.gmail.com>
+In-Reply-To: <87ve39lngy.fsf@tac.ki.iif.hu>
 Sender: linux-raid-owner@vger.kernel.org
-To: Christian Pernegger <pernegger@gmail.com>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: Ferenc Wagner <wferi@niif.hu>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Mar 26, 2008 at 06:16:30PM +0100, Christian Pernegger wrote:
-> >  OK, I think the normal hype on raid10 is to use the far layout for its
-> >  better striping performance.
-> 
-> Wasn't f2 supposed to improve *reads*? Maybe I've got it backwards.
-> 
-> >  Are the disks SATA disks or SCSI disks?
-> 
-> PATA. It's a how-to-best-utilize-some-older-stuff project.
-> 
-> >  you could probably get some more performance by moving 2 disks
-> >  to the PATA controller of the motherboard,
-> 
-> The board is newish and has just one PATA channel and that's
-> explicitly for CDROM use.
-> 
-> >  I think it is interesting that your 3ware controller is not maxing out
-> >  the PCI bus! With 6 disks of nominally 60 MB/s the  theoretical max is
-> >  360 MB/s. So the 3ware controller really has IO bandwidth available
-> >  which it is not getting close on putting to use.
-> 
-> Yes, that's the juicy part :)
-> 
-> >  What is the specifics for the 3ware controller?
-> 
-> http://www.3ware.com/products/parallel_ata.asp
-> 
-> It's the 8port version. Maybe their newer controllers are better but
-> this one frankly sucks at anything but raid1 and maybe raid0 ...
+Ferenc Wagner wrote:
+> Hi,
+>
+> I use an FC SAN, which provides multiple pathes to multiple LUNs.
+> These all come up as different sd* devices, exhausting single letter
+> names.  I mean they are a LOT.  Using the md mulitpath driver
+> everything works perfectly, no problems there.  However, during boot,
+> the kernel tries to read the partition table from each device,
+> spitting out hundreds of lines of error messages: most of the devices
+> aren't even readable, and those which are, don't contain a valid
+> partition table.  They never will.  So I'd like to disable partition
+> detection, because these messages overflow the kernel message buffer,
+> depriving syslog of gathering any useful boot messages, and also
+> needlessly lengthening the boot process.  (Of course the noise alone
+> is disturbing enough when one tries to troubleshoot a boot problem.)
+> However, looking at the kernel sources didn't give me any hint.  Is
+> this possible to disable at all?
+>
+> (Please Cc me, I'm not on the list.)
+>   
+After reading some code, I didn't see any boot or module load options 
+you can use to prevent that, I think you may want to increase buffer 
+size to hold the messages and use "grep -v" to create a sanitized 
+dmesg.  If you can give an example of the error message you see I can 
+look again.
 
-I don't know if it is any worse than other hardware controllers.
-I have two on-board sata controller chips with each their version of HW
-RAID (NVIDIA and SIL) but I hesitate to try them out as I do not believe
-I can configure raids on the partition level (only on disk level, I
-believe). 
+Don't forget to copy the list...
 
-I think there is a tendency that SW raid like Linux kernel MD and Sun ZFS
-etc are more intelligent and can thus obtain better performance than HW
-RAID. HW RAID has the advantage as Bill says that you only need to
-transfer the data once when writing, and that parity calculation is
-offloaded from the main CPUs. 
+-- 
+Bill Davidsen <davidsen@tmr.com>
+  "Woe unto the statesman who makes war without a reason that will still
+  be valid when the war is over..." Otto von Bismark 
 
-If you reuse older hw, then I would say that you really have a problem
-with the PCI bus here, and that a motherboard with better bus
-performance could really boost the overall performance of your older HW. 
-You should be able to get something like a 3-fold IO improvement if you
-could avoid the PCI botleneck.
 
-best regards
-keld
