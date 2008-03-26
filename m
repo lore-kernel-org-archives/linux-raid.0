@@ -1,61 +1,39 @@
-From: Hubert Verstraete <hubskml@free.fr>
-Subject: Re: MDP major registration
-Date: Wed, 26 Mar 2008 18:50:44 +0100
-Message-ID: <47EA8CF4.7080201@free.fr>
-References: <47D90614.9040206@free.fr> <18408.36753.223347.129420@notabene.brown> <47E92EE2.1080108@free.fr> <20080326065232.GA21970@percy.comedia.it> <47EA71BF.8050800@tmr.com>
+From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
+Subject: Re: raid10 vs raid5 - strange performance
+Date: Wed, 26 Mar 2008 18:49:36 +0100
+Message-ID: <20080326174936.GA18621@rap.rap.dk>
+References: <bb145bd20803251433q1018703cva56ea20e9bedf3c6@mail.gmail.com> <72dbd3150803251513v28ea142ct2de229c26e888c56@mail.gmail.com> <bb145bd20803251556pa416a0cs8350058a4216f6f9@mail.gmail.com> <47EA79D1.1090607@tmr.com> <bb145bd20803261010mfe43d25tf381e4d4392f4ed8@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <47EA71BF.8050800@tmr.com>
+Content-Disposition: inline
+In-Reply-To: <bb145bd20803261010mfe43d25tf381e4d4392f4ed8@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Christian Pernegger <pernegger@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Bill Davidsen wrote:
-> Luca Berra wrote:
->> On Tue, Mar 25, 2008 at 05:57:06PM +0100, Hubert Verstraete wrote:
->>> Neil Brown wrote:
->>>> On Thursday March 13, hubskml@free.fr wrote:
->>>>> Neil,
->>>>>
->>>>> What is the status of the major for the partitionable arrays ?
->>>>
->>>> automatically determined at runtime.
->>>>
->>>>> I see that it is 254, which is in the experimental section, 
->>>>> according to the official Linux device list 
->>>>> (http://www.lanana.org/docs/device-list/).
->>>>> Will there be an official registration ?
->>>>
->>>> No. Is there any need?
->>>
->>> I got this question in mind when I saw that mkfs.xfs source code was 
->>> referring to the MD major to tune its parameters on an MD device, 
->>> while it ignores MDP devices.
->>> If there were reasons to register MD, wouldn't they apply to MDP too ?
->>
->> i don't think so:
->> bluca@percy ~ $ grep mdp /proc/devices
->> 253 mdp
+On Wed, Mar 26, 2008 at 06:10:17PM +0100, Christian Pernegger wrote:
+> >  I think that you should treat 10,n2 and 10,f2 as separate
+> >  configurations,
 > 
-> Why is it important to have XFS tune its parameters for md and not for 
-> mdp? I don't understand your conclusion here, is tuning not needed for 
-> mdp, or so meaningless that it doesn't matter, or that XFS code reads 
-> /proc/devices, or ??? I note that device-mapper also has a dynamic 
-> major, what does XFS make of that?
+> Certainly, but f2 write performance is supposed to be even worse than
+> n2 even in theory. Maybe I'll try it anyway.
 
-It reads from /proc/devices.
+Nah, raid10,n2 and raid10,f2 has about equal writing performance,
+both for sequential and random writes, and according to my test,
+f2 is actually a little better than n2.
 
-> I don't know how much difference tuning makes, but if it's worth doing 
-> at all, it should be done for mdp as well, I would think.
+> >  The ability to transfer a single copy of the data and no parity
+> >  information is an advantage of hardware controllers.
+> 
+> The 3ware 7506-8 *is* a hardware controller and it quite obviously
+> does *not* have this ability, at least not for raid10. One can just as
+> well use the 3ware as a plain 8port controller and md over that,
+> doesn't make much of a difference. I find that interesting.
 
-Same thought. I wrote the patch for mkfs.xfs but did not publish it for 
-two reasons:
-1) MD is registered but not MDP. Now I understand, it's not a problem, 
-we just need to read /proc/devices as device-mapper does.
-2) Tuning XFS for MDP can be achieved through the mkfs.xfs options. With 
-a few lines in shell, my XFS on MDP now has the same performance as XFS 
-on MD.
+I do not believe the 3ware controller has raid10 in the MD sense.
+The raid10 that 3ware may have is most likely a raid1+0.
 
-Hubert
+Best regards
+keld
