@@ -1,52 +1,48 @@
-From: Marc Bejarano <beej@alum.mit.edu>
-Subject: Re: data corruption: ext3/lvm2/md/mptsas/vitesse/seagate
-Date: Tue, 25 Mar 2008 22:17:39 -0400
-Message-ID: <200803260217.m2Q2HsiU023202@colby.verdasys.com>
-References: <200803062108.m26L8e4i020882@colby.verdasys.com>
- <1204848652.3062.100.camel@localhost.localdomain>
- <200803101519.m2AFJCJS032509@colby.verdasys.com>
- <1205163386.2941.14.camel@localhost.localdomain>
- <7.1.0.9.2.20080311174743.1376cc30@alum.mit.edu>
- <200803252343.m2PNh8kl020506@colby.verdasys.com>
- <da824cf30803251712t801fdaexc19ba4fe8130ee2e@mail.gmail.com> <da824cf30803251712t801fdaexc19ba4fe8130ee2e@mail.gmail.com
- >
+From: Luca Berra <bluca@comedia.it>
+Subject: Re: MDP major registration
+Date: Wed, 26 Mar 2008 07:52:32 +0100
+Message-ID: <20080326065232.GA21970@percy.comedia.it>
+References: <47D90614.9040206@free.fr> <18408.36753.223347.129420@notabene.brown> <47E92EE2.1080108@free.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <da824cf30803251712t801fdaexc19ba4fe8130ee2e@mail.gmail.com
- >
-References: <200803062108.m26L8e4i020882@colby.verdasys.com>
- <1204848652.3062.100.camel@localhost.localdomain>
- <200803101519.m2AFJCJS032509@colby.verdasys.com>
- <1205163386.2941.14.camel@localhost.localdomain>
- <7.1.0.9.2.20080311174743.1376cc30@alum.mit.edu>
- <200803252343.m2PNh8kl020506@colby.verdasys.com>
- <da824cf30803251712t801fdaexc19ba4fe8130ee2e@mail.gmail.com>
+Content-Disposition: inline
+In-Reply-To: <47E92EE2.1080108@free.fr>
 Sender: linux-raid-owner@vger.kernel.org
-To: Grant Grundler <grundler@google.com>
-Cc: linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-At 20:12 3/25/2008, Grant Grundler wrote:
- >On Tue, Mar 25, 2008 at 4:43 PM, Marc Bejarano <beej@alum.mit.edu> wrote:
- >>  having never played with blocktrace, i have no idea what it's
- >>  capabilities are.  can it be used to record not just the IOs, but
- >>  also their timings?  any other ideas?  i'm at a loss for how to turn
- >>  my reproducible test case into something i can send to seagate for
- >>  investigation.
- >
- >Yes and yes (I think). But by itself, it won't help since block
- >trace tools don't generally do any data validation.
+On Tue, Mar 25, 2008 at 05:57:06PM +0100, Hubert Verstraete wrote:
+>Neil Brown wrote:
+>>On Thursday March 13, hubskml@free.fr wrote:
+>>>Neil,
+>>>
+>>>What is the status of the major for the partitionable arrays ?
+>>
+>>automatically determined at runtime.
+>>
+>>>I see that it is 254, which is in the experimental section, according to 
+>>>the official Linux device list (http://www.lanana.org/docs/device-list/).
+>>>Will there be an official registration ?
+>>
+>>No. Is there any need?
+>
+>I got this question in mind when I saw that mkfs.xfs source code was 
+>referring to the MD major to tune its parameters on an MD device, while 
+>it ignores MDP devices.
+>If there were reasons to register MD, wouldn't they apply to MDP too ?
 
-we've been successfully using md's mirror consistency-checking 
-capabilities to spot the corruption.  if we can get an IO pattern 
-that reproduces the issue, we're golden.  if only we didn't other 
-things to do with our time that were actually productive for us 
-;)  hopefully we'll be able to report back soon-ish with more.
+i don't think so:
+bluca@percy ~ $ grep mdp /proc/devices
+253 mdp
 
-if anybody else has helpful ideas, we're all ears.
+L.
 
-thanks, grant!
 
-marc
-
+-- 
+Luca Berra -- bluca@comedia.it
+        Communication Media & Services S.r.l.
+ /"\
+ \ /     ASCII RIBBON CAMPAIGN
+  X        AGAINST HTML MAIL
+ / \
