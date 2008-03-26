@@ -1,49 +1,46 @@
 From: Andre Noll <maan@systemlinux.org>
-Subject: [PATCH 2/8] md_getgeo(): Move comment to proper position.
-Date: Fri, 25 Apr 2008 20:57:58 +0200
-Message-ID: <S1752573AbYGGId5/20080707083358Z+1942@vger.kernel.org>
+Subject: [PATCH 3/8] do_md_run(): Fix misleading error message.
+Date: Wed, 26 Mar 2008 01:07:03 +0100
+Message-ID: <S1752204AbYGGIdz/20080707083355Z+1941@vger.kernel.org>
 References: <20080707075532.GA32617@skl-net.de>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20080707075532.GA32617@skl-net.de>
 Sender: linux-raid-owner@vger.kernel.org
 List-Id: linux-raid.ids
 
+In case pers->run() succeeds but creating the bitmap fails, we
+print an error message stating that pers->run() has failed.
+
+Print this message only if pers->run() really failed.
 
 Signed-off-by: Andre Noll <maan@systemlinux.org>
 ---
- drivers/md/md.c |   12 ++++++------
- 1 files changed, 6 insertions(+), 6 deletions(-)
+ drivers/md/md.c |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index b16d08d..f94ebe6 100644
+index f94ebe6..2384266 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -4641,6 +4641,12 @@ static int set_disk_faulty(mddev_t *mddev, dev_t dev)
- 	return 0;
- }
+@@ -3519,7 +3519,9 @@ static int do_md_run(mddev_t * mddev)
+ 		mddev->ro = 2; /* read-only, but switch on first write */
  
-+/*
-+ * We have a problem here : there is no easy way to give a CHS
-+ * virtual geometry. We currently pretend that we have a 2 heads
-+ * 4 sectors (with a BIG number of cylinders...). This drives
-+ * dosfs just mad... ;-)
-+ */
- static int md_getgeo(struct block_device *bdev, struct hd_geometry *geo)
- {
- 	mddev_t *mddev = bdev->bd_disk->private_data;
-@@ -4792,12 +4798,6 @@ static int md_ioctl(struct inode *inode, struct file *file,
- 			err = do_md_stop (mddev, 1);
- 			goto done_unlock;
- 
--	/*
--	 * We have a problem here : there is no easy way to give a CHS
--	 * virtual geometry. We currently pretend that we have a 2 heads
--	 * 4 sectors (with a BIG number of cylinders...). This drives
--	 * dosfs just mad... ;-)
--	 */
+ 	err = mddev->pers->run(mddev);
+-	if (!err && mddev->pers->sync_request) {
++	if (err)
++		printk(KERN_ERR "md: pers->run() failed ...\n");
++	else if (mddev->pers->sync_request) {
+ 		err = bitmap_create(mddev);
+ 		if (err) {
+ 			printk(KERN_ERR "%s: failed to create bitmap (%d)\n",
+@@ -3528,7 +3530,6 @@ static int do_md_run(mddev_t * mddev)
+ 		}
  	}
- 
- 	/*
+ 	if (err) {
+-		printk(KERN_ERR "md: pers->run() failed ...\n");
+ 		module_put(mddev->pers->owner);
+ 		mddev->pers = NULL;
+ 		bitmap_destroy(mddev);
 -- 
 1.5.3.8
 
