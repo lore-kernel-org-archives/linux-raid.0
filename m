@@ -1,60 +1,62 @@
 From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: raid10 vs raid5 - strange performance
-Date: Wed, 26 Mar 2008 12:29:05 -0400
-Message-ID: <47EA79D1.1090607@tmr.com>
-References: <bb145bd20803251433q1018703cva56ea20e9bedf3c6@mail.gmail.com>	 <72dbd3150803251513v28ea142ct2de229c26e888c56@mail.gmail.com> <bb145bd20803251556pa416a0cs8350058a4216f6f9@mail.gmail.com>
+Subject: Re: raid, lvm, and reused disks crashing initramfs
+Date: Wed, 26 Mar 2008 12:32:36 -0400
+Message-ID: <47EA7AA4.4050305@tmr.com>
+References: <0q3aqd3i9p.fsf@lanconius.mirror.to>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <bb145bd20803251556pa416a0cs8350058a4216f6f9@mail.gmail.com>
+In-Reply-To: <0q3aqd3i9p.fsf@lanconius.mirror.to>
 Sender: linux-raid-owner@vger.kernel.org
-To: Christian Pernegger <pernegger@gmail.com>
-Cc: David Rees <drees76@gmail.com>, Linux RAID <linux-raid@vger.kernel.org>
+To: "Andrew K. Bressen" <akb+lists.linux-raid@mirror.to>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Christian Pernegger wrote:
->>  Not surprising at all. Read performance is similar between the two
->>  setups as expected (appears to be limited by the PCI bus).
->>     
+Andrew K. Bressen wrote:
+> Hi--
 >
-> Yes, reads are fine.
+> I have a linux system running a pair of raid-1 drives, hda and hdc,
+> off of the motherboard IDE controller. 
 >
->   
->>  Streaming write performance is better because you are writing less
->>  redundant data to disks, you can now stripe writes over 5 disks
->>  instead of 3.
->>     
+> Almost all the space on the disks is in md1. 
+> (There's a tiny md0 from an old configuration, the system used
+> to boot off of it, but now it's empty and doesn't get mounted).
 >
-> Sounds reasonable. Write performance SHOULD be ~5x single disk for
-> raid5 and ~3x single disk for raid10 in a theoretical best-case
-> scenario, either should hit the PCI bus cap. In reality the ratios are
-> more like 1x for raid5 and 0.6 -1.1x for raid10. It's just that I'd
-> expected ~ identical and significantly better streaming write
-> performance from both array configurations ... then again, if you
-> think it over,
+> On top of md1 is lvm, a single PV (horivg) 
+> with a bunch of logical volumes in it.
 >
-> raid5 will transfer 1 parity block per 5 data blocks (so 5/6 of the
-> PCI bw are usable = 92MB)
-> raid10 will transfer 3 copy blocks per 3 data blocks (so 1/2 of the
-> PCI bw are usable = 55MB)
+> About a year ago, I replaced hda with a newer drive. 
 >
-> Factoring in some contention / overhead my values might well be
-> normal. It just means that the fabled raid10 only performs if you have
-> high-bw buses, which this box sadly doesn't, or a hw controller where
-> redundant blocks don't go over the bus, which the 3ware 7506
-> apparently isn't.
+> Recently, wanting more disk space, I took the old hda and added
+> it back to the machine as hdc. I repartitioned, put lvm on it, 
+> creating a sigle PV (hori2vg) with two LVs in it. I copied files
+> onto it and such, and all was well. Until a power outage and reboot.
 >
-> I'll still go with raid10 for the 50% better random I/O, only less
-> enthusiastically.
+> Then, the system crashed into initramfs. Exploring, it became
+> evident that initramfs was trying to mount the old disk
+> as root. This behavior occurred if the old disk was hdc or hdd. 
+>
+> Remove the disk, system boots normally.
+>
+> (Except that X11 no longer works. But I'm just going to choose
+> to believe that that's unrelated, even though I didn't change anything,
+> and even though that also occurred when the system was hosed a year 
+> ago by being booted with hda and hdc reversed.)
+>
+> The system is an athlon running debian etch; 
+> kernel 2.6.22 (debian 2.6.22-3-k7 build).
+>
+> I'd like to put that disk back in and have my system work. 
+>
+> Any ideas about what's going on and how to fix it?
 >   
 
-I think that you should treat 10,n2 and 10,f2 as separate 
-configurations, and test them as such. behavior is quite different, and 
-one or the other might be a better fit to your usage.
-
-The ability to transfer a single copy of the data and no parity 
-information is an advantage of hardware controllers.
+You have stale configuration somewhere which causes the drive to be 
+mounted. Do you have all of your mdadm mounts using UUID of the 
+superblock? Did you zero the superblock(s) on the old drive? At this 
+point you might have to zero the whole drive if you're already using 
+UUID to start your arrays.
 
 -- 
 Bill Davidsen <davidsen@tmr.com>
