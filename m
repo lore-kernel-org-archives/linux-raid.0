@@ -1,66 +1,62 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: raid, lvm, and reused disks crashing initramfs
-Date: Wed, 26 Mar 2008 12:32:36 -0400
-Message-ID: <47EA7AA4.4050305@tmr.com>
-References: <0q3aqd3i9p.fsf@lanconius.mirror.to>
+From: "Grant Grundler" <grundler@google.com>
+Subject: Re: data corruption: ext3/lvm2/md/mptsas/vitesse/seagate
+Date: Wed, 26 Mar 2008 10:03:08 -0700
+Message-ID: <da824cf30803261003i690f108dh86ff846e4f5fd2fa@mail.gmail.com>
+References: <200803062108.m26L8e4i020882@colby.verdasys.com>
+	 <1204848652.3062.100.camel@localhost.localdomain>
+	 <200803101519.m2AFJCJS032509@colby.verdasys.com>
+	 <1205163386.2941.14.camel@localhost.localdomain>
+	 <7.1.0.9.2.20080311174743.1376cc30@alum.mit.edu>
+	 <200803252343.m2PNh8kl020506@colby.verdasys.com>
+	 <da824cf30803251712t801fdaexc19ba4fe8130ee2e@mail.gmail.com>
+	 <200803260217.m2Q2HsiU023202@colby.verdasys.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <0q3aqd3i9p.fsf@lanconius.mirror.to>
-Sender: linux-raid-owner@vger.kernel.org
-To: "Andrew K. Bressen" <akb+lists.linux-raid@mirror.to>
-Cc: linux-raid@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <200803260217.m2Q2HsiU023202@colby.verdasys.com>
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
+To: Marc Bejarano <beej@alum.mit.edu>
+Cc: linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-raid.ids
 
-Andrew K. Bressen wrote:
-> Hi--
+On Tue, Mar 25, 2008 at 7:17 PM, Marc Bejarano <beej@alum.mit.edu> wrote:
+> At 20:12 3/25/2008, Grant Grundler wrote:
+>   >On Tue, Mar 25, 2008 at 4:43 PM, Marc Bejarano <beej@alum.mit.edu> wrote:
 >
-> I have a linux system running a pair of raid-1 drives, hda and hdc,
-> off of the motherboard IDE controller. 
+>  >>  having never played with blocktrace, i have no idea what it's
+>   >>  capabilities are.  can it be used to record not just the IOs, but
+>   >>  also their timings?  any other ideas?  i'm at a loss for how to turn
+>   >>  my reproducible test case into something i can send to seagate for
+>   >>  investigation.
+>   >
+>   >Yes and yes (I think). But by itself, it won't help since block
+>   >trace tools don't generally do any data validation.
 >
-> Almost all the space on the disks is in md1. 
-> (There's a tiny md0 from an old configuration, the system used
-> to boot off of it, but now it's empty and doesn't get mounted).
->
-> On top of md1 is lvm, a single PV (horivg) 
-> with a bunch of logical volumes in it.
->
-> About a year ago, I replaced hda with a newer drive. 
->
-> Recently, wanting more disk space, I took the old hda and added
-> it back to the machine as hdc. I repartitioned, put lvm on it, 
-> creating a sigle PV (hori2vg) with two LVs in it. I copied files
-> onto it and such, and all was well. Until a power outage and reboot.
->
-> Then, the system crashed into initramfs. Exploring, it became
-> evident that initramfs was trying to mount the old disk
-> as root. This behavior occurred if the old disk was hdc or hdd. 
->
-> Remove the disk, system boots normally.
->
-> (Except that X11 no longer works. But I'm just going to choose
-> to believe that that's unrelated, even though I didn't change anything,
-> and even though that also occurred when the system was hosed a year 
-> ago by being booted with hda and hdc reversed.)
->
-> The system is an athlon running debian etch; 
-> kernel 2.6.22 (debian 2.6.22-3-k7 build).
->
-> I'd like to put that disk back in and have my system work. 
->
-> Any ideas about what's going on and how to fix it?
->   
+>  we've been successfully using md's mirror consistency-checking
+>  capabilities to spot the corruption.
 
-You have stale configuration somewhere which causes the drive to be 
-mounted. Do you have all of your mdadm mounts using UUID of the 
-superblock? Did you zero the superblock(s) on the old drive? At this 
-point you might have to zero the whole drive if you're already using 
-UUID to start your arrays.
+Oh? Have you been running disktest on the mirrors or the individual disks?
+I was expecting the latter but wonder now.
 
--- 
-Bill Davidsen <davidsen@tmr.com>
-  "Woe unto the statesman who makes war without a reason that will still
-  be valid when the war is over..." Otto von Bismark 
+>  if we can get an IO pattern
+>  that reproduces the issue, we're golden.  if only we didn't other
+>  things to do with our time that were actually productive for us
+>  ;)  hopefully we'll be able to report back soon-ish with more.
 
+*sigh* this can take a long time to track down. And you right that
+getting the "magic" workload to reproduce is key.
 
+>
+>  if anybody else has helpful ideas, we're all ears.
+>
+>  thanks, grant!
+
+welcome,
+grant
+
+>
+>  marc
+>
+>
