@@ -1,7 +1,7 @@
 From: David Greaves <david@dgreaves.com>
 Subject: Re: What do Events actually mean?
-Date: Wed, 26 Mar 2008 08:57:07 +0000
-Message-ID: <47EA0FE3.70404@dgreaves.com>
+Date: Wed, 26 Mar 2008 08:57:29 +0000
+Message-ID: <47EA0FF9.5000304@dgreaves.com>
 References: <47DD2CD7.2090802@tuxes.nl>	<20080316161451.0d17fd22@szpak>	<47E26775.3000500@tuxes.nl>	<20080320134747.GA28114@cthulhu.home.robinhill.me.uk>	<47E2725C.1020206@tuxes.nl>	<20080320163551.GG13719@mit.edu>	<47E2EE64.5080101@rabbit.us>	<47E3C504.3010700@tmr.com>	<47E3CBAF.4090808@rabbit.us>	<47E43E57.5010409@tmr.com>	<20080321235557.GA11801@cthulhu.home.robinhill.me.uk>	<47E4D95A.9000505@rabbit.us>	<alpine.DEB.1.00.0803220640550.24697@p34.internal.lan> <18408.30798.940744.724391@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
@@ -51,6 +51,8 @@ Neil Brown wrote:
 > 
 > 
 > Feel free to merge this text into the wiki.
+
+Thanks Neil :)
 
 http://linux-raid.osdl.org/index.php?title=Event
 
