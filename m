@@ -1,43 +1,78 @@
 From: Andre Noll <maan@systemlinux.org>
-Subject: [PATCH 6/8] md: get_disk_info(): Don't convert between signed and unsigned and back.
-Date: Sat, 29 Mar 2008 20:12:07 +0100
-Message-ID: <S1755775AbYGHQdl/20080708163342Z+63@vger.kernel.org>
+Subject: [PATCH 5/8] md: Simplify restart_array().
+Date: Wed, 26 Mar 2008 01:25:24 +0100
+Message-ID: <S1754107AbYGHQdk/20080708163340Z+62@vger.kernel.org>
 References: <20080708155541.GS23944@skl-net.de>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20080708155541.GS23944@skl-net.de>
 Sender: linux-raid-owner@vger.kernel.org
 List-Id: linux-raid.ids
 
-The current code copies a signed int from user space, converts it to
-unsigned and passes the unsigned value to find_rdev_nr() which expects
-a signed value. Simply pass the signed value from user space directly.
 
 Signed-off-by: Andre Noll <maan@systemlinux.org>
 ---
- drivers/md/md.c |    5 +----
- 1 files changed, 1 insertions(+), 4 deletions(-)
+ drivers/md/md.c |   46 ++++++++++++++++------------------------------
+ 1 files changed, 16 insertions(+), 30 deletions(-)
 
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 90b6d1d..3f22ec7 100644
+index bf1499c..90b6d1d 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -4025,15 +4025,12 @@ out:
- static int get_disk_info(mddev_t * mddev, void __user * arg)
+@@ -3610,38 +3610,24 @@ static int do_md_run(mddev_t * mddev)
+ static int restart_array(mddev_t *mddev)
  {
- 	mdu_disk_info_t info;
--	unsigned int nr;
- 	mdk_rdev_t *rdev;
+ 	struct gendisk *disk = mddev->gendisk;
+-	int err;
  
- 	if (copy_from_user(&info, arg, sizeof(info)))
- 		return -EFAULT;
- 
--	nr = info.number;
+-	/*
+-	 * Complain if it has no devices
+-	 */
+-	err = -ENXIO;
++	/* Complain if it has no devices */
+ 	if (list_empty(&mddev->disks))
+-		goto out;
 -
--	rdev = find_rdev_nr(mddev, nr);
-+	rdev = find_rdev_nr(mddev, info.number);
- 	if (rdev) {
- 		info.major = MAJOR(rdev->bdev->bd_dev);
- 		info.minor = MINOR(rdev->bdev->bd_dev);
+-	if (mddev->pers) {
+-		err = -EBUSY;
+-		if (!mddev->ro)
+-			goto out;
+-
+-		mddev->safemode = 0;
+-		mddev->ro = 0;
+-		set_disk_ro(disk, 0);
+-
+-		printk(KERN_INFO "md: %s switched to read-write mode.\n",
+-			mdname(mddev));
+-		/*
+-		 * Kick recovery or resync if necessary
+-		 */
+-		set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+-		md_wakeup_thread(mddev->thread);
+-		md_wakeup_thread(mddev->sync_thread);
+-		err = 0;
+-	} else
+-		err = -EINVAL;
+-
+-out:
+-	return err;
++		return -ENXIO;
++	if (!mddev->pers)
++		return -EINVAL;
++	if (!mddev->ro)
++		return -EBUSY;
++	mddev->safemode = 0;
++	mddev->ro = 0;
++	set_disk_ro(disk, 0);
++	printk(KERN_INFO "md: %s switched to read-write mode.\n",
++		mdname(mddev));
++	/* Kick recovery or resync if necessary */
++	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
++	md_wakeup_thread(mddev->thread);
++	md_wakeup_thread(mddev->sync_thread);
++	return 0;
+ }
+ 
+ /* similar to deny_write_access, but accounts for our holding a reference
 -- 
 1.5.3.8
 
