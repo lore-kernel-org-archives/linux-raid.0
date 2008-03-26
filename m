@@ -1,51 +1,61 @@
-From: "Christian Pernegger" <pernegger@gmail.com>
-Subject: Re: raid10 vs raid5 - strange performance
-Date: Wed, 26 Mar 2008 18:16:30 +0100
-Message-ID: <bb145bd20803261016t351e4b98rb8989cc6c849108f@mail.gmail.com>
-References: <bb145bd20803251433q1018703cva56ea20e9bedf3c6@mail.gmail.com>
-	 <20080325233649.GA632@rap.rap.dk>
-	 <bb145bd20803251837x7ef1fa9dk6191fcaea7b02144@mail.gmail.com>
-	 <20080326072416.GA8674@rap.rap.dk>
+From: Hubert Verstraete <hubskml@free.fr>
+Subject: Re: MDP major registration
+Date: Wed, 26 Mar 2008 18:50:44 +0100
+Message-ID: <47EA8CF4.7080201@free.fr>
+References: <47D90614.9040206@free.fr> <18408.36753.223347.129420@notabene.brown> <47E92EE2.1080108@free.fr> <20080326065232.GA21970@percy.comedia.it> <47EA71BF.8050800@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20080326072416.GA8674@rap.rap.dk>
-Content-Disposition: inline
+In-Reply-To: <47EA71BF.8050800@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?UTF-8?Q?Keld_J=C3=B8rn_Simonsen?= <keld@dkuug.dk>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
->  OK, I think the normal hype on raid10 is to use the far layout for its
->  better striping performance.
+Bill Davidsen wrote:
+> Luca Berra wrote:
+>> On Tue, Mar 25, 2008 at 05:57:06PM +0100, Hubert Verstraete wrote:
+>>> Neil Brown wrote:
+>>>> On Thursday March 13, hubskml@free.fr wrote:
+>>>>> Neil,
+>>>>>
+>>>>> What is the status of the major for the partitionable arrays ?
+>>>>
+>>>> automatically determined at runtime.
+>>>>
+>>>>> I see that it is 254, which is in the experimental section, 
+>>>>> according to the official Linux device list 
+>>>>> (http://www.lanana.org/docs/device-list/).
+>>>>> Will there be an official registration ?
+>>>>
+>>>> No. Is there any need?
+>>>
+>>> I got this question in mind when I saw that mkfs.xfs source code was 
+>>> referring to the MD major to tune its parameters on an MD device, 
+>>> while it ignores MDP devices.
+>>> If there were reasons to register MD, wouldn't they apply to MDP too ?
+>>
+>> i don't think so:
+>> bluca@percy ~ $ grep mdp /proc/devices
+>> 253 mdp
+> 
+> Why is it important to have XFS tune its parameters for md and not for 
+> mdp? I don't understand your conclusion here, is tuning not needed for 
+> mdp, or so meaningless that it doesn't matter, or that XFS code reads 
+> /proc/devices, or ??? I note that device-mapper also has a dynamic 
+> major, what does XFS make of that?
 
-Wasn't f2 supposed to improve *reads*? Maybe I've got it backwards.
+It reads from /proc/devices.
 
->  Are the disks SATA disks or SCSI disks?
+> I don't know how much difference tuning makes, but if it's worth doing 
+> at all, it should be done for mdp as well, I would think.
 
-PATA. It's a how-to-best-utilize-some-older-stuff project.
+Same thought. I wrote the patch for mkfs.xfs but did not publish it for 
+two reasons:
+1) MD is registered but not MDP. Now I understand, it's not a problem, 
+we just need to read /proc/devices as device-mapper does.
+2) Tuning XFS for MDP can be achieved through the mkfs.xfs options. With 
+a few lines in shell, my XFS on MDP now has the same performance as XFS 
+on MD.
 
->  you could probably get some more performance by moving 2 disks
->  to the PATA controller of the motherboard,
-
-The board is newish and has just one PATA channel and that's
-explicitly for CDROM use.
-
->  I think it is interesting that your 3ware controller is not maxing out
->  the PCI bus! With 6 disks of nominally 60 MB/s the  theoretical max is
->  360 MB/s. So the 3ware controller really has IO bandwidth available
->  which it is not getting close on putting to use.
-
-Yes, that's the juicy part :)
-
->  What is the specifics for the 3ware controller?
-
-http://www.3ware.com/products/parallel_ata.asp
-
-It's the 8port version. Maybe their newer controllers are better but
-this one frankly sucks at anything but raid1 and maybe raid0 ...
-
-Cheers,
-
-C.
+Hubert
