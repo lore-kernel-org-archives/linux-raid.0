@@ -1,104 +1,63 @@
-From: Ferenc Wagner <wferi@niif.hu>
-Subject: Re: how to disable partition search?
-Date: Thu, 27 Mar 2008 01:45:01 +0100
-Message-ID: <87skydj8qa.fsf@szonett.ki.iif.hu>
-References: <87ve39lngy.fsf@tac.ki.iif.hu> <47EAB02B.3080104@tmr.com>
+From: "Christian Pernegger" <pernegger@gmail.com>
+Subject: Re: raid10 vs raid5 - strange performance
+Date: Thu, 27 Mar 2008 02:11:43 +0100
+Message-ID: <bb145bd20803261811t6d836064g67d971a075075018@mail.gmail.com>
+References: <bb145bd20803251433q1018703cva56ea20e9bedf3c6@mail.gmail.com>
+	 <20080325233649.GA632@rap.rap.dk>
+	 <bb145bd20803251837x7ef1fa9dk6191fcaea7b02144@mail.gmail.com>
+	 <20080326072416.GA8674@rap.rap.dk>
+	 <bb145bd20803261016t351e4b98rb8989cc6c849108f@mail.gmail.com>
+	 <20080326192935.GB18621@rap.rap.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <47EAB02B.3080104@tmr.com> (Bill Davidsen's message of "Wed, 26
-	Mar 2008 16:20:59 -0400")
+In-Reply-To: <20080326192935.GB18621@rap.rap.dk>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: linux-raid@vger.kernel.org
+To: =?UTF-8?Q?Keld_J=C3=B8rn_Simonsen?= <keld@dkuug.dk>
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Bill Davidsen <davidsen@tmr.com> writes:
+>  I have two on-board sata controller chips with each their version of HW
+>  RAID (NVIDIA and SIL)
 
-> Ferenc Wagner wrote:
->
->> I use an FC SAN, which provides multiple pathes to multiple LUNs.
->> These all come up as different sd* devices, exhausting single letter
->> names.  I mean they are a LOT.  Using the md mulitpath driver
->> everything works perfectly, no problems there.  However, during boot,
->> the kernel tries to read the partition table from each device,
->> spitting out hundreds of lines of error messages: most of the devices
->> aren't even readable, and those which are, don't contain a valid
->> partition table.  They never will.  So I'd like to disable partition
->> detection, because these messages overflow the kernel message buffer,
->> depriving syslog of gathering any useful boot messages, and also
->> needlessly lengthening the boot process.  (Of course the noise alone
->> is disturbing enough when one tries to troubleshoot a boot problem.)
->> However, looking at the kernel sources didn't give me any hint.  Is
->> this possible to disable at all?
->>
->> (Please Cc me, I'm not on the list.)
->
-> After reading some code, I didn't see any boot or module load options
-> you can use to prevent that, I think you may want to increase buffer
-> size to hold the messages and use "grep -v" to create a sanitized
-> dmesg.  If you can give an example of the error message you see I can
-> look again.
->
-> Don't forget to copy the list...
+I don't know of any nVIdia or Silicon Image onboard chips that can do
+raid in HW. Most likely it's BIOS-assisted software RAID. The 3ware
+should be the real article.
 
-Thanks for looking into this.  As an illustration, a reboot looks like
-this in the syslog:
+>  I think there is a tendency that SW raid like Linux kernel MD and Sun ZFS
+>  etc are more intelligent and can thus obtain better performance than HW
+>  RAID.
 
-Mar  3 17:20:55 mach kernel: Kernel logging (proc) stopped.
-Mar  3 17:20:55 mach kernel: Kernel log daemon terminating.
-Mar  3 17:20:56 mach exiting on signal 15
-Mar  3 17:27:00 mach syslogd 1.4.1#18: restart.
-Mar  3 17:27:00 mach kernel: klogd 1.4.1#18, log source = /proc/kmsg started.
-[boot messages should have been inserted here.]
-Mar  3 17:27:00 mach kernel:  Enabled
-Mar  3 17:27:00 mach kernel:  sdd:<6>sd 0:0:0:3: [sdd] Device not ready: <6>: Sense Key : Not Ready [current] 
-Mar  3 17:27:00 mach kernel: : Add. Sense: Logical unit not ready, manual intervention required
-Mar  3 17:27:00 mach kernel: end_request: I/O error, dev sdd, sector 0
-Mar  3 17:27:00 mach kernel: sd 0:0:0:3: [sdd] Device not ready: <6>: Sense Key : Not Ready [current] 
-Mar  3 17:27:00 mach kernel: : Add. Sense: Logical unit not ready, manual intervention required
-Mar  3 17:27:00 mach kernel: end_request: I/O error, dev sdd, sector 0
-[the above 3 lines 7 more times]
-Mar  3 17:27:00 mach kernel: Dev sdd: unable to read RDB block 0
-[those 3 lines 2 more times]
-Mar  3 17:27:00 mach kernel: sd 0:0:0:3: [sdd] Device not ready: <6>: Sense Key : Not Ready [current] 
-Mar  3 17:27:00 mach kernel: : Add. Sense: Logical unit not ready, manual intervention required
-Mar  3 17:27:00 mach kernel: end_request: I/O error, dev sdd, sector 24
-Mar  3 17:27:00 mach kernel: printk: 29 messages suppressed.
-Mar  3 17:27:00 mach kernel: sd 0:0:0:3: [sdd] Device not ready: <6>: Sense Key : Not Ready [current] 
-Mar  3 17:27:00 mach kernel: : Add. Sense: Logical unit not ready, manual intervention required
-Mar  3 17:27:00 mach kernel: end_request: I/O error, dev sdd, sector 24
-Mar  3 17:27:00 mach kernel: sd 0:0:0:3: [sdd] Device not ready: <6>: Sense Key : Not Ready [current] 
-Mar  3 17:27:00 mach kernel: : Add. Sense: Logical unit not ready, manual intervention required
-Mar  3 17:27:00 mach kernel: end_request: I/O error, dev sdd, sector 0
-Mar  3 17:27:00 mach kernel:  unable to read partition table
-Mar  3 17:27:00 mach kernel: sd 0:0:0:3: [sdd] Attached SCSI disk
-Mar  3 17:27:00 mach kernel: sd 0:0:1:0: [sde] 10485760 512-byte hardware sectors (5369 MB)
-Mar  3 17:27:00 mach kernel: sd 0:0:1:0: [sde] Write Protect is off
-Mar  3 17:27:00 mach kernel: sd 0:0:1:0: [sde] Cache data unavailable
-Mar  3 17:27:00 mach kernel: sd 0:0:1:0: [sde] 10485760 512-byte hardware sectors (5369 MB)
-Mar  3 17:27:00 mach kernel: sd 0:0:1:0: [sde] Write Protect is off
-Mar  3 17:27:00 mach kernel: sd 0:0:1:0: [sde] Cache data unavailable
-Mar  3 17:27:00 mach kernel:  sde: unknown partition table
-Mar  3 17:27:00 mach kernel: sd 0:0:1:0: [sde] Attached SCSI disk
-Mar  3 17:27:00 mach kernel: sd 0:0:1:1: [sdf] 419430400 512-byte hardware sectors (214748 MB)
-Mar  3 17:27:00 mach kernel: sd 0:0:1:1: [sdf] Test WP failed, assume Write Enabled
-Mar  3 17:27:00 mach kernel: sd 0:0:1:1: [sdf] 419430400 512-byte hardware sectors (214748 MB)
-Mar  3 17:27:00 mach kernel: sd 0:0:1:1: [sdf] Test WP failed, assume Write Enabled
-Mar  3 17:27:00 mach kernel:  sdf:<6>sd 0:0:1:1: [sdf] Device not ready: <6>: Sense Key : Not Ready [current] 
-Mar  3 17:27:00 mach kernel: : Add. Sense: Logical unit not ready, manual intervention required
-Mar  3 17:27:00 mach kernel: end_request: I/O error, dev sdf, sector 0
-Mar  3 17:27:00 mach kernel: sd 0:0:1:1: [sdf] Device not ready: <6>: Sense Key : Not Ready [current] 
-Mar  3 17:27:00 mach kernel: : Add. Sense: Logical unit not ready, manual intervention required
-Mar  3 17:27:00 mach kernel: end_request: I/O error, dev sdf, sector 0
-[and so on]
+Performance is one thing, flexibility is another ...
+- end-to-end checksumming
+- ECC-on-read and / or bg scrubbing
+- arbitrary percentage of parity data (fs-level PAR2)
+- virtualized storage pools with actual backing store chosen based on
+usage hints
+- all configurable rule-based with file level granularity
 
-It would be possible to grep out the offending lines, but I'd rather
-fight the cause than the symptom.  Doing my research I realized I'm
-not alone with this problem.  Looks like a recompilation is necessary,
-so I'm turning this into a feature request: how could selective
-partition check be added to the Linux kernel?  I'm willing to give it
-a shot under some expert guidance.
--- 
+Sort of like a stable ZFS+raif variant ... one can only dream :-)
+
+>  HW RAID has the advantage as Bill says that you only need to
+>  transfer the data once when writing, and that parity calculation is
+>  offloaded from the main CPUs.
+
+Yes, maybe current cards conserve bus bandwidth even for RAID 10. Mine
+doesn't, and there's no parity to offload. I don't like HW controllers
+much since the on-disk format is closed ... if the controller dies you
+have to get a very similar one, which can be a pain.
+
+>  If you reuse older hw, then I would say that you really have a problem
+>  with the PCI bus here, and that a motherboard with better bus
+>  performance
+
+The board has 5 bus segments, only most are PCIe. Boards with decent
+PCI slots are getting hard to find ...
+
+Nah, I'll just live with it until the disks start croaking ^^
+
 Thanks,
-Feri.
+
+C.
