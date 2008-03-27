@@ -1,63 +1,56 @@
 From: "Christian Pernegger" <pernegger@gmail.com>
 Subject: Re: raid10 vs raid5 - strange performance
-Date: Thu, 27 Mar 2008 02:11:43 +0100
-Message-ID: <bb145bd20803261811t6d836064g67d971a075075018@mail.gmail.com>
+Date: Thu, 27 Mar 2008 03:02:45 +0100
+Message-ID: <bb145bd20803261902g44e88f64p982607b88d864678@mail.gmail.com>
 References: <bb145bd20803251433q1018703cva56ea20e9bedf3c6@mail.gmail.com>
 	 <20080325233649.GA632@rap.rap.dk>
 	 <bb145bd20803251837x7ef1fa9dk6191fcaea7b02144@mail.gmail.com>
 	 <20080326072416.GA8674@rap.rap.dk>
 	 <bb145bd20803261016t351e4b98rb8989cc6c849108f@mail.gmail.com>
-	 <20080326192935.GB18621@rap.rap.dk>
+	 <20080326192935.GB18621@rap.rap.dk> <47EAACAB.7070203@tmr.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20080326192935.GB18621@rap.rap.dk>
+In-Reply-To: <47EAACAB.7070203@tmr.com>
 Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: =?UTF-8?Q?Keld_J=C3=B8rn_Simonsen?= <keld@dkuug.dk>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
->  I have two on-board sata controller chips with each their version of HW
->  RAID (NVIDIA and SIL)
+>  After doing a little research, I see that the original slowest form of PCI
+>  was 32 bit 33MHz, with a bandwidth of ~127MB/s.
 
-I don't know of any nVIdia or Silicon Image onboard chips that can do
-raid in HW. Most likely it's BIOS-assisted software RAID. The 3ware
-should be the real article.
+That's still the prevalent form, for anything else you need an (older)
+server or workstation board. 133MB/s in theory, 80-100MB/s in
+practice.
 
->  I think there is a tendency that SW raid like Linux kernel MD and Sun ZFS
->  etc are more intelligent and can thus obtain better performance than HW
->  RAID.
+>  The most common hardware used the v2.1 spec, which was 64 bit at 66MHz.
 
-Performance is one thing, flexibility is another ...
-- end-to-end checksumming
-- ECC-on-read and / or bg scrubbing
-- arbitrary percentage of parity data (fs-level PAR2)
-- virtualized storage pools with actual backing store chosen based on
-usage hints
-- all configurable rule-based with file level granularity
+I don't think the spec version has anything to do with speed ratings, really.
 
-Sort of like a stable ZFS+raif variant ... one can only dream :-)
+>  I would expect operation at UDMA/66
 
->  HW RAID has the advantage as Bill says that you only need to
->  transfer the data once when writing, and that parity calculation is
->  offloaded from the main CPUs.
+What's UDMA66 got to do with anything?
 
-Yes, maybe current cards conserve bus bandwidth even for RAID 10. Mine
-doesn't, and there's no parity to offload. I don't like HW controllers
-much since the on-disk format is closed ... if the controller dies you
-have to get a very similar one, which can be a pain.
+>  Final thought, these drives are paired on the master slave of the same
+>  cable, are they? That will cause them to really perform badly.
 
->  If you reuse older hw, then I would say that you really have a problem
->  with the PCI bus here, and that a motherboard with better bus
->  performance
+The cables are master-only, I'm pretty sure the controller doesn't
+even do slaves.
 
-The board has 5 bus segments, only most are PCIe. Boards with decent
-PCI slots are getting hard to find ...
 
-Nah, I'll just live with it until the disks start croaking ^^
+To wrap it up
+- on a regular 32bit/33Mhz PCI bus md-RAID10 is hurt really badly by
+having to transfer data twice in every case.
+- the old 3ware 7506-8 doesn't accelerate RAID-10 in any way, even
+though it's a hardware RAID controller, possibly because it's more of
+an afterthought.
 
-Thanks,
+
+On the 1+0 vs RAID10 debate ... 1+0 = 10 is usually used to mean a
+stripe of mirrors, while 0+1 = 01 is a less optimal mirror of stripes.
+The md implementation doesn't really do a stacked raid but with n2
+layout the data distribution should be identical to 1+0 / 10.
 
 C.
