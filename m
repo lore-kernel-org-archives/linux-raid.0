@@ -1,105 +1,64 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: Why are MD block IO requests subject to 'plugging'?
-Date: Thu, 27 Mar 2008 15:07:39 +1100
-Message-ID: <18411.7563.492191.944057@notabene.brown>
-References: <18382.54925.354731.996508@tree.ty.sabi.co.UK>
-	<18408.60019.523141.419772@tree.ty.sabi.co.uk>
+From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
+Subject: Re: raid10 vs raid5 - strange performance
+Date: Thu, 27 Mar 2008 10:18:31 +0100
+Message-ID: <20080327091831.GC8033@rap.rap.dk>
+References: <bb145bd20803251433q1018703cva56ea20e9bedf3c6@mail.gmail.com> <20080325233649.GA632@rap.rap.dk> <bb145bd20803251837x7ef1fa9dk6191fcaea7b02144@mail.gmail.com> <20080326072416.GA8674@rap.rap.dk> <bb145bd20803261016t351e4b98rb8989cc6c849108f@mail.gmail.com> <20080326192935.GB18621@rap.rap.dk> <bb145bd20803261811t6d836064g67d971a075075018@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Peter Grandi on Tuesday March 25
+Content-Disposition: inline
+In-Reply-To: <bb145bd20803261811t6d836064g67d971a075075018@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Peter Grandi <pg_lxra@lxra.for.sabi.co.UK>
+To: Christian Pernegger <pernegger@gmail.com>
 Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tuesday March 25, pg_lxra@lxra.for.sabi.co.UK wrote:
-> Another interesting detail is that while real disk devices have
-> queueing parameter and MD device don't:
+On Thu, Mar 27, 2008 at 02:11:43AM +0100, Christian Pernegger wrote:
+> >  I have two on-board sata controller chips with each their version of HW
+> >  RAID (NVIDIA and SIL)
 > 
->   # ls /sys/block/{md0,hda}/queue
->   ls: cannot access /sys/block/md0/queue: No such file or directory
->   /sys/block/hda/queue:
->   iosched  max_hw_sectors_kb  max_sectors_kb  nr_requests  read_ahead_kb  scheduler
+> I don't know of any nVIdia or Silicon Image onboard chips that can do
+> raid in HW. Most likely it's BIOS-assisted software RAID. The 3ware
+> should be the real article.
 
-No.  An md device doesn't have a queue, at least not in the same way
-that IDE/SCSI drivers do.  Most of those values are completely
-meaningless for an md device.
+I am not sure of the difference. My understanding is that in both for
+the NVIDIA and the SIL, and also for the 3ware, all logic is done in the
+chip/controller.
 
+I even think that the onboard chips have their own memory? How would it
+else be possible for them to do RAID5 and RAID6 parity calculation?
+
+> >  I think there is a tendency that SW raid like Linux kernel MD and Sun ZFS
+> >  etc are more intelligent and can thus obtain better performance than HW
+> >  RAID.
 > 
-> As one can set 'blockdev --setra' on an MD device (which should be
-> the same as setting 'queue/read_head_kb' to half the value), and
-> that does have an effect, but then the readhead on all the block
-> devices in the MD array are ignored.
+> Performance is one thing, flexibility is another ...
+> - end-to-end checksumming
+> - ECC-on-read and / or bg scrubbing
+> - arbitrary percentage of parity data (fs-level PAR2)
+> - virtualized storage pools with actual backing store chosen based on
+> usage hints
+> - all configurable rule-based with file level granularity
 
-I'm not sure what you mean by that last line...
+Even for performance the SW raid tends to be more intelligent.
+Viz your example that a 3are controller maxes out on its logic, 
+that it is not the PCI bus bandwidth that limits the IO.
+And 3ware is one of the most known HW raid vendors, and thus one of the
+vendors that presumably have the greates knowledge on HW raids, and 
+accordinly can produce the most intelligent controllers.
 
-readahead is performed by the filesystem.  Each device has a
-read-ahead number which serves as advice to the filesystem to suggest
-how much readahead might be appropriate.
-Components of an md device do not have a filesystem on them, so
-readahead setting for those devices is not relevant.
+SW raid can do something like raid10,f2 which has much better optimized
+IO than traditional RAID1+0, and also RAID5 has more intelligent 
+writing algorithms than I would imagine that most HW controllers have,
+as MD raid5 has a different strategy for writing sequential and writing
+randomly. There are probably more examples of cleverer IO performance
+tricks in Linux raid. 
 
-When md sets the readahead for the md array, it does take some notice
-of the read-ahead setting for the component devices.
+The buttom line is that there are more people involved in making the
+Linux SW raid, than there are for each of the closed drivers that HW
+vendors make, and that the cumulated knowledge of the open source
+community will produce better software because of much better personal
+resources.
 
-> 
-> Conversely, quite properly elevators (another request stream
-> restructuring) apply to physical devices, not to partitions or MD
-> devices, and one can have different elevators on different devices
-> (even if having them different for MD slave devices in most cases
-> is very dubious).
-> 
-
-This is exactly correct and exactly what Linux does.
-There is no elevator above MD.  There is a distinct elevator above
-each IDE/SCSI/etc device that is (or appear to Linux to be) a plain
-device.
-
-> 
-> So I had a look at how the MD subsystem handles unplugging,
-> because of a terrible suspicion that it does two-level
-> unplugging, and wonder what:
-> 
-> http://www.gelato.unsw.edu.au/lxr/source/drivers/md/raid10.c#L599
-> 
->   static void raid10_unplug(struct request_queue *q)
->   {
-> 	  mddev_t *mddev = q->queuedata;
-> 
-> 	  unplug_slaves(q->queuedata);
-> 	  md_wakeup_thread(mddev->thread);
->   }
-> 
-> Can some MD developer justify the lines above?
-
-You need to look more deeply.
-
-No md personality ever plugs read requests.
-Sometimes write requests are plugged, in order to delay the requests
-slightly.
-There are two main reasons for this:
-
-1/ When using a write-intent-bitmap we plug write request so as to
-  gather lots of them together, to reduce the number of updates to the
-  bitmap.
-
-2/ For raid5/raid6 we plug writes in the hope of gathering a full
-  stripe of writes so we can avoid pre-reading.  As soon as a stripe can
-  be processed without any pre-reading, it is bypasses the plug.
-
-> 
-> Can some MD developer also explain why should MD engage in double
-> level request queueing/unplugging at both the MD and slave level?
-
-different reasons for small delays.
-
-> 
-> Can some MD developer then give some very good reason why the MD
-> layer should be subject to plugging *at all*?
-
-The MD layer doesn't do plugging.  Some MD personalities do, for
-reasons I have explained above.
-
-NeilBrown
+best regards
+keld
