@@ -1,53 +1,73 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH] md: Subject: introduce get_priority_stripe() to improve
- raid456 write performance
-Date: Thu, 27 Mar 2008 23:22:52 -0700
-Message-ID: <20080327232252.20764ac4.akpm@linux-foundation.org>
-References: <20080328164351.30557.patches@notabene>
-	<1080328054528.30605@suse.de>
+From: Mattias Wadenstein <maswan@acc.umu.se>
+Subject: Re: component growing in raid5
+Date: Fri, 28 Mar 2008 09:07:09 +0100 (MET)
+Message-ID: <Pine.GSO.4.64.0803280900160.15900@montezuma.acc.umu.se>
+References: <47E5FFB8.5030903@bteam.hu> <47E753C4.7030903@rabbit.us>
+ <47E7C609.9000501@bteam.hu> <18408.63715.481333.26215@tree.ty.sabi.co.uk>
+ <Pine.GSO.4.64.0803251412000.15900@montezuma.acc.umu.se>
+ <18409.23124.77027.214361@tree.ty.sabi.co.uk> <Pine.GSO.4.64.0803261016550.15900@montezuma.acc.umu.se>
+ <47EC1B04.7040006@sauce.co.nz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1080328054528.30605@suse.de>
+In-Reply-To: <47EC1B04.7040006@sauce.co.nz>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>
+To: Richard Scobie <richard@sauce.co.nz>
+Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Fri, 28 Mar 2008 16:45:28 +1100 NeilBrown <neilb@suse.de> wrote:
+On Fri, 28 Mar 2008, Richard Scobie wrote:
 
-> +static ssize_t
-> +raid5_store_preread_threshold(mddev_t *mddev, const char *page, size_t len)
-> +{
-> +	raid5_conf_t *conf = mddev_to_conf(mddev);
-> +	char *end;
-> +	int new;
-> +	if (len >= PAGE_SIZE)
-> +		return -EINVAL;
-> +	if (!conf)
-> +		return -ENODEV;
-> +
-> +	new = simple_strtoul(page, &end, 10);
-> +	if (!*page || (*end && *end != '\n'))
-> +		return -EINVAL;
-> +	if (new > conf->max_nr_stripes || new < 0)
-> +		return -EINVAL;
-> +	conf->bypass_threshold = new;
-> +	return len;
-> +}
+> Mattias Wadenstein wrote:
+>
+>>> A day or two? That's quite risky. Never mind that you get awful
+>>> performance for that day or two and/or a risk of data corruption.
+>>> Neil Brown some weeks on this mailing list expressed a very
+>>> cautionary thought:
+>>>=20
+>>> =ABIt is really best to avoid degraded raid4/5/6 arrays when at all
+>>>  possible. NeilBrown=BB
+>>=20
+>>=20
+>> Yes, I read that mail. I've been meaning to do some real-world testi=
+ng of=20
+>> restarting degraded/rebuilding raid6es from various vendors, includi=
+ng MD,=20
+>> but haven't gotten around to it.
+>
+> You may be interested in these results - throughput results on an 8 S=
+ATA=20
+> drive RAID6 showed average write speed went from 348MB/s to 354MB/s a=
+nd read=20
+> speed 349MB/s to 196MB/s, while rebuilding with 2 failed drives. This=
+ was=20
+> with an Areca 1680x RAID controller.
+>
+> http://www.amug.org/amug-web/html/amug/reviews/articles/areca/1680x/
 
-checkpatch 0.16 (which I misfiled and have thus far failed to merge up)
-sayeth:
+That's only performance though. I was interested in seeing if you could=
+=20
+provoke actual data corruption by doing unkind resets while doing vario=
+us=20
+things like writing, flipping bits/bytes inside files, or some other=20
+access/update pattern.
 
-WARNING: consider using strict_strtoul in preference to simple_strtoul
-#258: FILE: drivers/md/raid5.c:4090:
-+       new = simple_strtoul(page, &end, 10);
+That performance is good enough in the "easy" cases I'm well aware of,=20
+I've done some poking at earlier areca controllers. They had really wei=
+rd=20
+performance issues in (for me) way too common corner cases though. I ju=
+st=20
+got a couple of newer ones delivered though, so I'll start pushing thos=
+e=20
+soon. I'm not sure I'll get the time for trying to provoke data corrupt=
+ion=20
+in degraded raidsets though.
 
-the reason being that code which uses simple_strtoul() can treat
-"42-what-a-todo" as "42", which seems a bit sloppy.
-
-Your code won't have that failing, because it explicitly checks that the
-input ended in \0 or \n.  But strict_strtoul() internally does that, so this
-open-coded test could be removed.
-
+/Mattias Wadenstein
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
