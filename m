@@ -1,140 +1,90 @@
 From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
 Subject: Re: raid10 vs raid5 - strange performance
-Date: Sun, 30 Mar 2008 14:58:52 +0200
-Message-ID: <20080330125852.GE754@rap.rap.dk>
-References: <bb145bd20803251837x7ef1fa9dk6191fcaea7b02144@mail.gmail.com> <20080326072416.GA8674@rap.rap.dk> <bb145bd20803261016t351e4b98rb8989cc6c849108f@mail.gmail.com> <20080326192935.GB18621@rap.rap.dk> <47EAACAB.7070203@tmr.com> <bb145bd20803261902g44e88f64p982607b88d864678@mail.gmail.com> <47EEA5BB.5080106@tmr.com> <20080330085528.GC17756@rap.rap.dk> <20080330093420.GB21050@rap.rap.dk> <18415.30379.492224.350276@tree.ty.sabi.co.uk>
+Date: Sun, 30 Mar 2008 16:21:07 +0200
+Message-ID: <20080330142107.GF754@rap.rap.dk>
+References: <20080325233649.GA632@rap.rap.dk> <bb145bd20803251837x7ef1fa9dk6191fcaea7b02144@mail.gmail.com> <20080326072416.GA8674@rap.rap.dk> <bb145bd20803261016t351e4b98rb8989cc6c849108f@mail.gmail.com> <20080326192935.GB18621@rap.rap.dk> <47EAACAB.7070203@tmr.com> <bb145bd20803261902g44e88f64p982607b88d864678@mail.gmail.com> <47EEA5BB.5080106@tmr.com> <20080330085528.GC17756@rap.rap.dk> <20080330093420.GB21050@rap.rap.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <18415.30379.492224.350276@tree.ty.sabi.co.uk>
+In-Reply-To: <20080330093420.GB21050@rap.rap.dk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Peter Grandi <pg_lxra@lxra.for.sabi.co.UK>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: Christian Pernegger <pernegger@gmail.com>, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Sun, Mar 30, 2008 at 12:16:59PM +0100, Peter Grandi wrote:
-> [ ... ]
-> 
-> >>> The md raid10,f2 generally has modest write performance, if
-> >>> U is a single drive speed, write might range between 1.5U to
-> >>> (N-1)/2*U depending on tuning. Read speed is almost always
-> >>> (N-1)*U, which is great for many applications. Playing with
-> >>> chunk size, chunk buffers, etc, can make a large difference
-> >>> in write performance.
-> 
-> >> Hmm, I have other formulae for this. raid10,f2 write speed
-> >> would rather be U*N/2, and read speed be U*N - possibly
-> >> enhanced by also having bigger chunks than on a regular
-> >> non-raid disk, and enhanced by lower access times. The
-> >> formulae are both for sequential and random reads.
-> 
-> Well, that's very optimistic, because writing to different
-> halves of disks in a staggered way has two impacts.
+On Sun, Mar 30, 2008 at 11:34:20AM +0200, Keld J=F8rn Simonsen wrote:
+> On Sun, Mar 30, 2008 at 10:55:28AM +0200, Keld J=F8rn Simonsen wrote:
+> > On Sat, Mar 29, 2008 at 04:25:31PM -0400, Bill Davidsen wrote:
+> > > Christian Pernegger wrote:
+> > >=20
+> > > The md raid10,f2 generally has modest write performance, if U is =
+a=20
+> > > single drive speed, write might range between 1.5U to (N-1)/2*U=20
+> > > depending on tuning. Read speed is almost always (N-1)*U, which i=
+s great=20
+> > > for many applications. Playing with chunk size, chunk buffers, et=
+c, can=20
+> > > make a large difference in write performance.
+> >=20
+> > Hmm, I have other formulae for this. raid10,f2 write speed would ra=
+ther
+> > be U*N/2, and read speed be U*N - possibly enhanced by also having
+> > bigger chunks than on a regular non-raid disk, and enhanced by lowe=
+r
+> > access times. The formulae are both for sequential and random reads=
+=2E
+>=20
+> And also faster transfer rates due to using the outer tracks of the
+> disk. This factor could amount to up to a factor of 2 when reading fr=
+om
+> the high end of the array vs reading from the high end of the bare di=
+sk.
 
-Nonetheless, that is what my tests show, for writes.
-Maybe the elevator saves me there. Have you got other figures?
+The faster transfer rates for reading would amount to an improvement,
+both for sequential and random reading, in average of about 17 % for
+raid10,f2 - given that it confines its reading to the outer faster trac=
+ks
+of the disks. For N>2 (f3, etc) this does not get much better.
 
-But my test is done on a completely new partition, and thus 
-I think that the test would tend to use the first sectors in the
-partition, making this faster than average. This would most likely be the
-same for other benchmarks.
+The lover average seek times will also be geometrically determined (as
+for the transfer rates as noted in another mail) and thus most likely
+the speedup will be equal across disk sizes. The latency component woul=
+d
+for raid10,f2 improve slightly more than to the double (less than half =
+the
+average seek time). This will affect random reading.=20
 
-> For example as you say here to bottom "mirror" half of each disk
-> can be rather slower than the outer "read" half:
-> 
-> > And also faster transfer rates due to using the outer tracks
-> > of the disk. This factor could amount to up to a factor of 2
-> > when reading from the high end of the array vs reading from
-> > the high end of the bare disk.
-> 
-> But then for writing on RAID10 f2 writing to an outer and inner
-> half only reduces a little the surface write speed *across the
-> RAID10*: in RAID10 n2 write speed goes from say mx(80,80)MB/s to
-> max(40,40)MB/s as one writes each disk top to bottom, with an
-> average of 60MB/s, but on RAID10 f2 it goes from max(80,60)MB/s
-> to max(60,40)MB/s, or average 50MB/s.
+I did some calculations on the geometry of a CD - Which has its inner
+tracks at a radius of 15 mm, and its outer tracks at the radius of 59 m=
+m
+(approximately). Because there is more data in the outer tracks, you
+need less tracks to make up for half the size of the disk, and the rang=
+e
+of the head movements are thus less than half of the original head span=
+=2E
+=46or a CD the head movements to cover half of the data on the outer pa=
+rt
+would only be 16 mm, compared to 44 mm to cover the whole CD size from
+inner to outer tracks. This is a littele less than a third, which shoul=
+d=20
+amount to the same reduction in latency time. Given that there is less
+data in the inner tracks, the improvement is somewhat offset by the
+reduced probability that inner tracks will be read. I am sure that this
+can be calculated on a strict geometric base, but I could not find the
+formulae. Anyway something like a 2-3 times improvement in latency=20
+would be expected. And then some disks do not follow the simple mapping
+between logical sectors and physical layout.
 
-I did explicitely say "when reading". I agree that the writing
-speed would be more constant for f2 than n2, but it would also decline 
-as the higher end sectors would be written.
-
-For reading, I would estimate that the striped reading of only half the
-disk with f2 layout will improve speed by about 17 % on average over the
-whole array. This is a figure that is most likely constant over disk
-size for 3.5 " disks, as it is dependent only of geometry, given the
-fixed rotational speed, and the radius for the inner and outer tracks.
-I measured this with badblocks over respectively a whole disk, and half
-the whole disk, but you can probably get the same result by pure mathematics.
-
-> In other words if one looks at the longitudinal (sequential)
-> speed, RAID10 f2 read speed is that of the first half, as you
-> write, but write speed is limited to that of the second half
-> (because in writing to both halves one must wait for both writes
-> to complete).
-
-I don't think the kernel waits for both writes to complete before
-doing the next write. It just puts the write blocks in buffers
-for the elevator to pick up later. That is also the reason why
-sequential writing in raid5 can be so fast.
-
-> But write speed is not just longitudinal speed, and things get
-> complicated because of the different latitudes of writing,
-> involving seeking between inner and outer half on long writes.
-
-My tests show that for random writes this kind of evens out between the
-different raid types, approximating to a general random writing rate.
- 
-> RAID10 f2 in effect means "mirror the upper half of a disk onto
-> the lower half of the next disk".
-
-Yes.
-
-> Suppose then a write to chunk 0 and all disks are 250MB ones,
-> are at rest and their arms are on cylinder 0: the sequence of
-> block writes that make up the chunk write goes to both the upper
-> half of the first disk and to the lower half of the second disk
-> nearly simultaneously, and total time is
-> 
->   max(
->     (rotational latency+write 1 chunk at 80MB/s),
->     (seek to cylinder 15200 + (rotational latency+write 1 chunk at 60MB/s))
->   )
-> 
-> But now suppose that you are writing *two* chunks back-to-back,
-> the queue of requests on the first 3 disks will be:
-> 
->    first:	write chunk 0 to cylinder 0
-> 
->    second:	write chunk 0 to cylinder 15200
-> 		write chunk 1 to cylinder 0
-> 
->    third:	write chunk 1 to cylinder 15200
-> 
-> There is latitudinal interference between writing a mirror copy
-> of chunk 0 to the lower half of the second disk and the writing
-> immediately afterwards of the first copy of chunk 1 to the upper
-> half of the same disk.
-> 
-> Of course if you write many chunks, the situation that happens
-> here on the second disk will happen on all disks, and all disks
-> will be writing to some cylinder in the second half of each disk
-> and to 15200 cylinders above that.
-> 
-> The cost of each seek and how many seeks depend on the disk and
-> chunk size (as pointed out in the quote above) and how fast
-> write requests are issued and the interaction with the elevator;
-> for example I'd guess that 'anticipatory' is good with RAID10
-> f2, but given the unpleasant surprises with the rather demented
-> (to use a euphemism) queueing logic within Linux that would have
-> to be confirmed.
-
-Yes, you are right in your analyses, but fortunately the elevator saves
-us, picking up a large number of writes each time, and thus minimizing
-the effect of the latency problem, for raid10,f2 for sequential writing.
-
-For random writing, I think this is random anyway, and it does not
-matter much which layout you use.
+Average access time will improve for N>2, eg raid10,f3 will have about
+50 % improved latency compared to raid10,f2, and raid10,f4 will only
+have around half the latency of raid10,f2.
 
 Best regards
 keld
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
