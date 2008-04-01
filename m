@@ -1,56 +1,32 @@
-From: pg_lxra@lxra.for.sabi.co.UK (Peter Grandi)
+From: Richard Scobie <richard@sauce.co.nz>
 Subject: Re: RAID 1 failure on single disk causes disk subsystem to lock up
-Date: Mon, 31 Mar 2008 20:54:24 +0100
-Message-ID: <18417.16752.269484.583258@tree.ty.sabi.co.uk>
-References: <47F020C6.1060809@tigertech.com>
-	<47F0281F.1070404@harddata.com>
-	<47F11F12.7010309@tigertech.com>
+Date: Wed, 02 Apr 2008 08:33:06 +1300
+Message-ID: <47F28DF2.8050207@sauce.co.nz>
+References: <47F020C6.1060809@tigertech.com>	<47F0281F.1070404@harddata.com>	<47F11F12.7010309@tigertech.com> <18417.16752.269484.583258@tree.ty.sabi.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <47F11F12.7010309@tigertech.com>
+In-Reply-To: <18417.16752.269484.583258@tree.ty.sabi.co.uk>
 Sender: linux-raid-owner@vger.kernel.org
 To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
->>> On Mon, 31 Mar 2008 10:27:46 -0700, Robert L Mathews
->>> <lists@tigertech.com> said:
+Peter Grandi wrote:
 
-[ ... ]
+> Also putting two drives belonging to a RAID set on the same
+> IDE/ATA channel is usually a bad idea for performance too.
+> 
 
-> I do see that both disks are under "ide:1". Is that what you
-> mean?
+True in general, but in this case the OP has SATA drives:
 
-Indeed the symptoms reported are likely to be from drives on the
-same channel.
+http://marc.info/?l=linux-raid&m=120692062718510&w=2
 
->> This is not something from mdadm, anyway.  Once the disk "dies"
->> you are losing the disk bus, and that is "all she wrote".
+Very much a guess on my part, but I would suspect the SATA support in 
+the 2.6.8 kernel you are using is not helping. There was a major rewrite 
+or libata error handling code in later kernels, along with significant 
+other SATA and RAID improvements.
 
-That happens when the disk dies badly, but it is common enough.
+Regards,
 
-> So mdadm can't protect against disk failures on these machines?
-
-You can expect the Linux IO and RAID subsystems to only handle
-reported, clean errors, after which the state of the whole machine
-is well defined and known.
-
-If you have high availability requirements perhaps you should buy
-from an established storage vendor a storage system designed by
-integration engineers and guaranteed by the vendor for some high
-availability level.
-
-> Whenever a disk returns a write error, the machine will lock
-> up?
-
-Perhaps without realizing it you have engaged in storage system
-design and integration and there are many, many, many, many subtle
-pitfalls in that (as the archives of this list show abundantly).
-
-You cannot just slap things together and it all works. Have you
-done even sketchy common mode failure analysis?
-
-Also putting two drives belonging to a RAID set on the same
-IDE/ATA channel is usually a bad idea for performance too.
-
+Richard
