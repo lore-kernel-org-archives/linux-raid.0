@@ -1,101 +1,131 @@
-From: Mike Snitzer <snitzer@gmail.com>
-Subject: [RFC][PATCH] md: avoid fullsync if a faulty member missed a dirty transition
-Date: Wed,  2 Apr 2008 18:09:15 -0400
-Message-ID: <1207174155-20090-1-git-send-email-snitzer@gmail.com>
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1763229AbYDBWJj@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, paul.clements@steeleye.com, neilb@suse.de
+From: "Dan Williams" <dan.j.williams@intel.com>
+Subject: Re: (was: Re: md: raid5 vs raid10 (f2,n2,o2) benchmarks [w/10 raptors])
+Date: Wed, 2 Apr 2008 17:52:46 -0700
+Message-ID: <e9c3a7c20804021752v78bbb7ct81322404eb7268e8@mail.gmail.com>
+References: <aebf5d970804012126o1e8a7d66qf80f081efcf0ec60@mail.gmail.com>
+	 <alpine.DEB.1.00.0804020812170.4198@p34.internal.lan>
+	 <20080402080206.6bd8ea65@hardcode42.net>
+	 <alpine.DEB.1.00.0804021344180.4140@p34.internal.lan>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <alpine.DEB.1.00.0804021344180.4140@p34.internal.lan>
+Content-Disposition: inline
+Sender: linux-raid-owner@vger.kernel.org
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: "Conway S. Smith" <beolach@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-resync via bitmap if faulty's events+1 == bitmap's events_cleared
+On Wed, Apr 2, 2008 at 10:44 AM, Justin Piszcz <jpiszcz@lucidpixels.com> wrote:
+>
+>
+>
+>  On Wed, 2 Apr 2008, Conway S. Smith wrote:
+>
+>
+> > On Wed, 2 Apr 2008 08:16:16 -0400 (EDT)
+> > Justin Piszcz <jpiszcz@lucidpixels.com> wrote:
+> >
+> > >
+> > >
+> > > On Tue, 1 Apr 2008, Beolach wrote:
+> > >
+> > >
+> > <snip>
+> >
+> > >
+> > > >
+> > > > Also, would you be willing to share your script for averaging 3
+> > > > bonnie++ runs?  I'm too lazy to write my own, so I've just been
+> > > > doing single runs.
+> > > >
+> > >
+> > > I do not have a single script to do it actually, it works like this:
+> > >
+> > > # Run bonnie 3 times (script).
+> > > for i in 1 2 3
+> > > do
+> > >   /usr/bin/time /usr/sbin/bonnie++ -d /x/test -s 16384 -m p34 -n
+> > > 16:100000:16:64 > $HOME/test"$i".txt 2>&1 done
+> > >
+> > > # then get the results
+> > > $ cat test* | grep ,
+> > >
+> p34,16G,80170,99,261521,43,109222,14,82516,99,527121,39,864.3,1,16:100000:16/6411428,83,+++++,+++,6603,30,7780,56,+++++,+++,8959,45
+> > >
+> p34,16G,79428,99,266452,44,111190,14,82087,99,535667,39,884.3,1,16:100000:16/643388,26,+++++,+++,7185,34,6364,46,+++++,+++,4040,22
+> > >
+> p34,16G,78346,99,255350,42,111591,14,82153,99,527210,38,850.4,1,16:100000:16/642916,21,+++++,+++,18495,81,5614,41,+++++,+++,15727,83
+> > >
+> > > $ cat test* | grep , > results
+> > >
+> > > $ avgbonnie results
+> > >
+> p34,16G,79314.7,99,261108,43,110668,14,82252,99,529999,38.6667,866.333,1,16:100000:16/64,5910.67,43.3333,0,0,10761,48.3333,6586,47.6667,0,0,9575.33,50
+> > >
+> > > Nothing special for the average, just a long awk statement
+> > > hardcoded for 3 runs:
+> > >
+> > > grep ',' "$1" | awk -F',' '{print $1, $2, c += $3/3, d += $4/3, e
+> > > += $5/3, f += $6/3, g += $7/3, h += $8/3, i += $9/3, j += $10/3, k
+> > > += $11/3, l += $12/3, m += $13/3, n += $14/3, $15, p += $16/3, q +=
+> > > $17/3, r += $18/3, s += $19/3, t += $20/3, u += $21/3, v += $22/3,
+> > > w += $23/3, x += $24/3, y += $25/3, z += $26/3, aa += $27/3}' |
+> > > tail -n 1 | sed 's/\ /,/g'
+> > >
+> > > $ grep ',' results | awk -F',' '{print $1, $2, c += $3/3, d +=
+> > > $4/3, e += $5/3, f += $6/3, g += $7/3, h += $8/3, i += $9/3, j +=
+> > > $10/3, k += $11/3, l += $12/3, m += $13/3, n += $14/3, $15, p +=
+> > > $16/3, q += $17/3, r += $18/3, s += $19/3, t += $20/3, u += $21/3,
+> > > v += $22/3, w += $23/3, x += $24/3, y += $25/3, z += $26/3, aa +=
+> > > $27/3}' | tail -n 1 | sed 's/\ /,/g'
+> > >
+> p34,16G,79314.7,99,261108,43,110668,14,82252,99,529999,38.6667,866.333,1,16:100000:16/64,5910.67,43.3333,0,0,10761,48.3333,6586,47.6667,0,0,9575.33,50
+> > >
+> > > Hope this helps..
+> > >
+> > >
+> >
+> > Thanks! Although now I'll have to get around to learning awk so I can
+> > understand that. ;-)
+> >
+> >
+> > >
+> > > >
+> > > > [1] My bonnie++ results:
+> > > > <http://www.xmission.com/~beolach/bonnie++_4disk-ls.html>
+> > > >
+> > > Intriguing results you have there, nice sequential read speed.
+> > > What FS are you using?
+> > > Any special options?
+> > >
+> >
+> > XFS, no special mkfs options, noatime,nodiratime mount options.
+> >
+> >
+> > > What read-ahead are you using?
+> > > What is your stripe_cache_size?
+> > > These heavily affect performance.
+> > >
+> > >
+> >
+> > I haven't tried tweaking these yet.  Are they likely to change which
+> > chunksize performs best?  I was thinking I'd figure out a chunksize,
+> > and then look at other performance tweaks.  But I'm worried that I
+> > might later find out a different chunksize would have been better,
+> > and chunksize is much harder to change than read-ahead.
+> >
+> > $ blockdev --getra /dev/md1
+> > 3072
+> > $ cat /sys/block/md1/md/stripe_cache_size
+> > 256
+> >
+>  The stripe_cache_size will make a huge difference with RAID5, try up to
+> 32768.
 
-For more background please see:
-http://marc.info/?l=linux-raid&m=120703208715865&w=2
+That's 512MB for a 4-disk array.  Hopefully the get_priority_stripe
+patch alleviates the pressure to push stripe_cache_size this high.
 
-Without this change validate_super() will prevent the previously faulty
-member from recovering via bitmap, e.g.:
-
- md: nbd0 rdev's ev1 (30080) < mddev->bitmap->events_cleared (30081)... rdev->raid_disk=-1
- md: nbd1 rdev's ev1 (30342) < mddev->bitmap->events_cleared (30343)... rdev->raid_disk=-1
- md: nbd0 rdev's ev1 (30186) < mddev->bitmap->events_cleared (30187)... rdev->raid_disk=-1
- md: nbd0 rdev's ev1 (30286) < mddev->bitmap->events_cleared (30287)... rdev->raid_disk=-1
- md: nbd1 rdev's ev1 (30476) < mddev->bitmap->events_cleared (30477)... rdev->raid_disk=-1
- md: nbd0 rdev's ev1 (30488) < mddev->bitmap->events_cleared (30489)... rdev->raid_disk=-1
- md: nbd1 rdev's ev1 (30680) < mddev->bitmap->events_cleared (30681)... rdev->raid_disk=-1
- md: nbd0 rdev's ev1 (31082) < mddev->bitmap->events_cleared (31083)... rdev->raid_disk=-1
- md: nbd1 rdev's ev1 (31264) < mddev->bitmap->events_cleared (31265)... rdev->raid_disk=-1
- md: nbd0 rdev's ev1 (31108) < mddev->bitmap->events_cleared (31109)... rdev->raid_disk=-1
- md: nbd0 rdev's ev1 (31126) < mddev->bitmap->events_cleared (31127)... rdev->raid_disk=-1
- md: nbd1 rdev's ev1 (31416) < mddev->bitmap->events_cleared (31417)... rdev->raid_disk=-1
- md: nbd1 rdev's ev1 (31432) < mddev->bitmap->events_cleared (31433)... rdev->raid_disk=-1
- md: nbd0 rdev's ev1 (31274) < mddev->bitmap->events_cleared (31275)... rdev->raid_disk=-1
- md: nbd1 rdev's ev1 (31448) < mddev->bitmap->events_cleared (31449)... rdev->raid_disk=-1
- md: nbd1 rdev's ev1 (31494) < mddev->bitmap->events_cleared (31495)... rdev->raid_disk=-1
- md: nbd1 rdev's ev1 (31512) < mddev->bitmap->events_cleared (31513)... rdev->raid_disk=-1
-
-Note that 'mddev->bitmap->events_cleared' is _always_ odd and the
-previously faulty member's 'ev1' (aka events) is _always_ even.  The
-current validate_super() logic is blind to clean-to-dirty events
-transitions and as such it imposes, potentially expensive, full resyncs.
-
-This change makes the bitmap's 'events_cleared' logic more nuanced than
-that which is documented in include/linux/raid/bitmap.h:
-
- * (2) This event counter [events_cleared] is updated when the other one
- *    [events] is *if*and*only*if* the array is not degraded.  As bits are
- *    not cleared when the array is degraded, this represents the last
- *    time that any bits were cleared.  If a device is being added that
- *    has an event count with this value or higher, it is accepted as
- *    conforming to the bitmap.
-
-But the question becomes: is the proposed change safe?
-
-Considerable testing seems to indicate that it is.  But I welcome any
-other suggestions for how to prevent such unnecessary full resyncs.
----
- drivers/md/md.c |   20 ++++++++++++++++++--
- 1 files changed, 18 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 61ccbd2..43425e4 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -839,8 +839,16 @@ static int super_90_validate(mddev_t *mddev, mdk_rdev_t *rdev)
- 	} else if (mddev->bitmap) {
- 		/* if adding to array with a bitmap, then we can accept an
- 		 * older device ... but not too old.
-+		 *
-+		 * if 'mddev->bitmap->events_cleared' is odd it implies a clean-to-dirty
-+		 * transition occurred just before the array became degraded
-+		 * - if rdev's on-disk 'events' is just one less (aka even) this
-+		 *   dirty transition wasn't recorded; allow use of the bitmap to
-+		 *   efficiently resync to this member
- 		 */
--		if (ev1 < mddev->bitmap->events_cleared)
-+		if (ev1 < mddev->bitmap->events_cleared &&
-+		    !(mddev->degraded && (mddev->bitmap->events_cleared & 1) &&
-+		      (ev1+1 == mddev->bitmap->events_cleared)))
- 			return 0;
- 	} else {
- 		if (ev1 < mddev->events)
-@@ -1214,8 +1222,16 @@ static int super_1_validate(mddev_t *mddev, mdk_rdev_t *rdev)
- 	} else if (mddev->bitmap) {
- 		/* If adding to array with a bitmap, then we can accept an
- 		 * older device, but not too old.
-+		 *
-+		 * if 'mddev->bitmap->events_cleared' is odd it implies a clean-to-dirty
-+		 * transition likely occurred just before the array became degraded
-+		 * - if rdev's on-disk 'events' is just one less (aka even) this
-+		 *   dirty transition wasn't recorded; allow use of the bitmap to
-+		 *   efficiently resync to this member
- 		 */
--		if (ev1 < mddev->bitmap->events_cleared)
-+		if (ev1 < mddev->bitmap->events_cleared &&
-+		    !(mddev->degraded && (mddev->bitmap->events_cleared & 1) &&
-+		      (ev1+1 == mddev->bitmap->events_cleared)))
- 			return 0;
- 	} else {
- 		if (ev1 < mddev->events)
--- 
-1.5.3.5
+--
+Dan
