@@ -1,59 +1,70 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: (was: Re: md: raid5 vs raid10 (f2,n2,o2) benchmarks [w/10
- raptors])
-Date: Thu, 3 Apr 2008 06:26:12 -0400 (EDT)
-Message-ID: <alpine.DEB.1.00.0804030625020.14822@p34.internal.lan>
-References: <aebf5d970804012126o1e8a7d66qf80f081efcf0ec60@mail.gmail.com> <alpine.DEB.1.00.0804020812170.4198@p34.internal.lan> <20080402080206.6bd8ea65@hardcode42.net> <alpine.DEB.1.00.0804021344180.4140@p34.internal.lan> <alpine.DEB.1.00.0804021349130.4140@p34.internal.lan>
- <20080403100246.GA16459@rap.rap.dk>
+From: pg_lxra@lxra.for.sabi.co.UK (Peter Grandi)
+Subject: Re: RAID 1 failure on single disk causes disk subsystem to lock up
+Date: Thu, 3 Apr 2008 22:01:17 +0100
+Message-ID: <18421.17821.6915.929392@tree.ty.sabi.co.uk>
+References: <47F020C6.1060809@tigertech.com>
+	<47F0281F.1070404@harddata.com>
+	<47F11F12.7010309@tigertech.com>
+	<18417.16752.269484.583258@tree.ty.sabi.co.uk>
+	<47F3D173.8060502@tigertech.com>
 Mime-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="-1463747160-834826048-1207218372=:14822"
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20080403100246.GA16459@rap.rap.dk>
+In-Reply-To: <47F3D173.8060502@tigertech.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?ISO-8859-15?Q?Keld_J=F8rn_Simonsen?= <keld@dkuug.dk>
-Cc: "Conway S. Smith" <beolach@gmail.com>, linux-raid@vger.kernel.org
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+>>> On Wed, 02 Apr 2008 11:33:23 -0700, Robert L Mathews
+>>> <lists@tigertech.com> said:
 
----1463747160-834826048-1207218372=:14822
-Content-Type: TEXT/PLAIN; charset=ISO-8859-15; format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+[ ... transfer errors on one disk affect transfers on a disk
+attached to the same chip ... ]
 
+> Just for the record, this isn't "slapped together"
+> hardware. They're off-the-shelf, server-grade, currently
+> sold, genuine Intel, etc. SuperMicro servers, [ ... ]
 
+Yes, but system integration engineers spend time and effort
+qualifying even good quality stuff like SuperMicro motherboards
+in the specific configurations designed, because there are
+*lots* of potential pitfalls.
 
-On Thu, 3 Apr 2008, Keld J=F8rn Simonsen wrote:
+One amusing example I heard about recently is that at CERN a
+whole batch of storage servers built using excellent bits was
+running much slower than expected because some cooling fans were
+making drives vibrate a bit thus making arm seek stabilization
+a lot more difficult, and then causing drive failure much sooner
+than expected.
 
-> On Wed, Apr 02, 2008 at 01:49:44PM -0400, Justin Piszcz wrote:
->>
->>
->> On Wed, 2 Apr 2008, Justin Piszcz wrote:
->>
->>>
->>>
->>> On Wed, 2 Apr 2008, Conway S. Smith wrote:
->
-> I have referenced both of your benchmaks in the wiki on performance. So
-> now I just hope that your URLs will live forever. I also took down some
-> of your recomendations there.
->
-> I note that raid10,f2 has a much higher cpu load than raid10,n2 or
-> raid10,o2. How come? it is 31-38 % for f2, where n2 and o2 is around 15 %
->
-> Also I note that the sequential read rate for o2 is nowhere near that of
-> n2, it is more like half of the n2 speed. I have seen claims from
-> normally trustworthy sources that o2 would obtain striping speeds.
-> IMHO theory would also say that o2 could not be striping.
->
-> And the optimized version from Justin impedes performance for f2, by
-> around 90 MB/s. How come?
-This may be due to the optimizations I use (for RAID5) in general they=20
-apply to RAID10 somewhat but in some cases it impedes performance greately=
-=20
-where the opposite is true of RAID5, if the optimizations are not in=20
-place, its nearly twice as slow.
+> [ ... ] The only storage system design we've done is connect a
+> SATA drive to each of the two motherboard SATA ports and use
+> software RAID 1 (yeah, I know that's "design", and we did
+> think about it and test it, but still).
 
-Justin.
+But have you checked whether the two ports use shared circuitry
+and in effect the two ports are on the same channel? Because my
+impression and that of another poster is that your drives are
+sharing the same transfer logic, as if two IDE drives on the
+same ribbon.
 
----1463747160-834826048-1207218372=:14822--
+The ICH5R chipset was the first Intel one with SATA support and
+it has extensive IDE/ATA compatibility:
+
+  http://en.Wikipedia.org/wiki/I/O_Controller_Hub#ICH5
+  http://WWW.Intel.com/design/chipsets/manuals/25267102.pdf
+
+Perhaps corners were cut and the chip does not actually operate
+the SATA channels independently At least that is what looks like
+given the errors that you are seeing.
+
+For example this guy noticed the exact same problem you are
+seeing with a slightly different (one drive going offline)
+cause:
+
+  http://www.mail-archive.com/linux-ide%40vger.kernel.org/msg07691.html
+
+Note also the driver developer's response...
+
+[ ... ]
