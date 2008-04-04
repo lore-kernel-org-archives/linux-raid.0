@@ -1,58 +1,87 @@
-From: pg_lxra@lxra.for.sabi.co.UK (Peter Grandi)
-Subject: Re: performance problems with raid10,f2
-Date: Thu, 3 Apr 2008 21:20:37 +0100
-Message-ID: <18421.15381.649822.295786@tree.ty.sabi.co.uk>
-References: <20080314231151.GA14568@rap.rap.dk>
-	<20080320172817.GA27070@rap.rap.dk>
-	<18408.35320.92714.891870@notabene.brown>
-	<20080325103656.GA4911@rap.rap.dk>
-	<18408.64635.201923.65782@tree.ty.sabi.co.uk>
-	<20080402211315.GA7899@rap.rap.dk>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Brett Dikeman <brett@cloud9.net>
+Subject: segfault in mdadm v2.6.4
+Date: Fri, 4 Apr 2008 01:03:48 -0400
+Message-ID: <2C1F2D1D-8799-4E11-8CDB-1827769496F3@cloud9.net>
+Reply-To: brett@cloud9.net
+Mime-Version: 1.0 (Apple Message framework v919.2)
+Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20080402211315.GA7899@rap.rap.dk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
->>> On Wed, 2 Apr 2008 23:13:15 +0200, Keld J=F8rn Simonsen
->>> <keld@dkuug.dk> said:
+On a debian/testing system, under both 2.6.22 and 2.6.24, I've been  
+trying to set up a 4-drive RAID6 array.  I see the following segfault  
+listed in /var/log/messages, and it's appeared each time I've  
+assembled the array.  Two drives are on the onboard SATA; two are on  
+external USB-SATA bridges (this is not permanent- just what I had  
+available for migrating off an other array.)
 
-[ ... slow RAID reading ... ]
+Also, the array's initial "resync" hung after a few hours, much to my  
+great annoyance (it's a +10 hour process; I was 3 hours in.)  It took  
+the entire device with it- I couldn't unmount the filesystem.  I  
+eventually tracked it to one of the four drives, on the USB<->SATA  
+bridge; it wasn't responding, and the other 3 drives seemed fine.   It  
+then took the entire system with it a few minutes later; all the  
+running daemons stopped responding and I couldn't get a shell.  After  
+waiting half an hour for a device timeout, etc- I unplugged the hung  
+drive since I didn't have anything on the array.  No change, no kernel  
+messages logged before or after, not even when the USB device  
+'disappeared.'  I gave up and power-cycled the box.
 
->> That could be the usual issue with apparent pauses in the
->> stream of IO requests to the array component devices, with
->> the usual workaround of trying 'blockdev --setra 65536
->> /dev/mdN' and see if sequential reads improve.
+I'd appreciate being cc'd on followups- though I will be checking the  
+archives.  I'm happy to provide additional info and run tests.
 
-keld> Yes, that did it!=20
+Thanks!
+Brett
 
-But that's as usual very wrong. Such a large readhead has
-negative consequences, and most likely is the result of both
-some terrible misdesign in the Linux block IO subsystem (from
-some further experiments it is most likely related to "plugging")
-and integration of MD into it.
+Apr  4 00:36:46 frank kernel: md: md1 stopped.
+Apr  4 00:36:46 frank kernel: md: unbind<sdc2>
+Apr  4 00:36:46 frank kernel: md: export_rdev(sdc2)
+Apr  4 00:36:46 frank kernel: md: unbind<sdd2>
+Apr  4 00:36:46 frank kernel: md: export_rdev(sdd2)
+Apr  4 00:36:46 frank kernel: md: bind<sdd2>
+Apr  4 00:36:46 frank kernel: md: bind<sde2>
+Apr  4 00:36:46 frank kernel: md: bind<sdf2>
+Apr  4 00:36:46 frank kernel: md: bind<sdc2>
+Apr  4 00:36:46 frank kernel: xor: automatically using best  
+checksumming function: generic_sse
+Apr  4 00:36:46 frank kernel:    generic_sse:  3086.000 MB/sec
+Apr  4 00:36:46 frank kernel: xor: using function: generic_sse  
+(3086.000 MB/sec)
+Apr  4 00:36:46 frank kernel: async_tx: api initialized (sync-only)
+Apr  4 00:36:46 frank kernel: raid6: int64x1    693 MB/s
+Apr  4 00:36:46 frank kernel: raid6: int64x2    922 MB/s
+Apr  4 00:36:46 frank kernel: raid6: int64x4   1083 MB/s
+Apr  4 00:36:46 frank kernel: raid6: int64x8    794 MB/s
+Apr  4 00:36:46 frank kernel: raid6: sse2x1    1268 MB/s
+Apr  4 00:36:46 frank kernel: raid6: sse2x2    1828 MB/s
+Apr  4 00:36:46 frank kernel: raid6: sse2x4    1929 MB/s
+Apr  4 00:36:46 frank kernel: raid6: using algorithm sse2x4 (1929 MB/s)
+Apr  4 00:36:46 frank kernel: md: raid6 personality registered for  
+level 6
+Apr  4 00:36:46 frank kernel: md: raid5 personality registered for  
+level 5
+Apr  4 00:36:46 frank kernel: md: raid4 personality registered for  
+level 4
+Apr  4 00:36:46 frank kernel: raid5: device sdc2 operational as raid  
+disk 0
+Apr  4 00:36:46 frank kernel: raid5: device sdf2 operational as raid  
+disk 3
+Apr  4 00:36:46 frank kernel: raid5: device sde2 operational as raid  
+disk 2
+Apr  4 00:36:46 frank kernel: raid5: device sdd2 operational as raid  
+disk 1
+Apr  4 00:36:46 frank kernel: raid5: allocated 4274kB for md1
+Apr  4 00:36:46 frank kernel: raid5: raid level 6 set md1 active with  
+4 out of 4 devices, algorithm 2
+Apr  4 00:36:46 frank kernel: RAID5 conf printout:
+Apr  4 00:36:46 frank kernel:  --- rd:4 wd:4
+Apr  4 00:36:46 frank kernel:  disk 0, o:1, dev:sdc2
+Apr  4 00:36:46 frank kernel:  disk 1, o:1, dev:sdd2
+Apr  4 00:36:46 frank kernel:  disk 2, o:1, dev:sde2
+Apr  4 00:36:46 frank kernel:  disk 3, o:1, dev:sdf2
+Apr  4 00:36:46 frank kernel: mdadm[3954]: segfault at 0 rip 412d2c  
+rsp 7fffcdd18fa0 error 4
 
-However I have found that on relatively fast machines (I think)
-much lower values of read-ahead still give reasonable speed,
-with some values being much better than others. For example with
-another RAID10 I get pretty decent speed with a read-ahead of
-128 on '/dev/md0' (but much worse with say 64 or 256). On others
-1000 sectors read-ahead is good.
-
-The read-ahead needed also depends a bit on the file system
-type, don't trust tests done on the block device itself.
-
-So please experiment a bit to try and reduce it, at least until
-I find the time to figure out the (surely embarrasing) reason
-why it is needed and how to avoid it, or the Linux block IO and
-MD maintainers confess (they almost surely already know why)
-and/or fix it already.
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
