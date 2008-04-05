@@ -1,7 +1,7 @@
 From: Andre Noll <maan@systemlinux.org>
-Subject: [PATCH 1/8] md: Simplify uuid_equal().
-Date: Sun, 23 Mar 2008 16:09:42 +0100
-Message-ID: <S1754097AbYGHQdj/20080708163339Z+61@vger.kernel.org>
+Subject: [PATCH 7/8] md: update_size(): Remove useless variable "fit".
+Date: Sat, 5 Apr 2008 15:54:49 +0200
+Message-ID: <S1756174AbYGHQdn/20080708163344Z+61@vger.kernel.org>
 References: <20080708155541.GS23944@skl-net.de>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20080708155541.GS23944@skl-net.de>
@@ -11,35 +11,30 @@ List-Id: linux-raid.ids
 
 Signed-off-by: Andre Noll <maan@systemlinux.org>
 ---
- drivers/md/md.c |   13 ++++---------
- 1 files changed, 4 insertions(+), 9 deletions(-)
+ drivers/md/md.c |    3 +--
+ 1 files changed, 1 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 2580ac1..c559b9e 100644
+index 3f22ec7..98a024c 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -543,17 +543,12 @@ fail:
+@@ -4459,7 +4459,6 @@ static int update_size(mddev_t *mddev, unsigned long size)
+ 	mdk_rdev_t * rdev;
+ 	int rv;
+ 	struct list_head *tmp;
+-	int fit = (size == 0);
  
- static int uuid_equal(mdp_super_t *sb1, mdp_super_t *sb2)
- {
--	if (	(sb1->set_uuid0 == sb2->set_uuid0) &&
--		(sb1->set_uuid1 == sb2->set_uuid1) &&
--		(sb1->set_uuid2 == sb2->set_uuid2) &&
--		(sb1->set_uuid3 == sb2->set_uuid3))
--
--		return 1;
--
--	return 0;
-+	return 	sb1->set_uuid0 == sb2->set_uuid0 &&
-+		sb1->set_uuid1 == sb2->set_uuid1 &&
-+		sb1->set_uuid2 == sb2->set_uuid2 &&
-+		sb1->set_uuid3 == sb2->set_uuid3;
- }
+ 	if (mddev->pers->resize == NULL)
+ 		return -EINVAL;
+@@ -4479,7 +4478,7 @@ static int update_size(mddev_t *mddev, unsigned long size)
+ 		sector_t avail;
+ 		avail = rdev->size * 2;
  
--
- static int sb_equal(mdp_super_t *sb1, mdp_super_t *sb2)
- {
- 	int ret;
+-		if (fit && (size == 0 || size > avail/2))
++		if (size == 0 || size > avail/2)
+ 			size = avail/2;
+ 		if (avail < ((sector_t)size << 1))
+ 			return -ENOSPC;
 -- 
 1.5.3.8
 
