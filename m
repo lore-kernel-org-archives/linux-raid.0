@@ -1,30 +1,40 @@
-From: Zlatko Calusic <zlatko.calusic@iskon.hr>
-Subject: How to rename MD device (e.g. md3 -> md2)?
-Date: Mon, 07 Apr 2008 17:48:02 +0200
-Message-ID: <87zls53bv1.fsf@magla.zg.iskon.hr>
+From: Ferenc Wagner <wferi@niif.hu>
+Subject: Re: how to disable partition search?
+Date: Mon, 07 Apr 2008 20:02:38 +0200
+Message-ID: <87zls5k0g1.fsf@tac.ki.iif.hu>
+References: <87ve39lngy.fsf@tac.ki.iif.hu>
+	<20080406103743.GA31334@percy.comedia.it>
+	<877ifaoc23.fsf@szonett.ki.iif.hu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <877ifaoc23.fsf@szonett.ki.iif.hu> (Ferenc Wagner's message of
+	"Mon, 07 Apr 2008 00:25:56 +0200")
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello list!
+Ferenc Wagner <wferi@niif.hu> writes:
 
-Does anybody know what would be the fastest way to rename MD device
-(without recreating/resyncing)? I have md0, md1 and md3 in system (don't
-ask :)), and obviously it would look slightly nicer if that md3 was
-called md2 instead, like I have on other machines (with all the same
-setup, except this small difference). Is it possible?
+> Luca Berra <bluca@comedia.it> writes:
+>
+>> anyway you can rebuild your own kernel disabling it
+>> just set PARTITION_ADVANCED, and disable all partition types.
+>
+> Sounds like a good idea, will try that!
 
-Thanks for any reply (and please Cc:, I'm not subscribed).
+Thanks again, it indeed works!  My boot messages are readable again.
+Interestingly, it still says "unknown partition table", but doesn't
+try to read it either.  More than good enough for me.
 
-I'll also use this opportunity to thank everybody involved in the
-development of RAID subsystem in Linux, cause it's a real data
-saver. You saved my ass too many times to even count...
+>> you should be aware that doing this will disable partition detection on
+>> all drives, so if you have partitioned drives (eg boot drives) you have
+>> to run partx in initramfs or it wont be able to access them.
+>
+> Not in this case.  I'm netbooting and getting / and co. from the SAN
+> via multipath and LVM, not a single partition on the whole cluster...
 
-Keep up the good work, guys!
+And sure everything just worked with the new kernel.  Wonderful!
 -- 
-Zlatko
-
-P.S. Debian sid, kernel 2.6.24, mdadm 2.6.4, using two disks in RAID 1
+Thanks,
+Feri.
