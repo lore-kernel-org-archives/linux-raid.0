@@ -1,43 +1,43 @@
-From: Zlatko Calusic <zlatko.calusic@iskon.hr>
-Subject: Re: How to rename MD device (e.g. md3 -> md2)?
-Date: Tue, 08 Apr 2008 00:24:21 +0200
-Message-ID: <87k5j9mhgq.fsf@magla.zg.iskon.hr>
-References: <87zls53bv1.fsf@magla.zg.iskon.hr>
-	<e9c3a7c20804071451m7cbd10bam5d66a24191cf2958@mail.gmail.com>
+From: "Dan Williams" <dan.j.williams@intel.com>
+Subject: Re: soft-lockup in raid5 / 2.6.24
+Date: Mon, 7 Apr 2008 15:43:14 -0700
+Message-ID: <e9c3a7c20804071543l6d9df2dbkc86bec6388da3f77@mail.gmail.com>
+References: <alpine.DEB.1.10.0804070806300.7751@twinlark.arctic.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <alpine.DEB.1.10.0804070806300.7751@twinlark.arctic.org>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
+To: dean gaudet <dean@arctic.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-"Dan Williams" <dan.j.williams@intel.com> writes:
-
-> On Mon, Apr 7, 2008 at 8:48 AM, Zlatko Calusic <zlatko.calusic@iskon.hr> wrote:
->> Hello list!
->>
->>  Does anybody know what would be the fastest way to rename MD device
->>  (without recreating/resyncing)? I have md0, md1 and md3 in system (don't
->>  ask :)), and obviously it would look slightly nicer if that md3 was
->>  called md2 instead, like I have on other machines (with all the same
->>  setup, except this small difference). Is it possible?
->>
+On Mon, Apr 7, 2008 at 8:22 AM, dean gaudet <dean@arctic.org> wrote:
+> while my system was doing its monthly check (debian) i bumped into
+>  soft-lockups in the raid5 code.  i must mention this is a rather mature
+>  system, the disks are 3.5 years old at this point... so i'm not surprised
+>  that the check will find some bad sectors which will take the
+>  device/driver a while to read/correct.
 >
-> Sure, you should just be able to do:
+>  all SMART events in this log are on disks which are part of /dev/md4 which
+>  is a raid5.  the controller is a 3ware 7508, the disks are seagate
+>  ST3400832A.
 >
-> mdadm --stop /dev/md3
-> mdadm --assemble /dev/md2 <insert component devices here>
+>  apparently no errors propagated all the way up to raid5, but based on the
+>  SMART events i'm pretty sure several sectors took a long time to finish
+>  being read and were probably corrected by the drive itself.
+>
+>  this is debian kernel image 2.6.24-1-686 version 2.6.24-4 which contains
+>  upstream 2.6.24.2.
+>
+>  -dean
+>
+>  root@neemlark:~# cat /sys/block/md4/md/mismatch_cnt
+>  0
+>
 
-So simple... who would've thought of that. :) Thank you!
-
-Although, the recipe will have to wait for another occasion to prove
-itself, my new md2 is in the middle of resyncing process as I write
-this. But, I don't mind. While I was copying the filesystem to the new
-device, I noticed that it was heavily fragmented in places (transfer
-speed was dropping from typical 40+ MB/s to below 10 MB/s - all very big
-files!), so I'm sure copying was good for it. :)
-
-Regards,
--- 
-Zlatko
+This does not look like the hang that is set to be fixed in 2.6.24.5.
+Does /proc/mdstat show that the resync is progressing, or does it
+appear to be stalled?
