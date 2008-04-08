@@ -1,65 +1,40 @@
-From: dean gaudet <dean@arctic.org>
-Subject: Re: soft-lockup in raid5 / 2.6.24
-Date: Mon, 7 Apr 2008 17:46:56 -0700 (PDT)
-Message-ID: <alpine.DEB.1.10.0804071746310.7751@twinlark.arctic.org>
-References: <alpine.DEB.1.10.0804070806300.7751@twinlark.arctic.org> <e9c3a7c20804071543l6d9df2dbkc86bec6388da3f77@mail.gmail.com>
+From: "Sean H." <silverwraithii@gmail.com>
+Subject: Re-assembling a software RAID in which device names have changed.
+Date: Tue, 8 Apr 2008 00:34:17 -0400
+Message-ID: <fa037c550804072134w59f0f280g3d86ed76a99a271e@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <e9c3a7c20804071543l6d9df2dbkc86bec6388da3f77@mail.gmail.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, 7 Apr 2008, Dan Williams wrote:
+To preface, I'm a fairly new Linux user, and have little experience
+with RAID. I've taken this question several places and have yet to get
+an answer which solves my problem, so I figured I'd come to the
+experts.
 
-> On Mon, Apr 7, 2008 at 8:22 AM, dean gaudet <dean@arctic.org> wrote:
-> > while my system was doing its monthly check (debian) i bumped into
-> >  soft-lockups in the raid5 code.  i must mention this is a rather mature
-> >  system, the disks are 3.5 years old at this point... so i'm not surprised
-> >  that the check will find some bad sectors which will take the
-> >  device/driver a while to read/correct.
-> >
-> >  all SMART events in this log are on disks which are part of /dev/md4 which
-> >  is a raid5.  the controller is a 3ware 7508, the disks are seagate
-> >  ST3400832A.
-> >
-> >  apparently no errors propagated all the way up to raid5, but based on the
-> >  SMART events i'm pretty sure several sectors took a long time to finish
-> >  being read and were probably corrected by the drive itself.
-> >
-> >  this is debian kernel image 2.6.24-1-686 version 2.6.24-4 which contains
-> >  upstream 2.6.24.2.
-> >
-> >  -dean
-> >
-> >  root@neemlark:~# cat /sys/block/md4/md/mismatch_cnt
-> >  0
-> >
-> 
-> This does not look like the hang that is set to be fixed in 2.6.24.5.
-> Does /proc/mdstat show that the resync is progressing, or does it
-> appear to be stalled?
+I have a five-disk RAID 5, and one of the disks is failing. Every few
+days it'll start buzzing, and will continue buzzing until the drive is
+forced to spin down and back up, by either a restart or suspending to
+RAM.
 
-it finished...
+ Now, today, I wanted to determine which disk was failing, so I
+unmounted my array and unplugged drives - Specifically, three. The
+third was the culprit, and I plugged the drives back in and rebooted.
 
-neemlark:~% cat /proc/mdstat
-Personalities : [raid1] [raid6] [raid5] [raid4]
-md4 : active raid5 sdc1[0] sdg1[5](S) sdh1[4] sde1[3] sdf1[2] sdd1[1]
-      1562834944 blocks level 5, 64k chunk, algorithm 2 [5/5] [UUUUU]
-      bitmap: 0/746 pages [0KB], 256KB chunk, file: /bitmap.md4
+ The gift, or in this case, curse of my motherboard is that it
+supports hot-swapping of SATA drives. So the drives didn't just
+disappear inside the OS and reappear after a reboot. They disappeared
+and re-appeared in the OS with incorrect /dev/sd* locations, and then
+I rebooted.
 
-md_d1 : active raid1 sda2[0] sdb2[1]
-      4156928 blocks [2/2] [UU]
+ I was unable to boot until I removed the line detailing the array
+from my fstab. Now, when I manually 'mdadm --assemble /dev/md0' mdadm
+finds the two untouched drives, then stops and tells me that they're
+not enough to start the array.
 
-md0 : active raid1 sdb1[0] sda1[1]
-      250368 blocks [2/2] [UU]
-
-md3 : active raid1 sdb4[0] sda4[1]
-      73769856 blocks [2/2] [UU]
-      bitmap: 0/141 pages [0KB], 256KB chunk
-
-unused devices: <none>
-
--dean
+ So... How can I reassemble the array without knowing what order the
+drives are in?
