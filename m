@@ -1,41 +1,39 @@
-From: "Ty! Boyack" <ty@nrel.colostate.edu>
-Subject: Write-Intent Bitmaps and disk caches
-Date: Tue, 08 Apr 2008 14:16:11 -0600
-Message-ID: <47FBD28B.6060209@nrel.colostate.edu>
+From: Michal Soltys <soltys@ziu.info>
+Subject: Re: Re-assembling a software RAID in which device names have changed.
+Date: Tue, 08 Apr 2008 22:19:43 +0200
+Message-ID: <47FBD35F.1010205@ziu.info>
+References: <fa037c550804072134w59f0f280g3d86ed76a99a271e@mail.gmail.com>	 <47FBAA76.20008@msgid.tls.msk.ru>	 <fa037c550804081055p2d2550ccs8dfab22d2edb6920@mail.gmail.com>	 <47FBBB6E.8040307@msgid.tls.msk.ru> <fa037c550804081206w6aa4db7r9b9f22202c4cca38@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <fa037c550804081206w6aa4db7r9b9f22202c4cca38@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: "Sean H." <silverwraithii@gmail.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-I'm a little confused on the write-intent bitmaps and how they interact 
-with the disk caches - I would appreciate any clarification here.
+Sean H. wrote:
+>
+>  Now, today, I wanted to determine which disk was failing, so I
+> unmounted my array and unplugged drives - Specifically, three. The
+> third was the culprit, and I plugged the drives back in and rebooted.
+>
 
-The way I understand it, if a device fails in a raid set, the bitmap 
-will track regions that have changed since the failed device left the 
-array.  If the device is added back in, the re-sync time is much shorter 
-since only some blocks have to be re-sync'ed.
+Just to be sure - did you do that on live array ? (it kinda looks like 
+you did)
 
-But in this case it's possible that blocks A, B, and C were written to 
-the device, and the failure was detected on block C.  Thus blocks A and 
-B would be probably held in the device's cache (hard drive cache, or 
-this problem gets worse if working with disk arrays as devices, since 
-they have much larger caches).  When the device was re-added, block C 
-would presumably be re-synced as requested by the bitmap, but would A 
-and B be lost forever because they fell out of the cache on the drive?
+> 
+> Below the first command, and separated by ten hyphens is --detail
+> /dev/md0 which shows that the remaining device is marked "removed" and
+> not "failed".
+> 
+> I thank you for your help thusfar - You've allowed me to mount the
+> array and access my data. However, I would very much like to get my
+> RAID 5 back to non-degraded status ASAP.
+> 
 
-Does the bitmap, or something else, take this into account?  Or will 
-this eventually lead to an inconsistent read or data corruption down the 
-road?  Or am I just out waving my paranoid flag today?
+You can add the drive/partition with --add option to the existing array.
 
-
--- 
--===========================-
-  Ty! Boyack
-  NREL Unix Network Manager
-  ty@nrel.colostate.edu
-  (970) 491-1186
--===========================-
+It will start rebuilding then, and it can take a while.
 
