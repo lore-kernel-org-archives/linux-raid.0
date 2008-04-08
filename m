@@ -1,93 +1,55 @@
-From: "Sean H." <silverwraithii@gmail.com>
-Subject: Re: Re-assembling a software RAID in which device names have changed.
-Date: Tue, 8 Apr 2008 13:55:24 -0400
-Message-ID: <fa037c550804081055p2d2550ccs8dfab22d2edb6920@mail.gmail.com>
-References: <fa037c550804072134w59f0f280g3d86ed76a99a271e@mail.gmail.com>
-	 <47FBAA76.20008@msgid.tls.msk.ru>
+From: Markus Hochholdinger <Markus@hochholdinger.net>
+Subject: Re: Is it possilble to be "delay tolerant" or have "slow dropout" of unavailable components?
+Date: Tue, 8 Apr 2008 19:48:37 +0200
+Message-ID: <200804081948.41959.Markus@hochholdinger.net>
+References: <47FBA3BB.2030007@nrel.colostate.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: multipart/signed;
+  boundary="nextPart1231424.LoVdVrWrnt";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <47FBAA76.20008@msgid.tls.msk.ru>
-Content-Disposition: inline
+In-Reply-To: <47FBA3BB.2030007@nrel.colostate.edu>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>, Michael Tokarev <mjt@tls.msk.ru>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Apr 8, 2008 at 1:25 PM, Michael Tokarev <mjt@tls.msk.ru> wrote:
->
-> Sean H. wrote:
->
-> > To preface, I'm a fairly new Linux user, and have little experience
-> > with RAID. I've taken this question several places and have yet to get
-> > an answer which solves my problem, so I figured I'd come to the
-> > experts.
-> >
-> > I have a five-disk RAID 5, and one of the disks is failing. Every few
-> > days it'll start buzzing, and will continue buzzing until the drive is
-> > forced to spin down and back up, by either a restart or suspending to
-> > RAM.
-> >
-> >  Now, today, I wanted to determine which disk was failing, so I
-> > unmounted my array and unplugged drives - Specifically, three. The
-> > third was the culprit, and I plugged the drives back in and rebooted.
-> >
-> >  The gift, or in this case, curse of my motherboard is that it
-> > supports hot-swapping of SATA drives. So the drives didn't just
-> > disappear inside the OS and reappear after a reboot. They disappeared
-> > and re-appeared in the OS with incorrect /dev/sd* locations, and then
-> > I rebooted.
-> >
-> >  I was unable to boot until I removed the line detailing the array
-> > from my fstab. Now, when I manually 'mdadm --assemble /dev/md0' mdadm
-> > finds the two untouched drives, then stops and tells me that they're
-> > not enough to start the array.
-> >
-> >  So... How can I reassemble the array without knowing what order the
-> > drives are in?
-> >
->
->  Don't list individual component devices in mdadm.conf.
->  Use array UUIDs instead.
->
->  I.e., instead of:
->
->  --- WRONG ---
->  ARRAY /dev/md1 devices=/dev/sda1,/dev/sdb1,/dev/sdc1
->  --- WRONG ---
->
->  use this:
->
->  --- RIGHT ---
->  ARRAY /dev/md1 UUID=11111111:22222222:33333333:44444444
->  --- RIGHT ---
->
->  Or use modern ways to assemble the arrays - such as homehost
->  (requires version 1 superblock).
->
->  In either case mdadm will find the relevant components (assuming
->  DEVICE line in mdadm.conf is correct) and figure out the right
->  order.
->
->  /mjt
->
+--nextPart1231424.LoVdVrWrnt
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-My mdadm.conf is configured with UUIDs:
+hi,
 
-# mdadm.conf written out by anaconda
-DEVICE partitions
-MAILADDR root
-ARRAY /dev/md0 level=raid5 num-devices=5
-uuid=58dcdaf3:bdf3f176:f2dd1b6b:f095c127
+Am Dienstag, 8. April 2008 18:56 schrieb Ty! Boyack:
+> I'm curious if there is a way to have a raid set (raid5 in my case, but
+> this could apply to any raid level) that could tolerate a component
+> device being unavailable for a period of time.
 
-Tried the following: 'mdadm --assemble /dev/md0 --uuid
-58dcdaf3:bdf3f176:f2dd1b6b:f095c127'
-... and got this: mdadm: /dev/md0 assembled from 2 drives - not enough
-to start the array.
-(Which is what I've been getting for a while, now.)
+for RAID1 there is "--write-mostly" and "--write-behind=3D". Don't know if =
+this=20
+is already available for RAID5.
 
-It's possible to correct this issue by unplugging the three drives and
-plugging them back in and rebooting, so the drives get their original
-/dev/sd* locations, is it not? (Even if it it possible, I'd like to
-learn how to fix problems like this at the software level over the
-hardware level.)
+There's also the option "--bitmap=3D" which can speedup a resync when=20
+temporarily disconnecting one device.
+
+
+=2D-=20
+greetings
+
+eMHa
+
+--nextPart1231424.LoVdVrWrnt
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.6 (GNU/Linux)
+
+iD8DBQBH+6/5XT3LE+AjWCsRAsiSAKDedcKFMfEPLLFx7i6dHpVEN4G+SACdFoK8
+AI9N7kXui55V+CwbyrirFg0=
+=TzMg
+-----END PGP SIGNATURE-----
+
+--nextPart1231424.LoVdVrWrnt--
