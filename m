@@ -1,55 +1,76 @@
-From: Markus Hochholdinger <Markus@hochholdinger.net>
-Subject: Re: Is it possilble to be "delay tolerant" or have "slow dropout" of unavailable components?
-Date: Tue, 8 Apr 2008 19:48:37 +0200
-Message-ID: <200804081948.41959.Markus@hochholdinger.net>
-References: <47FBA3BB.2030007@nrel.colostate.edu>
+From: "Ty! Boyack" <ty@nrel.colostate.edu>
+Subject: Re: Is it possilble to be "delay tolerant" or have "slow dropout"
+ of unavailable components?
+Date: Tue, 08 Apr 2008 12:24:02 -0600
+Message-ID: <47FBB842.2030902@nrel.colostate.edu>
+References: <47FBA3BB.2030007@nrel.colostate.edu> <200804081948.41959.Markus@hochholdinger.net>
 Mime-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1231424.LoVdVrWrnt";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <47FBA3BB.2030007@nrel.colostate.edu>
+In-Reply-To: <200804081948.41959.Markus@hochholdinger.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Markus Hochholdinger <Markus@hochholdinger.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---nextPart1231424.LoVdVrWrnt
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+Markus Hochholdinger wrote:
+> hi,
+>
+> Am Dienstag, 8. April 2008 18:56 schrieb Ty! Boyack:
+>   
+>> I'm curious if there is a way to have a raid set (raid5 in my case, but
+>> this could apply to any raid level) that could tolerate a component
+>> device being unavailable for a period of time.
+>>     
+>
+> for RAID1 there is "--write-mostly" and "--write-behind=". Don't know if this 
+> is already available for RAID5.
+>
+> There's also the option "--bitmap=" which can speedup a resync when 
+> temporarily disconnecting one device.
+>
+>
+>   
 
-hi,
+Thanks - I was looking at those options, but it seems that the 
+'write-behind' option would need to be applied to ALL devices.  It seems 
+to indicate a difference in the devices - one is fast, one is slow, and 
+the slow one is indicated with write-behind.  In my case, I think all 
+are fast except in the case of a failure, in which case I'd like to have 
+some delay before it gets declared bad to see if it comes back.
 
-Am Dienstag, 8. April 2008 18:56 schrieb Ty! Boyack:
-> I'm curious if there is a way to have a raid set (raid5 in my case, but
-> this could apply to any raid level) that could tolerate a component
-> device being unavailable for a period of time.
+As for the 'bitmap' option - I think this has a lot of potential, and 
+might work IF there was an automatically re-add a failed device.  With 
+the bitmap I see the following sequence taking place:
 
-for RAID1 there is "--write-mostly" and "--write-behind=3D". Don't know if =
-this=20
-is already available for RAID5.
+1) Device in a raid5 goes away for some reason (iscsi reboot, network 
+glitch, etc.) but the component is really still good.
+2) raid5 marks device as bad, starts tracking changes in bitmap
+3) device comes back online
+<right now this is as far as I can get it without manual intervention, 
+but if there is some sort of auto re-add this sequence could continue 
+unabated>
+4) device is re-added to raid5
+5) Resync occurs fast because of the bitmap.
 
-There's also the option "--bitmap=3D" which can speedup a resync when=20
-temporarily disconnecting one device.
+So... Perhaps I'm asking for the wrong thing.  Is there a way to detect 
+a recovery after a failure, and have it automatically repair the raid set?
+
+Right now, without the automation, it is possible, and likely, that an 
+operator cannot respond in time to avoid having the bitmap fill up, and 
+then we are into a long resync.  More critically, we would be running 
+with a degraded array from the point of failure until an operator can 
+fix it and the resync finishes, which is frightening.
+
+-Ty!
 
 
-=2D-=20
-greetings
+-- 
+-===========================-
+  Ty! Boyack
+  NREL Unix Network Manager
+  ty@nrel.colostate.edu
+  (970) 491-1186
+-===========================-
 
-eMHa
-
---nextPart1231424.LoVdVrWrnt
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
-
-iD8DBQBH+6/5XT3LE+AjWCsRAsiSAKDedcKFMfEPLLFx7i6dHpVEN4G+SACdFoK8
-AI9N7kXui55V+CwbyrirFg0=
-=TzMg
------END PGP SIGNATURE-----
-
---nextPart1231424.LoVdVrWrnt--
