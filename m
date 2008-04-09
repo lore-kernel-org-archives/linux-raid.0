@@ -1,53 +1,102 @@
-From: "Mike Snitzer" <snitzer@gmail.com>
-Subject: Re: Write-Intent Bitmaps and disk caches
-Date: Tue, 8 Apr 2008 22:44:55 -0400
-Message-ID: <170fa0d20804081944i4fcd51eck166bd8b5c2fa3724@mail.gmail.com>
-References: <47FBD28B.6060209@nrel.colostate.edu>
+From: "Christian Pernegger" <pernegger@gmail.com>
+Subject: drive failed, need help with interpretation / recovery
+Date: Wed, 9 Apr 2008 19:05:31 +0200
+Message-ID: <bb145bd20804091005x1ce30fmea001a9ff7d2307e@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <47FBD28B.6060209@nrel.colostate.edu>
 Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Ty! Boyack <ty@nrel.colostate.edu>
-Cc: linux-raid@vger.kernel.org
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tue, Apr 8, 2008 at 4:16 PM, Ty! Boyack <ty@nrel.colostate.edu> wrote:
-> I'm a little confused on the write-intent bitmaps and how they interact with
-> the disk caches - I would appreciate any clarification here.
->
->  The way I understand it, if a device fails in a raid set, the bitmap will
-> track regions that have changed since the failed device left the array.  If
-> the device is added back in, the re-sync time is much shorter since only
-> some blocks have to be re-sync'ed.
->
->  But in this case it's possible that blocks A, B, and C were written to the
-> device, and the failure was detected on block C.  Thus blocks A and B would
-> be probably held in the device's cache (hard drive cache, or this problem
-> gets worse if working with disk arrays as devices, since they have much
-> larger caches).  When the device was re-added, block C would presumably be
-> re-synced as requested by the bitmap, but would A and B be lost forever
-> because they fell out of the cache on the drive?
->
->  Does the bitmap, or something else, take this into account?  Or will this
-> eventually lead to an inconsistent read or data corruption down the road?
-> Or am I just out waving my paranoid flag today?
+Found an e-mail from mdam in my inbox and this in the logs:
 
-In your example problem both the in-memory bitmap and on-disk bitmaps
-would be updated to have the dirty bit associated with block C set.
-When the failed member is re-added to the array the block C will get
-resynced and the associated dirty bit cleared in all bitmaps.
+Apr  8 04:44:50 jesus kernel: ata3.00: exception Emask 0x0 SAct 0x1
+SErr 0x0 action 0x2 frozen
+Apr  8 04:44:50 jesus kernel: ata3.00: cmd
+60/00:00:00:6c:ef/01:00:2c:00:00/40 tag 0 cdb 0x0 data 131072 in
+Apr  8 04:44:50 jesus kernel:          res
+40/00:00:00:00:02/00:00:00:00:00/00 Emask 0x4 (timeout)
+Apr  8 04:44:51 jesus kernel: ata3: soft resetting port
+Apr  8 04:45:01 jesus kernel: ata3: softreset failed (timeout)
+Apr  8 04:45:01 jesus kernel: ata3: hard resetting port
+Apr  8 04:45:11 jesus kernel: ata3: softreset failed (timeout)
+Apr  8 04:45:11 jesus kernel: ata3: hard resetting port
+Apr  8 04:45:46 jesus kernel: ata3: softreset failed (timeout)
+Apr  8 04:45:46 jesus kernel: ata3: hard resetting port
+Apr  8 04:45:51 jesus kernel: ata3: softreset failed (timeout)
+Apr  8 04:45:51 jesus kernel: ata3: reset failed, giving up
+Apr  8 04:45:51 jesus kernel: ata3.00: disabled
+Apr  8 04:45:51 jesus kernel: ata3: EH complete
+Apr  8 04:45:51 jesus kernel: sd 3:0:0:0: [sdd] Result:
+hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK,SUGGEST_OK
+Apr  8 04:45:51 jesus kernel: end_request: I/O error, dev sdd, sector 753888256
+Apr  8 04:45:51 jesus kernel: sd 3:0:0:0: [sdd] Result:
+hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK,SUGGEST_OK
+Apr  8 04:45:51 jesus kernel: end_request: I/O error, dev sdd, sector 753888256
+Apr  8 04:45:51 jesus kernel: raid5: Disk failure on sdd, disabling
+device. Operation continuing on 3 devices
+Apr  8 04:45:51 jesus kernel: RAID5 conf printout:
+Apr  8 04:45:51 jesus kernel:  --- rd:4 wd:3
+Apr  8 04:45:51 jesus kernel:  disk 0, o:1, dev:sdb
+Apr  8 04:45:51 jesus kernel:  disk 1, o:1, dev:sdc
+Apr  8 04:45:51 jesus kernel:  disk 2, o:0, dev:sdd
+Apr  8 04:45:51 jesus kernel:  disk 3, o:1, dev:sde
+Apr  8 04:45:51 jesus kernel: RAID5 conf printout:
+Apr  8 04:45:51 jesus kernel:  --- rd:4 wd:3
+Apr  8 04:45:51 jesus kernel:  disk 0, o:1, dev:sdb
+Apr  8 04:45:51 jesus kernel:  disk 1, o:1, dev:sdc
+Apr  8 04:45:51 jesus kernel:  disk 3, o:1, dev:sde
 
-I'm not seeing why you have concern for blocks A and B; if the writes
-completed to all members that means each individual drive marked the
-associated block requests uptodate in the block device drivers beneath
-Linux MD.
+---
 
-The MD write-intent bitmap doesn't have anything to do with the
-hardware cache of each individual raid member.  Blocks A and B
-wouldn't get dropped unless you have writeback cache enabled on the
-drives (without battery backup) and they suffer a power loss.
+Apr  9 17:46:08 jesus kernel: md: unbind<sdd>
+Apr  9 17:46:08 jesus kernel: md: export_rdev(sdd)
+Apr  9 17:47:24 jesus kernel: sd 3:0:0:0: [sdd] Result:
+hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK,SUGGEST_OK
+Apr  9 17:47:24 jesus kernel: end_request: I/O error, dev sdd, sector 976773152
+Apr  9 17:47:24 jesus kernel: Buffer I/O error on device sdd, logical
+block 122096644
+Apr  9 17:47:25 jesus kernel: sd 3:0:0:0: [sdd] Result:
+hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK,SUGGEST_OK
+Apr  9 17:47:25 jesus kernel: end_request: I/O error, dev sdd, sector 976773152
+Apr  9 17:47:25 jesus kernel: Buffer I/O error on device sdd, logical
+block 122096644
+[... lots more ...]
 
-Mike
+The first part is what was originally there. Here's what I did:
+
+I --remove'd the drive, which went fine. Any further attempts to
+access the drive, be it for a simple --(re-)add, --zero-superblock or
+badblocks -w failed with the above errors.
+
+At which point I shut down the machine to replace the drive but
+restarted it instead by mistake - lo and behold, the drive is back and
+working.
+Re-adding it to the array went flawlessly and only took a few seconds
+of recovery. (Might well be that there were no writes in the last few
+days.)
+
+BUT considering I already tried to zero the superblock and run a
+destructive badblocks test - can I be sure that none of these commands
+went through and the data and superblock on the intermittent disk are
+ok? I started a "check" just to be sure, no errors yet, but I don't
+know if it will pick up all errors, i. e. in the superblock or other
+non-payload areas.
+
+Should I
+- fail the disk again manually, wipe it and force a full resync, with
+the added risk of another disk going on holiday or
+- let the "check" run its course and leave the disk as-is if
+mismatch_cnt remains 0?
+
+As for the failiure itself, maybe the dreaded
+WD5000YS-drops-out-of-RAIDs-intermittently bug has finally bitten me
+... I'm guessing I should exchange the disk just to be on the safe
+side?
+
+Thanks,
+
+C.
