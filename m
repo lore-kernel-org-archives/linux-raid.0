@@ -1,42 +1,53 @@
-From: Henry Huang <hwh6k@earthlink.net>
-Subject: RAID-6/External Bitmap Issues
-Date: Tue, 8 Apr 2008 15:57:58 -0700 (GMT-07:00)
-Message-ID: <33156703.1207695479029.JavaMail.root@elwamui-royal.atl.sa.earthlink.net>
-Reply-To: Henry Huang <hwh6k@earthlink.net>
+From: "Mike Snitzer" <snitzer@gmail.com>
+Subject: Re: Write-Intent Bitmaps and disk caches
+Date: Tue, 8 Apr 2008 22:44:55 -0400
+Message-ID: <170fa0d20804081944i4fcd51eck166bd8b5c2fa3724@mail.gmail.com>
+References: <47FBD28B.6060209@nrel.colostate.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <47FBD28B.6060209@nrel.colostate.edu>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Ty! Boyack <ty@nrel.colostate.edu>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Fairly new to Linux and md, so forgive me if this has been covered already.
+On Tue, Apr 8, 2008 at 4:16 PM, Ty! Boyack <ty@nrel.colostate.edu> wrote:
+> I'm a little confused on the write-intent bitmaps and how they interact with
+> the disk caches - I would appreciate any clarification here.
+>
+>  The way I understand it, if a device fails in a raid set, the bitmap will
+> track regions that have changed since the failed device left the array.  If
+> the device is added back in, the re-sync time is much shorter since only
+> some blocks have to be re-sync'ed.
+>
+>  But in this case it's possible that blocks A, B, and C were written to the
+> device, and the failure was detected on block C.  Thus blocks A and B would
+> be probably held in the device's cache (hard drive cache, or this problem
+> gets worse if working with disk arrays as devices, since they have much
+> larger caches).  When the device was re-added, block C would presumably be
+> re-synced as requested by the bitmap, but would A and B be lost forever
+> because they fell out of the cache on the drive?
+>
+>  Does the bitmap, or something else, take this into account?  Or will this
+> eventually lead to an inconsistent read or data corruption down the road?
+> Or am I just out waving my paranoid flag today?
 
-So anyone who's been looking into write-intent bitmaps under mdadm has probably seen this blurb from the man page already:
+In your example problem both the in-memory bitmap and on-disk bitmaps
+would be updated to have the dirty bit associated with block C set.
+When the failed member is re-added to the array the block C will get
+resynced and the associated dirty bit cleared in all bitmaps.
 
-       If  an  array  is  using a write-intent bitmap, then devices which have
-       been removed can be re-added in a way that avoids a full reconstruction
-       but  instead just updates the blocks that have changed since the device
-       was removed.  For arrays with persistent metadata (superblocks) this is
-       done  automatically.  For arrays created with --build mdadm needs to be
-       told that this device we removed recently with --re-add.
+I'm not seeing why you have concern for blocks A and B; if the writes
+completed to all members that means each individual drive marked the
+associated block requests uptodate in the block device drivers beneath
+Linux MD.
 
-       Devices can only be removed from an array if they  are  not  in	active
-       use,  i.e.  that must be spares or failed devices.  To remove an active
-       device, it must first be marked as faulty.
+The MD write-intent bitmap doesn't have anything to do with the
+hardware cache of each individual raid member.  Blocks A and B
+wouldn't get dropped unless you have writeback cache enabled on the
+drives (without battery backup) and they suffer a power loss.
 
-Having read some harsh performance criticisms of internal bitmaps, I figure I'll try a quick test with an external bitmap instead.  I set up four 500 MB loopback devices, and create a RAID-6 array with an external bitmap (on a physically separate drive) and version 1.2 superblocks.  Then I fail, remove, and re-add one device.
-
-Problem: instead of resyncing, it simply re-adds the device as a spare, in a "failed" state.
-
-Since RAID-6 has a two-drive cushion before complete failure, I wonder what failing/removing/re-adding a second device will do.  Answer: the exact same thing.
-
-So I stop the array, and re-assemble it WITHOUT the --bitmap parameter.  This time, both of the soft-failed devices are slow-resynced into the array -- as expected.
-
-(Notice that I didn't bother using Grow mode to "remove" the bitmap -- apparently with an external bitmap it doesn't matter, since no information about its existence seems to stored in the superblock, or anywhere else persistently.)
-
-What am I missing here?  It's fairly obvious to me that the expected behavior from the manual (automatic fast rebuilding w/o full reconstruction) is not happening -- despite using superblocks.
-
--H
-
+Mike
