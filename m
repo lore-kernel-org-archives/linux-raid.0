@@ -1,63 +1,93 @@
-From: Mikulas Patocka <mikulas@artax.karlin.mff.cuni.cz>
-Subject: Re: Data corruption on software RAID
-Date: Fri, 11 Apr 2008 04:55:06 +0200 (CEST)
-Message-ID: <Pine.LNX.4.64.0804110448120.22052@artax.karlin.mff.cuni.cz>
-References: <Pine.LNX.4.64.0804080033430.13352@artax.karlin.mff.cuni.cz>
-	<47FD0BE8.4070105@tmr.com>
-	<Pine.LNX.4.64.0804100503160.26713@artax.karlin.mff.cuni.cz>
-	<47FE224D.2020309@tmr.com>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: Jean-Baptiste Joret <JORET@de.ibm.com>
+Subject: Need some information and help on mdadm in order to support it on IBM z
+ Systems
+Date: Fri, 11 Apr 2008 14:28:57 +0200
+Message-ID: <OF9FBFD1B1.E511C96F-ONC1257428.004472D1-C1257428.004493A0@de.ibm.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <47FE224D.2020309@tmr.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, device-mapper development <dm-devel@redhat.com>, mingo@redhat.com, agk@redhat.com
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> Currently you can go for hours without ever reaching a clean state on active
-> files. By not deliberately allowing the buffer to change during a write the
-> chances for getting consistent data on the disk should be significantly
-> improved.
+Hello,
 
-It can already happen that one device writes the sector and other not if 
-the power is interrupted. And all RAID implementations already deal with 
-it by resynchronizing the modified areas in case of crash. So they could 
-resynchronize modify-while-write cases as well, with the same code.
+I am trying to obtain information such as design document or anything t=
+hat=20
+would describe the content of the metadata. I am evaluating the solutio=
+n=20
+to determinate whether it is entreprise ready for use as a mirror solut=
+ion=20
+and if we can support it at IBM.=20
 
-... or I don't know if MM maintainers want to add locking to the pages 
-that are under a write. Personally, I wouldn't do it.
+Also I am currently having quite a show stopper issue, where help would=
+ be=20
+appreciated. I have a RAID1 with 2 Harddisks, when I remove one hardisk=
+ (I=20
+put the chpids offline which is equivalent to telling the system that t=
+he=20
+drive is currently not available), the missing disk is marked as "fault=
+y=20
+spare" when calling mdadm -D /dev/md0.=20
 
-> > From my point of view that trick with thread doing sync() and turning off
-> > region bits looks best. I'd like to know if that solution doesn't have any
-> > other flaw.
-> >
-> >   
-> > > For reliable operation I would want all copies (and/or CRCs) to be 
-> > > written on an fsync, by the time I bother to fsync I really, really, 
-> > > want the data on the disk.
-> > >     
-> >
-> > fsync already works this way.
-> >   
-> 
-> The point I was making is that after you change the code I would still want
-> that to happen. And your comment above seems to indicate a goal of getting
-> consistent data after a crash, with less concern that it be the most recent
-> data written. Sorry in advance if that's a misreading of "you just must not
-> forget to resync them after a crash."
+/dev/md0:
+        Version : 01.02.03
+  Creation Time : Fri Apr 11 11:11:59 2008
+     Raid Level : raid1
+     Array Size : 2403972 (2.29 GiB 2.46 GB)
+  Used Dev Size : 2403972 (2.29 GiB 2.46 GB)
+   Raid Devices : 2
+  Total Devices : 2
+Preferred Minor : 0
+    Persistence : Superblock is persistent
 
-There would be no problem with fsync. Fsync writes the synced data to both 
-devices. So after a crash you can select any of the devices as a resync 
-master copy, and you get the data that you wrote before sync() or fsync().
+  Intent Bitmap : Internal
 
-Mikulas
+    Update Time : Fri Apr 11 11:23:04 2008
+          State : active, degraded
+ Active Devices : 1
+Working Devices : 1
+ Failed Devices : 1
+  Spare Devices : 0
+
+           Name : 0
+           UUID : 9a0a6e30:4b8bbe7f:bc0cad81:9fd46804
+         Events : 8
+
+    Number   Major   Minor   RaidDevice State
+       0       0        0        0      removed
+       1      94       21        1      active sync   /dev/dasdf1
+
+       0      94       17        -      faulty spare   /dev/dasde1
+
+When I put the disk back online it is not automatically reinserted into=
+=20
+the array. The only thing that I have tried that worked was to do a hot=
+=20
+remove followed by a hot add (mdadm /dev/md0 -r /dev/dasde1 and then md=
+adm=20
+/dev/md0 -a /dev/dasde1). Is that the correct way or is there any optio=
+n=20
+to tell the disk is back an clean ? I don't like my solution verymuch a=
+s=20
+somtimes I get an error saying the superblock cannot be written.
+
+Thank you very much for any help you can provide.
+
+Best regards / Mit freundlichen Gruessen / Cordialement / Cordiali Salu=
+ti=20
+
+Jean-Baptiste Joret - Linux on System Z=20
+Phone: +49 7031 16-3278 / ITN: 39203278 - eMail: joret@de.ibm.com=20
+
+IBM Deutschland Research & Development GmbH
+Vorsitzender des Aufsichtsrats: Martin Jetter
+Gesch=E4ftsf=FChrung: Herbert Kircher
+Sitz der Gesellschaft: B=F6blingen
+Registergericht: Amtsgericht Stuttgart, HRB 243294
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
