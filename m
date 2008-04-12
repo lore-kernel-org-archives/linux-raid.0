@@ -1,68 +1,37 @@
-From: Bernd Schubert <bernd-schubert@gmx.de>
-Subject: [patch] limit error rate
-Date: Sat, 12 Apr 2008 20:16:44 +0200
-Message-ID: <ftquac$82m$1@ger.gmane.org>
+From: Richard Scobie <richard@sauce.co.nz>
+Subject: Re: two questions re. proactive recovery and forced assembly
+Date: Sun, 13 Apr 2008 10:36:38 +1200
+Message-ID: <48013976.6020705@sauce.co.nz>
+References: <c4985c940804100501g5cac252ax129328371c36d397@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <c4985c940804100501g5cac252ax129328371c36d397@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello,
+rosenfield.albert@gmail.com wrote:
 
-last night we had scsi problems and a hardware raid 
-unit was offlined during heavy i/o. While this happened we got for 
-about 3 minutes a huge number messages like these
+> Question 2.
+> A background scan feature has been discussed a few times, my English
+> is limited but I find this explanation to be a good one:
+> http://thread.gmane.org/gmane.linux.raid/2206
 
-Apr 12 03:36:07 pfs1n14 kernel: [197510.696595] raid5:md7: read error not correctable (sector 2993096568 on sdj2).
+There is a md RAID feature called "repair", which can be regularly 
+scheduled via a cron job and will do a full check and repair of the 
+entire array.
 
-I guess the high error rate is responsible for not scheduling other 
-events - during this time the system was not pingable and in the end 
-also other devices run into scsi command timeouts causing problems on 
-these unrelated devices as well.
+This can be initiated with the command:
 
+echo repair > /sys/block/mdX/md/sync_action
 
-Signed-off-by: Bernd Schubert <bernd-schubert@gmx.de>
+where mdX is your array.
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index b162b83..3c82dfb 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -1141,10 +1141,12 @@ static void raid5_end_read_request(struct bio * bi, int error)
-                set_bit(R5_UPTODATE, &sh->dev[i].flags);
-                if (test_bit(R5_ReadError, &sh->dev[i].flags)) {
-                        rdev = conf->disks[i].rdev;
--                       printk(KERN_INFO "raid5:%s: read error corrected (%lu sectors at %llu on %s)\n",
--                              mdname(conf->mddev), STRIPE_SECTORS,
--                              (unsigned long long)(sh->sector + rdev->data_offset),
--                              bdevname(rdev->bdev, b));
-+                       if (printk_ratelimit())
-+                               printk(KERN_INFO "raid5:%s: read error corrected"
-+                                      " (%lu sectors at %llu on %s)\n",
-+                                      mdname(conf->mddev), STRIPE_SECTORS,
-+                                      (unsigned long long)(sh->sector + rdev->data_offset),
-+                                      bdevname(rdev->bdev, b));
-                        clear_bit(R5_ReadError, &sh->dev[i].flags);
-                        clear_bit(R5_ReWrite, &sh->dev[i].flags);
-                }
-@@ -1157,12 +1159,13 @@ static void raid5_end_read_request(struct bio * bi, int error)
- 
-                clear_bit(R5_UPTODATE, &sh->dev[i].flags);
-                atomic_inc(&rdev->read_errors);
--               if (conf->mddev->degraded)
-+               if (conf->mddev->degraded && printk_ratelimit())
-                        printk(KERN_WARNING "raid5:%s: read error not correctable (sector %llu on %s).\n",
-                               mdname(conf->mddev),
-                               (unsigned long long)(sh->sector + rdev->data_offset),
-                               bdn);
--               else if (test_bit(R5_ReWrite, &sh->dev[i].flags))
-+               else if (test_bit(R5_ReWrite, &sh->dev[i].flags) && 
-+                        printk_ratelimit())
-                        /* Oh, no!!! */
-                        printk(KERN_WARNING "raid5:%s: read error NOT corrected!! (sector %llu on %s).\n",
-                               mdname(conf->mddev),
+More information on md RAID options can be found in the file md.txt, in 
+the Documentation directory of the kernel source.
 
+Regards,
 
-
+Richard
