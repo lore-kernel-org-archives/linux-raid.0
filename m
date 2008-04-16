@@ -1,34 +1,60 @@
 From: "Dan Williams" <dan.j.williams@intel.com>
 Subject: Re: Mapping physical disk block to logical block to selectively repair w/o forcing rescan
-Date: Tue, 15 Apr 2008 17:35:15 -0700
-Message-ID: <e9c3a7c20804151735n6793339dl764c0d57aedabc57@mail.gmail.com>
+Date: Tue, 15 Apr 2008 23:04:40 -0700
+Message-ID: <e9c3a7c20804152304o6e784072pf78b11ed840c6459@mail.gmail.com>
 References: <A49AB75A717185448F69082E969E536B03C2647E@34093-EVS1C2.exchange.rackspace.com>
+	 <e9c3a7c20804151735n6793339dl764c0d57aedabc57@mail.gmail.com>
+	 <e9c3a7c20804151737k44b09572x484c7c41ff90e09d@mail.gmail.com>
+	 <A49AB75A717185448F69082E969E536B03C264CC@34093-EVS1C2.exchange.rackspace.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <A49AB75A717185448F69082E969E536B03C2647E@34093-EVS1C2.exchange.rackspace.com>
+In-Reply-To: <A49AB75A717185448F69082E969E536B03C264CC@34093-EVS1C2.exchange.rackspace.com>
 Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: David Lethe <david@santools.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Apr 15, 2008 at 1:47 PM, David Lethe <david@santools.com> wrote:
-> I have some code that does some background media scanning that results in a list of physical disks and block numbers that are known bad. I want to repair the logical (md) block(s) that they correspond to (assuming not RAID0, of course) without a draconian full repair/rescan.  As such, I need a physical to logical mapping technique.  It doesn't appear that there is a built-in mechanism in mdadm or by echoing a command to the /proc/mdstat, or anything else to force the md subsystem to repair the (parity protected) logical block associated with the physical disk and block that is known bad.
+On Tue, Apr 15, 2008 at 7:47 PM, David Lethe <david@santools.com> wrote:
+> I have the physical disk sector/drive, so I will have to go backwards.
+>  That means using compute_blocknr, factoring the chunk size, stripe size,
+>  look at the raid5_private_data to get everything else, including whether
+>  or not it is in a rebuild, what position the disk has in the stripe,
+>  among
+>  other things .. and repeat for RAID6.  Still all scriptable .. as long
+>  as I keep the block calculations in 64-bits when on 32-bit kernel.
 >
->  (raid5extend.c has a phys2log function that seems to take everything into consideration, and RAID1 is a non-issue,  but as long as I am going to do this, then might as well cover all the bases and make sure it is done right)
+>  I can parse mdadm -Q -D  to get health and configuration, or get it from
+>  sysfs, haven't decided.
 >
->  Has anybody written a script or something, or is there a technique I have missed that will provide block-level mapping?  I don't want to muck with modifying the md driver ... a shell script would be fine as this would be a rare occurrence, and since the disk will take billions of clock cycles to remap a bad sector, then an inefficient mapping script will hardly be noticeable.
+>  Now for recovery ... a change was made in 2.6.15 that affects how the
+>  /dev/md recalculates & corrects the error, but I don't think I have to
+>  worry about it. Just directly read the /dev/md block that corresponds to
+>  the faulty physical disk/sector.  This should just repair the bad block
+>  w/o enticing the md system to fail over the entire disk.  Exception
+>  would be if the disk with bad block can remap due to a catastrophic
+>  failure, or lack of spare sectors.
 >
->  Also, assuming I have to write such a script and now know that block X on /dev/mdY needs to be repaired, then is there any risk of data corruption if I simply issue a read  dd if=/dev/md$Y of=/dev/null count=1 skip=$X to force the md driver to repair the stripe?
->  (Actually, count should be increased large enough to force a non-cached read, and I think block number might need to be examined to make sure that it is not associated with a block that contains parity information, otherwise, the md engine might not detect the problem and force parity rebuild).
->
->  Any advice, comments, code will be appreciated.
+>  Even if the bad physical block lands on a parity block in the /dev/md
+>  space, it should get rebuilt because it has to read the entire stripe to
+>  figure out if there is a parity error, which there will be because one
+>  disk will return the sense data indicating an unrecoverable read error,
+>  so the md will repair the stripe to keep parity consistent for me.
 >
 
-raid5_compute_sector() in drivers/md/raid5.c maps the logical RAID
-block to the physical block.  Is that what you are looking for?
+There is no guarantee you can actually cause the bad block to be read
+by doing a "dd if=/dev/mdN...".  The kernel will sometimes calculate a
+disk without causing a read, although in  most cases it will directly
+hit the disk.  For correcting parity disk bad blocks there is no way
+to trigger a parity read without doing a resync operation or a write.
+That said, it would not be too difficult to add an interface to tell
+the kernel to try to read an entire stripe in order to trigger the bad
+block recovery code.  Another aspect of the mechanism could be to have
+the kernel not fail the disk and instead let userspace update a
+badblocks(8) file to tell the filesystem to ignore that part of the
+array...
 
 --
 Dan
