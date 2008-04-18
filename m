@@ -1,58 +1,56 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: Question: how to identify failing disk in a RAID1
-Date: Thu, 17 Apr 2008 09:12:02 -0400
-Message-ID: <48074CA2.2020004@tmr.com>
-References: <48025B8D.2030803@harddata.com> <alpine.DEB.1.10.0804131529300.11311@p34.internal.lan> <4802AFEB.9020006@tmr.com> <4802CDA2.605@harddata.com> <4803886E.3050007@tmr.com> <4804CD4F.7080303@harddata.com> <4804F09D.5070503@tmr.com> <48050DD6.7020404@harddata.com> <48055EFA.8060505@tmr.com> <480607F2.3060504@harddata.com>
+From: Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE>
+Subject: Re: Need some information and help on mdadm in order to support it
+ on IBM z Systems
+Date: Fri, 18 Apr 2008 11:46:23 +0200
+Message-ID: <fu9qlp$iaj$1@ger.gmane.org>
+References: <OF9FBFD1B1.E511C96F-ONC1257428.004472D1-C1257428.004493A0@de.ibm.com>
+ <47FF7831.20707@tmr.com>
+ <OF70B5DB7B.09FE2CC6-ONC125742B.0032A67D-C125742B.003CF42B@de.ibm.com>
+ <4804F9FD.4070606@tmr.com>
+ <OF759BAE37.32591658-ONC125742D.004F2D87-C125742D.00543FEE@de.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <480607F2.3060504@harddata.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Maurice Hilarius <maurice@harddata.com>, Linux RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Maurice Hilarius wrote:
-> Morning Bill.
->
-> BTW< I want to say "Thanks for your help with this" first.
-> Just in case I forgot.
->
-> So, I ran "check" once. It complained, and failed.
->
-Does the failure provide any useful information?
+Jean-Baptiste Joret <JORET@de.ibm.com> wrote:
+> the scenario actually involves simulating a hardware connection issue for 
+> a few seconds and bring it back online. But once the hardware comes back 
+> online it is still do not come back into the array an remains marked 
+> "faulty spare". Moreover, if you then reboot, the mirror comes up and you 
+> can mount it but it is degraded and my "faulty spare" is now removed:
 
-> A few hours later, I ran it again, and it immediately returned "0"
->
-I totally don't understand that, assuming that the first check was sone.
+This is just the normal way md deals with faulty components. And even
+more: I personally don't know any (soft or hard) RAID solution that
+would automatically try to re-add faulty components back to an array.
+I personally would also consider such an automatic re-add a really bad
+idea. There was a reason for the component to fail, you don't want to
+touch it again without user intervention - it could make things far more
+worse (blocking busses, reading wrong data etc.). A user who knows
+better can of course trigger the RAID to touch it again - for md it's
+just the way you described already: remove the faulty component from the
+array and re-add it.
 
-> I am still puzzled:
-> Why it failed the first time
-> Why it returned a result in a couple of seconds the second time.
-> What it tells me?
->    I gather this means the md0 device is healthy.
->
-I don't think so, I've never had a check *fail*, I just expect it to 
-tell me how bad things are.
+Being more "intelligent" regarding such an automatic re-add would
+require a far deeper failure analysis to decide whether it would be safe
+to try re-adding it or better leave it untouched. I don't know any
+software yet that would be capable to do so.
 
-> So, meanwhile back at the ranch, I still think sda is failing..
+Afaik, since a little while md contains one such automatism regarding
+sector read errors where it automatically tries to re-write this sector
+to the failing disk to trigger disk's sector-reallocation. I personally
+even consider this behaviour quite dangerous, since there is no
+guarantee that this read-error really occured due to a (quite harmless)
+single-sector failure and thus, IMHO even there is a chance to make
+things more worse by touching the failing disk again per default.
 
-I think it's time to be keeping a good backup, and hopefully someone 
-else has a good thought on running this down more.
 
-> Any thoughts on that?
-
-The only thought I have at the moment is marginal power supply, and 
-that's just because it can generate all manner of odd behaviors, rather 
-than any other hints. Sorry.
-
-If you aren't getting errors from SMART or logs, and I don't remember 
-you sending me that info, I'm not sure how you determine which drive is 
-the problem.
-
+regards
+   Mario
 -- 
-Bill Davidsen <davidsen@tmr.com>
-  "Woe unto the statesman who makes war without a reason that will still
-  be valid when the war is over..." Otto von Bismark 
-
+Computer Science is no more about computers than astronomy is about
+telescopes.                                       -- E. W. Dijkstra
 
