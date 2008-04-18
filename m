@@ -1,81 +1,102 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: Question: how to identify failing disk in a RAID1
-Date: Fri, 18 Apr 2008 09:17:57 -0400
-Message-ID: <48089F85.9060707@tmr.com>
-References: <48025B8D.2030803@harddata.com> <alpine.DEB.1.10.0804131529300.11311@p34.internal.lan> <4802AFEB.9020006@tmr.com> <4802CDA2.605@harddata.com> <4803886E.3050007@tmr.com> <4804CD4F.7080303@harddata.com> <4804F09D.5070503@tmr.com> <48050DD6.7020404@harddata.com> <48055EFA.8060505@tmr.com> <480607F2.3060504@harddata.com> <48074CA2.2020004@tmr.com> <48076096.2020804@harddata.com>
+From: "David Lethe" <david@santools.com>
+Subject: RE: RAID1 == two different ARRAY in scan, and Q on read error corrected
+Date: Fri, 18 Apr 2008 18:49:13 -0500
+Message-ID: <A20315AE59B5C34585629E258D76A97C087DAB@34093-C3-EVS3.exchange.rackspace.com>
+References: <27567.1208547359@perkpartners.com> <48091A67.1090906@sauce.co.nz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <48076096.2020804@harddata.com>
+Content-class: urn:content-classes:message
+In-Reply-To: <48091A67.1090906@sauce.co.nz>
 Sender: linux-raid-owner@vger.kernel.org
-To: Maurice Hilarius <maurice@harddata.com>
-Cc: vger majordomo for lists <linux-raid@vger.kernel.org>
+To: Richard Scobie <richard@sauce.co.nz>, Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Maurice Hilarius wrote:
-> Bill Davidsen wrote:
->> Maurice Hilarius wrote:
->>> Morning Bill.
->>>
->>> BTW< I want to say "Thanks for your help with this" first.
->>> Just in case I forgot.
->>>
->>> So, I ran "check" once. It complained, and failed.
->>>
->> Does the failure provide any useful information?
->>
-> No.
-> Here is what I got the first time:
->
-> root@localhost md]# echo check >sync_action; cat mismatch_cnt
-> -bash: echo: write error: Device or resource busy
-> 0
->
-> Later, on my second try, a few hours later, it worked, reporting no error.
-> ..
-> [maurice@localhost ~]$ su -
-> Password:
-> [root@localhost ~]# cd /sys/block/md0/md
-> [root@localhost md]# cat /proc/mdstat
-> Personalities : [raid1] [raid6] [raid5] [raid4]
-> md0 : active raid1 sda3[0] sdb2[1]
->       386403328 blocks [2/2] [UU]
->
-> unused devices: <none>
-> [root@localhost md]# echo check >sync_action; cat mismatch_cnt
-> 0
->
->>
->> I think it's time to be keeping a good backup, and hopefully someone 
->> else has a good thought on running this down more.
->>
-> Thanks, updated that backup at the first sign of trouble
->>> Any thoughts on that?
->>
->> The only thought I have at the moment is marginal power supply, and 
->> that's just because it can generate all manner of odd behaviors, 
->> rather than any other hints. Sorry.
->>
-> Yeah. I am going to replace *both* disks, and then run the 
-> manufacturers utility (Seatest) on them.
->> If you aren't getting errors from SMART or logs, and I don't remember 
->> you sending me that info, I'm not sure how you determine which drive 
->> is the problem.
-> Exactly.
->
-> Thanks a LOT for trying, Bill..
+You can't assume a disk is losing sectors and failing without running
+some diagnostics. If you had an improper shutdown (i.e, power loss, not
+a crash), and disks were writing, then you can get ECC errors.  That
+does not indicate the disk is bad.
 
-Actually, my though is that you may not actually be getting hardware 
-errors, which is why they are not being report by either the kernel or 
-SMART. That's why I thought of memory and/or power issues, either of 
-which could cause what you are seeing.
+Of course, you must always have a backup, even if both drives are
+perfectly fine, RAID1 doesn't protect you from entering rm -rf * tmp
+instead of rm -rf *.tmp 
 
-Guess I have to leave it there, maybe someone else will have a thought.
+I strongly advise against using Richard's dd if=/dev/zero suggestion.
+It puts you at risk as you only have one online copy of the data ..
+unless you have current backup and it can easily do a cold-metal
+restore.  Not worth the risk if you ask me.
 
--- 
-Bill Davidsen <davidsen@tmr.com>
-  "Woe unto the statesman who makes war without a reason that will still
-  be valid when the war is over..." Otto von Bismark 
+Enter dd if=/dev/md0 of=/dev/null instead, and it will force parity
+rebuild. You do this with both disks online in RAID1.   Furthermore, you
+can get report of what blocks were bad.   There is likely also a mdadm
+rescan or mdadm rebuild, but you'd have to look up syntax. They are
+preferable to using the dd command.
+
+Either technique won't technically check all physical blocks on both
+disks, but they will take you considerably less clock time, and will
+protect your data. 
+
+Warning .. A block-level dd read on every block in md0 will not
+necessarily rebuild parity for all kernels.  You probably have to do
+something to temporarily disable cache, I don't know.
+
+Good luck - 
+
+David @ santools ^com
+http://www.santools.com/smart/unix/manual
+
+
+
+(Use a smaller blocksize to dd if you 
+
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Richard Scobie
+Sent: Friday, April 18, 2008 5:02 PM
+To: Linux RAID Mailing List
+Subject: Re: RAID1 == two different ARRAY in scan, and Q on read error
+corrected
+
+Phil Lobbes wrote:
+____________________________________________________________
+
+> 
+> Apr 15 11:07:14  kernel: raid1: sdc1: rescheduling sector 517365296
+> Apr 15 11:07:54  kernel: raid1:md0: read error corrected (8 sectors at
+517365296 on sdc1)
+> Apr 15 11:07:54  kernel: raid1: sdc1: redirecting sector 517365296 to
+another mirror
+> Apr 15 11:08:32  kernel: raid1: sdc1: rescheduling sector 517365472
+> Apr 15 11:09:09  kernel: raid1:md0: read error corrected (8 sectors at
+517365472 on sdc1)
+> Apr 15 11:09:09  kernel: raid1: sdc1: redirecting sector 517365472 to
+another mirror
+
+These entries,
+
+> Apr 18 14:01:45  smartd[2104]: Device: /dev/sdc, 3 Currently
+unreadable (pending) sectors
+
+and this, indicate that sdc is losing sectors, so you probably want a 
+backup of the array.
+
+Depending on how important the array is you could fail and remove sdc 
+from the array, dd if=/dev/zero of=/dev/sdc bs=1M and re-add it back.
+
+It may then be fine for some time, but if it continues to gather pending
+
+sectors in the short term, it is probably dying.
+
+Otherwise just replace it with a new one.
+
+Regards,
+
+Richard
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 
