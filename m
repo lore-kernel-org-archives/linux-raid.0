@@ -1,56 +1,34 @@
-From: Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE>
-Subject: Re: Need some information and help on mdadm in order to support it
- on IBM z Systems
-Date: Fri, 18 Apr 2008 11:46:23 +0200
-Message-ID: <fu9qlp$iaj$1@ger.gmane.org>
-References: <OF9FBFD1B1.E511C96F-ONC1257428.004472D1-C1257428.004493A0@de.ibm.com>
- <47FF7831.20707@tmr.com>
- <OF70B5DB7B.09FE2CC6-ONC125742B.0032A67D-C125742B.003CF42B@de.ibm.com>
- <4804F9FD.4070606@tmr.com>
- <OF759BAE37.32591658-ONC125742D.004F2D87-C125742D.00543FEE@de.ibm.com>
+From: Richard Scobie <richard@sauce.co.nz>
+Subject: Re: RAID1 == two different ARRAY in scan, and Q on read error corrected
+Date: Sat, 19 Apr 2008 15:15:28 +1200
+Message-ID: <480963D0.70307@sauce.co.nz>
+References: <27567.1208547359@perkpartners.com> <48091A67.1090906@sauce.co.nz> <A20315AE59B5C34585629E258D76A97C087DAB@34093-C3-EVS3.exchange.rackspace.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <A20315AE59B5C34585629E258D76A97C087DAB@34093-C3-EVS3.exchange.rackspace.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Jean-Baptiste Joret <JORET@de.ibm.com> wrote:
-> the scenario actually involves simulating a hardware connection issue for 
-> a few seconds and bring it back online. But once the hardware comes back 
-> online it is still do not come back into the array an remains marked 
-> "faulty spare". Moreover, if you then reboot, the mirror comes up and you 
-> can mount it but it is degraded and my "faulty spare" is now removed:
+David Lethe wrote:
+> You can't assume a disk is losing sectors and failing without running
+> some diagnostics. If you had an improper shutdown (i.e, power loss, not
+> a crash), and disks were writing, then you can get ECC errors.  That
+> does not indicate the disk is bad.
 
-This is just the normal way md deals with faulty components. And even
-more: I personally don't know any (soft or hard) RAID solution that
-would automatically try to re-add faulty components back to an array.
-I personally would also consider such an automatic re-add a really bad
-idea. There was a reason for the component to fail, you don't want to
-touch it again without user intervention - it could make things far more
-worse (blocking busses, reading wrong data etc.). A user who knows
-better can of course trigger the RAID to touch it again - for md it's
-just the way you described already: remove the faulty component from the
-array and re-add it.
+The error was:
 
-Being more "intelligent" regarding such an automatic re-add would
-require a far deeper failure analysis to decide whether it would be safe
-to try re-adding it or better leave it untouched. I don't know any
-software yet that would be capable to do so.
+Apr 18 14:01:45  smartd[2104]: Device: /dev/sdc, 3 Currently unreadable 
+(pending) sectors
 
-Afaik, since a little while md contains one such automatism regarding
-sector read errors where it automatically tries to re-write this sector
-to the failing disk to trigger disk's sector-reallocation. I personally
-even consider this behaviour quite dangerous, since there is no
-guarantee that this read-error really occured due to a (quite harmless)
-single-sector failure and thus, IMHO even there is a chance to make
-things more worse by touching the failing disk again per default.
+These are not ECC errors and the definition I have for pending sector 
+errors is, "Current count of unstable sectors (waiting for remapping)."
 
+It would be useful to see the Reallocated Sectors Count from the 
+smartctl output.
 
-regards
-   Mario
--- 
-Computer Science is no more about computers than astronomy is about
-telescopes.                                       -- E. W. Dijkstra
+Regards,
 
+Richard
