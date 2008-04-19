@@ -1,102 +1,77 @@
-From: "David Lethe" <david@santools.com>
-Subject: RE: RAID1 == two different ARRAY in scan, and Q on read error corrected
-Date: Fri, 18 Apr 2008 18:49:13 -0500
-Message-ID: <A20315AE59B5C34585629E258D76A97C087DAB@34093-C3-EVS3.exchange.rackspace.com>
-References: <27567.1208547359@perkpartners.com> <48091A67.1090906@sauce.co.nz>
+From: pg_lxra@lxra.for.sabi.co.UK (Peter Grandi)
+Subject: RE: Software/ Hardware RAID info
+Date: Sat, 19 Apr 2008 14:10:07 +0100
+Message-ID: <18441.61231.961400.928853@tree.ty.sabi.co.uk>
+References: <1208560939.7243.146.camel@isis>
+	<A20315AE59B5C34585629E258D76A97C087DB6@34093-C3-EVS3.exchange.rackspace.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
-In-Reply-To: <48091A67.1090906@sauce.co.nz>
+In-Reply-To: <A20315AE59B5C34585629E258D76A97C087DB6@34093-C3-EVS3.exchange.rackspace.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Richard Scobie <richard@sauce.co.nz>, Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-You can't assume a disk is losing sectors and failing without running
-some diagnostics. If you had an improper shutdown (i.e, power loss, not
-a crash), and disks were writing, then you can get ECC errors.  That
-does not indicate the disk is bad.
+[ ... ]
 
-Of course, you must always have a backup, even if both drives are
-perfectly fine, RAID1 doesn't protect you from entering rm -rf * tmp
-instead of rm -rf *.tmp 
+>> I am new to setting up RAID arrays, and I have experimented
+>> in the past with software only RAID, but now I have a new
+>> Dell PowerEdge 1900 with a SAS RAID controller daughter card.
 
-I strongly advise against using Richard's dd if=/dev/zero suggestion.
-It puts you at risk as you only have one online copy of the data ..
-unless you have current backup and it can easily do a cold-metal
-restore.  Not worth the risk if you ask me.
+>> My question is: What is the difference in tools that I will
+>> use to create and manage this hardware array?  Can I still
+>> use all the same techniques and tools such as mdadm, LVM2,
+>> and GParted to manage my array? or is it all in the bios.
 
-Enter dd if=/dev/md0 of=/dev/null instead, and it will force parity
-rebuild. You do this with both disks online in RAID1.   Furthermore, you
-can get report of what blocks were bad.   There is likely also a mdadm
-rescan or mdadm rebuild, but you'd have to look up syntax. They are
-preferable to using the dd command.
+Either way. Some people prefer hw/BIOS RAID, some people prefer
+sw/Linux RAID. I prefer the latter in most cases because of its
+flexibility, but the former is simpler to deal with.
 
-Either technique won't technically check all physical blocks on both
-disks, but they will take you considerably less clock time, and will
-protect your data. 
+>> Another question is how should I format these disks?
 
-Warning .. A block-level dd read on every block in md0 will not
-necessarily rebuild parity for all kernels.  You probably have to do
-something to temporarily disable cache, I don't know.
+My usual generic advice is to use RAID10, unless you really know
+what you are doing, and JFS as filesystem on top. You can't go
+much wrong with these choices.
 
-Good luck - 
+I guess that in your case convenience is more important than
+flexibility and hw/BIOS RAID10 may be simpler to setup than
+sw/Linux RAID10, even if the latter is particularly flexible.
 
-David @ santools ^com
-http://www.santools.com/smart/unix/manual
+Also I dread to think of people who use LVM2 at all, and in
+particular with RAID, as there are many pitfalls, and LVM is
+almost always unncessary (except in two cases perhaps, and I
+don't think even in those case it makes much sense anymore).
 
+>> Typically I would use a root file system, and a swap file
+>> system that is twice the size of my memory.
 
+Simple and flexible.
 
-(Use a smaller blocksize to dd if you 
+>> Since all four of my disks are used for hardware RAID, can I
+>> partition this into 2 array's? one for my root, and the other
+>> for swap...
 
------Original Message-----
-From: linux-raid-owner@vger.kernel.org
-[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Richard Scobie
-Sent: Friday, April 18, 2008 5:02 PM
-To: Linux RAID Mailing List
-Subject: Re: RAID1 == two different ARRAY in scan, and Q on read error
-corrected
+That sounds very peculiar. Linux swap does not really need RAID,
+except perhaps RAID1 for extreme cases.
 
-Phil Lobbes wrote:
-____________________________________________________________
+>> Any advice into setting this up is greatly appreciated.
 
-> 
-> Apr 15 11:07:14  kernel: raid1: sdc1: rescheduling sector 517365296
-> Apr 15 11:07:54  kernel: raid1:md0: read error corrected (8 sectors at
-517365296 on sdc1)
-> Apr 15 11:07:54  kernel: raid1: sdc1: redirecting sector 517365296 to
-another mirror
-> Apr 15 11:08:32  kernel: raid1: sdc1: rescheduling sector 517365472
-> Apr 15 11:09:09  kernel: raid1:md0: read error corrected (8 sectors at
-517365472 on sdc1)
-> Apr 15 11:09:09  kernel: raid1: sdc1: redirecting sector 517365472 to
-another mirror
+> The simple answer is that nobody can give you anything but a
+> generic answer unless you supply much more data.
 
-These entries,
+So I tried :-).
 
-> Apr 18 14:01:45  smartd[2104]: Device: /dev/sdc, 3 Currently
-unreadable (pending) sectors
+> [ ... ] You did the write thing to ask before you set it up.
+> For what it is worth, if you got a contract from Dell, then
+> they will typically spend time on the phone at least helping
+> you figure out the basics. [ ... ]
 
-and this, indicate that sdc is losing sectors, so you probably want a 
-backup of the array.
+Uhm, I would not suggest asking Dell support for this. More like
+suggest finding some good papers on RAID, and some HOWTOs, and
+studying them carefully. Storage design is a complex and
+difficult subject that might take years of study, not call
+centre advice over the phone.
 
-Depending on how important the array is you could fail and remove sdc 
-from the array, dd if=/dev/zero of=/dev/sdc bs=1M and re-add it back.
-
-It may then be fine for some time, but if it continues to gather pending
-
-sectors in the short term, it is probably dying.
-
-Otherwise just replace it with a new one.
-
-Regards,
-
-Richard
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
+Or just my pithy "can't go much wrong" extremely generic advice
+above for those without the time.
