@@ -1,59 +1,145 @@
-From: "David Lethe" <david@santools.com>
-Subject: RE: RAID1 == two different ARRAY in scan, and Q on read error corrected
-Date: Sat, 19 Apr 2008 15:43:14 -0500
-Message-ID: <A20315AE59B5C34585629E258D76A97C087DD2@34093-C3-EVS3.exchange.rackspace.com>
-References: <27567.1208547359@perkpartners.com> <48091A67.1090906@sauce.co.nz> <A20315AE59B5C34585629E258D76A97C087DAB@34093-C3-EVS3.exchange.rackspace.com> <480963D0.70307@sauce.co.nz> <28126.1208625976@perkpartners.com> <480A4EF2.6060309@sauce.co.nz>
+From: pg_lxra@lxra.for.sabi.co.UK (Peter Grandi)
+Subject: Re: Need some information and help on mdadm in order to support it on IBM z Systems
+Date: Sun, 20 Apr 2008 14:41:15 +0100
+Message-ID: <18443.18427.512815.652823@tree.ty.sabi.co.uk>
+References: <OF9FBFD1B1.E511C96F-ONC1257428.004472D1-C1257428.004493A0@de.ibm.com>
+	<47FF7831.20707@tmr.com>
+	<OF70B5DB7B.09FE2CC6-ONC125742B.0032A67D-C125742B.003CF42B@de.ibm.com>
+	<4804F9FD.4070606@tmr.com>
+	<OF759BAE37.32591658-ONC125742D.004F2D87-C125742D.00543FEE@de.ibm.com>
+	<fu9qlp$iaj$1@ger.gmane.org>
+	<A20315AE59B5C34585629E258D76A97C087BA3@34093-C3-EVS3.exchange.rackspace.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
-In-Reply-To: <480A4EF2.6060309@sauce.co.nz>
+In-Reply-To: <A20315AE59B5C34585629E258D76A97C087BA3@34093-C3-EVS3.exchange.rackspace.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Richard Scobie <richard@sauce.co.nz>, Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Yes, that is correct.  Statistically speaking you have a 20% chance that
-a disk will fail within 3 months of having this particular error. Since
-you already had (22 - 3) reallocated sectors before this happened, then
-probability of failure is probably (don't know off top of head) more
-like 50%.
+[ ... ]
 
-Go shopping. Leave now.
+> Well, I can name many RAID controllers that will automatically
+> add a "faulty" drive back into an array.  This is a very good
+> thing to have, and is counter-intuitive to all but experienced
+> RAID architects.
 
------Original Message-----
-From: linux-raid-owner@vger.kernel.org
-[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Richard Scobie
-Sent: Saturday, April 19, 2008 2:59 PM
-To: Linux RAID Mailing List
-Subject: Re: RAID1 == two different ARRAY in scan, and Q on read error
-corrected
+It is not counter-intuitive, it is absolutely crazy in the
+general case, and in particular cases it leads to loss of focus
+and mingling of astractions layers that should remain separate.
 
-Phil Lobbes wrote:
+[ ... ]
 
-> Here's the requested count:
-> 
->   5 Reallocated_Sector_Ct   0x0033   251   251   063    Pre-fail
-Always       -       22
+> There are hundreds of published patents concerning data
+> recovery and availability in various failure scenarios, so
+> anybody who wants to learn more can simply search the
+> USPTO.GOV database and read them for themselves.
 
-I'm sure David can give a better interpretation, but as I read it, the 
-drive has failed and reallocated 22 sectors and there are 3 more 
-(Current_Pending_Sector) waiting to be reallocated.
+Sure, those are heuristics that are implemented on top of a RAID
+subsystem, and that are part of a ''computer assisted storage
+administration'' logic. Just like IBM developed many years ago
+expert systems to automate or assist with recovery from various
+faults (not just storage faults) on 370/390 class mainframes.
 
-I have seen some drives that have reallocated some sectors in a burst 
-and then operated for years without losing any more, but these were the 
-minority.
+Such recovery tools have nothing to do with RAID as such, even
+if they are often packaged with RAID products. They belong in a
+totally different abastraction layer, as this example makes
+starkly clear:
 
-Usually these counts continue to increase over the short term as the 
-drive fails. If the data is important, I would replace it.
+> A few real-world reasons you want this capability ...
+> * Your RAID system consists of 2 external units, with RAID
+>   controller(s) and disks in unit A, and unit B is an
+>   expansion chassis, with interconnecting cables. You have a
+>   LUN that is spread between 2 enclosures. Enclosure "B" goes
+>   offline, either because of a power failure; a sysadmin who
+>   doesn't know you should power the RAID head down first, then
+>   expansion; or he/she powers it up backwards .. bottom line
+>   is that the drive "failed", but it only "failed" because it
+>   was disconnected due to power issues.
+> [ ... ]
 
-Regards,
+This relies on case-based expert-system like fault analysis and
+recovery using knowledge of non-RAID aspects of the storage
+subsystem.
 
-Richard
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Fine, but it has nothing to do with RAID -- as it requires a
+kind of ''total system'' approach.
 
+> Well architected firmware needs to be able to recognize this
+> scenario and put the disk back.
 
+Well architected *RAID* firmware should do nothing of the sort.
+
+RAID has a (deceptively) simple operation model and yet getting
+RAID firmware right is hard enough.
+
+Well architected fault analysis and recovery daemons might well
+recognize that scenario and put the disk back, but that's a
+completely different story from RAID firmware doing that.
+
+> To go back to Mario's argument that you *could* make things
+> far worse ..  absolutely.
+
+Sure, because fault analysis and recovery heuristics take
+chances that can go spectacularly wrong, as well as being pretty
+hard to code too.
+
+While I am not however against optional fault analysis and
+recovery layers on top of RAID, I really object to statements
+like this:
+
+> The RAID architect needs to incorporate hot-adding md disks
+> back into the array, as long as it is done properly.
+
+Becase the RAID architect should stay well clear of considering
+such kind of issues, and of polluting the base RAID firmware
+with additional complications; even the base RAID logic is
+amazingly bug infested in various products I have had the
+misfortune to suffer.
+
+The role of the RAID achitect is to focus on the performance and
+correctness of the basic RAID logic, and let the architects of
+fault analysis and recovery daemons worry with other issues, and
+perhaps to provide suitable hooks to them to make their life
+easier.
+
+> RAID recovery logic is perhaps 75% of the source code for
+> top-of-the-line RAID controllers. Their firmware determines
+> why a disk "failed", and does what it can to bring it back
+> online and fix the damage.
+
+There is a rationale for bundling a storage fault analysis and
+recovery daemon into a RAID host adapter, but I don't like that,
+because often there are two downside:
+
+* Fault analysis and recovery usually are best done at the
+  highest possible abstraction level, that is as software
+  daemons running on the host, as they have more information
+  than a daemon running inside the host adapter.
+
+* Mingling fault analysis and recovery software with the base
+  RAID logic (as the temptation then becomes hard to resist)
+  tends to distract from the overridingly important task of
+  getting the latter to perform reliably and to report errors
+  clearly and usefully.
+
+In previous discussions in this list there were crazy proposals
+to make part of the Linux RAID logic some detection )not too
+bad) and recovery (chancy horror) from (ambiguous) unreported
+errors and the reason why I am objecting strenuously here is to
+help quash calls for something insane like that.
+
+Separation of concerns and of abstractions layers and keeping
+fundamental firmware logic simple are rather important goals
+in mission critical subsystems.
+
+> A $50 SATA RAID controller
+
+Except perhaps the IT8212 chips these don't exist :-).
+
+> has perhaps 10% of the logic dedicated to failover/failback.
+
+That 10% is 10% too many. It is already difficult to find
+simple, reliable RAID host adapters, never mind get RAID host
+adapters that try to be too clever.
