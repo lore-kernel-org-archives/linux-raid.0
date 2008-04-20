@@ -1,22 +1,46 @@
-From: pg_lxra@lxra.for.sabi.co.UK (Peter Grandi)
-Subject: Re: Need some information and help on mdadm in order to support it on IBM z Systems
-Date: Sun, 20 Apr 2008 14:41:15 +0100
-Message-ID: <18443.18427.512815.652823@tree.ty.sabi.co.uk>
-References: <OF9FBFD1B1.E511C96F-ONC1257428.004472D1-C1257428.004493A0@de.ibm.com>
-	<47FF7831.20707@tmr.com>
-	<OF70B5DB7B.09FE2CC6-ONC125742B.0032A67D-C125742B.003CF42B@de.ibm.com>
-	<4804F9FD.4070606@tmr.com>
-	<OF759BAE37.32591658-ONC125742D.004F2D87-C125742D.00543FEE@de.ibm.com>
-	<fu9qlp$iaj$1@ger.gmane.org>
-	<A20315AE59B5C34585629E258D76A97C087BA3@34093-C3-EVS3.exchange.rackspace.com>
+From: "David Lethe" <david@santools.com>
+Subject: RE: Need some information and help on mdadm in order to support it on IBM z Systems
+Date: Sun, 20 Apr 2008 11:24:34 -0500
+Message-ID: <A20315AE59B5C34585629E258D76A97C087DEE@34093-C3-EVS3.exchange.rackspace.com>
+References: <OF9FBFD1B1.E511C96F-ONC1257428.004472D1-C1257428.004493A0@de.ibm.com><47FF7831.20707@tmr.com><OF70B5DB7B.09FE2CC6-ONC125742B.0032A67D-C125742B.003CF42B@de.ibm.com><4804F9FD.4070606@tmr.com><OF759BAE37.32591658-ONC125742D.004F2D87-C125742D.00543FEE@de.ibm.com><fu9qlp$iaj$1@ger.gmane.org><A20315AE59B5C34585629E258D76A97C087BA3@34093-C3-EVS3.exchange.rackspace.com> <18443.18427.512815.652823@tree.ty.sabi.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <A20315AE59B5C34585629E258D76A97C087BA3@34093-C3-EVS3.exchange.rackspace.com>
+Content-class: urn:content-classes:message
+In-Reply-To: <18443.18427.512815.652823@tree.ty.sabi.co.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>
+To: Peter Grandi <pg_lxra@lxra.for.sabi.co.UK>, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
+
+Well, I can't formerly speak for IBM, EMC, LSI, NetApp, and others when
+I say you are wrong in just about everything you wrote. Their
+architectures are "absolutely crazy", and their firmware doesn't meet
+your personal criteria for being "well-architected".  Qlogic, Emulex and
+LSI are also wrong since they have vanity firmware/drivers for specific
+RAID subsystems to increase interoperability between all of the RAID
+hardware/software layers.
+
+Now contrast zfs with md+filesystemofyourchoice.  The performance,
+reliability, security, data integrity, and self-healing capability of
+zfs are as profoundly superior to md and your design philosophy, as the
+current md architecture is to MS-DOS/FAT.
+
+The empirical evidence speaks for itself.  The RAID hardware vendors and
+the architects of zfs spend billions of dollars annually on R&D, have
+superior products, and do it my way, not yours.  If you want to respond
+with a flame, then take it to a zfs group. I see no need to respond
+further.
+
+
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Peter Grandi
+Sent: Sunday, April 20, 2008 8:41 AM
+To: Linux RAID
+Subject: Re: Need some information and help on mdadm in order to support
+it on IBM z Systems
 
 [ ... ]
 
@@ -143,3 +167,9 @@ Except perhaps the IT8212 chips these don't exist :-).
 That 10% is 10% too many. It is already difficult to find
 simple, reliable RAID host adapters, never mind get RAID host
 adapters that try to be too clever.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
