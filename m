@@ -1,29 +1,34 @@
-From: carlos@fisica.ufpr.br (Carlos Carvalho)
-Subject: Re: Incorrect array member slot assignment during assemble
-Date: Sun, 20 Apr 2008 23:12:01 -0300
-Message-ID: <18443.63473.834200.366911@fisica.ufpr.br>
-References: <20080420183552.c0g0cm4mucsc8844@mail.jp-hosting.net>
+From: Dexter Filmore <Dexter.Filmore@gmx.de>
+Subject: migrating: degrade or grow
+Date: Mon, 21 Apr 2008 16:21:28 +0200
+Message-ID: <200804211621.28526.Dexter.Filmore@gmx.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20080420183552.c0g0cm4mucsc8844@mail.jp-hosting.net>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: jay@bernard.vm.bytemark.co.uk
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-jay@bernard.vm.bytemark.co.uk (jay@bernard.vm.bytemark.co.uk) wrote on 20 April 2008 18:35:
- >I had a single disk failure in a 3-disk RAID5 array recently, and have  
- >been trying to reassemble the array with the remaining devices, but am  
- >running into some issues.
- >
- >The failed disk died during synchronization into the array,
+current situation:
 
-Did another one fail during the resync? If not you can try to
-reassemble the array with only the 2 good disks using --force.
+machine with 8 sata ports, currently 4 disks in raid5.
+new array is gonna be 5 disks. 
 
-If a second disk failed you're in trouble. Since the array stopped at
-the moment of the second failure, the two disks are still in sync.
-Well, almost... You can then make an image of the second failed disk
-on a good one and use --force to reassemble again. Then fsck...
+now the question is: pluck one drive, let the array degrade and move data as 
+fast as possible to the new array?
+Or: build new array with 4 drivers, then pull old array and grow new array to 
+5 drives?
+
+
+-- 
+-----BEGIN GEEK CODE BLOCK-----
+Version: 3.12
+GCS d--(+)@ s-:+ a- C++++ UL++ P+>++ L+++>++++ E-- W++ N o? K-
+w--(---) !O M+ V- PS+ PE Y++ PGP t++(---)@ 5 X+(++) R+(++) tv--(+)@ 
+b++(+++) DI+++ D- G++ e* h>++ r* y?
+------END GEEK CODE BLOCK------
+
+http://www.vorratsdatenspeicherung.de
