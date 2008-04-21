@@ -1,37 +1,29 @@
-From: devzero@web.de
-Subject: managing raid on linux
-Date: Sun, 20 Apr 2008 23:51:41 +0200
-Message-ID: <247041911@web.de>
+From: carlos@fisica.ufpr.br (Carlos Carvalho)
+Subject: Re: Incorrect array member slot assignment during assemble
+Date: Sun, 20 Apr 2008 23:12:01 -0300
+Message-ID: <18443.63473.834200.366911@fisica.ufpr.br>
+References: <20080420183552.c0g0cm4mucsc8844@mail.jp-hosting.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20080420183552.c0g0cm4mucsc8844@mail.jp-hosting.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: jay@bernard.vm.bytemark.co.uk
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello !
+jay@bernard.vm.bytemark.co.uk (jay@bernard.vm.bytemark.co.uk) wrote on 20 April 2008 18:35:
+ >I had a single disk failure in a 3-disk RAID5 array recently, and have  
+ >been trying to reassemble the array with the remaining devices, but am  
+ >running into some issues.
+ >
+ >The failed disk died during synchronization into the array,
 
-since we use lots of servers with raid where i work, for every system i need to go trough that hassle to find out, how to monitor the state of the raid array.
+Did another one fail during the resync? If not you can try to
+reassemble the array with only the 2 good disks using --force.
 
-if you you have more than one brand of raid controller, you really need a large amount of time to find the proper tool for this, if you think you found it, then you have a broken link or the wrong version, the tool is outdated, doesn`t work with recent controller versions, is tricky to setup or difficult to use.
-
-this takes a lot of time and is a major annoyance.
-
-isn`t there a linux project which is adressing this?
-some site for the sysadmin to consult?
-i have raid controller xyz, what do i need to monitor the arrays state....?
-
-i would expect, that the linux kernel would provide sort of a standardized way to check the health state of a raid array - i.e. this should be completely done in kernel space, as some raid drivers do.
-
-instead i need to use a dozen different tools, which are often closed source, too.
-
-anybody suffer from that headaches, too ?
-
-regards
-roland
-
-_____________________________________________________________________
-Der WEB.DE SmartSurfer hilft bis zu 70% Ihrer Onlinekosten zu sparen!
-http://smartsurfer.web.de/?mc=100071&distributionid=000000000066
-
+If a second disk failed you're in trouble. Since the array stopped at
+the moment of the second failure, the two disks are still in sync.
+Well, almost... You can then make an image of the second failed disk
+on a good one and use --force to reassemble again. Then fsck...
