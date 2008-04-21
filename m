@@ -1,60 +1,46 @@
-From: jay@bernard.vm.bytemark.co.uk
-Subject: Re: Incorrect array member slot assignment during assemble
-Date: Mon, 21 Apr 2008 16:20:14 +0000
-Message-ID: <20080421162014.at1xgstvtq8c048c@mail.jp-hosting.net>
-References: <20080420183552.c0g0cm4mucsc8844@mail.jp-hosting.net>
-	<18443.63473.834200.366911@fisica.ufpr.br>
+From: michael@estone.ca
+Subject: Re: migrating: degrade or grow
+Date: Mon, 21 Apr 2008 08:17:49 -0700
+Message-ID: <20080421081749.nuzzot6b5s08ocwg@estone.ca>
+References: <200804211621.28526.Dexter.Filmore@gmx.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII;
 	DelSp=Yes	format=flowed
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18443.63473.834200.366911@fisica.ufpr.br>
+In-Reply-To: <200804211621.28526.Dexter.Filmore@gmx.de>
 Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Carlos Carvalho <carlos@fisica.ufpr.br>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Quoting Carlos Carvalho <carlos@fisica.ufpr.br>:
+Quoting Dexter Filmore <Dexter.Filmore@gmx.de>:
 
-> jay@bernard.vm.bytemark.co.uk (jay@bernard.vm.bytemark.co.uk) wrote   
-> on 20 April 2008 18:35:
->  >I had a single disk failure in a 3-disk RAID5 array recently, and have
->  >been trying to reassemble the array with the remaining devices, but am
->  >running into some issues.
->  >
->  >The failed disk died during synchronization into the array,
+> current situation:
 >
-> Did another one fail during the resync? If not you can try to
-> reassemble the array with only the 2 good disks using --force.
+> machine with 8 sata ports, currently 4 disks in raid5.
+> new array is gonna be 5 disks.
+>
+> now the question is: pluck one drive, let the array degrade and move data as
+> fast as possible to the new array?
+> Or: build new array with 4 drivers, then pull old array and grow new array to
+> 5 drives?
+>
 
-The array did fall offline shortly after the first failure, which  
-seemed unexpected; the two remaining disks (and controller) still seem  
-healthy (states 'clean' and 'active' respectively), just that they  
-refuse to assemble.
+Sounds like your new 5 disk array will have brand new disks? and larger?
 
-> If a second disk failed you're in trouble. Since the array stopped at
-> the moment of the second failure, the two disks are still in sync.
-> Well, almost... You can then make an image of the second failed disk
-> on a good one and use --force to reassemble again. Then fsck...
+If your filesystem allows, you could also just add your new disks in,  
+one at a time. (assuming your running software raid)
+Once all your new disks have been inserted one at a time, you then  
+grow your raid array to fill up the un used space, and then, you grow  
+your filesystem to fill up the un used space.
+Takes a long time, and becomes more tricky if your array is mounted on  
+/ because then you need to use a rescue disk, or boot CD to modify  
+your / system.
 
-This sounds good - the only filesystem mounted over the devices was  
-read-only at the time, so I'm hoping that the two good disks should  
-still be enough for some data recovery.
+Building your new array degraded with 4 disks, copying data, and then  
+adding 5th disk sounds like it might be the easiest. Nice that you  
+have the 8 controllers to play with.
 
-The only problem I see is that if I make a raw image copy of the  
-second disk, it will still have the incorrect 'slot' assignment in the  
-superblock.  I suppose I could dd everything except the superblock -  
-but is there a mechanism to repair/recreate the superblock on a raw  
-disk?
-
-The other idea I have in mind is to - after a backup - recreate the  
-array using the initial configuration (raid-level 5, num-devices 3,  
-etc), and hope that the array can pick itself up again.
-
-Any thoughts much appreciated - thanks for helping out :)
-
-----------------------------------------------------------------
-This message was sent using IMP, the Internet Messaging Program.
-
+Cheers,
+Mike
