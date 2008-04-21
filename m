@@ -1,7 +1,7 @@
 From: Dexter Filmore <Dexter.Filmore@gmx.de>
-Subject: migrating: degrade or grow
-Date: Mon, 21 Apr 2008 16:21:28 +0200
-Message-ID: <200804211621.28526.Dexter.Filmore@gmx.de>
+Subject: ext3: how to determine mkfs parameters?
+Date: Mon, 21 Apr 2008 16:23:39 +0200
+Message-ID: <200804211623.39785.Dexter.Filmore@gmx.de>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="us-ascii"
@@ -12,15 +12,9 @@ Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-current situation:
+How do I gather the info for stripe size on creating ext3 on a 5x500 raid5?
 
-machine with 8 sata ports, currently 4 disks in raid5.
-new array is gonna be 5 disks. 
-
-now the question is: pluck one drive, let the array degrade and move data as 
-fast as possible to the new array?
-Or: build new array with 4 drivers, then pull old array and grow new array to 
-5 drives?
+General purpose file server, everything from 10K to 2G files around.
 
 
 -- 
