@@ -1,59 +1,98 @@
-From: Keith Roberts <keith@karsites.net>
-Subject: PCI ATA EIDE cards and kernel drivers
-Date: Tue, 22 Apr 2008 07:20:56 +0100 (BST)
-Message-ID: <alpine.LFD.1.10.0804220658410.31467@www.karsites.net>
-Reply-To: Keith Roberts <keith@karsites.net>
+From: jay@bernard.vm.bytemark.co.uk
+Subject: Re: Incorrect array member slot assignment during assemble
+Date: Tue, 22 Apr 2008 11:47:22 +0000
+Message-ID: <20080422114722.gxek9a39y8g4g0gs@mail.jp-hosting.net>
+References: <20080420183552.c0g0cm4mucsc8844@mail.jp-hosting.net>
+	<18443.63473.834200.366911@fisica.ufpr.br>
+	<20080421162014.at1xgstvtq8c048c@mail.jp-hosting.net>
+	<18445.18648.388676.714441@fisica.ufpr.br>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
+Content-Type: text/plain; charset=US-ASCII;
+	DelSp=Yes	format=flowed
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <18445.18648.388676.714441@fisica.ufpr.br>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Carlos Carvalho <carlos@fisica.ufpr.br>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi all.
+Quoting Carlos Carvalho <carlos@fisica.ufpr.br>:
 
-I'm running Fedora 8, and having suffered a recent hard disk 
-failure, I want to set up a RAID1 array of two EIDE ATA 133 
-physical drives for my server. These will use the maximum 
-number of partitions allowed under Linux. I also want to use 
-a seperate non-raid ATA drive for making backups of 
-important data from the RAID arrays. So in total I would 
-have my important data on three seperate physical drives. 
-I'm also making backups of my data to CD-R and DVD+R as 
-well.
+> jay@bernard.vm.bytemark.co.uk (jay@bernard.vm.bytemark.co.uk) wrote   
+> on 21 April 2008 16:20:
+>  >Quoting Carlos Carvalho <carlos@fisica.ufpr.br>:
+>  >
+>  >> jay@bernard.vm.bytemark.co.uk (jay@bernard.vm.bytemark.co.uk) wrote
+>  >> on 20 April 2008 18:35:
+>  >>  >I had a single disk failure in a 3-disk RAID5 array recently, and have
+>  >>  >been trying to reassemble the array with the remaining devices, but am
+>  >>  >running into some issues.
+>  >>  >
+>  >>  >The failed disk died during synchronization into the array,
+>  >>
+>  >> Did another one fail during the resync? If not you can try to
+>  >> reassemble the array with only the 2 good disks using --force.
+>  >
+>  >The array did fall offline shortly after the first failure, which
+>  >seemed unexpected; the two remaining disks (and controller) still seem
+>  >healthy (states 'clean' and 'active' respectively), just that they
+>  >refuse to assemble.
+>
+> You should check the logs to see the cause.
 
-I have the standard EIDE connectors on my Motherboard, which 
-will be used for the backup ATA drive, and the DVD RW 
-optical drive. All drives will use separate cables and work 
-as master drives. This applies to the RAID1 array drives as 
-well.
+Unfortunately all that was recorded was a slightly nebulous 'read  
+error' before the array dropped - I suspect the controller might have  
+flaked out after the first drive failure..
 
-**My Questions are:**
 
-Do the PCI EIDE cards need to be supported with kernel 
-drivers, or can I put any PCI EIDE card in the machine and 
-it will 'just work'?
+>  >> If a second disk failed you're in trouble. Since the array stopped at
+>  >> the moment of the second failure, the two disks are still in sync.
+>  >> Well, almost... You can then make an image of the second failed disk
+>  >> on a good one and use --force to reassemble again. Then fsck...
+>  >
+>  >This sounds good - the only filesystem mounted over the devices was
+>  >read-only at the time, so I'm hoping that the two good disks should
+>  >still be enough for some data recovery.
+>  >
+>  >The only problem I see is that if I make a raw image copy of the
+>  >second disk, it will still have the incorrect 'slot' assignment in the
+>  >superblock.  I suppose I could dd everything except the superblock -
+>  >but is there a mechanism to repair/recreate the superblock on a raw
+>  >disk?
+>
+> No, just assemble with --force.
 
-Obviously I don't want to buy the wrong PCI EIDE/ATA 
-controller card.
+This is what I'd been trying prior to posting; but, from my original message:
 
-Can anyone recommend any PCI EIDE ATA controller cards that 
-are known to work under the latest versions of Linux please, 
-without me having to keep re-compiling the kernel to support 
-the PCI EIDE card?
+mdadm -Afv /dev/md0 /dev/sdc /dev/sdd
+mdadm: looking for devices for /dev/md0
+mdadm: /dev/sdc is identified as a member of /dev/md0, slot -1.
+mdadm: /dev/sdd is identified as a member of /dev/md0, slot 0.
+... *snip* ...
+mdadm: /dev/md0 assembled from 1 drive - not enough to start the array.
 
-I'm running kernel-2.6.24.4-64.fc8
+The assemble (even with --force/-f) just fails, I think due to the  
+'-1' slot assignment for one of the drives in the pair.
 
-Kind Regards
+>  >The other idea I have in mind is to - after a backup - recreate the
+>  >array using the initial configuration (raid-level 5, num-devices 3,
+>  >etc), and hope that the array can pick itself up again.
+>  >
+>  >Any thoughts much appreciated - thanks for helping out :)
+>
+> This is the last alternative, when you're sure the 2 disks are fine.
+> Then just re-create the array replacing the /dev/3rd-drive by the
+> word "missing". This won't change the data, it'll just re-write the
+> superblocks. Then do read-only fsck
 
-Keith Roberts
+I think I'll be giving this a go - I'll be taking full image copies  
+and attempting a recreate.
 
------------------------------------------------------------------
-Websites:
-http://www.php-debuggers.net
-http://www.karsites.net
-http://www.raised-from-the-dead.org.uk
+Cheers,
+Jay
 
-All email addresses are challenge-response protected with
-TMDA [http://tmda.net]
------------------------------------------------------------------
+----------------------------------------------------------------
+This message was sent using IMP, the Internet Messaging Program.
+
