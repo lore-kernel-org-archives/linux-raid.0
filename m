@@ -1,79 +1,123 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: Question: how to identify failing disk in a RAID1
-Date: Wed, 23 Apr 2008 15:26:03 -0400 (EDT)
-Message-ID: <alpine.DEB.1.10.0804231525140.4441@p34.internal.lan>
-References: <48025B8D.2030803@harddata.com> <alpine.DEB.1.10.0804131529300.11311@p34.internal.lan> <4802AFEB.9020006@tmr.com> <480F7105.9030405@harddata.com> <alpine.DEB.1.10.0804231453390.4441@p34.internal.lan> <480F8830.6020207@harddata.com>
+From: Bernd Schubert <bernd-schubert@gmx.de>
+Subject: Re: [patch] limit error rate
+Date: Thu, 24 Apr 2008 00:55:17 +0200
+Message-ID: <200804240055.17675.bernd-schubert@gmx.de>
+References: <ftquac$82m$1@ger.gmane.org> <e9c3a7c20804221744m6600eccdy9934f58fb6ccded3@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: Multipart/Mixed;
+  boundary="Boundary-00=_V57DIFpCdvn8UPF"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <480F8830.6020207@harddata.com>
+In-Reply-To: <e9c3a7c20804221744m6600eccdy9934f58fb6ccded3@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Maurice Hilarius <maurice@harddata.com>
-Cc: Bill Davidsen <davidsen@tmr.com>, linux-raid@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+--Boundary-00=_V57DIFpCdvn8UPF
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
+Hello Dan,
 
-On Wed, 23 Apr 2008, Maurice Hilarius wrote:
-
-> Justin Piszcz wrote:
->> 
->> 
->> On Wed, 23 Apr 2008, Maurice Hilarius wrote:
->> 
->>> Hi all.
->>> 
->>> With much appreciated help from Bell Davidsen and Justin Piszcz I recently 
->>> dealt with a problem with a RAID1 set, caused by a failing hard disk.
->>> 
->>> At the end, there is one question remaining, which I think is quite 
->>> important:
->>> When one has a RAID5 or RAID6, and a disk starts "acting up" mdadm rapidly 
->>> kicks out the offending device.
->>> Some might say "too easily" but that is another thread.
->>> 
->>> On a RAID1 set, until the failing disk completely "packs it in" it remains 
->>> part of the RAID.
->>> 
->>> Why??
->>> 
->>> Some more background:
->>> Since the issue was reported and explored I have recreated this on a test 
->>> machine.
->>> Installed RAID1 with one known good and one know error prone drive.
->>> Easy to do as the error drive has a thermal issue.
->>> Keep it cold, no problems, but after 30 minutes use in a +25C room it 
->>> start to generate data errors.
->>> I reproduced exactly the problem I saw before:
->>> Data errors occur, the other drive in the RAID1 set gets "infected" with 
->>> the bad data, and the file system will get corrupted.
->>> On BOTH drives.
->>> 
->>> This is highly reproducible.
->>> 
->>> In summary:
->>> 1) RAID1 lacks significant protection from the effects of a data error 
->>> condition on a failing drive
->>> 2) I recommend anyone using madadm refrain from using RAID1 until this 
->>> issue is addressed and resolved.
->>> 
->>> Thanks again.
->> I can confirm this, until you actually REBOOT the host with RAID1 only then 
->> will it kick it out.  Whereas with RAID5, I experienced the same thing, it 
->> kicks it out right away, would need to wait for the linux-raid/developers 
->> to answer this one.
->> 
->> Justin.
->> 
-> Actually reboot does not help me.
-> mdadm seems to NEVER "kick out" the bad disk.
-> Even when it is horribly erroring.
+On Wednesday 23 April 2008, Dan Williams wrote:
+> On Sat, Apr 12, 2008 at 11:16 AM, Bernd Schubert <bernd-schubert@gmx.de> 
+wrote:
+> > Hello,
+> >
+> >  last night we had scsi problems and a hardware raid
+> >  unit was offlined during heavy i/o. While this happened we got for
+> >  about 3 minutes a huge number messages like these
+> >
+> >  Apr 12 03:36:07 pfs1n14 kernel: [197510.696595] raid5:md7: read error
+> > not correctable (sector 2993096568 on sdj2).
+> >
+> >  I guess the high error rate is responsible for not scheduling other
+> >  events - during this time the system was not pingable and in the end
+> >  also other devices run into scsi command timeouts causing problems on
+> >  these unrelated devices as well.
+> >
+> >
+> >  Signed-off-by: Bernd Schubert <bernd-schubert@gmx.de>
 >
-> I think this is a CRITICAL problem, as, if one is using RAID1 thinking it 
-> will enhance their data reliability,
-> they stand a very good chance of getting a nasty surprise.
-Yikes, what kernel+mobo+chipset+drives are in use (the developers will 
-want to know) also are you using drives on different channels?  Or e.g., 
-two drives on one ide cable?  (To summarize for the developers)
+> Hi Bernd,
+>
+> This patch is whitespace damaged (tabs-->spaces).  Can you resend as
+> an attachment?
 
-Justin.
+
+hmm, don't know how I managed to do that. Probably copied it from the shell...
+I have attached it this time. I also just added another printk_ratelimit().
+
+Btw, from my point of view the 
+
+if (printk_ratelimit())
+	printk("print output");
+
+looks odd. I just don't see why the API isn't
+
+printk_ratelimit("print output");
+
+Oh well, modifying this all over the code would give a huge almost useless 
+patch _only_ improving the beauty of code.
+
+
+Thanks,
+Bernd
+
+--Boundary-00=_V57DIFpCdvn8UPF
+Content-Type: text/x-diff;
+  charset="iso-8859-1";
+  name="limit_read_error_not_correctable.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename="limit_read_error_not_correctable.patch"
+
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index b162b83..60d3442 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -1141,10 +1141,12 @@ static void raid5_end_read_request(struct bio * bi, int error)
+ 		set_bit(R5_UPTODATE, &sh->dev[i].flags);
+ 		if (test_bit(R5_ReadError, &sh->dev[i].flags)) {
+ 			rdev = conf->disks[i].rdev;
+-			printk(KERN_INFO "raid5:%s: read error corrected (%lu sectors at %llu on %s)\n",
+-			       mdname(conf->mddev), STRIPE_SECTORS,
+-			       (unsigned long long)(sh->sector + rdev->data_offset),
+-			       bdevname(rdev->bdev, b));
++			if (printk_ratelimit())
++				printk(KERN_INFO "raid5:%s: read error corrected"
++				       " (%lu sectors at %llu on %s)\n",
++				       mdname(conf->mddev), STRIPE_SECTORS,
++				       (unsigned long long)(sh->sector + rdev->data_offset),
++				       bdevname(rdev->bdev, b));
+ 			clear_bit(R5_ReadError, &sh->dev[i].flags);
+ 			clear_bit(R5_ReWrite, &sh->dev[i].flags);
+ 		}
+@@ -1157,19 +1159,20 @@ static void raid5_end_read_request(struct bio * bi, int error)
+ 
+ 		clear_bit(R5_UPTODATE, &sh->dev[i].flags);
+ 		atomic_inc(&rdev->read_errors);
+-		if (conf->mddev->degraded)
++		if (conf->mddev->degraded && printk_ratelimit())
+ 			printk(KERN_WARNING "raid5:%s: read error not correctable (sector %llu on %s).\n",
+ 			       mdname(conf->mddev),
+ 			       (unsigned long long)(sh->sector + rdev->data_offset),
+ 			       bdn);
+-		else if (test_bit(R5_ReWrite, &sh->dev[i].flags))
++		else if (test_bit(R5_ReWrite, &sh->dev[i].flags) && 
++			 printk_ratelimit())
+ 			/* Oh, no!!! */
+ 			printk(KERN_WARNING "raid5:%s: read error NOT corrected!! (sector %llu on %s).\n",
+ 			       mdname(conf->mddev),
+ 			       (unsigned long long)(sh->sector + rdev->data_offset),
+ 			       bdn);
+ 		else if (atomic_read(&rdev->read_errors)
+-			 > conf->max_nr_stripes)
++			 > conf->max_nr_stripes && printk_ratelimit())
+ 			printk(KERN_WARNING
+ 			       "raid5:%s: Too many read errors, failing device %s.\n",
+ 			       mdname(conf->mddev), bdn);
+
+--Boundary-00=_V57DIFpCdvn8UPF--
