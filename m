@@ -1,90 +1,45 @@
-From: "Ty! Boyack" <ty@nrel.colostate.edu>
-Subject: Re: managing raid on linux
-Date: Wed, 23 Apr 2008 09:55:18 -0600
-Message-ID: <480F5BE6.7070908@nrel.colostate.edu>
-References: <247041911@web.de> <480F4EF6.1000103@tmr.com>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: PCI ATA EIDE cards and kernel drivers
+Date: Wed, 23 Apr 2008 13:12:47 -0400
+Message-ID: <480F6E0F.80702@tmr.com>
+References: <alpine.LFD.1.10.0804220658410.31467@www.karsites.net> <18446.50.8995.663510@sail.stoffel.home>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <480F4EF6.1000103@tmr.com>
+In-Reply-To: <18446.50.8995.663510@sail.stoffel.home>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: John Stoffel <john@stoffel.org>
+Cc: Keith Roberts <keith@karsites.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I'm not quite "hardware flavor of the month" but I still feel like I've 
-got all 31 flavors around the shop.
+John Stoffel wrote:
+> I find the cost of CD-R media and DVD+R, as well as the issues with
+> longevity, to be my biggest concerns.  For those types of media,
+> having a very robust and redundant easy to recover format would be
+> key.  Haven't seen it done yet, though it's been talked about.  An
+> Archive filesystem, not a general access one.  
+>   
 
-Something you might look into is SMI-S (Storage Management Initiative - 
-Specification), which is being promoted by SNIA (Storage Network 
-Industry Association):
+Let me make one comment on that. To back up files of reasonable (<1GB) 
+files, you can build a list of files which will fit on a single DVD (a 
+series of lists actually), and backup the files to a DVD, either in ISO 
+format or using the loopback mount to make an ext2 filesystem you can 
+write to a DVD, or a tar, cpio, you get the idea. The tool to make the 
+lists of files which will fit is "breaker" and is on 
+www.tmr.com/~public/source for your enjoyment.
 
-http://www.snia.org/tech_activities/standards/curr_standards/smi/
+The other tool is dvdisaster, which builds software ECC for images you 
+are going to burn. You can make DVDs with 3.3GB data + ECC on each DVD, 
+or 4.4GB data per DVD and keep the ECC files separately, whatever 
+pleases you.  The recovery mode does work, I used scissors to scratch a 
+DVD with my initials, then recovered the data.
 
-The goal is to provide a single management protocol/API for any 
-traditional storage hardware (including arrays, switches, NAS devices, 
-tape libraies, etc.).  As I understand it, there are hooks for the 
-standard operations and monitoring, and extensibility for specialized 
-devices.
-
-While it has been targeted at SAN hardware, it would seem that the array 
-management features could be used on their own in your case, if your 
-arrays support this.  There are some open source projects working on 
-providing a management tool for these devices.  It's been on my horizon 
-for a while, but I have not had the chance to really look into it from a 
-practical sense.  So I don't know if it is exactly what you might need, 
-but it could be worth exploring.
-
-(I know it's WAY outside of the kernel space tools you mentioned, but it 
-is a mature option)
-
--Ty!
-
-
-
-Bill Davidsen wrote:
-> devzero@web.de wrote:
->> Hello !
->>
->> since we use lots of servers with raid where i work, for every system 
->> i need to go trough that hassle to find out, how to monitor the state 
->> of the raid array.
->>
->> if you you have more than one brand of raid controller, you really 
->> need a large amount of time to find the proper tool for this, if you 
->> think you found it, then you have a broken link or the wrong version, 
->> the tool is outdated, doesn`t work with recent controller versions, 
->> is tricky to setup or difficult to use.
->>
->> this takes a lot of time and is a major annoyance.
->>
->> isn`t there a linux project which is adressing this?
->> some site for the sysadmin to consult?
->> i have raid controller xyz, what do i need to monitor the arrays 
->> state....?
->>
->> i would expect, that the linux kernel would provide sort of a 
->> standardized way to check the health state of a raid array - i.e. 
->> this should be completely done in kernel space, as some raid drivers do.
->>
->> instead i need to use a dozen different tools, which are often closed 
->> source, too.
->>
->> anybody suffer from that headaches, too ?
->>   
->
-> You have that option, set your controllers to JBOD and use software 
-> raid. Most people don't play "flavor of the month" with hardware, and 
-> those of us who let purchasing alter hardware specs to "save money" 
-> use software raid.
->
-
+Both programs have enough documentation for most users.
 
 -- 
--===========================-
-  Ty! Boyack
-  NREL Unix Network Manager
-  ty@nrel.colostate.edu
-  (970) 491-1186
--===========================-
+Bill Davidsen <davidsen@tmr.com>
+  "Woe unto the statesman who makes war without a reason that will still
+  be valid when the war is over..." Otto von Bismark 
+
 
