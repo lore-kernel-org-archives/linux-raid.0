@@ -1,41 +1,46 @@
-From: "Dan Williams" <dan.j.williams@intel.com>
-Subject: Re: [patch] limit error rate
-Date: Tue, 22 Apr 2008 17:44:10 -0700
-Message-ID: <e9c3a7c20804221744m6600eccdy9934f58fb6ccded3@mail.gmail.com>
-References: <ftquac$82m$1@ger.gmane.org>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: managing raid on linux
+Date: Wed, 23 Apr 2008 11:00:06 -0400
+Message-ID: <480F4EF6.1000103@tmr.com>
+References: <247041911@web.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <ftquac$82m$1@ger.gmane.org>
-Content-Disposition: inline
+In-Reply-To: <247041911@web.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Bernd Schubert <bernd-schubert@gmx.de>
+To: devzero@web.de
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, Apr 12, 2008 at 11:16 AM, Bernd Schubert <bernd-schubert@gmx.de> wrote:
-> Hello,
+devzero@web.de wrote:
+> Hello !
 >
->  last night we had scsi problems and a hardware raid
->  unit was offlined during heavy i/o. While this happened we got for
->  about 3 minutes a huge number messages like these
+> since we use lots of servers with raid where i work, for every system i need to go trough that hassle to find out, how to monitor the state of the raid array.
 >
->  Apr 12 03:36:07 pfs1n14 kernel: [197510.696595] raid5:md7: read error not correctable (sector 2993096568 on sdj2).
+> if you you have more than one brand of raid controller, you really need a large amount of time to find the proper tool for this, if you think you found it, then you have a broken link or the wrong version, the tool is outdated, doesn`t work with recent controller versions, is tricky to setup or difficult to use.
 >
->  I guess the high error rate is responsible for not scheduling other
->  events - during this time the system was not pingable and in the end
->  also other devices run into scsi command timeouts causing problems on
->  these unrelated devices as well.
+> this takes a lot of time and is a major annoyance.
 >
+> isn`t there a linux project which is adressing this?
+> some site for the sysadmin to consult?
+> i have raid controller xyz, what do i need to monitor the arrays state....?
 >
->  Signed-off-by: Bernd Schubert <bernd-schubert@gmx.de>
+> i would expect, that the linux kernel would provide sort of a standardized way to check the health state of a raid array - i.e. this should be completely done in kernel space, as some raid drivers do.
 >
+> instead i need to use a dozen different tools, which are often closed source, too.
+>
+> anybody suffer from that headaches, too ?
+>   
 
-Hi Bernd,
+You have that option, set your controllers to JBOD and use software 
+raid. Most people don't play "flavor of the month" with hardware, and 
+those of us who let purchasing alter hardware specs to "save money" use 
+software raid.
 
-This patch is whitespace damaged (tabs-->spaces).  Can you resend as
-an attachment?
+-- 
+Bill Davidsen <davidsen@tmr.com>
+  "Woe unto the statesman who makes war without a reason that will still
+  be valid when the war is over..." Otto von Bismark 
 
-Thanks,
-Dan
+
