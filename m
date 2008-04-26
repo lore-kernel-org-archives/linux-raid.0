@@ -1,56 +1,57 @@
-From: "Tomasz Nowak" <tnowak-p@netventure.pl>
-Subject: Bug(?) in raid10 (raid10,f2 - lvm2 - xen)
-Date: Thu, 24 Apr 2008 17:41:24 +0200
-Message-ID: <fuq9nl$k5g$1@ger.gmane.org>
+From: Dexter Filmore <Dexter.Filmore@gmx.de>
+Subject: Can't create partitions on raid, --auto=mdp not possible
+Date: Sat, 26 Apr 2008 13:46:03 +0200
+Message-ID: <200804261346.03511.Dexter.Filmore@gmx.de>
 Mime-Version: 1.0
 Content-Type: text/plain;
-	format=flowed;
-	charset="iso-8859-2";
-	reply-type=original
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This bug comes ouf if you:
+While I'm at migrating data to a new array I thought I get rid of LVM and 
+partition the array directly - spares me one extra layer that I don't need.
 
-1. create a raid10,f2 device (ie /dev/md1)
-2. set it as pv for vg
-3. set a lv on that vg
-4. export this /dev/vg/lv to xen domU as "disk" (ie xvdb)
-   (that is the recommended way, feature of exporting
-   devices as partitions will be dropped in the future
-   probably)
+Now, I can cfdisk md1 just fine and sfdisk -d shows me the partitions 
+md1p[1-4], but as soon as I want to mkfs, I get:
 
-As soon as domU get its hands on /dev/xvdb creating
-a partition (xvdb1) there's a lot of filesystem
-related errors, such as:
-[...]
-kernel: Buffer I/O error on device xvdb1, logical block 22
-kernel: Buffer I/O error on device xvdb1, logical block 23
-kernel: Buffer I/O error on device xvdb1, logical block 24
-[...]
+-------------
+# LC_ALL=en_EN mkfs.ext3 -O dir_index -E stride=16 -m 0 /dev/md1p1
+mke2fs 1.40-WIP (14-Nov-2006)
+Could not stat /dev/md1p1 --- No such file or directory
 
-domU reports then:
-[...]
-raid10_make_request bug: can't convert block across chunks or bigger than 
-256k 41952765 4
-raid10_make_request bug: can't convert block across chunks or bigger than 
-256k 41954301 4
-raid10_make_request bug: can't convert block across chunks or bigger than 
-256k 41954813 4
-raid10_make_request bug: can't convert block across chunks or bigger than 
-256k 41955325 4
-[...]
+The device apparently does not exist; did you specify it correctly?
+-------------
 
-Raid10,f2 is great (+80% read perfomance bust on my 2 disks only),
-but unfortunably unusable as lvm backed xen device for the time
-being.
+And lo and behold: in /dev no trace of md1p1 or md1/p1 or whatever. Only md1.
 
-PS. Centos 5.1 if that matters.
+
+When assembling I get:
+
+# mdadm -A -s
+mdadm: that --auto option not compatable with device named /dev/md1
+
+Here's my mdadm.conf:
+DEVICE partitions
+ARRAY /dev/md1 level=raid5 num-devices=5 auto=mdp 
+ UUID=f2352335:f8654106:19a59613:120d8f39
+
+This is debian 4.0r3 with kernel 2.6.22 from etch-backports and mdadm 2.5.6.
+
+What do I have here? Version conflict? 
+
+Dex
+
 
 -- 
-Tomek
+-----BEGIN GEEK CODE BLOCK-----
+Version: 3.12
+GCS d--(+)@ s-:+ a- C++++ UL++ P+>++ L+++>++++ E-- W++ N o? K-
+w--(---) !O M+ V- PS+ PE Y++ PGP t++(---)@ 5 X+(++) R+(++) tv--(+)@ 
+b++(+++) DI+++ D- G++ e* h>++ r* y?
+------END GEEK CODE BLOCK------
 
-
+http://www.vorratsdatenspeicherung.de
