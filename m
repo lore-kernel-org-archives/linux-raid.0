@@ -1,54 +1,50 @@
-From: Lars =?UTF-8?B?VMOkdWJlcg==?= <taeuber@bbaw.de>
-Subject: Re: How to grow RAID1 mirror on top of LVM?
-Date: Mon, 28 Apr 2008 16:25:56 +0200
-Message-ID: <20080428162556.00ee0d72.taeuber@bbaw.de>
-References: <25F8EF57-9606-4217-B2D4-2DD3D8E064C4@cam.ac.uk>
-	<18408.36712.100712.499844@notabene.brown>
+From: "kyle" <kylewong@southa.com>
+Subject: Re: ahci slow transfer rate with kernel 2.6.23-2.6.25
+Date: Mon, 28 Apr 2008 22:45:20 +0800
+Message-ID: <003901c8a93e$7b4e88b0$0a01a8c0@kylecea1512a3f>
+References: <9359bbd70804280211ta587f87sff83dba5f7974796@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+	format=flowed;
+	charset="UTF-8";
+	reply-type=original
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18408.36712.100712.499844@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Anton Altaparmakov <aia21@cam.ac.uk>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: "Sergey A. Sukiyazov" <sergey.sukiyazov@gmail.com>, kyle <kylewong@southa.com>
 List-Id: linux-raid.ids
 
-Hallo Neil,
+Ok, I'll try set queue_depth to 1 to see if there's any improvement. btw, 
+the same disk connected to sil3132 controller has no problem at all with 
+queue_depth = 31, I got over 100MB/s for hdparm, dd, etc test with 
+ST3500320AS + sil3132. So I assume the problem would be ahci.
 
-Neil Brown <neilb@suse.de> schrieb:
-> On Thursday March 13, aia21@cam.ac.uk wrote:
-> >=20
-> > Is there a better way to do this?  I am hoping someone will tell me=
- to =20
-> > use option blah to utility foo that will do this for me without hav=
-ing =20
-> > to break the mirror twice and resync each time.  (-;
->=20
-> Sorry, but no.  This mode of operation was never envisaged for md.
-> I would always put the md/raid1 devices below the LVM.
+Thanks a lot.
 
-could you write in some short words what in the design prohibits us to =
-grow a raid1 on a grown lvm?
-We wanted to do the same:
+----- Original Message ----- 
+From: Sergey A. Sukiyazov
+To: kylewong@southa.com
+Sent: Monday, April 28, 2008 5:11 PM
+Subject: Re: ahci slow transfer rate with kernel 2.6.23-2.6.25
 
 
-mutliple RAID1 (aoe targets)
-on top of
-multiple LVMs
-on top of
-gigantic RAID6
+Hi
+
+I have some problem. Try set queue_depth in "1" for disks, it disables NCQ 
+and the transfer rate
+has returned to 100MB/S. It's ST3500320AS problem with NCQ implementation (I 
+think :-))
+
+for i in sda sdb sdd sdf ; do
+    echo "1" > /sys/block/${i}/device/queue_depth
+done
 
 
-Thanks
-Lars
---=20
-                            Informationstechnologie
-Berlin-Brandenburgische Akademie der Wissenschaften
-J=C3=A4gerstrasse 22-23                     10117 Berlin
-Tel.: +49 30 20370-352           http://www.bbaw.de
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+See also: http://bugzilla.kernel.org/show_bug.cgi?id=8327
+
+-- 
+Best regards
+Sergey A. Sukiyazov
+http://corwin.rostovlinux.ru/ 
+
