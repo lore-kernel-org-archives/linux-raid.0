@@ -1,59 +1,67 @@
-From: "David Lethe" <david@santools.com>
-Subject: RE: How to grow RAID1 mirror on top of LVM?
-Date: Mon, 28 Apr 2008 10:09:51 -0500
-Message-ID: <A20315AE59B5C34585629E258D76A97C2C79A0@34093-C3-EVS3.exchange.rackspace.com>
-References: <25F8EF57-9606-4217-B2D4-2DD3D8E064C4@cam.ac.uk><18408.36712.100712.499844@notabene.brown> <20080428162556.00ee0d72.taeuber@bbaw.de>
+From: Bernd Schubert <bernd-schubert@gmx.de>
+Subject: Re: [patch] limit error rate
+Date: Mon, 28 Apr 2008 23:33:17 +0200
+Message-ID: <200804282333.18172.bernd-schubert@gmx.de>
+References: <ftquac$82m$1@ger.gmane.org> <200804240055.17675.bernd-schubert@gmx.de> <18453.11291.797493.538474@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain;
-	charset="utf-8"
-Content-Transfer-Encoding: base64
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
-In-Reply-To: <20080428162556.00ee0d72.taeuber@bbaw.de>
+In-Reply-To: <18453.11291.797493.538474@notabene.brown>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: =?utf-8?B?TGFycyBUw6R1YmVy?= <taeuber@bbaw.de>, Neil Brown <neilb@suse.de>
-Cc: Anton Altaparmakov <aia21@cam.ac.uk>, linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: Dan Williams <dan.j.williams@intel.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-DQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBsaW51eC1yYWlkLW93bmVyQHZn
-ZXIua2VybmVsLm9yZyBbbWFpbHRvOmxpbnV4LXJhaWQtb3duZXJAdmdlci5rZXJuZWwub3JnXSBP
-biBCZWhhbGYgT2YgTGFycyBUw6R1YmVyDQpTZW50OiBNb25kYXksIEFwcmlsIDI4LCAyMDA4IDk6
-MjYgQU0NClRvOiBOZWlsIEJyb3duDQpDYzogQW50b24gQWx0YXBhcm1ha292OyBsaW51eC1yYWlk
-QHZnZXIua2VybmVsLm9yZw0KU3ViamVjdDogUmU6IEhvdyB0byBncm93IFJBSUQxIG1pcnJvciBv
-biB0b3Agb2YgTFZNPw0KDQpIYWxsbyBOZWlsLA0KDQpOZWlsIEJyb3duIDxuZWlsYkBzdXNlLmRl
-PiBzY2hyaWViOg0KPiBPbiBUaHVyc2RheSBNYXJjaCAxMywgYWlhMjFAY2FtLmFjLnVrIHdyb3Rl
-Og0KPiA+IA0KPiA+IElzIHRoZXJlIGEgYmV0dGVyIHdheSB0byBkbyB0aGlzPyAgSSBhbSBob3Bp
-bmcgc29tZW9uZSB3aWxsIHRlbGwgbWUgdG8gIA0KPiA+IHVzZSBvcHRpb24gYmxhaCB0byB1dGls
-aXR5IGZvbyB0aGF0IHdpbGwgZG8gdGhpcyBmb3IgbWUgd2l0aG91dCBoYXZpbmcgIA0KPiA+IHRv
-IGJyZWFrIHRoZSBtaXJyb3IgdHdpY2UgYW5kIHJlc3luYyBlYWNoIHRpbWUuICAoLTsNCj4gDQo+
-IFNvcnJ5LCBidXQgbm8uICBUaGlzIG1vZGUgb2Ygb3BlcmF0aW9uIHdhcyBuZXZlciBlbnZpc2Fn
-ZWQgZm9yIG1kLg0KPiBJIHdvdWxkIGFsd2F5cyBwdXQgdGhlIG1kL3JhaWQxIGRldmljZXMgYmVs
-b3cgdGhlIExWTS4NCg0KY291bGQgeW91IHdyaXRlIGluIHNvbWUgc2hvcnQgd29yZHMgd2hhdCBp
-biB0aGUgZGVzaWduIHByb2hpYml0cyB1cyB0byBncm93IGEgcmFpZDEgb24gYSBncm93biBsdm0/
-DQpXZSB3YW50ZWQgdG8gZG8gdGhlIHNhbWU6DQoNCg0KbXV0bGlwbGUgUkFJRDEgKGFvZSB0YXJn
-ZXRzKQ0Kb24gdG9wIG9mDQptdWx0aXBsZSBMVk1zDQpvbiB0b3Agb2YNCmdpZ2FudGljIFJBSUQ2
-DQoNCg0KVGhhbmtzDQpMYXJzDQotLS0tLS0tLS0tLS0tLS0tLQ0KTGFyczoNCkV2ZW4gaWYgeW91
-ICpjb3VsZCogZG8gdGhpcywgdGhlbiB5b3VyIGRlc2lnbiB3b3VsZCBzdGlsbCBiZSBhbiBhd2Z1
-bCBpZGVhLiAgWW91J2QgZWZmZWN0aXZlbHkgaGF2ZSBhIHJhbmRvbSBJL08gZmlsZXN5c3RlbS4g
-IEFueSB3cml0ZSBvbiBhIFJBSUQxIGRpc2sgd291bGQgZ2VuZXJhdGUgd3JpdGVzIG9uIGFsbCBv
-ZiB0aGUgb3RoZXIgZGlza3MuICBFdmVuIHdpdGggYSBzbWFsbCBudW1iZXIgb2YgUkFJRDEgdGFy
-Z2V0cyBhbmQgZGVmYXVsdCBqb3VybmFsaW5nLCBJIHdvdWxkbid0IGJlIHN1cnByaXNlZCBpZiBh
-IHNpbmdsZSBhcHBsaWNhdGlvbiB3cml0ZSB0cmFuc2xhdGVkIGludG8gYXQgbGVhc3QgYSBkb3pl
-biBwaHlzaWNhbCBkaXNrIHdyaXRlcy4gIA0KDQpXaGF0IGlmICh3aGVuKSBib3RoIHRoZSBSQUlE
-MSAmIFJBSUQ2IGJlY2FtZSBjb3JydXB0ZWQ/ICBIb3cgd291bGQgeW91IHByb2NlZWQ/ICBIb3cg
-d291bGQgeW91IHByb3Bvc2UgdGhlIG1kIGVuZ2luZSBkZWFsIHdpdGggdGhpcz8gICBXaGF0IGlm
-IHlvdSBsb3NlIGEgZGlzayBvbiB0aGUgUkFJRDYgd2hpbGUgZXhwYW5kaW5nIHRoZSBMVk0gYW5k
-IGhhdmUgYSBiYWQgc2VjdG9yIG9uIHJlbWFpbmluZyBkaXNrcywgb3IgZnNjayBzaG93cyBmaWxl
-c3l0ZW0gY29ycnVwdGlvbiB3aGlsZSB5b3UgYXJlIGV4cGFuZGluZyBhIG1kIHZvbHVtZS4gDQoN
-Ck1heWJlIHlvdSBhcmUgc3RhcnRpbmcgdG8gZ2V0IHRoZSBwb2ludC4gIFdoYXQgaXMgcHJldmVu
-dGluZyB0aGUgbWQgbGF5ZXIgZnJvbSBkb2luZyB3aGF0IHlvdSB3YW50IGlzIHRoYXQgYSBoZWNr
-IG9mIGEgbG90IG9mIGNvZGUgd291bGQgaGF2ZSB0byBiZSB3cml0dGVuLCBhbmQgdGhlIGZpbGV5
-c3RlbSBhbmQgbWQgbGF5ZXJzIHdvdWxkIGhhdmUgdG8gYmUgdGlnaHRseSBjb3VwbGVkIGludG8g
-YSBzaW5nbGUgZW50aXR5LiAgVGhpcyB3b3VsZCBoYXZlIHRvIGJlIGRvbmUgbm90IHNvIG11Y2gg
-dG8gZmFjaWxpdGF0ZSB3aGF0IHlvdSB3YW50IC4uLiBidXQgdG8gbWFpbnRhaW4gYW5kIHNhZmVs
-eSByZWNvdmVyIGRhdGEgaW50ZWdyaXR5IHdoZW4gdGhpbmdzIGdvIGJhZC4gIFRoZSBsYXllcmVk
-IGFyY2hpdGVjdHVyZSBvZiBMSU5VWCBoYXMgYmVuZWZpdHMgZnJvbSBkZXZlbG9wZXJzIHBlcnNw
-ZWN0aXZlLCBiZWNhdXNlIHRoZXkgZG9uJ3QgaGF2ZSB0byB3b3JyeSBhYm91dCBzdWNoIHRoaW5n
-cy4gIFRoZSBkb3duc2lkZSBpcyB0aGF0IGlmIHlvdSB3YW50IGEgcm9idXN0IHN0b3JhZ2UgcG9v
-bCB0aGF0IGdpdmVzIHlvdSBzdWNoIGZsZXhpYmlsaXR5IHRoZW4geW91IG5lZWQgdG8gdXNlIGV4
-dGVybmFsIFJBSUQgb3IgZ28gd2l0aCBhbm90aGVyIE8vUy4NCg0KDQogICANCg==
+On Monday 28 April 2008, Neil Brown wrote:
+> This is not good, you are subtly changing semantics.
+> You have changed:
+>
+>   if (A)
+>       X;
+>   else if (B)
+>       Y;
+>   else if (C)
+>       Z;
+>   else
+>       W;
+>
+> to
+>   if (A && foo())
+>       X;
+>   else if (B && foo())
+>       Y;
+>   else if (C && foo())
+>       Z;
+>   else
+>       W;
+>
+> If 'A' and not 'foo()', you want nothing to happen, but you will
+> actually get one of Y, Z, or W happening, all of which are wrong.
+
+
+Ouch, right. I shouldn't write patches in the middle of the night...
+
+>
+> > Btw, from my point of view the
+> >
+> > if (printk_ratelimit())
+> > 	printk("print output");
+> >
+> > looks odd. I just don't see why the API isn't
+> >
+> > printk_ratelimit("print output");
+>
+> Very sensible.  I've put
+>
+>   #define printk_rl  printk_ratelimit() ?: printk
+>
+> at the start of raid5.c, and used it to fix the problematic printks.
+
+Great!
+
+Thanks a lot,
+Bernd
+
