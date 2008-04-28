@@ -1,87 +1,61 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: [patch] limit error rate
-Date: Mon, 28 Apr 2008 11:44:59 +1000
-Message-ID: <18453.11291.797493.538474@notabene.brown>
-References: <ftquac$82m$1@ger.gmane.org>
-	<e9c3a7c20804221744m6600eccdy9934f58fb6ccded3@mail.gmail.com>
-	<200804240055.17675.bernd-schubert@gmx.de>
+From: "Joshua Johnson" <enigma2175@gmail.com>
+Subject: Help recovering from failed disk on RAID 6
+Date: Sun, 27 Apr 2008 20:16:39 -0600
+Message-ID: <e59c37290804271916t13c7cf4rb45e1c70f6ca9bfd@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Bernd Schubert on Thursday April 24
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Bernd Schubert <bernd-schubert@gmx.de>
-Cc: Dan Williams <dan.j.williams@intel.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thursday April 24, bernd-schubert@gmx.de wrote:
-> 
-> @@ -1157,19 +1159,20 @@ static void raid5_end_read_request(struct bio * bi, int error)
->  
->  		clear_bit(R5_UPTODATE, &sh->dev[i].flags);
->  		atomic_inc(&rdev->read_errors);
-> -		if (conf->mddev->degraded)
-> +		if (conf->mddev->degraded && printk_ratelimit())
->  			printk(KERN_WARNING "raid5:%s: read error not correctable (sector %llu on %s).\n",
->  			       mdname(conf->mddev),
->  			       (unsigned long long)(sh->sector + rdev->data_offset),
->  			       bdn);
-> -		else if (test_bit(R5_ReWrite, &sh->dev[i].flags))
-> +		else if (test_bit(R5_ReWrite, &sh->dev[i].flags) && 
-> +			 printk_ratelimit())
->  			/* Oh, no!!! */
->  			printk(KERN_WARNING "raid5:%s: read error NOT corrected!! (sector %llu on %s).\n",
->  			       mdname(conf->mddev),
->  			       (unsigned long long)(sh->sector + rdev->data_offset),
->  			       bdn);
->  		else if (atomic_read(&rdev->read_errors)
-> -			 > conf->max_nr_stripes)
-> +			 > conf->max_nr_stripes && printk_ratelimit())
->  			printk(KERN_WARNING
->  			       "raid5:%s: Too many read errors, failing device %s.\n",
->  			       mdname(conf->mddev), bdn);
+I am running a linux server with an 8 disk IDE/SATA RAID 6 array.  One
+of the disks is having a problem which caused the machine to freeze.
+If I boot the machine without the problem disk the array fails to
+start.  If I boot with the problem disk the array starts correctly and
+begins syncing, but the machine will soon freeze up again when the
+disk drops out.  My number one question is how to get the array back
+online.  It has a spare disk, but since the OS is freezing rather than
+failing the disk that is having the problem, it never switched to the
+new disk.  When I try to start the array without the problem disk, I
+get:
 
-This is not good, you are subtly changing semantics.
-You have changed:
+#mdadm --manage --run /dev/md0
+raid5: device hda2 operational as raid disk 0
+raid5: device sdb2 operational as raid disk 7
+raid5: device sda1 operational as raid disk 6
+raid5: device hdi2 operational as raid disk 5
+raid5: device hdg2 operational as raid disk 3
+raid5: device hde2 operational as raid disk 2
+raid5: device hdk2 operational as raid disk 1
+raid5: cannot start dirty degraded array for md0
+RAID5 conf printout:
+ --- rd:8 wd:7
+ disk 0, o:1, dev:hda2
+ disk 1, o:1, dev:hdk2
+ disk 2, o:1, dev:hde2
+ disk 3, o:1, dev:hdg2
+ disk 5, o:1, dev:hdi2
+ disk 6, o:1, dev:sda1
+ disk 7, o:1, dev:sdb2
+raid5: failed to run raid set md0
+md: pers->run() failed ...
+mdadm: failed to run array /dev/md0: Input/output error
 
-  if (A)
-      X;
-  else if (B)
-      Y;
-  else if (C)
-      Z;
-  else
-      W;
+/proc/mdstat contains:
+Personalities : [raid1] [raid6] [raid5] [raid4]
+md1 : active raid1 hdg1[1] hda1[0]
+      4200896 blocks [2/2] [UU]
 
-to 
-  if (A && foo())
-      X;
-  else if (B && foo())
-      Y;
-  else if (C && foo())
-      Z;
-  else
-      W;
+md0 : inactive hda2[0] sdc2[8](S) sdb2[7] sda1[6] hdi2[5] hdg2[3]
+hde2[2] hdk2[1]
+      1529265920 blocks
 
-If 'A' and not 'foo()', you want nothing to happen, but you will
-actually get one of Y, Z, or W happening, all of which are wrong.
 
-> 
-> Btw, from my point of view the 
-> 
-> if (printk_ratelimit())
-> 	printk("print output");
-> 
-> looks odd. I just don't see why the API isn't
-> 
-> printk_ratelimit("print output");
-
-Very sensible.  I've put
-
-  #define printk_rl  printk_ratelimit() ?: printk
-
-at the start of raid5.c, and used it to fix the problematic printks.
-
-Thanks,
-NeilBrown
+So how do I get this array to run?  I can't start it without the
+problem disk and I can't sync it with the problem disk.  I am running
+RAID 6 to be able to recover from multiple disk failures so it is a
+little vexing that a single disk going offline renders my array
+unrunnable.  Any help with this issue is greatly appreciated.
