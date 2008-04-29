@@ -1,67 +1,45 @@
-From: Bernd Schubert <bernd-schubert@gmx.de>
-Subject: Re: [patch] limit error rate
-Date: Mon, 28 Apr 2008 23:33:17 +0200
-Message-ID: <200804282333.18172.bernd-schubert@gmx.de>
-References: <ftquac$82m$1@ger.gmane.org> <200804240055.17675.bernd-schubert@gmx.de> <18453.11291.797493.538474@notabene.brown>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: Online resize
+Date: Tue, 29 Apr 2008 11:00:13 +1000
+Message-ID: <18454.29469.343413.701176@notabene.brown>
+References: <200803111119.56015.wayne@flashmedia.co.za>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18453.11291.797493.538474@notabene.brown>
-Content-Disposition: inline
+In-Reply-To: message from Wayne Gemmell on Tuesday March 11
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Dan Williams <dan.j.williams@intel.com>, linux-raid@vger.kernel.org
+To: wayne@flashmedia.co.za
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Monday 28 April 2008, Neil Brown wrote:
-> This is not good, you are subtly changing semantics.
-> You have changed:
->
->   if (A)
->       X;
->   else if (B)
->       Y;
->   else if (C)
->       Z;
->   else
->       W;
->
-> to
->   if (A && foo())
->       X;
->   else if (B && foo())
->       Y;
->   else if (C && foo())
->       Z;
->   else
->       W;
->
-> If 'A' and not 'foo()', you want nothing to happen, but you will
-> actually get one of Y, Z, or W happening, all of which are wrong.
+On Tuesday March 11, wayne@flashmedia.co.za wrote:
+> Hi all
+> 
+> I'd like to do an online resize for my RAID5 drives now that I've upgraded 
+> them to 500GB drives. Now I'm a bit stuck. I assume the steps would be the 
+> following.
 
+What exactly do you mean by "now that I've upgraded them to 500GB
+drives".
+Don't tell my you got new 500GB drives, created little partitions on
+them to match the old drives, and added those to the array.  That is
+the wrong way around.
 
-Ouch, right. I shouldn't write patches in the middle of the night...
+md is quite happy having using some partitions much larger than
+others.
+So if you have an array with (say) 4 200GB drives and want to replace
+them all with 500GB drives, you should make 500GB partitions on those
+drives (assuming that you really want to use partitions) and then
+one at a time, fail a working drive and add a new drive, and wait for
+recovery to complete.
 
->
-> > Btw, from my point of view the
-> >
-> > if (printk_ratelimit())
-> > 	printk("print output");
-> >
-> > looks odd. I just don't see why the API isn't
-> >
-> > printk_ratelimit("print output");
->
-> Very sensible.  I've put
->
->   #define printk_rl  printk_ratelimit() ?: printk
->
-> at the start of raid5.c, and used it to fix the problematic printks.
+Once that is done you still have a working array of the same size as
+before but all the devices (and all the partitions) are larger.
+Then just
+  mdadm --grow /dev/mdX --size=max
 
-Great!
+and the array will resync the new space and be larger for you.  Then
+you can resize the filesystem.
 
-Thanks a lot,
-Bernd
-
+NeilBrown
