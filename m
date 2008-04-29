@@ -1,75 +1,120 @@
-From: "David Lethe" <david@santools.com>
-Subject: RE: How to grow RAID1 mirror on top of LVM?
-Date: Tue, 29 Apr 2008 08:21:18 -0500
-Message-ID: <A20315AE59B5C34585629E258D76A97C2C7E9F@34093-C3-EVS3.exchange.rackspace.com>
-References: <25F8EF57-9606-4217-B2D4-2DD3D8E064C4@cam.ac.uk><18408.36712.100712.499844@notabene.brown><20080428162556.00ee0d72.taeuber@bbaw.de><A20315AE59B5C34585629E258D76A97C2C79A0@34093-C3-EVS3.exchange.rackspace.com> <20080429095545.305b2dfd.taeuber@bbaw.de>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: diskinfo script
+Date: Tue, 29 Apr 2008 14:20:21 -0400
+Message-ID: <481766E5.8080900@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="UTF-8"
-Content-Transfer-Encoding: base64
+Content-Type: multipart/mixed;
+ boundary="------------090500030108000401010304"
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
-In-Reply-To: <20080429095545.305b2dfd.taeuber@bbaw.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?UTF-8?B?TGFycyBUw6R1YmVy?= <taeuber@bbaw.de>
-Cc: Neil Brown <neilb@suse.de>, Anton Altaparmakov <aia21@cam.ac.uk>, linux-raid@vger.kernel.org
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-DQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBMYXJzIFTDpHViZXIgW21haWx0
-bzp0YWV1YmVyQGJiYXcuZGVdIA0KU2VudDogVHVlc2RheSwgQXByaWwgMjksIDIwMDggMjo1NiBB
-TQ0KVG86IERhdmlkIExldGhlDQpDYzogTmVpbCBCcm93bjsgQW50b24gQWx0YXBhcm1ha292OyBs
-aW51eC1yYWlkQHZnZXIua2VybmVsLm9yZw0KU3ViamVjdDogUmU6IEhvdyB0byBncm93IFJBSUQx
-IG1pcnJvciBvbiB0b3Agb2YgTFZNPw0KDQpIYWxsbyBEYXZpZCENCg0KIkRhdmlkIExldGhlIiA8
-ZGF2aWRAc2FudG9vbHMuY29tPiBzY2hyaWViOg0KPiBMYXJzOg0KPiBFdmVuIGlmIHlvdSAqY291
-bGQqIGRvIHRoaXMsIHRoZW4geW91ciBkZXNpZ24gd291bGQgc3RpbGwgYmUgYW4gYXdmdWwgaWRl
-YS4gIFlvdSdkIGVmZmVjdGl2ZWx5IGhhdmUgYSByYW5kb20gSS9PIGZpbGVzeXN0ZW0uICBBbnkg
-d3JpdGUgb24gYSBSQUlEMSBkaXNrIHdvdWxkIGdlbmVyYXRlIHdyaXRlcyBvbiBhbGwgb2YgdGhl
-IG90aGVyIGRpc2tzLiAgRXZlbiB3aXRoIGEgc21hbGwgbnVtYmVyIG9mIFJBSUQxIHRhcmdldHMg
-YW5kIGRlZmF1bHQgam91cm5hbGluZywgSSB3b3VsZG4ndCBiZSBzdXJwcmlzZWQgaWYgYSBzaW5n
-bGUgYXBwbGljYXRpb24gd3JpdGUgdHJhbnNsYXRlZCBpbnRvIGF0IGxlYXN0IGEgZG96ZW4gcGh5
-c2ljYWwgZGlzayB3cml0ZXMuICANCj4gDQo+IFdoYXQgaWYgKHdoZW4pIGJvdGggdGhlIFJBSUQx
-ICYgUkFJRDYgYmVjYW1lIGNvcnJ1cHRlZD8gIEhvdyB3b3VsZCB5b3UgcHJvY2VlZD8gIEhvdyB3
-b3VsZCB5b3UgcHJvcG9zZSB0aGUgbWQgZW5naW5lIGRlYWwgd2l0aCB0aGlzPyAgIFdoYXQgaWYg
-eW91IGxvc2UgYSBkaXNrIG9uIHRoZSBSQUlENiB3aGlsZSBleHBhbmRpbmcgdGhlIExWTSBhbmQg
-aGF2ZSBhIGJhZCBzZWN0b3Igb24gcmVtYWluaW5nIGRpc2tzLCBvciBmc2NrIHNob3dzIGZpbGVz
-eXRlbSBjb3JydXB0aW9uIHdoaWxlIHlvdSBhcmUgZXhwYW5kaW5nIGEgbWQgdm9sdW1lLiANCj4g
-DQo+IE1heWJlIHlvdSBhcmUgc3RhcnRpbmcgdG8gZ2V0IHRoZSBwb2ludC4NCg0KTm8sIHNvcnJ5
-LiBJIHJlYWxseSBkb24ndCB1bmRlcnN0YW5kLiBCdXQgbWF5YmUgYmVjYXVzZSBJIGRpZG4ndCB0
-ZWxsIGRldGFpbGVkIGVub3VnaCB3aGF0IG91ciBzeXN0ZW1zIGxvb2tzIGxpa2UuDQoNCldlIGhh
-dmUgaGVyZSB0d28gaHVnZSBSQUlENiBzeXN0ZW1zLCB0aGF0IGFyZSBjb25uZWN0ZWQgdGhyb3Vn
-aCBhIDEwRyBFdGhlcm5ldCBzd2l0Y2guIFRoZXkgYXJlIGVxdWFsbHkgaW4gc2l6ZS4NCk9uIHRo
-ZXNlIFJBSUQ2IHdlIGNyZWF0ZSBMVnMgZXVxYWxseSBpbiBzaXplIGFuZCB3YW50IHRoZW0gdG8g
-YmUgcGFydHMgb2YgYSBSQUlEMToNCg0KIFJBSUQ2ICAgIFJBSUQ2DQptb25vc2FuICBkdW9zYW4N
-CiAgTFYgICAgICAgTFYgICAgICAgICAgICAgKG11bHRpcGxlIG9mKQ0KICAgIFwgICAgIC8gICAg
-IDEwR0UNCiAgICAgUkFJRDENCiAgICAgICB8ICAgICAgICAxMEdFDQogICAgICBhb2UNCiAgICAg
-ICB8ICAgICAgICAxR0UNCiAgICAgc2VydmVyICAgICAgICAgICAgICAgKG11bHRpcGxlIG9mKQ0K
-DQo+ICBXaGF0IGlzIHByZXZlbnRpbmcgdGhlIG1kIGxheWVyIGZyb20gZG9pbmcgd2hhdCB5b3Ug
-d2FudCBpcyB0aGF0IGEgaGVjayBvZiBhIGxvdCBvZiBjb2RlIHdvdWxkIGhhdmUgdG8gYmUgd3Jp
-dHRlbiwNCg0KQnV0IGNvdWxkIHlvdSB0ZWxsIG1lIHdoYXQgaW4gdGhlIGN1cnJlbnQgwrtkZXNp
-Z27CqyBwcmV2ZW50cyB1cyB0byByZXNpemUgdGhlIExWcyBhbmQgdGhlIFJBSUQxIG9uIHRvcD8N
-CldoZW4gSSB1bmRlcnN0YW5kIGl0IGNvcnJlY3RseSB0aGUgUkFJRCBpbmZvcm1hdGlvbiBhcmUg
-d3JpdHRlbiBhdCB0aGUgZW5kIG9mIGVhY2ggYWNjZXNzaWJsZSBwYXJ0aXRpb24vTFYuDQpXaGF0
-IGlzIGRpZmZlcmVudCBvbiBhbiBleHRlbmRlZCBMViBmcm9tIGEgcGFydGl0aW9uIHRoYXQgaXMg
-cmVwbGFjZWQgd2l0aCBhIGJpZ2dlciBvbmU/DQoNClsuLi5dDQpUaGFua3MNCkxhcnMNCg0KPT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQ0KDQpUaGUgZHJhd2luZyB3YXMgaGVscGZ1
-bCwgYXMgSSBpbnRlcnByZXRlZCB5b3VyIGFyY2hpdGVjdHVyZSBkaWZmZXJlbnRseS4gIEkgdGhv
-dWdodCB5b3UgaGFkIHNvbWV0aGluZyBsaWtlDQogICAgIFJBSUQ2DQogICAgLyAgXA0KICAgLyAg
-ICBcDQpSQUlEMSAgICBSQUlEMQ0KDQpTdGlsbCwgeW91IGNvdWxkIGdldCBpbnRvIGEgZ3JlYXQg
-ZGVhbCBvZiBpbmVmZmljaWVuY3kuICAgV2hhdCBhcmUgdGhlIGJsb2NrL2NodW5rIHNpemVzIGlu
-IFJBSUQ2LCBSQUlEMSwgYW5kIHlvdXIgZmlsZSBzeXN0ZW0sIGFuZCBob3cgaXMgdGhlIGpvdXJu
-YWxpbmcgc2V0IHVwPyAgDQpIb3cgbWFueSBkaXNrcyBhcmUgaW4gdGhlIFJBSUQxLCBhbmQgd2hh
-dCBpcyB0aGUgYXZlcmFnZSBJL08gc2l6ZSB0aGF0IHlvdXIgYXBwbGljYXRpb24gZ2VuZXJhdGVz
-LiAgDQoNCkxldHMnIHNheSB5b3UgZG8gYSA0S0IgV1JJVEUgaW4gdGhlIGZpbGUgc3lzdGVtLiAg
-RmFjdG9yIGluIGFsbCBvZiB0aGUgYWJvdmUgYW5kIHNlZSBob3cgbWFueSBJL09zIGdldCBnZW5l
-cmF0ZWQgb24gZWFjaCBkaXNrLiAgSWYgeW91IGFyZSB3cml0ZS1pbnRlbnNpdmUsIHRoZW4gY29u
-c2lkZXIgaG93IG11Y2ggbGVzcyBJL08gd2lsbCBiZSBnZW5lcmF0ZWQgaWYgeW91IHJlZHVjZWQg
-dGhlIHNpemVzIG9mIHRoZSAyIFJBSUQ2IGJ5IDIgZGlza3MgZWFjaCwgYW5kIGFkZGVkIGEgUkFJ
-RDEgb24gZWFjaCBzeXN0ZW0sIGFuZCB1c2VkIHRoZSBSQUlEMSBmb3IgdGhlIGpvdXJuYWwuICBU
-aGUgSm91cm5hbCBpcyB3cml0ZS1pbnRlbnNpdmUsIGFuZCBSQUlEMSBpcyBiZXN0IGFyY2hpdGVj
-dHVyZSBmb3IgYSBqb3VybmFsLiAgQWxzbyB5b3UgY2FuIHNldCBjb3JyZWN0IGFuZCBtYXRjaGlu
-ZyBibG9jayBzaXplcyBmb3IgdGhlIEpvdXJuYWxpbmcuICBSQUlENiBoYXMgYSBodWdlIHBlbmFs
-dHkgb24gd3JpdGVzLCBzbyB0aGUgbW9yZSB3cml0ZXMgeW91IGNhbiBtb3ZlIGZyb20gdGhlIFJB
-SUQ2IG1kLCB0aGUgYmV0dGVyLiAgDQoNCkFzIGZvciB0aGUgcXVlc3Rpb24gYWJvdXQgcmVzaXpp
-bmcsIEkgd2FzIHVuZGVyIGltcHJlc3Npb24geW91IGJ1aWx0IGl0IGRpZmZlcmVudGx5LCBzbyBm
-b3JnZXQgdGhhdCByZXNwb25zZS4gVGhlcmUgaXMgbm90aGluZyBpbiB5b3VyIGFyY2hpdGVjdHVy
-ZSB0aGF0IHdpbGwgcHJldmVudCB5b3UgZnJvbSByZXNpemluZy4NCg0KRGF2aWQNCg0K
+This is a multi-part message in MIME format.
+--------------090500030108000401010304
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+
+I was playing around doing some prototyping for a more extensive disk 
+info reporter which will be written in perl, and it came to me that this 
+script might be useful to someone, so I'll attach it here. The perl 
+version will generate HTML, and CSV for configuration databases, show 
+mount points, etc. This was an hour or so, mainly playing with the 
+report format. Obviously you need to make it executable.
+
+I want it because I'm frequently asked to look at strange machines, and 
+I want to see what used and how. I could do it all in script, but only 
+to prove I can. ;-)
+
+*Enjoy!*
+
+-- 
+Bill Davidsen <davidsen@tmr.com>
+  "Woe unto the statesman who makes war without a reason that will still
+  be valid when the war is over..." Otto von Bismark 
+
+
+
+--------------090500030108000401010304
+Content-Type: text/plain;
+ name="diskinfo"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="diskinfo"
+
+#!/bin/bash
+#   diskinfo 1.10 2008-04-29 13:58:39-04 davidsen Testing
+#
+# display disk info
+
+# option parsing
+verbose=0
+partitions=false
+debug=false
+
+while getopts "pvd" opt; do
+  case "$opt" in
+  "p") partitions=true;;
+  "v") let verbose+=1;;
+  "d") debug=true;;
+  "?") exit 2;;
+  esac
+done
+if [ $verbose -gt 0 ]; then
+	echo -e 'diskinfo v1.10 Testing  2008-04-29 13:58:39-04 davidsen@tmr.com\n' >&2
+fi
+
+Gig_sect=$[2*1024*1024]
+
+# this does the output
+function do_blkdev
+{
+	local drive id modelfile
+	id="$1"
+	drive=$2
+
+	# size in MB or GB as makes sense
+	size=$(cat ${drive}/size)
+	if [ $size -lt $Gig_sect ]; then
+		MB=$(echo "scale=1;$size/2048"|bc)
+		UNIT="MB"
+	else
+		MB=$(echo "scale=1;$size/(2*1024^2)"|bc)
+		UNIT="GB"
+	fi
+	modelfile="${drive}/device/model"
+	if [ -f "$modelfile" ]; then
+		model=$(cat "${modelfile}")
+	else
+		if [ -d ${drive}/holders ]; then
+			model=$(ls ${drive}/holders)
+			[ -n "$model" ] && model="  ($(echo $model))"
+		else
+			model="undefined"
+		fi
+	fi
+	printf "%-8s %6s %-2s %s\n" "$id" $MB $UNIT "$model"
+}
+
+# identify devices
+eval DISKS=\${${OPTIND}:-hd? sd?}
+
+# process the block devices
+cd /sys/block
+for disk in ${DISKS}
+do
+	if [ -d "${disk}" ]; then
+		do_blkdev "$disk" "$disk"
+		if $partitions; then
+			for ptn in ${disk}/${disk}[1-9]*; do
+				if [ -d "$ptn" ]; then
+					do_blkdev "  ${ptn##*/}" $ptn
+				else
+					echo "  no partition table"
+				fi
+			done
+		fi
+	fi
+done
+
+--------------090500030108000401010304--
