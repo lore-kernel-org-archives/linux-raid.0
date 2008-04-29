@@ -1,44 +1,50 @@
-From: Dexter Filmore <Dexter.Filmore@gmx.de>
-Subject: Re: degraded array after reboot *again*
-Date: Tue, 29 Apr 2008 14:52:21 +0200
-Message-ID: <200804291452.21666.Dexter.Filmore@gmx.de>
-References: <200804281424.33558.Dexter.Filmore@gmx.de> <A20315AE59B5C34585629E258D76A97C197159@34093-C3-EVS3.exchange.rackspace.com>
+From: David Greaves <david@dgreaves.com>
+Subject: Re: --no-degraded in mdadm.conf? / disable auto assembly
+Date: Tue, 29 Apr 2008 14:02:47 +0100
+Message-ID: <48171C77.3080206@dgreaves.com>
+References: <200804291355.59052.Dexter.Filmore@gmx.de>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <A20315AE59B5C34585629E258D76A97C197159@34093-C3-EVS3.exchange.rackspace.com>
-Content-Disposition: inline
+In-Reply-To: <200804291355.59052.Dexter.Filmore@gmx.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Dexter Filmore <Dexter.Filmore@gmx.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Controller is running "dumb", all you can do there is "create raid set" 
-and "delete raid set".
+Dexter Filmore wrote:
+> How do I prevent mdadm from assembling any array at all without uninstalling 
+> the package? I commented out all lines, still it seems it scanned and 
+> assembled what it found.
+> (Possibly a debian thing, will look into this)
+AFAIK there are 3 places where an array is assembled 'automatically'
 
-I resynced the array yesterday. then shut down. then rebooted to Slackware 
-WITHOUT assembling.
-Ran mdadm -E.
-All drives have event count 0.3064.
+1. kernel auto-detect of 0xfd partitions - not mdadm, not currently preventable
+AFAIK.
+2. initrd mdadm script
+3. init.d mdadm script
 
-So I reboot to debian. 4 out of 5. 
-Event count on the active drives 0.3066, on the mssing still 0.3064.
+I'm not sure how udev figures into this... ISTR that some distros had udev
+script issues when udev detected and assembled an array when it had found
+'enough' components and then triggered a resync when the final component popped up.
 
-So the disk was kicked when debian assembled. Why?
-Only thing I could think of was if the controller wasn't ready when mdadm 
-assembled, but since it's the same chip as the onboard controller they should 
-all be there as soon as sata_sil is loaded.
+> Next thing: I don't want mdadm to assemble arrays if not all disks are 
+> present. Can I pass no-degraded to mdadm.conf?
+Yes. man madadm:
+       --no-degraded
+              This is the reverse of --run in that it inhibits the started if
+array unless all expected drives are present.  This
+              is  only needed with --scan and can be used if you physical
+connections to devices are not as reliable as you would
+              like.
 
-I now put sde on yet another controller and see what happens.
+Of course it may be in a newer version :)
+Where's the git page for mdadm then?
 
+> Is there a dry-run-option that says what would happen if I assembled now?
+Not AFAIK - plus, I think this would be an md function wouldn't it? Doesn't
+mdadm just ask the kernel md module to assemble the components without checking
+event counts etc.
 
--- 
------BEGIN GEEK CODE BLOCK-----
-Version: 3.12
-GCS d--(+)@ s-:+ a- C++++ UL++ P+>++ L+++>++++ E-- W++ N o? K-
-w--(---) !O M+ V- PS+ PE Y++ PGP t++(---)@ 5 X+(++) R+(++) tv--(+)@ 
-b++(+++) DI+++ D- G++ e* h>++ r* y?
-------END GEEK CODE BLOCK------
-
-http://www.vorratsdatenspeicherung.de
+David
