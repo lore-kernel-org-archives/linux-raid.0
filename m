@@ -1,45 +1,34 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: Online resize
-Date: Tue, 29 Apr 2008 11:00:13 +1000
-Message-ID: <18454.29469.343413.701176@notabene.brown>
-References: <200803111119.56015.wayne@flashmedia.co.za>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+From: NeilBrown <neilb@suse.de>
+Subject: [PATCH 000 of 9] md: Assorted patches for the 2.5.26 merge window
+Date: Tue, 29 Apr 2008 13:34:38 +1000
+Message-ID: <20080429133104.20146.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Wayne Gemmell on Tuesday March 11
 Sender: linux-raid-owner@vger.kernel.org
-To: wayne@flashmedia.co.za
-Cc: linux-raid@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Bernd Schubert <bernd-schubert@gmx.de>, Dan Williams <dan.j.williams@intel.com>, stable@kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday March 11, wayne@flashmedia.co.za wrote:
-> Hi all
-> 
-> I'd like to do an online resize for my RAID5 drives now that I've upgraded 
-> them to 500GB drives. Now I'm a bit stuck. I assume the steps would be the 
-> following.
 
-What exactly do you mean by "now that I've upgraded them to 500GB
-drives".
-Don't tell my you got new 500GB drives, created little partitions on
-them to match the old drives, and added those to the array.  That is
-the wrong way around.
+Following 9 patches for md are suitable for 2.5.26.  
+Yes, I really should have submitted them to -mm earlier, but I've been
+on leave, sorry.
 
-md is quite happy having using some partitions much larger than
-others.
-So if you have an array with (say) 4 200GB drives and want to replace
-them all with 500GB drives, you should make 500GB partitions on those
-drives (assuming that you really want to use partitions) and then
-one at a time, fail a working drive and add a new drive, and wait for
-recovery to complete.
+First patch is a bug fix that should go in 2.6.25.stable. 
+It has been copied to stable@kernel.org. 
 
-Once that is done you still have a working array of the same size as
-before but all the devices (and all the partitions) are larger.
-Then just
-  mdadm --grow /dev/mdX --size=max
-
-and the array will resync the new space and be larger for you.  Then
-you can resize the filesystem.
+Others are mostly related to "external" metadata support.  i.e. a userspace
+program does all the management of metadata, and needs to communicate
+with the kernel to do its job properly.
 
 NeilBrown
+
+
+ [PATCH 001 of 9] md: Fix use after free when removing rdev via sysfs
+ [PATCH 002 of 9] md: Skip all metadata update processing when using external metadata.
+ [PATCH 003 of 9] md: Reinitialise more mddev fields in do_md_stop.
+ [PATCH 004 of 9] md: Fix 'safemode' handling for external metadata.
+ [PATCH 005 of 9] md: Fix up switching md arrays between read-only and read-write
+ [PATCH 006 of 9] md: Remove a stray command from a copy and paste error in resync_start_store
+ [PATCH 007 of 9] md: prevent duplicates in bind_rdev_to_array
+ [PATCH 008 of 9] md: md: raid5 rate limit error printk
+ [PATCH 009 of 9] md: md: support blocking writes to an array on device failure
