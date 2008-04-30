@@ -1,44 +1,36 @@
-From: David Greaves <david@dgreaves.com>
-Subject: Re: diskinfo script
-Date: Wed, 30 Apr 2008 12:06:04 +0100
-Message-ID: <4818529C.1020603@dgreaves.com>
-References: <481766E5.8080900@tmr.com> <481784E5.4090307@tmr.com>
+From: Dexter Filmore <Dexter.Filmore@gmx.de>
+Subject: Keeping debian from auto-assembling
+Date: Wed, 30 Apr 2008 13:54:35 +0200
+Message-ID: <200804301354.35407.Dexter.Filmore@gmx.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <481784E5.4090307@tmr.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Bill Davidsen wrote:
-> Bill Davidsen wrote:
->> I was playing around doing some prototyping for a more extensive disk
->> info reporter which will be written in perl, and it came to me that
->> this script might be useful to someone, so I'll attach it here. The
->> perl version will generate HTML, and CSV for configuration databases,
->> show mount points, etc. This was an hour or so, mainly playing with
->> the report format. Obviously you need to make it executable.
->>
->> I want it because I'm frequently asked to look at strange machines,
->> and I want to see what used and how. I could do it all in script, but
->> only to prove I can. ;-)
->>
->> *Enjoy!*
->>
-> After some immediate feedback, I did an update on this to include some
-> patches and requested features. So here is the last version I'll put
-> here, with built-in help, examples, the option to use "GiB" instead of
-> "GB" if you care, and now should run on sh as well as bash. It currently
-> doesn't run on ksh, I have to look for my ksh book and see how to fix
-> the problem.
-> 
-> If there is ever a version after this I'll just put it on a website, I
-> was dropping this to do something better.
-> 
+I'd like to assembla manually to investigate why the bloody 5th disk flies 
+from the array at EVERY boot time (third so far, wonder how much stress the 
+disks take) but I can't seen to disable it.
 
-The wiki?
+All 5 disks are 0xFD, but I passed raid=noautodetect to the end of the kernel 
+line, I set "assemble at startup" in /etc/defaults/mdadm to "false", I 
+cleared the mdadm.conf - still it assembles the array. No idea why.
 
-David
+Hints? I'm currently pretty much down with my nerves on this issue.
+
+Dex
+
+
+-- 
+-----BEGIN GEEK CODE BLOCK-----
+Version: 3.12
+GCS d--(+)@ s-:+ a- C++++ UL++ P+>++ L+++>++++ E-- W++ N o? K-
+w--(---) !O M+ V- PS+ PE Y++ PGP t++(---)@ 5 X+(++) R+(++) tv--(+)@ 
+b++(+++) DI+++ D- G++ e* h>++ r* y?
+------END GEEK CODE BLOCK------
+
+http://www.vorratsdatenspeicherung.de
