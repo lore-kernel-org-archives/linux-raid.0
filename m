@@ -1,38 +1,33 @@
-From: David Greaves <david@dgreaves.com>
-Subject: Re: Keeping debian from auto-assembling
-Date: Wed, 30 Apr 2008 14:09:03 +0100
-Message-ID: <48186F6F.9070006@dgreaves.com>
-References: <200804301354.35407.Dexter.Filmore@gmx.de>
+From: "Greg Cormier" <gcormier@gmail.com>
+Subject: Sleeping hard drives in an array?
+Date: Wed, 30 Apr 2008 11:02:31 -0400
+Message-ID: <29a863790804300802i358ab6d9t2be907b47176bd5b@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200804301354.35407.Dexter.Filmore@gmx.de>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Dexter Filmore <Dexter.Filmore@gmx.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Dexter Filmore wrote:
-> I'd like to assembla manually to investigate why the bloody 5th disk flies 
-> from the array at EVERY boot time (third so far, wonder how much stress the 
-> disks take) but I can't seen to disable it.
-> 
-> All 5 disks are 0xFD, but I passed raid=noautodetect to the end of the kernel 
-> line, I set "assemble at startup" in /etc/defaults/mdadm to "false", I 
-> cleared the mdadm.conf - still it assembles the array. No idea why.
+Is it possible to sleep hard drives in an array?
 
-initrd or udev?
+I have a HTPC at home that's on 24x7. It does all my torrenting as
+well, and is mainly a media server.
 
-> 
-> Hints? I'm currently pretty much down with my nerves on this issue.
-> 
-> Dex
+Can I sleep the drives in my RAID5 array while it's not being used?
+It's an XFS partition.
 
-Since you shutdown and booted another distro to see == Events then it's not a
-bad shutdown process.
+I have each drive set as
 
-On reboot it looks like something is assembling the array partially.
-I'd upgrade udev, then test and then upgrade initrd-tools.
+hdparm -S240 /dev/sdX
 
-David
+But I'm fairly sure they are not spinning down :( Is there some
+activity mdadm is doing in the background?
+
+These things are probably idle 22 hours of the day.
+
+
+Thanks,
+Greg
