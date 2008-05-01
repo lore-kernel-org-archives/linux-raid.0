@@ -1,53 +1,48 @@
-From: Alex Davis <alex14641@yahoo.com>
-Subject: Re: Sharing disks amoung multiple software RAIDs
-Date: Thu, 1 May 2008 06:42:11 -0700 (PDT)
-Message-ID: <232402.74959.qm@web50210.mail.re2.yahoo.com>
-References: <alpine.DEB.1.10.0805010849380.20043@p34.internal.lan>
-Reply-To: alex14641@yahoo.com
+From: Twigathy <twigathy@gmail.com>
+Subject: Raid5 grow interrupted, failed
+Date: Thu, 1 May 2008 21:06:12 +0100
+Message-ID: <1f0f1a960805011306w3bba20bag343482a71110b33a@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.1.10.0805010849380.20043@p34.internal.lan>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---- On Thu, 5/1/08, Justin Piszcz <jpiszcz@lucidpixels.com> wrote:
+Hi,
 
-> From: Justin Piszcz <jpiszcz@lucidpixels.com>
-> Subject: Re: Sharing disks amoung multiple software RAIDs
-> To: "Alex Davis" <alex14641@yahoo.com>
-> Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
-> Date: Thursday, May 1, 2008, 8:50 AM
-> On Thu, 1 May 2008, Alex Davis wrote:
-> 
-> > Is this a bad thing? I'm guessing that it is, but
-> I want independent
-> > confirmation before I spoke to someone I know
-> who's doing this.
-> >
-> > Thanks
-> >
-> >
-> >     
-> What is the use case, why would you want to do that?
-> I have seen people on the list do it before, for example
-> are you going to be utilizing both raids at the same time? 
-Yes.
+I'm in a bit of a fix here - I was expanding an mdadm raid5 array from
+5 to 6 disks. During the expand, I had to shut down the machine to do
+some fiddling about with its guts, retiring an old 4x200GB raid5
+actually.
 
-> If so, I would advise against it.
-> 
-> What is the reasoning?
+When I booted the machine back up again the array did not recover and
+carry on reshaping. I tried various different tricks to see if I could
+force-mount it, and I fear I may have wiped the array for good here...
 
-No, I don't want to do this. I know someone who is, and I wanted to get
-more input before I advised them to get more disks. The RAIDs are running
-in degraded mode, so they'll need more disks anyway. Since they are (or
-hopefully soon will be) buying more disks, I'll advise them to get
-dedicated disks for each RAID.
+The position I'm in now:
+md5 is (was?) a 6x600GB raid5, being expanded from 5 disks to 6.
+The UUIDs on 5 of the disks match up
+The UUID on the other disk is different (uhoh)
+The disk with a different UUID has this info in --examine:
+  Reshape pos'n : 443168960 (422.64 GiB 453.81 GB)
+  Delta Devices : 1 (5->6)
+so mdadm has been recording where the reshape got to...
 
+The other disks in the array do *not* have this reshape info in
+them...I think this is probably because I force-assembled  somewhere
+down the line and screwed things up a bit.
 
+I can mount the 5-disk broken array and see about 1/4 of my data -
+consistent with how far the reshape got before I shut down the
+machine.
 
-      ____________________________________________________________________________________
-Be a better friend, newshound, and 
-know-it-all with Yahoo! Mobile.  Try it now.  http://mobile.yahoo.com/;_ylt=Ahu06i62sR8HDtDypao8Wcj9tAcJ
+What I would like to do is to assemble the array and continue
+reshaping where it left off - at that 422.64GiB point. Where do I
+start? Can I even do this? Is my data gone for good? :-(
+
+Thanks
+
+Tom C
