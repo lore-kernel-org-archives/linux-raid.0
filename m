@@ -1,59 +1,28 @@
-From: Twigathy <twigathy@gmail.com>
-Subject: Re: Raid5 grow interrupted, failed
-Date: Fri, 2 May 2008 02:23:25 +0100
-Message-ID: <1f0f1a960805011823t498b5cadlb715ddef218907a7@mail.gmail.com>
-References: <1f0f1a960805011306w3bba20bag343482a71110b33a@mail.gmail.com>
+From: Nick Andrew <nick@nick-andrew.net>
+Subject: Re: Sharing disks amoung multiple software RAIDs
+Date: Fri, 2 May 2008 11:23:37 +1000
+Message-ID: <20080502012337.GD13463@tull.net>
+References: <771640.4981.qm@web50209.mail.re2.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1f0f1a960805011306w3bba20bag343482a71110b33a@mail.gmail.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S933964AbYEBBYF@vger.kernel.org>
 Content-Disposition: inline
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+In-Reply-To: <771640.4981.qm@web50209.mail.re2.yahoo.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Alex Davis <alex14641@yahoo.com>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-Looking closer, it looks like the ext3 superblock is still intact but
-my data is hosed. I'll start from scratch and recover what I can from
-backups...after running badblocks on all the drives for that
-ultra-paranoid level of fun.
+On Thu, May 01, 2008 at 04:35:07AM -0700, Alex Davis wrote:
+> Is this a bad thing? I'm guessing that it is, but I want independent
+> confirmation before I spoke to someone I know who's doing this.
 
-T
+I use it to ensure that multiple partitions are RAIDed. I have a /boot
+partition which is ext3 and a large LVM partition. Both of them are
+RAID-1 onto a second drive (md0 and md1) for redundancy. The second
+drive has an identical partition table to the first drive.
 
-2008/5/1 Twigathy <twigathy@gmail.com>:
-> Hi,
->
->  I'm in a bit of a fix here - I was expanding an mdadm raid5 array from
->  5 to 6 disks. During the expand, I had to shut down the machine to do
->  some fiddling about with its guts, retiring an old 4x200GB raid5
->  actually.
->
->  When I booted the machine back up again the array did not recover and
->  carry on reshaping. I tried various different tricks to see if I could
->  force-mount it, and I fear I may have wiped the array for good here...
->
->  The position I'm in now:
->  md5 is (was?) a 6x600GB raid5, being expanded from 5 disks to 6.
->  The UUIDs on 5 of the disks match up
->  The UUID on the other disk is different (uhoh)
->  The disk with a different UUID has this info in --examine:
->   Reshape pos'n : 443168960 (422.64 GiB 453.81 GB)
->   Delta Devices : 1 (5->6)
->  so mdadm has been recording where the reshape got to...
->
->  The other disks in the array do *not* have this reshape info in
->  them...I think this is probably because I force-assembled  somewhere
->  down the line and screwed things up a bit.
->
->  I can mount the 5-disk broken array and see about 1/4 of my data -
->  consistent with how far the reshape got before I shut down the
->  machine.
->
->  What I would like to do is to assemble the array and continue
->  reshaping where it left off - at that 422.64GiB point. Where do I
->  start? Can I even do this? Is my data gone for good? :-(
->
->  Thanks
->
->  Tom C
->
+Nick.
+-- 
+PGP Key ID = 0x418487E7                      http://www.nick-andrew.net/
+PGP Key fingerprint = B3ED 6894 8E49 1770 C24A  67E3 6266 6EB9 4184 87E7
