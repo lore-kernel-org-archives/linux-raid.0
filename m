@@ -1,98 +1,45 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH] md: fix raid5 'repair' operations
-Date: Fri, 2 May 2008 17:26:45 +1000
-Message-ID: <18458.49717.471295.285149@notabene.brown>
-References: <20080502031513.13090.2973.stgit@dwillia2-linux.ch.intel.com>
+From: Kasper Sandberg <lkml@metanurb.dk>
+Subject: Re: Sharing disks amoung multiple software RAIDs
+Date: Fri, 02 May 2008 10:09:23 +0200
+Message-ID: <1209715763.7827.2.camel@localhost>
+References: <1209692359.16523.2.camel@localhost>
+	 <73000.21239.qm@web50212.mail.re2.yahoo.com>
+	 <A20315AE59B5C34585629E258D76A97C335477@34093-C3-EVS3.exchange.rackspace.com>
+	 <1209696179.16523.13.camel@localhost>
+	 <72dbd3150805020006p7f976a04o487389840f03b4a2@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Dan Williams on Thursday May 1
+In-Reply-To: <72dbd3150805020006p7f976a04o487389840f03b4a2@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux@horizon.com, linux-raid@vger.kernel.org
+To: David Rees <drees76@gmail.com>
+Cc: David Lethe <david@santools.com>, alex14641@yahoo.com, Justin Piszcz <jpiszcz@lucidpixels.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thursday May 1, dan.j.williams@intel.com wrote:
-> commit bd2ab67030e9116f1e4aae1289220255412b37fd "md: close a livelock
-> window in handle_parity_checks5" introduced a bug in handling 'repair'
-> operations.  After a repair operation completes we clear the state bits
-> tracking this operation.  However, they are cleared too early and this
-> results in the code deciding to re-run the parity check operation.  Since
-> we have done the repair in memory the second check does not find a mismatch
-> and thus does not do a writeback.
+On Fri, 2008-05-02 at 00:06 -0700, David Rees wrote:
+> On Thu, May 1, 2008 at 7:42 PM, Kasper Sandberg <lkml@metanurb.dk> wrote:
+> >  in other words, would i be
+> >  safer to run rsync every day to my other disk, and run in non-raid
+> >  mode?!
+> 
+> What would be safer is to run rsync every day from one redundant array
+> to another array - preferably on another machine that is located as
+> far away as possible from the one that you are backing up.
+> 
+> RAID is not the same as a backup, though unfortunately, too many
+> people treat it as such.
+Im not treating it as a backup, what i want, is to make sure that if 1
+disk dies, the data is still intact and ill hopefully be able to run
+with 1 disk till the newly ordered one arrives - and while i naturally
+will keep offsite backups of most important data, it is certainly far
+easier to simply rip out a faulty disk, and put in another, instead of
+restoring from backup from scratch..
 
-yes....
-I must admit that I find that code fairly hard to make sense of, but I
-can see how it was failing before and how this fixes it, and testing
-confirms that, so I suspect it is right.
-
-I cannot help feeling that there must be some way to simplify all
-those .pending and .complete bits and make it somewhat clearer, but I
-haven't been able to figure out how :-(
-
-So: Acked-by: NeilBrown <neilb@suse.de>
-
-I'm heading for a weekend, but feel free to send this to akpm.
-
-Thanks,
-NeilBrown
-
+So my question remains.. Is md raid1 not suited for this need? would it
+be safer to run in non-raid1 mode and daily(maybe hourly) rsync
+everything over to the second disk?
 
 > 
-> Test results:
-> $ echo repair > /sys/block/md0/md/sync_action
-> $ cat /sys/block/md0/md/mismatch_cnt
-> 51072
-> $ echo repair > /sys/block/md0/md/sync_action
-> $ cat /sys/block/md0/md/mismatch_cnt
-> 0
-> 
-> Cc: <stable@kernel.org>
-> Reported-by: George Spelvin <linux@horizon.com>
-> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
-> ---
-> 
->  drivers/md/raid5.c |   21 +++++++++++----------
->  1 files changed, 11 insertions(+), 10 deletions(-)
-> 
-> 
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index 087eee0..da3390d 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -2400,16 +2400,6 @@ static void handle_parity_checks5(raid5_conf_t *conf, struct stripe_head *sh,
->  			canceled_check = 1; /* STRIPE_INSYNC is not set */
->  	}
->  
-> -	/* check if we can clear a parity disk reconstruct */
-> -	if (test_bit(STRIPE_OP_COMPUTE_BLK, &sh->ops.complete) &&
-> -		test_bit(STRIPE_OP_MOD_REPAIR_PD, &sh->ops.pending)) {
-> -
-> -		clear_bit(STRIPE_OP_MOD_REPAIR_PD, &sh->ops.pending);
-> -		clear_bit(STRIPE_OP_COMPUTE_BLK, &sh->ops.complete);
-> -		clear_bit(STRIPE_OP_COMPUTE_BLK, &sh->ops.ack);
-> -		clear_bit(STRIPE_OP_COMPUTE_BLK, &sh->ops.pending);
-> -	}
-> -
->  	/* start a new check operation if there are no failures, the stripe is
->  	 * not insync, and a repair is not in flight
->  	 */
-> @@ -2424,6 +2414,17 @@ static void handle_parity_checks5(raid5_conf_t *conf, struct stripe_head *sh,
->  		}
->  	}
->  
-> +	/* check if we can clear a parity disk reconstruct */
-> +	if (test_bit(STRIPE_OP_COMPUTE_BLK, &sh->ops.complete) &&
-> +		test_bit(STRIPE_OP_MOD_REPAIR_PD, &sh->ops.pending)) {
-> +
-> +		clear_bit(STRIPE_OP_MOD_REPAIR_PD, &sh->ops.pending);
-> +		clear_bit(STRIPE_OP_COMPUTE_BLK, &sh->ops.complete);
-> +		clear_bit(STRIPE_OP_COMPUTE_BLK, &sh->ops.ack);
-> +		clear_bit(STRIPE_OP_COMPUTE_BLK, &sh->ops.pending);
-> +	}
-> +
-> +
->  	/* Wait for check parity and compute block operations to complete
->  	 * before write-back.  If a failure occurred while the check operation
->  	 * was in flight we need to cycle this stripe through handle_stripe
+> -Dave
+
