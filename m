@@ -1,56 +1,82 @@
-From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
+From: Alex Davis <alex14641@yahoo.com>
 Subject: Re: Sharing disks amoung multiple software RAIDs
-Date: Fri, 2 May 2008 12:25:00 +0200
-Message-ID: <20080502102500.GB16198@rap.rap.dk>
-References: <1209692359.16523.2.camel@localhost> <73000.21239.qm@web50212.mail.re2.yahoo.com> <A20315AE59B5C34585629E258D76A97C335477@34093-C3-EVS3.exchange.rackspace.com> <1209696179.16523.13.camel@localhost> <72dbd3150805020006p7f976a04o487389840f03b4a2@mail.gmail.com> <1209715763.7827.2.camel@localhost>
+Date: Fri, 2 May 2008 04:07:03 -0700 (PDT)
+Message-ID: <432288.71787.qm@web50205.mail.re2.yahoo.com>
+References: <20080502083656.28029.qmail@science.horizon.com>
+Reply-To: alex14641@yahoo.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1209715763.7827.2.camel@localhost>
+In-Reply-To: <20080502083656.28029.qmail@science.horizon.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Kasper Sandberg <lkml@metanurb.dk>
-Cc: David Rees <drees76@gmail.com>, David Lethe <david@santools.com>, alex14641@yahoo.com, Justin Piszcz <jpiszcz@lucidpixels.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+To: George Spelvin <linux@horizon.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, May 02, 2008 at 10:09:23AM +0200, Kasper Sandberg wrote:
-> On Fri, 2008-05-02 at 00:06 -0700, David Rees wrote:
-> > On Thu, May 1, 2008 at 7:42 PM, Kasper Sandberg <lkml@metanurb.dk> wrote:
-> > >  in other words, would i be
-> > >  safer to run rsync every day to my other disk, and run in non-raid
-> > >  mode?!
-> > 
-> > What would be safer is to run rsync every day from one redundant array
-> > to another array - preferably on another machine that is located as
-> > far away as possible from the one that you are backing up.
-> > 
-> > RAID is not the same as a backup, though unfortunately, too many
-> > people treat it as such.
-> Im not treating it as a backup, what i want, is to make sure that if 1
-> disk dies, the data is still intact and ill hopefully be able to run
-> with 1 disk till the newly ordered one arrives - and while i naturally
-> will keep offsite backups of most important data, it is certainly far
-> easier to simply rip out a faulty disk, and put in another, instead of
-> restoring from backup from scratch..
+--- On Fri, 5/2/08, George Spelvin <linux@horizon.com> wrote:
+
+> From: George Spelvin <linux@horizon.com>
+> Subject: Re: Sharing disks amoung multiple software RAIDs
+> To: alex14641@yahoo.com
+> Cc: linux@horizon.com, linux-raid@vger.kernel.org
+> Date: Friday, May 2, 2008, 4:36 AM
+> Can you explain what you mean, exactly?
+As an example, you have disks /dev/sd[abc]. /dev/md0 would be made 
+from /dev/sda1, /dev/sdb1, and /dev/sdc1; /dev/md1 would be made  from /dev/sda2, /dev/sdb2, and /dev/sdc2.
+
+> Do you just mean having two partitions on the same drive
+> used as part
+> of other RAID arrays?  That works fine.
+> Having two heavilty used partitions on the same drive
+> causes some
+> performance issues, 
+In this case they are heavily used.
+
+>but no correctness ones.  And
+> there's nothing
+> special about RAID for this consideration; it would apply
+> with
+> non-RAID partitions as well.
 > 
-> So my question remains.. Is md raid1 not suited for this need? would it
-> be safer to run in non-raid1 mode and daily(maybe hourly) rsync
-> everything over to the second disk?
+> But I have mirrored swap striped across all drives; I
+> don't
+> use swap a lot and it's not worth getting dedicated
+> drives.
+> 
+> Likewise, /boot is a 6-way RAID-1 emergency rescue
+> partition.
+> I can boot off any drive, and I have a basic text-mode
+> install
+> with all the disaster recovery tools.  Again, not heavily
+> used.
+> 
+> If you're doing serious database work, it's common
+> to split the
+> system, log, and database across different spindles.  But
+> that's
+> independent of whether RAID is used for any of them.
+> 
+> 
+> But there are other possible interpretations of
+> "sharing among multiple
+> RAIDs", like hot spares and the like.  Could you be
+> more specific?
+> Obviously, having the same partition active in multiple
+> different
+> arrays would be an unmitigated disaster, but I don't
+> think you mean that.
+> (And I don't think mdadm lets you do it, either.)
+> 
+> One thing that's very nice about Linux software RAID is
+> that you *don't*
+> have to RAID whole drives.  It took me a while to
+> understand Intel's
+> "Matrix RAID" feature because it had never
+> occurred to me that a RAID
+> array *couldn't* be set up that way.
 
-I join in on this question. I have written a howto on our linux raid
-page, that exactly advocates a way to with 2 drives use these 2 drives
-for multiple partitions, of different types of RAID. The partitions
-include /boot / /home and swap - which are actually all allocated 
-as RAID partitions on the same 2 drives. See
-http://linux-raid.osdl.org/index.php/Preventing_against_a_failing_disk
 
-I am trying to advocate that this be a recommended setup for normal
-workstations, to for the price of one extra harddisk get additional
-safety and performance.
 
-My take is that Linux RAID code is so stable, including in the degarded
-mode, that this is robust and stable. However, there are still bugs to
-be found, so you can never be 100 % sure. 
-
-Best regards
-keld
+      ____________________________________________________________________________________
+Be a better friend, newshound, and 
+know-it-all with Yahoo! Mobile.  Try it now.  http://mobile.yahoo.com/;_ylt=Ahu06i62sR8HDtDypao8Wcj9tAcJ
