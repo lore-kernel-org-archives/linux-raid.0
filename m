@@ -1,110 +1,78 @@
-From: "David Lethe" <david@santools.com>
-Subject: RE: Sharing disks amoung multiple software RAIDs
-Date: Fri, 2 May 2008 17:24:22 -0500
-Message-ID: <A20315AE59B5C34585629E258D76A97C335960@34093-C3-EVS3.exchange.rackspace.com>
-References: <1209692359.16523.2.camel@localhost> <73000.21239.qm@web50212.mail.re2.yahoo.com> <A20315AE59B5C34585629E258D76A97C335477@34093-C3-EVS3.exchange.rackspace.com> <1209696179.16523.13.camel@localhost> <72dbd3150805020006p7f976a04o487389840f03b4a2@mail.gmail.com> <1209715763.7827.2.camel@localhost>  <481AD006.6050708@dgreaves.com> <1209764630.7827.15.camel@localhost>
+From: berk walker <berk@panix.com>
+Subject: Re: Sleeping hard drives in an array?
+Date: Fri, 02 May 2008 18:11:26 -0400
+Message-ID: <481B918E.4@panix.com>
+References: <29a863790804300802i358ab6d9t2be907b47176bd5b@mail.gmail.com> <481B836E.6040208@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
-In-Reply-To: <1209764630.7827.15.camel@localhost>
+In-Reply-To: <481B836E.6040208@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Kasper Sandberg <lkml@metanurb.dk>, David Greaves <david@dgreaves.com>
-Cc: David Rees <drees76@gmail.com>, alex14641@yahoo.com, Justin Piszcz <jpiszcz@lucidpixels.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: Greg Cormier <gcormier@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Bill Davidsen wrote:
+> Greg Cormier wrote:
+>> Is it possible to sleep hard drives in an array?
+>>
+>> I have a HTPC at home that's on 24x7. It does all my torrenting as
+>> well, and is mainly a media server.
+>>
+>> Can I sleep the drives in my RAID5 array while it's not being used?
+>> It's an XFS partition.
+>>
+>> I have each drive set as
+>>
+>> hdparm -S240 /dev/sdX
+>>
+>> But I'm fairly sure they are not spinning down :( Is there some
+>> activity mdadm is doing in the background?
+>>
+>> These things are probably idle 22 hours of the day.
+>>   
+> 
+> I have several very similar systems, and I note that on one the disk 
+> light blinks every five sec or so, while the others don't do that. The 
+> one that blinks is the only one running LVM, all the others were 
+> partitioned by hand. Does that apply to your system, LVM in use?
+> 
+Geez!!  pardon me if I don't either "get it" or am unable to communicate 
+about "it".  Those thinking that I'm un-necessarily repeating myself - 
+email your flames and I will be gone from here for a few months.
 
+Put / [and whatever ELSE that needs to be mounted] on a USB drive.  I 
+recently got a 2Gb drive for pocket change!!
 
------Original Message-----
-=46rom: Kasper Sandberg [mailto:lkml@metanurb.dk]=20
-Sent: Friday, May 02, 2008 4:44 PM
-To: David Greaves
-Cc: David Rees; David Lethe; alex14641@yahoo.com; Justin Piszcz; linux-=
-raid@vger.kernel.org; linux-kernel@vger.kernel.org
-Subject: Re: Sharing disks amoung multiple software RAIDs
+Learn, or borrow someone who knows how - scripts. I don't think that you 
+would give a darn if a ram-drive didn't "spin-down".  So PUT what can 
+not be put to sleep on something that doesn't have mechanical wear!!!
 
-On Fri, 2008-05-02 at 09:25 +0100, David Greaves wrote:
-> Kasper Sandberg wrote:
-> > Im not treating it as a backup, what i want, is to make sure that i=
-f 1
-> > disk dies, the data is still intact and ill hopefully be able to ru=
-n
-> > with 1 disk till the newly ordered one arrives
-> Probably one of the main design objectives behind RAID/md
+Your system can be set up to WAKE up with everything mounted and ready 
+to go on ANY trigger/situation that YOU want - except the states need to 
+be either on or off... there are lots of states that newer 'puters 
+monitor.  I'm sorry but THIS is not rocket science.
 
-Exactly, but once people start saying: "Look how many problems people
-post to the thread on
-a weekly basis where people lose their data when md rebuilds go bad wit=
-h
-non-shared disks" i begin to worry..
+NOW!!  YOU FAILED TO RESPOND!!  To my earlier response to you.  Please 
+allow me to ax you again....  WHY do you want spin-down?  HMMM
+	Less noise-	- buy new drives
+	Less elect. co$t - If they aren't seeking, draw is LOW
+	Less wear on the drives - I have never had a drive mfg respond 				to 
+my questions about this.  My [totally personal] view 			on this is if 
+you're shutting down for a few hr., you 				will lose, weeks will win.
 
->=20
-> > So my question remains.. Is md raid1 not suited for this need? woul=
-d it
-> > be safer to run in non-raid1 mode and daily(maybe hourly) rsync
-> > everything over to the second disk?
->=20
-> md is 100% guaranteed perfect or your money back...
-> rsync is 100% guaranteed perfect or your money back...
-> your backups are 100% guaranteed perfect or your money back...
-> your hard drives are 100% guaranteed perfect or your money back...
-> your CPU and RAM are 100% guaranteed perfect or your money back...
-> your CPU and PSU fans are 100% guaranteed perfect or your money back.=
-=2E.
->=20
-> Clearly if you want to panic over reliability you have lots of choice=
-s :)
+As a FINAL note here - Somehow I do not know WHAT compubox that you are 
+using, IF you are using linux/unix/bsd, and WHAT level your 
+make/compiler/etc are at.  This particular forum has SEVERAL really 
+talanted and experienced people on here.  The only reason which I could 
+point at might be that you seem to be clueless - which is a different 
+forum.  :)
 
-I do not wish to panic, i merely wished to know if linux MD is believed
-to work in most cases, or believed to do all sorts of weird stuff when
-resyncing :)
+If I have caused yellow dribble and you wish to directly hammer me .. my 
+name is "berk"  hehe.. and my email provider is "panix".. of course +".com.
 
->=20
-> David
-> PS, FWIW md has saved my data* countless times over the past 'n' year=
-s in
-> exactly the scenario you describe.
+If you cause me to be flooded w/spam....................[I know, it's a 
+public forum].
 
-It has also been useful to people i know, i just wished to be sure :)
-and as Keld J=F8rn Simonsen and Helge Hafting's comments seems to confi=
-rm,
-linux md IS nice and stable :)
-
-and as said, what im looking for isnt an in-box backup solution, merely
-safety in case one disk burns :)
-
->=20
-> *(or more accurately has saved me from having to restore my data)
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-Since I am the person that wrote that "Look how many problems people
-post to the thread on a weekly basis where people lose their data when =
-md rebuilds go bad with
-non-shared disks", I think need to clarify.
-=20
-I was being too literal. md is a good solution (I use it myself).  Howe=
-ver, the OP wanted to "Make sure that if one disk dies, the data is sti=
-ll in tact". =20
-
-Only way to do that is have a good offsite backup.
-
-Nothing can prevent opportunity for data loss.  I don't care what RAID =
-level (with single redundancy) you use or whether you have software or =
-hardware-based RAID .. rebuilds can not reconstruct data if you are in =
-degraded mode and have an unrecoverable read error on surviving disks. =
- It is not md's job or design point to insure data consistency check/re=
-pairs are run 24x7.  As such, by definition, there is no way to insure =
-that a md rebuild will always be successful.
-
-David
----------
-
-
-
-
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+b-
