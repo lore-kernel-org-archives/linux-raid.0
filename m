@@ -1,28 +1,65 @@
-From: Nick Andrew <nick@nick-andrew.net>
+From: Kasper Sandberg <lkml@metanurb.dk>
 Subject: Re: Sharing disks amoung multiple software RAIDs
-Date: Fri, 2 May 2008 11:23:37 +1000
-Message-ID: <20080502012337.GD13463@tull.net>
+Date: Fri, 02 May 2008 03:39:19 +0200
+Message-ID: <1209692359.16523.2.camel@localhost>
 References: <771640.4981.qm@web50209.mail.re2.yahoo.com>
+	 <alpine.DEB.1.10.0805010849380.20043@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S933964AbYEBBYF@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <771640.4981.qm@web50209.mail.re2.yahoo.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Alex Davis <alex14641@yahoo.com>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <alpine.DEB.1.10.0805010849380.20043@p34.internal.lan>
+Sender: linux-raid-owner@vger.kernel.org
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: Alex Davis <alex14641@yahoo.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, May 01, 2008 at 04:35:07AM -0700, Alex Davis wrote:
-> Is this a bad thing? I'm guessing that it is, but I want independent
-> confirmation before I spoke to someone I know who's doing this.
+On Thu, 2008-05-01 at 08:50 -0400, Justin Piszcz wrote:
+> 
+> On Thu, 1 May 2008, Alex Davis wrote:
+> 
+> > Is this a bad thing? I'm guessing that it is, but I want independent
+> > confirmation before I spoke to someone I know who's doing this.
+> >
+> > Thanks
+> >
+> >
+> >      ____________________________________________________________________________________
+> > Be a better friend, newshound, and
+> > know-it-all with Yahoo! Mobile.  Try it now.  http://mobile.yahoo.com/;_ylt=Ahu06i62sR8HDtDypao8Wcj9tAcJ
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> >
+> 
+> What is the use case, why would you want to do that?
+> I have seen people on the list do it before, for example are you going to 
+> be utilizing both raids at the same time?  If so, I would advise against 
+> it.
+> 
+> What is the reasoning?
 
-I use it to ensure that multiple partitions are RAIDed. I have a /boot
-partition which is ext3 and a large LVM partition. Both of them are
-RAID-1 onto a second drive (md0 and md1) for redundancy. The second
-drive has an identical partition table to the first drive.
+I do this!
 
-Nick.
--- 
-PGP Key ID = 0x418487E7                      http://www.nick-andrew.net/
-PGP Key fingerprint = B3ED 6894 8E49 1770 C24A  67E3 6266 6EB9 4184 87E7
+is this really bad? i would surely like a list of reasons why..
+
+I do it because.. well.. first off, it allows me to have /boot on
+different raidlevel than / or /home without extra disks.
+secondly, it allows me to with the same disks use different
+filesystems.. for instance, it allows me to have /home encrypted with
+dm-crypt, while still raided.. Not that i would mind encrypting /
+and /home as 1 partition, but it creates a whole slew of issues with
+having to create initrd and stuff..
+
+I realize that performance probably suffers abit from this, but well..
+is there any stability or security wise risk? i mostly use raid1 and
+raid5 only..
+
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+
