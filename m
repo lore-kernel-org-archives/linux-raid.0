@@ -1,25 +1,45 @@
-From: "Dan Williams" <dan.j.williams@intel.com>
-Subject: Re: [PATCH] md: fix raid5 'repair' operations
-Date: Fri, 2 May 2008 11:36:03 -0700
-Message-ID: <e9c3a7c20805021136k51cc0ef8la940002454340de4@mail.gmail.com>
-References: <20080502031513.13090.2973.stgit@dwillia2-linux.ch.intel.com>
-	 <20080502162447.13832.qmail@science.horizon.com>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: Sleeping hard drives in an array?
+Date: Fri, 02 May 2008 17:11:10 -0400
+Message-ID: <481B836E.6040208@tmr.com>
+References: <29a863790804300802i358ab6d9t2be907b47176bd5b@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20080502162447.13832.qmail@science.horizon.com>
-Content-Disposition: inline
+In-Reply-To: <29a863790804300802i358ab6d9t2be907b47176bd5b@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: George Spelvin <linux@horizon.com>
-Cc: neilb@suse.de, linux-raid@vger.kernel.org
+To: Greg Cormier <gcormier@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, May 2, 2008 at 9:24 AM, George Spelvin <linux@horizon.com> wrote:
-> Just to confirm, after 2 hours repair + 2 hours check, it seems to have
->  worked.  And the e2fsck didn't complain.
+Greg Cormier wrote:
+> Is it possible to sleep hard drives in an array?
 >
->  So if you think it's good, please submit for 2.6.25.2.
+> I have a HTPC at home that's on 24x7. It does all my torrenting as
+> well, and is mainly a media server.
+>
+> Can I sleep the drives in my RAID5 array while it's not being used?
+> It's an XFS partition.
+>
+> I have each drive set as
+>
+> hdparm -S240 /dev/sdX
+>
+> But I'm fairly sure they are not spinning down :( Is there some
+> activity mdadm is doing in the background?
+>
+> These things are probably idle 22 hours of the day.
+>   
 
-Thanks for reporting this and confirming the fix,
-Dan
+I have several very similar systems, and I note that on one the disk 
+light blinks every five sec or so, while the others don't do that. The 
+one that blinks is the only one running LVM, all the others were 
+partitioned by hand. Does that apply to your system, LVM in use?
+
+-- 
+Bill Davidsen <davidsen@tmr.com>
+  "Woe unto the statesman who makes war without a reason that will still
+  be valid when the war is over..." Otto von Bismark 
+
+
