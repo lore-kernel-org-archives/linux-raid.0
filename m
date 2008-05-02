@@ -1,82 +1,92 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: Sharing disks amoung multiple software RAIDs
-Date: Fri, 02 May 2008 17:24:22 -0400
-Message-ID: <481B8686.7070208@tmr.com>
-References: <232402.74959.qm@web50210.mail.re2.yahoo.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: [PATCH] md: fix raid5 'repair' operations
+Date: Fri, 02 May 2008 14:27:15 -0700
+Message-ID: <20080502212715.22922.79901.stgit@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <232402.74959.qm@web50210.mail.re2.yahoo.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: alex14641@yahoo.com
-Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+To: akpm@linux-foundation.org
+Cc: neilb@suse.de, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, linux@horizon.com
 List-Id: linux-raid.ids
 
-Alex Davis wrote:
-> --- On Thu, 5/1/08, Justin Piszcz <jpiszcz@lucidpixels.com> wrote:
->
->   
->> From: Justin Piszcz <jpiszcz@lucidpixels.com>
->> Subject: Re: Sharing disks amoung multiple software RAIDs
->> To: "Alex Davis" <alex14641@yahoo.com>
->> Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
->> Date: Thursday, May 1, 2008, 8:50 AM
->> On Thu, 1 May 2008, Alex Davis wrote:
->>
->>     
->>> Is this a bad thing? I'm guessing that it is, but
->>>       
->> I want independent
->>     
->>> confirmation before I spoke to someone I know
->>>       
->> who's doing this.
->>     
->>> Thanks
->>>
->>>
->>>     
->>>       
->> What is the use case, why would you want to do that?
->> I have seen people on the list do it before, for example
->> are you going to be utilizing both raids at the same time? 
->>     
-> Yes.
->
->   
->> If so, I would advise against it.
->>
->> What is the reasoning?
->>     
->
-> No, I don't want to do this. I know someone who is, and I wanted to get
-> more input before I advised them to get more disks. The RAIDs are running
-> in degraded mode, so they'll need more disks anyway. Since they are (or
-> hopefully soon will be) buying more disks, I'll advise them to get
-> dedicated disks for each RAID.
->   
+commit bd2ab67030e9116f1e4aae1289220255412b37fd "md: close a livelock
+window in handle_parity_checks5" introduced a bug in handling 'repair'
+operations.  After a repair operation completes we clear the state bits
+tracking this operation.  However, they are cleared too early and this
+results in the code deciding to re-run the parity check operation.  Since
+we have done the repair in memory the second check does not find a mismatch
+and thus does not do a writeback.
 
-Depending on the use, dedicated disk may not be better, unless the 
-budget is large. I ran an application which had a heavily read database 
-and a large collection of files thich were read based on offsets read 
-from the database. I have a limited number of drives available 
-(rackspace limit, not $). I partitioned the drives with a small 
-partition for the heavily read database, using three copies raid1, and 
-raid5 for the more lightly used data, across the same disks.
+Test results:
+$ echo repair > /sys/block/md0/md/sync_action
+$ cat /sys/block/md0/md/mismatch_cnt
+51072
+$ echo repair > /sys/block/md0/md/sync_action
+$ cat /sys/block/md0/md/mismatch_cnt
+0
 
-I tried almost every layout possible with six drives, and spreading the 
-required head motion to all drives was a big win on the heavily read 
-database, while spreading the storage over all drives was required 
-because of capacity. And split and shared the performance was optimized. 
-And it did stay up with a drive fail, although "up" means "didn't lose 
-data" rather than "usefully fast."
+(also fix incorrect indentation)
+
+Cc: <stable@kernel.org>
+Tested-by: George Spelvin <linux@horizon.com>
+Acked-by: NeilBrown <neilb@suse.de>
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+---
+
+ drivers/md/raid5.c |   25 +++++++++++++------------
+ 1 files changed, 13 insertions(+), 12 deletions(-)
 
 
-
--- 
-Bill Davidsen <davidsen@tmr.com>
-  "Woe unto the statesman who makes war without a reason that will still
-  be valid when the war is over..." Otto von Bismark 
-
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 087eee0..ee0ea91 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -2369,8 +2369,8 @@ static void handle_parity_checks5(raid5_conf_t *conf, struct stripe_head *sh,
+ 
+ 	/* complete a check operation */
+ 	if (test_and_clear_bit(STRIPE_OP_CHECK, &sh->ops.complete)) {
+-	    clear_bit(STRIPE_OP_CHECK, &sh->ops.ack);
+-	    clear_bit(STRIPE_OP_CHECK, &sh->ops.pending);
++		clear_bit(STRIPE_OP_CHECK, &sh->ops.ack);
++		clear_bit(STRIPE_OP_CHECK, &sh->ops.pending);
+ 		if (s->failed == 0) {
+ 			if (sh->ops.zero_sum_result == 0)
+ 				/* parity is correct (on disc,
+@@ -2400,16 +2400,6 @@ static void handle_parity_checks5(raid5_conf_t *conf, struct stripe_head *sh,
+ 			canceled_check = 1; /* STRIPE_INSYNC is not set */
+ 	}
+ 
+-	/* check if we can clear a parity disk reconstruct */
+-	if (test_bit(STRIPE_OP_COMPUTE_BLK, &sh->ops.complete) &&
+-		test_bit(STRIPE_OP_MOD_REPAIR_PD, &sh->ops.pending)) {
+-
+-		clear_bit(STRIPE_OP_MOD_REPAIR_PD, &sh->ops.pending);
+-		clear_bit(STRIPE_OP_COMPUTE_BLK, &sh->ops.complete);
+-		clear_bit(STRIPE_OP_COMPUTE_BLK, &sh->ops.ack);
+-		clear_bit(STRIPE_OP_COMPUTE_BLK, &sh->ops.pending);
+-	}
+-
+ 	/* start a new check operation if there are no failures, the stripe is
+ 	 * not insync, and a repair is not in flight
+ 	 */
+@@ -2424,6 +2414,17 @@ static void handle_parity_checks5(raid5_conf_t *conf, struct stripe_head *sh,
+ 		}
+ 	}
+ 
++	/* check if we can clear a parity disk reconstruct */
++	if (test_bit(STRIPE_OP_COMPUTE_BLK, &sh->ops.complete) &&
++	    test_bit(STRIPE_OP_MOD_REPAIR_PD, &sh->ops.pending)) {
++
++		clear_bit(STRIPE_OP_MOD_REPAIR_PD, &sh->ops.pending);
++		clear_bit(STRIPE_OP_COMPUTE_BLK, &sh->ops.complete);
++		clear_bit(STRIPE_OP_COMPUTE_BLK, &sh->ops.ack);
++		clear_bit(STRIPE_OP_COMPUTE_BLK, &sh->ops.pending);
++	}
++
++
+ 	/* Wait for check parity and compute block operations to complete
+ 	 * before write-back.  If a failure occurred while the check operation
+ 	 * was in flight we need to cycle this stripe through handle_stripe
 
