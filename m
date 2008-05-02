@@ -1,134 +1,45 @@
-From: Kasper Sandberg <lkml@metanurb.dk>
-Subject: RE: Sharing disks amoung multiple software RAIDs
-Date: Fri, 02 May 2008 04:42:59 +0200
-Message-ID: <1209696179.16523.13.camel@localhost>
-References: <1209692359.16523.2.camel@localhost>
-	 <73000.21239.qm@web50212.mail.re2.yahoo.com>
-	 <A20315AE59B5C34585629E258D76A97C335477@34093-C3-EVS3.exchange.rackspace.com>
+From: "Dan Williams" <dan.j.williams@intel.com>
+Subject: Re: Can't get rid of RAID-5 mismatches
+Date: Thu, 1 May 2008 19:48:02 -0700
+Message-ID: <e9c3a7c20805011948q36102719hcc27e393f2735459@mail.gmail.com>
+References: <20080501211933.8466.qmail@science.horizon.com>
+	 <e9c3a7c20805011721s3fd9f519hd5efb19820a4542d@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <A20315AE59B5C34585629E258D76A97C335477@34093-C3-EVS3.exchange.rackspace.com>
+In-Reply-To: <e9c3a7c20805011721s3fd9f519hd5efb19820a4542d@mail.gmail.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: David Lethe <david@santools.com>
-Cc: alex14641@yahoo.com, Justin Piszcz <jpiszcz@lucidpixels.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+To: George Spelvin <linux@horizon.com>, Linus Torvalds <torvalds@linux-foundation.org>, Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org, Stable <stable@kernel.org>
 List-Id: linux-raid.ids
 
-On Thu, 2008-05-01 at 21:31 -0500, David Lethe wrote:
-> In a perfect world, my expectation is that sharing a disk is safe and
-> even a reasonable thing to do. The shared disk is effectively a range of
-> addressable blocks in the same way an individual disk or even a hardware
-> RAID LUN is a range of blocks. From this limited perspective, the only
-> penalty is performance related, assuming you don't mind having to
-> explain yourself to an IT supervisor somewhere in your company.
-> 
-> However, consider what COULD happen in event of a drive failure, either
-> with the shared or an unshared disk. What are the odds all of the
-> failure scenarios have been tested for all ATA and SCSI command sets;
-> with threaded I/Os pending; with dirty cache; bus resets when hardware
-> dies; etc... ?
-> 
-> The odds are zero.  Look how many problems people post to the thread on
-> a weekly basis where people lose their data when md rebuilds go bad with
-> non-shared disks.  Why make the problem worse?
+On Thu, May 1, 2008 at 5:21 PM, Dan Williams <dan.j.williams@intel.com> wrote:
+> On Thu, May 1, 2008 at 2:19 PM, George Spelvin <linux@horizon.com> wrote:
+>  [..]
+>
+> >  But let me just ask... the RAID-5 repair code is known to work, right?
+>  >  So the situation I've got above points to some lower-level problem?
+>  >  It's not just somehow forgetting to write out the corrections and
+>  >  I'm seeing the same mismatches over and over again?
+>  >
+>  >  Any other debugging suggestions?
+>
+>  I can reproduce this here, and until I can track down what happened
+>  the fix is reverting commit bd2ab67030e9116f1e4aae1289220255412b37fd
+>  "md: close a livelock window in handle_parity_checks5".
+>
+>  That fix was tested to close a livelock condition for which I had a
+>  reproducible test case, but I did not regression test 'echo repair >
+>  sync_action'.  My fear was that this compromised re-adding a dirty
+>  disk to a degraded array but that appears unaffected.
+>
 
-What? are you saying linux md is unreliable?! in other words, would i be
-safer to run rsync every day to my other disk, and run in non-raid
-mode?!
+The repair operation is detecting the mismatch then correcting it in
+memory without writing it back.  I have a potential fix that I will
+send in separate thread.  I want to put it through more testing and
+get it reviewed by Neil.
 
-> 
-> -----Original Message-----
-> From: linux-raid-owner@vger.kernel.org
-> [mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Alex Davis
-> Sent: Thursday, May 01, 2008 8:52 PM
-> To: Justin Piszcz; Kasper Sandberg
-> Cc: linux-raid@vger.kernel.org; linux-kernel@vger.kernel.org
-> Subject: Re: Sharing disks amoung multiple software RAIDs
-> 
-> --- On Thu, 5/1/08, Kasper Sandberg <lkml@metanurb.dk> wrote:
-> 
-> > From: Kasper Sandberg <lkml@metanurb.dk>
-> > Subject: Re: Sharing disks amoung multiple software RAIDs
-> > To: "Justin Piszcz" <jpiszcz@lucidpixels.com>
-> > Cc: "Alex Davis" <alex14641@yahoo.com>, linux-raid@vger.kernel.org,
-> linux-kernel@vger.kernel.org
-> > Date: Thursday, May 1, 2008, 9:39 PM
-> > On Thu, 2008-05-01 at 08:50 -0400, Justin Piszcz wrote:
-> > > 
-> > > On Thu, 1 May 2008, Alex Davis wrote:
-> > > 
-> > > > Is this a bad thing? I'm guessing that it is,
-> > but I want independent
-> > > > confirmation before I spoke to someone I know
-> > who's doing this.
-> > > >
-> > > > Thanks
-> > > >
-> > > >
-> > > >     
-> >
-> ________________________________________________________________________
-> ____________
-> > > > Be a better friend, newshound, and
-> > > > know-it-all with Yahoo! Mobile.  Try it now. 
-> > http://mobile.yahoo.com/;_ylt=Ahu06i62sR8HDtDypao8Wcj9tAcJ
-> > > > --
-> > > > To unsubscribe from this list: send the line
-> > "unsubscribe linux-raid" in
-> > > > the body of a message to
-> > majordomo@vger.kernel.org
-> > > > More majordomo info at 
-> > http://vger.kernel.org/majordomo-info.html
-> > > >
-> > > 
-> > > What is the use case, why would you want to do that?
-> > > I have seen people on the list do it before, for
-> > example are you going to 
-> > > be utilizing both raids at the same time?  If so, I
-> > would advise against 
-> > > it.
-> > > 
-> > > What is the reasoning?
-> > 
-> > I do this!
-> > 
-> > is this really bad? i would surely like a list of reasons
-> > why..
-> > 
-> > I do it because.. well.. first off, it allows me to have
-> > /boot on
-> > different raidlevel than / or /home without extra disks.
-> > secondly, it allows me to with the same disks use different
-> > filesystems.. for instance, it allows me to have /home
-> > encrypted with
-> > dm-crypt, while still raided.. Not that i would mind
-> > encrypting /
-> > and /home as 1 partition, but it creates a whole slew of
-> > issues with
-> > having to create initrd and stuff..
-> > 
-> > I realize that performance probably suffers abit from this,
-> > but well..
-> > is there any stability or security wise risk? i mostly use
-> > raid1 and
-> > raid5 only..
-> > 
-> I would guess if the RAIDs are heavily used simultaneously it could
-> cause the disk head actuators to jump around more, causing more wear
-> and tear.
-> 
-> 
->  
-> ________________________________________________________________________
-> ____________
-> Be a better friend, newshound, and 
-> know-it-all with Yahoo! Mobile.  Try it now.
-> http://mobile.yahoo.com/;_ylt=Ahu06i62sR8HDtDypao8Wcj9tAcJ
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> 
-
+--
+Dan
