@@ -1,43 +1,67 @@
-From: Michael Tokarev <mjt@tls.msk.ru>
-Subject: Re: [PATCH] md: fix raid5 'repair' operations
-Date: Fri, 02 May 2008 15:17:49 +0400
-Message-ID: <481AF85D.4040103@msgid.tls.msk.ru>
-References: <20080502031513.13090.2973.stgit@dwillia2-linux.ch.intel.com> <18458.49717.471295.285149@notabene.brown>
+From: Dexter Filmore <Dexter.Filmore@gmx.de>
+Subject: non-fresh from initrd, all fine when assembling manually
+Date: Fri, 2 May 2008 14:46:32 +0200
+Message-ID: <200805021446.32835.Dexter.Filmore@gmx.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18458.49717.471295.285149@notabene.brown>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Dan Williams <dan.j.williams@intel.com>, linux@horizon.com, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil Brown wrote:
-> On Thursday May 1, dan.j.williams@intel.com wrote:
->> commit bd2ab67030e9116f1e4aae1289220255412b37fd "md: close a livelock
->> window in handle_parity_checks5" introduced a bug in handling 'repair'
->> operations.  After a repair operation completes we clear the state bits
->> tracking this operation.  However, they are cleared too early and this
->> results in the code deciding to re-run the parity check operation.  Since
->> we have done the repair in memory the second check does not find a mismatch
->> and thus does not do a writeback.
-> 
-> yes....
-> I must admit that I find that code fairly hard to make sense of, but I
-> can see how it was failing before and how this fixes it, and testing
-> confirms that, so I suspect it is right.
-> 
-> I cannot help feeling that there must be some way to simplify all
-> those .pending and .complete bits and make it somewhat clearer, but I
-> haven't been able to figure out how :-(
-> 
-> So: Acked-by: NeilBrown <neilb@suse.de>
-> 
-> I'm heading for a weekend, but feel free to send this to akpm.
+My issues from the last few days all summed up in one, maybe someone knows 
+what to do about it, I CC to the debian list as well:
 
-Hmm.  Should this be sent to stable- as well?  I were just biten by
-this very bug here, and after applying the patch and rebooting the
-problem went away...  2.6.25.0 here.
 
-/mjt
+Software raid5 on debian etch with 2.6.22 kernel from backports.
+
+Hardware: Asus K8N-E Deluxe, nForce3/250Gb chipset. 
+Has: 
+2 sATA ports from the nF3 (sata_nv)
+4 sATA ports from an onboard Silicon Image 3114 (sata_sil)
+4 sATA ports from an PCI controller, Silicon Image 3114, too.
+
+I used to run this setup:
+4x Samsung Spinpoint 250GB on the onboard 3114, started by initrd. All fine.
+
+Now I upgraded to 5x500GB. Built the array degraded on the 4 PCI controller 
+ports, transferred all the data, then moved the 4x500 to the onboard 3114.
+
+Now I added the fifth disk and --add'ed it to the array and it synced.
+
+I thought all was fine. Wrong.
+
+Upon reboot, the 5th disk that now sat on the PCI controller alone was kicked 
+from the array for being non fresh. I suspected a shutdown problem, found one 
+with 2.6.22 and the shutdown utility, fixed that and resynced.
+Next reboot: same story.
+So I synced, booted a live CD (knoppix) and checked out mdadm -E in regard of 
+the event count. All ok. So no shutdown problem.
+I even moved the fifth disk from the PCI controller to the NV controller on 
+the board.
+
+Two resyncs later I decided to reconf mdadm to *not* start from the initrd and 
+not auto-assemble at boot time.
+I then assembled the array manually and tadaa, all fine, array works and is 
+synced.
+
+Now: what's going on here? both onboard 3114 and pci 3114 controllers are 
+handled by the same kernel module, so either initrd sees all or none.
+Why would it not wanna see the 5th disk from initrd, but when I manually 
+assemble, it's fine?
+
+Dex
+
+
+-- 
+-----BEGIN GEEK CODE BLOCK-----
+Version: 3.12
+GCS d--(+)@ s-:+ a- C++++ UL++ P+>++ L+++>++++ E-- W++ N o? K-
+w--(---) !O M+ V- PS+ PE Y++ PGP t++(---)@ 5 X+(++) R+(++) tv--(+)@ 
+b++(+++) DI+++ D- G++ e* h>++ r* y?
+------END GEEK CODE BLOCK------
+
+http://www.vorratsdatenspeicherung.de
