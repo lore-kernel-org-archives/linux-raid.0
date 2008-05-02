@@ -1,50 +1,25 @@
 From: "Dan Williams" <dan.j.williams@intel.com>
 Subject: Re: [PATCH] md: fix raid5 'repair' operations
-Date: Fri, 2 May 2008 11:34:42 -0700
-Message-ID: <e9c3a7c20805021134mf8e3101vc5efcae5fe0d035c@mail.gmail.com>
+Date: Fri, 2 May 2008 11:36:03 -0700
+Message-ID: <e9c3a7c20805021136k51cc0ef8la940002454340de4@mail.gmail.com>
 References: <20080502031513.13090.2973.stgit@dwillia2-linux.ch.intel.com>
-	 <18458.49717.471295.285149@notabene.brown>
+	 <20080502162447.13832.qmail@science.horizon.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18458.49717.471295.285149@notabene.brown>
+In-Reply-To: <20080502162447.13832.qmail@science.horizon.com>
 Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux@horizon.com, linux-raid@vger.kernel.org
+To: George Spelvin <linux@horizon.com>
+Cc: neilb@suse.de, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, May 2, 2008 at 12:26 AM, Neil Brown <neilb@suse.de> wrote:
-> On Thursday May 1, dan.j.williams@intel.com wrote:
->  > commit bd2ab67030e9116f1e4aae1289220255412b37fd "md: close a livelock
->  > window in handle_parity_checks5" introduced a bug in handling 'repair'
->  > operations.  After a repair operation completes we clear the state bits
->  > tracking this operation.  However, they are cleared too early and this
->  > results in the code deciding to re-run the parity check operation.  Since
->  > we have done the repair in memory the second check does not find a mismatch
->  > and thus does not do a writeback.
+On Fri, May 2, 2008 at 9:24 AM, George Spelvin <linux@horizon.com> wrote:
+> Just to confirm, after 2 hours repair + 2 hours check, it seems to have
+>  worked.  And the e2fsck didn't complain.
 >
->  yes....
->  I must admit that I find that code fairly hard to make sense of, but I
->  can see how it was failing before and how this fixes it, and testing
->  confirms that, so I suspect it is right.
->
->  I cannot help feeling that there must be some way to simplify all
->  those .pending and .complete bits and make it somewhat clearer, but I
->  haven't been able to figure out how :-(
->
+>  So if you think it's good, please submit for 2.6.25.2.
 
-Agreed, the current scheme is not easily readable, and has proven
-tricky to manipulate.  I will spend some cycles looking at this...
-
->  So: Acked-by: NeilBrown <neilb@suse.de>
->
->  I'm heading for a weekend, but feel free to send this to akpm.
->
->  Thanks,
->  NeilBrown
->
-
-Thanks,
+Thanks for reporting this and confirming the fix,
 Dan
