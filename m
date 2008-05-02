@@ -1,51 +1,98 @@
-From: Lars =?UTF-8?B?VMOkdWJlcg==?= <taeuber@bbaw.de>
-Subject: Re: How to grow RAID1 mirror on top of LVM?
-Date: Fri, 2 May 2008 09:23:13 +0200
-Message-ID: <20080502092313.d724b0b1.taeuber@bbaw.de>
-References: <25F8EF57-9606-4217-B2D4-2DD3D8E064C4@cam.ac.uk>
-	<18408.36712.100712.499844@notabene.brown>
-	<20080428162556.00ee0d72.taeuber@bbaw.de>
-	<18458.34575.416075.798546@notabene.brown>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: [PATCH] md: fix raid5 'repair' operations
+Date: Fri, 2 May 2008 17:26:45 +1000
+Message-ID: <18458.49717.471295.285149@notabene.brown>
+References: <20080502031513.13090.2973.stgit@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18458.34575.416075.798546@notabene.brown>
+In-Reply-To: message from Dan Williams on Thursday May 1
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Anton Altaparmakov <aia21@cam.ac.uk>, linux-raid@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: linux@horizon.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hallo Neil,
+On Thursday May 1, dan.j.williams@intel.com wrote:
+> commit bd2ab67030e9116f1e4aae1289220255412b37fd "md: close a livelock
+> window in handle_parity_checks5" introduced a bug in handling 'repair'
+> operations.  After a repair operation completes we clear the state bits
+> tracking this operation.  However, they are cleared too early and this
+> results in the code deciding to re-run the parity check operation.  Since
+> we have done the repair in memory the second check does not find a mismatch
+> and thus does not do a writeback.
 
-Neil Brown <neilb@suse.de> schrieb:
-> If you use version 1.1 or 1.2 metadata, the metadata is stored at the
-> start of the device, so it doesn't get lost.  However the metadata ha=
-s
-> recorded in it the amount of usable space on the device.  When you
-> make the device bigger you would need to update this number.
-> There is currently no way to update this for an active array.
->=20
-> You can stop the array, and the re-assemble it with=20
->    --update=3Ddevicesize
->=20
-> this will update the field in the metadata which records the size of
-> each device.  You will then be able to grow the array to make use of
-> all the space.
+yes....
+I must admit that I find that code fairly hard to make sense of, but I
+can see how it was failing before and how this fixes it, and testing
+confirms that, so I suspect it is right.
 
-this is just all I needed to know. Stopping the array for this short ti=
-me is not an issue.
+I cannot help feeling that there must be some way to simplify all
+those .pending and .complete bits and make it somewhat clearer, but I
+haven't been able to figure out how :-(
 
-Many thanks!
-Lars
+So: Acked-by: NeilBrown <neilb@suse.de>
 
---=20
-                            Informationstechnologie
-Berlin-Brandenburgische Akademie der Wissenschaften
-J=C3=A4gerstrasse 22-23                     10117 Berlin
-Tel.: +49 30 20370-352           http://www.bbaw.de
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I'm heading for a weekend, but feel free to send this to akpm.
+
+Thanks,
+NeilBrown
+
+
+> 
+> Test results:
+> $ echo repair > /sys/block/md0/md/sync_action
+> $ cat /sys/block/md0/md/mismatch_cnt
+> 51072
+> $ echo repair > /sys/block/md0/md/sync_action
+> $ cat /sys/block/md0/md/mismatch_cnt
+> 0
+> 
+> Cc: <stable@kernel.org>
+> Reported-by: George Spelvin <linux@horizon.com>
+> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+> ---
+> 
+>  drivers/md/raid5.c |   21 +++++++++++----------
+>  1 files changed, 11 insertions(+), 10 deletions(-)
+> 
+> 
+> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> index 087eee0..da3390d 100644
+> --- a/drivers/md/raid5.c
+> +++ b/drivers/md/raid5.c
+> @@ -2400,16 +2400,6 @@ static void handle_parity_checks5(raid5_conf_t *conf, struct stripe_head *sh,
+>  			canceled_check = 1; /* STRIPE_INSYNC is not set */
+>  	}
+>  
+> -	/* check if we can clear a parity disk reconstruct */
+> -	if (test_bit(STRIPE_OP_COMPUTE_BLK, &sh->ops.complete) &&
+> -		test_bit(STRIPE_OP_MOD_REPAIR_PD, &sh->ops.pending)) {
+> -
+> -		clear_bit(STRIPE_OP_MOD_REPAIR_PD, &sh->ops.pending);
+> -		clear_bit(STRIPE_OP_COMPUTE_BLK, &sh->ops.complete);
+> -		clear_bit(STRIPE_OP_COMPUTE_BLK, &sh->ops.ack);
+> -		clear_bit(STRIPE_OP_COMPUTE_BLK, &sh->ops.pending);
+> -	}
+> -
+>  	/* start a new check operation if there are no failures, the stripe is
+>  	 * not insync, and a repair is not in flight
+>  	 */
+> @@ -2424,6 +2414,17 @@ static void handle_parity_checks5(raid5_conf_t *conf, struct stripe_head *sh,
+>  		}
+>  	}
+>  
+> +	/* check if we can clear a parity disk reconstruct */
+> +	if (test_bit(STRIPE_OP_COMPUTE_BLK, &sh->ops.complete) &&
+> +		test_bit(STRIPE_OP_MOD_REPAIR_PD, &sh->ops.pending)) {
+> +
+> +		clear_bit(STRIPE_OP_MOD_REPAIR_PD, &sh->ops.pending);
+> +		clear_bit(STRIPE_OP_COMPUTE_BLK, &sh->ops.complete);
+> +		clear_bit(STRIPE_OP_COMPUTE_BLK, &sh->ops.ack);
+> +		clear_bit(STRIPE_OP_COMPUTE_BLK, &sh->ops.pending);
+> +	}
+> +
+> +
+>  	/* Wait for check parity and compute block operations to complete
+>  	 * before write-back.  If a failure occurred while the check operation
+>  	 * was in flight we need to cycle this stripe through handle_stripe
