@@ -1,67 +1,44 @@
-From: Dexter Filmore <Dexter.Filmore@gmx.de>
-Subject: non-fresh from initrd, all fine when assembling manually
-Date: Fri, 2 May 2008 14:46:32 +0200
-Message-ID: <200805021446.32835.Dexter.Filmore@gmx.de>
+From: Richard Michael <rmichael-raid@edgeofthenet.org>
+Subject: Re: Sharing disks amoung multiple software RAIDs
+Date: Fri, 2 May 2008 09:26:10 -0400
+Message-ID: <20080502132610.GB2140@nexus.edgeofthenet.org>
+References: <20080502083656.28029.qmail@science.horizon.com> <432288.71787.qm@web50205.mail.re2.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
+In-Reply-To: <432288.71787.qm@web50205.mail.re2.yahoo.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-My issues from the last few days all summed up in one, maybe someone knows 
-what to do about it, I CC to the debian list as well:
+> > Can you explain what you mean, exactly?
+> As an example, you have disks /dev/sd[abc]. /dev/md0 would be made 
+> from /dev/sda1, /dev/sdb1, and /dev/sdc1; /dev/md1 would be made  from /dev/sda2, /dev/sdb2, and /dev/sdc2.
 
+I've been watching this thread with interest, because I wanted
+clarification on what the OP meant.
 
-Software raid5 on debian etch with 2.6.22 kernel from backports.
+If by "sharing disks", the OP meant the above, I'm surprised (and
+concerned) there's any question at all.  How is this anything other than
+the definition of "mirror"?  What would a mirror be, if not this;
+perhaps the entire disk in one partition (which is still
+partition-based, albeit one), or an entire raw disk?
 
-Hardware: Asus K8N-E Deluxe, nForce3/250Gb chipset. 
-Has: 
-2 sATA ports from the nF3 (sata_nv)
-4 sATA ports from an onboard Silicon Image 3114 (sata_sil)
-4 sATA ports from an PCI controller, Silicon Image 3114, too.
+I've been doing this for years (with hardware RAID, and with other
+operating system software RAID implementations as well, e.g. on
+Solaris).  (I even just split the mirror on my own system and ran off
+half, then wiped the second disk for emergency scratch space for a few
+hours, then put the second disk back in and resynced.  No problems.)
 
-I used to run this setup:
-4x Samsung Spinpoint 250GB on the onboard 3114, started by initrd. All fine.
+In fact, I currently have a system with a three-way mirror.  The third
+disk is removed for offsite storage and returned to the pool on a
+schedule for resync (to implement a crude offsite policy where other
+means of data transfer are not effective, and the entire system can be
+recovered with a slight data loss window).
 
-Now I upgraded to 5x500GB. Built the array degraded on the 4 PCI controller 
-ports, transferred all the data, then moved the 4x500 to the onboard 3114.
+I'm now wondering, what is OP's concern?  Just performance?
 
-Now I added the fifth disk and --add'ed it to the array and it synced.
-
-I thought all was fine. Wrong.
-
-Upon reboot, the 5th disk that now sat on the PCI controller alone was kicked 
-from the array for being non fresh. I suspected a shutdown problem, found one 
-with 2.6.22 and the shutdown utility, fixed that and resynced.
-Next reboot: same story.
-So I synced, booted a live CD (knoppix) and checked out mdadm -E in regard of 
-the event count. All ok. So no shutdown problem.
-I even moved the fifth disk from the PCI controller to the NV controller on 
-the board.
-
-Two resyncs later I decided to reconf mdadm to *not* start from the initrd and 
-not auto-assemble at boot time.
-I then assembled the array manually and tadaa, all fine, array works and is 
-synced.
-
-Now: what's going on here? both onboard 3114 and pci 3114 controllers are 
-handled by the same kernel module, so either initrd sees all or none.
-Why would it not wanna see the 5th disk from initrd, but when I manually 
-assemble, it's fine?
-
-Dex
-
-
--- 
------BEGIN GEEK CODE BLOCK-----
-Version: 3.12
-GCS d--(+)@ s-:+ a- C++++ UL++ P+>++ L+++>++++ E-- W++ N o? K-
-w--(---) !O M+ V- PS+ PE Y++ PGP t++(---)@ 5 X+(++) R+(++) tv--(+)@ 
-b++(+++) DI+++ D- G++ e* h>++ r* y?
-------END GEEK CODE BLOCK------
-
-http://www.vorratsdatenspeicherung.de
+Regards,
+Richard
