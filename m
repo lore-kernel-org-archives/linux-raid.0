@@ -1,39 +1,45 @@
-From: David Greaves <david@dgreaves.com>
+From: "George Spelvin" <linux@horizon.com>
 Subject: Re: Sharing disks amoung multiple software RAIDs
-Date: Fri, 02 May 2008 09:25:42 +0100
-Message-ID: <481AD006.6050708@dgreaves.com>
-References: <1209692359.16523.2.camel@localhost>	 <73000.21239.qm@web50212.mail.re2.yahoo.com>	 <A20315AE59B5C34585629E258D76A97C335477@34093-C3-EVS3.exchange.rackspace.com>	 <1209696179.16523.13.camel@localhost>	 <72dbd3150805020006p7f976a04o487389840f03b4a2@mail.gmail.com> <1209715763.7827.2.camel@localhost>
+Date: Fri, 02 May 2008 04:36:55 -0400
+Message-ID: <20080502083656.28029.qmail@science.horizon.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1209715763.7827.2.camel@localhost>
 Sender: linux-raid-owner@vger.kernel.org
-To: Kasper Sandberg <lkml@metanurb.dk>
-Cc: David Rees <drees76@gmail.com>, David Lethe <david@santools.com>, alex14641@yahoo.com, Justin Piszcz <jpiszcz@lucidpixels.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+To: alex14641@yahoo.com
+Cc: linux@horizon.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Kasper Sandberg wrote:
-> Im not treating it as a backup, what i want, is to make sure that if 1
-> disk dies, the data is still intact and ill hopefully be able to run
-> with 1 disk till the newly ordered one arrives
-Probably one of the main design objectives behind RAID/md
+Can you explain what you mean, exactly?
 
-> So my question remains.. Is md raid1 not suited for this need? would it
-> be safer to run in non-raid1 mode and daily(maybe hourly) rsync
-> everything over to the second disk?
+Do you just mean having two partitions on the same drive used as part
+of other RAID arrays?  That works fine.
 
-md is 100% guaranteed perfect or your money back...
-rsync is 100% guaranteed perfect or your money back...
-your backups are 100% guaranteed perfect or your money back...
-your hard drives are 100% guaranteed perfect or your money back...
-your CPU and RAM are 100% guaranteed perfect or your money back...
-your CPU and PSU fans are 100% guaranteed perfect or your money back...
+Having two heavilty used partitions on the same drive causes some
+performance issues, but no correctness ones.  And there's nothing
+special about RAID for this consideration; it would apply with
+non-RAID partitions as well.
 
-Clearly if you want to panic over reliability you have lots of choices :)
+But I have mirrored swap striped across all drives; I don't
+use swap a lot and it's not worth getting dedicated drives.
 
-David
-PS, FWIW md has saved my data* countless times over the past 'n' years in
-exactly the scenario you describe.
+Likewise, /boot is a 6-way RAID-1 emergency rescue partition.
+I can boot off any drive, and I have a basic text-mode install
+with all the disaster recovery tools.  Again, not heavily used.
 
-*(or more accurately has saved me from having to restore my data)
+If you're doing serious database work, it's common to split the
+system, log, and database across different spindles.  But that's
+independent of whether RAID is used for any of them.
+
+
+But there are other possible interpretations of "sharing among multiple
+RAIDs", like hot spares and the like.  Could you be more specific?
+Obviously, having the same partition active in multiple different
+arrays would be an unmitigated disaster, but I don't think you mean that.
+(And I don't think mdadm lets you do it, either.)
+
+One thing that's very nice about Linux software RAID is that you *don't*
+have to RAID whole drives.  It took me a while to understand Intel's
+"Matrix RAID" feature because it had never occurred to me that a RAID
+array *couldn't* be set up that way.
