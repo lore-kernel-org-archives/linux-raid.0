@@ -1,82 +1,43 @@
-From: Alex Davis <alex14641@yahoo.com>
-Subject: Re: Sharing disks amoung multiple software RAIDs
-Date: Fri, 2 May 2008 04:07:03 -0700 (PDT)
-Message-ID: <432288.71787.qm@web50205.mail.re2.yahoo.com>
-References: <20080502083656.28029.qmail@science.horizon.com>
-Reply-To: alex14641@yahoo.com
+From: Michael Tokarev <mjt@tls.msk.ru>
+Subject: Re: [PATCH] md: fix raid5 'repair' operations
+Date: Fri, 02 May 2008 15:17:49 +0400
+Message-ID: <481AF85D.4040103@msgid.tls.msk.ru>
+References: <20080502031513.13090.2973.stgit@dwillia2-linux.ch.intel.com> <18458.49717.471295.285149@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20080502083656.28029.qmail@science.horizon.com>
+In-Reply-To: <18458.49717.471295.285149@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: George Spelvin <linux@horizon.com>
-Cc: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: Dan Williams <dan.j.williams@intel.com>, linux@horizon.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---- On Fri, 5/2/08, George Spelvin <linux@horizon.com> wrote:
-
-> From: George Spelvin <linux@horizon.com>
-> Subject: Re: Sharing disks amoung multiple software RAIDs
-> To: alex14641@yahoo.com
-> Cc: linux@horizon.com, linux-raid@vger.kernel.org
-> Date: Friday, May 2, 2008, 4:36 AM
-> Can you explain what you mean, exactly?
-As an example, you have disks /dev/sd[abc]. /dev/md0 would be made 
-from /dev/sda1, /dev/sdb1, and /dev/sdc1; /dev/md1 would be made  from /dev/sda2, /dev/sdb2, and /dev/sdc2.
-
-> Do you just mean having two partitions on the same drive
-> used as part
-> of other RAID arrays?  That works fine.
-> Having two heavilty used partitions on the same drive
-> causes some
-> performance issues, 
-In this case they are heavily used.
-
->but no correctness ones.  And
-> there's nothing
-> special about RAID for this consideration; it would apply
-> with
-> non-RAID partitions as well.
+Neil Brown wrote:
+> On Thursday May 1, dan.j.williams@intel.com wrote:
+>> commit bd2ab67030e9116f1e4aae1289220255412b37fd "md: close a livelock
+>> window in handle_parity_checks5" introduced a bug in handling 'repair'
+>> operations.  After a repair operation completes we clear the state bits
+>> tracking this operation.  However, they are cleared too early and this
+>> results in the code deciding to re-run the parity check operation.  Since
+>> we have done the repair in memory the second check does not find a mismatch
+>> and thus does not do a writeback.
 > 
-> But I have mirrored swap striped across all drives; I
-> don't
-> use swap a lot and it's not worth getting dedicated
-> drives.
+> yes....
+> I must admit that I find that code fairly hard to make sense of, but I
+> can see how it was failing before and how this fixes it, and testing
+> confirms that, so I suspect it is right.
 > 
-> Likewise, /boot is a 6-way RAID-1 emergency rescue
-> partition.
-> I can boot off any drive, and I have a basic text-mode
-> install
-> with all the disaster recovery tools.  Again, not heavily
-> used.
+> I cannot help feeling that there must be some way to simplify all
+> those .pending and .complete bits and make it somewhat clearer, but I
+> haven't been able to figure out how :-(
 > 
-> If you're doing serious database work, it's common
-> to split the
-> system, log, and database across different spindles.  But
-> that's
-> independent of whether RAID is used for any of them.
+> So: Acked-by: NeilBrown <neilb@suse.de>
 > 
-> 
-> But there are other possible interpretations of
-> "sharing among multiple
-> RAIDs", like hot spares and the like.  Could you be
-> more specific?
-> Obviously, having the same partition active in multiple
-> different
-> arrays would be an unmitigated disaster, but I don't
-> think you mean that.
-> (And I don't think mdadm lets you do it, either.)
-> 
-> One thing that's very nice about Linux software RAID is
-> that you *don't*
-> have to RAID whole drives.  It took me a while to
-> understand Intel's
-> "Matrix RAID" feature because it had never
-> occurred to me that a RAID
-> array *couldn't* be set up that way.
+> I'm heading for a weekend, but feel free to send this to akpm.
 
+Hmm.  Should this be sent to stable- as well?  I were just biten by
+this very bug here, and after applying the patch and rebooting the
+problem went away...  2.6.25.0 here.
 
-
-      ____________________________________________________________________________________
-Be a better friend, newshound, and 
-know-it-all with Yahoo! Mobile.  Try it now.  http://mobile.yahoo.com/;_ylt=Ahu06i62sR8HDtDypao8Wcj9tAcJ
+/mjt
