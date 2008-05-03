@@ -1,108 +1,34 @@
-From: "David Lethe" <david@santools.com>
-Subject: RE: Sleeping hard drives in an array?
-Date: Fri, 2 May 2008 17:44:27 -0500
-Message-ID: <A20315AE59B5C34585629E258D76A97C335968@34093-C3-EVS3.exchange.rackspace.com>
-References: <29a863790804300802i358ab6d9t2be907b47176bd5b@mail.gmail.com> <481B836E.6040208@tmr.com> <481B918E.4@panix.com>
+From: Alex Davis <alex14641@yahoo.com>
+Subject: RE: Sharing disks amoung multiple software RAIDs
+Date: Fri, 2 May 2008 17:44:18 -0700 (PDT)
+Message-ID: <824925.21830.qm@web50201.mail.re2.yahoo.com>
+References: <A20315AE59B5C34585629E258D76A97C335960@34093-C3-EVS3.exchange.rackspace.com>
+Reply-To: alex14641@yahoo.com
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
-In-Reply-To: <481B918E.4@panix.com>
+In-Reply-To: <A20315AE59B5C34585629E258D76A97C335960@34093-C3-EVS3.exchange.rackspace.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: berk walker <berk@panix.com>, Bill Davidsen <davidsen@tmr.com>
-Cc: Greg Cormier <gcormier@gmail.com>, linux-raid@vger.kernel.org
+To: Kasper Sandberg <lkml@metanurb.dk>, David Greaves <david@dgreaves.com>, David Lethe <david@santools.com>
+Cc: David Rees <drees76@gmail.com>, Justin Piszcz <jpiszcz@lucidpixels.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
 
------Original Message-----
-From: linux-raid-owner@vger.kernel.org
-[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of berk walker
-Sent: Friday, May 02, 2008 5:11 PM
-To: Bill Davidsen
-Cc: Greg Cormier; linux-raid@vger.kernel.org
-Subject: Re: Sleeping hard drives in an array?
 
-Bill Davidsen wrote:
-> Greg Cormier wrote:
->> Is it possible to sleep hard drives in an array?
->>
->> I have a HTPC at home that's on 24x7. It does all my torrenting as
->> well, and is mainly a media server.
->>
->> Can I sleep the drives in my RAID5 array while it's not being used?
->> It's an XFS partition.
->>
->> I have each drive set as
->>
->> hdparm -S240 /dev/sdX
->>
->> But I'm fairly sure they are not spinning down :( Is there some
->> activity mdadm is doing in the background?
->>
->> These things are probably idle 22 hours of the day.
->>   
-> 
-> I have several very similar systems, and I note that on one the disk 
-> light blinks every five sec or so, while the others don't do that. The
-
-> one that blinks is the only one running LVM, all the others were 
-> partitioned by hand. Does that apply to your system, LVM in use?
-> 
-Geez!!  pardon me if I don't either "get it" or am unable to communicate
-
-about "it".  Those thinking that I'm un-necessarily repeating myself - 
-email your flames and I will be gone from here for a few months.
-
-Put / [and whatever ELSE that needs to be mounted] on a USB drive.  I 
-recently got a 2Gb drive for pocket change!!
-
-Learn, or borrow someone who knows how - scripts. I don't think that you
-
-would give a darn if a ram-drive didn't "spin-down".  So PUT what can 
-not be put to sleep on something that doesn't have mechanical wear!!!
-
-Your system can be set up to WAKE up with everything mounted and ready 
-to go on ANY trigger/situation that YOU want - except the states need to
-
-be either on or off... there are lots of states that newer 'puters 
-monitor.  I'm sorry but THIS is not rocket science.
-
-NOW!!  YOU FAILED TO RESPOND!!  To my earlier response to you.  Please 
-allow me to ax you again....  WHY do you want spin-down?  HMMM
-	Less noise-	- buy new drives
-	Less elect. co$t - If they aren't seeking, draw is LOW
-	Less wear on the drives - I have never had a drive mfg respond
-to 
-my questions about this.  My [totally personal] view
-on this is if 
-you're shutting down for a few hr., you
-will lose, weeks will win.
-
-As a FINAL note here - Somehow I do not know WHAT compubox that you are 
-using, IF you are using linux/unix/bsd, and WHAT level your 
-make/compiler/etc are at.  This particular forum has SEVERAL really 
-talanted and experienced people on here.  The only reason which I could 
-point at might be that you seem to be clueless - which is a different 
-forum.  :)
-
-If I have caused yellow dribble and you wish to directly hammer me .. my
-
-name is "berk"  hehe.. and my email provider is "panix".. of course
-+".com.
-
-If you cause me to be flooded w/spam....................[I know, it's a 
-public forum].
-
-b-
-=========
-USB for root??
-Bad bad bad bad idea .. unless you get the industrial flash memory.  The
-typical max number of writes for consumer-grade USB flashdrives is
-around 25,000 ... but the low end of the range is 10,000 writes.  
-
--David
+I code, therefore I am
 
 
+--- On Fri, 5/2/08, David Lethe <david@santools.com> wrote:
+[snipped]
+> I was being too literal. md is a good solution (I use it
+> myself).  However, the OP wanted to "Make sure that if
+> one disk dies, the data is still in tact".  
+I was also concerned about performance. It seems that if the RAIDs will 
+be used heavily and independent of each other, and performance is a 
+concern, then dedicated disks (and possibly dedicated controllers)
+are the better option.
 
+
+      ____________________________________________________________________________________
+Be a better friend, newshound, and 
+know-it-all with Yahoo! Mobile.  Try it now.  http://mobile.yahoo.com/;_ylt=Ahu06i62sR8HDtDypao8Wcj9tAcJ
