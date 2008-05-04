@@ -1,73 +1,148 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: How to grow RAID1 mirror on top of LVM?
-Date: Sun, 4 May 2008 21:20:57 +1000
-Message-ID: <18461.39961.921994.904814@notabene.brown>
-References: <25F8EF57-9606-4217-B2D4-2DD3D8E064C4@cam.ac.uk>
-	<18408.36712.100712.499844@notabene.brown>
-	<20080428162556.00ee0d72.taeuber@bbaw.de>
-	<18458.34575.416075.798546@notabene.brown>
-	<1209740806.4319.26.camel@russ-ifl90>
+Subject: Re: Software RAID partitions not detected at boot time with linux 2.6.25.1.
+Date: Sun, 4 May 2008 22:56:03 +1000
+Message-ID: <18461.45667.588613.443564@notabene.brown>
+References: <200805032245.57084.assirati@nonada.if.usp.br>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Russ Hammer on Friday May 2
+In-Reply-To: message from Joao Luis Meloni Assirati on Saturday May 3
 Sender: linux-raid-owner@vger.kernel.org
-To: Russ Hammer <russ@perneus.com>
-Cc: linux-raid@vger.kernel.org
+To: Joao Luis Meloni Assirati <assirati@nonada.if.usp.br>, Kay Sievers <kay.sievers@vrfy.org>, Greg Kroah-Hartman <gregkh@suse.de>
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Friday May 2, russ@perneus.com wrote:
+On Saturday May 3, assirati@nonada.if.usp.br wrote:
+> Let's try again, this this time with a proper e-mail subject.
 > 
-> My plan basically was:
+> Hello,
 > 
-> # remove one small disk
-> /sbin/mdadm /dev/md0 --fail /dev/sdb1
-> /sbin/mdadm /dev/md0 --remove /dev/sdb1
+> The problem I reported in
+> http://marc.info/?l=linux-kernel&m=120804001406787&w=2
+> still persists at 2.6.25.1. (sorry for the repeated messages there; that was 
+> my mail client's fault).
 > 
-> # shutdown and swap in large disk
-> # (with larger partition for the RAID1 component)
-> # add large drive into array
-> /sbin/mdadm /dev/md0 --add /dev/sdb1
+> In my previous bug repor, I was using raid1; now, I am using raid5, as 
+> follows.
 > 
-> # Allow the array to resync
-> # remove the remaining small drive
-> /sbin/mdadm /dev/md0 --fail /dev/sda1
-> /sbin/mdadm /dev/md0 --remove /dev/sda1
+> I have three partitions /dev/sda2, /dev/sdb2 and /dev/sdc2 marked as raid 
+> autodetect (FD). They are assembled as a partitionable raid 5 array, and my 
+> root is in /dev/md_d0p1. With a 2.6.24.2 kernel with sata, ext3 and raid5 
+> compiled in (I don't use initrd), the system boots fine. In fact, the raid 
+> array and partitions are detected as show with dmesg:
 > 
-> # Grow the array
-> /sbin/mdadm -G /dev/md0 -z max
+> md: Autodetecting RAID arrays.
+> md: Scanned 3 and added 3 devices.
+> md: autorun ...
+> md: considering sdc2 ...
+> md:  adding sdc2 ...
+> md:  adding sdb2 ...
+> md:  adding sda2 ...
+> md: created md_d0
+> md: bind<sda2>
+> md: bind<sdb2>
+> md: bind<sdc2>
+> md: running: <sdc2><sdb2><sda2>
+> raid5: device sdc2 operational as raid disk 2
+> raid5: device sdb2 operational as raid disk 1
+> raid5: device sda2 operational as raid disk 0
+> raid5: allocated 3226kB for md_d0
+> raid5: raid level 5 set md_d0 active with 3 out of 3 devices, algorithm 2
+> RAID5 conf printout:
+>  --- rd:3 wd:3
+>  disk 0, o:1, dev:sda2
+>  disk 1, o:1, dev:sdb2
+>  disk 2, o:1, dev:sdc2
+> md: ... autorun DONE.
+>  md_d0: p1 p2 p3 p4 < p5 p6 p7 >
 > 
-> # shutdown and swap in second large disk
-> # (with larger partition for the RAID1 component)
-> # add in the second large drive
-> /sbin/mdadm /dev/md0 --add /dev/sda1
+> The last line shows my raid partitions are detected.
 > 
-> My concern (based on this discussion) is that this will fail because I
-> am changing the size of the partition underlying the RAID1 array, much
-> like the LVM discussion above, while using ver 0.90 superblock.
+> However, when I try kernel 2.6.25.1, again with sata, ext3 and raid5 compiled 
+> in and no initrd, the kernel does not recognize the raid partitions at boot 
+> time, nonetheless the array is dected. The output of dmesg is the same  until:
 > 
-> Do I have a legitimate concern??
+> raid5: allocated 3224kB for md_d0
+> raid5: raid level 5 set md_d0 active with 3 out of 3 devices, algorithm 2
+> RAID5 conf printout:
+>  --- rd:3 wd:3
+>  disk 0, o:1, dev:sda2
+>  disk 1, o:1, dev:sdb2
+>  disk 2, o:1, dev:sdc2
+> md: ... autorun DONE.
+> VFS: Cannot open root device "md_d0p1" or unknown-block(0,0)
+> Please append a coorect "root=" boot option; here are the available partitions:
+> 0800  312571224 sda driver:sd
+>   0801      96358 sda1
+>   0802  312472282 sda2
+> 0810  312571224 sdb driver:sd
+>   0811      96358 sdb1
+>   0812  312472282 sdb2
+> 0820  312571224 sdc driver:sd
+>   0821      96358 sdc1
+>   0822  312472282 sdc2
+> fe00  624944384 md_d0 (driver?)
+> Kernel panic - not syncing: VFS: Unable to mount root fs on unknown-block(0,0)
+> 
+> Note the absence of the line
+>  md_d0: p1 p2 p3 p4 < p5 p6 p7 >
+> showing partition detection.
+> 
 
-Your recipe is perfect.  You need not be concerned.
+It appears this regression was introduced by commit
+   edfaa7c36574f1bf09c65ad602412db9da5f96bf
+   Driver core: convert block from raw kobjects to core devices
 
-You are *not* changing the size of the partition underlying the RAID1
-array.  When you change the size of a partition, it is not part of the
-array at that time.  It has no superblock on it, so there is no room
-to be confused.
+Previously, the device name "md_d0p1" would be parsed out as "md_d0"
+and partition 1.
+md_d0 would be found and the device number of the first partition
+could then be deduced even though the partition table hadn't been
+processed at this point, so 'p1' wasn't actually known.
+The kernel would attempt to open 'p1', this would trigger a read of
+the partition table and the open would be successful.
 
-If you were to make a small partition on the new sdb, add that to the
-array, then change the partition table to make sdb1 bigger, that would
-cause confusion.
-However as you are making sdb1 nice and be before including it in the
-array, everything should work perfectly.
+The new code is 'simpler'.  It doesn't try to parse the device name at
+all.  It just compares the device name against the names of all known
+devices.  As the partitions are not known at this time, md_d0p1 is not
+found.
 
-The only possible problem area in your recipe is if the drives are not
-actually identical (not all 750GB drive have the same number of
-blocks), the array you get with the -G command might be too big to
-allow the partition you create on the new sda.  However if the drives
-do have exactly the same number of sectors, this will not be a problem.
+There seem to be two ways this could be fixed:
+1/ restore the old behaviour of parsing out the partition information.
+   This would be least likely to leave other regressions waiting to be
+   found, but might be seen as somewhat ugly.
+
+2/ Get md_d0 to read it's partition table earlier.  I've tried this
+   before without much luck.
+   There are three times that the partition table can be parsed.
+   a/ When the device is opened if bd_invalidated is set.
+   b/ When the device is first registered.  register_disk calls
+      blkdev_get which effectively opens the device, thus triggering
+      'a' above.
+   c/ When the BLKRRPART ioctl is made on the device.
+
+   When an md device is first registered, there are no disks attached
+   to it, so no partition table can be read.  The way md devices get
+   set up, they are registered as empty devices, the component devices
+   are attached, then the array is 'started'.  Only at this point can
+   data, such as the partition table, be read.  But this it too late
+   for case 'b' above.  Case 'a' is the one that usually causes
+   partitions to be read.  'mdadm' explicitly opens devices after
+   creating them to trigger this.
+
+   We could conceivably put a BLKRRPART call in at the end of
+   autorun_array where the array has just been started, but that would
+   be rather ugly.  We would need to open the device, and doing that
+   inside the kernel is never clean.  The code in 'init/*.c' for that
+   sort of thing creates nodes in /dev in a temporary root filesystem.
+   We cannot do that for autorun_array as it can be call long after
+   boot time (but the RAID_AUTODETECT ioctl) so there may not be 
+   a temporary filesystem to play with.
+
+So I currently think that restoring the old behaviour of not requiring
+partitions to exist before trying to open them would be best.
+
+Kay?
+
 
 NeilBrown
-
-
