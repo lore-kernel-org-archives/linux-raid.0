@@ -1,78 +1,57 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: WARNING in 2.6.25-07422-gb66e1f1
-Date: Mon, 5 May 2008 17:24:31 +1000
-Message-ID: <18462.46639.578272.994939@notabene.brown>
-References: <200805031151.44287.prakash@punnoor.de>
-	<481DB3F3.5080102@gmail.com>
-	<20080504183839.GN12774@kernel.dk>
+From: "NeilBrown" <neilb@suse.de>
+Subject: Re: mdadm raid1 stops to work after kernel panic
+Date: Mon, 5 May 2008 19:32:11 +1000 (EST)
+Message-ID: <56088.192.168.1.70.1209979931.squirrel@neil.brown.name>
+References: <26c008d70805042347g1afaa67em5a7af935bed434ca@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Jens Axboe on Sunday May 4
+In-Reply-To: <26c008d70805042347g1afaa67em5a7af935bed434ca@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: Jacek Luczak <difrost.kernel@gmail.com>, Prakash Punnoor <prakash@punnoor.de>, Linux Kernel list <linux-kernel@vger.kernel.org>, Dan Williams <dan.j.williams@intel.com>, linux-raid@vger.kernel.org
+To: Federico <undicizeri@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sunday May 4, jens.axboe@oracle.com wrote:
-> On Sun, May 04 2008, Jacek Luczak wrote:
-> > Hi,
-> > 
-> > I've CC:-ed few guys which may help.
-> > 
-> > Prakash Punnoor pisze:
-> > > Hi, I got this on boot:
-> > >
-> > > usb 2-1.3: new full speed USB device using ehci_hcd and address 3
-> > > usb 2-1.3: configuration #1 chosen from 1 choice
-> > > Clocksource tsc unstable (delta = -117343945 ns)
-> > > ------------[ cut here ]------------
-> > > WARNING: at include/linux/blkdev.h:443 blk_remove_plug+0x7d/0x90()
-...
-> 
-> Looks like it caught a real bug there - unfortunately we have to check
-> for ->queue_lock here as well, if this is another stacked devices and
-> not the bottom device. Does this make the warning go away for you?
-> 
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index 087eee0..958f26b 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -3264,6 +3264,8 @@ static void raid5_unplug_device(struct request_queue *q)
->  	unsigned long flags;
->  
->  	spin_lock_irqsave(&conf->device_lock, flags);
-> +	if (q->queue_lock)
-> +		spin_lock(q->queue_lock);
->  
->  	if (blk_remove_plug(q)) {
->  		conf->seq_flush++;
-> @@ -3271,6 +3273,8 @@ static void raid5_unplug_device(struct request_queue *q)
->  	}
->  	md_wakeup_thread(mddev->thread);
->  
-> +	if (q->queue_lock)
-> +		spin_unlock(q->queue_lock);
->  	spin_unlock_irqrestore(&conf->device_lock, flags);
->  
->  	unplug_slaves(mddev);
-> 
+On Mon, May 5, 2008 4:47 pm, Federico wrote:
+> Accidentally I've booted with wrong grub parameters and my systems
+> hanged with a kernel panic. After reboot my /dev/md2 device (raid1)
+> stopped to work.
+> These are some logs:
+>
+> wax@persifae:~$cat /proc/mdstat
+> Personalities : [raid1]
+> md2 : inactive sda1[0](S)
+>       293049600 blocks
+>
+> md1 : active raid1 sdc6[0] sdb2[1]
+>       152264000 blocks [2/2] [UU]
+>
+> md0 : active raid1 sdb1[1] sdc5[0]
+>       7815488 blocks [2/2] [UU]
+>
+> unused devices: <none>
+>
+> wax@persifae:~$sudo mdadm -Q /dev/md2
+> /dev/md2: is an md device which is not active
+>
+> wax@persifae:~$sudo mdadm --assemble --scan /dev/md2
+> mdadm: failed to add /dev/sdc1 to /dev/md2: Invalid argument
+> mdadm: /dev/md2 assembled from 0 drives - not enough to start the array.
+>
+> wax@persifae:~$cat /etc/mdadm.conf
+> ARRAY /dev/md0 level=raid1 num-devices=2
+> UUID=2a37b0a1:4b6b28fc:0209446b:c3b28f2a
+> ARRAY /dev/md1 level=raid1 num-devices=2
+> UUID=19c49c5d:e3193aa1:657f267b:b23c2dee
+> ARRAY /dev/md2 level=raid1 num-devices=2
+> UUID=62a5cb51:36ca61a3:1298e6c2:30fde3ba
+>
 
-I suspect that will just cause more problems, as the 'q' for an md
-device never gets ->queue_lock initialised.
-I suspect the correct thing to do is set
-	q->queue_lock = &conf->device_lock;
+What does
+  mdadm --examine /dev/sda1 /dev/sdc1
 
-at some stage, probably immediately after device_lock is initialised
-in 'run'.
+show?
 
-I was discussing this with Dan Williams starting
-  http://marc.info/?l=linux-raid&m=120951839903995&w=4
-though we don't have an agreed patch yet.
-
-I'm wondering why you mention the issues of stacked devices though.  I
-don't see how it applies.  Could you explain?
-
-Thanks,
 NeilBrown
+
