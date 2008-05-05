@@ -1,87 +1,128 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: WARNING in 2.6.25-07422-gb66e1f1
-Date: Mon, 5 May 2008 21:02:00 +0200
-Message-ID: <20080505190159.GA329@kernel.dk>
-References: <200805031151.44287.prakash@punnoor.de> <481DB3F3.5080102@gmail.com> <20080504183839.GN12774@kernel.dk> <18462.46639.578272.994939@notabene.brown>
+From: "Tiago Pinheiro" <tpinheiro@gmail.com>
+Subject: Resize / file system and create /home in existing raid 1
+Date: Mon, 5 May 2008 22:35:24 +0200
+Message-ID: <5a3dd2390805051335s7b163505w5d94206dcb56b8a4@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <18462.46639.578272.994939@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Jacek Luczak <difrost.kernel@gmail.com>, Prakash Punnoor <prakash@punnoor.de>, Linux Kernel list <linux-kernel@vger.kernel.org>, Dan Williams <dan.j.williams@intel.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, May 05 2008, Neil Brown wrote:
-> On Sunday May 4, jens.axboe@oracle.com wrote:
-> > On Sun, May 04 2008, Jacek Luczak wrote:
-> > > Hi,
-> > > 
-> > > I've CC:-ed few guys which may help.
-> > > 
-> > > Prakash Punnoor pisze:
-> > > > Hi, I got this on boot:
-> > > >
-> > > > usb 2-1.3: new full speed USB device using ehci_hcd and address 3
-> > > > usb 2-1.3: configuration #1 chosen from 1 choice
-> > > > Clocksource tsc unstable (delta = -117343945 ns)
-> > > > ------------[ cut here ]------------
-> > > > WARNING: at include/linux/blkdev.h:443 blk_remove_plug+0x7d/0x90()
-> ...
-> > 
-> > Looks like it caught a real bug there - unfortunately we have to check
-> > for ->queue_lock here as well, if this is another stacked devices and
-> > not the bottom device. Does this make the warning go away for you?
-> > 
-> > diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> > index 087eee0..958f26b 100644
-> > --- a/drivers/md/raid5.c
-> > +++ b/drivers/md/raid5.c
-> > @@ -3264,6 +3264,8 @@ static void raid5_unplug_device(struct request_queue *q)
-> >  	unsigned long flags;
-> >  
-> >  	spin_lock_irqsave(&conf->device_lock, flags);
-> > +	if (q->queue_lock)
-> > +		spin_lock(q->queue_lock);
-> >  
-> >  	if (blk_remove_plug(q)) {
-> >  		conf->seq_flush++;
-> > @@ -3271,6 +3273,8 @@ static void raid5_unplug_device(struct request_queue *q)
-> >  	}
-> >  	md_wakeup_thread(mddev->thread);
-> >  
-> > +	if (q->queue_lock)
-> > +		spin_unlock(q->queue_lock);
-> >  	spin_unlock_irqrestore(&conf->device_lock, flags);
-> >  
-> >  	unplug_slaves(mddev);
-> > 
-> 
-> I suspect that will just cause more problems, as the 'q' for an md
-> device never gets ->queue_lock initialised.
-> I suspect the correct thing to do is set
-> 	q->queue_lock = &conf->device_lock;
-> 
-> at some stage, probably immediately after device_lock is initialised
-> in 'run'.
-> 
-> I was discussing this with Dan Williams starting
->   http://marc.info/?l=linux-raid&m=120951839903995&w=4
-> though we don't have an agreed patch yet.
+Hi!
 
-I agree with the usage of the device lock. I (mistakenly) thought that
-raid5 used the bottom device queue for that unplug - I see that it does
-not, so where does the warning come from? mddev->queue->queue_lock
-should be NULL, since md never sets it and it's zeroed to begin with??
+I'm running Ubuntu 7.10 x64. Currently, my system is setup as follows:
 
-> I'm wondering why you mention the issues of stacked devices though.  I
-> don't see how it applies.  Could you explain?
+- / is in a Raid 1 array (/dev/md0) consisting of two partitions -
+sda1 and sdb1 (ca. 148 GB);
 
-See above, if the queue had been the bottom queue, ->queue_lock may or
-may not be NULL depending on whether this is the real device or
-(another) stacked device.
+- swap in Raid 0 (/dev/md1) - sda2 and sdb2 of ca. 1 GB each giving me
+2 GB in total:
 
--- 
-Jens Axboe
+- sda and sdb are two disks of 160GB:
 
+- I do not have a separate /home file system.
+
+I would like to correct this situation by doing the following:
+
+- resize the partition containing the / file system to 27 GB keeping
+it in RAID 1 (/dev/md0);
+- create a new partition of 120GB to mount /home, also in RAID 1 (/dev/md2);
+- change swap from a RAID 0 to a RAID 1, resizing it to 2GB (/dev/md1).
+
+Can this be done without reinstalling everything from scratch?
+
+Output of /proc/mdstat:
+
+Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5]
+[raid4] [raid10]
+md1 : active raid0 sda2[0] sdb2[1]
+         2023936 blocks 64k chunks
+
+md0 : active raid1 sda1[0] sdb1[1]
+         155276160 blocks [2/2] [UU]
+
+unused devices: <none>
+/proc/mdstat
+
+
+Output of /etc/fstab:
+
+# /etc/fstab: static file system information.
+#
+# <file system> <mount point>   <type>  <options>       <dump>  <pass>
+proc            /proc           proc    defaults        0       0
+# /dev/md0
+UUID=b3dd64e4-786f-496b-b9e3-c42da731e113 /               ext3
+defaults,errors=remount-ro 0       1
+# /dev/md1
+UUID=d9f45f6b-025f-42e7-9ebf-27cddc6fa27b none            swap    sw
+           0       0
+/dev/scd0       /media/cdrom0   udf,iso9660 user,noauto,exec 0       0
+/dev/fd0        /media/floppy0  auto    rw,user,noauto,exec 0       0
+
+Output of mdadm --detail /dev/md0:
+
+/dev/md0:
+        Version : 00.90.03
+  Creation Time : Mon Feb 25 13:25:15 2008
+     Raid Level : raid1
+     Array Size : 155276160 (148.08 GiB 159.00 GB)
+  Used Dev Size : 155276160 (148.08 GiB 159.00 GB)
+   Raid Devices : 2
+  Total Devices : 2
+Preferred Minor : 0
+    Persistence : Superblock is persistent
+
+    Update Time : Mon May  5 18:14:31 2008
+          State : clean
+ Active Devices : 2
+Working Devices : 2
+ Failed Devices : 0
+  Spare Devices : 0
+
+           UUID : c39b647f:cb4f0780:05770ebd:8c404dcc
+         Events : 0.18
+
+    Number   Major   Minor   RaidDevice State
+       0       8      145        0      active sync   /dev/sda1
+       1       8      161        1      active sync   /dev/sdb1
+
+Output of mdadm --detail /dev/md1:
+
+/dev/md1:
+        Version : 00.90.03
+  Creation Time : Mon Feb 25 13:25:23 2008
+     Raid Level : raid0
+     Array Size : 2023936 (1976.83 MiB 2072.51 MB)
+   Raid Devices : 2
+  Total Devices : 2
+Preferred Minor : 1
+    Persistence : Superblock is persistent
+
+    Update Time : Mon May  5 01:17:47 2008
+          State : clean
+ Active Devices : 2
+Working Devices : 2
+ Failed Devices : 0
+  Spare Devices : 0
+
+     Chunk Size : 64K
+
+           UUID : cd9a2299:6e3e0036:8ebd1878:1deccd4a
+         Events : 0.7
+
+    Number   Major   Minor   RaidDevice State
+       0       8      146        0      active sync   /dev/sda2
+       1       8      162        1      active sync   /dev/sdb2
+
+
+I would really appreciate your help. If you need further info from me
+please just say so and I will try to post it as soon as possible.
+
+Thanks.
+
+Cheers,
+Tiago
