@@ -1,47 +1,48 @@
-From: Federico <undicizeri@gmail.com>
-Subject: mdadm raid1 stops to work after kernel panic
-Date: Mon, 5 May 2008 09:47:45 +0300
-Message-ID: <26c008d70805042347g1afaa67em5a7af935bed434ca@mail.gmail.com>
+From: Lars =?UTF-8?B?VMOkdWJlcg==?= <taeuber@bbaw.de>
+Subject: Re: How to grow RAID1 mirror on top of LVM?
+Date: Mon, 5 May 2008 09:10:52 +0200
+Message-ID: <20080505091052.e6389586.taeuber@bbaw.de>
+References: <25F8EF57-9606-4217-B2D4-2DD3D8E064C4@cam.ac.uk>
+	<18408.36712.100712.499844@notabene.brown>
+	<20080428162556.00ee0d72.taeuber@bbaw.de>
+	<18458.34575.416075.798546@notabene.brown>
+	<1209740806.4319.26.camel@russ-ifl90>
+	<18461.39961.921994.904814@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <18461.39961.921994.904814@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: Russ Hammer <russ@perneus.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Accidentally I've booted with wrong grub parameters and my systems
-hanged with a kernel panic. After reboot my /dev/md2 device (raid1)
-stopped to work.
-These are some logs:
+Hi there!
 
-wax@persifae:~$cat /proc/mdstat
-Personalities : [raid1]
-md2 : inactive sda1[0](S)
-      293049600 blocks
+Neil Brown <neilb@suse.de> schrieb:
+> The only possible problem area in your recipe is if the drives are no=
+t
+> actually identical (not all 750GB drive have the same number of
+> blocks), the array you get with the -G command might be too big to
+> allow the partition you create on the new sda.  However if the drives
+> do have exactly the same number of sectors, this will not be a proble=
+m.
 
-md1 : active raid1 sdc6[0] sdb2[1]
-      152264000 blocks [2/2] [UU]
+I think this problem is not true if you grow the array after including =
+the second bigger disk. Because then all involved partition and their s=
+izes are known.
+Am I right?
 
-md0 : active raid1 sdb1[1] sdc5[0]
-      7815488 blocks [2/2] [UU]
-
-unused devices: <none>
-
-wax@persifae:~$sudo mdadm -Q /dev/md2
-/dev/md2: is an md device which is not active
-
-wax@persifae:~$sudo mdadm --assemble --scan /dev/md2
-mdadm: failed to add /dev/sdc1 to /dev/md2: Invalid argument
-mdadm: /dev/md2 assembled from 0 drives - not enough to start the array.
-
-wax@persifae:~$cat /etc/mdadm.conf
-ARRAY /dev/md0 level=raid1 num-devices=2
-UUID=2a37b0a1:4b6b28fc:0209446b:c3b28f2a
-ARRAY /dev/md1 level=raid1 num-devices=2
-UUID=19c49c5d:e3193aa1:657f267b:b23c2dee
-ARRAY /dev/md2 level=raid1 num-devices=2
-UUID=62a5cb51:36ca61a3:1298e6c2:30fde3ba
-
-Thanks in advance for your help
+Greetings
+Lars
+--=20
+                            Informationstechnologie
+Berlin-Brandenburgische Akademie der Wissenschaften
+J=C3=A4gerstrasse 22-23                     10117 Berlin
+Tel.: +49 30 20370-352           http://www.bbaw.de
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
