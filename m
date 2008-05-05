@@ -1,48 +1,78 @@
-From: Lars =?UTF-8?B?VMOkdWJlcg==?= <taeuber@bbaw.de>
-Subject: Re: How to grow RAID1 mirror on top of LVM?
-Date: Mon, 5 May 2008 09:10:52 +0200
-Message-ID: <20080505091052.e6389586.taeuber@bbaw.de>
-References: <25F8EF57-9606-4217-B2D4-2DD3D8E064C4@cam.ac.uk>
-	<18408.36712.100712.499844@notabene.brown>
-	<20080428162556.00ee0d72.taeuber@bbaw.de>
-	<18458.34575.416075.798546@notabene.brown>
-	<1209740806.4319.26.camel@russ-ifl90>
-	<18461.39961.921994.904814@notabene.brown>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: WARNING in 2.6.25-07422-gb66e1f1
+Date: Mon, 5 May 2008 17:24:31 +1000
+Message-ID: <18462.46639.578272.994939@notabene.brown>
+References: <200805031151.44287.prakash@punnoor.de>
+	<481DB3F3.5080102@gmail.com>
+	<20080504183839.GN12774@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18461.39961.921994.904814@notabene.brown>
+In-Reply-To: message from Jens Axboe on Sunday May 4
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Russ Hammer <russ@perneus.com>, linux-raid@vger.kernel.org
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: Jacek Luczak <difrost.kernel@gmail.com>, Prakash Punnoor <prakash@punnoor.de>, Linux Kernel list <linux-kernel@vger.kernel.org>, Dan Williams <dan.j.williams@intel.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi there!
+On Sunday May 4, jens.axboe@oracle.com wrote:
+> On Sun, May 04 2008, Jacek Luczak wrote:
+> > Hi,
+> > 
+> > I've CC:-ed few guys which may help.
+> > 
+> > Prakash Punnoor pisze:
+> > > Hi, I got this on boot:
+> > >
+> > > usb 2-1.3: new full speed USB device using ehci_hcd and address 3
+> > > usb 2-1.3: configuration #1 chosen from 1 choice
+> > > Clocksource tsc unstable (delta = -117343945 ns)
+> > > ------------[ cut here ]------------
+> > > WARNING: at include/linux/blkdev.h:443 blk_remove_plug+0x7d/0x90()
+...
+> 
+> Looks like it caught a real bug there - unfortunately we have to check
+> for ->queue_lock here as well, if this is another stacked devices and
+> not the bottom device. Does this make the warning go away for you?
+> 
+> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> index 087eee0..958f26b 100644
+> --- a/drivers/md/raid5.c
+> +++ b/drivers/md/raid5.c
+> @@ -3264,6 +3264,8 @@ static void raid5_unplug_device(struct request_queue *q)
+>  	unsigned long flags;
+>  
+>  	spin_lock_irqsave(&conf->device_lock, flags);
+> +	if (q->queue_lock)
+> +		spin_lock(q->queue_lock);
+>  
+>  	if (blk_remove_plug(q)) {
+>  		conf->seq_flush++;
+> @@ -3271,6 +3273,8 @@ static void raid5_unplug_device(struct request_queue *q)
+>  	}
+>  	md_wakeup_thread(mddev->thread);
+>  
+> +	if (q->queue_lock)
+> +		spin_unlock(q->queue_lock);
+>  	spin_unlock_irqrestore(&conf->device_lock, flags);
+>  
+>  	unplug_slaves(mddev);
+> 
 
-Neil Brown <neilb@suse.de> schrieb:
-> The only possible problem area in your recipe is if the drives are no=
-t
-> actually identical (not all 750GB drive have the same number of
-> blocks), the array you get with the -G command might be too big to
-> allow the partition you create on the new sda.  However if the drives
-> do have exactly the same number of sectors, this will not be a proble=
-m.
+I suspect that will just cause more problems, as the 'q' for an md
+device never gets ->queue_lock initialised.
+I suspect the correct thing to do is set
+	q->queue_lock = &conf->device_lock;
 
-I think this problem is not true if you grow the array after including =
-the second bigger disk. Because then all involved partition and their s=
-izes are known.
-Am I right?
+at some stage, probably immediately after device_lock is initialised
+in 'run'.
 
-Greetings
-Lars
---=20
-                            Informationstechnologie
-Berlin-Brandenburgische Akademie der Wissenschaften
-J=C3=A4gerstrasse 22-23                     10117 Berlin
-Tel.: +49 30 20370-352           http://www.bbaw.de
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I was discussing this with Dan Williams starting
+  http://marc.info/?l=linux-raid&m=120951839903995&w=4
+though we don't have an agreed patch yet.
+
+I'm wondering why you mention the issues of stacked devices though.  I
+don't see how it applies.  Could you explain?
+
+Thanks,
+NeilBrown
