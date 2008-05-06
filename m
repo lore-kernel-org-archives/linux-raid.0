@@ -1,76 +1,122 @@
-From: Marc MERLIN <marc_news@merlins.org>
-Subject: Re: mdadm create corrupted md data?
-Date: Tue, 6 May 2008 16:08:00 -0700
-Message-ID: <20080506230800.GL31536@merlins.org>
-References: <20080506054819.GA6413@merlins.org>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [RFC PATCH] md: towards a replacement for the raid5
+	STRIPE_OP_* flags
+Date: Tue, 06 May 2008 16:38:14 -0700
+Message-ID: <1210117094.8624.81.camel@dwillia2-linux.ch.intel.com>
+References: <20080505224915.29821.46041.stgit@dwillia2-linux.ch.intel.com>
+	 <18463.55860.363396.961894@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20080506054819.GA6413@merlins.org>
+In-Reply-To: <18463.55860.363396.961894@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: richard@sauce.co.nz
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-[please Cc me on replies, I see them faster that way]
-
-On Mon, May 05, 2008 at 10:48:19PM -0700, Marc MERLIN wrote:
-> I thought I could recreate a n-1 array like so:
-> gargamel:~# mdadm --create /dev/md5 --level=5 --chunk=64 --layout=left-symmetric  --raid-devices=5  /dev/sd{c,d,f,g}1
-> mdadm: You haven't given enough devices (real or missing) to create this array
+On Mon, 2008-05-05 at 21:10 -0700, Neil Brown wrote:
+> On Monday May 5, dan.j.williams@intel.com wrote:
+> > The STRIPE_OP_* flags record the state of stripe operations which are
+> > performed outside the stripe lock.  Their use in indicating which
+> > operations need to be run is straightforward; however, interpolating what
+> > the next state of the stripe should be based on a given combination of
+> > these flags is not straightforward, and has led to bugs.  An easier to read
+> > implementation with minimal degrees of freedom is needed.
 > 
-> In the olden days (pre-mdadm), I could bring up the array by giving 5 drives
-> and marking /dev/sde1 as failed-disk instead of read-disk (or somesuch).
- 
-Indeed "missing" as a device name did it, thanks Richard (I guess I can't
-read when it's late).
+> Thanks a lot for looking at this.
+> 
+> Yes, fewer degrees of freedom does seem like a good direction.
+> 
+> I cannot quite decide if I like what you have done or not.  That fact
+> that you found a bug speaks highly in favour of the approach you
+> took.  However it doesn't seem to be removing any flag bits, which
+> bothers me.  I had hoped that at least one and possibly two of
+> ops.{pending,ack,complete} could go.
 
-Sad part is that recreating the device worked, but my VG on top disappeared.
-I may have found a bug or misfeature. 
+They are removed by this approach.  They still exist in this patch in
+order to test the new code in the presence of the old code.
+ops.{ack,complete} are removed from the check path, and ops.pending is
+replaced with stripe_head_state.ops_run.  In this way requesting an
+operation is never globally visible, which should be more robust (or at
+least less code).  The only globally visible state is whether or not an
+operation is quiesced.
 
-During my first post, and up to this mornhing, I had:
-Layout : left-symmetric
-Chunk Size : 64K
-md5 : active raid5 sdf1[0] sdc1[3] sdg1[2] sde1[1]
-      1953535744 blocks level 5, 64k chunk, algorithm 2 [5/4] [UUUU_]
+Other things on the hit list:
+* kill ops.count: requesting service from raid5_run_ops is no longer
+globally visible so all we need is sh->count to tell when handle_stripe
+needs to be called again.
+* kill test_and_ack_op: no need for it after ops.{pending, ack,
+complete} are gone.
+* reduce prototype of raid5_run_ops to
+  void raid5_run_ops(struct stripe_head *sh, struct stripe_head_state *s)
 
-pvdisplay /dev/md5 or vgscan would find the pv and vg.
+> You have made the state-machine aspect of the code more explicit by
+> introducing labels for the high-level states.
+> When you have a multi-threads machine as we do, I think it is
+> sometimes easier to encode just the low-level state of the data (which
+> is harder to get wrong due to races) and each time make a decision
+> based on that.
 
-Then, I just typed this:
-mdadm --create /dev/md5 --level=5 --raid-devices=5  /dev/sd{c,d,f,g}1 missing
+> This is what we were previously doing, but it seems to be just a
+> little to complex.  Maybe that is telling us the for sufficiently
+> complex machines, focussing on the high-level states is the best way
+> to solve the complexity... but I'm not 100% convinced yet and am keen
+> to explore.
+> 
+> One aspect of your states that seems a bit odd is that you have both
+> "idle" and "done" states.  As states, these seem to me to mean much
+> the same thing - nothing is happening.  You do some "finish up"
+> tasking in the "done" state.  
 
-it made a new md5 that vgscan doesn't find anything on.
+Yes, the '_done' state really is a misnomer, how about
+'_process_result'?  Any event where parity is touched appears to have a
+_process_result state.  Reads (biofill operations) seem to be the only
+case where we can go straight from '_run' to '_idle'.
 
-but I'm very confused as to why
-mdadm --create /dev/md5 --level=5 --raid-devices=5  /dev/sd{c,e,f,g}1 missing
-also gives me an md5 that vgscan won't find its pv on anymore
+> Maybe these should be done on the
+> transition from "run" back to "idle".... but maybe locking
+> requirements make that awkward...
 
-gargamel:~# cat /proc/mdstat | grep -1 md5 | tail -n+2
-md5 : active raid5 sdg1[3] sdf1[2] sde1[1] sdc1[0]
-      1953535744 blocks level 5, 64k chunk, algorithm 2 [5/4] [UUUU_]
-gargamel:~# pvdisplay /dev/md5
-  No physical volume label read from /dev/md5
-    Failed to read physical volume "/dev/md5"
+You mean add the finish up tasks to the ops_complete_* routines?  We
+need an up-to-date stripe_head_state to direct some completion actions.
+So yes, moving these tasks outside of handle_stripe seems awkward.
 
-Any idea what got corrupted in my mdadm runs that caused my data to apparently be
-gone now?
-(good news is that I do have an up to date backup, but I should have to use
-it, and I'd like to recover from this the way it should work, so that I can
-learn from it)
+> As I said, I would like to see only one bitfield in place of the
+> current pending,ack,complete.
 
-It's maybe a good time to give:
-2.6.24.5-slub-dualcore2smp-volpreempt-noticks
-and
-mdadm - v2.6.4 - 19th October 2007
+> The way I imagine this is as follows:
+>   When the machine enters some state (xxx_run) there are some number
+>   of tasks that need to be accomplished.
+>   We set "state = xxx_run" and ops.pending = set.of.bits.
+> 
+>   Then outside the lock we doing:
+>     if (test_and_clean(bit, &ops.pending))
+>         atomic_inc(&sh->count);
+>         start 'bit' operation
+>   for each bit.
+>   When the operation completes, sh->count is decremented.
+> 
+>   So when ops.pending is 0, and sh->count is zero, xxx_run must have
+>   completed.
+>   Possibly we inc sh->count when we set the bit in pending rather than
+>   when we clear it.  That makes it universal that if sh->count is 0,
+>   then it is time to assess the current state and move on.
 
-Even if I've lost my data, I'd still like to try to find out what went wrong and help debug 
-if that helps.
+> I remains to be seen if the various states, particularly of parity
+> check and repair, can be adequately deduced from the general state of
+> the stripe, or whether we need an explicit state variable like you
+> introduced.
+
+> Would you be interested in trying to remove .ack and .complete as
+> described above and see where that leave us?
+
+I think this is done for check_states... I'll take a look at
+implementing reconstruct_states to see if anything falls out.
+
+> Thanks,
+> NeilBrown
 
 Thanks,
-Marc
--- 
-"A mouse is a device used to point at the xterm you want to type in" - A.S.R.
-Microsoft is to operating systems & security ....
-                                      .... what McDonalds is to gourmet cooking
-Home page: http://marc.merlins.org/  
+Dan
+
