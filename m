@@ -1,34 +1,71 @@
-From: Richard Scobie <richard@sauce.co.nz>
-Subject: Re: how to recreate a raid5 array with n-1 drives?
-Date: Tue, 06 May 2008 19:17:52 +1200
-Message-ID: <48200620.6060600@sauce.co.nz>
-References: <20080506054819.GA6413@merlins.org>
+From: Markus Hochholdinger <Markus@hochholdinger.net>
+Subject: Re: Resize / file system and create /home in existing raid 1
+Date: Tue, 6 May 2008 11:26:24 +0200
+Message-ID: <200805061126.24896.Markus@hochholdinger.net>
+References: <5a3dd2390805051335s7b163505w5d94206dcb56b8a4@mail.gmail.com> <18463.33260.564139.783585@tree.ty.sabi.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: multipart/signed;
+  boundary="nextPart1575444.nzK6NSDVbg";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20080506054819.GA6413@merlins.org>
+In-Reply-To: <18463.33260.564139.783585@tree.ty.sabi.co.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Marc MERLIN wrote:
+--nextPart1575444.nzK6NSDVbg
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-> In the olden days (pre-mdadm), I could bring up the array by giving 5 drives
-> and marking /dev/sde1 as failed-disk instead of read-disk (or somesuch).
-> 
-> I could not find a way to do this with mdadm in the man page. How do I give
-> /dev/sde1 on the command line as a failed drive?
+Hi,
 
-Looking at the mdadm man page in the "CREATE MODE" section:
+Am Montag, 5. Mai 2008 23:53 schrieb Peter Grandi:
+[..]
+> Resizing is dangerous, shrinking is very dangerous, and most
+> filesystems don't support shrinking anyhow.
 
-"To create a "degraded" array in which some devices are missing,  simply
-give  the  word  "missing"  in place of a device name.  This will cause
-mdadm to leave the corresponding slot in the array empty.  For a  RAID4
-or  RAID5 array at most one slot can be "missing"; for a RAID6 array at
-most two slots.  For a RAID1 array, only one real device  needs  to  be 
-given.  All of the others can be "missing"."
+is there any documentation why resizing is dangerous?
 
-Regards,
+I'm using a lot of RAID1 with ext3 ontop in my virtual servers and i resize=
+=20
+(grow) the RAID1 and ext3 filesystem as i need more space without=20
+interrupting.
+I've done this very often (more than 50 times) for a long time (for about 2=
+=20
+years) and never had any problems. I also do sometimes fsck to check if=20
+something went wrong (i can do this without interruption because my RAID1=20
+partitions are managed with lvm, and so, i do snapshots and make the fsck o=
+n=20
+the snapshots).
+I've done shrinking not that often because i don't know a filesystem which =
+can=20
+shrinking online (ext3 and reiserfs can be shrinked offline). But as i've=20
+testet shrinking with ext3 it's for me also very stable. Shrinking reiserfs=
+=20
+(offline) doesn't work reliably and i use reiserfs only on my backup space.=
+=20
+But shrinking RAID1 is not possible without recreating the RAID1, means=20
+shrinking RAID1 is not possible online.
 
-Richard
+
+=2D-=20
+greetings
+
+eMHa
+
+--nextPart1575444.nzK6NSDVbg
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.6 (GNU/Linux)
+
+iD8DBQBIICRAXT3LE+AjWCsRAnQGAJ0fig9tlyaLK/yq6VdnDHLVJ1ekNACgkKzs
+efcRoFMj7FDT91geDQJ7nFc=
+=1984
+-----END PGP SIGNATURE-----
+
+--nextPart1575444.nzK6NSDVbg--
