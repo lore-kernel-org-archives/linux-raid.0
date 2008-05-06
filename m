@@ -1,50 +1,40 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: mdadm feature suggestion
-Date: Tue, 6 May 2008 12:45:24 +1000
-Message-ID: <18463.50756.193011.129733@notabene.brown>
-References: <481EF5A5.3030501@serverleih.de>
+Subject: Re: mdadm raid1 stops to work after kernel panic
+Date: Tue, 6 May 2008 12:50:01 +1000
+Message-ID: <18463.51033.969459.795526@notabene.brown>
+References: <26c008d70805042347g1afaa67em5a7af935bed434ca@mail.gmail.com>
+	<56088.192.168.1.70.1209979931.squirrel@neil.brown.name>
+	<26c008d70805050256q65972fa7jb86c6d5254828fc1@mail.gmail.com>
+	<54900.192.168.1.70.1209987714.squirrel@neil.brown.name>
+	<26c008d70805050509q40acc59cg94d22d0f9ad3b8b6@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Denis Klimek on Monday May 5
+In-Reply-To: message from Federico on Monday May 5
 Sender: linux-raid-owner@vger.kernel.org
-To: Denis Klimek <denis@serverleih.de>
+To: Federico <undicizeri@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Monday May 5, denis@serverleih.de wrote:
-> Hello,
+On Monday May 5, undicizeri@gmail.com wrote:
+> >  What happens if you:
+> >   mdadm -S /dev/md2
+> >   mdadm -A /dev/md2 /dev/sda1 /dev/sdc1
 > 
-> I've written a "mdadm2sms", which sends me SMS to my mobilephone when 
-> something happens to raid.
-> Yesterday I've got a sms / also written into syslog (standard), that a 
-> rebuild has been started, just for data-checking. My suggestion is now, 
-> it is possible to add 3 more Events just for this DataCheck event? Like 
-> DataCheckStarted, CheckStarted, CheckedFinished and Check20-100 or 
-> something? Cause the problem is, you can't trigger a regulary 
-> mdadm-datacheck without using syslog. It would be very nice, when it 
-> would be possible to trigger a Datacheck with a event command.
-> 
+> root@persifae:~#mdadm -S /dev/md2
+> mdadm: stopped /dev/md2
+> root@persifae:~#mdadm -A /dev/md2 /dev/sda1 /dev/sdc1
+> mdadm: failed to add /dev/sdc1 to /dev/md2: Invalid argument
+> mdadm: /dev/md2 assembled from 0 drives - not enough to start the array.
 
-I'm sorry, but I don't understand what you are asking for.
+Ahhh... They have a different "preferred minor".  Presumably when you
+tried to boot with the wrong grub parameters it tried to assemble the
+array as /dev/md0 instead of /dev/md2.
 
-When a data-check is run, it should generate events just like when a
-resync or recovery is run.  These will be passed to any --program that
-you give to mdadm --monitor.
-In that program you can differentiate between
-data-check/resync/recovery by looking in /proc/mdstat.
+You can fix with:
 
-Do you want the events to be different for the different types of
-'resync' (check/sync/recover)??  So you can get an SMS on a resync
-start but not on a data-check start?  Is that it?
-
-I don't understand
-  "It would be very nice, when it would be possible to trigger a
-  Datacheck with a event command. "
-at all.  How would an event command trigger a Datacheck???
-
-
-confused.
+  mdadm -A /dev/md2 /dev/sdc1
+  mdadm /dev/md2 -a /dev/sda1
 
 NeilBrown
