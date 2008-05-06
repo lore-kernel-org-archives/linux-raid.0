@@ -1,108 +1,76 @@
-From: "Tiago Pinheiro" <tpinheiro@gmail.com>
-Subject: Re: Resize / file system and create /home in existing raid 1
-Date: Tue, 6 May 2008 15:58:00 +0200
-Message-ID: <5a3dd2390805060658j38b7d5cfwf41991ef21525cf4@mail.gmail.com>
-References: <5a3dd2390805051335s7b163505w5d94206dcb56b8a4@mail.gmail.com>
-	 <18463.33260.564139.783585@tree.ty.sabi.co.uk>
+From: Marc MERLIN <marc_news@merlins.org>
+Subject: Re: mdadm create corrupted md data?
+Date: Tue, 6 May 2008 16:08:00 -0700
+Message-ID: <20080506230800.GL31536@merlins.org>
+References: <20080506054819.GA6413@merlins.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18463.33260.564139.783585@tree.ty.sabi.co.uk>
 Content-Disposition: inline
+In-Reply-To: <20080506054819.GA6413@merlins.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID mailing list <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
+Cc: richard@sauce.co.nz
 List-Id: linux-raid.ids
 
-Hi there,
+[please Cc me on replies, I see them faster that way]
 
-Thanks for your prompt answer!
+On Mon, May 05, 2008 at 10:48:19PM -0700, Marc MERLIN wrote:
+> I thought I could recreate a n-1 array like so:
+> gargamel:~# mdadm --create /dev/md5 --level=5 --chunk=64 --layout=left-symmetric  --raid-devices=5  /dev/sd{c,d,f,g}1
+> mdadm: You haven't given enough devices (real or missing) to create this array
+> 
+> In the olden days (pre-mdadm), I could bring up the array by giving 5 drives
+> and marking /dev/sde1 as failed-disk instead of read-disk (or somesuch).
+ 
+Indeed "missing" as a device name did it, thanks Richard (I guess I can't
+read when it's late).
 
+Sad part is that recreating the device worked, but my VG on top disappeared.
+I may have found a bug or misfeature. 
 
-> [ ... reshaping from ... ]
->
->
->  > - / is in a Raid 1 array (/dev/md0) consisting of two
->  >   partitions - sda1 and sdb1 (ca. 148 GB);
->  > - swap in Raid 0 (/dev/md1) - sda2 and sdb2 of ca. 1 GB each
->  >   giving me 2 GB in total:
->
->  [ ... to ... ]
->
->
->  > - resize the partition containing the / file system to 27 GB
->  >   keeping it in RAID 1 (/dev/md0);
->  > - create a new partition of 120GB to mount /home, also in RAID
->  >   1 (/dev/md2);
->  > - change swap from a RAID 0 to a RAID 1, resizing it to 2GB
->  >   (/dev/md1).
+During my first post, and up to this mornhing, I had:
+Layout : left-symmetric
+Chunk Size : 64K
+md5 : active raid5 sdf1[0] sdc1[3] sdg1[2] sde1[1]
+      1953535744 blocks level 5, 64k chunk, algorithm 2 [5/4] [UUUU_]
 
-Yep, that's essentially it.
+pvdisplay /dev/md5 or vgscan would find the pv and vg.
 
+Then, I just typed this:
+mdadm --create /dev/md5 --level=5 --raid-devices=5  /dev/sd{c,d,f,g}1 missing
 
->  > Can this be done without reinstalling everything from scratch?
->
->  You have two mirrored disks so it is trivial.
+it made a new md5 that vgscan doesn't find anything on.
 
-Not so trivial to me... :)
+but I'm very confused as to why
+mdadm --create /dev/md5 --level=5 --raid-devices=5  /dev/sd{c,e,f,g}1 missing
+also gives me an md5 that vgscan won't find its pv on anymore
 
+gargamel:~# cat /proc/mdstat | grep -1 md5 | tail -n+2
+md5 : active raid5 sdg1[3] sdf1[2] sde1[1] sdc1[0]
+      1953535744 blocks level 5, 64k chunk, algorithm 2 [5/4] [UUUU_]
+gargamel:~# pvdisplay /dev/md5
+  No physical volume label read from /dev/md5
+    Failed to read physical volume "/dev/md5"
 
->  Break the mirroring, repartition 'sdb' say into 'sdb[123]',
->  'mkfs' the 'sdb[13]' partitions, 'mkswap' the 'sdb2' partition,
->  copy stuff from 'sda1' to 'sdb1' and 'sdb3', reboot from 'sdb1'
->  without any RAID, repartition 'sda' in the same way as 'sdb',
->  then recreate new RAID mirrors ('md0' as 'sda1' and 'sdb1'
->  etc.). You can do much the same from a live CD eliminating the
->  obvious steps.
+Any idea what got corrupted in my mdadm runs that caused my data to apparently be
+gone now?
+(good news is that I do have an up to date backup, but I should have to use
+it, and I'd like to recover from this the way it should work, so that I can
+learn from it)
 
-Let's suppose I use a live CD. It seems safer and less error prone.
-Step by step, we have:
-- break the mirroring: it is my perception that this would not be
-necessary as the system would not be aware of any raid. The only
-problem I see here is the fact that the drives are partitioned as RAID
-auto detect, but I might be seeing a problem where it is not there;
+It's maybe a good time to give:
+2.6.24.5-slub-dualcore2smp-volpreempt-noticks
+and
+mdadm - v2.6.4 - 19th October 2007
 
-- repartition the drive and create file systems: fine, will use parted
-to do it in a non-destructive manner, shrink sdb1 (ext3) to 27GB,
-delete sdb2 (swap), create new sdb2 (ext3) with 120GB and create sdb3
-(swap) with 2GB; I will have to set them as RAID autodetect as well,
-right?
+Even if I've lost my data, I'd still like to try to find out what went wrong and help debug 
+if that helps.
 
-- copy stuff from sda1 to sdb1 (/) and sdb2 (/home): fine; will do
-something like this 'find . -depth -print0 | sudo cpio --null --sparse
--pvd /target/';
-
-- reboot from sdb1 without any raid: how can I do that? change
-something in GRUB, or merely physically disconnecting sda? in any
-case, won't sdb's partitions be seen as they should belong to a RAID?
-
-- repartition sda: fine;
-
-- recreate the arrays: will this be non-destructive? do I have to
-recreate them as degraded (starting with sdb[123]) and then add the
-other partitions (sda[123])? would this be ok, or is there a better
-way of doing it? 'mdadm --create --verbose /dev/md0 --level=1
---raid-devices=2  /dev/sda1 missing';
-
-Am I going in the right direction here?
-Thanks for all the help.
-
-
->
->  Resizing is dangerous, shrinking is very dangerous, and most
->  filesystems don't support shrinking anyhow.
-
-Would that mean that it is not possible to do it?
-
-
->
->  > Output of /proc/mdstat: [ ... ]
->
->  Why so much pointless stuff...
-
-Sorry about that. It's just that I was apparently unable to
-distinguish what would be necessary and what was not.
-
-
-Cheers,
-Tiago
+Thanks,
+Marc
+-- 
+"A mouse is a device used to point at the xterm you want to type in" - A.S.R.
+Microsoft is to operating systems & security ....
+                                      .... what McDonalds is to gourmet cooking
+Home page: http://marc.merlins.org/  
