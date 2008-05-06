@@ -1,46 +1,35 @@
-From: Federico <undicizeri@gmail.com>
-Subject: Re: mdadm raid1 stops to work after kernel panic
-Date: Tue, 6 May 2008 07:46:55 +0200
-Message-ID: <26c008d70805052246g4533876cm172e296ca07d8295@mail.gmail.com>
-References: <26c008d70805042347g1afaa67em5a7af935bed434ca@mail.gmail.com>
-	 <56088.192.168.1.70.1209979931.squirrel@neil.brown.name>
-	 <26c008d70805050256q65972fa7jb86c6d5254828fc1@mail.gmail.com>
-	 <54900.192.168.1.70.1209987714.squirrel@neil.brown.name>
-	 <26c008d70805050509q40acc59cg94d22d0f9ad3b8b6@mail.gmail.com>
-	 <18463.51033.969459.795526@notabene.brown>
+From: Luca Berra <bluca@comedia.it>
+Subject: Re: Redundancy check using "echo check > sync_action": error	reporting?
+Date: Tue, 6 May 2008 08:36:10 +0200
+Message-ID: <20080506063609.GA3412@percy.comedia.it>
+References: <20080320134747.GA28114@cthulhu.home.robinhill.me.uk> <47E2725C.1020206@tuxes.nl> <20080320163551.GG13719@mit.edu> <47E2EE64.5080101@rabbit.us> <47E3C504.3010700@tmr.com> <47E3CBAF.4090808@rabbit.us> <47E43E57.5010409@tmr.com> <20080321235557.GA11801@cthulhu.home.robinhill.me.uk> <47E4D95A.9000505@rabbit.us> <481D65FA.4090107@rabbit.us>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18463.51033.969459.795526@notabene.brown>
 Content-Disposition: inline
+In-Reply-To: <481D65FA.4090107@rabbit.us>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Yeah! thank you for your help! :D
+On Sun, May 04, 2008 at 09:30:02AM +0200, Peter Rabbitson wrote:
+>I want to resurect this discussion with a peculiar observation - the above 
+>mismatch was caused by GRUB.
+...
+>I realized that my grub config contains a savedefault clause, which updates 
+>the file on the raw ext3 volume before any raid assembly has taken place. 
+>Executing grub-set-default from within a booted system (with a mounted 
+>assembled raid) resulted in the subsequent md check to return 0 mismatches. 
+this has been a long standing issue with grub 1.x
+hopefully some day grub 2 will be production ready and the issue will be
+forgoten (real md raid support for grub 2 was added in google SOC 2006).
 
-2008/5/6 Neil Brown <neilb@suse.de>:
->
-> On Monday May 5, undicizeri@gmail.com wrote:
->  > >  What happens if you:
->  > >   mdadm -S /dev/md2
->  > >   mdadm -A /dev/md2 /dev/sda1 /dev/sdc1
->  >
->  > root@persifae:~#mdadm -S /dev/md2
->  > mdadm: stopped /dev/md2
->  > root@persifae:~#mdadm -A /dev/md2 /dev/sda1 /dev/sdc1
->  > mdadm: failed to add /dev/sdc1 to /dev/md2: Invalid argument
->  > mdadm: /dev/md2 assembled from 0 drives - not enough to start the array.
->
->  Ahhh... They have a different "preferred minor".  Presumably when you
->  tried to boot with the wrong grub parameters it tried to assemble the
->  array as /dev/md0 instead of /dev/md2.
->
->  You can fix with:
->
->   mdadm -A /dev/md2 /dev/sdc1
->   mdadm /dev/md2 -a /dev/sda1
->
->  NeilBrown
->
+L.
+
+-- 
+Luca Berra -- bluca@comedia.it
+        Communication Media & Services S.r.l.
+ /"\
+ \ /     ASCII RIBBON CAMPAIGN
+  X        AGAINST HTML MAIL
+ / \
