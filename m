@@ -1,52 +1,49 @@
-From: Twigathy <twigathy@gmail.com>
-Subject: Re: Multiple siI SATA cards and data corruption
-Date: Wed, 7 May 2008 15:52:59 +0100
-Message-ID: <1f0f1a960805070752k6ed9c4dfj8ff2382d4557b013@mail.gmail.com>
-References: <1f0f1a960805061741t16bb165fp342ceb8f97f4347d@mail.gmail.com>
-	 <e9c3a7c20805062212x73a837d7l37905042d835e0a7@mail.gmail.com>
-	 <1f0f1a960805070234o2f9dfe07j42a1bd005b607791@mail.gmail.com>
-	 <1af518580805070648r6060ca9ase0d03e9a17ffe0c7@mail.gmail.com>
-	 <1f0f1a960805070720y4908b17dqe098d969f03ec37d@mail.gmail.com>
-	 <4821C052.6090105@harddata.com>
+From: Marc MERLIN <marc@merlins.org>
+Subject: Re: mdadm create corrupted md data?
+Date: Wed, 7 May 2008 08:08:14 -0700
+Message-ID: <20080507150814.GB21697@merlins.org>
+References: <20080506054819.GA6413@merlins.org> <20080506230800.GL31536@merlins.org> <e9c3a7c20805062238l36674d8akffda7ea9aec78371@mail.gmail.com> <20080507065657.GA21697@merlins.org> <48217680.10903@dgreaves.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4821C052.6090105@harddata.com>
 Content-Disposition: inline
+In-Reply-To: <48217680.10903@dgreaves.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Maurice Hilarius <maurice@harddata.com>, linux-raid@vger.kernel.org
+To: David Greaves <david@dgreaves.com>
+Cc: Dan Williams <dan.j.williams@gmail.com>, linux-raid@vger.kernel.org, richard@sauce.co.nz
 List-Id: linux-raid.ids
 
-PSU is a relatively reliable, if slightly old now, 380W thing. It has
-enough power on the 12v lines to power the disks and CPU, but you may
-be onto something there - all disks reading/writing at once = power
-levels higher.
+On Wed, May 07, 2008 at 10:29:36AM +0100, David Greaves wrote:
+> Marc MERLIN wrote:
+> > After that, I get my pv back, and my VG.
+> > 
+> > I did try an e2fsck -f -n -C 0 /dev/dshelf2/space when in the configuration
+> > with sdd1 (i.e. the drive I first tried to rebuild parity on, until I found
+> > out it was sde1 that had bad sectors), and it is showing some pretty scary
+> > errors that probably show that my fs is mostly toast if I elect to use sdd1
+> > instead of sde1.
+> > Considering that sde1 is the soon to be dead drive, I guess backups is where
+> > I go next.
+> 
+> I would obtain a replacement drive for sde and use gnu ddrescue (dd with error
+> retries) to create an image on a reliable drive. Then re-create the array using
+> the replaced sde instead of sdd. You should have more luck that way.
+ 
+True, I could do that too.
+ 
+> If you still have fsck issues then I'd suggest that the futzing around may have
+> caused corruption.
 
-The new kit I've ordered for this server includes a 450W PSU, so
-perhaps that'll solve things.
+No, that should work fine. The array works fine with sde, I'm just surprised
+that it is now half corrupted if I use sdd instead. I'm not sure I
+understand why, but I guess that drives the point that I should be even
+more careful about which drive I select after a double failure.
 
-The trouble with debugging a problem like this is that there are so
-many variables!
+Anyway, thanks for the suggestions.
 
-2008/5/7 Maurice Hilarius <maurice@harddata.com>:
->
->  Twigathy wrote:
->  It could be cables, although that wouldn't explain the disks working
-> perfectly well (Maxed out, too in the case of doing a badblocks test)
-> when they are by themselves.
->
->  Sounds like a current delivery issue.
->
->  How is your power supply?
->
->
-> --
->  With our best regards,
->
->  Maurice W. Hilarius         Telephone: 01-780-456-9771
->  Hard Data Ltd.                FAX:          01-780-456-9772
->  11060 - 166 Avenue         email:maurice@harddata.com
->  Edmonton, AB, Canada         http://www.harddata.com/
->       T5X 1Y3
->
+Marc
+-- 
+"A mouse is a device used to point at the xterm you want to type in" - A.S.R.
+Microsoft is to operating systems & security ....
+                                      .... what McDonalds is to gourmet cooking
+Home page: http://marc.merlins.org/  
