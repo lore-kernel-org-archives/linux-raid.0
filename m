@@ -1,47 +1,31 @@
-From: "Mike Snitzer" <snitzer@gmail.com>
-Subject: Re: [RFC][PATCH] md: avoid fullsync if a faulty member missed a dirty transition
-Date: Thu, 8 May 2008 16:11:53 -0400
-Message-ID: <170fa0d20805081311r6b726762ndc83c5f626f0956c@mail.gmail.com>
-References: <1207174155-20090-1-git-send-email-snitzer@gmail.com>
-	 <18464.134.236488.251879@notabene.brown>
-	 <170fa0d20805060458i43c9a4a7r1e30147bdcd40f20@mail.gmail.com>
-	 <18466.39418.578722.92979@notabene.brown>
+From: Richard Scobie <richard@sauce.co.nz>
+Subject: Re: two questions re. proactive recovery and forced assembly
+Date: Fri, 09 May 2008 08:23:21 +1200
+Message-ID: <48236139.70301@sauce.co.nz>
+References: <c4985c940804100501g5cac252ax129328371c36d397@mail.gmail.com>	 <48013976.6020705@sauce.co.nz>	 <c4985c940805070422lfde5f6bhd510c12d2f2d0f2f@mail.gmail.com>	 <482253C1.5060803@sauce.co.nz> <c4985c940805080401k5851a9d5n35d12d6d07ff2496@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18466.39418.578722.92979@notabene.brown>
-Content-Disposition: inline
+In-Reply-To: <c4985c940805080401k5851a9d5n35d12d6d07ff2496@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, paul.clements@steeleye.com
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, May 8, 2008 at 2:13 AM, Neil Brown <neilb@suse.de> wrote:
-> On Tuesday May 6, snitzer@gmail.com wrote:
->  >
->  > It looks like bitmap_update_sb()'s incrementing of events_cleared (on
->  > behalf of the local member) could be racing with the fact that the NBD
->  > member becomes faulty (whereby making the array degraded).  This
->  > allows the events_cleared to reflect a clean->dirty transition last
->  > occurred before the array became degraded.  My reasoning is: If it was
->  > a clean->dirty transition the bitmap still has the associated dirty
->  > bit set in the local member's bitmap, so using the bitmap to resync is
->  > valid.
->  >
->  > thanks,
->  > Mike
->
->  Thanks for persisting.  I think I understand what is going on now.
->
->  How about this patch?  It is similar to your, but instead of depending
->  on the odd/even state of the event counter, it directly checks the
->  clean/dirty state of the array.
+rosenfield.albert@gmail.com wrote:
 
-Hi Neil,
+> But will this assemble a RAID5 array where the event counters are out
+> of sync on not one, but two disks?
 
-Your revised patch works great and is obviously cleaner.
+I cannot read code unfortunately, but the man page states:
 
-Thanks!
+" --force
 
-Tested-by: Mike Snitzer <snitzer@gmail.com>
+Insist that mdadm accept the geometry and layout specified without 
+question."
+
+I would therefore expect it to.
+
+Regards,
+
+Richard
