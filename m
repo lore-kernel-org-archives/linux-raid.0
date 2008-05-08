@@ -1,31 +1,38 @@
-From: Richard Scobie <richard@sauce.co.nz>
-Subject: Re: two questions re. proactive recovery and forced assembly
-Date: Thu, 08 May 2008 13:13:37 +1200
-Message-ID: <482253C1.5060803@sauce.co.nz>
-References: <c4985c940804100501g5cac252ax129328371c36d397@mail.gmail.com>	 <48013976.6020705@sauce.co.nz> <c4985c940805070422lfde5f6bhd510c12d2f2d0f2f@mail.gmail.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: Autostarting arrays with V1 metadata
+Date: Thu, 8 May 2008 13:05:44 +1000
+Message-ID: <18466.28168.343215.443749@notabene.brown>
+References: <4821EEFB.1040501@bluecherry.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <c4985c940805070422lfde5f6bhd510c12d2f2d0f2f@mail.gmail.com>
+In-Reply-To: message from Ben Winslow on Wednesday May 7
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Ben Winslow <rain@bluecherry.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-rosenfield.albert@gmail.com wrote:
-
+On Wednesday May 7, rain@bluecherry.net wrote:
+> I've noticed that (as of 2.6.25, at least) the kernel doesn't autostart 
+> arrays with V1 metadata.  In autostart_arrays(), md_import_device() is 
+> called for 0.90 arrays only, and there's currently no sort of 
+> autodetection of the superblock position for V1 metadata.
 > 
-> (How about forcibly assembling an array where one too many disks has
-> been kicked?  Is that still, uhm, contorted to say the least? Or is
-> there a proper feature for that too?)
+> Is this simply a matter of the code being unwritten, or are there other 
+> reasons that V1 arrays aren't autostarted (such as the SB format being 
+> unfinished)?  My only real motivation to use V1 metadata is the unhashed 
+> homehost field, which I'll give up if the SB format hasn't stabilized yet.
 
-Depends what you mean by contorted. Have a look at the "For assemble" 
-section of the mdadm man page.
+V1.x metadata (deliberately) doesn't contain sufficient information to
+allow in-kernel autodetect.  In particular it doesn't store the 'minor
+number' information so the kernel wouldn't know which md device to
+use.
 
-mdadm -A --force /dev/mdX /dev/sda1 /dev/sdb1 /dev/sdc1
+However it is quite possible to assemble V1.x arrays using mdadm in an
+initrd.  This is the preferred method.
 
-does not seem contorted to me.
+Ofcourse, if the array doesn't hold the root filesystem, you can just
+assemble it as part of the regular boot scripts.
 
-Regards,
-
-Richard
+NeilBrown
