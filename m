@@ -1,40 +1,31 @@
-From: Andrew Farley <andrew@neonsurge.com>
-Subject: Re: Booting off of RAID10 versus RAID1
-Date: Thu, 8 May 2008 16:35:14 +0200
-Message-ID: <F173803E-7982-4BE7-898C-0D2BB36A94A9@neonsurge.com>
-References: <48230154.4000509@harddata.com>
-Mime-Version: 1.0 (Apple Message framework v919.2)
-Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
-Content-Transfer-Encoding: 7bit
+From: Bryan Mesich <bryan.mesich@ndsu.edu>
+Subject: Re: Autostarting arrays with V1 metadata
+Date: Thu, 8 May 2008 09:50:59 -0500
+Message-ID: <20080508145059.GA7744@atlantis.cc.ndsu.nodak.edu>
+References: <4821EEFB.1040501@bluecherry.net> <18466.28168.343215.443749@notabene.brown>
+Reply-To: Bryan Mesich <bryan.mesich@ndsu.edu>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <48230154.4000509@harddata.com>
+Content-Disposition: inline
+In-Reply-To: <18466.28168.343215.443749@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I'm pretty sure you can't put the kernel on a raid 10, but you can  
-have a 50-100MB RAID1 (or not raid) /boot partition (on each hdd if  
-you wish) and then have root on raid 10 provided you compile in  
-support for it or use a initrd.  I have used this setup successfully  
-without the kernel raid 10 support (older linux distro).  I just have  
-a raid 0 on top of three raid 1's that auto assemble the raid 1's upon  
-boot but then have to manually assemble the raid 0 since the boot-up  
-procedure only does one round of raid auto-detecting.
+On Thu, May 08, 2008 at 01:05:44PM +1000, Neil Brown wrote:
 
-Just required this little hack in menu.lst
+[snip...]
 
-title  Default kernel - build2
-root (hd0,0)
-kernel /kernel-build2 root=/dev/md4 md=4,/dev/md1,/dev/md2,/dev/md3
+> However it is quite possible to assemble V1.x arrays using mdadm in an
+> initrd.  This is the preferred method.
 
-Just a trick I used, makes some great vm and/or db servers.  Cheers,
 
-  - A
+I wasn't aware there's a "preferred method" to assembling an
+array at boot time.  Could you please elaborate as to why
+assembling in user space would be better? (besides having the
+ability to assemble non 0.9 metadata)
 
-On May 8, 2008, at 3:34 PM, Maurice Hilarius wrote:
+Just curious :-)
 
-> After recent issues discovered with RAID1 and failing disks, I am  
-> contemplating alternatives to ensure more reliability.
->
-> The question that arises: Is there any way to boot a system from a  
-> RAID10 md?
+Bryan
