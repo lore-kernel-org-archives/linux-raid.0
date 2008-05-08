@@ -1,56 +1,47 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: WARNING in 2.6.25-07422-gb66e1f1
-Date: Thu, 08 May 2008 11:46:19 -0700
-Message-ID: <1210272379.9697.3.camel@dwillia2-linux.ch.intel.com>
-References: <200805031151.44287.prakash@punnoor.de>
-	 <18462.46639.578272.994939@notabene.brown> <20080505190159.GA329@kernel.dk>
-	 <200805082039.01316.rjw@sisk.pl>
+From: "Mike Snitzer" <snitzer@gmail.com>
+Subject: Re: [RFC][PATCH] md: avoid fullsync if a faulty member missed a dirty transition
+Date: Thu, 8 May 2008 16:11:53 -0400
+Message-ID: <170fa0d20805081311r6b726762ndc83c5f626f0956c@mail.gmail.com>
+References: <1207174155-20090-1-git-send-email-snitzer@gmail.com>
+	 <18464.134.236488.251879@notabene.brown>
+	 <170fa0d20805060458i43c9a4a7r1e30147bdcd40f20@mail.gmail.com>
+	 <18466.39418.578722.92979@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200805082039.01316.rjw@sisk.pl>
+In-Reply-To: <18466.39418.578722.92979@notabene.brown>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Jens Axboe <jens.axboe@oracle.com>, Neil Brown <neilb@suse.de>, Jacek Luczak <difrost.kernel@gmail.com>, Prakash Punnoor <prakash@punnoor.de>, Linux Kernel list <linux-kernel@vger.kernel.org>, linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, paul.clements@steeleye.com
 List-Id: linux-raid.ids
 
-On Thu, 2008-05-08 at 11:39 -0700, Rafael J. Wysocki wrote:
-> I get a similar warning with RAID1 on one of my test boxes:
-> 
-> WARNING: at /home/rafael/src/linux-2.6/include/linux/blkdev.h:443 blk_remove_plug+0x85/0xa0()
-> Modules linked in: raid456 async_xor async_memcpy async_tx xor raid0 ehci_hcd ohci_hcd sd_mod edd raid1 ext3 jbd fan sata_uli pata_ali thermal processor
-> Pid: 2159, comm: md1_raid1 Not tainted 2.6.26-rc1 #158
-> 
-> Call Trace:
->  [<ffffffff80238bbf>] warn_on_slowpath+0x5f/0x80
->  [<ffffffff8025e8d8>] ? __lock_acquire+0x748/0x10d0
->  [<ffffffff80348f55>] blk_remove_plug+0x85/0xa0
->  [<ffffffffa004df64>] :raid1:flush_pending_writes+0x44/0xb0
->  [<ffffffffa004e649>] :raid1:raid1d+0x59/0xfe0
->  [<ffffffff8025e8d8>] ? __lock_acquire+0x748/0x10d0
->  [<ffffffff8025dc4f>] ? trace_hardirqs_on+0xbf/0x150
->  [<ffffffff8043ea8c>] md_thread+0x3c/0x110
->  [<ffffffff8024f6a0>] ? autoremove_wake_function+0x0/0x40
->  [<ffffffff8043ea50>] ? md_thread+0x0/0x110
->  [<ffffffff8024f23d>] kthread+0x4d/0x80
->  [<ffffffff8020c548>] child_rip+0xa/0x12
->  [<ffffffff8020bc5f>] ? restore_args+0x0/0x30
->  [<ffffffff8024f1f0>] ? kthread+0x0/0x80
->  [<ffffffff8020c53e>] ? child_rip+0x0/0x12
-> 
-> ---[ end trace 05d4e0844c61f45d ]---
-> 
-> This is the WARN_ON_ONCE(!queue_is_locked(q)) in queue_flag_clear(),
-> apparently.
+On Thu, May 8, 2008 at 2:13 AM, Neil Brown <neilb@suse.de> wrote:
+> On Tuesday May 6, snitzer@gmail.com wrote:
+>  >
+>  > It looks like bitmap_update_sb()'s incrementing of events_cleared (on
+>  > behalf of the local member) could be racing with the fact that the NBD
+>  > member becomes faulty (whereby making the array degraded).  This
+>  > allows the events_cleared to reflect a clean->dirty transition last
+>  > occurred before the array became degraded.  My reasoning is: If it was
+>  > a clean->dirty transition the bitmap still has the associated dirty
+>  > bit set in the local member's bitmap, so using the bitmap to resync is
+>  > valid.
+>  >
+>  > thanks,
+>  > Mike
+>
+>  Thanks for persisting.  I think I understand what is going on now.
+>
+>  How about this patch?  It is similar to your, but instead of depending
+>  on the odd/even state of the event counter, it directly checks the
+>  clean/dirty state of the array.
 
-Yes, it triggers on all RAID levels.  The patch in this message:
+Hi Neil,
 
-http://marc.info/?l=linux-raid&m=121001065404056&w=2
-> 
-...fixes the raid 0/1/10/5/6 cases, but I am still trying to isolate an
-issue (potentially unrelated) with linear arrays.
+Your revised patch works great and is obviously cleaner.
 
---
-Dan
+Thanks!
 
+Tested-by: Mike Snitzer <snitzer@gmail.com>
