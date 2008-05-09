@@ -1,42 +1,41 @@
-From: michael@estone.ca
-Subject: Re: partitioned mirror vs. mirrors of partitions?
-Date: Thu, 08 May 2008 23:15:59 -0700
-Message-ID: <20080508231559.3ewh3sdao8gs44ks@estone.ca>
-References: <4823A238.4080205@sandeen.net>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: Sleeping hard drives in an array?
+Date: Fri, 09 May 2008 09:20:20 -0400
+Message-ID: <48244F94.7000709@tmr.com>
+References: <29a863790804300802i358ab6d9t2be907b47176bd5b@mail.gmail.com>	 <481B836E.6040208@tmr.com> <481B918E.4@panix.com>	 <481E4EFC.2050805@tmr.com> <29a863790805041712v4eff0496hac3eedaa9003466b@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
-	DelSp=Yes	format=flowed
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4823A238.4080205@sandeen.net>
-Content-Disposition: inline
+In-Reply-To: <29a863790805041712v4eff0496hac3eedaa9003466b@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Greg Cormier <gcormier@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Quoting Eric Sandeen <sandeen@sandeen.net>:
-
-> Hi, I hope this isn't a FAQ, I did do a little searching first...
+Greg Cormier wrote:
+> Wow this has caused quite the stirrup!
 >
-> I'm looking at using a couple of large disks to mirror a system which
-> currently has a few different filesystems; I'll use partitions on the
-> disks to contain the different fileystems.
+> I think I'll leave them spinning :-) They are WD Raid Edition drives
+> so I'll keep my fingers crossed. I just figured since the array does
+> nothing like 21 hours of the day.. why not spin it down. But if
+> spinup/downs are worse then I'll leave it be.
 >
-> It looks like I could mirror sda and sdb, and partition the resulting
-> md_d0.  Or, I could partition sda and sdb, and create mirrors md0, md1,
-> etc from the partitions on the underlying disks.
+> The drive temps are 32-34 degrees since they have fans right on them
+> and the case is nicely cooled.
 >
-> Is there any technical reason to choose one method vs the other?  It
-> seems to me that perhaps on a system with several active partitions from
-> the same disk, partitioning a single large raid device might allow
-> better read balancing?
+>   
+Even with that use profile, my main concern would be power usage, room 
+heat, and cost of A/C if you run temperature controlled.
 
-As far as I know, there shouldn't be much difference.
-However, if one drive dies, it will be easier to re-construct the  
-md_d0 array when you add your new disk in. Just one command to repair  
-the array, and all filesystems will be good to go, instead of  
-repairing md0, and then md1 and so on.
-IIRC, the Debian mdadm docs have some more info on this.
+> Thanks,
+> Greg
+>   
 
-Cheers,
-Mike
+
+-- 
+Bill Davidsen <davidsen@tmr.com>
+  "Woe unto the statesman who makes war without a reason that will still
+  be valid when the war is over..." Otto von Bismark 
+
+
