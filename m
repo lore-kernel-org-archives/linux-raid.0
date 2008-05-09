@@ -1,57 +1,59 @@
-From: Eric Sandeen <sandeen@sandeen.net>
+From: pg_lxra@lxra.for.sabi.co.UK (Peter Grandi)
 Subject: Re: partitioned mirror vs. mirrors of partitions?
-Date: Fri, 09 May 2008 10:27:19 -0500
-Message-ID: <48246D57.6080406@sandeen.net>
-References: <4823A238.4080205@sandeen.net> <48246B73.3020207@tmr.com>
+Date: Fri, 9 May 2008 19:37:32 +0100
+Message-ID: <18468.39404.548362.679829@tree.ty.sabi.co.uk>
+References: <4823A238.4080205@sandeen.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <48246B73.3020207@tmr.com>
+In-Reply-To: <4823A238.4080205@sandeen.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: linux-raid@vger.kernel.org
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Bill Davidsen wrote:
-> Eric Sandeen wrote:
->> Hi, I hope this isn't a FAQ, I did do a little searching first...
->>
->> I'm looking at using a couple of large disks to mirror a system which
->> currently has a few different filesystems; I'll use partitions on the
->> disks to contain the different fileystems.
->>
->> It looks like I could mirror sda and sdb, and partition the resulting
->> md_d0.  Or, I could partition sda and sdb, and create mirrors md0, md1,
->> etc from the partitions on the underlying disks.
->>
->> Is there any technical reason to choose one method vs the other?  It
->> seems to me that perhaps on a system with several active partitions from
->> the same disk, partitioning a single large raid device might allow
->> better read balancing?
->>   
-> 
-> The reason for going with a partitioned raid is that rebuild after a 
-> failure is easier. The reason for NOT going there at the moment is 
-> discussed in another thread here, in the current kernel the partitions 
-> are not started unless you have an initrd file to make that happen. The 
-> last is performance, if you are using the partitions in different ways, 
-> and some would benefit from performance while others (/boot comes to 
-> mind) need to be simple and reliable, and have minimal requirements for 
-> speed. Having partitions on the drive allows you to use different raid 
-> levels across partitions, to best fit what you do with that data.
+> It looks like I could mirror sda and sdb, and partition the resulting
+> md_d0.  Or, I could partition sda and sdb, and create mirrors md0, md1,
+> etc from the partitions on the underlying disks.
 
-Thanks.  In my case I'd just have raid-1 on everything, so don't need
-that granulatiry...  Another drawback in my particular case is that the
-Red Hat / Fedora tools don't seem to grok partitioned md, but I can fix
-that ;)
+> Is there any technical reason to choose one method vs the other?
 
-Is there any merit to my notion about better read balancing across the
-entire disk if it's all one md device?
+In the Linux case, several, because the partitioning/RAID
+operators don't commute. It is in general better to RAID
+partitions than to partition RAIDs because:
 
-Thanks,
--Eric
+* Partitioning is a special operation that historically has only
+  been available for real disks, not any block device. You can
+  partition RAID block devices but the mechanisms are a bit
+  annoying (e.g. they are only recognized after the RAID is
+  assembled and then only in request and the device names are
+  not so nice, ...).
 
-> I don't see any as compelling, there's no one best answer for everyone.
-> 
+* Partitioning a RAID greatly obscures alignment and offset
+  issues. In your case it does not matter because you used
+  RAID1, but in general...
 
+* In the general case, not for RAID1, arrays can be much bigger
+  than a single disk, for example larger than 2TiB, and in that
+  case the traditional MS-DOS style partitions don't work, and
+  another less universally supported partitioning scheme should
+  be used.
+
+In your simple case keep things simple with nice partitions that
+get recognize immediately by the Linux kernel as it boots,
+thanks to RAID1 if set up nicely each partition can be used in
+an emergecy without its mirror, and so on.
+
+> It seems to me that perhaps on a system with several
+> active partitions from the same disk, partitioning a single
+> large raid device might allow better read balancing?
+
+That is nearly irrelevant. Read balancing depends on the
+physical distribution of data on disk (that would be much
+similar) and on the elevators.
+
+It is not clear to me what is the interaction between RAID and
+request queueing and elevators (I am still investigating the
+ridiculous '--seta 65536' situation), but I hope it does not
+matter that much whether the disk queues are fed from one or
+several RAID devices.
