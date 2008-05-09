@@ -1,66 +1,67 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: partitioned mirror vs. mirrors of partitions?
-Date: Fri, 09 May 2008 19:25:30 -0400
-Message-ID: <4824DD6A.80909@tmr.com>
-References: <4823A238.4080205@sandeen.net> <48246B73.3020207@tmr.com> <48246D57.6080406@sandeen.net>
+From: Graham King <linuxraid@tremagi.org.uk>
+Subject: Q. Recovering concatenated array from disk images?
+Date: Sat, 10 May 2008 00:07:09 +0100
+Message-ID: <1210374429.27262.679.camel@oberon.tremagi.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <48246D57.6080406@sandeen.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Eric Sandeen wrote:
-> Bill Davidsen wrote:
->   
->> Eric Sandeen wrote:
->>     
->>> Hi, I hope this isn't a FAQ, I did do a little searching first...
->>>
->>> I'm looking at using a couple of large disks to mirror a system which
->>> currently has a few different filesystems; I'll use partitions on the
->>> disks to contain the different fileystems.
->>>
->>> It looks like I could mirror sda and sdb, and partition the resulting
->>> md_d0.  Or, I could partition sda and sdb, and create mirrors md0, md1,
->>> etc from the partitions on the underlying disks.
->>>
->>> Is there any technical reason to choose one method vs the other?  It
->>> seems to me that perhaps on a system with several active partitions from
->>> the same disk, partitioning a single large raid device might allow
->>> better read balancing?
->>>   
->>>       
->> The reason for going with a partitioned raid is that rebuild after a 
->> failure is easier. The reason for NOT going there at the moment is 
->> discussed in another thread here, in the current kernel the partitions 
->> are not started unless you have an initrd file to make that happen. The 
->> last is performance, if you are using the partitions in different ways, 
->> and some would benefit from performance while others (/boot comes to 
->> mind) need to be simple and reliable, and have minimal requirements for 
->> speed. Having partitions on the drive allows you to use different raid 
->> levels across partitions, to best fit what you do with that data.
->>     
->
-> Thanks.  In my case I'd just have raid-1 on everything, so don't need
-> that granulatiry...  Another drawback in my particular case is that the
-> Red Hat / Fedora tools don't seem to grok partitioned md, but I can fix
-> that ;)
->
-> Is there any merit to my notion about better read balancing across the
-> entire disk if it's all one md device?
->   
+I'm trying to recover data for a friend from a failed external device
+that appears to have used md to concatenate two 500GB drives.
 
-Not that I can see, but that doesn't mean you're wrong, just that I 
-can't think of any reason why the same load on the same drives would be 
-better balanced.
+Having extracted disk images from the failed device, and associated them
+using losetup with /dev/loop0 and /dev/loop1, I'm now at the stage of
+trying to concatenate the images.  As a newcomer to mdadm, I have some
+concerns and would welcome good advice:
 
--- 
-Bill Davidsen <davidsen@tmr.com>
-  "Woe unto the statesman who makes war without a reason that will still
-  be valid when the war is over..." Otto von Bismark 
+1) There appears to be a superblock on only one of the devices, so I
+assume that I'll need to mdadm --build (rather than --assemble).
+However --build comes with a dire warning in the man page...
+Is --build the way to proceed?
+Do I need any special options?
 
+2) The output below refers to /dev/sd{a2,b}.  That was probably correct
+for the device from which the disk images were gathered, but the Fedora
+8 machine on which I'm trying to recover the data already has /dev/sda
+and /dev/sdb.  I don't want to take any risks with the real disks.  How
+can I ensure that mdadm reconstructs the array from /dev/loop0
+and /dev/loop1 ?
+
+Grateful for any light you can shed on this
+-- Graham
+
+
+
+[root@localhost ~]# mdadm --examine /dev/loop[01]
+mdadm: No md superblock detected on /dev/loop0.
+/dev/loop1:
+          Magic : a92b4efc
+        Version : 00.90.00
+           UUID : 163218f3:299b9ccc:3c666c38:60539313
+  Creation Time : Fri Dec 31 19:00:02 1999
+     Raid Level : linear
+   Raid Devices : 2
+  Total Devices : 2
+Preferred Minor : 0
+
+    Update Time : Fri Dec 31 19:00:02 1999
+          State : active
+ Active Devices : 2
+Working Devices : 2
+ Failed Devices : 0
+  Spare Devices : 0
+       Checksum : f6918bbe - correct
+         Events : 0.1
+
+       Rounding : 256K
+
+      Number   Major   Minor   RaidDevice State
+this     1       8       16        1      active sync   /dev/sdb
+
+   0     0       8        2        0      active sync   /dev/sda2
+   1     1       8       16        1      active sync   /dev/sdb
 
