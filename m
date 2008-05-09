@@ -1,82 +1,66 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] md: kill file_path wrapper
-Date: Fri, 9 May 2008 21:12:44 +0200
-Message-ID: <20080509191244.GA8188@lst.de>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: partitioned mirror vs. mirrors of partitions?
+Date: Fri, 09 May 2008 19:25:30 -0400
+Message-ID: <4824DD6A.80909@tmr.com>
+References: <4823A238.4080205@sandeen.net> <48246B73.3020207@tmr.com> <48246D57.6080406@sandeen.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <48246D57.6080406@sandeen.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
+To: Eric Sandeen <sandeen@sandeen.net>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Kill the trivial and rather pointless file_path wrapper around d_path.
+Eric Sandeen wrote:
+> Bill Davidsen wrote:
+>   
+>> Eric Sandeen wrote:
+>>     
+>>> Hi, I hope this isn't a FAQ, I did do a little searching first...
+>>>
+>>> I'm looking at using a couple of large disks to mirror a system which
+>>> currently has a few different filesystems; I'll use partitions on the
+>>> disks to contain the different fileystems.
+>>>
+>>> It looks like I could mirror sda and sdb, and partition the resulting
+>>> md_d0.  Or, I could partition sda and sdb, and create mirrors md0, md1,
+>>> etc from the partitions on the underlying disks.
+>>>
+>>> Is there any technical reason to choose one method vs the other?  It
+>>> seems to me that perhaps on a system with several active partitions from
+>>> the same disk, partitioning a single large raid device might allow
+>>> better read balancing?
+>>>   
+>>>       
+>> The reason for going with a partitioned raid is that rebuild after a 
+>> failure is easier. The reason for NOT going there at the moment is 
+>> discussed in another thread here, in the current kernel the partitions 
+>> are not started unless you have an initrd file to make that happen. The 
+>> last is performance, if you are using the partitions in different ways, 
+>> and some would benefit from performance while others (/boot comes to 
+>> mind) need to be simple and reliable, and have minimal requirements for 
+>> speed. Having partitions on the drive allows you to use different raid 
+>> levels across partitions, to best fit what you do with that data.
+>>     
+>
+> Thanks.  In my case I'd just have raid-1 on everything, so don't need
+> that granulatiry...  Another drawback in my particular case is that the
+> Red Hat / Fedora tools don't seem to grok partitioned md, but I can fix
+> that ;)
+>
+> Is there any merit to my notion about better read balancing across the
+> entire disk if it's all one md device?
+>   
+
+Not that I can see, but that doesn't mean you're wrong, just that I 
+can't think of any reason why the same load on the same drives would be 
+better balanced.
+
+-- 
+Bill Davidsen <davidsen@tmr.com>
+  "Woe unto the statesman who makes war without a reason that will still
+  be valid when the war is over..." Otto von Bismark 
 
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-
-Index: linux-2.6/drivers/md/bitmap.c
-===================================================================
---- linux-2.6.orig/drivers/md/bitmap.c	2008-03-12 09:09:23.000000000 +0100
-+++ linux-2.6/drivers/md/bitmap.c	2008-05-05 09:29:27.000000000 +0200
-@@ -203,17 +203,6 @@ static void bitmap_checkfree(struct bitm
-  * bitmap file handling - read and write the bitmap file and its superblock
-  */
- 
--/* copy the pathname of a file to a buffer */
--char *file_path(struct file *file, char *buf, int count)
--{
--	if (!buf)
--		return NULL;
--
--	buf = d_path(&file->f_path, buf, count);
--
--	return IS_ERR(buf) ? NULL : buf;
--}
--
- /*
-  * basic page I/O operations
-  */
-@@ -721,11 +710,12 @@ static void bitmap_file_kick(struct bitm
- 		if (bitmap->file) {
- 			path = kmalloc(PAGE_SIZE, GFP_KERNEL);
- 			if (path)
--				ptr = file_path(bitmap->file, path, PAGE_SIZE);
-+				ptr = d_path(&bitmap->file->f_path, path, PAGE_SIZE);
-+
- 
- 			printk(KERN_ALERT
- 			      "%s: kicking failed bitmap file %s from array!\n",
--			      bmname(bitmap), ptr ? ptr : "");
-+			      bmname(bitmap), IS_ERR(ptr) ? "" : ptr);
- 
- 			kfree(path);
- 		} else
-Index: linux-2.6/drivers/md/md.c
-===================================================================
---- linux-2.6.orig/drivers/md/md.c	2008-04-30 22:26:54.000000000 +0200
-+++ linux-2.6/drivers/md/md.c	2008-05-05 09:29:27.000000000 +0200
-@@ -3987,8 +3987,8 @@ static int get_bitmap_file(mddev_t * mdd
- 	if (!buf)
- 		goto out;
- 
--	ptr = file_path(mddev->bitmap->file, buf, sizeof(file->pathname));
--	if (!ptr)
-+	ptr = d_path(&mddev->bitmap->file->f_path, buf, sizeof(file->pathname));
-+	if (IS_ERR(ptr))
- 		goto out;
- 
- 	strcpy(file->pathname, ptr);
-Index: linux-2.6/include/linux/raid/bitmap.h
-===================================================================
---- linux-2.6.orig/include/linux/raid/bitmap.h	2008-03-06 09:21:32.000000000 +0100
-+++ linux-2.6/include/linux/raid/bitmap.h	2008-05-05 09:29:27.000000000 +0200
-@@ -262,7 +262,6 @@ int  bitmap_create(mddev_t *mddev);
- void bitmap_flush(mddev_t *mddev);
- void bitmap_destroy(mddev_t *mddev);
- 
--char *file_path(struct file *file, char *buf, int count);
- void bitmap_print_sb(struct bitmap *bitmap);
- void bitmap_update_sb(struct bitmap *bitmap);
- 
