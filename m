@@ -1,74 +1,42 @@
-From: pg_lxra@lxra.for.sabi.co.UK (Peter Grandi)
-Subject: Re: Multiple siI SATA cards and data corruption
-Date: Sun, 11 May 2008 09:19:04 +0100
-Message-ID: <18470.44024.458244.536905@tree.ty.sabi.co.uk>
-References: <1f0f1a960805061741t16bb165fp342ceb8f97f4347d@mail.gmail.com>
-	<e9c3a7c20805062212x73a837d7l37905042d835e0a7@mail.gmail.com>
-	<1f0f1a960805070234o2f9dfe07j42a1bd005b607791@mail.gmail.com>
-	<1af518580805070648r6060ca9ase0d03e9a17ffe0c7@mail.gmail.com>
-	<1f0f1a960805070720y4908b17dqe098d969f03ec37d@mail.gmail.com>
-	<4821C052.6090105@harddata.com>
-	<1f0f1a960805070752k6ed9c4dfj8ff2382d4557b013@mail.gmail.com>
-	<29a863790805080823m296004e7p4f047b608c4d3eb6@mail.gmail.com>
-	<1f0f1a960805080836o655bc46i484c416bf3bb503@mail.gmail.com>
-	<4823826A.90303@panix.com>
-	<1f0f1a960805101811i77905c79wb66c0281e4f5fbb2@mail.gmail.com>
+From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
+Subject: Re: linux raid faq
+Date: Sun, 11 May 2008 12:11:55 +0200
+Message-ID: <20080511101155.GA25826@rap.rap.dk>
+References: <20080129191755.GA27121@rap.rap.dk> <20080129210540.705fa47b@szpak>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1f0f1a960805101811i77905c79wb66c0281e4f5fbb2@mail.gmail.com>
+Content-Disposition: inline
+In-Reply-To: <20080129210540.705fa47b@szpak>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>
+To: Janek Kozicki <janek_listy@wp.pl>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-[ ... flakey hard drive subsystem ... ]
+On Tue, Jan 29, 2008 at 09:05:40PM +0100, Janek Kozicki wrote:
+> Keld J=F8rn Simonsen said:     (by the date of Tue, 29 Jan 2008 20:17=
+:55 +0100)
+>=20
+> > Hmm, I read the Linux raid faq on
+> > http://www.faqs.org/contrib/linux-raid/x37.html
+>=20
+> I've found some information in=20
+>=20
+> /usr/share/doc/mdadm/FAQ.gz
+>=20
+> I'm wondering why this file is not advertised anywhere
+> (eg. in 'man mdadm'). Does it exist only in debian packages, or what?
+> With 'man 4 md' I've found a little sparse info about raid10. But
+> still I don't get it.
 
-> [ ... ] I'm not too sure if the supposed bug I found with
-> multiple Silicon Image controller cards actually exists or not
+I have added a FAQ section to our howto wiki, and added a reference to
+the above Debian FAQ, along to a few comments on it.
 
-Well, a significant number of host adapters that I have used had
-significant bugs or misdesigns. Not just low end ones.
-
-For example a chip similar to SiI, the IT8212 would have big
-problems with a Trust (a brand name that in my experience is an
-antonym) card based on it, but a different card with the same
-chipset seems fine; but transfers are rather slower, which may
-means that the IT8212 has some problems at high frequencies and
-Trust did not throttle the chip. As to high end ones, bugs and
-problems are rather common, because they are sold on features,
-not reliability (a common story).
-
-Anyhow, given the state of Chinese manufacturing, even different
-batches of exactly the same product even if well designed can
-have very different quality, depending on which poor quality
-component has been substituted.
-
-  Explanation: even if company buys good quality components, the
-  factory or stock room manager may pilfer them and replace them
-  with poor quality ones and sell the good quality ones at a
-  huge profit. Never mind this being done intentionally to cut
-  costs.
-
-[ ... ]
-
-> The moral of the story here is: If you're going to be buying
-> lots of disks, do *not* skimp on cabling and controllers.
-
-Only in part; the moral of the story is that system integration
-is a very difficult and risky business and most people do not
-have the experience and resources to do it.
-
-Even people with a lot of experience and resources get surprises:
-
-https://indico.desy.de/contributionDisplay.py?contribId=65&sessionId=42&confId=257
-http://indico.fnal.gov/contributionDisplay.py?contribId=44&amp;sessionId=15&amp;confId=805
-[pages 11 and following]
-
-> Thanks all for the helpful suggestions and "me too!" entries -
-> my 6 disk raid5 is about a half hour away from completing
-> resync and I've had no nasties in dmesg. Win! :)
-
-Ah, one of those RAID5s. Consider reading http://WWW.BAARF.com/
-as to corruption. "if you are going to buy lots of disks, do
-*not* skimp on" the RAID level.
+Best regards
+keld
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
