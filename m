@@ -1,63 +1,101 @@
-From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
-Subject: Re: linux raid faq
-Date: Sun, 11 May 2008 19:03:48 +0200
-Message-ID: <20080511170348.GA31883@rap.rap.dk>
-References: <20080129191755.GA27121@rap.rap.dk> <20080129210540.705fa47b@szpak> <20080511101155.GA25826@rap.rap.dk> <20080511180257.0cf72871@absurd>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: howto and faq
+Date: Sun, 11 May 2008 13:22:23 -0400
+Message-ID: <48272B4F.6090001@tmr.com>
+References: <20080207164249.GA7116@rap.rap.dk> <47AECC59.1020808@dgreaves.com> <20080210111404.GA4823@rap.rap.dk> <47AF4094.3040702@dgreaves.com> <20080511103243.GA1128@rap.rap.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20080511180257.0cf72871@absurd>
+In-Reply-To: <20080511103243.GA1128@rap.rap.dk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Janek Kozicki <janek_listy@wp.pl>
-Cc: linux-raid@vger.kernel.org
+To: =?ISO-8859-1?Q?Keld_J=F8rn_Simonsen?= <keld@dkuug.dk>
+Cc: David Greaves <david@dgreaves.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, May 11, 2008 at 06:02:57PM +0200, Janek Kozicki wrote:
-> Keld J=F8rn Simonsen said:     (by the date of Sun, 11 May 2008 12:11=
-:55 +0200)
->=20
-> > On Tue, Jan 29, 2008 at 09:05:40PM +0100, Janek Kozicki wrote:
-> > > Keld J=F8rn Simonsen said:     (by the date of Tue, 29 Jan 2008 2=
-0:17:55 +0100)
-> > >=20
-> > > > Hmm, I read the Linux raid faq on
-> > > > http://www.faqs.org/contrib/linux-raid/x37.html
-> > >=20
-> > > I've found some information in=20
-> > >=20
-> > > /usr/share/doc/mdadm/FAQ.gz
-> > >=20
-> > > I'm wondering why this file is not advertised anywhere
-> > > (eg. in 'man mdadm'). Does it exist only in debian packages, or w=
-hat?
-> > > With 'man 4 md' I've found a little sparse info about raid10. But
-> > > still I don't get it.
-> >=20
-> > I have added a FAQ section to our howto wiki, and added a reference=
- to
-> > the above Debian FAQ, along to a few comments on it.
->=20
-> great, thanks, for reference it's here:
->=20
->   http://linux-raid.osdl.org/index.php/Mdadm-faq
->=20
-> I'm wondering, that maybe we could copy/paste that FAQ into that
-> page? After all that website is the ultimate source of information
-> about linux-raid. Whatever is updated in that FAQ would hopefully
-> find its way back into the original FAQ...?
+Keld J=F8rn Simonsen wrote:
+> On Sun, Feb 10, 2008 at 06:21:08PM +0000, David Greaves wrote:
+>  =20
+>> Keld J=F8rn Simonsen wrote:
+>>    =20
+>>> I would then like that to be reflected in the main page.
+>>> I would rather that this be called "Howto and FAQ - Linux raid"
+>>> than "Main Page - Linux Raid". Is that possible?
+>>>      =20
+>> Just like C has a main() wiki's have a Main Page :)
+>>
+>> I guess it could be changed but I think it involves editing the Medi=
+awiki config
+>> - maybe next time I'm in there...
+>>    =20
+>
+> I would appreciate if this change be made soon...
+>
+>  =20
+>>> And then, how do we structure the pages? I think we need a new sect=
+ion
+>>> for the FAQ.
+>>>      =20
+>> By all means create an FAQ page and link to answers or other relevan=
+t sections
+>> of the wiki. Bear in mind that this is a reference work and whilst i=
+t may
+>> contain tutorials the idea is that it contains (reasonably) authorit=
+ative
+>> information about the linux raid subsystem (linking to the source, k=
+ernel docs
+>> or man pages if that's more appropriate).
+>>    =20
+>
+> I have now created a FAQ section on the wiki.
+>
+>  =20
+>>> I have had a look at other search engines, yahoo and msn.
+>>> Our pages do show up within the 10 first hits for "linux raid".
+>>> So that is not that bad. Still, Google has the
+>>> http://linux-raid.osdl.org/ page as number 127. That is very bad.
+>>> Maybe something about it being referenced from wikipedia?
+>>>      =20
+>
+> We are now number 6 on google for "linux raid". Most of the other top=
+ pages
+> are quite old info, say 4 to 8 years old, and not mentioning mdadm no=
+r
+> raid10. I would like to do some work to get rid of the outdated info,=
+ as
+> it is quite bad guidance to users. I have contacted a number of the
+> authors for the other top pages, but to no avail.
+>
+> I have then looked at who is referencing the top pages, via the Googl=
+e
+> "link: URL" feature. For our own pages this is a sad story. Almost
+> nobody but ourselves are referencing it. That is, the links are mostl=
+y
+> our own pages referencing our own pages, or mail archive pages of
+> linux-raid ML referencing the wiki.=20
+>
+> I would really like to have this improved. That is, if people on this=
+ ML
+> could add links to http://linux-raid.osdl.org/ eg from their home pag=
+es
+> - "I am participating in the Linux kernel RAID mailing list with wiki
+> pages at http://linux-raid.osdl.org/" and/or include a reference to t=
+he
+> URL when discussing RAID issues on other fora.=20
+>  =20
 
-That was my plan at first, but then I discovered (from reading the firs=
-t
-couple of lines...) that there already was a web page for it.
+Just a public thanks and "please do" for this. I will update my=20
+appropriate pages with this on the next update.
 
-I hesitate copying the page as it is already maintained.
-But my idea was also the harvest the best info out of the outdated FAQs
-and then maintain it on our wiki.
+--=20
+Bill Davidsen <davidsen@tmr.com>
+  "Woe unto the statesman who makes war without a reason that will stil=
+l
+  be valid when the war is over..." Otto von Bismark=20
 
-best regards
-keld
+
+
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
