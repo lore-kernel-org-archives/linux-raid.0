@@ -1,88 +1,28 @@
-From: David Greaves <david@dgreaves.com>
-Subject: Re: howto and faq
-Date: Mon, 12 May 2008 09:46:01 +0100
-Message-ID: <482803C9.6080202@dgreaves.com>
-References: <20080207164249.GA7116@rap.rap.dk>	<47AECC59.1020808@dgreaves.com>	<20080210111404.GA4823@rap.rap.dk>	<47AF4094.3040702@dgreaves.com>	<20080511103243.GA1128@rap.rap.dk>	<48272B4F.6090001@tmr.com>	<48275486.1000607@dgreaves.com> <18471.34255.88287.478361@notabene.brown>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: "me at tmr.com" <tmrbill@tmr.com>
+Subject: (unknown)
+Date: Mon, 12 May 2008 07:29:30 -0400
+Message-ID: <200805121129.m4CBTU5h031396@firewall2.tmr.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18471.34255.88287.478361@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Bill Davidsen <davidsen@tmr.com>, =?ISO-8859-1?Q?Keld_J=F8rn_Simo?= =?ISO-8859-1?Q?nsen?= <keld@dkuug.dk>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil Brown wrote:
-> On Sunday May 11, david@dgreaves.com wrote:
->> Err, Neil....
->=20
-> What exactly did you see when you checking in git?
+David Lethe wrote:
+> there are still other factors to consider.  HW raid can usually be configured to monitor and repair bad blocks and data consistency in background with no cpu impact (but allow for bus overhead, depending on architecture.  When things go bad and RAID is in stress, then there is a world of difference between the methodologies. People rarely consider that ... Until they have corruption.  HW RAID (with  battery backup) will rarely corrupt on power failure or os crash, but is not immune.  SW RAID, however, exposes you much more.  Read the threads relating to bugs and data losses on md rebuilds after failures. The md code just can't address certain failure scenarios that HW RAID protects against .. But it still does a good job.  HW RAID is not immune by any means, some controllers have higher 
+ risk of loss then others.  Yes the OP asked for performance diffs, but performance under stress is fair game, as is data integrity.
+>
+> Think about it ... 100 percent of disks fail, eventually, so data integrity and recovery must be considered.
+>
+> Neither SW or HW RAID is best or covers all failure scenarios, but please don't make a deployment decision based on performance when everything is working fine.  Testing RAID is one of the things I do, so I speak from authority here. Too many people have blind faith that any kind of parity-protected RAID protects against hardware faults.  This is not the real-world behavior.  
+>   
 
-Oops, my mistake - my nroff reading skills are clearly lacking :)
+One other thought, there is *no such thing* as "hardware raid," it's 
+*all* software raid, your choice is to have it in the kernel, or in an 
+eprom on the controller, or in a big box near your computer, so all you 
+really have is a chance to play "who do you trust?"
 
-In my head I was planning on replacing the unthought.net link and when =
-I saw it
- was still there I didn't look further to see the extra URL - thanks fo=
-r that :)
-
-I wonder if it's time to deprecate the http://unthought.net/Software-RA=
-ID.HOWTO/
-reference though? Jakob agreed to the inclusion of all the material in =
-the wiki
-so we're not losing anything (and we are on a webwide URL cleaning exer=
-cise at
-the moment.)
-
-So, you may feel that:
-
-=46or further information on mdadm usage, MD and the various levels of
-RAID, see:
-  http://linux-raid.osdl.org/
-(based upon Jakob =D8stergaard's Software-RAID.HOWTO)
-
-is now appropriate... if which case, patch below.
-
-David
-
----
-
-Author: David Greaves <david@dgreaves.com>
-Date:   Mon May 12 09:40:39 2008 +0100
-
-    Remove outdated HOWTO link and credit Jakob's contribution.
-
-    Signed-off-by: David Greaves <david@dgreaves.com>
-
-diff --git a/mdadm.8 b/mdadm.8
-index d3cecb8..cd3028d 100644
---- a/mdadm.8
-+++ b/mdadm.8
-@@ -2105,17 +2105,15 @@ package, and does not use the
- configuration file at all.
-
- .SH SEE ALSO
--For further information on MD and the various levels of
-+For further information on mdadm usage, MD and the various levels of
- RAID, see:
-
- .IP
--.UR  http://unthought.net/Software-RAID.HOWTO/
--http://unthought.net/Software\-RAID.HOWTO/
--.UE
--.IP
- .UR http://linux-raid.osdl.org/
- http://linux\-raid.osdl.org/
- .UE
-+.PP
-+(based upon Jakob \(/Ostergaard's Software\-RAID.HOWTO)
- .\".PP
- .\"for new releases of the RAID driver check out:
- .\"
+-- 
+Bill Davidsen <davidsen@tmr.com>
+  "Woe unto the statesman who makes war without a reason that will still
+  be valid when the war is over..." Otto von Bismark 
 
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
