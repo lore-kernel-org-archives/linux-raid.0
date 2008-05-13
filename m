@@ -1,163 +1,77 @@
-From: "Pascal Charest" <pascal.charest@gmail.com>
-Subject: Re: Help recovering from failed disk on RAID 6
-Date: Tue, 13 May 2008 16:11:22 -0400
-Message-ID: <ba4e02df0805131311q69a52067s996624a4d17fa85a@mail.gmail.com>
-References: <e59c37290804271916t13c7cf4rb45e1c70f6ca9bfd@mail.gmail.com>
-	 <02b601c8b513$e3ee7200$6fd2a8c0@meanmachine>
-	 <A20315AE59B5C34585629E258D76A97C61E61E@34093-C3-EVS3.exchange.rackspace.com>
+From: "Fairbanks, David" <David.Fairbanks@stratus.com>
+Subject: Linux Software RAID /sysfs repair issue
+Date: Tue, 13 May 2008 15:42:14 -0400
+Message-ID: <EEEB1FA7BB798343BD171137F3E7FA53069EF4@EXNA.corp.stratus.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <A20315AE59B5C34585629E258D76A97C61E61E@34093-C3-EVS3.exchange.rackspace.com>
-Content-Disposition: inline
+Content-class: urn:content-classes:message
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: mingo@redhat.com, neilb@cse.unsw.edu.au, linux-raid@vger.kernel.org
+Cc: "Fairbanks, David" <David.Fairbanks@stratus.com>
 List-Id: linux-raid.ids
 
-Hum. Why not simply use the "fail" option to "fail" and thus put
-offline the problematic drive ?
+Hello Linux SW RAID maintainers;
 
-mdadm --fail /your/raid/device /the/drive/you/want/to/fail
+I am a software engineer at Stratus Technologies in Maynard, MA.
+I am running into an issue using the /sysfs "repair" functionality.
+kernel version: 2.6.18-87.el5 (RHEL5, update 2)
 
-You can "remove" the drive afterward with the "remove" command ;-). I
-don't think you should do any "physical" operation like disconnecting
-power supply of a live disk - even if it is a dodgy disk. "This
-eliminates possibility that the bad disk will lock up the system" but
-"create the possibility of a short circuit and having no more system
-at all".
+I have a 2 member RAID level 1 set consisting of 2 SAS drives on an
+Adaptec aic94xx HBA. I built the raid set using the following command:
 
-Pascal Charest
+mdadm -C /dev/md7 -size=5000000 -b internal -n2 -l1 /dev/sdb /dev/sde
 
+I inject a medium error onto one of the disks using sg_write_long:
 
--- 
-Pascal Charest, Free software consultant {GNU/Linux}
-http://blog.pacharest.com
+sg_write_long -lba=2000 -xfer_len=580 /dev/sdb
 
-On Tue, May 13, 2008 at 12:28 PM, David Lethe <david@santools.com> wrote:
-> I would also add to Steve's suggestion that you be prepared to
->  immediately disconnect the power to the dodgy disk once the rebuild
->  starts.  That eliminates possibility that the bad disk will lock up the
->  system.
->
->  David
->
->
->  -----Original Message-----
->  From: linux-raid-owner@vger.kernel.org
->
->
-> [mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Steve Fairbairn
->  Sent: Tuesday, May 13, 2008 11:11 AM
->  To: 'Joshua Johnson'; linux-raid@vger.kernel.org
->  Subject: RE: Help recovering from failed disk on RAID 6
->
->  Hi,
->
->  It appears noone else has answered, so I'll try.  First I'd attempt to
->  start the array with the --force parameter, which I believe will start
->  the dirty array without the failed drive in it.
->
->  The other option to try depends on how long you have before the OS
->  freezes, but is to start the array with the dodgy drive in it, but
->  immediately tell mdadm to fail the dodgy disk.  This should have mdadm
->  start a resync with the spare drive.
->
->  Hope this helps,
->
->  Steve.
->
->  > -----Original Message-----
->  > From: linux-raid-owner@vger.kernel.org
->  > [mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Joshua Johnson
->  > Sent: 28 April 2008 03:17
->  > To: linux-raid@vger.kernel.org
->  > Subject: Help recovering from failed disk on RAID 6
->  >
->  >
->  > I am running a linux server with an 8 disk IDE/SATA RAID 6
->  > array.  One of the disks is having a problem which caused the
->  > machine to freeze. If I boot the machine without the problem
->  > disk the array fails to start.  If I boot with the problem
->  > disk the array starts correctly and begins syncing, but the
->  > machine will soon freeze up again when the disk drops out.
->  > My number one question is how to get the array back online.
->  > It has a spare disk, but since the OS is freezing rather than
->  > failing the disk that is having the problem, it never
->  > switched to the new disk.  When I try to start the array
->  > without the problem disk, I
->  > get:
->  >
->  > #mdadm --manage --run /dev/md0
->  > raid5: device hda2 operational as raid disk 0
->  > raid5: device sdb2 operational as raid disk 7
->  > raid5: device sda1 operational as raid disk 6
->  > raid5: device hdi2 operational as raid disk 5
->  > raid5: device hdg2 operational as raid disk 3
->  > raid5: device hde2 operational as raid disk 2
->  > raid5: device hdk2 operational as raid disk 1
->  > raid5: cannot start dirty degraded array for md0
->  > RAID5 conf printout:
->  >  --- rd:8 wd:7
->  >  disk 0, o:1, dev:hda2
->  >  disk 1, o:1, dev:hdk2
->  >  disk 2, o:1, dev:hde2
->  >  disk 3, o:1, dev:hdg2
->  >  disk 5, o:1, dev:hdi2
->  >  disk 6, o:1, dev:sda1
->  >  disk 7, o:1, dev:sdb2
->  > raid5: failed to run raid set md0
->  > md: pers->run() failed ...
->  > mdadm: failed to run array /dev/md0: Input/output error
->  >
->  > /proc/mdstat contains:
->  > Personalities : [raid1] [raid6] [raid5] [raid4]
->  > md1 : active raid1 hdg1[1] hda1[0]
->  >       4200896 blocks [2/2] [UU]
->  >
->  > md0 : inactive hda2[0] sdc2[8](S) sdb2[7] sda1[6] hdi2[5]
->  > hdg2[3] hde2[2] hdk2[1]
->  >       1529265920 blocks
->  >
->  >
->  > So how do I get this array to run?  I can't start it without
->  > the problem disk and I can't sync it with the problem disk.
->  > I am running RAID 6 to be able to recover from multiple disk
->  > failures so it is a little vexing that a single disk going
->  > offline renders my array unrunnable.  Any help with this
->  > issue is greatly appreciated.
->  > --
->  > To unsubscribe from this list: send the line "unsubscribe
->  > linux-raid" in the body of a message to
->  > majordomo@vger.kernel.org More majordomo info at
->  http://vger.kernel.org/majordomo-info.html
->
->  No virus found in this incoming message.
->  Checked by AVG.
->  Version: 7.5.524 / Virus Database: 269.23.9/1419 - Release Date:
->  07/05/2008 07:46
->
->
->  No virus found in this outgoing message.
->  Checked by AVG.
->  Version: 7.5.524 / Virus Database: 269.23.16/1429 - Release Date:
->  12/05/2008 18:14
->
->
->  --
->  To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->  the body of a message to majordomo@vger.kernel.org
->  More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->
->  --
->  To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->  the body of a message to majordomo@vger.kernel.org
->  More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+I then execute:
 
+echo repair > /sys/block/md7/md/sync_action
 
+I have done some testing and I have found that if the lba is on a 4K
+byte aligned boundary (e.g. -lba=2000), the repair succeeds as expected.
+However, if the lba is "not" on a 4K byte aligned boundary (e.g.
+-lba=2001), the medium error is detected, but the disk gets removed from
+the raid set. The medium error is not repaired. The following messages
+appear in /var/log/messages:
 
--- 
-Pascal Charest, Free software consultant {GNU/Linux}
-http://blog.pacharest.com
+May 12 13:46:24 leeloo kernel: md: syncing RAID array md7
+May 12 13:46:24 leeloo kernel: md: minimum _guaranteed_ reconstruction
+speed: 1000 KB/sec/disc.
+May 12 13:46:24 leeloo kernel: md: using maximum available idle IO
+bandwidth (but not more than 200000 KB/sec) for reconstruction.
+May 12 13:46:24 leeloo kernel: md: using 128k window, over a total of
+5000000 blocks.
+May 12 13:46:33 leeloo kernel: sd 0:0:1:0: SCSI error: return code =
+x08000002
+May 12 13:46:33 leeloo kernel: sdh: Current: sense key: Medium Error
+May 12 13:46:33 leeloo kernel:     Add. Sense: Unrecovered read error
+May 12 13:46:33 leeloo kernel:
+May 12 13:46:33 leeloo kernel: Info fld=0x7d1
+May 12 13:46:33 leeloo kernel: end_request: I/O error, dev sdh, sector
+2001
+May 12 13:46:39 leeloo kernel: sd 0:0:1:0: SCSI error: return code =
+0x00050000
+May 12 13:46:39 leeloo kernel: end_request: I/O error, dev sdh, sector
+1920
+May 12 13:46:39 leeloo kernel: raid1: Disk failure on sdh, disabling
+device.
+May 12 13:46:39 leeloo kernel:  Operation continuing on 1 devices
+May 12 13:46:39 leeloo kernel: md: md7: sync done
+
+I originally thought this was a low level driver issue. However, this is
+also reproducible on parallel scsi and Fibre Channel configurations. I
+have also tried this on the latest kernel with the same results. I can
+provide any other info necessary.
+
+Because this appears to be a 4K byte alignment (cache block size) issue,
+I am not sure if this is an issue in the block layer (?).
+
+Thanks;
+
+Dave
+
