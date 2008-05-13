@@ -1,17 +1,32 @@
-From: "Steve Fairbairn" <steve@fairbairn-family.com>
+From: "David Lethe" <david@santools.com>
 Subject: RE: Help recovering from failed disk on RAID 6
-Date: Tue, 13 May 2008 17:10:41 +0100
-Message-ID: <02b601c8b513$e3ee7200$6fd2a8c0@meanmachine>
-References: <e59c37290804271916t13c7cf4rb45e1c70f6ca9bfd@mail.gmail.com>
+Date: Tue, 13 May 2008 11:28:32 -0500
+Message-ID: <A20315AE59B5C34585629E258D76A97C61E61E@34093-C3-EVS3.exchange.rackspace.com>
+References: <e59c37290804271916t13c7cf4rb45e1c70f6ca9bfd@mail.gmail.com> <02b601c8b513$e3ee7200$6fd2a8c0@meanmachine>
 Mime-Version: 1.0
 Content-Type: text/plain;
-	charset="windows-1250"
-Content-Transfer-Encoding: 7bit
+	charset="US-ASCII"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <e59c37290804271916t13c7cf4rb45e1c70f6ca9bfd@mail.gmail.com>
+Content-class: urn:content-classes:message
+In-Reply-To: <02b601c8b513$e3ee7200$6fd2a8c0@meanmachine>
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Joshua Johnson' <enigma2175@gmail.com>, linux-raid@vger.kernel.org
+To: Steve Fairbairn <steve@fairbairn-family.com>, Joshua Johnson <enigma2175@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+I would also add to Steve's suggestion that you be prepared to
+immediately disconnect the power to the dodgy disk once the rebuild
+starts.  That eliminates possibility that the bad disk will lock up the
+system.
+
+David
+
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Steve Fairbairn
+Sent: Tuesday, May 13, 2008 11:11 AM
+To: 'Joshua Johnson'; linux-raid@vger.kernel.org
+Subject: RE: Help recovering from failed disk on RAID 6
 
 Hi,
 
@@ -104,4 +119,10 @@ Checked by AVG.
 Version: 7.5.524 / Virus Database: 269.23.16/1429 - Release Date:
 12/05/2008 18:14
  
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
 
