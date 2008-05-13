@@ -1,34 +1,107 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: WARNING in 2.6.25-07422-gb66e1f1
-Date: Tue, 13 May 2008 11:08:51 +1000
-Message-ID: <18472.59939.115258.334458@notabene.brown>
-References: <200805031151.44287.prakash@punnoor.de>
-	<18462.46639.578272.994939@notabene.brown>
-	<20080505190159.GA329@kernel.dk>
-	<200805082039.01316.rjw@sisk.pl>
-	<1210272379.9697.3.camel@dwillia2-linux.ch.intel.com>
-	<1210288690.9697.14.camel@dwillia2-linux.ch.intel.com>
-	<18467.46015.146700.695469@notabene.brown>
-	<18467.58198.777484.773976@notabene.brown>
-	<1210614402.2640.10.camel@dwillia2-linux.ch.intel.com>
+From: "Steve Fairbairn" <steve@fairbairn-family.com>
+Subject: RE: Help recovering from failed disk on RAID 6
+Date: Tue, 13 May 2008 17:10:41 +0100
+Message-ID: <02b601c8b513$e3ee7200$6fd2a8c0@meanmachine>
+References: <e59c37290804271916t13c7cf4rb45e1c70f6ca9bfd@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="windows-1250"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Dan Williams on Monday May 12
+In-Reply-To: <e59c37290804271916t13c7cf4rb45e1c70f6ca9bfd@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Jens Axboe <jens.axboe@oracle.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Jacek Luczak <difrost.kernel@gmail.com>, Prakash Punnoor <prakash@punnoor.de>, Linux Kernel list <linux-kernel@vger.kernel.org>, linux-raid@vger.kernel.org
+To: 'Joshua Johnson' <enigma2175@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Monday May 12, dan.j.williams@intel.com wrote:
+Hi,
+
+It appears noone else has answered, so I'll try.  First I'd attempt to
+start the array with the --force parameter, which I believe will start
+the dirty array without the failed drive in it.
+
+The other option to try depends on how long you have before the OS
+freezes, but is to start the array with the dodgy drive in it, but
+immediately tell mdadm to fail the dodgy disk.  This should have mdadm
+start a resync with the spare drive.
+
+Hope this helps,
+
+Steve.
+
+> -----Original Message-----
+> From: linux-raid-owner@vger.kernel.org 
+> [mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Joshua Johnson
+> Sent: 28 April 2008 03:17
+> To: linux-raid@vger.kernel.org
+> Subject: Help recovering from failed disk on RAID 6
 > 
-> Yes, this is simpler than what I had... spotted some fixups.
 > 
+> I am running a linux server with an 8 disk IDE/SATA RAID 6 
+> array.  One of the disks is having a problem which caused the 
+> machine to freeze. If I boot the machine without the problem 
+> disk the array fails to start.  If I boot with the problem 
+> disk the array starts correctly and begins syncing, but the 
+> machine will soon freeze up again when the disk drops out.  
+> My number one question is how to get the array back online.  
+> It has a spare disk, but since the OS is freezing rather than 
+> failing the disk that is having the problem, it never 
+> switched to the new disk.  When I try to start the array 
+> without the problem disk, I
+> get:
+> 
+> #mdadm --manage --run /dev/md0
+> raid5: device hda2 operational as raid disk 0
+> raid5: device sdb2 operational as raid disk 7
+> raid5: device sda1 operational as raid disk 6
+> raid5: device hdi2 operational as raid disk 5
+> raid5: device hdg2 operational as raid disk 3
+> raid5: device hde2 operational as raid disk 2
+> raid5: device hdk2 operational as raid disk 1
+> raid5: cannot start dirty degraded array for md0
+> RAID5 conf printout:
+>  --- rd:8 wd:7
+>  disk 0, o:1, dev:hda2
+>  disk 1, o:1, dev:hdk2
+>  disk 2, o:1, dev:hde2
+>  disk 3, o:1, dev:hdg2
+>  disk 5, o:1, dev:hdi2
+>  disk 6, o:1, dev:sda1
+>  disk 7, o:1, dev:sdb2
+> raid5: failed to run raid set md0
+> md: pers->run() failed ...
+> mdadm: failed to run array /dev/md0: Input/output error
+> 
+> /proc/mdstat contains:
+> Personalities : [raid1] [raid6] [raid5] [raid4]
+> md1 : active raid1 hdg1[1] hda1[0]
+>       4200896 blocks [2/2] [UU]
+> 
+> md0 : inactive hda2[0] sdc2[8](S) sdb2[7] sda1[6] hdi2[5] 
+> hdg2[3] hde2[2] hdk2[1]
+>       1529265920 blocks
+> 
+> 
+> So how do I get this array to run?  I can't start it without 
+> the problem disk and I can't sync it with the problem disk.  
+> I am running RAID 6 to be able to recover from multiple disk 
+> failures so it is a little vexing that a single disk going 
+> offline renders my array unrunnable.  Any help with this 
+> issue is greatly appreciated.
+> --
+> To unsubscribe from this list: send the line "unsubscribe 
+> linux-raid" in the body of a message to 
+> majordomo@vger.kernel.org More majordomo info at  
+http://vger.kernel.org/majordomo-info.html
 
-Ahh, you noticed that I hadn't actually compiled it. :-)
-Thanks.
+No virus found in this incoming message.
+Checked by AVG. 
+Version: 7.5.524 / Virus Database: 269.23.9/1419 - Release Date:
+07/05/2008 07:46
+ 
 
-I've set it off to Linus.
+No virus found in this outgoing message.
+Checked by AVG. 
+Version: 7.5.524 / Virus Database: 269.23.16/1429 - Release Date:
+12/05/2008 18:14
+ 
 
-NeilBrown
