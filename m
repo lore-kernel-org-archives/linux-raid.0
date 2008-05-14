@@ -1,77 +1,58 @@
-From: "Fairbanks, David" <David.Fairbanks@stratus.com>
-Subject: Linux Software RAID /sysfs repair issue
-Date: Tue, 13 May 2008 15:42:14 -0400
-Message-ID: <EEEB1FA7BB798343BD171137F3E7FA53069EF4@EXNA.corp.stratus.com>
+From: "Janos Haar" <djani22@netcenter.hu>
+Subject: questions about softraid limitations
+Date: Wed, 14 May 2008 02:34:19 +0200
+Message-ID: <002801c8b55a$60e4a360$0404a8c0@dcccs>
 Mime-Version: 1.0
 Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+	format=flowed;
+	charset="iso-8859-2";
+	reply-type=original
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
 Sender: linux-raid-owner@vger.kernel.org
-To: mingo@redhat.com, neilb@cse.unsw.edu.au, linux-raid@vger.kernel.org
-Cc: "Fairbanks, David" <David.Fairbanks@stratus.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello Linux SW RAID maintainers;
+Hello list, Neil,
 
-I am a software engineer at Stratus Technologies in Maynard, MA.
-I am running into an issue using the /sysfs "repair" functionality.
-kernel version: 2.6.18-87.el5 (RHEL5, update 2)
+I have worked on a faulty hw raid card data recovery some days before.
+The project is already successfully done, but i run into some limitations.
 
-I have a 2 member RAID level 1 set consisting of 2 SAS drives on an
-Adaptec aic94xx HBA. I built the raid set using the following command:
+For the best safe way first i have jumperd the drives to readonly mode.
 
-mdadm -C /dev/md7 -size=5000000 -b internal -n2 -l1 /dev/sdb /dev/sde
+Than try to build an "old fashion" linear arrays from each disks + 64k 
+another blockdevice. (for store the superblock)
+But the mdadm refused to _build_ the array, because the source scsi drive is 
+jumpered to readonly. Why? :-)
 
-I inject a medium error onto one of the disks using sg_write_long:
+I try to build the array with --readonly option, but the mdadm still dont 
+understand what i want. (yes, i know, rtfm...)
 
-sg_write_long -lba=2000 -xfer_len=580 /dev/sdb
+The next step is:
 
-I then execute:
+mdadm --create --assume-clean -l 5 /dev/mdX --raid-disks 5 /dev/....
 
-echo repair > /sys/block/md7/md/sync_action
+(And this step is refused too if the drives or some part of the sources are 
+readonly.)
 
-I have done some testing and I have found that if the lba is on a 4K
-byte aligned boundary (e.g. -lba=2000), the repair succeeds as expected.
-However, if the lba is "not" on a 4K byte aligned boundary (e.g.
--lba=2001), the medium error is detected, but the disk gets removed from
-the raid set. The medium error is not repaired. The following messages
-appear in /var/log/messages:
+Its OK, but what about building a readonly raid 5 array for recovery usage 
+only? :-)
+And _build_ a degraded-readonly raid 4-5-6 is even better if this will ever 
+available....
 
-May 12 13:46:24 leeloo kernel: md: syncing RAID array md7
-May 12 13:46:24 leeloo kernel: md: minimum _guaranteed_ reconstruction
-speed: 1000 KB/sec/disc.
-May 12 13:46:24 leeloo kernel: md: using maximum available idle IO
-bandwidth (but not more than 200000 KB/sec) for reconstruction.
-May 12 13:46:24 leeloo kernel: md: using 128k window, over a total of
-5000000 blocks.
-May 12 13:46:33 leeloo kernel: sd 0:0:1:0: SCSI error: return code =
-x08000002
-May 12 13:46:33 leeloo kernel: sdh: Current: sense key: Medium Error
-May 12 13:46:33 leeloo kernel:     Add. Sense: Unrecovered read error
-May 12 13:46:33 leeloo kernel:
-May 12 13:46:33 leeloo kernel: Info fld=0x7d1
-May 12 13:46:33 leeloo kernel: end_request: I/O error, dev sdh, sector
-2001
-May 12 13:46:39 leeloo kernel: sd 0:0:1:0: SCSI error: return code =
-0x00050000
-May 12 13:46:39 leeloo kernel: end_request: I/O error, dev sdh, sector
-1920
-May 12 13:46:39 leeloo kernel: raid1: Disk failure on sdh, disabling
-device.
-May 12 13:46:39 leeloo kernel:  Operation continuing on 1 devices
-May 12 13:46:39 leeloo kernel: md: md7: sync done
+And i need to set the readonly flag _after_ the --create, but the --create 
++ --assume-clean is logical, and working combination with --readonly.
 
-I originally thought this was a low level driver issue. However, this is
-also reproducible on parallel scsi and Fibre Channel configurations. I
-have also tried this on the latest kernel with the same results. I can
-provide any other info necessary.
+More additionally, i think the only write the superblocks to the disks, when 
+the --readonly flag is cleared.
+And more, if the readonly raid 4-5-6 array can handle, and recover the bad 
+sectors from the parity infos.... hmmmm... :-)
 
-Because this appears to be a 4K byte alignment (cache block size) issue,
-I am not sure if this is an issue in the block layer (?).
+These little options can be great help for data recovery, and all is safe.
 
-Thanks;
+Thanks and regards,
 
-Dave
+Janos Haar
+
+
 
