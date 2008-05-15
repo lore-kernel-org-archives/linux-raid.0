@@ -1,36 +1,48 @@
-From: "Henry, Andrew" <andrew.henry@logica.com>
-Subject: RE: (no subject): should have read--"Regarding thread '"Deleting
- mdadm RAID arrays'".
-Date: Thu, 15 May 2008 17:33:40 +0200
-Message-ID: <3ECBDC05781B3D48ABD520A01ABF2F9B12C546FB2B@SE-EX008.groupinfra.com>
+From: Twigathy <twigathy@gmail.com>
+Subject: Re: (no subject): should have read--"Regarding thread '"Deleting mdadm RAID arrays'".
+Date: Thu, 15 May 2008 17:04:16 +0100
+Message-ID: <1f0f1a960805150904y2b4ca61ey1d2f4a750b6af733@mail.gmail.com>
 References: <3ECBDC05781B3D48ABD520A01ABF2F9B12C53D0880@SE-EX008.groupinfra.com>
- <482B5600.6040204@dgreaves.com>
- <3ECBDC05781B3D48ABD520A01ABF2F9B12C5435703@SE-EX008.groupinfra.com>
- <482C4240.7020202@dgreaves.com>
+	 <482B5600.6040204@dgreaves.com>
+	 <3ECBDC05781B3D48ABD520A01ABF2F9B12C5435703@SE-EX008.groupinfra.com>
+	 <482C4240.7020202@dgreaves.com>
+	 <3ECBDC05781B3D48ABD520A01ABF2F9B12C546FB2B@SE-EX008.groupinfra.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <482C4240.7020202@dgreaves.com>
-Content-Language: en-US
+In-Reply-To: <3ECBDC05781B3D48ABD520A01ABF2F9B12C546FB2B@SE-EX008.groupinfra.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: David Greaves <david@dgreaves.com>, LinuxRaid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> > At least I can still see the discs now.  So now it's been syncing all
-> night and it's 50% complete.
-> That's slow - my RAID5 takes 3hrs to do 320Gb - mirrors should be a *lot*
-> faster.
-
-Hmmm.  It's syncing at 6056k/s.  dd ran at 320MB/s.  worrying.  Wonder if the controller is not that good. Sorry for line breaks, Outlook.
-
-> You *do not* need (and should not use) kernel autodetect. You should
-> assemble
-> the array in the init scripts.
-
-How can I stop the kernel from autodetecting?  You just made me realize that this would solve my other problem: I cannot reboot my server remotely because it asks for the dmcrypt password on boot when I put a line in crypttab.  Mounting everything with scripts *after* boot would let me reboot remotely. :)
-
-Thanks a lot for the help.  I'll try mdadm --stop as soon as syncing has finished (95% complete now!!!)
->
-> David
-
+SGksCgpBIGNvdXBsZSBvZiB0aHJlYWRzIHVwLW1haWxpbmdsaXN0IEkgcG9zdGVkIGFib3V0IGEg
+ZmV3IGRvZGdleSBQQ0kgc2lsCmNhcmRzLiBJIGhhZCBhIGNvdXBsZSBvZiBmYXVsdHkgc2lsIDM1
+MTIgYmFzZWQgY2FyZHMuIFlvdSBtaWdodCB3YW50CnRvIGludmVzdCBpbiBzb21ldGhpbmcgYSBi
+aXQgYmV0dGVyLCBvciBhdCBsZWFzdCBzd2FwIG91dCBjYWJsZXMgYW5kCnNlZSBpZiB0aGF0IGhl
+bHBzLgoKSSBleHBlcmllbmNlZCBleGFjdGx5IHRoZSBzYW1lIGZyZWV6aW5nIG9mIHBvcnRzLiBV
+cGdyYWRlZCB0byBhIG5ldwptb3RoZXJib2FyZCB3aXRoIGxvdHMgb2YgU0FUQSBwb3J0cyBvbmJv
+YXJkIGFuZCBhbGwgd2FzIHdlbGwuIEFib3V0CmhhbGYgdGhlIGNhYmxlcyBpbiB0aGF0IG1hY2hp
+bmUgY2hhbmdlZCB0b28sIHNvLi4ueWVhaC4gR29vZCBsdWNrIQoKSnVzdCBteSDCozAuMDIuIE9y
+ICQwLjAyLiA6LSkKClQKCjIwMDgvNS8xNSBIZW5yeSwgQW5kcmV3IDxhbmRyZXcuaGVucnlAbG9n
+aWNhLmNvbT46Cj4+ID4gQXQgbGVhc3QgSSBjYW4gc3RpbGwgc2VlIHRoZSBkaXNjcyBub3cuICBT
+byBub3cgaXQncyBiZWVuIHN5bmNpbmcgYWxsCj4+IG5pZ2h0IGFuZCBpdCdzIDUwJSBjb21wbGV0
+ZS4KPj4gVGhhdCdzIHNsb3cgLSBteSBSQUlENSB0YWtlcyAzaHJzIHRvIGRvIDMyMEdiIC0gbWly
+cm9ycyBzaG91bGQgYmUgYSAqbG90Kgo+PiBmYXN0ZXIuCj4KPiBIbW1tLiAgSXQncyBzeW5jaW5n
+IGF0IDYwNTZrL3MuICBkZCByYW4gYXQgMzIwTUIvcy4gIHdvcnJ5aW5nLiAgV29uZGVyIGlmIHRo
+ZSBjb250cm9sbGVyIGlzIG5vdCB0aGF0IGdvb2QuIFNvcnJ5IGZvciBsaW5lIGJyZWFrcywgT3V0
+bG9vay4KPgo+PiBZb3UgKmRvIG5vdCogbmVlZCAoYW5kIHNob3VsZCBub3QgdXNlKSBrZXJuZWwg
+YXV0b2RldGVjdC4gWW91IHNob3VsZAo+PiBhc3NlbWJsZQo+PiB0aGUgYXJyYXkgaW4gdGhlIGlu
+aXQgc2NyaXB0cy4KPgo+IEhvdyBjYW4gSSBzdG9wIHRoZSBrZXJuZWwgZnJvbSBhdXRvZGV0ZWN0
+aW5nPyAgWW91IGp1c3QgbWFkZSBtZSByZWFsaXplIHRoYXQgdGhpcyB3b3VsZCBzb2x2ZSBteSBv
+dGhlciBwcm9ibGVtOiBJIGNhbm5vdCByZWJvb3QgbXkgc2VydmVyIHJlbW90ZWx5IGJlY2F1c2Ug
+aXQgYXNrcyBmb3IgdGhlIGRtY3J5cHQgcGFzc3dvcmQgb24gYm9vdCB3aGVuIEkgcHV0IGEgbGlu
+ZSBpbiBjcnlwdHRhYi4gIE1vdW50aW5nIGV2ZXJ5dGhpbmcgd2l0aCBzY3JpcHRzICphZnRlciog
+Ym9vdCB3b3VsZCBsZXQgbWUgcmVib290IHJlbW90ZWx5LiA6KQo+Cj4gVGhhbmtzIGEgbG90IGZv
+ciB0aGUgaGVscC4gIEknbGwgdHJ5IG1kYWRtIC0tc3RvcCBhcyBzb29uIGFzIHN5bmNpbmcgaGFz
+IGZpbmlzaGVkICg5NSUgY29tcGxldGUgbm93ISEhKQo+Pgo+PiBEYXZpZAo+Cj4gLS0KPiBUbyB1
+bnN1YnNjcmliZSBmcm9tIHRoaXMgbGlzdDogc2VuZCB0aGUgbGluZSAidW5zdWJzY3JpYmUgbGlu
+dXgtcmFpZCIgaW4KPiB0aGUgYm9keSBvZiBhIG1lc3NhZ2UgdG8gbWFqb3Jkb21vQHZnZXIua2Vy
+bmVsLm9yZwo+IE1vcmUgbWFqb3Jkb21vIGluZm8gYXQgIGh0dHA6Ly92Z2VyLmtlcm5lbC5vcmcv
+bWFqb3Jkb21vLWluZm8uaHRtbAo+Cg==
