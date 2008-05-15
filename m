@@ -1,74 +1,52 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: Linux Software RAID /sysfs repair issue
-Date: Thu, 15 May 2008 10:16:59 +1000
-Message-ID: <18475.33019.601821.898292@notabene.brown>
-References: <EEEB1FA7BB798343BD171137F3E7FA53069EF4@EXNA.corp.stratus.com>
+Subject: ANNOUNCE: mdadm 2.6.5 - A tool for managing Soft RAID under Linux
+Date: Thu, 15 May 2008 15:53:52 +1000
+Message-ID: <18475.53232.830327.694140@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Fairbanks, David on Tuesday May 13
 Sender: linux-raid-owner@vger.kernel.org
-To: "Fairbanks, David" <David.Fairbanks@stratus.com>
-Cc: mingo@redhat.com, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday May 13, David.Fairbanks@stratus.com wrote:
-> Hello Linux SW RAID maintainers;
-> 
-> I am a software engineer at Stratus Technologies in Maynard, MA.
-> I am running into an issue using the /sysfs "repair" functionality.
-> kernel version: 2.6.18-87.el5 (RHEL5, update 2)
-
-Hi David.  Thanks for reporting this problem.
-
-Unfortunately I cannot reproduce it as my test machine has SATA drives
-which don't seem to support WRITE_LONG.
-
-What should be happening during the 'repair' is that we should be
-doing 64K reads from all devices and comparing the data.
-If we hit a read error in one of these reads, the data read from the
-other device should be written over the area with the read error.
-
-This suggests that 64K offsets might be significant, but other 4K
-offsets shouldn't be... yet obviously they are (2000 isn't a multiple
-of 128)......
-
-4K is significant as that is the page size.  The 64K is 16 pages, and
-there is a 'vector' of addresses that is passed down with the request.
-If something is getting confused there, we could get a 4K artifact.
-
-Yes, I think I see it.  Could you please try with this patch, against
-a recent kernel?
-
-If that is the correct fix, I'll need to check elsewhere in the code
-to make sure I haven't made that mistake multiple times.
-
-Thanks,
-NeilBrown
 
 
-Signed-off-by: Neil Brown <neilb@suse.de>
+I am pleased to announce the availability of
+   mdadm version 2.6.5
 
-### Diffstat output
- ./drivers/md/raid1.c |    5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+It is available at the usual places:
+   countrycode=xx.
+   http://www.${countrycode}kernel.org/pub/linux/utils/raid/mdadm/
+and via git at
+   git://neil.brown.name/mdadm
+   http://neil.brown.name/git?p=mdadm
 
-diff .prev/drivers/md/raid1.c ./drivers/md/raid1.c
---- .prev/drivers/md/raid1.c	2008-04-29 12:27:58.000000000 +1000
-+++ ./drivers/md/raid1.c	2008-05-15 10:15:54.000000000 +1000
-@@ -1295,10 +1295,13 @@ static void sync_request_write(mddev_t *
- 					sbio->bi_sector = r1_bio->sector +
- 						conf->mirrors[i].rdev->data_offset;
- 					sbio->bi_bdev = conf->mirrors[i].rdev->bdev;
--					for (j = 0; j < vcnt ; j++)
-+					for (j = 0; j < vcnt ; j++) {
-+						sbio->bi_io_vec[j].bv_len += sbio->bi_io_vec[j].bv_offset;
-+						sbio->bi_io_vec[j].bv_offset = 0;						
- 						memcpy(page_address(sbio->bi_io_vec[j].bv_page),
- 						       page_address(pbio->bi_io_vec[j].bv_page),
- 						       PAGE_SIZE);
-+					}
- 
- 				}
- 			}
+mdadm is a tool for creating, managing and monitoring
+device arrays using the "md" driver in Linux, also
+known as Software RAID arrays.
+
+Release 2.6.5 adds a few minor bug fixes to 2.6.4
+
+Changelog Entries:
+    -   Avoid segfault when parsing /proc/mdstat with auto-read-only
+	arrays.
+    -   Fix problem with failing to add devices to v.large (>4TB) arrays,
+	cause by problems with device-size overflow.
+    -   For v0.90 superblocks, print the 'Events' count as a real count,
+	not 2 numbers separated by a dot.
+    -   Updates some URLs in the man page.
+    -   Allow creation of a RAID6 with exactly one missing device.
+    -   Use LOG_PID for syslog, so you get the pid of mdadm in the log
+	files.
+    -   --export now works with --examine too (not just --detail)
+    -   Improve auto-creation of device special file when using
+        --incremental
+    -   Simple locking for --incremental so mdadm doesn't get confused
+	when run concurrently with itself.
+    -   Make --incremental cope better with arrays that are being reshaped.
+
+Development of mdadm is sponsored by
+ SUSE Labs, Novell Inc.
+
+NeilBrown  15th May 2007
