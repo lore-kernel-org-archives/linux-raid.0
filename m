@@ -1,200 +1,143 @@
 From: "Janos Haar" <janos.haar@netcenter.hu>
 Subject: Re: questions about softraid limitations
-Date: Fri, 16 May 2008 12:00:35 +0200
-Message-ID: <029b01c8b73b$b0c2a980$9300a8c0@dcccs>
-References: <002801c8b55a$60e4a360$0404a8c0@dcccs><482AC2BB.5010602@dgreaves.com><01be01c8b61a$6e616260$9300a8c0@dcccs> <18476.58840.602946.872085@notabene.brown>
+Date: Fri, 16 May 2008 11:28:29 +0200
+Message-ID: <022401c8b739$5262ba80$9300a8c0@dcccs>
+References: <002801c8b55a$60e4a360$0404a8c0@dcccs> <482AC2BB.5010602@dgreaves.com> <01be01c8b61a$6e616260$9300a8c0@dcccs> <482D479F.3040809@dgreaves.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	format=flowed;
-	charset="iso-8859-1";
+	charset="iso-8859-2";
 	reply-type=original
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
+To: David Greaves <david@dgreaves.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello Neil,
-
-(sorry Neil for duplication, but first i forget to cc)
 
 ----- Original Message ----- 
-From: "Neil Brown" <neilb@suse.de>
+From: "David Greaves" <david@dgreaves.com>
 To: "Janos Haar" <djani22@netcenter.hu>
-Cc: "David Greaves" <david@dgreaves.com>; <linux-raid@vger.kernel.org>
-Sent: Friday, May 16, 2008 3:39 AM
+Cc: <linux-raid@vger.kernel.org>
+Sent: Friday, May 16, 2008 10:36 AM
 Subject: Re: questions about softraid limitations
 
 
-> On Thursday May 15, djani22@netcenter.hu wrote:
->> Hello David,
->>
->> ----- Original Message ----- 
->> From: "David Greaves" <david@dgreaves.com>
->> To: "Janos Haar" <djani22@netcenter.hu>
->> Cc: <linux-raid@vger.kernel.org>
->> Sent: Wednesday, May 14, 2008 12:45 PM
->> Subject: Re: questions about softraid limitations
->>
->>
->> > Janos Haar wrote:
->> >> Hello list, Neil,
->> >
->> > Hi Janos
->> >
->> >> I have worked on a faulty hw raid card data recovery some days before.
->> >> The project is already successfully done, but i run into some
->> >> limitations.
->> >
->> > Firstly, are you aware that Linux SW raid will not understand disks
->> > written by
->> > hardware raid.
->>
+> Janos Haar wrote:
+>>> Firstly, are you aware that Linux SW raid will not understand disks
+>>> written by hardware raid.
 >> Yes, i know, but the linux raid is a great tool to try it, and if the
->> user
->> know what he is doing, it is safe too. :-)
->
-> As long as the user also knows what the kernel is doing .....
->
-> If you build an md array on top of a read-only device, the array is
-> still writable, and the device gets written too!!
->
-> Yes, it is a bug.  I hadn't thought about that case before.  I will
-> look into it.
+>> user know what he is doing, it is safe too. :-)
+> OK - just checking :)
 
-Ooops. :-)
+:)
 
 >
->>
->> >
->> >> Than try to build an "old fashion" linear arrays from each disks + 64k
->> >> another blockdevice. (for store the superblock)
->> >> But the mdadm refused to _build_ the array, because the source scsi
->> >> drive is jumpered to readonly. Why? :-)
->> > This will not allow md to write superblocks to the disks.
+>>> This will not allow md to write superblocks to the disks.
 >>
 >> I think exactly for this steps:
 >>
 >> dd if=/dev/zero of=suberblock.bin bs=64k count=1
->                       ^p
 >> losetup /dev/loop0 superblock.bin
 >> blockdev --setro /dev/sda
 >> mdadm --build -l linear /dev/md0 /dev/sda /dev/loop0
->                         ^ --raid-disks=2
->
 >>
 >> The superblock area is writable.
 >> And this is enough to try to assemble the array to do the recovery, but
->> this
->> step is refused.
->
-> What error message do you get?  It worked for me (once I added
-> --raid-disks=2).
+>> this step is refused.
+> Ah, I understand now.
+> I think you need -n2 to tell mdadm to use 2 devices.
 
-The previous example is just an on the fly typing, in real readonly jumpered
-scsi sda gives az error message!
+Sorry i forget. :-)
+I wrote this on the fly, not a real example....
 
 >
-> You probably want superblock.bin to be more than 64K.  The superblock
-> is located between 64K and 128K from the end of the device, depending
-> on device size.  It is always a multiple of 64K from the start of the
-> device.
-
-Usually i used a 128MB! disk partitions for this.
-This is safe enough.
-And sometimes we need more loop devices than 8.... :-)
-
->
->>
->> >
->> >>
->> >> I try to build the array with --readonly option, but the mdadm still
->> >> dont understand what i want. (yes, i know, rtfm...)
->> > This will start the array in readonly mode - you've not created an
->> > array
->> > yet
->> > because you haven't written any superblocks...
->>
->> Yes, i only want to build, not to create.
->>
->> >
->> >
->> >> Its OK, but what about building a readonly raid 5 array for recovery
->> >> usage only? :-)
->> > That's fine. If they are md raid disks. Yours aren't yet since you
->> > haven't
->> > written the superblocks.
+>>>> Its OK, but what about building a readonly raid 5 array for recovery
+>>>> usage only? :-)
+>>> That's fine. If they are md raid disks. Yours aren't yet since you
+>>> haven't
+>>> written the superblocks.
 >>
 >> I only want to help for some people to get back the data.
 >> I only need to build, not to create.
 >
-> And this you can do ... but not with mdadm at the moment
-> unfortunately.
+> I think this would be really hard if they are not md arrays since the 
+> on-disk
+> layout is likely to be different. Not something I know how to do.
 >
-> What carefully :-)
-> --------------------------------------------------------------
-> /tmp# cd /sys/block/md0/md
-> /sys/block/md0/md# echo 65536 > chunk_size
-> /sys/block/md0/md# echo 2 > layout
-> /sys/block/md0/md# echo raid5  > level
-> /sys/block/md0/md# echo none > metadata_version
-> /sys/block/md0/md# echo 5 > raid_disks
-> /sys/block/md0/md# ls -l /dev/sdb
-> brw-rw---- 1 root disk 8, 16 2008-05-16 11:13 /dev/sdb
-> /sys/block/md0/md# ls -l /dev/sdc
-> brw-rw---- 1 root disk 8, 32 2008-05-16 11:13 /dev/sdc
-> /sys/block/md0/md# echo 8:16 > new_dev
-> /sys/block/md0/md# echo 8:32 > new_dev
-> /sys/block/md0/md# echo 8:48 > new_dev
-> /sys/block/md0/md# echo 8:64 > new_dev
-> /sys/block/md0/md# echo 8:80 > new_dev
-> /sys/block/md0/md# echo 0 > dev-sdb/slot
-> /sys/block/md0/md# echo 1 > dev-sdc/slot
-> /sys/block/md0/md# echo 2 > dev-sdd/slot
-> /sys/block/md0/md# echo 3 > dev-sde/slot
-> /sys/block/md0/md# echo 4 > dev-sdf/slot
-> /sys/block/md0/md# echo 156250000 > dev-sdb/size
-> /sys/block/md0/md# echo 156250000 > dev-sdc/size
-> /sys/block/md0/md# echo 156250000 > dev-sdd/size
-> /sys/block/md0/md# echo 156250000 > dev-sde/size
-> /sys/block/md0/md# echo 156250000 > dev-sdf/size
-> /sys/block/md0/md# echo readonly > array_state
-> /sys/block/md0/md# cat /proc/mdstat
-> Personalities : [linear] [raid0] [raid1] [raid10] [raid6] [raid5] [raid4]
-> [multipath] [faulty]
-> md0 : active (read-only) raid5 sdf[4] sde[3] sdd[2] sdc[1] sdb[0]
->      624999936 blocks super non-persistent level 5, 64k chunk, algorithm 2
-> [5/5] [UUUUU]
->
-> unused devices: <none>
-> ----------------------------------------------------------
->
-> Did you catch all of that?
+> Typically the first step in recovery is to duplicate the disks using 
+> ddrescue
+> and work on copies of the duplicates where you can overwrite things.
+> If you have had a hardware failure on the drive then even mounting 
+> readonly can
+> make things worse. (If the mb/controller failed then fair enough - but in 
+> that
+> case it's not a 'recovery', just a simple, 'no-risk(tm)' migration... ?)
 
-sysfs! :-)
-Wow! :-)
-This is what really helps for me, thanks! :-)
+Yes, i can agree.
+At this time, i working in my data recovery company, and some times need to 
+recover the broken hw raid arrays too.
+(with md arrays, we have no problem at all. :-) )
 
-But what about the other people?
-Mdadm will know this too?
+In your rows, we talking about 2 cases:
+
+a, disk hw problem (only bad sectors, the completely failed disk is in 'b' 
+case)
+Yes, the ddrescue is the best way, to do the recovery, but:
+The ddrescue is too agressive with default -e 0 setting!
+This can be easily fail down the drive! (dependig the reason of the bad 
+sectors)
+And with the images, we have another problem!
+The 0x00 holes.
+The hw or md have no deal about where we need recover from parity and where 
+we have real zero blocks....
+Overall this is why data recovery companys learning and developing more and 
+more.... :-)
+
+b, the disk is fine, but the hw raid card is failed, or the array have a 
+logical problem eg 2 disk in raid 5 is out of sync.
+In this case the duplication is only waste of time.
+The recovery safely in readonly mode.
+
+Often the problem with the arrays is the time.
+The servers using the array, and all the down time is expensive.
+In my case, the recovery is already successfully done, but yes, i need to 
+copy all the x TB data, to make only a readonly probe.... :-(
 
 >
-> The per-device 'size' is in K - I took it straight from
->  /proc/partitions.
-> The chunk_size is in bytes.
->
-> Have fun.
+> Tell us more about the failed system:
+> * hardware or md raid5  (if hw then you'll need a *lot* of info about 
+> on-disk
+> layout and I personally have no clue how to help - sorry)
 
-Thank you!
-Next time i will try it. :-)
+The card was an adaptech scsi raid card, and 5 disk in raid 5.
+Electrical problem (black out) made the 2 disk out of sync, and the card let 
+me no chance to repair, or safely rebuild the array, only erase it....
+But with md, ist done. :-)
+
+I need no help at this time, i just want to share my ideas, to helping 
+upgrading/developing md, and helping for people....
+
+Thanks,
 
 Janos
 
 >
-> NeilBrown
+> If md:
+> * kernel of original system and new system
+> * new mdadm version
+> * what kind of failure occured
+> * any dmesg data you have
+> * can you ddrescue the drives and do mdadm --examine /dev/sd<partition> 
+> for each
+> component.
+>
+> Cheers
+> David
+> PS Aplogies if I'm stating things that are obvious to you :)
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
 > the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html 
 
