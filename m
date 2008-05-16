@@ -1,70 +1,40 @@
-From: David Greaves <david@dgreaves.com>
-Subject: Re: questions about softraid limitations
-Date: Fri, 16 May 2008 09:36:47 +0100
-Message-ID: <482D479F.3040809@dgreaves.com>
-References: <002801c8b55a$60e4a360$0404a8c0@dcccs> <482AC2BB.5010602@dgreaves.com> <01be01c8b61a$6e616260$9300a8c0@dcccs>
+From: "Henry, Andrew" <andrew.henry@logica.com>
+Subject: RE: (no subject): should have read--"Regarding thread '"Deleting
+ mdadm RAID arrays'".
+Date: Fri, 16 May 2008 11:02:45 +0200
+Message-ID: <3ECBDC05781B3D48ABD520A01ABF2F9B12C54704D3@SE-EX008.groupinfra.com>
+References: <3ECBDC05781B3D48ABD520A01ABF2F9B12C53D0880@SE-EX008.groupinfra.com>
+ <482B5600.6040204@dgreaves.com>
+ <3ECBDC05781B3D48ABD520A01ABF2F9B12C5435703@SE-EX008.groupinfra.com>
+ <482C4240.7020202@dgreaves.com>
+ <3ECBDC05781B3D48ABD520A01ABF2F9B12C546FB2B@SE-EX008.groupinfra.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-2
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <01be01c8b61a$6e616260$9300a8c0@dcccs>
+In-Reply-To: <3ECBDC05781B3D48ABD520A01ABF2F9B12C546FB2B@SE-EX008.groupinfra.com>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Janos Haar <djani22@netcenter.hu>
-Cc: linux-raid@vger.kernel.org
+To: David Greaves <david@dgreaves.com>, LinuxRaid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Janos Haar wrote:
->> Firstly, are you aware that Linux SW raid will not understand disks
->> written by hardware raid.
-> Yes, i know, but the linux raid is a great tool to try it, and if the
-> user know what he is doing, it is safe too. :-)
-OK - just checking :)
+> -----Original Message-----
+>
+> Thanks a lot for the help.  I'll try mdadm --stop as soon as syncing has
+> finished (95% complete now!!!)
+>
 
->> This will not allow md to write superblocks to the disks.
-> 
-> I think exactly for this steps:
-> 
-> dd if=/dev/zero of=suberblock.bin bs=64k count=1
-> losetup /dev/loop0 superblock.bin
-> blockdev --setro /dev/sda
-> mdadm --build -l linear /dev/md0 /dev/sda /dev/loop0
-> 
-> The superblock area is writable.
-> And this is enough to try to assemble the array to do the recovery, but
-> this step is refused.
-Ah, I understand now.
-I think you need -n2 to tell mdadm to use 2 devices.
+Well, sync finished successfully.
 
->>> Its OK, but what about building a readonly raid 5 array for recovery
->>> usage only? :-)
->> That's fine. If they are md raid disks. Yours aren't yet since you
->> haven't
->> written the superblocks.
-> 
-> I only want to help for some people to get back the data.
-> I only need to build, not to create.
+Mdadm --dtop /dev/md0   # OK
+Mdadm --zero-superblock --force /dev/sda1  # OK
+Mdadm --zero-superblock --force /dev/sdb1  # OK
 
-I think this would be really hard if they are not md arrays since the on-disk
-layout is likely to be different. Not something I know how to do.
+These return to prompt without any messages.  If I then run them a second time they complain that the device is not part of an array.  All well and good.
 
-Typically the first step in recovery is to duplicate the disks using ddrescue
-and work on copies of the duplicates where you can overwrite things.
-If you have had a hardware failure on the drive then even mounting readonly can
-make things worse. (If the mb/controller failed then fair enough - but in that
-case it's not a 'recovery', just a simple, 'no-risk(tm)' migration... ?)
+Mdadm --create --verbose /dev/md0 --level=raid1 --raid-devices=2 /dev/sd[ab]1  # NOT OK.  Complains "already an array" starts a new resync.
 
-Tell us more about the failed system:
-* hardware or md raid5  (if hw then you'll need a *lot* of info about on-disk
-layout and I personally have no clue how to help - sorry)
+Mdadm --stop /dev/md0  # stops resync :)
 
-If md:
-* kernel of original system and new system
-* new mdadm version
-* what kind of failure occured
-* any dmesg data you have
-* can you ddrescue the drives and do mdadm --examine /dev/sd<partition> for each
-component.
+What else is needed?  Am I unable to recreate the array on md0?  Must I choose a new device such as md1?  Or is there another stop to erasing an array?
 
-Cheers
-David
-PS Aplogies if I'm stating things that are obvious to you :)
