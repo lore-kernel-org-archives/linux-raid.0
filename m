@@ -1,40 +1,29 @@
-From: "Henry, Andrew" <andrew.henry@logica.com>
-Subject: RE: (no subject): should have read--"Regarding thread '"Deleting
- mdadm RAID arrays'".
-Date: Fri, 16 May 2008 11:02:45 +0200
-Message-ID: <3ECBDC05781B3D48ABD520A01ABF2F9B12C54704D3@SE-EX008.groupinfra.com>
-References: <3ECBDC05781B3D48ABD520A01ABF2F9B12C53D0880@SE-EX008.groupinfra.com>
- <482B5600.6040204@dgreaves.com>
- <3ECBDC05781B3D48ABD520A01ABF2F9B12C5435703@SE-EX008.groupinfra.com>
- <482C4240.7020202@dgreaves.com>
- <3ECBDC05781B3D48ABD520A01ABF2F9B12C546FB2B@SE-EX008.groupinfra.com>
+From: David Greaves <david@dgreaves.com>
+Subject: Re: questions about softraid limitations
+Date: Fri, 16 May 2008 10:18:30 +0100
+Message-ID: <482D5166.2000201@dgreaves.com>
+References: <002801c8b55a$60e4a360$0404a8c0@dcccs> <482AC2BB.5010602@dgreaves.com> <01be01c8b61a$6e616260$9300a8c0@dcccs> <482D479F.3040809@dgreaves.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-2
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <3ECBDC05781B3D48ABD520A01ABF2F9B12C546FB2B@SE-EX008.groupinfra.com>
-Content-Language: en-US
+In-Reply-To: <482D479F.3040809@dgreaves.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Greaves <david@dgreaves.com>, LinuxRaid <linux-raid@vger.kernel.org>
+To: Janos Haar <djani22@netcenter.hu>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> -----Original Message-----
->
-> Thanks a lot for the help.  I'll try mdadm --stop as soon as syncing has
-> finished (95% complete now!!!)
->
+David Greaves wrote:
+Before checking the list this morning and seeing Neil had replied...
 
-Well, sync finished successfully.
+Anyhow - consider what I said about the disk failure issues and be careful with
+Neil's incantation if the only copy of the data is on those potentially flakey
+drives.
 
-Mdadm --dtop /dev/md0   # OK
-Mdadm --zero-superblock --force /dev/sda1  # OK
-Mdadm --zero-superblock --force /dev/sdb1  # OK
+If things aren't clear to you then feel free to answer my questions before doing
+anything you later regret :)
 
-These return to prompt without any messages.  If I then run them a second time they complain that the device is not part of an array.  All well and good.
+cheers
+David
 
-Mdadm --create --verbose /dev/md0 --level=raid1 --raid-devices=2 /dev/sd[ab]1  # NOT OK.  Complains "already an array" starts a new resync.
-
-Mdadm --stop /dev/md0  # stops resync :)
-
-What else is needed?  Am I unable to recreate the array on md0?  Must I choose a new device such as md1?  Or is there another stop to erasing an array?
 
