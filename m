@@ -1,43 +1,70 @@
-From: "Henry, Andrew" <andrew.henry@logica.com>
-Subject: RE: (no subject): should have read--"Regarding thread '"Deleting
- mdadm RAID arrays'".
-Date: Fri, 16 May 2008 09:35:20 +0200
-Message-ID: <3ECBDC05781B3D48ABD520A01ABF2F9B12C54700BD@SE-EX008.groupinfra.com>
-References: <3ECBDC05781B3D48ABD520A01ABF2F9B12C53D0880@SE-EX008.groupinfra.com>
-	 <482B5600.6040204@dgreaves.com>
-	 <3ECBDC05781B3D48ABD520A01ABF2F9B12C5435703@SE-EX008.groupinfra.com>
-	 <482C4240.7020202@dgreaves.com>
-	 <3ECBDC05781B3D48ABD520A01ABF2F9B12C546FB2B@SE-EX008.groupinfra.com>
- <1f0f1a960805150904y2b4ca61ey1d2f4a750b6af733@mail.gmail.com>
+From: David Greaves <david@dgreaves.com>
+Subject: Re: questions about softraid limitations
+Date: Fri, 16 May 2008 09:36:47 +0100
+Message-ID: <482D479F.3040809@dgreaves.com>
+References: <002801c8b55a$60e4a360$0404a8c0@dcccs> <482AC2BB.5010602@dgreaves.com> <01be01c8b61a$6e616260$9300a8c0@dcccs>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-2
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1f0f1a960805150904y2b4ca61ey1d2f4a750b6af733@mail.gmail.com>
-Content-Language: en-US
+In-Reply-To: <01be01c8b61a$6e616260$9300a8c0@dcccs>
 Sender: linux-raid-owner@vger.kernel.org
-To: Twigathy <twigathy@gmail.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Janos Haar <djani22@netcenter.hu>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> -----Original Message-----
-> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
-> owner@vger.kernel.org] On Behalf Of Twigathy
-> Sent: 15 May 2008 18:04
-> To: linux-raid@vger.kernel.org
-> Subject: Re: (no subject): should have read--"Regarding thread '"Deleting
-> mdadm RAID arrays'".
->
-> Hi,
->
-> A couple of threads up-mailinglist I posted about a few dodgey PCI sil
-> cards. I had a couple of faulty sil 3512 based cards. You might want
-> to invest in something a bit better, or at least swap out cables and
-> see if that helps.
->
-Cack.  I usually 'reasearch' hardware purchases thouroughly but in this case, I needed a CardBus controller, and there aren't that many to choose from, and the sil 3512 actually had support for linux!  First time I have ever seen a product say that, but then again it's a while since I purchased hardware.
+Janos Haar wrote:
+>> Firstly, are you aware that Linux SW raid will not understand disks
+>> written by hardware raid.
+> Yes, i know, but the linux raid is a great tool to try it, and if the
+> user know what he is doing, it is safe too. :-)
+OK - just checking :)
 
-I wonder if it is just transfers between devices on the two ports, as dd to one disk has 320MB/s which is good.
+>> This will not allow md to write superblocks to the disks.
+> 
+> I think exactly for this steps:
+> 
+> dd if=/dev/zero of=suberblock.bin bs=64k count=1
+> losetup /dev/loop0 superblock.bin
+> blockdev --setro /dev/sda
+> mdadm --build -l linear /dev/md0 /dev/sda /dev/loop0
+> 
+> The superblock area is writable.
+> And this is enough to try to assemble the array to do the recovery, but
+> this step is refused.
+Ah, I understand now.
+I think you need -n2 to tell mdadm to use 2 devices.
 
-Anyone else know of working CardBus eSATA adapters for Linux?
+>>> Its OK, but what about building a readonly raid 5 array for recovery
+>>> usage only? :-)
+>> That's fine. If they are md raid disks. Yours aren't yet since you
+>> haven't
+>> written the superblocks.
+> 
+> I only want to help for some people to get back the data.
+> I only need to build, not to create.
 
---andrew
+I think this would be really hard if they are not md arrays since the on-disk
+layout is likely to be different. Not something I know how to do.
+
+Typically the first step in recovery is to duplicate the disks using ddrescue
+and work on copies of the duplicates where you can overwrite things.
+If you have had a hardware failure on the drive then even mounting readonly can
+make things worse. (If the mb/controller failed then fair enough - but in that
+case it's not a 'recovery', just a simple, 'no-risk(tm)' migration... ?)
+
+Tell us more about the failed system:
+* hardware or md raid5  (if hw then you'll need a *lot* of info about on-disk
+layout and I personally have no clue how to help - sorry)
+
+If md:
+* kernel of original system and new system
+* new mdadm version
+* what kind of failure occured
+* any dmesg data you have
+* can you ddrescue the drives and do mdadm --examine /dev/sd<partition> for each
+component.
+
+Cheers
+David
+PS Aplogies if I'm stating things that are obvious to you :)
