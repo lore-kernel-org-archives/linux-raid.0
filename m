@@ -1,50 +1,59 @@
-From: "Oliver Pinter" <oliver.pntr@gmail.com>
+From: Eric Sandeen <sandeen@sandeen.net>
 Subject: Re: Regression- XFS won't mount on partitioned md array
-Date: Fri, 16 May 2008 20:35:32 +0200
-Message-ID: <6101e8c40805161135w7470123uaac93ca59caee026@mail.gmail.com>
+Date: Fri, 16 May 2008 13:59:13 -0500
+Message-ID: <482DD981.5070004@sandeen.net>
 References: <482DC043.5000307@dgreaves.com>
-	 <alpine.DEB.1.10.0805161316100.3118@p34.internal.lan>
-	 <482DCCCD.8020503@dgreaves.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <482DCCCD.8020503@dgreaves.com>
-Content-Disposition: inline
+In-Reply-To: <482DC043.5000307@dgreaves.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: David Greaves <david@dgreaves.com>
-Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, David Chinner <dgc@sgi.com>, LinuxRaid <linux-raid@vger.kernel.org>, xfs@oss.sgi.com, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Cc: David Chinner <dgc@sgi.com>, LinuxRaid <linux-raid@vger.kernel.org>, xfs@oss.sgi.com, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>
 List-Id: linux-raid.ids
 
-this[1] patch fixed?
+David Greaves wrote:
+> I just attempted a kernel upgrade from 2.6.20.7 to 2.6.25.3 and it no longer
+> mounts my xfs filesystem.
+> 
+> I bisected it to around
+> a67d7c5f5d25d0b13a4dfb182697135b014fa478
+> [XFS] Move platform specific mount option parse out of core XFS code
 
-this patch is for 2.6.25.5 kernel
+around that... not exactly?  That commit should have been largely a code
+move, which is not to say that it can't contain a bug... :)
 
-1: http://git.kernel.org/?p=linux/kernel/git/stable/stable-queue.git;a=blob;f=queue-2.6.25/block-do_mounts-accept-root-non-existant-partition.patch;h=097cda9928b434994dbb157065b2ca38e7cec3a1;hb=8cc4c3b370d59deb16c2e92165a466c82e914020
+> I have a RAID5 array with partitions:
+> 
+> Partition Table for /dev/md_d0
+> 
+>                First       Last
+>  # Type       Sector      Sector   Offset    Length   Filesystem Type (ID) Flag
+> -- ------- ----------- ----------- ------ ----------- -------------------- ----
+>  1 Primary           0  2500288279      4  2500288280 Linux (83)           None
+>  2 Primary  2500288280  2500483583      0      195304 Non-FS data (DA)     None
+> 
+> 
+> when I attempt to mount /media:
+> /dev/md_d0p1 /media xfs rw,nobarrier,noatime,logdev=/dev/md_d0p2,allocsize=512m 0 0
 
-On 5/16/08, David Greaves <david@dgreaves.com> wrote:
->> Ouch, still on 2.6.25.1 here, didn't reboot yet, but I do not use
->> mdraid'ed partitions, just regular mdraid, if you boot back to 2.6.20.7
->> does it work again?
-> Yes, no probs.
->
-> It came in prior to 2.6.25-rc1
-> The machine has a root xfs filesystem with an internal log on a sata disk
-> and a
-> data filesystem on a partitioned array with an external log (also on the
-> partitioned array).
-> Only the partitioned array/external-log filesystem is affected.
->
-> David
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
->
+mythbox?  :)
 
+Hm, so it's the external log size that it doesn't much like...
 
--- 
-Thanks,
-Oliver
+> I get:
+>  md_d0: p1 p2
+> XFS mounting filesystem md_d0p1
+> attempt to access beyond end of device
+> md_d0p2: rw=0, want=195311, limit=195304
+
+what does /proc/partitions say about md_d0p1 and p2?  Is it different
+between the older & newer kernel?
+
+What does xfs_info /mount/point say about the filesystem when you mount
+it under the older kernel?  Or... if you can't mount it,
+
+xfs_db -r -c "sb 0" -c p /dev/md_d0p1
+
+-Eric
