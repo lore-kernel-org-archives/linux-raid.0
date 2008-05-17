@@ -1,80 +1,46 @@
-From: Eric Sandeen <sandeen@sandeen.net>
+From: David Greaves <david@dgreaves.com>
 Subject: Re: Regression- XFS won't mount on partitioned md array
-Date: Sat, 17 May 2008 10:15:51 -0500
-Message-ID: <482EF6A7.2020909@sandeen.net>
-References: <482DC043.5000307@dgreaves.com> <482DD981.5070004@sandeen.net> <482EEFDA.50101@dgreaves.com>
+Date: Sat, 17 May 2008 16:20:48 +0100
+Message-ID: <482EF7D0.2030309@dgreaves.com>
+References: <482DC043.5000307@dgreaves.com>	 <alpine.DEB.1.10.0805161316100.3118@p34.internal.lan>	 <482DCCCD.8020503@dgreaves.com> <6101e8c40805161135w7470123uaac93ca59caee026@mail.gmail.com> <482EF026.9000206@dgreaves.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <482EEFDA.50101@dgreaves.com>
+In-Reply-To: <482EF026.9000206@dgreaves.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Greaves <david@dgreaves.com>
-Cc: David Chinner <dgc@sgi.com>, LinuxRaid <linux-raid@vger.kernel.org>, xfs@oss.sgi.com, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>
+To: Oliver Pinter <oliver.pntr@gmail.com>
+Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, David Chinner <dgc@sgi.com>, LinuxRaid <linux-raid@vger.kernel.org>, xfs@oss.sgi.com, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Eric Sandeen <sandeen@sandeen.net>
 List-Id: linux-raid.ids
 
 David Greaves wrote:
-> Eric Sandeen wrote:
-
->>> I get:
->>>  md_d0: p1 p2
->>> XFS mounting filesystem md_d0p1
->>> attempt to access beyond end of device
->>> md_d0p2: rw=0, want=195311, limit=195304
->> what does /proc/partitions say about md_d0p1 and p2?  Is it different
->> between the older & newer kernel?
-
-...
-
-> 2.6.25.4 (bad)
->  254     0 1250241792 md_d0
->  254     1 1250144138 md_d0p1
->  254     2      97652 md_d0p2
+> Oliver Pinter wrote:
+>> this[1] patch fixed?
+>>
+>> 1:
+> http://git.kernel.org/?p=linux/kernel/git/stable/stable-queue.git;a=blob;f=queue-2.6.25/block-do_mounts-accept-root-non-existant-partition.patch;h=097cda9928b434994dbb157065b2ca38e7cec3a1;hb=8cc4c3b370d59deb16c2e92165a466c82e914020
 > 
-> So nothing obvious there then...
 > 
->> What does xfs_info /mount/point say about the filesystem when you mount
->> it under the older kernel?  Or... if you can't mount it,
-> teak:~# xfs_info /media/
-> meta-data=/dev/md_d0p1           isize=256    agcount=32, agsize=9766751 blks
->          =                       sectsz=512   attr=0
-> data     =                       bsize=4096   blocks=312536032, imaxpct=25
->          =                       sunit=0      swidth=0 blks
-> naming   =version 2              bsize=4096
-> log      =external               bsize=4096   blocks=24413, version=2
->          =                       sectsz=512   sunit=0 blks, lazy-count=0
-> realtime =none                   extsz=65536  blocks=0, rtextents=0
-
-ok, and with:
-
-> Partition Table for /dev/md_d0
+> Looks like a possible candidate - thanks.
 > 
->                First       Last
->  # Type       Sector      Sector   Offset    Length   Filesystem Type (ID) Flag
-> -- ------- ----------- ----------- ------ ----------- -------------------- ----
->  1 Primary           0  2500288279      4  2500288280 Linux (83)           None
->  2 Primary  2500288280  2500483583      0      195304 Non-FS data (DA)     None
+> I think this patch is for mounting root on an md device when the partitions
+> aren't yet initialised.
+> 
+> However:
+> * When I run cfdisk I can read the partition table.
+> * Subsequent attempts to mount the xfs when /proc/partitions is clearly present
+> still fail.
+> 
+>> this patch is for 2.6.25.5 kernel
+> ? there isn't a 2.6.25.5
+Sorry, I understand; it's queued for 2.6.25.5.
 
-So, xfs thinks the external log is 24413 4k blocks (from the sb geometry
-printed by xfs_info).  This is 97652 1k units (matching your
-/proc/partitions output) and 195304 512-byte sectors (matching the
-partition table output).  So that all looks consistent.
+> It doesn't apply to 2.6.25.4
+> 
+> I'll see if I can make it apply...
+Yep - it was download corruption.
 
-So if xfs is doing:
+Applied but it didn't help.
 
->>> md_d0p2: rw=0, want=195311, limit=195304
->>> XFS: empty log check failed
+David
 
-it surely does seem to be trying to read past the end of what even it
-thinks is the end of its log.
-
-And, with your geometry I can reproduce this w/o md, partitioned or not.
- So looks like xfs itself is busted:
-
-loop5: rw=0, want=195311, limit=195304
-
-I'll see if I have a little time today to track down the problem.
-
-Thanks,
-
--Eric
