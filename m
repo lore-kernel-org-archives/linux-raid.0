@@ -1,55 +1,49 @@
 From: David Greaves <david@dgreaves.com>
-Subject: Re: Regression- XFS won't mount on partitioned md array
-Date: Sun, 18 May 2008 09:48:32 +0100
-Message-ID: <482FED60.7060405@dgreaves.com>
-References: <482DC043.5000307@dgreaves.com> <482DD981.5070004@sandeen.net> <482EEFDA.50101@dgreaves.com> <482EF6A7.2020909@sandeen.net> <482F67D9.70400@sandeen.net> <482FBD4C.20608@sandeen.net>
+Subject: Re: questions about softraid limitations
+Date: Sun, 18 May 2008 10:11:55 +0100
+Message-ID: <482FF2DB.9060604@dgreaves.com>
+References: <002801c8b55a$60e4a360$0404a8c0@dcccs> <482AC2BB.5010602@dgreaves.com> <01be01c8b61a$6e616260$9300a8c0@dcccs> <482D479F.3040809@dgreaves.com> <022401c8b739$5262ba80$9300a8c0@dcccs>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-2
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757256AbYERIsv@vger.kernel.org>
-In-Reply-To: <482FBD4C.20608@sandeen.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: David Chinner <dgc@sgi.com>, xfs@oss.sgi.com, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, LinuxRaid <linux-raid@vger.kernel.org>
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <022401c8b739$5262ba80$9300a8c0@dcccs>
+Sender: linux-raid-owner@vger.kernel.org
+To: Janos Haar <janos.haar@netcenter.hu>
+Cc: linux-raid@vger.kernel.org, David Lethe <david@santools.com>
 List-Id: linux-raid.ids
 
-Eric Sandeen wrote:
-> Eric Sandeen wrote:
->> Eric Sandeen wrote:
->>
->>> I'll see if I have a little time today to track down the problem.
->>
->> Does this patch fix it for you?  Does for me though I can't yet explain
->> why ;)
->>
->> http://www.linux.sgi.com/archives/xfs/2008-05/msg00190.html
->>
->> -Eric
-Yes, this fixes it for me - thanks :)
+Janos Haar wrote:
+> At this time, i working in my data recovery company, and some times need
+Ah - I missed this too.
 
-> So what's happening is that xfs is trying to read a page-sized IO from
-> the last sector of the log... which goes off the end of the device.
-> This looks like another regression introduced by
-> a9759f2de38a3443d5107bddde03b4f3f550060e, but fixed by Christoph's patch
-> in the URL above, which should be headed towards -stable.
-Damn, I guess I misread my bisect readings when things crashed then.
-Still, I said 'around' :)
+> to recover the broken hw raid arrays too.
+> (with md arrays, we have no problem at all. :-) )
+Nice quote for "the benefits of software raid" somewhere :)
 
-> (aside: it seems that this breaks any external log setup where the log
-> consists of the entire device... but I'd have expected the xfsqa suite
-> to catch this...?)
+> In your rows, we talking about 2 cases:
 > 
-> The patch avoids the problem by looking for some extra locking but it
-> seems to me that the root cause is that the buffer being read at this
-> point doesn't have it's b_offset, the offset in it's page, set.  Might
-> be another little buglet but harmless it seems.
-mmmm
-'little buglets' in the filesystem holding a few Tb of data...
-mmmm
-Anything I can do to help find that? I suspect not if you can reproduce it.
+> a, disk hw problem (only bad sectors, the completely failed disk is in
+> 'b' case)
+> Yes, the ddrescue is the best way, to do the recovery, but:
+> The ddrescue is too agressive with default -e 0 setting!
+> This can be easily fail down the drive! (dependig the reason of the bad
+> sectors)
+OK, worth knowing - what would you suggest?
 
-Anyhow - thanks again.
+> And with the images, we have another problem!
+> The 0x00 holes.
+> The hw or md have no deal about where we need recover from parity and
+> where we have real zero blocks....
+> Overall this is why data recovery companys learning and developing more
+> and more.... :-)
+
+Hmm - I wonder if things like ddrescue could work with the md bitmaps to improve
+this situation?
+Is this related to David Lethe's recent request?
+
+> I need no help at this time, i just want to share my ideas, to helping
+> upgrading/developing md, and helping for people....
+OK - ta.
 
 David
-PS I'll be back soon, back in 2.6.23 I was hitting a hibernate/xfs bug which
-I've been avoiding by powering down. Well, it's still there in 2.6.25.3...
