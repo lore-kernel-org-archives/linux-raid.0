@@ -1,90 +1,96 @@
-From: "David Lethe" <david@santools.com>
-Subject: RE: questions about softraid limitations
-Date: Sun, 18 May 2008 14:36:12 -0500
-Message-ID: <A20315AE59B5C34585629E258D76A97C6B3EEC@34093-C3-EVS3.exchange.rackspace.com>
-References: <002801c8b55a$60e4a360$0404a8c0@dcccs> <482AC2BB.5010602@dgreaves.com> <01be01c8b61a$6e616260$9300a8c0@dcccs> <482D479F.3040809@dgreaves.com> <022401c8b739$5262ba80$9300a8c0@dcccs> <482FF2DB.9060604@dgreaves.com>
+From: "Janos Haar" <janos.haar@netcenter.hu>
+Subject: Re: questions about softraid limitations
+Date: Sun, 18 May 2008 23:51:40 +0200
+Message-ID: <092d01c8b935$180cdac0$9300a8c0@dcccs>
+References: <002801c8b55a$60e4a360$0404a8c0@dcccs> <482AC2BB.5010602@dgreaves.com> <01be01c8b61a$6e616260$9300a8c0@dcccs> <482D479F.3040809@dgreaves.com> <022401c8b739$5262ba80$9300a8c0@dcccs> <482FF2DB.9060604@dgreaves.com> <07b301c8b8d7$f3e6d590$9300a8c0@dcccs> <48302861.3010607@dgreaves.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
-	charset="US-ASCII"
-Content-Transfer-Encoding: 8BIT
+	format=flowed;
+	charset="iso-8859-2";
+	reply-type=original
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
-In-Reply-To: <482FF2DB.9060604@dgreaves.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Greaves <david@dgreaves.com>, Janos Haar <janos.haar@netcenter.hu>
+To: David Greaves <david@dgreaves.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-
------Original Message-----
-From: David Greaves [mailto:david@dgreaves.com] 
-Sent: Sunday, May 18, 2008 4:12 AM
-To: Janos Haar
-Cc: linux-raid@vger.kernel.org; David Lethe
+----- Original Message ----- 
+From: "David Greaves" <david@dgreaves.com>
+To: "Janos Haar" <janos.haar@netcenter.hu>
+Cc: <linux-raid@vger.kernel.org>
+Sent: Sunday, May 18, 2008 3:00 PM
 Subject: Re: questions about softraid limitations
 
-Janos Haar wrote:
-> At this time, i working in my data recovery company, and some times
-need
-Ah - I missed this too.
 
-> to recover the broken hw raid arrays too.
-> (with md arrays, we have no problem at all. :-) )
-Nice quote for "the benefits of software raid" somewhere :)
+> Janos Haar wrote:
+>> The actually best way is this:
+>>
+>> blockdev --setro /dev/SOURCE
+>> blockdev --setra  0 /dev/SOURCE
+>> ddrescue -v -b 4096 -B 1024 -e 1 -y 0 /dev/SOURCE /dev/TARGET (if you
+>> dont use a real clean disk with full of zeros, you need the -A option 
+>> too)
+>>
+>> + need some kernel patch to disable all retry on the source disk.
+> Is that something you could share?
 
-> In your rows, we talking about 2 cases:
-> 
-> a, disk hw problem (only bad sectors, the completely failed disk is in
-> 'b' case)
-> Yes, the ddrescue is the best way, to do the recovery, but:
-> The ddrescue is too agressive with default -e 0 setting!
-> This can be easily fail down the drive! (dependig the reason of the
-bad
-> sectors)
-OK, worth knowing - what would you suggest?
+Aaa, i made it myself about 1 year before on 2.6.18, but unfortunately at 
+the moment the source is already deleted, and i dont save the diff. :-(
+I am not a good C programmer, but takes about 1 hour. ;-)
 
-> And with the images, we have another problem!
-> The 0x00 holes.
-> The hw or md have no deal about where we need recover from parity and
-> where we have real zero blocks....
-> Overall this is why data recovery companys learning and developing
-more
-> and more.... :-)
+>
+> It sounds like something that would be worth including in the libata error
+> handling to be controlled by something like 
+> /sys/block/sdX/device/ioerr_retry_count
 
-Hmm - I wonder if things like ddrescue could work with the md bitmaps to
-improve
-this situation?
-Is this related to David Lethe's recent request?
+This is a great idea! :)
+But not just for the ide drives!
+I think this is good for all block device!
+(usb, scsi, ide, sata...)
 
-> I need no help at this time, i just want to share my ideas, to helping
-> upgrading/developing md, and helping for people....
-OK - ta.
+Oops.
+And an old problem comes again:
+On IDE drives with read errors, sometimes drop the DMA.
+My script can be re-enable it sometimes, but not the real good solution....
+If this can be fixed too, this will be great! :-)
 
-David
------------
-No, we are trying two different approaches.
-In my situation, I already know that the data is munged on a particular
-block, so the solution is to calculate the correct data from surviving
-parity, and just write the new value.  There is no reason to worry about
-md bitmaps, or even whether or not there are 0x00 holes.
+>
+> I'd be interested in playing with it and sending to Tejun Heo if you don't 
+> have
+> time.
+>
+>> The best recovery history is in 3 steps:
+>>
+> [snip]
+>>
+>> There is no easy solution. :-(
+>
+> OK - I'll put this up on the wiki sometime.
+>
+>>> Hmm - I wonder if things like ddrescue could work with the md bitmaps
+>>> to improve
+>>> this situation?
+>>> Is this related to David Lethe's recent request?
+>>
+>> I think ddrescue is for copy/rescue the data, not for processing it.
+>> But can log the errors... ;-)
+> Yes - I meant to take the ddrescue output and manipulate the bitmap on the
+> copied drive to mark certain parts as 'bad'.
+> Ideally this could be done in the event of a dual-failure so that you 
+> could
+> re-add 2 failed drives and the bitmaps could indicate.
+>
+> This may requires something closer to a bytemap but...
 
-I am not trying to fix a problem such as a rebuild gone bad or an
-intermittent disk failure that put the md array in a partially synced,
-and totally confused state. [I also do data recovery, and have a
-software bag-o-tricks, but I only take on jobs relating to certain
-hardware RAID controllers where I am intimately familiar with the
-metadata layout ... and have a software bag-o-tricks that nearly always
-have to modify given the original configuration, and chain of events].
+This is good in this way. :-)
 
-My desire is to limit damage before a full disk recovery needs to be
-performed, by insuring that there are no double-errors that will make
-stripe-level recovery impossible (assuming they aren't using RAID6).
-For that I need a mechanism to repair a stripe given a physical disk and
-offset. There is no completely failed disk to contend with, merely a
-block of bad data that will repair itself once I issue a simple write
-command. (trick, of course, is to figure out exactly what & where to
-right it and deal with potential locking issues relating to file
-system).
+Cheers,
 
+Janos
+
+>
+>
+> David 
 
