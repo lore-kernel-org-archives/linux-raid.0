@@ -1,96 +1,63 @@
-From: "Janos Haar" <janos.haar@netcenter.hu>
+From: David Greaves <david@dgreaves.com>
 Subject: Re: questions about softraid limitations
-Date: Sun, 18 May 2008 23:51:40 +0200
-Message-ID: <092d01c8b935$180cdac0$9300a8c0@dcccs>
-References: <002801c8b55a$60e4a360$0404a8c0@dcccs> <482AC2BB.5010602@dgreaves.com> <01be01c8b61a$6e616260$9300a8c0@dcccs> <482D479F.3040809@dgreaves.com> <022401c8b739$5262ba80$9300a8c0@dcccs> <482FF2DB.9060604@dgreaves.com> <07b301c8b8d7$f3e6d590$9300a8c0@dcccs> <48302861.3010607@dgreaves.com>
+Date: Sun, 18 May 2008 23:23:50 +0100
+Message-ID: <4830AC76.6050004@dgreaves.com>
+References: <002801c8b55a$60e4a360$0404a8c0@dcccs> <482AC2BB.5010602@dgreaves.com> <01be01c8b61a$6e616260$9300a8c0@dcccs> <482D479F.3040809@dgreaves.com> <022401c8b739$5262ba80$9300a8c0@dcccs> <482FF2DB.9060604@dgreaves.com> <A20315AE59B5C34585629E258D76A97C6B3EEC@34093-C3-EVS3.exchange.rackspace.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	format=flowed;
-	charset="iso-8859-2";
-	reply-type=original
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <A20315AE59B5C34585629E258D76A97C6B3EEC@34093-C3-EVS3.exchange.rackspace.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Greaves <david@dgreaves.com>
-Cc: linux-raid@vger.kernel.org
+To: David Lethe <david@santools.com>
+Cc: Janos Haar <janos.haar@netcenter.hu>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+David Lethe wrote:
+ > Hmm - I wonder if things like ddrescue could work with the md bitmaps to
+> improve
+> this situation?
+> Is this related to David Lethe's recent request?
+> 
+> -----------
+> No, we are trying two different approaches.
+> In my situation, I already know that the data is munged on a particular
+> block, so the solution is to calculate the correct data from surviving
+> parity, and just write the new value.  There is no reason to worry about
+> md bitmaps, or even whether or not there are 0x00 holes.
 
------ Original Message ----- 
-From: "David Greaves" <david@dgreaves.com>
-To: "Janos Haar" <janos.haar@netcenter.hu>
-Cc: <linux-raid@vger.kernel.org>
-Sent: Sunday, May 18, 2008 3:00 PM
-Subject: Re: questions about softraid limitations
+I think we (or I) may be talking about the same thing?
 
+Consider an array sd[abcde] and a badblock (42) on sdb followed by a badblock
+elsewhere (142) on sdc.
+I would like to ddrescue sdb to sdb' and sdc to sdc' (leaving holes)
+block 42 should be recovered from sd[acde] to sdb'
+block 142 should be recovered from sd[abde] to sdc'
 
-> Janos Haar wrote:
->> The actually best way is this:
->>
->> blockdev --setro /dev/SOURCE
->> blockdev --setra  0 /dev/SOURCE
->> ddrescue -v -b 4096 -B 1024 -e 1 -y 0 /dev/SOURCE /dev/TARGET (if you
->> dont use a real clean disk with full of zeros, you need the -A option 
->> too)
->>
->> + need some kernel patch to disable all retry on the source disk.
-> Is that something you could share?
+The idea was to possibly tristate the bitmap clean/dirty/corrupt.
+If md gets a read/write error then it marks the block corrupt; alternatively we
+could use the output from ddrescue to identify corrupt blocks that md may not
+have seen.
 
-Aaa, i made it myself about 1 year before on 2.6.18, but unfortunately at 
-the moment the source is already deleted, and i dont save the diff. :-(
-I am not a good C programmer, but takes about 1 hour. ;-)
+I wondered whether each block actually needed to record the event it was last
+updated with. I haven't thought through the various failure cases but...
 
->
-> It sounds like something that would be worth including in the libata error
-> handling to be controlled by something like 
-> /sys/block/sdX/device/ioerr_retry_count
+> I am not trying to fix a problem such as a rebuild gone bad or an
+> intermittent disk failure that put the md array in a partially synced,
+> and totally confused state.
+No, me neither...
 
-This is a great idea! :)
-But not just for the ide drives!
-I think this is good for all block device!
-(usb, scsi, ide, sata...)
+> My desire is to limit damage before a full disk recovery needs to be
+> performed, by insuring that there are no double-errors that will make
+> stripe-level recovery impossible (assuming they aren't using RAID6).
+> For that I need a mechanism to repair a stripe given a physical disk and
+> offset. There is no completely failed disk to contend with, merely a
+> block of bad data that will repair itself once I issue a simple write
+> command. (trick, of course, is to figure out exactly what & where to
+> right it and deal with potential locking issues relating to file
+> system).
+I think I'm describing that too.
+If you simplify my case to a single badblock do we meet?
 
-Oops.
-And an old problem comes again:
-On IDE drives with read errors, sometimes drop the DMA.
-My script can be re-enable it sometimes, but not the real good solution....
-If this can be fixed too, this will be great! :-)
-
->
-> I'd be interested in playing with it and sending to Tejun Heo if you don't 
-> have
-> time.
->
->> The best recovery history is in 3 steps:
->>
-> [snip]
->>
->> There is no easy solution. :-(
->
-> OK - I'll put this up on the wiki sometime.
->
->>> Hmm - I wonder if things like ddrescue could work with the md bitmaps
->>> to improve
->>> this situation?
->>> Is this related to David Lethe's recent request?
->>
->> I think ddrescue is for copy/rescue the data, not for processing it.
->> But can log the errors... ;-)
-> Yes - I meant to take the ddrescue output and manipulate the bitmap on the
-> copied drive to mark certain parts as 'bad'.
-> Ideally this could be done in the event of a dual-failure so that you 
-> could
-> re-add 2 failed drives and the bitmaps could indicate.
->
-> This may requires something closer to a bytemap but...
-
-This is good in this way. :-)
-
-Cheers,
-
-Janos
-
->
->
-> David 
+David
 
