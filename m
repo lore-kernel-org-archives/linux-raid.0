@@ -1,86 +1,124 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [PATCH 008 of 10] md: Improve setting of "events_cleared" for write-intent bitmaps.
-Date: Mon, 19 May 2008 11:10:57 +1000
-Message-ID: <1080519011057.7754@suse.de>
+Subject: [PATCH 009 of 10] md: Allow parallel resync of md-devices.
+Date: Mon, 19 May 2008 11:11:04 +1000
+Message-ID: <1080519011104.7767@suse.de>
 References: <20080519110910.7473.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Mike Snitzer <snitzer@gmail.com>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Bernd Schubert <bs@q-leap.de>
 List-Id: linux-raid.ids
 
 
-When an array is degraded, bits in the write-intent bitmap are not
-cleared, so that if the missing device is re-added, it can be synced
-by only updated those parts of the device that have changed since
-it was removed.
+From: Bernd Schubert <bs@q-leap.de>
 
-The enable this a 'events_cleared' value is stored. It is the event
-counter for the array the last time that any bits were cleared.
-
-Sometime - if a device disappears from an array while it is 'clean' -
-the events_cleared value gets updated incorrectly (there are subtle
-ordering issues between updateing events in the main metadata and the
-bitmap metadata) resulting in the missing device appearing to require
-a full resync when it is re-added.
-
-With this patch, we update events_cleared precised when we are about
-to clear a bit in the bitmap.  This makes it more "obviously correct".
-We also need to update events_cleared when the event_count is going
-backwards (as happens on a dirty->clean transition of a non-degraded
-array).
-
-Thanks to Mike Snitzer for identifying this problem and testing early
-"fixes".
+In some configurations, a raid6 resync can be limited by CPU speed
+(Calculating P and Q and moving data) rather than by device speed.
+In these cases there is nothing to be gained byt serialising resync
+of arrays that share a device, and doing the resync in parallel can
+provide benefit.
+So add a sysfs tunable to flag an array as being allowed to
+resync in parallel with other arrays that use (a different part of)
+the same device.
 
 
-Cc:  "Mike Snitzer" <snitzer@gmail.com>
+Signed-off-by: Bernd Schubert <bs@q-leap.de>
 Signed-off-by: Neil Brown <neilb@suse.de>
 
 ### Diffstat output
- ./drivers/md/bitmap.c |   26 +++++++++++++++++++++-----
- 1 file changed, 21 insertions(+), 5 deletions(-)
+ ./drivers/md/md.c           |   40 ++++++++++++++++++++++++++++++++++++----
+ ./include/linux/raid/md_k.h |    3 +++
+ 2 files changed, 39 insertions(+), 4 deletions(-)
 
-diff .prev/drivers/md/bitmap.c ./drivers/md/bitmap.c
---- .prev/drivers/md/bitmap.c	2008-05-19 11:02:35.000000000 +1000
-+++ ./drivers/md/bitmap.c	2008-05-19 11:04:00.000000000 +1000
-@@ -454,8 +454,11 @@ void bitmap_update_sb(struct bitmap *bit
- 	spin_unlock_irqrestore(&bitmap->lock, flags);
- 	sb = (bitmap_super_t *)kmap_atomic(bitmap->sb_page, KM_USER0);
- 	sb->events = cpu_to_le64(bitmap->mddev->events);
--	if (!bitmap->mddev->degraded)
--		sb->events_cleared = cpu_to_le64(bitmap->mddev->events);
-+	if (bitmap->mddev->events < bitmap->events_cleared) {
-+		/* rocking back to read-only */
-+		bitmap->events_cleared = bitmap->mddev->events;
-+		sb->events_cleared = cpu_to_le64(bitmap->events_cleared);
-+	}
- 	kunmap_atomic(sb, KM_USER0);
- 	write_page(bitmap, bitmap->sb_page, 1);
- }
-@@ -1085,9 +1088,22 @@ void bitmap_daemon_work(struct bitmap *b
- 			} else
- 				spin_unlock_irqrestore(&bitmap->lock, flags);
- 			lastpage = page;
--/*
--			printk("bitmap clean at page %lu\n", j);
--*/
+diff .prev/drivers/md/md.c ./drivers/md/md.c
+--- .prev/drivers/md/md.c	2008-05-19 11:03:47.000000000 +1000
++++ ./drivers/md/md.c	2008-05-19 11:04:07.000000000 +1000
+@@ -74,6 +74,8 @@ static DEFINE_SPINLOCK(pers_lock);
+ 
+ static void md_print_devices(void);
+ 
++static DECLARE_WAIT_QUEUE_HEAD(resync_wait);
 +
-+			/* We are possibly going to clear some bits, so make
-+			 * sure that events_cleared is up-to-date.
-+			 */
-+			if (bitmap->events_cleared < bitmap->mddev->events) {
-+				bitmap_super_t *sb;
-+				bitmap->events_cleared = bitmap->mddev->events;
-+				wait_event(bitmap->mddev->sb_wait,
-+				    !test_bit(MD_CHANGE_CLEAN,
-+					      &bitmap->mddev->flags));
-+				sb = kmap_atomic(bitmap->sb_page, KM_USER0);
-+				sb->events_cleared =
-+					cpu_to_le64(bitmap->events_cleared);
-+				kunmap_atomic(sb, KM_USER0);
-+				write_page(bitmap, bitmap->sb_page, 1);
-+			}
- 			spin_lock_irqsave(&bitmap->lock, flags);
- 			clear_page_attr(bitmap, page, BITMAP_PAGE_CLEAN);
- 		}
+ #define MD_BUG(x...) { printk("md: bug in file %s, line %d\n", __FILE__, __LINE__); md_print_devices(); }
+ 
+ /*
+@@ -3013,6 +3015,36 @@ degraded_show(mddev_t *mddev, char *page
+ static struct md_sysfs_entry md_degraded = __ATTR_RO(degraded);
+ 
+ static ssize_t
++sync_force_parallel_show(mddev_t *mddev, char *page)
++{
++	return sprintf(page, "%d\n", mddev->parallel_resync);
++}
++
++static ssize_t
++sync_force_parallel_store(mddev_t *mddev, const char *buf, size_t len)
++{
++	long n;
++
++	if (strict_strtol(buf, 10, &n))
++		return -EINVAL;
++
++	if (n != 0 && n != 1)
++		return -EINVAL;
++
++	mddev->parallel_resync = n;
++
++	if (mddev->sync_thread)
++		wake_up(&resync_wait);
++
++	return len;
++}
++
++/* force parallel resync, even with shared block devices */
++static struct md_sysfs_entry md_sync_force_parallel =
++__ATTR(sync_force_parallel, S_IRUGO|S_IWUSR,
++       sync_force_parallel_show, sync_force_parallel_store);
++
++static ssize_t
+ sync_speed_show(mddev_t *mddev, char *page)
+ {
+ 	unsigned long resync, dt, db;
+@@ -3187,6 +3219,7 @@ static struct attribute *md_redundancy_a
+ 	&md_sync_min.attr,
+ 	&md_sync_max.attr,
+ 	&md_sync_speed.attr,
++	&md_sync_force_parallel.attr,
+ 	&md_sync_completed.attr,
+ 	&md_max_sync.attr,
+ 	&md_suspend_lo.attr,
+@@ -5487,8 +5520,6 @@ void md_allow_write(mddev_t *mddev)
+ }
+ EXPORT_SYMBOL_GPL(md_allow_write);
+ 
+-static DECLARE_WAIT_QUEUE_HEAD(resync_wait);
+-
+ #define SYNC_MARKS	10
+ #define	SYNC_MARK_STEP	(3*HZ)
+ void md_do_sync(mddev_t *mddev)
+@@ -5552,8 +5583,9 @@ void md_do_sync(mddev_t *mddev)
+ 		for_each_mddev(mddev2, tmp) {
+ 			if (mddev2 == mddev)
+ 				continue;
+-			if (mddev2->curr_resync && 
+-			    match_mddev_units(mddev,mddev2)) {
++			if (!mddev->parallel_resync
++			&&  mddev2->curr_resync
++			&&  match_mddev_units(mddev, mddev2)) {
+ 				DEFINE_WAIT(wq);
+ 				if (mddev < mddev2 && mddev->curr_resync == 2) {
+ 					/* arbitrarily yield */
+
+diff .prev/include/linux/raid/md_k.h ./include/linux/raid/md_k.h
+--- .prev/include/linux/raid/md_k.h	2008-05-19 11:02:06.000000000 +1000
++++ ./include/linux/raid/md_k.h	2008-05-19 11:04:07.000000000 +1000
+@@ -180,6 +180,9 @@ struct mddev_s
+ 	int				sync_speed_min;
+ 	int				sync_speed_max;
+ 
++	/* resync even though the same disks are shared among md-devices */
++	int				parallel_resync;
++
+ 	int				ok_start_degraded;
+ 	/* recovery/resync flags 
+ 	 * NEEDED:   we might need to start a resync/recover
