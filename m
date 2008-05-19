@@ -1,48 +1,93 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [PATCH 002 of 10] md: proper extern for mdp_major
-Date: Mon, 19 May 2008 11:10:17 +1000
-Message-ID: <1080519011017.7639@suse.de>
+Subject: [PATCH 004 of 10] md: md: raid5 rate limit error printk
+Date: Mon, 19 May 2008 11:10:31 +1000
+Message-ID: <1080519011031.7672@suse.de>
 References: <20080519110910.7473.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Adrian Bunk <bunk@kernel.org>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Bernd Schubert <bernd-schubert@gmx.de>, Dan Williams <dan.j.williams@intel.com>
 List-Id: linux-raid.ids
 
 
-From: Adrian Bunk <bunk@kernel.org>
+From: Bernd Schubert <bernd-schubert@gmx.de>
 
-This patch adds a proper extern for mdp_major in include/linux/raid/md.h
+last night we had scsi problems and a hardware raid
+unit was offlined during heavy i/o. While this happened we got for
+about 3 minutes a huge number messages like these
 
-Signed-off-by: Adrian Bunk <bunk@kernel.org>
+Apr 12 03:36:07 pfs1n14 kernel: [197510.696595] raid5:md7: read error not correctable (sector 2993096568 on sdj2).
+
+I guess the high error rate is responsible for not scheduling other
+events - during this time the system was not pingable and in the end
+also other devices run into scsi command timeouts causing problems on
+these unrelated devices as well.
+
+Signed-off-by: Bernd Schubert <bernd-schubert@gmx.de>
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 Signed-off-by: Neil Brown <neilb@suse.de>
 
 ### Diffstat output
- ./include/linux/raid/md.h |    2 ++
- ./init/do_mounts_md.c     |    1 -
- 2 files changed, 2 insertions(+), 1 deletion(-)
+ ./drivers/md/raid5.c |   34 ++++++++++++++++++++++------------
+ 1 file changed, 22 insertions(+), 12 deletions(-)
 
-diff .prev/include/linux/raid/md.h ./include/linux/raid/md.h
---- .prev/include/linux/raid/md.h	2008-05-19 11:02:06.000000000 +1000
-+++ ./include/linux/raid/md.h	2008-05-19 11:02:24.000000000 +1000
-@@ -72,6 +72,8 @@
-  */
- #define MD_PATCHLEVEL_VERSION           3
+diff .prev/drivers/md/raid5.c ./drivers/md/raid5.c
+--- .prev/drivers/md/raid5.c	2008-05-19 11:02:09.000000000 +1000
++++ ./drivers/md/raid5.c	2008-05-19 11:02:44.000000000 +1000
+@@ -94,6 +94,8 @@
+ #define __inline__
+ #endif
  
-+extern int mdp_major;
++#define printk_rl(args...) ((void) (printk_ratelimit() && printk(args)))
 +
- extern int register_md_personality (struct mdk_personality *p);
- extern int unregister_md_personality (struct mdk_personality *p);
- extern mdk_thread_t * md_register_thread (void (*run) (mddev_t *mddev),
-
-diff .prev/init/do_mounts_md.c ./init/do_mounts_md.c
---- .prev/init/do_mounts_md.c	2008-05-19 11:02:06.000000000 +1000
-+++ ./init/do_mounts_md.c	2008-05-19 11:02:24.000000000 +1000
-@@ -24,7 +24,6 @@ static struct {
- 
- static int md_setup_ents __initdata;
- 
--extern int mdp_major;
- /*
-  * Parse the command-line parameters given our kernel, but do not
-  * actually try to invoke the MD device now; that is handled by
+ #if !RAID6_USE_EMPTY_ZERO_PAGE
+ /* In .bss so it's zeroed */
+ const char raid6_empty_zero_page[PAGE_SIZE] __attribute__((aligned(256)));
+@@ -1143,10 +1145,12 @@ static void raid5_end_read_request(struc
+ 		set_bit(R5_UPTODATE, &sh->dev[i].flags);
+ 		if (test_bit(R5_ReadError, &sh->dev[i].flags)) {
+ 			rdev = conf->disks[i].rdev;
+-			printk(KERN_INFO "raid5:%s: read error corrected (%lu sectors at %llu on %s)\n",
+-			       mdname(conf->mddev), STRIPE_SECTORS,
+-			       (unsigned long long)(sh->sector + rdev->data_offset),
+-			       bdevname(rdev->bdev, b));
++			printk_rl(KERN_INFO "raid5:%s: read error corrected"
++				  " (%lu sectors at %llu on %s)\n",
++				  mdname(conf->mddev), STRIPE_SECTORS,
++				  (unsigned long long)(sh->sector
++						       + rdev->data_offset),
++				  bdevname(rdev->bdev, b));
+ 			clear_bit(R5_ReadError, &sh->dev[i].flags);
+ 			clear_bit(R5_ReWrite, &sh->dev[i].flags);
+ 		}
+@@ -1160,16 +1164,22 @@ static void raid5_end_read_request(struc
+ 		clear_bit(R5_UPTODATE, &sh->dev[i].flags);
+ 		atomic_inc(&rdev->read_errors);
+ 		if (conf->mddev->degraded)
+-			printk(KERN_WARNING "raid5:%s: read error not correctable (sector %llu on %s).\n",
+-			       mdname(conf->mddev),
+-			       (unsigned long long)(sh->sector + rdev->data_offset),
+-			       bdn);
++			printk_rl(KERN_WARNING
++				  "raid5:%s: read error not correctable "
++				  "(sector %llu on %s).\n",
++				  mdname(conf->mddev),
++				  (unsigned long long)(sh->sector
++						       + rdev->data_offset),
++				  bdn);
+ 		else if (test_bit(R5_ReWrite, &sh->dev[i].flags))
+ 			/* Oh, no!!! */
+-			printk(KERN_WARNING "raid5:%s: read error NOT corrected!! (sector %llu on %s).\n",
+-			       mdname(conf->mddev),
+-			       (unsigned long long)(sh->sector + rdev->data_offset),
+-			       bdn);
++			printk_rl(KERN_WARNING
++				  "raid5:%s: read error NOT corrected!! "
++				  "(sector %llu on %s).\n",
++				  mdname(conf->mddev),
++				  (unsigned long long)(sh->sector
++						       + rdev->data_offset),
++				  bdn);
+ 		else if (atomic_read(&rdev->read_errors)
+ 			 > conf->max_nr_stripes)
+ 			printk(KERN_WARNING
