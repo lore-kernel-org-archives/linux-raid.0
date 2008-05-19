@@ -1,33 +1,47 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: [OT] Re: questions about softraid limitations
-Date: Mon, 19 May 2008 09:52:32 +1000
-Message-ID: <18480.49473.241321.362325@notabene.brown>
-References: <002801c8b55a$60e4a360$0404a8c0@dcccs>
-	<482AC2BB.5010602@dgreaves.com>
-	<01be01c8b61a$6e616260$9300a8c0@dcccs>
-	<18476.58840.602946.872085@notabene.brown>
-	<482D242B.7060908@rabbit.us>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+From: NeilBrown <neilb@suse.de>
+Subject: [PATCH 001 of 10] md: Fix possible oops when removing a bitmap from an active array
+Date: Mon, 19 May 2008 11:10:11 +1000
+Message-ID: <1080519011011.7627@suse.de>
+References: <20080519110910.7473.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Peter Rabbitson on Friday May 16
 Sender: linux-raid-owner@vger.kernel.org
-To: Peter Rabbitson <rabbit+list@rabbit.us>
-Cc: Janos Haar <djani22@netcenter.hu>, David Greaves <david@dgreaves.com>, linux-raid@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Friday May 16, rabbit+list@rabbit.us wrote:
-> 
-> Wow, this is big :) Is it correct to state that today most of mdadm's tasks 
-> can be carried out by toying with sysfs? Fascinating!
 
-Sort-of.
+It is possible to add a write-intent bitmap to an active array, or remove
+the bitmap that is there.
+When we do with the 'quiesce' the array, which causes make_request to
+block in "wait_barrier()".
+However we are sampling the value of "mddev->bitmap" before the
+wait_barrier call, and using it afterwards.  This can result in
+using a bitmap structure that has been freed.
 
-Many of mdadm's tasks are "make it easy to..." or "'automatically
-figure out ...".  These things cannot be done by toying in sysfs.
+Signed-off-by: Neil Brown <neilb@suse.de>
 
-But yes:  most (if not all) direct manipulations of md array can be
-done through text files in sysfs.
+### Diffstat output
+ ./drivers/md/raid1.c |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-NeilBrown
+diff .prev/drivers/md/raid1.c ./drivers/md/raid1.c
+--- .prev/drivers/md/raid1.c	2008-05-19 11:02:04.000000000 +1000
++++ ./drivers/md/raid1.c	2008-05-19 11:02:15.000000000 +1000
+@@ -773,7 +773,7 @@ static int make_request(struct request_q
+ 	r1bio_t *r1_bio;
+ 	struct bio *read_bio;
+ 	int i, targets = 0, disks;
+-	struct bitmap *bitmap = mddev->bitmap;
++	struct bitmap *bitmap;
+ 	unsigned long flags;
+ 	struct bio_list bl;
+ 	struct page **behind_pages = NULL;
+@@ -802,6 +802,8 @@ static int make_request(struct request_q
+ 
+ 	wait_barrier(conf);
+ 
++	bitmap = mddev->bitmap;
++
+ 	disk_stat_inc(mddev->gendisk, ios[rw]);
+ 	disk_stat_add(mddev->gendisk, sectors[rw], bio_sectors(bio));
+ 
