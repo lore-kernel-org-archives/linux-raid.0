@@ -1,34 +1,162 @@
-From: Cry <cry_regarder@yahoo.com>
-Subject: Re: Wipe failed RAID-5 disk before RMA
-Date: Tue, 20 May 2008 19:28:26 +0000 (UTC)
-Message-ID: <loom.20080520T192413-406@post.gmane.org>
-References: <loom.20080520T190131-192@post.gmane.org> <483323FA.3000500@rabbit.us>
+From: "Janos Haar" <janos.haar@netcenter.hu>
+Subject: Re: Re: Two Drive Failure on RAID-5
+Date: Tue, 20 May 2008 21:40:34 +0200
+Message-ID: <044c01c8bab1$6382e6c0$9300a8c0@dcccs>
+References: <loom.20080519T224713-779@post.gmane.org> <48327FC2.1010901@dgreaves.com> A<loom.20080520T145950-804@post.gmane.org> <A20315AE59B5C34585629E258D76A97C71AC52@34093-C3-EVS3.exchange.rackspace.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	format=flowed;
+	charset="ISO-8859-1";
+	reply-type=original
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: David Lethe <david@santools.com>, cry_regarder@yahoo.com
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> 
-> Cry wrote:
->> Do any of you have suggestions on how to wipe a failed raid drive before RMA
->> back to vendor/manufacturer?  I need something that keeps going when it 
->> reaches
->> a bad block.  The tool doesn't have to do multiple passes with random 
->> numbers. 
->> It shouldn't need to be nursed along.
 
-Peter Rabbitson <rabbit+list <at> rabbit.us> writes:
-> How about `badblocks -svw` ?
+----- Original Message ----- 
+From: "David Lethe" <david@santools.com>
+To: "Cry" <cry_regarder@yahoo.com>; <linux-raid@vger.kernel.org>
+Sent: Tuesday, May 20, 2008 7:18 PM
+Subject: RE: Re: Two Drive Failure on RAID-5
 
-Nice.  I'd been using dd but that is a PIA.  Don't know why I hadn't seen
-badblocks before.  I'll add when I give it a whir.:
 
-badblocks -svw -o bad_block_list 
+>
+>
+> -----Original Message-----
+> From: linux-raid-owner@vger.kernel.org
+> [mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Cry
+> Sent: Tuesday, May 20, 2008 10:32 AM
+> To: linux-raid@vger.kernel.org
+> Subject: Re: Two Drive Failure on RAID-5
+>
+> David Greaves <david <at> dgreaves.com> writes:
+>
+>>
+>> Yep. Don't panic and don't do anything else yet if you're not
+> confident about
+>> what you're doing.
+>>
+>> I'll follow up with more info in a short while.
+>>
+>> Info you can provide:
+>> kernel version
+>> mdadm version
+>> cat /proc/mdstat
+>> mdadm --examine /dev/sd[abcdef]1 (or whatever your array components
+> are)
+>> relevant smartctl info on the bad drive(s)
+>> dmesg info about the drive failures
+>>
+>> Assuming genuine hardware failure:
+>> Do you have any spare drives that you can use to replace the
+> components?
+>>
+>> David
+>
+> Thanks for the info.  I was able to do a --force --assemble on the array
+> and I
+> copied off my most critical data.  At the moment, I don't have enough
+> drives to
+> take all the data on the array, so I'm going to be at a bit of a
+> standstill
+> until new hardware arrives.
+>
+> Since the copy of that data (about 500Gig of about 2TB) went so well, I
+> decided
+> to try to sync up the spare again and it died at the same point and the
+> raid
+> system pulled down the array.  I'm trying to decide if I should follow
+> your
+> suggestion in sister post to copy the failed drive onto my spare or if I
+> should
+> just format the spare and try to recover another 500 gig of data of the
+> array.
+>
+> Is there a mdadm or other command to tell the raid system to stay up in
+> the face
+> of errors?  Can the array be assembled in a way that doesn't change the
+> array in
+> any way (completely read-only)?
+>
+> I've got the older failed drive also (about 15 hours older).  Can that
+> be
+> leveraged also?
+>
+> The server isn't networked right now, but I'll try to get the above
+> requested
+> logs tonight.
+>
+> By the way, I'm thinking about buying five of these:
+>
+> Seagate Barracuda 7200.11 1TB ST31000340AS SATA-II 32MB Cache
+>
+> and one of these:
+>
+> Supermicro SUPERMICRO CSE-M35T-1 Hot-Swapable SATA HDD Enclosure
+>
+> http://www.supermicro.com/products/accessories/mobilerack/CSE-M35T-1.cfm
+>
+> and building a raid-6 array.  I'll convert the surviving drives into a
+> backup
+> for the primary array.  Any feedback on the above?  Is there a
+> suggestion on an
+> inexpensive controller to give more SATA ports that is very software
+> raid
+> compatible?
+>
+> Any suggestions for optimal configuration (ext3) and tuning for the new
+> array?
+> My load consists of serving a photo gallery via apache and gallery2 as
+> well as a
+> local media (audio/video) server so files sizes tend to be large.
+>
+> Thanks,
+>
+> Joel
+> ===============
+> Joel:
+>
+> Respectfully .. are you nuts???
+>
+> Don't buy the 7200.11 disks.   You bought a bunch of desktop class
+> drives, and they crapped out on you, and you are about to make the same
+> mistake again.  Get the server class disk that is designed to run 24x7
+> duty cycle, which in your case would be the 'cuda ES.2
+>
+> Sorry about the soapbox, but it never ceases to amaze me how people try
+> to save by buying disk drives architected with lowest possible cost in
+> mind, and don't investigate the higher-quality disks that are designed
+> for extended reliability and data integrity.
+>
+> David
 
-Thanks!
+David and Joel,
 
-Cry
+Let me remember you to the power supply!
+This is really important too!
+
+The 24x7 cycle systems need a good quality PS and cables, connectors for 
+hdd.
+One poor (Y) cable, or connector can make easy 1-2 or more failed drives at 
+a same time!
+The SMART can monitor the actual state, but can not monitor the bad 
+connection and/or noise on the voltage.
+
+Cheers,
+Janos
+
+
+>
+>
+>
+>
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html 
 
