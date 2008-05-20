@@ -1,7 +1,7 @@
 From: "David Lethe" <david@santools.com>
 Subject: RE:  Re: Two Drive Failure on RAID-5
-Date: Tue, 20 May 2008 12:18:44 -0500
-Message-ID: <A20315AE59B5C34585629E258D76A97C71AC52@34093-C3-EVS3.exchange.rackspace.com>
+Date: Tue, 20 May 2008 12:27:36 -0500
+Message-ID: <A20315AE59B5C34585629E258D76A97C71AC6B@34093-C3-EVS3.exchange.rackspace.com>
 References: <loom.20080519T224713-779@post.gmane.org> <48327FC2.1010901@dgreaves.com> A<loom.20080520T145950-804@post.gmane.org>
 Mime-Version: 1.0
 Content-Type: text/plain;
@@ -107,25 +107,15 @@ local media (audio/video) server so files sizes tend to be large.
 Thanks,
 
 Joel
-===============
-Joel:
 
-Respectfully .. are you nuts??? 
-
-Don't buy the 7200.11 disks.   You bought a bunch of desktop class
-drives, and they crapped out on you, and you are about to make the same
-mistake again.  Get the server class disk that is designed to run 24x7
-duty cycle, which in your case would be the 'cuda ES.2
-
-Sorry about the soapbox, but it never ceases to amaze me how people try
-to save by buying disk drives architected with lowest possible cost in
-mind, and don't investigate the higher-quality disks that are designed
-for extended reliability and data integrity.
+----------------
+Also .. statistically speaking, you just lost 2 of 6 disks, within hours
+of each other, and you have 4 more disks that had the same workload and
+exposure to environmental conditions.  Assuming you deployed all 6 disks
+at the same time, and they were all made at the same time, then you are
+betting your data against those other 4 drives failing soon.  Make sure
+you have current backup.
 
 David
-
-
-
-
 
 
