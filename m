@@ -1,54 +1,165 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: =?iso-8859-2?Q?INFO:_task_md2=5Fresync:7950_blocked_for_more_than_120_seconds?=
-Date: Wed, 21 May 2008 21:41:57 +1000
-Message-ID: <18484.2693.62883.535755@notabene.brown>
-References: <8a6b34b03e0524aa66c862534fee9b7a@www3.mail.volny.cz>
+From: Cry <cry_regarder@yahoo.com>
+Subject: Re: Two Drive Failure on RAID-5
+Date: Wed, 21 May 2008 14:14:20 +0000 (UTC)
+Message-ID: <loom.20080521T140522-597@post.gmane.org>
+References: <loom.20080519T224713-779@post.gmane.org> <4832966A.3010707@dgreaves.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from wylda@volny.cz on Sunday May 4
 Sender: linux-raid-owner@vger.kernel.org
-To: wylda@volny.cz
-Cc: dm-devel@redhat.com, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sunday May 4, wylda@volny.cz wrote:
-> Hello,
+David Greaves <david <at> dgreaves.com> writes:
 > 
-> today i noticed in syslog some strange entries triggered by checkarray.
-> I cannot judge if those are harmless messages or it means, that something
-> bad is happening. So is it bad or just a bug?
+> Cry wrote:
+>> Folks,
+>> 
+>> I had a drive fail on my 6 drive raid-5 array.  while syncing in the 
+>> replacement
+>> drive (11 percent complete) a second drive went bad.
+>> 
+>
+> blockdev --getra /dev/SOURCE <note the readahead value>
+> blockdev --setro /dev/SOURCE
+> blockdev --setra  0 /dev/SOURCE
+> ddrescue /dev/SOURCE /dev/TARGET /somewhere_safe/logfile
+> 
+ 
+> unless you've rebooted:
+> blockdev --setrw /dev/SOURCE
+> blockdev --setra  <saved readahead value> /dev/SOURCE
+> 
+> mdadm --assemble --force /dev/md0 /dev/sda1 /dev/sdb1 /dev/sdc1 /dev/sdd1
+> /dev/sde1
+ 
+> cat /proc/mdstat will show the drive status
+> mdadm --detail /dev/md0
+> mdadm --examine /dev/sd[abcdef]1 [components]
 
-Hi,
- your attachment was very large and so the original mail didn't go out
-to the list but went to the moderator instead, and I ended up with it
-(thanks Alasdair!).
+I performed the above steps, however I used dd_rescue instead of ddrescue.
 
-The syslog contained lots of things like:
+]# dd_rescue -l sda_rescue.log -o sda_rescue.bad -v /dev/sda /dev/sdg1 
 
-May  4 00:57:02 ss4000 mdadm: RebuildStarted event detected on md device /dev/md0
-May  4 00:57:02 ss4000 kernel: md: delaying data-check of md1 until md2 has finished (they share one or more physical units)
-May  4 00:57:02 ss4000 kernel: md: delaying data-check of md2 until md0 has finished (they share one or more physical units)
-May  4 01:20:26 ss4000 kernel: INFO: task md1_resync:7949 blocked for more than 120 seconds.
-May  4 01:20:26 ss4000 kernel: "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-May  4 01:20:26 ss4000 kernel: md1_resync    D c02c01b8     0  7949      2
-May  4 01:20:26 ss4000 kernel: [<c02bff50>] (schedule+0x0/0x2d4) from [<c0221ed0>] (md_do_sync+0x1dc/0x950)
-May  4 01:20:26 ss4000 kernel: [<c0221cf4>] (md_do_sync+0x0/0x950) from [<c02237a0>] (md_thread+0x114/0x130)
-May  4 01:20:26 ss4000 kernel: [<c022368c>] (md_thread+0x0/0x130) from [<c004ea7c>] (kthread+0x5c/0x94)
-May  4 01:20:26 ss4000 kernel: [<c004ea20>] (kthread+0x0/0x94) from [<c003c3dc>] (do_exit+0x0/0x328)
-May  4 01:20:26 ss4000 kernel:  r6:00000000 r5:00000000 r4:00000000
-May  4 01:20:27 ss4000 kernel: no locks held by md1_resync/7949.
-May  4 01:20:27 ss4000 kernel: INFO: task md2_resync:7950 blocked for more than 120 seconds.
+dd_rescue: (info): about to transfer 0.0 kBytes from /dev/sda to /dev/sdg1
+dd_rescue: (info): blocksizes: soft 65536, hard 512
+dd_rescue: (info): starting positions: in 0.0k, out 0.0k
+dd_rescue: (info): Logfile: sda_rescue.log, Maxerr: 0
+dd_rescue: (info): Reverse: no , Trunc: no , interactive: no 
+dd_rescue: (info): abort on Write errs: no , spArse write: if err
 
-suggesting that 'md1_resync' was blocked waiting for disk IO for 2 minutes
-multiple times.
+.......
 
-I have heard of another case of this happening when the md arrays were
-built on top of dm logical volumes.
+dd_rescue: (info): /dev/sda (488386592.0k): EOF
+Summary for /dev/sda -> /dev/sdg1:
+dd_rescue: (info): ipos: 488386592.0k, opos: 488386592.0k, 
+  xferd: 488386592.0k
+                   errs:    504, errxfer:       252.0k, 
+  succxfer: 488386336.0k
+             +curr.rate:    47904kB/s, avg.rate:    14835kB/s, 
+  avg.load:  9.6%
 
-Could you please report exactly what kernel and distro you are using,
-and describe your storage setup (what devices, what LVM, DM, MD, loop,
-crypto, filesystem,.... is being used and how).
 
-NeilBrown
+/dev/sdg1 is my replacement drive (750G) that I had tried to sync
+previously.  The problem now is that while the copy happened, mdadm 
+still thinks it is that old spare:
+
+~]#  mdadm -E /dev/sdg1 /dev/sda
+/dev/sdg1:
+          Magic : a92b4efc
+        Version : 00.90.00
+           UUID : 18e3d0b8:a21b31d2:7216c3e5:9bbd9f39
+  Creation Time : Thu May 24 01:55:48 2007
+     Raid Level : raid5
+  Used Dev Size : 488386432 (465.76 GiB 500.11 GB)
+     Array Size : 2441932160 (2328.81 GiB 2500.54 GB)
+   Raid Devices : 6
+  Total Devices : 6
+Preferred Minor : 0
+
+    Update Time : Mon May 19 22:32:56 2008
+          State : clean
+ Active Devices : 4
+Working Devices : 5
+ Failed Devices : 2
+  Spare Devices : 1
+       Checksum : 1dc8dcfa - correct
+         Events : 0.1187802
+
+         Layout : left-symmetric
+     Chunk Size : 128K
+
+      Number   Major   Minor   RaidDevice State
+this     6       8       97        6      spare   /dev/sdg1
+
+   0     0       8       80        0      active sync   /dev/sdf
+   1     1       8       64        1      active sync   /dev/sde
+   2     2       8      128        2      active sync   /dev/sdi
+   3     3       0        0        3      faulty removed
+   4     4       0        0        4      faulty removed
+   5     5       8      144        5      active sync   /dev/sdj
+   6     6       8       97        6      spare   /dev/sdg1
+/dev/sda:
+          Magic : a92b4efc
+        Version : 00.90.00
+           UUID : 18e3d0b8:a21b31d2:7216c3e5:9bbd9f39
+  Creation Time : Thu May 24 01:55:48 2007
+     Raid Level : raid5
+  Used Dev Size : 488386432 (465.76 GiB 500.11 GB)
+     Array Size : 2441932160 (2328.81 GiB 2500.54 GB)
+   Raid Devices : 6
+  Total Devices : 6
+Preferred Minor : 0
+
+    Update Time : Mon May 19 21:40:13 2008
+          State : clean
+ Active Devices : 5
+Working Devices : 6
+ Failed Devices : 1
+  Spare Devices : 1
+       Checksum : 1dc8d023 - correct
+         Events : 0.1187796
+
+         Layout : left-symmetric
+     Chunk Size : 128K
+
+      Number   Major   Minor   RaidDevice State
+this     4       8        0        4      active sync   /dev/sda
+
+   0     0       8       80        0      active sync   /dev/sdf
+   1     1       8       64        1      active sync   /dev/sde
+   2     2       8      128        2      active sync   /dev/sdi
+   3     3       0        0        3      faulty removed
+   4     4       8        0        4      active sync   /dev/sda
+   5     5       8      144        5      active sync   /dev/sdj
+   6     6       8       97        6      spare   /dev/sdg1
+
+and when I try to assemble the array, it only sees four disks 
+plus a spare.
+
+]# mdadm --assemble --force --verbose /dev/md0 /dev/sdf /dev/sde 
+/dev/sdi /dev/sdj /dev/sdg1
+mdadm: looking for devices for /dev/md0
+mdadm: /dev/sdf is identified as a member of /dev/md0, slot 0.
+mdadm: /dev/sde is identified as a member of /dev/md0, slot 1.
+mdadm: /dev/sdi is identified as a member of /dev/md0, slot 2.
+mdadm: /dev/sdj is identified as a member of /dev/md0, slot 5.
+mdadm: /dev/sdg1 is identified as a member of /dev/md0, slot 6.
+mdadm: added /dev/sde to /dev/md0 as 1
+mdadm: added /dev/sdi to /dev/md0 as 2
+mdadm: no uptodate device for slot 3 of /dev/md0
+mdadm: no uptodate device for slot 4 of /dev/md0
+mdadm: added /dev/sdj to /dev/md0 as 5
+mdadm: added /dev/sdg1 to /dev/md0 as 6
+mdadm: added /dev/sdf to /dev/md0 as 0
+mdadm: /dev/md0 assembled from 4 drives and 1 spare - not enough to 
+start the array.
+
+
+How do I transfer the label from /dev/sda (no partitions) to /dev/sdg1?
+
+Thanks,
+
+Cry
+
