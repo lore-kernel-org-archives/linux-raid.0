@@ -1,106 +1,40 @@
-From: "David Lethe" <david@santools.com>
-Subject: RE: Two Drive Failure on RAID-5
-Date: Thu, 22 May 2008 11:16:17 -0500
-Message-ID: <A20315AE59B5C34585629E258D76A97C76F416@34093-C3-EVS3.exchange.rackspace.com>
-References: <122201c8bad9$0050f26a$3501a8c0@exchange.rackspace.com> <4835865B.4000501@gmail.com>
+From: Tony Germano <tony_germano@hotmail.com>
+Subject: Re: Proposal: non-striping RAID4
+Date: Thu, 22 May 2008 17:15:49 -0400
+Message-ID: <BAY130-W418FFF9E3F58536967DDEAE1C60@phx.gbl>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
-In-Reply-To: <4835865B.4000501@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Ric Wheeler <ricwheeler@gmail.com>
-Cc: Keith Roberts <keith@karsites.net>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
+I would like to bring this back to the attention of the group (from November 2007) since the conversation died off and it looks like a few key features important to me were left out of the discussion... *grin*
 
------Original Message-----
-From: Ric Wheeler [mailto:ricwheeler@gmail.com] 
-Sent: Thursday, May 22, 2008 9:43 AM
-To: David Lethe
-Cc: Keith Roberts; linux-raid@vger.kernel.org
-Subject: Re: Two Drive Failure on RAID-5
+The original post was regarding "unRAID" developed by http://lime-technology.com/
 
-David Lethe wrote:
-> the disk manufacturers stopped making them last year, and stopped R&D
-on them way before that.  
->
-> -----Original Message-----
->
-> From:  "Keith Roberts" <keith@karsites.net>
-> Subj:  RE:  Re:  Re: Two Drive Failure on RAID-5
-> Date:  Tue May 20, 2008 5:20 pm
-> Size:  1K
-> To:  "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
->
-> On Tue, 20 May 2008, David Lethe wrote: 
->  
->   
->> To: Cry <cry_regarder@yahoo.com>, linux-raid@vger.kernel.org 
->> From: David Lethe <david@santools.com> 
->> Subject: RE:  Re:  Re: Two Drive Failure on RAID-5 
->>  
->> Here is a good analogy that puts this in perspective.  I haven't seen
+I had an idea in my head, and "unRAID" has features almost identical to what I was thinking about with the exception of a couple deal breaking design decisions. These are due to the proprietary front end, not the modified driver.
 
->> anybody equate the two yet, so get the name right if you quote this
-;) 
->>
->> Disk drives are like light bulbs. You can buy the server class
-(similar 
->> to CFLs), or desktop (incandescent).  If you don't mind the dark, 
->> replace them as they fail, and buy spares as they go on sale. 
->> Conversely, if you have to maintain a vaulted ceiling chandelier, and
+Bad decision #1) Implementation is for a NAS Appliance. Files are only accessible through a Samba share. (Though this is great for the hoards of people that use it as network storage for their windows media center pcs.)
 
->> are afraid of heights, then spending twice as much for never having
-to 
->> deal with *THAT* again will seem like a bargain. 
->>
->> - David Lethe 
->>     
->  
-> So are there such things as server class EIDE drives? Or are  
-> they all SCSI or SATA? 
->  
-> Keith 
->   
-Different vendors have different strategies around how to market their 
-various drives - you have archival (think big, slow S-ATA for things 
-like a Tivo), S-ATA drives that are consumer grade or slightly higher 
-class drive like SAS (serial attached SCSI) and then the highest quality
+Bad decision #2) Imposed ReiserFS.
 
-drives (Fibre channel).
+Oh yeah, and it's not free in either sense of the word.
 
-You can get good results from all classes of drives, but you need to 
-make sure that you periodically check them pro-actively for errors and 
-try to repair them in place if possible. Also, make sure you get an 
-updated kernel so we don't kick out drives that would be otherwise 
-perfectly reasonable ;-)
+The most relevant uses I can think of for this type of array are archive storage and low use media servers. Keeping that in mind...
 
-ric
+Good Thing #1)
+"JBOD with parity." Each usable disk is seen separately and has its own filesystem. This allows mixed sized disks and replacing older smaller drives with newer larger ones one at a time while utilizing the extra capacity right away (after expanding the filesystem.) In the event that two or more disks are lost, surviving non-parity disks still have 100% of their data. (Adding a new disk larger than the parity disk is possible, but takes multiple steps of converting it to the new parity disk and then adding the old parity disk back to the array as a regular disk... acceptable to me)
 
-============
-I must add a caveat to what Ric said.  Disks are designed to withstand
-specific duty cycles as well as tolerance for errors and intelligence
-when it comes to automated error recovery.
+Good Thing #2)
+You can spin down idle disks. Since there is no data striping and file systems don't [have to] span drives, reading a file only requires 1 disk to be spinning. Writing only requires 1 disk + parity disk. This is an important feature to the "GREEN" community. On my mythtv server, I only record a few shows each week. I would have disks in this setup possibly not accessed for weeks or even months at a time. They don't need to be spinning, and performance is of no importance to me as long as it can keep up with writing HD streams.
 
-His statement is only valid up to the point your usage doesn't exceed
-the workload that a specific disk was designed to tolerate.
-Furthermore, the superior server class drives have significantly better
-error recovery & management.  As such, they are less prone to having
-errors for any given load. Read the specs & programming manuals for
-specifics.
+Hopefully this brings a new perspective to the idea.
 
-So, for any given load, you can purchase disk drives that will actually
-generate FEWER errors .. which is a heck of a lot better than having to
-pro-actively test & repair and deal with drives that kernels kick out.
-
-That's why the disk manufacturers have 146 GB disks that retail for $150
-to $1000 dollars. The difference is not as many have claimed, just the
-physical interface. 
-
-David
-
-
+Thanks,
+Tony Germano
+_________________________________________________________________
+Keep your kids safer online with Windows Live Family Safety.
+http://www.windowslive.com/family_safety/overview.html?ocid=TXT_TAGLM_WL_Refresh_family_safety_052008
