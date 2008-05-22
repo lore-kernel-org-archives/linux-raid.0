@@ -1,64 +1,65 @@
-From: David Greaves <david@dgreaves.com>
+From: Ric Wheeler <ricwheeler@gmail.com>
 Subject: Re: Two Drive Failure on RAID-5
-Date: Thu, 22 May 2008 09:38:40 +0100
-Message-ID: <48353110.8060602@dgreaves.com>
-References: <loom.20080519T224713-779@post.gmane.org> <4832966A.3010707@dgreaves.com> <loom.20080521T140522-597@post.gmane.org> <483482E2.60300@dgreaves.com> <09ed01c8bb83$ec3f7230$9300a8c0@dcccs> <loom.20080521T210407-628@post.gmane.org>
+Date: Thu, 22 May 2008 10:42:35 -0400
+Message-ID: <4835865B.4000501@gmail.com>
+References: <122201c8bad9$0050f26a$3501a8c0@exchange.rackspace.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <loom.20080521T210407-628@post.gmane.org>
+In-Reply-To: <122201c8bad9$0050f26a$3501a8c0@exchange.rackspace.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Cry <cry_regarder@yahoo.com>
-Cc: linux-raid@vger.kernel.org
+To: David@santools.com
+Cc: Keith Roberts <keith@karsites.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Cry wrote:
-> Janos Haar <janos.haar <at> netcenter.hu> writes:
->>> No. /dev/sdg1 is a *partition* on your old drive.
-> 
-> Nope.  /dev/sda is my old drive.  It has NO partitions because I was 
-> retarded 1 year ago:
-> 
-> Folks, I made a mistake when I created my original raid array 
-> (there is a note about it in the archives of this group) that 
-> I built the array on the raw drives, not on partitions.
-That is not a 'problem' although it is not regarded as best practice.
+David Lethe wrote:
+> the disk manufacturers stopped making them last year, and stopped R&D on them way before that.  
+>
+> -----Original Message-----
+>
+> From:  "Keith Roberts" <keith@karsites.net>
+> Subj:  RE:  Re:  Re: Two Drive Failure on RAID-5
+> Date:  Tue May 20, 2008 5:20 pm
+> Size:  1K
+> To:  "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+>
+> On Tue, 20 May 2008, David Lethe wrote: 
+>  
+>   
+>> To: Cry <cry_regarder@yahoo.com>, linux-raid@vger.kernel.org 
+>> From: David Lethe <david@santools.com> 
+>> Subject: RE:  Re:  Re: Two Drive Failure on RAID-5 
+>>  
+>> Here is a good analogy that puts this in perspective.  I haven't seen 
+>> anybody equate the two yet, so get the name right if you quote this ;) 
+>>
+>> Disk drives are like light bulbs. You can buy the server class (similar 
+>> to CFLs), or desktop (incandescent).  If you don't mind the dark, 
+>> replace them as they fail, and buy spares as they go on sale. 
+>> Conversely, if you have to maintain a vaulted ceiling chandelier, and 
+>> are afraid of heights, then spending twice as much for never having to 
+>> deal with *THAT* again will seem like a bargain. 
+>>
+>> - David Lethe 
+>>     
+>  
+> So are there such things as server class EIDE drives? Or are  
+> they all SCSI or SATA? 
+>  
+> Keith 
+>   
+Different vendors have different strategies around how to market their 
+various drives - you have archival (think big, slow S-ATA for things 
+like a Tivo), S-ATA drives that are consumer grade or slightly higher 
+class drive like SAS (serial attached SCSI) and then the highest quality 
+drives (Fibre channel).
 
-> /dev/sda IS the drive.  There is no /dev/sda1.  However, the 
-> replacement drive is a 750Gig (not 500 like the originals) so 
-> I built a partition on the drive of the correct size: /dev/sdg1.
-And you didn't think to mention this?
-Maybe you thought it would be in the support file I keep for you?
+You can get good results from all classes of drives, but you need to 
+make sure that you periodically check them pro-actively for errors and 
+try to repair them in place if possible. Also, make sure you get an 
+updated kernel so we don't kick out drives that would be otherwise 
+perfectly reasonable ;-)
 
-
-When people offer suggestions they (or at least I) will probably form a picture
-of what's going on - if you are going to throw tweaks into the mix then they may
-throw us off. Mention them.
-
-You have failed to answer some potentially relevant questions and, before you
-get this array rebuilt you wandered off (on the same thread) into discussions
-about what disk drives you might like to buy, the best type of external
-enclosure and various other oddments. This is not helpful.
-
->The correct information should already be in /dev/sdg1 since I copied the entire
->/dev/sda there (probably overwrote stuff in /dev/sdg2 since /dev/sda was 160K
->bigger than /dev/sdg1).
-Err, no. Linux doesn't randomly overwrite other partitions...
-
-You're on 0.9 superblocks which are located at the end of the disk.
-
-I *think* your assemble problem is that /dev/sdg1 was an old component (slot 6);
-it had a superblock near the end of the partition which you didn't zero. You
-copied most of /dev/sda into it but you made /dev/sdg1 too small by a few k. The
-copy finished before it copied the /dev/sda superblock (I don't know why it
-didn't overwrite the old superblock??). Also, at some point, md will try and
-seek past the end of /dev/sdg1 and will die.
-
-You have now dug a maze of twisty passages...
-
-I think at this point you should enlarge /dev/sdg1, recopy /dev/sda to /dev/sdg1
-and try again. That will probably work.
-
-David
+ric
 
