@@ -1,142 +1,66 @@
-From: Lars =?UTF-8?B?VMOkdWJlcg==?= <taeuber@bbaw.de>
-Subject: Re: aoe disk not recognized as part of raid
-Date: Fri, 23 May 2008 17:00:56 +0200
-Message-ID: <20080523170056.d6e39787.taeuber@bbaw.de>
-References: <20080523142525.31d6e06b.taeuber@bbaw.de>
+From: Roger Heflin <rogerheflin@gmail.com>
+Subject: Re: Proposal: non-striping RAID4
+Date: Fri, 23 May 2008 10:12:38 -0500
+Message-ID: <4836DEE6.4030300@gmail.com>
+References: <BAY130-W418FFF9E3F58536967DDEAE1C60@phx.gbl>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="Multipart=_Fri__23_May_2008_17_00_56_+0200_GxuKMOrGChjh7d4u"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20080523142525.31d6e06b.taeuber@bbaw.de>
+In-Reply-To: <BAY130-W418FFF9E3F58536967DDEAE1C60@phx.gbl>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Tony Germano <tony_germano@hotmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This is a multi-part message in MIME format.
+Tony Germano wrote:
+> I would like to bring this back to the attention of the group (from November 2007) since the conversation died off and it looks like a few key features important to me were left out of the discussion... *grin*
+> 
+> The original post was regarding "unRAID" developed by http://lime-technology.com/
+> 
+> I had an idea in my head, and "unRAID" has features almost identical to what I was thinking about with the exception of a couple deal breaking design decisions. These are due to the proprietary front end, not the modified driver.
+> 
+> Bad decision #1) Implementation is for a NAS Appliance. Files are only accessible through a Samba share. (Though this is great for the hoards of people that use it as network storage for their windows media center pcs.)
+> 
+> Bad decision #2) Imposed ReiserFS.
+> 
+> Oh yeah, and it's not free in either sense of the word.
+> 
+> The most relevant uses I can think of for this type of array are archive storage and low use media servers. Keeping that in mind...
+> 
+> Good Thing #1)
+> "JBOD with parity." Each usable disk is seen separately and has its own filesystem. This allows mixed sized disks and replacing older smaller drives with newer larger ones one at a time while utilizing the extra capacity right away (after expanding the filesystem.) In the event that two or more disks are lost, surviving non-parity disks still have 100% of their data. (Adding a new disk larger than the parity disk is possible, but takes multiple steps of converting it to the new parity disk and then adding the old parity disk back to the array as a regular disk... acceptable to me)
+> 
+> Good Thing #2)
+> You can spin down idle disks. Since there is no data striping and file systems don't [have to] span drives, reading a file only requires 1 disk to be spinning. Writing only requires 1 disk + parity disk. This is an important feature to the "GREEN" community. On my mythtv server, I only record a few shows each week. I would have disks in this setup possibly not accessed for weeks or even months at a time. They don't need to be spinning, and performance is of no importance to me as long as it can keep up with writing HD streams.
+> 
+> Hopefully this brings a new perspective to the idea.
+> 
 
---Multipart=_Fri__23_May_2008_17_00_56_+0200_GxuKMOrGChjh7d4u
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+I would think (for mythtv and similar uses) that they way to handle this would 
+be to setup the raid array similar to enterprise class offline storage systems, 
+you have a local disk cache of say 10-20GB, and when something is accessed you 
+spinup the array and copy the entire file in, on writing, every hour or so (or 
+any time you have to spin up the array) you copy all or part of the file off of 
+the cache onto the array.   This would require either proper hooks in the kernel 
+to deal with the offline storage concept or software at the application level to 
+do it.
 
-Sorry!
+I know most of the offline storage has all of the files showing on a filesytem 
+with proper metadata, but the file data is actually elsewhere, and when an 
+application access the files the offline system (behind the scenes) brings the 
+file data back from the offline storage onto the cache.   With this on a myth 
+system I would expect the array to at most be spun up < 1x per hour for under 10 
+minutes (my array does 35MB/s write, 90MB/s read-1.5GB recording would take 45 
+seconds to copy from cache to array, and a reading a recording would take <20 
+seconds to copy from cache to array plus spinup time), so a most the array would 
+be actually spun up for maybe 3-5 minutes per hour under heavy usage, and 
+probably not spun up at all in when things were not used.    My array uses about 
+40W for the 4 disks, so being spun down 23 hours a day would save about 1KWhr 
+per day, At the low power rate I pay (0.07/kwh) that comes to about $25 per year 
+in power, in some more expensive states it would be 2-3 times that, and probably 
+higher in Europe.
 
-> mdadm version 2.6.6 although it is reported as:
-> monosan:~ # mdadm -V
-> mdadm - v2.6 - 21 December 2006
+The big question is would the disks survive being spun down that often?
 
-I accidentally compiled mdadm 2.6 instead of 2.6.6. But this is even worse:
-
-monosan:~ # mdadm -V
-mdadm - v2.6.6 - 19th May 2008
-monosan:~ # mdadm -As
-Segmentation fault
-
-
-Regards
-Lars
-
---Multipart=_Fri__23_May_2008_17_00_56_+0200_GxuKMOrGChjh7d4u
-Content-Type: text/plain;
- name="mdadm.strace"
-Content-Disposition: attachment;
- filename="mdadm.strace"
-Content-Transfer-Encoding: base64
-
-ZXhlY3ZlKCIvc2Jpbi9tZGFkbSIsIFsibWRhZG0iLCAiLUFzIl0sIFsvKiA1NCB2YXJzICovXSkg
-PSAwDQpicmsoMCkgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgPSAweDYzNjAwMA0K
-bW1hcChOVUxMLCA0MDk2LCBQUk9UX1JFQUR8UFJPVF9XUklURSwgTUFQX1BSSVZBVEV8TUFQX0FO
-T05ZTU9VUywgLTEsIDApID0gMHg3ZjYwMzQyNzYwMDANCm1tYXAoTlVMTCwgNDA5NiwgUFJPVF9S
-RUFEfFBST1RfV1JJVEUsIE1BUF9QUklWQVRFfE1BUF9BTk9OWU1PVVMsIC0xLCAwKSA9IDB4N2Y2
-MDM0Mjc1MDAwDQphY2Nlc3MoIi9ldGMvbGQuc28ucHJlbG9hZCIsIFJfT0spICAgICAgPSAtMSBF
-Tk9FTlQgKE5vIHN1Y2ggZmlsZSBvciBkaXJlY3RvcnkpDQpvcGVuKCIvZXRjL2xkLnNvLmNhY2hl
-IiwgT19SRE9OTFkpICAgICAgPSAzDQpmc3RhdCgzLCB7c3RfbW9kZT1TX0lGUkVHfDA2NDQsIHN0
-X3NpemU9Mzk1NjUsIC4uLn0pID0gMA0KbW1hcChOVUxMLCAzOTU2NSwgUFJPVF9SRUFELCBNQVBf
-UFJJVkFURSwgMywgMCkgPSAweDdmNjAzNDI2YjAwMA0KY2xvc2UoMykgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgID0gMA0Kb3BlbigiL2xpYjY0L2xpYmMuc28uNiIsIE9fUkRPTkxZKSAg
-ICAgID0gMw0KcmVhZCgzLCAiXDE3N0VMRlwyXDFcMVwwXDBcMFwwXDBcMFwwXDBcMFwzXDA+XDBc
-MVwwXDBcMHBcMzM0XDFcMFwwXDBcMFwwIi4uLiwgODMyKSA9IDgzMg0KZnN0YXQoMywge3N0X21v
-ZGU9U19JRlJFR3wwNzU1LCBzdF9zaXplPTEzNTQwMDAsIC4uLn0pID0gMA0KbW1hcChOVUxMLCAz
-NDI0NTY4LCBQUk9UX1JFQUR8UFJPVF9FWEVDLCBNQVBfUFJJVkFURXxNQVBfREVOWVdSSVRFLCAz
-LCAwKSA9IDB4N2Y2MDMzZDE3MDAwDQpmYWR2aXNlNjQoMywgMCwgMzQyNDU2OCwgUE9TSVhfRkFE
-Vl9XSUxMTkVFRCkgPSAwDQptcHJvdGVjdCgweDdmNjAzM2U1MzAwMCwgMjA5MzA1NiwgUFJPVF9O
-T05FKSA9IDANCm1tYXAoMHg3ZjYwMzQwNTIwMDAsIDIwNDgwLCBQUk9UX1JFQUR8UFJPVF9XUklU
-RSwgTUFQX1BSSVZBVEV8TUFQX0ZJWEVEfE1BUF9ERU5ZV1JJVEUsIDMsIDB4MTNiMDAwKSA9IDB4
-N2Y2MDM0MDUyMDAwDQptbWFwKDB4N2Y2MDM0MDU3MDAwLCAxNjY5NiwgUFJPVF9SRUFEfFBST1Rf
-V1JJVEUsIE1BUF9QUklWQVRFfE1BUF9GSVhFRHxNQVBfQU5PTllNT1VTLCAtMSwgMCkgPSAweDdm
-NjAzNDA1NzAwMA0KY2xvc2UoMykgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgID0gMA0K
-bW1hcChOVUxMLCA0MDk2LCBQUk9UX1JFQUR8UFJPVF9XUklURSwgTUFQX1BSSVZBVEV8TUFQX0FO
-T05ZTU9VUywgLTEsIDApID0gMHg3ZjYwMzQyNmEwMDANCm1tYXAoTlVMTCwgNDA5NiwgUFJPVF9S
-RUFEfFBST1RfV1JJVEUsIE1BUF9QUklWQVRFfE1BUF9BTk9OWU1PVVMsIC0xLCAwKSA9IDB4N2Y2
-MDM0MjY5MDAwDQphcmNoX3ByY3RsKEFSQ0hfU0VUX0ZTLCAweDdmNjAzNDI2OTZmMCkgPSAwDQpt
-cHJvdGVjdCgweDdmNjAzNDA1MjAwMCwgMTIyODgsIFBST1RfUkVBRCkgPSAwDQptcHJvdGVjdCgw
-eDYyZjAwMCwgNDA5NiwgUFJPVF9SRUFEKSAgICAgPSAwDQptdW5tYXAoMHg3ZjYwMzQyNmIwMDAs
-IDM5NTY1KSAgICAgICAgICAgPSAwDQpnZXRwaWQoKSAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgPSA3MDUyDQpicmsoMCkgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgPSAw
-eDYzNjAwMA0KYnJrKDB4NjU3MDAwKSAgICAgICAgICAgICAgICAgICAgICAgICAgID0gMHg2NTcw
-MDANCm9wZW4oIi9ldGMvbWRhZG0uY29uZiIsIE9fUkRPTkxZKSAgICAgICA9IDMNCmZzdGF0KDMs
-IHtzdF9tb2RlPVNfSUZSRUd8MDY0NCwgc3Rfc2l6ZT0zNTgsIC4uLn0pID0gMA0KbW1hcChOVUxM
-LCA0MDk2LCBQUk9UX1JFQUR8UFJPVF9XUklURSwgTUFQX1BSSVZBVEV8TUFQX0FOT05ZTU9VUywg
-LTEsIDApID0gMHg3ZjYwMzQyNzQwMDANCnJlYWQoMywgIkRFVklDRSAvZGV2L3NkW2FiXVswLTld
-IC9kZXYvZG0tIi4uLiwgNDA5NikgPSAzNTgNCnJlYWQoMywgIiIsIDQwOTYpICAgICAgICAgICAg
-ICAgICAgICAgICA9IDANCnJlYWQoMywgIiIsIDQwOTYpICAgICAgICAgICAgICAgICAgICAgICA9
-IDANCmNsb3NlKDMpICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA9IDANCm11bm1hcCgw
-eDdmNjAzNDI3NDAwMCwgNDA5NikgICAgICAgICAgICA9IDANCm9wZW4oIi9kZXYiLCBPX1JET05M
-WXxPX05PTkJMT0NLfE9fRElSRUNUT1JZKSA9IDMNCmZzdGF0KDMsIHtzdF9tb2RlPVNfSUZESVJ8
-MDc1NSwgc3Rfc2l6ZT04MTgwLCAuLi59KSA9IDANCmZjbnRsKDMsIEZfU0VURkQsIEZEX0NMT0VY
-RUMpICAgICAgICAgICA9IDANCmdldGRlbnRzNjQoMywgLyogMTU0IGVudHJpZXMgKi8sIDQwOTYp
-ICA9IDQwODANCmdldGRlbnRzNjQoMywgLyogMTM4IGVudHJpZXMgKi8sIDQwOTYpICA9IDQwODgN
-CmdldGRlbnRzNjQoMywgLyogMTE3IGVudHJpZXMgKi8sIDQwOTYpICA9IDM2NzINCmdldGRlbnRz
-NjQoMywgLyogMCBlbnRyaWVzICovLCA0MDk2KSAgICA9IDANCmNsb3NlKDMpICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICA9IDANCm9wZW4oIi9kZXYiLCBPX1JET05MWXxPX05PTkJMT0NL
-fE9fRElSRUNUT1JZKSA9IDMNCmZzdGF0KDMsIHtzdF9tb2RlPVNfSUZESVJ8MDc1NSwgc3Rfc2l6
-ZT04MTgwLCAuLi59KSA9IDANCmZjbnRsKDMsIEZfU0VURkQsIEZEX0NMT0VYRUMpICAgICAgICAg
-ICA9IDANCmdldGRlbnRzNjQoMywgLyogMTU0IGVudHJpZXMgKi8sIDQwOTYpICA9IDQwODANCmdl
-dGRlbnRzNjQoMywgLyogMTM4IGVudHJpZXMgKi8sIDQwOTYpICA9IDQwODgNCmdldGRlbnRzNjQo
-MywgLyogMTE3IGVudHJpZXMgKi8sIDQwOTYpICA9IDM2NzINCmdldGRlbnRzNjQoMywgLyogMCBl
-bnRyaWVzICovLCA0MDk2KSAgICA9IDANCmNsb3NlKDMpICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICA9IDANCnN0YXQoIi9kZXYvbWQyIiwge3N0X21vZGU9U19JRkJMS3wwNjQwLCBzdF9y
-ZGV2PW1ha2VkZXYoOSwgMiksIC4uLn0pID0gMA0Kb3BlbigiL2Rldi9tZDIiLCBPX1JEV1IpICAg
-ICAgICAgICAgICAgID0gMw0KZnN0YXQoMywge3N0X21vZGU9U19JRkJMS3wwNjQwLCBzdF9yZGV2
-PW1ha2VkZXYoOSwgMiksIC4uLn0pID0gMA0KaW9jdGwoMywgMHg4MDBjMDkxMCwgMHg3ZmZmM2My
-NzRmYjApICAgID0gMA0KaW9jdGwoMywgMHg4MDQ4MDkxMSwgMHg3ZmZmM2MyNzUyNjApICAgID0g
-MA0KY2xvc2UoMykgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgID0gMA0Kc3RhdCgiL2Rl
-di9tZDMiLCB7c3RfbW9kZT1TX0lGQkxLfDA2NDAsIHN0X3JkZXY9bWFrZWRldig5LCAzKSwgLi4u
-fSkgPSAwDQpvcGVuKCIvZGV2L21kMyIsIE9fUkRXUikgICAgICAgICAgICAgICAgPSAzDQpmc3Rh
-dCgzLCB7c3RfbW9kZT1TX0lGQkxLfDA2NDAsIHN0X3JkZXY9bWFrZWRldig5LCAzKSwgLi4ufSkg
-PSAwDQppb2N0bCgzLCAweDgwMGMwOTEwLCAweDdmZmYzYzI3NGZiMCkgICAgPSAwDQppb2N0bCgz
-LCAweDgwNDgwOTExLCAweDdmZmYzYzI3NTI2MCkgICAgPSAwDQpjbG9zZSgzKSAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgPSAwDQpzdGF0KCIvZGV2L21kNCIsIHtzdF9tb2RlPVNfSUZC
-TEt8MDY0MCwgc3RfcmRldj1tYWtlZGV2KDksIDQpLCAuLi59KSA9IDANCm9wZW4oIi9kZXYvbWQ0
-IiwgT19SRFdSKSAgICAgICAgICAgICAgICA9IDMNCmZzdGF0KDMsIHtzdF9tb2RlPVNfSUZCTEt8
-MDY0MCwgc3RfcmRldj1tYWtlZGV2KDksIDQpLCAuLi59KSA9IDANCmlvY3RsKDMsIDB4ODAwYzA5
-MTAsIDB4N2ZmZjNjMjc0ZmIwKSAgICA9IDANCmlvY3RsKDMsIDB4ODA0ODA5MTEsIDB4N2ZmZjNj
-Mjc1MjYwKSAgICA9IDANCmNsb3NlKDMpICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA9
-IDANCnN0YXQoIi9kZXYvbWQ5Iiwge3N0X21vZGU9U19JRkJMS3wwNjQwLCBzdF9yZGV2PW1ha2Vk
-ZXYoOSwgOSksIC4uLn0pID0gMA0Kb3BlbigiL2Rldi9tZDkiLCBPX1JEV1IpICAgICAgICAgICAg
-ICAgID0gMw0KZnN0YXQoMywge3N0X21vZGU9U19JRkJMS3wwNjQwLCBzdF9yZGV2PW1ha2VkZXYo
-OSwgOSksIC4uLn0pID0gMA0KaW9jdGwoMywgMHg4MDBjMDkxMCwgMHg3ZmZmM2MyNzRmYjApICAg
-ID0gMA0KaW9jdGwoMywgMHg4MDQ4MDkxMSwgMHg3ZmZmM2MyNzUyNjApICAgID0gLTEgRU5PREVW
-IChObyBzdWNoIGRldmljZSkNCnVuYW1lKHtzeXM9IkxpbnV4Iiwgbm9kZT0ibW9ub3NhbiIsIC4u
-Ln0pID0gMA0KZnN0YXQoMywge3N0X21vZGU9U19JRkJMS3wwNjQwLCBzdF9yZGV2PW1ha2VkZXYo
-OSwgOSksIC4uLn0pID0gMA0KaW9jdGwoMywgMHg4MDBjMDkxMCwgMHg3ZmZmM2MyNzRjMzApICAg
-ID0gMA0KaW9jdGwoMywgMHg4MDQ4MDkxMSwgMHg3ZmZmM2MyNzRlYjApICAgID0gLTEgRU5PREVW
-IChObyBzdWNoIGRldmljZSkNCmlvY3RsKDMsIDB4OTMyLCAwKSAgICAgICAgICAgICAgICAgICAg
-ICA9IDANCm9wZW4oIi9kZXYiLCBPX1JET05MWXxPX05PTkJMT0NLfE9fRElSRUNUT1JZKSA9IDQN
-CmZzdGF0KDQsIHtzdF9tb2RlPVNfSUZESVJ8MDc1NSwgc3Rfc2l6ZT04MTgwLCAuLi59KSA9IDAN
-CmZjbnRsKDQsIEZfU0VURkQsIEZEX0NMT0VYRUMpICAgICAgICAgICA9IDANCmdldGRlbnRzNjQo
-NCwgLyogMTU0IGVudHJpZXMgKi8sIDQwOTYpICA9IDQwODANCmdldGRlbnRzNjQoNCwgLyogMTM4
-IGVudHJpZXMgKi8sIDQwOTYpICA9IDQwODgNCmdldGRlbnRzNjQoNCwgLyogMTE3IGVudHJpZXMg
-Ki8sIDQwOTYpICA9IDM2NzINCmdldGRlbnRzNjQoNCwgLyogMCBlbnRyaWVzICovLCA0MDk2KSAg
-ICA9IDANCmNsb3NlKDQpICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA9IDANCm9wZW4o
-Ii9kZXYiLCBPX1JET05MWXxPX05PTkJMT0NLfE9fRElSRUNUT1JZKSA9IDQNCmZzdGF0KDQsIHtz
-dF9tb2RlPVNfSUZESVJ8MDc1NSwgc3Rfc2l6ZT04MTgwLCAuLi59KSA9IDANCmZjbnRsKDQsIEZf
-U0VURkQsIEZEX0NMT0VYRUMpICAgICAgICAgICA9IDANCmdldGRlbnRzNjQoNCwgLyogMTU0IGVu
-dHJpZXMgKi8sIDQwOTYpICA9IDQwODANCmdldGRlbnRzNjQoNCwgLyogMTM4IGVudHJpZXMgKi8s
-IDQwOTYpICA9IDQwODgNCmdldGRlbnRzNjQoNCwgLyogMTE3IGVudHJpZXMgKi8sIDQwOTYpICA9
-IDM2NzINCmdldGRlbnRzNjQoNCwgLyogMCBlbnRyaWVzICovLCA0MDk2KSAgICA9IDANCmNsb3Nl
-KDQpICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA9IDANCm9wZW4oIi9kZXYvc2RiMiIs
-IE9fUkRPTkxZfE9fRVhDTCkgICAgICA9IC0xIEVCVVNZIChEZXZpY2Ugb3IgcmVzb3VyY2UgYnVz
-eSkNCi0tLSBTSUdTRUdWIChTZWdtZW50YXRpb24gZmF1bHQpIEAgMCAoMCkgLS0tDQorKysga2ls
-bGVkIGJ5IFNJR1NFR1YgKysrDQo=
-
---Multipart=_Fri__23_May_2008_17_00_56_+0200_GxuKMOrGChjh7d4u--
+                             Roger
