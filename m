@@ -1,61 +1,69 @@
-From: Willy Tarreau <w@1wt.eu>
-Subject: Re: RFI for 2.6.25.5 : Re: Regression- XFS won't mount on partitioned md array
-Date: Sat, 24 May 2008 15:52:58 +0200
-Message-ID: <20080524135258.GF6749@1wt.eu>
-References: <482DC043.5000307@dgreaves.com> <482DD981.5070004@sandeen.net> <482EEFDA.50101@dgreaves.com> <482EF6A7.2020909@sandeen.net> <482F67D9.70400@sandeen.net> <482FBD4C.20608@sandeen.net> <482FED60.7060405@dgreaves.com> <4838192F.3050004@dgreaves.com>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: Proposal: non-striping RAID4
+Date: Sat, 24 May 2008 10:21:39 -0400
+Message-ID: <48382473.8090808@tmr.com>
+References: <BAY130-W418FFF9E3F58536967DDEAE1C60@phx.gbl> <BC2A76AABABF8741A8ADEE62DB1350F80384C383@exchange2.valvesoftware.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755978AbYEXN75@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4838192F.3050004@dgreaves.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: David Greaves <david@dgreaves.com>
-Cc: Greg KH <greg@kroah.com>, Eric Sandeen <sandeen@sandeen.net>, David Chinner <dgc@sgi.com>, xfs@oss.sgi.com, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, LinuxRaid <linux-raid@vger.kernel.org>, stable@kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <BC2A76AABABF8741A8ADEE62DB1350F80384C383@exchange2.valvesoftware.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Chris Green <cgreen@valvesoftware.com>
+Cc: Tony Germano <tony_germano@hotmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi David,
+Chris Green wrote:
+> I would really like to have this functionality. Honestly, its pretty
+> much perfect for the "home server" application (which I have several
+> of), where:
+>
+>    - writes are far less common than reads,
+>    - The system goes hours without any reads and days without any
+> writes.
+>    - single drive read speed is plenty for the applications that are
+> sitting on the other side
+>    - a lot of the data is too voluminous to backup (media that can just
+> be re-ripped or downloaded).
+>    - you want some redundancy beyond a single drive copy, but don't want
+> to spend a lot of drives on it. The model of "if you lose 1 disk, you
+> lose nothing, if you lose 2 disks you lose a portion" is better than the
+> raid5 model of losing everything with a double-disk failure.
+>    - a common access pattern is to do a long sequential read at a slow
+> rate that takes hours to go through a few gigs (playing media).
+>  
 
-On Sat, May 24, 2008 at 02:33:35PM +0100, David Greaves wrote:
-> Hi Greg
-> Perusing:
->   http://git.kernel.org/?p=linux/kernel/git/stable/stable-queue.git
-> doesn't show the patch referenced below as in the queue for 2.6.25.5
+I think you can do this right now with a touch of cleverness...
 
-First, please avoid top-posting.
+Assume you create a raid-1 array, load your data, and call that initialized.
 
-> David Greaves wrote:
-> > Eric Sandeen wrote:
-> >> Eric Sandeen wrote:
-> >>> Eric Sandeen wrote:
-> >>>
-> >>>> I'll see if I have a little time today to track down the problem.
-> >>> Does this patch fix it for you?  Does for me though I can't yet explain
-> >>> why ;)
-> >>>
-> >>> http://www.linux.sgi.com/archives/xfs/2008-05/msg00190.html
-> >>>
-> >>> -Eric
-> > Yes, this fixes it for me - thanks :)
-> > 
-> >> So what's happening is that xfs is trying to read a page-sized IO from
-> >> the last sector of the log... which goes off the end of the device.
-> >> This looks like another regression introduced by
-> >> a9759f2de38a3443d5107bddde03b4f3f550060e, but fixed by Christoph's patch
-> >> in the URL above, which should be headed towards -stable.
-> > Damn, I guess I misread my bisect readings when things crashed then.
-> > Still, I said 'around' :)
-> > 
-> >> (aside: it seems that this breaks any external log setup where the log
-> >> consists of the entire device... but I'd have expected the xfsqa suite
-> >> to catch this...?)
-> >>
-> >> The patch avoids the problem by looking for some extra locking but it
-> >> seems to me that the root cause is that the buffer being read at this
-> >> point doesn't have it's b_offset, the offset in it's page, set.  Might
-> >> be another little buglet but harmless it seems.
+ From cron, daily or weekly, you set one drive of the array 
+"write-mostly" and set the spin-down time (hdparm -S) to an hour or so. 
+Now reads will go to one drive, the other will spin down, *and*, should 
+you do one of those infrequent writes, the idle drive will spin back up 
+and write the data (I want a bitmap of course). At the end of the time 
+period you clear the write-mostly and spin-down time on the idle drive, 
+put them on the other drive, and ideally you wind up with redundancy, 
+splitting the disk wear evenly, and using existing capabilities.
 
-It would have helped to CC stable (fixed) and to give the mainline commit
-ID since the stable branch only holds already merged patches. Greg, the
-commit is 6ab455ee...
+Actually you can't quite use existing capabilities, write-mostly can 
+only be used at inconvenient times, like build, create, or add, so it's 
+not obviously possible to change without at least shutting the array 
+down. Perhaps Neil will give us his thoughts on that. However, if you 
+don't mind a *really* ugly script, you might be able to mark the active 
+drive failed, which would force all i/o to the previously sleeping 
+drive, then remove the previously active drive, and add it back in using 
+write-mostly. You would do a full sync (I think) but the change would be 
+made.
 
-Willy
+Better to make write-mostly a flag which can be enabled and disabled at 
+will. That would be useful when a remote drive is normally operated over 
+a fast link and has to drop to a slow backup link. I'm sure other uses 
+would be found.
+
+-- 
+Bill Davidsen <davidsen@tmr.com>
+  "Woe unto the statesman who makes war without a reason that will still
+  be valid when the war is over..." Otto von Bismark 
+
+
