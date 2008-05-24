@@ -1,30 +1,66 @@
-From: Eric Sandeen <sandeen@sandeen.net>
-Subject: Re: RFI for 2.6.25.5 : Re: Regression- XFS won't mount on partitioned
- md array
-Date: Sat, 24 May 2008 10:39:34 -0500
-Message-ID: <483836B6.8030406@sandeen.net>
-References: <482DC043.5000307@dgreaves.com> <482DD981.5070004@sandeen.net> <482EEFDA.50101@dgreaves.com> <482EF6A7.2020909@sandeen.net> <482F67D9.70400@sandeen.net> <482FBD4C.20608@sandeen.net> <482FED60.7060405@dgreaves.com> <4838192F.3050004@dgreaves.com> <20080524135258.GF6749@1wt.eu>
+From: Richard Scobie <richard@sauce.co.nz>
+Subject: Re: aoe disk not recognized as part of raid
+Date: Sun, 25 May 2008 08:28:58 +1200
+Message-ID: <48387A8A.3020201@sauce.co.nz>
+References: <20080523142525.31d6e06b.taeuber@bbaw.de>    <20080523170056.d6e39787.taeuber@bbaw.de> <46144.192.168.1.70.1211610465.squirrel@neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20080524135258.GF6749@1wt.eu>
+In-Reply-To: <46144.192.168.1.70.1211610465.squirrel@neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: Willy Tarreau <w@1wt.eu>
-Cc: David Greaves <david@dgreaves.com>, Greg KH <greg@kroah.com>, David Chinner <dgc@sgi.com>, xfs@oss.sgi.com, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, LinuxRaid <linux-raid@vger.kernel.org>, stable@kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Willy Tarreau wrote:
+NeilBrown wrote:
+> On Sat, May 24, 2008 1:00 am, Lars T=C3=A4uber wrote:
+>> Sorry!
+>>
+>>> mdadm version 2.6.6 although it is reported as:
+>>> monosan:~ # mdadm -V
+>>> mdadm - v2.6 - 21 December 2006
+>> I accidentally compiled mdadm 2.6 instead of 2.6.6. But this is even
+>> worse:
+>>
+>> monosan:~ # mdadm -V
+>> mdadm - v2.6.6 - 19th May 2008
+>> monosan:~ # mdadm -As
+>> Segmentation fault
+>=20
+> That's bad.
+> What do you get from:
+>=20
+>  ulimit -c unlimited
+>  mdadm -As
+>  gdb `which mdadm` core
+>  where
+>=20
+> ??
+>=20
+> NeilBrown
 
-> It would have helped to CC stable (fixed) and to give the mainline commit
-> ID since the stable branch only holds already merged patches. Greg, the
-> commit is 6ab455ee...
-> 
-> Willy
+I saw this last week, but can unfortunately only offer limited=20
+information - for various reasons, this system is no longer available.
 
-Yup I'll agree that this should probably go to -stable unless hch or
-dchinner disagree.
+On an up to date Fedora 8 x86_64 2.6.24.7-92.fc8 sytem, I replaced mdad=
+m=20
+with a locally built mdadm 2.6.5 - compiled with -O2.
 
-FWIW I've already put it in the Fedora kernels.
+On the next reboot, the md RAID1 / failed to assemble, with mdadm=20
+errors. When I accessed from a rescue disk, running mdadm -A /dev/mdX=20
+(can't rember exact dev), returned "Segmentation fault".
 
--Eric
+If it's any use, I do still have a complete mdadm 2.6.5 tree containing=
+=20
+the faulty objects from this system.
+
+Regards,
+
+Richard
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
