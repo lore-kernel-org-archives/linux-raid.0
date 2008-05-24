@@ -1,44 +1,43 @@
 From: "NeilBrown" <neilb@suse.de>
 Subject: Re: aoe disk not recognized as part of raid
-Date: Sat, 24 May 2008 16:26:24 +1000 (EST)
-Message-ID: <46141.192.168.1.70.1211610384.squirrel@neil.brown.name>
+Date: Sat, 24 May 2008 16:27:45 +1000 (EST)
+Message-ID: <46144.192.168.1.70.1211610465.squirrel@neil.brown.name>
 References: <20080523142525.31d6e06b.taeuber@bbaw.de>
+    <20080523170056.d6e39787.taeuber@bbaw.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20080523142525.31d6e06b.taeuber@bbaw.de>
+In-Reply-To: <20080523170056.d6e39787.taeuber@bbaw.de>
 Sender: linux-raid-owner@vger.kernel.org
 To: Lars =?iso-8859-1?Q?T=C3=A4uber?= <taeuber@bbaw.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, May 23, 2008 10:25 pm, Lars T=C3=A4uber wrote:
-> Hallo!
+On Sat, May 24, 2008 1:00 am, Lars T=C3=A4uber wrote:
+> Sorry!
 >
-> It seems mdadm doesn't recognises aoe block devices automatically as =
-part
-> of raid:
+>> mdadm version 2.6.6 although it is reported as:
+>> monosan:~ # mdadm -V
+>> mdadm - v2.6 - 21 December 2006
 >
-> monosan:~ # fgrep md9 /etc/mdadm.conf
-> ARRAY /dev/md9 level=3Draid1 num-devices=3D2
-> UUID=3D23882ab5:8346ffa3:0e2e4f1e:419f2ac9
+> I accidentally compiled mdadm 2.6 instead of 2.6.6. But this is even
+> worse:
 >
-> monosan:~ # cat /proc/partitions
-> major minor  #blocks  name
-> [...]
->  253    16 1074790400 dm-16
->  253    17 8589934592 dm-17
->  152  2832 1074790400 etherd/e11.1
->
+> monosan:~ # mdadm -V
+> mdadm - v2.6.6 - 19th May 2008
 > monosan:~ # mdadm -As
-> mdadm: /dev/md9 has been started with 1 drive (out of 2).
->
+> Segmentation fault
 
-What does
-   mdadm -Asv
+That's bad.
+What do you get from:
 
-show ??
+ ulimit -c unlimited
+ mdadm -As
+ gdb `which mdadm` core
+ where
+
+??
 
 NeilBrown
 
