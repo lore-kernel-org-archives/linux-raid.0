@@ -1,48 +1,54 @@
-From: "NeilBrown" <neilb@suse.de>
-Subject: Re: aoe disk not recognized as part of raid
-Date: Sat, 24 May 2008 16:27:45 +1000 (EST)
-Message-ID: <46144.192.168.1.70.1211610465.squirrel@neil.brown.name>
-References: <20080523142525.31d6e06b.taeuber@bbaw.de>
-    <20080523170056.d6e39787.taeuber@bbaw.de>
+From: David Greaves <david@dgreaves.com>
+Subject: RFI for 2.6.25.5 : Re: Regression- XFS won't mount on partitioned
+ md array
+Date: Sat, 24 May 2008 14:33:35 +0100
+Message-ID: <4838192F.3050004@dgreaves.com>
+References: <482DC043.5000307@dgreaves.com> <482DD981.5070004@sandeen.net> <482EEFDA.50101@dgreaves.com> <482EF6A7.2020909@sandeen.net> <482F67D9.70400@sandeen.net> <482FBD4C.20608@sandeen.net> <482FED60.7060405@dgreaves.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20080523170056.d6e39787.taeuber@bbaw.de>
+In-Reply-To: <482FED60.7060405@dgreaves.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Lars =?iso-8859-1?Q?T=C3=A4uber?= <taeuber@bbaw.de>
-Cc: linux-raid@vger.kernel.org
+To: Greg KH <greg@kroah.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, David Chinner <dgc@sgi.com>, xfs@oss.sgi.com, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, LinuxRaid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Sat, May 24, 2008 1:00 am, Lars T=C3=A4uber wrote:
-> Sorry!
->
->> mdadm version 2.6.6 although it is reported as:
->> monosan:~ # mdadm -V
->> mdadm - v2.6 - 21 December 2006
->
-> I accidentally compiled mdadm 2.6 instead of 2.6.6. But this is even
-> worse:
->
-> monosan:~ # mdadm -V
-> mdadm - v2.6.6 - 19th May 2008
-> monosan:~ # mdadm -As
-> Segmentation fault
+Hi Greg
+Perusing:
+  http://git.kernel.org/?p=linux/kernel/git/stable/stable-queue.git
+doesn't show the patch referenced below as in the queue for 2.6.25.5
 
-That's bad.
-What do you get from:
+David
 
- ulimit -c unlimited
- mdadm -As
- gdb `which mdadm` core
- where
+David Greaves wrote:
+> Eric Sandeen wrote:
+>> Eric Sandeen wrote:
+>>> Eric Sandeen wrote:
+>>>
+>>>> I'll see if I have a little time today to track down the problem.
+>>> Does this patch fix it for you?  Does for me though I can't yet explain
+>>> why ;)
+>>>
+>>> http://www.linux.sgi.com/archives/xfs/2008-05/msg00190.html
+>>>
+>>> -Eric
+> Yes, this fixes it for me - thanks :)
+> 
+>> So what's happening is that xfs is trying to read a page-sized IO from
+>> the last sector of the log... which goes off the end of the device.
+>> This looks like another regression introduced by
+>> a9759f2de38a3443d5107bddde03b4f3f550060e, but fixed by Christoph's patch
+>> in the URL above, which should be headed towards -stable.
+> Damn, I guess I misread my bisect readings when things crashed then.
+> Still, I said 'around' :)
+> 
+>> (aside: it seems that this breaks any external log setup where the log
+>> consists of the entire device... but I'd have expected the xfsqa suite
+>> to catch this...?)
+>>
+>> The patch avoids the problem by looking for some extra locking but it
+>> seems to me that the root cause is that the buffer being read at this
+>> point doesn't have it's b_offset, the offset in it's page, set.  Might
+>> be another little buglet but harmless it seems.
 
-??
-
-NeilBrown
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
