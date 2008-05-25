@@ -1,66 +1,51 @@
-From: Richard Scobie <richard@sauce.co.nz>
-Subject: Re: aoe disk not recognized as part of raid
-Date: Sun, 25 May 2008 08:28:58 +1200
-Message-ID: <48387A8A.3020201@sauce.co.nz>
-References: <20080523142525.31d6e06b.taeuber@bbaw.de>    <20080523170056.d6e39787.taeuber@bbaw.de> <46144.192.168.1.70.1211610465.squirrel@neil.brown.name>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Marvell 88SX7042 [4 Port SATA PCI-Express x4] Support/Questions
+Date: Sun, 25 May 2008 08:03:22 -0400 (EDT)
+Message-ID: <alpine.DEB.1.10.0805250757550.18572@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <46144.192.168.1.70.1211610465.squirrel@neil.brown.name>
-Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
+Return-path: <linux-ide-owner@vger.kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-NeilBrown wrote:
-> On Sat, May 24, 2008 1:00 am, Lars T=C3=A4uber wrote:
->> Sorry!
->>
->>> mdadm version 2.6.6 although it is reported as:
->>> monosan:~ # mdadm -V
->>> mdadm - v2.6 - 21 December 2006
->> I accidentally compiled mdadm 2.6 instead of 2.6.6. But this is even
->> worse:
->>
->> monosan:~ # mdadm -V
->> mdadm - v2.6.6 - 19th May 2008
->> monosan:~ # mdadm -As
->> Segmentation fault
->=20
-> That's bad.
-> What do you get from:
->=20
->  ulimit -c unlimited
->  mdadm -As
->  gdb `which mdadm` core
->  where
->=20
-> ??
->=20
-> NeilBrown
+Jeff has been working on this chipset/patching/etc:
+http://forum.soft32.com/linux/PATCH-sata_mv-HighPoint-2310-support-88SX7042-ftopict338643.html
 
-I saw this last week, but can unfortunately only offer limited=20
-information - for various reasons, this system is no longer available.
+Manual/specs:
+http://www.startech.com/Share/ProductSpecs/PDF/PEXSATA24E.pdf
+http://www.rosewill.com/RosewillSoftware/UserManual%20for%20RC-218-WEB%20v1.0.pdf
 
-On an up to date Fedora 8 x86_64 2.6.24.7-92.fc8 sytem, I replaced mdad=
-m=20
-with a locally built mdadm 2.6.5 - compiled with -O2.
+Looks like there are a couple cards sporting this new chip at the moment, 
+here is one:
+http://www.newegg.com/Product/Product.aspx?Item=N82E16816132018
 
-On the next reboot, the md RAID1 / failed to assemble, with mdadm=20
-errors. When I accessed from a rescue disk, running mdadm -A /dev/mdX=20
-(can't rember exact dev), returned "Segmentation fault".
+http://en.wikipedia.org/wiki/List_of_Marvell_Technology_Group_chipsets#88SXxxxx_SATA_Controllers_Chipsets
+It also appears to be supported in the latest kernel.
 
-If it's any use, I do still have a complete mdadm 2.6.5 tree containing=
-=20
-the faulty objects from this system.
+If one bought enough of these, one could possibly achieve speeds in 
+excess(!) of 1 gigabyte/second with enough drives and SW RAID in Linux.
+Does anyone have such a card? I would be interested if it could sustain 
+the maximum rate from each disk without any contention.
 
-Regards,
+(with an old 965 chipset for example and a lot of 2-port PCI-e cards)
+dd if=/dev/sda of=/dev/null bs=1M
+dd if=/dev/sdb of=/dev/null bs=1M
 
-Richard
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The total read speed increases linearly with each additional disk.  Up to 
+~700-800 megabytes per second with 12 disks (as reported by dstat) (or 
+vmstat 1)..  Same with write (but slower, obviously)...
+
+So my questions are:
+1. Does anyone have one of these cards? (not the highpoint with the same 
+chip) as that is a RAID card.
+2. How 'experimental' is it?
+
+Any other comments?
+
+There are motherboards with multiple PCI-e x8 slots (5) if you look around 
+hard enough, imagine 5 of these cards with 20 hard drives, you could have 
+one very fast raid array..!
+
+Justin.
