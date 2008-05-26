@@ -1,30 +1,29 @@
-From: dean gaudet <dean@arctic.org>
-Subject: Re: Keeping debian from auto-assembling
-Date: Mon, 26 May 2008 04:10:53 -0700 (PDT)
-Message-ID: <alpine.DEB.1.10.0805260408400.19238@twinlark.arctic.org>
-References: <200804301354.35407.Dexter.Filmore@gmx.de>
+From: Jan Engelhardt <jengelh@medozas.de>
+Subject: RE: Mechanism to safely force repair of single md stripe w/o hurting
+ data integrity of file system
+Date: Mon, 26 May 2008 13:17:32 +0200 (CEST)
+Message-ID: <alpine.LNX.1.10.0805261316400.19084@fbirervta.pbzchgretzou.qr>
+References: <200805172026.m4HKQwh06910@www.watkins-home.com>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200804301354.35407.Dexter.Filmore@gmx.de>
+In-Reply-To: <200805172026.m4HKQwh06910@www.watkins-home.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dexter Filmore <Dexter.Filmore@gmx.de>
-Cc: linux-raid@vger.kernel.org
+To: Guy Watkins <linux-raid@watkins-home.com>
+Cc: 'David Lethe' <david@santools.com>, 'LinuxRaid' <linux-raid@vger.kernel.org>, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 30 Apr 2008, Dexter Filmore wrote:
 
-> I'd like to assembla manually to investigate why the bloody 5th disk flies 
-> from the array at EVERY boot time (third so far, wonder how much stress the 
-> disks take) but I can't seen to disable it.
-> 
-> All 5 disks are 0xFD, but I passed raid=noautodetect to the end of the kernel 
-> line, I set "assemble at startup" in /etc/defaults/mdadm to "false", I 
-> cleared the mdadm.conf - still it assembles the array. No idea why.
+On Saturday 2008-05-17 22:26, Guy Watkins wrote:
+>
+>I thought this would cause md to read all blocks in an array:
+>echo repair > /sys/block/md0/md/sync_action
+>
+>And rewrite any blocks that can't be read.
+>
+>In the old days, md would kick out a disk on a read error.  When you added
+>it back, md would rewrite everything on that disk, which corrected read
+>errors.
 
-you need to rebuild your initramfs after you make those changes to 
-/etc/defaults/mdadm ... easiest is:
-
-dpkg-reconfigure linux-image-`uname -r`
-
--dean
+With a read bitmap (`mdadm -G /dev/mdX -b internal`, or during -C),
+it should resync less after an unwarranted kick.
