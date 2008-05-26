@@ -1,29 +1,29 @@
-From: Jan Engelhardt <jengelh@medozas.de>
-Subject: RE: Mechanism to safely force repair of single md stripe w/o hurting
- data integrity of file system
-Date: Mon, 26 May 2008 13:17:32 +0200 (CEST)
-Message-ID: <alpine.LNX.1.10.0805261316400.19084@fbirervta.pbzchgretzou.qr>
-References: <200805172026.m4HKQwh06910@www.watkins-home.com>
+From: Dexter Filmore <Dexter.Filmore@gmx.de>
+Subject: How to force stopping an array`
+Date: Mon, 26 May 2008 23:43:20 +0200
+Message-ID: <200805262343.20626.Dexter.Filmore@gmx.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200805172026.m4HKQwh06910@www.watkins-home.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Guy Watkins <linux-raid@watkins-home.com>
-Cc: 'David Lethe' <david@santools.com>, 'LinuxRaid' <linux-raid@vger.kernel.org>, linux-kernel@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+So I have a filesystem on an array I cannot unmount, hence I cannot stop the 
+array.
+Any way to force it?
 
-On Saturday 2008-05-17 22:26, Guy Watkins wrote:
->
->I thought this would cause md to read all blocks in an array:
->echo repair > /sys/block/md0/md/sync_action
->
->And rewrite any blocks that can't be read.
->
->In the old days, md would kick out a disk on a read error.  When you added
->it back, md would rewrite everything on that disk, which corrected read
->errors.
+Dex
 
-With a read bitmap (`mdadm -G /dev/mdX -b internal`, or during -C),
-it should resync less after an unwarranted kick.
+-- 
+-----BEGIN GEEK CODE BLOCK-----
+Version: 3.12
+GCS d--(+)@ s-:+ a- C++++ UL++ P+>++ L+++>++++ E-- W++ N o? K-
+w--(---) !O M+ V- PS+ PE Y++ PGP t++(---)@ 5 X+(++) R+(++) tv--(+)@ 
+b++(+++) DI+++ D- G++ e* h>++ r* y?
+------END GEEK CODE BLOCK------
+
+http://www.vorratsdatenspeicherung.de
