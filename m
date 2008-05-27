@@ -1,31 +1,46 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [PATCH 000 of 3] md: raid5 patches suitable for 2.6.26 and -stable
-Date: Tue, 27 May 2008 16:31:53 +1000
-Message-ID: <20080527162558.16305.patches@notabene>
+Subject: [PATCH 002 of 3] md: fix uninitialized use of mddev->recovery_wait
+Date: Tue, 27 May 2008 16:32:10 +1000
+Message-ID: <1080527063210.16432@suse.de>
+References: <20080527162558.16305.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: Andrew Morton <akpm@linux-foundation.org>
 Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, stable@kernel.org
 List-Id: linux-raid.ids
 
-Following are three patches that fixes bugs in raid5 that could
-conceivable cause data corruption (1 and 3) or and oops (2).
 
-Bugs 1 and 3 can cause a 'resync' to mistakenly think the partiy block
-is correct when infact it isn't (it looks at a parity block that was
-generated rather than read from disk).  If this happens to leave a
-parity block wrong, and a device then fails, data regenerated based on
-that parity block will be wrong.
+From: Dan Williams <dan.j.williams@intel.com>
 
-Once a patched kernel is installed, running a repair pass 
-(echo repair > .../sync_action) will fix any incorrect parity.
+If an array was created with --assume-clean we will oops when trying to set
+->resync_max.
 
-The Oops (patch 2) can only happen if you right to a partucular sysfs
-file that only root has access to and only developer (currently) have
-any reason to write to.
+Fix this by initializing ->recovery_wait in mddev_find.
 
-NeilBrown
+Cc: <stable@kernel.org>
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+Signed-off-by: Neil Brown <neilb@suse.de>
 
- [PATCH 001 of 3] md: md: fix prexor vs sync_request race
- [PATCH 002 of 3] md: fix uninitialized use of mddev->recovery_wait
- [PATCH 003 of 3] md: Do not compute parity unless it is on a failed drive
+### Diffstat output
+ ./drivers/md/md.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff .prev/drivers/md/md.c ./drivers/md/md.c
+--- .prev/drivers/md/md.c	2008-05-27 16:24:02.000000000 +1000
++++ ./drivers/md/md.c	2008-05-27 16:24:34.000000000 +1000
+@@ -276,6 +276,7 @@ static mddev_t * mddev_find(dev_t unit)
+ 	atomic_set(&new->active, 1);
+ 	spin_lock_init(&new->write_lock);
+ 	init_waitqueue_head(&new->sb_wait);
++	init_waitqueue_head(&new->recovery_wait);
+ 	new->reshape_position = MaxSector;
+ 	new->resync_max = MaxSector;
+ 	new->level = LEVEL_NONE;
+@@ -5665,7 +5666,6 @@ void md_do_sync(mddev_t *mddev)
+ 		window/2,(unsigned long long) max_sectors/2);
+ 
+ 	atomic_set(&mddev->recovery_active, 0);
+-	init_waitqueue_head(&mddev->recovery_wait);
+ 	last_check = 0;
+ 
+ 	if (j>2) {
