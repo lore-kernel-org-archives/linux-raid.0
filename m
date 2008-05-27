@@ -1,117 +1,87 @@
-From: Lars =?UTF-8?B?VMOkdWJlcg==?= <taeuber@bbaw.de>
-Subject: Re: aoe disk not recognized as part of raid
-Date: Tue, 27 May 2008 09:52:40 +0200
-Message-ID: <20080527095240.f517e4ff.taeuber@bbaw.de>
-References: <20080523142525.31d6e06b.taeuber@bbaw.de>
-	<20080523170056.d6e39787.taeuber@bbaw.de>
-	<46144.192.168.1.70.1211610465.squirrel@neil.brown.name>
-	<20080526122057.1ed4454e.taeuber@bbaw.de>
-	<18491.45392.503390.245024@notabene.brown>
+From: Dexter Filmore <Dexter.Filmore@gmx.de>
+Subject: Re: How to force stopping an array`
+Date: Tue, 27 May 2008 12:49:35 +0200
+Message-ID: <200805271249.35965.Dexter.Filmore@gmx.de>
+References: <200805262343.20626.Dexter.Filmore@gmx.de> <200805270102.15029.Dexter.Filmore@gmx.de> <40275.192.168.1.70.1211846736.squirrel@neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18491.45392.503390.245024@notabene.brown>
+In-Reply-To: <40275.192.168.1.70.1211846736.squirrel@neil.brown.name>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Neil,
+Am Dienstag, 27. Mai 2008 02:05:36 schrieb NeilBrown:
+> On Tue, May 27, 2008 9:02 am, Dexter Filmore wrote:
+> > Am Dienstag, 27. Mai 2008 00:30:26 schrieb Justin Piszcz:
+> >> On Tue, 27 May 2008, Dexter Filmore wrote:
+> >> > Am Dienstag, 27. Mai 2008 00:06:57 schrieb Justin Piszcz:
+> >> >> On Mon, 26 May 2008, Dexter Filmore wrote:
+> >> >>> So I have a filesystem on an array I cannot unmount, hence I cannot
+> >> >>> stop the array.
+> >> >>> Any way to force it?
+> >> >>>
+> >> >>> Dex
+> >> >>
+> >> >> What is using it?
+> >> >>
+> >> >> lsof | grep /mount_point
+> >> >> lsof | grep /dev/mdX
+> >> >
+> >> > A defunct java process that died from a mem heap error. I can't kill
+> >>
+> >> the
+> >>
+> >> > process, not even -9, leaves a <defunct>.
+> >>
+> >> Other than rebooting I am not sure..  You could try making / re-mounting
+> >> it as read-only but if the java process is still reading from the FS it
+> >> probably will not be of any help.
+> >>
+> >> Justin.
+> >
+> > Exactly. reboot pretty much deosn't do any good, afterwars the raid
+> > resyncs,
+> > which takes full 7h here.
+>
+> There shouldn't be a resync.  Presumably nothing is writing to the
+> array, and moments after the last write, the array will have been
+> flagged as 'clean' and will not require a resync after a reboot.
 
-Neil Brown <neilb@suse.de> schrieb:
-> > Any idea on the actual subject?
-> 
-> I need you to try the --assemble with --verbose to find out what is
-> happening.
-> Use an earlier version of mdadm.  (e.g. 2.6.4).
+Well, that's what I thought. Actually the "shutdown" didn't work at all, it 
+got stuck and wouldn't finish so I had to resort to Alt-SysRq-S/U/B to 
+reboot.
+S/U should have ensured the file systems are in sync, but I don't know how the 
+array takes to such measures. After the reboot the mdstat looks...
+>
+> > What happens there anyway? it resyncs, but mdstats say [UUUUU], all fine.
+>
+> I don't understand this question.
+>
 
-this is the output:
+...like this:
 
-monosan:/usr/local/src/mdadm-2.6.4 # ./mdadm -Av /dev/md9
-mdadm: looking for devices for /dev/md9
-mdadm: cannot open device /dev/sdb2: Device or resource busy
-mdadm: /dev/sdb2 has wrong uuid.
-mdadm: cannot open device /dev/sdb1: Device or resource busy
-mdadm: /dev/sdb1 has wrong uuid.
-mdadm: cannot open device /dev/sda3: Device or resource busy
-mdadm: /dev/sda3 has wrong uuid.
-mdadm: cannot open device /dev/sda2: Device or resource busy
-mdadm: /dev/sda2 has wrong uuid.
-mdadm: cannot open device /dev/sda1: Device or resource busy
-mdadm: /dev/sda1 has wrong uuid.
-mdadm: cannot open device /dev/dm-9: Device or resource busy
-mdadm: /dev/dm-9 has wrong uuid.
-mdadm: cannot open device /dev/dm-8: Device or resource busy
-mdadm: /dev/dm-8 has wrong uuid.
-mdadm: cannot open device /dev/dm-7: Device or resource busy
-mdadm: /dev/dm-7 has wrong uuid.
-mdadm: cannot open device /dev/dm-6: Device or resource busy
-mdadm: /dev/dm-6 has wrong uuid.
-mdadm: cannot open device /dev/dm-5: Device or resource busy
-mdadm: /dev/dm-5 has wrong uuid.
-mdadm: cannot open device /dev/dm-4: Device or resource busy
-mdadm: /dev/dm-4 has wrong uuid.
-mdadm: cannot open device /dev/dm-3: Device or resource busy
-mdadm: /dev/dm-3 has wrong uuid.
-mdadm: cannot open device /dev/dm-2: Device or resource busy
-mdadm: /dev/dm-2 has wrong uuid.
-mdadm: /dev/dm-17 has wrong uuid.
-mdadm: cannot open device /dev/dm-15: Device or resource busy
-mdadm: /dev/dm-15 has wrong uuid.
-mdadm: cannot open device /dev/dm-14: Device or resource busy
-mdadm: /dev/dm-14 has wrong uuid.
-mdadm: cannot open device /dev/dm-13: Device or resource busy
-mdadm: /dev/dm-13 has wrong uuid.
-mdadm: cannot open device /dev/dm-12: Device or resource busy
-mdadm: /dev/dm-12 has wrong uuid.
-mdadm: cannot open device /dev/dm-11: Device or resource busy
-mdadm: /dev/dm-11 has wrong uuid.
-mdadm: cannot open device /dev/dm-10: Device or resource busy
-mdadm: /dev/dm-10 has wrong uuid.
-mdadm: cannot open device /dev/dm-1: Device or resource busy
-mdadm: /dev/dm-1 has wrong uuid.
-mdadm: /dev/dm-0 has wrong uuid.
-mdadm: /dev/dm-16 is identified as a member of /dev/md9, slot 0.
-mdadm: no uptodate device for slot 1 of /dev/md9
-mdadm: added /dev/dm-16 to /dev/md9 as 0
-mdadm: /dev/md9 has been started with 1 drive (out of 2).
+# cat /proc/mdstat
+Personalities : [raid6] [raid5] [raid4]
+md0 : active raid5 sde1[0] sdb1[4] sdd1[3] sda1[2] sdc1[1]
+      1953503488 blocks level 5, 64k chunk, algorithm 2 [5/5] [UUUUU]
+      [>....................]  resync =  2.9% (14600832/488375872) 
+finish=360.6min speed=21896K/sec
 
-# cat /proc/partitions 
-major minor  #blocks  name
-
-   8     0  160836480 sda
-   8     1   14354046 sda1
-   8     2   48829567 sda2
-   8     3   48829567 sda3
-   8    16  160836480 sdb
-   8    17   14354046 sdb1
-   8    18   48829567 sdb2
-   8    32  976762584 sdc
-...
-  65   144  976762584 sdz
-  65   160  976762584 sdaa
-...
-  66    16  976762584 sdah
-   9     2   14353920 md2
- 253     0  976762584 dm-0
-...
- 253    15  976762584 dm-15
-   9     3   48829440 md3
-   9     4 12697912448 md4
-   9     9 1074790336 md9
- 152  2832 1074790400 etherd/e11.1
- 253    16 1074790400 dm-16
- 253    17 8589934592 dm-17
+unused devices: <none>
 
 
-dm-16 and etherd/e11.1 are the two parts of md9.
 
-monosan:/usr/local/src/mdadm-2.6.4 # cat /proc/mdstat 
-Personalities : [raid1] [raid0] [raid6] [raid5] [raid4] 
-md9 : active (auto-read-only) raid1 dm-16[0]
-      1074790336 blocks [2/1] [U_]
+-- 
+-----BEGIN GEEK CODE BLOCK-----
+Version: 3.12
+GCS d--(+)@ s-:+ a- C++++ UL++ P+>++ L+++>++++ E-- W++ N o? K-
+w--(---) !O M+ V- PS+ PE Y++ PGP t++(---)@ 5 X+(++) R+(++) tv--(+)@ 
+b++(+++) DI+++ D- G++ e* h>++ r* y?
+------END GEEK CODE BLOCK------
 
-Sorry for the voluminous outputs. :)
-Good luck.
-Lars
+http://www.vorratsdatenspeicherung.de
