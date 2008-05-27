@@ -1,31 +1,31 @@
-From: "Jeff Breidenbach" <jeff@jab.org>
-Subject: Re: split off + mount a partitionless RAID1 device?
-Date: Mon, 26 May 2008 22:28:42 -0700
-Message-ID: <e03b90ae0805262228w62a9eacaj1786fc57af7f21b@mail.gmail.com>
-References: <e03b90ae0805262100h9eb16cfq31fe9e0430154007@mail.gmail.com>
-	 <40607.192.168.1.70.1211863756.squirrel@neil.brown.name>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: NeilBrown <neilb@suse.de>
+Subject: [PATCH 000 of 3] md: raid5 patches suitable for 2.6.26 and -stable
+Date: Tue, 27 May 2008 16:31:53 +1000
+Message-ID: <20080527162558.16305.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <40607.192.168.1.70.1211863756.squirrel@neil.brown.name>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid list <linux-raid@vger.kernel.org>, Jeff Marshall <marshman@frozenbear.com>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, stable@kernel.org
 List-Id: linux-raid.ids
 
-> Why not just leave the resync going in the background using whatever
-> bandwidth happens to be available?
+Following are three patches that fixes bugs in raid5 that could
+conceivable cause data corruption (1 and 3) or and oops (2).
 
-Well, 32 thousand minutes is a long time. I figure sequestering
-all those seeks from Apache would cut resync to a mere 8 hours.
-Which would be nice because I'm trying to baby the array until
-it is complete by holding off on writes.
+Bugs 1 and 3 can cause a 'resync' to mistakenly think the partiy block
+is correct when infact it isn't (it looks at a parity block that was
+generated rather than read from disk).  If this happens to leave a
+parity block wrong, and a device then fails, data regenerated based on
+that parity block will be wrong.
 
-However, for some unknown reason the array has recently sped up
-a lot and is right now chugging along at speed=24485K/sec. So
-I guess I'll just offer general thanks to the strange and mysterious
-kernel gods and let things progress as is.
+Once a patched kernel is installed, running a repair pass 
+(echo repair > .../sync_action) will fix any incorrect parity.
 
-General thanks!
+The Oops (patch 2) can only happen if you right to a partucular sysfs
+file that only root has access to and only developer (currently) have
+any reason to write to.
+
+NeilBrown
+
+ [PATCH 001 of 3] md: md: fix prexor vs sync_request race
+ [PATCH 002 of 3] md: fix uninitialized use of mddev->recovery_wait
+ [PATCH 003 of 3] md: Do not compute parity unless it is on a failed drive
