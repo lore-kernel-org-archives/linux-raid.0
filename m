@@ -1,27 +1,33 @@
-From: David Greaves <david@dgreaves.com>
-Subject: Re: split off + mount a partitionless RAID1 device?
-Date: Tue, 27 May 2008 11:49:23 +0100
-Message-ID: <483BE733.5000106@dgreaves.com>
-References: <e03b90ae0805262100h9eb16cfq31fe9e0430154007@mail.gmail.com>	 <40607.192.168.1.70.1211863756.squirrel@neil.brown.name> <e03b90ae0805262228w62a9eacaj1786fc57af7f21b@mail.gmail.com>
+From: Lars =?UTF-8?B?VMOkdWJlcg==?= <taeuber@bbaw.de>
+Subject: Re: aoe disk not recognized as part of raid - solution!
+Date: Tue, 27 May 2008 13:05:01 +0200
+Message-ID: <20080527130501.75ad1820.taeuber@bbaw.de>
+References: <20080523142525.31d6e06b.taeuber@bbaw.de>
+	<20080523170056.d6e39787.taeuber@bbaw.de>
+	<46144.192.168.1.70.1211610465.squirrel@neil.brown.name>
+	<20080526122057.1ed4454e.taeuber@bbaw.de>
+	<18491.45392.503390.245024@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <e03b90ae0805262228w62a9eacaj1786fc57af7f21b@mail.gmail.com>
+In-Reply-To: <18491.45392.503390.245024@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jeff Breidenbach <jeff@jab.org>
-Cc: linux-raid list <linux-raid@vger.kernel.org>
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Jeff Breidenbach wrote:
-> However, for some unknown reason the array has recently sped up
-> a lot and is right now chugging along at speed=24485K/sec. So
-> I guess I'll just offer general thanks to the strange and mysterious
-> kernel gods and let things progress as is.
+Hi Neil,
 
-Maybe most of what apache needs is now cached...
+it was my fault!
 
-David
+I added the following =C2=BB/dev/etherd/e*.*=C2=AB to the DEVICE list i=
+n /etc/mdadm.conf.
 
-
-
+Sorry.
+Lars
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
