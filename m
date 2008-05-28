@@ -1,55 +1,46 @@
 From: Justin Piszcz <jpiszcz@lucidpixels.com>
 Subject: Re: Performance Characteristics of All Linux RAIDs
  (mdadm/bonnie++)
-Date: Wed, 28 May 2008 13:32:44 -0400 (EDT)
-Message-ID: <alpine.DEB.1.10.0805281329450.29755@p34.internal.lan>
-References: <alpine.DEB.1.10.0805280442330.4527@p34.internal.lan> <483D7CE8.4000600@redhat.com>
+Date: Wed, 28 May 2008 13:33:46 -0400 (EDT)
+Message-ID: <alpine.DEB.1.10.0805281333080.29755@p34.internal.lan>
+References: <alpine.DEB.1.10.0805280442330.4527@p34.internal.lan> <95711f160805280934y77ed7d91tec5aeb531bf8013c@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: MULTIPART/MIXED; BOUNDARY="-1463747160-2044578589-1211996026=:29755"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <483D7CE8.4000600@redhat.com>
+In-Reply-To: <95711f160805280934y77ed7d91tec5aeb531bf8013c@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Chris Snook <csnook@redhat.com>
+To: =?ISO-8859-15?Q?Jens_B=E4ckman?= <jens.backman@gmail.com>
 Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, xfs@oss.sgi.com
 List-Id: linux-raid.ids
 
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
+
+---1463747160-2044578589-1211996026=:29755
+Content-Type: TEXT/PLAIN; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 
 
-On Wed, 28 May 2008, Chris Snook wrote:
 
-> Justin Piszcz wrote:
->> Hardware:
->> 
->> 1. Utilized (6) 400 gigabyte sata hard drives.
->> 2. Everything is on PCI-e (965 chipset & a 2port sata card)
->> 
->> Used the following 'optimizations' for all tests.
->> 
->> # Set read-ahead.
->> echo "Setting read-ahead to 64 MiB for /dev/md3"
->> blockdev --setra 65536 /dev/md3
->> 
->> # Set stripe-cache_size for RAID5.
->> echo "Setting stripe_cache_size to 16 MiB for /dev/md3"
->> echo 16384 > /sys/block/md3/md/stripe_cache_size
->> 
->> # Disable NCQ on all disks.
->> echo "Disabling NCQ on all disks..."
->> for i in $DISKS
->> do
->>   echo "Disabling NCQ on $i"
->>   echo 1 > /sys/block/"$i"/device/queue_depth
->> done
+On Wed, 28 May 2008, Jens B=E4ckman wrote:
+
+> On Wed, May 28, 2008 at 10:53 AM, Justin Piszcz <jpiszcz@lucidpixels.com>=
+ wrote:
+>> Results:
+>>
+>> http://home.comcast.net/~jpiszcz/raid/20080528/raid-levels.html
+>> http://home.comcast.net/~jpiszcz/raid/20080528/raid-levels.txt
 >
-> Given that one of the greatest benefits of NCQ/TCQ is with parity RAID, I'd 
-> be fascinated to see how enabling NCQ changes your results.  Of course, you'd 
-> want to use a single SATA controller with a known good NCQ implementation, 
-> and hard drives known to not do stupid things like disable readahead when NCQ 
-> is enabled.
-Only/usually on multi-threaded jobs/tasks, yes?
+> Either the RAID 1 read speed must be wrong, or something is odd in the
+> Linux implementation. There's six drives that can be used for reading
+> at the same time, as they contain the very same data. 63MB/s
+> sequential looks like what you would get from a single drive.
+>
 
-Also, I turn off NCQ on all of my hosts that has it enabled by default because
-there are many bugs that occur when NCQ is on, they are working on it in the
-libata layer but IMO it is not safe at all for running SATA disks w/NCQ as
-with it on I have seen drives drop out of the array (with it off, no problems).
+The RAID1 is correct.  As has been discussed on this list before, you will=
+=20
+only see raid speed > 1 disk if you run 2(?, or 3 minimal) threads=20
+from the same device (raid1).
 
+Justin.
+---1463747160-2044578589-1211996026=:29755--
