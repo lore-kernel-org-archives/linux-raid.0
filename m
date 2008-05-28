@@ -1,39 +1,34 @@
-From: Chris Snook <csnook@redhat.com>
+From: Bryan Mesich <bryan.mesich@ndsu.edu>
 Subject: Re: Performance Characteristics of All Linux RAIDs (mdadm/bonnie++)
-Date: Wed, 28 May 2008 12:40:00 -0400
-Message-ID: <483D8AE0.8090606@redhat.com>
+Date: Wed, 28 May 2008 11:46:16 -0500
+Message-ID: <20080528164616.GB29722@atlantis.cc.ndsu.NoDak.edu>
 References: <alpine.DEB.1.10.0805280442330.4527@p34.internal.lan> <95711f160805280934y77ed7d91tec5aeb531bf8013c@mail.gmail.com>
+Reply-To: Bryan Mesich <bryan.mesich@ndsu.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
+Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 In-Reply-To: <95711f160805280934y77ed7d91tec5aeb531bf8013c@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?ISO-8859-1?Q?Jens_B=E4ckman?= <jens.backman@gmail.com>
-Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, xfs@oss.sgi.com
+To: Jens =?iso-8859-1?Q?B=E4ckman?= <jens.backman@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, xfs@oss.sgi.com
 List-Id: linux-raid.ids
 
-Jens B=E4ckman wrote:
-> On Wed, May 28, 2008 at 10:53 AM, Justin Piszcz <jpiszcz@lucidpixels.=
-com> wrote:
->> Results:
->>
->> http://home.comcast.net/~jpiszcz/raid/20080528/raid-levels.html
->> http://home.comcast.net/~jpiszcz/raid/20080528/raid-levels.txt
->=20
+On Wed, May 28, 2008 at 06:34:00PM +0200, Jens B=E4ckman wrote:
+
 > Either the RAID 1 read speed must be wrong, or something is odd in th=
 e
 > Linux implementation. There's six drives that can be used for reading
 > at the same time, as they contain the very same data. 63MB/s
 > sequential looks like what you would get from a single drive.
 
-The test is a single thread reading one block at a time, so this is not=
-=20
-surprising.  If you get this doing multi-megabyte readahead, or with=20
-several threads, something is very wrong.
+The RAID 1 read speed metrics do not depict multithreaded
+processes reading from the array simutaneouly. I would suspect
+that the read performance metrics would look better if 2 bonnie
+simulations were ran together (for RAID 1 that is).
 
--- Chris
+Bryan=20
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
