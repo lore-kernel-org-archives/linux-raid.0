@@ -1,76 +1,97 @@
 From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: Performance Characteristics of All Linux RAIDs (mdadm/bonnie++)
-Date: Wed, 28 May 2008 19:09:06 -0400
-Message-ID: <483DE612.5000804@tmr.com>
-References: <alpine.DEB.1.10.0805280442330.4527@p34.internal.lan>
+Subject: Re: Proposal: non-striping RAID4
+Date: Wed, 28 May 2008 19:14:30 -0400
+Message-ID: <483DE756.6020004@tmr.com>
+References: <BAY130-W418FFF9E3F58536967DDEAE1C60@phx.gbl> <BC2A76AABABF8741A8ADEE62DB1350F80384C383@exchange2.valvesoftware.com> <48382473.8090808@tmr.com> <BC2A76AABABF8741A8ADEE62DB1350F80384C398@exchange2.valvesoftware.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.1.10.0805280442330.4527@p34.internal.lan>
+In-Reply-To: <BC2A76AABABF8741A8ADEE62DB1350F80384C398@exchange2.valvesoftware.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, xfs@oss.sgi.com
+To: Chris Green <cgreen@valvesoftware.com>
+Cc: Tony Germano <tony_germano@hotmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Justin Piszcz wrote:
-> Hardware:
+Chris Green wrote:
+> I don't think this quite does it. It sounds like that would give me the
+> spin down capability, but not (to me), the most
+> interesting facility - the ability to have a system with
+> RAID5-equivalent redundancy
+> (i.e. I get N-1 drives worth of storage and can recover perfectly from
+> the loss of 1 drive) but also lets me survive a multiple 
+> drive failure with only partial data loss.
 > 
-> 1. Utilized (6) 400 gigabyte sata hard drives.
-> 2. Everything is on PCI-e (965 chipset & a 2port sata card)
-> 
-> Used the following 'optimizations' for all tests.
-> 
-> # Set read-ahead.
-> echo "Setting read-ahead to 64 MiB for /dev/md3"
-> blockdev --setra 65536 /dev/md3
-> 
-> # Set stripe-cache_size for RAID5.
-> echo "Setting stripe_cache_size to 16 MiB for /dev/md3"
-> echo 16384 > /sys/block/md3/md/stripe_cache_size
-> 
-> # Disable NCQ on all disks.
-> echo "Disabling NCQ on all disks..."
-> for i in $DISKS
-> do
->   echo "Disabling NCQ on $i"
->   echo 1 > /sys/block/"$i"/device/queue_depth
-> done
-> 
-> Software:
-> 
-> Kernel: 2.6.23.1 x86_64
-> Filesystem: XFS
-> Mount options: defaults,noatime
-> 
-> Results:
-> 
-> http://home.comcast.net/~jpiszcz/raid/20080528/raid-levels.html
-> http://home.comcast.net/~jpiszcz/raid/20080528/raid-levels.txt
-> 
-> Note: 'deg' means degraded and the number after is the number of disks 
-> failed, I did not test degraded raid10 because there are many ways you 
-> can degrade a raid10; however, the 3 types of raid10 were benchmarked 
-> f2,n2,o2.
+Agree, you can't get that with current kernel, although I think the 
+parts are there to actually make it work. All it would take is some 
+clever calling of raid-4 operations to get it going. It's not trivial, 
+but if you knew the code it might fall out by laying the raid-4 out and 
+just changing the mapping such that all of the sequential sectors fall 
+on the same device. Interesting summer project for someone.
 
-I have two tiny nits to pick with this information. One is the 
-readahead, which as someone else mentioned is in sectors. The other is 
-the unaligned display of the numbers, leading the eye to believe that 
-values with a similar number of digits can be compared. In truth there's 
-a decimal, but only sometimes. I imported the csv file, formatted all 
-the numbers to an equal number of places after the decimal, and it is 
-far easier to read.
+> -----Original Message-----
+> From: Bill Davidsen [mailto:davidsen@tmr.com] 
+> Sent: Saturday, May 24, 2008 7:22 AM
+> To: Chris Green
+> Cc: Tony Germano; linux-raid@vger.kernel.org
+> Subject: Re: Proposal: non-striping RAID4
+> 
+> Chris Green wrote:
+>> I would really like to have this functionality. Honestly, its pretty
+>> much perfect for the "home server" application (which I have several
+>> of), where:
+>>
+>>    - writes are far less common than reads,
+>>    - The system goes hours without any reads and days without any
+>> writes.
+>>    - single drive read speed is plenty for the applications that are
+>> sitting on the other side
+>>    - a lot of the data is too voluminous to backup (media that can
+> just
+>> be re-ripped or downloaded).
+>>    - you want some redundancy beyond a single drive copy, but don't
+> want
+>> to spend a lot of drives on it. The model of "if you lose 1 disk, you
+>> lose nothing, if you lose 2 disks you lose a portion" is better than
+> the
+>> raid5 model of losing everything with a double-disk failure.
+>>    - a common access pattern is to do a long sequential read at a slow
+>> rate that takes hours to go through a few gigs (playing media).
+>>  
+> 
+> I think you can do this right now with a touch of cleverness...
+> 
+> Assume you create a raid-1 array, load your data, and call that
+> initialized.
+> 
+>  From cron, daily or weekly, you set one drive of the array 
+> "write-mostly" and set the spin-down time (hdparm -S) to an hour or so. 
+> Now reads will go to one drive, the other will spin down, *and*, should 
+> you do one of those infrequent writes, the idle drive will spin back up 
+> and write the data (I want a bitmap of course). At the end of the time 
+> period you clear the write-mostly and spin-down time on the idle drive, 
+> put them on the other drive, and ideally you wind up with redundancy, 
+> splitting the disk wear evenly, and using existing capabilities.
+> 
+> Actually you can't quite use existing capabilities, write-mostly can 
+> only be used at inconvenient times, like build, create, or add, so it's 
+> not obviously possible to change without at least shutting the array 
+> down. Perhaps Neil will give us his thoughts on that. However, if you 
+> don't mind a *really* ugly script, you might be able to mark the active 
+> drive failed, which would force all i/o to the previously sleeping 
+> drive, then remove the previously active drive, and add it back in using
+> 
+> write-mostly. You would do a full sync (I think) but the change would be
+> 
+> made.
+> 
+> Better to make write-mostly a flag which can be enabled and disabled at 
+> will. That would be useful when a remote drive is normally operated over
+> 
+> a fast link and has to drop to a slow backup link. I'm sure other uses 
+> would be found.
+> 
 
-Okay, and a half-nit, there were some patches to improve raid-1 
-performance, I think by running io on multiple drives when you can, and 
-by doing reads from the outer tracks if there are two idle drives. 
-That's not in the stable version you used, I assume, it may not be in 
-2.6.26 either, I'm doing other things at the moment.
-
-A very nice bit of work, my only questions is if you ever feel motivated 
-to repeat this test, it would be fun to do it with ext3 (or ext4) using 
-the stride= parameter. I did limited testing and it really seemed to 
-help, but nothing remotely as format as your test.
 
 -- 
 Bill Davidsen <davidsen@tmr.com>
