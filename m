@@ -1,42 +1,70 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+From: Chris Snook <csnook@redhat.com>
 Subject: Re: Performance Characteristics of All Linux RAIDs (mdadm/bonnie++)
-Date: Wed, 28 May 2008 19:57:52 +0100
-Message-ID: <20080528195752.0cdcbc6d@core>
-References: <alpine.DEB.1.10.0805280442330.4527@p34.internal.lan>
-	<95711f160805280934y77ed7d91tec5aeb531bf8013c@mail.gmail.com>
+Date: Wed, 28 May 2008 15:22:20 -0400
+Message-ID: <483DB0EC.3090403@redhat.com>
+References: <alpine.DEB.1.10.0805280442330.4527@p34.internal.lan> <483D7CE8.4000600@redhat.com> <alpine.DEB.1.10.0805281329450.29755@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <95711f160805280934y77ed7d91tec5aeb531bf8013c@mail.gmail.com>
+In-Reply-To: <alpine.DEB.1.10.0805281329450.29755@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jens =?UTF-8?B?QsOkY2ttYW4=?= <jens.backman@gmail.com>
-Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, xfs@oss.sgi.com
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, xfs@oss.sgi.com
 List-Id: linux-raid.ids
 
-On Wed, 28 May 2008 18:34:00 +0200
-"Jens B=C3=A4ckman" <jens.backman@gmail.com> wrote:
+Justin Piszcz wrote:
+> 
+> 
+> On Wed, 28 May 2008, Chris Snook wrote:
+> 
+>> Justin Piszcz wrote:
+>>> Hardware:
+>>>
+>>> 1. Utilized (6) 400 gigabyte sata hard drives.
+>>> 2. Everything is on PCI-e (965 chipset & a 2port sata card)
+>>>
+>>> Used the following 'optimizations' for all tests.
+>>>
+>>> # Set read-ahead.
+>>> echo "Setting read-ahead to 64 MiB for /dev/md3"
+>>> blockdev --setra 65536 /dev/md3
+>>>
+>>> # Set stripe-cache_size for RAID5.
+>>> echo "Setting stripe_cache_size to 16 MiB for /dev/md3"
+>>> echo 16384 > /sys/block/md3/md/stripe_cache_size
+>>>
+>>> # Disable NCQ on all disks.
+>>> echo "Disabling NCQ on all disks..."
+>>> for i in $DISKS
+>>> do
+>>>   echo "Disabling NCQ on $i"
+>>>   echo 1 > /sys/block/"$i"/device/queue_depth
+>>> done
+>>
+>> Given that one of the greatest benefits of NCQ/TCQ is with parity 
+>> RAID, I'd be fascinated to see how enabling NCQ changes your results.  
+>> Of course, you'd want to use a single SATA controller with a known 
+>> good NCQ implementation, and hard drives known to not do stupid things 
+>> like disable readahead when NCQ is enabled.
+> Only/usually on multi-threaded jobs/tasks, yes?
 
-> On Wed, May 28, 2008 at 10:53 AM, Justin Piszcz <jpiszcz@lucidpixels.=
-com> wrote:
-> > Results:
-> >
-> > http://home.comcast.net/~jpiszcz/raid/20080528/raid-levels.html
-> > http://home.comcast.net/~jpiszcz/raid/20080528/raid-levels.txt
->=20
-> Either the RAID 1 read speed must be wrong, or something is odd in th=
-e
-> Linux implementation. There's six drives that can be used for reading
-> at the same time, as they contain the very same data. 63MB/s
-> sequential looks like what you would get from a single drive.
+Generally, yes, but there's caching and readahead at various layers in 
+software that can expose the benefit on certain single-threaded 
+workloads as well.
 
-Which is fairly typical of a cheap desktop PC where the limitation is t=
-he
-memory and PCI bridge as much as the drive.
+> Also, I turn off NCQ on all of my hosts that has it enabled by default 
+> because
+> there are many bugs that occur when NCQ is on, they are working on it in 
+> the
+> libata layer but IMO it is not safe at all for running SATA disks w/NCQ as
+> with it on I have seen drives drop out of the array (with it off, no 
+> problems).
+> 
 
-Alan
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Are you using SATA drives with RAID-optimized firmware?  Most SATA 
+manufacturers have variants of their drives for a few dollars more that 
+have firmware that provides bounded latency for error recovery 
+operations, for precisely this reason.
+
+-- Chris
