@@ -1,25 +1,75 @@
-From: "Henry, Andrew" <andrew.henry@logica.com>
-Subject: Known good eSATA CardBus controllers
-Date: Thu, 29 May 2008 09:31:56 +0200
-Message-ID: <3ECBDC05781B3D48ABD520A01ABF2F9B12C5855871@SE-EX008.groupinfra.com>
+From: Kasper Sandberg <lkml@metanurb.dk>
+Subject: Re: Performance Characteristics of All Linux RAIDs (mdadm/bonnie++)
+Date: Thu, 29 May 2008 11:57:30 +0200
+Message-ID: <1212055050.25169.33.camel@localhost>
+References: <alpine.DEB.1.10.0805280442330.4527@p34.internal.lan>
+	 <483D7CE8.4000600@redhat.com>
+	 <alpine.DEB.1.10.0805281329450.29755@p34.internal.lan>
+	 <483DB0EC.3090403@redhat.com>
+	 <alpine.DEB.1.10.0805281523560.29755@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Language: en-US
+In-Reply-To: <alpine.DEB.1.10.0805281523560.29755@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: LinuxRaid <linux-raid@vger.kernel.org>
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: Chris Snook <csnook@redhat.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, xfs@oss.sgi.com
 List-Id: linux-raid.ids
 
-I bought an ST Labs CardBus controller with 2 ports to drive my 2 WD MyBooks in RAID1, and I have previously asked for help on this list about implementing RAID1, but it now seems that I have issues with my controller.
+On Wed, 2008-05-28 at 15:27 -0400, Justin Piszcz wrote:
+> 
+> On Wed, 28 May 2008, Chris Snook wrote:
+> 
+> > Justin Piszcz wrote:
+> >> 
+> >> 
+> >> On Wed, 28 May 2008, Chris Snook wrote:
+> >> 
+> >>> Justin Piszcz wrote:
+> >>>> Hardware:
+> >>>> 
+> >>> Given that one of the greatest benefits of NCQ/TCQ is with parity RAID, 
+> >>> I'd be fascinated to see how enabling NCQ changes your results.  Of 
+> >>> course, you'd want to use a single SATA controller with a known good NCQ 
+> >>> implementation, and hard drives known to not do stupid things like disable 
+> >>> readahead when NCQ is enabled.
+> >> Only/usually on multi-threaded jobs/tasks, yes?
+> >
+> > Generally, yes, but there's caching and readahead at various layers in 
+> > software that can expose the benefit on certain single-threaded workloads as 
+> > well.
+> >
+> >> Also, I turn off NCQ on all of my hosts that has it enabled by default 
+> >> because
+> >> there are many bugs that occur when NCQ is on, they are working on it in 
+> >> the
+> >> libata layer but IMO it is not safe at all for running SATA disks w/NCQ as
+> >> with it on I have seen drives drop out of the array (with it off, no 
+> >> problems).
+> >> 
+> >
+> > Are you using SATA drives with RAID-optimized firmware?  Most SATA 
+> > manufacturers have variants of their drives for a few dollars more that have 
+> > firmware that provides bounded latency for error recovery operations, for 
+> > precisely this reason.
+> I see--however, as I understood it there were bugs utilizing NCQ in libata?
+You wouldnt happen to have some more information about this? i havent
+personally had problems yet, but i havent used it for very long - but
+since it comes activated by DEFAULT, i would assume it to be relatively
+stable?
 
-Can anyone recommend an eSATA CardBus controller that is known to work very well with Linux?
+> 
+> But FYI--
+> In this test, they were regular SATA drives, not special raid-ones (RE2,etc).
+> 
+> Thanks for the info!
+> 
+> Justin.
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
 
-I ran badblocks on both disks simultaneously for 24 hours and then badblocks read the discs to verify the data and this worked perfectly, not a single error.
-
-However, the discs spin down, and when I try to access them again, one of the ports (not any specific port) hangs trying to access the disc.  I can sort of get around this with sdparm -C start and a cron job, but it happens at boot time as well, which is not so easy to fix.
-
-Would appreciate and tips on good known controllers.
-
-Thanks
-Andrew.
