@@ -1,8 +1,8 @@
 From: Justin Piszcz <jpiszcz@lucidpixels.com>
 Subject: Re: Performance Characteristics of All Linux RAIDs
  (mdadm/bonnie++)
-Date: Thu, 29 May 2008 08:06:24 -0400 (EDT)
-Message-ID: <alpine.DEB.1.10.0805290805500.17643@p34.internal.lan>
+Date: Thu, 29 May 2008 13:02:40 -0400 (EDT)
+Message-ID: <alpine.DEB.1.10.0805291302190.23633@p34.internal.lan>
 References: <alpine.DEB.1.10.0805280442330.4527@p34.internal.lan> <Pine.LNX.4.64.0805290636020.20192@diagnostix.dwd.de>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
@@ -21,6 +21,33 @@ On Thu, 29 May 2008, Holger Kiehl wrote:
 >
 >> Hardware:
 >> 
+>> 1. Utilized (6) 400 gigabyte sata hard drives.
+>> 2. Everything is on PCI-e (965 chipset & a 2port sata card)
+>> 
+>> Used the following 'optimizations' for all tests.
+>> 
+>> # Set read-ahead.
+>> echo "Setting read-ahead to 64 MiB for /dev/md3"
+>> blockdev --setra 65536 /dev/md3
+>> 
+>> # Set stripe-cache_size for RAID5.
+>> echo "Setting stripe_cache_size to 16 MiB for /dev/md3"
+>> echo 16384 > /sys/block/md3/md/stripe_cache_size
+>> 
+>> # Disable NCQ on all disks.
+>> echo "Disabling NCQ on all disks..."
+>> for i in $DISKS
+>> do
+>>  echo "Disabling NCQ on $i"
+>>  echo 1 > /sys/block/"$i"/device/queue_depth
+>> done
+>> 
+>> Software:
+>> 
+>> Kernel: 2.6.23.1 x86_64
+>> Filesystem: XFS
+>> Mount options: defaults,noatime
+>> 
 >> Results:
 >> 
 >> http://home.comcast.net/~jpiszcz/raid/20080528/raid-levels.html
@@ -33,7 +60,5 @@ On Thu, 29 May 2008, Holger Kiehl wrote:
 > Holger
 >
 
-I will re-run the RAID5 test and also run the test on a single disk and 
-update the results later.
-
-Justin.
+RAID5 (2nd test of 3 averaged runs) & Single disk added:
+http://home.comcast.net/~jpiszcz/raid/20080528/raid-levels.html
