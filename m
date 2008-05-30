@@ -1,90 +1,60 @@
-From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
-Subject: Re: Performance Characteristics of All Linux RAIDs (mdadm/bonnie++)
-Date: Fri, 30 May 2008 16:23:46 +0200
-Message-ID: <20080530142346.GA17831@rap.rap.dk>
-References: <alpine.DEB.1.10.0805280442330.4527@p34.internal.lan> <Pine.LNX.4.64.0805290636020.20192@diagnostix.dwd.de> <alpine.DEB.1.10.0805291302190.23633@p34.internal.lan> <483FF92F.6060309@tmr.com>
+From: Tony Germano <tony_germano@hotmail.com>
+Subject: RE: Proposal: non-striping RAID4
+Date: Fri, 30 May 2008 13:23:57 -0400
+Message-ID: <BAY130-W484FAD9B1B0D912A9D9F85E1BE0@phx.gbl>
+References: <BAY130-W418FFF9E3F58536967DDEAE1C60@phx.gbl>
+ <BC2A76AABABF8741A8ADEE62DB1350F80384C383@exchange2.valvesoftware.com>
+ <48382473.8090808@tmr.com>
+ <BC2A76AABABF8741A8ADEE62DB1350F80384C398@exchange2.valvesoftware.com>
+ <483DE756.6020004@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=Windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <483FF92F.6060309@tmr.com>
+In-Reply-To: <483DE756.6020004@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, Holger Kiehl <Holger.Kiehl@dwd.de>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, xfs@oss.sgi.com
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, May 30, 2008 at 08:55:11AM -0400, Bill Davidsen wrote:
-> Justin Piszcz wrote:
-> >
-> >
-> >On Thu, 29 May 2008, Holger Kiehl wrote:
-> >
-> >>On Wed, 28 May 2008, Justin Piszcz wrote:
-> >>
-> >>>Hardware:
-> >>>
-> >>>1. Utilized (6) 400 gigabyte sata hard drives.
-> >>>2. Everything is on PCI-e (965 chipset & a 2port sata card)
-> >>>
-> >>>Used the following 'optimizations' for all tests.
-> >>>
-> >>># Set read-ahead.
-> >>>echo "Setting read-ahead to 64 MiB for /dev/md3"
-> >>>blockdev --setra 65536 /dev/md3
-> >>>
-> >>># Set stripe-cache_size for RAID5.
-> >>>echo "Setting stripe_cache_size to 16 MiB for /dev/md3"
-> >>>echo 16384 > /sys/block/md3/md/stripe_cache_size
-> >>>
-> >>># Disable NCQ on all disks.
-> >>>echo "Disabling NCQ on all disks..."
-> >>>for i in $DISKS
-> >>>do
-> >>> echo "Disabling NCQ on $i"
-> >>> echo 1 > /sys/block/"$i"/device/queue_depth
-> >>>done
-> >>>
-> >>>Software:
-> >>>
-> >>>Kernel: 2.6.23.1 x86_64
-> >>>Filesystem: XFS
-> >>>Mount options: defaults,noatime
-> >>>
-> >>>Results:
-> >>>
-> >>>http://home.comcast.net/~jpiszcz/raid/20080528/raid-levels.html
-> >>>http://home.comcast.net/~jpiszcz/raid/20080528/raid-levels.txt
-> >>>
-> >>Why is the Sequential Output (Block) for raid6 165719 and for raid5 only
-> >>86797? I would have thought that raid6 was always a bit slower in 
-> >>writting
-> >>due to having to write double amount of parity data.
-> >>
-> >>Holger
-> >>
-> >
-> >RAID5 (2nd test of 3 averaged runs) & Single disk added:
-> >http://home.comcast.net/~jpiszcz/raid/20080528/raid-levels.html 
-> 
-> Other than repeating my (possibly lost) comment that this would be 
-> vastly easier to read if the number were aligned and all had the same 
-> number of decimal places in a single column, good stuff. For sequential 
-> i/o the winners and losers are clear, and you can set cost and 
-> performance to pick the winners. Seems obvious that raid-1 is the loser 
-> for single threaded load, I suspect that it would be poor against other 
-> levels in multithread loads, but not so much for read.
 
-On my wishlist to Justin is also what is the performance of the raid10's
-in degraded mode.
+Unfortunately I'm not very familiar with writing driver code, and I'm
+painfully out of practice with writing code in general. For someone
+interested in looking, the source for the modified md driver is
+available from lime-technology that they use to implement these
+features. I don't know if I'm able to attach the files to this message,
+so I'll just tell you how to get them.
 
-And then I note that raid1 performs well on random seeks 702/s
-while the raid10,f2 (my pet) only performs 520/s - but this is on a
-2.6.23 kernel without the seek performance patch for raid10,f2.
+Download from
+http://lime-technology.com/dnlds/ the unRAID Server install. I got
+version 4.2.4. I used 7zip (I'm in Windows at work) to open the archive
+and then open the bzroot image. The source files are in
+bzroot\[Content]\usr\src\linux-2.6.20\drivers\md\ . Hopefully that will
+be useful to someone.
 
-I wonder if the random seeks are related to random read (and write) - it
-probably is, but there seems to be a difference between the results
-found with bonnie++ and my tests as reported on the
-http://linux-raid.osdl.org/index.php/Performance page.
 
-Best regards
-keld
+
+> Date: Wed, 28 May 2008 19:14:30 -0400
+> From: davidsen@tmr.com
+> To: cgreen@valvesoftware.com
+> CC: tony_germano@hotmail.com; linux-raid@vger.kernel.org
+> Subject: Re: Proposal: non-striping RAID4
+>
+> Agree, you can't get that with current kernel, although I think the
+> parts are there to actually make it work. All it would take is some
+> clever calling of raid-4 operations to get it going. It's not trivial=
+,
+> but if you knew the code it might fall out by laying the raid-4 out a=
+nd
+> just changing the mapping such that all of the sequential sectors fal=
+l
+> on the same device. Interesting summer project for someone.
+
+_________________________________________________________________
+Give to a good cause with every e-mail. Join the i=92m Initiative from =
+Microsoft.
+http://im.live.com/Messenger/IM/Join/Default.aspx?souce=3DEML_WL_ GoodC=
+ause--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
