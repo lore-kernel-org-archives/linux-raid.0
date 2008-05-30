@@ -1,42 +1,77 @@
 From: Bill Davidsen <davidsen@tmr.com>
 Subject: Re: Performance Characteristics of All Linux RAIDs (mdadm/bonnie++)
-Date: Fri, 30 May 2008 08:22:12 -0400
-Message-ID: <483FF174.80602@tmr.com>
-References: <alpine.DEB.1.10.0805280442330.4527@p34.internal.lan>	<95711f160805280934y77ed7d91tec5aeb531bf8013c@mail.gmail.com>	<20080528195752.0cdcbc6d@core>	<483DE40D.8090608@tmr.com> <20080529122223.462bf396@core>
+Date: Fri, 30 May 2008 08:55:11 -0400
+Message-ID: <483FF92F.6060309@tmr.com>
+References: <alpine.DEB.1.10.0805280442330.4527@p34.internal.lan> <Pine.LNX.4.64.0805290636020.20192@diagnostix.dwd.de> <alpine.DEB.1.10.0805291302190.23633@p34.internal.lan>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20080529122223.462bf396@core>
+In-Reply-To: <alpine.DEB.1.10.0805291302190.23633@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: =?ISO-8859-1?Q?Jens_B=E4ckman?= <jens.backman@gmail.com>, Justin Piszcz <jpiszcz@lucidpixels.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, xfs@oss.sgi.com
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: Holger Kiehl <Holger.Kiehl@dwd.de>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, xfs@oss.sgi.com
 List-Id: linux-raid.ids
 
-Alan Cox wrote:
->> I really don't think that's any part of the issue, the same memory and 
->> bridge went 4-5x faster in other read cases. The truth is that the 
->> raid-1 performance is really bad, and it's the code causing it AFAIK. If 
->> you track the actual io it seems to read one drive at a time, in order, 
->> without overlap.
->>     
+Justin Piszcz wrote:
 >
-> Make sure the readahead is set to be a fair bit over the stripe size if
-> you are doing bulk data tests for a single file. (Or indeed in the real
-> world for that specific case ;))
->   
+>
+> On Thu, 29 May 2008, Holger Kiehl wrote:
+>
+>> On Wed, 28 May 2008, Justin Piszcz wrote:
+>>
+>>> Hardware:
+>>>
+>>> 1. Utilized (6) 400 gigabyte sata hard drives.
+>>> 2. Everything is on PCI-e (965 chipset & a 2port sata card)
+>>>
+>>> Used the following 'optimizations' for all tests.
+>>>
+>>> # Set read-ahead.
+>>> echo "Setting read-ahead to 64 MiB for /dev/md3"
+>>> blockdev --setra 65536 /dev/md3
+>>>
+>>> # Set stripe-cache_size for RAID5.
+>>> echo "Setting stripe_cache_size to 16 MiB for /dev/md3"
+>>> echo 16384 > /sys/block/md3/md/stripe_cache_size
+>>>
+>>> # Disable NCQ on all disks.
+>>> echo "Disabling NCQ on all disks..."
+>>> for i in $DISKS
+>>> do
+>>>  echo "Disabling NCQ on $i"
+>>>  echo 1 > /sys/block/"$i"/device/queue_depth
+>>> done
+>>>
+>>> Software:
+>>>
+>>> Kernel: 2.6.23.1 x86_64
+>>> Filesystem: XFS
+>>> Mount options: defaults,noatime
+>>>
+>>> Results:
+>>>
+>>> http://home.comcast.net/~jpiszcz/raid/20080528/raid-levels.html
+>>> http://home.comcast.net/~jpiszcz/raid/20080528/raid-levels.txt
+>>>
+>> Why is the Sequential Output (Block) for raid6 165719 and for raid5 only
+>> 86797? I would have thought that raid6 was always a bit slower in 
+>> writting
+>> due to having to write double amount of parity data.
+>>
+>> Holger
+>>
+>
+> RAID5 (2nd test of 3 averaged runs) & Single disk added:
+> http://home.comcast.net/~jpiszcz/raid/20080528/raid-levels.html 
 
-IIRC Justin has readahead at 16MB and chunk at 256k. I would think that 
-if multiple devices were used at all by the md code, that the chunk 
-rather than stripe size would be the issue. In this case the RA seems 
-large enough to trigger good behavior, were there are available.
-
-Note: this testing was done with an old(er) kernel, as were all of mine. 
-Since my one large raid array has become more mission critical I'm not 
-comfortable playing with new kernels. The fate of big, fast, and stable 
-machines is to slide into production use. :-(
-I suppose that's not a bad way to do it, I now have faith in what I'm 
-running.
+Other than repeating my (possibly lost) comment that this would be 
+vastly easier to read if the number were aligned and all had the same 
+number of decimal places in a single column, good stuff. For sequential 
+i/o the winners and losers are clear, and you can set cost and 
+performance to pick the winners. Seems obvious that raid-1 is the loser 
+for single threaded load, I suspect that it would be poor against other 
+levels in multithread loads, but not so much for read.
 
 -- 
 Bill Davidsen <davidsen@tmr.com>
