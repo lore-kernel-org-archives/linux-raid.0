@@ -1,44 +1,36 @@
-From: "David Lethe" <david@santools.com>
-Subject: Re: Limits of the 965 chipset & 3 PCI-e cards/southbridge? ~774MiB/s peak for read, ~650MiB/s peak for write?
-Date: Sun, 1 Jun 2008 8:52:00 -0500
-Message-ID: <13c501c8c3ee$c6a31318$330ef40a@exchange.rackspace.com>
-Reply-To: <David@santools.com>
+From: Richard Scobie <richard@sauce.co.nz>
+Subject: Re: Software RAID 6 initial sync very slow
+Date: Mon, 02 Jun 2008 08:37:46 +1200
+Message-ID: <4843089A.7040909@sauce.co.nz>
+References: <8CA91F18992AC9E-1724-EAF@webmail-ne13.sysops.aol.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <8CA91F18992AC9E-1724-EAF@webmail-ne13.sysops.aol.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, xfs@oss.sgi.com
+To: thomas62186218@aol.com
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+thomas62186218@aol.com wrote:
 
+> My first test was to create a RAID 6 md device, 128K chunk, with all 12 
+> drives. The sync is currently underway at a very slow 30MB/sec, with 
+> mdadm estimating this as a 9hr process. With an Adaptec 5805 RAID card 
+> tested, I performed the RAID 6 initial sync with the same 12 drives in 
+> just under 5 hours. Meanwhile, our total CPU usage during mdadm syncing 
+> is at 5%, so there's plenty of CPU not being used.
 
------Original Message-----
+I have a very similar system, except single quad core and 16 x 750GB
 
-From:  "Justin Piszcz" <jpiszcz@lucidpixels.com>
-Subj:  Re: Limits of the 965 chipset & 3 PCI-e cards/southbridge? ~774MiB/s peak for read, ~650MiB/s peak for write?
-Date:  Sun Jun 1, 2008 6:02 am
-Size:  793 bytes
-To:  "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>; "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>; "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+It syncs (md RAID6) in 3:40min which is roughly proportional to the time 
+you see with your hardware RAID sync up, so you should be able to match 
+it with md RAID.
 
- 
-On Sun, 1 Jun 2008, Justin Piszcz wrote: 
- 
-> I have 12 enterprise-class seagate 1TiB disks on a 965 desktop board and it  
-> appears I have hit the limit, if I were able to get the maximum speed of all  
-> drives, ~70MiB/avg * 12 = 840MiB/s but it seems to stop aound 774 MiB/s  
-> (currently running badblocks on all drives).. 
- 
-Small correction, they are 7200.11 Seagate Desktop Drives (ST31000340AS),  
-not enterprise drives: 
- 
-http://www.seagate.com/ww/v/index.jsp?vgnextoid=0732f141e7f43110VgnVCM100000f5ee0a0aRCRD 
-http://www.newegg.com/Product/Product.aspx?Item=N82E16822148274 
- 
--- 
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in 
-the body of a message to majordomo@vger.kernel.org 
-More majordomo info at  http://vger.kernel.org/majordomo-info.html 
- 
+I cannot remember whether stripe_cache_size affected the sync time - 
+currently I have this set to 16384.
 
+Regards,
 
+Richard
