@@ -1,114 +1,63 @@
-From: Cry <cry_regarder@yahoo.com>
-Subject: Re: Two Drive Failure on RAID-5
-Date: Sat, 31 May 2008 09:27:56 +0000 (UTC)
-Message-ID: <loom.20080531T085813-896@post.gmane.org>
-References: <loom.20080519T224713-779@post.gmane.org> <4832966A.3010707@dgreaves.com> <loom.20080521T140522-597@post.gmane.org> <483482E2.60300@dgreaves.com> <09ed01c8bb83$ec3f7230$9300a8c0@dcccs> <loom.20080521T210407-628@post.gmane.org> <48353110.8060602@dgreaves.com>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Limits of the 965 chipset & 3 PCI-e cards/southbridge? ~774MiB/s
+ peak for read, ~650MiB/s peak for write?
+Date: Sun, 1 Jun 2008 05:45:39 -0400 (EDT)
+Message-ID: <alpine.DEB.1.10.0806010539430.24757@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, xfs@oss.sgi.com
 List-Id: linux-raid.ids
 
-David Greaves <david <at> dgreaves.com> writes:
+I have 12 enterprise-class seagate 1TiB disks on a 965 desktop board and 
+it appears I have hit the limit, if I were able to get the maximum speed 
+of all drives, ~70MiB/avg * 12 = 840MiB/s but it seems to stop aound 774 
+MiB/s (currently running badblocks on all drives)..
 
-> Cry wrote:
->> Janos Haar <janos.haar <at> netcenter.hu> writes:
->> 
->> Folks, I made a mistake when I created my original raid array 
->> (there is a note about it in the archives of this group) that 
->> I built the array on the raw drives, not on partitions.
-> 
-> When people offer suggestions they (or at least I) will probably form
-> a picture of what's going on - if you are going to throw tweaks into 
-> the mix then they may throw us off. Mention them.
+I am testing some drives for someone and was curious to see how far one 
+can push the disks/backplane to their theoretical limit.
 
-Point taken.
+dstat output:
+----total-cpu-usage---- -dsk/total- -net/total- ---paging-- ---system--
+usr sys idl wai hiq siq| read  writ| recv  send|  in   out | int   csw
+   1  12   0  83   3   2|   -     0 |   0     0 |   0     0 |  13k   23k
+   1  11   0  84   2   2| 774M    0 |2100B 7373B|   0     0 |  13k   23k
+   1  12   0  83   3   2| 774M    0 |   0     0 |   0     0 |  13k   23k
+   1  11   0  82   4   2| 774M    0 |2030B 5178B|   0     0 |  13k   23k
+   1  11   0  83   4   2| 774M    0 |   0     0 |   0     0 |  13k   23k
+   1  11   0  83   3   2| 774M    0 |2264B 6225B|   0     0 |  13k   23k
 
-> You have failed to answer some potentially relevant questions and, 
-> before you get this array rebuilt you wandered off (on the same 
-> thread) into discussions about what disk drives you might like to 
-> buy, the best type of external enclosure and various other oddments. 
-> This is not helpful.
+vmstat 1 output:
+~$ vmstat 1
+procs -----------memory---------- ---swap-- -----io---- -system-- ----cpu----
+  r  b   swpd   free   buff  cache   si   so    bi    bo   in   cs us sy id wa
+  0 12    124 3841772      8  13012    0    0 12595 163880  379  352  0 31 37 32
+  2 12    124 3841772      8  12992    0    0 791744     8 12796 23033  1 18  0 82
+  0 12    124 3841772      8  12992    0    0 792192     0 12677 22918  1 15  0 84
+  0 12    124 3841772      8  12992    0    0 792960     0 12894 22929  1 15  0 84
 
-Yup, I should have put that stuff into a separate thread.  That said, I
-did get good feedback on those questions on the other branch of the thread.
+When I was writing to all of the drives it was maxing out around ~650 
+MiB/s.
 
-> You're on 0.9 superblocks which are located at the end of the disk.
+I also have 2 raptors on a PCI card (as I ran out of PCI-e cards) and:
+When I read from 1 of the raptors (w/ dd/example shown below) the speed 
+drops:
 
-Thanks for the above line.  It was key.
- 
-> You have now dug a maze of twisty passages...
+   1  13   0  79   5   3| 764M    0 |2240B 7105B|   0     0 |  12k   21k
+   1  13   0  80   5   2| 764M    0 |   0     0 |   0     0 |  12k   21k
+   1  11   0  82   5   2| 764M    0 |2170B 5446B|   0     0 |  12k   21k
+   1  12   0  81   5   2| 762M    0 |   0     0 |   0     0 |  12k   21k
 
-:-)
- 
-> I think at this point you should enlarge /dev/sdg1, recopy /dev/sda to
-> /dev/sdg1 and try again. That will probably work.
+Does/has anyone done this with server intel board/would greater speeds be 
+achievable?
 
-What I ended up doing was writing off the extra 250G in /dev/sdg and using
-ddrescue to copy the failed drive to it.
+Also, how does AMD fair in this regard?  Has anyone run similar tests?
+For instance if you have 12 disks in your host you could:
 
-ddrescue -dr3 /dev/sdf /dev/sdg 750_ddrescue.log
-Press Ctrl-C to interrupt
-Initial status (read from logfile)
-rescued:   500107 MB,  errsize:    356 kB,  errors:      72
-Current status
-rescued:   500107 MB,  errsize:   48128 B,  current rate:        0 B/s
-   ipos:   482042 MB,   errors:      79,    average rate:      269 B/s
-   opos:   482042 MB
-Copying bad blocks... Retry 1
+dd if=/dev/disk1 of=/dev/null bs=1M
+dd if=/dev/disk2 of=/dev/null bs=1M
 
-It was nice that ddrescue as invoked got a good chunk more off the drive
-than I'd gotten with dd_rescue.
+What rate(s) do you get?
 
-The interesting thing was that mdadm -E /dev/sdg reported that there wasn't
-a superblock on it!  Then I remembered your note above about where the
-superblocks are located so I figured that the data was all fine, just that the
-superblock was in the wrong place.  So I let mdadm assemble the array:
-
-At this point, I have moved the drives around extensively so drive letters
-do not match earlier posts:
-
-mdadm --create /dev/md0 --verbose --level=5 --raid-devices=6 --chunk=128
-/dev/sdl /dev/sdi /dev/sdj missing /dev/sdg /dev/sdk
-
-mdadm: layout defaults to left-symmetric
-mdadm: /dev/sdl appears to be part of a raid array:
-    level=raid5 devices=6 ctime=Thu May 24 01:55:48 2007
-mdadm: /dev/sdi appears to be part of a raid array:
-    level=raid5 devices=6 ctime=Thu May 24 01:55:48 2007
-mdadm: /dev/sdj appears to be part of a raid array:
-    level=raid5 devices=6 ctime=Thu May 24 01:55:48 2007
-mdadm: /dev/sdk appears to be part of a raid array:
-    level=raid5 devices=6 ctime=Thu May 24 01:55:48 2007
-mdadm: size set to 488386432K
-mdadm: largest drive (/dev/sdg) exceed size (488386432K) by more than 1%
-Continue creating array? yes
-mdadm: array /dev/md0 started.
-
-At this point I was able to recover all but a couple files onto a second
-raid array.  
-
-Thanks David Greaves and Janos Haar for the wonderful advice on restoring
-my data.  Thanks to David Lethe for the advice to get the server class 
-drives and thanks to Brad Campbell for endorsing the supermicro CSE-M35T
-enclosure.  It was quite easy to install and seems to be working well and
-keeping the drives nice and cool.
-
-The old and the new arrays:
-
-md0 : active raid5 sdk[5] sdg[4] sdj[2] sdi[1] sdl[0]
-      2441932160 blocks level 5, 128k chunk, algorithm 2 [6/5] [UUU_UU]
-      
-md1 : active raid6 sdd1[3] sdc1[2] sde1[4] sda1[0] sdb1[1]
-      2930279808 blocks level 6, 128k chunk, algorithm 2 [5/5] [UUUUU]
-      
-Thanks again,
-
-Cry
-
-
-
-
-
+Justin.
