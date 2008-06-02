@@ -1,49 +1,69 @@
-From: "Jon Nelson" <jnelson-linux-raid@jamponi.net>
-Subject: Re: Awful Raid10,f2 performance
-Date: Mon, 2 Jun 2008 10:09:46 -0500
-Message-ID: <cccedfc60806020809t73794ce6w539c6b0d247a264f@mail.gmail.com>
-References: <cccedfc60806020711o39ccd321h5e410c963d8bf3b1@mail.gmail.com>
-	 <48440953.3040004@wpkg.org>
+From: David Greaves <david@dgreaves.com>
+Subject: Re: Problem Growing Raid 5 Array - Help Needed!
+Date: Mon, 02 Jun 2008 16:13:14 +0100
+Message-ID: <48440E0A.7020707@dgreaves.com>
+References: <484408bf.20018e0a.68db.ffffe97f@mx.google.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <48440953.3040004@wpkg.org>
-Content-Disposition: inline
+In-Reply-To: <484408bf.20018e0a.68db.ffffe97f@mx.google.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Tomasz Chmielewski <mangoo@wpkg.org>
-Cc: Linux-Raid <linux-raid@vger.kernel.org>
+To: Jeremy Leigh <jeremy.leigh@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-i can't show you raw write values, but I can show you raw read values
-(after dropping the caches):
+Jeremy Leigh wrote:
+> Hi Guys, I have just grown my raid 5 from 7 to 8 500Gb drives.
+> I am now running into this problem.
+> When I try to run fsck /dev/md0 I get the following:
 
-From dstat, this shows disks sdb, sdc, and sdd values in read (space)
-write format, with the total on the end.
+What command line?
 
-Thus:
+> fsck.ext2: Device or resource busy while trying to open /dev/md0
+> Filesystem mounted or opened exclusively by another program?
+>=20
+> Or when I try to run resize2fs /dev/md0 to make use of new drive, I g=
+et the
+> following:
+>=20
+> resize2fs: Device or resource busy while trying to open /dev/md0
+> Couldn=92t find valid filesystem superblock.
+again, what command.
 
-  70M    0 :  71M    0 :  72M    0 : 213M    0
-  71M    0 :  70M    0 :  69M    0 : 210M    0
-  71M    0 :  73M    0 :  74M    0 : 217M    0
 
-shows that I'm getting 70+- MB/s on each disk, combined to 210 to 217MB/s.
-These are read values.
+> Cat /proc/mdstat outputs:
+>=20
+> Personalities : [raid6] [raid5] [raid4]=20
+> md0 : active raid5 sdb1[0] sdi1[7] sdg1[6] sdh1[5] sdf1[4] sde1[3] sd=
+d1[2]
+> sdc1[1]
+>       3418686208 blocks level 5, 256k chunk, algorithm 2 [8/8] [UUUUU=
+UUU]
+>      =20
+> unused devices: <none>
+So the resize worked and is complete.
 
-I created a logical volume (50G), dropped the caches again, and issued:
+> However, I can still access and mount my filesystem - I just cannot g=
+row it,
+> which I find very strange.
+> I have tried to init 1, to go to single user mode, and I have made su=
+re file
+> system is unmounted, but this =91busy=92 error still occurs.
 
-dd if=/dev/zero of=/dev/raid/test bs=64k
+Have you rebooted? (Question, not suggestion)
 
-and got from 100 to 150MB/s sustained write speeds.
-NOTE: this is with a bitmap (internal)
-Without a bitmap (removed for this test), I get a much more consistent
-130-150MB/s.
-dd reports a mere 70MB/s when complete.
-When using oflag=direct, I get about 100MB/s combined, with a
-"reported" speed of 51.9MB/s.
-Since I'm using 3x drives, my total I/O is going to be about 2x what dd "sees".
+What is the output from a mount command.
+What is the line in /etc/fstab than normally mounts this filesystem?
 
-Does that help?
+Is mdadm running as a monitor daemon?
 
--- 
-Jon
+does lsof | grep <mountpoint> show anything?
+
+David
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
