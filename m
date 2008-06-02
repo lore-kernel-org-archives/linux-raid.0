@@ -1,51 +1,48 @@
-From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
-Subject: Re: mdadm raid10 performance
-Date: Mon, 2 Jun 2008 12:26:19 +0200
-Message-ID: <20080602102619.GA30779@rap.rap.dk>
-References: <b8f627e0806011347x49630976gf9bcf57d7356489b@mail.gmail.com>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: Software RAID 6 initial sync very slow
+Date: Mon, 02 Jun 2008 08:35:09 -0400
+Message-ID: <4843E8FD.8000601@tmr.com>
+References: <8CA91F18992AC9E-1724-EAF@webmail-ne13.sysops.aol.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <b8f627e0806011347x49630976gf9bcf57d7356489b@mail.gmail.com>
+In-Reply-To: <8CA91F18992AC9E-1724-EAF@webmail-ne13.sysops.aol.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: ???? ????????? <socketpair@gmail.com>
+To: thomas62186218@aol.com
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Jun 02, 2008 at 02:47:53AM +0600, ???? ????????? wrote:
-> Hello. I have a simple question.
-> 
-> I just created mdadm raid10 with four disks. The raid  build process
-> complete successfully.
-> All of 4 HDD are connected with separate SATA wires directly to motherboard.
-> The mode of operation (selected in bios) neither AHCI nor RAID.
-> 
-> I decide to acheive performance information of software RAID.
-> So I read 10 blocks by 64Mb. This give me roughly performance of one disk.
-> (I expect that it will be 4x speed ! it should read from 4 hdd
-> simultaneously!!!, BUT NOT! )
-> 
-> So, second test were reading 10 blocks (from 0 to 9) in one process,
-> and 10 blocks (from 10 to 19) in second thread.
-> I acheive performance of half disk... in each thread.
-> 
-> WTF? maybe raid is configured incorrectly ? Or my tests are invalid ?
-> 
-> Any ideas ?
+thomas62186218@aol.com wrote:
+> Hi all,
+>
+> I am debating between hardware or software RAID for a high-performance 
+> Linux storage server. One area of concern in my initial mdadm tests 
+> concerns sync speed. My setup is as follows:
+>
+> Linux Fedora 7 x64
+> 12 x 1TB Hitachi 1TB SATAII drives connected via LSI SAS3801E PCIe HBA
+> Dual 2.5GHz quad-core Xeon
+> 8GB RAM
+>
+> My first test was to create a RAID 6 md device, 128K chunk, with all 
+> 12 drives. The sync is currently underway at a very slow 30MB/sec, 
+> with mdadm estimating this as a 9hr process. With an Adaptec 5805 RAID 
+> card tested, I performed the RAID 6 initial sync with the same 12 
+> drives in just under 5 hours. Meanwhile, our total CPU usage during 
+> mdadm syncing is at 5%, so there's plenty of CPU not being used.
+>
+> Why is the sync so slow? This concerns me not only because initial 
+> sync time is important, but because this may be indicative of slow 
+> sync times in the event of a drive failure.
 
-have a look on the howto performance section.
+Two things will limit this, chunk size and max speed set in the 
+/sys/block/mdNN/md/sync_speed_max setting. What you are seeing does 
+sound slow.
 
-http://linux-raid.osdl.org/index.php/Performance
+-- 
+Bill Davidsen <davidsen@tmr.com>
+  "Woe unto the statesman who makes war without a reason that will still
+  be valid when the war is over..." Otto von Bismark 
 
-the far layout is "far" better:-)
 
-Also note the problem solving section there.
-
-doing IO in more threads will have your array behave in random read
-mode. 
-
-What kernel are you running?
-
-best regards
-keld
