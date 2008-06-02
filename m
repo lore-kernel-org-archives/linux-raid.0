@@ -1,47 +1,53 @@
-From: "Jon Nelson" <jnelson-linux-raid@jamponi.net>
-Subject: Awful Raid10,f2 performance
-Date: Mon, 2 Jun 2008 09:11:56 -0500
-Message-ID: <cccedfc60806020711o39ccd321h5e410c963d8bf3b1@mail.gmail.com>
+From: "Jeremy Leigh" <jeremy.leigh@gmail.com>
+Subject: Problem Growing Raid 5 Array - Help Needed!
+Date: Tue, 3 Jun 2008 00:50:35 +1000
+Message-ID: <484408bf.20018e0a.68db.ffffe97f@mx.google.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux-Raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I have set up a 3-disk raid10 using f2 layout using 3x SATA disks each
-capable of 70+ MB/s (give or take).
-The CPU is a dual core 64 bit Athlon 3600+, and the SATA interface
-consists of NVidia MCP55+ (PCIe or whatever).
-Previously this was a 3 disk raid5.
-The problem: I'm getting really awful transfer rates.  7-9MB/s
-per-drive with 21-30MB/s combined. The average hangs around 22-24MB/s.
-This, I feel, is really awful!
+Hi Guys, I have just grown my raid 5 from 7 to 8 500Gb drives.
+I am now running into this problem.
+When I try to run fsck /dev/md0 I get the following:
 
-What parameters can I twiddle to improve the performance?
-I am not using NCQ.
-The drives individually are capable of 70+ MB/s.
-I am using the deadline I/O scheduler but I have tried the others.
-This is the openSUSE 2.6.22.17 kernel.
-I am getting the I/O rates via dstat.
-I am using the jfs filesystem primarily.
-The operation I am performing varies but the I/O rates don't (much).
-In particular, moving one 17G file from a logical volume (I am using
-LVM) to another, both filesytems are JFS.
-The load is around 2.6, with these four processing being the top CPU
-consumers (they wiggle around a bit):
+fsck.ext2: Device or resource busy while trying to open /dev/md0
+=46ilesystem mounted or opened exclusively by another program?
 
+Or when I try to run resize2fs /dev/md0 to make use of new drive, I get=
+ the
+following:
 
- 2034 root      10  -5     0    0    0 D   10  0.0 201:00.30 md0_raid10
-10631 root      18   0  8436 1076  668 D    7  0.1   2:07.65 mv
-  218 root      15   0     0    0    0 D    3  0.0   2:06.30 pdflush
- 2182 root      10  -5     0    0    0 S    3  0.0   0:32.51 jfsCommit
+resize2fs: Device or resource busy while trying to open /dev/md0
+Couldn=92t find valid filesystem superblock.
 
-Is there more information that I can provide that can help explain why
-I'm getting such slow speeds?
+Cat /proc/mdstat outputs:
 
+Personalities : [raid6] [raid5] [raid4]=20
+md0 : active raid5 sdb1[0] sdi1[7] sdg1[6] sdh1[5] sdf1[4] sde1[3] sdd1=
+[2]
+sdc1[1]
+=A0=A0=A0=A0=A0 3418686208 blocks level 5, 256k chunk, algorithm 2 [8/8=
+] [UUUUUUUU]
+=A0=A0=A0=A0=A0=20
+unused devices: <none>
 
--- 
-Jon
+However, I can still access and mount my filesystem - I just cannot gro=
+w it,
+which I find very strange.
+I have tried to init 1, to go to single user mode, and I have made sure=
+ file
+system is unmounted, but this =91busy=92 error still occurs.
+
+Any ideas? I=92m kinda stuck. Google is no help!
+
+I am running fedora core 7.
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
