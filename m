@@ -1,48 +1,47 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: Software RAID 6 initial sync very slow
-Date: Mon, 02 Jun 2008 08:35:09 -0400
-Message-ID: <4843E8FD.8000601@tmr.com>
-References: <8CA91F18992AC9E-1724-EAF@webmail-ne13.sysops.aol.com>
+From: "Jon Nelson" <jnelson-linux-raid@jamponi.net>
+Subject: Awful Raid10,f2 performance
+Date: Mon, 2 Jun 2008 09:11:56 -0500
+Message-ID: <cccedfc60806020711o39ccd321h5e410c963d8bf3b1@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <8CA91F18992AC9E-1724-EAF@webmail-ne13.sysops.aol.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: thomas62186218@aol.com
-Cc: linux-raid@vger.kernel.org
+To: Linux-Raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-thomas62186218@aol.com wrote:
-> Hi all,
->
-> I am debating between hardware or software RAID for a high-performance 
-> Linux storage server. One area of concern in my initial mdadm tests 
-> concerns sync speed. My setup is as follows:
->
-> Linux Fedora 7 x64
-> 12 x 1TB Hitachi 1TB SATAII drives connected via LSI SAS3801E PCIe HBA
-> Dual 2.5GHz quad-core Xeon
-> 8GB RAM
->
-> My first test was to create a RAID 6 md device, 128K chunk, with all 
-> 12 drives. The sync is currently underway at a very slow 30MB/sec, 
-> with mdadm estimating this as a 9hr process. With an Adaptec 5805 RAID 
-> card tested, I performed the RAID 6 initial sync with the same 12 
-> drives in just under 5 hours. Meanwhile, our total CPU usage during 
-> mdadm syncing is at 5%, so there's plenty of CPU not being used.
->
-> Why is the sync so slow? This concerns me not only because initial 
-> sync time is important, but because this may be indicative of slow 
-> sync times in the event of a drive failure.
+I have set up a 3-disk raid10 using f2 layout using 3x SATA disks each
+capable of 70+ MB/s (give or take).
+The CPU is a dual core 64 bit Athlon 3600+, and the SATA interface
+consists of NVidia MCP55+ (PCIe or whatever).
+Previously this was a 3 disk raid5.
+The problem: I'm getting really awful transfer rates.  7-9MB/s
+per-drive with 21-30MB/s combined. The average hangs around 22-24MB/s.
+This, I feel, is really awful!
 
-Two things will limit this, chunk size and max speed set in the 
-/sys/block/mdNN/md/sync_speed_max setting. What you are seeing does 
-sound slow.
+What parameters can I twiddle to improve the performance?
+I am not using NCQ.
+The drives individually are capable of 70+ MB/s.
+I am using the deadline I/O scheduler but I have tried the others.
+This is the openSUSE 2.6.22.17 kernel.
+I am getting the I/O rates via dstat.
+I am using the jfs filesystem primarily.
+The operation I am performing varies but the I/O rates don't (much).
+In particular, moving one 17G file from a logical volume (I am using
+LVM) to another, both filesytems are JFS.
+The load is around 2.6, with these four processing being the top CPU
+consumers (they wiggle around a bit):
+
+
+ 2034 root      10  -5     0    0    0 D   10  0.0 201:00.30 md0_raid10
+10631 root      18   0  8436 1076  668 D    7  0.1   2:07.65 mv
+  218 root      15   0     0    0    0 D    3  0.0   2:06.30 pdflush
+ 2182 root      10  -5     0    0    0 S    3  0.0   0:32.51 jfsCommit
+
+Is there more information that I can provide that can help explain why
+I'm getting such slow speeds?
+
 
 -- 
-Bill Davidsen <davidsen@tmr.com>
-  "Woe unto the statesman who makes war without a reason that will still
-  be valid when the war is over..." Otto von Bismark 
-
-
+Jon
