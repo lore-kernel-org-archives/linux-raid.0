@@ -1,63 +1,104 @@
-From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
-Subject: Re: Awful Raid10,f2 performance
-Date: Mon, 2 Jun 2008 20:30:04 +0200
-Message-ID: <20080602183004.GD7990@rap.rap.dk>
-References: <cccedfc60806020711o39ccd321h5e410c963d8bf3b1@mail.gmail.com> <48440953.3040004@wpkg.org> <cccedfc60806020809t73794ce6w539c6b0d247a264f@mail.gmail.com>
+From: thomas62186218@aol.com
+Subject: Re: Software RAID 6 initial sync very slow
+Date: Mon, 02 Jun 2008 15:18:57 -0400
+Message-ID: <8CA92FCA38FE330-1A8-162F@webmail-nb02.sysops.aol.com>
+References: <8CA91F18992AC9E-1724-EAF@webmail-ne13.sysops.aol.com> <4843E8FD.8000601@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset="us-ascii"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <cccedfc60806020809t73794ce6w539c6b0d247a264f@mail.gmail.com>
+In-Reply-To: <4843E8FD.8000601@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jon Nelson <jnelson-linux-raid@jamponi.net>
-Cc: Tomasz Chmielewski <mangoo@wpkg.org>, Linux-Raid <linux-raid@vger.kernel.org>
+To: davidsen@tmr.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Jun 02, 2008 at 10:09:46AM -0500, Jon Nelson wrote:
-> i can't show you raw write values, but I can show you raw read values
-> (after dropping the caches):
-> 
-> >From dstat, this shows disks sdb, sdc, and sdd values in read (space)
-> write format, with the total on the end.
-> 
-> Thus:
-> 
->   70M    0 :  71M    0 :  72M    0 : 213M    0
->   71M    0 :  70M    0 :  69M    0 : 210M    0
->   71M    0 :  73M    0 :  74M    0 : 217M    0
-> 
-> shows that I'm getting 70+- MB/s on each disk, combined to 210 to 217MB/s.
-> These are read values.
-> 
-> I created a logical volume (50G), dropped the caches again, and issued:
-> 
-> dd if=/dev/zero of=/dev/raid/test bs=64k
-> 
-> and got from 100 to 150MB/s sustained write speeds.
-> NOTE: this is with a bitmap (internal)
-> Without a bitmap (removed for this test), I get a much more consistent
-> 130-150MB/s.
+Thank you Bill and Richard for your responses.
 
-70 MB/s sounds like as expected.
+In sync_speed_max, I had already set it to 250000 (250MB/sec). For 
+sync_speed_min, I have 249900 set. My rational behind doing this was to 
+"force" it to go as fast as it can. Any problem with this?
 
-> dd reports a mere 70MB/s when complete.
-> When using oflag=direct, I get about 100MB/s combined, with a
-> "reported" speed of 51.9MB/s.
-> Since I'm using 3x drives, my total I/O is going to be about 2x what dd "sees".
-> 
-> Does that help?
+However, adjusting stripe_cache_size did improve performance. It was 
+256 at first, and my sync rate was 28MB/sec. When I increased it to 
+4096, my sync rate jumped to 38MB/sec. Then I increased it to 16384, 
+and it jumped again to 40MB/sec. Increasing stripe_cache_size above 
+that did not seem to have any effect.
 
-It does not explain a 7 MB/s rate.
+My question then is, how do I set the stripe_cache_size at the time of 
+md creation? I would rather set it then, as opposed to having to echo 
+stripe_cache_size variable with a new setting. In other words, where is 
+this default value of 256 coming from? Thanks all!!
 
-the 52 MB/s writing seems as expected - maybe a bit slow, but not very
-slow. I do not know is a 3-disk raid10,f2 has specific performance
-problems.
+-Thomas
 
-You could try the command (md3 being my raid)
+-----Original Message-----
+From: Bill Davidsen <davidsen@tmr.com>
+To: thomas62186218@aol.com
+Cc: linux-raid@vger.kernel.org
+Sent: Mon, 2 Jun 2008 5:35 am
+Subject: Re: Software RAID 6 initial sync very slow
 
-blockdev --setra 65536 /dev/md3 
 
-It solved some performance problems for me.
 
-Best regards
-keld
+
+
+
+
+
+
+thomas62186218@aol.com wrote:
+
+> Hi all,
+
+>
+
+> I am debating between hardware or software RAID for a 
+high-performance
+> Linux storage server. One area of concern in my initial mdadm tests
+> concerns sync speed. My setup is as follows:
+
+>
+
+> Linux Fedora 7 x64
+
+> 12 x 1TB Hitachi 1TB SATAII drives connected via LSI SAS3801E PCIe 
+HBA
+
+> Dual 2.5GHz quad-core Xeon
+
+> 8GB RAM
+
+>
+
+> My first test was to create a RAID 6 md device, 128K chunk, with all
+> 12 drives. The sync is currently underway at a very slow 30MB/sec,
+> with mdadm estimating this as a 9hr process. With an Adaptec 5805 
+RAID
+> card tested, I performed the RAID 6 initial sync with the same 12
+> drives in just under 5 hours. Meanwhile, our total CPU usage during
+> mdadm syncing is at 5%, so there's plenty of CPU not being used.
+
+>
+
+> Why is the sync so slow? This concerns me not only because initial
+> sync time is important, but because this may be indicative of slow
+> sync times in the event of a drive failure.
+
+
+Two things will limit this, chunk size and max speed set in the
+/sys/block/mdNN/md/sync_speed_max setting. What you are seeing does
+sound slow.
+
+
+--
+Bill Davidsen <davidsen@tmr.com>
+
+ "Woe unto the statesman who makes war without a reason that will still
+
+ be valid when the war is over..." Otto von Bismark
+
+
+
+
+
+
