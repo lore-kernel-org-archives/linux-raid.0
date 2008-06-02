@@ -1,69 +1,63 @@
-From: David Greaves <david@dgreaves.com>
-Subject: Re: Problem Growing Raid 5 Array - Help Needed!
-Date: Mon, 02 Jun 2008 16:13:14 +0100
-Message-ID: <48440E0A.7020707@dgreaves.com>
-References: <484408bf.20018e0a.68db.ffffe97f@mx.google.com>
+From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
+Subject: Re: Awful Raid10,f2 performance
+Date: Mon, 2 Jun 2008 20:30:04 +0200
+Message-ID: <20080602183004.GD7990@rap.rap.dk>
+References: <cccedfc60806020711o39ccd321h5e410c963d8bf3b1@mail.gmail.com> <48440953.3040004@wpkg.org> <cccedfc60806020809t73794ce6w539c6b0d247a264f@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=iso-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <484408bf.20018e0a.68db.ffffe97f@mx.google.com>
+Content-Disposition: inline
+In-Reply-To: <cccedfc60806020809t73794ce6w539c6b0d247a264f@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jeremy Leigh <jeremy.leigh@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: Jon Nelson <jnelson-linux-raid@jamponi.net>
+Cc: Tomasz Chmielewski <mangoo@wpkg.org>, Linux-Raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Jeremy Leigh wrote:
-> Hi Guys, I have just grown my raid 5 from 7 to 8 500Gb drives.
-> I am now running into this problem.
-> When I try to run fsck /dev/md0 I get the following:
+On Mon, Jun 02, 2008 at 10:09:46AM -0500, Jon Nelson wrote:
+> i can't show you raw write values, but I can show you raw read values
+> (after dropping the caches):
+> 
+> >From dstat, this shows disks sdb, sdc, and sdd values in read (space)
+> write format, with the total on the end.
+> 
+> Thus:
+> 
+>   70M    0 :  71M    0 :  72M    0 : 213M    0
+>   71M    0 :  70M    0 :  69M    0 : 210M    0
+>   71M    0 :  73M    0 :  74M    0 : 217M    0
+> 
+> shows that I'm getting 70+- MB/s on each disk, combined to 210 to 217MB/s.
+> These are read values.
+> 
+> I created a logical volume (50G), dropped the caches again, and issued:
+> 
+> dd if=/dev/zero of=/dev/raid/test bs=64k
+> 
+> and got from 100 to 150MB/s sustained write speeds.
+> NOTE: this is with a bitmap (internal)
+> Without a bitmap (removed for this test), I get a much more consistent
+> 130-150MB/s.
 
-What command line?
+70 MB/s sounds like as expected.
 
-> fsck.ext2: Device or resource busy while trying to open /dev/md0
-> Filesystem mounted or opened exclusively by another program?
->=20
-> Or when I try to run resize2fs /dev/md0 to make use of new drive, I g=
-et the
-> following:
->=20
-> resize2fs: Device or resource busy while trying to open /dev/md0
-> Couldn=92t find valid filesystem superblock.
-again, what command.
+> dd reports a mere 70MB/s when complete.
+> When using oflag=direct, I get about 100MB/s combined, with a
+> "reported" speed of 51.9MB/s.
+> Since I'm using 3x drives, my total I/O is going to be about 2x what dd "sees".
+> 
+> Does that help?
 
+It does not explain a 7 MB/s rate.
 
-> Cat /proc/mdstat outputs:
->=20
-> Personalities : [raid6] [raid5] [raid4]=20
-> md0 : active raid5 sdb1[0] sdi1[7] sdg1[6] sdh1[5] sdf1[4] sde1[3] sd=
-d1[2]
-> sdc1[1]
->       3418686208 blocks level 5, 256k chunk, algorithm 2 [8/8] [UUUUU=
-UUU]
->      =20
-> unused devices: <none>
-So the resize worked and is complete.
+the 52 MB/s writing seems as expected - maybe a bit slow, but not very
+slow. I do not know is a 3-disk raid10,f2 has specific performance
+problems.
 
-> However, I can still access and mount my filesystem - I just cannot g=
-row it,
-> which I find very strange.
-> I have tried to init 1, to go to single user mode, and I have made su=
-re file
-> system is unmounted, but this =91busy=92 error still occurs.
+You could try the command (md3 being my raid)
 
-Have you rebooted? (Question, not suggestion)
+blockdev --setra 65536 /dev/md3 
 
-What is the output from a mount command.
-What is the line in /etc/fstab than normally mounts this filesystem?
+It solved some performance problems for me.
 
-Is mdadm running as a monitor daemon?
-
-does lsof | grep <mountpoint> show anything?
-
-David
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Best regards
+keld
