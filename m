@@ -1,56 +1,41 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: Software RAID 6 initial sync very slow
-Date: Tue, 03 Jun 2008 15:47:52 -0400
-Message-ID: <48459FE8.6080604@tmr.com>
-References: <8CA91F18992AC9E-1724-EAF@webmail-ne13.sysops.aol.com> <4843E8FD.8000601@tmr.com> <8CA92FCA38FE330-1A8-162F@webmail-nb02.sysops.aol.com>
+From: Jules Bean <jules@jellybean.co.uk>
+Subject: Re: After partition resize, RAID5 array does not assemble on boot
+Date: Tue, 03 Jun 2008 22:19:47 +0100
+Message-ID: <4845B573.7090801@jellybean.co.uk>
+References: <4844E994.8020808@jellybean.co.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <8CA92FCA38FE330-1A8-162F@webmail-nb02.sysops.aol.com>
+In-Reply-To: <4844E994.8020808@jellybean.co.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: thomas62186218@aol.com
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-thomas62186218@aol.com wrote:
-> Thank you Bill and Richard for your responses.
->
-> In sync_speed_max, I had already set it to 250000 (250MB/sec). For 
-> sync_speed_min, I have 249900 set. My rational behind doing this was 
-> to "force" it to go as fast as it can. Any problem with this?
->
-Other than possibly totally killing your response if you use some other 
-raid levels, no. I usually set the min speed to something I can tolerate 
-in the background, and still have a useful system.
+Jules Bean wrote:
+> Help? What next ;) Is there enough information in /dev/sdd2 and 
+> /dev/sdc2 to reconstruct the apparently missing superblocks on /dev/sda2 
+> and /dev/sdb2? Do I need to try to resize my partitions back to their 
+> old size so it can find the old superblock? Even if by adding /dev/sda2 
+> as a spare I've corrupted its superblock entirely, sdb2 should still 
+> have enough to save my array with 3 out of 4 devices?
 
-> However, adjusting stripe_cache_size did improve performance. It was 
-> 256 at first, and my sync rate was 28MB/sec. When I increased it to 
-> 4096, my sync rate jumped to 38MB/sec. Then I increased it to 16384, 
-> and it jumped again to 40MB/sec. Increasing stripe_cache_size above 
-> that did not seem to have any effect.
->
-You definitely hit diminishing returns on cache_size. There are people 
-on this list who swear by 32k or 64k, but even when I can spare the 
-memory I don't see any benefit to looking for that last tiny gain.
+I have become convinced (correct me if you think I'm wrong) that the 
+problem was cfdisk resizing the partitions but the kernel tables not 
+being updated.
 
-> My question then is, how do I set the stripe_cache_size at the time of 
-> md creation? I would rather set it then, as opposed to having to echo 
-> stripe_cache_size variable with a new setting. In other words, where 
-> is this default value of 256 coming from? Thanks all!!
+Therefore although I thought the partitions were 400G, the kernel still 
+thought they were 250G, and presumably the raid subsystem used that figure.
 
-rc.local is my usual choice for things like that, and if you want to 
-really spend a lot of time chasing performance, be aware that you can 
-use blockdev to play with readahead on the devince and filesystem, and 
-generally spend days trying to create a test which will show benefits in 
-a statistically valid manner. Add chunk size and knock yourself out. I 
-am convinced that the answer to better performance is "it depends," so 
-just boosting readahead and cache_size a bit usually gets 80-90% of 
-anything you can get with tons of playing.
+So the raid subsytem probably recorded its superblock as if the 
+partitions were still only 250G long? So I ought to be able to find that 
+superblock again by resizing the partitions back?
 
--- 
-Bill Davidsen <davidsen@tmr.com>
-  "Woe unto the statesman who makes war without a reason that will still
-  be valid when the war is over..." Otto von Bismark 
+Alas I didn't take precise notes of my old partition table (stupid 
+error). I have tried a couple of cylinder counts near 250G but no luck. 
+Is there any good way to 'search for' somethign which looks like a RAID 
+superblock?
 
+Does the mdadm --detail output I pasted in my last message hold any clues?
 
+Jules
