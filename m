@@ -1,96 +1,153 @@
-From: Jules Bean <jules@jellybean.co.uk>
-Subject: After partition resize, RAID5 array does not assemble on boot
-Date: Tue, 03 Jun 2008 07:49:56 +0100
-Message-ID: <4844E994.8020808@jellybean.co.uk>
+From: "Jeremy Leigh" <jeremy.leigh@gmail.com>
+Subject: RE: Problem Growing Raid 5 Array - Help Needed!
+Date: Wed, 4 Jun 2008 01:03:15 +1000
+Message-ID: <48455d39.16078e0a.20d2.14eb@mx.google.com>
+References: <48440E0A.7020707@dgreaves.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <48440E0A.7020707@dgreaves.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: 'David Greaves' <david@dgreaves.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Kernel: 2.6.24 i386
-mdadm: 2.6.4
+Hi David,
+These commands are being run from root.
 
-Hi,
+[root@FileServer ~]# fsck /dev/md0
+fsck 1.40.2 (12-Jul-2007)
+e2fsck 1.40.2 (12-Jul-2007)
+fsck.ext2: Device or resource busy while trying to open /dev/md0
+Filesystem mounted or opened exclusively by another program?
 
-I had a RAID5 array in the configuration 250/250/400/400 (so only
-250/250/250/250 was actually being used)
+[root@FileServer ~]# resize2fs /dev/md0
+resize2fs 1.40.2 (12-Jul-2007)
+resize2fs: Device or resource busy while trying to open /dev/md0
+Couldn't find valid filesystem superblock.
 
-After a partition rearrangement it was possible to increase the size
-of the two 250 partitions to 400. I did the following:
+[root@FileServer ~]# lsof | grep /home
+smbd      4674      root  cwd       DIR  253,0     4096    2 /home
 
-mdadm --fail partition
-mdadm --remove partition
-cfdisk resize partition
-mdadm --add partition
-wait some hours for rebuild to complete
+[root@FileServer ~]# umount /home -f
+[root@FileServer ~]# lsof | grep /home
+[root@FileServer ~]#
+[root@FileServer ~]# mdadm --stop --scan
+mdadm: fail to stop array /dev/md0: Device or resource busy
 
-Twice, once for each 250G partition.
 
-The new array was running fine. Here is its status:
+Yes, I have rebooted, and rebooted into single user mode with no effect.
 
-champagne:/home/jules# mdadm --detail /dev/md0
+Mount works fine for the LVM volume sitting on /dev/md0
+[root@FileServer ~]# mount /dev/LVMRAID/LV0 /home
+[root@FileServer ~]#
+
+Before sending email to this list I had already commented out the line in
+/etc/fstab in case that was the cause. But here it is anyway.
+
+#/dev/LVMRAID/LV0		/home		ext3	defaults	1 2
+
+Finally, I can give you output of mdadm --detail, but to be honest, I don't
+know what else I can do... This is really frustrating.
+
+[root@FileServer ~]# mdadm --detail /dev/md0 
 /dev/md0:
-         Version : 00.90.03
-   Creation Time : Tue Jan 30 21:28:07 2007
-      Raid Level : raid5
-      Array Size : 726732096 (693.07 GiB 744.17 GB)
-   Used Dev Size : 242244032 (231.02 GiB 248.06 GB)
-    Raid Devices : 4
-   Total Devices : 4
+        Version : 00.90.03
+  Creation Time : Wed Jul 18 21:10:47 2007
+     Raid Level : raid5
+     Array Size : 3418686208 (3260.31 GiB 3500.73 GB)
+  Used Dev Size : 488383744 (465.76 GiB 500.10 GB)
+   Raid Devices : 8
+  Total Devices : 8
 Preferred Minor : 0
-     Persistence : Superblock is persistent
+    Persistence : Superblock is persistent
 
-     Update Time : Mon Jun  2 22:46:33 2008
-           State : clean
-  Active Devices : 4
-Working Devices : 4
-  Failed Devices : 0
-   Spare Devices : 0
+    Update Time : Wed Jun  4 00:19:29 2008
+          State : clean
+ Active Devices : 8
+Working Devices : 8
+ Failed Devices : 0
+  Spare Devices : 0
 
-          Layout : left-symmetric
-      Chunk Size : 64K
+         Layout : left-symmetric
+     Chunk Size : 256K
 
-            UUID : 52252ae8:5d1fd858:31a51f4c:5ff55ddd
-          Events : 0.1638776
+           UUID : 46e9ab9d:c365cd2c:e08c1bc3:73c070ca
+         Events : 0.988674
 
-     Number   Major   Minor   RaidDevice State
-        0       8        2        0      active sync   /dev/sda2
-        1       8       18        1      active sync   /dev/sdb2
-        2       8       50        2      active sync   /dev/sdd2
-        3       8       34        3      active sync   /dev/sdc2
-
-However I was under the impression --grow --size=max would grow it up
-to the real limits of the partitions. This didn't work.
-
-Thinking something was cached in internal tables with incorrect
-partition sizes, I rebooted the machine.
-
-Bad idea :(
-
-The RAID array failed to reconstruct. The boot messages said there
-were only two working devices, not enough to start array.
-
-/dev/sdd2 and /dev/sd2 (which were the partitions I didn't touch) were
-both there. /dev/sda2 and /dev/sdb2 didn't add.
-
-I tried (mistake?) adding /dev/sda2 explicitly with --add but it added
-as a spare, not as a proper member.
-
-I tried assembling explicitly with --assemble /dev/sda2 /dev/sdb2
-/dev/sdc2 /dev/sdd2 and it complained of no RAID superblock on
-/dev/sdb2.
-
-Help? What next ;) Is there enough information in /dev/sdd2 and 
-/dev/sdc2 to reconstruct the apparently missing superblocks on /dev/sda2 
-and /dev/sdb2? Do I need to try to resize my partitions back to their 
-old size so it can find the old superblock? Even if by adding /dev/sda2 
-as a spare I've corrupted its superblock entirely, sdb2 should still 
-have enough to save my array with 3 out of 4 devices?
+    Number   Major   Minor   RaidDevice State
+       0       8       17        0      active sync   /dev/sdb1
+       1       8       33        1      active sync   /dev/sdc1
+       2       8       49        2      active sync   /dev/sdd1
+       3       8       65        3      active sync   /dev/sde1
+       4       8       81        4      active sync   /dev/sdf1
+       5       8      113        5      active sync   /dev/sdh1
+       6       8       97        6      active sync   /dev/sdg1
+       7       8      129        7      active sync   /dev/sdi1
 
 
-Many thanks,
+I am not sure why it says RAID size, 3500.73 GB? Well it should be 4000 GB -
+or maybe that only appears after the resize2fs.
 
-Jules
+Thanks for your response so far David.
+Anyone else want to join in?
+
+Regards.
+
+
+-----Original Message-----
+From: David Greaves [mailto:david@dgreaves.com] 
+Sent: Tuesday, 3 June 2008 1:13 AM
+To: Jeremy Leigh
+Cc: linux-raid@vger.kernel.org
+Subject: Re: Problem Growing Raid 5 Array - Help Needed!
+
+Jeremy Leigh wrote:
+> Hi Guys, I have just grown my raid 5 from 7 to 8 500Gb drives.
+> I am now running into this problem.
+> When I try to run fsck /dev/md0 I get the following:
+
+What command line?
+
+> fsck.ext2: Device or resource busy while trying to open /dev/md0
+> Filesystem mounted or opened exclusively by another program?
+> 
+> Or when I try to run resize2fs /dev/md0 to make use of new drive, I get
+the
+> following:
+> 
+> resize2fs: Device or resource busy while trying to open /dev/md0
+> Couldn't find valid filesystem superblock.
+again, what command.
+
+
+> Cat /proc/mdstat outputs:
+> 
+> Personalities : [raid6] [raid5] [raid4] 
+> md0 : active raid5 sdb1[0] sdi1[7] sdg1[6] sdh1[5] sdf1[4] sde1[3] sdd1[2]
+> sdc1[1]
+>       3418686208 blocks level 5, 256k chunk, algorithm 2 [8/8] [UUUUUUUU]
+>       
+> unused devices: <none>
+So the resize worked and is complete.
+
+> However, I can still access and mount my filesystem - I just cannot grow
+it,
+> which I find very strange.
+> I have tried to init 1, to go to single user mode, and I have made sure
+file
+> system is unmounted, but this 'busy' error still occurs.
+
+Have you rebooted? (Question, not suggestion)
+
+What is the output from a mount command.
+What is the line in /etc/fstab than normally mounts this filesystem?
+
+Is mdadm running as a monitor daemon?
+
+does lsof | grep <mountpoint> show anything?
+
+David
+
