@@ -1,31 +1,28 @@
 From: Jules Bean <jules@jellybean.co.uk>
-Subject: Re: After partition resize, RAID5 array does not assemble on boot
-Date: Wed, 04 Jun 2008 14:14:11 +0100
-Message-ID: <48469523.4050601@jellybean.co.uk>
-References: <4844E994.8020808@jellybean.co.uk>    <4845B573.7090801@jellybean.co.uk> <48675.192.168.1.70.1212528422.squirrel@neil.brown.name> <484636B9.20700@jellybean.co.uk> <48464B3A.7070206@dgreaves.com> <4846529B.1000809@jellybean.co.uk> <484681AF.8030004@dgreaves.com>
+Subject: boot time autoassembly: how come it works?
+Date: Wed, 04 Jun 2008 23:05:16 +0100
+Message-ID: <4847119C.3070002@jellybean.co.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <484681AF.8030004@dgreaves.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Greaves <david@dgreaves.com>
-Cc: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-David Greaves wrote:
->> I don't really see that it's "safer" though. I would have thought it was
->> quicker but potentially less safe.
-> 
-> Avoiding a lot of time stress testing the disks in degraded mode isn't 'safer'?
+I'm trying to understand the boot sequence of new kernels (2.6.24, 
+initramfs) better and I really don't understand how the RAID assembly works.
 
-Stress testing the disks by an md rebuild is a feature! It increases 
-confidence that they work.
+The docs (md.txt) say that auto-assembly only occurs if the RAID arrays 
+are marked as 'RAID autodetect' aka partition type 0xfd. On the other 
+hand mdadm needs mdadm.conf to get going.
 
-;)
+My RAID arrays (including the one which contains the root file system, 
+/dev/md2) are not marked as 0xfd, and they are not correctly listed in 
+/etc/mdadm/mdadm.conf on the initramfs filesystem either. (There are 
+some listings in there but they are out of date : UUIDs wrong and number 
+of devices wrong).
 
-Seriously, I understand your point now. Yes, a rebuild-free partition 
-resize would be a nice feature. So would a "help, please find my 
-superblock by exhaustive scanning" utility ;)
+So how come it works?
 
 Jules
