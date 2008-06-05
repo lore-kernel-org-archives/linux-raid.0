@@ -1,31 +1,28 @@
-From: Michal Soltys <soltys@ziu.info>
+From: Jules Bean <jules@jellybean.co.uk>
 Subject: Re: boot time autoassembly: how come it works?
-Date: Thu, 05 Jun 2008 07:10:44 +0200
-Message-ID: <48477554.7090409@ziu.info>
-References: <4847119C.3070002@jellybean.co.uk>
+Date: Thu, 05 Jun 2008 07:22:20 +0100
+Message-ID: <4847861C.20901@jellybean.co.uk>
+References: <4847119C.3070002@jellybean.co.uk> <20080604222740.GA32075@atlantis.cc.ndsu.NoDak.edu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4847119C.3070002@jellybean.co.uk>
+In-Reply-To: <20080604222740.GA32075@atlantis.cc.ndsu.NoDak.edu>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Bryan Mesich <bryan.mesich@ndsu.edu>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Jules Bean wrote:
-> I'm trying to understand the boot sequence of new kernels (2.6.24, 
-> initramfs) better and I really don't understand how the RAID assembly 
-> works.
-> 
-> The docs (md.txt) say that auto-assembly only occurs if the RAID arrays 
-> are marked as 'RAID autodetect' aka partition type 0xfd. On the other 
-> hand mdadm needs mdadm.conf to get going.
-> 
+Bryan Mesich wrote:
+> I'm not sure I've seen a system auto assemble an array when the
+> partitions were not set to 0xfd.  My bet is that you have a
+> mdadm.conf file in your initrd and that the init script is
+> starting the array in user space via mdadm.
 
-Initramfs is a tiny linux. It (usually) either has simple mdassamble or 
-mdassemble.auto, or full-blown mdadm - and when you use those, partition 
-type is ignored.
+Yes, there is an mdadm.conf and a full copy of mdadm in my initramfs.
 
-Partitions with 0xfd relate to [deprecated in times of early userpsace] 
-method of assembling the arrays by the kernel itself, before any 
-userspace code (initramfs/rd, your system) takes action.
+However the mdadm.conf is wrong. weird.
+
+It has the wrong number of devices listed for both arrays, and the wrong 
+UUIDs. Somehow that must be close enough to work.
+
+Jules
