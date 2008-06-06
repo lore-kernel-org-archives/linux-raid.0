@@ -1,52 +1,81 @@
-From: Lars =?UTF-8?B?VMOkdWJlcg==?= <taeuber@bbaw.de>
-Subject: Re: RAID1 over aoe devices freezes cp-procs on failure of one aoe
- device
-Date: Fri, 6 Jun 2008 12:03:40 +0200
-Message-ID: <20080606120340.b2e7d25b.taeuber@bbaw.de>
-References: <20080605162502.09856f38.taeuber@bbaw.de>
-	<20080606073416.GC10273@boogie.lpds.sztaki.hu>
+From: "Jeremy Leigh" <jeremy.leigh@gmail.com>
+Subject: RE: Problem Growing Raid 5 Array - Help Needed!
+Date: Fri, 6 Jun 2008 22:39:17 +1000
+Message-ID: <48493000.14098e0a.337f.ffffa26f@mx.google.com>
+References: <48457667.9030103@dgreaves.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20080606073416.GC10273@boogie.lpds.sztaki.hu>
+In-Reply-To: <48457667.9030103@dgreaves.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Gabor Gombas <gombasg@sztaki.hu>
-Cc: linux-raid@vger.kernel.org, sah@coraid.com, ecashin@coraid.com
+To: 'David Greaves' <david@dgreaves.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hallo Gabor,
+Hi David, you are right, thankyou!
+I have now:
 
-Gabor Gombas <gombasg@sztaki.hu> schrieb:
-> On Thu, Jun 05, 2008 at 04:25:02PM +0200, Lars T=C3=A4uber wrote:
->=20
-> > The lost aoe-device is correctly marked as faulty but the the raid =
-is
-> > not usable for a copying processes any more although the remaining
-> > device should be enough for a RAID1. There was no change after
-> > removing the faulty device from md9.
-> >=20
-> > Is it possible that one faulty aoe-device blocks the aoe-module any=
-how
-> > so that all other aoe devices aren't accessible anymore? Or is the
-> > RAID subsystem responsible for this?
->=20
-> It should be easy to test: when the RAID hangs, try to read directly
-> from the remaining device ("dd if=3D/dev/etherd/e11.1 ..."). If that =
-also
-> hangs, then it is an AoE issue.
+[root@FileServer ~]#pvresize /dev/md0
 
-the easiest tests are the last that come to mind. :o)
-There is another problem here:
-The described problem is not reproducable. I'm not sure wether I made s=
-omething wrong or the situation is not the same after the shutdown.
+And then from system-config-lvm I have selected 'Use Remaining' space on the
+logical volume.
 
-I'm checking this right now.
+All done. Good thing LVM keeps a lock on the device ;) 
 
-Thanks
-Lars
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+No doubt someone thought there would be users like me :D
+
+
+-----Original Message-----
+From: David Greaves [mailto:david@dgreaves.com] 
+Sent: Wednesday, 4 June 2008 2:51 AM
+To: Jeremy Leigh
+Cc: linux-raid@vger.kernel.org
+Subject: Re: Problem Growing Raid 5 Array - Help Needed!
+
+Jeremy Leigh wrote:
+> Hi David,
+> Mount works fine for the LVM volume sitting on /dev/md0
+> [root@FileServer ~]# mount /dev/LVMRAID/LV0 /home
+
+Ah...
+
+lvm is holding /dev/md0 open.
+
+lvm is layered on top of, and uses, md - just like md uses your hard disks.
+
+Try:
+  /etc/init.d/lvm2 stop
+
+That should do it.
+
+
+> Finally, I can give you output of mdadm --detail, but to be honest, I
+don't
+> know what else I can do... This is really frustrating.
+It would be nice if something told you what was holding the lock.
+I occasionally forget on the server that uses lvm.
+
+> These commands are being run from root.
+>
+> [root@FileServer ~]# fsck /dev/md0
+Yeah - that's a bad idea!!!
+your filesystem lives on /dev/LVMRAID/LV0
+  fsck /dev/LVMRAID/LV0
+
+If you had been really unlucky, fsck could have found a superblock and
+started
+scribbling all over your filesystem with potentially devastating results!
+Always run filesystem tools on the device holding the filesystem, rather
+than
+some random component ;)
+
+and similartly
+> [root@FileServer ~]# resize2fs /dev/md0
+resize2fs /dev/LVMRAID/LV0
+
+HTH
+
+David
+
