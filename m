@@ -1,38 +1,46 @@
-From: Neil Brown <neilb@suse.de>
-Subject: ANNOUNCE: mdadm 2.6.7 - A tool for managing Soft RAID under Linux
-Date: Fri, 6 Jun 2008 16:12:08 +1000
-Message-ID: <18504.54584.520384.655282@notabene.brown>
+From: Gabor Gombas <gombasg@sztaki.hu>
+Subject: Re: RAID1 over aoe devices freezes cp-procs on failure of one aoe
+	device
+Date: Fri, 6 Jun 2008 09:34:16 +0200
+Message-ID: <20080606073416.GC10273@boogie.lpds.sztaki.hu>
+References: <20080605162502.09856f38.taeuber@bbaw.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-2
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20080605162502.09856f38.taeuber@bbaw.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Lars =?iso-8859-2?Q?T=E4uber?= <taeuber@bbaw.de>
+Cc: linux-raid@vger.kernel.org, sah@coraid.com, ecashin@coraid.com
 List-Id: linux-raid.ids
 
+On Thu, Jun 05, 2008 at 04:25:02PM +0200, Lars T=E4uber wrote:
 
-I am pleased to announce the availability of
-   mdadm version 2.6.7
+> The lost aoe-device is correctly marked as faulty but the the raid is
+> not usable for a copying processes any more although the remaining
+> device should be enough for a RAID1. There was no change after
+> removing the faulty device from md9.
+>=20
+> Is it possible that one faulty aoe-device blocks the aoe-module anyho=
+w
+> so that all other aoe devices aren't accessible anymore? Or is the
+> RAID subsystem responsible for this?
 
-It is available at the usual places:
-   countrycode=xx.
-   http://www.${countrycode}kernel.org/pub/linux/utils/raid/mdadm/
-and via git at
-   git://neil.brown.name/mdadm
-   http://neil.brown.name/git?p=mdadm
+It should be easy to test: when the RAID hangs, try to read directly
+from the remaining device ("dd if=3D/dev/etherd/e11.1 ..."). If that al=
+so
+hangs, then it is an AoE issue.
 
-mdadm is a tool for creating, managing and monitoring
-device arrays using the "md" driver in Linux, also
-known as Software RAID arrays.
+Gabor
 
-Release 2.6.7 fixes a few bugs in 2.6.5 which 2.6.6 didn't fix.
-
-Changelog Entries:
-    -   Avoid NULL reference calling free_super and elsewhere.
-    -   Remove stray semicolon (Causes compile error with gcc-2.95)
-    -   Fix autoassemble for stack arrays.
-
-Development of mdadm is sponsored by
- SUSE Labs, Novell Inc.
-
-NeilBrown  6th June 2008
+--=20
+     ---------------------------------------------------------
+     MTA SZTAKI Computer and Automation Research Institute
+                Hungarian Academy of Sciences
+     ---------------------------------------------------------
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
