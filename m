@@ -1,81 +1,52 @@
-From: "Jeremy Leigh" <jeremy.leigh@gmail.com>
-Subject: RE: Problem Growing Raid 5 Array - Help Needed!
-Date: Fri, 6 Jun 2008 22:39:17 +1000
-Message-ID: <48493000.14098e0a.337f.ffffa26f@mx.google.com>
-References: <48457667.9030103@dgreaves.com>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: After partition resize, RAID5 array does not assemble on boot
+Date: Fri, 06 Jun 2008 09:52:45 -0400
+Message-ID: <4849412D.9030607@tmr.com>
+References: <4844E994.8020808@jellybean.co.uk>    <4845B573.7090801@jellybean.co.uk> <48675.192.168.1.70.1212528422.squirrel@neil.brown.name> <484636B9.20700@jellybean.co.uk> <48464B3A.7070206@dgreaves.com> <4846529B.1000809@jellybean.co.uk> <484681AF.8030004@dgreaves.com> <48469523.4050601@jellybean.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <48457667.9030103@dgreaves.com>
+In-Reply-To: <48469523.4050601@jellybean.co.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: 'David Greaves' <david@dgreaves.com>
-Cc: linux-raid@vger.kernel.org
+To: Jules Bean <jules@jellybean.co.uk>
+Cc: David Greaves <david@dgreaves.com>, NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi David, you are right, thankyou!
-I have now:
-
-[root@FileServer ~]#pvresize /dev/md0
-
-And then from system-config-lvm I have selected 'Use Remaining' space on the
-logical volume.
-
-All done. Good thing LVM keeps a lock on the device ;) 
-
-No doubt someone thought there would be users like me :D
-
-
------Original Message-----
-From: David Greaves [mailto:david@dgreaves.com] 
-Sent: Wednesday, 4 June 2008 2:51 AM
-To: Jeremy Leigh
-Cc: linux-raid@vger.kernel.org
-Subject: Re: Problem Growing Raid 5 Array - Help Needed!
-
-Jeremy Leigh wrote:
-> Hi David,
-> Mount works fine for the LVM volume sitting on /dev/md0
-> [root@FileServer ~]# mount /dev/LVMRAID/LV0 /home
-
-Ah...
-
-lvm is holding /dev/md0 open.
-
-lvm is layered on top of, and uses, md - just like md uses your hard disks.
-
-Try:
-  /etc/init.d/lvm2 stop
-
-That should do it.
-
-
-> Finally, I can give you output of mdadm --detail, but to be honest, I
-don't
-> know what else I can do... This is really frustrating.
-It would be nice if something told you what was holding the lock.
-I occasionally forget on the server that uses lvm.
-
-> These commands are being run from root.
+Jules Bean wrote:
+> David Greaves wrote:
+>>> I don't really see that it's "safer" though. I would have thought it 
+>>> was
+>>> quicker but potentially less safe.
+>>
+>> Avoiding a lot of time stress testing the disks in degraded mode 
+>> isn't 'safer'?
 >
-> [root@FileServer ~]# fsck /dev/md0
-Yeah - that's a bad idea!!!
-your filesystem lives on /dev/LVMRAID/LV0
-  fsck /dev/LVMRAID/LV0
+> Stress testing the disks by an md rebuild is a feature! It increases 
+> confidence that they work.
+>
+> ;)
+>
+> Seriously, I understand your point now. Yes, a rebuild-free partition 
+> resize would be a nice feature. So would a "help, please find my 
+> superblock by exhaustive scanning" utility ;)
 
-If you had been really unlucky, fsck could have found a superblock and
-started
-scribbling all over your filesystem with potentially devastating results!
-Always run filesystem tools on the device holding the filesystem, rather
-than
-some random component ;)
+Since this code must work when a partition is added on a totally new 
+drive, and when the partition is grown DOWN from the low end, clearly 
+the default must be a rebuild. And running "repair" before doing this 
+stuff is a really good idea!
 
-and similartly
-> [root@FileServer ~]# resize2fs /dev/md0
-resize2fs /dev/LVMRAID/LV0
+What is needed is to do something like assume-clean on the old data and 
+a sync on the new chunks. I don't see that there is a remotely safe way 
+to do that, currently, although if you were willing to be unsafe you 
+could remove a partition, grow it at the "top" end, and reassemble with 
+--assume-clean. Sprinkling with holy water first might be a good thing. 
+I'm just thinking out loud here, there are probably good reasons why 
+this wouldn't work.
 
-HTH
+-- 
+Bill Davidsen <davidsen@tmr.com>
+  "Woe unto the statesman who makes war without a reason that will still
+  be valid when the war is over..." Otto von Bismark 
 
-David
 
