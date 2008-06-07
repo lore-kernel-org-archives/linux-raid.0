@@ -1,202 +1,172 @@
-From: "David Lethe" <david@santools.com>
-Subject: RE: Linux MD RAID 5 Benchmarks Across (3 to 10) 300 Gigabyte Veliciraptors
-Date: Sat, 7 Jun 2008 10:54:57 -0500
-Message-ID: <A20315AE59B5C34585629E258D76A97CA53294@34093-C3-EVS3.exchange.rackspace.com>
-References: <alpine.DEB.1.10.0806071015110.23323@p34.internal.lan>
+From: Ben Martin <monkeyiq@users.sourceforge.net>
+Subject: RAID-5 and the mysterious disappearing drive
+Date: Sun, 08 Jun 2008 01:39:05 +1000
+Message-ID: <1212853145.22982.40.camel@sam.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
-Content-Transfer-Encoding: 8BIT
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ARjes5ZetTNqprxWPnUi"
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
-In-Reply-To: <alpine.DEB.1.10.0806071015110.23323@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, xfs@oss.sgi.com
-Cc: Alan Piszcz <ap@solarrain.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This is all interesting, but this has no relevance to the real world,
-where computers run application software.  You have a great foundation
-here, but it won't help anybody who is running a database, mail, or
-file/backup server because the I/Os are too large, and homogeneous.  You
-will get profoundly different sweet spots for RAID configurations once
-you model your bench to match something that people actually run.  I am
-not criticizing you for this, it is just that now I have a taste for
-what you have accomplished, and I want more more more :)
 
-David
+--=-ARjes5ZetTNqprxWPnUi
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
- 
------Original Message-----
-From: linux-raid-owner@vger.kernel.org
-[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Justin Piszcz
-Sent: Saturday, June 07, 2008 9:23 AM
-To: linux-kernel@vger.kernel.org; linux-raid@vger.kernel.org;
-xfs@oss.sgi.com
-Cc: Alan Piszcz
-Subject: Linux MD RAID 5 Benchmarks Across (3 to 10) 300 Gigabyte
-Veliciraptors
+Hi,
+  I recently constructed a RAID-5 using four 320Gb drives, moved the
+system and other data across and everything was working nicely. I awoke
+to find a degraded array email one day and on further investigation I
+noticed the following in /var/log/messages. The RAID-5 array was running
+in degraded mode and had evidently renoticed that /dev/sdm and sdm2 had
+reappeared and listed them again as a failed spare in the --detail of
+mdadm. I could not however see sdm with fdisk.
 
-First, the original benchmarks with 6-SATA drives with fixed formatting,
-using
-right justification and the same decimal point precision throughout:
-http://home.comcast.net/~jpiszcz/20080607/raid-benchmarks-decimal-fix-an
-d-right-justified/disks.html
+  I then rebooted the machine in the hopes that sdm would be able to be
+seen via fdisk etc. As I suspected /dev/sdm did appear and the partition
+table was valid in fdisk. The sdm1 array is a RAID-1 of size 4gb.
+Perfect for expanding back onto sdm1 and seeing what happens. Adding
+sdm1 to the smaller RAID-1 caused a resync and then the array was clean
+again with 4 drives.
 
-Now for for veliciraptors!  Ever wonder what kind of speed is possible
-with
-3 disk, 4,5,6,7,8,9,10-disk RAID5s?  I ran a loop to find out, each run
-is
-executed three times and the average is taken of all three runs per each
+  So then I decided to re-add sdm2 to the large RAID-5. I initially
+created this RAID-5 with an internal bitmap as a precaution against
+worst cases like kernel oopses halting the machine uncleanly. Adding the
+drive (/dev/sdm2) back to the large array only took a few seconds. mdadm
+informed me that it was readding the drive sdm2 to the array and
+performed some resync (of a few seconds) just after the readd. At this
+stage everything seems to be functioning correctly but the RAID always
+reports state:active. On another RAID-5 I have the state bounces between
+active and clean depending on how my disk load is. I find it strange
+that the RAID-5 that had the troubles never reports a state:clean even
+when there is no disk IO for a while. Any thoughts or recommendations?
 
-RAID5 disk set.
+  The RAID-5 that had the issues is running off a SIL 3114 controller,
+thus no NCQ issues possible.
 
-In short? The 965 no longer does justice with faster drives, a new
-chipset
-and motherboard are needed.  After reading or writing to 4-5
-veliciraptors
-it saturates the bus/965 chipset.
+/var/log/messages:
+Jun  6 04:27:10 x kernel: ata13.00: exception Emask 0x0 SAct 0x0 SErr 0x0 a=
+ction 0x2 frozen
+Jun  6 04:29:13 x kernel: ata13.00: cmd ea/00:00:00:00:00/00:00:00:00:00/a0=
+ tag 0 cdb 0x0 data 0=20
+Jun  6 04:29:13 x kernel:          res 40/00:00:00:00:00/00:00:00:00:00/00 =
+Emask 0x4 (timeout)
+Jun  6 04:29:13 x kernel: ata13: port is slow to respond, please be patient=
+ (Status 0xd0)
+Jun  6 04:29:13 x kernel: ata13: device not ready (errno=3D-16), forcing ha=
+rdreset
+Jun  6 04:29:13 x kernel: ata13: hard resetting port
+Jun  6 04:29:13 x kernel: ata13: SATA link up 1.5 Gbps (SStatus 113 SContro=
+l 310)
+Jun  6 04:29:13 x kernel: ata13.00: qc timeout (cmd 0xec)
+Jun  6 04:29:13 x kernel: ata13.00: failed to IDENTIFY (I/O error, err_mask=
+=3D0x4)
+Jun  6 04:29:13 x kernel: ata13.00: revalidation failed (errno=3D-5)
+Jun  6 04:29:13 x kernel: ata13: failed to recover some devices, retrying i=
+n 5 secs
+Jun  6 04:29:13 x kernel: ata13: hard resetting port
+Jun  6 04:29:13 x kernel: ata13: SATA link up 1.5 Gbps (SStatus 113 SContro=
+l 310)
+Jun  6 04:29:13 x kernel: ata13.00: qc timeout (cmd 0x27)
+Jun  6 04:29:13 x kernel: ata13.00: ata_hpa_resize 1: hpa sectors (0) is sm=
+aller than sectors (625142448)
+Jun  6 04:29:13 x kernel: ata13.00: failed to set xfermode (err_mask=3D0x40=
+)
+Jun  6 04:29:13 x kernel: ata13.00: limiting speed to UDMA/100:PIO3
+Jun  6 04:29:13 x kernel: ata13: failed to recover some devices, retrying i=
+n 5 secs
+Jun  6 04:29:13 x kernel: ata13: hard resetting port
+Jun  6 04:29:13 x kernel: ata13: SATA link up 1.5 Gbps (SStatus 113 SContro=
+l 310)
+Jun  6 04:29:13 x kernel: ata13.00: qc timeout (cmd 0xec)
+Jun  6 04:29:13 x kernel: ata13.00: failed to IDENTIFY (I/O error, err_mask=
+=3D0x4)
+Jun  6 04:29:13 x kernel: ata13.00: revalidation failed (errno=3D-5)
+Jun  6 04:29:13 x kernel: ata13.00: disabled
+Jun  6 04:29:13 x kernel: ata13: EH pending after completion, repeating EH =
+(cnt=3D4)
+Jun  6 04:29:13 x kernel: ata13: port is slow to respond, please be patient=
+ (Status 0xd0)
+Jun  6 04:29:13 x kernel: ata13: device not ready (errno=3D-16), forcing ha=
+rdreset
+Jun  6 04:29:13 x kernel: ata13: hard resetting port
+Jun  6 04:29:13 x kernel: ata13: SATA link up 1.5 Gbps (SStatus 113 SContro=
+l 310)
+Jun  6 04:29:13 x kernel: ata13: EH complete
+Jun  6 04:29:13 x kernel: sd 12:0:0:0: [sdm] Result: hostbyte=3DDID_BAD_TAR=
+GET driverbyte=3DDRIVER_OK,SUGGEST_OK
+Jun  6 04:29:13 x kernel: end_request: I/O error, dev sdm, sector 350365623
+Jun  6 04:29:13 x kernel: sd 12:0:0:0: [sdm] Result: hostbyte=3DDID_BAD_TAR=
+GET driverbyte=3DDRIVER_OK,SUGGEST_OK
+Jun  6 04:29:13 x kernel: end_request: I/O error, dev sdm, sector 350365879
+Jun  6 04:29:13 x kernel: sd 12:0:0:0: [sdm] READ CAPACITY failed
+Jun  6 04:29:13 x kernel: sd 12:0:0:0: [sdm] Result: hostbyte=3DDID_BAD_TAR=
+GET driverbyte=3DDRIVER_OK,SUGGEST_OK
+Jun  6 04:29:13 x kernel: sd 12:0:0:0: [sdm] Sense not available.
+Jun  6 04:29:13 x kernel: sd 12:0:0:0: [sdm] Write Protect is off
+Jun  6 04:29:13 x kernel: sd 12:0:0:0: [sdm] Asking for cache data failed
+Jun  6 04:29:13 x kernel: sd 12:0:0:0: [sdm] Assuming drive cache: write th=
+rough
+Jun  6 04:29:13 x kernel: md: super_written gets error=3D-5, uptodate=3D0
+Jun  6 04:29:13 x kernel: raid5: Disk failure on sdm2, disabling device. Op=
+eration continuing on 3 devices
+Jun  6 04:29:13 x kernel: RAID5 conf printout:
+Jun  6 04:29:13 x kernel:  --- rd:4 wd:3
+Jun  6 04:29:13 x kernel:  disk 0, o:1, dev:sdj2
+Jun  6 04:29:13 x kernel:  disk 1, o:1, dev:sdl2
+Jun  6 04:29:13 x kernel:  disk 2, o:1, dev:sdk2
+Jun  6 04:29:13 x kernel:  disk 3, o:0, dev:sdm2
+Jun  6 04:29:13 x kernel: RAID5 conf printout:
+Jun  6 04:29:13 x kernel:  --- rd:4 wd:3
+Jun  6 04:29:13 x kernel:  disk 0, o:1, dev:sdj2
+Jun  6 04:29:13 x kernel:  disk 1, o:1, dev:sdl2
+Jun  6 04:29:13 x kernel:  disk 2, o:1, dev:sdk2
 
-Here is a picture of the 12 veliciraptors I tested with:
-http://home.comcast.net/~jpiszcz/20080607/raid5-benchmarks-3to10-velicir
-aptors/raptors.jpg
+# mdadm --detail  /dev/md-2008=20
+        Version : 01.02.03
+  Creation Time : Sun Jun  1 09:26:59 2008
+     Raid Level : raid5
+     Array Size : 925970112 (883.07 GiB 948.19 GB)
+  Used Dev Size : 617313408 (294.36 GiB 316.06 GB)
+   Raid Devices : 4
+  Total Devices : 4
+Preferred Minor : 125
+    Persistence : Superblock is persistent
 
-Here are the bonnie++ results:
-http://home.comcast.net/~jpiszcz/20080607/raid5-benchmarks-3to10-velicir
-aptors/veliciraptor-raid.html
+  Intent Bitmap : Internal
 
-For those who want the results in text:
-http://home.comcast.net/~jpiszcz/20080607/raid5-benchmarks-3to10-velicir
-aptors/veliciraptor-raid.txt
+    Update Time : Sun Jun  8 00:25:40 2008
+          State : active
+ Active Devices : 4
+Working Devices : 4
+ Failed Devices : 0
+  Spare Devices : 0
 
-System used, same/similar as before:
-Motherboard: Intel DG965WH
-Memory: 8GiB
-Kernel: 2.6.25.4
-Distribution: Debian Testing x86_64
-Filesystem: XFS with default mkfs.xfs parameters [auto-optimized for SW
-RAID]
-Mount options: defaults,noatime,nodiratime,logbufs=8,logbsize=262144 0 1
-Chunk size: 1024KiB
-RAID5 Layout: Default (left-symmetric)
-Mdadm Superblock used: 0.90
+         Layout : left-symmetric
+     Chunk Size : 64K
 
-Optimizations used (last one is for the CFQ scheduler), it improves 
-performance by a modest 5-10MiB/s:
-http://home.comcast.net/~jpiszcz/raid/20080601/raid5.html
+           Name : md-2008
+         Events : 49342
 
-# Tell user what's going on.
-echo "Optimizing RAID Arrays..."
-
-# Define DISKS.
-cd /sys/block
-DISKS=$(/bin/ls -1d sd[a-z])
-
-# Set read-ahead.
-# > That's actually 65k x 512byte blocks so 32MiB
-echo "Setting read-ahead to 32 MiB for /dev/md3"
-blockdev --setra 65536 /dev/md3
-
-# Set stripe-cache_size for RAID5.
-echo "Setting stripe_cache_size to 16 MiB for /dev/md3"
-echo 16384 > /sys/block/md3/md/stripe_cache_size
-
-# Disable NCQ on all disks.
-echo "Disabling NCQ on all disks..."
-for i in $DISKS
-do
-   echo "Disabling NCQ on $i"
-   echo 1 > /sys/block/"$i"/device/queue_depth
-done
-
-# Fix slice_idle.
-# See http://www.nextre.it/oracledocs/ioscheduler_03.html
-echo "Fixing slice_idle to 0..."
-for i in $DISKS
-do
-   echo "Changing slice_idle to 0 on $i"
-   echo 0 > /sys/block/"$i"/queue/iosched/slice_idle
-done
-
-----
-
-Order of tests:
-
-1. Create RAID (mdadm)
-
-Example:
+    Number   Major   Minor   RaidDevice State
+       0       8      146        0      active sync   /dev/sdj2
+       1       8      178        1      active sync   /dev/sdl2
+       2       8      162        2      active sync   /dev/sdk2
+       4       8      194        3      active sync   /dev/sdm2
 
 
-   if [ $num_disks -eq 3 ]; then
-     mdadm --create /dev/md3 --verbose --level=5 -n $num_disks -c 1024
--e 0.90 \
-     /dev/sd[c-e]1 --assume-clean --run
-   fi
+--=-ARjes5ZetTNqprxWPnUi
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-2. Run optimize script (above)
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
 
-See above.
+iEYEABECAAYFAkhKq5kACgkQsIKOrI+5WvMVkACdFpJ33sQSusLb/dcCacQ3bp9G
++DoAoJY/F9foUv3iSQoUq6rSaMMAEacE
+=tNEv
+-----END PGP SIGNATURE-----
 
-3. mkfs.xfs -f /dev/md3
-
-mkfs.xfs auto-optimized for the underlying devices in an mdadm SW RAID.
-
-4. Run bonnie++ as shown below 3 times, averaged:
-
-/usr/bin/time /usr/sbin/bonnie++ -u 1000 -d /x/test -s 16384 -m p34 -n
-16:100000:16:64 > $HOME/test"$run"_$num_disks-disks.txt 2>&1
-
-
-----
-
-A little more info, after 4-5 dd's, I have already maxed out the
-performance
-of what the chipset can offer, see below:
-
-knoppix@Knoppix:~$ vmstat 1
-procs -----------memory---------- ---swap-- -----io---- -system--
-----cpu----
-  r  b   swpd   free   buff  cache   si   so    bi    bo   in   cs us sy
-id wa
-  1  0      0 2755556   6176 203584    0    0   153     1   25  371  3
-1 84 11
-  0  0      0 2755556   6176 203588    0    0     0     0   66  257  0
-0 100  0
-  0  1      0 2605400 152204 203584    0    0     0 146028  257  396  0
-5 77 18
-  0  1      0 2478176 277520 203604    0    0     0 125316  345  794  1
-4 75 20
-  1  0      0 2349472 403984 203592    0    0     0 119136  297  256  0
-5 75 20
-  2  1      0 2117292 631172 203512    0    0     0 232336  498 1019  0
-8 66 26
-  0  2      0 2014400 731968 203556    0    0     0 241472  542 2078  1
-11 63 25
-  3  0      0 2013412 733756 203492    0    0     0 302104  672 2760  0
-14 59 27
-  0  3      0 2013576 735624 203520    0    0     0 362524  808 3356  0
-15 56 29
-  0  4      0 2039312 736728 174860    0    0   120 425484  956 4899  1
-20 52 26
-  0  4      0 2050236 738508 163712    0    0     0 482868 1008 5030  1
-24 46 29
-  5  3      0 2050192 737916 163756    0    0     0 531532 1175 6033  0
-26 43 31
-  3  4      0 2050220 738028 163744    0    0     0 606560 1312 6664  1
-32 38 30
-  1  5      0 2049432 739184 163628    0    0     0 592756 1291 7195  1
-30 35 34
-  8  3      0 2049488 738868 163580    0    0     0 675228 1721 10540 1
-38 30 31
-Here, ~5 raptor 300s, no more linear improvement after this:
-  4  4      0 2050048 737816 163744    0    0     0 677820 1771 10514 1
-36 32 31
-  6  4      0 2048764 738612 163684    0    0     0 697640 1842 13231 1
-40 27 33
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+--=-ARjes5ZetTNqprxWPnUi--
 
