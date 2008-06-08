@@ -1,69 +1,59 @@
-From: "Jon =?iso-8859-1?Q?Lur=E5s?=" <jon@irisinfo.net>
-Subject: Change disk problem
-Date: Sun, 08 Jun 2008 09:58:32 +0200
-Message-ID: <WorldClient-F200806080958.AA58320509@irisinfo.net>
-References: <S1753847AbYFHHWg/20080608072236Z+62@vger.kernel.org>
+From: David Greaves <david@dgreaves.com>
+Subject: Re: Change disk problem
+Date: Sun, 08 Jun 2008 11:00:15 +0100
+Message-ID: <484BADAF.4000605@dgreaves.com>
+References: <S1753847AbYFHHWg/20080608072236Z+62@vger.kernel.org> <WorldClient-F200806080958.AA58320509@irisinfo.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <S1753847AbYFHHWg/20080608072236Z+62@vger.kernel.org>
+In-Reply-To: <WorldClient-F200806080958.AA58320509@irisinfo.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: =?ISO-8859-1?Q?Jon_Lur=E5s?= <jon@irisinfo.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello
+Jon Lur=E5s wrote:
+> Hello
+>=20
+> I got a big problem with replacing disk on Software-RAID.
+> Whatever I do it just ends up as a spare disk.
+> I guess the problem is that the faulty disk was not removed from the =
+RAID.
+> We just shut down and replace'd the disk.
+> Any idea of how to solve this?
 
-I got a big problem with replacing disk on Software-RAID.
-Whatever I do it just ends up as a spare disk.
-I guess the problem is that the faulty disk was not removed from the RAID.
-We just shut down and replace'd the disk.
-Any idea of how to solve this?
+You say 'spare' but I think you mean 'that md/mdadm is ignoring it comp=
+letely
+(on the grounds that it's not showing literally as a 'spare' in the --d=
+etail output.
 
-Thanks in advance 
+This is expected behaviour - md does not just randomly grab new disks; =
+you have
+to use 'mdadm /dev/md0 --add /dev/hdk1' (use the correct component) to =
+give md
+permission to use the new disk.
 
-Jon 
+Note that you should have partitioned it too (ie 'just shut down and re=
+place'
+becomes, shut down, replace, partition, mdadm --add )
 
-DETAILS:
-
-xxxxx:~# mdadm --detail /dev/md0
-/dev/md0:
-        Version : 00.90.00
-  Creation Time : Sat Jun  7 22:04:01 2008
-     Raid Level : raid5
-     Array Size : 490223232 (467.51 GiB 501.99 GB)
-    Device Size : 245111616 (233.76 GiB 250.99 GB)
-   Raid Devices : 3
-  Total Devices : 3
-Preferred Minor : 0
-    Persistence : Superblock is persistent
-
-    Update Time : Sat Jun  7 22:04:01 2008
-          State : active, degraded
- Active Devices : 2
-Working Devices : 2
- Failed Devices : 1
-  Spare Devices : 0
-
-         Layout : left-symmetric
-     Chunk Size : 64K
-
-           UUID : 7edd5dfe:14b3ffb2:304b0607:0d821dcd
-         Events : 0.2
-
-    Number   Major   Minor   RaidDevice State
-       0      56        1        0      active sync   /dev/hdi1
-       1      56       65        1      active sync   /dev/hdj1
-       2       0        0        2      removed
+>=20
+>     Number   Major   Minor   RaidDevice State
+>        0      56        1        0      active sync   /dev/hdi1
+>        1      56       65        1      active sync   /dev/hdj1
+>        2       0        0        2      removed
+>=20
 
 
-xxxxx:~# mdadm --version
-mdadm - v2.5.6 - 9 November 2006
+Look at http://linux-raid.osdl.org/ for more info...
 
-xxxxx:~# uname -a
-Linux xxxxx 2.4.27-3-386 xxxxxxxxxxxxxxxxxxxxxxxxxx
+HTH
 
-xxxxx:~# cat /etc/debian_version
-Debian 4.0
+David
 
-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
