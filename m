@@ -1,43 +1,143 @@
-From: Richard Scobie <richard@sauce.co.nz>
-Subject: Reallocating sd device
-Date: Mon, 09 Jun 2008 12:17:48 +1200
-Message-ID: <484C76AC.801@sauce.co.nz>
+From: thomas62186218@aol.com
+Subject: Re: Linux MD RAID 5 Benchmarks Across (3 to 10) 300 Gigabyte Veliciraptors
+Date: Mon, 09 Jun 2008 03:51:07 -0400
+Message-ID: <8CA981CB5C2B4D6-E68-18E2@MBLK-M14.sysops.aol.com>
+References: <alpine.DEB.1.10.0806071015110.23323@p34.internal.lan> <e9c3a7c20806071846w60b74aeegdf3e39afb36b5d9a@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset="us-ascii"; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756636AbYFIHvh@vger.kernel.org>
+In-Reply-To: <e9c3a7c20806071846w60b74aeegdf3e39afb36b5d9a@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: dan.j.williams@gmail.com, jpiszcz@lucidpixels.com
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, xfs@oss.sgi.com, ap@solarrain.com
 List-Id: linux-raid.ids
 
-Testing a 16 SATA drive (/dev/sd[c-r]1), md RAID, with drives installed 
-in a hotswap SAS/SATA enclosure.
+Thank you for sharing these results. One issue that I consistently see 
+with these results is miserable random IO performance. Looking at these 
+numbers, even a low-end RAID controller with 128MB of cache will outrun 
+md-based RAIDs in random IO benchmarks. In today's world of virtual 
+machines, etc, random IO is far more common than sequential IO. What 
+can be done with md (or something else) to alleviate this problem?
 
-Failed out /dev/sdd1, ejected the drive from the enclosure, reinserted 
-it and the system added it back as /dev/sds:
+-Thomas
 
-Jun  9 11:24:37 flash2 kernel: mptsas: ioc0: removing sata device, 
-channel 0, id 30, phy 5
-Jun  9 11:24:37 flash2 kernel: sd 4:0:1:0: [sdd] Synchronizing SCSI cache
 
-Jun  9 11:24:37 flash2 kernel: sd 4:0:1:0: [sdd] Result: 
-hostbyte=DID_NO_CONNECT driverbyte=DRIVER_OK,SUGGEST_OK
+-----Original Message-----
+From: Dan Williams <dan.j.williams@gmail.com>
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: linux-kernel@vger.kernel.org; linux-raid@vger.kernel.org; 
+xfs@oss.sgi.com; Alan Piszcz <ap@solarrain.com>
+Sent: Sat, 7 Jun 2008 6:46 pm
+Subject: Re: Linux MD RAID 5 Benchmarks Across (3 to 10) 300 Gigabyte 
+Veliciraptors
 
-Jun  9 11:26:38 flash2 kernel: mptsas: ioc0: attaching sata device, 
-channel 0, id 30, phy 5
 
-Jun  9 11:26:38 flash2 kernel: scsi 4:0:17:0: Direct-Access     ATA 
-  WDC WD7500AYYS-0 4G30 PQ: 0 ANSI: 5
 
-Jun  9 11:26:38 flash2 kernel: sd 4:0:17:0: [sds] 1465149168 512-byte 
-hardware sectors (750156 MB)
 
-Rebooting shows the offline drive back as /dev/sdd.
 
-Is there a safe, (OK to do on a mounted, active array), way of changing 
-the sds back to sdd, prior to adding it back into the array, without 
-having to reboot?
+
+
+
+
+
+On Sat, Jun 7, 2008 at 7:22 AM, Justin Piszcz <jpiszcz@lucidpixels.com> 
+wrote:
+> First, the original benchmarks with 6-SATA drives with fixed 
+formatting,
+> using
+> right justification and the same decimal point precision throughout:
+> 
+http://home.comcast.net/~jpiszcz/20080607/raid-benchmarks-decimal-fix-and-right-justified/disks.html
+>
+> Now for for veliciraptors!  Ever wonder what kind of speed is 
+possible with
+> 3 disk, 4,5,6,7,8,9,10-disk RAID5s?  I ran a loop to find out, each 
+run is
+> executed three times and the average is taken of all three runs per 
+each
+> RAID5 disk set.
+>
+> In short? The 965 no longer does justice with faster drives, a new 
+chipset
+> and motherboard are needed.  After reading or writing to 4-5 
+veliciraptors
+> it saturates the bus/965 chipset.
+>
+> Here is a picture of the 12 veliciraptors I tested with:
+> 
+http://home.comcast.net/~jpiszcz/20080607/raid5-benchmarks-3to10-veliciraptors/raptors.jpg
+>
+> Here are the bonnie++ results:
+> 
+http://home.comcast.net/~jpiszcz/20080607/raid5-benchmarks-3to10-veliciraptors/veliciraptor-raid.html
+>
+> For those who want the results in text:
+> 
+http://home.comcast.net/~jpiszcz/20080607/raid5-benchmarks-3to10-veliciraptors/veliciraptor-raid.txt
+>
+> System used, same/similar as before:
+> Motherboard: Intel DG965WH
+> Memory: 8GiB
+> Kernel: 2.6.25.4
+> Distribution: Debian Testing x86_64
+> Filesystem: XFS with default mkfs.xfs parameters [auto-optimized for 
+SW
+> RAID]
+> Mount options: defaults,noatime,nodiratime,logbufs=8,logbsize=262144 
+0 1
+> Chunk size: 1024KiB
+> RAID5 Layout: Default (left-symmetric)
+> Mdadm Superblock used: 0.90
+>
+> Optimizations used (last one is for the CFQ scheduler), it improves
+> performance by a modest 5-10MiB/s:
+> http://home.comcast.net/~jpiszcz/raid/20080601/raid5.html
+>
+> # Tell user what's going on.
+> echo "Optimizing RAID Arrays..."
+>
+> # Define DISKS.
+> cd /sys/block
+> DISKS=$(/bin/ls -1d sd[a-z])
+>
+> # Set read-ahead.
+> # > That's actually 65k x 512byte blocks so 32MiB
+> echo "Setting read-ahead to 32 MiB for /dev/md3"
+> blockdev --setra 65536 /dev/md3
+>
+> # Set stripe-cache_size for RAID5.
+> echo "Setting stripe_cache_size to 16 MiB for /dev/md3"
+
+Sorry to sound like a broken record,  16MiB is not correct.
+
+size=$((num_disks * 4 * 16384 / 1024))
+echo "Setting stripe_cache_size to $size MiB for /dev/md3"
+
+...and commit 8b3e6cdc should improve the performance / 
+stripe_cache_size ratio.
+
+> echo 16384 > /sys/block/md3/md/stripe_cache_size
+>
+> # Disable NCQ on all disks.
+> echo "Disabling NCQ on all disks..."
+> for i in $DISKS
+> do
+>  echo "Disabling NCQ on $i"
+>  echo 1 > /sys/block/"$i"/device/queue_depth
+> done
+>
+> # Fix slice_idle.
+> # See http://www.nextre.it/oracledocs/ioscheduler_03.html
+> echo "Fixing slice_idle to 0..."
+> for i in $DISKS
+> do
+>  echo "Changing slice_idle to 0 on $i"
+>  echo 0 > /sys/block/"$i"/queue/iosched/slice_idle
+> done
+>
+
+Thanks for putting this data together.
 
 Regards,
-
-Richard
+Dan
