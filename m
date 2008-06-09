@@ -1,43 +1,67 @@
-From: Gavin Hamill <gdh@acentral.co.uk>
-Subject: Re: Rebuild after a drive replacement
-Date: Mon, 09 Jun 2008 10:15:19 +0100
-Message-ID: <1213002919.15461.16.camel@gdh-work>
-References: <1212958349.7596.14.camel@gdh-home>
-	 <38060.192.168.1.70.1212963930.squirrel@neil.brown.name>
-	 <1212999164.15461.2.camel@gdh-work>
-	 <32774.192.168.1.70.1213002278.squirrel@neil.brown.name>
+From: Mikhail Yakshin <greycat@altlinux.org>
+Subject: [ANNOUNCE] Einarc - universal RAID management/monitoring tool - v1.2
+ released
+Date: Mon, 09 Jun 2008 15:58:06 +0400
+Message-ID: <484D1ACE.7030802@altlinux.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <32774.192.168.1.70.1213002278.squirrel@neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, 2008-06-09 at 19:04 +1000, NeilBrown wrote:
-> On Mon, June 9, 2008 6:12 pm, Gavin Hamill wrote:
-> > On Mon, 2008-06-09 at 08:25 +1000, NeilBrown wrote:
-> >
+Hello!
 
-> I suspect the partition is slightly too small.
-> Check the sizes in /proc/partitions.
-> 
-> hde5 needs to be at least 174851136K.
+I'm pleased to announce new release of Einarc project - an universal=20
+RAID management/monitoring tool.
 
-Well spotted, that man! hde5 is indeed 50000 blocks smaller than the
-others. I guess the debian installer must use different calculations
-than cfdisk :(
+Version 1.2 had almost half a year development cycle and sports the=20
+following new stuff:
 
-> Newer version of mdadm notice this and report a better
-> error message (I think 2.6.3 contains the fix).
-> 
-> So: you might need to repartition the drive and make hde5 a
-> little bigger.
+     * Support for new RAID devices: newer Adaptec adapters using arcco=
+nf.
 
-Yup - thanks muchly.. I'll give it a go and report back.
+     * New objects =E2=80=9Cbbu=E2=80=9D and =E2=80=9Cfirmware=E2=80=9D=
+ are introduced: now it=E2=80=99s=20
+possible to get information about BBU and read/write firmware to=20
+supported adapters.
 
-Cheers,
-Gavin.
+     * More strict =E2=80=9Cadapter info=E2=80=9D report: it outputs se=
+rial number and=20
+tries to pinpoint a particular adapter using PCI IDs, if possible.
 
+     * Updates for existing devices:
+           o aaccli: now it downloads and uses later, more acceptable=20
+version, not linked against arts library. Note, however, that=20
+Adaptec_Storage_Manager-Linux_v2.10.00 is a huge ~36M download.
+           o areca: update to v1.80A_71012.
+           o megacli: updated to v1.01.27.
 
+     * Multiple stability, metadata and rare occurance fixes for all=20
+modules.
+
+     * Improved build system.
+
+     * =E2=80=9Craid-wizard-passthrough=E2=80=9D can be used to handle =
+smaller groups of=20
+HDDs (not all available devices).
+
+As always, I'd be really happy to hear any opinions / thoughts / featur=
+e=20
+requests on this project and I hope it would come useful to someone :)=20
+Einarc can be reached at
+
+http://www.inquisitor.ru/doc/einarc/
+
+for downloading and documentation.
+
+--=20
+WBR, Mikhail Yakshin AKA GreyCat
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
