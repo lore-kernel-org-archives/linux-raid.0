@@ -1,33 +1,34 @@
-From: "Ed L. Cashin" <ecashin@coraid.com>
-Subject: Re: RAID1 over aoe devices freezes cp-procs on failure of one aoe
-	device
-Date: Mon, 9 Jun 2008 13:32:44 -0400
-Message-ID: <20080609173244.GA10348@coraid.com>
-References: <20080605162502.09856f38.taeuber@bbaw.de>
+From: Gavin Hamill <gdh@acentral.co.uk>
+Subject: [SOLVED] Re: Rebuild after a drive replacement
+Date: Mon, 09 Jun 2008 19:56:07 +0100
+Message-ID: <1213037767.6233.17.camel@gdh-home>
+References: <1212958349.7596.14.camel@gdh-home>
+	 <38060.192.168.1.70.1212963930.squirrel@neil.brown.name>
+	 <1212999164.15461.2.camel@gdh-work>
+	 <32774.192.168.1.70.1213002278.squirrel@neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20080605162502.09856f38.taeuber@bbaw.de>
+In-Reply-To: <32774.192.168.1.70.1213002278.squirrel@neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: Lars T??uber <taeuber@bbaw.de>
-Cc: linux-raid@vger.kernel.org, sah@coraid.com
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Jun 05, 2008 at 04:25:02PM +0200, Lars T??uber wrote:
-> Hi there.
-> 
-> please let me explain a problem i struggle with here with a self build SAN.
-> 
-> If of one of two AoE-devices of a RAID1 fails any process copying to the mounted RAID freezes.
+On Mon, 2008-06-09 at 19:04 +1000, NeilBrown wrote:
 
-The md driver might just be waiting for the I/O to fail or succeed
-while the AoE command times out.  You can adjust aoe_deadsecs if you
-like, so that I/O to an unavailable component is failed more quickly.
 
-There is an aoetools-discuss mailing list at the sourceforge
-"aoetools" project.  There you can talk to other people doing Linux
-Software RAID 1 over AoE targets.
+> So: you might need to repartition the drive and make hde5 a
+> little bigger.
 
--- 
-  Ed L Cashin <ecashin@coraid.com>
+Yup, that was precisely it. Rebooted to refresh the updated partition
+table, ran  mdadm --add /dev/md3 /dev/hde5 and it's happily rebuilding
+as I write. Now I'll be a little better armed when the next drive fails
+(smartctl is already showing the signs...)
+
+Hurrah!
+
+Cheers,
+Gavin.
+
+
