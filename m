@@ -1,55 +1,40 @@
-From: Andre Noll <maan@systemlinux.org>
-Subject: Re: Proper partition type for components with V1.x superblocks?
-Date: Wed, 11 Jun 2008 23:06:26 +0200
-Message-ID: <20080611210626.GC4981@skl-net.de>
-References: <484F9A3E.7020709@rabbit.us> <20080611112319.GB4981@skl-net.de> <484FC142.9030600@rabbit.us>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: RAID5 losing initial synchronization on restart when one disk
+ is spare
+Date: Thu, 12 Jun 2008 09:38:53 +1000
+Message-ID: <18512.25101.824044.407896@notabene.brown>
+References: <48466AD9.5@free.fr>
+	<484E6C3F.4090204@free.fr>
+	<484FE4C4.5020100@free.fr>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="H8ygTp4AXg6deix2"
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <484FC142.9030600@rabbit.us>
+In-Reply-To: message from Hubert Verstraete on Wednesday June 11
 Sender: linux-raid-owner@vger.kernel.org
-To: Peter Rabbitson <rabbit+list@rabbit.us>
+To: Hubert Verstraete <hubskml@free.fr>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Wednesday June 11, hubskml@free.fr wrote:
+> 
+> By the way and FYI, with my configuration, all disks on the same 
+> controller, internal bitmap, v1 superblock, ... the initial RAID-5 
+> synchronization duration is the same whether I'm using the option 
+> --force or not.
 
---H8ygTp4AXg6deix2
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+For this to be a valid test, you need to fill one drive up with
+garbage to ensure that a resync is no a no-op.
 
-On 14:12, Peter Rabbitson wrote:
-> >Nobody really cares about the partition type these days. I usually
-> >stick to the default 83 (Linux) for software raid partitions and
-> >never encountered any problems.
->=20
-> This is a very flawed assumption. You will be surprised how many=20
-> utilities/live CDs are there in existence, which will selently attempt to=
-=20
-> mount/fsck a partition based solely on its type.
+If you don't use the "--force" option, then the recovery process will
+read from N-1 drives and write to 1 drive, all completely sequentially
+so it will go at a predictable speed.
 
-Well, I'd consider those utilities broken by design. If it is the
-exercise is to break as few utilities/live CDs as possible, I admit
-you'll have to care about partition types. It's a rather pointless
-exercise IMHO though.
+When you use "--force" it will read from N drive and check parity.
+When it finds an error it will re-write that parity block.
+So if the parity blocks happen to be all correct (as probably was the
+case in your experiment), it will run nice and fast.  If the parity
+blocks happen to all be wrong (as is likely when first creating an
+array on drives that weren't an array before) it will be much slower.
 
-Andre
---=20
-The only person who always got his work done by Friday was Robinson Crusoe
-
---H8ygTp4AXg6deix2
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
-
-iD8DBQFIUD5SWto1QDEAkw8RAjeIAJ9zDEmIztzpb/zX1f0RonEubbkNCgCeJoQF
-TtmyreQdb1WjWXhc9I6GQQA=
-=c6s7
------END PGP SIGNATURE-----
-
---H8ygTp4AXg6deix2--
+NeilBrown
