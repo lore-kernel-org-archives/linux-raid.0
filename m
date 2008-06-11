@@ -1,40 +1,36 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: RAID5 losing initial synchronization on restart when one disk
- is spare
-Date: Thu, 12 Jun 2008 09:38:53 +1000
-Message-ID: <18512.25101.824044.407896@notabene.brown>
+Subject: Re: RAID5 losing initial synchronization on restart when one disk is spare
+Date: Thu, 12 Jun 2008 09:40:47 +1000
+Message-ID: <18512.25215.963409.362155@notabene.brown>
 References: <48466AD9.5@free.fr>
 	<484E6C3F.4090204@free.fr>
-	<484FE4C4.5020100@free.fr>
+	<e9c3a7c20806101556q6315f4c1u67bf8879b66d81a9@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Hubert Verstraete on Wednesday June 11
+In-Reply-To: message from Dan Williams on Tuesday June 10
 Sender: linux-raid-owner@vger.kernel.org
-To: Hubert Verstraete <hubskml@free.fr>
-Cc: linux-raid@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Hubert Verstraete <hubskml@free.fr>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wednesday June 11, hubskml@free.fr wrote:
+On Tuesday June 10, dan.j.williams@intel.com wrote:
 > 
-> By the way and FYI, with my configuration, all disks on the same 
-> controller, internal bitmap, v1 superblock, ... the initial RAID-5 
-> synchronization duration is the same whether I'm using the option 
-> --force or not.
+> I am able to reproduce this here, and I notice that it does not happen
+> with v0.90 superblocks.  In the v0.90 case when the array is stopped
+> the last disk remains marked as spare.  The following hack seems to
+> achieve the same effect for v1 arrays, but I wonder if it is
+> correct... Neil?
 
-For this to be a valid test, you need to fill one drive up with
-garbage to ensure that a resync is no a no-op.
+No, not correct.
 
-If you don't use the "--force" option, then the recovery process will
-read from N-1 drives and write to 1 drive, all completely sequentially
-so it will go at a predictable speed.
+The fact that a v1 array included spares in the array before recovery
+completes is deliberate.  It allows recovery to be restarted from
+where it got up to if the array is shut down while recovery is
+happening.
+If you don't mark the drive as a part of the array (though not
+in_sync), then there is no opportunity for this optimisation.
 
-When you use "--force" it will read from N drive and check parity.
-When it finds an error it will re-write that parity block.
-So if the parity blocks happen to be all correct (as probably was the
-case in your experiment), it will run nice and fast.  If the parity
-blocks happen to all be wrong (as is likely when first creating an
-array on drives that weren't an array before) it will be much slower.
-
+Thanks,
 NeilBrown
