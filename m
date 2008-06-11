@@ -1,93 +1,32 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: RAID5 losing initial synchronization on restart when one disk is
- spare
-Date: Thu, 12 Jun 2008 09:45:09 +1000
-Message-ID: <18512.25477.431367.952164@notabene.brown>
-References: <48466AD9.5@free.fr>
+Subject: Re: Proper partition type for components with V1.x superblocks?
+Date: Thu, 12 Jun 2008 09:52:52 +1000
+Message-ID: <18512.25940.653867.623185@notabene.brown>
+References: <484F9A3E.7020709@rabbit.us>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Hubert Verstraete on Wednesday June 4
+In-Reply-To: message from Peter Rabbitson on Wednesday June 11
 Sender: linux-raid-owner@vger.kernel.org
-To: Hubert Verstraete <hubskml@free.fr>
+To: Peter Rabbitson <rabbit+list@rabbit.us>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wednesday June 4, hubskml@free.fr wrote:
-> Hello
->=20
-> According to mdadm's man page:
-> "When creating a RAID5 array, mdadm will automatically create a degra=
-ded
-> array with an extra spare drive. This is because building the spare
-> into a degraded array is in general faster than resyncing the parity =
-on
-> a non-degraded, but not clean, array. This feature can be over-ridden
-> with the --force option."
->=20
-> Unfortunately, I'm seeing a kind of bug when I create a RAID5 array w=
-ith=20
-> an internal bitmap, then stop the array before the initial=20
-> synchronization is done and restart the array.
->=20
-> 1=B0 When I create the array with an internal bitmap:
-> mdadm -C /dev/md_d1 -e 1.2 -l 5 -n 4 -b internal -R /dev/sd?
-> I see the last disk as a spare disk. After the restart of the array, =
-all=20
-> disks are seen active and the array is not continuing the aborted=20
-> synchronization!
-> Note that I did not use the --assume-clean option.
->=20
-> 2=B0 When I create the array without a bitmap:
-> mdadm -C /dev/md_d1 -e 1.2 -l 5 -n 4 -R /dev/sd?
-> I see the last disk as a spare disk. After the restart of the array, =
-the=20
-> spare disk is still a spare disk and the array continues the=20
-> synchronization where it had stopped.
->=20
-> In the case 1=B0, is this a bug or did I miss something?
+On Wednesday June 11, rabbit+list@rabbit.us wrote:
+> Hello,
+> 
+> The subject pretty much says it all - it obviously is not 0xFD, since there is 
+> nothing to autodetect. Is there some best practice/semi-standard way of 
+> marking a raid component partition as such? After reading the specs 0xDA 
+> (non-fs data) comes to mind, but I figured I'll ask here.
+> 
 
-Thanks for the detailed report.  Yes, this is a bug.
+I (almost) alway make arrays out of whole devices, not partitions, so
+I really never thought about this.
 
-The following patch fixes it, though I'm not 100% sure this is the
-right fix (it may cause too much resync in some cases, which is better
-than not enough, but not ideal).
-
-> Secondly, what could be the consequences of this non-performed=20
-> synchronization ?
-
-If you lose a drive, the data might get corrupted.
-
-When writing to the array, the new parity block will sometimes be
-calculated assuming that it was previously correct.  If all updates to
-a particular parity block are of this sort, then it will still be
-incorrect when you lose a drive, and data recovered based on that
-parity block will be incorrect.
-
-Until you lose a drive, it will have no visible effect.
+I suspect 0xDA is safest and hence best.
+I wonder if this should be suggested in the mdadm man page
+anywhere.... anyone feel like creating a patch?
 
 NeilBrown
-
-
-Signed-off-by: Neil Brown <neilb@suse.de>
-
-diff .prev/drivers/md/raid5.c ./drivers/md/raid5.c
---- .prev/drivers/md/raid5.c	2008-06-10 10:27:51.000000000 +1000
-+++ ./drivers/md/raid5.c	2008-06-12 09:34:25.000000000 +1000
-@@ -4094,7 +4094,9 @@ static int run(mddev_t *mddev)
- 				" disk %d\n", bdevname(rdev->bdev,b),
- 				raid_disk);
- 			working_disks++;
--		}
-+		} else
-+			/* Cannot rely on bitmap to complete recovery */
-+			conf->fullsync =3D 1;
- 	}
-=20
- 	/*
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
