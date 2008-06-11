@@ -1,52 +1,55 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: Linux MD RAID 5 Benchmarks Across (3 to 10) 300 Gigabyte
- Veliciraptors
-Date: Wed, 11 Jun 2008 16:53:14 -0400 (EDT)
-Message-ID: <alpine.DEB.1.10.0806111652550.18136@p34.internal.lan>
-References: <alpine.DEB.1.10.0806071015110.23323@p34.internal.lan> <4850354A.8090503@tmr.com> <alpine.DEB.1.10.0806111647360.18136@p34.internal.lan>
+From: Andre Noll <maan@systemlinux.org>
+Subject: Re: Proper partition type for components with V1.x superblocks?
+Date: Wed, 11 Jun 2008 23:06:26 +0200
+Message-ID: <20080611210626.GC4981@skl-net.de>
+References: <484F9A3E.7020709@rabbit.us> <20080611112319.GB4981@skl-net.de> <484FC142.9030600@rabbit.us>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="H8ygTp4AXg6deix2"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.1.10.0806111647360.18136@p34.internal.lan>
+Content-Disposition: inline
+In-Reply-To: <484FC142.9030600@rabbit.us>
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, xfs@oss.sgi.com, Alan Piszcz <ap@solarrain.com>
+To: Peter Rabbitson <rabbit+list@rabbit.us>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
+--H8ygTp4AXg6deix2
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-On Wed, 11 Jun 2008, Justin Piszcz wrote:
+On 14:12, Peter Rabbitson wrote:
+> >Nobody really cares about the partition type these days. I usually
+> >stick to the default 83 (Linux) for software raid partitions and
+> >never encountered any problems.
+>=20
+> This is a very flawed assumption. You will be surprised how many=20
+> utilities/live CDs are there in existence, which will selently attempt to=
+=20
+> mount/fsck a partition based solely on its type.
 
->
->
-> On Wed, 11 Jun 2008, Bill Davidsen wrote:
->
->> Justin Piszcz wrote:
->>> First, the original benchmarks with 6-SATA drives with fixed formatting, 
->>> using
->>> right justification and the same decimal point precision throughout:
->>> http://home.comcast.net/~jpiszcz/20080607/raid-benchmarks-decimal-fix-and-right-justified/disks.html 
->>> Now for for veliciraptors! Ever wonder what kind of speed is possible with
->>> 3 disk, 4,5,6,7,8,9,10-disk RAID5s? I ran a loop to find out, each run is
->>> executed three times and the average is taken of all three runs per each 
->>> RAID5 disk set.
->>> 
->>> In short? The 965 no longer does justice with faster drives, a new chipset
->>> and motherboard are needed. After reading or writing to 4-5 veliciraptors
->>> it saturates the bus/965 chipset.
->> 
->> This is very interesting, but a 16GB chunk size bears no relationship to 
->> anything I would run in the real world, and I suspect most people are in 
->> the same category.
->
-> I based my bonnie++ test on:
-> http://everything2.org/?node_id=1479435
->
-> So I could compare to his results.
->
-> I use a 1024k (1MiB) with 16384 stripe, this offered the best overall 
-> read/write/rewrite performance AFAIK.
+Well, I'd consider those utilities broken by design. If it is the
+exercise is to break as few utilities/live CDs as possible, I admit
+you'll have to care about partition types. It's a rather pointless
+exercise IMHO though.
 
-1024k chunk size (raid5 chunk size)
-echo 16384 > stripe_cache_size
+Andre
+--=20
+The only person who always got his work done by Friday was Robinson Crusoe
 
+--H8ygTp4AXg6deix2
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.1 (GNU/Linux)
+
+iD8DBQFIUD5SWto1QDEAkw8RAjeIAJ9zDEmIztzpb/zX1f0RonEubbkNCgCeJoQF
+TtmyreQdb1WjWXhc9I6GQQA=
+=c6s7
+-----END PGP SIGNATURE-----
+
+--H8ygTp4AXg6deix2--
