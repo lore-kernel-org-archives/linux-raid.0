@@ -1,39 +1,29 @@
-From: David Greaves <david@dgreaves.com>
-Subject: Re: Proper partition type for components with V1.x superblocks?
-Date: Wed, 11 Jun 2008 12:24:21 +0100
-Message-ID: <484FB5E5.8000207@dgreaves.com>
-References: <484F9A3E.7020709@rabbit.us>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: What do these SATA errors mean / kernel 2.6.25.6 (DRDY ERR/ICRC
+ ABRT)
+Date: Wed, 11 Jun 2008 07:33:03 -0400 (EDT)
+Message-ID: <alpine.DEB.1.10.0806110732330.15676@p34.internal.lan>
+References: <alpine.DEB.1.10.0806110608080.7726@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <484F9A3E.7020709@rabbit.us>
+In-Reply-To: <alpine.DEB.1.10.0806110608080.7726@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: Peter Rabbitson <rabbit+list@rabbit.us>
+To: linux-kernel@vger.kernel.org
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Peter Rabbitson wrote:
-> Hello,
-> 
-> The subject pretty much says it all - it obviously is not 0xFD, since
-> there is nothing to autodetect. Is there some best
-> practice/semi-standard way of marking a raid component partition as
-> such? After reading the specs 0xDA (non-fs data) comes to mind, but I
-> figured I'll ask here.
 
-I recently wondered if there should be a new partition type.
 
-Partitioning tools look for (and sometimes find!) filesystems on 0x83 partitions
-so 0x83 is out (anyone splitting a mirror should be happy changing the type back)
+On Wed, 11 Jun 2008, Justin Piszcz wrote:
 
-I'd rather that rescue disk didn't think 'oh, I'll use that swap partition', so
-0x82 is out.
+> Never had a single error so far, powered down my host, powered it back up,
+> and now with kernel 2.6.25.6:
+>
 
-I don't want md trying to autodetect and complaining so, as you say, 0xfd is out.
+Will replace/re-connect/check cables/connectors, a long test on each disk
+just passed fine as well but there was a single (1) CRC error, could be the
+cables/connectors/will verify later today.
 
-I think it would be nice to mark them as 0xFC
-
-David
-
+Justin.
 
