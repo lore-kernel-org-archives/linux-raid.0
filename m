@@ -1,89 +1,42 @@
 From: Hubert Verstraete <hubskml@free.fr>
 Subject: Re: RAID5 losing initial synchronization on restart when one disk
  is spare
-Date: Thu, 12 Jun 2008 11:12:22 +0200
-Message-ID: <4850E876.1030207@free.fr>
-References: <48466AD9.5@free.fr> <18512.25477.431367.952164@notabene.brown>
+Date: Thu, 12 Jun 2008 15:05:57 +0200
+Message-ID: <48511F35.90701@free.fr>
+References: <48466AD9.5@free.fr>	<484E6C3F.4090204@free.fr>	<484FE4C4.5020100@free.fr> <18512.25101.824044.407896@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18512.25477.431367.952164@notabene.brown>
+In-Reply-To: <18512.25101.824044.407896@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: Neil Brown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 Neil Brown wrote:
-> On Wednesday June 4, hubskml@free.fr wrote:
->> Hello
->>
->> According to mdadm's man page:
->> "When creating a RAID5 array, mdadm will automatically create a degr=
-aded
->> array with an extra spare drive. This is because building the spare
->> into a degraded array is in general faster than resyncing the parity=
- on
->> a non-degraded, but not clean, array. This feature can be over-ridde=
-n
->> with the --force option."
->>
->> Unfortunately, I'm seeing a kind of bug when I create a RAID5 array =
-with=20
->> an internal bitmap, then stop the array before the initial=20
->> synchronization is done and restart the array.
->>
->> 1=B0 When I create the array with an internal bitmap:
->> mdadm -C /dev/md_d1 -e 1.2 -l 5 -n 4 -b internal -R /dev/sd?
->> I see the last disk as a spare disk. After the restart of the array,=
- all=20
->> disks are seen active and the array is not continuing the aborted=20
->> synchronization!
->> Note that I did not use the --assume-clean option.
->>
->> 2=B0 When I create the array without a bitmap:
->> mdadm -C /dev/md_d1 -e 1.2 -l 5 -n 4 -R /dev/sd?
->> I see the last disk as a spare disk. After the restart of the array,=
- the=20
->> spare disk is still a spare disk and the array continues the=20
->> synchronization where it had stopped.
->>
->> In the case 1=B0, is this a bug or did I miss something?
->=20
-> Thanks for the detailed report.  Yes, this is a bug.
->=20
-> The following patch fixes it, though I'm not 100% sure this is the
-> right fix (it may cause too much resync in some cases, which is bette=
-r
-> than not enough, but not ideal).
->=20
-> NeilBrown
->=20
-> Signed-off-by: Neil Brown <neilb@suse.de>
->=20
-> diff .prev/drivers/md/raid5.c ./drivers/md/raid5.c
-> --- .prev/drivers/md/raid5.c	2008-06-10 10:27:51.000000000 +1000
-> +++ ./drivers/md/raid5.c	2008-06-12 09:34:25.000000000 +1000
-> @@ -4094,7 +4094,9 @@ static int run(mddev_t *mddev)
->  				" disk %d\n", bdevname(rdev->bdev,b),
->  				raid_disk);
->  			working_disks++;
-> -		}
-> +		} else
-> +			/* Cannot rely on bitmap to complete recovery */
-> +			conf->fullsync =3D 1;
->  	}
-> =20
->  	/*
+> On Wednesday June 11, hubskml@free.fr wrote:
+>> By the way and FYI, with my configuration, all disks on the same 
+>> controller, internal bitmap, v1 superblock, ... the initial RAID-5 
+>> synchronization duration is the same whether I'm using the option 
+>> --force or not.
+>
+> For this to be a valid test, you need to fill one drive up with
+> garbage to ensure that a resync is no a no-op.
+>
+> If you don't use the "--force" option, then the recovery process will
+> read from N-1 drives and write to 1 drive, all completely sequentially
+> so it will go at a predictable speed.
+>
+> When you use "--force" it will read from N drive and check parity.
+> When it finds an error it will re-write that parity block.
+> So if the parity blocks happen to be all correct (as probably was the
+> case in your experiment), it will run nice and fast.  If the parity
+> blocks happen to all be wrong (as is likely when first creating an
+> array on drives that weren't an array before) it will be much slower.
 
-Thanks Neil, I can confirm this solves this issue.
-Regarding the eventual unwanted resync, I can't say.
+I've just filled all the drives with /dev/zero and am currently building 
+a new array. Is this a valid test or should I fill the drives with 
+/dev/random ?
 
-Regards,
-Hubert Verstraete
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Hubert
