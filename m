@@ -1,58 +1,72 @@
-From: Hubert Verstraete <hubskml@free.fr>
-Subject: Re: RAID5 losing initial synchronization on restart when one disk
- is spare
-Date: Thu, 12 Jun 2008 20:11:34 +0200
-Message-ID: <485166D6.505@free.fr>
-References: <48466AD9.5@free.fr> <484E6C3F.4090204@free.fr>	 <484FE4C4.5020100@free.fr> <18512.25101.824044.407896@notabene.brown>	 <48511F35.90701@free.fr> <e9c3a7c20806120959m4467f8f5r4500a736b440716f@mail.gmail.com>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: Linux MD RAID 5 Benchmarks Across (3 to 10) 300 Gigabyte Veliciraptors
+Date: Thu, 12 Jun 2008 15:08:48 -0400
+Message-ID: <48517440.6020905@tmr.com>
+References: <alpine.DEB.1.10.0806071015110.23323@p34.internal.lan> <4850354A.8090503@tmr.com> <alpine.DEB.1.10.0806111647360.18136@p34.internal.lan> <alpine.DEB.1.10.0806111652550.18136@p34.internal.lan>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <e9c3a7c20806120959m4467f8f5r4500a736b440716f@mail.gmail.com>
+In-Reply-To: <alpine.DEB.1.10.0806111652550.18136@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, xfs@oss.sgi.com, Alan Piszcz <ap@solarrain.com>
 List-Id: linux-raid.ids
 
-Dan Williams wrote:
-> On Thu, Jun 12, 2008 at 6:05 AM, Hubert Verstraete <hubskml@free.fr> wrote:
->> Neil Brown wrote:
->>> On Wednesday June 11, hubskml@free.fr wrote:
->>>> By the way and FYI, with my configuration, all disks on the same
->>>> controller, internal bitmap, v1 superblock, ... the initial RAID-5
->>>> synchronization duration is the same whether I'm using the option --force or
->>>> not.
->>> For this to be a valid test, you need to fill one drive up with
->>> garbage to ensure that a resync is no a no-op.
->>>
->>> If you don't use the "--force" option, then the recovery process will
->>> read from N-1 drives and write to 1 drive, all completely sequentially
->>> so it will go at a predictable speed.
->>>
->>> When you use "--force" it will read from N drive and check parity.
->>> When it finds an error it will re-write that parity block.
->>> So if the parity blocks happen to be all correct (as probably was the
->>> case in your experiment), it will run nice and fast.  If the parity
->>> blocks happen to all be wrong (as is likely when first creating an
->>> array on drives that weren't an array before) it will be much slower.
->> I've just filled all the drives with /dev/zero and am currently building a
->> new array. Is this a valid test or should I fill the drives with /dev/random
->> ?
+Justin Piszcz wrote:
 >
-> No, /dev/zero will not work for this test since the xor sum of zeroed
-> blocks is zero.  The check operation has the following stages: read
-> the parity from disk, verify it is correct, and if it is not correct
-> calculate / writeback correct parity.  So, you need to ensure that the
-> parity check fails.  Using /dev/urandom should be sufficient.  Do not
-> use /dev/random as it will exhaust the entropy pool and then block.
+>
+> On Wed, 11 Jun 2008, Justin Piszcz wrote:
+>
+>>
+>>
+>> On Wed, 11 Jun 2008, Bill Davidsen wrote:
+>>
+>>> Justin Piszcz wrote:
+>>>> First, the original benchmarks with 6-SATA drives with fixed 
+>>>> formatting, using
+>>>> right justification and the same decimal point precision throughout:
+>>>> http://home.comcast.net/~jpiszcz/20080607/raid-benchmarks-decimal-fix-and-right-justified/disks.html 
+>>>> Now for for veliciraptors! Ever wonder what kind of speed is 
+>>>> possible with
+>>>> 3 disk, 4,5,6,7,8,9,10-disk RAID5s? I ran a loop to find out, each 
+>>>> run is
+>>>> executed three times and the average is taken of all three runs per 
+>>>> each RAID5 disk set.
+>>>>
+>>>> In short? The 965 no longer does justice with faster drives, a new 
+>>>> chipset
+>>>> and motherboard are needed. After reading or writing to 4-5 
+>>>> veliciraptors
+>>>> it saturates the bus/965 chipset.
+>>>
+>>> This is very interesting, but a 16GB chunk size bears no 
+>>> relationship to anything I would run in the real world, and I 
+>>> suspect most people are in the same category.
+>>
+>> I based my bonnie++ test on:
+>> http://everything2.org/?node_id=1479435
+>>
+>> So I could compare to his results.
+>>
+>> I use a 1024k (1MiB) with 16384 stripe, this offered the best overall 
+>> read/write/rewrite performance AFAIK.
+>
+> 1024k chunk size (raid5 chunk size)
+> echo 16384 > stripe_cache_size
 
-Confirmed, I got the same resync time after zeroing the hard drives.
+Please don't explain any more, I'm confused enough already. I can't make 
+those numbers match 16G no matter how I add them, either the contents of 
+the column labeled "size:chunk size" isn't the size of the chunk, or you 
+have a multiplier floating around that I don't see.  And you eliminated 
+the degraded performance, since your stripe_cache_size is less than 
+(raid5 chunk size)*(#disks), I would expect the reads in degraded mode 
+to be dog slow because the don't fit in cache, even if 1024k is what I 
+call chunk size and certainly not if chunk size is 16G.
 
-Nevertheless, let's say I build the arrays on brand new disks.
-If I can assume these disks are full of zero, I can freely choose my 
-initial resync method :)
-And it seems my new Seagate disk is made of zero (currently running a 
-diff with /dev/zero).
+-- 
+Bill Davidsen <davidsen@tmr.com>
+  "Woe unto the statesman who makes war without a reason that will still
+  be valid when the war is over..." Otto von Bismark 
 
-Thanks for explanations.
-Hubert
+
