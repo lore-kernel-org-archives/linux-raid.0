@@ -1,32 +1,32 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: Proper partition type for components with V1.x superblocks?
-Date: Thu, 12 Jun 2008 09:52:52 +1000
-Message-ID: <18512.25940.653867.623185@notabene.brown>
-References: <484F9A3E.7020709@rabbit.us>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: What do these SATA errors mean / kernel 2.6.25.6 (DRDY ERR/ICRC
+ ABRT)
+Date: Wed, 11 Jun 2008 22:50:31 -0400
+Message-ID: <48508EF7.9070309@garzik.org>
+References: <alpine.DEB.1.10.0806110608080.7726@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Peter Rabbitson on Wednesday June 11
-Sender: linux-raid-owner@vger.kernel.org
-To: Peter Rabbitson <rabbit+list@rabbit.us>
-Cc: linux-raid@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755414AbYFLCuq@vger.kernel.org>
+In-Reply-To: <alpine.DEB.1.10.0806110608080.7726@p34.internal.lan>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wednesday June 11, rabbit+list@rabbit.us wrote:
-> Hello,
-> 
-> The subject pretty much says it all - it obviously is not 0xFD, since there is 
-> nothing to autodetect. Is there some best practice/semi-standard way of 
-> marking a raid component partition as such? After reading the specs 0xDA 
-> (non-fs data) comes to mind, but I figured I'll ask here.
-> 
+Justin Piszcz wrote:
+> Never had a single error so far, powered down my host, powered it back up,
+> and now with kernel 2.6.25.6:
 
-I (almost) alway make arrays out of whole devices, not partitions, so
-I really never thought about this.
+http://ata.wiki.kernel.org/index.php/Libata_error_messages
 
-I suspect 0xDA is safest and hence best.
-I wonder if this should be suggested in the mdadm man page
-anywhere.... anyone feel like creating a patch?
+In particular, timeouts may be solved by acpi=off or 'noapic' or
+pci=nomsi or pci=biosirq.
 
-NeilBrown
+
+> Does/the kernel handle the ATA v8 protocol properly?
+> ATA Version is:   8
+
+Yes.  ATA is always back-compatible.
+
+	Jeff
