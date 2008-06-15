@@ -1,169 +1,123 @@
-From: Jelle de Jong <jelledejong@powercraft.nl>
-Subject: need some help very strange behavior mdadm writes data to non raid
- disk?
-Date: Sun, 15 Jun 2008 11:33:39 +0200
-Message-ID: <4854E1F3.4090803@powercraft.nl>
+From: "Sean Hildebrand" <silverwraithii@gmail.com>
+Subject: Re: Rebuilding an array with a corrupt disk.
+Date: Sun, 15 Jun 2008 07:54:10 -0400
+Message-ID: <fa037c550806150454v68089bcbg50203b454ae593e0@mail.gmail.com>
+References: <fa037c550806131922y475de7ew8c3a66aa06d081b1@mail.gmail.com>
+	 <4853634C.90508@dgreaves.com>
+	 <fa037c550806140354k7bcab83fs39738e165f3aba8d@mail.gmail.com>
+	 <4853AFCF.5050209@dgreaves.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------010702030702090908060301"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4853AFCF.5050209@dgreaves.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: David Greaves <david@dgreaves.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This is a multi-part message in MIME format.
---------------010702030702090908060301
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Unfortunately, ddrescue didn't do me any good. The amount of data
+taken from /dev/sda1 and output to /dev/sdd1 was not sufficient to
+include /dev/sdd1 in the array.
 
-This message contains the following attachment(s):
-debug-mdadm.txt
-setup-mdadm.txt
+However, since I was only using around a third of the array, it looks
+like there wasn't much data in the latter portion of /dev/sda1. I
+mounted the array and cp'd data off - Ended up having only 11 read
+errors, all of which caused the array to kick /dev/sda1 out as a
+failed disk, and three of which were severe enough to stop the
+motherboard from recognizing the disk until after a reboot.
 
-Hello everybody
+I got all my data, save the eleven folders that read errors occurred
+in - Thankfully the data lost isn't terribly important.
 
-Thank you for supporting mdadm. I am creating my first raid1 array and 
-got some very confusing issues.
+Is there no way to get mdadm to allow a certain number of read errors
+from a disk, instead of removing it from the array immediately?
+Manually unmounting, stopping, and re-assembling is somewhat of a
+chore, especially when the system locks access to the array while
+copying, despite the read error.
 
-My raid1 md0 array should consist out of disks:
-/dev/sda1
-/dev/sdb1
+>IIt also depends on previous usage - was the disk ever more full? etc. etc.
 
-These are 749GB ext3 partitions in mirroring mode.
+To answer that: The drive was brand new. The thing I find odd about
+this failure is that it was integrated into the array without issue,
+meaning the disk has no issues writing to the bad sectors, just
+reading. Never had that before.
 
-However when I reboot my system, mdadm tells me everything is fine and
-is correctly using sda1 and sdb1.
+In any case, I'm very glad to have got my data with minimal loss. And
+to think, all this could have been avoided if I'd just made my array a
+RAID6 when it was first built. Certainly when I have a new fifth disk
+the array will be rebuilt as such.
 
-But it is not using a 749GB partition, it is using the same partition
-size as my /dev/sdc1 disk and when I write a test file to the root dir 
-and then mount /dev/sdc1 the file is there also. So md0 is directly 
-connected with /dev/sdc1. It does not make any sens to me.
-
-Can somebody please look at my debug en setup file that i created and 
-maybe see something that is going wrong?
-
-Thanks in advance,
-
-Jelle de Jong
-
-ps. I am mailing this address directly please cc me in a reply
-
-
---------------010702030702090908060301
-Content-Type: text/plain;
- name="setup-mdadm.txt"
-Content-Transfer-Encoding: base64
-Content-Disposition: inline;
- filename="setup-mdadm.txt"
-
-YXB0LWdldCBpbnN0YWxsIG1kYWRtCgojIHN0ZXAgMTogc2V0dXAgcGFydGl0aW9ucyBzaXpl
-cyBvbiB0aGUgZmlyc3QgZGlzawpwYXJ0ZWQgL2Rldi9zZGEKbWtsYWJlbCBtc2Rvcwpta3Bh
-cnQgcHJpbWFyeSAwIDc0OUdCCm1rcGFydCBwcmltYXJ5IDc0OUdCIDc1MEdCCnRvZ2dsZSAx
-IGJvb3QKcHJpbnQKcXVpdAoKIyBzdGVwIDI6IGNvcHkgcGFydGl0aW9uIHRhYmxlIGZyb20g
-c2RhIHRvIHNkYgpzZmRpc2sgLWQgL2Rldi9zZGEgfCBzZmRpc2sgL2Rldi9zZGIKCiMgc3Rl
-cCAzOiBjcmVhdGUgcmFpZCBtaXJyb3Jpbmcgc2V0dXAKbWRhZG0gLS1jcmVhdGUgL2Rldi9t
-ZDAgLS1sZXZlbD0xIC0tcmFpZC1kZXZpY2VzPTIgL2Rldi9zZGExIC9kZXYvc2RiMQptZGFk
-bSAtLWNyZWF0ZSAvZGV2L21kMSAtLWxldmVsPTEgLS1yYWlkLWRldmljZXM9MiAvZGV2L3Nk
-YTIgL2Rldi9zZGIyCgojIHN0ZXAgNDogY3JlYXRlIGZpbGUgc3lzdGVtcyBvbiB0aGUgZmly
-c3QgZGlzayBwYXJ0aXRpb25zCm1rZnMuZXh0MyAvZGV2L21kMApta3N3YXAgL2Rldi9tZDEK
-CiMgc3RlcCA1OiBjcmVhdGUgdGhlIG1kYWRtIGNvbmZpZ3VyYXRpb24gZmlsZQptZGFkbSAt
-LWRldGFpbCAtLXNjYW4gLS12ZXJib3NlID4gL2V0Yy9tZGFkbS5jb25mCm1kYWRtIC0tZGV0
-YWlsIC0tc2NhbiAtLXZlcmJvc2UgPiAvZXRjL21kYWRtL21kYWRtLmNvbmYKCiMgc3RlcCA2
-OiB3YXRjaCBob3cgdGhlIHJlY29uc3RydWN0aW9uIG9mIHRoZSBhcnJheSdzCndhdGNoIGNh
-dCAvcHJvYy9tZHN0YXQKCiMgc3RlcCA3OiBjaGFuZ2UgZnN0YWIKY2F0ID4gL2V0Yy9mc3Rh
-YiA8PCAiRU9GIgpVVUlEPTEwYTExZTQ0LWE5NTgtNGQxNC1hZTU2LWFkZjlhZjdjNWMyOCAv
-ICAgICAgICAgICAgICAgcmVpc2VyZnMgbm90YWlsICAgICAgIDAgICAgICAgMQpVVUlEPTg5
-MTYyNDI3LTMwOTItNDhhZi05M2YwLTkxMjNhNGUwMzFlYSBub25lICAgICAgICAgICAgc3dh
-cCAgICBzdyAgICAgICAwICAgICAgIDAKL2Rldi9tZDAgICAgIC9tZWRpYS9kaXNrIGV4dDMg
-ICAgICAgZGVmYXVsdHMgICAgICAgICAgICAwICAgICAgIDEKL2Rldi9tZDEgICAgIG5vbmUg
-ICAgICAgIHN3YXAgICAgICAgc3cgICAgICAgICAgICAgICAgICAwICAgICAgIDAKcHJvYyAg
-ICAgICAgIC9wcm9jICAgICAgIHByb2MgICAgICAgZGVmYXVsdHMgICAgICAgICAgICAwICAg
-ICAgIDAKRU9GCgojIHN0ZXAgODogY3JlYXRlIG1vdW50IGRpcmVjdG9yeSBhbmQgbW91bnQg
-ZGlza3MKbWtkaXIgL21lZGlhL2Rpc2sKbW91bnQgLWEKdG91Y2ggL21lZGlhL2Rpc2svdGVz
-dC50eHQKbHMgLWhhbCAvbWVkaWEvZGlzawoKIyBzdGVwIDg6IHJlYm9vdCB0aGUgc3lzdGVt
-IGFuZCBjaGVjayByYWlkIGRpc2sgYXJlIG1vdW50ZWQKc2h1dGRvd24gLXIgbm93CmxzIC1o
-YWwgL21lZGlhL2Rpc2sKCiMgc3RlcCA5OiBjaGFuZ2UgdG8gcnVubGV2ZWwgMSB0byBwcmVw
-YXJlIGZvciBjb3B5aW5nCmluaXQgMQoKIyBzdGVwIDk6IGNvcHkgcm9vdCBkaXJlY3RvcnkK
-cnN5bmMgLWFxeFAgLyAvbWVkaWEvZGlzawojIGNwIC1heCAvIC9tbnQvbmV3cm9vdAoKIyBz
-dGVwIDEwOiBzZXR1cCBib290IGZsYWdzIG9uIGRpc2sKcGFydGVkIC9kZXYvc2RjCnRvZ2ds
-ZSAxIGJvb3QKcHJpbnQKcXVpdAoKIyBzdGVwIDExOiBjaGFuZ2UgZnN0YWIKY2F0ID4gL2V0
-Yy9mc3RhYiA8PCAiRU9GIgovZGV2L21kMCAgICAgLyAgICAgICAgICAgZXh0MyAgICAgICBk
-ZWZhdWx0cyAgICAgICAgICAgIDAgICAgICAgMQovZGV2L21kMSAgICAgbm9uZSAgICAgICAg
-c3dhcCAgICAgICBzdyAgICAgICAgICAgICAgICAgIDAgICAgICAgMApwcm9jICAgICAgICAg
-L3Byb2MgICAgICAgcHJvYyAgICAgICBkZWZhdWx0cyAgICAgICAgICAgIDAgICAgICAgMApF
-T0YKCiMgc3RlcCAxMjogcmVib290IHRoZSBzeXN0ZW0Kc2h1dGRvd24gLXIgbm93CgotLSAt
-LSAtLSAtLQoKIyBub3RlczoKdHVuZTJmcyAtagpzZmRpc2sgLWQgL2Rldi9zZGIgPiBwYXJ0
-aXRpb25zLnNkYgpzZmRpc2sgL2Rldi9zZGIgPCBwYXJ0aXRpb25zLnNkYgoKbWRhZG0gLVMg
-L2Rldi9tZDAKbWRhZG0gLVMgL2Rldi9tZDEKbWRhZG0gLVMgL2Rldi9tZDIKCm1kYWRtIC9k
-ZXYvbWQwIC0tZmFpbCAvZGV2L3NkYTEgLS1yZW1vdmUgL2Rldi9zZGExCm1kYWRtIC9kZXYv
-bWQxIC0tZmFpbCAvZGV2L3NkYTIgLS1yZW1vdmUgL2Rldi9zZGEyCm1kYWRtIC9kZXYvbWQy
-IC0tZmFpbCAvZGV2L3NkYTMgLS1yZW1vdmUgL2Rldi9zZGEzCgptZGFkbSAvZGV2L21kMCAt
-LWZhaWwgL2Rldi9zZGIxIC0tcmVtb3ZlIC9kZXYvc2RiMQptZGFkbSAvZGV2L21kMSAtLWZh
-aWwgL2Rldi9zZGIyIC0tcmVtb3ZlIC9kZXYvc2RiMgptZGFkbSAvZGV2L21kMiAtLWZhaWwg
-L2Rldi9zZGIzIC0tcmVtb3ZlIC9kZXYvc2RiMwo=
---------------010702030702090908060301
-Content-Type: text/plain;
- name="debug-mdadm.txt"
-Content-Transfer-Encoding: base64
-Content-Disposition: inline;
- filename="debug-mdadm.txt"
-
-dG91Y2ggL3Rlc3RmaWxlLWEudHh0CgpscyAtaGFsIC90ZXN0ZmlsZS1hLnR4dAotcnctLS0t
-LS0tIDEgcm9vdCByb290IDAgMjAwOC0wNi0xNSAxMToxMCAvdGVzdGZpbGUtYS50eHQKCm1v
-dW50IC9kZXYvc2RhMSAvbWVkaWEvc2RhMS8KbW91bnQ6IHVua25vd24gZmlsZXN5c3RlbSB0
-eXBlICdsaW51eF9yYWlkX21lbWJlcicKCm1vdW50IC9kZXYvc2RiMSAvbWVkaWEvc2RiMS8K
-bW91bnQ6IHVua25vd24gZmlsZXN5c3RlbSB0eXBlICdsaW51eF9yYWlkX21lbWJlcicKCm1v
-dW50IC9kZXYvc2RjMSAvbWVkaWEvc2RjMS8KCmxzIC1oYWwgL21lZGlhL3NkYzEvdGVzdGZp
-bGUtYS50eHQKLXJ3LS0tLS0tLSAxIHJvb3Qgcm9vdCAwIDIwMDgtMDYtMTUgMTE6MTAgL21l
-ZGlhL3NkYzEvdGVzdGZpbGUtYS50eHQKCi0tIC0tIC0tIC0tIC0tCgpkZiAtaGFsCkZpbGVz
-eXN0ZW0gICAgICAgICAgICBTaXplICBVc2VkIEF2YWlsIFVzZSUgTW91bnRlZCBvbgovZGV2
-L21kMCAgICAgICAgICAgICAgMjk2RyAgMjg0RyAgIDEyRyAgOTclIC8KL2Rldi9zZGMxICAg
-ICAgICAgICAgIDI5NkcgIDI4NEcgICAxMkcgIDk3JSAvbWVkaWEvc2RjMQoKZGYgLWhhbFQK
-RmlsZXN5c3RlbSAgICBUeXBlICAgIFNpemUgIFVzZWQgQXZhaWwgVXNlJSBNb3VudGVkIG9u
-Ci9kZXYvbWQwICAgICAgZXh0MyAgICAyOTZHICAyODRHICAgMTJHICA5NyUgLwovZGV2L3Nk
-YzEgcmVpc2VyZnMgICAgMjk2RyAgMjg0RyAgIDEyRyAgOTclIC9tZWRpYS9zZGMxCgoKLS0g
-LS0gLS0gLS0gLS0KCmNhdCAvcHJvYy9tZHN0YXQKUGVyc29uYWxpdGllcyA6IFtsaW5lYXJd
-IFttdWx0aXBhdGhdIFtyYWlkMF0gW3JhaWQxXSBbcmFpZDZdIFtyYWlkNV0gW3JhaWQ0XSBb
-cmFpZDEwXQptZDAgOiBhY3RpdmUgcmFpZDEgc2RhMVswXSBzZGIxWzFdCiAgICAgIDczMTQ0
-NzM2MCBibG9ja3MgWzIvMl0gW1VVXQoKbWQxIDogYWN0aXZlIHJhaWQxIHNkYTJbMF0gc2Ri
-MlsxXQogICAgICAxMTI0NDgwIGJsb2NrcyBbMi8yXSBbVVVdCgp1bnVzZWQgZGV2aWNlczog
-PG5vbmU+CgotLSAtLSAtLSAtLSAtLQoKY2F0IC9ldGMvZnN0YWIKL2Rldi9tZDAgICAgIC8g
-ICAgICAgICAgIGV4dDMgICAgICAgZGVmYXVsdHMgICAgICAgICAgICAwICAgICAgIDEKL2Rl
-di9tZDEgICAgIG5vbmUgICAgICAgIHN3YXAgICAgICAgc3cgICAgICAgICAgICAgICAgICAw
-ICAgICAgIDAKcHJvYyAgICAgICAgIC9wcm9jICAgICAgIHByb2MgICAgICAgZGVmYXVsdHMg
-ICAgICAgICAgICAwICAgICAgIDAKCi0tIC0tIC0tIC0tIC0tCgpjYXQgL2V0Yy9tZGFkbS9t
-ZGFkbS5jb25mCkFSUkFZIC9kZXYvbWQxIGxldmVsPXJhaWQxIG51bS1kZXZpY2VzPTIgVVVJ
-RD1hOGRmODg0ZTo3MDNjZjNiYzoxMDliMmY3ODoyZDM2MWU2MgogICBkZXZpY2VzPS9kZXYv
-c2RhMiwvZGV2L3NkYjIKQVJSQVkgL2Rldi9tZDAgbGV2ZWw9cmFpZDEgbnVtLWRldmljZXM9
-MiBVVUlEPWRhNWUwMjdhOjUwNmQzNTg3OjEwOWIyZjc4OjJkMzYxZTYyCiAgIGRldmljZXM9
-L2Rldi9zZGExLC9kZXYvc2RiMQoKLS0gLS0gLS0gLS0gLS0KCmZkaXNrIC1sCgpEaXNrIC9k
-ZXYvc2RhOiA3NTAuMSBHQiwgNzUwMTU2Mzc0MDE2IGJ5dGVzCjI1NSBoZWFkcywgNjMgc2Vj
-dG9ycy90cmFjaywgOTEyMDEgY3lsaW5kZXJzClVuaXRzID0gY3lsaW5kZXJzIG9mIDE2MDY1
-ICogNTEyID0gODIyNTI4MCBieXRlcwpEaXNrIGlkZW50aWZpZXI6IDB4MDAwMTAzMjkKCiAg
-IERldmljZSBCb290ICAgICAgU3RhcnQgICAgICAgICBFbmQgICAgICBCbG9ja3MgICBJZCAg
-U3lzdGVtCi9kZXYvc2RhMSAgICogICAgICAgICAgIDEgICAgICAgOTEwNjEgICA3MzE0NDc0
-NTEgICA4MyAgTGludXgKL2Rldi9zZGEyICAgICAgICAgICA5MTA2MiAgICAgICA5MTIwMSAg
-ICAgMTEyNDU1MCAgIDgzICBMaW51eAoKRGlzayAvZGV2L3NkYjogNzUwLjEgR0IsIDc1MDE1
-NjM3NDAxNiBieXRlcwoyNTUgaGVhZHMsIDYzIHNlY3RvcnMvdHJhY2ssIDkxMjAxIGN5bGlu
-ZGVycwpVbml0cyA9IGN5bGluZGVycyBvZiAxNjA2NSAqIDUxMiA9IDgyMjUyODAgYnl0ZXMK
-RGlzayBpZGVudGlmaWVyOiAweDAwMDEwMzI5CgogICBEZXZpY2UgQm9vdCAgICAgIFN0YXJ0
-ICAgICAgICAgRW5kICAgICAgQmxvY2tzICAgSWQgIFN5c3RlbQovZGV2L3NkYjEgICAqICAg
-ICAgICAgICAxICAgICAgIDkxMDYxICAgNzMxNDQ3NDUxICAgODMgIExpbnV4Ci9kZXYvc2Ri
-MiAgICAgICAgICAgOTEwNjIgICAgICAgOTEyMDEgICAgIDExMjQ1NTAgICA4MyAgTGludXgK
-CkRpc2sgL2Rldi9tZDE6IDExNTEgTUIsIDExNTE0Njc1MjAgYnl0ZXMKMiBoZWFkcywgNCBz
-ZWN0b3JzL3RyYWNrLCAyODExMjAgY3lsaW5kZXJzClVuaXRzID0gY3lsaW5kZXJzIG9mIDgg
-KiA1MTIgPSA0MDk2IGJ5dGVzCkRpc2sgaWRlbnRpZmllcjogMHhlOGViNWQ4OAoKRGlzayAv
-ZGV2L21kMSBkb2Vzbid0IGNvbnRhaW4gYSB2YWxpZCBwYXJ0aXRpb24gdGFibGUKCkRpc2sg
-L2Rldi9tZDA6IDc0OS4wIEdCLCA3NDkwMDIwOTY2NDAgYnl0ZXMKMiBoZWFkcywgNCBzZWN0
-b3JzL3RyYWNrLCAxODI4NjE4NDAgY3lsaW5kZXJzClVuaXRzID0gY3lsaW5kZXJzIG9mIDgg
-KiA1MTIgPSA0MDk2IGJ5dGVzCkRpc2sgaWRlbnRpZmllcjogMHgwMDAwMDAwMAoKRGlzayAv
-ZGV2L21kMCBkb2Vzbid0IGNvbnRhaW4gYSB2YWxpZCBwYXJ0aXRpb24gdGFibGUKCkRpc2sg
-L2Rldi9zZGM6IDMyMC4wIEdCLCAzMjAwNzI5MzMzNzYgYnl0ZXMKMjU1IGhlYWRzLCA2MyBz
-ZWN0b3JzL3RyYWNrLCAzODkxMyBjeWxpbmRlcnMKVW5pdHMgPSBjeWxpbmRlcnMgb2YgMTYw
-NjUgKiA1MTIgPSA4MjI1MjgwIGJ5dGVzCkRpc2sgaWRlbnRpZmllcjogMHgwMDA0ZTNmMgoK
-ICAgRGV2aWNlIEJvb3QgICAgICBTdGFydCAgICAgICAgIEVuZCAgICAgIEJsb2NrcyAgIElk
-ICBTeXN0ZW0KL2Rldi9zZGMxICAgICAgICAgICAgICAgMSAgICAgICAzODU2MiAgIDMwOTc0
-OTIzMysgIDgzICBMaW51eAovZGV2L3NkYzIgICAgICAgICAgIDM4NTYzICAgICAgIDM4OTEz
-ICAgICAyODE5NDA3KyAgODIgIExpbnV4IHN3YXAgLyBTb2xhcmlzCgotLSAtLSAtLSAtLSAt
-LQo=
---------------010702030702090908060301--
+On Sat, Jun 14, 2008 at 7:47 AM, David Greaves <david@dgreaves.com> wrote:
+> Sean Hildebrand wrote:
+>> How's that?
+>>
+>> The spare (/dev/sdd) seems to be fine. I haven't tried the rebuild
+>> with any other disks, but smartctl doesn't report any issues with
+>> /dev/sdd, only /dev/sda.
+> Sorry, misread what you said.
+> Thought you had errors on both sda and sdd.
+>
+>
+>> Ran ddrescue, managed to recover 559071 MB.. But the other 191GB was
+>> thousand  upon thousands of read errors.
+> Looking fairly bad then.
+>
+>> Now, prior to this with the array in degraded mode I was able to
+>> access and modify all files I found, but mdadm would always fail on
+>> rebuild, and fsck would always fail and the array would go down
+>> roughly 75% through the scan, presumably when first encountering bad
+>> sections of the disk.
+> Sounds reasonable.
+>
+>> ddrescue has not yet finished - It's currently "Splitting error
+>> areas..." - Given that the array has been mountable prior to running
+>> ddrescue, is it safe to assume that once it's done, the
+>> partially-cloned /dev/sda1 that ddrescue has output onto /dev/sdd1
+>> will be mountable as part of the array so I can assess file loss?
+> It should be.
+> Additionally, the raid won't die as fsck works.
+>
+> However if any of the other disks die then you will have problems.
+> Its safer to add the spare when it arrives and go to a redundant setup. Then, if
+> any one drive dies, fsck will continue.
+>
+> Also note that you *may* recover more data by using ddrescue with a logfile and
+> re-running it after chilling the failed drive etc. Google...
+>
+> The longer you persevere with ddrescue, the more data you have the chance of
+> recovering. Maybe keep at it until the replacement spare arrives. Again - read
+> up on ddrescue - the list archives had something in the last few weeks.
+>
+>> I am unsure of how data is spread through a RAID5. Each disk gets an
+>> equal portion of data, but do drives fill up in linear fashion?
+> No. the data is spread amongs the drives. You've lost everything from the 75% up
+> mark on all the drives.
+>
+>> I ask
+>> this because whether the array is being rebuilt or fscked it fails at
+>> roughly 75% through either operation, yet I never had the array go
+>> down while I was using it - Only when fsck was running or mdadm was
+>> rebuilding.
+>
+>> The array is 2.69 TB, with 1.57TB currently free - If the drives do
+>> fill linearly (Or even semi-linearly) is it likely that the majority
+>> of the 191GB of errors are empty space?
+> I don't know how various filesystems use space.
+> It also depends on previous usage - was the disk ever more full? etc etc.
+> I do know that with 'normal' filesystems (ext/xfs/etc) then the answer is undefined.
+> Plus it's 191Gb x4 - so ~800Gb of corrupted md device.
+>
+> Sorry - keep fingers crossed.
+>
+>> If this isn't making much sense I apologize. I'm sleep deprived and
+>> not enjoying the prospect of losing large quantities of my data.
+> Sad, but people do use RAID instead of backups.
+> RAID is a convenience that helps with uptime in the event of a failure and
+> reduces the risk of data-loss between backups.
+>
+> Lets see what can be done to get it all back though - you may be lucky.
+>
+> David
+>
