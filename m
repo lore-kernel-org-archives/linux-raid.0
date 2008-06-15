@@ -1,39 +1,169 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: Weird corruptions read error.
-Date: Sun, 15 Jun 2008 04:52:48 -0400 (EDT)
-Message-ID: <alpine.DEB.1.10.0806150449430.2797@p34.internal.lan>
-References: <1213508229.4854aa85e9f52@www.imp.polymtl.ca>
+From: Jelle de Jong <jelledejong@powercraft.nl>
+Subject: need some help very strange behavior mdadm writes data to non raid
+ disk?
+Date: Sun, 15 Jun 2008 11:33:39 +0200
+Message-ID: <4854E1F3.4090803@powercraft.nl>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: multipart/mixed;
+ boundary="------------010702030702090908060301"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1213508229.4854aa85e9f52@www.imp.polymtl.ca>
 Sender: linux-raid-owner@vger.kernel.org
-To: Karl Dubois <karl-2.dubois@polymtl.ca>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+This is a multi-part message in MIME format.
+--------------010702030702090908060301
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+
+This message contains the following attachment(s):
+debug-mdadm.txt
+setup-mdadm.txt
+
+Hello everybody
+
+Thank you for supporting mdadm. I am creating my first raid1 array and 
+got some very confusing issues.
+
+My raid1 md0 array should consist out of disks:
+/dev/sda1
+/dev/sdb1
+
+These are 749GB ext3 partitions in mirroring mode.
+
+However when I reboot my system, mdadm tells me everything is fine and
+is correctly using sda1 and sdb1.
+
+But it is not using a 749GB partition, it is using the same partition
+size as my /dev/sdc1 disk and when I write a test file to the root dir 
+and then mount /dev/sdc1 the file is there also. So md0 is directly 
+connected with /dev/sdc1. It does not make any sens to me.
+
+Can somebody please look at my debug en setup file that i created and 
+maybe see something that is going wrong?
+
+Thanks in advance,
+
+Jelle de Jong
+
+ps. I am mailing this address directly please cc me in a reply
 
 
-On Sun, 15 Jun 2008, Karl Dubois wrote:
+--------------010702030702090908060301
+Content-Type: text/plain;
+ name="setup-mdadm.txt"
+Content-Transfer-Encoding: base64
+Content-Disposition: inline;
+ filename="setup-mdadm.txt"
 
-> Hey everyone!
->
-> I'll make it quick. I've got two arrays, both composed of 4 disks. The first one
-> works fine and is composed of 4 disk (sda4, sdb1, sdd2, sdf2).
->
-> The second one is composed of four disk (sdc1, sdd1, sde1, sdf1) and gives some
-1. Show smartctl -a output for all disks.
-2. Have you tried swapping the disks?
-    array1 -> array2's controller/port/cables
-    array2 -> array1's controller/port/cables
-    .. and see if the problem persists?
-3. Also what filesystem?
-4. Have you run an fsck?
+YXB0LWdldCBpbnN0YWxsIG1kYWRtCgojIHN0ZXAgMTogc2V0dXAgcGFydGl0aW9ucyBzaXpl
+cyBvbiB0aGUgZmlyc3QgZGlzawpwYXJ0ZWQgL2Rldi9zZGEKbWtsYWJlbCBtc2Rvcwpta3Bh
+cnQgcHJpbWFyeSAwIDc0OUdCCm1rcGFydCBwcmltYXJ5IDc0OUdCIDc1MEdCCnRvZ2dsZSAx
+IGJvb3QKcHJpbnQKcXVpdAoKIyBzdGVwIDI6IGNvcHkgcGFydGl0aW9uIHRhYmxlIGZyb20g
+c2RhIHRvIHNkYgpzZmRpc2sgLWQgL2Rldi9zZGEgfCBzZmRpc2sgL2Rldi9zZGIKCiMgc3Rl
+cCAzOiBjcmVhdGUgcmFpZCBtaXJyb3Jpbmcgc2V0dXAKbWRhZG0gLS1jcmVhdGUgL2Rldi9t
+ZDAgLS1sZXZlbD0xIC0tcmFpZC1kZXZpY2VzPTIgL2Rldi9zZGExIC9kZXYvc2RiMQptZGFk
+bSAtLWNyZWF0ZSAvZGV2L21kMSAtLWxldmVsPTEgLS1yYWlkLWRldmljZXM9MiAvZGV2L3Nk
+YTIgL2Rldi9zZGIyCgojIHN0ZXAgNDogY3JlYXRlIGZpbGUgc3lzdGVtcyBvbiB0aGUgZmly
+c3QgZGlzayBwYXJ0aXRpb25zCm1rZnMuZXh0MyAvZGV2L21kMApta3N3YXAgL2Rldi9tZDEK
+CiMgc3RlcCA1OiBjcmVhdGUgdGhlIG1kYWRtIGNvbmZpZ3VyYXRpb24gZmlsZQptZGFkbSAt
+LWRldGFpbCAtLXNjYW4gLS12ZXJib3NlID4gL2V0Yy9tZGFkbS5jb25mCm1kYWRtIC0tZGV0
+YWlsIC0tc2NhbiAtLXZlcmJvc2UgPiAvZXRjL21kYWRtL21kYWRtLmNvbmYKCiMgc3RlcCA2
+OiB3YXRjaCBob3cgdGhlIHJlY29uc3RydWN0aW9uIG9mIHRoZSBhcnJheSdzCndhdGNoIGNh
+dCAvcHJvYy9tZHN0YXQKCiMgc3RlcCA3OiBjaGFuZ2UgZnN0YWIKY2F0ID4gL2V0Yy9mc3Rh
+YiA8PCAiRU9GIgpVVUlEPTEwYTExZTQ0LWE5NTgtNGQxNC1hZTU2LWFkZjlhZjdjNWMyOCAv
+ICAgICAgICAgICAgICAgcmVpc2VyZnMgbm90YWlsICAgICAgIDAgICAgICAgMQpVVUlEPTg5
+MTYyNDI3LTMwOTItNDhhZi05M2YwLTkxMjNhNGUwMzFlYSBub25lICAgICAgICAgICAgc3dh
+cCAgICBzdyAgICAgICAwICAgICAgIDAKL2Rldi9tZDAgICAgIC9tZWRpYS9kaXNrIGV4dDMg
+ICAgICAgZGVmYXVsdHMgICAgICAgICAgICAwICAgICAgIDEKL2Rldi9tZDEgICAgIG5vbmUg
+ICAgICAgIHN3YXAgICAgICAgc3cgICAgICAgICAgICAgICAgICAwICAgICAgIDAKcHJvYyAg
+ICAgICAgIC9wcm9jICAgICAgIHByb2MgICAgICAgZGVmYXVsdHMgICAgICAgICAgICAwICAg
+ICAgIDAKRU9GCgojIHN0ZXAgODogY3JlYXRlIG1vdW50IGRpcmVjdG9yeSBhbmQgbW91bnQg
+ZGlza3MKbWtkaXIgL21lZGlhL2Rpc2sKbW91bnQgLWEKdG91Y2ggL21lZGlhL2Rpc2svdGVz
+dC50eHQKbHMgLWhhbCAvbWVkaWEvZGlzawoKIyBzdGVwIDg6IHJlYm9vdCB0aGUgc3lzdGVt
+IGFuZCBjaGVjayByYWlkIGRpc2sgYXJlIG1vdW50ZWQKc2h1dGRvd24gLXIgbm93CmxzIC1o
+YWwgL21lZGlhL2Rpc2sKCiMgc3RlcCA5OiBjaGFuZ2UgdG8gcnVubGV2ZWwgMSB0byBwcmVw
+YXJlIGZvciBjb3B5aW5nCmluaXQgMQoKIyBzdGVwIDk6IGNvcHkgcm9vdCBkaXJlY3RvcnkK
+cnN5bmMgLWFxeFAgLyAvbWVkaWEvZGlzawojIGNwIC1heCAvIC9tbnQvbmV3cm9vdAoKIyBz
+dGVwIDEwOiBzZXR1cCBib290IGZsYWdzIG9uIGRpc2sKcGFydGVkIC9kZXYvc2RjCnRvZ2ds
+ZSAxIGJvb3QKcHJpbnQKcXVpdAoKIyBzdGVwIDExOiBjaGFuZ2UgZnN0YWIKY2F0ID4gL2V0
+Yy9mc3RhYiA8PCAiRU9GIgovZGV2L21kMCAgICAgLyAgICAgICAgICAgZXh0MyAgICAgICBk
+ZWZhdWx0cyAgICAgICAgICAgIDAgICAgICAgMQovZGV2L21kMSAgICAgbm9uZSAgICAgICAg
+c3dhcCAgICAgICBzdyAgICAgICAgICAgICAgICAgIDAgICAgICAgMApwcm9jICAgICAgICAg
+L3Byb2MgICAgICAgcHJvYyAgICAgICBkZWZhdWx0cyAgICAgICAgICAgIDAgICAgICAgMApF
+T0YKCiMgc3RlcCAxMjogcmVib290IHRoZSBzeXN0ZW0Kc2h1dGRvd24gLXIgbm93CgotLSAt
+LSAtLSAtLQoKIyBub3RlczoKdHVuZTJmcyAtagpzZmRpc2sgLWQgL2Rldi9zZGIgPiBwYXJ0
+aXRpb25zLnNkYgpzZmRpc2sgL2Rldi9zZGIgPCBwYXJ0aXRpb25zLnNkYgoKbWRhZG0gLVMg
+L2Rldi9tZDAKbWRhZG0gLVMgL2Rldi9tZDEKbWRhZG0gLVMgL2Rldi9tZDIKCm1kYWRtIC9k
+ZXYvbWQwIC0tZmFpbCAvZGV2L3NkYTEgLS1yZW1vdmUgL2Rldi9zZGExCm1kYWRtIC9kZXYv
+bWQxIC0tZmFpbCAvZGV2L3NkYTIgLS1yZW1vdmUgL2Rldi9zZGEyCm1kYWRtIC9kZXYvbWQy
+IC0tZmFpbCAvZGV2L3NkYTMgLS1yZW1vdmUgL2Rldi9zZGEzCgptZGFkbSAvZGV2L21kMCAt
+LWZhaWwgL2Rldi9zZGIxIC0tcmVtb3ZlIC9kZXYvc2RiMQptZGFkbSAvZGV2L21kMSAtLWZh
+aWwgL2Rldi9zZGIyIC0tcmVtb3ZlIC9kZXYvc2RiMgptZGFkbSAvZGV2L21kMiAtLWZhaWwg
+L2Rldi9zZGIzIC0tcmVtb3ZlIC9kZXYvc2RiMwo=
+--------------010702030702090908060301
+Content-Type: text/plain;
+ name="debug-mdadm.txt"
+Content-Transfer-Encoding: base64
+Content-Disposition: inline;
+ filename="debug-mdadm.txt"
 
-Seems like a very odd problem since both arrays share some of the same 
-disks: sdd/sdf
-
-Have you tried isolating/putting the other two 'non-shared' disks of the 
-second raid on a different controller?  Changing SATA cables/etc?
-
-Justin.
+dG91Y2ggL3Rlc3RmaWxlLWEudHh0CgpscyAtaGFsIC90ZXN0ZmlsZS1hLnR4dAotcnctLS0t
+LS0tIDEgcm9vdCByb290IDAgMjAwOC0wNi0xNSAxMToxMCAvdGVzdGZpbGUtYS50eHQKCm1v
+dW50IC9kZXYvc2RhMSAvbWVkaWEvc2RhMS8KbW91bnQ6IHVua25vd24gZmlsZXN5c3RlbSB0
+eXBlICdsaW51eF9yYWlkX21lbWJlcicKCm1vdW50IC9kZXYvc2RiMSAvbWVkaWEvc2RiMS8K
+bW91bnQ6IHVua25vd24gZmlsZXN5c3RlbSB0eXBlICdsaW51eF9yYWlkX21lbWJlcicKCm1v
+dW50IC9kZXYvc2RjMSAvbWVkaWEvc2RjMS8KCmxzIC1oYWwgL21lZGlhL3NkYzEvdGVzdGZp
+bGUtYS50eHQKLXJ3LS0tLS0tLSAxIHJvb3Qgcm9vdCAwIDIwMDgtMDYtMTUgMTE6MTAgL21l
+ZGlhL3NkYzEvdGVzdGZpbGUtYS50eHQKCi0tIC0tIC0tIC0tIC0tCgpkZiAtaGFsCkZpbGVz
+eXN0ZW0gICAgICAgICAgICBTaXplICBVc2VkIEF2YWlsIFVzZSUgTW91bnRlZCBvbgovZGV2
+L21kMCAgICAgICAgICAgICAgMjk2RyAgMjg0RyAgIDEyRyAgOTclIC8KL2Rldi9zZGMxICAg
+ICAgICAgICAgIDI5NkcgIDI4NEcgICAxMkcgIDk3JSAvbWVkaWEvc2RjMQoKZGYgLWhhbFQK
+RmlsZXN5c3RlbSAgICBUeXBlICAgIFNpemUgIFVzZWQgQXZhaWwgVXNlJSBNb3VudGVkIG9u
+Ci9kZXYvbWQwICAgICAgZXh0MyAgICAyOTZHICAyODRHICAgMTJHICA5NyUgLwovZGV2L3Nk
+YzEgcmVpc2VyZnMgICAgMjk2RyAgMjg0RyAgIDEyRyAgOTclIC9tZWRpYS9zZGMxCgoKLS0g
+LS0gLS0gLS0gLS0KCmNhdCAvcHJvYy9tZHN0YXQKUGVyc29uYWxpdGllcyA6IFtsaW5lYXJd
+IFttdWx0aXBhdGhdIFtyYWlkMF0gW3JhaWQxXSBbcmFpZDZdIFtyYWlkNV0gW3JhaWQ0XSBb
+cmFpZDEwXQptZDAgOiBhY3RpdmUgcmFpZDEgc2RhMVswXSBzZGIxWzFdCiAgICAgIDczMTQ0
+NzM2MCBibG9ja3MgWzIvMl0gW1VVXQoKbWQxIDogYWN0aXZlIHJhaWQxIHNkYTJbMF0gc2Ri
+MlsxXQogICAgICAxMTI0NDgwIGJsb2NrcyBbMi8yXSBbVVVdCgp1bnVzZWQgZGV2aWNlczog
+PG5vbmU+CgotLSAtLSAtLSAtLSAtLQoKY2F0IC9ldGMvZnN0YWIKL2Rldi9tZDAgICAgIC8g
+ICAgICAgICAgIGV4dDMgICAgICAgZGVmYXVsdHMgICAgICAgICAgICAwICAgICAgIDEKL2Rl
+di9tZDEgICAgIG5vbmUgICAgICAgIHN3YXAgICAgICAgc3cgICAgICAgICAgICAgICAgICAw
+ICAgICAgIDAKcHJvYyAgICAgICAgIC9wcm9jICAgICAgIHByb2MgICAgICAgZGVmYXVsdHMg
+ICAgICAgICAgICAwICAgICAgIDAKCi0tIC0tIC0tIC0tIC0tCgpjYXQgL2V0Yy9tZGFkbS9t
+ZGFkbS5jb25mCkFSUkFZIC9kZXYvbWQxIGxldmVsPXJhaWQxIG51bS1kZXZpY2VzPTIgVVVJ
+RD1hOGRmODg0ZTo3MDNjZjNiYzoxMDliMmY3ODoyZDM2MWU2MgogICBkZXZpY2VzPS9kZXYv
+c2RhMiwvZGV2L3NkYjIKQVJSQVkgL2Rldi9tZDAgbGV2ZWw9cmFpZDEgbnVtLWRldmljZXM9
+MiBVVUlEPWRhNWUwMjdhOjUwNmQzNTg3OjEwOWIyZjc4OjJkMzYxZTYyCiAgIGRldmljZXM9
+L2Rldi9zZGExLC9kZXYvc2RiMQoKLS0gLS0gLS0gLS0gLS0KCmZkaXNrIC1sCgpEaXNrIC9k
+ZXYvc2RhOiA3NTAuMSBHQiwgNzUwMTU2Mzc0MDE2IGJ5dGVzCjI1NSBoZWFkcywgNjMgc2Vj
+dG9ycy90cmFjaywgOTEyMDEgY3lsaW5kZXJzClVuaXRzID0gY3lsaW5kZXJzIG9mIDE2MDY1
+ICogNTEyID0gODIyNTI4MCBieXRlcwpEaXNrIGlkZW50aWZpZXI6IDB4MDAwMTAzMjkKCiAg
+IERldmljZSBCb290ICAgICAgU3RhcnQgICAgICAgICBFbmQgICAgICBCbG9ja3MgICBJZCAg
+U3lzdGVtCi9kZXYvc2RhMSAgICogICAgICAgICAgIDEgICAgICAgOTEwNjEgICA3MzE0NDc0
+NTEgICA4MyAgTGludXgKL2Rldi9zZGEyICAgICAgICAgICA5MTA2MiAgICAgICA5MTIwMSAg
+ICAgMTEyNDU1MCAgIDgzICBMaW51eAoKRGlzayAvZGV2L3NkYjogNzUwLjEgR0IsIDc1MDE1
+NjM3NDAxNiBieXRlcwoyNTUgaGVhZHMsIDYzIHNlY3RvcnMvdHJhY2ssIDkxMjAxIGN5bGlu
+ZGVycwpVbml0cyA9IGN5bGluZGVycyBvZiAxNjA2NSAqIDUxMiA9IDgyMjUyODAgYnl0ZXMK
+RGlzayBpZGVudGlmaWVyOiAweDAwMDEwMzI5CgogICBEZXZpY2UgQm9vdCAgICAgIFN0YXJ0
+ICAgICAgICAgRW5kICAgICAgQmxvY2tzICAgSWQgIFN5c3RlbQovZGV2L3NkYjEgICAqICAg
+ICAgICAgICAxICAgICAgIDkxMDYxICAgNzMxNDQ3NDUxICAgODMgIExpbnV4Ci9kZXYvc2Ri
+MiAgICAgICAgICAgOTEwNjIgICAgICAgOTEyMDEgICAgIDExMjQ1NTAgICA4MyAgTGludXgK
+CkRpc2sgL2Rldi9tZDE6IDExNTEgTUIsIDExNTE0Njc1MjAgYnl0ZXMKMiBoZWFkcywgNCBz
+ZWN0b3JzL3RyYWNrLCAyODExMjAgY3lsaW5kZXJzClVuaXRzID0gY3lsaW5kZXJzIG9mIDgg
+KiA1MTIgPSA0MDk2IGJ5dGVzCkRpc2sgaWRlbnRpZmllcjogMHhlOGViNWQ4OAoKRGlzayAv
+ZGV2L21kMSBkb2Vzbid0IGNvbnRhaW4gYSB2YWxpZCBwYXJ0aXRpb24gdGFibGUKCkRpc2sg
+L2Rldi9tZDA6IDc0OS4wIEdCLCA3NDkwMDIwOTY2NDAgYnl0ZXMKMiBoZWFkcywgNCBzZWN0
+b3JzL3RyYWNrLCAxODI4NjE4NDAgY3lsaW5kZXJzClVuaXRzID0gY3lsaW5kZXJzIG9mIDgg
+KiA1MTIgPSA0MDk2IGJ5dGVzCkRpc2sgaWRlbnRpZmllcjogMHgwMDAwMDAwMAoKRGlzayAv
+ZGV2L21kMCBkb2Vzbid0IGNvbnRhaW4gYSB2YWxpZCBwYXJ0aXRpb24gdGFibGUKCkRpc2sg
+L2Rldi9zZGM6IDMyMC4wIEdCLCAzMjAwNzI5MzMzNzYgYnl0ZXMKMjU1IGhlYWRzLCA2MyBz
+ZWN0b3JzL3RyYWNrLCAzODkxMyBjeWxpbmRlcnMKVW5pdHMgPSBjeWxpbmRlcnMgb2YgMTYw
+NjUgKiA1MTIgPSA4MjI1MjgwIGJ5dGVzCkRpc2sgaWRlbnRpZmllcjogMHgwMDA0ZTNmMgoK
+ICAgRGV2aWNlIEJvb3QgICAgICBTdGFydCAgICAgICAgIEVuZCAgICAgIEJsb2NrcyAgIElk
+ICBTeXN0ZW0KL2Rldi9zZGMxICAgICAgICAgICAgICAgMSAgICAgICAzODU2MiAgIDMwOTc0
+OTIzMysgIDgzICBMaW51eAovZGV2L3NkYzIgICAgICAgICAgIDM4NTYzICAgICAgIDM4OTEz
+ICAgICAyODE5NDA3KyAgODIgIExpbnV4IHN3YXAgLyBTb2xhcmlzCgotLSAtLSAtLSAtLSAt
+LQo=
+--------------010702030702090908060301--
