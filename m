@@ -1,57 +1,31 @@
-From: Jesse Molina <jmolina@tgen.org>
-Subject: Re: Failed RAID5 array grow after reboot interruption; mdadm:
- Failed to restore critical section for reshape, sorry.
-Date: Mon, 16 Jun 2008 09:48:26 -0700
-Message-ID: <C47BE76A.9030%jmolina@tgen.org>
-References: <49481.61.88.57.1.1213610425.squirrel@home.kendrummond.com>
+From: "michael@kmaclub.com" <michael@kmaclub.com>
+Subject: Confused about UUID mounting and mirrors
+Date: Mon, 16 Jun 2008 10:54:14 -0700
+Message-ID: <4856A8C6.3030609@kmaclub.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <49481.61.88.57.1.1213610425.squirrel@home.kendrummond.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Ken Drummond <ken.drummond@kendrummond.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hello,
 
-Thanks.  I'll give the updated mdadm binary a try.  It certainly looks
-plausible that this was a recently fixed mdadm bug.
+I am making the transition from hardware raid to software raid and 
+things have gone pretty well.
 
-For the record, I think you typoed this below.  You meant to say v2.6.4,
-rather than v2.4.4.  My current version was v2.6.3.  The current mdadm
-version appears to be v2.6.4, and Debian currently has a -2 release.
+I am trying to mount everything by UUID to account for devices moving 
+around, etc.
 
-My system is Debian unstable, just as FYI.  It's been since January 2008
-since v2.6.4-1 was released, so I guess I've not updated this package since
-then.
+I have moved all mounts in /etc/fstab to uuid except /boot which is a 
+mirror sitting on /dev/md0.
 
-Here is the changelog for mdadm;
+Since it is a mirror, blkid returns the same uuid for /dev/md0, 
+/dev/sda1, and /dev/sdb1.
 
-http://www.cse.unsw.edu.au/~neilb/source/mdadm/ChangeLog
+This confuses mount at boot time.
 
-Specifically;
+How to I get it to correctly find md0 and not the components of the mirror?
 
-"Fix restarting of a 'reshape' if it was stopped in the middle."
-
-That sounds like my problem.
-
-I will try this here in an hour or two and see what happens...
-
-
-
-On 6/16/08 3:00 AM, "Ken Drummond" <ken.drummond@kendrummond.com> wrote:
-
-> There was an announcement on this
-> list for v2.4.4 which included fixes to restarting an interrupted grow.
-
--- 
-# Jesse Molina
-# The Translational Genomics Research Institute
-# http://www.tgen.org
-# Mail = jmolina@tgen.org
-# Desk = 1.602.343.8459
-# Cell = 1.602.323.7608
-
-
+Michael
