@@ -1,31 +1,36 @@
-From: "michael@kmaclub.com" <michael@kmaclub.com>
-Subject: Confused about UUID mounting and mirrors
-Date: Mon, 16 Jun 2008 10:54:14 -0700
-Message-ID: <4856A8C6.3030609@kmaclub.com>
+From: Richard Scobie <richard@sauce.co.nz>
+Subject: Re: Failed RAID5 array grow after reboot interruption; mdadm:  Failed
+ to restore critical section for reshape, sorry.
+Date: Tue, 17 Jun 2008 07:34:46 +1200
+Message-ID: <4856C056.1000302@sauce.co.nz>
+References: <C47BE76A.9030%jmolina@tgen.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <C47BE76A.9030%jmolina@tgen.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Jesse Molina <jmolina@tgen.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello,
+Jesse Molina wrote:
+> Thanks.  I'll give the updated mdadm binary a try.  It certainly looks
+> plausible that this was a recently fixed mdadm bug.
+> 
+> For the record, I think you typoed this below.  You meant to say v2.6.4,
+> rather than v2.4.4.  My current version was v2.6.3.  The current mdadm
+> version appears to be v2.6.4, and Debian currently has a -2 release.
 
-I am making the transition from hardware raid to software raid and 
-things have gone pretty well.
+The latest version is 2.6.7
 
-I am trying to mount everything by UUID to account for devices moving 
-around, etc.
+http://mirror.linux.org.au/linux/utils/raid/mdadm/
 
-I have moved all mounts in /etc/fstab to uuid except /boot which is a 
-mirror sitting on /dev/md0.
+For some reason, Neil's http://www.cse.unsw.edu.au/~neilb/source/mdadm/ 
+repository is not up to date.
 
-Since it is a mirror, blkid returns the same uuid for /dev/md0, 
-/dev/sda1, and /dev/sdb1.
+Don't use 2.6.5 or 2.6.6 as they may cause segfaults.
 
-This confuses mount at boot time.
+Regards,
 
-How to I get it to correctly find md0 and not the components of the mirror?
-
-Michael
+Richard
