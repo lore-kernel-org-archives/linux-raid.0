@@ -1,16 +1,36 @@
 From: <jmolina@tgen.org>
-Subject: Failed RAID5 array grow after reboot interruption; mdadm: Failed to restore critical section for reshape, sorry.
-Date: Mon, 16 Jun 2008 01:23:59 -0700
-Message-ID: <3E998AD6CC01E746957550D4CD642A742303F8@TGEN-M2.ad.tgen.org>
+Subject: RE: Failed RAID5 array grow after reboot interruption; mdadm: Failed to restore critical section for reshape, sorry.
+Date: Mon, 16 Jun 2008 02:28:45 -0700
+Message-ID: <3E998AD6CC01E746957550D4CD642A742303F9@TGEN-M2.ad.tgen.org>
+References: <3E998AD6CC01E746957550D4CD642A742303F8@TGEN-M2.ad.tgen.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-class: urn:content-classes:message
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: jmolina@tgen.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+
+I should also add that when doing an --examine on each of the five devices, they show very similar output, the checksum is correct, and the state is clean.  Adding a --verbose to the --assemble command didn't show anything surprising, as all five members were found.
+
+This seems to either be a RAID metadata problem (why clean/correct?) or an mdadm assembly failure due to bug or non-implementation of corrective action given my particular failure?
+
+Finally, I did find this somewhat similar position here;
+
+http://www.mail-archive.com/linux-raid@vger.kernel.org/msg09020.html
+
+Other than the RAID6 issue, it looks very similar.  Is this the same issue?
+
+
+
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org on behalf of jmolina@tgen.org
+Sent: Mon 6/16/2008 1:23 AM
+To: linux-raid@vger.kernel.org
+Subject: Failed RAID5 array grow after reboot interruption; mdadm: Failed to restore critical section for reshape, sorry.
+ 
 
 Hello!
 
@@ -47,4 +67,9 @@ Doing an mdadmin --examine on the partitions shows that the Reshape Position was
 I was under the impression that a reboot would simply cause the reshape to continue once the system came back up, but apparently not.  Something has farked it up badly.
 
 Advice?  I'll give just about anything a try, but I'll have to start creating new partitions, arrays, and the whole bit tomorrow and restore the data.
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
