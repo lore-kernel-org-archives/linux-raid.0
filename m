@@ -1,36 +1,36 @@
-From: Richard Scobie <richard@sauce.co.nz>
-Subject: Re: Failed RAID5 array grow after reboot interruption; mdadm:  Failed
- to restore critical section for reshape, sorry.
-Date: Tue, 17 Jun 2008 07:34:46 +1200
-Message-ID: <4856C056.1000302@sauce.co.nz>
-References: <C47BE76A.9030%jmolina@tgen.org>
+From: Michal Soltys <soltys@ziu.info>
+Subject: Re: Confused about UUID mounting and mirrors
+Date: Mon, 16 Jun 2008 22:41:05 +0200
+Message-ID: <4856CFE1.1020105@ziu.info>
+References: <4856A8C6.3030609@kmaclub.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <C47BE76A.9030%jmolina@tgen.org>
+In-Reply-To: <4856A8C6.3030609@kmaclub.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jesse Molina <jmolina@tgen.org>
+To: "michael@kmaclub.com" <michael@kmaclub.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Jesse Molina wrote:
-> Thanks.  I'll give the updated mdadm binary a try.  It certainly looks
-> plausible that this was a recently fixed mdadm bug.
+michael@kmaclub.com wrote:
+> Hello,
 > 
-> For the record, I think you typoed this below.  You meant to say v2.6.4,
-> rather than v2.4.4.  My current version was v2.6.3.  The current mdadm
-> version appears to be v2.6.4, and Debian currently has a -2 release.
+> This confuses mount at boot time.
+> 
+> How to I get it to correctly find md0 and not the components of the mirror?
+> 
 
-The latest version is 2.6.7
+You mean you mount by /dev/disk/by-uuid/* ?
 
-http://mirror.linux.org.au/linux/utils/raid/mdadm/
+The 0.9x or 1.0 superblocks (the ones working nicely with grub and 
+raid1) are placed at the end of the device, thus existing filesystem can 
+be detected both from /dev/sd{a,b}1 and /dev/md0.
 
-For some reason, Neil's http://www.cse.unsw.edu.au/~neilb/source/mdadm/ 
-repository is not up to date.
+In such case, you will have to adjust udev rules, so sd{a,b}1 filesystem 
+uuid symlinks will not be created, or will be overwritten by the symlink 
+to /dev/md0.
 
-Don't use 2.6.5 or 2.6.6 as they may cause segfaults.
+You can achieve the latter with higher link_priority in OPTIONS, in your 
+udev rules.
 
-Regards,
-
-Richard
