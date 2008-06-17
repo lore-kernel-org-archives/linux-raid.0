@@ -1,63 +1,84 @@
-From: pg_lxra@lxra.for.sabi.co.UK (Peter Grandi)
+From: Michal Soltys <soltys@ziu.info>
 Subject: Re: Confused about UUID mounting and mirrors
-Date: Tue, 17 Jun 2008 20:17:50 +0100
-Message-ID: <18520.3550.368939.664352@tree.ty.sabi.co.uk>
-References: <4856A8C6.3030609@kmaclub.com>
-	<4856CFE1.1020105@ziu.info>
-	<4856DB4C.20905@kmaclub.com>
-	<4856DD5B.9050303@dgreaves.com>
-	<485721A5.3080101@kmaclub.com>
+Date: Tue, 17 Jun 2008 23:37:35 +0200
+Message-ID: <48582E9F.4000508@ziu.info>
+References: <4856A8C6.3030609@kmaclub.com> <4856CFE1.1020105@ziu.info> <4856DB4C.20905@kmaclub.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <485721A5.3080101@kmaclub.com>
+In-Reply-To: <4856DB4C.20905@kmaclub.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>
+To: "michael@kmaclub.com" <michael@kmaclub.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-[ ... absurd question about disambiguating storage entities with
-the same UUID but which are otherwise distinct ... ]
+michael@kmaclub.com wrote:
+> 
+> In /etc/fstab,  I have entries like this:
+> 
+> UUID=8e651838-38c1-4783-8bde-4174ec484d52 /     ext3    defaults  1 1
+> UUID=aaeca70c-f0fe-470c-b631-87248648d275 /export xfs defaults,nobarrier 
+> 1 2
+> UUID=6e22c5b0-2874-4826-a871-ed733f8da643 swap swap    defaults   0 0
+> UUID=323cd094-4cbe-4c3b-9096-366c05465e7c /export/services xfs defaults 1 2
+> 
+> 
+> Do you have an example?  I am not sure I follow.
+> 
 
-> Is anyone mounting a mirrored /boot using UUID's?
+Taken fragment from stock udev rules:
 
-I hope it is only you, because it is a complete absurdity: UUID
-stands for Universally Unique ID. If someone gives the same UUID
-(for example by mirroring) to two entities that are in fact not
-absolutely equivalent in every respect (including convenience)
-they are misusing UUIDs (but then how many people understand the
-difference between "equal" and "identically the same", even
-among programmers: modality can be subtle).
+IMPORT{program}="vol_id --export $tempnode"
 
-In practice current storage entity naming schemes have not been
-designed to cover some common cases, and you have two options:
+OPTIONS="link_priority=100"
 
-* Use relative (storage path) names, and those will change, but
-  you can distinguish between mirror copies.
+ENV{ID_FS_USAGE}=="filesystem|other|crypto", ENV{ID_FS_UUID_ENC}=="?*",
+SYMLINK+="disk/by-uuid/$env{ID_FS_UUID_ENC}"
 
-* Use absolute (UUIDs, labels) names, and those won't change,
-  but you cannot distinguish between mirror copies.
+ENV{ID_FS_USAGE}=="filesystem|other", ENV{ID_FS_LABEL_ENC}=="?*",
+SYMLINK+="disk/by-label/$env{ID_FS_LABEL_ENC}"
 
-An approach that would be suitable for mirroring would be to use
-semi-relative naming: absolute naming for the containing storage
-entity (e.g. disk) and relative naming for the contained one
-(e.g.  partition or filesystem), assuming that the latter are
-static and not subject to change.
+- vol_id will export filesystem metadata, which udev will import and
+make available for further rules in current uevent
 
-Then you can mirror the contained storage entities and
-ambiguities do not arise because the container UUID is
-unambiguous and the relative path from it is static.  For
-example something like '/dev/${VOLID}_p0' where the '${VOLID}'
-part can be a UUID or a storage media label or "something".
+- link_priority will prioritize uuid and label symlinks to the
+filesystem found on md0, over existing or to-be-made symlinks
+to mirror components. (actully - vol_id called for components will 
+detect they are part of raid and return md's uuid along with USAGE=raid 
+- so the link won't be even created in persistant storage rules).
 
-The problem is that none of the commonly available software uses
-this kind of naming scheme, even if to some extend it would not
-be too hard to introduce the basic outline.
+- the rest will create appropriate symlinks
 
-I use something like that *manually* where I use the "disk
-signature" (4 bytes) of a PC-DOS MBR to uniquely identify
-physical volumes, and then I mirror-copy not the whole physical
-volume (which would duplicate the disk signature), but each
-partition defined by the MBR. I don't use 'udev' (I think it is
-awful and then I dislike the ugly, petty politics surrounding
-its inception).
+That's the general idea. Of coruse it's only a fragment. Check
+60-persistent-storage.rules and 64-md-raid.rules from udev sources, to
+see how things get done there.
+
+E.g. in one fstab of mine (not uuids, the same idea though), there're:
+
+/dev/disk/by-id/scsi-SATA_Maxtor_6Y120P0_Y32JMMQE-part1         /boot
+ext2    defaults 0 0
+/dev/disk/by-id/scsi-SATA_Maxtor_6Y120P0_Y32JMMQE-part2         swap
+swap    defaults 0 0
+
+> So what happens if someone sticks in a USB key and boots the machine. 
+> The key bcomes sda, and each following drive shifts.  Is UDEV in this 
+> case going to know to account for this?  The goal is to be able to 
+> always find the filesystem regardless of what the disk name might be.
+> 
+
+That depends on the udev rules. With typical ones - your names would
+shift, but symlinks created from /dev/disk/by-* directories would be proper.
+
+You can even set sd{a,b,c,...} or any other names you want persistently
+there, basing on the device's label, uuid or other traits - similary to
+how network devices can be named persistently based on e.g. their mac
+address. Still - with symlinks - there isn't much reason to.
+
+When mdadm assembles your /dev/md0 - it usually looks for md's uuid
+along other things (check your mdadm.conf) - so leaving /dev/md0 in
+fstab should be perfectly fine. You can even name it /dev/grubboot - it
+doesn't have to be md0.
+
+
+
