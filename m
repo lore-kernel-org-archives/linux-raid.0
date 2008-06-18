@@ -1,33 +1,32 @@
 From: Chris Webb <chris@arachsys.com>
-Subject: [PATCH] Segfault with --assemble --force
-Date: Wed, 18 Jun 2008 20:35:54 +0100
-Message-ID: <20080618193554.GA30682@arachsys.com>
+Subject: Re: Trouble increasing md component size
+Date: Wed, 18 Jun 2008 21:00:36 +0100
+Message-ID: <20080618200036.GB30682@arachsys.com>
+References: <20080618182622.GA29468@arachsys.com> <4859605D.90509@rabbit.us>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
+In-Reply-To: <4859605D.90509@rabbit.us>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Peter Rabbitson <rabbit+list@rabbit.us>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-mdadm --assemble --force repeatedly segfaults when run on a raid6 array with
-more than two components marked as failed, so at least one needs its event
-count forcibly updated. sb->events is accessed with sb NULL in update_super1,
-called from Assemble (line 667 of Assemble.c). I think the following patch is
-correct:
+Peter Rabbitson <rabbit+list@rabbit.us> writes:
 
-diff -uNrp mdadm-2.6.7.orig/Assemble.c mdadm-2.6.7/Assemble.c
---- mdadm-2.6.7.orig/Assemble.c	2008-06-18 20:23:36.000000000 +0100
-+++ mdadm-2.6.7/Assemble.c	2008-06-18 20:23:47.000000000 +0100
-@@ -656,7 +656,7 @@ int Assemble(struct supertype *st, char 
- 			continue;
- 		}
- 		tst = dup_super(st);
--		if (tst->ss->load_super(st,fd, NULL)) {
-+		if (tst->ss->load_super(tst, fd, NULL)) {
- 			close(fd);
- 			fprintf(stderr, Name ": RAID superblock disappeared from %s - not updating.\n",
- 				devices[chosen_drive].devname);
+> I had exactly the same problem some months ago. The key is in the
+> (obscure) assembly option --update=devicesize. Find it in the mdadm
+> manpage and the whole picture will come together instantly. The wisdom is
+> not very widespread as this affects only V1.1 and 1.2 superblocks.
+
+Thanks, that's great. I've been using a man page slightly older (2.5.6) than
+the mdadm binary I'm using (2.6.7), which doesn't mention update=devicesize,
+although I'd probably have missed it anyway!
+
+However, is there a way to do this without stopping the array first? I'm
+using it as an LVM PV and slicing it up into logical volumes which clients
+will be running off while I'm wanting to grow it.
 
 Cheers,
 
