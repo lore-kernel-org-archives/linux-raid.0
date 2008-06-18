@@ -1,38 +1,84 @@
-From: "michael@kmaclub.com" <michael@kmaclub.com>
-Subject: Re: Confused about UUID mounting and mirrors
-Date: Wed, 18 Jun 2008 07:42:05 -0700
-Message-ID: <48591EBD.4020308@kmaclub.com>
-References: <4856A8C6.3030609@kmaclub.com> <4856CFE1.1020105@ziu.info> <4856DB4C.20905@kmaclub.com> <4856DD5B.9050303@dgreaves.com> <485721A5.3080101@kmaclub.com> <48576394.8090609@msgid.tls.msk.ru> <4857C7FC.9000000@kmaclub.com> <485914E7.1000800@msgid.tls.msk.ru>
+From: Chris Webb <chris@arachsys.com>
+Subject: Trouble increasing md component size
+Date: Wed, 18 Jun 2008 19:26:22 +0100
+Message-ID: <20080618182622.GA29468@arachsys.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <485914E7.1000800@msgid.tls.msk.ru>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Michael Tokarev <mjt@tls.msk.ru>
-Cc: David Greaves <david@dgreaves.com>, Michal Soltys <soltys@ziu.info>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Michael Tokarev wrote:
-> michael@kmaclub.com wrote:
-> []
->> Using the filesystem ID doesn't work either because /dev/sda, 
->> /dev/sdb, and /dev/md0 all have the same UUID since it is a mirror.  
->> How do you tell the system to mount /dev/md0 and not the individual 
->> drives which is what it is trying to do now.
-> 
-> The tools/library that looks up filesystem UUIDs/labels are smarter than
-> that.  Or are supposed to be smarter.  That it - the tools are able to
-> recognize and skip components of a raid array, since raid superblock is
-> present on the device - which is not present on the array itself.
+Hi. I'm having some trouble increasing the component size of arrays to match
+changes in the underlying block devices. I'm running mdadm 2.6.7 against a
+stock 2.6.24.4 kernel.
 
+I'm seeing the problem in a cluster management application I'm writing, but I
+can reproduce it simply using two LV block devices, 150M each:
 
-Ok.  Thanks,
+  2# blockdev --getsz /dev/disk.4/{one,two}
+  311296
+  311296
 
-I will play with this more tonight and see I did something wrong the 
-first time I tried it.
+I build an array that only fills two thirds of the component disks:
 
-Thanks for all the suggestions.
+  2# mdadm --create /dev/md4 --level=1 --raid-disks=2 --size 102400 \
+           --metadata=1.2 /dev/disk.4/{one,two}
+  mdadm: largest drive (/dev/disk.4/one) exceed size (102400K) by more than 1%
+  Continue creating array? y
+  mdadm: array /dev/md4 started.
+  2# blockdev --getsz /dev/md4
+  204800
 
-Michael
+When the array is fully synced and up [UU], I try to grow the array to use
+more of the component disks:
 
+  2# mdadm --grow /dev/md4 --size max
+  2# blockdev --getsz /dev/md4
+  311272
+
+and so this has worked fine.
+
+However, if I increase the size of the underlying block devices:
+
+  2# lvm lvresize -L 200M /dev/disk.4/one
+    Extending logical volume one to 200.00 MB
+    Logical volume one successfully resized
+  2# lvm lvresize -L 200M /dev/disk.4/two
+    Extending logical volume two to 200.00 MB
+    Logical volume two successfully resized
+  2# blockdev --getsz /dev/disk.4/{one,two}
+  409600
+  409600
+
+and then try to grow the array:
+
+  2# mdadm --grow /dev/md4 --size max
+  2# blockdev --getsz /dev/md4
+  311272
+  2# mdadm --grow /dev/md4 --size 155637 just 1kB more
+  mdadm: Cannot set device size for /dev/md4: No space left on device
+
+it fails. Somehow, the change in the underlying component device sizes doesn't
+seem to be noticed even though the kernel's idea (as returned by blockdev/ioctl
+BLKGETSIZE[64]) has correctly changed. I can even remove and re-add both drives
+in turn without it noticing the size change and allowing me to grow the array.
+
+Trying to do something like
+
+  echo 155637 > /sys/block/md4/md/component_size
+
+doesn't work either. It'll accept values up as far as the size of the block
+device when the array was created, but no larger.
+
+The only recipe I've found which works is, for each drive in turn, to fail it,
+remove it, zero the superblock and then re-add it. This seems to mean the md
+driver sees is as a new component (e.g. different desc_nr in /proc/mdstat) and
+therefore re-reads its size? This isn't at all friendly to the raid array,
+though. While each device is out, any redundancy has gone. Is there some less
+drastic way to persuade the array to grow?
+
+Cheers,
+
+Chris.
