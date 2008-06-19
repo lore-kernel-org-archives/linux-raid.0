@@ -1,55 +1,44 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: resync=PENDING, interrupted RAID5 grow will not automatically
- reconstruct
-Date: Thu, 19 Jun 2008 14:06:16 +1000
-Message-ID: <18521.56120.815779.403788@notabene.brown>
-References: <3E998AD6CC01E746957550D4CD642A742303FF@TGEN-M2.ad.tgen.org>
-	<C47DA531.9128%jmolina@tgen.org>
+Subject: Re: Failed RAID5 array grow after reboot interruption; mdadm: Failed to restore critical section for reshape, sorry.
+Date: Thu, 19 Jun 2008 14:25:34 +1000
+Message-ID: <18521.57278.92951.935685@notabene.brown>
+References: <3E998AD6CC01E746957550D4CD642A742303F8@TGEN-M2.ad.tgen.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Jesse Molina on Tuesday June 17
+In-Reply-To: message from jmolina@tgen.org on Monday June 16
 Sender: linux-raid-owner@vger.kernel.org
-To: Jesse Molina <jmolina@tgen.org>
+To: jmolina@tgen.org
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday June 17, jmolina@tgen.org wrote:
->=20
-> I think I figured this out.
->=20
-> man md
->=20
-> Read the section regarding the sync_action file.
->=20
-> do as root; =B3echo idle > /sys/block/md2/md/sync_action=B2
->=20
->=20
->=20
-> After issuing the idle command, my array says;
->=20
-> user@host# cat /proc/mdstat
-> Personalities : [raid1] [raid6] [raid5] [raid4]
->     =20
-> md2 : active raid5 sdd5[0] sdg5[4] sdh5[3] sdf5[2] sde5[1]
->       325283840 blocks super 0.91 level 5, 64k chunk, algorithm 2 [5/=
-5]
-> [UUUUU]
->       [=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D>...]  resh=
-ape =3D 85.3% (138827968/162641920)
-> finish=3D279.7min speed=3D1416K/sec
+On Monday June 16, jmolina@tgen.org wrote:
+> 
+> During the grow process, this system slowly went unresponsive, and I
+> was forced to reboot it after about 30 hours.  At first I was not
+> able to run any mdadm commands to see the status of the grow (about
+> 30 minutes after starting), then I was not able to log in with a new
+> shell, then after about 24 hours I was able to use a previously
+> opened shell to see that tons of CRON jobs and other work had backed
+> up, however during all of this time the system was still acting as
+> an IP router doing NAT.  Finally, after about 30 hours, the dhcpd
+> daemon stopped giving out leases and then finally traffic stopped
+> and I could not ping the host any longer (not a lease problem). 
 
-Well done :-)
+This is a bit of a worry.  It sounds like the system was running out
+of memory.  It would seem to suggest that either the reshape process
+was leaking memory, or that it was blocking writeout somehow so that
+other memory wasn't getting freed.
+However I cannot measure it doing either of these things.
 
-Yes, you've found the bug that was fixed by commit
-   25156198235325805cd7295ed694509fd6e3a29e
-which is in 2.6.25.
-I'm glad you found the workaround.
+If you can reproduce this, I'd love to see the content of
+   /proc/meminfo
+   /proc/slabinfo
+   /proc/slab_allocators
+
+at 5 minutes intervals.   But I don't expect you'll want to try that
+experiment :-)
+
 
 NeilBrown
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
