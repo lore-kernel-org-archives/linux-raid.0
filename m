@@ -1,44 +1,35 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: Failed RAID5 array grow after reboot interruption; mdadm: Failed to restore critical section for reshape, sorry.
-Date: Thu, 19 Jun 2008 14:25:34 +1000
-Message-ID: <18521.57278.92951.935685@notabene.brown>
-References: <3E998AD6CC01E746957550D4CD642A742303F8@TGEN-M2.ad.tgen.org>
+Subject: Re: Rebuilding an array with a corrupt disk.
+Date: Thu, 19 Jun 2008 14:57:43 +1000
+Message-ID: <18521.59207.717842.199253@notabene.brown>
+References: <fa037c550806131922y475de7ew8c3a66aa06d081b1@mail.gmail.com>
+	<4853634C.90508@dgreaves.com>
+	<fa037c550806140354k7bcab83fs39738e165f3aba8d@mail.gmail.com>
+	<4853AFCF.5050209@dgreaves.com>
+	<fa037c550806150454v68089bcbg50203b454ae593e0@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from jmolina@tgen.org on Monday June 16
+In-Reply-To: message from Sean Hildebrand on Sunday June 15
 Sender: linux-raid-owner@vger.kernel.org
-To: jmolina@tgen.org
-Cc: linux-raid@vger.kernel.org
+To: Sean Hildebrand <silverwraithii@gmail.com>
+Cc: David Greaves <david@dgreaves.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Monday June 16, jmolina@tgen.org wrote:
+On Sunday June 15, silverwraithii@gmail.com wrote:
 > 
-> During the grow process, this system slowly went unresponsive, and I
-> was forced to reboot it after about 30 hours.  At first I was not
-> able to run any mdadm commands to see the status of the grow (about
-> 30 minutes after starting), then I was not able to log in with a new
-> shell, then after about 24 hours I was able to use a previously
-> opened shell to see that tons of CRON jobs and other work had backed
-> up, however during all of this time the system was still acting as
-> an IP router doing NAT.  Finally, after about 30 hours, the dhcpd
-> daemon stopped giving out leases and then finally traffic stopped
-> and I could not ping the host any longer (not a lease problem). 
+> Is there no way to get mdadm to allow a certain number of read errors
+> from a disk, instead of removing it from the array immediately?
+> Manually unmounting, stopping, and re-assembling is somewhat of a
+> chore, especially when the system locks access to the array while
+> copying, despite the read error.
 
-This is a bit of a worry.  It sounds like the system was running out
-of memory.  It would seem to suggest that either the reshape process
-was leaking memory, or that it was blocking writeout somehow so that
-other memory wasn't getting freed.
-However I cannot measure it doing either of these things.
+No, there isn't.
 
-If you can reproduce this, I'd love to see the content of
-   /proc/meminfo
-   /proc/slabinfo
-   /proc/slab_allocators
-
-at 5 minutes intervals.   But I don't expect you'll want to try that
-experiment :-)
-
+It might make sense to arrange that if the array is flagged as
+"read-only" (mdadm -r /dev/mdX), then rather than failing a drive, any
+read error is passed up to the filesystem.... I'll put it on my todo
+list (which isn't much of a promise).
 
 NeilBrown
