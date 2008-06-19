@@ -1,10 +1,8 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: Trouble increasing md component size
-Date: Thu, 19 Jun 2008 13:42:01 +1000
-Message-ID: <18521.54665.166875.489547@notabene.brown>
-References: <20080618182622.GA29468@arachsys.com>
-	<4859605D.90509@rabbit.us>
-	<20080618200036.GB30682@arachsys.com>
+Subject: Re: [PATCH] Segfault with --assemble --force
+Date: Thu, 19 Jun 2008 13:52:22 +1000
+Message-ID: <18521.55286.158619.223076@notabene.brown>
+References: <20080618193554.GA30682@arachsys.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
@@ -12,48 +10,32 @@ Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: message from Chris Webb on Wednesday June 18
 Sender: linux-raid-owner@vger.kernel.org
 To: Chris Webb <chris@arachsys.com>
-Cc: Peter Rabbitson <rabbit+list@rabbit.us>, linux-raid@vger.kernel.org
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 On Wednesday June 18, chris@arachsys.com wrote:
-> Peter Rabbitson <rabbit+list@rabbit.us> writes:
+> mdadm --assemble --force repeatedly segfaults when run on a raid6 array with
+> more than two components marked as failed, so at least one needs its event
+> count forcibly updated. sb->events is accessed with sb NULL in update_super1,
+> called from Assemble (line 667 of Assemble.c). I think the following patch is
+> correct:
 > 
-> > I had exactly the same problem some months ago. The key is in the
-> > (obscure) assembly option --update=devicesize. Find it in the mdadm
-> > manpage and the whole picture will come together instantly. The wisdom is
-> > not very widespread as this affects only V1.1 and 1.2 superblocks.
+> diff -uNrp mdadm-2.6.7.orig/Assemble.c mdadm-2.6.7/Assemble.c
+> --- mdadm-2.6.7.orig/Assemble.c	2008-06-18 20:23:36.000000000 +0100
+> +++ mdadm-2.6.7/Assemble.c	2008-06-18 20:23:47.000000000 +0100
+> @@ -656,7 +656,7 @@ int Assemble(struct supertype *st, char 
+>  			continue;
+>  		}
+>  		tst = dup_super(st);
+> -		if (tst->ss->load_super(st,fd, NULL)) {
+> +		if (tst->ss->load_super(tst, fd, NULL)) {
+>  			close(fd);
+>  			fprintf(stderr, Name ": RAID superblock disappeared from %s - not updating.\n",
+>  				devices[chosen_drive].devname);
 > 
-> Thanks, that's great. I've been using a man page slightly older (2.5.6) than
-> the mdadm binary I'm using (2.6.7), which doesn't mention update=devicesize,
-> although I'd probably have missed it anyway!
-> 
-> However, is there a way to do this without stopping the array first? I'm
-> using it as an LVM PV and slicing it up into logical volumes which clients
-> will be running off while I'm wanting to grow it.
 
-Not currently, no.
+Yes, definitely.
 
-It would require changing the 'size' as known by md of each device
-first.  i.e. /sys/block/mdX/md/dev-*/size.
-However this currently cannot be changed while the array is active.
-
-I cannot immediately see a good reason why not.  It may be as simple
-as removing
-
-	if (my_mddev->pers)
-		return -EBUSY;
-
-from the start of rdev_size_store, but I wouldn't recommend
-experimenting with that on a production system....
-
-Then you would need some code to update the device sizes to match
-their real size (but only if the metadata is at the start of the
-device .. or maybe relocating the metadata first ...)
-
-Then you could "--grow --size=max" happily.
-
-I'd put this on my todo list if it wasn't so long already :-)
-(Well, I've put it there anyway, but no promises).
+Thanks.
 
 NeilBrown
-
