@@ -1,43 +1,36 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: raid10: no raid0 support?
-Date: Thu, 19 Jun 2008 15:03:11 +1000
-Message-ID: <18521.59535.292223.722853@notabene.brown>
-References: <484D9712.7090804@hp.com>
+Subject: Re: Wierd critical node problem
+Date: Thu, 19 Jun 2008 15:07:35 +1000
+Message-ID: <18521.59799.628735.193839@notabene.brown>
+References: <200806100924.48763.wayne@flashmedia.co.za>
+	<200806101030.09019.wayne@flashmedia.co.za>
+	<42492.192.168.1.70.1213092370.squirrel@neil.brown.name>
+	<200806101235.00027.wayne@flashmedia.co.za>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Alan D. Brunelle on Monday June 9
+In-Reply-To: message from Wayne Gemmell on Tuesday June 10
 Sender: linux-raid-owner@vger.kernel.org
-To: "Alan D. Brunelle" <Alan.Brunelle@hp.com>
+To: wayne@flashmedia.co.za
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Monday June 9, Alan.Brunelle@hp.com wrote:
-> Is there some reason why the MD RAID10 module does /not/ support a
-> "RAID0-like" configuration (-p n1)? The comments in drivers/md/raid10.c
-> seem to suggest it should:  "* If [near_copies and far_copies] are 1, we
-> get raid0." Yet the code specifically checks for ((near_copies *
-> far_copies) > 1).
-
-You mean:
-	if ((nc*fc) <2 || (nc*fc) > mddev->raid_disks ||
-	    (mddev->layout >> 17)) {
-		printk(KERN_ERR "raid10: %s: unsupported raid10 layout: 0x%8x\n",
-		       mdname(mddev), mddev->layout);
-		goto out;
-	}
-
-Yes, I guess that could be "nc*fc < 1".  Everything else should still
-work.
-
-I cannot think of a good reason for making a raid10 with no redundancy though.
-
+On Tuesday June 10, wayne@flashmedia.co.za wrote:
+> >
+> > > I have found the following in my logs,
+> > > Jun  9 17:01:50 lloyd kernel: [   52.912904] mdadm[2656]: segfault at
+> > > 0000000000000004 rip 000000000041724c rsp 00007ffff99d9b30 error 4
+> >
+> > I suspect this is the real problem.
+> > Which version of mdadm (mdadm -V)?
+> mdadm - v2.6.2 - 21st May 2007
 > 
-> Just curious, as it seems interesting that one could support RAID0,
-> RAID1 /and/ RAID10 all w/ one RAID module.
 
-Interesting: yes.
-Useful:  not sure.
+I don't know of any segfault problems with this version.  It might be
+worth trying a newer release:  2.6.4 or 2.6.7.
+
+If you are still having problems, can you get the exact text of the
+error messages, they might show something useful.
 
 NeilBrown
