@@ -1,35 +1,43 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: Rebuilding an array with a corrupt disk.
-Date: Thu, 19 Jun 2008 14:57:43 +1000
-Message-ID: <18521.59207.717842.199253@notabene.brown>
-References: <fa037c550806131922y475de7ew8c3a66aa06d081b1@mail.gmail.com>
-	<4853634C.90508@dgreaves.com>
-	<fa037c550806140354k7bcab83fs39738e165f3aba8d@mail.gmail.com>
-	<4853AFCF.5050209@dgreaves.com>
-	<fa037c550806150454v68089bcbg50203b454ae593e0@mail.gmail.com>
+Subject: Re: raid10: no raid0 support?
+Date: Thu, 19 Jun 2008 15:03:11 +1000
+Message-ID: <18521.59535.292223.722853@notabene.brown>
+References: <484D9712.7090804@hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Sean Hildebrand on Sunday June 15
+In-Reply-To: message from Alan D. Brunelle on Monday June 9
 Sender: linux-raid-owner@vger.kernel.org
-To: Sean Hildebrand <silverwraithii@gmail.com>
-Cc: David Greaves <david@dgreaves.com>, linux-raid@vger.kernel.org
+To: "Alan D. Brunelle" <Alan.Brunelle@hp.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sunday June 15, silverwraithii@gmail.com wrote:
+On Monday June 9, Alan.Brunelle@hp.com wrote:
+> Is there some reason why the MD RAID10 module does /not/ support a
+> "RAID0-like" configuration (-p n1)? The comments in drivers/md/raid10.c
+> seem to suggest it should:  "* If [near_copies and far_copies] are 1, we
+> get raid0." Yet the code specifically checks for ((near_copies *
+> far_copies) > 1).
+
+You mean:
+	if ((nc*fc) <2 || (nc*fc) > mddev->raid_disks ||
+	    (mddev->layout >> 17)) {
+		printk(KERN_ERR "raid10: %s: unsupported raid10 layout: 0x%8x\n",
+		       mdname(mddev), mddev->layout);
+		goto out;
+	}
+
+Yes, I guess that could be "nc*fc < 1".  Everything else should still
+work.
+
+I cannot think of a good reason for making a raid10 with no redundancy though.
+
 > 
-> Is there no way to get mdadm to allow a certain number of read errors
-> from a disk, instead of removing it from the array immediately?
-> Manually unmounting, stopping, and re-assembling is somewhat of a
-> chore, especially when the system locks access to the array while
-> copying, despite the read error.
+> Just curious, as it seems interesting that one could support RAID0,
+> RAID1 /and/ RAID10 all w/ one RAID module.
 
-No, there isn't.
-
-It might make sense to arrange that if the array is flagged as
-"read-only" (mdadm -r /dev/mdX), then rather than failing a drive, any
-read error is passed up to the filesystem.... I'll put it on my todo
-list (which isn't much of a promise).
+Interesting: yes.
+Useful:  not sure.
 
 NeilBrown
