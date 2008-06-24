@@ -1,14 +1,26 @@
 From: Jin Suh <jinssuh@yahoo.com>
-Subject: md/Software RAID ATA/RAID (software RAID)
-Date: Tue, 24 Jun 2008 09:50:05 -0700 (PDT)
-Message-ID: <286325.29907.qm@web34404.mail.mud.yahoo.com>
+Subject: Re: md/Software RAID ATA/RAID (software RAID)
+Date: Tue, 24 Jun 2008 11:25:34 -0700 (PDT)
+Message-ID: <666979.12622.qm@web34402.mail.mud.yahoo.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: neilb@suse.de, Jin S Suh <jinssuh@yahoo.com>
+To: Jin Suh <jinssuh@yahoo.com>, linux-raid@vger.kernel.org
+Cc: neilb@suse.de
 List-Id: linux-raid.ids
+
+Sorry my mistake. The kernel I am using is 2.6.22.2.
+
+Jin
+
+
+----- Original Message ----
+From: Jin Suh <jinssuh@yahoo.com>
+To: linux-raid@vger.kernel.org
+Cc: neilb@suse.de; Jin S Suh <jinssuh@yahoo.com>
+Sent: Tuesday, June 24, 2008 12:50:05 PM
+Subject: md/Software RAID ATA/RAID (software RAID)
 
 Hello RAID community,
 
@@ -23,3 +35,4 @@ This is very odd. Does anyone notice this problem? Am I doing something wrong? H
 
 Thanks,
 Jin
+
