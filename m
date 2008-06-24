@@ -1,84 +1,108 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH 2/2] use bio_endio instead of a call to bi_end_io
-Date: Tue, 24 Jun 2008 16:10:01 +1000
-Message-ID: <18528.36793.994962.720572@notabene.brown>
-References: <Pine.LNX.4.64.0806240122340.24220@engineering.redhat.com>
+From: Ric Wheeler <ricwheeler@gmail.com>
+Subject: Re: End to end SMART to RAID repair
+Date: Tue, 24 Jun 2008 07:24:26 -0400
+Message-ID: <4860D96A.8040502@gmail.com>
+References: <1214199855.4296.8.camel@loss.redstem.com>	 <18528.10923.329740.465179@notabene.brown> <1214265944.31695.25.camel@loss.redstem.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Mikulas Patocka on Tuesday June 24
+In-Reply-To: <1214265944.31695.25.camel@loss.redstem.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mikulas Patocka <mpatocka@redhat.com>
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, axboe@kernel.dk, mingo@redhat.com
+To: Arthur Britto <ahbritto@iat.com>
+Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday June 24, mpatocka@redhat.com wrote:
-> Hi
-> 
-> The is sequel to my previous patch to avoid bio_endio recursion. raid5 
-> bypasses bio_endio and calls the method directly (although it does the 
-> same as bio_endio). I changed bio_endio to avoid recursion, so it should 
-> be used instead of calling the method.
-> 
-> Mikulas
-> 
+Arthur Britto wrote:
+> On Tue, 2008-06-24 at 08:58 +1000, Neil Brown wrote:
+>  =20
+>> On Sunday June 22, ahbritto@iat.com wrote:
+>>    =20
+>>> smartmontools (http://smartmontools.sourceforge.net/) can be config=
+ured
+>>> to passively scan hard drives for defects in the background.  The b=
+lock
+>>> numbers of pending unreadable sectors are logged via syslog.  These
+>>> sectors will be remapped when written too.
+>>>
+>>> It would be great if this worked end to end with linux software rai=
+d to
+>>> automatically repair the bad sector.
+>>>      =20
+>> Well, you can just get md to do a scan (echo check >
+>> /sys/block/mdXX/md/sync_action) and it will find any read errors and
+>> correct them.
+>>    =20
+>
+> True.  However, a SMART on disk check requires no main board
+> resources. =EF=BB=BFSome drives, when idle, may do background checkin=
+g anyway.
+> This would provide a way to correct the error without needing to scan
+> the whole volume and other components with an md check.  Error checki=
+ng
+> may be less intrusive (vs retries to the exclusion of other work) tha=
+n
+> normal for an attempted sector read.  At least manufactures have the
+> option to give priority to actual read requests over background defec=
+t
+> checking.
+>  =20
 
-Thanks.  I'll add that to my queue.
+This is almost always the case with disk arrays for example.
+>  =20
+>> Extracting numbers from syslog is a fairly messy thing to try to do.
+>> Maybe if smartmontools could report these in some other way -
+>> e.g. run a program giving device and block number, we could write a
+>> script that feeds that info to md.
+>> We would need to map the device+offset to partition+offset, then fin=
+d
+>> out if that is a member of an md array, then request a limited-range
+>> 'check', which I think is possible with current code...
+>>
+>> Do you know if smartmontools can provide this info in a more
+>> controlled way?
+>>    =20
+>
+> I was thinking, a non-smartmontools specific method would be best.  T=
+hat
+> is: (1) some way for the md driver to request notification about pend=
+ing
+> uncorrected read errors from a region of a block device and (2) some =
+way
+> for a trusted application to inform the kernel about pending uncorrec=
+ted
+> read errors (e.g. echo "start-stop > /sys/...").
+>
+> -Arthur
+>
+>  =20
 
-NeilBrown
+One thing that you can do that is much less invasive is to use the "rea=
+d=20
+verify" command to scan the platter of the disk at a fairly low rate.
 
-> --
-> 
-> Turn calls to bi->bi_end_io() into bio_endio(). Apparently bio_endio does
-> exactly the same error processing as is hardcoded at these places.
-> 
-> bio_endio() avoids recursion, so it should be used.
-> 
-> Signed-off-by: Mikulas Patocka <mpatocka@redhat.com>
-> 
-> Index: linux-2.6.26-rc7-devel/drivers/md/raid5.c
-> ===================================================================
-> --- linux-2.6.26-rc7-devel.orig/drivers/md/raid5.c	2008-06-24 07:28:15.000000000 +0200
-> +++ linux-2.6.26-rc7-devel/drivers/md/raid5.c	2008-06-24 07:28:53.000000000 +0200
-> @@ -115,9 +115,7 @@
->   		return_bi = bi->bi_next;
->   		bi->bi_next = NULL;
->   		bi->bi_size = 0;
-> -		bi->bi_end_io(bi,
-> -			      test_bit(BIO_UPTODATE, &bi->bi_flags)
-> -			        ? 0 : -EIO);
-> +		bio_endio(bi, 0);
->   		bi = return_bi;
->   	}
->   }
-> @@ -3689,9 +3687,7 @@
->   		if ( rw == WRITE )
->   			md_write_end(mddev);
-> 
-> -		bi->bi_end_io(bi,
-> -			      test_bit(BIO_UPTODATE, &bi->bi_flags)
-> -			        ? 0 : -EIO);
-> +		bio_endio(bi, 0);
->   	}
->   	return 0;
->   }
-> @@ -3994,12 +3990,8 @@
->   	spin_lock_irq(&conf->device_lock);
->   	remaining = --raid_bio->bi_phys_segments;
->   	spin_unlock_irq(&conf->device_lock);
-> -	if (remaining == 0) {
-> -
-> -		raid_bio->bi_end_io(raid_bio,
-> -			      test_bit(BIO_UPTODATE, &raid_bio->bi_flags)
-> -			        ? 0 : -EIO);
-> -	}
-> +	if (remaining == 0)
-> +		bio_endio(raid_bio, 0);
->   	if (atomic_dec_and_test(&conf->active_aligned_reads))
->   		wake_up(&conf->wait_for_stripe);
->   	return handled;
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Read verify does not transfer data from the disk to the host and you ca=
+n=20
+issue fairly large requests (say 1MB at a time) as a background task pe=
+r=20
+drive. What you will get out of this is a validation that nothing has=20
+failed at the disk sector level (i.e., each sector is still readable).=20
+On detection of an error, you can go back and try to pin point the=20
+failed sector with small IO's and then try to repair the damage with a=20
+write (say from the other mirror in a RAID1 device).
+
+This is useful, but is not an end to end data integrity check (like=20
+Martin's T10 DIF work that was posted).
+
+In general, it would also be really neat to figure out and API which=20
+would let a higher level application (or file system) inform the block=20
+level of an error and possibly ask for a read from another mirror.
+
+ric
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
