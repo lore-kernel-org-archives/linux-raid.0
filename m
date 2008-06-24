@@ -1,71 +1,229 @@
-From: Mikulas Patocka <mpatocka@redhat.com>
-Subject: [PATCH 2/2] use bio_endio instead of a call to bi_end_io
-Date: Tue, 24 Jun 2008 01:28:21 -0400 (EDT)
-Message-ID: <Pine.LNX.4.64.0806240122340.24220@engineering.redhat.com>
+From: Mark Davies <mark@curly.ii.net>
+Subject: raid5 recovery dramas.
+Date: Tue, 24 Jun 2008 14:05:15 +0800
+Message-ID: <48608E9B.6080904@curly.ii.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
-Cc: axboe@kernel.dk, mingo@redhat.com
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi
+Hi all,
 
-The is sequel to my previous patch to avoid bio_endio recursion. raid5 
-bypasses bio_endio and calls the method directly (although it does the 
-same as bio_endio). I changed bio_endio to avoid recursion, so it should 
-be used instead of calling the method.
+Hoping to find some information to help me recover my software raid5 array.
 
-Mikulas
+Some background information first (excuse the hostname)
 
---
+uname -a
+Linux Fuckyfucky3 2.6.18-4-686 #1 SMP Wed May 9 23:03:12 UTC 2007 i686 
+GNU/Linux
 
-Turn calls to bi->bi_end_io() into bio_endio(). Apparently bio_endio does
-exactly the same error processing as is hardcoded at these places.
 
-bio_endio() avoids recursion, so it should be used.
+It's a debian box that initially had 4 disks in a software raid5 array.
 
-Signed-off-by: Mikulas Patocka <mpatocka@redhat.com>
+The problem started when I attempted to add another disk and grow the 
+array.  I'd already done this from 3-4 disks using the instruction on 
+this page:  "http://scotgate.org/?p=107".
 
-Index: linux-2.6.26-rc7-devel/drivers/md/raid5.c
-===================================================================
---- linux-2.6.26-rc7-devel.orig/drivers/md/raid5.c	2008-06-24 07:28:15.000000000 +0200
-+++ linux-2.6.26-rc7-devel/drivers/md/raid5.c	2008-06-24 07:28:53.000000000 +0200
-@@ -115,9 +115,7 @@
-  		return_bi = bi->bi_next;
-  		bi->bi_next = NULL;
-  		bi->bi_size = 0;
--		bi->bi_end_io(bi,
--			      test_bit(BIO_UPTODATE, &bi->bi_flags)
--			        ? 0 : -EIO);
-+		bio_endio(bi, 0);
-  		bi = return_bi;
-  	}
-  }
-@@ -3689,9 +3687,7 @@
-  		if ( rw == WRITE )
-  			md_write_end(mddev);
+However this time I unmounted the volume, but didn't do a fsck before 
+starting.  I also discovered that for some reason mdadm wasn't 
+monitoring the array.
 
--		bi->bi_end_io(bi,
--			      test_bit(BIO_UPTODATE, &bi->bi_flags)
--			        ? 0 : -EIO);
-+		bio_endio(bi, 0);
-  	}
-  	return 0;
-  }
-@@ -3994,12 +3990,8 @@
-  	spin_lock_irq(&conf->device_lock);
-  	remaining = --raid_bio->bi_phys_segments;
-  	spin_unlock_irq(&conf->device_lock);
--	if (remaining == 0) {
--
--		raid_bio->bi_end_io(raid_bio,
--			      test_bit(BIO_UPTODATE, &raid_bio->bi_flags)
--			        ? 0 : -EIO);
--	}
-+	if (remaining == 0)
-+		bio_endio(raid_bio, 0);
-  	if (atomic_dec_and_test(&conf->active_aligned_reads))
-  		wake_up(&conf->wait_for_stripe);
-  	return handled;
+Bad mistakes obviously - and I hope I've learnt from them.
+
+Short version is that two of the disks had errors on them, and so mdadm 
+disabled those disks about 50MB into the reshape.  Both failed SMART 
+tests subsequently.
+
+I bought two new disks, and used dd-recue to make copies of them, which 
+seemed to work well.
+
+Now however I can't restart the array.
+
+I can see all 5 superblocks:
+
+:~# mdadm --examine /dev/sd?1
+/dev/sda1:
+           Magic : a92b4efc
+         Version : 01
+     Feature Map : 0x4
+      Array UUID : 43eff327:8d1aa506:c0df2849:005c003f
+            Name : 'Fuckyfucky3':1
+   Creation Time : Sun Dec 23 01:28:08 2007
+      Raid Level : raid5
+    Raid Devices : 5
+
+     Device Size : 976767856 (465.76 GiB 500.11 GB)
+      Array Size : 3907069952 (1863.04 GiB 2000.42 GB)
+       Used Size : 976767488 (465.76 GiB 500.10 GB)
+    Super Offset : 976767984 sectors
+           State : clean
+     Device UUID : 5b38c5a2:798c6793:91ad6d1e:9cfee153
+
+   Reshape pos'n : 143872 (140.52 MiB 147.32 MB)
+   Delta Devices : 1 (4->5)
+
+     Update Time : Fri May 16 23:55:29 2008
+        Checksum : 5354498d - correct
+          Events : 1420762
+
+          Layout : left-symmetric
+      Chunk Size : 128K
+
+     Array Slot : 3 (failed, 1, failed, 2, failed, 0)
+    Array State : uuU__ 3 failed
+/dev/sdb1:
+           Magic : a92b4efc
+         Version : 01
+     Feature Map : 0x4
+      Array UUID : 43eff327:8d1aa506:c0df2849:005c003f
+            Name : 'Fuckyfucky3':1
+   Creation Time : Sun Dec 23 01:28:08 2007
+      Raid Level : raid5
+    Raid Devices : 5
+
+     Device Size : 976767856 (465.76 GiB 500.11 GB)
+      Array Size : 3907069952 (1863.04 GiB 2000.42 GB)
+       Used Size : 976767488 (465.76 GiB 500.10 GB)
+    Super Offset : 976767984 sectors
+           State : clean
+     Device UUID : 673ba6d4:6c46fd55:745c9c93:3fa8bf21
+
+   Reshape pos'n : 143872 (140.52 MiB 147.32 MB)
+   Delta Devices : 1 (4->5)
+
+     Update Time : Fri May 16 23:55:29 2008
+        Checksum : 8ad75f10 - correct
+          Events : 1420762
+
+          Layout : left-symmetric
+      Chunk Size : 128K
+
+     Array Slot : 1 (failed, 1, failed, 2, failed, 0)
+    Array State : uUu__ 3 failed
+/dev/sdc1:
+           Magic : a92b4efc
+         Version : 01
+     Feature Map : 0x4
+      Array UUID : 43eff327:8d1aa506:c0df2849:005c003f
+            Name : 'Fuckyfucky3':1
+   Creation Time : Sun Dec 23 01:28:08 2007
+      Raid Level : raid5
+    Raid Devices : 5
+
+     Device Size : 976767856 (465.76 GiB 500.11 GB)
+      Array Size : 3907069952 (1863.04 GiB 2000.42 GB)
+       Used Size : 976767488 (465.76 GiB 500.10 GB)
+    Super Offset : 976767984 sectors
+           State : clean
+     Device UUID : 99b87c50:a919bd63:599a135f:9af385ba
+
+   Reshape pos'n : 143872 (140.52 MiB 147.32 MB)
+   Delta Devices : 1 (4->5)
+
+     Update Time : Fri May 16 23:55:29 2008
+        Checksum : 78ab38c3 - correct
+          Events : 1420762
+
+          Layout : left-symmetric
+      Chunk Size : 128K
+
+     Array Slot : 5 (failed, 1, failed, 2, failed, 0)
+    Array State : Uuu__ 3 failed
+/dev/sdd1:
+           Magic : a92b4efc
+         Version : 01
+     Feature Map : 0x4
+      Array UUID : 43eff327:8d1aa506:c0df2849:005c003f
+            Name : 'Fuckyfucky3':1
+   Creation Time : Sun Dec 23 01:28:08 2007
+      Raid Level : raid5
+    Raid Devices : 5
+
+     Device Size : 976767856 (465.76 GiB 500.11 GB)
+      Array Size : 3907069952 (1863.04 GiB 2000.42 GB)
+       Used Size : 976767488 (465.76 GiB 500.10 GB)
+    Super Offset : 976767984 sectors
+           State : clean
+     Device UUID : 89201477:8e950d20:9193016d:f5c9deb0
+
+   Reshape pos'n : 143872 (140.52 MiB 147.32 MB)
+   Delta Devices : 1 (4->5)
+
+     Update Time : Fri May 16 23:55:29 2008
+        Checksum : 5fc43e52 - correct
+          Events : 0
+
+          Layout : left-symmetric
+      Chunk Size : 128K
+
+     Array Slot : 6 (failed, 1, failed, 2, failed, 0)
+    Array State : uuu__ 3 failed
+/dev/sde1:
+           Magic : a92b4efc
+         Version : 01
+     Feature Map : 0x4
+      Array UUID : 43eff327:8d1aa506:c0df2849:005c003f
+            Name : 'Fuckyfucky3':1
+   Creation Time : Sun Dec 23 01:28:08 2007
+      Raid Level : raid5
+    Raid Devices : 5
+
+     Device Size : 976767856 (465.76 GiB 500.11 GB)
+      Array Size : 3907069952 (1863.04 GiB 2000.42 GB)
+       Used Size : 976767488 (465.76 GiB 500.10 GB)
+    Super Offset : 976767984 sectors
+           State : clean
+     Device UUID : 89b53542:d1d820bc:f2ece884:4785869a
+
+   Reshape pos'n : 143872 (140.52 MiB 147.32 MB)
+   Delta Devices : 1 (4->5)
+
+     Update Time : Fri May 16 23:55:29 2008
+        Checksum : c89dd220 - correct
+          Events : 1418968
+
+          Layout : left-symmetric
+      Chunk Size : 128K
+
+     Array Slot : 6 (failed, 1, failed, 2, failed, 0)
+    Array State : uuu__ 3 failed
+
+
+
+
+When I try to start the array, I get:
+
+~# mdadm --assemble --verbose /dev/md1 /dev/sda1 /dev/sdb1 /dev/sdc1 
+/dev/sdd1 /dev/sde1
+mdadm: looking for devices for /dev/md1
+mdadm: /dev/sda1 is identified as a member of /dev/md1, slot 2.
+mdadm: /dev/sdb1 is identified as a member of /dev/md1, slot 1.
+mdadm: /dev/sdc1 is identified as a member of /dev/md1, slot 0.
+mdadm: /dev/sdd1 is identified as a member of /dev/md1, slot -1.
+mdadm: /dev/sde1 is identified as a member of /dev/md1, slot -1.
+mdadm: added /dev/sdb1 to /dev/md1 as 1
+mdadm: added /dev/sda1 to /dev/md1 as 2
+mdadm: no uptodate device for slot 3 of /dev/md1
+mdadm: no uptodate device for slot 4 of /dev/md1
+mdadm: added /dev/sdd1 to /dev/md1 as -1
+mdadm: failed to add /dev/sde1 to /dev/md1: Device or resource busy
+mdadm: added /dev/sdc1 to /dev/md1 as 0
+mdadm: /dev/md1 assembled from 3 drives and -1 spares - not enough to 
+start the array.
+
+
+
+
+Any help would be much appreciated.   If I can provide any more 
+information, just ask.
+
+As to why /dev/sde1 is busy, I don't know.  lsof shows no files open.
+
+
+Regards,
+
+
+Mark.
