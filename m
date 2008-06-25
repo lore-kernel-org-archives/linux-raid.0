@@ -1,81 +1,57 @@
-From: Chris Webb <chris@arachsys.com>
-Subject: [PATCH] sysfs superblock read oops
-Date: Wed, 25 Jun 2008 00:35:33 +0100
-Message-ID: <20080624233533.GH9948@arachsys.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Subject: Re: md raid1 passes barriers, but xfs doesn't use them?
+Date: Tue, 24 Jun 2008 20:49:59 -0500
+Message-ID: <4861A447.5090208@sandeen.net>
+References: <48605A8E.9070903@sandeen.net> <20080624225724.GN29319@disturbed>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="LSp5EJdfMPwZcMS1"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <20080624225724.GN29319@disturbed>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>, LinuxRaid <linux-raid@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
 List-Id: linux-raid.ids
 
-
---LSp5EJdfMPwZcMS1
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-
-Whilst correcting my rdev resize patch to deal with non-persistent metadata,
-I noticed that reading from /sys/block/mdX/md/rdY/super when there isn't a
-real superblock causes an oops rather than just returning zero length. The
-tiny attached patch fixes this.
-
-Best wishes,
-
-Chris.
-
-------------[ cut here ]------------
-kernel BUG at fs/sysfs/file.c:126!
-invalid opcode: 0000 [#1] PREEMPT SMP 
-Modules linked in:
-
-Pid: 1263, comm: cat Not tainted (2.6.24.4 #12)
-EIP: 0060:[<c01ab41f>] EFLAGS: 00010212 CPU: 1
-EIP is at fill_read_buffer+0x6b/0x8c
-EAX: 00000001 EBX: 00001000 ECX: 00000000 EDX: f6d30360
-ESI: f6cf9940 EDI: f6d303c0 EBP: c06bd20c ESP: f6cabf4c
- DS: 007b ES: 007b FS: 00d8 GS: 0033 SS: 0068
-Process cat (pid: 1263, ti=f6caa000 task=f7cb2570 task.ti=f6caa000)
-Stack: 00000000 f6c13300 f6cf9940 00001000 0804d038 c01ab467 c053ed00 c053ed00 
-       f6c13300 0804d038 c053ed00 f6cabfa0 c0173cbf f6cabfa0 f6c13300 f6c13300 
-       fffffff7 0804d038 f6caa000 c0173f57 f6cabfa0 00000000 00000000 00000000 
-Call Trace:
- [<c01ab467>] sysfs_read_file+0x27/0x59
- [<c0173cbf>] vfs_read+0x83/0xee
- [<c0173f57>] sys_read+0x41/0x67
- [<c0103e7a>] sysenter_past_esp+0x5f/0x85
- =======================
-Code: ed ff ff ff 74 3e 8b 47 18 8b 4e 0c 8b 40 04 89 46 2c 8b 57 14 89 d8 ff 55 00 89 c3 89 f8 e8 cf 08 00 00 81 fb ff 0f 00 00 7e 04 <0f> 0b eb fe 85 db 78 0b c7 46 28 00 00 00 00 89 1e eb 03 89 1c 
-EIP: [<c01ab41f>] fill_read_buffer+0x6b/0x8c SS:ESP 0068:f6cabf4c
----[ end trace 6abc62061d49b4ad ]---
+Dave Chinner wrote:
+> On Mon, Jun 23, 2008 at 09:23:10PM -0500, Eric Sandeen wrote:
 
 
---LSp5EJdfMPwZcMS1
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: attachment; filename="linux-2.6.24.4-md-external-super-sysfs.patch"
+>> Maybe there should be a QUEUE_ORDERED_PASSTHRU flag?
+>> Or should XFS just stick with the test write and ignore the flag?  I'm
+>> not sure of the queue->ordered flag details, but it seems that XFS & md
+>> raid1 both try hard to keep barriers in force, and there's a disconnect
+>> here somewhere.
+> 
+> Yeah, the problem was that last time this check was removed was
+> that a bunch of existing hardware had barriers enabled on them when
+> not necessary (e.g. had NVRAM) and they went 5x slower on MD raid1
+> devices. 
 
-From: Chris Webb <chris@arachsys.com>
+Hm,
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_super.c#rev1.402,
+ putting back what was removed in
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_super.c#rev1.380
+ I guess.  But this seems like a very weird argument to me.  Whether a
+drive/raid has battery backed raid, is 1 spindle or 100, is connected to
+a UPS or whatnot really is orthogonal to what should be set on the queue
+flag... This should be an admin decision.  Leaving it this way for this
+odd reason leaves smaller users w/ 2 raid1 spindles in the desktop box
+actually completely unable to use barriers even if they wanted to;
+removing the check at least lets the savvy admin mount with an option to
+turn them off.
 
-Fix oops on reading from /sys/block/mdX/md/rdY/super when there is no
-persistent superblock to read.
+> Having to change the root drive config on a wide install
+> base was considered much more of support pain than leaving the
+> check there. I guess that was more of a distro upgrade issue than
+> a mainline problem, but that's the history. Hence I think we
+> should probably do whatever everyone else is doing here...
 
-Signed-off-by: Chris Webb <chris@arachsys.com>
----
- drivers/md/md.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+I'll submit a patch to remove the check ;)
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -1911,7 +1911,7 @@
- static ssize_t
- super_show(mdk_rdev_t *rdev, char *page)
- {
--	if (rdev->sb_loaded && rdev->sb_size) {
-+	if (rdev->mddev->persistent && rdev->sb_loaded && rdev->sb_size) {
- 		memcpy(page, page_address(rdev->sb_page), rdev->sb_size);
- 		return rdev->sb_size;
- 	} else
+-Eric
 
---LSp5EJdfMPwZcMS1--
+> 
+> Cheers,
+> 
+> Dave.
+
