@@ -1,98 +1,40 @@
-From: "David Lethe" <david@santools.com>
-Subject: RE: [PATCH] disable queue flag test in barrier check
-Date: Thu, 26 Jun 2008 09:47:19 -0500
-Message-ID: <A20315AE59B5C34585629E258D76A97CDBCF11@34093-C3-EVS3.exchange.rackspace.com>
-References: <486307EA.7080007@sandeen.net> <48635284.3060001@sgi.com> <486398B7.50306@sandeen.net>
+From: Eric Sandeen <sandeen@sandeen.net>
+Subject: Re: [PATCH] disable queue flag test in barrier check
+Date: Thu, 26 Jun 2008 09:57:18 -0500
+Message-ID: <4863AE4E.5060908@sandeen.net>
+References: <486307EA.7080007@sandeen.net> <48635284.3060001@sgi.com> <486398B7.50306@sandeen.net> <A20315AE59B5C34585629E258D76A97CDBCF11@34093-C3-EVS3.exchange.rackspace.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
-In-Reply-To: <486398B7.50306@sandeen.net>
+In-Reply-To: <A20315AE59B5C34585629E258D76A97CDBCF11@34093-C3-EVS3.exchange.rackspace.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Eric Sandeen <sandeen@sandeen.net>, Timothy Shimmin <tes@sgi.com>
-Cc: xfs-oss <xfs@oss.sgi.com>, LinuxRaid <linux-raid@vger.kernel.org>, NeilBrown <neilb@suse.de>, jeremy@sgi.comwe
+To: David Lethe <david@santools.com>
+Cc: Timothy Shimmin <tes@sgi.com>, xfs-oss <xfs@oss.sgi.com>, LinuxRaid <linux-raid@vger.kernel.org>, NeilBrown <neilb@suse.de>, jeremy@sgi.comwe
 List-Id: linux-raid.ids
 
-Fyi - related problem is seen with solaris & zfs when users attach them
-to hardware-based RAID subsystems.  The vendors had
-to make firmware tweaks to address solaris's
-flush-to-disk-after-all-writes.  
-
-Not sure what you mean about non-volatile vs. volatile write cache,
-however.  If you want to see if write cache is enabled on a disk drive,
-or 
-Even a logical disk on a hardware-based RAId, under Linux, then google
-"mode page editor" for lots of choices.  Also look up zfs write cache
-raid and you'll get information that you can just as easily apply to
-Linux implementations of md. 
-
-
------Original Message-----
-From: linux-raid-owner@vger.kernel.org
-[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Eric Sandeen
-Sent: Thursday, June 26, 2008 8:25 AM
-To: Timothy Shimmin
-Cc: xfs-oss; LinuxRaid; NeilBrown; jeremy@sgi.comwe
-Subject: Re: [PATCH] disable queue flag test in barrier check
-
-Timothy Shimmin wrote:
-
-> Also from memory, I believe Neil checked this removal into the
-SLES10sp1 tree
-> and some sgi boxes started having slow downs
-> (looking at Dave's email below - we were not wanting to tell them
-> to use nobarrier but needed it to work by default - I forget now).
-
-But that's an admin issue.
-
-The way it is now, for example a home user of md raid1 (me!) can't run
-barriers even if they wanted to.
-
-Until there is a way to know if a write cache is non-volatile the only
-safe option is to enable barriers when possible.
-
-> 6.
->> Date: Wed, 25 Jun 2008 08:57:24 +1000
->> From: Dave Chinner <david@fromorbit.com>
->> To: Eric Sandeen <sandeen@sandeen.net>
->> Cc: LinuxRaid <linux-raid@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
->> Subject: Re: md raid1 passes barriers, but xfs doesn't use them?
->>
->> Yeah, the problem was that last time this check was removed was
->> that a bunch of existing hardware had barriers enabled on them when
->> not necessary (e.g. had NVRAM) and they went 5x slower on MD raid1
->> devices. Having to change the root drive config on a wide install
->> base was considered much more of support pain than leaving the
->> check there. I guess that was more of a distro upgrade issue than
->> a mainline problem, but that's the history. Hence I think we
->> should probably do whatever everyone else is doing here....
->>
->> Cheers,
->>
->> Dave.
+David Lethe wrote:
+> Fyi - related problem is seen with solaris & zfs when users attach them
+> to hardware-based RAID subsystems.  The vendors had
+> to make firmware tweaks to address solaris's
+> flush-to-disk-after-all-writes.  
 > 
-> So I guess my question is whether there are cases where we are
-> going to be in trouble again.
-> Jeremy, do you see some problems?
+> Not sure what you mean about non-volatile vs. volatile write cache,
+> however.  If you want to see if write cache is enabled on a disk drive,
+> or 
+> Even a logical disk on a hardware-based RAId, under Linux, then google
+> "mode page editor" for lots of choices.  Also look up zfs write cache
+> raid and you'll get information that you can just as easily apply to
+> Linux implementations of md. 
 
-FWIW, the problem *I* foresee is that some people are going to slow down
-when using the defaults, yes, because barriers will start working again.
- But I don't see any other safe way around it.
+I'm not so interested in whether it is enabled; I'd like to know if it
+is safe (to varying degrees) in the event of a power failure, and I
+don't think there's any way we can know that.
 
-Education would be in order, I suppose.  :)
+So the administrator, if she's sure that all cached writes will hit disk
+even if a breaker pops, can disable barriers.  If it's just a 32MB cache
+seagate drive plugged  into the wall, you probably had better be sure
+barriers are enabled or you may well have a scrambled filesystem
+post-power-outage.
 
 -Eric
-
-> --Tim
-> 
-> 
-> 
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
