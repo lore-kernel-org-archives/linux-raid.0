@@ -1,67 +1,52 @@
-From: Eric Sandeen <sandeen@sandeen.net>
-Subject: Re: [PATCH] disable queue flag test in barrier check
-Date: Thu, 26 Jun 2008 08:25:11 -0500
-Message-ID: <486398B7.50306@sandeen.net>
-References: <486307EA.7080007@sandeen.net> <48635284.3060001@sgi.com>
+From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
+Subject: Re: raid10,f2 degraded read speed
+Date: Thu, 26 Jun 2008 15:37:08 +0200
+Message-ID: <20080626133708.GA5462@rap.rap.dk>
+References: <20080617143745.GA9148@rap.rap.dk> <20080625172516.GA21707@rap.rap.dk> <cccedfc60806251031q536dd88bg3cbeae703558318b@mail.gmail.com> <20080626081701.GE23500@rap.rap.dk> <cccedfc60806260535w7bf1a03by74ea476b1727f837@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <48635284.3060001@sgi.com>
+Content-Disposition: inline
+In-Reply-To: <cccedfc60806260535w7bf1a03by74ea476b1727f837@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Timothy Shimmin <tes@sgi.com>
-Cc: xfs-oss <xfs@oss.sgi.com>, LinuxRaid <linux-raid@vger.kernel.org>, NeilBrown <neilb@suse.de>, jeremy@sgi.comwe
+To: Jon Nelson <jnelson-linux-raid@jamponi.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Timothy Shimmin wrote:
+On Thu, Jun 26, 2008 at 07:35:20AM -0500, Jon Nelson wrote:
+> On Thu, Jun 26, 2008 at 3:17 AM, Keld J=F8rn Simonsen <keld@dkuug.dk>=
+ wrote:
+> > I think we should actually have more figures from systems in produc=
+tion.
+> ..
+> > Nice to have more benchmarks. Maybe you can write up something for =
+the
+> > wiki?
+> ..
+>=20
+> Funny you should mention that - I was speaking with a colleague
+> recently and I told him that I'm going to try for a fairly
+> comprehensive test of raid5, raid10[n2,o2,f2] in both regular and
+> degraded mode, utilizing fstest to test ext3, jfs, xfs, and maybe
+> spadfs. I've got most of it scripted too so some refinements to those
+> scripts might be useful to somebody else. I plan on putting this on m=
+y
+> blog when I get the time.
+>=20
+> However, I'm rather pressed for time right now so it will likely be a=
+ while.
 
-> Also from memory, I believe Neil checked this removal into the SLES10sp1 tree
-> and some sgi boxes started having slow downs
-> (looking at Dave's email below - we were not wanting to tell them
-> to use nobarrier but needed it to work by default - I forget now).
+Such is life. So then, when this is out, could I then use your findings
+for the wiki?
 
-But that's an admin issue.
+I think the wiki is a good place to put up such tests, as more people
+would have a chance finding the results there.
 
-The way it is now, for example a home user of md raid1 (me!) can't run
-barriers even if they wanted to.
-
-Until there is a way to know if a write cache is non-volatile the only
-safe option is to enable barriers when possible.
-
-> 6.
->> Date: Wed, 25 Jun 2008 08:57:24 +1000
->> From: Dave Chinner <david@fromorbit.com>
->> To: Eric Sandeen <sandeen@sandeen.net>
->> Cc: LinuxRaid <linux-raid@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
->> Subject: Re: md raid1 passes barriers, but xfs doesn't use them?
->>
->> Yeah, the problem was that last time this check was removed was
->> that a bunch of existing hardware had barriers enabled on them when
->> not necessary (e.g. had NVRAM) and they went 5x slower on MD raid1
->> devices. Having to change the root drive config on a wide install
->> base was considered much more of support pain than leaving the
->> check there. I guess that was more of a distro upgrade issue than
->> a mainline problem, but that's the history. Hence I think we
->> should probably do whatever everyone else is doing here....
->>
->> Cheers,
->>
->> Dave.
-> 
-> So I guess my question is whether there are cases where we are
-> going to be in trouble again.
-> Jeremy, do you see some problems?
-
-FWIW, the problem *I* foresee is that some people are going to slow down
-when using the defaults, yes, because barriers will start working again.
- But I don't see any other safe way around it.
-
-Education would be in order, I suppose.  :)
-
--Eric
-
-> --Tim
-> 
-> 
-> 
-
+best regards
+Keld
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
