@@ -1,55 +1,77 @@
-From: "David Lethe" <david@santools.com>
-Subject: Re: [PATCH] disable queue flag test in barrier check
-Date: Thu, 26 Jun 2008 10:24:00 -0500
-Message-ID: <22f301c8d7a0$c5e87fc0$9201a8c0@exchange.rackspace.com>
-Reply-To: <David@santools.com>
+From: "Jon Nelson" <jnelson-linux-raid@jamponi.net>
+Subject: Re: Slowww raid check (raid10, f2)
+Date: Thu, 26 Jun 2008 15:03:21 -0500
+Message-ID: <cccedfc60806261303t4a6d4124w2ab12227d8acb99f@mail.gmail.com>
+References: <cccedfc60806260621ud3af517j959f5ce3c2e521ef@mail.gmail.com>
+	 <4863A6A1.3010408@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4863A6A1.3010408@gmail.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Timothy Shimmin <tes@sgi.com>, xfs-oss <xfs@oss.sgi.com>, LinuxRaid <linux-raid@vger.kernel.org>, NeilBrown <neilb@suse.de>, jeremy@sgi.comwe
+To: Roger Heflin <rogerheflin@gmail.com>, Linux-Raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Unflushed writes are 100% effective for losing data and corrupting file systems.  Data isn't saved until it is on the magnetic media.  Batterybackup modules for disk controllers help, but there is no substitute for a ups.  Even with a bbu on disk controller, if the kernel hasn't flushed write to the controller, and system crashes or loses power, the kernel io queue will never reach the controllers bbu.
+On Thu, Jun 26, 2008 at 9:24 AM, Roger Heflin <rogerheflin@gmail.com> wrote:
+> Jon Nelson wrote:
+> What kind of controller are you using, and how is it connected to the MB?
 
-You have a moral obligation to use a ups... And if you work for a US company, then Sarbox pretty much makes this a legal obligation and a criminal offense if you don't protect certain databases with something as reasonable and cheap as a ups
+> If it is either PCI-X, PCI-e, or wired into the MB with a proper connection
+> then this would be low.
 
------Original Message-----
+MCP55, built-in.
+cat /proc/interrupts:
 
-From:  "Eric Sandeen" <sandeen@sandeen.net>
-Subj:  Re: [PATCH] disable queue flag test in barrier check
-Date:  Thu Jun 26, 2008 9:57 am
-Size:  1K
-To:  "David Lethe" <david@santools.com>
-cc:  "Timothy Shimmin" <tes@sgi.com>; "xfs-oss" <xfs@oss.sgi.com>; "LinuxRaid" <linux-raid@vger.kernel.org>; "NeilBrown" <neilb@suse.de>; "jeremy@sgi.comwe" <jeremy@sgi.comwe>
+           CPU0       CPU1
+  0:      67908  136036611   IO-APIC-edge      timer
+  1:          0         10   IO-APIC-edge      i8042
+  2:          0          0    XT-PIC-XT        cascade
+  5:    8325169   15373702   IO-APIC-fasteoi   sata_nv, ehci_hcd:usb1
+  7:          0          0   IO-APIC-fasteoi   ohci_hcd:usb2
+  8:          0          0   IO-APIC-edge      rtc
+  9:          0          0   IO-APIC-edge      acpi
+ 10:    3722699    7890387   IO-APIC-fasteoi   sata_nv
+ 11:          0          0   IO-APIC-fasteoi   sata_nv
+ 14:    1339948    1448257   IO-APIC-edge      libata
+ 15:          0          0   IO-APIC-edge      libata
+4345:   62529065       1494   PCI-MSI-edge      eth1
+4346:          8   60190576   PCI-MSI-edge      eth0
+NMI:          0          0
+LOC:  136110735  136110816
+ERR:          0
 
-David Lethe wrote: 
-> Fyi - related problem is seen with solaris & zfs when users attach them 
-> to hardware-based RAID subsystems.  The vendors had 
-> to make firmware tweaks to address solaris's 
-> flush-to-disk-after-all-writes.   
->  
-> Not sure what you mean about non-volatile vs. volatile write cache, 
-> however.  If you want to see if write cache is enabled on a disk drive, 
-> or  
-> Even a logical disk on a hardware-based RAId, under Linux, then google 
-> "mode page editor" for lots of choices.  Also look up zfs write cache 
-> raid and you'll get information that you can just as easily apply to 
-> Linux implementations of md.  
- 
-I'm not so interested in whether it is enabled; I'd like to know if it 
-is safe (to varying degrees) in the event of a power failure, and I 
-don't think there's any way we can know that. 
- 
-So the administrator, if she's sure that all cached writes will hit disk 
-even if a breaker pops, can disable barriers.  If it's just a 32MB cache 
-seagate drive plugged  into the wall, you probably had better be sure 
-barriers are enabled or you may well have a scrambled filesystem 
-post-power-outage. 
- 
--Eric 
- 
+> Do a test of "dd if=/dev/sdb4 of=/dev/null bs=64k" on 1 then 2 and the 3
+> disks while watching "vmstat 1" and see how it scales.
+
+Start with 1, then 2, then 3. Then back to 2, then back to 1. Then done.
+
+procs -----------memory---------- ---swap-- -----io---- -system-- ----cpu----
+ r  b   swpd   free   buff  cache   si   so    bi    bo   in   cs us sy id wa
+ 1  1    392   9760 704136  17656    0    0 67968    16 1985 2578  0 24 48 29
+ 1  1    392   9384 704632  17636    0    0 74900     0 1704 2540  0 26 45 29
+ 2  1    392   9992 703148  18036    0    0 74516     0 1750 2581  0 25 46 29
+ 2  0    392   9156 704096  18100    0    0 153856     0 4193 8686  0 55 25 20
+ 2  1    392   9240 704328  17892    0    0 147606    32 3990 8608  0 58 20 23
+ 3  0    392   9136 704444  17704    0    0 143434    52 3596 8087  0 52 17 30
+ 1  2    392   9492 703880  18068    0    0 136604    12 3438 7205  0 50 23 26
+ 1  2    392   9552 704272  17588    0    0 153984     0 3837 8461  0 57 21 21
+ 1  1    392   9812 704160  17368    0    0 149399     0 3760 8121  0 54 20 26
+ 2  1    392   9296 704464  17376    0    0 133546    32 3377 7822  0 52 18 30
+ 3  1    392   9240 704040  17796    0    0 152696    16 3811 7704  0 57 16 28
+ 3  3    392  10020 703296  17428    0    0 196994    36 5028 6354  0 75  1 23
+ 3  0    392   9152 704172  17332    0    0 197809    28 5030 5603  0 74  0 25
+ 2  2    392   9232 704440  17324    0    0 203131     0 5141 6030  0 75  0 24
+ 3  2    392   9680 704112  16988    0    0 201973     0 5105 5601  1 78  0 22
+ 2  1    400  10216 703656  17032    0    8 189088    52 4634 5853  0 69  0 31
+ 3  1    400   9112 704664  17004    0    0 188936    44 4721 5495  0 70  2 28
+ 1  4    400  10080 704132  17008    0    0 200736     4 5000 6037  0 78  1 21
+ 3  2    400   9212 705012  16800    0    0 146072    40 3724 6490  0 54 16 30
+ 1  1    400   9724 705988  17328    0    0 108857    32 2707 6034  0 39  9 51
+ 1  1    400   9164 706800  17436    0    0 144175     0 3580 8223  0 52 21 26
+ 1  2    400  10044 707708  17500    0    0 73452     0 1662 2560  0 26 46 27
 
 
+-- 
+Jon
