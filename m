@@ -1,72 +1,117 @@
-From: Mark Davies <mark@curly.ii.net>
-Subject: Re: raid5 recovery dramas.
-Date: Fri, 27 Jun 2008 19:14:51 +0800
-Message-ID: <4864CBAB.90201@curly.ii.net>
-References: <48608E9B.6080904@curly.ii.net> <18532.49368.984453.933541@notabene.brown>
+From: Andre Noll <maan@systemlinux.org>
+Subject: Re: [PATCH 008 of 29] md: Close race in md_probe
+Date: Fri, 27 Jun 2008 14:21:53 +0200
+Message-ID: <20080627122153.GE4981@skl-net.de>
+References: <20080627164503.9671.patches@notabene> <1080627065010.10418@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="n/aVsWSeQ4JHkrmm"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18532.49368.984453.933541@notabene.brown>
+Content-Disposition: inline
+In-Reply-To: <1080627065010.10418@suse.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil Brown wrote:
-> You are in a rather stick situation.
 
-Hmm, yes, I'm starting to realise that.
-> 
-> Neither  sdd1 or sde1 know where they belong in the array.  If they
-> did, then  "mdadm --assemble --force" would probably be able to help
-> you (I should test that).  But they don't.
-> 
-> Do you have any boot logs from before you started the reshape that
-> show which device fills which slot in the array?
-> 
-Not that I can find, and the physical drives have changed since I used 
-dd_rescue to recover from the bad sectors.
+--n/aVsWSeQ4JHkrmm
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-> sdd1 has an event count of 0.  That is really odd.  Any idea how that
-> happened?  Did you remove it from the array and try to add it back?
-> That wouldn't have been a good idea.
-> 
-I don't recall removing any drives, however it was a month or so ago 
-that this saga started.  I was fairly careful to not do anything 
-irreversable I think.
+On 16:50, NeilBrown wrote:
+>=20
+> There is a possible race in md_probe.  If two threads call md_probe
+> for the same device, then one could exit (having checked that
+> ->gendisk exists) before the other has called kobject_init_and_add,
+> thus returning an incomplete kobj which will cause problems when
+> we try to add children to it.
+>=20
+> So extend the range of protection of disks_mutex slightly to
+> avoid this possibility.
+>=20
+> Signed-off-by: Neil Brown <neilb@suse.de>
+>=20
+> ### Diffstat output
+>  ./drivers/md/md.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>=20
+> diff .prev/drivers/md/md.c ./drivers/md/md.c
+> --- .prev/drivers/md/md.c	2008-06-27 15:31:27.000000000 +1000
+> +++ ./drivers/md/md.c	2008-06-27 15:31:35.000000000 +1000
+> @@ -3359,9 +3359,9 @@ static struct kobject *md_probe(dev_t de
+>  	disk->queue =3D mddev->queue;
+>  	add_disk(disk);
+>  	mddev->gendisk =3D disk;
+> -	mutex_unlock(&disks_mutex);
+>  	error =3D kobject_init_and_add(&mddev->kobj, &md_ktype, &disk->dev.kobj,
+>  				     "%s", "md");
+> +	mutex_unlock(&disks_mutex);
+>  	if (error)
+>  		printk(KERN_WARNING "md: cannot register %s/md - name in use\n",
+>  		       disk->disk_name);
 
-Just checked the bash history, and I didn't remove any drives.  Amusing 
-history though - you can almost smell the desperation and fear in every 
-entry.
+Even with this patch, md_probe() calls mddev_find() without holding
+the disks_mutex. Is this OK? If it isn't, something like the patch
+below might be necessary.
 
-> I'm at a bit of a loss as to what to suggest.  The data is mostly
-> there, but getting it back is tricky.
-> 
-> What you need to do is 
->    choose one of sdd and sde which you think is device  '3'
->      (sdc is 0, sdb is 1, sda is 2).
->    rewrite the metadata to assert this fact
->    assemble the array read-only with sd[abc] and the one you choose
->    read the data to make sure it is all where
->    switch to read-write so the reshape competes, leaving you with
->     a degraded array
->    add the other drive and let it recover.
-> 
-> The early steps in particular are not easy.
+Andre
+---
 
-Since there's only two options, what's to stop me taking a backup of the 
-metadata, and then rewriting the metadata on one drive, mounting it, 
-seeing if it makes sense.  If it does, great.  If it doesn't, then 
-restore the metadata and repeat the process on the other drive.
+=46rom: Andre Noll <maan@systemlinux.org>
 
-Or am I missing an important step?
+Fix possible race in md_probe().
 
+The current code calls mddev_find() without any locks held.  It might
+happen that mddev_find() succeeds but the returned mddev pointer
+becomes stale just before the disks_mutex is aquired.
 
-> 
-> I'll try to find some time to experiment, but I cannot promise
-> anything.
-> 
-> If you can remember everything you tried to do (maybe in
-> .bash_history) that might help.
-> 
-> NeilBrown
+So close the race by calling mddev_find() with the disks mutex held.
+
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 647395b..6cb8773 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -3184,17 +3184,20 @@ static int mdp_major;
+ static struct kobject *md_probe(dev_t dev, int *part, void *data)
+ {
+ 	static DEFINE_MUTEX(disks_mutex);
+-	mddev_t *mddev =3D mddev_find(dev);
++	mddev_t *mddev;
+ 	struct gendisk *disk;
+ 	int partitioned =3D (MAJOR(dev) !=3D MD_MAJOR);
+ 	int shift =3D partitioned ? MdpMinorShift : 0;
+ 	int unit =3D MINOR(dev) >> shift;
+ 	int error;
+=20
+-	if (!mddev)
+-		return NULL;
+=20
+ 	mutex_lock(&disks_mutex);
++	mddev =3D mddev_find(dev);
++	if (!mddev) {
++		mutex_unlock(&disks_mutex);
++		return NULL;
++	}
+ 	if (mddev->gendisk) {
+ 		mutex_unlock(&disks_mutex);
+ 		mddev_put(mddev);
+
+--=20
+The only person who always got his work done by Friday was Robinson Crusoe
+
+--n/aVsWSeQ4JHkrmm
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.1 (GNU/Linux)
+
+iD8DBQFIZNthWto1QDEAkw8RAqv6AKCOwjmbFN+XXnLpD1KwTVsPjIBC1ACdGfDE
+SF/X6Eje6x+Diuh2Z1R1mN8=
+=+kWj
+-----END PGP SIGNATURE-----
+
+--n/aVsWSeQ4JHkrmm--
