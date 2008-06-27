@@ -1,117 +1,221 @@
-From: Andre Noll <maan@systemlinux.org>
-Subject: Re: [PATCH 008 of 29] md: Close race in md_probe
-Date: Fri, 27 Jun 2008 14:21:53 +0200
-Message-ID: <20080627122153.GE4981@skl-net.de>
-References: <20080627164503.9671.patches@notabene> <1080627065010.10418@suse.de>
+From: Markus Hochholdinger <Markus@hochholdinger.net>
+Subject: Re: [PATCH 018 of 29] md: Support changing rdev size on running arrays.
+Date: Fri, 27 Jun 2008 18:09:25 +0200
+Message-ID: <200806271809.29768.Markus@hochholdinger.net>
+References: <20080627164503.9671.patches@notabene> <1080627065116.10596@suse.de>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="n/aVsWSeQ4JHkrmm"
+Content-Type: multipart/signed;
+  boundary="nextPart1535982.F0lQVYcYCs";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1080627065010.10418@suse.de>
+In-Reply-To: <1080627065116.10596@suse.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: NeilBrown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-
---n/aVsWSeQ4JHkrmm
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+--nextPart1535982.F0lQVYcYCs
+Content-Type: text/plain;
+  charset="utf-8"
 Content-Transfer-Encoding: quoted-printable
-
-On 16:50, NeilBrown wrote:
->=20
-> There is a possible race in md_probe.  If two threads call md_probe
-> for the same device, then one could exit (having checked that
-> ->gendisk exists) before the other has called kobject_init_and_add,
-> thus returning an incomplete kobj which will cause problems when
-> we try to add children to it.
->=20
-> So extend the range of protection of disks_mutex slightly to
-> avoid this possibility.
->=20
-> Signed-off-by: Neil Brown <neilb@suse.de>
->=20
-> ### Diffstat output
->  ./drivers/md/md.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->=20
-> diff .prev/drivers/md/md.c ./drivers/md/md.c
-> --- .prev/drivers/md/md.c	2008-06-27 15:31:27.000000000 +1000
-> +++ ./drivers/md/md.c	2008-06-27 15:31:35.000000000 +1000
-> @@ -3359,9 +3359,9 @@ static struct kobject *md_probe(dev_t de
->  	disk->queue =3D mddev->queue;
->  	add_disk(disk);
->  	mddev->gendisk =3D disk;
-> -	mutex_unlock(&disks_mutex);
->  	error =3D kobject_init_and_add(&mddev->kobj, &md_ktype, &disk->dev.kobj,
->  				     "%s", "md");
-> +	mutex_unlock(&disks_mutex);
->  	if (error)
->  		printk(KERN_WARNING "md: cannot register %s/md - name in use\n",
->  		       disk->disk_name);
-
-Even with this patch, md_probe() calls mddev_find() without holding
-the disks_mutex. Is this OK? If it isn't, something like the patch
-below might be necessary.
-
-Andre
----
-
-=46rom: Andre Noll <maan@systemlinux.org>
-
-Fix possible race in md_probe().
-
-The current code calls mddev_find() without any locks held.  It might
-happen that mddev_find() succeeds but the returned mddev pointer
-becomes stale just before the disks_mutex is aquired.
-
-So close the race by calling mddev_find() with the disks mutex held.
-
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 647395b..6cb8773 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -3184,17 +3184,20 @@ static int mdp_major;
- static struct kobject *md_probe(dev_t dev, int *part, void *data)
- {
- 	static DEFINE_MUTEX(disks_mutex);
--	mddev_t *mddev =3D mddev_find(dev);
-+	mddev_t *mddev;
- 	struct gendisk *disk;
- 	int partitioned =3D (MAJOR(dev) !=3D MD_MAJOR);
- 	int shift =3D partitioned ? MdpMinorShift : 0;
- 	int unit =3D MINOR(dev) >> shift;
- 	int error;
-=20
--	if (!mddev)
--		return NULL;
-=20
- 	mutex_lock(&disks_mutex);
-+	mddev =3D mddev_find(dev);
-+	if (!mddev) {
-+		mutex_unlock(&disks_mutex);
-+		return NULL;
-+	}
- 	if (mddev->gendisk) {
- 		mutex_unlock(&disks_mutex);
- 		mddev_put(mddev);
-
---=20
-The only person who always got his work done by Friday was Robinson Crusoe
-
---n/aVsWSeQ4JHkrmm
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
 Content-Disposition: inline
+
+Hi,
+
+Am Freitag, 27. Juni 2008 08:51 schrieb NeilBrown:
+> From: Chris Webb <chris@arachsys.com>
+> Allow /sys/block/mdX/md/rdY/size to change on running arrays, moving the
+> superblock if necessary for this metadata version. We prevent the availab=
+le
+> space from shrinking to less than the used size, and allow it to be set to
+> zero to fill all the available space on the underlying device.
+
+I'm very happy of this new feature. But I'm a little confused how to use it=
+=20
+correctly.
+Can md now recognize the change by itself and I only have to run mdadm --gr=
+ow?=20
+Or have I manually update /sys/block/mdX/md/rdY/size and afterwards run=20
+mdadm --grow?
+
+To be on the safe side I'd first lvresize one disk of the raid1, then do=20
+mdadm --grow to let md update/move the superblock of this disk. And after=20
+this is successful, lvresize the other disk and do mdadm --grow. So in case=
+=20
+of a failure i wouldn't loose the whole raid1!?
+Am I correct or am I missing something?
+
+
+> Signed-off-by: Chris Webb <chris@arachsys.com>
+> Signed-off-by: Neil Brown <neilb@suse.de>
+>
+> ### Diffstat output
+>  ./drivers/md/md.c |  100
+> ++++++++++++++++++++++++++++++++++++++++++++++-------- 1 file changed, 87
+> insertions(+), 13 deletions(-)
+>
+> diff .prev/drivers/md/md.c ./drivers/md/md.c
+> --- .prev/drivers/md/md.c	2008-06-27 16:22:03.000000000 +1000
+> +++ ./drivers/md/md.c	2008-06-27 16:22:03.000000000 +1000
+> @@ -658,11 +658,14 @@ static unsigned int calc_sb_csum(mdp_sup
+>   */
+>
+>  struct super_type  {
+> -	char 		*name;
+> -	struct module	*owner;
+> -	int		(*load_super)(mdk_rdev_t *rdev, mdk_rdev_t *refdev, int
+> minor_version); -	int		(*validate_super)(mddev_t *mddev, mdk_rdev_t *rdev=
+);
+> -	void		(*sync_super)(mddev_t *mddev, mdk_rdev_t *rdev);
+> +	char		    *name;
+> +	struct module	    *owner;
+> +	int		    (*load_super)(mdk_rdev_t *rdev, mdk_rdev_t *refdev,
+> +					  int minor_version);
+> +	int		    (*validate_super)(mddev_t *mddev, mdk_rdev_t *rdev);
+> +	void		    (*sync_super)(mddev_t *mddev, mdk_rdev_t *rdev);
+> +	unsigned long long  (*rdev_size_change)(mdk_rdev_t *rdev,
+> +						unsigned long long size);
+>  };
+>
+>  /*
+> @@ -1004,6 +1007,27 @@ static void super_90_sync(mddev_t *mddev
+>  }
+>
+>  /*
+> + * rdev_size_change for 0.90.0
+> + */
+> +static unsigned long long
+> +super_90_rdev_size_change(mdk_rdev_t *rdev, unsigned long long size)
+> +{
+> +	if (size && size < rdev->mddev->size)
+> +		return 0; /* component must fit device */
+> +	size *=3D 2; /* convert to sectors */
+> +	if (rdev->mddev->bitmap_offset)
+> +		return 0; /* can't move bitmap */
+> +	rdev->sb_offset =3D calc_dev_sboffset(rdev->bdev);
+> +	if (!size || size > rdev->sb_offset*2)
+> +		size =3D rdev->sb_offset*2;
+> +	md_super_write(rdev->mddev, rdev, rdev->sb_offset << 1, rdev->sb_size,
+> +		       rdev->sb_page);
+> +	md_super_wait(rdev->mddev);
+> +	return size/2; /* kB for sysfs */
+> +}
+> +
+> +
+> +/*
+>   * version 1 superblock
+>   */
+>
+> @@ -1328,21 +1352,59 @@ static void super_1_sync(mddev_t *mddev,
+>  	sb->sb_csum =3D calc_sb_1_csum(sb);
+>  }
+>
+> +static unsigned long long
+> +super_1_rdev_size_change(mdk_rdev_t *rdev, unsigned long long size)
+> +{
+> +	struct mdp_superblock_1 *sb;
+> +	unsigned long long max_size;
+> +	if (size && size < rdev->mddev->size)
+> +		return 0; /* component must fit device */
+> +	size *=3D 2; /* convert to sectors */
+> +	if (rdev->sb_offset < rdev->data_offset/2) {
+> +		/* minor versions 1 and 2; superblock before data */
+> +		max_size =3D (rdev->bdev->bd_inode->i_size >> 9);
+> +		max_size -=3D rdev->data_offset;
+> +		if (!size || size > max_size)
+> +			size =3D max_size;
+> +	} else if (rdev->mddev->bitmap_offset) {
+> +		/* minor version 0 with bitmap we can't move */
+> +		return 0;
+> +	} else {
+> +		/* minor version 0; superblock after data */
+> +		sector_t sb_offset;
+> +		sb_offset =3D (rdev->bdev->bd_inode->i_size >> 9) - 8*2;
+> +		sb_offset &=3D ~(sector_t)(4*2 - 1);
+> +		max_size =3D rdev->size*2 + sb_offset - rdev->sb_offset*2;
+> +		if (!size || size > max_size)
+> +			size =3D max_size;
+> +		rdev->sb_offset =3D sb_offset/2;
+> +	}
+> +	sb =3D (struct mdp_superblock_1 *) page_address(rdev->sb_page);
+> +	sb->data_size =3D cpu_to_le64(size);
+> +	sb->super_offset =3D rdev->sb_offset*2;
+> +	sb->sb_csum =3D calc_sb_1_csum(sb);
+> +	md_super_write(rdev->mddev, rdev, rdev->sb_offset << 1, rdev->sb_size,
+> +		       rdev->sb_page);
+> +	md_super_wait(rdev->mddev);
+> +	return size/2; /* kB for sysfs */
+> +}
+>
+>  static struct super_type super_types[] =3D {
+>  	[0] =3D {
+>  		.name	=3D "0.90.0",
+>  		.owner	=3D THIS_MODULE,
+> -		.load_super	=3D super_90_load,
+> -		.validate_super	=3D super_90_validate,
+> -		.sync_super	=3D super_90_sync,
+> +		.load_super	    =3D super_90_load,
+> +		.validate_super	    =3D super_90_validate,
+> +		.sync_super	    =3D super_90_sync,
+> +		.rdev_size_change   =3D super_90_rdev_size_change,
+>  	},
+>  	[1] =3D {
+>  		.name	=3D "md-1",
+>  		.owner	=3D THIS_MODULE,
+> -		.load_super	=3D super_1_load,
+> -		.validate_super	=3D super_1_validate,
+> -		.sync_super	=3D super_1_sync,
+> +		.load_super	    =3D super_1_load,
+> +		.validate_super	    =3D super_1_validate,
+> +		.sync_super	    =3D super_1_sync,
+> +		.rdev_size_change   =3D super_1_rdev_size_change,
+>  	},
+>  };
+>
+> @@ -2060,8 +2122,20 @@ rdev_size_store(mdk_rdev_t *rdev, const
+>
+>  	if (e=3D=3Dbuf || (*e && *e !=3D '\n'))
+>  		return -EINVAL;
+> -	if (my_mddev->pers && rdev->raid_disk >=3D 0)
+> -		return -EBUSY;
+> +	if (my_mddev->pers && rdev->raid_disk >=3D 0) {
+> +		if (rdev->mddev->persistent) {
+> +			size =3D super_types[rdev->mddev->major_version].
+> +				rdev_size_change(rdev, size);
+> +			if (!size)
+> +				return -EBUSY;
+> +		} else if (!size) {
+> +			size =3D (rdev->bdev->bd_inode->i_size >> 10);
+> +			size -=3D rdev->data_offset/2;
+> +		}
+> +		if (size < rdev->mddev->size)
+> +			return -EINVAL; /* component must fit device */
+> +	}
+> +
+>  	rdev->size =3D size;
+>  	if (size > oldsize && rdev->mddev->external) {
+>  		/* need to check that all other rdevs with the same ->bdev
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+=2D-=20
+greetings
+
+eMHa
+
+--nextPart1535982.F0lQVYcYCs
+Content-Type: application/pgp-signature
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
+Version: GnuPG v1.4.6 (GNU/Linux)
 
-iD8DBQFIZNthWto1QDEAkw8RAqv6AKCOwjmbFN+XXnLpD1KwTVsPjIBC1ACdGfDE
-SF/X6Eje6x+Diuh2Z1R1mN8=
-=+kWj
+iD8DBQBIZRC5XT3LE+AjWCsRAndZAJ0WFu+FpkY4p0CqSN5y2TXus4dzDACgqMCy
+1uVx3/HUIkk8ZMJcZjoCjvE=
+=eIPa
 -----END PGP SIGNATURE-----
 
---n/aVsWSeQ4JHkrmm--
+--nextPart1535982.F0lQVYcYCs--
