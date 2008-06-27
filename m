@@ -1,90 +1,52 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH 008 of 29] md: Close race in md_probe
-Date: Sat, 28 Jun 2008 09:38:06 +1000
-Message-ID: <18533.31198.932488.652568@notabene.brown>
+Subject: Re: [PATCH 018 of 29] md: Support changing rdev size on running arrays.
+Date: Sat, 28 Jun 2008 09:41:03 +1000
+Message-ID: <18533.31375.280387.666514@notabene.brown>
 References: <20080627164503.9671.patches@notabene>
-	<1080627065010.10418@suse.de>
-	<20080627122153.GE4981@skl-net.de>
+	<1080627065116.10596@suse.de>
+	<200806271809.29768.Markus@hochholdinger.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Andre Noll on Friday June 27
+In-Reply-To: message from Markus Hochholdinger on Friday June 27
 Sender: linux-raid-owner@vger.kernel.org
-To: Andre Noll <maan@systemlinux.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Markus Hochholdinger <Markus@hochholdinger.net>
+Cc: linux-raid@vger.kernel.org, Chris Webb <chris@arachsys.com>
 List-Id: linux-raid.ids
 
-On Friday June 27, maan@systemlinux.org wrote:
-> On 16:50, NeilBrown wrote:
-> > 
-> > There is a possible race in md_probe.  If two threads call md_probe
-> > for the same device, then one could exit (having checked that
-> > ->gendisk exists) before the other has called kobject_init_and_add,
-> > thus returning an incomplete kobj which will cause problems when
-> > we try to add children to it.
-...
+On Friday June 27, Markus@hochholdinger.net wrote:
+> Hi,
 > 
-> Even with this patch, md_probe() calls mddev_find() without holding
-> the disks_mutex. Is this OK? If it isn't, something like the patch
-> below might be necessary.
+> Am Freitag, 27. Juni 2008 08:51 schrieb NeilBrown:
+> > From: Chris Webb <chris@arachsys.com>
+> > Allow /sys/block/mdX/md/rdY/size to change on running arrays, moving the
+> > superblock if necessary for this metadata version. We prevent the available
+> > space from shrinking to less than the used size, and allow it to be set to
+> > zero to fill all the available space on the underlying device.
+> 
+> I'm very happy of this new feature. But I'm a little confused how to use it 
+> correctly.
+> Can md now recognize the change by itself and I only have to run mdadm --grow? 
+> Or have I manually update /sys/block/mdX/md/rdY/size and afterwards run 
+> mdadm --grow?
 
-Thanks for looking at this and asking.
+No, md does not recognise the change by itself.
+Currently you need to update ..../size yourself before using 
+   "mdadm --grow"
+This should probably be incorporated into mdadm at some stage, but it
+hasn't yet.
 
-No, the below patch is not necessary.
+> 
+> To be on the safe side I'd first lvresize one disk of the raid1, then do 
+> mdadm --grow to let md update/move the superblock of this disk. And after 
+> this is successful, lvresize the other disk and do mdadm --grow. So in case 
+> of a failure i wouldn't loose the whole raid1!?
+> Am I correct or am I missing something?
 
-mddev_find gets a reference on the mddev, so it cannot become stale.
-md_probe does not return what it gets from mddev_find until getting
-the disks_mutex lock and checking the contents, so it is sure to
-return a good mddev.
+You don't want to "mdadm --grow" until everything has been resized.
+First lvresize one disk, then write '0' to the .../size file.
+Then do the same for the other disk.
+Then "mdadm --grow /dev/mdX --size max".
 
-Thanks,
 NeilBrown
-
-
-
-> 
-> Andre
-> ---
-> 
-> From: Andre Noll <maan@systemlinux.org>
-> 
-> Fix possible race in md_probe().
-> 
-> The current code calls mddev_find() without any locks held.  It might
-> happen that mddev_find() succeeds but the returned mddev pointer
-> becomes stale just before the disks_mutex is aquired.
-> 
-> So close the race by calling mddev_find() with the disks mutex held.
-> 
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 647395b..6cb8773 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -3184,17 +3184,20 @@ static int mdp_major;
->  static struct kobject *md_probe(dev_t dev, int *part, void *data)
->  {
->  	static DEFINE_MUTEX(disks_mutex);
-> -	mddev_t *mddev = mddev_find(dev);
-> +	mddev_t *mddev;
->  	struct gendisk *disk;
->  	int partitioned = (MAJOR(dev) != MD_MAJOR);
->  	int shift = partitioned ? MdpMinorShift : 0;
->  	int unit = MINOR(dev) >> shift;
->  	int error;
->  
-> -	if (!mddev)
-> -		return NULL;
->  
->  	mutex_lock(&disks_mutex);
-> +	mddev = mddev_find(dev);
-> +	if (!mddev) {
-> +		mutex_unlock(&disks_mutex);
-> +		return NULL;
-> +	}
->  	if (mddev->gendisk) {
->  		mutex_unlock(&disks_mutex);
->  		mddev_put(mddev);
-> 
-> -- 
-> The only person who always got his work done by Friday was Robinson Crusoe
