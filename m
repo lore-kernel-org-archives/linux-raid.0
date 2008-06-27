@@ -1,306 +1,276 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: mdadm: spare rebuilding
-Date: Fri, 27 Jun 2008 19:54:05 +1000
-Message-ID: <18532.47293.808234.949005@notabene.brown>
-References: <48615EE7.7000502@blueyonder.co.uk>
+Subject: Re: raid5 recovery dramas.
+Date: Fri, 27 Jun 2008 20:28:40 +1000
+Message-ID: <18532.49368.984453.933541@notabene.brown>
+References: <48608E9B.6080904@curly.ii.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Jon Buckingham on Tuesday June 24
+In-Reply-To: message from Mark Davies on Tuesday June 24
 Sender: linux-raid-owner@vger.kernel.org
-To: jbuckingham@blueyonder.co.uk
-Cc: linux-raid@vger.kernel.org, Jon Buckingham <jon.buckingham@hp.com>
+To: Mark Davies <mark@curly.ii.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday June 24, jbuckingham@blueyonder.co.uk wrote:
-> Hi,
+On Tuesday June 24, mark@curly.ii.net wrote:
+> Hi all,
 > 
-> I've rebuilt my server from scratch, and have 4 raided partitions.
-> 
-> All went fine, however one of the partitions (a raid 5) only
-> appears to be using 3 out of 4 disks.
-> mdadm indicates that the unused disk is "spare rebuilding",
-> but after tens of hours and a reboot it's status is unchanged.
-> 
-> There is no significant activity by the relevant process
-> (md3_raid5) - <1% cpu usage, the same as the other similar processes.
-> 
-> I have tried removing the "spare" disk and re-adding it, but get...
-> nas:~ # mdadm /dev/md3 --remove /dev/sdd4
-> mdadm: hot remove failed for /dev/sdd4: Device or resource busy
-> 
-> nas:~ # mdadm /dev/md3 --add /dev/sdd4
-> mdadm: Cannot open /dev/sdd4: Device or resource busy
-> 
-> There are no obvious errors from the boot log.
-> 
-> Do you have any ideas how to get all 4 disks used, what the
-> issue might be etc? Or am I just impatient?!
+> Hoping to find some information to help me recover my software raid5 array.
 
-No, not impatient...
+You are in a rather stick situation.
 
-Maybe a bug that has since been fixed.
-What happens if you
-  echo sync > /sys/block/md3/md/sync_action
-??
+Neither  sdd1 or sde1 know where they belong in the array.  If they
+did, then  "mdadm --assemble --force" would probably be able to help
+you (I should test that).  But they don't.
+
+Do you have any boot logs from before you started the reshape that
+show which device fills which slot in the array?
+
+sdd1 has an event count of 0.  That is really odd.  Any idea how that
+happened?  Did you remove it from the array and try to add it back?
+That wouldn't have been a good idea.
+
+I'm at a bit of a loss as to what to suggest.  The data is mostly
+there, but getting it back is tricky.
+
+What you need to do is 
+   choose one of sdd and sde which you think is device  '3'
+     (sdc is 0, sdb is 1, sda is 2).
+   rewrite the metadata to assert this fact
+   assemble the array read-only with sd[abc] and the one you choose
+   read the data to make sure it is all where
+   switch to read-write so the reshape competes, leaving you with
+    a degraded array
+   add the other drive and let it recover.
+
+The early steps in particular are not easy.
+
+I'll try to find some time to experiment, but I cannot promise
+anything.
+
+If you can remember everything you tried to do (maybe in
+.bash_history) that might help.
 
 NeilBrown
 
 
+
 > 
-> Various logs etc appended.
+> Some background information first (excuse the hostname)
 > 
-> Thanks
+> uname -a
+> Linux Fuckyfucky3 2.6.18-4-686 #1 SMP Wed May 9 23:03:12 UTC 2007 i686 
+> GNU/Linux
 > 
-> Jon B
 > 
-> ----------------------------------
-> opensuse 10.3
+> It's a debian box that initially had 4 disks in a software raid5 array.
 > 
-> nas:~ # uname -a
-> Linux nas 2.6.22.5-31-default #1 SMP 2007/09/21 22:29:00 UTC i686 athlon i386 GNU/Linux
+> The problem started when I attempted to add another disk and grow the 
+> array.  I'd already done this from 3-4 disks using the instruction on 
+> this page:  "http://scotgate.org/?p=107".
 > 
-> nas:~ # rpm -qa | grep mdadm
-> mdadm-2.6.2-16
-> ----------------------------------
-> nas:~ # cat /proc/mdstat
-> Personalities : [raid1] [raid0] [raid6] [raid5] [raid4]
-> md3 : active raid5 sda4[0] sdd4[4] sdc4[2] sdb4[1]
->        576435840 blocks super 1.0 level 5, 128k chunk, algorithm 2 [4/3] [UUU_]
->        bitmap: 2/184 pages [8KB], 512KB chunk
+> However this time I unmounted the volume, but didn't do a fsck before 
+> starting.  I also discovered that for some reason mdadm wasn't 
+> monitoring the array.
 > 
-> md1 : active raid1 sda2[0] sdd2[3] sdc2[2] sdb2[1]
->        41945640 blocks super 1.0 [4/4] [UUUU]
->        bitmap: 0/161 pages [0KB], 128KB chunk
+> Bad mistakes obviously - and I hope I've learnt from them.
 > 
-> md0 : active raid1 sda1[0] sdd1[3] sdc1[2] sdb1[1]
->        10490340 blocks super 1.0 [4/4] [UUUU]
->        bitmap: 1/161 pages [4KB], 32KB chunk
+> Short version is that two of the disks had errors on them, and so mdadm 
+> disabled those disks about 50MB into the reshape.  Both failed SMART 
+> tests subsequently.
 > 
-> md2 : active(auto-read-only) raid5 sda3[0] sdd3[4] sdc3[2] sdb3[1]
->        1590144 blocks super 1.0 level 5, 128k chunk, algorithm 2 [4/4] [UUUU]
->        bitmap: 0/9 pages [0KB], 32KB chunk
+> I bought two new disks, and used dd-recue to make copies of them, which 
+> seemed to work well.
 > 
-> unused devices: <none>
-> ----------------------------------
-> nas:~ # mdadm --detail /dev/md3
-> /dev/md3:
->          Version : 01.00.03
->    Creation Time : Mon Jun 23 22:03:45 2008
->       Raid Level : raid5
->       Array Size : 576435840 (549.73 GiB 590.27 GB)
->    Used Dev Size : 384290560 (183.24 GiB 196.76 GB)
->     Raid Devices : 4
->    Total Devices : 4
-> Preferred Minor : 3
->      Persistence : Superblock is persistent
+> Now however I can't restart the array.
 > 
->    Intent Bitmap : Internal
+> I can see all 5 superblocks:
 > 
->      Update Time : Tue Jun 24 21:37:33 2008
->            State : active, degraded
->   Active Devices : 3
-> Working Devices : 4
->   Failed Devices : 0
->    Spare Devices : 1
-> 
->           Layout : left-symmetric
->       Chunk Size : 128K
-> 
->             Name : 3
->             UUID : 17ae4fee:d1380d07:c3265e31:3c77f88f
->           Events : 1256
-> 
->      Number   Major   Minor   RaidDevice State
->         0       8        4        0      active sync   /dev/sda4
->         1       8       20        1      active sync   /dev/sdb4
->         2       8       36        2      active sync   /dev/sdc4
->         4       8       52        3      spare rebuilding   /dev/sdd4
-> ----------------------------------
-> nas:~ # mdadm -E /dev/sdd4
-> /dev/sdd4:
+> :~# mdadm --examine /dev/sd?1
+> /dev/sda1:
 >            Magic : a92b4efc
 >          Version : 01
->      Feature Map : 0x3
->       Array UUID : 17ae4fee:d1380d07:c3265e31:3c77f88f
->             Name : 3
->    Creation Time : Mon Jun 23 22:03:45 2008
+>      Feature Map : 0x4
+>       Array UUID : 43eff327:8d1aa506:c0df2849:005c003f
+>             Name : 'Fuckyfucky3':1
+>    Creation Time : Sun Dec 23 01:28:08 2007
 >       Raid Level : raid5
->     Raid Devices : 4
+>     Raid Devices : 5
 > 
->    Used Dev Size : 384290720 (183.24 GiB 196.76 GB)
->       Array Size : 1152871680 (549.73 GiB 590.27 GB)
->        Used Size : 384290560 (183.24 GiB 196.76 GB)
->     Super Offset : 384290848 sectors
-> Recovery Offset : 48750592 sectors
+>      Device Size : 976767856 (465.76 GiB 500.11 GB)
+>       Array Size : 3907069952 (1863.04 GiB 2000.42 GB)
+>        Used Size : 976767488 (465.76 GiB 500.10 GB)
+>     Super Offset : 976767984 sectors
 >            State : clean
->      Device UUID : 086e1682:4ba0454f:673f8a77:b56f3b92
+>      Device UUID : 5b38c5a2:798c6793:91ad6d1e:9cfee153
 > 
-> Internal Bitmap : -93 sectors from superblock
->      Update Time : Tue Jun 24 21:47:17 2008
->         Checksum : 135f5478 - correct
->           Events : 1258
+>    Reshape pos'n : 143872 (140.52 MiB 147.32 MB)
+>    Delta Devices : 1 (4->5)
+> 
+>      Update Time : Fri May 16 23:55:29 2008
+>         Checksum : 5354498d - correct
+>           Events : 1420762
 > 
 >           Layout : left-symmetric
 >       Chunk Size : 128K
 > 
->      Array Slot : 4 (0, 1, 2, failed, 3)
->     Array State : uuuU 1 failed
-> ----------------------------------
-> nas:~ # mdadm -E /dev/sda4
-> /dev/sda4:
+>      Array Slot : 3 (failed, 1, failed, 2, failed, 0)
+>     Array State : uuU__ 3 failed
+> /dev/sdb1:
 >            Magic : a92b4efc
 >          Version : 01
->      Feature Map : 0x1
->       Array UUID : 17ae4fee:d1380d07:c3265e31:3c77f88f
->             Name : 3
->    Creation Time : Mon Jun 23 22:03:45 2008
+>      Feature Map : 0x4
+>       Array UUID : 43eff327:8d1aa506:c0df2849:005c003f
+>             Name : 'Fuckyfucky3':1
+>    Creation Time : Sun Dec 23 01:28:08 2007
 >       Raid Level : raid5
->     Raid Devices : 4
+>     Raid Devices : 5
 > 
->    Used Dev Size : 384290720 (183.24 GiB 196.76 GB)
->       Array Size : 1152871680 (549.73 GiB 590.27 GB)
->        Used Size : 384290560 (183.24 GiB 196.76 GB)
->     Super Offset : 384290848 sectors
+>      Device Size : 976767856 (465.76 GiB 500.11 GB)
+>       Array Size : 3907069952 (1863.04 GiB 2000.42 GB)
+>        Used Size : 976767488 (465.76 GiB 500.10 GB)
+>     Super Offset : 976767984 sectors
 >            State : clean
->      Device UUID : 6ed4d11c:2092f54b:8d530f91:c1813c49
+>      Device UUID : 673ba6d4:6c46fd55:745c9c93:3fa8bf21
 > 
-> Internal Bitmap : -93 sectors from superblock
->      Update Time : Tue Jun 24 21:47:17 2008
->         Checksum : 7868f2de - correct
->           Events : 1258
+>    Reshape pos'n : 143872 (140.52 MiB 147.32 MB)
+>    Delta Devices : 1 (4->5)
+> 
+>      Update Time : Fri May 16 23:55:29 2008
+>         Checksum : 8ad75f10 - correct
+>           Events : 1420762
 > 
 >           Layout : left-symmetric
 >       Chunk Size : 128K
 > 
->      Array Slot : 0 (0, 1, 2, failed, 3)
->     Array State : Uuuu 1 failed
-> ----------------------------------
+>      Array Slot : 1 (failed, 1, failed, 2, failed, 0)
+>     Array State : uUu__ 3 failed
+> /dev/sdc1:
+>            Magic : a92b4efc
+>          Version : 01
+>      Feature Map : 0x4
+>       Array UUID : 43eff327:8d1aa506:c0df2849:005c003f
+>             Name : 'Fuckyfucky3':1
+>    Creation Time : Sun Dec 23 01:28:08 2007
+>       Raid Level : raid5
+>     Raid Devices : 5
 > 
-> nas:~ # grep -i -C6 raid /var/log/boot.msg
-> <6>ata6.00: ATA-7: WDC WD2500YD-01NVB1, 10.02E01, max UDMA/133
-> <6>ata6.00: 490234752 sectors, multi 16: LBA48 NCQ (depth 0/1)
-> <6>ata6.00: configured for UDMA/133
-> <5>scsi 4:0:0:0: Direct-Access     ATA      WDC WD2500YD-01N 10.0 PQ: 0 ANSI: 5
-> <5>scsi 5:0:0:0: Direct-Access     ATA      WDC WD2500YD-01N 10.0 PQ: 0 ANSI: 5
-> <4>ACPI Exception (processor_core-0787): AE_NOT_FOUND, Processor Device is not present [20070126]
-> <6>md: raid1 personality registered for level 1
-> <6>BIOS EDD facility v0.16 2004-Jun-25, 4 devices found
-> <6>usbcore: registered new interface driver usbfs
-> <6>usbcore: registered new interface driver hub
-> <6>usbcore: registered new device driver usb
-> <7>ohci_hcd: 2006 August 04 USB 1.1 'Open' Host Controller (OHCI) Driver
-> <4>ACPI: PCI Interrupt Link [LUB0] enabled at IRQ 21
-> --
-> <5>sd 5:0:0:0: [sdd] 490234752 512-byte hardware sectors (251000 MB)
-> <5>sd 5:0:0:0: [sdd] Write Protect is off
-> <7>sd 5:0:0:0: [sdd] Mode Sense: 00 3a 00 00
-> <5>sd 5:0:0:0: [sdd] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
-> <6> sdd: sdd1 sdd2 sdd3 sdd4
-> <5>sd 5:0:0:0: [sdd] Attached SCSI disk
-> <6>md: raid0 personality registered for level 0
-> <6>raid5: automatically using best checksumming function: pIII_sse
-> <4>   pIII_sse  :  5641.000 MB/sec
-> <4>raid5: using function: pIII_sse (5641.000 MB/sec)
-> <4>raid6: int32x1    706 MB/s
-> <4>raid6: int32x2    747 MB/s
-> <4>raid6: int32x4    671 MB/s
-> <4>raid6: int32x8    516 MB/s
-> <4>raid6: mmxx1     1504 MB/s
-> <4>raid6: mmxx2     2760 MB/s
-> <4>raid6: sse1x1     344 MB/s
-> <4>raid6: sse1x2     382 MB/s
-> <4>raid6: sse2x1     440 MB/s
-> <4>raid6: sse2x2     640 MB/s
-> <4>raid6: using algorithm sse2x2 (640 MB/s)
-> <6>md: raid6 personality registered for level 6
-> <6>md: raid5 personality registered for level 5
-> <6>md: raid4 personality registered for level 4
-> <6>md: md2 stopped.
-> <6>md: md0 stopped.
-> <6>md: bind<sdb1>
-> <6>md: bind<sdc1>
-> <6>md: bind<sdd1>
-> <6>md: bind<sda1>
-> <3>md: md0: raid array is not clean -- starting background reconstruction
-> <6>raid1: raid set md0 active with 4 out of 4 mirrors
-> <6>md0: bitmap file is out of date (4 < 5) -- forcing full recovery
-> <6>md0: bitmap file is out of date, doing full recovery
-> <6>md0: bitmap initialized from disk: read 11/11 pages, set 327824 bits, status: 0
-> <6>created bitmap (161 pages) for device md0
-> <4>swsusp: Basic memory bitmaps created
-> <4>swsusp: Basic memory bitmaps freed
-> <4>swsusp: Basic memory bitmaps created
-> <4>swsusp: Basic memory bitmaps freed
-> <4>Attempting manual resume
-> <1>Read-error on swap-device (9:2:8)
-> <6>md: resync of RAID array md0
-> <6>md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
-> <6>md: using maximum available idle IO bandwidth (but not more than 200000 KB/sec) for resync.
-> <6>md: using 128k window, over a total of 10490340 blocks.
-> <6>kjournald starting.  Commit interval 5 seconds
-> <6>EXT3 FS on md0, internal journal
-> <6>EXT3-fs: mounted filesystem with ordered data mode.
-> --
-> <6>md: md1 stopped.
-> <6>device-mapper: ioctl: 4.11.0-ioctl (2006-10-12) initialised: dm-devel@redhat.com
-> <6>md: bind<sdb2>
-> <6>md: bind<sdc2>
-> <6>md: bind<sdd2>
-> <6>md: bind<sda2>
-> <6>raid1: raid set md1 active with 4 out of 4 mirrors
-> <6>md1: bitmap initialized from disk: read 11/11 pages, set 2 bits, status: 0
-> <6>created bitmap (161 pages) for device md1
-> <6>md: md2 stopped.
-> <6>md: bind<sdb3>
-> <6>md: bind<sdc3>
-> <6>md: bind<sdd3>
-> <6>md: bind<sda3>
-> <6>raid5: device sda3 operational as raid disk 0
-> <6>raid5: device sdd3 operational as raid disk 3
-> <6>raid5: device sdc3 operational as raid disk 2
-> <6>raid5: device sdb3 operational as raid disk 1
-> <6>raid5: allocated 4204kB for md2
-> <4>raid5: raid level 5 set md2 active with 4 out of 4 devices, algorithm 2
-> <4>RAID5 conf printout:
-> <4> --- rd:4 wd:4
-> <4> disk 0, o:1, dev:sda3
-> <4> disk 1, o:1, dev:sdb3
-> <4> disk 2, o:1, dev:sdc3
-> <4> disk 3, o:1, dev:sdd3
-> <6>md2: bitmap initialized from disk: read 1/1 pages, set 0 bits, status: 0
-> --
-> <6>md: md3 stopped.
-> <6>md: bind<sdb4>
-> <7>ieee1394: Host added: ID:BUS[0-00:1023]  GUID[0011d80000916254]
-> <6>md: bind<sdc4>
-> <6>md: bind<sdd4>
-> <6>md: bind<sda4>
-> <6>raid5: device sda4 operational as raid disk 0
-> <6>raid5: device sdc4 operational as raid disk 2
-> <6>raid5: device sdb4 operational as raid disk 1
-> <6>raid5: allocated 4204kB for md3
-> <1>raid5: raid level 5 set md3 active with 3 out of 4 devices, algorithm 2
-> <4>RAID5 conf printout:
-> <4> --- rd:4 wd:3
-> <4> disk 0, o:1, dev:sda4
-> <4> disk 1, o:1, dev:sdb4
-> <4> disk 2, o:1, dev:sdc4
-> <4> disk 3, o:1, dev:sdd4
-> <6>md3: bitmap initialized from disk: read 12/12 pages, set 3 bits, status: 0
-> --
-> Loading required kernel modules
-> doneActivating swap-devices in /etc/fstab...
-> failedmount: according to mtab, /dev/md0 is already mounted on /
+>      Device Size : 976767856 (465.76 GiB 500.11 GB)
+>       Array Size : 3907069952 (1863.04 GiB 2000.42 GB)
+>        Used Size : 976767488 (465.76 GiB 500.10 GB)
+>     Super Offset : 976767984 sectors
+>            State : clean
+>      Device UUID : 99b87c50:a919bd63:599a135f:9af385ba
 > 
-> Activating device mapper...
-> done
-> Starting MD Raid mdadm: /dev/md1 has been started with 4 drives.
-> mdadm: /dev/md2 has been started with 4 drives.
-> mdadm: /dev/md3 has been started with 4 drives.
-> Checking file systems...
-> fsck 1.40.2 (12-Jul-2007)
-> /dev/md1: clean, 74739/5248992 files, 2949291/10486410 blocks
-> /sbin/fsck.xfs: XFS file system.
-> -------------------------------------
+>    Reshape pos'n : 143872 (140.52 MiB 147.32 MB)
+>    Delta Devices : 1 (4->5)
+> 
+>      Update Time : Fri May 16 23:55:29 2008
+>         Checksum : 78ab38c3 - correct
+>           Events : 1420762
+> 
+>           Layout : left-symmetric
+>       Chunk Size : 128K
+> 
+>      Array Slot : 5 (failed, 1, failed, 2, failed, 0)
+>     Array State : Uuu__ 3 failed
+> /dev/sdd1:
+>            Magic : a92b4efc
+>          Version : 01
+>      Feature Map : 0x4
+>       Array UUID : 43eff327:8d1aa506:c0df2849:005c003f
+>             Name : 'Fuckyfucky3':1
+>    Creation Time : Sun Dec 23 01:28:08 2007
+>       Raid Level : raid5
+>     Raid Devices : 5
+> 
+>      Device Size : 976767856 (465.76 GiB 500.11 GB)
+>       Array Size : 3907069952 (1863.04 GiB 2000.42 GB)
+>        Used Size : 976767488 (465.76 GiB 500.10 GB)
+>     Super Offset : 976767984 sectors
+>            State : clean
+>      Device UUID : 89201477:8e950d20:9193016d:f5c9deb0
+> 
+>    Reshape pos'n : 143872 (140.52 MiB 147.32 MB)
+>    Delta Devices : 1 (4->5)
+> 
+>      Update Time : Fri May 16 23:55:29 2008
+>         Checksum : 5fc43e52 - correct
+>           Events : 0
+> 
+>           Layout : left-symmetric
+>       Chunk Size : 128K
+> 
+>      Array Slot : 6 (failed, 1, failed, 2, failed, 0)
+>     Array State : uuu__ 3 failed
+> /dev/sde1:
+>            Magic : a92b4efc
+>          Version : 01
+>      Feature Map : 0x4
+>       Array UUID : 43eff327:8d1aa506:c0df2849:005c003f
+>             Name : 'Fuckyfucky3':1
+>    Creation Time : Sun Dec 23 01:28:08 2007
+>       Raid Level : raid5
+>     Raid Devices : 5
+> 
+>      Device Size : 976767856 (465.76 GiB 500.11 GB)
+>       Array Size : 3907069952 (1863.04 GiB 2000.42 GB)
+>        Used Size : 976767488 (465.76 GiB 500.10 GB)
+>     Super Offset : 976767984 sectors
+>            State : clean
+>      Device UUID : 89b53542:d1d820bc:f2ece884:4785869a
+> 
+>    Reshape pos'n : 143872 (140.52 MiB 147.32 MB)
+>    Delta Devices : 1 (4->5)
+> 
+>      Update Time : Fri May 16 23:55:29 2008
+>         Checksum : c89dd220 - correct
+>           Events : 1418968
+> 
+>           Layout : left-symmetric
+>       Chunk Size : 128K
+> 
+>      Array Slot : 6 (failed, 1, failed, 2, failed, 0)
+>     Array State : uuu__ 3 failed
+> 
+> 
+> 
+> 
+> When I try to start the array, I get:
+> 
+> ~# mdadm --assemble --verbose /dev/md1 /dev/sda1 /dev/sdb1 /dev/sdc1 
+> /dev/sdd1 /dev/sde1
+> mdadm: looking for devices for /dev/md1
+> mdadm: /dev/sda1 is identified as a member of /dev/md1, slot 2.
+> mdadm: /dev/sdb1 is identified as a member of /dev/md1, slot 1.
+> mdadm: /dev/sdc1 is identified as a member of /dev/md1, slot 0.
+> mdadm: /dev/sdd1 is identified as a member of /dev/md1, slot -1.
+> mdadm: /dev/sde1 is identified as a member of /dev/md1, slot -1.
+> mdadm: added /dev/sdb1 to /dev/md1 as 1
+> mdadm: added /dev/sda1 to /dev/md1 as 2
+> mdadm: no uptodate device for slot 3 of /dev/md1
+> mdadm: no uptodate device for slot 4 of /dev/md1
+> mdadm: added /dev/sdd1 to /dev/md1 as -1
+> mdadm: failed to add /dev/sde1 to /dev/md1: Device or resource busy
+> mdadm: added /dev/sdc1 to /dev/md1 as 0
+> mdadm: /dev/md1 assembled from 3 drives and -1 spares - not enough to 
+> start the array.
+> 
+> 
+> 
+> 
+> Any help would be much appreciated.   If I can provide any more 
+> information, just ask.
+> 
+> As to why /dev/sde1 is busy, I don't know.  lsof shows no files open.
+> 
+> 
+> Regards,
+> 
+> 
+> Mark.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
