@@ -1,50 +1,90 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: Software RAID1 deadlock in 2.6.25 kernels
-Date: Sat, 28 Jun 2008 06:47:29 +1000
-Message-ID: <18533.20961.694041.556763@notabene.brown>
-References: <48650567.3000501@w1nr.net>
+Subject: Re: [PATCH 008 of 29] md: Close race in md_probe
+Date: Sat, 28 Jun 2008 09:38:06 +1000
+Message-ID: <18533.31198.932488.652568@notabene.brown>
+References: <20080627164503.9671.patches@notabene>
+	<1080627065010.10418@suse.de>
+	<20080627122153.GE4981@skl-net.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Mike McCarthy on Friday June 27
+In-Reply-To: message from Andre Noll on Friday June 27
 Sender: linux-raid-owner@vger.kernel.org
-To: Mike McCarthy <mike@w1nr.net>
-Cc: linux-raid@vger.kernel.org
+To: Andre Noll <maan@systemlinux.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Friday June 27, mike@w1nr.net wrote:
-> Hello Neil and Linus,
-
-I've dropped Linus from cc as he won't be interested, and added
-linux-raid.
-
->     I am contacting both of you because you have submitted md raid code 
-> to the 2.6.25 kernels.  I have found an apparent deadlock condition 
-> using software RAID1 with SUSE 11.0 and Fedora 9, both which use the 
-> 2.6.25 kernels.  Configuration is as follows:
+On Friday June 27, maan@systemlinux.org wrote:
+> On 16:50, NeilBrown wrote:
+> > 
+> > There is a possible race in md_probe.  If two threads call md_probe
+> > for the same device, then one could exit (having checked that
+> > ->gendisk exists) before the other has called kobject_init_and_add,
+> > thus returning an incomplete kobj which will cause problems when
+> > we try to add children to it.
+...
 > 
->     Dell Precision 450 with single Xeon 2.4 GHz processor 
-> (hyperthreaded, looks like a dual core)
->     2 Seagate 120GB IDE drives
->        sda1,sdb1 - 1GB swap
->        sda2,sdb2 - 100MB, RAID1, md0,  /boot
->        sda3,sdb3 - balance of disk, RAID1, md1 3 LVM filesystems
-> 
->    System locks up after running a short time.  Had it hang once during 
-> installation.  Tried both Reiserfs and EXT3.
+> Even with this patch, md_probe() calls mddev_find() without holding
+> the disks_mutex. Is this OK? If it isn't, something like the patch
+> below might be necessary.
 
-We need more details about the lockup.  Does the whole system lock up,
-or just the array.
-Can  you get
-   alt-sysrq-T
-output?  That might be useful.
-  
+Thanks for looking at this and asking.
 
-> 
->    Are either of you aware of this issue?  If not, I can file a bugzilla.
+No, the below patch is not necessary.
 
-No I'm not aware of such an issue.
-I prefer to avoid bugzilla, lets just discuss it here.
+mddev_find gets a reference on the mddev, so it cannot become stale.
+md_probe does not return what it gets from mddev_find until getting
+the disks_mutex lock and checking the contents, so it is sure to
+return a good mddev.
 
+Thanks,
 NeilBrown
+
+
+
+> 
+> Andre
+> ---
+> 
+> From: Andre Noll <maan@systemlinux.org>
+> 
+> Fix possible race in md_probe().
+> 
+> The current code calls mddev_find() without any locks held.  It might
+> happen that mddev_find() succeeds but the returned mddev pointer
+> becomes stale just before the disks_mutex is aquired.
+> 
+> So close the race by calling mddev_find() with the disks mutex held.
+> 
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index 647395b..6cb8773 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -3184,17 +3184,20 @@ static int mdp_major;
+>  static struct kobject *md_probe(dev_t dev, int *part, void *data)
+>  {
+>  	static DEFINE_MUTEX(disks_mutex);
+> -	mddev_t *mddev = mddev_find(dev);
+> +	mddev_t *mddev;
+>  	struct gendisk *disk;
+>  	int partitioned = (MAJOR(dev) != MD_MAJOR);
+>  	int shift = partitioned ? MdpMinorShift : 0;
+>  	int unit = MINOR(dev) >> shift;
+>  	int error;
+>  
+> -	if (!mddev)
+> -		return NULL;
+>  
+>  	mutex_lock(&disks_mutex);
+> +	mddev = mddev_find(dev);
+> +	if (!mddev) {
+> +		mutex_unlock(&disks_mutex);
+> +		return NULL;
+> +	}
+>  	if (mddev->gendisk) {
+>  		mutex_unlock(&disks_mutex);
+>  		mddev_put(mddev);
+> 
+> -- 
+> The only person who always got his work done by Friday was Robinson Crusoe
