@@ -1,49 +1,75 @@
-From: Roger Heflin <rogerheflin@gmail.com>
-Subject: Re: Slowww raid check (raid10, f2)
-Date: Thu, 26 Jun 2008 15:47:39 -0500
-Message-ID: <4864006B.50703@gmail.com>
-References: <cccedfc60806260621ud3af517j959f5ce3c2e521ef@mail.gmail.com>	 <4863A6A1.3010408@gmail.com>	 <cccedfc60806261303t4a6d4124w2ab12227d8acb99f@mail.gmail.com>	 <4863F85D.7080502@gmail.com> <cccedfc60806261322r100e8b8x3a964ae683a46f59@mail.gmail.com>
+From: Timothy Shimmin <tes@sgi.com>
+Subject: Re: [PATCH] disable queue flag test in barrier check
+Date: Fri, 27 Jun 2008 14:51:41 +1000
+Message-ID: <486471DD.8010604@sgi.com>
+References: <486307EA.7080007@sandeen.net> <48635284.3060001@sgi.com> <486398B7.50306@sandeen.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <cccedfc60806261322r100e8b8x3a964ae683a46f59@mail.gmail.com>
+In-Reply-To: <486398B7.50306@sandeen.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jon Nelson <jnelson-linux-raid@jamponi.net>
-Cc: Linux-Raid <linux-raid@vger.kernel.org>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs-oss <xfs@oss.sgi.com>, LinuxRaid <linux-raid@vger.kernel.org>, NeilBrown <neilb@suse.de>, jeremy@sgi.comwe
 List-Id: linux-raid.ids
 
-Jon Nelson wrote:
->> That is a good built-in controller then, the scaling is almost perfect,
->> predicted would be  74, 158, 222 vs. 74, 154, 205.
+Eric Sandeen wrote:
+> Timothy Shimmin wrote:
 > 
-> I would really like to know how you arrived at what appear to be
-> fairly specific numbers.
+>> Also from memory, I believe Neil checked this removal into the SLES10sp1 tree
+>> and some sgi boxes started having slow downs
+>> (looking at Dave's email below - we were not wanting to tell them
+>> to use nobarrier but needed it to work by default - I forget now).
 > 
+> But that's an admin issue.
 > 
+> The way it is now, for example a home user of md raid1 (me!) can't run
+> barriers even if they wanted to.
+> 
+I understand what you are saying. I agree. And I agreed
+when it went out last time.
+
+But as it has:
+-> gone in
+<- gone out
+-> gone in
+I want to make sure that everyone is happy for it to go
+back out again. (Cut the string of the yoyo :-)
 
 
- From your test results each disk does about 74, both together should do 2x that 
-in a perfect world (no interference with each other), and 3 should do 3x that, 
-at 3x your system is 17MB/second slower than perfect, which is pretty good.
+> Until there is a way to know if a write cache is non-volatile the only
+> safe option is to enable barriers when possible.
+> 
+>> 6.
+>>> Date: Wed, 25 Jun 2008 08:57:24 +1000
+>>> From: Dave Chinner <david@fromorbit.com>
+>>> To: Eric Sandeen <sandeen@sandeen.net>
+>>> Cc: LinuxRaid <linux-raid@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
+>>> Subject: Re: md raid1 passes barriers, but xfs doesn't use them?
+>>>
+>>> Yeah, the problem was that last time this check was removed was
+>>> that a bunch of existing hardware had barriers enabled on them when
+>>> not necessary (e.g. had NVRAM) and they went 5x slower on MD raid1
+>>> devices. Having to change the root drive config on a wide install
+>>> base was considered much more of support pain than leaving the
+>>> check there. I guess that was more of a distro upgrade issue than
+>>> a mainline problem, but that's the history. Hence I think we
+>>> should probably do whatever everyone else is doing here....
+>>>
+>>> Cheers,
+>>>
+>>> Dave.
+>> So I guess my question is whether there are cases where we are
+>> going to be in trouble again.
+>> Jeremy, do you see some problems?
+> 
+> FWIW, the problem *I* foresee is that some people are going to slow down
+> when using the defaults, yes, because barriers will start working again.
+>  But I don't see any other safe way around it.
+> 
+> Education would be in order, I suppose.  :)
+> 
+Well that's an ongoing problem.
+(Tell 'em to use laptop drives ;-))
 
-With a PCI controller (32bit/33mhz-standard desktop-max 133MB/second) the 
-numbers look more like this:
-70, 100, 115 (pretty bad).
-
-You could get better estimates of how much interference is going on by using 
-"vmstat 60" as that will give you a more accurate sustained number, and would 
-give you better ideas of what the disks can sustain over longer periods of time, 
-note though that the disks get slower the further you are into the disk, if you 
-start a dd and graph the vmstat output then the disk speed will slowly decrease 
-as you get to the inside of the disk, but your built-in controller is pretty good.
-
-And the seeking around won't hurt too bad unless the block size is small, with a 
-8ms seek time you can write/read about 600kb of data in the time it takes for a 
-seek, so if you seek,read,seek,read with 600kb blocks you will get about 50% of 
-disk speed, but if you do the same with smaller blocks the seek time uses up 
-more time than the write/reads.    If you use 1M blocks you are spending more 
-time doing writes/reads, if you use 256kb blocks more time is spent seeking than 
-write/read.
-
-                            Roger
+--Tim
