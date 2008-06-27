@@ -1,35 +1,112 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [PATCH 004 of 29] md: linear: correct disk numbering error check
-Date: Fri, 27 Jun 2008 16:49:43 +1000
-Message-ID: <1080627064943.10337@suse.de>
+Subject: [PATCH 006 of 29] md: Improve setting of "events_cleared" for write-intent bitmaps.
+Date: Fri, 27 Jun 2008 16:49:56 +1000
+Message-ID: <1080627064956.10383@suse.de>
 References: <20080627164503.9671.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Nikanth Karthikesan <knikanth@novell.com>, Nikanth Karthikesan <knikanth@suse.de>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Mike Snitzer <snitzer@gmail.com>
 List-Id: linux-raid.ids
 
 
-From: "Nikanth Karthikesan" <knikanth@novell.com>
+When an array is degraded, bits in the write-intent bitmap are not
+cleared, so that if the missing device is re-added, it can be synced
+by only updated those parts of the device that have changed since
+it was removed.
 
-Correct disk numbering problem check.
+The enable this a 'events_cleared' value is stored. It is the event
+counter for the array the last time that any bits were cleared.
 
-Signed-off-by: Nikanth Karthikesan <knikanth@suse.de>
+Sometimes - if a device disappears from an array while it is 'clean' -
+the events_cleared value gets updated incorrectly (there are subtle
+ordering issues between updateing events in the main metadata and the
+bitmap metadata) resulting in the missing device appearing to require
+a full resync when it is re-added.
+
+With this patch, we update events_cleared precisely when we are about
+to clear a bit in the bitmap.  We record events_cleared when we clear
+the bit internally, and copy that to the superblock which is written
+out before the bit on storage.  This makes it more "obviously correct".
+
+We also need to update events_cleared when the event_count is going
+backwards (as happens on a dirty->clean transition of a non-degraded
+array).
+
+Thanks to Mike Snitzer for identifying this problem and testing early
+"fixes".
+
+
+Cc:  "Mike Snitzer" <snitzer@gmail.com>
 Signed-off-by: Neil Brown <neilb@suse.de>
 
 ### Diffstat output
- ./drivers/md/linear.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ ./drivers/md/bitmap.c         |   29 ++++++++++++++++++++++++-----
+ ./include/linux/raid/bitmap.h |    1 +
+ 2 files changed, 25 insertions(+), 5 deletions(-)
 
-diff .prev/drivers/md/linear.c ./drivers/md/linear.c
---- .prev/drivers/md/linear.c	2008-06-27 15:19:55.000000000 +1000
-+++ ./drivers/md/linear.c	2008-06-27 15:31:20.000000000 +1000
-@@ -126,7 +126,7 @@ static linear_conf_t *linear_conf(mddev_
- 		int j = rdev->raid_disk;
- 		dev_info_t *disk = conf->disks + j;
- 
--		if (j < 0 || j > raid_disks || disk->rdev) {
-+		if (j < 0 || j >= raid_disks || disk->rdev) {
- 			printk("linear: disk numbering problem. Aborting!\n");
- 			goto out;
+diff .prev/drivers/md/bitmap.c ./drivers/md/bitmap.c
+--- .prev/drivers/md/bitmap.c	2008-06-27 15:14:04.000000000 +1000
++++ ./drivers/md/bitmap.c	2008-06-27 15:31:25.000000000 +1000
+@@ -454,8 +454,11 @@ void bitmap_update_sb(struct bitmap *bit
+ 	spin_unlock_irqrestore(&bitmap->lock, flags);
+ 	sb = (bitmap_super_t *)kmap_atomic(bitmap->sb_page, KM_USER0);
+ 	sb->events = cpu_to_le64(bitmap->mddev->events);
+-	if (!bitmap->mddev->degraded)
+-		sb->events_cleared = cpu_to_le64(bitmap->mddev->events);
++	if (bitmap->mddev->events < bitmap->events_cleared) {
++		/* rocking back to read-only */
++		bitmap->events_cleared = bitmap->mddev->events;
++		sb->events_cleared = cpu_to_le64(bitmap->events_cleared);
++	}
+ 	kunmap_atomic(sb, KM_USER0);
+ 	write_page(bitmap, bitmap->sb_page, 1);
+ }
+@@ -1085,9 +1088,19 @@ void bitmap_daemon_work(struct bitmap *b
+ 			} else
+ 				spin_unlock_irqrestore(&bitmap->lock, flags);
+ 			lastpage = page;
+-/*
+-			printk("bitmap clean at page %lu\n", j);
+-*/
++
++			/* We are possibly going to clear some bits, so make
++			 * sure that events_cleared is up-to-date.
++			 */
++			if (bitmap->need_sync) {
++				bitmap_super_t *sb;
++				bitmap->need_sync = 0;
++				sb = kmap_atomic(bitmap->sb_page, KM_USER0);
++				sb->events_cleared =
++					cpu_to_le64(bitmap->events_cleared);
++				kunmap_atomic(sb, KM_USER0);
++				write_page(bitmap, bitmap->sb_page, 1);
++			}
+ 			spin_lock_irqsave(&bitmap->lock, flags);
+ 			clear_page_attr(bitmap, page, BITMAP_PAGE_CLEAN);
  		}
+@@ -1257,6 +1270,12 @@ void bitmap_endwrite(struct bitmap *bitm
+ 			return;
+ 		}
+ 
++		if (success &&
++		    bitmap->events_cleared < bitmap->mddev->events) {
++			bitmap->events_cleared = bitmap->mddev->events;
++			bitmap->need_sync = 1;
++		}
++
+ 		if (!success && ! (*bmc & NEEDED_MASK))
+ 			*bmc |= NEEDED_MASK;
+ 
+
+diff .prev/include/linux/raid/bitmap.h ./include/linux/raid/bitmap.h
+--- .prev/include/linux/raid/bitmap.h	2008-06-27 15:14:04.000000000 +1000
++++ ./include/linux/raid/bitmap.h	2008-06-27 15:31:25.000000000 +1000
+@@ -221,6 +221,7 @@ struct bitmap {
+ 	unsigned long syncchunk;
+ 
+ 	__u64	events_cleared;
++	int need_sync;
+ 
+ 	/* bitmap spinlock */
+ 	spinlock_t lock;
