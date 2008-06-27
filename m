@@ -1,166 +1,163 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [PATCH 018 of 29] md: Support changing rdev size on running arrays.
-Date: Fri, 27 Jun 2008 16:51:16 +1000
-Message-ID: <1080627065116.10596@suse.de>
+Subject: [PATCH 014 of 29] md: Make sure all changes to md/array_state are notified.
+Date: Fri, 27 Jun 2008 16:50:50 +1000
+Message-ID: <1080627065050.10526@suse.de>
 References: <20080627164503.9671.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Chris Webb <chris@arachsys.com>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-From: Chris Webb <chris@arachsys.com>
+Changes in md/array_state could be of interest to a monitoring
+program.  So make sure all changes trigger a notification.
 
-Allow /sys/block/mdX/md/rdY/size to change on running arrays, moving the
-superblock if necessary for this metadata version. We prevent the available
-space from shrinking to less than the used size, and allow it to be set to zero
-to fill all the available space on the underlying device.
-
-Signed-off-by: Chris Webb <chris@arachsys.com>
+Exceptions:
+   changing active_idle to active is not reported because it
+      is frequent and not interesting.
+   changing active to active_idle is only reported on arrays
+      with externally managed metadata, as it is not interesting
+      otherwise.
+      
 Signed-off-by: Neil Brown <neilb@suse.de>
 
 ### Diffstat output
- ./drivers/md/md.c |  100 ++++++++++++++++++++++++++++++++++++++++++++++--------
- 1 file changed, 87 insertions(+), 13 deletions(-)
+ ./Documentation/md.txt |    5 +++++
+ ./drivers/md/md.c      |   29 ++++++++++++++++++++++++-----
+ 2 files changed, 29 insertions(+), 5 deletions(-)
+
+diff .prev/Documentation/md.txt ./Documentation/md.txt
+--- .prev/Documentation/md.txt	2008-06-27 16:20:34.000000000 +1000
++++ ./Documentation/md.txt	2008-06-27 16:22:01.000000000 +1000
+@@ -236,6 +236,11 @@ All md devices contain:
+      writing the word for the desired state, however some states
+      cannot be explicitly set, and some transitions are not allowed.
+ 
++     Select/poll works on this file.  All changes except between
++     	active_idle and active (which can be frequent and are not
++	very interesting) are notified.  active->active_idle is
++	reported if the metadata is externally managed.
++
+      clear
+          No devices, no size, no level
+          Writing is equivalent to STOP_ARRAY ioctl
 
 diff .prev/drivers/md/md.c ./drivers/md/md.c
---- .prev/drivers/md/md.c	2008-06-27 16:22:03.000000000 +1000
-+++ ./drivers/md/md.c	2008-06-27 16:22:03.000000000 +1000
-@@ -658,11 +658,14 @@ static unsigned int calc_sb_csum(mdp_sup
-  */
+--- .prev/drivers/md/md.c	2008-06-27 16:22:01.000000000 +1000
++++ ./drivers/md/md.c	2008-06-27 16:22:01.000000000 +1000
+@@ -2716,8 +2716,10 @@ array_state_store(mddev_t *mddev, const 
+ 	}
+ 	if (err)
+ 		return err;
+-	else
++	else {
++		sysfs_notify(&mddev->kobj, NULL, "array_state");
+ 		return len;
++	}
+ }
+ static struct md_sysfs_entry md_array_state =
+ __ATTR(array_state, S_IRUGO|S_IWUSR, array_state_show, array_state_store);
+@@ -3408,7 +3410,11 @@ static void md_safemode_timeout(unsigned
+ {
+ 	mddev_t *mddev = (mddev_t *) data;
  
- struct super_type  {
--	char 		*name;
--	struct module	*owner;
--	int		(*load_super)(mdk_rdev_t *rdev, mdk_rdev_t *refdev, int minor_version);
--	int		(*validate_super)(mddev_t *mddev, mdk_rdev_t *rdev);
--	void		(*sync_super)(mddev_t *mddev, mdk_rdev_t *rdev);
-+	char		    *name;
-+	struct module	    *owner;
-+	int		    (*load_super)(mdk_rdev_t *rdev, mdk_rdev_t *refdev,
-+					  int minor_version);
-+	int		    (*validate_super)(mddev_t *mddev, mdk_rdev_t *rdev);
-+	void		    (*sync_super)(mddev_t *mddev, mdk_rdev_t *rdev);
-+	unsigned long long  (*rdev_size_change)(mdk_rdev_t *rdev,
-+						unsigned long long size);
- };
- 
- /*
-@@ -1004,6 +1007,27 @@ static void super_90_sync(mddev_t *mddev
+-	mddev->safemode = 1;
++	if (!atomic_read(&mddev->writes_pending)) {
++		mddev->safemode = 1;
++		if (mddev->external)
++			sysfs_notify(&mddev->kobj, NULL, "array_state");
++	}
+ 	md_wakeup_thread(mddev->thread);
  }
  
- /*
-+ * rdev_size_change for 0.90.0
-+ */
-+static unsigned long long
-+super_90_rdev_size_change(mdk_rdev_t *rdev, unsigned long long size)
-+{
-+	if (size && size < rdev->mddev->size)
-+		return 0; /* component must fit device */
-+	size *= 2; /* convert to sectors */
-+	if (rdev->mddev->bitmap_offset)
-+		return 0; /* can't move bitmap */
-+	rdev->sb_offset = calc_dev_sboffset(rdev->bdev);
-+	if (!size || size > rdev->sb_offset*2)
-+		size = rdev->sb_offset*2;
-+	md_super_write(rdev->mddev, rdev, rdev->sb_offset << 1, rdev->sb_size,
-+		       rdev->sb_page);
-+	md_super_wait(rdev->mddev);
-+	return size/2; /* kB for sysfs */
-+}
-+
-+
-+/*
-  * version 1 superblock
-  */
+@@ -3675,6 +3681,7 @@ static int do_md_run(mddev_t * mddev)
  
-@@ -1328,21 +1352,59 @@ static void super_1_sync(mddev_t *mddev,
- 	sb->sb_csum = calc_sb_1_csum(sb);
+ 	mddev->changed = 1;
+ 	md_new_event(mddev);
++	sysfs_notify(&mddev->kobj, NULL, "array_state");
+ 	kobject_uevent(&mddev->gendisk->dev.kobj, KOBJ_CHANGE);
+ 	return 0;
  }
- 
-+static unsigned long long
-+super_1_rdev_size_change(mdk_rdev_t *rdev, unsigned long long size)
-+{
-+	struct mdp_superblock_1 *sb;
-+	unsigned long long max_size;
-+	if (size && size < rdev->mddev->size)
-+		return 0; /* component must fit device */
-+	size *= 2; /* convert to sectors */
-+	if (rdev->sb_offset < rdev->data_offset/2) {
-+		/* minor versions 1 and 2; superblock before data */
-+		max_size = (rdev->bdev->bd_inode->i_size >> 9);
-+		max_size -= rdev->data_offset;
-+		if (!size || size > max_size)
-+			size = max_size;
-+	} else if (rdev->mddev->bitmap_offset) {
-+		/* minor version 0 with bitmap we can't move */
-+		return 0;
-+	} else {
-+		/* minor version 0; superblock after data */
-+		sector_t sb_offset;
-+		sb_offset = (rdev->bdev->bd_inode->i_size >> 9) - 8*2;
-+		sb_offset &= ~(sector_t)(4*2 - 1);
-+		max_size = rdev->size*2 + sb_offset - rdev->sb_offset*2;
-+		if (!size || size > max_size)
-+			size = max_size;
-+		rdev->sb_offset = sb_offset/2;
-+	}
-+	sb = (struct mdp_superblock_1 *) page_address(rdev->sb_page);
-+	sb->data_size = cpu_to_le64(size);
-+	sb->super_offset = rdev->sb_offset*2;
-+	sb->sb_csum = calc_sb_1_csum(sb);
-+	md_super_write(rdev->mddev, rdev, rdev->sb_offset << 1, rdev->sb_size,
-+		       rdev->sb_page);
-+	md_super_wait(rdev->mddev);
-+	return size/2; /* kB for sysfs */
-+}
- 
- static struct super_type super_types[] = {
- 	[0] = {
- 		.name	= "0.90.0",
- 		.owner	= THIS_MODULE,
--		.load_super	= super_90_load,
--		.validate_super	= super_90_validate,
--		.sync_super	= super_90_sync,
-+		.load_super	    = super_90_load,
-+		.validate_super	    = super_90_validate,
-+		.sync_super	    = super_90_sync,
-+		.rdev_size_change   = super_90_rdev_size_change,
- 	},
- 	[1] = {
- 		.name	= "md-1",
- 		.owner	= THIS_MODULE,
--		.load_super	= super_1_load,
--		.validate_super	= super_1_validate,
--		.sync_super	= super_1_sync,
-+		.load_super	    = super_1_load,
-+		.validate_super	    = super_1_validate,
-+		.sync_super	    = super_1_sync,
-+		.rdev_size_change   = super_1_rdev_size_change,
- 	},
- };
- 
-@@ -2060,8 +2122,20 @@ rdev_size_store(mdk_rdev_t *rdev, const 
- 
- 	if (e==buf || (*e && *e != '\n'))
- 		return -EINVAL;
--	if (my_mddev->pers && rdev->raid_disk >= 0)
--		return -EBUSY;
-+	if (my_mddev->pers && rdev->raid_disk >= 0) {
-+		if (rdev->mddev->persistent) {
-+			size = super_types[rdev->mddev->major_version].
-+				rdev_size_change(rdev, size);
-+			if (!size)
-+				return -EBUSY;
-+		} else if (!size) {
-+			size = (rdev->bdev->bd_inode->i_size >> 10);
-+			size -= rdev->data_offset/2;
-+		}
-+		if (size < rdev->mddev->size)
-+			return -EINVAL; /* component must fit device */
-+	}
+@@ -3709,6 +3716,8 @@ static int restart_array(mddev_t *mddev)
+ 		md_wakeup_thread(mddev->thread);
+ 		md_wakeup_thread(mddev->sync_thread);
+ 		err = 0;
++		sysfs_notify(&mddev->kobj, NULL, "array_state");
 +
- 	rdev->size = size;
- 	if (size > oldsize && rdev->mddev->external) {
- 		/* need to check that all other rdevs with the same ->bdev
+ 	} else
+ 		err = -EINVAL;
+ 
+@@ -3879,6 +3888,7 @@ static int do_md_stop(mddev_t * mddev, i
+ 			mdname(mddev));
+ 	err = 0;
+ 	md_new_event(mddev);
++	sysfs_notify(&mddev->kobj, NULL, "array_state");
+ out:
+ 	return err;
+ }
+@@ -4876,8 +4886,9 @@ static int md_ioctl(struct inode *inode,
+ 	    mddev->ro && mddev->pers) {
+ 		if (mddev->ro == 2) {
+ 			mddev->ro = 0;
+-		set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+-		md_wakeup_thread(mddev->thread);
++			sysfs_notify(&mddev->kobj, NULL, "array_state");
++			set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
++			md_wakeup_thread(mddev->thread);
+ 
+ 		} else {
+ 			err = -EROFS;
+@@ -5516,6 +5527,7 @@ void md_done_sync(mddev_t *mddev, int bl
+  */
+ void md_write_start(mddev_t *mddev, struct bio *bi)
+ {
++	int did_change = 0;
+ 	if (bio_data_dir(bi) != WRITE)
+ 		return;
+ 
+@@ -5526,6 +5538,7 @@ void md_write_start(mddev_t *mddev, stru
+ 		set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+ 		md_wakeup_thread(mddev->thread);
+ 		md_wakeup_thread(mddev->sync_thread);
++		did_change = 1;
+ 	}
+ 	atomic_inc(&mddev->writes_pending);
+ 	if (mddev->safemode == 1)
+@@ -5536,10 +5549,12 @@ void md_write_start(mddev_t *mddev, stru
+ 			mddev->in_sync = 0;
+ 			set_bit(MD_CHANGE_CLEAN, &mddev->flags);
+ 			md_wakeup_thread(mddev->thread);
++			did_change = 1;
+ 		}
+ 		spin_unlock_irq(&mddev->write_lock);
+-		sysfs_notify(&mddev->kobj, NULL, "array_state");
+ 	}
++	if (did_change)
++		sysfs_notify(&mddev->kobj, NULL, "array_state");
+ 	wait_event(mddev->sb_wait,
+ 		   !test_bit(MD_CHANGE_CLEAN, &mddev->flags) &&
+ 		   !test_bit(MD_CHANGE_PENDING, &mddev->flags));
+@@ -5991,18 +6006,22 @@ void md_check_recovery(mddev_t *mddev)
+ 		int spares = 0;
+ 
+ 		if (!mddev->external) {
++			int did_change = 0;
+ 			spin_lock_irq(&mddev->write_lock);
+ 			if (mddev->safemode &&
+ 			    !atomic_read(&mddev->writes_pending) &&
+ 			    !mddev->in_sync &&
+ 			    mddev->recovery_cp == MaxSector) {
+ 				mddev->in_sync = 1;
++				did_change = 1;
+ 				if (mddev->persistent)
+ 					set_bit(MD_CHANGE_CLEAN, &mddev->flags);
+ 			}
+ 			if (mddev->safemode == 1)
+ 				mddev->safemode = 0;
+ 			spin_unlock_irq(&mddev->write_lock);
++			if (did_change)
++				sysfs_notify(&mddev->kobj, NULL, "array_state");
+ 		}
+ 
+ 		if (mddev->flags)
