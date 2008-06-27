@@ -1,7 +1,7 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [PATCH 002 of 29] md: Don't acknowlege that stripe-expand is complete until it really is.
-Date: Fri, 27 Jun 2008 16:49:30 +1000
-Message-ID: <1080627064930.10302@suse.de>
+Subject: [PATCH 001 of 29] md: Ensure interrupted recovery completed properly (v1 metadata plus bitmap)
+Date: Fri, 27 Jun 2008 16:49:23 +1000
+Message-ID: <1080627064923.10270@suse.de>
 References: <20080627164503.9671.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
@@ -10,49 +10,61 @@ Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, stable@kernel.org
 List-Id: linux-raid.ids
 
 
-We shouldn't acknowledge that a stripe has been expanded (When
-reshaping a raid5 by adding a device) until the moved data has
-actually been written out.  However we are currently
-acknowledging (by calling md_done_sync) when the POST_XOR
-is complete and before the write.
+If, while assembling an array, we find a device which is not fully
+in-sync with the array, it is important to set the "fullsync" flags.
+This is an exact analog to the setting of this flag in hot_add_disk
+methods.
 
-So track in s.locked whether there are pending writes, and don't
-call md_done_sync yet if there are.
+Currently, only v1.x metadata supports having devices in an array
+which are not fully in-sync (it keep track of how in sync they are).
+The 'fullsync' flag only makes a difference when a write-intent bitmap
+is being used.  In this case it tells recovery to ignore the bitmap
+and recovery all blocks.
 
-Note: we all set R5_LOCKED on devices which are are about to
-read from.  This probably isn't technically necessary, but is
-usually done when writing a block, and justifies the use of
-s.locked here.
+This fix is already in place for raid1, but not raid5/6 or raid10.
 
-This bug can lead to a crash if an array is stopped while an reshape
-is in progress.
+So without this fix, a raid1 ir raid4/5/6 array with version 1.x
+metadata and a write intent bitmaps, that is stopped in the middle
+of a recovery, will appear to complete the recovery instantly
+after it is reassembled, but the recovery will not be correct.
+
+If you might have an array like that, issueing
+   echo repair > /sys/block/mdXX/md/sync_action
+
+will make sure recovery completes properly.
 
 Cc: <stable@kernel.org>
 Signed-off-by: Neil Brown <neilb@suse.de>
 
-
-
 ### Diffstat output
- ./drivers/md/raid5.c |    3 +++
- 1 file changed, 3 insertions(+)
+ ./drivers/md/raid10.c |    2 ++
+ ./drivers/md/raid5.c  |    4 +++-
+ 2 files changed, 5 insertions(+), 1 deletion(-)
+
+diff .prev/drivers/md/raid10.c ./drivers/md/raid10.c
+--- .prev/drivers/md/raid10.c	2008-06-27 15:14:05.000000000 +1000
++++ ./drivers/md/raid10.c	2008-06-27 15:19:36.000000000 +1000
+@@ -2137,6 +2137,8 @@ static int run(mddev_t *mddev)
+ 		    !test_bit(In_sync, &disk->rdev->flags)) {
+ 			disk->head_position = 0;
+ 			mddev->degraded++;
++			if (disk->rdev)
++				conf->fullsync = 1;
+ 		}
+ 	}
+ 
 
 diff .prev/drivers/md/raid5.c ./drivers/md/raid5.c
---- .prev/drivers/md/raid5.c	2008-06-27 15:30:19.000000000 +1000
-+++ ./drivers/md/raid5.c	2008-06-27 15:22:48.000000000 +1000
-@@ -2898,6 +2898,8 @@ static void handle_stripe5(struct stripe
+--- .prev/drivers/md/raid5.c	2008-06-27 15:14:05.000000000 +1000
++++ ./drivers/md/raid5.c	2008-06-27 15:19:36.000000000 +1000
+@@ -4305,7 +4305,9 @@ static int run(mddev_t *mddev)
+ 				" disk %d\n", bdevname(rdev->bdev,b),
+ 				raid_disk);
+ 			working_disks++;
+-		}
++		} else
++			/* Cannot rely on bitmap to complete recovery */
++			conf->fullsync = 1;
+ 	}
  
- 		for (i = conf->raid_disks; i--; ) {
- 			set_bit(R5_Wantwrite, &sh->dev[i].flags);
-+			set_bit(R5_LOCKED, &dev->flags);
-+			s.locked++;
- 			if (!test_and_set_bit(STRIPE_OP_IO, &sh->ops.pending))
- 				sh->ops.count++;
- 		}
-@@ -2911,6 +2913,7 @@ static void handle_stripe5(struct stripe
- 			conf->raid_disks);
- 		s.locked += handle_write_operations5(sh, 1, 1);
- 	} else if (s.expanded &&
-+		   s.locked == 0 &&
- 		!test_bit(STRIPE_OP_POSTXOR, &sh->ops.pending)) {
- 		clear_bit(STRIPE_EXPAND_READY, &sh->state);
- 		atomic_dec(&conf->reshape_stripes);
+ 	/*
