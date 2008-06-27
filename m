@@ -1,52 +1,50 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: raid5 recovery dramas.
-Date: Sat, 28 Jun 2008 06:44:19 +1000
-Message-ID: <18533.20771.286899.160882@notabene.brown>
-References: <48608E9B.6080904@curly.ii.net>
-	<18532.49368.984453.933541@notabene.brown>
-	<4864CBAB.90201@curly.ii.net>
+Subject: Re: Software RAID1 deadlock in 2.6.25 kernels
+Date: Sat, 28 Jun 2008 06:47:29 +1000
+Message-ID: <18533.20961.694041.556763@notabene.brown>
+References: <48650567.3000501@w1nr.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Mark Davies on Friday June 27
+In-Reply-To: message from Mike McCarthy on Friday June 27
 Sender: linux-raid-owner@vger.kernel.org
-To: Mark Davies <mark@curly.ii.net>
+To: Mike McCarthy <mike@w1nr.net>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Friday June 27, mark@curly.ii.net wrote:
-> > I'm at a bit of a loss as to what to suggest.  The data is mostly
-> > there, but getting it back is tricky.
-> > 
-> > What you need to do is 
-> >    choose one of sdd and sde which you think is device  '3'
-> >      (sdc is 0, sdb is 1, sda is 2).
-> >    rewrite the metadata to assert this fact
-> >    assemble the array read-only with sd[abc] and the one you choose
-> >    read the data to make sure it is all where
-> >    switch to read-write so the reshape competes, leaving you with
-> >     a degraded array
-> >    add the other drive and let it recover.
-> > 
-> > The early steps in particular are not easy.
-> 
-> Since there's only two options, what's to stop me taking a backup of the 
-> metadata, and then rewriting the metadata on one drive, mounting it, 
-> seeing if it makes sense.  If it does, great.  If it doesn't, then 
-> restore the metadata and repeat the process on the other drive.
-> 
-> Or am I missing an important step?
+On Friday June 27, mike@w1nr.net wrote:
+> Hello Neil and Linus,
 
-Yes, you could do that.
-But re-writing the metadata is non-trivial, and I'm not confident
-about how to start the array read-only.
-  echo 1 > /sys/module/md-mod/parameters/start_ro
-might do it, bit I would want to test with some scratch data first.
+I've dropped Linus from cc as he won't be interested, and added
+linux-raid.
 
-I would create some loop back devices over files and try to make a
-similar situation and assemble the array and assure my self that
-reshape doesn't start automatically (it shouldn't while the array is
-readonly) before actually doing anything to the real devices.
+>     I am contacting both of you because you have submitted md raid code 
+> to the 2.6.25 kernels.  I have found an apparent deadlock condition 
+> using software RAID1 with SUSE 11.0 and Fedora 9, both which use the 
+> 2.6.25 kernels.  Configuration is as follows:
+> 
+>     Dell Precision 450 with single Xeon 2.4 GHz processor 
+> (hyperthreaded, looks like a dual core)
+>     2 Seagate 120GB IDE drives
+>        sda1,sdb1 - 1GB swap
+>        sda2,sdb2 - 100MB, RAID1, md0,  /boot
+>        sda3,sdb3 - balance of disk, RAID1, md1 3 LVM filesystems
+> 
+>    System locks up after running a short time.  Had it hang once during 
+> installation.  Tried both Reiserfs and EXT3.
+
+We need more details about the lockup.  Does the whole system lock up,
+or just the array.
+Can  you get
+   alt-sysrq-T
+output?  That might be useful.
+  
+
+> 
+>    Are either of you aware of this issue?  If not, I can file a bugzilla.
+
+No I'm not aware of such an issue.
+I prefer to avoid bugzilla, lets just discuss it here.
 
 NeilBrown
