@@ -1,53 +1,67 @@
-From: "Leon Woestenberg" <leon.woestenberg@gmail.com>
-Subject: Re: Suspected corruption on ACID databases due to no barrier support in ext3 on software raid-5 and hard resets
-Date: Sun, 29 Jun 2008 21:44:26 +0200
-Message-ID: <c384c5ea0806291244n4721d97et37f16286af80f368@mail.gmail.com>
-References: <c384c5ea0806280153j426585f1q212c44f983a641e1@mail.gmail.com>
-	 <cccedfc60806280540j4ff2635cu494eaeb685459e6@mail.gmail.com>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: How to avoid complete rebuild of RAID 6 array (6/8 active devices)
+Date: Sun, 29 Jun 2008 17:58:30 -0400
+Message-ID: <48680586.609@tmr.com>
+References: <41931C59-9A91-47A6-A81C-EC14001DA95B@gmail.com>	<20080625161357.GH23944@skl-net.de> <18532.50062.63173.620773@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <cccedfc60806280540j4ff2635cu494eaeb685459e6@mail.gmail.com>
-Content-Disposition: inline
+In-Reply-To: <18532.50062.63173.620773@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jon Nelson <jnelson-linux-raid@jamponi.net>
-Cc: LinuxRaid <linux-raid@vger.kernel.org>, sandeen@sandeen.net
+To: Neil Brown <neilb@suse.de>
+Cc: Andre Noll <maan@systemlinux.org>, Dave Moon <p.b.w.tortilla@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello Jon,
-
-On Sat, Jun 28, 2008 at 2:40 PM, Jon Nelson
-<jnelson-linux-raid@jamponi.net> wrote:
-> database, the data is not being written to new files but existing
-> files are being modified. If it were new files, then data=ordered
-> would be fine but since it is existing files being modified (in-place)
-> data=journal is more appropriate.
+Neil Brown wrote:
+> On Wednesday June 25, maan@systemlinux.org wrote:
+>   
+>> On 15:37, Dave Moon wrote:
+>>
+>>     
+>>> 1. If mdadm encounters a bit error during a RAID 6 rebuild, will it  
+>>> just give up on that particular file and move on to recover other data  
+>>> on the array? Or will it trash the entire array?
+>>>       
+>> The kernel will stop the array and give up.
+>>     
 >
-data=ordered should be fine in any case. Data is written directly to
-disk (either modified data or newly allocated data, this does not
-matter) and meta data goes through the journal log, written after the
-data.
-
-The problem lies in the fact that the driver can re-order the writes,
-if write caching is enabled and barriers are not used (as in my case,
-as md raid 5 does not support barriers).
-
-> Of course, I might be wrong and would appreciate (polite) correction
-> but this is what I've been led to believe.
+> Not quite.  It will stop the recovery.  It won't stop the whole array
+> though (I think...).
 >
-I hope I was polite enough.
-
-> Now, due to the hardware reset, write caching on drives is a problem.
+>   
+>>> 2. Is it possible to cheat mdadm by somehow replacing the new "raid  
+>>> metadata" on the 6 drives with the old data on the 2 drives? Will it  
+>>> make mdadm think the array is clean, consistent and nothing ever  
+>>> happened?
+>>>       
+>>> Please do note that I did not write ANY new data onto the RAID 6 array  
+>>> from the time it was degraded until the time I brought it down with (-- 
+>>> stop).
+>>>       
+>> Use --force, Luke. Man mdadm(8):
+>>
+>> 	-f, --force Assemble the array even if some superblocks
+>> 	appear out-of-date
+>>     
 >
-Only because they re-order, not because of anything else.
-
-> That you may have to disable - I've not found substantial performance
-> differences on when write caching is enabled anyway, but surely that
-> depends on a great many factors.
+> --force only updates enough superblocks to assemble a working array.
+> For raid6, that mean n-2 drives.  As there are n-2 drive, it won't try
+> any harder.
 >
-Indeed, we will be doing tests with that.
+> You best bet is to recreate the array with --assume-clean.
+> Providing you have the chunksize, order of devices, etc the same, you
+> should get your array back.
+>   
 
-Regards,
+Then what? What's going to happen when he does a check?
+
+Of course build an array out of drives so unstable that you can't safelt 
+*run* a check is another topic.
+
 -- 
-Leon
+Bill Davidsen <davidsen@tmr.com>
+  "Woe unto the statesman who makes war without a reason that will still
+  be valid when the war is over..." Otto von Bismark 
+
+
