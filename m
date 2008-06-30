@@ -1,31 +1,33 @@
-From: David Greaves <david@dgreaves.com>
-Subject: Re: Whole drives or Only partitions for mdadm software RAIDs?
-Date: Mon, 30 Jun 2008 21:14:12 +0100
-Message-ID: <48693E94.4080309@dgreaves.com>
-References: <8CAA8FD62E1D4D0-594-672@webmail-nb10.sysops.aol.com> <alpine.DEB.1.10.0806301549580.4791@p34.internal.lan> <8CAA902C7CC8B09-594-8CF@webmail-nb10.sysops.aol.com>
+From: Richard Scobie <richard@sauce.co.nz>
+Subject: Re: Software RAID1 deadlock in 2.6.25 kernels
+Date: Tue, 01 Jul 2008 08:21:30 +1200
+Message-ID: <4869404A.2000500@sauce.co.nz>
+References: <48650567.3000501@w1nr.net> <18533.20961.694041.556763@notabene.brown> <20080630092348.GJ17557@boogie.lpds.sztaki.hu> <4868C410.2060005@w1nr.net> <20080630115926.GA31564@ruf099.fkie.fgan.de> <4868E050.7090904@tmr.com> <4868E45F.30105@w1nr.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <8CAA902C7CC8B09-594-8CF@webmail-nb10.sysops.aol.com>
+In-Reply-To: <4868E45F.30105@w1nr.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: thomas62186218@aol.com
-Cc: jpiszcz@lucidpixels.com, linux-raid@vger.kernel.org
+To: Mike McCarthy <mike@w1nr.net>
+Cc: Bill Davidsen <davidsen@tmr.com>, Michael Bussmann <bus@mb-net.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Also, if you ever replace a drive there is a distinct chance that the drive will
-be a different size (even if it is the same model).
-
-After being bitten by this I always make partition a few Mb smaller than the device.
-
-David
-
-thomas62186218@aol.com wrote:
+Mike McCarthy wrote:
+> Bill Davidsen wrote:
 > 
-> Thanks Justin. If that's the only risk, I'll go with full devices. This
-> will ultimately be a headless system with a separate boot drive and only
-> administered by me and used internally, so I'll be careful. :-)
+>>
+>> Wonder if hardware or software is happening, sounds like an mishandled 
+>> hardware error, but I'm guessing. I have a server with RAID1 and 
+>> Fedora 2.6.22.14-72.fc6PAE kernel, up 72 days, no problems.
+>>
 > 
-> Many thanks!
-> -Thomas
+> 2.6.22 is running fine.  The problems are in the 2.6.25 kernel (FC9 and 
+> SUSE 11.0)
 
+FC9 running on RAID 1 (ata_piix) for the last 3 weeks or so, with no 
+trouble.
+
+Regards,
+
+Richard
