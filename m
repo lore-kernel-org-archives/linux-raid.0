@@ -1,35 +1,49 @@
-From: Mark Davies <mark@curly.ii.net>
-Subject: Re: raid5 recovery dramas.
-Date: Mon, 30 Jun 2008 15:03:22 +0800
-Message-ID: <4868853A.4050202@curly.ii.net>
-References: <48608E9B.6080904@curly.ii.net>	<18532.49368.984453.933541@notabene.brown>	<4864CBAB.90201@curly.ii.net> <18533.20771.286899.160882@notabene.brown>
+From: Andre Noll <maan@systemlinux.org>
+Subject: Re: [PATCH 008 of 29] md: Close race in md_probe
+Date: Mon, 30 Jun 2008 09:52:42 +0200
+Message-ID: <20080630075242.GI23944@skl-net.de>
+References: <20080627164503.9671.patches@notabene> <1080627065010.10418@suse.de> <20080627122153.GE4981@skl-net.de> <18533.31198.932488.652568@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="+ZmrHH5cGjskQnY1"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18533.20771.286899.160882@notabene.brown>
+Content-Disposition: inline
+In-Reply-To: <18533.31198.932488.652568@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: Neil Brown <neilb@suse.de>
+To: Neil Brown <neilb@suse.de>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil Brown wrote:
 
-> I would create some loop back devices over files and try to make a
-> similar situation and assemble the array and assure my self that
-> reshape doesn't start automatically (it shouldn't while the array is
-> readonly) before actually doing anything to the real devices.
+--+ZmrHH5cGjskQnY1
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Hmm, I understand what you're asking and what it means, however actually 
-/doing/ it is beyond my skills at the moment.
+On 09:38, Neil Brown wrote:
 
-I haven't had a chance to bring down the box and try booting from a 
-liveCD, but based on the above, I don't think that's likely to work.
+> mddev_find gets a reference on the mddev, so it cannot become stale.
+> md_probe does not return what it gets from mddev_find until getting
+> the disks_mutex lock and checking the contents, so it is sure to
+> return a good mddev.
 
-Thanks for your help, but I'm feeling a little discouraged at this point.
+I see. Thanks for the clarification.
 
+Andre
+--=20
+The only person who always got his work done by Friday was Robinson Crusoe
 
-Cheers,
+--+ZmrHH5cGjskQnY1
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.1 (GNU/Linux)
 
-Mark.
+iD8DBQFIaJDKWto1QDEAkw8RAk/YAKCJMh5ACAsVV0B9VU0nb1b951ktTACffS8R
+p2HFYvQpT4dsTWl1IU0Qx90=
+=IPs+
+-----END PGP SIGNATURE-----
+
+--+ZmrHH5cGjskQnY1--
