@@ -1,50 +1,47 @@
-From: Mike McCarthy <mike@w1nr.net>
+From: Michael Bussmann <bus@mb-net.net>
 Subject: Re: Software RAID1 deadlock in 2.6.25 kernels
-Date: Mon, 30 Jun 2008 07:31:28 -0400
-Message-ID: <4868C410.2060005@w1nr.net>
-References: <48650567.3000501@w1nr.net> <18533.20961.694041.556763@notabene.brown> <20080630092348.GJ17557@boogie.lpds.sztaki.hu>
+Date: Mon, 30 Jun 2008 13:59:27 +0200
+Message-ID: <20080630115926.GA31564@ruf099.fkie.fgan.de>
+References: <48650567.3000501@w1nr.net> <18533.20961.694041.556763@notabene.brown> <20080630092348.GJ17557@boogie.lpds.sztaki.hu> <4868C410.2060005@w1nr.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20080630092348.GJ17557@boogie.lpds.sztaki.hu>
+Content-Disposition: inline
+In-Reply-To: <4868C410.2060005@w1nr.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Gabor Gombas <gombasg@sztaki.hu>
-Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Gabor Gombas wrote:
-> On Sat, Jun 28, 2008 at 06:47:29AM +1000, Neil Brown wrote:
->
->   
->>>    System locks up after running a short time.  Had it hang once during 
->>> installation.  Tried both Reiserfs and EXT3.
->>>       
->> We need more details about the lockup.  Does the whole system lock up,
->> or just the array.
->> Can  you get
->>    alt-sysrq-T
->> output?  That might be useful.
->>     
->
-> Also, try to set up netconsole and boot with nmi_watchdog=2. I've now 3
-> completely different HW setups where 2.6.25 hangs due to HPET issues.
->
-> Gabor
->
->   
-Due to time constraints, I will be unable to do much on this until the 
-weekend.
+Hi,
 
-In the meantime, a more detailed description of the symptoms:
+On 2008-06-30 07:31:28 -0400, Mike McCarthy wrote:
+>>>>    System locks up after running a short time.  Had it hang once 
+>>>> during installation.  Tried both Reiserfs and EXT3.
 
-When the system hangs, the mouse movement is tracked across the screen 
-and I can ping the node. There is no response to clicking on a mouse 
-button or trying to type anything into a field. It also does not respond 
-to ssh or to <CTRL><ALT><F1>.
+> When the system hangs, the mouse movement is tracked across the screen  
+> and I can ping the node. There is no response to clicking on a mouse  
+> button or trying to type anything into a field. It also does not respond  
+> to ssh or to <CTRL><ALT><F1>.
 
-I may also try and reproduce it on different hardware to rule out a 
-graphics problem if you wish.
+Maybe it's a totally different issue, but I also noticed system lockups,
+that started after I converted the system to Software-RAID1.  However, in
+my case the lockups only occur after 3-10 days uptime.  One day I was able
+to capture a couple of syslog entries:
 
-Mike
+| Jun 12 09:50:47 tardis kernel: hdg: lost interrupt
+| Jun 12 09:50:47 tardis kernel: hdg: drive_cmd: status=0x51 { DriveReady SeekComplete Error }
+| Jun 12 09:50:47 tardis kernel: hdg: drive_cmd: error=0x04 { DriveStatusError }
+| Jun 12 09:50:47 tardis kernel: ide: failed opcode was: 0xb0
+| Jun 12 09:51:07 tardis kernel: hdg: dma_timer_expiry: dma status == 0x21
+| (2 x WD2500SB-01RFA0 on a PDC20276 (MBFastTrak133))
 
+The HDD LED is permanently on.
+
+Cheers,
+MB
+
+-- 
+Michael Bussmann <bus@mb-net.net>
+BOFH excuse #136:
+
+Daemons loose in system.
