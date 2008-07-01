@@ -1,47 +1,29 @@
-From: "NeilBrown" <neilb@suse.de>
-Subject: Re: md man page
-Date: Wed, 2 Jul 2008 07:21:41 +1000 (EST)
-Message-ID: <55918.192.168.1.70.1214947301.squirrel@neil.brown.name>
-References: <20080701202231.GA24283@rap.rap.dk>
+From: "michael@kmaclub.com" <michael@kmaclub.com>
+Subject: Re: Software RAID1 deadlock in 2.6.25 kernels
+Date: Tue, 01 Jul 2008 14:24:29 -0700
+Message-ID: <486AA08D.7070800@kmaclub.com>
+References: <108e01c8dbb8$0ae69674$e90df40a@exchange.rackspace.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20080701202231.GA24283@rap.rap.dk>
+In-Reply-To: <108e01c8dbb8$0ae69674$e90df40a@exchange.rackspace.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Keld =?iso-8859-1?Q?J=F8rn_Simonsen?= <keld@dkuug.dk>
-Cc: linux-raid@vger.kernel.org
+To: David@santools.com
+Cc: David Rees <drees76@gmail.com>, Richard Scobie <richard@sauce.co.nz>, Mike McCarthy <mike@w1nr.net>, Bill Davidsen <davidsen@tmr.com>, Michael Bussmann <bus@mb-net.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, July 2, 2008 6:22 am, Keld J=F8rn Simonsen wrote:
-> Who is in charge of the linux man page for md(4)?
-> Neil?
-
-Yes, me.  It is part of the "mdadm" package.
-
->
-> I would like to have corrected som inaccuraties.
-
-I'm trying to decide if you are being ironic, or if your spelling
-is simply as bad as mine. :-)
-HOwever I'm always happy to receive updates and I'm sure we can
-get the spelling/grammar right if we do it together.
-
-NeilBrown
+David Lethe wrote:
+> Sounds like you worked for microsoft ... "i have 3 systems running XP and I never had a blue screen of death, so there is nothing wrong with the OS"  :)
+> 
 
 
->
-> Best regards
-> keld
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+I don't think anyone implied anything like that.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I think I was clear in my message that not everyone was seeing a problem 
+so it wasn't a widespread problem with 2.6.25.
+
+That said, more information would be required about the original posters 
+  configuration if there is going to be any determination about a problem.
+
+Michael
