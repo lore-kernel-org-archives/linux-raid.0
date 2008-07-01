@@ -1,20 +1,41 @@
-From: thomas62186218@aol.com
-Subject: md devices disappearing on system reboot
-Date: Tue, 01 Jul 2008 12:52:23 -0400
-Message-ID: <8CAA9B1F81B8E21-614-D2D@webmail-nc09.sysops.aol.com>
+From: Mike McCarthy <mike@w1nr.net>
+Subject: Re: Software RAID1 deadlock in 2.6.25 kernels
+Date: Tue, 01 Jul 2008 13:00:01 -0400
+Message-ID: <486A6291.20207@w1nr.net>
+References: <48650567.3000501@w1nr.net> <18533.20961.694041.556763@notabene.brown> <20080630092348.GJ17557@boogie.lpds.sztaki.hu> <4868C410.2060005@w1nr.net> <20080630115926.GA31564@ruf099.fkie.fgan.de> <4868E050.7090904@tmr.com> <4868E45F.30105@w1nr.net> <486A4E7B.50604@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <486A4E7B.50604@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: Michael Bussmann <bus@mb-net.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi all,
+Bill Davidsen wrote:
+> Mike McCarthy wrote:
+>> Bill Davidsen wrote:
+>>>
+>>> Wonder if hardware or software is happening, sounds like an 
+>>> mishandled hardware error, but I'm guessing. I have a server with 
+>>> RAID1 and Fedora 2.6.22.14-72.fc6PAE kernel, up 72 days, no problems.
+>>>
+>>
+>> 2.6.22 is running fine.  The problems are in the 2.6.25 kernel (FC9 
+>> and SUSE 11.0)
+>
+> Given heavy 2.6.25 use, my guess is still that the root cause of this 
+> is hardware, and that the change in disk code either triggers the 
+> hardware problem, or handles it differently. Are you by any chance 
+> running NCQ on your system?
+>
+No.  This system and the drives pre-date NCQ.  I think NCQ is only 
+implemented in SATA and these are IDE drives.  Sometime over the 
+weekend, I am going to reload SUSE 11 and try to do some more debugging.
 
-I have what I am sure is a simple problem to solve but I cannot figure 
-it out. I am running 64-bit Linux 2.6.20.11 (custom build) and my md 
-devices are not appearing after system reboot. Any ideas?
+BTW: It's back to 10.3 (kernel 2.6.22) running happily with a VMware 
+server thrashing away at the disks.
 
-Thanks!
-Thomas
+Mike
+
