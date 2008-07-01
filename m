@@ -1,40 +1,37 @@
-From: Jan Engelhardt <jengelh@medozas.de>
-Subject: Re: [PATCH 001 of 29] md: Ensure interrupted recovery completed
- properly (v1 metadata plus bitmap)
-Date: Tue, 1 Jul 2008 09:20:29 +0200 (CEST)
-Message-ID: <alpine.LNX.1.10.0807010918070.26892@fbirervta.pbzchgretzou.qr>
-References: <20080627164503.9671.patches@notabene> <1080627064923.10270@suse.de>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: Software RAID1 deadlock in 2.6.25 kernels
+Date: Tue, 01 Jul 2008 11:34:19 -0400
+Message-ID: <486A4E7B.50604@tmr.com>
+References: <48650567.3000501@w1nr.net> <18533.20961.694041.556763@notabene.brown> <20080630092348.GJ17557@boogie.lpds.sztaki.hu> <4868C410.2060005@w1nr.net> <20080630115926.GA31564@ruf099.fkie.fgan.de> <4868E050.7090904@tmr.com> <4868E45F.30105@w1nr.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1080627064923.10270@suse.de>
+In-Reply-To: <4868E45F.30105@w1nr.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, stable@kernel.org
+To: Mike McCarthy <mike@w1nr.net>
+Cc: Michael Bussmann <bus@mb-net.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-
-On Friday 2008-06-27 08:49, NeilBrown wrote:
+Mike McCarthy wrote:
+> Bill Davidsen wrote:
+>>
+>> Wonder if hardware or software is happening, sounds like an 
+>> mishandled hardware error, but I'm guessing. I have a server with 
+>> RAID1 and Fedora 2.6.22.14-72.fc6PAE kernel, up 72 days, no problems.
+>>
 >
->[...] In this case it tells recovery to ignore the bitmap
->and recovery all blocks.
->
->So without this fix, a raid1 ir raid4/5/6 array with version 1.x
->metadata and a write intent bitmaps, that is stopped in the middle
->of a recovery, will appear to complete the recovery instantly
->after it is reassembled, but the recovery will not be correct.
+> 2.6.22 is running fine.  The problems are in the 2.6.25 kernel (FC9 
+> and SUSE 11.0)
 
-If the array is stopped in the middle of a recovery, should not
-it restart recovery where it left off when reassembled?
-That's what the write intent bitmap is for, is not it? Like..
+Given heavy 2.6.25 use, my guess is still that the root cause of this is 
+hardware, and that the change in disk code either triggers the hardware 
+problem, or handles it differently. Are you by any chance running NCQ on 
+your system?
 
-wait_for(assemble)
-for_all('1' bits in bitmap)
-    if (resync == success)
-        bitmap[pos] = '0';
-    if (signalled)
-        break;
+-- 
+Bill Davidsen <davidsen@tmr.com>
+  "Woe unto the statesman who makes war without a reason that will still
+  be valid when the war is over..." Otto von Bismark 
 
-and stopping the resync in the middle, the bitmap should still
-have '1' bits left to be processed on the next assemble.
-Or, where did I go wrong?
+
