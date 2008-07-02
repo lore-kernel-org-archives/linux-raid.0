@@ -1,143 +1,78 @@
 From: Roger Heflin <rogerheflin@gmail.com>
 Subject: Re: new bottleneck section in wiki
-Date: Wed, 02 Jul 2008 16:45:38 -0500
-Message-ID: <486BF702.9070105@gmail.com>
-References: <20080702155603.GA11156@rap.rap.dk> <A20315AE59B5C34585629E258D76A97CF1FCCC@34093-C3-EVS3.exchange.rackspace.com>
+Date: Wed, 02 Jul 2008 16:55:37 -0500
+Message-ID: <486BF959.9050202@gmail.com>
+References: <20080702155603.GA11156@rap.rap.dk> <A20315AE59B5C34585629E258D76A97CF1FCCC@34093-C3-EVS3.exchange.rackspace.com> <20080702175117.GC12081@rap.rap.dk> <A20315AE59B5C34585629E258D76A97CF1FDB5@34093-C3-EVS3.exchange.rackspace.com> <20080702182627.GA12614@rap.rap.dk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1;
 	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <A20315AE59B5C34585629E258D76A97CF1FCCC@34093-C3-EVS3.exchange.rackspace.com>
+In-Reply-To: <20080702182627.GA12614@rap.rap.dk>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Lethe <david@santools.com>
-Cc: =?ISO-8859-1?Q?Keld_J=F8rn_Simonsen?= <keld@dkuug.dk>, linux-raid@vger.kernel.org
+To: =?ISO-8859-1?Q?Keld_J=F8rn_Simonsen?= <keld@dkuug.dk>
+Cc: David Lethe <david@santools.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-David Lethe wrote:
-> -----Original Message-----
-> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-owner@vger.=
-kernel.org] On Behalf Of Keld J=F8rn Simonsen
-> Sent: Wednesday, July 02, 2008 10:56 AM
-> To: linux-raid@vger.kernel.org
-> Subject: new bottleneck section in wiki
->=20
-> I should have done something else this afternoon, but anyway, I was
-> inspired to write up this text for the wiki. Comments welcome.
->=20
-> Keld
->=20
-> Bottlenecks
->=20
-> There can be a number of bottlenecks other than the disk subsystem th=
-at
-> hinders you in getting full performance out of your disks.
->=20
-> One is the PCI bus. Older PCI bus has a 33 MHz cycle and a 32 bit wid=
-th,
-> giving a maximum bandwidth of about 1 Gbit/s, or 133 MB/s. This will
-> easily cause trouble with newer SATA disks which easily gives 70-90 M=
-B/s
-> each. So do not put your SATA controllers on a 33 MHz PCI bus.
->=20
-> The 66 MHz 64-bit PCI bus is capable of handling about 4 Gbit/s, or
-> about 500 MB/s. This can also be a bottleneck with bigger arrays, eg =
-a 6
-> drive array will be able to deliver about 500 MB/s, and maybe you wan=
+Keld J=F8rn Simonsen wrote:
+> On Wed, Jul 02, 2008 at 01:08:04PM -0500, David Lethe wrote:
+>>
+>> And also the disk controllers, could these be bottlenecks? They typi=
+cally
+>> operate at 300 MB/s nominally, per disk channel, and presumably they
+>> then have a connection to the southbridge that is capable of handlin=
+g
+>> this speed. So for a 4-disk SATA-II controller this would be at leas=
 t
-> also to feed a gigabyte ethernet card - 125 MB/s, totalling potential=
-ly
-> 625 MB/s on the PCI bus.
+>> 1200 MB/s or about 10 gigabit.=20
+>>
+>> best regards
+>> keld
+>> -------------------
+>> It is much more complicated than just saying what the transfer rates=
+ are, especially in the world of blocking, arbitration, and unbalanced =
+I/O. =20
 >=20
-> The PCI-Express bus v1.1 has a limit of 250 MB/s per lane per dirctio=
-n,
-> and that limit can easily be hit eg by a 4-drive array.
+> Yes, that is understood, but I am only listing some potential
+> bottlenecs, of cause there may be more.
 >=20
-> Many SATA controllers are on-board and do not use the PCI bus. Anyway
-> bandwidth is limited, but it is probably different from motherboard t=
-o
-> motherboard. On board disk controllers most likely have a bigger
-> bandwidth than IO controllers on a 32-bit PCI 33 MHz, 64-bit PCI 66 M=
-Hz,
-> or PCI-E x1 bus.
+>> Everything is a potential bottleneck.  As I am under NDA with most o=
+f the controller vendors, then I can not provide specifics, but suffice=
+ to say that certain cards with certain chipsets will max out at well u=
+nder published speeds.  Heck, you could attach solid-state disks with r=
+andom I/O access time in the nanosecond range and still only get 150MB/=
+sec out of certain controllers, even on a PCIe X 16 bus.=20
+>>
+>> BTW, there isn't a SATA-II controller in the planet that will delive=
+r 1200 MB/sec with 4 disk drives.=20
 >=20
-> Having a RAID connected over the LAN can be a bottleneck, if the LAN
-> speed is only 1 Gbit/s - this limits the speed of the IO system to 12=
-5
-> MB/s by itself.
->=20
-> Classical bottlenecks are PATA drives placed on the same DMA channel,=
- or
-> the same PATA cable. This will of cause limit performance, but it sho=
-uld
-> work, given you have no other means of connecting your disks by. Also
-> placing more than one element of an array on the same disk hurts
-> performace seriously, and also gives redundancy problems.
->=20
-> A classical problem is also not to have enabled DMA transfer, or havi=
-ng
-> lost this setting due to some problem, including not well connected
-> cables, or setting the transfer speed to less than optimal.
->=20
-> RAM sppec may be a bottleneck. Using 32 bit RAM - or using a 32 bit
-> operating system may double time spent reading and writing RAM.
->=20
-> CPU usage may be a bottleneck, also combined with slow RAM or only us=
-ing
-> RAM in 32-bit mode.
->=20
-> BIOS settings may also impede your performance.=20
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
->=20
-> I would add -
-> The PCI (and PCI-X) bus is shared bandwidth, and operates at=20
- > lowest common denominator.  Put a 33Mhz card in the PCI bus,
-> and not only does everything operate at 33Mhz, but all of=20
- > the cards compete.  Grossly simplified, if you have a 133Mhz
- > card and a 33Mhz card in the same PCI bus, then that card
- > will operate at 16Mhz. Your motherboard's embedded Ethernet
- > chip and disk controllers are "on" the PCI bus, so even if
- > you have a single PCI controller card, and a multiple-bus
- > motherboard, then it does make a difference what slot
- > you put the controller in.
+> Yes, but I think this is normally due to that the max transfer speed =
+per
+> disk is in the ballpark of 80-120 MB/s - which is less than half the
+> SATA-II max speed. And I think much of this slowdown comes from head =
+movement,
+> track-to-track, disk latency etc. I was of the impression, that when =
+the
+> transfer between the disk and the controller is going on, then the
+> transfer speed would be not far from the 300 MB/s max speed, eg for
+> 90 MB/s 1 TB disks that I bougth recently, or the faster 15000 RPM
+> disks, which give something like 120 MB/s.
 
-Add in on the higher end MB's (with PCI-X, and PCIe, and
-stuff on the built-in to the motherboard) there is often a nice
-block diagram  that indicates which resources are sharing bandwidth,
-and often how much bandwidth they are sharing, so if one is
-careful one can carefully put different things on unshared parts,
-and take careful note of what other MB things they are being
-shared with.  With desktop motherboards this does not generally
-matter at all as there is typically only one PCI (32bit) bus and it
-is all shared.   And often the stuff on the MB is only connected
-slightly better that a 32-bit/33mhz PCI bus, so one has to be
-careful and take note of the reality of their MB.
+Actually enough sectors are only passing under the head at that 70-120M=
+B/second=20
+rate, so when you add in the seeks and such things are a bit lower, but=
+ you=20
+aren't ever going to be able to exceed that given bit rate, and the bit=
+ rate=20
+changes from the inside of the disk to the outside of the disk (the out=
+side has=20
+more sectors on it than the inside), in the disk data sheet's there is =
+usually a=20
+range of bit rates listed showing this.
 
->=20
-> If this isn't bad enough, then consider the consequences of
- > arbitration.  All of the PCI devices have to constantly
-> negotiate between themselves to get a chance to compete=20
-> against all of the other devices attached to other PCI=20
-> busses to get a chance to talk to the CPU and RAM.  As=20
-> such, every packet your Ethernet card picks up could=20
-> temporarily suspend disk I/O if you don't configure things wisely.
+                             Roger
 
-And note that in my experience if you are going to find a "bug" in the =
-MB design=20
-this sharing/arbitration under high loads is where you will find it, an=
-d it can=20
-result in everything from silent corruption to the entire machine crash=
-ing when
-put under heavy load.
-
-                              Roger
+                                 Roger
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
