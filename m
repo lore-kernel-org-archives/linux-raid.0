@@ -1,63 +1,48 @@
-From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
-Subject: new bottleneck section in wiki
-Date: Wed, 2 Jul 2008 17:56:03 +0200
-Message-ID: <20080702155603.GA11156@rap.rap.dk>
+From: Andre Noll <maan@systemlinux.org>
+Subject: Re: md devices disappearing on system reboot
+Date: Wed, 2 Jul 2008 18:21:08 +0200
+Message-ID: <20080702162108.GF4981@skl-net.de>
+References: <8CAA9B1F81B8E21-614-D2D@webmail-nc09.sysops.aol.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="WK3l2KTTmXPVedZ6"
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
+In-Reply-To: <8CAA9B1F81B8E21-614-D2D@webmail-nc09.sysops.aol.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: thomas62186218@aol.com
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I should have done something else this afternoon, but anyway, I was
-inspired to write up this text for the wiki. Comments welcome.
 
-Keld
+--WK3l2KTTmXPVedZ6
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Bottlenecks
+On 12:52, thomas62186218@aol.com wrote:
 
-There can be a number of bottlenecks other than the disk subsystem that
-hinders you in getting full performance out of your disks.
+> I have what I am sure is a simple problem to solve but I cannot figure=20
+> it out. I am running 64-bit Linux 2.6.20.11 (custom build) and my md=20
+> devices are not appearing after system reboot. Any ideas?
 
-One is the PCI bus. Older PCI bus has a 33 MHz cycle and a 32 bit width,
-giving a maximum bandwidth of about 1 Gbit/s, or 133 MB/s. This will
-easily cause trouble with newer SATA disks which easily gives 70-90 MB/s
-each. So do not put your SATA controllers on a 33 MHz PCI bus.
+Show us your /etc/mdadm.conf and the output of mdadm -E --scan.
 
-The 66 MHz 64-bit PCI bus is capable of handling about 4 Gbit/s, or
-about 500 MB/s. This can also be a bottleneck with bigger arrays, eg a 6
-drive array will be able to deliver about 500 MB/s, and maybe you want
-also to feed a gigabyte ethernet card - 125 MB/s, totalling potentially
-625 MB/s on the PCI bus.
+Andre
+--=20
+The only person who always got his work done by Friday was Robinson Crusoe
 
-The PCI-Express bus v1.1 has a limit of 250 MB/s per lane per dirction,
-and that limit can easily be hit eg by a 4-drive array.
+--WK3l2KTTmXPVedZ6
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
 
-Many SATA controllers are on-board and do not use the PCI bus. Anyway
-bandwidth is limited, but it is probably different from motherboard to
-motherboard. On board disk controllers most likely have a bigger
-bandwidth than IO controllers on a 32-bit PCI 33 MHz, 64-bit PCI 66 MHz,
-or PCI-E x1 bus.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.1 (GNU/Linux)
 
-Having a RAID connected over the LAN can be a bottleneck, if the LAN
-speed is only 1 Gbit/s - this limits the speed of the IO system to 125
-MB/s by itself.
+iD8DBQFIa6r0Wto1QDEAkw8RAlIrAKCnNWCCVckQ84yvJzu40bTeFZNCpQCfa9EU
+YogqPQ4p0Zk14c5NmoRzteQ=
+=7O39
+-----END PGP SIGNATURE-----
 
-Classical bottlenecks are PATA drives placed on the same DMA channel, or
-the same PATA cable. This will of cause limit performance, but it should
-work, given you have no other means of connecting your disks by. Also
-placing more than one element of an array on the same disk hurts
-performace seriously, and also gives redundancy problems.
-
-A classical problem is also not to have enabled DMA transfer, or having
-lost this setting due to some problem, including not well connected
-cables, or setting the transfer speed to less than optimal.
-
-RAM sppec may be a bottleneck. Using 32 bit RAM - or using a 32 bit
-operating system may double time spent reading and writing RAM.
-
-CPU usage may be a bottleneck, also combined with slow RAM or only using
-RAM in 32-bit mode.
-
-BIOS settings may also impede your performance. 
+--WK3l2KTTmXPVedZ6--
