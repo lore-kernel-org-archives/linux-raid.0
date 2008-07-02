@@ -1,59 +1,58 @@
-From: Keld J?rn Simonsen <keld@dkuug.dk>
+From: Matt Garman <matthew.garman@gmail.com>
 Subject: Re: new bottleneck section in wiki
-Date: Wed, 2 Jul 2008 21:39:14 +0200
-Message-ID: <20080702193914.GB13186@rap.rap.dk>
-References: <20080702155603.GA11156@rap.rap.dk> <A20315AE59B5C34585629E258D76A97CF1FCCC@34093-C3-EVS3.exchange.rackspace.com> <20080702190337.GA2311@sewage.raw-sewage.fake>
+Date: Wed, 2 Jul 2008 14:45:46 -0500
+Message-ID: <20080702194546.GB2311@sewage.raw-sewage.fake>
+References: <20080702155603.GA11156@rap.rap.dk> <A20315AE59B5C34585629E258D76A97CF1FCCC@34093-C3-EVS3.exchange.rackspace.com> <20080702175117.GC12081@rap.rap.dk> <A20315AE59B5C34585629E258D76A97CF1FDB5@34093-C3-EVS3.exchange.rackspace.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20080702190337.GA2311@sewage.raw-sewage.fake>
+In-Reply-To: <A20315AE59B5C34585629E258D76A97CF1FDB5@34093-C3-EVS3.exchange.rackspace.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Matt Garman <matthew.garman@gmail.com>
-Cc: David Lethe <david@santools.com>, linux-raid@vger.kernel.org
+To: David Lethe <david@santools.com>
+Cc: Keld J?rn Simonsen <keld@dkuug.dk>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Jul 02, 2008 at 02:03:37PM -0500, Matt Garman wrote:
-> On Wed, Jul 02, 2008 at 12:04:11PM -0500, David Lethe wrote:
-> > The PCI (and PCI-X) bus is shared bandwidth, and operates at
-> > lowest common denominator.  Put a 33Mhz card in the PCI bus, and
-> > not only does everything operate at 33Mhz, but all of the cards
-> > compete.  Grossly simplified, if you have a 133Mhz card and a
-> > 33Mhz card in the same PCI bus, then that card will operate at
-> > 16Mhz. Your motherboard's embedded Ethernet chip and disk
-> > controllers are "on" the PCI bus, so even if you have a single PCI
-> > controller card, and a multiple-bus motherboard, then it does make
-> > a difference what slot you put the controller in.
-> 
-> Is that true for all PCI-X implementations?  What's the point, then,
-> of having PCI-X (64 bit/66 MHz or greater) if you have even one PCI
-> card (32 bit/33 MHz)?
+On Wed, Jul 02, 2008 at 01:08:04PM -0500, David Lethe wrote:
+> Everything is a potential bottleneck.  As I am under NDA with most
+> of the controller vendors, then I can not provide specifics, but
+> suffice to say that certain cards with certain chipsets will max
+> out at well under published speeds.  Heck, you could attach
+> solid-state disks with random I/O access time in the nanosecond
+> range and still only get 150MB/sec out of certain controllers,
+> even on a PCIe X 16 bus. 
 
-My understanding is that this is not true for all PCI-X busses, only for
-some.
+Short of signing an NDA, how would one go about determining which
+chipsets are least likely to be a bottleneck?  I'm interested in
+building an NFS server with a Linux software RAID-5 data store.  To
+me, that means my I/O subsystem should be as fast and capable as
+possible.
 
-> A lot of "server" motherboards offer PCI-X and some simple graphics
-> chip.  If you read the motherboard specs, that simple graphics is
-> usually attached to the PCI bus [1].  So what's the point of having
-> PCI-X slots if everything is automatically downgraded to PCI speeds
-> due to the embedded graphics?
+For example, looking at the block diagram [1] of Intel's P45/ICH10
+chipset [2], it appears that the link between the north and south
+bridges is only 2 GB/s.  I would think that any raid level that
+requires the CPU (e.g. parity calculations) would clog that link
+fairly quickly, at least if large block transfers are taking place.
+And then I wonder what impact that has on the performance of the
+NIC(s) (I don't know how much a NIC has to talk to the CPU).
 
-I think there are some mobos that have both PCI-X and PCI busses.
+Then there are chips like nvidia's 8200 [3] that don't separate the
+north and south bridges.  I can't find a block diagram on their
+website, but I found a few via google "nvidia 8200 block diagram".
+[4]  It looks like the 8200 MCP is connected via HT3 (don't know
+exactly what that means/implies), but everything is connected to
+this one chip (PCI, SATA, PCI-Express, NIC, etc).
 
-> I read some of the high-level info on the Intel 6702 PHX PCI-X hub
-> [2].  If I understand correctly, that controller is actually
-> attached to the PCI express bus.  So to me, it seems possible that
-> PCI and PCI-X could be independant, and that PCI-X will compete with
-> PCI-E for bandwidth.
+Anyone have any suggestions on getting a motherboard with the most
+I/O bandwidth?
 
-Yes, that is possible.
+[1] http://www.intel.com/products/chipsets/P45/pix/p45_blockdiagram.gif
 
-> [1] The ASUS M2N-LR has PCI-X (via the Intel 6702PHX) and an
-> embedded ATI ES1000 video card.  The ES1000's specs say it has a PCI
-> bus interface.
-> ES1000: http://ati.amd.com/products/server/es1000/index.html
-> 
-> [2] http://www.intel.com/design/chipsets/datashts/303633.htm
+[2] http://www.intel.com/products/chipsets/P45/index.htm
 
-best regards
-keld
+[3] http://www.nvidia.com/object/geforce_8200mgpu.html
+    http://www.nvidia.com/object/mobo_gpu_tech_specs.html
+
+[4] http://www.hardwarezone.com.sg/img/data/articles/2008/2453/GeForce_8200_Block_Diagram.jpg
+    http://www.pcper.com/images/reviews/507/GeForce_8200_Block_Diagram.jpg
+    http://media.arstechnica.com/news.media/GeForce8200.jpg
