@@ -1,40 +1,41 @@
-From: Neil Brown <neilb@suse.de>
-Subject: [PULL-REQUEST] md bugfixes for 2.6.26
-Date: Thu, 3 Jul 2008 08:24:36 +1000
-Message-ID: <18540.36.610609.783148@notabene.brown>
+From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
+Subject: Re: Grow a RAID-10
+Date: Thu, 3 Jul 2008 01:10:26 +0200
+Message-ID: <20080702231026.GA15028@rap.rap.dk>
+References: <486BF974.70508@amfes.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <486BF974.70508@amfes.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+To: "Daniel L. Miller" <dmiller@amfes.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Wed, Jul 02, 2008 at 02:56:04PM -0700, Daniel L. Miller wrote:
+> I currently have a RAID10 across (4) SATA drives.  It looks like I'm 
+> going to need to grow in the near future.  Any tips for a procedure for 
+> this?  My current plan:
+> 
+> 1.  Add a PCI SATA controller (MB had 4 SATA + 4 RAID SATA, it's a Tyan 
+> MB with a NFORCE chipset, I'm not sure if I want/can use the RAID SATA 
+> ports as plain SATA connections).
 
-Hi Linus,
- please pull as follows:  three bugfixs that also need to go to
- -stable.
+Why not use the mobo raid sata ports? They are probably faster than a
+controller on the pci bus. What kind of pci bus do you have?
 
-Thanks,
-NeilBrown
+PCI-E 1x is likely to be too slow for a 4-drive raid10,f2 array.
+My 4-drive raid10,f2 delivers about 320 MB/s and newer disks should be
+able to deliver 360 MB/s - well above the 250 MB/s that a PCI-E 1x can
+deliver. 
 
+> 2.  Add 2 more drives - not necessarily the same size as the existing 
+> (they were all 4 the same)
+> 
+> 3.  Execute "mdadm --grow /dev/md0"
 
+What kind of raid10 do you have?> 
 
-The following changes since commit 543cf4cb3fe6f6cae3651ba918b9c56200b257d0:
-  Linus Torvalds (1):
-        Linux 2.6.26-rc8
-
-are available in the git repository at:
-
-  git://neil.brown.name/md for-2.6.26
-
-Neil Brown (3):
-      Ensure interrupted recovery completed properly (v1 metadata plus bitmap)
-      Don't acknowlege that stripe-expand is complete until it really is.
-      Fix error paths if md_probe fails.
-
- drivers/md/md.c     |    6 ++++--
- drivers/md/raid10.c |    2 ++
- drivers/md/raid5.c  |    7 ++++++-
- 3 files changed, 12 insertions(+), 3 deletions(-)
+Best regards
+keld
