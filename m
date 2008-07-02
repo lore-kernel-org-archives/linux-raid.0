@@ -1,18 +1,27 @@
-From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
-Subject: Re: new bottleneck section in wiki
-Date: Wed, 2 Jul 2008 19:51:18 +0200
-Message-ID: <20080702175117.GC12081@rap.rap.dk>
-References: <20080702155603.GA11156@rap.rap.dk> <A20315AE59B5C34585629E258D76A97CF1FCCC@34093-C3-EVS3.exchange.rackspace.com>
+From: "David Lethe" <david@santools.com>
+Subject: RE: new bottleneck section in wiki
+Date: Wed, 2 Jul 2008 13:08:04 -0500
+Message-ID: <A20315AE59B5C34585629E258D76A97CF1FDB5@34093-C3-EVS3.exchange.rackspace.com>
+References: <20080702155603.GA11156@rap.rap.dk> <A20315AE59B5C34585629E258D76A97CF1FCCC@34093-C3-EVS3.exchange.rackspace.com> <20080702175117.GC12081@rap.rap.dk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <A20315AE59B5C34585629E258D76A97CF1FCCC@34093-C3-EVS3.exchange.rackspace.com>
+Content-class: urn:content-classes:message
+In-Reply-To: <20080702175117.GC12081@rap.rap.dk>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Lethe <david@santools.com>
+To: =?iso-8859-1?Q?Keld_J=F8rn_Simonsen?= <keld@dkuug.dk>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+
+
+-----Original Message-----
+=46rom: Keld J=F8rn Simonsen [mailto:keld@dkuug.dk]=20
+Sent: Wednesday, July 02, 2008 12:51 PM
+To: David Lethe
+Cc: linux-raid@vger.kernel.org
+Subject: Re: new bottleneck section in wiki
 
 On Wed, Jul 02, 2008 at 12:04:11PM -0500, David Lethe wrote:
 > -----Original Message-----
@@ -63,6 +72,25 @@ this speed. So for a 4-disk SATA-II controller this would be at least
 
 best regards
 keld
+-------------------
+It is much more complicated than just saying what the transfer rates ar=
+e, especially in the world of blocking, arbitration, and unbalanced I/O=
+=2E =20
+
+Everything is a potential bottleneck.  As I am under NDA with most of t=
+he controller vendors, then I can not provide specifics, but suffice to=
+ say that certain cards with certain chipsets will max out at well unde=
+r published speeds.  Heck, you could attach solid-state disks with rand=
+om I/O access time in the nanosecond range and still only get 150MB/sec=
+ out of certain controllers, even on a PCIe X 16 bus.=20
+
+BTW, there isn't a SATA-II controller in the planet that will deliver 1=
+200 MB/sec with 4 disk drives.=20
+
+David
+
+
+
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
