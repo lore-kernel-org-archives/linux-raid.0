@@ -1,95 +1,89 @@
-From: "David Lethe" <david@santools.com>
-Subject: RE: new bottleneck section in wiki
-Date: Wed, 2 Jul 2008 13:08:04 -0500
-Message-ID: <A20315AE59B5C34585629E258D76A97CF1FDB5@34093-C3-EVS3.exchange.rackspace.com>
-References: <20080702155603.GA11156@rap.rap.dk> <A20315AE59B5C34585629E258D76A97CF1FCCC@34093-C3-EVS3.exchange.rackspace.com> <20080702175117.GC12081@rap.rap.dk>
+From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
+Subject: Re: new bottleneck section in wiki
+Date: Wed, 2 Jul 2008 20:14:54 +0200
+Message-ID: <20080702181454.GA12446@rap.rap.dk>
+References: <20080702155603.GA11156@rap.rap.dk> <20080702173331.GA2533@teal.hq.k1024.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
-In-Reply-To: <20080702175117.GC12081@rap.rap.dk>
+Content-Disposition: inline
+In-Reply-To: <20080702173331.GA2533@teal.hq.k1024.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?iso-8859-1?Q?Keld_J=F8rn_Simonsen?= <keld@dkuug.dk>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-
-
------Original Message-----
-=46rom: Keld J=F8rn Simonsen [mailto:keld@dkuug.dk]=20
-Sent: Wednesday, July 02, 2008 12:51 PM
-To: David Lethe
-Cc: linux-raid@vger.kernel.org
-Subject: Re: new bottleneck section in wiki
-
-On Wed, Jul 02, 2008 at 12:04:11PM -0500, David Lethe wrote:
-> -----Original Message-----
-> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-owner@vger.=
-kernel.org] On Behalf Of Keld J=F8rn Simonsen
-> Sent: Wednesday, July 02, 2008 10:56 AM
-> To: linux-raid@vger.kernel.org
-> Subject: new bottleneck section in wiki
+On Wed, Jul 02, 2008 at 07:33:31PM +0200, Iustin Pop wrote:
+> On Wed, Jul 02, 2008 at 05:56:03PM +0200, Keld J=F8rn Simonsen wrote:
+> > I should have done something else this afternoon, but anyway, I was
+> > inspired to write up this text for the wiki. Comments welcome.
+> >=20
+> > Keld
+> > [...]
+> > Many SATA controllers are on-board and do not use the PCI bus. Anyw=
+ay
+> > bandwidth is limited, but it is probably different from motherboard=
+ to
+> > motherboard. On board disk controllers most likely have a bigger
+> > bandwidth than IO controllers on a 32-bit PCI 33 MHz, 64-bit PCI 66=
+ MHz,
+> > or PCI-E x1 bus.
 >=20
-> I should have done something else this afternoon, but anyway, I was
-> inspired to write up this text for the wiki. Comments welcome.
- ....
+> Sorry to ask... are you sure the on-board controllers are *not* on th=
+e
+> PCI bus?
 
+My understanding is that they are not on the PCI or PCI-E bus, but on
+the southbridge. The southbridge then handles the PCI and PCI-E busses,
+the ISA bus, and other busses, and also the IO controller.
+Then the southbridge is connected to the northbridge.
+
+> They are not physically over the PCI bus, but still connected via the
+> same upstream-controller, I think, and still limited.
+
+Yes, and I do not know what speeds that are typical here.
+I would like to know more, if somebody can enlighten me.
+
+> I'm not familiar in this area, but the mainboard diagrams (the ones w=
+ith
+> pretty pictures, not electric ones) show that the on-board controller=
+s
+> 'hang' on the same PCI or PCI-E bus as the physical slots.
+
+This has been the case previously, but my understanding is that
+this is not the case any longer for current motherboards, even for the
+cheapest current motherboards.
+
+> > RAM sppec may be a bottleneck. Using 32 bit RAM - or using a 32 bit
+> > operating system may double time spent reading and writing RAM.
+> >=20
+> > CPU usage may be a bottleneck, also combined with slow RAM or only =
+using
+> > RAM in 32-bit mode.
 >=20
-> I would add -
-> The PCI (and PCI-X) bus is shared bandwidth, and operates at lowest c=
-ommon denominator.  Put a 33Mhz card in the PCI bus, and not only does =
-everything operate at 33Mhz, but all of the cards compete.  Grossly sim=
-plified, if you have a 133Mhz card and a 33Mhz card in the same PCI bus=
-, then that card will operate at 16Mhz. Your motherboard's embedded Eth=
-ernet chip and disk controllers are "on" the PCI bus, so even if you ha=
-ve a single PCI controller card, and a multiple-bus motherboard, then i=
-t does make a difference what slot you put the controller in.
->=20
-> If this isn't bad enough, then consider the consequences of arbitrati=
-on.  All of the PCI devices have to constantly negotiate between themse=
-lves to get a chance to compete against all of the other devices attach=
-ed to other PCI busses to get a chance to talk to the CPU and RAM.  As =
-such, every packet your Ethernet card picks up could temporarily suspen=
-d disk I/O if you don't configure things wisely.
+> Sorry, what is "32 bit RAM"? I never heard of this. Do you mean
+> dual-channel versus single-channel?
 
-Thanks, I added this text, modifed a little. And also I would like to
-note that I was inspired by some emailing with you, when writing the
-text.
+My terminology may be wrong. But I understand that if you
+are running an OS as a 32 bit OS, then your memcpy() function
+operate on the memory in 32 bit quantities, taking double the time to
+move a memory area as if it were done with 64-bit operations.=20
+I may be wrong there, and I would be glad if anybody could clarify.
+Maybe the 32-bit OS and C library does this with 64-bit loads and
+stores, or maybe there is an instruction in use to move a whole string
+in one instruction.
 
-Current motherboards with onboard disk controlles normally do not have
-the disk IO connected via the PCI or PCI-E busses, but rather directly =
-via the
-southbridge. What are typical transfer rates between the southbridge
-and the northbridge? Could this potentionally be a bottleneck?
-
-And also the disk controllers, could these be bottlenecks? They typical=
-ly
-operate at 300 MB/s nominally, per disk channel, and presumably they
-then have a connection to the southbridge that is capable of handling
-this speed. So for a 4-disk SATA-II controller this would be at least
-1200 MB/s or about 10 gigabit.=20
+A number of people run a 32-bit OS on 64 bit machine, either because a =
+64
+bit version of the OS is not available, or that some parts of the
+functionality, eg. codecs are only available in a 32-bit version, or fo=
+r
+reasons of ignorance, they did not know that a 64 bit OS would be
+better. So this is my concern that there may be room for improvement in
+these cases.
 
 best regards
 keld
--------------------
-It is much more complicated than just saying what the transfer rates ar=
-e, especially in the world of blocking, arbitration, and unbalanced I/O=
-=2E =20
-
-Everything is a potential bottleneck.  As I am under NDA with most of t=
-he controller vendors, then I can not provide specifics, but suffice to=
- say that certain cards with certain chipsets will max out at well unde=
-r published speeds.  Heck, you could attach solid-state disks with rand=
-om I/O access time in the nanosecond range and still only get 150MB/sec=
- out of certain controllers, even on a PCIe X 16 bus.=20
-
-BTW, there isn't a SATA-II controller in the planet that will deliver 1=
-200 MB/sec with 4 disk drives.=20
-
-David
-
-
 
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
