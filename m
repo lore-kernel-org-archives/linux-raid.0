@@ -1,39 +1,28 @@
-From: "H. Peter Anvin" <hpa@zytor.com>
-Subject: Re: Proper partition type for components with V1.x superblocks?
-Date: Wed, 02 Jul 2008 15:02:43 -0700
-Message-ID: <486BFB03.7060100@zytor.com>
-References: <484F9A3E.7020709@rabbit.us> <18512.25940.653867.623185@notabene.brown>
+From: "Daniel L. Miller" <dmiller@amfes.com>
+Subject: Grow a RAID-10
+Date: Wed, 02 Jul 2008 14:56:04 -0700
+Message-ID: <486BF974.70508@amfes.com>
+Reply-To: dmiller@amfes.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18512.25940.653867.623185@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Peter Rabbitson <rabbit+list@rabbit.us>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil Brown wrote:
-> On Wednesday June 11, rabbit+list@rabbit.us wrote:
->> Hello,
->>
->> The subject pretty much says it all - it obviously is not 0xFD, since there is 
->> nothing to autodetect. Is there some best practice/semi-standard way of 
->> marking a raid component partition as such? After reading the specs 0xDA 
->> (non-fs data) comes to mind, but I figured I'll ask here.
->>
-> 
-> I (almost) alway make arrays out of whole devices, not partitions, so
-> I really never thought about this.
-> 
-> I suspect 0xDA is safest and hence best.
-> I wonder if this should be suggested in the mdadm man page
-> anywhere.... anyone feel like creating a patch?
-> 
+I currently have a RAID10 across (4) SATA drives.  It looks like I'm 
+going to need to grow in the near future.  Any tips for a procedure for 
+this?  My current plan:
 
-Why 0xDA?
+1.  Add a PCI SATA controller (MB had 4 SATA + 4 RAID SATA, it's a Tyan 
+MB with a NFORCE chipset, I'm not sure if I want/can use the RAID SATA 
+ports as plain SATA connections).
 
-As far as I know, the closest thing there is to a registry is the list 
-that aeb at least used to maintain.
+2.  Add 2 more drives - not necessarily the same size as the existing 
+(they were all 4 the same)
 
-	-hpa
+3.  Execute "mdadm --grow /dev/md0"
+
+-- 
+Daniel
