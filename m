@@ -1,32 +1,40 @@
-From: Richard Scobie <richard@sauce.co.nz>
-Subject: Re: Metadata upgradable?
-Date: Thu, 03 Jul 2008 08:40:37 +1200
-Message-ID: <486BE7C5.8090306@sauce.co.nz>
-References: <486BD0DC.6030104@are-b.org> <alpine.DEB.1.10.0807021624150.5339@p34.internal.lan>
+From: Brendan Conoboy <blc@redhat.com>
+Subject: Re: "raid" versions of hard drives for software raid?
+Date: Wed, 02 Jul 2008 14:37:52 -0600
+Message-ID: <486BE720.3090507@redhat.com>
+References: <873amsqbag.fsf@uwo.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.1.10.0807021624150.5339@p34.internal.lan>
+In-Reply-To: <873amsqbag.fsf@uwo.ca>
 Sender: linux-raid-owner@vger.kernel.org
-To: Oliver <oliver@are-b.org>
+To: Dan Christensen <jdc@uwo.ca>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Dan Christensen wrote:
+> I'm looking at either the Western Digital 500G RE2 drives or the cheaper
+> 500G SE16 drives.  I have read that for use with a hardware raid card,
+> the RE2 drives are more appropriate, and I'm wondering if the same is
+> true for software raid.
 
-> On Wed, 2 Jul 2008, Oliver wrote:
+It's a mechanical property- vibration tolerance and whatnot.  No 
+difference between software and hardware raid in this sense.
+
+> I am planning to get two drives, and may use the entire drives as RAID1,
+> or I might partition the drives and use most of the partitions in a
+> RAID1 configuration, but leave a few of the partitions without RAID.
 > 
->> Hi,
->>
->> I've made the assumption last year or so that I won't ever be having 
->> an array of more then 2Tb. The irony is of course that I thought of 
->> this whilst building an array of 4x500gb. I've decided to stick an 
->> extra 500gb and expand the array a bit, and now I might bump into that 
->> 2TB limitation of 0.9 superblocks.
+> Suggestions appreciated (even suggestions for another drive I should
+> consider).
+> 
+> I do like the 5 year warranty on the RE2 drives and the increased MTBF,
+> as I do have a long history of drive failures...
 
-The 2TB limitation as I understand it, is for individual members of an 
-array, not the total size of it.
+I have 5 400GB RE2 drives in a RAID5 array (software raid, naturally). 
+That 5 year warranty has come in handy- only 1 of the original drives 
+still remains.  5 RMAs in under 3 years.  Maybe the 500GB is better.
 
-Regards,
-
-Richard
+-- 
+Brendan Conoboy / Red Hat, Inc. / blc@redhat.com
