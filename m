@@ -1,40 +1,30 @@
-From: Dan Christensen <jdc@uwo.ca>
+From: Brendan Conoboy <blc@redhat.com>
 Subject: Re: "raid" versions of hard drives for software raid?
-Date: Wed, 02 Jul 2008 16:54:30 -0400
-Message-ID: <87tzf8ovll.fsf@uwo.ca>
-References: <873amsqbag.fsf@uwo.ca> <486BE720.3090507@redhat.com>
+Date: Wed, 02 Jul 2008 15:30:24 -0600
+Message-ID: <486BF370.2070401@redhat.com>
+References: <873amsqbag.fsf@uwo.ca> <486BE720.3090507@redhat.com> <alpine.DEB.1.10.0807021650460.7957@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <alpine.DEB.1.10.0807021650460.7957@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: Dan Christensen <jdc@uwo.ca>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Brendan Conoboy <blc@redhat.com> writes:
+Justin Piszcz wrote:
+> That's a lot of RMA's, bad PSU or vibration issues, or a bad lot of drives?
 
-> Dan Christensen wrote:
->> I'm looking at either the Western Digital 500G RE2 drives or the cheaper
->> 500G SE16 drives.  I have read that for use with a hardware raid card,
->> the RE2 drives are more appropriate, and I'm wondering if the same is
->> true for software raid.
->
-> It's a mechanical property- vibration tolerance and whatnot.  No
-> difference between software and hardware raid in this sense.
+My educated case is that it was a bad batch of drives (Bought them 
+sooner after their introduction).  Drives in the enclosure from other 
+MFR's have held up reliably and heat has been a non-issue.
 
-The difference that is most commonly described, and that I should have
-highlighted, is TLER: Time-Limited Error Recovery.  Apparently, the SE16
-drives can take a long time to recover from an error (up to two minutes,
-I believe), and hardware raid controllers can kick the drives out of the
-array when it would instead be better for the drive to return a
-read/write error and let the raid controller deal with it.
+Dan might want to see if hdparm has a tunable for the TLER setting he's 
+concerned about.  Modern mdadm versions will attempt to rewrite a sector 
+if there's a read error using parity or mirrors to reconstruct the data. 
+  For this purpose having a short timeout before getting an error would 
+be preferable to waiting a couple minutes.
 
-My question is really whether this logic applies to linux software raid.
-
-One other point is that I also read that TLER can be enabled and
-disabled for both SE16 and RE2 drives using Windows software.  Not sure
-if it runs under wine.  See
-
-  http://www.hardforum.com/archive/index.php/t-1285254.html
-
-Dan
-
+-- 
+Brendan Conoboy / Red Hat, Inc. / blc@redhat.com
