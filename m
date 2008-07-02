@@ -1,47 +1,49 @@
-From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
+From: Matt Garman <matthew.garman@gmail.com>
 Subject: Re: new bottleneck section in wiki
-Date: Wed, 2 Jul 2008 20:26:27 +0200
-Message-ID: <20080702182627.GA12614@rap.rap.dk>
-References: <20080702155603.GA11156@rap.rap.dk> <A20315AE59B5C34585629E258D76A97CF1FCCC@34093-C3-EVS3.exchange.rackspace.com> <20080702175117.GC12081@rap.rap.dk> <A20315AE59B5C34585629E258D76A97CF1FDB5@34093-C3-EVS3.exchange.rackspace.com>
+Date: Wed, 2 Jul 2008 14:03:37 -0500
+Message-ID: <20080702190337.GA2311@sewage.raw-sewage.fake>
+References: <20080702155603.GA11156@rap.rap.dk> <A20315AE59B5C34585629E258D76A97CF1FCCC@34093-C3-EVS3.exchange.rackspace.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <A20315AE59B5C34585629E258D76A97CF1FDB5@34093-C3-EVS3.exchange.rackspace.com>
+In-Reply-To: <A20315AE59B5C34585629E258D76A97CF1FCCC@34093-C3-EVS3.exchange.rackspace.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: David Lethe <david@santools.com>
-Cc: linux-raid@vger.kernel.org
+Cc: Keld J?rn Simonsen <keld@dkuug.dk>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Jul 02, 2008 at 01:08:04PM -0500, David Lethe wrote:
-> 
-> 
-> And also the disk controllers, could these be bottlenecks? They typically
-> operate at 300 MB/s nominally, per disk channel, and presumably they
-> then have a connection to the southbridge that is capable of handling
-> this speed. So for a 4-disk SATA-II controller this would be at least
-> 1200 MB/s or about 10 gigabit. 
-> 
-> best regards
-> keld
-> -------------------
-> It is much more complicated than just saying what the transfer rates are, especially in the world of blocking, arbitration, and unbalanced I/O.  
+On Wed, Jul 02, 2008 at 12:04:11PM -0500, David Lethe wrote:
+> The PCI (and PCI-X) bus is shared bandwidth, and operates at
+> lowest common denominator.  Put a 33Mhz card in the PCI bus, and
+> not only does everything operate at 33Mhz, but all of the cards
+> compete.  Grossly simplified, if you have a 133Mhz card and a
+> 33Mhz card in the same PCI bus, then that card will operate at
+> 16Mhz. Your motherboard's embedded Ethernet chip and disk
+> controllers are "on" the PCI bus, so even if you have a single PCI
+> controller card, and a multiple-bus motherboard, then it does make
+> a difference what slot you put the controller in.
 
-Yes, that is understood, but I am only listing some potential
-bottlenecs, of cause there may be more.
+Is that true for all PCI-X implementations?  What's the point, then,
+of having PCI-X (64 bit/66 MHz or greater) if you have even one PCI
+card (32 bit/33 MHz)?
 
-> Everything is a potential bottleneck.  As I am under NDA with most of the controller vendors, then I can not provide specifics, but suffice to say that certain cards with certain chipsets will max out at well under published speeds.  Heck, you could attach solid-state disks with random I/O access time in the nanosecond range and still only get 150MB/sec out of certain controllers, even on a PCIe X 16 bus. 
-> 
-> BTW, there isn't a SATA-II controller in the planet that will deliver 1200 MB/sec with 4 disk drives. 
+A lot of "server" motherboards offer PCI-X and some simple graphics
+chip.  If you read the motherboard specs, that simple graphics is
+usually attached to the PCI bus [1].  So what's the point of having
+PCI-X slots if everything is automatically downgraded to PCI speeds
+due to the embedded graphics?
 
-Yes, but I think this is normally due to that the max transfer speed per
-disk is in the ballpark of 80-120 MB/s - which is less than half the
-SATA-II max speed. And I think much of this slowdown comes from head movement,
-track-to-track, disk latency etc. I was of the impression, that when the
-transfer between the disk and the controller is going on, then the
-transfer speed would be not far from the 300 MB/s max speed, eg for
-90 MB/s 1 TB disks that I bougth recently, or the faster 15000 RPM
-disks, which give something like 120 MB/s.
+I read some of the high-level info on the Intel 6702 PHX PCI-X hub
+[2].  If I understand correctly, that controller is actually
+attached to the PCI express bus.  So to me, it seems possible that
+PCI and PCI-X could be independant, and that PCI-X will compete with
+PCI-E for bandwidth.
 
-best regards
-keld
+[1] The ASUS M2N-LR has PCI-X (via the Intel 6702PHX) and an
+embedded ATI ES1000 video card.  The ES1000's specs say it has a PCI
+bus interface.
+ES1000: http://ati.amd.com/products/server/es1000/index.html
+
+[2] http://www.intel.com/design/chipsets/datashts/303633.htm
+
