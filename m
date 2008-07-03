@@ -1,60 +1,59 @@
 From: Doug Ledford <dledford@redhat.com>
-Subject: Re: new bottleneck section in wiki
-Date: Thu, 03 Jul 2008 01:10:48 -0400
-Message-ID: <1215061848.14196.3.camel@firewall.xsintricity.com>
-References: <20080702155603.GA11156@rap.rap.dk>
-	 <A20315AE59B5C34585629E258D76A97CF1FCCC@34093-C3-EVS3.exchange.rackspace.com>
-	 <20080702190337.GA2311@sewage.raw-sewage.fake>
+Subject: Re: Proper partition type for components with V1.x superblocks?
+Date: Thu, 03 Jul 2008 01:17:56 -0400
+Message-ID: <1215062276.14196.6.camel@firewall.xsintricity.com>
+References: <484F9A3E.7020709@rabbit.us>
+	 <18512.25940.653867.623185@notabene.brown>  <486BFB03.7060100@zytor.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-P15OBuhMFFae4GzyJkV7"
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ZtXFvckkCLChWO3wpFuM"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20080702190337.GA2311@sewage.raw-sewage.fake>
+In-Reply-To: <486BFB03.7060100@zytor.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Matt Garman <matthew.garman@gmail.com>
-Cc: David Lethe <david@santools.com>, Keld J?rn Simonsen <keld@dkuug.dk>, linux-raid@vger.kernel.org
+To: "H. Peter Anvin" <hpa@zytor.com>
+Cc: Neil Brown <neilb@suse.de>, Peter Rabbitson <rabbit+list@rabbit.us>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
---=-P15OBuhMFFae4GzyJkV7
+--=-ZtXFvckkCLChWO3wpFuM
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, 2008-07-02 at 14:03 -0500, Matt Garman wrote:
-> Is that true for all PCI-X implementations?  What's the point, then,
-> of having PCI-X (64 bit/66 MHz or greater) if you have even one PCI
-> card (32 bit/33 MHz)?
-
-A 32bit/33MHz card only slows down the particular bus it's plugged into.
-A lot of the server class machines that have had PCI-X in the past made
-a specific point of using multiple PCI busses for the slots so that
-plugging in that 32bit/33MHz card wouldn't effect the PCI-X card next to
-it because they were on physically distinct busses.
-
-> A lot of "server" motherboards offer PCI-X and some simple graphics
-> chip.  If you read the motherboard specs, that simple graphics is
-> usually attached to the PCI bus [1].  So what's the point of having
-> PCI-X slots if everything is automatically downgraded to PCI speeds
-> due to the embedded graphics?
-
-Again, different physical busses.
-
-> I read some of the high-level info on the Intel 6702 PHX PCI-X hub
-> [2].  If I understand correctly, that controller is actually
-> attached to the PCI express bus.  So to me, it seems possible that
-> PCI and PCI-X could be independant, and that PCI-X will compete with
-> PCI-E for bandwidth.
+On Wed, 2008-07-02 at 15:02 -0700, H. Peter Anvin wrote:
+> Neil Brown wrote:
+> > On Wednesday June 11, rabbit+list@rabbit.us wrote:
+> >> Hello,
+> >>
+> >> The subject pretty much says it all - it obviously is not 0xFD, since =
+there is=20
+> >> nothing to autodetect. Is there some best practice/semi-standard way o=
+f=20
+> >> marking a raid component partition as such? After reading the specs 0x=
+DA=20
+> >> (non-fs data) comes to mind, but I figured I'll ask here.
+> >>
+> >=20
+> > I (almost) alway make arrays out of whole devices, not partitions, so
+> > I really never thought about this.
+> >=20
+> > I suspect 0xDA is safest and hence best.
+> > I wonder if this should be suggested in the mdadm man page
+> > anywhere.... anyone feel like creating a patch?
+> >=20
 >=20
-> [1] The ASUS M2N-LR has PCI-X (via the Intel 6702PHX) and an
-> embedded ATI ES1000 video card.  The ES1000's specs say it has a PCI
-> bus interface.
-> ES1000: http://ati.amd.com/products/server/es1000/index.html
+> Why 0xDA?
 >=20
-> [2] http://www.intel.com/design/chipsets/datashts/303633.htm
->=20
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> As far as I know, the closest thing there is to a registry is the list=20
+> that aeb at least used to maintain.
+
+Actually, if you are going to use version 1 superblocks anyway, then
+just list the partitions as normal linux partitions.  The whole
+linux-raid-autodetect partition type was originally only for auto detect
+at bootup.  If you weren't using that feature, then standard linux type
+was good enough.  And if you use version 1.1 or 1.2 superblocks, then
+you really don't have anything to worry about since the location of the
+superblock and the data start offset means that the partition won't get
+accidentally recognized as a non-raid partition.
+
 --=20
 Doug Ledford <dledford@redhat.com>
               GPG KeyID: CFBFF194
@@ -64,17 +63,17 @@ Infiniband specific RPMs available at
               http://people.redhat.com/dledford/Infiniband
 
 
---=-P15OBuhMFFae4GzyJkV7
+--=-ZtXFvckkCLChWO3wpFuM
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.9 (GNU/Linux)
 
-iEYEABECAAYFAkhsX0wACgkQTzP9PM7pjw/SLgCfUeGWGKz/JFFz5dImU+bNmfsI
-mHIAn2AfQ4f5Sbjj4ZYeYTtcpVOQcaw1
-=v3f1
+iEYEABECAAYFAkhsYQQACgkQTzP9PM7pjw8uPQCcC2M+bOi7cLGi/4Sij7eP7iLx
+wmEAnjfgkNZRGmFcEnyQDmmd6LB+UhkE
+=X1VK
 -----END PGP SIGNATURE-----
 
---=-P15OBuhMFFae4GzyJkV7--
+--=-ZtXFvckkCLChWO3wpFuM--
 
