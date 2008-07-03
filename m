@@ -1,41 +1,39 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: new bottleneck section in wiki
-Date: Thu, 3 Jul 2008 10:00:32 -0400 (EDT)
-Message-ID: <alpine.DEB.1.10.0807030959530.11579@p34.internal.lan>
-References: <20080702155603.GA11156@rap.rap.dk>  <A20315AE59B5C34585629E258D76A97CF1FCCC@34093-C3-EVS3.exchange.rackspace.com>  <20080702190337.GA2311@sewage.raw-sewage.fake>  <cccedfc60807021210y2b47917ap227e46fd1666755e@mail.gmail.com>
- <20080702193527.GA13186@rap.rap.dk>  <cccedfc60807021238w2fdb2a60i5d6c4c8a901071e2@mail.gmail.com>  <A20315AE59B5C34585629E258D76A97CF200D3@34093-C3-EVS3.exchange.rackspace.com> <cccedfc60807030528t4724cbdhe5334ed0acefc536@mail.gmail.com>
+From: Dan Christensen <jdc@uwo.ca>
+Subject: Re: "raid" versions of hard drives for software raid?
+Date: Thu, 03 Jul 2008 10:34:28 -0400
+Message-ID: <87abgzvxxn.fsf@uwo.ca>
+References: <873amsqbag.fsf@uwo.ca> <486BE720.3090507@redhat.com>
+	<87tzf8ovll.fsf@uwo.ca>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <cccedfc60807030528t4724cbdhe5334ed0acefc536@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jon Nelson <jnelson-linux-raid@jamponi.net>
-Cc: David Lethe <david@santools.com>, Keld J?rn Simonsen <keld@dkuug.dk>, Matt Garman <matthew.garman@gmail.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Dan Christensen <jdc@uwo.ca> writes:
 
-
-On Thu, 3 Jul 2008, Jon Nelson wrote:
-
->> Not true, Jon.  The test above was limited by the amount of data that a
->> single drive head can push to the controller with 100% sequential reads
->> of 64KB.  You can't say anything about chipset bottlenecks, because you
->> haven't created a condition where the chipset could even be a
->> bottleneck.  I/O is constrained by the disk drives.
->>
->> Now, if you attached industrial class SSDs that operate at media speeds
->> with access time in the NS range, then you could be in a position to
->> benchmark chipset performance.
+>> Dan Christensen wrote:
+>>> I'm looking at either the Western Digital 500G RE2 drives or the cheaper
+>>> 500G SE16 drives.  I have read that for use with a hardware raid card,
+>>> the RE2 drives are more appropriate, and I'm wondering if the same is
+>>> true for software raid.
 >
-> Well, that's true. However, perhaps I mis-spoke. What I was intending
-> on doing is showing that the chipset was /not/ the limiting factor
-> here, not checking it's maximum speed, but rather given what I know
-> about the drives individually, and then what the rates are with all
-> drives cookin', then I can say, "Well, at least the chipset or bus
-> aren't getting in the way." Note that I also added "or bus" to my
-> statement. Would you say that this statement is more accurate or am I
-> getting the terminology wrong, again?
-Also check my thread regarding the Veliciraptors, when I read 
-concurrently off of two of them, I do not get that great of performance.
-Whereas the ports on the motherboard are excellent!
+> The difference that is most commonly described, and that I should have
+> highlighted, is TLER: Time-Limited Error Recovery.  Apparently, the SE16
+> drives can take a long time to recover from an error (up to two minutes,
+> I believe), and hardware raid controllers can kick the drives out of the
+> array when it would instead be better for the drive to return a
+> read/write error and let the raid controller deal with it.
+>
+> My question is really whether this logic applies to linux software raid.
+
+One more reference:
+
+  http://en.wikipedia.org/wiki/Time-Limited_Error_Recovery
+
+It certainly sounds to me like TLER is also appropriate for software
+raid, so I'm going to go ahead and get the RE2 drives.
+
+Dan
 
