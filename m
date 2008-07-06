@@ -1,34 +1,70 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: Lots of con-current I/O = resets SATA link? (2.6.25.10)
-Date: Sat, 5 Jul 2008 19:24:52 -0400 (EDT)
-Message-ID: <alpine.DEB.1.10.0807051923380.23222@p34.internal.lan>
-References: <fa.u8J+BqAcxU1mg8ob9pMBJaAHBPo@ifi.uio.no> <486FBFAB.5050303@shaw.ca> <alpine.DEB.1.10.0807051527210.8002@p34.internal.lan> <48700228.7060904@shaw.ca>
+From: thomas62186218@aol.com
+Subject: Re: md devices disappearing on system reboot
+Date: Sun, 06 Jul 2008 00:27:56 -0400
+Message-ID: <8CAAD37CC87F1BD-FD8-4A21@webmail-stg-d08.sysops.aol.com>
+References: <8CAA9B1F81B8E21-614-D2D@webmail-nc09.sysops.aol.com> <20080702162108.GF4981@skl-net.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset="us-ascii"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <48700228.7060904@shaw.ca>
+In-Reply-To: <20080702162108.GF4981@skl-net.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Robert Hancock <hancockr@shaw.ca>
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, xfs@oss.sgi.com, Alan Piszcz <ap@solarrain.com>
+To: maan@systemlinux.org
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hi Andre,
+
+Thank you for responding. I created md0 with 4 hard drives, RAID 0. 
+Here is the /etc/mdadm.conf
+DEVICE  /dev/sd*
+ARRAY /dev/md0 level=raid0 num-devices=4 
+UUID=d58a686f:20aa9ffe:e0d5f27e:e17216ec
+
+Here is the output of mdadm -E -scan
+ARRAY /dev/md0 level=raid0 num-devices=4 
+UUID=d58a686f:20aa9ffe:e0d5f27e:e17216ec
 
 
-On Sat, 5 Jul 2008, Robert Hancock wrote:
+However, cat /proc/mdstat shows nothing:
+Personalities : [raid0] [raid1] [raid6] [raid5] [raid4] [raid10]
+unused devices: <none>
 
-> Justin Piszcz wrote:
->>> Can you post your dmesg from bootup with the controller/drive detection?
->
-> So you've got 6 drives in the machine. Intel chipsets normally seem pretty 
-> robust with AHCI.
->
-> Are you certain that your machine has enough power to run all those drives 
-> properly? We've seen in a number of cases that power fluctuations or noise 
-> can cause these kinds of errors.
 
-I have a 650watt PSU (nice antec one) and the power draw of the box is 
-~148watts w/ veliciraptors, ~250 when fully load all 4 cores + all 12 
-disks writing.  I have turned off the irqbalance daemon and I am going to 
-see if the problem re-occurs.
+Thank you for any guidance!
+-Thomas
 
-Justin.
+-----Original Message-----
+From: Andre Noll <maan@systemlinux.org>
+To: thomas62186218@aol.com
+Cc: linux-raid@vger.kernel.org
+Sent: Wed, 2 Jul 2008 9:21 am
+Subject: Re: md devices disappearing on system reboot
+
+
+
+
+
+
+
+
+
+
+On 12:52, thomas62186218@aol.com wrote:
+
+> I have what I am sure is a simple problem to solve but I cannot 
+figure
+> it out. I am running 64-bit Linux 2.6.20.11 (custom build) and my md
+> devices are not appearing after system reboot. Any ideas?
+
+Show us your /etc/mdadm.conf and the output of mdadm -E --scan.
+
+Andre
+--
+The only person who always got his work done by Friday was Robinson 
+Crusoe
+
+
+
+
+
