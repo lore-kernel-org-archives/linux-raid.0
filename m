@@ -1,70 +1,26 @@
-From: thomas62186218@aol.com
-Subject: Re: md devices disappearing on system reboot
-Date: Sun, 06 Jul 2008 00:27:56 -0400
-Message-ID: <8CAAD37CC87F1BD-FD8-4A21@webmail-stg-d08.sysops.aol.com>
-References: <8CAA9B1F81B8E21-614-D2D@webmail-nc09.sysops.aol.com> <20080702162108.GF4981@skl-net.de>
+From: "George Spelvin" <linux@horizon.com>
+Subject: Re: 2.6.26-rc8 deadlock: RAID code?
+Date: Sun, 06 Jul 2008 02:49:04 -0400
+Message-ID: <20080706064904.10507.qmail@science.horizon.com>
+References: <20080704125551.24267.qmail@science.horizon.com>
+ <e9c3a7c20807050854o330279f7x3d64b1ec263f8800@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20080702162108.GF4981@skl-net.de>
-Sender: linux-raid-owner@vger.kernel.org
-To: maan@systemlinux.org
-Cc: linux-raid@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756281AbYGFGtV@vger.kernel.org>
+In-Reply-To: <e9c3a7c20807050854o330279f7x3d64b1ec263f8800@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux@horizon.com, dan.j.williams@intel.com
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Andre,
+"Dan Williams" <dan.j.williams@intel.com> wrote:
+> Are you running with CONFIG_NUMA=n?  If so, you may be seeing the
+> effects of kswapd not running. See the patch at:
+>
+>      http://marc.info/?l=linux-mm&m=121510360428340&w=2
 
-Thank you for responding. I created md0 with 4 hard drives, RAID 0. 
-Here is the /etc/mdadm.conf
-DEVICE  /dev/sd*
-ARRAY /dev/md0 level=raid0 num-devices=4 
-UUID=d58a686f:20aa9ffe:e0d5f27e:e17216ec
+Indeed I am.  My apologies for not including the kernel config.
+That's in -rc9, so I've rebased to that and we'll see what happens.
 
-Here is the output of mdadm -E -scan
-ARRAY /dev/md0 level=raid0 num-devices=4 
-UUID=d58a686f:20aa9ffe:e0d5f27e:e17216ec
-
-
-However, cat /proc/mdstat shows nothing:
-Personalities : [raid0] [raid1] [raid6] [raid5] [raid4] [raid10]
-unused devices: <none>
-
-
-Thank you for any guidance!
--Thomas
-
------Original Message-----
-From: Andre Noll <maan@systemlinux.org>
-To: thomas62186218@aol.com
-Cc: linux-raid@vger.kernel.org
-Sent: Wed, 2 Jul 2008 9:21 am
-Subject: Re: md devices disappearing on system reboot
-
-
-
-
-
-
-
-
-
-
-On 12:52, thomas62186218@aol.com wrote:
-
-> I have what I am sure is a simple problem to solve but I cannot 
-figure
-> it out. I am running 64-bit Linux 2.6.20.11 (custom build) and my md
-> devices are not appearing after system reboot. Any ideas?
-
-Show us your /etc/mdadm.conf and the output of mdadm -E --scan.
-
-Andre
---
-The only person who always got his work done by Friday was Robinson 
-Crusoe
-
-
-
-
-
+Thank you so much!
