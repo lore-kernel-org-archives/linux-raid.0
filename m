@@ -1,46 +1,28 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: md devices disappearing on system reboot
-Date: Tue, 8 Jul 2008 09:34:33 +1000
-Message-ID: <18546.43017.93866.476968@notabene.brown>
-References: <8CAA9B1F81B8E21-614-D2D@webmail-nc09.sysops.aol.com>
-	<20080702162108.GF4981@skl-net.de>
-	<8CAAD37CC87F1BD-FD8-4A21@webmail-stg-d08.sysops.aol.com>
-	<20080707093004.GQ23944@skl-net.de>
-	<8CAAE4763AEB341-2F6C-570@webmailbeta-m07.sysops.aol.com>
-	<20080707132319.GR23944@skl-net.de>
-	<8CAAE7C73AB975E-26A8-1E6E@webmail-stg-d10.sysops.aol.com>
-	<4872A2A6.2060908@dgreaves.com>
+From: "H. Peter Anvin" <hpa@zytor.com>
+Subject: Re: Proper partition type for components with V1.x superblocks?
+Date: Mon, 07 Jul 2008 16:47:26 -0700
+Message-ID: <4872AB0E.7050306@zytor.com>
+References: <484F9A3E.7020709@rabbit.us>	<18512.25940.653867.623185@notabene.brown>	<486BFB03.7060100@zytor.com>	<1215062276.14196.6.camel@firewall.xsintricity.com> <18545.35548.800516.532854@notabene.brown> <48725312.6090201@zytor.com> <4872A248.7060904@dgreaves.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from David Greaves on Tuesday July 8
+In-Reply-To: <4872A248.7060904@dgreaves.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: David Greaves <david@dgreaves.com>
-Cc: thomas62186218@aol.com, maan@systemlinux.org, linux-raid@vger.kernel.org
+Cc: Neil Brown <neilb@suse.de>, Doug Ledford <dledford@redhat.com>, Peter Rabbitson <rabbit+list@rabbit.us>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday July 8, david@dgreaves.com wrote:
-> thomas62186218@aol.com wrote:
-> > Hi Andre,
-> > 
-> > Thank you very much for the quick response.
-> > 
-> > My /dev/md0 device is using /dev/sdd1, /dev/sdg1, /dev/sdj1, and /dev/sdm1.
-> > 
-> > I did:
-> > devices=/dev/sd[dgjm]
-> ^^^^ add a 1 to the end...
-> devices=/dev/sd[dgjm]1
+David Greaves wrote:
 > 
-> > mdadm -A --run /dev/md0 $devices
+> I thought that.
+> But then I asked why?
+> 
+> Couldn't come up with a decent reason.
+> 
+> non-fs seems to cover everything.
+> 
 
-Also please add -vv to get more verbose output.
-So:
+Seems nicer to install software.
 
-   mdadm -A -s -vv
-and when that fails
-   mdadm -A --run -vv /dev/sd[dgjm]1
-
-Thanks,
-NeilBrown
+	-hpa
