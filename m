@@ -1,61 +1,48 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: 12 Veliciraptors again w/x4 card (1.1gbytes/sec aggregate
- read)!
-Date: Mon, 7 Jul 2008 15:40:10 -0400 (EDT)
-Message-ID: <alpine.DEB.1.10.0807071539520.5574@p34.internal.lan>
-References: <alpine.DEB.1.10.0807071424100.4694@p34.internal.lan> <alpine.DEB.1.10.0807071436080.5166@p34.internal.lan> <alpine.DEB.1.10.0807071442570.4709@p34.internal.lan>
+From: David Greaves <david@dgreaves.com>
+Subject: Re: Proper partition type for components with V1.x superblocks?
+Date: Tue, 08 Jul 2008 00:10:00 +0100
+Message-ID: <4872A248.7060904@dgreaves.com>
+References: <484F9A3E.7020709@rabbit.us>	<18512.25940.653867.623185@notabene.brown>	<486BFB03.7060100@zytor.com>	<1215062276.14196.6.camel@firewall.xsintricity.com> <18545.35548.800516.532854@notabene.brown> <48725312.6090201@zytor.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.1.10.0807071442570.4709@p34.internal.lan>
+In-Reply-To: <48725312.6090201@zytor.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, xfs@oss.sgi.com
-Cc: Alan Piszcz <ap@solarrain.com>
+To: "H. Peter Anvin" <hpa@zytor.com>
+Cc: Neil Brown <neilb@suse.de>, Doug Ledford <dledford@redhat.com>, Peter Rabbitson <rabbit+list@rabbit.us>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+H. Peter Anvin wrote:
+> Neil Brown wrote:
+>> On Thursday July 3, dledford@redhat.com wrote:
+>>> On Wed, 2008-07-02 at 15:02 -0700, H. Peter Anvin wrote:
+>>>> Why 0xDA?
+>>>>
+>>>> As far as I know, the closest thing there is to a registry is the
+>>>> list that aeb at least used to maintain.
+>>
+>> Yes. http://www.win.tue.nl/~aeb/partitions/partition_types-1.html
+>> lists 0xDA as
+>>
+>>     da Non-FS Data
+>>
+>>         Added on request of John Hardin (johnh@aproposretail.com).
+>>
+>> which is the closest we could come to "you won't want to look at
+>> or do anything to this partition".
+>>
+> 
+> But that's not really what it is, either.  The best would be to pick a
+> new partition identifier entirely.
 
+I thought that.
+But then I asked why?
 
-On Mon, 7 Jul 2008, Justin Piszcz wrote:
+Couldn't come up with a decent reason.
 
->
->
-> On Mon, 7 Jul 2008, Justin Piszcz wrote:
->
->> 
->> 
->> On Mon, 7 Jul 2008, Justin Piszcz wrote:
->> 
->>> Each PCI-e x1 card has 1 veliciraptor on it now.
->>> Got an x4 card wit 4 sata ports:
->>> 
->>> Not quite the > 1 gbyte/sec I was hoping for in regards to the reads
->>> but pretty close!
->> 
->> Going to remove one of the drives from the x1 card and put it on the x4
->> card instead, then I will use all 4 SATA ports on the x4 and hopefully get
->> better bw.
->> 
->
-> Four drives on the x4 card, MAX bandwidth for every disk.
->
-> p34:~# dd if=/dev/sdi of=/dev/null bs=1M &
-> [1] 4720
-> p34:~# dd if=/dev/sdj of=/dev/null bs=1M &
-> [2] 4721
-> p34:~# dd if=/dev/sdk of=/dev/null bs=1M &
-> [3] 4722
-> p34:~# dd if=/dev/sdl of=/dev/null bs=1M &
-> [4] 4723
-> p34:~#
->
-> 120MiB/s per each one!
->
-> Re-running dd test with all 12 disks:
->
-> 1.1 gigabytes per second read!
->
+non-fs seems to cover everything.
 
-bonnie++ benchmarks:
+David
 
-http://home.comcast.net/~jpiszcz/20080707/veliciraptors_with_x4.html
 
