@@ -1,51 +1,74 @@
-From: "Alan D. Brunelle" <Alan.Brunelle@hp.com>
-Subject: Re: raid10: no raid0 support?
-Date: Mon, 07 Jul 2008 08:46:49 -0400
-Message-ID: <48721039.7040706@hp.com>
-References: <484D9712.7090804@hp.com> <18521.59535.292223.722853@notabene.brown>
+From: thomas62186218@aol.com
+Subject: Re: md devices disappearing on system reboot
+Date: Mon, 07 Jul 2008 08:52:03 -0400
+Message-ID: <8CAAE4763AEB341-2F6C-570@webmailbeta-m07.sysops.aol.com>
+References: <8CAA9B1F81B8E21-614-D2D@webmail-nc09.sysops.aol.com> <20080702162108.GF4981@skl-net.de> <8CAAD37CC87F1BD-FD8-4A21@webmail-stg-d08.sysops.aol.com> <20080707093004.GQ23944@skl-net.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18521.59535.292223.722853@notabene.brown>
+In-Reply-To: <20080707093004.GQ23944@skl-net.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
+To: maan@systemlinux.org
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil Brown wrote:
-> On Monday June 9, Alan.Brunelle@hp.com wrote:
->> Is there some reason why the MD RAID10 module does /not/ support a
->> "RAID0-like" configuration (-p n1)? The comments in drivers/md/raid10.c
->> seem to suggest it should:  "* If [near_copies and far_copies] are 1, we
->> get raid0." Yet the code specifically checks for ((near_copies *
->> far_copies) > 1).
-> 
-> You mean:
-> 	if ((nc*fc) <2 || (nc*fc) > mddev->raid_disks ||
-> 	    (mddev->layout >> 17)) {
-> 		printk(KERN_ERR "raid10: %s: unsupported raid10 layout: 0x%8x\n",
-> 		       mdname(mddev), mddev->layout);
-> 		goto out;
-> 	}
-> 
-> Yes, I guess that could be "nc*fc < 1".  Everything else should still
-> work.
-> 
-> I cannot think of a good reason for making a raid10 with no redundancy though.
-> 
->> Just curious, as it seems interesting that one could support RAID0,
->> RAID1 /and/ RAID10 all w/ one RAID module.
-> 
-> Interesting: yes.
-> Useful:  not sure.
-> 
-> NeilBrown
-> 
+Hi Andre,
 
-Sorry for the tardy response (on holiday), just thinking about the
-algorithm's application to another problem where having one piece of
-code supporting all three RAID modes is goodness...
+Thank you for the response. When running:  mdadm -A /dev/md0   I get:
 
-Thanks,
-Alan
+mdadm: no devices found for /dev/md0
+
+But fdisk -l  shows all the devices present on the system...
+
+-Thomas
+
+-----Original Message-----
+From: Andre Noll <maan@systemlinux.org>
+To: thomas62186218@aol.com
+Cc: linux-raid@vger.kernel.org
+Sent: Mon, 7 Jul 2008 2:30 am
+Subject: Re: md devices disappearing on system reboot
+
+
+
+
+
+
+
+
+
+
+On 00:27, thomas62186218@aol.com wrote:
+
+> Thank you for responding. I created md0 with 4 hard drives, RAID 0.
+> Here is the /etc/mdadm.conf
+> DEVICE  /dev/sd*
+> ARRAY /dev/md0 level=raid0 num-devices=4
+> UUID=d58a686f:20aa9ffe:e0d5f27e:e17216ec
+>
+> Here is the output of mdadm -E -scan
+> ARRAY /dev/md0 level=raid0 num-devices=4
+> UUID=d58a686f:20aa9ffe:e0d5f27e:e17216ec
+
+Looks good.
+
+> However, cat /proc/mdstat shows nothing:
+> Personalities : [raid0] [raid1] [raid6] [raid5] [raid4] [raid10]
+> unused devices: <none>
+
+What happens if you try to assemble the array by executing
+
+    mdadm -A /dev/md0
+
+?
+
+Andre
+--
+The only person who always got his work done by Friday was Robinson 
+Crusoe
+
+
+
+
+
