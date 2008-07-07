@@ -1,71 +1,191 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: Lots of con-current I/O = resets SATA link? (2.6.25.10)
-Date: Mon, 7 Jul 2008 05:57:23 -0400 (EDT)
-Message-ID: <alpine.DEB.1.10.0807070554270.32508@p34.internal.lan>
-References: <fa.u8J+BqAcxU1mg8ob9pMBJaAHBPo@ifi.uio.no> <486FBFAB.5050303@shaw.ca> <alpine.DEB.1.10.0807051527210.8002@p34.internal.lan> <48700228.7060904@shaw.ca> <alpine.DEB.1.10.0807051923380.23222@p34.internal.lan>
- <Pine.GSO.4.64.0807071138190.20863@shaka.acc.umu.se>
+From: "Gustavo Melo" <gmelo@yellowstreet.pt>
+Subject: can't mount RAID 5  md0
+Date: Mon, 7 Jul 2008 11:31:55 +0100
+Message-ID: <6u8fbr$ac2ov@smtp2.artelecom.pt>
+Reply-To: <gmelo@yellowstreet.pt>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.GSO.4.64.0807071138190.20863@shaka.acc.umu.se>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mattias Wadenstein <maswan@acc.umu.se>
-Cc: Robert Hancock <hancockr@shaw.ca>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, xfs@oss.sgi.com, Alan Piszcz <ap@solarrain.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hi,
+ 
+I have a server with 4 HDs:
+ 
+- a 20GB holding a fedora 7 installation;
+- 3 160GB forming a RAID 5 3 disk array.
+ 
+The first, 20GB HD went south the other day, so I replaced it with another
+20GB HD with a fedora 8 installation and tried to mount the RAID array.
+ 
+I get the following error:
+ 
+        [root@Fileserver log]# mount /dev/md0 /files
 
+        mount: wrong fs type, bad option, bad superblock on /dev/md0,
+        missing codepage or helper program, or other error
+        In some cases useful info is found in syslog - try
+        dmesg | tail  or so
 
-On Mon, 7 Jul 2008, Mattias Wadenstein wrote:
+        [root@Fileserver log]# dmesg | tail
+        EXT3-fs error (device md0): ext3_check_descriptors: Block bitmap for
+group 1920 not in group (block 32800)!
+        EXT3-fs: group descriptors corrupted!
 
-> On Sat, 5 Jul 2008, Justin Piszcz wrote:
->
->> 
->> 
->> On Sat, 5 Jul 2008, Robert Hancock wrote:
->> 
->>> Justin Piszcz wrote:
->>>>> Can you post your dmesg from bootup with the controller/drive detection?
->>> 
->>> So you've got 6 drives in the machine. Intel chipsets normally seem pretty 
->>> robust with AHCI.
->>> 
->>> Are you certain that your machine has enough power to run all those drives 
->>> properly? We've seen in a number of cases that power fluctuations or noise 
->>> can cause these kinds of errors.
->> 
->> I have a 650watt PSU (nice antec one) and the power draw of the box is 
->> ~148watts w/ veliciraptors, ~250 when fully load all 4 cores + all 12 disks 
->> writing.  I have turned off the irqbalance daemon and I am going to see if 
->> the problem re-occurs.
->
-> Looking at the sum wattage number is really misleading for this. You need to 
-> dig out the specs for how many amps it can provide on the different voltages 
-> (5 and 12 volts). In particular, many modern PSUs have several separate 12V 
-> rails, where one (or more, some have the 12V supply split into 3 or 4 parts!) 
-> is used for CPU and GFX card power and usually only one is available for 
-> disks.
->
-> You can also have plenty of 12V left but run out of 5V, or the other way 
-> around. I've spent quite some time trying to find a PSU that would handle 18 
-> disks without costing too much. The splitting of the 12V power into separate 
-> rails and a general lack of 5V compared to what the disks need according to 
-> their specs just made it difficult, and I ended up bonding two PSUs together 
-> (linking the ground together with some custom cabling) to get a stable 
-> machine again.
->
-> /Mattias Wadenstein
->
+ 
+everything with the array itself seems to be ok:
+ 
+        [root@Fileserver log]# cat /proc/mdstat
+        Personalities : [raid6] [raid5] [raid4] 
+        md0 : active raid5 sdb1[0] sdd1[2] sdc1[1]
+        320159104 blocks level 5, 64k chunk, algorithm 2 [3/3] [UUU]
+      
+        unused devices: <none>
 
-Good info here indeed but for my case it does not apply.  I used to have 
-Raptor150s (12 of them on the same host) the ONLY thing that changed was 
-the drives themselves.  And it used to use 150-250 watts (the 3.5" suck up 
-a lot more power) the power cables are also exactly the same as they were 
-on the Raptor 150s and I never had any issues.
+ 
+        [root@Fileserver log]# mdadm --examine /dev/sdb1 /dev/sdc1 /dev/sdd1
+ 
+/dev/sdb1:
+        Magic : a92b4efc
+        Version : 00.90.00
+        UUID : c8aac6bd:221f01ad:3a41d058:d5801b62
+        Creation Time : Fri Jul  4 09:45:44 2008
+        Raid Level : raid5
+        Used Dev Size : 160079552 (152.66 GiB 163.92 GB)
+        Array Size : 320159104 (305.33 GiB 327.84 GB)
+        Raid Devices : 3
+        Total Devices : 3
+        Preferred Minor : 0
+ 
+        Update Time : Fri Jul  4 15:17:05 2008
+        State : clean
+        Active Devices : 3
+        Working Devices : 3
+        Failed Devices : 0
+        Spare Devices : 0
+        Checksum : 3e1eb720 - correct
+        Events : 0.2
+ 
+        Layout : left-symmetric
+        Chunk Size : 64K
+ 
+        Number   Major   Minor   RaidDevice State
+        this     0       8       17        0      active sync   /dev/sdb1
+ 
+        0     0       8       17        0      active sync   /dev/sdb1
+        1     1       8       33        1      active sync   /dev/sdc1
+        2     2       8       49        2      active sync   /dev/sdd1
 
-I have two hosts, pretty much idential, I use the Antec TruePower Trio 650 
-in each of them.
+/dev/sdc1:
+        Magic : a92b4efc
+        Version : 00.90.00
+        UUID : c8aac6bd:221f01ad:3a41d058:d5801b62
+        Creation Time : Fri Jul  4 09:45:44 2008
+        Raid Level : raid5
+        Used Dev Size : 160079552 (152.66 GiB 163.92 GB)
+        Array Size : 320159104 (305.33 GiB 327.84 GB)
+        Raid Devices : 3
+        Total Devices : 3
+        Preferred Minor : 0
+ 
+        Update Time : Fri Jul  4 15:17:05 2008
+        State : clean
+        Active Devices : 3
+        Working Devices : 3
+        Failed Devices : 0
+        Spare Devices : 0
+        Checksum : 3e1eb732 - correct
+        Events : 0.2
+ 
+        Layout : left-symmetric
+        Chunk Size : 64K
+ 
+        Number   Major   Minor   RaidDevice State
+        this     1       8       33        1      active sync   /dev/sdc1
+ 
+        0     0       8       17        0      active sync   /dev/sdb1
+        1     1       8       33        1      active sync   /dev/sdc1
+        2     2       8       49        2      active sync   /dev/sdd1
 
-http://www.antec.com/us/productDetails.php?ProdID=23650
+/dev/sdd1:
+        Magic : a92b4efc
+        Version : 00.90.00
+        UUID : c8aac6bd:221f01ad:3a41d058:d5801b62
+        Creation Time : Fri Jul  4 09:45:44 2008
+        Raid Level : raid5
+        Used Dev Size : 160079552 (152.66 GiB 163.92 GB)
+        Array Size : 320159104 (305.33 GiB 327.84 GB)
+        Raid Devices : 3
+        Total Devices : 3
+        Preferred Minor : 0
+ 
+        Update Time : Fri Jul  4 15:17:05 2008
+        State : clean
+        Active Devices : 3
+        Working Devices : 3
+        Failed Devices : 0
+        Spare Devices : 0
+        Checksum : 3e1eb744 - correct
+        Events : 0.2
+ 
+        Layout : left-symmetric
+        Chunk Size : 64K
+ 
+        Number   Major   Minor   RaidDevice State
+        this     2       8       49        2      active sync   /dev/sdd1
+ 
+        0     0       8       17        0      active sync   /dev/sdb1
+        1     1       8       33        1      active sync   /dev/sdc1
+        2     2       8       49        2      active sync   /dev/sdd1
 
-Justin.
+ 
+but not with the file system:
+ 
+ 
+    [root@Fileserver log]# fsck -n /dev/md0
+
+    fsck 1.40.4 (31-Dec-2007)
+    e2fsck 1.40.4 (31-Dec-2007)
+    fsck.ext3: Group descriptors look bad... trying backup blocks...
+    fsck.ext3: Bad magic number in super-block while trying to open /dev/md0
+ 
+    The superblock could not be read or does not describe a correct ext2
+    filesystem.  If the device is valid and it really contains an ext2
+    filesystem (and not swap or ufs or something else), then the superblock
+    is corrupt, and you might try running e2fsck with an alternate
+superblock:
+    e2fsck -b 8193 <device>
+
+ 
+        [root@Fileserver log]# mke2fs -n /dev/md0
+
+        mke2fs 1.40.4 (31-Dec-2007)
+        Filesystem label=
+        OS type: Linux
+        Block size=4096 (log=2)
+        Fragment size=4096 (log=2)
+        40026112 inodes, 80039776 blocks
+        4001988 blocks (5.00%) reserved for the super user
+        First data block=0
+        Maximum filesystem blocks=0
+        2443 block groups
+        32768 blocks per group, 32768 fragments per group
+        16384 inodes per group
+        Superblock backups stored on blocks: 
+        32768, 98304, 163840, 229376, 294912, 819200, 884736, 1605632,
+2654208, 
+        4096000, 7962624, 11239424, 20480000, 23887872, 71663616, 78675968
+
+ 
+ 
+I'm hoping you guys can save my day, because I'm way out of my league,
+here...
+ 
+TIA,
+ 
+Gustavo Melo
 
