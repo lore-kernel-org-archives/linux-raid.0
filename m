@@ -1,52 +1,32 @@
-From: Mike McCarthy <mike@w1nr.net>
-Subject: Re: Software RAID1 deadlock in 2.6.25 kernels
-Date: Mon, 07 Jul 2008 14:11:23 -0400
-Message-ID: <48725C4B.5030505@w1nr.net>
-References: <48650567.3000501@w1nr.net> <18533.20961.694041.556763@notabene.brown> <20080630092348.GJ17557@boogie.lpds.sztaki.hu> <4868C410.2060005@w1nr.net> <20080630115926.GA31564@ruf099.fkie.fgan.de> <4868E050.7090904@tmr.com> <4868E45F.30105@w1nr.net> <486A4E7B.50604@tmr.com> <486A6291.20207@w1nr.net> <48723F5A.4060301@tmr.com>
+From: Michal Soltys <soltys@ziu.info>
+Subject: Re: Lots of con-current I/O = resets SATA link? (2.6.25.10)
+Date: Mon, 07 Jul 2008 20:14:52 +0200
+Message-ID: <48725D1C.2080500@ziu.info>
+References: <fa.u8J+BqAcxU1mg8ob9pMBJaAHBPo@ifi.uio.no> <486FBFAB.5050303@shaw.ca> <alpine.DEB.1.10.0807051527210.8002@p34.internal.lan> <48700228.7060904@shaw.ca> <alpine.DEB.1.10.0807051923380.23222@p34.internal.lan> <Pine.GSO.4.64.0807071138190.20863@shaka.acc.umu.se> <alpine.DEB.1.10.0807070554270.32508@p34.internal.lan>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <48723F5A.4060301@tmr.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: Michael Bussmann <bus@mb-net.net>, linux-raid@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <alpine.DEB.1.10.0807070554270.32508@p34.internal.lan>
+Sender: linux-ide-owner@vger.kernel.org
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: Mattias Wadenstein <maswan@acc.umu.se>, Robert Hancock <hancockr@shaw.ca>, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, Alan Piszcz <ap@solarrain.com>
 List-Id: linux-raid.ids
 
-Bill Davidsen wrote:
-> Mike McCarthy wrote:
->> Bill Davidsen wrote:
->>>
->>> Given heavy 2.6.25 use, my guess is still that the root cause of 
->>> this is hardware, and that the change in disk code either triggers 
->>> the hardware problem, or handles it differently. Are you by any 
->>> chance running NCQ on your system?
->>>
->> No.  This system and the drives pre-date NCQ.  I think NCQ is only 
->> implemented in SATA and these are IDE drives.  Sometime over the 
->> weekend, I am going to reload SUSE 11 and try to do some more debugging.
->>
->> BTW: It's back to 10.3 (kernel 2.6.22) running happily with a VMware 
->> server thrashing away at the disks.
->
-> This has recycled back to the top of my todo list, I have a server in 
-> mothballs with IDE drives, I'll pull it out, upgrade to FC9 current 
-> (non-rawhide) and see if I have any problems. It's off due to lack of 
-> need, not really obsolete, so it's a fair test. O'll put a dew hundred 
-> GB of raid-1 and beat on it.
->
-I was going to get back to you all today and let you know what I found.  
-On Thursday, I rebuilt the system with SUSE 11 but before I did I went 
-over all of the BIOS settings.  The second IDE drive was set to "NONE" 
-instead of "AUTO".  Well, the installation went without the previous 
-hitch of having to manually install grub on the first boot after the 
-install.  It has also been running since then without issue.
+Justin Piszcz wrote:
+> 
+> 
+> I have two hosts, pretty much idential, I use the Antec TruePower Trio 
+> 650 in each of them.
+> 
+> http://www.antec.com/us/productDetails.php?ProdID=23650
+> 
+> Justin.
+> 
 
-Is it that simple?  Could that be all that was wrong?  What doesn't make 
-sense is how 10.3 (kernel 2.6.22) never had an issue.  Perhaps without 
-the BIOS reporting the second drive, the later kernel chose the wrong 
-parameters setting it up and they didn't match what was set up by the 
-BIOS for the first drive?
+On a related note, the best place to check out for psu reviews - 
+especially with unusual requirements in mind - is probably jonnyguru's 
+site. The mentioned psu model was reviewed some time ago (it's decent psu):
 
-Mike
+http://www.jonnyguru.com/modules.php?name=NDReviews&op=Story&reid=1
 
