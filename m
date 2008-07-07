@@ -1,64 +1,54 @@
-From: Andre Noll <maan@systemlinux.org>
-Subject: Re: md devices disappearing on system reboot
-Date: Mon, 7 Jul 2008 11:30:04 +0200
-Message-ID: <20080707093004.GQ23944@skl-net.de>
-References: <8CAA9B1F81B8E21-614-D2D@webmail-nc09.sysops.aol.com> <20080702162108.GF4981@skl-net.de> <8CAAD37CC87F1BD-FD8-4A21@webmail-stg-d08.sysops.aol.com>
+From: Mattias Wadenstein <maswan@acc.umu.se>
+Subject: Re: Lots of con-current I/O = resets SATA link? (2.6.25.10)
+Date: Mon, 7 Jul 2008 11:45:44 +0200 (MEST)
+Message-ID: <Pine.GSO.4.64.0807071138190.20863@shaka.acc.umu.se>
+References: <fa.u8J+BqAcxU1mg8ob9pMBJaAHBPo@ifi.uio.no> <486FBFAB.5050303@shaw.ca>
+ <alpine.DEB.1.10.0807051527210.8002@p34.internal.lan> <48700228.7060904@shaw.ca>
+ <alpine.DEB.1.10.0807051923380.23222@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="UK1lfQXsnwKrySH9"
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <8CAAD37CC87F1BD-FD8-4A21@webmail-stg-d08.sysops.aol.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: thomas62186218@aol.com
-Cc: linux-raid@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Return-path: <xfs-bounce@oss.sgi.com>
+In-Reply-To: <alpine.DEB.1.10.0807051923380.23222@p34.internal.lan>
+Sender: xfs-bounce@oss.sgi.com
+Errors-to: xfs-bounce@oss.sgi.com
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: Robert Hancock <hancockr@shaw.ca>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, xfs@oss.sgi.com, Alan Piszcz <ap@solarrain.com>
 List-Id: linux-raid.ids
 
+On Sat, 5 Jul 2008, Justin Piszcz wrote:
 
---UK1lfQXsnwKrySH9
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+>
+>
+> On Sat, 5 Jul 2008, Robert Hancock wrote:
+>
+>> Justin Piszcz wrote:
+>>>> Can you post your dmesg from bootup with the controller/drive detection?
+>> 
+>> So you've got 6 drives in the machine. Intel chipsets normally seem pretty 
+>> robust with AHCI.
+>> 
+>> Are you certain that your machine has enough power to run all those drives 
+>> properly? We've seen in a number of cases that power fluctuations or noise 
+>> can cause these kinds of errors.
+>
+> I have a 650watt PSU (nice antec one) and the power draw of the box is 
+> ~148watts w/ veliciraptors, ~250 when fully load all 4 cores + all 12 disks 
+> writing.  I have turned off the irqbalance daemon and I am going to see if 
+> the problem re-occurs.
 
-On 00:27, thomas62186218@aol.com wrote:
+Looking at the sum wattage number is really misleading for this. You need 
+to dig out the specs for how many amps it can provide on the different 
+voltages (5 and 12 volts). In particular, many modern PSUs have several 
+separate 12V rails, where one (or more, some have the 12V supply split 
+into 3 or 4 parts!) is used for CPU and GFX card power and usually only 
+one is available for disks.
 
-> Thank you for responding. I created md0 with 4 hard drives, RAID 0.=20
-> Here is the /etc/mdadm.conf
-> DEVICE  /dev/sd*
-> ARRAY /dev/md0 level=3Draid0 num-devices=3D4=20
-> UUID=3Dd58a686f:20aa9ffe:e0d5f27e:e17216ec
->=20
-> Here is the output of mdadm -E -scan
-> ARRAY /dev/md0 level=3Draid0 num-devices=3D4=20
-> UUID=3Dd58a686f:20aa9ffe:e0d5f27e:e17216ec
+You can also have plenty of 12V left but run out of 5V, or the other way 
+around. I've spent quite some time trying to find a PSU that would handle 
+18 disks without costing too much. The splitting of the 12V power into 
+separate rails and a general lack of 5V compared to what the disks need 
+according to their specs just made it difficult, and I ended up bonding 
+two PSUs together (linking the ground together with some custom cabling) 
+to get a stable machine again.
 
-Looks good.
-
-> However, cat /proc/mdstat shows nothing:
-> Personalities : [raid0] [raid1] [raid6] [raid5] [raid4] [raid10]
-> unused devices: <none>
-
-What happens if you try to assemble the array by executing
-
-	mdadm -A /dev/md0
-
-?
-
-Andre
---=20
-The only person who always got his work done by Friday was Robinson Crusoe
-
---UK1lfQXsnwKrySH9
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
-
-iD8DBQFIceIbWto1QDEAkw8RAhp8AKCCjrBmUu7VChawcCQB6LBxKyMSTwCfdFmK
-pPJEVFVbJfPleP5Px3CmWCU=
-=8X9x
------END PGP SIGNATURE-----
-
---UK1lfQXsnwKrySH9--
+/Mattias Wadenstein
