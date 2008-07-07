@@ -1,46 +1,64 @@
 From: Andre Noll <maan@systemlinux.org>
-Subject: [PATCH 3/8] do_md_run(): Fix misleading error message.
-Date: Wed, 26 Mar 2008 01:07:03 +0100
-Message-ID: <S1752204AbYGGIdz/20080707083355Z+1941@vger.kernel.org>
-References: <20080707075532.GA32617@skl-net.de>
+Subject: Re: md devices disappearing on system reboot
+Date: Mon, 7 Jul 2008 11:30:04 +0200
+Message-ID: <20080707093004.GQ23944@skl-net.de>
+References: <8CAA9B1F81B8E21-614-D2D@webmail-nc09.sysops.aol.com> <20080702162108.GF4981@skl-net.de> <8CAAD37CC87F1BD-FD8-4A21@webmail-stg-d08.sysops.aol.com>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="UK1lfQXsnwKrySH9"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20080707075532.GA32617@skl-net.de>
+Content-Disposition: inline
+In-Reply-To: <8CAAD37CC87F1BD-FD8-4A21@webmail-stg-d08.sysops.aol.com>
 Sender: linux-raid-owner@vger.kernel.org
+To: thomas62186218@aol.com
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-In case pers->run() succeeds but creating the bitmap fails, we
-print an error message stating that pers->run() has failed.
 
-Print this message only if pers->run() really failed.
+--UK1lfQXsnwKrySH9
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Andre Noll <maan@systemlinux.org>
----
- drivers/md/md.c |    5 +++--
- 1 files changed, 3 insertions(+), 2 deletions(-)
+On 00:27, thomas62186218@aol.com wrote:
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index f94ebe6..2384266 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -3519,7 +3519,9 @@ static int do_md_run(mddev_t * mddev)
- 		mddev->ro = 2; /* read-only, but switch on first write */
- 
- 	err = mddev->pers->run(mddev);
--	if (!err && mddev->pers->sync_request) {
-+	if (err)
-+		printk(KERN_ERR "md: pers->run() failed ...\n");
-+	else if (mddev->pers->sync_request) {
- 		err = bitmap_create(mddev);
- 		if (err) {
- 			printk(KERN_ERR "%s: failed to create bitmap (%d)\n",
-@@ -3528,7 +3530,6 @@ static int do_md_run(mddev_t * mddev)
- 		}
- 	}
- 	if (err) {
--		printk(KERN_ERR "md: pers->run() failed ...\n");
- 		module_put(mddev->pers->owner);
- 		mddev->pers = NULL;
- 		bitmap_destroy(mddev);
--- 
-1.5.3.8
+> Thank you for responding. I created md0 with 4 hard drives, RAID 0.=20
+> Here is the /etc/mdadm.conf
+> DEVICE  /dev/sd*
+> ARRAY /dev/md0 level=3Draid0 num-devices=3D4=20
+> UUID=3Dd58a686f:20aa9ffe:e0d5f27e:e17216ec
+>=20
+> Here is the output of mdadm -E -scan
+> ARRAY /dev/md0 level=3Draid0 num-devices=3D4=20
+> UUID=3Dd58a686f:20aa9ffe:e0d5f27e:e17216ec
 
+Looks good.
+
+> However, cat /proc/mdstat shows nothing:
+> Personalities : [raid0] [raid1] [raid6] [raid5] [raid4] [raid10]
+> unused devices: <none>
+
+What happens if you try to assemble the array by executing
+
+	mdadm -A /dev/md0
+
+?
+
+Andre
+--=20
+The only person who always got his work done by Friday was Robinson Crusoe
+
+--UK1lfQXsnwKrySH9
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.1 (GNU/Linux)
+
+iD8DBQFIceIbWto1QDEAkw8RAhp8AKCCjrBmUu7VChawcCQB6LBxKyMSTwCfdFmK
+pPJEVFVbJfPleP5Px3CmWCU=
+=8X9x
+-----END PGP SIGNATURE-----
+
+--UK1lfQXsnwKrySH9--
