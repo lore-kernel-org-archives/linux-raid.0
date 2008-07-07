@@ -1,184 +1,42 @@
-From: Gerhard Wiesinger <lists@wiesinger.com>
-Subject: Re: Lots of con-current I/O = resets SATA link? (2.6.25.10)
-Date: Mon, 7 Jul 2008 17:08:19 +0200 (CEST)
-Message-ID: <alpine.LFD.1.10.0807071705490.2997@bbs.intern>
-References: <alpine.DEB.1.10.0807051252200.12562@p34.internal.lan> <alpine.LFD.1.10.0807071649340.1160@bbs.intern>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: Software RAID1 deadlock in 2.6.25 kernels
+Date: Mon, 07 Jul 2008 12:07:54 -0400
+Message-ID: <48723F5A.4060301@tmr.com>
+References: <48650567.3000501@w1nr.net> <18533.20961.694041.556763@notabene.brown> <20080630092348.GJ17557@boogie.lpds.sztaki.hu> <4868C410.2060005@w1nr.net> <20080630115926.GA31564@ruf099.fkie.fgan.de> <4868E050.7090904@tmr.com> <4868E45F.30105@w1nr.net> <486A4E7B.50604@tmr.com> <486A6291.20207@w1nr.net>
 Mime-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="-1463811584-533268350-1215443300=:3171"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.LFD.1.10.0807071649340.1160@bbs.intern>
+In-Reply-To: <486A6291.20207@w1nr.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
+To: Mike McCarthy <mike@w1nr.net>
+Cc: Michael Bussmann <bus@mb-net.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+Mike McCarthy wrote:
+> Bill Davidsen wrote:
+>>
+>> Given heavy 2.6.25 use, my guess is still that the root cause of this 
+>> is hardware, and that the change in disk code either triggers the 
+>> hardware problem, or handles it differently. Are you by any chance 
+>> running NCQ on your system?
+>>
+> No.  This system and the drives pre-date NCQ.  I think NCQ is only 
+> implemented in SATA and these are IDE drives.  Sometime over the 
+> weekend, I am going to reload SUSE 11 and try to do some more debugging.
+>
+> BTW: It's back to 10.3 (kernel 2.6.22) running happily with a VMware 
+> server thrashing away at the disks.
 
----1463811584-533268350-1215443300=:3171
-Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
+This has recycled back to the top of my todo list, I have a server in 
+mothballs with IDE drives, I'll pull it out, upgrade to FC9 current 
+(non-rawhide) and see if I have any problems. It's off due to lack of 
+need, not really obsolete, so it's a fair test. O'll put a dew hundred 
+GB of raid-1 and beat on it.
 
-Hello!
-
-Missing logs attached ...
-
-Ciao,
-Gerhard
-
---
-http://www.wiesinger.com/
+-- 
+Bill Davidsen <davidsen@tmr.com>
+  "Woe unto the statesman who makes war without a reason that will still
+  be valid when the war is over..." Otto von Bismark 
 
 
-On Mon, 7 Jul 2008, Gerhard Wiesinger wrote:
-
-> Hello!
->
-> I'm having a similar problem with a brand new Hardware under Fedora 9 x64
-> 8GB RAM
-> Motherboard: ASUS M3N-H/HDMI
-> Chipset: NForce 8300/Nvidia 750a
-> CPU: AMD AM2 5600+, 2.9GHz, Brisbane Dual Core
-> Kernel: 2.6.25.9-76.fc9.x86_64
-> Smartmontools: smartmontools-5.38-2.fc9.x86_64
-> BIOS AHCI mode
-> Power cables for ata3 and ata4 are on the same cable from an Enermax power 
-> supply.
->
-> ata1.00: ATA-7: SAMSUNG HD103UJ, 1AA01109, max UDMA7
-> ata2.00: ATA-7: SAMSUNG HD103UJ, 1AA01109, max UDMA7
-> ata3.00: ATA-7: SAMSUNG HD103UJ, 1AA01109, max UDMA7
-> ata4.00: ATA-7: SAMSUNG HD103UJ, 1AA01109, max UDMA7
-> ata5.00: ATA-7: SAMSUNG HD103UJ, 1AA01109, max UDMA7
-> ata6.00: ATA-7: SAMSUNG HD103UJ, 1AA01109, max UDMA7
-> scsi 0:0:0:0: Direct-Access     ATA      SAMSUNG HD103UJ  1AA0 PQ: 0 ANSI: 5
-> scsi 1:0:0:0: Direct-Access     ATA      SAMSUNG HD103UJ  1AA0 PQ: 0 ANSI: 5
-> scsi 2:0:0:0: Direct-Access     ATA      SAMSUNG HD103UJ  1AA0 PQ: 0 ANSI: 5
-> scsi 3:0:0:0: Direct-Access     ATA      SAMSUNG HD103UJ  1AA0 PQ: 0 ANSI: 5
-> scsi 4:0:0:0: Direct-Access     ATA      SAMSUNG HD103UJ  1AA0 PQ: 0 ANSI: 5
-> scsi 5:0:0:0: Direct-Access     ATA      SAMSUNG HD103UJ  1AA0 PQ: 0 ANSI: 5
->
-> Problem occours only on ata3, I've changed the disk Port 3 the third time 
-> (new disks) and changed the SATA cable, too. Problem still exists.
->
-> Sometimes a RAID rebuild doesn't work at all.
->
-> To get the drive to live I've to power down the system.
->
-> Logs are attached.
->
-> Can it be a bug on concurrent access of smartctl/smartd?
->
-> Any ideas?
->
-> Ciao,
-> Gerhard
->
-> --
-> http://www.wiesinger.com/
->
->
----1463811584-533268350-1215443300=:3171
-Content-Type: TEXT/plain; name=kernel.txt
-Content-Transfer-Encoding: BASE64
-Content-ID: <alpine.LFD.1.10.0807071708190.3171@bbs.intern>
-Content-Description: 
-Content-Disposition: attachment; filename=kernel.txt
-
-SnVsICA3IDE1OjU2OjIyIGJpZzgga2VybmVsOiBtZDogZGF0YS1jaGVjayBv
-ZiBSQUlEIGFycmF5IG1kMA0KSnVsICA3IDE1OjU2OjIyIGJpZzgga2VybmVs
-OiBtZDogbWluaW11bSBfZ3VhcmFudGVlZF8gIHNwZWVkOiAxMDAwIEtCL3Nl
-Yy9kaXNrLg0KSnVsICA3IDE1OjU2OjIyIGJpZzgga2VybmVsOiBtZDogdXNp
-bmcgbWF4aW11bSBhdmFpbGFibGUgaWRsZSBJTyBiYW5kd2lkdGggKGJ1dCBu
-b3QgbW9yZSB0aGFuIDgwMDAwIEtCL3NlYykgZm9yIGRhdGEtY2hlY2suDQpK
-dWwgIDcgMTU6NTY6MjIgYmlnOCBrZXJuZWw6IG1kOiB1c2luZyAxMjhrIHdp
-bmRvdywgb3ZlciBhIHRvdGFsIG9mIDk3Njc1OTgwOCBibG9ja3MuDQpKdWwg
-IDcgMTU6NTY6MjYgYmlnOCBrZXJuZWw6IG1kOiBkYXRhLWNoZWNrIG9mIFJB
-SUQgYXJyYXkgbWQxDQpKdWwgIDcgMTU6NTY6MjYgYmlnOCBrZXJuZWw6IG1k
-OiBtaW5pbXVtIF9ndWFyYW50ZWVkXyAgc3BlZWQ6IDEwMDAgS0Ivc2VjL2Rp
-c2suDQpKdWwgIDcgMTU6NTY6MjYgYmlnOCBrZXJuZWw6IG1kOiB1c2luZyBt
-YXhpbXVtIGF2YWlsYWJsZSBpZGxlIElPIGJhbmR3aWR0aCAoYnV0IG5vdCBt
-b3JlIHRoYW4gODAwMDAgS0Ivc2VjKSBmb3IgZGF0YS1jaGVjay4NCkp1bCAg
-NyAxNTo1NjoyNiBiaWc4IGtlcm5lbDogbWQ6IHVzaW5nIDEyOGsgd2luZG93
-LCBvdmVyIGEgdG90YWwgb2YgOTc2NzU5ODA4IGJsb2Nrcy4NCkp1bCAgNyAx
-NjowMDo1MyBiaWc4IGtlcm5lbDogYXRhMy4wMDogZXhjZXB0aW9uIEVtYXNr
-IDB4MCBTQWN0IDB4MCBTRXJyIDB4MCBhY3Rpb24gMHgyIGZyb3plbg0KSnVs
-ICA3IDE2OjAwOjUzIGJpZzgga2VybmVsOiBhdGEzLjAwOiBjbWQgZWEvMDA6
-MDA6MDA6MDA6MDAvMDA6MDA6MDA6MDA6MDAvYTAgdGFnIDANCkp1bCAgNyAx
-NjowMDo1MyBiaWc4IGtlcm5lbDogICAgICAgICAgcmVzIDQwLzAwOjAwOjAw
-OjAwOjAwLzAwOjAwOjAwOjAwOjAwL2EwIEVtYXNrIDB4NCAodGltZW91dCkN
-Ckp1bCAgNyAxNjowMDo1MyBiaWc4IGtlcm5lbDogYXRhMy4wMDogc3RhdHVz
-OiB7IERSRFkgfQ0KSnVsICA3IDE2OjAwOjUzIGJpZzgga2VybmVsOiBhdGEz
-OiBoYXJkIHJlc2V0dGluZyBsaW5rDQpKdWwgIDcgMTY6MDE6MDAgYmlnOCBr
-ZXJuZWw6IGF0YTM6IHBvcnQgaXMgc2xvdyB0byByZXNwb25kLCBwbGVhc2Ug
-YmUgcGF0aWVudCAoU3RhdHVzIDB4ODApDQpKdWwgIDcgMTY6MDE6MDMgYmln
-OCBrZXJuZWw6IGF0YTM6IHNvZnRyZXNldCBmYWlsZWQgKGRldmljZSBub3Qg
-cmVhZHkpDQpKdWwgIDcgMTY6MDE6MDMgYmlnOCBrZXJuZWw6IGF0YTM6IGhh
-cmQgcmVzZXR0aW5nIGxpbmsNCkp1bCAgNyAxNjowMToxMCBiaWc4IGtlcm5l
-bDogYXRhMzogcG9ydCBpcyBzbG93IHRvIHJlc3BvbmQsIHBsZWFzZSBiZSBw
-YXRpZW50IChTdGF0dXMgMHg4MCkNCkp1bCAgNyAxNjowMToxMyBiaWc4IGtl
-cm5lbDogYXRhMzogc29mdHJlc2V0IGZhaWxlZCAoZGV2aWNlIG5vdCByZWFk
-eSkNCkp1bCAgNyAxNjowMToxMyBiaWc4IGtlcm5lbDogYXRhMzogaGFyZCBy
-ZXNldHRpbmcgbGluaw0KSnVsICA3IDE2OjAxOjIwIGJpZzgga2VybmVsOiBh
-dGEzOiBwb3J0IGlzIHNsb3cgdG8gcmVzcG9uZCwgcGxlYXNlIGJlIHBhdGll
-bnQgKFN0YXR1cyAweDgwKQ0KSnVsICA3IDE2OjAxOjQ4IGJpZzgga2VybmVs
-OiBhdGEzOiBzb2Z0cmVzZXQgZmFpbGVkIChkZXZpY2Ugbm90IHJlYWR5KQ0K
-SnVsICA3IDE2OjAxOjQ4IGJpZzgga2VybmVsOiBhdGEzOiBsaW1pdGluZyBT
-QVRBIGxpbmsgc3BlZWQgdG8gMS41IEdicHMNCkp1bCAgNyAxNjowMTo0OCBi
-aWc4IGtlcm5lbDogYXRhMzogaGFyZCByZXNldHRpbmcgbGluaw0KSnVsICA3
-IDE2OjAxOjUzIGJpZzgga2VybmVsOiBhdGEzOiBzb2Z0cmVzZXQgZmFpbGVk
-IChkZXZpY2Ugbm90IHJlYWR5KQ0KSnVsICA3IDE2OjAxOjUzIGJpZzgga2Vy
-bmVsOiBhdGEzOiByZXNldCBmYWlsZWQsIGdpdmluZyB1cA0KSnVsICA3IDE2
-OjAxOjUzIGJpZzgga2VybmVsOiBhdGEzLjAwOiBkaXNhYmxlZA0KSnVsICA3
-IDE2OjAxOjUzIGJpZzgga2VybmVsOiBhdGEzOiBFSCBjb21wbGV0ZQ0KSnVs
-ICA3IDE2OjAxOjUzIGJpZzgga2VybmVsOiBzZCAyOjA6MDowOiBbc2RjXSBS
-ZXN1bHQ6IGhvc3RieXRlPURJRF9CQURfVEFSR0VUIGRyaXZlcmJ5dGU9RFJJ
-VkVSX09LLFNVR0dFU1RfT0sNCkp1bCAgNyAxNjowMTo1MyBiaWc4IGtlcm5l
-bDogZW5kX3JlcXVlc3Q6IEkvTyBlcnJvciwgZGV2IHNkYywgc2VjdG9yIDI5
-MTIzNjQ3DQpKdWwgIDcgMTY6MDE6NTMgYmlnOCBrZXJuZWw6IHNkIDI6MDow
-OjA6IFtzZGNdIFJlc3VsdDogaG9zdGJ5dGU9RElEX0JBRF9UQVJHRVQgZHJp
-dmVyYnl0ZT1EUklWRVJfT0ssU1VHR0VTVF9PSw0KSnVsICA3IDE2OjAxOjUz
-IGJpZzgga2VybmVsOiBlbmRfcmVxdWVzdDogSS9PIGVycm9yLCBkZXYgc2Rj
-LCBzZWN0b3IgMjkxMjQ5MjcNCkp1bCAgNyAxNjowMTo1MyBiaWc4IGtlcm5l
-bDogc2QgMjowOjA6MDogW3NkY10gUmVzdWx0OiBob3N0Ynl0ZT1ESURfQkFE
-X1RBUkdFVCBkcml2ZXJieXRlPURSSVZFUl9PSyxTVUdHRVNUX09LDQpKdWwg
-IDcgMTY6MDE6NTMgYmlnOCBrZXJuZWw6IGVuZF9yZXF1ZXN0OiBJL08gZXJy
-b3IsIGRldiBzZGMsIHNlY3RvciAyOTEyMzkwMw0KSnVsICA3IDE2OjAxOjUz
-IGJpZzgga2VybmVsOiBzZCAyOjA6MDowOiBbc2RjXSBSZXN1bHQ6IGhvc3Ri
-eXRlPURJRF9CQURfVEFSR0VUIGRyaXZlcmJ5dGU9RFJJVkVSX09LLFNVR0dF
-U1RfT0sNCkp1bCAgNyAxNjowMTo1MyBiaWc4IGtlcm5lbDogZW5kX3JlcXVl
-c3Q6IEkvTyBlcnJvciwgZGV2IHNkYywgc2VjdG9yIDExODI4OTQyMDcNCkp1
-bCAgNyAxNjowMTo1MyBiaWc4IGtlcm5lbDogc2QgMjowOjA6MDogW3NkY10g
-UmVzdWx0OiBob3N0Ynl0ZT1ESURfQkFEX1RBUkdFVCBkcml2ZXJieXRlPURS
-SVZFUl9PSyxTVUdHRVNUX09LDQpKdWwgIDcgMTY6MDE6NTMgYmlnOCBrZXJu
-ZWw6IGVuZF9yZXF1ZXN0OiBJL08gZXJyb3IsIGRldiBzZGMsIHNlY3RvciAx
-MTM5NjcxNjM5DQpKdWwgIDcgMTY6MDE6NTMgYmlnOCBrZXJuZWw6IHNkIDI6
-MDowOjA6IFtzZGNdIFJlc3VsdDogaG9zdGJ5dGU9RElEX0JBRF9UQVJHRVQg
-ZHJpdmVyYnl0ZT1EUklWRVJfT0ssU1VHR0VTVF9PSw0KSnVsICA3IDE2OjAx
-OjUzIGJpZzgga2VybmVsOiBlbmRfcmVxdWVzdDogSS9PIGVycm9yLCBkZXYg
-c2RjLCBzZWN0b3IgMTU1NzIyMjY4Nw0KSnVsICA3IDE2OjAxOjUzIGJpZzgg
-a2VybmVsOiBzZCAyOjA6MDowOiBbc2RjXSBSZXN1bHQ6IGhvc3RieXRlPURJ
-RF9CQURfVEFSR0VUIGRyaXZlcmJ5dGU9RFJJVkVSX09LLFNVR0dFU1RfT0sN
-Ckp1bCAgNyAxNjowMTo1MyBiaWc4IGtlcm5lbDogZW5kX3JlcXVlc3Q6IEkv
-TyBlcnJvciwgZGV2IHNkYywgc2VjdG9yIDI5MTIzNjQ3DQpKdWwgIDcgMTY6
-MDE6NTMgYmlnOCBrZXJuZWw6IHJhaWQ1OiBEaXNrIGZhaWx1cmUgb24gc2Rj
-MSwgZGlzYWJsaW5nIGRldmljZS4gT3BlcmF0aW9uIGNvbnRpbnVpbmcgb24g
-MiBkZXZpY2VzDQpKdWwgIDcgMTY6MDE6NTMgYmlnOCBrZXJuZWw6IHNkIDI6
-MDowOjA6IFtzZGNdIFJlc3VsdDogaG9zdGJ5dGU9RElEX0JBRF9UQVJHRVQg
-ZHJpdmVyYnl0ZT1EUklWRVJfT0ssU1VHR0VTVF9PSw0KSnVsICA3IDE2OjAx
-OjUzIGJpZzgga2VybmVsOiBlbmRfcmVxdWVzdDogSS9PIGVycm9yLCBkZXYg
-c2RjLCBzZWN0b3IgMjkxMjQ2NzENCkp1bCAgNyAxNjowMTo1MyBiaWc4IGtl
-cm5lbDogbWQ6IG1kMDogZGF0YS1jaGVjayBkb25lLg0KSnVsICA3IDE2OjAx
-OjUzIGJpZzgga2VybmVsOiBSQUlENSBjb25mIHByaW50b3V0Og0KSnVsICA3
-IDE2OjAxOjUzIGJpZzgga2VybmVsOiAgLS0tIHJkOjMgd2Q6Mg0KSnVsICA3
-IDE2OjAxOjUzIGJpZzgga2VybmVsOiAgZGlzayAwLCBvOjEsIGRldjpzZGEx
-DQpKdWwgIDcgMTY6MDE6NTMgYmlnOCBrZXJuZWw6ICBkaXNrIDEsIG86MSwg
-ZGV2OnNkYjENCkp1bCAgNyAxNjowMTo1MyBiaWc4IGtlcm5lbDogIGRpc2sg
-MiwgbzowLCBkZXY6c2RjMQ0KSnVsICA3IDE2OjAxOjUzIGJpZzgga2VybmVs
-OiBSQUlENSBjb25mIHByaW50b3V0Og0KSnVsICA3IDE2OjAxOjUzIGJpZzgg
-a2VybmVsOiAgLS0tIHJkOjMgd2Q6Mg0KSnVsICA3IDE2OjAxOjUzIGJpZzgg
-a2VybmVsOiAgZGlzayAwLCBvOjEsIGRldjpzZGExDQpKdWwgIDcgMTY6MDE6
-NTMgYmlnOCBrZXJuZWw6ICBkaXNrIDEsIG86MSwgZGV2OnNkYjENCkp1bCAg
-NyAxNjowMjo0NSBiaWc4IGtlcm5lbDogcHJvZ3JhbSBzbWFydGN0bCBpcyB1
-c2luZyBhIGRlcHJlY2F0ZWQgU0NTSSBpb2N0bCwgcGxlYXNlIGNvbnZlcnQg
-aXQgdG8gU0dfSU8NCg==
-
----1463811584-533268350-1215443300=:3171--
