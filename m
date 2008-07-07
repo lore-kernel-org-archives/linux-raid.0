@@ -1,78 +1,76 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: 12 Veliciraptors again w/x4 card (1.1gbytes/sec aggregate
- read)!
-Date: Mon, 7 Jul 2008 14:46:28 -0400 (EDT)
-Message-ID: <alpine.DEB.1.10.0807071442570.4709@p34.internal.lan>
-References: <alpine.DEB.1.10.0807071424100.4694@p34.internal.lan> <alpine.DEB.1.10.0807071436080.5166@p34.internal.lan>
+From: thomas62186218@aol.com
+Subject: Re: md devices disappearing on system reboot
+Date: Mon, 07 Jul 2008 15:11:53 -0400
+Message-ID: <8CAAE7C73AB975E-26A8-1E6E@webmail-stg-d10.sysops.aol.com>
+References: <8CAA9B1F81B8E21-614-D2D@webmail-nc09.sysops.aol.com> <20080702162108.GF4981@skl-net.de> <8CAAD37CC87F1BD-FD8-4A21@webmail-stg-d08.sysops.aol.com> <20080707093004.GQ23944@skl-net.de> <8CAAE4763AEB341-2F6C-570@webmailbeta-m07.sysops.aol.com> <20080707132319.GR23944@skl-net.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset="us-ascii"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.1.10.0807071436080.5166@p34.internal.lan>
+In-Reply-To: <20080707132319.GR23944@skl-net.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, xfs@oss.sgi.com
-Cc: Alan Piszcz <ap@solarrain.com>
+To: maan@systemlinux.org
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hi Andre,
+
+Thank you very much for the quick response.
+
+My /dev/md0 device is using /dev/sdd1, /dev/sdg1, /dev/sdj1, and 
+/dev/sdm1.
+
+I did:
+devices=/dev/sd[dgjm]
+mdadm -A --run /dev/md0 $devices
+
+I received:
+mdadm: cannot open device /dev/sdd: Device or resource busy
+mdadm: /dev/sdd has no superblock - assembly aborted
+
+Any ideas?
+
+-Thomas
 
 
-On Mon, 7 Jul 2008, Justin Piszcz wrote:
+-----Original Message-----
+From: Andre Noll <maan@systemlinux.org>
+To: thomas62186218@aol.com
+Cc: linux-raid@vger.kernel.org
+Sent: Mon, 7 Jul 2008 6:23 am
+Subject: Re: md devices disappearing on system reboot
 
+
+
+
+
+
+
+
+
+
+On 08:52, thomas62186218@aol.com wrote:
+
+> Thank you for the response. When running:  mdadm -A /dev/md0   I get:
 >
+> mdadm: no devices found for /dev/md0
 >
-> On Mon, 7 Jul 2008, Justin Piszcz wrote:
->
->> Each PCI-e x1 card has 1 veliciraptor on it now.
->> Got an x4 card wit 4 sata ports:
->> 
->> Not quite the > 1 gbyte/sec I was hoping for in regards to the reads
->> but pretty close!
->
-> Going to remove one of the drives from the x1 card and put it on the x4
-> card instead, then I will use all 4 SATA ports on the x4 and hopefully get
-> better bw.
->
+> But fdisk -l  shows all the devices present on the system...
 
-Four drives on the x4 card, MAX bandwidth for every disk.
+Try to specify all component devices manually:
 
-p34:~# dd if=/dev/sdi of=/dev/null bs=1M &
-[1] 4720
-p34:~# dd if=/dev/sdj of=/dev/null bs=1M &
-[2] 4721
-p34:~# dd if=/dev/sdk of=/dev/null bs=1M &
-[3] 4722
-p34:~# dd if=/dev/sdl of=/dev/null bs=1M &
-[4] 4723
-p34:~#
+    devices=/dev/sd[abcd]
+    mdadm -A --run /dev/md0 $devices
 
-120MiB/s per each one!
+You'll probably need to modify the content of the above devices
+variable.
 
-Re-running dd test with all 12 disks:
+Andre
+--
+The only person who always got his work done by Friday was Robinson 
+Crusoe
 
-1.1 gigabytes per second read!
 
-  r  b   swpd   free   buff  cache   si   so    bi    bo   in   cs us sy id wa
-  1  0    120  59104 6632220  52228    0    0     0    40  168  517  0  0 100  0
-  0  0    120  59104 6632220  52228    0    0     0     0   20  291  0  0 100  0
-  3 10    120  43516 6635576  51924    0    0 1051776    62 4221 12301  1 70 11 19
-  6  9    160  44420 6634720  51788    0    0 1117284     0 4435 12308  1 75  5 19
-  6  9    160  47436 6631100  51676    0    0 1110300     0 4449 11438  1 76  3 20
-  2 10    160  46740 6632048  51948    0    0 1137920     0 4447 12251  1 75  8 17
-  9  7    160  45248 6632056  52004    0    8 1127940    45 4559 13259  1 74  9 17
-  3  9    160  44152 6634780  49960    0    0 1132032    12 4471 12962  0 75  8 16
-  4  9    160  44160 6634960  49380    0    0 1129216     8 4430 12545  0 76  7 16
 
-After:
 
-About the same for write:
-$ dd if=/dev/zero of=bigfile.1 bs=1M count=10240
-10240+0 records in
-10240+0 records out
-10737418240 bytes (11 GB) copied, 20.4056 s, 526 MB/s
 
-'nuff said for read :)
-$ dd if=bigfile.1 of=/dev/null bs=1M count=10240
-10240+0 records in
-10240+0 records out
-10737418240 bytes (11 GB) copied, 10.2841 s, 1.0 GB/s
-
-Justin.
