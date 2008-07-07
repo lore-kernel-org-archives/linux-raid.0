@@ -1,31 +1,48 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: Lots of con-current I/O = resets SATA link? (2.6.25.10)
-Date: Sun, 6 Jul 2008 15:51:01 -0400 (EDT)
-Message-ID: <alpine.DEB.1.10.0807061550310.16931@p34.internal.lan>
-References: <fa.u8J+BqAcxU1mg8ob9pMBJaAHBPo@ifi.uio.no> <486FBFAB.5050303@shaw.ca> <alpine.DEB.1.10.0807051527210.8002@p34.internal.lan> <48700228.7060904@shaw.ca> <alpine.DEB.1.10.0807051923380.23222@p34.internal.lan> <alpine.DEB.1.10.0807060447180.5005@p34.internal.lan>
- <alpine.DEB.1.10.0807060741010.4930@p34.internal.lan> <alpine.DEB.1.10.0807060841530.9996@p34.internal.lan>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: [Fwd: Re: mdadm: spare rebuilding]
+Date: Mon, 7 Jul 2008 12:50:45 +1000
+Message-ID: <18545.33925.939297.985909@notabene.brown>
+References: <486A7974.4070204@blueyonder.co.uk>
+	<55776.192.168.1.70.1214992071.squirrel@neil.brown.name>
+	<486C7B62.1@blueyonder.co.uk>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.1.10.0807060841530.9996@p34.internal.lan>
-Sender: linux-ide-owner@vger.kernel.org
-To: Robert Hancock <hancockr@shaw.ca>
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, xfs@oss.sgi.com, Alan Piszcz <ap@solarrain.com>
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: message from Jon Buckingham on Thursday July 3
+Sender: linux-raid-owner@vger.kernel.org
+To: jbuckingham@blueyonder.co.uk
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Thursday July 3, jbuckingham@blueyonder.co.uk wrote:
+> Hi Neil
+> 
+> So, a little while ago I did upgrade the kernel
+> (2.6.22.18-0.2-default), but it did not seem to make any difference to the
 
+I was thinking more like 2.6.25.
+My guess is that the fix was
+   commit 25156198235325805cd7295ed694509fd6e3a29e
+which is in 25-rc4.
 
-On Sun, 6 Jul 2008, Justin Piszcz wrote:
+> 'echo sync > /sys/block/md3/md/sync_action'.
+> 
+> After receiving your latest email, I did the following...
+> 
+> echo sync > /sys/block/md3/md/sync_action
+> (device busy reported to konsole as before)
+> echo idle > /sys/block/md3/md/sync_action
+> echo sync > /sys/block/md3/md/sync_action
+> (device busy reported to konsole as before)
+> 
+> Then checked "top" - and saw significant activity from
+> md3_sync and md3_raid5 processes.
 
-> On Sun, 6 Jul 2008, Justin Piszcz wrote:
->> On Sun, 6 Jul 2008, Justin Piszcz wrote:
->>> On Sat, 5 Jul 2008, Justin Piszcz wrote:
->>>> On Sat, 5 Jul 2008, Robert Hancock wrote:
->>> After the rebuild is completed I will perform more testing.
+I think the resync thread was sort of "half-started".   Writing 'idle'
+killed it off, then it was automatically restarted and proceeded
+properly.
 
-As more or less of a last-ditch effort, I replaced all 12 SATA cables.
+Thanks for reporting your success.
 
-Will see if/when the problem happens again.
-
-Justin.
-
+NeilBrown
