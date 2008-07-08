@@ -1,32 +1,49 @@
 From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: Lots of con-current I/O = resets SATA link? (2.6.25.10)
-Date: Tue, 8 Jul 2008 04:35:19 -0400 (EDT)
-Message-ID: <alpine.DEB.1.10.0807080434470.17980@p34.internal.lan>
-References: <alpine.DEB.1.10.0807051252200.12562@p34.internal.lan> <alpine.LFD.1.10.0807071649340.1160@bbs.intern> <alpine.LFD.1.10.0807071705490.2997@bbs.intern> <alpine.DEB.1.10.0807071149530.32508@p34.internal.lan> <alpine.LFD.1.10.0807080811560.5439@bbs.intern>
- <alpine.LFD.1.10.0807080857460.10532@bbs.intern>
+Subject: Re: 12 Veliciraptors again w/x4 card (~1gbyte/sec aggregate read)!
+Date: Tue, 8 Jul 2008 04:39:34 -0400 (EDT)
+Message-ID: <alpine.DEB.1.10.0807080438560.17980@p34.internal.lan>
+References: <alpine.DEB.1.10.0807071424100.4694@p34.internal.lan> <4872A2F4.2010604@dgreaves.com> <alpine.DEB.1.10.0807080429440.17980@p34.internal.lan>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <alpine.LFD.1.10.0807080857460.10532@bbs.intern>
-Sender: linux-ide-owner@vger.kernel.org
-To: Gerhard Wiesinger <lists@wiesinger.com>
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <alpine.DEB.1.10.0807080429440.17980@p34.internal.lan>
+Sender: linux-raid-owner@vger.kernel.org
+To: David Greaves <david@dgreaves.com>
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, xfs@oss.sgi.com
 List-Id: linux-raid.ids
 
 
 
-On Tue, 8 Jul 2008, Gerhard Wiesinger wrote:
+On Tue, 8 Jul 2008, Justin Piszcz wrote:
 
-> Hello!
 >
-> BTW:
-> The error in syslog also accoured when Reallocated_Sector_Ct didn't go up.
 >
+> On Tue, 8 Jul 2008, David Greaves wrote:
+>
+>> Justin Piszcz wrote:
+>>> Each PCI-e x1 card has 1 veliciraptor on it now.
+>>> Got an x4 card wit 4 sata ports:
+>> 
+>> Useful - which card?
+>> 
+>> David
+>> 
+>> 
+>
+> StarTech 4 Port PCI Express x4 SATA II Card Model PEXSATA24E
+>
+> Justin.
+>
+>
+>
+Chipset: Marvell 88SX7042
+SATA Connectivity: Use four internal ports at the same time or two 
+internal and two external ports
 
-Yes, I have seen the same thing on drives going bad as well.
+Which is fully supported in the latest kernels (didn't try an old kernel):
 
-What type of PSU are you using (per the other thread) and how are you 
-splitting the power connectors/etc?
+linux-2.6.25.10/drivers/ata/sata_mv.c
 
-Justin.
+   /* Marvell 7042 support */
+   { PCI_VDEVICE(MARVELL, 0x7042), chip_7042 },
 
