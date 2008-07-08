@@ -1,74 +1,35 @@
-From: thomas62186218@aol.com
-Subject: Re: md devices disappearing on system reboot
-Date: Mon, 07 Jul 2008 20:44:26 -0400
-Message-ID: <8CAAEAAE80876A0-11A4-4676@webmail-nc18.sysops.aol.com>
-References: <8CAA9B1F81B8E21-614-D2D@webmail-nc09.sysops.aol.com>	<20080702162108.GF4981@skl-net.de>	<8CAAD37CC87F1BD-FD8-4A21@webmail-stg-d08.sysops.aol.com>	<20080707093004.GQ23944@skl-net.de>	<8CAAE4763AEB341-2F6C-570@webmailbeta-m07.sysops.aol.com>	<20080707132319.GR23944@skl-net.de>	<8CAAE7C73AB975E-26A8-1E6E@webmail-stg-d10.sysops.aol.com>	<4872A2A6.2060908@dgreaves.com> <18546.43017.93866.476968@notabene.brown>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: [Patch 0/8] simple md.c cleanups
+Date: Tue, 8 Jul 2008 11:06:54 +1000
+Message-ID: <18546.48558.451793.270407@notabene.brown>
+References: <20080707075532.GA32617@skl-net.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18546.43017.93866.476968@notabene.brown>
+In-Reply-To: message from Andre Noll on Monday July 7
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de, david@dgreaves.com
-Cc: maan@systemlinux.org, linux-raid@vger.kernel.org
+To: Andre Noll <maan@systemlinux.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi all,
+On Monday July 7, maan@systemlinux.org wrote:
+> Hi
+> 
+> here are eight simple cleanup patches to md.c against linus-current.git.
+> Please review.
 
-I tried using the "1" at the end but still no luck.
+Thanks. I
+ - added "md: " to the start of the subject line
+ - fixed the conflicts with the first patch against my current tree:
+     I think I already fixed some of that indenting
+ - dropped the last patch....  I don't have a clear justification,
+   but I currently want to leave the 'mddev' parameter there to remind
+   me to review the implementation as I might want to do something
+   a bit different there ... not sure yet.
 
-mdadm: looking for devices for /dev/md0
-mdadm: cannot open device /dev/sdd1: Device or resource busy
-mdadm: /dev/sdd1 has no superblock - assembly aborted
+They are now in my "for-next" branch which can be viewed at
 
-Thank you for your input so far. Any ideas on this one?
+ http://neil.brown.name/git?p=md;a=shortlog;h=refs/heads/for-next
 
--Thomas
-
------Original Message-----
-From: Neil Brown <neilb@suse.de>
-To: David Greaves <david@dgreaves.com>
-Cc: thomas62186218@aol.com; maan@systemlinux.org; 
-linux-raid@vger.kernel.org
-Sent: Mon, 7 Jul 2008 4:34 pm
-Subject: Re: md devices disappearing on system reboot
-
-
-
-
-
-
-
-
-
-
-On Tuesday July 8, david@dgreaves.com wrote:
-> thomas62186218@aol.com wrote:
-> > Hi Andre,
-> >
-> > Thank you very much for the quick response.
-> >
-> > My /dev/md0 device is using /dev/sdd1, /dev/sdg1, /dev/sdj1, and 
-/dev/sdm1.
-> >
-> > I did:
-> > devices=/dev/sd[dgjm]
-> ^^^^ add a 1 to the end...
-> devices=/dev/sd[dgjm]1
->
-> > mdadm -A --run /dev/md0 $devices
-
-Also please add -vv to get more verbose output.
-So:
-
-   mdadm -A -s -vv
-and when that fails
-   mdadm -A --run -vv /dev/sd[dgjm]1
-
-Thanks,
 NeilBrown
-
-
-
-
-
