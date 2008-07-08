@@ -1,49 +1,72 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH 2/8] md: Simplify sb_equal().
-Date: Wed, 9 Jul 2008 08:54:16 +1000
-Message-ID: <18547.61464.526968.728138@notabene.brown>
+Subject: Re: [PATCH 7/8] md: update_size(): Remove useless variable "fit".
+Date: Wed, 9 Jul 2008 09:08:09 +1000
+Message-ID: <18547.62297.913913.977355@notabene.brown>
 References: <20080708155541.GS23944@skl-net.de>
-	<S1754151AbYGHQdg/20080708163337Z+60@vger.kernel.org>
+	<S1756174AbYGHQdn/20080708163344Z+61@vger.kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Andre Noll on Sunday March 23
+In-Reply-To: message from Andre Noll on Saturday April 5
 Sender: linux-raid-owner@vger.kernel.org
 To: Andre Noll <maan@systemlinux.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sunday March 23, maan@systemlinux.org wrote:
-> The only caller of sb_equal() tests the return value against
-> zero, so it's OK to return the negated return value of memcmp().
+On Saturday April 5, maan@systemlinux.org wrote:
 > 
 > Signed-off-by: Andre Noll <maan@systemlinux.org>
 > ---
->  drivers/md/md.c |    6 +-----
->  1 files changed, 1 insertions(+), 5 deletions(-)
+>  drivers/md/md.c |    3 +--
+>  1 files changed, 1 insertions(+), 2 deletions(-)
 > 
 > diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index c559b9e..58762dd 100644
+> index 3f22ec7..98a024c 100644
 > --- a/drivers/md/md.c
 > +++ b/drivers/md/md.c
-> @@ -572,11 +572,7 @@ static int sb_equal(mdp_super_t *sb1, mdp_super_t *sb2)
->  	tmp1->nr_disks = 0;
->  	tmp2->nr_disks = 0;
+> @@ -4459,7 +4459,6 @@ static int update_size(mddev_t *mddev, unsigned long size)
+>  	mdk_rdev_t * rdev;
+>  	int rv;
+>  	struct list_head *tmp;
+> -	int fit = (size == 0);
 >  
-> -	if (memcmp(tmp1, tmp2, MD_SB_GENERIC_CONSTANT_WORDS * 4))
-> -		ret = 0;
-> -	else
-> -		ret = 1;
-> -
-> +	ret = !memcmp(tmp1, tmp2, MD_SB_GENERIC_CONSTANT_WORDS * 4);
+>  	if (mddev->pers->resize == NULL)
+>  		return -EINVAL;
+> @@ -4479,7 +4478,7 @@ static int update_size(mddev_t *mddev, unsigned long size)
+>  		sector_t avail;
+>  		avail = rdev->size * 2;
+>  
+> -		if (fit && (size == 0 || size > avail/2))
+> +		if (size == 0 || size > avail/2)
+>  			size = avail/2;
+>  		if (avail < ((sector_t)size << 1))
+>  			return -ENOSPC;
 
-One of my pet hates is "!strcmp" and similarly "!memcmp".
-memcmp doesn't return a "boolean", so testing it or its inverse
-doesn't read well.  I always compare the result with '0'.  The
-comparison operator used matches exactly how I want to compare the two
-values.
-So I've changed this to
-        ret = (memcmp(....) == 0).
+This is wrong.
+The old code tested for "size == 0" once outside a loop.
+The new code does the test inside a loop which potentially changes
+size.  So after the first time through the loop, it is doing a
+different test.
+Thus patch 8/8 isn't appropriate either.
 
+If you are keen to do some more tidying up, I would really love it if
+all internal values that are currently stored as 'K' would instead be
+stored as sectors.
+So for example with update_size, we could make the value that is
+passed in be a number of sectors, get rid of those divisions.
+Then if we change rdev->size to be stored in sectors, that will get
+rid of even more mess.
+
+BTW your patches arrive without a valid "To" field.  The Date is odd
+too.
+
+To: unlisted-recipients: ;(no To-header on input)
+Apparently-To: <maan@skl-net.de>
+Subject: [PATCH 7/8] md: update_size(): Remove useless variable "fit".
+Date:	Sat, 5 Apr 2008 15:54:49 +0200
+
+Thanks,
 NeilBrown
+
+
