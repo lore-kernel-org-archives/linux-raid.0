@@ -1,49 +1,66 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: 12 Veliciraptors again w/x4 card (~1gbyte/sec aggregate read)!
-Date: Tue, 8 Jul 2008 04:39:34 -0400 (EDT)
-Message-ID: <alpine.DEB.1.10.0807080438560.17980@p34.internal.lan>
-References: <alpine.DEB.1.10.0807071424100.4694@p34.internal.lan> <4872A2F4.2010604@dgreaves.com> <alpine.DEB.1.10.0807080429440.17980@p34.internal.lan>
+From: Andre Noll <maan@systemlinux.org>
+Subject: Re: [Patch 0/8] simple md.c cleanups
+Date: Tue, 8 Jul 2008 11:48:12 +0200
+Message-ID: <20080708094812.GH4981@skl-net.de>
+References: <20080707075532.GA32617@skl-net.de> <18546.48558.451793.270407@notabene.brown>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="Zrag5V6pnZGjLKiw"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.1.10.0807080429440.17980@p34.internal.lan>
+Content-Disposition: inline
+In-Reply-To: <18546.48558.451793.270407@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Greaves <david@dgreaves.com>
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, xfs@oss.sgi.com
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
+--Zrag5V6pnZGjLKiw
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-On Tue, 8 Jul 2008, Justin Piszcz wrote:
+On 11:06, Neil Brown wrote:
+> On Monday July 7, maan@systemlinux.org wrote:
+> > Hi
+> >=20
+> > here are eight simple cleanup patches to md.c against linus-current.git.
+> > Please review.
+>=20
+> Thanks. I
+>  - added "md: " to the start of the subject line
+>  - fixed the conflicts with the first patch against my current tree:
+>      I think I already fixed some of that indenting
+>  - dropped the last patch....  I don't have a clear justification,
+>    but I currently want to leave the 'mddev' parameter there to remind
+>    me to review the implementation as I might want to do something
+>    a bit different there ... not sure yet.
+>=20
+> They are now in my "for-next" branch which can be viewed at
+>=20
+>  http://neil.brown.name/git?p=3Dmd;a=3Dshortlog;h=3Drefs/heads/for-next
 
->
->
-> On Tue, 8 Jul 2008, David Greaves wrote:
->
->> Justin Piszcz wrote:
->>> Each PCI-e x1 card has 1 veliciraptor on it now.
->>> Got an x4 card wit 4 sata ports:
->> 
->> Useful - which card?
->> 
->> David
->> 
->> 
->
-> StarTech 4 Port PCI Express x4 SATA II Card Model PEXSATA24E
->
-> Justin.
->
->
->
-Chipset: Marvell 88SX7042
-SATA Connectivity: Use four internal ports at the same time or two 
-internal and two external ports
+Thanks for including the changes so quickly.
 
-Which is fully supported in the latest kernels (didn't try an old kernel):
+I have some more patches which are also simple, but slighlty more
+involved. I'll queue them up and send them to the list for review
+later today.
 
-linux-2.6.25.10/drivers/ata/sata_mv.c
+Andre
+--=20
+The only person who always got his work done by Friday was Robinson Crusoe
 
-   /* Marvell 7042 support */
-   { PCI_VDEVICE(MARVELL, 0x7042), chip_7042 },
+--Zrag5V6pnZGjLKiw
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.1 (GNU/Linux)
+
+iD8DBQFIczfcWto1QDEAkw8RAgypAJ4txvq+nT79xyfbTQcXyP7H41XBewCfStr6
+H1s4BB6x759MKrNfY3oAcJM=
+=I7O1
+-----END PGP SIGNATURE-----
+
+--Zrag5V6pnZGjLKiw--
