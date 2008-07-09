@@ -1,53 +1,59 @@
-From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
-Subject: Re: raid10 layouts and performance Re: md man page
-Date: Wed, 9 Jul 2008 12:09:27 +0200
-Message-ID: <20080709100927.GC25160@rap.rap.dk>
-References: <20080701202231.GA24283@rap.rap.dk> <55918.192.168.1.70.1214947301.squirrel@neil.brown.name> <20080702001739.GA26832@rap.rap.dk> <18546.42692.577082.770926@notabene.brown> <20080708224422.GD7443@rap.rap.dk> <48747C1A.1000605@dgreaves.com>
+From: lsorense@csclub.uwaterloo.ca (Lennart Sorensen)
+Subject: Re: Veliciraptor HDD 3.0gbps but UDMA/100 on PCI-e controller?
+Date: Wed, 9 Jul 2008 10:48:58 -0400
+Message-ID: <20080709144858.GE31126@csclub.uwaterloo.ca>
+References: <fa.Rv78KGguIBjNqcR6d0heXxceZEM@ifi.uio.no> <486DA89F.9010505@shaw.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <48747C1A.1000605@dgreaves.com>
+In-Reply-To: <486DA89F.9010505@shaw.ca>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Greaves <david@dgreaves.com>
-Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
+To: Robert Hancock <hancockr@shaw.ca>
+Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Jul 09, 2008 at 09:51:38AM +0100, David Greaves wrote:
-> Keld J=F8rn Simonsen wrote:
-> > In my quest for updated documentation for linux raid, I find that m=
-dadm
-> > documentation is also very outdated. The mdadm man page that is rep=
-orted
-> > by google, and on wikipedia for mdadm, do not include any info on
-> > raid10!=20
-> >=20
-> > Is there a page that we could reference, which has the current mdad=
-m man
-> > page? And which is maintained?
+On Thu, Jul 03, 2008 at 10:35:43PM -0600, Robert Hancock wrote:
+> Justin Piszcz wrote:
+> >On the motherboard itself (all drives configured for AHCI)
+> >
+> >[    2.360648] ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> >[    2.678244] ata1.00: ATA-8: WDC WD3000GLFS-01F8U0, 03.03V01, max 
+> >UDMA/133
+> >[    2.678594] ata1.00: 586072368 sectors, multi 0: LBA48 NCQ (depth 31/32)
+> >[    2.684566] ata1.00: configured for UDMA/133
+> >
+> >On the PCI-e cards:
+> >
+> >[   16.136568] ata11: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
+> >[   16.155682] ata11.00: ATA-8: WDC WD3000GLFS-01F8U0, 03.03V01, max 
+> >UDMA/133
+> >[   16.156545] ata11.00: 586072368 sectors, multi 16: LBA48 NCQ (depth 
+> >31/32)
+> >[   16.162949] ata11.00: configured for UDMA/100
+> >
+> >How come the PCI-e card configured the drive for UDMA/100 and not UDMA/133?
+> >
+> >Perhaps the PCI-e card/driver does not configure/have AHCI 
+> >functionality, or?
+> >
+> >The mobo: Intel DG965WH
+> >The card: 03:00.0 RAID bus controller: Silicon Image, Inc. SiI 3132 
+> >Serial ATA Raid II Controller (rev 01)
+> >
+> >The hard drives are the same make/model.
+> 
+> Not sure exactly why that is (could be an artificial driver difference), 
+> but for SATA I don't think the UDMA mode selection matters at all as far 
+> as throughput. SATA uses its own flow control mechanism, and the UDMA 
+> rate has no real meaning.
+> 
+> And no, the card is not AHCI, it's Silicon Image's own interface, which 
+> has most of the same features. (I'm not aware of any AHCI add-in cards, 
+> though they may exist..)
 
-> Now the wiki is established I was hoping that we could somehow get th=
-e mdadm and
-> md documents integrated (though clearly they need to be manpages - ma=
-ybe
-> asciidoc (as used by git) would be a good start.
->=20
-> I didn't want to do this by hand as it would need updating to be usef=
-ul.
->=20
-> Hmm - having non-editable wiki pages automatically produced from some=
-thing like
-> asciidoc and then allowing the discussion pages to annotate/xref them=
-=2E..
+JMB363 cards.  Cute little 2 port SATA + 1 PATA in a PCIEx1.  Seems to
+be detected as AHCI.
 
-Neil is the one maintaining the man page. Maybe he has ideas on how to
-have an updated reference page? Else I am happy with your suggestions.
-
-best regards
-keld
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Len Sorensen
