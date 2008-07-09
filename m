@@ -1,57 +1,105 @@
-From: David Greaves <david@dgreaves.com>
-Subject: Re: raid10 layouts and performance Re: md man page
-Date: Wed, 09 Jul 2008 09:51:38 +0100
-Message-ID: <48747C1A.1000605@dgreaves.com>
-References: <20080701202231.GA24283@rap.rap.dk> <55918.192.168.1.70.1214947301.squirrel@neil.brown.name> <20080702001739.GA26832@rap.rap.dk> <18546.42692.577082.770926@notabene.brown> <20080708224422.GD7443@rap.rap.dk>
+From: Andre Noll <maan@systemlinux.org>
+Subject: Re: [PATCH 7/8] md: update_size(): Remove useless variable "fit".
+Date: Wed, 9 Jul 2008 11:14:27 +0200
+Message-ID: <20080709091427.GV23944@skl-net.de>
+References: <20080708155541.GS23944@skl-net.de> <S1756174AbYGHQdn/20080708163344Z+61@vger.kernel.org> <18547.62297.913913.977355@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="CUrluEZVXmx7ezWQ"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20080708224422.GD7443@rap.rap.dk>
+Content-Disposition: inline
+In-Reply-To: <18547.62297.913913.977355@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?ISO-8859-1?Q?Keld_J=F8rn_Simonsen?= <keld@dkuug.dk>
-Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Keld J=F8rn Simonsen wrote:
-> In my quest for updated documentation for linux raid, I find that mda=
-dm
-> documentation is also very outdated. The mdadm man page that is repor=
-ted
-> by google, and on wikipedia for mdadm, do not include any info on
-> raid10!=20
+
+--CUrluEZVXmx7ezWQ
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+On 09:08, Neil Brown wrote:
+> On Saturday April 5, maan@systemlinux.org wrote:
+> >=20
+> > Signed-off-by: Andre Noll <maan@systemlinux.org>
+> > ---
+> >  drivers/md/md.c |    3 +--
+> >  1 files changed, 1 insertions(+), 2 deletions(-)
+> >=20
+> > diff --git a/drivers/md/md.c b/drivers/md/md.c
+> > index 3f22ec7..98a024c 100644
+> > --- a/drivers/md/md.c
+> > +++ b/drivers/md/md.c
+> > @@ -4459,7 +4459,6 @@ static int update_size(mddev_t *mddev, unsigned l=
+ong size)
+> >  	mdk_rdev_t * rdev;
+> >  	int rv;
+> >  	struct list_head *tmp;
+> > -	int fit =3D (size =3D=3D 0);
+> > =20
+> >  	if (mddev->pers->resize =3D=3D NULL)
+> >  		return -EINVAL;
+> > @@ -4479,7 +4478,7 @@ static int update_size(mddev_t *mddev, unsigned l=
+ong size)
+> >  		sector_t avail;
+> >  		avail =3D rdev->size * 2;
+> > =20
+> > -		if (fit && (size =3D=3D 0 || size > avail/2))
+> > +		if (size =3D=3D 0 || size > avail/2)
+> >  			size =3D avail/2;
+> >  		if (avail < ((sector_t)size << 1))
+> >  			return -ENOSPC;
 >=20
-> Is there a page that we could reference, which has the current mdadm =
-man
-> page? And which is maintained?
-Now the wiki is established I was hoping that we could somehow get the =
-mdadm and
-md documents integrated (though clearly they need to be manpages - mayb=
-e
-asciidoc (as used by git) would be a good start.
+> This is wrong.
+> The old code tested for "size =3D=3D 0" once outside a loop.
+> The new code does the test inside a loop which potentially changes
+> size.
 
-I didn't want to do this by hand as it would need updating to be useful=
-=2E
+Oops, right you are. Please drop.
 
-Hmm - having non-editable wiki pages automatically produced from someth=
-ing like
-asciidoc and then allowing the discussion pages to annotate/xref them..=
-=2E
+> If you are keen to do some more tidying up, I would really love it if
+> all internal values that are currently stored as 'K' would instead be
+> stored as sectors.
+> So for example with update_size, we could make the value that is
+> passed in be a number of sectors, get rid of those divisions.
 
->=20
-> I note that our raid wiki is now nbr 3 on google, That is a lot bette=
-r
-> than number 121 which was the place about half a year ago:-)
+Of course the size unit exported to user space programs via sysfs must
+not change. So if we change update_size() as you propose, the division
+has to be done in the size_store() instead, which calls update_size()
+with a value obtained from sysfs.
 
-I'm still having trouble with the LDP howto people - they said they'd d=
-eprecate
-their page but there's a certain Rick Moen making life very difficult i=
-ndeed!!
-Perseverance...
+Therefore I think it's impossible to completely get rid of the
+divisions/multiplications without breaking user space, but it might
+still be worth to change the internal representations.
 
-David
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I will have a look at it, but I might need some further advice.
+
+> BTW your patches arrive without a valid "To" field.  The Date is odd
+> too.
+
+They were generated by git-format-patch and then bounced to the
+list. The date is "correct" in the sense that I checked them in back
+then. I'll see that subsequent patches have a proper date and a valid
+"To" field.
+
+Thanks
+Andre
+--=20
+The only person who always got his work done by Friday was Robinson Crusoe
+
+--CUrluEZVXmx7ezWQ
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.1 (GNU/Linux)
+
+iD8DBQFIdIFzWto1QDEAkw8RAngXAKCi4aTIhdHF0Z/0G3nHPlfT4dMgRACeLNdz
+xCmdTHNRhk6q15jTozb32VU=
+=ev5+
+-----END PGP SIGNATURE-----
+
+--CUrluEZVXmx7ezWQ--
