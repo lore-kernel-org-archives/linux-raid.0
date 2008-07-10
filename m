@@ -1,49 +1,55 @@
-From: "Jon Nelson" <jnelson-linux-raid@jamponi.net>
+From: Andre Noll <maan@systemlinux.org>
 Subject: Re: resync'ing - what is going on
-Date: Thu, 10 Jul 2008 12:45:40 -0500
-Message-ID: <cccedfc60807101045x207d27d7r9e61e697632d0e59@mail.gmail.com>
+Date: Thu, 10 Jul 2008 20:03:05 +0200
+Message-ID: <20080710180305.GA4247@skl-net.de>
 References: <20080710165459.GA17542@rap.rap.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="3V7upXqbjpZ4EhLz"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20080710165459.GA17542@rap.rap.dk>
 Content-Disposition: inline
+In-Reply-To: <20080710165459.GA17542@rap.rap.dk>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?ISO-8859-1?Q?Keld_J=F8rn_Simonsen?= <keld@dkuug.dk>
+To: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Jul 10, 2008 at 11:54 AM, Keld J=F8rn Simonsen <keld@dkuug.dk> =
-wrote:
-> I would like to know what is going on wrt resyncing, how it is done.
-> This is because I have some ideas to speed up the process.
-> I have noted for a 4 drive raid10,f2 array that only about 25 % of th=
-e
-> IO speed is used during the rebuid, I would like to have something li=
-ke
-> 90 % as a goal.
->
-> This is especially for raid10,f2, where I think I can make it much
-> better, but posssibly also for other raid types, as input to an
-> explanation on the wiki of what is really going on.
 
-Well, my guess (and from a quick scan of the source) is that basically
-raid10 resync by starting at the first logical block or stripe and
-proceeds through the last.  This means that there is quite a bit of
-seeking going on. IMO, the loop should look more like this:
+--3V7upXqbjpZ4EhLz
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-for component in all_components:
-  for stripe_or_block on this component:
-    read_or_check_or_whatever(stripe_or_block)
+On 18:54, Keld J=F8rn Simonsen wrote:
+> And what happens if a discrepancy is found? Which of the 2 copies are the
+> good one?
 
-This way, assuming no interference from other sources, each component
-does the minimal seeking.
+Nobody can tell. IIRC, the md code picks the one with the smallest drive
+id.
 
+> For raid5 and raid6 I could imagine that the parity blocks were cheked.
+
+For raid5 you still can't tell which of the copies (if any) is
+good. For raid6 you can tell under the assumption that exactly one
+drive has bad data.  However, the raid6 code currently does not try
+to fix up errors.
+
+Have a look at the archives for more..
+Andre
 --=20
-Jon
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The only person who always got his work done by Friday was Robinson Crusoe
+
+--3V7upXqbjpZ4EhLz
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.1 (GNU/Linux)
+
+iD8DBQFIdk7ZWto1QDEAkw8RAjGEAJ97vyf0hRJBaInv5n4MPbfB4TTmhQCdFI6F
+WyrOmzK+XX2XnongsTzPCSQ=
+=61qp
+-----END PGP SIGNATURE-----
+
+--3V7upXqbjpZ4EhLz--
