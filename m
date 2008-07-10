@@ -1,59 +1,71 @@
-From: lsorense@csclub.uwaterloo.ca (Lennart Sorensen)
-Subject: Re: Veliciraptor HDD 3.0gbps but UDMA/100 on PCI-e controller?
-Date: Wed, 9 Jul 2008 10:48:58 -0400
-Message-ID: <20080709144858.GE31126@csclub.uwaterloo.ca>
-References: <fa.Rv78KGguIBjNqcR6d0heXxceZEM@ifi.uio.no> <486DA89F.9010505@shaw.ca>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: 2.6.25.6 raid5 resync oops
+Date: Thu, 10 Jul 2008 11:07:58 +1000
+Message-ID: <18549.24814.313777.410346@notabene.brown>
+References: <200807092019.20090.arekm@maven.pl>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <486DA89F.9010505@shaw.ca>
+In-Reply-To: message from Arkadiusz Miskiewicz on Wednesday July 9
 Sender: linux-raid-owner@vger.kernel.org
-To: Robert Hancock <hancockr@shaw.ca>
-Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Arkadiusz Miskiewicz <arekm@maven.pl>
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>
 List-Id: linux-raid.ids
 
-On Thu, Jul 03, 2008 at 10:35:43PM -0600, Robert Hancock wrote:
-> Justin Piszcz wrote:
-> >On the motherboard itself (all drives configured for AHCI)
-> >
-> >[    2.360648] ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> >[    2.678244] ata1.00: ATA-8: WDC WD3000GLFS-01F8U0, 03.03V01, max 
-> >UDMA/133
-> >[    2.678594] ata1.00: 586072368 sectors, multi 0: LBA48 NCQ (depth 31/32)
-> >[    2.684566] ata1.00: configured for UDMA/133
-> >
-> >On the PCI-e cards:
-> >
-> >[   16.136568] ata11: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
-> >[   16.155682] ata11.00: ATA-8: WDC WD3000GLFS-01F8U0, 03.03V01, max 
-> >UDMA/133
-> >[   16.156545] ata11.00: 586072368 sectors, multi 16: LBA48 NCQ (depth 
-> >31/32)
-> >[   16.162949] ata11.00: configured for UDMA/100
-> >
-> >How come the PCI-e card configured the drive for UDMA/100 and not UDMA/133?
-> >
-> >Perhaps the PCI-e card/driver does not configure/have AHCI 
-> >functionality, or?
-> >
-> >The mobo: Intel DG965WH
-> >The card: 03:00.0 RAID bus controller: Silicon Image, Inc. SiI 3132 
-> >Serial ATA Raid II Controller (rev 01)
-> >
-> >The hard drives are the same make/model.
+On Wednesday July 9, arekm@maven.pl wrote:
 > 
-> Not sure exactly why that is (could be an artificial driver difference), 
-> but for SATA I don't think the UDMA mode selection matters at all as far 
-> as throughput. SATA uses its own flow control mechanism, and the UDMA 
-> rate has no real meaning.
+> While kernel was resyncing raid5 array on 4 sata disks this happened
+
+Thanks for the report.
 > 
-> And no, the card is not AHCI, it's Silicon Image's own interface, which 
-> has most of the same features. (I'm not aware of any AHCI add-in cards, 
-> though they may exist..)
+> ------------[ cut here ]------------
+> kernel BUG at drivers/md/raid5.c:2398!
 
-JMB363 cards.  Cute little 2 port SATA + 1 PATA in a PCIEx1.  Seems to
-be detected as AHCI.
+So in handle_parity_checks5, s->uptodate is not == disks.
+Not good (obviously).
 
--- 
-Len Sorensen
+We only get into handle_parity_checks5 if:
+  STRIPE_OP_CHECK or STRIPE_OP_MODE_REPAIR_PD
+    are set in sh->ops.pending
+or
+  s.syncing and s.locked == 0 (and some other stuff).
+
+The first two bits only get set inside handle_parity_checks5,
+so the first time handle_parity_checks5 was called on this
+stripe_head, s.syncing was true and s.locked == 0.
+
+If s.syncing, and s.uptodate < disks, then we will have already
+called handle_issuing_new_read_requests5 which will have tried to read
+all disks that aren't uptodate, so 
+    s.uptodate + s.locked == disks
+which makes the BUG impossible .... except.....
+
+If we already have uptodate == disks-1, then it doesn't read
+the missing block and falls straight down to the BUG.
+
+Dan:  I think this is your code.  In 
+  __handle_issuing_new_read_requests5
+the
+		} else if ((s->uptodate < disks - 1) &&
+			test_bit(R5_Insync, &dev->flags)) {
+
+looks wrong.  We at least want a test on s->syncing in there, maybe:
+		} else if (((s->uptodate < disks - 1) || s->syncing) &&
+			test_bit(R5_Insync, &dev->flags)) {
+
+and given that we only compute blocks when a device is failed, (see 15
+lines earlier) I think we probably just want
+		} else if (test_bit(R5_Insync, &dev->flags)) {
+
+I notice that is was it in linux-next (though the functions are
+renamed - it is fetch_block5 there).
+
+I wonder if there is still time for 2.6.26 .. probably not.  It'll be
+released immediately after lwn.net release their weekly edition :-)
+
+Arkadiusz: a reboot (which you have probably done already) is all you
+  can do here. Your array will resync, and almost certainly won't hit
+  the bug again.  There should be no data loss.
+
+NeilBrown
