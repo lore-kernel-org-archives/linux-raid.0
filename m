@@ -1,113 +1,59 @@
-From: Andre Noll <maan@systemlinux.org>
-Subject: [PATCH 1/5] md: Make update_size() take the number of sectors.
-Date: Thu, 10 Jul 2008 11:15:34 +0200
-Message-ID: <1215681338-32365-2-git-send-email-maan@systemlinux.org>
-References: <1215681338-32365-1-git-send-email-maan@systemlinux.org>
+From: Christopher Hicks <chicks@chicks.net>
+Subject: Can't recover half of a raid1
+Date: Thu, 10 Jul 2008 10:00:05 -0400 (EDT)
+Message-ID: <alpine.LRH.1.10.0807100956020.4684@skippy.fini.net>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1215681338-32365-1-git-send-email-maan@systemlinux.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
-Cc: Andre Noll <maan@systemlinux.org>
 List-Id: linux-raid.ids
 
-Changing the internal representations of sizes of raid devices
-from 1K blocks to sector counts (512B units) is desirable because
-it allows to get rid of many divisions/multiplications and unnecessary
-casts that are present in the current code.
+We had a drive die in a RAID1 array.  I've tried to bring it back so we 
+can migrate the data to a new machine and it keeps telling me "/dev/md0 
+assembled from 1 drive - not enough to start the array."  I've tried 
+everything I've found in the FAQ and wiki to no avail.  What am I missing?
+Here's the log of what I've tried:
 
-This patch is a first step in this direction. It replaces the old
-1K-based "size" argument of update_size() by "num_sectors" and
-fixes up its two callers.
+# mdadm -E /dev/hdb1
+/dev/hdb1:
+           Magic : a92b4efc
+         Version : 00.90.00
+            UUID : f8055b6f:766f7a3f:ad80d985:eb77d033
+   Creation Time : Thu Feb 19 10:57:42 2004
+      Raid Level : raid0
+     Device Size : 102398208 (97.65 GiB 104.86 GB)
+    Raid Devices : 2
+   Total Devices : 2
+Preferred Minor : 0
 
-Signed-off-by: Andre Noll <maan@systemlinux.org>
----
- drivers/md/md.c |   36 ++++++++++++++++++------------------
- 1 files changed, 18 insertions(+), 18 deletions(-)
+     Update Time : Sat Feb  3 22:56:54 2007
+           State : clean
+  Active Devices : 2
+Working Devices : 2
+  Failed Devices : 0
+   Spare Devices : 0
+        Checksum : 3cadf274 - correct
+          Events : 0.44
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 2580ac1..2ab13a3 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -2785,7 +2785,7 @@ size_show(mddev_t *mddev, char *page)
- 	return sprintf(page, "%llu\n", (unsigned long long)mddev->size);
- }
- 
--static int update_size(mddev_t *mddev, unsigned long size);
-+static int update_size(mddev_t *mddev, sector_t num_sectors);
- 
- static ssize_t
- size_store(mddev_t *mddev, const char *buf, size_t len)
-@@ -2802,7 +2802,7 @@ size_store(mddev_t *mddev, const char *buf, size_t len)
- 		return -EINVAL;
- 
- 	if (mddev->pers) {
--		err = update_size(mddev, size);
-+		err = update_size(mddev, size * 2);
- 		md_update_sb(mddev, 1);
- 	} else {
- 		if (mddev->size == 0 ||
-@@ -4476,24 +4476,24 @@ static int set_array_info(mddev_t * mddev, mdu_array_info_t *info)
- 	return 0;
- }
- 
--static int update_size(mddev_t *mddev, unsigned long size)
-+static int update_size(mddev_t *mddev, sector_t num_sectors)
- {
- 	mdk_rdev_t * rdev;
- 	int rv;
- 	struct list_head *tmp;
--	int fit = (size == 0);
-+	int fit = (num_sectors == 0);
- 
- 	if (mddev->pers->resize == NULL)
- 		return -EINVAL;
--	/* The "size" is the amount of each device that is used.
--	 * This can only make sense for arrays with redundancy.
--	 * linear and raid0 always use whatever space is available
--	 * We can only consider changing the size if no resync
--	 * or reconstruction is happening, and if the new size
--	 * is acceptable. It must fit before the sb_offset or,
--	 * if that is <data_offset, it must fit before the
--	 * size of each device.
--	 * If size is zero, we find the largest size that fits.
-+	/* The "num_sectors" is the number of sectors of each device that
-+	 * is used.  This can only make sense for arrays with redundancy.
-+	 * linear and raid0 always use whatever space is available. We can only
-+	 * consider changing this number if no resync or reconstruction is
-+	 * happening, and if the new size is acceptable. It must fit before the
-+	 * sb_offset or, if that is <data_offset, it must fit before the size
-+	 * of each device.  If num_sectors is zero, we find the largest size
-+	 * that fits.
-+
- 	 */
- 	if (mddev->sync_thread)
- 		return -EBUSY;
-@@ -4501,12 +4501,12 @@ static int update_size(mddev_t *mddev, unsigned long size)
- 		sector_t avail;
- 		avail = rdev->size * 2;
- 
--		if (fit && (size == 0 || size > avail/2))
--			size = avail/2;
--		if (avail < ((sector_t)size << 1))
-+		if (fit && (num_sectors == 0 || num_sectors > avail))
-+			num_sectors = avail;
-+		if (avail < num_sectors)
- 			return -ENOSPC;
- 	}
--	rv = mddev->pers->resize(mddev, (sector_t)size *2);
-+	rv = mddev->pers->resize(mddev, num_sectors);
- 	if (!rv) {
- 		struct block_device *bdev;
- 
-@@ -4588,7 +4588,7 @@ static int update_array_info(mddev_t *mddev, mdu_array_info_t *info)
- 			return mddev->pers->reconfig(mddev, info->layout, -1);
- 	}
- 	if (info->size >= 0 && mddev->size != info->size)
--		rv = update_size(mddev, info->size);
-+		rv = update_size(mddev, info->size * 2);
- 
- 	if (mddev->raid_disks    != info->raid_disks)
- 		rv = update_raid_disks(mddev, info->raid_disks);
+      Chunk Size : 64K
+
+       Number   Major   Minor   RaidDevice State
+this     1       3       65        1      active sync   /dev/hdb1
+
+    0     0       3        2        0      active sync   /dev/hda2
+    1     1       3       65        1      active sync   /dev/hdb1
+Personalities : [raid0] [raid1] [raid5] [raid6] 
+# mdadm  -Af /dev/md0 /dev/hdb1
+mdadm: /dev/md0 assembled from 1 drive - not enough to start the array.
+# cat /proc/mdstat
+md0 : inactive hdb1[1]
+       102398208 blocks
+unused devices: <none>
+
+
 -- 
-1.5.3.8
+</chris>
 
+If trees could scream, would we be so cavalier about cutting them down?
+We might, if they screamed all the time, for no good reason.
