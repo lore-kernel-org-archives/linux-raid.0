@@ -1,28 +1,79 @@
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Subject: Re: Lots of con-current I/O = resets SATA link? (2.6.25.10)
-Date: Wed, 9 Jul 2008 22:27:36 -0300
-Message-ID: <20080710012736.GD15729@khazad-dum.debian.net>
-References: <alpine.DEB.1.10.0807051252200.12562@p34.internal.lan> <alpine.LFD.1.10.0807071649340.1160@bbs.intern> <alpine.LFD.1.10.0807071705490.2997@bbs.intern> <alpine.DEB.1.10.0807071149530.32508@p34.internal.lan> <alpine.LFD.1.10.0807080811560.5439@bbs.intern> <alpine.DEB.1.10.0807080433550.17980@p34.internal.lan> <alpine.LFD.1.10.0807081232350.32659@bbs.intern> <alpine.DEB.1.10.0807080915040.23688@p34.internal.lan> <alpine.LFD.1.10.0807090726200.686@bbs.intern>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: 2.6.25.6 raid5 resync oops
+Date: Wed, 09 Jul 2008 21:54:57 -0700
+Message-ID: <1215665697.7848.15.camel@dwillia2-linux.ch.intel.com>
+References: <200807092019.20090.arekm@maven.pl>
+	 <18549.24814.313777.410346@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <alpine.LFD.1.10.0807090726200.686@bbs.intern>
+In-Reply-To: <18549.24814.313777.410346@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Gerhard Wiesinger <lists@wiesinger.com>
-Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: Arkadiusz Miskiewicz <arekm@maven.pl>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 09 Jul 2008, Gerhard Wiesinger wrote:
-> Load on power supply measured on 220V side with a true RMS Wattmeter:
+On Wed, 2008-07-09 at 18:07 -0700, Neil Brown wrote:
+> Dan:  I think this is your code.  In
+>   __handle_issuing_new_read_requests5
+> the
+>                 } else if ((s->uptodate < disks - 1) &&
+>                         test_bit(R5_Insync, &dev->flags)) {
+> 
+> looks wrong.  We at least want a test on s->syncing in there, maybe:
+>                 } else if (((s->uptodate < disks - 1) || s->syncing)
+> &&
+>                         test_bit(R5_Insync, &dev->flags)) {
+> 
+> and given that we only compute blocks when a device is failed, (see 15
+> lines earlier) I think we probably just want
+>                 } else if (test_bit(R5_Insync, &dev->flags)) {
+> 
+> I notice that is was it in linux-next (though the functions are
+> renamed - it is fetch_block5 there).
 
-That won't help for the failure mode you're looking for.
+Yes, I had realized it was obsolete... missed that it was buggy.
+> 
+> I wonder if there is still time for 2.6.26 .. probably not.  It'll be
+> released immediately after lwn.net release their weekly edition :-)
 
-Hook an osciloscope to the power lines on the HD's power feed, and try to
-get it to trigger on any "big" variations.
+Here is a patch against latest mainline.
 
--- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+---snip--->
+md: ensure all blocks are uptodate or locked when syncing
+
+From: Dan Williams <dan.j.williams@intel.com>
+
+Remove the dubious attempt to prefer 'compute' over 'read'.  Not only is it
+wrong given commit c337869d (md: do not compute parity unless it is on a failed
+drive), but it can trigger a BUG_ON in handle_parity_checks5().
+
+Cc: <stable@kernel.org>
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+---
+
+ drivers/md/raid5.c |    7 +------
+ 1 files changed, 1 insertions(+), 6 deletions(-)
+
+
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 54c8ee2..3b27df5 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -2017,12 +2017,7 @@ static int __handle_issuing_new_read_requests5(struct stripe_head *sh,
+ 			 */
+ 			s->uptodate++;
+ 			return 0; /* uptodate + compute == disks */
+-		} else if ((s->uptodate < disks - 1) &&
+-			test_bit(R5_Insync, &dev->flags)) {
+-			/* Note: we hold off compute operations while checks are
+-			 * in flight, but we still prefer 'compute' over 'read'
+-			 * hence we only read if (uptodate < * disks-1)
+-			 */
++		} else if (test_bit(R5_Insync, &dev->flags)) {
+ 			set_bit(R5_LOCKED, &dev->flags);
+ 			set_bit(R5_Wantread, &dev->flags);
+ 			if (!test_and_set_bit(STRIPE_OP_IO, &sh->ops.pending))
+
+
