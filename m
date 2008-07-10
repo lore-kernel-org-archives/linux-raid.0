@@ -1,55 +1,41 @@
-From: Andre Noll <maan@systemlinux.org>
-Subject: Re: resync'ing - what is going on
-Date: Thu, 10 Jul 2008 20:03:05 +0200
-Message-ID: <20080710180305.GA4247@skl-net.de>
-References: <20080710165459.GA17542@rap.rap.dk>
+From: CaT <cat@zip.com.au>
+Subject: Re: Can't recover half of a raid1
+Date: Fri, 11 Jul 2008 09:13:51 +1000
+Message-ID: <20080710231351.GC2903@zip.com.au>
+References: <alpine.LRH.1.10.0807100956020.4684@skippy.fini.net> <20080710142034.GB2903@zip.com.au> <alpine.LRH.1.10.0807101044320.4684@skippy.fini.net>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="3V7upXqbjpZ4EhLz"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20080710165459.GA17542@rap.rap.dk>
+In-Reply-To: <alpine.LRH.1.10.0807101044320.4684@skippy.fini.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
+To: Christopher Hicks <chicks@chicks.net>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Thu, Jul 10, 2008 at 10:45:23AM -0400, Christopher Hicks wrote:
+> On Fri, 11 Jul 2008, CaT wrote:
+> >On Thu, Jul 10, 2008 at 10:00:05AM -0400, Christopher Hicks wrote:
+> >>We had a drive die in a RAID1 array.  I've tried to bring it back so we
+> >...
+> >>     Raid Level : raid0
+> >
+> >These two things seem to contradict...
+> 
+> Oh no.  I don't suppose there's any chance that mdadm is wrong about what 
+> RAID level that chunk was at.
 
---3V7upXqbjpZ4EhLz
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+I don't know to be honest. There are two possibilities as far as I can
+see:
 
-On 18:54, Keld J=F8rn Simonsen wrote:
-> And what happens if a discrepancy is found? Which of the 2 copies are the
-> good one?
+1. it is a raid 1 array so you might try creating it as raid 1 with a
+drive missing and seeing if there's a valid filesystem there. don't know
+if this will destroy useful data though.
+2. you only think you had a raid1 array, in which case you're probably
+screwed as the data would be interleved between the two drives.
 
-Nobody can tell. IIRC, the md code picks the one with the smallest drive
-id.
-
-> For raid5 and raid6 I could imagine that the parity blocks were cheked.
-
-For raid5 you still can't tell which of the copies (if any) is
-good. For raid6 you can tell under the assumption that exactly one
-drive has bad data.  However, the raid6 code currently does not try
-to fix up errors.
-
-Have a look at the archives for more..
-Andre
---=20
-The only person who always got his work done by Friday was Robinson Crusoe
-
---3V7upXqbjpZ4EhLz
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
-
-iD8DBQFIdk7ZWto1QDEAkw8RAjGEAJ97vyf0hRJBaInv5n4MPbfB4TTmhQCdFI6F
-WyrOmzK+XX2XnongsTzPCSQ=
-=61qp
------END PGP SIGNATURE-----
-
---3V7upXqbjpZ4EhLz--
+-- 
+  "Police noticed some rustling sounds from Linn's bottom area
+  and on closer inspection a roll of cash was found protruding
+  from Linn's anus, the full amount of cash taken in the robbery."
+    - http://www.smh.com.au/news/world/robber-hides-loot-up-his-booty/2008/05/09/1210131248617.html
