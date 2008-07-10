@@ -1,29 +1,27 @@
-From: Christopher Hicks <chicks@chicks.net>
+From: CaT <cat@zip.com.au>
 Subject: Re: Can't recover half of a raid1
-Date: Thu, 10 Jul 2008 10:45:23 -0400 (EDT)
-Message-ID: <alpine.LRH.1.10.0807101044320.4684@skippy.fini.net>
-References: <alpine.LRH.1.10.0807100956020.4684@skippy.fini.net> <20080710142034.GB2903@zip.com.au>
+Date: Fri, 11 Jul 2008 00:20:34 +1000
+Message-ID: <20080710142034.GB2903@zip.com.au>
+References: <alpine.LRH.1.10.0807100956020.4684@skippy.fini.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20080710142034.GB2903@zip.com.au>
+Content-Disposition: inline
+In-Reply-To: <alpine.LRH.1.10.0807100956020.4684@skippy.fini.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org, CaT <cat@zip.com.au>
+To: Christopher Hicks <chicks@chicks.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, 11 Jul 2008, CaT wrote:
-> On Thu, Jul 10, 2008 at 10:00:05AM -0400, Christopher Hicks wrote:
->> We had a drive die in a RAID1 array.  I've tried to bring it back so we
-> ...
->>      Raid Level : raid0
->
-> These two things seem to contradict...
+On Thu, Jul 10, 2008 at 10:00:05AM -0400, Christopher Hicks wrote:
+> We had a drive die in a RAID1 array.  I've tried to bring it back so we 
+...
+>      Raid Level : raid0
 
-Oh no.  I don't suppose there's any chance that mdadm is wrong about what 
-RAID level that chunk was at.
+These two things seem to contradict...
 
 -- 
-</chris>
-
-If trees could scream, would we be so cavalier about cutting them down?
-We might, if they screamed all the time, for no good reason.
+  "Police noticed some rustling sounds from Linn's bottom area
+  and on closer inspection a roll of cash was found protruding
+  from Linn's anus, the full amount of cash taken in the robbery."
+    - http://www.smh.com.au/news/world/robber-hides-loot-up-his-booty/2008/05/09/1210131248617.html
