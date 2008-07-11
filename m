@@ -1,9 +1,8 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH 4/5] md: Turn rdev->sb_offset into a sector-based quantity.
-Date: Fri, 11 Jul 2008 21:15:17 +1000
-Message-ID: <18551.16581.929399.413701@notabene.brown>
+Subject: Re: [PATCH 0/5] md: sector_t conversions
+Date: Fri, 11 Jul 2008 22:18:43 +1000
+Message-ID: <18551.20387.782432.394928@notabene.brown>
 References: <1215681338-32365-1-git-send-email-maan@systemlinux.org>
-	<1215681338-32365-5-git-send-email-maan@systemlinux.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
@@ -15,48 +14,23 @@ Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 On Thursday July 10, maan@systemlinux.org wrote:
-> Rename it to sb_start to make sure all users have been converted.
+> Hi
+> 
+> here is the first batch of patches that aim to change the internal
+> representations of sizes of raid devices from 1K blocks to 512 byte
+> sectors.
+> 
+> Patches 1-3 change the internal functions update_size(),
+> calc_dev_size() and calc_dev_sboffset() so that they take/return a
+> sector count instead of a block count. Patch 4 changes the semantics
+> of rdev->sb_offset so that its value now represents the number of the
+> start sector instead of the start block. Patch 5 removes some macros
+> that have become unused due to this conversion.
 
-Good idea.
+Thanks.  I've pushed all of these (with some changes as mentioned in
+earlier emails) into my for-next tree
+   git://neil.brown.name/md/ for-next
+   http://neil.brown.name/git?p=md;a=shortlog;h=refs/heads/for-next
 
-> @@ -1047,22 +1045,21 @@ static int super_1_load(mdk_rdev_t *rdev, mdk_rdev_t *refdev, int minor_version)
->  	 */
->  	switch(minor_version) {
->  	case 0:
-> -		sb_offset = rdev->bdev->bd_inode->i_size >> 9;
-> -		sb_offset -= 8*2;
-> -		sb_offset &= ~(sector_t)(4*2-1);
-> +		sb_start = rdev->bdev->bd_inode->i_size >> 9;
-> +		sb_start -= 8*2;
-> +		sb_start &= ~(sector_t)(4*2-1);
->  		/* convert from sectors to K */
-> -		sb_offset /= 2;
->  		break;
-
-That "convert.." comment can go.
-
->  
->  	if (minor_version
-> -	    && rdev->data_offset < sb_offset + (rdev->sb_size/512))
-> +	    && rdev->data_offset < sb_start / 2 + (rdev->sb_size/512))
->  		return -EINVAL;
-
-That doesn't look right.
-  rdev->data_offset is in sectors.
-  rdev->sb_size/512 is in sectors.
-  sb_offset is in K.
-We had a bug there.  Better fix it by dropping the "/ 2".
-
-> @@ -3431,16 +3428,16 @@ static int do_md_run(mddev_t * mddev)
->  		 * We don't want the data to overlap the metadata,
->  		 * Internal Bitmap issues has handled elsewhere.
->  		 */
-> -		if (rdev->data_offset < rdev->sb_offset) {
-> +		if (rdev->data_offset < rdev->sb_start / 2) {
-
-And another bug.  We don't want the "/ 2".  data_offset was always
-sectors, and now sb_offset is too.
-That's two bugs we've found by doing this conversion - thanks!
-
-
+Thanks,
 NeilBrown
