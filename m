@@ -1,36 +1,45 @@
-From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
+From: "Jon Nelson" <jnelson-linux-raid@jamponi.net>
 Subject: Re: Collection of benchmarks on RAID5,6 and 10
-Date: Sat, 12 Jul 2008 15:21:05 +0200
-Message-ID: <20080712132105.GA32114@rap.rap.dk>
+Date: Sat, 12 Jul 2008 09:30:07 -0500
+Message-ID: <cccedfc60807120730w71845f91m4bb96506e24230fa@mail.gmail.com>
 References: <cccedfc60807110722q6d206b29xc46eeff378285bc7@mail.gmail.com>
+	 <alpine.DEB.1.10.0807120732190.19733@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <alpine.DEB.1.10.0807120732190.19733@p34.internal.lan>
 Content-Disposition: inline
-In-Reply-To: <cccedfc60807110722q6d206b29xc46eeff378285bc7@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jon Nelson <jnelson-linux-raid@jamponi.net>
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
 Cc: LinuxRaid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Fri, Jul 11, 2008 at 09:22:10AM -0500, Jon Nelson wrote:
-> Some of you may be interested in a a big blog article I wrote on
-> raid5,6 and 10 performance, primarily comparing various chunk sizes
-> and the impact they made.
-> I did get some interesting (to me) results, and have some unanswered questions.
+>> http://pycurious.blogspot.com/
+>
+> Nice benchmarks, what did you use to make the graphs?
 
-Could you summarize the interesting results?
+Thanks! I used flot (a jQuery plugin).
+However, I've redone the code that creates the graphs and have
+switched to google charts.
+You can see a preview here:
 
+http://www.jamponi.net/more_raid/graphs.html
 
-> I also re-did the tests using deadline and anticipatory (and noop is
-> planned) and will add another entry comparing those results to cfq,
-> which is what I used above.
-> 
-> http://pycurious.blogspot.com/
+I'll be revising that post to use the new graphs (unless people
+holler) and to include a 2048 chunk size as per Neil's suggestion.
 
-Thanks, Jon!
+A future installment will show the effects of the various schedulers
+(you can see the graphs for that in the link above), and yet another
+installment may show filesystems over raid (and possibly filesystems
+over lvm over raid).
 
-I added a reference to this on the wiki.
+> Also, for all of your RAID configuration/systems, what do you use for your
+> servers/stability after benchmarking multiple configurations?
 
-best regards
-keld
+I'm using raid10,f2 right now but I may switch to raid6. I was using
+raid5 previously. One big difference between the benchmarks and my
+system is that I am using 3 drives and the benchmarks show 4.
+
+-- 
+Jon
