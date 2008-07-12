@@ -1,66 +1,35 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: resync'ing - what is going on
-Date: Sat, 12 Jul 2008 20:44:48 +1000
-Message-ID: <18552.35616.626230.236249@notabene.brown>
-References: <20080710165459.GA17542@rap.rap.dk>
-	<18550.59093.835573.290313@notabene.brown>
-	<20080711222927.GA10862@rap.rap.dk>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: Collection of benchmarks on RAID5,6 and 10
+Date: Sat, 12 Jul 2008 07:32:56 -0400 (EDT)
+Message-ID: <alpine.DEB.1.10.0807120732190.19733@p34.internal.lan>
+References: <cccedfc60807110722q6d206b29xc46eeff378285bc7@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Keld Jorn Simonsen on Saturday July 12
+In-Reply-To: <cccedfc60807110722q6d206b29xc46eeff378285bc7@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
-Cc: linux-raid@vger.kernel.org
+To: Jon Nelson <jnelson-linux-raid@jamponi.net>
+Cc: LinuxRaid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Saturday July 12, keld@dkuug.dk wrote:
-> I took the information here and made something for the wiki.
-> Comments welcome.  /keld
 
-Thanks for doing that.  I'm not motivated to work on the wiki myself,
-but I'm more than happy for anyone to take any secrets I divulge in
-emails and publish them there.
 
-> 
-> = recovery and resync =
-> 
-> The following is a recollection of what Neil Brown and others have
-> written 
-> on the linux-raid mailing list.
-> 
-> "resync" and "recovery" are handled very differently in raid10.
-> "check" and "repair" are special cases of "resync".
-> 
-> == recovery ==
-> 
-> The purpose of the recovery process is to fill a new disk with the
-> relevant 
-> information from a running array.
-> 
-> The assumption is that all data do the new disk needs to be written.
-> 
-> "recovery" walks addresses from the start to the end of the component
-> drives.
-...
-> 
-> == resync ==
-...
-> 
-> "resync" walks the addresses from the start to end of the array.
+On Fri, 11 Jul 2008, Jon Nelson wrote:
 
-It's probably worth noting that this difference between recovery and
-resync in specific to raid10.
+> Some of you may be interested in a a big blog article I wrote on
+> raid5,6 and 10 performance, primarily comparing various chunk sizes
+> and the impact they made.
+> I did get some interesting (to me) results, and have some unanswered questions.
+>
+> I also re-did the tests using deadline and anticipatory (and noop is
+> planned) and will add another entry comparing those results to cfq,
+> which is what I used above.
+>
+> http://pycurious.blogspot.com/
 
-recovery always follows the address space of component drives.
+Nice benchmarks, what did you use to make the graphs?
 
-resync:
-  on raid10, follows the address space of the array
-  on raid4/5/6, follows the address space of component drives.
-  on raid1, the two address spaces are the same.
+Also, for all of your RAID configuration/systems, what do you use for 
+your servers/stability after benchmarking multiple configurations?
 
-Another way to say it is that raid10-resync follows the address space
-of the array, everything else follows the component drives.
-
-NeilBrown
+Justin.
