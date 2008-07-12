@@ -1,228 +1,94 @@
-From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
-Subject: Re: resync'ing - what is going on
-Date: Sat, 12 Jul 2008 00:29:27 +0200
-Message-ID: <20080711222927.GA10862@rap.rap.dk>
-References: <20080710165459.GA17542@rap.rap.dk> <18550.59093.835573.290313@notabene.brown>
+From: Gerhard Wiesinger <lists@wiesinger.com>
+Subject: Re: Lots of con-current I/O = resets SATA link? (2.6.25.10)
+Date: Sat, 12 Jul 2008 10:29:59 +0200 (CEST)
+Message-ID: <alpine.LFD.1.10.0807121025310.10748@bbs.intern>
+References: <alpine.DEB.1.10.0807051252200.12562@p34.internal.lan> <alpine.LFD.1.10.0807071649340.1160@bbs.intern> <alpine.LFD.1.10.0807071705490.2997@bbs.intern> <alpine.DEB.1.10.0807071149530.32508@p34.internal.lan> <alpine.LFD.1.10.0807080811560.5439@bbs.intern>
+ <alpine.DEB.1.10.0807080433550.17980@p34.internal.lan> <alpine.LFD.1.10.0807081232350.32659@bbs.intern> <alpine.DEB.1.10.0807080915040.23688@p34.internal.lan> <alpine.LFD.1.10.0807090726200.686@bbs.intern>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <18550.59093.835573.290313@notabene.brown>
-Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <alpine.LFD.1.10.0807090726200.686@bbs.intern>
+Sender: linux-ide-owner@vger.kernel.org
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-raid.ids
 
-I took the information here and made something for the wiki.
-Comments welcome.  /keld
 
-= recovery and resync =
 
-The following is a recollection of what Neil Brown and others have
-written 
-on the linux-raid mailing list.
+On Wed, 9 Jul 2008, Gerhard Wiesinger wrote:
 
-"resync" and "recovery" are handled very differently in raid10.
-"check" and "repair" are special cases of "resync".
+> On Tue, 8 Jul 2008, Justin Piszcz wrote:
+>
+>>>>>> Hi Gerhard,
+>>>> 
+>>>> Please run:
+>>>> 
+>>>> smartctl -t short /dev/sdc
+>>>> sleep 300
+>>>> smartctl -t long /dev/sdc
+>>>> 
+>>>> Wait 2-3 hours or more and:
+>>>> 
+>>>> smartctl -a /dev/sdc
+>>> 
+>>> 
+>>> I'm changing the disk one more time ...
+>> 
+>> Once you replace the disk please re-run the tests shown above and show us 
+>> the output please.
+>> 
+>> How many SAMSUNG disks have you gone through, do they really fail that 
+>> often?
+>> 
+>
+> Hello Justin!
+>
+> Setup Power suppply:
+> sda-sdd are on the same power supply cable, sde, sdf are on a second one.
+>
+> I changed the disk to a new SAMSUNG disk and the first raid resync did NOT 
+> work and I had 1 reallocated sector ...
+>
+> Also the RMA guy at our very good computer store (http://www.ditech.at/) were 
+> helpfull in changing the disks and he hates the SAMSUNG disks because of high 
+> RMA rates ...
+>
+> But:
+> smart checks were ok (details see below). The smart checks are shown as 
+> aborted, but before running the next tests they were at "Completed without 
+> error" (strange).
+>
+> Now sdc has it's own power cable and I'm running a raid resync now.
+>
+> Power supply is:
+> ATX 385 Watt, ENERMAX PRO82+
+>
+> Load on power supply measured on 220V side with a true RMS Wattmeter:
+> Power off: 6,5W
+> Max seen at power up: 196W
+> BIOS: 114,1W
+> Linux idle: 92,0W
+> 100% Disk I/O, 100% CPU load: 149,6W
+> => Everything fine and as expected.
+>
+> I'll keep you up to date ...
+>
 
-== recovery ==
+Hello!
 
-The purpose of the recovery process is to fill a new disk with the
-relevant 
-information from a running array.
+It looks like it works now without any problems:
+*) Serveral RAID checks (once a day)
+*) smartctl checks were fine
+*) Only one reallocated sector
+*) Writing the disk full with random data
 
-The assumption is that all data do the new disk needs to be written.
+So the possibilities for the fault are:
+*) SATA power connector (most likely I would guess)
+*) 4th disk is now ok
+*) Other 220V power cable connector through the Wattmeter
 
-"recovery" walks addresses from the start to the end of the component
-drives.
+Ciao,
+Gerhard
 
-At each address, it considers each drive which is being recovered and
-finds a place on a different device to read the block for the current
-(drive,address) from.  It schedules a read and when the read request
-completes it schedules the write.
-
-On an f2 layout, this will read one drive from halfway to the end,
-then from the start to halfway, and will write the other drive
-sequentially.
-
-== resync ==
-
-The purpose of resync is to ensure that all data on the array is
-syncronized.
-
-There is an assumption that most, if not all, of the data is allready
-OK.
-
-"resync" walks the addresses from the start to end of the array.
-
-At each address it reads every device block which stores that
-array block.  When all the reads complete the results are compared.
-If they are not all the same, the "first" block is written out 
-to the others. 
-
-Here "first" means (I think) the block with the earliest device
-address, and if there are several of those, the block with the least
-device index.
-
-So for f2, this will read from both the start and the middle of
-both devices.  It will read 64K (the chunk size) at a time, so you
-should get at least
-a 32K read at each position before a seek (more with a larger chunk
-size).
-
-Clearly this won't be fast.
-
-The reason this algorithm was chosen was that it makes sense for every
-possible raid10 layout, even though it might not be optimal for some
-of them.
-
-Were I to try to make it fast for f2, I would probably shuffle the
-bits in each request so that it did all the 'odd' chunks first, then
-all the even chunks.
-e.g. map
- 
-  0 1 2 3 4 5 6 7 8 ...
-to
-
-  0 1 4 5 8 9 .....  2 3 6 7 10 11 ....
-(assuming a chunk size of '2').
-
-The problem with this is that if you shutdown while part way though a
-resync,  and then boot into a kernel which used a different
-sequence, it would finish the resync checking the wrong blocks.
-This is annoying but should not be insurmountable.
-
-This way we leave the basic algorithm the same, but introduce
-variations in the sequence for different specific layouts.
-
-Another idea would be to read a number of chunks from one part of the f2
-mirror,
-say 10 MB, and then read then corresponding 10 MB from the other half of
-the f2 
-array. This would on current disk technology (80 MB/s) mean 125 ms spent
-reading, 
-and then 8 ms spent moving heads. 
-
-raid1 does resync simply by reading one device and writing all the
-others, and this is conceptually easiest. 
-
-When repairing, there is no "good" block - if they are different, then
-all are wrong.
-md/raid just tries to return a consistent value, and leave it up to
-the filesystem to find and correct any errors. 
-md/raid does not try to take advantage of information on failed CRC on
-disk 
-hardware, should that info be available to the kernel. 
-
-If any inconsistency is found during a resync of raid4/5/6 the parity
-blocks are changed to remove the inconsistency.  This may not be
-"right", but it is least likely to be "wrong".
-
-On Fri, Jul 11, 2008 at 02:51:33PM +1000, Neil Brown wrote:
-> On Thursday July 10, keld@dkuug.dk wrote:
-> > I would like to know what is going on wrt resyncing, how it is done.
-> > This is because I have some ideas to speed up the process. 
-> > I have noted for a 4 drive raid10,f2 array that only about 25 % of the
-> > IO speed is used during the rebuid, I would like to have something like
-> > 90 % as a goal.
-> 
-> "resync" and "recovery" are handled very differently in raid10.
-> "check" and "repair" are special cases of "resync".
-> 
-> "recovery" walks addresses from the start to the end of the component
-> drives.
-> At each address, it considers each drive which is being recovered and
-> finds a place on a different device to read the block for the current
-> (drive,address) from.  It schedules a read and when the read request
-> completes it schedules the write.
-> 
-> On an f2 layout, this will read one drive from halfway to the end,
-> then from the start to halfway, and will write the other drive
-> sequentially.
-> 
-> "resync" walks the addresses from the start to end of the array.
-> At each address it reads every device block which stores that
-> array block.  When all the reads complete the results are compared.
-> If they are not all the same, the "first" block is written out
-> to the others.  (I think I might have told you before that it reads
-> one block and writes the others.  I checked the code and what is
-> wrong).
-> 
-> Here "first" means (I think) the block with the earliest device
-> address, and if there are several of those, the block with the least
-> device index.
-> 
-> So for f2, this will read from both the start and the middle of
-> both devices.  It will read 64K at a time, so you should get at least
-> a 32K read at each position before a seek (more with a larger chunk
-> size).
-> 
-> Clearly this won't be fast.
-> 
-> The reason this algorithm was chosen was that it makes sense for every
-> possible raid10 layout, even though it might not be optimal for some
-> of them.
-> 
-> > 
-> > This is especially for raid10,f2, where I think I can make it much
-> > better, but posssibly also for other raid types, as input to an
-> > explanation on the wiki of what is really going on. 
-> 
-> Were I to try to make it fast for f2, I would probably shuffle the
-> bits in each request so that it did all the 'odd' chunks first, then
-> all the even chunks.
-> e.g. map
->    0 1 2 3 4 5 6 7 8 ...
-> to
->    0 1 4 5 8 9 .....  2 3 6 7 10 11 ....
-> (assuming a chunk size of '2').
-> 
-> The problem with this is that if you shutdown while part way though a
-> resync,  and then boot into a kernel which used a different
-> sequence, it would finish the resync checking the wrong blocks.
-> This is annoying but should not be insurmountable.
-> 
-> This way we leave the basic algorithm the same, but introduce
-> variations in the sequence for different specific layouts.
-> 
-> > 
-> > Are there references on the net? I tried to look but did not really find
-> > something.
-> 
-> Just the source, sorry.
-> 
-> > 
-> > I don't really understand why resync is going on for raid10,f2.
-> > But maybe it checks all of the array, and checks that the two copies are
-> > identical. Is that so? I got some communication with Neil that some
-> > writing is involved in the resync, I don't understand why. 
-> 
-> raid1 does resync simply by reading one device and writing all the
-> others, and this is conceptually easiest.  I had mistakenly thought
-> that I had used the same approach in raid10.
-> 
-> > 
-> > And what happens if a discrepancy is found? Which of the 2 copies are the
-> > good one? Maybe one could look if there are any CRC errors, or disk read
-> > retries going on. I could understand if it was a raid10,f3 - then if one
-> > was different from the 2 other copies - you could correct the odd copy.
-> 
-> There is no "good" block - if they are different, then all are wrong.
-> md/raid just tries to return a consistent value, and leave it up to
-> the filesystem to find and correct any errors.
-> 
-> > 
-> > For raid5 and raid6 I could imagine that the parity blocks were cheked.
-> 
-> If any inconsistency is found during a resync of raid4/5/6 the parity
-> blocks are changed to remove the inconsistency.  This may not be
-> "right", but it is least likely to be "wrong".
-> 
-> > 
-> > I could of cause read the code, but I would like an overview before
-> > dwelving into that part.
-> 
-> Sensible :-)
-> Enjoy your reading.
-> 
-> NeilBrown
+--
+http://www.wiesinger.com/
