@@ -1,94 +1,66 @@
-From: Gerhard Wiesinger <lists@wiesinger.com>
-Subject: Re: Lots of con-current I/O = resets SATA link? (2.6.25.10)
-Date: Sat, 12 Jul 2008 10:29:59 +0200 (CEST)
-Message-ID: <alpine.LFD.1.10.0807121025310.10748@bbs.intern>
-References: <alpine.DEB.1.10.0807051252200.12562@p34.internal.lan> <alpine.LFD.1.10.0807071649340.1160@bbs.intern> <alpine.LFD.1.10.0807071705490.2997@bbs.intern> <alpine.DEB.1.10.0807071149530.32508@p34.internal.lan> <alpine.LFD.1.10.0807080811560.5439@bbs.intern>
- <alpine.DEB.1.10.0807080433550.17980@p34.internal.lan> <alpine.LFD.1.10.0807081232350.32659@bbs.intern> <alpine.DEB.1.10.0807080915040.23688@p34.internal.lan> <alpine.LFD.1.10.0807090726200.686@bbs.intern>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: resync'ing - what is going on
+Date: Sat, 12 Jul 2008 20:44:48 +1000
+Message-ID: <18552.35616.626230.236249@notabene.brown>
+References: <20080710165459.GA17542@rap.rap.dk>
+	<18550.59093.835573.290313@notabene.brown>
+	<20080711222927.GA10862@rap.rap.dk>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <alpine.LFD.1.10.0807090726200.686@bbs.intern>
-Sender: linux-ide-owner@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: message from Keld Jorn Simonsen on Saturday July 12
+Sender: linux-raid-owner@vger.kernel.org
+To: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Saturday July 12, keld@dkuug.dk wrote:
+> I took the information here and made something for the wiki.
+> Comments welcome.  /keld
 
+Thanks for doing that.  I'm not motivated to work on the wiki myself,
+but I'm more than happy for anyone to take any secrets I divulge in
+emails and publish them there.
 
-On Wed, 9 Jul 2008, Gerhard Wiesinger wrote:
+> 
+> = recovery and resync =
+> 
+> The following is a recollection of what Neil Brown and others have
+> written 
+> on the linux-raid mailing list.
+> 
+> "resync" and "recovery" are handled very differently in raid10.
+> "check" and "repair" are special cases of "resync".
+> 
+> == recovery ==
+> 
+> The purpose of the recovery process is to fill a new disk with the
+> relevant 
+> information from a running array.
+> 
+> The assumption is that all data do the new disk needs to be written.
+> 
+> "recovery" walks addresses from the start to the end of the component
+> drives.
+...
+> 
+> == resync ==
+...
+> 
+> "resync" walks the addresses from the start to end of the array.
 
-> On Tue, 8 Jul 2008, Justin Piszcz wrote:
->
->>>>>> Hi Gerhard,
->>>> 
->>>> Please run:
->>>> 
->>>> smartctl -t short /dev/sdc
->>>> sleep 300
->>>> smartctl -t long /dev/sdc
->>>> 
->>>> Wait 2-3 hours or more and:
->>>> 
->>>> smartctl -a /dev/sdc
->>> 
->>> 
->>> I'm changing the disk one more time ...
->> 
->> Once you replace the disk please re-run the tests shown above and show us 
->> the output please.
->> 
->> How many SAMSUNG disks have you gone through, do they really fail that 
->> often?
->> 
->
-> Hello Justin!
->
-> Setup Power suppply:
-> sda-sdd are on the same power supply cable, sde, sdf are on a second one.
->
-> I changed the disk to a new SAMSUNG disk and the first raid resync did NOT 
-> work and I had 1 reallocated sector ...
->
-> Also the RMA guy at our very good computer store (http://www.ditech.at/) were 
-> helpfull in changing the disks and he hates the SAMSUNG disks because of high 
-> RMA rates ...
->
-> But:
-> smart checks were ok (details see below). The smart checks are shown as 
-> aborted, but before running the next tests they were at "Completed without 
-> error" (strange).
->
-> Now sdc has it's own power cable and I'm running a raid resync now.
->
-> Power supply is:
-> ATX 385 Watt, ENERMAX PRO82+
->
-> Load on power supply measured on 220V side with a true RMS Wattmeter:
-> Power off: 6,5W
-> Max seen at power up: 196W
-> BIOS: 114,1W
-> Linux idle: 92,0W
-> 100% Disk I/O, 100% CPU load: 149,6W
-> => Everything fine and as expected.
->
-> I'll keep you up to date ...
->
+It's probably worth noting that this difference between recovery and
+resync in specific to raid10.
 
-Hello!
+recovery always follows the address space of component drives.
 
-It looks like it works now without any problems:
-*) Serveral RAID checks (once a day)
-*) smartctl checks were fine
-*) Only one reallocated sector
-*) Writing the disk full with random data
+resync:
+  on raid10, follows the address space of the array
+  on raid4/5/6, follows the address space of component drives.
+  on raid1, the two address spaces are the same.
 
-So the possibilities for the fault are:
-*) SATA power connector (most likely I would guess)
-*) 4th disk is now ok
-*) Other 220V power cable connector through the Wattmeter
+Another way to say it is that raid10-resync follows the address space
+of the array, everything else follows the component drives.
 
-Ciao,
-Gerhard
-
---
-http://www.wiesinger.com/
+NeilBrown
