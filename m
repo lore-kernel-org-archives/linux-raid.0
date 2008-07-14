@@ -1,44 +1,41 @@
-From: "David Lethe" <david@santools.com>
-Subject: RE: How to avoid complete rebuild of RAID 6 array (6/8 active devices)
-Date: Mon, 14 Jul 2008 11:54:50 -0500
-Message-ID: <A20315AE59B5C34585629E258D76A97C010D2DB0@34093-C3-EVS3.exchange.rackspace.com>
-References: <41931C59-9A91-47A6-A81C-EC14001DA95B@gmail.com>	<20080625161357.GH23944@skl-net.de>	<18532.50062.63173.620773@notabene.brown> <48680586.609@tmr.com> <g5fam0$8oe$1@ger.gmane.org> <487B7B74.3010903@dgreaves.com>
+From: Ovidio Borrero <ovidioborrero@gmail.com>
+Subject: Mdadm Live data conversion
+Date: Mon, 14 Jul 2008 11:19:14 -0700
+Message-ID: <487B98A2.7080904@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
-In-Reply-To: <487B7B74.3010903@dgreaves.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Greaves <david@dgreaves.com>, Matthias Urlichs <matthias@urlichs.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-LS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZyb206IGxpbnV4LXJhaWQtb3duZXJAdmdlci5r
-ZXJuZWwub3JnIFttYWlsdG86bGludXgtcmFpZC1vd25lckB2Z2VyLmtlcm5lbC5vcmddIE9uIEJl
-aGFsZiBPZiBEYXZpZCBHcmVhdmVzDQpTZW50OiBNb25kYXksIEp1bHkgMTQsIDIwMDggMTE6MTUg
-QU0NClRvOiBNYXR0aGlhcyBVcmxpY2hzDQpDYzogbGludXgtcmFpZEB2Z2VyLmtlcm5lbC5vcmcN
-ClN1YmplY3Q6IFJlOiBIb3cgdG8gYXZvaWQgY29tcGxldGUgcmVidWlsZCBvZiBSQUlEIDYgYXJy
-YXkgKDYvOCBhY3RpdmUgZGV2aWNlcykNCg0KDQo+SSd2ZSBmb3VuZCB0aGF0IG9uY2UgYSBkaXNr
-IHN0YXJ0cyB0byBnbyBiYWQgdGhlcmUgaXMgYSB2ZXJ5IHN0cm9uZyB0ZW5kZW5jeSBmb3INCj5p
-dCB0byBjb250aW51ZSB0byBkZXRlcmlvcmF0ZS4NCg0KPlNvIEkgZG9uJ3QgcmVwbGFjZSBkaXNr
-cyBiZWNhdXNlIHRoZXkgaGF2ZSBhIGJhZCBzZWN0b3I7IEkgcmVwbGFjZSB0aGVtIGJlY2F1c2UN
-Cj5JIHN1c3BlY3QgdGhleSB3aWxsIGZhaWwgbW9yZSBhcyB0aW1lIGdvZXMgYnkuDQoNCj5TdXJl
-LCBzb21lIGRvbid0IC0gSSBkb24ndCB3YW50IHRvIHRha2UgdGhhdCBjaGFuY2UuDQoNCj5EYXZp
-ZA0KDQpEaWZmZXJlbnQgZGlzayB0ZWNobm9sb2dpZXMgKFNBUywgU0FUQSwgRkMsIGV0YykgYW5k
-IHRoZSByb290IGNhdXNlIGZvciBhICJiYWQiIHNlY3RvciB2YXJ5IHdpZGVseS4gIEl0IGlzIHVu
-d2lzZSB0byBhc3N1bWUgdGhhdCBhIGNlcnRhaW4gZGlzayB3aWxsIGhhdmUgYSAic3Ryb25nIiB0
-ZW5kZW5jeSBmb3IgYSBmYWlsdXJlIGFmdGVyIGEgImJhZCIgc2VjdG9yLiAgDQoNCldpdGhvdXQg
-YW5hbHl6aW5nIHRoZSBzZW5zZSBjb2RlIG9yIFMuTS5BLlIuVC4gbG9ncyByZXR1cm5lZCBieSB0
-aGUgZmFpbGVkIHJlYWQgeW91IGNhbid0IG1ha2UgYW55IGFzc3VtcHRpb25zIGFib3V0IGhvdyB0
-aGUgZXJyb3IgYWZmZWN0cyB0aGUgaGVhbHRoIG9mIHRoZSBkcml2ZSBvciBldmVuIGp1c3QgdGhl
-IG1lZGlhLiANCg0KTm93IGlmIHlvdXIgZXhwZXJpZW5jZSBpcyBsaW1pdGVkIHRvIGNvbnN1bWVy
-LWNsYXNzIEFUQS9TQVRBIGRpc2tzLCB0aGVuIEkgYWdyZWUgdGhlcmUgaXMgYSBoaWdoZXIgcHJv
-YmFiaWxpdHkgb2YgYSAybmQgZmFpbHVyZSB0aGVuIG9uIGVudGVycHJpc2UtY2xhc3MgZmlicmUg
-Y2hhbm5lbCBkaXNrcywgYnV0IGl0IGlzIGNlcnRhaW5seSBub3QgYSAic3Ryb25nIHRlbmRlbmN5
-IiBvZiBmYWlsdXJlLiAgVGhlcmUgaXNuJ3QgZXZlbiBhIGxpa2VsaWhvb2Qgb2YgZmFpbHVyZS4g
-IChCdXQgY2F1c2UgZm9yIGNvbmNlcm4sIGVzcGVjaWFsbHkgaWYgdGhlIGRpc2sgd2FzIGp1c3Qg
-cHV0IGludG8gc2VydmljZSkuDQoNCkl0IGNvdWxkIGJlIGFuIEVDQyBlcnJvciB0aGF0IHdhcyBj
-YXVzZWQgYnkgaW1wcm9wZXIgcG93ZXIgb2ZmIG9yIGEgYmFkIGNhYmxlLiAgDQoNCkRhdmlkIEAg
-c2FudG9vbHMuY29tDQoNCg0KDQoNCg0K
+Greetings,
+
+I posted this on linux forums and was hoping to see what kind of 
+responce i could get but they recommended emailing you guys. I apologize 
+if i shouldnt be emailing you, but here's my question:
+
+"Well i know in windows i can convert the live drive to a dynamic drive, 
+and then create the raid in just a few simple steps, but how can i do 
+this in linux? is it possible to convert the hard drive fs type to to 
+fd? how can i make sda2 and sdb2 into md0? is this possible? heres my 
+current fdisk output:
+
+Disk /dev/sda: 33.5 GB, 33554497536 bytes
+255 heads, 63 sectors/track, 4079 cylinders
+Units = cylinders of 16065 * 512 = 8225280 bytes
+Disk identifier: 0x0005816c
+
+Device Boot Start End Blocks Id System
+/dev/sda1 * 1 25 200781 83 Linux
+/dev/sda2 26 4079 32563755 8e Linux LVM
+
+Disk /dev/sdb: 33.5 GB, 33554497536 bytes
+255 heads, 63 sectors/track, 4079 cylinders
+Units = cylinders of 16065 * 512 = 8225280 bytes
+Disk identifier: 0xf3fa89fb
+
+Device Boot Start End Blocks Id System
+/dev/sdb1 1 25 200781 fd Linux raid autodetect
+/dev/sdb2 26 4079 32563755 fd Linux raid autodetect"
