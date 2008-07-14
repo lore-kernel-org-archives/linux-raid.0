@@ -1,38 +1,44 @@
-From: David Greaves <david@dgreaves.com>
-Subject: Re: How to avoid complete rebuild of RAID 6 array (6/8 active devices)
-Date: Mon, 14 Jul 2008 17:14:44 +0100
-Message-ID: <487B7B74.3010903@dgreaves.com>
-References: <41931C59-9A91-47A6-A81C-EC14001DA95B@gmail.com>	<20080625161357.GH23944@skl-net.de>	<18532.50062.63173.620773@notabene.brown> <48680586.609@tmr.com> <g5fam0$8oe$1@ger.gmane.org>
+From: "David Lethe" <david@santools.com>
+Subject: RE: How to avoid complete rebuild of RAID 6 array (6/8 active devices)
+Date: Mon, 14 Jul 2008 11:54:50 -0500
+Message-ID: <A20315AE59B5C34585629E258D76A97C010D2DB0@34093-C3-EVS3.exchange.rackspace.com>
+References: <41931C59-9A91-47A6-A81C-EC14001DA95B@gmail.com>	<20080625161357.GH23944@skl-net.de>	<18532.50062.63173.620773@notabene.brown> <48680586.609@tmr.com> <g5fam0$8oe$1@ger.gmane.org> <487B7B74.3010903@dgreaves.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <g5fam0$8oe$1@ger.gmane.org>
+Content-class: urn:content-classes:message
+In-Reply-To: <487B7B74.3010903@dgreaves.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Matthias Urlichs <matthias@urlichs.de>
+To: David Greaves <david@dgreaves.com>, Matthias Urlichs <matthias@urlichs.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Matthias Urlichs wrote:
-> On Sun, 29 Jun 2008 17:58:30 -0400, Bill Davidsen wrote:
-> 
->> Of course build an array out of drives so unstable that you can't safelt
->> *run* a check is another topic.
-> 
-> It's a topic that needs to be addressed sooner or later, however.
-> 
-> Let's face it, drives do develop bad spots.
-> 
-> Tossing a perfectly good drive because 0.0000064% of the data cannot be
-> read is wasteful (assuming a 64-kByte area of an 1-terabyte disk).
-
-I've found that once a disk starts to go bad there is a very strong tendency for
-it to continue to deteriorate.
-
-So I don't replace disks because they have a bad sector; I replace them because
-I suspect they will fail more as time goes by.
-
-Sure, some don't - I don't want to take that chance.
-
-David
-
+LS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZyb206IGxpbnV4LXJhaWQtb3duZXJAdmdlci5r
+ZXJuZWwub3JnIFttYWlsdG86bGludXgtcmFpZC1vd25lckB2Z2VyLmtlcm5lbC5vcmddIE9uIEJl
+aGFsZiBPZiBEYXZpZCBHcmVhdmVzDQpTZW50OiBNb25kYXksIEp1bHkgMTQsIDIwMDggMTE6MTUg
+QU0NClRvOiBNYXR0aGlhcyBVcmxpY2hzDQpDYzogbGludXgtcmFpZEB2Z2VyLmtlcm5lbC5vcmcN
+ClN1YmplY3Q6IFJlOiBIb3cgdG8gYXZvaWQgY29tcGxldGUgcmVidWlsZCBvZiBSQUlEIDYgYXJy
+YXkgKDYvOCBhY3RpdmUgZGV2aWNlcykNCg0KDQo+SSd2ZSBmb3VuZCB0aGF0IG9uY2UgYSBkaXNr
+IHN0YXJ0cyB0byBnbyBiYWQgdGhlcmUgaXMgYSB2ZXJ5IHN0cm9uZyB0ZW5kZW5jeSBmb3INCj5p
+dCB0byBjb250aW51ZSB0byBkZXRlcmlvcmF0ZS4NCg0KPlNvIEkgZG9uJ3QgcmVwbGFjZSBkaXNr
+cyBiZWNhdXNlIHRoZXkgaGF2ZSBhIGJhZCBzZWN0b3I7IEkgcmVwbGFjZSB0aGVtIGJlY2F1c2UN
+Cj5JIHN1c3BlY3QgdGhleSB3aWxsIGZhaWwgbW9yZSBhcyB0aW1lIGdvZXMgYnkuDQoNCj5TdXJl
+LCBzb21lIGRvbid0IC0gSSBkb24ndCB3YW50IHRvIHRha2UgdGhhdCBjaGFuY2UuDQoNCj5EYXZp
+ZA0KDQpEaWZmZXJlbnQgZGlzayB0ZWNobm9sb2dpZXMgKFNBUywgU0FUQSwgRkMsIGV0YykgYW5k
+IHRoZSByb290IGNhdXNlIGZvciBhICJiYWQiIHNlY3RvciB2YXJ5IHdpZGVseS4gIEl0IGlzIHVu
+d2lzZSB0byBhc3N1bWUgdGhhdCBhIGNlcnRhaW4gZGlzayB3aWxsIGhhdmUgYSAic3Ryb25nIiB0
+ZW5kZW5jeSBmb3IgYSBmYWlsdXJlIGFmdGVyIGEgImJhZCIgc2VjdG9yLiAgDQoNCldpdGhvdXQg
+YW5hbHl6aW5nIHRoZSBzZW5zZSBjb2RlIG9yIFMuTS5BLlIuVC4gbG9ncyByZXR1cm5lZCBieSB0
+aGUgZmFpbGVkIHJlYWQgeW91IGNhbid0IG1ha2UgYW55IGFzc3VtcHRpb25zIGFib3V0IGhvdyB0
+aGUgZXJyb3IgYWZmZWN0cyB0aGUgaGVhbHRoIG9mIHRoZSBkcml2ZSBvciBldmVuIGp1c3QgdGhl
+IG1lZGlhLiANCg0KTm93IGlmIHlvdXIgZXhwZXJpZW5jZSBpcyBsaW1pdGVkIHRvIGNvbnN1bWVy
+LWNsYXNzIEFUQS9TQVRBIGRpc2tzLCB0aGVuIEkgYWdyZWUgdGhlcmUgaXMgYSBoaWdoZXIgcHJv
+YmFiaWxpdHkgb2YgYSAybmQgZmFpbHVyZSB0aGVuIG9uIGVudGVycHJpc2UtY2xhc3MgZmlicmUg
+Y2hhbm5lbCBkaXNrcywgYnV0IGl0IGlzIGNlcnRhaW5seSBub3QgYSAic3Ryb25nIHRlbmRlbmN5
+IiBvZiBmYWlsdXJlLiAgVGhlcmUgaXNuJ3QgZXZlbiBhIGxpa2VsaWhvb2Qgb2YgZmFpbHVyZS4g
+IChCdXQgY2F1c2UgZm9yIGNvbmNlcm4sIGVzcGVjaWFsbHkgaWYgdGhlIGRpc2sgd2FzIGp1c3Qg
+cHV0IGludG8gc2VydmljZSkuDQoNCkl0IGNvdWxkIGJlIGFuIEVDQyBlcnJvciB0aGF0IHdhcyBj
+YXVzZWQgYnkgaW1wcm9wZXIgcG93ZXIgb2ZmIG9yIGEgYmFkIGNhYmxlLiAgDQoNCkRhdmlkIEAg
+c2FudG9vbHMuY29tDQoNCg0KDQoNCg0K
