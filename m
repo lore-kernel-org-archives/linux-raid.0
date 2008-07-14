@@ -1,42 +1,41 @@
-From: "NeilBrown" <neilb@suse.de>
-Subject: Re: mdadm-2.6.4 with linux-2.6.18
-Date: Mon, 14 Jul 2008 15:34:43 +1000 (EST)
-Message-ID: <47054.192.168.1.70.1216013683.squirrel@neil.brown.name>
-References: <b47423310807132217k7c7444c7mdb513b80c0913596@mail.gmail.com>
+From: Matthias Urlichs <matthias@urlichs.de>
+Subject: Re: How to avoid complete rebuild of RAID 6 array (6/8 active
+ devices)
+Date: Mon, 14 Jul 2008 10:44:16 +0000 (UTC)
+Message-ID: <g5fam0$8oe$1@ger.gmane.org>
+References: <41931C59-9A91-47A6-A81C-EC14001DA95B@gmail.com>
+	<20080625161357.GH23944@skl-net.de>
+	<18532.50062.63173.620773@notabene.brown> <48680586.609@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <b47423310807132217k7c7444c7mdb513b80c0913596@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: kishore goud <kishoreoff@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, July 14, 2008 3:17 pm, kishore goud wrote:
-> Hi neil,
->
-> I have upgraded from mdadm-2.5.4 to mdadm-2.6.4. I am using linux-2.6.18
-> kernel.  Do I need to patch kernel after upgrading mdadm?  If I have to
-> patch kernel, Could you please let me know, where are the patches.
+On Sun, 29 Jun 2008 17:58:30 -0400, Bill Davidsen wrote:
 
-No, you don't need to patch the kernel after upgrading mdadm.
-Some things might not work in older kernels that do work in newer kernels,
-but if you have a reason to stay with 2.6.18, then do so.
+> Of course build an array out of drives so unstable that you can't safelt
+> *run* a check is another topic.
 
->
-> Also are patches(kernel-patch-2.6.18/18.6/19) in mdadm-2.6.4, Should I
-> apply
-> this patch as well.
->
+It's a topic that needs to be addressed sooner or later, however.
 
-That patch is only needed if you want to use the --incremental functionality
-of mdadm.
-If you do want to use that functionality, then you should really
-upgrade your kernel.
-If you don't then don't worry about the patches.
+Let's face it, drives do develop bad spots.
 
-I'll probably remove them from the next release of mdadm.
+Tossing a perfectly good drive because 0.0000064% of the data cannot be
+read is wasteful (assuming a 64-kByte area of an 1-terabyte disk).
 
-NeilBrown
+My basic approach would be, whenever a read error is encountered, to tell
+the disk drive to fix the bad area (either by rewriting the problem area
+or by hardware reallocation or by using devmapper), fix the data (either
+tell the RAID driver that this particular area needs to be recovered or
+do it in userspace), and re-add the drive.
+
+So ... is there some userspace code which, given a bunch of RAID disks,
+can rebuild the array? Limiting said rebuild to one particular area on
+one particular disk should then be reasonably easy.
+
+-- 
+Matthias Urlichs
 
