@@ -1,41 +1,33 @@
-From: Ovidio Borrero <ovidioborrero@gmail.com>
-Subject: Mdadm Live data conversion
-Date: Mon, 14 Jul 2008 11:19:14 -0700
-Message-ID: <487B98A2.7080904@gmail.com>
+From: tirumalareddy marri <tirumalareddymarri@yahoo.com>
+Subject: Debugging new HW  XOR engine driver
+Date: Mon, 14 Jul 2008 11:26:02 -0700 (PDT)
+Message-ID: <961575.29492.qm@web81301.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Greetings,
+I am new to this mailing list. I am working on adding driver for HW acc=
+elerated XOR engine. I am able to get XOR engine working and created AD=
+MA interface . I am able to create RAID-5 using mdadm. After creating f=
+ilesystem, I tried to mount the /dev/md0 . It failied to mount saying t=
+hat "ext3_check_descriptors: Block bitmap for group 384 not in group" .=
+ For sure there is some thing wrong at driver level.=20
+=A0 I used "dd" command to read/write to /dev/md0. It seems read/writes=
+ are not a problem. When I do small file sizes of 10K , everything fine=
+=2E When I write a file of size of 1MB or above seems to have issue. Lo=
+oks like partial write fine too.
+=A0 I am looking for the ways to debug the problem. Also looking for su=
+ggestions from the people who developed HW accelerated drivers and the =
+issue thy run into. Are the some tools to identify the corruptions.
+Thanks in Advance.
+--Tirumala
 
-I posted this on linux forums and was hoping to see what kind of 
-responce i could get but they recommended emailing you guys. I apologize 
-if i shouldnt be emailing you, but here's my question:
-
-"Well i know in windows i can convert the live drive to a dynamic drive, 
-and then create the raid in just a few simple steps, but how can i do 
-this in linux? is it possible to convert the hard drive fs type to to 
-fd? how can i make sda2 and sdb2 into md0? is this possible? heres my 
-current fdisk output:
-
-Disk /dev/sda: 33.5 GB, 33554497536 bytes
-255 heads, 63 sectors/track, 4079 cylinders
-Units = cylinders of 16065 * 512 = 8225280 bytes
-Disk identifier: 0x0005816c
-
-Device Boot Start End Blocks Id System
-/dev/sda1 * 1 25 200781 83 Linux
-/dev/sda2 26 4079 32563755 8e Linux LVM
-
-Disk /dev/sdb: 33.5 GB, 33554497536 bytes
-255 heads, 63 sectors/track, 4079 cylinders
-Units = cylinders of 16065 * 512 = 8225280 bytes
-Disk identifier: 0xf3fa89fb
-
-Device Boot Start End Blocks Id System
-/dev/sdb1 1 25 200781 fd Linux raid autodetect
-/dev/sdb2 26 4079 32563755 fd Linux raid autodetect"
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
