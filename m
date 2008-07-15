@@ -1,42 +1,38 @@
-From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
-Subject: Re: How to avoid complete rebuild of RAID 6 array (6/8 active devices)
-Date: Tue, 15 Jul 2008 16:24:50 +0200
-Message-ID: <20080715142450.GA21485@rap.rap.dk>
-References: <41931C59-9A91-47A6-A81C-EC14001DA95B@gmail.com> <20080625161357.GH23944@skl-net.de> <18532.50062.63173.620773@notabene.brown> <48680586.609@tmr.com> <g5fam0$8oe$1@ger.gmane.org> <487B7B74.3010903@dgreaves.com> <20080714225816.GS4314@kiste.smurf.noris.de>
+From: Ben Martin <monkeyiq@users.sourceforge.net>
+Subject: Benchmarks: Linux Kernel RAID vs a Hardware RAID setup
+Date: Wed, 16 Jul 2008 00:06:09 +1000
+Message-ID: <1216130769.5633.318.camel@sam.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-XrQ9LGOjU4QKb4Pnu3sR"
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20080714225816.GS4314@kiste.smurf.noris.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Matthias Urlichs <smurf@smurf.noris.de>
-Cc: David Greaves <david@dgreaves.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Jul 15, 2008 at 12:58:16AM +0200, Matthias Urlichs wrote:
-> Hi,
-> 
-> However, even if they do in fact continue to deteriorate, the ability to
-> re-map the offending areas and continue gives me an order of magnitude
-> more time to deal with the problem.
-> 
-> In fact, as I said, there may be problems lurking on other disks which I
-> just haven't found yet (how often do you read all 5TB of your data?),
-> which means that a feature like this is the difference between being
-> able to recover and certain data loss, RAID-6 nonwithstanding.
 
-One idea about this - One could read and write the disks perodically,
-say once a month. In this way single bit errors that could have evolved
-on the disks coule be repaired, as the CRC saves the one bit error, and 
-gets it corrected when writing. For a raid - if an error occurs, then
-the sound data could be used, and if the error persists after a rewrite
-on the bad disk, that data should then be remapped to a sound area on
-the drive. Maybe people already have implemented this. SMART data could
-also be consulted. 
+--=-XrQ9LGOjU4QKb4Pnu3sR
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-I thought of badblocks -n to do this, but also raid check could be a
-place to do it. When writing ons should of cause take care that nobody
-else is writing the same data.  
+Hi,
+  Apologies if posting this here is inappropriate but a recent article
+of mine compares the Linux Kernel RAID code to an $800 hardware RAID
+card and might be of interest to list members:
 
-best regards
-keld
+http://www.linux.com/feature/140734
+
+
+--=-XrQ9LGOjU4QKb4Pnu3sR
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+
+iEYEABECAAYFAkh8rtEACgkQsIKOrI+5WvPtqgCgifPh0fFVaJ7DLPm1nLofbb9n
+yCoAn1tq0x/aOE/bkWmrUAC/tipE7FIU
+=KPdR
+-----END PGP SIGNATURE-----
+
+--=-XrQ9LGOjU4QKb4Pnu3sR--
+
