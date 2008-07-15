@@ -1,61 +1,84 @@
-From: pg_lxra@lxra.for.sabi.co.UK (Peter Grandi)
-Subject: Re: Benchmarks: Linux Kernel RAID vs a Hardware RAID setup
-Date: Tue, 15 Jul 2008 21:40:28 +0100
-Message-ID: <18557.2876.90167.508621@tree.ty.sabi.co.uk>
-References: <1216130769.5633.318.camel@sam.localdomain>
+From: tirumalareddy marri <tirumalareddymarri@yahoo.com>
+Subject: Re: Debugging new HW XOR engine driver
+Date: Tue, 15 Jul 2008 15:52:05 -0700 (PDT)
+Message-ID: <504385.34173.qm@web81301.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1216130769.5633.318.camel@sam.localdomain>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: tirumalareddy marri <tirumalareddymarri@yahoo.com>, Dan Williams <dan.j.williams@intel.com>
+Cc: thomas62186218@aol.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+I am able to create a disk size of 40MB and mount it(mkfs.ext3 -b 4096 =
+/dev/md0 10000). I was able to copy files to this mounted disk and read=
+ them back. If I increased the size more than 40MB file system if faili=
+ng to mount.
+=A0 Is it possible that data I have read/write was in page cache and ne=
+ver really written to Hard Disks=A0 ? Is it safe to say RAID-5 is parti=
+ally working ?
+Thanks,
+Marri
 
-> [ ... ] compares the Linux Kernel RAID code to an $800
-> hardware RAID card and might be of interest to list members:
-> http://www.linux.com/feature/140734
 
-Perhaps they could, if they were accompanied by vital details
-like the exact experimental conditions used, because those who
-talk of Bonnie++ and Iozone etc. as if they were mostly useful
-benchmarks tend, in my experience, to forget about the several
-pitfalls one can get into. I have seen several speed tests in
-this mailing lists from the usual suspects, and most range from
-the grossly meaningless to the rather misleading.
+----- Original Message ----
+=46rom: tirumalareddy marri <tirumalareddymarri@yahoo.com>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: thomas62186218@aol.com; linux-raid@vger.kernel.org
+Sent: Tuesday, July 15, 2008 1:19:55 PM
+Subject: Re: Debugging new HW XOR engine driver
 
-The comparison above is somewhat pointless to read without
-knowing which elevator, readhead, plugging/unplugging, kernel
-version (even if some ot these are somewhat implicit in Fedora
-9, e.g. CFQ) and so on; also whether caching was enabled or not
-between runs (even if the use, if properly done, of 100G
-datasets with 2G memory might reduce the influence of that,
-except of course for the CPU cost).
+Hi Dan,
+=A0 440SPe was my refence driver . I am working new SOC with some modif=
+ications to XOR engines. I have most of the stuff working like ADMA and=
+ XOR(tested one block of data). When I use ADMA and SW XOR(with out=A0H=
+W XOR) RAID-5 works fine.=A0=A0 =A0When combined ADMA + XOR , having is=
+sues. =A0When I create a file system and try to mount it fails. Which c=
+ould be becasue of some state problem in XOR calculations.
+Is there any document about how=A0 full stripe write, partial stripe wr=
+ites and recovery=A0 works in MD driver ?
+Thanks,
+Marri
+=A0=20
+=A0
 
-  The "using equal-sized partitions" bit is also worrying: it is
-  not clear whether the sw RAID is built on the partitions or
-  viceversa. This has a huge influence on alignment, and I am
-  not sure that "chunk and stride aligned to the RAID where
-  possible" can be relied upon without seeing exactly how the
-  filesystems were created.
 
-  Also, the graphs seem mislabeled, as all results are reported
-  as coming from Bonnie++, including the metadata ones which are
-  more likely to be coming from Iozone. Also for comparison they
-  should have been drawn to the same Y scale.
+----- Original Message ----
+=46rom: Dan Williams <dan.j.williams@intel.com>
+To: tirumalareddy marri <tirumalareddymarri@yahoo.com>
+Cc: thomas62186218@aol.com; linux-raid@vger.kernel.org
+Sent: Tuesday, July 15, 2008 11:34:48 AM
+Subject: Re: Debugging new HW XOR engine driver
 
-There are so many nonlinearities in the Linux IO subsystem where
-one can get wildly different results with small changes in
-obscure parameters (or large changes in parameters that should
-matter little, like the block device readahead) that overall
-tests like the above are not that useful without a list of the
-exact conditions.
+On Tue, Jul 15, 2008 at 9:59 AM, tirumalareddy marri
+<tirumalareddymarri@yahoo.com> wrote:
+> I am working AMCC powerPC based SoC. It has XOR engine built in the H=
+W.
 
-Overall however most of the results are within the boundaries of
-very rough plausibility, but the devil is in the details.
+Is this related to the driver started here?
 
-The overall conclusions that alignment matters a great deal with
-parity RAID and that a system with a recent CPU and a PCIe bus
-can outperform in most cases a hardware RAID card are not that
-novel...
+[PATCH] [PPC32]=A0 ADMA support for PPC 440SPe processors.
+http://marc.info/?l=3Dlinux-raid&m=3D117400143317440&w=3D2
+
+If so, that may be a better starting point.
+
+--
+Dan
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at=A0 http://vger.kernel.org/majordomo-info.html
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at=A0 http://vger.kernel.org/majordomo-info.html
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
