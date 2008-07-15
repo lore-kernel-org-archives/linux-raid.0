@@ -1,39 +1,39 @@
-From: thomas62186218@aol.com
-Subject: Re: Benchmarks: Linux Kernel RAID vs a Hardware RAID setup
-Date: Tue, 15 Jul 2008 12:50:57 -0400
-Message-ID: <8CAB4B2168C7183-B68-AD2@webmail-ng19.sysops.aol.com>
-References: <1216130769.5633.318.camel@sam.localdomain> <20080715163932.GA23164@rap.rap.dk>
+From: tirumalareddy marri <tirumalareddymarri@yahoo.com>
+Subject: Re: Debugging new HW  XOR engine driver
+Date: Tue, 15 Jul 2008 09:59:43 -0700 (PDT)
+Message-ID: <817998.29129.qm@web81306.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8;
-	format=flowed
+Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20080715163932.GA23164@rap.rap.dk>
 Sender: linux-raid-owner@vger.kernel.org
-To: keld@dkuug.dk, monkeyiq@users.sourceforge.net
-Cc: linux-raid@vger.kernel.org
+To: thomas62186218@aol.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Ben,
+I am working AMCC powerPC based SoC. It has=A0XOR engine built in the H=
+W.=A0=20
+Thanks,
+Marri
 
-Nice reporting on the benchmarks. It would be helpful though to run=20
-these tests without a file system involved, using a block level=20
-benchmark utility like fio or similar to really measure the RAID=20
-performance in isolation. While you did use a file system in both your=20
-hardware and software RAID tests, before directly implicating software=20
-RAID, it makes sense to isolate it as much as possible in the testing=20
-by eliminating the file system for benchmarks.
+----- Original Message ----
+=46rom: "thomas62186218@aol.com" <thomas62186218@aol.com>
+To: tirumalareddymarri@yahoo.com; linux-raid@vger.kernel.org
+Sent: Tuesday, July 15, 2008 9:35:15 AM
+Subject: Re: Debugging new HW XOR engine driver
 
-Thanks again for the report!
+Regarding your HW XOR driver, is this for Intel x86 or some other=20
+platform. I am assuming x86 since you did not mention another other=20
+processor platform but in that case, what hardware are you using for=20
+XOR?
+
 -Thomas
 
 
 -----Original Message-----
-=46rom: Keld J=C3=B8rn Simonsen <keld@dkuug.dk>
-To: Ben Martin <monkeyiq@users.sourceforge.net>
-Cc: linux-raid@vger.kernel.org
-Sent: Tue, 15 Jul 2008 9:39 am
-Subject: Re: Benchmarks: Linux Kernel RAID vs a Hardware RAID setup
+=46rom: tirumalareddy marri <tirumalareddymarri@yahoo.com>
+To: linux-raid@vger.kernel.org
+Sent: Mon, 14 Jul 2008 11:26 am
+Subject: Debugging new HW=A0 XOR engine driver
 
 
 
@@ -44,46 +44,49 @@ Subject: Re: Benchmarks: Linux Kernel RAID vs a Hardware RAID setup
 
 
 
-On Wed, Jul 16, 2008 at 12:06:09AM +1000, Ben Martin wrote:
-> Hi,
->   Apologies if posting this here is inappropriate but a recent articl=
-e
-> of mine compares the Linux Kernel RAID code to an $800 hardware RAID
-> card and might be of interest to list members:
->
-> http://www.linux.com/feature/140734
+I am new to this mailing list. I am working on adding driver for HW=20
+accelerated
+XOR engine. I am able to get XOR engine working and created ADMA=20
+interface . I
+am able to create RAID-5 using mdadm. After creating filesystem, I=20
+tried to
+mount the /dev/md0 . It failied to mount saying that=20
+"ext3_check_descriptors:
+Block bitmap for group 384 not in group" . For sure there is some thing=
+=20
+wrong at
+driver level.
+=A0 I used "dd" command to read/write to /dev/md0. It seems read/writes=
+=20
+are not a
+problem. When I do small file sizes of 10K , everything fine. When I=20
+write a
+file of size of 1MB or above seems to have issue. Looks like partial=20
+write fine
+too.
+=A0 I am looking for the ways to debug the problem. Also looking for=20
+suggestions
+from the people who developed HW accelerated drivers and the issue thy=20
+run into.
+Are the some tools to identify the corruptions.
+Thanks in Advance.
+--Tirumala
 
-It is (at least to me) very interesting to see comparisons on HW vs SW
-raid.
+--
+To unsubscribe from this list: send=3D2
+0the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at=A0 http://vger.kernel.org/majordomo-info.html
 
-I think tho, that you give it some bias not testing the best
-configurations for Linux SW raid. For example raid10, the f2 and o2
-layouts are faster than n2, and you don't know if Adaptec has some kind
-of improved layout.
 
-It would be interesting=20
-if you could enhance your article with=20
-benchmarks
-on raid10, f2 and o2 layouts. I think they would outperform HW raid, at
-least on input. And I would like to see how they perform on outout and
-rewrite, with ext3 and xfs. We do have some tests, but many of them are
-without a file system layer.
 
-I would also welcome test with mobo HW RAID - Many mobo's today come
-with some HW raid functionality, and many people would be in the
-situation of whether to choose a HW or SW configuration.
 
-best regards
-keld
+
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
 the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
-
-
+More majordomo info at=A0 http://vger.kernel.org/majordomo-info.html
 
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
