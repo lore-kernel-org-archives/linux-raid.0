@@ -1,36 +1,30 @@
-From: "Alan D. Brunelle" <Alan.Brunelle@hp.com>
+From: Richard Scobie <richard@sauce.co.nz>
 Subject: Re: Benchmarks: Linux Kernel RAID vs a Hardware RAID setup
-Date: Wed, 16 Jul 2008 14:54:16 -0400
-Message-ID: <487E43D8.60106@hp.com>
-References: <1216130769.5633.318.camel@sam.localdomain>
+Date: Thu, 17 Jul 2008 07:34:34 +1200
+Message-ID: <487E4D4A.9040809@sauce.co.nz>
+References: <1216130769.5633.318.camel@sam.localdomain>	 <487CC660.9030004@ziu.info> <1216179392.5633.348.camel@sam.localdomain> <487D7139.5050302@sauce.co.nz> <8CAB57DC49B9CE4-C68-3155@WEBMAIL-NG09.sysops.aol.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1216130769.5633.318.camel@sam.localdomain>
+In-Reply-To: <8CAB57DC49B9CE4-C68-3155@WEBMAIL-NG09.sysops.aol.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Ben Martin <monkeyiq@users.sourceforge.net>
-Cc: linux-raid@vger.kernel.org
+To: thomas62186218@aol.com
+Cc: monkeyiq@users.sourceforge.net, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Ben Martin wrote:
-> Hi,
->   Apologies if posting this here is inappropriate but a recent article
-> of mine compares the Linux Kernel RAID code to an $800 hardware RAID
-> card and might be of interest to list members:
+thomas62186218@aol.com wrote:
+> Richard,
 > 
-> http://www.linux.com/feature/140734
-> 
+> Are you sure that the patch you reference below is actually in 2.6.26? I 
+> checked the CHANGELOG and couldn't find anything about get priority 
+> stripe in there (maybe its called something else now)?
 
-Hi Ben -
+No, I haven't checked but was just going by the comment at the top of 
+the post I referenced.
 
-Did you do any performance testing of running /multiple/ disks through
-the Adaptec card w/out HW RAID enabled - for example, comparing the 4
-ports on the mobo against 4 drives exported through the Adaptec card?
-
-I wonder if there are any potential bottleneck issues with the single
-adapter card handling 6 independent drives (when testing SW RAID) versus
-one exported "drive" (when testing HW RAID).
+Dan may be able to comment.
 
 Regards,
-Alan
+
+Richard
