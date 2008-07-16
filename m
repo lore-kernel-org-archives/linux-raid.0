@@ -1,57 +1,36 @@
-From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
+From: Richard Scobie <richard@sauce.co.nz>
 Subject: Re: Benchmarks: Linux Kernel RAID vs a Hardware RAID setup
-Date: Wed, 16 Jul 2008 06:47:18 +0200
-Message-ID: <20080716044718.GA7626@rap.rap.dk>
-References: <1216130769.5633.318.camel@sam.localdomain> <20080715163932.GA23164@rap.rap.dk> <1216180685.5633.364.camel@sam.localdomain>
+Date: Wed, 16 Jul 2008 17:18:46 +1200
+Message-ID: <487D84B6.60908@sauce.co.nz>
+References: <1216130769.5633.318.camel@sam.localdomain> <20080715163932.GA23164@rap.rap.dk> <8CAB4B2168C7183-B68-AD2@webmail-ng19.sysops.aol.com> <20080715173927.GA24745@rap.rap.dk> <487D3A44.7000008@sauce.co.nz> <20080716042336.GB7148@rap.rap.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1216180685.5633.364.camel@sam.localdomain>
+In-Reply-To: <20080716042336.GB7148@rap.rap.dk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Ben Martin <monkeyiq@users.sourceforge.net>
-Cc: linux-raid@vger.kernel.org
+To: =?ISO-8859-1?Q?Keld_J=F8rn_Simonsen?= <keld@dkuug.dk>
+Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wed, Jul 16, 2008 at 01:58:05PM +1000, Ben Martin wrote:
-> On Tue, 2008-07-15 at 18:39 +0200, Keld J=F8rn Simonsen wrote:
-> > On Wed, Jul 16, 2008 at 12:06:09AM +1000, Ben Martin wrote:
->=20
-> One interesting question about the r10 layouts, if f2/o2 perform bett=
-er
-> than n2 why is the default for creation still n2? Just like mkfs.xfs
-> determining the raid chunk and stripe size for you (assuming you don'=
-t
-> use LVM to circumvent this, gah!), shouldn't mdadm select the "fastes=
-t"
-> --layout as the default for RAID-10?
+Keld J=F8rn Simonsen wrote:
 
-Perhaps. I think Neil first implemented "near", and more or less at the=
- same
-time "far" - but to him the main thing was "near". This was 2.6.9. Then
-in 2.6.18 he implemented "offset".  In the early days the
-characteristics of each layout were not well known. It is only in the
-last year or so I have seen benchmarks with n2, f2 and o2.
+> My understanding tho, is that the IO output and input figures are on
+> sequential IO. There are no figures on random IO,
 
-> >=20
-> > It would be interesting if you could enhance your article with benc=
-hmarks
-> > on raid10, f2 and o2 layouts. I think they would outperform HW raid=
-, at
-> > least on input. And I would like to see how they perform on outout =
-and
-> > rewrite, with ext3 and xfs. We do have some tests, but many of them=
- are
-> > without a file system layer.
->=20
-> This will probably be the target of a new article at some point which
-> just focuses on R10.
+If you look at some results Justin posted:
 
-Sounds good!
+http://home.comcast.net/~jpiszcz/20080707/veliciraptors_with_x4.html
 
-best regards
-keld
+The column "Random Create" shows performance for randomly creating,=20
+reading and deleting 16384 files sized between 16bytes and 1MB=20
+distributed randomly through 64 directories (this is the -n parameter=20
+and is shown in the "Num Files" column.)
+
+Regards,
+
+Richard
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
