@@ -1,93 +1,122 @@
 From: Ben Martin <monkeyiq@users.sourceforge.net>
 Subject: Re: Benchmarks: Linux Kernel RAID vs a Hardware RAID setup
-Date: Wed, 16 Jul 2008 14:06:59 +1000
-Message-ID: <1216181219.5633.372.camel@sam.localdomain>
+Date: Wed, 16 Jul 2008 14:14:16 +1000
+Message-ID: <1216181656.5633.380.camel@sam.localdomain>
 References: <1216130769.5633.318.camel@sam.localdomain>
-	 <20080715163932.GA23164@rap.rap.dk>
-	 <8CAB4B2168C7183-B68-AD2@webmail-ng19.sysops.aol.com>
-	 <20080715173927.GA24745@rap.rap.dk> <487D3A44.7000008@sauce.co.nz>
-	 <cccedfc60807151720x62cdbb3cx2c772ac884f97fde@mail.gmail.com>
+	 <alpine.DEB.1.10.0807151042320.20094@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-h3I388Odc1tgC0jVVmij"
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-eqWGov+xheIdLAOn7Tit"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <cccedfc60807151720x62cdbb3cx2c772ac884f97fde@mail.gmail.com>
+In-Reply-To: <alpine.DEB.1.10.0807151042320.20094@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jon Nelson <jnelson-linux-raid@jamponi.net>
-Cc: Richard Scobie <richard@sauce.co.nz>, Keld =?ISO-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>, thomas62186218@aol.com, linux-raid@vger.kernel.org, Ben Martin <monkeyiq@users.sourceforge.net>
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: linux-raid@vger.kernel.org, xfs@oss.sgi.com, Ben Martin <monkeyiq@users.sourceforge.net>
 List-Id: linux-raid.ids
 
 
---=-h3I388Odc1tgC0jVVmij
-Content-Type: text/plain; charset=UTF-8
+--=-eqWGov+xheIdLAOn7Tit
+Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 2008-07-15 at 19:20 -0500, Jon Nelson wrote:
-> On Tue, Jul 15, 2008 at 7:01 PM, Richard Scobie <richard@sauce.co.nz> wro=
-te:
-> > Keld J=C3=B8rn Simonsen wrote:
-> >
-> >> I would actually welcome more tests with specific user profiles, like
-> >> many small reads and writes for database  use, and concurrent random
-> >> reading and writing to simulate the load on a server. What bonnie++ is
-> >> reporting is only equential IO. This is important on work stations, bu=
-t
-> >> actually not on servers.
-> >
-> > The following is from the Bonnie++ man page:
-> >
-> > "There  are  two  sections  to the program's operations. The first is t=
-o
-> > test the IO throughput in a fashion that is designed to  simulate  some
-> > types of database applications. The second is to test creation, reading=
- and
-> > deleting many small files in a fashion similar to the usage patterns of
-> > programs such as Squid or INN."
-> >
-> > So I guess the author thinks it's valid for more than sequential I/O.
-> >
-> > In any case, while we may be in a minority, Justin, I and a few others =
-are
-> > interested in sequential I/O, as we build servers required to read
-> and write
-> > multiple streams of uncompressed SD and HD video in realtime.
+On Tue, 2008-07-15 at 10:42 -0400, Justin Piszcz wrote:
+> What were the commands used when creating the XFS filesystem=20
+> (sunit,swidth)?
 >=20
-> In that case, the 'fstest' program (google for it, it's associated
-> with the samba folks IIRC), might be just the ticket.
-> You specify the number of children (real children, not threads), the
-> number of files each child will open, populate, verify, and then
-> delete, the size of the files, and a few other options. It very nicely
-> simulates a set of totally greedy I/O intensive processes.
+> Justin.
+
+I noticed that on the hardware card I had to use nobarrier to get decent
+file metadata performance (create,del etc). I have noticed also recently
+on an 32gb Mtron SSD that with barriers enabled with XFS on the SSD
+metadata performance was an order of magnitude slower.
+
+The below is a snippit from the hardware RAID testing config. The XFS
+creation and mounting args are identical for software RAID.
+
+#!/bin/bash
+
+RAIDLEVEL=3D6
+CHUNK_SZ_KB=3D256
+PARITY_DRIVE_COUNT=3D2
+NON_PARITY_DRIVE_COUNT=3D4
+DEVICE=3D/dev/disk/by-id/scsi-SAdaptec_1024ktmpraid6
+...
+run_bonnie() {
+    fsdev=3D$1
+    mountopts=3D$2
+    N=3D256
+
+    mount -o "$mountopts" $DEVICE /mnt/tmpraid
+    chown ben /mnt/tmpraid
+    sync=20
+    sleep 1
+    sudo -u ben /usr/sbin/bonnie++ -q -m $fsdev -n $N -d \
+         /mnt/tmpraid >>/T/adaptec-raid
+${RAIDLEVEL}-${CHUNK_SZ_KB}kb-chunks-bonnie.csv
+    umount /mnt/tmpraid
+}
+
+...
+
+fsdev=3Dhardxfsdefaultnb
+mkfs.xfs -f -l lazy-count=3D1 \
+        $DEVICE
+run_bonnie $fsdev "nobarrier"
+
+fsdev=3Dhardxfsalign
+mkfs.xfs -f -s size=3D4096 \
+	-d sunit=3D$(($CHUNK_SZ_KB*2)),swidth=3D$(($CHUNK_SZ_KB*2*
+$NON_PARITY_DRIVE_COUNT)) \
+	-l lazy-count=3D1 \
+        $DEVICE
+run_bonnie $fsdev "nobarrier"
+
+fsdev=3Dhardxfsdlalign
+mkfs.xfs -f -s size=3D4096 \
+	-d sunit=3D$(($CHUNK_SZ_KB*2)),swidth=3D$(($CHUNK_SZ_KB*2*
+$NON_PARITY_DRIVE_COUNT)) \
+        -l lazy-count=3D1,sunit=3D$((CHUNK_SZ_KB*2)),size=3D128m \
+        $DEVICE
+run_bonnie $fsdev "nobarrier"
+
+# run iozone on it.
+fsdev=3Dhardxfsalign
+mkfs.xfs -f -s size=3D4096 \
+	-d sunit=3D$(($CHUNK_SZ_KB*2)),swidth=3D$(($CHUNK_SZ_KB*2*
+$NON_PARITY_DRIVE_COUNT)) \
+	-l lazy-count=3D1 \
+        $DEVICE
+mount -o "nobarrier" $DEVICE /mnt/tmpraid
+chown ben /mnt/tmpraid
+sync=20
+sleep 1
+sudo -u ben iozone -a -g 4G -f /mnt/tmpraid/iozone_file  \
+   >/T/adaptec-raid${RAIDLEVEL}-${CHUNK_SZ_KB}kb-chunks-iozone.txt
+umount /mnt/tmpraid
+
+
 >=20
+> On Wed, 16 Jul 2008, Ben Martin wrote:
+>=20
+> > Hi,
+> >  Apologies if posting this here is inappropriate but a recent article
+> > of mine compares the Linux Kernel RAID code to an $800 hardware RAID
+> > card and might be of interest to list members:
+> >
+> > http://www.linux.com/feature/140734
+> >
+> >
 
-I was thinking of benchmarks at a higher level too.=20
-
-fstest and fio seem like good candidates for making a configuration that
-tests performance that can be easily run on another system without much
-setup required.
-
-A few other ideas I had were using postal for simulating a mail server
-env and doing "something" with PostgreSQL. The latter is really a fairly
-large can of worms because you would need to lock down the various RAID
-caches, read aheads (which might actually adversely effect performance
-if the kernel second guesses PG badly), the pg configuration (eg, its
-caching settings) and of course where the base tables and indexes landed
-on disk.
-
-If anyone has pointers for testing PG performance on RAID I'd love to
-hear about them either on / off list.
-
-
---=-h3I388Odc1tgC0jVVmij
+--=-eqWGov+xheIdLAOn7Tit
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.9 (GNU/Linux)
 
-iEYEABECAAYFAkh9c+MACgkQsIKOrI+5WvOK3ACgktmydUrAhPlXei/17dSHegxV
-lXIAn0W5piKkAnYG9k3LooVbYhy4zrec
-=cIW0
+iEYEABECAAYFAkh9dZgACgkQsIKOrI+5WvME7wCgqDwC00Tb5gQlucvYwDJYdPEO
+UDAAoKUZnIWfmI+qX4+O27Zvm7RISOyQ
+=/Dwo
 -----END PGP SIGNATURE-----
 
---=-h3I388Odc1tgC0jVVmij--
+--=-eqWGov+xheIdLAOn7Tit--
 
