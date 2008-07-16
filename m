@@ -1,67 +1,28 @@
-From: "Jon Nelson" <jnelson-linux-raid@jamponi.net>
+From: Richard Scobie <richard@sauce.co.nz>
 Subject: Re: Benchmarks: Linux Kernel RAID vs a Hardware RAID setup
-Date: Tue, 15 Jul 2008 19:20:27 -0500
-Message-ID: <cccedfc60807151720x62cdbb3cx2c772ac884f97fde@mail.gmail.com>
-References: <1216130769.5633.318.camel@sam.localdomain>
-	 <20080715163932.GA23164@rap.rap.dk>
-	 <8CAB4B2168C7183-B68-AD2@webmail-ng19.sysops.aol.com>
-	 <20080715173927.GA24745@rap.rap.dk> <487D3A44.7000008@sauce.co.nz>
+Date: Wed, 16 Jul 2008 14:48:08 +1200
+Message-ID: <487D6168.6020308@sauce.co.nz>
+References: <1216130769.5633.318.camel@sam.localdomain> <487CC660.9030004@ziu.info> <487D09E7.1010805@sauce.co.nz> <Pine.LNX.4.64.0807151831070.32734@filesrv1.baby-dragons.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <487D3A44.7000008@sauce.co.nz>
-Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.64.0807151831070.32734@filesrv1.baby-dragons.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Richard Scobie <richard@sauce.co.nz>
-Cc: =?ISO-8859-1?Q?Keld_J=F8rn_Simonsen?= <keld@dkuug.dk>, thomas62186218@aol.com, monkeyiq@users.sourceforge.net, linux-raid@vger.kernel.org
+To: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
+Cc: linux-raid maillist <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tue, Jul 15, 2008 at 7:01 PM, Richard Scobie <richard@sauce.co.nz> w=
-rote:
-> Keld J=F8rn Simonsen wrote:
->
->> I would actually welcome more tests with specific user profiles, lik=
-e
->> many small reads and writes for database  use, and concurrent random
->> reading and writing to simulate the load on a server. What bonnie++ =
-is
->> reporting is only equential IO. This is important on work stations, =
-but
->> actually not on servers.
->
-> The following is from the Bonnie++ man page:
->
-> "There  are  two  sections  to the program's operations. The first is=
- to
-> test the IO throughput in a fashion that is designed to  simulate  so=
-me
-> types of database applications. The second is to test creation, readi=
-ng and
-> deleting many small files in a fashion similar to the usage patterns =
-of
-> programs such as Squid or INN."
->
-> So I guess the author thinks it's valid for more than sequential I/O.
->
-> In any case, while we may be in a minority, Justin, I and a few other=
-s are
-> interested in sequential I/O, as we build servers required to read an=
-d write
-> multiple streams of uncompressed SD and HD video in realtime.
+Mr. James W. Laferriere wrote:
 
-In that case, the 'fstest' program (google for it, it's associated
-with the samba folks IIRC), might be just the ticket.
-You specify the number of children (real children, not threads), the
-number of files each child will open, populate, verify, and then
-delete, the size of the files, and a few other options. It very nicely
-simulates a set of totally greedy I/O intensive processes.
+>     At what level (2.6.26) does one set readahead ?
+>     I've searched 'mount' ,  'mdadm' ,  'Documentation/md.txt' .  Where 
+> else should I look ?  Obviously I am missing something .
 
+Hi Jim,
 
---=20
-Jon
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+/sbin/blockdev --setra 65536 /dev/md5 gets it done here.
+
+Regards,
+
+Richard
