@@ -1,28 +1,40 @@
-From: Michal Soltys <soltys@ziu.info>
-Subject: Re: Benchmarks: Linux Kernel RAID vs a Hardware RAID setup
-Date: Wed, 16 Jul 2008 07:50:10 +0200
-Message-ID: <487D8C12.4080107@ziu.info>
-References: <1216130769.5633.318.camel@sam.localdomain> <487CC660.9030004@ziu.info> <487D09E7.1010805@sauce.co.nz> <Pine.LNX.4.64.0807151831070.32734@filesrv1.baby-dragons.com>
+From: "Dan Williams" <dan.j.williams@intel.com>
+Subject: Re: Debugging new HW XOR engine driver
+Date: Tue, 15 Jul 2008 23:48:46 -0700
+Message-ID: <e9c3a7c20807152348p1f97066ar34921a28d8d38646@mail.gmail.com>
+References: <504385.34173.qm@web81301.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0807151831070.32734@filesrv1.baby-dragons.com>
+In-Reply-To: <504385.34173.qm@web81301.mail.mud.yahoo.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
-Cc: Richard Scobie <richard@sauce.co.nz>, linux-raid maillist <linux-raid@vger.kernel.org>
+To: tirumalareddy marri <tirumalareddymarri@yahoo.com>
+Cc: thomas62186218@aol.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Mr. James W. Laferriere wrote:
->     Hello Richard ,
-> 
->     At what level (2.6.26) does one set readahead ?
->     I've searched 'mount' ,  'mdadm' ,  'Documentation/md.txt' .  Where 
-> else should I look ?  Obviously I am missing something .
-> 
+On Tue, Jul 15, 2008 at 3:52 PM, tirumalareddy marri
+<tirumalareddymarri@yahoo.com> wrote:
+> I am able to create a disk size of 40MB and mount it(mkfs.ext3 -b 4096 /dev/md0 10000). I was able to copy files to this mounted disk and read them back. If I increased the size more than 40MB file system if failing to mount.
+>   Is it possible that data I have read/write was in page cache and never really written to Hard Disks  ?
 
- From what I know, only the layer directly under the filesystem is 
-meaningful in any way - check out this post:
+What does the corruption look like?  Does it seem to be wrong data or
+stale data?
 
-http://marc.info/?l=linux-raid&m=120659089505963&w=2
+> Is it safe to say RAID-5 is partially working ?
 
+Without more information this sounds like the hw-xor driver is broken.
+ What kernel version are you developing against?  You may want to take
+a look at the dmatest client in async_tx/next [1].  It currently only
+supports copy tests, but should exercise your driver's descriptor
+processing routines.  When I tracked down bugs in iop-adma I used
+raid5 as the test client and modified the kernel to do data
+verification after each calculation in the ops_complete_* routines.
+This requires userspace to use a predictable data pattern when writing
+to the array.
+
+--
+Dan
+
+[1] http://git.kernel.org/?p=linux/kernel/git/djbw/async_tx.git;a=shortlog;h=next
