@@ -1,83 +1,36 @@
-From: thomas62186218@aol.com
+From: "Alan D. Brunelle" <Alan.Brunelle@hp.com>
 Subject: Re: Benchmarks: Linux Kernel RAID vs a Hardware RAID setup
-Date: Wed, 16 Jul 2008 13:08:57 -0400
-Message-ID: <8CAB57DC49B9CE4-C68-3155@WEBMAIL-NG09.sysops.aol.com>
-References: <1216130769.5633.318.camel@sam.localdomain>	 <487CC660.9030004@ziu.info> <1216179392.5633.348.camel@sam.localdomain> <487D7139.5050302@sauce.co.nz>
+Date: Wed, 16 Jul 2008 14:54:16 -0400
+Message-ID: <487E43D8.60106@hp.com>
+References: <1216130769.5633.318.camel@sam.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <487D7139.5050302@sauce.co.nz>
+In-Reply-To: <1216130769.5633.318.camel@sam.localdomain>
 Sender: linux-raid-owner@vger.kernel.org
-To: richard@sauce.co.nz, monkeyiq@users.sourceforge.net
+To: Ben Martin <monkeyiq@users.sourceforge.net>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Richard,
+Ben Martin wrote:
+> Hi,
+>   Apologies if posting this here is inappropriate but a recent article
+> of mine compares the Linux Kernel RAID code to an $800 hardware RAID
+> card and might be of interest to list members:
+> 
+> http://www.linux.com/feature/140734
+> 
 
-Are you sure that the patch you reference below is actually in 2.6.26?=20
-I checked the CHANGELOG and couldn't find anything about get priority=20
-stripe in there (maybe its called something else now)?
+Hi Ben -
 
-Thanks
--Thomas
+Did you do any performance testing of running /multiple/ disks through
+the Adaptec card w/out HW RAID enabled - for example, comparing the 4
+ports on the mobo against 4 drives exported through the Adaptec card?
 
+I wonder if there are any potential bottleneck issues with the single
+adapter card handling 6 independent drives (when testing SW RAID) versus
+one exported "drive" (when testing HW RAID).
 
------Original Message-----
-=46rom: Richard Scobie <richard@sauce.co.nz>
-To: Ben Martin <monkeyiq@users.sourceforge.net>
-Cc: linux-raid@vger.kernel.org
-Sent: Tue, 15 Jul 2008 8:55 pm
-Subject: Re: Benchmarks: Linux Kernel RAID vs a Hardware RAID setup
-
-
-
-
-
-
-
-
-
-Ben Martin wrote:=C2=A0
-=C2=A0
-
-> I have been meaning to ask for a while, why is the stripe_cache_size=C2=
-=A0
-
-> set so low by default if it has such an effect on performance? =C2=A0
-
-I can't comment on the above, but looking at this:=C2=A0
-=C2=A0
-
-http://marc.info/?l=3Dlinux-raid&m=3D120668318422034&w=3D2=C2=A0
-=C2=A0
-
-with the 2.6.26 release, bumping up the stripe cache should no longer=20
-be
-necessary.=C2=A0
-=C2=A0
-
-Regards,=C2=A0
-=C2=A0
-
-Richard=C2=A0
-
---=C2=A0
-
-To unsubscribe from this list: send the line "unsubscribe linux-raid"=20
-in=C2=A0
-
-the body of a message to majordomo@vger.kernel.org=C2=A0
-
-More majordomo info at  http://vger.kernel.org/majordomo-info.html=C2=A0
-
-
-
-
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Regards,
+Alan
