@@ -1,40 +1,43 @@
 From: "Dan Williams" <dan.j.williams@intel.com>
-Subject: Re: Debugging new HW XOR engine driver
-Date: Tue, 15 Jul 2008 23:48:46 -0700
-Message-ID: <e9c3a7c20807152348p1f97066ar34921a28d8d38646@mail.gmail.com>
-References: <504385.34173.qm@web81301.mail.mud.yahoo.com>
+Subject: Re: Benchmarks: Linux Kernel RAID vs a Hardware RAID setup
+Date: Wed, 16 Jul 2008 00:00:44 -0700
+Message-ID: <e9c3a7c20807160000w3fdd76efu68ebc79e8fe315ae@mail.gmail.com>
+References: <1216130769.5633.318.camel@sam.localdomain>
+	 <487CC660.9030004@ziu.info>
+	 <1216179392.5633.348.camel@sam.localdomain>
+	 <487D7139.5050302@sauce.co.nz>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <504385.34173.qm@web81301.mail.mud.yahoo.com>
+In-Reply-To: <487D7139.5050302@sauce.co.nz>
 Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: tirumalareddy marri <tirumalareddymarri@yahoo.com>
-Cc: thomas62186218@aol.com, linux-raid@vger.kernel.org
+To: Richard Scobie <richard@sauce.co.nz>
+Cc: Ben Martin <monkeyiq@users.sourceforge.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Jul 15, 2008 at 3:52 PM, tirumalareddy marri
-<tirumalareddymarri@yahoo.com> wrote:
-> I am able to create a disk size of 40MB and mount it(mkfs.ext3 -b 4096 /dev/md0 10000). I was able to copy files to this mounted disk and read them back. If I increased the size more than 40MB file system if failing to mount.
->   Is it possible that data I have read/write was in page cache and never really written to Hard Disks  ?
+On Tue, Jul 15, 2008 at 8:55 PM, Richard Scobie <richard@sauce.co.nz> wrote:
+> Ben Martin wrote:
+>
+>> I have been meaning to ask for a while, why is the stripe_cache_size
+>> set so low by default if it has such an effect on performance?
+>
+> I can't comment on the above, but looking at this:
+>
+> http://marc.info/?l=linux-raid&m=120668318422034&w=2
+>
+> with the 2.6.26 release, bumping up the stripe cache should no longer be
+> necessary.
+>
 
-What does the corruption look like?  Does it seem to be wrong data or
-stale data?
+To be clear bumping up the cache size can still increase performance
+but the ratio of performance/stripe_cache_size should now be larger,
+i.e. more sequential write performance at smaller cache sizes.
 
-> Is it safe to say RAID-5 is partially working ?
-
-Without more information this sounds like the hw-xor driver is broken.
- What kernel version are you developing against?  You may want to take
-a look at the dmatest client in async_tx/next [1].  It currently only
-supports copy tests, but should exercise your driver's descriptor
-processing routines.  When I tracked down bugs in iop-adma I used
-raid5 as the test client and modified the kernel to do data
-verification after each calculation in the ops_complete_* routines.
-This requires userspace to use a predictable data pattern when writing
-to the array.
+> Regards,
+>
+> Richard
 
 --
 Dan
-
-[1] http://git.kernel.org/?p=linux/kernel/git/djbw/async_tx.git;a=shortlog;h=next
