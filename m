@@ -1,67 +1,102 @@
-From: Ben Martin <monkeyiq@users.sourceforge.net>
-Subject: Re: Benchmarks: Linux Kernel RAID vs a Hardware RAID setup
-Date: Thu, 17 Jul 2008 18:26:03 +1000
-Message-ID: <1216283163.10437.60.camel@sam.localdomain>
-References: <1216130769.5633.318.camel@sam.localdomain>
-	 <487E43D8.60106@hp.com>
+From: Andre Noll <maan@systemlinux.org>
+Subject: Re: [PATCH 4/5] md: Turn rdev->sb_offset into a sector-based quantity.
+Date: Thu, 17 Jul 2008 11:40:08 +0200
+Message-ID: <20080717094008.GW23944@skl-net.de>
+References: <1215681338-32365-1-git-send-email-maan@systemlinux.org> <1215681338-32365-5-git-send-email-maan@systemlinux.org> <18551.16581.929399.413701@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-bwOMvcu+NODz3UywnzHh"
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="de1H0RjRxOSdb4we"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <487E43D8.60106@hp.com>
+Content-Disposition: inline
+In-Reply-To: <18551.16581.929399.413701@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Alan D. Brunelle" <Alan.Brunelle@hp.com>
-Cc: linux-raid@vger.kernel.org, Ben Martin <monkeyiq@users.sourceforge.net>
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
---=-bwOMvcu+NODz3UywnzHh
-Content-Type: text/plain
+--de1H0RjRxOSdb4we
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, 2008-07-16 at 14:54 -0400, Alan D. Brunelle wrote:
-> Ben Martin wrote:
-> > Hi,
-> >   Apologies if posting this here is inappropriate but a recent article
-> > of mine compares the Linux Kernel RAID code to an $800 hardware RAID
-> > card and might be of interest to list members:
-> >=20
-> > http://www.linux.com/feature/140734
-> >=20
+On 21:15, Neil Brown wrote:
+> >  	if (minor_version
+> > -	    && rdev->data_offset < sb_offset + (rdev->sb_size/512))
+> > +	    && rdev->data_offset < sb_start / 2 + (rdev->sb_size/512))
+> >  		return -EINVAL;
 >=20
-> Hi Ben -
+> That doesn't look right.
+>   rdev->data_offset is in sectors.
+>   rdev->sb_size/512 is in sectors.
+>   sb_offset is in K.
+> We had a bug there.  Better fix it by dropping the "/ 2".
 >=20
-> Did you do any performance testing of running /multiple/ disks through
-> the Adaptec card w/out HW RAID enabled - for example, comparing the 4
-> ports on the mobo against 4 drives exported through the Adaptec card?
-
-Good question, however I must admit that I didn't test this.
-Being an 8 lane PCIe card it I thought that there would not be a huge
-issue with the interface to the card and drives being a bottleneck.
-http://www.adaptec.com/en-US/products/Controllers/Hardware/sas/value/SAS-31=
-205/
-
-Though it would be interesting to compare, once I move a few old drives
-off the mobo SATA controller and get 4 ports free.
-
+> > @@ -3431,16 +3428,16 @@ static int do_md_run(mddev_t * mddev)
+> >  		 * We don't want the data to overlap the metadata,
+> >  		 * Internal Bitmap issues has handled elsewhere.
+> >  		 */
+> > -		if (rdev->data_offset < rdev->sb_offset) {
+> > +		if (rdev->data_offset < rdev->sb_start / 2) {
 >=20
-> I wonder if there are any potential bottleneck issues with the single
-> adapter card handling 6 independent drives (when testing SW RAID) versus
-> one exported "drive" (when testing HW RAID).
->=20
-> Regards,
-> Alan
+> And another bug.  We don't want the "/ 2".  data_offset was always
+> sectors, and now sb_offset is too.
 
---=-bwOMvcu+NODz3UywnzHh
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+It might be worth to get fixes for these two bugs into -stable.
+
+Here's a patch against mainline. Please forward to stable@... if
+you agree.
+
+Andre
+
+commit c1be9a2d52dd2db1cf284e62d5e1cb8423482fb4
+Author: Andre Noll <maan@systemlinux.org>
+Date:   Thu Jul 17 11:33:40 2008 +0200
+
+    md: Fix two bugs in md.c
+   =20
+    sb_offset is kilobytes while data_offset and sb_size/512 are in
+    sectors.
+   =20
+    Spotted by Neil while reviewing the sector_t conversion patches.
+
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 2580ac1..0c7aeb9 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -1113,7 +1113,7 @@ static int super_1_load(mdk_rdev_t *rdev, mdk_rdev_t =
+*refdev, int minor_version)
+ 		rdev->sb_size =3D (rdev->sb_size | bmask) + 1;
+=20
+ 	if (minor_version
+-	    && rdev->data_offset < sb_offset + (rdev->sb_size/512))
++	    && rdev->data_offset < sb_offset * 2 + (rdev->sb_size/512))
+ 		return -EINVAL;
+=20
+ 	if (sb->level =3D=3D cpu_to_le32(LEVEL_MULTIPATH))
+@@ -3432,7 +3432,7 @@ static int do_md_run(mddev_t * mddev)
+ 		 * We don't want the data to overlap the metadata,
+ 		 * Internal Bitmap issues has handled elsewhere.
+ 		 */
+-		if (rdev->data_offset < rdev->sb_offset) {
++		if (rdev->data_offset < rdev->sb_offset * 2) {
+ 			if (mddev->size &&
+ 			    rdev->data_offset + mddev->size*2
+ 			    > rdev->sb_offset*2) {
+--=20
+The only person who always got his work done by Friday was Robinson Crusoe
+
+--de1H0RjRxOSdb4we
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
+Version: GnuPG v1.4.1 (GNU/Linux)
 
-iEYEABECAAYFAkh/AhsACgkQsIKOrI+5WvM+TQCgjRwQHxx1qH6KELPi6MXbgv6B
-xioAoOlPHZ3ejeqA51AltVxZDDaLpiMJ
-=yY4u
+iD8DBQFIfxN3Wto1QDEAkw8RAvOGAJ98fdH965tBqY9GlDWez4NV17ZKHwCffdFM
+oN/qtirGXmnm43otxqWaA/E=
+=ujpI
 -----END PGP SIGNATURE-----
 
---=-bwOMvcu+NODz3UywnzHh--
-
+--de1H0RjRxOSdb4we--
