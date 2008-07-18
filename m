@@ -1,42 +1,43 @@
 From: Andre Noll <maan@systemlinux.org>
-Subject: [PATCH 0/4] more sector_t conversions
-Date: Fri, 18 Jul 2008 14:00:15 +0200
-Message-ID: <1216382419-2560-1-git-send-email-maan@systemlinux.org>
+Subject: [PATCH 1/4] md: Fix check for overlapping devices.
+Date: Fri, 18 Jul 2008 14:00:16 +0200
+Message-ID: <1216382419-2560-2-git-send-email-maan@systemlinux.org>
+References: <1216382419-2560-1-git-send-email-maan@systemlinux.org>
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1216382419-2560-1-git-send-email-maan@systemlinux.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
+Cc: Andre Noll <maan@systemlinux.org>
 List-Id: linux-raid.ids
 
-Hi
+The checks in overlaps() expect all parameters either in block-based
+or sector-based quantities. However, its single caller passes two
+rdev->data_offset arguments as well as two rdev->size arguments, the
+former being sector counts while the latter are measured in 1K blocks.
 
-here's the next batch of patches against Neil's for-next branch that
-change some of the remaining 1k-based representations to sector-based
-representations.
+This could cause rdev_size_store() to accept an invalid size from user
+space. Fix it by passing only sector-based quantities to overlaps().
 
-Patch #1 fixes what I believe is a bug in the check for overlapping
-partitions. This patch might also be suitable for -stable while #2-#4
-are definitely material for -next.
-
-Patch #2 changes the rdev_size_change function pointer of struct
-super_type. The patched version takes the number of sectors instead
-of the number of blocks.
-
-Patches #3 and #4 convert the array_size fields of struct mddev_s
-and of struct linear_private_data to sector-based representations
-respectively.
-
-Please review.
-Andre
+Signed-off-by: Andre Noll <maan@systemlinux.org>
 ---
+ drivers/md/md.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
- drivers/md/faulty.c         |    2 +-
- drivers/md/linear.c         |   18 +++++++-------
- drivers/md/md.c             |   52 ++++++++++++++++++++----------------------
- drivers/md/multipath.c      |    2 +-
- drivers/md/raid0.c          |    8 +++---
- drivers/md/raid1.c          |   10 ++++----
- drivers/md/raid10.c         |    2 +-
- drivers/md/raid5.c          |   14 +++++-----
- include/linux/raid/linear.h |    2 +-
- include/linux/raid/md_k.h   |    2 +-
- 10 files changed, 55 insertions(+), 57 deletions(-)
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 95466bb..1bfa1f2 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -2143,8 +2143,8 @@ rdev_size_store(mdk_rdev_t *rdev, const char *buf, size_t len)
+ 				if (test_bit(AllReserved, &rdev2->flags) ||
+ 				    (rdev->bdev == rdev2->bdev &&
+ 				     rdev != rdev2 &&
+-				     overlaps(rdev->data_offset, rdev->size,
+-					    rdev2->data_offset, rdev2->size))) {
++				     overlaps(rdev->data_offset, rdev->size * 2,
++					    rdev2->data_offset, rdev2->size * 2))) {
+ 					overlap = 1;
+ 					break;
+ 				}
+-- 
+1.5.3.8
+
