@@ -1,38 +1,67 @@
-From: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
-Subject: bonnie++-1.03c -p option problem & ?
-Date: Fri, 18 Jul 2008 21:36:46 -0800 (AKDT)
-Message-ID: <Pine.LNX.4.64.0807182131420.12086@filesrv1.baby-dragons.com>
+From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
+Subject: Re: title of our wiki page
+Date: Sat, 19 Jul 2008 15:00:19 +0200
+Message-ID: <20080719130019.GA24932@rap.rap.dk>
+References: <20080718140315.GA8677@rap.rap.dk> <4880C6D8.5000503@dgreaves.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <4880C6D8.5000503@dgreaves.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid maillist <linux-raid@vger.kernel.org>
+To: David Greaves <david@dgreaves.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
- 	Hello All ,  I know this isn't the proper place to pop this question .
- 	But it is one place where quite a few have practical experience with 
-bonnie++ .
- 	When I add the -p option to my bonnie command line all it does is print 
-the uid&gid I am using & dies .  So I think I am doing something wrong somewhere 
-.
- 	If anyone has ides('s) on the matter to share please pipe up offlies if 
-you desire (I'll compile the result & post) or on list everyone could interested 
-I guess ;-) .
- 		Tia ,  JimL
+On Fri, Jul 18, 2008 at 05:37:44PM +0100, David Greaves wrote:
+> Keld J=F8rn Simonsen wrote:
+> > Hi
+> >=20
+> > Today our wiki has the title of
+> >=20
+> > Linux raid - Linux Raid
+> The first part is the page name;
+> The second part is the wiki name;
+>=20
+> eg: http://linux-raid.osdl.org/index.php/Devices
+>=20
+> > I would like it to read:
+> > Linux Raid - Wiki FAQ and Howto
+> > Is that possible?
+> Not really...
 
-# bonniemd3() { time /root/bonnie++-1.03c/bonnie++  -u0:0  -d /md3 -x 15 -s 262144 -f -p 4 ; }
-# bonniemd3 > 131072MB-bonnie++-run-md3-xfs-15runs.log-`date "+%Y%m%d%H%M"`-`uname -r` 2>&1
-# cat 131072MB-bonnie++-run-md3-xfs-15runs.log-200807190513-2.6.26-rc9
-Using uid:0, gid:0.
+Hmm, why not? That would be a title called=20
 
-real    0m0.012s
-user    0m0.000s
-sys     0m0.000s
-#
+Wiki FAQ and Howto
 
--- 
-+------------------------------------------------------------------+
-| James   W.   Laferriere | System    Techniques | Give me VMS     |
-| Network&System Engineer | 2133    McCullam Ave |  Give me Linux  |
-| babydr@baby-dragons.com | Fairbanks, AK. 99701 |   only  on  AXP |
-+------------------------------------------------------------------+
+Seems to me like an ok title for all our pages.
+
+> Hey, the name is mirrored - that's not a bad thing - one of them may =
+be obscured
+> by bad pixels... ;)
+>=20
+> > I note that we are now number 2 on Google for "Linux Raid" and I ho=
+pe we
+> > would advance a little further shortly. If we advamce just a little=
+,
+> > then I would be contempt and not have further wishes on this matter=
+=2E
+>=20
+> So basically you won't be happy until we hit the top spot - good for =
+you :)
+
+Nah, I am happy with being number 2 here. Anyway I added some stuff to
+indicate that our pages are quite updated. - reflecting 2.6 kernels.
+>=20
+> I'm still working on the LDP - they're not the most responsive bunch.
+
+Such is life...
+
+Hest regards
+keld
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
