@@ -1,49 +1,67 @@
 From: Neil Brown <neilb@suse.de>
-Subject: RE: crash: write_sb_page walks mddev.disks without holding reconfig_mutex
-Date: Tue, 22 Jul 2008 08:56:12 +1000
-Message-ID: <18565.5132.347195.910949@notabene.brown>
-References: <3DC430E8F4814543943B52C2F34BF52A119498@EXNA.corp.stratus.com>
+Subject: Re: INFO: task pdflush:393 blocked for more than 120 seconds. & Call
+ traces ... (fwd)
+Date: Tue, 22 Jul 2008 09:12:15 +1000
+Message-ID: <18565.6095.988483.628391@notabene.brown>
+References: <Pine.LNX.4.64.0807210936410.7212@filesrv1.baby-dragons.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Dailey, Nate on Monday July 21
+In-Reply-To: message from Mr. James W. Laferriere on Monday July 21
 Sender: linux-raid-owner@vger.kernel.org
-To: "Dailey, Nate" <Nate.Dailey@stratus.com>
-Cc: linux-raid@vger.kernel.org, mingo@redhat.com
+To: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
+Cc: linux-raid maillist <linux-raid@vger.kernel.org>, xfs@oss.sgi.com
 List-Id: linux-raid.ids
 
-On Monday July 21, Nate.Dailey@stratus.com wrote:
-> Quick update... I've applied your patch to the kernel I'm using. There
-> were a few differences... for example, md_delayed_delete doesn't exist
-> in my kernel (so I added it).
+On Monday July 21, babydr@baby-dragons.com wrote:
+> INFO: task pdflush:393 blocked for more than 120 seconds.
+> "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+> pdflush       D c8209f80  4748   393      2
+>          f75e5e58 00000046 f7f7ad50 c8209f80 f7f7a8a0 f75e5e24 c014fc57 00000000
+>          f7f7a8a0 e5d0dd00 c8209f80 f75e4000 c0819e00 c8209f80 f7f7aaf4 f75e5e44
+>          00000286 f75e5e80 f510de30 f75e5e58 c0142233 f510de00 f75e5e80 f510de30
+> Call Trace:
+>    [<c014fc57>] ? mark_held_locks+0x67/0x80
+>    [<c0142233>] ? add_wait_queue+0x33/0x50
+>    [<c03a7f85>] xfs_buf_wait_unpin+0xb5/0xe0
+>    [<c0127a60>] ? default_wake_function+0x0/0x10
+>    [<c0127a60>] ? default_wake_function+0x0/0x10
+>    [<c03a84fb>] xfs_buf_iorequest+0x4b/0x80
+>    [<c03adeee>] xfs_bdstrat_cb+0x3e/0x50
+>    [<c03a495c>] xfs_bwrite+0x5c/0xe0
+>    [<c039e941>] xfs_syncsub+0x121/0x2b0
+>    [<c018a43b>] ? lock_super+0x1b/0x20
+>    [<c018a43b>] ? lock_super+0x1b/0x20
+>    [<c039e1d8>] xfs_sync+0x48/0x70
+>    [<c03af833>] xfs_fs_write_super+0x23/0x30
+>    [<c018a80f>] sync_supers+0xaf/0xc0
+
+Looks a lot like an XFS problem to me.
+Or at least, XFS people would be able to interpret this stack the
+best.
+
+>    [<c0169259>] wb_kupdate+0x29/0x100
+>    [<c016a0cc>] ? __pdflush+0xcc/0x1a0
+>    [<c016a0d2>] __pdflush+0xd2/0x1a0
+>    [<c016a1a0>] ? pdflush+0x0/0x40
+>    [<c016a1d1>] pdflush+0x31/0x40
+>    [<c0169230>] ? wb_kupdate+0x0/0x100
+>    [<c016a1a0>] ? pdflush+0x0/0x40
+>    [<c0141e2c>] kthread+0x5c/0xa0
+>    [<c0141dd0>] ? kthread+0x0/0xa0
+>    [<c0103d67>] kernel_thread_helper+0x7/0x10
+>    =======================
+> 2 locks held by pdflush/393:
+>    #0:  (&type->s_umount_key#17){----}, at: [<c018a7b2>] sync_supers+0x52/0xc0
+>    #1:  (&type->s_lock_key#7){--..}, at: [<c018a43b>] lock_super+0x1b/0x20
 > 
-> Unfortunately, I'm hitting a deadlock, and it looks like md_delayed_work
-> is at fault. Seems that in at least one case, code which holds the
-> inode_lock is interrupted, at which point the md_delayed_delete code
-> gets to run. He ends up needing the inode_lock too, and we're stuck.
+>     ...snip... Repeats of above message ad-infintum .
 
-Yes.... I noticed yesterday that there was a problem with that patch.
-calling md_delayed_delete with call_rcu just isn't right.
-md_delayed_delete needs to get a mutex, and call_rcu calls things in a
-context where mutexes aren't allowed.  The problem you are seeing has
-exactly the same cause.
 
-So I've changed it to:
-  call synchronise_rcu() to handle the RCU side, and
-  restore the use of schedule_work to run md_delayed delete.
-so unbind_rdev_from_array now ends.
-	synchronize_rcu();
-	INIT_WORK(&rdev->del_work, md_delayed_delete);
-	kobject_get(&rdev->kobj);
-	schedule_work(&rdev->del_work);
+Hmm... I guess I clipped a bit too much for our XFS friends to know
+the context.
+bonnie is being run on an XFS filesystem on md/raid6. and it gets
+this warning a lot and essentially hangs.
 
-You can see the submitted version of the full patch at 
-
- http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=4b80991c6cb9efa607bc4fd6f3ecdf5511c31bb0
-
-If you can test that (with appropriate revisions to apply to your
-kernel) I'd really appreciate it.
-
-Thanks,
 NeilBrown
