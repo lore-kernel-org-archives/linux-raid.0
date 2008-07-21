@@ -1,84 +1,76 @@
-From: Andre Noll <maan@systemlinux.org>
-Subject: Re: [PATCH 3/4] md: Make mddev->array_size sector-based.
-Date: Mon, 21 Jul 2008 17:42:35 +0200
-Message-ID: <20080721154235.GX23944@skl-net.de>
-References: <1216382419-2560-1-git-send-email-maan@systemlinux.org> <1216382419-2560-4-git-send-email-maan@systemlinux.org> <18564.25857.90818.972326@notabene.brown>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: Benchmarks: Linux Kernel RAID vs a Hardware RAID setup
+Date: Mon, 21 Jul 2008 12:55:23 -0400
+Message-ID: <4884BF7B.6030206@tmr.com>
+References: <1216130769.5633.318.camel@sam.localdomain> <20080715163932.GA23164@rap.rap.dk> <487CEF1A.6050402@wasp.net.au> <20080715201221.GB26439@rap.rap.dk>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="brdEIFGMNIjz5YJG"
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <18564.25857.90818.972326@notabene.brown>
+In-Reply-To: <20080715201221.GB26439@rap.rap.dk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: =?ISO-8859-1?Q?Keld_J=F8rn_Simonsen?= <keld@dkuug.dk>
+Cc: Brad Campbell <brad@wasp.net.au>, Ben Martin <monkeyiq@users.sourceforge.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Keld J=F8rn Simonsen wrote:
+> On Tue, Jul 15, 2008 at 10:40:26PM +0400, Brad Campbell wrote:
+>  =20
+>> Keld J=F8rn Simonsen wrote:
+>>
+>>    =20
+>>> I would also welcome test with mobo HW RAID - Many mobo's today com=
+e
+>>> with some HW raid functionality, and many people would be in the
+>>> situation of whether to choose a HW or SW configuration.
+>>>      =20
+>> Do you have some pointers for information on motherboards that come =
+with=20
+>> hardware raid? I'd be interested to have a look at them. I've certai=
+nly=20
+>> seen plenty of "fakeraid" systems, but I've not yet come across hard=
+ware=20
+>> raid on an MB.
+>>    =20
+>
+> It is possible that I am thinking of what you call fakeraid.
+>  =20
 
---brdEIFGMNIjz5YJG
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+I like "firmware raid" better, but the bottom line here is that the rai=
+d=20
+is still done in the system CPU. These often have little or no hardware=
+=20
+support, such as cache so that multiple drives can be written without=20
+passing the data through the system bus more than once (and chancing=20
+change while that happens).
+> Anyway this is what many users buy and look at employing.
+> And my understanding is that you can set up the mobo controller in th=
+e
+> bios, and then have it running with Linux, without further software.=20
+>  =20
 
-On 20:29, Neil Brown wrote:
-> On Friday July 18, maan@systemlinux.org wrote:
-> > index 8f4c70a..1e1a217 100644
-> > --- a/drivers/md/raid5.c
-> > +++ b/drivers/md/raid5.c
-> > @@ -4413,8 +4413,8 @@ static int raid5_resize(mddev_t *mddev, sector_t =
-sectors)
-> >  	raid5_conf_t *conf =3D mddev_to_conf(mddev);
-> > =20
-> >  	sectors &=3D ~((sector_t)mddev->chunk_size/512 - 1);
-> > -	mddev->array_size =3D (sectors * (mddev->raid_disks-conf->max_degrade=
-d))>>1;
-> > -	set_capacity(mddev->gendisk, mddev->array_size << 1);
-> > +	mddev->array_sectors =3D sectors * mddev->raid_disks-conf->max_degrad=
-ed;
-> > +	set_capacity(mddev->gendisk, mddev->array_sectors);
-> >  	mddev->changed =3D 1;
-> >  	if (sectors/2  > mddev->size && mddev->recovery_cp =3D=3D MaxSector) {
-> >  		mddev->recovery_cp =3D mddev->size << 1;
->=20
-> Can you spot the bug in this chunk?
->=20
-> There is a subtraction in there which is no longer inside parentheses,
-> so the multiplication takes precedence.
+Yes, although the reliability of firmware raid under device failure=20
+conditions is dependent on the vendor, firmware level, etc, etc.
+> I would then like to see what the differences are, and I hope to
+> document that Linux raid is better... Anyway I am first and foremost
+> just curious, and if HW/fake raid is faster or better, the I would
+> gladly recommend it.
+>  =20
 
-Uhuhu.. Such bugs are hard to spot for the human eye.
+Don't confuse HW and firmware raid, they don't have the same failure=20
+points and capabilities.
 
-> I've fixed it and put spaces around the '-' to make it more obvious.
-
-Thanks.
-
-> The rest are OK.
-
-Glad to hear that.
-
-> For future patches, could you please:
->=20
-> 1/ run ./scripts/checkpatch.pl on them and fix the warnings, mostly
->    line length issues in this case.
-> 2/ run the mdadm test suite on a kernel with the patches applied.
-
-Will do that before sending the next batch (probably tomorrow).
-
-Thanks
-Andre
 --=20
-The only person who always got his work done by Friday was Robinson Crusoe
+Bill Davidsen <davidsen@tmr.com>
+  "Woe unto the statesman who makes war without a reason that will stil=
+l
+  be valid when the war is over..." Otto von Bismark=20
 
---brdEIFGMNIjz5YJG
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
 
-iD8DBQFIhK5rWto1QDEAkw8RAtUtAJ4yX1qaFen2y0nAuQ3kj56/xOoqBwCbB/IT
-oGWNBD4pWJsucaSjRPIXBPc=
-=Blnr
------END PGP SIGNATURE-----
-
---brdEIFGMNIjz5YJG--
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
