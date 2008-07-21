@@ -1,36 +1,45 @@
-From: Randy Dunlap <randy.dunlap@oracle.com>
-Subject: Re: INFO: task pdflush:393 blocked for more than 120 seconds. &
- Call traces ... (fwd)
-Date: Mon, 21 Jul 2008 11:17:29 -0700
-Message-ID: <20080721111729.b8b987b3.randy.dunlap@oracle.com>
-References: <Pine.LNX.4.64.0807210936410.7212@filesrv1.baby-dragons.com>
+From: Arthur Jones <ajones@riverbed.com>
+Subject: raid10 failing to fail...
+Date: Mon, 21 Jul 2008 12:00:18 -0700
+Message-ID: <20080721190018.GA18246@ajones-laptop.nbttech.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0807210936410.7212@filesrv1.baby-dragons.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: "Mr. James W. Laferriere" <babydr@baby-dragons.com>, lkml <linux-kernel@vger.kernel.org>
-Cc: linux-raid maillist <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-[cc-ing lkml]
+Hi All,  I have a raid10 array md0 which, when I
+fail all reads on the first underlying block device
+(/dev/sda5), reads from the array hang forever.
 
+This is easy for me to reproduce (blkflsbuf is
+a simple C program that does a BLKFLSBUF ioctl):
 
-On Mon, 21 Jul 2008 09:40:23 -0800 (AKDT) Mr. James W. Laferriere wrote:
+# mount -t debugfs debugfs /debug
+# echo 1 > /debug/fail_make_request/interval
+# echo 100 > /debug/fail_make_request/probability
+# echo 0 > /debug/fail_make_request/space
+# echo N > /debug/fail_make_request/task-filter
+# echo -1 > /debug/fail_make_request/times
+# echo 2 > /debug/fail_make_request/verbose
+# ./blkflsbuf /dev/md0
+# ./blkflsbuf /dev/sda5
+# echo 1 > /sys/block/sda/sda5/make-it-fail
+# dd if=/dev/sda5 of=/dev/null count=1
+[fails as expected]
+# ./blkflsbuf /dev/sda5
+# dd if=/dev/md0 of=/dev/null count=1
+[hangs here -- kill -INT, -TERM, -KILL
+ have no effect...]
 
-<http://marc.info/?l=linux-raid&m=121666205220699&w=2>
+I expected to get the reads coming from the
+working mirror and to have the failing disk
+marked Faulty.  This is tested w/ today's
+git tree, but seems to happen on every kernel
+I've tried (2.6.9 RHEL4, 2.6.26).
 
+Any ideas?  Thanks...
 
-Basically a "me too", on x86_64, 4 proc, 8 GB RAM.
-
-I'm using OLTEST (Oracle Linux test) instead of bonnie.  OLTEST never
-finishes because of this.
-
-kernel log (12 MB) is here: http://oss.oracle.com/~rdunlap/kerneltest/logs/netcon-4655.log
-
-
----
-~Randy
-Linux Plumbers Conference, 17-19 September 2008, Portland, Oregon USA
-http://linuxplumbersconf.org/
+Arthur
