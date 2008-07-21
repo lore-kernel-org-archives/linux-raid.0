@@ -1,65 +1,50 @@
 From: Bill Davidsen <davidsen@tmr.com>
 Subject: Re: Benchmarks: Linux Kernel RAID vs a Hardware RAID setup
-Date: Mon, 21 Jul 2008 12:55:23 -0400
-Message-ID: <4884BF7B.6030206@tmr.com>
-References: <1216130769.5633.318.camel@sam.localdomain> <20080715163932.GA23164@rap.rap.dk> <487CEF1A.6050402@wasp.net.au> <20080715201221.GB26439@rap.rap.dk>
+Date: Mon, 21 Jul 2008 12:58:28 -0400
+Message-ID: <4884C034.6020502@tmr.com>
+References: <1216130769.5633.318.camel@sam.localdomain> <20080715163932.GA23164@rap.rap.dk> <1216180685.5633.364.camel@sam.localdomain> <20080716044718.GA7626@rap.rap.dk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1;
 	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20080715201221.GB26439@rap.rap.dk>
+In-Reply-To: <20080716044718.GA7626@rap.rap.dk>
 Sender: linux-raid-owner@vger.kernel.org
 To: =?ISO-8859-1?Q?Keld_J=F8rn_Simonsen?= <keld@dkuug.dk>
-Cc: Brad Campbell <brad@wasp.net.au>, Ben Martin <monkeyiq@users.sourceforge.net>, linux-raid@vger.kernel.org
+Cc: Ben Martin <monkeyiq@users.sourceforge.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 Keld J=F8rn Simonsen wrote:
-> On Tue, Jul 15, 2008 at 10:40:26PM +0400, Brad Campbell wrote:
+> On Wed, Jul 16, 2008 at 01:58:05PM +1000, Ben Martin wrote:
 >  =20
->> Keld J=F8rn Simonsen wrote:
->>
+>> On Tue, 2008-07-15 at 18:39 +0200, Keld J=F8rn Simonsen wrote:
 >>    =20
->>> I would also welcome test with mobo HW RAID - Many mobo's today com=
-e
->>> with some HW raid functionality, and many people would be in the
->>> situation of whether to choose a HW or SW configuration.
+>>> On Wed, Jul 16, 2008 at 12:06:09AM +1000, Ben Martin wrote:
 >>>      =20
->> Do you have some pointers for information on motherboards that come =
-with=20
->> hardware raid? I'd be interested to have a look at them. I've certai=
-nly=20
->> seen plenty of "fakeraid" systems, but I've not yet come across hard=
-ware=20
->> raid on an MB.
+>> One interesting question about the r10 layouts, if f2/o2 perform bet=
+ter
+>> than n2 why is the default for creation still n2? Just like mkfs.xfs
+>> determining the raid chunk and stripe size for you (assuming you don=
+'t
+>> use LVM to circumvent this, gah!), shouldn't mdadm select the "faste=
+st"
+>> --layout as the default for RAID-10?
 >>    =20
 >
-> It is possible that I am thinking of what you call fakeraid.
->  =20
+> Perhaps. I think Neil first implemented "near", and more or less at t=
+he same
+> time "far" - but to him the main thing was "near". This was 2.6.9. Th=
+en
+> in 2.6.18 he implemented "offset".  In the early days the
+> characteristics of each layout were not well known. It is only in the
+> last year or so I have seen benchmarks with n2, f2 and o2.
 
-I like "firmware raid" better, but the bottom line here is that the rai=
+
+I admit that I have done "raw device performance" benchmarks with n2 an=
 d=20
-is still done in the system CPU. These often have little or no hardware=
-=20
-support, such as cache so that multiple drives can be written without=20
-passing the data through the system bus more than once (and chancing=20
-change while that happens).
-> Anyway this is what many users buy and look at employing.
-> And my understanding is that you can set up the mobo controller in th=
-e
-> bios, and then have it running with Linux, without further software.=20
->  =20
-
-Yes, although the reliability of firmware raid under device failure=20
-conditions is dependent on the vendor, firmware level, etc, etc.
-> I would then like to see what the differences are, and I hope to
-> document that Linux raid is better... Anyway I am first and foremost
-> just curious, and if HW/fake raid is faster or better, the I would
-> gladly recommend it.
->  =20
-
-Don't confuse HW and firmware raid, they don't have the same failure=20
-points and capabilities.
+f2, and neglected o2 completely, so I rely on other's work. However, I=20
+am most often bitten by raid5 issues, so I have been paying most=20
+attention to them.
 
 --=20
 Bill Davidsen <davidsen@tmr.com>
