@@ -1,39 +1,30 @@
-From: tirumalareddy marri <tirumalareddymarri@yahoo.com>
-Subject: RAID-5 & RAID-0 lower read performance using  ADMA + HW XOR engine
-Date: Mon, 21 Jul 2008 17:24:31 -0700 (PDT)
-Message-ID: <841573.81999.qm@web81305.mail.mud.yahoo.com>
+From: Richard Scobie <richard@sauce.co.nz>
+Subject: Re: INFO: task pdflush:393 blocked for more than 120 seconds. & Call
+  traces ... (fwd)
+Date: Tue, 22 Jul 2008 12:57:18 +1200
+Message-ID: <4885306E.1030208@sauce.co.nz>
+References: <Pine.LNX.4.64.0807210936410.7212@filesrv1.baby-dragons.com> <18565.6095.988483.628391@notabene.brown> <Pine.LNX.4.64.0807211529350.7212@filesrv1.baby-dragons.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.64.0807211529350.7212@filesrv1.baby-dragons.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
+Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Recently I ported ADMA=A0 interface to of of=A0our AMCC powerPC chips. =
-Which has High Speed DMA and HW XOR acceleration. I am using high speed=
- DMA to do memcopy in RAID-0 . In RAID-5 I am using DMA + HW XOR engine=
-=2E I am using IO-meter to test the performance.
-=A0
-=A0
-=A0
-RAID-0: (page size 64k, File System Block size 64k)
-=A0
-=A0=A0 READ: 27MBps
-=A0=A0 Write: 68MBps=20
-=A0
-RAID-5: (Page size 64K and File system Block size 64k)
-=A0=A0=A0 READ: 28MBps
-=A0=A0=A0 WRITE: 50MBps
-=A0
-=A0
-I see there is lot of IO wait time. Any suggestions how to reduce IO wa=
-it time ? For sure there is no HW acceleration on Read path.
-=A0
-Thanks in advance,
-Marri
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Mr. James W. Laferriere wrote:
+
+>>> INFO: task pdflush:393 blocked for more than 120 seconds.
+>>> "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this 
+>>> message.
+
+I see similar things now during resyncs and a few times during md RAID 
+"checks", since kernel 2.6.25.6-55.fc9.x86_64 on md RAID6 and XFS.
+
+See : http://marc.info/?l=linux-raid&m=121408071129399&w=2
+
+Regards,
+
+Richard
