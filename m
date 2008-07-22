@@ -1,74 +1,101 @@
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: INFO: task pdflush:393 blocked for more than 120 seconds. &
-	Call traces ... (fwd)
-Date: Tue, 22 Jul 2008 12:20:50 +1000
-Message-ID: <20080722022050.GG6761@disturbed>
-References: <Pine.LNX.4.64.0807210936410.7212@filesrv1.baby-dragons.com> <18565.6095.988483.628391@notabene.brown> <Pine.LNX.4.64.0807211529350.7212@filesrv1.baby-dragons.com>
+From: martin f krafft <madduck@madduck.net>
+Subject: Re: [patch 3/4] fastboot: make the raid autodetect code wait for
+	all devices to init
+Date: Tue, 22 Jul 2008 12:36:05 +0200
+Message-ID: <20080722103605.GA13268@piper.oerlikon.madduck.net>
+References: <20080720151140.4aa7c682@infradead.org> <20080720151339.6f4a83d8@infradead.org> <18563.50428.659101.868745@notabene.brown> <20080721113417.GA8152@piper.oerlikon.madduck.net> <18565.6836.784228.255912@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="bg08WKrSYDhXBjb5"
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.64.0807211529350.7212@filesrv1.baby-dragons.com>
+In-Reply-To: <18565.6836.784228.255912@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
-Cc: Neil Brown <neilb@suse.de>, linux-raid maillist <linux-raid@vger.kernel.org>, xfs@oss.sgi.com
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid mailing list <linux-raid@vger.kernel.org>, 462617@bugs.debian.org
 List-Id: linux-raid.ids
 
-On Mon, Jul 21, 2008 at 03:43:03PM -0800, Mr. James W. Laferriere wrote:
-> 	Hello Neil ,
->
-> On Tue, 22 Jul 2008, Neil Brown wrote:
->> On Monday July 21, babydr@baby-dragons.com wrote:
->>> INFO: task pdflush:393 blocked for more than 120 seconds.
->>> "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
->>> pdflush       D c8209f80  4748   393      2
->>>          f75e5e58 00000046 f7f7ad50 c8209f80 f7f7a8a0 f75e5e24 c014fc57 00000000
->>>          f7f7a8a0 e5d0dd00 c8209f80 f75e4000 c0819e00 c8209f80 f7f7aaf4 f75e5e44
->>>          00000286 f75e5e80 f510de30 f75e5e58 c0142233 f510de00 f75e5e80 f510de30
->>> Call Trace:
->>>    [<c014fc57>] ? mark_held_locks+0x67/0x80
->>>    [<c0142233>] ? add_wait_queue+0x33/0x50
->>>    [<c03a7f85>] xfs_buf_wait_unpin+0xb5/0xe0
->>>    [<c0127a60>] ? default_wake_function+0x0/0x10
->>>    [<c0127a60>] ? default_wake_function+0x0/0x10
->>>    [<c03a84fb>] xfs_buf_iorequest+0x4b/0x80
->>>    [<c03adeee>] xfs_bdstrat_cb+0x3e/0x50
->>>    [<c03a495c>] xfs_bwrite+0x5c/0xe0
->>>    [<c039e941>] xfs_syncsub+0x121/0x2b0
->>>    [<c018a43b>] ? lock_super+0x1b/0x20
->>>    [<c018a43b>] ? lock_super+0x1b/0x20
->>>    [<c039e1d8>] xfs_sync+0x48/0x70
->>>    [<c03af833>] xfs_fs_write_super+0x23/0x30
->>>    [<c018a80f>] sync_supers+0xaf/0xc0
->>
->> Looks a lot like an XFS problem to me.
->> Or at least, XFS people would be able to interpret this stack the
->> best.
-> 	Hmm ,  Ok ,  I'll post there ,  I can provide a -complete- boot ->  
-> renboot log of the actions ,  But it ain't small ~ 649K .  So I'll post 
-> that on the back of my website , ie:
->
-> http://www.baby-dragons.com/bonnie++1.03c-2.6.26-rc9.console.trace.log
 
-Given that it's a log hang on 2.6.29-rc9, I'd first say add this commit:
+--bg08WKrSYDhXBjb5
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=49641f1acfdfd437ed9b0a70b86bf36626c02afe
+[462617@bugs.debian.org added to Cc]
 
-to your build (went in after -rc9 but before 2.6.26 was released)
-and see if that solves the problem.
+also sprach Neil Brown <neilb@suse.de> [2008.07.22.0124 +0200]:
+> > It was my understanding that write-intent bitmaps slow down all
+> > operations and are not suggested on e.g. workstations. No?
+>=20
+> Well, they don't slow down reads.
+> If you have a separate root filesystem (i.e. /home and /var are
+> elsewhere), it is likely to be read-mostly, so bitmaps probably won't
+> hurt much.
+> And an external bitmap on a dedicated device has minimal performance
+> cost.
+>=20
+> However I neither suggest having nor not-having bitmaps.  The choice to
+> use them involves a trade-off which I cannot make for other people.
 
-In more detail, this stack trace implies log I/O has not completed
-after the log force was triggered in xfs_buf_wait_unpin(). The above
-patch fixes a bug in log I/o dispatch where an non-atomic compare
-and decrement would result in log I/O not being dispatched.
+Ok, in the light of http://bugs.debian.org/462617, this answers my
+question and Debian will not make them default. It would be nice to
+have the option though, during installation.
 
-So, you've got a hang waiting for log I/o to complete on a kernel
-that has a known problem with log I/O dispatch, so it's likely
-that's what you've hit.
+Including the rest of your reply for the sake of the bug record,
+which is on Cc:
 
-Cheers,
+> They would, however, be very useful to cover the gap when assembling
+> arrays incrementally.
+> If, for example, you have a 6 disk raid5 array and 5 disks have been
+> found, what do you do? =20
+>   - wait for the 6th, that might never arrive
+>   - start degraded and if a write happens before the 6th disk arrives,
+>     have to rebuild the 6th disk completely.
+>=20
+> Neither is a good option.
+> An alternate is
+>   - add an internal bitmap, and remove it after the 6th disk has
+>     arrived, or after we are sure there are no more disks to find.
+>=20
+> Doing this means that if a recovery is needed when the 6th disk
+> arrives, it will be very fast.
+>=20
+> It's not hard to notice that the bitmap proposed here does not need to
+> be on stable storage.  It is not protecting against a crash, just
+> against a window when the array is degraded.  So if we could support
+> bitmaps on a tmpfs, we could use an external bitmap in /tmp instead of
+> an internal bitmap.
+> Or even - we could enhance the md code to always use a bitmap, but
+> simply not write it to storage if no such was configured.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+This would be very nice. In fact, everything that makes md better
+and requires less complexity in the mdadm packaging is nice. :)
+
+> (If a crash happens during that window between writing to the degraded
+> array and recovering the few blocks needed on the final device, then
+> you would be in an unfortunate position.  For raid1/10 you would just
+> need a full resync, which you would have needed anyway, so no loss.
+> For raid4/5/6, you have a potential for dataloss, so I probably would
+> not make this behaviour the default for those levels...)
+
+--=20
+martin | http://madduck.net/ | http://two.sentenc.es/
+=20
+drink canada dry! you might not succeed, but it *is* fun trying.
+=20
+spamtraps: madduck.bogus@madduck.net
+
+--bg08WKrSYDhXBjb5
+Content-Type: application/pgp-signature; name="digital_signature_gpg.asc"
+Content-Description: Digital signature (see http://martin-krafft.net/gpg/)
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+
+iEYEARECAAYFAkiFuBQACgkQIgvIgzMMSnVwngCg5yLrJuqsLGGc0r63EAznzrDz
+JNgAnixA1qkowhR7/mYKlV1Sq8YbU8nW
+=IHKH
+-----END PGP SIGNATURE-----
+
+--bg08WKrSYDhXBjb5--
