@@ -1,62 +1,67 @@
-From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
+From: Brad Campbell <brad@wasp.net.au>
 Subject: Re: Benchmarks: Linux Kernel RAID vs a Hardware RAID setup
-Date: Wed, 23 Jul 2008 09:45:39 +0200
-Message-ID: <20080723074539.GA13549@rap.rap.dk>
-References: <1216130769.5633.318.camel@sam.localdomain> <20080715163932.GA23164@rap.rap.dk> <487CEF1A.6050402@wasp.net.au> <20080715201221.GB26439@rap.rap.dk> <4884BF7B.6030206@tmr.com>
+Date: Wed, 23 Jul 2008 14:29:37 +0400
+Message-ID: <48870811.8050402@wasp.net.au>
+References: <1216130769.5633.318.camel@sam.localdomain> <20080715163932.GA23164@rap.rap.dk> <487CEF1A.6050402@wasp.net.au> <20080715201221.GB26439@rap.rap.dk> <4884BF7B.6030206@tmr.com> <20080723074539.GA13549@rap.rap.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4884BF7B.6030206@tmr.com>
+In-Reply-To: <20080723074539.GA13549@rap.rap.dk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: Brad Campbell <brad@wasp.net.au>, Ben Martin <monkeyiq@users.sourceforge.net>, linux-raid@vger.kernel.org
+To: =?ISO-8859-1?Q?Keld_J=F8rn_Simonsen?= <keld@dkuug.dk>
+Cc: Bill Davidsen <davidsen@tmr.com>, Ben Martin <monkeyiq@users.sourceforge.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Jul 21, 2008 at 12:55:23PM -0400, Bill Davidsen wrote:
-> Keld J=F8rn Simonsen wrote:
-> >On Tue, Jul 15, 2008 at 10:40:26PM +0400, Brad Campbell wrote:
-> > =20
-> >>Keld J=F8rn Simonsen wrote:
-> >>
-> >>   =20
-> >>>I would also welcome test with mobo HW RAID - Many mobo's today co=
-me
-> >>>with some HW raid functionality, and many people would be in the
-> >>>situation of whether to choose a HW or SW configuration.
-> >>>     =20
-> >>Do you have some pointers for information on motherboards that come=
- with=20
-> >>hardware raid? I'd be interested to have a look at them. I've certa=
-inly=20
-> >>seen plenty of "fakeraid" systems, but I've not yet come across har=
-dware=20
-> >>raid on an MB.
-> >>   =20
-> >
-> >It is possible that I am thinking of what you call fakeraid.
-> > =20
->=20
-> I like "firmware raid" better, but the bottom line here is that the r=
-aid=20
-> is still done in the system CPU. These often have little or no hardwa=
-re=20
-> support, such as cache so that multiple drives can be written without=
+Keld J=F8rn Simonsen wrote:
+
+>>> It is possible that I am thinking of what you call fakeraid.
+>>> =20
+>> I like "firmware raid" better, but the bottom line here is that the =
+raid=20
+>> is still done in the system CPU. These often have little or no hardw=
+are=20
+>> support, such as cache so that multiple drives can be written withou=
+t=20
+>> passing the data through the system bus more than once (and chancing=
 =20
-> passing the data through the system bus more than once (and chancing=20
-> change while that happens).
+>> change while that happens).
+>=20
+> OK, if the definition on these controllers is that they must have sup=
+port
+> from the OS, then I think most of the mobos today come with hardware
+> raid, that is there needs to be no support in Linux for this. Everyth=
+ing
+> is set up via the bios, and from the linux kernel it looks like an
+> ordinary disk.
 
-OK, if the definition on these controllers is that they must have suppo=
-rt
-from the OS, then I think most of the mobos today come with hardware
-raid, that is there needs to be no support in Linux for this. Everythin=
-g
-is set up via the bios, and from the linux kernel it looks like an
-ordinary disk.
+The problem here is it looks like an ordinary disk to the BIOS only. Gr=
+ub can use this to load the=20
+kernel and initrd from, but when the kernel boots it sees the controlle=
+r as the simple controller it=20
+is with some disks connected to it. It requires something like dmraid t=
+o make the "array" visible as=20
+an actual array.
 
-Best regards
-keld
+None of these controllers perform any of the RAID offload themselves, i=
+t's all handled by the=20
+driver. Windows loads using the BIOS and then hands over to the driver =
+which handles the raid, just=20
+the same as linux does with dmraid.
+
+I believe some of the ITE chipsets can handle raid-1 and possibly raid-=
+0 internally, and the kernel=20
+has the ability to drive those as a raid controller, but they are somew=
+hat rarer than the other=20
+fakeraid implementations out there.
+
+Brad
+--=20
+Dolphins are so intelligent that within a few weeks they can
+train Americans to stand at the edge of the pool and throw them
+fish.
+
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
