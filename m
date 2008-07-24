@@ -1,72 +1,97 @@
-From: "Dailey, Nate" <Nate.Dailey@stratus.com>
-Subject: RE: crash: write_sb_page walks mddev.disks without holding reconfig_mutex
-Date: Thu, 24 Jul 2008 08:42:54 -0400
-Message-ID: <3DC430E8F4814543943B52C2F34BF52A1194A2@EXNA.corp.stratus.com>
-Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+From: aucoins@comcast.net
+Subject: Re: failed device cleanup ?
+Date: Thu, 24 Jul 2008 13:41:48 +0000
+Message-ID: <072420081341.27209.4888869C0000DBF600006A4922155754749C0207010C9A0E@comcast.net>
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
-In-Reply-To: 18565.5132.347195.910949@notabene.brown
-References: message from Dailey, Nate on Monday July 21 18565.5132.347195.910949@notabene.brown
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org, mingo@redhat.com
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This version of the patch seems to do the trick... at least I haven't so
-far hit a failure testing with it.
+It's only in the summary of the individual array member that there is any 
+mention of a "failed" device.
 
-Thanks!
+The failed device listed is the one that was previously failed before the array 
+was repaired.
 
-Nate
+In the examine_super1 function of version 2.6.2 of mdadm around line 303 is 
+where the word "failed" is being printed in the "Array Slot" status based on the 
+"role" derived from the mdp_superblock_1 struct.
+    printf("    Array Slot : %d (", __le32_to_cpu(sb->dev_number));
+    for (i= __le32_to_cpu(sb->max_dev); i> 0 ; i--)
+        if (__le16_to_cpu(sb->dev_roles[i-1]) != 0xffff)
+            break;
+    for (d=0; d < i; d++) {
+        int role = __le16_to_cpu(sb->dev_roles[d]);
+        if (d) printf(", ");
+        if (role == 0xffff) printf("empty");
+        else if(role == 0xfffe) printf("failed");
+        else printf("%d", role);
+    }
 
+The total number "failed" at the end of the "Array State" line is being printed around line 
+331based on the same value.
+    for (i=0; i< __le32_to_cpu(sb->max_dev); i++) {
+        int role = __le16_to_cpu(sb->dev_roles[i]);
+        if (role == 0xFFFE)
+            faulty++;
+    }
+    if (faulty) printf(" %d failed", faulty);
 
- 
+I have a couple concerns around this behavior.
 
------Original Message-----
-From: Neil Brown [mailto:neilb@suse.de] 
-Sent: Monday, July 21, 2008 6:56 PM
-To: Dailey, Nate
-Cc: linux-raid@vger.kernel.org; mingo@redhat.com
-Subject: RE: crash: write_sb_page walks mddev.disks without holding
-reconfig_mutex
+1) The "failed" (role == 0xfffe") entries are being accumulated infinitely. 
+Under normal circumstances this would not ordinarily be a problem but in our 
+automated test environment it does cause some concern.
 
-On Monday July 21, Nate.Dailey@stratus.com wrote:
-> Quick update... I've applied your patch to the kernel I'm using. There
-> were a few differences... for example, md_delayed_delete doesn't exist
-> in my kernel (so I added it).
+2) The report of  "failed" devices in an otherwise healthy array is misleading. 
+And, as you can see from the earlier example, the infinite accumulation of 
+previously failed devices makes the summary cumbersome.
+
+ -------------- Original message ----------------------
+From: aucoins@comcast.net
+> I've searched the archives and can't find an answer specific to my question, if 
+> the answer is in the archives and someone can rub my nose in it I'd appreciate 
+> it.
 > 
-> Unfortunately, I'm hitting a deadlock, and it looks like
-md_delayed_work
-> is at fault. Seems that in at least one case, code which holds the
-> inode_lock is interrupted, at which point the md_delayed_delete code
-> gets to run. He ends up needing the inode_lock too, and we're stuck.
+> What I'm seeing in version 2.6.2 of mdadm is left over "failed" devices in the 
+> output from examining an individual device.
+> 
+> --->Raid Devices : 12
+> --->Array Slot : 0 (0, 1, 2, 3, 4, 5, 6, failed, 8, 9, 10, 11, 7)
+> --->Array State : Uuuuuuuuuuuu 1 failed
+> 
+> The array is actually healthy and repaired but the examine option insists on 
+> displaying the status for previously failed devices that have been replaced. 
+> 
+> I took a look at the source and didn't see where the entries for previously 
+> failed devices were getting cleaned up once the array was repaired. They appear 
+> to accumulate forever or at least until they hit the programmatic "max_dev" 
+> limit which appears to be 384 or 512 depending on where you look.
+> 
+> 6 super1.c getinfo_super1        467 __le32_to_cpu(sb->max_dev) > 512)
+> d super1.c add_internal_bitmap1 1218 __le32_to_cpu(sb->max_dev) <= 384)) {
+> e super1.c add_internal_bitmap1 1234 if (1 || __le32_to_cpu(sb->max_dev) <= 384) 
+> {
+> 
+> The code looks very similar in older versions (2.3.1) but this behavior escaped 
+> our attention because the older version didn't blatantly enumerate "failed" 
+> devices in a summary at the bottom of the output.
+> 
+> --->Raid Devices : 12
+> --->Array Slot : 14 (failed, failed, 2, 3, 4, failed, failed, 7, 8, 9, 10, 11, 
+> 1, 6, 0, 5)
+> --->Array State : Uuuuuuuuuuuu 4 failed
+> 
+> This might not ordinarily be a concern except that my company is providing a 
+> high availability solution which currently employs linux-raid as part of the 
+> infrastructure and in the course of testing our product we subject it to an 
+> inordinate number of automated hot-plug drive failures and replacements which 
+> causes the number of  "failed" devices in the array to grow fairly quickly. It 
+> appears the only way to clear the "failed" entries is to delete the array and 
+> recreate it, basically a complete reinstall of the product.
+> 
+> Is there a reason these old superblock entries are not being cleaned up?
+> 
+> Even if they shouldn't be cleaned up, is there a reason failed devices should 
+> appear in the summary once the array is repaired?
 
-Yes.... I noticed yesterday that there was a problem with that patch.
-calling md_delayed_delete with call_rcu just isn't right.
-md_delayed_delete needs to get a mutex, and call_rcu calls things in a
-context where mutexes aren't allowed.  The problem you are seeing has
-exactly the same cause.
-
-So I've changed it to:
-  call synchronise_rcu() to handle the RCU side, and
-  restore the use of schedule_work to run md_delayed delete.
-so unbind_rdev_from_array now ends.
-	synchronize_rcu();
-	INIT_WORK(&rdev->del_work, md_delayed_delete);
-	kobject_get(&rdev->kobj);
-	schedule_work(&rdev->del_work);
-
-You can see the submitted version of the full patch at 
-
- 
-http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commi
-tdiff;h=4b80991c6cb9efa607bc4fd6f3ecdf5511c31bb0
-
-If you can test that (with appropriate revisions to apply to your
-kernel) I'd really appreciate it.
-
-Thanks,
-NeilBrown
