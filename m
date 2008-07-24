@@ -1,32 +1,49 @@
-From: John Robinson <john.robinson@anonymous.org.uk>
-Subject: dmraid / RAID-5 / ICH10R
-Date: Thu, 24 Jul 2008 18:32:56 +0100
-Message-ID: <4888BCC8.9020308@anonymous.org.uk>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: Out of sync mirrors
+Date: Thu, 24 Jul 2008 18:37:55 -0400
+Message-ID: <48890443.5000003@tmr.com>
+References: <e6432b760807240903s57815b2aib5547d35b701ca70@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <e6432b760807240903s57815b2aib5547d35b701ca70@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Ana Paula <anapaula@cs.rutgers.edu>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Just got myself a new PC with an Asus P5Q PRO board and a bunch of SATA 
-discs, and I'd like to install it booting off a RAID-5 array on the 
-Intel Matrix Storage controller on the ICH10R southbridge, so I'm 
-looking for dmraid support for the ICH10R. It's there up to a point in 
-CentOS 5.2, but I think not for RAID-5, at least not according to the 
-docs I've looked at. I'd settle for booting off RAID-1 but the Intel 
-BIOS utility won't let me configure both a small RAID-1 and the rest 
-RAID-5 on the same bunch of discs.
+Ana Paula wrote:
+> Hi,
+> I am using linux 2.6.8 for my research on raid systems.
+>
+> I need to have the disks of an array out of sync for a while.
+> I want to be able to stop a disk request queue (blk_stop_queue) and
+> start it sometime later. Meanwhile its mirrors should be serving r/w
+> as if this mirror was up.
+> Whenever the stopped mirror comes back it will serve all the requests
+> already sent to it.
+>
+> I am queueing up the requests sent to all others while my mirror queue
+> is stopped.
+>
+> The problem is that the other mirrors stop serving as well. Even if I
+> don't stop the queue, only delay its request a little bit, still the
+> others also slow down.
+>
+> Question: how do I get raid to allow mirrors to be out of sync?
+>
+> Obviously, I am missing something out in the code.
+>
+> Any clues?
+>   
 
-I see a report of a similar problem in Fedora 8 on ICH9R from November 
-2007, so I've stuck my oar in there too: 
-https://bugzilla.redhat.com/show_bug.cgi?id=364901
+Take a look at "write-mostly" and see if creative use of it will assist. 
+I suspect you're doing something which needs a bitmap, as well.
 
-Anyway, is this something that should be working already and I'm doing 
-it wrong, or something that's coming soon?
+-- 
+Bill Davidsen <davidsen@tmr.com>
+  "Woe unto the statesman who makes war without a reason that will still
+  be valid when the war is over..." Otto von Bismark 
 
-Cheers,
-
-John.
 
