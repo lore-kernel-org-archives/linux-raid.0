@@ -1,28 +1,42 @@
-From: tirumalareddy marri <tirumalareddymarri@yahoo.com>
-Subject: possible bug using async_xor() call in ops_run_post_xor()
-Date: Fri, 25 Jul 2008 11:45:21 -0700 (PDT)
-Message-ID: <833724.76277.qm@web81303.mail.mud.yahoo.com>
+From: Arthur Jones <ajones@riverbed.com>
+Subject: [PATCH] md: raid10: wake up frozen array
+Date: Fri, 25 Jul 2008 12:03:38 -0700
+Message-ID: <20080725190338.GA27484@ajones-laptop.nbttech.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: Dan Williams <dan.j.williams@intel.com>
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I am looking at async_xor() usage and found that if async_xor() returns=
- null because of=A0 device->device_prep_dma_xor() <async_xor.c> failed =
-to get slot. This might cause failure of=A0stripe creation . Which woul=
-d cause data=A0corruption in RAID-5 at high data rates.
-OR
-Data integrity is guaranteed because ops_complete_write() will not be c=
-alled in the event=A0of =A0device->device_prep_dma_xor() failed to get =
-slot and returned NULL ?=20
-Thanks,
-Marri
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+When rescheduling a bio in raid10, we wake up
+the md thread, but if the array is frozen, this
+will have no effect.  This causes the array to
+remain frozen for eternity.  We add a wake_up
+to allow the array to de-freeze.  This code is
+nearly identical to the raid1 code, which has
+this fix already.
+
+Signed-off-by: Arthur Jones <ajones@riverbed.com>
+---
+ drivers/md/raid10.c |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index 159535d..d41bebb 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -215,6 +215,9 @@ static void reschedule_retry(r10bio_t *r10_bio)
+ 	conf->nr_queued ++;
+ 	spin_unlock_irqrestore(&conf->device_lock, flags);
+ 
++	/* wake up frozen array... */
++	wake_up(&conf->wait_barrier);
++
+ 	md_wakeup_thread(mddev->thread);
+ }
+ 
+-- 
+1.5.4.3
