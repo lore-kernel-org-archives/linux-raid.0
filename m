@@ -1,48 +1,34 @@
-From: "exxs.net - matevz sernc-urban" <ms@exxs.net>
-Subject: RAID10,f2 out of sync though synced
-Date: Fri, 25 Jul 2008 13:18:02 +0200
-Message-ID: <4889B66A.20301@exxs.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Andre Noll <maan@systemlinux.org>
+Subject: [PATCH 0/6] md: Make linear raid use sector_t for internal representations
+Date: Fri, 25 Jul 2008 17:27:46 +0200
+Message-ID: <1216999672-4943-1-git-send-email-maan@systemlinux.org>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
+Cc: Andre Noll <maan@systemlinux.org>
 List-Id: linux-raid.ids
 
-Hello,
+Hi
 
-we have a RAID10,f2 over 4 SATA drives connected directly to the mobo.
+here's a bunch of patches that convert all representations of
+internal variables in linear.c to sectors. Patches 1-3 are only
+trivial cleanups.
 
-Comparing a md5sum on first 1K (or 1M) gives me two different md5 - 
-sometimes its '0f343b0931126a20f133d67c2b018a3b' and other times its 
-'eff670f7076825ba3411ec24dd1ea5b1'.
+Patches #4 and #5 are straight-forward replacements of the size and
+offset fields of struct dev_info and some local variables respectively.
 
-Is this a correct behaviour on a RAID10,f2 with 4 disks?
-And hints?
+The only patch in this series that is not self-explanatory is #6 that
+converts the hash_spacing and the preshift fields of struct dev_info
+to sectors. I've added a detailed changelog message for this patch
+that explains the details of the changes introduced by this patch.
 
-* cat /proc/mdstat
-Personalities : [raid1] [raid10]
-md2 : active raid10 sdb5[1] sda5[0] sdd5[3] sdc5[2]
-       953778688 blocks 64K chunks 2 far-copies [4/4] [UUUU]
+checkpatch.pl is happy with all six patches, and the patched kernel
+was tested by the test suite of mdadm. While the 00linear test was
+successful, a couple of other tests failed. However, this seems to
+be unrelated to the changes of this series because the same tests
+also failed with an unpached ubuntu-hardy kernel.
 
-* echo check > /sys/block/md2/md/sync_action
-finished without any new result - then array must be in sync i suppose.
 
-* did also:
-echo 1 > /proc/sys/vm/drop_caches
-
-* and now we compare the first 1K from the array - it should always be 
-the same, but its not.
-
-=> dd if=/dev/md2 iflag=direct bs=1K count=1 status=noxfer|md5sum
-0f343b0931126a20f133d67c2b018a3b
-=> dd if=/dev/md2 iflag=direct bs=1K count=1 status=noxfer|md5sum
-eff670f7076825ba3411ec24dd1ea5b1
-=> dd if=/dev/md2 iflag=direct bs=1K count=1 status=noxfer|md5sum
-eff670f7076825ba3411ec24dd1ea5b1
-=> dd if=/dev/md2 iflag=direct bs=1K count=1 status=noxfer|md5sum
-0f343b0931126a20f133d67c2b018a3b
-
-thanks
-mat
+ drivers/md/linear.c         |  122 +++++++++++++++++-------------------------
+ include/linux/raid/linear.h |   10 ++--
+ 2 files changed, 55 insertions(+), 77 deletions(-)
