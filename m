@@ -1,42 +1,24 @@
 From: Arthur Jones <ajones@riverbed.com>
-Subject: [PATCH] md: raid10: wake up frozen array
-Date: Fri, 25 Jul 2008 12:03:38 -0700
-Message-ID: <20080725190338.GA27484@ajones-laptop.nbttech.com>
+Subject: Re: raid10 failing to fail...
+Date: Fri, 25 Jul 2008 12:05:56 -0700
+Message-ID: <20080725190556.GA19304@ajones-laptop.nbttech.com>
+References: <20080721190018.GA18246@ajones-laptop.nbttech.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
+In-Reply-To: <20080721190018.GA18246@ajones-laptop.nbttech.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-When rescheduling a bio in raid10, we wake up
-the md thread, but if the array is frozen, this
-will have no effect.  This causes the array to
-remain frozen for eternity.  We add a wake_up
-to allow the array to de-freeze.  This code is
-nearly identical to the raid1 code, which has
-this fix already.
+On Mon, Jul 21, 2008 at 12:00:18PM -0700, Arthur Jones wrote:
+> Hi All,  I have a raid10 array md0 which, when I
+> fail all reads on the first underlying block device
+> (/dev/sda5), reads from the array hang forever.
 
-Signed-off-by: Arthur Jones <ajones@riverbed.com>
----
- drivers/md/raid10.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
+This issue is now fixed with the patch I just
+posted...
 
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index 159535d..d41bebb 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -215,6 +215,9 @@ static void reschedule_retry(r10bio_t *r10_bio)
- 	conf->nr_queued ++;
- 	spin_unlock_irqrestore(&conf->device_lock, flags);
- 
-+	/* wake up frozen array... */
-+	wake_up(&conf->wait_barrier);
-+
- 	md_wakeup_thread(mddev->thread);
- }
- 
--- 
-1.5.4.3
+Arthur
+
