@@ -1,7 +1,7 @@
 From: Andre Noll <maan@systemlinux.org>
-Subject: [PATCH 4/6] md: linear: Represent dev_info->size and dev_info->offset in sectors.
-Date: Fri, 25 Jul 2008 17:27:50 +0200
-Message-ID: <1216999672-4943-5-git-send-email-maan@systemlinux.org>
+Subject: [PATCH 6/6] md: Convert remaining 1k representations in linear.c to sectors.
+Date: Fri, 25 Jul 2008 17:27:52 +0200
+Message-ID: <1216999672-4943-7-git-send-email-maan@systemlinux.org>
 References: <1216999672-4943-1-git-send-email-maan@systemlinux.org>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1216999672-4943-1-git-send-email-maan@systemlinux.org>
@@ -10,166 +10,170 @@ To: linux-raid@vger.kernel.org
 Cc: Andre Noll <maan@systemlinux.org>
 List-Id: linux-raid.ids
 
-Rename them to num_sectors and start_sector which is more descriptive.
+This patch renames hash_spacing and preshift to  spacing and
+sector_shift respectively with the following change of semantics:
+
+Case 1: (sizeof(sector_t) <= sizeof(u32)).
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In this case, we have sector_shift = preshift = 0 and spacing =
+2 * hash_spacing.
+
+Hence, the index for the hash table which is computed by the new code
+in which_dev() as sector / spacing equals the old value which was
+(sector/2) / hash_spacing.
+
+Note also that the value of nb_zone stays the same because both sz
+and base double.
+
+Case 2: (sizeof(sector_t) > sizeof(u32)).
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+(aka the shifting dance case). Here we have sector_shift = preshift +
+1 and
+
+spacing = 2 * hash_spacing
+
+during the computation of nb_zone and curr_sector, but
+
+spacing = hash_spacing
+
+in which_dev() because in the last hunk of the patch for linear.c we
+shift down conf->spacing (= 2 * hash_spacing) by one more bit than
+in the old code.
+
+Hence in the computation of nb_zone, sz and base have the same value
+as before, so nb_zone is not affected. Also curr_sector in the next
+hunk stays the same.
+
+In which_dev() the hash table index is computed as
+
+(sector >> sector_shift) / spacing
+
+In view of sector_shift = preshift + 1 and spacing = hash_spacing,
+this equals
+
+((sector/2) >> preshift) / hash_spacing
+
+which is the value computed by the old code.
 
 Signed-off-by: Andre Noll <maan@systemlinux.org>
 ---
- drivers/md/linear.c         |   51 ++++++++++++++++++++++---------------------
- include/linux/raid/linear.h |    4 +-
- 2 files changed, 28 insertions(+), 27 deletions(-)
+ drivers/md/linear.c         |   35 +++++++++++++++++------------------
+ include/linux/raid/linear.h |    6 ++++--
+ 2 files changed, 21 insertions(+), 20 deletions(-)
 
 diff --git a/drivers/md/linear.c b/drivers/md/linear.c
-index f33b574..b33e433 100644
+index 441b7fa..71ffebd 100644
 --- a/drivers/md/linear.c
 +++ b/drivers/md/linear.c
-@@ -42,7 +42,7 @@ static inline dev_info_t *which_dev(mddev_t *mddev, sector_t sector)
- 	(void)sector_div(block, conf->hash_spacing);
- 	hash = conf->hash_table[block];
+@@ -33,14 +33,13 @@ static inline dev_info_t *which_dev(mddev_t *mddev, sector_t sector)
+ {
+ 	dev_info_t *hash;
+ 	linear_conf_t *conf = mddev_to_conf(mddev);
+-	sector_t block = sector >> 1;
  
--	while ((sector>>1) >= (hash->size + hash->offset))
-+	while (sector >= hash->num_sectors + hash->start_sector)
- 		hash++;
- 	return hash;
- }
-@@ -63,7 +63,7 @@ static int linear_mergeable_bvec(struct request_queue *q, struct bio *bio, struc
- 	sector_t sector = bio->bi_sector + get_start_sect(bio->bi_bdev);
- 
- 	dev0 = which_dev(mddev, sector);
--	maxsectors = (dev0->size << 1) - (sector - (dev0->offset<<1));
-+	maxsectors = dev0->num_sectors - sector + dev0->start_sector;
- 
- 	if (maxsectors < bio_sectors)
- 		maxsectors = 0;
-@@ -111,7 +111,7 @@ static linear_conf_t *linear_conf(mddev_t *mddev, int raid_disks)
- 	mdk_rdev_t *rdev;
- 	int i, nb_zone, cnt;
- 	sector_t min_spacing;
--	sector_t curr_offset;
-+	sector_t curr_sector;
- 	struct list_head *tmp;
- 
- 	conf = kzalloc (sizeof (*conf) + raid_disks*sizeof(dev_info_t),
-@@ -143,7 +143,7 @@ static linear_conf_t *linear_conf(mddev_t *mddev, int raid_disks)
- 		    mddev->queue->max_sectors > (PAGE_SIZE>>9))
- 			blk_queue_max_sectors(mddev->queue, PAGE_SIZE>>9);
- 
--		disk->size = rdev->size;
-+		disk->num_sectors = rdev->size * 2;
- 		conf->array_sectors += rdev->size * 2;
- 
- 		cnt++;
-@@ -167,7 +167,7 @@ static linear_conf_t *linear_conf(mddev_t *mddev, int raid_disks)
- 		sector_t sz = 0;
- 		int j;
- 		for (j = i; j < cnt - 1 && sz < min_spacing; j++)
--			sz += conf->disks[j].size;
-+			sz += conf->disks[j].num_sectors / 2;
- 		if (sz >= min_spacing && sz < conf->hash_spacing)
- 			conf->hash_spacing = sz;
- 	}
-@@ -209,20 +209,20 @@ static linear_conf_t *linear_conf(mddev_t *mddev, int raid_disks)
- 	 * Here we generate the linear hash table
- 	 * First calculate the device offsets.
+ 	/*
+ 	 * sector_div(a,b) returns the remainer and sets a to a/b
  	 */
--	conf->disks[0].offset = 0;
-+	conf->disks[0].start_sector = 0;
- 	for (i = 1; i < raid_disks; i++)
--		conf->disks[i].offset =
--			conf->disks[i-1].offset +
--			conf->disks[i-1].size;
-+		conf->disks[i].start_sector =
-+			conf->disks[i-1].start_sector +
-+			conf->disks[i-1].num_sectors;
+-	block >>= conf->preshift;
+-	(void)sector_div(block, conf->hash_spacing);
+-	hash = conf->hash_table[block];
++	sector >>= conf->sector_shift;
++	(void)sector_div(sector, conf->spacing);
++	hash = conf->hash_table[sector];
  
- 	table = conf->hash_table;
+ 	while (sector >= hash->num_sectors + hash->start_sector)
+ 		hash++;
+@@ -162,25 +161,25 @@ static linear_conf_t *linear_conf(mddev_t *mddev, int raid_disks)
+ 	 * that is larger than min_sectors and use the size of that as
+ 	 * the actual spacing
+ 	 */
+-	conf->hash_spacing = conf->array_sectors / 2;
++	conf->spacing = conf->array_sectors;
+ 	for (i=0; i < cnt-1 ; i++) {
+ 		sector_t tmp = 0;
+ 		int j;
+ 		for (j = i; j < cnt - 1 && tmp < min_sectors; j++)
+ 			tmp += conf->disks[j].num_sectors;
+-		if (tmp >= min_sectors && tmp < conf->hash_spacing * 2)
+-			conf->hash_spacing = tmp / 2;
++		if (tmp >= min_sectors && tmp < conf->spacing)
++			conf->spacing = tmp;
+ 	}
+ 
+-	/* hash_spacing may be too large for sector_div to work with,
++	/* spacing may be too large for sector_div to work with,
+ 	 * so we might need to pre-shift
+ 	 */
+-	conf->preshift = 0;
++	conf->sector_shift = 0;
+ 	if (sizeof(sector_t) > sizeof(u32)) {
+-		sector_t space = conf->hash_spacing;
++		sector_t space = conf->spacing;
+ 		while (space > (sector_t)(~(u32)0)) {
+ 			space >>= 1;
+-			conf->preshift++;
++			conf->sector_shift++;
+ 		}
+ 	}
+ 	/*
+@@ -192,9 +191,9 @@ static linear_conf_t *linear_conf(mddev_t *mddev, int raid_disks)
+ 		unsigned round;
+ 		unsigned long base;
+ 
+-		sz = conf->array_sectors >> (conf->preshift + 1);
++		sz = conf->array_sectors >> conf->sector_shift;
+ 		sz += 1; /* force round-up */
+-		base = conf->hash_spacing >> conf->preshift;
++		base = conf->spacing >> conf->sector_shift;
+ 		round = sector_div(sz, base);
+ 		nb_zone = sz + (round ? 1 : 0);
+ 	}
+@@ -219,7 +218,7 @@ static linear_conf_t *linear_conf(mddev_t *mddev, int raid_disks)
  	i = 0;
--	for (curr_offset = 0;
--	     curr_offset < conf->array_sectors / 2;
--	     curr_offset += conf->hash_spacing) {
-+	for (curr_sector = 0;
-+	     curr_sector < conf->array_sectors;
-+	     curr_sector += conf->hash_spacing * 2) {
+ 	for (curr_sector = 0;
+ 	     curr_sector < conf->array_sectors;
+-	     curr_sector += conf->hash_spacing * 2) {
++	     curr_sector += conf->spacing) {
  
  		while (i < raid_disks-1 &&
--		       curr_offset >= conf->disks[i+1].offset)
-+		       curr_sector >= conf->disks[i+1].start_sector)
- 			i++;
- 
+ 		       curr_sector >= conf->disks[i+1].start_sector)
+@@ -228,12 +227,12 @@ static linear_conf_t *linear_conf(mddev_t *mddev, int raid_disks)
  		*table ++ = conf->disks + i;
-@@ -314,7 +314,6 @@ static int linear_make_request (struct request_queue *q, struct bio *bio)
- 	const int rw = bio_data_dir(bio);
- 	mddev_t *mddev = q->queuedata;
- 	dev_info_t *tmp_dev;
--	sector_t block;
- 
- 	if (unlikely(bio_barrier(bio))) {
- 		bio_endio(bio, -EOPNOTSUPP);
-@@ -325,29 +324,30 @@ static int linear_make_request (struct request_queue *q, struct bio *bio)
- 	disk_stat_add(mddev->gendisk, sectors[rw], bio_sectors(bio));
- 
- 	tmp_dev = which_dev(mddev, bio->bi_sector);
--	block = bio->bi_sector >> 1;
-     
--	if (unlikely(block >= (tmp_dev->size + tmp_dev->offset)
--		     || block < tmp_dev->offset)) {
-+	if (unlikely(bio->bi_sector >= tmp_dev->num_sectors
-+		+ tmp_dev->start_sector || bio->bi_sector <
-+		tmp_dev->start_sector)) {
- 		char b[BDEVNAME_SIZE];
- 
--		printk("linear_make_request: Block %llu out of bounds on "
--			"dev %s size %llu offset %llu\n",
--			(unsigned long long)block,
-+		printk("linear_make_request: Sector %llu out of bounds on "
-+			"dev %s: %llu sectors, offset %llu\n",
-+			(unsigned long long)bio->bi_sector,
- 			bdevname(tmp_dev->rdev->bdev, b),
--			(unsigned long long)tmp_dev->size,
--		        (unsigned long long)tmp_dev->offset);
-+			(unsigned long long)tmp_dev->num_sectors,
-+			(unsigned long long)tmp_dev->start_sector);
- 		bio_io_error(bio);
- 		return 0;
  	}
- 	if (unlikely(bio->bi_sector + (bio->bi_size >> 9) >
--		     (tmp_dev->offset + tmp_dev->size)<<1)) {
-+			tmp_dev->start_sector + tmp_dev->num_sectors)) {
- 		/* This bio crosses a device boundary, so we have to
- 		 * split it.
+ 
+-	if (conf->preshift) {
+-		conf->hash_spacing >>= conf->preshift;
+-		/* round hash_spacing up so that when we divide by it,
++	if (conf->sector_shift) {
++		conf->spacing >>= conf->sector_shift;
++		/* round spacing up so that when we divide by it,
+ 		 * we err on the side of "too-low", which is safest.
  		 */
- 		struct bio_pair *bp;
- 		bp = bio_split(bio, bio_split_pool,
--			       ((tmp_dev->offset + tmp_dev->size)<<1) - bio->bi_sector);
-+			tmp_dev->start_sector + tmp_dev->num_sectors
-+			- bio->bi_sector);
- 		if (linear_make_request(q, &bp->bio1))
- 			generic_make_request(&bp->bio1);
- 		if (linear_make_request(q, &bp->bio2))
-@@ -357,7 +357,8 @@ static int linear_make_request (struct request_queue *q, struct bio *bio)
+-		conf->hash_spacing++;
++		conf->spacing++;
  	}
- 		    
- 	bio->bi_bdev = tmp_dev->rdev->bdev;
--	bio->bi_sector = bio->bi_sector - (tmp_dev->offset << 1) + tmp_dev->rdev->data_offset;
-+	bio->bi_sector = bio->bi_sector - tmp_dev->start_sector
-+		+ tmp_dev->rdev->data_offset;
  
- 	return 1;
- }
+ 	BUG_ON(table - conf->hash_table > nb_zone);
 diff --git a/include/linux/raid/linear.h b/include/linux/raid/linear.h
-index 7e37511..87090e9 100644
+index 87090e9..f38b9c5 100644
 --- a/include/linux/raid/linear.h
 +++ b/include/linux/raid/linear.h
-@@ -5,8 +5,8 @@
- 
- struct dev_info {
- 	mdk_rdev_t	*rdev;
--	sector_t	size;
--	sector_t	offset;
-+	sector_t	num_sectors;
-+	sector_t	start_sector;
+@@ -15,9 +15,11 @@ struct linear_private_data
+ {
+ 	struct linear_private_data *prev;	/* earlier version */
+ 	dev_info_t		**hash_table;
+-	sector_t		hash_spacing;
++	sector_t		spacing;
+ 	sector_t		array_sectors;
+-	int			preshift; /* shift before dividing by hash_spacing */
++	int			sector_shift;	/* shift before dividing
++						 * by spacing
++						 */
+ 	dev_info_t		disks[0];
  };
  
- typedef struct dev_info dev_info_t;
 -- 
 1.5.4.3
 
