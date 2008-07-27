@@ -1,7 +1,7 @@
 From: tirumalareddy marri <tirumalareddymarri@yahoo.com>
-Subject: Re: possible bug using async_xor() call in ops_run_post_xor()
-Date: Sun, 27 Jul 2008 16:19:23 -0700 (PDT)
-Message-ID: <753927.795.qm@web81304.mail.mud.yahoo.com>
+Subject: 64k Page size + ext3 errors
+Date: Sun, 27 Jul 2008 16:28:18 -0700 (PDT)
+Message-ID: <576234.24141.qm@web81307.mail.mud.yahoo.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
@@ -10,46 +10,29 @@ Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Dan,
-=A0 You right. async_xor() wait for (tx !=3D NULL).
-Thanks,
+I am using HW accelerated XOR engine for RAID-5 . I am seeing EXT3-fs e=
+rrors when I use 64K page size. When I use 4K page size I don't see any=
+ issue. As many of you know, we=A0will get better performance when we s=
+tore bigger files like videos.
+=A0
+When I copy 128MB size files using 64k page size no issues seen. When I=
+ tried to copy 1.8 GB file with 64KB page size support I am seeing the =
+following errors. Any clue what could be wrong.=20
+=A0
+Errors 1:
+EXT3-fs error (device md0): ext3_new_block: Allocating block in system =
+zone - blocks from 65533, length 1
+EXT3-fs error (device md0): ext3_new_block: Allocating block in system =
+zone - blocks from 65534, length 1
+=A0
+=A0
+Errors2:
+EXT3-fs error (device md0): ext3_readdir: bad entry in directory #2: re=
+c_len % 4 !=3D 0 - offset=3D0, inode=3D3040
+
+=A0
+Thanks in Advance,
 Marri
-
------ Original Message ----
-=46rom: Dan Williams <dan.j.williams@intel.com>
-To: tirumalareddy marri <tirumalareddymarri@yahoo.com>
-Cc: linux-raid@vger.kernel.org
-Sent: Friday, July 25, 2008 12:47:27 PM
-Subject: Re: possible bug using async_xor() call in ops_run_post_xor()
-
-On Fri, Jul 25, 2008 at 11:45 AM, tirumalareddy marri
-<tirumalareddymarri@yahoo.com> wrote:
-> I am looking at async_xor() usage and found that if async_xor() retur=
-ns null because of=A0 device->device_prep_dma_xor() <async_xor.c> faile=
-d to get slot. This might cause failure of stripe creation . Which woul=
-d cause data corruption in RAID-5 at high data rates.
-> OR
-> Data integrity is guaranteed because ops_complete_write() will not be=
- called in the event of=A0 device->device_prep_dma_xor() failed to get =
-slot and returned NULL ?
-
-Hi Marri,
-
-ops_complete_write will be called regardless of whether NULL is
-returned.=A0 If async_xor returns NULL it simply indicates to the calle=
-r
-that the operation was completed synchronously.=A0 In current mainline
-async_xor will poll for a descriptor so the driver must take care to
-ensure forward progress.
-
---
-Dan
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at=A0 http://vger.kernel.org/majordomo-info.html
-
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
