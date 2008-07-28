@@ -1,48 +1,31 @@
-From: Richard Michael <rmichael-raid@edgeofthenet.org>
-Subject: Docs and operation of RAID10, size limitations on 0.90
-Date: Mon, 28 Jul 2008 10:35:53 -0400
-Message-ID: <20080728143553.GE30681@nexus.edgeofthenet.org>
+From: "Jon Nelson" <jnelson-linux-raid@jamponi.net>
+Subject: cosmetic bug in mdadm
+Date: Mon, 28 Jul 2008 12:35:14 -0500
+Message-ID: <cccedfc60807281035n23a93665s412cab3b25464ef5@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: LinuxRaid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hello list,
+mdadm --grow --help shows
 
-I'm building a new system with 8 disks, in two RAID5 arrays of 4 disks
-each, and a RAID1 array across them.  (Then LVM2 on top of the RAID1
-array.)
+  --raid-disks=  -n   : Change the number of active devices in an array.
+                      : array.
 
-I approached it this way for two reasons:
+but the manpage uses:
 
-1/ It feels "cleanest"; in the sense that it's not a special case, it's
-just RAID1 with two devices, which happen to be RAID5.
+  --raid-devices
 
-2/ I have a particular usage in mind: I need to be able to split the
-mirror and remove half; return it later and resync.  Therefore, I want
-to know which disks comprise which halves.
-
-However, I'm rethinking toward RAID10.  However, I can't find much
-documentation about layout, etc.  I believe this was recently discussed
-on the list.
-
-
-Can someone with RAID10 experience enlighten me?  Can it be cleaned
-split, half moved to another host, or rejoined with the first half, etc.
-How about performance?  (Not a huge issue, but it is better than nested
-arrays as I first considered?)
-
-
-Aside, I'd like it to be bootable.  I was told grub only supports
-booting from 0.90 superblocks, but that 0.90 has a 2TB limitation?
-Meaning, I need /boot with 0.90 and another partition (LVM) with a 1.0
-superblocks?
+The latter should be preferred?
+Also, a --grow fails without a spare or --backup-file, however
+--backup-file is only in the manpage, not in the --help. That's pretty
+minor but useful.
 
 
 
-Thanks,
-Richard
+-- 
+Jon
