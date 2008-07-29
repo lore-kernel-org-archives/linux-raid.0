@@ -1,45 +1,91 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: Problem with mdadm 2.6.7
-Date: Tue, 29 Jul 2008 10:59:33 +1000
-Message-ID: <18574.27509.370113.998930@notabene.brown>
-References: <488C531B.5060005@mandriva.org>
-	<488C8599.4090503@mandriva.org>
-	<1217171198.9041.62.camel@firewall.xsintricity.com>
-	<488C9328.8010503@mandriva.org>
+Subject: Re: cosmetic bug in mdadm
+Date: Tue, 29 Jul 2008 11:09:14 +1000
+Message-ID: <18574.28090.931731.900997@notabene.brown>
+References: <cccedfc60807281035n23a93665s412cab3b25464ef5@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Thomas Backlund on Sunday July 27
+In-Reply-To: message from Jon Nelson on Monday July 28
 Sender: linux-raid-owner@vger.kernel.org
-To: Thomas Backlund <tmb@mandriva.org>
-Cc: Doug Ledford <dledford@redhat.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Jon Nelson <jnelson-linux-raid@jamponi.net>
+Cc: LinuxRaid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Sunday July 27, tmb@mandriva.org wrote:
+On Monday July 28, jnelson-linux-raid@jamponi.net wrote:
+> mdadm --grow --help shows
 > 
-> as for --bitmap, can it be added to an existing array ?
-
-Yes.
+>   --raid-disks=  -n   : Change the number of active devices in an array.
+>                       : array.
 > 
-> What is the better choice, bitmap=internal or bitmap=<some_file> ?
-
-Internal is easier.
-
-The command is
-   mdadm --grow /dev/mdXXX --bitmap=internal
-
-This could have a negative impact on performance.  The degree depends
-a lot on your workload.
-If you notice a reduction in write speed that is not acceptable, and
-if removing the bitmap (mdadm --grow /dev/mdXXX --bitmap=none) fixes
-the problem, then we can try to find an alternate solution.
-
+> but the manpage uses:
 > 
-> I'd hate to have to recreate the array, as I have about 1.2GB of data on 
-> it...
+>   --raid-devices
+> 
+> The latter should be preferred?
+> Also, a --grow fails without a spare or --backup-file, however
+> --backup-file is only in the manpage, not in the --help. That's pretty
+> minor but useful.
 
-There is no need for that.
+Fair comments.
+Does this address your observations suitably?
 
+Thanks.
 NeilBrown
 
+
+
+diff --git a/ReadMe.c b/ReadMe.c
+index 0a736ed..7a67158 100644
+--- a/ReadMe.c
++++ b/ReadMe.c
+@@ -518,9 +518,12 @@ char Help_grow[] =
+ "  --size=        -z   : Change the active size of devices in an array.\n"
+ "                      : This is useful if all devices have been replaced\n"
+ "                      : with larger devices.\n"
+-"  --raid-disks=  -n   : Change the number of active devices in an array.\n"
++"  --raid-devices= -n  : Change the number of active devices in an array.\n"
+ "                      : array.\n"
+ "  --bitmap=      -b   : Add or remove a write-intent bitmap.\n"
++"  --backup-file= file : A file on a differt device to store data for a\n"
++"                      : short time while increasing raid-devices on a\n"
++"                      : RAID4/5/6 array. Not needed when a spare is present.\n"
+ ;
+ 
+ char Help_incr[] =
+diff --git a/mdadm.8 b/mdadm.8
+index fd26e12..be8568d 100644
+--- a/mdadm.8
++++ b/mdadm.8
+@@ -1729,7 +1729,7 @@ Currently the only support available is to
+ change the "size" attribute
+ for RAID1, RAID5 and RAID6.
+ .IP \(bu 4
+-increase the "raid-disks" attribute of RAID1, RAID5, and RAID6.
++increase the "raid\-devices" attribute of RAID1, RAID5, and RAID6.
+ .IP \(bu 4
+ add a write-intent bitmap to any array which supports these bitmaps, or
+ remove a write-intent bitmap from such an array.
+diff --git a/mdadm.c b/mdadm.c
+index 641d717..3aa3b13 100644
+--- a/mdadm.c
++++ b/mdadm.c
+@@ -1155,7 +1155,7 @@ int main(int argc, char *argv[])
+ 			break;
+ 		}
+ 		if (raiddisks == 0) {
+-			fprintf(stderr, Name ": no raid-disks specified.\n");
++			fprintf(stderr, Name ": no raid-devices specified.\n");
+ 			rv = 1;
+ 			break;
+ 		}
+@@ -1179,7 +1179,7 @@ int main(int argc, char *argv[])
+ 			break;
+ 		}
+ 		if (raiddisks == 0) {
+-			fprintf(stderr, Name ": no raid-disks specified.\n");
++			fprintf(stderr, Name ": no raid-devices specified.\n");
+ 			rv = 1;
+ 			break;
+ 		}
