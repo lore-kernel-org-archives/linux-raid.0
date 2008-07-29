@@ -1,62 +1,61 @@
-From: tirumalareddy marri <tirumalareddymarri@yahoo.com>
+From: Roger Heflin <rogerheflin@gmail.com>
 Subject: Re: 64k Page size + ext3 errors
-Date: Mon, 28 Jul 2008 16:44:15 -0700 (PDT)
-Message-ID: <802670.26931.qm@web81303.mail.mud.yahoo.com>
+Date: Mon, 28 Jul 2008 19:33:34 -0500
+Message-ID: <488E655E.1070408@gmail.com>
+References: <153154.27693.qm@web81301.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ext4-owner@vger.kernel.org>
-Sender: linux-ext4-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>, sandeen@sandeen.net
-Cc: linux-raid@vger.kernel.org, linux-ext4@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <153154.27693.qm@web81301.mail.mud.yahoo.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: tirumalareddy marri <tirumalareddymarri@yahoo.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Dan,
-=A0 Sure=A0 I will post my driver with some cleanup done.
-Thanks,
-Marri
+tirumalareddy marri wrote:
+> Hi Roger,
+>    I did sync after I copied the 128MB data. Isn't that should guarantee data is flushed to disk ? I am using "sum" command to check if data file is copied to Disk is valid or not. 
 
------ Original Message ----
-=46rom: Dan Williams <dan.j.williams@intel.com>
-To: sandeen@sandeen.net
-Cc: tirumalareddy marri <tirumalareddymarri@yahoo.com>; linux-raid@vger=
-=2Ekernel.org; linux-ext4@vger.kernel.org
-Sent: Monday, July 28, 2008 1:04:39 AM
-Subject: Re: 64k Page size + ext3 errors
+It means it will be flushed to disk, it does not mean that when you read it back 
+that will come off disk, if it is still in memory then it will come out of 
+memory, and still be wrong on disk.    If you won't want to to more complicated 
+test it might be best to create the file, csum it and if it is ok umount the 
+device and remount it and csum it again and see, this should at least force it 
+to come off of disk again.
 
-On Sun, Jul 27, 2008 at 6:52 PM,=A0 <sandeen@sandeen.net> wrote:
->> I am using HW accelerated XOR engine for RAID-5 . I am seeing EXT3-f=
-s
->> errors when I use 64K page size. When I use 4K page size I don't see=
- any
->> issue. As many of you know, we will get better performance when we s=
-tore
->> bigger files like videos.
->
-> Do you think it is specific to the filesystem on raid-5?=A0 Have you =
-tested
-> w/o md?=A0 I'd be a little surprised if the problem is at the raid la=
-yer (so
-> cc'ing the ext3/4 list), but maybe you tested that already.
->
-> Which arch is it, and which kernel?=A0 How big is the filesystem?=A0 =
-With full
-> geometry information it might be easier for someone to reproduce & de=
-bug.
->
+How much memory does your test machine have?
 
-Marri, can you post your XOR driver the problem may be there.
 
-Thanks,
-Dan
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at=A0 http://vger.kernel.org/majordomo-info.html
+> Here is more information.
+> setup: Created /dev/md0 of 30GB size , created ext3 files system. Then started SAMBA server to export mountded /dev/md0 to a windows machine to run IO and copy files.
+> 4K Page size:
+> -------------------
+> 1. IO Meter Test: Works just fine.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-ext4" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+None of the benchmarks I am familiar with actually confirm that the data is 
+good, the only way one of the benchmarks will fail is if the file table gets 
+corrupted, and they may run in cache.
+
+> 2. Copied 1.8 GB file and check sum is good.
+> 3. Performance is not good because of small page size.
+> 16k Page size:
+> ---------------------
+> 1. RAID-5 fails some times with " Attempt to access beyond the end of device"
+> 2. Copied 128MB and 385MB file. Checked check sum, they are matching check sum.
+> 3. Copied 1.8 GB file , this failed checksum test using "sum" command. I see "EXT3-fs errors".
+> 64K Page size:
+> ----------------------
+> 1. RAID-5 failes some times with "Attempt to access beyond the end of device"
+> 2. Able to copy 128MB data and check sum test passed.
+> 3. Copying 385MB and 1.8 GB file with EXT3-fs errors.
+> Thanks,
+> Marri
+
+I would write directly to the /dev/mdx a specific pattern (a stream of binary 
+numbers from 1 ... whatever works fine), and then read that back and see how 
+things match or don't.   csum *can* fail, and if you have enough memory then any 
+corruption actually on disk *WON'T* be found until somethings causes it to be 
+ejected from cache, and then later re-read from disk.
+
+                               Roger
