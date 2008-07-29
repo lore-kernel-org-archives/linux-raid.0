@@ -1,45 +1,29 @@
-From: "Conway S. Smith" <beolach@gmail.com>
-Subject: Re: cosmetic bug in mdadm
-Date: Tue, 29 Jul 2008 12:02:41 -0600
-Message-ID: <20080729120241.6da32aa1@hardcode42.net>
-References: <cccedfc60807281035n23a93665s412cab3b25464ef5@mail.gmail.com>
-	<18574.28090.931731.900997@notabene.brown>
-	<Pine.LNX.4.64.0807281805190.20007@filesrv1.baby-dragons.com>
-	<18574.37882.879252.6383@notabene.brown>
+From: Richard Michael <rmichael-raid@edgeofthenet.org>
+Subject: Adding a bitmap, v 0.90 superblocks
+Date: Tue, 29 Jul 2008 14:44:16 -0400
+Message-ID: <20080729184416.GA7655@nexus.edgeofthenet.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18574.37882.879252.6383@notabene.brown>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: LinuxRaid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, 29 Jul 2008 13:52:26 +1000
-Neil Brown <neilb@suse.de> wrote:
-> On Monday July 28, babydr@baby-dragons.com wrote:
-> > > --- a/ReadMe.c
-> > > +++ b/ReadMe.c
-> > > @@ -518,9 +518,12 @@ char Help_grow[] =
->                               ^^^^^^^^^
-> > > "  --size=        -z   : Change the active size of devices in
-> > > an array.\n" "                      : This is useful if all
-> > > devices have been replaced\n" "                      : with
-> > > larger devices.\n" -"  --raid-disks=  -n   : Change the number
-> > > of active devices in an array.\n" +"  --raid-devices= -n  :
-> > > Change the number of active devices in an array.\n"
-> > > "                      : array.\n"
-> >  	To what command  ^^^^^^^^^^^ is this associated in the
-> > --help output ?
-> 
->  mdadm --grow --help
-> 
-> (all the others already spelt it "--raid-devices").
-> 
+I would like to add an internal bitmap to my RAID1 array.  It uses
+v 0.90 superblocks.
 
-I think he meant the last line, w/ just ": array.\n".  Is that
-associated w/ a different command, or should it be removed since the
-previous line already has the word array?
+Reading the man page, I believe I do this with:
 
+"mdadm --grow --bitmap=internal /dev/mdX"
 
-Conway S. Smith
+correct?
+
+How do I know how much space is available on the superblock when mdadm
+will perform it's computation "to make best use of available space"?
+I'm curious because perhaps I should change to 1.x superblocks in the
+future (for non-bootable arrays).
+
+Regards,
+Richard
