@@ -1,58 +1,51 @@
 From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: Docs and operation of RAID10, size limitations on 0.90
-Date: Wed, 30 Jul 2008 12:18:06 -0400
-Message-ID: <4890943E.5060608@tmr.com>
-References: <20080728143553.GE30681@nexus.edgeofthenet.org>
+Subject: Re: AWFUL reshape speed with raid5.
+Date: Wed, 30 Jul 2008 12:23:20 -0400
+Message-ID: <48909578.9020307@tmr.com>
+References: <cccedfc60807281039y67c27685n161708146d7c2b3d@mail.gmail.com>	 <alpine.DEB.1.10.0807281414020.3288@p34.internal.lan>	 <cccedfc60807281124w6301915bo88b8be45599f4fb3@mail.gmail.com> <cccedfc60807281155u7a6561a7jce3ca46799f46e4@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20080728143553.GE30681@nexus.edgeofthenet.org>
+In-Reply-To: <cccedfc60807281155u7a6561a7jce3ca46799f46e4@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Richard Michael <rmichael-raid@edgeofthenet.org>
-Cc: linux-raid@vger.kernel.org
+To: Jon Nelson <jnelson-linux-raid@jamponi.net>
+Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, LinuxRaid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Richard Michael wrote:
-> Hello list,
+Jon Nelson wrote:
+> 1. metadata version matters. Why?
+> 2. VERY LITTLE I/O takes place (between 0 and 100KB/s, typically no
+> I/O at all) according to vmstat. Why? If it takes 1m34s to "grow" the
+> array, but no I/O is taking place, then what is actually taking so
+> long?
+> 3. I removed the bitmap for these tests. Having a bitmap meant that
+> the overall speed was REALLY HORRIBLE.
 >
-> I'm building a new system with 8 disks, in two RAID5 arrays of 4 disks
-> each, and a RAID1 array across them.  (Then LVM2 on top of the RAID1
-> array.)
+> The results:
 >
-> I approached it this way for two reasons:
+> metadata: time taken
 >
-> 1/ It feels "cleanest"; in the sense that it's not a special case, it's
-> just RAID1 with two devices, which happen to be RAID5.
+> 0.9: 27s
+> 1.0: 27s
+> 1.1: 37s
+> 1.2: 1m34s
 >
-> 2/ I have a particular usage in mind: I need to be able to split the
-> mirror and remove half; return it later and resync.  Therefore, I want
-> to know which disks comprise which halves.
+> Questions (repeated):
 >
-> However, I'm rethinking toward RAID10.  However, I can't find much
-> documentation about layout, etc.  I believe this was recently discussed
-> on the list.
->
->
-> Can someone with RAID10 experience enlighten me?  Can it be cleaned
-> split, half moved to another host, or rejoined with the first half, etc.
-> How about performance?  (Not a huge issue, but it is better than nested
-> arrays as I first considered?)
+> 1. Why does the metadata version matter so much?
 >   
 
-10,f2 read performance is very good, write performance is okay. AFAIK 
-you can't do a split, the object is to spread head motion and improve 
-performance.
->
-> Aside, I'd like it to be bootable.  I was told grub only supports
-> booting from 0.90 superblocks, but that 0.90 has a 2TB limitation?
-> Meaning, I need /boot with 0.90 and another partition (LVM) with a 1.0
-> superblocks?
+I have no idea.
+
+> 2. If no I/O is taking place, why does it take so long? [ NOTE: I/O
+> must be taking place but why doesn't vmstat show it? ]
 >   
 
-I usually create a 100MB or so partition, raid1, on my drives and boot 
-off that using 0.90 superblock. The rest of the storage can be anything 
-you want.
+vmstat doesn't tell you enough, you need a tool to show per-device and 
+per-partition io, which will give you what you need. I can't put a 
+finger on the one I wrote, but there are others.
+
 
 -- 
 Bill Davidsen <davidsen@tmr.com>
