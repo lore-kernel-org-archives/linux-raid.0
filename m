@@ -1,115 +1,70 @@
-From: Denis ChengRq <crquan@gmail.com>
-Subject: [PATCH] md: switch to use pr_debug from <linux/kernel.h>
-Date: Fri,  1 Aug 2008 14:55:48 +0800
-Message-ID: <1217573748-26886-1-git-send-email-crquan@gmail.com>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: 12 Veliciraptors again w/x4 card (~1gbyte/sec aggregate read)!
+Date: Fri, 1 Aug 2008 04:12:45 -0400 (EDT)
+Message-ID: <alpine.DEB.1.10.0808010410340.13630@p34.internal.lan>
+References: <alpine.DEB.1.10.0807071424100.4694@p34.internal.lan> <4872A2F4.2010604@dgreaves.com> <alpine.DEB.1.10.0807080429440.17980@p34.internal.lan> <alpine.DEB.1.10.0807080438560.17980@p34.internal.lan> <20080801034150.GA32026@sewage.raw-sewage.fake>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20080801034150.GA32026@sewage.raw-sewage.fake>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+To: Matt Garman <matthew.garman@gmail.com>
+Cc: David Greaves <david@dgreaves.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, xfs@oss.sgi.com
 List-Id: linux-raid.ids
 
-the local defined macro dprintk should not be used,
 
-and some of the orignal dprintk use KERN_INFO prefix, but they were actually
-debug messages, should use KERN_DEBUG prefix instead, which is pr_debug will do.
 
-Notice: pr_info from kernel.h will always call printk, not according to DEBUG macro,
-so cannot be used here, only pr_debug is adaptive to DEBUG.
+On Thu, 31 Jul 2008, Matt Garman wrote:
 
-Signed-off-by: Denis ChengRq <crquan@gmail.com>
----
- drivers/md/md.c |   25 ++++++++++---------------
- 1 files changed, 10 insertions(+), 15 deletions(-)
+> On Tue, Jul 08, 2008 at 04:39:34AM -0400, Justin Piszcz wrote:
+>> On Tue, 8 Jul 2008, Justin Piszcz wrote:
+>>> On Tue, 8 Jul 2008, David Greaves wrote:
+>>>> Justin Piszcz wrote:
+>>>>> Each PCI-e x1 card has 1 veliciraptor on it now.
+>>>>> Got an x4 card wit 4 sata ports:
+>>>> Useful - which card?
+>>>
+>>> StarTech 4 Port PCI Express x4 SATA II Card Model PEXSATA24E
+>>>
+>>>
+>> Chipset: Marvell 88SX7042
+>> SATA Connectivity: Use four internal ports at the same time or two internal
+>> and two external ports
+>>
+>> Which is fully supported in the latest kernels (didn't try an old kernel):
+>>
+>> linux-2.6.25.10/drivers/ata/sata_mv.c
+>>
+>>   /* Marvell 7042 support */
+>>   { PCI_VDEVICE(MARVELL, 0x7042), chip_7042 },
+>
+> How have that card and the array attached to it been doing since you
+> originally posted this?
+No problems to report yet, working well, I wish I had multiple x4 or x16 
+slots and use those instead of x1 cards (the mobo would need to support 
+the I/O as well)..
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index c2ff77c..c1299fb 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -61,10 +61,6 @@
- /* 63 partitions with the alternate major number (mdp) */
- #define MdpMinorShift 6
- 
--#define DEBUG 0
--#define dprintk(x...) ((void)(DEBUG && printk(x)))
--
--
- #ifndef MODULE
- static void autostart_arrays (int part);
- #endif
-@@ -1792,31 +1788,30 @@ repeat:
- 	sync_sbs(mddev, nospares);
- 	spin_unlock_irq(&mddev->write_lock);
- 
--	dprintk(KERN_INFO 
--		"md: updating %s RAID superblock on device (in sync %d)\n",
-+	pr_debug("md: updating %s RAID superblock on device (in sync %d)\n",
- 		mdname(mddev),mddev->in_sync);
- 
- 	bitmap_update_sb(mddev->bitmap);
- 	rdev_for_each(rdev, tmp, mddev) {
- 		char b[BDEVNAME_SIZE];
--		dprintk(KERN_INFO "md: ");
-+		pr_debug("md: ");
- 		if (rdev->sb_loaded != 1)
- 			continue; /* no noise on spare devices */
- 		if (test_bit(Faulty, &rdev->flags))
--			dprintk("(skipping faulty ");
-+			pr_debug("(skipping faulty ");
- 
--		dprintk("%s ", bdevname(rdev->bdev,b));
-+		pr_debug("%s ", bdevname(rdev->bdev,b));
- 		if (!test_bit(Faulty, &rdev->flags)) {
- 			md_super_write(mddev,rdev,
- 				       rdev->sb_start, rdev->sb_size,
- 				       rdev->sb_page);
--			dprintk(KERN_INFO "(write) %s's sb offset: %llu\n",
-+			pr_debug("(write) %s's sb offset: %llu\n",
- 				bdevname(rdev->bdev,b),
- 				(unsigned long long)rdev->sb_start);
- 			rdev->sb_events = mddev->events;
- 
- 		} else
--			dprintk(")\n");
-+			pr_debug(")\n");
- 		if (mddev->level == LEVEL_MULTIPATH)
- 			/* only need to write one superblock... */
- 			break;
-@@ -5108,7 +5103,7 @@ static int md_thread(void * arg)
- void md_wakeup_thread(mdk_thread_t *thread)
- {
- 	if (thread) {
--		dprintk("md: waking up MD thread %s.\n", thread->tsk->comm);
-+		pr_debug("md: waking up MD thread %s.\n", thread->tsk->comm);
- 		set_bit(THREAD_WAKEUP, &thread->flags);
- 		wake_up(&thread->wqueue);
- 	}
-@@ -5138,7 +5133,7 @@ mdk_thread_t *md_register_thread(void (*run) (mddev_t *), mddev_t *mddev,
- 
- void md_unregister_thread(mdk_thread_t *thread)
- {
--	dprintk("interrupting MD-thread pid %d\n", task_pid_nr(thread->tsk));
-+	pr_debug("interrupting MD-thread pid %d\n", task_pid_nr(thread->tsk));
- 
- 	kthread_stop(thread->tsk);
- 	kfree(thread);
-@@ -5157,7 +5152,7 @@ void md_error(mddev_t *mddev, mdk_rdev_t *rdev)
- 	if (mddev->external)
- 		set_bit(Blocked, &rdev->flags);
- /*
--	dprintk("md_error dev:%s, rdev:(%d:%d), (caller: %p,%p,%p,%p).\n",
-+	pr_debug("md_error dev:%s, rdev:(%d:%d), (caller: %p,%p,%p,%p).\n",
- 		mdname(mddev),
- 		MAJOR(rdev->bdev->bd_dev), MINOR(rdev->bdev->bd_dev),
- 		__builtin_return_address(0),__builtin_return_address(1),
-@@ -6250,7 +6245,7 @@ static struct notifier_block md_notifier = {
- 
- static void md_geninit(void)
- {
--	dprintk("md: sizeof(mdp_super_t) = %d\n", (int)sizeof(mdp_super_t));
-+	pr_debug("md: sizeof(mdp_super_t) = %d\n", (int)sizeof(mdp_super_t));
- 
- 	proc_create("mdstat", S_IRUGO, NULL, &md_seq_fops);
- }
--- 
-1.5.6.4
+>
+> Doesn't that HighPoint 23xx card also use the Marvell 88SX7042 chip?
+I read remeber 'locked' 64kb read problem but not any corruption issue.
 
+> I remember seeing the threads about the HighPoint card silently
+> corrupting data by silently writing over parts of the disk(s) with
+Also I MD5SUM -c (verify) 100-150GiB of data daily or so to make sure it 
+is OK, so far, no problems.
+
+> its own info.  I'm guessing that's not a "feature" of the Marvell
+> chip, but still... admittedly irrational fear here :)
+Have not seen it yet.
+
+>
+> It would be nice if that Supermicro 8-port SATA card (AOC-SAT2-MV8)
+> was available in PCIe... I wonder if it's possible to just graft
+> multiple SiI 3132 controllers (2 SATA each) on a single PCIe card?
+Yes, I asked Supermicro about it and they never mailed me back about a 
+PCIe version..
+
+That's a good question, I suppose if it was easy it would have already 
+been done?
+
+Justin.
