@@ -1,58 +1,43 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH] md: raid10: wake up frozen array
-Date: Fri, 1 Aug 2008 13:03:40 +1000
-Message-ID: <18578.32012.13358.269935@notabene.brown>
-References: <20080725190338.GA27484@ajones-laptop.nbttech.com>
+Subject: Re: Adding a bitmap, v 0.90 superblocks
+Date: Fri, 1 Aug 2008 13:11:07 +1000
+Message-ID: <18578.32459.608646.540653@notabene.brown>
+References: <20080729184416.GA7655@nexus.edgeofthenet.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Arthur Jones on Friday July 25
+In-Reply-To: message from Richard Michael on Tuesday July 29
 Sender: linux-raid-owner@vger.kernel.org
-To: Arthur Jones <ajones@riverbed.com>
+To: Richard Michael <rmichael-raid@edgeofthenet.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Friday July 25, ajones@riverbed.com wrote:
-> When rescheduling a bio in raid10, we wake up
-> the md thread, but if the array is frozen, this
-> will have no effect.  This causes the array to
-> remain frozen for eternity.  We add a wake_up
-> to allow the array to de-freeze.  This code is
-> nearly identical to the raid1 code, which has
-> this fix already.
+On Tuesday July 29, rmichael-raid@edgeofthenet.org wrote:
+> I would like to add an internal bitmap to my RAID1 array.  It uses
+> v 0.90 superblocks.
+> 
+> Reading the man page, I believe I do this with:
+> 
+> "mdadm --grow --bitmap=internal /dev/mdX"
+> 
+> correct?
 
-Thanks for this!  It is "obviously correct" based on the similarity
-with raid1.
+Correct!
 
-It is on its way to Linus.
+> 
+> How do I know how much space is available on the superblock when mdadm
+> will perform it's computation "to make best use of available space"?
+> I'm curious because perhaps I should change to 1.x superblocks in the
+> future (for non-bootable arrays).
+
+with 0.90, there is about 60K guaranteed to be available.  This is
+491520 bits.
+
+With 1.0 there 3K guaranteed to be available, though there might be
+more.  I don't think we use the "more" currently unless you add a
+bitmap when creating the array.
+
+So there is no need to change metadata version for more bitmap space.
 
 NeilBrown
-
-
-> 
-> Signed-off-by: Arthur Jones <ajones@riverbed.com>
-> ---
->  drivers/md/raid10.c |    3 +++
->  1 files changed, 3 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> index 159535d..d41bebb 100644
-> --- a/drivers/md/raid10.c
-> +++ b/drivers/md/raid10.c
-> @@ -215,6 +215,9 @@ static void reschedule_retry(r10bio_t *r10_bio)
->  	conf->nr_queued ++;
->  	spin_unlock_irqrestore(&conf->device_lock, flags);
->  
-> +	/* wake up frozen array... */
-> +	wake_up(&conf->wait_barrier);
-> +
->  	md_wakeup_thread(mddev->thread);
->  }
->  
-> -- 
-> 1.5.4.3
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
