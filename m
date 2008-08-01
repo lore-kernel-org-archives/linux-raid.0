@@ -1,35 +1,53 @@
-From: "Jon Nelson" <jnelson-linux-raid@jamponi.net>
-Subject: Re: AWFUL reshape speed with raid5.
-Date: Fri, 1 Aug 2008 10:57:36 -0500
-Message-ID: <cccedfc60808010857ye62b134g4b657bd13ea6a92a@mail.gmail.com>
-References: <cccedfc60807281039y67c27685n161708146d7c2b3d@mail.gmail.com>
-	 <alpine.DEB.1.10.0807281414020.3288@p34.internal.lan>
-	 <cccedfc60807281124w6301915bo88b8be45599f4fb3@mail.gmail.com>
-	 <cccedfc60807281155u7a6561a7jce3ca46799f46e4@mail.gmail.com>
-	 <48909578.9020307@tmr.com>
-	 <cccedfc60807300931g5a05b197j38022a024fa1f0e@mail.gmail.com>
-	 <alpine.DEB.1.10.0807301306510.1848@p34.internal.lan>
-	 <cccedfc60807301048t4aef1c1nd9f55e4424b0c057@mail.gmail.com>
-	 <18578.27191.869553.910780@notabene.brown>
-	 <cccedfc60808010623n6eb3c92bl613840a95e839050@mail.gmail.com>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: [PULL REQUEST] md bug fixes and minor improvements
+Date: Fri, 1 Aug 2008 10:16:57 -0700 (PDT)
+Message-ID: <alpine.LFD.1.10.0808011007240.3277@nehalem.linux-foundation.org>
+References: <18578.31924.259887.735206@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <cccedfc60808010623n6eb3c92bl613840a95e839050@mail.gmail.com>
-Content-Disposition: inline
+In-Reply-To: <18578.31924.259887.735206@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-Cc: LinuxRaid <linux-raid@vger.kernel.org>
+To: Neil Brown <neilb@suse.de>
+Cc: Arthur Jones <ajones@riverbed.com>, Dan Williams <dan.j.williams@intel.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-raid@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>, Jens Axboe <jens.axboe@oracle.com>
 List-Id: linux-raid.ids
 
->>> 1. Why does the version of metadata matter so much in a --grow --size operation?
->>
->> I cannot measure any significant different.  Could you give some
->> precise details of the tests you run and the results you get ?
->
-> I'll try to throw some stuff together soon.
 
-I was unable to replicate the difference in bitmap speeds.
 
--- 
-Jon
+On Fri, 1 Aug 2008, Neil Brown wrote:
+> 
+> Hi Linus,
+>  please pull the following bugfixes for drivers/md.
+
+Hmm. This doesn't seem to include any fix for the reported unlocked 
+blk_plug() from MD?
+
+See the emails from Rafael on the kernel mailing list for details 
+(WARNING: at /home/rafael/src/linux-next/include/linux/blkdev.h:447), but 
+it boils down to
+
+	WARNING: at /home/rafael/src/linux-2.6/include/linux/blkdev.h:447 blk_plug_device+0x9b/0xb0()
+	Pid: 2268, comm: kjournald Not tainted 2.6.27-rc1-git #211
+
+	Call Trace:
+	 [<ffffffff8023af5f>] warn_on_slowpath+0x5f/0x80
+	 [<ffffffff8034fc7b>] blk_plug_device+0x9b/0xb0
+	 [<ffffffff8044d5bf>] bitmap_startwrite+0xbf/0x1b0
+
+where it really looks like "bitmap_startwrite()" just calls 
+blk_plug_device() without holding the queue lock. The rule for that 
+function is documented to be:
+
+ * This is called with interrupts off and no requests on the queue and
+ * with the queue lock held.
+
+Hmm?
+
+Now, admittedly, the blk interfaces here are a bit inconsistent: I think 
+blk_unplug() is supposed to be called _without_ the lock, so it's a bit 
+odd that blk_plug_device() is supposed to b called with it held, but 
+somebody should double-check me on that one.
+
+I guess Jens is gone too..
+
+		Linus
