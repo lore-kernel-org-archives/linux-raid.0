@@ -1,74 +1,56 @@
-From: Dan Williams <dan.j.williams@intel.com>
+From: Jens Axboe <jens.axboe@oracle.com>
 Subject: Re: [PULL REQUEST] md bug fixes and minor improvements
-Date: Fri, 01 Aug 2008 10:34:48 -0700
-Message-ID: <1217612088.24551.5.camel@dwillia2-linux.ch.intel.com>
-References: <18578.31924.259887.735206@notabene.brown>
-	 <alpine.LFD.1.10.0808011007240.3277@nehalem.linux-foundation.org>
-	 <20080801172231.GF20055@kernel.dk>
+Date: Fri, 1 Aug 2008 19:40:25 +0200
+Message-ID: <20080801174024.GH20055@kernel.dk>
+References: <18578.31924.259887.735206@notabene.brown> <alpine.LFD.1.10.0808011007240.3277@nehalem.linux-foundation.org> <20080801172231.GF20055@kernel.dk> <1217612088.24551.5.camel@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20080801172231.GF20055@kernel.dk>
+Content-Disposition: inline
+In-Reply-To: <1217612088.24551.5.camel@dwillia2-linux.ch.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
+To: Dan Williams <dan.j.williams@intel.com>
 Cc: Linus Torvalds <torvalds@linux-foundation.org>, Neil Brown <neilb@suse.de>, Arthur Jones <ajones@riverbed.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-raid@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>
 List-Id: linux-raid.ids
 
-
-On Fri, 2008-08-01 at 19:22 +0200, Jens Axboe wrote:
-> It is a bit asymmetrical, largely due to the fact that the ->unplug_fn()
-> itself grabs the lock. The below patch should fix it, since Neil has
-> added a proper queue lock to the md queues. If someone can confirm that
-> this fixes it, I'll queue up a patch with proper descriptions.
+On Fri, Aug 01 2008, Dan Williams wrote:
 > 
-> > I guess Jens is gone too..
+> On Fri, 2008-08-01 at 19:22 +0200, Jens Axboe wrote:
+> > It is a bit asymmetrical, largely due to the fact that the ->unplug_fn()
+> > itself grabs the lock. The below patch should fix it, since Neil has
+> > added a proper queue lock to the md queues. If someone can confirm that
+> > this fixes it, I'll queue up a patch with proper descriptions.
+> > 
+> > > I guess Jens is gone too..
+> > 
+> > I'm back, just been busy this week :-)
+> > 
+> > diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
+> > index 621a272..f19b52f 100644
+> > --- a/drivers/md/bitmap.c
+> > +++ b/drivers/md/bitmap.c
+> > @@ -1234,7 +1234,9 @@ int bitmap_startwrite(struct bitmap *bitmap, sector_t offset, unsigned long sect
+> >  		case 0:
+> >  			bitmap_file_set_bit(bitmap, offset);
+> >  			bitmap_count_page(bitmap,offset, 1);
+> > +			spin_lock_irq(&bitmap->mddev->queue->queue_lock);
+> >  			blk_plug_device(bitmap->mddev->queue);
+> > +			spin_unlock_irq(&bitmap->mddev->queue->queue_lock);
+> >  			/* fall through */
+> >  		case 1:
+> >  			*bmc = 2;
+> > 
 > 
-> I'm back, just been busy this week :-)
-> 
-> diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
-> index 621a272..f19b52f 100644
-> --- a/drivers/md/bitmap.c
-> +++ b/drivers/md/bitmap.c
-> @@ -1234,7 +1234,9 @@ int bitmap_startwrite(struct bitmap *bitmap, sector_t offset, unsigned long sect
->  		case 0:
->  			bitmap_file_set_bit(bitmap, offset);
->  			bitmap_count_page(bitmap,offset, 1);
-> +			spin_lock_irq(&bitmap->mddev->queue->queue_lock);
->  			blk_plug_device(bitmap->mddev->queue);
-> +			spin_unlock_irq(&bitmap->mddev->queue->queue_lock);
->  			/* fall through */
->  		case 1:
->  			*bmc = 2;
-> 
+> We also need to protect the blk_plug_device call a few lines down (and
+> an obvious compile fix).
 
-We also need to protect the blk_plug_device call a few lines down (and
-an obvious compile fix).
+Old source I guess, just one blk_plug_device() in the copy I have here.
+Just checked latest git, still just one blk_plug_device(), are you
+diffing against -mm or something like that? Or linux-next?
 
-diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
-index 621a272..c1b07e7 100644
---- a/drivers/md/bitmap.c
-+++ b/drivers/md/bitmap.c
-@@ -1224,7 +1224,9 @@ int bitmap_startwrite(struct bitmap *bitmap, sector_t offset, unsigned long sect
- 			prepare_to_wait(&bitmap->overflow_wait, &__wait,
- 					TASK_UNINTERRUPTIBLE);
- 			spin_unlock_irq(&bitmap->lock);
-+			spin_lock_irq(bitmap->mddev->queue->queue_lock);
- 			blk_unplug(bitmap->mddev->queue);
-+			spin_unlock_irq(bitmap->mddev->queue->queue_lock);
- 			schedule();
- 			finish_wait(&bitmap->overflow_wait, &__wait);
- 			continue;
-@@ -1234,7 +1236,9 @@ int bitmap_startwrite(struct bitmap *bitmap, sector_t offset, unsigned long sect
- 		case 0:
- 			bitmap_file_set_bit(bitmap, offset);
- 			bitmap_count_page(bitmap,offset, 1);
-+			spin_lock_irq(bitmap->mddev->queue->queue_lock);
- 			blk_plug_device(bitmap->mddev->queue);
-+			spin_unlock_irq(bitmap->mddev->queue->queue_lock);
- 			/* fall through */
- 		case 1:
- 			*bmc = 2;
+And queue_lock is of course a pointer, I didn't even compile the
+thing... Thanks for the updated variant!
 
-
+-- 
+Jens Axboe
 
