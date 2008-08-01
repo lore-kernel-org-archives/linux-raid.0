@@ -1,50 +1,54 @@
-From: Matt Garman <matthew.garman@gmail.com>
-Subject: Re: 12 Veliciraptors again w/x4 card (~1gbyte/sec aggregate read)!
-Date: Thu, 31 Jul 2008 22:41:50 -0500
-Message-ID: <20080801034150.GA32026@sewage.raw-sewage.fake>
-References: <alpine.DEB.1.10.0807071424100.4694@p34.internal.lan> <4872A2F4.2010604@dgreaves.com> <alpine.DEB.1.10.0807080429440.17980@p34.internal.lan> <alpine.DEB.1.10.0807080438560.17980@p34.internal.lan>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: SLES, not large enough to join array
+Date: Fri, 1 Aug 2008 15:16:03 +1000
+Message-ID: <18578.39955.3571.303546@notabene.brown>
+References: <f3c8d0240807311308k7085724ardf6769d772e00fdc@mail.gmail.com>
+	<f3c8d0240807311309i4005357aib7a10584cf741fe6@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <alpine.DEB.1.10.0807080438560.17980@p34.internal.lan>
+In-Reply-To: message from Diego Ramos on Thursday July 31
 Sender: linux-raid-owner@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: David Greaves <david@dgreaves.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, xfs@oss.sgi.com
+To: Diego Ramos <leituras@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Jul 08, 2008 at 04:39:34AM -0400, Justin Piszcz wrote:
-> On Tue, 8 Jul 2008, Justin Piszcz wrote:
->> On Tue, 8 Jul 2008, David Greaves wrote:
->>> Justin Piszcz wrote:
->>>> Each PCI-e x1 card has 1 veliciraptor on it now.
->>>> Got an x4 card wit 4 sata ports:
->>> Useful - which card?
->>
->> StarTech 4 Port PCI Express x4 SATA II Card Model PEXSATA24E
->>
->>
-> Chipset: Marvell 88SX7042
-> SATA Connectivity: Use four internal ports at the same time or two internal 
-> and two external ports
->
-> Which is fully supported in the latest kernels (didn't try an old kernel):
->
-> linux-2.6.25.10/drivers/ata/sata_mv.c
->
->   /* Marvell 7042 support */
->   { PCI_VDEVICE(MARVELL, 0x7042), chip_7042 },
+On Thursday July 31, leituras@gmail.com wrote:
+>  Hi.
+> 
+> I have a setup with SLES 10 SP2 installed in 1 DELL PowerEdge 2950 attached
+> to 5 DELL MD1000 SAS storages (5 TB each).
+> 
+> I used mdadm to make a single RAID unit of my storages. I'm using RAID 5 to
+> prevent data loss if one of the storages fail.
+> 
+> I had a storage fail. I removed the faulty storage (mdadm /dev/md0 -r
+> /dev/sdb1) and restarted the system to replace this storage with a good one.
+> 
+> 
+> The new storage is an exact copy of the faulty one (including internal
+> HD's).
+> 
+> When I tried to add the new storage to my degraded array ( mdadm /dev/md0 -a
+> /dev/sdX1), I get the following message: /dev/sdX: not large enough to join
+> array.
+> 
+> I used the same steps in another site (with the same storages, but with only
+> 500 GB each) and it worked all right.
+> 
+> Any suggestions?
 
-How have that card and the array attached to it been doing since you
-originally posted this?
+Yes. Upgrade :-)
 
-Doesn't that HighPoint 23xx card also use the Marvell 88SX7042 chip?
-I remember seeing the threads about the HighPoint card silently
-corrupting data by silently writing over parts of the disk(s) with
-its own info.  I'm guessing that's not a "feature" of the Marvell
-chip, but still... admittedly irrational fear here :)
+This looks like the bug that was fixed in SLES10-SP2 by an update on
+May 9th this year.
 
-It would be nice if that Supermicro 8-port SATA card (AOC-SAT2-MV8)
-was available in PCIe... I wonder if it's possible to just graft
-multiple SiI 3132 controllers (2 SATA each) on a single PCIe card?
+The relevant bugzilla is
+  https://bugzilla.novell.com/show_bug.cgi?id=368704
 
+There is a patch linked in there.
+If you cannot find an upgrade, you could just compile your own mdadm
+from the latest source.
+
+NeilBrown
