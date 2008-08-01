@@ -1,41 +1,99 @@
-From: Holger Kiehl <Holger.Kiehl@dwd.de>
-Subject: Re: RAID1 write order fidelity
-Date: Fri, 1 Aug 2008 11:15:24 +0000 (GMT)
-Message-ID: <Pine.LNX.4.64.0808011051590.14520@diagnostix.dwd.de>
-References: <20080731090330.285131sc3ypxzwhu@webmail.ualberta.ca>
- <4891ED2F.30301@dgreaves.com> <18578.22600.936623.203944@notabene.brown>
- <4892E09E.3030003@dgreaves.com>
+From: "Jon Nelson" <jnelson-linux-raid@jamponi.net>
+Subject: Re: AWFUL reshape speed with raid5.
+Date: Fri, 1 Aug 2008 08:14:30 -0500
+Message-ID: <cccedfc60808010614k2c740af7h9f24148dd3eec540@mail.gmail.com>
+References: <cccedfc60807281039y67c27685n161708146d7c2b3d@mail.gmail.com>
+	 <18578.26174.118449.299867@notabene.brown>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4892E09E.3030003@dgreaves.com>
+In-Reply-To: <18578.26174.118449.299867@notabene.brown>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: David Greaves <david@dgreaves.com>
-Cc: Neil Brown <neilb@suse.de>, aristizb@ualberta.ca, linux-raid <linux-raid@vger.kernel.org>
+To: Neil Brown <neilb@suse.de>
+Cc: LinuxRaid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Fri, 1 Aug 2008, David Greaves wrote:
-
-> Neil Brown wrote:
->>> Hence messages like:
->>> Filesystem "md0": Disabling barriers, not supported by the underlying device
+On Thu, Jul 31, 2008 at 8:26 PM, Neil Brown <neilb@suse.de> wrote:
+> On Monday July 28, jnelson-linux-raid@jamponi.net wrote:
+>> I built a raid5 with 2 devices (and --assume-clean) using 2x 4GB
+>> partitions (not logical volumes).
+>> I then grew it to 3 devices.
+>> The reshape speed is really really slow.
+> ...
 >>
->> A strange message to get as md/RAID1 *does* support barriers when all the
->> underlying devices do (since the mid-teens of 2.6 I think).
+>> Kernel is 2.6.25.11 (openSUSE 11.0 x86-64 stock)
+>>
+>> /proc/mdstat for this entry:
+>>
+>> md99 : active raid5 sdd3[2] sdc3[1] sdb3[0]
+>>       3903744 blocks super 1.0 level 5, 64k chunk, algorithm 2 [3/3] [UUU]
+>>       [=>...................]  reshape =  8.2% (324224/3903744)
+>> finish=43.3min speed=1373K/sec
+>>
 >
-> You specifically mention raid1 - which, granted, is what the OP asked about - is
-> md raid1 different from other raid levels wrt barriers?
 >
-> Also the above message comes from XFS on a raid5 on 2.6.18 - Xen :(
-> I thought I'd seen this on raid5 on 2.6.2[456] too though (no access to check
-> right now)
->
-I get this message:
+> 1.3MB/sec is certainly slow.  On my test system (which is just a bunch
+> of fairly ordinary SATA drives in a cheap controller) I get about 10
+> times this - 13MB/sec.
 
-    JBD: barrier-based sync failed on md7 - disabling barriers
+I was able to sorta replicate it.
 
-That is with 2.6.26 and ext4. But this is with RAID1+0 and md7 is the
-RAID0 part.
+The exact sequence of commands;
 
-Holger
+mdadm --create /dev/md99 --level=raid5 --raid-devices=2
+--spare-devices=0 --assume-clean --metadata=1.0 /dev/sdb3 /dev/sdc3
+echo 2000 >  /sys/block/md99/md/sync_speed_min
+mdadm --add /dev/md99 /dev/sdd3
+mdadm --grow --raid-devices=3 /dev/md99
 
+cat /proc/mdstat
+
+md99 : active raid5 sdd3[2] sdc3[1] sdb3[0]
+      3903744 blocks super 1.0 level 5, 64k chunk, algorithm 2 [3/3] [UUU]
+      [=>...................]  reshape =  5.1% (202240/3903744)
+finish=28.5min speed=2161K/sec
+
+
+dstat shows this (note that the total is doubled for some reason...):
+
+--dsk/sdb-----dsk/sdc-----dsk/sdd-----dsk/sde----dsk/total-
+ read  writ: read  writ: read  writ: read  writ: read  writ
+ 549k   78k: 542k   68k: 534k   72k: 174B   11k:3333k 1097k
+7936k 3970k:7936k 3970k:   0  3970k:   0     0 :  31M   23M
+4096k 2050k:4096k 2050k:   0  2050k:   0     0 :  16M   12M
+2816k 1282k:2816k 1282k:   0  1410k:   0     0 :  11M 7948k
+1280k  836k:1280k  768k:   0   640k:   0     0 :5120k 4488k
+7936k 3970k:7936k 3970k:   0  3970k:   0     0 :  31M   23M
+5120k 2562k:5120k 2562k:   0  2562k:   0     0 :  20M   15M
+3456k 1728k:3456k 1728k:   0  1728k:   0     0 :  14M   10M
+1664k  834k:1664k  834k:   0   834k:   0     0 :6656k 5004k
+3072k 1560k:3072k 1536k:   0  1536k:   0     0 :  12M 9264k
+9216k 4612k:9216k 4612k:   0  4612k:   0     0 :  36M   27M
+
+
+Which clearly shows not a great deal of I/O: 5-18MB/s *total*.
+
+
+..
+
+> You can possibly increase the speed somewhat by increasing the buffer
+> space that is used, thus allowing larger reads followed by larger
+> writes.  This is done by increasing
+>       /sys/block/mdXX/md/stripe_cache_size
+
+turnip:~ # cat /sys/block/md99/md/stripe_cache_size
+256
+turnip:~ # cat /sys/block/md99/md/stripe_cache_active
+0
+
+Increasing that to 4096 moves the rebuild speed to between 3 and 4MB/s.
+Any ideas?
+
+This appears to happen with all metadata versions.
+
+100% reproduceable.
+
+-- 
+Jon
