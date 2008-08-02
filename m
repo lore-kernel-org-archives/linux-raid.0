@@ -1,106 +1,29 @@
-From: tirumalareddy marri <tirumalareddymarri@yahoo.com>
-Subject: (root cause found....may be not)64k Page size + ext3 errors
-Date: Fri, 1 Aug 2008 17:07:53 -0700 (PDT)
-Message-ID: <632622.79880.qm@web81307.mail.mud.yahoo.com>
+From: "=?BIG5?B?p/Ww6qxQ?=" <egx5l1y542w@gmail.com>
+Subject: =?BIG5?B?UEhQwcqqq6iuuOquxq53uvSvuLFNrtc=?=
+Date: Sun, 3 Aug 2008 06:03:28 +0800
+Message-ID: <97923a2a0808021503w4b393addj9bc04d5bca080367__9540.31556980244$1217714676$gmane$org@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=BIG5
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Roger Heflin <rogerheflin@gmail.com>
-Cc: linux-raid@vger.kernel.org, linux-ext4@vger.kernel.org
+To: linux-ppp@vger.kernel.org
 List-Id: linux-raid.ids
 
-After lots of debugging and dumping file system information. I found th=
-at=A0 super block is being corrupted=A0 during SATA dma transfer.=A0 I =
-am using PCI-E based SATA card to attach hard disks. Looks with 64k pag=
-e size SATA DMA seems to be stressed so much compared to 4k page size. =
-I used another SATA card which is more stable(it does not use=A0 libata=
-). It worked finw with RAID-5 and 64k page size.
-=A0 I have used a small C program to create w2GB size file and read it =
-back and check the data consistency. So far no errors found. I also use=
-d IO meter test , which worked fine too.=20
-All thank you very much for the suggestions and responses.
-Regards,
-Marri
-
-
-
------ Original Message ----
-=46rom: Roger Heflin <rogerheflin@gmail.com>
-To: tirumalareddy marri <tirumalareddymarri@yahoo.com>
-Cc: linux-raid@vger.kernel.org
-Sent: Monday, July 28, 2008 5:33:34 PM
-Subject: Re: 64k Page size + ext3 errors
-
-tirumalareddy marri wrote:
-> Hi Roger,
->=A0 =A0 I did sync after I copied the 128MB data. Isn't that should gu=
-arantee data is flushed to disk ? I am using "sum" command to check if =
-data file is copied to Disk is valid or not.=20
-
-It means it will be flushed to disk, it does not mean that when you rea=
-d it back=20
-that will come off disk, if it is still in memory then it will come out=
- of=20
-memory, and still be wrong on disk.=A0 =A0 If you won't want to to more=
- complicated=20
-test it might be best to create the file, csum it and if it is ok umoun=
-t the=20
-device and remount it and csum it again and see, this should at least f=
-orce it=20
-to come off of disk again.
-
-How much memory does your test machine have?
-
-
-> Here is more information.
-> setup: Created /dev/md0 of 30GB size , created ext3 files system. The=
-n started SAMBA server to export mountded /dev/md0 to a windows machine=
- to run IO and copy files.
-> 4K Page size:
-> -------------------
-> 1. IO Meter Test: Works just fine.
-
-None of the benchmarks I am familiar with actually confirm that the dat=
-a is=20
-good, the only way one of the benchmarks will fail is if the file table=
- gets=20
-corrupted, and they may run in cache.
-
-> 2. Copied 1.8 GB file and check sum is good.
-> 3. Performance is not good because of small page size.
-> 16k Page size:
-> ---------------------
-> 1. RAID-5 fails some times with " Attempt to access beyond the end of=
- device"
-> 2. Copied 128MB and 385MB file. Checked check sum, they are matching =
-check sum.
-> 3. Copied 1.8 GB file , this failed checksum test using "sum" command=
-=2E I see "EXT3-fs errors".
-> 64K Page size:
-> ----------------------
-> 1. RAID-5 failes some times with "Attempt to access beyond the end of=
- device"
-> 2. Able to copy 128MB data and check sum test passed.
-> 3. Copying 385MB and 1.8 GB file with EXT3-fs errors.
-> Thanks,
-> Marri
-
-I would write directly to the /dev/mdx a specific pattern (a stream of =
-binary=20
-numbers from 1 ... whatever works fine), and then read that back and se=
-e how=20
-things match or don't.=A0 csum *can* fail, and if you have enough memor=
-y then any=20
-corruption actually on disk *WON'T* be found until somethings causes it=
- to be=20
-ejected from cache, and then later re-read from disk.
-
-=A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 Roger
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+pHPgvqzsp9669K22s12tcAoKp9qtzKq6qXamrqFHq8ik4aq6qEOjuKXzpHCoxrGhoUGzo6xPpHPg
+vqq6pGqoxrGhCgqn2q3MpmKxwKVYpfi3fqfOtki69K+4pV2ndKtlpXi69K22rPykdSur4aV4ut6y
+erV7pqEKCq2trsmtrbZxsU2u17v5IKV1rW4kMjksOTAwCgoopmKwZaO4pn4xMDBNQqSjra2sebZx
+uvSvuKrFtqEpCgqn2q3MsLWquqSjpXWsT7r0r7ihQabTrE+xeqX4t36quqRKpGYKCqO4rdOmbqq6
+pfi3frr0r7i46q7Gp1muyafzt3OqurN0q9esT6vcrautbqq6Cgql+Ld+ou2kxqq6sKqrfr3ouc62
+pKFBpbSzebF6qrq69Lj0qvmtsQoKv+++3KRz4L6mqLROsXqqurnat1EKCqHjoeOh46HjoeOh46Hj
+oeOh46HjoeOh46HjoeOh46HjoeOh46HjoeOh46HjoeOh46HjoeMKUFM6IL11pFfByqqruvSvuKfa
+rczB2aVptKOo0ajqpWS+96juoUEKoUChQLtQvXWkV6ZDpkyxYrPmpf6s2bZXsNMrtmynvcO6tk8u
+Li4uLi61par3rHmqQbDIvveo7gqh46HjoeOh46HjoeOh46HjoeOh46HjoeOh46HjoeOh46HjoeOh
+46HjoeOh46HjoeOh46HjCgrFd6rvqNO5cayiuN+2wLFNrfuhXVNhbaFeoUcwOTgwMTE5ODEyIC8g
+MDkzODc2NDM5NQoKpFe69LdqtE2heaFApHPgvqzsp96kvaVxuvSvuKFAoXqnWaVpp+So7KfarcwK
+CqHjoeOh46HjoeOh46HjoeOh46HjoeOh46HjoeOh46HjoeOh46HjoeOh46HjoeOh46HjoeMKpbuk
+vaVxpXSlfrSjqNHD9sHkpnJTRU+xxqfHqkGwyAqrT8PSsU6xeqq6uvSvuKZiWXggLyBHeCAuLi6x
+xqZissSkQK22CqFAoUChQKFAoUChQKFAoUChQKFAoUChQKFAoUChQKFAoUChQCDFd6rvqNO5cbjf
+sN0hISEKoeOh46HjoeOh46HjoeOh46HjoeOh46HjoeOh46HjoeOh46HjoeOh46HjoeOh46HjoeOh
+4wo=
