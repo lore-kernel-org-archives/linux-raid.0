@@ -1,74 +1,106 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PULL REQUEST] md bug fixes and minor improvements
-Date: Fri, 1 Aug 2008 20:29:00 +0200
-Message-ID: <20080801182859.GK20055@kernel.dk>
-References: <18578.31924.259887.735206@notabene.brown> <alpine.LFD.1.10.0808011007240.3277@nehalem.linux-foundation.org> <20080801172231.GF20055@kernel.dk> <1217612088.24551.5.camel@dwillia2-linux.ch.intel.com> <20080801174024.GH20055@kernel.dk> <1217614945.24551.16.camel@dwillia2-linux.ch.intel.com>
+From: tirumalareddy marri <tirumalareddymarri@yahoo.com>
+Subject: (root cause found....may be not)64k Page size + ext3 errors
+Date: Fri, 1 Aug 2008 17:07:53 -0700 (PDT)
+Message-ID: <632622.79880.qm@web81307.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1217614945.24551.16.camel@dwillia2-linux.ch.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Neil Brown <neilb@suse.de>, Arthur Jones <ajones@riverbed.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-raid@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Roger Heflin <rogerheflin@gmail.com>
+Cc: linux-raid@vger.kernel.org, linux-ext4@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, Aug 01 2008, Dan Williams wrote:
-> 
-> On Fri, 2008-08-01 at 10:40 -0700, Jens Axboe wrote:
-> > On Fri, Aug 01 2008, Dan Williams wrote:
-> > >
-> > > On Fri, 2008-08-01 at 19:22 +0200, Jens Axboe wrote:
-> > > > It is a bit asymmetrical, largely due to the fact that the ->unplug_fn()
-> > > > itself grabs the lock. The below patch should fix it, since Neil has
-> > > > added a proper queue lock to the md queues. If someone can confirm that
-> > > > this fixes it, I'll queue up a patch with proper descriptions.
-> > > >
-> > > > > I guess Jens is gone too..
-> > > >
-> > > > I'm back, just been busy this week :-)
-> > > >
-> > > > diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
-> > > > index 621a272..f19b52f 100644
-> > > > --- a/drivers/md/bitmap.c
-> > > > +++ b/drivers/md/bitmap.c
-> > > > @@ -1234,7 +1234,9 @@ int bitmap_startwrite(struct bitmap *bitmap, sector_t offset, unsigned long sect
-> > > >             case 0:
-> > > >                     bitmap_file_set_bit(bitmap, offset);
-> > > >                     bitmap_count_page(bitmap,offset, 1);
-> > > > +                   spin_lock_irq(&bitmap->mddev->queue->queue_lock);
-> > > >                     blk_plug_device(bitmap->mddev->queue);
-> > > > +                   spin_unlock_irq(&bitmap->mddev->queue->queue_lock);
-> > > >                     /* fall through */
-> > > >             case 1:
-> > > >                     *bmc = 2;
-> > > >
-> > >
-> > > We also need to protect the blk_plug_device call a few lines down (and
-> > > an obvious compile fix).
-> > 
-> > Old source I guess, just one blk_plug_device() in the copy I have here.
-> > Just checked latest git, still just one blk_plug_device(), are you
-> > diffing against -mm or something like that? Or linux-next?
-> 
-> No, my mistake... I crossed my eyes and misread your patch as protecting
-> blk_unplug() a few lines up, sorry.
+After lots of debugging and dumping file system information. I found th=
+at=A0 super block is being corrupted=A0 during SATA dma transfer.=A0 I =
+am using PCI-E based SATA card to attach hard disks. Looks with 64k pag=
+e size SATA DMA seems to be stressed so much compared to 4k page size. =
+I used another SATA card which is more stable(it does not use=A0 libata=
+). It worked finw with RAID-5 and 64k page size.
+=A0 I have used a small C program to create w2GB size file and read it =
+back and check the data consistency. So far no errors found. I also use=
+d IO meter test , which worked fine too.=20
+All thank you very much for the suggestions and responses.
+Regards,
+Marri
 
-Ah, didn't read that closely in your patch, that would get you into
-trouble :-)
 
-> > And queue_lock is of course a pointer, I didn't even compile the
-> > thing... Thanks for the updated variant!
-> 
-> I have verified that:
-> 
-> 	mdadm --create /dev/md0 /dev/sd[bc] -n 2 -l 1 --bitmap=internal
-> 	dd if=/dev/zero of=/dev/md0 bs=1024k count=1
-> 
-> ...no longer triggers the warning with your fix.
 
-Goodie, thanks!
+----- Original Message ----
+=46rom: Roger Heflin <rogerheflin@gmail.com>
+To: tirumalareddy marri <tirumalareddymarri@yahoo.com>
+Cc: linux-raid@vger.kernel.org
+Sent: Monday, July 28, 2008 5:33:34 PM
+Subject: Re: 64k Page size + ext3 errors
 
--- 
-Jens Axboe
+tirumalareddy marri wrote:
+> Hi Roger,
+>=A0 =A0 I did sync after I copied the 128MB data. Isn't that should gu=
+arantee data is flushed to disk ? I am using "sum" command to check if =
+data file is copied to Disk is valid or not.=20
 
+It means it will be flushed to disk, it does not mean that when you rea=
+d it back=20
+that will come off disk, if it is still in memory then it will come out=
+ of=20
+memory, and still be wrong on disk.=A0 =A0 If you won't want to to more=
+ complicated=20
+test it might be best to create the file, csum it and if it is ok umoun=
+t the=20
+device and remount it and csum it again and see, this should at least f=
+orce it=20
+to come off of disk again.
+
+How much memory does your test machine have?
+
+
+> Here is more information.
+> setup: Created /dev/md0 of 30GB size , created ext3 files system. The=
+n started SAMBA server to export mountded /dev/md0 to a windows machine=
+ to run IO and copy files.
+> 4K Page size:
+> -------------------
+> 1. IO Meter Test: Works just fine.
+
+None of the benchmarks I am familiar with actually confirm that the dat=
+a is=20
+good, the only way one of the benchmarks will fail is if the file table=
+ gets=20
+corrupted, and they may run in cache.
+
+> 2. Copied 1.8 GB file and check sum is good.
+> 3. Performance is not good because of small page size.
+> 16k Page size:
+> ---------------------
+> 1. RAID-5 fails some times with " Attempt to access beyond the end of=
+ device"
+> 2. Copied 128MB and 385MB file. Checked check sum, they are matching =
+check sum.
+> 3. Copied 1.8 GB file , this failed checksum test using "sum" command=
+=2E I see "EXT3-fs errors".
+> 64K Page size:
+> ----------------------
+> 1. RAID-5 failes some times with "Attempt to access beyond the end of=
+ device"
+> 2. Able to copy 128MB data and check sum test passed.
+> 3. Copying 385MB and 1.8 GB file with EXT3-fs errors.
+> Thanks,
+> Marri
+
+I would write directly to the /dev/mdx a specific pattern (a stream of =
+binary=20
+numbers from 1 ... whatever works fine), and then read that back and se=
+e how=20
+things match or don't.=A0 csum *can* fail, and if you have enough memor=
+y then any=20
+corruption actually on disk *WON'T* be found until somethings causes it=
+ to be=20
+ejected from cache, and then later re-read from disk.
+
+=A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 Roger
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
