@@ -1,29 +1,46 @@
-From: "=?BIG5?B?p/Ww6qxQ?=" <egx5l1y542w@gmail.com>
-Subject: =?BIG5?B?UEhQwcqqq6iuuOquxq53uvSvuLFNrtc=?=
-Date: Sun, 3 Aug 2008 06:03:28 +0800
-Message-ID: <97923a2a0808021503w4b393addj9bc04d5bca080367__9540.31556980244$1217714676$gmane$org@mail.gmail.com>
+From: "Jon Nelson" <jnelson-sabmag@jamponi.net>
+Subject: Q: Is this how 'check' works (on raid10 in particular)?
+Date: Sun, 3 Aug 2008 07:32:00 -0500
+Message-ID: <cccedfc60808030532u14cfd668vfeca77a79996d11@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=BIG5
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-ppp@vger.kernel.org
+To: LinuxRaid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-pHPgvqzsp9669K22s12tcAoKp9qtzKq6qXamrqFHq8ik4aq6qEOjuKXzpHCoxrGhoUGzo6xPpHPg
-vqq6pGqoxrGhCgqn2q3MpmKxwKVYpfi3fqfOtki69K+4pV2ndKtlpXi69K22rPykdSur4aV4ut6y
-erV7pqEKCq2trsmtrbZxsU2u17v5IKV1rW4kMjksOTAwCgoopmKwZaO4pn4xMDBNQqSjra2sebZx
-uvSvuKrFtqEpCgqn2q3MsLWquqSjpXWsT7r0r7ihQabTrE+xeqX4t36quqRKpGYKCqO4rdOmbqq6
-pfi3frr0r7i46q7Gp1muyafzt3OqurN0q9esT6vcrautbqq6Cgql+Ld+ou2kxqq6sKqrfr3ouc62
-pKFBpbSzebF6qrq69Lj0qvmtsQoKv+++3KRz4L6mqLROsXqqurnat1EKCqHjoeOh46HjoeOh46Hj
-oeOh46HjoeOh46HjoeOh46HjoeOh46HjoeOh46HjoeOh46HjoeMKUFM6IL11pFfByqqruvSvuKfa
-rczB2aVptKOo0ajqpWS+96juoUEKoUChQLtQvXWkV6ZDpkyxYrPmpf6s2bZXsNMrtmynvcO6tk8u
-Li4uLi61par3rHmqQbDIvveo7gqh46HjoeOh46HjoeOh46HjoeOh46HjoeOh46HjoeOh46HjoeOh
-46HjoeOh46HjoeOh46HjCgrFd6rvqNO5cayiuN+2wLFNrfuhXVNhbaFeoUcwOTgwMTE5ODEyIC8g
-MDkzODc2NDM5NQoKpFe69LdqtE2heaFApHPgvqzsp96kvaVxuvSvuKFAoXqnWaVpp+So7KfarcwK
-CqHjoeOh46HjoeOh46HjoeOh46HjoeOh46HjoeOh46HjoeOh46HjoeOh46HjoeOh46HjoeMKpbuk
-vaVxpXSlfrSjqNHD9sHkpnJTRU+xxqfHqkGwyAqrT8PSsU6xeqq6uvSvuKZiWXggLyBHeCAuLi6x
-xqZissSkQK22CqFAoUChQKFAoUChQKFAoUChQKFAoUChQKFAoUChQKFAoUChQCDFd6rvqNO5cbjf
-sN0hISEKoeOh46HjoeOh46HjoeOh46HjoeOh46HjoeOh46HjoeOh46HjoeOh46HjoeOh46HjoeOh
-4wo=
+After digging through the code (admittedly, way too late at night), I
+think I have a basic understanding of how the resync code works, and
+why it appears to be suboptimal (speed-wise) for raid10.
+
+It would appear that, upon receipt of a 'check' (other resync methods
+have different paths, sometimes), md.c basically says, "start at the
+first sector or the first sector after the checkpoint and proceed
+logically through the end (unless told to stop)' and md.c schedules
+this check with the relevant sync_request method. For raid10, this
+finds the first device with that logical sector as a copy and then
+compares the data there to the data in all of the other copies on the
+other disks. For raid10 in f2 format (and to a less extent with the
+offset format) this is going to result in a great deal of thrashing.
+I'm guessing this is the reason why a 'check' operation raid10,f2
+takes 2x as long as for raid5 (same disks). One way to improve the
+efficiency here would be to perform a loop like this:
+
+for device in devices:
+  for chunk that is not a mirror:
+    read chunk
+    compare chunk to mirror chunks on other devices
+
+If I'm not wrong this should result in near streaming speeds from each
+device with a minimum of seeking. However, to effect this change it
+looks like the changes would be more invasive than just changing
+raid10.c. One way, of course, might be to abstract the sync code just
+a bit more so that md.c could ask each device to provide a function
+which does the driving (the above 4 lines) and md.c does all of the
+common error checking, interrupt checking, etc... Does this seem like
+crazy talk? If I can get some help I might give it a stab.
+
+-- 
+Jon
