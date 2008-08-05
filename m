@@ -1,61 +1,104 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [PATCH md] Fail safely when trying to grow an array with a write-intent bitmap.
-Date: Tue,  5 Aug 2008 16:17:31 +1000
-Message-ID: <1217917054-1725-4-git-send-email-neilb@suse.de>
+Subject: [PATCH md] Don't let a blocked_rdev interfere with read request in raid5/6
+Date: Tue,  5 Aug 2008 16:17:32 +1000
+Message-ID: <1217917054-1725-5-git-send-email-neilb@suse.de>
 References: <1217917054-1725-1-git-send-email-neilb@suse.de>
  <1217917054-1725-2-git-send-email-neilb@suse.de>
  <1217917054-1725-3-git-send-email-neilb@suse.de>
+ <1217917054-1725-4-git-send-email-neilb@suse.de>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1217917054-1725-3-git-send-email-neilb@suse.de>
+In-Reply-To: <1217917054-1725-4-git-send-email-neilb@suse.de>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 Cc: NeilBrown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-We cannot currently change the size of a write-intent bitmap.
-So if we change the size of an array which has such a bitmap, it
-tries to set bits beyond the end of the bitmap.
+When we have externally managed metadata, we need to mark a failed
+device as 'Blocked' and not allow any writes until that device
+have been marked as faulty in the metadata and the Blocked flag has
+been removed.
 
-For now, simply reject any request to change the size of an array
-which has a bitmap.  mdadm can remove the bitmap and add a new one
-after the array has changed size.
+However it is perfectly OK to allow read requests when there is a
+Blocked device, and with a readonly array, there may not be any
+metadata-handler watching for blocked devices.
+
+So in raid5/raid6 only allow a Blocked device to interfere with
+Write request or resync.  Read requests go through untouched.
+
+raid1 and raid10 already differentiate between read and write
+properly.
 
 Signed-off-by: NeilBrown <neilb@suse.de>
 ---
- drivers/md/md.c    |    5 +++++
- drivers/md/raid5.c |    3 +++
- 2 files changed, 8 insertions(+), 0 deletions(-)
+ drivers/md/raid5.c |   29 +++++++++++++++++++++--------
+ 1 files changed, 21 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 8d11cd1..6eb9545 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -4639,6 +4639,11 @@ static int update_size(mddev_t *mddev, sector_t num_sectors)
- 	 */
- 	if (mddev->sync_thread)
- 		return -EBUSY;
-+	if (mddev->bitmap)
-+		/* Sorry, cannot grow a bitmap yet, just remove it,
-+		 * grow, and re-add.
-+		 */
-+		return -EBUSY;
- 	rdev_for_each(rdev, tmp, mddev) {
- 		sector_t avail;
- 		avail = rdev->size * 2;
 diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 40e9396..17e0953 100644
+index 17e0953..224de02 100644
 --- a/drivers/md/raid5.c
 +++ b/drivers/md/raid5.c
-@@ -4446,6 +4446,9 @@ static int raid5_check_reshape(mddev_t *mddev)
- 		return -EINVAL; /* Cannot shrink array or change level yet */
- 	if (mddev->delta_disks == 0)
- 		return 0; /* nothing to do */
-+	if (mddev->bitmap)
-+		/* Cannot grow a bitmap yet */
-+		return -EBUSY;
+@@ -2568,10 +2568,10 @@ static bool handle_stripe5(struct stripe_head *sh)
+ 		if (dev->written)
+ 			s.written++;
+ 		rdev = rcu_dereference(conf->disks[i].rdev);
+-		if (rdev && unlikely(test_bit(Blocked, &rdev->flags))) {
++		if (blocked_rdev == NULL &&
++		    rdev && unlikely(test_bit(Blocked, &rdev->flags))) {
+ 			blocked_rdev = rdev;
+ 			atomic_inc(&rdev->nr_pending);
+-			break;
+ 		}
+ 		if (!rdev || !test_bit(In_sync, &rdev->flags)) {
+ 			/* The ReadError flag will just be confusing now */
+@@ -2588,8 +2588,14 @@ static bool handle_stripe5(struct stripe_head *sh)
+ 	rcu_read_unlock();
  
- 	/* Can only proceed if there are plenty of stripe_heads.
- 	 * We need a minimum of one full stripe,, and for sensible progress
+ 	if (unlikely(blocked_rdev)) {
+-		set_bit(STRIPE_HANDLE, &sh->state);
+-		goto unlock;
++		if (s.syncing || s.expanding || s.expanded ||
++		    s.to_write || s.written) {
++			set_bit(STRIPE_HANDLE, &sh->state);
++			goto unlock;
++		}
++		/* There is nothing for the blocked_rdev to block */
++		rdev_dec_pending(blocked_rdev, conf->mddev);
++		blocked_rdev = NULL;
+ 	}
+ 
+ 	if (s.to_fill && !test_bit(STRIPE_BIOFILL_RUN, &sh->state)) {
+@@ -2832,10 +2838,10 @@ static bool handle_stripe6(struct stripe_head *sh, struct page *tmp_page)
+ 		if (dev->written)
+ 			s.written++;
+ 		rdev = rcu_dereference(conf->disks[i].rdev);
+-		if (rdev && unlikely(test_bit(Blocked, &rdev->flags))) {
++		if (blocked_rdev == NULL &&
++		    rdev && unlikely(test_bit(Blocked, &rdev->flags))) {
+ 			blocked_rdev = rdev;
+ 			atomic_inc(&rdev->nr_pending);
+-			break;
+ 		}
+ 		if (!rdev || !test_bit(In_sync, &rdev->flags)) {
+ 			/* The ReadError flag will just be confusing now */
+@@ -2853,9 +2859,16 @@ static bool handle_stripe6(struct stripe_head *sh, struct page *tmp_page)
+ 	rcu_read_unlock();
+ 
+ 	if (unlikely(blocked_rdev)) {
+-		set_bit(STRIPE_HANDLE, &sh->state);
+-		goto unlock;
++		if (s.syncing || s.expanding || s.expanded ||
++		    s.to_write || s.written) {
++			set_bit(STRIPE_HANDLE, &sh->state);
++			goto unlock;
++		}
++		/* There is nothing for the blocked_rdev to block */
++		rdev_dec_pending(blocked_rdev, conf->mddev);
++		blocked_rdev = NULL;
+ 	}
++
+ 	pr_debug("locked=%d uptodate=%d to_read=%d"
+ 	       " to_write=%d failed=%d failed_num=%d,%d\n",
+ 	       s.locked, s.uptodate, s.to_read, s.to_write, s.failed,
 -- 
 1.5.6.3
 
