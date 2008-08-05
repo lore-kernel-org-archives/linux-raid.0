@@ -1,104 +1,73 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [PATCH md] Don't let a blocked_rdev interfere with read request in raid5/6
-Date: Tue,  5 Aug 2008 16:17:32 +1000
-Message-ID: <1217917054-1725-5-git-send-email-neilb@suse.de>
+Subject: [PATCH md] Allow faulty devices to be removed from a readonly array.
+Date: Tue,  5 Aug 2008 16:17:33 +1000
+Message-ID: <1217917054-1725-6-git-send-email-neilb@suse.de>
 References: <1217917054-1725-1-git-send-email-neilb@suse.de>
  <1217917054-1725-2-git-send-email-neilb@suse.de>
  <1217917054-1725-3-git-send-email-neilb@suse.de>
  <1217917054-1725-4-git-send-email-neilb@suse.de>
+ <1217917054-1725-5-git-send-email-neilb@suse.de>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1217917054-1725-4-git-send-email-neilb@suse.de>
+In-Reply-To: <1217917054-1725-5-git-send-email-neilb@suse.de>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 Cc: NeilBrown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-When we have externally managed metadata, we need to mark a failed
-device as 'Blocked' and not allow any writes until that device
-have been marked as faulty in the metadata and the Blocked flag has
-been removed.
+Removing faulty devices from an array is a two stage process.
+First the device is moved from being a part of the active array
+to being similar to a spare device.  Then it can be removed
+by a request from user space.
 
-However it is perfectly OK to allow read requests when there is a
-Blocked device, and with a readonly array, there may not be any
-metadata-handler watching for blocked devices.
+The first step is currently not performed for read-only arrays,
+so the second step can never succeed.
 
-So in raid5/raid6 only allow a Blocked device to interfere with
-Write request or resync.  Read requests go through untouched.
-
-raid1 and raid10 already differentiate between read and write
-properly.
+So allow readonly arrays to remove failed devices (which aren't
+blocked).
 
 Signed-off-by: NeilBrown <neilb@suse.de>
 ---
- drivers/md/raid5.c |   29 +++++++++++++++++++++--------
- 1 files changed, 21 insertions(+), 8 deletions(-)
+ drivers/md/md.c |   13 ++++++++++++-
+ 1 files changed, 12 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 17e0953..224de02 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -2568,10 +2568,10 @@ static bool handle_stripe5(struct stripe_head *sh)
- 		if (dev->written)
- 			s.written++;
- 		rdev = rcu_dereference(conf->disks[i].rdev);
--		if (rdev && unlikely(test_bit(Blocked, &rdev->flags))) {
-+		if (blocked_rdev == NULL &&
-+		    rdev && unlikely(test_bit(Blocked, &rdev->flags))) {
- 			blocked_rdev = rdev;
- 			atomic_inc(&rdev->nr_pending);
--			break;
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 6eb9545..25b893e 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -6003,7 +6003,7 @@ static int remove_and_add_spares(mddev_t *mddev)
+ 			}
  		}
- 		if (!rdev || !test_bit(In_sync, &rdev->flags)) {
- 			/* The ReadError flag will just be confusing now */
-@@ -2588,8 +2588,14 @@ static bool handle_stripe5(struct stripe_head *sh)
- 	rcu_read_unlock();
  
- 	if (unlikely(blocked_rdev)) {
--		set_bit(STRIPE_HANDLE, &sh->state);
--		goto unlock;
-+		if (s.syncing || s.expanding || s.expanded ||
-+		    s.to_write || s.written) {
-+			set_bit(STRIPE_HANDLE, &sh->state);
-+			goto unlock;
-+		}
-+		/* There is nothing for the blocked_rdev to block */
-+		rdev_dec_pending(blocked_rdev, conf->mddev);
-+		blocked_rdev = NULL;
+-	if (mddev->degraded) {
++	if (mddev->degraded && ! mddev->ro) {
+ 		rdev_for_each(rdev, rtmp, mddev) {
+ 			if (rdev->raid_disk >= 0 &&
+ 			    !test_bit(In_sync, &rdev->flags) &&
+@@ -6077,6 +6077,8 @@ void md_check_recovery(mddev_t *mddev)
+ 		flush_signals(current);
  	}
  
- 	if (s.to_fill && !test_bit(STRIPE_BIOFILL_RUN, &sh->state)) {
-@@ -2832,10 +2838,10 @@ static bool handle_stripe6(struct stripe_head *sh, struct page *tmp_page)
- 		if (dev->written)
- 			s.written++;
- 		rdev = rcu_dereference(conf->disks[i].rdev);
--		if (rdev && unlikely(test_bit(Blocked, &rdev->flags))) {
-+		if (blocked_rdev == NULL &&
-+		    rdev && unlikely(test_bit(Blocked, &rdev->flags))) {
- 			blocked_rdev = rdev;
- 			atomic_inc(&rdev->nr_pending);
--			break;
- 		}
- 		if (!rdev || !test_bit(In_sync, &rdev->flags)) {
- 			/* The ReadError flag will just be confusing now */
-@@ -2853,9 +2859,16 @@ static bool handle_stripe6(struct stripe_head *sh, struct page *tmp_page)
- 	rcu_read_unlock();
++	if (mddev->ro && !test_bit(MD_RECOVERY_NEEDED, &mddev->recovery))
++		return;
+ 	if ( ! (
+ 		(mddev->flags && !mddev->external) ||
+ 		test_bit(MD_RECOVERY_NEEDED, &mddev->recovery) ||
+@@ -6090,6 +6092,15 @@ void md_check_recovery(mddev_t *mddev)
+ 	if (mddev_trylock(mddev)) {
+ 		int spares = 0;
  
- 	if (unlikely(blocked_rdev)) {
--		set_bit(STRIPE_HANDLE, &sh->state);
--		goto unlock;
-+		if (s.syncing || s.expanding || s.expanded ||
-+		    s.to_write || s.written) {
-+			set_bit(STRIPE_HANDLE, &sh->state);
++		if (mddev->ro) {
++			/* Only thing we do on a ro array is remove
++			 * failed devices.
++			 */
++			remove_and_add_spares(mddev);
++			clear_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
 +			goto unlock;
 +		}
-+		/* There is nothing for the blocked_rdev to block */
-+		rdev_dec_pending(blocked_rdev, conf->mddev);
-+		blocked_rdev = NULL;
- 	}
 +
- 	pr_debug("locked=%d uptodate=%d to_read=%d"
- 	       " to_write=%d failed=%d failed_num=%d,%d\n",
- 	       s.locked, s.uptodate, s.to_read, s.to_write, s.failed,
+ 		if (!mddev->external) {
+ 			int did_change = 0;
+ 			spin_lock_irq(&mddev->write_lock);
 -- 
 1.5.6.3
 
