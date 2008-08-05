@@ -1,49 +1,41 @@
 From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
-Subject: [PATCH md] Speed up raid10 resync, especially for 'far' layout
-Date: Tue, 5 Aug 2008 12:14:30 +0200
-Message-ID: <20080805101429.GA16040@rap.rap.dk>
+Subject: Re: Q: Is this how 'check' works (on raid10 in particular)?
+Date: Tue, 5 Aug 2008 12:17:40 +0200
+Message-ID: <20080805101740.GB14670@rap.rap.dk>
+References: <cccedfc60808030532u14cfd668vfeca77a79996d11@mail.gmail.com> <20080803125413.GA10118@rap.rap.dk> <cccedfc60808041836s37637ff2x3d65543ab7d3d105@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
+In-Reply-To: <cccedfc60808041836s37637ff2x3d65543ab7d3d105@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: NeilBrown <neilb@suse.de>
+To: Jon Nelson <jnelson-linux-raid@jamponi.net>
+Cc: LinuxRaid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Speed up raid10 resync, especially for 'far' layout
+On Mon, Aug 04, 2008 at 08:36:33PM -0500, Jon Nelson wrote:
+> The patch Keld sent me makes a significant difference:
+> 
+> Before:
+> (Stock 2.6.25.11 x86-64 openSUSE 11.0 kernel raid10 module):   4.5h to 5.5h
+> 
+> After:
+> Same kernel, minor changes to raid10.c and compiled:  1h 56m.
+> 
+> ::
+> 
+> Aug  4 18:37:09 turnip kernel: md: data-check of RAID array md0
+> Aug  4 20:33:24 turnip kernel: md: md0: data-check done.
+> 
+> 
+> > My idea is to do the checks in bigger blocks, then you would minimize
+> > the trashing, by minimizing the number of times you need to move the
+> > head.  And this would not need much change in the code. I have done a
+> > patch to do this, but I have not yet tested it.
 
-This patch speeds up resync for raid10, especially for the 'far' 
-layout, where reading is done in 32 MiB increments and the moving of
-heads is therefore much reduced compared to the previous 2 MiB size,
-nd the 'far' property of striping read can be employed.
+Thanks for testing it. It sounds good, and as I expected it to behave.
+I think the patch is clean and I have sent it to the list and Neil for
+inclusion in the tree.
 
-A speed up of more than 50 % has been reported.
-
-Signed-off-by: Keld Simonsen <keld@dkuug.dk>
-
-### Diffstat output:
- raid10.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff -u linux-2.6.25.10/drivers/md/raid10.c linux-2.6.25.10-ks/drivers/md/raid10.c
---- linux-2.6.25.10/drivers/md/raid10.c	2008-07-03 05:46:47.000000000 +0200
-+++ linux-2.6.25.10-ks/drivers/md/raid10.c	2008-07-12 18:28:59.438235317 +0200
-@@ -80,7 +80,7 @@
- //#define RESYNC_BLOCK_SIZE PAGE_SIZE
- #define RESYNC_SECTORS (RESYNC_BLOCK_SIZE >> 9)
- #define RESYNC_PAGES ((RESYNC_BLOCK_SIZE + PAGE_SIZE-1) / PAGE_SIZE)
--#define RESYNC_WINDOW (2048*1024)
-+#define RESYNC_WINDOW (2048*1024*16)
- 
- /*
-  * When performing a resync, we need to read and compare, so
-@@ -686,7 +686,7 @@
-  *    there is no normal IO happeing.  It must arrange to call
-  *    lower_barrier when the particular background IO completes.
-  */
--#define RESYNC_DEPTH 32
-+#define RESYNC_DEPTH 32*16
- 
- static void raise_barrier(conf_t *conf, int force)
- {
+Best regards
+keld
