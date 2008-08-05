@@ -1,39 +1,34 @@
-From: "Jon Nelson" <jnelson-linux-raid@jamponi.net>
-Subject: Re: Q: Is this how 'check' works (on raid10 in particular)?
-Date: Mon, 4 Aug 2008 20:36:33 -0500
-Message-ID: <cccedfc60808041836s37637ff2x3d65543ab7d3d105@mail.gmail.com>
-References: <cccedfc60808030532u14cfd668vfeca77a79996d11@mail.gmail.com>
-	 <20080803125413.GA10118@rap.rap.dk>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: NeilBrown <neilb@suse.de>
+Subject: [PATCH md] 6 Little md patches for 2.6.27 for review
+Date: Tue,  5 Aug 2008 16:17:28 +1000
+Message-ID: <1217917054-1725-1-git-send-email-neilb@suse.de>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20080803125413.GA10118@rap.rap.dk>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: =?ISO-8859-1?Q?Keld_J=F8rn_Simonsen?= <keld@dkuug.dk>
-Cc: LinuxRaid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
+Cc: NeilBrown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-The patch Keld sent me makes a significant difference:
+Hi,
+ The following 6 patches are in my for-next tree and will probably
+ be sent to Linus shortly.
 
-Before:
-(Stock 2.6.25.11 x86-64 openSUSE 11.0 kernel raid10 module):   4.5h to 5.5h
+ Any review always appreciated.
 
-After:
-Same kernel, minor changes to raid10.c and compiled:  1h 56m.
+Thanks.
 
-::
-
-Aug  4 18:37:09 turnip kernel: md: data-check of RAID array md0
-Aug  4 20:33:24 turnip kernel: md: md0: data-check done.
+  git://neil.brown.name/md for-next
 
 
-> My idea is to do the checks in bigger blocks, then you would minimize
-> the trashing, by minimizing the number of times you need to move the
-> head.  And this would not need much change in the code. I have done a
-> patch to do this, but I have not yet tested it.
+NeilBrown (6):
+  Make writes to md/safe_mode_delay immediately effective.
+  Restore force switch of md array to readonly at reboot time.
+  Fail safely when trying to grow an array with a write-intent bitmap.
+  Don't let a blocked_rdev interfere with read request in raid5/6
+  Allow faulty devices to be removed from a readonly array.
+  Allow raid10 resync to happening in larger chunks.
 
+ drivers/md/md.c     |   29 +++++++++++++++++++++++++++--
+ drivers/md/raid10.c |    9 +++++----
+ drivers/md/raid5.c  |   32 ++++++++++++++++++++++++--------
+ 3 files changed, 56 insertions(+), 14 deletions(-)
 
--- 
-Jon
