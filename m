@@ -1,55 +1,28 @@
-From: "Jon Nelson" <jnelson-linux-raid@jamponi.net>
-Subject: Re: [PATCH md] Speed up raid10 resync, especially for 'far' layout
-Date: Tue, 5 Aug 2008 08:25:10 -0500
-Message-ID: <cccedfc60808050625n7e8d3fd2t9d4548f3e64bacf7@mail.gmail.com>
-References: <20080805101429.GA16040@rap.rap.dk>
-	 <cccedfc60808050453g69074057y8d858fc7c4d6317b@mail.gmail.com>
-	 <20080805132245.GA17635@rap.rap.dk>
+From: "Dan Williams" <dan.j.williams@intel.com>
+Subject: Re: [PATCH md] Fail safely when trying to grow an array with a write-intent bitmap.
+Date: Tue, 5 Aug 2008 11:12:09 -0700
+Message-ID: <e9c3a7c20808051112k7b0b23fdle1d52ccc4893f8dd@mail.gmail.com>
+References: <1217917054-1725-1-git-send-email-neilb@suse.de>
+	 <1217917054-1725-2-git-send-email-neilb@suse.de>
+	 <1217917054-1725-3-git-send-email-neilb@suse.de>
+	 <1217917054-1725-4-git-send-email-neilb@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20080805132245.GA17635@rap.rap.dk>
+In-Reply-To: <1217917054-1725-4-git-send-email-neilb@suse.de>
 Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: =?ISO-8859-1?Q?Keld_J=F8rn_Simonsen?= <keld@dkuug.dk>
-Cc: LinuxRaid <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Aug 5, 2008 at 8:22 AM, Keld J=F8rn Simonsen <keld@dkuug.dk> wr=
-ote:
-> On Tue, Aug 05, 2008 at 06:53:12AM -0500, Jon Nelson wrote:
->> On Tue, Aug 5, 2008 at 5:14 AM, Keld J=F8rn Simonsen <keld@dkuug.dk>=
- wrote:
->> > Speed up raid10 resync, especially for 'far' layout
->> >
->> > This patch speeds up resync for raid10, especially for the 'far'
->> > layout, where reading is done in 32 MiB increments and the moving =
-of
->> > heads is therefore much reduced compared to the previous 2 MiB siz=
-e,
->> > nd the 'far' property of striping read can be employed.
->> >
->> > A speed up of more than 50 % has been reported.
->>
->> Actually, the time taken to 'check' the array was reduced by more th=
-an 50%.
->
-> Which corresponds to a speed up of more than 100 %.
->
-> Did you  have any indications on whether there would still be room fo=
-r
-> improvements? What was the speed on the individual disks compared to
-> their nominal speed?
+On Mon, Aug 4, 2008 at 11:17 PM, NeilBrown <neilb@suse.de> wrote:
+> +               /* Sorry, cannot grow a bitmap yet, just remove it,
+> +                * grow, and re-add.
+> +                */
 
-Generally, very good. At or above the posted speed limit.
+Perhaps this bit should be in a pr_info().
 
-
-
---=20
-Jon
 --
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Dan
