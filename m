@@ -1,73 +1,86 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [PATCH md] Allow faulty devices to be removed from a readonly array.
-Date: Tue,  5 Aug 2008 16:17:33 +1000
-Message-ID: <1217917054-1725-6-git-send-email-neilb@suse.de>
+Subject: [PATCH md] Allow raid10 resync to happening in larger chunks.
+Date: Tue,  5 Aug 2008 16:17:34 +1000
+Message-ID: <1217917054-1725-7-git-send-email-neilb@suse.de>
 References: <1217917054-1725-1-git-send-email-neilb@suse.de>
  <1217917054-1725-2-git-send-email-neilb@suse.de>
  <1217917054-1725-3-git-send-email-neilb@suse.de>
  <1217917054-1725-4-git-send-email-neilb@suse.de>
  <1217917054-1725-5-git-send-email-neilb@suse.de>
+ <1217917054-1725-6-git-send-email-neilb@suse.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1217917054-1725-5-git-send-email-neilb@suse.de>
+In-Reply-To: <1217917054-1725-6-git-send-email-neilb@suse.de>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
-Cc: NeilBrown <neilb@suse.de>
+Cc: NeilBrown <neilb@suse.de>, =?utf-8?q?Keld=20J=C3=B8rn=20Simonsen?= <keld@dkuug.dk>
 List-Id: linux-raid.ids
 
-Removing faulty devices from an array is a two stage process.
-First the device is moved from being a part of the active array
-to being similar to a spare device.  Then it can be removed
-by a request from user space.
+The raid10 resync/recovery code currently limits the amount of
+in-flight resync IO to 2Meg.  This was copied from raid1 where
+it seems quite adequate.  However for raid10, some layouts require
+a bit of seeking to perform a resync, and allowing a larger buffer
+size means that the seeking can be significantly reduced.
 
-The first step is currently not performed for read-only arrays,
-so the second step can never succeed.
+There is probably no real need to limit the amount of in-flight
+IO at all.  Any shortage of memory will naturally reduce the
+amount of buffer space available down to a set minimum, and any
+concurrent normal IO will quickly cause resync IO to back off.
 
-So allow readonly arrays to remove failed devices (which aren't
-blocked).
+The only problem would be that normal IO has to wait for all resync IO
+to finish, so a very large amount of resync IO could cause unpleasant
+latency when normal IO starts up.
 
+So: increase RESYNC_DEPTH to allow 32Meg of buffer (if memory is
+available) which seems to be a good amount.  Also reduce the amount
+of memory reserved as there is no need to keep 2Meg just for resync if
+memory is tight.
+
+Thanks to Keld for the suggestion.
+
+Cc: Keld J=C3=B8rn Simonsen <keld@dkuug.dk>
 Signed-off-by: NeilBrown <neilb@suse.de>
 ---
- drivers/md/md.c |   13 ++++++++++++-
- 1 files changed, 12 insertions(+), 1 deletions(-)
+ drivers/md/raid10.c |    9 +++++----
+ 1 files changed, 5 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 6eb9545..25b893e 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -6003,7 +6003,7 @@ static int remove_and_add_spares(mddev_t *mddev)
- 			}
- 		}
- 
--	if (mddev->degraded) {
-+	if (mddev->degraded && ! mddev->ro) {
- 		rdev_for_each(rdev, rtmp, mddev) {
- 			if (rdev->raid_disk >= 0 &&
- 			    !test_bit(In_sync, &rdev->flags) &&
-@@ -6077,6 +6077,8 @@ void md_check_recovery(mddev_t *mddev)
- 		flush_signals(current);
- 	}
- 
-+	if (mddev->ro && !test_bit(MD_RECOVERY_NEEDED, &mddev->recovery))
-+		return;
- 	if ( ! (
- 		(mddev->flags && !mddev->external) ||
- 		test_bit(MD_RECOVERY_NEEDED, &mddev->recovery) ||
-@@ -6090,6 +6092,15 @@ void md_check_recovery(mddev_t *mddev)
- 	if (mddev_trylock(mddev)) {
- 		int spares = 0;
- 
-+		if (mddev->ro) {
-+			/* Only thing we do on a ro array is remove
-+			 * failed devices.
-+			 */
-+			remove_and_add_spares(mddev);
-+			clear_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
-+			goto unlock;
-+		}
-+
- 		if (!mddev->external) {
- 			int did_change = 0;
- 			spin_lock_irq(&mddev->write_lock);
--- 
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index d41bebb..e34cd0e 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -76,11 +76,13 @@ static void r10bio_pool_free(void *r10_bio, void *d=
+ata)
+ 	kfree(r10_bio);
+ }
+=20
++/* Maximum size of each resync request */
+ #define RESYNC_BLOCK_SIZE (64*1024)
+-//#define RESYNC_BLOCK_SIZE PAGE_SIZE
+-#define RESYNC_SECTORS (RESYNC_BLOCK_SIZE >> 9)
+ #define RESYNC_PAGES ((RESYNC_BLOCK_SIZE + PAGE_SIZE-1) / PAGE_SIZE)
+-#define RESYNC_WINDOW (2048*1024)
++/* amount of memory to reserve for resync requests */
++#define RESYNC_WINDOW (1024*1024)
++/* maximum number of concurrent requests, memory permitting */
++#define RESYNC_DEPTH (32*1024*1024/RESYNC_BLOCK_SIZE)
+=20
+ /*
+  * When performing a resync, we need to read and compare, so
+@@ -690,7 +692,6 @@ static int flush_pending_writes(conf_t *conf)
+  *    there is no normal IO happeing.  It must arrange to call
+  *    lower_barrier when the particular background IO completes.
+  */
+-#define RESYNC_DEPTH 32
+=20
+ static void raise_barrier(conf_t *conf, int force)
+ {
+--=20
 1.5.6.3
 
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
