@@ -1,64 +1,109 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: Nested raid operation and disk sizes
-Date: Wed, 6 Aug 2008 11:55:18 +1000
-Message-ID: <18585.1158.151051.791210@notabene.brown>
-References: <925039.86717.qm@web30804.mail.mud.yahoo.com>
+From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
+Subject: Re: [PATCH md] Allow raid10 resync to happening in larger chunks.
+Date: Wed, 6 Aug 2008 11:01:35 +0200
+Message-ID: <20080806090135.GA308@rap.rap.dk>
+References: <1217917054-1725-1-git-send-email-neilb@suse.de> <1217917054-1725-2-git-send-email-neilb@suse.de> <1217917054-1725-3-git-send-email-neilb@suse.de> <1217917054-1725-4-git-send-email-neilb@suse.de> <1217917054-1725-5-git-send-email-neilb@suse.de> <1217917054-1725-6-git-send-email-neilb@suse.de> <1217917054-1725-7-git-send-email-neilb@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Mike Myers on Tuesday August 5
+Content-Disposition: inline
+In-Reply-To: <1217917054-1725-7-git-send-email-neilb@suse.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mike Myers <mikesm559@yahoo.com>
+To: NeilBrown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday August 5, mikesm559@yahoo.com wrote:
+Neil made this patch based on my patch to speed up raid10 resync.
 
-> Hi.  I friend asked me a question about reconfiguring his linux
-> software raid system, and I think I know the answer, but thought I
-> would ask here to make sure since I'd never done this before. 
+It is a bit different, although it messes with exactly the two cinstant=
+s
+that I also changed. One difference is that Neil intiatlly only allocat=
+es
+1 MiB for buffers while my patch allocates 32 MiB. For the patch to wor=
+k=20
+as intended it is essential that something like 32 MiB be available for
+buffers. I do not see how that is done in Neil's case, but then I do no=
+t
+know the code so well.  So how does it work, Neil?
 
-Sensible.
+Has your patch been tested, Neil?
 
-> 
-> My friend has 2 raid5 disk sets right now, one with 8 500 GB saegate
-> 7200.10 disks, and the other with 5 1 TB Hitachi 7K1000 disks. 
-> 
-> He just bought 5 new seagate 7200.11 1 TB disks, and will format
-> them as new raid5 set.  He then plans to use lvm to move the data
-> off the  8x500GB set to the new 5x1TB set, destroy the 8x500 set,
-> and then use group 6 of the 500 GB disks into 3 raid0 sets of 2x500
-> each, and then add the raid0 sets as members of the new 1TB raid set
-> by expanding the array. 
-> 
-That should work.
+Anyway if this i a difference between 32 MiB being available or not, I
+think it is important that it be available at the start of the process
+and available for the whole duration of the process. Is it a concern of
+whether 32 Mib buffers be available? My take is that if you are running
+raid, then you probably always have quite some memory.=20
 
-> This enables him to replace the 500 GB drives later with 1TB disks
-> as the price of the disks gets cheaper as make the best use of the
-> SATA sleds that his case has.  The new 7200.11's have 1,953,525,168
-> 512 byte sectors each.  The existing segate 500 GB drives have
-> 976,773,168 512 byte sectors.  If he combines two of the 500's
-> together into a raid0, he should have a total of 1,953,546,336
-> sectors available, which is greater number of sectors than the 1 TB
-> drives, so there should be no problem using the 2 disk raid0 set as
-> a member of the 7200.11 1 TB disk raid5 set, right?   
+best regards
+keld
 
-Take the size of the 500GB drives, subtract 128K for overhead, then
-divide by your chunksize (e.g.64K) and double to get the number of
-chunks that will be available to the raid5.
-Compare this with the size of the 1TB device divided by the chunk
-size.
 
-2 500GB get 7631038 64K chunks each, or 15262076 total.
-1 1TB has 15261915.  So the 2*500GB is still bigger, which is good.
-
-If you want to be extra sure, you could create the raid5 on the 1TB
-devices with a smaller size. e.g. --size 950000000
-Then when all the devices are in place use "--grow --size=max",
-and then grow the filesystem to use all the available size.
-
-As you probably realise, you one need a single step to grow from 5
-devices to 8.  Just add the 3 raid0s as spares and "mdadm -G /dev/md0 -n8"
-
-NeilBrown
+On Tue, Aug 05, 2008 at 04:17:34PM +1000, NeilBrown wrote:
+> The raid10 resync/recovery code currently limits the amount of
+> in-flight resync IO to 2Meg.  This was copied from raid1 where
+> it seems quite adequate.  However for raid10, some layouts require
+> a bit of seeking to perform a resync, and allowing a larger buffer
+> size means that the seeking can be significantly reduced.
+>=20
+> There is probably no real need to limit the amount of in-flight
+> IO at all.  Any shortage of memory will naturally reduce the
+> amount of buffer space available down to a set minimum, and any
+> concurrent normal IO will quickly cause resync IO to back off.
+>=20
+> The only problem would be that normal IO has to wait for all resync I=
+O
+> to finish, so a very large amount of resync IO could cause unpleasant
+> latency when normal IO starts up.
+>=20
+> So: increase RESYNC_DEPTH to allow 32Meg of buffer (if memory is
+> available) which seems to be a good amount.  Also reduce the amount
+> of memory reserved as there is no need to keep 2Meg just for resync i=
+f
+> memory is tight.
+>=20
+> Thanks to Keld for the suggestion.
+>=20
+> Cc: Keld J=F8rn Simonsen <keld@dkuug.dk>
+> Signed-off-by: NeilBrown <neilb@suse.de>
+> ---
+>  drivers/md/raid10.c |    9 +++++----
+>  1 files changed, 5 insertions(+), 4 deletions(-)
+>=20
+> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+> index d41bebb..e34cd0e 100644
+> --- a/drivers/md/raid10.c
+> +++ b/drivers/md/raid10.c
+> @@ -76,11 +76,13 @@ static void r10bio_pool_free(void *r10_bio, void =
+*data)
+>  	kfree(r10_bio);
+>  }
+> =20
+> +/* Maximum size of each resync request */
+>  #define RESYNC_BLOCK_SIZE (64*1024)
+> -//#define RESYNC_BLOCK_SIZE PAGE_SIZE
+> -#define RESYNC_SECTORS (RESYNC_BLOCK_SIZE >> 9)
+>  #define RESYNC_PAGES ((RESYNC_BLOCK_SIZE + PAGE_SIZE-1) / PAGE_SIZE)
+> -#define RESYNC_WINDOW (2048*1024)
+> +/* amount of memory to reserve for resync requests */
+> +#define RESYNC_WINDOW (1024*1024)
+> +/* maximum number of concurrent requests, memory permitting */
+> +#define RESYNC_DEPTH (32*1024*1024/RESYNC_BLOCK_SIZE)
+> =20
+>  /*
+>   * When performing a resync, we need to read and compare, so
+> @@ -690,7 +692,6 @@ static int flush_pending_writes(conf_t *conf)
+>   *    there is no normal IO happeing.  It must arrange to call
+>   *    lower_barrier when the particular background IO completes.
+>   */
+> -#define RESYNC_DEPTH 32
+> =20
+>  static void raise_barrier(conf_t *conf, int force)
+>  {
+> --=20
+> 1.5.6.3
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
