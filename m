@@ -1,92 +1,43 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH md] Allow raid10 resync to happening in larger chunks.
-Date: Mon, 11 Aug 2008 10:37:09 +1000
-Message-ID: <18591.35253.346924.997020@notabene.brown>
-References: <1217917054-1725-1-git-send-email-neilb@suse.de>
-	<1217917054-1725-2-git-send-email-neilb@suse.de>
-	<1217917054-1725-3-git-send-email-neilb@suse.de>
-	<1217917054-1725-4-git-send-email-neilb@suse.de>
-	<1217917054-1725-5-git-send-email-neilb@suse.de>
-	<1217917054-1725-6-git-send-email-neilb@suse.de>
-	<1217917054-1725-7-git-send-email-neilb@suse.de>
-	<20080806090135.GA308@rap.rap.dk>
+Subject: [PULL REQUEST] more minor updates for md in 2.6.27
+Date: Fri, 15 Aug 2008 14:54:34 +1000
+Message-ID: <18597.3082.389905.592324@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Keld Jorn Simonsen on Wednesday August 6
 Sender: linux-raid-owner@vger.kernel.org
-To: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
+To: Linus Torvalds <torvalds@linux-foundation.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wednesday August 6, keld@dkuug.dk wrote:
-> Neil made this patch based on my patch to speed up raid10 resync.
-> 
 
-Yes, thanks for you suggestions.
-(and sorry if I seem to have been a bit silent - just busy).
-
-> It is a bit different, although it messes with exactly the two cinstants
-> that I also changed. One difference is that Neil intiatlly only allocates
-> 1 MiB for buffers while my patch allocates 32 MiB. For the patch to work 
-> as intended it is essential that something like 32 MiB be available for
-> buffers. I do not see how that is done in Neil's case, but then I do not
-> know the code so well.  So how does it work, Neil?
-
-The space controlled by RESYNC_WINDOW is the minimum amount of memory
-to preallocate.  This amount is reserved for the duration of the
-resync process and the resync process will not start unless it is
-available.
-
-The buffers for reading and writing data for the resync are allocated
-using a "mempool".  You tell the mempool a minimum size when you
-create it, and it will reserve this much memory and make sure it is
-always available.  If you as the mempool for more memory, it will get
-it if it can, or will block until some of the reserved memory is
-returned. 
-
-So the amount preallocated in a mempool should really be the minimum
-amount of memory that will allow reasonable forward progress to be
-made.  Preallocating a large amount because it makes things go fast is
-the wrong approach.  Using as much as is easily available is a good
-approach.  Arguably RESYNC_WINDOW should be quite a bit smaller -
-maybe just twice RESYNC_BLOCK_SIZE, and RESYNC_DEPTH could be quite a
-bit larger.
-
-The import limit on RESYNC_DEPTH relates to latency.  If a normal IO
-access arrives at the device, it has to wait for all pending resync IO
-to complete before it can start.  If RESYNC_DEPTH is too high (and
-there is enough available memory to support it), then it could be
-multiple seconds before the regular IO request gets a look-in.
-
-I should probably reduce the RESYNC_WINDOW for raid1 too, and increase
-the RESYNC_DEPTH, but it doesn't seem so important there.
-
-> 
-> Has your patch been tested, Neil?
-
-Yes, though on my hardware I don't see the same improvement that Jon
-does.
-More testing is always welcome!
-
-> 
-> Anyway if this i a difference between 32 MiB being available or not, I
-> think it is important that it be available at the start of the process
-> and available for the whole duration of the process. Is it a concern of
-> whether 32 Mib buffers be available? My take is that if you are running
-> raid, then you probably always have quite some memory. 
-
-Assumptions like that are dangerous.  It could be that you have lots
-of memory, but have lots of users of it too.  It could be that you
-don't have much.
-Certainly we don't need to try to fit inside 64K any more, but a good
-principle is to make do with a little as possible, but make use of as
-much as is available.
-The raid10 resync process is constantly allocating new memory and freeing
-old memory.  That means that the VM has the opportunity to use memory
-for other demands as they arrive, and provide any spare memory to
-resync.  This should make everyone happy.
-
+Hi Linus,
+  a few more bug fixes and minor improvements for md in 2.6.27.
 Thanks,
 NeilBrown
+
+
+The following changes since commit 30a2f3c60a84092c8084dfe788b710f8d0768cd4:
+  Linus Torvalds (1):
+        Linux 2.6.27-rc3
+
+are available in the git repository at:
+
+  git://neil.brown.name/md for-linus
+
+Dan Williams (1):
+      md: cancel check/repair requests when recovery is needed
+
+NeilBrown (6):
+      Make writes to md/safe_mode_delay immediately effective.
+      Restore force switch of md array to readonly at reboot time.
+      Fail safely when trying to grow an array with a write-intent bitmap.
+      Don't let a blocked_rdev interfere with read request in raid5/6
+      Allow faulty devices to be removed from a readonly array.
+      Allow raid10 resync to happening in larger chunks.
+
+ drivers/md/md.c     |   33 ++++++++++++++++++++++++++++++---
+ drivers/md/raid10.c |    9 +++++----
+ drivers/md/raid5.c  |   32 ++++++++++++++++++++++++--------
+ 3 files changed, 59 insertions(+), 15 deletions(-)
