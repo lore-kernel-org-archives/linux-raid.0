@@ -1,52 +1,65 @@
-From: Neil Brown <neilb@suse.de>
+From: Jan Wagner <jwagner@kurp.hut.fi>
 Subject: Re: single RAID slower than aggregate multi-RAID?
-Date: Mon, 18 Aug 2008 21:54:45 +1000
-Message-ID: <18601.25349.670500.530839@notabene.brown>
-References: <alpine.DEB.1.10.0808151607560.5400@kurp.hut.fi>
-	<18597.64737.508658.390657@notabene.brown>
-	<alpine.DEB.1.10.0808181339010.365@kurp.hut.fi>
+Date: Mon, 18 Aug 2008 15:27:31 +0300 (EEST)
+Message-ID: <alpine.DEB.1.10.0808181501010.698@kurp.hut.fi>
+References: <alpine.DEB.1.10.0808151607560.5400@kurp.hut.fi> <18597.64737.508658.390657@notabene.brown> <alpine.DEB.1.10.0808181339010.365@kurp.hut.fi> <18601.25349.670500.530839@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Jan Wagner on Monday August 18
+In-Reply-To: <18601.25349.670500.530839@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jan Wagner <jwagner@kurp.hut.fi>
+To: Neil Brown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Monday August 18, jwagner@kurp.hut.fi wrote:
-> Hello Neil and all,
-> 
-> first off thanks for your interest.
-> 
-> On Sat, 16 Aug 2008, Neil Brown wrote:
-> > You should only need about 12Meg of dirty memory to keep your RAID0
-> > busy, and I doubt that is even 1% of your memory.
-> 
-> Strange. With the 12disk raid we get as much as 200MB dirty and throughput 
-> is slow. With the 4*3disk raid's we see just around 12MB and throughput 
-> is good. We have 4GB RAM.
+Hi Neil,
 
-The differences in Dirty and Writeback numbers are interesting.  I'm
-not sure what they signify yet.
+On Mon, 18 Aug 2008, Neil Brown wrote:
+>> http://www.metsahovi.fi/~jwagner/10g-tests/pmp/linux-raid-1.txt
+>
+> you appear to be doing the write tests to the three small arrays in
+> series, one after the other.
+> You need to do them in parallel to find the aggregate bandwidth of the
+> system.
+> i.e.  run
+>
+> sudo /usr/bin/time dd if=/dev/zero of=/dev/md0 bs=1024k count=48000 &
+> sudo /usr/bin/time dd if=/dev/zero of=/dev/md1 bs=1024k count=48000 &
+> sudo /usr/bin/time dd if=/dev/zero of=/dev/md2 bs=1024k count=48000 &
+>
+> all at once in the background.  What does that produce?
+
+Sorry, I forgot to mention this in the .txt file: all the three tests 
+were in fact running in parallel, just on different xterm terminals. The 
+.txt is a copypaste from the three terminals.
+
+When I used '&' backgrounding the results were the same.
 
 
-in:
-> 
-> http://www.metsahovi.fi/~jwagner/10g-tests/pmp/linux-raid-1.txt
-> 
+But let's redo it, for completeness:
 
-you appear to be doing the write tests to the three small arrays in
-series, one after the other.
-You need to do them in parallel to find the aggregate bandwidth of the
-system.
-i.e.  run
+oper@abidal:~$ sudo /usr/bin/time dd if=/dev/zero of=/dev/md0 bs=1024k count=48000 &
+[1] 13283
+oper@abidal:~$ sudo /usr/bin/time dd if=/dev/zero of=/dev/md1 bs=1024k count=48000 &
+[2] 13286
+oper@abidal:~$ sudo /usr/bin/time dd if=/dev/zero of=/dev/md2 bs=1024k count=48000 &
+[3] 13288
 
-sudo /usr/bin/time dd if=/dev/zero of=/dev/md0 bs=1024k count=48000 & 
-sudo /usr/bin/time dd if=/dev/zero of=/dev/md1 bs=1024k count=48000 &
-sudo /usr/bin/time dd if=/dev/zero of=/dev/md2 bs=1024k count=48000 &
- 
-all at once in the background.  What does that produce?
+48000+0 records in
+48000+0 records out
+50331648000 bytes (50 GB) copied, 218.485 s, 230 MB/s
+0.07user 147.77system 3:38.50elapsed 67%CPU (0avgtext+0avgdata 0maxresident)k
+48inputs+98304008outputs (1major+520minor)pagefaults 0swaps
+48000+0 records in
+48000+0 records out
+50331648000 bytes (50 GB) copied, 218.206 s, 231 MB/s
+0.05user 145.51system 3:38.20elapsed 66%CPU (0avgtext+0avgdata 0maxresident)k
+0inputs+98304008outputs (0major+521minor)pagefaults 0swaps
+48000+0 records in
+48000+0 records out
+50331648000 bytes (50 GB) copied, 218.895 s, 230 MB/s
+0.06user 137.92system 3:38.89elapsed 63%CPU (0avgtext+0avgdata 0maxresident)k
+0inputs+98304008outputs (0major+520minor)pagefaults 0swaps
 
-NeilBrown
+Kind regards,
+  - Jan
