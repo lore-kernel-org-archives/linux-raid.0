@@ -1,103 +1,124 @@
-From: "Jon Nelson" <jnelson-linux-raid@jamponi.net>
-Subject: Re: AWFUL reshape speed with raid5.
-Date: Wed, 20 Aug 2008 21:58:03 -0500
-Message-ID: <cccedfc60808201958q2585f155sf7382efbb173cfb1@mail.gmail.com>
-References: <cccedfc60807281039y67c27685n161708146d7c2b3d@mail.gmail.com>
+From: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
+Subject: 5 concurrent bonnie runs failing after first pass .
+Date: Wed, 20 Aug 2008 19:10:38 -0800 (AKDT)
+Message-ID: <Pine.LNX.4.64.0808201853480.26204@filesrv1.baby-dragons.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <cccedfc60807281039y67c27685n161708146d7c2b3d@mail.gmail.com>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: LinuxRaid <linux-raid@vger.kernel.org>
+To: xfs@oss.sgi.com
+Cc: linux-raid maillist <linux-raid@vger.kernel.org>, Dan Williams <dan.j.williams@intel.com>
 List-Id: linux-raid.ids
 
-On Mon, Jul 28, 2008 at 12:39 PM, Jon Nelson
-<jnelson-linux-raid@jamponi.net> wrote:
-> I built a raid5 with 2 devices (and --assume-clean) using 2x 4GB
-> partitions (not logical volumes).
-> I then grew it to 3 devices.
-> The reshape speed is really really slow.
->
-> vmstat shows I/O like this:
->
->  0  0    212  25844 141160 497484    0    0     0   612  673 1284  0  6 93  0
->  0  0    212  25164 141160 497748    0    0     0    19  594 1253  1  4 95  0
->  0  0    212  25044 141160 498004    0    0     0     0  374  445  0  1 99  0
->  1  0    212  25220 141164 498000    0    0     0    23  506 1149  0  3 96  1
->  0  0    212  25500 141164 498004    0    0     0     3  546 1416  0  5 95  0
->
-> The min/max is 1000/200000.
-> What might be going on here?
->
-> Kernel is 2.6.25.11 (openSUSE 11.0 x86-64 stock)
->
-> /proc/mdstat for this entry:
->
-> md99 : active raid5 sdd3[2] sdc3[1] sdb3[0]
->      3903744 blocks super 1.0 level 5, 64k chunk, algorithm 2 [3/3] [UUU]
->      [=>...................]  reshape =  8.2% (324224/3903744)
-> finish=43.3min speed=1373K/sec
->
->
-> This is on a set of devices capable of 70+ MB/s.
+ 	Hello Dave (& Dan & All) ,
+ 	Even with your patch to xfs (49641f1acfdfd437ed9b0a70b86bf36626c02afe) 
+Under some conditions multiple concurrent bonnie runs just halt .  No log to 
+dmesg or serial console .  But there is a message from something when bonnie 
+halts .  Also note the really low I/O .
 
-I found some time to give this another shot.
-It's still true!
 
-Here is how I built the array:
+--- Bad Bonnie --- (multiple concurrent processes)
+filesrv2,136G,,,14389,16,10165,13,,,64722,9,134.3,0,16,212,2,+++++,+++,206,2,226,1,+++++,+++,177,2
+semop: semop failed.
+: Resource temporarily unavailable
 
-mdadm --create /dev/md99 --level=raid5 --raid-devices=2
---spare-devices=0 --assume-clean --metadata=1.0 --chunk=64 /dev/sdb3
-/dev/sdc3
 
-and then I added a drive:
+=== Good Bonnie === (single process)
+filesrv2,256G,,,108938,59,92128,56,,,402852,70,407.6,2,16,1477,10,+++++,+++,1164,10,1518,10,+++++,+++,1166,6
 
-mdadm --add /dev/md99 /dev/sdd3
 
-and then I grew the array to 3 devices:
+ 	# uname -a
+Linux filesrv2 2.6.26 #2 SMP Sun Aug 17 05:36:58 UTC 2008 i686 pentium4 i386 GNU/Linux
 
-mdadm --grow /dev/md99 --raid-devices=3
 
-This is what the relevant portion of /proc/mdstat looks like:
+ 	- serial console before , during & after the multiple concurrent bonnie run .
 
-md99 : active raid5 sdd3[2] sdc3[1] sdb3[0]
-      3903744 blocks super 1.0 level 5, 64k chunk, algorithm 2 [3/3] [UUU]
-      [=>...................]  reshape =  6.1% (241920/3903744)
-finish=43.0min speed=1415K/sec
+Welcome to Linux 2.6.26 (ttyS0)
 
-The 1000/200000 min/max defaults are being used.
-If I bump up the min to, say, 30000, the rebuild speed does grow to
-hover around 30000.
-
-As Justin Piszcz said:
-
-There once was a bug in an earlier kernel, in which the min_speed is
-what the rebuild ran at if you had a specific chunk size, have you
-tried to echo 30000 > to min_speed?  Does it increase it to 30mb/s for
-the rebuild?
-
-Yes, apparently, it does. However, 'git log drivers/md' in the
-linux-2.6 tree doesn't show anything obvious for me. Can somebody
-point me to a specific commit, patch, etc... because as of 2.6.25.11
-it's apparently still a problem (on an otherwise idle system, too).
+filesrv2 login: dd used greatest stack depth: 3604 bytes left
+Aug 19 03:51:01 filesrv2 kernel: dd used greatest stack depth: 3604 bytes left
 
 
 
+ 	Bonnie output Here ...
+
+ 	http://www.baby-dragons.com/131072MB-bonnie++-run-md3-xfs-15runs.log-200808200242-2.6.26
+
+ 	Below shows the amount of I/O during that run to all memebers of the array being tested ...
+
+ 	http://www.baby-dragons.com/device-thruput-200808200242-2.6.26.log
 
 
+ 	The culprit ...
+
+# cat ~/bin/bonniemd3.sh
+N=5
+/root/bonnie++-1.03c/bonnie++ -u0:0 -p${N}
+
+   SIZE="`echo -en "scale=0\n((717698048-4096)/((1024^2)*${N}))*1024\nquit\n" | bc`k"
+   echo "\${SIZE}=${SIZE}"
+
+# Note: add or subtract a line of the below for ${N} > 5 or ${N} < 5
+
+   time /root/bonnie++-1.03c/bonnie++ -u 0:0 -y -d /md3 -x 15 -s ${SIZE} -f -y &
+   time /root/bonnie++-1.03c/bonnie++ -u 0:0 -y -d /md3 -x 15 -s ${SIZE} -f -y &
+   time /root/bonnie++-1.03c/bonnie++ -u 0:0 -y -d /md3 -x 15 -s ${SIZE} -f -y &
+   time /root/bonnie++-1.03c/bonnie++ -u 0:0 -y -d /md3 -x 15 -s ${SIZE} -f -y &
+   time /root/bonnie++-1.03c/bonnie++ -u 0:0 -y -d /md3 -x 15 -s ${SIZE} -f -y &
 
 
->
-> No meaningful change if I start with 3 disks and grow to 4, with or
-> without bitmap.
->
-> --
-> Jon
->
+ 	The victim ...
 
+# mdadm -D /dev/md3
+mdadm: metadata format 00.90 unknown, ignored.
+mdadm: metadata format 00.90 unknown, ignored.
+mdadm: metadata format 00.90 unknown, ignored.
+/dev/md3:
+         Version : 00.90
+   Creation Time : Mon Jul  7 21:42:12 2008
+      Raid Level : raid6
+      Array Size : 717829120 (684.58 GiB 735.06 GB)
+   Used Dev Size : 143565824 (136.92 GiB 147.01 GB)
+    Raid Devices : 7
+   Total Devices : 8
+Preferred Minor : 3
+     Persistence : Superblock is persistent
+
+   Intent Bitmap : Internal
+
+     Update Time : Wed Aug 20 10:06:44 2008
+           State : active
+  Active Devices : 7
+Working Devices : 8
+  Failed Devices : 0
+   Spare Devices : 1
+
+      Chunk Size : 1024K
+
+            UUID : 7617aeb3:65870440:a619e7ca:f8a16963
+          Events : 0.12
+
+     Number   Major   Minor   RaidDevice State
+        0       8       32        0      active sync   /dev/sdc
+        1       8       48        1      active sync   /dev/sdd
+        2       8       64        2      active sync   /dev/sde
+        3       8       80        3      active sync   /dev/sdf
+        4       8       96        4      active sync   /dev/sdg
+        5       8      112        5      active sync   /dev/sdh
+        6       8      128        6      active sync   /dev/sdi
+
+        7       8      144        -      spare   /dev/sdj
+
+
+ 	More of the victim ...
+
+# cat /proc/mounts | grep md3
+/dev/md3 /md3 xfs rw,nobarrier,sunit=2048,swidth=12288,noquota 0 0
 
 
 -- 
-Jon
++------------------------------------------------------------------+
+| James   W.   Laferriere | System    Techniques | Give me VMS     |
+| Network&System Engineer | 2133    McCullam Ave |  Give me Linux  |
+| babydr@baby-dragons.com | Fairbanks, AK. 99701 |   only  on  AXP |
++------------------------------------------------------------------+
