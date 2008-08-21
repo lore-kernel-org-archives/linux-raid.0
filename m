@@ -1,43 +1,93 @@
-From: Eric Sandeen <sandeen@sandeen.net>
-Subject: Re: 5 concurrent bonnie runs failing after first pass .
-Date: Thu, 21 Aug 2008 01:32:03 -0500
-Message-ID: <48AD0BE3.7020403@sandeen.net>
-References: <Pine.LNX.4.64.0808201853480.26204@filesrv1.baby-dragons.com>
+From: Vladislav Bolkhovitin <vst@vlnb.net>
+Subject: Re: Who do we point to?
+Date: Thu, 21 Aug 2008 16:17:56 +0400
+Message-ID: <48AD5CF4.9060407@vlnb.net>
+References: <200808201911.m7KJBTik015082@wind.enjellic.com> <200808210306.39959.stf_xl@wp.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=iso-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0808201853480.26204@filesrv1.baby-dragons.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
-Cc: xfs@oss.sgi.com, linux-raid maillist <linux-raid@vger.kernel.org>, Dan Williams <dan.j.williams@intel.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <200808210306.39959.stf_xl@wp.pl>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Stanislaw Gruszka <stf_xl@wp.pl>
+Cc: scst-devel@lists.sourceforge.net, greg@enjellic.com, linux-driver@qlogic.com, neilb@suse.de, linux-raid@vger.kernel.org, linuxraid@amcc.com, linux-scsi@vger.kernel.org
 List-Id: linux-raid.ids
 
-Mr. James W. Laferriere wrote:
->  	Hello Dave (& Dan & All) ,
->  	Even with your patch to xfs (49641f1acfdfd437ed9b0a70b86bf36626c02afe) 
-> Under some conditions multiple concurrent bonnie runs just halt .  No log to 
-> dmesg or serial console .  But there is a message from something when bonnie 
-> halts . 
+Stanislaw Gruszka wrote:
+>> Apologies for the large broadcast domain on this.  I wanted to make
+>> sure everyone who may have an interest in this is involved.
+>>
+>> Some feedback on another issue we encountered with Linux in a
+>> production initiator/target environment with SCST.  I'm including logs
+>> below from three separate systems involved in the incident.  I've gone
+>> through them with my team and we are currently unsure on what
+>> triggered all this, hence mail to everyone who may be involved.
+>>
+>> The system involved is SCST 1.0.0.0 running on a Linux 2.6.24.7 target
+>> platform using the qla_isp driver module.  The target machine has two
+>> 9650 eight port 3Ware controller cards driving a total of 16 750
+>> gigabyte Seagate NearLine drives.  Firmware on the 3ware and Qlogic
+>> cards should all be current.  There are two identical servers in two
+>> geographically separated data-centers.
+>>
+>> The drives on each platform are broken into four 3+1 RAID5 devices
+>> with software RAID.  Each RAID5 volume is a physical volume for an LVM
+>> volume group. There is currently one logical volume exported from each
+>> of four RAID5 volumes as a target device.  A total of four initiators
+>> are thus accessing the target server, each accessing different RAID5
+>> volumes.
+>>
+>> The initiators are running a stock 2.6.26.2 kernel with a RHEL5
+>> userspace.  Access to the SAN is via a 2462 dual-port Qlogic card.
+>> The initiators see a block device from each of the two target servers
+>> through separate ports/paths.  The block devices form a software RAID1
+>> device (with bitmaps) which is the physical volume for an LVM volume
+>> group.  The production filesystem is supported by a single logical
+>> volume allocated from that volume group.
+>>
+>> A drive failure occured last Sunday afternoon on one of the RAID5
+>> volumes.  The target kernel recognized the failure, failed the device
+>> and kept going.
+>>
+>> Unfortunately three of the four initiators picked up a device failure
+>> which caused the SCST exported volume to be faulted out of the RAID1
+>> device.  One of the initiators noted an incident was occurring, issued
+>> a target reset and continued forward with no issues.
+>>
+>> The initiator which got things 'right' was not accessing the RAID5
+>> volume on the target which experienced the error.  Two of the three
+>> initiators which faulted out their volumes were not accessing the
+>> compromised RAID5 volume.  The initiator accessing the volume faulted
+>> out its device.
+> For some reason SCST core need to wait for logical unit driver (aka dev 
+> handler) for abort comand. It is not possible to abort command instantly i.e.  
+> mark command as aborted, return task management success to initiator and 
+> after logical unit driver finish, just free resources for aborted command (I 
+> don't know way, maybe Vlad could tell more about this).
 
-that "something" == bonnie ...
+That's a SAM requirement. Otherwise, if complete TM commands 
+"instantly", without waiting for all affected commands to complete, it 
+is possible that the aborted command would be executed in one more retry 
+*after* the next command that initiator issued after the reset was 
+completed. Initiator would think that the aborted commands are already 
+dead and such behavior could kill journaled filesystems.
 
->  Also note the really low I/O .
+> Qlogic initiator 
+> device just waits for 3ware card to abort commands. As both systems have the 
+> same SCSI stack, such same commands timeouts. 3ware driver will return error 
+> to RAID5 roughly at the same time when Qlogic initiator timeouts. So 
+> sometimes Qlogic send only device reset and sometimes target reset too.
 > 
+> I believe increasing timeouts in sd driver on initiator site (and maybe 
+> decreasing in on target system) will help. This things are not run time 
+> configurable, only compile time. On initiator systems I suggest to increase 
+> SD_TIMEOUT and maybe on target site decrease SD_MAX_RETRIES, both values are 
+> in drivers/scsi/sd.h. In such configuration, when physical disk fail, 3ware 
+> will return error during initiator waiting for command complete, RAID5 on 
+> target will do the right job and from initiator point of view command will 
+> finish successfully.
 > 
-> --- Bad Bonnie --- (multiple concurrent processes)
-> filesrv2,136G,,,14389,16,10165,13,,,64722,9,134.3,0,16,212,2,+++++,+++,206,2,226,1,+++++,+++,177,2
-> semop: semop failed.
-> : Resource temporarily unavailable
+> Cheers
+> Stanislaw Gruszka
 > 
-
-Is it unique to xfs?
-
-this is an error from bonnie's semop() call; it's not immediately clear
-that there is a problem with xfs.  Is bonnie deadlocking?  Is xfs stuck?
-
-echo w > /proc/sysrq-trigger to see if there are stuck processes and
-where they are.
-
--Eric
 
