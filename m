@@ -1,7 +1,7 @@
 From: "Mr.William  Juwais" <williamjuwais90@jmail.co.za>
 Subject: FROM  MR.WILLIAM  JUWAIS
-Date: Fri, 22 Aug 2008 12:00:40 +0200
-Message-ID: <20080822120040.18172536s0a2ads0@webmail-html.freesurf.fr>
+Date: Fri, 22 Aug 2008 12:00:46 +0200
+Message-ID: <20080822120046.92862dyhwd7qbjok@webmail-html.freesurf.fr>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset=ISO-8859-1;
