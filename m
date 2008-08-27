@@ -1,94 +1,83 @@
-From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: Re: Who do we point to?
-Date: Wed, 27 Aug 2008 22:17:15 +0400
-Message-ID: <48B59A2B.7040207@vlnb.net>
-References: <200808201911.m7KJBTik015082@wind.enjellic.com>	 <48AD5C14.6050508@vlnb.net> <1219329139.3265.17.camel@localhost.localdomain>
+From: Doug Ledford <dledford@redhat.com>
+Subject: Re: RAID not auto-assembling?
+Date: Wed, 27 Aug 2008 16:13:07 -0400
+Message-ID: <1219867987.27033.7.camel@firewall.xsintricity.com>
+References: <fa037c550808252233u175c7ca8g37ff6fa0c214e12f@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=KOI8-R; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <1219329139.3265.17.camel@localhost.localdomain>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: greg@enjellic.com, scst-devel@lists.sourceforge.net, linux-driver@qlogic.com, linux-scsi@vger.kernel.org, linuxraid@amcc.com, neilb@suse.de, linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Hm8jGSeW21ai+Nxgg+yj"
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <fa037c550808252233u175c7ca8g37ff6fa0c214e12f@mail.gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Sean Hildebrand <silverwraithii@gmail.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-James Bottomley wrote:
-> On Thu, 2008-08-21 at 16:14 +0400, Vladislav Bolkhovitin wrote:
->> MOANING MODE ON
->>
->> Testing SCST and target drivers I often have to deal with various 
->> failures and with how initiators recover from them. And,
->> unfortunately, 
->> my observations on Linux aren't very encouraging. See, for instance, 
->> http://marc.info/?l=linux-scsi&m=119557128825721&w=2 thread.
->> Receiving 
->> from the target TASK ABORTED status isn't really a failure, it's
->> rather 
->> a corner case behavior, but it leads to immediate file system errors
->> on 
->> initiator and then after remount ext3 journal replay doesn't
->> completely 
->> repair it, only manual e2fsck helps. Even mounting with barrier=1 
->> doesn't improve anything. Target can't be blamed for the failure, 
->> because it stayed online, all its cache fully healthy and no commands 
->> were lost. Hence, apparently, the journaling code in ext3 isn't as 
->> reliable in face of storage corner cases as it's thought. I haven't 
->> tried that test since I reported it, but recently I've seen the
->> similar 
->> ext3 failures on 2.6.26 in other tests, so I guess the problem(s)
->> still 
->> there.
->>
->> A software SCSI target, like SCST, is beautiful to test things like 
->> that, because it allows easily simulate any possible corner case and 
->> storage failure. Unfortunately, I don't work on file systems level
->> and 
->> can't participate in all that great testing and fixing effort. I can 
->> only help with setup and assistance in failures simulations.
->>
->> MOANING MODE OFF
-> 
-> Well, since I can see your just so anxious to stop moaning and get
-> coding, let me help you.
-> 
-> Firstly, from a standards point of view, TASK_ABORTED means that the
-> target is telling us this particular command was killed by another
-> initiator (seeing this also requires the TAS bit to be set in the
-> control mode page, so you can easily fix your current problem by
-> unsetting it).  This makes TASK_ABORTED an incredibly rare status
-> condition (hence the problems below).
-> 
-> The way the kernel currently handles it is to return SUCCESS (around
-> line 1411 in scsi_error.c).  This return actually propagates an I/O
-> error all the way up the stack.  If the filesystem is the consumer, then
-> how it handles the error depends on what you have the errors= switch set
-> to.  If you've got it set to a safety condition like remount-ro or
-> panic, then the fs should be recoverable on reboot (or unmount recheck).
-> If you have it set to something unsafe like continue, then yes, you're
-> asking for trouble and fs corruption ... but it's hardly the OSs fault,
-> you told it you didn't want to operate safely.
 
-Yes, we already agreed in the referenced thread that there are 2 
-separate and completely unrelated problems were discovered here:
+--=-Hm8jGSeW21ai+Nxgg+yj
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-1. Handling of TASK_ABORTED status is different from handling "Commands
-cleared by another initiator" Unit Attention.
+On Tue, 2008-08-26 at 01:33 -0400, Sean Hildebrand wrote:
+> I have a 3-disk RAID5, with a consistent superblock, and partitions
+> are all 0xFD.
+>=20
+> The array isn't recognized by mdadm at boot or when I manually ask it
+> to assemble /dev/md0 without specifying partitions. The three
+> partitions are always /dev/sd[abc]1.
 
-2. The file system layer after receiving an I/O error handles something 
-not too well. I use default mount and format options, so "errors" was 
-"remount-ro", but recovery on reboot wasn't sufficient.
+You didn't mention what distribution/OS you are using, but this problem
+is distribution specific.
 
-We in the SCSI layer can fix (1), but only FS people can fix (2).
+If you use any of the Red Hat OSes, then you probably need to configure
+your system to start the array at boot up.  This is especially true if
+this is the first array you've ever had on the system.
 
-> So, given what TASK_ABORT means, it looks to me like the handling should
-> go through the maybe_retry path.  I'd say that's about a three line
-> patch ... and since you have the test bed, you can even try it out.
+Start off by creating a simple /etc/mdadm.conf file.  A couple lines
+that read:
 
-OK, I'll prepare it.
+DEVICE partitions
+MAILADDR root
 
-> James
-> 
-> 
-> 
+is sufficient to start.  Then, while your md array is up and running,
+execute the following command:
+
+mdadm -Db /dev/md0 >> /etc/mdadm.conf
+
+This will add the information for your array to the end of the
+mdadm.conf file.  Once you've done that, recreate the initrd for your
+kernel by using this command:
+
+VER=3D`uname -r`
+mkinitrd -v -f /boot/initrd-${VER}.img ${VER}
+
+Now, when you reboot, the system should start up your raid array
+automatically.
+
+Note: if your raid array isn't needed in order for the system to mount
+the / partition, then you can skip remaking the initrd image, just
+creating an entry in /etc/mdadm.conf is enough to cause the system
+initscript to start the array at bootup.
+
+--=20
+Doug Ledford <dledford@redhat.com>
+              GPG KeyID: CFBFF194
+              http://people.redhat.com/dledford
+
+Infiniband specific RPMs available at
+              http://people.redhat.com/dledford/Infiniband
+
+
+--=-Hm8jGSeW21ai+Nxgg+yj
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+
+iEUEABECAAYFAki1tVMACgkQTzP9PM7pjw+zeQCYzAe115TZfmHOX73IyAmME/Cw
+NACfY4dCytqqBCf4giU14Jog92nBid0=
+=RJXn
+-----END PGP SIGNATURE-----
+
+--=-Hm8jGSeW21ai+Nxgg+yj--
 
