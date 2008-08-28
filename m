@@ -1,30 +1,58 @@
-From: "Don Dupuis" <dondster@gmail.com>
-Subject: 2.6.18 very slow sync to disk with ext3 fs on an md raid10 array
-Date: Wed, 27 Aug 2008 22:03:02 -0500
-Message-ID: <632b79000808272003m58cc5b32i8f44b563a4ba89cf@mail.gmail.com>
+From: David Greaves <david@dgreaves.com>
+Subject: Re: Help to decipher kernel io error log
+Date: Thu, 28 Aug 2008 16:38:12 +0100
+Message-ID: <48B6C664.6010108@dgreaves.com>
+References: <48B677DB.4010306@rabbit.us>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <48B677DB.4010306@rabbit.us>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+To: Peter Rabbitson <rabbit+list@rabbit.us>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I have a 12 drive system running 2.6.18.8 with a 11 drive md array.
-This array is setup with raid10 and a combination of ext3 and ext2
-filesystems. The issue I am having is this. I transfer a 180MB file
-with scp to the ext3 filesystem. When this is complete, I will then do
-a sync to make sure it is written to disk. The problem is that it will
-take 6 MINUTES for the sync to complete. If I do the same thing to the
-ext2 filesystem, it will take about 6 seconds. I know that 2.6.19
-kernel solves my problem, but the project I am working on requires
-2.6.18. I am trying to figure out which patch or patches that went in
-to 2.6.19-rc1 fixes this. PLease give me suggestions. I will give
-needed data that will be asked for. One more thing, this is an X86_64
-kernel on an Intel quad core processor. The disk controller is an LSI
-sas controller.
+Peter Rabbitson wrote:
+> Greetings,
+> 
+> This is not a strictly raid question, but this is the best list I know
+> of for this type of questions. Two days ago my server ground to a halt
+> without apparent reasons. There were tons of processes in D state, with
+> no signs of any significant work being done. I attributed it to resource
+> starvation (the server is pretty loaded), rebooted and went on with my
+> life.
+> 
+> Yesterday I received the log messages included at the bottom of this
+> email. Since I am running a --level=10 --raid-devices=4 --layout=f3 I am
+> not that worried abiut losing data, and decided to investigate. I
+> removed (mdadm -r) the devices in question from the arrays, power cycled
+>  the server, and executed a full badblocks -svw /dev/sda run. It passed
+> with flying colors.
+> 
+> So here is my question - what does the log below signify (there are no
+> omissions, this is all I got) - is my controller dying? Or is there
+> indeed a well masked hard drive failure? Should I change the drive, the
+> controller, or both?
 
-Thanks
+Looks to me like a drive failed with a sector problem.
+Then, quite possibly the sector was re-allocated.
+What does
+ smartctl -a /dev/sda
+say?
 
-Don
+Run
+  man smartctl
+to ensure you're informed :)
+Then run:
+  smartctl -t long /dev/sda
+(you may need smartctl -o on /dev/sda)
+
+Depending on the version of smartctl you'll be given a 'poll time' or completion
+time. It's safe to run
+ smartctl -a /dev/sda
+early, but make sure the selftest has completed and post the output of that -
+especially noting any differences to the earlier -a.
+
+David
+
