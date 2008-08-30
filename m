@@ -1,53 +1,74 @@
-From: "David Lethe" <david@santools.com>
-Subject: Re: Linux tries to bring up raid before the disks are finished initializing
-Date: Sat, 30 Aug 2008 16:21:00 -0500
-Message-ID: <271601c90ae6$5c615209$5001a8c0@exchange.rackspace.com>
+From: Clive Messer <clive@vacuumtube.org.uk>
+Subject: Re: [PATCH] md: raid10: wake up frozen array
+Date: Sat, 30 Aug 2008 22:30:52 +0100
+Message-ID: <1220131852.19005.77.camel@pc343.objectsoft-systems.ltd.uk>
+References: <20080725190338.GA27484@ajones-laptop.nbttech.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20080725190338.GA27484@ajones-laptop.nbttech.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mike Myers <mikesm559@yahoo.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Most mobos and controllers have a spinup delay settting exactly for this purpose.   increase the setting so that you allow sufficient time for everything to spin up before your system starts booting the OS.
 
------Original Message-----
+On Fri, 2008-07-25 at 12:03 -0700, Arthur Jones wrote:
+> When rescheduling a bio in raid10, we wake up
+> the md thread, but if the array is frozen, this
+> will have no effect.  This causes the array to
+> remain frozen for eternity.  We add a wake_up
+> to allow the array to de-freeze.  This code is
+> nearly identical to the raid1 code, which has
+> this fix already.
 
-From:  "Mike Myers" <mikesm559@yahoo.com>
-Subj:  Linux tries to bring up raid before the disks are finished initializing
-Date:  Sat Aug 30, 2008 2:18 pm
-Size:  1K
-To:  "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+Can someone explain this to me in simple terms? 
+What will cause a rescheduling of bio?
+Frozen for eternity - what will be the effect assuming my root file
+system is on raid10?
 
-I've sent this to the OpenSUSE list too, but thought I might ask here to as it is really linux raid question: 
- 
-I have a Opensuse 11.0 system running as a server with about 18 
-data disks hooked to the local motherboard SATA ports, and 3 SATA port 
-multipliers hooked to a Adaptec 1430SA controller.  Because of how the 
-PMP code works (all the EH stuff resetting the PMP port, reseting the PMP, etc..., etc, and how long it takes to spin up each disk on boot, it can take 
-awhile before the disks are all spun up and online.  About half the 
-time I boot the system, linux  thinks the disks are already up and 
-proceeds to run the /etc/init.d/boot.md and boot.lvm files, which of 
-course fail to assemble the disks because they haven't fully come 
-online yet, and dumps me into a single-user mode shell to fix the disks. 
- 
-The bottom line is about half the time I try to boot the system, it 
-fails and needs some console work before I can bring it up.  Does 
-anyone know if there is a fixed time delay somewhere that waits for the 
-disks to spin up or does it use a different way of telling if it's done? 
- 
-A few details: Kernel is 2.6.26.3, 6 SATA ports on the ICH10R (1 is the dystem disk), 1 Adaptec 1430SA with 4 ports, and 3 3726 PMP's hooked to 3 of the 4 ports, and 2 SI3132 controllers with nothing currently hooked to them. 
- 
-Thanks, 
-Mike 
- 
- 
-       
--- 
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in 
-the body of a message to majordomo@vger.kernel.org 
-More majordomo info at  http://vger.kernel.org/majordomo-info.html 
- 
+I have a Fedora Core 9 box using a 4 disk f2 raid10 array. This is the
+main partition and root file system. Every couple of days the machine
+would hard lock. Sometimes I could ssh in. Most of the time not. I never
+managed to catch anything to the logs with SysRq. With the benefit of
+hindsight - if the kernel was 'jammed' writing to logfiles on a frozen
+raid10 array that could explain it. I assumed faulty hardware. I have
+actually replaced one at a time, (and at considerable expense), the
+power supply, motherboard, processor, all 4 disks in the array. Still
+the machine would lock-up. What is interesting is that I have managed 5
+days uptime since I added this one line patch to
+2.6.25.14-108.fc9.x86_64. Could someone confirm for me that it is more
+than likely that the hard locks I experienced on this machine could be
+resolved by this one line patch? Has this patch now made it into an
+official kernel release?
+
+
+> Signed-off-by: Arthur Jones <ajones@riverbed.com>
+> ---
+>  drivers/md/raid10.c |    3 +++
+>  1 files changed, 3 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+> index 159535d..d41bebb 100644
+> --- a/drivers/md/raid10.c
+> +++ b/drivers/md/raid10.c
+> @@ -215,6 +215,9 @@ static void reschedule_retry(r10bio_t *r10_bio)
+>  	conf->nr_queued ++;
+>  	spin_unlock_irqrestore(&conf->device_lock, flags);
+>  
+> +	/* wake up frozen array... */
+> +	wake_up(&conf->wait_barrier);
+> +
+>  	md_wakeup_thread(mddev->thread);
+>  }
+>  
+
+Regards
+
+Clive
+- 
+Clive Messer <clive@vacuumtube.org.uk>
+
+
 
 
