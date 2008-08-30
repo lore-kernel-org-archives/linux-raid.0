@@ -1,50 +1,35 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: I/O wait problem with hardware raid
-Date: Sat, 30 Aug 2008 14:47:21 -0400
-Message-ID: <48B995B9.2040600@tmr.com>
-References: <48B75097.7000509@harvee.org>
+From: Mike Myers <mikesm559@yahoo.com>
+Subject: Linux tries to bring up raid before the disks are finished initializing
+Date: Sat, 30 Aug 2008 12:18:05 -0700 (PDT)
+Message-ID: <971504.54875.qm@web30805.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <48B75097.7000509@harvee.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Eric S. Johansson" <esj@harvee.org>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Eric S. Johansson wrote:
-> I'm not sure if this mailing lists is just for the Linux kernel raid  so  this
-> query does not belong, feel free to tell me where to go.
->
-> I'm running Ubuntu 8.04 on an HP ProLiant ml350 with an E200i sata raid card.
->
-> The problem is the I/O wait percentage increases during data transfer. A simple
-> rsync transfer will bring the percent I/O wait value up to the mid-20s to 40s
-> and a little more stress causes the wait percentage to climb to upper 90% range.
->  it appears that most of the I/O wait time is from the disk array because a copy
-> has a similar effect.  However, I cannot eliminate some contribution by the
-> networking code.
->
-> I'm not sure how to debug this. vmstat doesn't show anything extraordinary so
-> I'm left scratching my head.
->
-> what should I be looking for?
->   
+I've sent this to the OpenSUSE list too, but thought I might ask here to as it is really linux raid question:
 
-iowait means that there is a program waiting for I/O. That's all. Of 
-course when you do a copy (regardless of software) the CPU is waiting 
-for disk transfers. I'm not sure what you think you should debug, i/o 
-takes time, and if the program is blocked until the next input comes in 
-it will enter the waitio state. If there is no other process to use the 
-available CPU it becomes waitio, which is essentially available CPU 
-cycles similar to idle.
+I have a Opensuse 11.0 system running as a server with about 18
+data disks hooked to the local motherboard SATA ports, and 3 SATA port
+multipliers hooked to a Adaptec 1430SA controller.  Because of how the
+PMP code works (all the EH stuff resetting the PMP port, reseting the PMP, etc..., etc, and how long it takes to spin up each disk on boot, it can take
+awhile before the disks are all spun up and online.  About half the
+time I boot the system, linux  thinks the disks are already up and
+proceeds to run the /etc/init.d/boot.md and boot.lvm files, which of
+course fail to assemble the disks because they haven't fully come
+online yet, and dumps me into a single-user mode shell to fix the disks.
 
-What exactly do you think is wrong?
+The bottom line is about half the time I try to boot the system, it
+fails and needs some console work before I can bring it up.  Does
+anyone know if there is a fixed time delay somewhere that waits for the
+disks to spin up or does it use a different way of telling if it's done?
 
--- 
-Bill Davidsen <davidsen@tmr.com>
-  "Woe unto the statesman who makes war without a reason that will still
-  be valid when the war is over..." Otto von Bismark 
+A few details: Kernel is 2.6.26.3, 6 SATA ports on the ICH10R (1 is the dystem disk), 1 Adaptec 1430SA with 4 ports, and 3 3726 PMP's hooked to 3 of the 4 ports, and 2 SI3132 controllers with nothing currently hooked to them.
+
+Thanks,
+Mike
 
 
+      
