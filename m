@@ -1,7 +1,7 @@
-From: Roger Heflin <rogerheflin@gmail.com>
+From: Bill Davidsen <davidsen@tmr.com>
 Subject: Re: I/O wait problem with hardware raid
-Date: Sun, 31 Aug 2008 10:48:00 -0500
-Message-ID: <48BABD30.2060607@gmail.com>
+Date: Sun, 31 Aug 2008 17:08:19 -0400
+Message-ID: <48BB0843.3050008@tmr.com>
 References: <48B75097.7000509@harvee.org> <48B995B9.2040600@tmr.com> <48BAAFB0.8060103@harvee.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1;
@@ -11,17 +11,42 @@ Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <48BAAFB0.8060103@harvee.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: "Eric S. Johansson" <esj@harvee.org>
-Cc: Bill Davidsen <davidsen@tmr.com>, linux-raid@vger.kernel.org
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 Eric S. Johansson wrote:
 > Bill Davidsen wrote:
->=20
+>
+>  =20
 >> iowait means that there is a program waiting for I/O. That's all.=20
->=20
+>>    =20
+>
 > I was under the impression that I/O wait created a blocking condition=
 =2E
->=20
+>  =20
+
+I means a process is waiting for I/O, so that one is blocked. And often=
+=20
+it means that heavy disk access will slow down other disk i/o. But the=20
+CPU involved in iowait is available for CPU-bound process (any process=20
+which needs it).
+
+One of the things Linux does poorly is to balance reads and writes. If=20
+you are doing heavy writes you don't have reads jumping the queue and=20
+getting donw in reasonable time. Use of the deadline i/o scheduler may=20
+help this, as may making the dirty ratio _smaller_ to slow writes to le=
+t=20
+reads get run.
+
+I played with allowing the reads to bypayy a certain number of writes t=
+o=20
+balance performance. It worked beautifully, and I could tune it for any=
+=20
+load, but I never got it to tune itself, so there was a always a=20
+"jackpot case" which weorked WAY worse than standard. Needless to say I=
+=20
+never followed up on it, I haven't had inspiration.
+>  =20
 >> Of
 >> course when you do a copy (regardless of software) the CPU is waitin=
 g
@@ -35,13 +60,14 @@ the
 >> cycles similar to idle.
 >>
 >> What exactly do you think is wrong?
->=20
+>>    =20
+>
 > As I run rsync which increases the I/O wait state, the first thing I =
 notice is
 > that IMAP starts getting slow, users start experiencing failures in s=
 ending
 > e-mail, and the initial exchange for ssh gets significantly longer.
->=20
+>
 > All of these problems have both networking and file I/O in common and=
  I'm trying
 > to separate out where the problem is coming from.  I have run netcat =
@@ -57,7 +83,7 @@ nc within
 > the local filesystem and another rsync to an external rsync server.  =
 At that
 > point, the system becomes very close to unusable.
->=20
+>
 > Of course, I can throttle back rsync and regain some usability but I'=
 m backing
 > up a couple terabytes of information and it's a time-consuming proces=
@@ -70,7 +96,7 @@ ix 1 TB
 rmware.
 > Can't wait for ZFS (or its equivalent) on linux to reach production q=
 uality.
->=20
+>
 > from where I stand right now, this might be "it sucks but it's perfec=
 tly
 > normal".  In a situation with heavy disk I/O, I would expect anything=
@@ -81,74 +107,40 @@ ht that the
 me and its
 > kindred have lots of configuration files to read every time you move =
 the mouse.  :-)
->=20
+>
 > Any case, the people that sign my check aren't happy because they spe=
 nt all his
 > money on an HP server and performs no better than an ordinary PC.  I'=
 m hoping I
 > can learn enough to give them a cogent explanation if I can't give th=
 em a solution.
->=20
->=20
+>  =20
+
+Some of the tuning I suggested may help, perhaps a lot. If you have a=20
+lot of memory you can fill it with dirty buffers and the response will=20
+be a problem.
+>
 > I appreciate the help.
->=20
+>  =20
+
+Then let me know if any of the things I suggested help. Someone else ma=
+y=20
+have other ideas, I would cut the dirty ratio by half and see if it=20
+makes any difference and for better or worse.
+>
+> ---eric
+>
+>  =20
 
 
-IO wait really means.
+--=20
+Bill Davidsen <davidsen@tmr.com>
+  "Woe unto the statesman who makes war without a reason that will stil=
+l
+  be valid when the war is over..." Otto von Bismark=20
 
-You are asking the IO subsystem to do more than it can, and one can do =
-this *NO*=20
-matter how fast ones disks are, in this case throttle the IO processes =
-somewhat=20
-to allow other things to still function.
 
-The only real way out of this is to either throttle things, or get fast=
-er disks=20
-and/or raid subsystem.
 
-I would suggest that you (with the machine otherwise unused) test seque=
-ntial=20
-reads and writes off the raid unit and post the speeds of those test, y=
-ou will=20
-need to make sure things break the cache to get real numbers, and also =
-post the=20
-number and type of disks that you have, that will give some idea of wha=
-t the IO=20
-system can do/should be able to do.
-
-If the parts are picked incorrectly things will suck, there are several=
-=20
-different general classes of raid controller and some of them run alot =
-faster=20
-than the others (and cost more).   There are at least 3 classes of disk=
-s (SATA,=20
-SAS-10k, SAS-15k) and the more expensive ones run much faster.
-
-Even the best of disks/raid controllers will run at full speed on any o=
-f the=20
-dual socket machines (from anyone) that has enough PCI-X and/or PCI-e b=
-usses to=20
-keep the contollers supplied with data.
-
-How much one can push is related to how many PCI-X and/or PCI-e busses =
-and how=20
-much is shared between the different busses.   On most desktop boards *=
-ALL* of=20
-the pci busses are shared (there is only 132MB/second between all PCI s=
-lots),=20
-this got better with PCI-e but usually on desktop boards there aren't v=
-ery many=20
-of them.    On the higher end boards (usually 2+ socket, but some singl=
-e socket=20
-enterprise boards that have PCI-X) often there are several different PC=
-I-X=20
-busses that are not shared, and won't interfere with each other.   And =
-on some=20
-higher end AMD boards there are slots/chipsets connected to *BOTH* cpus=
-, so that=20
-increases possible bandwidth if done correctly.
-
-                                 Roger
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
