@@ -1,71 +1,58 @@
-From: Philip Molter <philip@datafoundry.com>
-Subject: RAID1 disk failure causes hung mount
-Date: Mon, 01 Sep 2008 13:32:10 -0500
-Message-ID: <48BC352A.5010701@datafoundry.com>
+From: Mike Myers <mikesm559@yahoo.com>
+Subject: Re: [opensuse] Opensuse doesn't wait long enough for the disks to spin up before trying to configure raid
+Date: Mon, 1 Sep 2008 12:20:46 -0700 (PDT)
+Message-ID: <901830.6549.qm@web30803.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: Anders Johansson <ajohansson@suse.de>, opensuse@opensuse.org
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello,
+Ok, well I had a chance to try out the longer MDADM_DEVICE_TIMEOUT delay parameter today (we had a power failure in the neighborhood that the UPS couldn't outlast).  It didn't make any difference.  The first time coming up, it tried to assemble the array before all the devices had been detected and created, and failed.  I manually entered the shell, and did a reboot, and the 2nd time every device was detected rapidly (presumably because the disks were already spun-up and online) and then it came up just fine.
 
-We're running a modified version of the FC4 2.6.17 kernel (2.6.17.4).  I 
-realize this is an old kernel.  For internal reasons, we cannot update 
-to a newer version of the kernel at this time.
+I noted that after the initial md assembly attempted failed during the first attempt at startup, the EH process of discovering the disks (and presumably spinning them up) from the port multipliers was still going on.  Since a device is not created until the disk is spun up, the udev events did not appear to get triggered in such a way as for the mdadm to realize it had to wait.  When boot.md was hit, only the base 6 drives attached to the onboard SATA ports and one of the PMP's and it's associated drives were online and detected.  The 2nd and 3 PMP's and their associated disks did not complete their EH process (and then begin to create the devices for the actual disks) until after md had tried to assemble the disks.
 
-We have a 3ware 9550SXU card with 12 drives in JBOD mode.  These 12 
-drives are mirrored in 6 RAID1 pairs, then striped together in one big 
-RAID0 stripe.  When we have a disk error with one of the drives in a 
-RAID1 pair, the entire RAID0 mount locks up.  We can still cd to the 
-mount and read from it, but if we try to write anything to the mount, 
-the process hangs in an unkillable state.
+So I must be looking for a different paramter to add a delay other than the md delays specified in /etc/sysconfig/mdadm.  Any ideas?
 
-This recently happened.  Here are the log messages from the disk failure:
+I have cc'd the linux-raid list on this as well.
 
-sd 0:0:9:0: SCSI error: return code = 0x8000004
-sdj: Current: sense key: Medium Error
-     Additional sense: Unrecovered read error
-end_request: I/O error, dev sdj, sector 10964975
-raid1: sdj1: rescheduling sector 10964912
-3w-9xxx: scsi0: ERROR: (0x03:0x0202): Drive ECC error:port=9.
-sd 0:0:9:0: SCSI error: return code = 0x8000004
-sdj: Current: sense key: Medium Error
-     Additional sense: Unrecovered read error
-end_request: I/O error, dev sdj, sector 10964975
-raid1: sdd1: redirecting sector 10964912 to another mirror
+Thanks,
+Mike
 
-When this happened, /dev/sdj1 did not fail out of its RAID.  It also did 
-not lock the system.  Later:
 
-sd 0:0:9:0: SCSI error: return code = 0x8000004
-sdj: Current: sense key: Medium Error
-     Additional sense: Unrecovered read error
-end_request: I/O error, dev sdj, sector 16744439
-raid1: sdj1: rescheduling sector 16744376
 
-When this happened, /dev/sdj1 did not fail out of its RAID, but it did 
-lock writes to the big RAID0 stripe.  I manually failed /dev/sdj1 out of 
-the RAID and /proc/mdstat did report it as failed out at that point.  It 
-did not cause writes to begin being processed.  I tried to manually 
-remove /dev/sdj1 from the RAID and mdadm reported that the device was 
-busy.  A hard power-cycle was required to restore functionality to the 
-system.  This is consistent with these kinds of errors.
 
-I have looked through the patches related to RAID1 and lockups.  The 
-patches from January/March 2008 related to RAID1 deadlocks have not 
-seemed to help (I didn't really expect them to as 2.6.17.4 predates 
-bitmap code, no?).
+----- Original Message ----
+From: Anders Johansson <ajohansson@suse.de>
+To: opensuse@opensuse.org
+Sent: Saturday, August 30, 2008 12:33:54 PM
+Subject: Re: [opensuse] Opensuse doesn't wait long enough for the disks to spin up before trrying to configure raid
 
-I'd like to be able to get more debug during cases like this, but I'm 
-not sure what to gather or how to gather it.  If anyone has any 
-suggestions, I'd appreciate hearing them.  If any of the md devs have 
-any suggestions for patches to look at that specifically address this 
-behavior, I'd by very grateful for that advice.  As it is, I've been 
-combing over git commits with very little success.
+On Saturday 30 August 2008 21:03:34 Mike Myers wrote:
+> The bottom line is about half the time I try to boot the system, it fails
+> and needs some console work before I can bring it up.  Does anyone know if
+> there is a fixed time delay somewhere that waits for the disks to spin up
+> or does it use a different way of telling if it's done?
 
-Thanks in advance for any assistance, knowledge, or suggestions anyone has.
+I'm not sure what exactly is failing here. Once the disk identifies itself on 
+the bus, a udev event causes the device node to get created. Does it get 
+created?
 
-Philip
+What exactly is the error message when boot.lvm fails to assemble the logical 
+volumes?
+
+boot.md will wait 60 seconds for all udev events to get processed. Would it 
+help to increase that (in /etc/sysconfig/mdadm, the value is 
+MDADM_DEVICE_TIMEOUT)?
+
+Otherwise, you have to let us know exactly where in the chain things fail
+
+Anders
+-- 
+To unsubscribe, e-mail: opensuse+unsubscribe@opensuse.org
+For additional commands, e-mail: opensuse+help@opensuse.org
+
+
+      
