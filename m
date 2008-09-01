@@ -1,58 +1,91 @@
-From: Mike Myers <mikesm559@yahoo.com>
-Subject: Re: [opensuse] Opensuse doesn't wait long enough for the disks to spin up before trying to configure raid
-Date: Mon, 1 Sep 2008 12:20:46 -0700 (PDT)
-Message-ID: <901830.6549.qm@web30803.mail.mud.yahoo.com>
+From: "David Lethe" <david@santools.com>
+Subject: RE: RAID1 disk failure causes hung mount
+Date: Mon, 1 Sep 2008 15:20:59 -0500
+Message-ID: <A20315AE59B5C34585629E258D76A97C01B75E09@34093-C3-EVS3.exchange.rackspace.com>
+References: <48BC352A.5010701@datafoundry.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-class: urn:content-classes:message
+In-Reply-To: <48BC352A.5010701@datafoundry.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Anders Johansson <ajohansson@suse.de>, opensuse@opensuse.org
-Cc: linux-raid@vger.kernel.org
+To: Philip Molter <philip@datafoundry.com>, Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Ok, well I had a chance to try out the longer MDADM_DEVICE_TIMEOUT delay parameter today (we had a power failure in the neighborhood that the UPS couldn't outlast).  It didn't make any difference.  The first time coming up, it tried to assemble the array before all the devices had been detected and created, and failed.  I manually entered the shell, and did a reboot, and the 2nd time every device was detected rapidly (presumably because the disks were already spun-up and online) and then it came up just fine.
-
-I noted that after the initial md assembly attempted failed during the first attempt at startup, the EH process of discovering the disks (and presumably spinning them up) from the port multipliers was still going on.  Since a device is not created until the disk is spun up, the udev events did not appear to get triggered in such a way as for the mdadm to realize it had to wait.  When boot.md was hit, only the base 6 drives attached to the onboard SATA ports and one of the PMP's and it's associated drives were online and detected.  The 2nd and 3 PMP's and their associated disks did not complete their EH process (and then begin to create the devices for the actual disks) until after md had tried to assemble the disks.
-
-So I must be looking for a different paramter to add a delay other than the md delays specified in /etc/sysconfig/mdadm.  Any ideas?
-
-I have cc'd the linux-raid list on this as well.
-
-Thanks,
-Mike
-
-
-
-
------ Original Message ----
-From: Anders Johansson <ajohansson@suse.de>
-To: opensuse@opensuse.org
-Sent: Saturday, August 30, 2008 12:33:54 PM
-Subject: Re: [opensuse] Opensuse doesn't wait long enough for the disks to spin up before trrying to configure raid
-
-On Saturday 30 August 2008 21:03:34 Mike Myers wrote:
-> The bottom line is about half the time I try to boot the system, it fails
-> and needs some console work before I can bring it up.  Does anyone know if
-> there is a fixed time delay somewhere that waits for the disks to spin up
-> or does it use a different way of telling if it's done?
-
-I'm not sure what exactly is failing here. Once the disk identifies itself on 
-the bus, a udev event causes the device node to get created. Does it get 
-created?
-
-What exactly is the error message when boot.lvm fails to assemble the logical 
-volumes?
-
-boot.md will wait 60 seconds for all udev events to get processed. Would it 
-help to increase that (in /etc/sysconfig/mdadm, the value is 
-MDADM_DEVICE_TIMEOUT)?
-
-Otherwise, you have to let us know exactly where in the chain things fail
-
-Anders
--- 
-To unsubscribe, e-mail: opensuse+unsubscribe@opensuse.org
-For additional commands, e-mail: opensuse+help@opensuse.org
-
-
-      
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBsaW51eC1yYWlkLW93bmVyQHZn
+ZXIua2VybmVsLm9yZyBbbWFpbHRvOmxpbnV4LXJhaWQtDQo+IG93bmVyQHZnZXIua2VybmVsLm9y
+Z10gT24gQmVoYWxmIE9mIFBoaWxpcCBNb2x0ZXINCj4gU2VudDogTW9uZGF5LCBTZXB0ZW1iZXIg
+MDEsIDIwMDggMTozMiBQTQ0KPiBUbzogTGludXggUkFJRCBNYWlsaW5nIExpc3QNCj4gU3ViamVj
+dDogUkFJRDEgZGlzayBmYWlsdXJlIGNhdXNlcyBodW5nIG1vdW50DQo+IA0KPiBIZWxsbywNCj4g
+DQo+IFdlJ3JlIHJ1bm5pbmcgYSBtb2RpZmllZCB2ZXJzaW9uIG9mIHRoZSBGQzQgMi42LjE3IGtl
+cm5lbCAoMi42LjE3LjQpLg0KPiBJDQo+IHJlYWxpemUgdGhpcyBpcyBhbiBvbGQga2VybmVsLiAg
+Rm9yIGludGVybmFsIHJlYXNvbnMsIHdlIGNhbm5vdCB1cGRhdGUNCj4gdG8gYSBuZXdlciB2ZXJz
+aW9uIG9mIHRoZSBrZXJuZWwgYXQgdGhpcyB0aW1lLg0KPiANCj4gV2UgaGF2ZSBhIDN3YXJlIDk1
+NTBTWFUgY2FyZCB3aXRoIDEyIGRyaXZlcyBpbiBKQk9EIG1vZGUuICBUaGVzZSAxMg0KPiBkcml2
+ZXMgYXJlIG1pcnJvcmVkIGluIDYgUkFJRDEgcGFpcnMsIHRoZW4gc3RyaXBlZCB0b2dldGhlciBp
+biBvbmUgYmlnDQo+IFJBSUQwIHN0cmlwZS4gIFdoZW4gd2UgaGF2ZSBhIGRpc2sgZXJyb3Igd2l0
+aCBvbmUgb2YgdGhlIGRyaXZlcyBpbiBhDQo+IFJBSUQxIHBhaXIsIHRoZSBlbnRpcmUgUkFJRDAg
+bW91bnQgbG9ja3MgdXAuICBXZSBjYW4gc3RpbGwgY2QgdG8gdGhlDQo+IG1vdW50IGFuZCByZWFk
+IGZyb20gaXQsIGJ1dCBpZiB3ZSB0cnkgdG8gd3JpdGUgYW55dGhpbmcgdG8gdGhlIG1vdW50LA0K
+PiB0aGUgcHJvY2VzcyBoYW5ncyBpbiBhbiB1bmtpbGxhYmxlIHN0YXRlLg0KPiANCj4gVGhpcyBy
+ZWNlbnRseSBoYXBwZW5lZC4gIEhlcmUgYXJlIHRoZSBsb2cgbWVzc2FnZXMgZnJvbSB0aGUgZGlz
+aw0KPiBmYWlsdXJlOg0KPiANCj4gc2QgMDowOjk6MDogU0NTSSBlcnJvcjogcmV0dXJuIGNvZGUg
+PSAweDgwMDAwMDQNCj4gc2RqOiBDdXJyZW50OiBzZW5zZSBrZXk6IE1lZGl1bSBFcnJvcg0KPiAg
+ICAgIEFkZGl0aW9uYWwgc2Vuc2U6IFVucmVjb3ZlcmVkIHJlYWQgZXJyb3INCj4gZW5kX3JlcXVl
+c3Q6IEkvTyBlcnJvciwgZGV2IHNkaiwgc2VjdG9yIDEwOTY0OTc1DQo+IHJhaWQxOiBzZGoxOiBy
+ZXNjaGVkdWxpbmcgc2VjdG9yIDEwOTY0OTEyDQo+IDN3LTl4eHg6IHNjc2kwOiBFUlJPUjogKDB4
+MDM6MHgwMjAyKTogRHJpdmUgRUNDIGVycm9yOnBvcnQ9OS4NCj4gc2QgMDowOjk6MDogU0NTSSBl
+cnJvcjogcmV0dXJuIGNvZGUgPSAweDgwMDAwMDQNCj4gc2RqOiBDdXJyZW50OiBzZW5zZSBrZXk6
+IE1lZGl1bSBFcnJvcg0KPiAgICAgIEFkZGl0aW9uYWwgc2Vuc2U6IFVucmVjb3ZlcmVkIHJlYWQg
+ZXJyb3INCj4gZW5kX3JlcXVlc3Q6IEkvTyBlcnJvciwgZGV2IHNkaiwgc2VjdG9yIDEwOTY0OTc1
+DQo+IHJhaWQxOiBzZGQxOiByZWRpcmVjdGluZyBzZWN0b3IgMTA5NjQ5MTIgdG8gYW5vdGhlciBt
+aXJyb3INCj4gDQo+IFdoZW4gdGhpcyBoYXBwZW5lZCwgL2Rldi9zZGoxIGRpZCBub3QgZmFpbCBv
+dXQgb2YgaXRzIFJBSUQuICBJdCBhbHNvDQo+IGRpZA0KPiBub3QgbG9jayB0aGUgc3lzdGVtLiAg
+TGF0ZXI6DQo+IA0KPiBzZCAwOjA6OTowOiBTQ1NJIGVycm9yOiByZXR1cm4gY29kZSA9IDB4ODAw
+MDAwNA0KPiBzZGo6IEN1cnJlbnQ6IHNlbnNlIGtleTogTWVkaXVtIEVycm9yDQo+ICAgICAgQWRk
+aXRpb25hbCBzZW5zZTogVW5yZWNvdmVyZWQgcmVhZCBlcnJvcg0KPiBlbmRfcmVxdWVzdDogSS9P
+IGVycm9yLCBkZXYgc2RqLCBzZWN0b3IgMTY3NDQ0MzkNCj4gcmFpZDE6IHNkajE6IHJlc2NoZWR1
+bGluZyBzZWN0b3IgMTY3NDQzNzYNCj4gDQo+IFdoZW4gdGhpcyBoYXBwZW5lZCwgL2Rldi9zZGox
+IGRpZCBub3QgZmFpbCBvdXQgb2YgaXRzIFJBSUQsIGJ1dCBpdCBkaWQNCj4gbG9jayB3cml0ZXMg
+dG8gdGhlIGJpZyBSQUlEMCBzdHJpcGUuICBJIG1hbnVhbGx5IGZhaWxlZCAvZGV2L3NkajEgb3V0
+DQo+IG9mDQo+IHRoZSBSQUlEIGFuZCAvcHJvYy9tZHN0YXQgZGlkIHJlcG9ydCBpdCBhcyBmYWls
+ZWQgb3V0IGF0IHRoYXQgcG9pbnQuDQo+IEl0DQo+IGRpZCBub3QgY2F1c2Ugd3JpdGVzIHRvIGJl
+Z2luIGJlaW5nIHByb2Nlc3NlZC4gIEkgdHJpZWQgdG8gbWFudWFsbHkNCj4gcmVtb3ZlIC9kZXYv
+c2RqMSBmcm9tIHRoZSBSQUlEIGFuZCBtZGFkbSByZXBvcnRlZCB0aGF0IHRoZSBkZXZpY2Ugd2Fz
+DQo+IGJ1c3kuICBBIGhhcmQgcG93ZXItY3ljbGUgd2FzIHJlcXVpcmVkIHRvIHJlc3RvcmUgZnVu
+Y3Rpb25hbGl0eSB0byB0aGUNCj4gc3lzdGVtLiAgVGhpcyBpcyBjb25zaXN0ZW50IHdpdGggdGhl
+c2Uga2luZHMgb2YgZXJyb3JzLg0KPiANCj4gSSBoYXZlIGxvb2tlZCB0aHJvdWdoIHRoZSBwYXRj
+aGVzIHJlbGF0ZWQgdG8gUkFJRDEgYW5kIGxvY2t1cHMuICBUaGUNCj4gcGF0Y2hlcyBmcm9tIEph
+bnVhcnkvTWFyY2ggMjAwOCByZWxhdGVkIHRvIFJBSUQxIGRlYWRsb2NrcyBoYXZlIG5vdA0KPiBz
+ZWVtZWQgdG8gaGVscCAoSSBkaWRuJ3QgcmVhbGx5IGV4cGVjdCB0aGVtIHRvIGFzIDIuNi4xNy40
+IHByZWRhdGVzDQo+IGJpdG1hcCBjb2RlLCBubz8pLg0KPiANCj4gSSdkIGxpa2UgdG8gYmUgYWJs
+ZSB0byBnZXQgbW9yZSBkZWJ1ZyBkdXJpbmcgY2FzZXMgbGlrZSB0aGlzLCBidXQgSSdtDQo+IG5v
+dCBzdXJlIHdoYXQgdG8gZ2F0aGVyIG9yIGhvdyB0byBnYXRoZXIgaXQuICBJZiBhbnlvbmUgaGFz
+IGFueQ0KPiBzdWdnZXN0aW9ucywgSSdkIGFwcHJlY2lhdGUgaGVhcmluZyB0aGVtLiAgSWYgYW55
+IG9mIHRoZSBtZCBkZXZzIGhhdmUNCj4gYW55IHN1Z2dlc3Rpb25zIGZvciBwYXRjaGVzIHRvIGxv
+b2sgYXQgdGhhdCBzcGVjaWZpY2FsbHkgYWRkcmVzcyB0aGlzDQo+IGJlaGF2aW9yLCBJJ2QgYnkg
+dmVyeSBncmF0ZWZ1bCBmb3IgdGhhdCBhZHZpY2UuICBBcyBpdCBpcywgSSd2ZSBiZWVuDQo+IGNv
+bWJpbmcgb3ZlciBnaXQgY29tbWl0cyB3aXRoIHZlcnkgbGl0dGxlIHN1Y2Nlc3MuDQo+IA0KPiBU
+aGFua3MgaW4gYWR2YW5jZSBmb3IgYW55IGFzc2lzdGFuY2UsIGtub3dsZWRnZSwgb3Igc3VnZ2Vz
+dGlvbnMgYW55b25lDQo+IGhhcy4NCj4gDQo+IFBoaWxpcA0KUGhpbGxpcDoNClRoZSBwcm9ibGVt
+IHJlYWxseSBpc24ndCB3aXRoIHRoZSBMSU5VWCBrZXJuZWwuICBZb3VyIDNXQVJFIGlzIHRoZSBp
+c3N1ZS4gIFNwZWNpZmljYWxseSwgd2hlbiB0aGUgUkFJRDEgImZhaWxlZCIsIExJTlVYIGRpZCB3
+aGF0IGl0IHdhcyBzdXBwb3NlZCB0byBkby4gICAvZGV2L3NkajEgaXMgdGhlIDNXQVJFLWRlZmlu
+ZWQgUkFJRDEsIGFuZCBpdCBnZW5lcmF0ZWQgYSBtZWRpYSBlcnJvciBiZWNhdXNlIGl0IGNvdWxk
+IG5vdCByZWNvbmNpbGUgYmFkIGRhdGEgb24gdGhlIFJBSUQxIHNldC4gIE15IGd1ZXNzIGlzIHRo
+YXQgeW91IGhhZCBhIGRyaXZlIGZhaWx1cmUgaW4gY29tYmluYXRpb24gd2l0aCBhbiB1bnJlY292
+ZXJhYmxlIHJlYWQgZXJyb3Igb24gYSBwaHlzaWNhbCBibG9jayBvbiB0aGUgIHN1cnZpdmluZyBk
+aXNrIGluIHRoZSBwYWlyLg0KDQpJIHdyaXRlIDNXQVJFLXNwZWNpZmljIGRpYWdzLCBhbmQgaGF2
+ZSBjb2RlIHRvIGRyaWxsIGRvd24gaW50byB0aGUgY2FyZCBhbmQgZ2V0IGRlYnVnIGluZm8sIGFu
+ZCBtb3N0IGxpa2VseSByZXBhaXIgdGhlIGRhbWFnZSwgYnV0IGl0IGlzIHdlbGwgYmV5b25kIHRo
+ZSBzY29wZSBvZiBnaXZpbmcgeW91IGEgc2ltcGxlIGhvdy10bywgYmV5b25kIGJvb3RpbmcgM1dB
+UkUgQklPUyBhbmQgZG9pbmcgZGF0YSBjb25zaXN0ZW5jeSBjaGVja3Mgb24gdGhlIGJyb2tlbiBS
+QUlEMS4gIElmIHlvdSBkb24ndCBjYXJlIGFib3V0IHJlY292ZXJpbmcgZGF0YSBvbiB0aGUgUkFJ
+RDAgc2xpY2UsIHRoZW4gZG8gYSBjb25zaXN0ZW5jeSBjaGVjay9yZXBhaXIsIGFuZCB0aGVuIHlv
+dSdsbCBoYXZlIG9ubHkgbWlub3IgbG9zcy4gIElmIHlvdSB3YW50IGFsbCBvZiB0aGUgZGF0YSBi
+YWNrLCB0aGVuIHlvdSdsbCBwcm9iYWJseSBoYXZlIHRvIHBheSBzb21lYm9keSBmb3IgdGhlaXIg
+dGltZS4gIER1ZSB0byB5b3VyIGhhcmR3YXJlIFJBSUQgY29tcG9uZW50IGZhaWx1cmUsIGl0IGlz
+bid0IHJlYWxseSBhcHBsaWNhYmxlIHRvIGEgc29mdHdhcmUgUkFJRCBmb3J1bS4gDQoNCkRhdmlk
+DQoNCg==
