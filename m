@@ -1,54 +1,38 @@
-From: "Michael Guyver" <michael.guyver@gmail.com>
-Subject: Re: Create software RAID from active partition
-Date: Mon, 1 Sep 2008 23:42:50 +0100
-Message-ID: <c8ce53500809011542s539e3c82t45abb467968a511c@mail.gmail.com>
-References: <c8ce53500809010532h5444a8cckcb1d2cb57d3dc281@mail.gmail.com>
-	 <48BC4A7D.8020907@ziu.info>
+From: Neil Brown <neilb@suse.de>
+Subject: [PULL REQUEST md] Fixes for two recent regression
+Date: Tue, 2 Sep 2008 10:25:19 +1000
+Message-ID: <18620.34799.712728.280652@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <48BC4A7D.8020907@ziu.info>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Michal Soltys <soltys@ziu.info>
-Cc: linux-raid@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-raid@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>
 List-Id: linux-raid.ids
 
-2008/9/1 Michal Soltys <soltys@ziu.info>:
-> What do:
->
-> mdadm -E /dev/sda1
-> mdadm -E /dev/sdb1
-> mdadm -E /dev/sda2
-> mdadm -E /dev/sdb2
->
-> show, if anything ?
->
 
-Hi Michal,
+These patches fix two recent regressions, though I'm still not sure
+exactly how the first one (do_md_stop) ever worked in the particular
+situation where it started to fail.  Still, I'm sure the fix is
+correct, and it does make the problem go away.
 
-Each device reports the same as /dev/sdb1:
+Thanks,
+NeilBrown
 
-# mdadm -E /dev/sdb1
-mdadm: No md superblock detected on /dev/sdb1.
 
-I think there might be a more subtle problem - the disks /dev/sda2 and
-/dev/sdb2 appear to have the same UUID. I'm not sure of the
-significance at present and am going to have to do a bit more
-investigation, but it is enough to prevent
+The following changes since commit bef69ea0dcce574a425feb0a5aa4c63dd108b9a6:
+  Linus Torvalds (1):
+        Resource handling: add 'insert_resource_expand_to_fit()' function
 
-pvcreate /dev/sda2
+are available in the git repository at:
 
-from working - unless I specify the -ff flag as an additional
-parameter, which I am loathe to try without understanding what might
-happen. I was working towards creating an lvm-mirror following some
-earlier advice in this thread, and found this problem when using
-system-config-lvm. The GUI shows /dev/sda2 as uninitialised and the
-error occurs when trying to initialise it. Any further advice would be
-gratefully received (although I appreciate that this is the
-linux-raid, not linux-lvm group)!
+  git://neil.brown.name/md for-linus
 
-Best wishes and thanks for your suggestions.
+NeilBrown (2):
+      Remove invalidate_partition call from do_md_stop.
+      Fix problem with waiting while holding rcu read lock in md/bitmap.c
 
-Michael
+ drivers/md/bitmap.c |   45 ++++++++++++++++++++++++++++++++++++++-------
+ drivers/md/md.c     |    2 --
+ 2 files changed, 38 insertions(+), 9 deletions(-)
