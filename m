@@ -1,38 +1,56 @@
-From: Neil Brown <neilb@suse.de>
-Subject: [PULL REQUEST md] Fixes for two recent regression
-Date: Tue, 2 Sep 2008 10:25:19 +1000
-Message-ID: <18620.34799.712728.280652@notabene.brown>
+From: "rae l" <crquan@gmail.com>
+Subject: Re: from raid456 patch, about the tiotest tool
+Date: Tue, 2 Sep 2008 16:02:30 +0800
+Message-ID: <91b13c310809020102j42e91ba2q65dd2f2f60bfde35@mail.gmail.com>
+References: <91b13c310808261103y326d57e8q737647b88d925daa@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <91b13c310808261103y326d57e8q737647b88d925daa@mail.gmail.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-raid@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Dan Williams <dan.j.williams@intel.com>, jmm@users.sourceforge.net, mhydra@users.sourceforge.net, miku@users.sourceforge.net
+Cc: linux-raid@vger.kernel.org, "James W. Laferriere" <babydr@baby-dragons.com>, Neil Brown <neilb@suse.de>, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Wed, Aug 27, 2008 at 2:03 AM, rae l <crquan@gmail.com> wrote:
+> Hello, Dan:
+>  I've known your md(raid456) patch just before v2.6.26,
+>
+> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=8b3e6cdc53b7f29f7026955d6cb6902a49322a15
+>
+> your md patch referred to tiobench, which is the multi-thread
+> benchmark tool, I'm interested on this tool and I found I ran it
+> differently with your results, so I want to know more about it,
+>
+> from its home page, it only released v0.3.3 on Mar 2002,
+>
+> http://sourceforge.net/projects/tiobench/
+>
+> but from its cvs repository, it has released v0.4.1,
+>
+> http://tiobench.cvs.sourceforge.net/tiobench/tiobench/
+>
+> Could you tell me what version of tiobench did you use? I want to see
+> if that's my configuration fault or I have used wrong program version.
+>
+> And when using v0.4.1 of tiobench from its cvs repository, I found its
+> multiple threads random IO statistics code reported wrong results, and
+> have resolved it by this patch,
+>
+> http://sourceforge.net/tracker/index.php?func=detail&aid=2047536&group_id=3857&atid=303857
+>
+> But its upstream seems have not noticed it yet, so I want to if
+> someone on this mailling-list know tiobench upstream and be able to
+> take this message?
 
-These patches fix two recent regressions, though I'm still not sure
-exactly how the first one (do_md_stop) ever worked in the particular
-situation where it started to fail.  Still, I'm sure the fix is
-correct, and it does make the problem go away.
-
-Thanks,
-NeilBrown
+Hope someone can wake up the tiobench developer?
 
 
-The following changes since commit bef69ea0dcce574a425feb0a5aa4c63dd108b9a6:
-  Linus Torvalds (1):
-        Resource handling: add 'insert_resource_expand_to_fit()' function
-
-are available in the git repository at:
-
-  git://neil.brown.name/md for-linus
-
-NeilBrown (2):
-      Remove invalidate_partition call from do_md_stop.
-      Fix problem with waiting while holding rcu read lock in md/bitmap.c
-
- drivers/md/bitmap.c |   45 ++++++++++++++++++++++++++++++++++++++-------
- drivers/md/md.c     |    2 --
- 2 files changed, 38 insertions(+), 9 deletions(-)
+>
+> Thanks.
+>
+> --
+> Denis Cheng
+>
