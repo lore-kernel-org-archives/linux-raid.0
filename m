@@ -1,56 +1,78 @@
-From: "rae l" <crquan@gmail.com>
-Subject: Re: from raid456 patch, about the tiotest tool
-Date: Tue, 2 Sep 2008 16:02:30 +0800
-Message-ID: <91b13c310809020102j42e91ba2q65dd2f2f60bfde35@mail.gmail.com>
-References: <91b13c310808261103y326d57e8q737647b88d925daa@mail.gmail.com>
+From: Arthur Jones <ajones@riverbed.com>
+Subject: Re: [PATCH] md: raid10: wake up frozen array
+Date: Tue, 2 Sep 2008 08:07:03 -0700
+Message-ID: <20080902150703.GA9406@ajones-laptop.nbttech.com>
+References: <20080725190338.GA27484@ajones-laptop.nbttech.com> <1220131852.19005.77.camel@pc343.objectsoft-systems.ltd.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <91b13c310808261103y326d57e8q737647b88d925daa@mail.gmail.com>
 Content-Disposition: inline
+In-Reply-To: <1220131852.19005.77.camel@pc343.objectsoft-systems.ltd.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>, jmm@users.sourceforge.net, mhydra@users.sourceforge.net, miku@users.sourceforge.net
-Cc: linux-raid@vger.kernel.org, "James W. Laferriere" <babydr@baby-dragons.com>, Neil Brown <neilb@suse.de>, linux-kernel@vger.kernel.org
+To: Clive Messer <clive@vacuumtube.org.uk>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wed, Aug 27, 2008 at 2:03 AM, rae l <crquan@gmail.com> wrote:
-> Hello, Dan:
->  I've known your md(raid456) patch just before v2.6.26,
->
-> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=8b3e6cdc53b7f29f7026955d6cb6902a49322a15
->
-> your md patch referred to tiobench, which is the multi-thread
-> benchmark tool, I'm interested on this tool and I found I ran it
-> differently with your results, so I want to know more about it,
->
-> from its home page, it only released v0.3.3 on Mar 2002,
->
-> http://sourceforge.net/projects/tiobench/
->
-> but from its cvs repository, it has released v0.4.1,
->
-> http://tiobench.cvs.sourceforge.net/tiobench/tiobench/
->
-> Could you tell me what version of tiobench did you use? I want to see
-> if that's my configuration fault or I have used wrong program version.
->
-> And when using v0.4.1 of tiobench from its cvs repository, I found its
-> multiple threads random IO statistics code reported wrong results, and
-> have resolved it by this patch,
->
-> http://sourceforge.net/tracker/index.php?func=detail&aid=2047536&group_id=3857&atid=303857
->
-> But its upstream seems have not noticed it yet, so I want to if
-> someone on this mailling-list know tiobench upstream and be able to
-> take this message?
+Hi Clive, ...
 
-Hope someone can wake up the tiobench developer?
+On Sat, Aug 30, 2008 at 02:30:52PM -0700, Clive Messer wrote:
+> 
+> On Fri, 2008-07-25 at 12:03 -0700, Arthur Jones wrote:
+> > When rescheduling a bio in raid10, we wake up
+> > the md thread, but if the array is frozen, this
+> > will have no effect.  This causes the array to
+> > remain frozen for eternity.  We add a wake_up
+> > to allow the array to de-freeze.  This code is
+> > nearly identical to the raid1 code, which has
+> > this fix already.
+> 
+> Can someone explain this to me in simple terms?
 
+The RAID sub-system needs to be able to synchronize
+certain operations, to do this, it "freezes" the
+array, i.e. no I/O will complete until it is un-frozen.
+This bug hit when we failed an I/O while the array
+was frozen.  In this case, we would never tell the
+frozen array that it was time wake up and get back
+to work and the retry would not make progress.
 
->
-> Thanks.
->
-> --
-> Denis Cheng
->
+> What will cause a rescheduling of bio?
+
+If the first bio read attempt failed (e.g. broken
+disk -- or, in my case, using fault injection),
+then raid10 will retry the block I/O.
+
+> Frozen for eternity - what will be the effect assuming my root file
+> system is on raid10?
+
+The failed I/O will not complete, the process which
+started the I/O will be stuck in an unkillable state
+forever.   Future I/O to the device would be put on
+hold (I guess, I never looked at this directly).
+
+> I have a Fedora Core 9 box using a 4 disk f2 raid10 array. This is the
+> main partition and root file system. Every couple of days the machine
+> would hard lock. Sometimes I could ssh in. Most of the time not. I never
+> managed to catch anything to the logs with SysRq. With the benefit of
+> hindsight - if the kernel was 'jammed' writing to logfiles on a frozen
+> raid10 array that could explain it. I assumed faulty hardware. I have
+> actually replaced one at a time, (and at considerable expense), the
+> power supply, motherboard, processor, all 4 disks in the array. Still
+> the machine would lock-up. What is interesting is that I have managed 5
+> days uptime since I added this one line patch to
+> 2.6.25.14-108.fc9.x86_64. Could someone confirm for me that it is more
+> than likely that the hard locks I experienced on this machine could be
+> resolved by this one line patch? Has this patch now made it into an
+> official kernel release?
+
+It could be, but since you changed the drives
+and controller, it doesn't seem too likely.  You
+need some sort of failure to trigger this bug.
+Also, Sys-rq still worked fine for me when I
+triggered this bug...
+
+This patch is now in linus' git tree, but it
+looks like it missed 2.6.26, so it won't be in
+an "official" release until 2.6.27...
+
+Arthur
