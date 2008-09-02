@@ -1,78 +1,61 @@
-From: Arthur Jones <ajones@riverbed.com>
-Subject: Re: [PATCH] md: raid10: wake up frozen array
-Date: Tue, 2 Sep 2008 08:07:03 -0700
-Message-ID: <20080902150703.GA9406@ajones-laptop.nbttech.com>
-References: <20080725190338.GA27484@ajones-laptop.nbttech.com> <1220131852.19005.77.camel@pc343.objectsoft-systems.ltd.uk>
+From: Marc Bejarano <beej@alum.mit.edu>
+Subject: Re: data corruption: ext3/lvm2/md/mptsas/vitesse/seagate
+Date: Tue, 02 Sep 2008 15:32:39 -0400
+Message-ID: <200809021932.m82JWfj3001152@colby.verdasys.com>
+References: <200803062108.m26L8e4i020882@colby.verdasys.com>
+ <1204848652.3062.100.camel@localhost.localdomain>
+ <200803101519.m2AFJCJS032509@colby.verdasys.com>
+ <1205163386.2941.14.camel@localhost.localdomain>
+ <7.1.0.9.2.20080311174743.1376cc30@alum.mit.edu>
+ <200803252343.m2PNh8kl020506@colby.verdasys.com>
+ <da824cf30803251712t801fdaexc19ba4fe8130ee2e@mail.gmail.com>
+ <200803260217.m2Q2HsiU023202@colby.verdasys.com>
+ <da824cf30803261003i690f108dh86ff846e4f5fd2fa@mail.gmail.com>
+ <7.1.0.9.2.20080327163522.14ab0ac8@alum.mit.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="us-ascii"; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1220131852.19005.77.camel@pc343.objectsoft-systems.ltd.uk>
+In-Reply-To: <7.1.0.9.2.20080327163522.14ab0ac8@alum.mit.edu>
+References: <200803062108.m26L8e4i020882@colby.verdasys.com>
+ <1204848652.3062.100.camel@localhost.localdomain>
+ <200803101519.m2AFJCJS032509@colby.verdasys.com>
+ <1205163386.2941.14.camel@localhost.localdomain>
+ <7.1.0.9.2.20080311174743.1376cc30@alum.mit.edu>
+ <200803252343.m2PNh8kl020506@colby.verdasys.com>
+ <da824cf30803251712t801fdaexc19ba4fe8130ee2e@mail.gmail.com>
+ <200803260217.m2Q2HsiU023202@colby.verdasys.com>
+ <da824cf30803261003i690f108dh86ff846e4f5fd2fa@mail.gmail.com>
+ <7.1.0.9.2.20080327163522.14ab0ac8@alum.mit.edu>
 Sender: linux-raid-owner@vger.kernel.org
-To: Clive Messer <clive@vacuumtube.org.uk>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: Grant Grundler <grundler@google.com>
 List-Id: linux-raid.ids
 
-Hi Clive, ...
+At 16:45 3/27/2008, Marc Bejarano wrote:
+ >unfortunately, we've already spent longer than we had.  the server
+ >deployment is way overdue and our current plan is to just avoid
+ >problematic drives and punt the problem to seagate.
 
-On Sat, Aug 30, 2008 at 02:30:52PM -0700, Clive Messer wrote:
-> 
-> On Fri, 2008-07-25 at 12:03 -0700, Arthur Jones wrote:
-> > When rescheduling a bio in raid10, we wake up
-> > the md thread, but if the array is frozen, this
-> > will have no effect.  This causes the array to
-> > remain frozen for eternity.  We add a wake_up
-> > to allow the array to de-freeze.  This code is
-> > nearly identical to the raid1 code, which has
-> > this fix already.
-> 
-> Can someone explain this to me in simple terms?
+i fought the good fight to try and get a seagate field application 
+engineer to come on site to investigate or get them to reproduce the 
+issue in their labs, but ultimately failed :(  at least seagate 
+swapped some 70 problematic 7200.10's with equivalent 7200.11's and 
+we haven't seen the presumed head placement issue with these.
 
-The RAID sub-system needs to be able to synchronize
-certain operations, to do this, it "freezes" the
-array, i.e. no I/O will complete until it is un-frozen.
-This bug hit when we failed an I/O while the array
-was frozen.  In this case, we would never tell the
-frozen array that it was time wake up and get back
-to work and the retry would not make progress.
+i give up.  it's now somebody else's problem...
 
-> What will cause a rescheduling of bio?
+fwiw, since this nightmare began, we've been buying hitachis and have 
+had much better luck wrt performance, failure rates, etc.
 
-If the first bio read attempt failed (e.g. broken
-disk -- or, in my case, using fault injection),
-then raid10 will retry the block I/O.
+ >at least the next
+ >time somebody sees similar issues with 3.AAJ and 3.AAK 7200.10's,
+ >they'll know they aren't alone.
 
-> Frozen for eternity - what will be the effect assuming my root file
-> system is on raid10?
+and if you have this problem, feel free to contact me at 781-228-5669 
+and i'll put you in touch with the folks at seagate that it took me 
+forever to get to.  hopefully you'll have better luck getting the 
+dinosaur to react.
 
-The failed I/O will not complete, the process which
-started the I/O will be stuck in an unkillable state
-forever.   Future I/O to the device would be put on
-hold (I guess, I never looked at this directly).
+cheers,
+marc
 
-> I have a Fedora Core 9 box using a 4 disk f2 raid10 array. This is the
-> main partition and root file system. Every couple of days the machine
-> would hard lock. Sometimes I could ssh in. Most of the time not. I never
-> managed to catch anything to the logs with SysRq. With the benefit of
-> hindsight - if the kernel was 'jammed' writing to logfiles on a frozen
-> raid10 array that could explain it. I assumed faulty hardware. I have
-> actually replaced one at a time, (and at considerable expense), the
-> power supply, motherboard, processor, all 4 disks in the array. Still
-> the machine would lock-up. What is interesting is that I have managed 5
-> days uptime since I added this one line patch to
-> 2.6.25.14-108.fc9.x86_64. Could someone confirm for me that it is more
-> than likely that the hard locks I experienced on this machine could be
-> resolved by this one line patch? Has this patch now made it into an
-> official kernel release?
-
-It could be, but since you changed the drives
-and controller, it doesn't seem too likely.  You
-need some sort of failure to trigger this bug.
-Also, Sys-rq still worked fine for me when I
-triggered this bug...
-
-This patch is now in linus' git tree, but it
-looks like it missed 2.6.26, so it won't be in
-an "official" release until 2.6.27...
-
-Arthur
