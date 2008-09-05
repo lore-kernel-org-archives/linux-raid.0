@@ -1,39 +1,44 @@
-From: Ilya Yanok <yanok@emcraft.com>
+From: Wolfgang Denk <wd@denx.de>
 Subject: Re: [PATCH] ASYNC_TX: fix the bug in async_tx_run_dependencies
-Date: Fri, 05 Sep 2008 14:17:22 +0400
-Message-ID: <48C10732.1050009@emcraft.com>
-References: <1220478231-8725-1-git-send-email-yanok@emcraft.com>	 <20080904141945.f5c4c3eb.akpm@linux-foundation.org>	 <e9c3a7c20809041624o24af57fsbe58507a44e6e2ef@mail.gmail.com> <e9c3a7c20809041703h5bf6a007g6dcbe8fb2a5deffd@mail.gmail.com>
+Date: Fri, 05 Sep 2008 15:06:22 +0200
+Message-ID: <20080905130622.4C497248B8@gemini.denx.de>
+References: <1220478231-8725-1-git-send-email-yanok@emcraft.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <e9c3a7c20809041703h5bf6a007g6dcbe8fb2a5deffd@mail.gmail.com>
+In-reply-to: <1220478231-8725-1-git-send-email-yanok@emcraft.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, wd@denx.de, yur@emcraft.com
+To: Ilya Yanok <yanok@emcraft.com>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Yuri Tikhonov <yur@emcraft.com>
 List-Id: linux-raid.ids
 
-Hello,
+Dear Ilya &Yrui,
 
-Dan Williams wrote:
-> Please also take a look at this cleanup patch that I will queue for
-> .28.  I think it makes things easier to read let me know if you
-> disagree.
->   
+In message <1220478231-8725-1-git-send-email-yanok@emcraft.com> you wrote:
+> 
+> Should clear the next pointer of the TX if we are sure that the
+> next TX (say NXT) will be submitted to the channel too. Overwise,
+> we break the chain of descriptors, because we lose the information
+> about the next descriptor to run. So next time, when invoke
+> async_tx_run_dependencies() with TX, it's TX->next will be NULL, and
+> NXT will be never submitted.
+> 
+> Signed-off-by: Yuri Tikhonov <yur@emcraft.com>
+> ---
+>  crypto/async_tx/async_tx.c |    3 ++-
+>  1 files changed, 2 insertions(+), 1 deletions(-)
 
-Look good for me. Hmm, actually I don't think that current version is so
-hard to read...
+What about this patch? SHould it be applied to our repository?
 
-Just one comment:
+Best regards,
 
-> -	if (!next)
-> +	if (dep)
-> +		chan = dep->chan;
-> +	else
->  		return;
->   
+Wolfgang Denk
 
-I don't like 'return' inside 'else'.
-
-Regards, Ilya.
-
+-- 
+DENX Software Engineering GmbH,     MD: Wolfgang Denk & Detlev Zundel
+HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
+Phone: (+49)-8142-66989-10 Fax: (+49)-8142-66989-80 Email: wd@denx.de
+The use of Microsoft crippleware systems is a sin that  carries  with
+it its own punishment.
+         -- Tom Christiansen in <6bo3fr$pj8$5@csnews.cs.colorado.edu>
