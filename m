@@ -1,32 +1,55 @@
-From: Arthur Jones <ajones@riverbed.com>
-Subject: Re: [PATCH] md: raid10: wake up frozen array
-Date: Fri, 5 Sep 2008 10:04:44 -0700
-Message-ID: <20080905170444.GA4543@ajones-laptop.nbttech.com>
-References: <20080725190338.GA27484@ajones-laptop.nbttech.com> <1220131852.19005.77.camel@pc343.objectsoft-systems.ltd.uk> <20080902150703.GA9406@ajones-laptop.nbttech.com> <48C1652C.1080109@tmr.com>
+From: AndrewL733 <AndrewL733@aol.com>
+Subject: Observation about RAID 0 performance in 2.6.25 kernel
+Date: Mon, 08 Sep 2008 09:00:54 -0400
+Message-ID: <48C52206.9060101@aol.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <48C1652C.1080109@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: Clive Messer <clive@vacuumtube.org.uk>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, Neil Brown <neilb@suse.de>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Bill, ...
+I'm wondering if anybody has observed something similar to what I am 
+seeing. For the past year, my production storage systems have primarily 
+been using the 2.6.20.15 kernel (that's what we settled on a while back, 
+and generally I have been happy with it).
 
-On Fri, Sep 05, 2008 at 09:58:20AM -0700, Bill Davidsen wrote:
-> [...]
-> > This patch is now in linus' git tree, but it
-> > looks like it missed 2.6.26, so it won't be in
-> > an "official" release until 2.6.27...
-> >
-> 
-> I would hope that you or Neil would get it into the -stable series ASAP.
-> While rare, this bug is a killer when it strikes.
+About 3 months ago, I began experimenting with the 2.6.25 kernel, 
+because I wanted to use some kernel-specific features that were only 
+introduced in 2.6.23, 2.6.24 and 2.6.25.
 
-That sounds like a good idea to me...  I
-think Neil should send it off if he agrees.
-Neil, what do you think?
+My production systems typically consist of servers with two 3ware 9650 
+12-port RAID cards and 24 SATA drives, 12 drives on each card. For 
+maximum performance, we stripe together the two 12-drive "hardware 
+RAIDS" using Linux software RAID-0. My other hardware includes a very 
+recent motherboard based on the Intel 5400 chipset, with 4 Gen-2 x8 
+PCI-e slots and the 5482 Intel 3.2 Ghz Quad Core CPU with 4 GBs of RAM. 
+In other words, it's very capable hardware.
 
-Arthur
+When comparing the 2.6.20.15 kernel with the 2.6.25 kernel, I have 
+noticed that:
+
+For the underlying 3ware devices, all benchmarks -- dd, bonnie++, and my 
+own "torture test" that measures performance doing many random reads 
+simultaneously -- show that 2.6.25 kernel is about 10 percent faster 
+than the 2.6.20.15 kernel for both reading and writing.
+
+However, when I stripe together those two 3ware devices with Linux 
+software RAID 0, with the 2.6.25 kernel I get about a 20 percent BOOST 
+in  performance for WRITING compared to the 2.6.20.15 kernel, but I get 
+about an 8 percent DROP in READING performance with the 2.6.25 kernel.
+
+My tests have been conducted using the in-kernel 3ware drivers, as well 
+as compiling 3ware's latest drivers for each kernel (so, in the latter 
+case, I have the same 3ware firmware and driver for either kernel). The 
+results are very similar either way.
+
+Does anybody have any insights into what might be going on here? Does 
+Linux software RAID need to be configured differently in 2.6.25 to NOT 
+lose READ performance? Is there something that most be done to vm tuning 
+with 2.6.25? Is there a known issue with 2.6.25 that perhaps has been 
+resolved with 2.6.26?
+
+Regards,
+Andrew
