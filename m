@@ -1,110 +1,89 @@
-From: Richard Michael <rmichael-raid@edgeofthenet.org>
-Subject: Re: Slow RAID5 build on ata_piix vs. fast on sata_mv
-Date: Mon, 8 Sep 2008 17:32:23 -0400
-Message-ID: <20080908213222.GB9484@nexus.edgeofthenet.org>
-References: <20080908175021.GA7730@nexus.edgeofthenet.org>
+From: AndrewL733 <AndrewL733@aol.com>
+Subject: Re: Observation about RAID 0 performance in 2.6.25 kernel
+Date: Mon, 08 Sep 2008 21:04:07 -0400
+Message-ID: <48C5CB87.7060900@aol.com>
+References: <48C52206.9060101@aol.com> <a43edf1b0809080741j72c850f8n6508870ccec01ee7@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20080908175021.GA7730@nexus.edgeofthenet.org>
+In-Reply-To: <a43edf1b0809080741j72c850f8n6508870ccec01ee7@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Billy Crook <billycrook@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Top-posting myself, I changed the motherboard BIOS (from IDE to AHCI)
-and initrd (adding ahci.ko), and the output of lspci makes a bit more
-sense:
+Billy Crook wrote:
+> I would suspect the default IO scheduler changed between those two
+> kernels.  On both systems,
+> [bcrook@bcrook ~]$ cat /sys/block/sda/queue/scheduler
+> noop anticipatory deadline [cfq]
+>
+> I bet you'll get closer matching results it you echo the name of the
+> .20 default scheduler to /sys/block/sda/queue/scheduler on .25
+> Though, it might be worth contrasting the performance of all options
+> on the .25 system.
+>
+> You probably already know this but the io scheduler determines in what
+> order the heads move to get at what parts of the disk in what order.
+> It can greatly impact performance, so choosing the right scheduler,
+> and tuning it, can potentially help a lot.
+>   
+Nice try, but no, both systems are running the deadline scheduler. CFQ?  
+I believe that means "poor performance for all". CFQ is fair, in that it 
+treats every request equally badly!
 
-SATA controller [0106]: Intel Corporation 82801IR/IO/IH (ICH9R/DO/DH)
-  6 port SATA AHCI Controller [8086:2922] (rev 02)
-Kernel driver in use: ahci
-Kernel modules: ahci
+In all seriousness, CFQ is not for this kind of storage server.
 
+Andrew
+> On Mon, Sep 8, 2008 at 08:00, AndrewL733 <AndrewL733@aol.com> wrote:
+>   
+>> I'm wondering if anybody has observed something similar to what I am seeing.
+>> For the past year, my production storage systems have primarily been using
+>> the 2.6.20.15 kernel (that's what we settled on a while back, and generally
+>> I have been happy with it).
+>>
+>> About 3 months ago, I began experimenting with the 2.6.25 kernel, because I
+>> wanted to use some kernel-specific features that were only introduced in
+>> 2.6.23, 2.6.24 and 2.6.25.
+>>
+>> My production systems typically consist of servers with two 3ware 9650
+>> 12-port RAID cards and 24 SATA drives, 12 drives on each card. For maximum
+>> performance, we stripe together the two 12-drive "hardware RAIDS" using
+>> Linux software RAID-0. My other hardware includes a very recent motherboard
+>> based on the Intel 5400 chipset, with 4 Gen-2 x8 PCI-e slots and the 5482
+>> Intel 3.2 Ghz Quad Core CPU with 4 GBs of RAM. In other words, it's very
+>> capable hardware.
+>>
+>> When comparing the 2.6.20.15 kernel with the 2.6.25 kernel, I have noticed
+>> that:
+>>
+>> For the underlying 3ware devices, all benchmarks -- dd, bonnie++, and my own
+>> "torture test" that measures performance doing many random reads
+>> simultaneously -- show that 2.6.25 kernel is about 10 percent faster than
+>> the 2.6.20.15 kernel for both reading and writing.
+>>
+>> However, when I stripe together those two 3ware devices with Linux software
+>> RAID 0, with the 2.6.25 kernel I get about a 20 percent BOOST in
+>>  performance for WRITING compared to the 2.6.20.15 kernel, but I get about
+>> an 8 percent DROP in READING performance with the 2.6.25 kernel.
+>>
+>> My tests have been conducted using the in-kernel 3ware drivers, as well as
+>> compiling 3ware's latest drivers for each kernel (so, in the latter case, I
+>> have the same 3ware firmware and driver for either kernel). The results are
+>> very similar either way.
+>>
+>> Does anybody have any insights into what might be going on here? Does Linux
+>> software RAID need to be configured differently in 2.6.25 to NOT lose READ
+>> performance? Is there something that most be done to vm tuning with 2.6.25?
+>> Is there a known issue with 2.6.25 that perhaps has been resolved with
+>> 2.6.26?
+>>
+>> Regards,
+>> Andrew
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+>>     
 
-However, now the rebuild is even slower, at ~12MB/sec.
-
-A disk on the ICH9R onboard controller (ahci):
-
-# hdparm -tT /dev/sdd
-
-/dev/sdd:
- Timing cached reads:   8030 MB in  2.00 seconds = 4022.76 MB/sec
- Timing buffered disk reads:  166 MB in  3.02 seconds =  54.98 MB/sec
-
-
-A disk on the PCI-X (sata_mv) controller:
-
-# hdparm -tT /dev/sda
-
-/dev/sda:
- Timing cached reads:   8094 MB in  2.00 seconds = 4054.45 MB/sec
- Timing buffered disk reads:  324 MB in  3.01 seconds = 107.73 MB/sec
-
-
-Googling reveals other people with slow AHCI disks on new (> 2.6.23)
-kernels.  Would someone using disks on an AHCI controller and a new
-kernel please send me timed reads?
-
-This doesn't feel like a linux-raid issue anymore, perhaps I should take
-this to the lkml?
-
-Perhaps I've missed something else in the BIOS..
-
-Thanks,
-Richard
-
-
-
-On Mon, Sep 08, 2008 at 01:50:21PM -0400, Richard Michael wrote:
-> On kernel 2.6.26.3 with mdadm 2.6.7, I'm building two RAID5 arrays of
-> three drives each from six Seagate 1TB drives (ST31000340NS) on two
-> different controllers.
-> 
-> Initial creation is rather slow for the array of disks on onboard
-> controller, about ~17MB/sec.  The creation of the array on the PCI-X
-> controller was much faster, about ~90MB/sec.  (Note: the creation is
-> sequential, I'm not creating these two arrays simultaneously.)
-> 
-> Three drives on one array are connected to the onboard SATA controller of
-> an Asus P5EWS Pro motherboard.  lspci shows me two IDE interfaces, one
-> four port and the other two port which I suppose correspond, in total,
-> to the six onboard ports:
-> 
-> Intel Corporation 82801IR/IO/IH (ICH9R/DO/DH)
->   4 port SATA IDE Controller (rev 02)
-> Intel Corporation 82801I (ICH9 Family)
->   2 port SATA IDE Controller (rev 02)
-> 
-> They both use the ata_piix kernel module.
-> 
-> 
-> The other controller is an eight port SuperMicro PCI-X controller,
-> AOC-SAT2-MV8, which has been mentioned on the list in the past:
-> 
-> Marvell Technology Group Ltd. 88SE6145 SATA II PCI-E controller (rev a1)
-> 
-> It uses the sata_mv kernel module.
-> 
-> 
-> I've created both RAID5 arrays with default parameters, using simply:
->   mdadm --create /dev/md2 --raid-devices=3 --level=raid5
->     /dev/sdd2 /dev/sde2 /dev/sdf2
-> 
-> 
-> hdparm shows me all drives are using udma6 (e.g. "hdparm -i /dev/sda"),
-> so I don't think it's a DMA issue (anyway, I've read all SATA drives use
-> DMA.. ?).
-> 
-> It seems like a controller issue.  Perhaps a different driver is
-> available for the onboard Intel controller; or some tunables in libata?
-> 
-> Any suggestions?
-> 
-> Thanks,
-> Richard
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
