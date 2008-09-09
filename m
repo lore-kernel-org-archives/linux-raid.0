@@ -1,31 +1,23 @@
-From: "Jacobo Cabaleiro" <obmun.h@gmail.com>
-Subject: Addition of a partition to an existing RAID1 array overwrites disk partition table
-Date: Tue, 9 Sep 2008 13:46:56 +0200
-Message-ID: <e49f63fe0809090446v326ce59ag9d0095d05f85a43b@mail.gmail.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: drivers/ata/libata-core.c:4732 ata_qc_issue+0x4c/0x2e0
+Date: Tue, 09 Sep 2008 13:46:00 +0200
+Message-ID: <48C661F8.5000709@kernel.org>
+References: <20080909111643.GB6239@deprecation.cyrius.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <20080909111643.GB6239@deprecation.cyrius.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Martin Michlmayr <tbm@cyrius.com>
+Cc: linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, Pietro Abate <Pietro.Abate@pps.jussieu.fr>
 List-Id: linux-raid.ids
 
-U3lzdGVtOiBTdW4gQmxhZGUgMTAwMAoyIHggRnVqaXRzdSBGQy1BTCBkaXNrcyAoMiB4IDcwIEdC
-eXRlcyBhcHByb3guKQpVc2luZyBTdW4gRGlzayBMYWJlbHMKRGViaWFuIExlbm55LCBydW5uaW5n
-IDIuNi4yNi0xLXNwYXJjNjQKClJBSUQgMSBhbHJlYWR5IGNyZWF0ZWQgKC9kZXYvbWQwKSB3aXRo
-IDIgdW5pdHMuIE9uZSBpcyByZW1vdmVkLgovZGV2L3NkYSBpcyBoZWF2aWx5IHBhcnRpdGlvbiAo
-aG9sZHMgc3lzdGVtIHBhcnRpdGlvbnMgKyAxIGJpZyBkYXRhCnBhcnRpdGlvbiAtPiBzZGE4KQov
-ZGV2L3NkYiBoYXMganVzdCB0aGUgZGVmYXVsdCBmZGlzayBsYXlvdXQgZm9yIHRoZSBkaXNrLCB3
-aXRoIGEgYmlnCi9kZXYvc2RiMSwgc21hbGwgL2Rldi9zZGIyIGFuZCB3aG9sZSBkaXNrIG9uIC9k
-ZXYvc2RiMwoKQWZ0ZXIgcnVubmluZyB0aGUgZm9sbG93aW5nIGNvbW1hbmQ6IG1kYWRtIC0tYWRk
-IC9kZXYvbWQwIC9kZXYvc2RiMSwKcmFpZDEgY29ycmVjdGx5IHN0YXJ0cyByZXBsaWNhdGlvbiBv
-ZiB0aGUgYXJyYXkgYnV0IHNvbWVib2R5IG1hZ2ljYWxseQptb2RpZmllcyB0aGUgcGFydGl0aW9u
-IHRhYmxlIG9mIC9kZXYvc2RiISEhISEhIQoKVGFrZSBhIGxvb2sgYXQ6IO+7v2h0dHA6Ly9wYXN0
-ZWJpbi5jb20vbTM0MWVlOTUzLiBSZWFsIHJlc3VsdHMgZXhlY3V0ZWQKc29tZSBtaW51dGVzIGFn
-by4KCklzIHRoZXJlIHNvbWV0aGluZyBvYnZpb3VzIG15IHN0dXBpZCBicmFpbiBpcyBub3Qgc2Vl
-aW5nPyBJJ3ZlIGFscmVhZHkKdHJpZWQgYSBzZWFyY2ggb24ga2VybmVsIGJ1Z3ppbGxhIGFuZCBk
-ZWJpYW4gYnVncywgaGF2aW5nIG5vdCBmb3VuZAphbnl0aGluZyBvZiBpbnRlcmVzdC4gIEJ1ZyAj
-IDQyMTEgaXMgb2J2aW91c2x5IG5vdCB0aGUgcHJvYmxlbSBoZXJlLAphcyBJJ20gYWRkaW5nIHRo
-ZSBwYXJ0aXRpb24gdG8gdGhlIGFycmF5LCBub3QgdGhlIGZ1bGwgZGlzay4gQ2FuIHRoaXMKYmUg
-YSBidWc/CgpUaGFua3MK
+Martin Michlmayr wrote:
+> A Debian user reported the following oops (2.6.26, RAID1 + LVM,
+> running on an ARM platform, sata_mv):
+
+Can you please attach full log?
+
+-- 
+tejun
