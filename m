@@ -1,36 +1,81 @@
-From: Sven Wegener <sven.wegener@stealer.net>
-Subject: md: Check for memory allocation failure in faulty personality
-Date: Wed, 10 Sep 2008 21:42:52 +0200 (CEST)
-Message-ID: <alpine.LNX.2.00.0809102132590.19109@titan.stealer.net>
+From: Tim Janik <timj@imendio.com>
+Subject: mdadm write-behind with --grow
+Date: Thu, 11 Sep 2008 00:34:21 +0200 (CEST)
+Message-ID: <alpine.DEB.1.00.0809110018360.7184@clinker.birnet.private>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Ingo Molnar <mingo@redhat.com>, Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-It's a fault injection module, but I don't think we should oops here.
+On Sun, 08 Jul 2007 18:30:54 -0700, Neil Brown wrote:
+> On Tuesday July 3, Ian Dall wrote:
+> > There doesn't seem to be any designated place to send bug reports and
+> > feature requests to mdadm, so I hope I am doing the right thing by
+> > sending it here.
+> 
+> Yes. Exactly the right thing, thanks.
+> 
+> I have applied the patch and pushed it out into .git.  It will appear
+> in the next release of mdadm.
+> 
+> Thank,
+> NeilBrown
+> 
+> > 
+> > I have a small patch to mdamd which allows the write-behind amount to be
+> > set a array grow time (instead of currently only at grow or create
+> > time). I have tested this fairly extensively on some arrays built out of
+> > loop back devices, and once on a real live array. I haven't lot any data
+> > and it seems to work OK, though it is possible I am missing something.
+> > 
+> > --- mdadm-2.6.1/mdadm.c.writebehind   2006-12-21 16:12:50.000000000 +1030
+> > +++ mdadm-2.6.1/mdadm.c       2007-06-30 13:16:22.000000000 +0930
+> > @@ -827,6 +827,7 @@
+> >                       bitmap_chunk = bitmap_chunk ? bitmap_chunk * 1024 : 512;
+> >                       continue;
+> > 
+> > +             case O(GROW, WriteBehind):
+> >               case O(BUILD, WriteBehind):
+> >               case O(CREATE, WriteBehind): /* write-behind mode */
+> >                       write_behind = DEFAULT_MAX_WRITE_BEHIND;
 
-Signed-off-by: Sven Wegener <sven.wegener@stealer.net>
+This change appears to not be enough:
+
+# mdadm --grow /dev/md0 --write-behind
+mdadm: no changes to --grow
+
+# mdadm -X /dev/sdb1 | fgrep Write
+       Write Mode : Normal
+
+The releavant mdadm code for handling GROW reads:
+         case GROW:
+ 	[...]
+                 else if (bitmap_file) {
+                         if (delay == 0) delay = DEFAULT_BITMAP_DELAY;
+                         rv = Grow_addbitmap(devlist->devname, mdfd, bitmap_file,
+                                             bitmap_chunk, delay, write_behind, force);
+
+So the only way to make use of the newly enabled --write-behind
+for --grow is:
+
+# mdadm --grow /dev/md0 -b internal --write-behind
+mdadm: failed to set internal bitmap.
+
+# mdadm -X /dev/sdb1 | fgrep Write
+       Write Mode : Allow write behind, max 256
+
+
+However the "-b internal" produces an error message
+for devices with persistent superblocks...
+
+Also, mdadm --grow --help doesn't document the use
+of --write-behind (also missing for --build --help and
+  --create --help).
+
+PS: I'm not subscribed to the mailing list, so please CC: me on replies.
+
 ---
- drivers/md/faulty.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
-
-Other personalities return -EIO, when something like this happens, but I 
-don't see a reason why we shouldn't return the more appropriate -ENOMEM 
-here.
-
-diff --git a/drivers/md/faulty.c b/drivers/md/faulty.c
-index 268547d..f26c1f9 100644
---- a/drivers/md/faulty.c
-+++ b/drivers/md/faulty.c
-@@ -287,6 +287,8 @@ static int run(mddev_t *mddev)
- 	int i;
- 
- 	conf_t *conf = kmalloc(sizeof(*conf), GFP_KERNEL);
-+	if (!conf)
-+		return -ENOMEM;
- 
- 	for (i=0; i<Modes; i++) {
- 		atomic_set(&conf->counters[i], 0);
+ciaoTJ
