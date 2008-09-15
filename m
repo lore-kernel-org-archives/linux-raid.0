@@ -1,79 +1,271 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: Expandable raid
-Date: Sun, 14 Sep 2008 12:29:24 -0400
-Message-ID: <48CD3BE4.6070709@tmr.com>
-References: <48CBDC40.1010505@tmr.com> <18636.62107.274386.224236@tree.ty.sabi.co.uk>
+From: Maarten <maarten@ultratux.net>
+Subject: Raid6 array crashed-- 4-disk failure...(?)
+Date: Mon, 15 Sep 2008 11:04:12 +0200
+Message-ID: <48CE250C.8000603@ultratux.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18636.62107.274386.224236@tree.ty.sabi.co.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Peter Grandi <pg_lxra@lxra.for.sabi.co.UK>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Peter Grandi wrote:
->> I am setting up a system with five drives. Initially two will
->> be for the system and three for other uses. In about 4-6 weeks
->> the three will be added to the original two.
->>     
->
-> What does "added" mean here? Physically? Logically? If logically,
-> in what way? And what's the starting point?  If you start with 5
-> drives, why configure them initially as 2 arrays, and then merge
-> later into 1 array? The exact array shapes involved matter.
->
->   
-Means I have five drives and need three for a project so they can't be 
-part of the original system configuration. I will put system on two, and 
-add the others after the project requiring them is complete.
->> Thoughts on picking a raid config to make this easy? I would
->> like to use raid-10, but I don't see a way to grow it.
->>     
->
-> What's "this"? Do you want to end up with a 5-drive array? If
-> so, where are you going to put the boot filesystem (most BIOSes
-> require single drive boot filesystems) unless it is a 5 drive
-> RAID1? In which case, growing is easy :-).
->   
 
-I always put the boot filesystem on raid1, over the first two drives (as 
-seen by the BIOS). That way if one fails the BIOS boots the other. Once 
-the system is up I can have the rest of the data as I want it. Generally 
-a 200-200MB boot partition is adequate, with MBR written to both drives.
-> More generally, my usual story: growing an array is a dangerous
-> and slow operation. Backup and restore is usually a lot faster,
-> results in a better physical to logical layout, and safer (and
-> one should backup anyhow before growing).
->   
+This weekend I promoted my new 6-disk raid6 array to production use and 
+was busy copying data to it overnight. The next morning the machine had 
+crashed, and the array is down with an (apparent?) 4-disk failure, as 
+witnessed by this info:
 
-If I had the resources for backup space I would have just put more 
-drives in the box, used a bigger box, etc. I'm looking for proposed 
-solutions to the problem I have, rather than ways to avoid having the 
-problem if I had resources I don't have.
-> BTW I was just looking at his home page for other reasons (NFSv4)
-> and noticed this:
->
->   http://neil.brown.name/hg
->
->     "LaFS Log Structured File system for Linux - VERY alpha
->      Neil Brown 7 weeks ago RSS".
->   
+md5 : inactive sdj1[2](S) sdb1[5](S) sda1[4](S) sdf1[3](S) sdc1[1](S) 
+sdk1[0](S)
+       2925435648 blocks
 
-Not really very descriptive, the filesystem which interests me at the 
-moment is the one Compaq released from their UNIX on Alpha o/s, Tru64 
-IIRC. It has the advantage of having been in enterprise use for about a 
-decade, and gets good marks from people I actually know and trust. 
-Compared to Reiser4, ZFS, and even XFS (from what I hear) it seems to 
-offer good real world performance without guru-level tuning and initial 
-setup.
+apoc ~ # mdadm --assemble /dev/md5 /dev/sd[abcfjk]1
+mdadm: /dev/md5 assembled from 2 drives - not enough to start the array.
 
-Always interesting, of course.
+apoc log # fdisk -l|grep 4875727
+/dev/sda1        1       60700   487572718+  fd  Linux raid autodetect
+/dev/sdb1        1       60700   487572718+  fd  Linux raid autodetect
+/dev/sdc1        1       60700   487572718+  fd  Linux raid autodetect
+/dev/sdf1        1       60700   487572718+  fd  Linux raid autodetect
+/dev/sdj1        1       60700   487572718+  fd  Linux raid autodetect
+/dev/sdk1        1       60700   487572718+  fd  Linux raid autodetect
 
--- 
-Bill Davidsen <davidsen@tmr.com>
-  "Woe unto the statesman who makes war without a reason that will still
-  be valid when the war is over..." Otto von Bismark 
+apoc log # mdadm --examine /dev/sd[abcfjk]1|grep Events
+          Events : 0.1057345
+          Events : 0.1057343
+          Events : 0.1057343
+          Events : 0.1057343
+          Events : 0.1057345
+          Events : 0.1057343
+
+Note: the array was built half-degraded, ie. it misses one disk. This is 
+how it was displayed when it was still OK yesterday:
+
+md5 : active raid6 sdk1[0] sdj1[2] sdf1[3] sdc1[1] sdb1[5] sda1[4]
+       2437863040 blocks level 6, 64k chunk, algorithm 2 [7/6] [UUUUUU_]
+
+
+By these event counters, one would maybe assume that 4 disks failed 
+simultaneously, however weird this may be. But when looking at the other 
+info of the examine command, this seems unlikely: all drives report (I 
+think) that they were online until the end, except for two drives. The 
+first drive of those two is the one that reports it has failed. The 
+second is the one that 'sees' that that first drive did fail. All the 
+others seem oblivious to that...  I included that data below at the end.
+
+My questions...
+
+1) Is my analysis correct so far ?
+2) Can/should I try to assemble --force, or it that very bad in these 
+circumstances?
+3) Should I say farewell to my ~2400 GB of data ? :-(
+4) If it was only a one-drive failure, why did it kill the array ?
+5) Any insight as to how this happened / can be prevented in future ?
+
+Thanks in advance !
+Maarten
+
+
+
+apoc log # mdadm --examine /dev/sd[abcfjk]1
+/dev/sda1:
+           Magic : a92b4efc
+         Version : 00.90.00
+            UUID : 999c61f3:c632ab84:b78500dd:1e5b1429
+   Creation Time : Sun Jan 13 18:10:14 2008
+      Raid Level : raid6
+   Used Dev Size : 487572608 (464.99 GiB 499.27 GB)
+      Array Size : 2437863040 (2324.93 GiB 2496.37 GB)
+    Raid Devices : 7
+   Total Devices : 6
+Preferred Minor : 5
+
+     Update Time : Mon Sep 15 05:17:07 2008
+           State : active
+  Active Devices : 5
+Working Devices : 5
+  Failed Devices : 1
+   Spare Devices : 0
+        Checksum : 8c5374ca - correct
+          Events : 0.1057345
+
+      Chunk Size : 64K
+
+       Number   Major   Minor   RaidDevice State
+this     4       8        1        4      active sync   /dev/sda1
+
+    0     0       0        0        0      removed
+    1     1       8       33        1      active sync   /dev/sdc1
+    2     2       8      145        2      active sync   /dev/sdj1
+    3     3       8       81        3      active sync   /dev/sdf1
+    4     4       8        1        4      active sync   /dev/sda1
+    5     5       8       17        5      active sync   /dev/sdb1
+    6     6       0        0        6      faulty removed
+/dev/sdb1:
+           Magic : a92b4efc
+         Version : 00.90.00
+            UUID : 999c61f3:c632ab84:b78500dd:1e5b1429
+   Creation Time : Sun Jan 13 18:10:14 2008
+      Raid Level : raid6
+   Used Dev Size : 487572608 (464.99 GiB 499.27 GB)
+      Array Size : 2437863040 (2324.93 GiB 2496.37 GB)
+    Raid Devices : 7
+   Total Devices : 6
+Preferred Minor : 5
+
+     Update Time : Mon Sep 15 05:16:06 2008
+           State : active
+  Active Devices : 6
+Working Devices : 6
+  Failed Devices : 1
+   Spare Devices : 0
+        Checksum : 8c53748e - correct
+          Events : 0.1057343
+
+      Chunk Size : 64K
+
+       Number   Major   Minor   RaidDevice State
+this     5       8       17        5      active sync   /dev/sdb1
+
+    0     0       8      161        0      active sync   /dev/sdk1
+    1     1       8       33        1      active sync   /dev/sdc1
+    2     2       8      145        2      active sync   /dev/sdj1
+    3     3       8       81        3      active sync   /dev/sdf1
+    4     4       8        1        4      active sync   /dev/sda1
+    5     5       8       17        5      active sync   /dev/sdb1
+    6     6       0        0        6      faulty removed
+/dev/sdc1:
+           Magic : a92b4efc
+         Version : 00.90.00
+            UUID : 999c61f3:c632ab84:b78500dd:1e5b1429
+   Creation Time : Sun Jan 13 18:10:14 2008
+      Raid Level : raid6
+   Used Dev Size : 487572608 (464.99 GiB 499.27 GB)
+      Array Size : 2437863040 (2324.93 GiB 2496.37 GB)
+    Raid Devices : 7
+   Total Devices : 6
+Preferred Minor : 5
+
+     Update Time : Mon Sep 15 05:16:06 2008
+           State : active
+  Active Devices : 6
+Working Devices : 6
+  Failed Devices : 1
+   Spare Devices : 0
+        Checksum : 8c537496 - correct
+          Events : 0.1057343
+
+      Chunk Size : 64K
+
+       Number   Major   Minor   RaidDevice State
+this     1       8       33        1      active sync   /dev/sdc1
+
+    0     0       8      161        0      active sync   /dev/sdk1
+    1     1       8       33        1      active sync   /dev/sdc1
+    2     2       8      145        2      active sync   /dev/sdj1
+    3     3       8       81        3      active sync   /dev/sdf1
+    4     4       8        1        4      active sync   /dev/sda1
+    5     5       8       17        5      active sync   /dev/sdb1
+    6     6       0        0        6      faulty removed
+/dev/sdf1:
+           Magic : a92b4efc
+         Version : 00.90.00
+            UUID : 999c61f3:c632ab84:b78500dd:1e5b1429
+   Creation Time : Sun Jan 13 18:10:14 2008
+      Raid Level : raid6
+   Used Dev Size : 487572608 (464.99 GiB 499.27 GB)
+      Array Size : 2437863040 (2324.93 GiB 2496.37 GB)
+    Raid Devices : 7
+   Total Devices : 6
+Preferred Minor : 5
+
+     Update Time : Mon Sep 15 05:16:06 2008
+           State : active
+  Active Devices : 6
+Working Devices : 6
+  Failed Devices : 1
+   Spare Devices : 0
+        Checksum : 8c5374ca - correct
+          Events : 0.1057343
+
+      Chunk Size : 64K
+
+       Number   Major   Minor   RaidDevice State
+this     3       8       81        3      active sync   /dev/sdf1
+
+    0     0       8      161        0      active sync   /dev/sdk1
+    1     1       8       33        1      active sync   /dev/sdc1
+    2     2       8      145        2      active sync   /dev/sdj1
+    3     3       8       81        3      active sync   /dev/sdf1
+    4     4       8        1        4      active sync   /dev/sda1
+    5     5       8       17        5      active sync   /dev/sdb1
+    6     6       0        0        6      faulty removed
+/dev/sdj1:
+           Magic : a92b4efc
+         Version : 00.90.00
+            UUID : 999c61f3:c632ab84:b78500dd:1e5b1429
+   Creation Time : Sun Jan 13 18:10:14 2008
+      Raid Level : raid6
+   Used Dev Size : 487572608 (464.99 GiB 499.27 GB)
+      Array Size : 2437863040 (2324.93 GiB 2496.37 GB)
+    Raid Devices : 7
+   Total Devices : 6
+Preferred Minor : 5
+
+     Update Time : Mon Sep 15 05:17:07 2008
+           State : active
+  Active Devices : 5
+Working Devices : 5
+  Failed Devices : 1
+   Spare Devices : 0
+        Checksum : 8c537556 - correct
+          Events : 0.1057345
+
+      Chunk Size : 64K
+
+       Number   Major   Minor   RaidDevice State
+this     2       8      145        2      active sync   /dev/sdj1
+
+    0     0       0        0        0      removed
+    1     1       8       33        1      active sync   /dev/sdc1
+    2     2       8      145        2      active sync   /dev/sdj1
+    3     3       8       81        3      active sync   /dev/sdf1
+    4     4       8        1        4      active sync   /dev/sda1
+    5     5       8       17        5      active sync   /dev/sdb1
+    6     6       0        0        6      faulty removed
+/dev/sdk1:
+           Magic : a92b4efc
+         Version : 00.90.00
+            UUID : 999c61f3:c632ab84:b78500dd:1e5b1429
+   Creation Time : Sun Jan 13 18:10:14 2008
+      Raid Level : raid6
+   Used Dev Size : 487572608 (464.99 GiB 499.27 GB)
+      Array Size : 2437863040 (2324.93 GiB 2496.37 GB)
+    Raid Devices : 7
+   Total Devices : 6
+Preferred Minor : 5
+
+     Update Time : Mon Sep 15 05:16:06 2008
+           State : active
+  Active Devices : 6
+Working Devices : 6
+  Failed Devices : 1
+   Spare Devices : 0
+        Checksum : 8c537514 - correct
+          Events : 0.1057343
+
+      Chunk Size : 64K
+
+       Number   Major   Minor   RaidDevice State
+this     0       8      161        0      active sync   /dev/sdk1
+
+    0     0       8      161        0      active sync   /dev/sdk1
+    1     1       8       33        1      active sync   /dev/sdc1
+    2     2       8      145        2      active sync   /dev/sdj1
+    3     3       8       81        3      active sync   /dev/sdf1
+    4     4       8        1        4      active sync   /dev/sda1
+    5     5       8       17        5      active sync   /dev/sdb1
+    6     6       0        0        6      faulty removed
 
 
