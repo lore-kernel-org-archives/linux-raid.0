@@ -1,72 +1,151 @@
-From: Andre Noll <maan@systemlinux.org>
+From: Maarten <maarten@ultratux.net>
 Subject: Re: Raid6 array crashed-- 4-disk failure...(?)
-Date: Mon, 15 Sep 2008 14:59:51 +0200
-Message-ID: <20080915125951.GA17966@skl-net.de>
-References: <48CE250C.8000603@ultratux.net>
+Date: Mon, 15 Sep 2008 18:32:40 +0200
+Message-ID: <48CE8E28.8030705@ultratux.net>
+References: <48CE250C.8000603@ultratux.net> <18638.13844.94632.293014@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="bp/iNruPH9dso1Pn"
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <48CE250C.8000603@ultratux.net>
+In-Reply-To: <18638.13844.94632.293014@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Maarten <maarten@ultratux.net>
+To: Neil Brown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Neil Brown wrote:
+> On Monday September 15, maarten@ultratux.net wrote:
+>> This weekend I promoted my new 6-disk raid6 array to production use and 
+>> was busy copying data to it overnight. The next morning the machine had 
+>> crashed, and the array is down with an (apparent?) 4-disk failure, as 
+>> witnessed by this info:
+> 
+> Pity about that crash.  I don't suppose there are any useful kernel
+> logs leading up to it.  Maybe the machine needs more burn-in testing
+> before going into production?
 
---bp/iNruPH9dso1Pn
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+The thing is, I tested the array for months on a new install that was 
+running on spare hardware. Then this weekend I swapped the new OS 
+together with the new disks to the fileserver. The fileserver was 
+running well on the old OS. So indeed, maybe there is a mismatch between 
+the new kernel and the hardware... But I did test-drive the raid-6 code 
+for a couple of months.
 
-On 11:04, Maarten wrote:
->=20
-> This weekend I promoted my new 6-disk raid6 array to production use and=
-=20
-> was busy copying data to it overnight. The next morning the machine had=
-=20
-> crashed, and the array is down with an (apparent?) 4-disk failure, as=20
-> witnessed by this info:
+>> md5 : inactive sdj1[2](S) sdb1[5](S) sda1[4](S) sdf1[3](S) sdc1[1](S) 
+>> sdk1[0](S)
+>>        2925435648 blocks
+> 
+> That suggests that the kernel tried to assemble the array, but failed
+> because it was too degraded.
+> 
+>> apoc ~ # mdadm --assemble /dev/md5 /dev/sd[abcfjk]1
+>> mdadm: /dev/md5 assembled from 2 drives - not enough to start the array.
+>>
+>> apoc log # fdisk -l|grep 4875727
+>> /dev/sda1        1       60700   487572718+  fd  Linux raid autodetect
+>> /dev/sdb1        1       60700   487572718+  fd  Linux raid autodetect
+>> /dev/sdc1        1       60700   487572718+  fd  Linux raid autodetect
+>> /dev/sdf1        1       60700   487572718+  fd  Linux raid autodetect
+>> /dev/sdj1        1       60700   487572718+  fd  Linux raid autodetect
+>> /dev/sdk1        1       60700   487572718+  fd  Linux raid autodetect
+>>
+>> apoc log # mdadm --examine /dev/sd[abcfjk]1|grep Events
+>>           Events : 0.1057345
+>>           Events : 0.1057343
+>>           Events : 0.1057343
+>>           Events : 0.1057343
+>>           Events : 0.1057345
+>>           Events : 0.1057343
+>>
+> 
+> So sda1 and sdj1 are newer, but not by much.
+> Looking at the full --examine output below, the time difference
+> between 1057343 and 1057345 is 61 seconds.  That is probably one or
+> two device timeouts.
 
-Believe it or not: The same thing (6-disk raid6, 4 disks failed)
-happened also to me during this weekend.
+Ah. How can you tell, I did not know this...
 
-> 4) If it was only a one-drive failure, why did it kill the array ?
+> 'a' and 'j' think that 'k' failed and was removed.  Everyone else
+> think that the world is a happy place.
+> 
+> So I suspect that an IO to k failed, and the attempt to update the
+> metadata worked on 'a' and 'j' but not anywhere else.  So then the
+> array just stopped.  When md tried to update 'a' and 'j' with the new
+> failure information, it failed on them as well.
+> 
+>> Note: the array was built half-degraded, ie. it misses one disk. This is 
+>> how it was displayed when it was still OK yesterday:
+>>
+>> md5 : active raid6 sdk1[0] sdj1[2] sdf1[3] sdc1[1] sdb1[5] sda1[4]
+>>        2437863040 blocks level 6, 64k chunk, algorithm 2 [7/6] [UUUUUU_]
+>>
+>>
+>> By these event counters, one would maybe assume that 4 disks failed 
+>> simultaneously, however weird this may be. But when looking at the other 
+>> info of the examine command, this seems unlikely: all drives report (I 
+>> think) that they were online until the end, except for two drives. The 
+>> first drive of those two is the one that reports it has failed. The 
+>> second is the one that 'sees' that that first drive did fail. All the 
+>> others seem oblivious to that...  I included that data below at the end.
+> 
+> Not quite.  'k' is reported as failed, 'a' 'and 'j' know this.
+> 
+> 
+>> My questions...
+>>
+>> 1) Is my analysis correct so far ?
+> 
+> Not exactly, but fairly close.
+> 
+>> 2) Can/should I try to assemble --force, or it that very bad in these 
+>> circumstances?
+> 
+> Yes, you should assemble with --force.  The evidence is strong that
+> nothing was successfully written after 'k' failed, so all the data
+> should be consistent.  You will need to sit through a recovery with
+> probably won't make any changes, but it is certainly safest to let it
+> try.
+> 
+> 
+>> 3) Should I say farewell to my ~2400 GB of data ? :-(
+> 
+> Not yet.
+> 
+>> 4) If it was only a one-drive failure, why did it kill the array ?
+> 
+> It wasn't just one drive.  Maybe it was a controller/connector
+> failure.  Maybe when one drive failed it did bad things to the buss.
+> It is hard to know for sure.
+> Are these drives SATA or SCSI or SAS or ???
 
-As others have already pointed out, this was not a one-drive
-failure. In my case, the two SATA disks which are still functional
-are connected to a 3ware controller while the four failed disks use
-the onboard SATA controller [1]. Therefore I'm confident that this
-is just a problem with the onboard SATA chip and that the array can
-be assembled again after a reboot. I'll have to wait until the end
-of the week to reboot that machine though.
+Eh, SATA. The machine has 4 4-port SATA controllers on 33MHz PCI busses.
+Yes, that kills performance, but what can you do. It still outperforms 
+the network.
+Re-seating the PCI cards may be a good idea. However, I think (am sure) 
+the drives were not on the same controllers: a thru d are on card #1, e 
+thru h on the second card, etc.
 
-Are you also using an Intel-based SATA chip (please send the output
-of lspci -v)?  Also, which kernel version are you using?
+>> 5) Any insight as to how this happened / can be prevented in future ?
+> 
+> See above.
+> You need to identify the failing component and correct it - either
+> replace or re-seat or whatever is needed.
+> Finding the failing component is not easy.   Lots of burn-in testing
+> and catching any kernel logs if/when it crashes is your best bet.
 
-> 5) Any insight as to how this happened / can be prevented in future ?
+Ok, I'll read up on using the MagicSysRQ, too. The logs were completely 
+empty at the time of the crash and the keyboard was unresponsive, so it 
+was a full kernel panic.
 
-Don't use cheap hardware (Fast, cheap, good. Pick two) ;)
+> Good luck.
 
-Andre
+Thanks for your help Neil !
 
-[1] 00:1f.2 SATA controller: Intel Corporation 631xESB/632xESB SATA
-Storage Controller AHCI (rev 09)
---=20
-The only person who always got his work done by Friday was Robinson Crusoe
+Maarten
 
---bp/iNruPH9dso1Pn
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
+> NeilBrown
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
-
-iD8DBQFIzlxHWto1QDEAkw8RAin/AKCZ6BtL823kFB+eMXWSRtGwxpfiCgCcDEpE
-h9Y7f0O+R8By1bQR/YEGXWk=
-=HzUs
------END PGP SIGNATURE-----
-
---bp/iNruPH9dso1Pn--
