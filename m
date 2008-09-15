@@ -1,126 +1,93 @@
 From: Maarten <maarten@ultratux.net>
 Subject: Re: Raid6 array crashed-- 4-disk failure...(?)
-Date: Mon, 15 Sep 2008 18:57:53 +0200
-Message-ID: <48CE9411.4060201@ultratux.net>
-References: <48CE250C.8000603@ultratux.net> <18638.16613.435533.269946@tree.ty.sabi.co.uk>
+Date: Mon, 15 Sep 2008 19:14:57 +0200
+Message-ID: <48CE9811.60307@ultratux.net>
+References: <48CE250C.8000603@ultratux.net> <20080915125951.GA17966@skl-net.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18638.16613.435533.269946@tree.ty.sabi.co.uk>
+In-Reply-To: <20080915125951.GA17966@skl-net.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Peter Grandi <pg_lxra@lxra.for.sabi.co.UK>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: Andre Noll <maan@systemlinux.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Peter Grandi wrote:
->> This weekend I promoted my new 6-disk raid6 array to
->> production use and was busy copying data to it overnight. The
->> next morning the machine had crashed, and the array is down
->> with an (apparent?) 4-disk failure, [ ... ]
+Andre Noll wrote:
+> On 11:04, Maarten wrote:
+>> This weekend I promoted my new 6-disk raid6 array to production use and 
+>> was busy copying data to it overnight. The next morning the machine had 
+>> crashed, and the array is down with an (apparent?) 4-disk failure, as 
+>> witnessed by this info:
 > 
-> Multiple drive failures are far more common than people expect,
-> and the problem lies in people's expectations, because they don't
-> do common mode analysis (what's what? many will think).
+> Believe it or not: The same thing (6-disk raid6, 4 disks failed)
+> happened also to me during this weekend.
 
-It IS more common indeed. I'm on my seventh or eight raid-5 array now, 
-the first was a 4-disk raid5 40(120) GB array. I've had 4 or 5 two-disk 
-failures happen to me over the years, invariably during rebuild, indeed.
-This is why I'm switching over to raid-6, by the way.
+Hehe. It doesn't get more scary than this.... ;-)
 
-I did not, at any point, lose the array with the two-disk failures 
-though. I intelligently cloned bad drives with dd_rescue and reassembled 
-those degraded arrays using the new disks and thus got my data back.
-But still, such events tend to keep me busy for a whole weekend, which 
-is not too pleasant.
-
-> They typically happen all at once at power up, or in short
-> succession (e.g. 2nd drive fails while syncing to recover from
-> 1st failure).
+>> 4) If it was only a one-drive failure, why did it kill the array ?
 > 
-> The typical RAID has N drives from the same manufacturer, of the
-> same model, with nearly contiguous serial numbers, from the same
-> shipping carton, in an enclosure where they all are started and
-> stopped at the same time, run on the same power circuit, at the
-> same temperature, on much the same load, attached to the same
-> host adapter or N of the same type. Expecting as many do to have
-> uncorrelated failures is rather comical.
-
-This is true. However, since I know this fact I tend to take care to not 
-make it too vulnerable; the system is incredibly well cooled, it has 8 
-80mm fans that cool the 16(!) disks, I buy disks in batches of 2, from 
-different brands and vendors. It indeed has just one PSU, but I chose a 
-good one, I think it's a Tagan 550 Watt unit.
-
-In fact -this is my home system- since I cannot afford a DLT drive for 
-this much data I practically have no backup, so I really spend a lot of 
-effort making sure the array stays ok. Yes, I know, this not a good 
-idea, but how do I economically backup 3 TB ?
-In practice I have older disks and/or decommisioned arrays with 
-"backups" but this is of course not up to date at all.
-
-> 1) Is my analysis correct so far ?
+> As others have already pointed out, this was not a one-drive
+> failure. In my case, the two SATA disks which are still functional
+> are connected to a 3ware controller while the four failed disks use
+> the onboard SATA controller [1]. Therefore I'm confident that this
+> is just a problem with the onboard SATA chip and that the array can
+> be assembled again after a reboot. I'll have to wait until the end
+> of the week to reboot that machine though.
 > 
-> Not so sure :-). Consider this interesting discrepancy:
+> Are you also using an Intel-based SATA chip (please send the output
+> of lspci -v)?  Also, which kernel version are you using?
+
+No, my chipset is a VIA one. Because the VIA SATA chips/drivers are 
+terrible, I use only SATA PCI cards with Sil chipsets.  Believe it or 
+not I have good/excellent experiences with these. The driver is quite 
+stable, better than everything else I tried.
+
+apoc log # lspci
+00:00.0 Host bridge: VIA Technologies, Inc. VT8377 [KT400/KT600 AGP] 
+Host Bridge (rev 80)
+00:01.0 PCI bridge: VIA Technologies, Inc. VT8237 PCI Bridge
+00:07.0 RAID bus controller: Silicon Image, Inc. SiI 3114 
+[SATALink/SATARaid] Serial ATA Controller (rev 02)
+00:08.0 RAID bus controller: Silicon Image, Inc. SiI 3114 
+[SATALink/SATARaid] Serial ATA Controller (rev 02)
+00:09.0 RAID bus controller: Silicon Image, Inc. SiI 3114 
+[SATALink/SATARaid] Serial ATA Controller (rev 02)
+00:0a.0 RAID bus controller: Silicon Image, Inc. SiI 3124 PCI-X Serial 
+ATA Controller (rev 02)
+00:0b.0 Ethernet controller: Realtek Semiconductor Co., Ltd. RTL-8169 
+Gigabit Ethernet (rev 10)
+00:0f.0 IDE interface: VIA Technologies, Inc. 
+VT82C586A/B/VT82C686/A/B/VT823x/A/C PIPC Bus Master IDE (rev 06)
+00:11.0 ISA bridge: VIA Technologies, Inc. VT8237 ISA bridge 
+[KT600/K8T800/K8T890 South]
+01:00.0 VGA compatible controller: ATI Technologies Inc Rage XL AGP 2X 
+(rev 65)
+
+Linux apoc 2.6.23-gentoo-r3 #2 Fri Apr 25 11:09:37 CEST 2008 i686 AMD 
+Sempron(tm) 2200+ AuthenticAMD GNU/Linux
+
+
+>> 5) Any insight as to how this happened / can be prevented in future ?
 > 
->   /dev/sda1:
->   [ ... ]
->       Raid Devices : 7
->      Total Devices : 6
->   [ ... ]
->     Active Devices : 5
->   Working Devices : 5
-> 
->   /dev/sdb1:
->   [ ... ]
->       Raid Devices : 7
->      Total Devices : 6
->   [ ... ]
->     Active Devices : 6
->   Working Devices : 6
-> 
-> Also note that member 0, 'sdk1' is listed as "removed", but not
-> faulty, in some member statuses. However you have been able to
-> actually get the status out of all members, including 'sdk1',
-> which reports itself as 'active', like all other drives as of
-> 5:16. Then only 2 drives report themselves as 'active' as of
-> 5:17, and those think that the array has 5 'active'/'working'
-> devices at that time. What happened between 5:16 and 5:17?
+> Don't use cheap hardware (Fast, cheap, good. Pick two) ;)
 
-Don't know, I was asleep ;-)
-Seriously, the system experienced a hard crash. Not even the keyboard 
-responded to the capslock key/led anymore. Logs are empty.
+How true. In this case I think(or hope) I went for "cheap, good"... 
+Sixteen disks on 4 PCI slots (but still a single PCI bus!) is far from 
+fast indeed. ;-) I get a rebuild speed of 20436K/sec on a 5-disk raid5 
+array (SATA 250 GB disks), which is not terrible, but not fast either.
 
-> You should look at your system log to figure out what really
-> happened to your drives and then assess what the cause of the
-> failure was and its impact.
+I'm considering a 8/12/16 port Areca controller but a few practicalities 
+hold me back: the price, and the fact I would need a PCI-X slot unless I 
+want to kill performance by a factor of 10. Also, the fact that I then 
+cannot use software raid anymore tends to scare me a little: You never 
+know how firmware reacts in the more 'interesting' circumstances, and 
+you lose control over it...
 
-Syslogs are empty. Not one line nor even a hint at that time.
-
-> 3) Should I say farewell to my ~2400 GB of data ? :-(
-> 
-> Surely not -- you have a backup of those 2400GB, as obvious from
-> "busy copying data to it". RAID is not backup anyhow :-).
-
-Yes I have most of the data. What I'd lose is ~20 GB, which is less than 
-one percent ;-).  But still, it's a lot of bytes...
-
-> 4) If it was only a one-drive failure, why did it kill the array ?
-> 
-> The MD subsystem marked as bad more than one drive. Anyhow doing
-> a 5+2 RAID6 and then loading it with data with a checksum drive
-> missing and at the same time as it syncing seems a bit too clever
-> to me. Right now the array is running in effect in RAID0 mode, so
-> I would not trust it even if you are able to restart it.
-
-Just bought a seventh/replacement disk...  But if the array is lost that 
-is of little use.  I'll try to reassemble later tonight...
-
-Thanks,
 Maarten
 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Andre
+> 
+> [1] 00:1f.2 SATA controller: Intel Corporation 631xESB/632xESB SATA
+> Storage Controller AHCI (rev 09)
 
