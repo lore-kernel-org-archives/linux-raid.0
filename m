@@ -1,129 +1,99 @@
-From: Richard Michael <rmichael-raid@edgeofthenet.org>
-Subject: Re: Slow RAID5 build on ata_piix vs. fast on sata_mv
-Date: Mon, 15 Sep 2008 23:16:01 -0400
-Message-ID: <20080916031601.GC24791@nexus.edgeofthenet.org>
-References: <20080908175021.GA7730@nexus.edgeofthenet.org> <20080908213222.GB9484@nexus.edgeofthenet.org>
+From: Andre Noll <maan@systemlinux.org>
+Subject: Re: Raid6 array crashed-- 4-disk failure...(?)
+Date: Tue, 16 Sep 2008 10:25:10 +0200
+Message-ID: <20080916082509.GA17300@skl-net.de>
+References: <48CE250C.8000603@ultratux.net> <20080915125951.GA17966@skl-net.de> <48CE9811.60307@ultratux.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="sdtB3X0nJg68CQEu"
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20080908213222.GB9484@nexus.edgeofthenet.org>
+In-Reply-To: <48CE9811.60307@ultratux.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Maarten <maarten@ultratux.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I'll reply to myself again, since I've solved the issue and figure it
-might as well go into archives somewhere. :)
 
-After discovering Adaptec acknowledged an issue these (and related)
-drives on their controllers and provides updated drive firmware on their
-website, I guess-timated a drive issue.  I obtained the new SN05
-firmware directly from Seagate and the drives are performing much faster
-on the Intel controller.
+--sdtB3X0nJg68CQEu
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-For good measure, I flashed the other three drives (on the Marvell
-chipset controller), and they're still fine too.
+On 19:14, Maarten wrote:
+> >Are you also using an Intel-based SATA chip (please send the output
+> >of lspci -v)?  Also, which kernel version are you using?
+>=20
+> No, my chipset is a VIA one. Because the VIA SATA chips/drivers are=20
+> terrible, I use only SATA PCI cards with Sil chipsets.  Believe it or=20
+> not I have good/excellent experiences with these. The driver is quite=20
+> stable, better than everything else I tried.
+>=20
+> apoc log # lspci
+> 00:00.0 Host bridge: VIA Technologies, Inc. VT8377 [KT400/KT600 AGP]=20
+> Host Bridge (rev 80)
+> 00:01.0 PCI bridge: VIA Technologies, Inc. VT8237 PCI Bridge
+> 00:07.0 RAID bus controller: Silicon Image, Inc. SiI 3114=20
+> [SATALink/SATARaid] Serial ATA Controller (rev 02)
+> 00:08.0 RAID bus controller: Silicon Image, Inc. SiI 3114=20
+> [SATALink/SATARaid] Serial ATA Controller (rev 02)
+> 00:09.0 RAID bus controller: Silicon Image, Inc. SiI 3114=20
+> [SATALink/SATARaid] Serial ATA Controller (rev 02)
+> 00:0a.0 RAID bus controller: Silicon Image, Inc. SiI 3124 PCI-X Serial=20
+> ATA Controller (rev 02)
+> 00:0b.0 Ethernet controller: Realtek Semiconductor Co., Ltd. RTL-8169=20
+> Gigabit Ethernet (rev 10)
+> 00:0f.0 IDE interface: VIA Technologies, Inc.=20
+> VT82C586A/B/VT82C686/A/B/VT823x/A/C PIPC Bus Master IDE (rev 06)
+> 00:11.0 ISA bridge: VIA Technologies, Inc. VT8237 ISA bridge=20
+> [KT600/K8T800/K8T890 South]
+> 01:00.0 VGA compatible controller: ATI Technologies Inc Rage XL AGP 2X=20
+> (rev 65)
+>=20
+> Linux apoc 2.6.23-gentoo-r3 #2 Fri Apr 25 11:09:37 CEST 2008 i686 AMD=20
+> Sempron(tm) 2200+ AuthenticAMD GNU/Linux
 
-Richard
+My machine is running vanilla 2.6.25.4, i.e. we're using different
+SATA drivers and different kernels.
 
-On Mon, Sep 08, 2008 at 05:32:23PM -0400, Richard Michael wrote:
-> Top-posting myself, I changed the motherboard BIOS (from IDE to AHCI)
-> and initrd (adding ahci.ko), and the output of lspci makes a bit more
-> sense:
-> 
-> SATA controller [0106]: Intel Corporation 82801IR/IO/IH (ICH9R/DO/DH)
->   6 port SATA AHCI Controller [8086:2922] (rev 02)
-> Kernel driver in use: ahci
-> Kernel modules: ahci
-> 
-> 
-> However, now the rebuild is even slower, at ~12MB/sec.
-> 
-> A disk on the ICH9R onboard controller (ahci):
-> 
-> # hdparm -tT /dev/sdd
-> 
-> /dev/sdd:
->  Timing cached reads:   8030 MB in  2.00 seconds = 4022.76 MB/sec
->  Timing buffered disk reads:  166 MB in  3.02 seconds =  54.98 MB/sec
-> 
-> 
-> A disk on the PCI-X (sata_mv) controller:
-> 
-> # hdparm -tT /dev/sda
-> 
-> /dev/sda:
->  Timing cached reads:   8094 MB in  2.00 seconds = 4054.45 MB/sec
->  Timing buffered disk reads:  324 MB in  3.01 seconds = 107.73 MB/sec
-> 
-> 
-> Googling reveals other people with slow AHCI disks on new (> 2.6.23)
-> kernels.  Would someone using disks on an AHCI controller and a new
-> kernel please send me timed reads?
-> 
-> This doesn't feel like a linux-raid issue anymore, perhaps I should take
-> this to the lkml?
-> 
-> Perhaps I've missed something else in the BIOS..
-> 
-> Thanks,
-> Richard
-> 
-> 
-> 
-> On Mon, Sep 08, 2008 at 01:50:21PM -0400, Richard Michael wrote:
-> > On kernel 2.6.26.3 with mdadm 2.6.7, I'm building two RAID5 arrays of
-> > three drives each from six Seagate 1TB drives (ST31000340NS) on two
-> > different controllers.
-> > 
-> > Initial creation is rather slow for the array of disks on onboard
-> > controller, about ~17MB/sec.  The creation of the array on the PCI-X
-> > controller was much faster, about ~90MB/sec.  (Note: the creation is
-> > sequential, I'm not creating these two arrays simultaneously.)
-> > 
-> > Three drives on one array are connected to the onboard SATA controller of
-> > an Asus P5EWS Pro motherboard.  lspci shows me two IDE interfaces, one
-> > four port and the other two port which I suppose correspond, in total,
-> > to the six onboard ports:
-> > 
-> > Intel Corporation 82801IR/IO/IH (ICH9R/DO/DH)
-> >   4 port SATA IDE Controller (rev 02)
-> > Intel Corporation 82801I (ICH9 Family)
-> >   2 port SATA IDE Controller (rev 02)
-> > 
-> > They both use the ata_piix kernel module.
-> > 
-> > 
-> > The other controller is an eight port SuperMicro PCI-X controller,
-> > AOC-SAT2-MV8, which has been mentioned on the list in the past:
-> > 
-> > Marvell Technology Group Ltd. 88SE6145 SATA II PCI-E controller (rev a1)
-> > 
-> > It uses the sata_mv kernel module.
-> > 
-> > 
-> > I've created both RAID5 arrays with default parameters, using simply:
-> >   mdadm --create /dev/md2 --raid-devices=3 --level=raid5
-> >     /dev/sdd2 /dev/sde2 /dev/sdf2
-> > 
-> > 
-> > hdparm shows me all drives are using udma6 (e.g. "hdparm -i /dev/sda"),
-> > so I don't think it's a DMA issue (anyway, I've read all SATA drives use
-> > DMA.. ?).
-> > 
-> > It seems like a controller issue.  Perhaps a different driver is
-> > available for the onboard Intel controller; or some tunables in libata?
-> > 
-> > Any suggestions?
-> > 
-> > Thanks,
-> > Richard
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+While looking at the logs I found a plenty of those:
+
+	set_rtc_mmss: can't update from 150 to 43
+
+And indeed this machine started to have serious problems with its
+clock since last weekend. I found it off by 12 hours yesterday and it
+is still runing much too fast so that ntp is not working any more. I'm
+currently setting the time with a script in 10min intervals...
+
+Were you also seeing such messages during/after the hard disk failures?
+
+> I'm considering a 8/12/16 port Areca controller but a few practicalities=
+=20
+> hold me back: the price, and the fact I would need a PCI-X slot unless I=
+=20
+> want to kill performance by a factor of 10. Also, the fact that I then=20
+> cannot use software raid anymore tends to scare me a little: You never=20
+> know how firmware reacts in the more 'interesting' circumstances, and=20
+> you lose control over it...
+
+You could use jbod mode (or create single-disk "raid arrays") with
+Areca or 3ware controllers and use software raid on top of that.
+
+Andre
+--=20
+The only person who always got his work done by Friday was Robinson Crusoe
+
+--sdtB3X0nJg68CQEu
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.1 (GNU/Linux)
+
+iD8DBQFIz21lWto1QDEAkw8RAsIrAJ9VMUN6DkTMvIgUH0Elo1+8MtjLGgCbB2ON
+kUuIH8IwWU2gQ1RFu4ZH+YE=
+=nJ4z
+-----END PGP SIGNATURE-----
+
+--sdtB3X0nJg68CQEu--
