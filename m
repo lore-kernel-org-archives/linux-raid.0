@@ -1,58 +1,32 @@
-From: Chris Webb <chris@arachsys.com>
-Subject: [PATCH] md: Fix rdev_size_store with size = 0
-Date: Wed, 17 Sep 2008 19:11:48 +0100
-Message-ID: <20080917181148.GE11527@arachsys.com>
-References: <18528.10590.221031.75420@notabene.brown> <20080624114706.GD9948@arachsys.com> <20080624231947.GG9948@arachsys.com>
+From: Richard Scobie <richard@sauce.co.nz>
+Subject: Re: Slow RAID5 build on ata_piix vs. fast on sata_mv
+Date: Thu, 18 Sep 2008 07:34:20 +1200
+Message-ID: <48D15BBC.601@sauce.co.nz>
+References: <20080908175021.GA7730@nexus.edgeofthenet.org> <20080908213222.GB9484@nexus.edgeofthenet.org> <20080916031601.GC24791@nexus.edgeofthenet.org> <48D03D3C.9000309@sauce.co.nz> <20080917144423.GC9481@nexus.edgeofthenet.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20080624231947.GG9948@arachsys.com>
+In-Reply-To: <20080917144423.GC9481@nexus.edgeofthenet.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
+To: Richard Michael <rmichael-raid@edgeofthenet.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Neil. You accepted a patch from me back at the end of June which allowed
-/sys/block/mdX/md/rdY/size to change on running arrays. It supported a value
-of zero to fill all the space on the underlying device. However, a later
-patch tidying up rdev_size_store broke the size = 0 functionality by testing
-for size < my_mddev->size slightly too early. The following patch fixes
-this.
+Richard Michael wrote:
+> I see I left the original version out of my message. :)
+> 
+> They all arrived with SN04 and I received SN05 from Seagate.
+> 
+> Note that if you look around, people have discussed flashing this drive
+> with AN05 (which is the firmware Adaptec distributes, IIRC).  I
+> preferred to contact Seagate directly and follow their advice, using the
+> firmware they provided based on my serial numbers.
 
-Best wishes,
+Thanks Richard,
 
-Chris.
+All mine seem to have arrived with SN05, so it looks like I'm OK.
 
+Regards,
 
-From: Chris Webb <chris@arachsys.com>
-
-Fix rdev_size_store with size = 0
-
-Signed-off-by: Chris Webb <chris@arachsys.com>
-
-diff --git a/drivers/md/md.c b/drivers/md/md.c
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -2109,8 +2109,6 @@
- 
- 	if (strict_strtoull(buf, 10, &size) < 0)
- 		return -EINVAL;
--	if (size < my_mddev->size)
--		return -EINVAL;
- 	if (my_mddev->pers && rdev->raid_disk >= 0) {
- 		if (my_mddev->persistent) {
- 			size = super_types[my_mddev->major_version].
-@@ -2121,9 +2119,9 @@
- 			size = (rdev->bdev->bd_inode->i_size >> 10);
- 			size -= rdev->data_offset/2;
- 		}
--		if (size < my_mddev->size)
--			return -EINVAL; /* component must fit device */
--	}
-+	}
-+	if (size < my_mddev->size)
-+		return -EINVAL; /* component must fit device */
- 
- 	rdev->size = size;
- 	if (size > oldsize && my_mddev->external) {
+Richard
