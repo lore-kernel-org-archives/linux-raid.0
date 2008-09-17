@@ -1,83 +1,56 @@
-From: Andre Noll <maan@systemlinux.org>
-Subject: Re: Raid6 array crashed-- 4-disk failure...(?)
-Date: Wed, 17 Sep 2008 10:25:10 +0200
-Message-ID: <20080917082510.GB17300@skl-net.de>
-References: <48CE250C.8000603@ultratux.net> <20080915125951.GA17966@skl-net.de> <48CE9811.60307@ultratux.net> <20080916082509.GA17300@skl-net.de> <48CFF1E9.30006@ultratux.net>
+From: Richard Michael <rmichael-raid@edgeofthenet.org>
+Subject: Re: Slow RAID5 build on ata_piix vs. fast on sata_mv
+Date: Wed, 17 Sep 2008 10:44:23 -0400
+Message-ID: <20080917144423.GC9481@nexus.edgeofthenet.org>
+References: <20080908175021.GA7730@nexus.edgeofthenet.org> <20080908213222.GB9484@nexus.edgeofthenet.org> <20080916031601.GC24791@nexus.edgeofthenet.org> <48D03D3C.9000309@sauce.co.nz>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="i9LlY+UWpKt15+FH"
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <48CFF1E9.30006@ultratux.net>
+In-Reply-To: <48D03D3C.9000309@sauce.co.nz>
 Sender: linux-raid-owner@vger.kernel.org
-To: Maarten <maarten@ultratux.net>
+To: Richard Scobie <richard@sauce.co.nz>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+I see I left the original version out of my message. :)
 
---i9LlY+UWpKt15+FH
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+They all arrived with SN04 and I received SN05 from Seagate.
 
-On 19:50, Maarten wrote:
-> >While looking at the logs I found a plenty of those:
-> >
-> >	set_rtc_mmss: can't update from 150 to 43
-> >
-> >And indeed this machine started to have serious problems with its
-> >clock since last weekend. I found it off by 12 hours yesterday and it
-> >is still runing much too fast so that ntp is not working any more. I'm
-> >currently setting the time with a script in 10min intervals...
-> >
-> >Were you also seeing such messages during/after the hard disk failures?
->=20
-> Nope, nothing there.
-> Strange your clock is so erratic. Maybe the BIOS battery is dead, then=20
-> again I would not be surprised it runs off mains when powered up.
+Note that if you look around, people have discussed flashing this drive
+with AN05 (which is the firmware Adaptec distributes, IIRC).  I
+preferred to contact Seagate directly and follow their advice, using the
+firmware they provided based on my serial numbers.
 
-I don't think it's the battery because this machine is only one year
-old. Moreover, AFAIK, the battery-powered clock is only used during
-system boot and I haven't rebooted the box yet. It's up for 113 days
-now with no problems at all until last weekend. So I'd rather guess
-it's a software-related problem, perhaps something like an integer
-overflow in the timer code.
+Regards,
+Richard
 
-> >You could use jbod mode (or create single-disk "raid arrays") with
-> >Areca or 3ware controllers and use software raid on top of that.
->=20
-> True, but then that would kind of defeat the whole purpose of the fairly=
-=20
-> expensive card.
-
-You'd still profit from the battery unit contained in such cards and
-the (hopefully) better driver.
-
-> In that case a better investment might be a sort of servergrade
-> motherboard which has 6 good onboard controllers and at least two
-> separate PCI buses for the add-on cards. (For the price of one 12 port
-> Areca you can already buy a bare bones low-range server...).
-
-Well, the box I have troubles with contains such a servergrade board
-with 6 onboard SATA controllers ;) Fortunately, we have a couple
-of unused 3ware cards lying around, so I prefer to use these in
-the future.
-
-Andre
---=20
-The only person who always got his work done by Friday was Robinson Crusoe
-
---i9LlY+UWpKt15+FH
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
-
-iD8DBQFI0L7mWto1QDEAkw8RAgGvAKCExtTI9iu5kjUxPefW/yUqw2iLBwCfc9qm
-PZZNogG6aUdDhvGVA8soCE4=
-=gFNy
------END PGP SIGNATURE-----
-
---i9LlY+UWpKt15+FH--
+On Wed, Sep 17, 2008 at 11:11:56AM +1200, Richard Scobie wrote:
+>
+> Interesting, as I have just received 4 of theses drives.
+>
+> Can you tell me the version of both the faulty and good firmware?
+>
+> Regards,
+>
+> Richard
+>
+> Richard Michael wrote:
+>> I'll reply to myself again, since I've solved the issue and figure it
+>> might as well go into archives somewhere. :)
+>>
+>> After discovering Adaptec acknowledged an issue these (and related)
+>> drives on their controllers and provides updated drive firmware on their
+>> website, I guess-timated a drive issue.  I obtained the new SN05
+>> firmware directly from Seagate and the drives are performing much faster
+>> on the Intel controller.
+>>
+>> For good measure, I flashed the other three drives (on the Marvell
+>> chipset controller), and they're still fine too.
+>>
+>> Richard
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
