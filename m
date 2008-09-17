@@ -1,56 +1,58 @@
-From: Richard Michael <rmichael-raid@edgeofthenet.org>
-Subject: Re: Slow RAID5 build on ata_piix vs. fast on sata_mv
-Date: Wed, 17 Sep 2008 10:44:23 -0400
-Message-ID: <20080917144423.GC9481@nexus.edgeofthenet.org>
-References: <20080908175021.GA7730@nexus.edgeofthenet.org> <20080908213222.GB9484@nexus.edgeofthenet.org> <20080916031601.GC24791@nexus.edgeofthenet.org> <48D03D3C.9000309@sauce.co.nz>
+From: Chris Webb <chris@arachsys.com>
+Subject: [PATCH] md: Fix rdev_size_store with size = 0
+Date: Wed, 17 Sep 2008 19:11:48 +0100
+Message-ID: <20080917181148.GE11527@arachsys.com>
+References: <18528.10590.221031.75420@notabene.brown> <20080624114706.GD9948@arachsys.com> <20080624231947.GG9948@arachsys.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <48D03D3C.9000309@sauce.co.nz>
+In-Reply-To: <20080624231947.GG9948@arachsys.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Richard Scobie <richard@sauce.co.nz>
+To: Neil Brown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I see I left the original version out of my message. :)
+Hi Neil. You accepted a patch from me back at the end of June which allowed
+/sys/block/mdX/md/rdY/size to change on running arrays. It supported a value
+of zero to fill all the space on the underlying device. However, a later
+patch tidying up rdev_size_store broke the size = 0 functionality by testing
+for size < my_mddev->size slightly too early. The following patch fixes
+this.
 
-They all arrived with SN04 and I received SN05 from Seagate.
+Best wishes,
 
-Note that if you look around, people have discussed flashing this drive
-with AN05 (which is the firmware Adaptec distributes, IIRC).  I
-preferred to contact Seagate directly and follow their advice, using the
-firmware they provided based on my serial numbers.
+Chris.
 
-Regards,
-Richard
 
-On Wed, Sep 17, 2008 at 11:11:56AM +1200, Richard Scobie wrote:
->
-> Interesting, as I have just received 4 of theses drives.
->
-> Can you tell me the version of both the faulty and good firmware?
->
-> Regards,
->
-> Richard
->
-> Richard Michael wrote:
->> I'll reply to myself again, since I've solved the issue and figure it
->> might as well go into archives somewhere. :)
->>
->> After discovering Adaptec acknowledged an issue these (and related)
->> drives on their controllers and provides updated drive firmware on their
->> website, I guess-timated a drive issue.  I obtained the new SN05
->> firmware directly from Seagate and the drives are performing much faster
->> on the Intel controller.
->>
->> For good measure, I flashed the other three drives (on the Marvell
->> chipset controller), and they're still fine too.
->>
->> Richard
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+From: Chris Webb <chris@arachsys.com>
+
+Fix rdev_size_store with size = 0
+
+Signed-off-by: Chris Webb <chris@arachsys.com>
+
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -2109,8 +2109,6 @@
+ 
+ 	if (strict_strtoull(buf, 10, &size) < 0)
+ 		return -EINVAL;
+-	if (size < my_mddev->size)
+-		return -EINVAL;
+ 	if (my_mddev->pers && rdev->raid_disk >= 0) {
+ 		if (my_mddev->persistent) {
+ 			size = super_types[my_mddev->major_version].
+@@ -2121,9 +2119,9 @@
+ 			size = (rdev->bdev->bd_inode->i_size >> 10);
+ 			size -= rdev->data_offset/2;
+ 		}
+-		if (size < my_mddev->size)
+-			return -EINVAL; /* component must fit device */
+-	}
++	}
++	if (size < my_mddev->size)
++		return -EINVAL; /* component must fit device */
+ 
+ 	rdev->size = size;
+ 	if (size > oldsize && my_mddev->external) {
