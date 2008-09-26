@@ -1,26 +1,37 @@
-From: John Robinson <john.robinson@anonymous.org.uk>
-Subject: Re: Faster read performance DURING (?) resync on raid10
-Date: Fri, 26 Sep 2008 09:03:44 +0100
-Message-ID: <48DC9760.90905@anonymous.org.uk>
-References: <19666016.post@talk.nabble.com>
+From: thomas62186218@aol.com
+Subject: /sys/block/md0 still present after mdadm -S and -r
+Date: Fri, 26 Sep 2008 09:28:56 -0400
+Message-ID: <8CAEDF2F5FF1BF0-E4C-2919@WEBMAIL-MY17.sysops.aol.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="us-ascii"; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <19666016.post@talk.nabble.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org, thomas62186218@aol.com
 List-Id: linux-raid.ids
 
-On 25/09/2008 10:27, sminded wrote:
-> The strange thing is that I can see a significant increase in read
-> performance (about 20%) when running the tests DURING the raid resync phase
-> directly after the raid creation
+Hi All,
 
-Is it possible this is because the resync process has already read part 
-of the disc into cache when your test starts, effectively poisioning the 
-test results?
+I created an md device as follows:
 
-Cheers,
+mdadm -C -f -e 1.0 -R /dev/md0 -l 0 -n 2 -c 32 /dev/sdc1 /dev/sdg1
 
-John.
+It was successful and started.
+
+I then want to delete this md device and did as follows:
+
+mdadm -S /dev/md0
+mdadm /dev/md0 -r
+mdadm --zero-superblock /dev/sdc1
+mdadm --zero-superblock /dev/sdg1
+
+I did not receive any errors. Afterwards, md0 was no longer visible in 
+/proc/mdstat.
+
+However, there is still /sys/block/md0 entry, as well as an /dev/md0 
+entry. I would have expected these to be gone.
+
+Is my md0 not getting fully deleted?
+
+Thanks!
+Thomas
