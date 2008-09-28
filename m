@@ -1,61 +1,125 @@
 From: "Daniel Zetterman" <daniel.zetterman@gmail.com>
-Subject: Re: Faster read performance DURING (?) resync on raid10
-Date: Sun, 28 Sep 2008 13:06:09 +0200
-Message-ID: <104f2a240809280406q22ab748s3dca796e70e63ec3@mail.gmail.com>
-References: <19666016.post@talk.nabble.com>
-	 <18652.25227.7530.435789@notabene.brown>
-	 <104f2a240809261619m2512bddem11ea7960d86df2ff@mail.gmail.com>
-	 <20080928022318.GA5634@rap.rap.dk>
-	 <104f2a240809280345i74ddc8dej462a33383082dfe8@mail.gmail.com>
+Subject: Higher read performance during (!?) resync on raid10
+Date: Sun, 28 Sep 2008 18:21:39 +0200
+Message-ID: <104f2a240809280921w2acdcf18ja7f851115b99d615@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <104f2a240809280345i74ddc8dej462a33383082dfe8@mail.gmail.com>
 Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: =?ISO-8859-1?Q?Keld_J=F8rn_Simonsen?= <keld@dkuug.dk>
-Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Sorry guys, the offset is if course as stated near=3D2, far=3D1
+I've made the mistake of posting to the list before subscribing, so
+I'm reposting this message. I apology for any inconvenience.
 
-Isn't near=3D2, far=3D2 better for raid10?
+I did some automated scripted tests with bonnie++ over RAID10 and
+encryption, using different encryption cipher modes to evaluate the
+impact on I/O operations.
+The strange thing is that I can see a significant increase in read
+performance (about 10-15%) when running the tests DURING the raid
+resync phase directly after the raid creation as appose to running it
+after the resync, or after I create the array with --assume-clean
+(which skips initial resync). Without encryption I still see an
+increase, but not that great.
 
+Have anyone noticed the same behaviour, and how can it be explained? Any ideas?
 
+Can someone else verify that they get the same result?
 
-On Sun, Sep 28, 2008 at 12:45 PM, Daniel Zetterman
-<daniel.zetterman@gmail.com> wrote:
-> I'm using near=3D2, far=3D1, superblock version=3D00.90.03
->
-> I'm not sure about offset, but its the default.
->
-> I wan't to clearify one thing about the data, its not only a problem
-> with encryption over raid, you get the same drop without encryption..=
-=2E
-> but you can remedy it by setting up the readahead, which gives no
-> effect when using encryption.
->
->
-> On Sun, Sep 28, 2008 at 4:23 AM, Keld J=F8rn Simonsen <keld@dkuug.dk>=
- wrote:
->> On Sat, Sep 27, 2008 at 01:19:50AM +0200, Daniel Zetterman wrote:
->>> I've done some more tests and here are the results:
->>>
->>> # bonnie++ during resync with readahead set to 512 (encrypted raid1=
-0)
->>> kpax,4G,,,77308,21,34585,17,,,82073,33,384.8,1,,,,,,,,,,,,,
->>
->> It would be nice to know which layout (near,far,offset)
->> that you are using for the test. The expected results are quite
->> dependent on this.
->>
->> best regards
->> keld
->>
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+My setup:
+--------------
+OS: Ubuntu Server 8.04
+HW: Via Epia C7 1800Mhz (with padlock support, ie hw AES encryption)
+Disks: 4x SATAII SAMSUNG Spinpoint 500GB
+RAID Setup: Level=10, near=2, far=1, chunksize=64kb, superblock
+version= 00.90.03
+FS: JFS
+Encryption: I'm using dm-crypt with aes-cbc-essiv:sha256, keysize=128,
+hash=sha256
+Note: Encryption is done on top of the raid array not the other way around
+
+Below is the bonnie++ tests. I made several consecutive tests to get an average.
+
+# bonnie++ during resync with readahead set to 512 (encrypted raid10)
+kpax,4G,,,77308,21,34585,17,,,82073,33,384.8,1,,,,,,,,,,,,,
+kpax,4G,,,77958,21,34810,17,,,83002,34,394.0,1,,,,,,,,,,,,,
+kpax,4G,,,78273,21,34884,17,,,82758,34,389.0,1,,,,,,,,,,,,,
+
+# bonnie++ during resync with readahead set to 65536 (encrypted raid10)
+kpax,4G,,,77873,21,34927,18,,,82941,34,367.5,0,,,,,,,,,,,,,
+kpax,4G,,,77072,21,34966,18,,,82234,34,357.6,1,,,,,,,,,,,,,
+kpax,4G,,,78033,21,34904,18,,,83381,34,372.2,1,,,,,,,,,,,,,
+
+As seen from above, the read throughput from bonnie++ is about  80 MiB
+/s during resync, regardless of the readahead size on encrypted
+raid10.
+
+# bonnie++ after resync with readahead set to 512 (encrypted raid10)
+kpax,4G,,,81619,22,31528,16,,,70996,28,411.7,1,,,,,,,,,,,,,
+kpax,4G,,,81013,22,31341,15,,,68451,28,354.1,1,,,,,,,,,,,,,
+kpax,4G,,,81750,22,31291,16,,,69484,28,364.5,0,,,,,,,,,,,,,
+
+# bonnie++ after resync with readahead set to 65536 (encrypted raid10)
+kpax,4G,,,81464,22,31348,16,,,69140,28,356.4,1,,,,,,,,,,,,,
+kpax,4G,,,81803,22,31039,16,,,67414,27,338.6,1,,,,,,,,,,,,,
+kpax,4G,,,81263,22,31361,16,,,70491,28,326.7,0,,,,,,,,,,,,,
+
+The above tests shows that the read throughput drops 15% to about 68
+MiB /s  after the resync has finished.
+
+If I run the same set of tests without encryption, I get:
+
+# bonnie++ during resync with readahead set to 512 (normal raid10)
+kpax,4G,,,90242,24,58586,20,,,138938,34,320.0,0,,,,,,,,,,,,,
+kpax,4G,,,90101,24,53133,19,,,141617,36,414.7,1,,,,,,,,,,,,,
+kpax,4G,,,88971,24,53107,19,,,135751,33,437.4,1,,,,,,,,,,,,,
+kpax,4G,,,89262,24,53058,19,,,134046,33,411.3,1,,,,,,,,,,,,,
+
+# bonnie++ during resync with readahead set to 65536 (normal raid10)
+kpax,4G,,,87487,24,59635,22,,,139171,30,440.3,1,,,,,,,,,,,,,
+kpax,4G,,,88879,24,60615,22,,,148133,32,426.5,1,,,,,,,,,,,,,
+kpax,4G,,,88836,24,56569,21,,,139867,30,423.0,1,,,,,,,,,,,,,
+kpax,4G,,,89166,24,58811,22,,,134982,30,422.2,1,,,,,,,,,,,,,
+
+Now we see that we have alot more juice without the encryption -
+pumping about 136 MiB / s during read.
+
+# bonnie++ after resync with readahead set to 512 (normal raid10)
+kpax,4G,,,95747,27,45329,17,,,123298,31,546.7,1,,,,,,,,,,,,,
+kpax,4G,,,94950,26,45006,16,,,128461,31,476.8,1,,,,,,,,,,,,,
+kpax,4G,,,95652,26,45202,16,,,130082,32,442.7,1,,,,,,,,,,,,,
+kpax,4G,,,94900,26,44224,16,,,125801,31,455.1,1,,,,,,,,,,,,,
+
+# bonnie++ after resync with readahead set to 65536 (normal raid10)
+kpax,4G,,,95475,27,71200,28,,,172074,37,429.2,1,,,,,,,,,,,,,
+kpax,4G,,,94724,26,68041,26,,,162545,34,447.5,1,,,,,,,,,,,,,
+kpax,4G,,,95133,27,72185,28,,,160979,35,412.8,1,,,,,,,,,,,,,
+kpax,4G,,,95090,27,71043,27,,,167199,36,421.7,1,,,,,,,,,,,,,
+
+As seen, even without encryption the read throughput drops after
+resync, although not that drastic. The big difference though is that
+it can be remedied by setting the readahead to 65536
+
+Running plain raid10 with full readahead, shows a whopping (for my
+setup anyway) 161 MiB /s.
+
+To summarize:
+1) There seems to be something fishy going on that makes read
+throughput drop a notch after the resync instead of the other way
+around.
+2) The readahead size does not seem to make any difference on
+encrypted raid arrays.
+
+Request:
+Could someone try encryption over raid10 and run bonnie++ tests during
+and after initial resync to see if we get similar results?
+Or just try it without encryption and readahead = 512.
+
+Does anyone have a clue to what this could be?
+
+If anyone have suggestions on preferred raid layout when using
+encryption or just plain raid10 please feel free to enlighten me.
+
+Would it be better to try near=2 far=2, or using offset?
