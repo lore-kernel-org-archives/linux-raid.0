@@ -1,40 +1,86 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: exception Emask 0x0 SAct 0x1 / SErr 0x0 action 0x2 frozen
-Date: Wed, 1 Oct 2008 04:06:06 -0400 (EDT)
-Message-ID: <alpine.DEB.1.10.0810010403500.16900@p34.internal.lan>
-References: <3E6D0C24877245C3A5A327129A7B4CA7@909927SOSLA>  <alpine.DEB.1.10.0809220828490.23159@p34.internal.lan>  <5419A02543384E69AF2BA82FF6E66C14@909927SOSLA>  <alpine.DEB.1.10.0809220903400.23159@p34.internal.lan>  <4B1ABD0393EF40FFB0A12242FE8356AF@909927SOSLA>
-  <alpine.DEB.1.10.0809220915470.23159@p34.internal.lan>  <alpine.DEB.1.10.0809220926240.23159@p34.internal.lan>  <e7510f760809231114y6cbaf13aqf7c63bd48a73c978@mail.gmail.com>  <48DBAB81.8050900@tmr.com> <48E08E2D.6050905@kernel.org>
- <a52a95e30809301347s70b57ebfh280a6871329afd72@mail.gmail.com> <alpine.DEB.1.10.0809301715280.14600@p34.internal.lan> <alpine.LNX.2.00.0809301946020.16014@filesrv1.baby-dragons.com>
+From: Danilo Godec <danilo.godec@agenda.si>
+Subject: SATA errors?
+Date: Wed, 01 Oct 2008 11:25:53 +0200
+Message-ID: <48E34221.1000008@agenda.si>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <alpine.LNX.2.00.0809301946020.16014@filesrv1.baby-dragons.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
-Cc: Tom Mortensen <tmmlkml@gmail.com>, Tejun Heo <tj@kernel.org>, Bill Davidsen <davidsen@tmr.com>, Gwendal Grignou <gwendal@google.com>, Brian Rademacher <rad@radfiles.net>, linux-ide@vger.kernel.org, linux-raid maillist <linux-raid@vger.kernel.org>, Linux Kernel Maillist <linux-kernel@vger.kernel.org>, Bruce Allen <ballen@gravity.phys.uwm.edu>
+Content-Type: multipart/mixed;
+ boundary="------------020203070705050902020004"
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+This is a multi-part message in MIME format.
+--------------020203070705050902020004
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+
+Hi,
+
+I've been searching the web, Google, mailing lists for a while now, but
+can't really find the answer - so I'm hoping for a 'SATA guru' here...
+
+On one of my server, I use 4 drive RAID5 Linux raid. One of the drives
+keeps reporting these errors:
+
+> Oct  1 10:11:29 bigxen2 kernel: ata1.00: exception Emask 0x10 SAct 0x0
+> SErr 0x10002 action 0x2 frozen
+> Oct  1 10:11:29 bigxen2 kernel: ata1.00: (irq_stat 0x04400000, PHY RDY
+> changed)
+> Oct  1 10:11:29 bigxen2 kernel: ata1.00: cmd
+> 25/00:08:5c:be:60/00:00:14:00:00/e0 tag 0 cdb 0x0 data 4096 in
+> Oct  1 10:11:29 bigxen2 kernel:          res
+> 50/00:00:6b:6a:60/00:00:14:00:00/e0 Emask 0x10 (ATA bus error)
+> Oct  1 10:11:30 bigxen2 kernel: ata1: waiting for device to spin up (7
+> secs)
+> Oct  1 10:11:40 bigxen2 kernel: ata1: soft resetting port
+> Oct  1 10:11:41 bigxen2 kernel: ata1: softreset failed (1st FIS failed)
+> Oct  1 10:11:41 bigxen2 kernel: ata1: softreset failed, retrying in 5 secs
+> Oct  1 10:11:46 bigxen2 kernel: ata1: hard resetting port
+> Oct  1 10:11:47 bigxen2 kernel: ata1: SATA link up 3.0 Gbps (SStatus
+> 123 SControl 300)
+> Oct  1 10:11:47 bigxen2 kernel: ata1.00: configured for UDMA/133
+> Oct  1 10:11:47 bigxen2 kernel: ata1: EH complete
+> Oct  1 10:11:47 bigxen2 kernel: SCSI device sda: 976771055 512-byte
+> hdwr sectors (500107 MB)
+> Oct  1 10:11:47 bigxen2 kernel: sda: Write Protect is off
+> Oct  1 10:11:47 bigxen2 kernel: sda: Mode Sense: 00 3a 00 00
+> Oct  1 10:11:47 bigxen2 kernel: SCSI device sda: drive cache: write back
+As far as I can tell these happen randomly - sometimes it's 8 hours
+between two, sometimes it's a couple of minutes. There are about 5-20 of
+those per day, however Linux raid never kicks the drive out of the
+array. There are also no other signs of drive not functioning properly
+(such as filesystem corruption or similar).
+
+Any ideas? Can anyone 'decode' the above errors?
+
+ Thanks, Danilo
+
+-- 
+Danilo Godec, sistemska podpora
+
+Predlog! Obiscite prenovljeno spletno stran http://www.agenda.si
+
+ODPRTA KODA IN LINUX
+STORITVE : POSLOVNE RESITVE : UPRAVLJANJE IT : INFRASTRUKTURA IT : IZOBRAZEVANJE : PROGRAMSKA OPREMA
+
+Visit our updated web page at http://www.agenda.si
+
+OPEN SOURCE AND LINUX
+SERVICES : BUSINESS SOLUTIONS : IT MANAGEMENT : IT INFRASTRUCTURE : TRAINING : SOFTWARE 
 
 
-On Tue, 30 Sep 2008, Mr. James W. Laferriere wrote:
+--------------020203070705050902020004
+Content-Type: text/x-vcard; charset=utf-8;
+ name="danilo_godec.vcf"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="danilo_godec.vcf"
 
-> 	Hello Justin ,
->
->> 
->> Justin.
-> 	I take it you've tried differant drive manufacturers ?
-It happens across 12-14 velociraptors.
-
-> 	Or even a differant drive of same manuf. ?
-It also occurs (I have seen it) on WD 750GiB drives on a different motherboard
-and chipset (P35).
-
-> 	Seeing as you've moved this same drive(?) across several chipsets & 
-> possibly mother boards ,  Leads me to beleive that the difficulty is either 
-> with the driver or the drive (if it is always the same drive or drive model) 
-Other people have the same problem with Seagate and / other drives.
-This also occurs on Raptor 150s.
-
-Justin.
-
-
+YmVnaW46dmNhcmQNCmZuOkRhbmlsbyBHb2RlYw0KbjpHb2RlYztEYW5pbG8NCm9yZzpBZ2Vu
+ZGEgT3BlblN5c3RlbXMNCmFkcjo7O1VsLiBQb2hvcnNrZWdhIGJhdGFsam9uYSA0OTtNYXJp
+Ym9yOzsyMDAwO1Nsb3ZlbmlhDQplbWFpbDtpbnRlcm5ldDpkYW5pbG8uZ29kZWNAYWdlbmRh
+LnNpDQp0ZWw7d29yazorMzg2IDIgNDIxNjEzOA0KdGVsO2ZheDorMzg2IDIgNDIxNjE0MQ0K
+dGVsO2NlbGw6KzM4NiA0MCA2MTg4MDINCngtbW96aWxsYS1odG1sOkZBTFNFDQp1cmw6aHR0
+cDovL3d3dy5hZ2VuZGEuc2kvDQp2ZXJzaW9uOjIuMQ0KZW5kOnZjYXJkDQoNCg==
+--------------020203070705050902020004--
