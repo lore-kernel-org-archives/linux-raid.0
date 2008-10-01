@@ -1,55 +1,97 @@
-From: Wolfgang Denk <wd@denx.de>
+From: Danilo Godec <danilo.godec@agenda.si>
 Subject: Re: SATA errors?
-Date: Wed, 01 Oct 2008 12:08:33 +0200
-Message-ID: <20081001100833.3253724847@gemini.denx.de>
-References: <48E34221.1000008@agenda.si>
+Date: Wed, 01 Oct 2008 12:41:25 +0200
+Message-ID: <48E353D5.1060908@agenda.si>
+References: <48E34221.1000008@agenda.si> <20081001100833.3253724847@gemini.denx.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: multipart/mixed;
+ boundary="------------060303090806010300040904"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-reply-to: <48E34221.1000008@agenda.si>
+In-Reply-To: <20081001100833.3253724847@gemini.denx.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Danilo Godec <danilo.godec@agenda.si>
+To: Wolfgang Denk <wd@denx.de>
 Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Dear Danilo,
+This is a multi-part message in MIME format.
+--------------060303090806010300040904
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 
-In message <48E34221.1000008@agenda.si> you wrote:
-> 
-> I've been searching the web, Google, mailing lists for a while now, but
-> can't really find the answer - so I'm hoping for a 'SATA guru' here...
+Wolfgang Denk pravi:
+> In my experience, problems like this are often casued by
+> broken/unreliable cables / connectors / backplanes.
+>
+> As a first measure, try replugging the SATA cables.
+>
+> If this doesn't help, try swapping arount the disks and cables to see
+> if the problem is with the cable (sticks with the disk) or  with  the
+> backplance (sticks with a physical port).
+>   
+That has been one of my ideas too and I have already checked and swapped
+cables - but no success. I couldn't change the backplane as I don't have
+a spare one.
 
-I'm ot a guru, but I had similar previous experience.
+But there is one thing though that crossed my mind just seconds after
+I've hit the 'send' button!
 
-> As far as I can tell these happen randomly - sometimes it's 8 hours
-> between two, sometimes it's a couple of minutes. There are about 5-20 of
-> those per day, however Linux raid never kicks the drive out of the
-> array. There are also no other signs of drive not functioning properly
-> (such as filesystem corruption or similar).
-> 
-> Any ideas? Can anyone 'decode' the above errors?
+I periodically check (every minute)  the drive temperature using
+'smartctl -a' and I only query one drive - '/dev/sda'! So I re-checked
+my log files and indeed - the SATA error ALWAYS happens within one
+second of the 'smartctl' command (but not every time).
 
-In my experience, problems like this are often casued by
-broken/unreliable cables / connectors / backplanes.
+So now I changed the scripts to query a different drive ('/dev/sdb'). In
+a couple of hours I should know if that was it...
 
-As a first measure, try replugging the SATA cables.
+  Thanks for the help, Danilo
 
-If this doesn't help, try swapping arount the disks and cables to see
-if the problem is with the cable (sticks with the disk) or  with  the
-backplance (sticks with a physical port).
+PS: Oh, one more thing - the 'sda' drive is a WDC, while all the others
+are Seagate.
 
-Then replace the faulty components.
 
-Best regards,
+> Then replace the faulty components.
+>
+> Best regards,
+>
+> Wolfgang Denk
+>
+>   
 
-Wolfgang Denk
 
 -- 
-DENX Software Engineering GmbH,     MD: Wolfgang Denk & Detlev Zundel
-HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
-Phone: (+49)-8142-66989-10 Fax: (+49)-8142-66989-80 Email: wd@denx.de
-"There's always been Tower of Babel sort of  bickering  inside  Unix,
-but  this  is the most extreme form ever. This means at least several
-years of confusion." - Bill Gates, founder and chairman of Microsoft,
-about the Open Systems Foundation
+Danilo Godec, sistemska podpora
+
+Predlog! Obiscite prenovljeno spletno stran http://www.agenda.si
+
+ODPRTA KODA IN LINUX
+STORITVE : POSLOVNE RESITVE : UPRAVLJANJE IT : INFRASTRUKTURA IT : IZOBRAZEVANJE : PROGRAMSKA OPREMA
+
+Visit our updated web page at http://www.agenda.si
+
+OPEN SOURCE AND LINUX
+SERVICES : BUSINESS SOLUTIONS : IT MANAGEMENT : IT INFRASTRUCTURE : TRAINING : SOFTWARE 
+
+
+--------------060303090806010300040904
+Content-Type: text/x-vcard; charset=utf-8;
+ name="danilo_godec.vcf"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="danilo_godec.vcf"
+
+begin:vcard
+fn:Danilo Godec
+n:Godec;Danilo
+org:Agenda OpenSystems
+adr:;;Ul. Pohorskega bataljona 49;Maribor;;2000;Slovenia
+email;internet:danilo.godec@agenda.si
+tel;work:+386 2 4216138
+tel;fax:+386 2 4216141
+tel;cell:+386 40 618802
+x-mozilla-html:FALSE
+url:http://www.agenda.si/
+version:2.1
+end:vcard
+
+
+--------------060303090806010300040904--
