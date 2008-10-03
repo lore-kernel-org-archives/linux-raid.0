@@ -1,97 +1,138 @@
-From: Danilo Godec <danilo.godec@agenda.si>
-Subject: Re: SATA errors?
-Date: Fri, 03 Oct 2008 11:52:02 +0200
-Message-ID: <48E5EB42.9050106@agenda.si>
-References: <48E34221.1000008@agenda.si> <20081001100833.3253724847@gemini.denx.de> <48E353D5.1060908@agenda.si> <A20315AE59B5C34585629E258D76A97C02180F8B@34093-C3-EVS3.exchange.rackspace.com> <48E36A61.4020903@dgreaves.com> <A20315AE59B5C34585629E258D76A97C021D052A@34093-C3-EVS3.exchange.rackspace.com> <48E3ED4D.6000409@agenda.si> <alpine.DEB.1.10.0810011803180.30506@p34.internal.lan>
-Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------040808000909020200010208"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.1.10.0810011803180.30506@p34.internal.lan>
-Sender: linux-raid-owner@vger.kernel.org
-Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+From: Denis ChengRq <crquan@gmail.com>
+Subject: [PATCH] [VFS] mark bio_split_pool static
+Date: Fri,  3 Oct 2008 21:01:18 +0800
+Message-ID: <1223038878-8038-1-git-send-email-crquan@gmail.com>
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Al Viro <viro@zeniv.linux.org.uk>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-fsdevel@vger.kernel.org, Peter Osterlund <petero2@telia.com>, NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-This is a multi-part message in MIME format.
---------------040808000909020200010208
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Since all bio_split calls refer the same single bio_split_pool, the bio_split
+function can use bio_split_pool directly instead of the mempool_t parameter;
 
-Well, it's been two full days (48+ hours) and no error... I guess
-smartctrl doesn't like WDC drives (or better yet, vise versa).
+then the mempool_t parameter can be removed from bio_split param list, and
+bio_split_pool is only referred in fs/bio.c file, can be marked static.
 
-  Danilo
+Signed-off-by: Denis ChengRq <crquan@gmail.com>
+---
+ drivers/block/pktcdvd.c |    2 +-
+ drivers/md/linear.c     |    2 +-
+ drivers/md/raid0.c      |    2 +-
+ drivers/md/raid10.c     |    2 +-
+ fs/bio.c                |    9 ++++-----
+ include/linux/bio.h     |    4 +---
+ 6 files changed, 9 insertions(+), 12 deletions(-)
 
-
-Justin Piszcz pravi:
->
->
-> On Wed, 1 Oct 2008, Danilo Godec wrote:
->
->> 1. I will get a new server in a couple of days and then I'll be able
->> to move the Xen VM's from the 'problematic' server. Then I'll see
->> what can be updated/upgraded.
->> 2. The errors are pretty much random and there is nothing in the cron
->> at all. I don't think Xen VM's could do anything with the physical
->> drive, so their crons shouldn't be relevant.
->> 3. It's not really a problem that we (the users) would feel. It's
->> just the logs that got me worried (I don't like unexplainable hard
->> drive errors).
->> 4. As said before, I changed the scripts to use 'smartctl' with one
->> of the other drives. So far it seems better - there hasn't been a
->> single error in 12 hours.
->>>
->> If it turns out that 'smartctl' was causing this I'll report it to
->> 'smartmontools' guys.
->>
->> Thanks for the help, Danilo
->>
->> -- 
->> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->
-> I actually turned off smart(daemon) /etc - the problems still persist
-> for me..
->
-> Justin.
-
-
+diff --git a/drivers/block/pktcdvd.c b/drivers/block/pktcdvd.c
+index 29b7a64..df8775a 100644
+--- a/drivers/block/pktcdvd.c
++++ b/drivers/block/pktcdvd.c
+@@ -2544,7 +2544,7 @@ static int pkt_make_request(struct request_queue *q, struct bio *bio)
+ 		if (last_zone != zone) {
+ 			BUG_ON(last_zone != zone + pd->settings.size);
+ 			first_sectors = last_zone - bio->bi_sector;
+-			bp = bio_split(bio, bio_split_pool, first_sectors);
++			bp = bio_split(bio, first_sectors);
+ 			BUG_ON(!bp);
+ 			pkt_make_request(q, &bp->bio1);
+ 			pkt_make_request(q, &bp->bio2);
+diff --git a/drivers/md/linear.c b/drivers/md/linear.c
+index b1eebf8..38e7890 100644
+--- a/drivers/md/linear.c
++++ b/drivers/md/linear.c
+@@ -349,7 +349,7 @@ static int linear_make_request (struct request_queue *q, struct bio *bio)
+ 		 * split it.
+ 		 */
+ 		struct bio_pair *bp;
+-		bp = bio_split(bio, bio_split_pool,
++		bp = bio_split(bio,
+ 			       ((tmp_dev->offset + tmp_dev->size)<<1) - bio->bi_sector);
+ 		if (linear_make_request(q, &bp->bio1))
+ 			generic_make_request(&bp->bio1);
+diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
+index 1836106..b493729 100644
+--- a/drivers/md/raid0.c
++++ b/drivers/md/raid0.c
+@@ -423,7 +423,7 @@ static int raid0_make_request (struct request_queue *q, struct bio *bio)
+ 		/* This is a one page bio that upper layers
+ 		 * refuse to split for us, so we need to split it.
+ 		 */
+-		bp = bio_split(bio, bio_split_pool, chunk_sects - (bio->bi_sector & (chunk_sects - 1)) );
++		bp = bio_split(bio, chunk_sects - (bio->bi_sector & (chunk_sects - 1)));
+ 		if (raid0_make_request(q, &bp->bio1))
+ 			generic_make_request(&bp->bio1);
+ 		if (raid0_make_request(q, &bp->bio2))
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index e34cd0e..bc1f782 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -816,7 +816,7 @@ static int make_request(struct request_queue *q, struct bio * bio)
+ 		/* This is a one page bio that upper layers
+ 		 * refuse to split for us, so we need to split it.
+ 		 */
+-		bp = bio_split(bio, bio_split_pool,
++		bp = bio_split(bio,
+ 			       chunk_sects - (bio->bi_sector & (chunk_sects - 1)) );
+ 		if (make_request(q, &bp->bio1))
+ 			generic_make_request(&bp->bio1);
+diff --git a/fs/bio.c b/fs/bio.c
+index 3cba7ae..22ce5fb 100644
+--- a/fs/bio.c
++++ b/fs/bio.c
+@@ -30,7 +30,7 @@
+ 
+ static struct kmem_cache *bio_slab __read_mostly;
+ 
+-mempool_t *bio_split_pool __read_mostly;
++static mempool_t *bio_split_pool __read_mostly;
+ 
+ /*
+  * if you change this list, also change bvec_alloc or things will
+@@ -1230,9 +1230,9 @@ static void bio_pair_end_2(struct bio *bi, int err)
+  * split a bio - only worry about a bio with a single page
+  * in it's iovec
+  */
+-struct bio_pair *bio_split(struct bio *bi, mempool_t *pool, int first_sectors)
++struct bio_pair *bio_split(struct bio *bi, int first_sectors)
+ {
+-	struct bio_pair *bp = mempool_alloc(pool, GFP_NOIO);
++	struct bio_pair *bp = mempool_alloc(bio_split_pool, GFP_NOIO);
+ 
+ 	if (!bp)
+ 		return bp;
+@@ -1266,7 +1266,7 @@ struct bio_pair *bio_split(struct bio *bi, mempool_t *pool, int first_sectors)
+ 	bp->bio2.bi_end_io = bio_pair_end_2;
+ 
+ 	bp->bio1.bi_private = bi;
+-	bp->bio2.bi_private = pool;
++	bp->bio2.bi_private = bio_split_pool;
+ 
+ 	if (bio_integrity(bi))
+ 		bio_integrity_split(bi, bp, first_sectors);
+@@ -1393,7 +1393,6 @@ EXPORT_SYMBOL(bio_map_kern);
+ EXPORT_SYMBOL(bio_copy_kern);
+ EXPORT_SYMBOL(bio_pair_release);
+ EXPORT_SYMBOL(bio_split);
+-EXPORT_SYMBOL(bio_split_pool);
+ EXPORT_SYMBOL(bio_copy_user);
+ EXPORT_SYMBOL(bio_uncopy_user);
+ EXPORT_SYMBOL(bioset_create);
+diff --git a/include/linux/bio.h b/include/linux/bio.h
+index 0933a14..90d621c 100644
+--- a/include/linux/bio.h
++++ b/include/linux/bio.h
+@@ -319,9 +319,7 @@ struct bio_pair {
+ 	atomic_t			cnt;
+ 	int				error;
+ };
+-extern struct bio_pair *bio_split(struct bio *bi, mempool_t *pool,
+-				  int first_sectors);
+-extern mempool_t *bio_split_pool;
++extern struct bio_pair *bio_split(struct bio *bi, int first_sectors);
+ extern void bio_pair_release(struct bio_pair *dbio);
+ 
+ extern struct bio_set *bioset_create(int, int);
 -- 
-Danilo Godec, sistemska podpora
+1.6.0.2
 
-Predlog! Obiscite prenovljeno spletno stran http://www.agenda.si
-
-ODPRTA KODA IN LINUX
-STORITVE : POSLOVNE RESITVE : UPRAVLJANJE IT : INFRASTRUKTURA IT : IZOBRAZEVANJE : PROGRAMSKA OPREMA
-
-Visit our updated web page at http://www.agenda.si
-
-OPEN SOURCE AND LINUX
-SERVICES : BUSINESS SOLUTIONS : IT MANAGEMENT : IT INFRASTRUCTURE : TRAINING : SOFTWARE 
-
-
---------------040808000909020200010208
-Content-Type: text/x-vcard; charset=utf-8;
- name="danilo_godec.vcf"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename="danilo_godec.vcf"
-
-begin:vcard
-fn:Danilo Godec
-n:Godec;Danilo
-org:Agenda OpenSystems
-adr:;;Ul. Pohorskega bataljona 49;Maribor;;2000;Slovenia
-email;internet:danilo.godec@agenda.si
-tel;work:+386 2 4216138
-tel;fax:+386 2 4216141
-tel;cell:+386 40 618802
-x-mozilla-html:FALSE
-url:http://www.agenda.si/
-version:2.1
-end:vcard
-
-
---------------040808000909020200010208--
