@@ -1,73 +1,97 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
+From: Danilo Godec <danilo.godec@agenda.si>
 Subject: Re: SATA errors?
-Date: Wed, 1 Oct 2008 18:03:50 -0400 (EDT)
-Message-ID: <alpine.DEB.1.10.0810011803180.30506@p34.internal.lan>
-References: <48E34221.1000008@agenda.si> <20081001100833.3253724847@gemini.denx.de> <48E353D5.1060908@agenda.si> <A20315AE59B5C34585629E258D76A97C02180F8B@34093-C3-EVS3.exchange.rackspace.com> <48E36A61.4020903@dgreaves.com>
- <A20315AE59B5C34585629E258D76A97C021D052A@34093-C3-EVS3.exchange.rackspace.com> <48E3ED4D.6000409@agenda.si>
+Date: Fri, 03 Oct 2008 11:52:02 +0200
+Message-ID: <48E5EB42.9050106@agenda.si>
+References: <48E34221.1000008@agenda.si> <20081001100833.3253724847@gemini.denx.de> <48E353D5.1060908@agenda.si> <A20315AE59B5C34585629E258D76A97C02180F8B@34093-C3-EVS3.exchange.rackspace.com> <48E36A61.4020903@dgreaves.com> <A20315AE59B5C34585629E258D76A97C021D052A@34093-C3-EVS3.exchange.rackspace.com> <48E3ED4D.6000409@agenda.si> <alpine.DEB.1.10.0810011803180.30506@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: multipart/mixed;
+ boundary="------------040808000909020200010208"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <48E3ED4D.6000409@agenda.si>
+In-Reply-To: <alpine.DEB.1.10.0810011803180.30506@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: Danilo Godec <danilo.godec@agenda.si>
-Cc: David Lethe <david@santools.com>, Linux RAID Mailing List <linux-raid@vger.kernel.org>
+Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+This is a multi-part message in MIME format.
+--------------040808000909020200010208
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+
+Well, it's been two full days (48+ hours) and no error... I guess
+smartctrl doesn't like WDC drives (or better yet, vise versa).
+
+  Danilo
 
 
-On Wed, 1 Oct 2008, Danilo Godec wrote:
+Justin Piszcz pravi:
+>
+>
+> On Wed, 1 Oct 2008, Danilo Godec wrote:
+>
+>> 1. I will get a new server in a couple of days and then I'll be able
+>> to move the Xen VM's from the 'problematic' server. Then I'll see
+>> what can be updated/upgraded.
+>> 2. The errors are pretty much random and there is nothing in the cron
+>> at all. I don't think Xen VM's could do anything with the physical
+>> drive, so their crons shouldn't be relevant.
+>> 3. It's not really a problem that we (the users) would feel. It's
+>> just the logs that got me worried (I don't like unexplainable hard
+>> drive errors).
+>> 4. As said before, I changed the scripts to use 'smartctl' with one
+>> of the other drives. So far it seems better - there hasn't been a
+>> single error in 12 hours.
+>>>
+>> If it turns out that 'smartctl' was causing this I'll report it to
+>> 'smartmontools' guys.
+>>
+>> Thanks for the help, Danilo
+>>
+>> -- 
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+>
+> I actually turned off smart(daemon) /etc - the problems still persist
+> for me..
+>
+> Justin.
 
-> I don't want to start any holly wars, but I'm not using a RAID controller. 
-> It's just a plain old on-board SATA controller (at least that's what I think 
-> it is):
->
-> 00:1f.2 SATA controller: Intel Corporation 631xESB/632xESB SATA Storage 
-> Controller AHCI (rev 09)
->
-> David Lethe wrote:
->> If this was my system, I would ...
->> 1) First check into upgrading firmware/bios/drivers of disk controller.
->> 2) Look at cron jobs and see if anything that needs capacity runs around
->> the time the errors are reported.  Something has to run to start this
->> off, so you need to find it.  3) Use logger and a shell script to try to 
->> catch system in the 15 second
->> window when you have this problem, and see what programs are running. 4) 
->> Actually, if this was my system, and if I/O wasn't actually being
->> suspended during those 15 seconds, then I probably would do step 1 only,
->> and if everything is current, then I would move on and not worry about
->> it.   Even if you find the offending program, then that doesn't mean
->> that the author of the program has or will make an acceptable change in
->> their code. 
-> 1. I will get a new server in a couple of days and then I'll be able to move 
-> the Xen VM's from the 'problematic' server. Then I'll see what can be 
-> updated/upgraded.
-> 2. The errors are pretty much random and there is nothing in the cron at all. 
-> I don't think Xen VM's could do anything with the physical drive, so their 
-> crons shouldn't be relevant.
-> 3. It's not really a problem that we (the users) would feel. It's just the 
-> logs that got me worried (I don't like unexplainable hard drive errors).
-> 4. As said before, I changed the scripts to use 'smartctl' with one of the 
-> other drives. So far it seems better - there hasn't been a single error in 12 
-> hours.
->> The problem you have from SCSI perspective is the bozo who wrote this
->> chunk of code did it the wrong way. The CORRECT way to determine
->> addressable blocks is to send out the READCAP10, look for return value
->> of FFFFFFFFh blocks, then issue a 16-byte (0x9e 0x10) READ CAPACITY,
->> because you have > FFFFFFFE blocks on the disk.  This architect never
->> imagined that the READCAP10 would have to deal with large disks, and
->> assumed if there was a problem, then the disk needs to be reset. 
-> If it turns out that 'smartctl' was causing this I'll report it to 
-> 'smartmontools' guys.
->
-> Thanks for the help, Danilo
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
 
-I actually turned off smart(daemon) /etc - the problems still persist for 
-me..
+-- 
+Danilo Godec, sistemska podpora
 
-Justin.
+Predlog! Obiscite prenovljeno spletno stran http://www.agenda.si
+
+ODPRTA KODA IN LINUX
+STORITVE : POSLOVNE RESITVE : UPRAVLJANJE IT : INFRASTRUKTURA IT : IZOBRAZEVANJE : PROGRAMSKA OPREMA
+
+Visit our updated web page at http://www.agenda.si
+
+OPEN SOURCE AND LINUX
+SERVICES : BUSINESS SOLUTIONS : IT MANAGEMENT : IT INFRASTRUCTURE : TRAINING : SOFTWARE 
+
+
+--------------040808000909020200010208
+Content-Type: text/x-vcard; charset=utf-8;
+ name="danilo_godec.vcf"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="danilo_godec.vcf"
+
+begin:vcard
+fn:Danilo Godec
+n:Godec;Danilo
+org:Agenda OpenSystems
+adr:;;Ul. Pohorskega bataljona 49;Maribor;;2000;Slovenia
+email;internet:danilo.godec@agenda.si
+tel;work:+386 2 4216138
+tel;fax:+386 2 4216141
+tel;cell:+386 40 618802
+x-mozilla-html:FALSE
+url:http://www.agenda.si/
+version:2.1
+end:vcard
+
+
+--------------040808000909020200010208--
