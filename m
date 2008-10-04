@@ -1,28 +1,35 @@
-From: Iustin Pop <iusty@k1024.org>
-Subject: Re: SATA errors?
-Date: Fri, 3 Oct 2008 18:13:11 +0200
-Message-ID: <20081003161311.GA15946@teal.hq.k1024.org>
-References: <48E34221.1000008@agenda.si> <20081001100833.3253724847@gemini.denx.de> <48E353D5.1060908@agenda.si> <A20315AE59B5C34585629E258D76A97C02180F8B@34093-C3-EVS3.exchange.rackspace.com> <48E36A61.4020903@dgreaves.com> <A20315AE59B5C34585629E258D76A97C021D052A@34093-C3-EVS3.exchange.rackspace.com> <48E3ED4D.6000409@agenda.si> <alpine.DEB.1.10.0810011803180.30506@p34.internal.lan> <48E5EB42.9050106@agenda.si>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: exception Emask 0x0 SAct 0x1 / SErr 0x0 action 0x2 frozen
+Date: Sat, 04 Oct 2008 11:27:13 +0900
+Message-ID: <48E6D481.7050407@kernel.org>
+References: <3E6D0C24877245C3A5A327129A7B4CA7@909927SOSLA>  <alpine.DEB.1.10.0809220828490.23159@p34.internal.lan>  <5419A02543384E69AF2BA82FF6E66C14@909927SOSLA>  <alpine.DEB.1.10.0809220903400.23159@p34.internal.lan>  <4B1ABD0393EF40FFB0A12242FE8356AF@909927SOSLA>  <alpine.DEB.1.10.0809220915470.23159@p34.internal.lan>  <alpine.DEB.1.10.0809220926240.23159@p34.internal.lan>  <e7510f760809231114y6cbaf13aqf7c63bd48a73c978@mail.gmail.com>  <48DBAB81.8050900@tmr.com> <48E08E2D.6050905@kernel.org> <a52a95e30809301347s70b57ebfh280a6871329afd72@mail.gmail.com> <alpine.DEB.1.10.0809301715280.14600@p34.internal.lan> <alpine.LNX.2.00.0809301946020.16014@filesrv1.baby-dragons.com> <alpine.DEB.1.10.0810010403500.16900@p34.internal.lan> <alpine.DEB.1.10.0810010710520.22435@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <48E5EB42.9050106@agenda.si>
-Sender: linux-raid-owner@vger.kernel.org
-To: Danilo Godec <danilo.godec@agenda.si>
-Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <alpine.DEB.1.10.0810010710520.22435@p34.internal.lan>
+Sender: linux-ide-owner@vger.kernel.org
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: "Mr. James W. Laferriere" <babydr@baby-dragons.com>, Tom Mortensen <tmmlkml@gmail.com>, Bill Davidsen <davidsen@tmr.com>, Gwendal Grignou <gwendal@google.com>, Brian Rademacher <rad@radfiles.net>, linux-ide@vger.kernel.org, linux-raid maillist <linux-raid@vger.kernel.org>, Linux Kernel Maillist <linux-kernel@vger.kernel.org>, Bruce Allen <ballen@gravity.phys.uwm.edu>
 List-Id: linux-raid.ids
 
-On Fri, Oct 03, 2008 at 11:52:02AM +0200, Danilo Godec wrote:
-> Well, it's been two full days (48+ hours) and no error... I guess
-> smartctrl doesn't like WDC drives (or better yet, vise versa).
+Justin Piszcz wrote:
+> [469680.004654] ata2.00: status: { DRDY }
+> [469680.004660] ata2: hard resetting link
+> [469680.309567] ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> [469680.333461] ata2.00: configured for UDMA/133
+> [469680.333477] ata2: EH complete
+> [469680.333461] sd 1:0:0:0: [sdb] 586072368 512-byte hardware sectors
+> (300069 MB)
+> [469680.340461] sd 1:0:0:0: [sdb] Write Protect is off
+> [469680.340461] sd 1:0:0:0: [sdb] Mode Sense: 00 3a 00 00
+> [469680.345461] sd 1:0:0:0: [sdb] Write cache: enabled, read cache:
+> enabled, doesn't support DPO or FUA
 
-I don't know about your specifics, but I had multiple (~10) WDC
-harddrives running with smartctl/smartd polling them periodically, and
-with various controllers (VIA, Promise, 3ware, but not Intel). I didn't
-have any issues like this.
+You're leaving the good part out.  Please always attach full kernel
+log.
 
-Maybe it's a specific interation between the drive and the controller?
-Or the driver?
+Thanks.
 
-iustin
+-- 
+tejun
