@@ -1,71 +1,46 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: [Resend] [PATCH] md: Fix rdev_size_store with size = 0
-Date: Mon, 13 Oct 2008 11:54:13 +1100
-Message-ID: <18674.39989.657486.681886@notabene.brown>
-References: <18528.10590.221031.75420@notabene.brown>
-	<20080624114706.GD9948@arachsys.com>
-	<20080624231947.GG9948@arachsys.com>
-	<20081007124059.GZ16020@arachsys.com>
+Subject: Re: /sys/block/md0 still present after mdadm -S and -r
+Date: Mon, 13 Oct 2008 11:56:50 +1100
+Message-ID: <18674.40146.187485.200241@notabene.brown>
+References: <8CAEDF2F5FF1BF0-E4C-2919@WEBMAIL-MY17.sysops.aol.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Chris Webb on Tuesday October 7
+In-Reply-To: message from thomas62186218@aol.com on Friday September 26
 Sender: linux-raid-owner@vger.kernel.org
-To: Chris Webb <chris@arachsys.com>
+To: thomas62186218@aol.com
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday October 7, chris@arachsys.com wrote:
-> Hi Neil. You accepted a patch from me back at the end of June which allowed
-> /sys/block/mdX/md/rdY/size to change on running arrays. It supported a value
-> of zero to fill all the space on the underlying device. However, a later
-> patch tidying up rdev_size_store broke the size = 0 functionality by testing
-> for size < my_mddev->size slightly too early. The following patch fixes
-> this.
+On Friday September 26, thomas62186218@aol.com wrote:
+> Hi All,
+> 
+> I created an md device as follows:
+> 
+> mdadm -C -f -e 1.0 -R /dev/md0 -l 0 -n 2 -c 32 /dev/sdc1 /dev/sdg1
+> 
+> It was successful and started.
+> 
+> I then want to delete this md device and did as follows:
+> 
+> mdadm -S /dev/md0
+> mdadm /dev/md0 -r
+> mdadm --zero-superblock /dev/sdc1
+> mdadm --zero-superblock /dev/sdg1
+> 
+> I did not receive any errors. Afterwards, md0 was no longer visible in 
+> /proc/mdstat.
+> 
+> However, there is still /sys/block/md0 entry, as well as an /dev/md0 
+> entry. I would have expected these to be gone.
+> 
+> Is my md0 not getting fully deleted?
 
-Thanks - and sorry for breaking this :-(
+The array is completely gone.  That fact that you can still see
+/sys/block/md0 is an implementation artifact.  It is very difficult to
+make it go away in a race-free way, and there is little cost is
+leaving it there.
 
-I'll send this upstream soon and probably aim it for -stable too.
-
-Thanks
 NeilBrown
 
-
-> 
-> Best wishes,
-> 
-> Chris.
-> 
-> 
-> From: Chris Webb <chris@arachsys.com>
-> 
-> Fix rdev_size_store with size = 0
-> 
-> Signed-off-by: Chris Webb <chris@arachsys.com>
-> 
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -2109,8 +2109,6 @@
->  
->  	if (strict_strtoull(buf, 10, &size) < 0)
->  		return -EINVAL;
-> -	if (size < my_mddev->size)
-> -		return -EINVAL;
->  	if (my_mddev->pers && rdev->raid_disk >= 0) {
->  		if (my_mddev->persistent) {
->  			size = super_types[my_mddev->major_version].
-> @@ -2121,9 +2119,9 @@
->  			size = (rdev->bdev->bd_inode->i_size >> 10);
->  			size -= rdev->data_offset/2;
->  		}
-> -		if (size < my_mddev->size)
-> -			return -EINVAL; /* component must fit device */
-> -	}
-> +	}
-> +	if (size < my_mddev->size)
-> +		return -EINVAL; /* component must fit device */
->  
->  	rdev->size = size;
->  	if (size > oldsize && my_mddev->external) {
