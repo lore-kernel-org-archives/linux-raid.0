@@ -1,56 +1,69 @@
-From: Mattias Wadenstein <maswan@acc.umu.se>
+From: Bill Davidsen <davidsen@tmr.com>
 Subject: Re: Distributed spares
-Date: Tue, 14 Oct 2008 19:20:49 +0200 (MEST)
-Message-ID: <Pine.GSO.4.64.0810141918150.1874@montezuma.acc.umu.se>
-References: <2cda01c92e01$12827a4c$3e01a8c0@exchange.rackspace.com>
- <20081014143755.GB3689@rap.rap.dk>
- <A20315AE59B5C34585629E258D76A97C02447570@34093-C3-EVS3.exchange.rackspace.com>
- <20081014162919.GB21633@kyra>
+Date: Tue, 14 Oct 2008 19:20:04 -0400
+Message-ID: <48F52924.7030607@tmr.com>
+References: <48F3C2A1.3080607@tmr.com> <alpine.DEB.1.10.0810131810570.16807@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20081014162919.GB21633@kyra>
+In-Reply-To: <alpine.DEB.1.10.0810131810570.16807@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: KELEMEN Peter <Peter.Kelemen@cern.ch>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: Neil Brown <neilb@suse.de>, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tue, 14 Oct 2008, KELEMEN Peter wrote:
-
-> * David Lethe (david@santools.com) [20081014 10:18]:
+Justin Piszcz wrote:
 >
->> The manuals are all online.  There are typically several to
->> choose from.  Installation Manuals are standard, but are pretty
->> worthless.  Look for programming/interface specification
->> manuals.  They are not always online where you can find them
->> easy, it depends on the manufacturer.  They're typically several
->> hundred pages long. [...]
 >
-> Could you please point to a few of them?  I have never seen
-> =FF=FFseveral hundred pages long=FF=FF public manuals for any hard dr=
-ive.
-> I'm pretty sure many people on this list would appreciate your
-> efforts, since you seem to be in the know.
+> On Mon, 13 Oct 2008, Bill Davidsen wrote:
+>
+>> Over a year ago I mentioned RAID-5e, a RAID-5 with the spare(s) 
+>> distributed over multiple drives. This has come up again, so I 
+>> thought I'd just mention why, and what advantages it offers.
+>>
+>> By spreading the spare over multiple drives the head motion of normal 
+>> access is spread over one (or several) more drives. This reduces 
+>> seeks, improves performance, etc. The benefit reduces as the number 
+>> of drives in the array gets larger, obviously with four drives using 
+>> only three for normal operation is slower than four, etc. And by 
+>> using all the drives all the time, the chance of a spare being 
+>> undetected after going bad is reduced.
+>>
+>> This becomes important as array drive counts shrink. Lower cost for 
+>> drives ($100/TB!), and attempts to drop power use by using fewer 
+>> drives, result in an overall drop in drive count, important in 
+>> serious applications.
+>>
+>> All that said, I would really like to bring this up one more time, 
+>> even if the answer is "no interest."
+>>
+>> -- 
+>> Bill Davidsen <davidsen@tmr.com>
+>> "Woe unto the statesman who makes war without a reason that will still
+>> be valid when the war is over..." Otto von Bismark
+>> -- 
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+>
+> Bill,
+>
+> Not a bad idea; however, can the same not be acheived (somewhat) by 
+> performing daily/smart, weekly/long tests on the drive to validate its 
+> health?  I find this to work fairly well on a large scale.
 
-http://www.hitachigst.com - "technical library" then choose a drive lea=
-ds=20
-you to something like:
+Not really, the performance benefit comes from spreading head motion to 
+(at least) one more drive. You can get a check on basic functionality 
+with SMART, but it doesn't beat the drive the way real load does. Add to 
+that the unfortunate problem that more realistic testing also takes up 
+i/o bandwidth for non-productive transfers. Better to be doing actual 
+live data transfers to those drives if you can.
 
-http://www.hitachigst.com/tech/techlib.nsf/products/Ultrastar_15K450
+-- 
+Bill Davidsen <davidsen@tmr.com>
+  "Woe unto the statesman who makes war without a reason that will still
+  be valid when the war is over..." Otto von Bismark 
 
-Where the "OEM Specification" is the 343 page detailed specification in=
-=20
-hitachi/ibm-speak.
 
-I'm guessing other manufacturers might call it something else, and=20
-probably hide it better too, because I can't think of having seen them=20
-easily findable online.
-
-/Mattias Wadenstein
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
