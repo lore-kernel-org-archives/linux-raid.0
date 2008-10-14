@@ -1,54 +1,50 @@
-From: Neil Brown <neilb@suse.de>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
 Subject: Re: Distributed spares
-Date: Tue, 14 Oct 2008 21:04:25 +1100
-Message-ID: <18676.28329.93345.30205@notabene.brown>
+Date: Tue, 14 Oct 2008 06:12:29 -0400
+Message-ID: <yq11vyjcwoi.fsf@sermon.lab.mkp.net>
 References: <48F3C2A1.3080607@tmr.com>
+	<alpine.DEB.1.10.0810131810570.16807@p34.internal.lan>
+	<a43edf1b0810131530x36a69089la0d5d26a2228b796@mail.gmail.com>
+	<20081013232921.GB22265@rap.rap.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Bill Davidsen on Monday October 13
+In-Reply-To: <20081013232921.GB22265@rap.rap.dk> ("Keld =?iso-8859-1?Q?J?=
+ =?iso-8859-1?Q?=F8rn?= Simonsen"'s message of "Tue\, 14 Oct 2008 01\:29\:21
+ +0200")
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
+Cc: Billy Crook <billycrook@gmail.com>, Justin Piszcz <jpiszcz@lucidpixels.com>, Bill Davidsen <davidsen@tmr.com>, Neil Brown <neilb@suse.de>, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Monday October 13, davidsen@tmr.com wrote:
-> Over a year ago I mentioned RAID-5e, a RAID-5 with the spare(s) 
-> distributed over multiple drives. This has come up again, so I thought 
-> I'd just mention why, and what advantages it offers.
-> 
-> By spreading the spare over multiple drives the head motion of normal 
-> access is spread over one (or several) more drives. This reduces seeks, 
-> improves performance, etc. The benefit reduces as the number of drives 
-> in the array gets larger, obviously with four drives using only three 
-> for normal operation is slower than four, etc. And by using all the 
-> drives all the time, the chance of a spare being undetected after going 
-> bad is reduced.
-> 
-> This becomes important as array drive counts shrink. Lower cost for 
-> drives ($100/TB!), and attempts to drop power use by using fewer drives, 
-> result in an overall drop in drive count, important in serious applications.
-> 
-> All that said, I would really like to bring this up one more time, even 
-> if the answer is "no interest."
+>>>>> "Keld" =3D=3D Keld J=F8rn Simonsen <keld@dkuug.dk> writes:
 
-How are your coding skills?
+Keld> I have also been thinking a little on this. My idea is that if
+Keld> bit errors develop on disks, then there is first maybe one bit
+Keld> error, and the crc check on the disk sectors then finds and
+Keld> corrects these.
 
-The tricky bit is encoding the new state.
-We can not longer tell the difference between "optimal" and "degraded"
-based on the number of in-sync devices.  We also need some state flag
-to say that the "distributed spare" has been constructed. 
-Maybe that could be encoded in the "layout".
+Keld> If you rewrite such bit errors, then that bit error will be
+Keld> corrected, and you prevent the one-bit error from developing to
+Keld> a two-bit error that is not correctable by the CRC.
 
-We would also need to allow a "recovery" pass to happen without having
-actually added any spares, or having any non-insync devices.  That
-probably means passing the decision "is a recovery pending" down into
-the personality rather than making it in common code.  Maybe have some
-field in the mddev structure which the personality sets if a recovery
-is worth trying.  Or maybe just try it anyway after any significant
-change and if the personality finds nothing can be done it aborts.
+I think you are assuming that disks are much simpler than they
+actually are.
 
-I'm happy to advise on, review, and eventually accept patches.
+A modern disk drive protects a 512-byte sector with a pretty strong
+ECC that's capable of correcting errors up to ~50 bytes.  Yes, that's
+bytes.
 
-NeilBrown
+Also, many drive firmwares will internally keep track of problematic
+media areas and rewrite or reallocate affected blocks.  That includes
+stuff like rewriting sectors that are susceptible to bleed due to
+being adjacent to write hot spots.
+
+--=20
+Martin K. Petersen	Oracle Linux Engineering
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
