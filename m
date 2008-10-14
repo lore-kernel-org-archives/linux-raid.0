@@ -1,59 +1,54 @@
-From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
+From: Neil Brown <neilb@suse.de>
 Subject: Re: Distributed spares
-Date: Tue, 14 Oct 2008 01:29:21 +0200
-Message-ID: <20081013232921.GB22265@rap.rap.dk>
-References: <48F3C2A1.3080607@tmr.com> <alpine.DEB.1.10.0810131810570.16807@p34.internal.lan> <a43edf1b0810131530x36a69089la0d5d26a2228b796@mail.gmail.com>
+Date: Tue, 14 Oct 2008 21:04:25 +1100
+Message-ID: <18676.28329.93345.30205@notabene.brown>
+References: <48F3C2A1.3080607@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <a43edf1b0810131530x36a69089la0d5d26a2228b796@mail.gmail.com>
+In-Reply-To: message from Bill Davidsen on Monday October 13
 Sender: linux-raid-owner@vger.kernel.org
-To: Billy Crook <billycrook@gmail.com>
-Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, Bill Davidsen <davidsen@tmr.com>, Neil Brown <neilb@suse.de>, Linux RAID <linux-raid@vger.kernel.org>
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Mon, Oct 13, 2008 at 05:30:49PM -0500, Billy Crook wrote:
-> Just my two cents....  Those daily smart tests or regularly running
-> badblocks are fine, but they're not 'real' load.  A test can't prove
-> everything is right, it can at best only prove it didn't find anything
-> wrong.  Distributed spare would exert 'real' load on the spare because
-> the spare disks ARE the live disks.
+On Monday October 13, davidsen@tmr.com wrote:
+> Over a year ago I mentioned RAID-5e, a RAID-5 with the spare(s) 
+> distributed over multiple drives. This has come up again, so I thought 
+> I'd just mention why, and what advantages it offers.
 > 
+> By spreading the spare over multiple drives the head motion of normal 
+> access is spread over one (or several) more drives. This reduces seeks, 
+> improves performance, etc. The benefit reduces as the number of drives 
+> in the array gets larger, obviously with four drives using only three 
+> for normal operation is slower than four, etc. And by using all the 
+> drives all the time, the chance of a spare being undetected after going 
+> bad is reduced.
 > 
-> On a side note, it would be handy to have a daemon that could run in
-> the background on large raid1's, or raid6', and once a month, pull
-> each disk out of the array sequentially, completely overwrite it,
-> check it with badblocks several times, do the smart tests, etc...,
-> then rejoin it, reinstall grub, wait an hour and move on.  The point
-> being, of course, to kill weak drives off early and in a controlled
-> manor.  It would be even nicer if there were a way to hot-transfer one
-> raid component to another without setting anything faulty.  I suppose
-> you could make all the components of the real array be single disk
-> raid1 arrays for that purpose.  Then you could have one extra disk set
-> aside for this sort of scrubbing, and never even be down one of your
-> parities.  I guess I should add that onto my todo list....
+> This becomes important as array drive counts shrink. Lower cost for 
+> drives ($100/TB!), and attempts to drop power use by using fewer drives, 
+> result in an overall drop in drive count, important in serious applications.
+> 
+> All that said, I would really like to bring this up one more time, even 
+> if the answer is "no interest."
 
-I have also been thinking a little on this. My idea is that if bit
-errors develop on disks, then there is first maybe one bit error, and
-the crc check on the disk sectors then finds and corrects these.
+How are your coding skills?
 
-If you rewrite such bit errors, then that bit error will be corrected,
-and you prevent the one-bit error from developing to a two-bit error
-that is not correctable by the CRC. 
+The tricky bit is encoding the new state.
+We can not longer tell the difference between "optimal" and "degraded"
+based on the number of in-sync devices.  We also need some state flag
+to say that the "distributed spare" has been constructed. 
+Maybe that could be encoded in the "layout".
 
-Is there some merit to this idea?
+We would also need to allow a "recovery" pass to happen without having
+actually added any spares, or having any non-insync devices.  That
+probably means passing the decision "is a recovery pending" down into
+the personality rather than making it in common code.  Maybe have some
+field in the mddev structure which the personality sets if a recovery
+is worth trying.  Or maybe just try it anyway after any significant
+change and if the personality finds nothing can be done it aborts.
 
-Furthermore, if bad luck has striken, then in the case of mirrored RAIDs
-you could - when crc fails, then see that this is the block in error and
-recreate it from the redundant info, Would be good for raid1, raid10,
-raid5, raid6. If the block then could not be written without errors,
-then it could be added to a bad blocks list and remapped.
+I'm happy to advise on, review, and eventually accept patches.
 
-I think there is nothing novel in a scheme like this, but I would like
-to know if it is implemented somewhere. Articles say that bit errors on
-disks are becoming more and more frequent, so schemes like this may help
-the scary scenarion somewhat.
-
-best regards
-keld
+NeilBrown
