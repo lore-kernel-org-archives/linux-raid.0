@@ -1,59 +1,56 @@
-From: "David Lethe" <david@santools.com>
-Subject: RE: Distributed spares
-Date: Tue, 14 Oct 2008 12:16:56 -0500
-Message-ID: <A20315AE59B5C34585629E258D76A97C024477D6@34093-C3-EVS3.exchange.rackspace.com>
-References: <2cda01c92e01$12827a4c$3e01a8c0@exchange.rackspace.com> <20081014143755.GB3689@rap.rap.dk> <A20315AE59B5C34585629E258D76A97C02447570@34093-C3-EVS3.exchange.rackspace.com> <20081014162919.GB21633@kyra>
+From: Mattias Wadenstein <maswan@acc.umu.se>
+Subject: Re: Distributed spares
+Date: Tue, 14 Oct 2008 19:20:49 +0200 (MEST)
+Message-ID: <Pine.GSO.4.64.0810141918150.1874@montezuma.acc.umu.se>
+References: <2cda01c92e01$12827a4c$3e01a8c0@exchange.rackspace.com>
+ <20081014143755.GB3689@rap.rap.dk>
+ <A20315AE59B5C34585629E258D76A97C02447570@34093-C3-EVS3.exchange.rackspace.com>
+ <20081014162919.GB21633@kyra>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="UTF-8"
-Content-Transfer-Encoding: base64
+Content-Type: TEXT/PLAIN; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
 In-Reply-To: <20081014162919.GB21633@kyra>
 Sender: linux-raid-owner@vger.kernel.org
-To: KELEMEN Peter <Peter.Kelemen@cern.ch>, Linux RAID <linux-raid@vger.kernel.org>
+To: KELEMEN Peter <Peter.Kelemen@cern.ch>
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-DQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IGxpbnV4LXJhaWQtb3duZXJA
-dmdlci5rZXJuZWwub3JnIFttYWlsdG86bGludXgtcmFpZC0NCj4gb3duZXJAdmdlci5rZXJuZWwu
-b3JnXSBPbiBCZWhhbGYgT2YgS0VMRU1FTiBQZXRlcg0KPiBTZW50OiBUdWVzZGF5LCBPY3RvYmVy
-IDE0LCAyMDA4IDExOjI5IEFNDQo+IFRvOiBMaW51eCBSQUlEDQo+IFN1YmplY3Q6IFJlOiBEaXN0
-cmlidXRlZCBzcGFyZXMNCj4gDQo+ICogRGF2aWQgTGV0aGUgKGRhdmlkQHNhbnRvb2xzLmNvbSkg
-WzIwMDgxMDE0IDEwOjE4XToNCj4gDQo+ID4gVGhlIG1hbnVhbHMgYXJlIGFsbCBvbmxpbmUuICBU
-aGVyZSBhcmUgdHlwaWNhbGx5IHNldmVyYWwgdG8NCj4gPiBjaG9vc2UgZnJvbS4gIEluc3RhbGxh
-dGlvbiBNYW51YWxzIGFyZSBzdGFuZGFyZCwgYnV0IGFyZSBwcmV0dHkNCj4gPiB3b3J0aGxlc3Mu
-ICBMb29rIGZvciBwcm9ncmFtbWluZy9pbnRlcmZhY2Ugc3BlY2lmaWNhdGlvbg0KPiA+IG1hbnVh
-bHMuICBUaGV5IGFyZSBub3QgYWx3YXlzIG9ubGluZSB3aGVyZSB5b3UgY2FuIGZpbmQgdGhlbQ0K
-PiA+IGVhc3ksIGl0IGRlcGVuZHMgb24gdGhlIG1hbnVmYWN0dXJlci4gIFRoZXkncmUgdHlwaWNh
-bGx5IHNldmVyYWwNCj4gPiBodW5kcmVkIHBhZ2VzIGxvbmcuIFsuLi5dDQo+IA0KPiBDb3VsZCB5
-b3UgcGxlYXNlIHBvaW50IHRvIGEgZmV3IG9mIHRoZW0/ICBJIGhhdmUgbmV2ZXIgc2Vlbg0KPiDi
-gJxzZXZlcmFsIGh1bmRyZWQgcGFnZXMgbG9uZ+KAnSBwdWJsaWMgbWFudWFscyBmb3IgYW55IGhh
-cmQgZHJpdmUuDQo+IEknbSBwcmV0dHkgc3VyZSBtYW55IHBlb3BsZSBvbiB0aGlzIGxpc3Qgd291
-bGQgYXBwcmVjaWF0ZSB5b3VyDQo+IGVmZm9ydHMsIHNpbmNlIHlvdSBzZWVtIHRvIGJlIGluIHRo
-ZSBrbm93Lg0KPiANCj4gVGhhbmtzLA0KPiBQZXRlcg0KPiANCj4gLS0NCj4gICAgIC4rJycnKy4g
-ICAgICAgICAuKycnJysuICAgICAgICAgLisnJycrLiAgICAgICAgIC4rJycnKy4NCj4gLisnJw0K
-PiAgS2VsZW1lbiBQw6l0ZXIgICAgIC8gICAgICAgXCAgICAgICAvICAgICAgIFwgICAgIFBldGVy
-LktlbGVtZW5AY2Vybi5jaA0KPiAuKycgICAgICAgICBgKy4uLisnICAgICAgICAgYCsuLi4rJyAg
-ICAgICAgIGArLi4uKycgICAgICAgICBgKy4uLisnDQo+IC0tDQo+IFRvIHVuc3Vic2NyaWJlIGZy
-b20gdGhpcyBsaXN0OiBzZW5kIHRoZSBsaW5lICJ1bnN1YnNjcmliZSBsaW51eC1yYWlkIg0KPiBp
-bg0KPiB0aGUgYm9keSBvZiBhIG1lc3NhZ2UgdG8gbWFqb3Jkb21vQHZnZXIua2VybmVsLm9yZw0K
-PiBNb3JlIG1ham9yZG9tbyBpbmZvIGF0ICBodHRwOi8vdmdlci5rZXJuZWwub3JnL21ham9yZG9t
-by1pbmZvLmh0bWwNCg0KTG9vayBmb3Iga2V5d29yZHMgInByb2R1Y3QgbWFudWFsIiAiaW50ZXJm
-YWNlIHNwZWNpZmljYXRpb24iLCBpbiB0aGUgc3VwcG9ydCBzaXRlLiAgTm90IHRoZSBpbnN0YWxs
-YXRpb24gZ3VpZGVzIG9yIGRhdGFzaGVldHMuDQoNClRoZSByZWFsIHNuZWFreSB0aGluZyB0byBk
-bywgaG93ZXZlciwgaXMgbGV0IGdvb2dsZSBmaW5kIG1hbnVhbHMgZm9yIHlvdS4gIFVzZSBnb29n
-bGUncyBhZHZhbmNlZCBzaXRlIHNlYXJjaCwgcG9pbnQgaXQgdG8gU2VhZ2F0ZSwgTWF4dG9yLCB3
-aGF0ZXZlciwgYW5kDQpUZWxsIGl0IHRvIGxvb2sgZm9yIFBERnMsIGdpdmUga2V5d29yZHMgb2Yg
-aW50ZXJmYWNlIG1hbnVhbCwgb3IgZHJpdmUgcGFydCBudW1iZXIuICANCg0KICBzYXMgaW50ZXJm
-YWNlIG1hbnVhbCBzaXRlOnNlYWdhdGUuY29tIGZpbGV0eXBlOnBkZg0KDQozIG91dCBvZiB0aGUg
-Zmlyc3QgNCBoaXRzIG9uIFNlYWdhdGUgd2VyZSBpbnRlcmZhY2UgbWFudWFscy4gIFlvdSBjYW4g
-aGF2ZSBzaW1pbGFyIGx1Y2sgd2l0aCBvdGhlciBkcml2ZSBtYW51ZmFjdHVyZXJzLg0KDQpSZWFk
-IHRoZSBtYW51YWwgYW5kIHRoZXkgcmVmZXJlbmNlIG90aGVyIG1hbnVhbHMgd2hpY2ggaGF2ZSBt
-b3JlIGluZm9ybWF0aW9uLCBidXQgdGhhdCBpcyBtb3JlICBpbmZvIHRoYW4geW91IGxpa2VseSBu
-ZWVkLiAgVGhlIGludGVyZmFjZSBtYW51YWwgZm9yIGRyaXZlIGZhbWlseSBpcyANClN1ZmZpY2ll
-bnQgZm9yIG1vc3QgcGVvcGxlLiAgTm8gd2F5IHdpbGwgdGhleSBnaXZlIGZpcm13YXJlIHJlbGVh
-c2Ugbm90ZXMgb3IgdXBkYXRlcyBvdXQgdG8gcHVibGljLiBJdCB3b3VsZCBzY2FyZSB0aGUgaGVj
-ayBvdXQgb2YgcGVvcGxlLCBhbmQgbW9zdCBwZW9wbGUgd291bGRuJ3Qga25vdw0KV2hhdCB0byBk
-byB3aXRoIGRyaXZlIGZpcm13YXJlIHVwZGF0ZSBpZiB0aGV5IGhhZCBpdCwgYW5kIGlmIHRoZXkg
-ZG9uJ3Qgc2V0IG1vZGUgcGFnZXMgcHJvcGVybHkgdGhlbiBhbiB1cGRhdGUgY291bGQgZG8gcmVh
-bCBkYW1hZ2UgdG8gdGhlaXIgZGF0YS4NCg0KRGF2aWQNCg0K
+On Tue, 14 Oct 2008, KELEMEN Peter wrote:
+
+> * David Lethe (david@santools.com) [20081014 10:18]:
+>
+>> The manuals are all online.  There are typically several to
+>> choose from.  Installation Manuals are standard, but are pretty
+>> worthless.  Look for programming/interface specification
+>> manuals.  They are not always online where you can find them
+>> easy, it depends on the manufacturer.  They're typically several
+>> hundred pages long. [...]
+>
+> Could you please point to a few of them?  I have never seen
+> =FF=FFseveral hundred pages long=FF=FF public manuals for any hard dr=
+ive.
+> I'm pretty sure many people on this list would appreciate your
+> efforts, since you seem to be in the know.
+
+http://www.hitachigst.com - "technical library" then choose a drive lea=
+ds=20
+you to something like:
+
+http://www.hitachigst.com/tech/techlib.nsf/products/Ultrastar_15K450
+
+Where the "OEM Specification" is the 343 page detailed specification in=
+=20
+hitachi/ibm-speak.
+
+I'm guessing other manufacturers might call it something else, and=20
+probably hide it better too, because I can't think of having seen them=20
+easily findable online.
+
+/Mattias Wadenstein
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
