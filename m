@@ -1,69 +1,93 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: Distributed spares
-Date: Tue, 14 Oct 2008 19:20:04 -0400
-Message-ID: <48F52924.7030607@tmr.com>
-References: <48F3C2A1.3080607@tmr.com> <alpine.DEB.1.10.0810131810570.16807@p34.internal.lan>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: Potential mdadm 2.6.7 bug: Cannot grow linear arrays with superblock v1.0,
+ 1.1, or 1.2
+Date: Wed, 15 Oct 2008 14:32:06 +1100
+Message-ID: <18677.25654.376918.24997@notabene.brown>
+References: <8CAFC3107449F0E-C80-C20@mblk-d47.sysops.aol.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.1.10.0810131810570.16807@p34.internal.lan>
+In-Reply-To: message from thomas62186218@aol.com on Tuesday October 14
 Sender: linux-raid-owner@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: Neil Brown <neilb@suse.de>, Linux RAID <linux-raid@vger.kernel.org>
+To: thomas62186218@aol.com
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Justin Piszcz wrote:
->
->
-> On Mon, 13 Oct 2008, Bill Davidsen wrote:
->
->> Over a year ago I mentioned RAID-5e, a RAID-5 with the spare(s) 
->> distributed over multiple drives. This has come up again, so I 
->> thought I'd just mention why, and what advantages it offers.
->>
->> By spreading the spare over multiple drives the head motion of normal 
->> access is spread over one (or several) more drives. This reduces 
->> seeks, improves performance, etc. The benefit reduces as the number 
->> of drives in the array gets larger, obviously with four drives using 
->> only three for normal operation is slower than four, etc. And by 
->> using all the drives all the time, the chance of a spare being 
->> undetected after going bad is reduced.
->>
->> This becomes important as array drive counts shrink. Lower cost for 
->> drives ($100/TB!), and attempts to drop power use by using fewer 
->> drives, result in an overall drop in drive count, important in 
->> serious applications.
->>
->> All that said, I would really like to bring this up one more time, 
->> even if the answer is "no interest."
->>
->> -- 
->> Bill Davidsen <davidsen@tmr.com>
->> "Woe unto the statesman who makes war without a reason that will still
->> be valid when the war is over..." Otto von Bismark
->> -- 
->> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->
-> Bill,
->
-> Not a bad idea; however, can the same not be acheived (somewhat) by 
-> performing daily/smart, weekly/long tests on the drive to validate its 
-> health?  I find this to work fairly well on a large scale.
+On Tuesday October 14, thomas62186218@aol.com wrote:
+> Hi all,
+> 
+> I have come across what is a potential bug in mdadm 2.6.7. (unless I am 
+> missing something)
+> 
+> Environment:
+> Ubuntu Linux 8.0.4 64-bit (Hardy)
+> Intel dual socket quad-core server with 16GB RAM
+> 10 SATA II 500GB hard drives
+> mdadm v2.6.7
+> 
+> Test 1: Attempt to grow linear md device with v1.0 superblock with 
+> additional hard drive. Failed.
+> 
+> root@localhost:/usr/local/apache2/htdocs# mdadm --grow /dev/md6 --add 
+> /dev/sdd1
+> mdadm: internal error - sb_offset is wrong
+> Aborted
 
-Not really, the performance benefit comes from spreading head motion to 
-(at least) one more drive. You can get a check on basic functionality 
-with SMART, but it doesn't beat the drive the way real load does. Add to 
-that the unfortunate problem that more realistic testing also takes up 
-i/o bandwidth for non-productive transfers. Better to be doing actual 
-live data transfers to those drives if you can.
+Hm, that's bad.
+I've tested growing linear devices with 1.0 superblocks and it works.
+But I only tested the case where the new device is exactly the same
+size as the other devices in the array.  I'm guess this isn't the case
+for you.
 
--- 
-Bill Davidsen <davidsen@tmr.com>
-  "Woe unto the statesman who makes war without a reason that will still
-  be valid when the war is over..." Otto von Bismark 
+Are you able to test with the patch below applied?
+
+Thanks.
+> 
+> Also, any plans on enabling "reshaping" or growth for RAID 0 and RAID 
+> 10 md's?
+
+Lots of plans.  Not so much time.
+
+NeilBrown
 
 
+diff --git a/super1.c b/super1.c
+index bec0c5e..62a3ab9 100644
+--- a/super1.c
++++ b/super1.c
+@@ -599,7 +599,7 @@ static int update_super1(struct supertype *st, struct mdinfo *info,
+ 	}
+ 	if (strcmp(update, "linear-grow-new") == 0) {
+ 		int i;
+-		int rfd;
++		int rfd, fd;
+ 		int max = __le32_to_cpu(sb->max_dev);
+ 
+ 		for (i=0 ; i < max ; i++)
+@@ -620,6 +620,25 @@ static int update_super1(struct supertype *st, struct mdinfo *info,
+ 
+ 		sb->dev_roles[i] =
+ 			__cpu_to_le16(info->disk.raid_disk);
++
++		fd = open(devname, O_RDONLY);
++		if (fd >= 0) {
++			unsigned long long ds;
++			get_dev_size(fd, devname, &ds);
++			close(fd);
++			ds >>= 9;
++			if (__le64_to_cpu(sb->super_offset) <
++			    __le64_to_cpu(sb->data_offset)) {
++				sb->data_size = __cpu_to_le64(
++					ds - __le64_to_cpu(sb->data_offset));
++			} else {
++				ds -= 8*2;
++				ds &= ~(unsigned long long)(4*2-1);
++				sb->super_offset = __cpu_to_le64(ds);
++				sb->data_size = __cpu_to_le64(
++					ds - __le64_to_cpu(sb->data_offset));
++			}
++		}
+ 	}
+ 	if (strcmp(update, "linear-grow-update") == 0) {
+ 		sb->raid_disks = __cpu_to_le32(info->array.raid_disks);
