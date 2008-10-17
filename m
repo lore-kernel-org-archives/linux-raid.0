@@ -1,29 +1,47 @@
-From: Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE>
-Subject: Re: RAID 0, disks swapped ?
-Date: Fri, 17 Oct 2008 19:44:16 +0200
-Message-ID: <gdaitg$fnb$1@ger.gmane.org>
-References: <200810171318.12654.c.baegert-listes@lixium.fr>
- <200810171548.59686.c.baegert-listes@lixium.fr>
- <gda641$spp$2@ger.gmane.org>
- <200810171634.22114.c.baegert-listes@lixium.fr>
+From: Bryan Christ <bryan.christ@hp.com>
+Subject: Re: Raid array is not automatically detected.
+Date: Fri, 17 Oct 2008 13:40:49 -0500
+Message-ID: <1224268849.17503.72.camel@tuxdev64>
+References: <48F8AA24.7050607@itamservices.de>
+Reply-To: bryan.christ@hp.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <48F8AA24.7050607@itamservices.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Daniel Reichelt <mail@itamservices.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-c.baegert-listes@lixium.fr <c.baegert-listes@lixium.fr> wrote:
-> Is the order the number [1] or [0] in the line below ?
-> md5 : active raid0 md4[1] md3[0]
+thanks for the tip!
 
-Yes, this should be the result of mdadm -C ... /dev/md5 /dev/md3 /dev/md4
-
-
-regards
-   Mario
--- 
-There are two major products that come from Berkeley: LSD and UNIX.
-We don't believe this to be a coincidence.    -- Jeremy S. Anderson
+On Fri, 2008-10-17 at 15:07 +0000, Daniel Reichelt wrote:
+> Hi Bryan,
+> I was just having the same problem and the mdadm man page clearly states:
+> ----------------------------
+> --homehost=
+>     This will override any HOMEHOST setting in the config file and provides the
+> identity of the host which should be considered the home for any arrays.
+> 
+>     When creating an array, the homehost will be recorded in the superblock.
+> For version-1 superblocks, it will be prefixed to the array name. For
+> version-0.90 superblocks, part of the SHA1 hash of the hostname will be stored
+> in the later half of the UUID.
+> 
+>     When reporting information about an array, any array which is tagged for
+> the given homehost will be reported as such.
+> 
+> ****
+>     When using Auto-Assemble, only arrays tagged for the given homehost will be
+> assembled.
+> ****
+> ----------------------------
+> 
+> So just once stop your array and manually assemble it like
+> mdadm -A <md-device> <components> --homehost=<somestring> --update=homehost
+> and from the next reboot on, that array, too, will automatically be assembled
+> by the linux kernel.
+> HTH
+> Daniel
 
