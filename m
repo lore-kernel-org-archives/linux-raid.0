@@ -1,40 +1,29 @@
-From: Daniel Reichelt <mail@itamservices.de>
-Subject: Re: Raid array is not automatically detected.
-Date: Fri, 17 Oct 2008 17:07:16 +0200
-Message-ID: <48F8AA24.7050607@itamservices.de>
+From: Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE>
+Subject: Re: RAID 0, disks swapped ?
+Date: Fri, 17 Oct 2008 19:44:16 +0200
+Message-ID: <gdaitg$fnb$1@ger.gmane.org>
+References: <200810171318.12654.c.baegert-listes@lixium.fr>
+ <200810171548.59686.c.baegert-listes@lixium.fr>
+ <gda641$spp$2@ger.gmane.org>
+ <200810171634.22114.c.baegert-listes@lixium.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: bryan.christ@hp.com
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Bryan,
-I was just having the same problem and the mdadm man page clearly states:
-----------------------------
---homehost=
-    This will override any HOMEHOST setting in the config file and provides the
-identity of the host which should be considered the home for any arrays.
+c.baegert-listes@lixium.fr <c.baegert-listes@lixium.fr> wrote:
+> Is the order the number [1] or [0] in the line below ?
+> md5 : active raid0 md4[1] md3[0]
 
-    When creating an array, the homehost will be recorded in the superblock.
-For version-1 superblocks, it will be prefixed to the array name. For
-version-0.90 superblocks, part of the SHA1 hash of the hostname will be stored
-in the later half of the UUID.
+Yes, this should be the result of mdadm -C ... /dev/md5 /dev/md3 /dev/md4
 
-    When reporting information about an array, any array which is tagged for
-the given homehost will be reported as such.
 
-****
-    When using Auto-Assemble, only arrays tagged for the given homehost will be
-assembled.
-****
-----------------------------
+regards
+   Mario
+-- 
+There are two major products that come from Berkeley: LSD and UNIX.
+We don't believe this to be a coincidence.    -- Jeremy S. Anderson
 
-So just once stop your array and manually assemble it like
-mdadm -A <md-device> <components> --homehost=<somestring> --update=homehost
-and from the next reboot on, that array, too, will automatically be assembled
-by the linux kernel.
-HTH
-Daniel
