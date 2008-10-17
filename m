@@ -1,36 +1,45 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: RAID 0, disks swapped ?
-Date: Fri, 17 Oct 2008 09:18:12 -0400
-Message-ID: <48F89094.2080504@tmr.com>
-References: <200810171318.12654.c.baegert-listes@lixium.fr>
+From: Gabor Gombas <gombasg@sztaki.hu>
+Subject: Re: Distributed spares
+Date: Fri, 17 Oct 2008 15:09:51 +0200
+Message-ID: <20081017130951.GD9009@boogie.lpds.sztaki.hu>
+References: <48F3C2A1.3080607@tmr.com> <18676.28329.93345.30205@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200810171318.12654.c.baegert-listes@lixium.fr>
+Content-Disposition: inline
+In-Reply-To: <18676.28329.93345.30205@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: c.baegert-listes@lixium.fr
-Cc: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: Bill Davidsen <davidsen@tmr.com>, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-c.baegert-listes@lixium.fr wrote:
-> Hi,
->
-> I had a RAID 10, crashed since a few days, made with a soft RAID 0 (/dev/md5) 
-> of 2 soft RAID 1 (/dev/md3 and /dev/md4). I'm using default kernel on Debian 
-> Etch.
->   
+On Tue, Oct 14, 2008 at 09:04:25PM +1100, Neil Brown wrote:
 
-Just for educational purposes (won't help fix your problem), you had 
-RAID 1+0 rather than RAID-10. See the mdadm docs for the difference. And 
-reading old discussions here on the performance of RAID-10 with two far 
-copies would be useful as well.
+> The tricky bit is encoding the new state.
+> We can not longer tell the difference between "optimal" and "degraded"
+> based on the number of in-sync devices.  We also need some state flag
+> to say that the "distributed spare" has been constructed. 
+> Maybe that could be encoded in the "layout".
 
-Sorry for your loss.
+Or you need to add a "virtual" spare that does not have an actual block
+device behind it. Or rather it could be a virtual disk constructed from
+the spare chunks on the data disks; maybe device mapper could be used
+here? If you could create such a virtual disk then maybe the normal
+RAID5 code could just do the rest. Of course the mapping of stripes to
+disk locations has to be changed to account for the "black holes" now
+belonging to the virtual spare device.
+
+Hmm, if you create DM devices for all the disks that just leave out the
+proper holes from the mapping, and you also create a DM device from the
+holes, and you create an MD RAID5+spare on top of these DM devices, then
+you could have RAID5e right now completely from userspace. The
+superblock should be changed so nobody ever tries to build a RAID5 from
+the raw disks and there may be some other details...
+
+Gabor
 
 -- 
-Bill Davidsen <davidsen@tmr.com>
-  "Woe unto the statesman who makes war without a reason that will still
-  be valid when the war is over..." Otto von Bismark 
-
-
+     ---------------------------------------------------------
+     MTA SZTAKI Computer and Automation Research Institute
+                Hungarian Academy of Sciences
+     ---------------------------------------------------------
