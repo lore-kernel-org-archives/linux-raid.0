@@ -1,29 +1,137 @@
-From: Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE>
-Subject: Re: RAID 0, disks swapped ?
-Date: Fri, 17 Oct 2008 14:36:48 +0200
-Message-ID: <gda0t0$9o2$1@ger.gmane.org>
-References: <200810171318.12654.c.baegert-listes@lixium.fr>
+From: thomas62186218@aol.com
+Subject: Re: Potential mdadm 2.6.7 bug: Cannot grow linear arrays with superblock
+ v1.0, 1.1, or 1.2
+Date: Fri, 17 Oct 2008 08:50:46 -0400
+Message-ID: <8CAFE6E1B94976D-C0-14F3@FWM-D03.sysops.aol.com>
+References: <8CAFC3107449F0E-C80-C20@mblk-d47.sysops.aol.com> <18677.25654.376918.24997@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <18677.25654.376918.24997@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-c.baegert-listes@lixium.fr <c.baegert-listes@lixium.fr> wrote:
-> I had to recreate the main RAID 0 (mdadm --create), I thought that the order 
-> of /dev/md3 and /dev/md4 was not important (mdadm is known to find the good 
-> order automatically),
+Hi Neil,
 
-This is true for assembling an existing RAID (provided it has a
-superblock), but when you create a new one ... where should md know the
-order except from what you gave it?
-But... why did you have to recreate it at all?
+Thank you for the reply and the patch. I patched 2.6.7 (had to tweak 
+the patch a little), but this patch seems to have done the trick. I can 
+now resize linear arrays of different sizes even with superblock 1.0.
+
+Was this patch already out there? Or is this a new one? If new, will 
+this be committed in?
+
+Thanks again!
+-Thomas
 
 
-regards
-   Mario
--- 
-We are the Bore. Resistance is futile. You will be bored.
+-----Original Message-----
+From: Neil Brown <neilb@suse.de>
+To: thomas62186218@aol.com
+Cc: linux-raid@vger.kernel.org
+Sent: Tue, 14 Oct 2008 8:32 pm
+Subject: Re: Potential mdadm 2.6.7 bug: Cannot grow linear arrays with 
+superblock v1.0, 1.1, or 1.2
+
+
+
+
+
+
+
+
+
+
+On Tuesday October 14, thomas62186218@aol.com wrote:
+> Hi all,
+>
+> I have come across what is a potential bug in mdadm 2.6.7. (unless I 
+am
+> missing something)
+>
+> Environment:
+> Ubuntu Linux 8.0.4 64-bit (Hardy)
+> Intel dual socket quad-core server with 16GB RAM
+> 10 SATA II 500GB hard drives
+> mdadm v2.6.7
+>
+> Test 1: Attempt to grow linear md device with v1.0 superblock with
+> additional hard drive. Failed.
+>
+> root@localhost:/usr/local/apache2/htdocs# mdadm --grow /dev/md6 --add
+> /dev/sdd1
+> mdadm: internal error - sb_offset is wrong
+> Aborted
+
+Hm, that's bad.
+I've tested growing linear devices with 1.0 superblocks and it works.
+But I only tested the case where the new device is exactly the same
+size as the other devices in the array.  I'm guess this isn't the case
+for you.
+
+Are you able to test with the patch below applied?
+
+Thanks.
+>
+> Also, any plans on enabling "reshaping" or growth for RAID 0 and RAID
+> 10 md's?
+
+Lots of plans.  Not so much time.
+
+NeilBrown
+
+
+diff --git a/super1.c b/super1.c
+index bec0c5e..62a3ab9 100644
+--- a/super1.c
++++ b/super1.c
+@@ -599,7 +599,7 @@ static int update_super1(struct supertype *st, 
+struct mdinfo
+*info,
+    }
+    if (strcmp(update, "linear-grow-new") == 0) {
+        int i;
+-       int rfd;
++       int rfd, fd;
+        int max = __le32_to_cpu(sb->max_dev);
+
+        for (i=0 ; i < max ; i++)
+@@ -620,6 +620,25 @@ static int update_super1(struct supertype *st, 
+struct
+mdinfo *info,
+
+        sb->dev_roles[i] =
+            __cpu_to_le16(info->disk.raid_disk);
++
++       fd = open(devname, O_RDONLY);
++       if (fd >= 0) {
++           unsigned long long ds;
++           get_dev_size(fd, devname, &ds);
++           close(fd);
++           ds >>= 9;
++           if (__le64_to_cpu(sb->super_offset) <
++               __le64_to_cpu(sb->data_offset)) {
++               sb->data_size = __cpu_to_le64(
++                   ds - __le64_to_cpu(sb->data_offset));
++           } else {
++               ds -= 8*2;
++               ds &= ~(unsigned long long)(4*2-1);
++               sb->super_offset = __cpu_to_le64(ds);
++               sb->data_size = __cpu_to_le64(
++                   ds - __le64_to_cpu(sb->data_offset));
++           }
++       }
+    }
+    if (strcmp(update, "linear-grow-update") == 0) {
+        sb->raid_disks = __cpu_to_le32(info->array.raid_disks);
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+
+
 
