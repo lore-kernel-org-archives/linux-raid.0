@@ -1,34 +1,31 @@
 From: c.baegert-listes@lixium.fr
 Subject: Re: RAID 0, disks swapped ?
-Date: Fri, 17 Oct 2008 15:48:59 +0200
-Message-ID: <200810171548.59686.c.baegert-listes@lixium.fr>
-References: <200810171318.12654.c.baegert-listes@lixium.fr> <48F89094.2080504@tmr.com>
+Date: Fri, 17 Oct 2008 15:57:30 +0200
+Message-ID: <200810171557.30177.c.baegert-listes@lixium.fr>
+References: <200810171318.12654.c.baegert-listes@lixium.fr> <gda0t0$9o2$1@ger.gmane.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <48F89094.2080504@tmr.com>
+In-Reply-To: <gda0t0$9o2$1@ger.gmane.org>
 Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
+To: Mario 'BitKoenig' Holbe <Mario.Holbe@tu-ilmenau.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+Le vendredi 17 octobre 2008, vous avez =E9crit :
+> This is true for assembling an existing RAID (provided it has a
+> superblock), but when you create a new one ... where should md know t=
+he
+> order except from what you gave it?
+> But... why did you have to recreate it at all?
 
-Le vendredi 17 octobre 2008, Bill Davidsen a =E9crit :
-> Just for educational purposes (won't help fix your problem), you had
-> RAID 1+0 rather than RAID-10. See the mdadm docs for the difference. =
-And
-> reading old discussions here on the performance of RAID-10 with two f=
-ar
-> copies would be useful as well.
-
-Yeah, I saw them, I use directly raid10 for a few months, but this arra=
-y was=20
-older. The good point of the RAID 1+0 solution is that I just have to r=
-epair=20
-a raid0 array now. But how ?
+If I remember well, a re-add failed after a disk lost sync, so I had to=
+=20
+re-create the RAID 1 array after stopping it, and then I had to stop th=
+e RAID=20
+0 before...
 
 Regards,
 --=20
