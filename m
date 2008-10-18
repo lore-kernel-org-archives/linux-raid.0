@@ -1,61 +1,22 @@
 From: Andre Noll <maan@systemlinux.org>
-Subject: [PATCH 1/8] md: raid0_make_request(): Remove local variable chunk_size.
-Date: Sat, 18 Oct 2008 17:24:22 +0200
-Message-ID: <1224343469-2831-2-git-send-email-maan@systemlinux.org>
-References: <1224343469-2831-1-git-send-email-maan@systemlinux.org>
+Subject: [PATCH 0/8] md: Make raid0 use sector-based quantities
+Date: Sat, 18 Oct 2008 17:24:21 +0200
+Message-ID: <1224343469-2831-1-git-send-email-maan@systemlinux.org>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1224343469-2831-1-git-send-email-maan@systemlinux.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org, Andre Noll <maan@systemlinux.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-We might as well use chunk_sects instead.
+This series of patches against Neil's for-next branch converts the
+internal representations of block-based quantities in the raid0 code
+to sector-based quantities.
 
-Signed-off-by: Andre Noll <maan@systemlinux.org>
----
- drivers/md/raid0.c |    7 +++----
- 1 files changed, 3 insertions(+), 4 deletions(-)
+There's also one trivial patch in this series, #6, which adds
+KERN_INFO/KERN_ERR to a couple of printk's.
 
-diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
-index 62a193c..d843849 100644
---- a/drivers/md/raid0.c
-+++ b/drivers/md/raid0.c
-@@ -387,7 +387,7 @@ static int raid0_stop (mddev_t *mddev)
- static int raid0_make_request (struct request_queue *q, struct bio *bio)
- {
- 	mddev_t *mddev = q->queuedata;
--	unsigned int sect_in_chunk, chunksect_bits, chunk_size, chunk_sects;
-+	unsigned int sect_in_chunk, chunksect_bits, chunk_sects;
- 	raid0_conf_t *conf = mddev_to_conf(mddev);
- 	struct strip_zone *zone;
- 	mdk_rdev_t *tmp_dev;
-@@ -407,7 +407,6 @@ static int raid0_make_request (struct request_queue *q, struct bio *bio)
- 		      bio_sectors(bio));
- 	part_stat_unlock();
- 
--	chunk_size = mddev->chunk_size >> 10;
- 	chunk_sects = mddev->chunk_size >> 9;
- 	chunksect_bits = ffz(~chunk_sects);
- 	block = bio->bi_sector >> 1;
-@@ -442,7 +441,7 @@ static int raid0_make_request (struct request_queue *q, struct bio *bio)
- 	while (block >= (zone->zone_offset + zone->size)) 
- 		zone++;
-     
--	sect_in_chunk = bio->bi_sector & ((chunk_size<<1) -1);
-+	sect_in_chunk = bio->bi_sector & (chunk_sects - 1);
- 
- 
- 	{
-@@ -467,7 +466,7 @@ static int raid0_make_request (struct request_queue *q, struct bio *bio)
- 
- bad_map:
- 	printk("raid0_make_request bug: can't convert block across chunks"
--		" or bigger than %dk %llu %d\n", chunk_size, 
-+		" or bigger than %dk %llu %d\n", chunk_sects / 2,
- 		(unsigned long long)bio->bi_sector, bio->bi_size >> 10);
- 
- 	bio_io_error(bio);
--- 
-1.5.3.8
+checkpatch.pl is happy with all eight patches, and the patched kernel
+passes the raid0 tests of mdadm's test suite on my i386 UP box.
 
+Please review.
+Andre
