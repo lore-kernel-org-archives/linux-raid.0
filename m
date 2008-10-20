@@ -1,7 +1,7 @@
 From: Andre Noll <maan@systemlinux.org>
-Subject: [PATCH 9/9] md: raid0: make hash_spacing and preshift sector-based.
-Date: Mon, 20 Oct 2008 10:56:47 +0200
-Message-ID: <1224493007-1255-10-git-send-email-maan@systemlinux.org>
+Subject: [PATCH 7/9] md: raid0 create_strip_zones(): Add KERN_INFO/KERN_ERR to printk's.
+Date: Mon, 20 Oct 2008 10:56:45 +0200
+Message-ID: <1224493007-1255-8-git-send-email-maan@systemlinux.org>
 References: <1224493007-1255-1-git-send-email-maan@systemlinux.org>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1224493007-1255-1-git-send-email-maan@systemlinux.org>
@@ -10,156 +10,141 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, Andre Noll <maan@systemlinux.org>
 List-Id: linux-raid.ids
 
-This patch renames the hash_spacing and preshift members of struct
-raid0_private_data to spacing and sector_shift respectively and
-changes the semantics as follows:
-
-We always have spacing = 2 * hash_spacing. In case
-sizeof(sector_t) > sizeof(u32) we also have sector_shift = preshift + 1
-while sector_shift = preshift = 0 otherwise.
-
-Note that the values of nb_zone and zone are unaffected by these changes
-because in the sector_div() preceeding the assignement of these two
-variables both arguments double.
+This patch consists only of these trivial changes.
 ---
- drivers/md/raid0.c         |   58 ++++++++++++++++++++++----------------------
- include/linux/raid/raid0.h |    4 +-
- 2 files changed, 31 insertions(+), 31 deletions(-)
+ drivers/md/raid0.c |   46 +++++++++++++++++++++++++---------------------
+ 1 files changed, 25 insertions(+), 21 deletions(-)
 
 diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
-index 6e85e88..90f5b24 100644
+index 9074ea4..c759436 100644
 --- a/drivers/md/raid0.c
 +++ b/drivers/md/raid0.c
-@@ -213,16 +213,16 @@ static int create_strip_zones (mddev_t *mddev)
- 	 * strip though as it's size has no bearing on the efficacy of the hash
- 	 * table.
- 	 */
--	conf->hash_spacing = curr_zone_start / 2;
--	min_spacing = curr_zone_start / 2;
-+	conf->spacing = curr_zone_start;
-+	min_spacing = curr_zone_start;
- 	sector_div(min_spacing, PAGE_SIZE/sizeof(struct strip_zone*));
- 	for (i=0; i < conf->nr_strip_zones-1; i++) {
--		sector_t sz = 0;
--		for (j=i; j<conf->nr_strip_zones-1 &&
--			     sz < min_spacing ; j++)
--			sz += conf->strip_zone[j].sectors / 2;
--		if (sz >= min_spacing && sz < conf->hash_spacing)
--			conf->hash_spacing = sz;
-+		sector_t s = 0;
-+		for (j = i; j < conf->nr_strip_zones - 1 &&
-+				s < min_spacing; j++)
-+			s += conf->strip_zone[j].sectors;
-+		if (s >= min_spacing && s < conf->spacing)
-+			conf->spacing = s;
- 	}
- 
- 	mddev->queue->unplug_fn = raid0_unplug;
-@@ -265,7 +265,7 @@ static int raid0_mergeable_bvec(struct request_queue *q,
- static int raid0_run (mddev_t *mddev)
- {
- 	unsigned  cur=0, i=0, nb_zone;
--	s64 size;
-+	s64 sectors;
- 	raid0_conf_t *conf;
- 	mdk_rdev_t *rdev;
- 	struct list_head *tmp;
-@@ -297,51 +297,51 @@ static int raid0_run (mddev_t *mddev)
- 	rdev_for_each(rdev, tmp, mddev)
- 		mddev->array_sectors += rdev->size * 2;
- 
--	printk("raid0 : md_size is %llu blocks.\n", 
--		(unsigned long long)mddev->array_sectors / 2);
--	printk("raid0 : conf->hash_spacing is %llu blocks.\n",
--		(unsigned long long)conf->hash_spacing);
-+	printk(KERN_INFO "raid0 : md_size is %llu sectors.\n",
-+		(unsigned long long)mddev->array_sectors);
-+	printk(KERN_INFO "raid0 : conf->spacing is %llu sectors.\n",
-+		(unsigned long long)conf->spacing);
- 	{
--		sector_t s = mddev->array_sectors / 2;
--		sector_t space = conf->hash_spacing;
-+		sector_t s = mddev->array_sectors;
-+		sector_t space = conf->spacing;
- 		int round;
--		conf->preshift = 0;
-+		conf->sector_shift = 0;
- 		if (sizeof(sector_t) > sizeof(u32)) {
- 			/*shift down space and s so that sector_div will work */
- 			while (space > (sector_t) (~(u32)0)) {
- 				s >>= 1;
- 				space >>= 1;
- 				s += 1; /* force round-up */
--				conf->preshift++;
-+				conf->sector_shift++;
- 			}
- 		}
- 		round = sector_div(s, (u32)space) ? 1 : 0;
- 		nb_zone = s + round;
- 	}
--	printk("raid0 : nb_zone is %d.\n", nb_zone);
-+	printk(KERN_INFO "raid0 : nb_zone is %d.\n", nb_zone);
- 
--	printk("raid0 : Allocating %Zd bytes for hash.\n",
-+	printk(KERN_INFO "raid0 : Allocating %zu bytes for hash.\n",
- 				nb_zone*sizeof(struct strip_zone*));
- 	conf->hash_table = kmalloc (sizeof (struct strip_zone *)*nb_zone, GFP_KERNEL);
- 	if (!conf->hash_table)
- 		goto out_free_conf;
--	size = conf->strip_zone[cur].sectors / 2;
-+	sectors = conf->strip_zone[cur].sectors;
- 
- 	conf->hash_table[0] = conf->strip_zone + cur;
- 	for (i=1; i< nb_zone; i++) {
--		while (size <= conf->hash_spacing) {
-+		while (sectors <= conf->spacing) {
- 			cur++;
--			size += conf->strip_zone[cur].sectors / 2;
-+			sectors += conf->strip_zone[cur].sectors;
- 		}
--		size -= conf->hash_spacing;
-+		sectors -= conf->spacing;
- 		conf->hash_table[i] = conf->strip_zone + cur;
- 	}
--	if (conf->preshift) {
--		conf->hash_spacing >>= conf->preshift;
--		/* round hash_spacing up so when we divide by it, we
-+	if (conf->sector_shift) {
-+		conf->spacing >>= conf->sector_shift;
-+		/* round spacing up so when we divide by it, we
- 		 * err on the side of too-low, which is safest
- 		 */
--		conf->hash_spacing++;
-+		conf->spacing++;
- 	}
- 
- 	/* calculate the max read-ahead size.
-@@ -435,8 +435,8 @@ static int raid0_make_request (struct request_queue *q, struct bio *bio)
+@@ -68,18 +68,18 @@ static int create_strip_zones (mddev_t *mddev)
+ 	conf->nr_strip_zones = 0;
   
- 
- 	{
--		sector_t x = sector >> (conf->preshift + 1);
--		sector_div(x, (u32)conf->hash_spacing);
-+		sector_t x = sector >> conf->sector_shift;
-+		sector_div(x, (u32)conf->spacing);
- 		zone = conf->hash_table[x];
+ 	rdev_for_each(rdev1, tmp1, mddev) {
+-		printk("raid0: looking at %s\n",
++		printk(KERN_INFO "raid0: looking at %s\n",
+ 			bdevname(rdev1->bdev,b));
+ 		c = 0;
+ 		rdev_for_each(rdev2, tmp2, mddev) {
+-			printk("raid0:   comparing %s(%llu)",
++			printk(KERN_INFO "raid0:   comparing %s(%llu)",
+ 			       bdevname(rdev1->bdev,b),
+ 			       (unsigned long long)rdev1->size);
+-			printk(" with %s(%llu)\n",
++			printk(KERN_INFO " with %s(%llu)\n",
+ 			       bdevname(rdev2->bdev,b),
+ 			       (unsigned long long)rdev2->size);
+ 			if (rdev2 == rdev1) {
+-				printk("raid0:   END\n");
++				printk(KERN_INFO "raid0:   END\n");
+ 				break;
+ 			}
+ 			if (rdev2->size == rdev1->size)
+@@ -88,19 +88,20 @@ static int create_strip_zones (mddev_t *mddev)
+ 				 * Not unique, don't count it as a new
+ 				 * group
+ 				 */
+-				printk("raid0:   EQUAL\n");
++				printk(KERN_INFO "raid0:   EQUAL\n");
+ 				c = 1;
+ 				break;
+ 			}
+-			printk("raid0:   NOT EQUAL\n");
++			printk(KERN_INFO "raid0:   NOT EQUAL\n");
+ 		}
+ 		if (!c) {
+-			printk("raid0:   ==> UNIQUE\n");
++			printk(KERN_INFO "raid0:   ==> UNIQUE\n");
+ 			conf->nr_strip_zones++;
+-			printk("raid0: %d zones\n", conf->nr_strip_zones);
++			printk(KERN_INFO "raid0: %d zones\n",
++				conf->nr_strip_zones);
+ 		}
  	}
+-	printk("raid0: FINAL %d zones\n", conf->nr_strip_zones);
++	printk(KERN_INFO "raid0: FINAL %d zones\n", conf->nr_strip_zones);
  
-diff --git a/include/linux/raid/raid0.h b/include/linux/raid/raid0.h
-index c12521d..fd42aa8 100644
---- a/include/linux/raid/raid0.h
-+++ b/include/linux/raid/raid0.h
-@@ -19,8 +19,8 @@ struct raid0_private_data
- 	mdk_rdev_t **devlist; /* lists of rdevs, pointed to by strip_zone->dev */
- 	int nr_strip_zones;
+ 	conf->strip_zone = kzalloc(sizeof(struct strip_zone)*
+ 				conf->nr_strip_zones, GFP_KERNEL);
+@@ -123,12 +124,13 @@ static int create_strip_zones (mddev_t *mddev)
+ 		int j = rdev1->raid_disk;
  
--	sector_t hash_spacing;
--	int preshift;			/* shift this before divide by hash_spacing */
-+	sector_t spacing;
-+	int sector_shift; /* shift this before divide by spacing */
- };
+ 		if (j < 0 || j >= mddev->raid_disks) {
+-			printk("raid0: bad disk number %d - aborting!\n", j);
++			printk(KERN_ERR "raid0: bad disk number %d - "
++				"aborting!\n", j);
+ 			goto abort;
+ 		}
+ 		if (zone->dev[j]) {
+-			printk("raid0: multiple devices for %d - aborting!\n",
+-				j);
++			printk(KERN_ERR "raid0: multiple devices for %d - "
++				"aborting!\n", j);
+ 			goto abort;
+ 		}
+ 		zone->dev[j] = rdev1;
+@@ -149,8 +151,8 @@ static int create_strip_zones (mddev_t *mddev)
+ 		cnt++;
+ 	}
+ 	if (cnt != mddev->raid_disks) {
+-		printk("raid0: too few disks (%d of %d) - aborting!\n",
+-			cnt, mddev->raid_disks);
++		printk(KERN_ERR "raid0: too few disks (%d of %d) - "
++			"aborting!\n", cnt, mddev->raid_disks);
+ 		goto abort;
+ 	}
+ 	zone->nb_dev = cnt;
+@@ -166,7 +168,7 @@ static int create_strip_zones (mddev_t *mddev)
+ 		zone = conf->strip_zone + i;
+ 		zone->dev = conf->strip_zone[i-1].dev + mddev->raid_disks;
  
- typedef struct raid0_private_data raid0_conf_t;
+-		printk("raid0: zone %d\n", i);
++		printk(KERN_INFO "raid0: zone %d\n", i);
+ 		zone->dev_start = current_start;
+ 		smallest = NULL;
+ 		c = 0;
+@@ -174,23 +176,25 @@ static int create_strip_zones (mddev_t *mddev)
+ 		for (j=0; j<cnt; j++) {
+ 			char b[BDEVNAME_SIZE];
+ 			rdev = conf->strip_zone[0].dev[j];
+-			printk("raid0: checking %s ...", bdevname(rdev->bdev,b));
++			printk(KERN_INFO "raid0: checking %s ...",
++				bdevname(rdev->bdev, b));
+ 			if (rdev->size > current_start / 2) {
+-				printk(" contained as device %d\n", c);
++				printk(KERN_INFO " contained as device %d\n",
++					c);
+ 				zone->dev[c] = rdev;
+ 				c++;
+ 				if (!smallest || (rdev->size <smallest->size)) {
+ 					smallest = rdev;
+-					printk("  (%llu) is smallest!.\n", 
++					printk(KERN_INFO "  (%llu) is smallest!.\n",
+ 						(unsigned long long)rdev->size);
+ 				}
+ 			} else
+-				printk(" nope.\n");
++				printk(KERN_INFO " nope.\n");
+ 		}
+ 
+ 		zone->nb_dev = c;
+ 		zone->size = (smallest->size - current_start / 2) * c;
+-		printk("raid0: zone->nb_dev: %d, size: %llu\n",
++		printk(KERN_INFO "raid0: zone->nb_dev: %d, size: %llu\n",
+ 			zone->nb_dev, (unsigned long long)zone->size);
+ 
+ 		zone->zone_start = curr_zone_start;
+@@ -226,7 +230,7 @@ static int create_strip_zones (mddev_t *mddev)
+ 	mddev->queue->backing_dev_info.congested_fn = raid0_congested;
+ 	mddev->queue->backing_dev_info.congested_data = mddev;
+ 
+-	printk("raid0: done.\n");
++	printk(KERN_INFO "raid0: done.\n");
+ 	return 0;
+  abort:
+ 	return 1;
 -- 
 1.5.3.8
 
