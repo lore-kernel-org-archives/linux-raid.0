@@ -1,7 +1,7 @@
 From: Andre Noll <maan@systemlinux.org>
-Subject: [PATCH 4/9] md: raid0: Represent device offset in sectors.
-Date: Mon, 20 Oct 2008 10:56:42 +0200
-Message-ID: <1224493007-1255-5-git-send-email-maan@systemlinux.org>
+Subject: [PATCH 3/9] md: raid0_make_request(): Replace local variable block by sector.
+Date: Mon, 20 Oct 2008 10:56:41 +0200
+Message-ID: <1224493007-1255-4-git-send-email-maan@systemlinux.org>
 References: <1224493007-1255-1-git-send-email-maan@systemlinux.org>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1224493007-1255-1-git-send-email-maan@systemlinux.org>
@@ -10,61 +10,63 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, Andre Noll <maan@systemlinux.org>
 List-Id: linux-raid.ids
 
-Rename zone->dev_offset to zone->dev_start to make sure all users
-have been converted.
+This change already simplifies the code a bit.
 ---
- drivers/md/raid0.c         |    9 ++++-----
- include/linux/raid/raid0.h |    2 +-
- 2 files changed, 5 insertions(+), 6 deletions(-)
+ drivers/md/raid0.c |   13 ++++++-------
+ 1 files changed, 6 insertions(+), 7 deletions(-)
 
 diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
-index fd65d88..b860536 100644
+index d843849..fd65d88 100644
 --- a/drivers/md/raid0.c
 +++ b/drivers/md/raid0.c
-@@ -167,7 +167,7 @@ static int create_strip_zones (mddev_t *mddev)
- 		zone->dev = conf->strip_zone[i-1].dev + mddev->raid_disks;
+@@ -392,7 +392,7 @@ static int raid0_make_request (struct request_queue *q, struct bio *bio)
+ 	struct strip_zone *zone;
+ 	mdk_rdev_t *tmp_dev;
+ 	sector_t chunk;
+-	sector_t block, rsect;
++	sector_t sector, rsect;
+ 	const int rw = bio_data_dir(bio);
+ 	int cpu;
  
- 		printk("raid0: zone %d\n", i);
--		zone->dev_offset = current_offset;
-+		zone->dev_start = current_offset * 2;
- 		smallest = NULL;
- 		c = 0;
+@@ -409,8 +409,7 @@ static int raid0_make_request (struct request_queue *q, struct bio *bio)
  
-@@ -452,8 +452,7 @@ static int raid0_make_request (struct request_queue *q, struct bio *bio)
- 		x = sector >> chunksect_bits;
+ 	chunk_sects = mddev->chunk_size >> 9;
+ 	chunksect_bits = ffz(~chunk_sects);
+-	block = bio->bi_sector >> 1;
+-	
++	sector = bio->bi_sector;
+ 
+ 	if (unlikely(chunk_sects < (bio->bi_sector & (chunk_sects - 1)) + (bio->bi_size >> 9))) {
+ 		struct bio_pair *bp;
+@@ -433,24 +432,24 @@ static int raid0_make_request (struct request_queue *q, struct bio *bio)
+  
+ 
+ 	{
+-		sector_t x = block >> conf->preshift;
++		sector_t x = sector >> (conf->preshift + 1);
+ 		sector_div(x, (u32)conf->hash_spacing);
+ 		zone = conf->hash_table[x];
+ 	}
+  
+-	while (block >= (zone->zone_offset + zone->size)) 
++	while (sector / 2 >= (zone->zone_offset + zone->size))
+ 		zone++;
+     
+ 	sect_in_chunk = bio->bi_sector & (chunk_sects - 1);
+ 
+ 
+ 	{
+-		sector_t x =  (block - zone->zone_offset) >> (chunksect_bits - 1);
++		sector_t x = (sector - zone->zone_offset * 2) >> chunksect_bits;
+ 
+ 		sector_div(x, zone->nb_dev);
+ 		chunk = x;
+ 
+-		x = block >> (chunksect_bits - 1);
++		x = sector >> chunksect_bits;
  		tmp_dev = zone->dev[sector_div(x, zone->nb_dev)];
  	}
--	rsect = (((chunk << (chunksect_bits - 1)) + zone->dev_offset)<<1)
--		+ sect_in_chunk;
-+	rsect = (chunk << chunksect_bits) + zone->dev_start + sect_in_chunk;
-  
- 	bio->bi_bdev = tmp_dev->bdev;
- 	bio->bi_sector = rsect + tmp_dev->data_offset;
-@@ -490,9 +489,9 @@ static void raid0_status (struct seq_file *seq, mddev_t *mddev)
- 			seq_printf(seq, "%s/", bdevname(
- 				conf->strip_zone[j].dev[k]->bdev,b));
- 
--		seq_printf(seq, "] zo=%d do=%d s=%d\n",
-+		seq_printf(seq, "] zo=%d ds=%d s=%d\n",
- 				conf->strip_zone[j].zone_offset,
--				conf->strip_zone[j].dev_offset,
-+				conf->strip_zone[j].dev_start,
- 				conf->strip_zone[j].size);
- 	}
- #endif
-diff --git a/include/linux/raid/raid0.h b/include/linux/raid/raid0.h
-index 1b2dda0..61c3d29 100644
---- a/include/linux/raid/raid0.h
-+++ b/include/linux/raid/raid0.h
-@@ -6,7 +6,7 @@
- struct strip_zone
- {
- 	sector_t zone_offset;	/* Zone offset in md_dev */
--	sector_t dev_offset;	/* Zone offset in real dev */
-+	sector_t dev_start;	/* Zone offset in real dev (in sectors) */
- 	sector_t size;		/* Zone size */
- 	int nb_dev;		/* # of devices attached to the zone */
- 	mdk_rdev_t **dev;	/* Devices attached to the zone */
+ 	rsect = (((chunk << (chunksect_bits - 1)) + zone->dev_offset)<<1)
 -- 
 1.5.3.8
 
