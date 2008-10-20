@@ -1,7 +1,7 @@
 From: Andre Noll <maan@systemlinux.org>
-Subject: [PATCH 6/9] md: raid0 create_strip_zones(): Make two local variables sector-based.
-Date: Mon, 20 Oct 2008 10:56:44 +0200
-Message-ID: <1224493007-1255-7-git-send-email-maan@systemlinux.org>
+Subject: [PATCH 8/9] md: raid0: Represent the size of strip zones in sectors.
+Date: Mon, 20 Oct 2008 10:56:46 +0200
+Message-ID: <1224493007-1255-9-git-send-email-maan@systemlinux.org>
 References: <1224493007-1255-1-git-send-email-maan@systemlinux.org>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1224493007-1255-1-git-send-email-maan@systemlinux.org>
@@ -10,94 +10,108 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, Andre Noll <maan@systemlinux.org>
 List-Id: linux-raid.ids
 
-current_offset and curr_zone_offset stored the corresponding offsets
-as 1K quantities. Rename them to current_start and curr_zone_start
-to match the naming of struct strip_zone and store the offsets as
-sector counts.
-
-Also, add KERN_INFO to the printk() affected by this change to make
-checkpatch happy.
+This completes the block -> sector conversion of struct strip_zone.
 ---
- drivers/md/raid0.c |   27 +++++++++++++--------------
- 1 files changed, 13 insertions(+), 14 deletions(-)
+ drivers/md/raid0.c         |   26 +++++++++++++-------------
+ include/linux/raid/raid0.h |    2 +-
+ 2 files changed, 14 insertions(+), 14 deletions(-)
 
 diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
-index 6e12a35..9074ea4 100644
+index c759436..6e85e88 100644
 --- a/drivers/md/raid0.c
 +++ b/drivers/md/raid0.c
-@@ -53,7 +53,7 @@ static int raid0_congested(void *data, int bits)
- static int create_strip_zones (mddev_t *mddev)
- {
- 	int i, c, j;
--	sector_t current_offset, curr_zone_offset;
-+	sector_t current_start, curr_zone_start;
- 	sector_t min_spacing;
- 	raid0_conf_t *conf = mddev_to_conf(mddev);
- 	mdk_rdev_t *smallest, *rdev1, *rdev2, *rdev;
-@@ -157,8 +157,8 @@ static int create_strip_zones (mddev_t *mddev)
- 	zone->size = smallest->size * cnt;
+@@ -156,11 +156,11 @@ static int create_strip_zones (mddev_t *mddev)
+ 		goto abort;
+ 	}
+ 	zone->nb_dev = cnt;
+-	zone->size = smallest->size * cnt;
++	zone->sectors = smallest->size * cnt * 2;
  	zone->zone_start = 0;
  
--	current_offset = smallest->size;
--	curr_zone_offset = zone->size;
-+	current_start = smallest->size * 2;
-+	curr_zone_start = zone->size * 2;
+ 	current_start = smallest->size * 2;
+-	curr_zone_start = zone->size * 2;
++	curr_zone_start = zone->sectors;
  
  	/* now do the other zones */
  	for (i = 1; i < conf->nr_strip_zones; i++)
-@@ -167,7 +167,7 @@ static int create_strip_zones (mddev_t *mddev)
- 		zone->dev = conf->strip_zone[i-1].dev + mddev->raid_disks;
- 
- 		printk("raid0: zone %d\n", i);
--		zone->dev_start = current_offset * 2;
-+		zone->dev_start = current_start;
- 		smallest = NULL;
- 		c = 0;
- 
-@@ -175,8 +175,7 @@ static int create_strip_zones (mddev_t *mddev)
- 			char b[BDEVNAME_SIZE];
- 			rdev = conf->strip_zone[0].dev[j];
- 			printk("raid0: checking %s ...", bdevname(rdev->bdev,b));
--			if (rdev->size > current_offset)
--			{
-+			if (rdev->size > current_start / 2) {
- 				printk(" contained as device %d\n", c);
- 				zone->dev[c] = rdev;
- 				c++;
-@@ -190,16 +189,16 @@ static int create_strip_zones (mddev_t *mddev)
+@@ -193,12 +193,12 @@ static int create_strip_zones (mddev_t *mddev)
  		}
  
  		zone->nb_dev = c;
--		zone->size = (smallest->size - current_offset) * c;
-+		zone->size = (smallest->size - current_start / 2) * c;
- 		printk("raid0: zone->nb_dev: %d, size: %llu\n",
- 			zone->nb_dev, (unsigned long long)zone->size);
+-		zone->size = (smallest->size - current_start / 2) * c;
+-		printk(KERN_INFO "raid0: zone->nb_dev: %d, size: %llu\n",
+-			zone->nb_dev, (unsigned long long)zone->size);
++		zone->sectors = (smallest->size * 2 - current_start) * c;
++		printk(KERN_INFO "raid0: zone->nb_dev: %d, sectors: %llu\n",
++			zone->nb_dev, (unsigned long long)zone->sectors);
  
--		zone->zone_start = curr_zone_offset * 2;
--		curr_zone_offset += zone->size;
-+		zone->zone_start = curr_zone_start;
-+		curr_zone_start += zone->size * 2;
+ 		zone->zone_start = curr_zone_start;
+-		curr_zone_start += zone->size * 2;
++		curr_zone_start += zone->sectors;
  
--		current_offset = smallest->size;
--		printk("raid0: current zone offset: %llu\n",
--			(unsigned long long)current_offset);
-+		current_start = smallest->size * 2;
-+		printk(KERN_INFO "raid0: current zone start: %llu\n",
-+			(unsigned long long)current_start);
- 	}
- 
- 	/* Now find appropriate hash spacing.
-@@ -210,8 +209,8 @@ static int create_strip_zones (mddev_t *mddev)
- 	 * strip though as it's size has no bearing on the efficacy of the hash
- 	 * table.
- 	 */
--	conf->hash_spacing = curr_zone_offset;
--	min_spacing = curr_zone_offset;
-+	conf->hash_spacing = curr_zone_start / 2;
-+	min_spacing = curr_zone_start / 2;
- 	sector_div(min_spacing, PAGE_SIZE/sizeof(struct strip_zone*));
- 	for (i=0; i < conf->nr_strip_zones-1; i++) {
+ 		current_start = smallest->size * 2;
+ 		printk(KERN_INFO "raid0: current zone start: %llu\n",
+@@ -220,7 +220,7 @@ static int create_strip_zones (mddev_t *mddev)
  		sector_t sz = 0;
+ 		for (j=i; j<conf->nr_strip_zones-1 &&
+ 			     sz < min_spacing ; j++)
+-			sz += conf->strip_zone[j].size;
++			sz += conf->strip_zone[j].sectors / 2;
+ 		if (sz >= min_spacing && sz < conf->hash_spacing)
+ 			conf->hash_spacing = sz;
+ 	}
+@@ -325,13 +325,13 @@ static int raid0_run (mddev_t *mddev)
+ 	conf->hash_table = kmalloc (sizeof (struct strip_zone *)*nb_zone, GFP_KERNEL);
+ 	if (!conf->hash_table)
+ 		goto out_free_conf;
+-	size = conf->strip_zone[cur].size;
++	size = conf->strip_zone[cur].sectors / 2;
+ 
+ 	conf->hash_table[0] = conf->strip_zone + cur;
+ 	for (i=1; i< nb_zone; i++) {
+ 		while (size <= conf->hash_spacing) {
+ 			cur++;
+-			size += conf->strip_zone[cur].size;
++			size += conf->strip_zone[cur].sectors / 2;
+ 		}
+ 		size -= conf->hash_spacing;
+ 		conf->hash_table[i] = conf->strip_zone + cur;
+@@ -439,10 +439,10 @@ static int raid0_make_request (struct request_queue *q, struct bio *bio)
+ 		sector_div(x, (u32)conf->hash_spacing);
+ 		zone = conf->hash_table[x];
+ 	}
+- 
+-	while (sector / 2 >= (zone->zone_start / 2 + zone->size))
++
++	while (sector >= zone->zone_start + zone->sectors)
+ 		zone++;
+-    
++
+ 	sect_in_chunk = bio->bi_sector & (chunk_sects - 1);
+ 
+ 
+@@ -495,7 +495,7 @@ static void raid0_status (struct seq_file *seq, mddev_t *mddev)
+ 		seq_printf(seq, "] zs=%d ds=%d s=%d\n",
+ 				conf->strip_zone[j].zone_start,
+ 				conf->strip_zone[j].dev_start,
+-				conf->strip_zone[j].size);
++				conf->strip_zone[j].sectors);
+ 	}
+ #endif
+ 	seq_printf(seq, " %dk chunks", mddev->chunk_size/1024);
+diff --git a/include/linux/raid/raid0.h b/include/linux/raid/raid0.h
+index eaf4f6a..c12521d 100644
+--- a/include/linux/raid/raid0.h
++++ b/include/linux/raid/raid0.h
+@@ -7,7 +7,7 @@ struct strip_zone
+ {
+ 	sector_t zone_start;	/* Zone offset in md_dev (in sectors) */
+ 	sector_t dev_start;	/* Zone offset in real dev (in sectors) */
+-	sector_t size;		/* Zone size */
++	sector_t sectors;	/* Zone size in sectors */
+ 	int nb_dev;		/* # of devices attached to the zone */
+ 	mdk_rdev_t **dev;	/* Devices attached to the zone */
+ };
 -- 
 1.5.3.8
 
