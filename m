@@ -1,41 +1,32 @@
-From: "Dan Williams" <dan.j.williams@intel.com>
-Subject: Re: Possible Bug in MD?
-Date: Tue, 21 Oct 2008 10:16:01 -0700
-Message-ID: <e9c3a7c20810211016u7b1c8b33se67eacf301c73441@mail.gmail.com>
-References: <cccedfc60810210554q4ed8822eyc93f972fe2d515db@mail.gmail.com>
+From: Ferenc Wagner <wferi@niif.hu>
+Subject: Re: aoe freezes 2.6.26.6
+Date: Tue, 21 Oct 2008 19:21:03 +0200
+Message-ID: <87ljwhn9ts.fsf@tac.ki.iif.hu>
+References: <871vyb9on9.fsf@tac.ki.iif.hu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <cccedfc60810210554q4ed8822eyc93f972fe2d515db@mail.gmail.com>
-Content-Disposition: inline
+In-Reply-To: <871vyb9on9.fsf@tac.ki.iif.hu> (Ferenc Wagner's message of "Mon,
+	20 Oct 2008 19:12:26 +0200")
 Sender: linux-raid-owner@vger.kernel.org
-To: Jon Nelson <jnelson-linux-raid@jamponi.net>
-Cc: LinuxRaid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Oct 21, 2008 at 5:54 AM, Jon Nelson
-<jnelson-linux-raid@jamponi.net> wrote:
-> I ran into a weird problem recently.
->
-> I tried using --stop on an array that was in the process of rebuilding
-> (immediately following creation).
->
-> mdadm never returned.
->
-> After the array was complete, mdadm still had not returned.
->
-> An strace of the mdadm process showed, unfortunately, nothing, indicating to me
-> that it was stuck in the kernel somewhere.
->
-> I have no other information at this time, except that it was with the Rescue
-> option from the openSUSE 11.0 x86-64 DVD iso (and thus the stock kernel, mdadm
-> version, etc...)
->
+Ferenc Wagner <wferi@niif.hu> writes:
 
-Can you determine if hald was running?  I have seen cases where hald
-prevents --stop from completing, but I have not debugged further.
-Terminating hald allowed --stop to complete.
+> I've got a total of 55 AoE devices.  Some of them come from Coraid
+> EtherDrive 1521 boxes (e1[0-3].*) and some are VS21 logical units
+> (e10[01].*).  This works with 2.6.18 and its stock AoE driver (v22).
+> But if I load the aoe module under 2.6.26.6, it freezes my system like
+> this: [...]
 
---
-Dan
+Forgot to say: it freezes under 2.6.27 as well (which has the same v47
+AoE driver as 2.6.26).  And there are 21 (that is more than 16)
+"slots" exported by the VS21 unit on "shelf" 100.  If those devices
+simply didn't show up, I wouldn't complain, but freezing the kernel is
+a show-stopper for me.  I uploaded the full console log of a boot
+attempt (ripe with sysrq interaction) with 2.6.27 to
+http://rs22.lvs.iif.hu/aoe_freeze.log
+-- 
+Regards,
+Feri.
