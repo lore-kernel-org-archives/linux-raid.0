@@ -1,32 +1,44 @@
-From: Ferenc Wagner <wferi@niif.hu>
-Subject: Re: aoe freezes 2.6.26.6
-Date: Tue, 21 Oct 2008 19:21:03 +0200
-Message-ID: <87ljwhn9ts.fsf@tac.ki.iif.hu>
-References: <871vyb9on9.fsf@tac.ki.iif.hu>
+From: David Greaves <david@dgreaves.com>
+Subject: Re: Proactive Drive Replacement
+Date: Tue, 21 Oct 2008 18:29:53 +0100
+Message-ID: <48FE1191.3030302@dgreaves.com>
+References: <cccedfc60810201035m53873320tb069f333b707191b@mail.gmail.com> <gdj1c4$8nf$1@ger.gmane.org> <48FD94F9.3060400@dgreaves.com> <gdkn4n$u6p$1@ger.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <871vyb9on9.fsf@tac.ki.iif.hu> (Ferenc Wagner's message of "Mon,
-	20 Oct 2008 19:12:26 +0200")
+In-Reply-To: <gdkn4n$u6p$1@ger.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Ferenc Wagner <wferi@niif.hu> writes:
+Mario 'BitKoenig' Holbe wrote:
+> David Greaves <david@dgreaves.com> wrote:
+>> The main issue is that the drive being replaced almost certainly has a bad
+>> block.
+> 
+> Then, the replacement is not pro-active ;)
+> 
+>> This block could be recovered from the raid5 set but won't be.
+> 
+> This is what 'check' and 'repair' operations
+> (/sys/block/md*/md/sync_action) can be used for.
 
-> I've got a total of 55 AoE devices.  Some of them come from Coraid
-> EtherDrive 1521 boxes (e1[0-3].*) and some are VS21 logical units
-> (e10[01].*).  This works with 2.6.18 and its stock AoE driver (v22).
-> But if I load the aoe module under 2.6.26.6, it freezes my system like
-> this: [...]
+Well, yes and no.
 
-Forgot to say: it freezes under 2.6.27 as well (which has the same v47
-AoE driver as 2.6.26).  And there are 21 (that is more than 16)
-"slots" exported by the VS21 unit on "shelf" 100.  If those devices
-simply didn't show up, I wouldn't complain, but freezing the kernel is
-a show-stopper for me.  I uploaded the full console log of a boot
-attempt (ripe with sysrq interaction) with 2.6.27 to
-http://rs22.lvs.iif.hu/aoe_freeze.log
+If I have a bad block then I could use the remaining disks to calculate data to
+overwrite it. So yes.
+
+However the overwrite may fail. So no.
+
+If I have an md managed mirror then the overwrite will write to the new disk and
+the old one. I don't care if the old one fails.
+
+
+David
+
+
+
 -- 
-Regards,
-Feri.
+"Don't worry, you'll be fine; I saw it work in a cartoon once..."
