@@ -1,55 +1,36 @@
-From: Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE>
-Subject: Re: Proactive Drive Replacement
-Date: Tue, 21 Oct 2008 17:30:18 +0200
-Message-ID: <gdksib$nap$1@ger.gmane.org>
-References: <cccedfc60810201035m53873320tb069f333b707191b@mail.gmail.com>
- <gdj1c4$8nf$1@ger.gmane.org> <48FD94F9.3060400@dgreaves.com>
- <cccedfc60810210605w638ac471xbce0ceb616a0c141@mail.gmail.com>
- <A20315AE59B5C34585629E258D76A97C025BF0B0@34093-C3-EVS3.exchange.rackspace.com>
- <gdknuo$2qp$1@ger.gmane.org>
- <A20315AE59B5C34585629E258D76A97C025BF23B@34093-C3-EVS3.exchange.rackspace.com>
+From: "Morgan Wahl" <morgy.wahl@gmail.com>
+Subject: HELP! my raid5 ate my data!
+Date: Tue, 21 Oct 2008 12:15:21 -0400
+Message-ID: <9512192b0810210915xa27061bkdc37e212f17c944b@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-David Lethe <david@santools.com> wrote:
-> is correctly called the "SMART selective
-> self-test routine".   By the way, this is an OFF-LINE scan.  
+yesterday I had a problem with the SATA bus one of my drives is on,
+which i've since fixed. I have a raid5 on four 20GB partitions (each
+on it's own drive, of course). The one that failed was sdc1. when i
+rebooted, the raid was no longer active (according to `mdadm -Q
+/dev/md0`).  I ran `mdadm --examine ` on each drive. For sdc1 it said
+everything was fine, but for the other three drives sdc1 was marked as
+failed. I've never recovered from a drive failure before and I don't
+think I did it correctly. I removed sdc1 from the raid and then
+incrementally added it again. (I now realize I should've started the
+raid with it removed and done a backup.) I started the raid again with
+all four drives, and put it in readonly mode and tried to mount it,
+but it presumably still isn't set up right since it refuses to mount
+and `e2fsck -n` returns myriad errors.
 
-short, long, conveyance and selective tests are all offline.
+Did starting the raid with the bad disk destroy everything? did it
+only destory a little (assuming fsck can get the filesystem back into
+a useable state)? How can I even find out what's wrong? I do have a
+separate terabyte disk that i've copied images of the disks to, so I
+can perform experiment on them, but I'm not sure what to do.
 
-> So bottom line, Mario is correct in that there is a way to get a PARTIAL
-> list of bad blocks, if you have a disk
-> that supports this command, and you're willing to run an off-line scan
-> (not practical or a parity-protected RAID 
-> environment).
+Help! Please!
 
-Most modern (ATA) disks support "Suspend Offline collection upon new
-command". Well, the tests take notably longer on a loaded disk and
-(low-frequent) requests to that disk take notably longer as well
-(high-frequent requests just keep the test suspended), but it works.
-
-> It is possible that some vendor has implemented a SATA ON-LINE bad block
-> scanning mechanism that reports results and
-> doesn't kill I/O performance.  It would have to give full list of bad
-> blocks, or at least startingblock + range.
->
-> That would be wonderful as you could just read the list on regular
-> interval and rebuild stripes as necessary. You'd have
-> Self-healing parity.
-
-echo check > /sys/block/mdx/md/sync_action
-
-That's indeed way more powerful than any attempt to rely on any
-S.M.A.R.T. thingy.
-
-
-regards
-   Mario
--- 
-I thought the only thing the internet was good for was porn.  -- Futurama
-
+   -Morgan
