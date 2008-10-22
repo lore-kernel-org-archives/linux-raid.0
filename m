@@ -1,225 +1,32 @@
-From: "Steve Evans" <jeeping@gmail.com>
-Subject: mdadm degraded RAID5 failure
-Date: Wed, 22 Oct 2008 14:52:43 -0600
-Message-ID: <6cc8e9ed0810221352y7427cb7dmfc7c3fcefd495bb9@mail.gmail.com>
-References: <6cc8e9ed0810221350o2b8b3aedm3d1c229fe7e66163@mail.gmail.com>
+From: "NeilBrown" <neilb@suse.de>
+Subject: Re: initiate consistency check using mdadm
+Date: Thu, 23 Oct 2008 08:43:28 +1100 (EST)
+Message-ID: <04eda08abe4ecb6ad04dd21259e07e1c.squirrel@neil.brown.name>
+References: <8b25b3bc0810220447s1c0b5e1ega116682a58f9fcd1@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <6cc8e9ed0810221350o2b8b3aedm3d1c229fe7e66163@mail.gmail.com>
-Content-Disposition: inline
+In-Reply-To: <8b25b3bc0810220447s1c0b5e1ega116682a58f9fcd1@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Mattias =?iso-8859-1?Q?Hellstr=F6m?= <hellstrom.mattias@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi all..
+On Wed, October 22, 2008 10:47 pm, Mattias Hellstr=F6m wrote:
+> To me it would be nice to use mdadm for all mdraid related tasks, as =
+a
+> convenient way to "cat /proc/mdstat" and writing check in the correct
+> sync_action file etc.
+>
+> Is this out of scope for the tool? (Or just not yet coded)
 
-I had one of the disks in my 3 disk RAID5 die on me this week. When
-attempting to replace the disk via a hot swap (USB), the RAID didn't
-like it. It decided to mark one of my remaining 2 disks as faulty.
+Not yet coded.  Patches welcome.
 
-Can someone *please* help me get the raid back!?
+NeilBrown
 
-More details -
-
-Drives are /dev/sdb1, /dev/sdc1 & /dev/sdd1
-
-sdc1 was the one that died earlier this week
-sdb1 appears to be the one that was marked as faulty
-
-mdadm detail before sdc1 was plugged in -
-
-root@imp[~]:11 # mdadm --detail /dev/md1
-/dev/md1:
-Version : 00.90.01
-Creation Time : Fri Nov 17 21:28:44 2006
-Raid Level : raid5
-Array Size : 586067072 (558.92 GiB 600.13 GB)
-Device Size : 293033536 (279.46 GiB 300.07 GB)
-Raid Devices : 3
-Total Devices : 2
-Preferred Minor : 1
-Persistence : Superblock is persistent
-
-Update Time : Sat Oct 18 20:06:34 2008
-State : clean, degraded
-Active Devices : 2
-Working Devices : 2
-Failed Devices : 0
-Spare Devices : 0
-
-Layout : left-symmetric
-Chunk Size : 64K
-
-UUID : bed40ee2:98523fdd:e4d010fb:894c0966
-Events : 0.1474312
-
-Number Major Minor RaidDevice State
-0 8 17 0 active sync /dev/sdb1
-1 0 0 - removed
-2 8 49 2 active sync /dev/sdd1
-
-
-then after plugging in the replacement sdc1 -
-
-root@imp[~]:13 # mdadm --add /dev/md1 /dev/sdc1
-mdadm: hot added /dev/sdc1
-root@imp[~]:14 #
-root@imp[~]:14 #
-root@imp[~]:14 # mdadm --detail /dev/md1
-/dev/md1:
-Version : 00.90.01
-Creation Time : Fri Nov 17 21:28:44 2006
-Raid Level : raid5
-Array Size : 586067072 (558.92 GiB 600.13 GB)
-Device Size : 293033536 (279.46 GiB 300.07 GB)
-Raid Devices : 3
-Total Devices : 3
-Preferred Minor : 1
-Persistence : Superblock is persistent
-
-Update Time : Sat Oct 18 22:13:13 2008
-State : clean, degraded
-Active Devices : 1
-Working Devices : 2
-Failed Devices : 1
-Spare Devices : 1
-
-Layout : left-symmetric
-Chunk Size : 64K
-
-UUID : bed40ee2:98523fdd:e4d010fb:894c0966
-Events : 0.1480366
-
-Number Major Minor RaidDevice State
-0 0 0 - removed
-1 0 0 - removed
-2 8 49 2 active sync /dev/sdd1
-
-3 8 33 0 spare rebuilding /dev/sdc1
-4 8 17 - faulty /dev/sdb1
-
-Shortly after this, subsequent mdadm --details stopped responding.. So
-I rebooted in the hope I could reset and problems with the hot add..
-
-Now, I'm unable to assemble the raid with the 2 working drives -
-
-mdadm --assemble /dev/md1 /dev/sdb1 /dev/sdd1
-
-doesn't work -
-
-mdadm: /dev/md1 assembled from 1 drive and 1 spare - not enough to
-start the array.
-
-mdadm --assemble --force /dev/md1 /dev/sdb1 /dev/sdd1
-
-doesn't' work either
-
-This -
-
-mdadm --assemble --force --run /dev/md1 /dev/sdb1 /dev/sdd1
-
-Did work partially -
-
-/dev/md1:
-Version : 00.90.01
-Creation Time : Fri Nov 17 21:28:44 2006
-Raid Level : raid5
-Device Size : 293033536 (279.46 GiB 300.07 GB)
-Raid Devices : 3
-Total Devices : 2
-Preferred Minor : 1
-Persistence : Superblock is persistent
-
-Update Time : Sat Oct 18 22:14:48 2008
-State : active, degraded
-Active Devices : 1
-Working Devices : 2
-Failed Devices : 0
-Spare Devices : 1
-
-Layout : left-symmetric
-Chunk Size : 64K
-
-UUID : bed40ee2:98523fdd:e4d010fb:894c0966
-Events : 0.1521614
-
-Number Major Minor RaidDevice State
-0 0 0 - removed
-1 0 0 - removed
-2 8 49 2 active sync /dev/sdd1
-
-3 8 17 - spare /dev/sdb1
-
-Here's the output from mdadm -E on each of the 2 drives -
-
-/dev/sdb1:
-Magic : a92b4efc
-Version : 00.90.00
-UUID : bed40ee2:98523fdd:e4d010fb:894c0966
-Creation Time : Fri Nov 17 21:28:44 2006
-Raid Level : raid5
-Raid Devices : 3
-Total Devices : 3
-Preferred Minor : 1
-
-Update Time : Sat Oct 18 22:14:48 2008
-State : clean
-Active Devices : 1
-Working Devices : 2
-Failed Devices : 2
-Spare Devices : 1
-Checksum : e6dbf75 - correct
-Events : 0.1521614
-
-Layout : left-symmetric
-Chunk Size : 64K
-
-Number Major Minor RaidDevice State
-this 3 8 33 3 spare /dev/sdc1
-
-0 0 0 0 0 removed
-1 1 0 0 1 faulty removed
-2 2 8 49 2 active sync /dev/sdd1
-3 3 8 33 3 spare /dev/sdc1
-/dev/sdd1:
-Magic : a92b4efc
-Version : 00.90.00
-UUID : bed40ee2:98523fdd:e4d010fb:894c0966
-Creation Time : Fri Nov 17 21:28:44 2006
-Raid Level : raid5
-Raid Devices : 3
-Total Devices : 3
-Preferred Minor : 1
-
-Update Time : Sat Oct 18 22:14:48 2008
-State : clean
-Active Devices : 1
-Working Devices : 2
-Failed Devices : 2
-Spare Devices : 1
-Checksum : e6dbf86 - correct
-Events : 0.1521614
-
-Layout : left-symmetric
-Chunk Size : 64K
-
-Number Major Minor RaidDevice State
-this 2 8 49 2 active sync /dev/sdd1
-
-0 0 0 0 0 removed
-1 1 0 0 1 faulty removed
-2 2 8 49 2 active sync /dev/sdd1
-3 3 8 33 0 spare /dev/sdc1
-
-root@imp[~]:28 # mdadm --version
-mdadm - v1.9.0 - 04 February 2005
-root@imp[~]:29 # uname -a
-Linux imp 2.6.8-3-686 #1 Tue Dec 5 21:26:38 UTC 2006 i686 GNU/Linux
-
-
-Is all the data lost, or can I recover from this?
-
-Thanks so much!
-Steve..
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
