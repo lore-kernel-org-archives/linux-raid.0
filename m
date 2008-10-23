@@ -1,32 +1,40 @@
-From: "NeilBrown" <neilb@suse.de>
-Subject: Re: initiate consistency check using mdadm
-Date: Thu, 23 Oct 2008 08:43:28 +1100 (EST)
-Message-ID: <04eda08abe4ecb6ad04dd21259e07e1c.squirrel@neil.brown.name>
-References: <8b25b3bc0810220447s1c0b5e1ega116682a58f9fcd1@mail.gmail.com>
+From: "Max Waterman" <davidmaxwaterman@fastmail.co.uk>
+Subject: backup using raid
+Date: Thu, 23 Oct 2008 08:21:24 +0300
+Message-ID: <d5fe39840810222221j26fbaa12t17ba8577186e3dbc@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <8b25b3bc0810220447s1c0b5e1ega116682a58f9fcd1@mail.gmail.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Mattias =?iso-8859-1?Q?Hellstr=F6m?= <hellstrom.mattias@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, October 22, 2008 10:47 pm, Mattias Hellstr=F6m wrote:
-> To me it would be nice to use mdadm for all mdraid related tasks, as =
-a
-> convenient way to "cat /proc/mdstat" and writing check in the correct
-> sync_action file etc.
->
-> Is this out of scope for the tool? (Or just not yet coded)
+Hi,
 
-Not yet coded.  Patches welcome.
+Maybe slightly off-topic, sorry.
 
-NeilBrown
+People often say "raid isn't for backup", but it seems obvious that it
+could be, if used in a similar way to tape.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+For example, if you have raid1 array, and have an 'extra' spare (is
+spare the correct word) on a removable drive, then it can be
+constantly creating a copy of the contents of the array which can be
+removed by failing the backup spare. If you then have a whole series
+of removable drives, then you can implement whatever off-site backup
+system you would with tape.
+
+The only gotchas I see are :
+
+1) you might have to adjust the backup system to account for the
+different reliability of tape vs disk
+2) you might have to carefully pick the time/way you remove the failed
+spare. It might be OK to just fail it and hot-remove the disk, but
+more likely it'll be necessary to take the system to single-user mode
+or even shut it down competely.
+
+Is this a crazy idea? Have people thought of this before? Are there
+any other gotchas?
+
+Max.
