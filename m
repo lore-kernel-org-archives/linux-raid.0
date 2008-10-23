@@ -1,44 +1,37 @@
-From: Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE>
-Subject: Re: backup using raid
-Date: Thu, 23 Oct 2008 10:09:50 +0200
-Message-ID: <slrngg0cae.ond.Mario.Holbe@darkside.dyn.samba-tng.org>
-References: <d5fe39840810222221j26fbaa12t17ba8577186e3dbc@mail.gmail.com>
+From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
+Subject: bad block checking and repair
+Date: Thu, 23 Oct 2008 14:31:17 +0200
+Message-ID: <20081023123117.GA24775@rap.rap.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Max Waterman <davidmaxwaterman@fastmail.co.uk> wrote:
-> For example, if you have raid1 array, and have an 'extra' spare (is
-> spare the correct word) on a removable drive, then it can be
+Is there a case for better bad block handling in linux raid?
 
-A spare is not enough, since spares get not synched.
+Disk errors are reported to be more and more frequent in today's
+systems. Storage capacity grows and with that the likelihood of disk
+errors.
 
-> Is this a crazy idea? Have people thought of this before? Are there
-> any other gotchas?
+I am not sure of the ststus of bad block handling in linux raid.
+Can somebody enlighten me?
 
-I'm doing my backups this way quite a long time now. All my RAID1 have
-an empty slot (i.e. I'm running 3-mirror RAID1s degraded to 2 mirrors)
-where I plug my backup disks in from time to time. For the bigger RAIDs
-I'm using bitmaps to reduce the backup-time.
-However, I would never suggest my way to "the average user". There are
-lots of things you can easily do wrong. Especially if you do this
-on-line: You have to make sure the filesystem is in a clean state when
-you pull the backup-disk. With bitmaps, only one backup generation
-works. etc. pp. Not to mention all the gotchas "the average fool" would
-stumble upon... synching in the wrong direction and things like that :)
+I think there are a number of techniques that could be employed.
 
-Btw... The Intel Matrix Storage Manager has a "mirror on demand" feature
-that seems to do something similar. I don't know how they deal with
-inconsitent filesystem states, etc.
+1. checking an array - full scan, and occasionally examining the SMART
+error log, eg. every gigabyte, then rewrite the data with reported
+errors. Then check the SMART error log again and for the errors still
+reported move it to a bad block area and remap the affected data.
 
+2. When irrecoverable errors have occurred, then check which drive was
+affected, and remap the bad data on the bad disk, using the data of the
+sound drive (for raids with redundant data). 
 
-regards
-   Mario
--- 
-There are two major products that come from Berkeley: LSD and UNIX.
-We don't believe this to be a coincidence.    -- Jeremy S. Anderson
+Is this viable techniques? I think something like this could be built
+into the raid check functionality.
 
+best regards
+keld
