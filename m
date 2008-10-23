@@ -1,40 +1,44 @@
-From: "Max Waterman" <davidmaxwaterman@fastmail.co.uk>
-Subject: backup using raid
-Date: Thu, 23 Oct 2008 08:21:24 +0300
-Message-ID: <d5fe39840810222221j26fbaa12t17ba8577186e3dbc@mail.gmail.com>
+From: Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE>
+Subject: Re: backup using raid
+Date: Thu, 23 Oct 2008 10:09:50 +0200
+Message-ID: <slrngg0cae.ond.Mario.Holbe@darkside.dyn.samba-tng.org>
+References: <d5fe39840810222221j26fbaa12t17ba8577186e3dbc@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+Max Waterman <davidmaxwaterman@fastmail.co.uk> wrote:
+> For example, if you have raid1 array, and have an 'extra' spare (is
+> spare the correct word) on a removable drive, then it can be
 
-Maybe slightly off-topic, sorry.
+A spare is not enough, since spares get not synched.
 
-People often say "raid isn't for backup", but it seems obvious that it
-could be, if used in a similar way to tape.
+> Is this a crazy idea? Have people thought of this before? Are there
+> any other gotchas?
 
-For example, if you have raid1 array, and have an 'extra' spare (is
-spare the correct word) on a removable drive, then it can be
-constantly creating a copy of the contents of the array which can be
-removed by failing the backup spare. If you then have a whole series
-of removable drives, then you can implement whatever off-site backup
-system you would with tape.
+I'm doing my backups this way quite a long time now. All my RAID1 have
+an empty slot (i.e. I'm running 3-mirror RAID1s degraded to 2 mirrors)
+where I plug my backup disks in from time to time. For the bigger RAIDs
+I'm using bitmaps to reduce the backup-time.
+However, I would never suggest my way to "the average user". There are
+lots of things you can easily do wrong. Especially if you do this
+on-line: You have to make sure the filesystem is in a clean state when
+you pull the backup-disk. With bitmaps, only one backup generation
+works. etc. pp. Not to mention all the gotchas "the average fool" would
+stumble upon... synching in the wrong direction and things like that :)
 
-The only gotchas I see are :
+Btw... The Intel Matrix Storage Manager has a "mirror on demand" feature
+that seems to do something similar. I don't know how they deal with
+inconsitent filesystem states, etc.
 
-1) you might have to adjust the backup system to account for the
-different reliability of tape vs disk
-2) you might have to carefully pick the time/way you remove the failed
-spare. It might be OK to just fail it and hot-remove the disk, but
-more likely it'll be necessary to take the system to single-user mode
-or even shut it down competely.
 
-Is this a crazy idea? Have people thought of this before? Are there
-any other gotchas?
+regards
+   Mario
+-- 
+There are two major products that come from Berkeley: LSD and UNIX.
+We don't believe this to be a coincidence.    -- Jeremy S. Anderson
 
-Max.
