@@ -1,34 +1,35 @@
-From: David Greaves <david@dgreaves.com>
-Subject: Re: mdadm degraded RAID5 failure
-Date: Sat, 25 Oct 2008 11:44:17 +0100
-Message-ID: <4902F881.9080305@dgreaves.com>
-References: <6cc8e9ed0810221350o2b8b3aedm3d1c229fe7e66163@mail.gmail.com>	<6cc8e9ed0810221352y7427cb7dmfc7c3fcefd495bb9@mail.gmail.com> <18690.48372.369694.309381@notabene.brown>
+From: Luca Berra <bluca@comedia.it>
+Subject: Re: Proactive Drive Replacement
+Date: Sat, 25 Oct 2008 15:20:45 +0200
+Message-ID: <20081025132045.GA9377@maude.comedia.it>
+References: <cccedfc60810201035m53873320tb069f333b707191b@mail.gmail.com> <gdj1c4$8nf$1@ger.gmane.org> <48FD94F9.3060400@dgreaves.com> <20081024055726.GA16857@maude.comedia.it> <490182BD.9070109@dgreaves.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18690.48372.369694.309381@notabene.brown>
+Content-Disposition: inline
+In-Reply-To: <490182BD.9070109@dgreaves.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Steve Evans <jeeping@gmail.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil Brown wrote:
->> mdadm --assemble --force --run /dev/md1 /dev/sdb1 /dev/sdd1
->>
->> Did work partially -
->>
-> Hmm.. That really shouldn't have worked.  The kernel should have
-> rejected the array...
+On Fri, Oct 24, 2008 at 09:09:33AM +0100, David Greaves wrote:
+>However you seem to ignore the part of the threads that demonstrate my
+>understanding of the issue when I talk about mirroring from the failing drive
+>and the need to have md resort to the remaining components/parity in the event
+>of a failed block precisely to avoid md failing the mirroring process and
+>leaving you stuck :)
+It was not 'ignored', in the sense i did not read or understand it:
+I do agree that hot-sparing of a failing drive should be a native
+feature of md
+I was just pointing out what were, imho, errors in your
+reasoning.
 
-Did you notice: 2.6.8-3-686
-mdadm - v1.9.0 - 04 February 2005
-
-I don't really recall the history of md and mdadm but I'd suggest trying to
-repair in a modern recovery/live-CD environment.
-
-David
-
+L.
 
 -- 
-"Don't worry, you'll be fine; I saw it work in a cartoon once..."
+Luca Berra -- bluca@comedia.it
+         Communication Media & Services S.r.l.
+  /"\
+  \ /     ASCII RIBBON CAMPAIGN
+   X        AGAINST HTML MAIL
+  / \
