@@ -1,58 +1,58 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: HELP! my raid5 ate my data!
-Date: Sat, 25 Oct 2008 17:49:30 +1100
-Message-ID: <18690.49530.642690.438271@notabene.brown>
-References: <9512192b0810210915xa27061bkdc37e212f17c944b@mail.gmail.com>
-	<5d96567b0810210930r5bc4d068mef57dcfb4a237603@mail.gmail.com>
-	<9512192b0810210940v77675287od420f7ea36fbf2de@mail.gmail.com>
+From: Adeel N <adeeln@hotmail.com>
+Subject: multiple raid 5 arrays using multiple partitions
+Date: Sat, 25 Oct 2008 10:03:08 +0000
+Message-ID: <COL106-W51C2E21BB08BA4455C26A8C82A0@phx.gbl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=Windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Morgan Wahl on Tuesday October 21
 Sender: linux-raid-owner@vger.kernel.org
-To: Morgan Wahl <morgy.wahl@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday October 21, morgy.wahl@gmail.com wrote:
-> these lines are the only uncommented ones in mdadm.conf:
-> DEVICE /dev/sd[abcd]1
-> ARRAY /dev/md0 devices=/dev/sda1,/dev/sdb1,/dev/sdc1,/dev/sdd1
-> 
-> mdadm -Q /dev/md0
-> mdadm --examine /dev/sda1
-> mdadm --examine /dev/sdb1
-> mdadm --examine /dev/sdc1
-> mdadm --examine /dev/sdd1
-> 
-> mdadm /dev/md0 --remove /dev/sdc1
 
-If the array was not running (as I think was implied in your other
-email) then this will have done nothing.
+Hello,
+   Originally, I setup a single RAID5 array using 3, 1 TB SATA drives a=
+nd put LVM2 on top to allow for easier administration. Based upon my ne=
+eds (at the time) and what I had read about RAID, I decided to use a de=
+cently large chunk size (256k) for md0. Initially, I was serving predom=
+inantly large files (1gb+ each) so I tried to optimize everything for t=
+hat. Now my needs have changed: I need to accommodate both, large and s=
+mall files. It was suggested to me to partition the drives and then cre=
+ate multiple arrays from the partitions, each with their own optimized =
+chunk size. However, wouldn't this cause the drives to excessively thra=
+sh or is that only bound to happen under high I/O loads? This array is =
+only used by 6-12 people, primarily through NFS/Samba so I'm not expect=
+ing it to have incredibly high I/O loads, but I don't want the disks to=
+ die prematurely due to excessive thrashing. Is there any other downsid=
+e or advantages to this approach? Is it commonly used? I know the ideal=
+ approach would be to have more drives and make them a separate array, =
+but that's not possible yet.
 
-> 
-> mdadm -A /dev/md0
+Also, just to double check, I shouldn't expect any adverse performance =
+(than normal) when using LVM2 with multiple arrays on multiple partitio=
+ns?
 
-This should have worked.  What do you get from
+One final thing, when using LVM2 & mdadm what, if any, optimizations/co=
+nsiderations should be taken into account to enhance performance? I've =
+come across quite a few threads that seem to address this topic, but th=
+ey didn't seem to be very cohesive nor authoritative. I've tried some o=
+ptimizations that I've come across, e.g. setting the read ahead paramet=
+ers for each drive, stripe cache, partition offset, XFS sunit/swidth, e=
+tc but I'm not sure which ones I'm missing or have a significant impact=
+=2E
 
-  mdadm -Av /dev/md0
-??
+I apologize in advance if this topic has been covered already, but I wa=
+sn't able to find a clear answer to this topic in my searches, so I tho=
+ught I'd ask.
 
-> 
-> mdadm --readonly /dev/md0
+Thanks for the help,
 
-This is a sensible precaution.
-
-> 
-> mount /dev/md0 /mnt/temp
-> (this return an error)
-> e2fsck -n /dev/md0
-> (lots of errors)
-
-It does sound like it is a mess, but there is nothing obvious in
-your description which would have caused it.
-Maybe if you could include the output of all the "mdadm --examine"
-commands?
-
-NeilBrown
+Adeel
+_________________________________________________________________
+When your life is on the go=97take your life with you.
+http://clk.atdmt.com/MRT/go/115298558/direct/01/--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
