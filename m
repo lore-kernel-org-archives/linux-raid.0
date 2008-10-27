@@ -1,60 +1,39 @@
-From: "Brian J. Murrell" <brian@interlinx.bc.ca>
-Subject: dmraid - where is the raid done?
-Date: Mon, 27 Oct 2008 11:07:42 -0400
-Message-ID: <1225120062.20830.34.camel@pc.ilinx>
+From: "Kay Sievers" <kay.sievers@vrfy.org>
+Subject: Re: RFC - device names and mdadm with some reference to udev.
+Date: Mon, 27 Oct 2008 17:13:44 +0100
+Message-ID: <ac3eb2510810270913y3201daa7jddb35a42b942bf3f@mail.gmail.com>
+References: <18692.62860.863118.727187@notabene.brown>
+	 <20081027082257.GB1801@piper.oerlikon.madduck.net>
+	 <1225120416.4845.128.camel@firewall.xsintricity.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-+VfiYMGtneFjuNjfg/tO"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1225120416.4845.128.camel@firewall.xsintricity.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Doug Ledford <dledford@redhat.com>
+Cc: martin f krafft <madduck@debian.org>, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org, Michal Marek <mmarek@novell.com>
 List-Id: linux-raid.ids
 
+On Mon, Oct 27, 2008 at 16:13, Doug Ledford <dledford@redhat.com> wrote:
+> On Mon, 2008-10-27 at 09:22 +0100, martin f krafft wrote:
+>> also sprach Neil Brown <neilb@suse.de> [2008.10.26.2356 +0100]:
 
---=-+VfiYMGtneFjuNjfg/tO
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+>> > I'm also wondering if I should include a udev 'rules' file for md
+>> > in the mdadm distribution.  Obviously it would be no more than
+>> > a recommendation, but it might give me a voice in guiding how udev
+>> > interacted with mdadm.
+>>
+>> I would really like to have a clear separation of competencies.
+>> Ideally, mdadm never creates any devices but leaves it all to udev,
+>> and all configuration about alternate names ("symlinks") is done in
+>> the udev rules file.
+>
+> This would then require that we have a working udev in our initrd
+> images.  It would greatly increase the complexity of early booting as a
+> result.
 
-Somebody had suggested this list for this question:
+There is no usual distro not having udev there.
 
-I understand that dmraid is just some kind of interface to the
-_software_ raid that is provided on a number of SATA interface cards
-such as the Promise and Adaptec cards.
-
-Reading http://ata.wiki.kernel.org/index.php/SATA_RAID_FAQ I get the
-message loud and clear that this is not real hardware RAID but rather
-it's done in the BIOS on the card.
-
-The message there seems to be, if you are going to do it in software
-anyway, why not just skip the IO card RAID and just use MD?
-
-The one reason I could think of for using the BIOS provided RAID would
-be to reduce the data needing to traverse the PCI bus.  With host-raid
-(i.e. MD) every write to disk needs to actually be written over the PCI
-bus twice, once for each disk, right?
-
-But do the BIOS RAID cards out there only need the write command and
-data once and they do the work of writing it to the two disks on-board
-the IO card?
-
-IIUC, when you have a BIOS RAID configured, even though there are two
-disks, the operating system only sees one.  This would seem to support
-the theory that the write only goes to the controller once and it takes
-care of the mirroring, but I will defer to your experience.
-
-Thanx,
-b.
-
---=-+VfiYMGtneFjuNjfg/tO
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-
-iEYEABECAAYFAkkF2T4ACgkQl3EQlGLyuXB52gCg1v31KDXnC3xHovwhj5kZ/4gi
-j7gAniXNwxzjpfgVXW79LkGb3Wi1LQFF
-=j9mv
------END PGP SIGNATURE-----
-
---=-+VfiYMGtneFjuNjfg/tO--
-
+Kay
