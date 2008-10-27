@@ -1,67 +1,67 @@
 From: Neil Brown <neilb@suse.de>
-Subject: RE: RFC - device names and mdadm with some reference to udev.
-Date: Tue, 28 Oct 2008 10:27:41 +1100
-Message-ID: <18694.20077.985722.466221@notabene.brown>
+Subject: Re: RFC - device names and mdadm with some reference to udev.
+Date: Tue, 28 Oct 2008 10:36:32 +1100
+Message-ID: <18694.20608.954160.346473@notabene.brown>
 References: <18692.62860.863118.727187@notabene.brown>
-	<ac3eb2510810270541g2ac57bd1p5576f15959e849e@mail.gmail.com>
-	<A20315AE59B5C34585629E258D76A97C026BB4B1@34093-C3-EVS3.exchange.rackspace.com>
+	<20081027082257.GB1801@piper.oerlikon.madduck.net>
+	<1225120416.4845.128.camel@firewall.xsintricity.com>
+	<20081027161000.GG17300@skl-net.de>
+	<ac3eb2510810270937i3acd7c94r2817b8f4c79babec@mail.gmail.com>
+	<1225128270.4845.144.camel@firewall.xsintricity.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from David Lethe on Monday October 27
+In-Reply-To: message from Doug Ledford on Monday October 27
 Sender: linux-raid-owner@vger.kernel.org
-To: David Lethe <david@santools.com>
-Cc: Kay Sievers <kay.sievers@vrfy.org>, linux-raid@vger.kernel.org, Doug Ledford <dledford@redhat.com>, "martin f. krafft" <madduck@debian.org>, Michal Marek <mmarek@novell.com>
+To: Doug Ledford <dledford@redhat.com>
+Cc: Kay Sievers <kay.sievers@vrfy.org>, Andre Noll <maan@systemlinux.org>, martin f krafft <madduck@debian.org>, linux-raid@vger.kernel.org, Michal Marek <mmarek@novell.com>
 List-Id: linux-raid.ids
 
-On Monday October 27, david@santools.com wrote:
+On Monday October 27, dledford@redhat.com wrote:
 > 
-> I am with Kay here, never force automount.  
-> I put that right up there with the bonehead MSFT rule of trying to write
-> signatures on disk drives once they appear.  
-
-By you wouldn't mind if something that looked like it might have once
-been a raid1 started a resync as soon as you plugged it in?
-
+> I've found the udev rules method of starting md devices to be
+> problematic (at best).
 > 
-> Furthermore, don't just delete /dev/md names.   That would be even a greater
-> mistake.  LINUX today has storage on SANs, clustering, multi-tasking, multi-pathing,
-> SAN-management/monitoring software that will be using device paths that you want to
-> delete.  
-
-I don't understand.  If the md array has been explicitly stopped, why
-not remove the names from /dev.  They have no meaning any more.  And
-nothing can have them open.
-
-
+> Here's the issue (in Fedora at least).  Starting devices via udev means
+> starting them as soon as they are capable and not waiting until all
+> devices are up and running.  You have to do this in case the device is
+> in a degraded state and you aren't going to get all the devices.
+> However, we don't create a bitmap on devices by default in the installer
+> (a user can add one themselves, but it isn't there by default).  Without
+> the bitmap, if the device is written to before all devices are added, it
+> triggers a full resync of the device.  As it turns out, for certain
+> installations, this happens on *every* single reboot.  It's painful, to
+> say the least.   So, I wanted to change the udev rule to work slightly
+> differently.  I wanted the invocation of mdadm --incremental that
+> happened to be the one that took the array from an unrunable state to a
+> runable but degraded state to sleep for say 2 to 5 seconds, and then if
+> the array is still not up and running due to subsequent udev rule
+> invocations, it would start the array in a degraded state.  This,
+> however, breaks udevsettle.  So, the current setup (for the upcoming
+> fedora 10) is done such that the udev rule won't start any degraded
+> arrays, and instead we have both a specific mdadm invocation in the
+> initrd and another in rc.sysinit that will start any degraded arrays
+> that are also listed in the mdadm.conf file.  This makes sure that known
+> arrays are assembled and started if at all possible, but we only start
+> unknown arrays if they are complete.
 > 
-> I can't think of a simple fix, but can think of a complicated fix to make this play
-> nice in such environments, when things are good .. and when things go bad.   My outside-
-> the-box suggestion is to present md target devices as a SCSI RAID controller or
-> processor device where you use ANSI-defined sense keys/ASC values to allow 
-> apps that are running remotely or even
-> locally to query immediate state.   If the md device is broken, then report the same sense
-> information not ready, spun down, whatever ... that a physical disk would report for 
-> various partition.
-> More importantly, use EVPD Inquiry and log pages to query configuration information, of
-> both the /dev/md device, AND all of the partitions, along with health and anything else.
-> Enterprise management software wouldn't have to log into the LINUX host and run custom
-> scripts to see what is going on. Use mode sense to send control/configuration change requests.
-> 
-> The ANSI provides a mechanism and options for defining a unique naming convention, and you can
-> even add a UUID in the format you want as a Vendor-specific layout.   There is already a foundation
-> for such work due to the iSCSI logic, but obviously much more work is required.
-> 
-> Yes, this not a simple & easy fix, but if you want to future-proof everything and make LINUX storage
-> easy to integrate into heterogeneous environments, then let ANSI be your guide.
 
-What I think you are suggesting is that md raid be exportable via
-iSCSI (or FCOE or AOE or flavor-of-the-month) in such a way that
-status-query commands 'do the right thing'.  Sounds like we want a
-plug-in for iscsid (or whatever it is that support iscsi service).
+This is using udev to start md devices, which is not quite the focus
+of the previous discussion.  That was more about using udev to create
+the entries in /dev when someone else started the arrays.
 
-Is that what you mean?
+However this is still a real issue that I would like to handle as best
+we can.
+
+I would like to get the md code to always have at least an in-memory
+bitmap to allow quite resync after a "re-add".
+
+However even this isn't a perfect solution as there is a window when a
+single device failure can kill an array.
+
+Your solution sounds good, but I'd be happy to hear other thoughts on
+the issue.
 
 Thanks,
 NeilBrown
