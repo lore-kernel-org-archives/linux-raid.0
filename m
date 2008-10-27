@@ -1,70 +1,74 @@
-From: Luca Berra <bluca@comedia.it>
-Subject: Re: question on how to (correctly) build an initrd for a root disk
-	on a RAID1
-Date: Mon, 27 Oct 2008 08:16:13 +0100
-Message-ID: <20081027071613.GA8197@maude.comedia.it>
-References: <9f5edc120810261937w339f2919p4f7ce82fbcaf2149@mail.gmail.com>
+From: martin f krafft <madduck@debian.org>
+Subject: Re: RFC - device names and mdadm with some reference to udev.
+Date: Mon, 27 Oct 2008 09:22:57 +0100
+Message-ID: <20081027082257.GB1801@piper.oerlikon.madduck.net>
+References: <18692.62860.863118.727187@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1; format=flowed
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="gj572EiMnwbLXET9"
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <9f5edc120810261937w339f2919p4f7ce82fbcaf2149@mail.gmail.com>
+In-Reply-To: <18692.62860.863118.727187@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org, Doug Ledford <dledford@redhat.com>, Michal Marek <mmarek@novell.com>, Kay Sievers <kay.sievers@vrfy.org>
 List-Id: linux-raid.ids
 
-On Sun, Oct 26, 2008 at 10:37:17PM -0400, Joe Landman wrote:
->Hi folks:
->
->  We have been trying to build an operational initrd for a root drive
->on  software RAID1.
->
->  Basic specs:   2.6.23.14 kernel (though same issues with 2.6.27.2
->kernel), on Centos 5.2, pair of SATA drives using libata and other
->drivers, x86_64 architecture.
-Custom built kernel or centos provided kernel?
 
+--gj572EiMnwbLXET9
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
->  Using mkinitrd --with=raid1 --with=libata --with=sd_mod ...
->
->  I am getting a kernel panic on switchroot, it can't find the root
->file system.  I did some googling, but could not find a similar
->example.
-unfortunately the kernel panic is a consequence of a previous error,
-someone willing to help you would need to know everithing that was
-spitted between the 'starting red-hat nash' message and the kernel
-panic.
+also sprach Neil Brown <neilb@suse.de> [2008.10.26.2356 +0100]:
+> Greeting.
+>  This is a Request For Comments....
 
->Do I need to create a specialized init script?  Is there an
-usually no, redhat/centos initrd should be able to boot from a raid1
+Good morning!
 
->example of this somewhere?  I did look at the Documentation/md.txt and
->tried the
->
->     md=0,sda1,sdb1 md=1,sda2,sdb2  md=2,sda3,sdb3
-if you are using the centos kernel, raid is modular and this parameter
-has no effect.
-mkinitrd should use your /etc/mdadm.conf to discover how the array
-should be laid out.
+[...]
+> I'm also wondering if I should include a udev 'rules' file for md
+> in the mdadm distribution.  Obviously it would be no more than
+> a recommendation, but it might give me a voice in guiding how udev
+> interacted with mdadm.
 
->  kernel boot time option, to no avail.  Persistent superblocks are
->on, and the devices have the right partition types.
-partition types do not matter anymore.
+I would really like to have a clear separation of competencies.
+Ideally, mdadm never creates any devices but leaves it all to udev,
+and all configuration about alternate names ("symlinks") is done in
+the udev rules file.
 
->
->  Any suggestions?  More things to read?
-is your fstab correct?
-is your mdadm.conf correct?
-are you loading the correct drivers for your hd controller?
+I know mdadm needs the devices for the ioctls(). However, much of
+what it does with ioctl should already be possible with /sys. Thus,
+in my ideal world, I imagine mdadm to be a manipulator of /sys,
+instructing the kernel to do stuff with components and arrays, and
+have udev create and remove corresponding devices in response to
+kernel events.
 
-mkinitrd is a shell script, if all else fails, run it with sh -x and
-read the output.
+I realise this would require a revamp of mdadm, and might actually
+be better done in a new software designed to eventually replace
+mdadm. But is this a way forward with which you could befriend
+yourself?
 
-L.
--- 
-Luca Berra -- bluca@comedia.it
-         Communication Media & Services S.r.l.
-  /"\
-  \ /     ASCII RIBBON CAMPAIGN
-   X        AGAINST HTML MAIL
-  / \
+--=20
+ .''`.   martin f. krafft <madduck@debian.org>
+: :'  :  proud Debian developer, author, administrator, and user
+`. `'`   http://people.debian.org/~madduck - http://debiansystem.info
+  `-  Debian - when you have better things to do than fixing systems
+=20
+"a compliment is like a kiss through a veil."
+                                                        -- victor hugo
+
+--gj572EiMnwbLXET9
+Content-Type: application/pgp-signature; name="digital_signature_gpg.asc"
+Content-Description: Digital signature (see http://martin-krafft.net/gpg/)
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+
+iEYEARECAAYFAkkFemEACgkQIgvIgzMMSnXpYQCfYgf0K8YVfL5GKxrl4PkEySG6
+chYAoNhbUfLS9rxdrbwr9JbggYGKvSS8
+=Te4H
+-----END PGP SIGNATURE-----
+
+--gj572EiMnwbLXET9--
