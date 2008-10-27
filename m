@@ -1,70 +1,79 @@
-From: Andre Noll <maan@systemlinux.org>
-Subject: Re: RFC - device names and mdadm with some reference to udev.
-Date: Mon, 27 Oct 2008 18:30:28 +0100
-Message-ID: <20081027173028.GH17300@skl-net.de>
-References: <18692.62860.863118.727187@notabene.brown> <20081027082257.GB1801@piper.oerlikon.madduck.net> <1225120416.4845.128.camel@firewall.xsintricity.com> <20081027161000.GG17300@skl-net.de> <ac3eb2510810270937i3acd7c94r2817b8f4c79babec@mail.gmail.com>
+From: Doug Ledford <dledford@redhat.com>
+Subject: Re: question on how to (correctly) build an initrd for a root disk
+	on a RAID1
+Date: Mon, 27 Oct 2008 13:56:16 -0400
+Message-ID: <1225130177.26510.3.camel@firewall.xsintricity.com>
+References: <9f5edc120810261937w339f2919p4f7ce82fbcaf2149@mail.gmail.com>
+	 <20081027071613.GA8197@maude.comedia.it>
+	 <9f5edc120810270534j3d969d2s18c1017755990c30@mail.gmail.com>
+	 <4905EE05.9070108@redhat.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="uJrvpPjGB3z5kYrA"
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-dXk9O5UxD4cH56AeBlUT"
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <ac3eb2510810270937i3acd7c94r2817b8f4c79babec@mail.gmail.com>
+In-Reply-To: <4905EE05.9070108@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Kay Sievers <kay.sievers@vrfy.org>
-Cc: Doug Ledford <dledford@redhat.com>, martin f krafft <madduck@debian.org>, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org, Michal Marek <mmarek@novell.com>
+To: Brendan Conoboy <blc@redhat.com>
+Cc: Joe Landman <joe.landman@gmail.com>, linux-raid list <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
 
---uJrvpPjGB3z5kYrA
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+--=-dXk9O5UxD4cH56AeBlUT
+Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On 17:37, Kay Sievers wrote:
-> >> This would then require that we have a working udev in our initrd
-> >> images.  It would greatly increase the complexity of early booting as a
-> >> result.
-> >
-> > Given that the initramfs usually contains busybox, one can also using
-> > mdev. It's much simpler than udev and it's good enough if the only
-> > thing you want to do is mounting the root partition that resides on
-> > a software raid array.
+On Mon, 2008-10-27 at 10:36 -0600, Brendan Conoboy wrote:
+> Joe Landman wrote:
+> > Ok.  This is where it gets interesting.  If the /etc/mdadm.conf is on
+> > the RAID, you have a bit of a "chicken and egg" problem to deal with
+> > here.  How does the system find /etc/mdadm.conf to make the RAID when
+> > /etc/mdadm.conf is on the RAID?
+> >=20
+> > This implies that /etc/mdadm.conf is in the initrd.  Peeking inside
+> > the default centos one, I can see that this is not true.  Which
+> > implies that it doesn't see /etc/mdadm.conf before it assembles the
+> > array, as the /etc/mdadm.conf is on the array, and not in the initrd
+> > image.
+> >=20
+> > Is there a way to include the /etc/mdadm.conf into the initrd?
 >=20
-> Depends on your definition of "usual". Debian, Fedora, openSUSE,
-> Ubuntu, Gentoo (as far as Gentoo counts as a distro with a default
-> setup) none of them uses any busybox/mdev setup, and all use udev in
-> initramfs.
+> This is almost certainly your problem.  If / is a RAID volume, the=20
+> initrd itself needs to have an /etc/mdadm.conf that reflects how it is=20
+> constructed.  This is something that mkinitrd should be doing for you.=20
+> I'll second the suggestion of running mkinitrd with sh's -x option to=20
+> see why it's not doing this for you.  Good luck.
 
-At least Ubuntu's initramfs contains busybox and starts up a shell
-during initramfs startup if the root partition could not be mounted.
+Keep in mind that mkinitrd senses what it needs to boot the machine from
+the currently running setup.  So, if you run mkinitrd with a root raid
+array, it should detect that it needs to start the md raid device, copy
+mdadm.static and mdadm.conf to the initrd, and add the appropriate lines
+to the initrd script.  If you aren't running the md raid array (maybe
+it's a raid1 and you just mounted a bare member long enough to create an
+initrd for instance), then it won't.  But, since the system works with a
+centos provided kernel, and not with the custom kernel, I'm guessing
+that this isn't the issue, that mkinitrd is just fine, and instead the
+custom kernel's config is somehow fubar'ed and that's what's causing all
+the problems.
 
-Anyway, my point is that it's currently possible to mount a root
-partition that resides on an md device without using udev.  Even plain
-mknod instead of mdev is enough if you know exactly which device node
-you have to create.
-
-Of course you might want to do that only if your system doesn't boot
-anymore. But I think it's important that in this rescue situation
-also the new mdadm can bring up the system without support from udev.
-
-In short: It's good to be able to do the plumbing manually in case
-the porcelain isn't flushing.
-
-Andre
 --=20
-The only person who always got his work done by Friday was Robinson Crusoe
+Doug Ledford <dledford@redhat.com>
+              GPG KeyID: CFBFF194
+              http://people.redhat.com/dledford
 
---uJrvpPjGB3z5kYrA
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
+Infiniband specific RPMs available at
+              http://people.redhat.com/dledford/Infiniband
+
+
+--=-dXk9O5UxD4cH56AeBlUT
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
+Version: GnuPG v1.4.9 (GNU/Linux)
 
-iD8DBQFJBfq0Wto1QDEAkw8RAkFpAJ0WSQbHlASYahmea51kI7S1yX9s6gCdFysf
-IsIQgX3hdjqwPZNDczJSFUM=
-=+FXe
+iEYEABECAAYFAkkGAMAACgkQTzP9PM7pjw/R8wCfcvmK3NSJWwkHKp0RF8/jBa4y
+m3cAnA+POGmBjoa7FekBdyjJzlJK+KaR
+=z5/v
 -----END PGP SIGNATURE-----
 
---uJrvpPjGB3z5kYrA--
+--=-dXk9O5UxD4cH56AeBlUT--
+
