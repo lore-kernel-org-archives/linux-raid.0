@@ -1,77 +1,60 @@
-From: Doug Ledford <dledford@redhat.com>
-Subject: Re: RFC - device names and mdadm with some reference to udev.
-Date: Mon, 27 Oct 2008 11:13:36 -0400
-Message-ID: <1225120416.4845.128.camel@firewall.xsintricity.com>
-References: <18692.62860.863118.727187@notabene.brown>
-	 <20081027082257.GB1801@piper.oerlikon.madduck.net>
+From: "Brian J. Murrell" <brian@interlinx.bc.ca>
+Subject: dmraid - where is the raid done?
+Date: Mon, 27 Oct 2008 11:07:42 -0400
+Message-ID: <1225120062.20830.34.camel@pc.ilinx>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-/rq9adNK92CdnQAimysZ"
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-+VfiYMGtneFjuNjfg/tO"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20081027082257.GB1801@piper.oerlikon.madduck.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: martin f krafft <madduck@debian.org>
-Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org, Michal Marek <mmarek@novell.com>, Kay Sievers <kay.sievers@vrfy.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
---=-/rq9adNK92CdnQAimysZ
+--=-+VfiYMGtneFjuNjfg/tO
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 2008-10-27 at 09:22 +0100, martin f krafft wrote:
-> also sprach Neil Brown <neilb@suse.de> [2008.10.26.2356 +0100]:
-> > Greeting.
-> >  This is a Request For Comments....
->=20
-> Good morning!
->=20
-> [...]
-> > I'm also wondering if I should include a udev 'rules' file for md
-> > in the mdadm distribution.  Obviously it would be no more than
-> > a recommendation, but it might give me a voice in guiding how udev
-> > interacted with mdadm.
->=20
-> I would really like to have a clear separation of competencies.
-> Ideally, mdadm never creates any devices but leaves it all to udev,
-> and all configuration about alternate names ("symlinks") is done in
-> the udev rules file.
+Somebody had suggested this list for this question:
 
-This would then require that we have a working udev in our initrd
-images.  It would greatly increase the complexity of early booting as a
-result.
+I understand that dmraid is just some kind of interface to the
+_software_ raid that is provided on a number of SATA interface cards
+such as the Promise and Adaptec cards.
 
-> I know mdadm needs the devices for the ioctls(). However, much of
-> what it does with ioctl should already be possible with /sys. Thus,
-> in my ideal world, I imagine mdadm to be a manipulator of /sys,
-> instructing the kernel to do stuff with components and arrays, and
-> have udev create and remove corresponding devices in response to
-> kernel events.
->=20
-> I realise this would require a revamp of mdadm, and might actually
-> be better done in a new software designed to eventually replace
-> mdadm. But is this a way forward with which you could befriend
-> yourself?
->=20
---=20
-Doug Ledford <dledford@redhat.com>
-              GPG KeyID: CFBFF194
-              http://people.redhat.com/dledford
+Reading http://ata.wiki.kernel.org/index.php/SATA_RAID_FAQ I get the
+message loud and clear that this is not real hardware RAID but rather
+it's done in the BIOS on the card.
 
-Infiniband specific RPMs available at
-              http://people.redhat.com/dledford/Infiniband
+The message there seems to be, if you are going to do it in software
+anyway, why not just skip the IO card RAID and just use MD?
 
+The one reason I could think of for using the BIOS provided RAID would
+be to reduce the data needing to traverse the PCI bus.  With host-raid
+(i.e. MD) every write to disk needs to actually be written over the PCI
+bus twice, once for each disk, right?
 
---=-/rq9adNK92CdnQAimysZ
-Content-Type: application/pgp-signature; name=signature.asc
+But do the BIOS RAID cards out there only need the write command and
+data once and they do the work of writing it to the two disks on-board
+the IO card?
+
+IIUC, when you have a BIOS RAID configured, even though there are two
+disks, the operating system only sees one.  This would seem to support
+the theory that the write only goes to the controller once and it takes
+care of the mirroring, but I will defer to your experience.
+
+Thanx,
+b.
+
+--=-+VfiYMGtneFjuNjfg/tO
+Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.9 (GNU/Linux)
 
-iEYEABECAAYFAkkF2qAACgkQTzP9PM7pjw99dQCfTm8pZqn9UpZ1ADKXtQ8EccLG
-9xAAnR8SP34gHW9so5YGohHg/Am1GIuh
-=89Oc
+iEYEABECAAYFAkkF2T4ACgkQl3EQlGLyuXB52gCg1v31KDXnC3xHovwhj5kZ/4gi
+j7gAniXNwxzjpfgVXW79LkGb3Wi1LQFF
+=j9mv
 -----END PGP SIGNATURE-----
 
---=-/rq9adNK92CdnQAimysZ--
+--=-+VfiYMGtneFjuNjfg/tO--
 
