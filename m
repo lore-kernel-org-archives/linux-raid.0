@@ -1,74 +1,127 @@
-From: martin f krafft <madduck@debian.org>
-Subject: Re: RFC - device names and mdadm with some reference to udev.
-Date: Mon, 27 Oct 2008 09:22:57 +0100
-Message-ID: <20081027082257.GB1801@piper.oerlikon.madduck.net>
-References: <18692.62860.863118.727187@notabene.brown>
+From: "Joe Landman" <joe.landman@gmail.com>
+Subject: Re: question on how to (correctly) build an initrd for a root disk on a RAID1
+Date: Mon, 27 Oct 2008 08:34:01 -0400
+Message-ID: <9f5edc120810270534j3d969d2s18c1017755990c30@mail.gmail.com>
+References: <9f5edc120810261937w339f2919p4f7ce82fbcaf2149@mail.gmail.com>
+	 <20081027071613.GA8197@maude.comedia.it>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="gj572EiMnwbLXET9"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20081027071613.GA8197@maude.comedia.it>
 Content-Disposition: inline
-In-Reply-To: <18692.62860.863118.727187@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org, Doug Ledford <dledford@redhat.com>, Michal Marek <mmarek@novell.com>, Kay Sievers <kay.sievers@vrfy.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Mon, Oct 27, 2008 at 3:16 AM, Luca Berra <bluca@comedia.it> wrote:
+> On Sun, Oct 26, 2008 at 10:37:17PM -0400, Joe Landman wrote:
+>>
+>> Hi folks:
+>>
+>>  We have been trying to build an operational initrd for a root drive
+>> on  software RAID1.
+>>
+>>  Basic specs:   2.6.23.14 kernel (though same issues with 2.6.27.2
+>> kernel), on Centos 5.2, pair of SATA drives using libata and other
+>> drivers, x86_64 architecture.
+>
+> Custom built kernel or centos provided kernel?
 
---gj572EiMnwbLXET9
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Custom.  The Centos provided does in fact work with this.  I did
+(previously) look at the initrd (uncompress and un-cpio it), and
+didn't see anything in particular different from what I had done.
 
-also sprach Neil Brown <neilb@suse.de> [2008.10.26.2356 +0100]:
-> Greeting.
->  This is a Request For Comments....
+>
+>
+>>  Using mkinitrd --with=raid1 --with=libata --with=sd_mod ...
+>>
+>>  I am getting a kernel panic on switchroot, it can't find the root
+>> file system.  I did some googling, but could not find a similar
+>> example.
+>
+> unfortunately the kernel panic is a consequence of a previous error,
+> someone willing to help you would need to know everithing that was
+> spitted between the 'starting red-hat nash' message and the kernel
+> panic.
 
-Good morning!
+I looked and this was actually the earliest error.  I will try to
+capture the rest of this and post it for download (it is long).
 
-[...]
-> I'm also wondering if I should include a udev 'rules' file for md
-> in the mdadm distribution.  Obviously it would be no more than
-> a recommendation, but it might give me a voice in guiding how udev
-> interacted with mdadm.
+>
+>> Do I need to create a specialized init script?  Is there an
+>
+> usually no, redhat/centos initrd should be able to boot from a raid1
 
-I would really like to have a clear separation of competencies.
-Ideally, mdadm never creates any devices but leaves it all to udev,
-and all configuration about alternate names ("symlinks") is done in
-the udev rules file.
+The baseline provided kernel can.  This is a custom kernel, and I am
+attempting to find the right mkinitrd parameters.  One of the nicer
+things in the Ubuntu/Debian process is that they have the ability to
+add most/all modules in to an initrd.  Somehow this is my current
+thought, that we are missing something critical.
 
-I know mdadm needs the devices for the ioctls(). However, much of
-what it does with ioctl should already be possible with /sys. Thus,
-in my ideal world, I imagine mdadm to be a manipulator of /sys,
-instructing the kernel to do stuff with components and arrays, and
-have udev create and remove corresponding devices in response to
-kernel events.
+>
+>> example of this somewhere?  I did look at the Documentation/md.txt and
+>> tried the
+>>
+>>    md=0,sda1,sdb1 md=1,sda2,sdb2  md=2,sda3,sdb3
+>
+> if you are using the centos kernel, raid is modular and this parameter
+> has no effect.
+> mkinitrd should use your /etc/mdadm.conf to discover how the array
+> should be laid out.
 
-I realise this would require a revamp of mdadm, and might actually
-be better done in a new software designed to eventually replace
-mdadm. But is this a way forward with which you could befriend
-yourself?
+Ok.  This is where it gets interesting.  If the /etc/mdadm.conf is on
+the RAID, you have a bit of a "chicken and egg" problem to deal with
+here.  How does the system find /etc/mdadm.conf to make the RAID when
+/etc/mdadm.conf is on the RAID?
 
---=20
- .''`.   martin f. krafft <madduck@debian.org>
-: :'  :  proud Debian developer, author, administrator, and user
-`. `'`   http://people.debian.org/~madduck - http://debiansystem.info
-  `-  Debian - when you have better things to do than fixing systems
-=20
-"a compliment is like a kiss through a veil."
-                                                        -- victor hugo
+This implies that /etc/mdadm.conf is in the initrd.  Peeking inside
+the default centos one, I can see that this is not true.  Which
+implies that it doesn't see /etc/mdadm.conf before it assembles the
+array, as the /etc/mdadm.conf is on the array, and not in the initrd
+image.
 
---gj572EiMnwbLXET9
-Content-Type: application/pgp-signature; name="digital_signature_gpg.asc"
-Content-Description: Digital signature (see http://martin-krafft.net/gpg/)
-Content-Disposition: inline
+Is there a way to include the /etc/mdadm.conf into the initrd?
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
+>
+>>  kernel boot time option, to no avail.  Persistent superblocks are
+>> on, and the devices have the right partition types.
+>
+> partition types do not matter anymore.
 
-iEYEARECAAYFAkkFemEACgkQIgvIgzMMSnXpYQCfYgf0K8YVfL5GKxrl4PkEySG6
-chYAoNhbUfLS9rxdrbwr9JbggYGKvSS8
-=Te4H
------END PGP SIGNATURE-----
+Autoassembly is depracated?
 
---gj572EiMnwbLXET9--
+
+>>  Any suggestions?  More things to read?
+>
+> is your fstab correct?
+
+Yes.  Boots fine with older kernel.  fstab doesn't change between the two.
+
+> is your mdadm.conf correct?
+
+
+Yes.  Boots fine with older kernel.  mdadm.conf doesn't change between the two.
+
+> are you loading the correct drivers for your hd controller?
+
+I believe so:  looked at the list from lsmod and replicated this in
+the mkinitrd.  However, I have seen drivers change markedly release to
+release.  Hence my interest in building an initrd with the maximum
+number of modules (specific to SATA/SCSI)
+
+>
+> mkinitrd is a shell script, if all else fails, run it with sh -x and
+> read the output.
+
+Already done.  Even instrumented the code so I could see what the
+handleraid function was in fact doing.  It looks correct, figures out
+the right modules, and makes sure they are in there.
+
+So I am wondering if it is a module load order, or something else like
+that., apart from just a missing module.  Which could be a depmod
+issue.
+
+Thanks.
+
+Joe
