@@ -1,142 +1,105 @@
-From: "David Lethe" <david@santools.com>
-Subject: RE: RFC - device names and mdadm with some reference to udev.
-Date: Mon, 27 Oct 2008 08:23:59 -0500
-Message-ID: <A20315AE59B5C34585629E258D76A97C026BB4B1@34093-C3-EVS3.exchange.rackspace.com>
+From: Andre Noll <maan@systemlinux.org>
+Subject: Re: RFC - device names and mdadm with some reference to udev.
+Date: Mon, 27 Oct 2008 14:24:53 +0100
+Message-ID: <20081027132453.GF17300@skl-net.de>
 References: <18692.62860.863118.727187@notabene.brown> <ac3eb2510810270541g2ac57bd1p5576f15959e849e@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="sDKAb4OeUBrWWL6P"
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
+Content-Disposition: inline
 In-Reply-To: <ac3eb2510810270541g2ac57bd1p5576f15959e849e@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Kay Sievers <kay.sievers@vrfy.org>, Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org, Doug Ledford <dledford@redhat.com>, "martin f. krafft" <madduck@debian.org>, Michal Marek <mmarek@novell.com>
+To: Kay Sievers <kay.sievers@vrfy.org>
+Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org, Doug Ledford <dledford@redhat.com>, "martin f. krafft" <madduck@debian.org>, Michal Marek <mmarek@novell.com>
 List-Id: linux-raid.ids
 
-PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBsaW51eC1yYWlkLW93bmVyQHZn
-ZXIua2VybmVsLm9yZyBbbWFpbHRvOmxpbnV4LXJhaWQtDQo+IG93bmVyQHZnZXIua2VybmVsLm9y
-Z10gT24gQmVoYWxmIE9mIEtheSBTaWV2ZXJzDQo+IFNlbnQ6IE1vbmRheSwgT2N0b2JlciAyNywg
-MjAwOCA3OjQyIEFNDQo+IFRvOiBOZWlsIEJyb3duDQo+IENjOiBsaW51eC1yYWlkQHZnZXIua2Vy
-bmVsLm9yZzsgRG91ZyBMZWRmb3JkOyBtYXJ0aW4gZi4ga3JhZmZ0OyBNaWNoYWwNCj4gTWFyZWsN
-Cj4gU3ViamVjdDogUmU6IFJGQyAtIGRldmljZSBuYW1lcyBhbmQgbWRhZG0gd2l0aCBzb21lIHJl
-ZmVyZW5jZSB0byB1ZGV2Lg0KPiANCj4gT24gU3VuLCBPY3QgMjYsIDIwMDggYXQgMjM6NTYsIE5l
-aWwgQnJvd24gPG5laWxiQHN1c2UuZGU+IHdyb3RlOg0KPiA+ICBEZXZpY2UgbmFtaW5nIGluIG1k
-YWRtIGlzIGEgYml0IG9mIGEgbWVzcy4NCj4gDQo+ID4gIEluIDIuNi4yOCwgcGFydGl0aW9uZWQg
-ZGV2aWNlcyAobWRwKSB3b250IGJlIG5lZWRlZCBhbnkgbW9yZSBhcyBtZA0KPiA+ICB3aWxsIG1h
-a2UgdXNlIG9mIHRoZSAiZXh0ZW5kZWQgcGFydGl0aW9uIiBmdW5jdGlvbmFsaXR5IHJlY2VudGx5
-DQo+ID4gIGFkZGVkLg0KPiANCj4gWW91IG1lYW4gdGhlIGV4dGVuZGVkIG1pbm9yIHNwYWNlLCBy
-aWdodD8gT3IgdGhlIGV4dGVuZGVkIHBhcnRpdGlvbnMsDQo+IHdoaWNoIGFyZSBhIGZvcm1hdCBp
-biBhIG1zZG9zIHRhYmxlPw0KPiANCj4gPiAgMS8gVGhlIG9ubHkgZGV2aWNlIG5vZGVzIGNyZWF0
-ZWQgd2lsbCBiZSAvZGV2L21kWCBhbmQgL2Rldi9tZF9kWA0KPiA+ICAgIGFsb25nIHdpdGggcGFy
-dGl0aW9ucyAvZGV2L21kWHBZIGFuZCAvZGV2L21kX2RYcFkgYXMgYXBwcm9wcmlhdGUuDQo+ID4g
-ICAgVGhlc2Ugd2lsbCBiZSBjcmVhdGVkIGJ5IG1kYWRtIGluIGFjY29yZGFuY2Ugd2l0aCB0aGUg
-Ii0tYXV0byINCj4gPiAgICBmbGFnIHVubGVzcyBzb21ldGhpbmcgaW4gbWRhZG0uY29uZiBzYXlz
-IHRvIGxlYXZlIGl0IHRvIHVkZXYuDQo+ID4gICAgSW4gdGhhdCBjYXNlLCBtZGFkbSB3aWxsIGNy
-ZWF0ZSBhIHRlbXBvcmFyeSBub2RlDQo+ID4gICAgKC9kZXYvLm1kYWRtLndoYXRldmVyKSBhbmQg
-cmVtb3ZlIGl0IG9uY2UgdWRldiBoYXMgY3JlYXRlZCB0aGUNCj4gPiAgICByZWFsIHRoaW5nLg0K
-PiANCj4gU291bmRzIGZpbmUsIGlmIG1kYWRtIG5lZWRzIGEgZGV2aWNlIG5vZGUuIEl0IGNvdWxk
-IGFsc28gd2FpdCBmb3IgdWRldg0KPiB0byBoYXZlIHRoZSBub2RlIGNyZWF0ZWQsIGJ1dCBoYXZp
-bmcgYSB0ZW1wb3Jhcnkgbm9kZSBzb3VuZHMgZmluZSwgYXMNCj4gbG9uZyBhcyBpdCB3aWxsIG5v
-dCBjbGFzaCB3aXRoIGFueXRoaW5nIHVkZXYgaXMgY3JlYXRpbmcuDQo+IA0KPiA+ICAyLyBUaGVy
-ZSB3aWxsIGJlIHZhcmlvdXMgc3ltbGlua3MgdG8gdGhlc2UgZGV2aWNlcy4NCj4gPiAgICBhLyBp
-ZiAic3ltbGlua3M9eWVzIiBpcyBnaXZlbiBpbiBtZGFkbS5jb25mLCBzeW1saW5rcyBmcm9tDQo+
-ID4gICAgICAgICAvZGV2L21kL1ggb3IgL2Rldi9tZC9kWCB3aWxsIGJlIGNyZWF0ZWQuDQo+ID4g
-ICAgYi8gaWYgdWRldiBpcyBjb25maWd1cmVkIGxpa2Ugb24gRGViaWFuLA0KPiA+ICAgICAgICAg
-ICAgICAvZGV2L2Rpc2svYnktaWQvbWQtbmFtZS1YWFhYDQo+ID4gICAgICAgIGFuZCAgIC9kZXYv
-ZGlzay9ieS1pZC9tZC11dWlkLVVVVVUNCj4gPiAgICAgICB3aWxsIGJlIGNyZWF0ZWQgKGJ5IHVk
-ZXYpLg0KPiANCj4gWWVzLCBhbG1vc3QgYWxsIGRpc3Ryb3MgaGF2ZSB0aGF0Lg0KPiANCj4gPiAg
-ICBJJ20gY29udGVtcGxhdGluZyBjcmVhdGluZyBhIGxpbmsgYmFzZWQgb24gdGhlIG1ldGFkYXRh
-IHR5cGUgd2l0aA0KPiA+ICAgIGEgc2VxdWVudGlhbCBudW1iZXIuIGUuZy4gL2Rldi9tZC9kZGYx
-IG9yIC9kZXYvbWQvaW1zbTIuDQo+ID4gICAgSSdtIG5vdCBzdXJlIGlmIHRoZXJlIHNob3VsZCBi
-ZSBpbiAvZGV2L21kLyBvciBkaXJlY3RseSBpbiAvZGV2Ly4NCj4gPiAgICBJJ20gYWxzbyBub3Qg
-c3VyZSBpZiBJIHNob3VsZCBsZWF2ZSB0aGUgY3JlYXRpb24gdG8gdWRldiwgYW5kDQo+ID4gICAg
-d2hldGhlciBJIHNob3VsZCB1c2UgYSBzbWFsbCBzZXF1ZW50aWFsIG51bWJlciwgb3IganVzdCB3
-aGF0ZXZlcg0KPiA+ICAgIG51bWJlciB3YXMgYWxsb2NhdGVkIGFzIHRoZSBtaW5vciBudW1iZXIg
-b2YgdGhlIGRldmljZS4NCj4gDQo+IFRoZXJlIGlzIGludGVudGlvbmFsbHkgbm8gc3VwcG9ydCBm
-b3IgZW51bWVyYXRpb24gaW4gdWRldiwgaXQgd2lsbA0KPiBqdXN0IG5vdCB3b3JrIGFuZCBzdWNo
-IG51bWJlcnMvbGlua3MgYXJlIG5vdCByZXByb2R1Y2libGUgaW4gaG90cGx1Zw0KPiBlbnZpcm9u
-bWVudHMsIGFuZCB0aGVyZWZvcmUgdG90YWxseSB1c2VsZXNzLCBhbmQgZG8gbXVjaCBtb3JlIGhh
-cm0NCj4gdGhhbiBnb29kLg0KPiANCj4gTm90aGluZyBtdXN0IGV2ZXIgZGVwZW5kIG9uIGVudW1l
-cmF0aW9uLCBvciBtaW5vciBudW1iZXJzLCBpZiB0aGVzZQ0KPiBwcm9wZXJ0aWVzIGNhbiBub3Qg
-bWFkZSBwZXJzaXN0ZW50LCBhdHRhY2hlZCAgdG8gdGhlIGRldmljZSBpdHNlbGYsIHNvDQo+IHRo
-YXQgaXQgd2lsbCBhbHdheXMgc2hvdyB1cCB3aXRoIHRoZSBzYW1lIG51bWJlciBmb3JldmVyLiBC
-ZXR0ZXIgZG8NCj4gbm90IGV2ZW4gc3RhcnQgc3VjaCBhbiBpZGVhLCBhbmQgbGVhdmUgdGhlIGtl
-cm5lbCBuYW1lIGFzIHRoZSBwcmltYXJ5DQo+ICJyYW5kb20iIG51bWJlciwgaW5zdGVhZCBvZiBj
-cmVhdGluZyBuZXcgcmFuZG9tbmVzcyBvbiB0b3AuDQo+IA0KPiA+ICA0LyBXaGVuIHdlIHN0b3Ag
-YW4gYXJyYXksIG1kYWRtIHdpbGwgcmVtb3ZlIGFueXRoaW5nIGZyb20gL2RldiB0aGF0DQo+ID4g
-ICAgaXQgcHJvYmFibHkgY3JlYXRlZC4NCj4gDQo+IFN1cmUsIGJ1dCBvbmx5IGlmIG1kYWRtIGhh
-cyBpdCBjcmVhdGVkLg0KPiANCj4gPiAgICBJbiBwYXJ0aWN1bGFyLCBpdCB3aWxsIHJlbW92ZSB0
-aGUgZGV2aWNlIG5vZGUgYXMgZGVzY3JpYmVkIGluIDEsDQo+ID4gICAgYW55IHBhcnRpdGlvbnMs
-IGFuZCBhbnkgc3ltbGlua3MgaW4gL2RldiBvciAvZGV2L21kIHdoaWNoIHBvaW50IHRvDQo+ID4g
-ICAgYW55IG9mIHRob3NlLiAgSSBuZWVkIHRvIGJlIGNlcnRhaW4gdGhhdCB0aGlzIHdvbid0IGNv
-bmZ1c2UgdWRldi4NCj4gDQo+IFlvdSBtdXN0IG5ldmVyIHRvdWNoIGFueXRoaW5nIHRoYXQgdWRl
-diBoYXMgY3JlYXRlZC4gSXQgbXVzdCBiZSBkcml2ZW4NCj4gYnkga2VybmVsICJhZGQvcmVtb3Zl
-L2NoYW5nZSIgZXZlbnRzLg0KPiANCj4gPiAgMS8gUGVvcGxlIHdhbnQgYXV0by1hc3NlbWJseS4g
-IEkndmUgYWx3YXlzIGZvdWdodCBhZ2FpbnN0IGl0ICh3ZQ0KPiA+ICAgIGRvbid0IGF1dG8tbW91
-bnQgYWxsIGZpbGVzeXN0ZW1zIGRvIHdlPykuDQo+IA0KPiBTb21lIHN5c3RlbXMgZG8gYXV0b21v
-dW50IGFsbCBkZXZpY2VzLiBNb3N0IHN5c3RlbXMgZG8gb25seSBob3RwbHVnDQo+IGRldmljZXMg
-d2hpY2ggYXJlIG5vdCBsaXN0ZWQgaW4gL2V0Yy9mc3RhYi4gRXhwZWN0IGluIHRoZSBmdXR1cmUg
-dGhhdA0KPiB0aGVyZSB3aWxsIGFsd2F5cyBiZSBhdXRvLWFzc2VtYmx5IGFuZCBhbHNvIGF1dG8t
-bW91bnRpbmcgdG8gc29tZQ0KPiBkZWdyZWUuIEFsbCB0aGUgbmV3ZXIgc3RvcmFnZSBidXNlcywg
-bGlrZSBpU0NTSSBhbmQgc3VjaCB3aWxsIGFsd2F5cw0KPiBuZWVkICBhdXRvLW1vdW50aW5nIG9u
-IGRldmljZSBkaXNjb3ZlcnksIGFuZCBub3Qgd29yayB3aXRoIGFueQ0KPiBib290dXAtc2NyaXB0
-IGxvZ2ljLg0KPiANCj4gPiAgICBCdXQgaXQgaXMgYSBsb29zaW5nDQo+ID4gICAgYmF0dGxlLiAg
-QW5kIG9uIGEgbW9kZXJuIGRlc2t0b3AsIHdoZW4geW91IHBsdWcgaW4gYSBuZXcgZHJpdmUgdGhl
-DQo+ID4gICAgZmlsZXN5c3RlbSBpcyBhdXRvbWF0aWNhbGx5IG1vdW50ZWQuICBTbyBteSBhcmd1
-bWVudCBpcyBmYWxsaW5nDQo+ID4gICAgYXBhcnQuDQo+IA0KPiBZZXMsIHdlIHdpbGwgbmVlZCB0
-byBzdXBwb3J0IHRoYXQgYXMgYSBjb21tb24gc2V0dXAuDQo+IA0KPiA+IEknbSBhbHNvIHdvbmRl
-cmluZyBpZiBJIHNob3VsZCBpbmNsdWRlIGEgdWRldiAncnVsZXMnIGZpbGUgZm9yIG1kIGluDQo+
-ID4gdGhlIG1kYWRtIGRpc3RyaWJ1dGlvbi4gIE9idmlvdXNseSBpdCB3b3VsZCBiZSBubyBtb3Jl
-IHRoYW4gYQ0KPiA+IHJlY29tbWVuZGF0aW9uLCBidXQgaXQgbWlnaHQgZ2l2ZSBtZSBhIHZvaWNl
-IGluIGd1aWRpbmcgaG93IHVkZXYNCj4gPiBpbnRlcmFjdGVkIHdpdGggbWRhZG0uDQo+IA0KPiBE
-ZWZpbml0ZWx5LCBpdCBzaG91bGQgY2FycnkgYSB1ZGV2IHJ1bGVzIGZpbGUgd2hpY2ggaW5zdHJ1
-Y3RzIHVkZXYgdG8NCj4gY3JlYXRlIGFsbCBpbnRlbmRlZCBzeW1saW5rcyBhbmQgYWxzbyBzdXBw
-b3J0cyB0aGUgcmFpZCBhdXRvLWFzc2VtYmx5DQo+IHNldHVwLiBJdCBzaG91bGQgbm90IG1vdW50
-IGFueXRoaW5nIGJ5IGRlZmF1bHQgdGhvdWdoLg0KPiANCj4gSSdtIGhhcHB5LCB0byBzZWUgeW91
-IHdvcmtpbmcgb24gbmV4dC1nZW5lcmF0aW9uIG1kYWRtLiBJIGxpa2UgdG8gc2VlDQo+IGEgYmV0
-dGVyIGludGVncmF0aW9uIHdpdGggdWRldiwgYW5kIGVzcGVjaWFsbHksIGlmIG1kYWRtIGRldGVj
-dHMgYQ0KPiBydW5uaW5nIHVkZXYsIG5vdCB0byBtZXNzIGFyb3VuZCBpbiAvZGV2IGluIGFueSB3
-YXksIGJ1dCBsZWF2ZSB0aGUNCj4gbmFtZXMgaW4gL2RldiB0byBpbnN0cnVjdGlvbnMgaW4gdWRl
-diBydWxlcy4gVGVtcG9yYXJ5IG5vZGVzIGFyZSBmaW5lLA0KPiBhcyBsb25nIGFzIHRoZXkgZG9u
-J3QgY29uZmxpY3Qgd2l0aCBhbnl0aGluZyBlbHNlLCBhbmQgZ2V0IHJlbW92ZWQNCj4gYWZ0ZXIg
-dGhleSBhcmUgbm90IG5lZWRlZCBhbnltb3JlLiBBbGwgdXBkYXRlcyB0byBzeW1saW5rcyBhbmQg
-c3VjaA0KPiBzaG91bGQgYmUgZG9uZSBieSAiY2hhbmdlIiBldmVudHMgZnJvbSB0aGUga2VybmVs
-LCB3aGljaCBpbnN0cnVjdHMNCj4gdWRldiB0byB1cGRhdGUgYWxsIHRoZSBsaW5rcywgYW5kIG5v
-dCBieSB0b3VjaGluZyBhbnl0aGluZyBpbiAvZGV2DQo+IGZyb20gbWRhZG0uDQo+IA0KPiBEbyB5
-b3UgdGhpbmsgbWRhZG0gd2lsbCBzdGF5IGEgcHJvZ3JhbSBvbmx5LCBjYWxsZWQgYnkgdWRldi90
-aGUgdXNlciwNCj4gb3Igd2lsbCBhIHBvcnQgb2YgaXRzIGZ1bmN0aW9uYWxpdHkgbGl2ZSBpbiBh
-IGRhZW1vbj8NCj4gDQo+IFRoYW5rcywNCj4gS2F5DQo+IC0tDQoNCkkgYW0gd2l0aCBLYXkgaGVy
-ZSwgbmV2ZXIgZm9yY2UgYXV0b21vdW50LiAgDQpJIHB1dCB0aGF0IHJpZ2h0IHVwIHRoZXJlIHdp
-dGggdGhlIGJvbmVoZWFkIE1TRlQgcnVsZSBvZiB0cnlpbmcgdG8gd3JpdGUNCnNpZ25hdHVyZXMg
-b24gZGlzayBkcml2ZXMgb25jZSB0aGV5IGFwcGVhci4gIA0KDQpGdXJ0aGVybW9yZSwgZG9uJ3Qg
-anVzdCBkZWxldGUgL2Rldi9tZCBuYW1lcy4gICBUaGF0IHdvdWxkIGJlIGV2ZW4gYSBncmVhdGVy
-DQptaXN0YWtlLiAgTElOVVggdG9kYXkgaGFzIHN0b3JhZ2Ugb24gU0FOcywgY2x1c3RlcmluZywg
-bXVsdGktdGFza2luZywgbXVsdGktcGF0aGluZywNClNBTi1tYW5hZ2VtZW50L21vbml0b3Jpbmcg
-c29mdHdhcmUgdGhhdCB3aWxsIGJlIHVzaW5nIGRldmljZSBwYXRocyB0aGF0IHlvdSB3YW50IHRv
-DQpkZWxldGUuICANCg0KSSBjYW4ndCB0aGluayBvZiBhIHNpbXBsZSBmaXgsIGJ1dCBjYW4gdGhp
-bmsgb2YgYSBjb21wbGljYXRlZCBmaXggdG8gbWFrZSB0aGlzIHBsYXkNCm5pY2UgaW4gc3VjaCBl
-bnZpcm9ubWVudHMsIHdoZW4gdGhpbmdzIGFyZSBnb29kIC4uIGFuZCB3aGVuIHRoaW5ncyBnbyBi
-YWQuICAgTXkgb3V0c2lkZS0NCnRoZS1ib3ggc3VnZ2VzdGlvbiBpcyB0byBwcmVzZW50IG1kIHRh
-cmdldCBkZXZpY2VzIGFzIGEgU0NTSSBSQUlEIGNvbnRyb2xsZXIgb3INCnByb2Nlc3NvciBkZXZp
-Y2Ugd2hlcmUgeW91IHVzZSBBTlNJLWRlZmluZWQgc2Vuc2Uga2V5cy9BU0MgdmFsdWVzIHRvIGFs
-bG93IA0KYXBwcyB0aGF0IGFyZSBydW5uaW5nIHJlbW90ZWx5IG9yIGV2ZW4NCmxvY2FsbHkgdG8g
-cXVlcnkgaW1tZWRpYXRlIHN0YXRlLiAgIElmIHRoZSBtZCBkZXZpY2UgaXMgYnJva2VuLCB0aGVu
-IHJlcG9ydCB0aGUgc2FtZSBzZW5zZQ0KaW5mb3JtYXRpb24gbm90IHJlYWR5LCBzcHVuIGRvd24s
-IHdoYXRldmVyIC4uLiB0aGF0IGEgcGh5c2ljYWwgZGlzayB3b3VsZCByZXBvcnQgZm9yIA0KdmFy
-aW91cyBwYXJ0aXRpb24uDQpNb3JlIGltcG9ydGFudGx5LCB1c2UgRVZQRCBJbnF1aXJ5IGFuZCBs
-b2cgcGFnZXMgdG8gcXVlcnkgY29uZmlndXJhdGlvbiBpbmZvcm1hdGlvbiwgb2YNCmJvdGggdGhl
-IC9kZXYvbWQgZGV2aWNlLCBBTkQgYWxsIG9mIHRoZSBwYXJ0aXRpb25zLCBhbG9uZyB3aXRoIGhl
-YWx0aCBhbmQgYW55dGhpbmcgZWxzZS4NCkVudGVycHJpc2UgbWFuYWdlbWVudCBzb2Z0d2FyZSB3
-b3VsZG4ndCBoYXZlIHRvIGxvZyBpbnRvIHRoZSBMSU5VWCBob3N0IGFuZCBydW4gY3VzdG9tDQpz
-Y3JpcHRzIHRvIHNlZSB3aGF0IGlzIGdvaW5nIG9uLiBVc2UgbW9kZSBzZW5zZSB0byBzZW5kIGNv
-bnRyb2wvY29uZmlndXJhdGlvbiBjaGFuZ2UgcmVxdWVzdHMuDQoNClRoZSBBTlNJIHByb3ZpZGVz
-IGEgbWVjaGFuaXNtIGFuZCBvcHRpb25zIGZvciBkZWZpbmluZyBhIHVuaXF1ZSBuYW1pbmcgY29u
-dmVudGlvbiwgYW5kIHlvdSBjYW4NCmV2ZW4gYWRkIGEgVVVJRCBpbiB0aGUgZm9ybWF0IHlvdSB3
-YW50IGFzIGEgVmVuZG9yLXNwZWNpZmljIGxheW91dC4gICBUaGVyZSBpcyBhbHJlYWR5IGEgZm91
-bmRhdGlvbg0KZm9yIHN1Y2ggd29yayBkdWUgdG8gdGhlIGlTQ1NJIGxvZ2ljLCBidXQgb2J2aW91
-c2x5IG11Y2ggbW9yZSB3b3JrIGlzIHJlcXVpcmVkLg0KDQpZZXMsIHRoaXMgbm90IGEgc2ltcGxl
-ICYgZWFzeSBmaXgsIGJ1dCBpZiB5b3Ugd2FudCB0byBmdXR1cmUtcHJvb2YgZXZlcnl0aGluZyBh
-bmQgbWFrZSBMSU5VWCBzdG9yYWdlDQplYXN5IHRvIGludGVncmF0ZSBpbnRvIGhldGVyb2dlbmVv
-dXMgZW52aXJvbm1lbnRzLCB0aGVuIGxldCBBTlNJIGJlIHlvdXIgZ3VpZGUuDQpEYXZpZA0KDQo=
+
+--sDKAb4OeUBrWWL6P
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+On 13:41, Kay Sievers wrote:
+> >  1/ The only device nodes created will be /dev/mdX and /dev/md_dX
+> >    along with partitions /dev/mdXpY and /dev/md_dXpY as appropriate.
+> >    These will be created by mdadm in accordance with the "--auto"
+> >    flag unless something in mdadm.conf says to leave it to udev.
+> >    In that case, mdadm will create a temporary node
+> >    (/dev/.mdadm.whatever) and remove it once udev has created the
+> >    real thing.
+>=20
+> Sounds fine, if mdadm needs a device node. It could also wait for udev
+> to have the node created, but having a temporary node sounds fine, as
+> long as it will not clash with anything udev is creating.
+
+IMHO we should try to avoid creating device nodes from mdadm whenever
+possible. OTOH it should be possible to assemble a raid array manually
+i.e. without udev, for example when used from a rescue system.
+
+> >    In particular, it will remove the device node as described in 1,
+> >    any partitions, and any symlinks in /dev or /dev/md which point to
+> >    any of those.  I need to be certain that this won't confuse udev.
+>=20
+> You must never touch anything that udev has created. It must be driven
+> by kernel "add/remove/change" events.
+
+I think it's no problem to let mdadm generate such events rather than
+messing with device nodes itself. BTW: What's the preferred way to
+wait for the generation of the device node after an appropriate event
+has been generated? Polling?
+
+> Some systems do automount all devices. Most systems do only hotplug
+> devices which are not listed in /etc/fstab. Expect in the future that
+> there will always be auto-assembly and also auto-mounting to some
+> degree. All the newer storage buses, like iSCSI and such will always
+> need  auto-mounting on device discovery, and not work with any
+> bootup-script logic.
+
+The nice thing is that this kind of auto-mounting can be handled from
+user space. So we _might_ get rid of the in-kernel raid autodetect
+code eventually.
+
+> > I'm also wondering if I should include a udev 'rules' file for md in
+> > the mdadm distribution.  Obviously it would be no more than a
+> > recommendation, but it might give me a voice in guiding how udev
+> > interacted with mdadm.
+>=20
+> Definitely, it should carry a udev rules file which instructs udev to
+> create all intended symlinks and also supports the raid auto-assembly
+> setup. It should not mount anything by default though.
+
+How about distributing such a rules file together with udev? As far as
+I understand it, you (Kay) are currently trying to unify the different
+udev configurations that exist in the wild. If the udev source code
+contained a rules file for md, this would already help.
+
+Moreover, changes to udev that require modifications of the md rules
+file might happen more frequently than changes to md that require
+such modifications ;)
+
+> Do you think mdadm will stay a program only, called by udev/the user,
+> or will a port of its functionality live in a daemon?
+
+mdadm already has a daemon mode. It's currently used only as a
+monitoring tool (to send alert mails on disk failures) but this could
+be extended if necessary.
+
+Andre
+--=20
+The only person who always got his work done by Friday was Robinson Crusoe
+
+--sDKAb4OeUBrWWL6P
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.1 (GNU/Linux)
+
+iD8DBQFJBcEkWto1QDEAkw8RAgUuAKCNZCg6LmguOGV8fpZZKNEncxovNACdGHw/
+HWtnfOJGu2Ik+wIQRO+2znk=
+=v9mU
+-----END PGP SIGNATURE-----
+
+--sDKAb4OeUBrWWL6P--
