@@ -1,146 +1,106 @@
-From: "David Lethe" <david@santools.com>
-Subject: RE: RFC - device names and mdadm with some reference to udev.
-Date: Mon, 27 Oct 2008 18:48:13 -0500
-Message-ID: <A20315AE59B5C34585629E258D76A97C026BBE86@34093-C3-EVS3.exchange.rackspace.com>
-References: <18692.62860.863118.727187@notabene.brown><ac3eb2510810270541g2ac57bd1p5576f15959e849e@mail.gmail.com><A20315AE59B5C34585629E258D76A97C026BB4B1@34093-C3-EVS3.exchange.rackspace.com> <18694.20077.985722.466221@notabene.brown>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: RFC - device names and mdadm with some reference to udev.
+Date: Tue, 28 Oct 2008 10:56:01 +1100
+Message-ID: <18694.21777.533214.972118@notabene.brown>
+References: <18692.62860.863118.727187@notabene.brown>
+	<20081027082257.GB1801@piper.oerlikon.madduck.net>
+	<18694.17044.342920.841232@notabene.brown>
+	<ac3eb2510810271551q53c27fedi9d662a36bd281ed4@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
-In-Reply-To: <18694.20077.985722.466221@notabene.brown>
+In-Reply-To: message from Kay Sievers on Monday October 27
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Kay Sievers <kay.sievers@vrfy.org>, linux-raid@vger.kernel.org, Doug Ledford <dledford@redhat.com>, "martin f. krafft" <madduck@debian.org>, Michal Marek <mmarek@novell.com>
+To: Kay Sievers <kay.sievers@vrfy.org>
+Cc: martin f krafft <madduck@debian.org>, linux-raid@vger.kernel.org, Doug Ledford <dledford@redhat.com>, Michal Marek <mmarek@novell.com>
 List-Id: linux-raid.ids
 
-
-
-> -----Original Message-----
-> From: Neil Brown [mailto:neilb@suse.de]
-> Sent: Monday, October 27, 2008 6:28 PM
-> To: David Lethe
-> Cc: Kay Sievers; linux-raid@vger.kernel.org; Doug Ledford; martin f.
-> krafft; Michal Marek
-> Subject: RE: RFC - device names and mdadm with some reference to udev.
+On Monday October 27, kay.sievers@vrfy.org wrote:
+> On Mon, Oct 27, 2008 at 23:37, Neil Brown <neilb@suse.de> wrote:
+> > On Monday October 27, madduck@debian.org wrote:
+> >> also sprach Neil Brown <neilb@suse.de> [2008.10.26.2356 +0100]:
 > 
-> On Monday October 27, david@santools.com wrote:
+> >> I would really like to have a clear separation of competencies.
+> >> Ideally, mdadm never creates any devices but leaves it all to udev,
+> >> and all configuration about alternate names ("symlinks") is done in
+> >> the udev rules file.
 > >
-> > I am with Kay here, never force automount.
-> > I put that right up there with the bonehead MSFT rule of trying to
-> write
-> > signatures on disk drives once they appear.
+> > Yes, I am moving towards this.  And it seems to be an idea with
+> > resounding support judging by the follow-ups.  So I will probably go
+> > even further than I was planning.
+> >  - if mdadm detects that udev is active (how do I do that???)
 > 
-> By you wouldn't mind if something that looked like it might have once
-> been a raid1 started a resync as soon as you plugged it in?
+> Most tools just check if /dev/.udev/ exists.
+
+So we are checking if udev is configured rather than if it is
+running.  I guess that is what we really want to check.  OK - thanks.
+
+> > However I do want to move towards using sysfs preferentially,
+> > particularly for "mdadm --monitor".  I would rather that daemon didn't
+> > ever open the device, as that can interfere with e.g. stopping the
+> > array.  The "mdadm -D" calls from udev also need to not open the device.
 > 
+> Sounds fine, but remember that udev will always look at every device's
+> content if not explicitly told no to do. It will look for filesystem
+> signatures and other metadata at the beginning and the end of the
+> device.
 
-This could be addressed via EVPD pages.  The application that cares what
-raid1 is
-at any instant in time, or what might have been can ask it.
-Furthermore, benny
-of doing this is those applications don't have to have access to the
-LINUX machine
-or O/S in any way to get the info, and would be O/S, shell, and hardware
--agnostic.
+Ahh yes, of course.
+So if I want to be able to stop an array immediately after starting
+(or changing) it (as I often do in test scripts, but may not need to
+in real life) I need to wait for udev to settle.
+So if I just need this in a script I can add
+    udevadm settle
+somewhere between the 'start' and the 'stop'.
 
+I wonder if I ever want mdadm to call that directly?  I suspect that
+if it got called from a udev rule it would deadlock, so I'd need to be
+careful of that.
+
+> 
+> > One issue that looms in my mind as I consider this is the Usage of
+> > mdadm when e.g. creating an array
 > >
-> > Furthermore, don't just delete /dev/md names.   That would be even a
-> greater
-> > mistake.  LINUX today has storage on SANs, clustering,
-multi-tasking,
-> multi-pathing,
-> > SAN-management/monitoring software that will be using device paths
-> that you want to
-> > delete.
-> 
-> I don't understand.  If the md array has been explicitly stopped, why
-> not remove the names from /dev.  They have no meaning any more.  And
-> nothing can have them open.
-> 
-
-They have no meaning to mdadm and the programs that explicitly know that
-md was stopped.  What if /dev/mdX was opened by another app and in use?
-I do
-not know for sure, but I bet there are corner cases where you wouldn't
-be
-able to remove device names even if you wanted to.  But, just educated
-guess
-on this item, but I suggest some people experienced with clustering,
-infiniband-
-connected nodes and such have the opportunity to put their opinion on
-this one.
-
-
+> >   mdadm -C /dev/md5 -l5 -n3 /dev/sd[bcd]
 > >
-> > I can't think of a simple fix, but can think of a complicated fix to
-> make this play
-> > nice in such environments, when things are good .. and when things
-go
-> bad.   My outside-
-> > the-box suggestion is to present md target devices as a SCSI RAID
-> controller or
-> > processor device where you use ANSI-defined sense keys/ASC values to
-> allow
-> > apps that are running remotely or even
-> > locally to query immediate state.   If the md device is broken, then
-> report the same sense
-> > information not ready, spun down, whatever ... that a physical disk
-> would report for
-> > various partition.
-> > More importantly, use EVPD Inquiry and log pages to query
-> configuration information, of
-> > both the /dev/md device, AND all of the partitions, along with
-health
-> and anything else.
-> > Enterprise management software wouldn't have to log into the LINUX
-
-
-> host and run custom
-> > scripts to see what is going on. Use mode sense to send
-> control/configuration change requests.
+> > I need to give the name of an array device (/dev/md5) that may not
+> > exist but that mdadm doesn't now want to create.
 > >
-> > The ANSI provides a mechanism and options for defining a unique
-> naming convention, and you can
-> > even add a UUID in the format you want as a Vendor-specific layout.
-> There is already a foundation
-> > for such work due to the iSCSI logic, but obviously much more work
-is
-> required.
+> > Once I have created the array I might want to look at the details with
 > >
-> > Yes, this not a simple & easy fix, but if you want to future-proof
-> everything and make LINUX storage
-> > easy to integrate into heterogeneous environments, then let ANSI be
-> your guide.
+> >   mdadm --detail /dev/md5
+> >
+> > The important role that the string "/dev/md5" is serving here is
+> > providing a connection between the two command.  Whatever I created in
+> > the first is what I access in the second.
 > 
-> What I think you are suggesting is that md raid be exportable via
-> iSCSI (or FCOE or AOE or flavor-of-the-month) in such a way that
-> status-query commands 'do the right thing'.  Sounds like we want a
-> plug-in for iscsid (or whatever it is that support iscsi service).
-> 
-> Is that what you mean?
-> 
-> Thanks,
-> NeilBrown
+> Can't you just use the major/minor is there is no other meaningful
+> name? The devnum can not change on any system, and is always valid as
+> long as the kernel device exists.
 
-iSCSI would be easier, but as long as you asked for suggestions ... I
-prefer
-that somebody magically write all of that code which will allow one to
-add true
-physical-port target devices so if you had a SAS, SCSI, or FC card then
-you could
-hook up multiple hosts, or switche. 
-Then you would have foundation for multiple-concurrent
-host connectivity on md-based volumes in addition to individual disks.
-Instant SAN.
-But iSCSI would effectively solve problem of having appropriate method
-for communicating 
-health and state across a SAN or WAN, and you wouldn't even have to
-write code to export
-the md device as a SCSI device type 0 (i.e, disk drive).   
+Maybe.  Though in general I would rather that the user didn't allocate
+the minor number.
+I could get "mdadm --create" to report
+   mdadm: created array as /dev/md42
+or
+   mdadm: created md array 42
 
-(Hey, you asked for suggestions ... so consider this my letter to Santa)
+and then you could simply
+   mdadm --detail 42
 
+however that would be awkward for scripts.
 
+I don't need to require that a name be given, but I want to allow it.
+An I need to stay at least a little bit compatible with current mdadm
+usage and practices.
 
+I'm definitely considering allowing
+
+  mdadm --create md0 ....
+
+(i.e. drop the '/dev/').  That isn't a big step in functionality, but
+it might be an important step in perceptions.
+
+Thanks, the picture is slowly becoming clearer.
+NeilBrown
