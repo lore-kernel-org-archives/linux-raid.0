@@ -1,127 +1,119 @@
-From: "Joe Landman" <joe.landman@gmail.com>
-Subject: Re: question on how to (correctly) build an initrd for a root disk on a RAID1
-Date: Mon, 27 Oct 2008 08:34:01 -0400
-Message-ID: <9f5edc120810270534j3d969d2s18c1017755990c30@mail.gmail.com>
-References: <9f5edc120810261937w339f2919p4f7ce82fbcaf2149@mail.gmail.com>
-	 <20081027071613.GA8197@maude.comedia.it>
+From: "Kay Sievers" <kay.sievers@vrfy.org>
+Subject: Re: RFC - device names and mdadm with some reference to udev.
+Date: Mon, 27 Oct 2008 13:41:55 +0100
+Message-ID: <ac3eb2510810270541g2ac57bd1p5576f15959e849e@mail.gmail.com>
+References: <18692.62860.863118.727187@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20081027071613.GA8197@maude.comedia.it>
+In-Reply-To: <18692.62860.863118.727187@notabene.brown>
 Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org, Doug Ledford <dledford@redhat.com>, "martin f. krafft" <madduck@debian.org>, Michal Marek <mmarek@novell.com>
 List-Id: linux-raid.ids
 
-On Mon, Oct 27, 2008 at 3:16 AM, Luca Berra <bluca@comedia.it> wrote:
-> On Sun, Oct 26, 2008 at 10:37:17PM -0400, Joe Landman wrote:
->>
->> Hi folks:
->>
->>  We have been trying to build an operational initrd for a root drive
->> on  software RAID1.
->>
->>  Basic specs:   2.6.23.14 kernel (though same issues with 2.6.27.2
->> kernel), on Centos 5.2, pair of SATA drives using libata and other
->> drivers, x86_64 architecture.
->
-> Custom built kernel or centos provided kernel?
+On Sun, Oct 26, 2008 at 23:56, Neil Brown <neilb@suse.de> wrote:
+>  Device naming in mdadm is a bit of a mess.
 
-Custom.  The Centos provided does in fact work with this.  I did
-(previously) look at the initrd (uncompress and un-cpio it), and
-didn't see anything in particular different from what I had done.
+>  In 2.6.28, partitioned devices (mdp) wont be needed any more as md
+>  will make use of the "extended partition" functionality recently
+>  added.
 
->
->
->>  Using mkinitrd --with=raid1 --with=libata --with=sd_mod ...
->>
->>  I am getting a kernel panic on switchroot, it can't find the root
->> file system.  I did some googling, but could not find a similar
->> example.
->
-> unfortunately the kernel panic is a consequence of a previous error,
-> someone willing to help you would need to know everithing that was
-> spitted between the 'starting red-hat nash' message and the kernel
-> panic.
+You mean the extended minor space, right? Or the extended partitions,
+which are a format in a msdos table?
 
-I looked and this was actually the earliest error.  I will try to
-capture the rest of this and post it for download (it is long).
+>  1/ The only device nodes created will be /dev/mdX and /dev/md_dX
+>    along with partitions /dev/mdXpY and /dev/md_dXpY as appropriate.
+>    These will be created by mdadm in accordance with the "--auto"
+>    flag unless something in mdadm.conf says to leave it to udev.
+>    In that case, mdadm will create a temporary node
+>    (/dev/.mdadm.whatever) and remove it once udev has created the
+>    real thing.
 
->
->> Do I need to create a specialized init script?  Is there an
->
-> usually no, redhat/centos initrd should be able to boot from a raid1
+Sounds fine, if mdadm needs a device node. It could also wait for udev
+to have the node created, but having a temporary node sounds fine, as
+long as it will not clash with anything udev is creating.
 
-The baseline provided kernel can.  This is a custom kernel, and I am
-attempting to find the right mkinitrd parameters.  One of the nicer
-things in the Ubuntu/Debian process is that they have the ability to
-add most/all modules in to an initrd.  Somehow this is my current
-thought, that we are missing something critical.
+>  2/ There will be various symlinks to these devices.
+>    a/ if "symlinks=yes" is given in mdadm.conf, symlinks from
+>         /dev/md/X or /dev/md/dX will be created.
+>    b/ if udev is configured like on Debian,
+>              /dev/disk/by-id/md-name-XXXX
+>        and   /dev/disk/by-id/md-uuid-UUUU
+>       will be created (by udev).
 
->
->> example of this somewhere?  I did look at the Documentation/md.txt and
->> tried the
->>
->>    md=0,sda1,sdb1 md=1,sda2,sdb2  md=2,sda3,sdb3
->
-> if you are using the centos kernel, raid is modular and this parameter
-> has no effect.
-> mkinitrd should use your /etc/mdadm.conf to discover how the array
-> should be laid out.
+Yes, almost all distros have that.
 
-Ok.  This is where it gets interesting.  If the /etc/mdadm.conf is on
-the RAID, you have a bit of a "chicken and egg" problem to deal with
-here.  How does the system find /etc/mdadm.conf to make the RAID when
-/etc/mdadm.conf is on the RAID?
+>    I'm contemplating creating a link based on the metadata type with
+>    a sequential number. e.g. /dev/md/ddf1 or /dev/md/imsm2.
+>    I'm not sure if there should be in /dev/md/ or directly in /dev/.
+>    I'm also not sure if I should leave the creation to udev, and
+>    whether I should use a small sequential number, or just whatever
+>    number was allocated as the minor number of the device.
 
-This implies that /etc/mdadm.conf is in the initrd.  Peeking inside
-the default centos one, I can see that this is not true.  Which
-implies that it doesn't see /etc/mdadm.conf before it assembles the
-array, as the /etc/mdadm.conf is on the array, and not in the initrd
-image.
+There is intentionally no support for enumeration in udev, it will
+just not work and such numbers/links are not reproducible in hotplug
+environments, and therefore totally useless, and do much more harm
+than good.
 
-Is there a way to include the /etc/mdadm.conf into the initrd?
+Nothing must ever depend on enumeration, or minor numbers, if these
+properties can not made persistent, attached  to the device itself, so
+that it will always show up with the same number forever. Better do
+not even start such an idea, and leave the kernel name as the primary
+"random" number, instead of creating new randomness on top.
 
->
->>  kernel boot time option, to no avail.  Persistent superblocks are
->> on, and the devices have the right partition types.
->
-> partition types do not matter anymore.
+>  4/ When we stop an array, mdadm will remove anything from /dev that
+>    it probably created.
 
-Autoassembly is depracated?
+Sure, but only if mdadm has it created.
 
+>    In particular, it will remove the device node as described in 1,
+>    any partitions, and any symlinks in /dev or /dev/md which point to
+>    any of those.  I need to be certain that this won't confuse udev.
 
->>  Any suggestions?  More things to read?
->
-> is your fstab correct?
+You must never touch anything that udev has created. It must be driven
+by kernel "add/remove/change" events.
 
-Yes.  Boots fine with older kernel.  fstab doesn't change between the two.
+>  1/ People want auto-assembly.  I've always fought against it (we
+>    don't auto-mount all filesystems do we?).
 
-> is your mdadm.conf correct?
+Some systems do automount all devices. Most systems do only hotplug
+devices which are not listed in /etc/fstab. Expect in the future that
+there will always be auto-assembly and also auto-mounting to some
+degree. All the newer storage buses, like iSCSI and such will always
+need  auto-mounting on device discovery, and not work with any
+bootup-script logic.
 
+>    But it is a loosing
+>    battle.  And on a modern desktop, when you plug in a new drive the
+>    filesystem is automatically mounted.  So my argument is falling
+>    apart.
 
-Yes.  Boots fine with older kernel.  mdadm.conf doesn't change between the two.
+Yes, we will need to support that as a common setup.
 
-> are you loading the correct drivers for your hd controller?
+> I'm also wondering if I should include a udev 'rules' file for md in
+> the mdadm distribution.  Obviously it would be no more than a
+> recommendation, but it might give me a voice in guiding how udev
+> interacted with mdadm.
 
-I believe so:  looked at the list from lsmod and replicated this in
-the mkinitrd.  However, I have seen drivers change markedly release to
-release.  Hence my interest in building an initrd with the maximum
-number of modules (specific to SATA/SCSI)
+Definitely, it should carry a udev rules file which instructs udev to
+create all intended symlinks and also supports the raid auto-assembly
+setup. It should not mount anything by default though.
 
->
-> mkinitrd is a shell script, if all else fails, run it with sh -x and
-> read the output.
+I'm happy, to see you working on next-generation mdadm. I like to see
+a better integration with udev, and especially, if mdadm detects a
+running udev, not to mess around in /dev in any way, but leave the
+names in /dev to instructions in udev rules. Temporary nodes are fine,
+as long as they don't conflict with anything else, and get removed
+after they are not needed anymore. All updates to symlinks and such
+should be done by "change" events from the kernel, which instructs
+udev to update all the links, and not by touching anything in /dev
+from mdadm.
 
-Already done.  Even instrumented the code so I could see what the
-handleraid function was in fact doing.  It looks correct, figures out
-the right modules, and makes sure they are in there.
+Do you think mdadm will stay a program only, called by udev/the user,
+or will a port of its functionality live in a daemon?
 
-So I am wondering if it is a module load order, or something else like
-that., apart from just a missing module.  Which could be a depmod
-issue.
-
-Thanks.
-
-Joe
+Thanks,
+Kay
