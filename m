@@ -1,67 +1,71 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: RFC - device names and mdadm with some reference to udev.
-Date: Tue, 28 Oct 2008 10:36:32 +1100
-Message-ID: <18694.20608.954160.346473@notabene.brown>
-References: <18692.62860.863118.727187@notabene.brown>
-	<20081027082257.GB1801@piper.oerlikon.madduck.net>
-	<1225120416.4845.128.camel@firewall.xsintricity.com>
-	<20081027161000.GG17300@skl-net.de>
-	<ac3eb2510810270937i3acd7c94r2817b8f4c79babec@mail.gmail.com>
-	<1225128270.4845.144.camel@firewall.xsintricity.com>
+From: Roger Heflin <rogerheflin@gmail.com>
+Subject: Re: dmraid - where is the raid done?
+Date: Mon, 27 Oct 2008 18:29:52 -0500
+Message-ID: <49064EF0.4080804@gmail.com>
+References: <1225120062.20830.34.camel@pc.ilinx>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Doug Ledford on Monday October 27
+In-Reply-To: <1225120062.20830.34.camel@pc.ilinx>
 Sender: linux-raid-owner@vger.kernel.org
-To: Doug Ledford <dledford@redhat.com>
-Cc: Kay Sievers <kay.sievers@vrfy.org>, Andre Noll <maan@systemlinux.org>, martin f krafft <madduck@debian.org>, linux-raid@vger.kernel.org, Michal Marek <mmarek@novell.com>
+To: "Brian J. Murrell" <brian@interlinx.bc.ca>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Monday October 27, dledford@redhat.com wrote:
+Brian J. Murrell wrote:
+> Somebody had suggested this list for this question:
 > 
-> I've found the udev rules method of starting md devices to be
-> problematic (at best).
+> I understand that dmraid is just some kind of interface to the
+> _software_ raid that is provided on a number of SATA interface cards
+> such as the Promise and Adaptec cards.
 > 
-> Here's the issue (in Fedora at least).  Starting devices via udev means
-> starting them as soon as they are capable and not waiting until all
-> devices are up and running.  You have to do this in case the device is
-> in a degraded state and you aren't going to get all the devices.
-> However, we don't create a bitmap on devices by default in the installer
-> (a user can add one themselves, but it isn't there by default).  Without
-> the bitmap, if the device is written to before all devices are added, it
-> triggers a full resync of the device.  As it turns out, for certain
-> installations, this happens on *every* single reboot.  It's painful, to
-> say the least.   So, I wanted to change the udev rule to work slightly
-> differently.  I wanted the invocation of mdadm --incremental that
-> happened to be the one that took the array from an unrunable state to a
-> runable but degraded state to sleep for say 2 to 5 seconds, and then if
-> the array is still not up and running due to subsequent udev rule
-> invocations, it would start the array in a degraded state.  This,
-> however, breaks udevsettle.  So, the current setup (for the upcoming
-> fedora 10) is done such that the udev rule won't start any degraded
-> arrays, and instead we have both a specific mdadm invocation in the
-> initrd and another in rc.sysinit that will start any degraded arrays
-> that are also listed in the mdadm.conf file.  This makes sure that known
-> arrays are assembled and started if at all possible, but we only start
-> unknown arrays if they are complete.
+> Reading http://ata.wiki.kernel.org/index.php/SATA_RAID_FAQ I get the
+> message loud and clear that this is not real hardware RAID but rather
+> it's done in the BIOS on the card.
 > 
+> The message there seems to be, if you are going to do it in software
+> anyway, why not just skip the IO card RAID and just use MD?
+> 
+> The one reason I could think of for using the BIOS provided RAID would
+> be to reduce the data needing to traverse the PCI bus.  With host-raid
+> (i.e. MD) every write to disk needs to actually be written over the PCI
+> bus twice, once for each disk, right?
+> 
+> But do the BIOS RAID cards out there only need the write command and
+> data once and they do the work of writing it to the two disks on-board
+> the IO card?
 
-This is using udev to start md devices, which is not quite the focus
-of the previous discussion.  That was more about using udev to create
-the entries in /dev when someone else started the arrays.
+At bootup the bios takes care of booting properly for the fakeraid.
 
-However this is still a real issue that I would like to handle as best
-we can.
+After that the OS driver only reads tables that the BIOS put on the disks,
+and figures out which disks are to be raided, and the OS does *ALL* of the work 
+just like MD.   The only advantage is the bios taking care of booting from 
+either disk, without this if a bad disk still partially there (say it just had 
+bad blocks on all of the /boot partition) then the OS won't boot (with MD), but 
+may boot with bios raid1/dmraid.
 
-I would like to get the md code to always have at least an in-memory
-bitmap to allow quite resync after a "re-add".
+If you set raid in the bios, and don't use dmraid in the OS, at some future
+boot the bios raid *CAN* determine that the disks are out of sync
+and correct this (and depending on your configuration eliminate your data), I
+had a customer that did this and was running R0 on the 2 disks, but the
+bios was configured R1 and after a year+ of running R0 the machine crashed
+in a bad way and the bios determined there were out of sync and asked to
+correct it, and they said yes, and it eliminated their data.
 
-However even this isn't a perfect solution as there is a window when a
-single device failure can kill an array.
+So only bootup is done in the bios, once the machine boots the bios is gone
+and no longer doing anything.
 
-Your solution sounds good, but I'd be happy to hear other thoughts on
-the issue.
+> 
+> IIUC, when you have a BIOS RAID configured, even though there are two
+> disks, the operating system only sees one.  This would seem to support
+> the theory that the write only goes to the controller once and it takes
+> care of the mirroring, but I will defer to your experience.
 
-Thanks,
-NeilBrown
+I don't remember if dmraid takes care of hiding the 2 devices, if it does
+the OS is still aware of them and writing to both of them.
+
+> 
+> Thanx,
+> b.
+
