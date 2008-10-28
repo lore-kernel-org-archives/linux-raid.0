@@ -1,129 +1,92 @@
-From: "Joe Landman" <joe.landman@gmail.com>
-Subject: Re: question on how to (correctly) build an initrd for a root disk on a RAID1
-Date: Tue, 28 Oct 2008 08:20:05 -0400
-Message-ID: <9f5edc120810280520i3ff4855fne765069beeca27e9@mail.gmail.com>
-References: <9f5edc120810261937w339f2919p4f7ce82fbcaf2149@mail.gmail.com>
-	 <20081027071613.GA8197@maude.comedia.it>
-	 <9f5edc120810270534j3d969d2s18c1017755990c30@mail.gmail.com>
-	 <20081028064354.GD7764@percy.comedia.it>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: [mdadm git pull] "--assemble --scan" support for imsm
+Date: Tue, 28 Oct 2008 14:44:01 -0700
+Message-ID: <1225230241.5778.26.camel@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20081028064354.GD7764@percy.comedia.it>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tue, Oct 28, 2008 at 2:43 AM, Luca Berra <bluca@comedia.it> wrote:
-> On Mon, Oct 27, 2008 at 08:34:01AM -0400, Joe Landman wrote:
->>>
->>> unfortunately the kernel panic is a consequence of a previous error,
->>> someone willing to help you would need to know everithing that was
->>> spitted between the 'starting red-hat nash' message and the kernel
->>> panic.
->>
->> I looked and this was actually the earliest error.  I will try to
->> capture the rest of this and post it for download (it is long).
->
-> it should at least spit out the modules it is loading and some of the
-> action it is doing. comparing this with a running one might help in
-> understanding what the difference is.
+Hi Neil,
 
-Ok, this makes sense.  Will bring this to a slightly different machine
-today and see if we can continue work (put on hold for a few days)
+This update allows imsm containers and member arrays to be discovered
+with '-Eb' and subsequently assembled with '-As'.
 
->
->>>> Do I need to create a specialized init script?  Is there an
->>>
->>> usually no, redhat/centos initrd should be able to boot from a raid1
->>
->> The baseline provided kernel can.  This is a custom kernel, and I am
->> attempting to find the right mkinitrd parameters.  One of the nicer
->> things in the Ubuntu/Debian process is that they have the ability to
->> add most/all modules in to an initrd.  Somehow this is my current
->> thought, that we are missing something critical.
->
-> is md modular (CONFIG_MD)?
+For example here is a test for assembling a 4 drive container with (1)
+4-disk raid5 array plus one spare.
 
-Yes.  Same .config for a different kernel exhibiting the same problem.
+# echo "DEVICES /dev/loop[0-4]" > tmp/mdadm.conf
 
-grep CONFIG_MD .config
-CONFIG_MD=y
-CONFIG_MD_LINEAR=m
-CONFIG_MD_RAID0=m
-CONFIG_MD_RAID1=m
-CONFIG_MD_RAID10=m
-CONFIG_MD_RAID456=m
-CONFIG_MD_RAID5_RESHAPE=y
-CONFIG_MD_MULTIPATH=m
-CONFIG_MD_FAULTY=m
-# CONFIG_MDIO_BITBANG is not set
+# mdadm -Ebsc tmp/mdadm.conf >> tmp/mdadm.conf
 
-[...]
+# cat tmp/mdadm.conf
+DEVICES /dev/loop[0-4]
+ARRAY /dev/imsm metadata=imsm auto=md UUID=b98f5dbe-aa859e7b-0e369b89-a80986d4
+ARRAY /dev/md/r1 container=/dev/imsm member=0 auto=mdp UUID=3538e39c-b397c2e9-1aa031f9-2bc0eca4
+   spares=1
 
->> This implies that /etc/mdadm.conf is in the initrd.  Peeking inside
->> the default centos one, I can see that this is not true.  Which
->> implies that it doesn't see /etc/mdadm.conf before it assembles the
->> array, as the /etc/mdadm.conf is on the array, and not in the initrd
->> image.
->>
->> Is there a way to include the /etc/mdadm.conf into the initrd?
->
-> mkinitrd should include mdadm and /etc/mdadm.conf if it decides your
-> root is on md
+# mdadm -Asvc tmp/mdadm.conf
+mdadm: looking for devices for /dev/imsm
+mdadm: /dev/loop4 is identified as a member of /dev/imsm, slot -1.
+mdadm: /dev/loop3 is identified as a member of /dev/imsm, slot -1.
+mdadm: /dev/loop2 is identified as a member of /dev/imsm, slot -1.
+mdadm: /dev/loop1 is identified as a member of /dev/imsm, slot -1.
+mdadm: /dev/loop0 is identified as a member of /dev/imsm, slot -1.
+mdadm: added /dev/loop3 to /dev/imsm as -1
+mdadm: added /dev/loop2 to /dev/imsm as -1
+mdadm: added /dev/loop1 to /dev/imsm as -1
+mdadm: added /dev/loop0 to /dev/imsm as -1
+mdadm: added /dev/loop4 to /dev/imsm as -1
+mdadm: Container /dev/imsm has been assembled with 5 drives
+mdadm: looking to assemble member array 0 inside container /dev/imsm
+mdadm: match found for member 0
 
-Ok.  This is what I think (e.g. am guessing) is the likely culprit at
-the moment.
+I suppose brief_examine_super_imsm() can be updated to look at the
+currently running kernel and not specify auto=mdp if the "extended
+partition" capability is available.  Is there a quick way to check for
+this capability?  You can see that I tagged this support as
+"preliminary" as it does not attempt to address the multiple container
+case, I left it alone for now as that solution depends on the device
+name rework.
 
-[...]
+Please have a look.
 
->>>>  Any suggestions?  More things to read?
->>>
->>> is your fstab correct?
->>
->> Yes.  Boots fine with older kernel.  fstab doesn't change between the two.
->
-> i mean, mkinitrd reads /etc/fstab to decide what your root device is,
-> sometimes it fails and creates a wrong initrd
+Thanks,
+Dan
 
-Ok.  I was unaware that it would build an incorrect initrd, I thought
-we could just miss the modules if they weren't explicitly included
-using --with=  or similar.  I have seen that with a number of RAID
-cards, that mkinitrd will not generate a workable initrd (no software
-RAID) as it leaves out the right drivers.  I have been (defensively)
-including RAID card drivers in our initrd builds.
+The following changes since commit b01b06bda8dce132e6eb3c3826ad0f4b94ebdf43:
+  NeilBrown (1):
+        Merge branch 'master' into devel-3.0
 
->
->>> is your mdadm.conf correct?
->>
->>
->> Yes.  Boots fine with older kernel.  mdadm.conf doesn't change between the
->> two.
->>
->>> are you loading the correct drivers for your hd controller?
->>
->> I believe so:  looked at the list from lsmod and replicated this in
->> the mkinitrd.  However, I have seen drivers change markedly release to
->> release.  Hence my interest in building an initrd with the maximum
->> number of modules (specific to SATA/SCSI)
->>
->>>
->>> mkinitrd is a shell script, if all else fails, run it with sh -x and
->>> read the output.
->>
->> Already done.  Even instrumented the code so I could see what the
->> handleraid function was in fact doing.  It looks correct, figures out
->> the right modules, and makes sure they are in there.
->
-> post it and the content of both initrds on pastebin or such,
-> you seem to have drawn enough interest that someone will look at it.
+are available in the git repository at:
 
-Ok, will bring the disks to a slightly different machine so I can do
-the serial port captures.  Will post when I can (later
-today/tomorrow).
+  git://git.kernel.org/pub/scm/linux/kernel/git/djbw/mdadm.git devel
 
-Thanks for all the suggestions and guidance!
+Dan Williams (7):
+      update copyright headers
+      imsm: update metadata immediately on "add spare" events
+      Examine: fix MD_DISK_SYNC is a bit not a flag
+      imsm: return associated uuid for spares
+      imsm: copy raid device info when associating spares
+      imsm: include members in ->brief_examine
+      Preliminary -As support for container member arrays
 
-Joe
+ Assemble.c    |   46 ++++++++++++++++++++++++++++++++++++++++++++++
+ Examine.c     |    2 +-
+ Incremental.c |    6 ++++++
+ config.c      |    2 ++
+ managemon.c   |   19 +++++++++++++++++++
+ mdadm.h       |    1 +
+ mdmon.c       |   28 +++++++++++++++++++---------
+ mdmon.h       |   20 ++++++++++++++++++++
+ monitor.c     |   19 +++++++++++++++++++
+ sg_io.c       |    2 +-
+ super-intel.c |   53 ++++++++++++++++++++++++++++++++++++++++++++---------
+ util.c        |    9 +++++++++
+ 12 files changed, 187 insertions(+), 20 deletions(-)
+
+
