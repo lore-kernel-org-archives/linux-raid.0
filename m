@@ -1,41 +1,99 @@
-From: Roger Heflin <rogerheflin@gmail.com>
-Subject: Re: dmraid - where is the raid done?
-Date: Mon, 27 Oct 2008 20:12:16 -0500
-Message-ID: <490666F0.4000306@gmail.com>
-References: <1225120062.20830.34.camel@pc.ilinx>	 <49064EF0.4080804@gmail.com> <1225154175.16984.16.camel@pc.ilinx>
+From: "Kay Sievers" <kay.sievers@vrfy.org>
+Subject: Re: RFC - device names and mdadm with some reference to udev.
+Date: Tue, 28 Oct 2008 02:16:29 +0100
+Message-ID: <ac3eb2510810271816n785605f4q4184731c3947898a@mail.gmail.com>
+References: <18692.62860.863118.727187@notabene.brown>
+	 <ac3eb2510810270541g2ac57bd1p5576f15959e849e@mail.gmail.com>
+	 <18694.19834.523955.697048@notabene.brown>
+	 <ac3eb2510810271703k7d9c97caob0f1d2eee28b8b7@mail.gmail.com>
+	 <18694.24642.729914.620038@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1225154175.16984.16.camel@pc.ilinx>
+In-Reply-To: <18694.24642.729914.620038@notabene.brown>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: "Brian J. Murrell" <brian@interlinx.bc.ca>
-Cc: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org, Doug Ledford <dledford@redhat.com>, "martin f. krafft" <madduck@debian.org>, Michal Marek <mmarek@novell.com>
 List-Id: linux-raid.ids
 
-Brian J. Murrell wrote:
-> On Mon, 2008-10-27 at 18:29 -0500, Roger Heflin wrote:
->> After that the OS driver only reads tables that the BIOS put on the disks,
->> and figures out which disks are to be raided, and the OS does *ALL* of the work 
->> just like MD.
-> 
-> Ahhhh.  Really.  That is disappointing.  So in reference to the OS doing
-> all of the work would that be the kernel driver for the particular RAID
-> card, such as the Promise or Adaptec fakeraid cards?
-> 
-> b.
-> 
+On Tue, Oct 28, 2008 at 01:43, Neil Brown <neilb@suse.de> wrote:
+> On Tuesday October 28, kay.sievers@vrfy.org wrote:
+>> > But in different places.
+>> > Debian has /etc/udev/rules
+>> > openSUSE has /lib/udev/rules
+>> >
+>> > I love standards.  There are so many to choose from. :-)
+>>
+>> They are all valid and needed. You should install in
+>> /lib/udev/rules.d/ if the rule is not supposed to be edited by the
+>> user.
+>
+> Clearer now.  Thanks.
+>
+>> > I notice that 'md'
+>> > devices don't seem to disappear.  Maybe that is because /sys/block/mdX
+>> > never disappears (last time I tried it was too racy).
+>>
+>> It stays because the md kernel device lifetime rules are kind of
+>> broken regarding hotplug setups. Similar issue why md needs all the
+>> static nodes in /dev too to create a device.
+>>
+>> > Would there be any way to get udev to delete devices when
+>> >  /sys/block/mdX/md/array_state
+>> > becomes 'clear' (presumably on a CHANGE event) ??
+>>
+>> What would be the reason to leave the kernel block device around?
+>> Can't you just remove it like any other subsytem in the kernel does.
+>> That would just remove the node, all links and update userspace to
+>> reflect the change.
+>
+> I tried some time ago.  It was hard.
+>
+> md devices magic appear when you tried to open the device-special
+> file.  I need some sort of locking to prevent that creation while I'm
+> destroying the old device.  But when I was trying this (quite some
+> months ago) the locking around do_open was fairly difficult to
+> follow.  I don't remember the exact issues, but I gave up.
+>
+> What would happen was that when the md device disappear, udev would
+> try to open it (I think) and make it reappear again.  Sometimes with
+> an oops.  I think I avoided some of that by sending the DELETE event
+> well before the device was actually deleted ... or something.  But it
+> was still far from perfect.
 
-If it is an out-of-kernel driver, then the work is being done in the 
-manufacturer's driver.
+Hmm, that would be a bug, if udev looks at a volume at "remove".
 
-If it is dmraid it is being done in the dmraid driver.
+> Maybe I should try again.
 
-If there is no underlying hardware to run the raid on then everything has
-to be done in the OS.   All of the real raid cards have at least a
-really basic microprocesser on the card that takes care of things.
-The higher-end cards have a lot more powerful processors.   In both
-cases have a small computer on the card is what makes the hardware
-raid cards cost quite a bit more than the fakeraid cards.
+I would love to see /sys reflecting the actual state and not carrying
+all the "dead" devices. Also some other logic to instantiate a new
+device then open() would be nice. Other subsytems use control device
+nodes to request new devices, sysfs might work too, if that's the
+preferred method.
 
-                    Roger
+The create-on-open is just a not easy to solve chicken/egg problem
+today and not really supported. Can't we have mdadm creating new
+devices with a control device instead of relying on the open() logic
+of a pre-existing device node?
+
+>> There is currently no "change" event that could tell to remove a
+>> device node in /dev while we still have a kernel device around. And
+>> you would need to convince me that this is really needed, and why md
+>> is so special here. :)
+>
+> md is a bit 'special', but not quite unique.  I think 'loop' now works
+> the same way as md in terms of devices magically appearing on open.
+
+Yeah, that's fine for some special use cases, they also have "destruct
+on last close" now which sounds useful for some setups. But as
+mentioned the whole create-at-open does not really integrate with a
+dynamic /dev.
+
+> Maybe I can see how it was made to work for that case.
+
+That would be great.
+
+Thanks,
+Kay
