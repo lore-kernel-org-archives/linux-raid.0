@@ -1,43 +1,69 @@
-From: David Greaves <david@dgreaves.com>
-Subject: occasional bitmap was Re: RFC - device names and mdadm with some
- reference to udev.
-Date: Tue, 28 Oct 2008 09:42:37 +0000
-Message-ID: <4906DE8D.5010006@dgreaves.com>
-References: <18692.62860.863118.727187@notabene.brown>	 <20081027082257.GB1801@piper.oerlikon.madduck.net>	 <1225120416.4845.128.camel@firewall.xsintricity.com>	 <20081027161000.GG17300@skl-net.de>	 <ac3eb2510810270937i3acd7c94r2817b8f4c79babec@mail.gmail.com> <1225128270.4845.144.camel@firewall.xsintricity.com>
+From: "Brian J. Murrell" <brian@interlinx.bc.ca>
+Subject: Re: dmraid - where is the raid done?
+Date: Tue, 28 Oct 2008 07:49:07 -0400
+Message-ID: <1225194547.16984.69.camel@pc.ilinx>
+References: <1225120062.20830.34.camel@pc.ilinx>
+	 <49064EF0.4080804@gmail.com> <1225154175.16984.16.camel@pc.ilinx>
+	 <490666F0.4000306@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-51xNllKqnwuu7PSzZsBf"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1225128270.4845.144.camel@firewall.xsintricity.com>
+In-Reply-To: <490666F0.4000306@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Doug Ledford <dledford@redhat.com>
-Cc: Kay Sievers <kay.sievers@vrfy.org>, Andre Noll <maan@systemlinux.org>, martin f krafft <madduck@debian.org>, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org, Michal Marek <mmarek@novell.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Doug Ledford wrote:
-> Here's the issue (in Fedora at least).  Starting devices via udev means
-> starting them as soon as they are capable and not waiting until all
-> devices are up and running.  You have to do this in case the device is
-> in a degraded state and you aren't going to get all the devices.
 
-> However, we don't create a bitmap on devices by default in the installer
-> (a user can add one themselves, but it isn't there by default).  Without
-> the bitmap, if the device is written to before all devices are added, it
-> triggers a full resync of the device.
+--=-51xNllKqnwuu7PSzZsBf
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-What about creating a bitmap and only writing to it whilst the array is degraded?
+On Mon, 2008-10-27 at 20:12 -0500, Roger Heflin wrote:
+>=20
+> If it is an out-of-kernel driver, then the work is being done in the=20
+> manufacturer's driver.
 
-That way you don't get the performance hit of a permanent bitmap (which I live
-with) but you do get high speed incremental assembly.
+I see.
 
-The bitmap area may have to record the starting event count written added to it.
- Then as devices are added, if the starting event matches the bitmap is used, if
-not then a full sync happens.
+> If it is dmraid it is being done in the dmraid driver.
 
-I don't think this needs anything special on shutdown.
+Ahhh.  So in the above "out of kernel driver" instance that is a case
+where dmraid is not handling it, yes?
 
-David
+> If there is no underlying hardware to run the raid on then everything has
+> to be done in the OS.
+
+Indeed.  I had just wondered if these "fakeraid" solutions where at
+least fanning out the copy (in the case of mirror) themselves, saving
+the doubling of PCI bus traffic.
+
+> All of the real raid cards have at least a
+> really basic microprocesser on the card that takes care of things.
+
+Yeah, I'm fairly familiar with the concepts of real RAID hardware.  It
+was this new fakeraid I was wondering about.
+
+Thanx for the enlightenment though.  The one last value that I had hope
+for in the fakeraid arena seems to be invalid so I have to start to
+agree with the documentation I've read and really have to wonder the
+value of the fakeraid, especially and until the on-disk formats are
+standardized.  Not being able to move fakeraid disks from one
+manufacturer to another is a real impediment in my mind.
+
+b.
 
 
--- 
-"Don't worry, you'll be fine; I saw it work in a cartoon once..."
+--=-51xNllKqnwuu7PSzZsBf
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+
+iEYEABECAAYFAkkG/DMACgkQl3EQlGLyuXAT1gCfUWe13xLh7t4jrBh7XLstb/fl
+SLAAoJ0orejGvD52UCOLh1EoiE59IO8O
+=BQzx
+-----END PGP SIGNATURE-----
+
+--=-51xNllKqnwuu7PSzZsBf--
+
