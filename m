@@ -1,54 +1,44 @@
 From: Luca Berra <bluca@comedia.it>
 Subject: Re: RFC - device names and mdadm with some reference to udev.
-Date: Tue, 28 Oct 2008 07:17:27 +0100
-Message-ID: <20081028061727.GA7764@percy.comedia.it>
-References: <18692.62860.863118.727187@notabene.brown> <20081027082257.GB1801@piper.oerlikon.madduck.net>
+Date: Tue, 28 Oct 2008 07:21:37 +0100
+Message-ID: <20081028062137.GB7764@percy.comedia.it>
+References: <18692.62860.863118.727187@notabene.brown> <20081027082257.GB1801@piper.oerlikon.madduck.net> <1225120416.4845.128.camel@firewall.xsintricity.com> <20081027161000.GG17300@skl-net.de> <ac3eb2510810270937i3acd7c94r2817b8f4c79babec@mail.gmail.com> <20081027165949.GC3061@piper.oerlikon.madduck.net> <ac3eb2510810271131q5aa682d7r7150734e5056feb6@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20081027082257.GB1801@piper.oerlikon.madduck.net>
+In-Reply-To: <ac3eb2510810271131q5aa682d7r7150734e5056feb6@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org, Doug Ledford <dledford@redhat.com>, Michal Marek <mmarek@novell.com>, Kay Sievers <kay.sievers@vrfy.org>
+To: Kay Sievers <kay.sievers@vrfy.org>
+Cc: Andre Noll <maan@systemlinux.org>, Doug Ledford <dledford@redhat.com>, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org, Michal Marek <mmarek@novell.com>
 List-Id: linux-raid.ids
 
-On Mon, Oct 27, 2008 at 09:22:57AM +0100, martin f krafft wrote:
->also sprach Neil Brown <neilb@suse.de> [2008.10.26.2356 +0100]:
->> Greeting.
->>  This is a Request For Comments....
+On Mon, Oct 27, 2008 at 07:31:57PM +0100, Kay Sievers wrote:
+>On Mon, Oct 27, 2008 at 17:59, martin f krafft <madduck@debian.org> wrote:
+>> also sprach Kay Sievers <kay.sievers@vrfy.org> [2008.10.27.1737 +0100]:
+>>> It's very simple to setup and follows the same logic as udev running
+>>> in the rootfs, There is absolutely no "increase of complexity"
+>>> involved if you use udev in the real root anyway, you just copy the
+>>> binaries and the rules, and on bootup you wait for /dev/root to show
+>>> up, mount it and start /sbin/init. Custom busybox stuff does not
+>>> support any non-trivial feature a "general purpose" distro needs to
+>>> support today.
+>>
+>> I would love to see some explicit instructions, then I could carry
+>> them into Debian,
 >
->Good morning!
+>What do you miss from the Ubuntu setup?
 >
->[...]
->> I'm also wondering if I should include a udev 'rules' file for md
->> in the mdadm distribution.  Obviously it would be no more than
->> a recommendation, but it might give me a voice in guiding how udev
->> interacted with mdadm.
+>> which is currently using full-blown udev with
+>> initramfs.
 >
->I would really like to have a clear separation of competencies.
->Ideally, mdadm never creates any devices but leaves it all to udev,
->and all configuration about alternate names ("symlinks") is done in
->the udev rules file.
-I would not, mdadm should be still able to create the base device name
-if needed. Aliases could be left to udev.
->I know mdadm needs the devices for the ioctls(). However, much of
->what it does with ioctl should already be possible with /sys. Thus,
->in my ideal world, I imagine mdadm to be a manipulator of /sys,
-/sys has the same issue as /dev.
-there is no md sys node before the device is created.
-apart from this small issue, mdadm should be able to control md via
-sysfs as well (i.e. sync_action).
-
->I realise this would require a revamp of mdadm, and might actually
->be better done in a new software designed to eventually replace
->mdadm. But is this a way forward with which you could befriend
->yourself?
-Please, NO, it took ages to get people and some distributions to stop
-using raidtools in favor of mdadm, don't do this mess again.
+>Which is the right thing to do, yes.
+>
+i believe it is overkill
+initramfs should have the sole purpose of finding and mounting the root
+filesystem, there is no need in packing it with unneeded junk.
 
 L.
-
-
 
 -- 
 Luca Berra -- bluca@comedia.it
