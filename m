@@ -1,35 +1,48 @@
-From: "Dan Williams" <dan.j.williams@intel.com>
+From: "Brian J. Murrell" <brian@interlinx.bc.ca>
 Subject: Re: dmraid - where is the raid done?
-Date: Mon, 27 Oct 2008 17:32:13 -0700
-Message-ID: <e9c3a7c20810271732v30c08b6by6a8c1eb015261ba2@mail.gmail.com>
+Date: Mon, 27 Oct 2008 20:36:15 -0400
+Message-ID: <1225154175.16984.16.camel@pc.ilinx>
 References: <1225120062.20830.34.camel@pc.ilinx>
-	 <slrnggck8i.ond.Mario.Holbe@darkside.dyn.samba-tng.org>
+	 <49064EF0.4080804@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-FqqYu0TU9wUvNeJ1OFrT"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <slrnggck8i.ond.Mario.Holbe@darkside.dyn.samba-tng.org>
-Content-Disposition: inline
+In-Reply-To: <49064EF0.4080804@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mario 'BitKoenig' Holbe <Mario.Holbe@tu-ilmenau.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Oct 27, 2008 at 4:38 PM, Mario 'BitKoenig' Holbe
-<Mario.Holbe@tu-ilmenau.de> wrote:
->> The message there seems to be, if you are going to do it in software
->> anyway, why not just skip the IO card RAID and just use MD?
->
-> Yes, that's the much cleaner approach. And, for Linux, the more stable
-> one as well - since dmraid doesn't manage drive-faults etc. anyways as
-> noted above.
->
 
-...or with the upcoming mdadm-3.0[1] you will be able to have the
-stability of MD and the boot support for bios raid.  At least for
-Intel platforms.
+--=-FqqYu0TU9wUvNeJ1OFrT
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
---
-Dan
+On Mon, 2008-10-27 at 18:29 -0500, Roger Heflin wrote:
+>=20
+> After that the OS driver only reads tables that the BIOS put on the disks=
+,
+> and figures out which disks are to be raided, and the OS does *ALL* of th=
+e work=20
+> just like MD.
 
-[1] http://marc.info/?l=linux-raid&m=122221593720893&w=2
+Ahhhh.  Really.  That is disappointing.  So in reference to the OS doing
+all of the work would that be the kernel driver for the particular RAID
+card, such as the Promise or Adaptec fakeraid cards?
+
+b.
+
+
+--=-FqqYu0TU9wUvNeJ1OFrT
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+
+iEYEABECAAYFAkkGXn8ACgkQl3EQlGLyuXDd1wCgyz+6loS+h/KRYH7CWqn+k38g
+RI0AoMzoUX+93pwMA7hi6gvfpZ0YCWMP
+=rFXM
+-----END PGP SIGNATURE-----
+
+--=-FqqYu0TU9wUvNeJ1OFrT--
+
