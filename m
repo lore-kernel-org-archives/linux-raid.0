@@ -1,56 +1,64 @@
 From: "Joe Landman" <joe.landman@gmail.com>
 Subject: Re: question on how to (correctly) build an initrd for a root disk on a RAID1
-Date: Tue, 28 Oct 2008 22:03:25 -0400
-Message-ID: <9f5edc120810281903y67c0b56eia869d76cfa048ce3@mail.gmail.com>
+Date: Tue, 28 Oct 2008 22:49:27 -0400
+Message-ID: <9f5edc120810281949w477fb376l6ca1b6e96bb6f791@mail.gmail.com>
 References: <9f5edc120810261937w339f2919p4f7ce82fbcaf2149@mail.gmail.com>
 	 <20081027071613.GA8197@maude.comedia.it>
 	 <9f5edc120810270534j3d969d2s18c1017755990c30@mail.gmail.com>
 	 <20081028064354.GD7764@percy.comedia.it>
 	 <9f5edc120810280520i3ff4855fne765069beeca27e9@mail.gmail.com>
 	 <9f5edc120810281842q7421ea92of6c466693f8f5b7f@mail.gmail.com>
+	 <9f5edc120810281903y67c0b56eia869d76cfa048ce3@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <9f5edc120810281842q7421ea92of6c466693f8f5b7f@mail.gmail.com>
+In-Reply-To: <9f5edc120810281903y67c0b56eia869d76cfa048ce3@mail.gmail.com>
 Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Oct 28, 2008 at 9:42 PM, Joe Landman <joe.landman@gmail.com> wrote:
-> Update:
+On Tue, Oct 28, 2008 at 10:03 PM, Joe Landman <joe.landman@gmail.com> wrote:
+> On Tue, Oct 28, 2008 at 9:42 PM, Joe Landman <joe.landman@gmail.com> wrote:
+>> Update:
+>
+> capture is at http://pastebin.com/f57b6ba19  .  I think I see part of
+> the problem
 
-capture is at http://pastebin.com/f57b6ba19  .  I think I see part of
-the problem
+Update 2: It appears that the issue is a buggy mkinitrd.  v5.1.19.6-28
+does not put the mdadm.conf into the initrd, and may rely upon
+something being built into the kernel that our kernel did not have
+built in.
 
-From the trace:
+Replacing this mkinitrd with 6.0.19-4 (by doing lots of rpmbuild 's
+against FC8/9 packages and installing), we did in fact see the
+mdadm.conf get explicitly added in during the mkinitrd.
 
-Scanning and configuring dmraid supported devices
-raidautorun: RAID_AUTORUN failed: No such device
-raidautorun: RAID_AUTORUN failed: No such device
+/sbin/mdadm -> /tmp/initrd.Jz3686/sbin/mdadm
+/etc/mdadm.conf -> /tmp/initrd.Jz3686/etc/mdadm.conf
 
-Seeing some of the other notes from here
-[http://www.centos.org/modules/newbb/viewtopic.php?topic_id=15305]
-someone noted that to make this work correctly, they had to rebuild
-with the raid drivers built in.  I am ok with this if we have to do
-it, but it seems strange ...  is RAID built as a module or as a built
-in for the default distro kernel?
+Upon reboot, it works.
 
-It is also interesting to note that in Fedora, the mkinitrd was
-patched to use mdadm
-(http://cvs.fedoraproject.org/viewvc/rpms/mkinitrd/F-7/mkinitrd.spec}.
- This is for mkinitrd-6.x.  This machine (Centos 5.2) uses
-mkinitrd-5.1.19.6-28
+[root@jackrabbitm ~]# uname -r
+2.6.23.14
+[root@jackrabbitm ~]# mount
+/dev/md0 on / type ext3 (rw)
+proc on /proc type proc (rw)
+sysfs on /sys type sysfs (rw)
+devpts on /dev/pts type devpts (rw,gid=5,mode=620)
+tmpfs on /dev/shm type tmpfs (rw)
+none on /proc/sys/fs/binfmt_misc type binfmt_misc (rw)
 
-[root@jackrabbitm ~]# rpm -qf /sbin/mkinitrd
-mkinitrd-5.1.19.6-28
-mkinitrd-5.1.19.6-28
+[root@jackrabbitm ~]# rpm -qa | grep -i mkinitrd
+mkinitrd-devel-6.0.19-4
+mkinitrd-6.0.19-4
 
-It is starting to look like we need to switch to a later model
-mkinitrd.  I'll try this, but are there any patches running around for
-this for this mkinitrd?  Conversely, does anyone else with MD raid on
-their root/boot drive see mdadm or mdadm.conf in their initrd with a
-similar mkinitrd on their system?
+While this works, this is not a solution I want to hand to our
+users/customers.  Could someone toss me a pointer as to who owns
+mkinitrd at RHEL/Centos so I can report this?  Basically this is not a
+linux-raid bug, but a bug in the mkinitrd assumptions (or possibly
+something that needs to be built into the kernel which is not
+explicitly indicated in mkinitrd).
 
-Thanks!
+Thanks for all the pointers/suggestions.
