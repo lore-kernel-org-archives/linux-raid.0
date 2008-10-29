@@ -1,66 +1,56 @@
 From: "Joe Landman" <joe.landman@gmail.com>
 Subject: Re: question on how to (correctly) build an initrd for a root disk on a RAID1
-Date: Tue, 28 Oct 2008 21:42:08 -0400
-Message-ID: <9f5edc120810281842q7421ea92of6c466693f8f5b7f@mail.gmail.com>
+Date: Tue, 28 Oct 2008 22:03:25 -0400
+Message-ID: <9f5edc120810281903y67c0b56eia869d76cfa048ce3@mail.gmail.com>
 References: <9f5edc120810261937w339f2919p4f7ce82fbcaf2149@mail.gmail.com>
 	 <20081027071613.GA8197@maude.comedia.it>
 	 <9f5edc120810270534j3d969d2s18c1017755990c30@mail.gmail.com>
 	 <20081028064354.GD7764@percy.comedia.it>
 	 <9f5edc120810280520i3ff4855fne765069beeca27e9@mail.gmail.com>
+	 <9f5edc120810281842q7421ea92of6c466693f8f5b7f@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <9f5edc120810280520i3ff4855fne765069beeca27e9@mail.gmail.com>
+In-Reply-To: <9f5edc120810281842q7421ea92of6c466693f8f5b7f@mail.gmail.com>
 Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Update:
+On Tue, Oct 28, 2008 at 9:42 PM, Joe Landman <joe.landman@gmail.com> wrote:
+> Update:
 
-On Tue, Oct 28, 2008 at 8:20 AM, Joe Landman <joe.landman@gmail.com> wrote:
-> On Tue, Oct 28, 2008 at 2:43 AM, Luca Berra <bluca@comedia.it> wrote:
->> On Mon, Oct 27, 2008 at 08:34:01AM -0400, Joe Landman wrote:
+capture is at http://pastebin.com/f57b6ba19  .  I think I see part of
+the problem
 
-[..]
+From the trace:
 
->>> This implies that /etc/mdadm.conf is in the initrd.  Peeking inside
->>> the default centos one, I can see that this is not true.  Which
->>> implies that it doesn't see /etc/mdadm.conf before it assembles the
->>> array, as the /etc/mdadm.conf is on the array, and not in the initrd
->>> image.
->>>
->>> Is there a way to include the /etc/mdadm.conf into the initrd?
->>
->> mkinitrd should include mdadm and /etc/mdadm.conf if it decides your
->> root is on md
->
-> Ok.  This is what I think (e.g. am guessing) is the likely culprit at
-> the moment.
+Scanning and configuring dmraid supported devices
+raidautorun: RAID_AUTORUN failed: No such device
+raidautorun: RAID_AUTORUN failed: No such device
 
-In fact, now looking at the generated initrd and the base distro
-initrd, neither one has mdadm.conf nor mdadm.
+Seeing some of the other notes from here
+[http://www.centos.org/modules/newbb/viewtopic.php?topic_id=15305]
+someone noted that to make this work correctly, they had to rebuild
+with the raid drivers built in.  I am ok with this if we have to do
+it, but it seems strange ...  is RAID built as a module or as a built
+in for the default distro kernel?
 
->
-> [...]
->
->>>>>  Any suggestions?  More things to read?
->>>>
->>>> is your fstab correct?
->>>
->>> Yes.  Boots fine with older kernel.  fstab doesn't change between the two.
->>
->> i mean, mkinitrd reads /etc/fstab to decide what your root device is,
->> sometimes it fails and creates a wrong initrd
->
-> Ok.  I was unaware that it would build an incorrect initrd, I thought
-> we could just miss the modules if they weren't explicitly included
-> using --with=  or similar.  I have seen that with a number of RAID
-> cards, that mkinitrd will not generate a workable initrd (no software
-> RAID) as it leaves out the right drivers.  I have been (defensively)
-> including RAID card drivers in our initrd builds.
+It is also interesting to note that in Fedora, the mkinitrd was
+patched to use mdadm
+(http://cvs.fedoraproject.org/viewvc/rpms/mkinitrd/F-7/mkinitrd.spec}.
+ This is for mkinitrd-6.x.  This machine (Centos 5.2) uses
+mkinitrd-5.1.19.6-28
 
-It looks like nash is the thing responsible for raidautorun, and it
-doesn't look like this is doing the right thing in the generated
-initrd.  Will post the captured trace from nash on downwards soon.
+[root@jackrabbitm ~]# rpm -qf /sbin/mkinitrd
+mkinitrd-5.1.19.6-28
+mkinitrd-5.1.19.6-28
+
+It is starting to look like we need to switch to a later model
+mkinitrd.  I'll try this, but are there any patches running around for
+this for this mkinitrd?  Conversely, does anyone else with MD raid on
+their root/boot drive see mdadm or mdadm.conf in their initrd with a
+similar mkinitrd on their system?
+
+Thanks!
