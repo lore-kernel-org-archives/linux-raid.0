@@ -1,569 +1,278 @@
-From: "Steve Evans" <jeeping@gmail.com>
-Subject: Re: mdadm degraded RAID5 failure
-Date: Wed, 29 Oct 2008 16:16:41 -0600
-Message-ID: <6cc8e9ed0810291516p46cb24a7pdd230e222797d06e@mail.gmail.com>
-References: <6cc8e9ed0810221350o2b8b3aedm3d1c229fe7e66163@mail.gmail.com>
-	 <6cc8e9ed0810221352y7427cb7dmfc7c3fcefd495bb9@mail.gmail.com>
-	 <18690.48372.369694.309381@notabene.brown>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: [Patch mdadm-2.6.7.1 0/3] Misc fixes for mdadm-2.6.7.1
+Date: Thu, 30 Oct 2008 09:56:30 +1100
+Message-ID: <18696.59934.872875.299706@notabene.brown>
+References: <cover.1225306892.git.dledford@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18690.48372.369694.309381@notabene.brown>
-Content-Disposition: inline
+In-Reply-To: message from Doug Ledford on Wednesday October 29
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
+To: Doug Ledford <dledford@redhat.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, Oct 25, 2008 at 12:30 AM, Neil Brown <neilb@suse.de> wrote:
-> On Wednesday October 22, jeeping@gmail.com wrote:
->> Hi all..
->
-> Hi.
-> You need to get a mail client that doesn't destroy the formatting of
-> the text that you paste in.  But while it is an inconvenience, we
-> should be able to persevere...
->
-
-Sorry, I attempted a plain text email through gmail.. I probably
-messed it up :(  Hopefully this one is better..
-
->>
->> I had one of the disks in my 3 disk RAID5 die on me this week. When
->> attempting to replace the disk via a hot swap (USB), the RAID didn't
->> like it. It decided to mark one of my remaining 2 disks as faulty.
->
-> It would be interesting to see the kernel logs at this time.  Maybe
-> the USB bus glitched while you were plugging the device in.
->
-
-Here are some of what I thought were the more relevent entries in the
-logs, let me know if you'd like all of them and I can email them
-directly to you as attachments -
-
-Oct 18 20:40:27 sjev kernel: usb 4-3.2: USB disconnect, address 4
-Oct 18 20:40:27 sjev kernel: usb 4-3.2: new high speed USB device
-using address 12
-Oct 18 20:40:27 sjev kernel: scsi8 : SCSI emulation for USB Mass Storage devices
-Oct 18 20:40:28 sjev kernel:   Vendor: ST330063  Model: 1A
-   Rev: 0000
-Oct 18 20:40:28 sjev kernel:   Type:   Direct-Access
-   ANSI SCSI revision: 02
-Oct 18 20:40:28 sjev kernel: SCSI device sdc: 586072368 512-byte hdwr
-sectors (300069 MB)
-Oct 18 20:40:28 sjev kernel: sdc: assuming drive cache: write through
-Oct 18 20:40:28 sjev kernel:  /dev/scsi/host8/bus0/target0/lun0: p1
-Oct 18 20:40:28 sjev kernel: Attached scsi disk sdc at scsi8, channel
-0, id 0, lun 0
-Oct 18 20:40:28 sjev kernel: Attached scsi generic sg1 at scsi8,
-channel 0, id 0, lun 0,  type 0
-Oct 18 20:40:28 sjev kernel: USB Mass Storage device found at 12
-Oct 18 20:40:28 sjev usb.agent[8548]:      usb-storage: already loaded
-Oct 18 20:40:29 sjev scsi.agent[8571]:      sd_mod: loaded sucessfully
-(for disk)
-Oct 18 20:40:29 sjev kernel: scsi1 (0:0): rejecting I/O to dead device
-Oct 18 20:40:29 sjev kernel: md: write_disk_sb failed for device sdb1
-Oct 18 20:40:29 sjev kernel: md: errors occurred during superblock
-update, repeating
-Oct 18 20:40:29 sjev kernel: scsi1 (0:0): rejecting I/O to dead device
-Oct 18 20:40:29 sjev kernel: md: write_disk_sb failed for device sdb1
-Oct 18 20:40:29 sjev kernel: md: errors occurred during superblock
-update, repeating
-Oct 18 20:40:29 sjev kernel: scsi1 (0:0): rejecting I/O to dead device
-Oct 18 20:40:29 sjev kernel: md: write_disk_sb failed for device sdb1
-Oct 18 20:40:29 sjev kernel: md: errors occurred during superblock
-update, repeating
-Oct 18 20:40:29 sjev kernel: scsi1 (0:0): rejecting I/O to dead device
-
-etc..
-
-Oct 18 20:40:34 sjev kernel: md: errors occurred during superblock
-update, repeating
-Oct 18 20:40:34 sjev kernel: scsi1 (0:0): rejecting I/O to dead device
-Oct 18 20:40:34 sjev kernel: md: write_disk_sb failed for device sdb1
-Oct 18 20:40:34 sjev kernel: md: errors occurred during superblock
-update, repeating
-Oct 18 20:40:34 sjev kernel: scsi1 (0:0): rejecting I/O to dead device
-Oct 18 20:40:34 sjev kernel: md: write_disk_sb failed for device sdb1
-Oct 18 20:40:34 sjev kernel: md: excessive errors occurred during
-superblock update, exiting
-Oct 18 20:40:34 sjev kernel: scsi1 (0:0): rejecting I/O to dead device
-Oct 18 20:40:34 sjev kernel: raid5: Disk failure on sdb1, disabling
-device. Operation continuing on 0 devices
-Oct 18 20:40:34 sjev kernel: RAID5 conf printout:
-Oct 18 20:40:34 sjev kernel:  --- rd:3 wd:0 fd:2
-Oct 18 20:40:34 sjev kernel:  disk 0, o:0, dev:sdb1
-Oct 18 20:40:34 sjev kernel:  disk 2, o:1, dev:sdd1
-Oct 18 20:40:34 sjev kernel: RAID5 conf printout:
-Oct 18 20:40:34 sjev kernel:  --- rd:3 wd:0 fd:2
-Oct 18 20:40:34 sjev kernel:  disk 2, o:1, dev:sdd1
-Oct 18 20:40:34 sjev kernel: Buffer I/O error on device md1, logical block 3601
-Oct 18 20:40:34 sjev kernel: lost page write due to I/O error on md1
-Oct 18 20:40:34 sjev kernel: Aborting journal on device md1.
-Oct 18 20:40:35 sjev kernel: ext3_abort called.
-Oct 18 20:40:35 sjev kernel: EXT3-fs abort (device md1):
-ext3_journal_start: Detected aborted journal
-Oct 18 20:40:35 sjev kernel: Remounting filesystem read-only
-Oct 18 20:40:38 sjev kernel: Buffer I/O error on device md1, logical
-block 103252006
-Oct 18 20:40:38 sjev kernel: lost page write due to I/O error on md1
-Oct 18 20:40:38 sjev kernel: Buffer I/O error on device md1, logical
-block 103252007
-Oct 18 20:40:38 sjev kernel: lost page write due to I/O error on md1
-Oct 18 20:40:38 sjev kernel: Buffer I/O error on device md1, logical
-block 103252008
-Oct 18 20:40:38 sjev kernel: lost page write due to I/O error on md1
-Oct 18 20:40:38 sjev kernel: Buffer I/O error on device md1, logical
-block 103252009
-Oct 18 20:40:38 sjev kernel: lost page write due to I/O error on md1
-Oct 18 20:40:38 sjev kernel: Buffer I/O error on device md1, logical
-block 103252010
-Oct 18 20:40:38 sjev kernel: lost page write due to I/O error on md1
-Oct 18 20:40:38 sjev kernel: Buffer I/O error on device md1, logical
-block 103252011
-Oct 18 20:40:38 sjev kernel: lost page write due to I/O error on md1
-Oct 18 20:40:38 sjev kernel: Buffer I/O error on device md1, logical
-block 103252012
-Oct 18 20:40:38 sjev kernel: lost page write due to I/O error on md1
-Oct 18 20:40:38 sjev kernel: Buffer I/O error on device md1, logical
-block 103252013
-Oct 18 20:40:38 sjev kernel: lost page write due to I/O error on md1
-Oct 18 20:40:38 sjev kernel: Buffer I/O error on device md1, logical
-block 103252014
-Oct 18 20:40:38 sjev kernel: lost page write due to I/O error on md1
-Oct 18 20:40:52 sjev kernel: printk: 35 messages suppressed.
+On Wednesday October 29, dledford@redhat.com wrote:
+> 
+> This can also be pulled directly from
+> 
+> git://fedorapeople.org/~dledford/mdadm.git for-neil
+> 
+> Doug Ledford (3):
+>   Fix bad metadata formatting
+>   Fix NULL pointer oops
+>   Make incremental mode work with partitionable arrays
 
 
-later ..
+Thanks for these Doug.
 
-Oct 18 22:12:39 sjev kernel: usb 4-3.3: new high speed USB device
-using address 13
-Oct 18 22:12:40 sjev usb.agent[21323]:      usb-storage: already loaded
-Oct 18 22:12:40 sjev kernel: scsi9 : SCSI emulation for USB Mass Storage devices
-Oct 18 22:12:40 sjev kernel:   Vendor: MAXTOR S  Model: TM3320620A
-   Rev: 0000
-Oct 18 22:12:40 sjev kernel:   Type:   Direct-Access
-   ANSI SCSI revision: 02
-Oct 18 22:12:40 sjev kernel: SCSI device sde: 625142448 512-byte hdwr
-sectors (320073 MB)
-Oct 18 22:12:40 sjev kernel: sde: assuming drive cache: write through
-Oct 18 22:12:40 sjev kernel:  /dev/scsi/host9/bus0/target0/lun0: p1
-Oct 18 22:12:40 sjev kernel: Attached scsi disk sde at scsi9, channel
-0, id 0, lun 0
-Oct 18 22:12:40 sjev kernel: Attached scsi generic sg2 at scsi9,
-channel 0, id 0, lun 0,  type 0
-Oct 18 22:12:40 sjev kernel: USB Mass Storage device found at 13
-Oct 18 22:12:41 sjev scsi.agent[21357]:      sd_mod: loaded
-sucessfully (for disk)
-Oct 18 22:13:00 sjev kernel: md: trying to hot-add unknown-block(8,33)
-to md1 ...
-Oct 18 22:13:00 sjev kernel: md: bind<sdc1>
-Oct 18 22:13:00 sjev kernel: RAID5 conf printout:
-Oct 18 22:13:00 sjev kernel:  --- rd:3 wd:0 fd:2
-Oct 18 22:13:00 sjev kernel:  disk 0, o:1, dev:sdc1
-Oct 18 22:13:00 sjev kernel:  disk 2, o:1, dev:sdd1
-Oct 18 22:13:00 sjev kernel: md: syncing RAID array md1
-Oct 18 22:13:00 sjev kernel: md: minimum _guaranteed_ reconstruction
-speed: 1000 KB/sec/disc.
-Oct 18 22:13:00 sjev kernel: md: using maximum available idle IO
-bandwith (but not more than 200000 KB/sec) for reconstruction.
-Oct 18 22:13:00 sjev kernel: md: using 128k window, over a total of
-293033536 blocks.
-Oct 18 22:13:00 sjev kernel: md: md1: sync done.
-Oct 18 22:13:00 sjev kernel: md: syncing RAID array md1
-Oct 18 22:13:00 sjev kernel: md: minimum _guaranteed_ reconstruction
-speed: 1000 KB/sec/disc.
-Oct 18 22:13:00 sjev kernel: md: using maximum available idle IO
-bandwith (but not more than 200000 KB/sec) for reconstruction.
-Oct 18 22:13:00 sjev kernel: md: using 128k window, over a total of
-293033536 blocks.
-Oct 18 22:13:00 sjev kernel: md: md1: sync done.
-Oct 18 22:13:01 sjev kernel: md: syncing RAID array md1
+The first two are definitely good and I've applied them.
 
-repeats until..
+The third I'm less comfortable with.  It combines a number of things
+and I'm a bit confused by some.  So I've split it up a bit.
 
-Oct 18 22:14:48 sjev kernel: md: syncing RAID array md1
-Oct 18 22:14:48 sjev kernel: md: minimum _guaranteed_ reconstruction
-speed: 1000 KB/sec/disc.
-Oct 18 22:14:48 sjev kernel: md: using maximum available idle IO
-bandwith (but not more than 200000 KB/sec) for reconstruction.
-Oct 18 22:14:48 sjev kernel: md: using 128k window, over a total of
-293033536 blocks.
-Oct 18 22:14:48 sjev kernel: md: md1: sync done.
-Oct 18 22:14:48 sjev kernel: Unable to handle kernel NULL pointer
-dereference at virtual address 000000a4
-Oct 18 22:14:48 sjev kernel:  printing eip:
-Oct 18 22:14:48 sjev kernel: c0124d89
-Oct 18 22:14:48 sjev kernel: *pde = 00000000
-Oct 18 22:14:48 sjev kernel: Oops: 0000 [#1]
-Oct 18 22:14:48 sjev kernel: PREEMPT
-Oct 18 22:14:48 sjev kernel: Modules linked in: ipv6 smbfs
-snd_intel8x0m snd_intel8x0 snd_ac97_codec snd_pcm snd_timer
-snd_page_alloc gameport snd_mpu401_uart snd_rawmidi snd_seq_device snd
-capability commoncap raid5 xor sr_mod tsdev mousedev joydev evdev
-pcspkr pci_hotplug intel_agp agpgart ide_scsi ide_generic sg font
-vesafb cfbcopyarea cfbimgblt cfbfillrect appletalk af_packet hw_random
-i810_audio soundcore ac97_codec b44 mii yenta_socket rtc piix unix ds
-pcmcia_core usb_storage ext3 mbcache raid1 md jbd ehci_hcd ohci_hcd
-uhci_hcd usbcore reiserfs psmouse ide_disk ide_cd ide_core cdrom
-sd_mod scsi_mod
-Oct 18 22:14:48 sjev kernel: CPU:    0
-Oct 18 22:14:48 sjev kernel: EIP:    0060:[sig_ignored+73/112]    Not tainted
-Oct 18 22:14:48 sjev kernel: EFLAGS: 00010006   (2.6.8-3-686)
-Oct 18 22:14:48 sjev kernel: EIP is at sig_ignored+0x49/0x70
-Oct 18 22:14:48 sjev kernel: eax: 000000b4   ebx: 00000000   ecx:
-00000008   edx: 00000000
-Oct 18 22:14:48 sjev kernel: esi: 00000009   edi: 00000009   ebp:
-00000000   esp: cedf3ec0
-Oct 18 22:14:48 sjev kernel: ds: 007b   es: 007b   ss: 0068
-Oct 18 22:14:48 sjev kernel: Process md1_raid5 (pid: 685,
-threadinfo=cedf2000 task=cedef3e0)
-Oct 18 22:14:48 sjev kernel: Stack: cf10e1b0 00000001 c01259f3
-cf10e1b0 00000009 c86194a0 cf99771c 00000202
-Oct 18 22:14:48 sjev kernel:        cedf2000 cf997680 cf222c00
-c0126565 00000009 00000001 cf10e1b0 c86194a0
-Oct 18 22:14:48 sjev kernel:        cedf3f30 cf997680 d093eb7d
-00000009 00000001 cf10e1b0 d093ebcd c86194a0
-Oct 18 22:14:48 sjev kernel: Call Trace:
-Oct 18 22:14:48 sjev kernel:  [specific_send_sig_info+83/224]
-specific_send_sig_info+0x53/0xe0
-Oct 18 22:14:48 sjev kernel:  [send_sig_info+69/128] send_sig_info+0x45/0x80
-Oct 18 22:14:48 sjev kernel:  [__crc_sb_min_blocksize+815035/1015327]
-md_interrupt_thread+0x4d/0x60 [md]
-Oct 18 22:14:48 sjev kernel:  [__crc_sb_min_blocksize+815115/1015327]
-md_unregister_thread+0x3d/0x60 [md]
-Oct 18 22:14:48 sjev kernel:  [recalc_task_prio+168/416]
-recalc_task_prio+0xa8/0x1a0
-Oct 18 22:14:48 sjev kernel:  [__crc_sb_min_blocksize+821862/1015327]
-md_check_recovery+0x288/0x300 [md]
-Oct 18 22:14:48 sjev kernel:  [__crc_fb_pan_display+1312520/2923165]
-raid5d+0x19/0x150 [raid5]
-Oct 18 22:14:48 sjev kernel:  [__crc_sb_min_blocksize+814642/1015327]
-md_thread+0x164/0x1d0 [md]
-Oct 18 22:14:48 sjev kernel:  [autoremove_wake_function+0/96]
-autoremove_wake_function+0x0/0x60
-Oct 18 22:14:48 sjev kernel:  [ret_from_fork+6/20] ret_from_fork+0x6/0x14
-Oct 18 22:14:48 sjev kernel:  [autoremove_wake_function+0/96]
-autoremove_wake_function+0x0/0x60
-Oct 18 22:14:48 sjev kernel:  [__crc_sb_min_blocksize+814286/1015327]
-md_thread+0x0/0x1d0 [md]
-Oct 18 22:14:48 sjev kernel:  [kernel_thread_helper+5/24]
-kernel_thread_helper+0x5/0x18
-Oct 18 22:14:48 sjev kernel: Code: 8b 40 f0 83 f8 01 74 18 85 c0 74 04
-89 d3 eb c1 83 fe 1f 7f
-Oct 18 22:14:48 sjev kernel:  <6>note: md1_raid5[685] exited with
-preempt_count 2
+First there is the fix to use the autof setting from the ARRAY line in
+mdadm.conf.  That is certainly a bug so I've got one patch for that.
+Then there is the fact that the devnum returned by is_standard is used
+even though it doesn't properly encode the 'partition-or-not'
+information.  So I have a separate patch the fixes that bug.
+
+Then there is the removal of the 'homehost' test.  I'm not comfortable
+with simply removing it.  So I have a patch which changes the homehost
+test so that instead of causing failure, it causes the name to be
+ignored, and the array to be assembled 'read-auto'.
+These three patches are below (I'll push them out later today I
+suspect).
+
+That leaves a largish slab of your code that I wasn't really sure
+what it was adding.
+And there is the bit about /dev/md_d0 having a different meaning to
+/dev/md/d0.  I have never seen any difference between those other than
+the obvious syntax.  There was a comment in is_standard that made them
+look slightly different.  That was unintentional and has been fixed.
+
+If you still need something more that what my three patches provide,
+please explain what I missed.
+
+Thanks again!
+
+NeilBrown
 
 
->
->>
->> Can someone *please* help me get the raid back!?
->
-> Probably.
->
+From 2b4ca8f079335c1b3f345ec13da58699aaa0269d Mon Sep 17 00:00:00 2001
+From: NeilBrown <neilb@suse.de>
+Date: Thu, 30 Oct 2008 09:34:04 +1100
+Subject: [PATCH] Fix --incremental assembly of partitions arrays.
 
-I like the optimism! Thanks!
+If incremental assembly finds an array mentioned in mdadm.conf,
+with a 'standard partitioned' name like /dev/md_d0 or /dev/md/d0,
+it will not create a partitioned array like it should.
+This is because it mishandled the 'devnum' returned by
+is_standard.
+That is a devnum that does not have the partition-or-not encoded
+into it.  So we need to check the actual return value of
+is_standard and encode the partition-or-not info into the devnum.
 
->>
->> More details -
->>
->> Drives are /dev/sdb1, /dev/sdc1 & /dev/sdd1
->
-> ... or were.  USB device names can change every time you plug them in.
->
->>
->> sdc1 was the one that died earlier this week
->> sdb1 appears to be the one that was marked as faulty
->>
->> mdadm detail before sdc1 was plugged in -
->>
->> root@imp[~]:11 # mdadm --detail /dev/md1
->> /dev/md1:
-> ...
->>
->> Number Major Minor RaidDevice State
->> 0 8 17 0 active sync /dev/sdb1
->> 1 0 0 - removed
->> 2 8 49 2 active sync /dev/sdd1
->
-> So the array thinks the 2nd of 3 is missing.  That is consistent with
-> your description.
->
->>
->>
->> then after plugging in the replacement sdc1 -
->>
->> root@imp[~]:13 # mdadm --add /dev/md1 /dev/sdc1
->> mdadm: hot added /dev/sdc1
->> root@imp[~]:14 #
->> root@imp[~]:14 #
->> root@imp[~]:14 # mdadm --detail /dev/md1
->> /dev/md1:
-> ...
->>
->> Number Major Minor RaidDevice State
->> 0 0 0 - removed
->> 1 0 0 - removed
->> 2 8 49 2 active sync /dev/sdd1
->>
->> 3 8 33 0 spare rebuilding /dev/sdc1
->> 4 8 17 - faulty /dev/sdb1
->
-> Yes, sdb must have got an error and failed while sdc was rebuilding.
-> Sad.  That suggests that it didn't fail at the moment of USB
-> insertion, but a little later.  Not conclusively though.
->
->>
->> Shortly after this, subsequent mdadm --details stopped responding.. So
->> I rebooted in the hope I could reset and problems with the hot add..
->>
->> Now, I'm unable to assemble the raid with the 2 working drives -
->>
->> mdadm --assemble /dev/md1 /dev/sdb1 /dev/sdd1
->>
->> doesn't work -
->>
->> mdadm: /dev/md1 assembled from 1 drive and 1 spare - not enough to
->> start the array.
->
-> You have rebooted so device names may have changed.
-> If it thought you had named a good drive and a spare, it probably saw
-> the device that was originally sdb (and possibly still is)
-> and the device that was originally sdc (and now might be sdd).
->
->>
->> mdadm --assemble --force /dev/md1 /dev/sdb1 /dev/sdd1
->>
->> doesn't' work either
->
-> What error messages?  Always best to be explicit.
-> Adding "-v" to the --assemble line would help too.
->
->>
->> This -
->>
->> mdadm --assemble --force --run /dev/md1 /dev/sdb1 /dev/sdd1
->>
->> Did work partially -
->>
-> Hmm.. That really shouldn't have worked.  The kernel should have
-> rejected the array...
->
->>
->> Here's the output from mdadm -E on each of the 2 drives -
->
-> Uhm... There should be 3 drives?
-> The 'good' one, the 'new' one, and the one that seemed to fail
-> immediately after you plugged in the 'new' one.
->
-
-Sorry, here are all 3 -
-
-root@imp[~]:3 # mdadm -E /dev/sd[bcd]1
-/dev/sdb1:
-          Magic : a92b4efc
-        Version : 00.90.00
-           UUID : bed40ee2:98523fdd:e4d010fb:894c0966
-  Creation Time : Fri Nov 17 21:28:44 2006
-     Raid Level : raid5
-   Raid Devices : 3
-  Total Devices : 3
-Preferred Minor : 1
-
-    Update Time : Sat Oct 18 22:14:48 2008
-          State : clean
- Active Devices : 1
-Working Devices : 2
- Failed Devices : 2
-  Spare Devices : 1
-       Checksum : e6dbf86 - correct
-         Events : 0.1521614
-
-         Layout : left-symmetric
-     Chunk Size : 64K
-
-      Number   Major   Minor   RaidDevice State
-this     2       8       49        2      active sync   /dev/sdd1
-
-   0     0       0        0        0      removed
-   1     1       0        0        1      faulty removed
-   2     2       8       49        2      active sync   /dev/sdd1
-   3     3       8       33        0      spare   /dev/sdc1
-/dev/sdc1:
-          Magic : a92b4efc
-        Version : 00.90.00
-           UUID : bed40ee2:98523fdd:e4d010fb:894c0966
-  Creation Time : Fri Nov 17 21:28:44 2006
-     Raid Level : raid5
-   Raid Devices : 3
-  Total Devices : 3
-Preferred Minor : 1
-
-    Update Time : Fri Oct 17 22:30:49 2008
-          State : clean
- Active Devices : 2
-Working Devices : 3
- Failed Devices : 1
-  Spare Devices : 1
-       Checksum : e6ae9ea - correct
-         Events : 0.1471469
-
-         Layout : left-symmetric
-     Chunk Size : 64K
-
-      Number   Major   Minor   RaidDevice State
-this     3       8       33        3      spare   /dev/sdc1
-
-   0     0       8       17        0      active sync   /dev/sdb1
-   1     1       0        0        1      faulty removed
-   2     2       8       49        2      active sync   /dev/sdd1
-   3     3       8       33        3      spare   /dev/sdc1
-/dev/sdd1:
-          Magic : a92b4efc
-        Version : 00.90.00
-           UUID : bed40ee2:98523fdd:e4d010fb:894c0966
-  Creation Time : Fri Nov 17 21:28:44 2006
-     Raid Level : raid5
-   Raid Devices : 3
-  Total Devices : 3
-Preferred Minor : 1
-
-    Update Time : Sat Oct 18 22:14:48 2008
-          State : clean
- Active Devices : 1
-Working Devices : 2
- Failed Devices : 2
-  Spare Devices : 1
-       Checksum : e6dbf75 - correct
-         Events : 0.1521614
-
-         Layout : left-symmetric
-     Chunk Size : 64K
-
-      Number   Major   Minor   RaidDevice State
-this     3       8       33        3      spare   /dev/sdc1
-
-   0     0       0        0        0      removed
-   1     1       0        0        1      faulty removed
-   2     2       8       49        2      active sync   /dev/sdd1
-   3     3       8       33        3      spare   /dev/sdc1
-
-fdisk details too -
-
-root@imp[~]:7 # fdisk -l /dev/sd[bcd]
-
-Disk /dev/sdb: 300.0 GB, 300069052416 bytes
-255 heads, 63 sectors/track, 36481 cylinders
-Units = cylinders of 16065 * 512 = 8225280 bytes
-
-   Device Boot      Start         End      Blocks   Id  System
-/dev/sdb1               1       36481   293033601   fd  Linux raid autodetect
-
-Disk /dev/sdc: 320.0 GB, 320072933376 bytes
-255 heads, 63 sectors/track, 38913 cylinders
-Units = cylinders of 16065 * 512 = 8225280 bytes
-
-   Device Boot      Start         End      Blocks   Id  System
-/dev/sdc1               1       36481   293033601   fd  Linux raid autodetect
-
-Disk /dev/sdd: 300.0 GB, 300069052416 bytes
-255 heads, 63 sectors/track, 36481 cylinders
-Units = cylinders of 16065 * 512 = 8225280 bytes
-
-   Device Boot      Start         End      Blocks   Id  System
-/dev/sdd1               1       36481   293033601   fd  Linux raid autodetect
+Also fix a couple of comments.
 
 
->>
->> /dev/sdb1:
-> ..
->> Number Major Minor RaidDevice State
->> this 3 8 33 3 spare /dev/sdc1
->>
->> 0 0 0 0 0 removed
->> 1 1 0 0 1 faulty removed
->> 2 2 8 49 2 active sync /dev/sdd1
->> 3 3 8 33 3 spare /dev/sdc1
->
-> sdb looks like the new one.
->
->> /dev/sdd1:
-> ...
->>
->> Number Major Minor RaidDevice State
->> this 2 8 49 2 active sync /dev/sdd1
->>
->> 0 0 0 0 0 removed
->> 1 1 0 0 1 faulty removed
->> 2 2 8 49 2 active sync /dev/sdd1
->> 3 3 8 33 0 spare /dev/sdc1
->
-> sdd looks like the good one.
->
-> Where is the "one that seemed to fail" which was once called sdb ??
->>
->> Is all the data lost, or can I recover from this?
->
-> Try
->
->  mdadm --examine --brief --verbose /dev/sd*
->
+Signed-off-by: NeilBrown <neilb@suse.de>
+---
+ Incremental.c |   10 +++++-----
+ util.c        |    2 +-
+ 2 files changed, 6 insertions(+), 6 deletions(-)
 
-ARRAY /dev/md1 level=raid5 num-devices=3
-UUID=bed40ee2:98523fdd:e4d010fb:894c0966
-   devices=/dev/sdb1,/dev/sdc1,/dev/sdd1
-ARRAY /dev/md4 level=raid1 num-devices=2
-UUID=6fded12b:6ecdca8a:18400b9a:df6a2ffc
-   devices=/dev/sda5
-ARRAY /dev/md0 level=raid1 num-devices=2
-UUID=c94d0631:20f0db42:9c6ab972:19acc617
-   devices=/dev/sda1
+diff --git a/Incremental.c b/Incremental.c
+index 9c6524f..5d26b77 100644
+--- a/Incremental.c
++++ b/Incremental.c
+@@ -214,16 +214,16 @@ int Incremental(char *devname, int verbose, int runstop,
+ 		}
+ 	}
+ 	/* 4/ Determine device number. */
+-	/* - If in mdadm.conf with std name, use that */
+-	/* - UUID in /var/run/mdadm.map  use that */
++	/* - If in mdadm.conf with std name, get number from name. */
++	/* - UUID in /var/run/mdadm.map  get number from mapping */
+ 	/* - If name is suggestive, use that. unless in use with */
+ 	/*           different uuid. */
+ 	/* - Choose a free, high number. */
+ 	/* - Use a partitioned device unless strong suggestion not to. */
+ 	/*         e.g. auto=md */
+-	if (match && is_standard(match->devname, &devnum))
+-		/* We have devnum now */;
+-	else if ((mp = map_by_uuid(&map, info.uuid)) != NULL)
++	if (match && (rv = is_standard(match->devname, &devnum))) {
++		devnum = (rv > 0) ? (-1-devnum) : devnum;
++	} else if ((mp = map_by_uuid(&map, info.uuid)) != NULL)
+ 		devnum = mp->devnum;
+ 	else {
+ 		/* Have to guess a bit. */
+diff --git a/util.c b/util.c
+index 2d51de0..a50036c 100644
+--- a/util.c
+From 4ef2f11e28800373f045e1f0c1336f13f89b79c9 Mon Sep 17 00:00:00 2001
+From: NeilBrown <neilb@suse.de>
+Date: Thu, 30 Oct 2008 09:34:06 +1100
+Subject: [PATCH] Incremental:  fix setting of 'autof' flag.
 
->
-> Then
->
->  mdadm --assemble --force --verbose /dev/md1 /dev/sd....
->
-> where you list all the devices in the device= section for the array
-> you want to try to start.
->
-> Report the output of that command and whether it was successful.
+When doing auto-assembly, the 'autof' flag from array lines
+in mdadm.conf was being ignored.
 
-root@imp[~]:9 # mdadm --assemble --force --verbose /dev/md1 /dev/sdb1
-/dev/sdc1 /dev/sdd1
-mdadm: looking for devices for /dev/md1
-mdadm: /dev/sdb1 is identified as a member of /dev/md1, slot 2.
-mdadm: /dev/sdc1 is identified as a member of /dev/md1, slot 3.
-mdadm: /dev/sdd1 is identified as a member of /dev/md1, slot 3.
-mdadm: no uptodate device for slot 0 of /dev/md1
-mdadm: no uptodate device for slot 1 of /dev/md1
-mdadm: added /dev/sdd1 to /dev/md1 as 3
-mdadm: added /dev/sdb1 to /dev/md1 as 2
-mdadm: /dev/md1 assembled from 1 drive and 1 spare - not enough to
-start the array.
-root@imp[~]:10 #
+Signed-off-by: NeilBrown <neilb@suse.de>
+---
+ Incremental.c |   14 ++++++++++----
+ 1 files changed, 10 insertions(+), 4 deletions(-)
 
-Oct 29 14:52:41 sjev kernel: md: md1 stopped.
-Oct 29 14:52:41 sjev kernel: md: unbind<sdb1>
-Oct 29 14:52:41 sjev kernel: md: export_rdev(sdb1)
-Oct 29 14:52:41 sjev kernel: md: unbind<sdd1>
-Oct 29 14:52:41 sjev kernel: md: export_rdev(sdd1)
-Oct 29 14:52:41 sjev kernel: md: bind<sdd1>
-Oct 29 14:52:41 sjev kernel: md: bind<sdb1>
-Oct 29 14:58:07 sjev smartd[2302]: Device: /dev/hdc, SMART Usage
-Attribute: 190 Unknown_Attribute changed from 49 to 48
-Oct 29 14:58:07 sjev smartd[2302]: Device: /dev/hdc, SMART Usage
-Attribute: 194 Temperature_Celsius changed from 51 to 52
+diff --git a/Incremental.c b/Incremental.c
+index 5d26b77..d61518a 100644
+--- a/Incremental.c
++++ b/Incremental.c
+@@ -83,12 +83,8 @@ int Incremental(char *devname, int verbose, int runstop,
+ 	int dfd, mdfd;
+ 	char *avail;
+ 	int active_disks;
+-
+-
+ 	struct createinfo *ci = conf_get_create_info();
+ 
+-	if (autof == 0)
+-		autof = ci->autof;
+ 
+ 	/* 1/ Check if devices is permitted by mdadm.conf */
+ 
+@@ -221,6 +217,16 @@ int Incremental(char *devname, int verbose, int runstop,
+ 	/* - Choose a free, high number. */
+ 	/* - Use a partitioned device unless strong suggestion not to. */
+ 	/*         e.g. auto=md */
++
++	/* There are three possible sources for 'autof':  command line,
++	 * ARRAY line in mdadm.conf, or CREATE line in mdadm.conf.
++	 * They have precedence in that order.
++	 */
++	if (autof == 0 && match)
++		autof = match->autof;
++	if (autof == 0)
++		autof = ci->autof;
++
+ 	if (match && (rv = is_standard(match->devname, &devnum))) {
+ 		devnum = (rv > 0) ? (-1-devnum) : devnum;
+ 	} else if ((mp = map_by_uuid(&map, info.uuid)) != NULL)
+-- 
+1.5.6.5
 
-I've held off upgrading mdadm to the latest version until I know it's
-the best option (vs recovering the raid 1st before upgrading), so you
-agree?
++++ b/util.c
+@@ -398,7 +398,7 @@ int is_standard(char *dev, int *nump)
+ 	if (strncmp(d, "/d",2)==0)
+ 		d += 2, type=1; /* /dev/md/dN{pM} */
+ 	else if (strncmp(d, "/md_d", 5)==0)
+-		d += 5, type=1; /* /dev/md_dNpM */
++		d += 5, type=1; /* /dev/md_dN{pM} */
+ 	else if (strncmp(d, "/md", 3)==0)
+ 		d += 3, type=-1; /* /dev/mdN */
+ 	else if (d-dev > 3 && strncmp(d-2, "md/", 3)==0)
+-- 
+1.5.6.5
 
->
-> NeilBrown
->
 
-Thanks for your patience and help!
-Regards,
-Steve..
+From 7b403fef7e97c16e1eb63773a278eb65c6dfd9a8 Mon Sep 17 00:00:00 2001
+From: NeilBrown <neilb@suse.de>
+Date: Thu, 30 Oct 2008 09:48:18 +1100
+Subject: [PATCH] Incremental:  allow assembly of foreign array.
+
+If a foreign (i.e. not known to be local) array is discovered
+by --incremental assembly, we now assemble it.  However we ignore
+any name information in the array so as not to potentially create
+a name that conflict with a 'local' array.
+Also, foreign arrays are always assembled 'read-auto' to avoid writing
+anything until the array is actually used.
+
+Signed-off-by: NeilBrown <neilb@suse.de>
+---
+ Incremental.c |   18 ++++++++++++------
+ mdopen.c      |    2 +-
+ 2 files changed, 13 insertions(+), 7 deletions(-)
+
+diff --git a/Incremental.c b/Incremental.c
+index d61518a..7148a73 100644
+--- a/Incremental.c
++++ b/Incremental.c
+@@ -84,6 +84,7 @@ int Incremental(char *devname, int verbose, int runstop,
+ 	char *avail;
+ 	int active_disks;
+ 	struct createinfo *ci = conf_get_create_info();
++	char *name;
+ 
+ 
+ 	/* 1/ Check if devices is permitted by mdadm.conf */
+@@ -199,14 +200,18 @@ int Incremental(char *devname, int verbose, int runstop,
+ 		match = array_list;
+ 	}
+ 
+-	/* 3a/ if not, check for homehost match.  If no match, reject. */
++	/* 3a/ if not, check for homehost match.  If no match, continue
++	 * but don't trust the 'name' in the array. Thus a 'random' minor
++	 * number will be assigned, and the device name will be based
++	 * on that. */
++	name = info.name;
+ 	if (!match) {
+ 		if (homehost == NULL ||
+ 		    st->ss->match_home(st, homehost) == 0) {
+ 			if (verbose >= 0)
+ 				fprintf(stderr, Name
+ 	      ": not found in mdadm.conf and not identified by homehost.\n");
+-			return 2;
++			name = NULL;
+ 		}
+ 	}
+ 	/* 4/ Determine device number. */
+@@ -237,11 +242,11 @@ int Incremental(char *devname, int verbose, int runstop,
+ 		char *np, *ep;
+ 		if ((autof&7) == 3 || (autof&7) == 5)
+ 			use_partitions = 0;
+-		np = strchr(info.name, ':');
++		np = name ? strchr(name, ':') : ":NONAME";
+ 		if (np)
+ 			np++;
+ 		else
+-			np = info.name;
++			np = name;
+ 		devnum = strtoul(np, &ep, 10);
+ 		if (ep > np && *ep == 0) {
+ 			/* This is a number.  Let check that it is unused. */
+@@ -264,7 +269,7 @@ int Incremental(char *devname, int verbose, int runstop,
+ 	}
+ 	mdfd = open_mddev_devnum(match ? match->devname : NULL,
+ 				 devnum,
+-				 info.name,
++				 name,
+ 				 chosen_name, autof >> 3);
+ 	if (mdfd < 0) {
+ 		fprintf(stderr, Name ": failed to open %s: %s.\n",
+@@ -452,7 +457,8 @@ int Incremental(char *devname, int verbose, int runstop,
+ 			close(bmfd);
+ 		}
+ 		sra = sysfs_read(mdfd, devnum, 0);
+-		if (sra == NULL || active_disks >= info.array.working_disks)
++		if ((sra == NULL || active_disks >= info.array.working_disks)
++		    && name != NULL)
+ 			rv = ioctl(mdfd, RUN_ARRAY, NULL);
+ 		else
+ 			rv = sysfs_set_str(sra, NULL,
+diff --git a/mdopen.c b/mdopen.c
+index 4fbcb48..9250e4b 100644
+--- a/mdopen.c
++++ b/mdopen.c
+@@ -282,7 +282,7 @@ int open_mddev_devnum(char *devname, int devnum, char *name,
+ 
+ 	if (devname)
+ 		strcpy(chosen_name, devname);
+-	else if (name && strchr(name,'/') == NULL) {
++	else if (name && *name && strchr(name,'/') == NULL) {
+ 		char *n = strchr(name, ':');
+ 		if (n) n++; else n = name;
+ 		if (isdigit(*n) && devnum < 0)
+-- 
+1.5.6.5
+
