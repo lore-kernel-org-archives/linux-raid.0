@@ -1,112 +1,111 @@
 From: Doug Ledford <dledford@redhat.com>
-Subject: Re: RFC - device names and mdadm with some reference to udev.
-Date: Wed, 29 Oct 2008 14:49:15 -0400
-Message-ID: <1225306155.26510.76.camel@firewall.xsintricity.com>
-References: <18692.62860.863118.727187@notabene.brown>
-	 <20081027082257.GB1801@piper.oerlikon.madduck.net>
-	 <1225120416.4845.128.camel@firewall.xsintricity.com>
-	 <20081027161000.GG17300@skl-net.de>
-	 <ac3eb2510810270937i3acd7c94r2817b8f4c79babec@mail.gmail.com>
-	 <1225128270.4845.144.camel@firewall.xsintricity.com>
-	 <18694.20608.954160.346473@notabene.brown>
+Subject: [Patch mdadm-2.6.7.1 1/3] Fix bad metadata formatting
+Date: Wed, 29 Oct 2008 15:05:35 -0400
+Message-ID: <c82952743d7177261512b107adcb101ecd035a21.1225306892.git.dledford@redhat.com>
+References: <cover.1225306892.git.dledford@redhat.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-SrB6MoJZhAJ1miAm2ZJ/"
+Content-Type: multipart/mixed; boundary="------------1.5.6.5"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18694.20608.954160.346473@notabene.brown>
+In-Reply-To: <cover.1225306892.git.dledford@redhat.com>
+In-Reply-To: <cover.1225306892.git.dledford@redhat.com>
+References: <cover.1225306892.git.dledford@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+Cc: linux-raid@vger.kernel.org, Doug Ledford <dledford@redhat.com>
 List-Id: linux-raid.ids
 
-
---=-SrB6MoJZhAJ1miAm2ZJ/
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Tue, 2008-10-28 at 10:36 +1100, Neil Brown wrote:
-> On Monday October 27, dledford@redhat.com wrote:
-> >=20
-> > I've found the udev rules method of starting md devices to be
-> > problematic (at best).
-> >=20
-> > Here's the issue (in Fedora at least).  Starting devices via udev means
-> > starting them as soon as they are capable and not waiting until all
-> > devices are up and running.  You have to do this in case the device is
-> > in a degraded state and you aren't going to get all the devices.
-> > However, we don't create a bitmap on devices by default in the installe=
-r
-> > (a user can add one themselves, but it isn't there by default).  Withou=
-t
-> > the bitmap, if the device is written to before all devices are added, i=
-t
-> > triggers a full resync of the device.  As it turns out, for certain
-> > installations, this happens on *every* single reboot.  It's painful, to
-> > say the least.   So, I wanted to change the udev rule to work slightly
-> > differently.  I wanted the invocation of mdadm --incremental that
-> > happened to be the one that took the array from an unrunable state to a
-> > runable but degraded state to sleep for say 2 to 5 seconds, and then if
-> > the array is still not up and running due to subsequent udev rule
-> > invocations, it would start the array in a degraded state.  This,
-> > however, breaks udevsettle.  So, the current setup (for the upcoming
-> > fedora 10) is done such that the udev rule won't start any degraded
-> > arrays, and instead we have both a specific mdadm invocation in the
-> > initrd and another in rc.sysinit that will start any degraded arrays
-> > that are also listed in the mdadm.conf file.  This makes sure that know=
-n
-> > arrays are assembled and started if at all possible, but we only start
-> > unknown arrays if they are complete.
-> >=20
->=20
-> This is using udev to start md devices, which is not quite the focus
-> of the previous discussion.  That was more about using udev to create
-> the entries in /dev when someone else started the arrays.
-
-True enough, although I think they are a bit related simply because it's
-udev rules on block devices that trigger the mdadm -I invocations that
-trigger the new mdadm devices, so the issue of creating devices from
-udev rules is at least mildly related to how mdadm gets called in the
-first place, especially for the issue of hot plugging as you brought up
-in your mail as hot plugging is specifically a case of udev kicking
-mdadm off.
-
-> However this is still a real issue that I would like to handle as best
-> we can.
->=20
-> I would like to get the md code to always have at least an in-memory
-> bitmap to allow quite resync after a "re-add".
->=20
-> However even this isn't a perfect solution as there is a window when a
-> single device failure can kill an array.
->=20
-> Your solution sounds good, but I'd be happy to hear other thoughts on
-> the issue.
-
-I ended up coding this up.  It took quite a bit more touchup in the
-incremental code than I expected.  In general, mdadm-2.6.7.1 doesn't do
-a very good job of honoring information in /etc/mdadm.conf when doing
-incremental assembly.  So, momentarily I'll send you a patch series/pull
-request with the changes.
-
---=20
-Doug Ledford <dledford@redhat.com>
-              GPG KeyID: CFBFF194
-              http://people.redhat.com/dledford
-
-Infiniband specific RPMs available at
-              http://people.redhat.com/dledford/Infiniband
+This is a multi-part message in MIME format.
+--------------1.5.6.5
+Content-Type: text/plain; charset=UTF-8; format=fixed
+Content-Transfer-Encoding: 8bit
 
 
---=-SrB6MoJZhAJ1miAm2ZJ/
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+Certain operations (Detail.c mainly) would print out the metadata of
+an array in a format that the scan operation in super0.c and super1.c
+would later reject as unknown when it was found in the mdadm.conf file.
+Use a consistent format, but also modify the super0 and super1 match
+methods to accept the other format without complaint.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
+Signed-off-by: Doug Ledford <dledford@redhat.com>
+---
+ Detail.c |    6 +++---
+ super0.c |    5 ++++-
+ super1.c |    3 +++
+ 3 files changed, 10 insertions(+), 4 deletions(-)
+--------------1.5.6.5
+Content-Type: text/x-patch; name="c82952743d7177261512b107adcb101ecd035a21.diff"
+Content-Transfer-Encoding: 8bit
+Content-Disposition: attachment; filename="c82952743d7177261512b107adcb101ecd035a21.diff"
 
-iEYEABECAAYFAkkIsCsACgkQTzP9PM7pjw9+gACeMYC2sFcdmWksR1X8v8ro+3Vx
-dDAAni5/TDiYa+VBsdK5HOrLdoS1dn4p
-=vpcJ
------END PGP SIGNATURE-----
+diff --git a/Detail.c b/Detail.c
+index 2fb59a3..715d4d0 100644
+--- a/Detail.c
++++ b/Detail.c
+@@ -138,7 +138,7 @@ int Detail(char *dev, int brief, int export, int test, char *homehost)
+ 		if (sra && sra->array.major_version < 0)
+ 			printf("MD_METADATA=%s\n", sra->text_version);
+ 		else
+-			printf("MD_METADATA=%02d.%02d\n",
++			printf("MD_METADATA=%d.%02d\n",
+ 			       array.major_version, array.minor_version);
+ 
+ 		if (st && st->sb)
+@@ -153,7 +153,7 @@ int Detail(char *dev, int brief, int export, int test, char *homehost)
+ 		if (sra && sra->array.major_version < 0)
+ 			printf(" metadata=%s", sra->text_version);
+ 		else
+-			printf(" metadata=%02d.%02d",
++			printf(" metadata=%d.%02d",
+ 			       array.major_version, array.minor_version);
+ 	} else {
+ 		mdu_bitmap_file_t bmf;
+@@ -175,7 +175,7 @@ int Detail(char *dev, int brief, int export, int test, char *homehost)
+ 		if (sra && sra->array.major_version < 0)
+ 			printf("        Version : %s\n", sra->text_version);
+ 		else
+-			printf("        Version : %02d.%02d\n",
++			printf("        Version : %d.%02d\n",
+ 			       array.major_version, array.minor_version);
+ 
+ 		atime = array.ctime;
+diff --git a/super0.c b/super0.c
+index 7e81482..42d8659 100644
+--- a/super0.c
++++ b/super0.c
+@@ -93,7 +93,7 @@ static void examine_super0(struct supertype *st, char *homehost)
+ 	char *c;
+ 
+ 	printf("          Magic : %08x\n", sb->md_magic);
+-	printf("        Version : %02d.%02d.%02d\n", sb->major_version, sb->minor_version,
++	printf("        Version : %d.%02d.%02d\n", sb->major_version, sb->minor_version,
+ 	       sb->patch_version);
+ 	if (sb->minor_version >= 90) {
+ 		printf("           UUID : %08x:%08x:%08x:%08x", sb->set_uuid0, sb->set_uuid1,
+@@ -847,6 +847,9 @@ static struct supertype *match_metadata_desc0(char *arg)
+ 	st->minor_version = 90;
+ 	st->max_devs = MD_SB_DISKS;
+ 	st->sb = NULL;
++	/* Eliminate pointless leading 0 from some versions of mdadm -D */
++	if (strncmp(arg, "00.", 3) == 0)
++		arg++;
+ 	if (strcmp(arg, "0") == 0 ||
+ 	    strcmp(arg, "0.90") == 0 ||
+ 	    strcmp(arg, "0.91") == 0 ||
+diff --git a/super1.c b/super1.c
+index e1d0219..a81ee6f 100644
+--- a/super1.c
++++ b/super1.c
+@@ -1186,6 +1186,9 @@ static struct supertype *match_metadata_desc1(char *arg)
+ 	st->ss = &super1;
+ 	st->max_devs = 384;
+ 	st->sb = NULL;
++	/* Eliminate pointless leading 0 from some versions of mdadm -D */
++	if (strncmp(arg, "01.", 3) == 0)
++		arg++;
+ 	if (strcmp(arg, "1.0") == 0) {
+ 		st->minor_version = 0;
+ 		return st;
 
---=-SrB6MoJZhAJ1miAm2ZJ/--
+--------------1.5.6.5--
+
 
